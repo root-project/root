@@ -256,6 +256,7 @@ namespace cling {
     ///
     /// @param[in] InstTy The deduced type used to create instantiation.
     /// @param[in] SubTree The AST node or subtree, which is being replaced.
+    /// @param[in] ValuePrinterReq Whether to turn on the value printing or not
     ///
     clang::Expr* SubstituteUnknownSymbol(const clang::QualType InstTy, 
                                          clang::Expr* SubTree,
