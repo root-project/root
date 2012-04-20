@@ -241,7 +241,7 @@ Event_t NewX11EventFromCocoaEvent(unsigned windowID, NSEvent *theEvent)
 }
 
 //______________________________________________________________________________
-void ConvertEventLocationToROOTXY(NSEvent *cocoaEvent, QuartzView *eventView, Event_t *rootEvent)
+void ConvertEventLocationToROOTXY(NSEvent *cocoaEvent, NSView<X11Window> *eventView, Event_t *rootEvent)
 {
    //1. All parameters are valid.
    //Both event and view must be in the same window, I do not check this here.
@@ -307,13 +307,13 @@ unsigned GetModifiersFromCocoaEvent(NSEvent *theEvent)
 //Misc. aux. functions.
 
 //______________________________________________________________________________
-bool IsParent(QuartzView *testParent, QuartzView *testChild)
+bool IsParent(NSView<X11Window>  *testParent, NSView<X11Window>  *testChild)
 {
    assert(testParent != nil && "IsParent, testParent parameter is nil");
    assert(testChild != nil && "IsParent, testChild parameter is nil");
 
    if (testChild.fParentView) {
-      QuartzView *parent = testChild.fParentView;
+      NSView<X11Window> *parent = testChild.fParentView;
       while (parent) {
          if(parent == testParent)
             return true;
@@ -325,7 +325,7 @@ bool IsParent(QuartzView *testParent, QuartzView *testChild)
 }
 
 //______________________________________________________________________________
-void BuildAncestryBranch(QuartzView *view, std::vector<QuartzView *> &branch)
+void BuildAncestryBranch(NSView<X11Window> *view, std::vector<NSView<X11Window> *> &branch)
 {
    assert(view != nil && "BuildAncestryBranch, view parameter is nil");
    assert(view.fParentView != nil && "BuildAncestryBranch, view must have a parent");
@@ -333,7 +333,7 @@ void BuildAncestryBranch(QuartzView *view, std::vector<QuartzView *> &branch)
 
    branch.resize(view.fLevel);
    
-   QuartzView *parent = view.fParentView;
+   NSView<X11Window>  *parent = view.fParentView;
    for (auto iter = branch.rbegin(), endIter = branch.rend(); iter != endIter; ++iter) {
       assert(parent != nil && "BuildAncestryBranch, fParentView is nil");
       *iter = parent;
@@ -342,9 +342,9 @@ void BuildAncestryBranch(QuartzView *view, std::vector<QuartzView *> &branch)
 }
 
 //______________________________________________________________________________
-Ancestry FindLowestCommonAncestor(QuartzView *view1, std::vector<QuartzView *> &branch1, 
-                                  QuartzView *view2, std::vector<QuartzView *> &branch2, 
-                                  QuartzView **lca)
+Ancestry FindLowestCommonAncestor(NSView<X11Window> *view1, std::vector<NSView<X11Window> *> &branch1, 
+                                  NSView<X11Window> *view2, std::vector<NSView<X11Window> *> &branch2, 
+                                  NSView<X11Window> **lca)
 {
    //Search for the lowest common ancestor.
    //View1 can not be parent of view2, view2 can not be parent of view1,
@@ -363,7 +363,7 @@ Ancestry FindLowestCommonAncestor(QuartzView *view1, std::vector<QuartzView *> &
    BuildAncestryBranch(view1, branch1);
    BuildAncestryBranch(view2, branch2);
    
-   QuartzView *ancestor = nil;
+   NSView<X11Window> *ancestor = nil;
    
    for (unsigned i = 0, j = 0; i < view1.fLevel && j < view2.fLevel && branch1[i] == branch2[j]; ++i, ++j)
       ancestor = branch1[i];
@@ -377,7 +377,7 @@ Ancestry FindLowestCommonAncestor(QuartzView *view1, std::vector<QuartzView *> &
 }
 
 //______________________________________________________________________________
-QuartzView *FindViewToPropagateEvent(QuartzView *viewFrom, Mask_t checkMask)
+NSView<X11Window> *FindViewToPropagateEvent(NSView<X11Window> *viewFrom, Mask_t checkMask)
 {
    //This function does not check passive grabs.
    assert(viewFrom != nil && "FindViewToPropagateEvent, view parameter is nil");
@@ -394,7 +394,7 @@ QuartzView *FindViewToPropagateEvent(QuartzView *viewFrom, Mask_t checkMask)
 }
 
 //______________________________________________________________________________
-QuartzView *FindViewToPropagateEvent(QuartzView *viewFrom, Mask_t checkMask, QuartzView *grabView, Mask_t grabMask)
+NSView<X11Window> *FindViewToPropagateEvent(NSView<X11Window> *viewFrom, Mask_t checkMask, NSView<X11Window> *grabView, Mask_t grabMask)
 {
    //This function does not check passive grabs.
    assert(viewFrom != nil && "FindViewToPropagateEvent, view parameter is nil");
@@ -499,7 +499,7 @@ void SendEvent(TGWindow *window, Event_t &event)
 }
 
 //______________________________________________________________________________
-void SendEnterEvent(QuartzView *view, NSEvent *theEvent, EXMagic detail)
+void SendEnterEvent(NSView<X11Window> *view, NSEvent *theEvent, EXMagic detail)
 {
    //1. Parameters are valid.
    //2. view.fID is valid.
@@ -535,7 +535,7 @@ void SendEnterEvent(QuartzView *view, NSEvent *theEvent, EXMagic detail)
 }
 
 //______________________________________________________________________________
-void SendLeaveEvent(QuartzView *view, NSEvent *theEvent, EXMagic detail)
+void SendLeaveEvent(NSView<X11Window> *view, NSEvent *theEvent, EXMagic detail)
 {
    //1. Parameters are valid.
    //2. view.fID is valid.
@@ -567,7 +567,7 @@ void SendLeaveEvent(QuartzView *view, NSEvent *theEvent, EXMagic detail)
 }
 
 //______________________________________________________________________________
-void SendPointerMotionEvent(QuartzView *view, NSEvent *theEvent)
+void SendPointerMotionEvent(NSView<X11Window> *view, NSEvent *theEvent)
 {
    //1. Parameters are valid.
    //2. view.fID is valid.
@@ -599,7 +599,7 @@ void SendPointerMotionEvent(QuartzView *view, NSEvent *theEvent)
 }
 
 //______________________________________________________________________________
-void SendButtonPressEvent(QuartzView *view, NSEvent *theEvent, EMouseButton btn)
+void SendButtonPressEvent(NSView<X11Window> *view, NSEvent *theEvent, EMouseButton btn)
 {
    //1. Parameters are valid.
    //2. view.fID is valid.
@@ -636,7 +636,7 @@ void SendButtonPressEvent(QuartzView *view, NSEvent *theEvent, EMouseButton btn)
    NSPoint viewPoint = {};
    viewPoint.x = pressEvent.fX;
    viewPoint.y = pressEvent.fY;
-   for (QuartzView *child in [view subviews]) {
+   for (NSView<X11Window> *child in [view subviews]) {
       if (!child.fIsOverlapped && [child hitTest : viewPoint]) {//Hit test goes down along the tree.
          pressEvent.fUser[0] = child.fID;
          break;
@@ -648,7 +648,7 @@ void SendButtonPressEvent(QuartzView *view, NSEvent *theEvent, EMouseButton btn)
 }
 
 //______________________________________________________________________________
-void SendButtonReleaseEvent(QuartzView *view, NSEvent *theEvent, EMouseButton btn)
+void SendButtonReleaseEvent(NSView<X11Window> *view, NSEvent *theEvent, EMouseButton btn)
 {
    //1. Parameters are valid.
    //2. view.fID is valid.
@@ -678,7 +678,7 @@ void SendButtonReleaseEvent(QuartzView *view, NSEvent *theEvent, EMouseButton bt
 }
 
 //______________________________________________________________________________
-void SendKeyPressEvent(QuartzView *view, QuartzView *childView, NSEvent *theEvent, NSPoint windowPoint)
+void SendKeyPressEvent(NSView<X11Window> *view, NSView<X11Window> *childView, NSEvent *theEvent, NSPoint windowPoint)
 {
    assert(view != nil && "SendKeyPressEvent, view parameter is nil");
    assert(theEvent != nil && "SendKeyPressEvent, event parameter is nil");
@@ -717,7 +717,7 @@ void SendKeyPressEvent(QuartzView *view, QuartzView *childView, NSEvent *theEven
 }
 
 //______________________________________________________________________________
-void SendFocusInEvent(QuartzView *view, EXMagic mode)
+void SendFocusInEvent(NSView<X11Window> *view, EXMagic mode)
 {
    assert(view != nil && "SendFocusInEvent, view parameter is nil");
    //
@@ -738,7 +738,7 @@ void SendFocusInEvent(QuartzView *view, EXMagic mode)
 }
 
 //______________________________________________________________________________
-void SendFocusOutEvent(QuartzView *view, EXMagic mode)
+void SendFocusOutEvent(NSView<X11Window> *view, EXMagic mode)
 {
    assert(view != nil && "SendFocusOutEvent, view parameter is nil");
    //
@@ -761,7 +761,7 @@ void SendFocusOutEvent(QuartzView *view, EXMagic mode)
 //Aux. functions to send events to view's branch.
 
 //______________________________________________________________________________
-void SendEnterEventRange(QuartzView *from, QuartzView *to, NSEvent *theEvent, EXMagic mode)
+void SendEnterEventRange(NSView<X11Window> *from, NSView<X11Window> *to, NSEvent *theEvent, EXMagic mode)
 {
    //[from, to) - legal range, 'to' must be ancestor for 'from'.
    assert(from != nil && "SendEnterEventRange, 'from' parameter is nil");
@@ -776,7 +776,7 @@ void SendEnterEventRange(QuartzView *from, QuartzView *to, NSEvent *theEvent, EX
 }
 
 //______________________________________________________________________________
-void SendEnterEventClosedRange(QuartzView *from, QuartzView *to, NSEvent *theEvent, EXMagic mode)
+void SendEnterEventClosedRange(NSView<X11Window> *from, NSView<X11Window> *to, NSEvent *theEvent, EXMagic mode)
 {
    //[from, to] - inclusive, legal range, 'to' must be ancestor for 'from'.
    assert(from != nil && "SendEnterEventClosedRange, 'from' parameter is nil");
@@ -789,7 +789,7 @@ void SendEnterEventClosedRange(QuartzView *from, QuartzView *to, NSEvent *theEve
 }
 
 //______________________________________________________________________________
-void SendLeaveEventRange(QuartzView *from, QuartzView *to, NSEvent *theEvent, EXMagic mode)
+void SendLeaveEventRange(NSView<X11Window> *from, NSView<X11Window> *to, NSEvent *theEvent, EXMagic mode)
 {
    //[from, to) - legal range, 'to' must be ancestor for 'from'.
    assert(from != nil && "SendLeaveEventRange, 'from' parameter is nil");
@@ -804,7 +804,7 @@ void SendLeaveEventRange(QuartzView *from, QuartzView *to, NSEvent *theEvent, EX
 }
 
 //______________________________________________________________________________
-void SendLeaveEventClosedRange(QuartzView *from, QuartzView *to, NSEvent *theEvent, EXMagic mode)
+void SendLeaveEventClosedRange(NSView<X11Window> *from, NSView<X11Window> *to, NSEvent *theEvent, EXMagic mode)
 {
    //[from, to] - inclusive, legal range, 'to' must be ancestor for 'from'.
    assert(from != nil && "SendLeaveEventClosedRange, 'from' parameter is nil");
@@ -819,7 +819,7 @@ void SendLeaveEventClosedRange(QuartzView *from, QuartzView *to, NSEvent *theEve
 //Top-level crossing event generators.
 
 //______________________________________________________________________________
-void GenerateCrossingEventChildToParent(QuartzView *parent, QuartzView *child, NSEvent *theEvent, EXMagic detail)
+void GenerateCrossingEventChildToParent(NSView<X11Window> *parent, NSView<X11Window> *child, NSEvent *theEvent, EXMagic detail)
 {
    //Pointer moves from window A to window B and A is an inferior of B.
    //Generate LeaveNotify on A (with detail NotifyAncestor).
@@ -843,7 +843,7 @@ void GenerateCrossingEventChildToParent(QuartzView *parent, QuartzView *child, N
 }
 
 //______________________________________________________________________________
-void GenerateCrossingEventParentToChild(QuartzView *parent, QuartzView *child, NSEvent *theEvent, EXMagic detail)
+void GenerateCrossingEventParentToChild(NSView<X11Window> *parent, NSView<X11Window> *child, NSEvent *theEvent, EXMagic detail)
 {
    //Pointer moves from window A to window B and B is an inferior of A.
    //Generate LeaveNotify event for A, detail == NotifyInferior.
@@ -869,7 +869,7 @@ void GenerateCrossingEventParentToChild(QuartzView *parent, QuartzView *child, N
 }
 
 //______________________________________________________________________________
-void GenerateCrossingEventFromChild1ToChild2(QuartzView *child1, QuartzView *child2, QuartzView *ancestor, NSEvent *theEvent, EXMagic detail)
+void GenerateCrossingEventFromChild1ToChild2(NSView<X11Window> *child1, NSView<X11Window> *child2, NSView<X11Window> *ancestor, NSEvent *theEvent, EXMagic detail)
 {
    //Pointer moves from window A to window B and window C is their lowest common ancestor.
    //Generate LeaveNotify for window A with detail == NotifyNonlinear.
@@ -888,9 +888,9 @@ void GenerateCrossingEventFromChild1ToChild2(QuartzView *child1, QuartzView *chi
    if (!ancestor) {
       //From child1 to it's top-level view.
       if (child1.fParentView)
-         SendLeaveEventClosedRange(child1.fParentView, (QuartzView *)[[child1 window] contentView], theEvent, detail);
+         SendLeaveEventClosedRange(child1.fParentView, (NSView<X11Window> *)[[child1 window] contentView], theEvent, detail);
       if (child2.fParentView)
-         SendEnterEventClosedRange(child2.fParentView, (QuartzView *)[[child2 window] contentView], theEvent, detail);
+         SendEnterEventClosedRange(child2.fParentView, (NSView<X11Window> *)[[child2 window] contentView], theEvent, detail);
    } else {
       if (child1.fParentView)
          SendLeaveEventRange(child1.fParentView, ancestor, theEvent, detail);
@@ -918,7 +918,7 @@ EventTranslator::EventTranslator()
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateConfigureNotifyEvent(QuartzView *view, const NSRect &newFrame)
+void EventTranslator::GenerateConfigureNotifyEvent(NSView<X11Window> *view, const NSRect &newFrame)
 {
    assert(view != nil && "GenerateConfigureNotifyEvent, view parameter is nil");
 
@@ -953,7 +953,7 @@ void EventTranslator::GenerateDestroyNotify(unsigned /*winID*/)
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateExposeEvent(QuartzView *view, const NSRect &exposedRect)
+void EventTranslator::GenerateExposeEvent(NSView<X11Window> *view, const NSRect &exposedRect)
 {
    assert(view != nil && "GenerateExposeEvent, view parameter is nil");
    
@@ -971,25 +971,25 @@ void EventTranslator::GenerateExposeEvent(QuartzView *view, const NSRect &expose
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateCrossingEvent(QuartzView *view, NSEvent *theEvent)
+void EventTranslator::GenerateCrossingEvent(NSView<X11Window> *view, NSEvent *theEvent)
 {
    //View parameter can be nil (we exit any window).
    assert(theEvent != nil && "GenerateCrossingEvent, event parameter is nil");
 
    if (fPointerGrab == PointerGrab::noGrab) {
       NSView *candidateView = [[[view window] contentView] hitTest : [theEvent locationInWindow]];
-      if (candidateView && ![candidateView isKindOfClass : [QuartzView class]]) {
+      if (candidateView && ![candidateView isKindOfClass : [QuartzView class]]) {//TODO: add a test for OpenGL view.
          NSLog(@"EventTranslator::GenerateCrossingEvent: error, hit test returned not a QuartzView!");
          candidateView = nil;
       }
 
-      GenerateCrossingEvent((QuartzView *)candidateView, theEvent, kNotifyNormal);
+      GenerateCrossingEvent((NSView<X11Window> *)candidateView, theEvent, kNotifyNormal);
    } else
       GenerateCrossingEventActiveGrab(view, theEvent);
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateCrossingEventActiveGrab(QuartzView *view, NSEvent *theEvent)
+void EventTranslator::GenerateCrossingEventActiveGrab(NSView<X11Window> *view, NSEvent *theEvent)
 {
    assert(view != nil && "GenerateCrossingEventActiveGrab, view parameter is nil");
    assert(theEvent != nil && "GenerateCrossingEventActiveGrab, event parameter is nil");
@@ -998,20 +998,18 @@ void EventTranslator::GenerateCrossingEventActiveGrab(QuartzView *view, NSEvent 
       return;
       
    if (fOwnerEvents) {
-      QuartzView *candidateView = nil;
+      NSView<X11Window> *candidateView = nil;
       SortTopLevelWindows();
       QuartzWindow *topLevel = FindTopLevelWindowForMouseEvent();
       if (topLevel) {
          const NSPoint mousePosition = [topLevel mouseLocationOutsideOfEventStream];
-         candidateView = (QuartzView *)[[topLevel contentView] hitTest : mousePosition];
+         candidateView = (NSView<X11Window> *)[[topLevel contentView] hitTest : mousePosition];
          if (candidateView)
             //Do propagation.
             candidateView = Detail::FindViewToPropagateEvent(candidateView, kEnterWindowMask | kLeaveWindowMask, fButtonGrabView, fGrabEventMask);
       }
       
       GenerateCrossingEvent(candidateView, theEvent, kNotifyNormal);
-      //NSLog(@"crossing event for %u", ((QuartzView *)candidateView).fID);
-      //GenerateCrossingEvent((QuartzView *)candidateView, theEvent, kNotifyNormal);
    } else {
       if (view == fButtonGrabView) {//We enter or leave grab view.
          const NSEventType type = [theEvent type];
@@ -1038,7 +1036,7 @@ bool EventTranslator::HasPointerGrab()const
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateCrossingEvent(QuartzView *view, NSEvent *theEvent, EXMagic detail)
+void EventTranslator::GenerateCrossingEvent(NSView<X11Window> *view, NSEvent *theEvent, EXMagic detail)
 {
    assert(theEvent != nil && "GenerateCrossingEvent, event parameter is nil");
 
@@ -1055,12 +1053,12 @@ void EventTranslator::GenerateCrossingEvent(QuartzView *view, NSEvent *theEvent,
       //We enter window "from the screen" - do not leave any window.
       //Send EnterNotify event.
       if (view)//Check, if order is OK.
-         Detail::SendEnterEventClosedRange(view, (QuartzView *)[[view window] contentView], theEvent, detail);
+         Detail::SendEnterEventClosedRange(view, (NSView<X11Window> *)[[view window] contentView], theEvent, detail);
    } else if (!view) {
       //We exit all views. Order must be OK here.
-      Detail::SendLeaveEventClosedRange(fViewUnderPointer, (QuartzView *)[[fViewUnderPointer window] contentView], theEvent, detail);
+      Detail::SendLeaveEventClosedRange(fViewUnderPointer, (NSView<X11Window> *)[[fViewUnderPointer window] contentView], theEvent, detail);
    } else {
-      QuartzView *ancestor = 0;
+      NSView<X11Window> *ancestor = 0;
       Ancestry rel = FindRelation(fViewUnderPointer, view, &ancestor);
       if (rel == Ancestry::view1IsParent) {
          //Case 1.
@@ -1103,7 +1101,7 @@ void EventTranslator::GenerateCrossingEvent(QuartzView *view, NSEvent *theEvent,
 }
 
 //______________________________________________________________________________
-void EventTranslator::GeneratePointerMotionEvent(QuartzView *eventView, NSEvent *theEvent)
+void EventTranslator::GeneratePointerMotionEvent(NSView<X11Window> *eventView, NSEvent *theEvent)
 {
    assert(eventView != nil && "GeneratePointerMotionEvent, view parameter is nil");
    assert(theEvent != nil && "GeneratePointerMotionEvent, event parameter is nil");
@@ -1116,7 +1114,7 @@ void EventTranslator::GeneratePointerMotionEvent(QuartzView *eventView, NSEvent 
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateButtonPressEvent(QuartzView *eventView, NSEvent *theEvent, EMouseButton btn)
+void EventTranslator::GenerateButtonPressEvent(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn)
 {
    assert(eventView != nil && "GenerateButtonPressEvent, view parameter is nil");
    assert(theEvent != nil && "GenerateButtonpressEvent, event parameter is nil");
@@ -1128,7 +1126,7 @@ void EventTranslator::GenerateButtonPressEvent(QuartzView *eventView, NSEvent *t
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateButtonReleaseEvent(QuartzView *eventView, NSEvent *theEvent, EMouseButton btn)
+void EventTranslator::GenerateButtonReleaseEvent(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn)
 {
    assert(eventView != nil && "GenerateButtonReleaseEvent, view parameter is nil");
    assert(theEvent != nil && "GenerateButtonReleaseEvent, event parameter is nil");
@@ -1142,7 +1140,7 @@ void EventTranslator::GenerateButtonReleaseEvent(QuartzView *eventView, NSEvent 
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateKeyPressEvent(QuartzView *view, NSEvent *theEvent)
+void EventTranslator::GenerateKeyPressEvent(NSView<X11Window> *view, NSEvent *theEvent)
 {
    assert(view != nil && "GenerateKeyPressEvent, view parameter is nil");
    (void)view;//TODO: change interface?
@@ -1159,7 +1157,7 @@ void EventTranslator::GenerateKeyPressEvent(QuartzView *view, NSEvent *theEvent)
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateKeyReleaseEvent(QuartzView *view, NSEvent *theEvent)
+void EventTranslator::GenerateKeyReleaseEvent(NSView<X11Window> *view, NSEvent *theEvent)
 {
    assert(view != nil && "GenerateKeyReleaseEvent, view parameter is nil");
    (void)view;//TODO: change interface?
@@ -1176,7 +1174,7 @@ void EventTranslator::GenerateKeyReleaseEvent(QuartzView *view, NSEvent *theEven
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateFocusChangeEvent(QuartzView *eventView)
+void EventTranslator::GenerateFocusChangeEvent(NSView<X11Window> *eventView)
 {
    if (eventView == fFocusView)
       return;
@@ -1194,7 +1192,7 @@ void EventTranslator::GenerateFocusChangeEvent(QuartzView *eventView)
 }
 
 //______________________________________________________________________________
-void EventTranslator::SetPointerGrab(QuartzView *grabView, unsigned eventMask, bool ownerEvents)
+void EventTranslator::SetPointerGrab(NSView<X11Window> *grabView, unsigned eventMask, bool ownerEvents)
 {
    assert(grabView != nil && "SetPointerGrab, view parameter is nil");
    
@@ -1225,9 +1223,9 @@ void EventTranslator::CancelPointerGrab()
 namespace {
 
 //______________________________________________________________________________
-void ClearPointerIfViewIsRelated(QuartzView *&view, Window_t winID) 
+void ClearPointerIfViewIsRelated(NSView<X11Window> *&view, Window_t winID) 
 {
-   QuartzView *v = view;
+   NSView<X11Window> *v = view;
    if (v) {
       for (; v; v = v.fParentView) {
          if (v.fID == winID) {
@@ -1244,7 +1242,7 @@ void ClearPointerIfViewIsRelated(QuartzView *&view, Window_t winID)
 void EventTranslator::CheckUnmappedView(Window_t winID)
 {
    if (fButtonGrabView) {
-      for (QuartzView *view = fButtonGrabView; view; view = view.fParentView) {
+      for (NSView<X11Window> *view = fButtonGrabView; view; view = view.fParentView) {
          if (view.fID == winID) {
             CancelPointerGrab();
             break;
@@ -1258,7 +1256,7 @@ void EventTranslator::CheckUnmappedView(Window_t winID)
 }
 
 //______________________________________________________________________________
-void EventTranslator::GeneratePointerMotionEventNoGrab(QuartzView *eventView, NSEvent *theEvent)
+void EventTranslator::GeneratePointerMotionEventNoGrab(NSView<X11Window> *eventView, NSEvent *theEvent)
 {
    //Without grab, things are simple: find a view which accepts pointer motion event.
 
@@ -1266,7 +1264,7 @@ void EventTranslator::GeneratePointerMotionEventNoGrab(QuartzView *eventView, NS
    assert(theEvent != nil && "GeneratePointerMotionEventNoGrab, event parameter is nil");
    
    //Find a view on the top of stack:
-   QuartzView *candidateView = (QuartzView *)[[[eventView window] contentView] hitTest : [theEvent locationInWindow]];
+   NSView<X11Window> *candidateView = (NSView<X11Window> *)[[[eventView window] contentView] hitTest : [theEvent locationInWindow]];
    if (candidateView) {
       //Do propagation.
       candidateView = Detail::FindViewToPropagateEvent(candidateView, kPointerMotionMask);
@@ -1276,7 +1274,7 @@ void EventTranslator::GeneratePointerMotionEventNoGrab(QuartzView *eventView, NS
 }
 
 //______________________________________________________________________________
-void EventTranslator::GeneratePointerMotionEventActiveGrab(QuartzView * /*eventView*/, NSEvent *theEvent)
+void EventTranslator::GeneratePointerMotionEventActiveGrab(NSView<X11Window> * /*eventView*/, NSEvent *theEvent)
 {
    //More complex case. Grab can be result of button press and set by SetPointerGrab.
    //In case of button press (this is either passive->active or implicit grab),
@@ -1296,7 +1294,7 @@ void EventTranslator::GeneratePointerMotionEventActiveGrab(QuartzView * /*eventV
       SortTopLevelWindows();
       if (QuartzWindow *topLevel = FindTopLevelWindowForMouseEvent()) {
          const NSPoint mousePosition = [topLevel mouseLocationOutsideOfEventStream];
-         QuartzView *candidateView = (QuartzView *)[[topLevel contentView] hitTest : mousePosition];
+         NSView<X11Window> *candidateView = (NSView<X11Window> *)[[topLevel contentView] hitTest : mousePosition];
          if (candidateView) {
             //Do propagation.
             candidateView = Detail::FindViewToPropagateEvent(candidateView, kPointerMotionMask, fButtonGrabView, fGrabEventMask);
@@ -1317,7 +1315,7 @@ void EventTranslator::GeneratePointerMotionEventActiveGrab(QuartzView * /*eventV
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateButtonPressEventNoGrab(QuartzView *view, NSEvent *theEvent, EMouseButton btn)
+void EventTranslator::GenerateButtonPressEventNoGrab(NSView<X11Window> *view, NSEvent *theEvent, EMouseButton btn)
 {
    assert(view != nil && "GenerateButtonPressEventNoGrab, view parameter is nil");
    assert(theEvent != nil && "GenerateButtonPressEventNoGrab, event parameter is nil");
@@ -1337,7 +1335,7 @@ void EventTranslator::GenerateButtonPressEventNoGrab(QuartzView *view, NSEvent *
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateButtonPressEventActiveGrab(QuartzView * /*view*/, NSEvent *theEvent, EMouseButton btn)
+void EventTranslator::GenerateButtonPressEventActiveGrab(NSView<X11Window> * /*view*/, NSEvent *theEvent, EMouseButton btn)
 {
    //TODO: change interface? remove view parameter from declaration.
 
@@ -1355,7 +1353,7 @@ void EventTranslator::GenerateButtonPressEventActiveGrab(QuartzView * /*view*/, 
       SortTopLevelWindows();
       if (QuartzWindow *topLevel = FindTopLevelWindowForMouseEvent()) {
          const NSPoint mousePosition = [topLevel mouseLocationOutsideOfEventStream];
-         QuartzView *candidateView = (QuartzView *)[[topLevel contentView] hitTest : mousePosition];
+         NSView<X11Window> *candidateView = (NSView<X11Window> *)[[topLevel contentView] hitTest : mousePosition];
          if (candidateView) {
             //Do propagation.
             candidateView = Detail::FindViewToPropagateEvent(candidateView, kButtonPressMask, fButtonGrabView, fGrabEventMask);
@@ -1373,22 +1371,22 @@ void EventTranslator::GenerateButtonPressEventActiveGrab(QuartzView * /*view*/, 
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateButtonReleaseEventNoGrab(QuartzView *eventView, NSEvent *theEvent, EMouseButton btn)
+void EventTranslator::GenerateButtonReleaseEventNoGrab(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn)
 {
    assert(eventView != nil && "GenerateButtonReleaseEventNoGrab, view parameter is nil");
    assert(theEvent != nil && "GenerateButtonReleaseEventNoGrabm event parameter is nil");
    
-   if (QuartzView *candidateView = Detail::FindViewToPropagateEvent(eventView, kButtonPressMask))
+   if (NSView<X11Window> *candidateView = Detail::FindViewToPropagateEvent(eventView, kButtonPressMask))
       Detail::SendButtonReleaseEvent(candidateView, theEvent, btn);
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateButtonReleaseEventActiveGrab(QuartzView *eventView, NSEvent *theEvent, EMouseButton btn)
+void EventTranslator::GenerateButtonReleaseEventActiveGrab(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn)
 {
    assert(eventView != nil && "GenerateButtonReleaseEventActiveGrab, view parameter is nil");
    assert(theEvent != nil && "GenerateButtonReleaseEventActiveGrab, event parameter is nil");
    
-   const Util::NSStrongReference<QuartzView *> eventViewGuard(eventView);//What if view is deleted in the middle of this function?
+   const Util::NSStrongReference<NSView<X11Window> *> eventViewGuard(eventView);//What if view is deleted in the middle of this function?
 
    if (!fButtonGrabView) {
       if (fPointerGrab == PointerGrab::passiveGrab || fPointerGrab == PointerGrab::implicitGrab) {
@@ -1405,7 +1403,7 @@ void EventTranslator::GenerateButtonReleaseEventActiveGrab(QuartzView *eventView
       SortTopLevelWindows();
       if (QuartzWindow *topLevel = FindTopLevelWindowForMouseEvent()) {
          const NSPoint mousePosition = [topLevel mouseLocationOutsideOfEventStream];
-         QuartzView *candidateView = (QuartzView *)[[topLevel contentView] hitTest : mousePosition];
+         NSView<X11Window> *candidateView = (NSView<X11Window> *)[[topLevel contentView] hitTest : mousePosition];
          if (candidateView) {
             /*
             bool continueSearch = true;
@@ -1445,7 +1443,7 @@ void EventTranslator::GenerateKeyPressEventNoGrab(NSEvent *theEvent)
    FindKeyGrabView(fFocusView, theEvent);
 
    if (!fKeyGrabView) {
-      QuartzView *candidateView = nil;
+      NSView<X11Window> *candidateView = nil;
 
       if ((candidateView = FindViewUnderPointer())) {
          if (Detail::IsParent(fFocusView, candidateView)) {
@@ -1471,7 +1469,7 @@ void EventTranslator::GenerateKeyEventActiveGrab(NSEvent *theEvent)
    assert(theEvent != nil && "GenerateKeyEventActiveGrab, theEvent parameter is nil");
    assert(fKeyGrabView != nil && "GenerateKeyEventActiveGrab, theEvent parameter is nil");
    
-   if (QuartzView *candidateView = FindViewUnderPointer()) {
+   if (NSView<X11Window> *candidateView = FindViewUnderPointer()) {
       //Since owner_events is always true in ROOT ...
       GenerateKeyEventForView(candidateView, theEvent);
    } else {// else part for grab view??
@@ -1494,7 +1492,7 @@ void EventTranslator::GenerateKeyReleaseEventNoGrab(NSEvent *theEvent)
 {
    assert(theEvent != nil && "GenerateKeyReleaseEventNoGrab, theEvent parameter is nil");
    
-   QuartzView *candidateView = FindViewUnderPointer();
+   NSView<X11Window> *candidateView = FindViewUnderPointer();
 
    if (candidateView && Detail::IsParent(fFocusView, candidateView))
       GenerateKeyEventForView(candidateView, theEvent);
@@ -1503,7 +1501,7 @@ void EventTranslator::GenerateKeyReleaseEventNoGrab(NSEvent *theEvent)
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateKeyEventForView(QuartzView *view, NSEvent *theEvent)
+void EventTranslator::GenerateKeyEventForView(NSView<X11Window> *view, NSEvent *theEvent)
 {
    //Generate key press event for a view without grab.
    assert(view != nil && "GenerateKeyEventForView, view parameter is nil");
@@ -1512,7 +1510,7 @@ void EventTranslator::GenerateKeyEventForView(QuartzView *view, NSEvent *theEven
           "GenerateKeyEvenForView, event's type must be keydown or keyup");
    
    const Mask_t eventType = theEvent.type == NSKeyDown ? kKeyPressMask : kKeyReleaseMask;
-   QuartzView *childView = nil;
+   NSView<X11Window> *childView = nil;
 
    for (;;) {
       if (!view.isHidden && (view.fEventMask & eventType))
@@ -1535,17 +1533,17 @@ void EventTranslator::GenerateKeyEventForView(QuartzView *view, NSEvent *theEven
 }
 
 //______________________________________________________________________________
-void EventTranslator::FindButtonGrabView(QuartzView *fromView, NSEvent *theEvent, EMouseButton btn)
+void EventTranslator::FindButtonGrabView(NSView<X11Window> *fromView, NSEvent *theEvent, EMouseButton btn)
 {
    assert(fromView != nil && "FindButtonGrabView, view parameter is nil");
    assert(theEvent != nil && "FindButtonGrabView, event parameter is nil");
 
    const unsigned keyModifiers = Detail::GetKeyboardModifiersFromCocoaEvent(theEvent);
    
-   QuartzView *grabView = 0;
-   QuartzView *buttonPressView = 0;
+   NSView<X11Window> *grabView = 0;
+   NSView<X11Window> *buttonPressView = 0;
    
-   for (QuartzView *view = fromView; view != nil; view = view.fParentView) {
+   for (NSView<X11Window> *view = fromView; view != nil; view = view.fParentView) {
       //Top-first view to receive button press event.
       if (!buttonPressView && (view.fEventMask & kButtonPressMask))
          buttonPressView = view;
@@ -1579,7 +1577,7 @@ void EventTranslator::FindButtonGrabView(QuartzView *fromView, NSEvent *theEvent
 }
 
 //______________________________________________________________________________
-void EventTranslator::FindKeyGrabView(QuartzView *fromView, NSEvent *theEvent)
+void EventTranslator::FindKeyGrabView(NSView<X11Window> *fromView, NSEvent *theEvent)
 {
    assert(fromView != nil && "FindKeyGrabView, fromView parameter is nil");
    assert(theEvent != nil && "FindKeyGrabView, theEvent parameter is nil");
@@ -1591,19 +1589,19 @@ void EventTranslator::FindKeyGrabView(QuartzView *fromView, NSEvent *theEvent)
    const NSUInteger modifiers = [theEvent modifierFlags];
    const unichar keyCode = [characters characterAtIndex : 0];
 
-   for (QuartzView *v = fromView; v; v = v.fParentView) {
+   for (NSView<X11Window> *v = fromView; v; v = v.fParentView) {
       if ([v findPassiveKeyGrab : keyCode modifiers : modifiers])
          fKeyGrabView = v;
    }
 }
 
 //______________________________________________________________________________
-QuartzView *EventTranslator::FindViewUnderPointer()
+NSView<X11Window> *EventTranslator::FindViewUnderPointer()
 {
    SortTopLevelWindows();
    if (QuartzWindow *topLevel = FindTopLevelWindowForMouseEvent()) {
       const NSPoint mousePosition = [topLevel mouseLocationOutsideOfEventStream];
-      if (QuartzView *candidateView = (QuartzView *)[[topLevel contentView] hitTest : mousePosition])
+      if (NSView<X11Window> *candidateView = (NSView<X11Window> *)[[topLevel contentView] hitTest : mousePosition])
          return candidateView;
    }
    
@@ -1611,7 +1609,7 @@ QuartzView *EventTranslator::FindViewUnderPointer()
 }
 
 //______________________________________________________________________________
-Ancestry EventTranslator::FindRelation(QuartzView *view1, QuartzView *view2, QuartzView **lca)
+Ancestry EventTranslator::FindRelation(NSView<X11Window> *view1, NSView<X11Window> *view2, NSView<X11Window> **lca)
 {
    assert(view1 != nil && "FindRelation, view1 parameter is nil");
    assert(view2 != nil && "FindRelation, view2 parameter is nil");

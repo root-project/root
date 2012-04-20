@@ -14,80 +14,79 @@
 //                                            //
 ////////////////////////////////////////////////
 
+@interface QuartzWindow : NSWindow<X11Window>//, NSWindowDelegate>
 
-@interface QuartzWindow : NSWindow<X11Drawable>//, NSWindowDelegate>
-
-@property (nonatomic, assign) QuartzPixmap *fBackBuffer;
-@property (nonatomic, assign) QuartzView *fParentView;
-@property (nonatomic, assign) unsigned fID;
-
-/////////////////////////////////////////////////////////////////
-//SetWindowAttributes_t/WindowAttributes_t
-
-@property (nonatomic, assign) long fEventMask;
-
-@property (nonatomic, assign) int fClass;
-@property (nonatomic, assign) int fDepth;
-
-@property (nonatomic, assign) int fBitGravity;
-@property (nonatomic, assign) int fWinGravity;
-
-@property (nonatomic, assign) unsigned long fBackgroundPixel;
-
-@property (nonatomic, readonly) int fMapState;
-
-
-//End of SetWindowAttributes_t/WindowAttributes_t
-/////////////////////////////////////////////////////////////////
-
-@property (nonatomic, readonly) BOOL fIsPixmap;
-@property (nonatomic, readonly) QuartzView *fContentView;
-@property (nonatomic, readonly) QuartzWindow *fQuartzWindow;
-
-@property (nonatomic, readonly) CGContextRef fContext;
-
-@property (nonatomic, assign) int fGrabButton;
-@property (nonatomic, assign) unsigned fGrabButtonEventMask;
-@property (nonatomic, assign) unsigned fGrabKeyModifiers;
-@property (nonatomic, assign) BOOL fOwnerEvents;
-
-
-//Life-cycle.
-
+//Life-cycle: "ctor".
 - (id) initWithContentRect : (NSRect) contentRect styleMask : (NSUInteger) windowStyle 
        backing : (NSBackingStoreType) bufferingType defer : (BOOL) deferCreation
        windowAttributes : (const SetWindowAttributes_t *) attr;
 
+//1. X11Drawable protocol.
+
+@property (nonatomic, assign) unsigned fID;
+
+- (BOOL) fIsPixmap;
+- (BOOL) fIsOpenGLWidget;
+
+@property (nonatomic, readonly) CGContextRef  fContext;
+
 //Geometry.
-- (int)      fX;
-- (int)      fY;
+- (int) fX;
+- (int) fY;
 
 - (unsigned) fWidth;
 - (unsigned) fHeight;
-- (NSSize)   fSize;
 
-- (void)     setDrawableSize : (NSSize) newSize;
-- (void)     setX : (int) x Y : (int) y width : (unsigned) w height : (unsigned) h;
-- (void)     setX : (int) x Y : (int) y;
-
-//Children subviews.
-- (void)     addChild : (QuartzView *)child;
-
-//X11/ROOT GUI's attributes.
-- (void)     getAttributes : (WindowAttributes_t *) attr;
-- (void)     setAttributes : (const SetWindowAttributes_t *) attr;
+- (void) setDrawableSize : (NSSize) newSize;
+- (void) setX : (int) x Y : (int) y width : (unsigned) w height : (unsigned) h;
+- (void) setX : (int) x Y : (int) y;
 
 //
-- (void)     mapRaised;
-- (void)     mapWindow;
-- (void)     mapSubwindows;
-
-- (void)     unmapWindow;
-//
-- (void)     copy : (id<X11Drawable>) src area : (Rectangle_t) area withMask : (QuartzImage *)mask 
-             clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint;
+- (void) copy : (id<X11Drawable>) src area : (Rectangle_t) area withMask : (QuartzImage *) mask 
+         clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint;
 
 - (unsigned char *) readColorBits : (Rectangle_t) area;
+
+
+//X11Window protocol.
+
+/////////////////////////////////////////////////////////////////
+//SetWindowAttributes_t/WindowAttributes_t
+
+@property (nonatomic, assign) long          fEventMask;
+@property (nonatomic, assign) int           fClass;
+@property (nonatomic, assign) int           fDepth;
+@property (nonatomic, assign) int           fBitGravity;
+@property (nonatomic, assign) int           fWinGravity;
+@property (nonatomic, assign) unsigned long fBackgroundPixel;
+@property (nonatomic, readonly) int         fMapState;
+
+//End of SetWindowAttributes_t/WindowAttributes_t
+/////////////////////////////////////////////////////////////////
+
+//"Back buffer" is a bitmap, attached to a window by TCanvas.
+@property (nonatomic, assign) QuartzPixmap          *fBackBuffer;
+@property (nonatomic, assign) QuartzView            *fParentView;
+@property (nonatomic, readonly) NSView<X11Window>   *fContentView;
+@property (nonatomic, readonly) QuartzWindow        *fQuartzWindow;
+
+@property (nonatomic, assign) int      fGrabButton;
+@property (nonatomic, assign) unsigned fGrabButtonEventMask;
+@property (nonatomic, assign) unsigned fGrabKeyModifiers;
+@property (nonatomic, assign) BOOL     fOwnerEvents;
+
+//Children subviews.
+- (void) addChild : (NSView<X11Window> *) child;
+
+//X11/ROOT GUI's attributes.
+- (void) getAttributes : (WindowAttributes_t *) attr;
+- (void) setAttributes : (const SetWindowAttributes_t *) attr;
+
+//X11's XMapWindow etc.
+- (void) mapRaised;
+- (void) mapWindow;
+- (void) mapSubwindows;
+- (void) unmapWindow;
 
 @end
 
@@ -98,7 +97,7 @@
 //////////////////////////////////////////////////////////////
 
 @interface PassiveKeyGrab : NSObject
-- (unichar) fKeyCode;
+- (unichar)    fKeyCode;
 - (NSUInteger) fModifiers;
 - (id) initWithKey : (unichar) keyCode modifiers : (NSUInteger) modifiers;
 - (BOOL) matchKey : (unichar) keyCode modifiers : (NSUInteger) modifiers;
@@ -111,94 +110,92 @@
 //                                    //
 ////////////////////////////////////////
 
-@interface QuartzView : NSView<X11Drawable>
-
-@property (nonatomic, assign) QuartzPixmap *fBackBuffer;
-@property (nonatomic, assign) QuartzView *fParentView;
-
-@property (nonatomic, assign) unsigned fID;
-@property (nonatomic, assign) unsigned fLevel;
-@property (nonatomic, readonly) BOOL fIsOverlapped;
-
-/////////////////////////////////////////////////////////////////
-//SetWindowAttributes_t/WindowAttributes_t
-
-@property (nonatomic, assign) long fEventMask;
-
-@property (nonatomic, assign) int fClass;
-@property (nonatomic, assign) int fDepth;
-
-@property (nonatomic, assign) int fBitGravity;
-@property (nonatomic, assign) int fWinGravity;
-
-@property (nonatomic, assign) unsigned long fBackgroundPixel;
-
-@property (nonatomic, readonly) int fMapState;
-
-//End of SetWindowAttributes_t/WindowAttributes_t
-/////////////////////////////////////////////////////////////////
-
-@property (nonatomic, readonly) BOOL fIsPixmap;
-@property (nonatomic, readonly) QuartzView *fContentView;
-@property (nonatomic, readonly) QuartzWindow *fQuartzWindow;
-
-@property (nonatomic, assign) CGContextRef fContext;
-
-@property (nonatomic, assign) int fGrabButton;
-@property (nonatomic, assign) unsigned fGrabButtonEventMask;
-@property (nonatomic, assign) unsigned fGrabKeyModifiers;
-@property (nonatomic, assign) BOOL fOwnerEvents;
-//modifier also.
-
-@property (nonatomic, assign) BOOL fSnapshotDraw;
+@interface QuartzView : NSView<X11Window>
 
 //Life-cycle.
 - (id) initWithFrame : (NSRect) frame windowAttributes : (const SetWindowAttributes_t *) attr;
 
+//X11Drawable protocol.
+
+@property (nonatomic, assign) unsigned fID;
+
+- (BOOL) fIsPixmap;
+- (BOOL) fIsOpenGLWidget;
+
+@property (nonatomic, assign) CGContextRef fContext;
+
 //Geometry.
-
-- (BOOL)     isFlipped;//override method from NSView.
-
 - (int)      fX;
 - (int)      fY;
-
 - (unsigned) fWidth;
 - (unsigned) fHeight;
-- (NSSize)   fSize;
-
 - (void)     setDrawableSize : (NSSize) newSize;
 - (void)     setX : (int) x Y : (int) y width : (unsigned) w height : (unsigned) h;
 - (void)     setX : (int) x Y : (int) y;
 
-//Children subviews.
-- (void)     addChild : (QuartzView *)child;
-
-//X11/ROOT GUI's attributes.
-- (void)     getAttributes : (WindowAttributes_t *)attr;
-- (void)     setAttributes : (const SetWindowAttributes_t *)attr;
-
-//
-- (void)     mapRaised;
-- (void)     mapWindow;
-- (void)     mapSubwindows;
-
-- (void)     unmapWindow;
-//
-- (void)     raiseWindow;
-- (void)     lowerWindow;
-//
 - (void)     copy : (id<X11Drawable>) src area : (Rectangle_t) area withMask : (QuartzImage *)mask 
              clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint;
-
 - (unsigned char *) readColorBits : (Rectangle_t) area;
 
+//X11Window protocol.
+
+/////////////////////////////////////////////////////////////////
+//SetWindowAttributes_t/WindowAttributes_t
+
+@property (nonatomic, assign) long          fEventMask;
+@property (nonatomic, assign) int           fClass;
+@property (nonatomic, assign) int           fDepth;
+@property (nonatomic, assign) int           fBitGravity;
+@property (nonatomic, assign) int           fWinGravity;
+@property (nonatomic, assign) unsigned long fBackgroundPixel;
+@property (nonatomic, readonly) int         fMapState;
+
+//End of SetWindowAttributes_t/WindowAttributes_t
+/////////////////////////////////////////////////////////////////
+
+
+@property (nonatomic, assign) QuartzPixmap        *fBackBuffer;
+@property (nonatomic, assign) QuartzView          *fParentView;
+@property (nonatomic, assign) unsigned             fLevel;
+@property (nonatomic, readonly) NSView<X11Window> *fContentView;
+@property (nonatomic, readonly) QuartzWindow      *fQuartzWindow;
+
+@property (nonatomic, assign) int      fGrabButton;
+@property (nonatomic, assign) unsigned fGrabButtonEventMask;
+@property (nonatomic, assign) unsigned fGrabKeyModifiers;
+@property (nonatomic, assign) BOOL     fOwnerEvents;
+
+//Children subviews.
+- (void) addChild : (NSView<X11Window> *)child;
+
+//X11/ROOT GUI's attributes.
+- (void) getAttributes : (WindowAttributes_t *) attr;
+- (void) setAttributes : (const SetWindowAttributes_t *) attr;
+
 //
-- (void)     configureNotifyTree;
-- (void)     updateLevel : (unsigned) newLevel;
+- (void) mapRaised;
+- (void) mapWindow;
+- (void) mapSubwindows;
+
+- (void) unmapWindow;
+//
+- (void) raiseWindow;
+- (void) lowerWindow;
+//
+
+- (BOOL) fIsOverlapped;
+- (void) setOverlapped : (BOOL) overlap;
+- (void) updateLevel : (unsigned) newLevel;
+- (void) configureNotifyTree;
+
+//Additional methods and properties.
+
+@property (nonatomic, assign) BOOL   fSnapshotDraw;
+- (BOOL) isFlipped;//override method from NSView.
 
 //Keyboard:
-- (void)     addPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
-- (void)     removePassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
+- (void) addPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
+- (void) removePassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
 - (PassiveKeyGrab *) findPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
 - (PassiveKeyGrab *) findPassiveKeyGrab : (unichar) keyCode;
 
@@ -221,13 +218,13 @@ void GetRootWindowAttributes(WindowAttributes_t *attr);
 int GlobalYCocoaToROOT(CGFloat yCocoa);
 int GlobalYROOTToCocoa(CGFloat yROOT);
 
-int LocalYCocoaToROOT(QuartzView *parentView, CGFloat yCocoa);
-int LocalYROOTToCocoa(QuartzView *parentView, CGFloat yROOT);
+int LocalYCocoaToROOT(NSView<X11Window> *parentView, CGFloat yCocoa);
+int LocalYROOTToCocoa(NSView<X11Window> *parentView, CGFloat yROOT);
 int LocalYROOTToCocoa(NSObject<X11Drawable> *parentView, CGFloat yROOT);
 
-NSPoint TranslateToScreen(QuartzView *from, NSPoint point);
-NSPoint TranslateFromScreen(NSPoint point, QuartzView *to);
-NSPoint TranslateCoordinates(QuartzView *fromView, QuartzView *toView, NSPoint sourcePoint);
+NSPoint TranslateToScreen(NSView<X11Window> *from, NSPoint point);
+NSPoint TranslateFromScreen(NSPoint point, NSView<X11Window> *to);
+NSPoint TranslateCoordinates(NSView<X11Window> *fromView, NSView<X11Window> *toView, NSPoint sourcePoint);
 
 }//X11
 }//MacOSX

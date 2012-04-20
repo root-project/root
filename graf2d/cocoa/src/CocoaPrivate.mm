@@ -89,6 +89,26 @@ NSObject<X11Drawable> *CocoaPrivate::GetDrawable(unsigned drawableID)const
 }
 
 //______________________________________________________________________________
+NSObject<X11Window> *CocoaPrivate::GetWindow(unsigned windowID)const
+{
+   auto winIter = fDrawables.find(windowID);
+#ifdef DEBUG_ROOT_COCOA
+   if (winIter == fDrawables.end()) {
+      NSLog(@"Fatal error: requested non-existing drawable %u", windowID);
+      //We do not care about efficiency, ROOT's gonna die on assert :)
+      auto deletedDrawable = std::find(fFreeDrawableIDs.begin(), fFreeDrawableIDs.end(), windowID);
+      if (deletedDrawable != fFreeDrawableIDs.end()) {
+         NSLog(@"This window was deleted already");
+      } else {
+         NSLog(@"This window not found among allocated/deleted drawables");
+      }
+   }
+#endif
+   assert(winIter != fDrawables.end() && "GetWindow, non-existing window requested");
+   return (NSObject<X11Window> *)winIter->second.Get();
+}
+
+//______________________________________________________________________________
 void CocoaPrivate::DeleteDrawable(unsigned drawableID)
 {
    auto drawableIter = fDrawables.find(drawableID);

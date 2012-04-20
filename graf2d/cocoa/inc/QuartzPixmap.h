@@ -16,24 +16,30 @@
 
 @interface QuartzPixmap : NSObject<X11Drawable>
 
-@property (nonatomic, assign) unsigned fID;
-@property (nonatomic, readonly) BOOL   fIsPixmap;
-
-@property (nonatomic, readonly) CGContextRef fContext;
-
-- (id) initWithW : (unsigned) width H :(unsigned) height;
+- (id) initWithW : (unsigned) width H : (unsigned) height;
 - (BOOL) resizeW : (unsigned) width H : (unsigned) height;
 
 - (CGImageRef) createImageFromPixmap;
 - (CGImageRef) createImageFromPixmap : (Rectangle_t) cropArea;
 
+//X11Drawable protocol.
+
+@property (nonatomic, assign) unsigned fID;
+
+- (BOOL) fIsPixmap;
+- (BOOL) fIsOpenGLWidget;
+
+@property (nonatomic, readonly) CGContextRef fContext;
+
 - (unsigned) fWidth;
 - (unsigned) fHeight;
-- (unsigned char *) fData;
 
 //Point_t, Rectangle_t are in GuiTypes.h
-- (void) copy : (id<X11Drawable>) src area : (Rectangle_t) area withMask : (QuartzImage *)mask 
+- (void) copy : (id<X11Drawable>) src area : (Rectangle_t) area withMask : (QuartzImage *) mask 
          clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint;
+
+//
+- (unsigned char *) fData;
 
 @end
 
@@ -46,19 +52,20 @@
 
 @interface QuartzImage : NSObject<X11Drawable>
 
-@property (nonatomic, assign) unsigned fID;
-@property (nonatomic, readonly) BOOL fIsPixmap;
-@property (nonatomic, readonly) BOOL fIsStippleMask;
-
 - (id) initWithW : (unsigned) width H : (unsigned) height data : (unsigned char *) data;
 - (id) initMaskWithW : (unsigned) width H : (unsigned) height bitmapMask : (unsigned char *) mask;
-
 - (void) dealloc;
+@property (nonatomic, readonly) BOOL fIsStippleMask;
+- (CGImageRef) fImage;
+
+//X11Drawable protocol.
+@property (nonatomic, assign) unsigned fID;
+
+- (BOOL) fIsPixmap;
+- (BOOL) fIsOpenGLWidget;
 
 - (unsigned) fWidth;
 - (unsigned) fHeight;
-
-- (CGImageRef) fImage;
 
 - (unsigned char *) readColorBits : (Rectangle_t) area;
 

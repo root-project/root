@@ -24,6 +24,8 @@
 #endif
 
 @protocol X11Drawable;
+@protocol X11Window;
+
 @class NSObject;
 
 class TGQuartz;
@@ -51,6 +53,7 @@ private:
 
    unsigned               RegisterDrawable(NSObject *nsObj);
    NSObject<X11Drawable> *GetDrawable(unsigned drawableD)const;
+   NSObject<X11Window>   *GetWindow(unsigned windowID)const;
    void                   DeleteDrawable(unsigned drawableID);
    
    //This function resets strong reference, if you still want NSObject for drawableID to live,

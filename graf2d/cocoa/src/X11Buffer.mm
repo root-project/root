@@ -351,7 +351,7 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
          continue;
       }
       
-      QuartzView *view = impl->GetDrawable(cmd->fID).fContentView;
+      QuartzView *view = (QuartzView *)impl->GetWindow(cmd->fID).fContentView;
       if ([view lockFocusIfCanDraw]) {
          NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
          assert(nsContext != nil && "Flush, currentContext is nil");
