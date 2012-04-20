@@ -7,6 +7,8 @@
 # 
 ##===----------------------------------------------------------------------===##
 LEVEL = ../../../..
+CLING_LEVEL := ../..
+
 
 TOOLNAME = cling
 CPPFLAGS += -I$(PROJ_SRC_DIR)/../../include -I$(PROJ_OBJ_DIR)/../../include \
@@ -18,5 +20,6 @@ CXXFLAGS = -fno-rtti
 TOOL_NO_EXPORTS = 1
 
 include $(LEVEL)/Makefile.common
+LDFLAGS += "-L$(SharedLibDir)"
+LIBS += -lcling
 
-LIBS += $(LibDir)/libcling$(SHLIBEXT)
