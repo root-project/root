@@ -52,7 +52,7 @@ namespace cling {
 
     ///\brief Removes the declaration from the lookup chains and from the
     /// declaration context and it rebuilds the redeclaration chain.
-    /// @param[in] VD - The declaration to be removed.
+    /// @param[in] FD - The declaration to be removed.
     ///
     ///\returns true on success.
     ///
