@@ -225,9 +225,10 @@ void SetFillPattern(CGContextRef ctx, const PatternContext *patternContext)
 TGCocoa::TGCocoa()
             : fSelectedDrawable(0),
               fCocoaDraw(0),
+              fDrawMode(kCopy),
+              fDirectDraw(false),
               fForegroundProcess(false),
               fCurrentMessageID(1)
-              
 {
    try {
       fPimpl.reset(new Details::CocoaPrivate);
@@ -241,6 +242,8 @@ TGCocoa::TGCocoa(const char *name, const char *title)
             : TVirtualX(name, title),
               fSelectedDrawable(0),
               fCocoaDraw(0),
+              fDrawMode(kCopy),
+              fDirectDraw(false),
               fForegroundProcess(false),
               fCurrentMessageID(1)
 {
@@ -2302,10 +2305,11 @@ void TGCocoa::SetDoubleBuffer(Int_t wid, Int_t mode)
    //        mode = 1 double buffer is on
    //        mode = 0 double buffer is off
    
+   //In ROOT, canvas has a "double buffer" - pixmap attached to window 'wid'.
    assert(wid > fPimpl->GetRootWindowID() && "SetDoubleBuffer called for 'root' window");
    
-   if (wid == 999) {
-      Warning("SetDoubleBuffer", "called with 999 - is it a window or \"All windows\"");
+   if (wid == 999) {//Comment in TVirtaulX suggests, that 999 means all windows.
+      Warning("SetDoubleBuffer", "called with wid == 999");
    } else {
       fSelectedDrawable = wid;
       mode ? SetDoubleBufferON() : SetDoubleBufferOFF();
@@ -2315,29 +2319,15 @@ void TGCocoa::SetDoubleBuffer(Int_t wid, Int_t mode)
 //______________________________________________________________________________
 void TGCocoa::SetDoubleBufferOFF()
 {
-   return;
-   /*
-   // Turns double buffer mode off.
-   assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "SetDoubleBufferOFF, called, but no correct window was selected before");
-   
-   NSObject<X11Drawable> *obj = fPimpl->GetDrawable(fSelectedDrawable);
-   assert(obj.fIsPixmap == NO && "SetDoubleBufferOFF, selected drawable is a pixmap, it can not have a back buffer");
-   
-   QuartzPixmap *buffer = obj.fBackBuffer;
-   assert(buffer != nil && "SetDoubleBufferOFF, window does not have back buffer");
-
-   if (fPimpl->fX11CommandBuffer.BufferSize())
-      fPimpl->fX11CommandBuffer.RemoveOperationsForDrawable(buffer.fID);
-
-   fPimpl->DeleteDrawable(buffer.fID);
-   obj.fBackBuffer = nil;
-   */
+   fDirectDraw = true;
 }
 
 //______________________________________________________________________________
 void TGCocoa::SetDoubleBufferON()
 {
-   // Turns double buffer mode on.   
+   //Attach pixmap to the selected window (view).
+   fDirectDraw = false;
+   
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "SetDoubleBufferON, called, but no correct window was selected before");
    
    NSObject<X11Drawable> *window = fPimpl->GetDrawable(fSelectedDrawable);
@@ -2373,14 +2363,12 @@ void TGCocoa::SetDoubleBufferON()
 }
 
 //______________________________________________________________________________
-void TGCocoa::SetDrawMode(EDrawMode /*mode*/)
+void TGCocoa::SetDrawMode(EDrawMode mode)
 {
    // Sets the drawing mode.
    //
-   // mode = 1 copy
-   // mode = 2 xor
-   // mode = 3 invert
-   // mode = 4 set the suitable mode for cursor echo according to the vendor
+   //EDrawMode{kCopy, kXor};
+   fDrawMode = mode;
 }
 
 //______________________________________________________________________________
@@ -2509,7 +2497,6 @@ Bool_t TGCocoa::CreatePictureFromData(Drawable_t /*wid*/, char ** /*data*/,
    // attributes "attr" are used for input and output. Returns kTRUE in
    // case of success, kFALSE otherwise. If the mask "pict_mask" does not
    // exist it is set to kNone.
-   NSLog(@"CreatePictureFromData");
 
    return kFALSE;
 }
@@ -3279,7 +3266,7 @@ void *TGCocoa::GetCurrentContext()
 }
 
 //______________________________________________________________________________
-Bool_t TGCocoa::MakeProcessForeground()
+bool TGCocoa::MakeProcessForeground()
 {
    //We start root in a terminal window, so it's considered as a 
    //background process. Background process has a lot of problems
@@ -3293,31 +3280,31 @@ Bool_t TGCocoa::MakeProcessForeground()
       const OSStatus res1 = TransformProcessType(&psn, kProcessTransformToForegroundApplication);
       if (res1 != noErr) {
          Error("MakeProcessForeground", "TransformProcessType failed with code %d", res1);
-         return kFALSE;
+         return false;
       }
    
       const OSErr res2 = SetFrontProcess(&psn);
       if (res2 != noErr) {
          Error("MakeProcessForeground", "SetFrontProcess failed with code %d", res2);
-         return kFALSE;
+         return false;
       }
 
-      fForegroundProcess = kTRUE;
+      fForegroundProcess = true;
    } else {
       ProcessSerialNumber psn = {};    
 
       OSErr res = GetCurrentProcess(&psn);
       if (res != noErr) {
          Error("MapProcessForeground", "GetCurrentProcess failed with code %d", res);
-         return kFALSE;
+         return false;
       }
       
       res = SetFrontProcess(&psn);
       if (res != noErr) {
          Error("MapProcessForeground", "SetFrontProcess failed with code %d", res);
-         return kFALSE;
+         return false;
       }
    }
    
-   return kTRUE;
+   return true;
 }

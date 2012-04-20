@@ -381,7 +381,7 @@ public:
    
    void CocoaDrawON();
    void CocoaDrawOFF();
-   bool IsCocoaDraw()const;
+   Bool_t IsCocoaDraw()const;
    
 protected:
    void *GetCurrentContext();
@@ -391,8 +391,11 @@ protected:
    std::auto_ptr<ROOT::MacOSX::Details::CocoaPrivate> fPimpl; //!
    Int_t fCocoaDraw;
 
+   EDrawMode fDrawMode;
+   bool fDirectDraw;//Primitive in canvas tries to draw into window directly.
+
 private:
-   Bool_t MakeProcessForeground();
+   bool MakeProcessForeground();
 
    bool fForegroundProcess;
    std::vector<GCValues_t> fX11Contexts;
@@ -404,7 +407,7 @@ private:
    
    //Quite ugly solution for the moment.
    std::map<Window_t, std::vector<UInt_t> > fClientMessagesToWindow;
-   
+      
    //I'd prefere to use = delete syntax from C++0x11, but this file is processed by CINT.
    TGCocoa(const TGCocoa &rhs);
    TGCocoa &operator = (const TGCocoa &rhs);
