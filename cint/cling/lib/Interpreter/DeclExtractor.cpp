@@ -214,7 +214,7 @@ namespace cling {
 
     DeclContext *SearchDC = m_Sema->CurContext;
     DeclContext *DC = m_Sema->CurContext;
-    bool isStdBadAlloc = false;
+    //bool isStdBadAlloc = false;
     SourceLocation NameLoc = NewTD->getLocation();
     // if (Name && SS.isNotEmpty()) {
     //   // We have a nested-name tag ('struct foo::bar').
@@ -324,7 +324,7 @@ namespace cling {
     if (m_Sema->getLangOpts().CPlusPlus && Name && DC && m_Sema->StdNamespace 
         && DC->Equals(m_Sema->getStdNamespace()) && Name->isStr("bad_alloc")) {
       // This is a declaration of or a reference to "std::bad_alloc".
-      isStdBadAlloc = true;
+      //isStdBadAlloc = true;
     
       if (Previous.empty() && m_Sema->StdBadAlloc) {
         // std::bad_alloc has been implicitly declared (but made invisible to
