@@ -925,7 +925,7 @@ namespace cling {
     std::vector<QualType>& GivenArgTypes, FunctionDecl* FD,
     bool UseUsingDeclRules)
   {
-    FunctionTemplateDecl* FTD = FD->getDescribedFunctionTemplate();
+    //FunctionTemplateDecl* FTD = FD->getDescribedFunctionTemplate();
     QualType FQT = CI->getASTContext().getCanonicalType(FD->getType());
     if (llvm::isa<FunctionNoProtoType>(FQT.getTypePtr())) {
       // A K&R-style function (no prototype), is considered to match the args.
