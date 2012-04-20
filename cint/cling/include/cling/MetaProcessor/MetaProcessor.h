@@ -135,7 +135,7 @@ namespace cling {
     int process(const char* input_line, cling::Value* result = 0);
 
     ///\brief Executes a file given the CINT specific rules. Mainly used as:
-    /// .x filename[(args)], which in turn #include-s the filename and runs a
+    /// .x filename[(args)], which in turn includes the filename and runs a
     /// function with signature void filename(args)
     /// @param[in] fileWithArgs - the filename(args)
     /// @param[out] result - the cling::Value as result of the execution of the
