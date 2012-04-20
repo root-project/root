@@ -26,13 +26,26 @@ END_HTML
 #include "Rtypes.h"
 #endif
 
-#include <vector>
+
+#ifndef ROO_REAL_VAR
+#include "RooRealVar.h"
+#endif
+
+#ifndef ROO_ABS_DATA
+#include "RooAbsData.h"
+#endif
+
+#ifndef ROO_ABS_PDF
+#include "RooAbsPdf.h"
+#endif
+
+#ifndef ROOSTATS_TestStatistic
+#include "RooStats/TestStatistic.h"
+#endif
+
 
 //#include "RooStats/DistributionCreator.h"
-#include "RooStats/SamplingDistribution.h"
-#include "RooStats/TestStatistic.h"
 
-#include "RooRealVar.h"
 
 namespace RooStats {
 
@@ -50,14 +63,36 @@ namespace RooStats {
     
      // Main interface to evaluate the test statistic on a dataset
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& /*paramsOfInterest*/)  {       
-       if(!&data) { 
-	 cout << "problem with data" << endl;
-	 return 0 ;
-       } else {
-       
-	 RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;	 
-	 return data.numEntries();
-       }
+      
+         if(!&data) {
+            cout << "Data set reference is NULL" << endl;
+            return 0;
+         }
+
+         if(data.isWeighted()) {
+            return data.sumEntries();
+         }
+ 
+         // if no pdf is given in the constructor, we assume by default it can be extended
+         if (!fPdf || fPdf->canBeExtended()) {
+            return data.numEntries();
+         } 
+          
+         // data is not weighted as pdf cannot be extended 
+         if(data.numEntries() == 1) { 
+
+            const RooArgSet *obsSet = data.get(0);
+            RooLinkedListIter iter = obsSet->iterator();
+
+            RooRealVar *obs = NULL; Double_t numEvents = 0.0;
+            while((obs = (RooRealVar *)iter.Next()) != NULL) {
+               numEvents += obs->getValV();
+            }
+            return numEvents;
+         }
+
+         cout << "Data set is invalid" << endl;
+         return 0;
      }
 
       // Get the TestStatistic
