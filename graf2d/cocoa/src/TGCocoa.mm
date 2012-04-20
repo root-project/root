@@ -462,7 +462,7 @@ void TGCocoa::MoveWindow(Int_t wid, Int_t x, Int_t y)
       return;
 
    assert(!fPimpl->IsRootWindow(wid) && "MoveWindow, called for 'root' window");
-   [fPimpl->GetDrawable(wid) setX : x Y : y];
+   [fPimpl->GetWindow(wid) setX : x Y : y];
 }
 
 //______________________________________________________________________________

@@ -304,11 +304,11 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
 }
 
 //______________________________________________________________________________
-- (void) copy : (id<X11Drawable>) src area : (Rectangle_t) area withMask : (QuartzImage *)mask clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint
+- (void) copy : (NSObject<X11Drawable> *) src area : (Rectangle_t) area withMask : (QuartzImage *)mask clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint
 {
-   if ([(NSObject *)src isKindOfClass : [QuartzImage class]]) {
+   if ([src isKindOfClass : [QuartzImage class]]) {
       [self copyImage : (QuartzImage *)src area : area withMask : mask clipOrigin : origin toPoint : dstPoint];
-   } else if ([(NSObject *)src isKindOfClass : [QuartzPixmap class]]) {
+   } else if ([src isKindOfClass : [QuartzPixmap class]]) {
       [self copyPixmap : (QuartzPixmap *)src area : area withMask : mask clipOrigin : origin toPoint : dstPoint];
    } else
       assert(0 && "Can copy only from pixmap or image");

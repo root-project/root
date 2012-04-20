@@ -16,6 +16,7 @@
 /////////////////////////////////////////////////////////////////////////////////////
 //                                                                                 //
 // Protocol for "drawables". It can be window, view (child window), pixmap.        //
+// X11Drawable is a generic part for both windows and pixmaps.                     //
 //                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -24,42 +25,39 @@
 
 @property (nonatomic, assign) unsigned fID;   //Drawable's id for GUI and TGCocoa.
 
-//In X11 drawable is window or pixmap, ROOT's GUI
+//In X11 drawable is a window or a pixmap, ROOT's GUI
 //also has this ambiguity. So I have a property
 //to check in TGCocoa, what's the object.
 - (BOOL) fIsPixmap;
-//Special case for OpenGL.
 - (BOOL) fIsOpenGLWidget;
 
-//If we draw "in a normal mode" == drawing operation were called
-//from view's drawRect method, this property is not nil.
-//TGCocoa, when some drawing method is called, will ask view/window
-//about context, if it's not nil - we'll use it, but if it is nil,
-//we try to get current context and lock focus on the current view.
+//Either [[NSGraphicsContext currentContext] graphicsPort]
+//or bitmap context (pixmap).
 @property (nonatomic, readonly) CGContextRef  fContext;
 
-//Geometry: (readonly)
+//Readonly geometry:
 - (int)      fX;
 - (int)      fY; //top-left corner system.
 - (unsigned) fWidth;
 - (unsigned) fHeight;
-//Geometry: setters.
-- (void)     setDrawableSize : (NSSize) newSize;
-- (void)     setX : (int) x Y : (int) y width : (unsigned) w height : (unsigned) h;
-- (void)     setX : (int) x Y : (int) y;
 
-//Functions to copy one drawable into another or
-//get access to pixel data.
+//Functions to copy one drawable into another.
 //Point_t, Rectangle_t are in GuiTypes.h
-- (void)     copy : (id<X11Drawable>) src area : (Rectangle_t) area withMask : (QuartzImage *)mask 
+- (void)     copy : (NSObject<X11Drawable> *) src area : (Rectangle_t) area withMask : (QuartzImage *)mask 
              clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint;
 
+//Get access to pixel data.
 - (unsigned char *) readColorBits : (Rectangle_t) area;
 
 @end
 
 @protocol X11Window <X11Drawable>
 @optional
+
+//Geometry setters:
+- (void)     setDrawableSize : (NSSize) newSize;
+- (void)     setX : (int) x Y : (int) y width : (unsigned) w height : (unsigned) h;
+- (void)     setX : (int) x Y : (int) y;
 
 //I have to somehow emulate X11's behavior to make ROOT's GUI happy,
 //that's why I have this bunch of properties here to be set/read from a window.

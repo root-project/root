@@ -554,7 +554,7 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) copy : (id<X11Drawable>) src area : (Rectangle_t) area withMask : (QuartzImage *)mask clipOrigin : (Point_t) clipXY toPoint : (Point_t) dstPoint
+- (void) copy : (NSObject<X11Drawable> *) src area : (Rectangle_t) area withMask : (QuartzImage *)mask clipOrigin : (Point_t) clipXY toPoint : (Point_t) dstPoint
 {
    assert(fContentView != nil && "copy:area:toPoint:, fContentView is nil");
 
@@ -1209,24 +1209,21 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) copy : (id<X11Drawable>) src area : (Rectangle_t) area withMask : (QuartzImage *)mask clipOrigin : (Point_t) clipXY toPoint : (Point_t) dstPoint
+- (void) copy : (NSObject<X11Drawable> *) src area : (Rectangle_t) area withMask : (QuartzImage *)mask clipOrigin : (Point_t) clipXY toPoint : (Point_t) dstPoint
 {
    assert(src != nil && "copy:area:withMask:clipOrigin:toPoint:, src parameter is nil");
    
-   NSObject<X11Drawable> *srcObj = (NSObject<X11Drawable> *)src;
-
-   if ([srcObj isKindOfClass : [QuartzWindow class]]) {
+   if ([src isKindOfClass : [QuartzWindow class]]) {
       //Forget about mask (can I have it???)
-      QuartzWindow *qw = (QuartzWindow *)srcObj;
-      
+      QuartzWindow *qw = (QuartzWindow *)src;
       //Will not work with OpenGL.
       [self copyView : (QuartzView *)qw.fContentView area : area toPoint : dstPoint];
-   } else if ([srcObj isKindOfClass : [QuartzView class]]) {
+   } else if ([src isKindOfClass : [QuartzView class]]) {
       //Forget about mask (can I have it???)
-      [self copyView : (QuartzView *)srcObj area : area toPoint : dstPoint];
-   } else if ([srcObj isKindOfClass : [QuartzPixmap class]]) {
+      [self copyView : (QuartzView *)src area : area toPoint : dstPoint];
+   } else if ([src isKindOfClass : [QuartzPixmap class]]) {
       [self copyPixmap : (QuartzPixmap *)src area : area withMask : mask clipOrigin : clipXY toPoint : dstPoint];
-   } else if ([srcObj isKindOfClass : [QuartzImage class]]) {
+   } else if ([src isKindOfClass : [QuartzImage class]]) {
       [self copyImage : (QuartzImage *)src area : area withMask : mask clipOrigin : clipXY toPoint : dstPoint];
    } else {
       assert(0 && "copy:area:withMask:clipOrigin:toPoint:, src is of unknown type");
