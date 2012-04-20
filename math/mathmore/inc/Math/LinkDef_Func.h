@@ -60,9 +60,10 @@
 #pragma link C++ function ROOT::MathMore::gamma_quantile(double,double,double);
 
 
-// for auto-loading
+// for auto-loading of mathmore 
+// one can do it by doing using namespace ROOT::Math::MathMore
 #ifdef USE_FOR_AUTLOADING
-#pragma link C++ class ROOT::Math;
+#pragma link C++ class ROOT::MathMore;
 #endif
 
 

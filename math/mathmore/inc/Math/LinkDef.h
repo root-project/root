@@ -14,6 +14,7 @@
 
 #pragma link C++ namespace ROOT;
 #pragma link C++ namespace ROOT::Math;
+#pragma link C++ namespace ROOT::MathMore;
 
 
 #include "LinkDef_Func.h" 
