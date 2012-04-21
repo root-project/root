@@ -1635,7 +1635,13 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
    TUrl *url = fileinfo->GetCurrentUrl();
 
    TFile *file = 0;
+   Bool_t anchor = kFALSE;
 
+   // Get timeout settings (default none)
+   Int_t timeout = gEnv->GetValue("DataSet.ScanFile.OpenTimeout", -1);
+   TString fileopt;
+   if (timeout > 0) fileopt.Form("TIMEOUT=%d", timeout);
+   
    // To determine the size we have to open the file without the anchor
    // (otherwise we get the size of the contained file - in case of a zip archive)
    // We open in raw mode which makes sure that the opening succeeds, even if
@@ -1644,42 +1650,62 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
    TString urlmod;
    if (TDataSetManager::CheckDataSetSrvMaps(url, urlmod) && !(urlmod.IsNull()))
       furl = urlmod.Data();
-   TUrl urlNoAnchor(furl);
-   urlNoAnchor.SetAnchor("");
-   urlNoAnchor.SetOptions("filetype=raw");
-   // Wait max 5 secs per file
-   if (!(file = TFile::Open(urlNoAnchor.GetUrl(), "TIMEOUT=5"))) return rc;
+   if (strlen(url->GetAnchor()) > 0) {
+      anchor = kTRUE;
+      // We need a raw open firts to get the real size of the file
+      TUrl urlNoAnchor(furl);
+      urlNoAnchor.SetAnchor("");
+      urlNoAnchor.SetOptions("filetype=raw");
+      // Wait max 5 secs per file
+      if (!(file = TFile::Open(urlNoAnchor.GetUrl(), fileopt))) return rc;
+
+      // Save some relevant info
+      if (file->GetSize() > 0) fileinfo->SetSize(file->GetSize());
+      fileinfo->SetBit(TFileInfo::kStaged);
+
+      // Add url of the disk server in front of the list
+      TUrl eurl(*(file->GetEndpointUrl()));
+      eurl.SetOptions(url->GetOptions());
+      eurl.SetAnchor(url->GetAnchor());
+      fileinfo->AddUrl(eurl.GetUrl(), kTRUE);
+
+      if (gDebug > 0) ::Info("TDataSetManager::ScanFile", "added URL %s", eurl.GetUrl());
+
+      fileinfo->SetUUID(file->GetUUID().AsString());
+
+      file->Close();
+      delete file;
+   }
 
    // OK, set the relevant flags
    rc = -1;
-   fileinfo->SetBit(TFileInfo::kStaged);
-
-   // Add url of the disk server in front of the list
-   TUrl eurl(*(file->GetEndpointUrl()));
-   eurl.SetOptions(url->GetOptions());
-   eurl.SetAnchor(url->GetAnchor());
-   fileinfo->AddUrl(eurl.GetUrl(), kTRUE);
-
-   if (gDebug > 0) ::Info("TDataSetManager::ScanFile", "added URL %s", eurl.GetUrl());
-
-   if (file->GetSize() > 0) fileinfo->SetSize(file->GetSize());
-   fileinfo->SetUUID(file->GetUUID().AsString());
-
-   file->Close();
-   delete file;
 
    // Disable warnings when reading a tree without loading the corresponding library
    Int_t oldLevel = gErrorIgnoreLevel;
    gErrorIgnoreLevel = kError+1;
 
    // Wait max 5 secs per file
-   if (!(file = TFile::Open(url->GetUrl(), "TIMEOUT=5"))) {
+   if (!(file = TFile::Open(url->GetUrl(), fileopt))) {
       // If the file could be opened before, but fails now it is corrupt...
       if (dbg) ::Info("TDataSetManager::ScanFile", "marking %s as corrupt", url->GetUrl());
       fileinfo->SetBit(TFileInfo::kCorrupted);
       // Set back old warning level
       gErrorIgnoreLevel = oldLevel;
       return rc;
+   } else if (!anchor) {
+      // Do the relevant settings
+      if (file->GetSize() > 0) fileinfo->SetSize(file->GetSize());
+      fileinfo->SetBit(TFileInfo::kStaged);
+
+      // Add url of the disk server in front of the list
+      TUrl eurl(*(file->GetEndpointUrl()));
+      eurl.SetOptions(url->GetOptions());
+      eurl.SetAnchor(url->GetAnchor());
+      fileinfo->AddUrl(eurl.GetUrl(), kTRUE);
+
+      if (gDebug > 0) ::Info("TDataSetManager::ScanFile", "added URL %s", eurl.GetUrl());
+
+      fileinfo->SetUUID(file->GetUUID().AsString());
    }
    rc = 0;
 
@@ -1688,6 +1714,8 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
    if ((rc = TDataSetManager::FillMetaData(fileinfo, file, "/")) != 0) {
       ::Error("TDataSetManager::ScanFile",
               "problems processing the directory tree in looking for metainfo");
+      fileinfo->SetBit(TFileInfo::kCorrupted);
+      rc = -1;
    }
    // Set back old warning level
    gErrorIgnoreLevel = oldLevel;
