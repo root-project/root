@@ -444,7 +444,9 @@ TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
       Error("GetDataSet", "dataset '%s' could not be retrieved", dset);
       return fcsub;
    }
-   
+   // Is it remote ?
+   Bool_t remote = (fcref->TestBit(TFileCollection::kRemoteCollection)) ? kTRUE : kFALSE;
+
    // Separate info per server
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,30,0)
    TMap *mpref = fcref->GetFilesPerServer(fProof->GetMaster(), kTRUE);
@@ -489,7 +491,8 @@ TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
          TUrl urlsrv(ksrv->GetName());
          if (TString(urlsrv.GetHostFQDN()).IsNull())
             urlsrv.SetHost(TUrl(gProof->GetMaster()).GetHostFQDN());
-         if (!strcmp(urlsrv.GetHostFQDN(), TUrl(key->GetName()).GetHostFQDN())) {
+         if (remote ||
+             !strcmp(urlsrv.GetHostFQDN(), TUrl(key->GetName()).GetHostFQDN())) {
             if ((xfc = dynamic_cast<TFileCollection *>(mpref->GetValue(ksrv)))) {
                if ((lswrks = dynamic_cast<TList *>(mpnodes->GetValue(key)))) {
                   Int_t nfnd = fFilesPerWrk * lswrks->GetSize();
@@ -515,7 +518,7 @@ TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
    fcsub->Update();
    fcsub->Print();
    
-   // Make sure that the tree name if the one of the original dataset
+   // Make sure that the tree name is the one of the original dataset
    if (fcref) {
       TString dflt(fcref->GetDefaultTreeName());
       if (!dflt.IsNull()) fcsub->SetDefaultTreeName(dflt);

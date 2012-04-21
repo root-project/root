@@ -908,6 +908,7 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
 
    // For files, 30000 evst each (about 600 MB total) per worker
    TString fn, fnr("event");
+   Bool_t remote = kFALSE;
    if (fnroot && strlen(fnroot) > 0) {
       TUrl ur(fnroot, kTRUE);
       if (!strcmp(ur.GetProtocol(), "file") &&
@@ -916,9 +917,11 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
       } else {
          fnr = gSystem->BaseName(ur.GetFile());
          // We need to set the basedir
-         TString bdir(fnroot);
-         bdir.ReplaceAll(fnr, "<fn>");
+         TString bdir(gSystem->DirName(fnroot));
+         bdir += "/<fn>";
          fProof->SetParameter("PROOF_BenchmarkBaseDir", bdir.Data());
+         // Flag as remote, if so
+         if (strcmp(ur.GetProtocol(), "file")) remote = kTRUE;
       }
    }
    TProofNodes pn(fProof);
@@ -998,6 +1001,7 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
       // trusting the existing information
       fc->Update();
       if (fc->GetNFiles() > 0) {
+         if (remote) fc->SetBit(TFileCollection::kRemoteCollection);
          if (!(fProof->RegisterDataSet(fDataSet, fc, "OT")))
             Warning("MakeDataSet", "problems registering '%s'", dset);
       } else {

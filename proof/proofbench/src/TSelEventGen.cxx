@@ -354,23 +354,26 @@ Bool_t TSelEventGen::Process(Long64_t entry)
          filename.Form("%s/%s", fBaseDir.Data(), fCurrent->GetName());
       }
    }
+   TString fndset(filename);
       
    // Set the Url for remote access
    TString dsrv, seed;
    seed = TString::Format("%s/%s", gSystem->HostName(), filename.Data());
-   if (gSystem->Getenv("LOCALDATASERVER")) {
-      dsrv = gSystem->Getenv("LOCALDATASERVER");
-      if (!dsrv.EndsWith("/")) dsrv += "/";
-   } else {
-      dsrv.Form("root://%s/", TUrl(gSystem->HostName()).GetHostFQDN());
+   TUrl basedirurl(filename, kTRUE);
+   if (!strcmp(basedirurl.GetProtocol(), "file")) {
+      if (gSystem->Getenv("LOCALDATASERVER")) {
+         dsrv = gSystem->Getenv("LOCALDATASERVER");
+         if (!dsrv.EndsWith("/")) dsrv += "/";
+      } else {
+         dsrv.Form("root://%s/", TUrl(gSystem->HostName()).GetHostFQDN());
+      }
+      TString srvProto = TUrl(dsrv).GetProtocol();
+         
+      // Remove prefix, if any, if included and if Xrootd
+      TString pfx  = gEnv->GetValue("Path.Localroot","");
+      if (!pfx.IsNull() && fndset.BeginsWith(pfx) &&
+         (srvProto == "root" || srvProto == "xrd")) fndset.Remove(0, pfx.Length());
    }
-   TString srvProto = TUrl(dsrv).GetProtocol();
-      
-   // Remove prefix, if any, if included and if Xrootd
-   TString fndset(filename);
-   TString pfx  = gEnv->GetValue("Path.Localroot","");
-   if (!pfx.IsNull() && fndset.BeginsWith(pfx) &&
-      (srvProto == "root" || srvProto == "xrd")) fndset.Remove(0, pfx.Length());
    
 
    //generate files
