@@ -497,10 +497,11 @@ public:
 };
 
 //______________________________________________________________________________
-void TProofBench::GetPerfSpecs(const char *path)
+void TProofBench::GetPerfSpecs(const char *path, Int_t degfit)
 {
    // Get performance specs. Check file 'path', or files in directory 'path'
-   // (default current directory)
+   // (default current directory).
+   // The degree of the polynomial used for the fit is 'degfit' (default 1). 
    
    // Locate the file (ask if many)
    TString pp(path), fn, oo;
@@ -626,7 +627,7 @@ void TProofBench::GetPerfSpecs(const char *path)
    }
 
    // Now get the specs
-   TProofBench::DrawCPU(fn.Data(), oo.Data(), kFALSE, 1);
+   TProofBench::DrawCPU(fn.Data(), oo.Data(), kFALSE, degfit);
 }
 
 //______________________________________________________________________________
