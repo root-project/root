@@ -40,7 +40,8 @@ class TSelEventGen : public TSelector {
 
 private:
 
-   TString fBaseDir;                          //directory where the generated files will be written to
+   TString fBaseDir;                          // URL where the files will be written
+   Bool_t  fLocalBaseDir;                     // base dir locality
    //Int_t fMaxNWorkers;
    Long64_t fNEvents;                         //number of events in a file
    Int_t fNTracks;                            //avg or min-avg number of tracks in an event
