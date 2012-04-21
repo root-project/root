@@ -514,6 +514,12 @@ TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
    // Update counters
    fcsub->Update();
    fcsub->Print();
+   
+   // Make sure that the tree name if the one of the original dataset
+   if (fcref) {
+      TString dflt(fcref->GetDefaultTreeName());
+      if (!dflt.IsNull()) fcsub->SetDefaultTreeName(dflt);
+   }
 
    // Cleanup
    SafeDelete(fcref);
