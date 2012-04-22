@@ -92,7 +92,7 @@ namespace cling {
       return COStack.back();
     }
 
-    const CompilationOptions& getCompilationOpts() const {
+    const CompilationOptions& getCompilationOpts() const{
       return COStack.back();
     }
 

@@ -300,7 +300,7 @@ namespace cling {
 
     ///\brief Adds an include path (-I).
     ///
-    void AddIncludePath(const char *incpath);
+    void AddIncludePath(llvm::StringRef incpath);
 
     ///\brief Prints the current include paths that are used.
     ///

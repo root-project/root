@@ -126,6 +126,19 @@ namespace cling {
     }
   }
 
+  // This function isn't referenced outside its translation unit, but it
+  // can't use the "static" keyword because its address is used for
+  // GetMainExecutable (since some platforms don't support taking the
+  // address of main, and some platforms can't implement GetMainExecutable
+  // without being given the address of a function in the main executable).
+  llvm::sys::Path GetExecutablePath(const char *Argv0) {
+    // This just needs to be some symbol in the binary; C++ doesn't
+    // allow taking the address of ::main however.
+    void *MainAddr = (void*) (intptr_t) GetExecutablePath;
+    return llvm::sys::Path::GetMainExecutable(Argv0, MainAddr);
+  }
+
+
   Interpreter::NamedDeclResult::NamedDeclResult(llvm::StringRef Decl, 
                                                 Interpreter* interp, 
                                                 const DeclContext* Within)
@@ -196,14 +209,26 @@ namespace cling {
 
     m_ValuePrintStream.reset(new llvm::raw_os_ostream(std::cout));
 
-    // Allow the interpreter to find itself.
-    // OBJ first: if it exists it should be more up to date
-#ifdef CLING_SRCDIR_INCL
-    AddIncludePath(CLING_SRCDIR_INCL);
-#endif
-#ifdef CLING_INSTDIR_INCL
-    AddIncludePath(CLING_INSTDIR_INCL);
-#endif
+    // Add path to interpreter's include files
+    // Try to find the headers in the src folder first
+    llvm::sys::Path SrcP(CLING_SRCDIR_INCL);
+    if (SrcP.canRead())
+      AddIncludePath(SrcP.str());
+
+    llvm::sys::Path P = GetExecutablePath(argv[0]);
+    if (!P.isEmpty()) {
+      P.eraseComponent();  // Remove /cling from foo/bin/clang
+      P.eraseComponent();  // Remove /bin   from foo/bin
+      // Get foo/include
+      P.appendComponent("include");
+      if (P.canRead())
+        AddIncludePath(P.str());
+      else {
+        llvm::sys::Path InstP(CLING_INSTDIR_INCL);
+        if (InstP.canRead())
+          AddIncludePath(InstP.str());
+      }
+    }
 
     // Warm them up
     m_IncrParser->Initialize();
@@ -252,7 +277,7 @@ namespace cling {
     }
   }
    
-  void Interpreter::AddIncludePath(const char *incpath)
+  void Interpreter::AddIncludePath(llvm::StringRef incpath)
   {
     // Add the given path to the list of directories in which the interpreter
     // looks for include files. Only one path item can be specified at a
@@ -263,7 +288,8 @@ namespace cling {
     const bool IsUserSupplied = false;
     const bool IsFramework = false;
     const bool IsSysRootRelative = true;
-    headerOpts.AddPath (incpath, frontend::Angled, IsUserSupplied, IsFramework, IsSysRootRelative);
+    headerOpts.AddPath(incpath, frontend::Angled, IsUserSupplied, IsFramework, 
+                       IsSysRootRelative);
       
     Preprocessor& PP = CI->getPreprocessor();
     ApplyHeaderSearchOptions(PP.getHeaderSearchInfo(), headerOpts,
