@@ -212,9 +212,11 @@ namespace cling {
 
     // Add path to interpreter's include files
     // Try to find the headers in the src folder first
-    //llvm::sys::Path SrcP(CLING_SRCDIR_INCL);
-    //if (SrcP.canRead())
-    //  AddIncludePath(SrcP.str());
+#ifdef CLING_SRCDIR_INCL
+    llvm::sys::Path SrcP(CLING_SRCDIR_INCL);
+    if (SrcP.canRead())
+      AddIncludePath(SrcP.str());
+#endif
 
     llvm::sys::Path P = GetExecutablePath(argv[0]);
     if (!P.isEmpty()) {
@@ -225,9 +227,11 @@ namespace cling {
       if (P.canRead())
         AddIncludePath(P.str());
       else {
-        //llvm::sys::Path InstP(CLING_INSTDIR_INCL);
-        //if (InstP.canRead())
-        //  AddIncludePath(InstP.str());
+#ifdef CLING_INSTDIR_INCL
+        llvm::sys::Path InstP(CLING_INSTDIR_INCL);
+        if (InstP.canRead())
+          AddIncludePath(InstP.str());
+#endif
       }
     }
 
