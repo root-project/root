@@ -27,6 +27,7 @@
 #include "clang/Parse/Parser.h"
 #undef private
 #include "clang/Sema/Lookup.h"
+#include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaInternal.h"
 #include "clang/Sema/TemplateDeduction.h"
@@ -1125,6 +1126,12 @@ namespace cling {
       UnqualifiedId FuncId;
       CXXScopeSpec SS;
       SS.MakeTrivial(Context, classNNS, SourceRange());
+      //ParseScope classScope(P, Scope::DeclScope);
+      //P->EnterScope(Scope::DeclScope);
+      Scope* OldScope = CI->getSema().CurScope;
+      CI->getSema().CurScope = new Scope(OldScope, Scope::DeclScope,
+        PP.getDiagnostics());
+      CI->getSema().EnterDeclaratorContext(P->getCurScope(), foundDC);
       if (P->ParseUnqualifiedId(SS, /*EnteringContext*/false,
           /*AllowDestructorName*/true,
           /*AllowConstructorName*/true,
@@ -1149,8 +1156,16 @@ namespace cling {
         Sema::LookupMemberName, Sema::ForRedeclaration);
       if (!CI->getSema().LookupQualifiedName(Result, foundDC)) {
         // Lookup failed.
+        CI->getSema().ExitDeclaratorContext(P->getCurScope());
+        //P->ExitScope();
+        delete CI->getSema().CurScope;
+        CI->getSema().CurScope = OldScope;
         goto lookupFuncProtoDone;
       }
+      CI->getSema().ExitDeclaratorContext(P->getCurScope());
+      //P->ExitScope();
+      delete CI->getSema().CurScope;
+      CI->getSema().CurScope = OldScope;
       //
       //  Check for lookup failure.
       //
