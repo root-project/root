@@ -58,6 +58,8 @@ Bool_t TF2GL::SetModel(TObject* obj, const Option_t* opt)
    fM = SetModelDynCast<TF2>(obj);
 
    fH = (TH2*) fM->CreateHistogram();
+   if (!fH) return kFALSE;
+
    fH->GetZaxis()->SetLimits(fH->GetMinimum(), fH->GetMaximum());
 
    if (dynamic_cast<TF3*>(fM))
