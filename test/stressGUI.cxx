@@ -411,7 +411,7 @@ void ProcessFrame(TGFrame *f, const char *title)
 {
    // Save a capture of frame f in a png file.
 
-   gClient->HandleInput();
+   gSystem->ProcessEvents();
    gSystem->Sleep(250);
    gSystem->ProcessEvents();
    gErrorIgnoreLevel = 9999;
