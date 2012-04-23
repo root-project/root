@@ -427,16 +427,16 @@ public:
    UChar_t               *GetBits() {return fBits;}
    virtual Int_t          GetByteCount(Option_t *option=0);
    void                   SetAllIndex();
-   static Int_t           GetMaxDaughters() {return fgMaxDaughters;}
-   static Int_t           GetMaxLevels()     {return fgMaxLevel;}
-   static Int_t           GetMaxXtruVert()  {return fgMaxXtruVert;}
+   static Int_t           GetMaxDaughters();
+   static Int_t           GetMaxLevels();
+   static Int_t           GetMaxXtruVert();
    Int_t                  GetMaxThreads() const {return fMaxThreads;}
    void                   SetMaxThreads(Int_t nthreads);
    void                   SetMultiThread(Bool_t flag=kTRUE) {fMultiThread = flag;}
    Bool_t                 IsMultiThread() const {return fMultiThread;}
-   static void            SetNavigatorsLock(Bool_t flag) {fgLockNavigators = flag;}
+   static void            SetNavigatorsLock(Bool_t flag);
    static Int_t           ThreadId();
-   static Int_t           GetNumThreads() {return fgNumThreads;}
+   static Int_t           GetNumThreads();
    static void            ClearThreadsMap();
    void                   ClearThreadData() const;
    void                   CreateThreadData() const;

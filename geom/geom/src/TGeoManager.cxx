@@ -867,6 +867,13 @@ Bool_t TGeoManager::SetCurrentNavigator(Int_t index)
 }
 
 //_____________________________________________________________________________
+void TGeoManager::SetNavigatorsLock(Bool_t flag)
+{
+// Set the lock for navigators.
+   fgLockNavigators = flag;
+}
+   
+//_____________________________________________________________________________
 void TGeoManager::ClearNavigators()
 {
 // Clear all navigators.
@@ -1830,6 +1837,34 @@ void TGeoManager::GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bom
    }
    bombx = bomby = bombz = bombr = 1.3;
 }
+
+//_____________________________________________________________________________
+Int_t TGeoManager::GetMaxDaughters()
+{
+// Return maximum number of daughters of a volume used in the geometry.
+   return fgMaxDaughters;
+}
+
+//_____________________________________________________________________________
+Int_t TGeoManager::GetMaxLevels()
+{
+// Return maximum number of levels used in the geometry.
+   return fgMaxLevel;
+}
+
+//_____________________________________________________________________________
+Int_t TGeoManager::GetMaxXtruVert()
+{
+// Return maximum number of vertices for an xtru shape used.
+   return fgMaxXtruVert;
+}
+
+//_____________________________________________________________________________
+Int_t TGeoManager::GetNumThreads()
+{
+// Returns number of threads that were set to use geometry.
+   return fgNumThreads;
+}   
 
 //_____________________________________________________________________________
 TGeoHMatrix *TGeoManager::GetHMatrix()

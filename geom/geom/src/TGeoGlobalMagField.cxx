@@ -87,6 +87,13 @@ void TGeoGlobalMagField::SetField(TVirtualMagField *field)
 }
 
 //______________________________________________________________________________
+TGeoGlobalMagField *TGeoGlobalMagField::GetInstance()
+{
+// Static getter that does not create the object.
+   return fgInstance;
+}   
+
+//______________________________________________________________________________
 TGeoGlobalMagField *TGeoGlobalMagField::Instance()
 {
 // Returns always a valid static pointer to the field manager.
