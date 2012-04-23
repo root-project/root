@@ -1,4 +1,14 @@
-//Author: Timur Pocheptsov.
+// @(#)root/graf2d:$Id$
+// Author: Timur Pocheptsov 6/12/2011
+
+/*************************************************************************
+ * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+ 
 #ifndef ROOT_CocoaUtils
 #define ROOT_CocoaUtils
 
@@ -8,17 +18,22 @@ namespace ROOT {
 namespace MacOSX {
 namespace Util {
 
-//In principle, NS is a prefix for AppKit classes, but I do not want to make it suffix and
-//still have to distinguish between RAII classes for AppKit and for Core Foundation/Core Graphics (suffix CF).
-//But in C++ I have namespaces, in Obj-C they will never have (beleive me!), and I can have NSWhatIWant,
-//since it will be ROOT::MacOSX::Util::NSWhatIWant. The same is true for CFWhatIWant.
-
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
 //  NSStrongReference. Class to keep strong reference to NSObject. //
 //  Move ctor and assignment operator are deleted.                 //
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
+
+//In principle, NS is a prefix for AppKit classes, 
+//but I do not want to make it a suffix and
+//still have to distinguish between RAII classes 
+//for AppKit and for Core Foundation/Core Graphics (suffix CF).
+//But in C++ I have namespaces, and I can have NSWhatIWant,
+//since it will be ROOT::MacOSX::Util::NSWhatIWant. 
+//The same is true for CFWhatIWant (CF is a prefix for
+//CoreFoundation in Apple's API).
+
 
 template<class DerivedType>
 class NSStrongReference {
@@ -280,8 +295,8 @@ private:
    RefType fRef;
 };
 
-}
-}
-}
+}//Util
+}//MacOSX
+}//ROOT
 
 #endif
