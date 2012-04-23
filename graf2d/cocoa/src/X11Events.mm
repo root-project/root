@@ -1229,6 +1229,31 @@ void EventTranslator::CancelPointerGrab()
    fOwnerEvents = true;
 }
 
+//______________________________________________________________________________
+void EventTranslator::SetInputFocus(NSView<X11Window> *newFocusView)
+{
+   if (fFocusView && (fFocusView.fEventMask & kFocusChangeMask))
+      Detail::SendFocusOutEvent(fFocusView, kNotifyNormal);
+
+   if (newFocusView) {
+      if (newFocusView.fEventMask & kFocusChangeMask)
+         Detail::SendFocusInEvent(newFocusView, kNotifyNormal);
+
+      fFocusView = newFocusView;
+   } else
+      fFocusView = nil;
+
+}
+
+//______________________________________________________________________________
+unsigned EventTranslator::GetInputFocus()const
+{
+   if (fFocusView)
+      return fFocusView.fID;
+   
+   return 0;
+}
+
 namespace {
 
 //______________________________________________________________________________

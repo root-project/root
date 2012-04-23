@@ -2788,13 +2788,19 @@ Window_t TGCocoa::GetInputFocus()
 {
    // Returns the window id of the window having the input focus.
 
-   return kNone;
+   return fPimpl->fX11EventTranslator.GetInputFocus();
 }
 
 //______________________________________________________________________________
-void TGCocoa::SetInputFocus(Window_t /*wid*/)
+void TGCocoa::SetInputFocus(Window_t wid)
 {
    // Changes the input focus to specified window "wid".
+   assert(!fPimpl->IsRootWindow(wid) && "SetInputFocus, called for 'root' window");
+   
+   if (wid == kNone)
+      fPimpl->fX11EventTranslator.SetInputFocus(nil);
+   else
+      fPimpl->fX11EventTranslator.SetInputFocus(fPimpl->GetWindow(wid).fContentView);
 }
 
 //______________________________________________________________________________

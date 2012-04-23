@@ -66,14 +66,17 @@ public:
    void SetPointerGrab(NSView<X11Window> *grabView, unsigned eventMask, bool ownerEvents);
    void CancelPointerGrab();
    
+   void SetInputFocus(NSView<X11Window> *focusView);
+   unsigned GetInputFocus()const;
+   
    //Window winID was either deleted or unmapped.
    //If it's a grab view or a parent of a grab view - cancel grab.
    //If it's a "view under pointer" - reset view under pointer.
+   //If it's a focus view, cancel focus.
    void CheckUnmappedView(Window_t winID);
 
 private:
    bool HasPointerGrab()const;
-
 
    //Used both by grab and non-grab case.
    void GenerateCrossingEvent(NSView<X11Window> *viewUnderPointer, NSEvent *theEvent, EXMagic detail);

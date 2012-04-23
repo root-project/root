@@ -816,7 +816,8 @@ void print_mask_info(ULong_t mask)
 {
    assert(fContentView && "mapRaised, content view is nil");
 
-   [self orderFront : self];
+//   [self orderFront : self];
+   [self makeKeyAndOrderFront : self];
    [fContentView setHidden : NO];
    [fContentView configureNotifyTree];
 }
@@ -826,7 +827,8 @@ void print_mask_info(ULong_t mask)
 {
    assert(fContentView != nil && "mapWindow, content view is nil");
 
-   [self orderFront : self];
+//   [self orderFront : self];
+   [self makeKeyAndOrderFront : self];
    [fContentView setHidden : NO];
    [fContentView configureNotifyTree];
 }
@@ -1761,6 +1763,13 @@ void print_mask_info(ULong_t mask)
 }
 
 //First responder staff.
+
+//______________________________________________________________________________
+- (BOOL) acceptsFirstMouse : (NSEvent *)theEvent
+{
+   (void)theEvent;
+   return YES;
+}
 
 //______________________________________________________________________________
 - (BOOL) acceptsFirstResponder
