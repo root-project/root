@@ -1,3 +1,15 @@
+// @(#)root/graf2d:$Id$
+// Author: Timur Pocheptsov   29/11/2011
+
+/*************************************************************************
+ * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+
 #ifndef ROOT_CocoaPrivate
 #define ROOT_CocoaPrivate
 
@@ -31,9 +43,15 @@
 class TGQuartz;
 class TGCocoa;
 
+///////////////////////////////////////////////
+//                                           //
+// CocoaPrivate. Hidden implementation       //
+// details for TGCocoa.                      //
+//                                           //
+///////////////////////////////////////////////
+
 namespace ROOT {
 namespace MacOSX {
-
 namespace Details {
 
 class CocoaPrivate {
@@ -80,8 +98,8 @@ private:
    std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> >> fDrawables;
 };
 
-}
-}
-}
+}//Details
+}//MacOSX
+}//ROOT
 
 #endif

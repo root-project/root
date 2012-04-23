@@ -1,4 +1,13 @@
-// Author: Timur Pocheptsov 22/11/2011
+// @(#)root/graf2d:$Id$
+// Author: Timur Pocheptsov   22/11/2011
+
+/*************************************************************************
+ * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 //#define NDEBUG
 
