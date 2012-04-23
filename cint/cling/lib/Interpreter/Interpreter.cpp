@@ -999,8 +999,7 @@ namespace cling {
       const Type* T = Context.getRecordType(RD).getTypePtr();
       classNNS = NestedNameSpecifier::Create(Context, 0, false, T);
     }
-    else if (const TranslationUnitDecl* TD =
-        llvm::dyn_cast<TranslationUnitDecl>(classDecl)) {
+    else if (llvm::isa<TranslationUnitDecl>(classDecl)) {
       classNNS = NestedNameSpecifier::GlobalSpecifier(Context);
     }
     else {
