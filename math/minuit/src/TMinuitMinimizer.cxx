@@ -476,7 +476,9 @@ bool TMinuitMinimizer::Minimize() {
 
 
    // check if Hesse needs to be run 
-   if (ierr == 0 && IsValidError() ) { 
+   // Migrad runs inside it automatically for strategy >=1. Do also 
+   // in case improve or other minimizers are used 
+   if (minErrStatus == 0  && (IsValidError() || ( strategy >=1 && CovMatrixStatus() < 3) ) ) { 
       fMinuit->mnexcm("HESSE",arglist,1,ierr);
       fStatus += 100*ierr; 
       if (printlevel>2) Info("Minimize","Finished to run HESSE - status %d",ierr);
