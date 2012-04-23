@@ -146,6 +146,24 @@ void FillRectangle::Execute()const
 }
 
 //______________________________________________________________________________
+FillPolygon::FillPolygon(Drawable_t wid, const GCValues_t &gc, const Point_t *points, Int_t nPoints)
+                : Command(wid, gc)
+{
+   assert(points != nullptr && "FillPolygon, points parameter is null");
+   assert(nPoints > 0 && "FillPolygon, nPoints <= 0");
+   
+   fPolygon.assign(points, points + nPoints);
+}
+
+//______________________________________________________________________________   
+void FillPolygon::Execute()const
+{
+   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   assert(vx != nullptr && "Execute, gVirtualX is either null or not of TGCocoa type");
+   vx->FillPolygonAux(fID, fGC, &fPolygon[0], (Int_t)fPolygon.size());
+}
+
+//______________________________________________________________________________
 DrawRectangle::DrawRectangle(Drawable_t wid, const GCValues_t &gc, const Rectangle_t &rectangle)
                  : Command(wid, gc),
                    fRectangle(rectangle)
@@ -309,6 +327,21 @@ void CommandBuffer::AddDrawRectangle(Drawable_t wid, const GCValues_t &gc, Int_t
       r.fWidth = (UShort_t)w;
       r.fHeight = (UShort_t)h;
       std::auto_ptr<DrawRectangle> cmd(new DrawRectangle(wid, gc, r));
+      fCommands.push_back(cmd.get());
+      cmd.release();
+   } catch (const std::exception &) {
+      throw;
+   }
+}
+
+//______________________________________________________________________________
+void CommandBuffer::AddFillPolygon(Drawable_t wid, const GCValues_t &gc, const Point_t *polygon, Int_t nPoints)
+{
+   assert(polygon != nullptr && "AddFillPolygon, polygon parameter is null");
+   assert(nPoints > 0 && "AddFillPolygon, nPoints <= 0");
+   
+   try {
+      std::auto_ptr<FillPolygon> cmd(new FillPolygon(wid, gc, polygon, nPoints));
       fCommands.push_back(cmd.get());
       cmd.release();
    } catch (const std::exception &) {

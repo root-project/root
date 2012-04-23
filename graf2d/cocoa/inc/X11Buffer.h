@@ -140,6 +140,21 @@ public:
    void Execute()const;
 };
 
+class FillPolygon : public Command {
+private:
+   std::vector<Point_t> fPolygon;
+   
+public:
+   FillPolygon(Drawable_t wid, const GCValues_t &gc, const Point_t *points, Int_t nPoints);
+   
+   bool IsGraphicsCommand()const
+   {
+      return true;
+   }
+   
+   void Execute()const;
+};
+
 class DrawRectangle : public Command {
 private:
    Rectangle_t fRectangle;
@@ -194,6 +209,7 @@ public:
    void AddCopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc,  Int_t srcX, Int_t srcY, UInt_t width, UInt_t height, Int_t dstX, Int_t dstY);
    void AddDrawString(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, const char *text, Int_t len);
    void AddFillRectangle(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void AddFillPolygon(Drawable_t wid, const GCValues_t &gc, const Point_t *polygon, Int_t nPoints);
    void AddDrawRectangle(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, UInt_t w, UInt_t h);
    void AddUpdateWindow(QuartzView *view);
    void AddDeletePixmap(Pixmap_t pixmap);

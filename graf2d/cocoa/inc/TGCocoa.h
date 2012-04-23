@@ -166,13 +166,14 @@ public:
    virtual void      DrawRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UInt_t w, UInt_t h);
            void      FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, Int_t y, UInt_t w, UInt_t h);//Non-overrider.
    virtual void      FillRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UInt_t w, UInt_t h);
+           void      FillPolygonAux(Window_t wid, const GCValues_t &gc, const Point_t *polygon, Int_t nPoints) ;//Non-overrider.
+   virtual void      FillPolygon(Window_t wid, GContext_t gc, Point_t *polygon, Int_t nPoints);
            void      CopyAreaAux(Drawable_t src, Drawable_t dst, const GCValues_t &gc, Int_t srcX, Int_t srcY, UInt_t width,
                                  UInt_t height, Int_t dstX, Int_t dstY);//Non-overrider.
    virtual void      CopyArea(Drawable_t src, Drawable_t dst, GContext_t gc, Int_t srcX, Int_t srcY, UInt_t width,
                               UInt_t height, Int_t dstX, Int_t dstY);
            void      DrawStringAux(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, const char *s, Int_t len);//Non-overrider.
    virtual void      DrawString(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, const char *s, Int_t len);
-
            void      ClearAreaAux(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);//Non-overrider.
    virtual void      ClearArea(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void      ClearWindow(Window_t wid);
@@ -344,7 +345,6 @@ public:
    virtual void         LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym);
    virtual void         GetPasteBuffer(Window_t wid, Atom_t atom, TString &text, Int_t &nchar,
                                        Bool_t del);
-   virtual void         FillPolygon(Window_t wid, GContext_t gc, Point_t *points, Int_t npnt);
    virtual void         QueryPointer(Window_t wid, Window_t &rootw, Window_t &childw,
                                      Int_t &root_x, Int_t &root_y, Int_t &win_x,
                                      Int_t &win_y, UInt_t &mask);

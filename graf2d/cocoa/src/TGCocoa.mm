@@ -1307,6 +1307,86 @@ void TGCocoa::FillRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UIn
 }
 
 //______________________________________________________________________________
+void TGCocoa::FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point_t *polygon, Int_t nPoints) 
+{
+   //Can be called directly or when flushing command buffer.
+   if (!wid)//From TGX11.
+      return;
+
+   assert(!fPimpl->IsRootWindow(wid) && "FillPolygonAux, called for the 'root' window");
+   assert(polygon != nullptr && "FillPolygonAux, polygon parameter is null");
+   assert(nPoints > 0 && "FillPolygonAux, nPoints <= 0");
+   
+   NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(wid);
+   CGContextRef ctx = drawable.fContext;
+
+   CGSize patternPhase = {};
+
+   if (!drawable.fIsPixmap) {
+      QuartzView *view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
+      const CGPoint origin = [view convertPoint : view.frame.origin toView : nil];
+      patternPhase.width = origin.x;
+      patternPhase.height = origin.y;
+   }
+
+   const Quartz::CGStateGuard ctxGuard(ctx);//Will restore context state.
+   
+   CGContextSetAllowsAntialiasing(ctx, false);
+
+   if (gcVals.fMask & kGCStipple) {
+      assert(fPimpl->GetDrawable(gcVals.fStipple).fIsPixmap == YES && "FillRectangleAux, stipple is not a pixmap");
+      PatternContext patternContext = {gcVals.fMask, gcVals.fForeground, gcVals.fBackground, 
+                                       (QuartzImage *)fPimpl->GetDrawable(gcVals.fStipple), 
+                                       patternPhase};
+      SetFillPattern(ctx, &patternContext);
+   } else
+      SetFilledAreaColorFromX11Context(ctx, gcVals);
+      
+   CGContextBeginPath(ctx);
+   CGContextMoveToPoint(ctx, polygon[0].fX, polygon[0].fY);
+   for (Int_t i = 1; i < nPoints; ++i)
+      CGContextAddLineToPoint(ctx, polygon[i].fX, polygon[i].fY);
+   CGContextFillPath(ctx);
+}
+
+//______________________________________________________________________________
+void TGCocoa::FillPolygon(Window_t wid, GContext_t gc, Point_t *polygon, Int_t nPoints) 
+{
+   // Fills the region closed by the specified path. The path is closed
+   // automatically if the last point in the list does not coincide with the
+   // first point.
+   //
+   // Point_t *points - specifies an array of points
+   // Int_t npnt      - specifies the number of points in the array
+   //
+   // GC components in use: function, plane-mask, fill-style, fill-rule,
+   // subwindow-mode, clip-x-origin, clip-y-origin, and clip-mask.  GC
+   // mode-dependent components: foreground, background, tile, stipple,
+   // tile-stipple-x-origin, and tile-stipple-y-origin.
+   // (see also the GCValues_t structure)
+   
+   if (!wid)//from TGX11.
+      return;
+   
+   assert(polygon != nullptr && "FillPolygon, 'points' array is null");
+   assert(nPoints > 0 && "FillPolygon, bad number of points");
+   assert(gc > 0 && gc <= fX11Contexts.size() && "FillPolygon, bad CGContext_t");
+   
+   NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(wid);
+   const GCValues_t &gcVals = fX11Contexts[gc - 1];
+   
+   if (!drawable.fIsPixmap) {
+      QuartzView *view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
+      if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
+         if (!view.fContext)
+            fPimpl->fX11CommandBuffer.AddFillPolygon(wid, gcVals, polygon, nPoints);
+         else
+            FillPolygonAux(wid, gcVals, polygon, nPoints);
+      }
+   }
+}
+
+//______________________________________________________________________________
 void TGCocoa::CopyAreaAux(Drawable_t src, Drawable_t dst, const GCValues_t &gcVals, Int_t srcX, Int_t srcY, UInt_t width, UInt_t height, Int_t dstX, Int_t dstY)
 {
    //Called directly or when flushing command buffer.
@@ -2849,23 +2929,6 @@ void TGCocoa::LookupString(Event_t *event, char *buf, Int_t length, UInt_t &keys
    assert(length >= 2 && "LookupString, length parameter - not enough memory to return null-terminated ASCII string");
 
    X11::MapUnicharToKeySym(event->fCode, buf, length, keysym);
-}
-
-//______________________________________________________________________________
-void TGCocoa::FillPolygon(Window_t /*wid*/, GContext_t /*gc*/, Point_t * /*points*/, Int_t /*npnt*/) 
-{
-   // Fills the region closed by the specified path. The path is closed
-   // automatically if the last point in the list does not coincide with the
-   // first point.
-   //
-   // Point_t *points - specifies an array of points
-   // Int_t npnt      - specifies the number of points in the array
-   //
-   // GC components in use: function, plane-mask, fill-style, fill-rule,
-   // subwindow-mode, clip-x-origin, clip-y-origin, and clip-mask.  GC
-   // mode-dependent components: foreground, background, tile, stipple,
-   // tile-stipple-x-origin, and tile-stipple-y-origin.
-   // (see also the GCValues_t structure)
 }
 
 //______________________________________________________________________________
