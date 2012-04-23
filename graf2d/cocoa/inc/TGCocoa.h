@@ -162,11 +162,13 @@ public:
    //GUI-rendering part.
            void      DrawLineAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x1, Int_t y1, Int_t x2, Int_t y2);//Non-overrider.
    virtual void      DrawLine(Drawable_t wid, GContext_t gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
+           void      DrawSegmentsAux(Drawable_t wid, const GCValues_t &gcVals, const Segment_t *segments, Int_t nSegments);//Non-overrider.
+   virtual void      DrawSegments(Drawable_t wid, GContext_t gc, Segment_t *segments, Int_t nSegments);
            void      DrawRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, Int_t y, UInt_t w, UInt_t h);//Non-overrider.
    virtual void      DrawRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UInt_t w, UInt_t h);
            void      FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, Int_t y, UInt_t w, UInt_t h);//Non-overrider.
    virtual void      FillRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UInt_t w, UInt_t h);
-           void      FillPolygonAux(Window_t wid, const GCValues_t &gc, const Point_t *polygon, Int_t nPoints) ;//Non-overrider.
+           void      FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point_t *polygon, Int_t nPoints) ;//Non-overrider.
    virtual void      FillPolygon(Window_t wid, GContext_t gc, Point_t *polygon, Int_t nPoints);
            void      CopyAreaAux(Drawable_t src, Drawable_t dst, const GCValues_t &gc, Int_t srcX, Int_t srcY, UInt_t width,
                                  UInt_t height, Int_t dstX, Int_t dstY);//Non-overrider.
@@ -336,7 +338,6 @@ public:
    virtual void         SetKeyAutoRepeat(Bool_t on = kTRUE);
    virtual void         GrabKey(Window_t wid, Int_t keycode, UInt_t modifier, Bool_t grab = kTRUE);
    virtual Int_t        KeysymToKeycode(UInt_t keysym);
-   virtual void         DrawSegments(Drawable_t wid, GContext_t gc, Segment_t *seg, Int_t nseg);
    virtual Window_t     GetInputFocus();
    virtual void         SetInputFocus(Window_t wid);
    virtual Window_t     GetPrimarySelectionOwner();

@@ -1185,10 +1185,52 @@ void TGCocoa::DrawLine(Drawable_t wid, GContext_t gc, Int_t x1, Int_t y1, Int_t 
 }
 
 //______________________________________________________________________________
+void TGCocoa::DrawSegmentsAux(Drawable_t wid, const GCValues_t &gcVals, const Segment_t *segments, Int_t nSegments)
+{
+   assert(!fPimpl->IsRootWindow(wid) && "DrawSegmentsAux, called for 'root' window");
+   assert(segments != nullptr && "DrawSegmentsAux, segments parameter is null");
+   assert(nSegments > 0 && "DrawSegmentsAux, nSegments <= 0");
+   
+   for (Int_t i = 0; i < nSegments; ++i)
+      DrawLineAux(wid, gcVals, segments[i].fX1, segments[i].fY1, segments[i].fX2, segments[i].fY2);
+}
+
+//______________________________________________________________________________
+void TGCocoa::DrawSegments(Drawable_t wid, GContext_t gc, Segment_t *segments, Int_t nSegments)
+{
+   //Draw multiple line segments. Each line is specified by a pair of points.
+   if (!wid)//From TGX11.
+      return;
+      
+   assert(!fPimpl->IsRootWindow(wid) && "DrawSegments, called for 'root' window");
+   assert(gc > 0 && gc <= fX11Contexts.size() && "DrawSegments, bad GContext_t");
+   assert(segments != nullptr && "DrawSegments, segments parameter is null");
+   assert(nSegments > 0 && "DrawSegments, number of segments <= 0");
+
+   NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(wid);
+   const GCValues_t &gcVals = fX11Contexts[gc - 1];
+   
+   if (!drawable.fIsPixmap) {
+      QuartzView *view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
+      if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
+         if (!view.fContext)
+            fPimpl->fX11CommandBuffer.AddDrawSegments(wid, gcVals, segments, nSegments);
+         else
+            DrawSegmentsAux(wid, gcVals, segments, nSegments);
+      }
+   } else {
+      if (!IsCocoaDraw())
+         fPimpl->fX11CommandBuffer.AddDrawSegments(wid, gcVals, segments, nSegments);
+      else
+         DrawSegmentsAux(wid, gcVals, segments, nSegments);
+   }
+}
+
+//______________________________________________________________________________
 void TGCocoa::DrawRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    //Can be called directly or during flushing command buffer.
-   assert(!fPimpl->IsRootWindow(wid) && "DrawRectangleAux, called for the 'root' window");
+   assert(!fPimpl->IsRootWindow(wid) && "DrawRectangleAux, called for 'root' window");
 
    CGContextRef ctx = fPimpl->GetDrawable(wid).fContext;
    assert(ctx && "DrawRectangleAux, ctx is null");
@@ -1209,10 +1251,10 @@ void TGCocoa::DrawRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UIn
    //Can be called in a 'normal way' - from drawRect method (QuartzView)
    //or directly by ROOT.
    
-   if (!wid)//From X11.
+   if (!wid)//From TGX11.
       return;
 
-   assert(!fPimpl->IsRootWindow(wid) && "DrawRectangle, called for the 'root' window");
+   assert(!fPimpl->IsRootWindow(wid) && "DrawRectangle, called for 'root' window");
    assert(gc > 0 && gc <= fX11Contexts.size() && "DrawRectangle, bad GContext_t");
 
    const GCValues_t &gcVals = fX11Contexts[gc - 1];
@@ -1243,7 +1285,7 @@ void TGCocoa::FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x
    if (!wid)//From TGX11.
       return;
 
-   assert(!fPimpl->IsRootWindow(wid) && "FillRectangleAux, called for the 'root' window");
+   assert(!fPimpl->IsRootWindow(wid) && "FillRectangleAux, called for 'root' window");
    
    NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(wid);
    CGContextRef ctx = drawable.fContext;
@@ -1283,7 +1325,7 @@ void TGCocoa::FillRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UIn
    if (!wid)//From TGX11.
       return;
 
-   assert(!fPimpl->IsRootWindow(wid) && "FillRectangle, called for the 'root' window");
+   assert(!fPimpl->IsRootWindow(wid) && "FillRectangle, called for 'root' window");
    assert(gc > 0 && gc <= fX11Contexts.size() && "FillRectangle, bad GContext_t");
 
    const GCValues_t &gcVals = fX11Contexts[gc - 1];
@@ -1313,7 +1355,7 @@ void TGCocoa::FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point
    if (!wid)//From TGX11.
       return;
 
-   assert(!fPimpl->IsRootWindow(wid) && "FillPolygonAux, called for the 'root' window");
+   assert(!fPimpl->IsRootWindow(wid) && "FillPolygonAux, called for 'root' window");
    assert(polygon != nullptr && "FillPolygonAux, polygon parameter is null");
    assert(nPoints > 0 && "FillPolygonAux, nPoints <= 0");
    
@@ -1383,6 +1425,11 @@ void TGCocoa::FillPolygon(Window_t wid, GContext_t gc, Point_t *polygon, Int_t n
          else
             FillPolygonAux(wid, gcVals, polygon, nPoints);
       }
+   } else {
+      if (!IsCocoaDraw())
+         fPimpl->fX11CommandBuffer.AddFillPolygon(wid, gcVals, polygon, nPoints);
+      else
+         FillPolygonAux(wid, gcVals, polygon, nPoints);
    }
 }
 
@@ -2846,21 +2893,6 @@ Int_t TGCocoa::KeysymToKeycode(UInt_t keySym)
    // "keysym" is not defined for any keycode, returns zero.
 
    return X11::MapKeySymToKeyCode(keySym);
-}
-
-//______________________________________________________________________________
-void TGCocoa::DrawSegments(Drawable_t /*wid*/, GContext_t /*gc*/, Segment_t * /*seg*/, Int_t /*nseg*/)
-{
-   // Draws multiple line segments. Each line is specified by a pair of points.
-   // Segment_t *seg - specifies an array of segments
-   // Int_t nseg     - specifies the number of segments in the array
-   //
-   // GC components in use: function, plane-mask, line-width, line-style,
-   // cap-style, join-style, fill-style, subwindow-mode, clip-x-origin,
-   // clip-y-origin, clip-mask.
-   // GC mode-dependent components: foreground, background, tile, stipple,
-   // tile-stipple-x-origin, tile-stipple-y-origin, dash-offset, and dash-list.
-   // (see also the GCValues_t structure)
 }
 
 //______________________________________________________________________________

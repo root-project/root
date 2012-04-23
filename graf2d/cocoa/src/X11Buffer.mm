@@ -77,6 +77,24 @@ void DrawLine::Execute()const
 }
 
 //______________________________________________________________________________
+DrawSegments::DrawSegments(Drawable_t wid, const GCValues_t &gc, const Segment_t *segments, Int_t nSegments)
+                 : Command(wid, gc) 
+{
+   assert(segments != nullptr && "DrawSegments, segments parameter is null");
+   assert(nSegments > 0 && "DrawSegments, nSegments <= 0");
+   
+   fSegments.assign(segments, segments + nSegments);
+}
+
+//______________________________________________________________________________
+void DrawSegments::Execute()const
+{
+   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   assert(vx != nullptr && "Execute, gVirtualX is either null or not of TGCocoa type");
+   vx->DrawSegmentsAux(fID, fGC, &fSegments[0], (Int_t)fSegments.size());
+}
+
+//______________________________________________________________________________
 ClearArea::ClearArea(Window_t wid, const Rectangle_t &area)
              : Command(wid),
                fArea(area)
@@ -238,6 +256,21 @@ void CommandBuffer::AddDrawLine(Drawable_t wid, const GCValues_t &gc, Int_t x1, 
       p2.fY = y2;
       std::auto_ptr<DrawLine> cmd(new DrawLine(wid, gc, p1, p2));//if this throws, I do not care.
       fCommands.push_back(cmd.get());//this can throw.
+      cmd.release();
+   } catch (const std::exception &) {
+      throw;
+   }
+}
+
+//______________________________________________________________________________
+void CommandBuffer::AddDrawSegments(Drawable_t wid, const GCValues_t &gc, const Segment_t *segments, Int_t nSegments)
+{
+   assert(segments != nullptr && "AddDrawSegments, segments parameter is null");
+   assert(nSegments > 0 && "AddDrawSegments, nSegments <= 0");
+
+   try {
+      std::auto_ptr<DrawSegments> cmd(new DrawSegments(wid, gc, segments, nSegments));
+      fCommands.push_back(cmd.get());
       cmd.release();
    } catch (const std::exception &) {
       throw;

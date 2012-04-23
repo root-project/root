@@ -77,6 +77,19 @@ public:
    }
 };
 
+class DrawSegments : public Command {
+private:
+   std::vector<Segment_t> fSegments;
+
+public:
+   DrawSegments(Drawable_t wid, const GCValues_t &gc, const Segment_t *segments, Int_t nSegments);
+   void Execute()const;
+   bool IsGraphicsCommand()const
+   {
+      return true;
+   }
+};
+
 class ClearArea : public Command {
 private:
    const Rectangle_t fArea;
@@ -205,6 +218,7 @@ public:
    ~CommandBuffer();
 
    void AddDrawLine(Drawable_t wid, const GCValues_t &gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
+   void AddDrawSegments(Drawable_t wid, const GCValues_t &gc, const Segment_t *segments, Int_t nSegments);
    void AddClearArea(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);
    void AddCopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc,  Int_t srcX, Int_t srcY, UInt_t width, UInt_t height, Int_t dstX, Int_t dstY);
    void AddDrawString(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, const char *text, Int_t len);
