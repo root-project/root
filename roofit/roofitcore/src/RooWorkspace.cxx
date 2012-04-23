@@ -816,8 +816,8 @@ Bool_t RooWorkspace::defineSet(const char* name, const char* contentList)
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  char buf[1024] ;
-  strlcpy(buf,contentList,1024) ;
+  char buf[10240] ;
+  strlcpy(buf,contentList,10240) ;
   char* token = strtok(buf,",") ;
   while(token) {
     // If missing, either import or report error
