@@ -981,20 +981,23 @@ namespace cling {
     CompilerInstance* CI = getCI();
     Parser* P = getParser();
     Preprocessor& PP = CI->getPreprocessor();
-    //
-    //  Tell the diagnostic engine to ignore all diagnostics.
-    //
-    bool OldSuppressAllDiagnostics =
-      PP.getDiagnostics().getSuppressAllDiagnostics();
-    PP.getDiagnostics().setSuppressAllDiagnostics(true);
-    //
-    //  Tell the parser to not attempt spelling correction.
-    //
-    bool OldSpellChecking = PP.getLangOpts().SpellChecking;
-    const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = 0;
+    ASTContext& Context = CI->getASTContext();
     //
     //  Get the DeclContext we will search for the function.
     //
+    NestedNameSpecifier* classNNS = 0;
+    if (const NamespaceDecl* NSD = llvm::dyn_cast<NamespaceDecl>(classDecl)) {
+      classNNS = NestedNameSpecifier::Create(Context, 0,
+        const_cast<NamespaceDecl*>(NSD));
+    }
+    else if (const RecordDecl* RD = llvm::dyn_cast<RecordDecl>(classDecl)) {
+      const Type* T = Context.getRecordType(RD).getTypePtr();
+      classNNS = NestedNameSpecifier::Create(Context, 0, false, T);
+    }
+    else {
+      // Not a namespace or class, we cannot use it.
+      return 0;
+    }
     DeclContext* foundDC = llvm::dyn_cast<DeclContext>(classDecl);
     //if (foundDC->isDependentContext()) {
     //  // error path
@@ -1006,6 +1009,17 @@ namespace cling {
     //  cleanup();
     //  return 0;
     //}
+    //
+    //  Tell the diagnostic engine to ignore all diagnostics.
+    //
+    bool OldSuppressAllDiagnostics =
+      PP.getDiagnostics().getSuppressAllDiagnostics();
+    PP.getDiagnostics().setSuppressAllDiagnostics(true);
+    //
+    //  Tell the parser to not attempt spelling correction.
+    //
+    bool OldSpellChecking = PP.getLangOpts().SpellChecking;
+    const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = 0;
     //
     //  Tell the diagnostic consumer we are switching files.
     //
@@ -1110,9 +1124,10 @@ namespace cling {
       SourceLocation TemplateKWLoc;
       UnqualifiedId FuncId;
       CXXScopeSpec SS;
+      SS.MakeTrivial(Context, classNNS, SourceRange());
       if (P->ParseUnqualifiedId(SS, /*EnteringContext*/false,
-          /*AllowDestructName*/false, // FIXME: true!
-          /*AllowConstructorName*/false, // FIXME: true!
+          /*AllowDestructorName*/true,
+          /*AllowConstructorName*/true,
           clang::ParsedType(), TemplateKWLoc, FuncId)) {
         // Bad parse.
         goto lookupFuncProtoDone;
