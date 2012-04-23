@@ -1,4 +1,14 @@
-//Author: Timur Pocheptsov.
+// @(#)root/graf2d:$Id$
+// Author: Timur Pocheptsov   26/01/2012
+
+/*************************************************************************
+ * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include <stdexcept>
 #include <cassert>
 #include <vector>
@@ -274,5 +284,5 @@ void DrawTextLineNoKerning(CGContextRef ctx, CTFontRef font, const std::vector<U
    CTFontDrawGlyphs(font, &glyphs[0], &glyphPositions[0], glyphs.size(), ctx);
 }
 
-}
-}
+}//Quartz
+}//ROOT
