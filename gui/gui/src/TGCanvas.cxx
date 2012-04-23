@@ -68,6 +68,7 @@
 #include "TKeyMapFile.h"
 #include "TGDNDManager.h"
 #include "Riostream.h"
+#include "RConfigure.h"
 #include <stdlib.h>
 
 
