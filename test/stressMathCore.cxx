@@ -952,7 +952,7 @@ public:
       // create tree
       std::string tree_name="Tree with" + VecType<V>::name(); 
 
-      TTree tree("VectorTree",tree_name.c_str());
+      TTree *tree = new TTree("VectorTree",tree_name.c_str());
 
       V *v1 = new V();
 
@@ -964,7 +964,7 @@ public:
       }
       //std::cout << typeName << std::endl;
 
-      TBranch * br = tree.Branch("Vector branch",typeName.c_str(),&v1);
+      TBranch * br = tree->Branch("Vector branch",typeName.c_str(),&v1);
       if (br == 0) { 
          std::cout << "Error creating branch for" << typeName << "\n\t typeid is " 
                    << typeid(*v1).name() << std::endl; 
@@ -975,11 +975,11 @@ public:
       Timer timer;
       for (int i = 0; i < nGen; ++i) { 
 	*v1 = dataV[i];  
-         tree.Fill();
+         tree->Fill();
       }
 
 #ifdef DEBUG
-      tree.Print(); // debug
+      tree->Print(); // debug
 #endif
 
       file.Write();
