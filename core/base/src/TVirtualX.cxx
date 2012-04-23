@@ -2212,6 +2212,12 @@ Bool_t TVirtualX::IsDNDAware(Window_t, Atom_t *)
 }
 
 //______________________________________________________________________________
+void TVirtualX::BeginModalSessionFor(Window_t)
+{
+   // Start a modal session for a dialog window.
+}
+
+//______________________________________________________________________________
 Int_t TVirtualX::SupportsExtension(const char *) const
 {
    // Returns 1 if window system server supports extension given by the
