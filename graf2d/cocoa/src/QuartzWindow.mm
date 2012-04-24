@@ -424,12 +424,12 @@ void print_mask_info(ULong_t mask)
       //ROOT's not able to draw GUI concurrently, thanks to global variables and gVirtualX itself.
       [self setAllowsConcurrentViewDrawing : NO];
 
-      //self.delegate = ...
+      self.delegate = self;
       //create content view here.
       NSRect contentViewRect = contentRect;
       contentViewRect.origin.x = 0.f;
       contentViewRect.origin.y = 0.f;
-      
+
       //TODO: OpenGL view can not be content of our QuartzWindow, check if
       //this is a problem for ROOT.
       fContentView = [[QuartzView alloc] initWithFrame : contentViewRect windowAttributes : 0];
@@ -851,7 +851,14 @@ void print_mask_info(ULong_t mask)
    [self orderOut : self];
 }
 
-//NSWindowDelegate's methods here.
+//NSWindowDelegate's methods.
+
+//______________________________________________________________________________
+- (BOOL) windowShouldClose : (id) sender
+{
+   (void)sender;
+   return YES;
+}
 
 @end
 

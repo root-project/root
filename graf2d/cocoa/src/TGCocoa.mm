@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <cassert>
+#include <cstring>
 #include <cstddef>
 #include <limits>
 
@@ -2536,16 +2537,20 @@ Bool_t TGCocoa::NeedRedraw(ULong_t /*tgwindow*/, Bool_t /*force*/)
 }
 
 //______________________________________________________________________________
-Atom_t  TGCocoa::InternAtom(const char * /*atom_name*/, Bool_t /*only_if_exist*/)
+Atom_t  TGCocoa::InternAtom(const char *atomName, Bool_t /*only_if_exist*/)
 {
-   // Returns the atom identifier associated with the specified "atom_name"
-   // string. If "only_if_exists" is False, the atom is created if it does
-   // not exist. If the atom name is not in the Host Portable Character
-   // Encoding, the result is implementation dependent. Uppercase and
-   // lowercase matter; the strings "thing", "Thing", and "thinG" all
-   // designate different atoms.
+   //X11 properties emulation.
+   //TODO: this is a temporary hack to make
+   //client message (close window) work.
 
-   return 0;
+   assert(atomName != nullptr && "InternAtom, atomName is null");
+   
+   if (!std::strcmp(atomName, "WM_DELETE_WINDOW"))
+      return kIA_DELETE_WINDOW;
+   else if (!std::strcmp(atomName, "_ROOT_MESSAGE"))
+      return kIA_ROOT_MESSAGE;
+   
+   return Atom_t();
 }
 
 //______________________________________________________________________________
@@ -2751,7 +2756,9 @@ void TGCocoa::DispatchClientMessage(UInt_t messageID)
    
    TGWindow *window = gClient->GetWindowById(widget.fID);
    assert(window != nullptr && "DispatchClientMessage, no window was found");
-   window->HandleEvent(&messageIter->second.second);
+   Event_t clientMessage = messageIter->second.second;
+   
+   window->HandleEvent(&clientMessage);
    
    fClientMessages.erase(messageIter);
    fFreeMessageIDs.push_back(messageID);

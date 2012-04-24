@@ -24,7 +24,7 @@
 //                                            //
 ////////////////////////////////////////////////
 
-@interface QuartzWindow : NSWindow<X11Window>//, NSWindowDelegate>
+@interface QuartzWindow : NSWindow<X11Window, NSWindowDelegate>
 
 //Life-cycle: "ctor".
 - (id) initWithContentRect : (NSRect) contentRect styleMask : (NSUInteger) windowStyle 

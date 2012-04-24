@@ -404,6 +404,15 @@ protected:
 
    EDrawMode fDrawMode;
    bool fDirectDraw;//Primitive in canvas tries to draw into window directly.
+   
+   //TODO:
+   //There is no property support yet,
+   //only this two valus to make GUI work 
+   //(used in client messages). 
+   enum EInternAtom {
+      kIA_DELETE_WINDOW = 1,
+      kIA_ROOT_MESSAGE
+   };
 
 private:
    bool MakeProcessForeground();
