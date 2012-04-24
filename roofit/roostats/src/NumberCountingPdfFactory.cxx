@@ -133,8 +133,10 @@ void NumberCountingPdfFactory::AddModel(Double_t* sig,
 
       RooPoisson* sigRegion = 
          new RooPoisson(("sigRegion"+str.str()).c_str(),("sigRegion"+str.str()).c_str(), *x,*splusb);
+
+      //LM:  need to set noRounding since y can take non integer values
       RooPoisson* sideband = 
-         new RooPoisson(("sideband"+str.str()).c_str(),("sideband"+str.str()).c_str(), *y,*bTau);
+         new RooPoisson(("sideband"+str.str()).c_str(),("sideband"+str.str()).c_str(), *y,*bTau,true);
 
       likelihoodFactors.Add(sigRegion);
       likelihoodFactors.Add(sideband);
@@ -245,7 +247,11 @@ void NumberCountingPdfFactory::AddData(Double_t* mainMeas,
       std::stringstream str;
       str<<"_"<<i;
 
-      Double_t _tau = 1./back[i]/back_syst[i]/back_syst[i];
+      //Double_t _tau = 1./back[i]/back_syst[i]/back_syst[i];
+      // LM: compute tau correctly for the Gamma distribution : mode = tau*b  and variance is (tau*b+1)
+      Double_t err = back_syst[i]; 
+      Double_t _tau = (1.0 + sqrt(1 + 4 * err * err))/ (2. * err * err)/ back[i];
+
       RooRealVar*  tau = SafeObservableCreation(ws,  ("tau"+str.str()).c_str(), _tau );
 
       oocoutW(ws,ObjectHandling) << "NumberCountingPdfFactory: changed value of " << tau->GetName() << " to " << tau->getVal() << 
