@@ -31,6 +31,9 @@
        backing : (NSBackingStoreType) bufferingType defer : (BOOL) deferCreation
        windowAttributes : (const SetWindowAttributes_t *) attr;
 
+//This is to emulate "transient" window/main window relationship:
+@property (nonatomic, assign) QuartzWindow *fMainWindow;
+
 //1. X11Drawable protocol.
 
 @property (nonatomic, assign) unsigned fID;

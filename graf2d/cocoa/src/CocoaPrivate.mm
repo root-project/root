@@ -137,6 +137,10 @@ void CocoaPrivate::DeleteDrawable(unsigned drawableID)
       [qw.fContentView removeFromSuperview];
       qw.fContentView.fParentView = nil;
       qw.contentView = nil;
+      if (qw.fMainWindow) {
+         [qw.fMainWindow removeChildWindow : qw];
+         qw.fMainWindow = nil;
+      }
    }
 
 //   fFreeDrawableIDs.push_back(drawableID);

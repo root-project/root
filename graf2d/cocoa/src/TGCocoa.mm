@@ -2884,11 +2884,30 @@ void TGCocoa::SetWMState(Window_t /*wid*/, EInitialState /*state*/)
 }
 
 //______________________________________________________________________________
-void TGCocoa::SetWMTransientHint(Window_t /*wid*/, Window_t /*main_id*/)
+void TGCocoa::SetWMTransientHint(Window_t wid, Window_t mainWid)
 {
+   //Comment from TVirtualX:
    // Tells window manager that the window "wid" is a transient window
    // of the window "main_id". A window manager may decide not to decorate
    // a transient window or may treat it differently in other ways.
+   //End of TVirtualX's comment.
+   
+   //TGTransientFrame uses this hint to attach a window to some "main" window,
+   //so that transient window is alway above the main window. This is used for 
+   //dialogs and dockable panels.
+
+   assert(Int_t(wid) > fPimpl->GetRootWindowID() && "SetWMTransientHint, wid parameter is a root window");
+   
+   if (fPimpl->IsRootWindow(mainWid))
+      return;
+   
+   QuartzWindow *mainWindow = fPimpl->GetWindow(mainWid).fQuartzWindow;
+   QuartzWindow *transientWindow = fPimpl->GetWindow(wid).fQuartzWindow;
+   if (mainWindow != transientWindow) {
+      [mainWindow addChildWindow : transientWindow ordered : NSWindowAbove];
+      transientWindow.fMainWindow = mainWindow;
+   } else
+      Warning("SetWMTransientHint", "transient and main windows are the same window");
 }
 
 //______________________________________________________________________________
@@ -3287,9 +3306,15 @@ Bool_t TGCocoa::IsDNDAware(Window_t, Atom_t *)
 }
 
 //______________________________________________________________________________
-void TGCocoa::BeginModalSessionFor(Window_t /*wid*/)
+void TGCocoa::BeginModalSessionFor(Window_t wid)
 {
-
+   assert(!fPimpl->IsRootWindow(wid) && "BeginModalSessionFor, called for 'root' window");
+   
+   //We start special modal session _ONLY_ for dialogs.
+   //Everything else is done in a different way.
+   if (IsDialog(wid)) {
+      //QuartzWindow *qw = fPimpl->GetWindow(wid).fQuartzWindow;
+   }   
 }
 
 //______________________________________________________________________________
@@ -3343,6 +3368,24 @@ void *TGCocoa::GetCurrentContext()
    }
    
    return drawable.fContext;
+}
+
+//______________________________________________________________________________
+bool TGCocoa::IsDialog(Window_t wid)const
+{
+   if (Int_t(wid) <= fPimpl->GetRootWindowID())
+      return false;
+      
+   TGWindow *window = gClient->GetWindowById(wid);
+   if (!window)
+      return false;
+      
+   const NSUInteger styleMask = [fPimpl->GetWindow(wid).fQuartzWindow styleMask];
+   
+   if (window->InheritsFrom("TGTransientFrame") && styleMask != NSBorderlessWindowMask)
+       return true;
+   
+   return false;
 }
 
 //______________________________________________________________________________

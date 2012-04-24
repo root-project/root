@@ -420,6 +420,7 @@ public:
    };
 
 private:
+   bool IsDialog(Window_t wid)const;
    bool MakeProcessForeground();
 
    bool fForegroundProcess;

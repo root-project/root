@@ -410,6 +410,7 @@ void print_mask_info(ULong_t mask)
    QuartzView *fContentView;
 }
 
+@synthesize fMainWindow;
 @synthesize fBackBuffer;
 
 
