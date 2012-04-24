@@ -409,6 +409,9 @@ protected:
    //There is no property support yet,
    //only this two valus to make GUI work 
    //(used in client messages). 
+
+public:
+
    enum EInternAtom {
       kIA_DELETE_WINDOW = 1,
       kIA_ROOT_MESSAGE

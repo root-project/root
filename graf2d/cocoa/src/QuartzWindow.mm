@@ -857,7 +857,21 @@ void print_mask_info(ULong_t mask)
 - (BOOL) windowShouldClose : (id) sender
 {
    (void)sender;
-   return YES;
+
+   assert(fContentView != nil && "windowShouldClose, content view is nil");
+   
+   Event_t closeEvent = {};
+   closeEvent.fWindow = fContentView.fID;
+   closeEvent.fType = kClientMessage;
+   closeEvent.fFormat = 32;//Taken from GUI classes.
+   closeEvent.fHandle = TGCocoa::kIA_DELETE_WINDOW;
+   closeEvent.fUser[0] = TGCocoa::kIA_DELETE_WINDOW;
+   
+   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   assert(vx != nullptr && "windowShouldClose, gVirtualX is either null or has a type different from TGCocoa");
+   vx->SendEvent(fContentView.fID, &closeEvent);
+   
+   return NO;
 }
 
 @end
