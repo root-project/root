@@ -2922,7 +2922,8 @@ void TBufferFile::StreamObject(void *obj, const type_info &typeinfo, const TClas
    // Stream an object given its C++ typeinfo information.
 
    TClass *cl = TClass::GetClass(typeinfo);
-   cl->Streamer(obj, *this, (TClass*)onFileClass );
+   if (cl) cl->Streamer(obj, *this, (TClass*)onFileClass );
+   else Warning("StreamObject","No TClass for the type %s is available, the object was not read.", typeinfo.name());
 }
 
 //______________________________________________________________________________
@@ -2931,7 +2932,8 @@ void TBufferFile::StreamObject(void *obj, const char *className, const TClass* o
    // Stream an object given the name of its actual class.
 
    TClass *cl = TClass::GetClass(className);
-   cl->Streamer(obj, *this, (TClass*)onFileClass );
+   if (cl) cl->Streamer(obj, *this, (TClass*)onFileClass );
+   else Warning("StreamObject","No TClass for the type %s is available, the object was not read.", className);
 }
 
 //______________________________________________________________________________
