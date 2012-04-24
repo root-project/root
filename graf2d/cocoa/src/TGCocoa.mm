@@ -493,6 +493,7 @@ void TGCocoa::UpdateWindow(Int_t /*mode*/)
    //This function is used by TCanvas/TPad:
    //draw "back buffer" image into the view.
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "UpdateWindow, no window was selected, can not update 'root' window");
+//   assert(fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap == NO && "UpdateWindow, called for a pixmap");
    
    NSObject<X11Window> *window = fPimpl->GetWindow(fSelectedDrawable);
 
@@ -1195,7 +1196,7 @@ void TGCocoa::DrawSegmentsAux(Drawable_t wid, const GCValues_t &gcVals, const Se
    assert(nSegments > 0 && "DrawSegmentsAux, nSegments <= 0");
    
    for (Int_t i = 0; i < nSegments; ++i)
-      DrawLineAux(wid, gcVals, segments[i].fX1, segments[i].fY1, segments[i].fX2, segments[i].fY2);
+      DrawLineAux(wid, gcVals, segments[i].fX1, segments[i].fY1 - 3, segments[i].fX2, segments[i].fY2 - 3);
 }
 
 //______________________________________________________________________________
@@ -1394,9 +1395,9 @@ void TGCocoa::FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point
       SetFilledAreaColorFromX11Context(ctx, gcVals);
       
    CGContextBeginPath(ctx);
-   CGContextMoveToPoint(ctx, polygon[0].fX, polygon[0].fY);
+   CGContextMoveToPoint(ctx, polygon[0].fX, polygon[0].fY - 2);
    for (Int_t i = 1; i < nPoints; ++i)
-      CGContextAddLineToPoint(ctx, polygon[i].fX, polygon[i].fY);
+      CGContextAddLineToPoint(ctx, polygon[i].fX, polygon[i].fY - 2);
    CGContextFillPath(ctx);
 }
 
