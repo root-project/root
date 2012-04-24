@@ -9,6 +9,8 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclVisitor.h"
 #include "clang/AST/DependentDiagnostic.h"
+#include "clang/Basic/SourceManager.h"
+#include "clang/Basic/FileManager.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
 
@@ -25,6 +27,15 @@ namespace cling {
 
   public:
     DeclReverter(Sema* S): m_Sema(S) {}
+
+    ///\brief Function that contains common actions, done for every removal of
+    /// declaration.
+    ///
+    /// For example: We must uncache the cached include, which brought that 
+    /// declaration in the AST.
+    ///\param[in] D - A declaration.
+    ///
+    void PreVisitDecl(Decl* D);
 
     ///\brief If it falls back in the base class just remove the declaration
     /// only from the declaration context. 
@@ -119,6 +130,17 @@ namespace cling {
     /// @}
   };
 
+  void DeclReverter::PreVisitDecl(Decl *D) {
+    SourceLocation Loc = D->getLocStart();
+    SourceManager& SM = m_Sema->getSourceManager();
+    FileManager& FM = SM.getFileManager();
+    const FileEntry* OldEntry = SM.getFileEntryForID(SM.getFileID(Loc));
+    //const FileEntry* NewEntry 
+    //  = FM.getFile(OldEntry->getName(), /*openFile*/ true);
+    //std::string errStr = "";
+    // SM.overrideFileContents(OldEntry, FM.getBufferForFile(NewEntry, &errStr));
+  }
+
   // Gives us access to the protected members that we  need.
   class DeclContextExt : public DeclContext {
   public:
@@ -141,7 +163,9 @@ namespace cling {
   };
 
   bool DeclReverter::VisitDecl(Decl* D) {
-    assert(D && "The Decl is null");
+    assert(D && "The Decl is null"); 
+    PreVisitDecl(D);
+
     DeclContext* DC = D->getDeclContext();
 
     bool ExistsInDC = false;
