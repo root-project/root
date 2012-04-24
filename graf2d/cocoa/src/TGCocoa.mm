@@ -599,6 +599,7 @@ void TGCocoa::DestroyWindow(Window_t wid)
    
    //I have NO idea why ROOT's GUI calls DestroyWindow with illegal
    //window id, but it does.
+   
    if (!wid)
       return;
 
@@ -2895,7 +2896,6 @@ void TGCocoa::SetWMTransientHint(Window_t wid, Window_t mainWid)
    //TGTransientFrame uses this hint to attach a window to some "main" window,
    //so that transient window is alway above the main window. This is used for 
    //dialogs and dockable panels.
-
    assert(Int_t(wid) > fPimpl->GetRootWindowID() && "SetWMTransientHint, wid parameter is a root window");
    
    if (fPimpl->IsRootWindow(mainWid))
@@ -2903,10 +2903,10 @@ void TGCocoa::SetWMTransientHint(Window_t wid, Window_t mainWid)
    
    QuartzWindow *mainWindow = fPimpl->GetWindow(mainWid).fQuartzWindow;
    QuartzWindow *transientWindow = fPimpl->GetWindow(wid).fQuartzWindow;
-   if (mainWindow != transientWindow) {
-      [mainWindow addChildWindow : transientWindow ordered : NSWindowAbove];
-      transientWindow.fMainWindow = mainWindow;
-   } else
+
+   if (mainWindow != transientWindow)
+      [mainWindow addTransientWindow : transientWindow];
+   else
       Warning("SetWMTransientHint", "transient and main windows are the same window");
 }
 

@@ -410,6 +410,7 @@ void print_mask_info(ULong_t mask)
    QuartzView *fContentView;
 }
 
+
 @synthesize fMainWindow;
 @synthesize fBackBuffer;
 
@@ -444,6 +445,15 @@ void print_mask_info(ULong_t mask)
    }
    
    return self;
+}
+
+//______________________________________________________________________________
+- (void) addTransientWindow : (QuartzWindow *)window
+{
+   assert(window != nil && "addTransientWindow, window parameter is nil");
+
+   window.fMainWindow = self;   
+   [self addChildWindow : window ordered : NSWindowAbove];
 }
 
 //______________________________________________________________________________
@@ -860,6 +870,12 @@ void print_mask_info(ULong_t mask)
    (void)sender;
 
    assert(fContentView != nil && "windowShouldClose, content view is nil");
+
+   //TODO: check this!!! Children are
+   //transient windows and ROOT does not handle
+   //such a deletion properly, noop then.
+   if ([[self childWindows] count])
+      return NO;
 
    //Prepare client message for a window.
    Event_t closeEvent = {};

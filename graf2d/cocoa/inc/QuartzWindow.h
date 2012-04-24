@@ -33,7 +33,7 @@
 
 //This is to emulate "transient" window/main window relationship:
 @property (nonatomic, assign) QuartzWindow *fMainWindow;
-
+- (void) addTransientWindow : (QuartzWindow *) window;
 //1. X11Drawable protocol.
 
 @property (nonatomic, assign) unsigned fID;
