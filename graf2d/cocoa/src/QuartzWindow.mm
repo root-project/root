@@ -1646,7 +1646,7 @@ void print_mask_info(ULong_t mask)
    
    if ((fEventMask & kStructureNotifyMask) && self.fMapState == kIsViewable) {
       TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
-      assert(vx != nullptr && "setFrameSize:, gVirtualX is either null or has type different from TGCocoa");
+      assert(vx != nullptr && "setFrameSize:, gVirtualX is either null or has a type, different from TGCocoa");
       vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
    }
 
@@ -1659,8 +1659,26 @@ void print_mask_info(ULong_t mask)
    assert(fID != 0 && "mouseDown, fID is 0");
    
    TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != nullptr && "mouseDown, gVirtualX is either null or has type different from TGCocoa");
+   assert(vx != nullptr && "mouseDown, gVirtualX is either null or has a type, different from TGCocoa");
    vx->GetEventTranslator()->GenerateButtonPressEvent(self, theEvent, kButton1);
+}
+
+//______________________________________________________________________________
+- (void) scrollWheel : (NSEvent*) theEvent
+{
+   assert(fID != 0 && "scrollWheel, fID is 0");
+
+   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   assert(vx != nullptr && "scrollWheel, gVirtualX is either null or has a type, different from TGCocoa");
+
+   const CGFloat deltaY = [theEvent deltaY];
+   if (deltaY < 0) {
+      vx->GetEventTranslator()->GenerateButtonPressEvent(self, theEvent, kButton5);
+      vx->GetEventTranslator()->GenerateButtonReleaseEvent(self, theEvent, kButton5);
+   } else if (deltaY > 0) {
+      vx->GetEventTranslator()->GenerateButtonPressEvent(self, theEvent, kButton4);
+      vx->GetEventTranslator()->GenerateButtonReleaseEvent(self, theEvent, kButton4);
+   }
 }
 
 #ifdef DEBUG_ROOT_COCOA
