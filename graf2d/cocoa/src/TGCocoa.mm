@@ -30,6 +30,7 @@
 #include "X11Buffer.h"
 #include "TGClient.h"
 #include "TGWindow.h"
+#include "TGFrame.h"
 #include "TGCocoa.h"
 #include "TError.h"
 #include "TColor.h"
@@ -2842,10 +2843,37 @@ void TGCocoa::GrabKey(Window_t wid, Int_t keyCode, UInt_t rootKeyModifiers, Bool
 }
 
 //______________________________________________________________________________
-void TGCocoa::SetMWMHints(Window_t /*wid*/, UInt_t /*value*/, UInt_t /*funcs*/,
-                            UInt_t /*input*/)
+void TGCocoa::SetMWMHints(Window_t wid, UInt_t value, UInt_t funcs, UInt_t /*input*/)
 {
    // Sets decoration style.
+   assert(!fPimpl->IsRootWindow(wid) && "SetMWMHints, called for 'root' window");
+   
+   QuartzWindow *qw = fPimpl->GetWindow(wid).fQuartzWindow;
+   NSUInteger newMask = 0;
+   
+   if ([qw styleMask] & NSTitledWindowMask) {//Do not modify this.
+      newMask |= NSTitledWindowMask;
+      newMask |= NSClosableWindowMask;
+   }
+
+   if (value & kMWMFuncAll) {
+      newMask |= NSMiniaturizableWindowMask | NSResizableWindowMask;
+   } else {
+      if (value & kMWMDecorMinimize)
+         newMask |= NSMiniaturizableWindowMask;
+      if (funcs & kMWMFuncResize)
+         newMask |= NSResizableWindowMask;
+   }
+
+   [qw setStyleMask : newMask];
+   
+   if (funcs & kMWMDecorAll) {
+      [[qw standardWindowButton : NSWindowZoomButton] setEnabled : YES];
+      [[qw standardWindowButton : NSWindowMiniaturizeButton] setEnabled : YES];
+   } else {
+      [[qw standardWindowButton : NSWindowZoomButton] setEnabled : funcs & kMWMDecorMaximize];
+      [[qw standardWindowButton : NSWindowMiniaturizeButton] setEnabled : funcs & kMWMDecorMinimize];
+   }
 }
 
 //______________________________________________________________________________
@@ -2864,17 +2892,16 @@ void TGCocoa::SetWMSize(Window_t /*wid*/, UInt_t /*w*/, UInt_t /*h*/)
 }
 
 //______________________________________________________________________________
-void TGCocoa::SetWMSizeHints(Window_t /*wid*/, UInt_t /*wmin*/, UInt_t /*hmin*/,
-                               UInt_t /*wmax*/, UInt_t /*hmax*/,
-                               UInt_t /*winc*/, UInt_t /*hinc*/)
+void TGCocoa::SetWMSizeHints(Window_t wid, UInt_t /*wMin*/, UInt_t /*hMin*/, UInt_t /*wMax*/, UInt_t /*hMax*/, UInt_t wInc, UInt_t hInc)
 {
-   // Gives the window manager minimum and maximum size hints of the window
-   // "wid". Also specify via "winc" and "hinc" the resize increments.
    //
-   // wmin, hmin - specify the minimum window size
-   // wmax, hmax - specify the maximum window size
-   // winc, hinc - define an arithmetic progression of sizes into which
-   //              the window to be resized (minimum to maximum)
+   assert(!fPimpl->IsRootWindow(wid) && "SetWMSizeHints, called for 'root' window");
+
+   if (!wInc && !hInc) {
+      QuartzWindow *qw = fPimpl->GetWindow(wid).fQuartzWindow;
+      [qw setStyleMask : [qw styleMask] & ~NSResizableWindowMask];
+      [[qw standardWindowButton : NSWindowZoomButton] setEnabled : NO];
+   }
 }
 
 //______________________________________________________________________________
@@ -2897,22 +2924,16 @@ void TGCocoa::SetWMTransientHint(Window_t wid, Window_t mainWid)
    //so that transient window is alway above the main window. This is used for 
    //dialogs and dockable panels.
    assert(Int_t(wid) > fPimpl->GetRootWindowID() && "SetWMTransientHint, wid parameter is a root window");
-   
+
    if (fPimpl->IsRootWindow(mainWid))
       return;
    
    QuartzWindow *mainWindow = fPimpl->GetWindow(mainWid).fQuartzWindow;
    QuartzWindow *transientWindow = fPimpl->GetWindow(wid).fQuartzWindow;
 
-   if (mainWindow != transientWindow) {
+   if (mainWindow != transientWindow)
       [mainWindow addTransientWindow : transientWindow];
-      //
-      NSUInteger styleMask = [transientWindow styleMask];
-      styleMask &= ~NSResizableWindowMask;
-      [transientWindow setStyleMask : styleMask];
-      //
-      [[transientWindow standardWindowButton : NSWindowZoomButton] setEnabled : NO];
-   } else
+   else
       Warning("SetWMTransientHint", "transient and main windows are the same window");
 }
 
