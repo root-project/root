@@ -152,6 +152,8 @@ void FontCache::GetFontProperties(FontStruct_t font, int &maxAscent, int &maxDes
    try {
       const Quartz::TextLine textLine("LALALA", fontRef);
       textLine.GetAscentDescent(maxAscent, maxDescent);
+      maxAscent += 1;
+      maxDescent += 1;
    } catch (const std::exception &) {
       throw;
    }
@@ -248,6 +250,7 @@ void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const
    try {
       const Quartz::TextLine ctLine(text, fSelectedFont);
       ctLine.GetBounds(w, h);
+      h += 2;
    } catch (const std::exception &) {
       throw;
    }
@@ -258,7 +261,7 @@ void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const
 double FontCache::GetAscent()const
 {
    assert(fSelectedFont != nullptr && "GetAscent, no font was selected");
-   return CTFontGetAscent(fSelectedFont);
+   return CTFontGetAscent(fSelectedFont) + 1;
 }
 
 
@@ -266,7 +269,7 @@ double FontCache::GetAscent()const
 double FontCache::GetDescent()const
 {
    assert(fSelectedFont != nullptr && "GetDescent, no font was selected");
-   return CTFontGetDescent(fSelectedFont);
+   return CTFontGetDescent(fSelectedFont) + 1;
 }
 
 //_________________________________________________________________
