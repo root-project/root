@@ -1235,12 +1235,18 @@ void TGCocoa::DrawRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x
    //Can be called directly or during flushing command buffer.
    assert(!fPimpl->IsRootWindow(wid) && "DrawRectangleAux, called for 'root' window");
 
+   //I can not draw a line at y == 0, shift the rectangle to 1 pixel (and reduce its height).
+   if (!y) {
+      y = 1;
+      if (h)
+         h -= 1;
+   }
+
    CGContextRef ctx = fPimpl->GetDrawable(wid).fContext;
    assert(ctx && "DrawRectangleAux, ctx is null");
    const Quartz::CGStateGuard ctxGuard(ctx);//Will restore context state.
 
    CGContextSetAllowsAntialiasing(ctx, false);
-
    //Line color from X11 context.
    SetStrokeParametersFromX11Context(ctx, gcVals);
       
