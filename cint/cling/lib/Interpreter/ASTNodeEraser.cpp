@@ -131,10 +131,10 @@ namespace cling {
   };
 
   void DeclReverter::PreVisitDecl(Decl *D) {
-    SourceLocation Loc = D->getLocStart();
-    SourceManager& SM = m_Sema->getSourceManager();
-    FileManager& FM = SM.getFileManager();
-    const FileEntry* OldEntry = SM.getFileEntryForID(SM.getFileID(Loc));
+    //SourceLocation Loc = D->getLocStart();
+    //SourceManager& SM = m_Sema->getSourceManager();
+    //FileManager& FM = SM.getFileManager();
+    //const FileEntry* OldEntry = SM.getFileEntryForID(SM.getFileID(Loc));
     //const FileEntry* NewEntry 
     //  = FM.getFile(OldEntry->getName(), /*openFile*/ true);
     //std::string errStr = "";
