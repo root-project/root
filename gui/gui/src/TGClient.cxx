@@ -681,6 +681,12 @@ void TGClient::WaitFor(TGWindow *w)
    fWaitForWindow = w->GetId();
    fWaitForEvent  = kDestroyNotify;
 
+   //Let VirtualX know, that we are
+   //in a nested loop for a window w.
+   //Noop on X11/win32gdk.
+   if (gVirtualX)
+      gVirtualX->BeginModalSessionFor(w->GetId());
+
    while (fWaitForWindow != kNone) {
       if (esave == kUnmapNotify)
          wsave = kNone;
@@ -702,6 +708,12 @@ void TGClient::WaitForUnmap(TGWindow *w)
 
    fWaitForWindow = w->GetId();
    fWaitForEvent  = kUnmapNotify;
+   
+   //Let VirtualX know, that we are
+   //in a nested loop for a window w.
+   //Noop on X11/win32gdk.   
+   if (gVirtualX)
+      gVirtualX->BeginModalSessionFor(w->GetId());
 
    while (fWaitForWindow != kNone) {
       gSystem->ProcessEvents();//gSystem->InnerLoop();

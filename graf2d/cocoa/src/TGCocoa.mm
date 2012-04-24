@@ -3286,6 +3286,11 @@ Bool_t TGCocoa::IsDNDAware(Window_t, Atom_t *)
    return kFALSE;
 }
 
+//______________________________________________________________________________
+void TGCocoa::BeginModalSessionFor(Window_t /*wid*/)
+{
+
+}
 
 //______________________________________________________________________________
 Int_t TGCocoa::SupportsExtension(const char *) const

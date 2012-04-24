@@ -859,18 +859,20 @@ void print_mask_info(ULong_t mask)
    (void)sender;
 
    assert(fContentView != nil && "windowShouldClose, content view is nil");
-   
+
+   //Prepare client message for a window.
    Event_t closeEvent = {};
    closeEvent.fWindow = fContentView.fID;
    closeEvent.fType = kClientMessage;
    closeEvent.fFormat = 32;//Taken from GUI classes.
    closeEvent.fHandle = TGCocoa::kIA_DELETE_WINDOW;
    closeEvent.fUser[0] = TGCocoa::kIA_DELETE_WINDOW;
-   
+   //Place it into the queue.
    TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != nullptr && "windowShouldClose, gVirtualX is either null or has a type different from TGCocoa");
    vx->SendEvent(fContentView.fID, &closeEvent);
-   
+
+   //Do not let AppKit to close a window.
    return NO;
 }
 
