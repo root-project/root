@@ -2459,7 +2459,8 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 
    // we are now ready to generate the classes
    // loop on all TStreamerInfo
-   TList *filelist = (TList*)GetStreamerInfoCache()->Clone();
+   TList *filelist = (TList*)GetStreamerInfoCache();
+   if (filelist) filelist = (TList*)filelist->Clone();
    if (filelist == 0) {
       Error("MakeProject","file %s has no StreamerInfo", GetName());
       return;
@@ -3336,7 +3337,6 @@ void TFile::ShowStreamerInfo()
    // Show the StreamerInfo of all classes written to this file.
 
    TList *list = GetStreamerInfoList();
-
    if (!list) return;
 
    list->ls();

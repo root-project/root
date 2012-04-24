@@ -2651,7 +2651,7 @@ void TBufferFile::SkipVersion(const TClass *cl)
              cl->GetStreamerInfos()->GetLast()>1 ) {
 
             const TList *list = ((TFile*)fParent)->GetStreamerInfoCache();
-            const TStreamerInfo *local = (TStreamerInfo*)list->FindObject(cl->GetName());
+            const TStreamerInfo *local = list ? (TStreamerInfo*)list->FindObject(cl->GetName()) : 0;
             if ( local )  {
                UInt_t checksum = local->GetCheckSum();
                TStreamerInfo *vinfo = (TStreamerInfo*)cl->FindStreamerInfo(checksum);
@@ -2760,7 +2760,7 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
             cl->GetStreamerInfos()->GetLast()>1 ) {
 
             const TList *list = ((TFile*)fParent)->GetStreamerInfoCache();
-            const TStreamerInfo *local = (TStreamerInfo*)list->FindObject(cl->GetName());
+            const TStreamerInfo *local = list ? (TStreamerInfo*)list->FindObject(cl->GetName()) : 0;
             if ( local )  {
                UInt_t checksum = local->GetCheckSum();
                TStreamerInfo *vinfo = (TStreamerInfo*)cl->FindStreamerInfo(checksum);
@@ -2831,7 +2831,7 @@ Version_t TBufferFile::ReadVersionForMemberWise(const TClass *cl)
             cl->GetStreamerInfos()->GetLast()>1 ) {
 
             const TList *list = ((TFile*)fParent)->GetStreamerInfoCache();
-            const TStreamerInfo *local = (TStreamerInfo*)list->FindObject(cl->GetName());
+            const TStreamerInfo *local = list ? (TStreamerInfo*)list->FindObject(cl->GetName()) : 0;
             if ( local )  {
                UInt_t checksum = local->GetCheckSum();
                TStreamerInfo *vinfo = (TStreamerInfo*)cl->FindStreamerInfo(checksum);
