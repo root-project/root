@@ -2904,9 +2904,15 @@ void TGCocoa::SetWMTransientHint(Window_t wid, Window_t mainWid)
    QuartzWindow *mainWindow = fPimpl->GetWindow(mainWid).fQuartzWindow;
    QuartzWindow *transientWindow = fPimpl->GetWindow(wid).fQuartzWindow;
 
-   if (mainWindow != transientWindow)
+   if (mainWindow != transientWindow) {
       [mainWindow addTransientWindow : transientWindow];
-   else
+      //
+      NSUInteger styleMask = [transientWindow styleMask];
+      styleMask &= ~NSResizableWindowMask;
+      [transientWindow setStyleMask : styleMask];
+      //
+      [[transientWindow standardWindowButton : NSWindowZoomButton] setEnabled : NO];
+   } else
       Warning("SetWMTransientHint", "transient and main windows are the same window");
 }
 
