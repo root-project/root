@@ -6432,7 +6432,12 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, c
    //loop on all lines in the file
    Long64_t nGoodLines = 0;
    std::string line;
-   const char sDelim[2] = { delimiter, 0 };
+   const char sDelimBuf[2] = { delimiter, 0 };
+   const char* sDelim = sDelimBuf;
+   if (delimiter == ' ') {
+      // ' ' really means whitespace
+      sDelim = "[ \t]";
+   }
    while(in.good()) {
       if (newline == '\r' && in.peek() == '\n') {
          // Windows, skip '\n':
@@ -6551,10 +6556,13 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, c
                  iBranch, nbranches, nlines);
          goodLine = kFALSE;
       } else if (pos != kNPOS) {
-         Warning("ReadStream",
-                 "Ignoring trailing \"%s\" while reading line %lld",
-                 sLine.Data() + pos - 1 /* also print delimiter */,
-                 nlines);
+         sLine = sLine.Strip(TString::kTrailing);
+         if (pos < sLine.Length()) {
+            Warning("ReadStream",
+                    "Ignoring trailing \"%s\" while reading line %lld",
+                    sLine.Data() + pos - 1 /* also print delimiter */,
+                    nlines);
+         }
       }
 
       //we are now ready to fill the tree
