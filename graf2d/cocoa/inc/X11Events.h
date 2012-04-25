@@ -75,8 +75,9 @@ public:
    //If it's a focus view, cancel focus.
    void CheckUnmappedView(Window_t winID);
 
-private:
    bool HasPointerGrab()const;
+
+private:
 
    //Used both by grab and non-grab case.
    void GenerateCrossingEvent(NSView<X11Window> *viewUnderPointer, NSEvent *theEvent, EXMagic detail);

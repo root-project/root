@@ -862,6 +862,36 @@ void print_mask_info(ULong_t mask)
    [self orderOut : self];
 }
 
+//Events.
+
+//______________________________________________________________________________
+- (void) sendEvent : (NSEvent *) theEvent
+{
+   assert(fContentView != nil && "sendEvent, content view is nil");
+
+   if (theEvent.type == NSLeftMouseDown || theEvent.type == NSRightMouseDown) {
+      const NSPoint windowPoint = [theEvent locationInWindow];
+      const NSPoint viewPoint =  [fContentView convertPointFromBase : windowPoint];
+      if (viewPoint.y <= 0 && windowPoint.y >= 0) {
+         //Very special case: mouse is in a title bar. 
+         //There are not NSView<X11Window> object in this area,
+         //this event will never go to any QuartzView, and this
+         //can be a problem: if drop-down menu is open and
+         //you move window using title-bar, ROOT's menu will
+         //"fell through" the main window, which is weird.
+         TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+         assert(vx != nullptr && "sendEvent, gVirtualX is either null or not of TGCocoa type");
+         if (vx->GetEventTranslator()->HasPointerGrab())
+            vx->GetEventTranslator()->GenerateButtonReleaseEvent(fContentView, theEvent, theEvent.type == NSLeftMouseDown ? kButton1 : kButton3);//yes, button release???
+      }
+   }
+
+   //Always call default version.
+   [super sendEvent : theEvent];
+}
+
+
+
 //NSWindowDelegate's methods.
 
 //______________________________________________________________________________

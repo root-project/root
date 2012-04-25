@@ -1450,7 +1450,8 @@ void EventTranslator::GenerateButtonReleaseEventActiveGrab(NSView<X11Window> *ev
             candidateView = Detail::FindViewToPropagateEvent(candidateView, kButtonReleaseMask, fButtonGrabView, fGrabEventMask);
             if (candidateView)//We have such a view, send event to a corresponding ROOT's window.
                Detail::SendButtonReleaseEvent(candidateView, theEvent, btn);
-         }
+         } else if (fGrabEventMask & kButtonReleaseMask)
+            Detail::SendButtonReleaseEvent(fButtonGrabView, theEvent, btn);
       } else {//Report to the grab view, if it has a corresponding bit set.
          if (fGrabEventMask & kButtonReleaseMask)
             Detail::SendButtonReleaseEvent(fButtonGrabView, theEvent, btn);
