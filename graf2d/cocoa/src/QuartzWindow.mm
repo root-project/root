@@ -1964,8 +1964,11 @@ void print_mask_info(ULong_t mask)
    case kCross:
       cursor = [NSCursor crosshairCursor];
       break;
-   case kHand:
+   case kPointer:
       cursor = [NSCursor pointingHandCursor];
+      break;
+   case kHand:
+      cursor = [NSCursor openHandCursor];
       break;
    case kLeftSide:
       cursor = [NSCursor resizeLeftCursor];
