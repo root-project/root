@@ -1245,6 +1245,7 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    // This test necessary to read very old Root files (NvE).
    if (R__unlikely(!buf)) {
       TFile* file = GetFile(0);
+      if (!file) return -1;
       basket->ReadBasketBuffers(fBasketSeek[fReadBasket], fBasketBytes[fReadBasket], file);
       buf = basket->GetBufferRef();
    }
@@ -1684,6 +1685,7 @@ Int_t TBranch::LoadBaskets()
    Int_t nimported = 0;
    Int_t nbaskets = fWriteBasket;
    TFile *file = GetFile(0);
+   if (!file) return 0;
    TBasket *basket;
    for (Int_t i=0;i<nbaskets;i++) {
       basket = (TBasket*)fBaskets.UncheckedAt(i);
