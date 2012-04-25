@@ -260,6 +260,14 @@ public:
    virtual void         DeleteGC(GContext_t gc);
    //Context management.
    /////////////////////////////
+   
+   /////////////////////////////
+   //Cursors.
+   virtual Cursor_t     CreateCursor(ECursor cursor);
+   virtual void         SetCursor(Window_t wid, Cursor_t curid);
+   virtual void         SetCursor(Int_t win, ECursor cursor);   
+   //Cursors.
+   /////////////////////////////
 
    //Remaining bunch of functions is not sorted yet (and not imlemented at the moment).
 
@@ -294,7 +302,6 @@ public:
    virtual void      SetCharacterUp(Float_t chupx, Float_t chupy);
    virtual void      SetClipOFF(Int_t wid);
    virtual void      SetClipRegion(Int_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);
-   virtual void      SetCursor(Int_t win, ECursor cursor);
    virtual void      SetDoubleBuffer(Int_t wid, Int_t mode);
    virtual void      SetDoubleBufferOFF();
    virtual void      SetDoubleBufferON();
@@ -313,9 +320,6 @@ public:
 
    virtual UInt_t       ScreenWidthMM() const;
    virtual Atom_t       InternAtom(const char *atom_name, Bool_t only_if_exist);
-
-   virtual Cursor_t     CreateCursor(ECursor cursor);
-   virtual void         SetCursor(Window_t wid, Cursor_t curid);
 
    virtual Bool_t       CreatePictureFromFile(Drawable_t wid, const char *filename,
                                               Pixmap_t &pict, Pixmap_t &pict_mask,

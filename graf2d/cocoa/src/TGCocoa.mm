@@ -2271,6 +2271,42 @@ void TGCocoa::DeleteGC(GContext_t /*gc*/)
    // Deletes the specified GC "gc".
 }
 
+//Cursor management.
+
+//______________________________________________________________________________
+Cursor_t TGCocoa::CreateCursor(ECursor cursor)
+{
+   // Creates the specified cursor. (just return cursor from cursor pool).
+   // The cursor can be:
+   //
+   // kBottomLeft, kBottomRight, kTopLeft,  kTopRight,
+   // kBottomSide, kLeftSide,    kTopSide,  kRightSide,
+   // kMove,       kCross,       kArrowHor, kArrowVer,
+   // kHand,       kRotate,      kPointer,  kArrowRight,
+   // kCaret,      kWatch
+
+   return Cursor_t(cursor);//HAHAHAHAHA!!! CREATED!!!
+}
+
+//______________________________________________________________________________
+void TGCocoa::SetCursor(Int_t wid, ECursor cursor)
+{
+   // The cursor "cursor" will be used when the pointer is in the
+   // window "wid".
+   assert(!fPimpl->IsRootWindow(wid) && "SetCursor, called for 'root' window");
+   
+   NSView<X11Window> *view = fPimpl->GetWindow(wid).fContentView;
+   view.fCurrentCursor = cursor;
+}
+
+//______________________________________________________________________________
+void TGCocoa::SetCursor(Window_t wid, Cursor_t cursorID)
+{
+   // Sets the cursor "curid" to be used when the pointer is in the
+   // window "wid".
+   SetCursor(Int_t(wid), ECursor(cursorID));
+}
+
 //______________________________________________________________________________
 void TGCocoa::NextEvent(Event_t &/*event*/)
 {
@@ -2403,13 +2439,6 @@ void TGCocoa::SetClipRegion(Int_t /*wid*/, Int_t /*x*/, Int_t /*y*/, UInt_t /*w*
    // x, y - origin of clipping rectangle
    // w, h - the clipping rectangle dimensions
 
-}
-
-//______________________________________________________________________________
-void TGCocoa::SetCursor(Int_t /*win*/, ECursor /*cursor*/)
-{
-   // The cursor "cursor" will be used when the pointer is in the
-   // window "wid".
 }
 
 //______________________________________________________________________________
@@ -2561,30 +2590,6 @@ Atom_t  TGCocoa::InternAtom(const char *atomName, Bool_t /*only_if_exist*/)
    
    return Atom_t();
 }
-
-//______________________________________________________________________________
-Cursor_t TGCocoa::CreateCursor(ECursor /*cursor*/)
-{
-   // Creates the specified cursor. (just return cursor from cursor pool).
-   // The cursor can be:
-   //
-   // kBottomLeft, kBottomRight, kTopLeft,  kTopRight,
-   // kBottomSide, kLeftSide,    kTopSide,  kRightSide,
-   // kMove,       kCross,       kArrowHor, kArrowVer,
-   // kHand,       kRotate,      kPointer,  kArrowRight,
-   // kCaret,      kWatch
-
-   return 0;
-}
-
-//______________________________________________________________________________
-void TGCocoa::SetCursor(Window_t /*wid*/, Cursor_t /*curid*/)
-{
-   // Sets the cursor "curid" to be used when the pointer is in the
-   // window "wid".
-}
-
-//Set of 'pixmap functions', required mainly by TCanvas/TPad classes.
 
 //______________________________________________________________________________
 Bool_t TGCocoa::CreatePictureFromFile(Drawable_t /*wid*/,

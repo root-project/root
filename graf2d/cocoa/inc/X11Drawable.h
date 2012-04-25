@@ -14,6 +14,7 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "TVirtualX.h"
 #import "GuiTypes.h"
 
 @class PassiveKeyGrab;
@@ -133,6 +134,9 @@
 - (void) removePassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
 - (PassiveKeyGrab *) findPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
 - (PassiveKeyGrab *) findPassiveKeyGrab : (unichar) keyCode;
+
+//Cursors.
+@property (nonatomic, assign) ECursor fCurrentCursor;
 
 @end
 

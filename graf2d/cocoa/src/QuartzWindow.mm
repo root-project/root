@@ -890,6 +890,22 @@ void print_mask_info(ULong_t mask)
    [super sendEvent : theEvent];
 }
 
+//Cursors.
+//______________________________________________________________________________
+- (ECursor) fCurrentCursor
+{
+   assert(fContentView != nil && "fCurrentCursor, content view is nil");
+   
+   return fContentView.fCurrentCursor;
+}
+
+//______________________________________________________________________________
+- (void) setFCurrentCursor : (ECursor) cursor
+{
+   assert(fContentView != nil && "setFCurrentCursor, content view is nil");
+   
+   fContentView.fCurrentCursor = cursor;
+}
 
 
 //NSWindowDelegate's methods.
@@ -998,6 +1014,7 @@ void print_mask_info(ULong_t mask)
 @synthesize fGrabKeyModifiers;
 @synthesize fOwnerEvents;
 @synthesize fSnapshotDraw;
+@synthesize fCurrentCursor;
 
 //______________________________________________________________________________
 - (id) initWithFrame : (NSRect) frame windowAttributes : (const SetWindowAttributes_t *)attr
@@ -1894,6 +1911,85 @@ void print_mask_info(ULong_t mask)
    
    //NSResponder returns YES, so do I.
    return YES;
+}
+
+
+//Cursors.
+//______________________________________________________________________________
+- (void) setFCurrentCursor : (ECursor) cursor
+{
+   if (cursor != fCurrentCursor) {
+      fCurrentCursor = cursor;
+      [self.fQuartzWindow invalidateCursorRectsForView : self];
+   }
+}
+
+//______________________________________________________________________________
+- (NSCursor *) createCustomCursor 
+{
+   switch (fCurrentCursor) {
+   case kMove:
+      break;
+   case kArrowHor:
+      break;
+   case kArrowVer:
+      break;
+   case kArrowRight:
+      break;
+   case kBottomLeft:
+   case kTopRight:
+      break;
+   case kTopLeft:
+   case kBottomRight:
+      break;
+   default:;
+   }
+
+   return nil;
+}
+
+//______________________________________________________________________________
+- (void) resetCursorRects
+{
+   //Cursors from TVirtaulX:
+   // kBottomLeft, kBottomRight, kTopLeft,  kTopRight,
+   // kBottomSide, kLeftSide,    kTopSide,  kRightSide,
+   // kMove,       kCross,       kArrowHor, kArrowVer,
+   // kHand,       kRotate,      kPointer,  kArrowRight,
+   // kCaret,      kWatch
+   
+   NSCursor *cursor = nil;
+   
+   switch (fCurrentCursor) {
+   case kCross:
+      cursor = [NSCursor crosshairCursor];
+      break;
+   case kHand:
+      cursor = [NSCursor pointingHandCursor];
+      break;
+   case kLeftSide:
+      cursor = [NSCursor resizeLeftCursor];
+      break;
+   case kRightSide:
+      cursor = [NSCursor resizeRightCursor];
+      break;
+   case kTopSide:
+      cursor = [NSCursor resizeUpCursor];
+      break;
+   case kBottomSide:
+      cursor = [NSCursor resizeDownCursor];
+      break;
+   case kCaret:
+      cursor = [NSCursor IBeamCursor];
+      break;
+   default:
+      cursor = [self createCustomCursor];
+   }
+   
+   if (cursor)
+      [self addCursorRect : self.visibleRect cursor : cursor];
+   else
+      [super resetCursorRects];
 }
 
 @end

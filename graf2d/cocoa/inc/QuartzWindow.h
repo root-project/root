@@ -101,6 +101,9 @@
 - (void) mapSubwindows;
 - (void) unmapWindow;
 
+//Cursors.
+@property (nonatomic, assign) ECursor fCurrentCursor;
+
 @end
 
 //////////////////////////////////////////////////////////////
@@ -211,6 +214,9 @@
 - (void) removePassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
 - (PassiveKeyGrab *) findPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
 - (PassiveKeyGrab *) findPassiveKeyGrab : (unichar) keyCode;
+
+//Cursors.
+@property (nonatomic, assign) ECursor fCurrentCursor;
 
 @end
 
