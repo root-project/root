@@ -366,6 +366,7 @@
 #include <sstream>
 #include <string>
 #include <stdio.h>
+#include <limits.h>
 
 Int_t    TTree::fgBranchStyle = 1;  // Use new TBranch style with TBranchElement.
 Long64_t TTree::fgMaxTreeSize = 100000000000LL;
@@ -7684,7 +7685,28 @@ void TTree::Streamer(TBuffer& b)
          if (fEstimate <= 10000) {
             fEstimate = 1000000;
          }
-         fCacheSize    = fAutoFlush;
+         if (fAutoFlush < 0) {
+            // If there is no autoflush set, let's keep the cache completely
+            // disabled by default for now.
+            fCacheSize = fAutoFlush; 
+         } else if (fAutoFlush != 0) {
+            // Estimate the cluster size.
+            // This will allow TTree::Process to enable the cache.
+            if (fZipBytes != 0) {
+               fCacheSize =  fAutoFlush*(fZipBytes/fEntries);
+            } else if (fTotBytes != 0) {
+               fCacheSize =  fAutoFlush*(fTotBytes/fEntries);                  
+            } else {
+               fCacheSize = 30000000;
+            }
+            if (fCacheSize >= (INT_MAX / 4)) {
+               fCacheSize = INT_MAX / 4;
+            } else if (fCacheSize == 0) {
+               fCacheSize = 30000000;                  
+            }
+         } else {
+            fCacheSize = 0;
+         }
          ResetBit(kMustCleanup);
          return;
       }
