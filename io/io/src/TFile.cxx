@@ -607,8 +607,14 @@ void TFile::Init(Bool_t create)
       char *header = new char[kBEGIN+200];
       Seek(0);
       //ReadBuffer(header, kBEGIN);
-      ReadBuffer(header, kBEGIN+200);
-
+      if (ReadBuffer(header, kBEGIN+200)) {
+         // ReadBuffer returns kTRUE in case of failure.
+         Error("Init","%s failed to read the file type data.",
+               GetName());
+         delete [] header;
+         goto zombie;
+      }
+      
       // make sure this is a ROOT file
       if (strncmp(header, "root", 4)) {
          Error("Init", "%s not a ROOT file", GetName());
@@ -663,7 +669,13 @@ void TFile::Init(Bool_t create)
          header       = new char[nbytes];
          buffer       = header;
          Seek(fBEGIN);
-         ReadBuffer(buffer,nbytes);
+         if (ReadBuffer(buffer,nbytes)) {
+            // ReadBuffer returns kTRUE in case of failure.
+            Error("Init","%s failed to read the file header information at %lld (size=%d)",
+                  GetName(),fBEGIN,nbytes);
+            delete [] header;
+            goto zombie;
+         }
          buffer = header+fNbytesName;
          buffer_keyloc = header;
       } else {
@@ -1048,7 +1060,12 @@ Float_t TFile::GetCompressionFactor()
 
    while (idcur < fEND-100) {
       Seek(idcur);
-      ReadBuffer(header, nwh);
+      if (ReadBuffer(header, nwh)) {
+         // ReadBuffer returns kTRUE in case of failure.
+//         Error("GetCompressionFactor","%s failed to read the key header information at %lld (size=%d).",
+//               GetName(),idcur,nwh);
+         break;
+      }
       buffer=header;
       frombuf(buffer, &nbytes);
       if (nbytes < 0) {
@@ -1141,7 +1158,12 @@ Int_t TFile::GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &n
               GetName(), nread);
       return nread;
    }
-   ReadBuffer(buf,nread);
+   if (ReadBuffer(buf,nread)) {
+      // ReadBuffer return kTRUE in case of failure.
+      Warning("GetRecordHeader","%s: failed to read header data (maxbytes = %d)",
+              GetName(), nread);
+      return nread;
+   }
    Version_t versionkey;
    Short_t  klen;
    UInt_t   datime;
@@ -1212,7 +1234,12 @@ TList *TFile::GetStreamerInfoList()
       char *buffer = new char[fNbytesInfo+1];
       char *buf    = buffer;
       Seek(fSeekInfo);
-      ReadBuffer(buf,fNbytesInfo);
+      if (ReadBuffer(buf,fNbytesInfo)) {
+         // ReadBuffer returns kTRUE in case of failure.
+         Warning("GetRecordHeader","%s: failed to read the StreamerInfo data from disk.",
+                 GetName());
+         return 0;
+      }
       key->ReadKeyBuffer(buf);
       list = (TList*)key->ReadObjWithBuffer(buffer);
       if (list) list->SetOwner();
@@ -1337,7 +1364,13 @@ void TFile::Map()
    while (idcur < fEND) {
       Seek(idcur);
       if (idcur+nread >= fEND) nread = fEND-idcur-1;
-      ReadBuffer(header, nread);
+      if (ReadBuffer(header, nread)) {
+         // ReadBuffer returns kTRUE in case of failure.
+         Warning("Map","%s: failed to read the key data from disk at %lld.",
+                 GetName(),idcur);
+         break;
+      }
+      
       buffer=header;
       frombuf(buffer, &nbytes);
       if (!nbytes) {
@@ -1732,7 +1765,12 @@ Int_t TFile::Recover()
    while (idcur < fEND) {
       Seek(idcur);
       if (idcur+nread >= fEND) nread = fEND-idcur-1;
-      ReadBuffer(header, nread);
+      if (ReadBuffer(header, nread)) {
+         // ReadBuffer returns kTRUE in case of failure.
+         Error("Recover","%s: failed to read the key data from disk at %lld.",
+               GetName(),idcur);
+         break;
+      }
       buffer  = header;
       bufread = header;
       frombuf(buffer, &nbytes);
@@ -4021,7 +4059,7 @@ TFile *TFile::Open(TFileOpenHandle *fh)
 
       // Adopt the handle instance in the TFile instance so that it gets
       // automatically cleaned up
-      f->fAsyncHandle = fh;
+      if (f) f->fAsyncHandle = fh;
    }
 
    // We are done
