@@ -7827,9 +7827,12 @@ void TTree::Streamer(TBuffer& b)
             fEstimate = 1000000;
          }
          if (fAutoFlush < 0) {
-            fCacheSize    = -fAutoFlush;
+            // If there is no autoflush set, let's keep the cache completely
+            // disable by default for now.
+            fCacheSize = fAutoFlush; 
          } else if (fAutoFlush != 0) {
             // Estimate the cluster size.
+            // This will allow TTree::Process to enable the cache.
             if (fZipBytes != 0) {
                fCacheSize =  fAutoFlush*(fZipBytes/fEntries);
             } else if (fTotBytes != 0) {
