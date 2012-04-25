@@ -1227,7 +1227,10 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
    if (obj && !obj->InheritsFrom("TSystemFile")) {
       TString ext = obj->GetName();
       if (obj->InheritsFrom("TDirectory")) {
-         fNKeys = ((TDirectory *)obj)->GetListOfKeys()->GetEntries();
+         if (((TDirectory *)obj)->GetListOfKeys())
+            fNKeys = ((TDirectory *)obj)->GetListOfKeys()->GetEntries();
+         else 
+            fNKeys = 0;
       }
       else if (obj->InheritsFrom("TKey") && (obj->IsA() != TClass::Class())) {
          Chdir(item);
