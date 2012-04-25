@@ -1243,7 +1243,11 @@ Int_t TDirectoryFile::ReadKeys(Bool_t forceRead)
       char *header = new char[nbytes];
       buffer       = header;
       fFile->Seek(fSeekDir);
-      fFile->ReadBuffer(buffer,nbytes);
+      if ( fFile->ReadBuffer(buffer,nbytes) ) {
+         // ReadBuffer return kTRUE in case of failure.
+         delete [] header;
+         return 0;
+      }
       buffer += fNbytesName;
       Version_t versiondir;
       frombuf(buffer,&versiondir);
