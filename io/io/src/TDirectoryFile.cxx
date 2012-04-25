@@ -109,13 +109,17 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
       Error("TDirectoryFile","An object with name %s exists already", name);
       return;
    }
-   TClass *cl = IsA();
-   if (strlen(classname) != 0) cl = TClass::GetClass(classname);
-
-   if (!cl) {
-      Error("TDirectoryFile","Invalid class name: %s",classname);
-      return;
+   TClass *cl = 0;
+   if (strlen(classname) != 0) {
+      cl = TClass::GetClass(classname);
+      if (!cl) {
+         Error("TDirectoryFile","Invalid class name: %s",classname);
+         return;
+      }
+   } else { 
+      cl = IsA();
    }
+
    fBufferSize  = 0;
    fWritable    = kTRUE;
 
@@ -147,7 +151,7 @@ void TDirectoryFile::Init(TClass *cl)
       if (fSeekDir == 0) return;
       char *buffer = key->GetBuffer();
       TDirectoryFile::FillBuffer(buffer);
-      Int_t cycle = motherdir->AppendKey(key);
+      Int_t cycle = motherdir ? motherdir->AppendKey(key) : 0;
       key->WriteFile(cycle);
    } else {
       fSeekParent  = 0;
