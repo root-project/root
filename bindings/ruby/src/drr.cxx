@@ -176,7 +176,7 @@ void * rr_parse_void (VALUE o)
          /* FIXME: Memory leak until I find the correct way. Until
           * then please use integers in TTrees with care. --elathan
           */
-         i = (VALUE*) malloc (sizeof(int));
+         i = (VALUE*) malloc (sizeof(VALUE));
          *i = (int) (o>>1);
          return (void *) i;
       case T_OBJECT:
