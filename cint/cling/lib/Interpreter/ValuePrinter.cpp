@@ -79,7 +79,8 @@ static void StreamObj(llvm::raw_ostream& o, const void* v,
         o << "]\n";
 
         return;
-      }
+      } else
+        o << "<<<invalid>>> ";
     }
 
   // TODO: Print the object members.
