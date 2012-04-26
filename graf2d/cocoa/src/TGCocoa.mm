@@ -2285,7 +2285,7 @@ Cursor_t TGCocoa::CreateCursor(ECursor cursor)
    // kHand,       kRotate,      kPointer,  kArrowRight,
    // kCaret,      kWatch
 
-   return Cursor_t(cursor);//HAHAHAHAHA!!! CREATED!!!
+   return Cursor_t(cursor + 1);//HAHAHAHAHA!!! CREATED!!!
 }
 
 //______________________________________________________________________________
@@ -2304,7 +2304,8 @@ void TGCocoa::SetCursor(Window_t wid, Cursor_t cursorID)
 {
    // Sets the cursor "curid" to be used when the pointer is in the
    // window "wid".
-   SetCursor(Int_t(wid), ECursor(cursorID));
+   if (cursorID > 0)
+      SetCursor(Int_t(wid), ECursor(cursorID - 1));
 }
 
 //______________________________________________________________________________

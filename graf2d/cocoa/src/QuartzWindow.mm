@@ -13,6 +13,8 @@
 
 //#define NDEBUG
 
+#include <stdexcept>
+
 #ifdef DEBUG_ROOT_COCOA
 #import <iostream>
 #import <fstream>
@@ -29,6 +31,7 @@
 #import "X11Events.h"
 #import "TGWindow.h"
 #import "TGClient.h"
+#import "TSystem.h"
 #import "TGCocoa.h"
 
 namespace ROOT {
@@ -329,6 +332,19 @@ NSComparisonResult CompareViewsToRaise(id view1, id view2, void *context)
       return NSOrderedAscending;
 
    return NSOrderedSame;
+}
+
+//______________________________________________________________________________
+NSPoint GetCursorHotStop(NSImage *image, ECursor cursor)
+{
+   assert(image != nil && "CursroHotSpot, image parameter is nil");
+   
+   const NSSize imageSize = image.size;
+
+   if (cursor == kArrowRight) 
+      return CGPointMake(imageSize.width, imageSize.height / 2);
+   
+   return CGPointMake(imageSize.width / 2, imageSize.height / 2);
 }
 
 }
@@ -1043,6 +1059,8 @@ void print_mask_info(ULong_t mask)
       //
       if (attr)
          ROOT::MacOSX::X11::SetWindowAttributes(attr, self);
+         
+      fCurrentCursor = kPointer;
    }
    
    return self;
@@ -1927,22 +1945,55 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (NSCursor *) createCustomCursor 
 {
+   const char *pngFileName = 0;
+
    switch (fCurrentCursor) {
    case kMove:
+      pngFileName = "move_cursor.png";
       break;
    case kArrowHor:
+      pngFileName = "hor_arrow_cursor.png";
       break;
    case kArrowVer:
+      pngFileName = "ver_arrow_cursor.png";
       break;
    case kArrowRight:
+      pngFileName = "right_arrow_cursor.png";
       break;
    case kBottomLeft:
    case kTopRight:
+      pngFileName = "top_right_cursor.png";
       break;
    case kTopLeft:
    case kBottomRight:
+      pngFileName = "top_left_cursor.png";
       break;
    default:;
+   }
+   
+   if (pngFileName) {
+      const char *path = gSystem->Which("$ROOTSYS/icons", pngFileName, kReadPermission);//This must be deleted.
+
+      if (!path || path[0] == 0) {
+         //File was not found.
+         delete [] path;
+         return nil;
+      }
+      
+      NSString *nsPath = [NSString stringWithFormat : @"%s", path];//in autorelease pool.
+      delete [] path;
+
+      NSImage *cursorImage = [[NSImage alloc] initWithContentsOfFile : nsPath];//must call release.
+
+      if (!cursorImage)
+         return nil;
+      
+      NSPoint hotSpot = ROOT::MacOSX::X11::GetCursorHotStop(cursorImage, fCurrentCursor);
+      NSCursor *customCursor = [[[NSCursor alloc] initWithImage : cursorImage hotSpot : hotSpot] autorelease];//in autorelease pool.
+      
+      [cursorImage release];
+      
+      return customCursor;
    }
 
    return nil;
@@ -1965,7 +2016,7 @@ void print_mask_info(ULong_t mask)
       cursor = [NSCursor crosshairCursor];
       break;
    case kPointer:
-      cursor = [NSCursor pointingHandCursor];
+      //Use simple arrow (or this special cursor will be even on GUI widgets).
       break;
    case kHand:
       cursor = [NSCursor openHandCursor];
@@ -1985,6 +2036,8 @@ void print_mask_info(ULong_t mask)
    case kCaret:
       cursor = [NSCursor IBeamCursor];
       break;
+   case kRotate:
+   case kWatch:
    default:
       cursor = [self createCustomCursor];
    }

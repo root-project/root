@@ -208,6 +208,12 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize)
       const char *fontDirectoryPath = gEnv->GetValue("Root.TTFontPath","$(ROOTSYS)/fonts");//This one I do not own.
       char *fontFileName = gSystem->Which(fontDirectoryPath, "symbol.ttf", kReadPermission);//This must be deleted.
 
+      if (!fontFileName || fontFileName[0] == 0) {
+         ::Error("FontCache::SelectSymbolFont", "sumbol.ttf file not found");
+         delete [] fontFileName;
+         return nullptr;
+      }
+
       try {
          const Util::CFScopeGuard<CFStringRef> path(CFStringCreateWithCString(kCFAllocatorDefault, fontFileName, kCFURLPOSIXPathStyle));
          if (!path.Get()) {
@@ -231,9 +237,12 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize)
             return nullptr;
          }
 
+         delete [] fontFileName;
+
          fFonts[11][fixedSize] = font;//This can throw.
          return fSelectedFont = font.Get();
       } catch (const std::exception &) {//Bad alloc.
+         //RAII destructors should do their work.
          return nullptr;
       }
    }
