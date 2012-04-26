@@ -1793,8 +1793,6 @@ void print_mask_info(ULong_t mask)
 {
 
    assert(fID != 0 && "rightMouseUp, fID is 0");
-   
-   (void)theEvent;//TODO: delete.
 
    TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != nullptr && "rightMouseUp, gVirtualX is either null or has type different from TGCocoa");
@@ -1842,11 +1840,6 @@ void print_mask_info(ULong_t mask)
 {
    assert(fID != 0 && "mouseDragged, fID is 0");
    
-   //mouseMoved and mouseDragged work differently 
-   //(drag events are generated only for one view, where drag started).
-   //if (fParentView)
-   //   return;
-   
    TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != nullptr && "mouseMoved, gVirtualX is null or not of TGCocoa type");
    
@@ -1857,12 +1850,7 @@ void print_mask_info(ULong_t mask)
 - (void) rightMouseDragged : (NSEvent *)theEvent
 {
    assert(fID != 0 && "rightMouseDragged, fID is 0");
-   
-   //mouseMoved and mouseDragged work differently 
-   //(drag events are generated only for one view, where drag started).
-   //if (fParentView)
-   //   return;
-   
+
    TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != nullptr && "rightMouseMoved, gVirtualX is null or not of TGCocoa type");
    

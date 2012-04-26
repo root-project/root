@@ -49,7 +49,7 @@ $(COCOALIB):    $(COCOAO) $(COCOAOBJCPPO) $(COCOADO) $(ORDER_) $(MAINLIBS) \
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libGCocoa.$(SOEXT) $@ \
 		   "$(COCOAO) $(COCOAOBJCPPO) $(COCOADO)" \
-		   "$(COCOALIBEXTRA) -framework Cocoa"
+		   "$(COCOALIBEXTRA) -framework Cocoa -framework OpenGL"
 
 $(COCOADS):     $(COCOAH1) $(COCOAL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)

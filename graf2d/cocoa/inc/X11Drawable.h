@@ -53,8 +53,8 @@
 
 //Functions to copy one drawable into another.
 //Point_t, Rectangle_t are in GuiTypes.h
-- (void)     copy : (NSObject<X11Drawable> *) src area : (Rectangle_t) area withMask : (QuartzImage *)mask 
-             clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint;
+- (void) copy : (NSObject<X11Drawable> *) src area : (Rectangle_t) area withMask : (QuartzImage *)mask 
+         clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint;
 
 //Get access to pixel data.
 - (unsigned char *) readColorBits : (Rectangle_t) area;
@@ -65,9 +65,9 @@
 @optional
 
 //Geometry setters:
-- (void)     setDrawableSize : (NSSize) newSize;
-- (void)     setX : (int) x Y : (int) y width : (unsigned) w height : (unsigned) h;
-- (void)     setX : (int) x Y : (int) y;
+- (void) setDrawableSize : (NSSize) newSize;
+- (void) setX : (int) x Y : (int) y width : (unsigned) w height : (unsigned) h;
+- (void) setX : (int) x Y : (int) y;
 
 //I have to somehow emulate X11's behavior to make ROOT's GUI happy,
 //that's why I have this bunch of properties here to be set/read from a window.
