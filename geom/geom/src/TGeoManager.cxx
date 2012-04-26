@@ -3215,6 +3215,7 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
    for (Int_t i=0; i<nnavigators; i++) {
       TGeoNavigator *nav = (TGeoNavigator*)GetListOfNavigators()->At(i);
       nav->ResetAll();
+      if (fClosed) nav->GetCache()->BuildInfoBranch();
    }
 }
 //_____________________________________________________________________________
