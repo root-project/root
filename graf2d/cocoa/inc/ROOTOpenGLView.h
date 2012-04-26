@@ -1,9 +1,26 @@
+// @(#)root/graf2d:$Id$
+// Author: Timur Pocheptsov   26/04/2012
+
+/*************************************************************************
+ * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_ROOTOpenGLView
 #define ROOT_ROOTOpenGLView
 
 #import "X11Drawable.h"
 
 @class QuartzView;
+
+///////////////////////////////////////////
+//                                       //
+// OpenGL view's class.                  //
+//                                       //
+///////////////////////////////////////////
 
 @interface ROOTOpenGLView : NSOpenGLView <X11Window>
 
