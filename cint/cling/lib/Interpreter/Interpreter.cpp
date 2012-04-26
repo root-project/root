@@ -401,14 +401,6 @@ namespace cling {
   Interpreter::CompilationResult
   Interpreter::process(const std::string& input, Value* V /* = 0 */,
                        const Decl** D /* = 0 */) {
-    DiagnosticsEngine& Diag = getCI()->getDiagnostics();
-    // Disable warnings which doesn't make sense when using the prompt
-    // This gets reset with the clang::Diagnostics().Reset()
-    Diag.setDiagnosticMapping(clang::diag::warn_unused_expr,
-                              clang::diag::MAP_IGNORE, SourceLocation());
-    Diag.setDiagnosticMapping(clang::diag::warn_unused_call,
-                              clang::diag::MAP_IGNORE, SourceLocation());
-
     CompilationOptions CO;
     CO.DeclarationExtraction = 1;
     CO.ValuePrinting = CompilationOptions::VPAuto;
@@ -418,30 +410,16 @@ namespace cling {
     if (!canWrapForCall(input))
       return declare(input, D);
 
-    if (V) {
-      return Evaluate(input, CO, V);
+    if (Evaluate(input, CO, V) == Interpreter::kFailure) {
+      if (D)
+        *D = 0;
+      return Interpreter::kFailure;
     }
-    
-    std::string functName;
-    std::string wrapped = input;
-    WrapInput(wrapped, functName);
-
-    if (m_IncrParser->Compile(wrapped, CO) == IncrementalParser::kFailed)
-        return Interpreter::kFailure;
 
     if (D)
       *D = m_IncrParser->getLastTransaction().getFirstDecl();
 
-    //
-    //  Run it using the JIT.
-    //
-    // TODO: Handle the case when RunFunction wasn't able to run the function
-    bool RunRes = RunFunction(functName);
-
-    if (RunRes)
-      return Interpreter::kSuccess;
-
-    return Interpreter::kFailure;
+    return Interpreter::kSuccess;
   }
 
   Interpreter::CompilationResult
@@ -450,6 +428,7 @@ namespace cling {
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.DynamicScoping = isDynamicLookupEnabled();
+    CO.Debug = isPrintingAST();
 
     return Declare(input, CO, D);
   }
@@ -541,6 +520,14 @@ namespace cling {
                         Value* V /* = 0 */) {
 
     Sema& TheSema = getCI()->getSema();
+
+    DiagnosticsEngine& Diag = getCI()->getDiagnostics();
+    // Disable warnings which doesn't make sense when using the prompt
+    // This gets reset with the clang::Diagnostics().Reset()
+    Diag.setDiagnosticMapping(clang::diag::warn_unused_expr,
+                              clang::diag::MAP_IGNORE, SourceLocation());
+    Diag.setDiagnosticMapping(clang::diag::warn_unused_call,
+                              clang::diag::MAP_IGNORE, SourceLocation());
 
     // Wrap the expression
     std::string WrapperName;
