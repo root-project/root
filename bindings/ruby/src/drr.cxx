@@ -782,31 +782,30 @@ static VALUE drr_singleton_missing(int argc, VALUE argv[], VALUE self)
    rb_scan_args (argc, argv, "0*", &inargs);
    nargs = RARRAY_LEN(inargs) - 1;
 
-   G__CallFunc *func = new G__CallFunc();
+   G__CallFunc func;
    G__ClassInfo *klass = new G__ClassInfo (classname);
    G__MethodInfo *minfo = 0;
 
    if (nargs) {
       drr_find_method_prototype( klass, methname, inargs, cproto, 1 );
-      drr_set_method_args( inargs, func, 1 );
+      drr_set_method_args( inargs, &func, 1 );
    }
 
    /* FIXME: minfo is really used only for the return type.  */
    minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &offset));
    if (minfo->InterfaceMethod())
-      func->SetFunc(*minfo);
+      func.SetFunc(*minfo);
    else
       rb_raise( rb_eArgError, "You provided an unknown prototype (%s) for (%s#%s).",
                 cproto, classname, methname);
 
+   int rtype = drr_parse_ret_type (minfo->Type()->TrueName());
    delete minfo;
 
-   int rtype = drr_parse_ret_type (minfo->Type()->TrueName());
-
    if (rtype != kfloat)
-      address = func->ExecInt((void*)(offset));
+      address = func.ExecInt((void*)(offset));
    else
-      dbladdr = func->ExecDouble((void*)(offset));
+      dbladdr = func.ExecDouble((void*)(offset));
 
    return(drr_return(rtype, address, dbladdr, self));
 }
