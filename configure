@@ -2743,7 +2743,7 @@ if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
                result "ok"
                ftglincdir=`pkg-config --cflags-only-I ftgl | sed 's/-I//g'`
                ftgllibs=`pkg-config --libs-only-l ftgl`
-               ftgllibdir=`pkg-config --libs-only-L ftgl | sed 's/-L//g'`
+               ftgllibdir=`pkg-config --libs-only-L ftgl`
                enable_builtin_ftgl="no"
             else
                enable_builtin_ftgl="yes"
