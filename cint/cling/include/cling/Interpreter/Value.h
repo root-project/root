@@ -9,6 +9,7 @@
 
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/CanonicalType.h"
 
 namespace clang {
   class ASTContext;
@@ -75,7 +76,8 @@ namespace cling {
     /// \brief Get the value.
     //
     /// Get the value cast to T. This is similar to reinterpret_cast<T>(value),
-    /// but only works for builtin types and pointers.
+    /// casting the value of builtins (except void), enums and pointers.
+    /// Values referencing an object are treated as pointers to the object.
     template <typename T>
     T simplisticCastAs() const;
   };
@@ -112,7 +114,9 @@ namespace cling {
   CLING_VALUE_TYPEDACCESS_UNSIGNED(TYPE);
 
   CLING_VALUE_TYPEDACCESS(double, DoubleVal);
+  //CLING_VALUE_TYPEDACCESS(long double, ???);
   CLING_VALUE_TYPEDACCESS(float, FloatVal);
+
   CLING_VALUE_TYPEDACCESS(bool, IntVal.getBoolValue());
 
   CLING_VALUE_TYPEDACCESS_BOTHSIGNS(char)
@@ -134,31 +138,20 @@ namespace cling {
   }
   template <typename T>
   T Value::simplisticCastAs() const {
-    const clang::Type* desugared = type->getUnqualifiedDesugaredType();
-    if (desugared->getTypeClass() == clang::Type::Builtin) {
-      switch (desugared->getAs<clang::BuiltinType>()->getKind()) {
-      case clang::BuiltinType::Bool: return (T) getAs<bool>();
-      case clang::BuiltinType::Char_U: return (T) getAs<char>();
-      case clang::BuiltinType::UChar: return (T) getAs<unsigned char>();
-      case clang::BuiltinType::UShort: return (T) getAs<unsigned short>();
-      case clang::BuiltinType::UInt: return (T) getAs<unsigned int>();
-      case clang::BuiltinType::ULong: return (T) getAs<unsigned long>();
-      case clang::BuiltinType::ULongLong: return (T) getAs<unsigned long long>();
-
-      case clang::BuiltinType::Char_S: return (T) getAs<char>();
-      case clang::BuiltinType::SChar: return (T) getAs<signed char>();
-      case clang::BuiltinType::Short: return (T) getAs<signed short>();
-      case clang::BuiltinType::Int: return (T) getAs<signed int>();
-      case clang::BuiltinType::Long: return (T) getAs<signed long>();
-      case clang::BuiltinType::LongLong: return (T) getAs<signed long long>();
-
-      case clang::BuiltinType::Float: return (T) getAs<float>();
-      case clang::BuiltinType::Double: return (T) getAs<double>();
-      default:
-        assert("Cannot cast simplistically from value's type!" && 0);
-        return T();
-      }
-    } else if (desugared->getTypeClass() == clang::Type::Pointer) {
+    const clang::Type* desugCanon = type->getUnqualifiedDesugaredType();
+    desugCanon = desugCanon->getCanonicalTypeUnqualified()->getTypePtr()->getUnqualifiedDesugaredType();
+    if (desugCanon->isSignedIntegerOrEnumerationType()) {
+      return (T) getAs<signed long long>();
+    } else if (desugCanon->isUnsignedIntegerOrEnumerationType()) {
+      return (T) getAs<unsigned long long>();
+    } else if (desugCanon->isRealFloatingType()) {
+      const clang::BuiltinType* BT = desugCanon->getAs<clang::BuiltinType>();
+      if (BT->getKind() == clang::BuiltinType::Double) return (T) getAs<double>();
+      else if (BT->getKind() == clang::BuiltinType::Float) return (T) getAs<float>();
+      /* not yet supported in JIT:
+      else if (BT->getKind() == clang::BuiltinType::LongDouble) return (T) getAs<long double>();
+      */
+    } else if (desugCanon->isPointerType() || desugCanon->isObjectType()) {
       return (T) getAs<void*>();
     }
     assert("unsupported type in Value, cannot cast simplistically!" && 0);
