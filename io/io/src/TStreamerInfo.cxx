@@ -472,38 +472,42 @@ void TStreamerInfo::Build()
 
    if (needAllocClass) {
       TStreamerInfo *infoalloc  = (TStreamerInfo *)Clone(TString::Format("%s@@%d",GetName(),GetClassVersion()));
-      infoalloc->BuildCheck();
-      infoalloc->BuildOld();
-      TClass *allocClass = infoalloc->GetClass();
-
-      {
-         TIter next(fElements);
-         TStreamerElement* element;
-         while ((element = (TStreamerElement*) next())) {
-            if (element->TestBit(TStreamerElement::kRepeat) && element->IsaPointer()) {
-               TStreamerElement *other = (TStreamerElement*) infoalloc->GetElements()->FindObject(element->GetName());
-               if (other) {
-                  other->SetBit(TStreamerElement::kDoNotDelete);
+      if (!infoalloc) {
+         Error("Build","Could you create a TStreamerInfo for %s\n",TString::Format("%s@@%d",GetName(),GetClassVersion()).Data());
+      } else {
+         infoalloc->BuildCheck();
+         infoalloc->BuildOld();
+         TClass *allocClass = infoalloc->GetClass();
+         
+         {
+            TIter next(fElements);
+            TStreamerElement* element;
+            while ((element = (TStreamerElement*) next())) {
+               if (element->TestBit(TStreamerElement::kRepeat) && element->IsaPointer()) {
+                  TStreamerElement *other = (TStreamerElement*) infoalloc->GetElements()->FindObject(element->GetName());
+                  if (other) {
+                     other->SetBit(TStreamerElement::kDoNotDelete);
+                  }
                }
             }
+            infoalloc->GetElements()->Compress();
          }
-         infoalloc->GetElements()->Compress();
-      }
-      {
-         TIter next(fElements);
-         TStreamerElement* element;
-         while ((element = (TStreamerElement*) next())) {
+         {
+            TIter next(fElements);
+            TStreamerElement* element;
+            while ((element = (TStreamerElement*) next())) {
             if (element->TestBit(TStreamerElement::kCache)) {
                element->SetOffset(infoalloc->GetOffset(element->GetName()));
             }
+            }
          }
+         
+         TStreamerElement *el = new TStreamerArtificial("@@alloc","", 0, TStreamerInfo::kCacheNew, allocClass->GetName());
+         R__TObjArray_InsertAt( fElements, el, 0 );
+         
+         el = new TStreamerArtificial("@@dealloc","", 0, TStreamerInfo::kCacheDelete, allocClass->GetName());
+         fElements->Add( el );
       }
-
-      TStreamerElement *el = new TStreamerArtificial("@@alloc","", 0, TStreamerInfo::kCacheNew, allocClass->GetName());
-      R__TObjArray_InsertAt( fElements, el, 0 );
-
-      el = new TStreamerArtificial("@@dealloc","", 0, TStreamerInfo::kCacheDelete, allocClass->GetName());
-      fElements->Add( el );
    }
 
    //
@@ -1013,20 +1017,24 @@ namespace {
       TStreamerInfo *info;
       while ((info = (TStreamerInfo*)next())) {
          info = (TStreamerInfo*)info->Clone();
-         info->SetClass(newClass);
-         Int_t oldv = info->GetClassVersion();
-         if (oldv > newClass->GetStreamerInfos()->GetSize() || newClass->GetStreamerInfos()->At(oldv) == 0) {
-            // All is good.
-            newClass->GetStreamerInfos()->AddAtAndExpand(info,oldv);
+         if (!info) {
+            Error("ImportStreamerInfo","Unable to clone the StreamerInfo for %s.",info->GetName());
          } else {
-            // We verify that we are consistent and that
-            //   newcl->GetStreamerInfos()->UncheckedAt(info->GetClassVersion)
-            // is already the same as info.
-            if (strcmp(newClass->GetStreamerInfos()->At(oldv)->GetName(),
-                         oldClass->GetName()) != 0) {
-               // The existing StreamerInfo does not already come from OldClass.
-               // This is a real problem!
-               return oldv;
+            info->SetClass(newClass);
+            Int_t oldv = info->GetClassVersion();
+            if (oldv > newClass->GetStreamerInfos()->GetSize() || newClass->GetStreamerInfos()->At(oldv) == 0) {
+               // All is good.
+               newClass->GetStreamerInfos()->AddAtAndExpand(info,oldv);
+            } else {
+               // We verify that we are consistent and that
+               //   newcl->GetStreamerInfos()->UncheckedAt(info->GetClassVersion)
+               // is already the same as info.
+               if (strcmp(newClass->GetStreamerInfos()->At(oldv)->GetName(),
+                          oldClass->GetName()) != 0) {
+                  // The existing StreamerInfo does not already come from OldClass.
+                  // This is a real problem!
+                  return oldv;
+               }
             }
          }
       }
@@ -1303,7 +1311,7 @@ void TStreamerInfo::BuildOld()
             TStreamerInfo* infobase;
             if (fClass->TestBit(TClass::kIsEmulation) && (baseclass->Property() & kIsAbstract)) {
                infobase = (TStreamerInfo*)baseclass->GetStreamerInfoAbstractEmulated(version);
-               baseclass = infobase->GetClass();
+               if (infobase) baseclass = infobase->GetClass();
             }
             else {
                infobase = (TStreamerInfo*)baseclass->GetStreamerInfo(version);
@@ -1772,9 +1780,13 @@ void TStreamerInfo::BuildOld()
 
          if (allocClass == 0) {
             infoalloc  = (TStreamerInfo *)Clone(TString::Format("%s@@%d",GetName(),GetOnFileClassVersion()));
-            infoalloc->BuildCheck();
-            infoalloc->BuildOld();
-            allocClass = infoalloc->GetClass();
+            if (!infoalloc) {
+               Error("BuildOld","Unable to create the StreamerInfo for %s.",TString::Format("%s@@%d",GetName(),GetOnFileClassVersion()).Data());
+            } else {
+               infoalloc->BuildCheck();
+               infoalloc->BuildOld();
+               allocClass = infoalloc->GetClass();
+            }
          }
 
          // Now that we are caching the unconverted element, we do not assign it to the real type even if we could have!
@@ -2202,7 +2214,7 @@ void TStreamerInfo::ComputeSize()
    TStreamerElement *element = (TStreamerElement*)fElements->Last();
    //faster and more precise to use last element offset +size
    //on 64 bit machines, offset may be forced to be a multiple of 8 bytes
-   fSize = element->GetOffset() + element->GetSize();
+   fSize = element ? element->GetOffset() + element->GetSize() : 0;
    if (fNVirtualInfoLoc > 0 && (fVirtualInfoLoc[0]+sizeof(TStreamerInfo*)) >= (ULong_t)fSize) {
       fSize = fVirtualInfoLoc[0] + sizeof(TStreamerInfo*);
    }
@@ -3172,7 +3184,7 @@ TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember, Int_
             } else {
                baseInfo = (TStreamerInfo*)baseClass->GetStreamerInfo();
             }
-            element = baseInfo->GetStreamerElement(datamember, local_offset);
+            if (baseInfo) element = baseInfo->GetStreamerElement(datamember, local_offset);
             if (element) {
                offset = base_offset + local_offset;
                return element;
@@ -3632,7 +3644,8 @@ void* TStreamerInfo::New(void *obj)
          case kBase:
          {
             if (cle->Property() & kIsAbstract) {
-               cle->GetStreamerInfoAbstractEmulated()->New(eaddr);
+               TVirtualStreamerInfo *einfo = cle->GetStreamerInfoAbstractEmulated();
+               if (einfo) einfo->New(eaddr);
             } else {
                cle->New(eaddr);               
             }
@@ -3800,7 +3813,8 @@ void TStreamerInfo::DestructorImpl(void* obj, Bool_t dtorOnly)
 
       if (etype == kBase) {
          if (cle->Property() & kIsAbstract) {
-            cle->GetStreamerInfoAbstractEmulated()->Destructor(eaddr, kTRUE);
+            TVirtualStreamerInfo *einfo = cle->GetStreamerInfoAbstractEmulated();
+            if (einfo) einfo->Destructor(eaddr, kTRUE);
          } else {
             cle->Destructor(eaddr, kTRUE);
          }

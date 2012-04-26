@@ -1177,30 +1177,32 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                      subinfo = (TStreamerInfo*)oldProxy->GetValueClass()->GetStreamerInfo( vClVersion );
                      newProxy = oldProxy;
                   }
-                  if (subinfo->IsOptimized()) {
-                     subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-                     subinfo->Compile();
-                  }
-                  DOLOOP {
-                     void* env;
-                     void **contp = (void**)(arr[k]+ioffset);
-                     int j;
-                     for(j=0;j<fLength[i];j++) {
-                        void *cont = contp[j];
-                        if (cont==0) {
-                           contp[j] = cle->New();
-                           cont = contp[j];
+                  if (subinfo) {
+                     if (subinfo->IsOptimized()) {
+                        subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
+                        subinfo->Compile();
+                     }
+                     DOLOOP {
+                        void* env;
+                        void **contp = (void**)(arr[k]+ioffset);
+                        int j;
+                        for(j=0;j<fLength[i];j++) {
+                           void *cont = contp[j];
+                           if (cont==0) {
+                              contp[j] = cle->New();
+                              cont = contp[j];
+                           }
+                           TVirtualCollectionProxy::TPushPop helper( newProxy, cont );
+                           Int_t nobjects;
+                           b >> nobjects;
+                           env = newProxy->Allocate(nobjects,true);
+                           if (vers<7) {
+                              subinfo->ReadBuffer(b,*newProxy,-1,nobjects,0,1);
+                           } else {
+                              subinfo->ReadBufferSTL(b,newProxy,nobjects,-1,0);
+                           }
+                           newProxy->Commit(env);
                         }
-                        TVirtualCollectionProxy::TPushPop helper( newProxy, cont );
-                        Int_t nobjects;
-                        b >> nobjects;
-                        env = newProxy->Allocate(nobjects,true);
-                        if (vers<7) {
-                           subinfo->ReadBuffer(b,*newProxy,-1,nobjects,0,1);
-                        } else {
-                           subinfo->ReadBufferSTL(b,newProxy,nobjects,-1,0);
-                        }
-                        newProxy->Commit(env);
                      }
                   }
                   b.CheckByteCount(start,count,aElement->GetFullName());
