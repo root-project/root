@@ -1265,16 +1265,18 @@ void TSelectorDraw::ProcessFillObject(Long64_t /*entry*/)
 
             void *obj = fVar[0]->EvalObject(i);
 
-            TBits *bits = (TBits*)obj;
-            Int_t nbits = bits->GetNbits();
+            if (obj) {
+               TBits *bits = (TBits*)obj;
+               Int_t nbits = bits->GetNbits();
 
-            Int_t nextbit = -1;
-            while (1) {
-               nextbit = bits->FirstSetBit(nextbit + 1);
-               if (nextbit >= nbits) break;
-               fVal[0][fNfill] = nextbit;
-               fW[fNfill] =  ww;
-               fNfill++;
+               Int_t nextbit = -1;
+               while (1) {
+                  nextbit = bits->FirstSetBit(nextbit + 1);
+                  if (nextbit >= nbits) break;
+                  fVal[0][fNfill] = nextbit;
+                  fW[fNfill] =  ww;
+                  fNfill++;
+               }
             }
 
          } else {
@@ -1659,7 +1661,7 @@ void TSelectorDraw::TakeEstimate()
             // because h3 will be filled below and we do not want to show
             // the binned scatter-plot, the TGraph being better.
             TH1 *h3c = h3->DrawCopy(fOption.Data());
-            h3c->SetStats(kFALSE);
+            if (h3c) h3c->SetStats(kFALSE);
          } else {
             // case like: T.Draw("y:x")
             // h3 is a temporary histogram (htemp). This histogram

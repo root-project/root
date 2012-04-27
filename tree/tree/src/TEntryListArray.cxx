@@ -365,7 +365,7 @@ Bool_t TEntryListArray::Enter(Long64_t entry, TTree *tree, Long64_t subentry)
       result = TEntryList::Enter(entry);
       if (subentry != -1 && result) { // a sub entry was given and the entry was not present
          t = SetEntry(entry);
-         t->TEntryList::Enter(subentry);
+         if (t) t->TEntryList::Enter(subentry);
       }
    }
    return result;

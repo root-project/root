@@ -644,7 +644,7 @@ void TTreeCloner::WriteBaskets()
          to->AddBasket(*basket,kTRUE,fToStartEntries + from->GetBasketEntry()[index]);
       } else {
          TBasket *frombasket = from->GetBasket( index );
-         if (frombasket->GetNevBuf()>0) {
+         if (frombasket && frombasket->GetNevBuf()>0) {
             TBasket *tobasket = (TBasket*)frombasket->Clone();
             tobasket->SetBranch(to);
             to->AddBasket(*tobasket, kFALSE, fToStartEntries+from->GetBasketEntry()[index]);

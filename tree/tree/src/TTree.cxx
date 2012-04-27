@@ -2373,7 +2373,7 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */, Boo
    cl->BuildRealData(pointer);
    TStreamerInfo* sinfo = (TStreamerInfo*)cl->GetStreamerInfo(cl->GetClassVersion());
 
-   if (!canOptimize && (!sinfo->IsCompiled() || sinfo->IsOptimized()) ) {
+   if (sinfo && !canOptimize && (!sinfo->IsCompiled() || sinfo->IsOptimized()) ) {
       // Streamer info has not yet been compiled.
       //
       // Optimizing does not work with splitting.
@@ -2391,7 +2391,7 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */, Boo
       TClass* clm = TClass::GetClass(base->GetName());
       BuildStreamerInfo(clm, pointer, canOptimize);
    }
-   if (fDirectory) {
+   if (sinfo && fDirectory) {
       sinfo->ForceWriteInfo(fDirectory->GetFile());
    }
    return sinfo;
@@ -3000,11 +3000,12 @@ namespace {
                   break;
                case kBuild:
                   // Build the index then copy it
-                  oldtree->GetTree()->BuildIndex(newtree->GetTreeIndex()->GetMajorName(), newtree->GetTreeIndex()->GetMinorName());
-                  newtree->GetTreeIndex()->Append(oldtree->GetTree()->GetTreeIndex(), kTRUE);
-                  // Clean up
-                  delete oldtree->GetTree()->GetTreeIndex();
-                  oldtree->GetTree()->SetTreeIndex(0);
+                  if (oldtree->GetTree()->BuildIndex(newtree->GetTreeIndex()->GetMajorName(), newtree->GetTreeIndex()->GetMinorName())) {
+                     newtree->GetTreeIndex()->Append(oldtree->GetTree()->GetTreeIndex(), kTRUE);
+                     // Clean up
+                     delete oldtree->GetTree()->GetTreeIndex();
+                     oldtree->GetTree()->SetTreeIndex(0);
+                  }
                   break;
             }
          } else {
@@ -3030,8 +3031,9 @@ namespace {
                   newtree->SetTreeIndex(index);
                } else {
                   // Build the index so far.
-                  newtree->BuildIndex(oldtree->GetTree()->GetTreeIndex()->GetMajorName(), oldtree->GetTree()->GetTreeIndex()->GetMinorName());
-                  newtree->GetTreeIndex()->Append(oldtree->GetTree()->GetTreeIndex(), kTRUE);
+                  if (newtree->BuildIndex(oldtree->GetTree()->GetTreeIndex()->GetMajorName(), oldtree->GetTree()->GetTreeIndex()->GetMinorName())) {
+                     newtree->GetTreeIndex()->Append(oldtree->GetTree()->GetTreeIndex(), kTRUE);
+                  }
                }
                break;
          }
@@ -3940,15 +3942,17 @@ void TTree::DropBuffers(Int_t)
    for (Int_t i = 0; i < nleaves; ++i)  {
       TLeaf* leaf = (TLeaf*) fLeaves.UncheckedAt(i);
       TBranch* branch = (TBranch*) leaf->GetBranch();
-      Int_t nbaskets = branch->GetListOfBaskets()->GetEntriesFast();
+      Int_t nbaskets = branch->GetListOfBaskets()->GetEntries();
       for (Int_t j = 0; j < nbaskets - 1; ++j) {
          if ((j == branch->GetReadBasket()) || (j == branch->GetWriteBasket())) {
             continue;
          }
-         TBasket* basket = branch->GetBasket(j);
-         ndrop += basket->DropBuffers();
-         if (fTotalBuffers < fMaxVirtualSize) {
-            return;
+         TBasket* basket = (TBasket*)branch->GetListOfBaskets()->UncheckedAt(j);
+         if (basket) {
+            ndrop += basket->DropBuffers();
+            if (fTotalBuffers < fMaxVirtualSize) {
+               return;
+            }
          }
       }
    }
@@ -5812,8 +5816,10 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
    if (info && info->fIsFirst && info->fOutputDirectory && info->fOutputDirectory->GetFile() != GetCurrentFile()) {
       TDirectory::TContext ctxt(gDirectory,info->fOutputDirectory);
       TTree *newtree = CloneTree(-1, options);
-      newtree->Write();
-      delete newtree;
+      if (newtree) {
+         newtree->Write();
+         delete newtree;
+      }
       info->fOutputDirectory->ReadTObject(this,this->GetName());
    }
    if (!li) return 0;
@@ -8070,6 +8076,7 @@ TObject* TTreeFriendLeafIter::Next()
       TObjArray *list = fTree->GetListOfLeaves();
       if (!list) return 0; // Can happen with an empty chain.
       fLeafIter =  list->MakeIterator(fDirection);
+      if (!fLeafIter) return 0;
    }
 
    next = fLeafIter->Next();
@@ -8078,6 +8085,7 @@ TObject* TTreeFriendLeafIter::Next()
          TCollection * list = fTree->GetListOfFriends();
          if (!list) return next;
          fTreeIter = list->MakeIterator(fDirection);
+         if (!fLeafIter) return 0;
       }
       TFriendElement * nextFriend = (TFriendElement*) fTreeIter->Next();
       ///nextTree = (TTree*)fTreeIter->Next();
@@ -8086,6 +8094,7 @@ TObject* TTreeFriendLeafIter::Next()
          if (!nextTree) return Next();
          SafeDelete(fLeafIter);
          fLeafIter = nextTree->GetListOfLeaves()->MakeIterator(fDirection);
+         if (!fLeafIter) return 0;
          next = fLeafIter->Next();
       }
    }

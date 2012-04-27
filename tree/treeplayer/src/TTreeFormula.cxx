@@ -3278,7 +3278,7 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char
          Error("BranchHasMethod","A TClonesArray was stored in a branch type no yet support (i.e. neither TBranchObject nor TBranchElement): %s",branch->IsA()->GetName());
          return kFALSE;
       }
-      cl = clones->GetClass();
+      cl = clones ? clones->GetClass() : 0;
    } else if (cl && cl->GetCollectionProxy()) {
       cl = cl->GetCollectionProxy()->GetValueClass();
    }

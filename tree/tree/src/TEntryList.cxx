@@ -863,7 +863,7 @@ TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename,
             Info("GetEntryList", "file: %s (longname: %s), hash: %lu, element hash: %lu",
                                  filename, longname.Data(), newhash, templist->fStringHash);
          if (newhash == templist->fStringHash){
-            if (!strcmp(templist->GetTreeName(), treename) && !strcmp(templist->GetFileName(), longname)){
+            if (templist->fTreeName == treename && templist->fFileName == longname){
                return templist;
             }
          }
@@ -1109,7 +1109,7 @@ void TEntryList::SetTree(const char *treename, const char *filename)
       TIter next(fLists);
       while ((elist = (TEntryList*)next())){
          if (newhash == elist->fStringHash){
-            if (!strcmp(elist->GetTreeName(), treename) && !strcmp(elist->GetFileName(), fn.Data())){
+            if (elist->fTreeName == treename && elist->fFileName == fn.Data()) {
                //the current entry list was changed. reset the fLastIndexQueried,
                //so that Next() doesn't start with the wrong current list
                //Also, reset those indices in the previously current list

@@ -624,10 +624,13 @@ static TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TCl
       }
    }
    if (objInfo == 0 && branch->GetTree()->GetDirectory()->GetFile()) {
-      TVirtualStreamerInfo *i = (TVirtualStreamerInfo *)branch->GetTree()->GetDirectory()->GetFile()->GetStreamerInfoCache()->FindObject(cname);
-      if (i) {
-         // NOTE: Is this correct for Foreigh classes?
-         objInfo = (TVirtualStreamerInfo *)cl->GetStreamerInfo(i->GetClassVersion());
+      const TList *infolist = branch->GetTree()->GetDirectory()->GetFile()->GetStreamerInfoCache();
+      if (infolist) {
+         TVirtualStreamerInfo *i = (TVirtualStreamerInfo *)infolist->FindObject(cname);
+         if (i) {
+            // NOTE: Is this correct for Foreigh classes?
+            objInfo = (TVirtualStreamerInfo *)cl->GetStreamerInfo(i->GetClassVersion());
+         }
       }
    }
    if (objInfo == 0) {

@@ -1217,6 +1217,7 @@ Double_t TFormLeafInfoClones::GetValue(TLeaf *leaf, Int_t instance)
       sub_instance = 0;
    }
    TClonesArray *clones = (TClonesArray*)GetLocalValuePointer(leaf);
+   if (clones==0) return 0;
 
    // Note we take advantage of having only one physically variable
    // dimension:
@@ -1230,7 +1231,7 @@ void * TFormLeafInfoClones::GetValuePointer(TLeaf *leaf, Int_t instance)
    // Return the pointer to the clonesArray
 
    TClonesArray * clones = (TClonesArray*)GetLocalValuePointer(leaf);
-   if (fNext) {
+   if (fNext && clones) {
       // Same as in TFormLeafInfoClones::GetValue
       Int_t len,index,sub_instance;
       len = (fNext->fElement==0)? 0 : fNext->GetArrayLength();
@@ -2680,9 +2681,11 @@ void TFormLeafInfoMultiVarDimClones::LoadSizes(TBranch* branch)
    fSumOfSizes = 0;
    for (Int_t i=0; i<fNsize; i++) {
       TClonesArray *clones = (TClonesArray*)fCounter2->GetValuePointer(leaf,i);
-      Int_t size = clones->GetEntries();
-      fSumOfSizes += size;
-      fSizes.AddAt( size, i );
+      if (clones) {
+         Int_t size = clones->GetEntries();
+         fSumOfSizes += size;
+         fSizes.AddAt( size, i );
+      }
    }
    return;
 }

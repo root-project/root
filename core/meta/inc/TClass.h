@@ -172,7 +172,7 @@ private:
    // Internal status bits
    enum { kLoading = BIT(14) };
    // Internal streamer type.
-   enum {kDefault=0, kEmulated=1, kTObject=2, kInstrumented=4, kForeign=8, kExternal=16};
+   enum EStreamerType {kDefault=0, kEmulated=1, kTObject=2, kInstrumented=4, kForeign=8, kExternal=16};
 
    // When a new class is created, we need to be able to find
    // if there are any existing classes that have the same name

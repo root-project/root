@@ -61,7 +61,7 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, const char *fi
    fOwnFile    = kTRUE;
    fParentTree = tree;
    fTreeName   = treename;
-   if (strchr(treename,'=')) {
+   if (treename && strchr(treename,'=')) {
       char *temp = Compress(treename);
       char *equal = strchr(temp,'=');
       if (!equal) return;;
@@ -96,7 +96,7 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
       // the filename.
       SetTitle("");
    }
-   if (strchr(treename,'=')) {
+   if (treename && strchr(treename,'=')) {
       char *temp = Compress(treename);
       char *equal = strchr(temp,'=');
       if (!equal) return;;

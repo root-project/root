@@ -1018,7 +1018,7 @@ namespace {
       while ((info = (TStreamerInfo*)next())) {
          info = (TStreamerInfo*)info->Clone();
          if (!info) {
-            Error("ImportStreamerInfo","Unable to clone the StreamerInfo for %s.",info->GetName());
+            Error("ImportStreamerInfo","Unable to clone the StreamerInfo for %s.",(*next)->GetName());
          } else {
             info->SetClass(newClass);
             Int_t oldv = info->GetClassVersion();
@@ -1803,7 +1803,7 @@ void TStreamerInfo::BuildOld()
          }
          element->SetBit(TStreamerElement::kCache);
          element->SetNewType( element->GetType() );
-         element->SetOffset(infoalloc->GetOffset(element->GetName()));
+         element->SetOffset(infoalloc ? infoalloc->GetOffset(element->GetName()) : 0);
       }
 
       if (element->GetNewType() == -2) {
