@@ -1034,19 +1034,19 @@ void TRootGuiBuilder::AddAction(TGuiBldAction *act, const char *sect)
    btn->SetUserData((void*)act);
    btn->Connect("Clicked()", "TRootGuiBuilder", this, "HandleButtons()");
 
-   hf->AddFrame(btn, new TGLayoutHints(kLHintsTop | kLHintsCenterY,1,1,1,1));
+   hf->AddFrame(btn, new TGLayoutHints(kLHintsTop | kLHintsCenterY,3,3,3,3));
 
    TGLabel *lb = new TGLabel(hf, act->fType != kGuiBldMacro ? act->GetTitle() :
                              act->GetName());
    lb->SetBackgroundColor(cont->GetBackground());
-   hf->AddFrame(lb, new TGLayoutHints(kLHintsTop | kLHintsCenterY,1,1,1,1));
+   hf->AddFrame(lb, new TGLayoutHints(kLHintsTop | kLHintsCenterY,3,3,3,3));
    hf->SetBackgroundColor(cont->GetBackground());
 
    // disable edit
    cont->SetEditDisabled(kEditDisable);
    hf->SetEditDisabled(kEditDisable);
 
-   cont->AddFrame(hf, new TGLayoutHints(kLHintsTop, 5, 5, 5, 0));
+   cont->AddFrame(hf, new TGLayoutHints(kLHintsExpandX | kLHintsTop, 2, 2, 2, 0));
    cont->MapSubwindows();
    cont->Resize();  // invoke Layout()
 }
