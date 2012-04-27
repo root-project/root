@@ -49,6 +49,10 @@ namespace PyROOT {
          UInt_t                      fFlags;
 
          int* fRefCount;
+
+      private:
+         MethodInfo_t( const MethodInfo_t& );
+         MethodInfo_t& operator=( const MethodInfo_t& );
       };
 
    public:

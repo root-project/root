@@ -815,6 +815,30 @@ void PyROOT::MethodProxy::AddMethod( MethodProxy* meth )
 }
 
 //____________________________________________________________________________
+PyROOT::MethodProxy::MethodInfo_t::MethodInfo_t( const MethodInfo_t& s ) :
+   fName( s.fName ), fDispatchMap( s.fDispatchMap ), fMethods( s.fMethods ), fFlags( s.fFlags ) 
+{
+   *s.fRefCount += 1;
+   fRefCount = s.fRefCount;
+}
+
+//____________________________________________________________________________
+PyROOT::MethodProxy::MethodInfo_t& PyROOT::MethodProxy::MethodInfo_t::operator=( const MethodInfo_t& s )
+{
+   if ( this != &s ) {
+      *s.fRefCount += 1;
+      fRefCount = s.fRefCount;
+
+      fName        = s.fName;
+      fDispatchMap = s.fDispatchMap;
+      fMethods     = s.fMethods;
+      fFlags       = s.fFlags;
+   }
+
+   return *this;
+}
+
+//____________________________________________________________________________
 PyROOT::MethodProxy::MethodInfo_t::~MethodInfo_t()
 {
 // Destructor (this object is reference counted).
