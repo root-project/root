@@ -625,6 +625,7 @@ BayesianCalculator::BayesianCalculator() :
    fSize(0.05), fLeftSideFraction(0.5), 
    fBrfPrecision(0.00005), 
    fNScanBins(-1),
+   fNumIterations(0),
    fValidInterval(false)
 {
    // default constructor
@@ -1280,7 +1281,7 @@ void BayesianCalculator::ComputeIntervalFromApproxPosterior(double lowerCutOff, 
    if (!fApproxPosterior) return;
 
    double prob[2]; 
-   double limits[2];
+   double limits[2] = {0,0};
    prob[0] = lowerCutOff;
    prob[1] = upperCutOff; 
    fApproxPosterior->GetQuantiles(2,limits,prob);

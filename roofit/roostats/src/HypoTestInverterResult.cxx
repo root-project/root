@@ -663,8 +663,8 @@ SamplingDistribution *  HypoTestInverterResult::GetLimitDistribution(bool lower 
      delete distVec[i];  distVec[i] = 0;
      std::sort(pvalues.begin(), pvalues.end());
      // find the quantiles of the distribution 
-     double p[1]; 
-     double q[1];
+     double p[1] = {0}; 
+     double q[1] = {0};
 
      quantVec[i] = std::vector<double>(size);
      for (int ibin = 0; ibin < size; ++ibin) { 
@@ -689,7 +689,7 @@ SamplingDistribution *  HypoTestInverterResult::GetLimitDistribution(bool lower 
   // loop on the p values and find the limit for each expected point in the quantiles vector  
   for (int j = 0; j < size; ++j ) {
 
-     TGraph g(ArraySize() );
+     TGraph g( npoints );
      for (int k = 0; k < npoints ; ++k) { 
         g.SetPoint(k, GetXValue(index[k]), (quantVec[index[k]])[j] );
      }
@@ -749,8 +749,11 @@ double  HypoTestInverterResult::GetExpectedLimit(double nsig, bool lower, const 
    // else (default) find expected limit by obtaining first a full limit distributions
    // The last one is in general more correct
 
-
+   const int nEntries = ArraySize();
+   if (nEntries <= 0)  return (lower) ? 1 : 0;  // return 1 for lower, 0 for upper
+   
    HypoTestResult * r = dynamic_cast<HypoTestResult *> (fYObjects.First() );
+   assert(r != 0);
    if (!r->GetNullDistribution() && !r->GetAltDistribution() ) { 
       // we are in the asymptotic case 
       // get the limits obtained at the different sigma values 
@@ -763,8 +766,8 @@ double  HypoTestInverterResult::GetExpectedLimit(double nsig, bool lower, const 
       return values[i];
    }
 
-   double p[1];
-   double q[1];
+   double p[1] = {0};
+   double q[1] = {0};
    p[0] = ROOT::Math::normal_cdf(nsig,1);
 
    // for CLs+b can get the quantiles of p-value distribution and 
@@ -776,7 +779,6 @@ double  HypoTestInverterResult::GetExpectedLimit(double nsig, bool lower, const 
    option.ToUpper();
    if (option.Contains("P")) {
 
-      const int nEntries = ArraySize();
       TGraph  g(nEntries);   
 
       // sort the arrays based on the x values

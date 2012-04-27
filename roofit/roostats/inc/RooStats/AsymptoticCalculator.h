@@ -113,7 +113,6 @@ namespace RooStats {
    private: 
 
       bool fOneSided;                // for one sided PL test statistic
-      bool fNominalAsimov;  
       mutable int fUseQTilde;              // flag to indicate if using qtilde or not (-1 (default based on RooRealVar)), 0 false, 1 (true)
       static int fgPrintLevel;     // control print level  (0 minimal, 1 normal, 2 debug)
       mutable double fNLLObs; 
