@@ -22,7 +22,7 @@
 - (id) initWithFrame : (NSRect) frameRect pixelFormat : (NSOpenGLPixelFormat *) format
 {
 
-   if (self = [self initWithFrame : frameRect pixelFormat : format]) {
+   if (self = [super initWithFrame : frameRect pixelFormat : format]) {
       fPassiveKeyGrabs = [[NSMutableArray alloc] init];
       [self setHidden : YES];//Not sure.
       fCurrentCursor = kPointer;
