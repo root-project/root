@@ -8,49 +8,13 @@
 // *                                                                       * //
 // *  $ cd $ROOTSYS/test                                                   * //
 // *  $ make stressProof                                                   * //
-// *  $ ./stressProof [-h] [-n <wrks>] [-d [scope:]level] [-l logfile]     * //
-// *                  [-dyn] [-ds] [-t tests] [-h1 h1src]                  * //
-// *                  [-event src] [-dryrun] [-g] [-cpu] [-clearcache]     * //
-// *                  [master]                                             * //
 // *                                                                       * //
-// * Optional arguments:                                                   * //
-// *   -h          show help info                                          * //
-// *   master      entry point of the cluster where to run the test        * //
-// *               in the form '[user@]host.domain[:port]';                * //
-// *               default 'localhost:40000'                               * //
-// *   -n wrks     number of workers to be started when running on the     * //
-// *               local host; default is the nuber of local cores         * //
-// *   -d [scope:]level                                                    * //
-// *               verbosity scope and level; default level is 1; scope    * //
-// *               refers to PROOF debug options (see TProofDebug.h) and   * //
-// *               is enabled only is level > 1 (default kAll).            * //
-// *   -l logfile  file where to redirect the processing logs; default is  * //
-// *               a temporary file deleted at the end of the test; in     * //
-// *               case of success                                         * //
-// *   -dyn        run the test in dynamic startup mode                    * //
-// *   -ds         force the dataset test if skipped by default            * //
-// *   -t tests    run only tests in the comma-separated list and those    * //
-//                 from which they depend; ranges can be given with        * //
-//                'first-last' syntax, e.g. '3,6-9,23' to run tests 3, 6,  * //
-//                 7, 8, 9 and 23                                          * //
-// *   -h1 h1src   specify a location for the H1 files;                    * //
-// *               use h1src="download" to download them to a temporary    * //
-// *               location; by default the files are read directly from   * //
-// *               the ROOT http server; however this may give failures if * //
-// *               the connection is slow;                                 * //
-// *               if h1src ends with ".zip" the program assumes that the  * //
-// *               4 files are concatenated in a single zip archive and    * //
-// *               are accessible with the standard archive syntax.        * //
-// *   -punzip     use parallel unzipping for data-driven processing       * //
-// *   -dryrun     only show which tests would be run                      * //
-// *   -g          enable graphics; default is to run in text mode         * //
-// *   -cpu        show CPU times used by each successful test; used for   * //
-// *               calibration                                             * //
-// *   -clearcache clear memory cache associated with the files processed  * //
-// *               when local                                              * //
+// * Run stressProof with '-h' to get the list of supported options        * //
+// *  $ ./stressProof -h                                                   * //
 // *                                                                       * //
 // * To run interactively:                                                 * //
 // * $ root                                                                * //
+// * root[] .include $ROOTSYS/tutorials                                    * //
 // * root[] .L stressProof.cxx+                                            * //
 // * root[] stressProof(master, wrks, verbose, logfile, dyn, \             * //
 // *                    skipds, tests, h1src, eventsrc, dryrun)            * //
@@ -59,6 +23,9 @@
 // *     verbose [Int_t]   increasing verbosity (0 == minimal)             * //
 // *     dyn     [Bool_t]  if kTRUE run in dynamic startup mode            * //
 // *     skipds  [Bool_t]  if kTRUE the dataset related tests are skipped  * //
+// *                                                                       * //
+// * A certain number of swithces can also be controlled via environment   * //
+// * variables: check './stressProof -h'                                   * //
 // *                                                                       * //
 // * The stressProof function returns 0 on success, 1 on failure.          * //
 // *                                                                       * //
@@ -134,6 +101,7 @@
 #include "Getline.h"
 #include "TApplication.h"
 #include "TChain.h"
+#include "TDataMember.h"
 #include "TDSet.h"
 #include "TFile.h"
 #include "TFileCollection.h"
@@ -145,6 +113,7 @@
 #include "TMacro.h"
 #include "TMap.h"
 #include "TMath.h"
+#include "TMethodCall.h"
 #include "TNamed.h"
 #include "TNtuple.h"
 #include "TParameter.h"
@@ -159,8 +128,7 @@
 #include "TROOT.h"
 #include "TSelector.h"
 
-#include "../tutorials/proof/getProof.C"
-#include "../tutorials/proof/ProofSimple.h"
+#include "proof/getProof.C"
 
 static const char *urldef = "proof://localhost:40000";
 static TString gtutdir;
@@ -201,22 +169,28 @@ static Long64_t gEventSiz = 100000;
 static TStopwatch gStopwatch;
 
 // The selectors
+static TString gTutDir = "$ROOTSYS/tutorials"; // default path
 static TList gSelectors;
-static TString gH1Sel("$ROOTSYS/tutorials/tree/h1analysis.C");
-static TString gEventSel("$ROOTSYS/tutorials/proof/ProofEvent.C");
-static TString gEventProcSel("$ROOTSYS/tutorials/proof/ProofEventProc.C");
-static TString gSimpleSel("$ROOTSYS/tutorials/proof/ProofSimple.C");
-static TString gTestsSel("$ROOTSYS/tutorials/proof/ProofTests.C");
-static TString gNtupleSel("$ROOTSYS/tutorials/proof/ProofNtuple.C");
-static TString gFriendsSel("$ROOTSYS/tutorials/proof/ProofFriends.C");
-static TString gAuxSel("$ROOTSYS/tutorials/proof/ProofAux.C");
+static TString gH1Sel("/tree/h1analysis.C");
+static TString gEventSel("/proof/ProofEvent.C");
+static TString gEventProcSel("/proof/ProofEventProc.C");
+static TString gSimpleSel("/proof/ProofSimple.C");
+static TString gTestsSel("/proof/ProofTests.C");
+static TString gNtupleSel("/proof/ProofNtuple.C");
+static TString gFriendsSel("/proof/ProofFriends.C");
+static TString gAuxSel("/proof/ProofAux.C");
 
 // Special class
-static TString gProcFileElem("$ROOTSYS/tutorials/proof/ProcFileElements.C");
+static TString gProcFileElem("/proof/ProcFileElements.C");
 
 // Special files
-static TString gEmptyInclude("$ROOTSYS/tutorials/proof/EmptyInclude.h");
-static TString gNtpRndm("$ROOTSYS/tutorials/proof/ntprndm.root");
+static TString gEmptyInclude("/proof/EmptyInclude.h");
+static TString gNtpRndm("/proof/ntprndm.root");
+
+// Special packages
+static TString gPackEvent("/proof/event.par");
+static TString gPack1("/proof/packtest1.par");
+static TString gPack2("/proof/packtest2.par");
 
 int stressProof(const char *url = "proof://localhost:40000",
                 Int_t nwrks = -1, const char *verbose = "1",
@@ -224,7 +198,7 @@ int stressProof(const char *url = "proof://localhost:40000",
                 Bool_t skipds = kTRUE, const char *tests = 0,
                 const char *h1src = 0, const char *eventsrc = 0,
                 Bool_t dryrun = kFALSE, Bool_t showcpu = kFALSE,
-                Bool_t clearcache = kFALSE, Bool_t useprogress = kTRUE);
+                Bool_t clearcache = kFALSE, Bool_t useprogress = kTRUE, const char *tutdir = 0);
 
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -240,12 +214,13 @@ int main(int argc,const char *argv[])
       printf(" \n");
       printf(" $ ./stressProof [-h] [-n <wrks>] [-d [scope:]level] [-l logfile] [-dyn] [-ds]\n");
       printf("                 [-t tests] [-h1 h1src] [-event src] [-dryrun] [-g] [-cpu]\n");
-      printf("                 [-clearcache] [-noprogress] [master]\n");
+      printf("                 [-clearcache] [-noprogress] [-tut tutdir] [master]\n");
       printf(" \n");
       printf(" Optional arguments:\n");
       printf("   -h            prints this menu\n");
       printf("   master        entry point of the cluster where to run the test\n");
       printf("                 in the form '[user@]host.domain[:port]'; default 'localhost:40000'\n");
+      printf("                 or the env STRESSPROOF_URL\n");
       printf("   -n wrks       number of workers to be started when running on the local host;\n");
       printf("                 default is the nuber of local cores\n");
       printf("   -d [scope:]level\n");
@@ -253,27 +228,34 @@ int main(int argc,const char *argv[])
       printf("                 options (see TProofDebug.h) and is enabled only is level > 1 (default kAll).\n");
       printf("   -l logfile    file where to redirect the processing logs; must be writable;\n");
       printf("                 default is a temporary file deleted at the end of the test\n");
-      printf("                 in case of success\n");
+      printf("                 in case of success; can be also passed via the env STRESSPROOF_LOGFILE\n");
       printf("   -dyn          run the test in dynamicStartup mode\n");
       printf("   -ds           force the dataset test if skipped by default\n");
       printf("   -t tests      run only tests in the comma-separated list and those from which they\n");
       printf("                 depend; ranges can be given with 'first-last' syntax, e.g. '3,6-9,23'\n");
-      printf("                 to run tests 3, 6, 7, 8, 9 and 23 \n");
+      printf("                 to run tests 3, 6, 7, 8, 9 and 23. Can be also given via the env STRESSPROOF_TESTS.\n");
       printf("   -h1 h1src     specify a location for the H1 files; use h1src=\"download\" to download\n");
-      printf("                 to a temporary location; by default the files are read directly from the\n");
+      printf("                 to a temporary location (or h1src=\"download=/path/for/local/h1\" to download\n");
+      printf("                 to /path/for/local/h1; by default the files are read directly from the\n");
       printf("                 ROOT http server; however this may give failures if the connection is slow.\n");
       printf("                 If h1src ends with '.zip' the program assumes that the 4 files are concatenated\n");
       printf("                 in a single zip archive and are accessible with the standard archive syntax.\n");
+      printf("                 Can be also passed via the env STRESSPROOF_H1SRC.\n");
       printf("   -event src\n");
       printf("                 specify a location for the 'event' files; use src=\"download\" to download\n");
-      printf("                 to a temporary location; by default the files are read directly from the\n");
+      printf("                 to a temporary location (or eventsrc=\"download=/path/for/local/event\" to download\n");
+      printf("                 to /path/for/local/event; by default the files are read directly from the\n");
       printf("                 ROOT http server; however this may give failures if the connection is slow\n");
+      printf("                 Can be also passed via the env STRESSPROOF_EVENT.\n");
       printf("   -punzip       use parallel unzipping for data-driven processing.\n");
       printf("   -dryrun       only show which tests would be run.\n");
       printf("   -g            enable graphics; default is to run in text mode.\n");
       printf("   -cpu          show CPU times used by each successful test; used for calibration.\n");
       printf("   -clearcache   clear memory cache associated with the files processed when local.\n");
       printf("   -noprogress   do not show progress whose escaped chars may confuse some wrapper applications.\n");
+      printf("   -tut tutdir   specify alternative location for the ROOT tutorials; allows to run multiple\n");
+      printf("                 concurrent instances of stressProof, for tests, for example.\n");
+      printf("                 Can be also passed via the env STRESSPROOF_TUTORIALDIR.\n");
       printf(" \n");
       gSystem->Exit(0);
    }
@@ -291,6 +273,7 @@ int main(int argc,const char *argv[])
    const char *h1src = 0;
    const char *eventsrc = 0;
    const char *tests = 0;
+   const char *tutdir = 0;
    Int_t i = 1;
    while (i < argc) {
       if (!strcmp(argv[i],"-h")) {
@@ -373,13 +356,19 @@ int main(int argc,const char *argv[])
       } else if (!strncmp(argv[i],"-noprogress",11)) {
          useprogress = kFALSE;
          i++;
+      } else if (!strcmp(argv[i],"-tut")) {
+         if (i+1 == argc || argv[i+1][0] == '-') {
+            printf(" -tut should be followed by a path: ignoring \n");
+            i++;
+         } else { 
+            tutdir = argv[i+1];
+            i += 2;
+         }
       } else {
          url = argv[i];
          i++;
       }
    }
-   // Use defaults where required
-   if (!url) url = urldef;
 
    // Enable graphics if required
    if (enablegraphics) {
@@ -389,7 +378,7 @@ int main(int argc,const char *argv[])
    }
 
    int rc = stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest,
-                        tests, h1src, eventsrc, dryrun, showcpu, clearcache, useprogress);
+                        tests, h1src, eventsrc, dryrun, showcpu, clearcache, useprogress, tutdir);
 
    gSystem->Exit(rc);
 }
@@ -706,7 +695,6 @@ Int_t ProofTest::Run(Bool_t dryrun, Bool_t showcpu)
 // Test functions
 Int_t PT_Open(void *, RunTimes &);
 Int_t PT_GetLogs(void *, RunTimes &);
-//Int_t PT_Simple(void *smg = 0, RunTimes &);
 Int_t PT_Simple(void *, RunTimes &);
 Int_t PT_H1Http(void *, RunTimes &);
 Int_t PT_H1FileCollection(void *, RunTimes &);
@@ -726,6 +714,7 @@ Int_t PT_POFDataset(void *, RunTimes &);
 Int_t PT_Friends(void *, RunTimes &);
 Int_t PT_SimpleByObj(void *, RunTimes &);
 Int_t PT_H1ChainByObj(void *, RunTimes &);
+Int_t PT_AssertTutorialDir(const char *tutdir);
 
 // Auxilliary functions
 void PT_GetLastTimes(RunTimes &tt)
@@ -769,12 +758,18 @@ static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
 int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *logfile,
                 Bool_t dyn, Bool_t skipds, const char *tests,
                 const char *h1src, const char *eventsrc,
-                Bool_t dryrun, Bool_t showcpu, Bool_t clearcache, Bool_t useprogress)
+                Bool_t dryrun, Bool_t showcpu, Bool_t clearcache, Bool_t useprogress,
+                const char *tutdir)
 {
    printf("******************************************************************\n");
    printf("*  Starting  P R O O F - S T R E S S  suite                      *\n");
    printf("******************************************************************\n");
 
+   // Use defaults or environment settings where required
+   if (!url) {
+      url = getenv("STRESSPROOF_URL"); 
+      if (!url) url = urldef;
+   }
    // Set dynamic mode
    gDynamicStartup = (!strcmp(url,"lite://")) ? kFALSE : dyn;
 
@@ -841,6 +836,7 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
    // Log file path
    Bool_t usedeflog = kTRUE;
    FILE *flog = 0;
+   if (!logfile) logfile = getenv("STRESSPROOF_LOGFILE"); 
    if (logfile && strlen(logfile) > 0 && !dryrun) {
       usedeflog = kFALSE;
       glogfile = logfile;
@@ -884,26 +880,46 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
       printf("*  PROOF-Lite session (tests #15 and #16 skipped)               **\n");
       printf("******************************************************************\n");
    }
-   if (h1src && strlen(h1src) && gverbose > 0) {
+   if (!h1src) h1src = getenv("STRESSPROOF_H1SRC"); 
+   if (h1src && strlen(h1src)) {
       if (!strcmp(h1src, "download") && extcluster) {
-         printf("*  External clusters: ignoring download request of H1 files\n");
-         printf("******************************************************************\n");
+         if (gverbose > 0) {
+            printf("*  External clusters: ignoring download request of H1 files\n");
+            printf("******************************************************************\n");
+         }
       } else if (!gh1src.BeginsWith(h1src)) {
-         printf("*  Taking H1 files from: %s\n", h1src);
-         printf("******************************************************************\n");
+         if (gverbose > 0) {
+            printf("*  Taking H1 files from: %s\n", h1src);
+            printf("******************************************************************\n");
+         }
          gh1src = h1src;
          gh1ok = kFALSE;
       }
    }
-   if (eventsrc && strlen(eventsrc) && gverbose > 0) {
+   if (!eventsrc) eventsrc = getenv("STRESSPROOF_EVENT"); 
+   if (eventsrc && strlen(eventsrc)) {
       if (!strcmp(eventsrc, "download") && extcluster) {
-         printf("*  External clusters: ignoring download request of 'event' files\n");
-         printf("******************************************************************\n");
+         if (gverbose > 0) {
+            printf("*  External clusters: ignoring download request of 'event' files\n");
+            printf("******************************************************************\n");
+         }
       } else if (!geventsrc.BeginsWith(eventsrc)) {
-         printf("*  Taking 'event' files from: %s\n", eventsrc);
-         printf("******************************************************************\n");
+         if (gverbose > 0) {
+            printf("*  Taking 'event' files from: %s\n", eventsrc);
+            printf("******************************************************************\n");
+         }
          geventsrc = eventsrc;
          geventok = kFALSE;
+      }
+   }
+   if (!tutdir) tutdir = getenv("STRESSPROOF_TUTORIALDIR"); 
+   if (tutdir && strlen(tutdir)) {
+      if (!(gTutDir == tutdir)) {
+         if (gverbose > 0) {
+            printf("*  Taking tutorial files from: %s\n", tutdir);
+            printf("******************************************************************\n");
+         }
+         gTutDir = tutdir;
       }
    }
    if (clearcache && gverbose > 0) {
@@ -981,17 +997,10 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
    // H1 analysis over HTTP by TSeletor object
    testList->Add(new ProofTest("H1 chain: selector by object", 26, &PT_H1ChainByObj, 0, "1", "h1analysis", kTRUE));
    // The selectors
-   gSystem->ExpandPathName(gH1Sel);
-   gSystem->ExpandPathName(gEventSel);
-   gSystem->ExpandPathName(gEventProcSel);
-   gSystem->ExpandPathName(gSimpleSel);
-   gSystem->ExpandPathName(gTestsSel);
-   gSystem->ExpandPathName(gProcFileElem);
-   gSystem->ExpandPathName(gEmptyInclude);
-   gSystem->ExpandPathName(gNtupleSel);
-   gSystem->ExpandPathName(gFriendsSel);
-   gSystem->ExpandPathName(gAuxSel);
-   gSystem->ExpandPathName(gNtpRndm);
+   if (PT_AssertTutorialDir(gTutDir) != 0) {
+      printf("*  SOme of the turial files are missing! Stop\n");
+      return 1;
+   }
    gSelectors.Add(new TNamed("h1analysis", gH1Sel.Data()));
    gSelectors.Add(new TNamed("ProofEvent", gEventSel.Data()));
    gSelectors.Add(new TNamed("ProofEventProc", gEventProcSel.Data()));
@@ -1013,6 +1022,7 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
    ProofTest *t = 0, *treq = 0;
    TIter nxt(testList);
    Bool_t all = kTRUE;
+   if (!tests) tests = getenv("STRESSPROOF_TESTS"); 
    if (tests && strlen(tests)) {
       TString tts(tests), tsg, ts, ten;
       Ssiz_t from = 0;
@@ -1275,8 +1285,13 @@ Int_t PT_H1AssertFiles(const char *h1src)
    
    gh1sep = '/';
    // Special cases
-   if (!strcmp(h1src,"download")) {
-      gh1src = TString::Format("%s/h1", gtutdir.Data());
+   if (!strncmp(h1src,"download",8)) {
+      if (strcmp(h1src,"download")) {
+         gh1src = h1src;
+         gh1src.ReplaceAll("download=", "");
+      }
+      if (gh1src.IsNull() || gSystem->AccessPathName(gh1src, kWritePermission))
+         gh1src = TString::Format("%s/h1", gtutdir.Data());
       if (gSystem->AccessPathName(gh1src)) {
          if (gSystem->MakeDirectory(gh1src) != 0) {
             printf("\n >>> Test failure: could not create dir %s\n", gh1src.Data());
@@ -1393,8 +1408,13 @@ Int_t PT_EventAssertFiles(const char *eventsrc, Int_t nf = 10)
    geventlocal = (!strcmp(u.GetProtocol(), "file")) ? kTRUE : kFALSE;
 
    // Special case
-   if (!strcmp(eventsrc,"download")) {
-      geventsrc = TString::Format("%s/event", gtutdir.Data());
+   if (!strncmp(eventsrc,"download",8)) {
+      if (strcmp(eventsrc,"download")) {
+         geventsrc = eventsrc;
+         geventsrc.ReplaceAll("download=", "");
+      }
+      if (geventsrc.IsNull() || gSystem->AccessPathName(geventsrc, kWritePermission))
+         geventsrc = TString::Format("%s/event", gtutdir.Data());
       if (gSystem->AccessPathName(geventsrc)) {
          if (gSystem->MakeDirectory(geventsrc) != 0) {
             printf("\n >>> Test failure: could not create dir %s\n", geventsrc.Data());
@@ -1436,6 +1456,82 @@ Int_t PT_EventAssertFiles(const char *eventsrc, Int_t nf = 10)
 
    // Done
    geventok = kTRUE;
+   return 0;
+}
+      
+//_____________________________________________________________________________
+Int_t PT_AssertTutorialDir(const char *tutdir)
+{
+   // Make sure that the needed files are available under the specified
+   // tutorial directory, setting the relevant variables
+
+   if (!tutdir || strlen(tutdir) <= 0) {
+      printf("\n >>> Test failure: dir undefined\n");
+      return -1;
+   }
+
+   TString path;
+   // Selectors
+   gH1Sel.Insert(0, tutdir);
+   gSystem->ExpandPathName(gH1Sel);
+   if (gSystem->AccessPathName(gH1Sel)) return -1;
+   //
+   gEventSel.Insert(0, tutdir);
+   gSystem->ExpandPathName(gEventSel);
+   if (gSystem->AccessPathName(gEventSel)) return -1;
+   //
+   gEventProcSel.Insert(0, tutdir);
+   gSystem->ExpandPathName(gEventProcSel);
+   if (gSystem->AccessPathName(gEventProcSel)) return -1;
+   //
+   gSimpleSel.Insert(0, tutdir);
+   gSystem->ExpandPathName(gSimpleSel);
+   if (gSystem->AccessPathName(gSimpleSel)) return -1;
+   //
+   gTestsSel.Insert(0, tutdir);
+   gSystem->ExpandPathName(gTestsSel);
+   if (gSystem->AccessPathName(gTestsSel)) return -1;
+   //
+   gNtupleSel.Insert(0, tutdir);
+   gSystem->ExpandPathName(gNtupleSel);
+   if (gSystem->AccessPathName(gNtupleSel)) return -1;
+   //
+   gFriendsSel.Insert(0, tutdir);
+   gSystem->ExpandPathName(gFriendsSel);
+   if (gSystem->AccessPathName(gFriendsSel)) return -1;
+   //
+   gAuxSel.Insert(0, tutdir);
+   gSystem->ExpandPathName(gAuxSel);
+   if (gSystem->AccessPathName(gAuxSel)) return -1;
+   
+   // Special class
+   gProcFileElem.Insert(0, tutdir);
+   gSystem->ExpandPathName(gProcFileElem);
+   if (gSystem->AccessPathName(gProcFileElem)) return -1;
+
+   // Special files
+   gEmptyInclude.Insert(0, tutdir);
+   gSystem->ExpandPathName(gEmptyInclude);
+   if (gSystem->AccessPathName(gEmptyInclude)) return -1;
+   //
+   gNtpRndm.Insert(0, tutdir);
+   gSystem->ExpandPathName(gNtpRndm);
+   if (gSystem->AccessPathName(gNtpRndm)) return -1;
+
+   // Special packages
+   gPackEvent.Insert(0, tutdir);
+   gSystem->ExpandPathName(gPackEvent);
+   if (gSystem->AccessPathName(gPackEvent)) return -1;
+   //
+   gPack1.Insert(0, tutdir);
+   gSystem->ExpandPathName(gPack1);
+   if (gSystem->AccessPathName(gPack1)) return -1;
+   //
+   gPack2.Insert(0, tutdir);
+   gSystem->ExpandPathName(gPack2);
+   if (gSystem->AccessPathName(gPack2)) return -1;
+
+   // Done
    return 0;
 }
 
@@ -2560,16 +2656,14 @@ Int_t PT_Packages(void *, RunTimes &tt)
 
    // Name and location for this package
    const char *pack = "event";
-   TString packpath("$ROOTSYS/tutorials/proof/event.par");
-   gSystem->ExpandPathName(packpath);
 
    // Upload the package
    PutPoint();
-   gProof->UploadPackage(packpath);
+   gProof->UploadPackage(gPackEvent);
    // Check the result
    packs = gProof->GetListOfPackages();
    if (!packs || packs->GetSize() != 1) {
-      printf("\n >>> Test failure: could not upload '%s'!\n", packpath.Data());
+      printf("\n >>> Test failure: could not upload '%s'!\n", gPackEvent.Data());
       return -1;
    }
 
@@ -2585,11 +2679,11 @@ Int_t PT_Packages(void *, RunTimes &tt)
 
    // Re-upload the package
    PutPoint();
-   gProof->UploadPackage(packpath);
+   gProof->UploadPackage(gPackEvent);
    // Check the result
    packs = gProof->GetListOfPackages();
    if (!packs || packs->GetSize() != 1) {
-      printf("\n >>> Test failure: could not re-upload '%s'!\n", packpath.Data());
+      printf("\n >>> Test failure: could not re-upload '%s'!\n", gPackEvent.Data());
       return -1;
    }
 
@@ -2816,20 +2910,18 @@ Int_t PT_PackageArguments(void *, RunTimes &tt)
 
    // Passing a 'const char *': upload packtest1
    const char *pack1 = "packtest1";
-   TString pack1path("$ROOTSYS/tutorials/proof/packtest1.par");
-   gSystem->ExpandPathName(pack1path);
    PutPoint();
-   gProof->UploadPackage(pack1path);
+   gProof->UploadPackage(gPack1);
    // Check the result
    TList *packs = gProof->GetListOfPackages();
    if (!packs || !packs->FindObject(pack1)) {
-      printf("\n >>> Test failure: could not upload '%s'!\n", pack1path.Data());
+      printf("\n >>> Test failure: could not upload '%s'!\n", gPack1.Data());
       return -1;
    }
    // Enable the package now passing a 'const char *' argument
    TString arg("ProofTest.ConstChar");
    if (gProof->EnablePackage(pack1, arg) != 0) {
-      printf("\n >>> Test failure: could not enable '%s' with argument: '%s'!\n", pack1path.Data(), arg.Data());
+      printf("\n >>> Test failure: could not enable '%s' with argument: '%s'!\n", gPack1.Data(), arg.Data());
       return -1;
    }
 
@@ -2891,14 +2983,12 @@ Int_t PT_PackageArguments(void *, RunTimes &tt)
 
    // Passing a 'TList *': upload packtest2
    const char *pack2 = "packtest2";
-   TString pack2path("$ROOTSYS/tutorials/proof/packtest2.par");
-   gSystem->ExpandPathName(pack2path);
    PutPoint();
-   gProof->UploadPackage(pack2path);
+   gProof->UploadPackage(gPack2);
    // Check the result
    packs = gProof->GetListOfPackages();
    if (!packs || !packs->FindObject(pack2)) {
-      printf("\n >>> Test failure: could not upload '%s'!\n", pack2path.Data());
+      printf("\n >>> Test failure: could not upload '%s'!\n", gPack2.Data());
       return -1;
    }
    // Create the argument list
@@ -2908,7 +2998,7 @@ Int_t PT_PackageArguments(void *, RunTimes &tt)
    argls->Add(new TNamed("ProofTest.ArgThree", "4."));
    // Enable the package now passing the 'TList *' argument
    if (gProof->EnablePackage(pack2, argls) != 0) {
-      printf("\n >>> Test failure: could not enable '%s' with argument: '%s'!\n", pack2path.Data(), arg.Data());
+      printf("\n >>> Test failure: could not enable '%s' with argument: '%s'!\n", gPack2.Data(), arg.Data());
       return -1;
    }
 
@@ -3747,10 +3837,35 @@ Int_t PT_SimpleByObj(void *submergers, RunTimes &tt)
    // Clear the list of query results
    if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
 
-   // Define TSelector object
-   gProof->Load("../tutorials/proof/ProofSimple.C+");
-   ProofSimple *sel = (ProofSimple *)TSelector::GetSelector("ProofSimple");
-   sel->fNhist = nhist;
+   // Define TSelector object. We use  reflection to avoid including the header,
+   // so being able to change the tutorial directory
+   TString emsg;
+   gProof->Load(gSimpleSel);
+   TSelector *sel = TSelector::GetSelector(gSimpleSel);
+   if (sel) {
+      TClass *cl = sel->IsA();
+      if (cl) {
+         TDataMember *dm = cl->GetDataMember("fNhist");
+         if (dm) {
+            TMethodCall *setter = dm->SetterMethod(cl);
+            if (setter) {
+               setter->Execute(sel, TString::Format("%d", nhist).Data());
+            } else {
+               emsg = "no SetterMethod for fNhist: check version of ProofSimple";
+            }
+         } else {
+            emsg = "fNhist not found";
+         }
+      } else {
+         emsg = "IsA() failed";
+      }
+   } else {
+      emsg = "GetSelector failed";
+   }
+   if (!emsg.IsNull()) {
+      printf("\n >>> Test failure: initializing ProofSimple selector: %s\n", emsg.Data());
+      return -1;
+   }
 
    // Process
    PutPoint();
@@ -3823,8 +3938,8 @@ Int_t PT_H1ChainByObj(void *, RunTimes &tt)
    if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
 
    // Load TSelector
-   gProof->Load("../tutorials/tree/h1analysis.C+");
-   TSelector *sel = TSelector::GetSelector("h1analysis");
+   gProof->Load(gH1Sel);
+   TSelector *sel = TSelector::GetSelector(gH1Sel);
 
    // Process
    PutPoint();

@@ -765,6 +765,9 @@ TrackMathCoreDict.$(SrcSuf): 	TrackMathCore.h TrackMathCoreLinkDef.h
 	@echo "Generating dictionary $@ using rootcint ..."
 	$(ROOTCINT) -f $@ -c $^	
 
+stressProof.$(ObjSuf):	stressProof.$(SrcSuf)
+	$(CXX)  $(CXXFLAGS) -I$(ROOTSYS)/tutorials -c $<
+
 TrackMathCoreRflx.$(SrcSuf): 	TrackMathCore.h TrackMathCoreRflx.xml
 			@echo "Generating dictionary $@ using gccxml ..."
 			genreflex TrackMathCore.h --selection_file=TrackMathCoreRflx.xml -o TrackMathCoreRflx.cxx  -I$(ROOTSYS)/include
