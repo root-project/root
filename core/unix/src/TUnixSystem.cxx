@@ -4930,7 +4930,7 @@ static void GetDarwinSysInfo(SysInfo_t *sysinfo)
    // Get system info for Mac OS X.
 
    FILE *p = gSystem->OpenPipe("sysctl -n kern.ostype hw.model hw.ncpu hw.cpufrequency "
-                               "hw.busfrequency hw.l2cachesize hw.physmem", "r");
+                               "hw.busfrequency hw.l2cachesize hw.memsize", "r");
    TString s;
    s.Gets(p);
    sysinfo->fOS = s;
