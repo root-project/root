@@ -2772,11 +2772,11 @@ void TGCocoa::DispatchClientMessage(UInt_t messageID)
    TGWindow *window = gClient->GetWindowById(widget.fID);
    assert(window != nullptr && "DispatchClientMessage, no window was found");
    Event_t clientMessage = messageIter->second.second;
-   
-   window->HandleEvent(&clientMessage);
-   
-   fClientMessages.erase(messageIter);
+
+   fClientMessages.erase(messageIter);   
    fFreeMessageIDs.push_back(messageID);
+
+   window->HandleEvent(&clientMessage);
 }
 
 //______________________________________________________________________________
