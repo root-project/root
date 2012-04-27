@@ -998,7 +998,7 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
    testList->Add(new ProofTest("H1 chain: selector by object", 26, &PT_H1ChainByObj, 0, "1", "h1analysis", kTRUE));
    // The selectors
    if (PT_AssertTutorialDir(gTutDir) != 0) {
-      printf("*  SOme of the turial files are missing! Stop\n");
+      printf("*  Some of the tutorial files are missing! Stop\n");
       return 1;
    }
    gSelectors.Add(new TNamed("h1analysis", gH1Sel.Data()));
