@@ -433,7 +433,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
      for (j=0;j<len;j++) {                                                \
        delete [] f[j];                                                    \
        f[j] = 0;                                                          \
-       if (*l <=0 || *l > b.BufferSize()) continue;                       \
+       if (*l <=0 || *l >= b.BufferSize()) continue;                      \
        f[j] = new newtype[*l];                                            \
        newtype *af = f[j];                                                \
        b.ReadArrayFunc(readbuf, *l);                                      \
