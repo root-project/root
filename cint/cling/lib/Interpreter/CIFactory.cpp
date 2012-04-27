@@ -40,7 +40,7 @@ namespace cling {
   /// Returns NULL on error.
   static const clang::driver::ArgStringList
   *GetCC1Arguments(clang::DiagnosticsEngine *Diagnostics,
-		   clang::driver::Compilation *Compilation) {
+                   clang::driver::Compilation *Compilation) {
     // We expect to get back exactly one Command job, if we didn't something
     // failed. Extract that job from the Compilation.
     const clang::driver::JobList &Jobs = Compilation->getJobs();
@@ -61,17 +61,17 @@ namespace cling {
   }
 
   CompilerInstance* CIFactory::createCI(llvm::StringRef code,
-					int argc,
-					const char* const *argv,
-					const char* llvmdir) {
+                                        int argc,
+                                        const char* const *argv,
+                                        const char* llvmdir) {
     return createCI(llvm::MemoryBuffer::getMemBuffer(code), argc, argv,
-		    llvmdir);
+                    llvmdir);
   }
 
   CompilerInstance* CIFactory::createCI(llvm::MemoryBuffer* buffer,
-					int argc,
-					const char* const *argv,
-					const char* llvmdir) {
+                                        int argc,
+                                        const char* const *argv,
+                                        const char* llvmdir) {
     // Create an instance builder, passing the llvmdir and arguments.
     //
     //  Initialize the llvm library.
@@ -99,9 +99,15 @@ namespace cling {
       // Note: Otherwise it uses dladdr().
       //
       resource_path
-	= CompilerInvocation::GetResourcesPath("cling",
-				       (void*)(intptr_t) locate_cling_executable
-					       );
+        = CompilerInvocation::GetResourcesPath("cling",
+                                       (void*)(intptr_t) locate_cling_executable
+                                               );
+    }
+    if (!resource_path.canRead()) {
+      llvm::errs()
+        << "ERROR in cling::CIFactory::createCI():\n  resource directory "
+        << resource_path.str() << " not found!\n";
+      resource_path = "";
     }
 
     //______________________________________
@@ -118,7 +124,7 @@ namespace cling {
     // Only insert it if there is no other "-x":
     bool haveMinusX = false;
     for (const char* const* iarg = argv; !haveMinusX && iarg < argv + argc;
-	 ++iarg) {
+         ++iarg) {
       haveMinusX = !strcmp(*iarg, "-x");
     }
     if (!haveMinusX) {
@@ -151,9 +157,9 @@ namespace cling {
                                               *Diagnostics);
     Invocation->getFrontendOpts().DisableFree = true;
 
-    // Update ResourceDir
     if (Invocation->getHeaderSearchOpts().UseBuiltinIncludes &&
-	!resource_path.empty()) {
+        !resource_path.empty()) {
+      // Update ResourceDir
       // header search opts' entry for resource_path/include isn't
       // updated by providing a new resource path; update it manually.
       clang::HeaderSearchOptions& Opts = Invocation->getHeaderSearchOpts();
@@ -163,15 +169,15 @@ namespace cling {
       newResInc.appendComponent("include");
       bool foundOldResInc = false;
       for (unsigned i = 0, e = Opts.UserEntries.size();
-	   !foundOldResInc && i != e; ++i) {
-	HeaderSearchOptions::Entry &E = Opts.UserEntries[i];
-	if (!E.IsUserSupplied && !E.IsFramework
-	    && E.Group == clang::frontend::System && E.IgnoreSysRoot
-	    && E.IsInternal && !E.ImplicitExternC
-	    && oldResInc.str() == E.Path) {
-	  E.Path = newResInc.str();
-	  foundOldResInc = true;
-	}
+           !foundOldResInc && i != e; ++i) {
+        HeaderSearchOptions::Entry &E = Opts.UserEntries[i];
+        if (!E.IsUserSupplied && !E.IsFramework
+            && E.Group == clang::frontend::System && E.IgnoreSysRoot
+            && E.IsInternal && !E.ImplicitExternC
+            && oldResInc.str() == E.Path) {
+          E.Path = newResInc.str();
+          foundOldResInc = true;
+        }
       }
 
       Opts.ResourceDir = resource_path.str();
@@ -193,13 +199,13 @@ namespace cling {
 
       CI->getInvocation().getPreprocessorOpts().addMacroDef("__CLING__");
       if (CI->getDiagnostics().hasErrorOccurred()) {
-	delete CI;
-	CI = 0;
-	return 0;
+        delete CI;
+        CI = 0;
+        return 0;
       }
     }
     CI->setTarget(TargetInfo::CreateTargetInfo(CI->getDiagnostics(),
-					       Invocation->getTargetOpts()));
+                                               Invocation->getTargetOpts()));
     if (!CI->hasTarget()) {
       delete CI;
       CI = 0;
@@ -220,14 +226,14 @@ namespace cling {
     CI->createPreprocessor();
     Preprocessor& PP = CI->getPreprocessor();
     PP.getBuiltinInfo().InitializeBuiltins(PP.getIdentifierTable(),
-					   PP.getLangOpts());
+                                           PP.getLangOpts());
 
     // Set up the ASTContext
     ASTContext *Ctx = new ASTContext(CI->getLangOpts(),
-				     PP.getSourceManager(), &CI->getTarget(),
-				     PP.getIdentifierTable(),
-				     PP.getSelectorTable(), PP.getBuiltinInfo(),
-				     /*size_reserve*/0, /*DelayInit*/false);
+                                     PP.getSourceManager(), &CI->getTarget(),
+                                     PP.getIdentifierTable(),
+                                     PP.getSelectorTable(), PP.getBuiltinInfo(),
+                                     /*size_reserve*/0, /*DelayInit*/false);
     CI->setASTContext(Ctx);
 
     // Set up the ASTConsumers
@@ -255,7 +261,7 @@ namespace cling {
   }
 
   void CIFactory::SetClingTargetLangOpts(LangOptions& Opts,
-					 const TargetInfo& Target) {
+                                         const TargetInfo& Target) {
     if (Target.getTriple().getOS() == llvm::Triple::Win32) {
       Opts.MicrosoftExt = 1;
       Opts.MSCVersion = 1300;
