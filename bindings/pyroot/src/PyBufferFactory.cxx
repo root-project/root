@@ -27,10 +27,6 @@ namespace {
       Py_ssize_t fSize;            // b_size in python
    };
 
-// size callback label
-   char* sizeCallback = const_cast< char* >( "_size" );
-   PyObject* sizeCallbackString_ = PyROOT_PyUnicode_FromString( sizeCallback );
-
 // callable cache
    std::map< PyObject*, PyObject* > gSizeCallbacks;
 
