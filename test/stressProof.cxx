@@ -2042,7 +2042,10 @@ Int_t PT_Open(void *args, RunTimes &tt)
       return -1;
    }
    Int_t from = strlen("Working directory:") + 1;
-   if (!os->GetString().Tokenize(gsandbox, from, " ")) {
+   while (os->GetString().Tokenize(gsandbox, from, " ")) {
+      if (!gsandbox.IsNull()) break;
+   }
+   if (gsandbox.IsNull()) {
       printf("\n >>> Test failure: no sandbox dir found\n");
       return -1;
    }
