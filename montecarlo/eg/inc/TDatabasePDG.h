@@ -58,9 +58,9 @@ public:
                                        Int_t        Anti=-1,
                                        Int_t        TrackingCode=0);
 
-   virtual Int_t  ConvertGeant3ToPdg(Int_t Geant3Number);
-   virtual Int_t  ConvertPdgToGeant3(Int_t pdgNumber);
-   virtual Int_t  ConvertIsajetToPdg(Int_t isaNumber);
+   virtual Int_t  ConvertGeant3ToPdg(Int_t Geant3Number) const;
+   virtual Int_t  ConvertPdgToGeant3(Int_t pdgNumber) const;
+   virtual Int_t  ConvertIsajetToPdg(Int_t isaNumber) const;
 
    virtual TParticlePDG* AddAntiParticle(const char* Name, Int_t PdgCode);
 
