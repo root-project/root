@@ -1039,7 +1039,7 @@ TFriendElement* TTree::AddFriend(const char* treename, const char* filename)
       fFriends = new TList();
    }
    TFriendElement* fe = new TFriendElement(this, treename, filename);
-   R__ASSERT(fe); // this assert is for historical reasons. Don't remove it unless you understand all the consequences.
+
    fFriends->Add(fe);
    TTree* t = fe->GetTree();
    if (t) {
