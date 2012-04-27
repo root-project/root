@@ -89,10 +89,10 @@ endif
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cxx.build.log 2>&1
 
 atlasFlushed/atlasFlushedProjectDict1.cxx: atlasFlushed/atlasFlushedLinkDef1.h
-	$(CMDECHO) cd atlasFlushed; rootcint -f atlasFlushedProjectDict1.cxx -c -I$ROOTSYS/include  -I"/local2/pcanal/root_working/code/root.untouched/include"  atlasFlushedProjectHeaders.h atlasFlushedLinkDef1.h
+	$(CMDECHO) cd atlasFlushed; rootcint -f atlasFlushedProjectDict1.cxx -c atlasFlushedProjectHeaders.h atlasFlushedLinkDef1.h
 
 atlasFlushed/atlasFlushedProjectDict2.cxx: atlasFlushed/atlasFlushedLinkDef2.h
-	$(CMDECHO) cd atlasFlushed ; rootcint -f atlasFlushedProjectDict2.cxx -c -I$ROOTSYS/include  -I"/local2/pcanal/root_working/code/root.untouched/include"  atlasFlushedProjectHeaders.h atlasFlushedLinkDef2.h
+	$(CMDECHO) cd atlasFlushed ; rootcint -f atlasFlushedProjectDict2.cxx -c atlasFlushedProjectHeaders.h atlasFlushedLinkDef2.h
 
 atlasFlushed/atlasFlushed.$(DllSuf): atlasFlushedProjectDict1.$(ObjSuf) atlasFlushedProjectDict2.$(ObjSuf) atlasFlushedProjectSource.$(ObjSuf)	
 	$(BuildFromObjs)
