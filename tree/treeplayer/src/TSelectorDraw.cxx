@@ -1571,7 +1571,7 @@ void TSelectorDraw::TakeEstimate()
             // because h2 will be filled below and we do not want to show
             // the binned scatter-plot, the TGraph being better.
             TH1 *h2c = h2->DrawCopy(fOption.Data());
-            h2c->SetStats(kFALSE);
+            if (h2c) h2c->SetStats(kFALSE);
          } else {
             // case like: T.Draw("y:x")
             // h2 is a temporary histogram (htemp). This histogram
