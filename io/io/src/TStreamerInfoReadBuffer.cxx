@@ -1277,27 +1277,29 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                      subinfo = (TStreamerInfo*)valueClass->GetStreamerInfo( vClVersion );
                      newProxy = oldProxy;
                   }
-                  if (subinfo->IsOptimized()) {
-                     subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-                     subinfo->Compile();
-                  }
-
-                  DOLOOP {
-                     int objectSize = cle->Size();
-                     char *obj = arr[k]+ioffset;
-                     char *end = obj + fLength[i]*objectSize;
-
-                     for(; obj<end; obj+=objectSize) {
-                        TVirtualCollectionProxy::TPushPop helper( newProxy, obj );
-                        Int_t nobjects;
-                        b >> nobjects;
-                        void* env = newProxy->Allocate(nobjects,true);
-                        if (vers<7) {
-                           subinfo->ReadBuffer(b,*newProxy,-1,nobjects,0,1);
-                        } else {
-                           subinfo->ReadBufferSTL(b,newProxy,nobjects,-1,0);
+                  if (subinfo) {
+                     if (subinfo->IsOptimized()) {
+                        subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
+                        subinfo->Compile();
+                     }
+                     
+                     DOLOOP {
+                        int objectSize = cle->Size();
+                        char *obj = arr[k]+ioffset;
+                        char *end = obj + fLength[i]*objectSize;
+                        
+                        for(; obj<end; obj+=objectSize) {
+                           TVirtualCollectionProxy::TPushPop helper( newProxy, obj );
+                           Int_t nobjects;
+                           b >> nobjects;
+                           void* env = newProxy->Allocate(nobjects,true);
+                           if (vers<7) {
+                              subinfo->ReadBuffer(b,*newProxy,-1,nobjects,0,1);
+                           } else {
+                              subinfo->ReadBufferSTL(b,newProxy,nobjects,-1,0);
+                           }
+                           newProxy->Commit(env);
                         }
-                        newProxy->Commit(env);
                      }
                   }
                   b.CheckByteCount(start,count,aElement->GetTypeName());

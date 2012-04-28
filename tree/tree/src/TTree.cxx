@@ -2224,7 +2224,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    // Do splitting, if requested.
    //
 
-   if (splitlevel%kSplitCollectionOfPointers > 0) {
+   if (sinfo && splitlevel%kSplitCollectionOfPointers > 0) {
       // Loop on all public data members of the class and its base classes and create branches for each one.
       TObjArray* blist = branch->GetListOfBranches();
       TIter next(sinfo->GetElements());
@@ -8085,7 +8085,7 @@ TObject* TTreeFriendLeafIter::Next()
          TCollection * list = fTree->GetListOfFriends();
          if (!list) return next;
          fTreeIter = list->MakeIterator(fDirection);
-         if (!fLeafIter) return 0;
+         if (!fTreeIter) return 0;
       }
       TFriendElement * nextFriend = (TFriendElement*) fTreeIter->Next();
       ///nextTree = (TTree*)fTreeIter->Next();

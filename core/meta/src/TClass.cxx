@@ -4622,7 +4622,7 @@ Long_t TClass::Property() const
    Long_t dummy;
    TClass *kl = const_cast<TClass*>(this);
 
-   kl->fStreamerType = kNone;
+   kl->fStreamerType = TClass::kDefault;
    kl->fStreamerImpl = &TClass::StreamerDefault;
 
    if (InheritsFrom(TObject::Class())) {
