@@ -2194,6 +2194,10 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    //
 
    TStreamerInfo* sinfo = BuildStreamerInfo(cl, objptr, splitlevel==0);
+   if (!sinfo) {
+      Error("Bronch", "Cannot build the StreamerInfo for class: %s", cl->GetName());
+      return 0;
+   }
 
    //
    // Do we have a final dot in our name?
@@ -2224,7 +2228,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    // Do splitting, if requested.
    //
 
-   if (sinfo && splitlevel%kSplitCollectionOfPointers > 0) {
+   if (splitlevel%kSplitCollectionOfPointers > 0) {
       // Loop on all public data members of the class and its base classes and create branches for each one.
       TObjArray* blist = branch->GetListOfBranches();
       TIter next(sinfo->GetElements());
