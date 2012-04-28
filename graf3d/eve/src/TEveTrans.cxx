@@ -1046,12 +1046,22 @@ void TEveTrans::SetFrom(const TGeoMatrix& mat)
    fUseTrans = kTRUE;
    const Double_t *r = mat.GetRotationMatrix();
    const Double_t *t = mat.GetTranslation();
-   const Double_t *s = mat.GetScale();
    Double_t       *m = fM;
-   m[0] = r[0]*s[0]; m[1] = r[3]*s[0]; m[2] = r[6]*s[0]; m[3] = 0; m += 4;
-   m[0] = r[1]*s[1]; m[1] = r[4]*s[1]; m[2] = r[7]*s[1]; m[3] = 0; m += 4;
-   m[0] = r[2]*s[2]; m[1] = r[5]*s[2]; m[2] = r[8]*s[2]; m[3] = 0; m += 4;
-   m[0] = t[0];      m[1] = t[1];      m[2] = t[2];      m[3] = 1;
+   if (mat.IsScale())
+   {
+      const Double_t *s = mat.GetScale();
+      m[0]  = r[0]*s[0]; m[1]  = r[3]*s[0]; m[2]  = r[6]*s[0]; m[3]  = 0;
+      m[4]  = r[1]*s[1]; m[5]  = r[4]*s[1]; m[6]  = r[7]*s[1]; m[7]  = 0;
+      m[8]  = r[2]*s[2]; m[9]  = r[5]*s[2]; m[10] = r[8]*s[2]; m[11] = 0;
+      m[12] = t[0];      m[13] = t[1];      m[14] = t[2];      m[15] = 1;
+   }
+   else
+   {
+      m[0]  = r[0];      m[1]  = r[3];      m[2]  = r[6];      m[3]  = 0;
+      m[4]  = r[1];      m[5]  = r[4];      m[6]  = r[7];      m[7]  = 0;
+      m[8]  = r[2];      m[9]  = r[5];      m[10] = r[8];      m[11] = 0;
+      m[12] = t[0];      m[13] = t[1];      m[14] = t[2];      m[15] = 1;
+   }
    fAsOK = kFALSE;
 }
 
@@ -1072,7 +1082,9 @@ void TEveTrans::SetGeoHMatrix(TGeoHMatrix& mat)
       r[1] = m[0]/s[1]; r[4] = m[1]/s[1]; r[7] = m[2]/s[1]; m += 4;
       r[2] = m[0]/s[2]; r[5] = m[1]/s[2]; r[8] = m[2]/s[2]; m += 4;
       t[0] = m[0];      t[1] = m[1];      t[2] = m[2];
-   } else {
+   }
+   else
+   {
       mat.ResetBit(TGeoMatrix::kGeoGenTrans);
       r[0] = 1; r[3] = 0; r[6] = 0;
       r[1] = 0; r[4] = 1; r[7] = 0;
