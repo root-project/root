@@ -8,27 +8,11 @@
    
 #include "TThread.h"
 #include <Riostream.h>
-#include "TROOT.h"
-
-TObject gObject;
-
-class ClassA {
-   int arrat[20];
-};
-
-TObject *myfunction () {
-   static TObject obj[1024];
-   return &obj[0];
-}
 
 void *handle(void *ptr)
 {
    long nr = (long) ptr;
 
-   long size = nr * 10000;
-   void *addr = malloc(sizeof(ClassA)*size);
-   TThread::Printf("Here I am before the loop for thread: %ld, an address on the stack: %p on the heap: %p as a global %p and a local function static: %p", nr, &nr, addr, &gObject, myfunction());
-   
    for (int i = 0; i < 10; i++) {
       //TThread::Lock();
       //printf("Here I am loop index: %3d , thread: %d\n",i,nr);
@@ -37,7 +21,6 @@ void *handle(void *ptr)
       TThread::Printf("Here I am loop index: %d , thread: %ld", i, nr);
       gSystem->Sleep(1000);
    }
-
    return 0;
 }
 
@@ -49,11 +32,6 @@ void threads()
 #endif
 
    gDebug = 1;
-
-   int nr = gDebug;
-   TObject *addr = new TObject;
-   TThread::Printf("Main thread an address on the stack: %p on the heap: %p as a global %p and a function static: %p", &nr, addr, &gObject, gROOT);
-   delete addr;
 
    printf("Starting Thread 1\n");
    TThread *h1 = new TThread("h1", handle, (void*) 1);
