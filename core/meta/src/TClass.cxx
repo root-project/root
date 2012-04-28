@@ -4647,7 +4647,7 @@ Long_t TClass::Property() const
          kl->fStreamerType  = kForeign;
          kl->fStreamerImpl  = &TClass::StreamerStreamerInfo;
 
-      } else if ( kl->fStreamerType == kNone ) {
+      } else if ( kl->fStreamerType == TClass::kDefault ) {
          if ( gCint->ClassInfo_FileName(fClassInfo) 
              && strcmp( gCint->ClassInfo_FileName(fClassInfo),"{CINTEX dictionary translator}")==0) {
             kl->SetBit(kIsForeign);
