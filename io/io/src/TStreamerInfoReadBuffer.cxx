@@ -427,13 +427,21 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       break;                                                              \
    }
 
-#define ConvCBasicPointerTo(newtype,ReadArrayFunc)                        \
+#define ConvCBasicPointerToOutOfRange(newtype,ReadArrayFunc)              \
    {                                                                      \
      newtype **f=(newtype**)(arr[k]+ioffset);                             \
      for (j=0;j<len;j++) {                                                \
        delete [] f[j];                                                    \
        f[j] = 0;                                                          \
-       if (*l <=0 || *l >= b.BufferSize()) continue;                      \
+     }                                                                    \
+     break;                                                               \
+   }
+
+#define ConvCBasicPointerTo(newtype,ReadArrayFunc)                        \
+   {                                                                      \
+     newtype **f=(newtype**)(arr[k]+ioffset);                             \
+     for (j=0;j<len;j++) {                                                \
+       delete [] f[j];                                                   \
        f[j] = new newtype[*l];                                            \
        newtype *af = f[j];                                                \
        b.ReadArrayFunc(readbuf, *l);                                      \
@@ -441,7 +449,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
      }                                                                    \
      break;                                                               \
    }
-
+   
 #define ConvCBasicPointer(name,ReadArrayFunc)                                           \
    {                                                                      \
       Char_t isArray;                                                     \
@@ -452,25 +460,45 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       DOLOOP {                                                            \
          b >> isArray;                                                    \
          Int_t *l = (Int_t*)(arr[k]+imethod);                             \
-         if (*l>0 && *l < b.BufferSize()) readbuf = new name[*l];         \
-         switch(newtype) {                                                \
-            case TStreamerInfo::kBool:     ConvCBasicPointerTo(Bool_t,ReadArrayFunc);   \
-            case TStreamerInfo::kChar:     ConvCBasicPointerTo(Char_t,ReadArrayFunc);   \
-            case TStreamerInfo::kShort:    ConvCBasicPointerTo(Short_t,ReadArrayFunc);  \
-            case TStreamerInfo::kInt:      ConvCBasicPointerTo(Int_t,ReadArrayFunc);    \
-            case TStreamerInfo::kLong:     ConvCBasicPointerTo(Long_t,ReadArrayFunc);   \
-            case TStreamerInfo::kLong64:   ConvCBasicPointerTo(Long64_t,ReadArrayFunc); \
-            case TStreamerInfo::kFloat:    ConvCBasicPointerTo(Float_t,ReadArrayFunc);  \
-            case TStreamerInfo::kFloat16:  ConvCBasicPointerTo(Float_t,ReadArrayFunc);  \
-            case TStreamerInfo::kDouble:   ConvCBasicPointerTo(Double_t,ReadArrayFunc); \
-            case TStreamerInfo::kDouble32: ConvCBasicPointerTo(Double_t,ReadArrayFunc); \
-            case TStreamerInfo::kUChar:    ConvCBasicPointerTo(UChar_t,ReadArrayFunc);  \
-            case TStreamerInfo::kUShort:   ConvCBasicPointerTo(UShort_t,ReadArrayFunc); \
-            case TStreamerInfo::kUInt:     ConvCBasicPointerTo(UInt_t,ReadArrayFunc);   \
-            case TStreamerInfo::kULong:    ConvCBasicPointerTo(ULong_t,ReadArrayFunc);  \
-            case TStreamerInfo::kULong64:  ConvCBasicPointerTo(ULong64_t,ReadArrayFunc); \
+         if (*l>0 && *l < b.BufferSize()) {                               \
+            readbuf = new name[*l];                                       \
+            switch(newtype) {                                             \
+               case TStreamerInfo::kBool:     ConvCBasicPointerTo(Bool_t,ReadArrayFunc);   \
+               case TStreamerInfo::kChar:     ConvCBasicPointerTo(Char_t,ReadArrayFunc);   \
+               case TStreamerInfo::kShort:    ConvCBasicPointerTo(Short_t,ReadArrayFunc);  \
+               case TStreamerInfo::kInt:      ConvCBasicPointerTo(Int_t,ReadArrayFunc);    \
+               case TStreamerInfo::kLong:     ConvCBasicPointerTo(Long_t,ReadArrayFunc);   \
+               case TStreamerInfo::kLong64:   ConvCBasicPointerTo(Long64_t,ReadArrayFunc); \
+               case TStreamerInfo::kFloat:    ConvCBasicPointerTo(Float_t,ReadArrayFunc);  \
+               case TStreamerInfo::kFloat16:  ConvCBasicPointerTo(Float_t,ReadArrayFunc);  \
+               case TStreamerInfo::kDouble:   ConvCBasicPointerTo(Double_t,ReadArrayFunc); \
+               case TStreamerInfo::kDouble32: ConvCBasicPointerTo(Double_t,ReadArrayFunc); \
+               case TStreamerInfo::kUChar:    ConvCBasicPointerTo(UChar_t,ReadArrayFunc);  \
+               case TStreamerInfo::kUShort:   ConvCBasicPointerTo(UShort_t,ReadArrayFunc); \
+               case TStreamerInfo::kUInt:     ConvCBasicPointerTo(UInt_t,ReadArrayFunc);   \
+               case TStreamerInfo::kULong:    ConvCBasicPointerTo(ULong_t,ReadArrayFunc);  \
+               case TStreamerInfo::kULong64:  ConvCBasicPointerTo(ULong64_t,ReadArrayFunc); \
+            }                                                             \
+            delete[] readbuf;                                             \
+         } else {                                                         \
+            switch(newtype) {                                             \
+               case TStreamerInfo::kBool:     ConvCBasicPointerToOutOfRange(Bool_t,ReadArrayFunc);   \
+               case TStreamerInfo::kChar:     ConvCBasicPointerToOutOfRange(Char_t,ReadArrayFunc);   \
+               case TStreamerInfo::kShort:    ConvCBasicPointerToOutOfRange(Short_t,ReadArrayFunc);  \
+               case TStreamerInfo::kInt:      ConvCBasicPointerToOutOfRange(Int_t,ReadArrayFunc);    \
+               case TStreamerInfo::kLong:     ConvCBasicPointerToOutOfRange(Long_t,ReadArrayFunc);   \
+               case TStreamerInfo::kLong64:   ConvCBasicPointerToOutOfRange(Long64_t,ReadArrayFunc); \
+               case TStreamerInfo::kFloat:    ConvCBasicPointerToOutOfRange(Float_t,ReadArrayFunc);  \
+               case TStreamerInfo::kFloat16:  ConvCBasicPointerToOutOfRange(Float_t,ReadArrayFunc);  \
+               case TStreamerInfo::kDouble:   ConvCBasicPointerToOutOfRange(Double_t,ReadArrayFunc); \
+               case TStreamerInfo::kDouble32: ConvCBasicPointerToOutOfRange(Double_t,ReadArrayFunc); \
+               case TStreamerInfo::kUChar:    ConvCBasicPointerToOutOfRange(UChar_t,ReadArrayFunc);  \
+               case TStreamerInfo::kUShort:   ConvCBasicPointerToOutOfRange(UShort_t,ReadArrayFunc); \
+               case TStreamerInfo::kUInt:     ConvCBasicPointerToOutOfRange(UInt_t,ReadArrayFunc);   \
+               case TStreamerInfo::kULong:    ConvCBasicPointerToOutOfRange(ULong_t,ReadArrayFunc);  \
+               case TStreamerInfo::kULong64:  ConvCBasicPointerToOutOfRange(ULong64_t,ReadArrayFunc); \
+               }                                                          \
          }                                                                \
-         delete[] readbuf;                                                \
          readbuf = 0;                                                     \
       } break;                                                            \
    }
