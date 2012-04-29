@@ -26,6 +26,9 @@
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
+#ifndef ROOT_THashList
+#include "THashList.h"
+#endif
 
 #include <set>
 #include <string>
@@ -33,16 +36,15 @@
 namespace std { using ::set; using ::string; }
 #endif
 
-
-class TCollection;
-
 class TStatus : public TNamed {
 
+public:
+   enum EProcStatus { kNotOk = 15};  // True if status of things are not OK
+
 private:
-   typedef std::set<std::string>                 MsgSet_t;
-   typedef std::set<std::string>::const_iterator MsgIter_t;
-   MsgSet_t    fMsgs;   // list of error messages
-   MsgIter_t   fIter;   //!iterator in messages
+   TList       fMsgs;     // list of error messages
+   TIter       fIter;     //!iterator in messages
+   THashList   fInfoMsgs; // list of info messages
 
    Int_t       fExitStatus;  // Query exit status ((Int_t)TVirtualProofPlayer::EExitStatus or -1);
    Long_t      fVirtMemMax;  // Max virtual memory used by the worker
@@ -54,8 +56,9 @@ public:
    TStatus();
    virtual ~TStatus() { }
 
-   Bool_t         IsOk() const { return fMsgs.empty(); }
+   inline Bool_t  IsOk() const { return TestBit(kNotOk) ? kFALSE : kTRUE; }
    void           Add(const char *mesg);
+   void           AddInfo(const char *mesg);
    virtual Int_t  Merge(TCollection *list);
    virtual void   Print(Option_t *option="") const;
    void           Reset();
@@ -68,7 +71,7 @@ public:
    void           SetExitStatus(Int_t est) { fExitStatus = est; }
    void           SetMemValues(Long_t vmem = -1, Long_t rmem = -1, Bool_t master = kFALSE);
 
-   ClassDef(TStatus,4);  // Status class
+   ClassDef(TStatus,5);  // Status class
 };
 
 #endif

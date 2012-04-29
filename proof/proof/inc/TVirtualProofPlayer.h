@@ -118,8 +118,9 @@ public:
    virtual Bool_t    IsClient() const = 0;
 
    virtual EExitStatus GetExitStatus() const = 0;
-   virtual Long64_t    GetEventsProcessed() const = 0;
-   virtual void        AddEventsProcessed(Long64_t ev) = 0;
+   virtual void      SetExitStatus(EExitStatus) = 0;
+   virtual Long64_t  GetEventsProcessed() const = 0;
+   virtual void      AddEventsProcessed(Long64_t ev) = 0;
    virtual TProofProgressStatus*  GetProgressStatus() const = 0;
 
    virtual void      SetDispatchTimer(Bool_t on = kTRUE) = 0;
@@ -128,6 +129,8 @@ public:
    virtual void      SetInitTime() = 0;
    virtual Long64_t  GetCacheSize() = 0;
    virtual Int_t     GetLearnEntries() = 0;
+   
+   virtual void      UpdateProgressInfo() = 0;
 
    virtual TVirtualPacketizer *GetPacketizer() const { return 0; }
 

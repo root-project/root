@@ -1156,13 +1156,15 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
          if (r->BufferSize() > r->Length()) (*r) >> totev;
 
          numev = totev - slstat->GetEntriesProcessed();
-         slstat->GetProgressStatus()->IncEntries(numev);
-         slstat->GetProgressStatus()->IncBytesRead(bytesRead);
+         if (numev > 0)  slstat->GetProgressStatus()->IncEntries(numev);
+         if (bytesRead > 0) slstat->GetProgressStatus()->IncBytesRead(bytesRead);
+         if (numev > 0 || bytesRead > 0) slstat->GetProgressStatus()->SetLastUpdate();
       }
 
       if (fProgressStatus) {
          if (numev > 0)  fProgressStatus->IncEntries(numev);
          if (bytesRead > 0)  fProgressStatus->IncBytesRead(bytesRead);
+         if (numev > 0 || bytesRead > 0) fProgressStatus->SetLastUpdate();
       }
       PDB(kPacketizer,2)
          Info("GetNextPacket","worker-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",

@@ -238,6 +238,7 @@ protected:
    Bool_t        UnlinkDataDir(const char *path);
 
    static TString fgLastMsg;    // Message about status before exception
+   static Long64_t fgLastEntry;  // Last entry before exception
 
 public:
    TProofServ(Int_t *argc, char **argv, FILE *flog = 0);
@@ -340,6 +341,7 @@ public:
    static void    ResolveKeywords(TString &fname, const char *path = 0);
 
    static void    SetLastMsg(const char *lastmsg);
+   static void    SetLastEntry(Long64_t lastentry);
 
    static Bool_t      IsActive();
    static TProofServ *This();

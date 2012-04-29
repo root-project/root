@@ -92,6 +92,10 @@ protected:
    Long64_t      fTotalEvents;     //   number of events requested
    TProofProgressStatus *fProgressStatus; // the progress status object;
 
+   Long64_t      fReadBytesRun;   //! Bytes read in this run
+   Long64_t      fReadCallsRun;   //! Read calls in this run
+   Long64_t      fProcessedRun;   //! Events processed in this run
+
    TList        *fQueryResults;    //List of TQueryResult
    TQueryResult *fQuery;           //Instance of TQueryResult currently processed
    TQueryResult *fPreviousQuery;   //Previous instance of TQueryResult processed
@@ -202,6 +206,7 @@ public:
 
    Bool_t    IsClient() const { return kFALSE; }
 
+   void      SetExitStatus(EExitStatus st) { fExitStatus = st; }
    EExitStatus GetExitStatus() const { return fExitStatus; }
    Long64_t    GetEventsProcessed() const { return fProgressStatus->GetEntries(); }
    void        AddEventsProcessed(Long64_t ev) { fProgressStatus->IncEntries(ev); }
@@ -216,6 +221,8 @@ public:
 
    void              SetProcessing(Bool_t on = kTRUE);
    TProofProgressStatus  *GetProgressStatus() const { return fProgressStatus; }
+
+   void      UpdateProgressInfo();
 
    ClassDef(TProofPlayer,0)  // Basic PROOF player
 };
@@ -237,7 +244,16 @@ public:
    virtual ~TProofPlayerLocal() { }
 
    Bool_t         IsClient() const { return fIsClient; }
-
+   Long64_t  Process(const char *selector, Long64_t nentries = -1, Option_t *option = "");
+   Long64_t  Process(TSelector *selector, Long64_t nentries = -1, Option_t *option = "");
+   Long64_t  Process(TDSet *set,
+                     const char *selector, Option_t *option = "",
+                     Long64_t nentries = -1, Long64_t firstentry = 0) {
+             return TProofPlayer::Process(set, selector, option, nentries, firstentry); }
+   Long64_t  Process(TDSet *set,
+                     TSelector *selector, Option_t *option = "",
+                     Long64_t nentries = -1, Long64_t firstentry = 0) {
+             return TProofPlayer::Process(set, selector, option, nentries, firstentry); }
    ClassDef(TProofPlayerLocal,0)  // PROOF player running on client
 };
 

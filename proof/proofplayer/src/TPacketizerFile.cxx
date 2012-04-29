@@ -319,9 +319,11 @@ TDSetElement *TPacketizerFile::GetNextPacket(TSlave *wrk, TMessage *r)
 
       numev = totev - wrkstat->GetEntriesProcessed();
       wrkstat->GetProgressStatus()->IncEntries(numev);
+      wrkstat->GetProgressStatus()->SetLastUpdate();
    }
 
    fProgressStatus->IncEntries(numev);
+   fProgressStatus->SetLastUpdate();
 
    PDB(kPacketizer,2)
       Info("GetNextPacket","worker-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",

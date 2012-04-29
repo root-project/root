@@ -46,28 +46,28 @@ public:
    void     Reset() { fEntries = 0,
                       fBytesRead = 0, fProcTime = 0, fCPUTime = 0; SetLastUpdate();}
 
-   Long64_t GetEntries() const { return fEntries; }
-   Long64_t GetBytesRead() const { return fBytesRead; }
-   Long64_t GetReadCalls() const { return fReadCalls; }
-   Double_t GetLearnTime() const { return fLearnTime; }
-   Double_t GetProcTime() const { return fProcTime; }
-   Double_t GetCPUTime() const { return fCPUTime; }
-   Double_t GetLastUpdate() const { return fLastUpdate; }
-   Double_t GetRate() const { return ((fProcTime > 0) ? fEntries/fProcTime : 0); }
+   inline Long64_t GetEntries() const { return fEntries; }
+   inline Long64_t GetBytesRead() const { return fBytesRead; }
+   inline Long64_t GetReadCalls() const { return fReadCalls; }
+   inline Double_t GetLearnTime() const { return fLearnTime; }
+   inline Double_t GetProcTime() const { return fProcTime; }
+   inline Double_t GetCPUTime() const { return fCPUTime; }
+   inline Double_t GetLastUpdate() const { return fLastUpdate; }
+   inline Double_t GetRate() const { return ((fProcTime > 0) ? fEntries/fProcTime : 0); }
    Double_t GetCurrentRate() const;
-   void     SetLastEntries(Long64_t entries) { fLastEntries = entries;}
-   void     SetEntries(Long64_t entries) { fEntries = entries; SetLastUpdate();}
-   void     IncEntries(Long64_t entries = 1) { fLastEntries = entries; fEntries += entries; SetLastUpdate();}
-   void     IncBytesRead(Long64_t bytesRead) { fBytesRead += bytesRead; SetLastUpdate();}
-   void     SetBytesRead(Long64_t bytesRead) { fBytesRead = bytesRead; SetLastUpdate();}
-   void     IncReadCalls(Long64_t readCalls) { fReadCalls += readCalls; SetLastUpdate();}
-   void     SetReadCalls(Long64_t readCalls) { fReadCalls = readCalls; SetLastUpdate();}
-   void     SetLearnTime(Double_t learnTime) { fLearnTime = learnTime; }
-   void     SetLastProcTime(Double_t procTime) { fLastProcTime = procTime; }
-   void     SetProcTime(Double_t procTime) { fProcTime = procTime; }
-   void     IncProcTime(Double_t procTime) { fLastProcTime = procTime; fProcTime += procTime; }
-   void     SetCPUTime(Double_t procTime) { fCPUTime = procTime; }
-   void     IncCPUTime(Double_t procTime) { fCPUTime += procTime; }
+   inline void     SetLastEntries(Long64_t entries) { fLastEntries = entries; }
+   inline void     SetEntries(Long64_t entries) { fEntries = entries; }
+   inline void     IncEntries(Long64_t entries = 1) { fLastEntries = entries; fEntries += entries; }
+   inline void     IncBytesRead(Long64_t bytesRead) { fBytesRead += bytesRead; }
+   inline void     SetBytesRead(Long64_t bytesRead) { fBytesRead = bytesRead; }
+   inline void     IncReadCalls(Long64_t readCalls) { fReadCalls += readCalls; }
+   inline void     SetReadCalls(Long64_t readCalls) { fReadCalls = readCalls; }
+   inline void     SetLearnTime(Double_t learnTime) { fLearnTime = learnTime; }
+   inline void     SetLastProcTime(Double_t procTime) { fLastProcTime = procTime; }
+   inline void     SetProcTime(Double_t procTime) { fProcTime = procTime; }
+   inline void     IncProcTime(Double_t procTime) { fLastProcTime = procTime; fProcTime += procTime; }
+   inline void     SetCPUTime(Double_t procTime) { fCPUTime = procTime; }
+   inline void     IncCPUTime(Double_t procTime) { fCPUTime += procTime; }
    void     SetLastUpdate(Double_t updtTime = 0);
    void     Print(Option_t* option = "") const;
 

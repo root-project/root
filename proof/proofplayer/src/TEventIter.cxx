@@ -71,6 +71,7 @@ TEventIter::TEventIter()
    fElemFirst = 0;
    fElemNum = 0;
    fElemCur = -1;
+   ResetBit(TEventIter::kData);
 }
 
 //______________________________________________________________________________
@@ -94,6 +95,7 @@ TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num
    fElemFirst = 0;
    fElemNum = 0;
    fElemCur = -1;
+   ResetBit(TEventIter::kData);
 }
 
 //______________________________________________________________________________
@@ -236,6 +238,49 @@ TEventIterUnit::TEventIterUnit(TDSet* dset, TSelector *sel, Long64_t num)
 }
 
 //______________________________________________________________________________
+Int_t TEventIterUnit::GetNextPacket(Long64_t &fst, Long64_t &num,
+                                   TEntryList **, TEventList **)
+{
+   // Get loop range
+
+   if (gPerfStats) {
+      Long64_t totBytesWritten = TFile::GetFileBytesWritten();
+      Long64_t bytesWritten = totBytesWritten - fOldBytesRead;
+      PDB(kLoop, 2) Info("GetNextPacket", "bytes written: %lld", bytesWritten);
+      gPerfStats->SetBytesRead(bytesWritten);
+      fOldBytesRead = totBytesWritten;
+   }
+
+   if (fDSet->TestBit(TDSet::kIsLocal)) {
+      if (fElem) {
+         SafeDelete(fElem);
+         return -1;
+      } else {
+         fElem = new TDSetElement("", "", "", 0, fNum);
+         fElem->SetBit(TDSetElement::kEmpty);
+      }
+   } else {
+      SafeDelete(fElem);
+      if (!(fElem = fDSet->Next()))
+         return -1;
+   }
+   fElem->SetBit(TDSetElement::kNewPacket);
+
+   if (!fElem->TestBit(TDSetElement::kEmpty)) {
+      Error("GetNextPacket", "data element must be set to kEmtpy");
+      return -1;
+   }
+
+   // Set output
+   num = fElem->GetNum();
+   if (num == 0) return -1;
+   fst = fElem->GetFirst();
+  
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
 Long64_t TEventIterUnit::GetNextEvent()
 {
    // Get next event
@@ -255,9 +300,19 @@ Long64_t TEventIterUnit::GetNextEvent()
          fOldBytesRead = totBytesWritten;
       }
 
-      SafeDelete(fElem);
-      if (!(fElem = fDSet->Next()))
-         return -1;
+      if (fDSet->TestBit(TDSet::kIsLocal)) {
+         if (fElem) {
+            SafeDelete(fElem);
+            return -1;
+         } else {
+            fElem = new TDSetElement("", "", "", 0, fNum);
+            fElem->SetBit(TDSetElement::kEmpty);
+         }
+      } else {
+         SafeDelete(fElem);
+         if (!(fElem = fDSet->Next()))
+            return -1;
+      }
       fElem->SetBit(TDSetElement::kNewPacket);
 
       if (!fElem->TestBit(TDSetElement::kEmpty)) {
@@ -316,6 +371,114 @@ TEventIterObj::~TEventIterObj()
 }
 
 //______________________________________________________________________________
+Int_t TEventIterObj::GetNextPacket(Long64_t &first, Long64_t &num,
+                                  TEntryList **, TEventList **)
+{
+   // Get loop range
+
+   SafeDelete(fElem);
+
+   if (fStop || fNum == 0) return -1;
+
+   while (fElem == 0 || fCur < fFirst-1) {
+
+      if (gPerfStats && fFile) {
+         Long64_t bytesRead = fFile->GetBytesRead();
+         gPerfStats->SetBytesRead(bytesRead - fOldBytesRead);
+         fOldBytesRead = bytesRead;
+      }
+
+      SafeDelete(fElem);
+      fElem = fDSet->Next(fKeys->GetSize());
+      if (fElem && fElem->GetEntryList()) {
+         Error("GetNextPacket", "entry- or event-list not available");
+         return -1;
+      }
+
+      if ( fElem == 0 ) {
+         fNum = 0;
+         return -1;
+      }
+      fElem->SetBit(TDSetElement::kNewPacket);
+
+      Int_t r = LoadDir();
+
+      if ( r == -1 ) {
+
+         // Error has been reported
+         fNum = 0;
+         return -1;
+
+      } else if ( r == 1 ) {
+
+         // New file and/or directory
+         fKeys = fDir->GetListOfKeys();
+         fNextKey = new TIter(fKeys);
+      }
+
+      // Validate values for this element
+      fElemFirst = fElem->GetFirst();
+      fElemNum = fElem->GetNum();
+      if (fElem->GetEntryList()) {
+         if (!(fEntryList = dynamic_cast<TEntryList *>(fElem->GetEntryList())))
+            fEventList = dynamic_cast<TEventList *>(fElem->GetEntryList());
+      }
+      fEventListPos = 0;
+      if (fEntryList)
+         fElemNum = fEntryList->GetEntriesToProcess();
+      else if (fEventList)
+         fElemNum = fEventList->GetN();
+
+      Long64_t tnum = fKeys->GetSize();
+
+      if ( fElemFirst > tnum ) {
+         Error("GetNextPacket","First (%lld) higher then number of keys (%lld) in %s",
+               fElemFirst, tnum, fElem->GetName());
+         fNum = 0;
+         return -1;
+      }
+
+      if ( fElemNum == -1 ) {
+         fElemNum = tnum - fElemFirst;
+      } else if ( fElemFirst+fElemNum  > tnum ) {
+         Error("GetNextPacket","Num (%lld) + First (%lld) larger then number of keys (%lld) in %s",
+            fElemNum, fElemFirst, tnum, fElem->GetDirectory());
+         fElemNum = tnum - fElemFirst;
+      }
+
+      // Skip this element completely?
+      if ( fCur + fElemNum < fFirst ) {
+         fCur += fElemNum;
+         continue;
+      }
+
+      // Position within this element
+      fNextKey->Reset();
+      for(fElemCur = -1; fElemCur < fElemFirst-1 ; fElemCur++, fNextKey->Next()) { }
+   }
+
+   first = ++fElemCur;
+   num = fElemNum;
+   
+   // Done
+   return 0;
+}
+//______________________________________________________________________________
+void TEventIterObj::PreProcessEvent(Long64_t)
+{
+   // To be executed before by TProofPlayer calling TSelector::Process
+   
+   --fNum;
+   ++fCur;
+   TKey *key = (TKey*) fNextKey->Next();
+   TDirectory *dirsave = gDirectory;
+   fDir->cd();
+   fObj = key->ReadObj();
+   if (dirsave) dirsave->cd();
+   fSel->SetObject(fObj);
+}
+
+//______________________________________________________________________________
 Long64_t TEventIterObj::GetNextEvent()
 {
    // Get next event
@@ -363,11 +526,14 @@ Long64_t TEventIterObj::GetNextEvent()
       // Validate values for this element
       fElemFirst = fElem->GetFirst();
       fElemNum = fElem->GetNum();
-      fEntryList = dynamic_cast<TEntryList *>(fElem->GetEntryList());
-      fEventList = (fEntryList) ? (TEventList *)0
-                                : dynamic_cast<TEventList *>(fElem->GetEntryList());
+      if (fElem->GetEntryList()) {
+         if (!(fEntryList = dynamic_cast<TEntryList *>(fElem->GetEntryList())))
+            fEventList = dynamic_cast<TEventList *>(fElem->GetEntryList());
+      }
       fEventListPos = 0;
-      if (fEventList)
+      if (fEntryList)
+         fElemNum = fEntryList->GetEntriesToProcess();
+      else if (fEventList)
          fElemNum = fEventList->GetN();
 
       Long64_t num = fKeys->GetSize();
@@ -400,14 +566,9 @@ Long64_t TEventIterObj::GetNextEvent()
 
    --fElemNum;
    ++fElemCur;
-   --fNum;
-   ++fCur;
-   TKey *key = (TKey*) fNextKey->Next();
-   TDirectory *dirsave = gDirectory;
-   fDir->cd();
-   fObj = key->ReadObj();
-   if (dirsave) dirsave->cd();
-   fSel->SetObject( fObj );
+   
+   // Pre-event processing
+   PreProcessEvent(fElemCur);
 
    return fElemCur;
 }
@@ -453,6 +614,7 @@ TEventIterTree::TEventIterTree()
    fFileTrees = 0;
    fUseParallelUnzip = 0;
    fDontCacheFiles = kFALSE;
+   SetBit(TEventIter::kData);
 }
 
 //______________________________________________________________________________
@@ -476,6 +638,7 @@ TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long
       TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kDisable);
    }
    fDontCacheFiles = gEnv->GetValue("ProofPlayer.DontCacheFiles", 0);
+   SetBit(TEventIter::kData);
 }
 
 //______________________________________________________________________________
@@ -750,6 +913,181 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile)
 }
 
 //______________________________________________________________________________
+Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num,
+                                   TEntryList **enl, TEventList **evl)
+{
+   // Get loop range
+
+   if (first > -1) fEntryListPos = first;
+
+   if (fStop || fNum == 0) return -1;
+
+   Bool_t attach = kFALSE;
+
+   // When files are aborted during processing (via TSelector::kAbortFile) the player
+   // invalidates the element by settign this bit. We need to ask for a new packet
+   Bool_t corrupted = kFALSE;
+   Long64_t rest = -1;
+   if (fElem) {
+      corrupted = (fElem->TestBit(TDSetElement::kCorrupted)) ? kTRUE : kFALSE;
+      rest = fElem->GetNum();
+      if (fElemCur >= 0) rest -= (fElemCur + 1 - fElemFirst);
+   }
+      
+   SafeDelete(fElem);
+
+   while (fElem == 0 || fElemNum == 0 || fCur < fFirst-1) {
+
+      if (gPerfStats && fTree) {
+         Long64_t totBytesRead = fTree->GetCurrentFile()->GetBytesRead();
+         Long64_t bytesRead = totBytesRead - fOldBytesRead;
+         gPerfStats->SetBytesRead(bytesRead);
+         fOldBytesRead = totBytesRead;
+      }
+      
+      SafeDelete(fElem);
+      while (!fElem) {
+         // For a corrupted/invalid file the request for a new packet is with totalEntries = -1
+         // (the default) so that the packetizer invalidates the element
+         if (corrupted) {
+            fElem = fDSet->Next(rest);
+         } else if (fTree) {
+            fElem = fDSet->Next(fTree->GetEntries());
+         } else {
+            fElem = fDSet->Next();
+         }
+
+         if (!fElem) {
+            // End of processing
+            fNum = 0;
+            return -1;
+         }
+         corrupted = kFALSE;
+         fElem->SetBit(TDSetElement::kNewPacket);
+         fElem->ResetBit(TDSetElement::kCorrupted);
+         
+         TTree *newTree = GetTrees(fElem);
+         if (newTree) {
+            if (newTree != fTree) {
+               // The old tree is owned by TFileTree and will be deleted there
+               fTree = newTree;
+               attach = kTRUE;
+               fOldBytesRead = (fTree->GetCurrentFile()) ? fTree->GetCurrentFile()->GetBytesRead() : 0;
+            }
+            // Set range to be analysed
+            if (fTreeCache)
+               fTreeCache->SetEntryRange(fElem->GetFirst(),
+                                         fElem->GetFirst() + fElem->GetNum() - 1);
+         } else {
+            // Could not open this element: ask for another one
+            SafeDelete(fElem);
+            // The current tree, if any, is not valid anymore
+            fTree = 0;
+         }
+      }
+
+      // Validate values for this element
+      fElemFirst = fElem->GetFirst();
+      fElemNum = fElem->GetNum();
+      fEntryList = 0;
+      fEventList = 0;
+      if (fElem->GetEntryList()) {
+         if (!(fEntryList = dynamic_cast<TEntryList *>(fElem->GetEntryList())))
+            fEventList = dynamic_cast<TEventList *>(fElem->GetEntryList());
+      }
+      fEntryListPos = fElemFirst;
+      fEventListPos = 0;
+      if (fEntryList)
+         fElemNum = fEntryList->GetEntriesToProcess();
+      else if (fEventList)
+         fElemNum = fEventList->GetN();
+
+      Long64_t tnum = (Long64_t) fTree->GetEntries();
+
+      if (!fEntryList && !fEventList) {
+         if ( fElemFirst > tnum ) {
+            Error("GetNextPacket", "first (%lld) higher then number of entries (%lld) in %s",
+                                  fElemFirst, tnum, fElem->GetObjName());
+            fNum = 0;
+            return -1;
+         }
+         if ( fElemNum == -1 ) {
+            fElemNum = tnum - fElemFirst;
+         } else if ( fElemFirst+fElemNum  > tnum ) {
+            Error("GetNextPacket", "num (%lld) + first (%lld) larger then number of entries (%lld) in %s",
+                                  fElemNum, fElemFirst, tnum, fElem->GetName());
+            fElemNum = tnum - fElemFirst;
+         }
+
+         // Skip this element completely?
+         if ( fCur + fElemNum < fFirst ) {
+            fCur += fElemNum;
+            continue;
+         }
+         // Position within this element
+         fElemCur = fElemFirst-1;
+      }
+   }
+
+   if (attach) {
+      PDB(kLoop,1) Info("GetNextPacket", "call Init(%p) and Notify()",fTree);
+      fSel->Init(fTree);
+      fSel->Notify();
+      TIter next(fSel->GetOutputList());
+      TEntryList *elist=0;
+      while ((elist=(TEntryList*)next())){
+         if (elist->InheritsFrom(TEntryList::Class()))
+            elist->SetTree(fTree->GetName(), fElem->GetFileName());
+      }
+      if (fSel->GetAbort() == TSelector::kAbortProcess) {
+         // the error has been reported
+         return -1;
+      }
+      attach = kFALSE;
+   }
+   
+   // Fill the output now
+   num = fElemNum;
+   if (fEntryList) {
+      first = fEntryListPos;
+      if (enl) *enl = fEntryList;
+   } else if (fEventList){
+      first = fEventListPos;
+      if (evl) *evl = fEventList;
+   } else {
+      first = fElemFirst;
+   }
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+void TEventIterTree::PreProcessEvent(Long64_t entry)
+{
+   // Actions to be done just before processing entry 'entry'.
+   // Called by TProofPlayer.
+
+   if (!(fEntryList || fEventList)) {
+      --fNum;
+      ++fCur;
+   }
+
+   // Signal ending of learning phase
+   if (fTreeCache && fTreeCacheIsLearning) {
+      if (!(fTreeCache->IsLearning())) {
+         fTreeCacheIsLearning = kFALSE;
+         if (gProofServ) gProofServ->RestartComputeTime();
+      }
+   }
+
+   // For prefetching
+   if (fTree->LoadTree(entry) < 0) {
+      Warning("PreEventProcess", "problems setting entry in TTree");
+   }
+}
+
+//______________________________________________________________________________
 Long64_t TEventIterTree::GetNextEvent()
 {
    // Get next event
@@ -889,21 +1227,11 @@ Long64_t TEventIterTree::GetNextEvent()
    } else {
       --fElemNum;
       ++fElemCur;
-      --fNum;
-      ++fCur;
       rv = fElemCur;
    }
 
-   // Signal ending of learning phase
-   if (fTreeCache && fTreeCacheIsLearning) {
-      if (!(fTreeCache->IsLearning())) {
-         fTreeCacheIsLearning = kFALSE;
-         if (gProofServ) gProofServ->RestartComputeTime();
-      }
-   }
-
-   // For prefetching
-   fTree->LoadTree(rv);
+   // Pre-event processing
+   PreProcessEvent(rv);
 
    return rv;
 }

@@ -155,7 +155,8 @@ public:
       kEmpty           = BIT(17),
       kValidityChecked = BIT(18),  // Set if elements validiy has been checked
       kSomeInvalid     = BIT(19),  // Set if at least one element is invalid
-      kMultiDSet       = BIT(20)   // Set if fElements is a list of datasets
+      kMultiDSet       = BIT(20),   // Set if fElements is a list of datasets
+      kIsLocal         = BIT(21)   // Set if local, non-PROOF, processing
    };
 
 private:
@@ -254,7 +255,7 @@ public:
 
    void                  SetWriteV3(Bool_t on = kTRUE);
 
-   ClassDef(TDSet,8)  // Data set for remote processing (PROOF)
+   ClassDef(TDSet,9)  // Data set for remote processing (PROOF)
 };
 
 #endif

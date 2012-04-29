@@ -45,6 +45,9 @@ class TEntryList;
 
 class TEventIter : public TObject {
 
+public:
+   enum EIterType { kData = 15};  // True if iterating over data
+  
 protected:
    TDSet         *fDSet;         // data set over which to iterate
 
@@ -79,7 +82,10 @@ public:
    virtual Long64_t  GetCacheSize() = 0;
    virtual Int_t     GetLearnEntries() = 0;
    virtual Long64_t  GetNextEvent() = 0;
+   virtual Int_t     GetNextPacket(Long64_t &first, Long64_t &num,
+                                   TEntryList **enl = 0, TEventList **evl = 0) = 0;
    virtual void      InvalidatePacket();
+   virtual void      PreProcessEvent(Long64_t) = 0;
    virtual void      StopProcess(Bool_t abort);
 
    static TEventIter *Create(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
@@ -105,6 +111,9 @@ public:
    Long64_t GetCacheSize() {return -1;}
    Int_t    GetLearnEntries() {return -1;}
    Long64_t GetNextEvent();
+   Int_t    GetNextPacket(Long64_t &first, Long64_t &num,
+                          TEntryList **enl = 0, TEventList **evl = 0);
+   inline void PreProcessEvent(Long64_t) { };
 
    ClassDef(TEventIterUnit,0)  // Event iterator for objects
 };
@@ -128,6 +137,9 @@ public:
    Long64_t GetCacheSize() {return -1;}
    Int_t    GetLearnEntries() {return -1;}
    Long64_t GetNextEvent();
+   Int_t    GetNextPacket(Long64_t &first, Long64_t &num,
+                          TEntryList **enl = 0, TEventList **evl = 0);
+   void PreProcessEvent(Long64_t);
 
    ClassDef(TEventIterObj,0)  // Event iterator for objects
 };
@@ -168,6 +180,9 @@ public:
    Long64_t GetCacheSize();
    Int_t    GetLearnEntries();
    Long64_t GetNextEvent();
+   Int_t    GetNextPacket(Long64_t &first, Long64_t &num,
+                          TEntryList **enl = 0, TEventList **evl = 0);
+   void PreProcessEvent(Long64_t ent);
 
    ClassDef(TEventIterTree,0)  // Event iterator for Trees
 };

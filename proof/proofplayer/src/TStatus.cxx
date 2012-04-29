@@ -23,20 +23,21 @@
 #include "TStatus.h"
 #include "Riostream.h"
 #include "TClass.h"
-#include "TList.h"
 #include "TProofDebug.h"
-
 
 ClassImp(TStatus)
 
 //______________________________________________________________________________
-TStatus::TStatus() : fExitStatus(-1), fVirtMemMax(-1), fResMemMax(-1),
+TStatus::TStatus() : fIter(&fMsgs), fExitStatus(-1),
+                     fVirtMemMax(-1), fResMemMax(-1),
                      fVirtMaxMst(-1), fResMaxMst(-1)
 {
    // Default constructor.
 
    SetName("PROOF_Status");
-   fIter = fMsgs.begin();
+   fMsgs.SetOwner(kTRUE);
+   fInfoMsgs.SetOwner(kTRUE);
+   ResetBit(TStatus::kNotOk);
 }
 
 //______________________________________________________________________________
@@ -44,8 +45,17 @@ void TStatus::Add(const char *mesg)
 {
    // Add an error message.
 
-   fMsgs.insert(mesg);
+   fMsgs.Add(new TObjString(mesg));
+   SetBit(TStatus::kNotOk);
    Reset();
+}
+
+//______________________________________________________________________________
+void TStatus::AddInfo(const char *mesg)
+{
+   // Add an info message.
+
+   fInfoMsgs.Add(new TObjString(mesg));
 }
 
 //______________________________________________________________________________
@@ -61,10 +71,19 @@ Int_t TStatus::Merge(TCollection *li)
       TStatus *s = dynamic_cast<TStatus*>(obj);
       if (s == 0) continue;
 
-      MsgIter_t i = s->fMsgs.begin();
-      MsgIter_t end = s->fMsgs.end();
-      for (; i != end; i++)
-         Add(i->c_str());
+      TObjString *os = 0;
+      // Errors
+      TIter nxem(&(s->fMsgs));
+      while ((os = (TObjString *) nxem())) {
+         Add(os->GetName());
+      }
+
+      // Infos (no duplications)
+      TIter nxwm(&(s->fInfoMsgs));
+      while ((os = (TObjString *) nxwm())) {
+         if (!fInfoMsgs.FindObject(os->GetName()))
+            AddInfo(os->GetName());
+      }
       
       SetMemValues(s->GetVirtMemMax(), s->GetResMemMax());
       // Check the master values (relevantt if merging submaster info)
@@ -81,7 +100,7 @@ Int_t TStatus::Merge(TCollection *li)
       }
    }
 
-   return fMsgs.size();
+   return fMsgs.GetSize();
 }
 
 //______________________________________________________________________________
@@ -91,9 +110,24 @@ void TStatus::Print(Option_t * /*option*/) const
 
    Printf("OBJ: %s\t%s\t%s", IsA()->GetName(), GetName(), (IsOk() ? "OK" : "ERROR"));
 
-   MsgIter_t i = fMsgs.begin();
-   for (; i != fMsgs.end(); i++)
-      Printf("\t%s", (*i).c_str());
+   TObjString *os = 0;
+   // Errors first
+   if (fMsgs.GetSize() > 0) {
+      Printf("\n   Errors:");
+      TIter nxem(&fMsgs);
+      while ((os = (TObjString *) nxem()))
+         Printf("\t%s",os->GetName());
+      Printf(" ");
+   }
+
+   // Infos
+   if (fInfoMsgs.GetSize() > 0) {
+      Printf("\n   Infos:");
+      TIter nxem(&fInfoMsgs);
+      while ((os = (TObjString *) nxem()))
+         Printf("\t%s",os->GetName());
+      Printf(" ");
+   }
 
    Printf(" Max worker virtual memory: %.2f MB \tMax worker resident memory: %.2f MB ",
           GetVirtMemMax()/1024., GetResMemMax()/1024.);
@@ -106,7 +140,7 @@ void TStatus::Reset()
 {
    // Reset the iterator on the messages.
 
-   fIter = fMsgs.begin();
+   fIter.Reset();
 }
 
 //______________________________________________________________________________
@@ -114,11 +148,9 @@ const char *TStatus::NextMesg()
 {
    // Return the next message or 0.
 
-   if (fIter != fMsgs.end()) {
-      return (*fIter++).c_str();
-   } else {
-      return 0;
-   }
+   TObjString *os = (TObjString *) fIter();
+   if (os) return os->GetName();
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -134,4 +166,48 @@ void TStatus::SetMemValues(Long_t vmem, Long_t rmem, Bool_t master)
       if (rmem > 0. && (fResMemMax < 0. || rmem > fResMemMax)) fResMemMax = rmem;
    }
 }
+
+//______________________________________________________________________________
+void TStatus::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TStatus.
+   if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 4) {
+         R__b.ReadClassBuffer(TStatus::Class(), this, R__v, R__s, R__c);
+      } else {
+         // For version <= 4 masters we need a special streamer
+         TNamed::Streamer(R__b);
+         std::set<std::string> msgs;
+         TClass *cl = TClass::GetClass("set<string>");
+         if (cl) {
+            UInt_t SS__s = 0, SS__c = 0;
+            UInt_t SS__v = cl->GetClassVersion();
+            R__b.ReadClassBuffer(cl, &msgs, SS__v, SS__s, SS__c);
+         } else {
+            Error("Streamer", "no infor found for 'set<string>' - skip");
+            return;
+         }
+         std::set<std::string>::const_iterator it;
+         for (it = msgs.begin(); it != msgs.end(); it++) {
+            fMsgs.Add(new TObjString((*it).c_str()));
+         }
+         if (R__v > 2) {
+            R__b >> fExitStatus;
+         }
+         if (R__v > 1) {
+            R__b >> fVirtMemMax;
+            R__b >> fResMemMax;
+         }
+         if (R__v > 3) {
+            R__b >> fVirtMaxMst;
+            R__b >> fResMaxMst;
+         }
+      }
+   } else {
+      R__b.WriteClassBuffer(TStatus::Class(),this);
+   }   
+}
+
 

@@ -127,8 +127,9 @@ FILE *TProofServ::fgErrorHandlerFile = 0;
 // To control allowed actions while processing
 Int_t TProofServ::fgRecursive = 0;
 
-// Last message before exceptions
+// Last message and entry before exceptions
 TString TProofServ::fgLastMsg("<undef>");
+Long64_t TProofServ::fgLastEntry = -1;
 
 // Memory controllers
 Long_t TProofServ::fgVirtMemMax = -1;
@@ -1157,9 +1158,10 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
    if (fProtocol > 18) {
       req << fLatency.RealTime();
       TProofProgressStatus *status = 0;
-      if (fPlayer)
+      if (fPlayer) {
+         fPlayer->UpdateProgressInfo();
          status = fPlayer->GetProgressStatus();
-      else {
+      } else {
          Error("GetNextPacket", "no progress status object");
          return 0;
       }
@@ -1383,19 +1385,24 @@ void TProofServ::HandleSocketInput()
    
    } catch (std::bad_alloc &) {
       // Memory allocation problem:
-      exmsg.Form("caught exception 'bad_alloc' (memory leak?) %s", fgLastMsg.Data());
+      exmsg.Form("caught exception 'bad_alloc' (memory leak?) %s %lld",
+                 fgLastMsg.Data(), fgLastEntry);
    } catch (std::exception &exc) {
       // Standard exception caught
-      exmsg.Form("caught standard exception '%s' %s", exc.what(), fgLastMsg.Data());
+      exmsg.Form("caught standard exception '%s' %s %lld",
+                 exc.what(), fgLastMsg.Data(), fgLastEntry);
    } catch (int i) {
       // Other exception caught
-      exmsg.Form("caught exception throwing %d %s", i, fgLastMsg.Data());
+      exmsg.Form("caught exception throwing %d %s %lld",
+                 i, fgLastMsg.Data(), fgLastEntry);
    } catch (const char *str) {
       // Other exception caught
-      exmsg.Form("caught exception throwing '%s' %s", str, fgLastMsg.Data());
+      exmsg.Form("caught exception throwing '%s' %s %lld",
+                 str, fgLastMsg.Data(), fgLastEntry);
    } catch (...) {
       // Caught other exception
-      exmsg.Form("caught exception <unknown> %s", fgLastMsg.Data());
+      exmsg.Form("caught exception <unknown> %s %lld",
+                 fgLastMsg.Data(), fgLastEntry);
    }
 
    // Terminate on exception
@@ -6505,12 +6512,12 @@ void TProofServ::HandleException(Int_t sig)
 {
    // Exception handler: we do not try to recover here, just exit.
 
-   Error("HandleException", "caugth exception triggered by signal '%d' %s",
-                            sig, fgLastMsg.Data());
+   Error("HandleException", "caugth exception triggered by signal '%d' %s %lld",
+                            sig, fgLastMsg.Data(), fgLastEntry);
    // Description
    TString emsg;
-   emsg.Form("%s: caught exception triggered by signal '%d' %s",
-             GetOrdinal(), sig, fgLastMsg.Data());
+   emsg.Form("%s: caught exception triggered by signal '%d' %s %lld",
+             GetOrdinal(), sig, fgLastMsg.Data(), fgLastEntry);
    // Try to warn the user
    SendAsynMessage(emsg.Data());
 
@@ -7191,6 +7198,14 @@ void TProofServ::SetLastMsg(const char *lastmsg)
    // Set the message to be sent back in case of exceptions
 
    fgLastMsg = lastmsg;
+}
+
+//______________________________________________________________________________
+void TProofServ::SetLastEntry(Long64_t entry)
+{
+   // Set the last entry before exception
+
+   fgLastEntry = entry;
 }
 
 //______________________________________________________________________________

@@ -348,9 +348,11 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
 
       numev = totev - slstat->GetEntriesProcessed();
       slstat->GetProgressStatus()->IncEntries(numev);
+      slstat->GetProgressStatus()->SetLastUpdate();
    }
 
    fProgressStatus->IncEntries(numev);
+   fProgressStatus->SetLastUpdate();
 
    fProcessing = 0;
 
