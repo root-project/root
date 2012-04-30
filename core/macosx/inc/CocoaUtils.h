@@ -172,7 +172,7 @@ template<class RefType>
 class CFStrongReference {
 public:
    CFStrongReference()
-              : fRef(nullptr)
+              : fRef(0)
    {
    }
    
@@ -233,7 +233,7 @@ template<class RefType>
 class CFScopeGuard {
 public:
    CFScopeGuard()
-            : fRef(nullptr)
+            : fRef(0)
    {
    }
    
@@ -264,7 +264,7 @@ public:
    
    void Release()
    {
-      fRef = nullptr;
+      fRef = 0;
    }
 
 private:

@@ -60,6 +60,8 @@ private:
    };
 
    std::map<TString, RGB_t> fX11RGB;//X11's rgb.txt
+   typedef std::map<TString, RGB_t> rgb_map;
+   typedef rgb_map::const_iterator const_rgb_iterator;
 };
 
 void PixelToRGB(Pixel_t pixelColor, CGFloat *rgb);

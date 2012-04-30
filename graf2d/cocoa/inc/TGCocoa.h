@@ -434,9 +434,11 @@ private:
    std::vector<UInt_t> fFreeMessageIDs;
    UInt_t fCurrentMessageID;
    std::map<UInt_t, ClientMessage_t> fClientMessages;
+   typedef std::map<UInt_t, ClientMessage_t>::iterator message_iterator;
    
    //Quite ugly solution for the moment.
    std::map<Window_t, std::vector<UInt_t> > fClientMessagesToWindow;
+   typedef std::map<Window_t, std::vector<UInt_t> >::iterator message_window_iterator;
       
    //I'd prefere to use = delete syntax from C++0x11, but this file is processed by CINT.
    TGCocoa(const TGCocoa &rhs);

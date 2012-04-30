@@ -31,7 +31,8 @@ typedef std::string::size_type size_type;
 template<class T>
 void StringToInt(const std::string &str, const std::string &componentName, T &num)
 {
-   for (auto symbol : str) {
+   for (std::string::size_type i = 0, e = str.length(); i < e; ++i) {
+      const char symbol = str[i];
       if (!std::isdigit(symbol))
          throw std::runtime_error("bad symbol while converting component " + componentName + " into number");
    }
@@ -39,7 +40,6 @@ void StringToInt(const std::string &str, const std::string &componentName, T &nu
    std::istringstream in(str);
    in>>num;
 }
-
 
 //______________________________________________________________________________
 size_type GetXLFDNameComponentAsString(const std::string &name, const std::string & componentName,

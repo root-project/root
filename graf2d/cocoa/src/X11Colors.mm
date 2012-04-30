@@ -121,7 +121,7 @@ bool ColorParser::LookupColorByName(const TString &colorName, ColorStruct_t &col
 {
    TString lowerCaseName(colorName);
    lowerCaseName.ToLower();
-   auto it = fX11RGB.find(lowerCaseName);
+   const_rgb_iterator it = fX11RGB.find(lowerCaseName);
 
    if (it != fX11RGB.end()) {
       color.fPixel = 0;
@@ -900,9 +900,9 @@ ColorParser::ColorParser()
    //But X11 also understand lower case names.
    //And ROOT uses this. Convert all keys into lower case.
    
-   decltype(fX11RGB) tmpMap;
+   rgb_map tmpMap;
    TString key;
-   for (auto iter = fX11RGB.begin(), endIter = fX11RGB.end(); iter != endIter; ++iter) {
+   for (const_rgb_iterator iter = fX11RGB.begin(), endIter = fX11RGB.end(); iter != endIter; ++iter) {
       key = iter->first;
       key.ToLower();
       //Insert fails, if we have such case already - we do not care about such a fail.
