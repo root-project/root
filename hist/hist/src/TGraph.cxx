@@ -429,6 +429,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       }
       if (ntokens >= 2 && ntokensToBeSaved != 2) { //first condition not to repeat the previous error message
          Error("TGraph", "Incorrect input format! There are %d \"%%lg\" tag(s) in format whereas 2 and only 2 are expected!", ntokensToBeSaved);
+         delete [] isTokenToBeSaved ;
          return;
       }
 
