@@ -772,10 +772,12 @@ Int_t TApplicationRemote::SendFile(const char *file, Int_t opt, const char *rfil
    Long_t id, flags, modtime;
    if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 1) {
       Error("SendFile", "cannot stat file %s", file);
+      close(fd);
       return -1;
    }
    if (size == 0) {
       Error("SendFile", "empty file %s", file);
+      close(fd);
       return -1;
    }
 
