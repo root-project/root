@@ -167,6 +167,11 @@ TParticlePDG* TDatabasePDG::AddAntiParticle(const char* Name, Int_t PdgCode)
    Int_t pdg_code  = abs(PdgCode);
    TParticlePDG* p = GetParticle(pdg_code);
 
+   if (!p) {
+      printf(" *** TDatabasePDG::AddAntiParticle: particle with pdg code %d not known\n", pdg_code);
+      return NULL;
+   }
+
    TParticlePDG* ap = AddParticle(Name,
                                   Name,
                                   p->Mass(),
@@ -685,7 +690,7 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
 
                code[i] = dc->DaughterPdgCode(i);
                daughter = GetParticle(code[i]);
-               if (daughter->AntiParticle()) {
+               if (daughter && daughter->AntiParticle()) {
                   // this particle does have an
                   // antiparticle
                   code[i] = -code[i];

@@ -79,12 +79,14 @@ Reflex::LiteralString&
 Reflex::LiteralString::operator=(const LiteralString& other) {
 //-------------------------------------------------------------------------------
 // Assign a LiteralString
-   this->~LiteralString();
+   if (&other != this) {
+      this->~LiteralString();
 
-   fLiteral = other.fLiteral;
-   fAllocSize = 0;
-   if (other.fAllocSize)
-      StrDup(other.fBuf);
+      fLiteral = other.fLiteral;
+      fAllocSize = 0;
+      if (other.fAllocSize)
+         StrDup(other.fBuf);
+   }
    return *this;
 }
 

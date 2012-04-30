@@ -457,11 +457,11 @@ UInt_t drr_map_args2(VALUE inargs, char *cproto, int cproto_size, G__CallFunc *f
                break;
             case T_FLOAT:
                if (f) f->SetArg(NUM2DBL(arg));
-               if (cproto) strcat(cproto, "double");
+               if (cproto) strlcat(cproto, "double", cproto_size);
                break;
             case T_STRING:
                if (f) f->SetArg((Long_t) StringValuePtr(arg));
-               if (cproto) strcat(cproto, "char*");
+               if (cproto) strlcat(cproto, "char*", cproto_size);
                break;
             case T_ARRAY:
                /* FIXME: Handle all arrays, not only
@@ -474,7 +474,7 @@ UInt_t drr_map_args2(VALUE inargs, char *cproto, int cproto_size, G__CallFunc *f
                         arr[j] = NUM2DBL(rb_ary_entry (arg, j));
                      f->SetArg((Long_t) arr);
                   }
-               if (cproto) strcat(cproto, "double*");
+               if (cproto) strlcat(cproto, "double*", cproto_size);
                break;
             case T_OBJECT:
                v = rb_iv_get (arg, "__rr__");
@@ -484,11 +484,11 @@ UInt_t drr_map_args2(VALUE inargs, char *cproto, int cproto_size, G__CallFunc *f
                      if (f) f->SetArg((Long_t) ptr);
                      if (cproto) {
                         VALUE tmp = rb_iv_get (arg, "__rr_class__");
-                        strcat(cproto, StringValuePtr(tmp));
+                        strlcat(cproto, StringValuePtr(tmp), cproto_size);
                         if( ((reference_map>>ntobjects)&0x1) ) {
-                           strcat(cproto, "*");
+                           strlcat(cproto, "*", cproto_size);
                         } else {
-                           strcat(cproto, "&");
+                           strlcat(cproto, "&", cproto_size);
                         }
                      }
                   }
@@ -498,7 +498,7 @@ UInt_t drr_map_args2(VALUE inargs, char *cproto, int cproto_size, G__CallFunc *f
                break;
             }
          if ((i + 1 < nargs) && (nargs != 1) && cproto) 
-            strcat(cproto, ",");
+            strlcat(cproto, ",", cproto_size);
       }
    return ntobjects;
 }
@@ -931,9 +931,11 @@ static VALUE drr_generic_method(int argc, VALUE argv[], VALUE self)
          if (nargs)
             drr_set_method_args (inargs, func, 0);
       }
-   else
+   else {
       /* FIXME: This can never be happened.  */
       rb_warn ("Proto conflict with cache. Expected %s, but found no match for %s", cproto, methname);
+      return VALUE();
+   }
 
    if (entry->rtype != kfloat)
       address = func->ExecInt((void*)((Long_t)caller + offset));
