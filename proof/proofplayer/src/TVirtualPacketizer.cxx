@@ -185,8 +185,8 @@ Long64_t TVirtualPacketizer::GetEntries(Bool_t tree, TDSetElement *e)
    TFile *file = TFile::Open(e->GetFileName());
 
    if (!file || (file && file->IsZombie())) {
-      Error("GetEntries","Cannot open file: %s (%s)",
-            e->GetFileName(), strerror(file->GetErrno()) );
+      const char *emsg = (file) ? strerror(file->GetErrno()) : "<undef>";
+      Error("GetEntries","Cannot open file: %s (%s)", e->GetFileName(), emsg);
       return -1;
    }
 
