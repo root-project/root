@@ -28,18 +28,18 @@ namespace ROOT {
 namespace MacOSX {
 namespace X11 {//X11 emulation for Cocoa.
 
-enum class Ancestry {
-   view1IsParent,
-   view2IsParent,
-   haveNonRootAncestor,
-   ancestorIsRoot
+enum Ancestry {
+   kAView1IsParent,
+   kAView2IsParent,
+   kAHaveNonRootAncestor,
+   kAAncestorIsRoot
 };
 
-enum class PointerGrab {
-   noGrab,
-   implicitGrab,
-   activeGrab,
-   passiveGrab
+enum PointerGrab {
+   kPGNoGrab,
+   kPGImplicitGrab,
+   kPGActiveGrab,
+   kPGPassiveGrab
 };
 
 class EventTranslator {

@@ -82,12 +82,13 @@ unsigned CocoaPrivate::RegisterDrawable(NSObject *nsObj)
 //______________________________________________________________________________
 NSObject<X11Drawable> *CocoaPrivate::GetDrawable(unsigned drawableID)const
 {
-   auto drawableIter = fDrawables.find(drawableID);
+   const_drawable_iterator drawableIter = fDrawables.find(drawableID);
+   
 #ifdef DEBUG_ROOT_COCOA
    if (drawableIter == fDrawables.end()) {
       NSLog(@"Fatal error: requested non-existing drawable %u", drawableID);
       //We do not care about efficiency, ROOT's gonna die on assert :)
-      auto deletedDrawable = std::find(fFreeDrawableIDs.begin(), fFreeDrawableIDs.end(), drawableID);
+      std::vector<unsigned>::const_iterator deletedDrawable = std::find(fFreeDrawableIDs.begin(), fFreeDrawableIDs.end(), drawableID);
       if (deletedDrawable != fFreeDrawableIDs.end()) {
          NSLog(@"This drawable was deleted already");
       } else {
@@ -102,12 +103,12 @@ NSObject<X11Drawable> *CocoaPrivate::GetDrawable(unsigned drawableID)const
 //______________________________________________________________________________
 NSObject<X11Window> *CocoaPrivate::GetWindow(unsigned windowID)const
 {
-   auto winIter = fDrawables.find(windowID);
+   const_drawable_iterator winIter = fDrawables.find(windowID);
 #ifdef DEBUG_ROOT_COCOA
    if (winIter == fDrawables.end()) {
       NSLog(@"Fatal error: requested non-existing drawable %u", windowID);
       //We do not care about efficiency, ROOT's gonna die on assert :)
-      auto deletedDrawable = std::find(fFreeDrawableIDs.begin(), fFreeDrawableIDs.end(), windowID);
+      std::vector<unsigned>::const_iterator deletedDrawable = std::find(fFreeDrawableIDs.begin(), fFreeDrawableIDs.end(), windowID);
       if (deletedDrawable != fFreeDrawableIDs.end()) {
          NSLog(@"This window was deleted already");
       } else {
@@ -122,10 +123,9 @@ NSObject<X11Window> *CocoaPrivate::GetWindow(unsigned windowID)const
 //______________________________________________________________________________
 void CocoaPrivate::DeleteDrawable(unsigned drawableID)
 {
-   auto drawableIter = fDrawables.find(drawableID);
-
+   drawable_iterator drawableIter = fDrawables.find(drawableID);
    assert(drawableIter != fDrawables.end() && "DeleteDrawable, non existing drawableID");
-   
+
    //Probably, I'll need some additional cleanup here later. Now just delete NSObject and
    //reuse its id.
    NSObject<X11Drawable> *base = drawableIter->second.Get();
@@ -160,7 +160,7 @@ void CocoaPrivate::DeleteDrawable(unsigned drawableID)
 //______________________________________________________________________________
 void CocoaPrivate::ReplaceDrawable(unsigned drawableID, NSObject *nsObj)
 {
-   auto drawableIter = fDrawables.find(drawableID);
+   drawable_iterator drawableIter = fDrawables.find(drawableID);
    assert(drawableIter != fDrawables.end() && "ReplaceDrawable, can not replace non existing drawable");
    drawableIter->second.Reset(nsObj);
 }

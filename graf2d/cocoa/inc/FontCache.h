@@ -71,17 +71,19 @@ private:
    
    //These are fonts for GUI. Weird map, as I can see now.
    std::map<CTFontRef, CTFontGuard_t> fLoadedFonts;
+   typedef std::map<CTFontRef, CTFontGuard_t>::iterator font_iterator;
+   typedef std::map<CTFontRef, CTFontGuard_t>::const_iterator const_font_iterator;
 
    //Fonts for TPad's graphics.
    typedef std::map<UInt_t, CTFontGuard_t> FontMap_t;
+   typedef FontMap_t::iterator font_map_iterator;
+   typedef FontMap_t::const_iterator const_font_map_iterator;
 
    FontMap_t fFonts[nPadFonts];
    CTFontRef fSelectedFont;
    
-   FontCache(const FontCache &rhs) = delete;
-   FontCache(FontCache &&rhs) = delete;//Make this explicit.
-   FontCache &operator = (const FontCache &rhs) = delete;
-   FontCache &operator = (FontCache &&rhs) = delete;//Make this explicit.
+   FontCache(const FontCache &rhs);
+   FontCache &operator = (const FontCache &rhs);
 };
 
 }

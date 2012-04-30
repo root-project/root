@@ -58,9 +58,9 @@ public:
 
    virtual void Execute()const = 0;
 
-   
-   Command(const Command &rhs) = delete;
-   Command &operator = (const Command &rhs) = delete;
+private:   
+   Command(const Command &rhs);
+   Command &operator = (const Command &rhs);
 };
 
 class DrawLine : public Command {
@@ -206,8 +206,8 @@ public:
 
 class CommandBuffer {
 private:
-   CommandBuffer(const CommandBuffer &rhs) = delete;
-   CommandBuffer &operator = (const CommandBuffer &rhs) = delete;
+   CommandBuffer(const CommandBuffer &rhs);
+   CommandBuffer &operator = (const CommandBuffer &rhs);
    
    std::vector<Command *> fCommands;
 

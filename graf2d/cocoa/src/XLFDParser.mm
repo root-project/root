@@ -115,9 +115,9 @@ size_type ParseWeight(const std::string &name, size_type pos, XLFDName &dst)
    pos = GetXLFDNameComponentAsString(name, "weight", pos, weight);
 
    if (weight != "bold")
-      dst.fWeight = FontWeight::medium;
+      dst.fWeight = kFWMedium;
    else
-      dst.fWeight = FontWeight::bold;
+      dst.fWeight = kFWBold;
 
    return pos;
 }
@@ -131,12 +131,12 @@ size_type ParseSlant(const std::string &name, size_type pos, XLFDName &dst)
    pos = GetXLFDNameComponentAsString(name, "slant", pos, slant);
 
    if (slant == "r" || slant == "R") {
-      dst.fSlant = FontSlant::regular;
+      dst.fSlant = kFSRegular;
       return pos;
    }
 
    if (slant == "i" || slant == "I" || slant == "o" || slant == "O") {
-      dst.fSlant = FontSlant::italic;
+      dst.fSlant = kFSItalic;
       return pos;
    }
 

@@ -66,8 +66,8 @@ private:
    int GetRootWindowID()const;
    bool IsRootWindow(int wid)const;
    
-   CocoaPrivate(const CocoaPrivate &rhs) = delete;
-   CocoaPrivate &operator = (const CocoaPrivate &rhs) = delete;
+   CocoaPrivate(const CocoaPrivate &rhs);
+   CocoaPrivate &operator = (const CocoaPrivate &rhs);
 
    unsigned               RegisterDrawable(NSObject *nsObj);
    NSObject<X11Drawable> *GetDrawable(unsigned drawableD)const;
@@ -94,8 +94,9 @@ private:
    //Cache of ids.
    std::vector<unsigned>                       fFreeDrawableIDs;
    //Cocoa objects (views, windows, "pixmaps").
-   //As soon as NSObject<X11Drawable> is not a C++, even in C++0x11 I need a space :(
-   std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> >> fDrawables;
+   std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> > > fDrawables;
+   typedef std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> > >::iterator drawable_iterator;
+   typedef std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> > >::const_iterator const_drawable_iterator;
 };
 
 }//Details

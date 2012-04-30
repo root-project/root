@@ -24,14 +24,14 @@ namespace ROOT {
 namespace MacOSX {
 namespace X11 {//X11 emulation.
 
-enum class FontSlant {
-   regular,
-   italic
+enum FontSlant {
+   kFSRegular,
+   kFSItalic
 };
 
-enum class FontWeight {
-   medium,
-   bold
+enum FontWeight {
+   kFWMedium,
+   kFWBold
 };
 
 struct XLFDName {
