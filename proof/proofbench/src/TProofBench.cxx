@@ -508,7 +508,7 @@ void TProofBench::GetPerfSpecs(const char *path, Int_t degfit)
    if (pp.IsNull()) pp = gSystem->WorkingDirectory();
    FileStat_t st;
    if (gSystem->GetPathInfo(pp.Data(), st) != 0) {
-      ::Error("GetPerfSpecs", "path '%s' could not be stat'ed - abort", pp.Data());
+      ::Error("TProofBench::GetPerfSpecs", "path '%s' could not be stat'ed - abort", pp.Data());
       return;
    }
    TSortedList filels;
@@ -516,7 +516,7 @@ void TProofBench::GetPerfSpecs(const char *path, Int_t degfit)
       // Scan the directory
       void *dirp = gSystem->OpenDirectory(pp.Data());
       if (!dirp) {
-         ::Error("GetPerfSpecs", "directory path '%s' could nto be open - abort", pp.Data());
+         ::Error("TProofBench::GetPerfSpecs", "directory path '%s' could nto be open - abort", pp.Data());
          return;
       }
       const char *ent = 0;
@@ -533,20 +533,23 @@ void TProofBench::GetPerfSpecs(const char *path, Int_t degfit)
             if (!strncmp(rr, "root", 4)) {
                SafeDelete(f);
                fn.ReplaceAll("?filetype=raw", "");
-               f = TFile::Open(fn);
-               TString desc("<no decription>");
-               TNamed *nmdesc = (TNamed *) f->Get("PB_description");
-               if (nmdesc) desc = nmdesc->GetTitle();
-               if (f->GetListOfKeys()->FindObject("RunCPU"))
-                  filels.Add(new fileDesc(fn, "std:", st.fMtime, desc.Data()));
-               if (f->GetListOfKeys()->FindObject("RunCPUx"))
-                  filels.Add(new fileDesc(fn, "stdx:", st.fMtime, desc.Data()));
+               if ((f = TFile::Open(fn))) {
+                  TString desc("<no decription>");
+                  TNamed *nmdesc = (TNamed *) f->Get("PB_description");
+                  if (nmdesc) desc = nmdesc->GetTitle();
+                  if (f->GetListOfKeys()->FindObject("RunCPU"))
+                     filels.Add(new fileDesc(fn, "std:", st.fMtime, desc.Data()));
+                  if (f->GetListOfKeys()->FindObject("RunCPUx"))
+                     filels.Add(new fileDesc(fn, "stdx:", st.fMtime, desc.Data()));
+               } else {
+                  ::Warning("TProofBench::GetPerfSpecs", "problems opening '%s'", fn.Data());
+               }
             }
          }
          SafeDelete(f);
       }
    } else if (!R_ISREG(st.fMode)) {
-      ::Error("GetPerfSpecs",
+      ::Error("TProofBench::GetPerfSpecs",
               "path '%s' not a regular file nor a directory - abort", pp.Data());
       return;
    } else {
@@ -589,7 +592,7 @@ void TProofBench::GetPerfSpecs(const char *path, Int_t degfit)
          emsg.Form("path '%s' cannot be stated - abort", fn.Data());
       }
       if (!isOk) {
-         ::Error("GetPerfSpecs", "%s", emsg.Data());
+         ::Error("TProofBench::GetPerfSpecs", "%s", emsg.Data());
          return;
       }
    }
@@ -615,12 +618,12 @@ void TProofBench::GetPerfSpecs(const char *path, Int_t degfit)
          fn = nm->GetName();
          oo = nm->GetTitle();
       } else {
-         ::Error("GetPerfSpecs", "chosen index '%d' does not exist - abort", idx);
+         ::Error("TProofBench::GetPerfSpecs", "chosen index '%d' does not exist - abort", idx);
          return;
       }
    } else {
       if (fn.IsNull()) {
-         ::Error("GetPerfSpecs",
+         ::Error("TProofBench::GetPerfSpecs",
                  "path '%s' is a directory but no ROOT file found in it - abort", pp.Data());
          return;
       }
