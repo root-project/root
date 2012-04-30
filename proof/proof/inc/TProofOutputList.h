@@ -32,7 +32,7 @@ private:
   
 public:
    TProofOutputList(const char *dontshow = "PROOF_*");
-   TProofOutputList(TObject *o) : TList(o) { } // for backward compatibility, don't use
+TProofOutputList(TObject *o) : TList(o), fDontShow(0) { } // for backward compatibility, don't use
    virtual ~TProofOutputList();
 
    void AttachList(TList *alist);
