@@ -452,6 +452,7 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
       }
       if (ntokens >= 3 && ntokensToBeSaved != 3) { //first condition not to repeat the previous error message
          Error("TGraph2D", "Incorrect input format! There are %d \"%%lg\" tag(s) in format whereas 3 and only 3 are expected!", ntokensToBeSaved);
+         delete [] isTokenToBeSaved ;
          return;
       }
 

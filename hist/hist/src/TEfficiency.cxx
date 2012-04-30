@@ -1943,7 +1943,8 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    std::vector<Int_t> total(num); 
    
    //loop over all bins
-   Double_t low, up;
+   Double_t low = 0;
+   Double_t up = 0;
    for(Int_t i=1; i <= nbins_max; ++i) {
       //the binning of the x-axis is taken from the first total histogram
       x[i-1] = vTotal.at(0)->GetBinCenter(i);
