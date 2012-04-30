@@ -51,7 +51,7 @@ public:
    /**
     * operator assigment
     */
-   Object operator =(const Object& obj);
+   Object& operator =(const Object& obj);
 
 
    /**
@@ -263,11 +263,13 @@ inline Reflex::Object::Object(const Object& obj)
 
 
 //-------------------------------------------------------------------------------
-inline Reflex::Object
+inline Reflex::Object&
 Reflex::Object::operator =(const Object& obj) {
 //-------------------------------------------------------------------------------
-   fType = obj.fType;
-   fAddress = obj.fAddress;
+   if (&obj != this) {
+      fType = obj.fType;
+      fAddress = obj.fAddress;
+   }
    return *this;
 }
 

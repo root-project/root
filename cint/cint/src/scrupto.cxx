@@ -156,7 +156,7 @@ static void G__close_inputfiles_upto(G__dictposition* pos)
    // -- FIXME: Describe this function!
    // -- Cannot replace G__close_inputfiles()
 #ifdef G__SHAREDLIB
-   struct G__filetable permanentsl[G__MAX_SL];
+   G__filetable* permanentsl = new G__filetable[G__MAX_SL];
    int nperm = 0;
 #endif // G__SHAREDLIB
 #ifdef G__DUMPFILE
@@ -356,6 +356,7 @@ static void G__close_inputfiles_upto(G__dictposition* pos)
       fclose(G__sin);
       G__sin = G__stdin;
    }
+   delete [] permanentsl;
 }
 
 //______________________________________________________________________________

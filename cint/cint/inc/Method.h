@@ -46,8 +46,11 @@ G__MethodInfo {
     : handle(mi.handle), index(mi.index), usingIndex(mi.usingIndex), 
      belongingclass(mi.belongingclass), memberOf(0), type(mi.type) {}
   G__MethodInfo& operator=(const G__MethodInfo& mi) {
-    handle=mi.handle; index=mi.index; usingIndex=mi.usingIndex; 
-    belongingclass=mi.belongingclass; memberOf=NULL; type=mi.type; return *this;}
+    if (&mi != this) {
+      handle=mi.handle; index=mi.index; usingIndex=mi.usingIndex; 
+      belongingclass=mi.belongingclass; memberOf=NULL; type=mi.type;
+    }
+    return *this;}
 
   void Init();
   void Init(G__ClassInfo &a);

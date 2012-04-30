@@ -1248,8 +1248,10 @@ Reflex::Type::RepresType() const {
 inline Reflex::Type&
 Reflex::Type::operator =(const Type& rh) {
 //-------------------------------------------------------------------------------
-   fTypeName = rh.fTypeName;
-   fModifiers = rh.fModifiers;
+   if (&rh != this) {
+      fTypeName = rh.fTypeName;
+      fModifiers = rh.fModifiers;
+   }
    return *this;
 }
 

@@ -21,6 +21,7 @@
 
 #include "CallFunc.h"
 #include "Class.h"
+#include "strlcpy.h"
 
 #include "ruby.h"
 
@@ -423,7 +424,8 @@ TObject* drr_grab_object(VALUE self)
    return o;
 }
 
-UInt_t drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, Long_t offset=1, UInt_t reference_map=0x0)
+UInt_t drr_map_args2(VALUE inargs, char *cproto, int cproto_size, G__CallFunc *f,
+                     Long_t offset=1, UInt_t reference_map=0x0)
 {
    /* FIXME. Offset reminds me fortran code; make a better interface,
     * and change the function name to a better one.
@@ -451,7 +453,7 @@ UInt_t drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, Long_t offset=1
             {
             case T_FIXNUM:
                if (f) f->SetArg((Long_t) NUM2INT(arg));
-               if (cproto) strcat(cproto, "int");
+               if (cproto) strlcat(cproto, "int", cproto_size);
                break;
             case T_FLOAT:
                if (f) f->SetArg(NUM2DBL(arg));
@@ -501,7 +503,8 @@ UInt_t drr_map_args2(VALUE inargs, char *cproto, G__CallFunc *f, Long_t offset=1
    return ntobjects;
 }
 
-void drr_find_method_prototype( G__ClassInfo *klass, char *methname, VALUE inargs, char *cproto, Long_t offset=1 )
+void drr_find_method_prototype( G__ClassInfo *klass, char *methname, VALUE inargs,
+                                char *cproto, int cproto_size, Long_t offset )
 {
    /* FIXME: Brute force checking of all combinations of * and & for
     * T_Objects Since we cannot tell which one is needed (we get the type
@@ -512,7 +515,7 @@ void drr_find_method_prototype( G__ClassInfo *klass, char *methname, VALUE inarg
    Long_t dummy_offset = 0; // Not read out, but expected by GetMethod
 
    // Number of T_OBJECTS in argument list initialized to more than 1
-   UInt_t nobjects = drr_map_args2 (inargs, cproto, 0, offset, 0x0);
+   UInt_t nobjects = drr_map_args2 (inargs, cproto, cproto_size, 0, offset, 0x0);
    // 2^nobjects == number of combinations of "*" and "&"
    UInt_t bitmap_end = static_cast<UInt_t>( 0x1 << nobjects );
 
@@ -525,7 +528,7 @@ void drr_find_method_prototype( G__ClassInfo *klass, char *methname, VALUE inarg
    if( nobjects > 0 and !(minfo->InterfaceMethod()) ) {
       for( UInt_t reference_map=0x1; reference_map < bitmap_end; reference_map++) {
          cproto[0] = static_cast<char>( 0 ); // reset cproto
-         drr_map_args2 (inargs, cproto, 0, offset, reference_map);
+         drr_map_args2 (inargs, cproto, cproto_size, 0, offset, reference_map);
          minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &dummy_offset));
          if (minfo->InterfaceMethod())
             break;
@@ -539,7 +542,7 @@ void drr_find_method_prototype( G__ClassInfo *klass, char *methname, VALUE inarg
 
 void drr_set_method_args( VALUE inargs, G__CallFunc *func, Long_t offset=1 )
 {
-   drr_map_args2( inargs, 0, func, offset );
+   drr_map_args2( inargs, 0, 0, func, offset );
 }
 
 enum Ektype {kint, kfloat, kchar, kunknown, kvoid, kintary, kfloatary, kstring, kroot, kbool};
@@ -679,28 +682,29 @@ static VALUE drr_init(int argc, VALUE argv[], VALUE self)
 
    rb_scan_args (argc, argv, "0*", &inargs);
 
-   G__CallFunc func;
+   G__CallFunc* func = new G__CallFunc();
    G__ClassInfo klass(classname);
 
    /* Call the requested ctor.  */
 
    if (RARRAY_LEN(inargs)) {
-      drr_find_method_prototype (&klass, classname, inargs, cproto, 0);
-      drr_set_method_args ( inargs, &func, 0);
+      drr_find_method_prototype (&klass, classname, inargs, cproto, sizeof(cproto), 0);
+      drr_set_method_args ( inargs, func, 0);
    }
 
    G__MethodInfo minfo(klass.GetMethod(classname, cproto, &offset));
    if (minfo.InterfaceMethod())
-      func.SetFunc(minfo);
+      func->SetFunc(minfo);
    else
       rb_raise( rb_eArgError, "You provided an unknown prototype (%s) for (%s#%s).",
                 cproto, classname, classname);
 
-   addr = func.ExecInt((void*)((Long_t)0 + offset));
+   addr = func->ExecInt((void*)((Long_t)0 + offset));
    rb_iv_set(self, "__rr__", Data_Wrap_Struct(cTObject, 0, 0, (TObject *)addr));
    rb_iv_set(self, "__rr_class__", rb_str_new2 (classname));
 
-   func.Init();
+   func->Init();
+   delete func;
    return self;
 }
 
@@ -782,19 +786,19 @@ static VALUE drr_singleton_missing(int argc, VALUE argv[], VALUE self)
    rb_scan_args (argc, argv, "0*", &inargs);
    nargs = RARRAY_LEN(inargs) - 1;
 
-   G__CallFunc func;
+   G__CallFunc* func = new G__CallFunc;
    G__ClassInfo *klass = new G__ClassInfo (classname);
    G__MethodInfo *minfo = 0;
 
    if (nargs) {
-      drr_find_method_prototype( klass, methname, inargs, cproto, 1 );
-      drr_set_method_args( inargs, &func, 1 );
+      drr_find_method_prototype( klass, methname, inargs, cproto, sizeof(cproto), 1 );
+      drr_set_method_args( inargs, func, 1 );
    }
 
    /* FIXME: minfo is really used only for the return type.  */
    minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &offset));
    if (minfo->InterfaceMethod())
-      func.SetFunc(*minfo);
+      func->SetFunc(*minfo);
    else
       rb_raise( rb_eArgError, "You provided an unknown prototype (%s) for (%s#%s).",
                 cproto, classname, methname);
@@ -803,11 +807,13 @@ static VALUE drr_singleton_missing(int argc, VALUE argv[], VALUE self)
    delete minfo;
 
    if (rtype != kfloat)
-      address = func.ExecInt((void*)(offset));
+      address = func->ExecInt((void*)(offset));
    else
-      dbladdr = func.ExecDouble((void*)(offset));
+      dbladdr = func->ExecDouble((void*)(offset));
 
-   return(drr_return(rtype, address, dbladdr, self));
+   VALUE ret = drr_return(rtype, address, dbladdr, self);
+   delete func;
+   return ret;
 }
 
 
@@ -842,7 +848,7 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
    G__MethodInfo *minfo = 0;
 
    if (nargs) {
-      drr_find_method_prototype( klass, methname, inargs, cproto, 1 );
+      drr_find_method_prototype( klass, methname, inargs, cproto, sizeof(cproto), 1 );
       drr_set_method_args( inargs, func, 1 );
    }
 
@@ -917,7 +923,7 @@ static VALUE drr_generic_method(int argc, VALUE argv[], VALUE self)
       {
          func = entry->func;
          if (nargs)
-            drr_find_method_prototype (entry->klass, methname, inargs, cproto, 0);
+            drr_find_method_prototype (entry->klass, methname, inargs, cproto, sizeof(cproto), 0);
          func->SetFuncProto (entry->klass, methname, cproto, &offset);
          /* FIXME: Why on earth CINT resets the arguments when
           * SetFuncProto() is called?

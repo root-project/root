@@ -1469,7 +1469,7 @@ int G__main(int argc, char** argv)
     * wait for user input.
     *************************************************************/
    if (G__ismain == G__MAINEXIST) {
-      struct G__param para;
+      G__param* para = new G__param;
       /*********************************/
       /* If main() exists , execute it */
       /*********************************/
@@ -1490,17 +1490,18 @@ int G__main(int argc, char** argv)
          G__fprinterr(G__serr, "\nCALL main()\n");
       }
       temp = "main";
-      para.paran = 2;
-      G__letint(&para.para[0], 'i', argc - optind);
-      para.para[0].tagnum = -1;
-      para.para[0].typenum = -1;
-      para.para[0].ref = 0;
-      G__letint(&para.para[1], 'C', (long) G__argpointer);
-      para.para[1].tagnum = -1;
-      para.para[1].typenum = -1;
-      para.para[1].ref = 0;
-      para.para[1].obj.reftype.reftype = G__PARAP2P;
-      G__interpret_func(&result, temp, &para, G__HASH_MAIN, G__p_ifunc, G__EXACT, G__TRYNORMAL);
+      para->paran = 2;
+      G__letint(&para->para[0], 'i', argc - optind);
+      para->para[0].tagnum = -1;
+      para->para[0].typenum = -1;
+      para->para[0].ref = 0;
+      G__letint(&para->para[1], 'C', (long) G__argpointer);
+      para->para[1].tagnum = -1;
+      para->para[1].typenum = -1;
+      para->para[1].ref = 0;
+      para->para[1].obj.reftype.reftype = G__PARAP2P;
+      G__interpret_func(&result, temp, para, G__HASH_MAIN, G__p_ifunc, G__EXACT, G__TRYNORMAL);
+      delete para;
       if (!result.type) {
          result = G__null;
       }

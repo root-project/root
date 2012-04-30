@@ -591,7 +591,9 @@ Reflex::Member::operator !=(const Member& rh) const {
 inline Reflex::Member&
 Reflex::Member::operator =(const Member& rh) {
 //-------------------------------------------------------------------------------
-   fMemberBase = rh.fMemberBase;
+   if (&rh != this) {
+      fMemberBase = rh.fMemberBase;
+   }
    return *this;
 }
 

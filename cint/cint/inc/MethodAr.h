@@ -42,8 +42,11 @@ G__MethodArgInfo {
     : argn(mai.argn), belongingmethod(mai.belongingmethod), type(mai.type) 
       { } 
   G__MethodArgInfo& operator=(const G__MethodArgInfo& mai) {
-    argn=mai.argn; belongingmethod=mai.belongingmethod; 
-    type=mai.type; return *this;}
+    if (&mai != this) {
+      argn=mai.argn; belongingmethod=mai.belongingmethod; 
+      type=mai.type;
+    }
+    return *this;}
 
   const char *Name();
   G__TypeInfo* Type() { return(&type); }

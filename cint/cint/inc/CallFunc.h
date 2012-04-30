@@ -51,16 +51,19 @@ G__CallFunc {
   {}
 
   G__CallFunc& operator=(const G__CallFunc& cf) {
+    if (&cf != this) {
 #ifndef __MAKECINT__
-  pfunc=cf.pfunc;
-  result=cf.result;
+      pfunc=cf.pfunc;
+      result=cf.result;
 #ifdef G__ASM_WHOLEFUNC
-  bytecode=cf.bytecode;
+      bytecode=cf.bytecode;
 #endif
-  method=cf.method;
-  para=cf.para;
+      method=cf.method;
+      para=cf.para;
 #endif /* __MAKECINT__ */
-  return *this;}
+    }
+    return *this;
+  }
 
   void Init() ;
 

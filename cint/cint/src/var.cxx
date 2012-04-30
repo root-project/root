@@ -558,7 +558,7 @@ G__value G__letvariable(G__FastAllocString &item, G__value expression, G__var_ar
    int store_asm_noverflow = 0;
    G__FastAllocString ttt(G__ONELINE);
    G__FastAllocString result7(G__ONELINE);
-   char parameter[G__MAXVARDIM][G__ONELINE];
+   G__FastAllocString parameter[G__MAXVARDIM];
    G__value para[G__MAXVARDIM];
    G__FastAllocString varname(G__BUFLEN);
    //--
@@ -5232,7 +5232,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
 {
    // -- FIXME: Describe me!
    struct G__var_array* var = 0;
-   char parameter[G__MAXVARDIM][G__ONELINE];
+   G__FastAllocString parameter[G__MAXVARDIM];
    G__value para[G__MAXVARDIM];
    int ig15 = 0;
    int paran = 0;

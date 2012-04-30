@@ -12406,20 +12406,21 @@ void G__specify_link(int link_stub)
       }
     }
     if(!done && strchr(buf,'<')!=0) {
-      struct G__param fpara;
+      G__param* fpara = new G__param;
       struct G__funclist *funclist=(struct G__funclist*)NULL;
       int tmp=0;
 
-      fpara.paran=0;
+      fpara->paran=0;
 
       G__hash(buf,hash,tmp);
-      funclist=G__add_templatefunc(buf,&fpara,hash,funclist,x_ifunc,0);
+      funclist=G__add_templatefunc(buf,fpara,hash,funclist,x_ifunc,0);
       if(funclist) {
         funclist->ifunc->globalcomp[funclist->ifn] = globalcomp;
         if(rfUseStubs) funclist->ifunc->funcptr[i]=(void*)-2;
         G__funclist_delete(funclist);
         ++done;
       }
+      delete fpara;
     }
     if(!done && G__NOLINK!=globalcomp) {
 #ifdef G__ROOT

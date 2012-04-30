@@ -15,6 +15,12 @@
 #ifndef G__CI_FPROTO_INCLUDE
 #define G__CI_FPROTO_INCLUDE
 
+#if defined(__clang__) && __clang_major__ > 2 && __clang_minor__ > 0
+// 'G__getfunction' has C-linkage specified, but returns
+// user-defined type 'G__value' which is incompatible with C
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif
+
 G__DECL_API(0, unsigned long, G__uint, (G__value buf))
 G__DECL_API(1, int, G__fgetline, (char *string))
 G__DECL_API(2, int, G__load, (char *commandfile))

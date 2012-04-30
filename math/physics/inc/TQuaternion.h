@@ -236,8 +236,10 @@ inline Bool_t TQuaternion::operator != (const TQuaternion& Q) const {
 }
 
 inline TQuaternion& TQuaternion::operator=(const TQuaternion& quat) {
-   fRealPart = quat.fRealPart;
-   fVectorPart.SetXYZ(quat.fVectorPart.X(),quat.fVectorPart.Y(),quat.fVectorPart.Z());
+   if (&quat != this) {
+      fRealPart = quat.fRealPart;
+      fVectorPart.SetXYZ(quat.fVectorPart.X(),quat.fVectorPart.Y(),quat.fVectorPart.Z());
+   }
    return (*this);
 }
 

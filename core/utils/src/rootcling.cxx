@@ -5717,7 +5717,7 @@ static int GenerateModule(const char* dictname, const std::vector<std::string>& 
 
    printf("Would like to generate PCM: %s\n",clangInvocation.c_str());
    int ret = system(clangInvocation.c_str());
-   unlink(moduleMapName.c_str());
+   //unlink(moduleMapName.c_str());
    return ret;
 }
 
