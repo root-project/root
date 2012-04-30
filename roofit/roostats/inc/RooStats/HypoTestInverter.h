@@ -66,9 +66,9 @@ public:
                      RooRealVar* scannedVariable, 
                      double size = 0.05) ;
 
-   // constructor from two ModelConfigs
-   HypoTestInverter( RooAbsData& data, ModelConfig &b, ModelConfig &sb,
-		      RooRealVar * scannedVariable = 0,  ECalculatorType type = kFrequentist, 
+   // constructor from two ModelConfigs (first sb (the null model) then b (the alt model)
+   HypoTestInverter( RooAbsData& data, ModelConfig &sb, ModelConfig &b,
+		     RooRealVar * scannedVariable = 0,  ECalculatorType type = kFrequentist, 
 		     double size = 0.05) ;
 
 

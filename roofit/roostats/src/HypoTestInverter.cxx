@@ -315,7 +315,7 @@ HypoTestInverter::HypoTestInverter( AsymptoticCalculator& hc,
 
 
 //_________________________________________________________________________________________________
-HypoTestInverter::HypoTestInverter( RooAbsData& data, ModelConfig &bModel, ModelConfig &sbModel,
+HypoTestInverter::HypoTestInverter( RooAbsData& data, ModelConfig &sbModel, ModelConfig &bModel,
 				    RooRealVar * scannedVariable,  ECalculatorType type, double size) :
    fTotalToysRun(0),
    fMaxToys(0),
@@ -336,9 +336,9 @@ HypoTestInverter::HypoTestInverter( RooAbsData& data, ModelConfig &bModel, Model
    // If no variable to scan are given they are assumed to be the first variable
    // from the parameter of interests of the null model
 
-   if(fCalcType==kFrequentist) fHC = auto_ptr<HypoTestCalculatorGeneric>(new FrequentistCalculator(data, sbModel, bModel)); 
-   if(fCalcType==kHybrid) fHC = auto_ptr<HypoTestCalculatorGeneric>(new HybridCalculator(data, sbModel, bModel)); 
-   if(fCalcType==kAsymptotic) fHC = auto_ptr<HypoTestCalculatorGeneric>(new AsymptoticCalculator(data, sbModel, bModel)); 
+   if(fCalcType==kFrequentist) fHC = auto_ptr<HypoTestCalculatorGeneric>(new FrequentistCalculator(data, bModel, sbModel)); 
+   if(fCalcType==kHybrid) fHC = auto_ptr<HypoTestCalculatorGeneric>(new HybridCalculator(data, bModel, sbModel)); 
+   if(fCalcType==kAsymptotic) fHC = auto_ptr<HypoTestCalculatorGeneric>(new AsymptoticCalculator(data, bModel, sbModel)); 
    fCalculator0 = fHC.get();
    // get scanned variabke
    if (!fScannedVariable) { 
