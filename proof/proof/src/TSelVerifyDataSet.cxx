@@ -231,12 +231,12 @@ Bool_t TSelVerifyDataSet::Process(Long64_t entry)
    TPair *elemPair = 0;
    if (fInput && (elemPair = dynamic_cast<TPair *>
                       (fInput->FindObject("PROOF_CurrentElement")))) {
-      if ((fCurrent = dynamic_cast<TDSetElement *>(elemPair->Value()))) {
+      if ((fCurrent = dynamic_cast<TDSetElement *>(elemPair->Value())))
          Info("Process", "entry %lld: file: '%s'", entry, fCurrent->GetName());
-      } else { 
-         Error("Process", "entry %lld: no file specified!", entry);
-         return kFALSE;
-      }
+   }
+   if (!fCurrent) {
+      Error("Process", "entry %lld: current element not found!", entry);
+      return kFALSE;
    }
  
    TFileInfo *fileInfo = dynamic_cast<TFileInfo*>(fCurrent->GetAssocObj(0));

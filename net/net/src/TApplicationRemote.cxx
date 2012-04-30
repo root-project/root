@@ -696,7 +696,7 @@ Bool_t TApplicationRemote::CheckFile(const char *file, Long_t modtime)
       // file not in the cache
       TMD5 *md5 = TMD5::FileChecksum(file);
       if (md5) {
-         fs = new TARFileStat(fn, *md5, modtime);
+         fs = new TARFileStat(fn, md5, modtime);
          if (!fFileList)
             fFileList = new THashList;
          fFileList->Add(fs);

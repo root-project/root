@@ -69,8 +69,8 @@ public:
 private:
    class TARFileStat : public TNamed {
       public:
-         TARFileStat(const char *fn, TMD5 md5, Long_t mt) :
-                     TNamed(fn,fn), fMD5(md5), fModtime(mt) { }
+         TARFileStat(const char *fn, TMD5 *md5, Long_t mt) :
+                     TNamed(fn,fn), fMD5(*md5), fModtime(mt) { }
          TMD5   fMD5;        //file's md5
          Long_t fModtime;    //file's modification time
    };
