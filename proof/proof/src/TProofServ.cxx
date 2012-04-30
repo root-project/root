@@ -588,7 +588,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    }   
 
    // Wait (loop) to allow debugger to connect
-   Bool_t test = (*argc >= 4 && !strcmp(argv[3], "test")) ? kTRUE : kFALSE;
+   Bool_t test = (argc && *argc >= 4 && !strcmp(argv[3], "test")) ? kTRUE : kFALSE;
    if ((gEnv->GetValue("Proof.GdbHook",0) == 3 && !test) ||
        (gEnv->GetValue("Proof.GdbHook",0) == 4 && test)) {
       while (gProofServDebug)
@@ -596,12 +596,12 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    }
 
    // Test instance
-   if (*argc >= 4)
+   if (argc && *argc >= 4)
       if (!strcmp(argv[3], "test"))
          fService = "prooftest";
 
    // crude check on number of arguments
-   if (*argc < 2) {
+   if (argc && *argc < 2) {
       Error("TProofServ", "Must have at least 1 arguments (see  proofd).");
       exit(1);
    }
@@ -1280,7 +1280,7 @@ void TProofServ::GetOptions(Int_t *argc, char **argv)
       exit(0);
    }
 
-   if (*argc <= 1) {
+   if (!argc || (argc && *argc <= 1)) {
       Fatal("GetOptions", "Must be started from proofd with arguments");
       exit(1);
    }
