@@ -98,9 +98,9 @@ namespace cling {
 
               for (EnumDecl::enumerator_iterator I = ED->enumerator_begin(),
                      E = ED->enumerator_end(); I != E; ++I) {
-                assert((*I)->getDeclName() && "EnumConstantDecl with no name?");
-                  m_Sema->PushOnScopeChains(*I, S,
-                                            /*AddToContext*/false);
+                assert(I->getDeclName() && "EnumConstantDecl with no name?");
+                m_Sema->PushOnScopeChains(&(*I), S,
+                                          /*AddToContext*/false);
               }
             }
 

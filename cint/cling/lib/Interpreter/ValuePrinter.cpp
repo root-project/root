@@ -129,11 +129,11 @@ static void StreamValue(llvm::raw_ostream& o, const void* const p,
     llvm::APSInt ValAsAPSInt = C.MakeIntValue(value, C.IntTy);
     for (clang::EnumDecl::enumerator_iterator I = ED->enumerator_begin(),
            E = ED->enumerator_end(); I != E; ++I) {
-      if ((*I)->getInitVal() == ValAsAPSInt) {
+      if (I->getInitVal() == ValAsAPSInt) {
         if (!IsFirst) {
           o << " ? ";
         }
-        o << "(" << (*I)->getQualifiedNameAsString() << ")";
+        o << "(" << I->getQualifiedNameAsString() << ")";
         IsFirst = false;
       }
     }
