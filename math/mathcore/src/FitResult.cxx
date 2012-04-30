@@ -16,6 +16,8 @@
 
 #include "Fit/BinData.h"
 
+//#include "Fit/Chi2FCN.h"
+
 #include "Math/Minimizer.h"
 
 #include "Math/IParamFunction.h"
@@ -164,6 +166,7 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
          fChi2 = fVal;
       else { 
          // compute chi2 equivalent for likelihood fits
+         // NB: empty bins are considered
          fChi2 = (*chi2func)(&fParams[0]); 
       }
    }

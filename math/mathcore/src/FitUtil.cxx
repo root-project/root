@@ -335,13 +335,6 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
    
    unsigned int n = data.Size();
 
- 
-#ifdef DEBUG
-   std::cout << "\n\nFit data size = " << n << std::endl;
-   std::cout << "evaluate chi2 using function " << &func << "  " << p << std::endl; 
-#endif
-
-
    double chi2 = 0;
    nPoints = 0; // count the effective non-zero points
    
@@ -353,6 +346,15 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
    const DataOptions & fitOpt = data.Opt();
    bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges(); 
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
+
+#ifdef DEBUG
+   std::cout << "\n\nFit data size = " << n << std::endl;
+   std::cout << "evaluate chi2 using function " << &func << "  " << p << std::endl; 
+   std::cout << "use empty bins  " << fitOpt.fUseEmpty << std::endl;
+   std::cout << "use integral    " << fitOpt.fIntegral << std::endl;
+   std::cout << "use all error=1 " << fitOpt.fErrors1 << std::endl;
+#endif
+
 
    IntegralEvaluator<> igEval( func, p, useBinIntegral); 
 
@@ -934,12 +936,11 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
       }
       logl += extendedTerm;
 
-//#define DEBUG
 #ifdef DEBUG
       // for (unsigned int ipar = 0; ipar < func.NPar(); ++ipar) 
       //    std::cout << p[ipar] << "\t";
       // std::cout << std::endl;
-      std::cout << "fit is extended n = " << n << " nutot " << nuTot << " extended LL term = " << << extendedTerm << " logl = " << logl
+      std::cout << "fit is extended n = " << n << " nutot " << nuTot << " extended LL term = " <<  extendedTerm << " logl = " << logl
                 << std::endl;
 #endif
    }
@@ -1151,8 +1152,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
    IntegralEvaluator<> igEval( func, p, fitOpt.fIntegral); 
 
    // double nuTot = 0; // total number of expected events (needed for non-extended fits) 
-   // double yTot = 0;  // sum of bin contents (i.e sum of all the weights)
-   // double wTot = 0; // sum of weights  
+   // double wTot = 0; // sum of all weights  
    // double w2Tot = 0; // sum of weight squared  (these are needed for useW2)
 
 
@@ -1208,24 +1208,30 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
       // negative values of fval 
       fval = std::max(fval, 0.0);
 
-      // if (!extended) { 
-      //    nuTot += fval;
-      //    yTot += y; 
-      // }
 
       double tmp = 0; 
       if (useW2) { 
          // apply weight correction . Effective weight is error^2/ y
          // and expected events in bins is fval/weight
          // can apply correction only when y is not zero otherwise weight is undefined
-         // (in case of weighted likelihood I don;t care about the constant term due to 
-         // teh saturated model)
+         // (in case of weighted likelihood I don't care about the constant term due to 
+         // the saturated model)
          if (y != 0) { 
             double error = data.Error(i);
             double weight = (error*error)/y;  // this is the bin effective weight
-            if (extended) tmp = fval * weight;
+            if (extended) { 
+               tmp = fval * weight;
+               // wTot  += weight; 
+               // w2Tot += weight*weight; 
+            }
             tmp -= weight * y * ROOT::Math::Util::EvalLog( fval);
          }
+         
+         //  need to compute total weight and weight-square
+         // if (extended ) { 
+         //    nuTot += fval;
+         // }
+
       }
       else {
          // standard case no weights or iWeight=1 
@@ -1242,7 +1248,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
 
       nloglike +=  tmp;  
    }
-
+   
    // if (notExtended) { 
    //    // not extended : remove from the Likelihood the global Poisson term
    //    if (!useW2)  
@@ -1254,9 +1260,14 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction & func, const BinData &
          
    // }
 
+   // if (extended && useW2) { 
+   //    // effective total weight is total sum of weight square / sum of weights
+   //    //nloglike += (w2Tot/wTot) * nuTot; 
+   // }
+
    
 #ifdef DEBUG
-   std::cout << "Loglikelihood  = " << loglike << std::endl;
+   std::cout << "Loglikelihood  = " << nloglike << std::endl;
 #endif
    
    return nloglike;  

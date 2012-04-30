@@ -15,6 +15,11 @@
 
 #include <string>
 
+#ifndef ROOT_Math_Error
+#include "Math/Error.h"
+#endif
+
+
 namespace ROOT { 
 
    namespace Fit { 
@@ -54,7 +59,9 @@ public:
    ///constructor for double limited Parameter
    ParameterSettings(const std::string &  name, double val, double err, 
 		  double min, double max) : 
-      fValue(val), fStepSize(err), fFix(false), fName(name) 
+      fValue(val), fStepSize(err), fFix(false), 
+      fLowerLimit(0.), fUpperLimit(0.), fHasLowerLimit(false), fHasUpperLimit(false), 
+      fName(name) 
    { 
       SetLimits(min,max); 
    }
@@ -138,13 +145,16 @@ public:
    /// set a double side limit, 
    /// if low == up the parameter is fixedm if low > up the limits are removed
    void SetLimits(double low, double up) {
-      if (low == up) { 
+      if ( low > up ) { 
+         RemoveLimits(); 
+         return; 
+      }
+      if (low == up && low == fValue) { 
          Fix();           
          return; 
       }
-      else if ( low > up ) { 
-         RemoveLimits(); 
-         return; 
+      if (low > fValue || up < fValue) { 
+         MATH_ERROR_MSG("ParameterSettings","Invalid lower/upper bounds - ignoring the bounds ");
       }
       fLowerLimit = low; 
       fUpperLimit = up;
