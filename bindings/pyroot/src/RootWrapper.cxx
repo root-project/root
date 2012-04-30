@@ -161,9 +161,6 @@ namespace {
 
       std::string sub = tname.substr( 0, tname.find( "<" ) );
       if ( gSTLTypes.find( sub ) != gSTLTypes.end() ) {
-      // removal is required or the dictionary can't be updated properly
-         if ( klass != 0 )
-            TClass::RemoveClass( (TClass*)klass );
 
       // strip std:: part as needed to form proper file name
          if ( sub.substr( 0, 5 ) == "std::" )
