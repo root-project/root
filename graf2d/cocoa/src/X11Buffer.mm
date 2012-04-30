@@ -23,6 +23,8 @@
 #include "QuartzPixmap.h"
 #include "X11Drawable.h"
 #include "X11Buffer.h"
+#include "TGWindow.h"
+#include "TGClient.h"
 #include "TGCocoa.h"
 
 namespace ROOT {
@@ -408,6 +410,47 @@ void CommandBuffer::AddDeletePixmap(Pixmap_t pixmapID)
    }
 }
 
+namespace {
+
+//______________________________________________________________________________
+void RepaintTree(QuartzView *view)
+{
+   //Can be only QuartzView, ROOTOpenGLView should never have children views.
+   assert(view != nil && "RepaintTree, view parameter is nil");
+   
+   TGCocoa *vx = (TGCocoa *)gVirtualX;
+   vx->CocoaDrawON();
+   
+   for (NSView<X11Window> *child in [view subviews]) {
+      if ([child isKindOfClass : [QuartzView class]]) {
+         QuartzView *qv = (QuartzView *)child;
+         if ([qv lockFocusIfCanDraw]) {
+            NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
+            assert(nsContext != nil && "RepaintTree, nsContext is nil");
+            CGContextRef cgContext = (CGContextRef)[nsContext graphicsPort];
+            assert(cgContext != 0 && "RepaintTree, cgContext is null");//remove this assert?
+
+            CGContextRef oldCtx = qv.fContext;
+            qv.fContext = cgContext;
+            
+            TGWindow *window = gClient->GetWindowById(qv.fID);
+            assert(window != 0 && "RepaintTree, window was not found");
+            
+            gClient->NeedRedraw(window, kTRUE);
+            qv.fContext = oldCtx;
+            
+            [qv unlockFocus];
+            if ([[qv subviews] count])
+               RepaintTree(qv);
+         }
+      }
+   }
+   
+   vx->CocoaDrawOFF();
+}
+
+}
+
 //______________________________________________________________________________
 void CommandBuffer::Flush(Details::CocoaPrivate *impl)
 {
@@ -416,6 +459,7 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
    //All magic is here.
    CGContextRef prevContext = 0;
    CGContextRef currContext = 0;
+   QuartzView *prevView = nil;
 
    for (size_type i = 0, e = fCommands.size(); i < e; ++i) {
       const Command *cmd = fCommands[i];
@@ -429,6 +473,12 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
       }
       
       QuartzView *view = (QuartzView *)impl->GetWindow(cmd->fID).fContentView;
+      
+      if (prevView && prevView != view && [[prevView subviews] count])
+         RepaintTree(prevView);
+      
+      prevView = view;
+      
       if ([view lockFocusIfCanDraw]) {
          NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
          assert(nsContext != nil && "Flush, currentContext is nil");
@@ -455,6 +505,9 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
          view.fContext = 0;
       }
    }
+   
+   if (prevView && [[prevView subviews] count])
+      RepaintTree(prevView);
    
    if (currContext)
       CGContextFlush(currContext);
