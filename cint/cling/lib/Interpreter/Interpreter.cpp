@@ -106,6 +106,7 @@ static bool canWrapForCall(const std::string& input_line) {
    // "1" can, "#include <vector>" can't.
    if (input_line.length() > 1 && input_line[0] == '#') return false;
    if (input_line.compare(0, strlen("extern "), "extern ") == 0) return false;
+   if (input_line.compare(0, strlen("using "), "using ") == 0) return false;
    return true;
 }
 
