@@ -54,13 +54,33 @@ XrdProofdSandbox::XrdProofdSandbox(XrdProofUI ui, bool full, bool changeown)
    if (fgUI.fUid < 0)
       XrdProofdAux::GetUserInfo(getuid(), fgUI);
 
-   // Assert the workdir directory ...
+   // Default working directory location for the effective user
+   XrdOucString defdir = fgUI.fHomeDir;
+   if (!defdir.endswith('/')) defdir += "/";
+   defdir += ".proof/";
+   XrdOucString initus = ui.fUser[0];
+   int iph = STR_NPOS;
    if (fgWorkdir.length() > 0) {
       // The user directory path will be <workdir>/<user>
       fDir = fgWorkdir;
-      if (!fDir.endswith('/'))
-         fDir += "/";
-      fDir += ui.fUser;
+      if (fDir.find("<user>") == STR_NPOS) {
+         if (!fDir.endswith('/')) fDir += "/";
+         fDir += "<user>";
+      }
+      // Replace supported place-holders
+      fDir.replace("<workdir>", defdir);
+      // Index of first place-holder
+      iph = fDir.find("<effuser>");
+      int iu = fDir.find("<u>");
+      int ius = fDir.find("<user>");
+      if (iu != STR_NPOS)
+         if ((iph != STR_NPOS && iu < iph) || (iph == STR_NPOS)) iph = iu;
+      if (ius != STR_NPOS)
+         if ((iph != STR_NPOS && ius < iph) || (iph == STR_NPOS)) iph = ius;
+      // Replace supported place-holders
+      fDir.replace("<effuser>", fgUI.fUser);
+      fDir.replace("<u>", initus);
+      fDir.replace("<user>", ui.fUser);
    } else {
       if (changeown || ui.fUser == fgUI.fUser) {
          // Default: $HOME/proof
@@ -69,7 +89,7 @@ XrdProofdSandbox::XrdProofdSandbox(XrdProofUI ui, bool full, bool changeown)
             fDir += "/";
          fDir += ".proof";
       } else {
-         // ~daemon_owner/proof/<user>
+         // ~daemon_owner/.proof/<user>
          fDir = fgUI.fHomeDir;
          if (!fDir.endswith('/'))
             fDir += "/";
@@ -80,11 +100,28 @@ XrdProofdSandbox::XrdProofdSandbox(XrdProofUI ui, bool full, bool changeown)
    TRACE(REQ, "work dir = " << fDir);
 
    // Make sure the directory exists
-   if (XrdProofdAux::AssertDir(fDir.c_str(), ui, changeown) == -1) {
-      fErrMsg += "unable to create work dir: ";
-      fErrMsg += fDir;
-      TRACE(XERR, fErrMsg);
-      return;
+   if (iph > -1) {
+      // Recursively ...
+      XrdOucString path, sb;
+      path.assign(fDir, 0, iph - 1);
+      int from = iph; 
+      while ((from = fDir.tokenize(sb, from, '/')) != -1) {
+         path += sb;
+         if (XrdProofdAux::AssertDir(path.c_str(), ui, changeown) == -1) {
+            fErrMsg += "unable to create work dir: ";
+            fErrMsg += path;
+            TRACE(XERR, fErrMsg);
+            return;
+         }
+         path += "/";
+      }
+   } else {
+      if (XrdProofdAux::AssertDir(fDir.c_str(), ui, changeown) == -1) {
+         fErrMsg += "unable to create work dir: ";
+         fErrMsg += fDir;
+         TRACE(XERR, fErrMsg);
+         return;
+      }
    }
 
    // Dirs to be asserted

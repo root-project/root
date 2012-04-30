@@ -810,13 +810,17 @@ int XrdProofdNetMgr::BroadcastCtrlC(const char *usr)
                     (w->fPort == -1 || w->fPort == fMgr->Port())) ? 1 : 0;
          if (!us) {
             // Create 'url'
-            XrdOucString u = (usr) ? usr : fMgr->EffectiveUser();
+            // We use the enforced username if specified in the config file; this is the case
+            // of user-dedicated daemons with mapped usernames, like PoD@gLite ...
+            XrdOucString u = (w->fUser.length() > 0) ? w->fUser : usr;
+            if (u.length() <= 0) u = fMgr->EffectiveUser();
             u += '@';
             u += w->fHost;
             if (w->fPort != -1) {
                u += ':';
                u += w->fPort;
             }
+            TRACE(HDBG, "sending request to: "<<u);
             // Get a connection to the server
             XrdProofConn *conn = GetProofConn(u.c_str());
             if (conn && conn->IsValid()) {
@@ -874,7 +878,10 @@ int XrdProofdNetMgr::Broadcast(int type, const char *msg, const char *usr,
                     (w->fPort == -1 || w->fPort == fMgr->Port())) ? 1 : 0;
          if (!us) {
             // Create 'url'
-            XrdOucString u = (usr) ? usr : fMgr->EffectiveUser();
+            // We use the enforced username if specified in the config file; this is the case
+            // of user-dedicated daemons with mapped usernames, like PoD@gLite ...
+            XrdOucString u = (w->fUser.length() > 0) ? w->fUser : usr;
+            if (u.length() <= 0) u = fMgr->EffectiveUser();
             u += '@';
             u += w->fHost;
             if (w->fPort != -1) {

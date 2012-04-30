@@ -127,6 +127,7 @@ class XrdProofdManager : public XrdProofdConfig {
    int               fPort;           // Port for client-like connections
    XrdOucString      fImage;          // image name for these servers
    XrdOucString      fWorkDir;        // working dir for these servers
+   XrdOucString      fMUWorkDir;      // template working dir in multi-user mode
    int               fCronFrequency;  // Frequency of cron checks
 
    XrdOucString      fBareLibPath;    // LIBPATH cleaned from ROOT dists
