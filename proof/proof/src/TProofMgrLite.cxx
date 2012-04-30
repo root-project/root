@@ -338,6 +338,9 @@ TObjString *TProofMgrLite::ReadBuffer(const char *fin, Long64_t ofs, Int_t len)
 
    } while (len > 0 && left > 0);
 
+   // Close file
+   close(fd);
+
    // Done
    return new TObjString(outbuf.Data());
 }
