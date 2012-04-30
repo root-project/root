@@ -1,3 +1,4 @@
+# %ROOTTEST-duration%:2
 # Run ROOTSYS/tutorials. Don't check for valid output, just
 # check that CINT can run it without (unhandled) error.
 

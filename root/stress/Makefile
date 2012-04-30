@@ -1,4 +1,4 @@
-# This is a template for all makefiles.
+# %ROOTTEST-duration%:5
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.root *.dat *.ps test files \

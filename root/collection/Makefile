@@ -1,3 +1,4 @@
+# %ROOTTEST-duration%:0
 TEST_TARGETS += tbits_test TExMap_test TMap_test CATTreeClear
 
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog tbits TExMap TMap ca.root

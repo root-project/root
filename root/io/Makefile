@@ -1,3 +1,4 @@
+# %ROOTTEST-duration%:9
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
 endif

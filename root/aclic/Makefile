@@ -1,4 +1,4 @@
-
+# %ROOTTEST-duration%:0
 TEST_TARGETS += withspace.test
 
 ifeq ($(strip $(ROOTTEST_HOME)),)

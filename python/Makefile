@@ -1,3 +1,4 @@
+# %ROOTTEST-duration%:1
 CLEAN_TARGETS += *.pyc
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
