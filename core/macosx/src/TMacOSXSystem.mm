@@ -84,7 +84,7 @@ namespace Detail {
 
 class MacOSXSystem {
 public:
-   enum class DescriptorType {
+   enum DescriptorType {
       write,
       read
    };
@@ -152,7 +152,8 @@ void TMacOSXSystem_WriteCallback(CFFileDescriptorRef fdref, CFOptionFlags /*call
 //______________________________________________________________________________
 MacOSXSystem::MacOSXSystem()
 {
-   assert(fgInstance == nullptr && "MacOSXSystem, fgInstance was initialized already");
+   assert(fgInstance == 0 && "MacOSXSystem, fgInstance was initialized already");
+
    fgInstance = this;
 }
 
@@ -166,17 +167,19 @@ MacOSXSystem::~MacOSXSystem()
 void MacOSXSystem::AddFileHandler(TFileHandler *fh)
 {
    //Can throw std::bad_alloc. I'm not allocating any resources here, so I'm not going to catch here.
+   assert(fh != 0 && "AddFileHandler, fh parameter is null");
    assert(fFileDescriptors.find(fh->GetFd()) == fFileDescriptors.end() && "AddFileHandler, file descriptor was registered already");
 
-   fFileDescriptors[fh->GetFd()] = fh->HasReadInterest() ? DescriptorType::read : DescriptorType::write;
+   fFileDescriptors[fh->GetFd()] = fh->HasReadInterest() ? read : write;
 }
 
 //______________________________________________________________________________
 void MacOSXSystem::RemoveFileHandler(TFileHandler *fh)
 {
    //Can not throw.
+   assert(fh != 0 && "RemoveFileHandler, fh parameter is null");
+   std::map<int, DescriptorType>::iterator fdIter = fFileDescriptors.find(fh->GetFd());
 
-   auto fdIter = fFileDescriptors.find(fh->GetFd());
    assert(fdIter != fFileDescriptors.end() && "RemoveFileHandler, file handler was not found");
    fFileDescriptors.erase(fdIter);
 }
@@ -190,8 +193,8 @@ bool MacOSXSystem::SetFileDescriptors()
    //return false. Return true if everything is ok.
 
    try {
-      for (auto fdIter = fFileDescriptors.begin(), end = fFileDescriptors.end(); fdIter != end; ++fdIter) {
-         const bool read = fdIter->second == DescriptorType::read;
+      for (std::map<int, DescriptorType>::iterator fdIter = fFileDescriptors.begin(), end = fFileDescriptors.end(); fdIter != end; ++fdIter) {
+         const bool read = fdIter->second == read;
          CFFileDescriptorRef fdref = CFFileDescriptorCreate(kCFAllocatorDefault, fdIter->first, false, read ? TMacOSXSystem_ReadCallback : TMacOSXSystem_WriteCallback, 0);
 
          if (!fdref)
@@ -225,7 +228,7 @@ void MacOSXSystem::UnregisterFileDescriptor(CFFileDescriptorRef fd)
    //This function does not touch file descriptor (it's invalidated and released externally),
    //just remove pointer.
 
-   auto fdIter = fCFFileDescriptors.find(fd);
+   std::set<CFFileDescriptorRef>::iterator fdIter = fCFFileDescriptors.find(fd);
    assert(fdIter != fCFFileDescriptors.end() && "InvalidateFileDescriptor, file descriptor was not found");
    fCFFileDescriptors.erase(fdIter);
 }
@@ -233,10 +236,9 @@ void MacOSXSystem::UnregisterFileDescriptor(CFFileDescriptorRef fd)
 //______________________________________________________________________________
 void MacOSXSystem::CloseFileDescriptors()
 {
-   
-   for (auto fd : fCFFileDescriptors) {
-      CFFileDescriptorInvalidate(fd);
-      CFRelease(fd);
+   for (std::set<CFFileDescriptorRef>::iterator fdIter = fCFFileDescriptors.begin(), end = fCFFileDescriptors.end(); fdIter != end; ++fdIter) {
+      CFFileDescriptorInvalidate(*fdIter);
+      CFRelease(*fdIter);
    }   
 
    fCFFileDescriptors.clear();
@@ -274,10 +276,10 @@ void TMacOSXSystem::ProcessApplicationDefinedEvent(void *e)
    
    if (event.data2) {
       gVirtualX->DispatchClientMessage(event.data2);
-   } else {   
-      auto fdIter = fPimpl->fFileDescriptors.find(event.data1);
+   } else {
+      std::map<int, Private::MacOSXSystem::DescriptorType>::iterator fdIter = fPimpl->fFileDescriptors.find(event.data1);
       assert(fdIter != fPimpl->fFileDescriptors.end() && "WaitForAllEvents, file descriptor from NSEvent not found");
-      if (fdIter->second == Private::MacOSXSystem::DescriptorType::read)
+      if (fdIter->second == Private::MacOSXSystem::read)
          fReadready->Set(event.data1);
       else
          fWriteready->Set(event.data1);

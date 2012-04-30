@@ -94,10 +94,6 @@ public:
       }
    }
 
-   //Declare as deleted for clarity.
-   NSStrongReference &operator = (NSStrongReference &&rhs) = delete;
-   NSStrongReference(NSStrongReference &&rhs) = delete;
-
 private:
    NSObject *fNSObject;
 };
@@ -120,13 +116,7 @@ public:
       [fNSObject release];//nothing for nil.
    }
    
-   NSScopeGuard(const NSScopeGuard &rhs) = delete;
-   //Declare as deleted for clarity.
-   NSScopeGuard(NSScopeGuard &&rhs) = delete;
-   
-   NSScopeGuard &operator = (const NSScopeGuard &rhs) = delete;
-   //Declare as deleted for clarity.
-   NSScopeGuard &operator = (NSScopeGuard &&rhs) = delete;
+public:
    
    DerivedType *Get()const
    {
@@ -147,6 +137,9 @@ public:
    }
 private:   
    NSObject *fNSObject;
+
+   NSScopeGuard(const NSScopeGuard &rhs);
+   NSScopeGuard &operator = (const NSScopeGuard &rhs);
 };
 
 //////////////////////////////////////
@@ -160,17 +153,11 @@ public:
    AutoreleasePool();
    ~AutoreleasePool();
    
-
-   AutoreleasePool(const AutoreleasePool &rhs) = delete;
-   //Declare as deleted for clarity.
-   AutoreleasePool(AutoreleasePool &&rhs) = delete;
-
-   AutoreleasePool &operator = (const AutoreleasePool &rhs) = delete;
-   //Declare as deleted for clarity.
-   AutoreleasePool &operator = (AutoreleasePool &&rhs) = delete;
 private:
-
    NSAutoreleasePool *fPool;
+
+   AutoreleasePool(const AutoreleasePool &rhs);
+   AutoreleasePool &operator = (const AutoreleasePool &rhs);
 };
 
 ///////////////////////////////////////////////////////////
@@ -227,10 +214,6 @@ public:
       return fRef;
    }
    
-   //Declare as deleted for clarity.
-   CFStrongReference(CFStrongReference &&rhs) = delete;
-   CFStrongReference &operator = (CFStrongReference &&rhs) = delete;
-   
 private:
    RefType fRef;
 };
@@ -265,13 +248,6 @@ public:
          CFRelease(fRef);
    }
    
-   CFScopeGuard(const CFScopeGuard &rhs) = delete;
-   CFScopeGuard(CFScopeGuard &&rhs) = delete;
-   
-   //Declare as delete for clarity.
-   CFScopeGuard &operator = (const CFScopeGuard &rhs) = delete;
-   CFScopeGuard &operator = (CFScopeGuard &&rhs) = delete;
-   
    RefType Get()const
    {
       return fRef;
@@ -293,6 +269,9 @@ public:
 
 private:
    RefType fRef;
+
+   CFScopeGuard(const CFScopeGuard &rhs);
+   CFScopeGuard &operator = (const CFScopeGuard &rhs);
 };
 
 }//Util
