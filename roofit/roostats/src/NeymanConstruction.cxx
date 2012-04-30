@@ -192,7 +192,11 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
 	samplingDist = 
 	  toyMCSampler->AppendSamplingDistribution(*point, 
 						   samplingDist, 
-						   additionalMC); 
+						   additionalMC);
+        if (!samplingDist) {
+           oocoutE((TObject*)0,Eval) << "Neyman Construction: error generating sampling distribution" << endl;
+           return 0;
+        }
 	totalMC=samplingDist->GetSize();
 
 	//cout << "without sigma upper = " << 
@@ -238,6 +242,10 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
       // the next line is where most of the time will be spent 
       // generating the sampling dist of the test statistic.
       samplingDist = fTestStatSampler->GetSamplingDistribution(*point); 
+      if (!samplingDist) {
+         oocoutE((TObject*)0,Eval) << "Neyman Construction: error generating sampling distribution" << endl;
+         return 0;
+      }
       
       lowerEdgeOfAcceptance = 
 	samplingDist->InverseCDF( fLeftSideFraction * fSize );

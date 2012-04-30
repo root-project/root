@@ -238,20 +238,22 @@ THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const
       axes.add(*whichVars);
 
    Int_t dim = axes.getSize();
-   Double_t* min = new Double_t[dim];
-   Double_t* max = new Double_t[dim];
-   Int_t* bins = new Int_t[dim];
+   std::vector<Double_t> min(dim);
+   std::vector<Double_t> max(dim);
+   std::vector<Int_t> bins(dim);
+   std::vector<const char *> names(dim);
    TIterator* it = axes.createIterator();
    for (Int_t i = 0; i < dim; i++) {
-      min[i] = ((RooRealVar*)it->Next())->getMin();
-      max[i] = ((RooRealVar*)it->Next())->getMax();
-      bins[i] = ((RooRealVar*)it->Next())->numBins();
+      RooRealVar * var = dynamic_cast<RooRealVar*>(it->Next() );
+      assert(var != 0);
+      names[i] = var->GetName();
+      min[i] = var->getMin();
+      max[i] = var->getMax();
+      bins[i] = var->numBins();
    }
+
    THnSparseF* sparseHist = new THnSparseF("posterior", "MCMC Posterior Histogram",
-         dim, bins, min, max);
-   delete[] min;
-   delete[] max;
-   delete[] bins;
+         dim, &bins[0], &min[0], &max[0]);
 
    // kbelasco: it appears we need to call Sumw2() just to get the
    // histogram to keep a running total of the weight so that Getsumw doesn't
@@ -265,9 +267,11 @@ THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const
    for (Int_t i = 0; i < size; i++) {
       entry = fChain->get(i);
       it->Reset();
-      for (Int_t ii = 0; ii < dim; ii++)
-         x[ii] = entry->getRealValue(it->Next()->GetName());
-      sparseHist->Fill(x, fChain->weight());
+      for (Int_t ii = 0; ii < dim; ii++) {
+         //LM:  doing this is probably quite slow
+         x[ii] = entry->getRealValue( names[ii]);
+         sparseHist->Fill(x, fChain->weight());
+      }
    }
    delete[] x;
    delete it;

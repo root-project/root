@@ -326,6 +326,8 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
 
        if (status%100 == 0) { // ignore errors in Hesse or in Improve
           result = minim.save();
+       }
+       if (result){ 
           val = result->minNll();
        }
        else { 
@@ -409,8 +411,8 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    // set the one-side condition
    // (this works when we have only one params of interest 
    RooRealVar * muHat =  dynamic_cast<RooRealVar*> (  fBestFitPoi.first() );
-   RooRealVar * muTest = dynamic_cast<RooRealVar*> ( nullSnapshot->find(muHat->GetName() ) );
    assert(muHat && "no best fit parameter defined"); 
+   RooRealVar * muTest = dynamic_cast<RooRealVar*> ( nullSnapshot->find(muHat->GetName() ) );
    assert(muTest && "poi snapshot is not existing"); 
 
 
@@ -885,18 +887,13 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
     
   //look at category of simpdf 
   RooCategory& channelCat = (RooCategory&)simPdf->indexCat();
-  //    TIterator* iter = simPdf->indexCat().typeIterator() ;
-  TIterator* iter = channelCat.typeIterator() ;
-  RooCatType* tt = NULL;
-  int nrIndices = 0;
-  while((tt=(RooCatType*) iter->Next())) {
-    nrIndices++;
-  }
+  int nrIndices = channelCat.numTypes();
   for (int i=0;i<nrIndices;i++){
     channelCat.setIndex(i);
     //iFrame++;
     // Get pdf associated with state from simpdf
     RooAbsPdf* pdftmp = simPdf->getPdf(channelCat.getLabel()) ;
+    assert(pdftmp != 0);
 	
     if (printLevel > 1)
     {

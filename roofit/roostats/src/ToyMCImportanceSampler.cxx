@@ -335,7 +335,10 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    }
    //cout << "data generated: " << data << endl;
 
-
+   if (!data) { 
+      oocoutE((TObject*)0,InputArguments) << "ToyMCImportanceSampler: error generating data" << endl;
+      return NULL;
+   }
 
 
 

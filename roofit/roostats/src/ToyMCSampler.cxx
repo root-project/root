@@ -246,7 +246,7 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistribution(RooArgSet& paramPoin
    }
    
    RooDataSet* r = GetSamplingDistributions(paramPointIn);
-   if(r->numEntries() == 0) {
+   if(r == NULL || r->numEntries() == 0) {
       oocoutW((TObject*)NULL, Generation) << "no sampling distribution generated" << endl;
       return NULL;
    }
@@ -477,11 +477,13 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
          RooCatType* tt = NULL;
          while ((tt = (RooCatType*) citer->Next())) {
             RooAbsPdf* pdftmp = simPdf->getPdf(tt->GetName());
-            RooArgSet* globtmp = pdftmp->getObservables(*fGlobalObservables);
-            RooAbsPdf::GenSpec* gs = pdftmp->prepareMultiGen(*globtmp, NumEvents(1));
-            _pdfList.push_back(pdftmp);
-            _obsList.push_back(globtmp);
-            _gsList.push_back(gs);
+            if (pdftmp) { 
+               RooArgSet* globtmp = pdftmp->getObservables(*fGlobalObservables);
+               RooAbsPdf::GenSpec* gs = pdftmp->prepareMultiGen(*globtmp, NumEvents(1));
+               _pdfList.push_back(pdftmp);
+               _obsList.push_back(globtmp);
+               _gsList.push_back(gs);
+            }
          }
       }
 

@@ -72,11 +72,11 @@ ClassImp(RooStats::ProposalHelper);
 using namespace RooFit;
 using namespace RooStats;
 
-static const Double_t DEFAULT_UNI_FRAC = 0.10;
+//static const Double_t DEFAULT_UNI_FRAC = 0.10;
 static const Double_t DEFAULT_CLUES_FRAC = 0.20;
 //static const Double_t SIGMA_RANGE_DIVISOR = 6;
 static const Double_t SIGMA_RANGE_DIVISOR = 5;
-static const Int_t DEFAULT_CACHE_SIZE = 100;
+//static const Int_t DEFAULT_CACHE_SIZE = 100;
 //static const Option_t* CLUES_OPTIONS = "a";
 
 ProposalHelper::ProposalHelper()

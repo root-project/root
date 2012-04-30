@@ -107,6 +107,11 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
       return 0;
    }
 
+   if (!fTestStatSampler  || !fTestStatSampler->GetTestStatistic() ) { 
+      oocoutE((TObject*)0,InputArguments) << "Test Statistic Sampler or Test Statistics not defined. Stop." << endl;
+      return 0;
+   }
+
    // get a big list of all variables for convenient switching
    RooArgSet *nullParams = fNullModel->GetPdf()->getParameters(*fData);
    RooArgSet *altParams = fAltModel->GetPdf()->getParameters(*fData);

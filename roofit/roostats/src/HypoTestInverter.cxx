@@ -661,7 +661,7 @@ bool HypoTestInverter::RunOnePoint( double rVal, bool adaptive, double clTarget)
       oocoutI((TObject*)0,Eval) << "HypoTestInverter::RunOnePoint - Merge with previous result for "
                                 << fScannedVariable->GetName() << " = " << rVal << std::endl;
       HypoTestResult* prevResult =  fResults->GetResult(fResults->ArraySize()-1);
-      if (prevResult->GetNullDistribution() && prevResult->GetAltDistribution()) { 
+      if (prevResult && prevResult->GetNullDistribution() && prevResult->GetAltDistribution()) { 
          prevResult->Append(result);
          delete result;  // we can delete the result
       }
@@ -1039,15 +1039,19 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
    int nPoints = fNBins;
 
    bool storePValues = clsDist || clsbDist || clbDist;
-   if (fNBins < 0 && storePValues) { 
+   if (fNBins <=0  && storePValues) { 
       oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RebuildDistribution - cannot return p values distribution with the auto scan" << std::endl; 
+      storePValues = false;
+      nPoints = 0;
    } 
-
-   if (fResults) nPoints = fResults->ArraySize();
-   if (nPoints <=0) { 
-      oocoutE((TObject*)0,InputArguments) << "HypoTestInverter - result is not existing and number of point to scan is not set" 
-                                          << std::endl;
-      return 0;
+   
+   if (storePValues) { 
+      if (fResults) nPoints = fResults->ArraySize();
+      if (nPoints <=0) { 
+         oocoutE((TObject*)0,InputArguments) << "HypoTestInverter - result is not existing and number of point to scan is not set" 
+                                             << std::endl;
+         return 0;
+      }
    }
 
    if (nToys <= 0) nToys = 100; // default value
@@ -1056,10 +1060,12 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
    std::vector<std::vector<double> > CLsb_values(nPoints);
    std::vector<std::vector<double> > CLb_values(nPoints);
 
-   for (int i = 0; i < nPoints; ++i) { 
-      CLs_values[i].reserve(nToys);
-      CLb_values[i].reserve(nToys);
-      CLsb_values[i].reserve(nToys);
+   if (storePValues) { 
+      for (int i = 0; i < nPoints; ++i) { 
+         CLs_values[i].reserve(nToys);
+         CLb_values[i].reserve(nToys);
+         CLsb_values[i].reserve(nToys);
+      }
    }
 
    std::vector<double> limit_values; limit_values.reserve(nToys);
@@ -1076,6 +1082,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
 
       RooAbsData * bkgdata = toymcSampler->GenerateToyData(paramPoint);
 
+      // by copying I will have the same min/max as previous ones
       HypoTestInverter inverter = *this; 
       inverter.SetData(*bkgdata);
       
@@ -1091,11 +1098,22 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
       if (nPoints < r->ArraySize()) {
          oocoutW((TObject*)0,InputArguments) << "HypoTestInverter: skip extra points" << std::endl;
       }
+      else if (nPoints > r->ArraySize()) {
+         oocoutW((TObject*)0,InputArguments) << "HypoTestInverter: missing some points" << std::endl;
+      }
+      
 
       for (int ipoint = 0; ipoint < nPoints; ++ipoint) {
-         CLs_values[ipoint].push_back( r->GetResult(ipoint)->CLs() );
-         CLsb_values[ipoint].push_back( r->GetResult(ipoint)->CLsplusb() );
-         CLb_values[ipoint].push_back( r->GetResult(ipoint)->CLb() );
+         HypoTestResult * hr = r->GetResult(ipoint);
+         if (hr) { 
+            CLs_values[ipoint].push_back( hr->CLs() );
+            CLsb_values[ipoint].push_back( hr->CLsplusb() );
+            CLb_values[ipoint].push_back( hr->CLb() );
+         }
+         else { 
+            oocoutW((TObject*)0,InputArguments) << "HypoTestInverter: missing result for point: x = " 
+                                                << fResults->GetXValue(ipoint) <<  std::endl;            
+         }
       }
 
       delete r; 

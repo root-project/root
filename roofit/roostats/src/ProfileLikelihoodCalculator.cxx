@@ -300,16 +300,15 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
       RooFitResult* fit2 = pdf->fitTo(*data,Constrain(*constrainedParams),Hesse(kFALSE),Strategy(0), Minos(kFALSE),
                                       Minimizer(minimType,minimAlgo), Save(kTRUE),PrintLevel(level));
      
-      NLLatCondMLE = fit2->minNll();
       // print fit result 
-      if (fit2) 
+      if (fit2) {
+         NLLatCondMLE = fit2->minNll();
          fit2->printStream( oocoutI((TObject*)0,Minimization), fit2->defaultPrintContents(0), fit2->defaultPrintStyle(0) );
 
-      if (fit2->status() != 0) 
-         oocoutW((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::GetHypotest -  Conditional fit failed - status = " << fit2->status() << std::endl;      
+         if (fit2->status() != 0) 
+            oocoutW((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::GetHypotest -  Conditional fit failed - status = " << fit2->status() << std::endl;      
+      }
 
-
-      fit2->Print();
    }
    else { 
       // get just the likelihood value (no need to do a fit since the likelihood is a constant function)

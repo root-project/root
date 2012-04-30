@@ -180,6 +180,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          if (fXmin < fXmax) { xmin = fXmin; xmax = fXmax; }
          
          TF1 * tmp = newProfile->asTF(*myarg); 
+         assert(tmp != 0);
          tmp->SetRange(xmin, xmax);      
          tmp->SetNpx(nPoints);
 

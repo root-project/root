@@ -802,6 +802,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    // to avoid numerical errors when we compute the likelihood (overflows in the exponent)
    // N.B.: this works for only 1 parameter of interest otherwise Minuit should be used for finding the minimum
    RooFunctor * nllFunc = fLogLike->functor(fPOI);
+   assert(nllFunc);
    ROOT::Math::Functor1D wnllFunc(*nllFunc);
    RooRealVar* poi = dynamic_cast<RooRealVar*>( fPOI.first() ); 
    assert(poi);
@@ -967,6 +968,7 @@ RooPlot* BayesianCalculator::GetPosteriorPlot(bool norm, double precision ) cons
 
 
    RooPlot* plot = poi->frame();
+   if (!plot) return 0;
 
    // try to reduce some error messages
    posterior->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
@@ -1120,8 +1122,11 @@ void BayesianCalculator::ComputeIntervalUsingRooFit(double lowerCutOff, double u
    if (!fPosteriorPdf) return;
          
    RooAbsReal* cdf = fPosteriorPdf->createCdf(fPOI,RooFit::ScanNoCdf());
+   if (!cdf) return;
          
    RooAbsFunc* cdf_bind = cdf->bindVars(fPOI,&fPOI);
+   if (!cdf_bind) return; 
+
    RooBrentRootFinder brf(*cdf_bind);
    brf.setTol(fBrfPrecision); // set the brf precision
    

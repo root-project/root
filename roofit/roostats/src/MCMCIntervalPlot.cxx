@@ -234,6 +234,11 @@ void* MCMCIntervalPlot::DrawPosteriorKeysPdf(const Option_t* options)
    if (fDimension == 1) {
       RooRealVar* v = (RooRealVar*)fParameters->first();
       RooPlot* frame = v->frame();
+      if (frame == NULL) { 
+         coutE(InputArguments) << "MCMCIntervalPlot::DrawPosteriorKeysPdf: "
+                               << "Invalid parameter" << endl;
+         return NULL;
+      }
       if (isEmpty)
          frame->SetTitle(Form("Posterior Keys PDF for %s", v->GetName()));
       else
@@ -397,6 +402,7 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
       // limit bars line up
       // fDimension == 1, so we know will get a TH1F*
       TH1F* hist = (TH1F*)DrawPosteriorHist(options, NULL, false);
+      if (hist == NULL) return;
       if (isEmpty)
          hist->SetTitle(NULL);
       else
@@ -488,6 +494,7 @@ void MCMCIntervalPlot::DrawTailFractionInterval(const Option_t* options)
       Double_t ll = fInterval->LowerLimitTailFraction(*p);
 
       TH1F* hist = (TH1F*)DrawPosteriorHist(options, NULL, false);
+      if (hist == NULL) return;
       if (isEmpty)
          hist->SetTitle(NULL);
       else
@@ -549,6 +556,7 @@ void* MCMCIntervalPlot::DrawPosteriorKeysProduct(const Option_t* options)
 
    if (fDimension == 1) {
       RooPlot* frame = ((RooRealVar*)fParameters->first())->frame();
+      if (!frame) return NULL;
       if (isEmpty)
          frame->SetTitle(Form("Posterior Keys PDF * Heaviside product for %s",
                   axes->at(0)->GetName()));
