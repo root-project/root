@@ -27,7 +27,7 @@ extern "C" {
 //______________________________________________________________________________
 const void* ROOT_QuartzImage_GetBytePointer(void *info)
 {
-   assert(info != nullptr && "ROOT_QuartzImage_GetBytePointer, info parameter is null");
+   assert(info != 0 && "ROOT_QuartzImage_GetBytePointer, info parameter is null");
    return info;
 }
 
@@ -168,7 +168,7 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
    CGDataProviderRef provider = CGDataProviderCreateDirect(fData, fWidth * fHeight * 4, &providerCallbacks);
    if (!provider) {
       NSLog(@"QuartzPixmap: -pixmapToImage, CGDataProviderCreateDirect failed");
-      return nullptr;
+      return 0;
    }
 
    //RGB - this is only for TGCocoa::CreatePixmapFromData.
@@ -176,7 +176,7 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
    if (!colorSpace) {
       NSLog(@"QuartzPixmap: -pixmapToImage, CGColorSpaceCreateDeviceRGB failed");
       CGDataProviderRelease(provider);
-      return nullptr;
+      return 0;
    }
       
    //8 bits per component, 32 bits per pixel, 4 bytes per pixel, kCGImageAlphaLast:
@@ -203,14 +203,14 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
 //______________________________________________________________________________
 - (CGContextRef) fContext
 {
-   assert(fContext != nullptr && "fContext, called for bad pixmap");   
+   assert(fContext != 0 && "fContext, called for bad pixmap");   
    return fContext;
 }
 
 //______________________________________________________________________________
 - (unsigned) fWidth
 {
-   assert(fContext != nullptr && "fWidth, called for bad pixmap");
+   assert(fContext != 0 && "fWidth, called for bad pixmap");
 
    return fWidth;
 }
@@ -218,7 +218,7 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
 //______________________________________________________________________________
 - (unsigned) fHeight
 {
-   assert(fContext != nullptr && "fHeight, called for bad pixmap");
+   assert(fContext != 0 && "fHeight, called for bad pixmap");
 
    return fHeight;
 }
@@ -237,7 +237,7 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
       return;
    }
    
-   CGImageRef subImage = nullptr;
+   CGImageRef subImage = 0;
    bool needSubImage = false;
    if (area.fX || area.fY || area.fWidth != srcImage.fWidth || area.fHeight != srcImage.fHeight) {
       needSubImage = true;
@@ -349,7 +349,7 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
 
    assert(width != 0 && "initWithW:H:data:, width parameter is 0");
    assert(height != 0 && "initWithW:H:data:, height parameter is 0");
-   assert(data != nullptr && "initWithW:H:data:, data parameter is null");
+   assert(data != 0 && "initWithW:H:data:, data parameter is null");
 
    if (self = [super init]) {
       fIsStippleMask = NO;
@@ -400,7 +400,7 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
 {
    assert(width > 0 && "initMaskWithW:H:bitmapMask:, width parameter is zero");
    assert(height > 0 && "initMaskWithW:H:bitmapMask:, height parameter is zero");
-   assert(mask != nullptr && "initMaskWithW:H:bitmapMask:, mask parameter is null");
+   assert(mask != 0 && "initMaskWithW:H:bitmapMask:, mask parameter is null");
    
    if (self = [super init]) {
       fIsStippleMask = YES;
@@ -413,7 +413,7 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
          return nil;
       }
 
-      fImage = CGImageMaskCreate(width, height, 8, 8, width, provider, nullptr, false);//null -> decode, false -> shouldInterpolate.
+      fImage = CGImageMaskCreate(width, height, 8, 8, width, provider, 0, false);//null -> decode, false -> shouldInterpolate.
 
       if (!fImage) {
          NSLog(@"QuartzPixmap: -initMaskWithW:H:bitmapMask:, CGImageMaskCreate failed");
@@ -611,7 +611,7 @@ bool TestBitmapBit(const unsigned char *bitmap, unsigned w, unsigned i, unsigned
    //Test if a bit (i,j) is set in a bitmap (w, h).
    
    //Code in ROOT's GUI suggests, that byte is octet.
-   assert(bitmap != nullptr && "TestBitmapBit, bitmap parameter is null");
+   assert(bitmap != 0 && "TestBitmapBit, bitmap parameter is null");
    assert(w != 0 && "TestBitmapBit, w parameter is 0");
    assert(i < w && "TestBitmapBit, i parameter is >= w");
    
@@ -625,10 +625,10 @@ bool TestBitmapBit(const unsigned char *bitmap, unsigned w, unsigned i, unsigned
 //______________________________________________________________________________
 void FillPixmapBuffer(const unsigned char *bitmap, unsigned width, unsigned height, ULong_t foregroundPixel, ULong_t backgroundPixel, unsigned depth, unsigned char *imageData)
 {
-   assert(bitmap != nullptr && "FillPixmapBuffer, bitmap parameter is null");
+   assert(bitmap != 0 && "FillPixmapBuffer, bitmap parameter is null");
    assert(width != 0 && "FillPixmapBuffer, width parameter is 0");
    assert(height != 0 && "FillPixmapBuffer, height parameter is 0");
-   assert(imageData != nullptr && "FillPixmapBuffer, imageData parameter is null");
+   assert(imageData != 0 && "FillPixmapBuffer, imageData parameter is null");
 
    if (depth > 1) {
       unsigned char foregroundColor[4] = {};
