@@ -275,7 +275,7 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
       if (gROOT) gROOT->Add(gexp); 
       if (drawAxis && !drawObs) { 
          gexp->Draw("A");
-         if (gexp->GetHistogram()) gExp->GetHistogram()->SetTitle( GetTitle() );
+         if (gexp->GetHistogram()) gexp->GetHistogram()->SetTitle( GetTitle() );
          gplot = (TGraph*) gexp->GetListOfGraphs()->First();
       }
       else 

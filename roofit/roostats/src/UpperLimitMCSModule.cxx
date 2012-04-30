@@ -189,7 +189,7 @@ Bool_t UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
 
   std::cout<<"after generation Test"<<std::endl;
 
-  if (!fitInitParams || !genSample() || !fitParams() || !fitModel() ) return kFALSE; 
+  if (!fitInitParams() || !genSample() || !fitParams() || !fitModel() ) return kFALSE; 
 
   static_cast<RooRealVar*>(_poi->first())->setVal(static_cast<RooRealVar*>(fitInitParams()->find(_parName.c_str()))->getVal());
   
