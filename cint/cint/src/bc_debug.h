@@ -43,6 +43,8 @@ using namespace std;
  * G__bc_funccall
  ***********************************************************************/
 class G__bc_funccall {
+ private:
+  G__bc_funccall& operator=(const G__bc_funccall&); // not implemented
  public:
   // ctor and dtor
   G__bc_funccall() 

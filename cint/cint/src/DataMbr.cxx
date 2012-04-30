@@ -40,10 +40,12 @@ Cint::G__DataMemberInfo::G__DataMemberInfo(class G__ClassInfo &a):
 ///////////////////////////////////////////////////////////////////////////
 Cint::G__DataMemberInfo& Cint::G__DataMemberInfo::operator=(const G__DataMemberInfo& dmi)
 {
-   handle=dmi.handle;
-   index=dmi.index;
-   belongingclass=dmi.belongingclass;
-   type=dmi.type;
+   if (&dmi != this) {
+     handle=dmi.handle;
+     index=dmi.index;
+     belongingclass=dmi.belongingclass;
+     type=dmi.type;
+   }
    return *this;
 }
 ///////////////////////////////////////////////////////////////////////////
