@@ -645,7 +645,7 @@ namespace cling {
 
     std::string code;
     code += "#include \"" + filename + "\"\n";
-    return declare(code);
+    return declare(code) == Interpreter::kSuccess;
   }
   
   QualType
