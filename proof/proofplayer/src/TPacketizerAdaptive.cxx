@@ -790,7 +790,7 @@ TPacketizerAdaptive::TPacketizerAdaptive(TDSet *dset, TList *slaves,
             TEventList *evl = dynamic_cast<TEventList *>(e->GetEntryList());
             eNum = evl ? evl->GetN() : eNum;
             PDB(kPacketizer,2)
-               Info("TPacketizerAdaptive", " --> event-list element: %d entries (evl:%p)", eNum, evl);
+               Info("TPacketizerAdaptive", " --> event-list element: %lld entries (evl:%p)", eNum, evl);
          }
          if (!eNum) {
             PDB(kPacketizer,2)
