@@ -111,7 +111,10 @@ Bool_t PyROOT::TPyROOTApplication::CreatePyROOTApplication( Bool_t bLoadLibs )
          argv[ i ] = argi;
       }
 #if PY_VERSION_HEX < 0x03000000
-      argv[ 0 ] = Py_GetProgramName();
+      if ( Py_GetProgramName() && strlen( Py_GetProgramName() ) != 0 )
+         argv[ 0 ] = Py_GetProgramName();
+      else
+         argv[ 0 ] = (char*)"python";
 #else
 // TODO: convert the wchar_t*
       argv[ 0 ] = (char*)"python";
