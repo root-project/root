@@ -200,7 +200,7 @@ void TextLine::Init(const std::vector<UniChar> &unichars, UInt_t nAttribs, CFStr
 //_________________________________________________________________
 void TextLine::DrawLine(CGContextRef ctx)const
 {
-   assert(ctx != nullptr && "DrawLine, ctx parameter is null");
+   assert(ctx != 0 && "DrawLine, ctx parameter is null");
    CTLineDraw(fCTLine, ctx);
 }
 
@@ -208,7 +208,7 @@ void TextLine::DrawLine(CGContextRef ctx)const
 //______________________________________________________________________________
 void TextLine::DrawLine(CGContextRef ctx, Double_t x, Double_t y)const
 {
-   assert(ctx != nullptr && "DrawLine, ctx parameter is null");
+   assert(ctx != 0 && "DrawLine, ctx parameter is null");
 
    CGContextSetAllowsAntialiasing(ctx, 1);
    UInt_t w = 0, h = 0;
@@ -257,8 +257,8 @@ void DrawTextLineNoKerning(CGContextRef ctx, CTFontRef font, const std::vector<U
    if (!text.size())//This can happen with ROOT's GUI.
       return;
 
-   assert(ctx != nullptr && "DrawTextLineNoKerning, ctx parameter is null");
-   assert(font != nullptr && "DrawTextLineNoKerning, font parameter is null");
+   assert(ctx != 0 && "DrawTextLineNoKerning, ctx parameter is null");
+   assert(font != 0 && "DrawTextLineNoKerning, font parameter is null");
    assert(text.size() && "DrawTextLineNoKerning, text parameter is an empty vector");
 
    std::vector<CGGlyph> glyphs(text.size());

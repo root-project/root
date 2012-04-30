@@ -56,8 +56,8 @@ private:
    void Init(const char *textLine, UInt_t nAttribs, CFStringRef *keys, CFTypeRef *values);
    void Init(const std::vector<UniChar> &textLine, UInt_t nAttribs, CFStringRef *keys, CFTypeRef *values);
 
-   TextLine(const TextLine &rhs) = delete;
-   TextLine &operator = (const TextLine &rhs) = delete;
+   TextLine(const TextLine &rhs);
+   TextLine &operator = (const TextLine &rhs);
 };
 
 //Aux. function which extracts glyphs, calculates their positions, draws glyphs with manual layout (GUI text).
