@@ -77,15 +77,16 @@ public:
    void Clear();
 
    // set for a fixed scan in nbins
-   void SetFixedScan(int nBins, double xMin = 1, double xMax = -1) {
+   void SetFixedScan(int nBins, double xMin = 1, double xMax = -1, bool scanLog = false ) {
       fNBins = nBins; 
       fXmin = xMin; fXmax = xMax; 
+      fScanLog = scanLog;
    }
      
    // set auto scan (default) 
    void SetAutoScan() { SetFixedScan(0); }
 
-   bool RunFixedScan( int nBins, double xMin, double xMax ) const;
+   bool RunFixedScan( int nBins, double xMin, double xMax, bool scanLog = false ) const;
 
    bool RunOnePoint( double thisX, bool adaptive = false, double clTarget = -1 ) const;
 
@@ -183,6 +184,7 @@ private:
    mutable HypoTestInverterResult* fResults; // pointer to the result 
      
    bool fUseCLs;
+   bool fScanLog; 
    double fSize;
    int fVerbose;
    ECalculatorType fCalcType; 
@@ -193,7 +195,7 @@ private:
 
 protected:
 
-   ClassDef(HypoTestInverter,2)  // HypoTestInverter class
+   ClassDef(HypoTestInverter,3)  // HypoTestInverter class
 
 };
 

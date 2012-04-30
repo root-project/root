@@ -154,6 +154,7 @@ HypoTestInverter::HypoTestInverter( ) :
    fScannedVariable(0),
    fResults(0),
    fUseCLs(false),
+   fScanLog(false),
    fSize(0),
    fVerbose(0),
    fCalcType(kUndefined), 
@@ -171,6 +172,7 @@ HypoTestInverter::HypoTestInverter( HypoTestCalculatorGeneric& hc,
    fScannedVariable(scannedVariable), 
    fResults(0),
    fUseCLs(false),
+   fScanLog(false),
    fSize(size),
    fVerbose(0),
    fCalcType(kUndefined), 
@@ -224,6 +226,7 @@ HypoTestInverter::HypoTestInverter( HybridCalculator& hc,
    fScannedVariable(scannedVariable), 
    fResults(0),
    fUseCLs(false),
+   fScanLog(false),
    fSize(size),
    fVerbose(0),
    fCalcType(kHybrid), 
@@ -257,6 +260,7 @@ HypoTestInverter::HypoTestInverter( FrequentistCalculator& hc,
    fScannedVariable(scannedVariable), 
    fResults(0),
    fUseCLs(false),
+   fScanLog(false),
    fSize(size),
    fVerbose(0),
    fCalcType(kFrequentist), 
@@ -286,6 +290,7 @@ HypoTestInverter::HypoTestInverter( AsymptoticCalculator& hc,
    fScannedVariable(scannedVariable), 
    fResults(0),
    fUseCLs(false),
+   fScanLog(false),
    fSize(size),
    fVerbose(0),
    fCalcType(kAsymptotic), 
@@ -318,6 +323,7 @@ HypoTestInverter::HypoTestInverter( RooAbsData& data, ModelConfig &bModel, Model
    fScannedVariable(scannedVariable), 
    fResults(0),
    fUseCLs(false),
+   fScanLog(false),
    fSize(size),
    fVerbose(0),
    fCalcType(type), 
@@ -369,6 +375,7 @@ HypoTestInverter & HypoTestInverter::operator= (const HypoTestInverter & rhs) {
    fCalculator0 = rhs.fCalculator0;
    fScannedVariable = rhs.fScannedVariable; 
    fUseCLs = rhs.fUseCLs;
+   fScanLog = rhs.fScanLog;
    fSize = rhs.fSize;
    fVerbose = rhs.fVerbose;
    fCalcType = rhs.fCalcType; 
@@ -442,7 +449,7 @@ HypoTestInverterResult* HypoTestInverter::GetInterval() const {
 
    if (fNBins > 0) {
       oocoutI((TObject*)0,Eval) << "HypoTestInverter::GetInterval - run a fixed scan" << std::endl;          
-      bool ret = RunFixedScan(fNBins, fXmin, fXmax); 
+      bool ret = RunFixedScan(fNBins, fXmin, fXmax, fScanLog); 
       if (!ret) 
          oocoutE((TObject*)0,Eval) << "HypoTestInverter::GetInterval - error running a fixed scan " << std::endl;    
    }
@@ -549,7 +556,7 @@ HypoTestResult * HypoTestInverter::Eval(HypoTestCalculatorGeneric &hc, bool adap
 } 
 
 
-bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax ) const
+bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax, bool scanLog ) const
 {
    // Run a Fixed scan in npoints between min and max
 
@@ -587,19 +594,24 @@ bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax ) const
                                           << xMax << std::endl; 
    }         
 
-   
-   double thisX = xMin;
+   double thisX = 0;
    for (int i=0; i<nBins; i++) {
-      // for one bin scan at xMin
-      if (i>0) thisX += (xMax-xMin)/(nBins-1); 
+      
+      if (scanLog)
+         thisX = exp(  log(xMin)+i*(log(xMax)-log(xMin))/(nBins-1)  ); // scan in log x
+      else
+         thisX = xMin+i*(xMax-xMin)/(nBins-1);          // linear scan in x 
+      
       bool status = RunOnePoint(thisX);
-  
+      
       // check if failed status
       if ( status==false ) {
          std::cout << "\t\tLoop interrupted because of failed status\n";
          return false;
       }
    }
+
+
 
    return true;
 }
