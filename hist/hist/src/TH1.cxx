@@ -4365,10 +4365,13 @@ void TH1::GetBinXYZ(Int_t binglobal, Int_t &binx, Int_t &biny, Int_t &binz) cons
 
    if (GetDimension() < 2) {
       binx = binglobal%nx;
+      biny = -1;
+      binz = -1;
    }
    if (GetDimension() < 3) {
       binx = binglobal%nx;
       biny = ((binglobal-binx)/nx)%ny;
+      binz = -1;
    }
    if (GetDimension() < 4) {
       binx = binglobal%nx;
