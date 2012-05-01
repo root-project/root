@@ -38,7 +38,6 @@ TProofChain::TProofChain() : TChain()
    fTree         = 0;
    fSet          = 0;
    fDirectory    = gDirectory;
-   fDrawFeedback = 0;
    ResetBit(kOwnsChain);
 }
 
@@ -51,7 +50,6 @@ TProofChain::TProofChain(TChain *chain, Bool_t gettreeheader) : TChain()
    fTree         = 0;
    fSet          = chain ? new TDSet((const TChain &)(*chain)) : 0;
    fDirectory    = gDirectory;
-   fDrawFeedback = 0;
    if (gProof) {
       gProof->AddChain(chain);
       ConnectProof();
@@ -75,7 +73,6 @@ TProofChain::TProofChain(TDSet *dset, Bool_t gettreeheader) : TChain()
    fTree         = 0;
    fSet          = dset;
    fDirectory    = gDirectory;
-   fDrawFeedback = 0;
    if (gProof) {
       ConnectProof();
       if (gettreeheader && dset)
@@ -148,8 +145,6 @@ Long64_t TProofChain::Draw(const char *varexp, const TCut &selection,
    }
    ConnectProof();
 
-   if (fDrawFeedback)
-      gProof->SetDrawFeedbackOption(fDrawFeedback, option);
    fReadEntry = firstentry;
 
    // Set either the entry-list (priority) or the event-list
@@ -180,8 +175,6 @@ Long64_t TProofChain::Draw(const char *varexp, const char *selection,
    }
    ConnectProof();
 
-   if (fDrawFeedback)
-      gProof->SetDrawFeedbackOption(fDrawFeedback, option);
    fReadEntry = firstentry;
 
    // Set either the entry-list (priority) or the event-list
@@ -400,21 +393,14 @@ void TProofChain::ReleaseProof()
       return;
    gProof->Disconnect("Progress(Long64_t,Long64_t)",
                       this, "Progress(Long64_t,Long64_t)");
-   if (fDrawFeedback)
-      gProof->DeleteDrawFeedback(fDrawFeedback);
-   fDrawFeedback = 0;
 }
 
 //______________________________________________________________________________
 void TProofChain::ConnectProof()
 {
-   // Connects the proof - creates a "DrawFeedback" and connects the
-   // "Progress" signal.
+   // Connects the proof "Progress" signal.
 
-   if (gProof && !fDrawFeedback) {
-      fDrawFeedback = gProof->CreateDrawFeedback();
-
+   if (gProof)
       gProof->Connect("Progress(Long64_t,Long64_t)", "TProofChain",
                        this, "Progress(Long64_t,Long64_t)");
-   }
 }

@@ -27,7 +27,6 @@
 #endif
 
 class TDSet;
-class TDrawFeedback;
 class TList;
 class TProof;
 
@@ -43,7 +42,6 @@ private:
 protected:
    TChain        *fChain;            // mother chain: needed for the browsing list
    TDSet         *fSet;              // TDSet
-   TDrawFeedback *fDrawFeedback;     // feedback handler
 
 public:
    TProofChain();
