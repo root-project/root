@@ -56,6 +56,7 @@ void ProofPythia::Begin(TTree * /*tree*/)
    // The tree argument is deprecated (on PROOF 0 is passed).
 
    TString option = GetOption();
+   Info("Begin", "starting a simple exercise with process option: %s", option.Data());
 }
 
 //_____________________________________________________________________________

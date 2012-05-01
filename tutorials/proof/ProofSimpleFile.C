@@ -30,7 +30,7 @@ ProofSimpleFile::ProofSimpleFile()
 {
    // Constructor
 
-   fNhist = -1;
+   fNhist = 16;
    fHistTop = 0;
    fHistDir = 0;
    fRandom = 0;
@@ -48,19 +48,19 @@ ProofSimpleFile::~ProofSimpleFile()
 }
 
 //_____________________________________________________________________________
-void ProofSimpleFile::CreateHistoArrays()
+Int_t ProofSimpleFile::CreateHistoArrays()
 {
    // Create the histogram arrays
 
-   // Histos array
-   fNhist = 16;
-   if (fInput->FindObject("ProofSimpleFile_NHist")) {
-      TParameter<Long_t> *p =
-         dynamic_cast<TParameter<Long_t>*>(fInput->FindObject("ProofSimpleFile_NHist"));
-      fNhist = (p) ? (Int_t) p->GetVal() : fNhist;
+   if (fNHist <= 0) {
+      Error("CreateHistoArrays", "fNHist must be positive!");
+      return -1;
    }
+   // Histos array
    fHistTop = new TH1F*[fNhist];
    fHistDir = new TH1F*[fNhist];
+   // Done
+   return 0;
 }
 
 //_____________________________________________________________________________
@@ -72,8 +72,16 @@ void ProofSimpleFile::Begin(TTree * /*tree*/)
 
    TString option = GetOption();
 
-   // Histos arrays
-   CreateHistoArrays();
+   // Number of histograms (needed in terminate)
+   if (fInput->FindObject("ProofSimpleFile_NHist")) {
+      TParameter<Long_t> *p =
+         dynamic_cast<TParameter<Long_t>*>(fInput->FindObject("ProofSimpleFile_NHist"));
+      fNhist = (p) ? (Int_t) p->GetVal() : fNhist;
+   } else if ((iopt = option.Index("nhist=")) != kNPOS) {
+      TString s;
+      Ssiz_t from = iopt + strlen("nhist=");
+      if (option.Tokenize(s, from, ";") && s.IsDigit()) fNhist = s.Atoi();
+   }
 }
 
 //_____________________________________________________________________________
@@ -84,6 +92,17 @@ void ProofSimpleFile::SlaveBegin(TTree * /*tree*/)
    // The tree argument is deprecated (on PROOF 0 is passed).
 
    TString option = GetOption();
+
+   // Number of histograms (needed in terminate)
+   if (fInput->FindObject("ProofSimpleFile_NHist")) {
+      TParameter<Long_t> *p =
+         dynamic_cast<TParameter<Long_t>*>(fInput->FindObject("ProofSimpleFile_NHist"));
+      fNhist = (p) ? (Int_t) p->GetVal() : fNhist;
+   } else if ((iopt = option.Index("nhist=")) != kNPOS) {
+      TString s;
+      Ssiz_t from = iopt + strlen("nhist=");
+      if (option.Tokenize(s, from, ";") && s.IsDigit()) fNhist = s.Atoi();
+   }
    
    // The file for merging
    fProofFile = new TProofOutputFile("SimpleFile.root", "M");
@@ -96,16 +115,22 @@ void ProofSimpleFile::SlaveBegin(TTree * /*tree*/)
 
    // Cannot continue
    if (!fFile) {
-      Info("SlaveBegin", "could not create '%s': instance is invalid!", fProofFile->GetName());
+      TString amsg = TString::Format("ProofSimpleFile::SlaveBegin: could not create '%s':"
+                                     " instance is invalid!", fProofFile->GetName());
+      Abort(amsg, kAbortProcess);
       return;
    }
 
    // Histos arrays
-   CreateHistoArrays();
+   if (CreateHistoArrays() != 0) {
+      Abort("ProofSimpleFile::SlaveBegin: could not create histograms", kAbortProcess);
+      return;
+   }
 
    // Create directory
    if (!(fFileDir = fFile->mkdir("blue"))) {
-      Info("SlaveBegin", "could not create directory 'blue' in file!");
+      Abort("ProofSimpleFile::SlaveBegin: could not create directory 'blue' in file!",
+            kAbortProcess);
       return;
    }
    

@@ -21,7 +21,7 @@ class TDirectory;
 
 class ProofSimpleFile : public TSelector {
 private:
-   void CreateHistoArrays();
+   Int_t CreateHistoArrays();
    void PlotHistos(Int_t opt = 0);
 public :
 

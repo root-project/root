@@ -23,6 +23,7 @@
 #include <TFile.h>
 #include <TProofOutputFile.h>
 
+//_____________________________________________________________________________
 ProofNtuple::~ProofNtuple()
 {
    // Destructor
@@ -32,6 +33,7 @@ ProofNtuple::~ProofNtuple()
    SafeDelete(fRandom);
 }
 
+//_____________________________________________________________________________
 void ProofNtuple::PlotNtuple(TNtuple *ntp, const char *ntptitle)
 {
    // Make some plots from the ntuple 'ntp'
@@ -81,6 +83,7 @@ void ProofNtuple::PlotNtuple(TNtuple *ntp, const char *ntptitle)
    c1->Update();
 }
 
+//_____________________________________________________________________________
 void ProofNtuple::Begin(TTree * /*tree*/)
 {
    // The Begin() function is called at the start of the query.
@@ -93,6 +96,7 @@ void ProofNtuple::Begin(TTree * /*tree*/)
    if (out) fPlotNtuple = kFALSE;
 }
 
+//_____________________________________________________________________________
 void ProofNtuple::SlaveBegin(TTree * /*tree*/)
 {
    // The SlaveBegin() function is called after the Begin() function.
@@ -152,6 +156,7 @@ void ProofNtuple::SlaveBegin(TTree * /*tree*/)
    if (!fNtpRndm) fRandom = new TRandom3(0);
 }
 
+//_____________________________________________________________________________
 Bool_t ProofNtuple::Process(Long64_t entry)
 {
    // The Process() function is called for each entry in the tree (or possibly
@@ -198,6 +203,7 @@ Bool_t ProofNtuple::Process(Long64_t entry)
    return kTRUE;
 }
 
+//_____________________________________________________________________________
 void ProofNtuple::SlaveTerminate()
 {
    // The SlaveTerminate() function is called after all entries or objects
@@ -233,6 +239,7 @@ void ProofNtuple::SlaveTerminate()
    }
 }
 
+//_____________________________________________________________________________
 void ProofNtuple::Terminate()
 {
    // The Terminate() function is the last function to be called during

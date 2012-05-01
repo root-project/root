@@ -59,9 +59,6 @@ void ProofTests::Begin(TTree * /*tree*/)
    // The Begin() function is called at the start of the query.
    // When running with PROOF Begin() is only called on the client.
    // The tree argument is deprecated (on PROOF 0 is passed).
-
-   // Fill relevant members
-   ParseInput();
 }
 
 //_____________________________________________________________________________

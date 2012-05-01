@@ -23,6 +23,7 @@
 #include "EmptyInclude.h"
 
 
+//_____________________________________________________________________________
 void ProofEventProc::Begin(TTree *)
 {
    // The Begin() function is called at the start of the query.
@@ -30,27 +31,31 @@ void ProofEventProc::Begin(TTree *)
    // The tree argument is deprecated (on PROOF 0 is passed).
 
    TString option = GetOption();
-
+   Info("Begin", "starting a simple exercise with process option: %s", option.Data());
 }
 
-void ProofEventProc::SlaveBegin(TTree *tree)
+//_____________________________________________________________________________
+void ProofEventProc::SlaveBegin(TTree * /*tree*/)
 {
    // The SlaveBegin() function is called after the Begin() function.
    // When running with PROOF SlaveBegin() is called on each slave server.
    // The tree argument is deprecated (on PROOF 0 is passed).
 
-   Init(tree);
+   TString option = GetOption();
 
    // How much to read
    fFullRead = kFALSE;
    TNamed *nm = 0;
-   if (fInput) 
-      nm = dynamic_cast<TNamed *>(fInput->FindObject("ProofEventProc_Read"));
-   if (nm && !strcmp(nm->GetTitle(), "readall"))
-      fFullRead = kTRUE;
+   if (fInput) {
+      if ((nm = dynamic_cast<TNamed *>(fInput->FindObject("ProofEventProc_Read")))) {
+         if (!strcmp(nm->GetTitle(), "readall")) fFullRead = kTRUE;
+      }
+   }
+   if (!nm) {
+      // Check option
+      if (option == "readall") fFullRead = kTRUE;
+   }
    Info("SlaveBegin", "'%s' reading", (fFullRead ? "full" : "optimized"));
-
-   TString option = GetOption();
 
    fPtHist = new TH1F("pt_dist","p_{T} Distribution",100,0,5);
    fPtHist->SetDirectory(0);
@@ -89,6 +94,7 @@ void ProofEventProc::SlaveBegin(TTree *tree)
       Abort("Test abortion during init", kAbortProcess);
 }
 
+//_____________________________________________________________________________
 Bool_t ProofEventProc::Process(Long64_t entry)
 {
    // The Process() function is called for each entry in the tree (or possibly
@@ -145,6 +151,7 @@ Bool_t ProofEventProc::Process(Long64_t entry)
    return kTRUE;
 }
 
+//_____________________________________________________________________________
 void ProofEventProc::SlaveTerminate()
 {
    // The SlaveTerminate() function is called after all entries or objects
@@ -165,6 +172,7 @@ void ProofEventProc::SlaveTerminate()
    while ((o = nxpe())) { fOutput->Add(o); };
 }
 
+//_____________________________________________________________________________
 void ProofEventProc::Terminate()
 {
    // The Terminate() function is the last function to be called during
@@ -223,6 +231,7 @@ void ProofEventProc::Terminate()
    canvas->Update();
 }
 
+//_____________________________________________________________________________
 void ProofEventProc::CheckRanges()
 {
    // Check the processed event ranges when there is enough information

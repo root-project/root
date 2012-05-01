@@ -66,11 +66,6 @@ void ProofAux::Begin(TTree * /*tree*/)
    // The Begin() function is called at the start of the query.
    // When running with PROOF Begin() is only called on the client.
    // The tree argument is deprecated (on PROOF 0 is passed).
-
-   TString option = GetOption();
-
-   // Determine the action type
-   fAction = GetAction(fInput);
 }
 
 //_____________________________________________________________________________
