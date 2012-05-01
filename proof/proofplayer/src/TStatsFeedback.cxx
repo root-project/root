@@ -102,7 +102,7 @@ void TStatsFeedback::Feedback(TList *objs)
    if (gROOT->GetListOfCanvases())
       cv = (TVirtualPad *) canvases->FindObject(cvnm.Data());
    if (!cv) {
-      TString cvcmd = TString::Format("new TCanvas(\"%s\", \"Feedback Stats\",800,10,500,500)",
+      TString cvcmd = TString::Format("new TCanvas(\"%s\", \"Feedback Stats\",10,300,600,400)",
                                       cvnm.Data());
       if (!(cv = (TVirtualPad *) gROOT->ProcessLine(cvcmd))) {
          Warning("Feedback", "could not create canvas!");
@@ -125,11 +125,17 @@ void TStatsFeedback::Feedback(TList *objs)
    gStyle->SetOptStat(11);
    // Plot
    pd1->cd();
-   if (hevt) hevt->DrawCopy();
+   if (hevt) {
+      hevt->DrawCopy();
+   }
    pd2->cd();
-   if (hevt) hpck->DrawCopy();
+   if (hpck) {
+      hpck->DrawCopy();
+   }
    pd3->cd();
-   if (hevt) hass->DrawCopy();
+   if (hass) {
+      hass->DrawCopy();
+   }
 
    cv->cd();
    cv->Update();
