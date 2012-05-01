@@ -1864,6 +1864,16 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       TString emsg;
       if (TProof::SendInputData(fQuery, fProof, emsg) != 0)
          Warning("Process", "could not forward input data: %s", emsg.Data());
+      
+      // Attach to the transient histogram with the assigned packets, if required
+      if (fInput->FindObject("PROOF_StatsHist") != 0) {
+         if (!(fProcPackets = (TH1I *) fOutput->FindObject("PROOF_ProcPcktHist"))) {
+            Warning("Process", "could not attach to histogram 'PROOF_ProcPcktHist'");
+         } else {
+            Warning("Process", "attached to histogram 'PROOF_ProcPcktHist' to record"
+                               " packets being processed");
+         }
+      }
 
    } else {
 
@@ -3639,6 +3649,14 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
    // The first call to this determines the end of initialization
    SetInitTime();
 
+   if (fProcPackets) {
+      Int_t bin = fProcPackets->GetXaxis()->FindBin(slave->GetOrdinal());
+      if (bin >= 0) {
+         if (fProcPackets->GetBinContent(bin) > 0)
+            fProcPackets->Fill(slave->GetOrdinal(), -1);
+      }
+   }
+
    TDSetElement *e = fPacketizer->GetNextPacket( slave, r );
 
    if (e == 0) {
@@ -3650,6 +3668,7 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
          Info("GetNextPacket","%s (%s): '%s' '%s' '%s' %lld %lld",
               slave->GetOrdinal(), slave->GetName(), e->GetFileName(),
               e->GetDirectory(), e->GetObjName(), e->GetFirst(), e->GetNum());
+      if (fProcPackets) fProcPackets->Fill(slave->GetOrdinal(), 1);
    }
 
    return e;

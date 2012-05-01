@@ -116,7 +116,8 @@ Long_t TPerfStats::fgResMemMax = -1;
 
 //______________________________________________________________________________
 TPerfStats::TPerfStats(TList *input, TList *output)
-   : fTrace(0), fPerfEvent(0), fPacketsHist(0), fEventsHist(0), fLatencyHist(0),
+   : fTrace(0), fPerfEvent(0), fPacketsHist(0), fProcPcktHist(0),
+      fEventsHist(0), fLatencyHist(0),
       fProcTimeHist(0), fCpuTimeHist(0), fBytesRead(0),
       fTotCpuTime(0.), fTotBytesRead(0), fTotEvents(0), fNumEvents(0),
       fSlaves(0), fDoHist(kFALSE),
@@ -209,11 +210,22 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_PacketsHist"));
       fPacketsHist = new TH1D("PROOF_PacketsHist", "Packets processed per Worker",
                               fSlaves, 0, fSlaves);
+      fPacketsHist->SetFillColor(kCyan);
       fPacketsHist->SetDirectory(0);
       fPacketsHist->SetMinimum(0);
       output->Add(fPacketsHist);
       PDB(kMonitoring,1)
          Info("TPerfStats", "histo '%s' added to the output list", fPacketsHist->GetName());
+
+      gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_ProcPcktHist"));
+      fProcPcktHist = new TH1I("PROOF_ProcPcktHist", "Packets being processed per Worker",
+                              fSlaves, 0, fSlaves);
+      fProcPcktHist->SetFillColor(kRed);
+      fProcPcktHist->SetDirectory(0);
+      fProcPcktHist->SetMinimum(0);
+      output->Add(fProcPcktHist);
+      PDB(kMonitoring,1)
+         Info("TPerfStats", "histo '%s' added to the output list", fProcPcktHist->GetName());
 
       gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_EventsHist"));
       fEventsHist = new TH1D("PROOF_EventsHist", "Events processed per Worker",
@@ -273,6 +285,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       while (TSlaveInfo *si = dynamic_cast<TSlaveInfo*>(nextslaveinfo())) {
          if (si->fStatus == TSlaveInfo::kActive) {
             fPacketsHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
+            fProcPcktHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
             fEventsHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
             fNodeHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
             fLatencyHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());

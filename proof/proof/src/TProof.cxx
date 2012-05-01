@@ -4429,6 +4429,83 @@ void TProof::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
+void TProof::SetFeedback(TString &opt, TString &optfb, Int_t action)
+{
+   // Extract from opt in optfb information about wanted feedback settings.
+   // Feedback are removed from the input string opt.
+   // If action == 0, set up feedback accordingly, if action == 1 clean related
+   // feedback settings (using info in optfb, if available, or reparsing opt).
+   //
+   // Feedback requirements are in the form
+   //
+   //       <previous_option>fb=name1,name2,name3,... <next_option>
+   //       <previous_option>feedback=name1,name2,name3,... <next_option>
+   //
+   // The special name 'stats' triggers feedback about events and packets.
+   // Called interanally by TProof::Process.
+
+   Ssiz_t from = 0;
+   if (action == 0 || (action == 1 && optfb.IsNull())) {
+      TString tag("fb=");
+      Ssiz_t ifb = opt.Index(tag);
+      if (ifb == kNPOS) {
+         tag = "feedback=";
+         ifb = opt.Index(tag);
+      }
+      if (ifb == kNPOS) return;
+      from = ifb + tag.Length();
+      
+      if (!opt.Tokenize(optfb, from, "[; ]") || optfb.IsNull()) {
+         Warning("SetFeedback", "could not extract feedback string! Ignoring ...");
+         return;
+      }
+      // Remove from original options string
+      tag += optfb;
+      opt.ReplaceAll(tag, "");
+   }
+
+   // Parse now
+   TString nm, startdraw, stopdraw;
+   from = 0;
+   while (optfb.Tokenize(nm, from, ",")) {
+      // Special name first
+      if (nm == "stats") {
+         if (action == 0) {
+            startdraw.Form("gDirectory->Add(new TStatsFeedback((TProof *)%p))", this);
+            gROOT->ProcessLine(startdraw.Data());
+            SetParameter("PROOF_StatsHist", "");
+            AddFeedback("PROOF_EventsHist");
+            AddFeedback("PROOF_PacketsHist");
+            AddFeedback("PROOF_ProcPcktHist");
+         } else {
+            stopdraw.Form("TObject *o = gDirectory->FindObject(\"%s\"); "
+                          " if (o && strcmp(o->ClassName(), \"TStatsFeedback\")) "
+                          " { gDirectory->Remove(o); delete o; }", GetSessionTag());
+            gROOT->ProcessLine(stopdraw.Data());
+            DeleteParameters("PROOF_StatsHist");
+            RemoveFeedback("PROOF_EventsHist");
+            RemoveFeedback("PROOF_PacketsHist");
+            RemoveFeedback("PROOF_ProcPcktHist");
+         }
+      } else {
+         if (action == 0) {
+            // Enable or
+            AddFeedback(nm);
+            startdraw.Form("gDirectory->Add(new TDrawFeedback((TProof *)%p))", this);
+            gROOT->ProcessLine(startdraw.Data());
+         } else {
+            // ... or disable
+            RemoveFeedback(nm);
+            stopdraw.Form("TObject *o = gDirectory->FindObject(\"%s\"); "
+                          " if (o && strcmp(o->ClassName(), \"TDrawFeedback\")) "
+                          " { gDirectory->Remove(o); delete o; }", GetSessionTag());
+            gROOT->ProcessLine(stopdraw.Data());
+         }         
+      }      
+   }
+}
+
+//______________________________________________________________________________
 Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
                          Long64_t nentries, Long64_t first)
 {
@@ -4443,11 +4520,15 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
 
    // Set PROOF to running state
    SetRunStatus(TProof::kRunning);
+   
+   TString opt(option), optfb;
+   // Enable feedback, if required
+   if (opt.Contains("fb=") || opt.Contains("feedback=")) SetFeedback(opt, optfb, 0);
+   Info("Process", "opt: %s, optfc: %s", opt.Data(), optfb.Data());
 
    // Resolve query mode
-   fSync = (GetQueryMode(option) == kSync);
+   fSync = (GetQueryMode(opt) == kSync);
 
-   TString opt(option);
    if (fSync && (!IsIdle() || IsWaiting())) {
       // Already queued or processing queries: switch to asynchronous mode
       Info("Process", "session is in waiting or processing status: switch to asynchronous mode");
@@ -4479,6 +4560,9 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
       Error("Process", "neither a selecrot file nor a selector object have"
                        " been specified: cannot process!");
    }
+
+   // Disable feedback, if required
+   if (!optfb.IsNull()) SetFeedback(opt, optfb, 1);
 
    if (fSync) {
       // reactivate the default application interrupt handler
@@ -4830,7 +4914,7 @@ Long64_t TProof::Process(const char *selector, Long64_t n, Option_t *option)
    } else if (fSelector) {
       retval = Process(dset, fSelector, option, n);
    } else {
-      Error("Process", "neither a selecrot file nor a selector object have"
+      Error("Process", "neither a selector file nor a selector object have"
                        " been specified: cannot process!");
    }
 

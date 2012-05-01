@@ -14,6 +14,9 @@
 // TDrawFeedback                                                        //
 //                                                                      //
 // Utility class to draw objects in the feedback list during queries.   //
+// Draws histograms in separated canvases and user-defined objects via  //
+// Draw(). Users requiring advanced treatment should implement their    //
+// own version following this example. See also TStatsFeedback.         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -50,6 +53,7 @@ TDrawFeedback::TDrawFeedback(TProof *proof, TSeqCollection *names)
       return;
    }
    fProof = p;
+   fName = fProof->GetSessionTag();
 
    Bool_t ok = proof->Connect("Feedback(TList *objs)", "TDrawFeedback",
                   this, "Feedback(TList *objs)");
@@ -97,24 +101,34 @@ void TDrawFeedback::Feedback(TList *objs)
       TString name = o->GetName();
       if (fAll || fNames->FindObject(name.Data())) {
 
-         name += "_canvas";
-
-         TVirtualPad *p = (TVirtualPad*) canvases->FindObject(name.Data());
-
-         if ( p == 0 ) {
-            gROOT->MakeDefCanvas();
-            gPad->SetName(name);
-            PDB(kFeedback,2) Info("Feedback","Created canvas %s", name.Data());
-         } else {
-            p->cd();
-            PDB(kFeedback,2) Info("Feedback","Used canvas %s", name.Data());
-         }
-
          if (TH1 *h = dynamic_cast<TH1*>(o)) {
+            
+            // Basic service provided fro histograms, each one drawn in
+            // a separate canvas named '<histogram_name>_canvas'
+
+            name += "_canvas";
+
+            TVirtualPad *p = (TVirtualPad*) canvases->FindObject(name.Data());
+
+            if ( p == 0 ) {
+               gROOT->MakeDefCanvas();
+               gPad->SetName(name);
+               PDB(kFeedback,2) Info("Feedback","Created canvas %s", name.Data());
+            } else {
+               p->cd();
+               PDB(kFeedback,2) Info("Feedback","Used canvas %s", name.Data());
+            }
+
             h->DrawCopy(fOption);
+            gPad->Update();
+
+         } else {
+
+            // Call the Draw method of the object; this is intended for user-defined
+            // objects handling their canvas needs inside Draw() as needed
+            o->Draw();
          }
 
-         gPad->Update();
       }
    }
 

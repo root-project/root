@@ -994,9 +994,14 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
 
    // For the time being cannot accept other queries if not idle, even if in async
    // mode; needs to set up an event handler to manage that
+   
+   TString opt(option), optfb;
+   // Enable feedback, if required
+   if (opt.Contains("fb=") || opt.Contains("feedback=")) SetFeedback(opt, optfb, 0);
+   Info("Process", "opt: %s, optfc: %s", opt.Data(), optfb.Data());
 
    // Resolve query mode
-   fSync = (GetQueryMode(option) == kSync);
+   fSync = (GetQueryMode(opt) == kSync);
    if (!fSync) {
       Info("Process","asynchronous mode not yet supported in PROOF-Lite");
       return -1;
@@ -1047,15 +1052,15 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
       varexp = fVarExp;
       selection = fSelection;
       // Decode now the expression
-      if (fPlayer->GetDrawArgs(varexp, selection, option, selec, objname) != 0) {
+      if (fPlayer->GetDrawArgs(varexp, selection, opt, selec, objname) != 0) {
          Error("Process", "draw query: error parsing arguments '%s', '%s', '%s'",
-                          varexp.Data(), selection.Data(), option);
+                          varexp.Data(), selection.Data(), opt.Data());
          return -1;
       }
    }
 
    // Create instance of query results (the data set is added after Process)
-   TProofQueryResult *pq = MakeQueryResult(nentries, option, first, 0, selec);
+   TProofQueryResult *pq = MakeQueryResult(nentries, opt, first, 0, selec);
 
    // If not a draw action add the query to the main list
    if (!(pq->IsDraw())) {
@@ -1133,13 +1138,16 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    Long64_t rv = 0;
    if (!(pq->IsDraw())) {
       if (selector && strlen(selector)) {
-         rv = fPlayer->Process(dset, selec, option, nentries, first);
+         rv = fPlayer->Process(dset, selec, opt, nentries, first);
       } else {
-         rv = fPlayer->Process(dset, fSelector, option, nentries, first);
+         rv = fPlayer->Process(dset, fSelector, opt, nentries, first);
       }
    } else {
-      rv = fPlayer->DrawSelect(dset, varexp, selection, option, nentries, first);
+      rv = fPlayer->DrawSelect(dset, varexp, selection, opt, nentries, first);
    }
+
+   // Disable feedback, if required
+   if (!optfb.IsNull()) SetFeedback(opt, optfb, 1);
 
    if (fSync) {
 

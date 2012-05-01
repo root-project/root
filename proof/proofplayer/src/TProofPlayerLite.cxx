@@ -186,6 +186,16 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
 
    // Send large input data objects, if any
    gProof->SendInputDataFile();
+      
+   // Attach to the transient histogram with the assigned packets, if required
+   if (fInput->FindObject("PROOF_StatsHist") != 0) {
+      if (!(fProcPackets = (TH1 *) fOutput->FindObject("PROOF_ProcPcktHist"))) {
+         Warning("Process", "could not attach to histogram 'PROOF_ProcPcktHist'");
+      } else {
+         Warning("Process", "attached to histogram 'PROOF_ProcPcktHist' to record"
+                              " packets being processed");
+      }
+   }
 
    PDB(kPacketizer,1) Info("Process","Create Proxy TDSet");
    TDSet *set = new TDSetProxy(dset->GetType(), dset->GetObjName(),

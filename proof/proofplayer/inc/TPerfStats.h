@@ -41,6 +41,7 @@
 
 class TDSet;
 class TH1D;
+class TH1I;
 class TH2D;
 class TList;
 class TTree;
@@ -85,6 +86,7 @@ private:
    TTimeStamp     fTzero;        //!start time of this run
    TPerfEvent    *fPerfEvent;    //!TPerfEvent used to fill tree
    TH1D          *fPacketsHist;  //!histogram of packets processed per slave
+   TH1I          *fProcPcktHist; //!histogram of packets being processed per slave
    TH1D          *fEventsHist;   //!histogram of events processed per slave
    TH1D          *fNodeHist;     //!histogram of slaves per file serving node
    TH2D          *fLatencyHist;  //!histogram of latency due to packet requests

@@ -747,6 +747,9 @@ protected:
    virtual void  SendInputDataFile();
    Int_t SendFile(const char *file, Int_t opt = (kBinary | kForward | kCp | kCpBin),
                   const char *rfile = 0, TSlave *sl = 0);
+   
+   // Fast enable/disable feedback from Process
+   void SetFeedback(TString &opt, TString &optfb, Int_t action);
 
    static void *SlaveStartupThread(void *arg);
 

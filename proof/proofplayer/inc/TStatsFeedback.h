@@ -1,5 +1,5 @@
 // @(#)root/proofplayer:$Id$
-// Author: Maarten Ballintijn   28/10/2003
+// Author: G. Ganis May 2012
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,18 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TDrawFeedback
-#define ROOT_TDrawFeedback
+#ifndef ROOT_TStatsFeedback
+#define ROOT_TStatsFeedback
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TDrawFeedback                                                        //
+// TStatsFeedback                                                       //
 //                                                                      //
-// Utility class to draw objects in the feedback list during queries.   //
-// Draws histograms in separated canvases and user-defined objects via  //
-// Draw(). Users requiring advanced treatment should implement their    //
-// own version following this example. See also TStatsFeedback.         //
+// Utility class to display PROOF stats feedback histos during queries. //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -36,26 +33,19 @@ class TProof;
 class THashList;
 class TSeqCollection;
 
-class TDrawFeedback : public TObject, public TQObject {
-private:
-   TString        fName;   // Identfier for this object
-   Bool_t         fAll;    //draw all or selected objects
-   THashList     *fNames;  //selected objects
-
+class TStatsFeedback : public TObject, public TQObject {
 protected:
-   Option_t      *fOption; //draw option
+   TString        fName;   // Identfier for this object
    TProof        *fProof;  //handle to PROOF session
-
 public:
-   TDrawFeedback(TProof *proof = 0, TSeqCollection *names = 0);
-   ~TDrawFeedback();
+   TStatsFeedback(TProof *proof = 0);
+   ~TStatsFeedback();
 
-   void Feedback(TList *objs);
+   void        Feedback(TList *objs);
    const char *GetName() const { return fName.Data(); }
-   ULong_t  Hash() const { return fName.Hash(); }
-   void SetOption(Option_t *option) { fOption = option; }
+   ULong_t     Hash() const { return fName.Hash(); }
 
-   ClassDef(TDrawFeedback,0)  // Present PROOF query feedback
+   ClassDef(TStatsFeedback,0)  // Present PROOF query feedback
 };
 
 #endif
