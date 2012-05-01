@@ -7363,32 +7363,12 @@ Int_t TProof::LoadPackageOnClient(const char *pack, TList *loadopts)
       gSystem->ChangeDirectory(ocwd);
 
       if (status == 0) {
-         // create link to package in working directory
 
-         fPackageLock->Lock();
+         // Add package directory to list of include directories to be searched by ACliC
+         gSystem->AddIncludePath(TString("-I") + pdir);
 
-         FileStat_t stat;
-         Int_t st = gSystem->GetPathInfo(pack, stat);
-         // check if symlink, if so unlink, if not give error
-         // NOTE: GetPathnfo() returns 1 in case of symlink that does not point to
-         // existing file or to a directory, but if fIsLink is true the symlink exists
-         if (stat.fIsLink)
-            gSystem->Unlink(pack);
-         else if (st == 0) {
-            Error("LoadPackageOnClient", "cannot create symlink %s in %s on client, "
-                  "another item with same name already exists", pack, ocwd.Data());
-            fPackageLock->Unlock();
-            return -1;
-         }
-         gSystem->Symlink(pdir, pack);
-
-         fPackageLock->Unlock();
-
-         // add package to list of include directories to be searched by ACliC
-         gSystem->AddIncludePath(TString("-I") + pack);
-
-         // add package to list of include directories to be searched by CINT
-         gROOT->ProcessLine(TString(".include ") + pack);
+         // add package directory to list of include directories to be searched by CINT
+         gROOT->ProcessLine(TString(".include ") + pdir);
 
          fEnabledPackagesOnClient->Add(new TObjString(pack));
          PDB(kPackage, 1)
