@@ -192,8 +192,9 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
       if (!(fProcPackets = (TH1 *) fOutput->FindObject("PROOF_ProcPcktHist"))) {
          Warning("Process", "could not attach to histogram 'PROOF_ProcPcktHist'");
       } else {
-         Warning("Process", "attached to histogram 'PROOF_ProcPcktHist' to record"
-                              " packets being processed");
+         PDB(kLoop,1)
+            Info("Process", "attached to histogram 'PROOF_ProcPcktHist' to record"
+                            " packets being processed");
       }
    }
 
