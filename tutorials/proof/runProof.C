@@ -261,6 +261,11 @@
 //      Generate the perfomance tree and save it to file 'perftreefile.root',
 //      e.g. root[] runProof("eventproc(perftree=perftreefile.root)")
 //
+//   10. feedback=name1[,name2,name3,...]|off
+//
+//      Enable feedback for the specified names or switch it off; by default it is
+//      enabled for the 'stats' histograms (events,packest, packets-being processed).
+//
 //   In all cases, to run on a remote PROOF cluster, the master URL must
 //   be passed as second argument; e.g.
 //
@@ -297,7 +302,6 @@
 
 #include "TCanvas.h"
 #include "TChain.h"
-#include "TDrawFeedback.h"
 #include "TDSet.h"
 #include "TEnv.h"
 #include "TEntryList.h"
@@ -315,8 +319,6 @@
 #include "getProof.C"
 void plotNtuple(TProof *p, const char *ds, const char *ntptitle);
 void SavePerfTree(TProof *proof, const char *fn);
-
-TDrawFeedback *fb = 0;
 
 // Variable used to locate the Pythia8 directory for the Pythia8 example
 const char *pythia8dir = 0;
@@ -459,16 +461,6 @@ void runProof(const char *what = "simple",
    TString tutorials(Form("%s/tutorials", rootsys.Data()));
    delete[] rootbin;
 
-   // Create feedback displayer
-   if (!fb) {
-      new TCanvas("PROOF_EventsHist_canvas", "Events per Worker", 100, 600, 600, 400);
-      fb = new TDrawFeedback(proof);
-   }
-   if (!proof->GetFeedbackList() || !proof->GetFeedbackList()->FindObject("PROOF_EventsHist")) {
-      // Number of events per worker
-      proof->AddFeedback("PROOF_EventsHist");
-   }
-
    // Parse 'what'; it is in the form 'analysis(arg1,arg2,...)'
    TString args(what);
    args.ReplaceAll("("," "); 
@@ -492,7 +484,8 @@ void runProof(const char *what = "simple",
    // Parse out number of events and  'asyn' option, used almost by every test
    TString aNevt, aFirst, aNwrk, opt, sel, punzip("off"), aCache, aOutFile,
            aH1Src("http://root.cern.ch/files/h1"),
-           aDebug, aDebugEnum, aRateEst, aPerfTree("perftree.root");
+           aDebug, aDebugEnum, aRateEst, aPerfTree("perftree.root"),
+           aFeedback("fb=stats");
    Long64_t suf = 1;
    Int_t aSubMg = -1;
    Bool_t fillList = kFALSE, useList = kFALSE, makePerfTree = kFALSE;
@@ -602,6 +595,21 @@ void runProof(const char *what = "simple",
             if (!(tok.IsNull())) aOutFile = tok;
          }
          Printf("runProof: %s: output file: '%s'", act.Data(), aOutFile.Data());
+      }
+      // Feedback
+      if (tok.BeginsWith("feedback=")) {
+         tok.ReplaceAll("feedback=","");
+         if (tok == "off" || tok == "OFF" || tok == "0") {
+            aFeedback = "";
+         } else if (!(tok.IsNull())) {
+            if (tok.BeginsWith("+")) {
+               tok[0] = ',';
+               aFeedback += tok;
+            } else {
+               aFeedback.Form("fb=%s", tok.Data());
+            }
+         }
+         Printf("runProof: %s: feedback: '%s'", act.Data(), aFeedback.Data());
       }
    }
    Long64_t nevt = (aNevt.IsNull()) ? -1 : aNevt.Atoi();
@@ -721,7 +729,8 @@ void runProof(const char *what = "simple",
       sel.Form("%s/proof/ProofSimple.C%s", tutorials.Data(), aMode.Data());
       //
       // Run it for nevt times
-      proof->Process(sel.Data(), nevt, opt);
+      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      proof->Process(sel.Data(), nevt, xopt);
 
    } else if (act == "h1") {
       // This is the famous 'h1' example analysis run on Proof reading the
@@ -763,7 +772,8 @@ void runProof(const char *what = "simple",
       sel.Form("%s/tree/h1analysis.C%s", tutorials.Data(), aMode.Data());
       // Run it 
       Printf("\nrunProof: running \"h1\"\n");
-      chain->Process(sel.Data(),opt,nevt,first);
+      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      chain->Process(sel.Data(),xopt,nevt,first);
       // Cleanup the input list
       gProof->ClearInputData("elist");
       gProof->ClearInputData("elist.root");
@@ -815,7 +825,8 @@ void runProof(const char *what = "simple",
       // The selector string
       sel.Form("%s/proof/ProofPythia.C%s", tutorials.Data(), aMode.Data());
       // Run it for nevt times
-      proof->Process(sel.Data(), nevt);
+      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      proof->Process(sel.Data(), nevt, xopt);
 
   } else if (act == "event") {
 
@@ -841,7 +852,8 @@ void runProof(const char *what = "simple",
       // The selector string
       sel.Form("%s/proof/ProofEvent.C%s", tutorials.Data(), aMode.Data());
       // Run it for nevt times
-      proof->Process(sel.Data(), nevt);
+      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      proof->Process(sel.Data(), nevt, xopt);
 
   } else if (act == "eventproc") {
 
@@ -969,7 +981,8 @@ void runProof(const char *what = "simple",
       sel.Form("%s/proof/ProofEventProc.C%s", tutorials.Data(), aMode.Data());
       // Run it
       Printf("\nrunProof: running \"eventproc\"\n");
-      c->Process(sel.Data(), opt, nevt, first);
+      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      c->Process(sel.Data(), xopt, nevt, first);
 
    } else if (act == "ntuple") {
 
@@ -1042,7 +1055,8 @@ void runProof(const char *what = "simple",
       sel.Form("%s/proof/ProofNtuple.C%s", tutorials.Data(), aMode.Data());
 
       // Run it for nevt times
-      proof->Process(sel.Data(), nevt, opt);
+      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      proof->Process(sel.Data(), nevt, xopt);
 
       // Reset input variables
       if (usentprndm) {
@@ -1077,7 +1091,8 @@ void runProof(const char *what = "simple",
       sel.Form("%s/proof/ProofNtuple.C%s", tutorials.Data(), aMode.Data());
       //
       // Run it for nevt times
-      proof->Process(sel.Data(), nevt, opt);
+      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      proof->Process(sel.Data(), nevt, xopt);
 
       // The TFileCollection must be in the output
       if (proof->GetOutputList()->FindObject("testNtuple")) {
@@ -1183,7 +1198,8 @@ void runProof(const char *what = "simple",
       // Process with friends
       dset->AddFriend(dsetf, "friend");
       sel.Form("%s/proof/ProofFriends.C%s", tutorials.Data(), aMode.Data());
-      dset->Process(sel);
+      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      dset->Process(sel, xopt);
       // Clear the files created by this run
       proof->ClearData(TProof::kUnregistered | TProof::kForceClear);
 
@@ -1254,7 +1270,8 @@ void runProof(const char *what = "simple",
       sel.Form("%s/proof/ProofSimpleFile.C%s", tutorials.Data(), aMode.Data());
       //
       // Run it for nevt times
-      proof->Process(sel.Data(), nevt, opt);
+      TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
+      proof->Process(sel.Data(), nevt, xopt);
 
    } else {
       // Do not know what to run
