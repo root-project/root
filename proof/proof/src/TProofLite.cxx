@@ -998,7 +998,6 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    TString opt(option), optfb;
    // Enable feedback, if required
    if (opt.Contains("fb=") || opt.Contains("feedback=")) SetFeedback(opt, optfb, 0);
-   Info("Process", "opt: %s, optfc: %s", opt.Data(), optfb.Data());
 
    // Resolve query mode
    fSync = (GetQueryMode(opt) == kSync);
