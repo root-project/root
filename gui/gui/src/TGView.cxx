@@ -42,8 +42,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-
 #include "TGView.h"
 #include "TGScrollBar.h"
 #include "TGResourcePool.h"
