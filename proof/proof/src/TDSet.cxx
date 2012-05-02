@@ -453,12 +453,14 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree, Bool_t openfile)
    // Record end-point Url and mark as looked-up; be careful to change
    // nothing in the file name, otherwise some cross-checks may fail
    TUrl *eu = (TUrl *) file->GetEndpointUrl();
-   eu->SetOptions(TUrl(fname).GetOptions());
-   eu->SetAnchor(TUrl(fname).GetAnchor());
-   if (strlen(eu->GetProtocol()) > 0 && strcmp(eu->GetProtocol(), "file"))
-      fName = eu->GetUrl();
-   else
-      fName = eu->GetFileAndOptions();
+   if (eu) {
+      eu->SetOptions(TUrl(fname).GetOptions());
+      eu->SetAnchor(TUrl(fname).GetAnchor());
+      if (strlen(eu->GetProtocol()) > 0 && strcmp(eu->GetProtocol(), "file"))
+         fName = eu->GetUrl();
+      else
+         fName = eu->GetFileAndOptions();
+   }
    SetBit(kHasBeenLookedUp);
 
    TDirectory *dirsave = gDirectory;
@@ -975,7 +977,8 @@ void TDSet::Print(const Option_t *opt) const
 {
    // Print TDSet basic or full data. When option="a" print full data.
 
-   Printf("OBJ: %s\ttype %s\t%s\tin %s\telements %d", IsA()->GetName(), GetName(),
+   const char *clnm = (IsA()) ? IsA()->GetName() : "TDSet";
+   Printf("OBJ: %s\ttype %s\t%s\tin %s\telements %d", clnm, GetName(),
           fObjName.Data(), GetTitle(), GetListOfElements()->GetSize());
 
    if (opt && opt[0] == 'a') {

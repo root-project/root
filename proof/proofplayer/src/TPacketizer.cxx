@@ -873,7 +873,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves, Long64_t maxent, Boo
 
       // Check if there is anything to wait for
       if (mon.GetActive() == 0) {
-         if (byfile && maxent > 0) {
+         if (byfile && maxent > 0 && totent > 0) {
             // How many files do we still need ?
             Long64_t nrestf = (maxent - totent) * nopenf / totent ;
             if (nrestf <= 0 && maxent > totent) nrestf = 1;

@@ -140,7 +140,13 @@ Int_t pingXrootdAt()
    initHS.fourth = host2net((int)4);
    initHS.fifth  = host2net((int)2012);
    int len = sizeof(initHS);
-   s.SendRaw(&initHS, len);
+   int writeCount = s.SendRaw(&initHS, len);
+   if (writeCount != len) {
+      if (gDebug > 0)
+         Printf("pingXrootdAt: 1st: wrong number of bytes sent: %d (expected: %d)",
+                writeCount, len);
+      return 1;
+   }
    // Read first server response
    int type;
    len = sizeof(type);

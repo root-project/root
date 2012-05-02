@@ -1663,15 +1663,19 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
       if (file->GetSize() > 0) fileinfo->SetSize(file->GetSize());
       fileinfo->SetBit(TFileInfo::kStaged);
 
-      // Add url of the disk server in front of the list
-      TUrl eurl(*(file->GetEndpointUrl()));
-      eurl.SetOptions(url->GetOptions());
-      eurl.SetAnchor(url->GetAnchor());
-      fileinfo->AddUrl(eurl.GetUrl(), kTRUE);
-
-      if (gDebug > 0) ::Info("TDataSetManager::ScanFile", "added URL %s", eurl.GetUrl());
-
       fileinfo->SetUUID(file->GetUUID().AsString());
+      
+      // Add url of the disk server in front of the list
+      if (file->GetEndpointUrl()) {
+         TUrl eurl(*(file->GetEndpointUrl()));
+         eurl.SetOptions(url->GetOptions());
+         eurl.SetAnchor(url->GetAnchor());
+         fileinfo->AddUrl(eurl.GetUrl(), kTRUE);
+
+         if (gDebug > 0) ::Info("TDataSetManager::ScanFile", "added URL %s", eurl.GetUrl());
+      } else {
+         ::Warning("TDataSetManager::ScanFile", "end-point URL undefined for file %s", file->GetName());
+      }
 
       file->Close();
       delete file;
@@ -1814,7 +1818,8 @@ TList *TDataSetManager::ParseDataSetSrvMaps(const TString &srvmaps)
       sf = ""; st = "";
       if (srvmap.Contains("|")) {
          from1 = 0;
-         if (srvmap.Tokenize(sf, from1, "|")) srvmap.Tokenize(st, from1, "|");
+         if (srvmap.Tokenize(sf, from1, "|"))
+            if (srvmap.Tokenize(st, from1, "|")) { }
       } else {
          st = srvmap;
       }

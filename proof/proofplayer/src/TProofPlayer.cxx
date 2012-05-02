@@ -746,6 +746,7 @@ Int_t TProofPlayer::AssertSelector(const char *selector_file)
       Info("AssertSelector", "Processing via filename");
    } else if (!fSelector) {
       Error("AssertSelector", "no TSelector object define : cannot continue!");
+      return -1;
    } else {
       Info("AssertSelector", "Processing via TSelector object");
    }
@@ -788,7 +789,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    Int_t version = -1;
    TString wmsg;
    TRY {
-      if (AssertSelector(selector_file) != 0 ) {
+      if (AssertSelector(selector_file) != 0 || !fSelector) {
          Error("Process", "cannot assert the selector object");
          return -1;
       }
@@ -2366,13 +2367,17 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          // Some input parameters may be needed in Terminate
          fSelector->SetInputList(fInput);
 
-         TIter next(fOutput);
          TList *output = fSelector->GetOutputList();
-         while(TObject* obj = next()) {
-            if (fProof->IsParallel() || DrawCanvas(obj) == 1)
-               // Either parallel or not a canvas or not able to display it:
-               // just add to the list
-               output->Add(obj);
+         if (output) {
+            TIter next(fOutput);
+            while(TObject* obj = next()) {
+               if (fProof->IsParallel() || DrawCanvas(obj) == 1)
+                  // Either parallel or not a canvas or not able to display it:
+                  // just add to the list
+                  output->Add(obj);
+            }
+         } else {
+            Warning("Finalize", "undefined output list in the selector! Protocol error?");
          }
 
          SetSelectorDataMembersFromOutputList();

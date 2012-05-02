@@ -134,12 +134,13 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
    }
 
    // Init ntple to store active workers vs processing time
-   TString saveProgressPerf("no");
-   TProof::GetParameter(input, "PROOF_SaveProgressPerf", saveProgressPerf);
    fProgressPerf = 0;
-   if (fProgress && saveProgressPerf == "yes")
-      fProgressPerf = new TNtuple("PROOF_ProgressPerfNtuple",
-                                  "{Active workers, evt rate, MB read} vs processing time", "tm:aw:er:mb:ns");
+   TString saveProgressPerf("no");
+   if (TProof::GetParameter(input, "PROOF_SaveProgressPerf", saveProgressPerf) == 0) {
+      if (fProgress && saveProgressPerf == "yes")
+         fProgressPerf = new TNtuple("PROOF_ProgressPerfNtuple",
+                                     "{Active workers, evt rate, MB read} vs processing time", "tm:aw:er:mb:ns");
+   }
    fProcTimeLast = -1.;
    fActWrksLast = -1;
    fEvtRateLast = -1.;

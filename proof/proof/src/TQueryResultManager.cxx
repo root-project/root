@@ -198,19 +198,24 @@ void TQueryResultManager::ScanPreviousQueries(const char *dir)
                   pqr = (TProofQueryResult *) f->Get(k->GetName());
                   if (pqr) {
                      TQueryResult *qr = pqr->CloneInfo();
-                     if (!fPreviousQueries)
-                        fPreviousQueries = new TList;
-                     if (qr->GetStatus() > TQueryResult::kRunning) {
-                        fPreviousQueries->Add(qr);
-                     } else {
-                        // (For the time being) remove a non completed
-                        // query if not owned by anybody
-                        TProofLockPath *lck = 0;
-                        if (LockSession(qr->GetTitle(), &lck) == 0) {
-                           RemoveQuery(qr);
-                           // Unlock and remove the lock file
-                           SafeDelete(lck);
+                     if (qr) {
+                        if (!fPreviousQueries)
+                           fPreviousQueries = new TList;
+                        if (qr->GetStatus() > TQueryResult::kRunning) {
+                           fPreviousQueries->Add(qr);
+                        } else {
+                           // (For the time being) remove a non completed
+                           // query if not owned by anybody
+                           TProofLockPath *lck = 0;
+                           if (LockSession(qr->GetTitle(), &lck) == 0) {
+                              RemoveQuery(qr);
+                              // Unlock and remove the lock file
+                              SafeDelete(lck);
+                           }
                         }
+                     } else {
+                        Warning("ScanPreviousQueries", "unable to clone TProofQueryResult '%s:%s'",
+                                                       pqr->GetName(), pqr->GetTitle());
                      }
                   }
                }

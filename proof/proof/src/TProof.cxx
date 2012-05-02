@@ -5156,7 +5156,7 @@ Int_t TProof::Retrieve(const char *ref, const char *path)
          if (qr) {
 
             TFile *farc = TFile::Open(path,"UPDATE");
-            if (!(farc->IsOpen())) {
+            if (!farc || (farc && !(farc->IsOpen()))) {
                Info("Retrieve", "archive file cannot be open (%s)", path);
                return 0;
             }
@@ -6401,7 +6401,10 @@ void TProof::ClearData(UInt_t what, const char *dsname)
          if (line.IsNull()) continue;
          while (line.EndsWith("\n")) { line.Strip(TString::kTrailing, '\n'); }
          from = 0;
-         if (line.Tokenize(host, from, "| ")) line.Tokenize(file, from, "| ");
+         host = "";
+         if (!line.Tokenize(host, from, "| ")) continue;
+         file = "";
+         if (!line.Tokenize(file, from, "| ")) continue;
          if (!host.IsNull() && !file.IsNull()) {
             TList *fl = (TList *) afmap->GetValue(host.Data());
             if (!fl) {

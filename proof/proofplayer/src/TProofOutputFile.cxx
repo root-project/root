@@ -273,8 +273,14 @@ Int_t TProofOutputFile::AdoptFile(TFile *f)
    // Adopt a file already open.
    // Return 0 if OK, -1 in case of failure
 
-   if (!f || f->IsZombie())
+   if (!f || (f && f->IsZombie())) {
+      Error("AdoptFile", "file is undefined or zombie!");
       return -1;
+   }
+   if (!f->GetEndpointUrl()) {
+      Error("AdoptFile", "file end-point url is undefined!");
+      return -1;
+   }
 
    // Set the name and dir
    TUrl u(*(f->GetEndpointUrl()));

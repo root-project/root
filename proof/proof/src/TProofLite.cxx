@@ -1731,9 +1731,13 @@ TList *TProofLite::GetListOfQueries(Option_t *opt)
          TQueryResult *pqm = 0;
          while ((pqr = (TProofQueryResult *)nxq())) {
             ntot++;
-            pqm = pqr->CloneInfo();
-            pqm->fSeqNum = ntot;
-            ql->Add(pqm);
+            if ((pqm = pqr->CloneInfo())) {
+               pqm->fSeqNum = ntot;
+               ql->Add(pqm);
+            } else {
+               Warning("GetListOfQueries", "unable to clone TProofQueryResult '%s:%s'",
+                       pqr->GetName(), pqr->GetTitle());
+            }
          }
       }
       // Number of draw queries

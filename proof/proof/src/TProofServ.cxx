@@ -2127,14 +2127,19 @@ Bool_t TProofServ::AcceptResults(Int_t connections, TVirtualProofPlayer *mergerP
       if (s == fMergingSocket) {
          // New incoming connection
          TSocket *sw = fMergingSocket->Accept();
-         fMergingMonitor->Add(sw);
+         if (sw && sw != (TSocket *)(-1)) {
+            fMergingMonitor->Add(sw);
 
-         PDB(kSubmerger, 2)
-            Info("AcceptResults", "connection from a worker accepted on merger %s ",
-                                  fOrdinal.Data());
-         // All assigned workers are connected
-         if (++numworkers >= connections)
-            fMergingMonitor->Remove(fMergingSocket);
+            PDB(kSubmerger, 2)
+               Info("AcceptResults", "connection from a worker accepted on merger %s ",
+                                    fOrdinal.Data());
+            // All assigned workers are connected
+            if (++numworkers >= connections)
+               fMergingMonitor->Remove(fMergingSocket);
+         } else {
+            PDB(kSubmerger, 1)
+               Info("AcceptResults", "spurious signal found of merging socket");
+         }
       } else {
          if (s->Recv(mess) < 0) {
             Error("AcceptResults", "problems receiving message");
@@ -4479,11 +4484,11 @@ void TProofServ::ProcessNext(TString *slb)
    TList rin;
    TDSet *ds = new TDSet(dset->GetName(), dset->GetObjName());
    rin.Add(ds);
-   pqr->SetInputList(&rin, kTRUE);
+   if (pqr) pqr->SetInputList(&rin, kTRUE);
    if (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted && fPlayer->GetOutputList()) {
       PDB(kGlobal, 2)
          Info("ProcessNext", "sending results");
-      TQueryResult *xpq = (fProtocol > 10) ? pqr : pq;
+      TQueryResult *xpq = (pqr && fProtocol > 10) ? pqr : pq;
       if (SendResults(fSocket, fPlayer->GetOutputList(), xpq) != 0)
          Warning("ProcessNext", "problems sending output list");
       if (slb) slb->Form("%d %lld %lld %.3f", fPlayer->GetExitStatus(), pq->GetEntries(),
@@ -4498,11 +4503,11 @@ void TProofServ::ProcessNext(TString *slb)
 
    // Remove aborted queries from the list
    if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
-      delete pqr;
+      if (pqr) SafeDelete(pqr);
       if (fQMgr) fQMgr->RemoveQuery(pq);
    } else {
       // Keep in memory only light infor about a query
-      if (!(pq->IsDraw())) {
+      if (!(pq->IsDraw()) && pqr) {
          if (fQMgr && fQMgr->Queries()) {
             fQMgr->Queries()->Add(pqr);
             // Remove from the fQueries list
@@ -4667,9 +4672,13 @@ void TProofServ::HandleQueryList(TMessage *mess)
          TQueryResult *pqm = 0;
          while ((pqr = (TProofQueryResult *)nxq())) {
             ntot++;
-            pqm = pqr->CloneInfo();
-            pqm->fSeqNum = ntot;
-            ql->Add(pqm);
+            if ((pqm = pqr->CloneInfo())) {
+               pqm->fSeqNum = ntot;
+               ql->Add(pqm);
+            } else {
+               Warning("HandleQueryList", "unable to clone TProofQueryResult '%s:%s'",
+                       pqr->GetName(), pqr->GetTitle());
+            }
          }
       }
       // Number of draw queries
@@ -5045,7 +5054,10 @@ void TProofServ::HandleCheckFile(TMessage *mess, TString *slb)
       } else if (IsMaster()) {
          // forward to workers
          fPackageLock->Unlock();
-         fProof->UploadPackage(fPackageDir + "/" + filenam, (TProof::EUploadPackageOpt)opt);
+         if (fProof->UploadPackage(fPackageDir + "/" + filenam,
+                                  (TProof::EUploadPackageOpt)opt) != 0)
+            Info("HandleCheckFile",
+                  "problems uploading package %s", filenam.Data());
       } else {
          // Unlock in all cases
          fPackageLock->Unlock();
@@ -5071,7 +5083,7 @@ void TProofServ::HandleCheckFile(TMessage *mess, TString *slb)
          if (IsMaster())
             if (fProof->UploadPackage(fPackageDir + "/" + filenam) != 0)
                Info("HandleCheckFile",
-                    "problems with uploading package %s", filenam.Data());
+                    "problems uploading package %s", filenam.Data());
                
       } else {
          reply << (Int_t)0;
@@ -6902,8 +6914,11 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                         if ((mergerPlayer->AddOutputObject(o) != 1)) {
                            // Remove the object if it has not been merged: it is owned
                            // now by the merger player (in its output list)
-                           PDB(kSubmerger, 2) Info("HandleSocketInput", "removing merged object (%p)", o);
-                           fPlayer->GetOutputList()->Remove(o);
+                           if (fPlayer->GetOutputList()) {
+                              PDB(kSubmerger, 2)
+                                 Info("HandleSocketInput", "removing merged object (%p)", o);
+                              fPlayer->GetOutputList()->Remove(o);
+                           }
                         }
                      }
                      PDB(kSubmerger, 2) Info("HandleSubmerger","kBeMerger: own outputs added");

@@ -386,7 +386,10 @@ void TProofDraw::SetError(const char *sub, const char *mesg)
    }
 
    TString m;
-   m.Form("%s::%s: %s", IsA()->GetName(), sub, mesg);
+   if (IsA())
+      m.Form("%s::%s: %s", IsA()->GetName(), sub, mesg);
+   else
+      m.Form("TProofDraw::%s: %s", sub, mesg);
    fStatus->Add(m);
 }
 

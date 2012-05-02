@@ -52,6 +52,8 @@ private:
    Int_t     fPort;      // Port number
    Int_t     fPerfIndex; // Performance index
 
+   void operator=(const TProofNodeInfo &);    // idem
+
 public:
    TProofNodeInfo();
    TProofNodeInfo(const char *str);

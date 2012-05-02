@@ -1505,7 +1505,7 @@ Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr, Long64_t cach
          Float_t packetTime = ((fTotalEntries - GetEntriesProcessed())/avgProcRate)/fPacketAsAFraction;
 
          // Bytes-to-Event conversion
-         Float_t bevt = GetBytesRead() / GetEntriesProcessed();
+         Float_t bevt = (GetEntriesProcessed() > 0) ? GetBytesRead() / GetEntriesProcessed() : -1.;
 
          // Make sure it is not smaller then the cache, if the info is available and the size
          // synchronization is required. But apply the cache-packet size synchronization only if there
@@ -1531,7 +1531,7 @@ Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr, Long64_t cach
                }
             }
          }
-         if (cachesz > 0 && cpsync) {
+         if (bevt > 0. && cachesz > 0 && cpsync) {
             if ((Long64_t)(rate * packetTime * bevt) < cachesz)
                packetTime = cachesz / bevt / rate;
          }
@@ -1547,7 +1547,7 @@ Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr, Long64_t cach
          PDB(kPacketizer,2)
             Info("CalculatePacketSize","%s: avgr: %f, rate: %f, left: %lld, pacT: %f, sz: %f (csz: %f), num: %lld",
                  slstat->GetOrdinal(), avgProcRate, rate, fTotalEntries - GetEntriesProcessed(),
-                 packetTime, num*bevt/1048576., cachesz/1048576., num);
+                 packetTime, ((bevt > 0) ? num*bevt/1048576. : -1.), cachesz/1048576., num);
 
       } else {
          // First packet for this worker in this query

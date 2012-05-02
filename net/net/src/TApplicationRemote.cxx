@@ -180,7 +180,11 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
    mon->Select();
 
    // Get the connection
-   fSocket = ss->Accept();
+   if (!(fSocket = ss->Accept())) {
+      Error("TApplicationRemote", "failed to open connection");
+      SetBit(kInvalidObject);
+      return;
+   }
 
    // Cleanup the monitor and the server socket
    mon->DeActivateAll();
