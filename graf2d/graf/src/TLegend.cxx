@@ -160,7 +160,7 @@ End_Macro
 
 
 //______________________________________________________________________________
-TLegend::TLegend(): TPave(), TAttText(12,0,1,gStyle->GetTextFont(),0)
+TLegend::TLegend(): TPave(), TAttText(12,0,1,gStyle->GetLegendFont(),0)
 {
    /* Begin_Html
    Default constructor.
@@ -174,7 +174,7 @@ TLegend::TLegend(): TPave(), TAttText(12,0,1,gStyle->GetTextFont(),0)
 //______________________________________________________________________________
 TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2,
                   const char *header, Option_t *option)
-        :TPave(x1,y1,x2,y2,4,option), TAttText(12,0,1,gStyle->GetTextFont(),0)
+        :TPave(x1,y1,x2,y2,4,option), TAttText(12,0,1,gStyle->GetLegendFont(),0)
 {
    /* Begin_Html
    Normal Contructor.
@@ -194,7 +194,7 @@ TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2,
       headerEntry->SetTextAlign(0);
       headerEntry->SetTextAngle(0);
       headerEntry->SetTextColor(0);
-      headerEntry->SetTextFont(62); // default font is 62 for the header
+      headerEntry->SetTextFont(gStyle->GetLegendFont());
       headerEntry->SetTextSize(0);
       fPrimitives->AddFirst(headerEntry);
    }
