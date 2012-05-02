@@ -186,7 +186,7 @@ void TStatus::Streamer(TBuffer &R__b)
             UInt_t SS__v = cl->GetClassVersion();
             R__b.ReadClassBuffer(cl, &msgs, SS__v, SS__s, SS__c);
          } else {
-            Error("Streamer", "no infor found for 'set<string>' - skip");
+            Error("Streamer", "no info found for 'set<string>' - skip");
             return;
          }
          std::set<std::string>::const_iterator it;
