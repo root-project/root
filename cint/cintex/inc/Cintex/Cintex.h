@@ -34,6 +34,9 @@ namespace ROOT {
     typedef TClass* (*ROOTCreator_t)( ROOT::Reflex::Type, ROOT::TGenericClassInfo* );
  
     class Cintex {
+    private:
+       Cintex(const Cintex&); // not implemented
+       Cintex& operator=(const Cintex&); // not implemented
     public:
       Cintex();
       ~Cintex();

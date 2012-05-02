@@ -13632,7 +13632,10 @@ void G__gen_extra_include() {
 
     tempfile = (char*) malloc(strlen(G__CPPLINK_H)+6);
     sprintf(tempfile,"%s.temp", G__CPPLINK_H);
-    rename(G__CPPLINK_H,tempfile);
+    if (rename(G__CPPLINK_H,tempfile) == -1) {
+       G__fprinterr(G__serr,"Error renaming %s to %s\n",
+                    G__CPPLINK_H, tempfile);
+    }
 
     fp = fopen(G__CPPLINK_H,"w");
     if(!fp) G__fileerror(G__CPPLINK_H);

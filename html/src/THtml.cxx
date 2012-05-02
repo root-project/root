@@ -665,30 +665,31 @@ void THtml::TFileSysDir::Recurse(TFileSysDB* db, const char* path)
       if (gSystem->AccessPathName(entryPath, kReadPermission))
          continue;
       FileStat_t buf;
-      gSystem->GetPathInfo(entryPath, buf);
-      if (R_ISDIR(buf.fMode)) {
-         // skip if we would nest too deeply,  and skip soft links:
-         if (GetLevel() > db->GetMaxLevel()
+      if (!gSystem->GetPathInfo(entryPath, buf)) {
+         if (R_ISDIR(buf.fMode)) {
+            // skip if we would nest too deeply,  and skip soft links:
+            if (GetLevel() > db->GetMaxLevel()
 #ifndef R__WIN32
-             || db->GetMapIno().GetValue(buf.fIno)
+                || db->GetMapIno().GetValue(buf.fIno)
 #endif
-             ) continue;
-         TFileSysDir* subdir = new TFileSysDir(direntry, this);
-         fDirs.Add(subdir);
+                ) continue;
+            TFileSysDir* subdir = new TFileSysDir(direntry, this);
+            fDirs.Add(subdir);
 #ifndef R__WIN32
-         db->GetMapIno().Add(buf.fIno, (Long_t)subdir);
+            db->GetMapIno().Add(buf.fIno, (Long_t)subdir);
 #endif
-         subdir->Recurse(db, entryPath);
-      } else {
-         int delen = strlen(direntry);
-         // only .cxx and .h are taken
-         if (strcmp(direntry + delen - 4, ".cxx")
-             && strcmp(direntry + delen - 2, ".h"))
-            continue;
-         TFileSysEntry* entry = new TFileSysEntry(direntry, this);
-         db->GetEntries().Add(entry);
-         fFiles.Add(entry);
-      }
+            subdir->Recurse(db, entryPath);
+         } else {
+            int delen = strlen(direntry);
+            // only .cxx and .h are taken
+            if (strcmp(direntry + delen - 4, ".cxx")
+                && strcmp(direntry + delen - 2, ".h"))
+               continue;
+            TFileSysEntry* entry = new TFileSysEntry(direntry, this);
+            db->GetEntries().Add(entry);
+            fFiles.Add(entry);
+         }
+      } // if !gSystem->GetPathInfo()
    } // while dir entry
    gSystem->FreeDirectory(hDir);
 }
@@ -709,8 +710,7 @@ void THtml::TFileSysDB::Fill()
          continue;
       }
       FileStat_t buf;
-      gSystem->GetPathInfo(dir, buf);
-      if (R_ISDIR(buf.fMode)) {
+      if (!gSystem->GetPathInfo(dir, buf) && R_ISDIR(buf.fMode)) {
 #ifndef R__WIN32
          TFileSysRoot* prevroot = (TFileSysRoot*) (Long_t)GetMapIno().GetValue(buf.fIno);
          if (prevroot != 0) {

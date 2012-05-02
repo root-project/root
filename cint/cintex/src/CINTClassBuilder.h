@@ -28,6 +28,9 @@ namespace ROOT {
          typedef std::vector<std::pair<ROOT::Reflex::Base,int> > Bases;
       private:
          CINTClassBuilder(const ROOT::Reflex::Type& TypeNth);
+
+         CINTClassBuilder(const CINTClassBuilder&); // not implemented
+         CINTClassBuilder& operator=(const CINTClassBuilder&); // not implemented
       public:
          ~CINTClassBuilder();
          static CINTClassBuilder& Get(const ROOT::Reflex::Type& TypeNth);

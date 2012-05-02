@@ -34,6 +34,9 @@ typedef void (*sig_t)(int);
 #endif
 
 class TerminalConfigUnix {
+private:
+   TerminalConfigUnix(const TerminalConfigUnix&); // not implemented
+   TerminalConfigUnix& operator=(const TerminalConfigUnix&); // not implemented
 public:
   ~TerminalConfigUnix();
 

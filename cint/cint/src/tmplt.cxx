@@ -117,7 +117,9 @@ void G__IntList_free(G__IntList *body)
 {
   if(!body) return;
   if(body->prev) body->prev->next = (struct G__IntList*)NULL;
-  while(body->next) G__IntList_free(body->next);
+  if (body->next) {
+     G__IntList_free(body->next);
+  }
   free(body);
 }
 

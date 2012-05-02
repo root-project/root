@@ -617,7 +617,11 @@ Bool_t TDocOutput::CopyHtmlFile(const char *sourceName, const char *destName)
    if (gSystem->GetPathInfo(sourceFile, &id, &size, &flags, &sModtime)
       || gSystem->GetPathInfo(destFile, &id, &size, &flags, &dModtime)
       || sModtime > dModtime)
-      gSystem->CopyFile(sourceFile, destFile, kTRUE);
+      if (gSystem->CopyFile(sourceFile, destFile, kTRUE) < 0) {
+         Error("Copy", "Can't copy file '%s' to '%s'!",
+               sourceFile.Data(), destFile.Data());
+         return kFALSE;
+      }
 
    return kTRUE;
 }

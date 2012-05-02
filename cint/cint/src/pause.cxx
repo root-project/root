@@ -1682,7 +1682,8 @@ int G__process_cmd(char* line, char* prompt, int* more, int* err, G__value* rslt
                   goto multi_line_command;
                case -2:
                   fprintf(stderr, "!!!command input too long.\n");
-               case - 1:
+                  // intentional fall-through
+               case -1:
                default:
                   fprintf(stderr, "!!!Bad command input. Ignored!!!\n");
                   G__UnlockCriticalSection();

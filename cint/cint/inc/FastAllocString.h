@@ -86,7 +86,8 @@ public:
    G__FastAllocString& operator=(const G__FastAllocString& s) {
       // Copy s into *this.
       // Cannot rely on operator=(const char*) overload - compiler-generated one wins resolution!
-      return operator=(s.data());
+      operator=(s.data());
+      return *this;
    }
    G__FastAllocString& operator=(const char*);
    G__FastAllocString& operator+=(const char*);

@@ -33,6 +33,9 @@ using namespace textinput;
 namespace {
    // TTabCom adapter.
    class ROOTTabCompletion: public TabCompletion {
+   private:
+      ROOTTabCompletion(const ROOTTabCompletion&); // not implemented
+      ROOTTabCompletion& operator=(const ROOTTabCompletion&); // not implemented
    public:
       ROOTTabCompletion(): fLineBuf(new char[fgLineBufSize]) {}
       virtual ~ROOTTabCompletion() { delete []fLineBuf; }
