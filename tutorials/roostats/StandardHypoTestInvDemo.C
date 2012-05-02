@@ -605,7 +605,7 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
          RooAbsPdf * constrPdf = RooStats::MakeNuisancePdf(*sbModel,"nuisanceConstraintPdf_sbmodel");
          if (constrPdf) { 
             Warning("StandardHypoTestInvDemo","Model %s has nuisance parameters but no global observables associated",sbModel->GetName());
-            Warning("StandardHypoTestInvDemo","\tThe effect of the nuisance parameters will not be treated correctly ",sbModel->GetName());
+            Warning("StandardHypoTestInvDemo","\tThe effect of the nuisance parameters will not be treated correctly ");
          }
       }
    }
@@ -746,7 +746,17 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
   
    ToyMCSampler *toymcs = (ToyMCSampler*)hc->GetTestStatSampler();
    if (toymcs && (type == 0 || type == 1) ) { 
-      if (useNumberCounting) toymcs->SetNEventsPerToy(1);
+      // for not extended pdf
+      if (!useNumberCounting)  { 
+         int nEvents = data->numEntries();
+         Info("StandardHypoTestInvDemo","Pdf is not extended: number of events to generate taken  from observed data set is %d",nEvents);
+         toymcs->SetNEventsPerToy(nEvents);
+      }
+      else {
+         Info("StandardHypoTestInvDemo","using a number counting pdf");
+         toymcs->SetNEventsPerToy(1);
+      }
+
       toymcs->SetTestStatistic(testStat);
     
       if (data->isWeighted() && !mGenerateBinned) { 
