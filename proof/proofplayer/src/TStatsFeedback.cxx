@@ -95,23 +95,26 @@ void TStatsFeedback::Feedback(TList *objs)
       Warning("Feedback", "none of the requested histograms has been found!");
       return;
    }
-   
+
+   // Number of histograms
+   Int_t nh = 3;
+   if (!hass) nh = 2;
    // Create or attach to canvas
    TString cvnm = TString::Format("Stats: %s", fProof->GetSessionTag());
    TVirtualPad *cv = 0;
    if (gROOT->GetListOfCanvases())
       cv = (TVirtualPad *) canvases->FindObject(cvnm.Data());
+   if (cv && nh == 3 && !cv->GetPad(3)) SafeDelete(cv);
    if (!cv) {
-      TString cvcmd = TString::Format("new TCanvas(\"%s\", \"Feedback Stats\",10,300,600,400)",
-                                      cvnm.Data());
+      Int_t h = (nh == 3) ? 600 : 400;
+      TString cvcmd = TString::Format("new TCanvas(\"%s\", \"Feedback Stats\",10,300,600,%d)",
+                                      cvnm.Data(), h);
       if (!(cv = (TVirtualPad *) gROOT->ProcessLine(cvcmd))) {
          Warning("Feedback", "could not create canvas!");
          return;
       }
       PDB(kFeedback,2) Info("Feedback", "created canvas %s", cvnm.Data());
       // Create pads
-      Int_t nh = 3;
-      if (!hass) nh = 2;
       cv->Divide(1, nh);
    } else {
       cv->cd();
@@ -119,21 +122,25 @@ void TStatsFeedback::Feedback(TList *objs)
    }
    TVirtualPad *pd1 = (TVirtualPad *) cv->GetPad(1);
    TVirtualPad *pd2 = (TVirtualPad *) cv->GetPad(2);
-   TVirtualPad *pd3 = (TVirtualPad *) cv->GetPad(3);
+   TVirtualPad *pd3 = (nh == 3) ? (TVirtualPad *) cv->GetPad(3) : 0;
 
    UInt_t optstat = gStyle->GetOptStat();
    gStyle->SetOptStat(11);
    // Plot
-   pd1->cd();
    if (hevt) {
+      if (pd1) pd1->cd();
+      hevt->SetFillColor(kGreen);
       hevt->DrawCopy();
    }
-   pd2->cd();
    if (hpck) {
+      if (pd2) pd2->cd();
+      hpck->SetFillColor(kAzure-5);
       hpck->DrawCopy();
    }
-   pd3->cd();
    if (hass) {
+      if (pd3) pd3->cd();
+      hass->SetFillColor(kGray);
+      hass->SetMaximum(2);
       hass->DrawCopy();
    }
 
