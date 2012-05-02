@@ -89,3 +89,14 @@
       graphics window in interactive mode is kept for OpenGL canvases.
    </li>
 </ul>
+<h4>New graphical back-end for MacOSX</h4>
+<p align="justify">
+TGCocoa/TGQuartz classes are the implementation of TVirtualX based on Cocoa and Quartz 2D.
+They let to use ROOT's GUI and graphics on MacOS X without installing X11.app and also give an access to Apple's native
+graphics and GUI frameworks. Window management, event loop, event dispatching, etc. are implemented on top of <a href="http://en.wikipedia.org/wiki/Cocoa_(API)">Cocoa</a>.
+Graphics (GUI rendering and non-GUI) is done by <a href="http://en.wikipedia.org/wiki/Quartz_2D">Quartz 2D (Core Grapchis)</a>.
+An example of a TCanvas with a THStack object, transparency, anti-aliasing, gradient fill, shadows:
+</p>
+<img alt="Transparency and gradients" width="750" height="484" title="Transparency and gradients" src="quartz2d.gif"/>
+<br />ROOT must be configured with <strong>--enable-cocoa</strong> parameter to use Cocoa back-end instead of X11 version.
+<strong>Please note</strong>, this is still a work in progress.
