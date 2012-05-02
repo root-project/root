@@ -300,7 +300,7 @@ void TMacOSXSystem::WaitEvents(Long_t nextto)
 
    NSDate *untilDate = nil;
    if (nextto >= 0)//0 also means non-blocking call.
-      untilDate = [NSDate dateWithTimeIntervalSinceNow : nextto / 100000.];
+      untilDate = [NSDate dateWithTimeIntervalSinceNow : nextto / 1000.];
    else
       untilDate = [NSDate distantFuture];
 
