@@ -572,7 +572,7 @@ $(STRESSHEPIX): $(STRESSHEPIXO) $(STRESSGEOMETRY) $(STRESSFIT) $(STRESSL) \
 		@echo "$@ done"
 
 $(STRESSROOFITO): stressRooFit_tests.cxx
-$(STRESSROOSTATSO): stressRooStats_tests.cxx
+$(STRESSROOSTATSO): stressRooStats_tests.cxx stressRooStats_models.cxx
 
 ifeq ($(shell $(RC) --has-mathmore),yes)
 ifeq ($(PLATFORM),win32)
