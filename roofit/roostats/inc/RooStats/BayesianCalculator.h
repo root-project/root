@@ -48,7 +48,7 @@ namespace RooStats {
       BayesianCalculator( RooAbsData& data,
                           RooAbsPdf& pdf,
                           const RooArgSet& POI,
-                          RooAbsPdf& priorPOI,
+                          RooAbsPdf& priorPdf,
                           const RooArgSet* nuisanceParameters = 0 );
 
       BayesianCalculator( RooAbsData& data,
@@ -78,6 +78,15 @@ namespace RooStats {
 
       // set the model via the ModelConfig
       virtual void SetModel( const ModelConfig& model ); 
+
+      // specify the parameters of interest in the interval
+      virtual void SetParameters(const RooArgSet& set) { fPOI.removeAll(); fPOI.add(set); }
+
+      // specify the nuisance parameters (eg. the rest of the parameters)
+      virtual void SetNuisanceParameters(const RooArgSet& set) {fNuisanceParameters.removeAll(); fNuisanceParameters.add(set);}
+
+      // Set only the Prior Pdf 
+      virtual void SetPriorPdf(RooAbsPdf& pdf) { fPriorPdf = &pdf; }
 
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize( Double_t size ) {
@@ -148,7 +157,7 @@ namespace RooStats {
       RooAbsData* fData;                          // data set 
       RooAbsPdf* fPdf;                           // model pdf  (could contain the nuisance pdf as constraint term)
       RooArgSet fPOI;                            // POI
-      RooAbsPdf* fPriorPOI;                      // prior pdf for POI
+      RooAbsPdf* fPriorPdf;                      // prior pdf (typically for the POI)
       RooAbsPdf* fNuisancePdf;                   // nuisance pdf (needed when using nuisance sampling technique)
       RooArgSet fNuisanceParameters;          
 
