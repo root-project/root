@@ -30,7 +30,7 @@
 #include <deque>
 
 #include <iostream>
-using namespace std ;
+
 #include "TClass.h"
 
 class TTree ;

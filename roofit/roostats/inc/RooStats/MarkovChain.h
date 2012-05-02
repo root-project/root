@@ -36,7 +36,6 @@
 //#include "RooMsgService.h"
 //#include "RooRealVar.h"
 
-using namespace std;
 
 namespace RooStats {
 

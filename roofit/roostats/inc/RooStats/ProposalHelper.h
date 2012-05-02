@@ -37,9 +37,7 @@
 #include "TObject.h"
 #endif
 
-#include <map>
 
-using namespace std;
 
 namespace RooStats {
 

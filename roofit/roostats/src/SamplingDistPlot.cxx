@@ -34,7 +34,7 @@ objects.
 #endif
 
 #include <limits>
-#define NaN numeric_limits<float>::quiet_NaN()
+#define NaN std::numeric_limits<float>::quiet_NaN()
 #include "TMath.h"
 #define IsNaN(a) TMath::IsNaN(a)
 
@@ -43,6 +43,7 @@ objects.
 ClassImp(RooStats::SamplingDistPlot);
 
 using namespace RooStats;
+using namespace std;
 
 //_______________________________________________________
 SamplingDistPlot::SamplingDistPlot(Int_t nbins) :

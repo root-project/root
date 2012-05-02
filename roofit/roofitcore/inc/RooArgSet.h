@@ -20,7 +20,6 @@
 #include "RooErrorHandler.h"
 #include <map>
 #include <iostream>
-using namespace std ;
 
 class RooArgList ;
 

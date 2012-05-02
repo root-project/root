@@ -49,7 +49,6 @@ class TH3F;
 #include <list>
 #include <string>
 #include <iostream>
-using namespace std ;
 
 class RooAbsReal : public RooAbsArg {
 public:

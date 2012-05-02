@@ -27,8 +27,6 @@
 #include "RooStats/ModelConfig.h"
 #include "RooProdPdf.h"
 
-#include <iostream>
-using namespace std ;
 
 namespace RooStats {
 

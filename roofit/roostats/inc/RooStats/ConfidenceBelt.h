@@ -28,15 +28,14 @@
 #include <vector>
 #include <map>
 
-using namespace std;
 
 namespace RooStats {
 
   ///////////////////////////
   class SamplingSummaryLookup : public TObject {
 
-    typedef pair<Double_t, Double_t> AcceptanceCriteria; // defined by Confidence level, leftside tail probability
-    typedef map<Int_t, AcceptanceCriteria> LookupTable; // map ( Index, ( CL, leftside tail prob) )
+     typedef std::pair<Double_t, Double_t> AcceptanceCriteria; // defined by Confidence level, leftside tail probability
+     typedef std::map<Int_t, AcceptanceCriteria> LookupTable; // map ( Index, ( CL, leftside tail prob) )
 
   public:
     SamplingSummaryLookup() {}
@@ -48,7 +47,7 @@ namespace RooStats {
 
       // should check to see if this is already in the map
       if(GetLookupIndex(cl,leftside) >=0 ){
-	cout<< "SamplingSummaryLookup::Add, already in lookup table" << endl;
+         std::cout<< "SamplingSummaryLookup::Add, already in lookup table" << std::endl;
       } else
 	fLookupTable[fLookupTable.size()]= tmp;
     }
@@ -76,16 +75,16 @@ namespace RooStats {
 
   Double_t GetConfidenceLevel(Int_t index){
     if(index<0 || index>(Int_t)fLookupTable.size()) {
-      cout << "SamplingSummaryLookup::GetConfidenceLevel, index not in lookup table" << endl;
-      return -1;
+       std::cout << "SamplingSummaryLookup::GetConfidenceLevel, index not in lookup table" << std::endl;
+       return -1;
     }
     return fLookupTable[index].first;
   }
 
   Double_t GetLeftSideTailFraction(Int_t index){
     if(index<0 || index>(Int_t)fLookupTable.size()) {
-      cout << "SamplingSummaryLookup::GetLeftSideTailFraction, index not in lookup table" << endl;
-      return -1;
+       std::cout << "SamplingSummaryLookup::GetLeftSideTailFraction, index not in lookup table" << std::endl;
+       return -1;
     }
     return fLookupTable[index].second;
   }
@@ -148,9 +147,9 @@ namespace RooStats {
     }
     
   private:
-    Int_t fParameterPointIndex; // want a small footprint reference to the RooArgSet for particular parameter point
-    TRef fSamplingDistribution; // persistent pointer to a SamplingDistribution
-    map<Int_t, AcceptanceRegion> fAcceptanceRegions;
+     Int_t fParameterPointIndex; // want a small footprint reference to the RooArgSet for particular parameter point
+     TRef fSamplingDistribution; // persistent pointer to a SamplingDistribution
+     std::map<Int_t, AcceptanceRegion> fAcceptanceRegions;
 
   protected:
     ClassDef(SamplingSummary,1)  // A summary of acceptance regions for confidence belt
@@ -162,7 +161,7 @@ namespace RooStats {
 
   private:
     SamplingSummaryLookup fSamplingSummaryLookup;
-    vector<SamplingSummary> fSamplingSummaries; // composite of several AcceptanceRegions
+    std::vector<SamplingSummary> fSamplingSummaries; // composite of several AcceptanceRegions
     RooAbsData* fParameterPoints;  // either a histogram (RooDataHist) or a tree (RooDataSet)
 
 
@@ -184,7 +183,7 @@ namespace RooStats {
     AcceptanceRegion* GetAcceptanceRegion(RooArgSet&, Double_t cl=-1., Double_t leftside=-1.);
     Double_t GetAcceptanceRegionMin(RooArgSet&, Double_t cl=-1., Double_t leftside=-1.);
     Double_t GetAcceptanceRegionMax(RooArgSet&, Double_t cl=-1., Double_t leftside=-1.);
-    vector<Double_t> ConfidenceLevels() const ;
+    std::vector<Double_t> ConfidenceLevels() const ;
  
     // Method to return lower limit on a given parameter 
     //  Double_t LowerLimit(RooRealVar& param) ; // could provide, but misleading?

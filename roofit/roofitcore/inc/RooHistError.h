@@ -21,7 +21,6 @@
 #include "RooAbsFunc.h"
 #include <math.h>
 #include <iostream>
-using namespace std ;
 
 class RooHistError {
 public:

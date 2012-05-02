@@ -51,6 +51,7 @@
 ClassImp(RooUnitTest)
 ;
 
+using namespace std; 
 
 TDirectory* RooUnitTest::gMemDir = 0 ;
 

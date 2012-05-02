@@ -37,9 +37,7 @@
 #endif
 
 #include <map>
-#include <string>
 
-using namespace std;
 
 namespace RooStats {
 
@@ -86,9 +84,9 @@ namespace RooStats {
 
       virtual void printMappings()
       {
-         map<RooRealVar*, RooAbsReal*>::iterator it;
+         std::map<RooRealVar*, RooAbsReal*>::iterator it;
          for (it = fMap.begin(); it != fMap.end(); it++)
-         cout << it->first->GetName() << " => " << it->second->GetName() << endl;
+            std::cout << it->first->GetName() << " => " << it->second->GetName() << std::endl;
       }
 
       // Set how many points to generate each time we propose from a new point
@@ -99,7 +97,7 @@ namespace RooStats {
             fCacheSize = size;
          else
             coutE(Eval) << "Warning: Requested non-positive cache size: " <<
-                           size << ". Cache size unchanged." << endl;
+               size << ". Cache size unchanged." << std::endl;
       }
 
       // set whether we own the PDF that serves as the proposal density function

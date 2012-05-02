@@ -259,9 +259,9 @@ public:
     RealFullVector(const RealFullVector& other, RooAbsReal* real=0) : RealVector(other,real),
       _bufE(other._bufE), _bufEL(other._bufEL), _bufEH(other._bufEH),
       _nativeBufE(other._nativeBufE), _nativeBufEL(other._nativeBufEL), _nativeBufEH(other._nativeBufEH) {
-      _vecE = (other._vecE) ? new vector<Double_t>(*other._vecE) : 0 ;
-      _vecEL = (other._vecEL) ? new vector<Double_t>(*other._vecEL) : 0 ;
-      _vecEH = (other._vecEH) ? new vector<Double_t>(*other._vecEH) : 0 ;
+      _vecE = (other._vecE) ? new std::vector<Double_t>(*other._vecE) : 0 ;
+      _vecEL = (other._vecEL) ? new std::vector<Double_t>(*other._vecEL) : 0 ;
+      _vecEH = (other._vecEH) ? new std::vector<Double_t>(*other._vecEH) : 0 ;
     }
 
     RealFullVector(const RealVector& other, RooAbsReal* real=0) : RealVector(other,real), 
@@ -281,24 +281,24 @@ public:
       _nativeBufE = other._nativeBufE ;
       _nativeBufEL = other._nativeBufEL ;
       _nativeBufEH = other._nativeBufEH ;
-      _vecE = other._vecE ? new vector<Double_t>(*other._vecE) : 0 ;
-      _vecEL = other._vecEL ? new vector<Double_t>(*other._vecEL) : 0 ;
-      _vecEH = other._vecEH ? new vector<Double_t>(*other._vecEH) : 0 ;
+      _vecE = other._vecE ? new std::vector<Double_t>(*other._vecE) : 0 ;
+      _vecEL = other._vecEL ? new std::vector<Double_t>(*other._vecEL) : 0 ;
+      _vecEH = other._vecEH ? new std::vector<Double_t>(*other._vecEH) : 0 ;
       return *this ;
     }
     
     void setErrorBuffer(Double_t* newBuf) { 
 /*       cout << "setErrorBuffer(" << _nativeReal->GetName() << ") newBuf = " << newBuf << endl ; */
       _bufE = newBuf ; 
-      if (!_vecE) _vecE = new vector<Double_t> ;
+      if (!_vecE) _vecE = new std::vector<Double_t> ;
       _vecE->reserve(_vec.capacity()) ;
       if (!_nativeBufE) _nativeBufE = _bufE ;
     }
     void setAsymErrorBuffer(Double_t* newBufL, Double_t* newBufH) { 
       _bufEL = newBufL ; _bufEH = newBufH ; 
       if (!_vecEL) {
-	_vecEL = new vector<Double_t> ;
-	_vecEH = new vector<Double_t> ;
+        _vecEL = new std::vector<Double_t> ;
+	_vecEH = new std::vector<Double_t> ;
 	_vecEL->reserve(_vec.capacity()) ;
 	_vecEH->reserve(_vec.capacity()) ;
       }

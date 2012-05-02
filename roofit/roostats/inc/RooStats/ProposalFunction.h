@@ -43,7 +43,6 @@ END_HTML
 #include "RooRealVar.h"
 #endif
 
-using namespace std;
 
 namespace RooStats {
 
@@ -80,7 +79,7 @@ namespace RooStats {
                coutE(Eval) << "Error when checking parameters in"
                            << "ProposalFunction: "
                            << "Object \"" << obj->GetName() << "\" not of type "
-                           << "RooRealVar" << endl;
+                           << "RooRealVar" << std::endl;
                delete it;
                return false;
             }
