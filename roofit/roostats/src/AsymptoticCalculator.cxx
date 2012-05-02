@@ -792,7 +792,7 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovDataSinglePdf(const RooAbsPdf &
    // compute the asimov data set for an observable of a pdf 
    // use the number of bins sets in the observables 
    // to do :  (possibility to change number of bins)
-   // impelment integration over bin content
+   // implement integration over bin content
 
    int printLevel = fgPrintLevel;
 
