@@ -17,6 +17,7 @@
 found_lib=no
 found_dir=no
 found_hdr=no
+found_ext=
 show_pkglist=no
 fail_on_missing=no
 noact="no"
@@ -502,6 +503,7 @@ check_library() {
     fi
     found_lib=no
     found_dir=no
+    found_ext=
 
     # Make list of libraries to search for. The .lib extension is for
     # Windoze - note $shared is always "no" on windoze, since we need
@@ -630,6 +632,7 @@ check_library() {
         found_raw_lib=""
         logmsg " library not found"
     else
+        found_ext=`echo $found_lib | sed 's|^lib\(.*\)\.\(.*\)|\2|'`
         flib=""
         maclib=""
         for i in $lib ; do
@@ -4480,6 +4483,7 @@ if test "x$enable_xrootd" = "xyes" ; then
       xrdlibs="libXrdNet libXrdOuc libXrdSys libXrdClient libXrd" 
    fi
    tmpxrdlibdir=""
+   xrdlibext=""
    for ll in $xrdlibs ; do 
       #
       # Check if packaging has libXrdUtils or the old libXrdOuc, libXrdSys, ...
@@ -4490,12 +4494,22 @@ if test "x$enable_xrootd" = "xyes" ; then
          xrdlibdir=""
          break
       else
+         xrdlibext="$found_ext"
          tmpxrdlibdir="$found_dir"
          if test "x$ll" = "xlibXrdUtils" || test "x$ll" = "xlibXrdOuc"; then
             libxrdoucbjr="$found_lib"
          fi
       fi
    done
+
+   #
+   # If not 'so' or 'a', comunicate the extension for the library loadings
+   # in XrdProofd. This may be temporary, as xrootd may do it automatically,
+   # one day ...
+   if test ! "x$xrdlibext" = "x" && test ! "x$xrdlibext" = "xso" && test ! "x$xrdlibext" = "xa"; then
+      # The \'s are needed to produce -DLT_MODULE_EXT=\".ext\" in Makefile.config
+      extraxrdflags="$extraxrdflags -DLT_MODULE_EXT=\\\\\".$xrdlibext\\\\\""
+   fi
 
    #
    # Check if bonjour is available for code potentially using it ...
