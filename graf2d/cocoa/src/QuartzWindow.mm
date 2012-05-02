@@ -347,6 +347,94 @@ NSPoint GetCursorHotStop(NSImage *image, ECursor cursor)
    return CGPointMake(imageSize.width / 2, imageSize.height / 2);
 }
 
+//TGTextView is a very special window: it's a TGCompositeFrame,
+//which has TGCompositeFrame inside (TGViewFrame). This TGViewFrame
+//delegates Expose events to its parent, and parent tries to draw
+//inside a TGViewFrame. This does not work with default 
+//QuartzView -drawRect/TGCocoa. So I need a trick to identify
+//this special window.
+
+//______________________________________________________________________________
+bool ViewIsTextView(unsigned viewID)
+{
+   TGWindow *window = gClient->GetWindowById(viewID);
+   if (!window)
+      return false;   
+   return window->InheritsFrom("TGTextView");
+}
+
+//______________________________________________________________________________
+bool ViewIsTextView(NSView<X11Window> *view)
+{
+   assert(view != nil && "ViewIsTextView, view parameter is nil");
+
+   return ViewIsTextView(view.fID);
+}
+
+//______________________________________________________________________________
+bool ViewIsTextViewFrame(NSView<X11Window> *view, bool checkParent)
+{
+   assert(view != nil && "ViewIsTextViewFrame, view parameter is nil");
+   
+   TGWindow *window = gClient->GetWindowById(view.fID);
+   if (!window)
+      return false;
+
+   if (!window->InheritsFrom("TGViewFrame"))
+      return false;
+      
+   if (!checkParent)
+      return true;
+      
+   if (!view.fParentView)
+      return false;
+      
+   return ViewIsTextView(view.fParentView);
+}
+
+//______________________________________________________________________________
+NSView<X11Window> *FrameForTextView(NSView<X11Window> *textView)
+{
+   assert(textView != nil && "FrameForTextView, textView parameter is nil");
+   
+   for (NSView<X11Window> *child in [textView subviews]) {
+      if (ViewIsTextViewFrame(child, false))
+         return child;
+   }
+   
+   return nil;
+}
+
+//______________________________________________________________________________
+bool LockFocus(NSView<X11Window> *view)
+{
+   assert(view != nil && "LockFocus, view parameter is nil");
+   assert([view isKindOfClass : [QuartzView class]] && "LockFocus, QuartzView is expected");
+   
+   if ([view lockFocusIfCanDraw]) {
+      NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
+      assert(nsContext != nil && "LockFocus, currentContext is nil");
+      CGContextRef currContext = (CGContextRef)[nsContext graphicsPort];
+      assert(currContext != 0 && "LockFocus, graphicsPort is null");//remove this assert?
+      
+      ((QuartzView *)view).fContext = currContext;
+      
+      return true;
+   }
+   
+   return false;
+}
+
+//______________________________________________________________________________
+void UnlockFocus(NSView<X11Window> *view)
+{
+   assert(view != nil && "UnlockFocus, view parameter is nil");
+   assert([view isKindOfClass : [QuartzView class]] && "UnlockFocus, QuartzView is expected");
+   
+   [view unlockFocus];
+   ((QuartzView *)view).fContext = 0;
+}
+
 }
 }
 }
@@ -1632,10 +1720,15 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) drawRect : (NSRect) dirtyRect
 {
+   using namespace ROOT::MacOSX::X11;
+
    (void)dirtyRect;
 
    if (fID) {
       if (TGWindow *window = gClient->GetWindowById(fID)) {
+         if (ViewIsTextViewFrame(self, true))//It's never painted, parent renders child. true == check the parent also.
+            return;
+
          NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
          assert(nsContext != nil && "drawRect, currentContext returned nil");
 
@@ -1651,6 +1744,13 @@ void print_mask_info(ULong_t mask)
             vx->GetEventTranslator()->GenerateExposeEvent(self, [self visibleRect]);
 
          if (fEventMask & kExposureMask) {
+            if (ViewIsTextView(self)) {
+               //Send Expose event, using child view (this is how it's done in GUI :( ).
+               NSView<X11Window> *viewFrame = FrameForTextView(self);
+               if (viewFrame)
+                  vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, [viewFrame visibleRect]);//Now we set fExposedRegion for TGView.
+            }
+
             //Ask ROOT's widget/window to draw itself.
             gClient->NeedRedraw(window, kTRUE);
             

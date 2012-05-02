@@ -230,6 +230,17 @@ void SetFillPattern(CGContextRef ctx, const PatternContext *patternContext)
    CGContextSetPatternPhase(ctx, patternContext->fPhase);
 }
 
+//______________________________________________________________________________
+bool ParentRendersToChild(NSView<X11Window> *child)
+{
+   assert(child != nil && "ParentRendersToChild, child parameter is nil");
+
+   //Adovo poluchaetsia, tashhem-ta! ;)
+   return X11::ViewIsTextViewFrame(child, true) && !child.fContext && 
+          child.fMapState == kIsViewable && child.fParentView.fContext &&
+          !child.fIsOverlapped;
+}
+
 }
 
 //______________________________________________________________________________
@@ -1173,6 +1184,15 @@ void TGCocoa::DrawLine(Drawable_t wid, GContext_t gc, Int_t x1, Int_t y1, Int_t 
    if (!drawable.fIsPixmap) {
       NSObject<X11Window> *window = (NSObject<X11Window> *)drawable;
       QuartzView *view = (QuartzView *)window.fContentView;
+      
+      if (ParentRendersToChild(view)) {
+         if (X11::LockFocus(view)) {
+            DrawLineAux(view.fID, gcVals, x1, y1, x2, y2);
+            X11::UnlockFocus(view);
+            return;
+         }
+      }
+      
       if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
          if (!view.fContext)
             fPimpl->fX11CommandBuffer.AddDrawLine(wid, gcVals, x1, y1, x2, y2);
@@ -1216,6 +1236,15 @@ void TGCocoa::DrawSegments(Drawable_t wid, GContext_t gc, Segment_t *segments, I
    
    if (!drawable.fIsPixmap) {
       QuartzView *view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
+      
+      if (ParentRendersToChild(view)) {
+         if (X11::LockFocus(view)) {
+            DrawSegmentsAux(view.fID, gcVals, segments, nSegments);
+            X11::UnlockFocus(view);
+            return;
+         }
+      }
+      
       if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
          if (!view.fContext)
             fPimpl->fX11CommandBuffer.AddDrawSegments(wid, gcVals, segments, nSegments);
@@ -1274,6 +1303,15 @@ void TGCocoa::DrawRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UIn
    if (!drawable.fIsPixmap) {
       NSObject<X11Window> *window = (NSObject<X11Window> *)drawable;
       QuartzView *view = (QuartzView *)window.fContentView;
+      
+      if (ParentRendersToChild(view)) {
+         if (X11::LockFocus(view)) {
+            DrawRectangleAux(view.fID, gcVals, x, y, w, h);
+            X11::UnlockFocus(view);
+            return;
+         }
+      }
+      
       if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
          if (!view.fContext)
             fPimpl->fX11CommandBuffer.AddDrawRectangle(wid, gcVals, x, y, w, h);
@@ -1344,6 +1382,15 @@ void TGCocoa::FillRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UIn
    if (!drawable.fIsPixmap) {
       NSObject<X11Window> *window = (NSObject<X11Window> *)drawable;
       QuartzView *view = (QuartzView *)window.fContentView;
+      
+      if (ParentRendersToChild(view)) {
+         if (X11::LockFocus(view)) {
+            FillRectangleAux(view.fID, gcVals, x, y, w, h);
+            X11::UnlockFocus(view);
+            return;
+         }
+      }
+      
       if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
          if (!view.fContext)
             fPimpl->fX11CommandBuffer.AddFillRectangle(wid, gcVals, x, y, w, h);
@@ -1429,6 +1476,15 @@ void TGCocoa::FillPolygon(Window_t wid, GContext_t gc, Point_t *polygon, Int_t n
    
    if (!drawable.fIsPixmap) {
       QuartzView *view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
+      
+      if (ParentRendersToChild(view)) {
+         if (X11::LockFocus(view)) {
+            FillPolygonAux(view.fID, gcVals, polygon, nPoints);
+            X11::UnlockFocus(view);
+            return;
+         }
+      }
+      
       if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
          if (!view.fContext)
             fPimpl->fX11CommandBuffer.AddFillPolygon(wid, gcVals, polygon, nPoints);
@@ -1500,6 +1556,15 @@ void TGCocoa::CopyArea(Drawable_t src, Drawable_t dst, GContext_t gc, Int_t srcX
    
    if (!drawable.fIsPixmap) {
       QuartzView *view = (QuartzView *)fPimpl->GetWindow(dst).fContentView;
+      
+      if (ParentRendersToChild(view)) {
+         if (X11::LockFocus(view)) {
+            CopyAreaAux(src, dst, gcVals, srcX, srcY, width, height, dstX, dstY);
+            X11::UnlockFocus(view);
+            return;
+         }
+      }
+      
       if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
          if (!view.fContext)
             fPimpl->fX11CommandBuffer.AddCopyArea(src, dst, gcVals, srcX, srcY, width, height, dstX, dstY);
@@ -1557,7 +1622,6 @@ void TGCocoa::DrawStringAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, I
 void TGCocoa::DrawString(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, const char *text, Int_t len)
 {
    //Can be called by ROOT directly, or indirectly by AppKit.
-
    if (!wid)//from TGX11.
       return;
 
@@ -1568,14 +1632,24 @@ void TGCocoa::DrawString(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, const 
    const GCValues_t &gcVals = fX11Contexts[gc - 1];
    assert(gcVals.fMask & kGCFont && "DrawString, font is not set in a context");
 
-   if (!drawable.fIsPixmap) {
+   if (!drawable.fIsPixmap) {   
       QuartzView *view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
+
+      if (ParentRendersToChild(view)) {//Ufff.
+         if (X11::LockFocus(view)) {
+            DrawStringAux(view.fID, gcVals, x, y, text, len);
+            X11::UnlockFocus(view);
+            return;
+         }
+      }
+      
       if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
          if (!view.fContext)
             fPimpl->fX11CommandBuffer.AddDrawString(wid, gcVals, x, y, text, len);
          else
             DrawStringAux(wid, gcVals, x, y, text, len);
       }
+
    } else {
       if (!IsCocoaDraw())
          fPimpl->fX11CommandBuffer.AddDrawString(wid, gcVals, x, y, text, len);
@@ -1618,6 +1692,15 @@ void TGCocoa::ClearArea(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
    assert(!fPimpl->IsRootWindow(wid) && "ClearArea, called for the 'root' window");
    
    QuartzView *view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;//If wid is pixmap or image, this will crush.
+
+   if (ParentRendersToChild(view)) {
+      if (X11::LockFocus(view)) {
+         ClearAreaAux(view.fID, x, y, w, h);
+         X11::UnlockFocus(view);
+         return;
+      }
+   }
+   
    if (!view.fIsOverlapped && view.fMapState == kIsViewable) {
       if (!view.fContext)
          fPimpl->fX11CommandBuffer.AddClearArea(wid, x, y, w, h);
