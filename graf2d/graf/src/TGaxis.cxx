@@ -715,14 +715,14 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             struct tm* tptest;
             time_t timeoffsettest;
             // get timezone offset for the current location
-            Int_t zoneoffset = TTimeStamp::GetZoneOffset();
+            Int_t zoneoffset_seconds = TTimeStamp::GetZoneOffset();
             // convert offset in hours
-            zoneoffset /= 3600;
+            Int_t zoneoffset_hours   = zoneoffset_seconds/3600;
             tp.tm_year  = year-1900;
             tp.tm_mon   = mm-1;
             tp.tm_mday  = dd;
-            tp.tm_hour  = hh - zoneoffset;
-            tp.tm_min   = mi;
+            tp.tm_hour  = hh - zoneoffset_hours;
+            tp.tm_min   = mi ;
             tp.tm_sec   = ss;
             tp.tm_isdst =  1; //daylight saving time is on.
             timeoffset  = mktime(&tp);
@@ -741,7 +741,15 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                timeoffset += dp;
             }
             // if optionTime = 2 gmtime will be used instead of localtime
-            if (stringtimeoffset.Index("GMT")>=0) optionTime =2;
+            Int_t idG = stringtimeoffset.Index("GMT");
+            if (idG>=0) {
+               lnF = stringtimeoffset.Length();
+               TString gmtoffset = stringtimeoffset(idG+3,lnF);
+               Int_t itz;
+               sscanf(gmtoffset.Data(), "%d", &itz);
+               timeoffset += zoneoffset_seconds-itz;
+               optionTime = 2;
+            }
          } else {
             Error(where, "Time offset has not the right format");
          }
@@ -2140,6 +2148,14 @@ void TGaxis::SetTimeFormat(const char *tformat)
 
    TString timeformat = tformat;
 
+
+   Int_t lnF = timeformat.Length();
+   Int_t idG = timeformat.Index("GMT");
+
+   if (idG) {
+      if (idG+3==lnF) timeformat.Append(Form("%d",TTimeStamp::GetZoneOffset()));
+   }
+
    if (timeformat.Index("%F")>=0 || timeformat.IsNull()) {
       fTimeFormat = timeformat;
       return;
@@ -2147,7 +2163,7 @@ void TGaxis::SetTimeFormat(const char *tformat)
 
    Int_t idF = fTimeFormat.Index("%F");
    if (idF>=0) {
-      Int_t lnF = fTimeFormat.Length();
+      lnF = fTimeFormat.Length();
       TString stringtimeoffset = fTimeFormat(idF,lnF);
       fTimeFormat = tformat;
       fTimeFormat.Append(stringtimeoffset);
@@ -2191,7 +2207,7 @@ void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
    }
 
    // If the time is GMT, stamp fTimeFormat
-   if (gmt) fTimeFormat.Append(" GMT");
+   if (gmt) fTimeFormat.Append(Form(" GMT%d",TTimeStamp::GetZoneOffset()));
 }
 
 
