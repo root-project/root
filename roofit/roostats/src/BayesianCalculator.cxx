@@ -883,7 +883,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
       fLogLike = pdfAndPrior->createNLL(*fData, RooFit::Constrain(*constrParams) );
       delete constrParams;
 
-      TString likeName = TString("likelihood_times_prior_") + TString(fProductPdf->GetName());   
+      TString likeName = TString("likelihood_times_prior_") + TString(pdfAndPrior->GetName());   
       TString formula; 
       formula.Form("exp(-@0+%f)",fNLLMin);
       fLikelihood = new RooFormulaVar(likeName,formula,RooArgList(*fLogLike));
