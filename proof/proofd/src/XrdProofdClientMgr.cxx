@@ -1392,7 +1392,7 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
                }
             }
             if (freeclient) {
-               delete c;
+               SafeDelete(c);
             } else if (TRACING(DBG)) {
                XPDFORM(dmsg, "instance for {client, group} = {%s, %s} created"
                              " and added to the list (%p)", usr, grp, c);

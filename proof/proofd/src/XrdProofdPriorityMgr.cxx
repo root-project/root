@@ -70,7 +70,7 @@ void *XrdProofdPriorityCron(void *p)
          // Parse type
          if (msg.Type() == XrdProofdPriorityMgr::kChangeStatus) {
             XrdOucString usr, grp;
-            int opt, pid;
+            int opt = 0, pid = -1;
             rc = msg.Get(opt);
             rc = (rc == 0) ? msg.Get(usr) : rc;
             rc = (rc == 0) ? msg.Get(grp) : rc;
@@ -569,7 +569,7 @@ int XrdProofdPriorityMgr::SetProcessPriority(int pid, const char *user, int &dp)
 //
 //______________________________________________________________________________
 XrdProofdSessionEntry::XrdProofdSessionEntry(const char *u, const char *g, int pid)
-                     : fUser(u), fGroup(g), fPid(pid)
+                     : fUser(u), fGroup(g), fPid(pid), fFracEff(0.)
 {
    // Constructor
    XPDLOC(PMGR, "XrdProofdSessionEntry")

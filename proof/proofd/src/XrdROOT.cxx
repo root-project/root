@@ -43,6 +43,12 @@ XrdROOT::XrdROOT(const char *dir, const char *tag, const char *bindir,
 
    fStatus = -1;
    fSrvProtVers = -1;
+   fRelease = "";
+   fSvnRevision = -1;
+   fVersionCode = -1;
+   fVrsMajor = -1;
+   fVrsMinor = -1;
+   fVrsPatch = -1;
 
    // 'dir' must make sense
    if (!dir || strlen(dir) <= 0)
@@ -65,12 +71,6 @@ XrdROOT::XrdROOT(const char *dir, const char *tag, const char *bindir,
    if (CheckDir(fIncDir.c_str()) != 0) return;
 
    // Parse version info
-   fRelease = "";
-   fSvnRevision = -1;
-   fVersionCode = -1;
-   fVrsMajor = -1;
-   fVrsMinor = -1;
-   fVrsPatch = -1;
    if (ParseROOTVersionInfo() == -1) {
       TRACE(XERR, "unable to extract ROOT version information from path "<<fIncDir);
       return;

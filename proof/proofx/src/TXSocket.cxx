@@ -231,6 +231,7 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
    }
 }
 
+#if 0
 //______________________________________________________________________________
 TXSocket::TXSocket(const TXSocket &s) : TSocket(s),XrdClientAbsUnsolMsgHandler(s)
 {
@@ -243,6 +244,7 @@ TXSocket& TXSocket::operator=(const TXSocket&)
    // TXSocket assignment operator.
    return *this;
 }
+#endif
 
 //_____________________________________________________________________________
 TXSocket::~TXSocket()

@@ -1536,7 +1536,7 @@ int XrdProofdAux::Touch(const char *path, int opt)
       struct stat st;
       if (stat(path, &st) != 0)
          return -errno;
-      struct utimbuf ut;
+      struct utimbuf ut = {0,0};
       if (opt == 1) {
          ut.actime = time(0);
          ut.modtime = st.st_mtime;

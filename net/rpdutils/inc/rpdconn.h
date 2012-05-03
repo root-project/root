@@ -147,7 +147,8 @@ protected:
    int             fd;      // Socket descriptor
    struct sockaddr addr;    // Structure describing the peer address
 public:
-   rpdtcp(int d = -1) : rpdconn(), port(0), fd(d) { setdescriptors(d,d); } // Used by rpdtcpsrv
+   rpdtcp(int d = -1) : rpdconn(), port(0), fd(d) { memset(&addr, 0, sizeof(addr));
+                                                    setdescriptors(d,d); } // Used by rpdtcpsrv
    rpdtcp(const char *h, int p);
    virtual ~rpdtcp() { close(); }
 

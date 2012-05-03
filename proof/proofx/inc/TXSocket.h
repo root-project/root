@@ -152,8 +152,10 @@ public:
 
    TXSocket(const char *url, Char_t mode = 'M', Int_t psid = -1, Char_t ver = -1,
             const char *logbuf = 0, Int_t loglevel = -1, TXHandler *handler = 0);
+#if 0
    TXSocket(const TXSocket &xs);
    TXSocket& operator=(const TXSocket& xs);
+#endif
    virtual ~TXSocket();
 
    virtual void        Close(Option_t *opt = "");

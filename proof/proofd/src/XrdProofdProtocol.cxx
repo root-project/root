@@ -439,7 +439,7 @@ int XrdProofdProtocol::StartRootd(XrdLink *lp, XrdOucString &emsg)
       }
 
       // Accept a connection from the second server
-      int err;
+      int err = 0;
       rpdunix *uconn = fgMgr->RootdUnixSrv()->accept(-1, &err);
       if (!uconn || !uconn->isvalid(0)) {
          XPDFORM(emsg, "failure accepting callback (errno: %d)", -err);

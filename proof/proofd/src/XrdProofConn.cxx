@@ -96,8 +96,8 @@ XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
    : fMode(m), fConnected(0), fLogConnID(-1), fStreamid(0), fRemoteProtocol(-1),
      fServerProto(-1), fServerType(kSTNone), fSessionID(psid),
      fLastErr(kXR_Unsupported), fCapVer(capver), fLoginBuffer(logbuf), fMutex(0),
-     fConnectInterruptMtx(0), fConnectInterrupt(0),
-     fPhyConn(0), fUnsolMsgHandler(uh), fSender(0), fSenderArg(0)
+     fConnectInterruptMtx(0), fConnectInterrupt(0), fPhyConn(0), 
+     fOpenSockFD(-1), fUnsolMsgHandler(uh), fSender(0), fSenderArg(0)
 {
    // Constructor. Open the connection to a remote XrdProofd instance.
    // The mode 'm' indicates the role of this connection:

@@ -420,12 +420,22 @@ TList *TXProofMgr::QuerySessions(Option_t *opt)
          TProofDesc *d = 0;
          TIter nxos(oa);
          TObjString *to = (TObjString *) nxos();
+         if (to && to->GetString().IsDigit() && !strncasecmp(opt,"S",1))
+            Printf("// +++ %s session(s) currently active +++", to->GetName());
          while ((to = (TObjString *) nxos())) {
             // Now parse them ...
-            char al[256];
-            char tg[256];
             Int_t id = -1, st = -1, nc = 0;
-            sscanf(to->GetName(),"%d %s %s %d %d", &id, tg, al, &st, &nc);
+            TString al, tg, tk;
+            Ssiz_t from = 0;
+            while ((to->GetString()[from] == ' ')) { from++; }
+            if (!to->GetString().Tokenize(tk, from, " ") || !tk.IsDigit()) continue;
+            id = tk.Atoi();
+            if (!to->GetString().Tokenize(tg, from, " ")) continue;
+            if (!to->GetString().Tokenize(al, from, " ")) continue;
+            if (!to->GetString().Tokenize(tk, from, " ") || !tk.IsDigit()) continue;
+            st = tk.Atoi();
+            if (!to->GetString().Tokenize(tk, from, " ") || !tk.IsDigit()) continue;
+            nc = tk.Atoi();
             // Add to the list, if not already there
             if (!(d = (TProofDesc *) fSessions->FindObject(tg))) {
                Int_t locid = fSessions->GetSize() + 1;

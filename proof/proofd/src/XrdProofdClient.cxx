@@ -47,6 +47,7 @@ XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
    fIsValid = 0;
    fAskedToTouch = 0;
    fChangeOwn = changeown;
+   fLauncher = 0;
 
    // Make sure the admin path exists
    XPDFORM(fAdminPath, "%s/%s.%s", adminpath, ui.fUser.c_str(), ui.fGroup.c_str());

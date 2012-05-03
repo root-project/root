@@ -525,7 +525,8 @@ rpdtcp::rpdtcp(const char *h, int p) : rpdconn(), host(h), port(p), fd(-1)
       fprintf(stderr, "rpdtcp::rpdtcp: ERROR: failure resolving host address (errno: %d)\n", errno);
       return;
    }
-   
+   memset(&addr, 0, sizeof(addr));
+    
    // The structure   
    struct sockaddr_in server;
    memset(&server, 0, sizeof(server));

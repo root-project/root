@@ -164,7 +164,7 @@ void *XrdProofdProofServCron(void *p)
             XpdSrvMgrCreateCnt cnt(mgr, XrdProofdProofServMgr::kCleanSessionsCnt);
             XrdOucString usr;
             rc = msg.Get(usr);
-            int svrtype;
+            int svrtype = kXPD_AnyServer;
             rc = (rc == 0) ? msg.Get(svrtype) : rc;
             if (rc != 0) {
                TRACE(XERR, "kCleanSessions: problems parsing message (buf: '"<<
@@ -4003,9 +4003,6 @@ int XrdProofdProofServMgr::CleanupLostProofServ()
          if (!alive) {
             a = (XrdProofdAux::VerifyProcessByID(xpid, fParentExecs.c_str())) ? 1 : 0;
             xrdproc.Add(xpid, a);
-            if (!(alive = xrdproc.Find(xpid))) {
-               TRACE(ALL, "unable to add info in the Rash table!");
-            }
          } else {
             a = *alive;
          }

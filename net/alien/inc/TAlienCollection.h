@@ -50,7 +50,8 @@ private:
    UInt_t       fNofGroups;          // number of file groups
    UInt_t       fNofGroupfiles;      // number of files per group
    Bool_t       fHasSUrls;           // defines if SURLs are present in the collection
-   Bool_t       fHasSelection;       // defines if the user made some selection on the files to be exported for processing
+   Bool_t       fHasSelection;       // defines if the user made some selection on the files
+                                     // to be exported for processing
    Bool_t       fHasOnline;          // defines if the collection was checked for the online status
    TString      fLastOutFileName;    // keeps the latest outputfilename produced with GetOutputFileName
    TFileStager *fFileStager;         //! pointer to the file stager object
@@ -66,7 +67,8 @@ private:
 public:
    TAlienCollection() : fFileGroupList(0), fFileGroupListIter(0), fCurrent(0),
        fNofGroups(0), fNofGroupfiles(0), fHasSUrls(0), fHasSelection(0),
-       fFileStager(0), fExportUrl(""), fInfoComment(""), fCollectionName("unnamed"), fTagFilterList(0)
+       fHasOnline(0), fFileStager(0), fExportUrl(""), fInfoComment(""),
+       fCollectionName("unnamed"), fTagFilterList(0)
       { }
    TAlienCollection(TList *eventlist, UInt_t ngroups = 0,
                     UInt_t ngroupfiles = 0);
