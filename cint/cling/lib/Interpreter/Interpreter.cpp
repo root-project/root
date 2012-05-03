@@ -27,6 +27,7 @@
 #include "clang/Parse/Parser.h"
 #undef private
 #include "clang/Sema/Lookup.h"
+#include "clang/Sema/Overload.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaInternal.h"
@@ -37,6 +38,7 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/raw_os_ostream.h"
 
 #include <cstdio>
@@ -1112,6 +1114,12 @@ namespace cling {
           /*AllowConstructorName*/true,
           clang::ParsedType(), TemplateKWLoc, FuncId)) {
         // Bad parse.
+        // Destroy the scope we created first, and
+        // restore the original.
+        CI->getSema().ExitDeclaratorContext(P->getCurScope());
+        delete CI->getSema().CurScope;
+        CI->getSema().CurScope = OldScope;
+        // Then cleanup and exit.
         goto lookupFuncProtoDone;
       }
       //
@@ -1215,6 +1223,408 @@ namespace cling {
       }
     }
   lookupFuncProtoDone:
+    //
+    // Advance the parser to the end of the file, and pop the include stack.
+    //
+    // Note: Consuming the EOF token will pop the include stack.
+    //
+    P->SkipUntil(tok::eof, /*StopAtSemi*/false, /*DontConsume*/false,
+      /*StopAtCodeCompletion*/false);
+    if (ResetIncrementalProcessing) {
+      PP.enableIncrementalProcessing(false);
+    }
+    DClient.EndSourceFile();
+    CI->getDiagnostics().Reset();
+    PP.getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
+    const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = OldSpellChecking;
+    return TheDecl;
+  }
+
+  Decl*
+  Interpreter::lookupFunctionArgs(Decl* classDecl,
+    const std::string& funcName, const std::string& funcArgs)
+  {
+    //
+    //  Our return value.
+    //
+    Decl* TheDecl = 0;
+    //
+    //  Some utilities.
+    //
+    CompilerInstance* CI = getCI();
+    Parser* P = getParser();
+    Preprocessor& PP = CI->getPreprocessor();
+    ASTContext& Context = CI->getASTContext();
+    //
+    //  Tell the diagnostic engine to ignore all diagnostics.
+    //
+    bool OldSuppressAllDiagnostics =
+      PP.getDiagnostics().getSuppressAllDiagnostics();
+    PP.getDiagnostics().setSuppressAllDiagnostics(true);
+    //
+    //  Convert the passed decl into a nested name specifier,
+    //  a scope spec, and a decl context.
+    //
+    NestedNameSpecifier* classNNS = 0;
+    if (const NamespaceDecl* NSD = llvm::dyn_cast<NamespaceDecl>(classDecl)) {
+      classNNS = NestedNameSpecifier::Create(Context, 0,
+        const_cast<NamespaceDecl*>(NSD));
+    }
+    else if (const RecordDecl* RD = llvm::dyn_cast<RecordDecl>(classDecl)) {
+      const Type* T = Context.getRecordType(RD).getTypePtr();
+      classNNS = NestedNameSpecifier::Create(Context, 0, false, T);
+    }
+    else if (llvm::isa<TranslationUnitDecl>(classDecl)) {
+      classNNS = NestedNameSpecifier::GlobalSpecifier(Context);
+    }
+    else {
+      // Not a namespace or class, we cannot use it.
+      return 0;
+    }
+    CXXScopeSpec SS;
+    SS.MakeTrivial(Context, classNNS, SourceRange());
+    DeclContext* foundDC = llvm::dyn_cast<DeclContext>(classDecl);
+    //
+    //  Some validity checks on the passed decl.
+    //
+    if (foundDC->isDependentContext()) {
+      // Passed decl is a template, we cannot use it.
+      return 0;
+    }
+    if (CI->getSema().RequireCompleteDeclContext(SS, foundDC)) {
+      // Forward decl or instantiation failure, we cannot use it.
+      return 0;
+    }
+    //
+    //  Get ready for arg list parsing.
+    //
+    std::vector<QualType> GivenArgTypes;
+    std::vector<Expr*> GivenArgs;
+    //
+    //  If we are looking up a member function, construct
+    //  the implicit object argument.
+    //
+    //  Note: For now this is always a non-CV qualified lvalue.
+    //
+    QualType ClassType;
+    Expr* ObjExpr = 0;
+    Expr::Classification ObjExprClassification;
+    if (CXXRecordDecl* CRD = dyn_cast<CXXRecordDecl>(foundDC)) {
+      ClassType = Context.getTypeDeclType(CRD).getCanonicalType();
+      ObjExpr = new (Context) OpaqueValueExpr(SourceLocation(),
+        ClassType, VK_LValue);
+      ObjExprClassification = ObjExpr->Classify(Context);
+      //GivenArgTypes.insert(GivenArgTypes.begin(), ClassType);
+      //GivenArgs.insert(GivenArgs.begin(), ObjExpr);
+    }
+    //
+    //  Tell the parser to not attempt spelling correction.
+    //
+    bool OldSpellChecking = PP.getLangOpts().SpellChecking;
+    const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = 0;
+    //
+    //  Tell the diagnostic consumer we are switching files.
+    //
+    DiagnosticConsumer& DClient = CI->getDiagnosticClient();
+    DClient.BeginSourceFile(CI->getLangOpts(), &PP);
+    //
+    //  Create a fake file to parse the arguments.
+    //
+    llvm::MemoryBuffer* SB = llvm::MemoryBuffer::getMemBufferCopy(
+      funcArgs + "\n", "func.args.file");
+    FileID FID = CI->getSourceManager().createFileIDForMemBuffer(SB);
+    //
+    //  Turn on ignoring of the main file eof token.
+    //
+    //  Note: We need this because token readahead in the following
+    //        routine calls ends up parsing it multiple times.
+    //
+    bool ResetIncrementalProcessing = false;
+    if (!PP.isIncrementalProcessingEnabled()) {
+      ResetIncrementalProcessing = true;
+      PP.enableIncrementalProcessing();
+    }
+    //
+    //  Switch to the new file the way #include does.
+    //
+    //  Note: To switch back to the main file we must consume an eof token.
+    //
+    PP.EnterSourceFile(FID, 0, SourceLocation());
+    PP.Lex(const_cast<Token&>(P->getCurToken()));
+    //
+    //  Parse the arguments now.
+    //
+    {
+      PrintingPolicy Policy(Context.getPrintingPolicy());
+      Policy.SuppressTagKeyword = true;
+      Policy.SuppressUnwrittenScope = true;
+      Policy.SuppressInitializers = true;
+      Policy.AnonymousTagLocations = false;
+      std::string proto;
+      {
+        bool first_time = true;
+        while (P->getCurToken().isNot(tok::eof)) {
+          ExprResult Res = P->ParseAssignmentExpression();
+          if (Res.isUsable()) {
+            Expr* expr = Res.release();
+            GivenArgs.push_back(expr);
+            QualType QT = expr->getType().getCanonicalType();
+            QualType NonRefQT(QT.getNonReferenceType());
+            GivenArgTypes.push_back(NonRefQT);
+            if (first_time) {
+              first_time = false;
+            }
+            else {
+              proto += ',';
+            }
+            std::string empty;
+            llvm::raw_string_ostream tmp(empty);
+            expr->printPretty(tmp, Context, /*PrinterHelper=*/0,
+              Policy, /*Indentation=*/0);
+            proto += tmp.str();
+            fprintf(stderr, "%s\n", proto.c_str());
+          }
+          if (!P->getCurToken().is(tok::comma)) {
+            break;
+          }
+          P->ConsumeToken();
+        }
+      }
+    }
+    if (P->getCurToken().isNot(tok::eof)) {
+      // We did not consume all of the arg list, bad parse.
+      goto lookupFuncArgsDone;
+    }
+    {
+      //
+      //  Cleanup after the arg list parse.
+      //
+      P->SkipUntil(clang::tok::eof, /*StopAtSemi*/false, /*DontConsume*/false,
+        /*StopAtCodeCompletion*/false);
+      DClient.EndSourceFile();
+      CI->getDiagnostics().Reset();
+      //
+      //  Create a fake file to parse the function name.
+      //
+      {
+        llvm::MemoryBuffer* SB = llvm::MemoryBuffer::getMemBufferCopy(
+          funcName + "\n", "lookup.funcname.file");
+        clang::FileID FID = CI->getSourceManager().createFileIDForMemBuffer(SB);
+        CI->getPreprocessor().EnterSourceFile(FID, 0, clang::SourceLocation());
+        CI->getPreprocessor().Lex(const_cast<clang::Token&>(P->getCurToken()));
+      }
+      //
+      //  Make the class we are looking up the function
+      //  in the current scope to please the constructor
+      //  name lookup.  We do not need to do this otherwise,
+      //  and may be able to remove it in the future if
+      //  the way constructors are looked up changes.
+      //
+      //  Note:  We cannot use P->EnterScope(Scope::DeclScope)
+      //         and P->ExitScope() because they do things
+      //         we do not want to happen.
+      //
+      Scope* OldScope = CI->getSema().CurScope;
+      CI->getSema().CurScope = new Scope(OldScope, Scope::DeclScope,
+        PP.getDiagnostics());
+      CI->getSema().EnterDeclaratorContext(P->getCurScope(), foundDC);
+      //
+      //  Parse the function name.
+      //
+      SourceLocation TemplateKWLoc;
+      UnqualifiedId FuncId;
+      if (P->ParseUnqualifiedId(SS, /*EnteringContext*/false,
+          /*AllowDestructorName*/true, /*AllowConstructorName*/true,
+          ParsedType(), TemplateKWLoc, FuncId)) {
+        // Failed parse, cleanup.
+        CI->getSema().ExitDeclaratorContext(P->getCurScope());
+        delete CI->getSema().CurScope;
+        CI->getSema().CurScope = OldScope;
+        goto lookupFuncArgsDone;
+      }
+      //
+      //  Get any template args in the function name.
+      //
+      TemplateArgumentListInfo FuncTemplateArgsBuffer;
+      DeclarationNameInfo FuncNameInfo;
+      const TemplateArgumentListInfo* FuncTemplateArgs;
+      CI->getSema().DecomposeUnqualifiedId(FuncId, FuncTemplateArgsBuffer,
+        FuncNameInfo, FuncTemplateArgs);
+      //
+      //  Lookup the function name in the given class now.
+      //
+      DeclarationName FuncName = FuncNameInfo.getName();
+      SourceLocation FuncNameLoc = FuncNameInfo.getLoc();
+      LookupResult Result(CI->getSema(), FuncName, FuncNameLoc,
+        Sema::LookupMemberName, Sema::ForRedeclaration);
+      if (!CI->getSema().LookupQualifiedName(Result, foundDC)) {
+        // Lookup failed.
+        // Destroy the scope we created first, and
+        // restore the original.
+        CI->getSema().ExitDeclaratorContext(P->getCurScope());
+        delete CI->getSema().CurScope;
+        CI->getSema().CurScope = OldScope;
+        // Then cleanup and exit.
+        goto lookupFuncArgsDone;
+      }
+      //
+      //  Destroy the scope we created, and restore the original.
+      //
+      CI->getSema().ExitDeclaratorContext(P->getCurScope());
+      delete CI->getSema().CurScope;
+      CI->getSema().CurScope = OldScope;
+      //
+      //  Check for lookup failure.
+      //
+      if (!(Result.getResultKind() == LookupResult::Found) &&
+          !(Result.getResultKind() == LookupResult::FoundOverloaded)) {
+        // Lookup failed.
+        goto lookupFuncArgsDone;
+      }
+      //
+      //  Dump what was found.
+      //
+      if (Result.getResultKind() == LookupResult::Found) {
+        NamedDecl* ND = Result.getFoundDecl();
+        std::string buf;
+        llvm::raw_string_ostream tmp(buf);
+        ND->print(tmp, 0);
+        fprintf(stderr, "Found: %s\n", tmp.str().c_str());
+      } else if (Result.getResultKind() == LookupResult::FoundOverloaded) {
+        fprintf(stderr, "Found overload set!\n");
+        Result.print(llvm::outs());
+        fprintf(stderr, "\n");
+      }
+      {
+        //
+        //  Construct the overload candidate set.
+        //
+        OverloadCandidateSet Candidates(FuncNameInfo.getLoc());
+        for (LookupResult::iterator I = Result.begin(), E = Result.end();
+            I != E; ++I) {
+          NamedDecl* ND = *I;
+          if (FunctionDecl* FD = dyn_cast<FunctionDecl>(ND)) {
+            if (isa<CXXMethodDecl>(FD) &&
+                !cast<CXXMethodDecl>(FD)->isStatic() &&
+                !isa<CXXConstructorDecl>(FD)) {
+              // Class method, not static, not a constructor, so has
+              // an implicit object argument.
+              CXXMethodDecl* MD = cast<CXXMethodDecl>(FD);
+              {
+                std::string buf;
+                llvm::raw_string_ostream tmp(buf);
+                MD->print(tmp, 0);
+                fprintf(stderr, "Considering method: %s\n",
+                  tmp.str().c_str());
+              }
+              if (FuncTemplateArgs && (FuncTemplateArgs->size() != 0)) {
+                // Explicit template args were given, cannot use a plain func.
+                fprintf(stderr, "rejected: template args given\n");
+                continue;
+              }
+              CI->getSema().AddMethodCandidate(MD, I.getPair(),
+                MD->getParent(),
+                /*ObjectType=*/ClassType,
+                /*ObjectClassification=*/ObjExprClassification,
+                llvm::makeArrayRef<Expr*>(GivenArgs.data(), GivenArgs.size()),
+                Candidates);
+            }
+            else {
+              {
+                std::string buf;
+                llvm::raw_string_ostream tmp(buf);
+                FD->print(tmp, 0);
+                fprintf(stderr, "Considering func: %s\n", tmp.str().c_str());
+              }
+              const FunctionProtoType* Proto = dyn_cast<FunctionProtoType>(
+                FD->getType()->getAs<clang::FunctionType>());
+              if (!Proto) {
+                // Function has no prototype, cannot do overloading.
+                fprintf(stderr, "rejected: no prototype\n");
+                continue;
+              }
+              if (FuncTemplateArgs && (FuncTemplateArgs->size() != 0)) {
+                // Explicit template args were given, cannot use a plain func.
+                fprintf(stderr, "rejected: template args given\n");
+                continue;
+              }
+              CI->getSema().AddOverloadCandidate(FD, I.getPair(),
+                llvm::makeArrayRef<Expr*>(GivenArgs.data(), GivenArgs.size()),
+                Candidates);
+            }
+          }
+          else if (FunctionTemplateDecl* FTD =
+              dyn_cast<FunctionTemplateDecl>(ND)) {
+            if (isa<CXXMethodDecl>(FTD->getTemplatedDecl()) &&
+                !cast<CXXMethodDecl>(FTD->getTemplatedDecl())->isStatic() &&
+                !isa<CXXConstructorDecl>(FTD->getTemplatedDecl())) {
+              // Class method template, not static, not a constructor, so has
+              // an implicit object argument.
+              {
+                std::string buf;
+                llvm::raw_string_ostream tmp(buf);
+                FTD->print(tmp, 0);
+                fprintf(stderr, "Considering method template: %s\n",
+                  tmp.str().c_str());
+              }
+              CI->getSema().AddMethodTemplateCandidate(FTD, I.getPair(),
+                cast<CXXRecordDecl>(FTD->getDeclContext()),
+                const_cast<TemplateArgumentListInfo*>(FuncTemplateArgs),
+                /*ObjectType=*/ClassType,
+                /*ObjectClassification=*/ObjExprClassification,
+                llvm::makeArrayRef<Expr*>(GivenArgs.data(), GivenArgs.size()),
+                Candidates);
+            }
+            else {
+              {
+                std::string buf;
+                llvm::raw_string_ostream tmp(buf);
+                FTD->print(tmp, 0);
+                fprintf(stderr, "Considering func template: %s\n",
+                  tmp.str().c_str());
+              }
+              CI->getSema().AddTemplateOverloadCandidate(FTD, I.getPair(),
+                const_cast<TemplateArgumentListInfo*>(FuncTemplateArgs),
+                llvm::makeArrayRef<Expr*>(GivenArgs.data(), GivenArgs.size()),
+                Candidates, /*SuppressUserConversions=*/false);
+            }
+          }
+          else {
+            {
+              std::string buf;
+              llvm::raw_string_ostream tmp(buf);
+              FD->print(tmp, 0);
+              fprintf(stderr, "Considering non-func: %s\n",
+                tmp.str().c_str());
+              fprintf(stderr, "rejected: not a function\n");
+            }
+          }
+        }
+        //
+        //  Find the best viable function from the set.
+        //
+        {
+          OverloadCandidateSet::iterator Best;
+          OverloadingResult OR = Candidates.BestViableFunction(CI->getSema(),
+            Result.getNameLoc(), Best);
+          if (OR == OR_Success) {
+            TheDecl = Best->Function;
+          }
+        }
+      }
+      //
+      //  Dump the overloading result.
+      //
+      if (TheDecl) {
+        std::string buf;
+        llvm::raw_string_ostream tmp(buf);
+        TheDecl->print(tmp, 0);
+        fprintf(stderr, "Match: %s\n", tmp.str().c_str());
+        TheDecl->dump();
+        fprintf(stderr, "\n");
+      }
+    }
+  lookupFuncArgsDone:
     //
     // Advance the parser to the end of the file, and pop the include stack.
     //
