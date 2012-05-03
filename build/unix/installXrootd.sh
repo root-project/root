@@ -11,7 +11,7 @@
 #                    [--xrdopts="<opts-to-xrootd>"]
 #                    [--vers-subdir[=<version-root>]] [--no-vers-subdir]
 #                    [-j <concurrent-build-jobs>|--jobs=<concurrent-build-jobs>]
-#                    [-k|--keep]
+#                    [-k|--keep] [--bzip2]
 #
 # See printhelp for a description of the options.
 #
@@ -29,7 +29,7 @@ printhelp()
         echo "                      [--xrdopts=\"<opts-to-xrootd>\"]"
         echo "                      [-j <concurrent-build-jobs>|--jobs=<concurrent-build-jobs>]"
         echo "                      [--vers-subdir[=<version-root>]] [--no-vers-subdir]"
-        echo "                      [-k|--keep]"
+        echo "                      [-k|--keep] [--bzip2]"
         echo " "
         echo "  where"
         echo "   <installdir>: the directory where the bin, lib, include/xrootd, share and"
@@ -44,7 +44,7 @@ printhelp()
         echo "                 full local path to source tarball"
         echo "   -v <version>, --version=<version>"
         echo "                 version in the form x.j.w[-hash-or-tag] ;"
-        echo "                 current default 3.1.0"
+        echo "                 current default 3.2.0"
         echo "   --xrdopts=<opts-to-xrootd>"
         echo "                 additional configuration options to xrootd"
         echo "                 (see xrootd web site)"
@@ -60,6 +60,8 @@ printhelp()
         echo "                 default is <number-of-cores> + 1."
         echo "   -k, --keep"
         echo "                 keep the build directory"
+        echo "   --bzip2"
+        echo "                 use bzip2 to manage the tarball (when extension is .b2z)"
         echo " "
         echo "  When relevant, the script uses 'wget' ('curl' on MacOS X) to retrieve"
         echo "  the tarball"
@@ -83,6 +85,8 @@ XRDOPTS=""
 VSUBDIR="xrootd-"
 MAKEMJ=""
 KEEP=""
+UNZIP="gunzip"
+TUNZIP="xzf"
 
 #
 # Parse long options first
@@ -131,6 +135,7 @@ for i in $@ ; do
          vers-subdir=*) VSUBDIR="$oarg" ;;
          xrdopts=*)  XRDOPTS="$oarg" ;;
          keep)       KEEP="yes" ;;
+         bzip2)      UNZIP="bunzip2" ; TUNZIP="xjf" ;;
       esac
    fi
 done
@@ -187,7 +192,7 @@ else
 fi
 
 if test "x$VERS" =  "x" ; then
-   VERS="3.1.0"
+   VERS="3.2.0"
 fi
 echo "Version: $VERS"
 
@@ -203,7 +208,7 @@ if test ! "x$TARBALL" = "x" && test -f $TARBALL ; then
 fi
 if test "x$retrieve" = "xyes" ; then
    if test "x$TARBALL" = "x" ; then
-      TARBALL="http://xrootd.slac.stanford.edu/download/v$VERS/xrootd-$VERS.tar.gz"
+      TARBALL="http://xrootd.org/download/v$VERS/xrootd-$VERS.tar.gz"
       TGTBALL="xrootd-$VERS.tar.gz"
    else
       TGTBALL=`basename $TARBALL`
@@ -253,11 +258,11 @@ fi
 # Untar tarball
 if test "x$ARCH" = "xSunOS" ; then
    XMK="gmake"
-   gunzip -c $TGTBALL > "$TGTBALL.tar"
+   $UNZIP -c $TGTBALL > "$TGTBALL.tar"
    tar xf "$TGTBALL.tar"
    rm -f "$TGTBALL.tar"
 else
-   tar xzf $TGTBALL
+   tar $TUNZIP $TGTBALL
 fi
 if test ! -d xrootd-$VERS ; then
    echo "Could not find source sub-directory xrootd-$VERS"
