@@ -13,7 +13,7 @@ endif()
 
 
 #----Test if clang setup works----------------------------------------------------------------------
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   exec_program(${CMAKE_C_COMPILER} ARGS "-v" OUTPUT_VARIABLE _clang_version_info)
   string(REGEX REPLACE "^.*[ ]([0-9]+)\\.[0-9].*$" "\\1" CLANG_MAJOR "${_clang_version_info}")
   string(REGEX REPLACE "^.*[ ][0-9]+\\.([0-9]).*$" "\\1" CLANG_MINOR "${_clang_version_info}")
