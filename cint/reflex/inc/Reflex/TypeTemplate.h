@@ -305,7 +305,9 @@ inline
 Reflex::TypeTemplate&
 Reflex::TypeTemplate::operator=(const TypeTemplate& rh) {
 //-------------------------------------------------------------------------------
-   fTypeTemplateName = rh.fTypeTemplateName;
+   if (&rh != this) {
+      fTypeTemplateName = rh.fTypeTemplateName;
+   }
    return *this;
 }
 

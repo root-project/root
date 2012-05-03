@@ -304,7 +304,9 @@ inline
 Reflex::MemberTemplate&
 Reflex::MemberTemplate::operator=(const MemberTemplate& rh) {
 //-------------------------------------------------------------------------------
-   fMemberTemplateName = rh.fMemberTemplateName;
+   if (&rh != this) {
+      fMemberTemplateName = rh.fMemberTemplateName;
+   }
    return *this;
 }
 

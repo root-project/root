@@ -1128,7 +1128,9 @@ inline
 Reflex::Scope&
 Reflex::Scope::operator=(const Scope& rh) {
 //-------------------------------------------------------------------------------
-   fScopeName = rh.fScopeName;
+   if (&rh != this) {
+      fScopeName = rh.fScopeName;
+   }
    return *this;
 }
 

@@ -678,7 +678,8 @@ static VALUE drr_init(int argc, VALUE argv[], VALUE self)
    VALUE inargs;
    char *classname = (char*) rb_obj_classname(self);
    char cproto[1024] = "";
-   Long_t addr = 0, offset;
+   Long_t addr = 0;
+   Long_t offset = 0;
 
    rb_scan_args (argc, argv, "0*", &inargs);
 
@@ -776,7 +777,8 @@ static VALUE drr_singleton_missing(int argc, VALUE argv[], VALUE self)
    VALUE inargs;
    char cproto[1024] = "";
    int nargs;
-   Long_t offset, address = 0;
+   Long_t offset = 0;
+   Long_t address = 0;
    double dbladdr = 0;
 
    /* Call a singleton method.  */
@@ -827,7 +829,8 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
 
    VALUE inargs;
    char *methname, *classname ;
-   Long_t offset, address = 0;
+   Long_t offset = 0;
+   Long_t address = 0;
    double dbladdr = 0;
    char cproto[1024] = "";
    int nargs;

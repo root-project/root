@@ -296,7 +296,9 @@ inline
 Reflex::PropertyListImpl&
 Reflex::PropertyListImpl::operator=(const PropertyListImpl& pl) {
 //-------------------------------------------------------------------------------
-   fProperties = pl.fProperties;
+   if (&pl != this) {
+      fProperties = pl.fProperties;
+   }
    return *this;
 }
 

@@ -110,11 +110,13 @@ inline
 Reflex::ValueObject&
 Reflex::ValueObject::operator=(const ValueObject& o) {
 //-------------------------------------------------------------------------------
-   Object::operator=(Object(o.TypeOf(), 0));
-   fValue = o.fValue;
-   if (TypeOf().IsPointer()) {
-      fAddress = *(void**) fValue.Address();
-   } else { fAddress = fValue.Address(); }
+   if (&o != this) {
+      Object::operator=(Object(o.TypeOf(), 0));
+      fValue = o.fValue;
+      if (TypeOf().IsPointer()) {
+         fAddress = *(void**) fValue.Address();
+      } else { fAddress = fValue.Address(); }
+   }
    return *this;
 }
 
