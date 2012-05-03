@@ -67,6 +67,17 @@ root [2] histo->Draw("hist,text") ;
 </li>
 </ul>
 
+<h3>TAxis</h3>
+<ul>
+<li>
+A time axis defined with the GMT option, saved into a root file in a
+given time zone, was different when displayed in an other time zone.
+The time zone offset in which the axis was created is now saved with
+ the time axis offset allowing to make the right adjustments when 
+the axis is displayed in an other time zone.
+</li>
+</ul>
+
 <h3>TGraph2DPainter</h3>
 <ul>
 <li>
