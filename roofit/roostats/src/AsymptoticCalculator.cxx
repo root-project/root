@@ -435,15 +435,19 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
 
 
-   if (qmu < 0) {
+   if (qmu < 0 || TMath::IsNaN(fNLLObs) ) {
 
-      oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Found a negative value of the qmu - retry to do the unconditional fit " 
-                                        << std::endl;         
+      if (qmu < 0) 
+         oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Found a negative value of the qmu - retry to do the unconditional fit " 
+                                           << std::endl;         
+      else 
+         oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  unconditional fit failed before - retry to do it now " 
+                                           << std::endl;         
       
       
       double nll = EvaluateNLL( *nullPdf, const_cast<RooAbsData&>(*GetData()));
       
-      if (nll < fNLLObs) { 
+      if (nll < fNLLObs || (TMath::IsNaN(fNLLObs) && !TMath::IsNaN(nll) ) ) { 
          oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Found a better unconditional minimum "
                                            << " old NLL = " << fNLLObs << " old muHat " << muHat->getVal() << std::endl;            
 
@@ -463,35 +467,28 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
         qmu = 2.*(condNLL - fNLLObs); 
 
-        std::cout << " New qmu value is " << qmu << std::endl;
+        if (verbose > 0) 
+           oocoutP((TObject*)0,Eval) << "After unconditional refit,  new qmu value is " << qmu << std::endl;
 
       }
    }
 
-   if (qmu < 0) {       
-      oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  qmu is still < 0  for mu = " 
-                                        <<  muTest << " resulting p-value will not be meaningful "  
+   if (qmu < 0 ) {       
+      oocoutE((TObject*)0,Minimization) << "AsymptoticCalculator:  qmu is still < 0  for mu = " 
+                                        <<  muTest << " return a dummy result "  
                                         << std::endl;         
+      return new HypoTestResult();
+   }
+   if (TMath::IsNaN(qmu) ) {       
+      oocoutE((TObject*)0,Minimization) << "AsymptoticCalculator:  failure in fitting for qmu or qmuA " 
+                                        <<  muTest << " return a dummy result "  
+                                        << std::endl;         
+      return new HypoTestResult();
    }
 
-   //check for one side condition (remember this is valid only for one poi)
-   if (fOneSided ) { 
-      if ( muHat->getVal() > muTest->getVal() ) { 
-         oocoutI((TObject*)0,Eval) << "Using one-sided qmu - setting qmu to zero  muHat = " << muHat->getVal() 
-                                   << " muTest = " << muTest->getVal() << std::endl;
-         qmu = 0;
-      }
-   }
 
 
-   // asymptotic formula for pnull (for only one POI) 
-   // From fact that qmu is a chi2 with ndf=1
 
-   double sqrtqmu = (qmu > 0) ? std::sqrt(qmu) : 0; 
-
-   double pnull = ROOT::Math::normal_cdf_c( sqrtqmu, 1.);
- 
-   
 
    // compute conditional ML on Asimov data set
    // (need to const cast because it uses fitTo which is a non const method
@@ -518,15 +515,19 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    if (verbose > 0) 
       oocoutP((TObject*)0,Eval) << "\t ASIMOV data qmu_A = " << qmu_A << " condNLL = " << condNLL_A << " uncond " << fNLLAsimov << std::endl;
 
-   if (qmu_A < 0) {
+   if (qmu_A < 0 || TMath::IsNaN(fNLLAsimov) ) {
 
-      oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Found a negative value of the qmu Asimov- retry to do the unconditional fit " 
-                                        << std::endl;         
+      if (qmu_A < 0) 
+         oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Found a negative value of the qmu Asimov- retry to do the unconditional fit " 
+                                           << std::endl;         
+      else 
+         oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Fit failed for  unconditional the qmu Asimov- retry  unconditional fit " 
+                                           << std::endl;         
       
       
       double nll = EvaluateNLL( *nullPdf, *fAsimovData );
       
-      if (nll < fNLLAsimov) { 
+      if (nll < fNLLAsimov || (TMath::IsNaN(fNLLAsimov) && !TMath::IsNaN(nll) )) { 
          oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Found a better unconditional minimum for Asimov data set"
                                            << " old NLL = " << fNLLAsimov << std::endl;            
 
@@ -537,64 +538,121 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
                                            << "    NLL = " << fNLLAsimov << std::endl;            
          qmu_A = 2.*(condNLL_A - fNLLAsimov); 
 
-         std::cout << " New qmu value is " << qmu_A << std::endl;
+        if (verbose > 0) 
+           oocoutP((TObject*)0,Eval) << "After unconditional Asimov refit,  new qmu_A value is " << qmu_A << std::endl;
 
       }
    }
 
    if (qmu_A < 0) {       
-      oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  qmu_A is still < 0  for mu = " 
-                                        <<  muTest << " resulting p-value will not be meaningful "  
+      oocoutE((TObject*)0,Minimization) << "AsymptoticCalculator:  qmu_A is still < 0  for mu = " 
+                                        <<  muTest << " return a dummy result "  
                                         << std::endl;         
+      return new HypoTestResult();
+   }
+   if (TMath::IsNaN(qmu) ) {       
+      oocoutE((TObject*)0,Minimization) << "AsymptoticCalculator:  failure in fitting for qmu or qmuA " 
+                                        <<  muTest << " return a dummy result "  
+                                        << std::endl;         
+      return new HypoTestResult();
    }
 
 
    // restore previous value of global observables
    globObs = globObsSnapshot;
 
+   // now we compute p-values using the asumptotic formulae 
+   // described in the paper 
+   //  Cowan et al, Eur.Phys.J. C (2011) 71:1554
 
-   // do I need to do something for Asimov on the one-sided case ???
-//    if (fOneSided) { 
-//          if ( muHat->getVal() > muTest->getVal() ) qmu_A = 0;
-//       }
-//    }
-
-
-
-   // asymptotic formula for palt based on Asimov data set 
-   // See Eur.Phys.J C(2011( 71:1554
-   
-   double sqrtqmu_A = (qmu_A > 0) ? std::sqrt(qmu_A) : 0; 
-
-   double palt = ROOT::Math::normal_cdf( sqrtqmu_A - sqrtqmu, 1.);
-
-   // formula for Qtilde (need to distinguish case when qmu > qmuA
+   // first try to guess autoatically if needed to use qtilde (or ttilde in case of two sided) 
+   // if explicitly fUseQTilde this was not set
+   // qtilde is in this case used if poi is bounded at the value of the alt hypothesis
+   //  for Qtilde (need to distinguish case when qmu > qmuA = mu^2/ sigma^2) 
    // (see Cowan et al, Eur.Phys.J. C(2011) 71:1554 paper equations 64 and 65
    // (remember qmu_A = mu^2/sigma^2 )
    bool useQTilde = false; 
    // default case (check if poi is limited or not to a zero value)
-   if (fUseQTilde == -1) {
-      // alternate snapshot is value for which background is zero
-      RooRealVar * muAlt = dynamic_cast<RooRealVar*>( GetAlternateModel()->GetSnapshot()->first() );
-      assert(muAlt != 0);
-      if (muTest->getMin() == muAlt->getVal() ) { 
-         fUseQTilde = 1;  
-         oocoutI((TObject*)0,InputArguments) << "Minimum of POI is " << muTest->getMin() << " corresponds to alt snapshot  " << muAlt->getVal() << " - using qtilde asymptotic formulae  " << std::endl;
-      } else {
-         fUseQTilde = 0;  
-         oocoutI((TObject*)0,InputArguments) << "Minimum of POI is " << muTest->getMin() << " is different to alt snapshot " << muAlt->getVal() << " - using standard q asymptotic formulae  " << std::endl;
-      }         
+   if (!fOneSidedDiscovery) { // qtilde is not a discovery test 
+      if (fUseQTilde == -1 && !fOneSidedDiscovery) { 
+         // alternate snapshot is value for which background is zero (for limits)
+         RooRealVar * muAlt = dynamic_cast<RooRealVar*>( GetAlternateModel()->GetSnapshot()->first() );
+         // null snapshot is value for which background is zero (for discovery)
+         //RooRealVar * muNull = dynamic_cast<RooRealVar*>( GetNullModel()->GetSnapshot()->first() );
+         assert(muAlt != 0 );
+         if (muTest->getMin() == muAlt->getVal()   ) { 
+            fUseQTilde = 1;  
+            oocoutI((TObject*)0,InputArguments) << "Minimum of POI is " << muTest->getMin() << " corresponds to alt  snapshot   - using qtilde asymptotic formulae  " << std::endl;
+         } else {
+            fUseQTilde = 0;  
+            oocoutI((TObject*)0,InputArguments) << "Minimum of POI is " << muTest->getMin() << " is different to alt snapshot " << muAlt->getVal() 
+                                                << " - using standard q asymptotic formulae  " << std::endl;
+         }         
+      }
+      else 
+         useQTilde = fUseQTilde;
    }
-   else 
-      useQTilde = fUseQTilde; 
 
- 
-   if (useQTilde && qmu > qmu_A) { 
-      pnull = ROOT::Math::normal_cdf_c( (qmu + qmu_A)/(2 * sqrtqmu_A), 1.);
-      palt = ROOT::Math::normal_cdf_c( (qmu - qmu_A)/(2 * sqrtqmu_A), 1.);
+
+   //check for one side condition (remember this is valid only for one poi)
+   if (fOneSided ) { 
+      if ( muHat->getVal() > muTest->getVal() ) { 
+         oocoutI((TObject*)0,Eval) << "Using one-sided qmu - setting qmu to zero  muHat = " << muHat->getVal() 
+                                   << " muTest = " << muTest->getVal() << std::endl;
+         qmu = 0;
+      }
    }
+   if (fOneSidedDiscovery ) { 
+      if ( muHat->getVal() < muTest->getVal() ) { 
+         oocoutI((TObject*)0,Eval) << "Using one-sided qmu - setting qmu to zero  muHat = " << muHat->getVal() 
+                                   << " muTest = " << muTest->getVal() << std::endl;
+         qmu = 0;
+      }
+   }
+
+   // asymptotic formula for pnull and from  paper Eur.Phys.J C 2011  71:1554
+   // we have 4 different cases: 
+   //          t(mu), t_tilde(mu) for the 2-sided 
+   //          q(mu) and q_tilde(mu) for the one -sided test statistics
+
+   double pnull = -1, palt = -1;
+
+   // asymptotic formula for pnull (for only one POI) 
+   // From fact that qmu is a chi2 with ndf=1
+
+   double sqrtqmu = (qmu > 0) ? std::sqrt(qmu) : 0; 
+   double sqrtqmu_A = (qmu_A > 0) ? std::sqrt(qmu_A) : 0; 
 
    
+   if (fOneSided || fOneSidedDiscovery) { 
+      pnull = ROOT::Math::normal_cdf_c( sqrtqmu, 1.);
+      palt = ROOT::Math::normal_cdf( sqrtqmu_A - sqrtqmu, 1.);
+   }
+   else  {
+      // for 2-sided PL 
+      pnull = 2.*ROOT::Math::normal_cdf_c( sqrtqmu, 1.);
+      palt = ROOT::Math::normal_cdf_c( sqrtqmu + sqrtqmu_A, 1.) + 
+         ROOT::Math::normal_cdf_c( sqrtqmu - sqrtqmu_A, 1.); 
+         
+   }
+
+   if (useQTilde ) { 
+      if (fOneSided) { 
+         if ( qmu > qmu_A) { 
+            pnull = ROOT::Math::normal_cdf_c( (qmu + qmu_A)/(2 * sqrtqmu_A), 1.);
+            palt = ROOT::Math::normal_cdf_c( (qmu - qmu_A)/(2 * sqrtqmu_A), 1.);
+         }
+      }
+      else {  // for 2 sided test statistic  (for one sided discovery qtilde is false)
+         if ( qmu >  qmu_A) { 
+            pnull = ROOT::Math::normal_cdf_c(sqrtqmu,1.) + 
+                    ROOT::Math::normal_cdf_c( (qmu + qmu_A)/(2 * sqrtqmu_A), 1.);
+            palt = ROOT::Math::normal_cdf_c( sqrtqmu_A + sqrtqmu, 1.) + 
+                   ROOT::Math::normal_cdf_c( (qmu - qmu_A)/(2 * sqrtqmu_A), 1.);
+         }
+      }
+   }
+
 
 
    // create an HypoTest result but where the sampling distributions are set to zero
