@@ -599,7 +599,7 @@ bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax, bool s
    for (int i=0; i<nBins; i++) {
       
       if (i > 0) { // avoids case of nBins = 1
-         if (scanLog) {
+         if (scanLog) 
             thisX = exp(  log(xMin) +  i*(log(xMax)-log(xMin))/(nBins-1)  );  // scan in log x
          else
             thisX = xMin + i*(xMax-xMin)/(nBins-1);          // linear scan in x 
