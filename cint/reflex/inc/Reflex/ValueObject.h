@@ -40,6 +40,9 @@ public:
    /** destructor */
    ~ValueObject();
 
+   /** assignment op */
+   ValueObject& operator=(const ValueObject &o);
+
    /** get the actual value */
    template <typename T> const T& Value();
 
@@ -99,6 +102,20 @@ Reflex::ValueObject::Assign(const T& v) {
 //-------------------------------------------------------------------------------
 inline Reflex::ValueObject::~ValueObject() {
 //-------------------------------------------------------------------------------
+}
+
+
+//-------------------------------------------------------------------------------
+inline
+Reflex::ValueObject&
+Reflex::ValueObject::operator=(const ValueObject& o) {
+//-------------------------------------------------------------------------------
+   Object::operator=(Object(o.TypeOf(), 0));
+   fValue = o.fValue;
+   if (TypeOf().IsPointer()) {
+      fAddress = *(void**) fValue.Address();
+   } else { fAddress = fValue.Address(); }
+   return *this;
 }
 
 

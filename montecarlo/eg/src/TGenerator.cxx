@@ -462,10 +462,19 @@ void TGenerator::Draw(Option_t *option)
    snprintf(tcount,12,"%d",nKaons);       text->DrawText(-0.55,-0.87,tcount);
    snprintf(tcount,12,"%d",nElectrons);   text->DrawText(-0.55,-0.92,tcount);
 
-   snprintf(tcount,12,"Protons/Pions= %4f",Float_t(nProtons)/Float_t(nPionPlus+nPionMinus));
    text->SetTextAlign(12);
+   if (nPionPlus+nPionMinus) {
+      snprintf(tcount,31,"Protons/Pions= %4f",Float_t(nProtons)/Float_t(nPionPlus+nPionMinus));
+   } else {
+      strlcpy(tcount,"Protons/Pions= inf",31);
+   }
    text->DrawText(-0.45,-0.92,tcount);
-   snprintf(tcount,12,"Kaons/Pions= %4f",Float_t(nKaons)/Float_t(nPionPlus+nPionMinus));
+
+   if (nPionPlus+nPionMinus) {
+      snprintf(tcount,12,"Kaons/Pions= %4f",Float_t(nKaons)/Float_t(nPionPlus+nPionMinus));
+   } else {
+      strlcpy(tcount,"Kaons/Pions= inf",31);
+   }
    text->DrawText(0.30,-0.92,tcount);
 }
 

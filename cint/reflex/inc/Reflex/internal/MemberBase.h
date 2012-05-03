@@ -31,6 +31,9 @@ class DictionaryGenerator;
  * @ingroup Ref
  */
 class RFLX_API MemberBase {
+private:
+   MemberBase(const MemberBase&); // not implemented
+   MemberBase& operator=(const MemberBase&); // not implemented
 public:
    /** default constructor */
    MemberBase(const char* name,

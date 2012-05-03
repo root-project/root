@@ -48,6 +48,10 @@ public:
    virtual ~PropertyListImpl();
 
 
+   /** assignment op */
+   PropertyListImpl& operator=(const PropertyListImpl &pl);
+
+
    /**
     * AddProperty will add a key value pair to the PropertyNth lsit
     * @param key the key of the PropertyNth
@@ -284,6 +288,16 @@ inline Reflex::PropertyListImpl::PropertyListImpl()
 inline Reflex::PropertyListImpl::PropertyListImpl(const PropertyListImpl& pl)
 //-------------------------------------------------------------------------------
    : fProperties(pl.fProperties) {
+}
+
+
+//-------------------------------------------------------------------------------
+inline
+Reflex::PropertyListImpl&
+Reflex::PropertyListImpl::operator=(const PropertyListImpl& pl) {
+//-------------------------------------------------------------------------------
+   fProperties = pl.fProperties;
+   return *this;
 }
 
 

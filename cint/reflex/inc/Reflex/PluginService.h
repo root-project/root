@@ -32,6 +32,9 @@ class PluginFactoryMap;
  * @ingroup Ref
  */
 class RFLX_API PluginService {
+private:
+   PluginService(const PluginService&); // not implemented
+   PluginService& operator=(const PluginService&); // not implemented
 public:
    template <typename R>
    static R

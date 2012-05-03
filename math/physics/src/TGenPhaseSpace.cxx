@@ -64,6 +64,25 @@ TGenPhaseSpace::TGenPhaseSpace(const TGenPhaseSpace &gen) : TObject(gen)
    }
 }
 
+
+//__________________________________________________________________________________________________
+TGenPhaseSpace& TGenPhaseSpace::operator=(const TGenPhaseSpace &gen)
+{
+   // Assignment operator
+   TObject::operator=(gen);
+   fNt      = gen.fNt;
+   fWtMax   = gen.fWtMax;
+   fTeCmTm  = gen.fTeCmTm;
+   fBeta[0] = gen.fBeta[0];
+   fBeta[1] = gen.fBeta[1];
+   fBeta[2] = gen.fBeta[2];
+   for (Int_t i=0;i<fNt;i++) {
+      fMass[i]   = gen.fMass[i];
+      fDecPro[i] = gen.fDecPro[i];
+   }
+   return *this;
+}
+
 //__________________________________________________________________________________________________
 Double_t TGenPhaseSpace::Generate() 
 {

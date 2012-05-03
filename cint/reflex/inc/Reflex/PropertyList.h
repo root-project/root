@@ -46,6 +46,10 @@ public:
    ~PropertyList();
 
 
+   /** assignment op */
+   PropertyList& operator=(const PropertyList &pl);
+
+
    /**
     * operator bool will return true if the property list is implemented
     * @return true if property list is not a fake one
@@ -323,6 +327,16 @@ inline Reflex::PropertyList::PropertyList(const PropertyList& pl)
 //-------------------------------------------------------------------------------
 inline Reflex::PropertyList::~PropertyList() {
 //-------------------------------------------------------------------------------
+}
+
+
+//-------------------------------------------------------------------------------
+inline
+Reflex::PropertyList&
+Reflex::PropertyList::operator=(const PropertyList& pl) {
+//-------------------------------------------------------------------------------
+   fPropertyListImpl = pl.fPropertyListImpl;
+   return *this;
 }
 
 

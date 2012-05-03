@@ -34,6 +34,9 @@ class DictionaryGenerator;
  * @ingroup Ref
  */
 class RFLX_API TypeBase {
+private:
+   TypeBase(const TypeBase&); // not implemented
+   TypeBase& operator=(const TypeBase&); // not implemented
 public:
    /** default constructor */
    TypeBase(const char* nam,
