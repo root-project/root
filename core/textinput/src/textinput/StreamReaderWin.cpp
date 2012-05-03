@@ -98,6 +98,7 @@ namespace textinput {
   bool
   StreamReaderWin::ReadInput(size_t& nRead, InputData& in) {
     DWORD NRead = 0;
+    in.SetModifier(InputData::kModNone);
     char C;
     if (fIsConsole) {
       INPUT_RECORD buf;
