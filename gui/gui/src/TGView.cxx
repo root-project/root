@@ -47,6 +47,7 @@
 #include "TGResourcePool.h"
 #include "TMath.h"
 #include "KeySymbols.h"
+#include "RConfigure.h"
 
 
 
@@ -269,11 +270,19 @@ void TGView::DoRedraw()
 
    DrawBorder();
 
+#ifdef R__HAS_COCOA
+   //It can happen, that TGView::DoRedraw is called outside
+   //of QuartzView's drawRect (drawRect also sets fExposedRegion).
+   //In this case, TGView's content will be lost.
+   //TODO: This is non-optimal solution.
+   DrawRegion(0, 0, GetWidth(), GetHeight());
+#else
    if (!fExposedRegion.IsEmpty()) {
       DrawRegion(fExposedRegion.fX, fExposedRegion.fY, 
                  fExposedRegion.fW, fExposedRegion.fH);
       fExposedRegion.Empty();
    }
+#endif
 }
 
 //______________________________________________________________________________
@@ -538,6 +547,11 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
 
    UpdateBackgroundStart();
 
+#ifdef R__HAS_COCOA
+   //With QuartzView it's quite tough to copy window's pixels to window.
+   //TODO: non-optimal solution.
+   DrawRegion(0, 0, GetWidth(), GetHeight());
+#else
    // Copy the scrolled region to its new position
    gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fWhiteGC(),
                        xsrc, ysrc, fCanvas->GetWidth()-cpywidth,
@@ -553,6 +567,7 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
 #endif
 
    DrawRegion(points[0].fX, points[0].fY, xdiff, ydiff);
+#endif
 }
 
 //______________________________________________________________________________

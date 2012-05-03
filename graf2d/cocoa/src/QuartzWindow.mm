@@ -1754,7 +1754,9 @@ void print_mask_info(ULong_t mask)
             //Ask ROOT's widget/window to draw itself.
             gClient->NeedRedraw(window, kTRUE);
             
-            if (!fSnapshotDraw) {
+            if (!fSnapshotDraw && !ViewIsTextView(self)) {
+               //If Cocoa repaints widget, cancel all ROOT's "outside of paint event"
+               //rendering into this widget ... Except it's a text view :)
                gClient->CancelRedraw(window);
                vx->GetCommandBuffer()->RemoveGraphicsOperationsForWindow(fID);
             }
