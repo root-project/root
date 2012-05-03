@@ -858,6 +858,7 @@ int changeown(const std::string &path, uid_t u, gid_t g)
                if (changeown(fn.c_str(), u, g) != 0) {
                   Info("changeown: ERROR: problems changing recursively ownership of '%s'",
                        fn.c_str());
+                  closedir(dir);
                   return -1;
                }
             } else {
@@ -865,12 +866,14 @@ int changeown(const std::string &path, uid_t u, gid_t g)
                rpdprivguard pguard((uid_t)0, (gid_t)0);
                if (rpdbadpguard(pguard, u)) {
                   Info("changeown: ERROR: could not get privileges (errno: %d)", errno);
+                  closedir(dir);
                   return -1;
                }
                // Set ownership of the path to the client
                if (chown(fn.c_str(), u, g) == -1) {
                   Info("changeown: ERROR: cannot set user ownership on path '%s' (errno: %d)",
                        fn.c_str(), errno);
+                  closedir(dir);
                   return -1;
                }
             }

@@ -566,6 +566,7 @@ int XrdProofdAux::ChangeOwn(const char *path, XrdProofUI ui)
             if (S_ISDIR(xst.st_mode)) {
                if (XrdProofdAux::ChangeOwn(fn.c_str(), ui) != 0) {
                   TRACE(XERR, "problems changing recursively ownership of: "<<fn);
+                  closedir(dir);
                   return -1;
                }
             } else {
@@ -573,10 +574,12 @@ int XrdProofdAux::ChangeOwn(const char *path, XrdProofUI ui)
                XrdSysPrivGuard pGuard((uid_t)0, (gid_t)0);
                if (XpdBadPGuard(pGuard, ui.fUid)) {
                   TRACE(XERR, "could not get privileges to change ownership");
+                  closedir(dir);
                   return -1;
                }
                // Set ownership of the path to the client
                if (chown(fn.c_str(), ui.fUid, ui.fGid) == -1) {
+                  closedir(dir);
                   TRACE(XERR, "cannot set user ownership on path (errno: "<<errno<<")");
                   return -1;
                }
@@ -664,11 +667,13 @@ int XrdProofdAux::ChangeMod(const char *path, unsigned int mode)
                XrdSysPrivGuard pGuard(xst.st_uid, xst.st_gid);
                if (XpdBadPGuard(pGuard, xst.st_uid)) {
                   TRACE(XERR, "could not get privileges to change ownership");
+                  closedir(dir);
                   return -1;
                }
                // Set the permission mode of the path
                if (chmod(fn.c_str(), mode) == -1) {
                   TRACE(XERR, "cannot change permissions on path (errno: "<<errno<<")");
+                  closedir(dir);
                   return -1;
                }
             }
@@ -676,6 +681,7 @@ int XrdProofdAux::ChangeMod(const char *path, unsigned int mode)
             if (S_ISDIR(xst.st_mode)) {
                if (XrdProofdAux::ChangeMod(fn.c_str(), mode) != 0) {
                   TRACE(XERR, "problems changing recursively permissions of: "<<fn);
+                  closedir(dir);
                   return -1;
                }
             }
@@ -1247,6 +1253,7 @@ int XrdProofdAux::VerifyProcessByID(int pid, const char *pname)
       } else {
          XPDFORM(emsg, "cannot open %s; errno: %d", fn.c_str(), errno);
          TRACE(XERR, emsg);
+         close(ffd);
          return -1;
       }
    }
@@ -1455,6 +1462,7 @@ int XrdProofdAux::MvDir(const char *oldpath, const char *newpath)
    if (stat(newpath, &st) != 0 || !S_ISDIR(st.st_mode)) {
       TRACE(XERR, "destination dir "<<newpath<<
                   " does not exist or is not a directory; errno: "<<errno);
+      closedir(dir);
       return -ENOENT;
    }
 

@@ -3092,6 +3092,7 @@ int XrdProofdProofServMgr::SetProofServEnvOld(XrdProofdProtocol *p, void *input)
                }
             } else {
                TRACE(XERR, "unable to create creds dir: "<<credsdir);
+               fclose(fenv);
                return -1;
             }
          }
@@ -3557,6 +3558,7 @@ int XrdProofdProofServMgr::CreateProofServEnvFile(XrdProofdProtocol *p, void *in
                }
             } else {
                TRACE(XERR, "unable to create creds dir: "<<credsdir);
+               fclose(fenv);
                return -1;
             }
          }

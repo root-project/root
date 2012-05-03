@@ -563,6 +563,9 @@ int XrdProofGroupMgr::ReadPriorities()
       g->SetPriority((float)strtod(value.c_str(),0));
    }
 
+   // Close the file
+   fclose(fin);
+
    // Done
    return 0;
 }
