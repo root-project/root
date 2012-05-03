@@ -11,6 +11,7 @@ find_package(ROOT REQUIRED)
 include(${ROOT_USE_FILE})
 
 include_directories(${ROOT_INCLUDE_DIRS})
+include_directories(${ROOT_INCLUDE_DIRS}/../tutorials)
 
 
 #---environment-------------------------------------------------------------------------------
