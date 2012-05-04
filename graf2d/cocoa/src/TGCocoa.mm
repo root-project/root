@@ -2965,11 +2965,15 @@ void TGCocoa::SetMWMHints(Window_t wid, UInt_t value, UInt_t funcs, UInt_t /*inp
    [qw setStyleMask : newMask];
    
    if (funcs & kMWMDecorAll) {
-      [[qw standardWindowButton : NSWindowZoomButton] setEnabled : YES];
-      [[qw standardWindowButton : NSWindowMiniaturizeButton] setEnabled : YES];
+      if (!qw.fMainWindow) {//Do not touch buttons for transient window.
+         [[qw standardWindowButton : NSWindowZoomButton] setEnabled : YES];
+         [[qw standardWindowButton : NSWindowMiniaturizeButton] setEnabled : YES];
+      }
    } else {
-      [[qw standardWindowButton : NSWindowZoomButton] setEnabled : funcs & kMWMDecorMaximize];
-      [[qw standardWindowButton : NSWindowMiniaturizeButton] setEnabled : funcs & kMWMDecorMinimize];
+      if (!qw.fMainWindow) {//Do not touch transient window's titlebar.
+         [[qw standardWindowButton : NSWindowZoomButton] setEnabled : funcs & kMWMDecorMaximize];
+         [[qw standardWindowButton : NSWindowMiniaturizeButton] setEnabled : funcs & kMWMDecorMinimize];
+      }
    }
 }
 
@@ -2989,16 +2993,17 @@ void TGCocoa::SetWMSize(Window_t /*wid*/, UInt_t /*w*/, UInt_t /*h*/)
 }
 
 //______________________________________________________________________________
-void TGCocoa::SetWMSizeHints(Window_t wid, UInt_t /*wMin*/, UInt_t /*hMin*/, UInt_t /*wMax*/, UInt_t /*hMax*/, UInt_t wInc, UInt_t hInc)
+void TGCocoa::SetWMSizeHints(Window_t wid, UInt_t wMin, UInt_t hMin, UInt_t wMax, UInt_t hMax, UInt_t /*wInc*/, UInt_t /*hInc*/)
 {
    //
    assert(!fPimpl->IsRootWindow(wid) && "SetWMSizeHints, called for 'root' window");
 
-   if (!wInc && !hInc) {
-      QuartzWindow *qw = fPimpl->GetWindow(wid).fQuartzWindow;
-      [qw setStyleMask : [qw styleMask] & ~NSResizableWindowMask];
-      [[qw standardWindowButton : NSWindowZoomButton] setEnabled : NO];
-   }
+   QuartzWindow *qw = fPimpl->GetWindow(wid).fQuartzWindow;   
+   //I can use CGSizeMake, but what if NSSize one bad day becomes something else? :)
+   NSSize minSize = {}; minSize.width = wMin, minSize.height = hMin;
+   [qw setMinSize : minSize];
+   NSSize maxSize = {}; maxSize.width = wMax, maxSize.height = hMax;
+   [qw setMaxSize : maxSize];
 }
 
 //______________________________________________________________________________
@@ -3028,9 +3033,10 @@ void TGCocoa::SetWMTransientHint(Window_t wid, Window_t mainWid)
    QuartzWindow *mainWindow = fPimpl->GetWindow(mainWid).fQuartzWindow;
    QuartzWindow *transientWindow = fPimpl->GetWindow(wid).fQuartzWindow;
 
-   if (mainWindow != transientWindow)
+   if (mainWindow != transientWindow) {
+      [[transientWindow standardWindowButton : NSWindowZoomButton] setEnabled : NO];
       [mainWindow addTransientWindow : transientWindow];
-   else
+   } else
       Warning("SetWMTransientHint", "transient and main windows are the same window");
 }
 
