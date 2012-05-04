@@ -156,7 +156,7 @@ const TMVA::Event* TMVA::TransformationHandler::Transform( const Event* ev ) con
 //_______________________________________________________________________
 const TMVA::Event* TMVA::TransformationHandler::InverseTransform( const Event* ev, Bool_t suppressIfNoTargets ) const 
 {
-   if (fTransformationsReferenceClasses.size()==0){
+   if (fTransformationsReferenceClasses.empty()){
       //Log() << kWARNING << __FILE__ <<":InverseTransform fTransformationsReferenceClasses is empty" << Endl;
       return ev; 
    }
