@@ -144,6 +144,7 @@ protected:
 
    static bool CheckAxisLimits(const TAxis* a1, const TAxis* a2);
    static bool CheckBinLimits(const TAxis* a1, const TAxis* a2);
+   static bool CheckBinLabels(const TAxis* a1, const TAxis* a2);
    static bool CheckEqualAxes(const TAxis* a1, const TAxis* a2);
    static bool CheckConsistentSubAxes(const TAxis *a1, Int_t firstBin1, Int_t lastBin1, const TAxis *a2, Int_t firstBin2=0, Int_t lastBin2=0);
    static bool CheckConsistency(const TH1* h1, const TH1* h2);

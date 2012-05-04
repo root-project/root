@@ -158,6 +158,6 @@ Add the support for asymmetric errors, by adding the methods <tt>TH1::GetBinErro
 <li>Change all the <tt>TH1::Add</tt>, <tt>TH1::Divide</tt>, <tt>TH1::Multiply</tt>,  methods and those in the derived classes (e.g. in TProfile classes) to return a boolean. The boolean is set to false in case the method fails (e.g when the histograms are not consistent,
 they have different bins)</li>
 
-
+<li>Add in TH1::Add a check for the labels. If the histogram axes to be added have same bin labels no warning is produced</li>
 
 </ul>
