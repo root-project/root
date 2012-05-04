@@ -658,9 +658,10 @@ fi
 # want readline?
 if [ "$READLINELIB" != "" ]; then
     CXXFLAGS="$CXXFLAGS -DG__GNUREADLINE"
+    DEFAULTLIBS="$DEFAULTLIBS -ltermcap"
     echo "Using $READLINELIB"
 
-    if [ "$EXPLLINK" = "1" ]; then 
+    if [ "$EXPLLINK" = "1" ]; then
        READLINELIB4SHLIB=$READLINELIB
     fi
 
@@ -671,7 +672,6 @@ if [ "$READLINELIB" != "" ]; then
             for d in $EXTRA_LIB_DIR /usr/local/lib /usr/lib /sw/lib /sw/lib/ncurses; do 
                 if [ -f ${d}/libncurses$ext ]; then
                     CURSESLIB=${d}/libncurses$ext
-                    DEFAULTLIBS="$DEFAULTLIBS -ltermcap"
                     NCURSES=n
                     break 2
                 elif [ -f ${d}/libcurses$ext ]; then
