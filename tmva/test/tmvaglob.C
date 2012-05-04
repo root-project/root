@@ -448,10 +448,14 @@ namespace TMVAGlob {
 
    Int_t GetNumberOfTargets( TDirectory *dir )
    {
+      if (!dir) {
+         cout << "tmvaglob::GetNumberOfTargets is called with *dir==NULL :( " << endl;
+         return 0;
+      }
       TIter next(dir->GetListOfKeys());
       TKey* key    = 0;
       Int_t noTrgts = 0;
-         
+      
       while ((key = (TKey*)next())) {
          if (key->GetCycle() != 1) continue;        
          if (TString(key->GetName()).Contains("__Regression_target")) noTrgts++;

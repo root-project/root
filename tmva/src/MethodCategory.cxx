@@ -160,6 +160,7 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
    MethodBase *method = (dynamic_cast<MethodBase*>(addedMethod));
    if(method==0) return 0;
 
+   method->SetAnalysisType( fAnalysisType );
    method->SetupMethod();
    method->ParseOptions();
    method->GetTransformationHandler().AddTransformation( rearrangeTransformation, -1 );
@@ -648,6 +649,6 @@ const std::vector<Float_t> &TMVA::MethodCategory::GetRegressionValues()
       return MethodBase::GetRegressionValues();
    }
    // get mva value from the suitable sub-classifier
-   return meth->GetRegressionValues();
+   return meth->GetRegressionValues(ev);
 }
 

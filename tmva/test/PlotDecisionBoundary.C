@@ -20,7 +20,9 @@
 #include "TGraph.h"
 #include "TH2F.h"
 #include "TH3F.h"
+
 #include "TMVAGui.C"
+#include "tmvaglob.C"
 
 #if not defined(__CINT__) || defined(__MAKECINT__)
 #include "TMVA/Tools.h"
@@ -28,16 +30,16 @@
 #include "TMVA/MethodCuts.h"
 #include "TMVA/SeparationBase.h"
 #include "TMVA/GiniIndex.h"
-#include "TMVA/MisClassificationErrror.h"
+#include "TMVA/MisClassificationError.h"
 #endif
 
 using namespace TMVA;
 
 
-void plot(TH2D *sig, TH2D *bkg, TH2F *MVA, TString v0="var0", TString v1="var1",Float_t mvaCut){
+void plot(TH2D *sig, TH2D *bkg, TH2F *MVA, TString v0="var0", TString v1="var1",Float_t mvaCut=0){
 
    TCanvas *c = new TCanvas(Form("DecisionBoundary%s",MVA->GetTitle()),MVA->GetTitle(),800,800);
-
+   c->cd();
    cout <<  "MVACut = "<<mvaCut << endl;
    gStyle->SetPalette(1);
    MVA->SetXTitle(v0);
@@ -82,14 +84,14 @@ void PlotDecisionBoundary( TString weightFile = "weights/TMVAClassification_BDT.
    // create a set of variables and declare them to the reader
    // - the variable names must corresponds in name and type to 
    // those given in the weight file(s) that you use
-   Float_t var0, var1;
+   Double_t var0, var1;
    reader->AddVariable( v0,                &var0 );
    reader->AddVariable( v1,                &var1 );
 
    //
    // book the MVA method
    //
-   reader->BookMVA( "M1", weightFile ); 
+   reader->BookMVA( "MyMVAMethod", weightFile ); 
    
    TFile *f = new TFile(dataFileName);
    TTree *signal     = (TTree*)f->Get("TreeS");
@@ -117,10 +119,10 @@ void PlotDecisionBoundary( TString weightFile = "weights/TMVAClassification_BDT.
    Float_t ymax = signal->GetMaximum(v1.Data());
    Float_t ymin = signal->GetMinimum(v1.Data());
  
-   xmax = TMath::Max(xmax,background->GetMaximum(v0.Data()));  
-   xmin = TMath::Min(xmin,background->GetMinimum(v0.Data()));
-   ymax = TMath::Max(ymax,background->GetMaximum(v1.Data()));
-   ymin = TMath::Min(ymin,background->GetMinimum(v1.Data()));
+   xmax = TMath::Max(xmax,(Float_t)background->GetMaximum(v0.Data()));  
+   xmin = TMath::Min(xmin,(Float_t)background->GetMinimum(v0.Data()));
+   ymax = TMath::Max(ymax,(Float_t)background->GetMaximum(v1.Data()));
+   ymin = TMath::Min(ymin,(Float_t)background->GetMinimum(v1.Data()));
 
 
    TH2D *hs=new TH2D("hs","",nbin,xmin,xmax,nbin,ymin,ymax);   
@@ -140,51 +142,52 @@ void PlotDecisionBoundary( TString weightFile = "weights/TMVAClassification_BDT.
    // we'll later on use only the "signal" events for the test in this example.
 
    Float_t MinMVA=10000, MaxMVA=-100000;
-   for (Int_t ibin=1; ibin<nbin+1; ibin++){
-      for (Int_t jbin=1; jbin<nbin+1; jbin++){
+   for (UInt_t ibin=1; ibin<nbin+1; ibin++){
+      for (UInt_t jbin=1; jbin<nbin+1; jbin++){
          var0 = hs->GetXaxis()->GetBinCenter(ibin);
          var1 = hs->GetYaxis()->GetBinCenter(jbin);
-         Float_t mvaVal=reader->EvaluateMVA( "M1" ) ;
+         Float_t mvaVal=reader->EvaluateMVA( "MyMVAMethod" ) ;
          if (MinMVA>mvaVal) MinMVA=mvaVal;
          if (MaxMVA<mvaVal) MaxMVA=mvaVal;
          hist->SetBinContent(ibin,jbin, mvaVal);
       }
    }
 
-   // creating a fine histograms containing the error rate
+
+   // now you need to try to find the MVA-value at which you cut for the plotting of the decision boundary
+   // (Use the smallest number of misclassifications as criterion)
    const Int_t nValBins=100;
    Double_t    sum = 0.;
-
-   TH1F *mvaS= new TH1F("mvaS","",nValBins,MinMVA,MaxMVA);
-   TH1F *mvaB= new TH1F("mvaB","",nValBins,MinMVA,MaxMVA);
-   TH1F *mvaSC= new TH1F("mvaSC","",nValBins,MinMVA,MaxMVA);
-   TH1F *mvaBC= new TH1F("mvaBC","",nValBins,MinMVA,MaxMVA);
+   TH1F *mvaS= new TH1F("mvaS","",nValBins,MinMVA,MaxMVA); mvaS->SetXTitle("MVA-ouput"); mvaS->SetYTitle("#entries");
+   TH1F *mvaB= new TH1F("mvaB","",nValBins,MinMVA,MaxMVA); mvaB->SetXTitle("MVA-ouput"); mvaB->SetYTitle("#entries");
+   TH1F *mvaSC= new TH1F("mvaSC","",nValBins,MinMVA,MaxMVA); mvaSC->SetXTitle("MVA-ouput"); mvaSC->SetYTitle("cummulation");
+   TH1F *mvaBC= new TH1F("mvaBC","",nValBins,MinMVA,MaxMVA); mvaBC->SetXTitle("MVA-ouput"); mvaBC->SetYTitle("cummulation");
 
    Long64_t nentries;
-   nentries = TreeS->GetEntries();
+   nentries = signal->GetEntries();
    for (Long64_t is=0; is<nentries;is++) {
       signal->GetEntry(is);
       sum +=sWeight;
       var0 = svar0;
       var1 = svar1;
-      Float_t mvaVal=reader->EvaluateMVA( "M1" ) ;
+      Float_t mvaVal=reader->EvaluateMVA( "MyMVAMethod" ) ;
       hs->Fill(svar0,svar1);
       mvaS->Fill(mvaVal,sWeight);
    }
-   nentries = TreeB->GetEntries();
+   nentries = background->GetEntries();
    for (Long64_t ib=0; ib<nentries;ib++) {
       background->GetEntry(ib);
       sum +=bWeight;
       var0 = bvar0;
       var1 = bvar1;
-      Float_t mvaVal=reader->EvaluateMVA( "M1" ) ;
+      Float_t mvaVal=reader->EvaluateMVA( "MyMVAMethod" ) ;
       hb->Fill(bvar0,bvar1);
       mvaB->Fill(mvaVal,bWeight);
    }
 
-   //SeparationBase *sepGain = new MisClassificationError();
+   SeparationBase *sepGain = new MisClassificationError();
    //SeparationBase *sepGain = new GiniIndex();
-   SeparationBase *sepGain = new CrossEntropy();
+   //SeparationBase *sepGain = new CrossEntropy();
 
    Double_t sTot = mvaS->GetSum();
    Double_t bTot = mvaB->GetSum();
@@ -193,21 +196,25 @@ void PlotDecisionBoundary( TString weightFile = "weights/TMVAClassification_BDT.
    mvaBC->SetBinContent(1,mvaB->GetBinContent(1));
    Double_t sSel=mvaSC->GetBinContent(1);
    Double_t bSel=mvaBC->GetBinContent(1);
+   Double_t sSelBest=0;
+   Double_t bSelBest=0;
    Double_t separationGain=sepGain->GetSeparationGain(sSel,bSel,sTot,bTot);
    Double_t mvaCut=mvaSC->GetBinCenter(1);
    Double_t mvaCutOrientation=1; // 1 if mva > mvaCut --> Signal and -1 if mva < mvaCut (i.e. mva*-1 > mvaCut*-1) --> Signal
-   for (Int_t ibin=2;ibin<nValBins;ibin++){ 
+   for (UInt_t ibin=2;ibin<nValBins;ibin++){ 
       mvaSC->SetBinContent(ibin,mvaS->GetBinContent(ibin)+mvaSC->GetBinContent(ibin-1));
       mvaBC->SetBinContent(ibin,mvaB->GetBinContent(ibin)+mvaBC->GetBinContent(ibin-1));
     
       sSel=mvaSC->GetBinContent(ibin);
       bSel=mvaBC->GetBinContent(ibin);
 
-      if (separationGain < sepGain->GetSeparationGain(sSel,bSel,sTot,bTot) && mvaSC->GetBinCenter(ibin)<0){
+      if (separationGain < sepGain->GetSeparationGain(sSel,bSel,sTot,bTot)){
          separationGain = sepGain->GetSeparationGain(sSel,bSel,sTot,bTot);
          mvaCut=mvaSC->GetBinCenter(ibin);
          if (sSel/bSel > (sTot-sSel)/(bTot-bSel)) mvaCutOrientation=-1;
          else                                     mvaCutOrientation=1;
+         sSelBest=sSel;
+         bSelBest=bSel;
      }
    }
    
@@ -215,6 +222,8 @@ void PlotDecisionBoundary( TString weightFile = "weights/TMVAClassification_BDT.
    cout << "Min="<<MinMVA << " Max=" << MaxMVA 
         << " sTot=" << sTot
         << " bTot=" << bTot
+        << " sSel=" << sSelBest
+        << " bSel=" << bSelBest
         << " sepGain="<<separationGain
         << " cut=" << mvaCut
         << " cutOrientation="<<mvaCutOrientation

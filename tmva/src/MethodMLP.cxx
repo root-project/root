@@ -221,12 +221,13 @@ void TMVA::MethodMLP::ProcessOptions()
    // process user options
    MethodANNBase::ProcessOptions();
 
+   
    if (IgnoreEventsWithNegWeightsInTraining()) {
-      Log() << kFATAL << "Mechanism to ignore events with negative weights in training not yet available for method: "
-            << GetMethodTypeName()
-            << " --> please remove \"IgnoreNegWeightsInTraining\" option from booking string."
+      Log() << kINFO 
+            << "Will ignore negative events in training!"
             << Endl;
    }
+   
 
    if      (fTrainMethodS == "BP"  ) fTrainingMethod = kBP;
    else if (fTrainMethodS == "BFGS") fTrainingMethod = kBFGS;
@@ -300,7 +301,13 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t i
    for (Int_t i = 0; i < nEvents; i++) {
 
       const Event* ev = GetEvent(i);
-      Double_t     w  = ev->GetWeight();
+      
+      if ((ev->GetWeight() < 0) && IgnoreEventsWithNegWeightsInTraining() 
+          &&  (saveType == Types::kTraining)){
+         continue;
+      }
+
+       Double_t     w  = ev->GetWeight();
 
       ForceNetworkInputs( ev );
       ForceNetworkCalculations();
@@ -650,9 +657,15 @@ void TMVA::MethodMLP::ComputeDEDw()
    }
 
    Int_t nEvents = GetNEvents();
+   Int_t nPosEvents = nEvents;
    for (Int_t i=0;i<nEvents;i++) {
 
       const Event* ev = GetEvent(i);
+       if ((ev->GetWeight() < 0) && IgnoreEventsWithNegWeightsInTraining() 
+          &&  (Data()->GetCurrentType() == Types::kTraining)){
+         --nPosEvents;
+         continue;
+      }
 
       SimulateEvent( ev );
 
@@ -666,7 +679,7 @@ void TMVA::MethodMLP::ComputeDEDw()
       TSynapse *synapse = (TSynapse*)fSynapses->At(i);
       Double_t DEDw=synapse->GetDEDw();     //zjh
       if (fUseRegulator) DEDw+=fPriorDev[i]; //zjh
-      synapse->SetDEDw( DEDw / nEvents );   //zjh
+      synapse->SetDEDw( DEDw / nPosEvents );   //zjh
    }
 }
 
@@ -905,6 +918,10 @@ Double_t TMVA::MethodMLP::GetError()
    for (Int_t i=0;i<nEvents;i++) {
       const Event* ev = GetEvent(i);
 
+       if ((ev->GetWeight() < 0) && IgnoreEventsWithNegWeightsInTraining() 
+          &&  (Data()->GetCurrentType() == Types::kTraining)){
+         continue;
+      }
       SimulateEvent( ev );
 
       Double_t error = 0.;
@@ -1071,6 +1088,12 @@ void TMVA::MethodMLP::TrainOneEpoch()
    // loop over all training events
    for (Int_t i = 0; i < nEvents; i++) {
 
+      const Event * ev = GetEvent(index[i]);
+      if ((ev->GetWeight() < 0) && IgnoreEventsWithNegWeightsInTraining() 
+          &&  (Data()->GetCurrentType() == Types::kTraining)){
+         continue;
+      }
+      
       TrainOneEvent(index[i]);
 
       // do adjustments if in batch mode

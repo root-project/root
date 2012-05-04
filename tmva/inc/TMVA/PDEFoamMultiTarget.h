@@ -49,6 +49,8 @@ namespace TMVA
       ETargetSelection fTargetSelection; // the target selection method
 
       PDEFoamMultiTarget(const PDEFoamMultiTarget&); // Copy Constructor  NOT USED
+      virtual void CalculateMpv(std::map<Int_t, Float_t>&, const std::vector<PDEFoamCell*>&);  // Calculate mpv target
+      virtual void CalculateMean(std::map<Int_t, Float_t>&, const std::vector<PDEFoamCell*>&); // Calculate mean target
 
       // ---------- Public functions ----------------------------------
    public:

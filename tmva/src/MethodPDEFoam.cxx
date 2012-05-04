@@ -1037,8 +1037,8 @@ const std::vector<Float_t>& TMVA::MethodPDEFoam::GetRegressionValues()
    const Event* ev = GetEvent();
    std::vector<Float_t> vals = ev->GetValues(); // get array of event variables (non-targets)   
 
-   if (vals.size() == 0) {
-      Log() << kWARNING << "<GetRegressionValues> value vector has size 0. " << Endl;
+   if (vals.empty()) {
+      Log() << kWARNING << "<GetRegressionValues> value vector is empty. " << Endl;
    }
 
    if (fMultiTargetRegression) {

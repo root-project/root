@@ -134,13 +134,12 @@ std::vector<Float_t> TMVA::PDEFoamMultiTarget::GetCellValue(const std::map<Int_t
       txvec.insert(std::pair<Int_t, Float_t>(dim, VarTransform(dim, coordinate)));
    }
 
-   // map of targets and normalization
-   std::map<Int_t, Float_t> target, norm;
-   Double_t max_dens = 0.;            // maximum cell density
+   // map of targets
+   std::map<Int_t, Float_t> target;
 
    // find cells, which fit txvec
    std::vector<PDEFoamCell*> cells = FindCells(txvec);
-   if (cells.size() < 1) {
+   if (cells.empty()) {
       // return empty target vector (size = dimension of foam -
       // number of variables)
       return std::vector<Float_t>(GetTotDim() - xvec.size(), 0);
@@ -153,63 +152,17 @@ std::vector<Float_t> TMVA::PDEFoamMultiTarget::GetCellValue(const std::map<Int_t
          target.insert(std::pair<Int_t, Float_t>(idim, 0));
    }
 
-   // loop over all cells that were found
-   for (std::vector<PDEFoamCell*>::const_iterator cell_it = cells.begin();
-        cell_it != cells.end(); cell_it++) {
-
-      // get event density in cell
-      Double_t cell_density = GetCellValue(*cell_it, kValueDensity);
-
-      // get cell position and size
-      PDEFoamVect  cellPosi(GetTotDim()), cellSize(GetTotDim());
-      (*cell_it)->GetHcub(cellPosi, cellSize);
-
-      // loop over all target dimensions (= dimensions, that are
-      // missing in txvec), in order to calculate target value
-      for (Int_t idim = 0; idim < GetTotDim(); ++idim) {
-         // is idim a target dimension, i.e. is idim missing in txvec?
-         std::map<Int_t, Float_t>::const_iterator txvec_it = txvec.find(idim);
-         if (txvec_it == txvec.end()) {
-            // idim is missing in txvec --> this is a target
-            // dimension!
-            switch (fTargetSelection) {
-               case kMean:
-                  target[idim] += cell_density *
-                                  VarTransformInvers(idim, cellPosi[idim] + 0.5 * cellSize[idim]);
-                  norm[idim] += cell_density;
-                  break;
-               case kMpv:
-                  if (cell_density > max_dens) {
-                     max_dens = cell_density; // save new max density
-                     target[idim] =
-                        VarTransformInvers(idim, cellPosi[idim] + 0.5 * cellSize[idim]);
-                  }
-                  break;
-               default:
-                  Log() << "<PDEFoamMultiTarget::GetCellValue>: "
-                        << "unknown target selection type!" << Endl;
-                  break;
-            }
-         }
-      } // loop over foam dimensions
-   } // loop over cells
-
-   // normalise mean cell density
-   if (fTargetSelection == kMean) {
-      // loop over all dimensions
-      for (Int_t idim = 0; idim < GetTotDim(); ++idim) {
-         // is idim in target map?
-         std::map<Int_t, Float_t>::const_iterator target_it = target.find(idim);
-         if (target_it != target.end()) {
-            // idim is in target map! --> Normalize
-            if (norm[idim] > std::numeric_limits<float>::epsilon())
-               target[idim] /= norm[idim];
-            else
-               // normalisation factor is too small -> return
-               // approximate target value
-               target[idim] = (fXmax[idim] - fXmin[idim]) / 2.;
-         }
-      }
+   switch (fTargetSelection) {
+   case kMean:
+      CalculateMean(target, cells);
+      break;
+   case kMpv:
+      CalculateMpv(target, cells);
+      break;
+   default:
+      Log() << "<PDEFoamMultiTarget::GetCellValue>: "
+            << "unknown target selection type!" << Endl;
+      break;
    }
 
    // copy targets to result vector
@@ -220,4 +173,107 @@ std::vector<Float_t> TMVA::PDEFoamMultiTarget::GetCellValue(const std::map<Int_t
       result.push_back(it->second);
 
    return result;
+}
+
+void TMVA::PDEFoamMultiTarget::CalculateMpv(std::map<Int_t, Float_t>& target, const std::vector<PDEFoamCell*>& cells)
+{
+   // This function calculates the most probable target value from a
+   // given number of cells.  The most probable target is defined to
+   // be the coordinates of the cell which has the biggest event
+   // density.
+   //
+   // Parameters:
+   //
+   // - target - map of targets, where the key is the dimension and
+   //   the value is the target value.  It is assumed that this map is
+   //   initialized such that there is a map entry for every target.
+   //
+   // - cells - vector of PDEFoam cells to pick the most probable
+   //   target from
+
+   Double_t max_dens = 0.0;            // maximum cell density
+
+   // loop over all cells and find cell with maximum event density
+   for (std::vector<PDEFoamCell*>::const_iterator cell_it = cells.begin();
+        cell_it != cells.end(); ++cell_it) {
+      
+      // get event density of cell
+      const Double_t cell_density = GetCellValue(*cell_it, kValueDensity);
+
+      // has this cell a larger event density?
+      if (cell_density > max_dens) {
+         // get cell position and size
+         PDEFoamVect  cellPosi(GetTotDim()), cellSize(GetTotDim());
+         (*cell_it)->GetHcub(cellPosi, cellSize);
+
+         // save new maximum density
+         max_dens = cell_density;
+
+         // calculate new target values
+         for (std::map<Int_t, Float_t>::iterator target_it = target.begin();
+              target_it != target.end(); ++target_it) {
+            const Int_t dim = target_it->first; // target dimension
+            target_it->second =
+               VarTransformInvers(dim, cellPosi[dim] + 0.5 * cellSize[dim]);
+         }
+      }
+   }
+}
+
+void TMVA::PDEFoamMultiTarget::CalculateMean(std::map<Int_t, Float_t>& target, const std::vector<PDEFoamCell*>& cells)
+{
+   // This function calculates the mean target value from a given
+   // number of cells.  As weight the event density of the cell is
+   // used.
+   //
+   // Parameters:
+   //
+   // - target - map of targets, where the key is the dimension and
+   //   the value is the target value.  It is assumed that this map is
+   //   initialized such that there is a map entry for every target
+   //   with all target values set to zero.
+   //
+   // - cells - vector of PDEFoam cells to pick the most probable
+   //   target from
+
+   // normalization
+   std::map<Int_t, Float_t> norm;
+
+   // loop over all cells and find cell with maximum event density
+   for (std::vector<PDEFoamCell*>::const_iterator cell_it = cells.begin();
+        cell_it != cells.end(); ++cell_it) {
+      
+      // get event density of cell
+      const Double_t cell_density = GetCellValue(*cell_it, kValueDensity);
+
+      // get cell position and size
+      PDEFoamVect  cellPosi(GetTotDim()), cellSize(GetTotDim());
+      (*cell_it)->GetHcub(cellPosi, cellSize);
+
+      // accumulate weighted target values
+      for (std::map<Int_t, Float_t>::iterator target_it = target.begin();
+           target_it != target.end(); ++target_it) {
+         const Int_t dim = target_it->first; // target dimension
+         target_it->second += cell_density *
+            VarTransformInvers(dim, cellPosi[dim] + 0.5 * cellSize[dim]);
+         norm[dim] += cell_density;
+      }
+   }
+
+   // normalize the targets
+   for (std::map<Int_t, Float_t>::iterator target_it = target.begin();
+        target_it != target.end(); ++target_it) {
+
+      // get target dimension
+      const Int_t dim = target_it->first;
+
+      // normalize target in dimension 'dim'
+      if (norm[dim] > std::numeric_limits<Float_t>::epsilon()) {
+         target[dim] /= norm[dim];
+      } else {
+         // normalisation factor is too small -> return approximate
+         // target value
+         target[dim] = (fXmax[dim] - fXmin[dim]) / 2.;
+      }
+   }
 }

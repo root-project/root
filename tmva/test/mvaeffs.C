@@ -53,7 +53,8 @@ public:
       line1(0),
       line2(0),
       rightAxis(0),
-      maxSignificance(0)
+      maxSignificance(0),
+      maxSignificanceErr(0)
    {}
    virtual ~MethodInfo();
 
@@ -73,6 +74,7 @@ public:
    TLatex*  line2;
    TGaxis*  rightAxis;
    Double_t maxSignificance;
+   Double_t maxSignificanceErr;
 
    void SetResultHists() 
    {
@@ -138,7 +140,7 @@ class StatDialogMVAEffs {
    
    void SetFormula(const TString& f) { fFormula = f; }
    TString GetFormula();
-   TString GetFormulaString(){return fFormula;}
+   TString GetFormulaString() { return fFormula; }
    TString GetLatexFormula();
    
    void ReadHistograms(TFile* file);
@@ -331,17 +333,28 @@ void StatDialogMVAEffs::UpdateSignificanceHists()
    cout << "--- " << setfill('=') << setw(str.Length()) << "" << setfill(' ') << endl;
    cout << "--- " << str << endl;
    cout << "--- " << setfill('-') << setw(str.Length()) << "" << setfill(' ') << endl;
+   Double_t maxSig    = -1;
+   Double_t maxSigErr = -1;
    while ((info = (MethodInfo*)next())) {
       for (Int_t i=1; i<=info->origSigE->GetNbinsX(); i++) {
          Float_t eS = info->origSigE->GetBinContent( i );
          Float_t S = eS * fNSignal;
          Float_t B = info->origBgdE->GetBinContent( i ) * fNBackground;
          info->purS->SetBinContent( i, (S+B==0)?0:S/(S+B) );
-         info->sSig->SetBinContent( i, f.Eval(S,B) );
+         
+         Double_t sig = f.Eval(S,B);
+         if (sig > maxSig) {
+            maxSig    = sig;
+            if (GetFormulaString() == "S/sqrt(B)") {
+               maxSigErr = sig * sqrt( 1./S + 1./(2.*B));
+            }
+         }
+         info->sSig->SetBinContent( i, sig );
          info->effpurS->SetBinContent( i, eS*info->purS->GetBinContent( i ) );
       }
       
-      info->maxSignificance = info->sSig->GetMaximum();
+      info->maxSignificance    = info->sSig->GetMaximum();
+      info->maxSignificanceErr = (maxSigErr > 0) ? maxSigErr : 0;
       info->sSig->Scale(1/info->maxSignificance);
 
       // update the text in the lower left corner
@@ -495,9 +508,19 @@ void StatDialogMVAEffs::DrawHistograms()
       Int_t maxbin = info->sSig->GetMaximumBin();
       info->line1 = tl.DrawLatex( 0.15, 0.23, Form("For %1.0f signal and %1.0f background", fNSignal, fNBackground));
       tl.DrawLatex( 0.15, 0.19, "events the maximum "+GetLatexFormula()+" is");
-      info->line2 = tl.DrawLatex( 0.15, 0.15, Form("%3.4f when cutting at %3.4f",
-                                                   info->maxSignificance, 
-                                                   info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
+
+      if (info->maxSignificanceErr > 0) {
+         info->line2 = tl.DrawLatex( 0.15, 0.15, Form("%5.2f +- %4.2f when cutting at %5.2f", 
+                                                      info->maxSignificance, 
+                                                      info->maxSignificanceErr, 
+                                                      info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
+      }
+      else {
+         info->line2 = tl.DrawLatex( 0.15, 0.15, Form("%4.2f when cutting at %5.2f", 
+                                                      info->maxSignificance, 
+                                                      info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
+      }
+
       // add comment for Method cuts
       if (info->methodTitle.Contains("Cuts")){
          tl.DrawLatex( 0.13, 0.77, "Method Cuts provides a bundle of cut selections, each tuned to a");
@@ -536,22 +559,48 @@ void StatDialogMVAEffs::PrintResults( const MethodInfo* info )
       info->line1->SetText( 0.15, 0.23, Form("For %1.0f signal and %1.0f background", fNSignal, fNBackground));
    
    if (info->line2 !=0 ) {
-      info->line2->SetText( 0.15, 0.15, Form("%3.4f when cutting at %3.4f", info->maxSignificance, 
-                                             info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
+      if (info->maxSignificanceErr > 0) {
+         info->line2->SetText( 0.15, 0.15, Form("%3.2g +- %3.2g when cutting at %3.2g", 
+                                                info->maxSignificance, 
+                                                info->maxSignificanceErr, 
+                                                info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
+      }
+      else {
+         info->line2->SetText( 0.15, 0.15, Form("%3.4f when cutting at %3.4f", info->maxSignificance, 
+                                                info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
+      }
+
    }
 
-   TString opt = Form( "%%%is:  (%%9.8g,%%9.8g)    %%9.4f   %%10.6g  %%8.7g  %%8.7g %%8.4g %%8.4g", 
-                       maxLenTitle );
-   cout << "--- " 
-        << Form( opt.Data(),
-                 info->methodTitle.Data(), fNSignal, fNBackground, 
-                 info->sSig->GetXaxis()->GetBinCenter( maxbin ),
-                 info->maxSignificance,
-                 info->origSigE->GetBinContent( maxbin )*fNSignal,   
-                 info->origBgdE->GetBinContent( maxbin )*fNBackground,
-                 info->origSigE->GetBinContent( maxbin ),
-                 info->origBgdE->GetBinContent( maxbin ) )
-        << endl;
+   if (info->maxSignificanceErr <= 0) {
+      TString opt = Form( "%%%is:  (%%9.8g,%%9.8g)    %%9.4f   %%10.6g  %%8.7g  %%8.7g %%8.4g %%8.4g", 
+                          maxLenTitle );
+      cout << "--- " 
+           << Form( opt.Data(),
+                    info->methodTitle.Data(), fNSignal, fNBackground, 
+                    info->sSig->GetXaxis()->GetBinCenter( maxbin ),
+                    info->maxSignificance,
+                    info->origSigE->GetBinContent( maxbin )*fNSignal,   
+                    info->origBgdE->GetBinContent( maxbin )*fNBackground,
+                    info->origSigE->GetBinContent( maxbin ),
+                    info->origBgdE->GetBinContent( maxbin ) )
+           << endl;
+   }
+   else {
+      TString opt = Form( "%%%is:  (%%9.8g,%%9.8g)    %%9.4f   (%%8.3g  +-%%6.3g)  %%8.7g  %%8.7g %%8.4g %%8.4g", 
+                          maxLenTitle );
+      cout << "--- " 
+           << Form( opt.Data(),
+                    info->methodTitle.Data(), fNSignal, fNBackground, 
+                    info->sSig->GetXaxis()->GetBinCenter( maxbin ),
+                    info->maxSignificance,
+                    info->maxSignificanceErr,
+                    info->origSigE->GetBinContent( maxbin )*fNSignal,   
+                    info->origBgdE->GetBinContent( maxbin )*fNBackground,
+                    info->origSigE->GetBinContent( maxbin ),
+                    info->origBgdE->GetBinContent( maxbin ) )
+           << endl;
+   }
 }
 
 void mvaeffs( TString fin = "TMVA.root", 

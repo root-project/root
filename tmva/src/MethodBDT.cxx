@@ -643,16 +643,25 @@ void TMVA::MethodBDT::PreProcessNegativeEventWeights(){
    // A first attempt is "brute force", I dont' try to be clever using search trees etc, 
    // just quick and dirty to see if the result is any good  
    Double_t totalNegWeights = 0;
+   Double_t totalPosWeights = 0;
+   Double_t totalWeights    = 0;
    std::vector<Event*> negEvents;
    for (UInt_t iev = 0; iev < fEventSample.size(); iev++){
       if (fEventSample[iev]->GetWeight() < 0) {
          totalNegWeights += fEventSample[iev]->GetWeight();
          negEvents.push_back(fEventSample[iev]);
+      } else {
+         totalPosWeights += fEventSample[iev]->GetWeight();
       }
+      totalWeights += fEventSample[iev]->GetWeight();
    }
    if (totalNegWeights == 0 ) {
       Log() << kINFO << "no negative event weights found .. no preprocessing necessary" << Endl;
       return;
+   } else {
+      Log() << kINFO << "found a total of " << totalNegWeights << " of negative event weights which I am going to try to pair with positive events to annihilate them" << Endl;
+      Log() << kINFO << "found a total of " << totalPosWeights << " of events with positive weights" << Endl;
+      Log() << kINFO << "--> total sum of weights = " << totalWeights << " = " << totalNegWeights+totalPosWeights << Endl;
    }
    
    std::vector<TMatrixDSym*>* cov = gTools().CalcCovarianceMatrices( fEventSample, 2);
@@ -704,11 +713,16 @@ void TMVA::MethodBDT::PreProcessNegativeEventWeights(){
          }
          
          if (iMin > -1) { 
-            //std::cout << "Happily pairing .. weight before : " << negEvents[nev]->GetWeight() << " and " << fEventSample[iMin]->GetWeight();
-            Double_t newWeight= (negEvents[nev]->GetWeight() + fEventSample[iMin]->GetWeight());
-            negEvents[nev]->SetBoostWeight( newWeight/negEvents[nev]->GetWeight() );
-            fEventSample[iMin]->SetBoostWeight( newWeight/fEventSample[iMin]->GetWeight() );
-            //std::cout << " and afterwards " <<  negEvents[nev]->GetWeight() <<  " and the paired " << fEventSample[iMin]->GetWeight() << " dist="<<minDist<< std::endl;
+	   //	    std::cout << "Happily pairing .. weight before : " << negEvents[nev]->GetWeight() << " and " << fEventSample[iMin]->GetWeight();
+	    Double_t newWeight= (negEvents[nev]->GetWeight() + fEventSample[iMin]->GetWeight());
+            if (newWeight > 0){
+	       negEvents[nev]->SetBoostWeight( 0 );
+	       fEventSample[iMin]->SetBoostWeight( newWeight );
+	    } else {
+	       negEvents[nev]->SetBoostWeight( newWeight );
+	       fEventSample[iMin]->SetBoostWeight( 0 );
+	    }	      
+	    //	    std::cout << " and afterwards " <<  negEvents[nev]->GetWeight() <<  " and the paired " << fEventSample[iMin]->GetWeight() << " dist="<<minDist<< std::endl;
          } else Log() << kFATAL << "preprocessing didn't find event to pair with the negative weight ... probably a bug" << Endl;
          weight = negEvents[nev]->GetWeight();
       }
@@ -716,6 +730,8 @@ void TMVA::MethodBDT::PreProcessNegativeEventWeights(){
 
    // just check.. now there should be no negative event weight left anymore
    totalNegWeights = 0;
+   totalPosWeights = 0;
+   totalWeights    = 0;
    Double_t sigWeight=0;
    Double_t bkgWeight=0;
    Int_t    nSig=0;
@@ -726,6 +742,10 @@ void TMVA::MethodBDT::PreProcessNegativeEventWeights(){
    for (UInt_t iev = 0; iev < fEventSample.size(); iev++){
       if (fEventSample[iev]->GetWeight() < 0) {
          totalNegWeights += fEventSample[iev]->GetWeight();
+         totalWeights    += fEventSample[iev]->GetWeight();
+      } else {
+	     totalPosWeights += fEventSample[iev]->GetWeight();
+         totalWeights    += fEventSample[iev]->GetWeight();
       }
       if (fEventSample[iev]->GetWeight() > 0) {
          newEventSample.push_back(fEventSample[iev]);
@@ -742,7 +762,7 @@ void TMVA::MethodBDT::PreProcessNegativeEventWeights(){
 
    fEventSample = newEventSample;
 
-   Log() << kINFO  << " after PreProcessing, the Event sample is left with " << fEventSample.size() << " events, all positive weight" << Endl;
+   Log() << kINFO  << " after PreProcessing, the Event sample is left with " << fEventSample.size() << " events (unweighted), all with positive weights, adding up to " << totalWeights << Endl;
    Log() << kINFO  << " nSig="<<nSig << " sigWeight="<<sigWeight <<  " nBkg="<<nBkg << " bkgWeight="<<bkgWeight << Endl;
    
 
