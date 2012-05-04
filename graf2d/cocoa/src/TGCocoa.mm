@@ -2136,14 +2136,15 @@ void TGCocoa::FreeFontStruct(FontStruct_t /*fs*/)
 }
 
 //______________________________________________________________________________
-char **TGCocoa::ListFonts(const char *fontName, Int_t /*max*/, Int_t &count)
+char **TGCocoa::ListFonts(const char * /*fontName*/, Int_t /*maxNames*/, Int_t &count)
 {
-   if (fontName && fontName[0]) {
-      X11::XLFDName xlfd;
-      X11::ParseXLFDName(fontName, xlfd);
-   }
-
    count = 0;
+/*
+   if (fontName && fontName[0]) {
+      X11::XLFDName xlfd = {};
+      if (X11::ParseXLFDName(fontName, xlfd))
+         return fPimpl->fFontManager.ListFonts(xlfd, maxNames, count);
+   }*/
 
    return 0;
 }

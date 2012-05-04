@@ -12,6 +12,8 @@
 #ifndef ROOT_FontCache
 #define ROOT_FontCache
 
+#include <vector>
+#include <list>
 #include <map>
 
 #include <ApplicationServices/ApplicationServices.h>
@@ -47,6 +49,7 @@ public:
    FontCache();
    
    FontStruct_t LoadFont(const X11::XLFDName &xlfd);
+   char **ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count);
    void UnloadFont(FontStruct_t font);
 
    unsigned GetTextWidth(FontStruct_t font, const char *text, int nChars);
@@ -81,7 +84,23 @@ private:
 
    FontMap_t fFonts[nPadFonts];
    CTFontRef fSelectedFont;
-   
+
+   //FontList can be requested by TGCocoa::ListFonts,
+   //the return value is char **, and later it's freed by
+   //TGCocoa::FreeFontNames, again using char **.
+   //In my case, I have to somehow map char ** to two 
+   //data sets - char ** itself + real strings, whose
+   //addresses are in char **.
+   //fList, after it's filled and returned by TGCocoa, 
+   //is immutable, so later I can find this FontList
+   //comparing char ** and &fList[0].
+   struct FontList {
+      std::vector<char *> fList;
+      std::vector<char> fStringData;
+   };
+
+   std::list<FontList> fFontLists;//list of "list" of fonts :)
+
    FontCache(const FontCache &rhs);
    FontCache &operator = (const FontCache &rhs);
 };

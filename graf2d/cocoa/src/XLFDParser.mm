@@ -259,10 +259,17 @@ bool ParseXLFDName(const std::string &xlfdName, XLFDName &dst)
          size_type pos = ParseFoundry(xlfdName, 0, dst);
          if (pos + 1 < nameLength)
             pos = ParseFamilyName(xlfdName, pos, dst);
+
          if (pos + 1 < nameLength)
             pos = ParseWeight(xlfdName, pos, dst);
+         else
+            dst.fWeight = kFWMedium;
+            
          if (pos + 1 < nameLength)
             pos = ParseSlant(xlfdName, pos, dst);
+         else
+            dst.fSlant = kFSRegular;
+
          if (pos + 1 < nameLength)
             pos = ParseSetwidth(xlfdName, pos, dst);
          if (pos + 1 < nameLength)
