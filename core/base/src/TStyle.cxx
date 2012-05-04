@@ -536,6 +536,7 @@ void TStyle::Reset(Option_t *opt)
    fStripDecimals  = kTRUE;
    fNumberContours = 20;
    fLegendBorderSize= 4;
+   fLegendFont      = 62;
 
    SetDateX();
    SetDateY();
