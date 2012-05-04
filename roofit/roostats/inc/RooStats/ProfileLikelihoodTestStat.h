@@ -116,6 +116,9 @@ namespace RooStats {
      void SetSigned(Bool_t flag=true) {fSigned = flag;}  // +/- t_mu instead of t_mu>0 with one-sided settings
      //void SetOneSidedDiscovery(Bool_t flag=true) {fOneSidedDiscovery = flag;}
 
+     bool IsTwoSided() const { return fLimitType == twoSided; }
+     bool IsOneSidedDiscovery() const { return fLimitType == oneSidedDiscovery; }
+
      static void SetAlwaysReuseNLL(Bool_t flag) { fgAlwaysReuseNll = flag ; }
      void SetReuseNLL(Bool_t flag) { fReuseNll = flag ; }
 

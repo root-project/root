@@ -436,6 +436,21 @@ void  HypoTestInverter::CreateResults() const {
    }
    fResults->UseCLs(fUseCLs);
    fResults->SetConfidenceLevel(1.-fSize);
+   // check if one or two sided scan
+   if (fCalculator0) {
+      // if asymptotic calculator
+      AsymptoticCalculator * ac = dynamic_cast<AsymptoticCalculator*>(fCalculator0);
+      if (ac) 
+         fResults->fIsTwoSided = ac->IsTwoSided();
+      else { 
+         // in case of the other calculators 
+         TestStatSampler * sampler = fCalculator0->GetTestStatSampler();
+         if (sampler) {
+            ProfileLikelihoodTestStat * pl = dynamic_cast<ProfileLikelihoodTestStat*>(sampler->GetTestStatistic());
+            if (pl && pl->IsTwoSided() ) fResults->fIsTwoSided = true;
+         }
+      }
+   }
 }
 
 HypoTestInverterResult* HypoTestInverter::GetInterval() const { 

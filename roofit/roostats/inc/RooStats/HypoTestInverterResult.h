@@ -98,6 +98,11 @@ public:
    // flag to switch between using CLsb (default) or CLs as confidence level
    void UseCLs( bool on = true ) { fUseCLs = on; }  
 
+   // query if one sided result
+   bool IsOneSided() const { return !fIsTwoSided; }
+   // query if two sided result
+   bool IsTwoSided() const { return fIsTwoSided; }
+
    // lower and upper bound of the confidence interval (to get upper/lower limits, multiply the size( = 1-confidence level ) by 2
    Double_t LowerLimit();
    Double_t UpperLimit();
@@ -155,19 +160,25 @@ public:
 private:
 
 
-   double CalculateEstimatedError(double target);
-   int FindClosestPointIndex(double target);
+   double CalculateEstimatedError(double target, bool lower = true, double xmin = 1, double xmax = 0);
+
+   int FindClosestPointIndex(double target, int mode = 0, double xtarget = 0);
 
    SamplingDistribution* GetLimitDistribution(bool lower ) const;
 
    double GetExpectedLimit(double nsig, bool lower, const char * opt = "" ) const ; 
 
-   double GetGraphX(const TGraph & g, double y0, bool lowSearch = false, double xmin=1, double xmax=0) const;
+   double GetGraphX(const TGraph & g, double y0, bool lowSearch, double &xmin, double &xmax) const;
+   double GetGraphX(const TGraph & g, double y0, bool lowSearch = true) const { 
+      double xmin=1; double xmax = 0;
+      return GetGraphX(g,y0,lowSearch,xmin,xmax);
+   }
 
  
 protected:
 
    bool fUseCLs; 
+   bool fIsTwoSided;                  // two sided scan (look for lower/upper limit) 
    bool fInterpolateLowerLimit;
    bool fInterpolateUpperLimit;
    bool fFittedLowerLimit;
@@ -188,7 +199,7 @@ protected:
    friend class HypoTestInverterPlot;
    friend class HypoTestInverterOriginal;
 
-   ClassDef(HypoTestInverterResult,4)  // HypoTestInverterResult class      
+   ClassDef(HypoTestInverterResult,5)  // HypoTestInverterResult class      
 };
 }
 

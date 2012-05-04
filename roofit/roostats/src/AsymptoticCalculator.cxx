@@ -40,6 +40,9 @@
 #include <cmath>
 #include <typeinfo>
 
+#include "Math/BrentRootFinder.h"
+#include "Math/WrappedFunction.h"
+
 #include "TStopwatch.h"
 
 using namespace RooStats;
@@ -624,12 +627,13 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    double sqrtqmu_A = (qmu_A > 0) ? std::sqrt(qmu_A) : 0; 
 
    
-   if (fOneSided || fOneSidedDiscovery) { 
+   if (fOneSided || fOneSidedDiscovery) {
+      // for one-sided PL (q_mu : equations 56,57)
       pnull = ROOT::Math::normal_cdf_c( sqrtqmu, 1.);
       palt = ROOT::Math::normal_cdf( sqrtqmu_A - sqrtqmu, 1.);
    }
    else  {
-      // for 2-sided PL 
+      // for 2-sided PL (t_mu : equations 35,36 in asymptotic paper) 
       pnull = 2.*ROOT::Math::normal_cdf_c( sqrtqmu, 1.);
       palt = ROOT::Math::normal_cdf_c( sqrtqmu + sqrtqmu_A, 1.) + 
          ROOT::Math::normal_cdf_c( sqrtqmu - sqrtqmu_A, 1.); 
@@ -638,12 +642,15 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
    if (useQTilde ) { 
       if (fOneSided) { 
+         // for bounded one-sided (q_mu_tilde: equations 64,65)
          if ( qmu > qmu_A) { 
             pnull = ROOT::Math::normal_cdf_c( (qmu + qmu_A)/(2 * sqrtqmu_A), 1.);
             palt = ROOT::Math::normal_cdf_c( (qmu - qmu_A)/(2 * sqrtqmu_A), 1.);
          }
       }
-      else {  // for 2 sided test statistic  (for one sided discovery qtilde is false)
+      else {  
+         // for 2 sided bounded test statistic  (N.B there is no one sided discovery qtilde)
+         // t_mu_tilde: equations 43,44 in asymptotic paper
          if ( qmu >  qmu_A) { 
             pnull = ROOT::Math::normal_cdf_c(sqrtqmu,1.) + 
                     ROOT::Math::normal_cdf_c( (qmu + qmu_A)/(2 * sqrtqmu_A), 1.);
@@ -671,15 +678,58 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
 }
 
-double AsymptoticCalculator::GetExpectedPValues(double pnull, double palt, double nsigma, bool useCls ) { 
+struct PaltFunction { 
+   PaltFunction( double offset, double pval, int icase) : 
+      fOffset(offset), fPval(pval), fCase(icase) {}
+   double operator() (double x) const { 
+      return ROOT::Math::normal_cdf_c(x + fOffset) + ROOT::Math::normal_cdf_c(fCase*(x - fOffset)) - fPval;
+   }
+   double fOffset;
+   double fPval;
+   int fCase;
+};
+
+double AsymptoticCalculator::GetExpectedPValues(double pnull, double palt, double nsigma, bool useCls, bool oneSided ) { 
    // function given the null and the alt p value - return the expected one given the N - sigma value
-   double sqrtqmu =  ROOT::Math::normal_quantile_c( pnull,1.);
-   double sqrtqmu_A =  ROOT::Math::normal_quantile( palt,1.) + sqrtqmu;
-   double clsplusb = ROOT::Math::normal_cdf_c( sqrtqmu_A - nsigma, 1.);
-   if (!useCls) return clsplusb; 
-   double clb = ROOT::Math::normal_cdf( nsigma, 1.);
-   return (clb == 0) ? -1 : clsplusb / clb;  
-}   
+   if (oneSided) { 
+      double sqrtqmu =  ROOT::Math::normal_quantile_c( pnull,1.);
+      double sqrtqmu_A =  ROOT::Math::normal_quantile( palt,1.) + sqrtqmu;
+      double clsplusb = ROOT::Math::normal_cdf_c( sqrtqmu_A - nsigma, 1.);
+      if (!useCls) return clsplusb; 
+      double clb = ROOT::Math::normal_cdf( nsigma, 1.);
+      return (clb == 0) ? -1 : clsplusb / clb;  
+   }
+
+   // case of 2 sided test statistic
+   // need to compute numerically
+   double sqrttmu =  ROOT::Math::normal_quantile_c( 0.5*pnull,1.);
+   if (sqrttmu == 0) { 
+      // here cannot invert the function - skip the point
+      return -1; 
+   }      
+   // invert formula for palt to get sqrttmu_A
+   PaltFunction f( sqrttmu, palt, -1);       
+   ROOT::Math::BrentRootFinder brf;
+   ROOT::Math::WrappedFunction<PaltFunction> wf(f);
+   brf.SetFunction( wf, 0, 20);
+   bool ret = brf.Solve();
+   if (!ret) { 
+      oocoutE((TObject*)0,Eval)  << "Error finding expected p-values - return -1" << std::endl;
+      return -1;
+   }
+   double sqrttmu_A = brf.Root();
+
+   // now invert for expected value
+   PaltFunction f2( sqrttmu_A,  ROOT::Math::normal_cdf( nsigma, 1.), 1);
+   ROOT::Math::WrappedFunction<PaltFunction> wf2(f2);
+   brf.SetFunction(wf2,0,20);
+   ret = brf.Solve();
+   if (!ret) { 
+      oocoutE((TObject*)0,Eval)  << "Error finding expected p-values - return -1" << std::endl;
+      return -1;
+   }   
+   return  2*ROOT::Math::normal_cdf_c( brf.Root(),1.);
+}
 
 // void GetExpectedLimit(double nsigma, double alpha, double &clsblimit, double &clslimit) { 
 //    // get expected limit 

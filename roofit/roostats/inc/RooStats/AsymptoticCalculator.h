@@ -71,13 +71,17 @@ namespace RooStats {
       static RooAbsData * GenerateAsimovData(const RooAbsPdf & pdf, const RooArgSet & observables ); 
 
       // function given the null and the alt p value - return the expected one given the N - sigma value
-      static double GetExpectedPValues(double pnull, double palt, double nsigma, bool usecls ); 
+      static double GetExpectedPValues(double pnull, double palt, double nsigma, bool usecls, bool oneSided  ); 
 
       // set test statistic for one sided (upper limits)
       void SetOneSided(bool on) { fOneSided = on; }
 
       // set the test statistics for one-sided discovery
       void SetOneSidedDiscovery(bool on) { fOneSidedDiscovery = on; }
+
+      bool IsTwoSided() const { return (!fOneSided && !fOneSidedDiscovery); }
+      bool IsOneSidedDiscovery() const { return fOneSidedDiscovery; }
+
 
       // set using of qtilde, by default is controlled if RoORealVar is limited or not 
       void SetQTilde(bool on) { fUseQTilde = on; }
