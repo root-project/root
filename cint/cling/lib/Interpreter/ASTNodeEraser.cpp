@@ -261,6 +261,9 @@ namespace cling {
     // In the end we don't need to remove the canonical decl because, it
     // doesn't end up in the lookup table.
     //
+#if 0
+    getSpecializations() now returns a FoldingSetVector which
+    does not have an interface for removing nodes...
     class FunctionTemplateDeclExt : public FunctionTemplateDecl {
     public:
       static llvm::FoldingSet<FunctionTemplateSpecializationInfo>& 
@@ -269,10 +272,12 @@ namespace cling {
         return ((FunctionTemplateDeclExt*) FTD)->getSpecializations();
       }
     };
+#endif
 
     if (FD->isFunctionTemplateSpecialization()) {
+#if 0
       // 1. Remove the canonical decl.
-      // TODO: Can the cannonical has another DeclContext and Scope, different
+      // TODO: Can the canonical have another DeclContext and Scope, different
       // from the specialization's implementation?
       FunctionDecl* CanFD = FD->getCanonicalDecl();
       FunctionTemplateDecl* FTD 
@@ -280,6 +285,8 @@ namespace cling {
       llvm::FoldingSet<FunctionTemplateSpecializationInfo> &FS 
         = FunctionTemplateDeclExt::getSpecializationsExt(FTD);
       FS.RemoveNode(CanFD->getTemplateSpecializationInfo());
+#endif
+      assert("FunctionTemplateSpecialization not handled yet" && 0);
     }
 
     // Find other decls that the old one has replaced
