@@ -2677,7 +2677,7 @@ if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
 
     if test ! "x$macosx105" = "x" && test "x$macosx106" = "x" ; then
 	# Mac OS X 10.5 problem
-	opengllib="-dylib_file /usr/X11R6/lib/libGL.dylib:/usr/X11R6/lib/libGL.dylib"
+	opengllib="-dylib_file /usr/X11R6/lib/libGL.dylib:/usr/X11R6/lib/libGL.dylib -lGL"
     fi
 
     check_library "libGLU libMesaGLU" "$enable_shared" \
