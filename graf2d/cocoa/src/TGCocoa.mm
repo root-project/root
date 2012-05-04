@@ -2069,8 +2069,14 @@ FontStruct_t TGCocoa::LoadQueryFont(const char *fontName)
    assert(fontName != 0 && "LoadQueryFont, fontName is null");
 
    ROOT::MacOSX::X11::XLFDName xlfd = {};
-   if (ParseXLFDName(fontName, xlfd))
+   if (ParseXLFDName(fontName, xlfd)) {
+      //Make names more flexible: fFamilyName can be empty or '*'.
+      if (!xlfd.fFamilyName.length() || xlfd.fFamilyName == "*")
+         xlfd.fFamilyName = "Courier";//Up to me, right?
+      if (!xlfd.fPixelSize)
+         xlfd.fPixelSize = 11;//Again, up to me.
       return fPimpl->fFontManager.LoadFont(xlfd);
+   }
 
    return FontStruct_t();
 }
@@ -2130,9 +2136,15 @@ void TGCocoa::FreeFontStruct(FontStruct_t /*fs*/)
 }
 
 //______________________________________________________________________________
-char **TGCocoa::ListFonts(const char * /*fontname*/, Int_t /*max*/, Int_t &count)
+char **TGCocoa::ListFonts(const char *fontName, Int_t /*max*/, Int_t &count)
 {
+   if (fontName && fontName[0]) {
+      X11::XLFDName xlfd;
+      X11::ParseXLFDName(fontName, xlfd);
+   }
+
    count = 0;
+
    return 0;
 }
 

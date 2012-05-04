@@ -19,6 +19,16 @@
 #include "XLFDParser.h"
 #include "TError.h"
 
+//
+// I did not find any formal description of what XLFD name can be.
+// The first version of this code was quite strict - it expected all
+// components to be in place, digits must be digits. But after using
+// ROOT's GUI for some time, I noticed that ROOT can use font name like
+// *, "fixed", "-*-" or something like this. In this case I have to set
+// some "default" or "wildcard" names.
+// TODO: what does X11 epxected to do, if XLFD name is bad?
+//
+
 namespace ROOT {
 namespace MacOSX {
 namespace X11 {
@@ -31,7 +41,7 @@ typedef std::string::size_type size_type;
 template<class T>
 void StringToInt(const std::string &str, const std::string &componentName, T &num)
 {
-   for (std::string::size_type i = 0, e = str.length(); i < e; ++i) {
+   for (size_type i = 0, e = str.length(); i < e; ++i) {
       const char symbol = str[i];
       if (!std::isdigit(symbol))
          throw std::runtime_error("bad symbol while converting component " + componentName + " into number");
@@ -84,7 +94,7 @@ size_type GetXLFDNameComponentAsInteger(const std::string &name,
 //______________________________________________________________________________
 size_type ParseFoundry(const std::string &name, size_type pos, XLFDName &/*dst*/)
 {
-   //We ignore foundry at the moment(?)
+   //Ignore foundry.
    std::string dummy;
    return GetXLFDNameComponentAsString(name, "foundry", pos, dummy);
 }
@@ -97,11 +107,10 @@ size_type ParseFamilyName(const std::string &name, size_type pos, XLFDName &dst)
    
    //This is a "special case": ROOT uses it's own symbol.ttf, but
    //I can not use it to render text in a GUI, and also I can not use
-   //Apple's system symbol font - it can not encode all symbols GUI wants.
-   
+   //Apple's system symbol font - it can not encode all symbols ROOT wants.
    if (dst.fFamilyName == "symbol") 
       dst.fFamilyName = "helvetica";
-   
+
    return tokenEnd;
 }
 
@@ -113,11 +122,7 @@ size_type ParseWeight(const std::string &name, size_type pos, XLFDName &dst)
    //and integer.
    std::string weight;
    pos = GetXLFDNameComponentAsString(name, "weight", pos, weight);
-
-   if (weight != "bold")
-      dst.fWeight = kFWMedium;
-   else
-      dst.fWeight = kFWBold;
+   weight == "bold" ? dst.fWeight = kFWBold : dst.fWeight = kFWMedium;
 
    return pos;
 }
@@ -130,20 +135,14 @@ size_type ParseSlant(const std::string &name, size_type pos, XLFDName &dst)
    std::string slant;
    pos = GetXLFDNameComponentAsString(name, "slant", pos, slant);
 
-   if (slant == "r" || slant == "R") {
-      dst.fSlant = kFSRegular;
-      return pos;
-   }
+   //Can be 'r', 'R', 'i', 'I', 'o', 'O', and now I add also '*' - let it be regular.
+   dst.fSlant = kFSRegular;
 
-   if (slant == "i" || slant == "I" || slant == "o" || slant == "O") {
+   if (slant == "i" || slant == "I" || slant == "o" || slant == "O")
       dst.fSlant = kFSItalic;
-      return pos;
-   }
 
-   throw std::runtime_error("ParseSlant: unknown slant: " + slant);
-   return pos;//never executed.
+   return pos;
 }
-
 
 //______________________________________________________________________________
 size_type ParseSetwidth(const std::string &name, size_type pos, XLFDName &/*dst*/)
@@ -153,7 +152,6 @@ size_type ParseSetwidth(const std::string &name, size_type pos, XLFDName &/*dst*
    return GetXLFDNameComponentAsString(name, "setwidth", pos, dummy);
 }
 
-
 //______________________________________________________________________________
 size_type ParseAddstyle(const std::string &name, size_type pos, XLFDName &/*dst*/)
 {
@@ -162,13 +160,23 @@ size_type ParseAddstyle(const std::string &name, size_type pos, XLFDName &/*dst*
    return GetXLFDNameComponentAsString(name, "addstyle", pos, dummy);
 }
 
-
 //______________________________________________________________________________
 size_type ParsePixelSize(const std::string &name, size_type pos, XLFDName &dst)
 {
+   //First, try to parse as string. It can be '*' == 'any size'.
+   //In the first version it was more strict - throwing and exception.
+   std::string dummy;
+
+   size_type endOfSize = GetXLFDNameComponentAsString(name, "pixel size", pos, dummy);
+   if (dummy == "*") {
+      //Aha, ignore size.
+      dst.fPixelSize = 0;
+      return endOfSize;
+   }
+
+   //Real size in pixel?
    return GetXLFDNameComponentAsInteger(name, "pixel size", pos, dst.fPixelSize);
 }
-
 
 //______________________________________________________________________________
 size_type ParsePointSize(const std::string &name, size_type pos, XLFDName &/*dst*/)
@@ -233,34 +241,48 @@ size_type ParseEncoding(const std::string &name, size_type pos, XLFDName &dst)
 //______________________________________________________________________________
 bool ParseXLFDName(const std::string &xlfdName, XLFDName &dst)
 {
-   assert(xlfdName.length() && "XLFD name is a string with a zero length");
+   const size_type nameLength = xlfdName.length();
 
-   if (!xlfdName.length()) {
+   assert(nameLength && "XLFD name is a string with a zero length");
+
+   if (!nameLength) {
       ::Warning("ROOT::MacOSX::X11::ParseXLFDName: ", "XLFD name is a string with a zero length");
       return false;
    }
 
    try {
       if (xlfdName == "fixed" || xlfdName == "*") {
+         //Is this correct XLFD name???? Who knows. Replace it.
          dst.fFamilyName = "Courier";
          dst.fPixelSize = 11;
       } else {
-         std::string::size_type pos = 0;
-
-         pos = ParseFoundry(xlfdName, pos, dst);
-         pos = ParseFamilyName(xlfdName, pos, dst);
-         pos = ParseWeight(xlfdName, pos, dst);
-         pos = ParseSlant(xlfdName, pos, dst);
-         pos = ParseSetwidth(xlfdName, pos, dst);
-         pos = ParseAddstyle(xlfdName, pos, dst);
-         pos = ParsePixelSize(xlfdName, pos, dst);
-         pos = ParsePointSize(xlfdName, pos, dst);
-         pos = ParseHoriz(xlfdName, pos, dst);
-         pos = ParseVert(xlfdName, pos, dst);
-         pos = ParseSpacing(xlfdName, pos, dst);
-         pos = ParseAvgwidth(xlfdName, pos, dst);
-         pos = ParseRgstry(xlfdName, pos, dst);
-         pos = ParseEncoding(xlfdName, pos, dst);
+         size_type pos = ParseFoundry(xlfdName, 0, dst);
+         if (pos + 1 < nameLength)
+            pos = ParseFamilyName(xlfdName, pos, dst);
+         if (pos + 1 < nameLength)
+            pos = ParseWeight(xlfdName, pos, dst);
+         if (pos + 1 < nameLength)
+            pos = ParseSlant(xlfdName, pos, dst);
+         if (pos + 1 < nameLength)
+            pos = ParseSetwidth(xlfdName, pos, dst);
+         if (pos + 1 < nameLength)
+            pos = ParseAddstyle(xlfdName, pos, dst);
+         if (pos + 1 < nameLength)
+            pos = ParsePixelSize(xlfdName, pos, dst);
+         if (pos + 1 < nameLength)
+            pos = ParsePointSize(xlfdName, pos, dst);
+         if (pos + 1 < nameLength)
+            pos = ParseHoriz(xlfdName, pos, dst);
+         if (pos + 1 < nameLength)
+            pos = ParseVert(xlfdName, pos, dst);
+         if (pos + 1 < nameLength)
+            pos = ParseSpacing(xlfdName, pos, dst);
+         if (pos + 1 < nameLength)
+            pos = ParseAvgwidth(xlfdName, pos, dst);
+         if (pos + 1 < nameLength)
+            pos = ParseRgstry(xlfdName, pos, dst);
+         if (pos + 1 < nameLength)
+            pos = ParseEncoding(xlfdName, pos, dst);
       }
 
       return true;
