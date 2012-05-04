@@ -891,9 +891,6 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
       Warning("Add","Attempt to add histograms with different labels");
    }
   
-   if (h1->GetXaxis()->GetLabels()  || fXaxis.GetLabels() )
-      Warning("Add","Attempt to add histograms with labels");
-
    if (fDimension < 2) nbinsy = -1;
    if (fDimension < 3) nbinsz = -1;
 
@@ -1367,14 +1364,14 @@ bool TH1::CheckBinLabels(const TAxis* a1, const TAxis * a2)
       throw DifferentLabels();
       return false;
    } 
-   // check now labels are the same
+   // check now labels sizes  are the same
    if (l1->GetSize() != l2->GetSize() ) {
       throw DifferentLabels();
       return false;
    }
-   for (int i = 0; i < l1->GetSize(); ++i) {
-      TString label1 = l1->At(i)->GetName();
-      TString label2 = l1->At(i)->GetName();
+   for (int i = 1; i <= a1->GetNbins(); ++i) {
+      TString label1 = a1->GetBinLabel(i);
+      TString label2 = a2->GetBinLabel(i);
       if (label1 != label2) {
          throw DifferentLabels();
          return false;         
@@ -1494,6 +1491,11 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
    ret &= CheckBinLimits(h1->GetXaxis(), h2->GetXaxis());
    ret &= CheckBinLimits(h1->GetYaxis(), h2->GetYaxis());
    ret &= CheckBinLimits(h1->GetZaxis(), h2->GetZaxis());
+
+   // check labels
+   ret &= CheckBinLabels(h1->GetXaxis(), h2->GetXaxis());
+   ret &= CheckBinLabels(h1->GetYaxis(), h2->GetYaxis());
+   ret &= CheckBinLabels(h1->GetZaxis(), h2->GetZaxis());
 
    return ret;
 }
