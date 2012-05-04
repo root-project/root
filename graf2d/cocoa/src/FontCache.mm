@@ -99,6 +99,45 @@ FontStruct_t FontCache::LoadFont(const X11::XLFDName &xlfd)
 namespace {
 
 //______________________________________________________________________________
+CTFontCollectionRef CreateFontCollection(const X11::XLFDName &xlfd)
+{
+   CTFontCollectionRef ctCollection = 0;
+   if (xlfd.fFamilyName == "*")
+      ctCollection = CTFontCollectionCreateFromAvailableFonts(0);//Select all available fonts.
+   else {
+      //Create collection, using font descriptor?
+      const Util::CFScopeGuard<CFStringRef> fontName(CFStringCreateWithCString(kCFAllocatorDefault, xlfd.fFamilyName.c_str(), kCFStringEncodingMacRoman));
+      if (!fontName.Get()) {
+         ::Error("CreateFontCollection", "CFStringCreateWithCString failed");
+         return 0;
+      }
+      
+      const Util::CFScopeGuard<CTFontDescriptorRef> fontDescriptor(CTFontDescriptorCreateWithNameAndSize(fontName.Get(), 0.));
+      if (!fontDescriptor.Get()) {
+         ::Error("CreateFontCollection", "CTFontDescriptorCreateWithNameAndSize failed");
+         return 0;
+      }
+
+      Util::CFScopeGuard<CFMutableArrayRef> descriptors(CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks));
+      if (!descriptors.Get()) {
+         ::Error("CreateFontCollection", "CFArrayCreateMutable failed");
+         return 0;
+      }
+      
+      CFArrayAppendValue(descriptors.Get(), fontDescriptor.Get());      
+      ctCollection = CTFontCollectionCreateWithFontDescriptors(descriptors.Get(), 0);//Oh mama, so many code just to do this :(((
+   }
+   
+   if (!ctCollection) {
+      ::Error("CreateFontCollection", "No fonts are available for family %s", xlfd.fFamilyName.c_str());//WTF???
+      return 0;
+   }
+
+
+   return ctCollection;
+}
+
+//______________________________________________________________________________
 bool GetFamilyName(CTFontDescriptorRef fontDescriptor, std::vector<char> &name)
 {
    assert(fontDescriptor != 0 && "GetFamilyName, fontDescriptor parameter is null");
@@ -112,6 +151,44 @@ bool GetFamilyName(CTFontDescriptorRef fontDescriptor, std::vector<char> &name)
       return true;
 
    return false;
+}
+
+//______________________________________________________________________________
+void GetWeightAndSlant(CTFontDescriptorRef fontDescriptor, X11::XLFDName &newXLFD)
+{
+   //Let's ask for a weight and pixel size.
+   const Util::CFScopeGuard<CFDictionaryRef> traits((CFDictionaryRef)CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontTraitsAttribute));
+   if (traits.Get()) {
+      if(CFNumberRef weight = (CFNumberRef)CFDictionaryGetValue(traits.Get(), kCTFontWeightTrait)) {
+         double val = 0.;
+         if (CFNumberGetValue(weight, kCFNumberDoubleType, &val))
+            newXLFD.fWeight = val > 0. ? X11::kFWBold : X11::kFWMedium;
+      }
+
+      if(CFNumberRef slant = (CFNumberRef)CFDictionaryGetValue(traits.Get(), kCTFontSlantTrait)) {
+         double val = 0.;
+         if (CFNumberGetValue(slant, kCFNumberDoubleType, &val))
+            newXLFD.fSlant = val > 0. ? X11::kFSItalic : X11::kFSRegular;
+      }
+   }
+}
+
+//______________________________________________________________________________
+void GetPixelSize(CTFontDescriptorRef fontDescriptor, X11::XLFDName &newXLFD)
+{
+   const Util::CFScopeGuard<CFNumberRef> size((CFNumberRef)CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontSizeAttribute));
+   if (size.Get()) {
+      int pixelSize = 0;
+      if(CFNumberIsFloatType(size.Get())) {
+         double val = 0;
+         CFNumberGetValue(size.Get(), kCFNumberDoubleType, &val);
+         pixelSize = val;
+      } else
+         CFNumberGetValue(size.Get(), kCFNumberIntType, &pixelSize);
+
+      if(pixelSize)
+         newXLFD.fPixelSize = pixelSize;
+   }      
 }
 
 }
@@ -128,41 +205,11 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
    //total trash and sodomy because of all possible cleanup actions.
 
    //First, create a font collection.
-   CTFontCollectionRef ctCollection = 0;
-   if (xlfd.fFamilyName == "*")
-      ctCollection = CTFontCollectionCreateFromAvailableFonts(0);//Select all available fonts.
-   else {
-      //Create collection, using font descriptor?
-      const Util::CFScopeGuard<CFStringRef> fontName(CFStringCreateWithCString(kCFAllocatorDefault, xlfd.fFamilyName.c_str(), kCFStringEncodingMacRoman));
-      if (!fontName.Get()) {
-         ::Error("FontCache::ListFonts", "CFStringCreateWithCString failed");
-         return 0;
-      }
-      
-      const Util::CFScopeGuard<CTFontDescriptorRef> fontDescriptor(CTFontDescriptorCreateWithNameAndSize(fontName.Get(), 0.));
-      if (!fontDescriptor.Get()) {
-         ::Error("FontCache::ListFonts", "CTFontDescriptorCreateWithNameAndSize failed");
-         return 0;
-      }
-
-      Util::CFScopeGuard<CFMutableArrayRef> descriptors(CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks));
-      if (!descriptors.Get()) {
-         ::Error("FontCache::ListFonts", "CFArrayCreateMutable failed");
-         return 0;
-      }
-      
-      CFArrayAppendValue(descriptors.Get(), fontDescriptor.Get());      
-      ctCollection = CTFontCollectionCreateWithFontDescriptors(descriptors.Get(), 0);//Oh mama, so many code just to do this :(((
-   }
-   
-   if (!ctCollection) {
-      ::Error("FontCache::ListFonts", "No fonts are available for family %s", xlfd.fFamilyName.c_str());//WTF???
+   const Util::CFScopeGuard<CTFontCollectionRef> collectionGuard(CreateFontCollection(xlfd));
+   if (!collectionGuard.Get())
       return 0;
-   }
 
-   const Util::CFScopeGuard<CTFontCollectionRef> collectionGuard(ctCollection);
-
-   Util::CFScopeGuard<CFArrayRef> fonts(CTFontCollectionCreateMatchingFontDescriptors(ctCollection));
+   Util::CFScopeGuard<CFArrayRef> fonts(CTFontCollectionCreateMatchingFontDescriptors(collectionGuard.Get()));
    if (!fonts.Get()) {
       ::Error("FontCache::ListFonts", "CTFontCollectionCreateMatchingFontDescriptors failed %s", xlfd.fFamilyName.c_str());
       return 0;
@@ -176,53 +223,24 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
    const CFIndex nFonts = CFArrayGetCount(fonts.Get());
    for (CFIndex i = 0; i < nFonts && added < maxNames; ++i) {
       CTFontDescriptorRef font = (CTFontDescriptorRef)CFArrayGetValueAtIndex(fonts.Get(), i);
+
       if (!GetFamilyName(font, familyName))
          continue;
-      
-   
       //I do not check family name: if xlfd.fFamilyName is '*', all font names fit,
       //if it's a special name - collection is created using this name.
       newXLFD.fFamilyName = &familyName[0];
-   
-      //Let's ask for a weight and pixel size.
-      const Util::CFScopeGuard<CFDictionaryRef> traits((CFDictionaryRef)CTFontDescriptorCopyAttribute(font, kCTFontTraitsAttribute));
-      if (traits.Get()) {
-         if(CFNumberRef weight = (CFNumberRef)CFDictionaryGetValue(traits.Get(), kCTFontWeightTrait)) {
-            double val = 0.;
-            if (CFNumberGetValue(weight, kCFNumberDoubleType, &val))
-               newXLFD.fWeight = val > 0. ? X11::kFWBold : X11::kFWMedium;
-         }
 
-         if(CFNumberRef slant = (CFNumberRef)CFDictionaryGetValue(traits.Get(), kCTFontSlantTrait)) {
-            double val = 0.;
-            if (CFNumberGetValue(slant, kCFNumberDoubleType, &val))
-               newXLFD.fSlant = val > 0. ? X11::kFSItalic : X11::kFSRegular;
-         }
-      }
-      
+      GetWeightAndSlant(font, newXLFD);
       //Check weight and slant.
       if (newXLFD.fWeight != xlfd.fWeight)
          continue;
-         
       if (newXLFD.fSlant != xlfd.fSlant)
          continue;
-         
-      if (xlfd.fPixelSize) {//Size was requested.
-         const Util::CFScopeGuard<CFNumberRef> size((CFNumberRef)CTFontDescriptorCopyAttribute(font, kCTFontSizeAttribute));
-         if (size.Get()) {
-            int pixelSize = 0;
-            if(CFNumberIsFloatType(size.Get())) {
-               double val = 0;
-               CFNumberGetValue(size.Get(), kCFNumberDoubleType, &val);
-               pixelSize = val;
-            } else
-               CFNumberGetValue(size.Get(), kCFNumberIntType, &pixelSize);
+      
 
-            if(pixelSize)
-               newXLFD.fPixelSize = pixelSize;
-         }      
-         
-         if (xlfd.fPixelSize != newXLFD.fPixelSize)//?
+      if (xlfd.fPixelSize) {//Size was requested.
+         GetPixelSize(font, newXLFD);         
+         if (xlfd.fPixelSize != newXLFD.fPixelSize)//??? do I need this check actually?
             continue;
       }
 
