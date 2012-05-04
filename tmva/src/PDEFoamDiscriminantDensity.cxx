@@ -80,7 +80,7 @@ TMVA::PDEFoamDiscriminantDensity::PDEFoamDiscriminantDensity(const PDEFoamDiscri
 }
 
 //_____________________________________________________________________
-Double_t TMVA::PDEFoamDiscriminantDensity::Density(std::vector<Double_t> &Xarg, Double_t &event_density)
+Double_t TMVA::PDEFoamDiscriminantDensity::Density(std::vector<Double_t> &xev, Double_t &event_density)
 {
    // This function is needed during the foam buildup.  It returns the
    // average number density of events of type fClass within the
@@ -88,14 +88,14 @@ Double_t TMVA::PDEFoamDiscriminantDensity::Density(std::vector<Double_t> &Xarg, 
    //
    // Parameters:
    //
-   // - Xarg - event vector (in [fXmin,fXmax]) to place the box at
+   // - xev - event vector (in [fXmin,fXmax]) to place the box at
    //
    // - event_density - here the event density is stored
    //
    // Returns:
    //
    // Number of events (event weights) of type fClass, which were
-   // found in the range-searching volume at point 'Xarg', divided by
+   // found in the range-searching volume at point 'xev', divided by
    // the box volume.
 
    if (!fBst)
@@ -110,27 +110,27 @@ Double_t TMVA::PDEFoamDiscriminantDensity::Density(std::vector<Double_t> &Xarg, 
 
    // set upper and lower bound for search volume
    for (UInt_t idim = 0; idim < GetBox().size(); ++idim) {
-      lb[idim] = Xarg[idim] - GetBox().at(idim) / 2.0;
-      ub[idim] = Xarg[idim] + GetBox().at(idim) / 2.0;
+      lb[idim] = xev[idim] - GetBox().at(idim) / 2.0;
+      ub[idim] = xev[idim] + GetBox().at(idim) / 2.0;
    }
 
    TMVA::Volume volume(&lb, &ub);                        // volume to search in
    std::vector<const TMVA::BinarySearchTreeNode*> nodes; // BST nodes found
 
    // do range searching
-   Double_t SumOfWeights = fBst->SearchVolume(&volume, &nodes);
+   const Double_t sumOfWeights = fBst->SearchVolume(&volume, &nodes);
 
    // store density based on total number of events
    event_density = nodes.size() * probevolume_inv;
 
-   Double_t N_sig = 0;           // number of signal events found
+   Double_t n_sig = 0;           // number of signal events found
    // calc number of signal events in nodes
    for (std::vector<const TMVA::BinarySearchTreeNode*>::const_iterator it = nodes.begin();
         it != nodes.end(); ++it) {
       if ((*it)->GetClass() == fClass) // signal node
-         N_sig += (*it)->GetWeight();
+         n_sig += (*it)->GetWeight();
    }
 
-   // return:  (N_sig/N_total) / (cell_volume)
-   return (N_sig / (SumOfWeights + 0.1)) * probevolume_inv;
+   // return:  (n_sig/n_total) / (cell_volume)
+   return (n_sig / (sumOfWeights + 0.1)) * probevolume_inv;
 }

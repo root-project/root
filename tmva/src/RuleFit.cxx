@@ -442,7 +442,7 @@ void TMVA::RuleFit::NormVisHists(std::vector<TH2F *> & hlist)
    // if all weights are positive, the scale will be 1/maxweight
    // if minimum weight < 0, then the scale will be 1/max(maxweight,abs(minweight))
    //
-   if (hlist.size()==0) return;
+   if (hlist.empty()) return;
    //
    Double_t wmin=0;
    Double_t wmax=0;

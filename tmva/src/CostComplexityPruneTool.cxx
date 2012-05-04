@@ -297,7 +297,7 @@ void CostComplexityPruneTool::Optimize( DecisionTree* dt, Double_t weights ) {
       fPruneStrengthList.push_back(alpha);
    }
 
-   if(fPruneSequence.size() == 0) {
+   if(fPruneSequence.empty()) {
       fOptimalK = -1;
       return;
    }

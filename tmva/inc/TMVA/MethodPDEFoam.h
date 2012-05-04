@@ -41,10 +41,6 @@
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TRandom3
-#include "TRandom3.h"
-#endif
-
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
 #endif
@@ -175,6 +171,9 @@ namespace TMVA {
 
       // get help message text
       void GetHelpMessage() const;
+
+      // calculate the error on the Mva value
+      Double_t CalculateMVAError();
 
       // calculate Xmin and Xmax for Foam
       void CalcXminXmax();

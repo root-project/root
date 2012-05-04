@@ -106,14 +106,14 @@ TMVA::PDEFoamCell::~PDEFoamCell()
 }
 
 //_____________________________________________________________________
-void TMVA::PDEFoamCell::Fill(Int_t Status, PDEFoamCell *Parent, PDEFoamCell *Daugh1, PDEFoamCell *Daugh2)
+void TMVA::PDEFoamCell::Fill(Int_t status, PDEFoamCell *parent, PDEFoamCell *daugh1, PDEFoamCell *daugh2)
 {
    // Fills in certain data into newly allocated cell
 
-   fStatus  = Status;
-   fParent  = Parent;
-   fDaught0 = Daugh1;
-   fDaught1 = Daugh2;
+   fStatus  = status;
+   fParent  = parent;
+   fDaught0 = daugh1;
+   fDaught1 = daugh2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

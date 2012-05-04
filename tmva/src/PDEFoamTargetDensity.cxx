@@ -78,22 +78,22 @@ TMVA::PDEFoamTargetDensity::PDEFoamTargetDensity(const PDEFoamTargetDensity &dis
 }
 
 //_____________________________________________________________________
-Double_t TMVA::PDEFoamTargetDensity::Density(std::vector<Double_t> &Xarg, Double_t &event_density)
+Double_t TMVA::PDEFoamTargetDensity::Density(std::vector<Double_t> &xev, Double_t &event_density)
 {
    // This function is needed during the foam buildup.  It returns the
    // average target value within the range-searching box at point
-   // Xarg, divided by volume (specified by fBox).
+   // xev, divided by volume (specified by fBox).
    //
    // Parameters:
    //
-   // - Xarg - event vector (in [fXmin,fXmax]) to place the box at
+   // - xev - event vector (in [fXmin,fXmax]) to place the box at
    //
    // - event_density - here the event density is stored
    //
    // Returns:
    //
    // Average target value in the range-searching volume at point
-   // 'Xarg', divided by the box volume.
+   // 'xev', divided by the box volume.
 
    if (!fBst)
       Log() << kFATAL << "<PDEFoamTargetDensity::Density()> Binary tree not found!" << Endl;
@@ -107,26 +107,26 @@ Double_t TMVA::PDEFoamTargetDensity::Density(std::vector<Double_t> &Xarg, Double
 
    // set upper and lower bound for search volume
    for (UInt_t idim = 0; idim < GetBox().size(); ++idim) {
-      lb[idim] = Xarg[idim] - GetBox().at(idim) / 2.0;
-      ub[idim] = Xarg[idim] + GetBox().at(idim) / 2.0;
+      lb[idim] = xev[idim] - GetBox().at(idim) / 2.0;
+      ub[idim] = xev[idim] + GetBox().at(idim) / 2.0;
    }
 
    TMVA::Volume volume(&lb, &ub);                        // volume to search in
    std::vector<const TMVA::BinarySearchTreeNode*> nodes; // BST nodes found
 
    // do range searching
-   Double_t SumOfWeights = fBst->SearchVolume(&volume, &nodes);
+   const Double_t sumOfWeights = fBst->SearchVolume(&volume, &nodes);
 
    // store density based on total number of events
    event_density = nodes.size() * probevolume_inv;
 
-   Double_t N_tar = 0;           // number of target events found
+   Double_t n_tar = 0;           // number of target events found
    // now sum over all nodes->GetTarget(0);
    for (std::vector<const TMVA::BinarySearchTreeNode*>::const_iterator it = nodes.begin();
         it != nodes.end(); ++it) {
-      N_tar += ((*it)->GetTargets()).at(fTarget) * ((*it)->GetWeight());
+      n_tar += ((*it)->GetTargets()).at(fTarget) * ((*it)->GetWeight());
    }
 
-   // return:  (N_tar/N_total) / (cell_volume)
-   return (N_tar / (SumOfWeights + 0.1)) * probevolume_inv;
+   // return:  (n_tar/n_total) / (cell_volume)
+   return (n_tar / (sumOfWeights + 0.1)) * probevolume_inv;
 }

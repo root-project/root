@@ -686,7 +686,7 @@ void TMVA::Tools::UsefulSortAscending( std::vector<Double_t>& v )
 Int_t TMVA::Tools::GetIndexMaxElement( std::vector<Double_t>& v )
 {
    // find index of maximum entry in vector
-   if (v.size()==0) return -1;
+   if (v.empty()) return -1;
 
    Int_t pos=0; Double_t mx=v[0];
    for (UInt_t i=0; i<v.size(); i++){
@@ -702,7 +702,7 @@ Int_t TMVA::Tools::GetIndexMaxElement( std::vector<Double_t>& v )
 Int_t TMVA::Tools::GetIndexMinElement( std::vector<Double_t>& v )
 {
    // find index of minimum entry in vector
-   if (v.size()==0) return -1;
+   if (v.empty()) return -1;
 
    Int_t pos=0; Double_t mn=v[0];
    for (UInt_t i=0; i<v.size(); i++){
@@ -1404,7 +1404,7 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t ma
 {
    // compute covariance matrices
 
-   if (events.size() == 0) return 0;
+   if (events.empty()) return 0;
 
 
    UInt_t nvars=0, ntgts=0, nspcts=0;

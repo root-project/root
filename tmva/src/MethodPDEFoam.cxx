@@ -50,17 +50,11 @@
 // integration package TFoam included in the analysis package ROOT.
 // _______________________________________________________________________
 
-#include <iomanip>
-#include <cassert>
-#include <climits>
-
 #include "TMath.h"
-#include "Riostream.h"
 #include "TFile.h"
 
 #include "TMVA/MethodPDEFoam.h"
 #include "TMVA/Tools.h"
-#include "TMatrix.h"
 #include "TMVA/Ranking.h"
 #include "TMVA/Types.h"
 #include "TMVA/ClassifierFactory.h"
@@ -107,9 +101,9 @@ TMVA::MethodPDEFoam::MethodPDEFoam( const TString& jobName,
    , fDTLogic("None")
    , fDTSeparation(kFoam)
    , fPeekMax(kTRUE)
-   , fXmin(std::vector<Float_t>())
-   , fXmax(std::vector<Float_t>())
-   , fFoam(std::vector<PDEFoam*>())
+   , fXmin()
+   , fXmax()
+   , fFoam()
 {
    // init PDEFoam objects
 }
@@ -143,9 +137,9 @@ TMVA::MethodPDEFoam::MethodPDEFoam( DataSetInfo& dsi,
    , fDTLogic("None")
    , fDTSeparation(kFoam)
    , fPeekMax(kTRUE)
-   , fXmin(std::vector<Float_t>())
-   , fXmax(std::vector<Float_t>())
-   , fFoam(std::vector<PDEFoam*>())
+   , fXmin()
+   , fXmax()
+   , fFoam()
 {
    // constructor from weight file
 }
@@ -640,9 +634,9 @@ void TMVA::MethodPDEFoam::TrainMultiTargetRegression()
       // since in multi-target regression targets are handled like
       // variables --> remove targets and add them to the event variabels
       std::vector<Float_t> targets(ev->GetTargets());
-      UInt_t NVariables = ev->GetValues().size();
+      const UInt_t nVariables = ev->GetValues().size();
       for (UInt_t i = 0; i < targets.size(); ++i)
-	 ev->SetVal(i+NVariables, targets.at(i));
+	 ev->SetVal(i+nVariables, targets.at(i));
       ev->GetTargets().clear();
       if (!(IgnoreEventsWithNegWeightsInTraining() && ev->GetWeight()<=0))
 	 fFoam.back()->FillBinarySearchTree(ev);
@@ -661,10 +655,10 @@ void TMVA::MethodPDEFoam::TrainMultiTargetRegression()
       // since in multi-target regression targets are handled like
       // variables --> remove targets and add them to the event variabels
       std::vector<Float_t> targets = ev->GetTargets(); 	 
-      UInt_t NVariables = ev->GetValues().size();
+      const UInt_t nVariables = ev->GetValues().size();
       Float_t weight = fFillFoamWithOrigWeights ? ev->GetOriginalWeight() : ev->GetWeight();
       for (UInt_t i = 0; i < targets.size(); ++i) 	 
-	 ev->SetVal(i+NVariables, targets.at(i)); 	 
+	 ev->SetVal(i+nVariables, targets.at(i)); 	 
       ev->GetTargets().clear();
       if (!(IgnoreEventsWithNegWeightsInTraining() && ev->GetWeight()<=0))
 	 fFoam.back()->FillFoamCells(ev, weight);
@@ -692,11 +686,12 @@ Double_t TMVA::MethodPDEFoam::GetMvaValue( Double_t* err, Double_t* errUpper )
    // PDEFoam (fFoam[0]) and 'Density_bg' is the content of the cell
    // in the background PDEFoam (fFoam[1]).
    //
-   // In both cases the error on the discriminant is stored in 'err'.
+   // In both cases the error on the discriminant is stored in 'err'
+   // and 'errUpper'.  (Of course err and errUpper must be non-zero
+   // and point to valid address to make this work.)
 
    const Event* ev = GetEvent();
    Double_t discr = 0.;
-   Double_t discr_error = 0.;
 
    if (fSigBgSeparated) {
       std::vector<Float_t> xvec = ev->GetValues();
@@ -711,44 +706,62 @@ Double_t TMVA::MethodPDEFoam::GetMvaValue( Double_t* err, Double_t* errUpper )
          discr = density_sig/(density_sig+density_bg);
       else
          discr = 0.5; // assume 50% signal probability, if no events found (bad assumption, but can be overruled by cut on error)
-
-      // do error estimation (not jet used in TMVA)
-      Double_t neventsB = fFoam.at(1)->GetCellValue(xvec, kValue, fKernelEstimator);
-      Double_t neventsS = fFoam.at(0)->GetCellValue(xvec, kValue, fKernelEstimator);
-      Double_t scaleB = 1.;
-      Double_t errorS = TMath::Sqrt(neventsS); // estimation of statistical error on counted signal events
-      Double_t errorB = TMath::Sqrt(neventsB); // estimation of statistical error on counted background events
-
-      if (neventsS == 0) // no signal events in cell
-         errorS = 1.;
-      if (neventsB == 0) // no bg events in cell
-         errorB = 1.;
-
-      if ( (neventsS>1e-10) || (neventsB>1e-10) ) // eq. (5) in paper T.Carli, B.Koblitz 2002
-         discr_error = TMath::Sqrt( Sqr ( scaleB*neventsB
-                                          / Sqr(neventsS+scaleB*neventsB)
-                                          * errorS) +
-                                    Sqr ( scaleB*neventsS
-                                          / Sqr(neventsS+scaleB*neventsB)
-                                          * errorB) );
-      else discr_error = 1.;
-
-      if (discr_error < 1e-10) discr_error = 1.;
    }
    else { // Signal and Bg not separated
       // get discriminator direct from the foam
-      discr       = fFoam.at(0)->GetCellValue(ev->GetValues(), kValue, fKernelEstimator);
-      discr_error = fFoam.at(0)->GetCellValue(ev->GetValues(), kValueError, fKernelEstimator);
+      discr = fFoam.at(0)->GetCellValue(ev->GetValues(), kValue, fKernelEstimator);
    }
 
-   // attribute error
-   if (err != 0) *err = discr_error;
-   if (errUpper != 0) *errUpper = discr_error;
+   // calculate the error
+   if (err || errUpper) {
+      const Double_t discr_error = CalculateMVAError();
+      if (err != 0) *err = discr_error;
+      if (errUpper != 0) *errUpper = discr_error;
+   }
 
    if (fUseYesNoCell)
       return (discr < 0.5 ? -1 : 1);
    else
       return discr;
+}
+
+//_______________________________________________________________________
+Double_t TMVA::MethodPDEFoam::CalculateMVAError()
+{
+   // Calculate the error on the Mva value
+   //
+   // If fSigBgSeparated == true the error is calculated from the
+   // number of events in the signal and background PDEFoam cells.
+   //
+   // If fSigBgSeparated == false, the error is taken directly from
+   // the PDEFoam cell.
+
+   const Event* ev = GetEvent(); // current event
+   Double_t mvaError = 0.0; // the error on the Mva value
+
+   if (fSigBgSeparated) {
+      const std::vector<Float_t>& xvec = ev->GetValues();
+
+      const Double_t neventsB = fFoam.at(1)->GetCellValue(xvec, kValue, fKernelEstimator);
+      const Double_t neventsS = fFoam.at(0)->GetCellValue(xvec, kValue, fKernelEstimator);
+      const Double_t scaleB = 1.;
+      // estimation of statistical error on counted signal/background events
+      const Double_t errorS = neventsS == 0 ? 1.0 : TMath::Sqrt(neventsS);
+      const Double_t errorB = neventsB == 0 ? 1.0 : TMath::Sqrt(neventsB);
+
+      if ((neventsS > 1e-10) || (neventsB > 1e-10)) {
+         // eq. (5) in paper T.Carli, B.Koblitz 2002
+         mvaError = TMath::Sqrt(Sqr(scaleB * neventsB / Sqr(neventsS + scaleB * neventsB) * errorS) +
+                                Sqr(scaleB * neventsS / Sqr(neventsS + scaleB * neventsB) * errorB));
+      } else {
+         mvaError = 1.0;
+      }
+   } else { // Signal and Bg not separated
+      // get discriminator error direct from the foam
+      mvaError = fFoam.at(0)->GetCellValue(ev->GetValues(), kValueError, fKernelEstimator);
+   }
+
+   return mvaError;
 }
 
 //_______________________________________________________________________
@@ -804,17 +817,17 @@ const TMVA::Ranking* TMVA::MethodPDEFoam::CreateRanking()
 
       // fill the importance vector (ignoring the target dimensions in
       // case of a multi-target regression foam)
-      UInt_t SumCuts = 0;
+      UInt_t sumOfCuts = 0;
       std::vector<Float_t> tmp_importance;
       for (UInt_t ivar = 0; ivar < GetNvar(); ++ivar) {
-         SumCuts += nCuts.at(ivar);
+         sumOfCuts += nCuts.at(ivar);
          tmp_importance.push_back( nCuts.at(ivar) );
       }
       // normalization of the variable importances of this foam: the
       // sum of all variable importances equals 1 for this foam
       for (UInt_t ivar = 0; ivar < GetNvar(); ++ivar) {
-	 if (SumCuts > 0)
-	    tmp_importance.at(ivar) /= SumCuts;
+	 if (sumOfCuts > 0)
+	    tmp_importance.at(ivar) /= sumOfCuts;
 	 else
 	    tmp_importance.at(ivar) = 0;
       }

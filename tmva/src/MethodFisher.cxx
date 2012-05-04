@@ -323,6 +323,8 @@ void TMVA::MethodFisher::GetMean( void )
       // signal + background
       (*fMeanMatx)( ivar, 2 ) /= (fSumOfWeightsS + fSumOfWeightsB);
    }
+
+   //   fMeanMatx->Print();
    delete [] sumS;
    delete [] sumB;
 }
@@ -359,9 +361,13 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
       Int_t k=0;
       for (Int_t x=0; x<nvar; x++) {
          for (Int_t y=0; y<nvar; y++) {            
-            Double_t v = ( (xval[x] - (*fMeanMatx)(x, 0))*(xval[y] - (*fMeanMatx)(y, 0)) )*weight;
-            if (DataInfo().IsSignal(ev)) sumSig[k] += v;
-            else                         sumBgd[k] += v;
+            if (DataInfo().IsSignal(ev)) {
+               Double_t v = ( (xval[x] - (*fMeanMatx)(x, 0))*(xval[y] - (*fMeanMatx)(y, 0)) )*weight;
+               sumSig[k] += v;
+            }else{
+               Double_t v = ( (xval[x] - (*fMeanMatx)(x, 0))*(xval[y] - (*fMeanMatx)(y, 0)) )*weight;
+               sumBgd[k] += v;
+            }
             k++;
          }
       }

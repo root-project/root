@@ -922,7 +922,7 @@ void TMVA::Factory::TrainAllMethods()
    WriteDataInformation();
 
    // don't do anything if no method booked
-   if (fMethods.size() == 0) {
+   if (fMethods.empty()) {
       Log() << kINFO << "...nothing found to train" << Endl;
       return;
    }
@@ -1028,7 +1028,7 @@ void TMVA::Factory::TestAllMethods()
    Log() << kINFO << "Test all methods..." << Endl;
 
    // don't do anything if no method booked
-   if (fMethods.size() == 0) {
+   if (fMethods.empty()) {
       Log() << kINFO << "...nothing found to test" << Endl;
       return;
    }
@@ -1122,7 +1122,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
    Log() << kINFO << "Evaluate all methods..." << Endl;
 
    // don't do anything if no method booked
-   if (fMethods.size() == 0) {
+   if (fMethods.empty()) {
       Log() << kINFO << "...nothing found to evaluate" << Endl;
       return;
    }

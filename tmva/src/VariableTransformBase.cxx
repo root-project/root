@@ -308,7 +308,7 @@ Bool_t TMVA::VariableTransformBase::GetInput( const Event* event, std::vector<Fl
    ItVarTypeIdxConst itEntry;
    ItVarTypeIdxConst itEntryEnd;
 
-   if( backTransformation ){
+   if( backTransformation && !fPut.empty() ){
       itEntry = fPut.begin();
       itEntryEnd = fPut.end();
    }
@@ -366,13 +366,13 @@ void TMVA::VariableTransformBase::SetOutput( Event* event, std::vector<Float_t>&
       ItVarTypeIdxConst itEntry;
       ItVarTypeIdxConst itEntryEnd;
 
-      if( !backTransformation ){ // as in GetInput, but the other way round (from fPut for transformation, from fGet for backTransformation)
-	 itEntry = fPut.begin();
-	 itEntryEnd = fPut.end();
-      }
-      else {
+      if( backTransformation || fPut.empty() ){ // as in GetInput, but the other way round (from fPut for transformation, from fGet for backTransformation)
 	 itEntry = fGet.begin();
 	 itEntryEnd = fGet.end();
+      }
+      else {
+	 itEntry = fPut.begin();
+	 itEntryEnd = fPut.end();
       }
 
 

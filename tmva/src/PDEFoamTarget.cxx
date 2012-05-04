@@ -58,23 +58,23 @@ TMVA::PDEFoamTarget::PDEFoamTarget()
 }
 
 //_____________________________________________________________________
-TMVA::PDEFoamTarget::PDEFoamTarget(const TString& Name, UInt_t target)
-   : PDEFoam(Name)
+TMVA::PDEFoamTarget::PDEFoamTarget(const TString& name, UInt_t target)
+   : PDEFoam(name)
    , fTarget(target)
 {
    // User constructor
    //
    // Parameters:
    //
-   // - Name - name of PDEFoam object
+   // - name - name of PDEFoam object
    //
    // - target - target number to range-search for
 }
 
 //_____________________________________________________________________
-TMVA::PDEFoamTarget::PDEFoamTarget(const PDEFoamTarget &From)
-   : PDEFoam(From)
-   , fTarget(From.fTarget)
+TMVA::PDEFoamTarget::PDEFoamTarget(const PDEFoamTarget &from)
+   : PDEFoam(from)
+   , fTarget(from.fTarget)
 {
    // Copy Constructor  NOT IMPLEMENTED (NEVER USED)
    Log() << kFATAL << "COPY CONSTRUCTOR NOT IMPLEMENTED" << Endl;
@@ -111,12 +111,12 @@ void TMVA::PDEFoamTarget::Finalize()
       if (!(fCells[iCell]->GetStat()))
          continue;
 
-      Double_t N_ev  = GetCellElement(fCells[iCell], 0); // get number of events
+      Double_t n_ev  = GetCellElement(fCells[iCell], 0); // get number of events
       Double_t tar   = GetCellElement(fCells[iCell], 1); // get sum of targets
 
-      if (N_ev > 0) {
-         SetCellElement(fCells[iCell], 0, tar / N_ev); // set average target
-         SetCellElement(fCells[iCell], 1, tar / TMath::Sqrt(N_ev)); // set error on average target
+      if (n_ev > 0) {
+         SetCellElement(fCells[iCell], 0, tar / n_ev); // set average target
+         SetCellElement(fCells[iCell], 1, tar / TMath::Sqrt(n_ev)); // set error on average target
       } else {
          SetCellElement(fCells[iCell], 0, 0.0);  // set mean target
          SetCellElement(fCells[iCell], 1, -1);   // set mean target error

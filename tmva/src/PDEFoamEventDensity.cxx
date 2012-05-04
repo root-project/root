@@ -73,7 +73,7 @@ TMVA::PDEFoamEventDensity::PDEFoamEventDensity(const PDEFoamEventDensity &distr)
 }
 
 //_____________________________________________________________________
-Double_t TMVA::PDEFoamEventDensity::Density(std::vector<Double_t> &Xarg, Double_t &event_density)
+Double_t TMVA::PDEFoamEventDensity::Density(std::vector<Double_t> &xev, Double_t &event_density)
 {
    // This function is needed during the foam buildup.  It returns the
    // event density within the range-searching volume (specified by
@@ -81,14 +81,14 @@ Double_t TMVA::PDEFoamEventDensity::Density(std::vector<Double_t> &Xarg, Double_
    //
    // Parameters:
    //
-   // - Xarg - event vector (in [fXmin,fXmax]) to place the box at
+   // - xev - event vector (in [fXmin,fXmax]) to place the box at
    //
    // - event_density - here the event density is stored
    //
    // Returns:
    //
    // Number of events (event weights), which were found in the
-   // range-searching volume at point 'Xarg', divided by the box
+   // range-searching volume at point 'xev', divided by the box
    // volume.
 
    if (!fBst)
@@ -103,19 +103,19 @@ Double_t TMVA::PDEFoamEventDensity::Density(std::vector<Double_t> &Xarg, Double_
 
    // set upper and lower bound for search volume
    for (UInt_t idim = 0; idim < GetBox().size(); ++idim) {
-      lb[idim] = Xarg[idim] - GetBox().at(idim) / 2.0;
-      ub[idim] = Xarg[idim] + GetBox().at(idim) / 2.0;
+      lb[idim] = xev[idim] - GetBox().at(idim) / 2.0;
+      ub[idim] = xev[idim] + GetBox().at(idim) / 2.0;
    }
 
    TMVA::Volume volume(&lb, &ub);                        // volume to search in
    std::vector<const TMVA::BinarySearchTreeNode*> nodes; // BST nodes found
 
    // do range searching
-   Double_t SumOfWeights = fBst->SearchVolume(&volume, &nodes);
+   const Double_t sumOfWeights = fBst->SearchVolume(&volume, &nodes);
 
    // store density based on total number of events
    event_density = nodes.size() * probevolume_inv;
 
    // return:  N_total(weighted) / cell_volume
-   return (SumOfWeights + 0.1) * probevolume_inv;
+   return (sumOfWeights + 0.1) * probevolume_inv;
 }

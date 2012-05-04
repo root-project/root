@@ -76,7 +76,7 @@ Float_t TMVA::PDEFoamKernelLinN::Estimate(PDEFoam *foam, std::vector<Float_t> &t
 }
 
 //_____________________________________________________________________
-Float_t TMVA::PDEFoamKernelLinN::WeightLinNeighbors(PDEFoam *foam, std::vector<Float_t> &txvec, ECellValue cv, Bool_t TreatEmptyCells)
+Float_t TMVA::PDEFoamKernelLinN::WeightLinNeighbors(PDEFoam *foam, std::vector<Float_t> &txvec, ECellValue cv, Bool_t treatEmptyCells)
 {
    // Returns the cell value, corresponding to 'txvec' (foam
    // coordinates [0,1]), weighted by the neighbor cells via a linear
@@ -89,7 +89,7 @@ Float_t TMVA::PDEFoamKernelLinN::WeightLinNeighbors(PDEFoam *foam, std::vector<F
    //
    //  - cv - cell value to be weighted
    //
-   //  - TreatEmptyCells - if this option is set to false (default),
+   //  - treatEmptyCells - if this option is set to false (default),
    //    it is not checked, wether the cell value or neighbor cell
    //    values are undefined (using foam->CellValueIsUndefined()).
    //    If this option is set to true, than only non-empty neighbor
@@ -112,7 +112,7 @@ Float_t TMVA::PDEFoamKernelLinN::WeightLinNeighbors(PDEFoam *foam, std::vector<F
    cell->GetHcub(cellPosi, cellSize);
    // calc value of cell, which contains txvec
    Float_t cellval = 0;
-   if (!(TreatEmptyCells && foam->CellValueIsUndefined(cell)))
+   if (!(treatEmptyCells && foam->CellValueIsUndefined(cell)))
       // cell is not empty -> get cell value
       cellval = foam->GetCellValue(cell, cv);
    else
@@ -139,7 +139,7 @@ Float_t TMVA::PDEFoamKernelLinN::WeightLinNeighbors(PDEFoam *foam, std::vector<F
       Float_t mindistcellval = foam->GetCellValue(mindistcell, cv);
       // if treatment of empty neighbor cells is deactivated, do
       // normal weighting
-      if (!(TreatEmptyCells && foam->CellValueIsUndefined(mindistcell))) {
+      if (!(treatEmptyCells && foam->CellValueIsUndefined(mindistcell))) {
          result += cellval        * (0.5 + mindist);
          result += mindistcellval * (0.5 - mindist);
          norm++;

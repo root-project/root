@@ -65,13 +65,13 @@ TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree()
 }
 
 //_____________________________________________________________________
-TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree(const TString& Name, SeparationBase *sepType, UInt_t cls)
-   : PDEFoamDiscriminant(Name, cls)
+TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree(const TString& name, SeparationBase *sepType, UInt_t cls)
+   : PDEFoamDiscriminant(name, cls)
    , fSepType(sepType)
 {
    // Parameters:
    //
-   // - Name - name of the foam
+   // - name - name of the foam
    //
    // - sepType - separation type used for the cell splitting (will be
    //   deleted in the destructor)
@@ -80,9 +80,9 @@ TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree(const TString& Name, SeparationBa
 }
 
 //_____________________________________________________________________
-TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree(const PDEFoamDecisionTree &From)
-   : PDEFoamDiscriminant(From)
-   , fSepType(NULL)
+TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree(const PDEFoamDecisionTree &from)
+   : PDEFoamDiscriminant(from)
+   , fSepType(from.fSepType)
 {
    // Copy Constructor  NOT IMPLEMENTED (NEVER USED)
    Log() << kFATAL << "COPY CONSTRUCTOR NOT IMPLEMENTED" << Endl;

@@ -409,7 +409,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const vector<TMVA::Event*> & eventSample,
          }
 
          // sanity check
-         if (leftSample.size() == 0 || rightSample.size() == 0) {
+         if (leftSample.empty() || rightSample.empty()) {
             Log() << kFATAL << "<TrainNode> all events went to the same branch" << Endl
                   << "---                       Hence new node == old node ... check" << Endl
                   << "---                         left:" << leftSample.size()

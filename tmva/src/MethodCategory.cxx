@@ -368,7 +368,7 @@ void TMVA::MethodCategory::Train()
          << (analysisType == Types::kRegression ? "Regression" : "Classification") << " ..." << Endl;
 
    // don't do anything if no sub-classifier booked
-   if (fMethods.size() == 0) {
+   if (fMethods.empty()) {
       Log() << kINFO << "...nothing found to train" << Endl;
       return;
    }
@@ -580,7 +580,7 @@ Double_t TMVA::MethodCategory::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    // returns the mva value of the right sub-classifier
 
-   if (fMethods.size()==0) return 0;
+   if (fMethods.empty()) return 0;
 
    UInt_t methodToUse = 0;
    const Event* ev = GetEvent();
@@ -618,7 +618,7 @@ const std::vector<Float_t> &TMVA::MethodCategory::GetRegressionValues()
 {
    // returns the mva value of the right sub-classifier
 
-   if (fMethods.size()==0) return MethodBase::GetRegressionValues();
+   if (fMethods.empty()) return MethodBase::GetRegressionValues();
 
    UInt_t methodToUse = 0;
    const Event* ev = GetEvent();

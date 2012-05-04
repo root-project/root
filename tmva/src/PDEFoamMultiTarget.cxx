@@ -65,15 +65,15 @@ TMVA::PDEFoamMultiTarget::PDEFoamMultiTarget()
 }
 
 //_____________________________________________________________________
-TMVA::PDEFoamMultiTarget::PDEFoamMultiTarget(const TString& Name, ETargetSelection ts)
-   : PDEFoamEvent(Name)
+TMVA::PDEFoamMultiTarget::PDEFoamMultiTarget(const TString& name, ETargetSelection ts)
+   : PDEFoamEvent(name)
    , fTargetSelection(ts)
 {
    // User constructor
    //
    // Parameters:
    //
-   // - Name - name of PDEFoam object
+   // - name - name of PDEFoam object
    //
    // - ts - target selection method used in
    //   GetCellValue(const std::map<Int_t, Float_t>& xvec, ECellValue)
@@ -91,9 +91,9 @@ TMVA::PDEFoamMultiTarget::PDEFoamMultiTarget(const TString& Name, ETargetSelecti
 }
 
 //_____________________________________________________________________
-TMVA::PDEFoamMultiTarget::PDEFoamMultiTarget(const PDEFoamMultiTarget &From)
-   : PDEFoamEvent(From)
-   , fTargetSelection(kMean)
+TMVA::PDEFoamMultiTarget::PDEFoamMultiTarget(const PDEFoamMultiTarget &from)
+   : PDEFoamEvent(from)
+   , fTargetSelection(from.fTargetSelection)
 {
    // Copy Constructor  NOT IMPLEMENTED (NEVER USED)
    Log() << kFATAL << "COPY CONSTRUCTOR NOT IMPLEMENTED" << Endl;

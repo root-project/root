@@ -274,7 +274,7 @@ namespace TMVA {
 
       // Generates C++ code (root macro) for drawing foam with boxes (only 2-dim!)
       void RootPlot2dim( const TString& filename, TString opt,
-                         Bool_t CreateCanvas = kTRUE, Bool_t colors = kTRUE );
+                         Bool_t createCanvas = kTRUE, Bool_t colors = kTRUE );
 
       // ---------- Foam evaluation functions
 

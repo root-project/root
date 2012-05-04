@@ -86,20 +86,20 @@ TMVA::PDEFoamVect::~PDEFoamVect()
 //////////////////////////////////////////////////////////////////////////////
 
 //_____________________________________________________________________
-TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator =(const PDEFoamVect& Vect)
+TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator =(const PDEFoamVect& vect)
 {
    // substitution operator
 
-   if (&Vect == this) return *this;
-   if( fDim != Vect.fDim )
-      Error( "PDEFoamVect","operator=Dims. are different: %d and %d \n ",fDim,Vect.fDim);
-   if( fDim != Vect.fDim ) {  // cleanup
+   if (&vect == this) return *this;
+   if (fDim != vect.fDim)
+      Error("PDEFoamVect", "operator=Dims. are different: %d and %d \n ", fDim, vect.fDim);
+   if (fDim != vect.fDim) {  // cleanup
       delete [] fCoords;
       fCoords = new Double_t[fDim];
    }
-   fDim=Vect.fDim;
+   fDim = vect.fDim;
    for(Int_t i=0; i<fDim; i++)
-      fCoords[i] = Vect.fCoords[i];
+      fCoords[i] = vect.fCoords[i];
    return *this;
 }
 
@@ -128,26 +128,26 @@ TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator*=(const Double_t &x)
 }
 
 //_____________________________________________________________________
-TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator+=(const PDEFoamVect& Shift)
+TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator+=(const PDEFoamVect& shift)
 {
    // unary addition operator +=; adding vector c*=x,
-   if( fDim != Shift.fDim){
-      Error(  "PDEFoamVect","operator+, different dimensions= %d %d \n",fDim,Shift.fDim);
+   if(fDim != shift.fDim){
+      Error("PDEFoamVect", "operator+, different dimensions= %d %d \n", fDim, shift.fDim);
    }
    for(Int_t i=0;i<fDim;i++)
-      fCoords[i] = fCoords[i]+Shift.fCoords[i];
+      fCoords[i] = fCoords[i] + shift.fCoords[i];
    return *this;
 }
 
 //_____________________________________________________________________
-TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator-=(const PDEFoamVect& Shift)
+TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator-=(const PDEFoamVect& shift)
 {
    // unary subtraction operator -=
-   if( fDim != Shift.fDim) {
-      Error(  "PDEFoamVect","operator+, different dimensions= %d %d \n",fDim,Shift.fDim);
+   if(fDim != shift.fDim) {
+      Error("PDEFoamVect", "operator+, different dimensions= %d %d \n", fDim, shift.fDim);
    }
    for(Int_t i=0;i<fDim;i++)
-      fCoords[i] = fCoords[i]-Shift.fCoords[i];
+      fCoords[i] = fCoords[i] - shift.fCoords[i];
    return *this;
 }
 

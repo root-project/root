@@ -295,7 +295,7 @@ void TMVA::DataSetInfo::SetWeightExpression( const TString& expr, const TString&
    }
    else {
       // no class name specified, set weight for all classes
-      if (fClasses.size()==0) {
+      if (fClasses.empty()) {
          Log() << kWARNING << "No classes registered yet, cannot specify weight expression!" << Endl;
       }
       for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); it++) {

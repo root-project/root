@@ -63,15 +63,15 @@ TMVA::PDEFoamDiscriminant::PDEFoamDiscriminant()
 }
 
 //_____________________________________________________________________
-TMVA::PDEFoamDiscriminant::PDEFoamDiscriminant(const TString& Name, UInt_t cls)
-   : PDEFoam(Name)
+TMVA::PDEFoamDiscriminant::PDEFoamDiscriminant(const TString& name, UInt_t cls)
+   : PDEFoam(name)
    , fClass(cls)
 {}
 
 //_____________________________________________________________________
-TMVA::PDEFoamDiscriminant::PDEFoamDiscriminant(const PDEFoamDiscriminant &From)
-   : PDEFoam(From)
-   , fClass(0)
+TMVA::PDEFoamDiscriminant::PDEFoamDiscriminant(const PDEFoamDiscriminant &from)
+   : PDEFoam(from)
+   , fClass(from.fClass)
 {
    // Copy Constructor  NOT IMPLEMENTED (NEVER USED)
    Log() << kFATAL << "COPY CONSTRUCTOR NOT IMPLEMENTED" << Endl;
@@ -108,27 +108,27 @@ void TMVA::PDEFoamDiscriminant::Finalize()
       if (!(fCells[iCell]->GetStat()))
          continue;
 
-      Double_t N_sig = GetCellElement(fCells[iCell], 0); // get number of signal events
-      Double_t N_bg  = GetCellElement(fCells[iCell], 1); // get number of bg events
+      Double_t n_sig = GetCellElement(fCells[iCell], 0); // get number of signal events
+      Double_t n_bg  = GetCellElement(fCells[iCell], 1); // get number of bg events
 
-      if (N_sig < 0.) {
+      if (n_sig < 0.) {
          Log() << kWARNING << "Negative number of signal events in cell " << iCell
-               << ": " << N_sig << ". Set to 0." << Endl;
-         N_sig = 0.;
+               << ": " << n_sig << ". Set to 0." << Endl;
+         n_sig = 0.;
       }
-      if (N_bg < 0.) {
+      if (n_bg < 0.) {
          Log() << kWARNING << "Negative number of background events in cell " << iCell
-               << ": " << N_bg << ". Set to 0." << Endl;
-         N_bg = 0.;
+               << ": " << n_bg << ". Set to 0." << Endl;
+         n_bg = 0.;
       }
 
       // calculate discriminant
-      if (N_sig + N_bg > 0) {
+      if (n_sig + n_bg > 0) {
          // discriminant
-         SetCellElement(fCells[iCell], 0, N_sig / (N_sig + N_bg));
+         SetCellElement(fCells[iCell], 0, n_sig / (n_sig + n_bg));
          // discriminant error
-         SetCellElement(fCells[iCell], 1, TMath::Sqrt(Sqr(N_sig / Sqr(N_sig + N_bg))*N_sig +
-                                                      Sqr(N_bg / Sqr(N_sig + N_bg))*N_bg));
+         SetCellElement(fCells[iCell], 1, TMath::Sqrt(Sqr(n_sig / Sqr(n_sig + n_bg))*n_sig +
+                                                      Sqr(n_bg / Sqr(n_sig + n_bg))*n_bg));
 
       } else {
          SetCellElement(fCells[iCell], 0, 0.5); // set discriminator

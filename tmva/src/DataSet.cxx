@@ -298,7 +298,7 @@ void TMVA::DataSet::DeleteResults( const TString & resultsName,
    //      Tree type (Training, testing etc..)
    //      Analysis Type (Classification, Multiclass, Regression etc..)
 
-   if (fResults.size() == 0) return;
+   if (fResults.empty()) return;
 
    if (UInt_t(type) > fResults.size()){
       Log()<<kFATAL<< "you asked for an Treetype (training/testing/...)"

@@ -53,13 +53,13 @@ TMVA::PDEFoamEvent::PDEFoamEvent()
 }
 
 //_____________________________________________________________________
-TMVA::PDEFoamEvent::PDEFoamEvent(const TString& Name)
-   : PDEFoam(Name)
+TMVA::PDEFoamEvent::PDEFoamEvent(const TString& name)
+   : PDEFoam(name)
 {}
 
 //_____________________________________________________________________
-TMVA::PDEFoamEvent::PDEFoamEvent(const PDEFoamEvent &From)
-   : PDEFoam(From)
+TMVA::PDEFoamEvent::PDEFoamEvent(const PDEFoamEvent &from)
+   : PDEFoam(from)
 {
    // Copy Constructor  NOT IMPLEMENTED (NEVER USED)
    Log() << kFATAL << "COPY CONSTRUCTOR NOT IMPLEMENTED" << Endl;

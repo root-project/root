@@ -33,13 +33,18 @@
 
 // this macro displays a decision tree read in from the weight file
 
-static const Int_t kSigColorF = TColor::GetColor( "#2244a5" );  // novel blue 
-static const Int_t kBkgColorF = TColor::GetColor( "#dd0033" );  // novel red  
-static const Int_t kIntColorF = TColor::GetColor( "#33aa77" );  // novel green
+// static const Int_t kSigColorF = TColor::GetColor( "#2244a5" );  // novel blue 
+// static const Int_t kBkgColorF = TColor::GetColor( "#dd0033" );  // novel red  
+// static const Int_t kIntColorF = TColor::GetColor( "#33aa77" );  // novel green
+
+static const Int_t kSigColorF = TColor::GetColor( "#0000FF" );  // Pure Signal
+static const Int_t kBkgColorF = TColor::GetColor( "#FF0000" );  // Pure Backgr.
+
 
 static const Int_t kSigColorT = 10;
 static const Int_t kBkgColorT = 10;
 static const Int_t kIntColorT = 10;
+
 
 enum PlotType { EffPurity = 0 };
 
@@ -72,6 +77,7 @@ class StatDialogBDT {
    Int_t        fNtrees;
    TCanvas*     fCanvas;
 
+
    TGNumberEntry* fInput;
 
    TGHorizontalFrame* fButtons;
@@ -88,6 +94,8 @@ class StatDialogBDT {
 
    TString fWfile;
    TString fMethName;
+
+   Int_t   fColorOffset;
 
  public:
 
@@ -259,9 +267,10 @@ void StatDialogBDT::DrawNode( TMVA::DecisionTreeNode *n,
    t->SetBorderSize(1);
 
    t->SetFillStyle(1);
-   if      (n->GetNodeType() ==  1) { t->SetFillColor( kSigColorF ); t->SetTextColor( kSigColorT ); }
-   else if (n->GetNodeType() == -1) { t->SetFillColor( kBkgColorF ); t->SetTextColor( kBkgColorT ); }
-   else if (n->GetNodeType() ==  0) { t->SetFillColor( kIntColorF ); t->SetTextColor( kIntColorT ); }
+
+
+   Double_t pur=n->GetPurity();
+   t->SetFillColor(fColorOffset+Int_t(pur*100));
 
    char buffer[25];
    sprintf( buffer, "N=%f", n->GetNEvents() );
@@ -371,6 +380,21 @@ void StatDialogBDT::DrawTree( Int_t itree )
    cout << "--- Tree depth: " << depth << endl;
 
    TStyle* TMVAStyle   = gROOT->GetStyle("Plain"); // our style is based on Plain
+
+
+
+   Double_t r[2]    = {1., 0.};
+   Double_t g[2]    = {0., 0.};
+   Double_t b[2]    = {0., 1.};
+   Double_t stop[2] = {0., 1.0};
+   fColorOffset = TColor::CreateGradientColorTable(2, stop, r, g, b, 100);
+
+   Int_t MyPalette[100];
+   for (int i=0;i<100;i++) MyPalette[i] = fColorOffset+i;
+   TMVAStyle->SetPalette(100, MyPalette);
+   
+
+
    Int_t   canvasColor = TMVAStyle->GetCanvasColor(); // backup
 
    TString cbuffer = Form( "Reading weight file: %s", fWfile.Data() );
@@ -393,21 +417,11 @@ void StatDialogBDT::DrawTree( Int_t itree )
    whichTree->AddText( tbuffer );
    whichTree->Draw();
 
-   TPaveText *intermediate = new TPaveText(0.02,ydown,0.15,yup, "NDC");
-   intermediate->SetBorderSize(1);
-   intermediate->SetFillStyle(1);
-   intermediate->SetFillColor( kIntColorF );
-   intermediate->AddText("Intermediate Nodes");
-   intermediate->SetTextColor( kIntColorT );
-   intermediate->Draw();
-
-   ydown = ydown - ystep/2.5 -dy;
-   yup   = yup - ystep/2.5 -dy;
    TPaveText *signalleaf = new TPaveText(0.02,ydown ,0.15,yup, "NDC");
    signalleaf->SetBorderSize(1);
    signalleaf->SetFillStyle(1);
    signalleaf->SetFillColor( kSigColorF );
-   signalleaf->AddText("Signal Leaf Nodes");
+   signalleaf->AddText("Pure Signal Nodes");
    signalleaf->SetTextColor( kSigColorT );
    signalleaf->Draw();
 
@@ -418,9 +432,10 @@ void StatDialogBDT::DrawTree( Int_t itree )
    backgroundleaf->SetFillStyle(1);
    backgroundleaf->SetFillColor( kBkgColorF );
 
-   backgroundleaf->AddText("Backgr. Leaf Nodes");
+   backgroundleaf->AddText("Pure Backgr. Nodes");
    backgroundleaf->SetTextColor( kBkgColorT );
    backgroundleaf->Draw();
+
 
    fCanvas->Update();
    TString fname = Form("plots/%s_%i", fMethName.Data(), itree );

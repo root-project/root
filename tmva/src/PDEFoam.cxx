@@ -102,8 +102,8 @@
 
 ClassImp(TMVA::PDEFoam)
 
-static const Float_t gHigh= FLT_MAX;
-static const Float_t gVlow=-FLT_MAX;
+static const Float_t kHigh= FLT_MAX;
+static const Float_t kVlow=-FLT_MAX;
 
 using namespace std;
 
@@ -140,11 +140,15 @@ TMVA::PDEFoam::PDEFoam() :
    fLogger(new MsgLogger("PDEFoam"))
 {
    // Default constructor for streamer, user should not use it.
+
+   // fVariableNames may delete it's heap-based content
+   if (fVariableNames)
+      fVariableNames->SetOwner(kTRUE);
 }
 
 //_____________________________________________________________________
-TMVA::PDEFoam::PDEFoam(const TString& Name) :
-   fName(Name),
+TMVA::PDEFoam::PDEFoam(const TString& name) :
+   fName(name),
    fDim(0),
    fNCells(1000),
    fNBin(5),
@@ -175,8 +179,12 @@ TMVA::PDEFoam::PDEFoam(const TString& Name) :
    fLogger(new MsgLogger("PDEFoam"))
 {
    // User constructor, to be employed by the user
-   if(strlen(Name) > 128)
-      Log() << kFATAL << "Name too long " << Name.Data() << Endl;
+   if(strlen(name) > 128)
+      Log() << kFATAL << "Name too long " << name.Data() << Endl;
+
+   // fVariableNames may delete it's heap-based content
+   if (fVariableNames)
+      fVariableNames->SetOwner(kTRUE);
 }
 
 //_____________________________________________________________________
@@ -191,6 +199,7 @@ TMVA::PDEFoam::~PDEFoam()
    if (fXmin) delete [] fXmin;  fXmin=0;
    if (fXmax) delete [] fXmax;  fXmax=0;
 
+   ResetCellElements();
    if(fCells!= 0) {
       for(Int_t i=0; i<fNCells; i++) delete fCells[i]; // PDEFoamCell*[]
       delete [] fCells;
@@ -204,8 +213,8 @@ TMVA::PDEFoam::~PDEFoam()
 }
 
 //_____________________________________________________________________
-TMVA::PDEFoam::PDEFoam(const PDEFoam &From) :
-   TObject(From)
+TMVA::PDEFoam::PDEFoam(const PDEFoam &from) :
+   TObject(from)
    , fDim(0)
    , fNCells(0)
    , fNBin(0)
@@ -233,10 +242,14 @@ TMVA::PDEFoam::PDEFoam(const PDEFoam &From) :
    , fDistr(0)
    , fTimer(0)
    , fVariableNames(0)
-   , fLogger(new MsgLogger(*From.fLogger))
+   , fLogger(new MsgLogger(*from.fLogger))
 {
    // Copy Constructor  NOT IMPLEMENTED (NEVER USED)
    Log() << kFATAL << "COPY CONSTRUCTOR NOT IMPLEMENTED" << Endl;
+
+   // fVariableNames may delete it's heap-based content
+   if (fVariableNames)
+      fVariableNames->SetOwner(kTRUE);
 }
 
 //_____________________________________________________________________
@@ -352,13 +365,16 @@ void TMVA::PDEFoam::InitCells()
       for(Int_t i=0; i<fNCells; i++) delete fCells[i];
       delete [] fCells;
    }
-   //
-   fCells = new PDEFoamCell*[fNCells];
+
+   fCells = new(nothrow) PDEFoamCell*[fNCells];
+   if (!fCells) {
+      Log() << kFATAL << "not enough memory to create " << fNCells
+            << " cells" << Endl;
+   }
    for(Int_t i=0; i<fNCells; i++){
       fCells[i]= new PDEFoamCell(fDim); // Allocate BIG list of cells
       fCells[i]->SetSerial(i);
    }
-   if(fCells==0) Log() << kFATAL << "Cannot initialize CELLS" << Endl;
 
    /////////////////////////////////////////////////////////////////////////////
    //              Single Root Hypercube                                      //
@@ -372,7 +388,7 @@ void TMVA::PDEFoam::InitCells()
 }//InitCells
 
 //_____________________________________________________________________
-Int_t TMVA::PDEFoam::CellFill(Int_t Status, PDEFoamCell *parent)
+Int_t TMVA::PDEFoam::CellFill(Int_t status, PDEFoamCell *parent)
 {
    // Internal subprogram used by Create.
    // It initializes content of the newly allocated active cell.
@@ -385,7 +401,7 @@ Int_t TMVA::PDEFoam::CellFill(Int_t Status, PDEFoamCell *parent)
 
    cell = fCells[fLastCe];
 
-   cell->Fill(Status, parent, 0, 0);
+   cell->Fill(status, parent, 0, 0);
 
    cell->SetBest( -1);         // pointer for planning division of the cell
    cell->SetXdiv(0.5);         // factor for division
@@ -463,8 +479,8 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
    ceSum[0]=0;
    ceSum[1]=0;
    ceSum[2]=0;
-   ceSum[3]=gHigh;  //wtmin
-   ceSum[4]=gVlow;  //wtmax
+   ceSum[3]=kHigh;  //wtmin
+   ceSum[4]=kVlow;  //wtmax
 
    for (i=0;i<fDim;i++) ((TH1D *)(*fHistEdg)[i])->Reset(); // Reset histograms
 
@@ -569,7 +585,7 @@ void TMVA::PDEFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Dou
       if( fMaskDiv[kProj]) {
          // initialize search over bins
          // Double_t sigmIn =0.0; Double_t sigmOut =0.0;
-         Double_t sswtBest = gHigh;
+         Double_t sswtBest = kHigh;
          Double_t gain =0.0;
          Double_t xMin=0.0; Double_t xMax=0.0;
          // Double loop over all pairs jLo<jUp
@@ -638,7 +654,7 @@ Long_t TMVA::PDEFoam::PeekMax()
    Double_t  drivMax, driv;
    Bool_t bCutNmin = kTRUE;
    Bool_t bCutMaxDepth = kTRUE;
-   //   drivMax = gVlow;
+   //   drivMax = kVlow;
    drivMax = 0;  // only split cells if gain>0 (this also avoids splitting at cell boundary)
    for(i=0; i<=fLastCe; i++) {//without root
       if( fCells[i]->GetStat() == 1 ) {
@@ -772,7 +788,7 @@ void TMVA::PDEFoam::Grow()
 }// Grow
 
 //_____________________________________________________________________
-void  TMVA::PDEFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv)
+void  TMVA::PDEFoam::SetInhiDiv(Int_t iDim, Int_t inhiDiv)
 {
    // This can be called before Create, after setting kDim
    // It defines which variables are excluded in the process of the cell division.
@@ -785,7 +801,7 @@ void  TMVA::PDEFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv)
    }
    //
    if( ( 0<=iDim) && (iDim<fDim)) {
-      fInhiDiv[iDim] = InhiDiv;
+      fInhiDiv[iDim] = inhiDiv;
    } else
       Log() << kFATAL << "Wrong iDim" << Endl;
 }//SetInhiDiv
@@ -949,11 +965,11 @@ void TMVA::PDEFoam::ResetCellElements()
 
    if (!fCells) return;
 
-   // delete all old cell elements
-   Log() << kVERBOSE << "Delete old cell elements" << Endl;
-   for(Long_t iCell=0; iCell<fNCells; iCell++) {
-      if (fCells[iCell]->GetElement() != NULL){
-         delete dynamic_cast<TVectorD*>(fCells[iCell]->GetElement());
+   Log() << kVERBOSE << "Delete cell elements" << Endl;
+   for (Long_t iCell = 0; iCell < fNCells; ++iCell) {
+      TObject* elements = fCells[iCell]->GetElement();
+      if (elements) {
+         delete elements;
          fCells[iCell]->SetElement(NULL);
       }
    }
@@ -1449,7 +1465,7 @@ void TMVA::PDEFoam::OutputGrow( Bool_t finished )
 
 //_____________________________________________________________________
 void TMVA::PDEFoam::RootPlot2dim( const TString& filename, TString opt,
-                                  Bool_t CreateCanvas, Bool_t colors )
+                                  Bool_t createCanvas, Bool_t colors )
 {
    // Debugging tool which plots the cells of a 2-dimensional PDEFoam
    // as rectangles in C++ format readable for ROOT.
@@ -1470,7 +1486,7 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, TString opt,
    //   If 'opt' contains the string 'cellnumber', the index of
    //   each cell is draw in addition.
    //
-   // - CreateCanvas - whether to create a new canvas or not
+   // - createCanvas - whether to create a new canvas or not
    //
    // - colors - whether to fill cells with colors or shades of grey
    //
@@ -1519,7 +1535,7 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, TString opt,
       outfile << "for (Int_t i=0.; i<100; i++)" << std::endl;
       outfile << "  graycolors[i]=new TColor(1000+i, 1-(Float_t)i/100.,1-(Float_t)i/100.,1-(Float_t)i/100.);"<< std::endl;
    }
-   if (CreateCanvas)
+   if (createCanvas)
       outfile << "cMap = new TCanvas(\"" << fName << "\",\"Cell Map for "
               << fName << "\",600,600);" << std::endl;
 
