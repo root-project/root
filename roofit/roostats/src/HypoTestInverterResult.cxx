@@ -464,39 +464,27 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
       if (lowSearch && !TMath::IsNaN(fUpperLimit) ) {
          xmin = fXValues[ index.front() ];
          // find xmax (is first point before upper limit)
-         int upI = FindClosestPointIndex(target, 1, fUpperLimit);
-         if ( GetXValue(upI) > fUpperLimit) { 
-            // find corrsponding sorted index
-            std::vector<unsigned int>::iterator itr = std::find(index.begin(),index.end(), upI);
-            itr--;
-            upI = *itr;
-         }
-         if (upI < 1) return xmin;
+         int upI = FindClosestPointIndex(target, 2, fUpperLimit);
+         if (upI < 1) return xmin; 
          xmax = GetXValue(upI);
       }
       else if (!lowSearch && !TMath::IsNaN(fUpperLimit) ) {
          // find xmin (is first point after lower limit)
-         int lowI = FindClosestPointIndex(target, 1, fLowerLimit);
-         if ( GetXValue(lowI) < fLowerLimit)  {
-            // find corrsponding sorted index
-            std::vector<unsigned int>::iterator itr = std::find(index.begin(),index.end(), lowI);
-            itr++;
-            lowI = *itr;
-         }
+         int lowI = FindClosestPointIndex(target, 3, fLowerLimit);
          if (lowI >= n-1) return xmax;
          xmin = GetXValue(lowI);
          xmax = fXValues[ index.back() ];
       }
    }
    
-   std::cout << "finding " << lowSearch << " limit betweem " << xmin << "  " << xmax << endl;
+   //std::cout << "finding " << lowSearch << " limit betweem " << xmin << "  " << xmax << endl;
 
    double limit =  GetGraphX(graph, target, lowSearch, xmin, xmax);
    if (lowSearch) fLowerLimit = limit; 
    else fUpperLimit = limit;
    CalculateEstimatedError( target, lowSearch, xmin, xmax);
 
-   std::cout << "limit is " << limit << std::endl;
+   //std::cout << "limit is " << limit << std::endl;
    return limit;
 }
 
@@ -508,6 +496,9 @@ int HypoTestInverterResult::FindClosestPointIndex(double target, int mode, doubl
    // and has smaller error
    // if mode = 1
    // find 2 closest point to target in X and between these two take the one closer to the target
+   // if mode = 2  as in mode = 1 but return the lower point not the closest one
+   // if mode = 3  as in mode = 1 but return the upper point not the closest one
+
   int bestIndex = -1;
   int closestIndex = -1;
   if (mode == 0) { 
@@ -530,7 +521,7 @@ int HypoTestInverterResult::FindClosestPointIndex(double target, int mode, doubl
      // if no points found just return the closest one to the target
      return closestIndex;
   }
-  // else mode = 1
+  // else mode = 1,2,3
   // find the two closest points to limit value
   // sort the array first 
   int n = fXValues.size();
@@ -544,13 +535,14 @@ int HypoTestInverterResult::FindClosestPointIndex(double target, int mode, doubl
   std::cout << "finding closest point to " << xtarget << " is " << index1 << "  " << indx[index1] << std::endl; 
 #endif
 
-  if (index1 < 0) index1 = 0;
-  int index2 = index1;
-  if (index1 < n-1) 
-     index2 = index1+1;
-  else if (index1> 0) 
-     index2 = index1-1;
-  // get smaller point of the two
+   // case xtarget is outside the range (bbefore or afterwards)
+  if (index1 < 0) return indx[0]; 
+  if (index1 >= n-1) return indx[n-1];  
+  int index2 = index1 +1;
+  
+  if (mode == 2) return (index1 < index2) ? indx[index1] : indx[index2];
+  if (mode == 3) return (index1 > index2) ? indx[index1] : indx[index2];
+  // get smaller point of the two (mode == 1)
   if (fabs(GetYValue(indx[index1])-target) <= fabs(GetYValue(indx[index2])-target) )
      return indx[index1];
   return indx[index2];

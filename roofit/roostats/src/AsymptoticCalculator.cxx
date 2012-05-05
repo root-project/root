@@ -85,7 +85,7 @@ AsymptoticCalculator::AsymptoticCalculator(
    const ModelConfig &altModel,
    const ModelConfig &nullModel, bool nominalAsimov) :
       HypoTestCalculatorGeneric(data, altModel, nullModel, 0), 
-      fOneSided(false), fUseQTilde(-1), 
+      fOneSided(false), fOneSidedDiscovery(false), fUseQTilde(-1), 
       fNLLObs(0), fNLLAsimov(0), 
       fAsimovData(0)   
 {
