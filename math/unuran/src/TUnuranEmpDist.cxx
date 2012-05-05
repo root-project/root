@@ -17,13 +17,18 @@
 #include <cassert>
 
 
+
 TUnuranEmpDist::TUnuranEmpDist (const TH1 * h1, bool useBuffer) : 
+   fDim(0),
    fMin(0),
-   fMax(0)
+   fMax(0),
+   fBinned(false)
 {
    //Constructor from a TH1 objects. 
    //The buffer of the histo, if available, can be used for 
    // the estimation of the parent distribution using smoothing
+
+   if (!h1) return;  // in case of default ctor for I/O 
 
    fDim = h1->GetDimension();
 

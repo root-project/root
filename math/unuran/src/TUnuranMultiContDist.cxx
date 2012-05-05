@@ -27,11 +27,15 @@ TUnuranMultiContDist::TUnuranMultiContDist (const ROOT::Math::IMultiGenFunction 
 
 
 TUnuranMultiContDist::TUnuranMultiContDist (TF1 * func, unsigned int dim, bool isLogPdf) : 
-   fPdf( new ROOT::Math::WrappedMultiTF1( *func, dim) ), 
+   fPdf(0), 
    fIsLogPdf(isLogPdf), 
-   fOwnFunc(true)
+   fOwnFunc(false)
 {
    //Constructor from a TF1 objects
+   if (func) { 
+      fPdf = new ROOT::Math::WrappedMultiTF1( *func, dim);
+      fOwnFunc = true; 
+   }
 } 
 
 
