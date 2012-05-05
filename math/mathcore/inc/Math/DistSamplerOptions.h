@@ -52,7 +52,7 @@ public:
    static ROOT::Math::IOptions * FindDefault(const char * name);
 
    /// print all the default options for the name given
-   static void PrintDefault(const char * name = 0, std::ostream & os = std::cout); 
+   static void PrintDefault(const char * name, std::ostream & os = std::cout); 
 
 public:
 

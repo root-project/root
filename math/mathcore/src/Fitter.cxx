@@ -433,7 +433,6 @@ bool Fitter::DoLikelihoodFit(const UnBinData & data, bool extended) {
       // do minimization without using the gradient
       LogLikelihoodFCN<BaseFunc> logl(data,*fFunc, useWeight, extended); 
       fFitType = logl.Type();
-      return DoMinimization (logl); 
       if (!DoMinimization (logl) ) return false;
       if (useWeight) { 
          logl.UseSumOfWeightSquare();
