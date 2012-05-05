@@ -540,8 +540,8 @@ int HypoTestInverterResult::FindClosestPointIndex(double target, int mode, doubl
   if (index1 >= n-1) return indx[n-1];  
   int index2 = index1 +1;
   
-  if (mode == 2) return (index1 < index2) ? indx[index1] : indx[index2];
-  if (mode == 3) return (index1 > index2) ? indx[index1] : indx[index2];
+  if (mode == 2) return (GetXValue(indx[index1]) < GetXValue(indx[index2])) ? indx[index1] : indx[index2];
+  if (mode == 3) return (GetXValue(indx[index1]) > GetXValue(indx[index2])) ? indx[index1] : indx[index2];
   // get smaller point of the two (mode == 1)
   if (fabs(GetYValue(indx[index1])-target) <= fabs(GetYValue(indx[index2])-target) )
      return indx[index1];
