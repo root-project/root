@@ -1,16 +1,3 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'BASIC FUNCTIONALITY' RooFit tutorial macro #101
-//
-// Fitting, plotting, toy data generation on one-dimensional p.d.f
-//
-// pdf = gauss(x,m,s)
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
 // C/C++ Standard Libraries
 #include <utility>
 
@@ -132,7 +119,6 @@ public:
          Double_t estMean = data->mean(*w->var("x"));
          Double_t intervalHalfWidth = 
             ROOT::Math::normal_quantile_c((1.0 - fConfidenceLevel) / 2.0, w->var("sigma")->getValV() / sqrt(N));
-         cout << "ihw " << intervalHalfWidth << endl;
          Double_t lowerLimit = estMean - intervalHalfWidth;
          Double_t upperLimit = estMean + intervalHalfWidth;
 
@@ -271,19 +257,21 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// PROFILE LIKELIHOOD CALCULATOR - LIKELIHOOD INTERVAL - COMPLEX MODEL
+// PROFILE LIKELIHOOD CALCULATOR - LIKELIHOOD INTERVAL - POISSON COMPLEX MODEL
 //
 // Test the 68% likelihood interval computed by the ProfileLikelihoodCalculator
 // on a complex model. Reference values and test values are both computed with 
 // the ProfileLikelihoodCalculator. As such, this test can only confirm if the 
-// ProfileLikelihoodCalculator has the same behaviour on a different machine.
+// ProfileLikelihoodCalculator has the same behaviour across different computer
+// platforms or RooStats revisions.
 //
 // ModelConfig (explicit) : Poisson Product Model
-//    built in stressRooStats_models.cxx
+//    built in stressRooStats_models.cxx 
 //
 // Input Parameters:
 //    obsValueX -> observed value "x" when measuring sig + bkg1
 //    obsValueY -> observed value "y" when measuring 2*sig*1.2^beta + bkg2
+//    confidenceLevel -> Confidence Level of the interval we are calculating
 //
 // 04/2012 - Ioan Gabriel Bucur
 //
@@ -293,18 +281,21 @@ class TestProfileLikelihoodCalculator3 : public RooUnitTest {
 private:
    Int_t fObsValueX;
    Int_t fObsValueY;
+   Double_t fConfidenceLevel;
 
 public:
    TestProfileLikelihoodCalculator3(
       TFile* refFile, 
       Bool_t writeRef, 
       Int_t verbose, 
-      Int_t obsValueX = 7, 
-      Int_t obsValueY = 15
+      Int_t obsValueX = 15, 
+      Int_t obsValueY = 30,
+      Double_t confidenceLevel = 2 * ROOT::Math::normal_cdf(1) - 1
    ) : 
       RooUnitTest("ProfileLikelihoodCalculator Interval - Poisson Complex Model", refFile, writeRef, verbose), 
       fObsValueX(obsValueX), 
-      fObsValueY(obsValueY) 
+      fObsValueY(obsValueY),
+      fConfidenceLevel(confidenceLevel)
    {};
 
    // Basic checks for the parameters passed to the test
@@ -318,31 +309,38 @@ public:
          Warning("isTestAvailable", "Observed value Y=2*s*1.2^beta+b must be in the range [0,120]. Skipping test...");
          return kFALSE;
       }         
+      if(fConfidenceLevel <= 0.0 || fConfidenceLevel >= 1.0) {
+         Warning("isTestAvailable", "Confidence level must be in the range (0,1). Skipping test...");
+         return kFALSE;
+      }      
       return kTRUE;
    }
 
    Bool_t testCode() {
 
-      // 68.3% confidence level
-      const Double_t confidenceLevel = 2 * ROOT::Math::normal_cdf(1) - 1.0;
-
       // Create workspace and model
       RooWorkspace *w = new RooWorkspace("w", kTRUE);
-      pair<ModelConfig *, ModelConfig *> models = buildPoissonProductModel(w);
-      
+      buildPoissonProductModel(w);
+      ModelConfig *model = (ModelConfig *)w->obj("S+B");     
+ 
       // add observed values to data set 
       w->var("x")->setVal(fObsValueX);
       w->var("y")->setVal(fObsValueY);
       w->data("data")->add(*w->set("obs"));
-
+      
       // build likelihood interval with ProfileLikelihoodCalculator
-      ProfileLikelihoodCalculator *plc = new ProfileLikelihoodCalculator(*w->data("data"), *models.first);
-      plc->SetConfidenceLevel(confidenceLevel);
+      ProfileLikelihoodCalculator *plc = new ProfileLikelihoodCalculator(*w->data("data"), *model);
+      plc->SetConfidenceLevel(fConfidenceLevel);
       LikelihoodInterval *interval = plc->GetInterval();
 
-      regValue(w->var("beta")->getValV(), TString::Format("tplc3_beta_nuis_fit_%d_%d", fObsValueX, fObsValueY));    
-      regValue(interval->LowerLimit(*w->var("sig")), TString::Format("tplc3_lower_limit_sig_%d_%d", fObsValueX, fObsValueY));
-      regValue(interval->UpperLimit(*w->var("sig")), TString::Format("tplc3_upper_limit_sig_%d_%d", fObsValueX, fObsValueY));
+      regValue(
+         interval->LowerLimit(*w->var("sig")), 
+         TString::Format("tplc3_lower_limit_sig_%d_%d_%lf", fObsValueX, fObsValueY, fConfidenceLevel)
+      );
+      regValue(
+         interval->UpperLimit(*w->var("sig")), 
+         TString::Format("tplc3_upper_limit_sig_%d_%d_%lf", fObsValueX, fObsValueY, fConfidenceLevel)
+      );
 
       // cleanup
       delete interval;
@@ -364,11 +362,12 @@ public:
 // ProfileLikelihoodCalculator has the same behaviour on a different machine.
 //
 // ModelConfig (explicit) : Poisson On / Off Model
-//    built in stressRooStats_models.cxx
-// For a detailed description, see the paper: "Evaluation of three methods 
-// for calculating statistical significance when incorporating a systematic 
-// uncertainty into a test of the background-only hypothesis for a Poisson 
-// process" by Robert D. Cousins, James T. Linnemann, Jordan Tucker 
+//    built in stressRooStats_models.cxx 
+//
+// For a detailed description of the on/off model, see the paper: "Evaluation 
+// of three methods for calculating statistical significance when incorporating
+// a systematic uncertainty into a test of the background-only hypothesis for 
+// a Poisson process" by Robert D. Cousins, James T. Linnemann, Jordan Tucker 
 //
 // 04/2012 - Ioan Gabriel Bucur
 //
@@ -413,23 +412,26 @@ public:
       
             // build workspace and model
             RooWorkspace *w = new RooWorkspace("w", kTRUE);
-            pair<ModelConfig *, ModelConfig *> models = buildOnOffModel(w);
+            buildOnOffModel(w);
+            ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
+            ModelConfig *bModel = (ModelConfig *)w->obj("B");
 
             // add observable values to data set
             w->var("n_on")->setVal(numberOnEvents[i]);
             w->var("n_off")->setVal(numberOffEvents[i]);
-            w->var("tau")->setVal(tau[i]); w->var("tau")->setConstant();
+            w->var("tau")->setVal(tau[i]); 
+            w->var("tau")->setConstant();
             w->data("data")->add(*w->set("obs"));
 
             // set snapshots
             w->var("sig")->setVal(numberOnEvents[i] - numberOffEvents[i] / tau[i]);
-            models.first->SetSnapshot(*w->set("poi"));
+            sbModel->SetSnapshot(*w->set("poi"));
             w->var("sig")->setVal(0);
-            models.second->SetSnapshot(*w->set("poi")); 
+            bModel->SetSnapshot(*w->set("poi")); 
 
-            ProfileLikelihoodCalculator *plc = new ProfileLikelihoodCalculator(*w->data("data"), *models.first);
-            plc->SetNullParameters(*models.second->GetSnapshot());
-            plc->SetAlternateParameters(*models.first->GetSnapshot());
+            ProfileLikelihoodCalculator *plc = new ProfileLikelihoodCalculator(*w->data("data"), *sbModel);
+            plc->SetNullParameters(*bModel->GetSnapshot());
+            plc->SetAlternateParameters(*sbModel->GetSnapshot());
             HypoTestResult *htr = plc->GetHypoTest();
 
             regValue(htr->Significance(), stringSignificance);
@@ -488,6 +490,7 @@ public:
 //
 // Input Parameters:
 //    obsValue -> observed value in experiment
+//    confidenceLevel -> Confidence Level of the interval we are calculating
 //
 // 04/2012 - Ioan Gabriel Bucur
 //
@@ -496,6 +499,7 @@ public:
 class TestBayesianCalculator1 : public RooUnitTest {
 private:
    Int_t fObsValue;
+   Double_t fConfidenceLevel;
    static Double_t priorInv(Double_t mean) { return 1.0 / mean; }
    static Double_t priorInvSqrt(Double_t mean) { return 1.0 / sqrt(mean); }
 
@@ -504,43 +508,55 @@ public:
       TFile* refFile, 
       Bool_t writeRef, 
       Int_t verbose,
-      Int_t obsValue = 3
+      Int_t obsValue = 3,
+      Double_t confidenceLevel = 2 * ROOT::Math::normal_cdf(1) - 1
    ) : 
       RooUnitTest("BayesianCalculator Central Interval - Poisson Simple Model", refFile, writeRef, verbose),
-      fObsValue(obsValue)
+      fObsValue(obsValue),
+      fConfidenceLevel(confidenceLevel)
    {};
 
-   Double_t vtol() { return 0.01; }
+   // Basic checks for the parameters passed to the test
+   // In case of invalid parameters, a warning is printed and the test is skipped
+   Bool_t isTestAvailable() {
+      if(fObsValue < 0 || fObsValue > 100) {
+         Warning("isTestAvailable", "Observed value must be in the range [0,100]. Skipping test...");
+         return kFALSE;
+      }
+      if(fConfidenceLevel <= 0.0 || fConfidenceLevel >= 1.0) {
+         Warning("isTestAvailable", "Confidence level must be in the range (0,1). Skipping test...");
+         return kFALSE;
+      }      
+      return kTRUE;
+   }
 
    Bool_t testCode() {
 
       // Set the confidence level for a 68.3% CL central interval
-      const Double_t confidenceLevel = 2 * ROOT::Math::normal_cdf(1) - 1; 
       const Double_t gammaShape = 2; // shape of the gamma distribution prior (gamma = alpha)
       const Double_t gammaRate = 1; // rate = 1/scale of the gamma distribution prior (beta = 1/theta)
       const Int_t numberScans = 10000; // tested to be sufficient for the scan of the Bayesian posterior
 
-      const TString lowerLimitString = TString::Format("tbc1_lower_limit_unif_%d", fObsValue);
-      const TString upperLimitString = TString::Format("tbc1_upper_limit_unif_%d", fObsValue);
-      const TString lowerLimitInvString = TString::Format("tbc1_lower_limit_inv_%d", fObsValue);
-      const TString upperLimitInvString = TString::Format("tbc1_upper_limit_inv_%d", fObsValue);
-      const TString lowerLimitInvSqrtString = TString::Format("tbc1_lower_limit_inv_sqrt_%d", fObsValue);
-      const TString upperLimitInvSqrtString = TString::Format("tbc1_upper_limit_inv_sqrt_%d", fObsValue);
-      const TString lowerLimitGammaString = TString::Format("tbc1_lower_limit_gamma_%d", fObsValue);
-      const TString upperLimitGammaString = TString::Format("tbc1_upper_limit_gamma_%d", fObsValue);
+      // names of tested variables must be the same in write / comparison modes
+      const TString lowerLimitString = TString::Format("tbc1_lower_limit_unif_%d_%lf", fObsValue, fConfidenceLevel);
+      const TString upperLimitString = TString::Format("tbc1_upper_limit_unif_%d_%lf", fObsValue, fConfidenceLevel);
+      const TString lowerLimitInvString = TString::Format("tbc1_lower_limit_inv_%d_%lf", fObsValue, fConfidenceLevel);
+      const TString upperLimitInvString = TString::Format("tbc1_upper_limit_inv_%d_%lf", fObsValue, fConfidenceLevel);
+      const TString lowerLimitInvSqrtString = TString::Format("tbc1_lower_limit_inv_sqrt_%d_%lf", fObsValue, fConfidenceLevel);
+      const TString upperLimitInvSqrtString = TString::Format("tbc1_upper_limit_inv_sqrt_%d_%lf", fObsValue, fConfidenceLevel);
+      const TString lowerLimitGammaString = TString::Format("tbc1_lower_limit_gamma_%d_%lf", fObsValue, fConfidenceLevel);
+      const TString upperLimitGammaString = TString::Format("tbc1_upper_limit_gamma_%d_%lf", fObsValue, fConfidenceLevel);
 
       if (_write == kTRUE) {
 
-         cout << "CL " << confidenceLevel << (1.0 - confidenceLevel) / 2 << endl;
-
-         Double_t lowerLimit = ROOT::Math::gamma_quantile((1.0 - confidenceLevel) / 2, fObsValue + 1, 1); // integrate to 16%
-         Double_t upperLimit = ROOT::Math::gamma_quantile_c((1.0 - confidenceLevel) / 2, fObsValue + 1, 1); // integrate to 84%
-         Double_t lowerLimitInv = ROOT::Math::gamma_quantile((1.0 - confidenceLevel) / 2, fObsValue, 1);
-         Double_t upperLimitInv = ROOT::Math::gamma_quantile_c((1.0 - confidenceLevel) / 2, fObsValue, 1);
-         Double_t lowerLimitInvSqrt = ROOT::Math::gamma_quantile((1.0 - confidenceLevel) / 2, fObsValue + 0.5, 1);
-         Double_t upperLimitInvSqrt = ROOT::Math::gamma_quantile_c((1.0 - confidenceLevel) / 2, fObsValue + 0.5, 1);
-         Double_t lowerLimitGamma = gamma_quantile((1.0 - confidenceLevel) / 2, fObsValue + gammaShape, 1.0 / (1 + gammaRate));
-         Double_t upperLimitGamma = gamma_quantile_c((1.0 - confidenceLevel) / 2, fObsValue + gammaShape, 1.0 / (1 + gammaRate));
+         Double_t lowerLimit = ROOT::Math::gamma_quantile((1.0 - fConfidenceLevel) / 2, fObsValue + 1, 1); // integrate to 16%
+         Double_t upperLimit = ROOT::Math::gamma_quantile_c((1.0 - fConfidenceLevel) / 2, fObsValue + 1, 1); // integrate to 84%
+         Double_t lowerLimitInv = ROOT::Math::gamma_quantile((1.0 - fConfidenceLevel) / 2, fObsValue, 1);
+         Double_t upperLimitInv = ROOT::Math::gamma_quantile_c((1.0 - fConfidenceLevel) / 2, fObsValue, 1);
+         Double_t lowerLimitInvSqrt = ROOT::Math::gamma_quantile((1.0 - fConfidenceLevel) / 2, fObsValue + 0.5, 1);
+         Double_t upperLimitInvSqrt = ROOT::Math::gamma_quantile_c((1.0 - fConfidenceLevel) / 2, fObsValue + 0.5, 1);
+         Double_t lowerLimitGamma = gamma_quantile((1.0 - fConfidenceLevel) / 2, fObsValue + gammaShape, 1.0 / (1 + gammaRate));
+         Double_t upperLimitGamma = gamma_quantile_c((1.0 - fConfidenceLevel) / 2, fObsValue + gammaShape, 1.0 / (1 + gammaRate));
 
          // Compare the limits obtained via BayesianCalculator with quantile values
          regValue(lowerLimit, lowerLimitString);
@@ -565,9 +581,6 @@ public:
          w->import(*(new RooCFunction1PdfBinding<Double_t, Double_t>("priorInvSqrt", "priorInvSqrt", priorInvSqrt, *w->var("mean"))));
          w->factory(TString::Format("Gamma::priorGamma(mean, %lf, %lf, 0)", gammaShape, gammaRate));
 
-         // NOTE: Roo1DIntegrator is too slow and gives poor results
-         RooAbsReal::defaultIntegratorConfig()->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
-
          // build argument sets and data set
          w->defineSet("obs", "x");
          w->defineSet("poi", "mean");
@@ -575,9 +588,12 @@ public:
          RooDataSet *data = new RooDataSet("data", "data", *w->set("obs"));
          data->add(*w->set("obs"));
 
+         // NOTE: RooIntegrator1D is too slow and gives poor results
+         RooAbsReal::defaultIntegratorConfig()->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
+
          // Uniform prior on mean
          BayesianCalculator *bc = new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("prior"), NULL);
-         bc->SetConfidenceLevel(confidenceLevel);
+         bc->SetConfidenceLevel(fConfidenceLevel);
          bc->SetScanOfPosterior(numberScans);
          SimpleInterval *interval = bc->GetInterval();
          regValue(interval->LowerLimit(), lowerLimitString);
@@ -588,7 +604,7 @@ public:
 
          // Inverse of mean prior
          bc = new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("priorInv"), NULL);
-         bc->SetConfidenceLevel(confidenceLevel);
+         bc->SetConfidenceLevel(fConfidenceLevel);
          bc->SetScanOfPosterior(numberScans);
          interval = bc->GetInterval();
          regValue(interval->LowerLimit(), lowerLimitInvString);
@@ -599,7 +615,7 @@ public:
 
          // Square root of inverse of mean prior
          bc = new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("priorInvSqrt"), NULL);
-         bc->SetConfidenceLevel(confidenceLevel);
+         bc->SetConfidenceLevel(fConfidenceLevel);
          bc->SetScanOfPosterior(numberScans);
          interval = bc->GetInterval();
          regValue(interval->LowerLimit(), lowerLimitInvSqrtString);
@@ -610,7 +626,7 @@ public:
 
          // Gamma distribution prior
          bc = new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("priorGamma"), NULL);
-         bc->SetConfidenceLevel(confidenceLevel);
+         bc->SetConfidenceLevel(fConfidenceLevel);
          bc->SetScanOfPosterior(numberScans);
          interval = bc->GetInterval();
          regValue(interval->LowerLimit(), lowerLimitGammaString);
@@ -642,7 +658,7 @@ public:
 // The reference interval limits are taken from the paper: "Why isn't every
 // physicist a Bayesian?" by Robert D. Cousins.
 //
-//ModelConfig (implicit) :
+// ModelConfig (implicit) :
 //    Observable -> x
 //    Parameter of Interest -> mean
 //
@@ -652,27 +668,38 @@ public:
 
 class TestBayesianCalculator2 : public RooUnitTest {
 public:
-   TestBayesianCalculator2(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("BayesianCalculator Shortest Interval - Poisson Simple Model", refFile, writeRef, verbose) {};
+   TestBayesianCalculator2(
+      TFile* refFile, 
+      Bool_t writeRef, 
+      Int_t verbose
+   ) : 
+      RooUnitTest("BayesianCalculator Shortest Interval - Poisson Simple Model", refFile, writeRef, verbose) 
+   {};
 
-   Double_t vtol() {
-      return 1e-2;   // the references values in the paper have a precision of only two decimal points
-   }
+   // the references values in the paper have a precision of only two decimal points
    // in such a situation, it is natural that we increase the value tolerance
+   Double_t vtol() { return 1e-2; }
 
    Bool_t testCode() {
 
       // Put the confidence level so that we obtain a 68% confidence interval
-      const Double_t confidenceLevel = ROOT::Math::normal_cdf(1) * 2 - 1; // test size
+      const Double_t confidenceLevel = 2 * ROOT::Math::normal_cdf(1) - 1;
       const Int_t obsValue = 3; // observed experiment value
       const Int_t numberScans = 10000; // sufficient number of scans
+
+      // names of tested variables must be the same in write / comparison modes
+      const TString lowerLimitString = "tbc2_lower_limit_unif";
+      const TString upperLimitString = "tbc2_upper_limit_unif";
+      const TString lowerLimitInvString = "tbc2_lower_limit_inv";
+      const TString upperLimitInvString = "tbc2_upper_limit_inv";
 
       if (_write == kTRUE) {
 
          // Compare the limits obtained via BayesianCalculator with given reference values
-         regValue(1.55, "bc2_lower_limit_unif");
-         regValue(5.15, "bc2_upper_limit_unif");
-         regValue(0.86, "bc2_lower_limit_inv");
-         regValue(3.85, "bc2_upper_limit_inv");
+         regValue(1.55, lowerLimitString);
+         regValue(5.15, upperLimitString);
+         regValue(0.86, lowerLimitInvString);
+         regValue(3.85, upperLimitInvString);
 
       } else {
 
@@ -682,9 +709,6 @@ public:
          w->factory("Uniform::prior(mean)");
          w->factory("EXPR::priorInv('1/mean', mean)");
 
-         // Roo1DIntegrator too slow and imprecise
-         RooAbsReal::defaultIntegratorConfig()->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
-
          // build argument sets and data set
          w->defineSet("poi", "mean");
          w->defineSet("obs", "x");
@@ -692,14 +716,17 @@ public:
          RooDataSet *data = new RooDataSet("data", "data", *w->set("obs"));
          data->add(*w->set("obs"));
 
+         // NOTE: RooIntegrator1D is too slow and gives poor results
+         RooAbsReal::defaultIntegratorConfig()->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
+
          // Uniform prior on mean
          BayesianCalculator *bc = new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("prior"), NULL);
          bc->SetConfidenceLevel(confidenceLevel);
          bc->SetShortestInterval();
          bc->SetScanOfPosterior(numberScans);
          SimpleInterval *interval = bc->GetInterval();
-         regValue(interval->LowerLimit(), "bc2_lower_limit_unif");
-         regValue(interval->UpperLimit(), "bc2_upper_limit_unif");
+         regValue(interval->LowerLimit(), lowerLimitString);
+         regValue(interval->UpperLimit(), upperLimitString);
 
          delete bc;
          delete interval;
@@ -710,8 +737,8 @@ public:
          bc->SetShortestInterval();
          bc->SetScanOfPosterior(numberScans);
          interval = bc->GetInterval();
-         regValue(interval->LowerLimit(), "bc2_lower_limit_inv");
-         regValue(interval->UpperLimit(), "bc2_upper_limit_inv");
+         regValue(interval->LowerLimit(), lowerLimitInvString);
+         regValue(interval->UpperLimit(), upperLimitInvString);
 
          // Cleanup branch objects
          delete bc;
@@ -726,6 +753,108 @@ public:
 };
 
 
+///////////////////////////////////////////////////////////////////////////////
+//
+// BAYESIAN CENTRAL INTERVAL - COMPLEX POISSON MODEL
+//
+// Test the validity of the central interval computed by the BayesianCalculator
+// on a complex Poisson model distribution. Reference values and test values 
+// are both computed with the BayesianCalculator. As such, this test can only
+// confirm if the BayesianCalculator has the same behaviour across different
+// computer platforms or RooStats revisions. A uniform prior PDF is used for the
+// parameter of interest ("sig").
+//
+// ModelConfig (explicit) : Poisson Product Model
+//    built in stressRooStats_models.cxx 
+//
+// Input Parameters:
+//    obsValueX -> observed value "x" when measuring sig + bkg1
+//    obsValueY -> observed value "y" when measuring 2*sig*1.2^beta + bkg2
+//    confidenceLevel -> Confidence Level of the interval we are calculating
+//
+// 04/2012 - Ioan Gabriel Bucur
+//
+///////////////////////////////////////////////////////////////////////////////
+
+class TestBayesianCalculator3 : public RooUnitTest {
+private:
+   Int_t fObsValueX;
+   Int_t fObsValueY;
+   Double_t fConfidenceLevel;
+
+public:
+   TestBayesianCalculator3(
+      TFile* refFile, 
+      Bool_t writeRef, 
+      Int_t verbose,
+      Int_t obsValueX = 15,
+      Int_t obsValueY = 30,
+      Double_t confidenceLevel = 2 * ROOT::Math::normal_cdf(1) - 1
+   ) : 
+      RooUnitTest("BayesianCalculator Central Interval - Poisson Complex Model", refFile, writeRef, verbose), 
+      fObsValueX(obsValueX),
+      fObsValueY(obsValueY),
+      fConfidenceLevel(confidenceLevel)
+   {};
+
+   // Basic checks for the parameters passed to the test
+   // In case of invalid parameters, a warning is printed and the test is skipped
+   Bool_t isTestAvailable() {
+      if(fObsValueX < 0 || fObsValueX > 40) {
+         Warning("isTestAvailable", "Observed value X=s+b must be in the range [0,40]. Skipping test...");
+         return kFALSE;
+      }
+      if(fObsValueY < 0 || fObsValueY > 120) {
+         Warning("isTestAvailable", "Observed value Y=2*s*1.2^beta+b must be in the range [0,120]. Skipping test...");
+         return kFALSE;
+      }         
+      if(fConfidenceLevel <= 0.0 || fConfidenceLevel >= 1.0) {
+         Warning("isTestAvailable", "Confidence level must be in the range (0,1). Skipping test...");
+         return kFALSE;
+      }      
+      return kTRUE;
+   }
+
+   Bool_t testCode() {
+
+      // Create workspace and model
+      RooWorkspace *w = new RooWorkspace("w", kTRUE);
+      buildPoissonProductModel(w);
+      ModelConfig *model = (ModelConfig *)w->obj("S+B");
+      
+      // add observed values to data set 
+      w->var("x")->setVal(fObsValueX);
+      w->var("y")->setVal(fObsValueY);
+      w->data("data")->add(*w->set("obs"));
+
+      // NOTE: Roo1DIntegrator is too slow and gives poor results
+      RooAbsReal::defaultIntegratorConfig()->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
+     
+      // Create BayesianCalculator and
+      BayesianCalculator *bc = new BayesianCalculator(*w->data("data"), *model);
+      bc->SetConfidenceLevel(fConfidenceLevel);
+
+      // Obtain confidence interval by scanning the posterior function in the given number of points
+      SimpleInterval *interval = bc->GetInterval();
+      regValue(
+         interval->LowerLimit(), 
+         TString::Format("tbc3_lower_limit_sig_%d_%d_%lf", fObsValueX, fObsValueY, fConfidenceLevel)
+      );
+      regValue(
+         interval->UpperLimit(), 
+         TString::Format("tbc3_upper_limit_sig_%d_%d_%lf", fObsValueX, fObsValueY, fConfidenceLevel)
+      );
+
+      // Cleanup
+      delete bc;
+      delete interval;
+      delete w;
+
+      return kTRUE ;
+   }
+};
+
+
 //
 // END OF PART TWO
 //
@@ -736,7 +865,149 @@ public:
 
 
 
+
+//_____________________________________________________________________________
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//
+// PART THREE:
+//    MARKOV CHAIN MONTE CARLO CALCULATOR UNIT TESTS
+//
+
+#include "RooStats/MCMCCalculator.h"
+#include "RooStats/SequentialProposal.h"
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// MCMC INTERVAL CALCULATOR - COMPLEX MODEL
+//
+// Test the validity of the confidence interval computed by the MCMCCalculator
+// on a complex Poisson model distribution. Reference values and test values 
+// are both computed with the MCMCCalculator. As such, this test can only 
+// confirm if the BayesianCalculator has the same behaviour across different
+// computer platforms or RooStats revisions.
+//
+// ModelConfig (explicit) : Poisson Product Model
+//    built in stressRooStats_models.cxx 
+//
+// Input Parameters:
+//    obsValueX -> observed value "x" when measuring sig + bkg1
+//    obsValueY -> observed value "y" when measuring 2*sig*1.2^beta + bkg2
+//    confidenceLevel -> Confidence Level of the interval we are calculating
+//
+// 04/2012 - Ioan Gabriel Bucur
+//
+///////////////////////////////////////////////////////////////////////////////
+
+class TestMCMCCalculator : public RooUnitTest {
+private:
+   Int_t fObsValueX;
+   Int_t fObsValueY;
+   Double_t fConfidenceLevel;
+
+public:
+   TestMCMCCalculator(
+      TFile* refFile, 
+      Bool_t writeRef, 
+      Int_t verbose,
+      Int_t obsValueX = 15,
+      Int_t obsValueY = 30,
+      Double_t confidenceLevel = 2 * ROOT::Math::normal_cdf(1) - 1
+   ) : 
+      RooUnitTest("MCMCCalculator Interval - Poisson Complex Model", refFile, writeRef, verbose),
+      fObsValueX(obsValueX),
+      fObsValueY(obsValueY),
+      fConfidenceLevel(confidenceLevel)
+   {};
+
+   // Basic checks for the parameters passed to the test
+   // In case of invalid parameters, a warning is printed and the test is skipped
+   Bool_t isTestAvailable() {
+      if(fObsValueX < 0 || fObsValueX > 40) {
+         Warning("isTestAvailable", "Observed value X=s+b must be in the range [0,40]. Skipping test...");
+         return kFALSE;
+      }
+      if(fObsValueY < 0 || fObsValueY > 120) {
+         Warning("isTestAvailable", "Observed value Y=2*s*1.2^beta+b must be in the range [0,120]. Skipping test...");
+         return kFALSE;
+      }         
+      if(fConfidenceLevel <= 0.0 || fConfidenceLevel >= 1.0) {
+         Warning("isTestAvailable", "Confidence level must be in the range (0,1). Skipping test...");
+         return kFALSE;
+      }      
+      return kTRUE;
+   }
+
+   Bool_t testCode() {
+
+      // Create workspace and model
+      RooWorkspace *w = new RooWorkspace("w", kTRUE);
+      buildPoissonProductModel(w);
+      ModelConfig *model = (ModelConfig *)w->obj("S+B");
+
+      // add observed values to data set 
+      w->var("x")->setVal(fObsValueX);
+      w->var("y")->setVal(fObsValueY);
+      w->data("data")->add(*w->set("obs"));
+ 
+      // NOTE: Roo1DIntegrator is too slow and gives poor results
+      RooAbsReal::defaultIntegratorConfig()->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
+    
+      // create and configure MCMC calculator
+      SequentialProposal *sp = new SequentialProposal(0.1);
+      MCMCCalculator *mcmcc = new MCMCCalculator(*w->data("data"), *model);
+      mcmcc->SetProposalFunction(*sp);
+      mcmcc->SetNumIters(100000); // Metropolis-Hastings algorithm iterations
+      mcmcc->SetNumBurnInSteps(50); // first 50 steps to be ignored as burn-in
+      mcmcc->SetConfidenceLevel(fConfidenceLevel);
+
+      // calculate the confidence interval
+      MCMCInterval *interval = mcmcc->GetInterval();
+      regValue(
+         interval->LowerLimit(*w->var("sig")), 
+         TString::Format("mcmcc_lower_limit_sig_%d_%d_%lf", fObsValueX, fObsValueY, fConfidenceLevel)
+      );
+      regValue(
+         interval->UpperLimit(*w->var("sig")), 
+         TString::Format("mcmcc_upper_limit_sig_%d_%d_%lf", fObsValueX, fObsValueY, fConfidenceLevel)
+      );
+
+      // cleanup
+      delete interval;
+      delete mcmcc;
+      delete sp;
+      delete w;
+
+      return kTRUE ;
+   }
+};
+
+
+//
+// END OF PART THREE
+//
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//_____________________________________________________________________________
+
+
+
+
 // OTHER TESTS FOLLOW
+
+/////////////////////////////////////////////////////////////////////////
+//
+// 'BASIC FUNCTIONALITY' RooFit tutorial macro #101
+//
+// Fitting, plotting, toy data generation on one-dimensional p.d.f
+//
+// pdf = gauss(x,m,s)
+//
+//
+// 07/2008 - Wouter Verkerke
+//
+/////////////////////////////////////////////////////////////////////////
+
 
 class TestBasic101 : public RooUnitTest {
 public:
@@ -1180,117 +1451,6 @@ public:
 
 
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// BAYESIAN CENTRAL INTERVAL - COMPLEX POISSON MODEL
-//
-// Test the confidence interval computed by the BayesianCalculator on a
-// complex model. A uniform prior is used for the POI.
-//
-// 04/2012 - Ioan Gabriel Bucur
-//
-///////////////////////////////////////////////////////////////////////////////
-
-class TestBayesianCalculator3 : public RooUnitTest {
-
-public:
-   TestBayesianCalculator3(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("BayesianCalculator Central Interval - Poisson Complex Product Model", refFile, writeRef, verbose) {};
-
-   Bool_t testCode() {
-
-      const Double_t testSize = ROOT::Math::normal_cdf_c(1) * 2; // test size
-      // for the BayesianCalculator we need to change the integration method - default method is too slow
-      RooAbsReal::defaultIntegratorConfig()->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
-
-      // Create workspace model
-      RooWorkspace *w = new RooWorkspace("w", kTRUE);
-      pair<ModelConfig *, ModelConfig *> models = buildPoissonProductModel(w);
-
-      // add observed values to data set 
-      w->var("x")->setVal(30);
-      w->var("y")->setVal(5);
-      w->data("data")->add(*w->set("obs"));
-
-     // w->var("sig")->setVal(5);
-     // models.first->SetSnapshot(*w->set("poi"));
-
-      //w->var("beta")->setConstant();
-      //w->var("beta0")->setConstant();
-
-      // Create BayesianCalculator and calculate interval
-      BayesianCalculator *bc = new BayesianCalculator(*w->data("data"), *models.first);
-      bc->SetTestSize(testSize);
-      //SimpleInterval *interval = bc->GetInterval();
-      //regValue(interval->LowerLimit(), "bc3_lower_limit_sig1_unif");
-      //regValue(interval->UpperLimit(), "bc3_upper_limit_sig1_unif");
-
-      // Obtain CI by scanning the posterior function in the given number of points
-      bc->SetScanOfPosterior(100);
-      SimpleInterval *interval = bc->GetInterval();
-      regValue(interval->LowerLimit(), "bc3_lower_limit_sig1_binned");
-      regValue(interval->UpperLimit(), "bc3_upper_limit_sig1_binned");
-
-      // Cleanup
-      delete bc;
-      delete interval;
-      delete w;
-
-      return kTRUE ;
-   }
-};
-
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// MCMC INTERVAL CALCULATOR - COMPLEX MODEL
-//
-// Test the confidence interval computed by the MCMCCalculator on a complex
-// model. A uniform prior is used for the POI.
-//
-// 04/2012 - Ioan Gabriel Bucur
-//
-///////////////////////////////////////////////////////////////////////////////
-
-#include "RooStats/MCMCCalculator.h"
-#include "RooStats/SequentialProposal.h"
-
-class TestMCMCCalculator : public RooUnitTest {
-public:
-   TestMCMCCalculator(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("MCMCCalculator Interval - Poisson Complex Model", refFile, writeRef, verbose) {};
-
-   Bool_t testCode() {
-
-      const Double_t testSize = ROOT::Math::normal_cdf_c(1) * 2;
-
-      // Create workspace and model
-      RooWorkspace *w = new RooWorkspace("w", kTRUE);
-      pair<ModelConfig *, ModelConfig *> models = buildPoissonProductModel(w);
-
-      // build confidence interval (MCMCInterval) with MCMC calculator
-      SequentialProposal *sp = new SequentialProposal(0.1);
-      MCMCCalculator *mcmcc = new MCMCCalculator(*w->data("data"), *models.first);
-      mcmcc->SetProposalFunction(*sp);
-      mcmcc->SetNumIters(1000000); // Metropolis-Hastings algorithm iterations
-      mcmcc->SetNumBurnInSteps(50); // first 50 steps to be ignored as burn-in
-      mcmcc->SetTestSize(testSize);
-
-      MCMCInterval *interval = mcmcc->GetInterval();
-      regValue(interval->LowerLimit(*w->var("sig1")), "mcmcc_lower_limit_sig1");
-      regValue(interval->UpperLimit(*w->var("sig1")), "mcmcc_upper_limit_sig1");
-
-      // cleanup
-      delete interval;
-      delete mcmcc;
-      delete sp;
-      delete w;
-
-      return kTRUE ;
-   }
-};
-
-
-
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -1336,25 +1496,22 @@ public:
 
       // Create workspace and model
       RooWorkspace *w = new RooWorkspace("w", kTRUE);
-      pair<ModelConfig *, ModelConfig *> models = buildPoissonProductModel(w);
-   
+      buildPoissonProductModel(w);
+      ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
+      ModelConfig *bModel = (ModelConfig *)w->obj("B");   
+
       w->var("x")->setVal(7);
       w->var("y")->setVal(15);
       w->data("data")->add(*w->set("obs"));
-      w->var("beta0")->setVal(0.0);
-      w->var("beta0")->setConstant();
       w->var("sig")->setVal(7);
-      models.first->SetSnapshot(*w->set("poi"));
-      
-
-      w->import(*models.first);
-      w->import(*models.second);
+      sbModel->SetSnapshot(*w->set("poi"));
+     
 
     //  w->writeToFile(TString::Format("thti1_ws_%d_%d.root", fCalculatorType, fTestStatType));
 
       // configure HypoTestInverter
-      HypoTestInverter *hti = new HypoTestInverter(*w->data("data"), *models.first, *models.second, NULL, fCalculatorType, testSize);
-      hti->SetTestStatistic(*buildTestStatistic(fTestStatType, *models.first, *models.second));
+      HypoTestInverter *hti = new HypoTestInverter(*w->data("data"), *sbModel, *bModel, NULL, fCalculatorType, testSize);
+      hti->SetTestStatistic(*buildTestStatistic(fTestStatType, *sbModel, *bModel));
       hti->SetFixedScan(10, 2, 8);
  
       //TODO: check how to eliminate this code, calculator should autoconfigure itself     
@@ -1367,7 +1524,7 @@ public:
       }
 
       //TODO: check how this code can be eliminated, maybe 0 should be default print level for AsymptoticCalculator
-      if(fCalculatorType == HypoTestInverter::kAsymptotic && _verb == 0) {
+      if(fCalculatorType == HypoTestInverter::kAsymptotic) {
          AsymptoticCalculator::SetPrintLevel(0); // print only minimal output
       }
 
