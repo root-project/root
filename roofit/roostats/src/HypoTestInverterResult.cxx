@@ -367,6 +367,14 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
       return (n>0) ?  y[0] : 0;
    } 
 
+   double varmin = - TMath::Infinity();
+   double varmax = TMath::Infinity();
+   const RooRealVar* var = dynamic_cast<RooRealVar*>( fParameters.first() );
+   if (var) { 
+       varmin = var->getMin();
+       varmax = var->getMax();
+   }
+
    double xmin = axmin; 
    double xmax = axmax;
    // case no range is given check if need to extrapolate to lower/upper values 
@@ -381,15 +389,35 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
       double ymax = TMath::MaxElement(n,y);
       // do lower extrapolation 
       if ( (ymax < y0 && !lowSearch) || ( ymin > y0 && lowSearch) ) { 
-         const RooRealVar* var = dynamic_cast<RooRealVar*>( fParameters.first() );
-         if (var) xmin = var->getMin();
+         xmin = varmin;
       }
       // do upper extrapolation  
       if ( (ymax < y0 && lowSearch) || ( ymin > y0 && !lowSearch) ) { 
-         const RooRealVar* var = dynamic_cast<RooRealVar*>( fParameters.first() );
-         if (var) xmax = var->getMax();
+         xmax = varmax;
       }
    }
+   else { 
+      // in case of range given, check if all points are above or below the confidence level line
+      bool isCross = false;
+      bool first = true; 
+      double prod = 1;
+      for (int i = 0; i< n; ++i) { 
+         double xp, yp;
+         graph.GetPoint(i,xp,yp);
+         if (xp >= xmin && xp <= xmax) { 
+            prod *= TMath::Sign(1., (yp - y0) );
+            if (prod < 0 && !first) { 
+               isCross = true; 
+               break;
+            }
+            first = false;
+         }
+      }
+      if (!isCross) { 
+         return (lowSearch) ? varmin : varmax;
+      }
+   }
+   
 
 
    brf.SetFunction(wf,xmin,xmax);
