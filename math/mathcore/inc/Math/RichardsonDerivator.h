@@ -191,11 +191,11 @@ public:
       return Derivative3(x);
    }
 
-   /** Set function for derivative calculation (function is not copied in)
+   /** Set function for derivative calculation (copy the function if option has been enabled in the constructor)
 
        \@param f Function to be differentiated
    */
-   void SetFunction (const IGenFunction & f) { fFunction = &f; }
+   void SetFunction (const IGenFunction & f);
 
    /** Set step size for derivative calculation
 

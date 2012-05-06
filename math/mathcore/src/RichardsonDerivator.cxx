@@ -28,7 +28,7 @@ RichardsonDerivator::RichardsonDerivator(double h) :
    // Default Constructor.
 }
 RichardsonDerivator::RichardsonDerivator(const ROOT::Math::IGenFunction & f, double h, bool copyFunc) : 
-   fFunctionCopied(false),
+   fFunctionCopied(copyFunc),
    fStepSize(h),
    fLastError(0),
    fFunction(0)
@@ -37,6 +37,7 @@ RichardsonDerivator::RichardsonDerivator(const ROOT::Math::IGenFunction & f, dou
    if (copyFunc) fFunction = f.Clone(); 
    else fFunction = &f;
 }
+
 
 RichardsonDerivator::~RichardsonDerivator()
 {
@@ -54,13 +55,22 @@ RichardsonDerivator::RichardsonDerivator(const RichardsonDerivator & rhs)
 RichardsonDerivator &  RichardsonDerivator::operator= ( const RichardsonDerivator & rhs) 
 {
    // Assignment operator
+   if (&rhs == this) return *this;
    fFunctionCopied = rhs.fFunctionCopied;
    fStepSize = rhs.fStepSize;
    fLastError = rhs.fLastError;
-   fFunction = rhs.fFunction;
-   if (fFunctionCopied && fFunction != 0) 
-      fFunction = fFunction->Clone();
+   SetFunction(*rhs.fFunction);
    return *this;
+}
+
+void RichardsonDerivator::SetFunction(const ROOT::Math::IGenFunction & f)
+{
+   // set function
+   if (fFunctionCopied) {
+      if (fFunction) delete fFunction;
+      fFunction = f.Clone(); 
+   }
+   else fFunction = &f;
 }
 
 double RichardsonDerivator::Derivative1 (double x)
