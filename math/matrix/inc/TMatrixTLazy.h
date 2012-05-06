@@ -54,7 +54,7 @@ protected:
    Int_t fColUpb;
    Int_t fColLwb;
 
-   TMatrixTLazy(const TMatrixTLazy<Element> &) : TObject() { }
+   TMatrixTLazy(const TMatrixTLazy<Element> &) : TObject(), fRowUpb(0),fRowLwb(0),fColUpb(0),fColLwb(0) { }
    void operator=(const TMatrixTLazy<Element> &) { }
 
 private:
@@ -95,7 +95,7 @@ protected:
    Int_t fRowUpb;
    Int_t fRowLwb;
 
-   TMatrixTSymLazy(const TMatrixTSymLazy<Element> &) : TObject() { }
+   TMatrixTSymLazy(const TMatrixTSymLazy<Element> &) : TObject(), fRowUpb(0),fRowLwb(0)  { }
    void operator=(const TMatrixTSymLazy<Element> &) { }
 
 private:
