@@ -103,9 +103,9 @@ TQpSolverBase::~TQpSolverBase()
    if (fSys) { delete fSys; fSys = 0; }
 
    if (fMu_history) { delete [] fMu_history;      fMu_history      = 0; }
-   if (fMu_history) { delete [] fRnorm_history;   fRnorm_history   = 0; }
-   if (fMu_history) { delete [] fPhi_history;     fPhi_history     = 0; }
-   if (fMu_history) { delete [] fPhi_min_history; fPhi_min_history = 0; }
+   if (fRnorm_history) { delete [] fRnorm_history;   fRnorm_history   = 0; }
+   if (fPhi_history) { delete [] fPhi_history;     fPhi_history     = 0; }
+   if (fPhi_min_history) { delete [] fPhi_min_history; fPhi_min_history = 0; }
 }
 
 

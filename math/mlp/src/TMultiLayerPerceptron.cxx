@@ -774,8 +774,8 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option, Double_t minE
       residual_plot->Add(train_residual_plot);
       residual_plot->Add(test_residual_plot);
       residual_plot->Draw("LA");
-      residual_plot->GetXaxis()->SetTitle("Epoch");
-      residual_plot->GetYaxis()->SetTitle("Error");
+      if (residual_plot->GetXaxis())  residual_plot->GetXaxis()->SetTitle("Epoch");
+      if (residual_plot->GetYaxis())  residual_plot->GetYaxis()->SetTitle("Error");
    }
    // If the option "+" is not set, one has to randomize the weights first
    if (!opt.Contains("+"))
@@ -934,9 +934,11 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option, Double_t minE
             }
          }
          if ((!(iepoch % displayStepping)) || (iepoch == nEpoch - 1)) {
-            residual_plot->GetYaxis()->UnZoom();
-            residual_plot->GetYaxis()->SetTitleOffset(1.4);
-            residual_plot->GetYaxis()->SetDecimals();
+            if (residual_plot->GetYaxis()) {
+               residual_plot->GetYaxis()->UnZoom();
+               residual_plot->GetYaxis()->SetTitleOffset(1.4);
+               residual_plot->GetYaxis()->SetDecimals();
+            }
             canvas->Modified();
             canvas->Update();
          }
