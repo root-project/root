@@ -152,9 +152,11 @@ MarkovChain* MetropolisHastings::ConstructChain()
    Int_t weight = 0;
    Double_t xL = 0.0, xPrimeL = 0.0, a = 0.0;
 
+   // ibucur: i think the user should have the possiblity to display all the message
+   //    levels should he/she want to; maybe a setPrintLevel would be appropriate
+   //    (maybe for the other classes that use this approach as well)?
    RooFit::MsgLevel oldMsgLevel = RooMsgService::instance().globalKillBelow();
-   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
-
+   RooMsgService::instance().setGlobalKillBelow(RooFit::PROGRESS);
 
    // We will need to check if log-likelihood evaluation left an error status.
    // Now using faster eval error logging with CountErrors.
@@ -197,16 +199,16 @@ MarkovChain* MetropolisHastings::ConstructChain()
                      "MetropolisHastings::ConstructChain() " << endl;
    }
 
+
+   ooccoutP((TObject *)0, Generation) << "Metropolis-Hastings progress: ";
+
    // do main loop
    for (i = 0; i < fNumIters; i++) {
       // reset error handling flag
       hadEvalError = false;
 
-      if (i % (fNumIters / 100) == 0) {
-         // print a dot every 1% of the chain construction
-         fprintf(stdout, ".");
-         fflush(NULL);
-      }
+      // print a dot every 1% of the chain construction
+      if (i % (fNumIters / 100) == 0) ooccoutP((TObject*)0, Generation) << ".";
 
       fPropFunc->Propose(xPrime, x);
 
@@ -264,7 +266,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
    // make sure to add the last point
    if (weight != 0.0)
       chain->Add(x, CalcNLL(xL), (Double_t)weight);
-   printf("\n");
+   ooccoutP((TObject *)0, Generation) << endl;
 
    RooMsgService::instance().setGlobalKillBelow(oldMsgLevel);
 
