@@ -11,7 +11,8 @@ STRESSTESTS  := $(filter-out stressHepix-test,\
 	$(filter-out stressProof-test,\
 	$(filter-out stressRooFit_tests-test,\
 	$(filter-out stressRooStats_tests-test,\
-	$(notdir $(STRESSSRC:.cxx=-test))))))
+	$(filter-out stressRooStats_models-test,\
+	$(notdir $(STRESSSRC:.cxx=-test)))))))
 ifeq ($(ARCH)$(FAIL),win32)
    for_echoing := $(shell echo Known failures: stressMathCore skipped tests in root/stress 1>&2)
 STRESSTESTS  := $(filter-out stressMathCore-test,$(STRESSTEST))
