@@ -70,18 +70,18 @@
       New method DivideSquare a canvas in to  n sub-pads. The number of sub-pads
       along the X and Y axis are computed according to the square root of n.
       Example:
-   </li>
    <pre>
       void divsquare(int w, int h, int n) 
       {
          TCanvas *c = new TCanvas ("c","c",0,0,w,h);
          c->DivideSquare(n);
-         for (int i=1; i<=n; i++) {
+         for (int i=1; i&lt;=n; i++) {
             c->cd(i);
             gPad->DrawFrame(0,0,1,1);
          }
       }
    </pre>
+   </li>
    <li> TPad::Print always use TImageDump to print gif, png and jpeg files, in 
       interactive and batch mode (previously it was used in the batch case only). 
       This allows to generate output transparent colors in these formats even in 

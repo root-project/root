@@ -116,7 +116,7 @@ following example:
    
    Double_t dx = 6.28/100;
    Double_t x  = -3.14;
-   for (int i=0; i<=100; i++) {
+   for (int i=0; i&lt;=100; i++) {
       x = x+dx;
       gr1->SetPoint(i,x,2.*TMath::Sin(x));
       gr2->SetPoint(i,x,TMath::Cos(x));
