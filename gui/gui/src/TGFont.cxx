@@ -2414,7 +2414,7 @@ getsystem:
       // some applications looks may change slightly if another foundry
       // is chosen.
 
-      if (strcasecmp(xa.fFoundry, "adobe") != 0) {
+      if (xa.fFoundry && (strcasecmp(xa.fFoundry, "adobe") != 0)) {
          score += 3000;
       }
       if (!xa.fFA.fPointsize) {

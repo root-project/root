@@ -150,7 +150,7 @@ void GetPixelSize(CTFontDescriptorRef fontDescriptor, X11::XLFDName &newXLFD)
 //_________________________________________________________________
 void CreateXLFDString(const X11::XLFDName &xlfd, std::string &xlfdString)
 {
-    xlfdString = "-*-"; //skip the foundry.
+    xlfdString = "-CoreText-"; //Fake foundry.
     xlfdString += xlfd.fFamilyName;
 
     if (xlfd.fWeight == X11::kFWBold)
