@@ -286,12 +286,10 @@ void StandardHypoTestDemo(const char* infile = "",
          // use prior defined first in bModel (then in SbModel)
          if (!nuisPdf)  { 
             Info("StandardHypoTestDemo","No nuisance pdf given for the HybridCalculator - try to deduce  pdf from the   model");
-#ifndef USE_OLD_ROOT
             if (bModel->GetPdf() && bModel->GetObservables() ) 
                nuisPdf = RooStats::MakeNuisancePdf(*bModel,"nuisancePdf_bmodel");
             else 
                nuisPdf = RooStats::MakeNuisancePdf(*sbModel,"nuisancePdf_sbmodel");
-#endif
          }   
          if (!nuisPdf ) {
             if (bModel->GetPriorPdf())  { 

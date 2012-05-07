@@ -19,9 +19,9 @@
 //
 // testStatType = 0 LEP
 //              = 1 Tevatron 
-//              = 2 Profile Likelihood
+//              = 2 Profile Likelihood two sided
 //              = 3 Profile Likelihood one sided (i.e. = 0 if mu < mu_hat)
-//              = 4 Profiel Likelihood signed ( pll = -pll if mu < mu_hat) 
+//              = 4 Profile Likelihood signed ( pll = -pll if mu < mu_hat) 
 //              = 5 Max Likelihood Estimate as test statistic
 //              = 6 Number of observed event as test statistic
 //
@@ -406,9 +406,19 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
   
    double upperLimit = r->UpperLimit();
    double ulError = r->UpperLimitEstimatedError();
-   double lowerLimit = r->LowerLimit();
-   double llError = r->LowerLimitEstimatedError();
-   if (lowerLimit < upperLimit*(1.- 1.E-4)) 
+   double lowerLimit = 0;
+   double llError = 0;
+#if defined ROOT_SVN_VERSION &&  ROOT_SVN_VERSION >= 44126
+   if (r->IsTwoSided()) {
+      lowerLimit = r->LowerLimit();
+      llError = r->LowerLimitEstimatedError();
+   }
+#else
+      lowerLimit = r->LowerLimit();
+      llError = r->LowerLimitEstimatedError();
+#endif
+      
+   if (lowerLimit < upperLimit*(1.- 1.E-4) && lowerLimit != 0) 
       std::cout << "The computed lower limit is: " << lowerLimit << " +/- " << llError << std::endl;
    std::cout << "The computed upper limit is: " << upperLimit << " +/- " << ulError << std::endl;
   
