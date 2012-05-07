@@ -17,16 +17,16 @@ ifeq ($(ARCH)$(FAIL),win32)
    for_echoing := $(shell echo Known failures: stressMathCore skipped tests in root/stress 1>&2)
 STRESSTESTS  := $(filter-out stressMathCore-test,$(STRESSTEST))
 endif
-ifeq ($(findstring roofit,$(R_FEATURES)),)
+ifeq ($(findstring roofit,$(R__FEATURES)),)
 STRESSTESTS  := $(filter-out stressRooStats-test,$(filter-out stressRooFit-test,$(STRESSTESTS)))
 endif
-ifeq ($(findstring mathmore,$(R_FEATURES)),)
+ifeq ($(findstring mathmore,$(R__FEATURES)),)
 STRESSTESTS  := $(filter-out stressMathMore-test,$(STRESSTESTS))
 endif
-ifeq ($(findstring unuran,$(R_FEATURES)),)
+ifeq ($(findstring unuran,$(R__FEATURES)),)
 STRESSTESTS  := $(filter-out stressHistoFit-test,$(STRESSTESTS))
 endif
-ifeq ($(findstring minuit2,$(R_FEATURES)),)
+ifeq ($(findstring minuit2,$(R__FEATURES)),)
 STRESSTESTS  := $(filter-out stressHistoFit-test,$(STRESSTESTS))
 endif
 
