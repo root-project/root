@@ -170,7 +170,7 @@ Double_t PiecewiseInterpolation::evaluate() const
     else
       sum += param->getVal()*(nominal - low->getVal());
     */
-
+    //cout << "interp code is " << _interpCode.at(i) << endl;
     if(_interpCode.empty() || _interpCode.at(i)==0){
       // piece-wise linear
       if(param->getVal()>0)
@@ -208,6 +208,73 @@ Double_t PiecewiseInterpolation::evaluate() const
 	sum +=  a*pow(param->getVal(),2) + b*param->getVal()+c;
       }
 	
+    } else if (_interpCode.at(i) == 4){ // AA - 6th order poly interp + linear extrap
+      
+      double x0 = 1.0;//boundary;
+      double x  = param->getVal();
+
+      if (x > x0 || x < -x0)
+      {
+	if(x>0)
+	  sum += x*(high->getVal() - nominal );
+	else
+	  sum += x*(nominal - low->getVal());
+      }
+      else
+      {
+	double eps_plus = high->getVal() - nominal;
+	double eps_minus = nominal - low->getVal();
+	double S = (eps_plus + eps_minus)/2;
+	double A = (eps_plus - eps_minus)/2;
+
+//fcns+der+2nd_der are eq at bd
+	double a = S;
+	double b = 15*A/(8*x0);
+	//double c = 0;
+	double d = -10*A/(8*x0*x0*x0);
+	//double e = 0;
+	double f = 3*A/(8*x0*x0*x0*x0*x0);
+
+	double val = nominal + a*x + b*pow(x, 2) + 0/*c*pow(x, 3)*/ + d*pow(x, 4) + 0/*e*pow(x, 5)*/ + f*pow(x, 6);
+	if (val < 0) val = 0;
+	//cout << "Using interp code 4, val = " << val << endl;
+	sum += val-nominal;
+      }
+	
+    } else if (_interpCode.at(i) == 5){ // AA - 4th order poly interp + linear extrap
+      
+      double x0 = 1.0;//boundary;
+      double x  = param->getVal();
+
+      if (x > x0 || x < -x0)
+      {
+	if(x>0)
+	  sum += x*(high->getVal() - nominal );
+	else
+	  sum += x*(nominal - low->getVal());
+      }
+      else if (nominal != 0)
+      {
+	double eps_plus = high->getVal() - nominal;
+	double eps_minus = nominal - low->getVal();
+	double S = (eps_plus + eps_minus)/2;
+	double A = (eps_plus - eps_minus)/2;
+
+//fcns+der are eq at bd
+	double a = S;
+	double b = 3*A/(2*x0);
+	//double c = 0;
+	double d = -A/(2*x0*x0*x0);
+
+	double val = nominal + a*x + b*pow(x, 2) + 0/*c*pow(x, 3)*/ + d*pow(x, 4);
+	if (val < 0) val = 0;
+
+	//cout << "Using interp code 5, val = " << val << endl;
+
+	sum += val-nominal;
+      }
+
+
     } else {
       coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << param->GetName() 
 			    << " with unknown interpolation code" << endl ;

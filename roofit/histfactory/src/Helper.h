@@ -18,6 +18,11 @@
 #include "TFile.h"
 
 #include "RooStats/HistFactory/EstimateSummary.h"
+#include "RooStats/HistFactory/Measurement.h"
+#include "RooStats/HistFactory/HistFactoryException.h"
+#include "RooWorkspace.h"
+
+
 using namespace std; 
 
 namespace RooStats{
@@ -29,6 +34,10 @@ namespace HistFactory{
   bool AddSummaries( vector<EstimateSummary> & summary, vector<vector<EstimateSummary> > &master);
   vector<pair<string, string> > get_comb(vector<string> names);
   void AddSubStrings( vector<string> & vs, string s);
+
+  std::vector<EstimateSummary> GetChannelEstimateSummaries(Measurement& measurement, Channel& channel);
+
+
 }
 }
 #endif
