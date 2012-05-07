@@ -61,6 +61,8 @@
 #pragma link C++ class RooStats::HybridPlot+;
 #pragma link C++ class RooStats::HybridResult+;				 
 
+#pragma link C++ class RooStats::DetailedOutputAggregator+;				 
+
 #pragma link C++ class RooStats::TestStatSampler+; // interface, not concrete
 #pragma link C++ class RooStats::DebuggingSampler+;
 #pragma link C++ class RooStats::ToyMCSampler+;
@@ -77,6 +79,7 @@
 #pragma link C++ class RooStats::NumEventsTestStat+;
 #pragma link C++ class RooStats::SimpleLikelihoodRatioTestStat+;
 #pragma link C++ class RooStats::MaxLikelihoodEstimateTestStat+;
+#pragma link C++ class RooStats::MinNLLTestStat+;
 
 #pragma link C++ class RooStats::SamplingDistribution+;
 #pragma link C++ class RooStats::NeymanConstruction+;
@@ -121,6 +124,7 @@
 #pragma link C++ function RooStats::SetAllConstant(const RooAbsCollection & , bool );
 #pragma link C++ function RooStats::MakeNuisancePdf(RooAbsPdf & , const RooArgSet &, const char * );
 #pragma link C++ function RooStats::MakeNuisancePdf(const RooStats::ModelConfig & , const char * );
+#pragma link C++ function RooStats::GetAsTTree(TString, TString, const RooDataSet&);
 
 
 // need for auto_ptr object in Likelihoodinterval since they are forwd declared

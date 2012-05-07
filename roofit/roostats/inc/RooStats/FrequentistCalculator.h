@@ -31,6 +31,12 @@ END_HTML
 #include "RooStats/ToyMCSampler.h"
 #endif
 
+#ifndef ROOSTATS_DetailedOutputAggregator
+#include "RooStats/DetailedOutputAggregator.h"
+#endif
+
+#include "RooFitResult.h"
+
 namespace RooStats {
 
    class FrequentistCalculator : public HypoTestCalculatorGeneric {
@@ -48,13 +54,16 @@ namespace RooStats {
          fNToysNull(-1),
          fNToysAlt(-1),
          fNToysNullTail(0),
-         fNToysAltTail(0)
+         fNToysAltTail(0),
+	 fFitInfo(NULL),
+	 fStoreFitInfo(false)
       {
       }
 
       ~FrequentistCalculator() {
          if( fConditionalMLEsNull ) delete fConditionalMLEsNull;
-         if( fConditionalMLEsAlt ) delete fConditionalMLEsAlt;
+	 if( fConditionalMLEsAlt ) delete fConditionalMLEsAlt;
+	 if( fFitInfo ) delete fFitInfo;
       }
 
 
@@ -82,12 +91,23 @@ namespace RooStats {
          else fConditionalMLEsAlt = NULL;
       }
 
+      void StoreFitInfo(bool val = true) {
+	      fStoreFitInfo = val;
+      }
+
+      const RooArgSet* GetFitInfo() const {
+	      return fFitInfo;
+      }
+
    protected:
       // configure TestStatSampler for the Null run
       int PreNullHook(RooArgSet *parameterPoint, double obsTestStat) const;
 
       // configure TestStatSampler for the Alt run
       int PreAltHook(RooArgSet *parameterPoint, double obsTestStat) const;
+
+      void PreHook() const;
+      void PostHook() const;
 
    protected:
       // MLE inputs
@@ -101,6 +121,10 @@ namespace RooStats {
       // adaptive sampling
       int fNToysNullTail;
       int fNToysAltTail;
+
+   private:
+      mutable RooArgSet* fFitInfo;
+      bool fStoreFitInfo;
 
    protected:
       ClassDef(FrequentistCalculator,1)

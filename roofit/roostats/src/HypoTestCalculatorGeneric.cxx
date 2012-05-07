@@ -92,6 +92,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    //   - nuisance parameters are floating, so they do float in test statistic
 
    // initial setup
+   PreHook();
    const_cast<ModelConfig*>(fNullModel)->GuessObsAndNuisance(*fData);
    const_cast<ModelConfig*>(fAltModel)->GuessObsAndNuisance(*fData);
 
@@ -188,12 +189,20 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    res->SetNullDetailedOutput( detOut_null );
    res->SetAllTestStatisticsData( allTS );
 
+   const RooArgSet *aset = GetFitInfo();
+   if (aset != NULL) {
+      RooDataSet *dset = new RooDataSet(NULL, NULL, *aset);
+      dset->add(*aset);
+      res->SetFitInfo( dset );
+   }
+
    *bothParams = *saveAll;
    delete bothParams;
    delete saveAll;
    delete altParams;
    delete nullParams;
    delete nullSnapshot;
+   PostHook();
    return res;
 }
 

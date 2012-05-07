@@ -87,6 +87,7 @@ class ToyMCPayload : public TNamed {
       
       ToyMCPayload() {
          // proof constructor, do not use
+	 fDataSet = NULL;
       }
 
       ToyMCPayload(RooDataSet* sd)

@@ -188,7 +188,7 @@ class ToyMCSampler: public TestStatSampler {
          if( fParametersForTestStat ) delete fParametersForTestStat;
          fParametersForTestStat = (const RooArgSet*)nullpoi.snapshot();
       }
-      
+
       virtual void SetPdf(RooAbsPdf& pdf) { fPdf = &pdf; ClearCache(); }
 
       // How to randomize the prior. Set to NULL to deactivate randomization.
@@ -208,11 +208,14 @@ class ToyMCSampler: public TestStatSampler {
 
       // Set the TestStatistic (want the argument to be a function of the data & parameter points
       virtual void SetTestStatistic(TestStatistic *testStatistic, unsigned int i) {
-         if( fTestStatistics.size() <= i ) {
+         if( fTestStatistics.size() < i ) {
             oocoutE((TObject*)NULL,InputArguments) << "Cannot set test statistic for this index." << endl;
             return;
          }
-         fTestStatistics[i] = testStatistic;
+	 if( fTestStatistics.size() == i)
+		 fTestStatistics.push_back(testStatistic);
+	 else
+		 fTestStatistics[i] = testStatistic;
       }
       virtual void SetTestStatistic(TestStatistic *t) { return SetTestStatistic(t,0); }
 

@@ -41,7 +41,7 @@ namespace RooStats {
 
     SamplingDistribution(const char *name,const char *title, const char * varName = 0);
 
-    SamplingDistribution(const char *name,const char *title, RooDataSet& dataSet, const char * varName = 0);
+    SamplingDistribution(const char *name,const char *title, RooDataSet& dataSet, const char * columnName = 0, const char * varName = 0);
 
     // Default constructor for SamplingDistribution
     SamplingDistribution();

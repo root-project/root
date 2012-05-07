@@ -16,6 +16,10 @@
 #include "TMath.h"
 #endif
 
+#ifndef ROOT_TTree
+#include "TTree.h"
+#endif
+
 #ifndef ROOT_Math_DistFuncMathCore
 #include"Math/DistFuncMathCore.h"
 #endif
@@ -26,6 +30,7 @@
 #include "TIterator.h"
 #include "RooStats/ModelConfig.h"
 #include "RooProdPdf.h"
+#include "RooDataSet.h"
 
 
 namespace RooStats {
@@ -101,6 +106,9 @@ namespace RooStats {
    RooAbsPdf * MakeNuisancePdf(RooAbsPdf &pdf, const RooArgSet &observables, const char *name);
 
    RooAbsPdf * MakeNuisancePdf(const RooStats::ModelConfig &model, const char *name);
+   
+   // Create a TTree with the given name and description. All RooRealVars in the RooDataSet are represented as branches that contain values of type Double_t.
+   TTree* GetAsTTree(TString name, TString desc, const RooDataSet& data);
 
 }
 

@@ -10,13 +10,16 @@
  *************************************************************************/
 
 #include "RooStats/ProfileLikelihoodTestStat.h"
+#include "RooFitResult.h"
+#include "RooPullVar.h"
+#include "RooStats/DetailedOutputAggregator.h"
 
 #include "RooProfileLL.h"
 #include "RooNLLVar.h"
 #include "RooMsgService.h"
 #include "RooMinimizer.h"
 #include "RooArgSet.h"
-#include "RooAbsData.h"
+#include "RooDataSet.h"
 #include "TStopwatch.h"
 
 #include "RooStats/RooStatsUtils.h"
@@ -32,6 +35,13 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        if (!&data) {
 	 cout << "problem with data" << endl;
 	 return 0 ;
+       }
+       if( fDetailedOutputEnabled and fDetailedOutput ) {
+	       delete fDetailedOutput;
+	       fDetailedOutput = 0;
+       }
+       if( fDetailedOutputEnabled and !fDetailedOutput ) {
+	       fDetailedOutput = new RooArgSet();
        }
 
        //data.Print("V");
@@ -98,33 +108,17 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        if (type != 2) {
           // minimize and count eval errors
           fNll->clearEvalErrorLog();
-          uncondML = GetMinNLL(statusD);
-          int invalidNLLEval = fNll->numEvalErrors();
+	  RooFitResult* result = GetMinNLL();
+	  uncondML = result->minNll();
+	  statusD = result->status();
 
           // get best fit value for one-sided interval 
-          if (firstPOI) fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
-          
-          // save this snapshot
-          if( fDetailedOutputEnabled ) {
-            if( fDetailedOutput ) delete fDetailedOutput;
-            
-            RooArgSet detOut( *attachedSet );
-            RooStats::RemoveConstantParameters( &detOut );
-            
-            // monitor a few more variables
-            fUncML->setVal( uncondML ); detOut.add( *fUncML );
-            fFitStatus->setVal( statusD ); detOut.add( *fFitStatus );
-            //fCovQual->setVal( covQual ); detOut.add( *fCovQual );
-            fNumInvalidNLLEval->setVal( invalidNLLEval ); detOut.add( *fNumInvalidNLLEval );
-            
-            // store it
-            fDetailedOutput = (const RooArgSet*)detOut.snapshot();
-            
-            cout << endl << "STORING THIS AS DETAILED OUTPUT:" << endl;
-            fDetailedOutput->Print("v");
-            cout << endl;
-          }
+	  if (firstPOI) fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
 
+	  // save this snapshot
+	  if( fDetailedOutputEnabled )
+		  fDetailedOutput->addOwned(*DetailedOutputAggregator::GetAsArgSet(result, "fitUncond_", fDetailedOutputWithErrorsAndPulls));
+	  delete result;
        }
        tsw.Stop();
        double fitTime1  = tsw.CpuTime();
@@ -171,7 +165,13 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
              condML = fNll->getVal(); 
           }
           else {              
-             condML = GetMinNLL(statusN);
+            fNll->clearEvalErrorLog();
+            RooFitResult* result = GetMinNLL();
+            condML = result->minNll();
+            statusN = result->status();
+            if( fDetailedOutputEnabled )
+               fDetailedOutput->addOwned(*DetailedOutputAggregator::GetAsArgSet(result, "fitCond_", fDetailedOutputWithErrorsAndPulls));
+            delete result;
           }
 
        }
@@ -227,7 +227,7 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
              
      }     
 
-double RooStats::ProfileLikelihoodTestStat::GetMinNLL(int& status) {
+RooFitResult* RooStats::ProfileLikelihoodTestStat::GetMinNLL() {
    //find minimum of NLL using RooMinimizer
 
    RooMinimizer minim(*fNll);
@@ -241,6 +241,7 @@ double RooStats::ProfileLikelihoodTestStat::GetMinNLL(int& status) {
    TString minimizer = fMinimizer;
    TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();
    if (algorithm == "Migrad") algorithm = "Minimize"; // prefer to use Minimize instead of Migrad
+   int status;
    for (int tries = 1, maxtries = 4; tries <= maxtries; ++tries) {
       status = minim.minimize(minimizer,algorithm);
       if (status%1000 == 0) {  // ignore erros from Improve 
@@ -264,8 +265,7 @@ double RooStats::ProfileLikelihoodTestStat::GetMinNLL(int& status) {
       }
    }
 
-   double val =  fNll->getVal();
+   //how to get cov quality faster?
+   return minim.save();
    //minim.optimizeConst(false); 
-
-   return val;
 }

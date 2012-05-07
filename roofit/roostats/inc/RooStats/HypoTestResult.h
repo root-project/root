@@ -109,6 +109,7 @@ namespace RooStats {
       SamplingDistribution* GetAltDistribution(void) const { return fAltDistr; }
       RooDataSet* GetNullDetailedOutput(void) const { return fNullDetailedOutput; }
       RooDataSet* GetAltDetailedOutput(void) const { return fAltDetailedOutput; }
+      RooDataSet* GetFitInfo(void) const { return fFitInfo; }
       Double_t GetTestStatisticData(void) const { return fTestStatisticData; }
       const RooArgList* GetAllTestStatisticsData(void) const { return fAllTestStatisticsData; }
       Bool_t HasTestStatisticData(void) const;
@@ -117,6 +118,7 @@ namespace RooStats {
       void SetNullDistribution(SamplingDistribution *null);
       void SetAltDetailedOutput(RooDataSet* d) { fAltDetailedOutput = d; }
       void SetNullDetailedOutput(RooDataSet* d) { fNullDetailedOutput = d; }
+      void SetFitInfo(RooDataSet* d) { fFitInfo = d; }
       void SetTestStatisticData(const Double_t tsd);
       void SetAllTestStatisticsData(const RooArgList* tsd);
 
@@ -156,6 +158,7 @@ namespace RooStats {
       SamplingDistribution *fAltDistr;
       RooDataSet* fNullDetailedOutput;
       RooDataSet* fAltDetailedOutput;
+      RooDataSet* fFitInfo;
       Bool_t fPValueIsRightTail;
       Bool_t fBackgroundIsAlt;
 

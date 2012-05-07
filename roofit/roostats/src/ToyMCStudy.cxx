@@ -84,7 +84,7 @@ RooDataSet* ToyMCStudy::merge() {
          continue;
       }
       
-      if( !samplingOutput ) samplingOutput = new RooDataSet(*oneWorker->GetSamplingDistributions(), "proofOutput");
+      if( !samplingOutput ) samplingOutput = new RooDataSet(*oneWorker->GetSamplingDistributions());
       else samplingOutput->append( *oneWorker->GetSamplingDistributions() );
 
       //delete oneWorker;

@@ -65,6 +65,7 @@ namespace RooStats {
       virtual void SetNullModel(const ModelConfig &nullModel) { fNullModel = &nullModel; }
       const RooAbsData * GetData(void) const { return fData; }
       const ModelConfig* GetNullModel(void) const { return fNullModel; }
+      virtual const RooArgSet* GetFitInfo() const { return NULL; }
       // set the model for the alternate hypothesis  (S+B)
       virtual void SetAlternateModel(const ModelConfig &altModel) { fAltModel = &altModel; }
       const ModelConfig* GetAlternateModel(void) const { return fAltModel; }
@@ -80,6 +81,8 @@ namespace RooStats {
       virtual int CheckHook(void) const { return 0; }
       virtual int PreNullHook(RooArgSet* /*parameterPoint*/, double /*obsTestStat*/) const { return 0; }
       virtual int PreAltHook(RooArgSet* /*parameterPoint*/, double /*obsTestStat*/) const { return 0; }
+      virtual void PreHook() const { }
+      virtual void PostHook() const { }
 
    protected:
       const ModelConfig *fAltModel;

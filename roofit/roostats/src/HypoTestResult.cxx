@@ -60,7 +60,7 @@ HypoTestResult::HypoTestResult(const char* name) :
    fTestStatisticData(NaN),
    fAllTestStatisticsData(NULL),
    fNullDistr(NULL), fAltDistr(NULL),
-   fNullDetailedOutput(NULL), fAltDetailedOutput(NULL),
+   fNullDetailedOutput(NULL), fAltDetailedOutput(NULL), fFitInfo(NULL),
    fPValueIsRightTail(kTRUE),
    fBackgroundIsAlt(kFALSE)
 {
@@ -76,7 +76,7 @@ HypoTestResult::HypoTestResult(const char* name, Double_t nullp, Double_t altp) 
    fTestStatisticData(NaN),
    fAllTestStatisticsData(NULL),
    fNullDistr(NULL), fAltDistr(NULL),
-   fNullDetailedOutput(NULL), fAltDetailedOutput(NULL),
+   fNullDetailedOutput(NULL), fAltDetailedOutput(NULL), fFitInfo(NULL),
    fPValueIsRightTail(kTRUE),
    fBackgroundIsAlt(kFALSE)
 {
@@ -91,7 +91,7 @@ HypoTestResult::HypoTestResult(const HypoTestResult& other) :
    fTestStatisticData(NaN),
    fAllTestStatisticsData(NULL),
    fNullDistr(NULL), fAltDistr(NULL),
-   fNullDetailedOutput(NULL), fAltDetailedOutput(NULL),
+   fNullDetailedOutput(NULL), fAltDetailedOutput(NULL), fFitInfo(NULL),
    fPValueIsRightTail( other.GetPValueIsRightTail() ),
    fBackgroundIsAlt( other.GetBackGroundIsAlt() )
 {
@@ -140,6 +140,12 @@ void HypoTestResult::Append(const HypoTestResult* other) {
       if( other->GetAltDetailedOutput() ) fAltDetailedOutput->append( *other->GetAltDetailedOutput() );
    }else{
       if( other->GetAltDetailedOutput() ) fAltDetailedOutput = new RooDataSet( *other->GetAltDetailedOutput() );
+   }
+
+   if( fFitInfo ) {
+      if( other->GetFitInfo() ) fFitInfo->append( *other->GetFitInfo() );
+   }else{
+      if( other->GetFitInfo() ) fFitInfo = new RooDataSet( *other->GetFitInfo() );
    }
 
    // if no data is present use the other HypoTestResult's data

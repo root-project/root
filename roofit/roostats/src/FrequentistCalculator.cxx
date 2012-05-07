@@ -15,13 +15,26 @@ MLEs.
 
 #include "RooStats/FrequentistCalculator.h"
 #include "RooStats/ToyMCSampler.h"
+#include "RooMinuit.h"
+#include "RooProfileLL.h"
 
 
 ClassImp(RooStats::FrequentistCalculator)
 
 using namespace RooStats;
 
+void FrequentistCalculator::PreHook() const {
+   if (fFitInfo != NULL) {
+      delete fFitInfo;
+      fFitInfo = NULL;
+   }
+   if (fStoreFitInfo) {
+      fFitInfo = new RooArgSet();
+   }
+}
 
+void FrequentistCalculator::PostHook() const {
+}
 
 int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTestStat) const {
 
@@ -31,35 +44,55 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
    RooArgSet * allParams = fNullModel->GetPdf()->getParameters(*fData);
    RemoveConstantParameters(allParams);
 
-   oocoutI((TObject*)0,InputArguments) << "Profiling conditional MLEs for Null." << endl;
    // note: making nll or profile class variables can only be done in the constructor
    // as all other hooks are const (which has to be because GetHypoTest is const). However,
    // when setting it only in constructor, they would have to be changed every time SetNullModel
    // or SetAltModel is called. Simply put, converting them into class variables breaks
    // encapsulation.
 
+   bool doProfile = true;
    RooArgSet allButNuisance(*allParams);
-   if( fNullModel->GetNuisanceParameters() ) allButNuisance.remove(*fNullModel->GetNuisanceParameters());
-   if( fConditionalMLEsNull ) {
-      oocoutI((TObject*)0,InputArguments) << "Using given conditional MLEs for Null." << endl;
-      *allParams = *fConditionalMLEsNull;
-      allButNuisance.add( *fConditionalMLEsNull );
+   if( fNullModel->GetNuisanceParameters() ) {
+      allButNuisance.remove(*fNullModel->GetNuisanceParameters());
+      if( fConditionalMLEsNull ) {
+         oocoutI((TObject*)0,InputArguments) << "Using given conditional MLEs for Null." << endl;
+         *allParams = *fConditionalMLEsNull;
+         allButNuisance.add( *fConditionalMLEsNull );
+         if (fNullModel->GetNuisanceParameters()) {
+            RooArgSet remain(*fNullModel->GetNuisanceParameters());
+            remain.remove(*fConditionalMLEsNull,true,true);
+            if( remain.getSize() == 0 ) doProfile = false;
+         }
+      }
+   }else{
+      doProfile = false;
    }
-   RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
-   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
+   if (doProfile) {
+      oocoutI((TObject*)0,InputArguments) << "Profiling conditional MLEs for Null." << endl;
+      RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
+      RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
+      
+      RooAbsReal* nll = fNullModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams));
+      RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
+      profile->getVal(); // this will do fit and set nuisance parameters to profiled values
 
-   RooAbsReal* nll = fNullModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams));
-   RooAbsReal* profile = nll->createProfile(allButNuisance);
-   profile->getVal(); // this will do fit and set nuisance parameters to profiled values
+      // Hack to extract a RooFitResult
+      if (fStoreFitInfo) {
+         RooFitResult *result = profile->minuit()->save();
+         fFitInfo->addOwned(*DetailedOutputAggregator::GetAsArgSet(result, "fitNull_"));
+         delete result;
+      }
+   
+      delete profile;
+      delete nll;
+      RooMsgService::instance().setGlobalKillBelow(msglevel);
+   }
+   
    // add nuisance parameters to parameter point
    if(fNullModel->GetNuisanceParameters())
       parameterPoint->add(*fNullModel->GetNuisanceParameters());
 
-   delete profile;
-   delete nll;
-
    delete allParams;
-   RooMsgService::instance().setGlobalKillBelow(msglevel);
 
 
 
@@ -103,29 +136,49 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
    RooArgSet * allParams = fAltModel->GetPdf()->getParameters(*fData);
    RemoveConstantParameters(allParams);
 
-   oocoutI((TObject*)0,InputArguments) << "Profiling conditional MLEs for Alt." << endl;
-
+   bool doProfile = true;
    RooArgSet allButNuisance(*allParams);
-   if( fAltModel->GetNuisanceParameters() ) allButNuisance.remove(*fAltModel->GetNuisanceParameters());
-   if( fConditionalMLEsAlt ) {
-      oocoutI((TObject*)0,InputArguments) << "Using given conditional MLEs for Alt." << endl;
-      *allParams = *fConditionalMLEsAlt;
-      allButNuisance.add( *fConditionalMLEsAlt );
+   if( fAltModel->GetNuisanceParameters() ) {
+      allButNuisance.remove(*fAltModel->GetNuisanceParameters());
+      if( fConditionalMLEsAlt ) {
+         oocoutI((TObject*)0,InputArguments) << "Using given conditional MLEs for Alt." << endl;
+         *allParams = *fConditionalMLEsAlt;
+         allButNuisance.add( *fConditionalMLEsAlt );
+         if (fAltModel->GetNuisanceParameters()) {
+            RooArgSet remain(*fAltModel->GetNuisanceParameters());
+            remain.remove(*fConditionalMLEsAlt,true,true);
+            if( remain.getSize() == 0 ) doProfile = false;
+         }
+      }
+   }else{
+      doProfile = false;
    }
-   RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
-   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
+   if (doProfile) {
+      oocoutI((TObject*)0,InputArguments) << "Profiling conditional MLEs for Alt." << endl;
+      RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
+      RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
+      
+      RooAbsReal* nll = fAltModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams));
+      RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
+      profile->getVal(); // this will do fit and set nuisance parameters to profiled values
+
+      // Hack to extract a RooFitResult
+      if (fStoreFitInfo) {
+         RooFitResult *result = profile->minuit()->save();
+         fFitInfo->addOwned(*DetailedOutputAggregator::GetAsArgSet(result, "fitAlt_"));
+         delete result;
+      }
    
-   RooAbsReal* nll = fAltModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams));
-   RooAbsReal* profile = nll->createProfile(allButNuisance);
-   profile->getVal(); // this will do fit and set nuisance parameters to profiled values
+      delete profile;
+      delete nll;
+      RooMsgService::instance().setGlobalKillBelow(msglevel);
+   }
+   
    // add nuisance parameters to parameter point
    if(fAltModel->GetNuisanceParameters())
       parameterPoint->add(*fAltModel->GetNuisanceParameters());
-   delete profile;
-   delete nll;
-   
+
    delete allParams;
-   RooMsgService::instance().setGlobalKillBelow(msglevel);
 
 
 

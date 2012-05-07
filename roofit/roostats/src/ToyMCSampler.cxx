@@ -29,6 +29,7 @@
 
 #include "RooStudyManager.h"
 #include "RooStats/ToyMCStudy.h"
+#include "RooStats/DetailedOutputAggregator.h"
 #include "RooSimultaneous.h"
 
 #include "TMath.h"
@@ -126,7 +127,7 @@ Bool_t ToyMCSampler::fgAlwaysUseMultiGen = kFALSE ;
 
 
 
-ToyMCSampler::ToyMCSampler() : fSamplingDistName("temp"), fNToys(1)
+ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
 {
    // Proof constructor. Do not use.
 
@@ -315,57 +316,17 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
    RooArgSet *saveAll = (RooArgSet*) allVars->snapshot();
 
 
-   // bug workaround: evaluate all test statistics once so that they have their detailed
-   // output generated ... but only do that if there is no detailedOutput present already
-   if( fTestStatistics[0]  &&  !fTestStatistics[0]->GetDetailedOutput() ) {
-      RooAbsData* dummyData = GenerateToyData(*paramPoint);
-      EvaluateAllTestStatistics(*dummyData, *paramPoint);
-   }
+   DetailedOutputAggregator detOutAgg;
 
 
-   RooDataSet* outputs = new RooDataSet(
-      fSamplingDistName.c_str(),fSamplingDistName.c_str(),
-      RooArgSet( *(new RooRealVar("weight","weight",1.0)), "tmpSet" ),
-      "weight"
-   );
    vector<TString> namesOfTSColumns;
+   RooArgSet* allVarsToBeSaved = new RooArgSet("tsValues");
    for( unsigned int i=0; i < fTestStatistics.size(); i++ ) {
       TString name( TString::Format("%s_TS%d", fSamplingDistName.c_str(), i) );
       namesOfTSColumns.push_back( name );
-      
-      // Add a column for the test statistic value.
-      // Its name is "NameOfSamplingDistribution_i" where is the index of
-      // the snapshot/test statistic.
-      // Title comes from the TestStatistic.
-      outputs->addColumn( *(new RooRealVar(name, fTestStatistics[i]->GetVarName(), -1.0)) );
-      
-      // add columns for detailed output if this TS supplies them
-      const RooArgSet* detOut = fTestStatistics[i]->GetDetailedOutput();
-      if( detOut ) {
-         // rename all variables to "NameOfSamplingDistribution_i_detailedOutputVariable"
-         // for "namespacing" in the columns of the data set.
-         // Titles remain the same.
-         //cout << "Adding det out for TS " << i << endl;
-         TIterator* iter = detOut->createIterator();
-         while(RooAbsArg* v = dynamic_cast<RooAbsArg*>( iter->Next() ) ) {
-            TString origName( v->GetName() );
-            v->SetName( TString::Format( "%s_%s", name.Data(), v->GetName() ) );
-            //cout << "adding variable: " << v->GetName() << endl;
-            outputs->addColumn( *v );
-            v->SetName( origName );
-         }
-      }
+      allVarsToBeSaved->addOwned( *new RooRealVar(name, fTestStatistics[i]->GetVarName(), -1) );
    }
-
-   // retrieve the set of variables to be stored and print some info
-   RooArgSet* allVarsToBeSaved = new RooArgSet( *outputs->get() );
-//    oocoutI((TObject*)NULL, InputArguments) << endl;
-//    oocoutI((TObject*)NULL, InputArguments) << "The variables that will be stored for each toy:" << endl;
-//    allVarsToBeSaved->Print();
-//    oocoutI((TObject*)NULL, InputArguments) << endl;
-
-
-
+      
    // counts the number of toys in the limits set for adaptive sampling
    // (taking weights into account; always on first test statistic)
    Double_t toysInTails = 0.0;
@@ -385,52 +346,45 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
       // TODO: change this treatment to keep track of all values so that the threshold
       // for adaptive sampling is counted for all distributions and not just the
       // first one.
-      Double_t valueFirst = -1.0, weight = -1.0;
+      Double_t valueFirst = -999.0, weight = 1.0;
 
       // set variables to requested parameter point
       *allVars = *saveAll; // important for example for SimpleLikelihoodRatioTestStat
       *allVars = *fParametersForTestStat;
-
+      
       RooAbsData* toydata = GenerateToyData(*paramPoint, weight);
       RooArgSet* saveVarsWithGlobObsSet = (RooArgSet*)allVars->snapshot();
+      detOutAgg.AppendArgSet( fGlobalObservables, "globObs_" );
 
       // evaluate all test statistics
       for( unsigned int tsi = 0; tsi < fTestStatistics.size(); tsi++ ) {
          *allVars = *saveVarsWithGlobObsSet;
          *allVars = *fParametersForTestStat;
-      
+         
          // evaluate test statistic; only depends on null POI
-         Double_t value = fTestStatistics[tsi]->Evaluate(*toydata, *(RooArgSet*)fParametersForTestStat);
+         RooArgSet* parForTS = (RooArgSet*)fParametersForTestStat->snapshot();
+         Double_t value = fTestStatistics[tsi]->Evaluate(*toydata, *parForTS);
+         delete parForTS;
          allVarsToBeSaved->setRealValue( namesOfTSColumns[tsi], value );
          
          // get detailed output, construct name in dataset, store
-         const RooArgSet* detOut = fTestStatistics[tsi]->GetDetailedOutput();
-         if( detOut ) {
-            TIterator* iter = detOut->createIterator();
-            while(RooAbsArg* v = dynamic_cast<RooAbsArg*>( iter->Next() ) ) {
-               TString varName( TString::Format( "%s_%s", namesOfTSColumns[tsi].Data(), v->GetName() ) );
-               ((RooRealVar&)((*allVarsToBeSaved)[varName])).setVal( ((RooRealVar*)v)->getVal() );
-            }
-            //cout << "detOut: " << endl;
-            //detOut->Print("v");
-            //cout << "allVarsToSave: " << endl;
-            //allVarsToBeSaved->Print("v");
-         }
+         const RooArgSet *ndetout = fTestStatistics[tsi]->GetDetailedOutput();
+         if (ndetout != NULL)
+            detOutAgg.AppendArgSet(ndetout, TString(namesOfTSColumns[tsi]).Append("_"));
          
          if(valueFirst < 0.0) { valueFirst = value; }
       }
       delete saveVarsWithGlobObsSet;      
       delete toydata;
 
-      //cout << "weight for this data entry: " << weight << endl;
-      outputs->add( *allVarsToBeSaved, weight );
-
-
       // check for nan
       if(valueFirst != valueFirst) {
          oocoutW((TObject*)NULL, Generation) << "skip: " << valueFirst << ", " << weight << endl;
          continue;
       }
+
+      detOutAgg.AppendArgSet(allVarsToBeSaved);
+      detOutAgg.CommitSet(weight);
 
       // adaptive sampling checks
       if (valueFirst <= fAdaptiveLowLimit  ||  valueFirst >= fAdaptiveHighLimit) {
@@ -439,6 +393,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
       }
    }
 
+   delete allVarsToBeSaved;
 
    // clean up
    *allVars = *saveAll;
@@ -446,7 +401,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
    delete allVars;
    delete paramPoint;
 
-   return outputs;
+   return detOutAgg.GetAsDataSet(fSamplingDistName, fSamplingDistName);
 }
 
 void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
@@ -546,7 +501,7 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
       // get nuisance parameter point and weight
       fNuisanceParametersSampler->NextPoint(allVarsMinusParamPoint, weight);
    }else{
-      weight = -1.0;
+      weight = 1.0;
    }
 
    RooAbsData *data = Generate(pdf, observables);
@@ -662,7 +617,7 @@ SamplingDistribution* ToyMCSampler::AppendSamplingDistribution(
 
 void ToyMCSampler::ClearCache() { 
    // clear the cache obtained from the pdf used for speeding the toy and global observables generation
-   // needs to be called every time the model pdf (fPdf) changes 
+   // needs to be called every time the model pdf (fPdf) changes
 
 
    if (_gs1) delete _gs1; 

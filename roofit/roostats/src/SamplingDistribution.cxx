@@ -23,6 +23,10 @@ a weighted set of points (eg. for the FFT method).
 The class supports merging.
 */
 
+#ifndef ROO_MSG_SERVICE
+#include "RooMsgService.h"
+#endif
+
 #include "RooStats/SamplingDistribution.h"
 #include "RooNumber.h"
 #include "TMath.h"
@@ -80,6 +84,7 @@ SamplingDistribution::SamplingDistribution(
    const char *name,
    const char *title,
    RooDataSet& dataSet,
+   const char * _columnName,
    const char * varName
 ) : TNamed(name, title) {
    // Creates a SamplingDistribution from a RooDataSet for debugging
@@ -93,14 +98,30 @@ SamplingDistribution::SamplingDistribution(
    // If varName is not given, the first variable will be used.
    // This is useful mostly for RooDataSets with only one observable.
 
-   fVarName = varName;
-   if(fVarName.Length() == 0) {
+   // check there are any meaningful entries in the given dataset
+   if( dataSet.numEntries() == 0  ||  !dataSet.get()->first() ) {
+      if( varName ) fVarName = varName;
+      return;
+   }
+
+   TString columnName( _columnName );
+
+   if( !columnName.Length() ) {
+      columnName.Form( "%s_TS0", name );
+      if( !dataSet.get()->find(columnName) ) {
+         columnName = dataSet.get()->first()->GetName();
+      }
+   }
+   
+   if( !varName ) {
       // no leak. none of these transfers ownership.
-      fVarName = dataSet.get()->first()->GetName();
+      fVarName = (*dataSet.get())[columnName].GetTitle();
+   }else{
+      fVarName = varName;
    }
 
    for(Int_t i=0; i < dataSet.numEntries(); i++) {
-      fSamplingDist.push_back(dataSet.get(i)->getRealValue(fVarName));
+      fSamplingDist.push_back(dataSet.get(i)->getRealValue(columnName));
       fSampleWeights.push_back(dataSet.weight());
    }
 }
