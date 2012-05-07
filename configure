@@ -6300,7 +6300,10 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  core/utils/src/rootcint7.cxx core/utils/src/RStl7.cxx \
  core/metautils/src/TClassEdit7.cxx \
  core/metautils/src/RConversionRuleParser7.cxx \
+ core/meta/src/G__TCint.h core/meta/src/G__TCint.cxx \
  core/thread/src/TLockFile.* proof/proofplayer/src/TFileMerger.* \
+ graf2d/graf/src/G__Graf1.h graf2d/graf/src/G__Graf1.cxx \
+ graf2d/graf/src/G__Graf2.h graf2d/graf/src/G__Graf2.cxx \
  etc/daemons/olbd.rc.d etc/daemons/cmsd.rc.d etc/daemons/xrootd.rc.d \
  bin/cmsd bin/xprep bin/xrd bin/xrdcp bin/xrdgsiproxy bin/xrdpwdadmin \
  bin/xrdsssadmin bin/xrdstagetool bin/xrootd lib/libXrd* \
