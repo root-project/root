@@ -22,6 +22,7 @@
 #pragma link C++ global ROOT_TMath;
 
 #pragma link C++ class TComplex+;
+#pragma link C++ class TStatistic+;
 
 #pragma link C++ function operator*(Double_t, const TComplex&);
 #pragma link C++ function operator+(Double_t, const TComplex&);
