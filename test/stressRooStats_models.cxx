@@ -2,6 +2,7 @@
 #include "RooWorkspace.h"
 #include "RooRealVar.h"
 #include "RooDataSet.h"
+
 // RooStats headers
 #include "RooStats/ModelConfig.h"
 
@@ -49,8 +50,6 @@ void buildPoissonProductModel(RooWorkspace *w)
    // create background model configuration
    ModelConfig *bModel = new ModelConfig(*sbModel);
    bModel->SetName("B");
-   w->var("sig")->setVal(0);
-   bModel->SetSnapshot(*w->set("poi"));
 
    w->import(*sbModel);
    w->import(*bModel);
@@ -99,4 +98,51 @@ void buildOnOffModel(RooWorkspace *w)
    w->import(*sbModel);
    w->import(*bModel);
 }
+
+
+void createPoissonEfficiencyModel(RooWorkspace *w) {
+   
+   // build models 
+   w->factory("Gaussian::constrb(b0[-5,5], b1[-5,5], 1)");
+   w->factory("Gaussian::constre(e0[-5,5], e1[-5,5], 1)");
+   w->factory("expr::bkg('5 * pow(1.3, b1)', b1)"); // background model
+   w->factory("expr::eff('0.5 * pow(1.2, e1)', e1)"); // efficiency model
+   w->factory("expr::splusb('eff * sig + bkg', eff, bkg, sig[0,20])");
+   w->factory("Poisson::sb_poiss(x[0,40], splusb)");
+   w->factory("Poisson::b_poiss(x, bkg)");
+   w->factory("PROD::sb_pdf(sb_poiss, constrb, constre)");
+   w->factory("PROD::b_pdf(b_poiss, constrb)");
+   w->factory("PROD::priorbkg(constr1, constr2)");
+
+   w->var("b0")->setConstant(kTRUE);
+   w->var("e0")->setConstant(kTRUE);
+
+   // build argument sets
+   w->defineSet("obs", "x");
+   w->defineSet("poi", "sig");
+   w->defineSet("nuis", "b1,e1");
+   w->defineSet("globObs", "b0,e0");
+
+   // define data set and import it into workspace
+   RooDataSet *data = new RooDataSet("data", "data", *w->set("obs"));
+   w->import(*data);
+
+   // create model configuration
+   ModelConfig *sbModel = new ModelConfig("S+B", w);
+   sbModel->SetObservables(*w->set("obs"));
+   sbModel->SetParametersOfInterest(*w->set("poi"));
+   sbModel->SetNuisanceParameters(*w->set("nuis"));
+   sbModel->SetPdf("sb_pdf");
+   //sbModel->SetPriorPdf("prior");
+   sbModel->SetSnapshot(*w->set("poi"));
+   sbModel->SetGlobalObservables(*w->set("globObs"));
+ 
+   ModelConfig *bModel = new ModelConfig(*sbModel);
+   bModel->SetName("B");
+   bModel->SetPdf("b_pdf");
+   
+   w->import(*sbModel);
+   w->import(*bModel);   
+}
+
 

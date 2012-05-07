@@ -1,6 +1,13 @@
 // @(#)root/roofitcore:$name:  $:$id$
 // Authors: Wouter Verkerke  November 2007
 
+// C/C++ headers
+#include <string>
+#include <list>
+#include <iostream>
+#include <cmath>
+
+// ROOT headers
 #include "TWebFile.h"
 #include "TSystem.h"
 #include "TString.h"
@@ -13,6 +20,8 @@
 #include "TH1.h"
 #include "TF1.h"
 #include "TBenchmark.h"
+
+// RooFit headers
 #include "RooGlobalFunc.h"
 #include "RooNumIntConfig.h"
 #include "RooMsgService.h"
@@ -27,12 +36,8 @@
 #include "RooRandom.h"
 #include "RooTrace.h"
 #include "RooMath.h"
-#include <string>
-#include <list>
-#include <iostream>
-#include <math.h>
 
-
+// Tests file
 #include "stressRooStats_tests.cxx"
 
 using namespace std ;
@@ -54,7 +59,6 @@ void StatusPrint(const Int_t id, const TString &title, const Int_t status, const
    TString header = TString::Format("Test %d : %s ", id, title.Data());
    cout << left << setw(lineWidth) << setfill('.') << header << " " << (status > 0 ? "OK" : (status < 0 ? "SKIPPED" : "FAILED")) << endl;
 }
-
 
 //______________________________________________________________________________
 Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore)
@@ -125,8 +129,8 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Int_t 
 
    // TEST PLC CONFINT PRODUCT POISSON : Observed value range is [0,40] for x=s+b and [0,120] for y=2*s*1.2^beta
    testList.push_back(new TestProfileLikelihoodCalculator3(fref, writeRef, verbose, 10, 30));
-   testList.push_back(new TestProfileLikelihoodCalculator3(fref, writeRef, verbose, 25, 40));
-   testList.push_back(new TestProfileLikelihoodCalculator3(fref, writeRef, verbose, 20, 25, 2 * ROOT::Math::normal_cdf(2) - 1));
+   testList.push_back(new TestProfileLikelihoodCalculator3(fref, writeRef, verbose, 20, 25));
+   testList.push_back(new TestProfileLikelihoodCalculator3(fref, writeRef, verbose, 15, 20, 2 * ROOT::Math::normal_cdf(2) - 1));
 
    // TEST PLC HYPOTEST ON/OFF MODEL
    testList.push_back(new TestProfileLikelihoodCalculator4(fref, writeRef, verbose));
@@ -142,28 +146,47 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Int_t 
 
    // TEST BC CONFINT CENTRAL PRODUCT POISSON : Observed value range is [0,40] for x=s+b and [0,120] for y=2*s*1.2^beta
    testList.push_back(new TestBayesianCalculator3(fref, writeRef, verbose, 10, 30));
-   testList.push_back(new TestBayesianCalculator3(fref, writeRef, verbose, 25, 40));
-   testList.push_back(new TestBayesianCalculator3(fref, writeRef, verbose, 20, 25, 2 * ROOT::Math::normal_cdf(2) - 1));
+   testList.push_back(new TestBayesianCalculator3(fref, writeRef, verbose, 20, 25));
+   testList.push_back(new TestBayesianCalculator3(fref, writeRef, verbose, 15, 20, 2 * ROOT::Math::normal_cdf(2) - 1));
 
    // TEST MCMCC CONFINT PRODUCT POISSON : Observed value range is [0,40] for x=s+b and [0,120] for y=2*s*1.2^beta
    testList.push_back(new TestMCMCCalculator(fref, writeRef, verbose, 10, 30));
-   testList.push_back(new TestMCMCCalculator(fref, writeRef, verbose, 25, 40));
-   testList.push_back(new TestMCMCCalculator(fref, writeRef, verbose, 20, 25, 2 * ROOT::Math::normal_cdf(2) - 1));
+   testList.push_back(new TestMCMCCalculator(fref, writeRef, verbose, 20, 25));
+   testList.push_back(new TestMCMCCalculator(fref, writeRef, verbose, 15, 20, 2 * ROOT::Math::normal_cdf(2) - 1));
 
+   // TEST HYPOTEST INVERTER PRODUCT POISSON :  Observed value range is [0,40] for x=s+b and [0,120] for y=2*s*1.2^beta
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kProfileLR, 10, 30));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kProfileLR, 20, 25));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kProfileLR, 15, 20, 2 * normal_cdf(2) - 1));
+ 
+   // TEST PLC CONFINT PRODUCT POISSON : Observed value range is [0,40] for x=s+b and [0,120] for y=2*s*1.2^beta
+//   testList.push_back(new TestProfileLikelihoodCalculator3(fref, writeRef, verbose, 10, 30));
+//   testList.push_back(new TestProfileLikelihoodCalculator3(fref, writeRef, verbose, 20, 25));
+//   testList.push_back(new TestProfileLikelihoodCalculator3(fref, writeRef, verbose, 15, 20, 2 * ROOT::Math::normal_cdf(2) - 1));
 
 //   testList.push_back(new TestBasic101(fref, writeRef, verbose));
 //   testList.push_back(new TestHypoTestCalculator(fref, writeRef, verbose));
 //   testList.push_back(new TestHypoTestCalculator2(fref, writeRef, verbose));
 //   testList.push_back(new TestHypoTestCalculator3(fref, writeRef, verbose));
-//   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kAsymptotic, kSimpleLR));
-//   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kHybrid, kSimpleLR));
-//   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kSimpleLR));
-//   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kRatioLR));
-//   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kProfileLR));
-//   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kProfileLROneSided));
-//   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kProfileLRSigned));
-//   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kMLE));
-//   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kNObs));
+
+/*   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kProfileLR, 10, 30));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kProfileLR, 20, 25));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kProfileLR, 15, 20, 2 * normal_cdf(2) - 1));
+
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kSimpleLR, 10, 30));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kSimpleLR, 20, 25));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kSimpleLR, 15, 20, 2 * normal_cdf(2) - 1));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kRatioLR, 10, 30));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kRatioLR, 20, 25));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kRatioLR, 15, 20, 2 * normal_cdf(2) - 1));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kMLE, 10, 30));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kMLE, 20, 25));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kMLE, 15, 20, 2 * normal_cdf(2) - 1));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kNEvts, 10, 30));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kRatioLR, 20, 25));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kRatioLR, 15, 20, 2 * normal_cdf(2) - 1));
+*/
+
 //   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kHybrid, kSimpleLR));
 //   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kHybrid, kRatioLR));
 //   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kHybrid, kProfileLR));
