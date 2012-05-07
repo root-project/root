@@ -154,7 +154,7 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
   if(IS_ABSOLUTE ${ARG_SELECTION})
     set(selectionfile ${ARG_SELECTION})
   else() 
-    set(selectionfile ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_SELECTION}})
+    set(selectionfile ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_SELECTION})
   endif()
  
   set(gensrcdict ${dictionary}_dict.cpp)
