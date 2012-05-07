@@ -2139,20 +2139,25 @@ void TGCocoa::FreeFontStruct(FontStruct_t /*fs*/)
 char **TGCocoa::ListFonts(const char * /*fontName*/, Int_t /*maxNames*/, Int_t &count)
 {
    count = 0;
-/*
-   if (fontName && fontName[0]) {
+
+  /* if (fontName && fontName[0]) {
       X11::XLFDName xlfd = {};
       if (X11::ParseXLFDName(fontName, xlfd))
          return fPimpl->fFontManager.ListFonts(xlfd, maxNames, count);
-   }*/
+   }
+   */
 
    return 0;
 }
 
 //______________________________________________________________________________
-void TGCocoa::FreeFontNames(char ** /*fontlist*/)
+void TGCocoa::FreeFontNames(char **fontList)
 {
    // Frees the specified the array of strings "fontlist".
+   if (!fontList)
+      return;
+      
+   fPimpl->fFontManager.FreeFontNames(fontList);
 }
 
 //Color management.

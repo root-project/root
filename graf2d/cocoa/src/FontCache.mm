@@ -12,7 +12,9 @@
 //#define NDEBUG
 
 #include <stdexcept>
+#include <sstream>
 #include <cassert>
+#include <string>
 #include <cmath>
 
 #include "CocoaUtils.h"
@@ -51,6 +53,128 @@ const CFStringRef fixedFontNames[FontCache::nPadFonts] =
                                       CFSTR("TimesNewRomanPSMT")
                                      };
 
+
+//______________________________________________________________________________
+CTFontCollectionRef CreateFontCollection(const X11::XLFDName &xlfd)
+{
+   CTFontCollectionRef ctCollection = 0;
+   if (xlfd.fFamilyName == "*")
+      ctCollection = CTFontCollectionCreateFromAvailableFonts(0);//Select all available fonts.
+   else {
+      //Create collection, using font descriptor?
+      const Util::CFScopeGuard<CFStringRef> fontName(CFStringCreateWithCString(kCFAllocatorDefault, xlfd.fFamilyName.c_str(), kCFStringEncodingMacRoman));
+      if (!fontName.Get()) {
+         ::Error("CreateFontCollection", "CFStringCreateWithCString failed");
+         return 0;
+      }
+
+      const Util::CFScopeGuard<CTFontDescriptorRef> fontDescriptor(CTFontDescriptorCreateWithNameAndSize(fontName.Get(), 0.));
+      if (!fontDescriptor.Get()) {
+         ::Error("CreateFontCollection", "CTFontDescriptorCreateWithNameAndSize failed");
+         return 0;
+      }
+
+      Util::CFScopeGuard<CFMutableArrayRef> descriptors(CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks));
+      if (!descriptors.Get()) {
+         ::Error("CreateFontCollection", "CFArrayCreateMutable failed");
+         return 0;
+      }
+
+      CFArrayAppendValue(descriptors.Get(), fontDescriptor.Get());
+      ctCollection = CTFontCollectionCreateWithFontDescriptors(descriptors.Get(), 0);//Oh mama, so many code just to do this :(((
+   }
+
+   if (!ctCollection) {
+      ::Error("CreateFontCollection", "No fonts are available for family %s", xlfd.fFamilyName.c_str());//WTF???
+      return 0;
+   }
+
+
+   return ctCollection;
+}
+
+//______________________________________________________________________________
+bool GetFamilyName(CTFontDescriptorRef fontDescriptor, std::vector<char> &name)
+{
+   assert(fontDescriptor != 0 && "GetFamilyName, fontDescriptor parameter is null");
+
+   name.clear();
+
+   Util::CFScopeGuard<CFStringRef> cfFamilyName((CFStringRef)CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontFamilyNameAttribute));
+   const CFIndex cfLen = CFStringGetLength(cfFamilyName.Get());
+   name.resize(cfLen + 1);//+ 1 for '\0'.
+   if (CFStringGetCString(cfFamilyName.Get(), &name[0], name.size(), kCFStringEncodingMacRoman))
+      return true;
+
+   return false;
+}
+
+//______________________________________________________________________________
+void GetWeightAndSlant(CTFontDescriptorRef fontDescriptor, X11::XLFDName &newXLFD)
+{
+   //Let's ask for a weight and pixel size.
+   const Util::CFScopeGuard<CFDictionaryRef> traits((CFDictionaryRef)CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontTraitsAttribute));
+   if (traits.Get()) {
+      if(CFNumberRef weight = (CFNumberRef)CFDictionaryGetValue(traits.Get(), kCTFontWeightTrait)) {
+         double val = 0.;
+         if (CFNumberGetValue(weight, kCFNumberDoubleType, &val))
+            newXLFD.fWeight = val > 0. ? X11::kFWBold : X11::kFWMedium;
+      }
+
+      if(CFNumberRef slant = (CFNumberRef)CFDictionaryGetValue(traits.Get(), kCTFontSlantTrait)) {
+         double val = 0.;
+         if (CFNumberGetValue(slant, kCFNumberDoubleType, &val))
+            newXLFD.fSlant = val > 0. ? X11::kFSItalic : X11::kFSRegular;
+      }
+   }
+}
+
+//______________________________________________________________________________
+void GetPixelSize(CTFontDescriptorRef fontDescriptor, X11::XLFDName &newXLFD)
+{
+   const Util::CFScopeGuard<CFNumberRef> size((CFNumberRef)CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontSizeAttribute));
+   if (size.Get()) {
+      int pixelSize = 0;
+      if(CFNumberIsFloatType(size.Get())) {
+         double val = 0;
+         CFNumberGetValue(size.Get(), kCFNumberDoubleType, &val);
+         pixelSize = val;
+      } else
+         CFNumberGetValue(size.Get(), kCFNumberIntType, &pixelSize);
+
+      if(pixelSize)
+         newXLFD.fPixelSize = pixelSize;
+   }
+}
+
+//_________________________________________________________________
+void CreateXLFDString(const X11::XLFDName &xlfd, std::string &xlfdString)
+{
+    xlfdString = "-*-"; //skip the foundry.
+    xlfdString += xlfd.fFamilyName;
+
+    if (xlfd.fWeight == X11::kFWBold)
+        xlfdString += "-bold";
+    else
+        xlfdString += "-*";
+
+    if (xlfd.fSlant == X11::kFSItalic)
+        xlfdString += "-i";
+    else
+        xlfdString += "-r";
+
+    xlfdString += "-*-*"; //width, addstyle
+
+    if (xlfd.fPixelSize) {
+        std::ostringstream out;
+        out<<xlfd.fPixelSize;
+        xlfdString += "-";
+        xlfdString += out.str();
+    } else
+        xlfdString += "-*";
+
+    xlfdString += "-*-*-*-*-*-*-*-";//TODO: something more reasonable?
+}
 
 }
 
@@ -96,106 +220,22 @@ FontStruct_t FontCache::LoadFont(const X11::XLFDName &xlfd)
    return reinterpret_cast<FontStruct_t>(baseFont.Get());   
 }
 
-namespace {
-
 //______________________________________________________________________________
-CTFontCollectionRef CreateFontCollection(const X11::XLFDName &xlfd)
+void FontCache::UnloadFont(FontStruct_t font)
 {
-   CTFontCollectionRef ctCollection = 0;
-   if (xlfd.fFamilyName == "*")
-      ctCollection = CTFontCollectionCreateFromAvailableFonts(0);//Select all available fonts.
-   else {
-      //Create collection, using font descriptor?
-      const Util::CFScopeGuard<CFStringRef> fontName(CFStringCreateWithCString(kCFAllocatorDefault, xlfd.fFamilyName.c_str(), kCFStringEncodingMacRoman));
-      if (!fontName.Get()) {
-         ::Error("CreateFontCollection", "CFStringCreateWithCString failed");
-         return 0;
-      }
-      
-      const Util::CFScopeGuard<CTFontDescriptorRef> fontDescriptor(CTFontDescriptorCreateWithNameAndSize(fontName.Get(), 0.));
-      if (!fontDescriptor.Get()) {
-         ::Error("CreateFontCollection", "CTFontDescriptorCreateWithNameAndSize failed");
-         return 0;
-      }
+   CTFontRef fontRef = (CTFontRef)font;
+   font_iterator fontIter = fLoadedFonts.find(fontRef);
 
-      Util::CFScopeGuard<CFMutableArrayRef> descriptors(CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks));
-      if (!descriptors.Get()) {
-         ::Error("CreateFontCollection", "CFArrayCreateMutable failed");
-         return 0;
-      }
-      
-      CFArrayAppendValue(descriptors.Get(), fontDescriptor.Get());      
-      ctCollection = CTFontCollectionCreateWithFontDescriptors(descriptors.Get(), 0);//Oh mama, so many code just to do this :(((
-   }
-   
-   if (!ctCollection) {
-      ::Error("CreateFontCollection", "No fonts are available for family %s", xlfd.fFamilyName.c_str());//WTF???
-      return 0;
-   }
+   assert(fontIter != fLoadedFonts.end() && "Attempt to unload font, not created by font manager");
 
-
-   return ctCollection;
-}
-
-//______________________________________________________________________________
-bool GetFamilyName(CTFontDescriptorRef fontDescriptor, std::vector<char> &name)
-{
-   assert(fontDescriptor != 0 && "GetFamilyName, fontDescriptor parameter is null");
-   
-   name.clear();
-   
-   Util::CFScopeGuard<CFStringRef> cfFamilyName((CFStringRef)CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontFamilyNameAttribute));
-   const CFIndex cfLen = CFStringGetLength(cfFamilyName.Get());
-   name.resize(cfLen + 1);//+ 1 for '0'.
-   if (CFStringGetCString(cfFamilyName.Get(), &name[0], name.size(), kCFStringEncodingMacRoman))
-      return true;
-
-   return false;
-}
-
-//______________________________________________________________________________
-void GetWeightAndSlant(CTFontDescriptorRef fontDescriptor, X11::XLFDName &newXLFD)
-{
-   //Let's ask for a weight and pixel size.
-   const Util::CFScopeGuard<CFDictionaryRef> traits((CFDictionaryRef)CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontTraitsAttribute));
-   if (traits.Get()) {
-      if(CFNumberRef weight = (CFNumberRef)CFDictionaryGetValue(traits.Get(), kCTFontWeightTrait)) {
-         double val = 0.;
-         if (CFNumberGetValue(weight, kCFNumberDoubleType, &val))
-            newXLFD.fWeight = val > 0. ? X11::kFWBold : X11::kFWMedium;
-      }
-
-      if(CFNumberRef slant = (CFNumberRef)CFDictionaryGetValue(traits.Get(), kCTFontSlantTrait)) {
-         double val = 0.;
-         if (CFNumberGetValue(slant, kCFNumberDoubleType, &val))
-            newXLFD.fSlant = val > 0. ? X11::kFSItalic : X11::kFSRegular;
-      }
-   }
-}
-
-//______________________________________________________________________________
-void GetPixelSize(CTFontDescriptorRef fontDescriptor, X11::XLFDName &newXLFD)
-{
-   const Util::CFScopeGuard<CFNumberRef> size((CFNumberRef)CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontSizeAttribute));
-   if (size.Get()) {
-      int pixelSize = 0;
-      if(CFNumberIsFloatType(size.Get())) {
-         double val = 0;
-         CFNumberGetValue(size.Get(), kCFNumberDoubleType, &val);
-         pixelSize = val;
-      } else
-         CFNumberGetValue(size.Get(), kCFNumberIntType, &pixelSize);
-
-      if(pixelSize)
-         newXLFD.fPixelSize = pixelSize;
-   }      
-}
-
+   fLoadedFonts.erase(fontIter);
 }
 
 //______________________________________________________________________________
 char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
 {
+   typedef std::vector<char>::size_type size_type;
+
    count =  0;
 
    //Ugly, ugly code. I should "think different"!!!   
@@ -215,13 +255,13 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
       return 0;
    }
    
-   int added = 0;
-   FontList newFontList;
+   std::vector<char> xlfdData;
    std::vector<char> familyName;
    X11::XLFDName newXLFD = {};
+   std::string xlfdString;
    
    const CFIndex nFonts = CFArrayGetCount(fonts.Get());
-   for (CFIndex i = 0; i < nFonts && added < maxNames; ++i) {
+   for (CFIndex i = 0; i < nFonts && count < maxNames; ++i) {
       CTFontDescriptorRef font = (CTFontDescriptorRef)CFArrayGetValueAtIndex(fonts.Get(), i);
 
       if (!GetFamilyName(font, familyName))
@@ -236,31 +276,57 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
          continue;
       if (newXLFD.fSlant != xlfd.fSlant)
          continue;
-      
 
       if (xlfd.fPixelSize) {//Size was requested.
-         GetPixelSize(font, newXLFD);         
-         if (xlfd.fPixelSize != newXLFD.fPixelSize)//??? do I need this check actually?
-            continue;
+         GetPixelSize(font, newXLFD);
+         //I do not think, that font has a pixel size.
+         //But Core Text supports different font sizes.
+         if (!newXLFD.fPixelSize)
+            newXLFD.fPixelSize = xlfd.fPixelSize;
       }
 
       //Ok, now lets create XLFD name, and place into list.
+      CreateXLFDString(newXLFD, xlfdString);
+      //
+      xlfdData.insert(xlfdData.end(), xlfdString.begin(), xlfdString.end());
+      xlfdData.push_back(0);//terminal 0.
+      ++count;
    }
 
-   return 0;
+   //Setup array with string addresses.
+   if (xlfdData.size()) {
+      fFontLists.push_back(fDummyList);
+      fFontLists.back().fStringData.swap(xlfdData);
+      
+      std::vector<char> &data = fFontLists.back().fStringData;
+      std::vector<char *> &list = fFontLists.back().fList;
+      
+      list.push_back(&data[0]);
+      for (size_type i = 1, e = data.size(); i < e; ++i) {
+         if (!data[i] && i + 1 < e)
+            list.push_back(&data[i + 1]);
+      }
+
+      return &list[0];
+   } else
+      return 0;
 }
 
 //______________________________________________________________________________
-void FontCache::UnloadFont(FontStruct_t font)
+void FontCache::FreeFontNames(char **fontList)
 {
-   CTFontRef fontRef = (CTFontRef)font;
-   font_iterator fontIter = fLoadedFonts.find(fontRef);
-
-   assert(fontIter != fLoadedFonts.end() && "Attempt to unload font, not created by font manager");
-
-   fLoadedFonts.erase(fontIter);
+   if (!fontList)
+      return;
+   
+   for (std::list<FontList>::iterator it = fFontLists.begin(), eIt = fFontLists.end(); it != eIt; ++it) {
+      if (fontList == &it->fList[0]) {
+         fFontLists.erase(it);
+         return;
+      }
+   }
+   
+   assert(0 && "FreeFontNames, unknown fontList");
 }
-
 
 //______________________________________________________________________________
 unsigned FontCache::GetTextWidth(FontStruct_t font, const char *text, int nChars)
