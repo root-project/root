@@ -478,13 +478,13 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
    if (qmu < 0 ) {       
       oocoutE((TObject*)0,Minimization) << "AsymptoticCalculator:  qmu is still < 0  for mu = " 
-                                        <<  muTest << " return a dummy result "  
+                                        <<  muTest->getVal() << " return a dummy result "  
                                         << std::endl;         
       return new HypoTestResult();
    }
    if (TMath::IsNaN(qmu) ) {       
       oocoutE((TObject*)0,Minimization) << "AsymptoticCalculator:  failure in fitting for qmu or qmuA " 
-                                        <<  muTest << " return a dummy result "  
+                                        <<  muTest->getVal() << " return a dummy result "  
                                         << std::endl;         
       return new HypoTestResult();
    }
@@ -549,13 +549,13 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
    if (qmu_A < 0) {       
       oocoutE((TObject*)0,Minimization) << "AsymptoticCalculator:  qmu_A is still < 0  for mu = " 
-                                        <<  muTest << " return a dummy result "  
+                                        <<  muTest->getVal() << " return a dummy result "  
                                         << std::endl;         
       return new HypoTestResult();
    }
    if (TMath::IsNaN(qmu) ) {       
       oocoutE((TObject*)0,Minimization) << "AsymptoticCalculator:  failure in fitting for qmu or qmuA " 
-                                        <<  muTest << " return a dummy result "  
+                                        <<  muTest->getVal() << " return a dummy result "  
                                         << std::endl;         
       return new HypoTestResult();
    }

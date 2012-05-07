@@ -71,7 +71,7 @@ namespace RooStats {
       static RooAbsData * GenerateAsimovData(const RooAbsPdf & pdf, const RooArgSet & observables ); 
 
       // function given the null and the alt p value - return the expected one given the N - sigma value
-      static double GetExpectedPValues(double pnull, double palt, double nsigma, bool usecls, bool oneSided  ); 
+      static double GetExpectedPValues(double pnull, double palt, double nsigma, bool usecls, bool oneSided = true ); 
 
       // set test statistic for one sided (upper limits)
       void SetOneSided(bool on) { fOneSided = on; }
