@@ -766,10 +766,14 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
          double fval = pdf.getVal(&obstmp)*totBinVolume;
          if (fval*expectedEvents <= 0)
          {
-            cout << "WARNING::Detected bin with zero expected events! Please check your inputs." << endl;
+            if (fval*expectedEvents < 0)
+               cout << "WARNING::Detected a bin with negative expected events! Please check your inputs." << endl;
+            else
+               cout << "WARNING::Detected a bin with zero expected events- skip it" << endl;
          }
          // have a cut off for overflows ??
-         data.add(obs, fval*expectedEvents);
+         else 
+            data.add(obs, fval*expectedEvents);
 
          if (debug) { 
             cout << "bin " << ibin << "\t";
