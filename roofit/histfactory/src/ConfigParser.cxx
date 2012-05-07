@@ -1401,11 +1401,11 @@ HistFactory::StatErrorConfig ConfigParser::CreateStatErrorConfigElement( TXMLNod
 	throw bad_hf;
       }
 
-      else if( attrVal==TString("Gaussian") || attrVal==TString("Gauss")  ) {  
+      else if( attrVal=="Gaussian" || attrVal=="Gauss"  ) {  
 	config.SetConstraintType( Constraint::Gaussian );
       }
 
-      else if( attrVal==TString("Poisson") || attrVal==TString("Pois")  ) {
+      else if( attrVal=="Poisson" || attrVal=="Pois"  ) {
 	config.SetConstraintType( Constraint::Poisson );
       }
 
@@ -1888,14 +1888,14 @@ HistFactory::ShapeSys ConfigParser::MakeShapeSys( TXMLNode* node ) {
     }
 
     else if( attrName == TString( "ConstraintType" ) ) {
-      if( attrVal==TString("") ) {
+      if( attrVal=="" ) {
 	std::cout << "Error: ShapeSys Constraint type is empty" << std::endl;
 	throw bad_hf;
       }
-      else if( attrVal==TString("Gaussian") || attrVal==TString("Gauss") ) {
+      else if( attrVal=="Gaussian" || attrVal=="Gauss" ) {
 	shapeSys.SetConstraintType( Constraint::Gaussian );
       }
-      else if( attrVal==TString("Poisson")  || attrVal==TString("Pois")  ) {
+      else if( attrVal=="Poisson"  || attrVal=="Pois"  ) {
 	shapeSys.SetConstraintType( Constraint::Poisson );
       }
       else {
