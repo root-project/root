@@ -1,6 +1,7 @@
 // RooFit headers
 #include "RooWorkspace.h"
 #include "RooRealVar.h"
+#include "RooDataSet.h"
 // RooStats headers
 #include "RooStats/ModelConfig.h"
 

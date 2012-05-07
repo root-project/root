@@ -16,6 +16,7 @@
 #include "RooStats/NumberCountingUtils.h"
 #include "RooStats/RooStatsUtils.h"
 #include "RooStats/TestStatistic.h"
+
 #include "stressRooStats_models.cxx" // Global functions that build complex RooStats models
 
 using namespace RooFit;

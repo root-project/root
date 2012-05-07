@@ -32,8 +32,12 @@
 #include <iostream>
 #include <math.h>
 
+
+#include "stressRooStats_tests.cxx"
+
 using namespace std ;
 using namespace RooFit ;
+
 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
 //                                                                           //
@@ -51,7 +55,6 @@ void StatusPrint(const Int_t id, const TString &title, const Int_t status, const
    cout << left << setw(lineWidth) << setfill('.') << header << " " << (status > 0 ? "OK" : (status < 0 ? "SKIPPED" : "FAILED")) << endl;
 }
 
-#include "stressRooStats_tests.cxx"
 
 //______________________________________________________________________________
 Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore)
