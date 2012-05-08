@@ -105,6 +105,9 @@ public:
    // Obtain the computed inverse of the covariance matrix
    TH2D*    GetXinv() const;
    
+   //Obtain the covariance matrix on the data
+   TH2D*    GetBCov() const;
+
    // Helper functions
    Double_t ComputeChiSquared( const TH1D& truspec, const TH1D& unfspec );
 

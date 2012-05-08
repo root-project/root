@@ -197,6 +197,40 @@ TSVDUnfold::TSVDUnfold( const TSVDUnfold& other )
 TSVDUnfold::~TSVDUnfold()
 {
    // Destructor
+   if(fToyhisto){
+      delete fToyhisto;
+      fToyhisto = 0;
+   }
+   
+   if(fToymat){
+      delete fToymat;
+      fToymat = 0;
+   }
+
+   if(fDHist){
+      delete fDHist;
+      fDHist = 0;
+   }
+
+   if(fSVHist){
+      delete fSVHist;
+      fSVHist = 0;
+   }
+
+   if(fXtau){
+      delete fXtau;
+      fXtau = 0;
+   }
+
+   if(fXinv){
+      delete fXinv;
+      fXinv = 0;
+   }
+
+   if(fBcov){
+      delete fBcov;
+      fBcov = 0;
+   }
 }
 
 //_______________________________________________________________________
@@ -239,12 +273,6 @@ TH1D* TSVDUnfold::Unfold( Int_t kreg )
 
    CUort.Transpose( CUort );
    TMatrixD mCinv = (CVort*CSVM)*CUort;
-
-//    // Rescale matrix and vectors by error of data vector. Replaced by using full covmat now
-//    vbini = VecDiv   ( vbini, vberr );
-//    vb    = VecDiv   ( vb,    vberr, 1 );
-//    mA    = MatDivVec( mA,    vberr, 1 );
-//    vberr = VecDiv   ( vberr, vberr, 1 );
 
    //Rescale using the data covariance matrix
    TDecompSVD BSVD( mB );
@@ -436,6 +464,8 @@ TH2D* TSVDUnfold::GetUnfoldCovMatrix( const TH2D* cov, Int_t ntoys, Int_t seed )
       for (Int_t j=1; j<=fNdim; j++) {
          toymean->SetBinContent(j, toymean->GetBinContent(j) + unfres->GetBinContent(j)/ntoys);
       }
+      delete unfres;
+      unfres = 0;
    }
 
    // Reset the random seed
@@ -463,9 +493,11 @@ TH2D* TSVDUnfold::GetUnfoldCovMatrix( const TH2D* cov, Int_t ntoys, Int_t seed )
             unfcov->SetBinContent(j,k,unfcov->GetBinContent(j,k) + ( (unfres->GetBinContent(j) - toymean->GetBinContent(j))* (unfres->GetBinContent(k) - toymean->GetBinContent(k))/(ntoys-1)) );
          }
       }
+      delete unfres;
+      unfres = 0;
    }
    delete Lt;
-   delete unfres;
+   delete toymean;
    fToyMode = kFALSE;
    
    return unfcov;
@@ -508,6 +540,8 @@ TH2D* TSVDUnfold::GetAdetCovMatrix( Int_t ntoys, Int_t seed )
       for (Int_t j=1; j<=fNdim; j++) {
          toymean->SetBinContent(j, toymean->GetBinContent(j) + unfres->GetBinContent(j)/ntoys);
       }
+      delete unfres;
+      unfres = 0;
    }
 
    // Reset the random seed
@@ -528,8 +562,10 @@ TH2D* TSVDUnfold::GetAdetCovMatrix( Int_t ntoys, Int_t seed )
             unfcov->SetBinContent(j,k,unfcov->GetBinContent(j,k) + ( (unfres->GetBinContent(j) - toymean->GetBinContent(j))*(unfres->GetBinContent(k) - toymean->GetBinContent(k))/(ntoys-1)) );
          }
       }
+      delete unfres;
+      unfres = 0;
    }
-   delete unfres;
+   delete toymean;
    fMatToyMode = kFALSE;
    
    return unfcov;
@@ -565,6 +601,13 @@ TH2D* TSVDUnfold::GetXinv() const
 { 
    // Returns the computed inverse of the covariance matrix
    return fXinv; 
+}
+
+//_______________________________________________________________________
+TH2D* TSVDUnfold::GetBCov() const 
+{ 
+   // Returns the covariance matrix
+   return fBcov; 
 }
 
 //_______________________________________________________________________
