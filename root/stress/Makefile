@@ -17,6 +17,11 @@ ifeq ($(ARCH)$(FAIL),win32)
    for_echoing := $(shell echo Known failures: stressMathCore skipped tests in root/stress 1>&2)
 STRESSTESTS  := $(filter-out stressMathCore-test,$(STRESSTEST))
 endif
+
+ifeq ($(R__FEATURES),)
+   R__FEATURES := $(shell root-config --features)
+endif
+
 ifeq ($(findstring roofit,$(R__FEATURES)),)
 STRESSTESTS  := $(filter-out stressRooStats-test,$(filter-out stressRooFit-test,$(STRESSTESTS)))
 endif
