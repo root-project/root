@@ -2,6 +2,7 @@
 #include "stdlib.h"
 
 #include "TFile.h"
+#include "TTimeStamp.h"
 
 #include "RooStats/HistFactory/HistFactoryException.h"
 #include "RooStats/HistFactory/Channel.h"
@@ -73,12 +74,25 @@ void RooStats::HistFactory::Channel::PrintXML( std::string Directory, std::strin
   // Add the time
   xml << "<!--" << std::endl;
   xml << "This xml file created automatically on: " << std::endl;
+/*
   time_t t = time(0);   // get time now
   struct tm * now = localtime( &t );
   xml << (now->tm_year + 1900) << '-'
       << (now->tm_mon + 1) << '-'
       << now->tm_mday
       << std::endl;
+*/
+// LM: use TTimeStamp since time_t does not work on Windows
+  TTimeStamp t; 
+  UInt_t year = 0; 
+  UInt_t month = 0; 
+  UInt_t day = 0; 
+  t.GetDate(true, 0, &year, &month, &day);
+  xml << year << '-'
+      << month << '-'
+      << day
+      << std::endl;
+
   xml << "-->" << std::endl;
   
 

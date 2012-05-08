@@ -36,11 +36,11 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
 	 cout << "problem with data" << endl;
 	 return 0 ;
        }
-       if( fDetailedOutputEnabled and fDetailedOutput ) {
+       if( fDetailedOutputEnabled && fDetailedOutput ) {
 	       delete fDetailedOutput;
 	       fDetailedOutput = 0;
        }
-       if( fDetailedOutputEnabled and !fDetailedOutput ) {
+       if( fDetailedOutputEnabled && !fDetailedOutput ) {
 	       fDetailedOutput = new RooArgSet();
        }
 
