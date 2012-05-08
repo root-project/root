@@ -148,8 +148,8 @@ namespace RooStats {
          bs->ResetValues();
          const RooArgSet* aset = data.get(entry);
          RooAbsArg *arg(0);
-         TIterator *it = aset->createIterator();
-         for(;(arg = dynamic_cast<RooAbsArg*>(it->Next()));) {
+         RooLinkedListIter it = aset->iterator();
+         for(;(arg = dynamic_cast<RooAbsArg*>(it.Next()));) {
             RooRealVar *rvar = dynamic_cast<RooRealVar*>(arg);
             if (rvar == NULL)
                continue;
@@ -162,9 +162,9 @@ namespace RooStats {
                bs->varVals[TString::Format("%s_err", rvar->GetName())] = rvar->getError();
             }
          }
-         delete it;
          myTree.Fill();
       }
+      delete bs;
    }
 
    TTree * GetAsTTree(TString name, TString desc, const RooDataSet& data) {

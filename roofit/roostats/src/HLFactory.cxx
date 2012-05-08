@@ -302,11 +302,13 @@ RooDataSet* HLFactory::GetTotDataSet(){
     if (!fCombinationDone)
         fCreateCategory();
 
+
     TIterator* it = fDatasetsNames.MakeIterator();
     TObjString* ostring;
     TObject* obj = it->Next();
     ostring = (TObjString*) obj;
     fComboDataset = (RooDataSet*) fWs->data(ostring->String()) ;
+    if (!fComboDataset) return NULL;
     fComboDataset->Print();
     TString dataname(GetName());
     fComboDataset = new RooDataSet(*fComboDataset,dataname+"_TotData");

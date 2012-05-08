@@ -109,16 +109,21 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
           // minimize and count eval errors
           fNll->clearEvalErrorLog();
 	  RooFitResult* result = GetMinNLL();
-	  uncondML = result->minNll();
-	  statusD = result->status();
+          if (result) {
+             uncondML = result->minNll();
+             statusD = result->status();
 
-          // get best fit value for one-sided interval 
-	  if (firstPOI) fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
+             // get best fit value for one-sided interval 
+             if (firstPOI) fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
 
-	  // save this snapshot
-	  if( fDetailedOutputEnabled )
+             // save this snapshot
+             if( fDetailedOutputEnabled )
 		  fDetailedOutput->addOwned(*DetailedOutputAggregator::GetAsArgSet(result, "fitUncond_", fDetailedOutputWithErrorsAndPulls));
-	  delete result;
+             delete result;
+          }
+          else { 
+             return TMath::SignalingNaN();   // this should not really happen
+          }
        }
        tsw.Stop();
        double fitTime1  = tsw.CpuTime();
@@ -167,11 +172,16 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
           else {              
             fNll->clearEvalErrorLog();
             RooFitResult* result = GetMinNLL();
-            condML = result->minNll();
-            statusN = result->status();
-            if( fDetailedOutputEnabled )
-               fDetailedOutput->addOwned(*DetailedOutputAggregator::GetAsArgSet(result, "fitCond_", fDetailedOutputWithErrorsAndPulls));
-            delete result;
+            if (result) { 
+               condML = result->minNll();
+               statusN = result->status();
+               if( fDetailedOutputEnabled )
+                  fDetailedOutput->addOwned(*DetailedOutputAggregator::GetAsArgSet(result, "fitCond_", fDetailedOutputWithErrorsAndPulls));
+               delete result;
+            }
+            else { 
+               return TMath::SignalingNaN();   // this should not really happen
+            }
           }
 
        }
