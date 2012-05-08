@@ -959,6 +959,12 @@ again:
                         //   m->Update();
                         TColorWheel *wheel = new TColorWheel();
                         wheel->Draw();
+                        
+                        //tp: with Cocoa, window is visible (and repainted)
+                        //before wheel->Draw() was called and you can see "empty"
+                        //canvas.
+                        gPad->Update();
+                        //
                         if (padsav) padsav->cd();
                      }
                      break;
