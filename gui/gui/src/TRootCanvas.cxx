@@ -486,6 +486,7 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    // Create toolbar dock
    fToolDock = new TGDockableFrame(this);
+   fToolDock->SetCleanup();
    fToolDock->EnableHide(kFALSE);
    AddFrame(fToolDock, fDockLayout = new TGLayoutHints(kLHintsExpandX));
 
