@@ -1,7 +1,17 @@
 
-#ifndef MAKEMODELANDMEASUREMENTSFAST_H
-#define MAKEMODELANDMEASUREMENTSFAST_H
+#ifndef HISTFACTORY_MAKEMODELANDMEASUREMENTSFAST_H
+#define HISTFACTORY_MAKEMODELANDMEASUREMENTSFAST_H
 
+#include <string>
+#include <vector>
+
+#include "RooStats/HistFactory/Measurement.h"
+#include "RooStats/HistFactory/Channel.h"
+#include "RooStats/HistFactory/EstimateSummary.h"
+
+#include "RooWorkspace.h"
+#include "RooPlot.h"
+#include "TFile.h"
 
 namespace RooStats{
   namespace HistFactory{
@@ -10,12 +20,12 @@ namespace RooStats{
     RooWorkspace* MakeModelAndMeasurementFast( RooStats::HistFactory::Measurement& measurement );
     //RooWorkspace* MakeModelFast( RooStats::HistFactory::Measurement& measurement );
 
-    std::vector<EstimateSummary> GetChannelEstimateSummaries(RooStats::HistFactory::Measurement& measurement, RooStats::HistFactory::Channel& channel);
+    std::vector<RooStats::HistFactory::EstimateSummary> GetChannelEstimateSummaries(RooStats::HistFactory::Measurement& measurement, RooStats::HistFactory::Channel& channel);
     // void ConfigureWorkspaceForMeasurement( const std::string&, RooWorkspace*, RooStats::HistFactory::Measurement&);
 
-    void FormatFrameForLikelihood(RooPlot* frame, string XTitle=string("#sigma / #sigma_{SM}"), string YTitle=string("-log likelihood"));
-    void FitModel(RooWorkspace *, string data_name="obsData");
-    void FitModelAndPlot(const std::string& MeasurementName, const std::string& FileNamePrefix, RooWorkspace *, string, string, TFile*, FILE*);
+    void FormatFrameForLikelihood(RooPlot* frame, std::string xTitle=std::string("#sigma / #sigma_{SM}"), std::string yTitle=std::string("-log likelihood"));
+    void FitModel(RooWorkspace *, std::string data_name="obsData");
+    void FitModelAndPlot(const std::string& measurementName, const std::string& fileNamePrefix, RooWorkspace *, std::string, std::string, TFile*, FILE*);
   }
 }
 
