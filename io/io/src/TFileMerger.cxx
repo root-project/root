@@ -148,21 +148,19 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
    }
    
    // We want gDirectory untouched by anything going on here
-   TDirectory *dirsave = gDirectory;
+   TDirectory::TContext ctx(0);
    
    if (fLocal) {
       TUUID uuid;
       localcopy.Form("file:%s/ROOTMERGE-%s.root", gSystem->TempDirectory(), uuid.AsString());
       if (!TFile::Cp(url, localcopy, cpProgress)) {
          Error("AddFile", "cannot get a local copy of file %s", url);
-         gDirectory = dirsave;
          return kFALSE;
       }
       newfile = TFile::Open(localcopy, "READ");
    } else {
       newfile = TFile::Open(url, "READ");
    }
-   gDirectory = dirsave;
    
    if (!newfile) {
       if (fLocal)
@@ -226,20 +224,18 @@ Bool_t TFileMerger::AddFile(TFile *source, Bool_t own, Bool_t cpProgress)
    TString localcopy;
    
    // We want gDirectory untouched by anything going on here
-   TDirectory *dirsave = gDirectory;
+   TDirectory::TContext ctx(0);
    if (fLocal && !source->InheritsFrom(TMemFile::Class())) {
       TUUID uuid;
       localcopy.Form("file:%s/ROOTMERGE-%s.root", gSystem->TempDirectory(), uuid.AsString());
       if (!source->Cp(localcopy, cpProgress)) {
          Error("AddFile", "cannot get a local copy of file %s", source->GetName());
-         gDirectory = dirsave;
          return kFALSE;
       }
       newfile = TFile::Open(localcopy, "READ");
    } else {
       newfile = source;
    }
-   gDirectory = dirsave;
    
    if (!newfile) {
       if (fLocal)
@@ -305,13 +301,11 @@ Bool_t TFileMerger::OutputFile(const char *outputfile, const char *mode, Int_t c
    fOutputFilename = outputfile;
    
    // We want gDirectory untouched by anything going on here
-   TDirectory *dirsave = gDirectory;
+   TDirectory::TContext ctx(0);
    if (!(fOutputFile = TFile::Open(outputfile, mode, "", compressionLevel)) || fOutputFile->IsZombie()) {
       Error("OutputFile", "cannot open the MERGER output file %s", fOutputFilename.Data());
-      gDirectory = dirsave;
       return kFALSE;
    }
-   gDirectory = dirsave;
    return kTRUE;
 }
 
@@ -842,7 +836,7 @@ Bool_t TFileMerger::OpenExcessFiles()
    TObjString *url = 0;
    TString localcopy;
    // We want gDirectory untouched by anything going on here
-   TDirectory *dirsave = gDirectory;
+   TDirectory::TContext ctx(0);
    while( nfiles < (fMaxOpenedFiles-1) && ( url = (TObjString*)next() ) ) {
       TFile *newfile = 0;
       if (fLocal) {
@@ -850,7 +844,6 @@ Bool_t TFileMerger::OpenExcessFiles()
          localcopy.Form("file:%s/ROOTMERGE-%s.root", gSystem->TempDirectory(), uuid.AsString());
          if (!TFile::Cp(url->GetName(), localcopy, url->TestBit(kCpProgress))) {
             Error("OpenExcessFiles", "cannot get a local copy of file %s", url->GetName());
-            gDirectory = dirsave;
             return kFALSE;
          }
          newfile = TFile::Open(localcopy, "READ");
@@ -864,7 +857,6 @@ Bool_t TFileMerger::OpenExcessFiles()
                   localcopy.Data(), url->GetName());
          else
             Error("OpenExcessFiles", "cannot open file %s", url->GetName());
-            gDirectory = dirsave;
          return kFALSE;
       } else {
          if (fOutputFile && fOutputFile->GetCompressionLevel() != newfile->GetCompressionLevel()) fCompressionChange = kTRUE;
@@ -875,7 +867,6 @@ Bool_t TFileMerger::OpenExcessFiles()
          fExcessFiles->Remove(url);
       }
    }
-   gDirectory = dirsave;
    return kTRUE;
 }
 
