@@ -122,7 +122,13 @@ size_type ParseWeight(const std::string &name, size_type pos, XLFDName &dst)
    //and integer.
    std::string weight;
    pos = GetXLFDNameComponentAsString(name, "weight", pos, weight);
-   weight == "bold" ? dst.fWeight = kFWBold : dst.fWeight = kFWMedium;
+
+   if (weight == "*")
+      dst.fWeight = kFWAny;
+   else if (weight == "bold")
+      dst.fWeight = kFWBold;
+   else
+      dst.fWeight = kFWMedium;
 
    return pos;
 }
@@ -135,11 +141,13 @@ size_type ParseSlant(const std::string &name, size_type pos, XLFDName &dst)
    std::string slant;
    pos = GetXLFDNameComponentAsString(name, "slant", pos, slant);
 
-   //Can be 'r', 'R', 'i', 'I', 'o', 'O', and now I add also '*' - let it be regular.
-   dst.fSlant = kFSRegular;
-
-   if (slant == "i" || slant == "I" || slant == "o" || slant == "O")
+   //Can be 'r', 'R', 'i', 'I', 'o', 'O', '*'.
+   if (slant == "*")
+      dst.fSlant = kFSAny;
+   else if (slant == "i" || slant == "I" || slant == "o" || slant == "O")
       dst.fSlant = kFSItalic;
+   else
+      dst.fSlant = kFSRegular;   
 
    return pos;
 }
@@ -237,6 +245,14 @@ size_type ParseEncoding(const std::string &name, size_type pos, XLFDName &dst)
 }
 
 }//Anonymous namespace.
+
+//______________________________________________________________________________
+XLFDName::XLFDName()
+            : fWeight(kFWAny),
+              fSlant(kFSAny),
+              fPixelSize(0)
+{
+}
 
 //______________________________________________________________________________
 bool ParseXLFDName(const std::string &xlfdName, XLFDName &dst)

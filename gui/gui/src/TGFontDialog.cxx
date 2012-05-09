@@ -180,9 +180,10 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    fFontNames = new TGListBox(vf, kFDLG_FONTNAMES);
    fFontNames->Resize(120, fFontNames->GetDefaultHeight());
 
-   if (gVirtualX->InheritsFrom("TGX11")) {
+   if (gVirtualX->InheritsFrom("TGX11") || gVirtualX->InheritsFrom("TGCocoa")) {
       fFontNames->Connect("Selected(char*)", "TGFontDialog", this, "UpdateStyleSize(char*)");
    }
+
    fFontNames->Associate(this);
    vf->AddFrame(fFontNames,  new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
@@ -580,6 +581,13 @@ void TGFontDialog::UpdateStyleSize(const char *family)
    Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
    Bool_t all_sizes = !x11;
    Bool_t all_styles = !x11;
+   
+   //
+   if (gVirtualX->InheritsFrom("TGCocoa")) {
+      all_sizes = kTRUE;
+      all_styles = kFALSE;
+   }
+   
    int szn = 0;
 
    fFontSizes->AddEntry("12", szn++);
