@@ -55,9 +55,14 @@ const CFStringRef fixedFontNames[FontCache::nPadFonts] =
 
 
 //______________________________________________________________________________
-CTFontCollectionRef CreateFontCollection(const X11::XLFDName &xlfd)
+CTFontCollectionRef CreateFontCollection(const X11::XLFDName &/*xlfd*/)
 {
-   CTFontCollectionRef ctCollection = 0;
+   CTFontCollectionRef ctCollection = CTFontCollectionCreateFromAvailableFonts(0);
+   if (!ctCollection) 
+      ::Error("CreateFontCollection", "CTFontCollectionCreateFromAvailableFonts failed");
+   
+   return ctCollection;
+/*   CTFontCollectionRef ctCollection = 0;
    if (xlfd.fFamilyName == "*")
       ctCollection = CTFontCollectionCreateFromAvailableFonts(0);//Select all available fonts.
    else {
@@ -90,7 +95,7 @@ CTFontCollectionRef CreateFontCollection(const X11::XLFDName &xlfd)
    }
 
 
-   return ctCollection;
+   return ctCollection;*/
 }
 
 //______________________________________________________________________________
@@ -115,6 +120,23 @@ void GetWeightAndSlant(CTFontDescriptorRef fontDescriptor, X11::XLFDName &newXLF
    //Let's ask for a weight and pixel size.
    const Util::CFScopeGuard<CFDictionaryRef> traits((CFDictionaryRef)CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontTraitsAttribute));
    if (traits.Get()) {
+      if (CFNumberRef symbolTraits = (CFNumberRef)CFDictionaryGetValue(traits.Get(), kCTFontSymbolicTrait)) {
+         uint32_t val = 0;
+         CFNumberGetValue(symbolTraits, kCFNumberIntType, &val);
+         if (val & kCTFontItalicTrait)
+            newXLFD.fSlant = X11::kFSItalic;
+         else
+            newXLFD.fSlant = X11::kFSRegular;
+            
+         if (val & kCTFontBoldTrait)
+            newXLFD.fWeight = X11::kFWBold;
+         else
+            newXLFD.fWeight = X11::kFWMedium;
+      }
+   
+      /*
+      //The code below is wrong - using it, I can not identify bold or italic and always have 
+      //only medium/regular.
       if(CFNumberRef weight = (CFNumberRef)CFDictionaryGetValue(traits.Get(), kCTFontWeightTrait)) {
          double val = 0.;
          if (CFNumberGetValue(weight, kCFNumberDoubleType, &val))
@@ -126,6 +148,7 @@ void GetWeightAndSlant(CTFontDescriptorRef fontDescriptor, X11::XLFDName &newXLF
          if (CFNumberGetValue(slant, kCFNumberDoubleType, &val))
             newXLFD.fSlant = val > 0. ? X11::kFSItalic : X11::kFSRegular;
       }
+      */
    }
 }
 
@@ -156,7 +179,7 @@ void CreateXLFDString(const X11::XLFDName &xlfd, std::string &xlfdString)
     if (xlfd.fWeight == X11::kFWBold)
         xlfdString += "-bold";
     else
-        xlfdString += "-*";
+        xlfdString += "-normal";
 
     if (xlfd.fSlant == X11::kFSItalic)
         xlfdString += "-i";
@@ -266,16 +289,19 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
 
       if (!GetFamilyName(font, familyName))
          continue;
-      //I do not check family name: if xlfd.fFamilyName is '*', all font names fit,
-      //if it's a special name - collection is created using this name.
+ 
+      if (xlfd.fFamilyName != "*" && xlfd.fFamilyName != &familyName[0])
+         continue;
+
       newXLFD.fFamilyName = &familyName[0];
 
       GetWeightAndSlant(font, newXLFD);
+
       //Check weight and slant.
-      if (newXLFD.fWeight != xlfd.fWeight)
+      /*if (newXLFD.fWeight != xlfd.fWeight)
          continue;
       if (newXLFD.fSlant != xlfd.fSlant)
-         continue;
+         continue;*/
 
       if (xlfd.fPixelSize) {//Size was requested.
          GetPixelSize(font, newXLFD);

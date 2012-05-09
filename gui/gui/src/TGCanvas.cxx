@@ -792,13 +792,16 @@ void TGContainer::SetPageDimension(UInt_t w, UInt_t h)
 void TGContainer::DoRedraw()
 {
    // Redraw content of container in the viewport region.
-
+#ifdef R__HAS_COCOA
+   DrawRegion(0, 0, GetWidth(), GetHeight());
+#else
    if (!fExposedRegion.IsEmpty()) {
       DrawRegion(fExposedRegion.fX, fExposedRegion.fY, 
                  fExposedRegion.fW, fExposedRegion.fH);
       
       fExposedRegion.Empty();
    }
+#endif
 }
 
 //______________________________________________________________________________
