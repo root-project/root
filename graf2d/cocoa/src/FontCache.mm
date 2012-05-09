@@ -280,7 +280,7 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
    
    std::vector<char> xlfdData;
    std::vector<char> familyName;
-   X11::XLFDName newXLFD = {};
+   X11::XLFDName newXLFD;
    std::string xlfdString;
    
    const CFIndex nFonts = CFArrayGetCount(fonts.Get());
@@ -304,15 +304,14 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
       GetWeightAndSlant(font, newXLFD);
 
       //Check weight and slant.
-      /*if (newXLFD.fWeight != xlfd.fWeight)
+      if (xlfd.fWeight != X11::kFWAny && newXLFD.fWeight != xlfd.fWeight)
          continue;
-      if (newXLFD.fSlant != xlfd.fSlant)
-         continue;*/
+      if (xlfd.fSlant != X11::kFSAny && newXLFD.fSlant != xlfd.fSlant)
+         continue;
 
       if (xlfd.fPixelSize) {//Size was requested.
          GetPixelSize(font, newXLFD);
-         //I do not think, that font has a pixel size.
-         //But Core Text supports different font sizes.
+         //Core Text supports different font sizes.
          if (!newXLFD.fPixelSize)
             newXLFD.fPixelSize = xlfd.fPixelSize;
       }

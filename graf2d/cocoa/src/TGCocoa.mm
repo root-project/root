@@ -2074,7 +2074,7 @@ FontStruct_t TGCocoa::LoadQueryFont(const char *fontName)
    //-foundry-family- ..... etc., some components can be omitted and replaced by *.
    assert(fontName != 0 && "LoadQueryFont, fontName is null");
 
-   ROOT::MacOSX::X11::XLFDName xlfd = {};
+   ROOT::MacOSX::X11::XLFDName xlfd;
    if (ParseXLFDName(fontName, xlfd)) {
       //Make names more flexible: fFamilyName can be empty or '*'.
       if (!xlfd.fFamilyName.length() || xlfd.fFamilyName == "*")
@@ -2147,7 +2147,7 @@ char **TGCocoa::ListFonts(const char *fontName, Int_t maxNames, Int_t &count)
    count = 0;
 
    if (fontName && fontName[0]) {
-      X11::XLFDName xlfd = {};
+      X11::XLFDName xlfd;
       if (X11::ParseXLFDName(fontName, xlfd))
          return fPimpl->fFontManager.ListFonts(xlfd, maxNames, count);
    }

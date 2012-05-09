@@ -25,16 +25,19 @@ namespace MacOSX {
 namespace X11 {//X11 emulation.
 
 enum FontSlant {
+   kFSAny, //For '*' wildcard in xlfd string.
    kFSRegular,
    kFSItalic
 };
 
 enum FontWeight {
+   kFWAny, //For '*' wildcard in xlfd string.
    kFWMedium,
    kFWBold
 };
 
 struct XLFDName {
+   XLFDName();
    //foundry *
    std::string fFamilyName;
    FontWeight fWeight;
