@@ -294,6 +294,12 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
          continue;
 
       newXLFD.fFamilyName = &familyName[0];
+      
+      //If family name has '-', ROOT's GUI can not parse it correctly - 
+      //'-' is a separator in XLFD. Just skip this font (anyway, it wan not requested by GUI, only
+      //listed by FontCache.
+      if (newXLFD.fFamilyName.find('-') != std::string::npos)
+         continue;
 
       GetWeightAndSlant(font, newXLFD);
 
