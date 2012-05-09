@@ -30,12 +30,12 @@ MATHCOREDO   := $(MATHCOREDO1) $(MATHCOREDO2) $(MATHCOREDO3)
 MATHCOREDH   := $(MATHCOREDS:.cxx=.h)
 
 MATHCOREDH1  := $(MODDIRI)/TComplex.h \
-                $(MODDIRI)/TStatistic.h \
                 $(MODDIRI)/TMath.h 
 MATHCOREDH2  := $(MODDIRI)/TRandom.h \
                 $(MODDIRI)/TRandom1.h \
                 $(MODDIRI)/TRandom2.h \
 		$(MODDIRI)/TRandom3.h \
+                $(MODDIRI)/TStatistic.h \
                 $(MODDIRI)/TVirtualFitter.h \
                 $(MODDIRI)/TKDTree.h \
                 $(MODDIRI)/TKDTreeBinning.h \
