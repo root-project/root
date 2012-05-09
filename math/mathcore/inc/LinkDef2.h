@@ -44,6 +44,8 @@
 #pragma link C++ class TRandom2+;
 #pragma link C++ class TRandom3-;
 
+#pragma link C++ class TStatistic+;
+
 #pragma link C++ class TVirtualFitter+;
 
 #pragma link C++ class TKDTree<Int_t, Double_t>+;
