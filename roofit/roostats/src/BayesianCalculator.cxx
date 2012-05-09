@@ -818,6 +818,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    }
 
 
+
    // need do find minimum of log-likelihood in the range to shift function 
    // to avoid numerical errors when we compute the likelihood (overflows in the exponent)
    // N.B.: this works for only 1 parameter of interest otherwise Minuit should be used for finding the minimum
@@ -827,12 +828,14 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    RooRealVar* poi = dynamic_cast<RooRealVar*>( fPOI.first() ); 
    assert(poi);
 
+   // try to reduce some error messages
+   //Bool_t silentMode = (RooMsgService::instance().globalKillBelow() >= RooFit::ERROR || RooMsgService::instance().silentMode()) ;
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CountErrors);
+
+
    coutI(Eval) <<  "BayesianCalculator::GetPosteriorFunction : " 
                << " nll value " <<  nllVal << " poi value = " << poi->getVal() << std::endl;
 
-   // if pdf evaluates to zero, should be fixed, but this will
-   // stop error messages.
-   fLogLike->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
 
    ROOT::Math::BrentMinimizer1D minim; 
    minim.SetFunction(wnllFunc,poi->getMin(),poi->getMax() );
@@ -900,7 +903,6 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
          fIntegratedLikelihood = fLikelihood->createIntegral(fNuisanceParameters);
 
 
-      return fIntegratedLikelihood;
    }
 
    else if ( fIntegrationType.Contains("TOYMC") ) { 
@@ -943,11 +945,12 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
 
    }
 
-   //fIntegratedLikelihood->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
 
-   // ccoutD(Eval) << "BayesianCalculator::GetPosteriorFunction : use ROOT numerical integration algorithm. "; 
-   // ccoutD(Eval) << " Integrated log-likelihood = " << fIntegratedLikelihood->getVal() << std::endl;
-
+   if (RooAbsReal::numEvalErrors() > 0) 
+      coutW(Eval) << "BayesianCalculator::GetPosteriorFunction : " << RooAbsReal::numEvalErrors() << " errors reported in evaluating log-likelihood function "
+                   << std::endl;         
+   RooAbsReal::clearEvalErrorLog();
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
    
    return fIntegratedLikelihood;  
 
@@ -1002,12 +1005,16 @@ RooPlot* BayesianCalculator::GetPosteriorPlot(bool norm, double precision ) cons
    if (!plot) return 0;
 
    // try to reduce some error messages
-   posterior->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CountErrors);
 
    plot->SetTitle(TString("Posterior probability of parameter \"")+TString(poi->GetName())+TString("\""));  
    posterior->plotOn(plot,RooFit::Range(fLower,fUpper,kFALSE),RooFit::VLines(),RooFit::DrawOption("F"),RooFit::MoveToBack(),RooFit::FillColor(kGray),RooFit::Precision(precision));
    posterior->plotOn(plot);
    plot->GetYaxis()->SetTitle("posterior function");
+
+   // reset the counts and default mode
+   RooAbsReal::clearEvalErrorLog();
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
    
    return plot; 
 }
@@ -1073,8 +1080,13 @@ SimpleInterval* BayesianCalculator::GetInterval() const
       return 0; 
    } 
 
+
+
    // get integrated likelihood (posterior function) 
    GetPosteriorFunction();
+
+   //Bool_t silentMode = (RooMsgService::instance().globalKillBelow() >= RooFit::ERROR || RooMsgService::instance().silentMode()) ;
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CountErrors);
 
    if (fLeftSideFraction < 0 ) { 
       // compute short intervals
@@ -1109,6 +1121,15 @@ SimpleInterval* BayesianCalculator::GetInterval() const
          }
       }
    }
+
+
+   // reset the counts and default mode
+   if (RooAbsReal::numEvalErrors() > 0) 
+      coutW(Eval) << "BayesianCalculator::GetInterval : " << RooAbsReal::numEvalErrors() << " errors reported in evaluating log-likelihood function "
+                   << std::endl;         
+   
+   RooAbsReal::clearEvalErrorLog();
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
 
    if (!fValidInterval) { 
       fLower = 1; fUpper = 0;
@@ -1275,11 +1296,10 @@ void BayesianCalculator::ApproximatePosterior() const {
       fApproxPosterior = 0;
    }      
 
+
    RooAbsReal * posterior = GetPosteriorFunction();
    if (!posterior) return; 
 
-   // try to reduce some error messages
-   posterior->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
 
    TF1 * tmp = posterior->asTF(fPOI); 
    assert(tmp != 0);

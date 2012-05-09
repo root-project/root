@@ -160,8 +160,12 @@ MarkovChain* MetropolisHastings::ConstructChain()
 
    // We will need to check if log-likelihood evaluation left an error status.
    // Now using faster eval error logging with CountErrors.
-   if (fType == kLog)
-     fFunction->setEvalErrorLoggingMode(RooAbsReal::CountErrors);
+   if (fType == kLog) {
+     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CountErrors);
+     //N.B: need to clear the count in case of previous errors !
+     // the clear needs also to be done after calling setEvalErrorLoggingMode 
+     RooAbsReal::clearEvalErrorLog();
+   }
 
    bool hadEvalError = true;
 
@@ -179,8 +183,8 @@ MarkovChain* MetropolisHastings::ConstructChain()
       xL = fFunction->getVal();
 
       if (fType == kLog) {
-         if (fFunction->numEvalErrors() > 0) {
-            fFunction->clearEvalErrorLog();
+         if (RooAbsReal::numEvalErrors() > 0) {
+            RooAbsReal::clearEvalErrorLog();
             hadEvalError = true;
          } else
             hadEvalError = false;
