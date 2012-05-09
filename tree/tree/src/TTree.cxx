@@ -6399,7 +6399,10 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, c
       while (isspace(in.peek())) {
          in.get();
       }
-      if ( in.peek() != '#' ) {
+      if ( in.eof() || !in.good()) {
+         break;
+      }
+      if (in.peek() != '#' ) {
          //loop on branches and read the branch values into their buffer
          for (Int_t i=0;i<nbranches;i++) {
             branch = (TBranch*)fBranches.At(i);
