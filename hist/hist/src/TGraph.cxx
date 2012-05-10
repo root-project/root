@@ -203,6 +203,8 @@ TGraph& TGraph::operator=(const TGraph &gr)
       else fHistogram = 0;
       fMinimum = gr.fMinimum;
       fMaximum = gr.fMaximum;
+      if (fX) delete [] fX;
+      if (fY) delete [] fY;
       if (!fMaxSize) {
          fX = fY = 0;
          return *this;
@@ -730,6 +732,8 @@ Bool_t TGraph::CtorAllocate()
 {
    // In constructors set fNpoints than call this method.
    // Return kFALSE if the graph will contain no points.
+   //Note: This function should be called only from the constructor
+   // since it does not delete previously existing arrays
 
    fHistogram = 0;
    fMaximum = -1111;

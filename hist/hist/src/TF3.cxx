@@ -329,6 +329,10 @@ void TF3::GetMinimumXYZ(Double_t &x, Double_t &y, Double_t &z)
    }
 
    TVirtualFitter *minuit = TVirtualFitter::Fitter(this, 3);
+   if (!minuit) { 
+      Error("GetMinimumXYZ", "Cannot create fitter");
+      return;
+   }
    minuit->Clear();
    minuit->SetFitMethod("F3Minimizer");
    Double_t arglist[10];

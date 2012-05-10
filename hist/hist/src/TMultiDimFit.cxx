@@ -2380,11 +2380,17 @@ void TMultiDimFit::Fit(Option_t *option)
       Warning("Fit", "test sample is very small");
 
    if (!opt.Contains("m")) {
+      Error("Fit", "invalid option");
       delete [] x;
       return;
    }
 
    fFitter = TVirtualFitter::Fitter(0,fNCoefficients);
+   if (!fFitter) { 
+      Error("Fit", "Vannot create Fitter");
+      delete [] x; 
+      return;
+   }
    fFitter->SetFCN(mdfHelper);
 
    const Int_t  maxArgs = 16;

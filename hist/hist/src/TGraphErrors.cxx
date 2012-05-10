@@ -197,6 +197,9 @@ TGraphErrors& TGraphErrors::operator=(const TGraphErrors &gr)
 
    if (this != &gr) {
       TGraph::operator=(gr);
+      // N.B CtorAllocate does not delete arrays
+      if (fEX) delete [] fEX; 
+      if (fEY) delete [] fEY; 
       if (!CtorAllocate()) return *this;
 
       Int_t n = sizeof(Double_t) * fNpoints;
@@ -518,6 +521,9 @@ Bool_t TGraphErrors::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
 Bool_t TGraphErrors::CtorAllocate()
 {
    // Constructor allocate.
+   //Note: This function should be called only from the constructor
+   // since it does not delete previously existing arrays
+
 
    if (!fNpoints) {
       fEX = fEY = 0;

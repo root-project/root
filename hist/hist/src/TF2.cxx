@@ -440,6 +440,10 @@ void TF2::GetMinimumXY(Double_t &x, Double_t &y)
    }
 
    TVirtualFitter *minuit = TVirtualFitter::Fitter(this, 2);
+   if (!minuit) { 
+      Error("GetMinimumXY", "Cannot create fitter");
+      return;
+   }
    minuit->Clear();
    minuit->SetFitMethod("F2Minimizer");
    Double_t arglist[10];

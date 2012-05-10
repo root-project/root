@@ -1082,6 +1082,8 @@ void TF1::Browse(TBrowser *b)
 void TF1::Copy(TObject &obj) const
 {
    // Copy this F1 to a new F1.
+   // Note that the cached integral with its related arrays are not copied
+   // (they are also set as transient data members) 
 
    if (((TF1&)obj).fParMin)    delete [] ((TF1&)obj).fParMin;
    if (((TF1&)obj).fParMax)    delete [] ((TF1&)obj).fParMax;
@@ -3058,8 +3060,8 @@ void TF1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       out<<"   "<<GetName()<<"->SetNDF("<<GetNDF()<<");"<<endl;
    }
 
-   GetXaxis()->SaveAttributes(out,GetName(),"->GetXaxis()");
-   GetYaxis()->SaveAttributes(out,GetName(),"->GetYaxis()");
+   if (GetXaxis()) GetXaxis()->SaveAttributes(out,GetName(),"->GetXaxis()");
+   if (GetYaxis()) GetYaxis()->SaveAttributes(out,GetName(),"->GetYaxis()");
 
    Double_t parmin, parmax;
    for (i=0;i<fNpar;i++) {
