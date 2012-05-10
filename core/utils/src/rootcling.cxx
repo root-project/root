@@ -689,17 +689,17 @@ const clang::CXXRecordDecl *R__SlowClassSearch(const char *name, const clang::De
 {
    const clang::NamedDecl *result = R__SlowSearch(name,0);
 
-   // Now, let's check with cling's lookupClass 
+   // Now, let's check with cling's lookupScope 
    const clang::CXXRecordDecl *result_cxx = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(result);
-   const clang::CXXRecordDecl *result_new = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupClass(name));
+   const clang::CXXRecordDecl *result_new = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupScope(name));
    if (!result_new) {
       std::string std_name("std::");
       std_name += name;
-      result_new = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupClass(std_name));
+      result_new = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupScope(std_name));
    }
    if (result_cxx != result_new) {
       // Humm ok, we are not the same
-      fprintf(stderr,"Error: lookupClass disagree with R__SlowSearchImpl on %s: lookupClass: %s slowClassSearch: %s\n",
+      fprintf(stderr,"Error: lookupScope disagree with R__SlowSearchImpl on %s: lookupScope: %s slowClassSearch: %s\n",
               name, result_new ? R__GetQualifiedName(*result_new).c_str() : " nothing ", result ? R__GetQualifiedName(*result_cxx).c_str() : " nothing ");
    }
 
@@ -829,6 +829,13 @@ public:
 const clang::CXXMethodDecl *R__GetFuncWithProto(const clang::CXXRecordDecl* cinfo, 
                                                 const char *method, const char *proto)
 {
+   const clang::FunctionDecl* funcD = gInterp->lookupFunctionProto(cinfo, method, proto);
+   if (funcD) {
+      return llvm::dyn_cast<const clang::CXXMethodDecl>(funcD);
+   }
+   return 0;
+
+#if 0
 #define USE_CLING_LOOKUP
 
    // First check it exist under some name.
@@ -910,6 +917,7 @@ const clang::CXXMethodDecl *R__GetFuncWithProto(const clang::CXXRecordDecl* cinf
    }
 #endif
    return 0;
+#endif
 }
 
 bool R__CheckPublicFuncWithProto(const clang::CXXRecordDecl *cl, const char *methodname, const char *proto)
@@ -6178,6 +6186,15 @@ int main(int argc, char **argv)
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              getenv("LLVMDIR"));
    interp.declare("namespace std {} using namespace std;");
+#ifdef ROOTBUILD
+   interp.declare("#include \"include/TObject.h\"");
+#else
+# ifndef ROOTINCDIR
+   interp.declare("#include \"TObject.h\"");
+# else
+   interp.declare("#include \"" ROOTINCDIR "/TObject.h\"");
+# endif
+#endif
    gInterp = &interp;
 
    // flags used only for the pragma parser:
