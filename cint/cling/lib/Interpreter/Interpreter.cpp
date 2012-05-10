@@ -730,13 +730,13 @@ namespace cling {
     return TheQT;
   }
 
-  Decl*
-  Interpreter::lookupClass(const std::string& className)
+  const Decl*
+  Interpreter::lookupScope(const std::string& className)
   {
     //
     //  Our return value.
     //
-    Decl* TheDecl = 0;
+    const Decl* TheDecl = 0;
     //
     //  Some utilities.
     //
@@ -962,14 +962,14 @@ namespace cling {
     return false;
   }
 
-  Decl*
-  Interpreter::lookupFunctionProto(Decl* classDecl,
+  const FunctionDecl*
+  Interpreter::lookupFunctionProto(const Decl* scopeDecl,
     const std::string& funcName, const std::string& funcProto)
   {
     //
     //  Our return value.
     //
-    Decl* TheDecl = 0;
+    FunctionDecl* TheDecl = 0;
     //
     //  Some utilities.
     //
@@ -981,22 +981,23 @@ namespace cling {
     //  Get the DeclContext we will search for the function.
     //
     NestedNameSpecifier* classNNS = 0;
-    if (const NamespaceDecl* NSD = llvm::dyn_cast<NamespaceDecl>(classDecl)) {
+    if (const NamespaceDecl* NSD = llvm::dyn_cast<NamespaceDecl>(scopeDecl)) {
       classNNS = NestedNameSpecifier::Create(Context, 0,
         const_cast<NamespaceDecl*>(NSD));
     }
-    else if (const RecordDecl* RD = llvm::dyn_cast<RecordDecl>(classDecl)) {
+    else if (const RecordDecl* RD = llvm::dyn_cast<RecordDecl>(scopeDecl)) {
       const Type* T = Context.getRecordType(RD).getTypePtr();
       classNNS = NestedNameSpecifier::Create(Context, 0, false, T);
     }
-    else if (llvm::isa<TranslationUnitDecl>(classDecl)) {
+    else if (llvm::isa<TranslationUnitDecl>(scopeDecl)) {
       classNNS = NestedNameSpecifier::GlobalSpecifier(Context);
     }
     else {
       // Not a namespace or class, we cannot use it.
       return 0;
     }
-    DeclContext* foundDC = llvm::dyn_cast<DeclContext>(classDecl);
+    DeclContext* foundDC =
+       llvm::dyn_cast<DeclContext>(const_cast<Decl*>(scopeDecl));
     //
     //  Tell the diagnostic engine to ignore all diagnostics.
     //
@@ -1216,7 +1217,7 @@ namespace cling {
               // looking up a class member func, ignore it.
               continue;
             }
-            TheDecl = *I;
+            TheDecl = llvm::dyn_cast<clang::FunctionDecl>(*I);
             break;
           }
         }
@@ -1240,14 +1241,14 @@ namespace cling {
     return TheDecl;
   }
 
-  Decl*
-  Interpreter::lookupFunctionArgs(Decl* classDecl,
+  const FunctionDecl*
+  Interpreter::lookupFunctionArgs(const Decl* scopeDecl,
     const std::string& funcName, const std::string& funcArgs)
   {
     //
     //  Our return value.
     //
-    Decl* TheDecl = 0;
+    FunctionDecl* TheDecl = 0;
     //
     //  Some utilities.
     //
@@ -1266,15 +1267,15 @@ namespace cling {
     //  a scope spec, and a decl context.
     //
     NestedNameSpecifier* classNNS = 0;
-    if (const NamespaceDecl* NSD = llvm::dyn_cast<NamespaceDecl>(classDecl)) {
+    if (const NamespaceDecl* NSD = llvm::dyn_cast<const NamespaceDecl>(scopeDecl)) {
       classNNS = NestedNameSpecifier::Create(Context, 0,
         const_cast<NamespaceDecl*>(NSD));
     }
-    else if (const RecordDecl* RD = llvm::dyn_cast<RecordDecl>(classDecl)) {
+    else if (const RecordDecl* RD = llvm::dyn_cast<const RecordDecl>(scopeDecl)) {
       const Type* T = Context.getRecordType(RD).getTypePtr();
       classNNS = NestedNameSpecifier::Create(Context, 0, false, T);
     }
-    else if (llvm::isa<TranslationUnitDecl>(classDecl)) {
+    else if (llvm::isa<TranslationUnitDecl>(scopeDecl)) {
       classNNS = NestedNameSpecifier::GlobalSpecifier(Context);
     }
     else {
@@ -1283,7 +1284,8 @@ namespace cling {
     }
     CXXScopeSpec SS;
     SS.MakeTrivial(Context, classNNS, SourceRange());
-    DeclContext* foundDC = llvm::dyn_cast<DeclContext>(classDecl);
+    DeclContext* foundDC = 
+       llvm::dyn_cast<DeclContext>(const_cast<Decl*>(scopeDecl));
     //
     //  Some validity checks on the passed decl.
     //

@@ -390,15 +390,15 @@ namespace cling {
     ///                        namespace, or enum to lookup.
     ///\returns The found declaration or null.
     ///
-    clang::Decl* lookupClass(const std::string& className);
+    const clang::Decl* lookupScope(const std::string& className);
 
-    clang::Decl* lookupFunctionProto(clang::Decl* classDecl,
-                                     const std::string& funcName,
-                                     const std::string& funcProto);
+    const clang::FunctionDecl* lookupFunctionProto(const clang::Decl* scopeDecl,
+                                             const std::string& funcName,
+                                             const std::string& funcProto);
 
-    clang::Decl* lookupFunctionArgs(clang::Decl* classDecl,
-                                    const std::string& funcName,
-                                    const std::string& funcArgs);
+    const clang::FunctionDecl* lookupFunctionArgs(const clang::Decl* scopeDecl,
+                                            const std::string& funcName,
+                                            const std::string& funcArgs);
 
     void enableDynamicLookup(bool value = true);
     bool isDynamicLookupEnabled();
