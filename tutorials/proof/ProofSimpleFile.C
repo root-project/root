@@ -52,8 +52,8 @@ Int_t ProofSimpleFile::CreateHistoArrays()
 {
    // Create the histogram arrays
 
-   if (fNHist <= 0) {
-      Error("CreateHistoArrays", "fNHist must be positive!");
+   if (fNhist <= 0) {
+      Error("CreateHistoArrays", "fNhist must be positive!");
       return -1;
    }
    // Histos array
@@ -73,6 +73,7 @@ void ProofSimpleFile::Begin(TTree * /*tree*/)
    TString option = GetOption();
 
    // Number of histograms (needed in terminate)
+   Ssiz_t iopt = kNPOS;
    if (fInput->FindObject("ProofSimpleFile_NHist")) {
       TParameter<Long_t> *p =
          dynamic_cast<TParameter<Long_t>*>(fInput->FindObject("ProofSimpleFile_NHist"));
@@ -94,6 +95,7 @@ void ProofSimpleFile::SlaveBegin(TTree * /*tree*/)
    TString option = GetOption();
 
    // Number of histograms (needed in terminate)
+   Ssiz_t iopt = kNPOS;
    if (fInput->FindObject("ProofSimpleFile_NHist")) {
       TParameter<Long_t> *p =
          dynamic_cast<TParameter<Long_t>*>(fInput->FindObject("ProofSimpleFile_NHist"));
@@ -250,6 +252,12 @@ void ProofSimpleFile::Terminate()
 
    } else {
       Error("Terminate", "TProofOutputFile not found");
+      return;
+   }
+
+   // Histos arrays
+   if (CreateHistoArrays() != 0) {
+      Error("Terminate", "could not create histograms");
       return;
    }
 
