@@ -187,6 +187,19 @@
 //      root[] runProof("simplefile(outfile=/data0/testsimple.root)")
 //      root[] runProof("simplefile(outfile=root://aserver//data/testsimple.root)")
 //
+// 10. "stdvec"
+//
+//      Selector: ProofStdVect.h.C
+//
+//      This is an example of using standard vectors (vector<vector<bool> > and
+//      vector<vector<float> >) in a TSelector. The same selector is run twice:
+//      in 'create' mode it creates a dataset with the tree 'stdvec' containing
+//      3 branches, a vector<vector<bool> > and two vector<vector<float> >. The
+//      tree is saved into a file on each worker and a dataset is created with
+//      these files (the dataset is called 'TestStdVect'); in 'read' mode the
+//      dataset is read and a couple fo histograms filled and displayed.
+//
+//      root[] runProof("stdvec")
 //
 //   General arguments
 //   -----------------
@@ -1272,6 +1285,39 @@ void runProof(const char *what = "simple",
       // Run it for nevt times
       TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
       proof->Process(sel.Data(), nevt, xopt);
+
+   } else if (act == "stdvec") {
+
+      // This is an example of runnign a TSelector using standard vectors
+      // Selector used: ProofStdVect
+
+      if (first > 0)
+         // Meaningless for this tutorial
+         Printf("runProof: %s: warning concept of 'first' meaningless for this tutorial"
+                " - ignored", act.Data());
+
+      // Set the default number of events, if needed
+      nevt = (nevt < 0) ? 50000 * proof->GetParallel() : nevt;
+      Printf("\nrunProof: running \"stdvec\" with nevt= %lld\n", nevt);
+
+      // The selector string
+      sel.Form("%s/proof/ProofStdVect.C%s", tutorials.Data(), aMode.Data());
+
+      TString xopt;
+      // Create the dataset 'TestStdVect' with 'nevt' events
+      xopt.Form("%s %s create", aFeedback.Data(), opt.Data());
+      proof->Process(sel.Data(), nevt, xopt);
+
+      // The dataset must have been registered
+      if (proof->ExistsDataSet("TestStdVect")) {
+
+         // Use dataset 'TestStdVect'
+         xopt.Form("%s %s", aFeedback.Data(), opt.Data());
+         proof->Process("TestStdVect", sel.Data(), xopt);
+
+      } else {
+         Printf("runProof: dataset 'TestStdVect' not available!");
+      }
 
    } else {
       // Do not know what to run
