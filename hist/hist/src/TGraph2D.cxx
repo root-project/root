@@ -1494,7 +1494,8 @@ void TGraph2D::SetMaximum(Double_t maximum)
    // Set maximum.
 
    fMaximum = maximum;
-   GetHistogram()->SetMaximum(maximum);
+   TH1 * h = GetHistogram();
+   if (h) h->SetMaximum(maximum);
 }
 
 
@@ -1504,7 +1505,8 @@ void TGraph2D::SetMinimum(Double_t minimum)
    // Set minimum.
 
    fMinimum = minimum;
-   GetHistogram()->SetMinimum(minimum);
+   TH1 * h = GetHistogram();
+   if (h) h->SetMinimum(minimum);
 }
 
 

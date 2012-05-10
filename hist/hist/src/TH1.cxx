@@ -2393,25 +2393,39 @@ void TH1::Copy(TObject &obj) const
    ((TH1&)obj).fBarOffset = fBarOffset;
    ((TH1&)obj).fBarWidth  = fBarWidth;
    ((TH1&)obj).fOption    = fOption;
-   ((TH1&)obj).fBuffer    = 0;
    ((TH1&)obj).fBufferSize= fBufferSize;
+   // copy the Buffer 
+   // delete first a previously existing buffer
+   if (((TH1&)obj).fBuffer != 0)  { 
+      delete []  ((TH1&)obj).fBuffer;
+      ((TH1&)obj).fBuffer = 0;
+   }
+   if (fBuffer) {
+      Double_t *buf = new Double_t[fBufferSize];
+      for (Int_t i=0;i<fBufferSize;i++) buf[i] = fBuffer[i];
+      // obj.fBuffer has been deleted before
+      ((TH1&)obj).fBuffer    = buf;
+   }
+
 
    TArray* a = dynamic_cast<TArray*>(&obj);
    if (a) a->Set(fNcells);
    Int_t canRebin = ((TH1&)obj).TestBit(kCanRebin);
    ((TH1&)obj).ResetBit(kCanRebin);  //we want to avoid the call to LabelsInflate
+   // we need to set fBuffer to zero to avoid calling BufferEmpty in GetBinContent
+   Double_t * buffer = 0; 
+   if (fBuffer) { 
+      buffer = fBuffer; 
+      ((TH1*)this)->fBuffer = 0; 
+   }
    for (Int_t i=0;i<fNcells;i++) ((TH1&)obj).SetBinContent(i,this->GetBinContent(i));
+   // restore rebin bit and buffer pointer
    if (canRebin) ((TH1&)obj).SetBit(kCanRebin);
+   if (buffer) ((TH1*)this)->fBuffer  = buffer;
    ((TH1&)obj).fEntries   = fEntries;
 
-   // copy the Buffer (needs to do after calling Get/SetBinContent 
-   // which will call BufferEmpty. Maybe one should call 
+   // which will call BufferEmpty(0) and set fBuffer[0] to a  Maybe one should call 
    // assignment operator on the TArrayD
-   if (fBuffer) {
-      Double_t *buf = new Double_t[fBufferSize];
-      for (Int_t i=0;i<fBufferSize;i++) buf[i] = fBuffer[i];
-      ((TH1&)obj).fBuffer    = buf;
-   }
 
    ((TH1&)obj).fTsumw     = fTsumw;
    ((TH1&)obj).fTsumw2    = fTsumw2;
@@ -4681,7 +4695,8 @@ void TH1::LabelsDeflate(Option_t *ax)
       if (ibin > nbins) nbins = ibin; 
    }
    if (nbins < 1) nbins = 1;
-   TH1 *hold = (TH1*)IsA()->New();;
+   TH1 *hold = (TH1*)IsA()->New();
+   R__ASSERT(hold);
    hold->SetDirectory(0);
    Copy(*hold);
 
@@ -7574,7 +7589,7 @@ void TH1::SetBuffer(Int_t buffersize, Option_t * /*option*/)
    if (buffersize < 100) buffersize = 100;
    fBufferSize = 1 + buffersize*(fDimension+1);
    fBuffer = new Double_t[fBufferSize];
-   memset(fBuffer,0,8*fBufferSize);
+   memset(fBuffer,0,sizeof(Double_t)*fBufferSize);
 }
 
 //______________________________________________________________________________
@@ -8393,6 +8408,10 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
    Int_t binx,biny;
    TString opt = option;
    opt.ToUpper();
+   if (!fft ||  !fft->GetN() ) {
+      ::Error("TransformHisto","Invalid FFT transform class");
+      return 0; 
+   }
    Int_t *n = fft->GetN();
    TH1 *hout=0;
    if (h_output) { 
@@ -8438,7 +8457,7 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
             }
          }
       } else {
-         printf("No complex numbers in the output");
+         ::Error("TransformHisto","No complex numbers in the output");
          return 0;
       }
    }

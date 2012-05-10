@@ -99,6 +99,12 @@ TGraphAsymmErrors& TGraphAsymmErrors::operator=(const TGraphAsymmErrors &gr)
 
    if(this!=&gr) {
       TGraph::operator=(gr);
+      // delete arrays 
+      if (fEXlow) delete [] fEXlow; 
+      if (fEYlow) delete [] fEYlow; 
+      if (fEXhigh) delete [] fEXhigh; 
+      if (fEYhigh) delete [] fEYhigh; 
+
       if (!CtorAllocate()) return *this;
       Int_t n = fNpoints*sizeof(Double_t);
       memcpy(fEXlow, gr.fEXlow, n);
@@ -802,6 +808,8 @@ Bool_t TGraphAsymmErrors::CopyPoints(Double_t **arrays,
 Bool_t TGraphAsymmErrors::CtorAllocate(void)
 {
    // Should be called from ctors after fNpoints has been set
+   // Note: This function should be called only from the constructor
+   // since it does not delete previously existing arrays
 
    if (!fNpoints) {
       fEXlow = fEYlow = fEXhigh = fEYhigh = 0;
