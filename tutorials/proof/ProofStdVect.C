@@ -186,9 +186,7 @@ Bool_t ProofStdVect::Process(Long64_t entry)
       fVfy.clear();
    } else {
       // Read the entry
-      b_Vb->GetEntry(entry);
-      b_Vfx->GetEntry(entry);
-      b_Vfy->GetEntry(entry);
+      GetEntry(entry);
       // Plot normalized values for bad and good hits
       for (UInt_t i = 0; i < fVfyr->size(); i++) {
          std::vector<bool> &vb = fVbr->at(i);
