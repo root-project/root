@@ -36,7 +36,8 @@ class SelectionRules
 public:
    enum ESelectionFileTypes { // type of selection file
       kSelectionXMLFile,
-      kLinkdefFile
+      kLinkdefFile,
+      kNumSelectionFileTypes
    };
    
 private:
@@ -52,7 +53,11 @@ private:
 
 public:
    
-   SelectionRules() {}
+   SelectionRules():
+      fSelectionFileType(kNumSelectionFileTypes),
+      fIsDeep(false),
+      fHasFileNameRule(false)
+   {}
    
    void AddClassSelectionRule(const ClassSelectionRule& classSel);
    bool HasClassSelectionRules() const;
