@@ -2413,7 +2413,7 @@ void TH1::Copy(TObject &obj) const
    Int_t canRebin = ((TH1&)obj).TestBit(kCanRebin);
    ((TH1&)obj).ResetBit(kCanRebin);  //we want to avoid the call to LabelsInflate
    // we need to set fBuffer to zero to avoid calling BufferEmpty in GetBinContent
-   double_t * buffer = 0; 
+   Double_t * buffer = 0; 
    if (fBuffer) { 
       buffer = fBuffer; 
       ((TH1*)this)->fBuffer = 0; 
