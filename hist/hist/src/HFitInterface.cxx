@@ -632,9 +632,10 @@ void DoFillData ( BinData  & dv,  const TGraph * gr,  BinData::ErrorType type, T
 
          // adjust error in y according to option 
          double errorY = std::max(gr->GetErrorY(i), 0.); 
+         // we do not check the return value since we check later if error in X and Y is zero for skipping the point
          HFitInterface::AdjustError(fitOpt, errorY); 
 
-         // skip points with totla error = 0
+         // skip points with total error = 0
          if ( errorX <=0 && errorY <= 0 ) continue; 
          
          if (type == BinData::kAsymError)   { 

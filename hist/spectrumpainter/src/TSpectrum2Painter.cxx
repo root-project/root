@@ -177,6 +177,8 @@ TSpectrum2Painter::~TSpectrum2Painter()
       col = gROOT->GetColor(250+i);
       if (col) delete col;
    }
+   if (fEnvelope) delete [] fEnvelope; 
+   if (fEnvelopeContour) delete [] fEnvelopeContour; 
 }
 
 

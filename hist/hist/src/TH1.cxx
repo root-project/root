@@ -8401,17 +8401,18 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
 //   "MAG" - magnitude of the output
 //   "PH"  - phase of the output
 
+   if (!fft ||  !fft->GetN() ) {
+      ::Error("TransformHisto","Invalid FFT transform class");
+      return 0; 
+   }
+
    if (fft->GetNdim()>2){
-      printf("Only 1d and 2d\n");
+      ::Error("TransformHisto","Only 1d and 2D transform are supported");
       return 0;
    }
    Int_t binx,biny;
    TString opt = option;
    opt.ToUpper();
-   if (!fft ||  !fft->GetN() ) {
-      ::Error("TransformHisto","Invalid FFT transform class");
-      return 0; 
-   }
    Int_t *n = fft->GetN();
    TH1 *hout=0;
    if (h_output) { 

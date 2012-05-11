@@ -404,14 +404,15 @@ void TUnfoldSys::DoBackgroundSubtraction(void) {
          {
             TMapIter bgrErrCorrPtr(fBgrErrCorrIn);
             for(key=bgrErrCorrPtr.Next();key;key=bgrErrCorrPtr.Next()) {
-               const TMatrixD *bgrerrcorr=(const TMatrixD *)
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
-                  ((const TPair *)*bgrErrCorrPtr)->Value()
+                  if (!*bgrErrCorrPtr) continue;
+               const TMatrixD *bgrerrcorr=(const TMatrixD *)
+                  ((const TPair *)*bgrErrCorrPtr)->Value();
 #else
+               const TMatrixD *bgrerrcorr=(const TMatrixD *)
                   fBgrErrCorrIn->GetValue(((const TObjString *)key)
-                                          ->GetString())
+                                          ->GetString());
 #endif
-                  ;
                for(Int_t yi=0;yi<ny;yi++) {
                   if(!usedBin[yi]) continue;
                   for(Int_t yj=0;yj<ny;yj++) {
@@ -676,6 +677,7 @@ void TUnfoldSys::PrepareSysError(void) {
    for(key=(const TObjString *)sysErrIn.Next();key;
        key=(const TObjString *)sysErrIn.Next()) {
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
+      if (!*sysErrIn) continue;
       const TMatrixDSparse *dsys=
          (const TMatrixDSparse *)((const TPair *)*sysErrIn)->Value();
 #else
@@ -1111,14 +1113,16 @@ Double_t TUnfoldSys::GetChi2Sys(void) {
    const TObject *key;
    // correlated su=ystematic errors
    for(key=sysErrPtr.Next();key;key=sysErrPtr.Next()) {
-      const TMatrixDSparse *delta=(TMatrixDSparse *)
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
-                 ((const TPair *)*sysErrPtr)->Value()
+      if (!*sysErrPtr) continue;
+      const TMatrixDSparse *delta=(TMatrixDSparse *)
+         ((const TPair *)*sysErrPtr)->Value();
 #else
+      const TMatrixDSparse *delta=(TMatrixDSparse *)
          fDeltaCorrAx->GetValue(((const TObjString *)key)
-                                ->GetString())
+                                ->GetString());
 #endif
-         ;
+
       TMatrixDSparse *emat=MultiplyMSparseMSparseTranspVector(delta,delta,0);
       AddMSparse(&emat_sum,1.0,emat);
       DeleteMatrix(&emat);

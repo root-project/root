@@ -3426,7 +3426,10 @@ void TFormula::Streamer(TBuffer &b)
             Int_t npar = fNpar;
             fParams = 0;
             fNames = 0;
-            Compile();
+            if (Compile()) {
+               Error("Streamer","error compiling formula");
+               return;
+            }
             for (Int_t i = 0; i<npar && i<fNpar; ++i) fParams[i] = param[i];
             delete [] param;
             delete [] fNames;
