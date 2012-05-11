@@ -23,9 +23,13 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/Utils.h"
 #include "clang/Lex/Preprocessor.h"
+
+#ifndef _WIN32
 #define private public
 #include "clang/Parse/Parser.h"
 #undef private
+#endif
+
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Overload.h"
 #include "clang/Sema/Scope.h"
@@ -650,6 +654,7 @@ namespace cling {
     return declare(code) == Interpreter::kSuccess;
   }
   
+#ifndef _WIN32
   QualType
   Interpreter::lookupType(const std::string& typeName)
   {
@@ -1643,6 +1648,7 @@ namespace cling {
     const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = OldSpellChecking;
     return TheDecl;
   }
+#endif
 
   Interpreter::NamedDeclResult Interpreter::LookupDecl(llvm::StringRef Decl, 
                                                        const DeclContext* Within) {
@@ -1725,4 +1731,3 @@ namespace cling {
   }
   
 } // namespace cling
-
