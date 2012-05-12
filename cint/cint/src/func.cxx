@@ -2833,7 +2833,7 @@ G__value G__getfunction(const char* item, int* known3, int memfunc_flag)
                         G__fprinterr(
                              G__serr
                            , "Error: Can't call %s::%s in current scope"
-                           , G__struct.name[G__tagnum]
+                           , ( G__tagnum >=0 ? G__struct.name[G__tagnum] : "[Unknown class or namespace]" )
                            , item
                         );
                         G__genericerror(0);
