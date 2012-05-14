@@ -36,6 +36,16 @@ TGLContext *TGLContextPrivate::GetCurrentContext()
    return 0;
 }
 
+#elif defined(R__HAS_COCOA)
+
+std::map<ULong_t, TGLContext *> TGLContextPrivate::fgContexts;
+
+//______________________________________________________________________________
+TGLContext *TGLContextPrivate::GetCurrentContext()
+{
+   return 0;
+}
+
 #else
 
 std::map<GLXContext, TGLContext *> TGLContextPrivate::fgContexts;

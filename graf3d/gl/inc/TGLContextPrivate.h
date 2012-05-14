@@ -9,6 +9,7 @@
 #include "TGLIncludes.h"
 #include "TGLWSIncludes.h"
 #include "TGLContext.h"
+//#include "RConfigure.h"
 
 #ifdef WIN32
 
@@ -36,6 +37,28 @@ private:
    static std::map<HGLRC, TGLContext *> fgContexts;
 };
 
+#elif defined(R__HAS_COCOA)
+
+class TGLContextPrivate {
+public:
+
+   ULong_t fGLContext;
+
+   TGLContextPrivate()
+      : fGLContext(0)
+   {
+   }
+
+   static void RegisterContext(TGLContext *ctx);
+   static void RemoveContext(TGLContext *ctx);
+   static TGLContext *GetCurrentContext();
+
+private:
+   TGLContextPrivate(const TGLContextPrivate &);
+   TGLContextPrivate &operator = (const TGLContextPrivate &);
+
+   static std::map<ULong_t, TGLContext *> fgContexts;
+};
 
 #else
 
@@ -67,5 +90,4 @@ private:
 };
 
 #endif
-
 #endif

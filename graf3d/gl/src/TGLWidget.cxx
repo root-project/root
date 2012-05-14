@@ -21,8 +21,8 @@
 #include "TGLIncludes.h"
 #include "TGLWSIncludes.h"
 #include "TGLUtil.h"
-
 #include "TGLEventHandler.h"
+//#include "RConfigure.h"
 
 /******************************************************************************/
 // TGLWidget
@@ -159,7 +159,9 @@ TGLWidget::~TGLWidget()
    //Destructor. Deletes window ???? and XVisualInfo
 
 #ifndef WIN32
+#ifndef R__HAS_COCOA
    XFree(fInnerData.second);//free XVisualInfo
+#endif
 #endif
    if (fValidContexts.size() > 1u) {
       Warning("~TGLWidget", "There are some gl-contexts connected to this gl device"
@@ -377,9 +379,32 @@ void TGLWidget::SetFormat()
       throw std::runtime_error("ChoosePixelFormat failed");
    }
 }
+//==============================================================================
+#elif defined(R__HAS_COCOA) //MacOSX with Cocoa enabled.
+//==============================================================================
+
+//______________________________________________________________________________
+Window_t TGLWidget::CreateWindow(const TGWindow* /*parent*/, const TGLFormat &/*format*/,
+                                 UInt_t /*width*/, UInt_t /*height*/,
+                                 std::pair<void *, void *>& /*innerData*/)
+{
+   // CreateWidget - MacOSX/Cocoa version.
+   // Static function called prior to construction.
+   // Can throw std::bad_alloc and std::runtime_error.
+   // This version is bad - I do not check the results of
+   // X11 calls.
+   return Window_t();
+}
+
+//______________________________________________________________________________
+void TGLWidget::SetFormat()
+{
+   // Set pixel format.
+   // Empty version for X11.
+}
 
 //==============================================================================
-#else // Non WIN32
+#else // X11
 //==============================================================================
 
 namespace

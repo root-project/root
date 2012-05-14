@@ -21,6 +21,7 @@
 #include "TROOT.h"
 
 #include "TGLContextPrivate.h"
+//#include "RConfigure.h"
 #include "TGLIncludes.h"
 #include "TGLContext.h"
 #include "TGLWidget.h"
@@ -224,8 +225,44 @@ void TGLContext::Release()
    fValid = kFALSE;
 }
 
+#elif defined(R__HAS_COCOA)
+
+//______________________________________________________________________________
+void TGLContext::SetContext(TGLWidget * /*widget*/, const TGLContext * /*shareList*/)
+{
+}
+
+//______________________________________________________________________________
+Bool_t TGLContext::MakeCurrent()
+{
+   //If context is valid (TGLPaintDevice, for which context was created still exists),
+   //make it current.
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGLContext::ClearCurrent()
+{
+   //Reset current context.
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+void TGLContext::SwapBuffers()
+{
+   //If context is valid (TGLPaintDevice, for which context was created still exists),
+   //swap buffers (in case of P-buffer call glFinish()).
+}
+
+//______________________________________________________________________________
+void TGLContext::Release()
+{
+   //Make the context invalid and (do thread switch, if needed)
+   //free resources.
+}
+
 //==============================================================================
-#else // Non WIN32
+#else // X11
 //==============================================================================
 
 //______________________________________________________________________________
