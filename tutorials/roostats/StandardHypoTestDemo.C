@@ -273,9 +273,11 @@ void StandardHypoTestDemo(const char* infile = "",
    if (calcType == 1) 
        ((HybridCalculator*)hypoCalc)->SetToys(ntoys, ntoys/nToysRatio);
    if (calcType == 2 ) { 
-      //if (testStatType == 3) ((AsymptoticCalculator*) hypoCalc)->SetOneSided(true);  
+      if (testStatType == 3) ((AsymptoticCalculator*) hypoCalc)->SetOneSidedDiscovery(true);  
       if (testStatType != 2 && testStatType != 3)  
          Warning("StandardHypoTestDemo","Only the PL test statistic can be used with AsymptoticCalculator - use by default a two-sided PL");
+      
+
    }
 
 
