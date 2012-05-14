@@ -71,7 +71,7 @@ include $(MAKEFILEDEP)
 
 MODULES       = build cint/cint core/metautils core/pcre core/clib core/utils \
                 core/textinput core/base core/cont core/meta core/thread \
-                io/io math/mathcore net/net core/zip core/lzma math/matrix \
+                io/io math/mathcore net/net net/pmerge core/zip core/lzma math/matrix \
                 core/newdelete hist/hist tree/tree graf2d/freetype \
                 graf2d/graf graf2d/gpad graf3d/g3d \
                 gui/gui math/minuit hist/histpainter tree/treeplayer \
@@ -290,7 +290,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 graf3d/gl graf3d/ftgl graf3d/glew io/rfio io/castor \
                 montecarlo/pythia6 montecarlo/pythia8 misc/table \
                 sql/mysql sql/pgsql sql/sapdb net/srputils graf3d/x3d \
-                rootx net/rootd io/dcache io/chirp hist/hbook graf2d/asimage \
+                rootx net/rootd net/pmerge io/dcache io/chirp hist/hbook graf2d/asimage \
                 net/ldap net/krb5auth net/rpdutils net/globusauth \
                 bindings/pyroot bindings/ruby io/gfal misc/minicern \
                 graf2d/qt gui/qtroot gui/qtgsi net/netx net/alien \
@@ -645,7 +645,7 @@ $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.c
 $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.mm
 	$$(MAKEDIR)
 	$$(MAKEDEP) -R -f$$(@:.o=.d) -Y -w 1000 -- $$(CXXFLAGS) -D__cplusplus -- $$<
-	$$(CXX) $$(OPT) $$(CXXFLAGS) -ObjC++ -std=c++11 $$(CXXOUT)$$@ -c $$<
+	$$(CXX) $$(OPT) $$(CXXFLAGS) -ObjC++ $$(CXXOUT)$$@ -c $$<
 
 $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.f
 	$$(MAKEDIR)
@@ -676,7 +676,7 @@ $(foreach module,$(MODULESGENERIC),$(eval $(call SRCTOOBJ_template,$(module))))
 
 %.o: %.mm
 	$(MAKEDEP) -R -f$*.d -Y -w 1000 -- $(CXXFLAGS) -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CXXFLAGS) -ObjC++ -std=c++11 $(CXXOUT)$@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) -ObjC++ $(CXXOUT)$@ -c $<
 
 %.o: %.f
 ifeq ($(F77),f2c)
