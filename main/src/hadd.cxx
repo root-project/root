@@ -203,8 +203,7 @@ int main( int argc, char **argv )
          }
          while( indirect_file ){
             std::string line;
-            std::getline(indirect_file, line);
-            if( !merger.AddFile(line.c_str()) ) {
+            if( std::getline(indirect_file, line) && line.length() &&  !merger.AddFile(line.c_str()) ) {
                return 1;
             }
          }         
