@@ -307,6 +307,12 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
    // be used by ToyMCStudy on the workers (ie. when you explicitly want
    // a serial run although ProofConfig is present).
 
+   // Make sure the cache is clear. It is important to clear it hear, because
+   // the cache might be invalid even when just the firstPOI was changed, for which
+   // no accessor has to be called. (Fixes a bug when ToyMCSampler is
+   // used with the Neyman Construction)
+   ClearCache();
+
    CheckConfig();
 
    // important to cache the paramPoint b/c test statistic might 
@@ -410,29 +416,30 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
       ooccoutE((TObject*)NULL,InputArguments) << "Global Observables not set." << endl;
       return;
    }
+   
+   
+   if (fUseMultiGen || fgAlwaysUseMultiGen) {
 
-
-   // generate one set of global observables and assign it
-   // has problem for sim pdfs
-   RooSimultaneous* simPdf = dynamic_cast<RooSimultaneous*>( &pdf );
-   if (!simPdf) {
-      RooDataSet *one = pdf.generate(*fGlobalObservables, 1);
-
-      const RooArgSet *values = one->get();
-      if (!_allVars) {
-         _allVars = pdf.getVariables();
-      }
-      *_allVars = *values;
-      delete one;
-
-   } else {
-
-      if (_pdfList.size() == 0) {
-         TIterator* citer = simPdf->indexCat().typeIterator();
-         RooCatType* tt = NULL;
-         while ((tt = (RooCatType*) citer->Next())) {
-            RooAbsPdf* pdftmp = simPdf->getPdf(tt->GetName());
-            if (pdftmp) { 
+      // generate one set of global observables and assign it
+      // has problem for sim pdfs
+      RooSimultaneous* simPdf = dynamic_cast<RooSimultaneous*>( &pdf );
+      if (!simPdf) {
+         RooDataSet *one = pdf.generate(*fGlobalObservables, 1);
+   
+         const RooArgSet *values = one->get();
+         if (!_allVars) {
+            _allVars = pdf.getVariables();
+         }
+         *_allVars = *values;
+         delete one;
+   
+      } else {
+   
+         if (_pdfList.size() == 0) {
+            TIterator* citer = simPdf->indexCat().typeIterator();
+            RooCatType* tt = NULL;
+            while ((tt = (RooCatType*) citer->Next())) {
+               RooAbsPdf* pdftmp = simPdf->getPdf(tt->GetName());
                RooArgSet* globtmp = pdftmp->getObservables(*fGlobalObservables);
                RooAbsPdf::GenSpec* gs = pdftmp->prepareMultiGen(*globtmp, NumEvents(1));
                _pdfList.push_back(pdftmp);
@@ -440,16 +447,28 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
                _gsList.push_back(gs);
             }
          }
+   
+         list<RooArgSet*>::iterator oiter = _obsList.begin();
+         list<RooAbsPdf::GenSpec*>::iterator giter = _gsList.begin();
+         for (list<RooAbsPdf*>::iterator iter = _pdfList.begin(); iter != _pdfList.end(); ++iter, ++giter, ++oiter) {
+            //RooDataSet* tmp = (*iter)->generate(**oiter,1) ;
+            RooDataSet* tmp = (*iter)->generate(**giter);
+            **oiter = *tmp->get(0);
+            delete tmp;
+         }
       }
 
-      list<RooArgSet*>::iterator oiter = _obsList.begin();
-      list<RooAbsPdf::GenSpec*>::iterator giter = _gsList.begin();
-      for (list<RooAbsPdf*>::iterator iter = _pdfList.begin(); iter != _pdfList.end(); ++iter, ++giter, ++oiter) {
-         //RooDataSet* tmp = (*iter)->generate(**oiter,1) ;
-         RooDataSet* tmp = (*iter)->generate(**giter);
-         **oiter = *tmp->get(0);
-         delete tmp;
-      }
+
+   } else {
+   
+      // not using multigen for global observables
+      RooDataSet* one = pdf.generate( *fGlobalObservables, 1 );
+      const RooArgSet *values = one->get();
+      RooArgSet* allVars = pdf.getVariables();
+      *allVars = *values;
+      delete allVars;
+      delete one;
+
    }
 }
 
