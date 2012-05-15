@@ -205,6 +205,11 @@ protected:
 
 public:
    ClassDef(TSpectrum2Painter,0)   //TSpectrum 3d graphics package
+   
+private:
+   TSpectrum2Painter (const TSpectrum2Painter&);
+   TSpectrum2Painter& operator=(const TSpectrum2Painter&);
+
 };
 
 #endif
