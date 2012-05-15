@@ -38,40 +38,40 @@ void TSSLSocket::WrapWithSSL(void)
 
    // New context
    if (!(fSSLCtx = SSL_CTX_new(SSLv23_method()))) {
-      Error("TSSLSocket::WrapWithSSL()", "the context could not be created");
+      Error("WrapWithSSL", "the context could not be created");
       goto wrapFailed;
    }
 
    if ((fgSSLCAFile[0] || fgSSLCAPath[0]) && SSL_CTX_load_verify_locations(fSSLCtx, fgSSLCAFile, fgSSLCAPath) == 0) {
-      Error("TSSLSocket::WrapWithSSL", "Could not set the CA file and/or the CA path");
+      Error("WrapWithSSL", "could not set the CA file and/or the CA path");
       goto wrapFailed;
    }
 
    if (fgSSLUCert[0] && SSL_CTX_use_certificate_chain_file(fSSLCtx, fgSSLUCert) == 0) {
-      Error("TSSLSocket::WrapWithSSL", "Could not set the client certificate");
+      Error("WrapWithSSL", "could not set the client certificate");
       goto wrapFailed;
    }
 
    if (fgSSLUKey[0] && SSL_CTX_use_PrivateKey_file(fSSLCtx, fgSSLUKey, SSL_FILETYPE_PEM) == 0) {
-      Error("TSSLSocket::WrapWithSSL", "Could not set the client private key");
+      Error("WrapWithSSL", "could not set the client private key");
       goto wrapFailed;
    }
 
    // New SSL structure
    if (!(fSSL = SSL_new(fSSLCtx))) {
-      Error("TSSLSocket::WrapWithSSL()", "cannot create the ssl struct");
+      Error("WrapWithSSL", "cannot create the ssl struct");
       goto wrapFailed;
    }
 
    // Bind to the socket
    if (SSL_set_fd(fSSL, fSocket) != 1) {
-      Error("TSSLSocket::WrapWithSSL()", "cannot bind to the socket %d", fSocket);
+      Error("WrapWithSSL", "cannot bind to the socket %d", fSocket);
       goto wrapFailed;
    }
 
    // Open connection
    if (SSL_connect(fSSL) != 1) {
-      Error("TSSLSocket::WrapWithSSL()", "cannot connect");
+      Error("WrapWithSSL", "cannot connect");
       goto wrapFailed;
    }
 
@@ -178,7 +178,7 @@ void TSSLSocket::SetUpSSL(const char *cafile, const char *capath,
 //______________________________________________________________________________
 Int_t TSSLSocket::Recv(TMessage *& /*mess */)
 {
-   Error("TSSLSocket::Recv(TMessage*&)", "Not implemented");
+   Error("Recv", "not implemented");
    return -1;
 }
 
@@ -195,34 +195,45 @@ Int_t TSSLSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
    ResetBit(TSocket::kBrokenConn);
 
    Int_t n;
+   Int_t offset = 0;
+   Int_t remain = length;
 
-   if (opt == kPeek)
-      n = SSL_peek(fSSL, buffer, (int)length);
-   else
-      n = SSL_read(fSSL, buffer, (int)length);
+   // SSL_read/SSL_peek may not return the total length at once
+   while (remain > 0) {
+     if (opt == kPeek)
+        n = SSL_peek(fSSL, (char*)buffer + offset, (int)remain);
+     else
+        n = SSL_read(fSSL, (char*)buffer + offset, (int)remain);
 
-   if (n <= 0) {
-      if (SSL_get_error(fSSL, n) == SSL_ERROR_ZERO_RETURN || SSL_get_error(fSSL, n) == SSL_ERROR_SYSCALL) {
-         // Connection closed, reset or broken
-         SetBit(TSocket::kBrokenConn);
-         SSL_set_quiet_shutdown(fSSL, 1); // Socket is gone, sending "close notify" will fail
-         Close();
-      }
-      return n;
+     if (n <= 0) {
+        if (gDebug > 0)
+           Info("TSSLSocket::RecvRaw(void*, Int_t, ESendRecvOptions)", "Failed to read from the socket");
+
+        if (SSL_get_error(fSSL, n) == SSL_ERROR_ZERO_RETURN || SSL_get_error(fSSL, n) == SSL_ERROR_SYSCALL) {
+           // Connection closed, reset or broken
+           SetBit(TSocket::kBrokenConn);
+           SSL_set_quiet_shutdown(fSSL, 1); // Socket is gone, sending "close notify" will fail
+           Close();
+        }
+        return n;
+     }
+     
+     offset += n;
+     remain -= n;
    }
 
-   fBytesRecv  += n;
-   fgBytesRecv += n;
+   fBytesRecv  += length;
+   fgBytesRecv += length;
 
    Touch();  // update usage timestamp
 
-   return n;
+   return offset;
 }
 
 //______________________________________________________________________________
 Int_t TSSLSocket::Send(const TMessage & /* mess */)
 {
-   Error("TSSLSocket::Send(TMessage*&)", "Not implemented");
+   Error("Send", "not implemented");
    return -1;
 }
 
