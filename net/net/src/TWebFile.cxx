@@ -671,8 +671,13 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
 
          if (first >= 0) {
             Int_t ll = Int_t(last - first) + 1;
-            if (fSocket->RecvRaw(&buf[ltot], ll) == -1) {
+            Int_t rsize;
+            if ((rsize = fSocket->RecvRaw(&buf[ltot], ll)) == -1) {
                Error("GetFromWeb10", "error receiving data from host %s", fUrl.GetHost());
+               return -1;
+            }
+            else if (ll != rsize) {
+               Error("GetFromWeb10", "expected %d bytes, got %d", ll, rsize);
                return -1;
             }
             ltot += ll;
