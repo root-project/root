@@ -643,11 +643,12 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    
    if (fOneSided || fOneSidedDiscovery) {
       // for one-sided PL (q_mu : equations 56,57)
-      if (verbose>2)
+      if (verbose>2) {
          if (fOneSided) 
             oocoutI((TObject*)0,Eval) << "Using one-sided limit asymptotic formula (qmu)" << endl;
          else
             oocoutI((TObject*)0,Eval) << "Using one-sided discovery asymptotic formula (q0)" << endl;
+      }
       pnull = ROOT::Math::normal_cdf_c( sqrtqmu, 1.);
       palt = ROOT::Math::normal_cdf( sqrtqmu_A - sqrtqmu, 1.);
    }
