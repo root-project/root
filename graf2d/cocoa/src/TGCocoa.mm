@@ -2410,6 +2410,8 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
       
       if (comp.first == TGLFormat::kDoubleBuffer) {
          attribs.push_back(NSOpenGLPFADoubleBuffer);
+      } else if (comp.first == TGLFormat::kStereo) {
+         attribs.push_back(NSOpenGLPFAStereo);
       } else if (comp.first == TGLFormat::kDepth) {
          attribs.push_back(NSOpenGLPFADepthSize);
          attribs.push_back(comp.second > 0 ? comp.second : 32);
