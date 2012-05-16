@@ -384,15 +384,33 @@ void TGLWidget::SetFormat()
 //==============================================================================
 
 //______________________________________________________________________________
-Window_t TGLWidget::CreateWindow(const TGWindow* /*parent*/, const TGLFormat &/*format*/,
+Window_t TGLWidget::CreateWindow(const TGWindow* /*parent*/, const TGLFormat &format,
                                  UInt_t /*width*/, UInt_t /*height*/,
-                                 std::pair<void *, void *>& /*innerData*/)
+                                 std::pair<void *, void *>& /*internalData*/)
 {
    // CreateWidget - MacOSX/Cocoa version.
    // Static function called prior to construction.
-   // Can throw std::bad_alloc and std::runtime_error.
-   // This version is bad - I do not check the results of
-   // X11 calls.
+
+   typedef std::pair<UInt_t, Int_t> component_type;
+   
+   std::vector<component_type>formatComponents;
+
+   if (format.HasDepth())
+      formatComponents.push_back(component_type(TGLFormat::kDepth, format.GetDepthSize()));
+   if (format.HasStencil())
+      formatComponents.push_back(component_type(TGLFormat::kStencil, format.GetStencilSize()));
+   if (format.HasAccumBuffer())
+      formatComponents.push_back(component_type(TGLFormat::kAccum, format.GetAccumSize()));
+   if (format.IsDoubleBuffered())
+      formatComponents.push_back(component_type(TGLFormat::kDoubleBuffer, 0));
+   if (format.IsStereo())
+      formatComponents.push_back(component_type(TGLFormat::kStereo, 0));
+   if (format.HasMultiSampling())
+      formatComponents.push_back(component_type(TGLFormat::kMultiSample, format.GetSamples()));
+
+   //return gVirtualX->CreateOpenGLWindow(parent->GetId(), width, height, formatComponents);
+
+   
    return Window_t();
 }
 
