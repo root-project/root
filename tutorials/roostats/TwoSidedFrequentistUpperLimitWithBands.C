@@ -112,6 +112,7 @@ This results in thresholds that become very large.
 #include "RooStats/PointSetInterval.h"
 #include "RooStats/ConfidenceBelt.h"
 
+#include "RooStats/RooStatsUtils.h"
 #include "RooStats/ProfileLikelihoodTestStat.h"
 
 using namespace RooFit;

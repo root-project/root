@@ -116,6 +116,7 @@ This version does not deal with this issue, but it will be addressed in a future
 #include "RooStats/PointSetInterval.h"
 #include "RooStats/ConfidenceBelt.h"
 
+#include "RooStats/RooStatsUtils.h"
 #include "RooStats/ProfileLikelihoodTestStat.h"
 
 using namespace RooFit;
