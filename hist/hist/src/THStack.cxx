@@ -801,8 +801,10 @@ void THStack::Paint(Option_t *option)
             h1->Paint(loption);
             static TClassRef clTFrame = TClass::GetClass("TFrame",kFALSE);
             TAttFill *frameFill = (TAttFill*)clTFrame->DynamicCast(TAttFill::Class(),gPad->GetFrame());
-            h1->SetFillColor(frameFill->GetFillColor());
-            h1->SetFillStyle(frameFill->GetFillStyle());
+            if (frameFill) { 
+               h1->SetFillColor(frameFill->GetFillColor());
+               h1->SetFillStyle(frameFill->GetFillStyle());
+            }
             h1->Paint(loption);
             h1->SetFillColor(h1col);
             h1->SetFillStyle(h1fill);

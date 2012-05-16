@@ -1260,6 +1260,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
 
       // update the original data histogram
       x  = (Double_t*)(GetRow(i));
+      R__ASSERT(x);
 
       if (makeP||makeD||makeS)
          // calculate the corresponding principal component

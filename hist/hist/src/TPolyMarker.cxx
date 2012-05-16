@@ -116,6 +116,9 @@ TPolyMarker& TPolyMarker::operator=(const TPolyMarker& pm)
       TAttMarker::operator=(pm);
       fN=pm.fN;
       fLastPoint=pm.fLastPoint;
+   // delete first previous existing fX and fY
+      if (fX) delete [] fX;
+      if (fY) delete [] fY;
       fX=pm.fX;
       fY=pm.fY;
       fOption=pm.fOption;
