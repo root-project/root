@@ -2410,8 +2410,6 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
       
       if (comp.first == TGLFormat::kDoubleBuffer) {
          attribs.push_back(NSOpenGLPFADoubleBuffer);
-      } else if (comp.first == TGLFormat::kStereo) {
-         attribs.push_back(NSOpenGLPFAStereo);
       } else if (comp.first == TGLFormat::kDepth) {
          attribs.push_back(NSOpenGLPFADepthSize);
          attribs.push_back(comp.second > 0 ? comp.second : 32);
@@ -2450,6 +2448,35 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
    glView.fID = glID;
 
    return glID;
+}
+
+//______________________________________________________________________________
+Handle_t TGCocoa::CreateOpenGLContext(Window_t windowID, Handle_t sharedID)
+{
+   assert(!fPimpl->IsRootWindow(windowID) && "CreateOpenGLContext, windowID is a 'root' window");
+
+   assert([fPimpl->GetWindow(windowID).fContentView isKindOfClass : [ROOTOpenGLView class]] && 
+          "CreateOpenGLContext, view is not an OpenGL view");
+   
+   ROOTOpenGLView *glView = (ROOTOpenGLView *)fPimpl->GetWindow(windowID).fContentView;
+   //At the moment I can not have several gl contenxts, created for the same view.
+   assert([glView openGLContext] == nil && "CreateOpenGLContext, view's context is not nil");
+   NSOpenGLPixelFormat *pixelFormat = glView.pixelFormat;
+
+   NSOpenGLContext *sharedContext = nil;
+
+   if (sharedID) {
+      NSObject<X11Window> *v = fPimpl->GetWindowForGLContext(sharedID);
+      assert([v isKindOfClass : [ROOTOpenGLView class]] && "CreateOpenGLContext, shared context's view is not an OpenGL view");
+      sharedContext = ((ROOTOpenGLView *)v).openGLContext;
+   }
+
+   Util::NSScopeGuard<NSOpenGLContext> newContext([[NSOpenGLContext alloc] initWithFormat : pixelFormat shareContext : sharedContext]);
+   glView.openGLContext = newContext.Get();   
+   const ULong_t ctxID = fPimpl->RegisterGLContextForView(windowID);
+   newContext.Release();
+
+   return ctxID;
 }
 
 //______________________________________________________________________________

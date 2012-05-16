@@ -228,8 +228,23 @@ void TGLContext::Release()
 #elif defined(R__HAS_COCOA)
 
 //______________________________________________________________________________
-void TGLContext::SetContext(TGLWidget * /*widget*/, const TGLContext * /*shareList*/)
+void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
 {
+   //This function is public only for calls via gROOT and called from ctor.
+   if (!fFromCtor) {
+      Error("TGLContext::SetContext", "SetContext must be called only from ctor");
+      return;
+   }
+
+   std::auto_ptr<TGLContextPrivate> safe_ptr(fPimpl = new TGLContextPrivate);
+
+   fPimpl->fGLContext = gVirtualX->CreateOpenGLContext(widget->GetId(), shareList ? shareList->fPimpl->fGLContext : 0);
+
+   fValid = kTRUE;
+   fDevice->AddContext(this);
+   TGLContextPrivate::RegisterContext(this);
+
+   safe_ptr.release();
 }
 
 //______________________________________________________________________________

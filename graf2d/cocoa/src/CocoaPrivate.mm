@@ -32,8 +32,9 @@ namespace Details {
 
 //______________________________________________________________________________
 CocoaPrivate::CocoaPrivate()
-               : fCurrentDrawableID(GetRootWindowID() + 1)//Any real window has id > rootID.
-                                                        //0 is also used by some X11 functions as None.
+               : fCurrentDrawableID(GetRootWindowID() + 1), //Any real window has id > rootID.
+                                                            //0 is also used by some X11 functions as None.
+                 fFreeGLContextID(1)
 {
    //Init NSApplication, if it was not done yet.
    Util::AutoreleasePool pool;
@@ -155,6 +156,21 @@ void CocoaPrivate::DeleteDrawable(unsigned drawableID)
 
 //   fFreeDrawableIDs.push_back(drawableID);
    fDrawables.erase(drawableIter);//StrongReference should do work here.
+}
+
+//______________________________________________________________________________
+ULong_t CocoaPrivate::RegisterGLContextForView(unsigned viewID)
+{
+   //At the moment, let's assume we attach only 1 gl context to 1 view.
+   fGLContextMap[fFreeGLContextID] = viewID;
+   return fFreeGLContextID++;
+}
+
+//______________________________________________________________________________
+NSObject<X11Window> *CocoaPrivate::GetWindowForGLContext(Handle_t glContextID)
+{
+   assert(fGLContextMap.find(glContextID) != fGLContextMap.end() && "GetWindowForGLContext, bad context id");
+   return GetWindow(fGLContextMap[glContextID]);
 }
 
 //______________________________________________________________________________
