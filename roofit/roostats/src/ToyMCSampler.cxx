@@ -31,6 +31,7 @@
 #include "RooStats/ToyMCStudy.h"
 #include "RooStats/DetailedOutputAggregator.h"
 #include "RooSimultaneous.h"
+#include "RooCategory.h"
 
 #include "TMath.h"
 
@@ -436,10 +437,12 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
       } else {
    
          if (_pdfList.size() == 0) {
-            TIterator* citer = simPdf->indexCat().typeIterator();
-            RooCatType* tt = NULL;
-            while ((tt = (RooCatType*) citer->Next())) {
-               RooAbsPdf* pdftmp = simPdf->getPdf(tt->GetName());
+            RooCategory& channelCat = (RooCategory&)simPdf->indexCat();
+            int nCat = channelCat.numTypes();
+            for (int i=0; i < nCat; ++i){
+               channelCat.setIndex(i);
+               RooAbsPdf* pdftmp = simPdf->getPdf(channelCat.getLabel());
+               assert(pdftmp);
                RooArgSet* globtmp = pdftmp->getObservables(*fGlobalObservables);
                RooAbsPdf::GenSpec* gs = pdftmp->prepareMultiGen(*globtmp, NumEvents(1));
                _pdfList.push_back(pdftmp);

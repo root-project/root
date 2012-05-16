@@ -76,6 +76,10 @@ namespace RooStats {
       // set test statistic for one sided (upper limits)
       void SetOneSided(bool on) { fOneSided = on; }
 
+      // set the test statistics for two sided (in case of upper limits
+      // for discovery does not make really sense)
+      void SetTwoSided() { fOneSided = false; fOneSidedDiscovery = false;}
+
       // set the test statistics for one-sided discovery
       void SetOneSidedDiscovery(bool on) { fOneSidedDiscovery = on; }
 

@@ -152,7 +152,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    // do not do anything if the given parameter point if fNullSnapshots[0]
    // ... which is the most common case
    if( fNullSnapshots[0] != &paramPoint ) {
-      ooccoutI((TObject*)NULL,InputArguments) << "Using given parameter point. Replaces snapshot for the only null currently defined." << endl;
+      ooccoutD((TObject*)NULL,InputArguments) << "Using given parameter point. Replaces snapshot for the only null currently defined." << endl;
       if(fNullSnapshots[0]) delete fNullSnapshots[0];
       fNullSnapshots.clear();
       fNullSnapshots.push_back( (RooArgSet*)paramPoint.snapshot() );
@@ -234,8 +234,8 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    // test statistics.
 
 
-   oocoutI((TObject*)0,InputArguments) << endl;
-   oocoutI((TObject*)0,InputArguments) << "GenerateToyDataImportanceSampling" << endl;
+   ooccoutD((TObject*)0,InputArguments) << endl;
+   ooccoutD((TObject*)0,InputArguments) << "GenerateToyDataImportanceSampling" << endl;
 
    if(!fObservables) {
       ooccoutE((TObject*)NULL,InputArguments) << "Observables not set." << endl;
@@ -345,7 +345,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    // Importance Sampling: adjust weight
    // Sources: Alex Read, presentation by Michael Woodroofe
 
-   oocoutI((TObject*)0,InputArguments) << "About to create/calculate all nullNLLs." << endl;
+   ooccoutD((TObject*)0,InputArguments) << "About to create/calculate all nullNLLs." << endl;
    for( unsigned int i=0; i < fNullDensities.size(); i++ ) {
       //oocoutI((TObject*)0,InputArguments) << "Setting variables to nullSnapshot["<<i<<"]"<<endl;
       //fNullSnapshots[i]->Print("v");
@@ -365,7 +365,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    
    
    // for each null: find minNLLVal of null and all imp densities
-   oocoutI((TObject*)0,InputArguments) << "About to find the minimum NLLs." << endl;
+   ooccoutD((TObject*)0,InputArguments) << "About to find the minimum NLLs." << endl;
    vector<double> minNLLVals;
    for( unsigned int i=0; i < nullNLLVals.size(); i++ ) minNLLVals.push_back( nullNLLVals[i] );
    
@@ -387,13 +387,13 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       
       for( unsigned int j=0; j < nullNLLVals.size(); j++ ) {
          if( impNLLVals[i] < minNLLVals[j] ) minNLLVals[j] = impNLLVals[i];
-         oocoutI((TObject*)0,InputArguments) << "minNLLVals["<<j<<"]: " << minNLLVals[j] << "  nullNLLVals["<<j<<"]: " << nullNLLVals[j] << "    impNLLVals["<<i<<"]: " << impNLLVals[i] << endl;
+         ooccoutD((TObject*)0,InputArguments) << "minNLLVals["<<j<<"]: " << minNLLVals[j] << "  nullNLLVals["<<j<<"]: " << nullNLLVals[j] << "    impNLLVals["<<i<<"]: " << impNLLVals[i] << endl;
       }
    }
    
    // veto toys: this is a sort of "overlap removal" of the various distributions
    // if not vetoed: apply weight
-   oocoutI((TObject*)0,InputArguments) << "About to apply vetos and calculate weights." << endl;
+   ooccoutD((TObject*)0,InputArguments) << "About to apply vetos and calculate weights." << endl;
    for( unsigned int j=0; j < nullNLLVals.size(); j++ ) {
       if     ( fApplyVeto  &&  fGenerateFromNull  &&  minNLLVals[j] != nullNLLVals[j] ) weights[j] = 0.0;
       else if( fApplyVeto  &&  !fGenerateFromNull  &&  minNLLVals[j] != impNLLVals[fIndexGenDensity] ) weights[j] = 0.0;
@@ -404,7 +404,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
          weights[j] *= exp(minNLLVals[j] - nullNLLVals[j]);
       }
 
-      oocoutI((TObject*)0,InputArguments) << "weights["<<j<<"]: " << weights[j] << endl;
+      ooccoutD((TObject*)0,InputArguments) << "weights["<<j<<"]: " << weights[j] << endl;
    }
 
 
