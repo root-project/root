@@ -6,6 +6,8 @@
 @implementation ROOTOpenGLView {
    NSMutableArray *fPassiveKeyGrabs;
    BOOL            fIsOverlapped;
+   
+   NSOpenGLPixelFormat *fPixelFormat;
 }
 
 @synthesize fID;
@@ -27,6 +29,8 @@
       fPassiveKeyGrabs = [[NSMutableArray alloc] init];
       [self setHidden : YES];//Not sure.
       fCurrentCursor = kPointer;
+
+      fPixelFormat = [format retain];      
       //Tracking area?
    }
    
@@ -37,6 +41,8 @@
 - (void) dealloc
 {
    [fPassiveKeyGrabs release];
+   [fPixelFormat release];
+
    [super dealloc];
 }
 
