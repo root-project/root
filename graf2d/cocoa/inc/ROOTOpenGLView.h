@@ -22,17 +22,16 @@
 //                                       //
 ///////////////////////////////////////////
 
-@interface ROOTOpenGLView : NSOpenGLView <X11Window>
+@interface ROOTOpenGLView : NSView <X11Window>
 
-//NSOpenGLView methods.
 - (id) initWithFrame : (NSRect) frameRect pixelFormat : (NSOpenGLPixelFormat *) format;
 - (void) clearGLContext;
 - (NSOpenGLContext *) openGLContext;
-- (NSOpenGLPixelFormat *) pixelFormat;
-- (void) prepareOpenGL;
-- (void) reshape;
 - (void) setOpenGLContext : (NSOpenGLContext *) context;
+
+- (NSOpenGLPixelFormat *) pixelFormat;
 - (void) setPixelFormat : (NSOpenGLPixelFormat *) pixelFormat;
+
 - (void) update;
 
 //X11Drawable protocol

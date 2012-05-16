@@ -18,8 +18,10 @@
 #include <cstddef>
 #include <limits>
 
-#include  <Cocoa/Cocoa.h>
+#include <OpenGL/OpenGL.h>
+#include <Cocoa/Cocoa.h>
 
+#include "ROOTOpenGLView.h"
 #include "CocoaPrivate.h"
 #include "QuartzWindow.h"
 #include "QuartzPixmap.h"
@@ -28,6 +30,7 @@
 #include "CocoaUtils.h"
 #include "X11Events.h"
 #include "X11Buffer.h"
+#include "TGLFormat.h"
 #include "TGClient.h"
 #include "TGWindow.h"
 #include "TGFrame.h"
@@ -252,11 +255,7 @@ TGCocoa::TGCocoa()
               fForegroundProcess(false),
               fCurrentMessageID(1)
 {
-   try {
-      fPimpl.reset(new Details::CocoaPrivate);
-   } catch (const std::exception &) {
-      throw;
-   }
+   fPimpl.reset(new Details::CocoaPrivate);
 }
 
 //______________________________________________________________________________
@@ -269,11 +268,7 @@ TGCocoa::TGCocoa(const char *name, const char *title)
               fForegroundProcess(false),
               fCurrentMessageID(1)
 {
-   try {
-      fPimpl.reset(new Details::CocoaPrivate);
-   } catch (const std::exception &) {
-      throw;   
-   }
+   fPimpl.reset(new Details::CocoaPrivate);
 }
 
 //______________________________________________________________________________
@@ -569,31 +564,23 @@ Window_t TGCocoa::CreateWindow(Window_t parentID, Int_t x, Int_t y, UInt_t w, UI
    const Util::AutoreleasePool pool;
    
    if (fPimpl->IsRootWindow(parentID)) {//parent == root window.
-      try {
-         QuartzWindow *newWindow = X11::CreateTopLevelWindow(x, y, w, h, border, depth, clss, visual, attr, wtype);//Can throw.
-         const Util::NSScopeGuard<QuartzWindow> winGuard(newWindow);
-         const Window_t result = fPimpl->RegisterDrawable(newWindow);//Can throw.
-         newWindow.fID = result;
+      QuartzWindow *newWindow = X11::CreateTopLevelWindow(x, y, w, h, border, depth, clss, visual, attr, wtype);//Can throw.
+      const Util::NSScopeGuard<QuartzWindow> winGuard(newWindow);
+      const Window_t result = fPimpl->RegisterDrawable(newWindow);//Can throw.
+      newWindow.fID = result;
 
-         return result;
-      } catch (const std::exception &) {//Bad alloc.
-         throw;
-      }
+      return result;
    } else {
       NSObject<X11Window> *parentWin = fPimpl->GetWindow(parentID);
       //OpenGL view can not have children.
       assert([parentWin.fContentView isKindOfClass : [QuartzView class]] && "CreateWindow, parent view must be QuartzView");
-      try {
-         QuartzView *childView = X11::CreateChildView((QuartzView *)parentWin.fContentView, x, y, w, h, border, depth, clss, visual, attr, wtype);//Can throw.
-         const Util::NSScopeGuard<QuartzView> viewGuard(childView);
-         const Window_t result = fPimpl->RegisterDrawable(childView);//Can throw.
-         childView.fID = result;
-         [parentWin addChild : childView];
-         
-         return result;
-      } catch (const std::exception &) {//Bad alloc.
-         throw;
-      }
+      QuartzView *childView = X11::CreateChildView((QuartzView *)parentWin.fContentView, x, y, w, h, border, depth, clss, visual, attr, wtype);//Can throw.
+      const Util::NSScopeGuard<QuartzView> viewGuard(childView);
+      const Window_t result = fPimpl->RegisterDrawable(childView);//Can throw.
+      childView.fID = result;
+      [parentWin addChild : childView];
+      
+      return result;
    }
 }
 
@@ -1736,18 +1723,14 @@ Int_t TGCocoa::OpenPixmap(UInt_t w, UInt_t h)
    newSize.width = w;
    newSize.height = h;
 
-   try {
-      Util::NSScopeGuard<QuartzPixmap> obj([QuartzPixmap alloc]);
-      if (QuartzPixmap *pixmap = [obj.Get() initWithW : w H : h]) {
-         obj.Reset(pixmap);
-         pixmap.fID = fPimpl->RegisterDrawable(pixmap);//Can throw.
-         return (Int_t)pixmap.fID;
-      } else {
-         Error("OpenPixmap", "Pixmap initialization failed");
-         return -1;
-      }
-   } catch (const std::exception &) {//std::bad_alloc.
-      throw;
+   Util::NSScopeGuard<QuartzPixmap> obj([QuartzPixmap alloc]);
+   if (QuartzPixmap *pixmap = [obj.Get() initWithW : w H : h]) {
+      obj.Reset(pixmap);
+      pixmap.fID = fPimpl->RegisterDrawable(pixmap);//Can throw.
+      return (Int_t)pixmap.fID;
+   } else {
+      Error("OpenPixmap", "Pixmap initialization failed");
+      return -1;
    }
 }
 
@@ -1832,46 +1815,40 @@ Pixmap_t TGCocoa::CreatePixmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
    assert(width > 0 && "CreatePixmap, width parameter is 0");
    assert(height > 0 && "CreatePixmap, height parameter is 0");
    
-   try {
-      unsigned char *imageData = 0;      
-      if (depth > 1)
-         imageData = new unsigned char[width * height * 4]();
-      else
-         imageData = new unsigned char[width * height];
+   unsigned char *imageData = 0;      
+   if (depth > 1)
+      imageData = new unsigned char[width * height * 4]();
+   else
+      imageData = new unsigned char[width * height];
 
-      X11::FillPixmapBuffer((unsigned char*)bitmap, width, height, foregroundPixel, backgroundPixel, depth, imageData);
+   X11::FillPixmapBuffer((unsigned char*)bitmap, width, height, foregroundPixel, backgroundPixel, depth, imageData);
 
-      //Now we can create CGImageRef.
-      Util::NSScopeGuard<QuartzImage> mem([QuartzImage alloc]);
-      if (!mem.Get()) {
-         Error("CreatePixmap", "[QuartzImage alloc] failed");
-         delete [] imageData;
-         return Pixmap_t();
-      }
-   
-      QuartzImage *image = nil;
-      
-      if (depth > 1)
-         image = [mem.Get() initWithW : width H : height data: imageData];
-      else
-         image = [mem.Get() initMaskWithW : width H : height bitmapMask : imageData];
-
-      if (!image) {
-         delete [] imageData;
-         Error("CreatePixmap", "[QuartzImage initWithW:H:data:] failed");
-         return Pixmap_t();
-      }
-
-      mem.Reset(image);
-      //Now imageData is owned by image.
-      image.fID = fPimpl->RegisterDrawable(image);//This can throw.
-      return image.fID;      
-   } catch (const std::exception &) {
-      //Memory is owned by QuartzImage.
-      throw;
+   //Now we can create CGImageRef.
+   Util::NSScopeGuard<QuartzImage> mem([QuartzImage alloc]);
+   if (!mem.Get()) {
+      Error("CreatePixmap", "[QuartzImage alloc] failed");
+      delete [] imageData;
+      return Pixmap_t();
    }
 
-   return Pixmap_t();
+   QuartzImage *image = nil;
+   
+   if (depth > 1)
+      image = [mem.Get() initWithW : width H : height data: imageData];
+   else
+      image = [mem.Get() initMaskWithW : width H : height bitmapMask : imageData];
+
+   if (!image) {
+      delete [] imageData;
+      Error("CreatePixmap", "[QuartzImage initWithW:H:data:] failed");
+      return Pixmap_t();
+   }
+
+   mem.Reset(image);
+   //Now imageData is owned by image.
+   image.fID = fPimpl->RegisterDrawable(image);//This can throw.
+
+   return image.fID;      
 }
 
 //______________________________________________________________________________
@@ -1882,42 +1859,36 @@ Pixmap_t TGCocoa::CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t
    assert(width != 0 && "CreatePixmapFromData, width parameter is 0");
    assert(height != 0 && "CreatePixmapFromData, height parameter is 0");
 
-   try {
-      //I'm not using vector here, since I have to pass this pointer to Obj-C code
-      //(and Obj-C object will own this memory later).
-      unsigned char *imageData = new unsigned char[width * height * 4];
-      std::copy(bits, bits + width * height * 4, imageData);
+   //I'm not using vector here, since I have to pass this pointer to Obj-C code
+   //(and Obj-C object will own this memory later).
+   unsigned char *imageData = new unsigned char[width * height * 4];
+   std::copy(bits, bits + width * height * 4, imageData);
 
-      //Convert bgra to rgba.
-      unsigned char *p = imageData;
-      for (unsigned i = 0, e = width * height; i < e; ++i, p += 4)
-         std::swap(p[0], p[2]);
-   
-      //Now we can create CGImageRef.
-      Util::NSScopeGuard<QuartzImage> mem([QuartzImage alloc]);
-      if (!mem.Get()) {
-         Error("CreatePixmapFromData", "[QuartzImage alloc] failed");
-         delete [] imageData;
-         return Pixmap_t();
-      }
-   
-      QuartzImage *image = [mem.Get() initWithW : width H : height data : imageData];
-      if (!image) {
-         delete [] imageData;
-         Error("CreatePixmapFromData", "[QuartzImage initWithW:H:data:] failed");
-         return Pixmap_t();
-      }
-      
-      mem.Reset(image);
-      //Now imageData is owned by image.
-      image.fID = fPimpl->RegisterDrawable(image);//This can throw.
-      
-      return image.fID;      
-   } catch (const std::exception &) {//Bad alloc.
-      throw;
+   //Convert bgra to rgba.
+   unsigned char *p = imageData;
+   for (unsigned i = 0, e = width * height; i < e; ++i, p += 4)
+      std::swap(p[0], p[2]);
+
+   //Now we can create CGImageRef.
+   Util::NSScopeGuard<QuartzImage> mem([QuartzImage alloc]);
+   if (!mem.Get()) {
+      Error("CreatePixmapFromData", "[QuartzImage alloc] failed");
+      delete [] imageData;
+      return Pixmap_t();
    }
 
-   return Pixmap_t();
+   QuartzImage *image = [mem.Get() initWithW : width H : height data : imageData];
+   if (!image) {
+      delete [] imageData;
+      Error("CreatePixmapFromData", "[QuartzImage initWithW:H:data:] failed");
+      return Pixmap_t();
+   }
+   
+   mem.Reset(image);
+   //Now imageData is owned by image.
+   image.fID = fPimpl->RegisterDrawable(image);//This can throw.
+   
+   return image.fID;      
 }
 
 //______________________________________________________________________________
@@ -1926,47 +1897,41 @@ Pixmap_t TGCocoa::CreateBitmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
    //Create QuartzImage with image mask.
    assert(std::numeric_limits<unsigned char>::digits == 8 && "CreateBitmap, ASImage requires octets");
 
-   try {
-      //I'm not using vector here, since I have to pass this pointer to Obj-C code
-      //(and Obj-C object will own this memory later).
-      
-      //TASImage has a bug, it calculates size in pixels (making a with to multiple-of eight and 
-      //allocates memory as each bit occupies one byte, and later packs bits into bytes.
-      //Posylaiu luchi ponosa avtoru.
-
-      unsigned char *imageData = new unsigned char[width * height]();
-      for (unsigned i = 0, j = 0, e = width / 8 * height; i < e; ++i) {//TASImage supposes 8-bit bytes and packs mask bits.
-         for(unsigned bit = 0; bit < 8; ++bit, ++j) {
-            if (bitmap[i] & (1 << bit))
-               imageData[j] = 0;//Opaque.
-            else
-               imageData[j] = 255;//Masked out bit.
-         }
-      }
-
-      //Now we can create CGImageRef.
-      Util::NSScopeGuard<QuartzImage> mem([QuartzImage alloc]);
-      if (!mem.Get()) {
-         Error("CreateBitmap", "[QuartzImage alloc] failed");
-         delete [] imageData;
-         return Pixmap_t();
-      }
+   //I'm not using vector here, since I have to pass this pointer to Obj-C code
+   //(and Obj-C object will own this memory later).
    
-      QuartzImage *image = [mem.Get() initMaskWithW : width H : height bitmapMask: imageData];
-      if (!image) {
-         delete [] imageData;
-         return Pixmap_t();
+   //TASImage has a bug, it calculates size in pixels (making a with to multiple-of eight and 
+   //allocates memory as each bit occupies one byte, and later packs bits into bytes.
+   //Posylaiu luchi ponosa avtoru.
+
+   unsigned char *imageData = new unsigned char[width * height]();
+   for (unsigned i = 0, j = 0, e = width / 8 * height; i < e; ++i) {//TASImage supposes 8-bit bytes and packs mask bits.
+      for(unsigned bit = 0; bit < 8; ++bit, ++j) {
+         if (bitmap[i] & (1 << bit))
+            imageData[j] = 0;//Opaque.
+         else
+            imageData[j] = 255;//Masked out bit.
       }
-      
-      mem.Reset(image);
-      //Now, imageData is owned by image.
-      image.fID = fPimpl->RegisterDrawable(image);//This can throw.      
-      return image.fID;      
-   } catch (const std::exception &e) {//Bad alloc.
-      throw;
    }
 
-   return Pixmap_t();
+   //Now we can create CGImageRef.
+   Util::NSScopeGuard<QuartzImage> mem([QuartzImage alloc]);
+   if (!mem.Get()) {
+      Error("CreateBitmap", "[QuartzImage alloc] failed");
+      delete [] imageData;
+      return Pixmap_t();
+   }
+
+   QuartzImage *image = [mem.Get() initMaskWithW : width H : height bitmapMask: imageData];
+   if (!image) {//Error is already reported by QuartzImage.
+      delete [] imageData;
+      return Pixmap_t();
+   }
+   
+   mem.Reset(image);
+   //Now, imageData is owned by image.
+   image.fID = fPimpl->RegisterDrawable(image);//This can throw.      
+   return image.fID;      
 }
 
 //______________________________________________________________________________
@@ -2428,6 +2393,64 @@ void TGCocoa::GetPasteBuffer(Window_t /*id*/, Atom_t /*atom*/, TString &/*text*/
 }
 
 //______________________________________________________________________________
+Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &formatComponents)
+{
+   //ROOT never creates GL widgets with 'root' as a parent (so not top-level gl-windows).
+   //If this change, assert must be deleted.
+   typedef std::pair<UInt_t, Int_t> component_type;
+   typedef std::vector<component_type>::size_type size_type;
+
+   assert(!fPimpl->IsRootWindow(parentID) && "CreateOpenGLWindow, could not create top-level gl window");
+   //Convert pairs into Cocoa's GL attributes.
+   
+
+   std::vector<NSOpenGLPixelFormatAttribute> attribs;
+   for (size_type i = 0, e = formatComponents.size(); i < e; ++i) {
+      const component_type &comp = formatComponents[i];
+      
+      if (comp.first == TGLFormat::kDoubleBuffer) {
+         attribs.push_back(NSOpenGLPFADoubleBuffer);
+      } else if (comp.first == TGLFormat::kDepth) {
+         attribs.push_back(NSOpenGLPFADepthSize);
+         attribs.push_back(comp.second > 0 ? comp.second : 32);
+      } else if (comp.first == TGLFormat::kAccum) {
+         attribs.push_back(NSOpenGLPFAAccumSize);
+         attribs.push_back(comp.second > 0 ? comp.second : 1);
+      } else if (comp.first == TGLFormat::kStencil) {
+         attribs.push_back(NSOpenGLPFAStencilSize);
+         attribs.push_back(comp.second > 0 ? comp.second : 8);
+      } else if (comp.first == TGLFormat::kMultiSample) {
+         attribs.push_back(NSOpenGLPFASampleBuffers);
+         attribs.push_back(1);
+         attribs.push_back(NSOpenGLPFASamples);
+         attribs.push_back(comp.second ? comp.second : 4);
+      }
+   }
+   
+   attribs.push_back(NSOpenGLPFAAccelerated);//??? I think, TGLWidget always wants this.
+   attribs.push_back(0);
+
+   NSOpenGLPixelFormat *pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes : &attribs[0]];
+   const Util::NSScopeGuard<NSOpenGLPixelFormat> formatGuard(pixelFormat);
+   
+   NSView<X11Window> *parentView = fPimpl->GetWindow(parentID).fContentView;
+   assert([parentView isKindOfClass : [QuartzView class]] && "CreateOpenGLWindow, parent view must be QuartzView");
+   
+   NSRect viewFrame = {};
+   viewFrame.size.width = width;
+   viewFrame.size.height = height;
+
+   ROOTOpenGLView *glView = [[ROOTOpenGLView alloc] initWithFrame : viewFrame pixelFormat : pixelFormat];
+   const Util::NSScopeGuard<ROOTOpenGLView> viewGuard(glView);
+   
+   [parentView addChild : glView];
+   const Window_t glID = fPimpl->RegisterDrawable(glView);
+   glView.fID = glID;
+
+   return glID;
+}
+
+//______________________________________________________________________________
 void TGCocoa::CreateOpenGLContext(Int_t /*wid*/)
 {
    // Creates OpenGL context for window "wid"
@@ -2588,23 +2611,19 @@ void TGCocoa::SetDoubleBufferON()
          return;
    }
 
-   try {
-      Util::NSScopeGuard<QuartzPixmap> mem([QuartzPixmap alloc]);      
-      if (QuartzPixmap *pixmap = [mem.Get() initWithW : currW H : currH]) {
-         mem.Reset(pixmap);
-         pixmap.fID = fPimpl->RegisterDrawable(pixmap);//Can throw.
-         if (window.fBackBuffer) {//Now we can delete the old one, since the new was created.
-            if (fPimpl->fX11CommandBuffer.BufferSize())
-               fPimpl->fX11CommandBuffer.RemoveOperationsForDrawable(window.fBackBuffer.fID);
-            fPimpl->DeleteDrawable(window.fBackBuffer.fID);
-         }
-
-         window.fBackBuffer = pixmap;
-      } else {
-         Error("SetDoubleBufferON", "Can't create a pixmap");
+   Util::NSScopeGuard<QuartzPixmap> mem([QuartzPixmap alloc]);      
+   if (QuartzPixmap *pixmap = [mem.Get() initWithW : currW H : currH]) {
+      mem.Reset(pixmap);
+      pixmap.fID = fPimpl->RegisterDrawable(pixmap);//Can throw.
+      if (window.fBackBuffer) {//Now we can delete the old one, since the new was created.
+         if (fPimpl->fX11CommandBuffer.BufferSize())
+            fPimpl->fX11CommandBuffer.RemoveOperationsForDrawable(window.fBackBuffer.fID);
+         fPimpl->DeleteDrawable(window.fBackBuffer.fID);
       }
-   } catch (const std::exception &) {//std::bad_alloc.
-      throw;
+
+      window.fBackBuffer = pixmap;
+   } else {
+      Error("SetDoubleBufferON", "Can't create a pixmap");
    }
 }
 

@@ -21,8 +21,9 @@
 //______________________________________________________________________________
 - (id) initWithFrame : (NSRect) frameRect pixelFormat : (NSOpenGLPixelFormat *) format
 {
+   (void)format;
 
-   if (self = [super initWithFrame : frameRect pixelFormat : format]) {
+   if (self = [super initWithFrame : frameRect]) {
       fPassiveKeyGrabs = [[NSMutableArray alloc] init];
       [self setHidden : YES];//Not sure.
       fCurrentCursor = kPointer;
@@ -39,54 +40,38 @@
    [super dealloc];
 }
 
-//NSOpenGLView's overriders.
-
 //______________________________________________________________________________
 - (void) clearGLContext
 {
-   [super clearGLContext];
 }
 
 //______________________________________________________________________________
 - (NSOpenGLContext *) openGLContext
 {
-   return [super openGLContext];
-}
-
-//______________________________________________________________________________
-- (NSOpenGLPixelFormat *) pixelFormat
-{
-   return [super pixelFormat];
-}
-
-//______________________________________________________________________________
-- (void) prepareOpenGL
-{
-   [super prepareOpenGL];
-}
-
-//______________________________________________________________________________
-- (void) reshape
-{
-   [super reshape];
+   return nil;
 }
 
 //______________________________________________________________________________
 - (void) setOpenGLContext : (NSOpenGLContext *) context
 {
-   [super setOpenGLContext : context];
+   (void)context;
+}
+
+//______________________________________________________________________________
+- (NSOpenGLPixelFormat *) pixelFormat
+{
+   return nil;
 }
 
 //______________________________________________________________________________
 - (void) setPixelFormat : (NSOpenGLPixelFormat *) pixelFormat
 {
-   [super setPixelFormat : pixelFormat];
+   (void)pixelFormat;
 }
 
 //______________________________________________________________________________
 - (void) update
 {
-   [super update];
 }
 
 //X11Drawable protocol.
