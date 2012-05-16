@@ -318,13 +318,15 @@ RooDataSet* HLFactory::GetTotDataSet(){
     while ((obj = it->Next())){
         ostring=(TObjString*) obj;
         catindex++;
-        RooDataSet* dummy = new RooDataSet(*(RooDataSet*)fWs->data(ostring->String()),"");
+        RooDataSet * data = (RooDataSet*)fWs->data(ostring->String());
+        if (!data) return NULL;
+        RooDataSet* dummy = new RooDataSet(*data,"");
         fComboCat->setIndex(catindex);
         fComboCat->Print();
         dummy->addColumn(*fComboCat);
         fComboDataset->append(*dummy);
         delete dummy;
-        }
+    }
 
     delete it;
     return fComboDataset;

@@ -135,16 +135,16 @@ AsymptoticCalculator::AsymptoticCalculator(
       allParams->snapshot(nominalParams);
    }
 
-   // evaluate the unconditional nll for the full model on the  observed data  
-   oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best unconditional NLL on observed data" << endl;
+   // evaluate the unconditional nll for the full model on the  observed data 
+   if (verbose >= 0)
+      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best unconditional NLL on observed data" << endl;
    fNLLObs = EvaluateNLL( *nullPdf, *obsData);
    // fill also snapshot of best poi
    poi->snapshot(fBestFitPoi);
-   if (verbose > 0) {
-      std::cout << "Best fitted POI\n";
-      fBestFitPoi.Print("v");
-      std::cout << std::endl;
-   }
+   RooRealVar * muBest = dynamic_cast<RooRealVar*>(fBestFitPoi.first());
+   assert(muBest);
+   if (verbose >= 0)  
+      oocoutP((TObject*)0,Eval) << "Best fitted POI value = " << muBest->getVal() << " +/- " << muBest->getError() << std::endl;   
    // keep snapshot of all best fit parameters
    allParams->snapshot(fBestFitParams);
    delete allParams;
@@ -162,14 +162,16 @@ AsymptoticCalculator::AsymptoticCalculator(
 
 
    if (!nominalAsimov) {
-      oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimov data will be generated using fitted nuisance parameter values" << endl;
+      if (verbose >= 0) 
+         oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimov data will be generated using fitted nuisance parameter values" << endl;
       RooArgSet * tmp = (RooArgSet*) poiAlt.snapshot(); 
       fAsimovData = MakeAsimovData( data, nullModel, poiAlt, fAsimovGlobObs,tmp);
    }
 
    else {
       // assume use current value of nuisance as nominal ones
-      oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimovdata set will be generated using nominal (current) nuisance parameter values" << endl;
+      if (verbose >= 0) 
+         oocoutI((TObject*)0,InputArguments) << "AsymptoticCalculator: Asimovdata set will be generated using nominal (current) nuisance parameter values" << endl;
       nominalParams = poiAlt; // set poi to alt value but keep nuisance at the nominal one
       fAsimovData = MakeAsimovData( nullModel, nominalParams, fAsimovGlobObs);
    }
@@ -196,8 +198,9 @@ AsymptoticCalculator::AsymptoticCalculator(
 
    RooRealVar * muAlt = (RooRealVar*) poiAlt.first();
    assert(muAlt);
-   oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best conditional NLL on ASIMOV data set for given alt POI ( " << 
-      muAlt->GetName() << " ) = " << muAlt->getVal() << std::endl;
+   if (verbose>=0)
+      oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best conditional NLL on ASIMOV data set for given alt POI ( " << 
+         muAlt->GetName() << " ) = " << muAlt->getVal() << std::endl;
 
    fNLLAsimov =  EvaluateNLL( *nullPdf, *fAsimovData, &poiAlt );
    // for unconditional fit 
@@ -206,6 +209,17 @@ AsymptoticCalculator::AsymptoticCalculator(
 
    // restore previous value 
    globObs = globObsSnapshot;
+
+   // try to guess default configuration
+   // (this part should be in constructor)
+   RooRealVar * muNull  = dynamic_cast<RooRealVar*>( nullSnapshot->first() );
+   assert (muNull);
+   if (muNull->getVal() == muNull->getMin()) { 
+      fOneSidedDiscovery = true; 
+      if (verbose > 0) 
+         oocoutI((TObject*)0,InputArguments) << "Minimum of POI is " << muNull->getMin() << " corresponds to null  snapshot   - default configuration is  one-sided discovery formulae  " << std::endl;
+   }
+
 
 
 }
@@ -607,7 +621,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    }
    if (fOneSidedDiscovery ) { 
       if ( muHat->getVal() < muTest->getVal() ) { 
-         oocoutI((TObject*)0,Eval) << "Using one-sided qmu - setting qmu to zero  muHat = " << muHat->getVal() 
+         oocoutI((TObject*)0,Eval) << "Using one-sided discovery qmu - setting qmu to zero  muHat = " << muHat->getVal() 
                                    << " muTest = " << muTest->getVal() << std::endl;
          qmu = 0;
       }
@@ -629,11 +643,18 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    
    if (fOneSided || fOneSidedDiscovery) {
       // for one-sided PL (q_mu : equations 56,57)
+      if (verbose>2) {
+         if (fOneSided) 
+            oocoutI((TObject*)0,Eval) << "Using one-sided limit asymptotic formula (qmu)" << endl;
+         else
+            oocoutI((TObject*)0,Eval) << "Using one-sided discovery asymptotic formula (q0)" << endl;
+      }
       pnull = ROOT::Math::normal_cdf_c( sqrtqmu, 1.);
       palt = ROOT::Math::normal_cdf( sqrtqmu_A - sqrtqmu, 1.);
    }
    else  {
       // for 2-sided PL (t_mu : equations 35,36 in asymptotic paper) 
+      if (verbose > 2) oocoutI((TObject*)0,Eval) << "Using two-sided asimptotic  formula (tmu)" << endl;
       pnull = 2.*ROOT::Math::normal_cdf_c( sqrtqmu, 1.);
       palt = ROOT::Math::normal_cdf_c( sqrtqmu + sqrtqmu_A, 1.) + 
          ROOT::Math::normal_cdf_c( sqrtqmu - sqrtqmu_A, 1.); 
@@ -644,6 +665,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
       if (fOneSided) { 
          // for bounded one-sided (q_mu_tilde: equations 64,65)
          if ( qmu > qmu_A) { 
+            if (verbose > 2) oocoutI((TObject*)0,Eval) << "Using qmu_tilde (qmu is greater than qmu_A)" << endl;
             pnull = ROOT::Math::normal_cdf_c( (qmu + qmu_A)/(2 * sqrtqmu_A), 1.);
             palt = ROOT::Math::normal_cdf_c( (qmu - qmu_A)/(2 * sqrtqmu_A), 1.);
          }
@@ -652,6 +674,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
          // for 2 sided bounded test statistic  (N.B there is no one sided discovery qtilde)
          // t_mu_tilde: equations 43,44 in asymptotic paper
          if ( qmu >  qmu_A) { 
+            if (verbose > 2) oocoutI((TObject*)0,Eval) << "Using tmu_tilde (qmu is greater than qmu_A)" << endl;
             pnull = ROOT::Math::normal_cdf_c(sqrtqmu,1.) + 
                     ROOT::Math::normal_cdf_c( (qmu + qmu_A)/(2 * sqrtqmu_A), 1.);
             palt = ROOT::Math::normal_cdf_c( sqrtqmu_A + sqrtqmu, 1.) + 
