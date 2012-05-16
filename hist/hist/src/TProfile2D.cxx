@@ -1766,7 +1766,7 @@ void TProfile2D::SetBuffer(Int_t buffersize, Option_t *)
    if (buffersize < 100) buffersize = 100;
    fBufferSize = 1 + 4*buffersize;
    fBuffer = new Double_t[fBufferSize];
-   memset(fBuffer,0,8*fBufferSize);
+   memset(fBuffer,0,sizeof(Double_t)*fBufferSize);
 }
 
 //______________________________________________________________________________
