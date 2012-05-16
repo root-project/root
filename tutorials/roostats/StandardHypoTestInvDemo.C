@@ -404,8 +404,6 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
    // analyze result produced by the inverter, optionally save it in a file 
    
   
-   double upperLimit = r->UpperLimit();
-   double ulError = r->UpperLimitEstimatedError();
    double lowerLimit = 0;
    double llError = 0;
 #if defined ROOT_SVN_VERSION &&  ROOT_SVN_VERSION >= 44126
@@ -414,14 +412,20 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
       llError = r->LowerLimitEstimatedError();
    }
 #else
-      lowerLimit = r->LowerLimit();
-      llError = r->LowerLimitEstimatedError();
+   lowerLimit = r->LowerLimit();
+   llError = r->LowerLimitEstimatedError();
 #endif
+
+   double upperLimit = r->UpperLimit();
+   double ulError = r->UpperLimitEstimatedError();
+
+   //std::cout << "DEBUG : [ " << lowerLimit << " , " << upperLimit << "  ] " << std::endl;
       
    if (lowerLimit < upperLimit*(1.- 1.E-4) && lowerLimit != 0) 
       std::cout << "The computed lower limit is: " << lowerLimit << " +/- " << llError << std::endl;
    std::cout << "The computed upper limit is: " << upperLimit << " +/- " << ulError << std::endl;
   
+
    // compute expected limit
    std::cout << "Expected upper limits, using the B (alternate) model : " << std::endl;
    std::cout << " expected limit (median) " << r->GetExpectedUpperLimit(0) << std::endl;
@@ -756,15 +760,21 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
   
    ToyMCSampler *toymcs = (ToyMCSampler*)hc->GetTestStatSampler();
    if (toymcs && (type == 0 || type == 1) ) { 
-      // for not extended pdf
-      if (!useNumberCounting)  { 
-         int nEvents = data->numEntries();
-         Info("StandardHypoTestInvDemo","Pdf is not extended: number of events to generate taken  from observed data set is %d",nEvents);
-         toymcs->SetNEventsPerToy(nEvents);
+      // look if pdf is number counting or extended
+      if (sbModel->GetPdf()->canBeExtended() ) { 
+         if (useNumberCounting)   Warning("StandardHypoTestInvDemo","Pdf is extended: but number counting flag is set: ignore it ");
       }
-      else {
-         Info("StandardHypoTestInvDemo","using a number counting pdf");
-         toymcs->SetNEventsPerToy(1);
+      else { 
+         // for not extended pdf
+         if (!useNumberCounting  )  { 
+            int nEvents = data->numEntries();
+            Info("StandardHypoTestInvDemo","Pdf is not extended: number of events to generate taken  from observed data set is %d",nEvents);
+            toymcs->SetNEventsPerToy(nEvents);
+         }
+         else {
+            Info("StandardHypoTestInvDemo","using a number counting pdf");
+            toymcs->SetNEventsPerToy(1);
+         }
       }
 
       toymcs->SetTestStatistic(testStat);

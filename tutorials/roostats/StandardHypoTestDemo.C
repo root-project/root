@@ -237,9 +237,6 @@ void StandardHypoTestDemo(const char* infile = "",
    RooArgSet nullParams(*bModel->GetSnapshot());
    if (bModel->GetNuisanceParameters()) nullParams.add(*bModel->GetNuisanceParameters());
    
-   cout << "MODEL PARAMETERS ! " << endl;
-   nullParams.Print("v");
-
    slrts->SetNullParameters(nullParams);
    RooArgSet altParams(*sbModel->GetSnapshot());
    if (sbModel->GetNuisanceParameters()) altParams.add(*sbModel->GetNuisanceParameters());
