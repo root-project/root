@@ -1143,6 +1143,7 @@ guess_architecture() {
         cygwin_*:*86:*)        arch=win32           ;;
         cygwin_*:pentium:*)    arch=win32           ;;
         cygwin_*:ia64)         arch=win32           ;;
+        mingw32_*:*86:*)       arch=win32           ;;
         *)
             echo "Attempts at guessing your architecture failed."
             echo "(triplet is $arch:$chip:$rele)"
