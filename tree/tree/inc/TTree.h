@@ -483,7 +483,7 @@ public:
    virtual Long64_t        Scan(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0); // *MENU*
    virtual Bool_t          SetAlias(const char* aliasName, const char* aliasFormula);
    virtual void            SetAutoSave(Long64_t autos = 300000000);
-   virtual void            SetAutoFlush(Long64_t autof = 30000000);
+   virtual void            SetAutoFlush(Long64_t autof = -30000000);
    virtual void            SetBasketSize(const char* bname, Int_t buffsize = 16000);
 #if !defined(__CINT__)
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
