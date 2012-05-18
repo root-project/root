@@ -4093,7 +4093,7 @@ Int_t TTree::Fill()
             if (fAutoSave!=0 && fEntries >= fAutoSave) AutoSave();    // FlushBaskets not called in AutoSave
             if (gDebug > 0) Info("TTree::Fill","First AutoFlush.  fAutoFlush = %lld, fAutoSave = %lld\n", fAutoFlush, fAutoSave);
          }
-      } else if (fNClusterRange && fAutoFlush && (fEntries-fClusterRangeEnd[fNClusterRange-1]) % fAutoFlush) {
+      } else if (fNClusterRange && fAutoFlush && ( (fEntries-fClusterRangeEnd[fNClusterRange-1]) % fAutoFlush == 0)  ) {
          if (fAutoSave != 0 && fEntries%fAutoSave == 0) {
             //We are at an AutoSave point. AutoSave flushes baskets and saves the Tree header
             AutoSave("flushbaskets");
@@ -6687,15 +6687,16 @@ void TTree::Reset(Option_t* option)
 {
    // Reset baskets, buffers and entries count in all branches and leaves.
 
-   fNotify = 0;
-   fEntries = 0;
+   fNotify        = 0;
+   fEntries       = 0;
    fNClusterRange = 0;
-   fTotBytes = 0;
-   fZipBytes = 0;
-   fSavedBytes = 0;
-   fTotalBuffers = 0;
-   fChainOffset = 0;
-   fReadEntry = -1;
+   fTotBytes      = 0;
+   fZipBytes      = 0;
+   fFlushedBytes  = 0;
+   fSavedBytes    = 0;
+   fTotalBuffers  = 0;
+   fChainOffset   = 0;
+   fReadEntry     = -1;
 
    delete fTreeIndex;
    fTreeIndex = 0;
@@ -6721,6 +6722,7 @@ void TTree::ResetAfterMerge(TFileMergeInfo *info)
    fTotBytes      = 0;
    fZipBytes      = 0;
    fSavedBytes    = 0;
+   fFlushedBytes  = 0;
    fTotalBuffers  = 0;
    fChainOffset   = 0;
    fReadEntry     = -1;
@@ -6835,7 +6837,7 @@ Bool_t TTree::SetAlias(const char* aliasName, const char* aliasFormula)
 }
 
 //_______________________________________________________________________
-void TTree::SetAutoFlush(Long64_t autof)
+void TTree::SetAutoFlush(Long64_t autof /* = -30000000 */ )
 {
    // This function may be called at the start of a program to change
    // the default value for fAutoFlush.
