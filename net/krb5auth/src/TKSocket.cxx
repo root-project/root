@@ -5,6 +5,9 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <netinet/in.h>
+#ifndef WIN32
+#   include <unistd.h>
+#endif
 
 #include "TKSocket.h"
 #include "TSocket.h"
