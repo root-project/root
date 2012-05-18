@@ -2486,6 +2486,25 @@ void TGCocoa::CreateOpenGLContext(Int_t /*wid*/)
 }
 
 //______________________________________________________________________________
+Bool_t TGCocoa::MakeOpenGLContextCurrent(Handle_t ctx)
+{
+   assert(ctx > 0 && "MakeOpenGLContextCurrent, invalid context id");
+   
+   ROOTOpenGLView *glView = (ROOTOpenGLView *)fPimpl->GetWindowForGLContext(ctx);
+   [glView makeContextCurrent];
+   return [glView isGLContextCurrent];
+}
+
+//______________________________________________________________________________
+void TGCocoa::FlushOpenGLBuffer(Handle_t ctx)
+{
+   assert(ctx > 0 && "FlushOpenGLBuffer, invalid context id");
+
+   ROOTOpenGLView *glView = (ROOTOpenGLView *)fPimpl->GetWindowForGLContext(ctx);
+   [glView flushGLBuffer];
+}
+
+//______________________________________________________________________________
 void TGCocoa::DeleteOpenGLContext(Int_t /*wid*/)
 {
    // Deletes OpenGL context for window "wid"

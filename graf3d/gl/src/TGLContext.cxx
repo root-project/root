@@ -252,7 +252,21 @@ Bool_t TGLContext::MakeCurrent()
 {
    //If context is valid (TGLPaintDevice, for which context was created still exists),
    //make it current.
-   return kFALSE;
+
+   if (!fValid) {
+      Error("TGLContext::MakeCurrent", "This context is invalid.");
+      return kFALSE;
+   }
+
+   const Bool_t rez = gVirtualX->MakeOpenGLContextCurrent(fPimpl->fGLContext);
+   if (rez) {
+      if (!fgGlewInitDone)
+         GlewInit();
+      fIdentity->DeleteGLResources();
+      
+   }
+
+   return rez;
 }
 
 //______________________________________________________________________________
@@ -267,6 +281,12 @@ void TGLContext::SwapBuffers()
 {
    //If context is valid (TGLPaintDevice, for which context was created still exists),
    //swap buffers (in case of P-buffer call glFinish()).
+   if (!fValid) {
+      Error("TGLContext::SwapBuffers", "This context is invalid.");
+      return;
+   }
+
+   gVirtualX->FlushOpenGLBuffer(fPimpl->fGLContext);  
 }
 
 //______________________________________________________________________________
