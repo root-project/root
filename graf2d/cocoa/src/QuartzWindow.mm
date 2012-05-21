@@ -899,10 +899,16 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) addChild : (NSView<X11Window> *) child
 {
-   assert(fContentView != nil && "addChild, content view is nil");
    assert(child != nil && "addChild, child view is nil");
-   
-   [fContentView addChild : child];
+ 
+   if (!fContentView) {
+      //This can happen only in case of re-parent operation.
+      assert([child isKindOfClass : [QuartzView class]] && "addChild: gl view in a top-level window as content view is not supported");
+      fContentView = (QuartzView *)child;
+      [self setContentView : child];
+      fContentView.fParentView = nil;
+   } else
+      [fContentView addChild : child];
 }
 
 //______________________________________________________________________________

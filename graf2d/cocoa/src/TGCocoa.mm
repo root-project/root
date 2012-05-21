@@ -726,7 +726,7 @@ void TGCocoa::ReparentChild(Window_t wid, Window_t pid, Int_t x, Int_t y)
       QuartzWindow *newTopLevel = [[QuartzWindow alloc] initWithContentRect : frame styleMask : styleMask backing : NSBackingStoreBuffered defer : NO];
       
       [view setX : x Y : y];
-      [newTopLevel setContentView : view];
+      [newTopLevel addChild : view];
       fPimpl->ReplaceDrawable(wid, newTopLevel);
 
       [view updateLevel : 0];
@@ -2943,13 +2943,15 @@ void TGCocoa::DispatchClientMessage(UInt_t messageID)
    assert(widget.fID != 0 && "DispatchClientMessage, widget.fID is 0");
    
    TGWindow *window = gClient->GetWindowById(widget.fID);
-   assert(window != 0 && "DispatchClientMessage, no window was found");
    Event_t clientMessage = messageIter->second.second;
 
    fClientMessages.erase(messageIter);   
    fFreeMessageIDs.push_back(messageID);
 
-   window->HandleEvent(&clientMessage);
+   //Many thanks to ROOT's GUI, TGWindow can be deleted, but QuartzViews is still alive
+   //(DestroyWindow is never called for this window).
+   if (window)
+      window->HandleEvent(&clientMessage);
 }
 
 //______________________________________________________________________________
