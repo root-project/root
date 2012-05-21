@@ -52,6 +52,8 @@
 
 //X11Window protocol.
 
+- (void) getAttributes : (WindowAttributes_t *) attr;
+
 - (void) setDrawableSize : (NSSize) newSize;
 - (void) setX : (int) x Y : (int) y width : (unsigned) w height : (unsigned) h;
 - (void) setX : (int) x Y : (int) y;
@@ -76,8 +78,12 @@
 - (void) mapWindow;
 - (void) mapSubwindows;
 - (void) configureNotifyTree;
+- (BOOL) fIsOverlapped;
+- (void) setOverlapped : (BOOL) overlap;
+- (void) updateLevel : (unsigned) newLevel;
+
 /*
-- (void) getAttributes : (WindowAttributes_t *) attr;
+
 - (void) setAttributes : (const SetWindowAttributes_t *) attr;
 
 - (void) mapRaised;
@@ -87,13 +93,8 @@
 - (void) raiseWindow;
 - (void) lowerWindow;
 
-- (BOOL) fIsOverlapped;
-- (void) setOverlapped : (BOOL) overlap;
-
 - (void) configureNotifyTree;
 */
-
-- (void) updateLevel : (unsigned) newLevel;
 
 - (void) addPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
 - (void) removePassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;

@@ -37,7 +37,7 @@
       fPassiveKeyGrabs = [[NSMutableArray alloc] init];
       [self setHidden : YES];//Not sure.
       fCurrentCursor = kPointer;
-      
+      fIsOverlapped = NO;
       fPixelFormat = [format retain];
       fCtxIsCurrent = kFALSE;
       //Tracking area?
@@ -142,12 +142,6 @@
 }
 
 //______________________________________________________________________________
-- (void) updateLevel : (unsigned) newLevel
-{
-   fLevel = newLevel;
-}
-
-//______________________________________________________________________________
 - (void) getAttributes : (WindowAttributes_t *) attr
 {
    assert(attr && "getAttributes, attr parameter is nil");
@@ -178,6 +172,25 @@
          vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
       }
    }
+}
+
+//______________________________________________________________________________
+- (BOOL) fIsOverlapped
+{
+   return fIsOverlapped;
+}
+
+//______________________________________________________________________________
+- (void) setOverlapped : (BOOL) overlap
+{
+   fIsOverlapped = overlap;
+   [self setHidden : fIsOverlapped];
+}
+
+//______________________________________________________________________________
+- (void) updateLevel : (unsigned) newLevel
+{
+   fLevel = newLevel;
 }
 
 ////////
