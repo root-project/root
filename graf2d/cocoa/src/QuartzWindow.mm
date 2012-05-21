@@ -1210,8 +1210,6 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) setX : (int) x Y : (int) y width : (unsigned) w height : (unsigned) h
 {
-   assert(fParentView != nil && "setX:Y:width:height:, parent view is nil");
-
    NSRect newFrame = {};
    newFrame.origin.x = x;
    newFrame.origin.y = y;
@@ -1224,8 +1222,6 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) setX : (int) x Y : (int) y
 {
-   assert(fParentView != nil && "setX:Y:, parent view is nil");
-   
    NSRect newFrame = self.frame;
    newFrame.origin.x = x;
    newFrame.origin.y = y;
