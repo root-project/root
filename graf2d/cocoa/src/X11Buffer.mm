@@ -546,7 +546,7 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
          if (ancestorView == sibling) {
             doCheck = true;//all views after this must be checked.
             continue;
-         } else if (!doCheck) {
+         } else if (!doCheck || sibling.fMapState != kIsViewable) {
             continue;
          }
          
