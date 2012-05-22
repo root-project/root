@@ -253,6 +253,7 @@ void UnlockFocus(NSView<X11Window> *view);//For symmetry only.
 //Find intersection of sibling1 and sibling2, result is a rect in sibling1's space.
 NSRect FindOverlapRect(QuartzView *sibling1, QuartzView *sibling2);
 bool SiblingsOverlap(QuartzView *sibling1, QuartzView *sibling2);
+bool RectsOverlap(const NSRect &r1, const NSRect &r2);
 //Check all subviews of parentView and find overlaps, if any.
 void FindSiblingsOverlap(QuartzView *parentView);
 

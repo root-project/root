@@ -493,6 +493,21 @@ bool SiblingsOverlap(QuartzView *sibling1, QuartzView *sibling2)
 }
 
 //________________________________________________________________________________________
+bool RectsOverlap(const NSRect &r1, const NSRect &r2)
+{
+   if (r2.origin.x >= r1.origin.x + r1.size.width)
+      return false;
+   if (r2.origin.x + r2.size.width <= r1.origin.x)
+      return false;
+   if (r2.origin.y >= r1.origin.y + r1.size.height)
+      return false;
+   if (r2.origin.y + r2.size.height <= r1.origin.y)
+      return false;
+   
+   return true;
+}
+
+//________________________________________________________________________________________
 void FindSiblingsOverlap(QuartzView *parentView)
 {
    assert(parentView != nil && "FindSiblingsOverlap, parentView parameter is nil");

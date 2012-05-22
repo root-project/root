@@ -210,7 +210,7 @@ private:
    CommandBuffer &operator = (const CommandBuffer &rhs);
    
    std::vector<Command *> fCommands;
-
+   std::vector<QuartzView *> fViewBranch;
 public:
    typedef std::vector<Command *>::size_type size_type;
 
@@ -238,6 +238,7 @@ public:
    }
 private:
    void ClearCommands();
+   void ClipOverlaps(QuartzView *view);
 };
 
 }//X11

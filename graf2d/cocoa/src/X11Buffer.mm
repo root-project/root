@@ -474,6 +474,9 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
       
       QuartzView *view = (QuartzView *)impl->GetWindow(cmd->fID).fContentView;
       
+      if (prevView != view)
+         ClipOverlaps(view);
+      
       if (prevView && prevView != view && [[prevView subviews] count])
          RepaintTree(prevView);
       
@@ -513,6 +516,51 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
       CGContextFlush(currContext);
 
    ClearCommands();
+}
+
+//______________________________________________________________________________
+void CommandBuffer::ClipOverlaps(QuartzView *view)
+{
+   assert(view != nil && "ClipOverlaps, view parameter is nil");
+
+   fViewBranch.clear();
+   fViewBranch.reserve(view.fLevel);
+   
+   for (QuartzView *parent = view.fParentView; parent; parent = parent.fParentView)
+      fViewBranch.push_back(parent);
+   
+   if (fViewBranch.size())
+      fViewBranch.pop_back();//we do not need content view.
+
+   typedef std::vector<QuartzView *>::reverse_iterator reverse_iterator;
+   NSRect frame1 = {};
+   NSRect frame2 = view.frame;
+   
+   //[view clearClipMask];
+   
+   for (reverse_iterator it = fViewBranch.rbegin(), eIt = fViewBranch.rend(); it != eIt; ++it) {
+      QuartzView *ancestorView = *it;
+      //const NSRect frame1 = ancestorView.frame;
+      bool doCheck = false;
+      for (QuartzView *sibling in [ancestorView.fParentView subviews]) {
+         if (ancestorView == sibling) {
+            doCheck = true;//all views after this must be checked.
+            continue;
+         } else if (!doCheck) {
+            continue;
+         }
+         
+         //Real check is here.
+         frame1 = sibling.frame;
+         frame2.origin = [view convertPoint : view.frame.origin toView : ancestorView.fParentView];
+         
+         //Check if two rects intersect.
+         if (RectsOverlap(frame2, frame1)) {
+            //Update view's clip mask - mask out hidden pixels.
+            //[view addOverlap : FindOverlap(frame2, frame1)];
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
