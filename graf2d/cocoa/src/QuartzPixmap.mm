@@ -567,13 +567,13 @@ bool AdjustCropArea(const Rectangle_t &srcRect, Rectangle_t &cropArea)
       cropArea.fWidth = std::min(int(srcRect.fWidth), int(cropArea.fWidth) - int(srcRect.fX - cropArea.fX));
       cropArea.fX = srcRect.fX;
    } else
-      cropArea.fWidth = std::min(srcRect.fWidth, cropArea.fWidth);
+      cropArea.fWidth = std::min(int(srcRect.fWidth) - int(cropArea.fX - srcRect.fX), int(cropArea.fWidth));
       
    if (cropArea.fY < srcRect.fY) {
       cropArea.fHeight = std::min(int(srcRect.fHeight), int(cropArea.fHeight) - int(srcRect.fY - cropArea.fY));
       cropArea.fY = srcRect.fY;
    } else
-      cropArea.fHeight = std::min(srcRect.fHeight, cropArea.fHeight);
+      cropArea.fHeight = std::min(int(srcRect.fHeight) - int(cropArea.fY - srcRect.fY), int(cropArea.fHeight));
    
    return true;
 }
