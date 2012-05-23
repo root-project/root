@@ -432,6 +432,44 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
 }
 
 //______________________________________________________________________________
+- (id) initMaskWithW : (unsigned) width H : (unsigned) height
+{
+   assert(width > 0 && "initMaskWithW:H:, width parameter is zero");
+   assert(height > 0 && "initMaskWithW:H:, height parameter is zero");
+   
+   if (self = [super init]) {
+      fImageData = new unsigned char[width * height];
+      fIsStippleMask = YES;
+      const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer, 
+                                                               ROOT_QuartzImage_ReleaseBytePointer, 
+                                                               ROOT_QuartzImage_GetBytesAtPosition, 0};
+      CGDataProviderRef provider = CGDataProviderCreateDirect(fImageData, width * height, &providerCallbacks);
+      if (!provider) {
+         NSLog(@"QuartzPixmap: -initMaskWithW:H: CGDataProviderCreateDirect failed");
+         delete [] fImageData;
+         fImageData = 0;
+         return nil;
+      }
+
+      fImage = CGImageMaskCreate(width, height, 8, 8, width, provider, 0, false);//null -> decode, false -> shouldInterpolate.
+
+      if (!fImage) {
+         NSLog(@"QuartzPixmap: -initMaskWithW:H:, CGImageMaskCreate failed");
+         delete [] fImageData;
+         fImageData = 0;
+         return nil;
+      }
+      
+      fWidth = width;
+      fHeight = height;
+      
+      return self;
+   }
+   
+   return nil;
+}
+
+//______________________________________________________________________________
 - (void) dealloc
 {
    if (fImage) {
@@ -440,6 +478,35 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
    }
    
    [super dealloc];
+}
+
+//______________________________________________________________________________
+- (void) clearMask
+{
+   assert(fIsStippleMask == YES && "-clearMask, called for non-mask image");
+   
+   for (unsigned i = 0, e = fWidth * fHeight; i < e; ++i)
+      fImageData[i] = 0;//All pixels are ok.
+}
+
+//______________________________________________________________________________
+- (void) maskOutPixels : (NSRect) maskedArea
+{
+   assert(fIsStippleMask == YES && "-maskOutPixels, called for non-mask image");
+   assert(fImageData != 0 && "-maskOutPixels, image was not initialized");
+   
+   const int iStart = std::max(0, int(maskedArea.origin.x));
+   const int iEnd = std::min(int(fWidth), int(maskedArea.size.width) + iStart);
+   
+   //Note about j: as soon as QuartzView is flipped, orde of pixel lines is changed here.
+   const int jStart = int(fHeight) - std::min(int(fHeight), int(maskedArea.origin.y + maskedArea.size.height));
+   const int jEnd = std::min(int(fHeight), int(jStart + maskedArea.size.height));
+   
+   for (int j = jStart; j < jEnd; ++j) {
+      unsigned char *line = fImageData + j * fWidth;
+      for (int i = iStart; i < iEnd; ++i)
+         line[i] = 255;
+   }
 }
 
 //______________________________________________________________________________

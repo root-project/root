@@ -60,13 +60,20 @@
 //                                                     //
 /////////////////////////////////////////////////////////
 
+//TODO: split image and mask image?
+
 @interface QuartzImage : NSObject<X11Drawable>
 
 - (id) initWithW : (unsigned) width H : (unsigned) height data : (unsigned char *) data;
 - (id) initMaskWithW : (unsigned) width H : (unsigned) height bitmapMask : (unsigned char *) mask;
+- (id) initMaskWithW : (unsigned) width H : (unsigned) height;
+
 - (void) dealloc;
 @property (nonatomic, readonly) BOOL fIsStippleMask;
 - (CGImageRef) fImage;
+
+- (void) clearMask;
+- (void) maskOutPixels : (NSRect) maskedArea;
 
 //X11Drawable protocol.
 @property (nonatomic, assign) unsigned fID;
