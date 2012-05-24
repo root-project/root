@@ -2,3 +2,14 @@
 <hr/> 
 <a name="hist"></a> 
 <h3>Histogram Libraries</h3>
+
+
+<h3>THistPainter</h3>
+<ul>
+<li>
+With option COL <tt>TProfile2D</tt> histograms are handled differently because, for this type of 2D
+histograms, it is possible to know if an empty bin has been filled or not. So even
+if all the bins' contents are positive some empty bins might be painted. And vice versa,
+if some bins have a negative content some empty bins might be not painted.
+</li>
+</ul>
