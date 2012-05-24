@@ -3124,6 +3124,10 @@ void TGCocoa::SetWMTransientHint(Window_t wid, Window_t mainWid)
       return;
    
    QuartzWindow *mainWindow = fPimpl->GetWindow(mainWid).fQuartzWindow;
+   
+   if (![mainWindow isVisible])
+      return;
+   
    QuartzWindow *transientWindow = fPimpl->GetWindow(wid).fQuartzWindow;
 
    if (mainWindow != transientWindow) {
