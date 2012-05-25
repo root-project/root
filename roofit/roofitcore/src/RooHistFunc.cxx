@@ -201,7 +201,7 @@ Int_t RooHistFunc::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
   }
 
   // Disable partial analytical integrals if interpolation is used
-  if (_intOrder>1) {
+  if (_intOrder>0) {
     return 0 ;
   }
 
@@ -271,7 +271,7 @@ list<Double_t>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xl
   // with the vertical lines that occur in a non-interpolated histogram
 
   // No hints are required when interpolation is used
-  if (_intOrder>0) {
+  if (_intOrder>1) {
     return 0 ;
   }
 
@@ -314,7 +314,7 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
   // with the vertical lines that occur in a non-interpolated histogram
 
   // No hints are required when interpolation is used
-  if (_intOrder>0) {
+  if (_intOrder>1) {
     return 0 ;
   }
 

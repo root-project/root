@@ -624,6 +624,13 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
 
     return log((double)0);
   }
+
+  if (TMath::IsNaN(prob)) {
+    logEvalError("getLogVal() top-level p.d.f evaluates to NaN") ;
+
+    return log((double)0);
+    
+  }
   return log(prob);
 }
 
