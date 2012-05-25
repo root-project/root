@@ -2378,6 +2378,8 @@ void TGCocoa::SetCursor(Window_t wid, Cursor_t cursorID)
    // window "wid".
    if (cursorID > 0)
       SetCursor(Int_t(wid), ECursor(cursorID - 1));
+   else
+      SetCursor(Int_t(wid), kPointer);
 }
 
 //______________________________________________________________________________
