@@ -95,9 +95,11 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
 {
   // Constructor of RooPlot with range [xmin,xmax]
 
+  Bool_t addDirectoryStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
-  TH1::AddDirectory(kTRUE) ;
+  TH1::AddDirectory(addDirectoryStatus) ;
+
 
   // Create an empty frame with the specified x-axis limits.
   initialize();
@@ -113,9 +115,10 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
 {
   // Construct of a two-dimensioanl RooPlot with ranges [xmin,xmax] x [ymin,ymax]
 
+  Bool_t addDirectoryStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
-  TH1::AddDirectory(kFALSE) ;
+  TH1::AddDirectory(addDirectoryStatus) ;
 
   SetMinimum(ymin);
   SetMaximum(ymax);
@@ -131,9 +134,10 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
   // Construct a two-dimensional RooPlot with ranges and properties taken
   // from variables var1 and var2
 
+  Bool_t addDirectoryStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,var1.getMin(),var1.getMax()) ;
-  TH1::AddDirectory(kTRUE) ;
+  TH1::AddDirectory(addDirectoryStatus) ;
 
   if(!var1.hasMin() || !var1.hasMax()) {
     coutE(InputArguments) << "RooPlot::RooPlot: cannot create plot for variable without finite limits: "
@@ -163,9 +167,10 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
   // from variables var1 and var2 but with an overriding range definition
   // of [xmin,xmax] x [ymin,ymax]
 
+  Bool_t addDirectoryStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
-  TH1::AddDirectory(kTRUE) ;
+  TH1::AddDirectory(addDirectoryStatus) ;
 
   SetMinimum(ymin);
   SetMaximum(ymax);
@@ -183,9 +188,10 @@ RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &va
   // Create an 1-dimensional with all properties taken from 'var', but
   // with an explicit range [xmin,xmax] and a default binning of 'nbins'
 
+  Bool_t addDirectoryStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(name,title,nbins,xmin,xmax) ;
-  TH1::AddDirectory(kTRUE) ;
+  TH1::AddDirectory(addDirectoryStatus) ;
 
   // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
   _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
@@ -208,9 +214,10 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_
   // Create an 1-dimensional with all properties taken from 'var', but
   // with an explicit range [xmin,xmax] and a default binning of 'nbins'
 
+  Bool_t addDirectoryStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(histName(),"RooPlot",nbins,xmin,xmax) ;
-  TH1::AddDirectory(kTRUE) ;
+  TH1::AddDirectory(addDirectoryStatus) ;
 
   // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
   _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;

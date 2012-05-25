@@ -201,7 +201,7 @@ Int_t RooHistFunc::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
   }
 
   // Disable partial analytical integrals if interpolation is used
-  if (_intOrder>0) {
+  if (_intOrder>1) {
     return 0 ;
   }
 
@@ -245,7 +245,6 @@ Double_t RooHistFunc::analyticalIntegral(Int_t code, const char* /*rangeName*/) 
   }
 
   // Partial integration scenario, retrieve set of variables, calculate partial sum
-
   RooArgSet intSet ;
   TIterator* iter = _depList.createIterator() ;
   RooAbsArg* arg ;

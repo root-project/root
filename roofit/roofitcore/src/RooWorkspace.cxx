@@ -1770,14 +1770,21 @@ Bool_t RooWorkspace::import(TObject& object, Bool_t replaceExisting)
 			  << object.GetName() << " is already in workspace and replaceExisting flag is set to false" << endl ;
     return kTRUE ;
   }  
-  TH1::AddDirectory(kFALSE) ;
+
+  // Grab the current state of the directory Auto-Add
+  ROOT::DirAutoAdd_t func = object.IsA()->GetDirectoryAutoAdd();
+  object.IsA()->SetDirectoryAutoAdd(0);
+
   if (oldObj) {
     _genObjects.Replace(oldObj,object.Clone()) ;
     delete oldObj ;
   } else {
     _genObjects.Add(object.Clone()) ;
   }
-  TH1::AddDirectory(kTRUE) ;
+
+  // Reset the state of the directory Auto-Add
+  object.IsA()->SetDirectoryAutoAdd(func);
+
   return kFALSE ;
 }
 
