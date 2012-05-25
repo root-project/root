@@ -569,6 +569,8 @@ Window_t TGCocoa::CreateWindow(Window_t parentID, Int_t x, Int_t y, UInt_t w, UI
       const Window_t result = fPimpl->RegisterDrawable(newWindow);//Can throw.
       newWindow.fID = result;
 
+      [newWindow setAcceptsMouseMovedEvents : YES];
+
       return result;
    } else {
       NSObject<X11Window> *parentWin = fPimpl->GetWindow(parentID);
