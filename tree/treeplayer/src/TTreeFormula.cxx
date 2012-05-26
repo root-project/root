@@ -4884,6 +4884,9 @@ void TTreeFormula::SetAxis(TAxis *axis)
          R__ASSERT(subform);
          subform->SetAxis(axis);
       }
+      // Since the bin are corresponding to 'string', we currently must also set
+      // the axis to align the bins exactly on integer boundaries.
+      axis->SetBit(TAxis::kIsInteger);
    } else if (IsInteger()) {
       axis->SetBit(TAxis::kIsInteger);
    }
