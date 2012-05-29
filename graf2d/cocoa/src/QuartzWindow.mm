@@ -13,8 +13,6 @@
 
 //#define NDEBUG
 
-#include <stdexcept>
-
 #ifdef DEBUG_ROOT_COCOA
 #import <iostream>
 #import <fstream>
@@ -22,6 +20,7 @@
 #import "TClass.h"
 #endif
 
+#import <algorithm>
 #import <stdexcept>
 #import <cassert>
 
@@ -435,9 +434,55 @@ void UnlockFocus(NSView<X11Window> *view)
    ((QuartzView *)view).fContext = 0;
 }
 
+//________________________________________________________________________________________
+NSRect FindOverlapRect(const NSRect &viewRect, const NSRect &siblingViewRect)
+{
+   NSRect frame1 = viewRect;
+   NSRect frame2 = siblingViewRect;
+
+   //Adjust frames - move to frame1's space.
+   frame2.origin.x -= frame1.origin.x;
+   frame2.origin.y -= frame1.origin.y;
+   frame1.origin = CGPointZero;
+
+   NSRect overlap = {};
+   
+   if (frame2.origin.x < 0) {
+      overlap.size.width = std::min(frame1.size.width, frame2.size.width - (frame1.origin.x - frame2.origin.x));
+   } else {
+      overlap.origin.x = frame2.origin.x;
+      overlap.size.width = std::min(frame2.size.width, frame1.size.width - frame2.origin.x);
+   }
+   
+   if (frame2.origin.y < 0) {
+      overlap.size.height = std::min(frame1.size.height, frame2.size.height - (frame1.origin.y - frame2.origin.y));
+   } else {
+      overlap.origin.y = frame2.origin.y;
+      overlap.size.height = std::min(frame2.size.height, frame1.size.height - frame2.origin.y);
+   }
+   
+   return overlap;
+
 }
+
+//________________________________________________________________________________________
+bool RectsOverlap(const NSRect &r1, const NSRect &r2)
+{
+   if (r2.origin.x >= r1.origin.x + r1.size.width)
+      return false;
+   if (r2.origin.x + r2.size.width <= r1.origin.x)
+      return false;
+   if (r2.origin.y >= r1.origin.y + r1.size.height)
+      return false;
+   if (r2.origin.y + r2.size.height <= r1.origin.y)
+      return false;
+   
+   return true;
 }
-}
+
+}//X11
+}//MacOSX
+}//ROOT
 
 #ifdef DEBUG_ROOT_COCOA
 
@@ -899,10 +944,16 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) addChild : (NSView<X11Window> *) child
 {
-   assert(fContentView != nil && "addChild, content view is nil");
    assert(child != nil && "addChild, child view is nil");
-   
-   [fContentView addChild : child];
+ 
+   if (!fContentView) {
+      //This can happen only in case of re-parent operation.
+      assert([child isKindOfClass : [QuartzView class]] && "addChild: gl view in a top-level window as content view is not supported");
+      fContentView = (QuartzView *)child;
+      [self setContentView : child];
+      fContentView.fParentView = nil;
+   } else
+      [fContentView addChild : child];
 }
 
 //______________________________________________________________________________
@@ -1093,10 +1144,14 @@ void print_mask_info(ULong_t mask)
 
 @end
 
+
 @implementation QuartzView {
    NSMutableArray *fPassiveKeyGrabs;
    BOOL            fIsOverlapped;
+   QuartzImage    *fClipMask;
 }
+
+@synthesize fClipMaskIsValid;
 
 @synthesize fID;
 @synthesize fContext;
@@ -1125,6 +1180,9 @@ void print_mask_info(ULong_t mask)
 {
    if (self = [super initWithFrame : frame]) {
       //Make this explicit (though memory is zero initialized).
+      fClipMaskIsValid = NO;
+      fClipMask = nil;
+
       fID = 0;
       fLevel = 0;
       
@@ -1152,6 +1210,51 @@ void print_mask_info(ULong_t mask)
    }
    
    return self;
+}
+
+//Overlap management.
+//______________________________________________________________________________
+- (BOOL) initClipMask
+{
+   const NSSize size = self.frame.size;
+
+   if (fClipMask) {
+      if ((unsigned)size.width == fClipMask.fWidth && (unsigned)size.height == fClipMask.fHeight) {
+         //All pixels must be visible.
+         [fClipMask clearMask];
+      } else {
+         [fClipMask release];
+         fClipMask = nil;
+      }
+   }
+   
+   if (!fClipMask) {
+      fClipMask = [QuartzImage alloc];
+      if ([fClipMask initMaskWithW : (unsigned)size.width H : (unsigned)size.height]) {
+         return YES;
+      } else {
+         [fClipMask release];
+         fClipMask = nil;
+         return NO;
+      }
+   }
+
+   return YES;
+}
+
+//______________________________________________________________________________
+- (QuartzImage *) fClipMask
+{
+   return fClipMask;
+}
+
+//______________________________________________________________________________
+- (void) addOverlap : (NSRect)overlapRect
+{
+   assert(fClipMask != nil && "addOverlap, fClipMask is nil");
+   assert(fClipMaskIsValid == YES && "addOverlap, fClipMask is invalid");
+   
+   [fClipMask maskOutPixels : overlapRect];
 }
 
 //X11Drawable protocol.
@@ -1210,8 +1313,6 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) setX : (int) x Y : (int) y width : (unsigned) w height : (unsigned) h
 {
-   assert(fParentView != nil && "setX:Y:width:height:, parent view is nil");
-
    NSRect newFrame = {};
    newFrame.origin.x = x;
    newFrame.origin.y = y;
@@ -1224,8 +1325,6 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) setX : (int) x Y : (int) y
 {
-   assert(fParentView != nil && "setX:Y:, parent view is nil");
-   
    NSRect newFrame = self.frame;
    newFrame.origin.x = x;
    newFrame.origin.y = y;
@@ -1603,12 +1702,21 @@ void print_mask_info(ULong_t mask)
    for (QuartzView *sibling in [fParentView subviews]) {
       if (self == sibling)
          continue;
+      if ([sibling isHidden])
+         continue;
       //TODO: equal test is not good :) I have a baaad feeling about this ;)
-      if (CGRectEqualToRect(sibling.frame, self.frame))
+      if (CGRectEqualToRect(sibling.frame, self.frame)) {
          [sibling setOverlapped : YES];
+         //
+         [sibling setHidden : YES];
+         //
+      }
    }
 
    [self setOverlapped : NO];
+   //
+   [self setHidden : NO];
+   //
    [fParentView sortSubviewsUsingFunction : CompareViewsToRaise context : (void *)self];
    [self setNeedsDisplay : YES];//?
 }
@@ -1622,11 +1730,18 @@ void print_mask_info(ULong_t mask)
    for (QuartzView *sibling in reverseEnumerator) {
       if (sibling == self)
          continue;
+
       //TODO: equal test is not good :) I have a baaad feeling about this ;)
       if (CGRectEqualToRect(sibling.frame, self.frame)) {
          [sibling setOverlapped : NO];
+         //
+         [sibling setHidden : NO];
+         //
          [sibling setNeedsDisplay : YES];
          [self setOverlapped : YES];
+         //
+         [self setHidden : YES];
+         //
          break;
       }
    }

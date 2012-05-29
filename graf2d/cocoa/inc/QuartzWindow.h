@@ -126,10 +126,18 @@
 //                                    //
 ////////////////////////////////////////
 
+@class QuartzImage;
+
 @interface QuartzView : NSView<X11Window>
 
 //Life-cycle.
 - (id) initWithFrame : (NSRect) frame windowAttributes : (const SetWindowAttributes_t *) attr;
+
+//Clip mask - to deal with overlaps.
+@property (nonatomic, assign) BOOL fClipMaskIsValid;
+- (BOOL) initClipMask;
+- (QuartzImage *) fClipMask;
+- (void) addOverlap : (NSRect)overlapRect;
 
 //X11Drawable protocol.
 
@@ -232,6 +240,7 @@ QuartzView *CreateChildView(QuartzView *parent, Int_t x, Int_t y, UInt_t w, UInt
                             UInt_t clss, void *visual, SetWindowAttributes_t *attr, UInt_t wtype);
 
 void GetRootWindowAttributes(WindowAttributes_t *attr);
+void GetWindowAttributes(NSObject<X11Window> *window, WindowAttributes_t *dst);
 
 //Coordinate conversion.
 int GlobalYCocoaToROOT(CGFloat yCocoa);
@@ -248,6 +257,10 @@ NSPoint TranslateCoordinates(NSView<X11Window> *fromView, NSView<X11Window> *toV
 bool ViewIsTextViewFrame(NSView<X11Window> *view, bool checkParent);
 bool LockFocus(NSView<X11Window> *view);
 void UnlockFocus(NSView<X11Window> *view);//For symmetry only.
+
+//Find intersection of view and sibling, result is a rect in view's space.
+NSRect FindOverlapRect(const NSRect &viewRect, const NSRect &siblingViewRect);
+bool RectsOverlap(const NSRect &r1, const NSRect &r2);
 
 }//X11
 }//MacOSX

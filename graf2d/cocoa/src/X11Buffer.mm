@@ -474,6 +474,9 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
       
       QuartzView *view = (QuartzView *)impl->GetWindow(cmd->fID).fContentView;
       
+      if (prevView != view)
+         ClipOverlaps(view);
+      
       if (prevView && prevView != view && [[prevView subviews] count])
          RepaintTree(prevView);
       
@@ -490,6 +493,11 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
             CGContextFlush(prevContext);
          prevContext = currContext;
          
+         //Context can be modified by a clip mask.
+         const Quartz::CGStateGuard ctxGuard(currContext);
+         if (view.fClipMaskIsValid)
+            CGContextClipToMask(currContext, CGRectMake(0, 0, view.fClipMask.fWidth, view.fClipMask.fHeight), view.fClipMask.fImage);
+         
          cmd->Execute();
          if (view.fBackBuffer) {
             //Very "special" window.
@@ -502,6 +510,7 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
          }
          
          [view unlockFocus];
+         
          view.fContext = 0;
       }
    }
@@ -513,6 +522,57 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
       CGContextFlush(currContext);
 
    ClearCommands();
+}
+
+//______________________________________________________________________________
+void CommandBuffer::ClipOverlaps(QuartzView *view)
+{
+   typedef std::vector<QuartzView *>::reverse_iterator reverse_iterator;
+
+   assert(view != nil && "ClipOverlaps, view parameter is nil");
+
+   fViewBranch.clear();
+   fViewBranch.reserve(view.fLevel + 1);
+   
+   for (QuartzView *v = view; v; v = v.fParentView)
+      fViewBranch.push_back(v);
+   
+   if (fViewBranch.size())
+      fViewBranch.pop_back();//we do not need content view, it does not have any sibling.
+
+   NSRect frame1 = {};
+   NSRect frame2 = view.frame;
+   
+   //[view clearClipMask];
+   view.fClipMaskIsValid = NO;
+   
+   for (reverse_iterator it = fViewBranch.rbegin(), eIt = fViewBranch.rend(); it != eIt; ++it) {
+      QuartzView *ancestorView = *it;//Actually, it's either one of ancestors, or a view itself.
+      bool doCheck = false;
+      for (QuartzView *sibling in [ancestorView.fParentView subviews]) {
+         if (ancestorView == sibling) {
+            doCheck = true;//all views after this must be checked.
+            continue;
+         } else if (!doCheck || sibling.fMapState != kIsViewable) {
+            continue;
+         }
+         
+         //Real check is here.
+         frame1 = sibling.frame;
+         frame2.origin = [view.fParentView convertPoint : view.frame.origin toView : ancestorView.fParentView];
+         
+         //Check if two rects intersect.
+         if (RectsOverlap(frame2, frame1)) {
+            if (!view.fClipMaskIsValid) {
+               if (![view initClipMask])//initClipMask will issue an error message.
+                  return;//Forget about clipping at all.
+               view.fClipMaskIsValid = YES;
+            }
+            //Update view's clip mask - mask out hidden pixels.
+            [view addOverlap : FindOverlapRect(frame2, frame1)];
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________

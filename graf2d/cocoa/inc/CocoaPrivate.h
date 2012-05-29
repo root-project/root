@@ -74,6 +74,9 @@ private:
    NSObject<X11Window>   *GetWindow(unsigned windowID)const;
    void                   DeleteDrawable(unsigned drawableID);
    
+   ULong_t                RegisterGLContextForView(unsigned viewID);
+   NSObject<X11Window>   *GetWindowForGLContext(Handle_t glContextID);
+   
    //This function resets strong reference, if you still want NSObject for drawableID to live,
    //you have to retain the pointer (probably) and also drawableID will become id for nsObj (replacement).
    void               ReplaceDrawable(unsigned drawableID, NSObject *nsObj);
@@ -97,6 +100,9 @@ private:
    std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> > > fDrawables;
    typedef std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> > >::iterator drawable_iterator;
    typedef std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> > >::const_iterator const_drawable_iterator;
+   
+   std::map<ULong_t, unsigned> fGLContextMap;
+   ULong_t fFreeGLContextID;
 };
 
 }//Details

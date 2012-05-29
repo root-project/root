@@ -22,18 +22,21 @@
 //                                       //
 ///////////////////////////////////////////
 
-@interface ROOTOpenGLView : NSOpenGLView <X11Window>
+@interface ROOTOpenGLView : NSView <X11Window>
 
-//NSOpenGLView methods.
 - (id) initWithFrame : (NSRect) frameRect pixelFormat : (NSOpenGLPixelFormat *) format;
 - (void) clearGLContext;
 - (NSOpenGLContext *) openGLContext;
-- (NSOpenGLPixelFormat *) pixelFormat;
-- (void) prepareOpenGL;
-- (void) reshape;
 - (void) setOpenGLContext : (NSOpenGLContext *) context;
+
+- (NSOpenGLPixelFormat *) pixelFormat;
 - (void) setPixelFormat : (NSOpenGLPixelFormat *) pixelFormat;
+
 - (void) update;
+
+- (void) makeContextCurrent;
+- (BOOL) isGLContextCurrent;
+- (void) flushGLBuffer;
 
 //X11Drawable protocol
 
@@ -49,12 +52,18 @@
 
 //X11Window protocol.
 
+- (void) getAttributes : (WindowAttributes_t *) attr;
+
 - (void) setDrawableSize : (NSSize) newSize;
 - (void) setX : (int) x Y : (int) y width : (unsigned) w height : (unsigned) h;
 - (void) setX : (int) x Y : (int) y;
 
 @property (nonatomic, assign) long  fEventMask;
+@property (nonatomic, assign) int   fClass;
 @property (nonatomic, readonly) int fMapState;
+@property (nonatomic, assign) int           fDepth;
+@property (nonatomic, assign) int           fBitGravity;
+@property (nonatomic, assign) int           fWinGravity;
 
 @property (nonatomic, assign) QuartzView          *fParentView;
 @property (nonatomic, assign) unsigned             fLevel;
@@ -65,22 +74,28 @@
 @property (nonatomic, assign) unsigned fGrabButtonEventMask;
 @property (nonatomic, assign) unsigned fGrabKeyModifiers;
 @property (nonatomic, assign) BOOL     fOwnerEvents;
+
+- (void) mapWindow;
+- (void) mapSubwindows;
+- (void) configureNotifyTree;
+- (BOOL) fIsOverlapped;
+- (void) setOverlapped : (BOOL) overlap;
+- (void) updateLevel : (unsigned) newLevel;
+
 /*
-- (void) getAttributes : (WindowAttributes_t *) attr;
+
 - (void) setAttributes : (const SetWindowAttributes_t *) attr;
 
 - (void) mapRaised;
-- (void) mapWindow;
+
 - (void) mapSubwindows;
 - (void) unmapWindow;
 - (void) raiseWindow;
 - (void) lowerWindow;
 
-- (BOOL) fIsOverlapped;
-- (void) setOverlapped : (BOOL) overlap;
-- (void) updateLevel : (unsigned) newLevel;
 - (void) configureNotifyTree;
 */
+
 - (void) addPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
 - (void) removePassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
 - (PassiveKeyGrab *) findPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;

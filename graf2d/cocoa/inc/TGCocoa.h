@@ -283,7 +283,13 @@ public:
    virtual void      SetWMState(Window_t wid, EInitialState state);
    virtual void      SetWMTransientHint(Window_t wid, Window_t main_id);
 
+   //
+   virtual Window_t  CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &format);
+   virtual Handle_t  CreateOpenGLContext(Window_t windowID, Handle_t sharedContext);
    virtual void      CreateOpenGLContext(Int_t wid);
+   virtual Bool_t    MakeOpenGLContextCurrent(Handle_t ctx);
+   virtual void      FlushOpenGLBuffer(Handle_t ctx);
+
    virtual void      DeleteOpenGLContext(Int_t wid);
 
    virtual UInt_t    ExecCommand(TGWin32Command *code);
