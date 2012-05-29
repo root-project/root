@@ -18,16 +18,17 @@
 
 #if !defined(__CINT__)
 #include <occi.h>
-using namespace oracle::occi;
 #ifdef CONST
 #undef CONST
 #endif
 #else
+namespace oracle { namespace occi {
 class Environment;
 class Connection;
 class Statement;
 class ResultSet;
 class MetaData;
+   }}
 #endif
 
 class TOracleStatement : public TSQLStatement {
@@ -40,11 +41,11 @@ protected:
       char* namebuf;
    };
 
-   Environment           *fEnv;         // enviroment 
-   Connection            *fConn;        // connection to Oracle
-   Statement             *fStmt;        // executed statement
-   ResultSet             *fResult;      // query result (rows)
-   std::vector<MetaData> *fFieldInfo;   // info for each field in the row
+   oracle::occi::Environment *fEnv;         // enviroment 
+   oracle::occi::Connection  *fConn;        // connection to Oracle
+   oracle::occi::Statement   *fStmt;        // executed statement
+   oracle::occi::ResultSet   *fResult;      // query result (rows)
+   std::vector<oracle::occi::MetaData> *fFieldInfo;   // info for each field in the row
    TBufferRec            *fBuffer;       // buffer of values and field names
    Int_t                  fBufferSize;   // size of fBuffer
    Int_t                  fNumIterations;  // size of internal statement buffer
@@ -59,7 +60,10 @@ protected:
    void        CloseBuffer();
    
 public:
-   TOracleStatement(Environment* env, Connection* conn, Statement* stmt, Int_t niter, Bool_t errout = kTRUE);
+   TOracleStatement(oracle::occi::Environment* env,
+                    oracle::occi::Connection* conn,
+                    oracle::occi::Statement* stmt,
+                    Int_t niter, Bool_t errout = kTRUE);
    virtual ~TOracleStatement();
 
    virtual void        Close(Option_t * = "");

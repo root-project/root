@@ -21,22 +21,22 @@
 #include <sys/time.h>
 #endif
 #include <occi.h>
-using namespace std;
-using namespace oracle::occi;
 #ifdef CONST
 #undef CONST
 #endif
 #else
+namespace oracle { namespace occi {
 class Environment;
 class Connection;
+}}
 #endif
 
 
 class TOracleServer : public TSQLServer {
 
 private:
-   Environment  *fEnv;    // environment of Oracle access
-   Connection   *fConn;   // connection to Oracle server
+   oracle::occi::Environment  *fEnv;    // environment of Oracle access
+   oracle::occi::Connection   *fConn;   // connection to Oracle server
    TString       fInfo;  // info string with Oracle version information
    
    static const char* fgDatimeFormat; //! format for converting date and time stamps into string 
