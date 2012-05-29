@@ -15,9 +15,12 @@
 #ifndef TEXTINPUT_EDITOR_H
 #define TEXTINPUT_EDITOR_H
 
+#include <deque>
+#include <cstddef>                      // for size_t
+#include <string>                       // for string
+#include <utility>                      // for pair
 #include "textinput/Text.h"
 #include "textinput/Range.h"
-#include <deque>
 
 namespace textinput {
   class TextInputContext;

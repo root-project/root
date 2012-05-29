@@ -17,9 +17,12 @@
 #define TEXTINPUT_STREAMREADERUNIX_H
 
 #include "textinput/StreamReader.h"
+#include <cstddef>
 #include <queue>
 
 namespace textinput {
+  class InputData;
+
   // Input from a tty, file descriptor, or pipe
   class StreamReaderUnix: public StreamReader {
   public:

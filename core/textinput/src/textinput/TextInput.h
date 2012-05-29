@@ -15,6 +15,7 @@
 #ifndef TEXTINPUT_TEXTINPUT_H
 #define TEXTINPUT_TEXTINPUT_H
 
+#include <stddef.h>
 #include <string>
 #include <vector>
 

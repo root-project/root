@@ -15,6 +15,7 @@
 
 #include "textinput/History.h"
 #include <iostream>
+#include <fstream>
 
 #ifdef WIN32
 # include <stdio.h>

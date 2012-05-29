@@ -19,7 +19,6 @@
 #include <cstddef>
 #include <string>
 #include <vector>
-#include <fstream>
 
 namespace textinput {
   // Previous input lines.

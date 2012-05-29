@@ -17,9 +17,6 @@
 
 #include "textinput/TerminalDisplayUnix.h"
 
-#include "textinput/TerminalConfigUnix.h"
-#include "textinput/Color.h"
-
 #include <stdio.h>
 // putenv not in cstdlib on Solaris
 #include <stdlib.h>
@@ -29,6 +26,11 @@
 #include <csignal>
 #include <cstring>
 #include <sstream>
+#include <string>
+
+#include "textinput/Color.h"
+#include "textinput/Display.h"
+#include "textinput/TerminalConfigUnix.h"
 
 using std::signal;
 using std::strstr;

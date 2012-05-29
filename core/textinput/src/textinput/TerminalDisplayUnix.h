@@ -16,6 +16,7 @@
 #ifndef TEXTINPUT_TERMINALDISPLAYUNIX_H
 #define TEXTINPUT_TERMINALDISPLAYUNIX_H
 
+#include <cstddef>
 #include "textinput/TerminalDisplay.h"
 
 namespace textinput {

@@ -15,15 +15,13 @@
 
 #include "textinput/Editor.h"
 
+#include <cctype>
+#include <vector>
 #include "textinput/Callbacks.h"
 #include "textinput/History.h"
 #include "textinput/KeyBinding.h"
 #include "textinput/TextInput.h"
 #include "textinput/TextInputContext.h"
-
-#include <algorithm>
-
-#include <cctype>
 
 namespace textinput {
 

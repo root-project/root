@@ -17,12 +17,8 @@
 
 #include "textinput/StreamReaderUnix.h"
 
-#include "textinput/KeyBinding.h"
-#include "textinput/TerminalConfigUnix.h"
-#include "textinput/TextInputContext.h"
-
-#include <sys/uio.h>
 #include <sys/select.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <termios.h>
 #include <stdio.h>
@@ -31,6 +27,12 @@
 #include <cstring>
 #include <map>
 #include <list>
+#include <utility>
+
+#include "textinput/InputData.h"
+#include "textinput/KeyBinding.h"
+#include "textinput/TerminalConfigUnix.h"
+#include "textinput/TextInputContext.h"
 
 namespace {
   using namespace textinput;

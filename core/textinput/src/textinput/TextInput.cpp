@@ -13,14 +13,17 @@
 //===----------------------------------------------------------------------===//
 
 #include "textinput/TextInput.h"
-#include "textinput/Display.h"
-#include "textinput/Reader.h"
 #include "textinput/Color.h"
+#include "textinput/Display.h"
 #include "textinput/Editor.h"
 #include "textinput/History.h"
+#include "textinput/InputData.h"
 #include "textinput/KeyBinding.h"
-#include "textinput/TextInputContext.h"
+#include "textinput/Range.h"
+#include "textinput/Reader.h"
 #include "textinput/SignalHandler.h"
+#include "textinput/Text.h"
+#include "textinput/TextInputContext.h"
 
 #include <algorithm>
 #include <functional>
