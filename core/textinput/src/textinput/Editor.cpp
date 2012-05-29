@@ -141,11 +141,23 @@ namespace textinput {
 
   void
   Editor::CancelSpecialInputMode(Range& DisplayR) {
+    // Stop incremental history search, leaving text at the
+    // history line currently selected.
     if (fMode == kInputMode) return;
     fContext->GetKeyBinding()->EnableEscCmd(false);
     SetEditorPrompt(Text());
     DisplayR.ExtendPromptUpdate(Range::kUpdateEditorPrompt);
     fMode = kInputMode;
+  }
+
+  void
+  Editor::CancelAndRevertSpecialInputMode(EditorRange& R) {
+    // Stop incremental history search, reset text to what it was
+    // before search started.
+    if (fMode == kInputMode) return;
+    CancelSpecialInputMode(R.fDisplay);
+    // Original line should be top of undo buffer.
+    ProcessCommand(kCmdUndo, R);
   }
 
   Editor::EProcessResult
@@ -184,6 +196,14 @@ namespace textinput {
 
   Editor::EProcessResult
   Editor::ProcessMove(EMoveID M, EditorRange &R) {
+    if (fMode == kHistSearchMode) {
+       if (M == kMoveRight) {
+          // ^G, i.e. cancel hist search and revert original line.
+          CancelAndRevertSpecialInputMode(R);
+          return kPRSuccess;
+       }
+    }
+
     ClearPasteBuf();
     CancelSpecialInputMode(R.fDisplay);
 
@@ -405,6 +425,7 @@ namespace textinput {
         ProcessMove(kMoveEnd, R);
         return kPRSuccess;
       case kCmdReverseSearch:
+        PushUndo();
         fMode = kHistSearchMode;
         fSearch.clear();
         SetReverseHistSearchPrompt(R.fDisplay);
