@@ -1702,12 +1702,21 @@ void print_mask_info(ULong_t mask)
    for (QuartzView *sibling in [fParentView subviews]) {
       if (self == sibling)
          continue;
+      if ([sibling isHidden])
+         continue;
       //TODO: equal test is not good :) I have a baaad feeling about this ;)
-      if (CGRectEqualToRect(sibling.frame, self.frame))
+      if (CGRectEqualToRect(sibling.frame, self.frame)) {
          [sibling setOverlapped : YES];
+         //
+         [sibling setHidden : YES];
+         //
+      }
    }
 
    [self setOverlapped : NO];
+   //
+   [self setHidden : NO];
+   //
    [fParentView sortSubviewsUsingFunction : CompareViewsToRaise context : (void *)self];
    [self setNeedsDisplay : YES];//?
 }
@@ -1721,11 +1730,18 @@ void print_mask_info(ULong_t mask)
    for (QuartzView *sibling in reverseEnumerator) {
       if (sibling == self)
          continue;
+
       //TODO: equal test is not good :) I have a baaad feeling about this ;)
       if (CGRectEqualToRect(sibling.frame, self.frame)) {
          [sibling setOverlapped : NO];
+         //
+         [sibling setHidden : NO];
+         //
          [sibling setNeedsDisplay : YES];
          [self setOverlapped : YES];
+         //
+         [self setHidden : YES];
+         //
          break;
       }
    }
