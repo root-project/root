@@ -782,8 +782,8 @@ Bool_t RooWorkspace::defineSet(const char* name, const RooArgSet& aset, Bool_t i
       if (importMissing) {
 	import(*sarg) ;
       } else {
-	coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR set constituent " << sarg->GetName() 
-			      << " is not in workspace and importMissing option is disabled" << endl ;
+	coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR set constituent \"" << sarg->GetName() 
+			      << "\" is not in workspace and importMissing option is disabled" << endl ;
 	return kTRUE ;
       }
     }
@@ -822,8 +822,8 @@ Bool_t RooWorkspace::defineSet(const char* name, const char* contentList)
   while(token) {
     // If missing, either import or report error
     if (!arg(token)) {
-      coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent " << token
-			    << " is not in workspace" << endl ;
+      coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent \"" << token
+			    << "\" is not in workspace" << endl ;
       return kTRUE ;
     }
     wsargs.add(*arg(token)) ;    
@@ -855,8 +855,8 @@ Bool_t RooWorkspace::extendSet(const char* name, const char* newContents)
   while(token) {
     // If missing, either import or report error
     if (!arg(token)) {
-      coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent " << token
-			    << " is not in workspace" << endl ;
+      coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent \"" << token
+			    << "\" is not in workspace" << endl ;
       return kTRUE ;
     }
     wsargs.add(*arg(token)) ;    
@@ -1221,7 +1221,7 @@ RooArgSet RooWorkspace::argSet(const char* nameList) const
     if (oneArg) {
       ret.add(*oneArg) ;
     } else {
-      coutE(InputArguments) << " RooWorkspace::argSet(" << GetName() << ") no RooAbsArg named " << token << " in workspace" << endl ;
+      coutE(InputArguments) << " RooWorkspace::argSet(" << GetName() << ") no RooAbsArg named \"" << token << "\" in workspace" << endl ;
     }
     token = strtok(0,",") ; 
   }
