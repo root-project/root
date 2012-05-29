@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/mathcore:$Id$
 // Author: G. Ganis 2012
 
 /*************************************************************************
@@ -21,14 +21,6 @@
 // Named, streamable, storable and mergeable.                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_Riostream
-#include "Riostream.h"
-#endif
-
-#ifndef ROOT_TClass
-#include "TClass.h"
-#endif
 
 #ifndef ROOT_TObject
 #include "TObject.h"
