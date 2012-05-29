@@ -152,7 +152,7 @@ namespace RooStats {
    private:
 
       RooAbsPdf* fPdf;
-      RooNLLVar* fNll; //!
+      RooAbsReal* fNll; //! pointer to negative log-likelihood function
       const RooArgSet* fCachedBestFitParams;
       RooAbsData* fLastData;
       //      Double_t fLastMLE;

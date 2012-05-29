@@ -177,7 +177,7 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
 	 Bool_t created = kFALSE ;
 	 if (!fNllNull) {
       RooArgSet* allParams = fNullPdf->getParameters(data);
-	   fNllNull = (RooNLLVar*) fNullPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
+	   fNllNull = fNullPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
 	   delete allParams;
 	   created = kTRUE ;
 	 }
@@ -203,7 +203,7 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
 	 created = kFALSE ;
 	 if (!fNllAlt) {
       RooArgSet* allParams = fAltPdf->getParameters(data);
-	   fNllAlt = (RooNLLVar*) fAltPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
+	   fNllAlt = fAltPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
 	   delete allParams;
 	   created = kTRUE ;
 	 }
@@ -266,8 +266,8 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
       bool fDetailedOutputEnabled;
       RooArgSet* fDetailedOutput; //!
 
-      RooNLLVar* fNllNull ;  //! transient copy of the null NLL
-      RooNLLVar* fNllAlt ; //!  transient copy of the alt NLL
+      RooAbsReal* fNllNull ;  //! transient copy of the null NLL
+      RooAbsReal* fNllAlt ; //!  transient copy of the alt NLL
       static Bool_t fAlwaysReuseNll ;
       Bool_t fReuseNll ;
 

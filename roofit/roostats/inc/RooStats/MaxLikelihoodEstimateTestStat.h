@@ -91,7 +91,7 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
     RooStats::RemoveConstantParameters(allParams);
 
     // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
-    RooAbsReal* nll = (RooNLLVar*) fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
+    RooAbsReal* nll = fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
 
     //RooAbsReal* nll = fPdf->createNLL(data, RooFit::CloneData(false));
 
