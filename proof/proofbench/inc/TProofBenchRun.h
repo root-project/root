@@ -38,6 +38,7 @@ protected:
    TProof* fProof;     // Proof
    TString fSelName;   // Name of the selector to be run
    TString fParList;   // List of PARs to be loaded
+   TString fSelOption; // Option field for processing the selector 
 
 public:
 
@@ -49,6 +50,7 @@ public:
    virtual const char *GetParList() { return fParList; }
    virtual void SetSelName(const char *sel) { fSelName = sel; }
    virtual void SetParList(const char *pars) { fParList = pars; }
+   virtual void SetSelOption(const char *opt) { fSelOption = opt; }
 
    virtual void Run(Long64_t nevents, Int_t start = -1, Int_t stop = -1,
                     Int_t step = -1, Int_t ntries = -1, Int_t debug = -1,
