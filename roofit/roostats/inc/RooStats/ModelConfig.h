@@ -114,11 +114,26 @@ public:
    virtual void SetParametersOfInterest(const RooArgSet& set) {
       SetParameters(set); 
    }
+   // specify the parameters of interest 
+   // through a list of comma-separated arguments already in the workspace
+   virtual void SetParameters(const char *argList) {
+      if(!GetWS()) return;
+      SetParameters(GetWS()->argSet(argList));
+   }
+   virtual void SetParametersOfInterest(const char *argList) {
+      SetParameters(argList);
+   }
     
-   // specify the nuisance parameters (eg. the rest of the parameters)
+   // specify the nuisance parameters (e.g. the rest of the parameters)
    virtual void SetNuisanceParameters(const RooArgSet& set) {
       fNuisParamsName=std::string(GetName()) + "_NuisParams";
       DefineSetInWS(fNuisParamsName.c_str(), set);
+   }
+   // specify the nuisance parameters 
+   // through a list of comma-separated arguments already in the workspace
+   virtual void SetNuisanceParameters(const char *argList) {
+      if(!GetWS()) return;
+      SetNuisanceParameters(GetWS()->argSet(argList));
    }
 
    // specify the constraint parameters 
@@ -126,11 +141,23 @@ public:
       fConstrParamsName=std::string(GetName()) + "_ConstrainedParams";
       DefineSetInWS(fConstrParamsName.c_str(), set);
    }
+   // specify the constraint parameters 
+   // through a list of comma-separated arguments already in the workspace
+   virtual void SetConstraintParameters(const char *argList) {
+      if(!GetWS()) return;
+      SetConstraintParameters(GetWS()->argSet(argList));
+   }
 
    // specify the observables
    virtual void SetObservables(const RooArgSet& set) {
       fObservablesName=std::string(GetName()) + "_Observables";
       DefineSetInWS(fObservablesName.c_str(), set);
+   }
+   // specify the observables 
+   // through a list of comma-separated arguments already in the workspace
+   virtual void SetObservables(const char *argList) {
+      if(!GetWS()) return;
+      SetObservables(GetWS()->argSet(argList));
    }
 
    // specify the conditional observables
@@ -138,11 +165,23 @@ public:
       fConditionalObsName=std::string(GetName()) + "_ConditionalObservables";
       DefineSetInWS(fConditionalObsName.c_str(), set);
    }
-
    // specify the conditional observables
+   // through a list of comma-separated arguments already in the workspace
+   virtual void SetConditionalObservables(const char *argList) {
+      if(!GetWS()) return;
+      SetConditionalObservables(GetWS()->argSet(argList));
+   }
+
+   // specify the global observables
    virtual void SetGlobalObservables(const RooArgSet& set) {
       fGlobalObsName=std::string(GetName()) + "_GlobalObservables";
       DefineSetInWS(fGlobalObsName.c_str(), set);
+   }
+   // specify the global observables 
+   // through a list of comma-separated arguments already in the workspace
+   virtual void SetGlobalObservables(const char *argList) {
+      if(!GetWS()) return;
+      SetGlobalObservables(GetWS()->argSet(argList));
    }
 
    // set parameter values for a particular hypothesis if using a common PDF
