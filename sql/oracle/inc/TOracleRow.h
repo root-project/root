@@ -21,22 +21,23 @@
 #include <sys/time.h>
 #endif
 #include <occi.h>
-using namespace oracle::occi;
 #ifdef CONST
 #undef CONST
 #endif
 #else
+namespace oracle { namespace occi {
 class ResultSet;
 class MetaData;
+   }}
 #endif
 
 class TOracleRow : public TSQLRow {
 
 private:
-   ResultSet                *fResult;      // current result set
-   std::vector<MetaData>    *fFieldInfo;   // metadata for columns
-   Int_t                     fFieldCount;
-   char                    **fFieldsBuffer;
+   oracle::occi::ResultSet *fResult;      // current result set
+   std::vector<oracle::occi::MetaData> *fFieldInfo;   // metadata for columns
+   Int_t                    fFieldCount;
+   char                   **fFieldsBuffer;
 
    Bool_t  IsValid(Int_t field);
 
@@ -47,7 +48,8 @@ protected:
    void        GetRowData();
 
 public:
-   TOracleRow(ResultSet *rs, std::vector<MetaData> *fieldMetaData);
+   TOracleRow(oracle::occi::ResultSet *rs,
+              std::vector<oracle::occi::MetaData> *fieldMetaData);
    ~TOracleRow();
 
    void        Close(Option_t *opt="");

@@ -15,6 +15,10 @@
 
 ClassImp(TOracleRow);
 
+using namespace std;
+using namespace oracle::occi;
+
+
 //______________________________________________________________________________
 TOracleRow::TOracleRow(ResultSet *rs, vector<MetaData> *fieldMetaData)
 {

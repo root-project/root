@@ -25,6 +25,10 @@
 
 ClassImp(TOracleStatement)
 
+using namespace std;
+using namespace oracle::occi;
+
+
 //______________________________________________________________________________
 TOracleStatement::TOracleStatement(Environment* env, Connection* conn, Statement* stmt, Int_t niter, Bool_t errout) :
    TSQLStatement(errout),

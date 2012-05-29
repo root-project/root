@@ -57,6 +57,9 @@
 
 ClassImp(TOracleServer)
 
+using namespace std;
+using namespace oracle::occi;
+
 const char* TOracleServer::fgDatimeFormat = "MM/DD/YYYY, HH24:MI:SS";
 
 

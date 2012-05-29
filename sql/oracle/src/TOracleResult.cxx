@@ -14,7 +14,7 @@
 #include "TList.h"
 
 using namespace std;
-
+using namespace oracle::occi;
 
 ClassImp(TOracleResult)
 

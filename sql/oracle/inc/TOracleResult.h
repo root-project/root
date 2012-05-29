@@ -23,15 +23,16 @@
 #include <sys/time.h>
 #endif
 #include <occi.h>
-using namespace oracle::occi;
 #ifdef CONST
 #undef CONST
 #endif
 #else
+namespace oracle { namespace occi {
 class Connection;
 class Statement;
 class ResultSet;
 class MetaData;
+   }}
 #endif
 
 class TList;
@@ -39,10 +40,10 @@ class TList;
 class TOracleResult : public TSQLResult {
 
 private:
-   Connection            *fConn;        // connection to Oracle 
-   Statement             *fStmt;        // executed statement
-   ResultSet             *fResult;      // query result (rows)
-   std::vector<MetaData> *fFieldInfo;   // info for each field in the row
+   oracle::occi::Connection*fConn;        // connection to Oracle 
+   oracle::occi::Statement *fStmt;        // executed statement
+   oracle::occi::ResultSet *fResult;      // query result (rows)
+   std::vector<oracle::occi::MetaData> *fFieldInfo;   // info for each field in the row
    Int_t                  fFieldCount;  // num of fields in resultset
    UInt_t                 fUpdateCount; // for dml query, mutual exclusive with above
    Int_t                  fResultType;  // 0 - nothing; 1 - Select; 2 - table metainfo, 3 - update counter
@@ -55,12 +56,12 @@ private:
    TOracleResult &operator=(const TOracleResult&); // Not implemented;
    
 protected:
-   void    initResultSet(Statement *stmt);
+   void    initResultSet(oracle::occi::Statement *stmt);
    void    ProducePool();
 
 public:
-   TOracleResult(Connection *conn, Statement *stmt);
-   TOracleResult(Connection *conn, const char *tableName);
+   TOracleResult(oracle::occi::Connection *conn, oracle::occi::Statement *stmt);
+   TOracleResult(oracle::occi::Connection *conn, const char *tableName);
    ~TOracleResult();
 
    void        Close(Option_t *opt="");
