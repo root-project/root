@@ -25,8 +25,6 @@
 #include "textinput/Text.h"
 #include "textinput/Editor.h"
 
-#include <cstring>
-
 namespace textinput {
   TerminalDisplay::~TerminalDisplay() {}
 
@@ -215,9 +213,8 @@ namespace textinput {
       // Any prompt update means we'll have to re-write the text
       Offset = 0;
       Requested = (size_t) -1;
-    } else {
-      Move(IndexToPos(PromptLen + EditorPromptLen + Offset));
     }
+    Move(IndexToPos(PromptLen + EditorPromptLen + Offset));
 
     size_t avail = 0;
     if (hidden) {

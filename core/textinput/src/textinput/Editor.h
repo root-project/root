@@ -127,6 +127,7 @@ namespace textinput {
     const Text& GetEditorPrompt() const { return fEditorPrompt; }
     void SetEditorPrompt(const Text& EP) { fEditorPrompt = EP; }
     void CancelSpecialInputMode(Range& DisplayR);
+    void CancelAndRevertSpecialInputMode(EditorRange& R);
 
   private:
     EProcessResult ProcessChar(char C, EditorRange& R);
