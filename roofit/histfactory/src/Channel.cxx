@@ -7,8 +7,6 @@
 #include "RooStats/HistFactory/HistFactoryException.h"
 #include "RooStats/HistFactory/Channel.h"
 
-
-
 RooStats::HistFactory::Channel::Channel() :
   fName( "" ) { ; }
 
@@ -401,7 +399,7 @@ TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::st
   try{
     hist = dynamic_cast<TH1*>( inFile->Get( HistNameFull.c_str() ) );
   }
-  catch(exception& e)
+  catch(std::exception& e)
     {
       std::cout << "Failed to cast object to TH1*" << std::endl;
       std::cout << e.what() << std::endl;
