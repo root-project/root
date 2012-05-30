@@ -21,7 +21,6 @@ END_HTML
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
 #include <math.h>
 #include "TMath.h"
 

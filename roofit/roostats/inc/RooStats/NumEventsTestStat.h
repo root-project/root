@@ -65,7 +65,7 @@ namespace RooStats {
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& /*paramsOfInterest*/)  {       
       
          if(!&data) {
-            cout << "Data set reference is NULL" << endl;
+            std::cout << "Data set reference is NULL" << std::endl;
             return 0;
          }
 
@@ -91,7 +91,7 @@ namespace RooStats {
             return numEvents;
          }
 
-         cout << "Data set is invalid" << endl;
+         std::cout << "Data set is invalid" << std::endl;
          return 0;
      }
 
