@@ -13,3 +13,38 @@ if all the bins' contents are positive some empty bins might be painted. And vic
 if some bins have a negative content some empty bins might be not painted.
 </li>
 </ul>
+
+
+<h3>TGraphPainter</h3>
+<ul>
+<li>
+Fix http://root.cern.ch/phpBB3/viewtopic.php?f=3&t=8591.
+<br>
+When drawn with option SAME the histogram 1st and last bins might be wrong.
+The following macro shows the problem:
+<pre>
+   {
+   TCanvas *c = new TCanvas("c","c",900,900);
+   c->Divide (1,2);
+   
+   TH1D * histo1 = new TH1D ("histo1","histo1",100,0.,100.) ;
+   histo1->SetBinContent(51,80.) ;
+   
+   TH1D * histo2 = new TH1D ("histo2","histo2",100,49.9,51.1) ;  /// not ok
+   histo2->SetMinimum(0.) ; histo2->SetMaximum(100.) ;
+   
+   c->cd(1); gPad->DrawFrame(49.9, 0., 51.1, 100);
+   histo1->Draw("same");
+   
+   Double_t xAxis[4] = {3., 5., 7., 9.};
+   TH1D *histo2 = new TH1D("histo","",3, xAxis);
+   histo2->SetBinContent(1,2.);
+   histo2->SetBinContent(2,4.);
+   histo2->SetBinContent(3,3.);
+   
+   c->cd(2); gPad->DrawFrame(4.,0., 10.,5.);
+   histo2->Draw("same");
+}
+</pre>
+</li>
+</ul>
