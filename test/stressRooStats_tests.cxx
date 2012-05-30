@@ -21,6 +21,7 @@
 using namespace ROOT::Math;
 using namespace RooFit;
 using namespace RooStats;
+using namespace std;
 
 // testStatType = 0 Simple Likelihood Ratio (the LEP TestStat)
 //              = 1 Ratio of Profiled Likelihood Ratios (the Tevatron TestStat)

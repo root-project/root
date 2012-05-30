@@ -26,7 +26,7 @@ namespace HistFactory{
 
     LinInterpVar() ;
     LinInterpVar(const char *name, const char *title,
-           const RooArgList& _paramList, double nominal, vector<double> low, vector<double> high);
+                 const RooArgList& _paramList, double nominal, std::vector<double> low, std::vector<double> high);
 
     LinInterpVar(const char *name, const char *title);
     LinInterpVar(const LinInterpVar&, const char*);
@@ -39,8 +39,8 @@ namespace HistFactory{
 
     RooListProxy _paramList ;
     double _nominal;
-    vector<double> _low;
-    vector<double> _high;
+    std::vector<double> _low;
+    std::vector<double> _high;
     
     TIterator* _paramIter ;  //! do not persist
 

@@ -139,24 +139,24 @@ namespace RooStats {
 				       "Sampling Distribution of Test Statistic", testStatVec, fVarName );
     } 
 
-     virtual RooAbsData* GenerateToyData(RooArgSet& allParameters) const {
+    virtual RooAbsData* GenerateToyData(RooArgSet& allParameters) const {
        // This method generates a toy dataset for the given parameter point.
 
 
        //       cout << "fNevents = " << fNevents << endl;
        RooAbsPdf* pdf = fWS->pdf(fPdfName);
        if(!fObservables){
-	 cout << "Observables not specified in ToyMCSamplerOld, will try to determine.  "
-	      << "Will ignore all constant parameters, parameters of interest, and nuisance parameters." << endl;
+          std::cout << "Observables not specified in ToyMCSamplerOld, will try to determine.  "
+                    << "Will ignore all constant parameters, parameters of interest, and nuisance parameters." << std::endl;
 	 RooArgSet* observables = pdf->getVariables();
 	 RemoveConstantParameters(observables); // observables might be set constant, this is just a guess
 
 
 	 if(fNullPOI) observables->remove(*fNullPOI, kFALSE, kTRUE);
 	 if(fNuisParams) observables->remove(*fNuisParams, kFALSE, kTRUE);
-	 cout << "will use the following as observables when generating data" << endl;
+         std::cout << "will use the following as observables when generating data" << std::endl;
 	 observables->Print();
-	 fObservables=observables;
+	 ((ToyMCSamplerOld*)this)->fObservables=observables;
        } /*else {
 	   cout << "obs set: will use the following as observables when generating data" << endl;
 	   fObservables->Print();
@@ -198,26 +198,26 @@ namespace RooStats {
 	 data = (RooAbsData*)pdf->generate(*fObservables, RooFit::Extended());
        } else {
 	 data = (RooAbsData*)pdf->generate(*fObservables, fNevents);
-     }
+       }
 
        RooMsgService::instance().setGlobalKillBelow(level) ;
        delete parameters;
        return data;
-     }
+    }
 
-     // helper method to create meaningful names for sampling dist
-     string MakeName(RooArgSet& /*params*/){
+    // helper method to create meaningful names for sampling dist
+    std::string MakeName(RooArgSet& /*params*/){
        std::ostringstream str;
        str<<"SamplingDist_"<< fCounter;
        fCounter++;
        std::string buf = str.str(); 
-       return buf ;       
-     }
-
-      // Main interface to evaluate the test statistic on a dataset
-     virtual Double_t EvaluateTestStatistic(RooAbsData& data, RooArgSet& allParameters) {
+       return buf;       
+    }
+       
+    // Main interface to evaluate the test statistic on a dataset
+    virtual Double_t EvaluateTestStatistic(RooAbsData& data, RooArgSet& allParameters) {
        return fTestStat->Evaluate(data, allParameters);
-     }
+    }
 
       // Get the TestStatistic
       virtual TestStatistic* GetTestStatistic()  const {
@@ -296,12 +296,12 @@ namespace RooStats {
       Double_t fSize;
       RooWorkspace* fWS; // a workspace that owns all the components to be used by the calculator
       Bool_t fOwnsWorkspace; // flag if this object owns its workspace
-      string fSamplingDistName; // name of the model
+      std::string fSamplingDistName; // name of the model
       const char* fPdfName; // name of  common PDF in workspace
       const char* fDataName; // name of data set in workspace
       RooArgSet* fNullPOI; // the values of parameters used when evaluating test statistic
       const RooArgSet* fNuisParams;// RooArgSet specifying  nuisance parameters for interval
-      mutable const RooArgSet* fObservables; // RooArgSet specifying the observables in the dataset (needed to evaluate the test statistic)
+      const RooArgSet* fObservables; // RooArgSet specifying the observables in the dataset (needed to evaluate the test statistic)
       TestStatistic* fTestStat; // pointer to the test statistic that is being sampled
       Int_t fNtoys; // number of toys to generate
       Int_t fNevents; // number of events per toy (may be ignored depending on settings)

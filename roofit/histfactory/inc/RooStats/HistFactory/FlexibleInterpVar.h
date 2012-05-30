@@ -27,11 +27,11 @@ namespace HistFactory{
     FlexibleInterpVar() ;
     FlexibleInterpVar(const char *name, const char *title,
 		      const RooArgList& _paramList, 
-		      double nominal, vector<double> low, vector<double> high);
+		      double nominal, std::vector<double> low, std::vector<double> high);
 
     FlexibleInterpVar(const char *name, const char *title,
-		      const RooArgList& _paramList, double nominal, vector<double> low, 
-		      vector<double> high,vector<int> code);
+		      const RooArgList& _paramList, double nominal, std::vector<double> low, 
+		      std::vector<double> high,std::vector<int> code);
 
     FlexibleInterpVar(const char *name, const char *title);
     FlexibleInterpVar(const FlexibleInterpVar&, const char*);
@@ -50,9 +50,9 @@ namespace HistFactory{
 
     RooListProxy _paramList ;
     Double_t _nominal;
-    vector<double> _low;
-    vector<double> _high;
-    vector<int> _interpCode;
+    std::vector<double> _low;
+    std::vector<double> _high;
+    std::vector<int> _interpCode;
     Double_t _interpBoundary;
 
     TIterator* _paramIter ;  //! do not persist

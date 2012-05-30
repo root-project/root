@@ -70,7 +70,7 @@ namespace RooStats {
       // Get the TestStatistic
       virtual TestStatistic* GetTestStatistic()  const {
          // TODO change to Roo... notifications
-         cout << "GetTestStatistic() IS NOT IMPLEMENTED FOR THIS SAMPLER. Returning NULL." << endl;
+         std::cout << "GetTestStatistic() IS NOT IMPLEMENTED FOR THIS SAMPLER. Returning NULL." << std::endl;
          return NULL; /*fTestStatistic;*/
       }
     
@@ -102,7 +102,7 @@ namespace RooStats {
       // Set the TestStatistic (want the argument to be a function of the data & parameter points
       virtual void SetTestStatistic(TestStatistic* /*testStatistic*/) {
          // TODO change to Roo... notifications
-         cout << "SetTestStatistic(...) IS NOT IMPLEMENTED FOR THIS SAMPLER" << endl;
+         std::cout << "SetTestStatistic(...) IS NOT IMPLEMENTED FOR THIS SAMPLER" << std::endl;
       }
       
    private:
