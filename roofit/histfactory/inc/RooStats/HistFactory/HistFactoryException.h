@@ -5,9 +5,8 @@
 
 #include <iostream>
 #include <exception>
-using namespace std;
 
-class hf_exc: public exception
+class hf_exc: public std::exception
 {
   virtual const char* what() const throw()
   {
