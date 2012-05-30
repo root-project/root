@@ -79,6 +79,7 @@ ClassImp(RooStats::BernsteinCorrection) ;
 
 using namespace RooFit;
 using namespace RooStats;
+using namespace std;
 
 //____________________________________
 BernsteinCorrection::BernsteinCorrection(Double_t tolerance):

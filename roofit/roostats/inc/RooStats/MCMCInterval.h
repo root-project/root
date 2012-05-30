@@ -238,7 +238,7 @@ namespace RooStats {
       {
          if (epsilon < 0)
             coutE(InputArguments) << "MCMCInterval::SetEpsilon will not allow "
-                                  << "negative epsilon value" << endl;
+                                  << "negative epsilon value" << std::endl;
          else
             fEpsilon = epsilon;
       }
@@ -268,7 +268,7 @@ namespace RooStats {
       {
          if (delta < 0.)
             coutE(InputArguments) << "MCMCInterval::SetDelta will not allow "
-                                  << "negative delta value" << endl;
+                                  << "negative delta value" << std::endl;
          else
             fDelta = delta;
       }
@@ -299,7 +299,7 @@ namespace RooStats {
 
       Double_t fLeftSideTF; // left side tail-fraction for interval
       Double_t fTFConfLevel; // the actual conf level of tail-fraction interval
-      vector<Int_t> fVector; // vector containing the Markov chain data
+      std::vector<Int_t> fVector; // vector containing the Markov chain data
       Double_t fVecWeight; // sum of weights of all entries in fVector
       Double_t fTFLower;   // lower limit of the tail-fraction interval
       Double_t fTFUpper;   // upper limit of the tail-fraction interval

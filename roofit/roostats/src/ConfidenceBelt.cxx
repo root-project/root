@@ -44,6 +44,7 @@
 ClassImp(RooStats::ConfidenceBelt) ;
 
 using namespace RooStats;
+using namespace std;
 
 //____________________________________________________________________
 ConfidenceBelt::ConfidenceBelt() : 

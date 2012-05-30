@@ -19,6 +19,7 @@ Same purpose as HybridCalculatorOriginal, but different implementation.
 ClassImp(RooStats::HybridCalculator)
 
 using namespace RooStats;
+using namespace std;
 
 
 

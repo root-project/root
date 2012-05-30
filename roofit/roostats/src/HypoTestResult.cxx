@@ -50,6 +50,7 @@ END_HTML
 ClassImp(RooStats::HypoTestResult) ;
 
 using namespace RooStats;
+using namespace std;
 
 
 //____________________________________________________________________

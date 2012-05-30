@@ -42,6 +42,7 @@
 #endif
  
 using namespace RooFit ;
+using namespace std ;
 
 void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/) 
 {  

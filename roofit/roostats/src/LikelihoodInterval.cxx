@@ -81,6 +81,7 @@ END_HTML
 ClassImp(RooStats::LikelihoodInterval) ;
 
 using namespace RooStats;
+using namespace std;
 
 
 //____________________________________________________________________

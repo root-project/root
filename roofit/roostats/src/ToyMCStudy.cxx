@@ -25,6 +25,7 @@ ClassImp(RooStats::ToyMCStudy);
 
 ClassImp(RooStats::ToyMCPayload);
 
+using namespace std;
 
 
 namespace RooStats {

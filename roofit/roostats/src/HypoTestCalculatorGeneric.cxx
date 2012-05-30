@@ -26,7 +26,7 @@ ToyMCSampler as its TestStatSampler.
 ClassImp(RooStats::HypoTestCalculatorGeneric)
 
 using namespace RooStats;
-
+using namespace std;
 
 //___________________________________
 HypoTestCalculatorGeneric::HypoTestCalculatorGeneric(

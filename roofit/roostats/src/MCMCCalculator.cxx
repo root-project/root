@@ -82,6 +82,7 @@ ClassImp(RooStats::MCMCCalculator);
 
 using namespace RooFit;
 using namespace RooStats;
+using namespace std;
 
 // default constructor
 MCMCCalculator::MCMCCalculator() : 

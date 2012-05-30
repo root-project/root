@@ -98,6 +98,7 @@ ClassImp(RooStats::MetropolisHastings);
 
 using namespace RooFit;
 using namespace RooStats;
+using namespace std;
 
 MetropolisHastings::MetropolisHastings()
 {

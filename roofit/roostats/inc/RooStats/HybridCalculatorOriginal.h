@@ -135,7 +135,7 @@ namespace RooStats {
       HybridResult* Calculate(unsigned int nToys, bool usePriors) const;
       void PrintMore(const char* options) const;
 
-      void PatchSetExtended(bool on = true) { fTmpDoExtended = on; std::cout << "extended patch set to " << on << endl; } // patch to test with RooPoisson (or other non-extended models)
+      void PatchSetExtended(bool on = true) { fTmpDoExtended = on; std::cout << "extended patch set to " << on << std::endl; } // patch to test with RooPoisson (or other non-extended models)
 
    private:
 

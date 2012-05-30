@@ -65,6 +65,7 @@ ClassImp(RooStats::NumberCountingPdfFactory) ;
 
 using namespace RooStats;
 using namespace RooFit;
+using namespace std;
 
 
 //_______________________________________________________

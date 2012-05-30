@@ -24,6 +24,7 @@
 
 #include "RooStats/RooStatsUtils.h"
 
+using namespace std;
 
 Bool_t RooStats::ProfileLikelihoodTestStat::fgAlwaysReuseNll = kTRUE ;
 
