@@ -107,7 +107,7 @@ private:
   int fBinHigh;
 
   bool fExportOnly;
-  bool fSaveExtra;
+  // bool fSaveExtra;
 
   std::string fInterpolationScheme;
   

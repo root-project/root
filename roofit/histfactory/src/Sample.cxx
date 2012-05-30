@@ -1,5 +1,6 @@
 
 #include "RooStats/HistFactory/Sample.h"
+#include "RooStats/HistFactory/HistFactoryException.h"
 
 //#include "TClass.h"
 
@@ -18,8 +19,9 @@ RooStats::HistFactory::Sample::Sample(std::string SampName) :
   fNormalizeByTheory(true), fStatErrorActivate(false)  { ; }
 
 
-TH1* RooStats::HistFactory::Sample::GetHisto() {
-  return (TH1*) fhNominal.GetObject();
+TH1* RooStats::HistFactory::Sample::GetHisto()  {
+  TH1* histo = (TH1*) fhNominal.GetObject();
+  return histo;
 }
 
 

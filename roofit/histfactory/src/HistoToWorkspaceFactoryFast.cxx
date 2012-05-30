@@ -160,6 +160,11 @@ namespace HistFactory{
 
     // Make a ModelConfig and configure it
     ModelConfig * proto_config = (ModelConfig *) ws_single->obj("ModelConfig");
+    if( proto_config == NULL ) {
+      std::cout << "Error: Did not find 'ModelConfig' object in file: " << ws_single->GetName() 
+		<< std::endl;
+      throw hf_exc();
+    }
     cout << "Setting Parameter of Interest as :" << measurement.GetPOI() << endl;
     RooRealVar* poi = (RooRealVar*) ws_single->var( (measurement.GetPOI()).c_str() );
     RooArgSet * params= new RooArgSet;
@@ -206,7 +211,12 @@ namespace HistFactory{
     
     // Then, use HistFactory on that vector to create the workspace
     RooWorkspace* ws_single = this->MakeSingleChannelModel(channel_estimateSummary, measurement.GetConstantParams());
-    
+    if( ws_single == NULL ) {
+      std::cout << "Error: Failed to make Single-Channel workspace for channel: " << ch_name
+		<< " and measurement: " << measurement.GetName() << std::endl;
+      throw hf_exc();
+    }
+
     // Finally, configure that workspace based on
     // properties of the measurement
     HistoToWorkspaceFactoryFast::ConfigureWorkspaceForMeasurement( "model_"+ch_name, ws_single, measurement );
@@ -245,8 +255,7 @@ namespace HistFactory{
       if( ! channel.CheckHistograms() ) {
 	std::cout << "MakeModelAndMeasurementsFast: Channel: " << channel.GetName()
 		  << " has uninitialized histogram pointers" << std::endl;
-	throw bad_hf;
-	return NULL;
+	throw hf_exc();
       }
 
       string ch_name = channel.GetName();
@@ -395,10 +404,16 @@ namespace HistFactory{
     std::vector<std::string>::iterator itr = fObsNameVec.begin();
     for (int idx=0; itr!=fObsNameVec.end(); ++itr, ++idx ) {
       if ( !proto->var(itr->c_str()) ) {
-	TAxis* axis(0);
+	TAxis* axis(NULL);
 	if (idx==0) { axis = nominal->GetXaxis(); }
-	if (idx==1) { axis = nominal->GetYaxis(); }
-	if (idx==2) { axis = nominal->GetZaxis(); }
+	else if (idx==1) { axis = nominal->GetYaxis(); }
+	else if (idx==2) { axis = nominal->GetZaxis(); }
+	else {
+	  std::cout << "Error: Too many observables.  "
+		    << "HistFactory only accepts up to 3 observables (3d) "
+		    << std::endl;
+	  throw hf_exc();
+	}
 	Int_t nbins = axis->GetNbins();	
 	Double_t xmin = axis->GetXmin();
 	Double_t xmax = axis->GetXmax(); 	
@@ -710,6 +725,9 @@ namespace HistFactory{
      tree->Fill();
      RooDataSet* data = new RooDataSet("expData","", tree, obsList); // one experiment
 
+     delete tree;
+     delete [] obsForTree;
+
      proto->import(*data);
 
   }
@@ -738,6 +756,11 @@ namespace HistFactory{
     //cout << "HistoToWorkspaceFactoryFast::EditSyst() : gamma = " << gammaSyst.size() << ", uniform = " << uniformSyst.size() << ", noconst = " << noSyst.size() << endl;
 
     ModelConfig * combined_config = (ModelConfig *) proto->obj("ModelConfig");
+    if( combined_config==NULL ) {
+      std::cout << "Error: Failed to find object 'ModelConfig' in workspace: " 
+		<< proto->GetName() << std::endl;
+      throw hf_exc();
+    }
     //    const RooArgSet * constrainedParams=combined_config->GetNuisanceParameters();
     //    RooArgSet temp(*constrainedParams);
     string edit="EDIT::newSimPdf("+pdfName+",";
@@ -1437,6 +1460,10 @@ namespace HistFactory{
       // Create the histogram of (binwise)
       // stat uncertainties:
       TH1* fracStatError = MakeScaledUncertaintyHist( statNodeName + "_RelErr", statHistPairs ); 
+      if( fracStatError == NULL ) {
+	std::cout << "Error: Failed to make ScaledUncertaintyHist for: " << statNodeName << std::endl;
+	throw hf_exc();
+      }
       
       // Using this TH1* of fractinal stat errors, 
       // create a set of constraint terms:
@@ -1492,10 +1519,23 @@ namespace HistFactory{
     //////////////////////////////////////
     // final proto model
     for(unsigned int i=0; i<constraintTermNames.size(); ++i){
-      constraintTerms.add(* (proto->arg(constraintTermNames[i].c_str())) );
+      RooAbsArg* proto_arg = (proto->arg(constraintTermNames[i].c_str()));
+      if( proto_arg==NULL ) {
+	std::cout << "Error: Cannot find arg set: " << constraintTermNames.at(i)
+		  << " in workspace: " << proto->GetName() << std::endl;
+	throw hf_exc();
+      }
+      constraintTerms.add( *proto_arg );
+      //  constraintTerms.add(* proto_arg(proto->arg(constraintTermNames[i].c_str())) );
     }
     for(unsigned int i=0; i<likelihoodTermNames.size(); ++i){
-      likelihoodTerms.add(* (proto->arg(likelihoodTermNames[i].c_str())) );
+      RooAbsArg* proto_arg = (proto->arg(likelihoodTermNames[i].c_str())); 
+      if( proto_arg==NULL ) {
+	std::cout << "Error: Cannot find arg set: " << constraintTermNames.at(i)
+		  << " in workspace: " << proto->GetName() << std::endl;
+	throw hf_exc();
+      }
+      likelihoodTerms.add( *proto_arg );
     }
     proto->defineSet("constraintTerms",constraintTerms);
     proto->defineSet("likelihoodTerms",likelihoodTerms);
@@ -1797,9 +1837,9 @@ namespace HistFactory{
 		  << " bin error for bin " << i_bin
 		  << " is NAN.  Not using Error!!!"
 		  << std::endl;
-	throw -1;
+	throw hf_exc();
 	//histError = sqrt( histContent );
-	histError = 0;
+	//histError = 0;
       }
     
       // Check that histError ! < 0
@@ -1895,8 +1935,8 @@ namespace HistFactory{
 		  << " bin error for bin " << binNumber
 		  << " is NAN.  Not using error!!"
 		  << std::endl;
-	throw -1;
-	histError = 0;
+	throw hf_exc();
+	//histError = 0;
       }
       
       TotalBinContent.at(i_bins) += histValue;
@@ -1941,8 +1981,7 @@ namespace HistFactory{
       std::cout << " HistErrorsSqr: " << ErrorsSqr
 		<< " TotalVal: " << TotalVal
 		<< std::endl;
-      throw -1;
-      return NULL;
+      throw hf_exc();
     }
 
     // 0th entry in vector is
