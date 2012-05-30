@@ -50,6 +50,7 @@ options="                    \
    enable_builtin_pcre       \
    enable_builtin_zlib       \
    enable_builtin_lzma       \
+   enable_cxx11              \
    enable_castor             \
    enable_chirp              \
    enable_cintex             \
@@ -138,6 +139,7 @@ for c in $options $deprecated_options; do
 done
 for c in $options ; do eval ${c}_explicit="" ; done
 
+enable_cxx11=no
 enable_cling=no
 enable_cocoa=no
 enable_afs=no
@@ -873,6 +875,48 @@ EOF
 }
 
 #_____________________________________________________________________
+check_cxxopt() {
+    # This function will try to compile with a specific cxx compiler
+    # option [$1]. The result of the check is stored in cxxopt_result,
+    # 1 if true, 0 otherwise, which should be immediately copied,
+    # since the variable will be overwritten at next invocation
+    # of this function.
+
+    # Assert that we got enough arguments
+    if test $# -lt 1 ; then
+        echo "check_compopt: need at least one argument"
+        cxxopt_result=0
+        return 1
+    fi
+
+    # save arguments in logical names
+    cxxopt="$1"; shift
+
+    logmsg " trying to compile with option $cxxopt"
+    cat <<EOF > conftest.mk
+include ${ac_srcdir}/config/Makefile.${arch}
+conftest: conftest.cxx
+	\$(CXX) \$(CFLAGS) $cxxopt \$(LDFLAGS) \$< -o \$@
+
+conftest.cxx:
+	echo "int main() { return 0; }" > \$@
+EOF
+
+    $gnumake -f conftest.mk >> $logfile 2>&1
+    if test $? -eq 0 ; then
+        cxxopt_result=1
+        logmsg " Compilation OK"
+    else
+        cxxopt_result=0
+        logmsg " Failed code was"
+        cat conftest.mk >> $logfile
+    fi
+    rm -rf conftest.cxx conftest.mk conftest conftest.dSYM
+
+    unset cxxopt
+}
+
+#_____________________________________________________________________
 check_symbol() {
     # This function will try to locate a symbol [$1] in a specific
     # library [$2] and in a given directory [$3].
@@ -1407,7 +1451,7 @@ FIRST argument one of the architecures given at the end of this message.
    FLAG            DESCRIPTION               DEFAULT
    --aclocaldir    Autoconf macro install dir(<prefix>/share/aclocal)
    --bindir        Binary installation dir   (<prefix>/bin)
-   --build         Build configuration [debug, c++11, ...],
+   --build         Build configuration [debug, ...],
                    overrides the ROOTBUILD shell variable
    --cintincdir    CINT interpeted headers   (<libdir>/cint)
    --datadir       Data installation dir     (<prefix>/share/root)
@@ -1446,6 +1490,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-pcre       Built included libpcre, or use system libpcre
   builtin-zlib       Built included libz, or use system libz
   builtin-lzma       Built included liblzma, or use system liblzma
+  c++11              Build using C++11 compatible mode, requires gcc > 4.7.x or clang
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
   chirp              Chirp filesystem support, requires cctools >= 3.2.2
   cintex             Build the libCintex Reflex interface library
@@ -1948,7 +1993,7 @@ if test $# -gt 0 ; then
       # features
       #
       --enable-*)
-        f=`echo $1 | sed -e 's/--//' -e 's/-/_/g'`
+        f=`echo $1 | sed -e 's/--//' -e 's/-/_/g' -e 's/++11/xx11/'`
         eval prev='$'`echo ${f}`
         eval prev_expl='$'`echo ${f}_explicit`
         if test "${prev}:${prev_expl}" = "yes:"; then
@@ -1977,7 +2022,7 @@ if test $# -gt 0 ; then
         fi
         ;;
       --disable-*)
-        f=`echo $1 | sed -e 's/--disable/enable/' -e 's/-/_/g'`
+        f=`echo $1 | sed -e 's/--disable/enable/' -e 's/-/_/g' -e 's/++11/xx11/'`
         eval prev='$'`echo ${f}`
         eval prev_expl='$'`echo ${f}_explicit`
         if test "${prev}:${prev_expl}" = "xno:"; then
@@ -2249,6 +2294,24 @@ if test ! "x$host" = "x"; then
 
     compmsgextra=""
     arch=$archbak
+fi
+
+######################################################################
+#
+### echo %%% C++11 - compile using c++11 compatible option
+#
+# needs gcc > 4.7.x or clang
+usecxx11="undef"
+if test "x$enable_cxx11" = "xyes"; then
+    message "Checking whether c++11 mode is supported"
+    check_cxxopt -std=c++11
+    if test $cxxopt_result -eq 0 ; then
+        enable_cxx11="no"
+	result "no"
+    else
+	usecxx11="define"
+	result "yes"
+    fi
 fi
 
 ######################################################################
@@ -6716,6 +6779,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@afdsmgrdapmon@|$afdsmgrdapmon|"      \
     -e "s|@buildglite@|$enable_glite|"          \
     -e "s|@buildcocoa@|$enable_cocoa|"          \
+    -e "s|@c++11@|$enable_cxx11|"               \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 
@@ -6768,6 +6832,7 @@ sed \
     -e "s|@hasxft@|$hasxft|"               \
     -e "s|@hascling@|$hascling|"           \
     -e "s|@hascocoa@|$hascocoa|"           \
+    -e "s|@usec++11@|$usecxx11|"           \
     < RConfigure.tmp > RConfigure-out.tmp
 rm -f RConfigure.tmp
 

@@ -445,10 +445,10 @@ freebsd* | openbsd* | linux*)
       if test "x$f" = "xrpath" ; then
          auxlibs="-Wl,-rpath,$libdir $auxlibs"
       fi
+      if test "x$f" = "xcxx11" ; then
+         auxcflags="-std=c++11 -Wno-deprecated-declarations $auxcflags"
+      fi
    done
-   if echo $configargs | grep 'c++11' > /dev/null 2>& 1 ; then
-      auxcflags="-std=c++11 -Wno-deprecated-declarations $auxcflags"
-   fi
    ;;
 macosx*)
    for f in $features ; do
@@ -466,10 +466,10 @@ macosx*)
             auxlibs="-Wl,-rpath,$libdir $auxlibs"
          fi
       fi
+      if test "x$f" = "xcxx11" ; then
+         auxcflags="-std=c++11 $auxcflags"
+      fi
    done
-   if echo $configargs | grep 'c++11' > /dev/null 2>& 1 ; then
-      auxcflags="-std=c++11 $auxcflags"
-   fi
    ;;
 hpuxacc | hpuxia64acc)
    for f in $features ; do
