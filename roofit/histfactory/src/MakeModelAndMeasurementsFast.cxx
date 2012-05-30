@@ -235,7 +235,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
       if( ! channel.CheckHistograms() ) {
 	std::cout << "MakeModelAndMeasurementsFast: Channel: " << channel.GetName()
 		  << " has uninitialized histogram pointers" << std::endl;
-	throw bad_hf;
+	throw hf_exc();
 	return NULL;
       }
 
@@ -306,6 +306,10 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
     ws->writeToFile( CombinedFileName.c_str() );
     std::cout << "About to write combined measurement to file" << std::endl;
     TFile* combFile = TFile::Open( CombinedFileName.c_str(), "UPDATE" );
+    if( combFile == NULL ) {
+      std::cout << "Error: Failed to open file " << CombinedFileName << std::endl;
+      throw hf_exc();
+    }
     measurement.writeToFile( combFile );
     combFile->Close();
 
@@ -334,7 +338,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
   catch(exception& e)
     {
       std::cout << e.what() << std::endl;
-      throw bad_hf;
+      throw hf_exc();
       return NULL;
     }
 
@@ -399,7 +403,18 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName, 
 
       RooAbsReal* nll = model->createNLL(*simData);
       RooAbsReal* profile = nll->createProfile(*poi);
+      if( profile==NULL ) {
+	std::cout << "Error: Failed to make ProfileLikelihood for: " << poi->GetName() 
+		  << " using model: " << model->GetName()
+		  << " and data: " << simData->GetName()
+		  << std::endl;
+	throw hf_exc();
+      }
       RooPlot* frame = poi->frame();
+      if( frame == NULL ) {
+	std::cout << "Error: Failed to create RooPlot frame for: " << poi->GetName() << std::endl;
+	throw hf_exc();
+      }
       FormatFrameForLikelihood(frame);
       TCanvas* c1 = new TCanvas( channel.c_str(), "",800,600);
       nll->plotOn(frame, ShiftToZero(), LineColor(kRed), LineStyle(kDashed));
@@ -411,7 +426,18 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName, 
       c1->SaveAs( (FileNamePrefix+"_"+channel+"_"+MeasurementName+"_profileLR.eps").c_str() );
       delete c1;
 
-      outFile->mkdir(channel.c_str())->mkdir("Summary")->cd();
+      TDirectory* channel_dir = outFile->mkdir(channel.c_str());
+      if( channel_dir == NULL ) {
+	std::cout << "Error: Failed to make channel directory: " << channel << std::endl;
+	throw hf_exc();
+      }
+      TDirectory* summary_dir = channel_dir->mkdir("Summary");
+      if( summary_dir == NULL ) {
+	std::cout << "Error: Failed to make Summary directory for channel: " << channel << std::endl;
+	throw hf_exc();
+      }
+      summary_dir->cd();
+      //outFile->mkdir(channel.c_str())->mkdir("Summary")->cd();
     
       RooCurve* curve=frame->getCurve();
       Int_t curve_N=curve->GetN();

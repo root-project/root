@@ -62,9 +62,10 @@ RooStats::HistFactory::Channel& RooStats::HistFactory::Measurement::GetChannel( 
 
   std::cout << "Error: Did not find channel: " << ChanName
 	    << " in measurement: " << GetName() << std::endl;
-  throw bad_hf;
+  throw hf_exc();
 
-  return RooStats::HistFactory::BadChannel;
+  // No Need to return after throwing exception
+  // return RooStats::HistFactory::BadChannel;
 
 
 }
@@ -126,10 +127,14 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
 
   // First, check that the directory exists:
 
+
   // LM : fixes for Windows 
-  gSystem->MakeDirectory(Directory.c_str() );    
-  //mkdir( Directory.c_str(), 0777 );
-  
+  int success = gSystem->MakeDirectory(Directory.c_str() );    
+  if( success != 0 ) {
+    std::cout << "Error: Failed to make directory: " << Directory << std::endl;
+    throw hf_exc();
+  }
+
   // If supplied new Prefix, use that one:
 
   std::cout << "Printing XML Files for measurement: " << GetName() << std::endl;
@@ -141,7 +146,7 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
 
   if( ! xml.is_open() ) {
     std::cout << "Error opening xml file: " << XMLName << std::endl;
-    throw bad_hf;
+    throw hf_exc();
   }
 
 
@@ -271,7 +276,7 @@ void RooStats::HistFactory::Measurement::writeToFile( TFile* file ) {
     if( ! channel.CheckHistograms() ) {
       std::cout << "Measurement.writeToFile(): Channel: " << chanName
 		<< " has uninitialized histogram pointers" << std::endl;
-      throw bad_hf;
+      throw hf_exc();
       return;
     }
     
@@ -284,11 +289,20 @@ void RooStats::HistFactory::Measurement::writeToFile( TFile* file ) {
     // for this channel
 
     TDirectory* chanDir = file->mkdir( (chanName + "_hists").c_str() );
+    if( chanDir == NULL ) {
+      std::cout << "Error: Cannot create channel " << (chanName + "_hists")
+		<< std::endl;
+      throw hf_exc();
+    }
     chanDir->cd();
 
     // Save the data:
     
     TDirectory* dataDir = chanDir->mkdir( "data" );
+    if( dataDir == NULL ) {
+      std::cout << "Error: Cannot make directory " << chanDir << std::endl;
+      throw hf_exc();
+    }
     dataDir->cd();
 
     channel.fData.writeToFile( OutputFileName, GetDirPath(dataDir) );
@@ -318,13 +332,17 @@ void RooStats::HistFactory::Measurement::writeToFile( TFile* file ) {
       file->cd();
       chanDir->cd();
       TDirectory* sampleDir = chanDir->mkdir( sampName.c_str() );
+      if( sampleDir == NULL ) {
+	std::cout << "Error: Directory " << sampName << " not created properly" << std::endl;
+	throw hf_exc();
+      }
       std::string sampleDirPath = GetDirPath( sampleDir );
 
       if( ! sampleDir ) {
 	std::cout << "Error making directory: " << sampName 
 		  << " in directory: " << chanName
 		  << std::endl;
-	throw bad_hf;
+	throw hf_exc();
       }
 
       // Write the data file to this directory

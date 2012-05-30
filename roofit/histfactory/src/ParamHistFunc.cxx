@@ -44,7 +44,7 @@ ClassImp(ParamHistFunc);
 
 
 //_____________________________________________________________________________
-ParamHistFunc::ParamHistFunc() 
+ParamHistFunc::ParamHistFunc() : _numBins(0)
 {
   ;
 }
@@ -836,14 +836,14 @@ Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*
 
 
 //_____________________________________________________________________________
-list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const
 {
   // Return sampling hint for making curves of (projections) of this function
   // as the recursive division strategy of RooCurve cannot deal efficiently
   // with the vertical lines that occur in a non-interpolated histogram
 
   return 0;
-
+  /*
   // copied and edited from RooHistFunc
   RooAbsLValue* lvarg = &obs;
 
@@ -869,11 +869,12 @@ list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t 
   }
 
   return hint ;
+  */
 }
 
 
 //______________________________________________________________________________
-std::list<Double_t>* ParamHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
+std::list<Double_t>* ParamHistFunc::binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const 
 {
   // Return sampling hint for making curves of (projections) of this function
   // as the recursive division strategy of RooCurve cannot deal efficiently
@@ -881,6 +882,7 @@ std::list<Double_t>* ParamHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_
 
   return 0;
 
+  /*
   // copied and edited from RooHistFunc
   RooAbsLValue* lvarg = &obs;
 
@@ -899,4 +901,5 @@ std::list<Double_t>* ParamHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_
   }
 
   return hint ;
+  */
 }

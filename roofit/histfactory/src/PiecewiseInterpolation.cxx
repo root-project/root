@@ -9,7 +9,7 @@
 // END_HTML
 //
 
-
+#include <exception>
 #include "RooFit.h"
 
 #include "Riostream.h"
@@ -485,6 +485,10 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
 
   // old integral, only works for linear and not positive definite
   CacheElem* cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
+  if( cache==NULL ) {
+    std::cout << "Error: Cache Element is NULL" << std::endl;
+    throw std::exception();
+  }
 
   // old integral, only works for linear and not positive definite
   RooFIter funcIntIter = cache->_funcIntList.fwdIterator() ;
