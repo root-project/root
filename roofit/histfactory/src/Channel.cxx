@@ -351,7 +351,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
     } // End Loop over Samples
 
   }
-  catch(exception& e)
+  catch(std::exception& e)
     {
       std::cout << e.what() << std::endl;
       return false;
