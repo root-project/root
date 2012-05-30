@@ -36,6 +36,7 @@ Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 
 ClassImp(TGraphPainter);
 
+
 //______________________________________________________________________________
 /* Begin_Html
 <center><h2>The graph painter class</h2></center>
@@ -1189,8 +1190,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
                   if (TMath::Abs(theGraph->GetLineWidth())>99) PaintPolyLineHatches(theGraph, npt, gyworkl, gxworkl);
                   gPad->PaintPolyLine(npt,gyworkl,gxworkl);
                }
-            }
-            else {
+            } else {
                if (optionFill) {
                   gPad->PaintFillArea(npt,gxworkl,gyworkl);
                   if (bord) gPad->PaintPolyLine(npt,gxworkl,gyworkl);
@@ -1241,8 +1241,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
             ComputeLogs(npt, optionZ);
             Smooth(theGraph, npt,gxworkl,gyworkl,drawtype);
          }
-      }
-      else {
+      } else {
          drawtype += 10;
          npt    = 0;
          for (i=1;i<=nloop;i++) {
@@ -1313,8 +1312,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
             if (x[i] > barxmax) barxmax = x[i];
          }
          bdelta = (barxmax-barxmin)/Double_t(npoints);
-      }
-      else {
+      } else {
          barymin = y[0];
          barymax = y[0];
          for (i=1;i<npoints;i++) {
@@ -1345,8 +1343,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
 
             gPad->PaintBox(gxworkl[0],gyworkl[0],gxworkl[1],gyworkl[1]);
          }
-      }
-      else {
+      } else {
          for (i=1;i<=npoints;i++) {
             xhigh = x[i-1];
             ylow  = y[i-1] - dbar;
@@ -1662,8 +1659,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                gxwork[npt]     = wmin+((j-first+1)*delta);
                if (gxwork[npt] < gxwork[0]) gxwork[npt] = gxwork[0];
 
-            }
-            else {
+            } else {
                xj1 = x[j];      xj  = x[j-1];
                if (xj1 < xj) {
                   if (j != last) Error(where, "X must be in increasing order");
@@ -1675,8 +1671,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             gywork[npt-1] = y[j-1];
             gywork[npt]   = y[j-1];
             if (gywork[npt] < vymin) {gywork[npt] = vymin; gywork[npt-1] = vymin;}
-            if (gxwork[npt-1] >= uxmin-rounding && gxwork[npt] <= uxmax+rounding) npt += 2;
-            else gxwork[npt-2] = TMath::Min(gxwork[npt], uxmax);
+            if ((gxwork[npt-1] >= uxmin-rounding && gxwork[npt-1] <= uxmax+rounding) ||
+                (gxwork[npt]   >= uxmin-rounding && gxwork[npt]   <= uxmax+rounding)) npt += 2;
             if (j == last) {
                gxwork[npt-1] = gxwork[npt-2];
                gywork[npt-1] = gywork[0];
@@ -1695,8 +1691,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                continue;
             }
          }  //endfor (j=first; j<=last;j++) {
-      }
-      else {
+      } else {
          gywork[0] = wmin;
          if (!optionOne) gxwork[0] = TMath::Max((Double_t)0,gPad->GetUxmin());
          else            gxwork[0] = gPad->GetUxmin();
@@ -1705,8 +1700,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             if (!optionBins) {
                gywork[npt-1] = gywork[npt-2];
                gywork[npt]   = wmin+((j-first+1)*delta);
-            }
-            else {
+            } else {
                yj1 = y[j];      yj  = y[j-1];
                if (yj1 < yj) {
                   if (j != last) Error(where, "Y must be in increasing order");
@@ -1716,7 +1710,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                gywork[npt-1] = y[j-1];       gywork[npt] = y[j];
             }
             gxwork[npt-1] = x[j-1];      gxwork[npt] = x[j-1];
-            if (gxwork[npt-1] >= uxmin-rounding && gxwork[npt] <= uxmax+rounding) npt += 2;
+            if ((gxwork[npt-1] >= uxmin-rounding && gxwork[npt-1] <= uxmax+rounding) ||
+                (gxwork[npt]   >= uxmin-rounding && gxwork[npt]   <= uxmax+rounding)) npt += 2;
             if (j == last) {
                gywork[npt-1] = gywork[npt-2];
                gxwork[npt-1] = gxwork[0];
@@ -1746,8 +1741,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             if (!optionBins) {
                gxwork[npt-1] = gxwork[npt-2];
                gxwork[npt]   = wmin+((i-first+1)*delta);
-            }
-            else {
+            } else {
                xi1 = x[i];      xi  = x[i-1];
                if (xi1 < xi) {
                   if (i != last) Error(where, "X must be in increasing order");
@@ -1759,8 +1753,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             gywork[npt-1] = y[i-1];
             gywork[npt]   = y[i-1];
             if (gywork[npt] < vymin) {gywork[npt] = vymin; gywork[npt-1] = vymin;}
-            if (gxwork[npt-1] >= uxmin-rounding && gxwork[npt] <= uxmax+rounding) npt += 2;
-            else gxwork[npt-2] = TMath::Min(gxwork[npt], uxmax);
+            if ((gxwork[npt-1] >= uxmin-rounding && gxwork[npt-1] <= uxmax+rounding) ||
+                (gxwork[npt]   >= uxmin-rounding && gxwork[npt]   <= uxmax+rounding)) npt += 2;
             if (i == last) {
                gxwork[npt-1] = gxwork[npt-2];
                gywork[npt-1] = gywork[0];
@@ -1804,8 +1798,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                continue;
             }
          }  //endfor (i=first; i<=last;i++)
-      }
-      else {
+      } else {
          gywork[0] = wmin;
          gxwork[0] = TMath::Max((Double_t)0,gPad->GetUxmin());
          xwmin    = gxwork[0];
@@ -1814,8 +1807,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             if (!optionBins) {
                gywork[npt-1]   = gywork[npt-2];
                gywork[npt] = wmin+((i-first+1)*delta);
-            }
-            else {
+            } else {
                yi1 = y[i];      yi  = y[i-1];
                if (yi1 < yi) {
                   if (i != last) Error(where, "Y must be in increasing order");
@@ -1825,7 +1817,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                gywork[npt-1] = y[i-1];      gywork[npt] = y[i];
             }
             gxwork[npt-1] = x[i-1];      gxwork[npt] = x[i-1];
-            if (gxwork[npt-1] >= uxmin-rounding && gxwork[npt] <= uxmax+rounding) npt += 2;
+            if ((gxwork[npt-1] >= uxmin-rounding && gxwork[npt-1] <= uxmax+rounding) ||
+                (gxwork[npt]   >= uxmin-rounding && gxwork[npt]   <= uxmax+rounding)) npt += 2;
             if (i == last) {
                gywork[npt-1] = gywork[npt-2];
                gxwork[npt-1] = xwmin;
@@ -1841,8 +1834,9 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
    //              The smoothing is done by the method Smooth()
 
    if (optionCurve) {
-      if (!optionFill) drawtype = 1;
-      else {
+      if (!optionFill) {
+         drawtype = 1;
+      } else {
          if (!optionOne) drawtype = 2;
          else            drawtype = 3;
       }
@@ -1850,8 +1844,9 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
          npt = 0;
          for (i=first; i<=last;i++) {
             npt++;
-            if (!optionBins) gxwork[npt-1] = wmin+(i-first)*delta+0.5*delta;
-            else {
+            if (!optionBins) {
+               gxwork[npt-1] = wmin+(i-first)*delta+0.5*delta;
+            } else {
                xi1 = x[i];      xi  = x[i-1];
                if (xi1 < xi) {
                   if (i != last) Error(where, "X must be in increasing order");
@@ -1888,14 +1883,14 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             ComputeLogs(npt, optionZ);
             Smooth(theGraph, npt,gxworkl,gyworkl,drawtype);
          }
-      }
-      else {
+      } else {
          drawtype = drawtype+10;
          npt   = 0;
          for (i=first; i<=last;i++) {
             npt++;
-            if (!optionBins) gywork[npt-1] = wmin+(i-first)*delta+0.5*delta;
-            else {
+            if (!optionBins) {
+               gywork[npt-1] = wmin+(i-first)*delta+0.5*delta;
+            } else {
                yi1 = y[i];      yi = y[i-1];
                if (yi1 < yi) {
                   if (i != last) Error(where, "Y must be in increasing order");
@@ -2065,8 +2060,9 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             npt = 0;
             for (i=first; i<=last;i++) {
                npt++;
-               if (!optionBins) gxwork[npt-1] = wmin+(i-first)*delta+0.5*delta;
-               else {
+               if (!optionBins) {
+                  gxwork[npt-1] = wmin+(i-first)*delta+0.5*delta;
+               } else {
                   xi1 = x[i];      xi = x[i-1];
                   if (xi1 < xi) {
                      if (i != last) Error(where, "X must be in increasing order");
@@ -2132,13 +2128,13 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                }
                gPad->PaintPolyLine(npt,gxworkl,gyworkl);
             }
-         }
-         else {
+         } else {
             npt = 0;
             for (i=first; i<=last;i++) {
                npt++;
-               if (!optionBins) gywork[npt-1] = wminstep+(i-first)*delta+0.5*delta;
-               else {
+               if (!optionBins) {
+                  gywork[npt-1] = wminstep+(i-first)*delta+0.5*delta;
+               } else {
                   yi1 = y[i];      yi = y[i-1];
                   if (yi1 < yi) {
                      if (i != last) Error(where, "Y must be in increasing order");
@@ -2193,8 +2189,9 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
    //              Draw the histogram as a bar chart
 
    if (optionBar) {
-      if (!optionBins) { offset = delta*baroffset; dbar = delta*barwidth; }
-      else {
+      if (!optionBins) {
+         offset = delta*baroffset; dbar = delta*barwidth;
+      } else {
          if (!optionRot) {
             offset = (x[1]-x[0])*baroffset;
             dbar   = (x[1]-x[0])*barwidth;
@@ -2223,8 +2220,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             if (!optionBins) {
                xlow  = xlow+delta;
                xhigh = xhigh+delta;
-            }
-            else {
+            } else {
                if (i < last) {
                   xi1 = x[i];      xi = x[i-1];
                   if (xi1 < xi) {
@@ -2238,8 +2234,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                }
             }
          }  //endfor (i=first; i<=last;i++)
-      }
-      else {
+      } else {
          ylow  = wmin + offset;
          yhigh = wmin + offset + dbar;
          if (!optionOne) xlow = TMath::Max((Double_t)0,gPad->GetUxmin());
@@ -2257,8 +2252,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             if (!optionBins) {
                ylow  = ylow  + delta;
                yhigh = yhigh + delta;
-            }
-            else {
+            } else {
                if (i < last) {
                   yi1 = y[i];      yi = y[i-1];
                   if (yi1 < yi) {
@@ -3732,6 +3726,7 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
    stats->Paint();
 }
 
+
 //______________________________________________________________________________
 void TGraphPainter::Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype)
 {
@@ -3842,8 +3837,9 @@ void TGraphPainter::Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_
    Double_t dx1n   = TMath::Abs(x[npoints-1]-x[0]);
    Double_t dy1n   = TMath::Abs(y[npoints-1]-y[0]);
    if (dx1n < 0.01*(sxmax-sxmin) && dy1n < 0.01*(symax-symin))  closed = 1;
-   if (sxmin == sxmax) xratio = 1;
-   else {
+   if (sxmin == sxmax) {
+      xratio = 1;
+   } else {
       if (six > 1) ratio_signs = siy/six;
       else         ratio_signs = 20;
       xratio = ratio_signs/(sxmax-sxmin);
@@ -4182,16 +4178,14 @@ L300:
 L310:
    if (drawtype >= 1000) {
       gPad->PaintFillArea(npt,qlx,qly, "B");
-   }
-   else {
+   } else {
       if (ktype > 1) {
          if (!loptx) {
             qlx[npt]   = qlx[npt-1];
             qlx[npt+1] = qlx[0];
             qly[npt]   = yorg;
             qly[npt+1] = yorg;
-         }
-         else {
+         } else {
             qlx[npt]   = xorg;
             qlx[npt+1] = xorg;
             qly[npt]   = qly[npt-1];
