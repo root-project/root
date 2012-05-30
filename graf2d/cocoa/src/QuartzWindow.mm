@@ -1670,7 +1670,7 @@ void print_mask_info(ULong_t mask)
 {
    for (QuartzView * v in [self subviews]) {
       [v setHidden : NO]; 
-      [v mapSubwindows];
+      //[v mapSubwindows];
    }
 }
 
@@ -1769,7 +1769,7 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) configureNotifyTree
 {
-   if (self.fMapState == kIsViewable) {
+  // if (self.fMapState == kIsViewable) {
       if (fEventMask & kStructureNotifyMask) {
          TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
          assert(vx && "configureNotifyTree, gVirtualX is either null or has type different from TGCocoa");
@@ -1778,7 +1778,7 @@ void print_mask_info(ULong_t mask)
 
       for (NSView<X11Window> *v in [self subviews])
          [v configureNotifyTree];
-   }
+//  }
 }
 
 //Key grabs.
