@@ -14,7 +14,7 @@ OPT           = $(OPTFLAGS)
 NOOPT         =
 endif
 ifeq (c++11,$(findstring c++11,$(ROOTBUILD)))
-CXX11         = -std=c++11
+CXX11         = -std=c++11  -Wno-deprecated-declarations
 endif
 
 # Compiler:

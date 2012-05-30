@@ -447,7 +447,7 @@ freebsd* | openbsd* | linux*)
       fi
    done
    if echo $configargs | grep 'c++11' > /dev/null 2>& 1 ; then
-      auxcflags="-std=c++11 $auxcflags"
+      auxcflags="-std=c++11 -Wno-deprecated-declarations $auxcflags"
    fi
    ;;
 macosx*)
