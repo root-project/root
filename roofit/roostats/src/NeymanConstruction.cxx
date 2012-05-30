@@ -73,6 +73,7 @@ ClassImp(RooStats::NeymanConstruction) ;
 
 using namespace RooFit;
 using namespace RooStats;
+using namespace std;
 
 
 //_______________________________________________________

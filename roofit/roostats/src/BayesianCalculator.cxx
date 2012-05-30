@@ -88,6 +88,8 @@ END_HTML
 
 ClassImp(RooStats::BayesianCalculator)
 
+using namespace std;
+
 namespace RooStats { 
 
 

@@ -179,7 +179,7 @@ private:
    int fMaxToys;  // maximum number of toys to run 
     
    HypoTestCalculatorGeneric* fCalculator0;   // pointer to the calculator passed in the constructor
-   auto_ptr<HypoTestCalculatorGeneric> fHC;
+   std::auto_ptr<HypoTestCalculatorGeneric> fHC;
    RooRealVar* fScannedVariable;     // pointer to the constrained variable
    mutable HypoTestInverterResult* fResults; // pointer to the result 
      

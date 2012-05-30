@@ -55,21 +55,21 @@ namespace RooStats {
       virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}  
       // Set the DataSet
       virtual void SetData(RooAbsData& /*data*/) {  
-	cout << "DEPRECATED, set data in constructor" << endl;
+	std::cout << "DEPRECATED, set data in constructor" << std::endl;
       }    
       // Set the Pdf
       virtual void SetPdf(RooAbsPdf& /*pdf*/) { 
-	cout << "DEPRECATED, use ModelConfig" << endl;
+	std::cout << "DEPRECATED, use ModelConfig" << std::endl;
       }	
 
       // specify the parameters of interest in the interval
       virtual void SetParameters(const RooArgSet& /*set*/) { 
-	cout << "DEPRECATED, use ModelConfig" << endl;
+	std::cout << "DEPRECATED, use ModelConfig" << std::endl;
       }
 
       // specify the nuisance parameters (eg. the rest of the parameters)
       virtual void SetNuisanceParameters(const RooArgSet& /*set*/) {
-	cout << "DEPRECATED, use ModelConfig" << endl;
+	std::cout << "DEPRECATED, use ModelConfig" << std::endl;
       }
 
       // User-defined set of points to test

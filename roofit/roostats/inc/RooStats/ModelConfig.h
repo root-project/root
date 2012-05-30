@@ -195,7 +195,7 @@ public:
       if(GetWS()->pdf(name))
          fPdfName = name;
       else
-         coutE(ObjectHandling) << "pdf "<<name<< " does not exist in workspace"<<endl;
+         coutE(ObjectHandling) << "pdf "<<name<< " does not exist in workspace"<<std::endl;
    }
 
    // specify the name of the PDF in the workspace to be used
@@ -205,7 +205,7 @@ public:
       if(GetWS()->pdf(name))
          fPriorPdfName = name;
       else
-         coutE(ObjectHandling) << "pdf "<<name<< " does not exist in workspace"<<endl;
+         coutE(ObjectHandling) << "pdf "<<name<< " does not exist in workspace"<<std::endl;
    }
 
 
@@ -216,7 +216,7 @@ public:
       if(GetWS()->data(name))
          fProtoDataName = name;
       else
-         coutE(ObjectHandling) << "dataset "<<name<< " does not exist in workspace"<<endl;
+         coutE(ObjectHandling) << "dataset "<<name<< " does not exist in workspace"<<std::endl;
    }
 
 

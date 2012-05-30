@@ -62,6 +62,7 @@ The class can scan the CLs+b values or alternativly CLs (if the method HypoTestI
 ClassImp(RooStats::HypoTestInverter)
 
 using namespace RooStats;
+using namespace std;
 
 // static variable definitions
 double HypoTestInverter::fgCLAccuracy = 0.005;

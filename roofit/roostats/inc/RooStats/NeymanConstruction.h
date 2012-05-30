@@ -82,17 +82,17 @@ namespace RooStats {
 
       // Set the Pdf, add to the the workspace if not already there
       virtual void SetPdf(RooAbsPdf& /*pdf*/) { 
-	cout << "DEPRECATED, use ModelConfig"<<endl;
+        std::cout << "DEPRECATED, use ModelConfig"<<std::endl;
       }  
 
       // specify the parameters of interest in the interval
       virtual void SetParameters(const RooArgSet& /*set*/) {
-	cout << "DEPRECATED, use ModelConfig"<<endl;
+        std::cout << "DEPRECATED, use ModelConfig"<<std::endl;
       }
 
       // specify the nuisance parameters (eg. the rest of the parameters)
       virtual void SetNuisanceParameters(const RooArgSet& /*set*/) {
-	cout << "DEPRECATED, use ModelConfig"<<endl;
+        std::cout << "DEPRECATED, use ModelConfig"<<std::endl;
       }
 
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)

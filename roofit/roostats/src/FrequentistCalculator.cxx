@@ -22,6 +22,7 @@ MLEs.
 ClassImp(RooStats::FrequentistCalculator)
 
 using namespace RooStats;
+using namespace std;
 
 void FrequentistCalculator::PreHook() const {
    if (fFitInfo != NULL) {

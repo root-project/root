@@ -25,6 +25,7 @@
 
 ClassImp(RooStats::ModelConfig)
 
+using namespace std;
 
 namespace RooStats {
 

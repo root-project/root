@@ -75,9 +75,9 @@ class ToyMCImportanceSampler: public ToyMCSampler {
 
       using ToyMCSampler::GenerateToyData;
       virtual RooAbsData* GenerateToyData(RooArgSet& paramPoint, double& weight) const;
-      virtual RooAbsData* GenerateToyData(RooArgSet& paramPoint, double& weight, vector<double>& impNLLs, double& nullNLL) const;
-      virtual RooAbsData* GenerateToyData(vector<double>& weights) const;
-      virtual RooAbsData* GenerateToyData(vector<double>& weights, vector<double>& nullNLLs, vector<double>& impNLLs) const;
+      virtual RooAbsData* GenerateToyData(RooArgSet& paramPoint, double& weight, std::vector<double>& impNLLs, double& nullNLL) const;
+      virtual RooAbsData* GenerateToyData(std::vector<double>& weights) const;
+      virtual RooAbsData* GenerateToyData(std::vector<double>& weights, std::vector<double>& nullNLLs, std::vector<double>& impNLLs) const;
 
 
       /// specifies the pdf to sample from
@@ -87,7 +87,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
          ) {
             oocoutE((TObject*)0,InputArguments) << "Index out of range. Requested index: "<<i<<
                " , but null densities: "<<fNullDensities.size()<<
-               " and importance densities: "<<fImportanceDensities.size() << endl;
+               " and importance densities: "<<fImportanceDensities.size() << std::endl;
          }
          
          fIndexGenDensity = i;
@@ -103,11 +103,11 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       // is used. The snapshot is also optional.
       void AddImportanceDensity(RooAbsPdf* p, const RooArgSet* s) {
          if( p == NULL && s == NULL ) {
-            oocoutI((TObject*)0,InputArguments) << "Neither density nor snapshot given. Doing nothing." << endl;
+            oocoutI((TObject*)0,InputArguments) << "Neither density nor snapshot given. Doing nothing." << std::endl;
             return;
          }
          if( p == NULL && fPdf == NULL ) {
-            oocoutE((TObject*)0,InputArguments) << "No density given, but snapshot is there. Aborting." << endl;
+            oocoutE((TObject*)0,InputArguments) << "No density given, but snapshot is there. Aborting." << std::endl;
             return;
          }
          
@@ -124,7 +124,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       // is used. The snapshot and TestStatistic is also optional.
       void AddNullDensity(RooAbsPdf* p, const RooArgSet* s = NULL) {
          if( p == NULL && s == NULL ) {
-            oocoutI((TObject*)0,InputArguments) << "Neither density nor snapshot nor test statistic given. Doing nothing." << endl;
+            oocoutI((TObject*)0,InputArguments) << "Neither density nor snapshot nor test statistic given. Doing nothing." << std::endl;
             return;
          }
          
@@ -144,7 +144,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
          if( fNullDensities.size() == 1 ) { fNullDensities[0] = &pdf; }
          else if( fNullDensities.size() == 0) AddNullDensity( &pdf );
          else{
-            oocoutE((TObject*)0,InputArguments) << "Cannot use SetPdf() when already multiple null densities are specified. Please use AddNullDensity()." << endl;
+            oocoutE((TObject*)0,InputArguments) << "Cannot use SetPdf() when already multiple null densities are specified. Please use AddNullDensity()." << std::endl;
          }
       }
       // overwrite from ToyMCSampler
@@ -152,11 +152,11 @@ class ToyMCImportanceSampler: public ToyMCSampler {
          ToyMCSampler::SetParametersForTestStat(nullpoi);
          if( fNullSnapshots.size() == 0 ) AddNullDensity( NULL, &nullpoi );
          else if( fNullSnapshots.size() == 1 ) {
-            oocoutI((TObject*)0,InputArguments) << "Overwriting snapshot for the only defined null density." << endl;
+            oocoutI((TObject*)0,InputArguments) << "Overwriting snapshot for the only defined null density." << std::endl;
             if( fNullSnapshots[0] ) delete fNullSnapshots[0];
             fNullSnapshots[0] = (const RooArgSet*)nullpoi.snapshot();
          }else{
-            oocoutE((TObject*)0,InputArguments) << "Cannot use SetParametersForTestStat() when already multiple null densities are specified. Please use AddNullDensity()." << endl;
+            oocoutE((TObject*)0,InputArguments) << "Cannot use SetParametersForTestStat() when already multiple null densities are specified. Please use AddNullDensity()." << std::endl;
          }
       }
 
@@ -197,19 +197,19 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       bool fApplyVeto;
 
       // support multiple null densities
-      vector<RooAbsPdf*> fNullDensities;
-      mutable vector<const RooArgSet*> fNullSnapshots;
+      std::vector<RooAbsPdf*> fNullDensities;
+      mutable std::vector<const RooArgSet*> fNullSnapshots;
 
       // densities and snapshots to generate from      
-      vector<RooAbsPdf*> fImportanceDensities;
-      vector<const RooArgSet*> fImportanceSnapshots;
+      std::vector<RooAbsPdf*> fImportanceDensities;
+      std::vector<const RooArgSet*> fImportanceSnapshots;
       
       bool fReuseNLL;
       
       toysStrategies fToysStrategy;
 
-      mutable vector<RooAbsReal*> fNullNLLs;    //!
-      mutable vector<RooAbsReal*> fImpNLLs;     //!
+      mutable std::vector<RooAbsReal*> fNullNLLs;    //!
+      mutable std::vector<RooAbsReal*> fImpNLLs;     //!
 
 
    protected:

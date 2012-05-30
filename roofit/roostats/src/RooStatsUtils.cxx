@@ -28,6 +28,8 @@ NamespaceImp(RooStats)
 #include "RooStats/RooStatsUtils.h"
 #include <typeinfo>
 
+using namespace std;
+
 // this file is only for the documentation of RooStats namespace
 
 namespace RooStats { 

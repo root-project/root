@@ -143,7 +143,7 @@ namespace RooStats {
       {
          if (epsilon < 0)
             coutE(InputArguments) << "MCMCInterval::SetEpsilon will not allow "
-                                  << "negative epsilon value" << endl;
+                                  << "negative epsilon value" << std::endl;
          else
             fEpsilon = epsilon;
       }
@@ -166,7 +166,7 @@ namespace RooStats {
       {
          if (delta < 0.)
             coutE(InputArguments) << "MCMCInterval::SetDelta will not allow "
-                                  << "negative delta value" << endl;
+                                  << "negative delta value" << std::endl;
          else
             fDelta = delta;
       }

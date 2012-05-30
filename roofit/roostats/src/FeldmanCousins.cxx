@@ -60,6 +60,7 @@ ClassImp(RooStats::FeldmanCousins) ;
 
 using namespace RooFit;
 using namespace RooStats;
+using namespace std;
 
 
 /*

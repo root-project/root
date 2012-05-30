@@ -46,6 +46,7 @@
 #include "TStopwatch.h"
 
 using namespace RooStats;
+using namespace std;
 
 namespace Utils { 
 

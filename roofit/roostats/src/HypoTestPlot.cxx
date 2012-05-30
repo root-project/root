@@ -16,12 +16,12 @@
 
 
 #include "RooStats/HypoTestPlot.h"
-
+#include "TStyle.h"
 
 ClassImp(RooStats::HypoTestPlot)
 
 using namespace RooStats;
-#include "TStyle.h"
+using namespace std;
 
 HypoTestPlot::HypoTestPlot(HypoTestResult& result, Int_t bins, Option_t* opt) :
    SamplingDistPlot(bins),

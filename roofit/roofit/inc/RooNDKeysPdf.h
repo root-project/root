@@ -143,7 +143,7 @@ protected:
   mutable std::vector<itVec> _sortTVIdcs;
 #endif
 
-  mutable std::vector<string> _varName;
+  mutable std::vector<std::string> _varName;
   mutable std::vector<Double_t> _rho;
   mutable RooArgSet _dataVars;
   mutable std::vector<Double_t> _x;

@@ -60,7 +60,7 @@ namespace RooStats {
             fCacheSize = size;
          else
             coutE(Eval) << "Warning: Requested non-positive cache size: " <<
-                           size << ". Cache size unchanged." << endl;
+                           size << ". Cache size unchanged." << std::endl;
       }
 
       virtual void SetUpdateProposalParameters(Bool_t updateParams)
