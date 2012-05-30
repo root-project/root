@@ -146,15 +146,15 @@ namespace RooStats {
        //       cout << "fNevents = " << fNevents << endl;
        RooAbsPdf* pdf = fWS->pdf(fPdfName);
        if(!fObservables){
-	 cout << "Observables not specified in ToyMCSamplerOld, will try to determine.  "
-	      << "Will ignore all constant parameters, parameters of interest, and nuisance parameters." << endl;
+          std::cout << "Observables not specified in ToyMCSamplerOld, will try to determine.  "
+                    << "Will ignore all constant parameters, parameters of interest, and nuisance parameters." << std::endl;
 	 RooArgSet* observables = pdf->getVariables();
 	 RemoveConstantParameters(observables); // observables might be set constant, this is just a guess
 
 
 	 if(fNullPOI) observables->remove(*fNullPOI, kFALSE, kTRUE);
 	 if(fNuisParams) observables->remove(*fNuisParams, kFALSE, kTRUE);
-	 cout << "will use the following as observables when generating data" << endl;
+         std::cout << "will use the following as observables when generating data" << std::endl;
 	 observables->Print();
 	 ((ToyMCSamplerOld*)this)->fObservables=observables;
        } /*else {

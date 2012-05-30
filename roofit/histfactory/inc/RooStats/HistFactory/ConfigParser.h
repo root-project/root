@@ -71,9 +71,9 @@ namespace RooStats{
 
        // To be deprecated
        /*
-       typedef pair<double,double> UncertPair;
-       void AddSystematic( RooStats::HistFactory::EstimateSummary &, TXMLNode*, string, string,string);
-       void ReadXmlConfig( string, vector<RooStats::HistFactory::Channel>& , Double_t );
+       typedef std::pair<double,double> UncertPair;
+       void AddSystematic( RooStats::HistFactory::EstimateSummary &, TXMLNode*, std::string, std::string,std::string);
+       void ReadXmlConfig( std::string, std::vector<RooStats::HistFactory::Channel>& , Double_t );
        */
 
      protected:
