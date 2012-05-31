@@ -1,4 +1,13 @@
-//Author: Timur Pocheptsov 16/02/2012
+// @(#)root/graf2d:$Id$
+// Author: Timur Pocheptsov   16/02/2012
+
+/*************************************************************************
+ * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_X11Events
 #define ROOT_X11Events
@@ -91,6 +100,7 @@ private:
 
    void GenerateButtonReleaseEventNoGrab(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
    void GenerateButtonReleaseEventActiveGrab(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
+   bool CancelImplicitOrPassiveGrab();
    
    void GenerateKeyPressEventNoGrab(NSEvent *theEvent);
    void GenerateKeyReleaseEventNoGrab(NSEvent *theEvent);
