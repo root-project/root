@@ -265,7 +265,7 @@ protected:
    Bool_t              fMergeFiles;    // is True when merging output files centrally is needed
    TDSet              *fDSet;          //!tdset for current processing
    ErrorHandlerFunc_t  fErrorHandler;  // Store previous handler when redirecting output
-   Bool_t              fUseTH1Merge;   // If kTRUE forces use of TH1::Merge [kFALSE]
+   Bool_t              fMergeTH1OneByOne;  // If kTRUE forces TH1 merge one-by-one [kTRUE]
 
    virtual Bool_t  HandleTimer(TTimer *timer);
    Int_t           InitPacketizer(TDSet *dset, Long64_t nentries,
@@ -285,7 +285,7 @@ public:
    TProofPlayerRemote(TProof *proof = 0) : fProof(proof), fOutputLists(0), fFeedback(0),
                                            fFeedbackLists(0), fPacketizer(0),
                                            fMergeFiles(kFALSE), fDSet(0), fErrorHandler(0),
-                                           fUseTH1Merge(kFALSE)
+                                           fMergeTH1OneByOne(kTRUE)
                                            { fProgressStatus = new TProofProgressStatus(); }
    virtual ~TProofPlayerRemote();   // Owns the fOutput list
    virtual Long64_t Process(TDSet *set, const char *selector,

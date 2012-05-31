@@ -1407,10 +1407,10 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
    fExitStatus = kFinished;
 
    // This is done here to pickup on the fly changes
-   Int_t usemerge = 0;
-   if (TProof::GetParameter(fInput, "PROOF_UseTH1Merge", usemerge) != 0)
-      usemerge = gEnv->GetValue("ProofPlayer.UseTH1Merge", 0);
-   fUseTH1Merge = (usemerge == 1) ? kTRUE : kFALSE;
+   Int_t honebyone = 1;
+   if (TProof::GetParameter(fInput, "PROOF_MergeTH1OneByOne", honebyone) != 0)
+      honebyone = gEnv->GetValue("ProofPlayer.MergeTH1OneByOne", 1);
+   fMergeTH1OneByOne = (honebyone == 1) ? kTRUE : kFALSE;
 
    Bool_t noData = dset->TestBit(TDSet::kEmpty) ? kTRUE : kFALSE;
 
@@ -2957,70 +2957,38 @@ TObject *TProofPlayerRemote::HandleHistogram(TObject *obj, Bool_t &merged)
          return (TObject *)0;
 
       } else {
-
-         if (!fUseTH1Merge) {
-            // Check if we can 'Add' the histogram to an existing one; this is more efficient
-            // then using Merge
-            TH1 *hout = (TH1*) fOutput->FindObject(h->GetName());
-            if (hout) {
-               // Do they have the same binning and ranges?
-               Bool_t samebin = HistoSameAxis(hout, h);
-               if (samebin) {
-                  hout->Add(h);
-                  PDB(kOutput,2)
-                     Info("HandleHistogram", "histogram '%s' just added", h->GetName());
-                  merged = kTRUE; // So it will be deleted
-                  return (TObject *)0;
-               } else {
-                  // Remove the existing histo from the output list ...
-                  fOutput->Remove(hout);
-                  // ... and create either the list to merge in one-go at the end
-                  // (more efficient than merging one by one) or, if too big, merge
-                  // these two and start the 'one-by-one' technology
-                  Int_t hsz = h->GetNbinsX() * h->GetNbinsY() * h->GetNbinsZ();
-                  if (gProofServ && hsz > gProofServ->GetMsgSizeHWM()) {
-                     list = new TList;
-                     list->Add(hout);
-                     h->Merge(list);
-                     list->SetOwner();
-                     delete list;
-                     return h;
-                  } else {
-                     list = new TList;
-                     list->SetName(h->GetName());
-                     list->SetOwner();
-                     fOutputLists->Add(list);
-                     // Add the existing and the incoming histos
-                     list->Add(hout);
-                     list->Add(h);
-                     // Done
-                     return (TObject *)0;
-                  }
-               }
-            } else {
-               // This is the first one; add it to the output list
-               fOutput->Add(h);
-               return (TObject *)0;
-            }
-
-         } else {
-
-            // Histogram has already been projected
+         // Check if we can 'Add' the histogram to an existing one; this is more efficient
+         // then using Merge
+         TH1 *hout = (TH1*) fOutput->FindObject(h->GetName());
+         if (hout) {
+            // Remove the existing histo from the output list ...
+            fOutput->Remove(hout);
+            // ... and create either the list to merge in one-go at the end
+            // (more efficient than merging one by one) or, if too big, merge
+            // these two and start the 'one-by-one' technology
             Int_t hsz = h->GetNbinsX() * h->GetNbinsY() * h->GetNbinsZ();
-            if (gProofServ && hsz > gProofServ->GetMsgSizeHWM()) {
-               // Large histo: merge one-by-one
-               return obj;
+            if (fMergeTH1OneByOne || (gProofServ && hsz > gProofServ->GetMsgSizeHWM())) {
+               list = new TList;
+               list->Add(hout);
+               h->Merge(list);
+               list->SetOwner();
+               delete list;
+               return h;
             } else {
-               // Create the list to merge in one-go at the end (more efficient
-               // than merging one by one)
                list = new TList;
                list->SetName(h->GetName());
                list->SetOwner();
                fOutputLists->Add(list);
+               // Add the existing and the incoming histos
+               list->Add(hout);
                list->Add(h);
                // Done
                return (TObject *)0;
             }
+         } else {
+            // This is the first one; add it to the output list
+            fOutput->Add(h);
+            return (TObject *)0;
          }
       }
    }
