@@ -23,17 +23,16 @@
 #include "RooWorkspace.h"
 
 
-using namespace std; 
 
 namespace RooStats{
 namespace HistFactory{
-  vector<EstimateSummary>*  loadSavedInputs(TFile* outFile, string channel );
-  void saveInputs(TFile* outFile, string channel, vector<EstimateSummary> summaries);
-  TH1 * GetHisto( TFile * inFile, const string name );
-  TH1 * GetHisto( const string file, const string path, const string obj );
-  bool AddSummaries( vector<EstimateSummary> & summary, vector<vector<EstimateSummary> > &master);
-  vector<pair<string, string> > get_comb(vector<string> names);
-  void AddSubStrings( vector<string> & vs, string s);
+  std::vector<EstimateSummary>*  loadSavedInputs(TFile* outFile, std::string channel );
+  void saveInputs(TFile* outFile, std::string channel, std::vector<EstimateSummary> summaries);
+  TH1 * GetHisto( TFile * inFile, const std::string name );
+  TH1 * GetHisto( const std::string file, const std::string path, const std::string obj );
+  bool AddSummaries( std::vector<EstimateSummary> & summary, std::vector<std::vector<EstimateSummary> > &master);
+  std::vector<std::pair<std::string, std::string> > get_comb(std::vector<std::string> names);
+  void AddSubStrings( std::vector<std::string> & vs, std::string s);
 
   std::vector<EstimateSummary> GetChannelEstimateSummaries(Measurement& measurement, Channel& channel);
 

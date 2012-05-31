@@ -93,6 +93,8 @@ using namespace RooFit;
 using namespace RooStats;
 using namespace HistFactory;
 
+using namespace std;
+
 void topDriver(string input);
 void fastDriver(string input); // in MakeModelAndMeasurementsFast
 

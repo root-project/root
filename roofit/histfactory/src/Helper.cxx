@@ -26,6 +26,8 @@ END_HTML
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 
+using namespace std; 
+
 namespace RooStats{
 namespace HistFactory{
   vector<pair<string, string> > get_comb(vector<string> names){
