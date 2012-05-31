@@ -66,7 +66,6 @@
 #pragma link C++ class RooStats::TestStatSampler+; // interface, not concrete
 #pragma link C++ class RooStats::DebuggingSampler+;
 #pragma link C++ class RooStats::ToyMCSampler+;
-#pragma link C++ class RooStats::ToyMCSamplerOld+;
 #pragma link C++ class RooStats::ToyMCStudy+;
 #pragma link C++ class RooStats::ProofConfig+;
 #pragma link C++ class RooStats::ToyMCImportanceSampler+;
