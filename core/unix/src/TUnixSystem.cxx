@@ -4378,8 +4378,11 @@ int TUnixSystem::UnixUnixService(int port, int backlog)
 
    // Assure that socket directory exists
    oldumask = umask(0);
-   ::mkdir(kServerPath, 0777);
+   int res = ::mkdir(kServerPath, 0777);
    umask(oldumask);
+
+   if (res == -1)
+      return -1;
 
    // Socket path
    TString sockpath;

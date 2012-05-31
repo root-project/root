@@ -37,8 +37,7 @@ void TAlienDirectoryEntry::Browse(TBrowser* b)
    if (b) {
       TString alienname = "alien://";
       alienname += fLfn;
-      TObject *bobj;
-      if (!(bobj = fBrowserObjects.FindObject(alienname.Data()))) {
+      if (!fBrowserObjects.FindObject(alienname)) {
          TFile *newfile = TFile::Open(alienname.Data());
          b->Add(newfile);
          fBrowserObjects.Add(new TObjString(alienname.Data()), (TObject*) newfile);

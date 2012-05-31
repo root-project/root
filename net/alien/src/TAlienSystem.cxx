@@ -33,6 +33,8 @@ ClassImp(TAlienSystem)
 TAlienSystem::TAlienSystem(const char *name, const char *title) : TSystem(name, title)
 {
    // Create a new OS interface.
+   
+   fWorkingDirectory = { '\0' };
 }
 
 //______________________________________________________________________________
@@ -76,6 +78,7 @@ int TAlienSystem::MakeDirectory(const char* dirname)
 void *TAlienSystem::OpenDirectory(const char* name)
 {
    // Open a directory. Returns 0 if directory does not exist.
+
    TUrl url(name);
    url.CleanRelativePath();
    if (strcmp(url.GetProtocol(),"alien")) {
@@ -83,18 +86,15 @@ void *TAlienSystem::OpenDirectory(const char* name)
      url.SetProtocol("alien",kTRUE);
    }
    return (void*) gapi_opendir(url.GetUrl());
-
-   AbstractMethod("OpenDirectory");
-   return 0;
 }
 
 //______________________________________________________________________________
 void TAlienSystem::FreeDirectory(void* ptr)
 {
    // Free a directory.
+
    gapi_closedir( (GAPI_DIR*)ptr);
    return;
-   AbstractMethod("FreeDirectory");
 }
 
 //______________________________________________________________________________

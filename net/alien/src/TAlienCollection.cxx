@@ -55,6 +55,7 @@ TAlienCollection::TAlienCollection(const char *localcollectionfile,
    fNofGroupfiles = 0;
    fHasSUrls = kFALSE;
    fHasSelection = kFALSE;
+   fHasOnline = kFALSE;
    fFileStager = 0;
    fExportUrl = "";
    fInfoComment = "";
@@ -79,6 +80,7 @@ TAlienCollection::TAlienCollection(TList *eventlist, UInt_t nofgroups,
    fNofGroupfiles = nofgroupfiles;
    fHasSUrls = kFALSE;
    fHasSelection = kFALSE;
+   fHasOnline = kFALSE;
    fFileStager = 0;
    fExportUrl = "";
    fInfoComment = "";
@@ -315,8 +317,6 @@ void TAlienCollection::ParseXML(UInt_t maxentries)
             fXmlFile.Data());
       return;
    }
-   if (!xevent)
-      return;
 
    fNofGroups = 0;
    fNofGroupfiles = 0;
@@ -534,7 +534,8 @@ void TAlienCollection::Status()
         100.0 * offlinefilesize / (onlinefilesize + offlinefilesize +
                                    0.0000001));
    Info("Status", "=========================================\n");
-
+   
+   delete statuslist;
 }
 
 //______________________________________________________________________________
@@ -840,13 +841,12 @@ TDSet *TAlienCollection::GetDataset(const char *type, const char *objname,
    // taken into account.
 
    Reset();
-   TMap *mapp;
    TDSet *dset = new TDSet(type, objname, dir);
    if (!dset) {
       return 0;
    }
 
-   while ((mapp = Next())) {
+   while (Next()) {
       if (((TObjString *) fCurrent->GetValue("")))
          dset->Add(((TMap *) (fCurrent->GetValue("")))->GetValue("turl")->
                    GetName());;
@@ -866,10 +866,9 @@ TGridResult *TAlienCollection::GetGridResult(const char *filename,
    // will be empty. <publicaccess> adds the publicaccess option to the TGridResult entries
 
    Reset();
-   TMap *mapp;
    TGridResult *result = new TAlienResult();
 
-   while ((mapp = Next())) {
+   while (Next()) {
       if (((TObjString *) fCurrent->GetValue(filename))) {
          TMap *attributes = (TMap *) fCurrent->GetValue(filename)->Clone();
          if (publicaccess) {
@@ -933,12 +932,11 @@ void TAlienCollection::Add(TGridCollection * addcollection)
    addcollection->Reset();
    // loop over all elements in reference (=this)
    TMap *addmap;
-   TMap *thismap;
    while ((addmap = addcollection->Next())) {
       Reset();
       // try to find in the comparator collection
       TString s2 = addcollection->GetLFN();
-      while ((thismap = Next())) {
+      while (Next()) {
          TString s1 = GetLFN();
          // printf("%s = %s\n", s1.Data(), s2.Data());
          if (s1 == s2) {
@@ -1462,6 +1460,8 @@ Bool_t TAlienCollection::ExportXML(TFile * exportfile, Bool_t selected,
       return kFALSE;
    }
 
+   delete filegroups;
+
    return kTRUE;
 }
 
@@ -1529,7 +1529,7 @@ const char *TAlienCollection::GetOutputFileName(const char *infile,
    if (fp) {
       char rootfile[4096];
       Int_t item;
-      while ((item = fscanf(fp, "%s", rootfile)) == 1) {
+      while ((item = fscanf(fp, "%4095s", rootfile)) == 1) {
          TString rootdir(gSystem->DirName(rootfile));
          TString rootbase(gSystem->BaseName(rootfile));
          TString rootbasenosuffix;

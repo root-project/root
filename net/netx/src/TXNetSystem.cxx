@@ -35,7 +35,7 @@
 
 #include "XrdClient/XrdClientAdmin.hh"
 #include "XrdClient/XrdClientConn.hh"
-#include <XrdClient/XrdClientConst.hh>
+#include "XrdClient/XrdClientConst.hh"
 #include "XrdClient/XrdClientEnv.hh"
 #include "XProtocol/XProtocol.hh"
 
@@ -54,6 +54,7 @@ TXNetSystem::TXNetSystem(Bool_t owner) : TNetSystem(owner)
    // Create system management class without connecting to server.
 
    SetTitle("(x)rootd system administration");
+   fIsRootd = kFALSE;
    fIsXRootd = kFALSE;
    fDir = "";
    fDirp = 0;

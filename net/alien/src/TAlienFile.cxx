@@ -375,9 +375,7 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t *option,
          urlStr->SetString(((TObjString *) tokens->At(0))->GetName());
       }
 
-      if (tokens) {
-         delete tokens;
-      }
+      delete tokens;
 
       newurl = urlStr->GetName();
       stmp = purl.GetAnchor();
@@ -560,9 +558,9 @@ void TAlienFile::Close(Option_t * option)
          // there is only one result line .... in case it is at all ....
          break;
       }
-      delete iter;
-      delete result;
    }
+   delete iter;
+   delete result;
 
    gSystem->Unsetenv("GCLIENT_EXTRA_ARG");
 

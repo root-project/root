@@ -146,8 +146,7 @@ void TAlienMasterJob::Print(Option_t* options) const
             }
          }
          printf("\n");
-         if (dirlist)
-            delete dirlist;
+         delete dirlist;
       }
    }
    std::cout << " ----------LITE_JOB_OPERATIONS-------------------------------------- " << std::endl;

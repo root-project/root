@@ -516,8 +516,10 @@ Bool_t TAlienPackage::InstallAllPackages ()
                                                        strObjVersion->GetName(),
                                                        fPlatform.Data());
          if (newpackage) {
-            if (!newpackage->Enable ())
+            if (!newpackage->Enable ()) {
+               delete newpackage;
                return kFALSE;
+            }
          } else {
             return kFALSE;
          }

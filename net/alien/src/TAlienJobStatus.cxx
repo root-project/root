@@ -85,8 +85,7 @@ void TAlienJobStatus::Browse(TBrowser* b)
             b->Add(new TAlienDirectory(sandbox.Data(),"job-output"));
 
          } else {
-            if (keyStr && valueStr)
-               b->Add(new TNamed(valueStr->GetString(), keyStr->GetString()));
+            b->Add(new TNamed(valueStr->GetString(), keyStr->GetString()));
          }
       }
       delete iter;
