@@ -29,7 +29,7 @@
 using namespace RooStats;
 using namespace HistFactory;
 
-
+using namespace std;
 
 std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsFromXML( string input ) {
  

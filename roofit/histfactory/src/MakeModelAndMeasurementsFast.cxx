@@ -99,6 +99,7 @@ using namespace RooFit;
 using namespace RooStats;
 using namespace HistFactory;
 
+using namespace std;
 
 void fastDriver(string input){
   // TO DO:

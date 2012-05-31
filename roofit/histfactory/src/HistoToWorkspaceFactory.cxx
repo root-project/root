@@ -67,9 +67,9 @@ END_HTML
 
 // specific to this package
 //#include "RooStats/HistFactory/Helper.h"
-#include "Helper.h"
 #include "RooStats/HistFactory/LinInterpVar.h"
 #include "RooStats/HistFactory/HistoToWorkspaceFactory.h"
+#include "Helper.h"
 
 #define VERBOSE
 
