@@ -186,7 +186,7 @@ void RooFitResult::setFinalParList(const RooArgList& list)
 
 
 //_____________________________________________________________________________
-Int_t RooFitResult::statusCodeHistory(UInt_t icycle) 
+Int_t RooFitResult::statusCodeHistory(UInt_t icycle) const
 { 
   if (icycle>=_statusHistory.size()) {
     coutE(InputArguments) << "RooFitResult::statusCodeHistory(" << GetName() 
@@ -199,7 +199,7 @@ Int_t RooFitResult::statusCodeHistory(UInt_t icycle)
 
 
 //_____________________________________________________________________________
-const char* RooFitResult::statusLabelHistory(UInt_t icycle) 
+const char* RooFitResult::statusLabelHistory(UInt_t icycle) const 
 { 
   if (icycle>=_statusHistory.size()) {
     coutE(InputArguments) << "RooFitResult::statusLabelHistory(" << GetName() 

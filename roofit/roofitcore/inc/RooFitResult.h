@@ -79,8 +79,8 @@ public:
   }
 
   inline UInt_t numStatusHistory() const { return _statusHistory.size() ; }
-  Int_t statusCodeHistory(UInt_t icycle) ;
-  const char* statusLabelHistory(UInt_t icycle) ;
+  Int_t statusCodeHistory(UInt_t icycle) const ;
+  const char* statusLabelHistory(UInt_t icycle) const ;
 
   inline Int_t covQual() const { 
     // Return MINUIT quality code of covariance matrix

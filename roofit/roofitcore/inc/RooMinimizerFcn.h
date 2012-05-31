@@ -72,6 +72,7 @@ class RooMinimizerFcn : public ROOT::Math::IBaseFunctionMultiDim {
 
 
   virtual double DoEval(const double * x) const;  
+  void updateFloatVec() ;
 
 private:
   
@@ -88,6 +89,7 @@ private:
   bool _verbose;
 
   RooArgList* _floatParamList;
+  std::vector<RooAbsArg*> _floatParamVec ;
   RooArgList* _constParamList;
   RooArgList* _initFloatParamList;
   RooArgList* _initConstParamList;
