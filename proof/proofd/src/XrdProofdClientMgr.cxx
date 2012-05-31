@@ -1229,6 +1229,7 @@ XrdSecService *XrdProofdClientMgr::LoadSecurity()
    XrdSecServLoader_t ep = 0;
    if (!(ep = (XrdSecServLoader_t)dlsym(lh, "XrdSecgetService"))) {
       TRACE(XERR, dlerror() <<" finding XrdSecgetService() in "<<seclib);
+      dlclose(lh);
       return 0;
    }
 
@@ -1237,6 +1238,7 @@ XrdSecService *XrdProofdClientMgr::LoadSecurity()
    int nd = 0;
    char *rcfn = FilterSecConfig(nd);
    if (!rcfn) {
+      dlclose(lh);
       if (nd == 0) {
          // No directives to be processed
          TRACE(XERR, "no security directives: strong authentication disabled");
@@ -1251,6 +1253,9 @@ XrdSecService *XrdProofdClientMgr::LoadSecurity()
    XrdSecService *cia = 0;
    if (!(cia = (*ep)((fEDest ? fEDest->logger() : (XrdSysLogger *)0), rcfn))) {
       TRACE(XERR, "Unable to create security service object via " << seclib);
+      dlclose(lh);
+      unlink(rcfn);
+      delete[] rcfn;
       return 0;
    }
    // Notify
@@ -1259,6 +1264,7 @@ XrdSecService *XrdProofdClientMgr::LoadSecurity()
    // Unlink the temporary file and cleanup its path
    unlink(rcfn);
    delete[] rcfn;
+   dlclose(lh);
 
    // All done
    return cia;

@@ -395,7 +395,7 @@ void XrdProofdAux::LogEmsgToFile(const char *flog, const char *emsg, const char 
    if (flog && strlen(flog)) {
       // Open the file in write-only, append mode
       int logfd = open(flog, O_WRONLY|O_APPEND, 0644);
-      if (logfd > 0) {
+      if (logfd >= 0) {
          fcntl(logfd, F_SETFD, FD_CLOEXEC);
          // Attach a logger to the file
          XrdSysLogger logger(logfd, 0);

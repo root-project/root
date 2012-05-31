@@ -822,6 +822,8 @@ Int_t TXProofMgr::SendMsgToUsers(const char *msg, const char *usr)
          wanted = (left > kMAXBUF-1) ? kMAXBUF-1 : left;
 
       } while (len > 0 && left > 0);
+      // Close file
+      fclose(f);
    } else {
       // Add the message to the buffer
       len = strlen(msg);

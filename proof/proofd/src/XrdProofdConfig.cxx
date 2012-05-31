@@ -156,6 +156,7 @@ int XrdProofdConfig::ParseFile(bool rcf)
          }
       }
    }
+   close(cfgFD);
 
    // Done
    return 0;

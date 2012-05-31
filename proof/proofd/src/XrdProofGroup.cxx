@@ -324,15 +324,20 @@ int XrdProofGroupMgr::Config(const char *fn)
    // Return the number of active groups or -1 in case of error.
    XPDLOC(GMGR, "GroupMgr::Config")
 
-   if (!fn || strlen(fn) <= 0) {
-      // This call is to reset existing info and remain with
-      // the 'default' group only
-      XrdSysMutexHelper mhp(fMutex);
-      // Reset existing info
-      fGroups.Purge();
-      // Create "default" group
-      fGroups.Add("default", new XrdProofGroup("default"));
-      return fGroups.Num();;
+   if ((!fn || strlen(fn) <= 0)) {
+      if (fCfgFile.fName != fn) {
+         // This call is to reset existing info and remain with
+         // the 'default' group only
+         XrdSysMutexHelper mhp(fMutex);
+         // Reset existing info
+         fGroups.Purge();
+         // Create "default" group
+         fGroups.Add("default", new XrdProofGroup("default"));
+         // Reset fCfgFile
+         fCfgFile.fName = "";
+         fCfgFile.fMtime = 0;
+      }
+      return fGroups.Num();
    }
 
    // Did the file changed ?

@@ -531,7 +531,7 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
    }
 
    // Make sure that something has been found
-   if (!acws || acws->size() <= 1) {
+   if (!acws || (acws && acws->size() <= 1)) {
       if (fUseFIFO) {
          // Enqueue the query/session
          // the returned list of workers was not filled
@@ -540,10 +540,11 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
          if (TRACING(REQ)) xps->DumpQueries();
          // Notify enqueing
          TRACE(REQ, "no workers currently available: session enqueued");
+         SafeDelete(acwseff);
          return 2;
       } else {
          TRACE(XERR, "no worker available: do nothing");
-         if (acwseff) { delete acwseff; acwseff = 0; }
+         SafeDelete(acwseff);
          return -1;
       }
    }
@@ -551,6 +552,7 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
    // If the session has already assigned workers just return
    if (xps->Workers()->Num() > 0) {
       // Current assignement is valid
+      SafeDelete(acwseff);
       return 1;
    }
 

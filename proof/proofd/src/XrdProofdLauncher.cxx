@@ -73,11 +73,12 @@ XrdNetPeer *XrdProofdLauncher::Launch(ProofdLaunch_t *in, int &pid)
    
    // Create server socket to get the call back
    rpdunixsrv *unixsrv = new rpdunixsrv(xps->UNIXSockPath());
-   if (!unixsrv || !unixsrv->isvalid(0)) {
+   if (!unixsrv || (unixsrv && !unixsrv->isvalid(0))) {
       XPDFORM(emsg, "could not start unix server connection on path '%s' (errno: %d)",
                     xps->UNIXSockPath(), (int)errno);
       TRACE(XERR, emsg);      
       XrdProofdAux::LogEmsgToFile(in->fErrLog.c_str(), emsg.c_str(), npfx.c_str());
+      SafeDelete(unixsrv);
       return peer;
    }
 
@@ -92,6 +93,7 @@ XrdNetPeer *XrdProofdLauncher::Launch(ProofdLaunch_t *in, int &pid)
       XPDFORM(emsg, "failure from 'system' (errno: %d)", (int)errno);
       TRACE(XERR, emsg);
       XrdProofdAux::LogEmsgToFile(in->fErrLog.c_str(), emsg.c_str(), npfx.c_str());
+      SafeDelete(unixsrv);
       return peer;
    }
 
@@ -99,12 +101,14 @@ XrdNetPeer *XrdProofdLauncher::Launch(ProofdLaunch_t *in, int &pid)
    // Accept a connection from the second server
    int err;
    rpdunix *uconn = unixsrv->accept(in->fIntWait, &err);
-   if (!uconn || !uconn->isvalid(0)) {
+   if (!uconn || (uconn && !uconn->isvalid(0))) {
       XPDFORM(emsg, "failure accepting callback (errno: %d)", -err);
       TRACE(XERR, emsg);
       XrdProofdAux::LogEmsgToFile(in->fErrLog.c_str(), emsg.c_str(), npfx.c_str());
+      SafeDelete(uconn);
       return peer;
    }
+   SafeDelete(unixsrv);
    TRACE(ALL, "proofserv connected!");
 
    //   
