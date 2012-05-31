@@ -190,20 +190,21 @@ int XrdgetProtocolPort(const char * /*pname*/, char * /*parms*/, XrdProtocol_Con
       // This function is called early on to determine the port we need to use. The
       // The default is ostensibly 1093 but can be overidden; which we allow.
 
-      XrdProofdProtCfg pcfg(pi->ConfigFN, pi->eDest);
-      // Init some relevant quantities for tracing
-      XrdProofdTrace = new XrdOucTrace(pi->eDest);
-      pcfg.Config(0);
-
       // Default XPD_DEF_PORT (1093)
       int port = XPD_DEF_PORT;
 
-      if (pcfg.fPort > 0) {
-         port = pcfg.fPort;
-      } else {
-         port = (pi && pi->Port > 0) ? pi->Port : XPD_DEF_PORT;
-      }
+      if (pi) {
+         XrdProofdProtCfg pcfg(pi->ConfigFN, pi->eDest);
+         // Init some relevant quantities for tracing
+         XrdProofdTrace = new XrdOucTrace(pi->eDest);
+         pcfg.Config(0);
 
+         if (pcfg.fPort > 0) {
+            port = pcfg.fPort;
+         } else {
+            port = (pi && pi->Port > 0) ? pi->Port : XPD_DEF_PORT;
+         }
+      }
       return port;
 }}
 

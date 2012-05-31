@@ -565,8 +565,10 @@ int XrdProofdProofServ::BroadcastPriority(int priority)
    if (!fResponse || fResponse->Send(kXR_attn, kXPD_priority, buf, len) != 0) {
       // Failure
       TRACE(XERR,"problems telling proofserv");
+      SafeDelArray(buf);
       return -1;
    }
+   SafeDelArray(buf);
    TRACE(DBG, "priority "<<priority<<" sent over");
    // Done
    return 0;
@@ -995,7 +997,7 @@ void XrdProofdProofServ::SendClusterInfo(int nsess, int nacti)
       // Failure
       TRACE(XERR,"problems sending proofserv");
    }
-
+   SafeDelArray(buf);
 }
 
 //__________________________________________________________________________

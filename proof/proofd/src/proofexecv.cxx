@@ -182,6 +182,7 @@ void start_rootd(int argc, char **argv)
 
    // We should not be here!!!
    Info("ERROR: returned from execv: bad, bad sign !!!");
+   delete [] argvv;
    return;
 }
 
@@ -281,6 +282,7 @@ void start_ps(int argc, char **argv)
    rpdunix *uconn = new rpdunix(sockpath.c_str());
    if (!uconn || (uconn && !uconn->isvalid(0))) {
       Info("ERROR: failure calling back parent on '%s'", sockpath.c_str());
+      if (uconn) delete uconn;
       return;
    }
 
@@ -288,6 +290,7 @@ void start_ps(int argc, char **argv)
    int rcc = 0;
    if ((rcc = uconn->send((int) getpid())) != 0) {
       Info("ERROR: failure sending pid to parent (errno: %d)", -rcc);
+      delete uconn;
       return;
    }
    
@@ -295,6 +298,7 @@ void start_ps(int argc, char **argv)
    rpdmsg msg;
    if ((rcc = uconn->recv(msg)) != 0) {
       Info("ERROR: failure receiving admin path and executable from parent (errno: %d)", -rcc);
+      delete uconn;
       return;
    }
    int ppid;
@@ -309,6 +313,7 @@ void start_ps(int argc, char **argv)
    msg.reset();
    if ((rcc = uconn->recv(msg)) != 0) {
       Info("ERROR: failure receiving information about dataset and data dir(s) from parent (errno: %d)", -rcc);
+      delete uconn;
       return;
    }
    int euid;
@@ -323,6 +328,7 @@ void start_ps(int argc, char **argv)
    if (setownerships(euid, user, group, creds, datasetsrcs, datadir, ddiropts,
                      ord, stag) != 0) {
       Info("ERROR: problems setting relevant user ownerships");
+      delete uconn;
       return;
    }
 
@@ -330,29 +336,34 @@ void start_ps(int argc, char **argv)
    if (mvfile(tenvfile, envfile, uid, gid, 0644) != 0) {
       Info("ERROR: problems renaming '%s' to '%s' (errno: %d)",
            tenvfile.c_str(), envfile.c_str(), errno);
+      delete uconn;
       return;
    }
    // Move the rootrc file in the session directory
    if (mvfile(trcfile, rcfile, uid, gid, 0644) != 0) {
       Info("ERROR: problems renaming '%s' to '%s' (errno: %d)",
            trcfile.c_str(), rcfile.c_str(), errno);
+      delete uconn;
       return;
    }
 
    // Add missing information to the rc file
    if (completercfile(rcfile, userdir, stag, adminpath) != 0) {
       Info("ERROR: problems completing '%s'", rcfile.c_str());
+      delete uconn;
       return;
    }
    // Set the environment following the content of the env file
    if (setproofservenv(envfile, logfile, rcfile) != 0) {
       Info("ERROR: problems setting environment from '%s'", envfile.c_str());
+      delete uconn;
       return;
    }
 
    // Export the file descriptor
    if (exportsock(uconn) != 0) {
       Info("ERROR: problems exporting file descriptor");
+      delete uconn;
       return;
    }
    delete uconn;

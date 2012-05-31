@@ -1088,6 +1088,7 @@ Bool_t TXSocket::Create(Bool_t attach)
          } else {
             Error("Create","session ID is undefined!");
             fSessionID = -1;
+            if (srvresp) free(srvresp);
             return kFALSE;
          }
 
@@ -1134,8 +1135,7 @@ Bool_t TXSocket::Create(Bool_t attach)
 
          // Cleanup
          SafeDelete(xrsp);
-         if (srvresp)
-            free(srvresp);
+         if (srvresp) free(srvresp);
 
          // Notify
          return kTRUE;
@@ -1150,6 +1150,7 @@ Bool_t TXSocket::Create(Bool_t attach)
          if (fConn->GetOpenError() == kXP_TooManySess) {
             // Avoid to contact the server any more
             fSessionID = -1;
+            if (srvresp) free(srvresp);
             return kFALSE;
          } else {
             // Print error msg, if any
@@ -1167,6 +1168,7 @@ Bool_t TXSocket::Create(Bool_t attach)
          Error("Create", "%d creation/attachment attempts failed: no attempts left",
                          gEnv->GetValue("XProof.CreationRetries", 4));
 
+      if (srvresp) free(srvresp);
    } // Creation retries
    
    // The session is invalid: reset the sessionID to invalid state (it was our protocol
@@ -1290,6 +1292,7 @@ Bool_t TXSocket::Ping(const char *ord)
 
       // Cleanup
       SafeDelete(xrsp);
+      if (pans) free(pans);
 
    } else {
       if (XPD::clientMarshall(&Request) == 0) {

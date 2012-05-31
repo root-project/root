@@ -1156,12 +1156,16 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
                TRACEP(p, DBG, emsg);
             }
             response->Send();
+            SafeDelArray(pattern);
+            SafeFree(filen);
             return 0;
          } else {
             XPDFORM(emsg, "could not read buffer from %s %s",
                     (local) ? "local file " : "remote file ", file);
             TRACEP(p, XERR, emsg);
             response->Send(kXR_InvalidRequest, emsg.c_str());
+            SafeDelArray(pattern);
+            SafeFree(filen);
             return 0;
          }
       } else {

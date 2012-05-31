@@ -1183,8 +1183,7 @@ bool XrdProofConn::Login()
                // We failed the aythentication attempt: cannot continue
                notdone = 0;
 
-            if (plist)
-               delete[] plist;
+            delete[] plist;
          } else {
             // We are successfully done
             resp = 1;

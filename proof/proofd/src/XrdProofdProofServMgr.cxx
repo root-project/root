@@ -1654,7 +1654,7 @@ XrdProofdProofServ *XrdProofdProofServMgr::PrepareProofServ(XrdProofdProtocol *p
    TRACEP(p, REQ, msg);
    if (p->ConnType() == kXPD_ClientMaster) {
       // Notify the client if using a version different from the default one
-      if (p->Client()->ROOT() != fMgr->ROOTMgr()->DefaultVersion()) {
+      if (fMgr && p->Client()->ROOT() != fMgr->ROOTMgr()->DefaultVersion()) {
          XPDFORM(msg, "++++ Using NON-default ROOT version: %s ++++\n", xps->ROOT()->Export());
          r->Send(kXR_attn, kXPD_srvmsg, (char *) msg.c_str(), msg.length());
       }
@@ -2489,6 +2489,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       emsg += errlog;
       emsg.insert(npfx, 0);
       response->Send(kXP_ServerError, emsg.c_str());
+      SafeDelete(peersrv);
       return 0;
    }
 
@@ -2531,6 +2532,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       TRACEP(p, XERR, emsg.c_str());
       emsg.insert(npfx, 0);
       response->Send(kXR_attn, kXPD_errmsg, (char *) emsg.c_str(), emsg.length());
+      SafeDelete(peersrv);
       return 0;
    }
    SafeDelete(peersrv);
@@ -4432,7 +4434,9 @@ int XrdProofdProofServMgr::SetUserOwnerships(XrdProofdProtocol *p,
             for (int i = 0; i < 3; i++) {
                if (XrdProofdAux::AssertDir(dus[i].c_str(), p->Client()->UI(), fMgr->ChangeOwn()) == 0) {
                   if (XrdProofdAux::ChangeMod(dus[i].c_str(), mode) != 0) {
+                     std::ios_base::fmtflags oflags = std::cerr.flags();
                      TRACE(XERR, "problems setting permissions "<< oct << mode<<" on: "<<dus[i]);
+                     std::cerr.flags(oflags);
                   }
                } else {
                   TRACE(XERR, "problems asserting: "<<dus[i]);
@@ -4570,7 +4574,7 @@ int XrdProofdProofServMgr::SaveAFSkey(XrdSecCredentials *c,
 
       // Open the file, truncating if already existing
       int fd = open(fn.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
-      if (fd <= 0) {
+      if (fd < 0) {
          TRACE(XERR, "problems creating file - errno: " << errno);
          delete [] out;
          return -1;

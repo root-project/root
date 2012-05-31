@@ -543,6 +543,7 @@ int XrdProofdAdmin::SetGroupProperties(XrdProofdProtocol *p)
       TRACEP(p, XERR, "received group does not match the user's one");
       response->Send(kXR_InvalidRequest,
                      "SetGroupProperties: received group does not match the user's one");
+      SafeDelArray(grp);
       return 0;
    }
 
@@ -558,12 +559,15 @@ int XrdProofdAdmin::SetGroupProperties(XrdProofdProtocol *p)
          TRACEP(p, XERR, "problem sending message on the pipe");
          response->Send(kXR_ServerError,
                              "SetGroupProperties: problem sending message on the pipe");
+         SafeDelArray(grp);
          return 0;
       }
    }
 
    // Notify
    TRACEP(p, REQ, "priority for group '"<< grp<<"' has been set to "<<priority);
+
+   SafeDelArray(grp);
 
    // Acknowledge user
    response->Send();
@@ -1582,7 +1586,7 @@ int XrdProofdAdmin::ExecCmd(XrdProofdProtocol *p, XrdProofdResponse *r,
                }
                // Close the pipe
                int rcpc = 0;
-               if (rc == 0 && (rcpc = pclose(fp)) == -1) {
+               if ((rcpc = pclose(fp)) == -1) {
                   emsg = "could not close the command pipe";
                   rc = 1;
                }
@@ -2419,7 +2423,7 @@ int XrdProofdAdmin::CpFile(XrdProofdProtocol *p)
             }
             // Close the pipe if not in error state (otherwise we may block here)
             int rcpc = 0;
-            if (rc == 0 && (rcpc = pclose(fp)) == -1) {
+            if ((rcpc = pclose(fp)) == -1) {
                emsg = "error while trying to close the command pipe";
                rc = 1;
             }
