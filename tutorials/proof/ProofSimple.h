@@ -26,6 +26,8 @@ public :
    TH3F           **fHist3;//![fNhist3]
    TRandom3        *fRandom;//!
 
+   TH1F            *fHLab;//!
+
    ProofSimple();
    virtual ~ProofSimple();
    virtual Int_t   Version() const { return 2; }
