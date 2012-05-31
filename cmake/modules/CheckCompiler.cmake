@@ -51,6 +51,16 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
+#---Check for c++11 option------------------------------------------------------------
+if(c++11)
+  include(CheckCXXCompilerFlag)
+  CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CXX11)
+  if(NOT HAS_CXX11)
+    message(STATUS "Current compiler does not suppport -std=c++11 option. Switching OFF c++11 option")
+    set(c++11 OFF CACHE BOOL "" FORCE)
+  endif()
+endif()
+
 #---Need to locate thead libraries and options to set properly some compilation flags---------------- 
 find_package(Threads)
 
@@ -61,6 +71,10 @@ elseif(APPLE)
   include(SetUpMacOS)
 elseif(WIN32)
   include(SetupWindows)
+endif()
+
+if(c++11)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-deprecated-declaration")
 endif()
 
 #---Print the final compiler flags--------------------------------------------------------------------
