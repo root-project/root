@@ -29,6 +29,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 #---Load some basic macros which are needed later for the confiuration and build----------------
 include(RootNewMacros)
+include(RootBuildOptions)
 include(CheckCompiler)
 include(MacroEnsureVersion)
 
@@ -37,8 +38,6 @@ include(MacroEnsureVersion)
 #---Check if the user wants to build the project in the source directory------------------------
 ROOT_CHECK_OUT_OF_SOURCE_BUILD()
 
-#---Here we declare the required build options--------------------------------------------------
-include(RootBuildOptions)
 #---Here we look for installed software and switch on and of the different build options--------
 include(SearchInstalledSoftware)
 ROOT_SHOW_OPTIONS()
