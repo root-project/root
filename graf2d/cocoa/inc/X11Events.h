@@ -91,6 +91,7 @@ private:
 
    void GenerateButtonReleaseEventNoGrab(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
    void GenerateButtonReleaseEventActiveGrab(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
+   bool CancelImplicitOrPassiveGrab();
    
    void GenerateKeyPressEventNoGrab(NSEvent *theEvent);
    void GenerateKeyReleaseEventNoGrab(NSEvent *theEvent);
