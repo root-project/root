@@ -1408,7 +1408,7 @@ Bool_t TDataSetManager::CheckStagedStatus(TFileInfo *fileInfo, Int_t fopt, Int_t
 
       fileInfo->ResetUrl();
       if (!fileInfo->GetCurrentUrl()) {
-         ::Error("TDataSetManager::ScanDataSet", "GetCurrentUrl() returned 0 for %s",
+         ::Error("TDataSetManager::CheckStagedStatus", "GetCurrentUrl() returned 0 for %s",
                                                 fileInfo->GetFirstUrl()->GetUrl());
          return kFALSE;
       }
@@ -1441,7 +1441,7 @@ Bool_t TDataSetManager::CheckStagedStatus(TFileInfo *fileInfo, Int_t fopt, Int_t
                // Actually access the file
                char tmpChar = 0;
                if (file->ReadBuffer(&tmpChar, 1))
-                  ::Warning("TDataSetManager::ScanDataSet", "problems reading 1 byte from open file");
+                  ::Warning("TDataSetManager::CheckStagedStatus", "problems reading 1 byte from open file");
                // Count
                touched = kTRUE;
             }
@@ -1449,7 +1449,7 @@ Bool_t TDataSetManager::CheckStagedStatus(TFileInfo *fileInfo, Int_t fopt, Int_t
             delete file;
          } else {
             // File could not be opened, reset staged bit
-            if (dbg) ::Info("TDataSetManager::ScanDataSet", "file %s disappeared", url.GetUrl());
+            if (dbg) ::Info("TDataSetManager::CheckStagedStatus", "file %s disappeared", url.GetUrl());
             fileInfo->ResetBit(TFileInfo::kStaged);
             disappeared = kTRUE;
             changed = kTRUE;
@@ -1492,11 +1492,11 @@ Bool_t TDataSetManager::CheckStagedStatus(TFileInfo *fileInfo, Int_t fopt, Int_t
       if (stager) {
          result = stager->IsStaged(url.GetUrl());
          if (gDebug > 0)
-            ::Info("TDataSetManager::ScanDataSet", "IsStaged: %s: %d", url.GetUrl(), result);
+            ::Info("TDataSetManager::CheckStagedStatus", "IsStaged: %s: %d", url.GetUrl(), result);
          if (createStager)
             SafeDelete(stager);
       } else {
-         ::Warning("TDataSetManager::ScanDataSet",
+         ::Warning("TDataSetManager::CheckStagedStatus",
                   "could not get stager instance for '%s'", url.GetUrl());
       }
 
@@ -1667,12 +1667,17 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
       
       // Add url of the disk server in front of the list
       if (file->GetEndpointUrl()) {
+         // add endpoint url if it is not a local file
          TUrl eurl(*(file->GetEndpointUrl()));
-         eurl.SetOptions(url->GetOptions());
-         eurl.SetAnchor(url->GetAnchor());
-         fileinfo->AddUrl(eurl.GetUrl(), kTRUE);
 
-         if (gDebug > 0) ::Info("TDataSetManager::ScanFile", "added URL %s", eurl.GetUrl());
+         if (strcmp(eurl.GetProtocol(), "file") || strcmp(eurl.GetProtocol(), url->GetProtocol())) { 
+            
+            eurl.SetOptions(url->GetOptions());
+            eurl.SetAnchor(url->GetAnchor());
+            fileinfo->AddUrl(eurl.GetUrl(), kTRUE);
+
+            if (gDebug > 0) ::Info("TDataSetManager::ScanFile", "added URL %s", eurl.GetUrl());
+         }
       } else {
          ::Warning("TDataSetManager::ScanFile", "end-point URL undefined for file %s", file->GetName());
       }
@@ -1701,14 +1706,17 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
       if (file->GetSize() > 0) fileinfo->SetSize(file->GetSize());
       fileinfo->SetBit(TFileInfo::kStaged);
 
-      // Add url of the disk server in front of the list
+      // Add url of the disk server in front of the list if it is not a local file
       TUrl eurl(*(file->GetEndpointUrl()));
-      eurl.SetOptions(url->GetOptions());
-      eurl.SetAnchor(url->GetAnchor());
-      fileinfo->AddUrl(eurl.GetUrl(), kTRUE);
 
-      if (gDebug > 0) ::Info("TDataSetManager::ScanFile", "added URL %s", eurl.GetUrl());
+      if (strcmp(eurl.GetProtocol(), "file") || strcmp(eurl.GetProtocol(), url->GetProtocol())) { 
 
+         eurl.SetOptions(url->GetOptions());
+         eurl.SetAnchor(url->GetAnchor());
+         fileinfo->AddUrl(eurl.GetUrl(), kTRUE);
+
+         if (gDebug > 0) ::Info("TDataSetManager::ScanFile", "added URL %s", eurl.GetUrl());
+      }
       fileinfo->SetUUID(file->GetUUID().AsString());
    }
    rc = 0;
