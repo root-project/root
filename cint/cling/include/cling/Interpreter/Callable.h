@@ -52,7 +52,7 @@ namespace cling {
     /// \brief Get the declaration of the function.
     //
     /// Retrieve the Callable's function declaration.
-    const clang::FunctionDecl* Decl() const { return decl; }
+    const clang::FunctionDecl* getDecl() const { return decl; }
 
     /// \brief Invoke a free-standing (i.e. non-CXXMethod) function.
     //
