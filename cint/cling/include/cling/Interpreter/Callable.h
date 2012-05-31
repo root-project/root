@@ -49,11 +49,10 @@ namespace cling {
     /// whether the llvm::Function pointer is valid.
     bool isValid() const { return func; }
 
-    /// \brief Determine whether the Value is unset.
+    /// \brief Get the declaration of the function.
     //
-    /// Determine whether the Callable cannot be invoked. Check
-    /// whether the llvm::Function pointer is invalid.
-    bool isInvalid() const { return !func; }
+    /// Retrieve the Callable's function declaration.
+    const clang::FunctionDecl* Decl() const { return decl; }
 
     /// \brief Invoke a free-standing (i.e. non-CXXMethod) function.
     //
@@ -61,8 +60,8 @@ namespace cling {
     /// the parameters ArgValues; the return value of the function
     /// call ends up in Result.
     /// \return true if the call was successful.
-    bool Invoke(Value& Result,
-                const std::vector<llvm::GenericValue>& ArgValues) const;
+     bool Invoke(const std::vector<llvm::GenericValue>& ArgValues,
+                 Value* Result = 0) const;
 
     /// \brief Invoke a CXXMethod i.e. member function.
     //
@@ -71,28 +70,9 @@ namespace cling {
     /// the parameters ArgValues; the return  value of the function call
     /// ends up in Result.
     /// \return true if the call was successful.
-    bool InvokeThis(Value& Result, const llvm::GenericValue& This,
-                    const std::vector<llvm::GenericValue>& ArgValues) const;
-
-    /// \brief Invoke a free-standing function after checking parameter types.
-    //
-    /// Invoke the function which must not be a CXXMethod. If the parameters 
-    /// passed in ArgValues match the expected types, call passing these
-    /// parameters and put the return value of the call into Result.
-    /// \return true if the call was successful.
-    bool CheckedInvoke(Value& Result,
-                       const std::vector<cling::Value>& ArgValues) const;
-
-    /// \brief Invoke a member function after checking parameter types.
-    //
-    /// Invoke the function which must be a CXXMethod. Pass in the
-    /// This pointer to the object on which to invoke the function and
-    /// the parameters ArgValues. If the parameters 
-    /// passed in ArgValues match the expected types, call passing these
-    /// parameters and put the return value of the call into Result.
-    /// \return true if the call was successful.
-    bool CheckedInvokeThis(Value& Result, const llvm::GenericValue& This,
-                           const std::vector<cling::Value>& ArgValues) const;
+    bool InvokeThis(const llvm::GenericValue& This,
+                    const std::vector<llvm::GenericValue>& ArgValues,
+                    Value* Result = 0) const;
   };
 
 } // end namespace cling

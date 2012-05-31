@@ -52,12 +52,6 @@ namespace cling {
     /// whether the type is valid.
     bool isValid() const { return !type.isNull(); }
 
-    /// \brief Determine whether the Value is unset.
-    //
-    /// Determine whether the Value is unset by checking
-    /// whether the type is invalid.
-    bool isInvalid() const { return !isValid(); }
-
     /// \brief Determine whether the Value is set but void.
     bool isVoid(const clang::ASTContext& ASTContext) const {
       return isValid() && type.getDesugaredType(ASTContext)->isVoidType(); }
