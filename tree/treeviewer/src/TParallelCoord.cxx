@@ -279,8 +279,10 @@ void  TParallelCoord::BuildParallelCoord(TSelectorDraw* selector, Bool_t candle)
    TString varexp = "";
    for(Int_t i=0;i<selector->GetDimension();++i) {
       if (selector->GetVal(i)) {
-         pc->AddVariable(selector->GetVal(i),selector->GetVar(i)->GetTitle());
-         if (selector->GetVar(i)) varexp.Append(Form(":%s",selector->GetVar(i)->GetTitle()));
+         if (selector->GetVar(i)) {
+            pc->AddVariable(selector->GetVal(i),selector->GetVar(i)->GetTitle());
+            varexp.Append(Form(":%s",selector->GetVar(i)->GetTitle()));
+         }
       }
    }
    varexp.Remove(TString::kLeading,':');
