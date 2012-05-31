@@ -1924,7 +1924,7 @@ void print_mask_info(ULong_t mask)
    
    [super setFrameSize : newSize];
    
-   if ((fEventMask & kStructureNotifyMask) && self.fMapState == kIsViewable) {
+   if ((fEventMask & kStructureNotifyMask) && (self.fMapState == kIsViewable || fIsOverlapped == YES)) {
       TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
       assert(vx != 0 && "setFrameSize:, gVirtualX is either null or has a type, different from TGCocoa");
       vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
