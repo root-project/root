@@ -114,6 +114,35 @@ HypoTestResult::~HypoTestResult()
    if( fAllTestStatisticsData ) delete fAllTestStatisticsData;
 }
 
+//____________________________________________________________________
+HypoTestResult & HypoTestResult::operator=(const HypoTestResult& other) { 
+   // assignment operator
+
+   if (this == &other) return *this;
+   SetName(other.GetName());
+   SetTitle(other.GetTitle());
+   fNullPValue = other.fNullPValue; 
+   fAlternatePValue = other.fAlternatePValue; 
+   fNullPValueError = other.fNullPValueError;
+   fAlternatePValueError = other.fAlternatePValueError;
+   fTestStatisticData = other.fTestStatisticData;
+
+   if( fAllTestStatisticsData ) delete fAllTestStatisticsData;
+   fAllTestStatisticsData = NULL;
+   if( fNullDistr ) delete fNullDistr; fNullDistr = NULL;
+   if( fAltDistr ) delete fAltDistr; fAltDistr = NULL;   
+   if( fNullDetailedOutput ) delete fNullDetailedOutput; fNullDetailedOutput = NULL;
+   if( fAltDetailedOutput ) delete fAltDetailedOutput;  fAltDetailedOutput = NULL;
+   if (fFitInfo) delete fFitInfo; fFitInfo = NULL;
+   
+   fPValueIsRightTail =  other.GetPValueIsRightTail();
+   fBackgroundIsAlt = other.GetBackGroundIsAlt();
+
+   this->Append( &other );
+
+   return *this; 
+}
+
 
 void HypoTestResult::Append(const HypoTestResult* other) {
    // Add additional toy-MC experiments to the current results.
@@ -219,6 +248,11 @@ Double_t HypoTestResult::CLsplusbError() const {
    return fBackgroundIsAlt ? fNullPValueError : fAlternatePValueError;
 }
 
+//____________________________________________________________________
+Double_t HypoTestResult::SignificanceError() const {
+   // Taylor expansion series approximation for standard deviation (error propagation)
+   return NullPValueError() / ROOT::Math::normal_pdf(Significance());
+}
 
 //____________________________________________________________________
 Double_t HypoTestResult::CLsError() const {
@@ -275,26 +309,28 @@ void HypoTestResult::Print(Option_t * ) const
    
    bool fromToys = (fAltDistr || fNullDistr);
    
-   cout << endl << "Results " << GetName() << ": " << endl;
-   cout << " - Null p-value = " << NullPValue(); 
-   if (fromToys) cout << " +/- " << NullPValueError();
-   cout << endl;
-   cout << " - Significance = " << Significance() << " sigma" << endl;
+   std::cout << std::endl << "Results " << GetName() << ": " << endl;
+   std::cout << " - Null p-value = " << NullPValue(); 
+   if (fromToys) std::cout << " +/- " << NullPValueError();
+   std::cout << std::endl;
+   std::cout << " - Significance = " << Significance();
+   if (fromToys) std::cout << " +/- " << SignificanceError() << " sigma";
+   std::cout << std::endl;
    if(fAltDistr)
-      cout << " - Number of Alt toys: " << fAltDistr->GetSize() << std::endl;
+      std::cout << " - Number of Alt toys: " << fAltDistr->GetSize() << std::endl;
    if(fNullDistr)
-      cout << " - Number of Null toys: " << fNullDistr->GetSize() << std::endl;
+      std::cout << " - Number of Null toys: " << fNullDistr->GetSize() << std::endl;
    
-   if (HasTestStatisticData() ) cout << " - Test statistic evaluated on data: " << fTestStatisticData << std::endl;
-   cout << " - CL_b: " << CLb();
-   if (fromToys) cout << " +/- " << CLbError();
-   cout << std::endl;
-   cout << " - CL_s+b: " << CLsplusb();
-   if (fromToys) cout << " +/- " << CLsplusbError();
-   cout << std::endl;
-   cout << " - CL_s: " << CLs();
-   if (fromToys) cout << " +/- " << CLsError();
-   cout << std::endl;
+   if (HasTestStatisticData() ) std::cout << " - Test statistic evaluated on data: " << fTestStatisticData << std::endl;
+   std::cout << " - CL_b: " << CLb();
+   if (fromToys) std::cout << " +/- " << CLbError();
+   std::cout << std::endl;
+   std::cout << " - CL_s+b: " << CLsplusb();
+   if (fromToys) std::cout << " +/- " << CLsplusbError();
+   std::cout << std::endl;
+   std::cout << " - CL_s: " << CLs();
+   if (fromToys) std::cout << " +/- " << CLsError();
+   std::cout << std::endl;
    
    return;
 }

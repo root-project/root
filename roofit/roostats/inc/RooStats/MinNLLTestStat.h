@@ -56,30 +56,44 @@ namespace RooStats {
    public:
      MinNLLTestStat() {
         // Proof constructor. Do not use.
-	proflts = 0;
+	fProflts = 0;
      }
      MinNLLTestStat(RooAbsPdf& pdf) {
-	proflts = new ProfileLikelihoodTestStat(pdf);
+	fProflts = new ProfileLikelihoodTestStat(pdf);
+     }
+
+     MinNLLTestStat(const MinNLLTestStat& rhs) : fProflts(0) {
+        RooAbsPdf * pdf = rhs.fProflts->GetPdf();
+        if (pdf)  fProflts = new ProfileLikelihoodTestStat(*pdf);
+     }
+
+     MinNLLTestStat & operator=(const MinNLLTestStat& rhs)  {
+        if (this == &rhs) return *this;
+        RooAbsPdf * pdf = rhs.fProflts->GetPdf();
+        if (fProflts) delete fProflts;
+        fProflts = NULL;
+        if (pdf)  fProflts = new ProfileLikelihoodTestStat(*pdf);
+        return *this;
      }
 
      virtual ~MinNLLTestStat() {
-	delete proflts;
+	delete fProflts;
      }
 
-     void SetOneSided(Bool_t flag=true) {proflts->SetOneSided(flag);}
-     void SetOneSidedDiscovery(Bool_t flag=true) {proflts->SetOneSidedDiscovery(flag);}
-     void SetReuseNLL(Bool_t flag) { proflts->SetReuseNLL(flag); }
-     void SetMinimizer(const char* minimizer){ proflts->SetMinimizer(minimizer); }
-     void SetStrategy(Int_t strategy){ proflts->SetStrategy(strategy); }
-     void SetTolerance(double tol){ proflts->SetTolerance(tol); }
-     void SetPrintLevel(Int_t printlevel){ proflts->SetPrintLevel(printlevel); }
+     void SetOneSided(Bool_t flag=true) {fProflts->SetOneSided(flag);}
+     void SetOneSidedDiscovery(Bool_t flag=true) {fProflts->SetOneSidedDiscovery(flag);}
+     void SetReuseNLL(Bool_t flag) { fProflts->SetReuseNLL(flag); }
+     void SetMinimizer(const char* minimizer){ fProflts->SetMinimizer(minimizer); }
+     void SetStrategy(Int_t strategy){ fProflts->SetStrategy(strategy); }
+     void SetTolerance(double tol){ fProflts->SetTolerance(tol); }
+     void SetPrintLevel(Int_t printlevel){ fProflts->SetPrintLevel(printlevel); }
     
      // Main interface to evaluate the test statistic on a dataset
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) {
-        return proflts->EvaluateProfileLikelihood(1, data, paramsOfInterest); //find unconditional NLL minimum
+        return fProflts->EvaluateProfileLikelihood(1, data, paramsOfInterest); //find unconditional NLL minimum
      }
 
-     virtual void EnableDetailedOutput( bool e=true ) { proflts->EnableDetailedOutput(e); }
+     virtual void EnableDetailedOutput( bool e=true ) { fProflts->EnableDetailedOutput(e); }
 
      virtual const RooArgSet* GetDetailedOutput(void) const {
 	     // Returns detailed output. The value returned by this function is updated after each call to Evaluate().
@@ -88,15 +102,15 @@ namespace RooStats {
 	     // <li> the minimum nll, fitstatus and convergence quality for each fit </li> 
 	     // <li> for all non-constant parameters their value, error and pull </li>
 	     // </ul>
-	     return proflts->GetDetailedOutput();
+	     return fProflts->GetDetailedOutput();
      }
     
-     virtual void SetVarName(const char* name) { proflts->SetVarName(name); }
+     virtual void SetVarName(const char* name) { fProflts->SetVarName(name); }
 
-     virtual const TString GetVarName() const { return proflts->GetVarName(); }
+     virtual const TString GetVarName() const { return fProflts->GetVarName(); }
 
    private:
-     ProfileLikelihoodTestStat* proflts;
+     ProfileLikelihoodTestStat* fProflts;
 
    protected:
       ClassDef(MinNLLTestStat,1)   // implements the minimum NLL as a test statistic to be used with several tools

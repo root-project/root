@@ -121,8 +121,9 @@ class ToyMCSampler: public TestStatSampler {
             oocoutI((TObject*)0,InputArguments) << "No test statistic given. Doing nothing." << std::endl;
             return;
          }
+
+         //if( t == NULL && fTestStatistics.size() >= 1 ) t = fTestStatistics[0];
          
-         if( t == NULL && fTestStatistics.size() >= 1 ) t = fTestStatistics[0];
          fTestStatistics.push_back( t );
       }      
 
