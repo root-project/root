@@ -67,11 +67,8 @@ namespace RooStats {
 
       RooDataSet *GetAsDataSet(TString name, TString title);
 
-      virtual ~DetailedOutputAggregator() {
-         if (fResult != NULL) delete fResult;
-         if (fBuiltSet != NULL) delete fBuiltSet;
-      }
-      
+      virtual ~DetailedOutputAggregator();
+
    private:
 
       RooDataSet *fResult;

@@ -213,6 +213,7 @@ public:
 
   static void setDefaultStorageType(StorageType s) ;
 
+  static StorageType getDefaultStorageType();
 
 protected:
 
