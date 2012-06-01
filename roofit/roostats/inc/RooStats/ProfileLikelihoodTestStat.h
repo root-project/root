@@ -128,6 +128,7 @@ namespace RooStats {
      virtual void EnableDetailedOutput( bool e=true, bool withErrorsAndPulls=false ) {
         fDetailedOutputEnabled = e;
         fDetailedOutputWithErrorsAndPulls = withErrorsAndPulls;
+        delete fDetailedOutput;
         fDetailedOutput = NULL;
      }
      virtual const RooArgSet* GetDetailedOutput(void) const {

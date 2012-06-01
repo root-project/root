@@ -54,7 +54,7 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        RooRealVar* firstPOI = dynamic_cast<RooRealVar*>( paramsOfInterest.first());       
        if (firstPOI) initial_mu_value = firstPOI->getVal();
        //paramsOfInterest.getRealValue(firstPOI->GetName());
-       if (fPrintLevel > 0) { 
+       if (fPrintLevel > 1) { 
             cout << "POIs: " << endl;
             paramsOfInterest.Print("v");
        }
