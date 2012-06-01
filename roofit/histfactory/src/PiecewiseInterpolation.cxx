@@ -657,6 +657,7 @@ void PiecewiseInterpolation::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(PiecewiseInterpolation::Class(),this);
       specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator") ;      
+      if (_interpCode.empty()) _interpCode.resize(_paramSet.getSize());
    } else {
       R__b.WriteClassBuffer(PiecewiseInterpolation::Class(),this);
    }
