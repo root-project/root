@@ -428,6 +428,7 @@ void TPaletteAxis::Paint(Option_t *)
       wmax = TMath::Power(10., wlmax);
       strncat(chopt, "G", 1);
    }
+   fAxis.SetTitle(fH->GetZaxis()->GetTitle());
    fAxis.PaintAxis(xmax, ymin, xmax, ymax, wmin, wmax, ndiv, chopt);
 }
 
