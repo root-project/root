@@ -34,7 +34,7 @@ TAlienSystem::TAlienSystem(const char *name, const char *title) : TSystem(name, 
 {
    // Create a new OS interface.
    
-   fWorkingDirectory = '\0';
+   fWorkingDirectory[0] = '\0';
 }
 
 //______________________________________________________________________________
