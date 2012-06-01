@@ -22,6 +22,13 @@
 
 namespace RooStats {
 
+   DetailedOutputAggregator::~DetailedOutputAggregator() {
+      // destructor
+      if (fResult != NULL) delete fResult;
+      if (fBuiltSet != NULL) delete fBuiltSet;
+   }
+
+
    RooArgSet * DetailedOutputAggregator::GetAsArgSet(RooFitResult *result, TString prefix, bool withErrorsAndPulls) {
       // static function to translate the given fit result to a RooArgSet in a generic way.
       // Prefix is prepended to all variable names.
@@ -100,11 +107,11 @@ namespace RooStats {
    void DetailedOutputAggregator::CommitSet(double weight) {
       if (fResult == NULL) {
          // Store dataset as a tree - problem with VectorStore and StoreError (bug #94908)
-         RooAbsData::StorageType defStore= RooAbsData::defaultStorageType;
-         RooAbsData::defaultStorageType = RooAbsData::Tree;
+         RooAbsData::StorageType defStore= RooAbsData::getDefaultStorageType();
+         RooAbsData::setDefaultStorageType(RooAbsData::Tree);
          RooRealVar wgt("weight","weight",1.0);
          fResult = new RooDataSet("", "", RooArgSet(*fBuiltSet,wgt), RooFit::WeightVar(wgt));
-         RooAbsData::defaultStorageType = defStore;
+         RooAbsData::setDefaultStorageType(defStore);
       }
       fResult->add(RooArgSet(*fBuiltSet), weight);
       TIterator* iter = fBuiltSet->createIterator();
