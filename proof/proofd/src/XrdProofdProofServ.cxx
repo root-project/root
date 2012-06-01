@@ -684,25 +684,22 @@ int XrdProofdProofServ::CreateUNIXSock(XrdSysError *edest)
    fUNIXSock = new XrdNet(edest);
 
    // Make sure the admin path exists
-   struct stat st;
-   if (fAdminPath.length() > 0 &&
-       stat(fAdminPath.c_str(), &st) != 0 && (errno == ENOENT)) {;
-      FILE *fadm = fopen(fAdminPath.c_str(), "w");
-      fclose(fadm);
+   if (fAdminPath.length() > 0) {
+      FILE *fadm = fopen(fAdminPath.c_str(), "a");
+      if (fadm) {
+         fclose(fadm);
+      } else {
+         TRACE(XERR, "unable to open / create admin path "<< fAdminPath << "; errno = "<<errno);
+         return -1;
+      }
    }
 
    // Check the path
-   bool rm = 0, ok = 0;
-   if (stat(fUNIXSockPath.c_str(), &st) == 0 || (errno != ENOENT)) rm = 1;
-   if (rm  && unlink(fUNIXSockPath.c_str()) != 0) {
-      if (!S_ISSOCK(st.st_mode)) {
-         TRACE(XERR, "non-socket path exists: unable to delete it: " <<fUNIXSockPath);
-         return -1;
-      } else {
-         XPDPRT("WARNING: socket path exists: unable to delete it:"
-                " try to use it anyway " <<fUNIXSockPath);
-         ok = 1;
-      }
+   bool ok = 0;
+   if (unlink(fUNIXSockPath.c_str()) != 0 && (errno != ENOENT)) {
+      XPDPRT("WARNING: path exists: unable to delete it:"
+               " try to use it anyway " <<fUNIXSockPath);
+      ok = 1;
    }
 
    // Create the path
@@ -754,32 +751,24 @@ int XrdProofdProofServ::SetAdminPath(const char *a, bool assert, bool setown)
    // If we are not asked to assert the file we are done
    if (!assert) return 0;
 
-   // The session file
-   struct stat st;
-   if (stat(a, &st) != 0 && errno == ENOENT) {
-      // Create the file
-      FILE *fpid = fopen(a, "w");
-      if (fpid) {
-         fclose(fpid);
-      } else {
-         TRACE(XERR, "unable to open / create admin path "<< fAdminPath << "; errno = "<<errno);
-         return -1;
-      }
+   // Check if the session file exists
+   FILE *fpid = fopen(a, "a");
+   if (fpid) {
+      fclose(fpid);
+   } else {
+      TRACE(XERR, "unable to open / create admin path "<< fAdminPath << "; errno = "<<errno);
+      return -1;
    }
 
-   // The status file
+   // Check if the status file exists
    XrdOucString fn;
    XPDFORM(fn, "%s.status", a);
-   if (stat(fn.c_str(), &st) != 0 && errno == ENOENT) {
-      // Create the file
-      FILE *fpid = fopen(fn.c_str(), "w");
-      if (fpid) {
-         fprintf(fpid, "%d", fStatus);
-         fclose(fpid);
-      } else {
-         TRACE(XERR, "unable to open / create status path "<< fn << "; errno = "<<errno);
-         return -1;
-      }
+   if ((fpid = fopen(fn.c_str(), "a"))) {
+      fprintf(fpid, "%d", fStatus);
+      fclose(fpid);
+   } else {
+      TRACE(XERR, "unable to open / create status path "<< fn << "; errno = "<<errno);
+      return -1;
    }
    
    if (setown) {
@@ -792,13 +781,6 @@ int XrdProofdProofServ::SetAdminPath(const char *a, bool assert, bool setown)
       if (XrdProofdAux::ChangeOwn(fn.c_str(), ui) != 0) {
          TRACE(XERR, "unable to give ownership of the status file "<< fn << " to user; errno = "<<errno);
          return -1;
-      }
-      // Check
-      if (stat(fn.c_str(), &st) != 0) {
-         TRACE(XERR, "creation/assertion of the status path "<< fn << " failed; errno = "<<errno);
-         return -1;
-      } else {
-         TRACE(ALL, "creation/assertion of the status path "<< fn << " was successful!");
       }
    }
 

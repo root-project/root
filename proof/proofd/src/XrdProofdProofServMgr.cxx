@@ -4567,33 +4567,25 @@ int XrdProofdProofServMgr::SaveAFSkey(XrdSecCredentials *c,
    // Save to file, if not existing already
    XrdOucString fn = dir;
    fn += "/.afs";
-
    int rc = 0;
-   struct stat st;
-   if (stat(fn.c_str(), &st) != 0 && errno == ENOENT) {
 
-      // Open the file, truncating if already existing
-      int fd = open(fn.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
-      if (fd < 0) {
-         TRACE(XERR, "problems creating file - errno: " << errno);
-         delete [] out;
-         return -1;
-      }
-      // Write out the key
-      int lkey = lout - 9;
-      if (XrdProofdAux::Write(fd, key, lkey) != lkey) {
-         TRACE(XERR, "problems writing to file - errno: " << errno);
-         rc = -1;
-      }
-
-      // Cleanup
-      delete [] out;
-      close(fd);
-   } else {
-      TRACE(XERR, "cannot stat existing file "<<fn<<" - errno: " << errno);
+   // Open the file, truncating if already existing
+   int fd = open(fn.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+   if (fd < 0) {
+      TRACE(XERR, "problems creating file - errno: " << errno);
       delete [] out;
       return -1;
    }
+   // Write out the key
+   int lkey = lout - 9;
+   if (XrdProofdAux::Write(fd, key, lkey) != lkey) {
+      TRACE(XERR, "problems writing to file - errno: " << errno);
+      rc = -1;
+   }
+
+   // Cleanup
+   delete [] out;
+   close(fd);
 
    // Make sure the file is owned by the user
    if (XrdProofdAux::ChangeOwn(fn.c_str(), ui) != 0) {
