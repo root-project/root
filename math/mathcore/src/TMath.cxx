@@ -2092,8 +2092,8 @@ Double_t TMath::Binomial(Int_t n,Int_t k)
 {
    // Calculate the binomial coefficient n over k.
 
+   if (n<0 || k<0 || n<k) return TMath::SignalingNaN();
    if (k==0 || n==k) return 1;
-   if (n<=0 || k<0 || n<k) return 0;
 
    Int_t k1=TMath::Min(k,n-k);
    Int_t k2=n-k1;
