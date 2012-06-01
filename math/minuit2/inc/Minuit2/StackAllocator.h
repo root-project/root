@@ -26,6 +26,7 @@
 
 
 #include <cstdlib>
+#include <new>
 
 namespace ROOT {
 
@@ -94,6 +95,7 @@ public:
       
 #else
       void* result = malloc(nBytes);
+      if (!result) throw std::bad_alloc();
 #endif
 
       return result;

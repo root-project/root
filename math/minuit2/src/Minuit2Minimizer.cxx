@@ -13,6 +13,7 @@
 #include "Minuit2/Minuit2Minimizer.h"
 
 #include "Math/IFunction.h"
+#include "Math/IOptions.h"
 
 #include "Minuit2/FCNAdapter.h"
 #include "Minuit2/FumiliFCNAdapter.h"
@@ -316,7 +317,7 @@ bool Minuit2Minimizer::Minimize() {
 
    int maxfcn = MaxFunctionCalls(); 
    double tol = Tolerance();
-   int strategy = Strategy(); 
+   int strategyLevel = Strategy(); 
    fMinuitFCN->SetErrorDef(ErrorDef() );
 
    if (PrintLevel() >=1) { 
@@ -328,7 +329,7 @@ bool Minuit2Minimizer::Minimize() {
       }      
       std::cout << "Minuit2Minimizer: Minimize with max-calls " << maxfcn_used 
                 << " convergence for edm < " << tol << " strategy " 
-                << strategy << std::endl; 
+                << strategyLevel << std::endl; 
    }
 
    // internal minuit messages
@@ -339,16 +340,55 @@ bool Minuit2Minimizer::Minimize() {
 
    // set the precision if needed
    if (Precision() > 0) fState.SetPrecision(Precision());
+
+   // set strategy and add extra options if needed
+   ROOT::Minuit2::MnStrategy strategy(strategyLevel);
+   ROOT::Math::IOptions * minuit2Opt = ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
+   if (minuit2Opt) { 
+      // set extra strategy options
+      int nGradCycles = strategy.GradientNCycles();
+      int nHessCycles = strategy.HessianNCycles();
+      int nHessGradCycles = strategy.HessianGradientNCycles();
+
+      double gradTol =  strategy.GradientTolerance();
+      double gradStepTol = strategy.GradientStepTolerance();
+      double hessStepTol = strategy.HessianStepTolerance();
+      double hessG2Tol = strategy.HessianG2Tolerance();
+
+      minuit2Opt->GetValue("GradientNCycles",nGradCycles);
+      minuit2Opt->GetValue("HessianNCycles",nHessCycles);
+      minuit2Opt->GetValue("HessianGradientNCycles",nHessGradCycles);
+
+      minuit2Opt->GetValue("GradientTolerance",gradTol);
+      minuit2Opt->GetValue("GradientStepTolerance",gradStepTol);
+      minuit2Opt->GetValue("HessianStepTolerance",hessStepTol);
+      minuit2Opt->GetValue("HessianG2Tolerance",hessG2Tol);
+
+      strategy.SetGradientNCycles(nGradCycles);      
+      strategy.SetHessianNCycles(nHessCycles);
+      strategy.SetHessianGradientNCycles(nHessGradCycles);
+
+      strategy.SetGradientTolerance(gradTol);
+      strategy.SetGradientStepTolerance(gradStepTol);
+      strategy.SetHessianStepTolerance(hessStepTol);
+      strategy.SetHessianG2Tolerance(hessStepTol);
+
+      if (PrintLevel() > 0) { 
+         std::cout << "Minuit2Minimizer::Minuit  - Changing default stratgey options" << std::endl;
+         minuit2Opt->Print();
+      }
+      
+   }
       
    const ROOT::Minuit2::FCNGradientBase * gradFCN = dynamic_cast<const ROOT::Minuit2::FCNGradientBase *>( fMinuitFCN ); 
    if ( gradFCN != 0) {
       // use gradient
       //SetPrintLevel(3);
-      ROOT::Minuit2::FunctionMinimum min =  GetMinimizer()->Minimize(*gradFCN, fState, ROOT::Minuit2::MnStrategy(strategy), maxfcn, tol);
+      ROOT::Minuit2::FunctionMinimum min =  GetMinimizer()->Minimize(*gradFCN, fState, strategy, maxfcn, tol);
       fMinimum = new ROOT::Minuit2::FunctionMinimum (min);    
    }
    else {
-      ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*GetFCN(), fState, ROOT::Minuit2::MnStrategy(strategy), maxfcn, tol);
+      ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*GetFCN(), fState, strategy, maxfcn, tol);
       fMinimum = new ROOT::Minuit2::FunctionMinimum (min);    
    }
 
