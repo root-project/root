@@ -1670,7 +1670,8 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
          // add endpoint url if it is not a local file
          TUrl eurl(*(file->GetEndpointUrl()));
 
-         if (strcmp(eurl.GetProtocol(), "file") || strcmp(eurl.GetProtocol(), url->GetProtocol())) { 
+         if (strcmp(eurl.GetProtocol(), "file") ||
+            !strcmp(eurl.GetProtocol(), url->GetProtocol())) { 
             
             eurl.SetOptions(url->GetOptions());
             eurl.SetAnchor(url->GetAnchor());
@@ -1709,7 +1710,8 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
       // Add url of the disk server in front of the list if it is not a local file
       TUrl eurl(*(file->GetEndpointUrl()));
 
-      if (strcmp(eurl.GetProtocol(), "file") || strcmp(eurl.GetProtocol(), url->GetProtocol())) { 
+      if (strcmp(eurl.GetProtocol(), "file") ||
+         !strcmp(eurl.GetProtocol(), url->GetProtocol())) { 
 
          eurl.SetOptions(url->GetOptions());
          eurl.SetAnchor(url->GetAnchor());
