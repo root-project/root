@@ -254,9 +254,9 @@ RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, const RooA
 const RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, const RooArgSet& poi, DetailedOutputAggregator& detOutAgg) {
    RooArgSet *allVars = fPdf ? fPdf->getVariables() : 0;
    RooArgSet *saveAll = allVars ? dynamic_cast<RooArgSet*>(allVars->snapshot()) : 0;
-   for( size_t i = 0; i < fTestStatistics.size(); i++ ) {
+   for( unsigned int i = 0; i < fTestStatistics.size(); i++ ) {
       if( fTestStatistics[i] == NULL ) continue;
-      TString name( TString::Format("%s_TS%lu", fSamplingDistName.c_str(), i) );
+      TString name( TString::Format("%s_TS%u", fSamplingDistName.c_str(), i) );
       RooArgSet* parForTS = dynamic_cast<RooArgSet*>(poi.snapshot());
       RooRealVar ts( name, fTestStatistics[i]->GetVarName(), fTestStatistics[i]->Evaluate( data, *parForTS ) );
       RooArgList tset(ts);
