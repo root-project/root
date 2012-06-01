@@ -16,6 +16,7 @@
 #endif
 
 #include "RooCategory.h"
+#include "TMath.h"
 
 using namespace RooFit;
 using namespace std;
@@ -75,13 +76,13 @@ RooDataSet* ToyMCImportanceSampler::GetSamplingDistributionsSingleWorker(RooArgS
       // apply strategy for how to distribute the #toys between the distributions
       if( fToysStrategy == EQUALTOYSPERDENSITY ) {
          // assuming alltoys = one null + N imp densities. And round up.
-         fNToys = ceil(  double(allToys)/(fImportanceDensities.size()+1)  ); 
+         fNToys = TMath::CeilNint(  double(allToys)/(fImportanceDensities.size()+1)  ); 
       }else if(fToysStrategy == EXPONENTIALTOYDISTRIBUTION ) {
          // for N densities, split the toys into (2^(N+1))-1 parts, and assign 2^0 parts to the first
          // density (which is the null), 2^1 to the second (first imp dens), etc, up to 2^N
-         fNToys = ceil(  double(allToys) * pow( double(2) , i+1 )  /  (pow( double(2), int(fImportanceDensities.size()+1) )-1)  );
+         fNToys = TMath::CeilNint(  double(allToys) * pow( double(2) , i+1 )  /  (pow( double(2), int(fImportanceDensities.size()+1) )-1)  );
          
-         int largestNToys = ceil(  allToys * pow( double(2), int(fImportanceDensities.size()) )  /  (pow( double(2), int(fImportanceDensities.size()+1) )-1)  );
+         int largestNToys = TMath::CeilNint(  allToys * pow( double(2), int(fImportanceDensities.size()) )  /  (pow( double(2), int(fImportanceDensities.size()+1) )-1)  );
          reweight.setVal( ((double)largestNToys) / fNToys );
       }
       
@@ -91,33 +92,36 @@ RooDataSet* ToyMCImportanceSampler::GetSamplingDistributionsSingleWorker(RooArgS
 
       RooDataSet* result = ToyMCSampler::GetSamplingDistributionsSingleWorker( paramPoint );
 
-      // add label
-      densityLabel.setIndex( i );
-      result->addColumn( densityLabel );
-      result->addColumn( reweight );
+      if (result->get()->getSize() > Int_t(fTestStatistics.size())) {
+         // add label
+         densityLabel.setIndex( i );
+         result->addColumn( densityLabel );
+         result->addColumn( reweight );
+      }
       
-      RooArgSet columns( *result->get() );
-      columns.add( *(new RooRealVar( "weight", "weight", 1.0 )) );
+      if( !fullResult ) {
+         RooArgSet columns( *result->get() );
+         RooRealVar weightVar ( "weight", "weight", 1.0 );
+         columns.add( weightVar );
 //       cout << endl << endl << "Reweighted data columns: " << endl;
 //       columns.Print("v");
 //       cout << endl;
-      RooDataSet* reweightedResult = new RooDataSet( "rewRes", "rewRes", columns, "weight" );
+         // Store dataset as a tree - problem with VectorStore and StoreError (bug #94908)
+         RooAbsData::StorageType defStore= RooAbsData::defaultStorageType;
+         RooAbsData::defaultStorageType = RooAbsData::Tree;
+         fullResult = new RooDataSet( result->GetName(), result->GetTitle(), columns, "weight" );
+         RooAbsData::defaultStorageType = defStore;
+      }
+
       for( int j=0; j < result->numEntries(); j++ ) {
 //          cout << "entry: " << j << endl;
 //          result->get(j)->Print();
 //          cout << "weight: " << result->weight() << endl;
 //          cout << "reweight: " << reweight.getVal() << endl;
          const RooArgSet* row = result->get(j);
-         reweightedResult->add( *row, result->weight()*reweight.getVal() );
+         fullResult->add( *row, result->weight()*reweight.getVal() );
       }
       delete result;
-      
-      if( !fullResult ) {
-         fullResult = reweightedResult;
-      }else{
-         fullResult->append( *reweightedResult );
-         delete reweightedResult;
-      }
    }
 
    // restore #toys
@@ -431,7 +435,7 @@ int ToyMCImportanceSampler::CreateImpDensitiesForOnePOIAdaptively( RooAbsPdf& pd
    
    // check whether error is trustworthy
    if( poi.getError() > 0.01  &&  poi.getError() < 5.0 ) {
-      n = poi.getVal() / (2.*nStdDevOverlap*poi.getError())  + 1; // round up
+      n = TMath::CeilNint( poi.getVal() / (2.*nStdDevOverlap*poi.getError()) ); // round up
       oocoutI((TObject*)0,InputArguments) << "Using fitFavoredMu and error to set the number of imp points" << endl;
       oocoutI((TObject*)0,InputArguments) << "muhat: " << poi.getVal() << "    optimize for distance: " << 2.*nStdDevOverlap*poi.getError() << endl;
       oocoutI((TObject*)0,InputArguments) << "n = " << n << endl;

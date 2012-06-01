@@ -53,6 +53,8 @@ END_HTML
 
 namespace RooStats {
 
+  class DetailedOutputAggregator;
+
 // only used inside ToyMCSampler, ie "private" in the cxx file
 class NuisanceParametersSampler {
    // Helper for ToyMCSampler. Handles all of the nuisance parameter related
@@ -147,18 +149,7 @@ class ToyMCSampler: public TestStatSampler {
          return fTestStatistics[i]->Evaluate(data, nullPOI);
       }
       virtual Double_t EvaluateTestStatistic(RooAbsData& data, RooArgSet& nullPOI) { return EvaluateTestStatistic( data,nullPOI, 0 ); }
-      virtual RooArgList* EvaluateAllTestStatistics(RooAbsData& data, RooArgSet& nullPOI) {
-         RooArgList* allTS = new RooArgList( "allTS" );
-         for( unsigned int i = 0; i < fTestStatistics.size(); i++ ) {
-            if( fTestStatistics[i] == NULL ) continue;
-            allTS->add( *(new RooRealVar(
-               TString::Format( "%s_TS%d", fSamplingDistName.c_str(),i ),
-               fTestStatistics[i]->GetVarName(),
-               fTestStatistics[i]->Evaluate( data, nullPOI )
-            ) ) );
-         }
-         return allTS;
-      }
+      virtual RooArgList* EvaluateAllTestStatistics(RooAbsData& data, const RooArgSet& poi);
 
 
       virtual TestStatistic* GetTestStatistic(unsigned int i) const {
@@ -261,6 +252,8 @@ class ToyMCSampler: public TestStatSampler {
       void SetProtoData(const RooDataSet* d) { fProtoData = d; }
       
    protected:
+
+      const RooArgList* EvaluateAllTestStatistics(RooAbsData& data, const RooArgSet& poi, DetailedOutputAggregator& detOutAgg);
 
       // helper for GenerateToyData
       RooAbsData* Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooDataSet *protoData=NULL, int forceEvents=0) const;

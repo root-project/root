@@ -136,6 +136,10 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
       //allTS->Print("v");
       RooRealVar* firstTS = (RooRealVar*)allTS->at(0);
       obsTestStat = firstTS->getVal();
+      if (allTS->getSize()<=1) {
+        delete allTS;
+        allTS= 0;  // don't save
+      }
    }else{
       obsTestStat = fTestStatSampler->EvaluateTestStatistic(*const_cast<RooAbsData*>(fData), nullP);
    }
@@ -158,7 +162,13 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    RooDataSet* detOut_null = NULL;
    if(toymcs) {
       detOut_null = toymcs->GetSamplingDistributions(paramPointNull);
-      if( detOut_null ) samp_null = new SamplingDistribution( detOut_null->GetName(), detOut_null->GetTitle(), *detOut_null );
+      if( detOut_null ) {
+        samp_null = new SamplingDistribution( detOut_null->GetName(), detOut_null->GetTitle(), *detOut_null );
+        if (detOut_null->get()->getSize()<=1) {
+          delete detOut_null;
+          detOut_null= 0;
+        }
+      }
    }else samp_null = fTestStatSampler->GetSamplingDistribution(paramPointNull);
 
    // set parameters back
@@ -174,7 +184,13 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    RooDataSet* detOut_alt = NULL;
    if(toymcs) {
       detOut_alt = toymcs->GetSamplingDistributions(paramPointAlt);
-      if( detOut_alt ) samp_alt = new SamplingDistribution( detOut_alt->GetName(), detOut_alt->GetTitle(), *detOut_alt );
+      if( detOut_alt ) {
+        samp_alt = new SamplingDistribution( detOut_alt->GetName(), detOut_alt->GetTitle(), *detOut_alt );
+        if (detOut_alt->get()->getSize()<=1) {
+          delete detOut_alt;
+          detOut_alt= 0;
+        }
+      }
    }else samp_alt = fTestStatSampler->GetSamplingDistribution(paramPointAlt);
 
 
@@ -197,6 +213,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    }
 
    *bothParams = *saveAll;
+   delete allTS;
    delete bothParams;
    delete saveAll;
    delete altParams;
