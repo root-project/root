@@ -2326,12 +2326,16 @@ class genDictionary(object) :
         if opname == 'new []':
           if len(sems) == 1 and self.genTypeName(sems[0]['type']) in ('size_t',): opnewa = 1
           if len(sems) == 2 and self.genTypeName(sems[0]['type']) in ('size_t',) and self.genTypeName(sems[1]['type']) in ('void*',): plopnewa = 1
-    newc = ''
-    newa = ''
+    newc,newa = '',''
     if opnewc and not plopnewc: newc = '_np'
     elif not opnewc and plopnewc : newc = '_p'
     if opnewa and not plopnewa: newa = '_np'
     elif not opnewa and plopnewa : newa = '_p'
+    # go to base classes eventually
+    if (newc,newa) == ('','') :
+      for b in self.getBases(cid):
+        newc,newa = self.checkOperators(b['type'])
+        if (newc,newa) != ('','') : break
     return (newc, newa)
 #----Constructor/Destructor stuff--------------------------------------------------------
   def genGetNewDelFunctionsDecl( self, attrs, args ) :
