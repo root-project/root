@@ -107,10 +107,10 @@ RooDataSet* ToyMCImportanceSampler::GetSamplingDistributionsSingleWorker(RooArgS
 //       columns.Print("v");
 //       cout << endl;
          // Store dataset as a tree - problem with VectorStore and StoreError (bug #94908)
-         RooAbsData::StorageType defStore= RooAbsData::defaultStorageType;
-         RooAbsData::defaultStorageType = RooAbsData::Tree;
+         RooAbsData::StorageType defStore = RooAbsData::getDefaultStorageType();
+         RooAbsData::setDefaultStorageType(RooAbsData::Tree);
          fullResult = new RooDataSet( result->GetName(), result->GetTitle(), columns, "weight" );
-         RooAbsData::defaultStorageType = defStore;
+         RooAbsData::setDefaultStorageType(defStore);
       }
 
       for( int j=0; j < result->numEntries(); j++ ) {
