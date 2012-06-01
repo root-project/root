@@ -1417,7 +1417,7 @@ Element &TMatrixTSparseRow<Element>::operator()(Int_t i)
    if (index >= 0 && this->fColPtr[index] == acoln)
       return (const_cast<Element*>(this->fDataPtr))[index];
    else {
-      TMatrixTBase<Element> *mt = const_cast<TMatrixTBase<Element> *>(this->fMatrix);
+      TMatrixTSparse<Element> *mt = const_cast<TMatrixTSparse<Element> *>(this->fMatrix);
       const Int_t row = this->fRowInd+mt->GetRowLwb();
       Element val = 0.;
       mt->InsertRow(row,i,&val,1);
@@ -1495,7 +1495,7 @@ void TMatrixTSparseRow<Element>::operator=(const TMatrixTSparseRow_const<Element
 
    TVectorT<Element> v(ncols);
    mt->ExtractRow(row2,col,v.GetMatrixArray());
-   const_cast<TMatrixTBase<Element> *>(this->fMatrix)->InsertRow(row1,col,v.GetMatrixArray());
+   const_cast<TMatrixTSparse<Element> *>(this->fMatrix)->InsertRow(row1,col,v.GetMatrixArray());
 
    const Int_t sIndex = this->fMatrix->GetRowIndexArray()[this->fRowInd];
    const Int_t eIndex = this->fMatrix->GetRowIndexArray()[this->fRowInd+1];
@@ -1522,7 +1522,7 @@ void TMatrixTSparseRow<Element>::operator=(const TVectorT<Element> &vec)
    const Element *vp = vec.GetMatrixArray();
    const Int_t row = this->fRowInd+this->fMatrix->GetRowLwb();
    const Int_t col = this->fMatrix->GetColLwb();
-   const_cast<TMatrixTBase<Element> *>(this->fMatrix)->InsertRow(row,col,vp,vec.GetNrows());
+   const_cast<TMatrixTSparse<Element> *>(this->fMatrix)->InsertRow(row,col,vp,vec.GetNrows());
 
    const Int_t sIndex = this->fMatrix->GetRowIndexArray()[this->fRowInd];
    const Int_t eIndex = this->fMatrix->GetRowIndexArray()[this->fRowInd+1];
@@ -1556,7 +1556,7 @@ void TMatrixTSparseRow<Element>::operator+=(const TMatrixTSparseRow_const<Elemen
    this->fMatrix->ExtractRow(row1,col,v1.GetMatrixArray());
    mt           ->ExtractRow(row2,col,v2.GetMatrixArray());
    v1 += v2;
-   const_cast<TMatrixTBase<Element> *>(this->fMatrix)->InsertRow(row1,col,v1.GetMatrixArray());
+   const_cast<TMatrixTSparse<Element> *>(this->fMatrix)->InsertRow(row1,col,v1.GetMatrixArray());
 
    const Int_t sIndex = this->fMatrix->GetRowIndexArray()[this->fRowInd];
    const Int_t eIndex = this->fMatrix->GetRowIndexArray()[this->fRowInd+1];
@@ -1592,7 +1592,7 @@ void TMatrixTSparseRow<Element>::operator*=(const TMatrixTSparseRow_const<Elemen
    mt           ->ExtractRow(row2,col,v2.GetMatrixArray());
 
    ElementMult(v1,v2);
-   const_cast<TMatrixTBase<Element> *>(this->fMatrix)->InsertRow(row1,col,v1.GetMatrixArray());
+   const_cast<TMatrixTSparse<Element> *>(this->fMatrix)->InsertRow(row1,col,v1.GetMatrixArray());
 
    const Int_t sIndex = this->fMatrix->GetRowIndexArray()[this->fRowInd];
    const Int_t eIndex = this->fMatrix->GetRowIndexArray()[this->fRowInd+1];
@@ -1687,7 +1687,7 @@ Element &TMatrixTSparseDiag<Element>::operator()(Int_t i)
       return (const_cast<Element*>(this->fDataPtr))[0];
    }
 
-   TMatrixTBase<Element> *mt = const_cast<TMatrixTBase<Element> *>(this->fMatrix);
+   TMatrixTSparse<Element> *mt = const_cast<TMatrixTSparse<Element> *>(this->fMatrix);
    const Int_t *pR = mt->GetRowIndexArray();
    const Int_t *pC = mt->GetColIndexArray();
    Int_t sIndex = pR[i];
