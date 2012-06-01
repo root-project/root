@@ -66,6 +66,7 @@ namespace RooStats {
         fLastData = 0;
 	fLimitType = twoSided;
 	fSigned = false;
+        fDetailedOutputWithErrorsAndPulls = false;
         fDetailedOutputEnabled = false;
         fDetailedOutput = NULL;
       
@@ -84,6 +85,7 @@ namespace RooStats {
        fLastData = 0;
        fLimitType = twoSided;
        fSigned = false;
+       fDetailedOutputWithErrorsAndPulls = false;
        fDetailedOutputEnabled = false;
        fDetailedOutput = NULL;
       
