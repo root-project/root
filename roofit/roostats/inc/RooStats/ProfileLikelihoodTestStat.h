@@ -103,6 +103,8 @@ namespace RooStats {
        if(fDetailedOutput) delete fDetailedOutput;
      }
 
+     //LM use default copy constructor and assignment copying the pointers. Is this what we want ?
+
      void SetOneSided(Bool_t flag=true) {fLimitType = (flag ? oneSided : twoSided);}
      void SetOneSidedDiscovery(Bool_t flag=true) {fLimitType = (flag ? oneSidedDiscovery : twoSided);}
      void SetSigned(Bool_t flag=true) {fSigned = flag;}  // +/- t_mu instead of t_mu>0 with one-sided settings
@@ -142,9 +144,12 @@ namespace RooStats {
 	     // </ul>
 	     return fDetailedOutput;
      }
-    
+         
      virtual void SetVarName(const char* name) { fVarName = name; }
      virtual const TString GetVarName() const {return fVarName;}
+
+     virtual RooAbsPdf * GetPdf() const { return fPdf; }
+
       
       //      const bool PValueIsRightTail(void) { return false; } // overwrites default
 

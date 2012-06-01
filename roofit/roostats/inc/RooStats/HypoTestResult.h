@@ -67,7 +67,7 @@ namespace RooStats {
       // default constructor
       explicit HypoTestResult(const char* name = 0);
       
-      // copy constructor
+      // copy constructo
       HypoTestResult(const HypoTestResult& other);
 
       // constructor from name, null and alternate p values 
@@ -75,6 +75,9 @@ namespace RooStats {
 
       // destructor 
       virtual ~HypoTestResult();
+
+      // assignment operator
+      HypoTestResult & operator=(const HypoTestResult& other);
 
       // add values from another HypoTestResult
       virtual void Append(const HypoTestResult *other);
@@ -137,7 +140,11 @@ namespace RooStats {
       /// The error on the ratio CLs+b/CLb
       Double_t CLsError() const;
 
+      /// The error on the Null p-value
       Double_t NullPValueError() const;
+
+      /// The error on the significance, computed from NullPValueError via error propagation
+      Double_t SignificanceError() const;
 
 
       void Print(const Option_t* = "") const;
