@@ -85,8 +85,8 @@ namespace Detail {
 class MacOSXSystem {
 public:
    enum DescriptorType {
-      write,
-      read
+      kDTWrite,
+      kDTRead
    };
 
    MacOSXSystem();
@@ -170,7 +170,7 @@ void MacOSXSystem::AddFileHandler(TFileHandler *fh)
    assert(fh != 0 && "AddFileHandler, fh parameter is null");
    assert(fFileDescriptors.find(fh->GetFd()) == fFileDescriptors.end() && "AddFileHandler, file descriptor was registered already");
 
-   fFileDescriptors[fh->GetFd()] = fh->HasReadInterest() ? read : write;
+   fFileDescriptors[fh->GetFd()] = fh->HasReadInterest() ? kDTRead : kDTWrite;
 }
 
 //______________________________________________________________________________
@@ -194,7 +194,7 @@ bool MacOSXSystem::SetFileDescriptors()
 
    try {
       for (std::map<int, DescriptorType>::iterator fdIter = fFileDescriptors.begin(), end = fFileDescriptors.end(); fdIter != end; ++fdIter) {
-         const bool read = fdIter->second == read;
+         const bool read = fdIter->second == kDTRead;
          CFFileDescriptorRef fdref = CFFileDescriptorCreate(kCFAllocatorDefault, fdIter->first, false, read ? TMacOSXSystem_ReadCallback : TMacOSXSystem_WriteCallback, 0);
 
          if (!fdref)
@@ -279,7 +279,7 @@ void TMacOSXSystem::ProcessApplicationDefinedEvent(void *e)
    } else {
       std::map<int, Private::MacOSXSystem::DescriptorType>::iterator fdIter = fPimpl->fFileDescriptors.find(event.data1);
       assert(fdIter != fPimpl->fFileDescriptors.end() && "WaitForAllEvents, file descriptor from NSEvent not found");
-      if (fdIter->second == Private::MacOSXSystem::read)
+      if (fdIter->second == Private::MacOSXSystem::kDTRead)
          fReadready->Set(event.data1);
       else
          fWriteready->Set(event.data1);
