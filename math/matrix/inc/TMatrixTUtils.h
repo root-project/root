@@ -574,7 +574,7 @@ public:
 template<class Element> class TMatrixTSparseRow_const {
 
 protected:
-   const TMatrixTBase<Element> *fMatrix;  // the matrix I am a row of
+   const TMatrixTSparse<Element> *fMatrix;  // the matrix I am a row of
          Int_t                  fRowInd;  // effective row index
          Int_t                  fNindex;  // index range
    const Int_t                 *fColPtr;  // column index pointer
@@ -640,7 +640,7 @@ public:
 template<class Element> class TMatrixTSparseDiag_const {
 
 protected:
-   const TMatrixTBase<Element> *fMatrix;  //  the matrix I am the diagonal of
+   const TMatrixTSparse<Element> *fMatrix;  //  the matrix I am the diagonal of
          Int_t                  fNdiag;   //  number of diag elems, min(nrows,ncols)
    const Element               *fDataPtr; //  data pointer
 
