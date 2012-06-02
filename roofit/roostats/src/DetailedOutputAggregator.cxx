@@ -83,6 +83,7 @@ namespace RooStats {
          if (fResult == NULL) {
             // we never commited, so by default all columns are expected to not exist
             RooAbsArg* var = v->createFundamental();
+            assert(var != NULL);
             (RooArgSet(*var)) = RooArgSet(*v);
             var->SetName(renamed);
             if (RooRealVar* rvar= dynamic_cast<RooRealVar*>(var)) {
