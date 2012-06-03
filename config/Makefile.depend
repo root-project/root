@@ -490,16 +490,16 @@ ALIENLIBEXTRA           = -Llib -lXMLIO -lNetx -lTree -lProof -lProofPlayer \
 ROOFITCORELIBEXTRA      = -Llib -lHist -lGraf -lMatrix -lTree -lMinuit -lRIO \
                           -lMathCore -lFoam
 ROOFITLIBEXTRA          = -Llib -lRooFitCore -lTree -lRIO -lMatrix -lMathCore
-ifeq ($(BUILDMATHMORE),yes)
-ROOFITLIBEXTRA         += -lMathMore
-ROOSTATSLIBEXTRA       += -lMathMore
-HISTFACTORYLIBEXTRA    += -lMathMore
-endif
 ROOSTATSLIBEXTRA        = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lHist \
                           -lMatrix -lMathCore -lMinuit -lFoam -lGraf -lGpad
 HISTFACTORYLIBEXTRA     = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lHist \
                           -lMatrix -lMathCore -lMinuit -lFoam -lGraf -lGpad \
                           -lRooStats -lXMLParser
+ifeq ($(BUILDMATHMORE),yes)
+ROOFITLIBEXTRA         += -lMathMore
+ROOSTATSLIBEXTRA       += -lMathMore
+HISTFACTORYLIBEXTRA    += -lMathMore
+endif
 CINTEXLIBEXTRA          = -Llib -lReflex
 REFLEXDICTLIBEXTRA      = -Llib -lReflex
 RAUTHLIBEXTRA           = -Llib -lNet -lRIO
