@@ -2126,28 +2126,32 @@ fi
 #
 ### echo %%% Check for Fink or MacPorts on Mac OS X
 #
-message "Checking for Fink/MacPorts directory"
-if test "x$platform" = "xmacosx" -a "x$enable_fink" = "xyes"; then
-    if test -d "$finkdir"; then
-        # User specified a directory with --with-finkdir=...
-        logmsg "Using user-specified Fink directory"
-        logmsg "$finkdir"
-    else
-        # Fink has precedence over MacPorts
-        logmsg "Checking Fink directory"
-        finkdir=`$cwhich fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
-        logmsg "$finkdir"
-
-        if test "x$finkdir" = "x"; then
-            logmsg "Checking MacPorts directory"
-            finkdir=`$cwhich port 2>&1 | sed -ne "s/\/bin\/port//p"`
+if test "x$platform" = "xmacosx"; then
+    message "Checking for Fink/MacPorts directory"
+    if test "x$enable_fink" = "xyes"; then
+        if test -d "$finkdir"; then
+            # User specified a directory with --with-finkdir=...
+            logmsg "Using user-specified Fink directory"
             logmsg "$finkdir"
+        else
+            # Fink has precedence over MacPorts
+            logmsg "Checking Fink directory"
+            finkdir=`$cwhich fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
+            logmsg "$finkdir"
+
+            if test "x$finkdir" = "x"; then
+                logmsg "Checking MacPorts directory"
+                finkdir=`$cwhich port 2>&1 | sed -ne "s/\/bin\/port//p"`
+                logmsg "$finkdir"
+            fi
         fi
+        result "$finkdir"
+    else
+        logmsg "Fink/MacPorts disabled"
+        result "disabled"
     fi
-    result "$finkdir"
 else
-    logmsg "Fink/MacPorts disabled"
-    result "disabled"
+    enable_fink="no"
 fi
 
 ######################################################################
