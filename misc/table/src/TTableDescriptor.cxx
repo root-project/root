@@ -349,15 +349,25 @@ Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
       if (newType == kInt)       newType = kLong;
       else if (newType == kUInt) newType = kULong;
 #endif
-      if (    colNewIndx >=0
-         && Dimensions(colCounter) == newDescriptor->Dimensions(colNewIndx)
-         && ColumnType(colCounter) == newType)  {
+      if ( colNewIndx >=0
+	   && Dimensions(colCounter) == newDescriptor->Dimensions(colNewIndx)
+	   && ColumnType(colCounter) == newType) {
+     Bool_t same = kFALSE;
+      if ( Dimensions(colCounter)) {
+	for (Int_t d = 0; d < Dimensions(colCounter); d++) {
+	  if (IndexArray(colCounter)[d] != newDescriptor->IndexArray(colNewIndx)[d]){  same = kTRUE; break; }
+	}
+      }
          SetOffset(newDescriptor->Offset(colNewIndx),colCounter);
          if (colNewIndx != colCounter) {
             Printf("Schema evolution: \t%d column of the \"%s\" table has been moved to %d-th column\n",
             colCounter,ColumnName(colCounter),colNewIndx);
             mismathes++;
-         }
+         } else if (same) { 
+	   Printf("Schema evolution: \t%d column \"%s\" size has been changed\n",
+		  colNewIndx, ColumnName(colCounter));
+	   mismathes++; 
+	 }
       } else {
          Printf("Schema evolution: \t%d column \"%s\" of %d type has been lost\n",
          colCounter,ColumnName(colCounter),ColumnType(colCounter));
