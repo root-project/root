@@ -53,6 +53,10 @@ protected:
                                                                      nbins[1], range[2], range[3]); };
    Int_t Fill(const Double_t* v) { return Fill(v[0], v[1], v[2], v[3]); };
 
+   using TH2::Fill;
+   Int_t             Fill(Double_t, Double_t) {return TH2::Fill(0); } //MayNotUse
+
+
 private:
    Double_t *GetB()  {return &fBinEntries.fArray[0];}
    Double_t *GetB2() {return (fBinSumw2.fN ? &fBinSumw2.fArray[0] : 0 ); }
@@ -93,9 +97,6 @@ public:
    virtual Bool_t    Divide(const TH1 *h1);
    virtual Bool_t    Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
    virtual TH1      *DrawCopy(Option_t *option="") const;
-   Int_t             Fill(Double_t) {return -1;} //MayNotUse
-   Int_t             Fill(const char*, Double_t) {return -1;} //MayNotUse
-   Int_t             Fill(Double_t, Double_t) {return -1; } //MayNotUse
    Int_t             Fill(Double_t x, Double_t y, Double_t z);
    virtual Int_t     Fill(Double_t x, const char *namey, Double_t z);
    virtual Int_t     Fill(const char *namex, Double_t y, Double_t z);

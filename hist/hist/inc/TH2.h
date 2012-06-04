@@ -53,19 +53,20 @@ protected:
    TH2(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins
                                          ,Int_t nbinsy,const Float_t  *ybins);
 
-   virtual Int_t     BufferFill(Double_t, Double_t) {return -2;} //may not use
    virtual Int_t     BufferFill(Double_t x, Double_t y, Double_t w);
    virtual TH1D     *DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const;
    virtual TProfile *DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const;
    virtual void      DoFitSlices(bool onX, TF1 *f1, Int_t firstbin, Int_t lastbin, Int_t cut, Option_t *option, TObjArray* arr);
+
+   Int_t    BufferFill(Double_t, Double_t) {return -2;} //may not use
+   Int_t    Fill(Double_t); //MayNotUse
+   Int_t    Fill(const char*, Double_t) { return Fill(0);}  //MayNotUse
 
 public:
    TH2(const TH2&);
    virtual ~TH2();
    virtual Int_t    BufferEmpty(Int_t action=0);
    virtual void     Copy(TObject &hnew) const;
-           Int_t    Fill(Double_t) {return -1;} //MayNotUse
-           Int_t    Fill(const char*, Double_t) {return -1;} //MayNotUse
    virtual Int_t    Fill(Double_t x, Double_t y);
    virtual Int_t    Fill(Double_t x, Double_t y, Double_t w);
    virtual Int_t    Fill(Double_t x, const char *namey, Double_t w);
