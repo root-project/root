@@ -451,11 +451,11 @@ int XrdProofdPriorityMgr::DoDirectiveSchedOpt(char *val, XrdOucStream *cfg, bool
       if (o.beginswith("min:")) {
          // The overall inflating factor
          o.replace("min:","");
-         sscanf(o.c_str(), "%d", &pmin);
+         pmin = o.atoi();
       } else if (o.beginswith("max:")) {
          // The overall inflating factor
          o.replace("max:","");
-         sscanf(o.c_str(), "%d", &pmax);
+         pmax = o.atoi();
       } else {
          if (o == "central")
             opt = kXPD_sched_central;

@@ -1102,8 +1102,10 @@ int XrdProofdAux::GetIDFromPath(const char *path, XrdOucString &emsg)
    FILE *fid = fopen(path, "r");
    if (fid) {
       char line[64];
-      if (fgets(line, sizeof(line), fid))
-         sscanf(line, "%d", &id);
+      if (fgets(line, sizeof(line), fid)) {
+         if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = 0;
+         id = atoi(line);
+      }
       fclose(fid);
    } else if (errno != ENOENT) {
       XPDFORM(emsg, "GetIDFromPath: error reading id from: %s (errno: %d)",
@@ -2258,19 +2260,19 @@ void XrdProofdAux::Form(XrdOucString &s, const char *fmt,
          }
       } else if (s[k+1] == 'd') {
          if (nii < ni) {
-            sprintf(si,"%d", ii[nii++]);
+            snprintf(si, 32, "%d", ii[nii++]);
             s.replace("%d", si, k, k + 1);
             replaced = 1;
          }
       } else if (s[k+1] == 'u') {
          if (nui < nu) {
-            sprintf(si,"%u", ui);
+            snprintf(si, 32, "%u", ui);
             s.replace("%u", si, k, k + 1);
             replaced = 1;
          }
       } else if (s[k+1] == 'p') {
          if (npp < np) {
-            sprintf(sp,"%p", pp[npp++]);
+            snprintf(sp, 32, "%p", pp[npp++]);
             s.replace("%p", sp, k, k + 1);
             replaced = 1;
          }

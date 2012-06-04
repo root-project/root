@@ -183,8 +183,13 @@ int XrdProofdProofServ::Reset(const char *msg, int type)
    XPDFORM(fn, "%s.status", fAdminPath.c_str());
    FILE *fpid = fopen(fn.c_str(), "r");
    if (fpid) {
-      if (fscanf(fpid, "%d", &st) <= 0)
+      char line[64];
+      if (fgets(line, sizeof(line), fpid)) {
+         if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = 0;
+         st = atoi(line);
+      } else {
          TRACE(XERR,"problems reading from file "<<fn);
+      }
       fclose(fpid);
    }
    TRACE(DBG,"file: "<<fn<<", st:"<<st);

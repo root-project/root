@@ -634,9 +634,9 @@ Int_t TXProofServ::Setup()
    char str[512];
 
    if (IsMaster()) {
-      sprintf(str, "**** Welcome to the PROOF server @ %s ****", gSystem->HostName());
+      snprintf(str, 512, "**** Welcome to the PROOF server @ %s ****", gSystem->HostName());
    } else {
-      sprintf(str, "**** PROOF worker server @ %s started ****", gSystem->HostName());
+      snprintf(str, 512, "**** PROOF worker server @ %s started ****", gSystem->HostName());
    }
 
    if (fSocket->Send(str) != 1+static_cast<Int_t>(strlen(str))) {

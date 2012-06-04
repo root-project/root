@@ -353,7 +353,7 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
 
    // Bind the protocol to the link and return the protocol
    xp->fLink = lp;
-   strcpy(xp->fSecEntity.prot, "host");
+   snprintf(xp->fSecEntity.prot, XrdSecPROTOIDSIZE, "host");
    xp->fSecEntity.host = strdup((char *)lp->Host());
 
    // Dummy data used by 'proofd'

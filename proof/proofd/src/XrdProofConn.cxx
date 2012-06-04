@@ -1055,7 +1055,7 @@ bool XrdProofConn::Login()
    if (ug.length() > 8) {
       // The name must go in the attached buffer because the login structure
       // can accomodate at most 8 chars
-      strcpy( (char *)reqhdr.login.username, "?>buf" );
+      strncpy( (char *)reqhdr.login.username, "?>buf", sizeof(reqhdr.login.username));
       // Add the name to the login buffer, if not already done during
       // a previous login (for example if we are reconnecting ...)
       if (fLoginBuffer.find("|usr:") == STR_NPOS) {
@@ -1066,7 +1066,7 @@ bool XrdProofConn::Login()
       memcpy((void *)reqhdr.login.username, (void *)(ug.c_str()), ug.length());
       if (ug.length() < 8) reqhdr.login.username[ug.length()] = '\0';
    } else {
-      strcpy((char *)reqhdr.login.username, "????" );
+      strncpy((char *)reqhdr.login.username, "????", sizeof(reqhdr.login.username));
    }
 
    // This is the place to send a token for fast authentication

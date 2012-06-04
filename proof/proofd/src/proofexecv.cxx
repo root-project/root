@@ -394,12 +394,12 @@ void start_ps(int argc, char **argv)
    } else {
       // We add our PID to be able to identify processes coming from us
       sxpd = new char[10];
-      sprintf(sxpd, "%d", ppid);
+      snprintf(sxpd, 10, "%d", ppid);
    }
 
    // Log level
    char slog[10] = {0};
-   sprintf(slog, "%d", gDebug);
+   snprintf(slog, 10, "%d", gDebug);
 
    // Fill arguments
    argvv[0] = (char *) pspath.c_str();
@@ -439,14 +439,15 @@ int loginuser(const std::string &home, const std::string &user, uid_t uid, gid_t
    }
 
    // set HOME env
-   char *h = new char[8 + home.length()];
-   sprintf(h, "HOME=%s", home.c_str());
+   size_t len = home.length() + 8;
+   char *h = new char[len];
+   snprintf(h, len, "HOME=%s", home.c_str());
    putenv(h);
    if (gDebug > 0) Info("loginuser: set '%s'", h);
 
    // set USER env
-   char *u = new char[8 + user.length()];
-   sprintf(u, "USER=%s", user.c_str());
+   char *u = new char[len];
+   snprintf(u, len, "USER=%s", user.c_str());
    putenv(u);
    if (gDebug > 0) Info("loginuser: set '%s'", u);
 
