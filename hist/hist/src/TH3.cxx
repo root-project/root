@@ -252,6 +252,13 @@ Int_t TH3::BufferFill(Double_t x, Double_t y, Double_t z, Double_t w)
 }
 
 //______________________________________________________________________________
+Int_t TH3::Fill(Double_t )
+{
+   // Invalid Fill method
+   Error("Fill", "Invalid signature - do nothing"); 
+   return -1;
+}
+//______________________________________________________________________________
 Int_t TH3::Fill(Double_t x, Double_t y, Double_t z)
 {
    //*-*-*-*-*-*-*-*-*-*-*Increment cell defined by x,y,z by 1 *-*-*-*-*

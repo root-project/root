@@ -254,6 +254,13 @@ void TH2::Copy(TObject &obj) const
 }
 
 //______________________________________________________________________________
+Int_t TH2::Fill(Double_t )
+{
+   // Invalid Fill method
+   Error("Fill", "Invalid signature - do nothing"); 
+   return -1;
+}
+//______________________________________________________________________________
 Int_t TH2::Fill(Double_t x,Double_t y)
 {
    //*-*-*-*-*-*-*-*-*-*-*Increment cell defined by x,y by 1*-*-*-*-*-*-*-*-*-*
