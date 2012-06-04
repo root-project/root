@@ -414,6 +414,7 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
       }
 
       fImage = CGImageMaskCreate(width, height, 8, 8, width, provider, 0, false);//null -> decode, false -> shouldInterpolate.
+      CGDataProviderRelease(provider);
 
       if (!fImage) {
          NSLog(@"QuartzPixmap: -initMaskWithW:H:bitmapMask:, CGImageMaskCreate failed");
@@ -452,6 +453,7 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
       }
 
       fImage = CGImageMaskCreate(width, height, 8, 8, width, provider, 0, false);//null -> decode, false -> shouldInterpolate.
+      CGDataProviderRelease(provider);
 
       if (!fImage) {
          NSLog(@"QuartzPixmap: -initMaskWithW:H:, CGImageMaskCreate failed");
