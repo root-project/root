@@ -44,7 +44,7 @@ friend class TPSocket;
 friend class TXSocket;
 
 private:
-   TList   *fInfos;       //Array of TStreamerInfo used in WriteObject
+   TList   *fInfos;       //List of TStreamerInfo used in WriteObject
    TBits    fBitsPIDs;    //Array of bits to mark the TProcessIDs uids written to the message
    UInt_t   fWhat;        //Message type
    TClass  *fClass;       //If message is kMESS_OBJECT pointer to object's class
@@ -82,6 +82,7 @@ public:
 
    void     EnableSchemaEvolution(Bool_t enable = kTRUE) { fEvolution = enable; }
    Bool_t   UsesSchemaEvolution() const { return fEvolution; }
+   TList   *GetStreamerInfos() const { return fInfos; }
    Int_t    GetCompressionAlgorithm() const;
    Int_t    GetCompressionLevel() const;
    Int_t    GetCompressionSettings() const;
