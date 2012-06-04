@@ -1,6 +1,8 @@
 #include "Riostream.h"
 #include "Rtypes.h"
 
+using namespace std;
+
 class G4_ROOT_IO;
 
 class None {};
