@@ -565,6 +565,10 @@ Window_t TGCocoa::CreateWindow(Window_t parentID, Int_t x, Int_t y, UInt_t w, UI
                                UInt_t clss, void *visual, SetWindowAttributes_t *attr, UInt_t wtype)
 {
    //Create new window (top-level == QuartzWindow + QuartzView, or child == QuartzView)
+   
+   //Strong es-guarantee - exception can be only during registration, class state will remain
+   //unchanged, no leaks (scope guards).
+   
    const Util::AutoreleasePool pool;
    
    if (fPimpl->IsRootWindow(parentID)) {//parent == root window.
@@ -605,6 +609,8 @@ void TGCocoa::DestroyWindow(Window_t wid)
    
    //I have NO idea why ROOT's GUI calls DestroyWindow with illegal
    //window id, but it does.
+   
+   //No-throw guarantee???
    
    if (!wid)
       return;
@@ -647,6 +653,8 @@ void TGCocoa::DestroySubwindows(Window_t wid)
    // The DestroySubwindows function destroys all inferior windows of the
    // specified window, in bottom-to-top stacking order.
    
+   //No-throw guarantee??
+   
    if (!wid)//From TGX11.
       return;
    
@@ -671,6 +679,8 @@ void TGCocoa::DestroySubwindows(Window_t wid)
 //______________________________________________________________________________
 void TGCocoa::GetWindowAttributes(Window_t wid, WindowAttributes_t &attr)
 {
+   //No-throw guarantee.
+
    if (!wid)//X11's None?
       return;
 
@@ -685,6 +695,8 @@ void TGCocoa::GetWindowAttributes(Window_t wid, WindowAttributes_t &attr)
 //______________________________________________________________________________
 void TGCocoa::ChangeWindowAttributes(Window_t wid, SetWindowAttributes_t *attr)
 {
+   //No-throw guarantee.
+
    if (!wid)//From TGX11
       return;
 
@@ -697,6 +709,8 @@ void TGCocoa::ChangeWindowAttributes(Window_t wid, SetWindowAttributes_t *attr)
 //______________________________________________________________________________
 void TGCocoa::SelectInput(Window_t wid, UInt_t evmask)
 {
+   //No-throw guarantee.
+
    // Defines which input events the window is interested in. By default
    // events are propageted up the window stack. This mask can also be
    // set at window creation time via the SetWindowAttributes_t::fEventMask
