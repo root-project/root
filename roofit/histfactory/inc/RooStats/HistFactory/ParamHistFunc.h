@@ -59,7 +59,7 @@ public:
   const RooArgSet* get(Int_t masterIdx) const { return _dataSet.get( masterIdx ) ; } 
   const RooArgSet* get(const RooArgSet& coord) const { return _dataSet.get( coord ) ; } 
 
-
+  double binVolume() const { return _dataSet.binVolume(); }
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
 
