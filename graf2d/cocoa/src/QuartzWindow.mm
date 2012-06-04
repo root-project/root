@@ -557,12 +557,12 @@ void print_mask_info(ULong_t mask)
 @implementation QuartzWindow {
 @private
    QuartzView *fContentView;
+   BOOL fDelayedTransient;
 }
 
 
 @synthesize fMainWindow;
 @synthesize fBackBuffer;
-
 
 //QuartzWindow's life cycle.
 //______________________________________________________________________________
@@ -588,6 +588,7 @@ void print_mask_info(ULong_t mask)
       [self setContentView : fContentView];
 
       [fContentView release];
+      fDelayedTransient = NO;
       
       if (attr)
          ROOT::MacOSX::X11::SetWindowAttributes(attr, self);
@@ -601,14 +602,26 @@ void print_mask_info(ULong_t mask)
 {
    assert(window != nil && "addTransientWindow, window parameter is nil");
 
-   window.fMainWindow = self;   
-   [self addChildWindow : window ordered : NSWindowAbove];
+   window.fMainWindow = self;
+   
+   if (window.fMapState != kIsViewable) {
+      fDelayedTransient = YES;
+   } else {
+      [self addChildWindow : window ordered : NSWindowAbove];
+      fDelayedTransient = NO;
+   }
 }
 
 //______________________________________________________________________________
 - (void) dealloc
 {
    [super dealloc];
+}
+
+//______________________________________________________________________________
+- (void) setFDelayedTransient : (BOOL) d
+{
+   fDelayedTransient = d;
 }
 
 ///////////////////////////////////////////////////////////
@@ -986,6 +999,11 @@ void print_mask_info(ULong_t mask)
    [self makeKeyAndOrderFront : self];
    [fContentView setHidden : NO];
    [fContentView configureNotifyTree];
+
+   if (fDelayedTransient) {
+      fDelayedTransient = NO;
+      [fMainWindow addChildWindow : self ordered : NSWindowAbove];
+   }
 }
 
 //______________________________________________________________________________
@@ -997,6 +1015,11 @@ void print_mask_info(ULong_t mask)
    [self makeKeyAndOrderFront : self];
    [fContentView setHidden : NO];
    [fContentView configureNotifyTree];
+   
+   if (fDelayedTransient) {
+      fDelayedTransient = NO;
+      [fMainWindow addChildWindow : self ordered : NSWindowAbove];
+   }
 }
 
 //______________________________________________________________________________
