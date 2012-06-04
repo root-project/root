@@ -94,6 +94,7 @@
 
 #include "Event.h"
 
+using namespace std;
 
 //______________________________________________________________________________
 int main(int argc, char **argv)

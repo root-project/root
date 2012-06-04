@@ -1,3 +1,6 @@
+namespace std{}
+using namespace std;
+
 #include "TPCnvTokenList_p1.h"
 #include "Trk__TrackCollection_p1.h"
 #include "ElectronContainer_p1.h"
