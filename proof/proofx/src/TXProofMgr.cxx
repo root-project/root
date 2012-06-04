@@ -779,7 +779,7 @@ Int_t TXProofMgr::SendMsgToUsers(const char *msg, const char *usr)
    // A specific user?
    if (usr && strlen(usr) > 0 && (strlen(usr) != 1 || usr[0] != '*')) {
       lusr = (strlen(usr) + 3);
-      sprintf(buf, "u:%s ", usr);
+      snprintf(buf, kMAXBUF, "u:%s ", usr);
       p += lusr;
       space -= lusr;
    }
@@ -1103,6 +1103,7 @@ Int_t TXProofMgr::Stat(const char *what, FileStat_t &st, const char *where)
    // Show the result, if any
    if (os) {
       if (gDebug > 1) Printf("%s", os->GetName());
+#if 0
       Int_t    mode, uid, gid, islink;
       Long_t   dev, ino, mtime;
       Long64_t size;
@@ -1123,6 +1124,27 @@ Int_t TXProofMgr::Stat(const char *what, FileStat_t &st, const char *where)
       st.fSize   = size;
       st.fMtime  = mtime;
       st.fIsLink = (islink == 1);
+#else
+      TString tkn;
+      Ssiz_t from = 0;
+      if (!os->GetString().Tokenize(tkn, from, "[ ]+") || !tkn.IsDigit()) return -1;
+      st.fDev = tkn.Atoi();
+      if (st.fDev == -1) return -1;
+      if (!os->GetString().Tokenize(tkn, from, "[ ]+") || !tkn.IsDigit()) return -1;
+      st.fIno = tkn.Atoi();
+      if (!os->GetString().Tokenize(tkn, from, "[ ]+") || !tkn.IsDigit()) return -1;
+      st.fMode = tkn.Atoi();
+      if (!os->GetString().Tokenize(tkn, from, "[ ]+") || !tkn.IsDigit()) return -1;
+      st.fUid = tkn.Atoi();
+      if (!os->GetString().Tokenize(tkn, from, "[ ]+") || !tkn.IsDigit()) return -1;
+      st.fGid = tkn.Atoi();
+      if (!os->GetString().Tokenize(tkn, from, "[ ]+") || !tkn.IsDigit()) return -1;
+      st.fSize = tkn.Atoll();
+      if (!os->GetString().Tokenize(tkn, from, "[ ]+") || !tkn.IsDigit()) return -1;
+      st.fMtime = tkn.Atoi();
+      if (!os->GetString().Tokenize(tkn, from, "[ ]+") || !tkn.IsDigit()) return -1;
+      st.fIsLink = (tkn.Atoi() == 1) ? kTRUE : kFALSE;
+#endif
 
       // Cleanup
       SafeDelete(os);
@@ -1370,8 +1392,14 @@ Int_t TXProofMgr::GetFile(const char *remote, const char *local, const char *opt
 
    if (os) {
       // The message contains the size
-      Long64_t size;
-      sscanf(os->GetName(), "%lld", &size);
+      TString ssz(os->GetName());
+      ssz.ReplaceAll(" ", "");
+      if (!ssz.IsDigit()) {
+         Error("GetFile", "received non-digit size string: '%s' ('%s')", os->GetName(), ssz.Data());
+         close(fdout);
+         return rc;
+      }
+      Long64_t size = ssz.Atoll();
       if (size <= 0) {
          Error("GetFile", "received null or negative size: %lld", size);
          close(fdout);

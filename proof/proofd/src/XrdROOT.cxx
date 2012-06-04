@@ -191,7 +191,7 @@ int XrdROOT::ParseROOTVersionInfo()
 
    // Read the file
    char *pv = 0;
-   XrdOucString tkn;
+   XrdOucString tkn, sline;
    char line[1024];
    while (fgets(line, sizeof(line), fv)) {
       if (fRelease.length() <= 0 && (pv = (char *) strstr(line, "ROOT_RELEASE"))) {
@@ -201,13 +201,15 @@ int XrdROOT::ParseROOTVersionInfo()
          fRelease = pv;
          fRelease.replace("\"","");
       } else if ((pv = (char *) strstr(line, "ROOT_SVN_REVISION"))) {
-         if (line[strlen(line)-1] == '\n')
-            line[strlen(line)-1] = 0;
-         sscanf(pv, "ROOT_SVN_REVISION %d", &fSvnRevision);
+         if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = 0;
+         pv += strlen("ROOT_SVN_REVISION");
+         while (pv[0] == ' ') pv++;
+         fSvnRevision = atoi(pv);
       } else if ((pv = (char *) strstr(line, "ROOT_VERSION_CODE"))) {
-         if (line[strlen(line)-1] == '\n')
-            line[strlen(line)-1] = 0;
-         sscanf(pv, "ROOT_VERSION_CODE %d", &fVersionCode);
+         if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = 0;
+         pv += strlen("ROOT_VERSION_CODE");
+         while (pv[0] == ' ') pv++;
+         fVersionCode = atoi(pv);
       }
    }
 
@@ -262,11 +264,15 @@ int XrdROOT::ParseReleaseString(const char *release,
 
    if (!release || strlen(release) <= 0) return -1;
 
-   XrdOucString rel(release, 7);
-   rel.replace(".", " ");
-   rel.replace("/", " ");
-
-   sscanf(rel.c_str(), "%d %d %d", &maj, &min, &patch);
+   XrdOucString rel(release, 7), tkn;
+   int from = 0;
+   if ((from = rel.tokenize(tkn, from, '.')) == -1) return -1;
+   maj = atoi(tkn.c_str());
+   if ((from = rel.tokenize(tkn, from, '/')) == -1) return -1;
+   min = atoi(tkn.c_str());
+   if ((from = rel.tokenize(tkn, from, ' ')) == -1) return -1;
+   patch = atoi(tkn.c_str());
+   
    return 0;
 }
 
@@ -522,8 +528,9 @@ int XrdROOTMgr::Validate(XrdROOT *r, XrdScheduler *sched)
          // Log to the session log file from now on
          fLogger->Bind(logfile.c_str());
          // Transfer the info to proofserv
-         char *ev = new char[strlen("ROOTPROOFLOGFILE=") + logfile.length() + 2];
-         sprintf(ev, "ROOTPROOFLOGFILE=%s", logfile.c_str());
+         size_t len = strlen("ROOTPROOFLOGFILE=") + logfile.length() + 2;
+         char *ev = new char[len];
+         snprintf(ev, len, "ROOTPROOFLOGFILE=%s", logfile.c_str());
          putenv(ev);
          if (debug && rootrc.length() > 0) {
             // Create .rootrc
@@ -533,8 +540,9 @@ int XrdROOTMgr::Validate(XrdROOT *r, XrdScheduler *sched)
                fclose(frc);
             }
             // Transfer the info to proofserv
-            ev = new char[strlen("ROOTRCFILE=") + rootrc.length() + 2];
-            sprintf(ev, "ROOTRCFILE=%s", rootrc.c_str());
+            len = strlen("ROOTRCFILE=") + rootrc.length() + 2;
+            ev = new char[len];
+            snprintf(ev, len, "ROOTRCFILE=%s", rootrc.c_str());
             putenv(ev);
          }
       }
@@ -562,7 +570,7 @@ int XrdROOTMgr::Validate(XrdROOT *r, XrdScheduler *sched)
 
       // Set Open socket
       char *ev = new char[25];
-      sprintf(ev, "ROOTOPENSOCK=%d", fp[1]);
+      snprintf(ev, 25, "ROOTOPENSOCK=%d", fp[1]);
       putenv(ev);
 
       // Prepare for execution: we need to acquire the identity of

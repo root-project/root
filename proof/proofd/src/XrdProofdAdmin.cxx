@@ -1501,7 +1501,7 @@ int XrdProofdAdmin::ExecCmd(XrdProofdProtocol *p, XrdProofdResponse *r,
                // Fill the buffer and go
                char msg[256];
                int  islink = S_ISLNK(st.st_mode);
-               sprintf(msg, "%ld %ld %d %d %d %lld %ld %d", (long)st.st_dev,
+               snprintf(msg, 256, "%ld %ld %d %d %d %lld %ld %d", (long)st.st_dev,
                         (long)st.st_ino, st.st_mode, (int)(st.st_uid),
                         (int)(st.st_gid), (kXR_int64)st.st_size, st.st_mtime, islink);
                emsg = msg;
@@ -1827,7 +1827,7 @@ int XrdProofdAdmin::GetFile(XrdProofdProtocol *p)
          } else {
             // Send the size as OK message
             char sizmsg[64];
-            sprintf(sizmsg, "%lld", (kXR_int64) st.st_size);
+            snprintf(sizmsg, 64, "%lld", (kXR_int64) st.st_size);
             response->Send((const char *) &sizmsg[0]);
             TRACEP(p, XERR, "size is "<<sizmsg<<" bytes");
          }
@@ -1987,7 +1987,7 @@ int XrdProofdAdmin::PutFile(XrdProofdProtocol *p)
          return 0;
       }
       // Extract size
-      sscanf(ssiz.c_str(), "%lld", &size);
+      size = atoll(ssiz.c_str());
       if (size < 0) {
          TRACEP(p, XERR, "cannot resolve size!");
          response->Send(kXR_InvalidRequest, "cannot resolve size!");

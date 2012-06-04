@@ -1391,14 +1391,14 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *path,
       lcmd = strlen(pat) + strlen(file) + 20;
       cmd = new char[lcmd];
       if (opt == 2) {
-         sprintf(cmd, "grep -v %s %s", pat, file);
+         snprintf(cmd, lcmd, "grep -v %s %s", pat, file);
       } else {
-         sprintf(cmd, "grep %s %s", pat, file);
+         snprintf(cmd, lcmd, "grep %s %s", pat, file);
       }
    } else {
       lcmd = strlen(file) + 10;
       cmd = new char[lcmd];
-      sprintf(cmd, "cat %s", file);
+      snprintf(cmd, lcmd, "cat %s", file);
    }
    TRACE(DBG, "cmd: " << cmd);
 

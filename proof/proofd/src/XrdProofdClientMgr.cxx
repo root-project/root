@@ -1113,8 +1113,9 @@ int XrdProofdClientMgr::Auth(XrdProofdProtocol *p)
       p->AuthProt()->Entity.tident = p->Link()->ID;
    }
    // Set the wanted login name
-   char *u = new char[strlen("XrdSecLOGINUSER=")+strlen(p->UserIn())+2];
-   sprintf(u, "XrdSecLOGINUSER=%s", p->UserIn());
+   size_t len = strlen("XrdSecLOGINUSER=")+strlen(p->UserIn())+2;
+   char *u = new char[len];
+   snprintf(u, len, "XrdSecLOGINUSER=%s", p->UserIn());
    putenv(u);
 
    // Now try to authenticate the client using the current protocol
@@ -1311,15 +1312,19 @@ char *XrdProofdClientMgr::FilterSecConfig(int &nd)
          nd++;
          // Create the output file, if not yet done
          if (!rcfn) {
-            rcfn = new char[strlen(fMgr->TMPdir()) + strlen("/xpdcfn_XXXXXX") + 2];
-            sprintf(rcfn, "%s/xpdcfn_XXXXXX", fMgr->TMPdir());
+            size_t len = strlen(fMgr->TMPdir()) + strlen("/xpdcfn_XXXXXX") + 2;
+            rcfn = new char[len];
+            snprintf(rcfn, len, "%s/xpdcfn_XXXXXX", fMgr->TMPdir());
+            mode_t oldum = umask(022);
             if ((fd = mkstemp(rcfn)) < 0) {
                delete[] rcfn;
                nd = (errno > 0) ? -errno : -1;
                fclose(fin);
                rcfn = 0;
+               oldum = umask(oldum);
                return rcfn;
             }
+            oldum = umask(oldum);
          }
          XrdOucString slin = lin;
          // Strip the prefix "xpd."
