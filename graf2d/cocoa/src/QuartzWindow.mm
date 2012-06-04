@@ -605,10 +605,10 @@ void print_mask_info(ULong_t mask)
    window.fMainWindow = self;
    
    if (window.fMapState != kIsViewable) {
-      fDelayedTransient = YES;
+      window.fDelayedTransient = YES;
    } else {
       [self addChildWindow : window ordered : NSWindowAbove];
-      fDelayedTransient = NO;
+      window.fDelayedTransient = NO;
    }
 }
 
