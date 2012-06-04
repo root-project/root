@@ -1102,8 +1102,10 @@ int XrdProofdAux::GetIDFromPath(const char *path, XrdOucString &emsg)
    FILE *fid = fopen(path, "r");
    if (fid) {
       char line[64];
-      if (fgets(line, sizeof(line), fid))
-         sscanf(line, "%d", &id);
+      if (fgets(line, sizeof(line), fid)) {
+         if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = 0;
+         id = atoi(line);
+      }
       fclose(fid);
    } else if (errno != ENOENT) {
       XPDFORM(emsg, "GetIDFromPath: error reading id from: %s (errno: %d)",
