@@ -354,7 +354,7 @@ Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
 	   && ColumnType(colCounter) == newType) {
      Bool_t same = kFALSE;
       if ( Dimensions(colCounter)) {
-	for (Int_t d = 0; d < Dimensions(colCounter); d++) {
+	for (UInt_t d = 0; d < Dimensions(colCounter); ++d) {
 	  if (IndexArray(colCounter)[d] != newDescriptor->IndexArray(colNewIndx)[d]){  same = kTRUE; break; }
 	}
       }
