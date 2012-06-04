@@ -104,8 +104,8 @@ void TNamed::ls(Option_t *) const
    // List TNamed name and title.
 
    TROOT::IndentLevel();
-   cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
-        << Int_t(TestBit(kCanDelete)) << " at: "<<this<< endl;
+   std::cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
+        << Int_t(TestBit(kCanDelete)) << " at: "<<this<< std::endl;
 }
 
 //______________________________________________________________________________
@@ -113,7 +113,7 @@ void TNamed::Print(Option_t *) const
 {
    // Print TNamed name and title.
 
-   cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << endl;
+   std::cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << std::endl;
 }
 
 //______________________________________________________________________________

@@ -133,10 +133,10 @@ namespace TMVA {
       inline Bool_t  OpenRFile(TString name, std::ifstream & f);
 
       // read/write binary files
-      inline Bool_t WriteInt(ofstream &   f, const Int_t   *v, Int_t n=1);
-      inline Bool_t WriteFloat(ofstream & f, const Float_t *v, Int_t n=1);
-      inline Int_t  ReadInt(ifstream & f,   Int_t *v, Int_t n=1) const;
-      inline Int_t  ReadFloat(ifstream & f, Float_t *v, Int_t n=1) const;
+      inline Bool_t WriteInt(std::ofstream &   f, const Int_t   *v, Int_t n=1);
+      inline Bool_t WriteFloat(std::ofstream & f, const Float_t *v, Int_t n=1);
+      inline Int_t  ReadInt(std::ifstream & f,   Int_t *v, Int_t n=1) const;
+      inline Int_t  ReadFloat(std::ifstream & f, Float_t *v, Int_t n=1) const;
 
       // write rf_go.exe i/o files
       Bool_t WriteAll();
@@ -261,7 +261,7 @@ Bool_t TMVA::RuleFitAPI::OpenRFile(TString name, std::ifstream & f)
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::RuleFitAPI::WriteInt(ofstream &   f, const Int_t   *v, Int_t n)
+Bool_t TMVA::RuleFitAPI::WriteInt(std::ofstream &   f, const Int_t   *v, Int_t n)
 {
    // write an int
    if (!f.is_open()) return kFALSE;
@@ -269,7 +269,7 @@ Bool_t TMVA::RuleFitAPI::WriteInt(ofstream &   f, const Int_t   *v, Int_t n)
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::RuleFitAPI::WriteFloat(ofstream & f, const Float_t *v, Int_t n)
+Bool_t TMVA::RuleFitAPI::WriteFloat(std::ofstream & f, const Float_t *v, Int_t n)
 {
    // write a float
    if (!f.is_open()) return kFALSE;
@@ -277,7 +277,7 @@ Bool_t TMVA::RuleFitAPI::WriteFloat(ofstream & f, const Float_t *v, Int_t n)
 }
 
 //_______________________________________________________________________
-Int_t TMVA::RuleFitAPI::ReadInt(ifstream & f,   Int_t *v, Int_t n) const
+Int_t TMVA::RuleFitAPI::ReadInt(std::ifstream & f,   Int_t *v, Int_t n) const
 {
    // read an int
    if (!f.is_open()) return 0;
@@ -286,7 +286,7 @@ Int_t TMVA::RuleFitAPI::ReadInt(ifstream & f,   Int_t *v, Int_t n) const
 }
 
 //_______________________________________________________________________
-Int_t TMVA::RuleFitAPI::ReadFloat(ifstream & f, Float_t *v, Int_t n) const
+Int_t TMVA::RuleFitAPI::ReadFloat(std::ifstream & f, Float_t *v, Int_t n) const
 {
    // read a float
    if (!f.is_open()) return 0;

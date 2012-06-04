@@ -32,6 +32,8 @@ END_HTML
 
 #include "RooStats/HistFactory/LinInterpVar.h"
 
+using namespace std;
+
 ClassImp(RooStats::HistFactory::LinInterpVar)
 
 using namespace RooStats;

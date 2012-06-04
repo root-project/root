@@ -102,7 +102,7 @@ public:
    virtual void     RateEvent(Double_t , Double_t , Long64_t , Long64_t) {}
 
    virtual void     SaveAs(const char *filename="",Option_t *option="") const;
-   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void     SetBytesRead(Long64_t nbytes) {fBytesRead = nbytes;}
    virtual void     SetBytesReadExtra(Long64_t nbytes) {fBytesReadExtra = nbytes;}
    virtual void     SetCompress(Double_t cx) {fCompress = cx;}

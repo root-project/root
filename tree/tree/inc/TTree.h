@@ -161,7 +161,7 @@ protected:
    Int_t    SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr);
    virtual TLeaf   *GetLeafImpl(const char* branchname, const char* leafname);
 
-   char             GetNewlineValue(istream &inputStream);
+   char             GetNewlineValue(std::istream &inputStream);
    void             ImportClusterRanges(TTree *fromtree);
 
    class TFriendLock {
@@ -472,7 +472,7 @@ public:
    virtual Long64_t        Project(const char* hname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    virtual TSQLResult     *Query(const char* varexp = "", const char* selection = "", Option_t* option = "", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    virtual Long64_t        ReadFile(const char* filename, const char* branchDescriptor = "", char delimiter = ' ');
-   virtual Long64_t        ReadStream(istream& inputStream, const char* branchDescriptor = "", char delimiter = ' ');
+   virtual Long64_t        ReadStream(std::istream& inputStream, const char* branchDescriptor = "", char delimiter = ' ');
    virtual void            Refresh();
    virtual void            RecursiveRemove(TObject *obj);
    virtual void            RemoveFriend(TTree*);

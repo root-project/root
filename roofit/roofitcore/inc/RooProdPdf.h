@@ -81,7 +81,7 @@ public:
   virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
   Bool_t isBinnedDistribution(const RooArgSet& obs) const  ;
 
-  void printMetaArgs(ostream& os) const ;
+  void printMetaArgs(std::ostream& os) const ;
 
   virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
   void fixRefRange(const char* rangeName) ;

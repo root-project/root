@@ -330,7 +330,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fPluginManager->LoadHandlersFromEnv(gEnv);
 #if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
    if (TARGET_OS_IPHONE | TARGET_IPHONE_SIMULATOR) {
-      TEnv plugins(".plugins-ios");
+      TEnv plugins(".plugins-std::ios");
       fPluginManager->LoadHandlersFromEnv(&plugins);
    }
 #endif
@@ -2014,7 +2014,7 @@ void TROOT::IndentLevel()
 {
    // Functions used by ls() to indent an object hierarchy.
 
-   for (int i = 0; i < fgDirLevel; i++) cout.put(' ');
+   for (int i = 0; i < fgDirLevel; i++) std::cout.put(' ');
 }
 
 //______________________________________________________________________________

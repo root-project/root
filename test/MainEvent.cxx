@@ -94,6 +94,7 @@
 
 #include "Event.h"
 
+using namespace std;
 
 //______________________________________________________________________________
 int main(int argc, char **argv)
@@ -177,7 +178,7 @@ int main(int argc, char **argv)
       } else {    //read random
          Int_t evrandom;
          for (ev = 0; ev < nevent; ev++) {
-            if (ev%printev == 0) cout<<"event="<<ev<<endl;
+            if (ev%printev == 0) std::cout<<"event="<<ev<<std::endl;
             evrandom = Int_t(nevent*gRandom->Rndm(1));
             nb += tree->GetEntry(evrandom);  //read complete event in memory
          }

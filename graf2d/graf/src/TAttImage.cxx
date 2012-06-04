@@ -611,7 +611,7 @@ void TAttImage::ResetAttImage(Option_t *)
 }
 
 //______________________________________________________________________________
-void TAttImage::SaveImageAttributes(ostream &out, const char *name,
+void TAttImage::SaveImageAttributes(std::ostream &out, const char *name,
                                     EImageQuality qualdef,
                                     UInt_t comprdef, Bool_t constRatiodef)
 {
@@ -619,13 +619,13 @@ void TAttImage::SaveImageAttributes(ostream &out, const char *name,
    // not the palette.
 
    if (fImageQuality != qualdef) {
-      out<<"   "<<name<<"->SetImageQuality("<<fImageQuality<<");"<<endl;
+      out<<"   "<<name<<"->SetImageQuality("<<fImageQuality<<");"<<std::endl;
    }
    if (fImageCompression != comprdef) {
-      out<<"   "<<name<<"->SetImageCompression("<<fImageCompression<<");"<<endl;
+      out<<"   "<<name<<"->SetImageCompression("<<fImageCompression<<");"<<std::endl;
    }
    if (fConstRatio != constRatiodef) {
-      out<<"   "<<name<<"->SetConstRatio("<<fConstRatio<<");"<<endl;
+      out<<"   "<<name<<"->SetConstRatio("<<fConstRatio<<");"<<std::endl;
    }
 }
 

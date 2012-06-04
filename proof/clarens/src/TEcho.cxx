@@ -100,9 +100,9 @@ void TEcho::Benchmark(Int_t iterations)
 
    timer.Stop();
 
-   cout <<
+   std::cout <<
       "Elapsed time is " << timer.RealTime() << " s, " <<
       iterations / timer.RealTime() << " calls/s for " <<
-      iterations << " calls" << endl;
+      iterations << " calls" << std::endl;
 }
 

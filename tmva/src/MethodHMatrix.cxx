@@ -265,7 +265,7 @@ Double_t TMVA::MethodHMatrix::GetChi2( Types::ESBType type )
 
    // loop over variables
    UInt_t ivar(0), jvar(0), nvar(GetNvar());
-   vector<Double_t> val( nvar );
+   std::vector<Double_t> val( nvar );
 
    // transform the event according to the given type (signal/background)
    if (type==Types::kSignal)
@@ -323,7 +323,7 @@ void TMVA::MethodHMatrix::ReadWeightsFromXML( void* wghtnode )
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodHMatrix::ReadWeightsFromStream( istream& istr )
+void  TMVA::MethodHMatrix::ReadWeightsFromStream( std::istream& istr )
 {
    // read variable names and min/max
    // NOTE: the latter values are mandatory for the normalisation 
@@ -352,91 +352,91 @@ void  TMVA::MethodHMatrix::ReadWeightsFromStream( istream& istr )
 void TMVA::MethodHMatrix::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
    // write Fisher-specific classifier response
-   fout << "   // arrays of input evt vs. variable " << endl;
-   fout << "   double fInvHMatrixS[" << GetNvar() << "][" << GetNvar() << "]; // inverse H-matrix (signal)" << endl;
-   fout << "   double fInvHMatrixB[" << GetNvar() << "][" << GetNvar() << "]; // inverse H-matrix (background)" << endl;
-   fout << "   double fVecMeanS[" << GetNvar() << "];    // vector of mean values (signal)" << endl;
-   fout << "   double fVecMeanB[" << GetNvar() << "];    // vector of mean values (background)" << endl;
-   fout << "   " << endl;
-   fout << "   double GetChi2( const std::vector<double>& inputValues, int type ) const;" << endl;
-   fout << "};" << endl;
-   fout << "   " << endl;
-   fout << "void " << className << "::Initialize() " << endl;
-   fout << "{" << endl;
-   fout << "   // init vectors with mean values" << endl;
+   fout << "   // arrays of input evt vs. variable " << std::endl;
+   fout << "   double fInvHMatrixS[" << GetNvar() << "][" << GetNvar() << "]; // inverse H-matrix (signal)" << std::endl;
+   fout << "   double fInvHMatrixB[" << GetNvar() << "][" << GetNvar() << "]; // inverse H-matrix (background)" << std::endl;
+   fout << "   double fVecMeanS[" << GetNvar() << "];    // vector of mean values (signal)" << std::endl;
+   fout << "   double fVecMeanB[" << GetNvar() << "];    // vector of mean values (background)" << std::endl;
+   fout << "   " << std::endl;
+   fout << "   double GetChi2( const std::vector<double>& inputValues, int type ) const;" << std::endl;
+   fout << "};" << std::endl;
+   fout << "   " << std::endl;
+   fout << "void " << className << "::Initialize() " << std::endl;
+   fout << "{" << std::endl;
+   fout << "   // init vectors with mean values" << std::endl;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-      fout << "   fVecMeanS[" << ivar << "] = " << (*fVecMeanS)(ivar) << ";" << endl;
-      fout << "   fVecMeanB[" << ivar << "] = " << (*fVecMeanB)(ivar) << ";" << endl;
+      fout << "   fVecMeanS[" << ivar << "] = " << (*fVecMeanS)(ivar) << ";" << std::endl;
+      fout << "   fVecMeanB[" << ivar << "] = " << (*fVecMeanB)(ivar) << ";" << std::endl;
    }
-   fout << "   " << endl;
-   fout << "   // init H-matrices" << endl;
+   fout << "   " << std::endl;
+   fout << "   // init H-matrices" << std::endl;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       for (UInt_t jvar=0; jvar<GetNvar(); jvar++) {
          fout << "   fInvHMatrixS[" << ivar << "][" << jvar << "] = " 
-              << (*fInvHMatrixS)(ivar,jvar) << ";" << endl;
+              << (*fInvHMatrixS)(ivar,jvar) << ";" << std::endl;
          fout << "   fInvHMatrixB[" << ivar << "][" << jvar << "] = " 
-              << (*fInvHMatrixB)(ivar,jvar) << ";" << endl;
+              << (*fInvHMatrixB)(ivar,jvar) << ";" << std::endl;
       }
    }
-   fout << "}" << endl;
-   fout << "   " << endl;
-   fout << "inline double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << endl;
-   fout << "{" << endl;
-   fout << "   // returns the H-matrix signal estimator" << endl;
-   fout << "   std::vector<double> inputValuesSig = inputValues;" << endl;
-   fout << "   std::vector<double> inputValuesBgd = inputValues;" << endl;
+   fout << "}" << std::endl;
+   fout << "   " << std::endl;
+   fout << "inline double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << std::endl;
+   fout << "{" << std::endl;
+   fout << "   // returns the H-matrix signal estimator" << std::endl;
+   fout << "   std::vector<double> inputValuesSig = inputValues;" << std::endl;
+   fout << "   std::vector<double> inputValuesBgd = inputValues;" << std::endl;
    if (GetTransformationHandler().GetTransformationList().GetSize() != 0) {
 
       UInt_t signalClass    =DataInfo().GetClassInfo("Signal")->GetNumber();
       UInt_t backgroundClass=DataInfo().GetClassInfo("Background")->GetNumber();
 
-      fout << "   Transform(inputValuesSig," << signalClass << ");" << endl;
-      fout << "   Transform(inputValuesBgd," << backgroundClass << ");" << endl;
+      fout << "   Transform(inputValuesSig," << signalClass << ");" << std::endl;
+      fout << "   Transform(inputValuesBgd," << backgroundClass << ");" << std::endl;
    }
 
-//   fout << "   for(uint i=0; i<GetNvar(); ++i) std::cout << inputValuesSig.at(i) << \"  \" << inputValuesBgd.at(i) << std::endl; " << endl;
+//   fout << "   for(uint i=0; i<GetNvar(); ++i) std::cout << inputValuesSig.at(i) << \"  \" << inputValuesBgd.at(i) << std::endl; " << std::endl;
 
-   fout << "   double s = GetChi2( inputValuesSig, " << Types::kSignal << " );" << endl;
-   fout << "   double b = GetChi2( inputValuesBgd, " << Types::kBackground << " );" << endl;
+   fout << "   double s = GetChi2( inputValuesSig, " << Types::kSignal << " );" << std::endl;
+   fout << "   double b = GetChi2( inputValuesBgd, " << Types::kBackground << " );" << std::endl;
 
-//   fout << "   std::cout << s << \"  \" << b << std::endl; " << endl;
+//   fout << "   std::cout << s << \"  \" << b << std::endl; " << std::endl;
 
-   fout << "   " << endl;
-   fout << "   if (s+b <= 0) std::cout << \"Problem in class " << className << "::GetMvaValue__: s+b = \"" << endl;
-   fout << "                           << s+b << \" <= 0 \"  << std::endl;" << endl;
-   fout << "   " << endl;
-   fout << "   return (b - s)/(s + b);" << endl;
-   fout << "}" << endl;
-   fout << "   " << endl;
-   fout << "inline double " << className << "::GetChi2( const std::vector<double>& inputValues, int type ) const" << endl;
-   fout << "{" << endl;
-   fout << "   // compute chi2-estimator for event according to type (signal/background)" << endl;
-   fout << "   " << endl;
-   fout << "   size_t ivar,jvar;" << endl;
-   fout << "   double chi2 = 0;" << endl;
-   fout << "   for (ivar=0; ivar<GetNvar(); ivar++) {" << endl;
-   fout << "      for (jvar=0; jvar<GetNvar(); jvar++) {" << endl;
-   fout << "         if (type == " << Types::kSignal << ") " << endl;
-   fout << "            chi2 += ( (inputValues[ivar] - fVecMeanS[ivar])*(inputValues[jvar] - fVecMeanS[jvar])" << endl;
-   fout << "                      * fInvHMatrixS[ivar][jvar] );" << endl;
-   fout << "         else" << endl;
-   fout << "            chi2 += ( (inputValues[ivar] - fVecMeanB[ivar])*(inputValues[jvar] - fVecMeanB[jvar])" << endl;
-   fout << "                      * fInvHMatrixB[ivar][jvar] );" << endl;
-   fout << "      }" << endl;
-   fout << "   }   // loop over variables   " << endl;
-   fout << "   " << endl;
-   fout << "   // sanity check" << endl;
-   fout << "   if (chi2 < 0) std::cout << \"Problem in class " << className << "::GetChi2: chi2 = \"" << endl;
-   fout << "                           << chi2 << \" < 0 \"  << std::endl;" << endl;
-   fout << "   " << endl;
-   fout << "   return chi2;" << endl;
-   fout << "}" << endl;
-   fout << "   " << endl;
-   fout << "// Clean up" << endl;
-   fout << "inline void " << className << "::Clear() " << endl;
-   fout << "{" << endl;
-   fout << "   // nothing to clear" << endl;
-   fout << "}" << endl;
+   fout << "   " << std::endl;
+   fout << "   if (s+b <= 0) std::cout << \"Problem in class " << className << "::GetMvaValue__: s+b = \"" << std::endl;
+   fout << "                           << s+b << \" <= 0 \"  << std::endl;" << std::endl;
+   fout << "   " << std::endl;
+   fout << "   return (b - s)/(s + b);" << std::endl;
+   fout << "}" << std::endl;
+   fout << "   " << std::endl;
+   fout << "inline double " << className << "::GetChi2( const std::vector<double>& inputValues, int type ) const" << std::endl;
+   fout << "{" << std::endl;
+   fout << "   // compute chi2-estimator for event according to type (signal/background)" << std::endl;
+   fout << "   " << std::endl;
+   fout << "   size_t ivar,jvar;" << std::endl;
+   fout << "   double chi2 = 0;" << std::endl;
+   fout << "   for (ivar=0; ivar<GetNvar(); ivar++) {" << std::endl;
+   fout << "      for (jvar=0; jvar<GetNvar(); jvar++) {" << std::endl;
+   fout << "         if (type == " << Types::kSignal << ") " << std::endl;
+   fout << "            chi2 += ( (inputValues[ivar] - fVecMeanS[ivar])*(inputValues[jvar] - fVecMeanS[jvar])" << std::endl;
+   fout << "                      * fInvHMatrixS[ivar][jvar] );" << std::endl;
+   fout << "         else" << std::endl;
+   fout << "            chi2 += ( (inputValues[ivar] - fVecMeanB[ivar])*(inputValues[jvar] - fVecMeanB[jvar])" << std::endl;
+   fout << "                      * fInvHMatrixB[ivar][jvar] );" << std::endl;
+   fout << "      }" << std::endl;
+   fout << "   }   // loop over variables   " << std::endl;
+   fout << "   " << std::endl;
+   fout << "   // sanity check" << std::endl;
+   fout << "   if (chi2 < 0) std::cout << \"Problem in class " << className << "::GetChi2: chi2 = \"" << std::endl;
+   fout << "                           << chi2 << \" < 0 \"  << std::endl;" << std::endl;
+   fout << "   " << std::endl;
+   fout << "   return chi2;" << std::endl;
+   fout << "}" << std::endl;
+   fout << "   " << std::endl;
+   fout << "// Clean up" << std::endl;
+   fout << "inline void " << className << "::Clear() " << std::endl;
+   fout << "{" << std::endl;
+   fout << "   // nothing to clear" << std::endl;
+   fout << "}" << std::endl;
 }
 
 //_______________________________________________________________________

@@ -196,7 +196,7 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
 
       // enter the Gondzio correction loop:
       if (fPrintlevel >= 10)
-         cout << "**** Entering the correction loop ****" << endl;
+         std::cout << "**** Entering the correction loop ****" << std::endl;
 
       while (fNumberGondzioCorrections < fMaximum_correctors  &&
       alpha < 1.0 && !stopCorrections) {
@@ -281,40 +281,40 @@ void TGondzioSolver::DefMonitor(TQpDataBase* /* data */,TQpVar* /* vars */,
    switch (level) {
       case 0 : case 1:
       {
-         cout << endl << "Duality Gap: " << resid->GetDualityGap() << endl;
+         std::cout << std::endl << "Duality Gap: " << resid->GetDualityGap() << std::endl;
          if (i > 1) {
-            cout << " Number of Corrections = " << fNumberGondzioCorrections
-               << " alpha = " << alpha << endl;
+            std::cout << " Number of Corrections = " << fNumberGondzioCorrections
+               << " alpha = " << alpha << std::endl;
          }
-         cout << " *** Iteration " << i << " *** " << endl;
-         cout << " mu = " << mu << " relative residual norm = "
-            << resid->GetResidualNorm()/fDnorm << endl;
+         std::cout << " *** Iteration " << i << " *** " << std::endl;
+         std::cout << " mu = " << mu << " relative residual norm = "
+            << resid->GetResidualNorm()/fDnorm << std::endl;
 
          if (level == 1) {
             // Termination has been detected by the status check; print
             // appropriate message
             if (status_code == kSUCCESSFUL_TERMINATION) {
-               cout << endl
+               std::cout << std::endl
                   << " *** SUCCESSFUL TERMINATION ***"
-                  << endl;
+                  << std::endl;
             }
             else if (status_code == kMAX_ITS_EXCEEDED) {
-               cout << endl
-                  << " *** MAXIMUM ITERATIONS REACHED *** " << endl;
+               std::cout << std::endl
+                  << " *** MAXIMUM ITERATIONS REACHED *** " << std::endl;
             }
             else if (status_code == kINFEASIBLE) {
-               cout << endl
+               std::cout << std::endl
                   << " *** TERMINATION: PROBABLY INFEASIBLE *** "
-                  << endl;
+                  << std::endl;
             }
             else if (status_code == kUNKNOWN) {
-               cout << endl
-                  << " *** TERMINATION: STATUS UNKNOWN *** " << endl;
+               std::cout << std::endl
+                  << " *** TERMINATION: STATUS UNKNOWN *** " << std::endl;
             }
          }
       } break;
       case 2:
-         cout << " *** sigma = " << sigma << endl;
+         std::cout << " *** sigma = " << sigma << std::endl;
          break;
    }
 }

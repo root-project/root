@@ -573,8 +573,8 @@ void TXTRU::SplitConcavePolygon(Bool_t split)
    // Not implemented yet
    if (split) {
       fSplitConcave = kFALSE;
-      cout << TNamed::GetName()
-           << " TXTRU::SplitConcavePolygon is not yet implemented" << endl;
+      std::cout << TNamed::GetName()
+           << " TXTRU::SplitConcavePolygon is not yet implemented" << std::endl;
    }
 
 }
@@ -732,7 +732,7 @@ void TXTRU::DumpPoints(int npoints, float *pointbuff) const
 {
    // Dump the vertex points for visual inspection
 
-   cout << "TXTRU::DumpPoints - " << npoints << " points" << endl;
+   std::cout << "TXTRU::DumpPoints - " << npoints << " points" << std::endl;
    int ioff = 0;
    float x,y,z;
    int ipt=0;
@@ -750,7 +750,7 @@ void TXTRU::DumpSegments(int nsegments, int *segbuff) const
 {
    // Dump the segment info for visual inspection
 
-   cout << "TXTRU::DumpSegments - " << nsegments << " segments" << endl;
+   std::cout << "TXTRU::DumpSegments - " << nsegments << " segments" << std::endl;
    int ioff = 0;
    int icol, p1, p2;
    int iseg=0;
@@ -768,7 +768,7 @@ void TXTRU::DumpPolygons(int npolygons, int *polybuff, int buffsize) const
 {
    // Dump the derived polygon info for visual inspection
 
-   cout << "TXTRU::DumpPolygons - " << npolygons << " polygons" << endl;
+   std::cout << "TXTRU::DumpPolygons - " << npolygons << " polygons" << std::endl;
    int ioff = 0;
    int icol, nseg, iseg;
    int ipoly=0;
@@ -776,17 +776,17 @@ void TXTRU::DumpPolygons(int npolygons, int *polybuff, int buffsize) const
       icol = polybuff[ioff++];
       nseg = polybuff[ioff++];
 #ifndef R__MACOSX
-      cout << "  [" << setw(4) << ipoly << "] icol " << setw(3) << icol
-           << " nseg " << setw(3) << nseg << "  (";
+      std::cout << "  [" << std::setw(4) << ipoly << "] icol " << std::setw(3) << icol
+           << " nseg " << std::setw(3) << nseg << "  (";
 #else
       printf(" [%d4] icol %d3 nseg %d3  (", ipoly, icol, nseg);
 #endif
       for (iseg=0; iseg<nseg-1; iseg++) {
-         cout << polybuff[ioff++] << ",";
+         std::cout << polybuff[ioff++] << ",";
       }
-      cout << polybuff[ioff++] << ")" << endl;
+      std::cout << polybuff[ioff++] << ")" << std::endl;
    }
-   cout << " buffer size " << buffsize << " last used " << --ioff << endl;
+   std::cout << " buffer size " << buffsize << " last used " << --ioff << std::endl;
 }
 
 

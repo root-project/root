@@ -50,6 +50,8 @@
 #include "RooNumber.h"
 
 
+using namespace std;
+
 ClassImp(RooStreamParser)
 
 

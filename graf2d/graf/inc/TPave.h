@@ -78,7 +78,7 @@ public:
    virtual void  PaintPaveArc(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                               Int_t bordersize=4 ,Option_t *option="br");
    virtual void  Print(Option_t *option="") const;
-   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void  SetBorderSize(Int_t bordersize=4) {fBorderSize = bordersize;} // *MENU*
    virtual void  SetCornerRadius(Double_t rad = 0.2) {fCornerRadius = rad;} // *MENU*
    virtual void  SetName(const char *name="") {fName = name;} // *MENU*

@@ -273,7 +273,7 @@ void Viewer::SetRange(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
 {
    fCanvas->Range(xmin,ymin,xmax,ymax);
 
-   //cerr << "x=[" << xmin << " - " << xmax << "], "
+   //std::cerr << "x=[" << xmin << " - " << xmax << "], "
    //     << "y=[" << ymin << " - " << ymax << "]\n";
 
    fHScale->SetWmin(xmin);

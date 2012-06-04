@@ -6642,7 +6642,7 @@ void TASImage::SetPaletteEnabled(Bool_t on)
 
 
 //______________________________________________________________________________
-void TASImage::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TASImage::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
     // Save a primitive as a C++ statement(s) on output stream "out".
 
@@ -6672,11 +6672,11 @@ void TASImage::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    xpm += name;
    xpm += ii;
    str.ReplaceAll("asxpm", xpm.Data());
-   out << endl << str << endl << endl;
+   out << std::endl << str << std::endl << std::endl;
    out << "   TImage *";
-   out << name << " = TImage::Create();" << endl;
-   out << "   " << name << "->SetImageBuffer(" << xpm << ", TImage::kXpm);" << endl;
-   out << "   " << name << "->Draw();" << endl;
+   out << name << " = TImage::Create();" << std::endl;
+   out << "   " << name << "->SetImageBuffer(" << xpm << ", TImage::kXpm);" << std::endl;
+   out << "   " << name << "->Draw();" << std::endl;
 }
 
 

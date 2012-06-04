@@ -124,7 +124,7 @@ public:
    TGFont      *GetFont() const  { return fFont; }
 
    virtual void Layout();
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGLabel,0)  // A label GUI element
 };

@@ -395,7 +395,7 @@ TGeoPatternFinder *TGeoPatternX::MakeCopy(Bool_t reflect)
 }
    
 //______________________________________________________________________________
-void TGeoPatternX::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoPatternX::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 1;
@@ -565,7 +565,7 @@ TGeoPatternFinder *TGeoPatternY::MakeCopy(Bool_t reflect)
 }
    
 //______________________________________________________________________________
-void TGeoPatternY::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoPatternY::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 2;
@@ -731,7 +731,7 @@ TGeoPatternFinder *TGeoPatternZ::MakeCopy(Bool_t reflect)
 }
    
 //______________________________________________________________________________
-void TGeoPatternZ::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoPatternZ::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 3;
@@ -868,7 +868,7 @@ TGeoPatternFinder *TGeoPatternParaX::MakeCopy(Bool_t reflect)
 }
       
 //______________________________________________________________________________
-void TGeoPatternParaX::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoPatternParaX::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 1;
@@ -1024,7 +1024,7 @@ TGeoPatternFinder *TGeoPatternParaY::MakeCopy(Bool_t reflect)
 }
          
 //______________________________________________________________________________
-void TGeoPatternParaY::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoPatternParaY::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 2;
@@ -1184,7 +1184,7 @@ TGeoPatternFinder *TGeoPatternParaZ::MakeCopy(Bool_t reflect)
 }
          
 //______________________________________________________________________________
-void TGeoPatternParaZ::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoPatternParaZ::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 3;
@@ -1353,7 +1353,7 @@ TGeoPatternFinder *TGeoPatternTrapZ::MakeCopy(Bool_t reflect)
 }
    
 //______________________________________________________________________________
-void TGeoPatternTrapZ::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoPatternTrapZ::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 3;
@@ -1497,7 +1497,7 @@ TGeoPatternFinder *TGeoPatternCylR::MakeCopy(Bool_t reflect)
 }
       
 //______________________________________________________________________________
-void TGeoPatternCylR::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoPatternCylR::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 1;
@@ -1647,7 +1647,7 @@ TGeoPatternFinder *TGeoPatternCylPhi::MakeCopy(Bool_t reflect)
 }
    
 //______________________________________________________________________________
-void TGeoPatternCylPhi::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoPatternCylPhi::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 2;
@@ -1776,7 +1776,7 @@ TGeoPatternFinder *TGeoPatternSphR::MakeCopy(Bool_t)
 }
    
 //______________________________________________________________________________
-void TGeoPatternSphR::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoPatternSphR::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 1;
@@ -1880,7 +1880,7 @@ TGeoPatternFinder *TGeoPatternSphTheta::MakeCopy(Bool_t)
 }
    
 //______________________________________________________________________________
-void TGeoPatternSphTheta::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoPatternSphTheta::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 2;
@@ -1984,7 +1984,7 @@ TGeoPatternFinder *TGeoPatternSphPhi::MakeCopy(Bool_t)
 }
    
 //______________________________________________________________________________
-void TGeoPatternSphPhi::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoPatternSphPhi::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 3;

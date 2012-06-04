@@ -73,7 +73,7 @@ public:
    virtual Bool_t        PaintComposite(Option_t *option = "") const;
    void                  RegisterYourself();
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void          SetDimensions(Double_t * /*param*/) {;}
    virtual void          SetPoints(Double_t *points) const;
    virtual void          SetPoints(Float_t *points) const;

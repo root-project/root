@@ -441,7 +441,7 @@ void TAlienJDL::Parse(const char *filename)
 {
    // fills the TAlienJDL from inputfile (should be AliEn JDL file)
 
-   ifstream file;
+   std::ifstream file;
    file.open ( filename );
    if ( !file.is_open() )  {
       Error("Parse", "error opening file %s", filename);

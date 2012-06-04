@@ -387,7 +387,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
    }
 
    // open OS file
-   fStream = new ofstream(fname,ios::out);
+   fStream = new std::ofstream(fname,std::ios::out);
    if (fStream == 0 || gSystem->AccessPathName(fname,kWritePermission)) {
       printf("ERROR in TPostScript::Open: Cannot open file:%s\n",fname);
       return;

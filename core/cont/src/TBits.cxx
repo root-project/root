@@ -348,9 +348,9 @@ UInt_t TBits::FirstSetBit(UInt_t startBit) const
 }
 
 //______________________________________________________________________________
-void TBits::Output(ostream &os) const
+void TBits::Output(std::ostream &os) const
 {
-   // Print the value to the ostream
+   // Print the value to the std::ostream
 
    for(UInt_t i=0; i<fNbytes; ++i) {
       UChar_t val = fAllBits[fNbytes - 1 - i];

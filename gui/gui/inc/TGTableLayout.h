@@ -63,7 +63,7 @@ public:
    UInt_t GetAttachRight() const { return fAttachRight; }
    UInt_t GetAttachTop() const { return fAttachTop; }
    UInt_t GetAttachBottom() const { return fAttachBottom; }
-   virtual void SavePrimitive(ostream &out, Option_t * = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
 
    ClassDef(TGTableLayoutHints,0)  // Class describing GUI table layout hints
 };
@@ -133,7 +133,7 @@ public:
 
    virtual void Layout();
    virtual TGDimension GetDefaultSize() const; // return sum of all child sizes
-   virtual void SavePrimitive(ostream &out, Option_t * = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
 
    ClassDef(TGTableLayout,0)  // Table layout manager
 };

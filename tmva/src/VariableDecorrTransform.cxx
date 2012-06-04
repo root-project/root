@@ -401,7 +401,7 @@ void TMVA::VariableDecorrTransform::ReadTransformationFromStream( std::istream& 
 }
 
 //_______________________________________________________________________
-void TMVA::VariableDecorrTransform::PrintTransformation( ostream& ) 
+void TMVA::VariableDecorrTransform::PrintTransformation( std::ostream& ) 
 {
    // prints the transformation matrix
    Int_t cls = 0;

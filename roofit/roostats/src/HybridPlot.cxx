@@ -31,6 +31,8 @@ An example plot is available here:
 #include <algorithm>
 
 /// To build the THtml documentation
+using namespace std;
+
 ClassImp(RooStats::HybridPlot)
 
 using namespace RooStats;

@@ -561,8 +561,8 @@ void TRecorderReplaying::RegisterWindow(Window_t w)
    }
 
    if ((gDebug > 0) && (fWaitingForWindow)) {
-      cout << " Window registered: new ID: " << hex << w <<
-              "  previous ID: " << fWin << dec << endl;
+      std::cout << " Window registered: new ID: " << std::hex << w <<
+              "  previous ID: " << fWin << std::dec << std::endl;
    }
 
    // Lock mutex for guarding access to fWindowList
@@ -581,8 +581,8 @@ void TRecorderReplaying::RegisterWindow(Window_t w)
    if (fWaitingForWindow && fGuiEvent->fWindow == fWin) {
 
       if (gDebug > 0)
-         cout << " Window " << hex << fGuiEvent->fWindow <<
-                 " registered." << dec << endl;
+         std::cout << " Window " << std::hex << fGuiEvent->fWindow <<
+                 " registered." << std::dec << std::endl;
 
       fNextEvent = fGuiEvent;
       // Sets that we do not wait for this window anymore
@@ -640,12 +640,12 @@ Bool_t TRecorderReplaying::RemapWindowReferences()
 
    if (gDebug > 0) {
       // save actual formatting flags
-      ios_base::fmtflags org_flags = cout.flags();
-      cout << "fGuiTreeCounter = " << dec << fGuiTreeCounter <<
-              " No mapping found for ID " << hex << fGuiEvent->fWindow << endl;
+      std::ios_base::fmtflags org_flags = std::cout.flags();
+      std::cout << "fGuiTreeCounter = " << std::dec << fGuiTreeCounter <<
+              " No mapping found for ID " << std::hex << fGuiEvent->fWindow << std::endl;
       TRecorderInactive::DumpRootEvent(fGuiEvent,0);
       // restore original formatting flags
-      cout.flags(org_flags);
+      std::cout.flags(org_flags);
    }
 
    // Stopps timer and waits for the appropriate window to be registered
@@ -831,8 +831,8 @@ Bool_t TRecorderReplaying::CanOverlap()
 
 
    if (gDebug > 0) {
-      cout << "Event overlapping " <<
-              kRecEventNames[((TRecGuiEvent*)fNextEvent)->fType] << endl;
+      std::cout << "Event overlapping " <<
+              kRecEventNames[((TRecGuiEvent*)fNextEvent)->fType] << std::endl;
       TRecorderInactive::DumpRootEvent(((TRecGuiEvent*)fNextEvent), 0);
    }
 
@@ -1048,11 +1048,11 @@ void TRecorderInactive::ListCmd(const char *filename)
    Int_t entries = t1->GetEntries();
    for (Int_t i = 0; i < entries; ++i) {
       t1->GetEntry(i);
-      cout << "[" << i << "] " << "fTime=" <<
+      std::cout << "[" << i << "] " << "fTime=" <<
              (ULong64_t) fCmdEvent->GetTime() << " fText=" <<
-             fCmdEvent->GetText() << endl;
+             fCmdEvent->GetText() << std::endl;
    }
-   cout << endl;
+   std::cout << std::endl;
 
    delete fCmdEvent;
    delete file;
@@ -1105,10 +1105,10 @@ void TRecorderInactive::DumpRootEvent(TRecGuiEvent *e, Int_t n)
    // Prints out attributes of one GUI event TRecGuiEvent *e
    // Int_n n is number of event if called in cycle
 
-   cout << "[" << n << "] " << dec <<  setw(10)
-      << e->GetTime().AsString() << setw(15) << kRecEventNames[e->fType]
-      << " fW:"   << hex << e->fWindow
-      << " t:"    << dec << e->fTime
+   std::cout << "[" << n << "] " << std::dec <<  std::setw(10)
+      << e->GetTime().AsString() << std::setw(15) << kRecEventNames[e->fType]
+      << " fW:"   << std::hex << e->fWindow
+      << " t:"    << std::dec << e->fTime
       << " x:"    << DisplayValid(e->fX)
       << " y:"    << DisplayValid(e->fY)
       << " fXR:"  << DisplayValid(e->fXRoot)
@@ -1125,12 +1125,12 @@ void TRecorderInactive::DumpRootEvent(TRecGuiEvent *e, Int_t n)
 
    for (Int_t i=0; i<5; ++i)
       if (DisplayValid(e->fUser[i]) != -1)
-         cout << "[" << i << "]=" << DisplayValid(e->fUser[i]);
+         std::cout << "[" << i << "]=" << DisplayValid(e->fUser[i]);
 
    if (e->fMasked)
-      cout << " | fM:" << hex << e->fMasked;
+      std::cout << " | fM:" << std::hex << e->fMasked;
 
-   cout << endl;
+   std::cout << std::endl;
 }
 
 //______________________________________________________________________________
@@ -1325,7 +1325,7 @@ Bool_t TRecorderRecording::StartRecording()
          twin2 = (Window_t) twin->GetId();
          if (IsFiltered(twin2)) {
             if (gDebug > 0) {
-               cout << "WindowID "<< twin2 << " filtered" << endl;
+               std::cout << "WindowID "<< twin2 << " filtered" << std::endl;
             }
          }
          else if (twin != gClient->GetRoot()) {

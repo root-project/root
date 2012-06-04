@@ -841,14 +841,14 @@ void TGFileContainer::StartRefreshTimer(ULong_t msec)
 }
 
 //______________________________________________________________________________
-void TGFileContainer::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGFileContainer::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a file container widget as a C++ statement(s) on output stream out.
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    char quote = '"';
-   out << endl << "   // container frame" << endl;
+   out << std::endl << "   // container frame" << std::endl;
    out << "   TGFileContainer *";
 
    if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class())) {
@@ -860,18 +860,18 @@ void TGFileContainer::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (GetOptions() == kSunkenFrame) {
-         out <<");" << endl;
+         out <<");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
    out << "   " << GetCanvas()->GetName() << "->SetContainer("
-                << GetName() << ");" << endl;
-   out << "   " << GetName() << "->DisplayDirectory();" << endl;
-   out << "   " << GetName() << "->AddFile("<< quote << ".." << quote << ");" << endl;
-   out << "   " << GetName() << "->StopRefreshTimer();" << endl;
+                << GetName() << ");" << std::endl;
+   out << "   " << GetName() << "->DisplayDirectory();" << std::endl;
+   out << "   " << GetName() << "->AddFile("<< quote << ".." << quote << ");" << std::endl;
+   out << "   " << GetName() << "->StopRefreshTimer();" << std::endl;
 }

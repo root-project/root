@@ -181,6 +181,6 @@ public:
    ClassDef(TEveTrans, 1); // Column-major 4x4 transforamtion matrix for homogeneous coordinates.
 };
 
-ostream& operator<<(ostream& s, const TEveTrans& t);
+std::ostream& operator<<(std::ostream& s, const TEveTrans& t);
 
 #endif

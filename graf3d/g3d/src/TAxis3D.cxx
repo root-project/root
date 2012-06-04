@@ -475,7 +475,7 @@ Double_t *TAxis3D::PixeltoXYZ(Double_t px, Double_t py, Double_t *point3D, TView
 
 
 //______________________________________________________________________________
-void TAxis3D::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TAxis3D::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

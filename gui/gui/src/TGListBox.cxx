@@ -1648,13 +1648,13 @@ TGLBEntry *TGListBox::FindEntry(const char *name) const
 }
 
 //______________________________________________________________________________
-void TGListBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGListBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save a list box widget as a C++ statement(s) on output stream out.
 
    if (fBackground != GetWhitePixel()) SaveUserColor(out, option);
 
-   out << endl << "   // list box" << endl;
+   out << std::endl << "   // list box" << std::endl;
 
    out<<"   TGListBox *";
    out << GetName() << " = new TGListBox(" << fParent->GetName();
@@ -1662,18 +1662,18 @@ void TGListBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    if (fBackground == GetWhitePixel()) {
       if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
          if (fWidgetId == -1) {
-            out <<");" << endl;
+            out <<");" << std::endl;
          } else {
-            out << "," << fWidgetId << ");" << endl;
+            out << "," << fWidgetId << ");" << std::endl;
          }
       } else {
-         out << "," << fWidgetId << "," << GetOptionString() <<");" << endl;
+         out << "," << fWidgetId << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << fWidgetId << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << fWidgetId << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    if (!fLbc->GetList()) return;
 
@@ -1683,14 +1683,14 @@ void TGListBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    while ((el = (TGFrameElement *) next())) {
       out << "   " << GetName() << "->AddEntry(";
       el->fFrame->SavePrimitive(out, option);
-      out << ");"<< endl;
+      out << ");"<< std::endl;
    }
    out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight()
-       << ");" << endl;
+       << ");" << std::endl;
 }
 
 //______________________________________________________________________________
-void TGTextLBEntry::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGTextLBEntry::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save a list box entry widget as a C++ statement(s) on output stream out.
 

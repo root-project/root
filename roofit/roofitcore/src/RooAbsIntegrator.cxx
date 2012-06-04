@@ -33,6 +33,8 @@
 #include "RooMsgService.h"
 #include "TClass.h"
 
+using namespace std;
+
 ClassImp(RooAbsIntegrator)
 ;
 

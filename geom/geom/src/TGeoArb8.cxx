@@ -1092,29 +1092,29 @@ Double_t TGeoArb8::SafetyToFace(Double_t *point, Int_t iseg, Bool_t in) const
 }
    
 //_____________________________________________________________________________
-void TGeoArb8::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoArb8::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   dz       = " << fDz << ";" << endl;
-   out << "   vert[0]  = " << fXY[0][0] << ";" << endl;
-   out << "   vert[1]  = " << fXY[0][1] << ";" << endl;
-   out << "   vert[2]  = " << fXY[1][0] << ";" << endl;
-   out << "   vert[3]  = " << fXY[1][1] << ";" << endl;
-   out << "   vert[4]  = " << fXY[2][0] << ";" << endl;
-   out << "   vert[5]  = " << fXY[2][1] << ";" << endl;
-   out << "   vert[6]  = " << fXY[3][0] << ";" << endl;
-   out << "   vert[7]  = " << fXY[3][1] << ";" << endl;
-   out << "   vert[8]  = " << fXY[4][0] << ";" << endl;
-   out << "   vert[9]  = " << fXY[4][1] << ";" << endl;
-   out << "   vert[10] = " << fXY[5][0] << ";" << endl;
-   out << "   vert[11] = " << fXY[5][1] << ";" << endl;
-   out << "   vert[12] = " << fXY[6][0] << ";" << endl;
-   out << "   vert[13] = " << fXY[6][1] << ";" << endl;
-   out << "   vert[14] = " << fXY[7][0] << ";" << endl;
-   out << "   vert[15] = " << fXY[7][1] << ";" << endl;
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoArb8(\"" << GetName() << "\", dz,vert);" << endl;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   dz       = " << fDz << ";" << std::endl;
+   out << "   vert[0]  = " << fXY[0][0] << ";" << std::endl;
+   out << "   vert[1]  = " << fXY[0][1] << ";" << std::endl;
+   out << "   vert[2]  = " << fXY[1][0] << ";" << std::endl;
+   out << "   vert[3]  = " << fXY[1][1] << ";" << std::endl;
+   out << "   vert[4]  = " << fXY[2][0] << ";" << std::endl;
+   out << "   vert[5]  = " << fXY[2][1] << ";" << std::endl;
+   out << "   vert[6]  = " << fXY[3][0] << ";" << std::endl;
+   out << "   vert[7]  = " << fXY[3][1] << ";" << std::endl;
+   out << "   vert[8]  = " << fXY[4][0] << ";" << std::endl;
+   out << "   vert[9]  = " << fXY[4][1] << ";" << std::endl;
+   out << "   vert[10] = " << fXY[5][0] << ";" << std::endl;
+   out << "   vert[11] = " << fXY[5][1] << ";" << std::endl;
+   out << "   vert[12] = " << fXY[6][0] << ";" << std::endl;
+   out << "   vert[13] = " << fXY[6][1] << ";" << std::endl;
+   out << "   vert[14] = " << fXY[7][0] << ";" << std::endl;
+   out << "   vert[15] = " << fXY[7][1] << ";" << std::endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoArb8(\"" << GetName() << "\", dz,vert);" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
@@ -1623,23 +1623,23 @@ Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoTrap::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoTrap::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   dz     = " << fDz << ";" << endl;
-   out << "   theta  = " << fTheta << ";" << endl;
-   out << "   phi    = " << fPhi << ";" << endl;
-   out << "   h1     = " << fH1<< ";" << endl;
-   out << "   bl1    = " << fBl1<< ";" << endl;
-   out << "   tl1    = " << fTl1<< ";" << endl;
-   out << "   alpha1 = " << fAlpha1 << ";" << endl;
-   out << "   h2     = " << fH2 << ";" << endl;
-   out << "   bl2    = " << fBl2<< ";" << endl;
-   out << "   tl2    = " << fTl2<< ";" << endl;
-   out << "   alpha2 = " << fAlpha2 << ";" << endl;
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTrap(\"" << GetName() << "\", dz,theta,phi,h1,bl1,tl1,alpha1,h2,bl2,tl2,alpha2);" << endl;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   dz     = " << fDz << ";" << std::endl;
+   out << "   theta  = " << fTheta << ";" << std::endl;
+   out << "   phi    = " << fPhi << ";" << std::endl;
+   out << "   h1     = " << fH1<< ";" << std::endl;
+   out << "   bl1    = " << fBl1<< ";" << std::endl;
+   out << "   tl1    = " << fTl1<< ";" << std::endl;
+   out << "   alpha1 = " << fAlpha1 << ";" << std::endl;
+   out << "   h2     = " << fH2 << ";" << std::endl;
+   out << "   bl2    = " << fBl2<< ";" << std::endl;
+   out << "   tl2    = " << fTl2<< ";" << std::endl;
+   out << "   alpha2 = " << fAlpha2 << ";" << std::endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTrap(\"" << GetName() << "\", dz,theta,phi,h1,bl1,tl1,alpha1,h2,bl2,tl2,alpha2);" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
@@ -1857,24 +1857,24 @@ Double_t TGeoGtra::Safety(Double_t *point, Bool_t in) const
 }   
 
 //_____________________________________________________________________________
-void TGeoGtra::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoGtra::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;  
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   dz     = " << fDz << ";" << endl;
-   out << "   theta  = " << fTheta << ";" << endl;
-   out << "   phi    = " << fPhi << ";" << endl;
-   out << "   twist  = " << fTwistAngle << ";" << endl;
-   out << "   h1     = " << fH1<< ";" << endl;
-   out << "   bl1    = " << fBl1<< ";" << endl;
-   out << "   tl1    = " << fTl1<< ";" << endl;
-   out << "   alpha1 = " << fAlpha1 << ";" << endl;
-   out << "   h2     = " << fH2 << ";" << endl;
-   out << "   bl2    = " << fBl2<< ";" << endl;
-   out << "   tl2    = " << fTl2<< ";" << endl;
-   out << "   alpha2 = " << fAlpha2 << ";" << endl;
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoGtra(\"" << GetName() << "\", dz,theta,phi,twist,h1,bl1,tl1,alpha1,h2,bl2,tl2,alpha2);" << endl;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   dz     = " << fDz << ";" << std::endl;
+   out << "   theta  = " << fTheta << ";" << std::endl;
+   out << "   phi    = " << fPhi << ";" << std::endl;
+   out << "   twist  = " << fTwistAngle << ";" << std::endl;
+   out << "   h1     = " << fH1<< ";" << std::endl;
+   out << "   bl1    = " << fBl1<< ";" << std::endl;
+   out << "   tl1    = " << fTl1<< ";" << std::endl;
+   out << "   alpha1 = " << fAlpha1 << ";" << std::endl;
+   out << "   h2     = " << fH2 << ";" << std::endl;
+   out << "   bl2    = " << fBl2<< ";" << std::endl;
+   out << "   tl2    = " << fTl2<< ";" << std::endl;
+   out << "   alpha2 = " << fAlpha2 << ";" << std::endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoGtra(\"" << GetName() << "\", dz,theta,phi,twist,h1,bl1,tl1,alpha1,h2,bl2,tl2,alpha2);" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 

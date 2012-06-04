@@ -447,7 +447,7 @@ Bool_t TRootEmbeddedCanvas::HandleDNDLeave()
 }
 
 //______________________________________________________________________________
-void TRootEmbeddedCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TRootEmbeddedCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save an embedded canvas as a C++ statement(s) on output stream out.
 
@@ -457,25 +457,25 @@ void TRootEmbeddedCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    char quote ='"';
 
-   out << endl << "   // embedded canvas" << endl;
+   out << std::endl << "   // embedded canvas" << std::endl;
    out << "   TRootEmbeddedCanvas *";
    out << GetName() << " = new TRootEmbeddedCanvas(0" << "," << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-         out <<");" << endl;
+         out <<");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    out << "   Int_t w" << GetName() << " = " << GetName()
-       << "->GetCanvasWindowId();" << endl;
+       << "->GetCanvasWindowId();" << std::endl;
 
    static int n = 123;
    TString cname = TString::Format("c%d", n);
@@ -483,9 +483,9 @@ void TRootEmbeddedCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out << "   TCanvas *";
    out <<  cname << " = new TCanvas(";
    out << quote << cname.Data() << quote << ", 10, 10, w"
-       << GetName() << ");" << endl;
+       << GetName() << ");" << std::endl;
    out << "   " << GetName() << "->AdoptCanvas(" << cname
-       << ");" << endl;
+       << ");" << std::endl;
 
    n++;
    //Next line is a connection to TCanvas::SavePrimitives()

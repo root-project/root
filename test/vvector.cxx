@@ -68,9 +68,9 @@ Int_t gVerbose = 0;
 
 void stress_vector(Int_t verbose=0)
 {
-  cout << "******************************************************************" <<endl;
-  cout << "*  Starting  Vector - S T R E S S suite                          *" <<endl;
-  cout << "******************************************************************" <<endl;
+  std::cout << "******************************************************************" <<std::endl;
+  std::cout << "*  Starting  Vector - S T R E S S suite                          *" <<std::endl;
+  std::cout << "******************************************************************" <<std::endl;
 
   gVerbose = verbose;
   stress_allocation();
@@ -80,7 +80,7 @@ void stress_vector(Int_t verbose=0)
   stress_matrix_slices(20);
   stress_vector_io();
 
-  cout << "******************************************************************" <<endl;
+  std::cout << "******************************************************************" <<std::endl;
 }
 
 void StatusPrint(Int_t id,const Char_t *title,Bool_t status)
@@ -90,7 +90,7 @@ void StatusPrint(Int_t id,const Char_t *title,Bool_t status)
 //   TString header = TString("Test ")+Form("%2d",id)+" : "+title;
 //   const Int_t nch = header.Length();
 //   for (Int_t i = nch; i < kMAX; i++) header += '.';
-//   cout << header << (status ? "OK" : "FAILED") << endl;
+//   std::cout << header << (status ? "OK" : "FAILED") << std::endl;
   // Print test program number and its title
    const Int_t kMAX = 65;
    char header[80];
@@ -99,7 +99,7 @@ void StatusPrint(Int_t id,const Char_t *title,Bool_t status)
    for (Int_t i=nch;i<kMAX;i++) header[i] = '.';
    header[kMAX] = 0;
    header[kMAX-1] = ' ';
-   cout << header << (status ? "OK" : "FAILED") << endl;
+   std::cout << header << (status ? "OK" : "FAILED") << std::endl;
 }
 
 //------------------------------------------------------------------------
@@ -109,7 +109,7 @@ void StatusPrint(Int_t id,const Char_t *title,Bool_t status)
 void stress_allocation()
 {
   if (gVerbose)
-    cout << "\n\n---> Test allocation and compatibility check" << endl;
+    std::cout << "\n\n---> Test allocation and compatibility check" << std::endl;
 
   Bool_t ok = kTRUE;
   TVectorD v1(20);
@@ -118,34 +118,34 @@ void stress_allocation()
   TVectorD v4(v1);
 
   if (gVerbose) {
-    cout << "\nStatus information reported for vector v3:" << endl;
-    cout << "  Lower bound ... " << v3.GetLwb() << endl;
-    cout << "  Upper bound ... " << v3.GetUpb() << endl;
-    cout << "  No. of elements " << v3.GetNoElements() << endl;
+    std::cout << "\nStatus information reported for vector v3:" << std::endl;
+    std::cout << "  Lower bound ... " << v3.GetLwb() << std::endl;
+    std::cout << "  Upper bound ... " << v3.GetUpb() << std::endl;
+    std::cout << "  No. of elements " << v3.GetNoElements() << std::endl;
   }
 
   if (gVerbose)
-    cout << "\nCheck vectors 1 & 2 for compatibility" << endl;
+    std::cout << "\nCheck vectors 1 & 2 for compatibility" << std::endl;
   ok &= AreCompatible(v1,v2,gVerbose);
 
   if (gVerbose)
-    cout << "Check vectors 1 & 4 for compatibility" << endl;
+    std::cout << "Check vectors 1 & 4 for compatibility" << std::endl;
   ok &= AreCompatible(v1,v4,gVerbose);
 
   if (gVerbose)
-    cout << "v2 has to be compatible with v3 after resizing to v3" << endl;
+    std::cout << "v2 has to be compatible with v3 after resizing to v3" << std::endl;
   v2.ResizeTo(v3);
   ok &= AreCompatible(v2,v3,gVerbose);
 
   TVectorD v5(v1.GetUpb()+5);
   if (gVerbose)
-    cout << "v1 has to be compatible with v5 after resizing to v5.upb" << endl;
+    std::cout << "v1 has to be compatible with v5 after resizing to v5.upb" << std::endl;
   v1.ResizeTo(v5.GetNoElements());
   ok &= AreCompatible(v1,v5,gVerbose);
 
   {
     if (gVerbose)
-      cout << "Check that shrinking does not change remaining elements" << endl;
+      std::cout << "Check that shrinking does not change remaining elements" << std::endl;
     TVectorD vb(-1,20);
     Int_t i;
     for (i = vb.GetLwb(); i <= vb.GetUpb(); i++)
@@ -157,7 +157,7 @@ void stress_allocation()
     for (i = v.GetLwb(); i <= v.GetUpb(); i++)
       ok &= ( v(i) == vb(i) ) ? kTRUE : kFALSE;
     if (gVerbose)
-      cout << "Check that expansion expands by zeros" << endl;
+      std::cout << "Check that expansion expands by zeros" << std::endl;
     const Int_t old_nelems = v.GetNoElements();
     const Int_t old_lwb    = v.GetLwb();
     v.ResizeTo(vb);
@@ -171,7 +171,7 @@ void stress_allocation()
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
   StatusPrint(1,"Allocation, Filling, Resizing",ok);
 }
 
@@ -196,7 +196,7 @@ class CosAction : public TElementPosActionD {
 void stress_element_op(Int_t vsize)
 {
   if (gVerbose)
-    cout << "\n---> Test operations that treat each element uniformly" << endl;
+    std::cout << "\n---> Test operations that treat each element uniformly" << std::endl;
 
   Bool_t ok = kTRUE;
   const double pattern = TMath::Pi();
@@ -205,22 +205,22 @@ void stress_element_op(Int_t vsize)
   TVectorD v1(v);
 
   if (gVerbose)
-    cout << "\nWriting zeros to v..." << endl;
+    std::cout << "\nWriting zeros to v..." << std::endl;
   for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++)
     v(i) = 0;
   ok &= VerifyVectorValue(v,0.0,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "Clearing v1 ..." << endl;
+    std::cout << "Clearing v1 ..." << std::endl;
   v1.Zero();
   ok &= VerifyVectorValue(v1,0.0,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "Comparing v1 with 0 ..." << endl;
+    std::cout << "Comparing v1 with 0 ..." << std::endl;
   ok &= (v1 == 0) ? kTRUE : kFALSE;
 
   if (gVerbose)
-    cout << "Writing a pattern " << pattern << " by assigning to v(i)..." << endl;
+    std::cout << "Writing a pattern " << pattern << " by assigning to v(i)..." << std::endl;
   {
     for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++)
       v(i) = pattern;
@@ -228,33 +228,33 @@ void stress_element_op(Int_t vsize)
   }
 
   if (gVerbose)
-    cout << "Writing the pattern by assigning to v1 as a whole ..." << endl;
+    std::cout << "Writing the pattern by assigning to v1 as a whole ..." << std::endl;
   v1 = pattern;
   ok &= VerifyVectorValue(v1,pattern,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "Comparing v and v1 ..." << endl;
+    std::cout << "Comparing v and v1 ..." << std::endl;
   ok &= (v == v1) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "Comparing (v=0) and v1 ..." << endl;
+    std::cout << "Comparing (v=0) and v1 ..." << std::endl;
   ok &= (!(v.Zero() == v1)) ? kTRUE : kFALSE;
 
   if (gVerbose)
-    cout << "\nClear v and add the pattern" << endl;
+    std::cout << "\nClear v and add the pattern" << std::endl;
   v.Zero();
   v += pattern;
   ok &= VerifyVectorValue(v,pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "   add the doubled pattern with the negative sign" << endl;
+    std::cout << "   add the doubled pattern with the negative sign" << std::endl;
   v += -2*pattern;
   ok &= VerifyVectorValue(v,-pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "   subtract the trippled pattern with the negative sign" << endl;
+    std::cout << "   subtract the trippled pattern with the negative sign" << std::endl;
   v -= -3*pattern;
   ok &= VerifyVectorValue(v,2*pattern,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nVerify comparison operations" << endl;
+    std::cout << "\nVerify comparison operations" << std::endl;
   v = pattern;
   ok &= ( v == pattern && !(v != pattern) && v >= pattern && v <= pattern ) ? kTRUE : kFALSE;
   ok &= ( v > 0 && v >= 0 ) ? kTRUE : kFALSE;
@@ -266,25 +266,25 @@ void stress_element_op(Int_t vsize)
   ok &= ( v <= pattern+1.001 && !(v < pattern+1) && !(v <= pattern) ) ? kTRUE : kFALSE;
 
   if (gVerbose)
-    cout << "\nAssign 2*pattern to v by repeating additions" << endl;
+    std::cout << "\nAssign 2*pattern to v by repeating additions" << std::endl;
   v = 0; v += pattern; v += pattern;
   if (gVerbose)
-    cout << "Assign 2*pattern to v1 by multiplying by two" << endl;
+    std::cout << "Assign 2*pattern to v1 by multiplying by two" << std::endl;
   v1 = pattern; v1 *= 2;
   ok &= VerifyVectorValue(v1,2*pattern,gVerbose,EPSILON);
   ok &= ( v == v1 ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "Multiply v1 by one half returning it to the 1*pattern" << endl;
+    std::cout << "Multiply v1 by one half returning it to the 1*pattern" << std::endl;
   v1 *= 1/2.;
   ok &= VerifyVectorValue(v1,pattern,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nAssign -pattern to v and v1" << endl;
+    std::cout << "\nAssign -pattern to v and v1" << std::endl;
   v.Zero(); v -= pattern; v1 = -pattern;
   ok &= VerifyVectorValue(v,-pattern,gVerbose,EPSILON);
   ok &= ( v == v1 ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "v = sqrt(sqr(v)); v1 = abs(v1); Now v and v1 have to be the same" << endl;
+    std::cout << "v = sqrt(sqr(v)); v1 = abs(v1); Now v and v1 have to be the same" << std::endl;
   v.Sqr();
   ok &= VerifyVectorValue(v,pattern*pattern,gVerbose,EPSILON);
   v.Sqrt();
@@ -295,7 +295,7 @@ void stress_element_op(Int_t vsize)
 
   {
     if (gVerbose)
-      cout << "\nCheck out to see that sin^2(x) + cos^2(x) = 1" << endl;
+      std::cout << "\nCheck out to see that sin^2(x) + cos^2(x) = 1" << std::endl;
     for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++)
       v(i) = 2*TMath::Pi()/v.GetNoElements()*i;
 #ifndef __CINT__
@@ -318,7 +318,7 @@ void stress_element_op(Int_t vsize)
   }
 
   if (gVerbose)
-    cout << "\nVerify constructor with initialization" << endl;
+    std::cout << "\nVerify constructor with initialization" << std::endl;
 #ifndef __CINT__
   TVectorD vi(0,4,0.0,1.0,2.0,3.0,4.0,"END");
 #else
@@ -333,7 +333,7 @@ void stress_element_op(Int_t vsize)
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
   StatusPrint(2,"Uniform vector operations",ok);
 }
 
@@ -344,7 +344,7 @@ void stress_element_op(Int_t vsize)
 void stress_binary_op(Int_t vsize)
 {
   if (gVerbose)
-    cout << "\n---> Test Binary Vector operations" << endl;
+    std::cout << "\n---> Test Binary Vector operations" << std::endl;
 
   Bool_t ok = kTRUE;
   const double pattern = TMath::Pi();
@@ -355,7 +355,7 @@ void stress_binary_op(Int_t vsize)
   TVectorD v1(v);
 
   if (gVerbose)
-    cout << "\nVerify assignment of a vector to the vector" << endl;
+    std::cout << "\nVerify assignment of a vector to the vector" << std::endl;
   v = pattern;
   v1.Zero();
   v1 = v;
@@ -363,20 +363,20 @@ void stress_binary_op(Int_t vsize)
   ok &= ( v1 == v ) ? kTRUE : kFALSE;
 
   if (gVerbose)
-    cout << "\nAdding one vector to itself, uniform pattern " << pattern << endl;
+    std::cout << "\nAdding one vector to itself, uniform pattern " << pattern << std::endl;
   v.Zero(); v = pattern;
   v1 = v; v1 += v1;
   ok &= VerifyVectorValue(v1,2*pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "  subtracting two vectors ..." << endl;
+    std::cout << "  subtracting two vectors ..." << std::endl;
   v1 -= v;
   ok &= VerifyVectorValue(v1,pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "  subtracting the vector from itself" << endl;
+    std::cout << "  subtracting the vector from itself" << std::endl;
   v1 -= v1;
   ok &= VerifyVectorValue(v1,0.,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "  adding two vectors together" << endl;
+    std::cout << "  adding two vectors together" << std::endl;
   v1 += v;
   ok &= VerifyVectorValue(v1,pattern,gVerbose,EPSILON);
 
@@ -387,8 +387,8 @@ void stress_binary_op(Int_t vsize)
   }
 
   if (gVerbose) {
-    cout << "\nArithmetic operations on vectors with not the same elements" << endl;
-    cout << "   adding vp to the zero vector..." << endl;
+    std::cout << "\nArithmetic operations on vectors with not the same elements" << std::endl;
+    std::cout << "   adding vp to the zero vector..." << std::endl;
   }
   v.Zero();
   ok &= ( v == 0.0 ) ? kTRUE : kFALSE;
@@ -397,26 +397,26 @@ void stress_binary_op(Int_t vsize)
 //  ok &= ( v == vp ) ? kTRUE : kFALSE;
   v1 = v;
   if (gVerbose)
-    cout << "   making v = 3*vp and v1 = 3*vp, via add() and succesive mult" << endl;
+    std::cout << "   making v = 3*vp and v1 = 3*vp, via add() and succesive mult" << std::endl;
   Add(v,2.,vp);
   v1 += v1; v1 += vp;
   ok &= VerifyVectorIdentity(v,v1,gVerbose,epsilon);
   if (gVerbose)
-    cout << "   clear both v and v1, by subtracting from itself and via add()" << endl;
+    std::cout << "   clear both v and v1, by subtracting from itself and via add()" << std::endl;
   v1 -= v1;
   Add(v,-3.,vp);
   ok &= VerifyVectorIdentity(v,v1,gVerbose,epsilon);
 
   if (gVerbose) {
-    cout << "\nTesting element-by-element multiplications and divisions" << endl;
-    cout << "   squaring each element with sqr() and via multiplication" << endl;
+    std::cout << "\nTesting element-by-element multiplications and divisions" << std::endl;
+    std::cout << "   squaring each element with sqr() and via multiplication" << std::endl;
   }
   v = vp; v1 = vp;
   v.Sqr();
   ElementMult(v1,v1);
   ok &= VerifyVectorIdentity(v,v1,gVerbose,epsilon);
   if (gVerbose)
-    cout << "   compare (v = pattern^2)/pattern with pattern" << endl;
+    std::cout << "   compare (v = pattern^2)/pattern with pattern" << std::endl;
   v = pattern; v1 = pattern;
   v.Sqr();
   ElementDiv(v,v1);
@@ -425,7 +425,7 @@ void stress_binary_op(Int_t vsize)
    Compare(v1,v);
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
   StatusPrint(3,"Binary vector element-by-element operations",ok);
 }
 
@@ -436,7 +436,7 @@ void stress_binary_op(Int_t vsize)
 void stress_norms(Int_t vsize)
 {
   if (gVerbose)
-    cout << "\n---> Verify norm calculations" << endl;
+    std::cout << "\n---> Verify norm calculations" << std::endl;
 
   Bool_t ok = kTRUE;
   const double pattern = 10.25;
@@ -448,27 +448,27 @@ void stress_norms(Int_t vsize)
   TVectorD v1(v);
 
   if (gVerbose)
-    cout << "\nAssign " << pattern << " to all the elements and check norms" << endl;
+    std::cout << "\nAssign " << pattern << " to all the elements and check norms" << std::endl;
   v = pattern;
   if (gVerbose)
-    cout << "  1. norm should be pattern*no_elems" << endl;
+    std::cout << "  1. norm should be pattern*no_elems" << std::endl;
   ok &= ( v.Norm1() == pattern*v.GetNoElements() ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "  Square of the 2. norm has got to be pattern^2 * no_elems" << endl;
+    std::cout << "  Square of the 2. norm has got to be pattern^2 * no_elems" << std::endl;
   ok &= ( v.Norm2Sqr() == (pattern*pattern)*v.GetNoElements() ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "  Inf norm should be pattern itself" << endl;
+    std::cout << "  Inf norm should be pattern itself" << std::endl;
   ok &= ( v.NormInf() == pattern ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "  Scalar product of vector by itself is the sqr(2. vector norm)" << endl;
+    std::cout << "  Scalar product of vector by itself is the sqr(2. vector norm)" << std::endl;
   ok &= ( v.Norm2Sqr() == v*v ) ? kTRUE : kFALSE;
 
   Double_t ap_step = 1;
   Double_t ap_a0   = -pattern;
   Int_t n = v.GetNoElements();
   if (gVerbose) {
-    cout << "\nAssign the arithm progression with 1. term " << ap_a0 <<
-            "\nand the difference " << ap_step << endl;
+    std::cout << "\nAssign the arithm progression with 1. term " << ap_a0 <<
+            "\nand the difference " << ap_step << std::endl;
   }
   {
     for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++)
@@ -478,21 +478,21 @@ void stress_norms(Int_t vsize)
   Double_t norm = (2*ap_a0+(l+n-1)*ap_step)/2*(n-l) +
                   (-2*ap_a0-(l-1)*ap_step)/2*l;
   if (gVerbose)
-    cout << "  1. norm should be " << norm << endl;
+    std::cout << "  1. norm should be " << norm << std::endl;
   ok &= ( v.Norm1() == norm ) ? kTRUE : kFALSE;
   norm = n*( (ap_a0*ap_a0)+ap_a0*ap_step*(n-1)+(ap_step*ap_step)*(n-1)*(2*n-1)/6);
   if (gVerbose) {
-    cout << "  Square of the 2. norm has got to be "
-            "n*[ a0^2 + a0*q*(n-1) + q^2/6*(n-1)*(2n-1) ], or " << norm << endl;
+    std::cout << "  Square of the 2. norm has got to be "
+            "n*[ a0^2 + a0*q*(n-1) + q^2/6*(n-1)*(2n-1) ], or " << norm << std::endl;
   }
   ok &= ( TMath::Abs( (v.Norm2Sqr()-norm)/norm ) < 1e-15 ) ? kTRUE : kFALSE;
 
   norm = TMath::Max(TMath::Abs(v(v.GetLwb())),TMath::Abs(v(v.GetUpb())));
   if (gVerbose)
-    cout << "  Inf norm should be max(abs(a0),abs(a0+(n-1)*q)), ie " << norm << endl;
+    std::cout << "  Inf norm should be max(abs(a0),abs(a0+(n-1)*q)), ie " << norm << std::endl;
   ok &= ( v.NormInf() == norm ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "  Scalar product of vector by itself is the sqr(2. vector norm)" << endl;
+    std::cout << "  Scalar product of vector by itself is the sqr(2. vector norm)" << std::endl;
   ok &= ( v.Norm2Sqr() == v*v ) ? kTRUE : kFALSE;
 
 #if 0
@@ -501,22 +501,22 @@ void stress_norms(Int_t vsize)
 #endif
 
   if (gVerbose)
-    cout << "\nConstruct v1 to be orthogonal to v as v(n), -v(n-1), v(n-2)..." << endl;
+    std::cout << "\nConstruct v1 to be orthogonal to v as v(n), -v(n-1), v(n-2)..." << std::endl;
   {
     for (Int_t i = 0; i < v1.GetNoElements(); i++)
       v1(i+v1.GetLwb()) = v(v.GetUpb()-i) * ( i % 2 == 1 ? -1 : 1 );
   }
   if (gVerbose)
-    cout << "||v1|| has got to be equal ||v|| regardless of the norm def" << endl;
+    std::cout << "||v1|| has got to be equal ||v|| regardless of the norm def" << std::endl;
   ok &= ( v1.Norm1()    == v.Norm1() ) ? kTRUE : kFALSE;
   ok &= ( v1.Norm2Sqr() == v.Norm2Sqr() ) ? kTRUE : kFALSE;
   ok &= ( v1.NormInf()  == v.NormInf() ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "But the scalar product has to be zero" << endl;
+    std::cout << "But the scalar product has to be zero" << std::endl;
   ok &= ( v1 * v == 0 ) ? kTRUE : kFALSE;
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
   StatusPrint(4,"Vector Norms",ok);
 }
 
@@ -527,7 +527,7 @@ void stress_norms(Int_t vsize)
 void stress_matrix_slices(Int_t vsize)
 {
   if (gVerbose)
-    cout << "\n---> Test operations with vectors and matrix slices" << endl;
+    std::cout << "\n---> Test operations with vectors and matrix slices" << std::endl;
 
   Bool_t ok = kTRUE;
   const Double_t pattern = 8.625;
@@ -538,7 +538,7 @@ void stress_matrix_slices(Int_t vsize)
 
   Int_t i,j;
   if (gVerbose)
-    cout << "\nCheck modifying the matrix column-by-column" << endl;
+    std::cout << "\nCheck modifying the matrix column-by-column" << std::endl;
   m = pattern;
   ok &= ( m == pattern ) ? kTRUE : kFALSE;
   for (i = m.GetColLwb(); i <= m.GetColUpb(); i++) {
@@ -574,7 +574,7 @@ void stress_matrix_slices(Int_t vsize)
   }
 
   if (gVerbose)
-    cout << "\nCheck modifying the matrix row-by-row" << endl;
+    std::cout << "\nCheck modifying the matrix row-by-row" << std::endl;
   m = pattern;
   ok &= ( m == pattern ) ? kTRUE : kFALSE;
   for (i = m.GetRowLwb(); i <= m.GetRowUpb(); i++) {
@@ -608,7 +608,7 @@ void stress_matrix_slices(Int_t vsize)
   }
 
   if (gVerbose)
-    cout << "\nCheck modifying the matrix diagonal" << endl;
+    std::cout << "\nCheck modifying the matrix diagonal" << std::endl;
   m = pattern;
   TMatrixDDiag td = m;
   td = pattern-3;
@@ -634,8 +634,8 @@ void stress_matrix_slices(Int_t vsize)
   ok &= ( m == pattern ) ? kTRUE : kFALSE;
 
   if (gVerbose) {
-    cout << "\nCheck out to see that multiplying by diagonal is column-wise"
-            "\nmatrix multiplication" << endl;
+    std::cout << "\nCheck out to see that multiplying by diagonal is column-wise"
+            "\nmatrix multiplication" << std::endl;
   }
   TMatrixD mm(m);
   TMatrixD m1(m.GetRowLwb(),TMath::Max(m.GetRowUpb(),m.GetColUpb()),
@@ -661,7 +661,7 @@ void stress_matrix_slices(Int_t vsize)
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
   StatusPrint(5,"Matrix Slices to Vectors",ok);
 }
 
@@ -672,7 +672,7 @@ void stress_matrix_slices(Int_t vsize)
 void stress_vector_io()
 {
   if (gVerbose)
-    cout << "\n---> Test vector I/O" << endl;
+    std::cout << "\n---> Test vector I/O" << std::endl;
 
   Bool_t ok = kTRUE;
   const double pattern = TMath::Pi();
@@ -681,29 +681,29 @@ void stress_vector_io()
   v = pattern;
 
   if (gVerbose)
-    cout << "\nWrite vector v to database" << endl;
+    std::cout << "\nWrite vector v to database" << std::endl;
 
   TFile *f = new TFile("vvector.root","RECREATE");
 
   v.Write("v");
 
   if (gVerbose)
-    cout << "\nClose database" << endl;
+    std::cout << "\nClose database" << std::endl;
   delete f;
 
   if (gVerbose)
-    cout << "\nOpen database in read-only mode and read vector" << endl;
+    std::cout << "\nOpen database in read-only mode and read vector" << std::endl;
   TFile *f1 = new TFile("vvector.root");
 
   TVectorD *vr = (TVectorD*) f1->Get("v");
 
   if (gVerbose)
-    cout << "\nRead vector should be same as original still in memory" << endl;
+    std::cout << "\nRead vector should be same as original still in memory" << std::endl;
   ok &= ((*vr) == v) ? kTRUE : kFALSE;
 
   delete f1;
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
   StatusPrint(6,"Vector Persistence",ok);
 }

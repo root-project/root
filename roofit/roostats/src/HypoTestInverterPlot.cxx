@@ -33,6 +33,8 @@
 #include "TPad.h"
 #include "Math/DistFuncMathCore.h"
 
+using namespace std;
+
 ClassImp(RooStats::HypoTestInverterPlot)
 
 using namespace RooStats;

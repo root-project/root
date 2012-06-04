@@ -49,6 +49,8 @@
 
 
 
+using namespace std;
+
 ClassImp(RooGenContext)
   ;
 

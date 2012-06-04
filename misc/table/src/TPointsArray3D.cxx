@@ -245,7 +245,7 @@ void TPointsArray3D::ls(Option_t *option) const
 //*-*                ==========================================
 
    TROOT::IndentLevel();
-   cout << IsA()->GetName() << " N=" <<fN<<" Option="<<option<<endl;
+   std::cout << IsA()->GetName() << " N=" <<fN<<" Option="<<option<<std::endl;
 
 }
 //______________________________________________________________________________
@@ -254,7 +254,7 @@ void TPointsArray3D::Print(Option_t *option) const
 //*-*-*-*-*-*-*-*-*-*Dump this 3-D polyline with its attributes*-*-*-*-*-*-*-*-*
 //*-*                ==========================================
 
-   cout <<"   " << IsA()->GetName() <<" Printing N=" <<fN<<" Option="<<option<<endl;
+   std::cout <<"   " << IsA()->GetName() <<" Printing N=" <<fN<<" Option="<<option<<std::endl;
 }
 //______________________________________________________________________________
 Int_t TPointsArray3D::SetLastPosition(Int_t idx)

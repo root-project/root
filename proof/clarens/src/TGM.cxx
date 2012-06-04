@@ -181,12 +181,12 @@ TGM::TFileParams::TFileParams(const Char_t *file, const Char_t *cl, const Char_t
 //______________________________________________________________________________
 void TGM::TFileParams::Print(Option_t *) const
 {
-   cout << IsA()->GetName()
+   std::cout << IsA()->GetName()
       << ":  '" << fFileName << "'"
       << "  " << fObjClass
       << " " << fObjName
       << " (" << fDir
       << ") [" << fFirst << ", " << fNum << "]"
-      << endl;
+      << std::endl;
 }
 

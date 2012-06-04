@@ -66,7 +66,7 @@ public:
    Double_t       *GetEX() const {return fEX;}
    Double_t       *GetEY() const {return fEY;}
    virtual void    Print(Option_t *chopt="") const;
-   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void    SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void    SetPointError(Double_t ex, Double_t ey);  // *MENU
    virtual void    SetPointError(Int_t i, Double_t ex, Double_t ey);
 

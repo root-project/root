@@ -118,10 +118,10 @@ void ROOT::TBranchProxy::Print()
 {
    // Display the content of the object
 
-   cout << "fBranchName " << fBranchName << endl;
-   //cout << "fTree " << fDirector->fTree << endl;
-   cout << "fBranch " << fBranch << endl;
-   if (fBranchCount) cout << "fBranchCount " << fBranchCount << endl;
+   std::cout << "fBranchName " << fBranchName << std::endl;
+   //std::cout << "fTree " << fDirector->fTree << std::endl;
+   std::cout << "fBranch " << fBranch << std::endl;
+   if (fBranchCount) std::cout << "fBranchCount " << fBranchCount << std::endl;
 }
 
 Bool_t ROOT::TBranchProxy::Setup()

@@ -295,7 +295,7 @@ void TMVA::Event::SetSpectator( UInt_t ivar, Float_t value )
 }
 
 //_______________________________________________________________________
-ostream& TMVA::operator << ( ostream& os, const TMVA::Event& event )
+std::ostream& TMVA::operator << ( std::ostream& os, const TMVA::Event& event )
 { 
    // Outputs the data of an event
    os << "Variables [" << event.fValues.size() << "]:";

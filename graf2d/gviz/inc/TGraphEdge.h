@@ -63,8 +63,8 @@ public:
    TGraphNode    *GetNode2() {return fNode2;}
    void           Layout();            
    virtual void   Paint(Option_t *option="");
-   virtual void   SavePrimitive(ostream &, Option_t *);
-   void           SaveAttributes(ostream &, const char*);                  
+   virtual void   SavePrimitive(std::ostream &, Option_t *);
+   void           SaveAttributes(std::ostream &, const char*);                  
 
 
    ClassDef(TGraphEdge,1)  //Graph edge class

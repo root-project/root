@@ -1345,11 +1345,11 @@ void TPDF::Open(const char *fname, Int_t wtype)
    }
 
    // Open OS file
-   fStream = new ofstream();
+   fStream = new std::ofstream();
 #ifdef R__WIN32
-      fStream->open(fname, ofstream::out | ofstream::binary);
+      fStream->open(fname, std::ofstream::out | std::ofstream::binary);
 #else
-      fStream->open(fname, ofstream::out);
+      fStream->open(fname, std::ofstream::out);
 #endif
    if (fStream == 0 || !fStream->good()) {
       printf("ERROR in TPDF::Open: Cannot open file:%s\n",fname);

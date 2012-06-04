@@ -56,7 +56,7 @@ unsigned char *B64Encode(xmlrpc_env *env,unsigned char *instring,int len)
     xmlrpc_mem_block *mem;
     mem=xmlrpc_base64_encode (env,instring,len);
     if (env->fault_occurred) {
-       cerr<<"XML-RPC Fault: "<<env->fault_string<<"("<< env->fault_code<<")"<<endl;
+       std::cerr<<"XML-RPC Fault: "<<env->fault_string<<"("<< env->fault_code<<")"<<std::endl;
        if (mem) xmlrpc_mem_block_free (mem);
        return 0;
     }
@@ -82,7 +82,7 @@ unsigned char *B64Decode(xmlrpc_env *env, unsigned char *instring,int *len)
     xmlrpc_mem_block *mem;
     mem=xmlrpc_base64_decode (env,(char *)instring,strlen((const char *)instring));
     if (env->fault_occurred) {
-       cerr<<"XML-RPC Fault: "<<env->fault_string<<"("<< env->fault_code<<")"<<endl;
+       std::cerr<<"XML-RPC Fault: "<<env->fault_string<<"("<< env->fault_code<<")"<<std::endl;
        if (mem) xmlrpc_mem_block_free (mem);
        return 0;
     }
@@ -273,7 +273,7 @@ Bool_t TClSession::InitAuthentication()
    TString line;
    Bool_t incert=kFALSE;
    fgUserCert = "";
-   ifstream fin(certFile);
+   std::ifstream fin(certFile);
    while (!fin.eof()) {
       line.ReadToDelim(fin,'\n');
 

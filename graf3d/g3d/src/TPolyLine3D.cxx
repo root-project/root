@@ -440,7 +440,7 @@ void TPolyLine3D::ls(Option_t *option) const
    // List this 3-D polyline.
 
    TROOT::IndentLevel();
-   cout <<"PolyLine3D  N=" <<fN<<" Option="<<option<<endl;
+   std::cout <<"PolyLine3D  N=" <<fN<<" Option="<<option<<std::endl;
 }
 
 
@@ -579,27 +579,27 @@ void TPolyLine3D::Print(Option_t *option) const
 
 
 //______________________________________________________________________________
-void TPolyLine3D::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TPolyLine3D::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream.
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TPolyLine3D::Class())) {
       out<<"   ";
    } else {
       out<<"   TPolyLine3D *";
    }
    Int_t size=Size();
-   out<<"pline3D = new TPolyLine3D("<<fN<<","<<quote<<fOption<<quote<<");"<<endl;
+   out<<"pline3D = new TPolyLine3D("<<fN<<","<<quote<<fOption<<quote<<");"<<std::endl;
 
    SaveLineAttributes(out,"pline3D",1,1,1);
 
    if (size > 0) {
       for (Int_t i=0;i<size;i++)
-         out<<"   pline3D->SetPoint("<<i<<","<<fP[3*i]<<","<<fP[3*i+1]<<","<<fP[3*i+2]<<");"<<endl;
+         out<<"   pline3D->SetPoint("<<i<<","<<fP[3*i]<<","<<fP[3*i+1]<<","<<fP[3*i+2]<<");"<<std::endl;
    }
-   out<<"   pline3D->Draw();"<<endl;
+   out<<"   pline3D->Draw();"<<std::endl;
 }
 
 

@@ -99,7 +99,7 @@ void TMemStatMng::Init()
    fDumpTree->GetUserInfo()->Add(fHbtids);
    fDumpTree->GetUserInfo()->Add(fFAddrsList);
    // save the system info to a tree header
-   string sSysInfo(gSystem->GetBuildNode());
+   std::string sSysInfo(gSystem->GetBuildNode());
    sSysInfo += " | ";
    sSysInfo += gSystem->GetBuildCompilerVersion();
    sSysInfo += " | ";
@@ -135,7 +135,7 @@ void TMemStatMng::Close()
    // TODO: This is a temporary solution until we find a properalgorithm for SaveData
    //fgInstance->fDumpFile->WriteObject(fgInstance->fFAddrsList, "FAddrsList");
 
-/*  ofstream f("mem_stat_debug.txt");
+/*  std::ofstream f("mem_stat_debug.txt");
   int *btids = fgInstance->fHbtids->GetArray();
    if( !btids )
       return;
@@ -157,7 +157,7 @@ void TMemStatMng::Close()
            TNamed *nm = (TNamed*)fgInstance->fFAddrsList->At(btids[j]);
            if( !nm )
                {
-                   f << "Bad ID" << endl;
+                   f << "Bad ID" << std::endl;
                    bStop = true;
                 }
            f << "-------> " << nm->GetTitle() << "\n";
@@ -385,7 +385,7 @@ Int_t TMemStatMng::generateBTID(UChar_t *CRCdigest, Int_t stackEntries,
       }
 
       // add new BT's CRC value
-      pair<CRCSet_t::iterator, bool> res = fBTChecksums.insert(CRCSet_t::value_type(CRCdigest, ret_val));
+      std::pair<CRCSet_t::iterator, bool> res = fBTChecksums.insert(CRCSet_t::value_type(CRCdigest, ret_val));
       if(!res.second)
          Error("AddPointer", "Can't added a new BTID to the container.");
 

@@ -172,7 +172,7 @@ TList* TSQLServer::GetTablesList(const char* wild)
    // TIter next(lst);
    // TObject* obj;
    // while (obj = next()) 
-   //   cout << "Table: " << obj->GetName() << endl; 
+   //   std::cout << "Table: " << obj->GetName() << std::endl; 
    // delete lst;
    
    TSQLResult* res = GetTables(fDB.Data(), wild);

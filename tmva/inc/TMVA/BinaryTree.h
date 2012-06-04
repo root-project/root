@@ -62,13 +62,13 @@ namespace TMVA {
    class BinaryTree;
    class MsgLogger;
 
-   ostream& operator<< ( ostream& os, const BinaryTree& tree );
-   istream& operator>> ( istream& istr,     BinaryTree& tree );
+   std::ostream& operator<< ( std::ostream& os, const BinaryTree& tree );
+   std::istream& operator>> ( std::istream& istr,     BinaryTree& tree );
    
    class BinaryTree {
       
-      friend ostream& operator<< ( ostream& os, const BinaryTree& tree );
-      friend istream& operator>> ( istream& istr,     BinaryTree& tree );
+      friend std::ostream& operator<< ( std::ostream& os, const BinaryTree& tree );
+      friend std::istream& operator>> ( std::istream& istr,     BinaryTree& tree );
       
    public:
       
@@ -104,8 +104,8 @@ namespace TMVA {
       Node* GetLeftDaughter ( Node* n);    
       Node* GetRightDaughter( Node* n);
 
-      virtual void Print( ostream& os ) const;
-      virtual void Read ( istream& istr, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
+      virtual void Print( std::ostream& os ) const;
+      virtual void Read ( std::istream& istr, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
       virtual void* AddXMLTo(void* parent) const;
       virtual void  ReadXML(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
 

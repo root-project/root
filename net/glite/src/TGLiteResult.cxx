@@ -49,8 +49,8 @@ void TGLiteResult::DumpResult()
 {
    // Dump result set.
 
-   cout << "BEGIN DUMP" << endl;
-   cout << "END DUMP" << endl;
+   std::cout << "BEGIN DUMP" << std::endl;
+   std::cout << "END DUMP" << std::endl;
 }
 
 //______________________________________________________________________________
@@ -201,18 +201,18 @@ void TGLiteResult::Print(Option_t * /*wildcard*/, Option_t *option) const
       for (Int_t count = 0; (map = dynamic_cast<TMap*>(next())); ++count) {
          TIter next2(map->GetTable());
          TPair *pair;
-         cout << "# " << setiosflags(ios::left) << setw(6) << count << " ------------------------------------------------------------" << endl;
+         std::cout << "# " << setiosflags(std::ios::left) << std::setw(6) << count << " ------------------------------------------------------------" << std::endl;
          while ((pair = dynamic_cast< TPair*>(next2()))) {
             TObjString * keyStr = dynamic_cast<TObjString*>(pair->Key());
             TObjString* valueStr = dynamic_cast<TObjString*>(pair->Value());
             if (keyStr && valueStr) {
-               cout
-               << setw(16) << keyStr->GetName()
+               std::cout
+               << std::setw(16) << keyStr->GetName()
                << valueStr->GetName()
-               << endl;
+               << std::endl;
             }
          }
-         cout << endl;
+         std::cout << std::endl;
       }
    }
 }

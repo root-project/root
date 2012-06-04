@@ -91,7 +91,7 @@ public:
    TLegend       *MakeLegend(Double_t x1=.65,Double_t y1=.65,Double_t x2=.95, Double_t y2=.95, const char *leg_header="");
    void           MakeSlices(Bool_t force=kFALSE);
    virtual void   Paint(Option_t *);
-   void           SavePrimitive(ostream &out, Option_t *opts="");
+   void           SavePrimitive(std::ostream &out, Option_t *opts="");
    void           SetAngle3D(Float_t val = 30.); // *MENU*
    void           SetAngularOffset(Double_t);
    void           SetCircle(Double_t x=.5, Double_t y=.5, Double_t rad=.4);

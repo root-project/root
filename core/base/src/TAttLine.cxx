@@ -250,22 +250,22 @@ void TAttLine::ResetAttLine(Option_t *)
 
 
 //______________________________________________________________________________
-void TAttLine::SaveLineAttributes(ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t widdef)
+void TAttLine::SaveLineAttributes(std::ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t widdef)
 {
    // Save line attributes as C++ statement(s) on output stream out.
 
    if (fLineColor != coldef) {
       if (fLineColor > 228) {
          TColor::SaveColor(out, fLineColor);
-         out<<"   "<<name<<"->SetLineColor(ci);" << endl;
+         out<<"   "<<name<<"->SetLineColor(ci);" << std::endl;
       } else
-         out<<"   "<<name<<"->SetLineColor("<<fLineColor<<");"<<endl;
+         out<<"   "<<name<<"->SetLineColor("<<fLineColor<<");"<<std::endl;
    }
    if (fLineStyle != stydef) {
-      out<<"   "<<name<<"->SetLineStyle("<<fLineStyle<<");"<<endl;
+      out<<"   "<<name<<"->SetLineStyle("<<fLineStyle<<");"<<std::endl;
    }
    if (fLineWidth != widdef) {
-      out<<"   "<<name<<"->SetLineWidth("<<fLineWidth<<");"<<endl;
+      out<<"   "<<name<<"->SetLineWidth("<<fLineWidth<<");"<<std::endl;
    }
 }
 

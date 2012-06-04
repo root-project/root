@@ -94,12 +94,12 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
     TH1* dh=(TH1*)infile->Get("data");
     TLimitDataSource* mydatasource = new TLimitDataSource(sh,bh,dh);
     TConfidenceLevel *myconfidence = TLimit::ComputeLimit(mydatasource,50000);
-    cout &lt&lt "  CLs    : " &lt&lt myconfidence->CLs()  &lt&lt endl;
-    cout &lt&lt "  CLsb   : " &lt&lt myconfidence->CLsb() &lt&lt endl;
-    cout &lt&lt "  CLb    : " &lt&lt myconfidence->CLb()  &lt&lt endl;
-    cout &lt&lt "&lt CLs &gt  : " &lt&lt myconfidence->GetExpectedCLs_b()  &lt&lt endl;
-    cout &lt&lt "&lt CLsb &gt : " &lt&lt myconfidence->GetExpectedCLsb_b() &lt&lt endl;
-    cout &lt&lt "&lt CLb &gt  : " &lt&lt myconfidence->GetExpectedCLb_b()  &lt&lt endl;
+    std::cout &lt&lt "  CLs    : " &lt&lt myconfidence->CLs()  &lt&lt std::endl;
+    std::cout &lt&lt "  CLsb   : " &lt&lt myconfidence->CLsb() &lt&lt std::endl;
+    std::cout &lt&lt "  CLb    : " &lt&lt myconfidence->CLb()  &lt&lt std::endl;
+    std::cout &lt&lt "&lt CLs &gt  : " &lt&lt myconfidence->GetExpectedCLs_b()  &lt&lt std::endl;
+    std::cout &lt&lt "&lt CLsb &gt : " &lt&lt myconfidence->GetExpectedCLsb_b() &lt&lt std::endl;
+    std::cout &lt&lt "&lt CLb &gt  : " &lt&lt myconfidence->GetExpectedCLb_b()  &lt&lt std::endl;
     delete myconfidence;
     delete mydatasource;
     infile->Close();
@@ -142,9 +142,9 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
          Double_t d = (Double_t) ((TH1 *) (data->GetCandidates()->At(channel)))->GetBinContent(bin);
          // Compute the value of the "-2lnQ" for the actual data
          if ((b == 0) && (s > 0)) {
-            cout << "WARNING: Ignoring bin " << bin << " of channel "
-                 << channel << " which has s=" << s << " but b=" << b << endl;
-            cout << "         Maybe the MC statistic has to be improved..." << endl;
+            std::cout << "WARNING: Ignoring bin " << bin << " of channel "
+                 << channel << " which has s=" << s << " but b=" << b << std::endl;
+            std::cout << "         Maybe the MC statistic has to be improved..." << std::endl;
          }
          if ((s > 0) && (b > 0))
             buffer += LogLikelihood(s, b, b, d);

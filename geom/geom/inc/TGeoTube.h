@@ -79,7 +79,7 @@ public:
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, Int_t skipz=0);
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *points) const;
@@ -152,7 +152,7 @@ public:
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, 
                                  Double_t phi1, Double_t phi2, Int_t skipz=0);
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                                        Double_t phi1, Double_t phi2);
    virtual void          SetDimensions(Double_t *param);
@@ -215,7 +215,7 @@ public:
    Double_t              GetZcoord(Double_t xc, Double_t yc, Double_t zc) const;
    virtual void          InspectShape() const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetCtubDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                                        Double_t phi1, Double_t phi2, Double_t lx, Double_t ly, Double_t lz,
                                        Double_t tx, Double_t ty, Double_t tz);

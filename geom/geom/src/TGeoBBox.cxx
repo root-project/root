@@ -797,23 +797,23 @@ Double_t TGeoBBox::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoBBox::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoBBox::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   dx = " << fDX << ";" << endl;
-   out << "   dy = " << fDY << ";" << endl;
-   out << "   dz = " << fDZ << ";" << endl;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   dx = " << fDX << ";" << std::endl;
+   out << "   dy = " << fDY << ";" << std::endl;
+   out << "   dz = " << fDZ << ";" << std::endl;
    if (!TGeoShape::IsSameWithinTolerance(fOrigin[0],0) || 
        !TGeoShape::IsSameWithinTolerance(fOrigin[1],0) || 
        !TGeoShape::IsSameWithinTolerance(fOrigin[2],0)) { 
-      out << "   origin[0] = " << fOrigin[0] << ";" << endl;
-      out << "   origin[1] = " << fOrigin[1] << ";" << endl;
-      out << "   origin[2] = " << fOrigin[2] << ";" << endl;
-      out << "   TGeoShape *" << GetPointerName() << " = new TGeoBBox(\"" << GetName() << "\", dx,dy,dz,origin);" << endl;
+      out << "   origin[0] = " << fOrigin[0] << ";" << std::endl;
+      out << "   origin[1] = " << fOrigin[1] << ";" << std::endl;
+      out << "   origin[2] = " << fOrigin[2] << ";" << std::endl;
+      out << "   TGeoShape *" << GetPointerName() << " = new TGeoBBox(\"" << GetName() << "\", dx,dy,dz,origin);" << std::endl;
    } else {   
-      out << "   TGeoShape *" << GetPointerName() << " = new TGeoBBox(\"" << GetName() << "\", dx,dy,dz);" << endl;
+      out << "   TGeoShape *" << GetPointerName() << " = new TGeoBBox(\"" << GetName() << "\", dx,dy,dz);" << std::endl;
    }
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }         

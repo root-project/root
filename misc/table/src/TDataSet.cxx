@@ -148,7 +148,7 @@ ClassImp(TDataSet)
 TDataSet::TDataSet(const Char_t *name, TDataSet *parent, Bool_t arrayFlag)
            : TNamed(name,"TDataSet"),fParent(0),fList(0)
 {
-  //  cout << "ctor for " << GetName() << " - " << GetTitle() << endl;
+  //  std::cout << "ctor for " << GetName() << " - " << GetTitle() << std::endl;
    if (name && strchr(name,'/')) {
       Error("TDataSet::TDataSet","dataset name (%s) cannot contain a slash", name);
       return;
@@ -184,7 +184,7 @@ fParent(0),fList(0)
   //
   //   All new-created sets become the structural ones anyway.
   //
-  //  cout << "ctor for " << GetName() << " - " << GetTitle() << endl;
+  //  std::cout << "ctor for " << GetName() << " - " << GetTitle() << std::endl;
 
    TDataSet *set = 0;
    TDataSetIter next((TDataSet *)&pattern);
@@ -207,7 +207,7 @@ TDataSet::TDataSet(TNode &)
 //______________________________________________________________________________
 TDataSet::~TDataSet()
 {
-//              cout << "Default destructor for " << GetName() << " - " << GetTitle() << endl;
+//              std::cout << "Default destructor for " << GetName() << " - " << GetTitle() << std::endl;
    Shunt(0); Delete();
 }
 

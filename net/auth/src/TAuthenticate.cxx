@@ -4037,9 +4037,9 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
                                         (unsigned char *)&fgRSAPubExport[key].keys[kk],
                                         (unsigned char *)&buftmp[ke],
                                         RSASSLServer,RSA_PKCS1_PADDING)) < 0) {
-            char cerr[120];
-            ERR_error_string(ERR_get_error(), cerr);
-            ::Info("TAuthenticate::SendRSAPublicKey","SSL: error: '%s' ",cerr);
+            char errstr[120];
+            ERR_error_string(ERR_get_error(), errstr);
+            ::Info("TAuthenticate::SendRSAPublicKey","SSL: error: '%s' ",errstr);
          }
          kk += lc;
          ke += ttmp;

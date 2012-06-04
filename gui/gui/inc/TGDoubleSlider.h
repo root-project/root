@@ -175,7 +175,7 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(kDoubleSliderWidth, fHeight); }
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGDoubleVSlider,0)  // Vertical double slider widget
 };
@@ -201,7 +201,7 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(fWidth, kDoubleSliderHeight); }
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGDoubleHSlider,0)  // Horizontal double slider widget
 };

@@ -82,10 +82,10 @@ R__EXTERN XrdOucTrace *XrdProofdTrace;
         }
 
 #define XPDPRT(x) \
-   {XrdProofdTrace->Beg("-I");   cerr << xpdloc <<": "<< x; XrdProofdTrace->End();}
+   {XrdProofdTrace->Beg("-I");   std::cerr << xpdloc <<": "<< x; XrdProofdTrace->End();}
 
 #define XPDERR(x) \
-   {XrdProofdTrace->Beg("-E");   cerr << xpdloc <<": "<< x; XrdProofdTrace->End();}
+   {XrdProofdTrace->Beg("-E");   std::cerr << xpdloc <<": "<< x; XrdProofdTrace->End();}
 
 #define TRACE(act, x) \
    if (TRACING(act)) { \
@@ -100,11 +100,11 @@ R__EXTERN XrdOucTrace *XrdProofdTrace;
    if (TRACING(act)) { \
       if (TRACINGERR(act)) { \
          if (p) {\
-            XrdProofdTrace->Beg("-E", 0, p->TraceID()); cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
+            XrdProofdTrace->Beg("-E", 0, p->TraceID()); std::cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
          } else {XPDERR(x);}\
       } else { \
          if (p) {\
-            XrdProofdTrace->Beg("-I", 0, p->TraceID()); cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
+            XrdProofdTrace->Beg("-I", 0, p->TraceID()); std::cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
          } else {XPDPRT(x);}\
       } \
    }
@@ -113,11 +113,11 @@ R__EXTERN XrdOucTrace *XrdProofdTrace;
    if (TRACING(act)) { \
       if (TRACINGERR(act)) { \
          if (id) {\
-            XrdProofdTrace->Beg("-E", 0, id); cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
+            XrdProofdTrace->Beg("-E", 0, id); std::cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
          } else { XPDERR(x); }\
       } else { \
          if (id) {\
-            XrdProofdTrace->Beg("-I", 0, id); cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
+            XrdProofdTrace->Beg("-I", 0, id); std::cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
          } else { XPDPRT(x); }\
       } \
    }
@@ -126,11 +126,11 @@ R__EXTERN XrdOucTrace *XrdProofdTrace;
    if (TRACING(act)) { \
       if (TRACINGERR(act)) { \
          if (r) {\
-            XrdProofdTrace->Beg("-E", 0, r->TraceID()); cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
+            XrdProofdTrace->Beg("-E", 0, r->TraceID()); std::cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
          } else { XPDERR(x); }\
       } else { \
          if (r) {\
-            XrdProofdTrace->Beg("-I", 0, r->TraceID()); cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
+            XrdProofdTrace->Beg("-I", 0, r->TraceID()); std::cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
          } else { XPDPRT(x); }\
       } \
    }

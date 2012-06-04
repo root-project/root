@@ -488,7 +488,7 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
          else
             if(fCmPar[0]==1.) {
                ReleaseParameter(fLastFixed);
-               cout <<fLastFixed<<endl;
+               std::cout <<fLastFixed<<std::endl;
             }
          return 0;
       case 10: // RELease <parno> ...
@@ -674,9 +674,9 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
             printf("%5s: ",fANames[nnn++].Data());
             for (Int_t j=0;j<=i;j++)
                printf("%11.2E",fZ[l++]);
-            cout<<endl;
+            std::cout<<std::endl;
          }
-         cout<<endl;
+         std::cout<<std::endl;
          return 0;
          }
       case 4:
@@ -686,7 +686,7 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
             printf("%5s: ",fANames[i].Data());
             printf("%11.3E\n",TMath::Sqrt(1-1/((fR[i]!=0.)?fR[i]:1.)) );
          }
-         cout<<endl;
+         std::cout<<std::endl;
          return 0;
       case 5:   // PRIntout not implemented
          return -10;

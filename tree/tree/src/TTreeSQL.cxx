@@ -190,7 +190,7 @@ void TTreeSQL::CheckBasket(TBranch *branch)
    TBuffer * buffer = basket->GetBufferRef();
 
    if(buffer == 0){
-      vector<Int_t> *columns = GetColumnIndice(branch);
+      std::vector<Int_t> *columns = GetColumnIndice(branch);
       if (columns) basket->CreateBuffer(branch->GetName(),"A", columns, branch, &fResult);
    }
 
@@ -343,7 +343,7 @@ TBasket * TTreeSQL::CreateBasket(TBranch * tb)
       Error("CreateBasket","No TSQLServer specified");
       return 0;
    }
-   vector<Int_t> *columnVec = GetColumnIndice(tb);
+   std::vector<Int_t> *columnVec = GetColumnIndice(tb);
    if (columnVec) {
       return new TBasketSQL(tb->GetName(), tb->GetName(), tb,
                             &fResult, &fInsertQuery, columnVec, &fRow);
@@ -609,7 +609,7 @@ Int_t TTreeSQL::Fill()
 }
 
 //______________________________________________________________________________
-vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
+std::vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
 {
    // Return a vector of columns index corresponding to the
    // current SQL table and the branch given as argument
@@ -618,17 +618,17 @@ vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
 
    if (!CheckTable(fTable)) return 0;
 
-   vector<Int_t> *columns = new vector<Int_t>;
+   std::vector<Int_t> *columns = new std::vector<Int_t>;
 
    Int_t nl = branch->GetNleaves();
 
-   vector<TString> names;
+   std::vector<TString> names;
 
    TSQLResult *rs = fServer->GetColumns(fDB,fTable);
    if (rs==0) { delete columns; return 0; }
    Int_t rows = rs->GetRowCount();
 
-   pair<TString,Int_t> value;
+   std::pair<TString,Int_t> value;
 
    for (Int_t i=0;i<rows;++i) {
       TSQLRow *row = rs->Next();

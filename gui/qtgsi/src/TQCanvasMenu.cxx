@@ -200,7 +200,7 @@ void TQCanvasMenu::Dialog(TObject* object, TMethod* method)
       }
       else {
          if (strncmp(type, "enum", 4) != 0)
-         cout << "*** Warning in Dialog(): data type is not basic type, assuming (int)\n";
+         std::cout << "*** Warning in Dialog(): data type is not basic type, assuming (int)\n";
          strcpy(basictype, "int");
       }
 
@@ -239,7 +239,7 @@ void TQCanvasMenu::Dialog(TObject* object, TMethod* method)
          // Find out whether we have options ...
          TList *opt;
          if ((opt = m->GetOptions())) {
-            cout << "*** Warning in Dialog(): option menu not yet implemented " << opt << endl;
+            std::cout << "*** Warning in Dialog(): option menu not yet implemented " << opt << std::endl;
             // should stop dialog
             return;
          }

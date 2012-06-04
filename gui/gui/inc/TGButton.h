@@ -130,7 +130,7 @@ public:
    virtual void         SetStyle(UInt_t newstyle);
    virtual void         SetStyle(const char *style);
 
-   virtual void         SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void         SavePrimitive(std::ostream &out, Option_t *option = "");
 
    GContext_t GetNormGC() const { return fNormGC; }
 
@@ -223,7 +223,7 @@ public:
    FontStruct_t GetFontStruct() const { return fFontStruct; }
 
    virtual void       Layout();
-   virtual void       SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void       SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGTextButton,0)  // A text button widget
 };
@@ -259,7 +259,7 @@ public:
    virtual void     SetDisabledPicture(const TGPicture *pic);
    const TGPicture *GetPicture() const { return fPic; };
    const TGPicture *GetDisabledPicture() const { return fPicD; };
-   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGPictureButton,0)  // A picture button widget
 };
@@ -317,7 +317,7 @@ public:
    virtual Bool_t IsDisabledAndSelected() const { return kButtonDisabled && fStateOn; }
    virtual void   SetDisabledAndSelected(Bool_t);
    virtual void   SetState(EButtonState state, Bool_t emit = kFALSE);
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGCheckButton,0)  // A check button widget
 };
@@ -374,7 +374,7 @@ public:
    virtual Bool_t IsOn() const { return fStateOn; }
    virtual Bool_t IsDown() const { return fStateOn; }
    virtual Bool_t IsDisabledAndSelected() const { return kButtonDisabled && fStateOn; }
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGRadioButton,0)  // A radio button widget
 };

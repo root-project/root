@@ -6,7 +6,7 @@
 #include "FTGL.h"
 
 /**
- * Provides a non-STL alternative to the STL map<unsigned long, unsigned long>
+ * Provides a non-STL alternative to the STL std::map<unsigned long, unsigned long>
  * which maps character codes to glyph indices inside FTCharmap.
  * 
  * Implementation:

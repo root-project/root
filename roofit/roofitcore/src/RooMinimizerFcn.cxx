@@ -38,6 +38,8 @@
 
 #include "RooMinimizer.h"
 
+using namespace std;
+
 RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer* context,
 			   bool verbose) :
   _funct(funct), _context(context),

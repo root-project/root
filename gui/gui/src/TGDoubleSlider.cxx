@@ -590,7 +590,7 @@ Bool_t TGDoubleHSlider::HandleMotion(Event_t *event)
 }
 
 //______________________________________________________________________________
-void TGDoubleHSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGDoubleHSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
 
@@ -603,32 +603,32 @@ void TGDoubleHSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out << GetOptionString() << ",ucolor";
    if (fMarkEnds) {
       if (fReversedScale)
-         out << ",kTRUE,kTRUE);" << endl;
+         out << ",kTRUE,kTRUE);" << std::endl;
       else
-         out << ",kFALSE,kTRUE);" << endl;
+         out << ",kFALSE,kTRUE);" << std::endl;
    } else if (fReversedScale) {
-      out << ",kTRUE);" << endl;
+      out << ",kTRUE);" << std::endl;
    } else {
-      out << ");" << endl;
+      out << ");" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    if (fVmin != 0 || fVmax != (Int_t)fWidth)
       out << "   " << GetName() << "->SetRange(" << fVmin << "," << fVmax
-          << ");" << endl;
+          << ");" << std::endl;
 
    if (fSmin != fWidth/8*3 || fSmax != fWidth/8*5)
       out << "   " << GetName() << "->SetPosition(" << GetMinPosition()
-          << "," << GetMaxPosition() << ");" << endl;
+          << "," << GetMaxPosition() << ");" << std::endl;
 
    if (fScale != 10)
-      out << "   " << GetName() << "->SetScale(" << fScale << ");" << endl;
+      out << "   " << GetName() << "->SetScale(" << fScale << ");" << std::endl;
 
 }
 
 //______________________________________________________________________________
-void TGDoubleVSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGDoubleVSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
 
@@ -641,28 +641,28 @@ void TGDoubleVSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out << GetOptionString() << ",ucolor";
    if (fMarkEnds) {
       if (fReversedScale)
-         out << ",kTRUE,kTRUE);" << endl;
+         out << ",kTRUE,kTRUE);" << std::endl;
       else
-         out << ",kFALSE,kTRUE);" << endl;
+         out << ",kFALSE,kTRUE);" << std::endl;
    } else if (fReversedScale) {
-      out << ",kTRUE);" << endl;
+      out << ",kTRUE);" << std::endl;
    } else {
-      out << ");" << endl;
+      out << ");" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    if (fVmin != 0 || fVmax != (Int_t)fHeight)
       out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax
-          << ");" << endl;
+          << ");" << std::endl;
 
 
    if (fSmin != fHeight/8*3 || fSmax != fHeight/8*5)
       out << "   " << GetName() << "->SetPosition(" << GetMinPosition()
-          << "," << GetMaxPosition() << ");" << endl;
+          << "," << GetMaxPosition() << ");" << std::endl;
 
 
    if (fScale != 10)
-      out << "   " << GetName() << "->SetScale(" << fScale << ");" << endl;
+      out << "   " << GetName() << "->SetScale(" << fScale << ");" << std::endl;
 
 }

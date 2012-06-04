@@ -1286,7 +1286,7 @@ void TMVA::MethodMLP::GeneticMinimize()
    fGA_nsteps    = 30;
 
    // ranges
-   vector<Interval*> ranges;
+   std::vector<Interval*> ranges;
 
    Int_t numWeights = fSynapses->GetEntriesFast();
    for (Int_t ivar=0; ivar< numWeights; ivar++) {
@@ -1391,8 +1391,8 @@ void TMVA::MethodMLP::UpdateRegulators()  //zjh
    Int_t numRegulators=fRegulators.size();
    Float_t gamma=0,
       variance=1.;    // Gaussian noise
-   vector<Int_t> nWDP(numRegulators);
-   vector<Double_t> trace(numRegulators),weightSum(numRegulators);
+   std::vector<Int_t> nWDP(numRegulators);
+   std::vector<Double_t> trace(numRegulators),weightSum(numRegulators);
    for (int i=0;i<numSynapses;i++) {
       TSynapse* synapses = (TSynapse*)fSynapses->At(i);
       Int_t idx=fRegulatorIdx[i];

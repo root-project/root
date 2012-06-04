@@ -146,8 +146,8 @@ void TMLPAnalyzer::CheckNetwork()
    // Gives some information about the network in the terminal.
 
    TString fStructure = fNetwork->GetStructure();
-   cout << "Network with structure: " << fStructure.Data() << endl;
-   cout << "inputs with low values in the differences plot may not be needed" << endl;
+   std::cout << "Network with structure: " << fStructure.Data() << std::endl;
+   std::cout << "inputs with low values in the differences plot may not be needed" << std::endl;
    // Checks if some input variable is not needed
    char var[64], sel[64];
    for (Int_t i = 0; i < GetNeurons(1); i++) {
@@ -156,9 +156,9 @@ void TMLPAnalyzer::CheckNetwork()
       fAnalysisTree->Draw(var, sel, "goff");
       TH1F* tmp = (TH1F*)gDirectory->Get(Form("tmp%d",i));
       if (!tmp) continue;
-      cout << GetInputNeuronTitle(i)
+      std::cout << GetInputNeuronTitle(i)
            << " -> " << tmp->GetMean()
-           << " +/- " << tmp->GetRMS() << endl;
+           << " +/- " << tmp->GetRMS() << std::endl;
    }
 }
 

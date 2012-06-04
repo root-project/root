@@ -26,15 +26,15 @@
 //#pragma link C++ class ROOT::Math;
 #endif
 
-#pragma link C++ class vector<Double_t>+;
-#pragma link C++ operators vector<Double_t>;
+#pragma link C++ class std::vector<Double_t>+;
+#pragma link C++ operators std::vector<Double_t>;
 #ifdef G__VECTOR_HAS_CLASS_ITERATOR
-#pragma link C++ class vector<Double_t>::iterator; 
-#pragma link C++ class vector<Double_t>::const_iterator; 
-#pragma link C++ class vector<Double_t>::reverse_iterator; 
-#pragma link C++ operators vector<Double_t>::iterator; 
-#pragma link C++ operators vector<Double_t>::const_iterator; 
-#pragma link C++ operators vector<Double_t>::reverse_iterator; 
+#pragma link C++ class std::vector<Double_t>::iterator; 
+#pragma link C++ class std::vector<Double_t>::const_iterator; 
+#pragma link C++ class std::vector<Double_t>::reverse_iterator; 
+#pragma link C++ operators std::vector<Double_t>::iterator; 
+#pragma link C++ operators std::vector<Double_t>::const_iterator; 
+#pragma link C++ operators std::vector<Double_t>::reverse_iterator; 
 #endif
 
 #pragma link C++ global gRandom;
@@ -128,7 +128,7 @@
 #pragma link C++ class ROOT::Math::DistSampler+;
 #pragma link C++ class ROOT::Math::DistSamplerOptions+;
 #pragma link C++ class ROOT::Math::GoFTest+;
-#pragma link C++ class vector<vector<double> >+;
+#pragma link C++ class std::vector<std::vector<double> >+;
 
 #pragma link C++ class ROOT::Math::TDataPoint<1,Float_t>+;
 #pragma link C++ typedef ROOT::Math::TDataPoint1F;

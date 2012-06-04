@@ -126,7 +126,7 @@ public:
    virtual void      PutStats(Double_t *stats);
    virtual void      Reset(Option_t *option="");
    virtual void      RebinAxis(Double_t x, TAxis *axis);
-   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void      Scale(Double_t c1=1, Option_t *option="");
    virtual void      SetBinEntries(Int_t bin, Double_t w);
    virtual void      SetBins(Int_t nbinsx, Double_t xmin, Double_t xmax, 

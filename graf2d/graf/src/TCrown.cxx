@@ -246,25 +246,25 @@ void TCrown::Paint(Option_t *)
 
 
 //______________________________________________________________________________
-void TCrown::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TCrown::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    /* Begin_Html
    Save primitive as a C++ statement(s) on output stream out.
    End_Html */
 
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TCrown::Class())) {
       out<<"   ";
    } else {
       out<<"   TCrown *";
    }
    out<<"crown = new TCrown("<<fX1<<","<<fY1<<","<<fR1<<","<<fR2
-      <<","<<fPhimin<<","<<fPhimax<<");"<<endl;
+      <<","<<fPhimin<<","<<fPhimax<<");"<<std::endl;
 
    SaveFillAttributes(out,"crown",0,1001);
    SaveLineAttributes(out,"crown",1,1,1);
 
-   if (GetNoEdges()) out<<"   crown->SetNoEdges();"<<endl;
+   if (GetNoEdges()) out<<"   crown->SetNoEdges();"<<std::endl;
 
-   out<<"   crown->Draw();"<<endl;
+   out<<"   crown->Draw();"<<std::endl;
 }

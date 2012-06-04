@@ -2096,7 +2096,7 @@ void TGNumberEntry::ValueSet(Long_t val)
 }
 
 //______________________________________________________________________________
-void TGNumberEntry::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGNumberEntry::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a number entry widget as a C++ statement(s) on output stream out.
 
@@ -2171,7 +2171,7 @@ void TGNumberEntry::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       {  char hex[256];
          ULong_t l = GetHexNumber();
          IntToHexStr(hex, l);
-         out << "0x" << hex << "U," << digits << "," << WidgetId()
+         out << "0x" << std::hex << "U," << digits << "," << WidgetId()
              << ",(TGNumberFormat::EStyle) " << GetNumStyle();
          break;
       }
@@ -2180,28 +2180,28 @@ void TGNumberEntry::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       if (GetNumMin() == 0) {
          if (GetNumLimits() == kNELNoLimits) {
             if (GetNumAttr() == kNEAAnyNumber) {
-               out << ");" << endl;
+               out << ");" << std::endl;
             } else {
-               out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ");" << endl;
+               out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ");" << std::endl;
             }
          } else {
             out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
-                << ",(TGNumberFormat::ELimit) " << GetNumLimits() << ");" << endl;
+                << ",(TGNumberFormat::ELimit) " << GetNumLimits() << ");" << std::endl;
          }
       } else {
          out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
              << ",(TGNumberFormat::ELimit) " << GetNumLimits()
-             << "," << GetNumMin() << ");" << endl;
+             << "," << GetNumMin() << ");" << std::endl;
       }
    } else {
          out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
              << ",(TGNumberFormat::ELimit) " << GetNumLimits()
-             << "," << GetNumMin() << "," << GetNumMax() << ");" << endl;
+             << "," << GetNumMin() << "," << GetNumMax() << ");" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
    if (fButtonDown->GetState() == kButtonDisabled)
-      out << "   " << GetName() << "->SetState(kFALSE);" << endl;
+      out << "   " << GetName() << "->SetState(kFALSE);" << std::endl;
 
    TGToolTip *tip = GetNumberEntry()->GetToolTip();
    if (tip) {
@@ -2209,12 +2209,12 @@ void TGNumberEntry::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       tiptext.ReplaceAll("\n", "\\n");
       out << "   ";
       out << GetName() << "->GetNumberEntry()->SetToolTipText(" << quote
-          << tiptext << quote << ");"  << endl;
+          << tiptext << quote << ");"  << std::endl;
    }
 }
 
 //______________________________________________________________________________
-void TGNumberEntryField::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGNumberEntryField::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a number entry widget as a C++ statement(s) on output stream out.
 
@@ -2284,7 +2284,7 @@ void TGNumberEntryField::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       {  char hex[256];
          ULong_t l = GetHexNumber();
          IntToHexStr(hex, l);
-         out << "0x" << hex << "U"
+         out << "0x" << std::hex << "U"
              << ",(TGNumberFormat::EStyle) " << GetNumStyle();
          break;
       }
@@ -2293,31 +2293,31 @@ void TGNumberEntryField::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       if (GetNumMin() == 0) {
          if (GetNumLimits() == kNELNoLimits) {
             if (GetNumAttr() == kNEAAnyNumber) {
-               out << ");" << endl;
+               out << ");" << std::endl;
             } else {
-               out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ");" << endl;
+               out << ",(TGNumberFormat::EAttribute) " << GetNumAttr() << ");" << std::endl;
             }
          } else {
             out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
-                << ",(TGNumberFormat::ELimit) " << GetNumLimits() << ");" << endl;
+                << ",(TGNumberFormat::ELimit) " << GetNumLimits() << ");" << std::endl;
          }
       } else {
          out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
              << ",(TGNumberFormat::ELimit) " << GetNumLimits()
-             << "," << GetNumMin() << ");" << endl;
+             << "," << GetNumMin() << ");" << std::endl;
       }
    } else {
          out << ",(TGNumberFormat::EAttribute) " << GetNumAttr()
              << ",(TGNumberFormat::ELimit) " << GetNumLimits()
-             << "," << GetNumMin() << "," << GetNumMax() << ");" << endl;
+             << "," << GetNumMin() << "," << GetNumMax() << ");" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
    if (!IsEnabled())
-      out << "   " << GetName() << "->SetState(kFALSE);" << endl;
+      out << "   " << GetName() << "->SetState(kFALSE);" << std::endl;
 
    out << "   " << GetName() << "->Resize("<< GetWidth() << "," << GetName()
-       << "->GetDefaultHeight());" << endl;
+       << "->GetDefaultHeight());" << std::endl;
 
    TGToolTip *tip = GetToolTip();
    if (tip) {
@@ -2325,6 +2325,6 @@ void TGNumberEntryField::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       tiptext.ReplaceAll("\n", "\\n");
       out << "   ";
       out << GetName() << "->SetToolTipText(" << quote
-          << tiptext << quote << ");"  << endl;
+          << tiptext << quote << ");"  << std::endl;
    }
 }

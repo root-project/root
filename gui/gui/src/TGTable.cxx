@@ -955,11 +955,11 @@ void TGTable::Show()
    for (j = 0; j < ncolumns + 1; j++) {
       if (j == 0) {
          hdr = fTableHeader;
-         if (hdr) std::cout << " " << setw(12) << right 
+         if (hdr) std::cout << " " << std::setw(12) << std::right 
                             << hdr->GetLabel()->GetString() << " ";
       } else {
          hdr = GetColumnHeader(j - 1);
-         if (hdr) std::cout << " " << setw(12) << right 
+         if (hdr) std::cout << " " << std::setw(12) << std::right 
                             << hdr->GetLabel()->GetString() << " ";
       }
    }
@@ -969,11 +969,11 @@ void TGTable::Show()
       for (j = 0; j < ncolumns + 1; j++) {
          if (j == 0) {
             hdr = GetRowHeader(i);
-            if (hdr) std::cout << " " << setw(12) << right 
+            if (hdr) std::cout << " " << std::setw(12) << std::right 
                                << hdr->GetLabel()->GetString() << " ";
          } else {
             cell = GetCell(i, j - 1);
-            if (cell) std::cout << " " << setw(12) << right 
+            if (cell) std::cout << " " << std::setw(12) << std::right 
                                 << cell->GetLabel()->GetString() << " ";
          }
       }

@@ -52,7 +52,7 @@ public:
    virtual void  Paint(Option_t *option="");
    virtual void  PaintModified();
    virtual void  Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
-   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void  SetBorderMode(Short_t bordermode) { fBorderMode = bordermode; }
    virtual void  SetFraming(Bool_t f=1);
    virtual Bool_t GetFraming() { return fFraming; };

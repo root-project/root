@@ -51,7 +51,7 @@ public:
    virtual void     InsertText(const char *) { }
    virtual void     InsertLine() { }
    virtual void     ReadFile(const char *, Option_t *, Int_t, Int_t) { }
-   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void     SaveStyle(); // *MENU*
    virtual void     SetAllWith(const char *, Option_t *, Double_t) { }
    virtual void     SetMargin(Float_t) { }

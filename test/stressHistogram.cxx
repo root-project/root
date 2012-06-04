@@ -88,6 +88,8 @@
 #include <algorithm>
 #include <cassert>
 
+using namespace std;
+
 const unsigned int __DRAW__ = 0;
 
 const Double_t minRange = 1;
@@ -150,7 +152,7 @@ int equals(const char* msg, THnBase* h1, THnBase* h2, int options = 0, double ER
 int equals(const char* msg, THnBase* h1, TH1* h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
 int equals(Double_t n1, Double_t n2, double ERRORLIMIT = defaultErrorLimit);
 int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT = defaultErrorLimit);
-ostream& operator<<(ostream& out, TH1D* h);
+std::ostream& operator<<(std::ostream& out, TH1D* h);
 // old stresHistOpts.cxx file
 
 bool testAdd1() 
@@ -5797,16 +5799,16 @@ bool testInterpolation1D()
      
       if (  fabs(ip  - function1D(xp) ) > 1.E-13*fabs(ip) ) {
          status = true;
-         cout << "x: " << xp 
+         std::cout << "x: " << xp 
               << " h3->Inter: " << ip
               << " functionD: " << function1D(xp)
               << " diff: " << fabs(ip  - function1D(xp))
-              << endl;
+              << std::endl;
       }
    }
 
    delete h1;
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testInterpolation1D: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testInterpolation1D: \t" << (status?"FAILED":"OK") << std::endl;
    return status; 
 }
 
@@ -5836,16 +5838,16 @@ bool testInterpolationVar1D()
      
       if (  fabs(ip  - function1D(xp) ) > 1.E-13*fabs(ip) ) {
          status = true;
-         cout << "x: " << xp 
+         std::cout << "x: " << xp 
               << " h3->Inter: " << ip
               << " functionD: " << function1D(xp)
               << " diff: " << fabs(ip  - function1D(xp))
-              << endl;
+              << std::endl;
       }
    }
 
    delete h1;
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testInterpolaVar1D: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testInterpolaVar1D: \t" << (status?"FAILED":"OK") << std::endl;
    return status; 
 }
 
@@ -5886,16 +5888,16 @@ bool testInterpolation2D()
      
       if (  fabs(ip  - function2D(xp, yp) ) > 1.E-13*fabs(ip) ) {
          status = true;
-         cout << "x: " << xp << " y: " << yp
+         std::cout << "x: " << xp << " y: " << yp
               << " h3->Inter: " << ip
               << " function: " << function2D(xp, yp)
               << " diff: " << fabs(ip  - function2D(xp, yp))
-              << endl;
+              << std::endl;
       }
    }
 
    delete h1;
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testInterpolation2D: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testInterpolation2D: \t" << (status?"FAILED":"OK") << std::endl;
    return status; 
 }
 
@@ -5945,7 +5947,7 @@ bool testInterpolation3D()
 
    delete h1;
 
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testInterpolation3D: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testInterpolation3D: \t" << (status?"FAILED":"OK") << std::endl;
 
    return status; 
 }
@@ -6473,12 +6475,12 @@ int findBin(ROOT::Fit::BinData& bd, const double *x)
       double value1, error1;
       const double *x1 = bd.GetPoint(i, value1, error1);
 
-//       cout << "\ti: " << i
+//       std::cout << "\ti: " << i
 //            << " x: ";
-//       std::copy(x1, x1+ndim, ostream_iterator<double>(cout, " "));
-//       cout << " val: " << value1
+//       std::copy(x1, x1+ndim, ostream_iterator<double>(std::cout, " "));
+//       std::cout << " val: " << value1
 //            << " error: " << error1
-//            << endl;
+//            << std::endl;
 
       bool thisIsIt = true;
       for ( unsigned int j = 0; j < ndim; ++j )
@@ -6486,12 +6488,12 @@ int findBin(ROOT::Fit::BinData& bd, const double *x)
          thisIsIt &= fabs(x1[j] - x[j]) < 1E-15;
       }
       if ( thisIsIt ) { 
-//          cout << "RETURNED!" << endl;
+//          std::cout << "RETURNED!" << std::endl;
          return i; 
       }
    }
 
-//    cout << "ERROR FINDING BIN!" << endl;
+//    std::cout << "ERROR FINDING BIN!" << std::endl;
    return -1;
 }
 
@@ -6507,12 +6509,12 @@ bool operator ==(ROOT::Fit::BinData& bd1, ROOT::Fit::BinData& bd2)
       double value1, error1;
       const double *x1 = bd1.GetPoint(i, value1, error1);
 
-//       cout << "i: " << i
+//       std::cout << "i: " << i
 //            << " x: ";
-//       std::copy(x1, x1+ndim, ostream_iterator<double>(cout, " "));
-//       cout << " val: " << value1
+//       std::copy(x1, x1+ndim, ostream_iterator<double>(std::cout, " "));
+//       std::cout << " val: " << value1
 //            << " error: " << error1
-//            << endl;
+//            << std::endl;
 
       int bin = findBin(bd2, x1);
       if ( bin < 0 )
@@ -6534,7 +6536,7 @@ bool operator ==(ROOT::Fit::BinData& bd1, ROOT::Fit::BinData& bd2)
 
 
 int findBin(ROOT::Fit::SparseData& sd, 
-            const vector<double>& minRef, const vector<double>& maxRef,
+            const std::vector<double>& minRef, const std::vector<double>& maxRef,
             const double valRef, const double errorRef)
 {
    const unsigned int ndim = sd.NDim();
@@ -6542,42 +6544,42 @@ int findBin(ROOT::Fit::SparseData& sd,
 
    for ( unsigned int i = 0; i < npoints; ++i )
    {
-      vector<double> min(ndim);
-      vector<double> max(ndim);
+      std::vector<double> min(ndim);
+      std::vector<double> max(ndim);
       double val;
       double error;
       sd.GetPoint(i, min, max, val, error);
 
-//       cout << "\ti: " << i
+//       std::cout << "\ti: " << i
 //            << " min: ";
-//       std::copy(min.begin(), min.end(), ostream_iterator<double>(cout, " "));
-//       cout << " max: ";
-//       std::copy(max.begin(), max.end(), ostream_iterator<double>(cout, " "));
-//       cout << " val: " << val
+//       std::copy(min.begin(), min.end(), ostream_iterator<double>(std::cout, " "));
+//       std::cout << " max: ";
+//       std::copy(max.begin(), max.end(), ostream_iterator<double>(std::cout, " "));
+//       std::cout << " val: " << val
 //            << " error: " << error
-//            << endl;
+//            << std::endl;
 
       bool thisIsIt = true;
-//       cout << "\t\t" << thisIsIt << " ";
+//       std::cout << "\t\t" << thisIsIt << " ";
       thisIsIt &= !equals(valRef, val, 1E-8);
-//       cout << thisIsIt << " ";
+//       std::cout << thisIsIt << " ";
       thisIsIt &= !equals(errorRef, error, 1E-15);
-//       cout << thisIsIt << " ";
+//       std::cout << thisIsIt << " ";
       for ( unsigned int j = 0; j < ndim && thisIsIt; ++j )
       {
          thisIsIt &= !equals(minRef[j], min[j]);
-//          cout << thisIsIt << " ";
+//          std::cout << thisIsIt << " ";
          thisIsIt &= !equals(maxRef[j], max[j]);
-//          cout << thisIsIt << " ";
+//          std::cout << thisIsIt << " ";
       }
-//       cout << thisIsIt << " " << endl;
+//       std::cout << thisIsIt << " " << std::endl;
       if ( thisIsIt ) { 
-//          cout << "RETURNING " << i << endl; 
+//          std::cout << "RETURNING " << i << std::endl; 
          return i; 
       }
    }
 
-//    cout << "ERROR FINDING BIN!" << endl;
+//    std::cout << "ERROR FINDING BIN!" << std::endl;
    return -1;
 }
 bool operator ==(ROOT::Fit::SparseData& sd1, ROOT::Fit::SparseData& sd2)
@@ -6591,8 +6593,8 @@ bool operator ==(ROOT::Fit::SparseData& sd1, ROOT::Fit::SparseData& sd2)
 
    for ( unsigned int i = 0; i < npoints1 && equals; ++i )
    {
-      vector<double> min(ndim);
-      vector<double> max(ndim);
+      std::vector<double> min(ndim);
+      std::vector<double> max(ndim);
       double val;
       double error;
       sd1.GetPoint(i, min, max, val, error);
@@ -6602,8 +6604,8 @@ bool operator ==(ROOT::Fit::SparseData& sd1, ROOT::Fit::SparseData& sd2)
 
    for ( unsigned int i = 0; i < npoints2 && equals; ++i )
    {
-      vector<double> min(ndim);
-      vector<double> max(ndim);
+      std::vector<double> min(ndim);
+      std::vector<double> max(ndim);
       double val;
       double error;
       sd2.GetPoint(i, min, max, val, error);
@@ -6646,7 +6648,7 @@ bool testSparseData1DFull()
    delete h1;
    delete s1;
 
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testSparseData1DFull: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testSparseData1DFull: \t" << (status?"FAILED":"OK") << std::endl;
    return status;
 }
 
@@ -6682,7 +6684,7 @@ bool testSparseData1DSparse()
    delete h1;
    delete s1;
 
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testSparseData1DSpar: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testSparseData1DSpar: \t" << (status?"FAILED":"OK") << std::endl;
    return status;
 }
 
@@ -6720,7 +6722,7 @@ bool testSparseData2DFull()
    delete h2;
    delete s2;
 
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testSparseData2DFull: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testSparseData2DFull: \t" << (status?"FAILED":"OK") << std::endl;
    return status;
 }
 
@@ -6758,7 +6760,7 @@ bool testSparseData2DSparse()
    delete h2;
    delete s2;
 
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testSparseData2DSpar: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testSparseData2DSpar: \t" << (status?"FAILED":"OK") << std::endl;
    return status;
 }
 
@@ -6798,7 +6800,7 @@ bool testSparseData3DFull()
    delete h3;
    delete s3;
 
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testSparseData3DFull: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testSparseData3DFull: \t" << (status?"FAILED":"OK") << std::endl;
    return status;
 }
 
@@ -6838,7 +6840,7 @@ bool testSparseData3DSparse()
    delete h3;
    delete s3;
 
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testSparseData3DSpar: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testSparseData3DSpar: \t" << (status?"FAILED":"OK") << std::endl;
    return status;
 }
 
@@ -6877,7 +6879,7 @@ bool testBinDataData1D()
    delete h1;
    delete s1;
 
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testBinDataData1D: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testBinDataData1D: \t" << (status?"FAILED":"OK") << std::endl;
    return status;
 }
 
@@ -6919,7 +6921,7 @@ bool testBinDataData2D()
    delete h2;
    delete s2;
 
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testBinDataData2D: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testBinDataData2D: \t" << (status?"FAILED":"OK") << std::endl;
    return status;
 }
 
@@ -6963,7 +6965,7 @@ bool testBinDataData3D()
    delete h3;
    delete s3;
 
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testBinDataData3D: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testBinDataData3D: \t" << (status?"FAILED":"OK") << std::endl;
    return status;
 }
 
@@ -7006,7 +7008,7 @@ bool testBinDataData1DInt()
    delete h1;
    delete s1;
 
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testBinDataData1DInt: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testBinDataData1DInt: \t" << (status?"FAILED":"OK") << std::endl;
    return status;
 }
 
@@ -7052,7 +7054,7 @@ bool testBinDataData2DInt()
    delete h2;
    delete s2;
 
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testBinDataData2DInt: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testBinDataData2DInt: \t" << (status?"FAILED":"OK") << std::endl;
    return status;
 }
 
@@ -7100,7 +7102,7 @@ bool testBinDataData3DInt()
    delete h3;
    delete s3;
 
-   if ( defaultEqualOptions & cmpOptPrint ) cout << "testBinDataData3DInt: \t" << (status?"FAILED":"OK") << endl;
+   if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testBinDataData3DInt: \t" << (status?"FAILED":"OK") << std::endl;
    return status;
 }
 
@@ -7499,8 +7501,8 @@ bool testArrayRebin()
 #ifdef __DEBUG__
    std::cout << "min range = " << minRange << " max range " << maxRange << std::endl;
    for ( Int_t i = 0; i < rebin; ++i ) 
-      cout << rebinArray[i] << endl;
-   cout << "rebin: " << rebin << endl;
+      std::cout << rebinArray[i] << std::endl;
+   std::cout << "rebin: " << rebin << std::endl;
 #endif
 
    TH1D* h2 = static_cast<TH1D*>( h1->Rebin(rebin - 1, "testArrayRebin", rebinArray) );
@@ -7547,8 +7549,8 @@ bool testArrayRebinProfile()
 
    #ifdef __DEBUG__
    for ( Int_t i = 0; i < rebin; ++i ) 
-      cout << rebinArray[i] << endl;
-   cout << "rebin: " << rebin << endl;
+      std::cout << rebinArray[i] << std::endl;
+   std::cout << "rebin: " << rebin << std::endl;
    #endif
 
    TProfile* p2 = static_cast<TProfile*>( p1->Rebin(rebin - 1, "testArrayRebinProf", rebinArray) );
@@ -8769,7 +8771,7 @@ public:
                        h3->GetZaxis()->FindBin(z) >= zmin && h3->GetZaxis()->FindBin(z) <= zmax )
                   {
                      if ( defaultEqualOptions & cmpOptPrint )
-                        cout << "Filling (" << x << "," << y << "," << z << ")!" << endl;
+                        std::cout << "Filling (" << x << "," << y << "," << z << ")!" << std::endl;
                      
                      h2XY->Fill(x,y);
                      h2XZ->Fill(x,z);
@@ -8869,7 +8871,7 @@ public:
       status += equals("TH3 -> ZY", h2ZY, (TH2D*) h3->Project3D("YZ"), options);
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
-         cout << "----------------------------------------------" << endl;
+         std::cout << "----------------------------------------------" << std::endl;
       
       // TH1 derived from TH3
       options = cmpOptStats;
@@ -8889,7 +8891,7 @@ public:
 
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
-         cout << "----------------------------------------------" << endl;
+         std::cout << "----------------------------------------------" << std::endl;
       
       // TH1 derived from h2XY
       options = cmpOptStats;
@@ -8912,7 +8914,7 @@ public:
       status += equals("TH2ZY -> Y", h1Y, (TH1D*) h2ZY->ProjectionY("y"), options);
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
-         cout << "----------------------------------------------" << endl;
+         std::cout << "----------------------------------------------" << std::endl;
 
 
       // in the following comparison with profiles we need to re-calculate statistics using bin centers 
@@ -8940,7 +8942,7 @@ public:
       status += equals("TH3 -> PBZY", h2ZY, (TH2D*) h3->Project3DProfile("yz UF OF")->ProjectionXY("6", "B"), options);
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
-         cout << "----------------------------------------------" << endl;
+         std::cout << "----------------------------------------------" << std::endl;
       
       // test directly project3dprofile
       options = cmpOptStats;
@@ -8952,7 +8954,7 @@ public:
       status += equals("TH3 -> PZY", (TH2D*) pe2ZY, (TH2D*) h3->Project3DProfile("yz  UF OF"), options);
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
-         cout << "----------------------------------------------" << endl;
+         std::cout << "----------------------------------------------" << std::endl;
       
       // test option E of ProjectionXY
       options = 0;
@@ -8964,7 +8966,7 @@ public:
       status += equals("TH3 -> PEZY", (TH2D*) pe2ZY, (TH2D*) h3->Project3DProfile("yz  UF OF")->ProjectionXY("6", "E"), options);
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
-         cout << "----------------------------------------------" << endl;
+         std::cout << "----------------------------------------------" << std::endl;
       
       // test option W of ProjectionXY
       
@@ -8978,7 +8980,7 @@ public:
       status += equals("TH3 -> PWZY", (TH2D*) h2wZY, (TH2D*) h3->Project3DProfile("yz  UF OF")->ProjectionXY("6", "W"), options);
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
-         cout << "----------------------------------------------" << endl;
+         std::cout << "----------------------------------------------" << std::endl;
       
       // test 1D histograms
       options = cmpOptStats;
@@ -8999,7 +9001,7 @@ public:
       status += equals("TH2ZY -> PBY", h1Y, (TH1D*) h2ZY->ProfileY("PBY", 0,h2ZY->GetXaxis()->GetNbins()+1)->ProjectionX("1", "B"),options);
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
-         cout << "----------------------------------------------" << endl;
+         std::cout << "----------------------------------------------" << std::endl;
 
       // 1D testing direct profiles 
       options = cmpOptStats;
@@ -9017,7 +9019,7 @@ public:
       status += equals("TH2ZY -> PY", pe1YZ, (TH1D*) h2ZY->ProfileY("PY", 0,h2ZY->GetXaxis()->GetNbins()+1), options);
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
-         cout << "----------------------------------------------" << endl;
+         std::cout << "----------------------------------------------" << std::endl;
 
       // 1D testing e profiles
       options = 0;
@@ -9047,7 +9049,7 @@ public:
                        (TH1D*) h2ZY->ProfileY("PEY", 0,h2ZY->GetXaxis()->GetNbins()+1)->ProjectionX("1", "E"), options);
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
-         cout << "----------------------------------------------" << endl;
+         std::cout << "----------------------------------------------" << std::endl;
 
       // 1D testing w profiles
       // The error is not properly propagated when build with weights :S
@@ -9079,7 +9081,7 @@ public:
 
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
-         cout << "----------------------------------------------" << endl;
+         std::cout << "----------------------------------------------" << std::endl;
 
 
       // do THNsparse after Profile because reference histograms need to have a ResetStats
@@ -9102,7 +9104,7 @@ public:
       status += equals("THn3 -> ZY", h2ZY, (TH2D*) n3->Projection(1,2), options); 
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
-         cout << "----------------------------------------------" << endl;
+         std::cout << "----------------------------------------------" << std::endl;
 
       // TH1 derived from STH3
       options = cmpOptStats;
@@ -9115,7 +9117,7 @@ public:
       status += equals("THn3 -> Z", h1Z, (TH1D*) n3->Projection(2), options);
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
-         cout << "----------------------------------------------" << endl;
+         std::cout << "----------------------------------------------" << std::endl;
 
       
       
@@ -9145,16 +9147,16 @@ int stressHistogram()
    TBenchmark bm;
    bm.Start("stressHistogram");
 
-   cout << "****************************************************************************" <<endl;
-   cout << "*  Starting  stress  H I S T O G R A M                                     *" <<endl;
-   cout << "****************************************************************************" <<endl;
+   std::cout << "****************************************************************************" <<std::endl;
+   std::cout << "*  Starting  stress  H I S T O G R A M                                     *" <<std::endl;
+   std::cout << "****************************************************************************" <<std::endl;
 
    // Test 1
    if ( defaultEqualOptions & cmpOptPrint )
-      cout << "**********************************\n"
+      std::cout << "**********************************\n"
            << "       Test without weights       \n" 
            << "**********************************\n"
-           << endl;
+           << std::endl;
 
 
    TH1::SetDefaultSumw2(); 
@@ -9175,10 +9177,10 @@ int stressHistogram()
 
    // Test 2
    if ( defaultEqualOptions & cmpOptPrint )
-      cout << "**********************************\n"
+      std::cout << "**********************************\n"
            << "        Test with weights         \n" 
            << "**********************************\n"
-           << endl;
+           << std::endl;
    
    ProjectionTester* ht2 = new ProjectionTester();
    ht2->buildHistogramsWithWeights();
@@ -9485,7 +9487,7 @@ int stressHistogram()
    return GlobalStatus;
 }
 
-ostream& operator<<(ostream& out, TH1D* h)
+std::ostream& operator<<(std::ostream& out, TH1D* h)
 {
    out << h->GetName() << ": [" << h->GetBinContent(1);
    for ( Int_t i = 1; i < h->GetNbinsX(); ++i )
@@ -9498,11 +9500,11 @@ ostream& operator<<(ostream& out, TH1D* h)
 void printResult(const char* msg, bool status)
 {
    static int counter = 1;
-   cout << "Test ";
-   cout.width(2);
-   cout<< counter << ": "
+   std::cout << "Test ";
+   std::cout.width(2);
+   std::cout<< counter << ": "
        << msg
-       << (status?"FAILED":"OK") << endl;
+       << (status?"FAILED":"OK") << std::endl;
    counter += 1;
 }
 
@@ -9566,7 +9568,7 @@ int equals(const char* msg, THnBase* h1, THnBase* h2, int options, double ERRORL
             Int_t bin[3] = {i, j, h};
             
             if (debug) {
-               cout << equals(x, h2->GetAxis(0)->GetBinCenter(i), ERRORLIMIT) << " "
+               std::cout << equals(x, h2->GetAxis(0)->GetBinCenter(i), ERRORLIMIT) << " "
                     << equals(y, h2->GetAxis(1)->GetBinCenter(j), ERRORLIMIT) << " "
                     << equals(z, h2->GetAxis(2)->GetBinCenter(h), ERRORLIMIT) << " "
                     << "[" << x << "," << y << "," << z << "]: " 
@@ -9576,7 +9578,7 @@ int equals(const char* msg, THnBase* h1, THnBase* h2, int options, double ERRORL
                     << " "   << equals(h1->GetBinError(bin)  , h2->GetBinError(bin),   ERRORLIMIT)
                     << " "   << differents
                     << " "   << (fabs(h1->GetBinContent(bin) - h2->GetBinContent(bin)))
-                    << endl;
+                    << std::endl;
             }
             differents += equals(x, h2->GetAxis(0)->GetBinCenter(i), ERRORLIMIT);
             differents += equals(y, h2->GetAxis(1)->GetBinCenter(j), ERRORLIMIT);
@@ -9591,7 +9593,7 @@ int equals(const char* msg, THnBase* h1, THnBase* h2, int options, double ERRORL
 //    if ( compareStats )
 //       differents += compareStatistics( h1, h2, debug, ERRORLIMIT);
    
-   if ( print || debug ) cout << msg << ": \t" << (differents?"FAILED":"OK") << endl;
+   if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
    
    delete h2;
    
@@ -9651,7 +9653,7 @@ int equals(const char* msg, THnBase* s, TH1* h2, int options, double ERRORLIMIT)
          differents += equals(err1  , err2, ERRORLIMIT);
    }
 
-   if ( print || debug ) cout << msg << ": \t" << (differents?"FAILED":"OK") << endl;
+   if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
    
    delete h2;
    
@@ -9668,8 +9670,8 @@ int equals(const char* msg, TH3D* h1, TH3D* h2, int options, double ERRORLIMIT)
    
    int differents = ( h1 == h2 ); // Check they are not the same histogram!
    if (debug) {
-      cout << static_cast<void*>(h1) << " " << static_cast<void*>(h2) << " "
-           << (h1 == h2 ) << " " << differents << endl;
+      std::cout << static_cast<void*>(h1) << " " << static_cast<void*>(h2) << " "
+           << (h1 == h2 ) << " " << differents << std::endl;
    }
    
    for ( int i = 0; i <= h1->GetNbinsX() + 1; ++i )
@@ -9682,7 +9684,7 @@ int equals(const char* msg, TH3D* h1, TH3D* h2, int options, double ERRORLIMIT)
          
          if (debug)
          {
-            cout << equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT) << " "
+            std::cout << equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT) << " "
                  << equals(y, h2->GetYaxis()->GetBinCenter(j), ERRORLIMIT) << " "
                  << equals(z, h2->GetZaxis()->GetBinCenter(h), ERRORLIMIT) << " "
                  << "[" << x << "," << y << "," << z << "]: " 
@@ -9692,7 +9694,7 @@ int equals(const char* msg, TH3D* h1, TH3D* h2, int options, double ERRORLIMIT)
                  << " "   << equals(h1->GetBinError(i,j,h)  , h2->GetBinError(i,j,h),   ERRORLIMIT)
                  << " "   << differents
                  << " "   << (fabs(h1->GetBinContent(i,j,h) - h2->GetBinContent(i,j,h)))
-                 << endl;
+                 << std::endl;
          }
          differents += (bool) equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT);
          differents += (bool) equals(y, h2->GetYaxis()->GetBinCenter(j), ERRORLIMIT);
@@ -9706,7 +9708,7 @@ int equals(const char* msg, TH3D* h1, TH3D* h2, int options, double ERRORLIMIT)
    if ( compareStats )
       differents += compareStatistics( h1, h2, debug, ERRORLIMIT);
    
-   if ( print || debug ) cout << msg << ": \t" << (differents?"FAILED":"OK") << endl;
+   if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
    
    delete h2;
    
@@ -9723,8 +9725,8 @@ int equals(const char* msg, TH2D* h1, TH2D* h2, int options, double ERRORLIMIT)
    
    int differents = ( h1 == h2 ); // Check they are not the same histogram!
    if (debug) {
-      cout << static_cast<void*>(h1) << " " << static_cast<void*>(h2) << " "
-           << (h1 == h2 ) << " " << differents << endl;
+      std::cout << static_cast<void*>(h1) << " " << static_cast<void*>(h2) << " "
+           << (h1 == h2 ) << " " << differents << std::endl;
    }
 
    for ( int i = 0; i <= h1->GetNbinsX() + 1; ++i )
@@ -9735,7 +9737,7 @@ int equals(const char* msg, TH2D* h1, TH2D* h2, int options, double ERRORLIMIT)
          
          if (debug)
          {
-            cout << equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT) << " "
+            std::cout << equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT) << " "
                  << equals(y, h2->GetYaxis()->GetBinCenter(j), ERRORLIMIT) << " "
                  << "[" << x << "," << y << "]: " 
                  << h1->GetBinContent(i,j) << " +/- " << h1->GetBinError(i,j) << " | "
@@ -9744,7 +9746,7 @@ int equals(const char* msg, TH2D* h1, TH2D* h2, int options, double ERRORLIMIT)
                  << " "   << equals(h1->GetBinError(i,j)  , h2->GetBinError(i,j),   ERRORLIMIT)
                  << " "   << differents
                  << " "   << (fabs(h1->GetBinContent(i,j) - h2->GetBinContent(i,j)))
-                 << endl;
+                 << std::endl;
          }
          differents += (bool) equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT);
          differents += (bool) equals(y, h2->GetYaxis()->GetBinCenter(j), ERRORLIMIT);
@@ -9757,7 +9759,7 @@ int equals(const char* msg, TH2D* h1, TH2D* h2, int options, double ERRORLIMIT)
    if ( compareStats )
       differents += compareStatistics( h1, h2, debug, ERRORLIMIT);
    
-   if ( print || debug ) cout << msg << ": \t" << (differents?"FAILED":"OK") << endl;
+   if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
    
    delete h2;
    
@@ -9774,13 +9776,13 @@ int equals(const char* msg, TH1D* h1, TH1D* h2, int options, double ERRORLIMIT)
    
 
    if (debug) { 
-      cout << "Nbins  = " << h1->GetXaxis()->GetNbins() << " ,  " <<  h2->GetXaxis()->GetNbins() << endl;
+      std::cout << "Nbins  = " << h1->GetXaxis()->GetNbins() << " ,  " <<  h2->GetXaxis()->GetNbins() << std::endl;
    }
 
    int differents = ( h1 == h2 ); // Check they are not the same histogram!
    if (debug) {
-      cout << static_cast<void*>(h1) << " " << static_cast<void*>(h2) << " "
-           << (h1 == h2 ) << " " << differents << endl;
+      std::cout << static_cast<void*>(h1) << " " << static_cast<void*>(h2) << " "
+           << (h1 == h2 ) << " " << differents << std::endl;
    }
 
    for ( int i = 0; i <= h1->GetNbinsX() + 1; ++i )
@@ -9788,14 +9790,14 @@ int equals(const char* msg, TH1D* h1, TH1D* h2, int options, double ERRORLIMIT)
       Double_t x = h1->GetXaxis()->GetBinCenter(i);
       if ( debug )
       {
-         cout << equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT)
+         std::cout << equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT)
               << " [" << x << "]: " 
               << h1->GetBinContent(i) << " +/- " << h1->GetBinError(i) << " | "
               << h2->GetBinContent(i) << " +/- " << h2->GetBinError(i)
               << " | " << equals(h1->GetBinContent(i), h2->GetBinContent(i), ERRORLIMIT)
               << " "   << equals(h1->GetBinError(i),   h2->GetBinError(i),   ERRORLIMIT)
               << " "   << differents
-              << endl;
+              << std::endl;
       }
       differents += (bool) equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT);
       differents += (bool) equals(h1->GetBinContent(i), h2->GetBinContent(i), ERRORLIMIT);
@@ -9808,7 +9810,7 @@ int equals(const char* msg, TH1D* h1, TH1D* h2, int options, double ERRORLIMIT)
    if ( compareStats )
       differents += compareStatistics( h1, h2, debug, ERRORLIMIT);
    
-   if ( print || debug ) cout << msg << ": \t" << (differents?"FAILED":"OK") << endl;
+   if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
    
    delete h2;
    
@@ -9843,27 +9845,27 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
    differents += (bool) equals(chi_21, 1, ERRORLIMIT);  
    differents += (bool) equals(chi_12, chi_21, ERRORLIMIT);
    if ( debug )
-      cout << "Chi2Test " << chi_12 << " " <<  chi_21 
+      std::cout << "Chi2Test " << chi_12 << " " <<  chi_21 
            << " | " << differents
-           << endl;
+           << std::endl;
 
    if (!debug) gErrorIgnoreLevel = precLevel; 
 
    // Mean
    differents += (bool) equals(h1->GetMean(1), h2->GetMean(1), ERRORLIMIT);
    if ( debug )
-      cout << "Mean: " << h1->GetMean(1) << " " << h2->GetMean(1) 
+      std::cout << "Mean: " << h1->GetMean(1) << " " << h2->GetMean(1) 
            << " | " << fabs( h1->GetMean(1) - h2->GetMean(1) ) 
            << " " << differents
-           << endl;
+           << std::endl;
    
    // RMS
    differents += (bool) equals( h1->GetRMS(1), h2->GetRMS(1), ERRORLIMIT);
    if ( debug )
-      cout << "RMS: " << h1->GetRMS(1) << " " << h2->GetRMS(1) 
+      std::cout << "RMS: " << h1->GetRMS(1) << " " << h2->GetRMS(1) 
            << " | " << fabs( h1->GetRMS(1) - h2->GetRMS(1) ) 
            << " " << differents
-           << endl;  
+           << std::endl;  
 
    // Number of Entries
    // check if is an unweighted histogram compare entries and  effective entries
@@ -9877,28 +9879,28 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
    // check first sum of weights
    differents += (bool) equals( stats1[0], stats2[0], 100*ERRORLIMIT);
    if ( debug )
-      cout << "Sum Of Weigths: " << stats1[0] << " " << stats2[0]
+      std::cout << "Sum Of Weigths: " << stats1[0] << " " << stats2[0]
            << " | " << fabs( stats1[0] - stats2[0] ) 
            << " " << differents
-           << endl;  
+           << std::endl;  
 
    if (TMath::AreEqualRel(stats1[0], h1->GetEffectiveEntries() , 1.E-12) ) { 
       // unweighted histograms - check also number of entries
       differents += (bool) equals( h1->GetEntries(), h2->GetEntries(), 100*ERRORLIMIT);
       if ( debug )
-         cout << "Entries: " << h1->GetEntries() << " " << h2->GetEntries() 
+         std::cout << "Entries: " << h1->GetEntries() << " " << h2->GetEntries() 
               << " | " << fabs( h1->GetEntries() - h2->GetEntries() ) 
               << " " << differents
-              << endl;  
+              << std::endl;  
    }
    
    // Number of Effective Entries
    differents += (bool) equals( h1->GetEffectiveEntries(), h2->GetEffectiveEntries(), 100*ERRORLIMIT);
    if ( debug )
-      cout << "Eff Entries: " << h1->GetEffectiveEntries() << " " << h2->GetEffectiveEntries() 
+      std::cout << "Eff Entries: " << h1->GetEffectiveEntries() << " " << h2->GetEffectiveEntries() 
            << " | " << fabs( h1->GetEffectiveEntries() - h2->GetEffectiveEntries() ) 
            << " " << differents
-           << endl;  
+           << std::endl;  
 
    std::cout.precision(pr);   
 

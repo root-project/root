@@ -58,7 +58,7 @@ public:
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetEltuDimensions(Double_t a, Double_t b, Double_t dz);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *points) const;

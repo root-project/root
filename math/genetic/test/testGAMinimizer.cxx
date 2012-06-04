@@ -27,7 +27,7 @@ public :
 
    inline double DoEval (const double * x) const { 
       fNCalls++;
-      //cout << "called!" << endl;
+      //std::cout << "called!" << std::endl;
       const Double_t xx = x[0];
       const Double_t yy = x[1];
       const Double_t tmp1 = yy-xx*xx;
@@ -77,7 +77,7 @@ int testGAMinimizer() {
    gaParabole.SetFunction(parabole);
    gaParabole.SetLimitedVariable(0, "x", 0, 0, -5, +5);
    gaParabole.Minimize();
-   cout << "Parabole min:" << gaParabole.MinValue() << endl;
+   std::cout << "Parabole min:" << gaParabole.MinValue() << std::endl;
 
    ROOT::Math::GeneticMinimizer gaRosenBrock;
    RosenBrockFunction RosenBrock;
@@ -86,16 +86,16 @@ int testGAMinimizer() {
    gaRosenBrock.SetLimitedVariable(0, "x", 0, 0, -5, +5);
    gaRosenBrock.Minimize();
    const double * xmin = gaRosenBrock.X(); 
-   cout << "RosenBrock min: [" << xmin[0] << "] [" << xmin[1] << "]" << endl;
+   std::cout << "RosenBrock min: [" << xmin[0] << "] [" << xmin[1] << "]" << std::endl;
 
    ROOT::Math::GeneticMinimizer gaMultiMin;
    MultiMin multimin;
    gaMultiMin.SetFunction(multimin);
    gaMultiMin.SetLimitedVariable(0, "x", 0, 0, -5, +5);
    gaMultiMin.Minimize();
-   cout << "MultiMin min:" << gaMultiMin.MinValue() << endl;
+   std::cout << "MultiMin min:" << gaMultiMin.MinValue() << std::endl;
 
-   cout << "Done!" << endl;
+   std::cout << "Done!" << std::endl;
 
    return status;
 }

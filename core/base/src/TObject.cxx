@@ -539,12 +539,12 @@ void TObject::ls(Option_t *option) const
    // is typically much less verbose then Dump().
 
    TROOT::IndentLevel();
-   cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : ";
-   cout << Int_t(TestBit(kCanDelete));  
+   std::cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : ";
+   std::cout << Int_t(TestBit(kCanDelete));  
    if (strstr(option,"noaddr")==0) {
-      cout <<" at: "<< this ;
+      std::cout <<" at: "<< this ;
    }
-   cout << endl;
+   std::cout << std::endl;
 }
 
 //______________________________________________________________________________
@@ -596,7 +596,7 @@ void TObject::Print(Option_t *) const
 {
    // This method must be overridden when a class wants to print itself.
 
-   cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << endl;
+   std::cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << std::endl;
 }
 
 //______________________________________________________________________________
@@ -653,28 +653,28 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
    } else {
       fname = Form("%s.C", GetName());
    }
-   ofstream out;
-   out.open(fname, ios::out);
+   std::ofstream out;
+   out.open(fname, std::ios::out);
    if (!out.good ()) {
       Error("SaveAs", "cannot open file: %s", fname);
       return;
    }
-   out <<"{"<<endl;
-   out <<"//========= Macro generated from object: "<<GetName()<<"/"<<GetTitle()<<endl;
-   out <<"//========= by ROOT version"<<gROOT->GetVersion()<<endl;
+   out <<"{"<<std::endl;
+   out <<"//========= Macro generated from object: "<<GetName()<<"/"<<GetTitle()<<std::endl;
+   out <<"//========= by ROOT version"<<gROOT->GetVersion()<<std::endl;
    ((TObject*)this)->SavePrimitive(out,option);
-   out <<"}"<<endl;
+   out <<"}"<<std::endl;
    out.close();
    Info("SaveAs", "C++ Macro file: %s has been generated", fname);
 }
 
 //______________________________________________________________________________
-void TObject::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TObject::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
 
    out << "//Primitive: " << GetName() << "/" << GetTitle()
-       <<". You must implement " << ClassName() << "::SavePrimitive" << endl;
+       <<". You must implement " << ClassName() << "::SavePrimitive" << std::endl;
 }
 
 //______________________________________________________________________________

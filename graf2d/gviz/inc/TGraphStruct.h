@@ -61,7 +61,7 @@ public:
    TList       *GetListOfNodes() const { return fNodes; }
    TList       *GetListOfEdges() const { return fEdges; }
    Int_t        Layout();
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
    void         SetMargin(Double_t m=10) {fMargin = m;}
 
    ClassDef(TGraphStruct,1)  //Graph structure class

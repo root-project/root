@@ -48,7 +48,7 @@ protected:
    Int_t        fLenBuffer;       //Buffer length
    Int_t        fSizBuffer;       //Buffer size
    Bool_t       fPrinted;         //True when a page must be printed
-   ofstream    *fStream;          //File stream identifier
+   std::ofstream    *fStream;          //File stream identifier
    char        *fBuffer;          //File buffer
    const char  *fImplicitCREsc;   //Escape symbol before enforced new line
 
@@ -77,7 +77,7 @@ public:
    virtual void  WriteInteger(Int_t i, Bool_t space=kTRUE);
    virtual void  WriteReal(Float_t r);
    virtual void *GetStream() const {  return (void*)fStream; }
-   virtual void  SetStream(ofstream *os) {  fStream = os; }
+   virtual void  SetStream(std::ofstream *os) {  fStream = os; }
 
    virtual void  SetType(Int_t /*type*/ = -111) { }
    virtual Int_t GetType() const { return 111; }

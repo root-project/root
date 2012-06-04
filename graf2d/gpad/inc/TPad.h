@@ -127,7 +127,7 @@ protected:
    void          PaintBorder(Color_t color, Bool_t tops);
    virtual void  PaintBorderPS(Double_t xl,Double_t yl,Double_t xt,Double_t yt,Int_t bmode,Int_t bsize,Int_t dark,Int_t light);
    void          PaintDate();
-   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void  SetBatch(Bool_t batch=kTRUE);
 
 private:

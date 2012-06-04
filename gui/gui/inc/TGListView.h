@@ -182,7 +182,7 @@ public:
    UInt_t         GetNumColumns() { return fNColumns; }
    EListViewMode  GetViewMode() const { return fViewMode; }
    virtual const char *GetHeader(Int_t idx) const;
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void   SetIncrements(Int_t hInc, Int_t vInc);
    virtual void   SetDefaultColumnWidth(TGVFileSplitter* splitter);
    TGDimension    GetMaxItemSize() const { return fMaxSize; }
@@ -256,7 +256,7 @@ public:
                               { fListView->SetHeader(s,hmode,cmode,idx); }
    void   SetDefaultHeaders() { fListView->SetDefaultHeaders(); }
    const char *GetHeader(Int_t idx) const { return fListView->GetHeader(idx); }
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGLVContainer,0)  // Listview container
 };

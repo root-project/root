@@ -137,7 +137,7 @@ public:
 
    virtual const TGFrame *GetNextSelected(void **current);
    virtual TGFrame *GetLastActive() const { return fLastActiveEl ? fLastActiveEl->fFrame : 0; }
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    virtual Bool_t HandleDNDFinished() { fBdown = kFALSE; return kTRUE; }
    virtual Bool_t HandleExpose(Event_t *event);
@@ -246,7 +246,7 @@ public:
    virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGCanvas,0)  // A canvas with two scrollbars and a viewport
 };

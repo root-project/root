@@ -107,7 +107,7 @@ public:
    Int_t             GetArcMode() const { return fValues.fArcMode; }
 
    void Print(Option_t *option="") const;
-   void SavePrimitive(ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGGC,0)  // Graphics context
 };

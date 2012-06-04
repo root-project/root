@@ -980,8 +980,8 @@ Int_t TXSocket::Flush()
    // Returns number of bytes in flushed buffers.
 
    Int_t nf = 0;
-   list<TXSockBuf *> splist;
-   list<TXSockBuf *>::iterator i;
+   std::list<TXSockBuf *> splist;
+   std::list<TXSockBuf *>::iterator i;
 
    {  R__LOCKGUARD(fAMtx);
 
@@ -1489,7 +1489,7 @@ TXSockBuf *TXSocket::PopUpSpare(Int_t size)
 
    Int_t maxsz = 0;
    if (fgSQue.size() > 0) {
-      list<TXSockBuf *>::iterator i;
+      std::list<TXSockBuf *>::iterator i;
       for (i = fgSQue.begin(); i != fgSQue.end(); i++) {
          maxsz = ((*i)->fSiz > maxsz) ? (*i)->fSiz : maxsz;
          if ((*i) && (*i)->fSiz >= size) {

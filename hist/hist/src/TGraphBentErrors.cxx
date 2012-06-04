@@ -467,32 +467,32 @@ void TGraphBentErrors::Print(Option_t *) const
 
 
 //______________________________________________________________________________
-void TGraphBentErrors::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TGraphBentErrors::Class())) {
       out<<"   ";
    } else {
       out<<"   TGraphBentErrors *";
    }
-   out<<"grbe = new TGraphBentErrors("<<fNpoints<<");"<<endl;
-   out<<"   grbe->SetName("<<quote<<GetName()<<quote<<");"<<endl;
-   out<<"   grbe->SetTitle("<<quote<<GetTitle()<<quote<<");"<<endl;
+   out<<"grbe = new TGraphBentErrors("<<fNpoints<<");"<<std::endl;
+   out<<"   grbe->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
+   out<<"   grbe->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
 
    SaveFillAttributes(out,"grbe",0,1001);
    SaveLineAttributes(out,"grbe",1,1,1);
    SaveMarkerAttributes(out,"grbe",1,1,1);
 
    for (Int_t i=0;i<fNpoints;i++) {
-      out<<"   grbe->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
+      out<<"   grbe->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<std::endl;
       out<<"   grbe->SetPointError("<<i<<","<<fEXlow[i]<<","<<fEXhigh[i]
                                        <<","<<fEYlow[i]<<","<<fEYhigh[i]
                                        <<","<<fEXlowd[i]<<","<<fEXhighd[i]
                                        <<","<<fEYlowd[i]<<","<<fEYhighd[i]
-                                       <<");"<<endl;
+                                       <<");"<<std::endl;
    }
 
    static Int_t frameNumber = 0;
@@ -502,8 +502,8 @@ void TGraphBentErrors::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       hname += frameNumber;
       fHistogram->SetName(Form("Graph_%s",hname.Data()));
       fHistogram->SavePrimitive(out,"nodraw");
-      out<<"   grbe->SetHistogram("<<fHistogram->GetName()<<");"<<endl;
-      out<<"   "<<endl;
+      out<<"   grbe->SetHistogram("<<fHistogram->GetName()<<");"<<std::endl;
+      out<<"   "<<std::endl;
    }
 
    // save list of functions
@@ -511,17 +511,17 @@ void TGraphBentErrors::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    TObject *obj;
    while ((obj=next())) {
       obj->SavePrimitive(out,"nodraw");
-      out<<"   grbe->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
+      out<<"   grbe->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<std::endl;
       if (obj->InheritsFrom("TPaveStats")) {
-         out<<"   ptstats->SetParent(grbe->GetListOfFunctions());"<<endl;
+         out<<"   ptstats->SetParent(grbe->GetListOfFunctions());"<<std::endl;
       }
    }
 
    const char *l = strstr(option,"multigraph");
    if (l) {
-      out<<"   multigraph->Add(grbe,"<<quote<<l+10<<quote<<");"<<endl;
+      out<<"   multigraph->Add(grbe,"<<quote<<l+10<<quote<<");"<<std::endl;
    } else {
-      out<<"   grbe->Draw("<<quote<<option<<quote<<");"<<endl;
+      out<<"   grbe->Draw("<<quote<<option<<quote<<");"<<std::endl;
    }
 }
 

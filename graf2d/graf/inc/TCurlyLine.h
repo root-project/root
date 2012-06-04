@@ -64,7 +64,7 @@ public:
    virtual void SetAmplitude(Double_t x);               // *MENU* *ARGS={x=>fAmplitude}
    virtual void SetStartPoint(Double_t x1, Double_t y1);
    virtual void SetEndPoint  (Double_t x2, Double_t y2);
-   virtual void SavePrimitive(ostream &out, Option_t * = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
 
    static void     SetDefaultWaveLength(Double_t WaveLength);
    static void     SetDefaultAmplitude (Double_t Amplitude );

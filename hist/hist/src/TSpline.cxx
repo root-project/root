@@ -834,7 +834,7 @@ void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
    // the name of the function is the name of the file up to the "." if any
 
    //open the file
-   ofstream *f = new ofstream(filename,ios::out);
+   std::ofstream *f = new std::ofstream(filename,std::ios::out);
    if (f == 0 || gSystem->AccessPathName(filename,kWritePermission)) {
       Error("SaveAs","Cannot open file:%s\n",filename);
       return;
@@ -989,12 +989,12 @@ void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
 
 
 //______________________________________________________________________________
-void TSpline3::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TSpline3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TSpline3::Class())) {
       out<<"   ";
    } else {
@@ -1002,19 +1002,19 @@ void TSpline3::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    }
    out<<"spline3 = new TSpline3("<<quote<<GetTitle()<<quote<<","
       <<fXmin<<","<<fXmax<<",(TF1*)0,"<<fNp<<","<<quote<<quote<<","
-      <<fValBeg<<","<<fValEnd<<");"<<endl;
-   out<<"   spline3->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+      <<fValBeg<<","<<fValEnd<<");"<<std::endl;
+   out<<"   spline3->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
 
    SaveFillAttributes(out,"spline3",0,1001);
    SaveLineAttributes(out,"spline3",1,1,1);
    SaveMarkerAttributes(out,"spline3",1,1,1);
-   if (fNpx != 100) out<<"   spline3->SetNpx("<<fNpx<<");"<<endl;
+   if (fNpx != 100) out<<"   spline3->SetNpx("<<fNpx<<");"<<std::endl;
 
    for (Int_t i=0;i<fNp;i++) {
-      out<<"   spline3->SetPoint("<<i<<","<<fPoly[i].X()<<","<<fPoly[i].Y()<<");"<<endl;
-      out<<"   spline3->SetPointCoeff("<<i<<","<<fPoly[i].B()<<","<<fPoly[i].C()<<","<<fPoly[i].D()<<");"<<endl;
+      out<<"   spline3->SetPoint("<<i<<","<<fPoly[i].X()<<","<<fPoly[i].Y()<<");"<<std::endl;
+      out<<"   spline3->SetPointCoeff("<<i<<","<<fPoly[i].B()<<","<<fPoly[i].C()<<","<<fPoly[i].D()<<");"<<std::endl;
    }
-   out<<"   spline3->Draw("<<quote<<option<<quote<<");"<<endl;
+   out<<"   spline3->Draw("<<quote<<option<<quote<<");"<<std::endl;
 }
 
 
@@ -1623,7 +1623,7 @@ void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
    // the name of the function is the name of the file up to the "." if any
 
    //open the file
-   ofstream *f = new ofstream(filename,ios::out);
+   std::ofstream *f = new std::ofstream(filename,std::ios::out);
    if (f == 0 || gSystem->AccessPathName(filename,kWritePermission)) {
       Error("SaveAs","Cannot open file:%s\n",filename);
       return;
@@ -1810,12 +1810,12 @@ void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
 
 
 //______________________________________________________________________________
-void TSpline5::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TSpline5::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TSpline5::Class())) {
       out<<"   ";
    } else {
@@ -1827,19 +1827,19 @@ void TSpline5::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    Double_t e2 = fPoly[fNp-1].Y();
    out<<"spline5 = new TSpline5("<<quote<<GetTitle()<<quote<<","
       <<fXmin<<","<<fXmax<<",(TF1*)0,"<<fNp<<","<<quote<<quote<<","
-      <<b1<<","<<e1<<","<<b2<<","<<e2<<");"<<endl;
-   out<<"   spline5->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+      <<b1<<","<<e1<<","<<b2<<","<<e2<<");"<<std::endl;
+   out<<"   spline5->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
 
    SaveFillAttributes(out,"spline5",0,1001);
    SaveLineAttributes(out,"spline5",1,1,1);
    SaveMarkerAttributes(out,"spline5",1,1,1);
-   if (fNpx != 100) out<<"   spline5->SetNpx("<<fNpx<<");"<<endl;
+   if (fNpx != 100) out<<"   spline5->SetNpx("<<fNpx<<");"<<std::endl;
 
    for (Int_t i=0;i<fNp;i++) {
-      out<<"   spline5->SetPoint("<<i<<","<<fPoly[i].X()<<","<<fPoly[i].Y()<<");"<<endl;
-      out<<"   spline5->SetPointCoeff("<<i<<","<<fPoly[i].B()<<","<<fPoly[i].C()<<","<<fPoly[i].D()<<","<<fPoly[i].E()<<","<<fPoly[i].F()<<");"<<endl;
+      out<<"   spline5->SetPoint("<<i<<","<<fPoly[i].X()<<","<<fPoly[i].Y()<<");"<<std::endl;
+      out<<"   spline5->SetPointCoeff("<<i<<","<<fPoly[i].B()<<","<<fPoly[i].C()<<","<<fPoly[i].D()<<","<<fPoly[i].E()<<","<<fPoly[i].F()<<");"<<std::endl;
    }
-   out<<"   spline5->Draw("<<quote<<option<<quote<<");"<<endl;
+   out<<"   spline5->Draw("<<quote<<option<<quote<<");"<<std::endl;
 }
 
 

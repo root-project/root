@@ -1492,8 +1492,8 @@ void THtml::Convert(const char *filename, const char *title,
    cRealFilename = 0;
 
    // open source file
-   ifstream sourceFile;
-   sourceFile.open(realFilename, ios::in);
+   std::ifstream sourceFile;
+   sourceFile.open(realFilename, std::ios::in);
 
    if (!sourceFile.good()) {
       Error("Convert", "Can't open file '%s' !", realFilename.Data());

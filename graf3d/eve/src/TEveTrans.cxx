@@ -1010,9 +1010,9 @@ void TEveTrans::Print(Option_t* /*option*/) const
 #include <iomanip>
 
 //______________________________________________________________________________
-ostream& operator<<(ostream& s, const TEveTrans& t)
+std::ostream& operator<<(std::ostream& s, const TEveTrans& t)
 {
-   // Print to ostream.
+   // Print to std::ostream.
 
    s.setf(std::ios::fixed, std::ios::floatfield);
    s.precision(3);

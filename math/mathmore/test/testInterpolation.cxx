@@ -141,10 +141,10 @@ int main(int argc, char **argv)
 
    if ( argc > 1 && argc != 2 )
    {
-      cerr << "Usage: " << argv[0] << " [-ng]\n";
-      cerr << "  where:\n";
-      cerr << "     -ng : no graphics mode";
-      cerr << endl;
+      std::cerr << "Usage: " << argv[0] << " [-ng]\n";
+      std::cerr << "  where:\n";
+      std::cerr << "     -ng : no graphics mode";
+      std::cerr << std::endl;
       exit(1);
    }
 

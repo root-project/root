@@ -70,7 +70,7 @@ public:
    TGCompositeFrame *GetBarPart(Int_t npart) const;
    TGDimension GetDefaultSize() const;
 
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGStatusBar,0)  // Status bar widget
 };

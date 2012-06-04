@@ -16,6 +16,8 @@
 #include <math.h> 
 #include "TMath.h" 
 
+using namespace std;
+
 ClassImp(RooHistConstraint) 
   
 RooHistConstraint::RooHistConstraint(const char *name, const char *title, const RooArgSet& phfSet, Int_t threshold) :

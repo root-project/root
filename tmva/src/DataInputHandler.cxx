@@ -134,7 +134,7 @@ TTree* TMVA::DataInputHandler::ReadInputTree( const TString& dataFile )
    // create trees from these ascii files
    TTree* tr = new TTree( "tmp", dataFile );
   
-   ifstream in(dataFile);
+   std::ifstream in(dataFile);
    if (!in.good()) Log() << kFATAL << "Could not open file: " << dataFile << Endl;
    in.close();
 

@@ -158,7 +158,7 @@ TKey::TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset) : TNamed
          return;
       }
       if (gDebug) {
-         cout << "TKey Reading "<<nsize<< " bytes at address "<<fSeekKey<<endl;
+         std::cout << "TKey Reading "<<nsize<< " bytes at address "<<fSeekKey<<std::endl;
       }
    }
    fBuffer += bufferDecOffset; // Reset the buffer to be appropriate for this key.
@@ -672,7 +672,7 @@ void TKey::ls(Option_t *) const
    // List Key contents.
 
    TROOT::IndentLevel();
-   cout <<"KEY: "<<fClassName<<"\t"<<GetName()<<";"<<GetCycle()<<"\t"<<GetTitle()<<endl;
+   std::cout <<"KEY: "<<fClassName<<"\t"<<GetName()<<";"<<GetCycle()<<"\t"<<GetTitle()<<std::endl;
 }
 
 //______________________________________________________________________________
@@ -1258,7 +1258,7 @@ Bool_t TKey::ReadFile()
    }
 #endif
    if (gDebug) {
-      cout << "TKey Reading "<<nsize<< " bytes at address "<<fSeekKey<<endl;
+      std::cout << "TKey Reading "<<nsize<< " bytes at address "<<fSeekKey<<std::endl;
    }
    return kTRUE;
 }
@@ -1441,8 +1441,8 @@ Int_t TKey::WriteFile(Int_t cycle, TFile* f)
    //f->Flush(); Flushing takes too much time.
    //            Let user flush the file when he wants.
    if (gDebug) {
-      cout <<"   TKey Writing "<<nsize<< " bytes at address "<<fSeekKey
-           <<" for ID= " <<GetName()<<" Title= "<<GetTitle()<<endl;
+      std::cout <<"   TKey Writing "<<nsize<< " bytes at address "<<fSeekKey
+           <<" for ID= " <<GetName()<<" Title= "<<GetTitle()<<std::endl;
    }
 
    DeleteBuffer();
@@ -1477,8 +1477,8 @@ Int_t TKey::WriteFileKeepBuffer(TFile *f)
    //f->Flush(); Flushing takes too much time.
    //            Let user flush the file when he wants.
    if (gDebug) {
-      cout <<"   TKey Writing "<<nsize<< " bytes at address "<<fSeekKey
-      <<" for ID= " <<GetName()<<" Title= "<<GetTitle()<<endl;
+      std::cout <<"   TKey Writing "<<nsize<< " bytes at address "<<fSeekKey
+      <<" for ID= " <<GetName()<<" Title= "<<GetTitle()<<std::endl;
    }
    
    return result==kTRUE ? -1 : nsize;

@@ -156,7 +156,7 @@ void TFree::ls(Option_t *) const
 {
    // List free segment contents.
 
-   cout <<"Free Segment: "<<fFirst<<"\t"<<fLast<<endl;
+   std::cout <<"Free Segment: "<<fFirst<<"\t"<<fLast<<std::endl;
 }
 
 //______________________________________________________________________________

@@ -42,7 +42,7 @@ void TSchemaRuleSet::ls(Option_t *) const
    // is typically much less verbose then Dump().
    
    TROOT::IndentLevel();
-   cout << "TSchemaRuleSet for " << fClassName << ":\n";
+   std::cout << "TSchemaRuleSet for " << fClassName << ":\n";
    TROOT::IncreaseDirLevel();
    TObject *object = 0;
    TIter next(fPersistentRules);

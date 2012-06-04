@@ -376,7 +376,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
    TString fname = filename;
    gSystem->ExpandPathName(fname);
 
-   ifstream infile(fname.Data());
+   std::ifstream infile(fname.Data());
    if (!infile.good()) {
       MakeZombie();
       Error("TGraph", "Cannot open file: %s, TGraph is Zombie", filename);
@@ -2065,30 +2065,30 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
 
 
 //______________________________________________________________________________
-void TGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out << "   " << endl;
+   out << "   " << std::endl;
    if (gROOT->ClassSaved(TGraph::Class())) {
       out << "   ";
    } else {
       out << "   TGraph *";
    }
-   out << "graph = new TGraph(" << fNpoints << ");" << endl;
-   out << "   graph->SetName(" << quote << GetName() << quote << ");" << endl;
-   out << "   graph->SetTitle(" << quote << GetTitle() << quote << ");" << endl;
+   out << "graph = new TGraph(" << fNpoints << ");" << std::endl;
+   out << "   graph->SetName(" << quote << GetName() << quote << ");" << std::endl;
+   out << "   graph->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
 
    SaveFillAttributes(out, "graph", 0, 1001);
    SaveLineAttributes(out, "graph", 1, 1, 1);
    SaveMarkerAttributes(out, "graph", 1, 1, 1);
 
    if (fNpoints >= 1) {
-      streamsize prec = out.precision();
+      std::streamsize prec = out.precision();
       out.precision(10);
       for (Int_t i = 0; i < fNpoints; i++) {
-         out << "   graph->SetPoint(" << i << "," << fX[i] << "," << fY[i] << ");" << endl;
+         out << "   graph->SetPoint(" << i << "," << fX[i] << "," << fY[i] << ");" << std::endl;
       }
       out.precision(prec);
    }
@@ -2100,8 +2100,8 @@ void TGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       hname += frameNumber;
       fHistogram->SetName(Form("Graph_%s", hname.Data()));
       fHistogram->SavePrimitive(out, "nodraw");
-      out << "   graph->SetHistogram(" << fHistogram->GetName() << ");" << endl;
-      out << "   " << endl;
+      out << "   graph->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
+      out << "   " << std::endl;
    }
 
    // save list of functions
@@ -2110,25 +2110,25 @@ void TGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    while ((obj = next())) {
       obj->SavePrimitive(out, "nodraw");
       if (obj->InheritsFrom("TPaveStats")) {
-         out << "   graph->GetListOfFunctions()->Add(ptstats);" << endl;
-         out << "   ptstats->SetParent(graph->GetListOfFunctions());" << endl;
+         out << "   graph->GetListOfFunctions()->Add(ptstats);" << std::endl;
+         out << "   ptstats->SetParent(graph->GetListOfFunctions());" << std::endl;
       } else {
-         out << "   graph->GetListOfFunctions()->Add(" << obj->GetName() << ");" << endl;
+         out << "   graph->GetListOfFunctions()->Add(" << obj->GetName() << ");" << std::endl;
       }
    }
 
    const char *l;
    l = strstr(option, "multigraph");
    if (l) {
-      out << "   multigraph->Add(graph," << quote << l + 10 << quote << ");" << endl;
+      out << "   multigraph->Add(graph," << quote << l + 10 << quote << ");" << std::endl;
       return;
    }
    l = strstr(option, "th2poly");
    if (l) {
-      out << "   " << l + 7 << "->AddBin(graph);" << endl;
+      out << "   " << l + 7 << "->AddBin(graph);" << std::endl;
       return;
    }
-   out << "   graph->Draw(" << quote << option << quote << ");" << endl;
+   out << "   graph->Draw(" << quote << option << quote << ");" << std::endl;
 }
 
 

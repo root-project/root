@@ -851,9 +851,9 @@ Int_t TProofServ::CreateServer()
       }
    }
 
-   // Everybody expects iostream to be available, so load it...
+   // Everybody expects std::iostream to be available, so load it...
    ProcessLine("#include <iostream>", kTRUE);
-   ProcessLine("#include <string>",kTRUE); // for std::string iostream.
+   ProcessLine("#include <string>",kTRUE); // for std::string std::iostream.
 
    // The following libs are also useful to have, make sure they are loaded...
    //gROOT->LoadClass("TMinuit",     "Minuit");

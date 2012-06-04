@@ -198,10 +198,10 @@ const Int_t gSizeA[] = {5,6,7,8,9,10,15,20,30,40,50,60,70,80,90,100,300,500,700,
 
 void stressLinear(Int_t maxSizeReq,Int_t verbose)
 {
-  cout << "******************************************************************" <<endl;
-  cout << "*  Starting  Linear Algebra - S T R E S S suite                  *" <<endl;
-  cout << "******************************************************************" <<endl;
-  cout << "******************************************************************" <<endl;
+  std::cout << "******************************************************************" <<std::endl;
+  std::cout << "*  Starting  Linear Algebra - S T R E S S suite                  *" <<std::endl;
+  std::cout << "******************************************************************" <<std::endl;
+  std::cout << "******************************************************************" <<std::endl;
 
   gVerbose = verbose;
 
@@ -215,8 +215,8 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
 
   // Matrix
   {
-    cout << "*  Starting  Matrix - S T R E S S                                *" <<endl;
-    cout << "******************************************************************" <<endl;
+    std::cout << "*  Starting  Matrix - S T R E S S                                *" <<std::endl;
+    std::cout << "******************************************************************" <<std::endl;
     mstress_allocation(maxSize);
     mstress_matrix_fill(maxSize,maxSize/2);
     mstress_element_op(maxSize,maxSize/2);
@@ -234,13 +234,13 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
     mstress_inversion();
 
     mstress_matrix_io();
-    cout << "******************************************************************" <<endl;
+    std::cout << "******************************************************************" <<std::endl;
   }
 
   // Sparse Matrix
   {
-    cout << "*  Starting  Sparse Matrix - S T R E S S                         *" <<endl;
-    cout << "******************************************************************" <<endl;
+    std::cout << "*  Starting  Sparse Matrix - S T R E S S                         *" <<std::endl;
+    std::cout << "******************************************************************" <<std::endl;
     spstress_allocation(maxSize);
     spstress_matrix_fill(maxSize,maxSize/2);
     spstress_element_op(maxSize,maxSize/2);
@@ -251,39 +251,39 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
     spstress_vm_multiplications();
     spstress_matrix_slices(maxSize);
     spstress_matrix_io();
-    cout << "******************************************************************" <<endl;
+    std::cout << "******************************************************************" <<std::endl;
   }
 
   {
-    cout << "*  Starting  Vector - S T R E S S                                *" <<endl;
-    cout << "******************************************************************" <<endl;
+    std::cout << "*  Starting  Vector - S T R E S S                                *" <<std::endl;
+    std::cout << "******************************************************************" <<std::endl;
     vstress_allocation(maxSize);
     vstress_element_op(maxSize);
     vstress_binary_op(maxSize);
     vstress_norms(maxSize);
     vstress_matrix_slices(maxSize);
     vstress_vector_io();
-    cout << "******************************************************************" <<endl;
+    std::cout << "******************************************************************" <<std::endl;
   }
 
   // Linear Algebra
   {
-    cout << "*  Starting  Linear Algebra - S T R E S S                        *" <<endl;
-    cout << "******************************************************************" <<endl;
+    std::cout << "*  Starting  Linear Algebra - S T R E S S                        *" <<std::endl;
+    std::cout << "******************************************************************" <<std::endl;
     astress_decomp();
     astress_lineqn();
     astress_pseudo();
     astress_eigen(5);
     astress_decomp_io(10);
-    cout << "******************************************************************" <<endl;
+    std::cout << "******************************************************************" <<std::endl;
   }
 
   //Backward Compatibility of Streamers
   {
-    cout << "*  Starting  Backward IO compatibility - S T R E S S             *" <<endl;
-    cout << "******************************************************************" <<endl;
+    std::cout << "*  Starting  Backward IO compatibility - S T R E S S             *" <<std::endl;
+    std::cout << "******************************************************************" <<std::endl;
     stress_backward_io();
-    cout << "******************************************************************" <<endl;
+    std::cout << "******************************************************************" <<std::endl;
   }
 
   gBenchmark->Stop("stressLinear");
@@ -336,7 +336,7 @@ void StatusPrint(Int_t id,const TString &title,Bool_t status)
   TString header = TString("Test ")+number+" : "+title;
   const Int_t nch = header.Length();
   for (Int_t i = nch; i < kMAX; i++) header += '.';
-  cout << header << (status ? "OK" : "FAILED") << endl;
+  std::cout << header << (status ? "OK" : "FAILED") << std::endl;
 }
 
 //------------------------------------------------------------------------
@@ -345,7 +345,7 @@ void StatusPrint(Int_t id,const TString &title,Bool_t status)
 void mstress_allocation(Int_t msize)
 {
   if (gVerbose)
-    cout << "\n\n---> Test allocation and compatibility check" << endl;
+    std::cout << "\n\n---> Test allocation and compatibility check" << std::endl;
 
   Int_t i,j;
   Bool_t ok = kTRUE;
@@ -360,26 +360,26 @@ void mstress_allocation(Int_t msize)
   TMatrixD m4(m1);
 
   if (gVerbose) {
-    cout << "\nStatus information reported for matrix m3:" << endl;
-    cout << "  Row lower bound ... " << m3.GetRowLwb() << endl;
-    cout << "  Row upper bound ... " << m3.GetRowUpb() << endl;
-    cout << "  Col lower bound ... " << m3.GetColLwb() << endl;
-    cout << "  Col upper bound ... " << m3.GetColUpb() << endl;
-    cout << "  No. rows ..........." << m3.GetNrows()  << endl;
-    cout << "  No. cols ..........." << m3.GetNcols()  << endl;
-    cout << "  No. of elements ...." << m3.GetNoElements() << endl;
+    std::cout << "\nStatus information reported for matrix m3:" << std::endl;
+    std::cout << "  Row lower bound ... " << m3.GetRowLwb() << std::endl;
+    std::cout << "  Row upper bound ... " << m3.GetRowUpb() << std::endl;
+    std::cout << "  Col lower bound ... " << m3.GetColLwb() << std::endl;
+    std::cout << "  Col upper bound ... " << m3.GetColUpb() << std::endl;
+    std::cout << "  No. rows ..........." << m3.GetNrows()  << std::endl;
+    std::cout << "  No. cols ..........." << m3.GetNcols()  << std::endl;
+    std::cout << "  No. of elements ...." << m3.GetNoElements() << std::endl;
   }
 
   if (gVerbose)
-    cout << "\nCheck matrices 1 & 2 for compatibility" << endl;
+    std::cout << "\nCheck matrices 1 & 2 for compatibility" << std::endl;
   ok &= AreCompatible(m1,m2,gVerbose);
 
   if (gVerbose)
-    cout << "Check matrices 1 & 4 for compatibility" << endl;
+    std::cout << "Check matrices 1 & 4 for compatibility" << std::endl;
   ok &= AreCompatible(m1,m4,gVerbose);
 
   if (gVerbose)
-    cout << "m2 has to be compatible with m3 after resizing to m3" << endl;
+    std::cout << "m2 has to be compatible with m3 after resizing to m3" << std::endl;
   m2.ResizeTo(m3);
   ok &= AreCompatible(m2,m3,gVerbose);
 
@@ -389,23 +389,23 @@ void mstress_allocation(Int_t msize)
       m5(i,j) = TMath::Pi()*i+TMath::E()*j;
 
   if (gVerbose)
-    cout << "m1 has to be compatible with m5 after resizing to m5" << endl;
+    std::cout << "m1 has to be compatible with m5 after resizing to m5" << std::endl;
   m1.ResizeTo(m5.GetNrows(),m5.GetNcols());
   ok &= AreCompatible(m1,m5,gVerbose);
 
   if (gVerbose)
-    cout << "m1 has to be equal to m4 after stretching and shrinking" << endl;
+    std::cout << "m1 has to be equal to m4 after stretching and shrinking" << std::endl;
   m1.ResizeTo(m4.GetNrows(),m4.GetNcols());
   ok &= VerifyMatrixIdentity(m1,m4,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "m5 has to be equal to m1 after shrinking" << endl;
+    std::cout << "m5 has to be equal to m1 after shrinking" << std::endl;
   m5.ResizeTo(m1.GetNrows(),m1.GetNcols());
   ok &= VerifyMatrixIdentity(m1,m5,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "stretching and shrinking for small matrices (stack)" << endl;
+    std::cout << "stretching and shrinking for small matrices (stack)" << std::endl;
   if (gVerbose)
-    cout << "m8 has to be equal to m7 after stretching and shrinking" << endl;
+    std::cout << "m8 has to be equal to m7 after stretching and shrinking" << std::endl;
   TMatrixD m6(4,4);
   for (i = m6.GetRowLwb(); i <= m6.GetRowUpb(); i++)
     for (j = m6.GetColLwb(); j <= m6.GetColUpb(); j++)
@@ -421,12 +421,12 @@ void mstress_allocation(Int_t msize)
   ok &= VerifyMatrixIdentity(m7,m8,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "m6 has to be equal to m8 after shrinking" << endl;
+    std::cout << "m6 has to be equal to m8 after shrinking" << std::endl;
   m6.ResizeTo(3,3);
   ok &= VerifyMatrixIdentity(m6,m8,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(1,"Allocation, Resizing",ok);
 }
@@ -448,11 +448,11 @@ public:
 void mstress_matrix_fill(Int_t rsize,Int_t csize)
 {
   if (gVerbose)
-    cout << "\n\n---> Test different matrix filling methods\n" << endl;
+    std::cout << "\n\n---> Test different matrix filling methods\n" << std::endl;
 
   Bool_t ok = kTRUE;
   if (gVerbose)
-    cout << "Creating m  with Apply function..." << endl;
+    std::cout << "Creating m  with Apply function..." << std::endl;
   TMatrixD m(-1,rsize-2,1,csize);
 #ifndef __CINT__
   FillMatrix f(m);
@@ -465,7 +465,7 @@ void mstress_matrix_fill(Int_t rsize,Int_t csize)
 
   {
     if (gVerbose)
-      cout << "Check identity between m and matrix filled through (i,j)" << endl;
+      std::cout << "Check identity between m and matrix filled through (i,j)" << std::endl;
 
     TMatrixD m_overload1(-1,rsize-2,1,csize);
     TMatrixD m_overload2(-1,rsize-2,1,csize);
@@ -482,10 +482,10 @@ void mstress_matrix_fill(Int_t rsize,Int_t csize)
 
     ok &= VerifyMatrixIdentity(m,m_overload1,gVerbose,EPSILON);
     if (gVerbose)
-      cout << "Check identity between m and matrix filled through [i][j]" << endl;
+      std::cout << "Check identity between m and matrix filled through [i][j]" << std::endl;
     ok &= VerifyMatrixIdentity(m,m_overload2,gVerbose,EPSILON);
     if (gVerbose)
-      cout << "Check identity between matrix filled through [i][j] and (i,j)" << endl;
+      std::cout << "Check identity between matrix filled through [i][j] and (i,j)" << std::endl;
     ok &= VerifyMatrixIdentity(m_overload1,m_overload2,gVerbose,EPSILON);
   }
 
@@ -502,23 +502,23 @@ void mstress_matrix_fill(Int_t rsize,Int_t csize)
     }
 
     if (gVerbose)
-      cout << "Creating m_fortran by filling with fortran stored matrix" << endl;
+      std::cout << "Creating m_fortran by filling with fortran stored matrix" << std::endl;
     TMatrixD m_fortran(-1,rsize-2,1,csize,a_fortran.GetArray(),"F");
     if (gVerbose)
-      cout << "Check identity between m and m_fortran" << endl;
+      std::cout << "Check identity between m and m_fortran" << std::endl;
     ok &= VerifyMatrixIdentity(m,m_fortran,gVerbose,EPSILON);
 
     if (gVerbose)
-      cout << "Creating m_c by filling with c stored matrix" << endl;
+      std::cout << "Creating m_c by filling with c stored matrix" << std::endl;
     TMatrixD m_c(-1,rsize-2,1,csize,a_c.GetArray());
     if (gVerbose)
-      cout << "Check identity between m and m_c" << endl;
+      std::cout << "Check identity between m and m_c" << std::endl;
     ok &= VerifyMatrixIdentity(m,m_c,gVerbose,EPSILON);
   }
 
   {
     if (gVerbose)
-      cout << "Check insertion/extraction of sub-matrices" << endl;
+      std::cout << "Check insertion/extraction of sub-matrices" << std::endl;
     {
       TMatrixD m_sub1 = m;
       m_sub1.ResizeTo(0,rsize-2,2,csize);
@@ -555,7 +555,7 @@ void mstress_matrix_fill(Int_t rsize,Int_t csize)
 
   {
     if (gVerbose)
-      cout << "Check sub-matrix views" << endl;
+      std::cout << "Check sub-matrix views" << std::endl;
     {
       TMatrixD m3(-1,rsize-2,1,csize);
       TMatrixDSub(m3,0,rsize-2,2,csize) = TMatrixDSub(m,0,rsize-2,2,csize);
@@ -580,7 +580,7 @@ void mstress_matrix_fill(Int_t rsize,Int_t csize)
 
   {
     if (gVerbose)
-      cout << "Check array Use" << endl;
+      std::cout << "Check array Use" << std::endl;
     {
       TMatrixD *m1a = new TMatrixD(m);
       TMatrixD *m2a = new TMatrixD();
@@ -595,7 +595,7 @@ void mstress_matrix_fill(Int_t rsize,Int_t csize)
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(2,"Filling, Inserting, Using",ok);
 }
@@ -620,7 +620,7 @@ void mstress_element_op(Int_t rsize,Int_t csize)
   TMatrixD m(-1,rsize-2,1,csize);
 
   if (gVerbose)
-    cout << "\nWriting zeros to m..." << endl;
+    std::cout << "\nWriting zeros to m..." << std::endl;
   {
     for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
       for(Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
@@ -629,17 +629,17 @@ void mstress_element_op(Int_t rsize,Int_t csize)
   }
 
   if (gVerbose)
-    cout << "Creating zero m1 ..." << endl;
+    std::cout << "Creating zero m1 ..." << std::endl;
   TMatrixD m1(TMatrixD::kZero, m);
   ok &= VerifyMatrixValue(m1,0.,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "Comparing m1 with 0 ..." << endl;
+    std::cout << "Comparing m1 with 0 ..." << std::endl;
   R__ASSERT(m1 == 0);
   R__ASSERT(!(m1 != 0));
 
   if (gVerbose)
-    cout << "Writing a pattern " << pattern << " by assigning to m(i,j)..." << endl;
+    std::cout << "Writing a pattern " << pattern << " by assigning to m(i,j)..." << std::endl;
   {
     for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
       for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
@@ -648,38 +648,38 @@ void mstress_element_op(Int_t rsize,Int_t csize)
   }
 
   if (gVerbose)
-    cout << "Writing the pattern by assigning to m1 as a whole ..."  << endl;
+    std::cout << "Writing the pattern by assigning to m1 as a whole ..."  << std::endl;
   m1 = pattern;
   ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "Comparing m and m1 ..." << endl;
+    std::cout << "Comparing m and m1 ..." << std::endl;
   R__ASSERT(m == m1);
   if (gVerbose)
-    cout << "Comparing (m=0) and m1 ..." << endl;
+    std::cout << "Comparing (m=0) and m1 ..." << std::endl;
   R__ASSERT(!(m.Zero() == m1));
 
   if (gVerbose)
-    cout << "Clearing m1 ..." << endl;
+    std::cout << "Clearing m1 ..." << std::endl;
   m1.Zero();
   ok &= VerifyMatrixValue(m1,0.,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nClear m and add the pattern" << endl;
+    std::cout << "\nClear m and add the pattern" << std::endl;
   m.Zero();
   m += pattern;
   ok &= VerifyMatrixValue(m,pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "   add the doubled pattern with the negative sign" << endl;
+    std::cout << "   add the doubled pattern with the negative sign" << std::endl;
   m += -2*pattern;
   ok &= VerifyMatrixValue(m,-pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "   subtract the trippled pattern with the negative sign" << endl;
+    std::cout << "   subtract the trippled pattern with the negative sign" << std::endl;
   m -= -3*pattern;
   ok &= VerifyMatrixValue(m,2*pattern,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nVerify comparison operations when all elems are the same" << endl;
+    std::cout << "\nVerify comparison operations when all elems are the same" << std::endl;
   m = pattern;
   R__ASSERT( m == pattern && !(m != pattern) );
   R__ASSERT( m > 0 && m >= pattern && m <= pattern );
@@ -690,7 +690,7 @@ void mstress_element_op(Int_t rsize,Int_t csize)
   R__ASSERT( m  >= -pattern && !(m > -pattern) );
 
   if (gVerbose)
-    cout << "\nVerify comparison operations when not all elems are the same" << endl;
+    std::cout << "\nVerify comparison operations when not all elems are the same" << std::endl;
   m = pattern; m(m.GetRowUpb(),m.GetColUpb()) = pattern-1;
   R__ASSERT( !(m == pattern) && !(m != pattern) );
   R__ASSERT( m != 0 );                   // none of elements are 0
@@ -698,25 +698,25 @@ void mstress_element_op(Int_t rsize,Int_t csize)
   R__ASSERT( !(m <= pattern-1) && m >= pattern-1 && !(m>pattern-1) );
 
   if (gVerbose)
-    cout << "\nAssign 2*pattern to m by repeating additions" << endl;
+    std::cout << "\nAssign 2*pattern to m by repeating additions" << std::endl;
   m = 0; m += pattern; m += pattern;
   if (gVerbose)
-    cout << "Assign 2*pattern to m1 by multiplying by two " << endl;
+    std::cout << "Assign 2*pattern to m1 by multiplying by two " << std::endl;
   m1 = pattern; m1 *= 2;
   ok &= VerifyMatrixValue(m1,2*pattern,gVerbose,EPSILON);
   R__ASSERT( m == m1 );
   if (gVerbose)
-    cout << "Multiply m1 by one half returning it to the 1*pattern" << endl;
+    std::cout << "Multiply m1 by one half returning it to the 1*pattern" << std::endl;
   m1 *= 1/2.;
   ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nAssign -pattern to m and m1" << endl;
+    std::cout << "\nAssign -pattern to m and m1" << std::endl;
   m.Zero(); m -= pattern; m1 = -pattern;
   ok &= VerifyMatrixValue(m,-pattern,gVerbose,EPSILON);
   R__ASSERT( m == m1 );
   if (gVerbose)
-    cout << "m = sqrt(sqr(m)); m1 = abs(m1); Now m and m1 have to be the same" << endl;
+    std::cout << "m = sqrt(sqr(m)); m1 = abs(m1); Now m and m1 have to be the same" << std::endl;
   m.Sqr();
   ok &= VerifyMatrixValue(m,pattern*pattern,gVerbose,EPSILON);
   m.Sqrt();
@@ -726,7 +726,7 @@ void mstress_element_op(Int_t rsize,Int_t csize)
   ok &= VerifyMatrixIdentity(m1,m,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nCheck out to see that sin^2(x) + cos^2(x) = 1" << endl;
+    std::cout << "\nCheck out to see that sin^2(x) + cos^2(x) = 1" << std::endl;
   {
 #ifndef __CINT__
     FillMatrix f(m);
@@ -759,7 +759,7 @@ void mstress_element_op(Int_t rsize,Int_t csize)
   ok &= VerifyMatrixValue(m,1.,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(3,"Uniform matrix operations",ok);
 }
@@ -771,7 +771,7 @@ void mstress_element_op(Int_t rsize,Int_t csize)
 void mstress_binary_ebe_op(Int_t rsize, Int_t csize)
 {
   if (gVerbose)
-    cout << "\n---> Test Binary Matrix element-by-element operations" << endl;
+    std::cout << "\n---> Test Binary Matrix element-by-element operations" << std::endl;
 
   Bool_t ok = kTRUE;
   const Double_t pattern = 4.25;
@@ -787,7 +787,7 @@ void mstress_binary_ebe_op(Int_t rsize, Int_t csize)
   }
 
   if (gVerbose)
-    cout << "\nVerify assignment of a matrix to the matrix" << endl;
+    std::cout << "\nVerify assignment of a matrix to the matrix" << std::endl;
   m = pattern;
   m1.Zero();
   m1 = m;
@@ -795,51 +795,51 @@ void mstress_binary_ebe_op(Int_t rsize, Int_t csize)
   R__ASSERT( m1 == m );
 
   if (gVerbose)
-    cout << "\nAdding the matrix to itself, uniform pattern " << pattern << endl;
+    std::cout << "\nAdding the matrix to itself, uniform pattern " << pattern << std::endl;
   m.Zero(); m = pattern;
   m1 = m; m1 += m1;
   ok &= VerifyMatrixValue(m1,2*pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "  subtracting two matrices ..." << endl;
+    std::cout << "  subtracting two matrices ..." << std::endl;
   m1 -= m;
   ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "  subtracting the matrix from itself" << endl;
+    std::cout << "  subtracting the matrix from itself" << std::endl;
   m1 -= m1;
   ok &= VerifyMatrixValue(m1,0.,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "  adding two matrices together" << endl;
+    std::cout << "  adding two matrices together" << std::endl;
   m1 += m;
   ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
 
   if (gVerbose) {
-    cout << "\nArithmetic operations on matrices with not the same elements" << endl;
-    cout << "   adding mp to the zero matrix..." << endl;
+    std::cout << "\nArithmetic operations on matrices with not the same elements" << std::endl;
+    std::cout << "   adding mp to the zero matrix..." << std::endl;
   }
   m.Zero(); m += mp;
   ok &= VerifyMatrixIdentity(m,mp,gVerbose,EPSILON);
   m1 = m;
   if (gVerbose)
-    cout << "   making m = 3*mp and m1 = 3*mp, via add() and succesive mult" << endl;
+    std::cout << "   making m = 3*mp and m1 = 3*mp, via add() and succesive mult" << std::endl;
   Add(m,2.,mp);
   m1 += m1; m1 += mp;
   ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "   clear both m and m1, by subtracting from itself and via add()" << endl;
+    std::cout << "   clear both m and m1, by subtracting from itself and via add()" << std::endl;
   m1 -= m1;
   Add(m,-3.,mp);
   ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
 
   if (gVerbose) {
-    cout << "\nTesting element-by-element multiplications and divisions" << endl;
-    cout << "   squaring each element with sqr() and via multiplication" << endl;
+    std::cout << "\nTesting element-by-element multiplications and divisions" << std::endl;
+    std::cout << "   squaring each element with sqr() and via multiplication" << std::endl;
   }
   m = mp; m1 = mp;
   m.Sqr();
   ElementMult(m1,m1);
   ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "   compare (m = pattern^2)/pattern with pattern" << endl;
+    std::cout << "   compare (m = pattern^2)/pattern with pattern" << std::endl;
   m = pattern; m1 = pattern;
   m.Sqr();
   ElementDiv(m,m1);
@@ -848,7 +848,7 @@ void mstress_binary_ebe_op(Int_t rsize, Int_t csize)
     Compare(m1,m);
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(4,"Binary Matrix element-by-element operations",ok);
 }
@@ -860,14 +860,14 @@ void mstress_binary_ebe_op(Int_t rsize, Int_t csize)
 void mstress_transposition(Int_t msize)
 {
   if (gVerbose) {
-    cout << "\n---> Verify matrix transpose "
-            "for matrices of a characteristic size " << msize << endl;
+    std::cout << "\n---> Verify matrix transpose "
+            "for matrices of a characteristic size " << msize << std::endl;
   }
 
   Bool_t ok = kTRUE;
   {
     if (gVerbose)
-      cout << "\nCheck to see that a square UnitMatrix stays the same";
+      std::cout << "\nCheck to see that a square UnitMatrix stays the same";
     TMatrixD m(msize,msize);
     m.UnitMatrix();
     TMatrixD mt(TMatrixD::kTransposed,m);
@@ -876,7 +876,7 @@ void mstress_transposition(Int_t msize)
 
   {
     if (gVerbose)
-      cout << "\nTest a non-square UnitMatrix";
+      std::cout << "\nTest a non-square UnitMatrix";
     TMatrixD m(msize,msize+1);
     m.UnitMatrix();
     TMatrixD mt(TMatrixD::kTransposed,m);
@@ -888,7 +888,7 @@ void mstress_transposition(Int_t msize)
 
   {
     if (gVerbose)
-      cout << "\nCheck to see that a symmetric (Hilbert)Matrix stays the same";
+      std::cout << "\nCheck to see that a symmetric (Hilbert)Matrix stays the same";
     TMatrixD m = THilbertMatrixD(msize,msize);
     TMatrixD mt(TMatrixD::kTransposed,m);
     ok &= ( m == mt ) ? kTRUE : kFALSE;
@@ -896,7 +896,7 @@ void mstress_transposition(Int_t msize)
 
   {
     if (gVerbose)
-      cout << "\nCheck transposing a non-symmetric matrix";
+      std::cout << "\nCheck transposing a non-symmetric matrix";
     TMatrixD m = THilbertMatrixD(msize+1,msize);
     m(1,2) = TMath::Pi();
     TMatrixD mt(TMatrixD::kTransposed,m);
@@ -905,13 +905,13 @@ void mstress_transposition(Int_t msize)
     R__ASSERT(mt[2][1] == (Double_t)TMath::Pi() && mt[1][2] != (Double_t)TMath::Pi());
 
     if (gVerbose)
-      cout << "\nCheck double transposing a non-symmetric matrix" << endl;
+      std::cout << "\nCheck double transposing a non-symmetric matrix" << std::endl;
     TMatrixD mtt(TMatrixD::kTransposed,mt);
     ok &= ( m == mtt ) ? kTRUE : kFALSE;
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(5,"Matrix transposition",ok);
 }
@@ -951,12 +951,12 @@ public:
 void mstress_special_creation(Int_t dim)
 {
   if (gVerbose)
-    cout << "\n---> Check creating some special matrices of dimension " << dim << endl;
+    std::cout << "\n---> Check creating some special matrices of dimension " << dim << std::endl;
 
   Bool_t ok = kTRUE;
   {
     if (gVerbose)
-      cout << "\ntest creating Hilbert matrices" << endl;
+      std::cout << "\ntest creating Hilbert matrices" << std::endl;
     TMatrixD m = THilbertMatrixD(dim+1,dim);
     TMatrixD m1(TMatrixD::kZero,m);
     ok &= ( !(m == m1) ) ? kTRUE : kFALSE;
@@ -975,7 +975,7 @@ void mstress_special_creation(Int_t dim)
 
   {
     if (gVerbose)
-      cout << "test creating zero matrix and copy constructor" << endl;
+      std::cout << "test creating zero matrix and copy constructor" << std::endl;
     TMatrixD m = THilbertMatrixD(dim,dim+1);
     ok &= ( m != 0 ) ? kTRUE : kFALSE;
     TMatrixD m1(m);               // Applying the copy constructor
@@ -987,7 +987,7 @@ void mstress_special_creation(Int_t dim)
 
   {
     if (gVerbose)
-      cout << "test creating unit matrices" << endl;
+      std::cout << "test creating unit matrices" << std::endl;
     TMatrixD m(dim,dim);
 #ifndef __CINT__
     {
@@ -1034,7 +1034,7 @@ void mstress_special_creation(Int_t dim)
 
   {
     if (gVerbose)
-      cout << "check to see that Haar matrix has *exactly* orthogonal columns" << endl;
+      std::cout << "check to see that Haar matrix has *exactly* orthogonal columns" << std::endl;
     Int_t j;
     const Int_t order = 5;
     const TMatrixD haar = THaarMatrixD(order);
@@ -1053,7 +1053,7 @@ void mstress_special_creation(Int_t dim)
     }
 
     if (gVerbose)
-      cout << "make Haar (sub)matrix and test it *is* a submatrix" << endl;
+      std::cout << "make Haar (sub)matrix and test it *is* a submatrix" << std::endl;
     const Int_t no_sub_cols = (1<<order) - 3;
     const TMatrixD haar_sub = THaarMatrixD(order,no_sub_cols);
     ok &= ( haar_sub.GetNrows() == (1<<order) &&
@@ -1066,7 +1066,7 @@ void mstress_special_creation(Int_t dim)
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(6,"Haar/Hilbert Matrix",ok);
 }
@@ -1091,12 +1091,12 @@ public:
 void mstress_matrix_promises(Int_t dim)
 {
   if (gVerbose)
-    cout << "\n---> Check making/forcing promises, (lazy)matrices of dimension " << dim << endl;
+    std::cout << "\n---> Check making/forcing promises, (lazy)matrices of dimension " << dim << std::endl;
 
   Bool_t ok = kTRUE;
   {
     if (gVerbose)
-      cout << "\nmake a promise and force it by a constructor" << endl;
+      std::cout << "\nmake a promise and force it by a constructor" << std::endl;
     TMatrixD m  = hilbert_matrix_promise(dim,dim+1);
     TMatrixD m1 = THilbertMatrixD(dim,dim+1);
     ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
@@ -1104,7 +1104,7 @@ void mstress_matrix_promises(Int_t dim)
 
   {
     if (gVerbose)
-      cout << "make a promise and force it by an assignment" << endl;
+      std::cout << "make a promise and force it by an assignment" << std::endl;
     TMatrixD m(-1,dim,0,dim);
     m = hilbert_matrix_promise(-1,dim,0,dim);
     TMatrixD m1 = THilbertMatrixD(-1,dim,0,dim);
@@ -1112,7 +1112,7 @@ void mstress_matrix_promises(Int_t dim)
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(7,"Matrix promises",ok);
 }
@@ -1125,7 +1125,7 @@ void mstress_matrix_promises(Int_t dim)
 void mstress_norms(Int_t rsize_req,Int_t csize_req)
 {
   if (gVerbose)
-    cout << "\n---> Verify norm calculations" << endl;
+    std::cout << "\n---> Verify norm calculations" << std::endl;
 
   Bool_t ok = kTRUE;
   const Double_t pattern = 10.25;
@@ -1135,32 +1135,32 @@ void mstress_norms(Int_t rsize_req,Int_t csize_req)
   Int_t csize = csize_req;
   if (csize%2 != 0)  csize--;
   if (rsize%2 == 1 || csize%2 == 1) {
-    cout << "rsize: " << rsize <<endl;
-    cout << "csize: " << csize <<endl;
+    std::cout << "rsize: " << rsize <<std::endl;
+    std::cout << "csize: " << csize <<std::endl;
     Fatal("mstress_norms","Sorry, size of the matrix to test must be even for this test\n");
   }
 
   TMatrixD m(rsize,csize);
 
   if (gVerbose)
-    cout << "\nAssign " << pattern << " to all the elements and check norms" << endl;
+    std::cout << "\nAssign " << pattern << " to all the elements and check norms" << std::endl;
   m = pattern;
   if (gVerbose)
-    cout << "  1. (col) norm should be pattern*nrows" << endl;
+    std::cout << "  1. (col) norm should be pattern*nrows" << std::endl;
   ok &= ( m.Norm1() == pattern*m.GetNrows() ) ? kTRUE : kFALSE;
   ok &= ( m.Norm1() == m.ColNorm() ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "  Inf (row) norm should be pattern*ncols" << endl;
+    std::cout << "  Inf (row) norm should be pattern*ncols" << std::endl;
   ok &= ( m.NormInf() == pattern*m.GetNcols() ) ? kTRUE : kFALSE;
   ok &= ( m.NormInf() == m.RowNorm() ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "  Square of the Eucl norm has got to be pattern^2 * no_elems" << endl;
+    std::cout << "  Square of the Eucl norm has got to be pattern^2 * no_elems" << std::endl;
   ok &= ( m.E2Norm() == (pattern*pattern)*m.GetNoElements() ) ? kTRUE : kFALSE;
   TMatrixD m1(TMatrixD::kZero,m);
   ok &= ( m.E2Norm() == E2Norm(m,m1) ) ? kTRUE : kFALSE;
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(8,"Matrix Norms",ok);
 }
@@ -1172,7 +1172,7 @@ void mstress_norms(Int_t rsize_req,Int_t csize_req)
 void mstress_determinant(Int_t msize)
 {
   if (gVerbose)
-    cout << "\n---> Verify determinant evaluation for a square matrix of size " << msize << endl;
+    std::cout << "\n---> Verify determinant evaluation for a square matrix of size " << msize << std::endl;
 
   Bool_t ok = kTRUE;
   TMatrixD m(msize,msize);
@@ -1180,14 +1180,14 @@ void mstress_determinant(Int_t msize)
 
   {
     if (gVerbose)
-      cout << "\nCheck to see that the determinant of the unit matrix is one" <<endl;
+      std::cout << "\nCheck to see that the determinant of the unit matrix is one" <<std::endl;
     m.UnitMatrix();
     Double_t d1,d2;
     m.Determinant(d1,d2);
     const Double_t det = d1*TMath::Power(2.,d2);
     if (gVerbose) {
-      cout << "det = " << det << " deviation= " << TMath::Abs(det-1);
-      cout << ( (TMath::Abs(det-1) < EPSILON) ? " OK" : " too large") <<endl;
+      std::cout << "det = " << det << " deviation= " << TMath::Abs(det-1);
+      std::cout << ( (TMath::Abs(det-1) < EPSILON) ? " OK" : " too large") <<std::endl;
     }
     ok &= (TMath::Abs(det-1) < EPSILON) ? kTRUE : kFALSE;
   }
@@ -1195,7 +1195,7 @@ void mstress_determinant(Int_t msize)
   if (ok)
   {
     if (gVerbose)
-      cout << "\nCheck the determinant for the matrix with " << pattern << " at the diagonal" << endl;
+      std::cout << "\nCheck the determinant for the matrix with " << pattern << " at the diagonal" << std::endl;
     {
       for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
         for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
@@ -1207,8 +1207,8 @@ void mstress_determinant(Int_t msize)
     const Double_t log_det1 = d2*TMath::Log(2.)+TMath::Log(d1_abs);
     const Double_t log_det2 = ((Double_t)m.GetNrows())*TMath::Log(pattern);
     if (gVerbose) {
-      cout << "log_det1 = " << log_det1 << " deviation= " << TMath::Abs(log_det1-log_det2);
-      cout << ( (TMath::Abs(log_det1-log_det2) < msize*EPSILON) ? " OK" : " too large") <<endl;
+      std::cout << "log_det1 = " << log_det1 << " deviation= " << TMath::Abs(log_det1-log_det2);
+      std::cout << ( (TMath::Abs(log_det1-log_det2) < msize*EPSILON) ? " OK" : " too large") <<std::endl;
     }
     ok &= ( TMath::Abs(log_det1-log_det2) < msize*EPSILON  ) ? kTRUE : kFALSE;
   }
@@ -1216,7 +1216,7 @@ void mstress_determinant(Int_t msize)
   if (ok)
   {
     if (gVerbose)
-      cout << "\nCheck the determinant of the transposed matrix" << endl;
+      std::cout << "\nCheck the determinant of the transposed matrix" << std::endl;
     m.UnitMatrix();
     m(1,2) = pattern;
     TMatrixD m_tran(TMatrixD::kTransposed,m);
@@ -1224,8 +1224,8 @@ void mstress_determinant(Int_t msize)
     const Double_t det1 = m.Determinant();
     const Double_t det2 = m_tran.Determinant();
     if (gVerbose) {
-      cout << "det1 = " << det1 << " deviation= " << TMath::Abs(det1-det2);
-      cout << ( (TMath::Abs(det1-det2) < msize*EPSILON) ? " OK" : " too large") <<endl;
+      std::cout << "det1 = " << det1 << " deviation= " << TMath::Abs(det1-det2);
+      std::cout << ( (TMath::Abs(det1-det2) < msize*EPSILON) ? " OK" : " too large") <<std::endl;
     }
     ok &= ( TMath::Abs(det1-det2) < msize*EPSILON ) ? kTRUE : kFALSE;
   }
@@ -1233,7 +1233,7 @@ void mstress_determinant(Int_t msize)
   if (ok)
   {
     if (gVerbose)
-      cout << "\nswap two rows/cols of a matrix through method 1 and watch det's sign" << endl;
+      std::cout << "\nswap two rows/cols of a matrix through method 1 and watch det's sign" << std::endl;
     m.UnitMatrix();
     TMatrixDRow(m,3) = pattern;
     Double_t d1,d2;
@@ -1245,8 +1245,8 @@ void mstress_determinant(Int_t msize)
     Double_t d1_p,d2_p;
     m.Determinant(d1_p,d2_p);
     if (gVerbose) {
-      cout << "d1 = " << d1 << " deviation= " << TMath::Abs(d1+d1_p);
-      cout << ( ( d1 == -d1_p ) ? " OK" : " too large") <<endl;
+      std::cout << "d1 = " << d1 << " deviation= " << TMath::Abs(d1+d1_p);
+      std::cout << ( ( d1 == -d1_p ) ? " OK" : " too large") <<std::endl;
     }
     ok &= ( d1 == -d1_p ) ? kTRUE : kFALSE;
     TMatrixDColumn col2(m,2);
@@ -1255,8 +1255,8 @@ void mstress_determinant(Int_t msize)
     col2 = vcol4; TMatrixDColumn(m,4) = vcol2;
     m.Determinant(d1_p,d2_p);
     if (gVerbose) {
-      cout << "d1 = " << d1 << " deviation= " << TMath::Abs(d1-d1_p);
-      cout << ( ( d1 == d1_p ) ? " OK" : " too large") <<endl;
+      std::cout << "d1 = " << d1 << " deviation= " << TMath::Abs(d1-d1_p);
+      std::cout << ( ( d1 == d1_p ) ? " OK" : " too large") <<std::endl;
     }
     ok &= ( d1 == d1_p ) ? kTRUE : kFALSE;
   }
@@ -1264,7 +1264,7 @@ void mstress_determinant(Int_t msize)
   if (ok)
   {
     if (gVerbose)
-      cout << "\nswap two rows/cols of a matrix through method 2 and watch det's sign" << endl;
+      std::cout << "\nswap two rows/cols of a matrix through method 2 and watch det's sign" << std::endl;
     m.UnitMatrix();
     TMatrixDRow(m,3) = pattern;
     Double_t d1,d2;
@@ -1276,8 +1276,8 @@ void mstress_determinant(Int_t msize)
     Double_t d1_p,d2_p;
     m.Determinant(d1_p,d2_p);
     if (gVerbose) {
-      cout << "d1 = " << d1 << " deviation= " << TMath::Abs(d1+d1_p);
-      cout << ( ( d1 == -d1_p ) ? " OK" : " too large") <<endl;
+      std::cout << "d1 = " << d1 << " deviation= " << TMath::Abs(d1+d1_p);
+      std::cout << ( ( d1 == -d1_p ) ? " OK" : " too large") <<std::endl;
     }
     ok &= ( d1 == -d1_p ) ? kTRUE : kFALSE;
 
@@ -1286,8 +1286,8 @@ void mstress_determinant(Int_t msize)
     TMatrixDColumn(m,4) = TMatrixDColumn(m_save,2);
     m.Determinant(d1_p,d2_p);
     if (gVerbose) {
-      cout << "d1 = " << d1 << " deviation= " << TMath::Abs(d1-d1_p);
-      cout << ( ( d1 == d1_p ) ? " OK" : " too large") <<endl;
+      std::cout << "d1 = " << d1 << " deviation= " << TMath::Abs(d1-d1_p);
+      std::cout << ( ( d1 == d1_p ) ? " OK" : " too large") <<std::endl;
     }
     ok &= ( d1 == d1_p ) ? kTRUE : kFALSE;
   }
@@ -1295,7 +1295,7 @@ void mstress_determinant(Int_t msize)
   if (ok)
   {
     if (gVerbose)
-      cout << "\nCheck the determinant for the matrix with " << pattern << " at the anti-diagonal" << endl;
+      std::cout << "\nCheck the determinant for the matrix with " << pattern << " at the anti-diagonal" << std::endl;
     for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
       for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
         m(i,j) = ( i==(m.GetColUpb()+m.GetColLwb()-j) ? pattern : 0 );
@@ -1307,9 +1307,9 @@ void mstress_determinant(Int_t msize)
     const Double_t log_det2 = ((Double_t)m.GetNrows())*TMath::Log(pattern);
     const Double_t sign     = ( m.GetNrows()*(m.GetNrows()-1)/2 & 1 ? -1 : 1 );
     if (gVerbose) {
-      cout << "log_det1 = " << log_det1 << " deviation= " << TMath::Abs(log_det1-log_det2);
-      cout << ( (TMath::Abs(log_det1-log_det2) < msize*EPSILON) ? " OK" : " too large") <<endl;
-      cout << ( sign * d1 > 0. ? " OK sign" : " wrong sign") <<endl;
+      std::cout << "log_det1 = " << log_det1 << " deviation= " << TMath::Abs(log_det1-log_det2);
+      std::cout << ( (TMath::Abs(log_det1-log_det2) < msize*EPSILON) ? " OK" : " too large") <<std::endl;
+      std::cout << ( sign * d1 > 0. ? " OK sign" : " wrong sign") <<std::endl;
     }
     ok &= ( TMath::Abs(log_det1-log_det2) < msize*EPSILON  ) ? kTRUE : kFALSE;
     ok &= ( sign * d1 > 0. ) ? kTRUE : kFALSE;
@@ -1318,90 +1318,90 @@ void mstress_determinant(Int_t msize)
   // Next test disabled because it produces (of course) a Warning
   if (0) {
     if (gVerbose)
-      cout << "\nCheck the determinant for the singular matrix"
-              "\n	defined as above with zero first row" << endl;
+      std::cout << "\nCheck the determinant for the singular matrix"
+              "\n	defined as above with zero first row" << std::endl;
     m.Zero();
     {
       for (Int_t i = m.GetRowLwb()+1; i <= m.GetRowUpb(); i++)
         for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
           m(i,j) = ( i==(m.GetColUpb()+m.GetColLwb()-j) ? pattern : 0 );
     }
-    cout << "\n	determinant is " << m.Determinant();
+    std::cout << "\n	determinant is " << m.Determinant();
     ok &= ( m.Determinant() == 0 ) ? kTRUE : kFALSE;
   }
 
   if (gVerbose)
-    cout << "\nCheck out the determinant of the Hilbert matrix";
+    std::cout << "\nCheck out the determinant of the Hilbert matrix";
   TMatrixDSym H = THilbertMatrixDSym(3);
   H.SetTol(1.0e-20);
   if (gVerbose) {
-    cout << "\n    3x3 Hilbert matrix: exact determinant 1/2160 ";
-    cout << "\n                              computed    1/"<< 1/H.Determinant();
+    std::cout << "\n    3x3 Hilbert matrix: exact determinant 1/2160 ";
+    std::cout << "\n                              computed    1/"<< 1/H.Determinant();
   }
 
   H.ResizeTo(4,4);
   H = THilbertMatrixDSym(4);
   H.SetTol(1.0e-20);
   if (gVerbose) {
-    cout << "\n    4x4 Hilbert matrix: exact determinant 1/6048000 ";
-    cout << "\n                              computed    1/"<< 1/H.Determinant();
+    std::cout << "\n    4x4 Hilbert matrix: exact determinant 1/6048000 ";
+    std::cout << "\n                              computed    1/"<< 1/H.Determinant();
   }
 
   H.ResizeTo(5,5);
   H = THilbertMatrixDSym(5);
   H.SetTol(1.0e-20);
   if (gVerbose) {
-    cout << "\n    5x5 Hilbert matrix: exact determinant 3.749295e-12";
-    cout << "\n                              computed    "<< H.Determinant();
+    std::cout << "\n    5x5 Hilbert matrix: exact determinant 3.749295e-12";
+    std::cout << "\n                              computed    "<< H.Determinant();
   }
 
   if (gVerbose) {
     TDecompQRH qrh(H);
     Double_t d1,d2;
     qrh.Det(d1,d2);
-    cout  << "\n qrh det = " << d1*TMath::Power(2.0,d2) <<endl;
+    std::cout  << "\n qrh det = " << d1*TMath::Power(2.0,d2) <<std::endl;
   }
 
   if (gVerbose) {
     TDecompChol chol(H);
     Double_t d1,d2;
     chol.Det(d1,d2);
-    cout  << "\n chol det = " << d1*TMath::Power(2.0,d2) <<endl;
+    std::cout  << "\n chol det = " << d1*TMath::Power(2.0,d2) <<std::endl;
   }
 
   if (gVerbose) {
     TDecompSVD svd(H);
     Double_t d1,d2;
     svd.Det(d1,d2);
-    cout  << "\n svd det = " << d1*TMath::Power(2.0,d2) <<endl;
+    std::cout  << "\n svd det = " << d1*TMath::Power(2.0,d2) <<std::endl;
   }
 
   H.ResizeTo(7,7);
   H = THilbertMatrixDSym(7);
   H.SetTol(1.0e-20);
   if (gVerbose) {
-    cout << "\n    7x7 Hilbert matrix: exact determinant 4.8358e-25";
-    cout << "\n                              computed    "<< H.Determinant();
+    std::cout << "\n    7x7 Hilbert matrix: exact determinant 4.8358e-25";
+    std::cout << "\n                              computed    "<< H.Determinant();
   }
 
   H.ResizeTo(9,9);
   H = THilbertMatrixDSym(9);
   H.SetTol(1.0e-20);
   if (gVerbose) {
-    cout << "\n    9x9 Hilbert matrix: exact determinant 9.72023e-43";
-    cout << "\n                              computed    "<< H.Determinant();
+    std::cout << "\n    9x9 Hilbert matrix: exact determinant 9.72023e-43";
+    std::cout << "\n                              computed    "<< H.Determinant();
   }
 
   H.ResizeTo(10,10);
   H = THilbertMatrixDSym(10);
   H.SetTol(1.0e-20);
   if (gVerbose) {
-    cout << "\n    10x10 Hilbert matrix: exact determinant 2.16418e-53";
-    cout << "\n                              computed    "<< H.Determinant();
+    std::cout << "\n    10x10 Hilbert matrix: exact determinant 2.16418e-53";
+    std::cout << "\n                              computed    "<< H.Determinant();
   }
 
   if (gVerbose)
-  cout << "\nDone\n" << endl;
+  std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(9,"Matrix Determinant",ok);
 }
@@ -1429,12 +1429,12 @@ void mstress_mm_multiplications()
     }
 
     if (verbose)
-      cout << "\n---> Verify matrix multiplications "
-              "for matrices of the characteristic size " << msize << endl;
+      std::cout << "\n---> Verify matrix multiplications "
+              "for matrices of the characteristic size " << msize << std::endl;
 
     {
       if (verbose)
-        cout << "\nTest inline multiplications of the UnitMatrix" << endl;
+        std::cout << "\nTest inline multiplications of the UnitMatrix" << std::endl;
       TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
       TMatrixD u(TMatrixD::kUnit,m);
       m(3,1) = TMath::Pi();
@@ -1445,7 +1445,7 @@ void mstress_mm_multiplications()
     if (ok)
     {
       if (verbose)
-        cout << "Test inline multiplications by a DiagMat" << endl;
+        std::cout << "Test inline multiplications by a DiagMat" << std::endl;
       TMatrixD m = THilbertMatrixD(msize+3,msize);
       m(1,3) = TMath::Pi();
       TVectorD v(msize);
@@ -1465,7 +1465,7 @@ void mstress_mm_multiplications()
     if (ok)
     {
       if (verbose)
-        cout << "Test XPP = X where P is a permutation matrix" << endl;
+        std::cout << "Test XPP = X where P is a permutation matrix" << std::endl;
       TMatrixD m = THilbertMatrixD(msize-1,msize);
       m(2,3) = TMath::Pi();
       TMatrixD eth = m;
@@ -1480,7 +1480,7 @@ void mstress_mm_multiplications()
     if (ok)
     {
       if (verbose)
-        cout << "Test general matrix multiplication through inline mult" << endl;
+        std::cout << "Test general matrix multiplication through inline mult" << std::endl;
       TMatrixD m = THilbertMatrixD(msize-2,msize);
       m(3,3) = TMath::Pi();
       TMatrixD mt(TMatrixD::kTransposed,m);
@@ -1499,7 +1499,7 @@ void mstress_mm_multiplications()
       ok &= VerifyMatrixIdentity(m,mp2,verbose,epsilon);
 
       if (verbose)
-        cout << "Test XP=X*P  vs XP=X;XP*=P" << endl;
+        std::cout << "Test XP=X*P  vs XP=X;XP*=P" << std::endl;
       TMatrixD mp3 = m1*p;
       ok &= VerifyMatrixIdentity(m,mp3,verbose,epsilon);
     }
@@ -1507,7 +1507,7 @@ void mstress_mm_multiplications()
     if (ok)
     {
       if (verbose)
-        cout << "Check n * m  == n * m_sym; m_sym * n == m * n; m_sym * m_sym == m * m" <<endl;
+        std::cout << "Check n * m  == n * m_sym; m_sym * n == m * n; m_sym * m_sym == m * m" <<std::endl;
 
       const TMatrixD     n     = THilbertMatrixD(0,msize-1,0,msize-1);
       const TMatrixD     m     = n;
@@ -1537,7 +1537,7 @@ void mstress_mm_multiplications()
 
     if (!ok) {
       if (gVerbose)
-        cout << "General Matrix Multiplications failed for size " << msize << endl;
+        std::cout << "General Matrix Multiplications failed for size " << msize << std::endl;
       break;
     }
   }
@@ -1545,7 +1545,7 @@ void mstress_mm_multiplications()
   if (ok)
   {
     if (gVerbose)
-      cout << "Check to see UU' = U'U = E when U is the Haar matrix" << endl;
+      std::cout << "Check to see UU' = U'U = E when U is the Haar matrix" << std::endl;
     const Int_t order = 5;
     const Int_t no_sub_cols = (1<<order)-5;
     TMatrixD haar_sub = THaarMatrixD(5,no_sub_cols);
@@ -1570,7 +1570,7 @@ void mstress_mm_multiplications()
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(10,"General Matrix Multiplications",ok);
 }
@@ -1582,8 +1582,8 @@ void mstress_mm_multiplications()
 void mstress_sym_mm_multiplications(Int_t msize)
 {
   if (gVerbose)
-    cout << "\n---> Verify symmetric matrix multiplications "
-            "for matrices of the characteristic size " << msize << endl;
+    std::cout << "\n---> Verify symmetric matrix multiplications "
+            "for matrices of the characteristic size " << msize << std::endl;
 
   Int_t i,j;
   Bool_t ok = kTRUE;
@@ -1592,7 +1592,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
 
   {
     if (gVerbose)
-      cout << "\nTest inline multiplications of the UnitMatrix" << endl;
+      std::cout << "\nTest inline multiplications of the UnitMatrix" << std::endl;
     TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
     TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
     TMatrixDSym u(TMatrixDSym::kUnit,m_sym);
@@ -1603,10 +1603,10 @@ void mstress_sym_mm_multiplications(Int_t msize)
   if (ok)
   {
     if (gVerbose)
-      cout << "\nTest symmetric multiplications" << endl;
+      std::cout << "\nTest symmetric multiplications" << std::endl;
     {
       if (gVerbose)
-        cout << "\n  Test m * m_sym == m_sym * m == m_sym * m_sym  multiplications" << endl;
+        std::cout << "\n  Test m * m_sym == m_sym * m == m_sym * m_sym  multiplications" << std::endl;
       TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
       TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
       TMatrixD mm      = m * m;
@@ -1620,7 +1620,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
 
     {
       if (gVerbose)
-        cout << "\n  Test m^T * m_sym == m_sym^T * m == m_sym^T * m_sym  multiplications" << endl;
+        std::cout << "\n  Test m^T * m_sym == m_sym^T * m == m_sym^T * m_sym  multiplications" << std::endl;
       TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
       TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
       TMatrixD mtm      = TMatrixD(m    ,TMatrixD::kTransposeMult,m);
@@ -1634,7 +1634,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
 
     {
       if (gVerbose)
-        cout << "\n  Test m * m_sym^T == m_sym * m^T == m_sym * m_sym^T  multiplications" << endl;
+        std::cout << "\n  Test m * m_sym^T == m_sym * m^T == m_sym * m_sym^T  multiplications" << std::endl;
       TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
       TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
       TMatrixD mmt      = TMatrixD(m    ,TMatrixD::kMultTranspose,m);
@@ -1648,7 +1648,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
 
     {
       if (gVerbose)
-        cout << "\n  Test n * m_sym == n * m multiplications" << endl;
+        std::cout << "\n  Test n * m_sym == n * m multiplications" << std::endl;
       TMatrixD n = THilbertMatrixD(-1,msize,-1,msize);
       TMatrixD m = n;
       n(1,3) = TMath::Pi();
@@ -1663,7 +1663,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
   if (ok)
   {
     if (gVerbose)
-      cout << "Test inline multiplications by a DiagMatrix" << endl;
+      std::cout << "Test inline multiplications by a DiagMatrix" << std::endl;
     TMatrixDSym ms = THilbertMatrixDSym(msize);
     ms(1,3) = TMath::Pi();
     ms(3,1) = TMath::Pi();
@@ -1683,7 +1683,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
   if (ok)
   {
     if (gVerbose)
-      cout << "Test XPP = X where P is a permutation matrix" << endl;
+      std::cout << "Test XPP = X where P is a permutation matrix" << std::endl;
     TMatrixDSym ms = THilbertMatrixDSym(msize);
     ms(2,3) = TMath::Pi();
     ms(3,2) = TMath::Pi();
@@ -1699,7 +1699,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
   if (ok)
   {
     if (gVerbose)
-      cout << "Test general matrix multiplication through inline mult" << endl;
+      std::cout << "Test general matrix multiplication through inline mult" << std::endl;
     TMatrixDSym ms = THilbertMatrixDSym(msize);
     ms(2,3) = TMath::Pi();
     ms(3,2) = TMath::Pi();
@@ -1718,7 +1718,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
     ok &= ( mp2 == 0 ) ? kTRUE : kFALSE;
 
     if (gVerbose)
-      cout << "Test XP=X*P  vs XP=X;XP*=P" << endl;
+      std::cout << "Test XP=X*P  vs XP=X;XP*=P" << std::endl;
     TMatrixD mp3 = m1*p;
     ok &= VerifyMatrixIdentity(ms,mp3,gVerbose,epsilon);
   }
@@ -1726,7 +1726,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
   if (ok)
   {
     if (gVerbose)
-      cout << "Check to see UU' = U'U = E when U is the Haar matrix" << endl;
+      std::cout << "Check to see UU' = U'U = E when U is the Haar matrix" << std::endl;
     {
       const Int_t order = 5;
       const Int_t no_sub_cols = (1<<order)-5;
@@ -1753,8 +1753,8 @@ void mstress_sym_mm_multiplications(Int_t msize)
   if (ok)
   {
     if (gVerbose)
-      cout << "Check to see A.Similarity(Haar) = Haar * A * Haar^T" <<
-              " and A.SimilarityT(Haar) = Haar^T * A * Haar" << endl;
+      std::cout << "Check to see A.Similarity(Haar) = Haar * A * Haar^T" <<
+              " and A.SimilarityT(Haar) = Haar^T * A * Haar" << std::endl;
     {
       TMatrixD    h  = THaarMatrixD(5);
       TMatrixDSym ms = THilbertMatrixDSym(1<<5);
@@ -1764,7 +1764,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
       ok &= VerifyMatrixIdentity(ms.SimilarityT(h),htmh,gVerbose,epsilon);
     }
     if (gVerbose)
-      cout << "Check to see A.Similarity(B_sym) = A.Similarity(B)" << endl;
+      std::cout << "Check to see A.Similarity(B_sym) = A.Similarity(B)" << std::endl;
     {
       TMatrixDSym nsym = THilbertMatrixDSym(5);
       TMatrixD    n    = THilbertMatrixD(5,5);
@@ -1774,7 +1774,7 @@ void mstress_sym_mm_multiplications(Int_t msize)
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(11,"Symmetric Matrix Multiplications",ok);
 }
@@ -1797,12 +1797,12 @@ void mstress_vm_multiplications()
     const Int_t verbose = (gVerbose && nr==0 && iloop==gNrLoop);
 
     if (verbose)
-      cout << "\n---> Verify vector-matrix multiplications "
-             "for matrices of the characteristic size " << msize << endl;
+      std::cout << "\n---> Verify vector-matrix multiplications "
+             "for matrices of the characteristic size " << msize << std::endl;
 
     {
       if (verbose)
-        cout << "\nCheck shrinking a vector by multiplying by a non-sq unit matrix" << endl;
+        std::cout << "\nCheck shrinking a vector by multiplying by a non-sq unit matrix" << std::endl;
       TVectorD vb(-2,msize);
       for (Int_t i = vb.GetLwb(); i <= vb.GetUpb(); i++)
         vb(i) = TMath::Pi()-i;
@@ -1819,7 +1819,7 @@ void mstress_vm_multiplications()
     if (ok)
     {
       if (verbose)
-        cout << "Check expanding a vector by multiplying by a non-sq unit matrix" << endl;
+        std::cout << "Check expanding a vector by multiplying by a non-sq unit matrix" << std::endl;
       TVectorD vb(msize);
       for (Int_t i = vb.GetLwb(); i <= vb.GetUpb(); i++)
         vb(i) = TMath::Pi()+i;
@@ -1836,7 +1836,7 @@ void mstress_vm_multiplications()
     if (ok)
     {
       if (verbose)
-        cout << "Check general matrix-vector multiplication" << endl;
+        std::cout << "Check general matrix-vector multiplication" << std::endl;
       TVectorD vb(msize);
       for (Int_t i = vb.GetLwb(); i <= vb.GetUpb(); i++)
         vb(i) = TMath::Pi()+i;
@@ -1854,7 +1854,7 @@ void mstress_vm_multiplications()
     if (ok)
     {
       if (verbose)
-        cout << "Check symmetric matrix-vector multiplication" << endl;
+        std::cout << "Check symmetric matrix-vector multiplication" << std::endl;
       TVectorD vb(msize);
       for (Int_t i = vb.GetLwb(); i <= vb.GetUpb(); i++)
         vb(i) = TMath::Pi()+i;
@@ -1881,13 +1881,13 @@ void mstress_vm_multiplications()
 
     if (!ok) {
       if (gVerbose)
-        cout << "Vector Matrix Multiplications failed for size " << msize << endl;
+        std::cout << "Vector Matrix Multiplications failed for size " << msize << std::endl;
       break;
     }
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(12,"Matrix Vector Multiplications",ok);
 }
@@ -1910,10 +1910,10 @@ void mstress_inversion()
     const Int_t verbose = (gVerbose && nr==0 && iloop==gNrLoop);
 
     if (verbose)
-      cout << "\n---> Verify matrix inversion for square matrices of size " << msize << endl;
+      std::cout << "\n---> Verify matrix inversion for square matrices of size " << msize << std::endl;
     {
       if (verbose)
-        cout << "\nTest inversion of a diagonal matrix" << endl;
+        std::cout << "\nTest inversion of a diagonal matrix" << std::endl;
       TMatrixD m(-1,msize,-1,msize);
       TMatrixD mi(TMatrixD::kZero,m);
       for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++) {
@@ -1929,7 +1929,7 @@ void mstress_inversion()
     if (ok)
     {
       if (verbose)
-        cout << "Test inversion of an orthonormal (Haar) matrix" << endl;
+        std::cout << "Test inversion of an orthonormal (Haar) matrix" << std::endl;
       const Int_t order = Int_t(TMath::Log(msize)/TMath::Log(2));
       TMatrixD mr = THaarMatrixD(order);
       TMatrixD morig = mr;
@@ -1939,8 +1939,8 @@ void mstress_inversion()
       ok &= VerifyMatrixIdentity(mr,mt,verbose,epsilon);
       ok &= ( TMath::Abs(det-1) <= msize*epsilon ) ? kTRUE : kFALSE;
       if (verbose) {
-        cout << "det = " << det << " deviation= " << TMath::Abs(det-1);
-        cout << ( (TMath::Abs(det-1) < msize*epsilon) ? " OK" : " too large") <<endl;
+        std::cout << "det = " << det << " deviation= " << TMath::Abs(det-1);
+        std::cout << ( (TMath::Abs(det-1) < msize*epsilon) ? " OK" : " too large") <<std::endl;
       }
       TMatrixD mti(TMatrixD::kInverted,mt);
       ok &= VerifyMatrixIdentity(mti,morig,verbose,msize*epsilon);
@@ -1949,7 +1949,7 @@ void mstress_inversion()
     if (ok)
     {
       if (verbose)
-        cout << "Test inversion of a good matrix with diagonal dominance" << endl;
+        std::cout << "Test inversion of a good matrix with diagonal dominance" << std::endl;
       TMatrixD mh = THilbertMatrixD(msize,msize);
       TMatrixDDiag(mh) += 1;
       TMatrixD morig = mh;
@@ -1957,44 +1957,44 @@ void mstress_inversion()
       const Double_t det_comp = mh.Determinant();
       mh.Invert(&det_inv);
       if (verbose) {
-        cout << "\tcomputed determinant             " << det_comp << endl;
-        cout << "\tdeterminant returned by Invert() " << det_inv << endl;
+        std::cout << "\tcomputed determinant             " << det_comp << std::endl;
+        std::cout << "\tdeterminant returned by Invert() " << det_inv << std::endl;
       }
 
       if (verbose)
-        cout << "\tcheck to see M^(-1) * M is E" << endl;
+        std::cout << "\tcheck to see M^(-1) * M is E" << std::endl;
       TMatrixD mim(mh,TMatrixD::kMult,morig);
       TMatrixD unit(TMatrixD::kUnit,mh);
       ok &= VerifyMatrixIdentity(mim,unit,verbose,epsilon);
 
       if (verbose)
-        cout << "Test inversion through the matrix decompositions" << endl;
+        std::cout << "Test inversion through the matrix decompositions" << std::endl;
 
       TMatrixDSym ms = THilbertMatrixDSym(msize);
       TMatrixDDiag(ms) += 1;
       if (verbose)
-        cout << "Test inversion through SVD" << endl;
+        std::cout << "Test inversion through SVD" << std::endl;
       TMatrixD inv_svd (msize,msize); TDecompSVD  svd (ms); svd.Invert(inv_svd);
       ok &= VerifyMatrixIdentity(inv_svd,mh,verbose,epsilon);
       if (verbose)
-        cout << "Test inversion through LU" << endl;
+        std::cout << "Test inversion through LU" << std::endl;
       TMatrixD inv_lu  (msize,msize); TDecompLU   lu  (ms); lu.Invert(inv_lu);
       ok &= VerifyMatrixIdentity(inv_lu,mh,verbose,epsilon);
       if (verbose)
-        cout << "Test inversion through Cholesky" << endl;
+        std::cout << "Test inversion through Cholesky" << std::endl;
       TMatrixDSym inv_chol(msize); TDecompChol chol(ms); chol.Invert(inv_chol);
       ok &= VerifyMatrixIdentity(inv_chol,mh,verbose,epsilon);
       if (verbose)
-        cout << "Test inversion through QRH" << endl;
+        std::cout << "Test inversion through QRH" << std::endl;
       TMatrixD inv_qrh (msize,msize); TDecompQRH  qrh (ms); qrh.Invert(inv_qrh);
       ok &= VerifyMatrixIdentity(inv_qrh,mh,verbose,epsilon);
       if (verbose)
-        cout << "Test inversion through Bunch-Kaufman" << endl;
+        std::cout << "Test inversion through Bunch-Kaufman" << std::endl;
       TMatrixDSym inv_bk(msize); TDecompBK bk(ms); chol.Invert(inv_bk);
       ok &= VerifyMatrixIdentity(inv_bk,mh,verbose,epsilon);
 
       if (verbose)
-        cout << "\tcheck to see M * M^(-1) is E" << endl;
+        std::cout << "\tcheck to see M * M^(-1) is E" << std::endl;
       TMatrixD mmi = morig; mmi *= mh;
       ok &= VerifyMatrixIdentity(mmi,unit,verbose,epsilon);
     }
@@ -2011,15 +2011,15 @@ void mstress_inversion()
 
     if (!ok) {
       if (gVerbose)
-        cout << "Matrix Inversion failed for size " << msize << endl;
+        std::cout << "Matrix Inversion failed for size " << msize << std::endl;
       break;
     }
   }
 
   {
     if (gVerbose) {
-      cout << "Check to see that Invert() and InvertFast() give identical results" <<endl;
-      cout << " for size < (7x7)" <<endl;
+      std::cout << "Check to see that Invert() and InvertFast() give identical results" <<std::endl;
+      std::cout << " for size < (7x7)" <<std::endl;
     }
     Int_t size;
     for (size = 2; size < 7; size++) {
@@ -2034,9 +2034,9 @@ void mstress_inversion()
       ok &= VerifyMatrixIdentity(m1,m2,gVerbose,EPSILON);
       ok &= (TMath::Abs(det1-det2) < EPSILON);
       if (gVerbose) {
-        cout << "det(Invert)= " << det1 << "  det(InvertFast)= " << det2 <<endl;
-        cout << " deviation= " << TMath::Abs(det1-det2);
-        cout << ( (TMath::Abs(det1-det2) <  EPSILON) ? " OK" : " too large") <<endl;
+        std::cout << "det(Invert)= " << det1 << "  det(InvertFast)= " << det2 <<std::endl;
+        std::cout << " deviation= " << TMath::Abs(det1-det2);
+        std::cout << ( (TMath::Abs(det1-det2) <  EPSILON) ? " OK" : " too large") <<std::endl;
       }
     }
     for (size = 2; size < 7; size++) {
@@ -2050,15 +2050,15 @@ void mstress_inversion()
       ok &= VerifyMatrixIdentity(ms1,ms2,gVerbose,EPSILON);
       ok &= (TMath::Abs(det1-det2) < EPSILON);
       if (gVerbose) {
-        cout << "det(Invert)= " << det1 << "  det(InvertFast)= " << det2 <<endl;
-        cout << " deviation= " << TMath::Abs(det1-det2);
-        cout << ( (TMath::Abs(det1-det2) <  EPSILON) ? " OK" : " too large") <<endl;
+        std::cout << "det(Invert)= " << det1 << "  det(InvertFast)= " << det2 <<std::endl;
+        std::cout << " deviation= " << TMath::Abs(det1-det2);
+        std::cout << ( (TMath::Abs(det1-det2) <  EPSILON) ? " OK" : " too large") <<std::endl;
       }
     }
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(13,"Matrix Inversion",ok);
 }
@@ -2070,7 +2070,7 @@ void mstress_inversion()
 void mstress_matrix_io()
 {
   if (gVerbose)
-    cout << "\n---> Test matrix I/O" << endl;
+    std::cout << "\n---> Test matrix I/O" << std::endl;
 
   Bool_t ok = kTRUE;
   const Double_t pattern = TMath::Pi();
@@ -2097,17 +2097,17 @@ void mstress_matrix_io()
     ms = pattern;
 
     if (verbose)
-      cout << "\nWrite matrix m to database" << endl;
+      std::cout << "\nWrite matrix m to database" << std::endl;
     snprintf(name,80,"m_%d",msize);
     m.Write(name);
 
     if (verbose)
-      cout << "\nWrite matrix ma which adopts to database" << endl;
+      std::cout << "\nWrite matrix ma which adopts to database" << std::endl;
     snprintf(name,80,"ma_%d",msize);
     ma.Write(name);
 
     if (verbose)
-      cout << "\nWrite symmetric matrix ms to database" << endl;
+      std::cout << "\nWrite symmetric matrix ms to database" << std::endl;
     snprintf(name,80,"ms_%d",msize);
     ms.Write(name);
 
@@ -2117,11 +2117,11 @@ void mstress_matrix_io()
   }
 
   if (gVerbose)
-    cout << "\nClose database" << endl;
+    std::cout << "\nClose database" << std::endl;
   delete f;
 
   if (gVerbose)
-    cout << "\nOpen database in read-only mode and read matrix" << endl;
+    std::cout << "\nOpen database in read-only mode and read matrix" << std::endl;
   TFile *f1 = new TFile("vmatrix.root");
 
   iloop = gNrLoop;
@@ -2140,7 +2140,7 @@ void mstress_matrix_io()
     TMatrixDSym *msr = (TMatrixDSym*) f1->Get(name);
 
     if (verbose)
-      cout << "\nRead matrix should be same as original" << endl;
+      std::cout << "\nRead matrix should be same as original" << std::endl;
     ok &= ((*mr)  == m) ? kTRUE : kFALSE;
     ok &= ((*mar) == m) ? kTRUE : kFALSE;
     ok &= ((*msr) == m) ? kTRUE : kFALSE;
@@ -2151,7 +2151,7 @@ void mstress_matrix_io()
   delete f1;
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(14,"Matrix Persistence",ok);
 }
@@ -2162,7 +2162,7 @@ void mstress_matrix_io()
 void spstress_allocation(Int_t msize)
 {
   if (gVerbose)
-    cout << "\n\n---> Test allocation and compatibility check" << endl;
+    std::cout << "\n\n---> Test allocation and compatibility check" << std::endl;
 
   Int_t i,j;
   Bool_t ok = kTRUE;
@@ -2194,22 +2194,22 @@ void spstress_allocation(Int_t msize)
   TMatrixDSparse m4(m1);
 
   if (gVerbose) {
-    cout << "\nStatus information reported for matrix m3:" << endl;
-    cout << "  Row lower bound ... " << m3.GetRowLwb() << endl;
-    cout << "  Row upper bound ... " << m3.GetRowUpb() << endl;
-    cout << "  Col lower bound ... " << m3.GetColLwb() << endl;
-    cout << "  Col upper bound ... " << m3.GetColUpb() << endl;
-    cout << "  No. rows ..........." << m3.GetNrows()  << endl;
-    cout << "  No. cols ..........." << m3.GetNcols()  << endl;
-    cout << "  No. of elements ...." << m3.GetNoElements() << endl;
+    std::cout << "\nStatus information reported for matrix m3:" << std::endl;
+    std::cout << "  Row lower bound ... " << m3.GetRowLwb() << std::endl;
+    std::cout << "  Row upper bound ... " << m3.GetRowUpb() << std::endl;
+    std::cout << "  Col lower bound ... " << m3.GetColLwb() << std::endl;
+    std::cout << "  Col upper bound ... " << m3.GetColUpb() << std::endl;
+    std::cout << "  No. rows ..........." << m3.GetNrows()  << std::endl;
+    std::cout << "  No. cols ..........." << m3.GetNcols()  << std::endl;
+    std::cout << "  No. of elements ...." << m3.GetNoElements() << std::endl;
   }
 
   if (gVerbose)
-    cout << "Check matrices 1 & 4 for compatibility" << endl;
+    std::cout << "Check matrices 1 & 4 for compatibility" << std::endl;
   ok &= AreCompatible(m1,m4,gVerbose);
 
   if (gVerbose)
-    cout << "m2 has to be compatible with m3 after resizing to m3" << endl;
+    std::cout << "m2 has to be compatible with m3 after resizing to m3" << std::endl;
   m2.ResizeTo(m3);
   ok &= AreCompatible(m2,m3,gVerbose);
 
@@ -2220,21 +2220,21 @@ void spstress_allocation(Int_t msize)
   TMatrixDSparse m5(m5_d);
 
   if (gVerbose)
-    cout << "m1 has to be compatible with m5 after resizing to m5" << endl;
+    std::cout << "m1 has to be compatible with m5 after resizing to m5" << std::endl;
   m1.ResizeTo(m5.GetNrows(),m5.GetNcols());
   ok &= AreCompatible(m1,m5,gVerbose);
 
   if (gVerbose)
-    cout << "m1 has to be equal to m4 after stretching and shrinking" << endl;
+    std::cout << "m1 has to be equal to m4 after stretching and shrinking" << std::endl;
   m1.ResizeTo(m4.GetNrows(),m4.GetNcols());
   ok &= VerifyMatrixIdentity(m1,m4,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "m5 has to be equal to m1 after shrinking" << endl;
+    std::cout << "m5 has to be equal to m1 after shrinking" << std::endl;
   m5.ResizeTo(m1.GetNrows(),m1.GetNcols());
   ok &= VerifyMatrixIdentity(m1,m5,gVerbose,msize*EPSILON);
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(1,"Allocation, Resizing",ok);
 }
@@ -2271,7 +2271,7 @@ void spstress_matrix_fill(Int_t rsize,Int_t csize)
 
   {
     if (gVerbose)
-      cout << "Check filling through operator(i,j) without setting sparse index" << endl;
+      std::cout << "Check filling through operator(i,j) without setting sparse index" << std::endl;
     TMatrixDSparse m1(-1,rsize-2,1,csize);
 
     for (Int_t i = m1.GetRowLwb(); i <= m1.GetRowUpb(); i++)
@@ -2283,7 +2283,7 @@ void spstress_matrix_fill(Int_t rsize,Int_t csize)
 
   {
     if (gVerbose)
-      cout << "Check filling through operator(i,j)" << endl;
+      std::cout << "Check filling through operator(i,j)" << std::endl;
     TMatrixDSparse m2(-1,rsize-2,1,csize);
     m2.SetSparseIndex(m);
 
@@ -2296,7 +2296,7 @@ void spstress_matrix_fill(Int_t rsize,Int_t csize)
 
   {
     if (gVerbose)
-      cout << "Check insertion/extraction of sub-matrices" << endl;
+      std::cout << "Check insertion/extraction of sub-matrices" << std::endl;
     {
       TMatrixDSparse m_sub1 = m;
       m_sub1.ResizeTo(0,rsize-2,2,csize);
@@ -2354,7 +2354,7 @@ void spstress_matrix_fill(Int_t rsize,Int_t csize)
 
   {
     if (gVerbose)
-      cout << "Check insertion/extraction of rows" << endl;
+      std::cout << "Check insertion/extraction of rows" << std::endl;
 
     TMatrixDSparse m1 = m;
     TVectorD v1(1,csize);
@@ -2375,7 +2375,7 @@ void spstress_matrix_fill(Int_t rsize,Int_t csize)
 
   {
     if (gVerbose)
-      cout << "Check array Use" << endl;
+      std::cout << "Check array Use" << std::endl;
     {
       TMatrixDSparse *m1a = new TMatrixDSparse(m);
       TMatrixDSparse *m2a = new TMatrixDSparse();
@@ -2389,7 +2389,7 @@ void spstress_matrix_fill(Int_t rsize,Int_t csize)
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(2,"Filling, Inserting, Using",ok);
 }
@@ -2406,17 +2406,17 @@ void spstress_element_op(Int_t rsize,Int_t csize)
   TMatrixDSparse m(-1,rsize-2,1,csize);
 
   if (gVerbose)
-    cout << "Creating zero m1 ..." << endl;
+    std::cout << "Creating zero m1 ..." << std::endl;
   TMatrixDSparse m1(TMatrixDSparse::kZero, m);
   ok &= VerifyMatrixValue(m1,0.,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "Comparing m1 with 0 ..." << endl;
+    std::cout << "Comparing m1 with 0 ..." << std::endl;
   R__ASSERT(m1 == 0);
   R__ASSERT(!(m1 != 0));
 
   if (gVerbose)
-    cout << "Writing a pattern " << pattern << " by assigning through SetMatrixArray..." << endl;
+    std::cout << "Writing a pattern " << pattern << " by assigning through SetMatrixArray..." << std::endl;
   {
     const Int_t nr = rsize*csize;
     Int_t    *irow = new Int_t[nr];
@@ -2440,38 +2440,38 @@ void spstress_element_op(Int_t rsize,Int_t csize)
   }
 
   if (gVerbose)
-    cout << "Writing the pattern by assigning to m1 as a whole ..."  << endl;
+    std::cout << "Writing the pattern by assigning to m1 as a whole ..."  << std::endl;
   m1.SetSparseIndex(m);
   m1 = pattern;
   ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "Comparing m and m1 ..." << endl;
+    std::cout << "Comparing m and m1 ..." << std::endl;
   R__ASSERT(m == m1);
   if (gVerbose)
-    cout << "Comparing (m=0) and m1 ..." << endl;
+    std::cout << "Comparing (m=0) and m1 ..." << std::endl;
   R__ASSERT(!((m=0) == m1));
 
   if (gVerbose)
-    cout << "Clearing m1 ..." << endl;
+    std::cout << "Clearing m1 ..." << std::endl;
   m1.Zero();
   ok &= VerifyMatrixValue(m1,0.,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nSet m = pattern" << endl;
+    std::cout << "\nSet m = pattern" << std::endl;
   m = pattern;
   ok &= VerifyMatrixValue(m,pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "   add the doubled pattern with the negative sign" << endl;
+    std::cout << "   add the doubled pattern with the negative sign" << std::endl;
   m += -2*pattern;
   ok &= VerifyMatrixValue(m,-pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "   subtract the trippled pattern with the negative sign" << endl;
+    std::cout << "   subtract the trippled pattern with the negative sign" << std::endl;
   m -= -3*pattern;
   ok &= VerifyMatrixValue(m,2*pattern,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nVerify comparison operations when all elems are the same" << endl;
+    std::cout << "\nVerify comparison operations when all elems are the same" << std::endl;
   m = pattern;
   R__ASSERT( m == pattern && !(m != pattern) );
   R__ASSERT( m > 0 && m >= pattern && m <= pattern );
@@ -2482,7 +2482,7 @@ void spstress_element_op(Int_t rsize,Int_t csize)
   R__ASSERT( m  >= -pattern && !(m > -pattern) );
 
   if (gVerbose)
-    cout << "\nVerify comparison operations when not all elems are the same" << endl;
+    std::cout << "\nVerify comparison operations when not all elems are the same" << std::endl;
   {
     Int_t nr = rsize*csize;
     Int_t    *irow = new Int_t[nr];
@@ -2510,26 +2510,26 @@ void spstress_element_op(Int_t rsize,Int_t csize)
   R__ASSERT( !(m >= pattern) && m <= pattern && !(m<pattern) );
   R__ASSERT( !(m <= pattern-1) && m >= pattern-1 && !(m>pattern-1) );
   if (gVerbose)
-    cout << "\nAssign 2*pattern to m by repeating additions" << endl;
+    std::cout << "\nAssign 2*pattern to m by repeating additions" << std::endl;
   m = 0; m += pattern; m += pattern;
   if (gVerbose)
-    cout << "Assign 2*pattern to m1 by multiplying by two " << endl;
+    std::cout << "Assign 2*pattern to m1 by multiplying by two " << std::endl;
   m1.SetSparseIndex(m);
   m1 = pattern; m1 *= 2;
   ok &= VerifyMatrixValue(m1,2*pattern,gVerbose,EPSILON);
   R__ASSERT( m == m1 );
   if (gVerbose)
-    cout << "Multiply m1 by one half returning it to the 1*pattern" << endl;
+    std::cout << "Multiply m1 by one half returning it to the 1*pattern" << std::endl;
   m1 *= 1/2.;
   ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nAssign -pattern to m and m1" << endl;
+    std::cout << "\nAssign -pattern to m and m1" << std::endl;
   m = 0; m -= pattern; m1 = -pattern;
   ok &= VerifyMatrixValue(m,-pattern,gVerbose,EPSILON);
   R__ASSERT( m == m1 );
   if (gVerbose)
-    cout << "m = sqrt(sqr(m)); m1 = abs(m1); Now m and m1 have to be the same" << endl;
+    std::cout << "m = sqrt(sqr(m)); m1 = abs(m1); Now m and m1 have to be the same" << std::endl;
   m.Sqr();
   ok &= VerifyMatrixValue(m,pattern*pattern,gVerbose,EPSILON);
   m.Sqrt();
@@ -2539,7 +2539,7 @@ void spstress_element_op(Int_t rsize,Int_t csize)
   ok &= VerifyMatrixIdentity(m1,m,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(3,"Uniform matrix operations",ok);
 }
@@ -2551,7 +2551,7 @@ void spstress_element_op(Int_t rsize,Int_t csize)
 void spstress_binary_ebe_op(Int_t rsize, Int_t csize)
 {
   if (gVerbose)
-    cout << "\n---> Test Binary Matrix element-by-element operations" << endl;
+    std::cout << "\n---> Test Binary Matrix element-by-element operations" << std::endl;
 
   Bool_t ok = kTRUE;
 
@@ -2569,49 +2569,49 @@ void spstress_binary_ebe_op(Int_t rsize, Int_t csize)
   }
 
   if (gVerbose)
-    cout << "\nVerify assignment of a matrix to the matrix" << endl;
+    std::cout << "\nVerify assignment of a matrix to the matrix" << std::endl;
   m  = pattern;
   m1 = m;
   ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
   R__ASSERT( m1 == m );
 
   if (gVerbose)
-    cout << "\nAdding the matrix to itself, uniform pattern " << pattern << endl;
+    std::cout << "\nAdding the matrix to itself, uniform pattern " << pattern << std::endl;
   m.Zero(); m.SetSparseIndex(m_d); m = pattern;
 
   m1 = m; m1 += m1;
   ok &= VerifyMatrixValue(m1,2*pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "  subtracting two matrices ..." << endl;
+    std::cout << "  subtracting two matrices ..." << std::endl;
   m1 -= m;
   ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "  subtracting the matrix from itself" << endl;
+    std::cout << "  subtracting the matrix from itself" << std::endl;
   m1 -= m1;
   ok &= VerifyMatrixValue(m1,0.,gVerbose,EPSILON);
   m1.SetSparseIndex(m_d);
 
   if (gVerbose) {
-    cout << "\nArithmetic operations on matrices with not the same elements" << endl;
-    cout << "   adding mp to the zero matrix..." << endl;
+    std::cout << "\nArithmetic operations on matrices with not the same elements" << std::endl;
+    std::cout << "   adding mp to the zero matrix..." << std::endl;
   }
   m.Zero(); m.SetSparseIndex(m_d); m += mp;
   ok &= VerifyMatrixIdentity(m,mp,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "   making m = 3*mp and m1 = 3*mp, via add() and succesive mult" << endl;
+    std::cout << "   making m = 3*mp and m1 = 3*mp, via add() and succesive mult" << std::endl;
   m1 = m;
   Add(m,2.,mp);
   m1 += m1; m1 += mp;
   ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "   clear both m and m1, by subtracting from itself and via add()" << endl;
+    std::cout << "   clear both m and m1, by subtracting from itself and via add()" << std::endl;
   m1 -= m1;
   Add(m,-3.,mp);
   ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
 
   if (gVerbose) {
-    cout << "\nTesting element-by-element multiplications and divisions" << endl;
-    cout << "   squaring each element with sqr() and via multiplication" << endl;
+    std::cout << "\nTesting element-by-element multiplications and divisions" << std::endl;
+    std::cout << "   squaring each element with sqr() and via multiplication" << std::endl;
   }
   m.SetSparseIndex(m_d);  m = mp;
   m1.SetSparseIndex(m_d); m1 = mp;
@@ -2619,7 +2619,7 @@ void spstress_binary_ebe_op(Int_t rsize, Int_t csize)
   ElementMult(m1,m1);
   ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "   compare (m = pattern^2)/pattern with pattern" << endl;
+    std::cout << "   compare (m = pattern^2)/pattern with pattern" << std::endl;
   m = pattern; m1 = pattern;
   m.Sqr();
   ElementDiv(m,m1);
@@ -2628,7 +2628,7 @@ void spstress_binary_ebe_op(Int_t rsize, Int_t csize)
     Compare(m1,m);
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(4,"Binary Matrix element-by-element operations",ok);
 }
@@ -2640,14 +2640,14 @@ void spstress_binary_ebe_op(Int_t rsize, Int_t csize)
 void spstress_transposition(Int_t msize)
 {
   if (gVerbose) {
-    cout << "\n---> Verify matrix transpose "
-            "for matrices of a characteristic size " << msize << endl;
+    std::cout << "\n---> Verify matrix transpose "
+            "for matrices of a characteristic size " << msize << std::endl;
   }
 
   Bool_t ok = kTRUE;
   {
     if (gVerbose)
-      cout << "\nCheck to see that a square UnitMatrix stays the same";
+      std::cout << "\nCheck to see that a square UnitMatrix stays the same";
     TMatrixDSparse m(msize,msize);
     m.UnitMatrix();
     TMatrixDSparse mt(TMatrixDSparse::kTransposed,m);
@@ -2656,7 +2656,7 @@ void spstress_transposition(Int_t msize)
 
   {
     if (gVerbose)
-      cout << "\nTest a non-square UnitMatrix";
+      std::cout << "\nTest a non-square UnitMatrix";
     TMatrixDSparse m(msize,msize+1);
     m.UnitMatrix();
     TMatrixDSparse mt(TMatrixDSparse::kTransposed,m);
@@ -2671,7 +2671,7 @@ void spstress_transposition(Int_t msize)
 
   {
     if (gVerbose)
-      cout << "\nCheck to see that a symmetric (Hilbert)Matrix stays the same";
+      std::cout << "\nCheck to see that a symmetric (Hilbert)Matrix stays the same";
     TMatrixDSparse m = TMatrixD(THilbertMatrixD(msize,msize));
     TMatrixDSparse mt(TMatrixDSparse::kTransposed,m);
     ok &= ( m == mt ) ? kTRUE : kFALSE;
@@ -2679,7 +2679,7 @@ void spstress_transposition(Int_t msize)
 
   {
     if (gVerbose)
-      cout << "\nCheck transposing a non-symmetric matrix";
+      std::cout << "\nCheck transposing a non-symmetric matrix";
     TMatrixDSparse m = TMatrixD(THilbertMatrixD(msize+1,msize));
     m(1,2) = TMath::Pi();
     TMatrixDSparse mt(TMatrixDSparse::kTransposed,m);
@@ -2688,13 +2688,13 @@ void spstress_transposition(Int_t msize)
     R__ASSERT(mt[2][1] == (Double_t)TMath::Pi() && mt[1][2] != (Double_t)TMath::Pi());
 
     if (gVerbose)
-      cout << "\nCheck double transposing a non-symmetric matrix" << endl;
+      std::cout << "\nCheck double transposing a non-symmetric matrix" << std::endl;
     TMatrixDSparse mtt(TMatrixDSparse::kTransposed,mt);
     ok &= ( m == mtt ) ? kTRUE : kFALSE;
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(5,"Matrix transposition",ok);
 }
@@ -2706,7 +2706,7 @@ void spstress_transposition(Int_t msize)
 void spstress_norms(Int_t rsize_req,Int_t csize_req)
 {
   if (gVerbose)
-    cout << "\n---> Verify norm calculations" << endl;
+    std::cout << "\n---> Verify norm calculations" << std::endl;
 
   Bool_t ok = kTRUE;
   const Double_t pattern = 10.25;
@@ -2716,8 +2716,8 @@ void spstress_norms(Int_t rsize_req,Int_t csize_req)
   Int_t csize = csize_req;
   if (csize%2 != 0)  csize--;
   if (rsize%2 == 1 || csize%2 == 1) {
-    cout << "rsize: " << rsize <<endl;
-    cout << "csize: " << csize <<endl;
+    std::cout << "rsize: " << rsize <<std::endl;
+    std::cout << "csize: " << csize <<std::endl;
     Fatal("spstress_norms","Sorry, size of the matrix to test must be even for this test\n");
   }
 
@@ -2725,24 +2725,24 @@ void spstress_norms(Int_t rsize_req,Int_t csize_req)
   TMatrixDSparse m(rsize,csize); m.SetSparseIndex(m_d);
 
   if (gVerbose)
-    cout << "\nAssign " << pattern << " to all the elements and check norms" << endl;
+    std::cout << "\nAssign " << pattern << " to all the elements and check norms" << std::endl;
   m = pattern;
   if (gVerbose)
-    cout << "  1. (col) norm should be pattern*nrows" << endl;
+    std::cout << "  1. (col) norm should be pattern*nrows" << std::endl;
   ok &= ( m.Norm1() == pattern*m.GetNrows() ) ? kTRUE : kFALSE;
   ok &= ( m.Norm1() == m.ColNorm() ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "  Inf (row) norm should be pattern*ncols" << endl;
+    std::cout << "  Inf (row) norm should be pattern*ncols" << std::endl;
   ok &= ( m.NormInf() == pattern*m.GetNcols() ) ? kTRUE : kFALSE;
   ok &= ( m.NormInf() == m.RowNorm() ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "  Square of the Eucl norm has got to be pattern^2 * no_elems" << endl;
+    std::cout << "  Square of the Eucl norm has got to be pattern^2 * no_elems" << std::endl;
   ok &= ( m.E2Norm() == (pattern*pattern)*m.GetNoElements() ) ? kTRUE : kFALSE;
   TMatrixDSparse m1(m); m1 = 1;
   ok &= ( m.E2Norm() == E2Norm(m+1.,m1) ) ? kTRUE : kFALSE;
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(6,"Matrix Norms",ok);
 }
@@ -2770,12 +2770,12 @@ void spstress_mm_multiplications()
     }
 
     if (verbose)
-      cout << "\n---> Verify matrix multiplications "
-              "for matrices of the characteristic size " << msize << endl;
+      std::cout << "\n---> Verify matrix multiplications "
+              "for matrices of the characteristic size " << msize << std::endl;
 
     {
       if (verbose)
-        cout << "\nTest inline multiplications of the UnitMatrix" << endl;
+        std::cout << "\nTest inline multiplications of the UnitMatrix" << std::endl;
       if (ok)
       {
         TMatrixDSparse m = TMatrixD(THilbertMatrixD(-1,msize,-1,msize));
@@ -2802,7 +2802,7 @@ void spstress_mm_multiplications()
     if (ok)
     {
       if (verbose)
-        cout << "Test XPP = X where P is a permutation matrix" << endl;
+        std::cout << "Test XPP = X where P is a permutation matrix" << std::endl;
       TMatrixDSparse m = TMatrixD(THilbertMatrixD(msize-1,msize));
       m(2,3) = TMath::Pi();
       TMatrixDSparse eth = m;
@@ -2832,7 +2832,7 @@ void spstress_mm_multiplications()
     if (ok)
     {
       if (verbose)
-        cout << "Test general matrix multiplication through inline mult" << endl;
+        std::cout << "Test general matrix multiplication through inline mult" << std::endl;
       TMatrixDSparse m = TMatrixD(THilbertMatrixD(msize-2,msize));
       m(3,3) = TMath::Pi();
       TMatrixD p_d = THilbertMatrixD(msize,msize);
@@ -2853,7 +2853,7 @@ void spstress_mm_multiplications()
       ok &= VerifyMatrixIdentity(m,mp2,verbose,epsilon);
 
       if (verbose)
-        cout << "Test XP=X*P  vs XP=X;XP*=P" << endl;
+        std::cout << "Test XP=X*P  vs XP=X;XP*=P" << std::endl;
       TMatrixDSparse mp3 = m1*p_d;
       ok &= VerifyMatrixIdentity(m,mp3,verbose,epsilon);
     }
@@ -2870,7 +2870,7 @@ void spstress_mm_multiplications()
 
     if (!ok) {
       if (gVerbose)
-        cout << "General Matrix Multiplications failed for size " << msize << endl;
+        std::cout << "General Matrix Multiplications failed for size " << msize << std::endl;
       break;
     }
   }
@@ -2878,7 +2878,7 @@ void spstress_mm_multiplications()
   if (ok)
   {
     if (gVerbose)
-      cout << "Check to see UU' = U'U = E when U is the Haar matrix" << endl;
+      std::cout << "Check to see UU' = U'U = E when U is the Haar matrix" << std::endl;
     const Int_t order = 5;
     const Int_t no_sub_cols = (1<<order)-order;
     TMatrixDSparse haar_sub = TMatrixD(THaarMatrixD(order,no_sub_cols));
@@ -2910,7 +2910,7 @@ void spstress_mm_multiplications()
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(7,"General Matrix Multiplications",ok);
 }
@@ -2933,12 +2933,12 @@ void spstress_vm_multiplications()
     const Int_t verbose = (gVerbose && nr==0 && iloop==gNrLoop);
 
     if (verbose)
-      cout << "\n---> Verify vector-matrix multiplications "
-             "for matrices of the characteristic size " << msize << endl;
+      std::cout << "\n---> Verify vector-matrix multiplications "
+             "for matrices of the characteristic size " << msize << std::endl;
 
     {
       if (verbose)
-        cout << "\nCheck shrinking a vector by multiplying by a non-sq unit matrix" << endl;
+        std::cout << "\nCheck shrinking a vector by multiplying by a non-sq unit matrix" << std::endl;
       TVectorD vb(-2,msize);
       for (Int_t i = vb.GetLwb(); i <= vb.GetUpb(); i++)
         vb(i) = TMath::Pi()-i;
@@ -2955,7 +2955,7 @@ void spstress_vm_multiplications()
     if (ok)
     {
       if (verbose)
-        cout << "Check expanding a vector by multiplying by a non-sq unit matrix" << endl;
+        std::cout << "Check expanding a vector by multiplying by a non-sq unit matrix" << std::endl;
       TVectorD vb(msize);
       for (Int_t i = vb.GetLwb(); i <= vb.GetUpb(); i++)
         vb(i) = TMath::Pi()+i;
@@ -2972,7 +2972,7 @@ void spstress_vm_multiplications()
     if (ok)
     {
       if (verbose)
-        cout << "Check general matrix-vector multiplication" << endl;
+        std::cout << "Check general matrix-vector multiplication" << std::endl;
       TVectorD vb(msize);
       for (Int_t i = vb.GetLwb(); i <= vb.GetUpb(); i++)
         vb(i) = TMath::Pi()+i;
@@ -3002,13 +3002,13 @@ void spstress_vm_multiplications()
 
     if (!ok) {
       if (gVerbose)
-        cout << "Vector Matrix Multiplications failed for size " << msize << endl;
+        std::cout << "Vector Matrix Multiplications failed for size " << msize << std::endl;
       break;
     }
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(8,"Matrix Vector Multiplications",ok);
 }
@@ -3020,7 +3020,7 @@ void spstress_vm_multiplications()
 void spstress_matrix_slices(Int_t vsize)
 {
   if (gVerbose)
-    cout << "\n---> Test operations with vectors and sparse matrix slices" << endl;
+    std::cout << "\n---> Test operations with vectors and sparse matrix slices" << std::endl;
 
   Bool_t ok = kTRUE;
   const Double_t pattern = 8.625;
@@ -3032,7 +3032,7 @@ void spstress_matrix_slices(Int_t vsize)
 
   Int_t i,j;
   if (gVerbose)
-    cout << "\nCheck modifying the matrix row-by-row" << endl;
+    std::cout << "\nCheck modifying the matrix row-by-row" << std::endl;
   m = pattern;
   ok &= ( m == pattern ) ? kTRUE : kFALSE;
   for (i = m.GetRowLwb(); i <= m.GetRowUpb(); i++) {
@@ -3066,7 +3066,7 @@ void spstress_matrix_slices(Int_t vsize)
   }
 
   if (gVerbose)
-    cout << "\nCheck modifying the matrix diagonal" << endl;
+    std::cout << "\nCheck modifying the matrix diagonal" << std::endl;
   m = pattern;
   TMatrixDSparseDiag td = m;
   td = pattern-3;
@@ -3092,7 +3092,7 @@ void spstress_matrix_slices(Int_t vsize)
   ok &= ( m == pattern ) ? kTRUE : kFALSE;
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
   StatusPrint(9,"Matrix Slices to Vectors",ok);
 }
 
@@ -3103,7 +3103,7 @@ void spstress_matrix_slices(Int_t vsize)
 void spstress_matrix_io()
 {
   if (gVerbose)
-    cout << "\n---> Test matrix I/O" << endl;
+    std::cout << "\n---> Test matrix I/O" << std::endl;
 
   Bool_t ok = kTRUE;
   const Double_t pattern = TMath::Pi();
@@ -3123,12 +3123,12 @@ void spstress_matrix_io()
     ma.Use(m);
 
     if (verbose)
-      cout << "\nWrite matrix m to database" << endl;
+      std::cout << "\nWrite matrix m to database" << std::endl;
     snprintf(name,80,"m_%d",msize);
     m.Write(name);
 
     if (verbose)
-      cout << "\nWrite matrix ma which adopts to database" << endl;
+      std::cout << "\nWrite matrix ma which adopts to database" << std::endl;
     snprintf(name,80,"ma_%d",msize);
     ma.Write(name);
 
@@ -3136,11 +3136,11 @@ void spstress_matrix_io()
   }
 
   if (gVerbose)
-    cout << "\nClose database" << endl;
+    std::cout << "\nClose database" << std::endl;
   delete f;
 
   if (gVerbose)
-    cout << "\nOpen database in read-only mode and read matrix" << endl;
+    std::cout << "\nOpen database in read-only mode and read matrix" << std::endl;
   TFile *f1 = new TFile("vmatrix.root");
 
   iloop = gNrLoop;
@@ -3158,7 +3158,7 @@ void spstress_matrix_io()
     snprintf(name,80,"ms_%d",msize);
 
     if (verbose)
-      cout << "\nRead matrix should be same as original" << endl;
+      std::cout << "\nRead matrix should be same as original" << std::endl;
     ok &= ((*mr)  == m) ? kTRUE : kFALSE;
     ok &= ((*mar) == m) ? kTRUE : kFALSE;
 
@@ -3168,7 +3168,7 @@ void spstress_matrix_io()
   delete f1;
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(10,"Matrix Persistence",ok);
 }
@@ -3179,7 +3179,7 @@ void spstress_matrix_io()
 void vstress_allocation(Int_t msize)
 {
   if (gVerbose)
-    cout << "\n\n---> Test allocation and compatibility check" << endl;
+    std::cout << "\n\n---> Test allocation and compatibility check" << std::endl;
 
   Int_t i;
   Bool_t ok = kTRUE;
@@ -3189,34 +3189,34 @@ void vstress_allocation(Int_t msize)
   TVectorD v4(v1);
 
   if (gVerbose) {
-    cout << "\nStatus information reported for vector v3:" << endl;
-    cout << "  Lower bound ... " << v3.GetLwb() << endl;
-    cout << "  Upper bound ... " << v3.GetUpb() << endl;
-    cout << "  No. of elements " << v3.GetNoElements() << endl;
+    std::cout << "\nStatus information reported for vector v3:" << std::endl;
+    std::cout << "  Lower bound ... " << v3.GetLwb() << std::endl;
+    std::cout << "  Upper bound ... " << v3.GetUpb() << std::endl;
+    std::cout << "  No. of elements " << v3.GetNoElements() << std::endl;
   }
 
   if (gVerbose)
-    cout << "\nCheck vectors 1 & 2 for compatibility" << endl;
+    std::cout << "\nCheck vectors 1 & 2 for compatibility" << std::endl;
   ok &= AreCompatible(v1,v2,gVerbose);
 
   if (gVerbose)
-    cout << "Check vectors 1 & 4 for compatibility" << endl;
+    std::cout << "Check vectors 1 & 4 for compatibility" << std::endl;
   ok &= AreCompatible(v1,v4,gVerbose);
 
   if (gVerbose)
-    cout << "v2 has to be compatible with v3 after resizing to v3" << endl;
+    std::cout << "v2 has to be compatible with v3 after resizing to v3" << std::endl;
   v2.ResizeTo(v3);
   ok &= AreCompatible(v2,v3,gVerbose);
 
   TVectorD v5(v1.GetUpb()+5);
   if (gVerbose)
-    cout << "v1 has to be compatible with v5 after resizing to v5.upb" << endl;
+    std::cout << "v1 has to be compatible with v5 after resizing to v5.upb" << std::endl;
   v1.ResizeTo(v5.GetNoElements());
   ok &= AreCompatible(v1,v5,gVerbose);
 
   {
     if (gVerbose)
-      cout << "Check that shrinking does not change remaining elements" << endl;
+      std::cout << "Check that shrinking does not change remaining elements" << std::endl;
     TVectorD vb(-1,msize);
     for (i = vb.GetLwb(); i <= vb.GetUpb(); i++)
       vb(i) = i+TMath::Pi();
@@ -3227,7 +3227,7 @@ void vstress_allocation(Int_t msize)
     for (i = v.GetLwb(); i <= v.GetUpb(); i++)
       ok &= ( v(i) == vb(i) ) ? kTRUE : kFALSE;
     if (gVerbose)
-      cout << "Check that expansion expands by zeros" << endl;
+      std::cout << "Check that expansion expands by zeros" << std::endl;
     const Int_t old_nelems = v.GetNoElements();
     const Int_t old_lwb    = v.GetLwb();
     v.ResizeTo(vb);
@@ -3241,7 +3241,7 @@ void vstress_allocation(Int_t msize)
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
   StatusPrint(1,"Allocation, Filling, Resizing",ok);
 }
 
@@ -3265,7 +3265,7 @@ class CosAction : public TElementPosActionD {
 void vstress_element_op(Int_t vsize)
 {
   if (gVerbose)
-    cout << "\n---> Test operations that treat each element uniformly" << endl;
+    std::cout << "\n---> Test operations that treat each element uniformly" << std::endl;
 
   Bool_t ok = kTRUE;
   const Double_t pattern = TMath::Pi();
@@ -3274,22 +3274,22 @@ void vstress_element_op(Int_t vsize)
   TVectorD v1(v);
 
   if (gVerbose)
-    cout << "\nWriting zeros to v..." << endl;
+    std::cout << "\nWriting zeros to v..." << std::endl;
   for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++)
     v(i) = 0;
   ok &= VerifyVectorValue(v,0.0,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "Clearing v1 ..." << endl;
+    std::cout << "Clearing v1 ..." << std::endl;
   v1.Zero();
   ok &= VerifyVectorValue(v1,0.0,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "Comparing v1 with 0 ..." << endl;
+    std::cout << "Comparing v1 with 0 ..." << std::endl;
   ok &= (v1 == 0) ? kTRUE : kFALSE;
 
   if (gVerbose)
-    cout << "Writing a pattern " << pattern << " by assigning to v(i)..." << endl;
+    std::cout << "Writing a pattern " << pattern << " by assigning to v(i)..." << std::endl;
   {
     for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++)
       v(i) = pattern;
@@ -3297,33 +3297,33 @@ void vstress_element_op(Int_t vsize)
   }
 
   if (gVerbose)
-    cout << "Writing the pattern by assigning to v1 as a whole ..." << endl;
+    std::cout << "Writing the pattern by assigning to v1 as a whole ..." << std::endl;
   v1 = pattern;
   ok &= VerifyVectorValue(v1,pattern,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "Comparing v and v1 ..." << endl;
+    std::cout << "Comparing v and v1 ..." << std::endl;
   ok &= (v == v1) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "Comparing (v=0) and v1 ..." << endl;
+    std::cout << "Comparing (v=0) and v1 ..." << std::endl;
   ok &= (!(v.Zero() == v1)) ? kTRUE : kFALSE;
 
   if (gVerbose)
-    cout << "\nClear v and add the pattern" << endl;
+    std::cout << "\nClear v and add the pattern" << std::endl;
   v.Zero();
   v += pattern;
   ok &= VerifyVectorValue(v,pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "   add the doubled pattern with the negative sign" << endl;
+    std::cout << "   add the doubled pattern with the negative sign" << std::endl;
   v += -2*pattern;
   ok &= VerifyVectorValue(v,-pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "   subtract the trippled pattern with the negative sign" << endl;
+    std::cout << "   subtract the trippled pattern with the negative sign" << std::endl;
   v -= -3*pattern;
   ok &= VerifyVectorValue(v,2*pattern,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nVerify comparison operations" << endl;
+    std::cout << "\nVerify comparison operations" << std::endl;
   v = pattern;
   ok &= ( v == pattern && !(v != pattern) && v >= pattern && v <= pattern ) ? kTRUE : kFALSE;
   ok &= ( v > 0 && v >= 0 ) ? kTRUE : kFALSE;
@@ -3335,25 +3335,25 @@ void vstress_element_op(Int_t vsize)
   ok &= ( v <= pattern+1.001 && !(v < pattern+1) && !(v <= pattern) ) ? kTRUE : kFALSE;
 
   if (gVerbose)
-    cout << "\nAssign 2*pattern to v by repeating additions" << endl;
+    std::cout << "\nAssign 2*pattern to v by repeating additions" << std::endl;
   v = 0; v += pattern; v += pattern;
   if (gVerbose)
-    cout << "Assign 2*pattern to v1 by multiplying by two" << endl;
+    std::cout << "Assign 2*pattern to v1 by multiplying by two" << std::endl;
   v1 = pattern; v1 *= 2;
   ok &= VerifyVectorValue(v1,2*pattern,gVerbose,EPSILON);
   ok &= ( v == v1 ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "Multiply v1 by one half returning it to the 1*pattern" << endl;
+    std::cout << "Multiply v1 by one half returning it to the 1*pattern" << std::endl;
   v1 *= 1/2.;
   ok &= VerifyVectorValue(v1,pattern,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nAssign -pattern to v and v1" << endl;
+    std::cout << "\nAssign -pattern to v and v1" << std::endl;
   v.Zero(); v -= pattern; v1 = -pattern;
   ok &= VerifyVectorValue(v,-pattern,gVerbose,EPSILON);
   ok &= ( v == v1 ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "v = sqrt(sqr(v)); v1 = abs(v1); Now v and v1 have to be the same" << endl;
+    std::cout << "v = sqrt(sqr(v)); v1 = abs(v1); Now v and v1 have to be the same" << std::endl;
   v.Sqr();
   ok &= VerifyVectorValue(v,pattern*pattern,gVerbose,EPSILON);
   v.Sqrt();
@@ -3364,7 +3364,7 @@ void vstress_element_op(Int_t vsize)
 
   {
     if (gVerbose)
-      cout << "\nCheck out to see that sin^2(x) + cos^2(x) = 1" << endl;
+      std::cout << "\nCheck out to see that sin^2(x) + cos^2(x) = 1" << std::endl;
     for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++)
       v(i) = 2*TMath::Pi()/v.GetNoElements()*i;
 #ifndef __CINT__
@@ -3387,7 +3387,7 @@ void vstress_element_op(Int_t vsize)
   }
 
   if (gVerbose)
-    cout << "\nVerify constructor with initialization" << endl;
+    std::cout << "\nVerify constructor with initialization" << std::endl;
 #ifndef __CINT__
   TVectorD vi(0,4,0.0,1.0,2.0,3.0,4.0,"END");
 #else
@@ -3402,7 +3402,7 @@ void vstress_element_op(Int_t vsize)
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
   StatusPrint(2,"Uniform vector operations",ok);
 }
 
@@ -3413,7 +3413,7 @@ void vstress_element_op(Int_t vsize)
 void vstress_binary_op(Int_t vsize)
 {
   if (gVerbose)
-    cout << "\n---> Test Binary Vector operations" << endl;
+    std::cout << "\n---> Test Binary Vector operations" << std::endl;
 
   Bool_t ok = kTRUE;
   const Double_t pattern = TMath::Pi();
@@ -3424,7 +3424,7 @@ void vstress_binary_op(Int_t vsize)
   TVectorD v1(v);
 
   if (gVerbose)
-    cout << "\nVerify assignment of a vector to the vector" << endl;
+    std::cout << "\nVerify assignment of a vector to the vector" << std::endl;
   v = pattern;
   v1.Zero();
   v1 = v;
@@ -3432,20 +3432,20 @@ void vstress_binary_op(Int_t vsize)
   ok &= ( v1 == v ) ? kTRUE : kFALSE;
 
   if (gVerbose)
-    cout << "\nAdding one vector to itself, uniform pattern " << pattern << endl;
+    std::cout << "\nAdding one vector to itself, uniform pattern " << pattern << std::endl;
   v.Zero(); v = pattern;
   v1 = v; v1 += v1;
   ok &= VerifyVectorValue(v1,2*pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "  subtracting two vectors ..." << endl;
+    std::cout << "  subtracting two vectors ..." << std::endl;
   v1 -= v;
   ok &= VerifyVectorValue(v1,pattern,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "  subtracting the vector from itself" << endl;
+    std::cout << "  subtracting the vector from itself" << std::endl;
   v1 -= v1;
   ok &= VerifyVectorValue(v1,0.,gVerbose,EPSILON);
   if (gVerbose)
-    cout << "  adding two vectors together" << endl;
+    std::cout << "  adding two vectors together" << std::endl;
   v1 += v;
   ok &= VerifyVectorValue(v1,pattern,gVerbose,EPSILON);
 
@@ -3456,8 +3456,8 @@ void vstress_binary_op(Int_t vsize)
   }
 
   if (gVerbose) {
-    cout << "\nArithmetic operations on vectors with not the same elements" << endl;
-    cout << "   adding vp to the zero vector..." << endl;
+    std::cout << "\nArithmetic operations on vectors with not the same elements" << std::endl;
+    std::cout << "   adding vp to the zero vector..." << std::endl;
   }
   v.Zero();
   ok &= ( v == 0.0 ) ? kTRUE : kFALSE;
@@ -3465,26 +3465,26 @@ void vstress_binary_op(Int_t vsize)
   ok &= VerifyVectorIdentity(v,vp,gVerbose,epsilon);
   v1 = v;
   if (gVerbose)
-    cout << "   making v = 3*vp and v1 = 3*vp, via add() and succesive mult" << endl;
+    std::cout << "   making v = 3*vp and v1 = 3*vp, via add() and succesive mult" << std::endl;
   Add(v,2.,vp);
   v1 += v1; v1 += vp;
   ok &= VerifyVectorIdentity(v,v1,gVerbose,epsilon);
   if (gVerbose)
-    cout << "   clear both v and v1, by subtracting from itself and via add()" << endl;
+    std::cout << "   clear both v and v1, by subtracting from itself and via add()" << std::endl;
   v1 -= v1;
   Add(v,-3.,vp);
   ok &= VerifyVectorIdentity(v,v1,gVerbose,epsilon);
 
   if (gVerbose) {
-    cout << "\nTesting element-by-element multiplications and divisions" << endl;
-    cout << "   squaring each element with sqr() and via multiplication" << endl;
+    std::cout << "\nTesting element-by-element multiplications and divisions" << std::endl;
+    std::cout << "   squaring each element with sqr() and via multiplication" << std::endl;
   }
   v = vp; v1 = vp;
   v.Sqr();
   ElementMult(v1,v1);
   ok &= VerifyVectorIdentity(v,v1,gVerbose,epsilon);
   if (gVerbose)
-    cout << "   compare (v = pattern^2)/pattern with pattern" << endl;
+    std::cout << "   compare (v = pattern^2)/pattern with pattern" << std::endl;
   v = pattern; v1 = pattern;
   v.Sqr();
   ElementDiv(v,v1);
@@ -3493,7 +3493,7 @@ void vstress_binary_op(Int_t vsize)
    Compare(v1,v);
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
   StatusPrint(3,"Binary vector element-by-element operations",ok);
 }
 
@@ -3504,7 +3504,7 @@ void vstress_binary_op(Int_t vsize)
 void vstress_norms(Int_t vsize)
 {
   if (gVerbose)
-    cout << "\n---> Verify norm calculations" << endl;
+    std::cout << "\n---> Verify norm calculations" << std::endl;
 
   Bool_t ok = kTRUE;
   const Double_t pattern = 10.25;
@@ -3516,27 +3516,27 @@ void vstress_norms(Int_t vsize)
   TVectorD v1(v);
 
   if (gVerbose)
-    cout << "\nAssign " << pattern << " to all the elements and check norms" << endl;
+    std::cout << "\nAssign " << pattern << " to all the elements and check norms" << std::endl;
   v = pattern;
   if (gVerbose)
-    cout << "  1. norm should be pattern*no_elems" << endl;
+    std::cout << "  1. norm should be pattern*no_elems" << std::endl;
   ok &= ( v.Norm1() == pattern*v.GetNoElements() ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "  Square of the 2. norm has got to be pattern^2 * no_elems" << endl;
+    std::cout << "  Square of the 2. norm has got to be pattern^2 * no_elems" << std::endl;
   ok &= ( v.Norm2Sqr() == (pattern*pattern)*v.GetNoElements() ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "  Inf norm should be pattern itself" << endl;
+    std::cout << "  Inf norm should be pattern itself" << std::endl;
   ok &= ( v.NormInf() == pattern ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "  Scalar product of vector by itself is the sqr(2. vector norm)" << endl;
+    std::cout << "  Scalar product of vector by itself is the sqr(2. vector norm)" << std::endl;
   ok &= ( v.Norm2Sqr() == v*v ) ? kTRUE : kFALSE;
 
   Double_t ap_step = 1;
   Double_t ap_a0   = -pattern;
   Int_t n = v.GetNoElements();
   if (gVerbose) {
-    cout << "\nAssign the arithm progression with 1. term " << ap_a0 <<
-            "\nand the difference " << ap_step << endl;
+    std::cout << "\nAssign the arithm progression with 1. term " << ap_a0 <<
+            "\nand the difference " << ap_step << std::endl;
   }
   {
     for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++)
@@ -3546,21 +3546,21 @@ void vstress_norms(Int_t vsize)
   Double_t norm = (2*ap_a0+(l+n-1)*ap_step)/2*(n-l) +
                   (-2*ap_a0-(l-1)*ap_step)/2*l;
   if (gVerbose)
-    cout << "  1. norm should be " << norm << endl;
+    std::cout << "  1. norm should be " << norm << std::endl;
   ok &= ( v.Norm1() == norm ) ? kTRUE : kFALSE;
   norm = n*( (ap_a0*ap_a0)+ap_a0*ap_step*(n-1)+(ap_step*ap_step)*(n-1)*(2*n-1)/6);
   if (gVerbose) {
-    cout << "  Square of the 2. norm has got to be "
-            "n*[ a0^2 + a0*q*(n-1) + q^2/6*(n-1)*(2n-1) ], or " << norm << endl;
+    std::cout << "  Square of the 2. norm has got to be "
+            "n*[ a0^2 + a0*q*(n-1) + q^2/6*(n-1)*(2n-1) ], or " << norm << std::endl;
   }
   ok &= ( TMath::Abs( (v.Norm2Sqr()-norm)/norm ) < EPSILON ) ? kTRUE : kFALSE;
 
   norm = TMath::Max(TMath::Abs(v(v.GetLwb())),TMath::Abs(v(v.GetUpb())));
   if (gVerbose)
-    cout << "  Inf norm should be max(abs(a0),abs(a0+(n-1)*q)), ie " << norm << endl;
+    std::cout << "  Inf norm should be max(abs(a0),abs(a0+(n-1)*q)), ie " << norm << std::endl;
   ok &= ( v.NormInf() == norm ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "  Scalar product of vector by itself is the sqr(2. vector norm)" << endl;
+    std::cout << "  Scalar product of vector by itself is the sqr(2. vector norm)" << std::endl;
   ok &= ( v.Norm2Sqr() == v*v ) ? kTRUE : kFALSE;
 
 #if 0
@@ -3569,22 +3569,22 @@ void vstress_norms(Int_t vsize)
 #endif
 
   if (gVerbose)
-    cout << "\nConstruct v1 to be orthogonal to v as v(n), -v(n-1), v(n-2)..." << endl;
+    std::cout << "\nConstruct v1 to be orthogonal to v as v(n), -v(n-1), v(n-2)..." << std::endl;
   {
     for (Int_t i = 0; i < v1.GetNoElements(); i++)
       v1(i+v1.GetLwb()) = v(v.GetUpb()-i) * ( i % 2 == 1 ? -1 : 1 );
   }
   if (gVerbose)
-    cout << "||v1|| has got to be equal ||v|| regardless of the norm def" << endl;
+    std::cout << "||v1|| has got to be equal ||v|| regardless of the norm def" << std::endl;
   ok &= ( v1.Norm1()    == v.Norm1() ) ? kTRUE : kFALSE;
   ok &= ( v1.Norm2Sqr() == v.Norm2Sqr() ) ? kTRUE : kFALSE;
   ok &= ( v1.NormInf()  == v.NormInf() ) ? kTRUE : kFALSE;
   if (gVerbose)
-    cout << "But the scalar product has to be zero" << endl;
+    std::cout << "But the scalar product has to be zero" << std::endl;
   ok &= ( v1 * v == 0 ) ? kTRUE : kFALSE;
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
   StatusPrint(4,"Vector Norms",ok);
 }
 
@@ -3595,7 +3595,7 @@ void vstress_norms(Int_t vsize)
 void vstress_matrix_slices(Int_t vsize)
 {
   if (gVerbose)
-    cout << "\n---> Test operations with vectors and matrix slices" << endl;
+    std::cout << "\n---> Test operations with vectors and matrix slices" << std::endl;
 
   Bool_t ok = kTRUE;
   const Double_t pattern = 8.625;
@@ -3606,7 +3606,7 @@ void vstress_matrix_slices(Int_t vsize)
 
   Int_t i,j;
   if (gVerbose)
-    cout << "\nCheck modifying the matrix column-by-column" << endl;
+    std::cout << "\nCheck modifying the matrix column-by-column" << std::endl;
   m = pattern;
   ok &= ( m == pattern ) ? kTRUE : kFALSE;
   for (i = m.GetColLwb(); i <= m.GetColUpb(); i++) {
@@ -3642,7 +3642,7 @@ void vstress_matrix_slices(Int_t vsize)
   }
 
   if (gVerbose)
-    cout << "\nCheck modifying the matrix row-by-row" << endl;
+    std::cout << "\nCheck modifying the matrix row-by-row" << std::endl;
   m = pattern;
   ok &= ( m == pattern ) ? kTRUE : kFALSE;
   for (i = m.GetRowLwb(); i <= m.GetRowUpb(); i++) {
@@ -3676,7 +3676,7 @@ void vstress_matrix_slices(Int_t vsize)
   }
 
   if (gVerbose)
-    cout << "\nCheck modifying the matrix diagonal" << endl;
+    std::cout << "\nCheck modifying the matrix diagonal" << std::endl;
   m = pattern;
   TMatrixDDiag td = m;
   td = pattern-3;
@@ -3702,8 +3702,8 @@ void vstress_matrix_slices(Int_t vsize)
   ok &= ( m == pattern ) ? kTRUE : kFALSE;
 
   if (gVerbose) {
-    cout << "\nCheck out to see that multiplying by diagonal is column-wise"
-            "\nmatrix multiplication" << endl;
+    std::cout << "\nCheck out to see that multiplying by diagonal is column-wise"
+            "\nmatrix multiplication" << std::endl;
   }
   TMatrixD mm(m);
   TMatrixD m1(m.GetRowLwb(),TMath::Max(m.GetRowUpb(),m.GetColUpb()),
@@ -3729,7 +3729,7 @@ void vstress_matrix_slices(Int_t vsize)
   }
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
   StatusPrint(5,"Matrix Slices to Vectors",ok);
 }
 
@@ -3740,7 +3740,7 @@ void vstress_matrix_slices(Int_t vsize)
 void vstress_vector_io()
 {
   if (gVerbose)
-    cout << "\n---> Test vector I/O" << endl;
+    std::cout << "\n---> Test vector I/O" << std::endl;
 
   Bool_t ok = kTRUE;
   const Double_t pattern = TMath::Pi();
@@ -3764,7 +3764,7 @@ void vstress_vector_io()
     va.Use(msize,pattern_array);
 
     if (verbose)
-      cout << "\nWrite vector v to database" << endl;
+      std::cout << "\nWrite vector v to database" << std::endl;
 
     snprintf(name,80,"v_%d",msize);
     v.Write(name);
@@ -3777,11 +3777,11 @@ void vstress_vector_io()
   }
 
   if (gVerbose)
-    cout << "\nClose database" << endl;
+    std::cout << "\nClose database" << std::endl;
   delete f;
 
   if (gVerbose)
-    cout << "\nOpen database in read-only mode and read vector" << endl;
+    std::cout << "\nOpen database in read-only mode and read vector" << std::endl;
   TFile *f1 = new TFile("vvector.root");
 
   iloop = gNrLoop;
@@ -3799,7 +3799,7 @@ void vstress_vector_io()
     TVectorD *var = (TVectorD*) f1->Get(name);
 
     if (verbose)
-      cout << "\nRead vector should be same as original still in memory" << endl;
+      std::cout << "\nRead vector should be same as original still in memory" << std::endl;
     ok &= ((*vr) == v)  ? kTRUE : kFALSE;
     ok &= ((*var) == v) ? kTRUE : kFALSE;
 
@@ -3809,30 +3809,30 @@ void vstress_vector_io()
   delete f1;
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
   StatusPrint(6,"Vector Persistence",ok);
 }
 
 Bool_t test_svd_expansion(const TMatrixD &A)
 {
   if (gVerbose)
-    cout << "\n\nSVD-decompose matrix A and check if we can compose it back\n" <<endl;
+    std::cout << "\n\nSVD-decompose matrix A and check if we can compose it back\n" <<std::endl;
 
   Bool_t ok = kTRUE;
 
   TDecompSVD svd(A);
   if (gVerbose) {
-    cout << "left factor U" <<endl;
+    std::cout << "left factor U" <<std::endl;
     svd.GetU().Print();
-    cout << "Vector of Singular values" <<endl;
+    std::cout << "Vector of Singular values" <<std::endl;
     svd.GetSig().Print();
-    cout << "right factor V" <<endl;
+    std::cout << "right factor V" <<std::endl;
     svd.GetV().Print();
   }
 
   {
     if (gVerbose)
-      cout << "\tchecking that U is orthogonal indeed, i.e., U'U=E and UU'=E" <<endl;
+      std::cout << "\tchecking that U is orthogonal indeed, i.e., U'U=E and UU'=E" <<std::endl;
     const Int_t nRows = svd.GetU().GetNrows();
     const Int_t nCols = svd.GetU().GetNcols();
     TMatrixD E1(nRows,nRows); E1.UnitMatrix();
@@ -3844,7 +3844,7 @@ Bool_t test_svd_expansion(const TMatrixD &A)
 
   {
     if (gVerbose)
-      cout << "\tchecking that V is orthogonal indeed, i.e., V'V=E and VV'=E" <<endl;
+      std::cout << "\tchecking that V is orthogonal indeed, i.e., V'V=E and VV'=E" <<std::endl;
     const Int_t nRows = svd.GetV().GetNrows();
     const Int_t nCols = svd.GetV().GetNcols();
     TMatrixD E1(nRows,nRows); E1.UnitMatrix();
@@ -3856,7 +3856,7 @@ Bool_t test_svd_expansion(const TMatrixD &A)
 
   {
     if (gVerbose)
-      cout << "\tchecking that U*Sig*V' is indeed A" <<endl;
+      std::cout << "\tchecking that U*Sig*V' is indeed A" <<std::endl;
     const Int_t nRows = svd.GetU().GetNrows();
     const Int_t nCols = svd.GetV().GetNcols();
     TMatrixD s(nRows,nCols);
@@ -3865,7 +3865,7 @@ Bool_t test_svd_expansion(const TMatrixD &A)
     TMatrixD tmp = s * vt;
     ok &= VerifyMatrixIdentity(A,svd.GetU() * tmp,gVerbose,100*EPSILON);
     if (gVerbose) {
-      cout << "U*Sig*V'" <<endl;
+      std::cout << "U*Sig*V'" <<std::endl;
       (svd.GetU()*tmp).Print();
     }
   }
@@ -3910,7 +3910,7 @@ void astress_decomp()
 
   {
     if (gVerbose)
-      cout << "\nBrandt example page 503\n" <<endl;
+      std::cout << "\nBrandt example page 503\n" <<std::endl;
 
     Double_t array0[] = { -2,1,0,0, 2,1,0,0, 0,0,0,0, 0,0,0,0 };
     ok &= test_svd_expansion(MakeMatrix(4,4,array0,sizeof(array0)/sizeof(array0[0])));
@@ -3918,7 +3918,7 @@ void astress_decomp()
 
   {
     if (gVerbose)
-      cout << "\nRotated by PI/2 Matrix Diag(1,4,9)\n" <<endl;
+      std::cout << "\nRotated by PI/2 Matrix Diag(1,4,9)\n" <<std::endl;
 
     Double_t array1[] = {0,-4,0,  1,0,0,  0,0,9 };
     ok &= test_svd_expansion(MakeMatrix(3,3,array1,sizeof(array1)/sizeof(array1[0])));
@@ -3926,7 +3926,7 @@ void astress_decomp()
 
   {
     if (gVerbose)
-      cout << "\nExample from the Forsythe, Malcolm, Moler's book\n" <<endl;
+      std::cout << "\nExample from the Forsythe, Malcolm, Moler's book\n" <<std::endl;
 
     Double_t array2[] =
          { 1,6,11, 2,7,12, 3,8,13, 4,9,14, 5,10,15};
@@ -3935,8 +3935,8 @@ void astress_decomp()
 
   {
     if (gVerbose)
-      cout << "\nExample from the Wilkinson, Reinsch's book\n" <<
-              "Singular numbers are 0, 19.5959, 20, 0, 35.3270\n" <<endl;
+      std::cout << "\nExample from the Wilkinson, Reinsch's book\n" <<
+              "Singular numbers are 0, 19.5959, 20, 0, 35.3270\n" <<std::endl;
 
     Double_t array3[] =
         { 22, 10,  2,   3,  7,    14,  7, 10,  0,  8,
@@ -3948,8 +3948,8 @@ void astress_decomp()
 
   {
     if (gVerbose)
-      cout << "\nExample from the Wilkinson, Reinsch's book\n" <<
-              "Ordered singular numbers are Sig[21-k] = sqrt(k*(k-1))\n" <<endl;
+      std::cout << "\nExample from the Wilkinson, Reinsch's book\n" <<
+              "Ordered singular numbers are Sig[21-k] = sqrt(k*(k-1))\n" <<std::endl;
     TMatrixD A(21,20);
     for (Int_t irow = A.GetRowLwb(); irow <= A.GetRowUpb(); irow++)
       for (Int_t icol = A.GetColLwb(); icol <= A.GetColUpb(); icol++)
@@ -3961,10 +3961,10 @@ void astress_decomp()
   if (0)
   {
     if (gVerbose) {
-      cout << "\nTest by W. Meier <wmeier@manu.com> to catch an obscure "
-           << "bug in QR\n" <<endl;
-      cout << "expect singular values to be\n"
-           << "1.4666e-024   1.828427   3.828427   4.366725  7.932951\n" <<endl;
+      std::cout << "\nTest by W. Meier <wmeier@manu.com> to catch an obscure "
+           << "bug in QR\n" <<std::endl;
+      std::cout << "expect singular values to be\n"
+           << "1.4666e-024   1.828427   3.828427   4.366725  7.932951\n" <<std::endl;
     }
 
     Double_t array4[] =
@@ -3990,7 +3990,7 @@ void astress_decomp()
   }
 
   if (gVerbose)
-    cout << "\nDone" <<endl;
+    std::cout << "\nDone" <<std::endl;
 
   StatusPrint(1,"Decomposition / Reconstruction",ok);
 }
@@ -3998,7 +3998,7 @@ void astress_decomp()
 void astress_lineqn()
 {
   if (gVerbose)
-    cout << "\nSolve Ax=b where A is a Hilbert matrix and b(i) = sum_j Aij\n" <<endl;
+    std::cout << "\nSolve Ax=b where A is a Hilbert matrix and b(i) = sum_j Aij\n" <<std::endl;
 
   Bool_t ok = kTRUE;
 
@@ -4011,7 +4011,7 @@ void astress_lineqn()
     const Int_t verbose = (gVerbose && nr==0 && iloop==gNrLoop);
 
     if (verbose)
-      cout << "\nSolve Ax=b for size = " << msize <<endl;
+      std::cout << "\nSolve Ax=b for size = " << msize <<std::endl;
 
     // Since The Hilbert matrix is accuracy "challenged", I will use a diagonaly
     // dominant one fore sizes > 100, otherwise the verification might fail
@@ -4120,13 +4120,13 @@ void astress_lineqn()
 
     if (!ok) {
       if (gVerbose)
-        cout << "Linear Equations failed for size " << msize << endl;
+        std::cout << "Linear Equations failed for size " << msize << std::endl;
       break;
     }
   }
 
   if (gVerbose)
-    cout << "\nDone" <<endl;
+    std::cout << "\nDone" <<std::endl;
 
   StatusPrint(2,"Linear Equations",ok);
 }
@@ -4163,7 +4163,7 @@ void astress_pseudo()
 
   TDecompSVD svd(A);
   if (gVerbose)
-    cout << "\ncondition number " << svd.Condition() << endl;
+    std::cout << "\ncondition number " << svd.Condition() << std::endl;
 
   // Compute the inverse as a solution of A*Ainv = E
   TMatrixD Ainv(nrows,nrows); Ainv.UnitMatrix();
@@ -4175,21 +4175,21 @@ void astress_pseudo()
   ok &= VerifyMatrixIdentity(Ainv,Ainv2,gVerbose,EPSILON);
 
   if (gVerbose) {
-    cout << "\nChecking the Moore-Penrose conditions for the Ainv" << endl;
-    cout << "\nVerify that Ainv * A * Ainv is Ainv" << endl;
+    std::cout << "\nChecking the Moore-Penrose conditions for the Ainv" << std::endl;
+    std::cout << "\nVerify that Ainv * A * Ainv is Ainv" << std::endl;
   }
   ok &= VerifyMatrixIdentity(Ainv * A * Ainv, Ainv,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nVerify that A * Ainv * A is A" << endl;
+    std::cout << "\nVerify that A * Ainv * A is A" << std::endl;
   ok &= VerifyMatrixIdentity(A * Ainv * A, A,gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nVerify that Ainv * A is symmetric" << endl;
+    std::cout << "\nVerify that Ainv * A is symmetric" << std::endl;
   ok &= VerifyMatrixIdentity(Ainv * A, (Ainv*A).T(),gVerbose,EPSILON);
 
   if (gVerbose)
-    cout << "\nVerify that A * Ainv is symmetric" << endl;
+    std::cout << "\nVerify that A * Ainv is symmetric" << std::endl;
   ok &= VerifyMatrixIdentity(A * Ainv, (A*Ainv).T(),gVerbose,EPSILON);
 
   StatusPrint(3,"Pseudo-Inverse, Moore-Penrose",ok);
@@ -4253,7 +4253,7 @@ void astress_decomp_io(Int_t msize)
 //           Test decomposition I/O
 //
   if (gVerbose)
-    cout << "\n---> Test decomp I/O" << endl;
+    std::cout << "\n---> Test decomp I/O" << std::endl;
 
   Bool_t ok = kTRUE;
 
@@ -4269,7 +4269,7 @@ void astress_decomp_io(Int_t msize)
   }
 
   if (gVerbose)
-    cout << "\nWrite decomp m to database" << endl;
+    std::cout << "\nWrite decomp m to database" << std::endl;
 
   TFile *f = new TFile("vdecomp.root", "RECREATE");
 
@@ -4286,15 +4286,15 @@ void astress_decomp_io(Int_t msize)
   bk.Write("bk");
 
   if (gVerbose)
-    cout << "\nClose database" << endl;
+    std::cout << "\nClose database" << std::endl;
   delete f;
 
   if (gVerbose)
-    cout << "\nOpen database in read-only mode and read matrix" << endl;
+    std::cout << "\nOpen database in read-only mode and read matrix" << std::endl;
   TFile *f1 = new TFile("vdecomp.root");
 
   if (gVerbose)
-    cout << "\nRead decompositions should create same solutions" << endl;
+    std::cout << "\nRead decompositions should create same solutions" << std::endl;
   {
     TDecompLU *rlu = (TDecompLU*)  f1->Get("lu");
     TVectorD b1(rowsum);
@@ -4368,7 +4368,7 @@ void astress_decomp_io(Int_t msize)
   delete f1;
 
   if (gVerbose)
-    cout << "\nDone\n" << endl;
+    std::cout << "\nDone\n" << std::endl;
 
   StatusPrint(5,"Decomposition Persistence",ok);
 }

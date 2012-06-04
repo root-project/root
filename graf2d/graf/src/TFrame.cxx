@@ -137,7 +137,7 @@ void TFrame::Pop()
 }
 
 //______________________________________________________________________________
-void TFrame::SavePrimitive(ostream &, Option_t * /*= ""*/)
+void TFrame::SavePrimitive(std::ostream &, Option_t * /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 

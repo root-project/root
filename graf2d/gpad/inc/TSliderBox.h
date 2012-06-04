@@ -45,7 +45,7 @@ public:
               Color_t color=18, Short_t bordersize=2 ,Short_t bordermode=-1);
    virtual ~TSliderBox();
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
    void          SetSlider(TSlider*slider) {fSlider=slider;}
 
    ClassDef(TSliderBox,1)  //The moving box of a TSlider

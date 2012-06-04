@@ -1826,7 +1826,7 @@ const TGGC &TGTextEntry::GetDefaultSelectedBackgroundGC()
 }
 
 //______________________________________________________________________________
-void TGTextEntry::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGTextEntry::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a text entry widget as a C++ statement(s) on output stream out.
 
@@ -1867,50 +1867,50 @@ void TGTextEntry::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
          if (fFontStruct == GetDefaultFontStruct()) {
             if (fNormGC() == GetDefaultGC()()) {
                if (fWidgetId == -1) {
-                  out <<");" << endl;
+                  out <<");" << std::endl;
                } else {
-                  out << "," << fWidgetId << ");" << endl;
+                  out << "," << fWidgetId << ");" << std::endl;
                }
             } else {
-               out << "," << fWidgetId << "," << parGC.Data() << ");" << endl;
+               out << "," << fWidgetId << "," << parGC.Data() << ");" << std::endl;
             }
          } else {
             out << "," << fWidgetId << "," << parGC.Data() << "," << parFont.Data()
-                <<");" << endl;
+                <<");" << std::endl;
          }
       } else {
          out << "," << fWidgetId << "," << parGC.Data() << "," << parFont.Data()
-             << "," << GetOptionString() << ");" << endl;
+             << "," << GetOptionString() << ");" << std::endl;
       }
    } else {
       out << "," << fWidgetId << "," << parGC.Data() << "," << parFont.Data()
-          << "," << GetOptionString() << ",ucolor);" << endl;
+          << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
-   out << "   " << GetName() << "->SetMaxLength(" << GetMaxLength() << ");" << endl;
+   out << "   " << GetName() << "->SetMaxLength(" << GetMaxLength() << ");" << std::endl;
 
    out << "   " << GetName() << "->SetAlignment(";
 
    if (fAlignment == kTextLeft)
-      out << "kTextLeft);"    << endl;
+      out << "kTextLeft);"    << std::endl;
 
    if (fAlignment == kTextRight)
-      out << "kTextRight);"   << endl;
+      out << "kTextRight);"   << std::endl;
 
    if (fAlignment == kTextCenterX)
-      out << "kTextCenterX);" << endl;
+      out << "kTextCenterX);" << std::endl;
 
    out << "   " << GetName() << "->SetText(" << quote << GetText() << quote
-       << ");" << endl;
+       << ");" << std::endl;
 
    out << "   " << GetName() << "->Resize("<< GetWidth() << "," << GetName()
-       << "->GetDefaultHeight());" << endl;
+       << "->GetDefaultHeight());" << std::endl;
 
    if ((fDefWidth > 0) || (fDefHeight > 0)) {
       out << "   " << GetName() << "->SetDefaultSize(";
-      out << fDefWidth << "," << fDefHeight << ");" << endl;
+      out << fDefWidth << "," << fDefHeight << ");" << std::endl;
    }
 
    if (fTip) {
@@ -1918,6 +1918,6 @@ void TGTextEntry::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       tiptext.ReplaceAll("\n", "\\n");
       out << "   ";
       out << GetName() << "->SetToolTipText(" << quote
-          << tiptext << quote << ");"  << endl;
+          << tiptext << quote << ");"  << std::endl;
    }
 }

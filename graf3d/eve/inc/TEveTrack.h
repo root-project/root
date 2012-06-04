@@ -119,7 +119,7 @@ public:
    virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
 
    virtual void CopyVizParams(const TEveElement* el);
-   virtual void WriteVizParams(ostream& out, const TString& var);
+   virtual void WriteVizParams(std::ostream& out, const TString& var);
 
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
@@ -224,7 +224,7 @@ public:
    TEveTrack* FindTrackByIndex(Int_t index); // *MENU*
 
    virtual void CopyVizParams(const TEveElement* el);
-   virtual void WriteVizParams(ostream& out, const TString& var);
+   virtual void WriteVizParams(std::ostream& out, const TString& var);
 
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
 

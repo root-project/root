@@ -80,10 +80,10 @@ int main(int argc, char** argv )
       input = TFile::Open( fname );
    }
    else {
-      cout << "Creating testdata...." << std::endl;
+      std::cout << "Creating testdata...." << std::endl;
       gROOT->ProcessLine(".L createData.C+");
       gROOT->ProcessLine("create_MultipleBackground(2000)");
-      cout << " created tmva_example_multiple_background.root for tests of the multiclass features"<<endl;
+      std::cout << " created tmva_example_multiple_background.root for tests of the multiclass features"<<std::endl;
       input = TFile::Open( fname );
    }
    if (!input) {

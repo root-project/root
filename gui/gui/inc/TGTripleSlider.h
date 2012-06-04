@@ -98,7 +98,7 @@ public:
    virtual void      SetConstrained(Bool_t on = kTRUE);
    virtual void      SetPointerPosition(Float_t pos);
    virtual void      SetRelative(Bool_t rel = kTRUE) { fRelative = rel; }
-   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGTripleVSlider,0)  // Vertical triple slider widget
 };
@@ -139,7 +139,7 @@ public:
    virtual void      SetConstrained(Bool_t on = kTRUE);
    virtual void      SetPointerPosition(Float_t pos);
    virtual void      SetRelative(Bool_t rel = kTRUE) { fRelative = rel; }
-   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGTripleHSlider,0)  // Horizontal triple slider widget
 };

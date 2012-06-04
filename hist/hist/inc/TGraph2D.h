@@ -138,7 +138,7 @@ public:
    void                  Paint(Option_t *option="");
    TH1                  *Project(Option_t *option="x") const; // *MENU*
    Int_t                 RemovePoint(Int_t ipoint); // *MENU*
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void          Set(Int_t n);
    virtual void          SetDirectory(TDirectory *dir);
    virtual void          SetHistogram(TH2 *h);

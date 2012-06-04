@@ -46,7 +46,7 @@ public:
    const TGPicture   GetPicture() const { return *fBgnd; }
    TImage            GetImage() const { return *fImage; }
 
-   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGShapedFrame, 0) // Shaped composite frame
 };

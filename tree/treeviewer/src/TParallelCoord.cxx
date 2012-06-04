@@ -807,7 +807,7 @@ void TParallelCoord::SaveEntryLists(const char* filename, Bool_t overwrite)
 
 
 //______________________________________________________________________________
-void TParallelCoord::SavePrimitive(ostream & out, Option_t* options)
+void TParallelCoord::SavePrimitive(std::ostream & out, Option_t* options)
 {
    // Save the TParallelCoord in a macro.
 
@@ -818,61 +818,61 @@ void TParallelCoord::SavePrimitive(ostream & out, Option_t* options)
    const char* filename = Form("%s_parallelcoord_entries.root",fTree->GetName());
    SaveEntryLists(filename,kTRUE); // FIXME overwriting by default.
    SaveTree(fTreeFileName,kTRUE);  // FIXME overwriting by default.
-   out<<"   // Create a TParallelCoord."<<endl;
-   out<<"   TFile *f = TFile::Open(\""<<fTreeFileName.Data()<<"\");"<<endl;
-   out<<"   TTree* tree = (TTree*)f->Get(\""<<fTreeName.Data()<<"\");"<<endl;
-   out<<"   TParallelCoord* para = new TParallelCoord(tree,"<<fNentries<<");"<<endl;
-   out<<"   // Load the entrylists."<<endl;
-   out<<"   TFile *entries = TFile::Open(\""<<filename<<"\");"<<endl;
-   out<<"   TEntryList *currententries = (TEntryList*)entries->Get(\"currententries\");"<<endl;
-   out<<"   tree->SetEntryList(currententries);"<<endl;
-   out<<"   para->SetInitEntries((TEntryList*)entries->Get(\"initentries\"));"<<endl;
-   out<<"   para->SetCurrentEntries(currententries);"<<endl;
+   out<<"   // Create a TParallelCoord."<<std::endl;
+   out<<"   TFile *f = TFile::Open(\""<<fTreeFileName.Data()<<"\");"<<std::endl;
+   out<<"   TTree* tree = (TTree*)f->Get(\""<<fTreeName.Data()<<"\");"<<std::endl;
+   out<<"   TParallelCoord* para = new TParallelCoord(tree,"<<fNentries<<");"<<std::endl;
+   out<<"   // Load the entrylists."<<std::endl;
+   out<<"   TFile *entries = TFile::Open(\""<<filename<<"\");"<<std::endl;
+   out<<"   TEntryList *currententries = (TEntryList*)entries->Get(\"currententries\");"<<std::endl;
+   out<<"   tree->SetEntryList(currententries);"<<std::endl;
+   out<<"   para->SetInitEntries((TEntryList*)entries->Get(\"initentries\"));"<<std::endl;
+   out<<"   para->SetCurrentEntries(currententries);"<<std::endl;
    TIter next(fSelectList);
    TParallelCoordSelect* sel;
-   out<<"   TParallelCoordSelect* sel;"<<endl;
-   out<<"   para->GetSelectList()->Delete();"<<endl;
+   out<<"   TParallelCoordSelect* sel;"<<std::endl;
+   out<<"   para->GetSelectList()->Delete();"<<std::endl;
    while ((sel = (TParallelCoordSelect*)next())) {
-      out<<"   para->AddSelection(\""<<sel->GetTitle()<<"\");"<<endl;
-      out<<"   sel = (TParallelCoordSelect*)para->GetSelectList()->Last();"<<endl;
-      out<<"   sel->SetLineColor("<<sel->GetLineColor()<<");"<<endl;
-      out<<"   sel->SetLineWidth("<<sel->GetLineWidth()<<");"<<endl;
+      out<<"   para->AddSelection(\""<<sel->GetTitle()<<"\");"<<std::endl;
+      out<<"   sel = (TParallelCoordSelect*)para->GetSelectList()->Last();"<<std::endl;
+      out<<"   sel->SetLineColor("<<sel->GetLineColor()<<");"<<std::endl;
+      out<<"   sel->SetLineWidth("<<sel->GetLineWidth()<<");"<<std::endl;
    }
    TIter nextbis(fVarList);
    TParallelCoordVar* var;
    TString varexp = "";
    while ((var = (TParallelCoordVar*)nextbis())) varexp.Append(Form(":%s",var->GetTitle()));
    varexp.Remove(TString::kLeading,':');
-   out<<"   tree->Draw(\""<<varexp.Data()<<"\",\"\",\"goff para\");"<<endl;
-   out<<"   TSelectorDraw* selector = (TSelectorDraw*)((TTreePlayer*)tree->GetPlayer())->GetSelector();"<<endl;
+   out<<"   tree->Draw(\""<<varexp.Data()<<"\",\"\",\"goff para\");"<<std::endl;
+   out<<"   TSelectorDraw* selector = (TSelectorDraw*)((TTreePlayer*)tree->GetPlayer())->GetSelector();"<<std::endl;
    nextbis.Reset();
    Int_t i=0;
-   out<<"   TParallelCoordVar* var;"<<endl;
+   out<<"   TParallelCoordVar* var;"<<std::endl;
    while ((var = (TParallelCoordVar*)nextbis())) {
-      out<<"   //***************************************"<<endl;
-      out<<"   // Create the axis \""<<var->GetTitle()<<"\"."<<endl;
-      out<<"   para->AddVariable(selector->GetVal("<<i<<"),\""<<var->GetTitle()<<"\");"<<endl;
-      out<<"   var = (TParallelCoordVar*)para->GetVarList()->Last();"<<endl;
+      out<<"   //***************************************"<<std::endl;
+      out<<"   // Create the axis \""<<var->GetTitle()<<"\"."<<std::endl;
+      out<<"   para->AddVariable(selector->GetVal("<<i<<"),\""<<var->GetTitle()<<"\");"<<std::endl;
+      out<<"   var = (TParallelCoordVar*)para->GetVarList()->Last();"<<std::endl;
       var->SavePrimitive(out,"pcalled");
       ++i;
    }
-   out<<"   //***************************************"<<endl;
-   out<<"   // Set the TParallelCoord parameters."<<endl;
-   out<<"   para->SetCurrentFirst("<<fCurrentFirst<<");"<<endl;
-   out<<"   para->SetCurrentN("<<fCurrentN<<");"<<endl;
-   out<<"   para->SetWeightCut("<<fWeightCut<<");"<<endl;
-   out<<"   para->SetDotsSpacing("<<fDotsSpacing<<");"<<endl;
-   out<<"   para->SetLineColor("<<GetLineColor()<<");"<<endl;
-   out<<"   para->SetLineWidth("<<GetLineWidth()<<");"<<endl;
-   out<<"   para->SetBit(TParallelCoord::kVertDisplay,"<<TestBit(kVertDisplay)<<");"<<endl;
-   out<<"   para->SetBit(TParallelCoord::kCurveDisplay,"<<TestBit(kCurveDisplay)<<");"<<endl;
-   out<<"   para->SetBit(TParallelCoord::kPaintEntries,"<<TestBit(kPaintEntries)<<");"<<endl;
-   out<<"   para->SetBit(TParallelCoord::kLiveUpdate,"<<TestBit(kLiveUpdate)<<");"<<endl;
-   out<<"   para->SetBit(TParallelCoord::kGlobalLogScale,"<<TestBit(kGlobalLogScale)<<");"<<endl;
-   if (TestBit(kGlobalScale)) out<<"   para->SetGlobalScale(kTRUE);"<<endl;
-   if (TestBit(kCandleChart)) out<<"   para->SetCandleChart(kTRUE);"<<endl;
-   if (TestBit(kGlobalLogScale)) out<<"   para->SetGlobalLogScale(kTRUE);"<<endl;
-   out<<endl<<"   para->Draw();"<<endl;
+   out<<"   //***************************************"<<std::endl;
+   out<<"   // Set the TParallelCoord parameters."<<std::endl;
+   out<<"   para->SetCurrentFirst("<<fCurrentFirst<<");"<<std::endl;
+   out<<"   para->SetCurrentN("<<fCurrentN<<");"<<std::endl;
+   out<<"   para->SetWeightCut("<<fWeightCut<<");"<<std::endl;
+   out<<"   para->SetDotsSpacing("<<fDotsSpacing<<");"<<std::endl;
+   out<<"   para->SetLineColor("<<GetLineColor()<<");"<<std::endl;
+   out<<"   para->SetLineWidth("<<GetLineWidth()<<");"<<std::endl;
+   out<<"   para->SetBit(TParallelCoord::kVertDisplay,"<<TestBit(kVertDisplay)<<");"<<std::endl;
+   out<<"   para->SetBit(TParallelCoord::kCurveDisplay,"<<TestBit(kCurveDisplay)<<");"<<std::endl;
+   out<<"   para->SetBit(TParallelCoord::kPaintEntries,"<<TestBit(kPaintEntries)<<");"<<std::endl;
+   out<<"   para->SetBit(TParallelCoord::kLiveUpdate,"<<TestBit(kLiveUpdate)<<");"<<std::endl;
+   out<<"   para->SetBit(TParallelCoord::kGlobalLogScale,"<<TestBit(kGlobalLogScale)<<");"<<std::endl;
+   if (TestBit(kGlobalScale)) out<<"   para->SetGlobalScale(kTRUE);"<<std::endl;
+   if (TestBit(kCandleChart)) out<<"   para->SetCandleChart(kTRUE);"<<std::endl;
+   if (TestBit(kGlobalLogScale)) out<<"   para->SetGlobalLogScale(kTRUE);"<<std::endl;
+   out<<std::endl<<"   para->Draw();"<<std::endl;
 }
 
 

@@ -310,8 +310,8 @@ namespace ROOT {
    public:
       void Print() {
          TBranchProxy::Print();
-         cout << "fWhere " << fWhere << endl;
-         if (fWhere) cout << "value? " << *(unsigned char*)GetStart() << endl;
+         std::cout << "fWhere " << fWhere << std::endl;
+         if (fWhere) std::cout << "value? " << *(unsigned char*)GetStart() << std::endl;
       }
 
       TArrayCharProxy() : TBranchProxy() {}
@@ -368,12 +368,12 @@ namespace ROOT {
    public:
       void Print() {
          TBranchProxy::Print();
-         cout << "fWhere " << fWhere << endl;
+         std::cout << "fWhere " << fWhere << std::endl;
          if (fWhere) {
             if (IsaPointer()) {
-               cout << "location " << *(TClonesArray**)fWhere << endl;
+               std::cout << "location " << *(TClonesArray**)fWhere << std::endl;
             } else {
-               cout << "location " << fWhere << endl;
+               std::cout << "location " << fWhere << std::endl;
             }
          }
       }
@@ -410,12 +410,12 @@ namespace ROOT {
    public:
       void Print() {
          TBranchProxy::Print();
-         cout << "fWhere " << fWhere << endl;
+         std::cout << "fWhere " << fWhere << std::endl;
          if (fWhere) {
             if (IsaPointer()) {
-               cout << "location " << *(TClonesArray**)fWhere << endl;
+               std::cout << "location " << *(TClonesArray**)fWhere << std::endl;
             } else {
-               cout << "location " << fWhere << endl;
+               std::cout << "location " << fWhere << std::endl;
             }
          }
       }
@@ -451,8 +451,8 @@ namespace ROOT {
    public:
       void Print() {
          TBranchProxy::Print();
-         cout << "fWhere " << fWhere << endl;
-         if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
+         std::cout << "fWhere " << fWhere << std::endl;
+         if (fWhere) std::cout << "value? " << *(T*)GetStart() << std::endl;
       }
 
       TImpProxy() : TBranchProxy() {};
@@ -525,8 +525,8 @@ namespace ROOT {
 
       void Print() {
          TBranchProxy::Print();
-         cout << "fWhere " << GetWhere() << endl;
-         if (GetWhere()) cout << "value? " << *(type_t*)GetWhere() << endl;
+         std::cout << "fWhere " << GetWhere() << std::endl;
+         if (GetWhere()) std::cout << "value? " << *(type_t*)GetWhere() << std::endl;
       }
 
       const array_t &At(UInt_t i) {
@@ -551,8 +551,8 @@ namespace ROOT {
 
       void Print() {
          TBranchProxy::Print();
-         cout << "fWhere " << fWhere << endl;
-         if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
+         std::cout << "fWhere " << fWhere << std::endl;
+         if (fWhere) std::cout << "value? " << *(T*)GetStart() << std::endl;
       }
 
       TClaImpProxy() : TBranchProxy() {};
@@ -603,8 +603,8 @@ namespace ROOT {
 
       void Print() {
          TBranchProxy::Print();
-         cout << "fWhere " << fWhere << endl;
-         if (fWhere) cout << "value? " << *(T*)GetStart() << endl;
+         std::cout << "fWhere " << fWhere << std::endl;
+         if (fWhere) std::cout << "value? " << *(T*)GetStart() << std::endl;
       }
 
       TStlImpProxy() : TBranchProxy() {};
@@ -656,8 +656,8 @@ namespace ROOT {
 
       void Print() {
          TBranchProxy::Print();
-         cout << "fWhere " << fWhere << endl;
-         if (fWhere) cout << "value? " << *(type_t*)GetStart() << endl;
+         std::cout << "fWhere " << fWhere << std::endl;
+         if (fWhere) std::cout << "value? " << *(type_t*)GetStart() << std::endl;
       }
 
       TClaArrayProxy() : TBranchProxy() {}
@@ -693,8 +693,8 @@ namespace ROOT {
 
       void Print() {
          TBranchProxy::Print();
-         cout << "fWhere " << fWhere << endl;
-         if (fWhere) cout << "value? " << *(type_t*)GetStart() << endl;
+         std::cout << "fWhere " << fWhere << std::endl;
+         if (fWhere) std::cout << "value? " << *(type_t*)GetStart() << std::endl;
       }
 
       TStlArrayProxy() : TBranchProxy() {}

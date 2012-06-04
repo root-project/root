@@ -349,7 +349,7 @@ namespace ROOT {
          // Generate a TCollectionProxyInfo given a TCollectionProxyInfo::Type
          // template (used to described the behavior of the stl collection.
          // Typical use looks like:
-         //      ::ROOT::TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< vector<string> >()));
+         //      ::ROOT::TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< std::vector<string> >()));
          
          PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>* p =
             (PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
@@ -374,7 +374,7 @@ namespace ROOT {
          // Generate a TCollectionProxyInfo given a TCollectionProxyInfo::Type
          // template (used to described the behavior of the stl collection.
          // Typical use looks like:
-         //      ::ROOT::TCollectionProxyInfo::Get(TCollectionProxyInfo::Pushback< vector<string> >()));
+         //      ::ROOT::TCollectionProxyInfo::Get(TCollectionProxyInfo::Pushback< std::vector<string> >()));
          
          PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>* p =
             (PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
@@ -482,7 +482,7 @@ namespace ROOT {
    };
 
 #ifndef __CINT__
-   // Need specialization for boolean references due to stupid STL vector<bool>
+   // Need specialization for boolean references due to stupid STL std::vector<bool>
    template<> inline void* ::ROOT::TCollectionProxyInfo::Address<std::vector<Bool_t>::const_reference>::address(std::vector<Bool_t>::const_reference ) {
       R__ASSERT(0);
       return 0;

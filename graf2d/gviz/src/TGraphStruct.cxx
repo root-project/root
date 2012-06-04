@@ -277,11 +277,11 @@ Int_t TGraphStruct::Layout()
 
 
 //______________________________________________________________________________
-void TGraphStruct::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGraphStruct::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
-   out<<"   TGraphStruct *graphstruct = new  TGraphStruct();"<<endl;
+   out<<"   TGraphStruct *graphstruct = new  TGraphStruct();"<<std::endl;
 
    // Save the nodes
    if (fNodes) {
@@ -289,14 +289,14 @@ void TGraphStruct::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       node = (TGraphNode*) fNodes->First();
       out<<"   TGraphNode *"<<node->GetName()<<" = graphstruct->AddNode(\""<<
                             node->GetName()<<"\",\""<<
-                            node->GetTitle()<<"\");"<<endl;
+                            node->GetTitle()<<"\");"<<std::endl;
       node->SaveAttributes(out);
       for(Int_t i = 1; i < fNodes->GetSize(); i++){
          node = (TGraphNode*)fNodes->After(node);
          if (node) {
             out<<"   TGraphNode *"<<node->GetName()<<" = graphstruct->AddNode(\""<<
                                   node->GetName()<<"\",\""<<
-                                  node->GetTitle()<<"\");"<<endl;
+                                  node->GetTitle()<<"\");"<<std::endl;
             node->SaveAttributes(out);
          }
       }
@@ -310,8 +310,8 @@ void TGraphStruct::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       out<<"   TGraphEdge *"<<"e"<<en<<
                             " = new TGraphEdge("<<
                             edge->GetNode1()->GetName()<<","<<
-                            edge->GetNode2()->GetName()<<");"<<endl;
-      out<<"   graphstruct->AddEdge("<<"e"<<en<<");"<<endl;
+                            edge->GetNode2()->GetName()<<");"<<std::endl;
+      out<<"   graphstruct->AddEdge("<<"e"<<en<<");"<<std::endl;
       edge->SaveAttributes(out,Form("e%d",en));
       for(Int_t i = 1; i < fEdges->GetSize(); i++){
          en++;
@@ -320,14 +320,14 @@ void TGraphStruct::SavePrimitive(ostream &out, Option_t * /*= ""*/)
             out<<"   TGraphEdge *"<<"e"<<en<<
                                   " = new TGraphEdge("<<
                                   edge->GetNode1()->GetName()<<","<<
-                                  edge->GetNode2()->GetName()<<");"<<endl;
-            out<<"   graphstruct->AddEdge("<<"e"<<en<<");"<<endl;
+                                  edge->GetNode2()->GetName()<<");"<<std::endl;
+            out<<"   graphstruct->AddEdge("<<"e"<<en<<");"<<std::endl;
             edge->SaveAttributes(out,Form("e%d",en));
          }
       }
    }
 
-   out<<"   graphstruct->Draw();"<<endl;
+   out<<"   graphstruct->Draw();"<<std::endl;
 }
 
 

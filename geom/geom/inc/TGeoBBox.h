@@ -85,7 +85,7 @@ public:
    virtual Bool_t        IsNullBox() const {return ((fDX<1.E-16)&&(fDY<1.E-16)&&(fDZ<1.E-16))?kTRUE:kFALSE;}
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t *origin=0);
    virtual void          SetDimensions(Double_t *param);
    void                  SetBoxPoints(Double_t *points) const;

@@ -58,7 +58,7 @@ public:
    virtual void     PaintMarker(Double_t x, Double_t y);
    virtual void     PaintMarkerNDC(Double_t u, Double_t v);
    virtual void     Print(Option_t *option="") const;
-   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void     SetNDC(Bool_t isNDC=kTRUE);
    virtual void     SetX(Double_t x) { fX = x;} // *MENU*
    virtual void     SetY(Double_t y) { fY = y;} // *MENU*

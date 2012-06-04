@@ -96,24 +96,24 @@ void TLegendEntry::Copy( TObject &obj ) const
 //____________________________________________________________________________
 void TLegendEntry::Print( Option_t *) const
 {
-   // dump this TLegendEntry to cout
+   // dump this TLegendEntry to std::cout
 
    TString output;
-   cout << "TLegendEntry: Object ";
+   std::cout << "TLegendEntry: Object ";
    if ( fObject ) output = fObject->GetName();
    else output = "NULL";
-   cout << output << " Label ";
+   std::cout << output << " Label ";
    if ( fLabel ) output = fLabel.Data();
    else output = "NULL";
-   cout << output << " Option ";
+   std::cout << output << " Option ";
    if (fOption ) output = fOption.Data();
    else output = "NULL";
-   cout << output << endl;
+   std::cout << output << std::endl;
 }
 
 
 //____________________________________________________________________________
-void TLegendEntry::SaveEntry(ostream &out, const char* name )
+void TLegendEntry::SaveEntry(std::ostream &out, const char* name )
 {
    // Save this TLegendEntry as C++ statements on output stream out
    //  to be used with the SaveAs .C option
@@ -127,7 +127,7 @@ void TLegendEntry::SaveEntry(ostream &out, const char* name )
    TString objname = "NULL";
    if ( fObject ) objname = fObject->GetName();
    out << name << "->AddEntry("<<quote<<objname<<quote<<","<<quote<<
-      fLabel.Data()<<quote<<","<<quote<<fOption.Data()<<quote<<");"<<endl;
+      fLabel.Data()<<quote<<","<<quote<<fOption.Data()<<quote<<");"<<std::endl;
    SaveFillAttributes(out,"entry",0,0);
    SaveLineAttributes(out,"entry",0,0,0);
    SaveMarkerAttributes(out,"entry",0,0,0);

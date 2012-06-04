@@ -56,6 +56,6 @@
 #pragma link C++ class ROOT::Minuit2::FumiliMinimizer; 
 #pragma link C++ class ROOT::Minuit2::MnMachinePrecision; 
 
-#pragma link C++ class vector<ROOT::Minuit2::MinuitParameter >;
+#pragma link C++ class std::vector<ROOT::Minuit2::MinuitParameter >;
 
 #endif

@@ -50,6 +50,8 @@
 
 #include <string>
 
+using namespace std;
+
 ClassImp(RooAbsTestStatistic)
 ;
 

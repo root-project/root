@@ -70,9 +70,9 @@ void TMCVerbose::PrintBanner() const
 // Prints banner for track information
 // ---
 
-   cout << endl;
-   for (Int_t i=0; i<10; i++) cout << "**********";
-   cout << endl;
+   std::cout << std::endl;
+   for (Int_t i=0; i<10; i++) std::cout << "**********";
+   std::cout << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -83,20 +83,20 @@ void TMCVerbose::PrintTrackInfo() const
 
    // Particle
    //
-   cout << "  Particle = ";
+   std::cout << "  Particle = ";
    TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(gMC->TrackPid());
    if (particle)
-      cout << particle->GetName() << "  ";
+      std::cout << particle->GetName() << "  ";
    else
-      cout << "unknown" << "  ";
+      std::cout << "unknown" << "  ";
 
    // Track ID
    //
-   cout << "   Track ID = " << gMC->GetStack()->GetCurrentTrackNumber() << "  ";
+   std::cout << "   Track ID = " << gMC->GetStack()->GetCurrentTrackNumber() << "  ";
 
    // Parent ID
    //
-   cout << "   Parent ID = " << gMC->GetStack()->GetCurrentParentTrackNumber();
+   std::cout << "   Parent ID = " << gMC->GetStack()->GetCurrentParentTrackNumber();
 }
 
 //_____________________________________________________________________________
@@ -105,7 +105,7 @@ void TMCVerbose::PrintStepHeader() const
 // Prints the header for stepping information
 // ---
 
-   cout << "Step#     "
+   std::cout << "Step#     "
         << "X(cm)    "
         << "Y(cm)    "
         << "Z(cm)  "
@@ -115,7 +115,7 @@ void TMCVerbose::PrintStepHeader() const
         << "TrackL(cm) "
         << "Volume  "
         << "Process "
-        << endl;
+        << std::endl;
 }
 
 //
@@ -129,7 +129,7 @@ void TMCVerbose::InitMC()
 // ---
 
    if (fLevel>0)
-      cout << "--- Init MC " << endl;
+      std::cout << "--- Init MC " << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -139,7 +139,7 @@ void TMCVerbose::RunMC(Int_t nofEvents)
 // ---
 
    if (fLevel>0)
-      cout << "--- Run MC for " << nofEvents << " events" << endl;
+      std::cout << "--- Run MC for " << nofEvents << " events" << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -149,7 +149,7 @@ void TMCVerbose::FinishRun()
 // ---
 
    if (fLevel>0)
-      cout << "--- Finish Run MC " << endl;
+      std::cout << "--- Finish Run MC " << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -159,7 +159,7 @@ void TMCVerbose::ConstructGeometry()
 // ---
 
    if (fLevel>0)
-      cout << "--- Construct geometry " << endl;
+      std::cout << "--- Construct geometry " << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -169,7 +169,7 @@ void TMCVerbose::ConstructOpGeometry()
 // ---
 
    if (fLevel>0)
-      cout << "--- Construct geometry for optical processes" << endl;
+      std::cout << "--- Construct geometry for optical processes" << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -179,7 +179,7 @@ void TMCVerbose::InitGeometry()
 // ---
 
    if (fLevel>0)
-      cout << "--- Init geometry " << endl;
+      std::cout << "--- Init geometry " << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -189,7 +189,7 @@ void TMCVerbose::AddParticles()
 // ---
 
    if (fLevel>0)
-      cout << "--- Add particles " << endl;
+      std::cout << "--- Add particles " << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -199,7 +199,7 @@ void TMCVerbose::AddIons()
 // ---
 
    if (fLevel>0)
-      cout << "--- Add ions " << endl;
+      std::cout << "--- Add ions " << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -209,7 +209,7 @@ void TMCVerbose::GeneratePrimaries()
 // ---
 
    if (fLevel>0)
-      cout << "--- Generate primaries " << endl;
+      std::cout << "--- Generate primaries " << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -219,7 +219,7 @@ void TMCVerbose::BeginEvent()
 // ---
 
    if (fLevel>0)
-      cout << "--- Begin event " << endl;
+      std::cout << "--- Begin event " << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -229,7 +229,7 @@ void TMCVerbose::BeginPrimary()
 // ---
 
    if (fLevel>1)
-      cout << "--- Begin primary " << endl;
+      std::cout << "--- Begin primary " << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -250,7 +250,7 @@ void TMCVerbose::PreTrack()
    }
 
    if (fLevel>1)
-      cout << "--- Pre track " << endl;
+      std::cout << "--- Pre track " << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -262,55 +262,55 @@ void TMCVerbose::Stepping()
    if (fLevel>2) {
 
 #if __GNUC__ >= 3
-      cout << std::fixed;
+      std::cout << std::fixed;
 #endif
 
       // Step number
       //
-      cout << "#" << setw(4) << fStepNumber++ << "  ";
+      std::cout << "#" << std::setw(4) << fStepNumber++ << "  ";
 
       // Position
       //
       Double_t x, y, z;
       gMC->TrackPosition(x, y, z);
-      cout << setw(8) << setprecision(3) << x << " "
-           << setw(8) << setprecision(3) << y << " "
-           << setw(8) << setprecision(3) << z << "  ";
+      std::cout << std::setw(8) << std::setprecision(3) << x << " "
+           << std::setw(8) << std::setprecision(3) << y << " "
+           << std::setw(8) << std::setprecision(3) << z << "  ";
 
       // Kinetic energy
       //
       Double_t px, py, pz, etot;
       gMC->TrackMomentum(px, py, pz, etot);
       Double_t ekin = etot - gMC->TrackMass();
-      cout << setw(9) << setprecision(4) << ekin*1e03 << " ";
+      std::cout << std::setw(9) << std::setprecision(4) << ekin*1e03 << " ";
 
       // Energy deposit
       //
-      cout << setw(9) << setprecision(4) << gMC->Edep()*1e03 << " ";
+      std::cout << std::setw(9) << std::setprecision(4) << gMC->Edep()*1e03 << " ";
 
       // Step length
       //
-      cout << setw(8) << setprecision(3) << gMC->TrackStep() << " ";
+      std::cout << std::setw(8) << std::setprecision(3) << gMC->TrackStep() << " ";
 
       // Track length
       //
-      cout << setw(8) << setprecision(3) << gMC->TrackLength() << "     ";
+      std::cout << std::setw(8) << std::setprecision(3) << gMC->TrackLength() << "     ";
 
       // Volume
       //
       if (gMC->CurrentVolName() != 0)
-         cout << setw(4) << gMC->CurrentVolName() << "  ";
+         std::cout << std::setw(4) << gMC->CurrentVolName() << "  ";
       else
-         cout << setw(4) << "None"  << "  ";
+         std::cout << std::setw(4) << "None"  << "  ";
 
       // Process
       //
       TArrayI processes;
       Int_t nofProcesses = gMC->StepProcesses(processes);
       if (nofProcesses > 0)
-         cout << TMCProcessName[processes[nofProcesses-1]];
+         std::cout << TMCProcessName[processes[nofProcesses-1]];
 
-      cout << endl;
+      std::cout << std::endl;
    }
 }
 
@@ -321,7 +321,7 @@ void TMCVerbose::PostTrack()
 // ---
 
    if (fLevel==2)
-      cout << "--- Post track " << endl;
+      std::cout << "--- Post track " << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -331,7 +331,7 @@ void TMCVerbose::FinishPrimary()
 // ---
 
    if (fLevel==2)
-      cout << "--- Finish primary " << endl;
+      std::cout << "--- Finish primary " << std::endl;
 }
 
 //_____________________________________________________________________________
@@ -341,6 +341,6 @@ void TMCVerbose::FinishEvent()
 // ---
 
    if (fLevel>0)
-      cout << "--- Finish event " << endl;
+      std::cout << "--- Finish event " << std::endl;
 }
 

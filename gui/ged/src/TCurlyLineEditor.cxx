@@ -29,7 +29,7 @@
 #include "TGNumberEntry.h"
 #include "TGButton.h"
 #include "TCurlyLine.h"
-#include "iostream"
+#include <iostream>
 
 ClassImp(TCurlyLineEditor)
 

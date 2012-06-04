@@ -39,7 +39,7 @@ public:
    virtual void  Draw(Option_t *option="");
    virtual Int_t GetNpaves() {return fNpaves;}
    virtual void  Paint(Option_t *option="");
-   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void  SetNpaves(Int_t npaves=5) {fNpaves=npaves;} // *MENU*
 
    ClassDef(TPavesText,1)  //Stacked Paves with text strings

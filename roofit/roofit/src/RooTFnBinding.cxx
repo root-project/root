@@ -13,6 +13,8 @@
 #include "RooAbsCategory.h" 
 #include "TF3.h"
 
+using namespace std;
+
 ClassImp(RooTFnBinding) 
 
 RooTFnBinding::RooTFnBinding(const char *name, const char *title, TF1* _func, const RooArgList& _list) :

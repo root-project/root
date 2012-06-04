@@ -637,13 +637,13 @@ void TQpVar::Print(Option_t * /*option*/) const
 {
 // Print class members
 
-   cout << "fNx  : " << fNx   << endl;
-   cout << "fMy  : " << fMy   << endl;
-   cout << "fMz  : " << fMz   << endl;
-   cout << "fNxup: " << fNxup << endl;
-   cout << "fNxlo: " << fNxlo << endl;
-   cout << "fMcup: " << fMcup << endl;
-   cout << "fMclo: " << fMclo << endl;
+   std::cout << "fNx  : " << fNx   << std::endl;
+   std::cout << "fMy  : " << fMy   << std::endl;
+   std::cout << "fMz  : " << fMz   << std::endl;
+   std::cout << "fNxup: " << fNxup << std::endl;
+   std::cout << "fNxlo: " << fNxlo << std::endl;
+   std::cout << "fMcup: " << fMcup << std::endl;
+   std::cout << "fMclo: " << fMclo << std::endl;
 
    fXloIndex.Print("fXloIndex");
    fXupIndex.Print("fXupIndex");

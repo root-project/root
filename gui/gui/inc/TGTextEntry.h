@@ -178,7 +178,7 @@ public:
    Pixel_t              GetForeground() const { return fNormGC.GetForeground(); }
    Bool_t               HasOwnFont() const { return fHasOwnFont; }
 
-   virtual  void        SavePrimitive(ostream &out, Option_t *option = "");
+   virtual  void        SavePrimitive(std::ostream &out, Option_t *option = "");
 
    virtual  Bool_t      HandleButton(Event_t *event);
    virtual  Bool_t      HandleDoubleClick(Event_t *event);

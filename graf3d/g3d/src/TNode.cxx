@@ -543,23 +543,23 @@ void TNode::ls(Option_t *option) const
    const char *shapename, *matrixname;
    if (fShape) shapename = fShape->IsA()->GetName();
    else        shapename = "????";
-   cout<<GetName()<<":"<<GetTitle()<<" is a "<<shapename;
+   std::cout<<GetName()<<":"<<GetTitle()<<" is a "<<shapename;
    if (sizeX3D) {
       gSize3D.numPoints = 0;
       gSize3D.numSegs   = 0;
       gSize3D.numPolys  = 0;
       Sizeof3D();
-      cout<<" NumPoints="<<gSize3D.numPoints;
-      cout<<" NumSegs  ="<<gSize3D.numSegs;
-      cout<<" NumPolys ="<<gSize3D.numPolys;
+      std::cout<<" NumPoints="<<gSize3D.numPoints;
+      std::cout<<" NumSegs  ="<<gSize3D.numSegs;
+      std::cout<<" NumPolys ="<<gSize3D.numPolys;
    } else {
-      cout<<" X="<<fX<<" Y="<<fY<<" Z="<<fZ;
-      if (nsons) cout<<" Sons="<<nsons;
+      std::cout<<" X="<<fX<<" Y="<<fY<<" Z="<<fZ;
+      if (nsons) std::cout<<" Sons="<<nsons;
       if (fMatrix) matrixname   = fMatrix->GetName();
       else         matrixname   = "Identity";
-      if(strcmp(matrixname,"Identity")) cout<<" Rot="<<matrixname;
+      if(strcmp(matrixname,"Identity")) std::cout<<" Rot="<<matrixname;
    }
-   cout<<endl;
+   std::cout<<std::endl;
    if(!nsons) return;
    if (gGeomLevel >= maxlevel) return;
 

@@ -49,7 +49,7 @@ public:
    Double_t      GetMaximum() const {return fMaximum;}
    virtual const char *GetMethod() const { return fMethod.Data(); }
    virtual void  Paint(Option_t *option="");
-   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void  SetMethod(const char *method) { fMethod=method; } // *MENU*
    void          SetObject(TObject *obj=0) {fObject=obj;}
    virtual void  SetMinimum(Double_t min=0) {fMinimum=min;}

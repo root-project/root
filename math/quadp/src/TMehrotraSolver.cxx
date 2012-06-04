@@ -176,29 +176,29 @@ void TMehrotraSolver::DefMonitor(TQpDataBase * /* data */,TQpVar * /* vars */,
    switch (level) {
       case 0 : case 1:
       {
-         cout << endl << "Duality Gap: " << resids->GetDualityGap() << endl;
+         std::cout << std::endl << "Duality Gap: " << resids->GetDualityGap() << std::endl;
          if (i > 1) {
-            cout << " alpha = " << alpha << endl;
+            std::cout << " alpha = " << alpha << std::endl;
          }
-         cout << " *** Iteration " << i << " *** " << endl;
-         cout << " mu = " << mu << " relative residual norm = "
-            << resids->GetResidualNorm()/fDnorm << endl;
+         std::cout << " *** Iteration " << i << " *** " << std::endl;
+         std::cout << " mu = " << mu << " relative residual norm = "
+            << resids->GetResidualNorm()/fDnorm << std::endl;
 
          if (level == 1) {
             // Termination has been detected by the status check; print
             // appropriate message
             switch (status_code) {
                case kSUCCESSFUL_TERMINATION:
-                  cout << endl << " *** SUCCESSFUL TERMINATION ***" << endl;
+                  std::cout << std::endl << " *** SUCCESSFUL TERMINATION ***" << std::endl;
                   break;
                case kMAX_ITS_EXCEEDED:
-                  cout << endl << " *** MAXIMUM ITERATIONS REACHED *** " << endl;
+                  std::cout << std::endl << " *** MAXIMUM ITERATIONS REACHED *** " << std::endl;
                   break;
                case kINFEASIBLE:
-                  cout << endl << " *** TERMINATION: PROBABLY INFEASIBLE *** " << endl;
+                  std::cout << std::endl << " *** TERMINATION: PROBABLY INFEASIBLE *** " << std::endl;
                   break;
                case kUNKNOWN:
-                  cout << endl << " *** TERMINATION: STATUS UNKNOWN *** " << endl;
+                  std::cout << std::endl << " *** TERMINATION: STATUS UNKNOWN *** " << std::endl;
                   break;
             }
          }

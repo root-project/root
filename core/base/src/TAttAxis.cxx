@@ -93,54 +93,54 @@ void TAttAxis::ResetAttAxis(Option_t *option)
 
 
 //______________________________________________________________________________
-void TAttAxis::SaveAttributes(ostream &out, const char *name, const char *subname)
+void TAttAxis::SaveAttributes(std::ostream &out, const char *name, const char *subname)
 {
     // Save axis attributes as C++ statement(s) on output stream out
 
    if (fNdivisions != 510) {
-      out<<"   "<<name<<subname<<"->SetNdivisions("<<fNdivisions<<");"<<endl;
+      out<<"   "<<name<<subname<<"->SetNdivisions("<<fNdivisions<<");"<<std::endl;
    }
    if (fAxisColor != 1) {
       if (fAxisColor > 228) {
          TColor::SaveColor(out, fAxisColor);
-         out<<"   "<<name<<subname<<"->SetAxisColor(ci);" << endl;
+         out<<"   "<<name<<subname<<"->SetAxisColor(ci);" << std::endl;
       } else
-         out<<"   "<<name<<subname<<"->SetAxisColor("<<fAxisColor<<");"<<endl;
+         out<<"   "<<name<<subname<<"->SetAxisColor("<<fAxisColor<<");"<<std::endl;
    }
    if (fLabelColor != 1) {
       if (fLabelColor > 228) {
          TColor::SaveColor(out, fLabelColor);
-         out<<"   "<<name<<subname<<"->SetLabelColor(ci);" << endl;
+         out<<"   "<<name<<subname<<"->SetLabelColor(ci);" << std::endl;
       } else
-         out<<"   "<<name<<subname<<"->SetLabelColor("<<fLabelColor<<");"<<endl;
+         out<<"   "<<name<<subname<<"->SetLabelColor("<<fLabelColor<<");"<<std::endl;
    }
    if (fLabelFont != 62) {
-      out<<"   "<<name<<subname<<"->SetLabelFont("<<fLabelFont<<");"<<endl;
+      out<<"   "<<name<<subname<<"->SetLabelFont("<<fLabelFont<<");"<<std::endl;
    }
    if (TMath::Abs(fLabelOffset-0.005) > 0.0001) {
-      out<<"   "<<name<<subname<<"->SetLabelOffset("<<fLabelOffset<<");"<<endl;
+      out<<"   "<<name<<subname<<"->SetLabelOffset("<<fLabelOffset<<");"<<std::endl;
    }
    if (TMath::Abs(fLabelSize-0.04) > 0.001) {
-      out<<"   "<<name<<subname<<"->SetLabelSize("<<fLabelSize<<");"<<endl;
+      out<<"   "<<name<<subname<<"->SetLabelSize("<<fLabelSize<<");"<<std::endl;
    }
    if (TMath::Abs(fTitleSize-0.04) > 0.001) {
-      out<<"   "<<name<<subname<<"->SetTitleSize("<<fTitleSize<<");"<<endl;
+      out<<"   "<<name<<subname<<"->SetTitleSize("<<fTitleSize<<");"<<std::endl;
    }
    if (TMath::Abs(fTickLength-0.03) > 0.001) {
-      out<<"   "<<name<<subname<<"->SetTickLength("<<fTickLength<<");"<<endl;
+      out<<"   "<<name<<subname<<"->SetTickLength("<<fTickLength<<");"<<std::endl;
    }
    if (TMath::Abs(fTitleOffset-1) > 0.001) {
-      out<<"   "<<name<<subname<<"->SetTitleOffset("<<fTitleOffset<<");"<<endl;
+      out<<"   "<<name<<subname<<"->SetTitleOffset("<<fTitleOffset<<");"<<std::endl;
    }
    if (fTitleColor != 1) {
       if (fTitleColor > 228) {
          TColor::SaveColor(out, fTitleColor);
-         out<<"   "<<name<<subname<<"->SetTitleColor(ci);" << endl;
+         out<<"   "<<name<<subname<<"->SetTitleColor(ci);" << std::endl;
       } else
-         out<<"   "<<name<<subname<<"->SetTitleColor("<<fTitleColor<<");"<<endl;
+         out<<"   "<<name<<subname<<"->SetTitleColor("<<fTitleColor<<");"<<std::endl;
    }
    if (fTitleFont != 62) {
-      out<<"   "<<name<<subname<<"->SetTitleFont("<<fTitleFont<<");"<<endl;
+      out<<"   "<<name<<subname<<"->SetTitleFont("<<fTitleFont<<");"<<std::endl;
    }
 }
 

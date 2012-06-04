@@ -24,12 +24,12 @@
 /** 
    Pre-processor macro to report messages 
    which can be configured to use ROOT error or 
-   simply an iostream in case of stan-alone builds
+   simply an std::iostream in case of stan-alone builds
 */
 
 #ifndef USE_ROOT_ERROR
 
-// use iostream instead of ROOT 
+// use std::iostream instead of ROOT 
 
 #include <iostream>
 

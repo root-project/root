@@ -79,7 +79,7 @@ int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiCont
    // init unuran 
    bool ret =   unr.Init(dist,method); 
    if (!ret) { 
-      std::cerr << "Error initializing unuran with method " << unr.MethodName() << endl; 
+      std::cerr << "Error initializing unuran with method " << unr.MethodName() << std::endl; 
       return -1;
    } 
 
@@ -99,7 +99,7 @@ int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiCont
    w.Stop(); 
    double time = w.CpuTime()*1.E9/n; 
 
-   cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call\t";
+   std::cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call\t";
    if (href != 0)  { 
       double prob = href->Chi2Test(h1,"UU");
       double ksprob = href->KolmogorovTest(h1);
@@ -237,7 +237,7 @@ int  unuranMultiDim() {
 #endif
 
    // test setting the mode
-   cout << "\nTest setting the mode in Unuran distribution:\n\n"; 
+   std::cout << "\nTest setting the mode in Unuran distribution:\n\n"; 
    double m[3] = {0,0,0};
    dist.SetMode(m);
 
@@ -253,7 +253,7 @@ int  unuranMultiDim() {
    iret |= testUnuran(unr, method, logdist, h1, href);
 #endif
 
-   cout << "\nTest truncated distribution:\n\n"; 
+   std::cout << "\nTest truncated distribution:\n\n"; 
 
    double xmin[3] = { -1, -1, -1 }; 
    double xmax[3] = {  1,  1,  1 }; 
@@ -316,7 +316,7 @@ int  unuranMultiDim() {
    n/= scale;
    iret |= testUnuran(unr, method, dist3, hrefN);
 
-   cout << "\nTest 10 dimension:       (be patient , it takes time....)\n\n"; 
+   std::cout << "\nTest 10 dimension:       (be patient , it takes time....)\n\n"; 
 
    TF1 * f10 = new TF1("g10d",gaus10d,-10,10,0); 
    TUnuranMultiContDist dist10(f10,10); 
@@ -341,13 +341,13 @@ int  unuranMultiDim() {
 
 
    // 100 dim
-   cout << "\nTest 100 dimension: (  be patient , it takes time....)\n\n"; 
+   std::cout << "\nTest 100 dimension: (  be patient , it takes time....)\n\n"; 
    TF1 * f100 = new TF1("g100d",gaus100d,-10,10,0); 
    TUnuranMultiContDist dist100(f100,100); 
    
    //   scale = 5;
    //  n/=scale;
-   std::cout << "number of events to be generated  = " << n << endl;
+   std::cout << "number of events to be generated  = " << n << std::endl;
    method = "hitro;thinning=200";
    iret |= testUnuran(unr, method, dist100, h100, hrefN,100);
 //    n/= 100;

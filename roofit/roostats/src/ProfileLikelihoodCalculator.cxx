@@ -67,6 +67,8 @@ END_HTML
 #include "Math/MinimizerOptions.h"
 //#include "RooProdPdf.h"
 
+using namespace std;
+
 ClassImp(RooStats::ProfileLikelihoodCalculator) ;
 
 using namespace RooFit;

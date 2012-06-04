@@ -87,7 +87,7 @@ public:
    virtual void     Paint(Option_t *option="");
    void             PaintAxis(TGaxis *axis, Float_t ang);
    static Double_t *PixeltoXYZ(Double_t px, Double_t py, Double_t *point3D, TView *view =0);
-   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
 
    virtual void     SetAxisColor(Color_t color=1, Option_t *axis="*"); // *MENU*
    virtual void     SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis="*");

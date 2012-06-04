@@ -66,7 +66,7 @@ public:
    // ----------------------------------------------------------------
 
    virtual void CopyVizParams(const TEveElement* el);
-   virtual void WriteVizParams(ostream& out, const TString& var);
+   virtual void WriteVizParams(std::ostream& out, const TString& var);
 
    // ----------------------------------------------------------------
 

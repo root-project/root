@@ -103,10 +103,10 @@ void TFoamMaxwt::Make(Double_t eps, Double_t &MCeff)
    Double_t wtLim,aveWt;
    GetMCeff(eps, MCeff, wtLim);
    aveWt = MCeff*wtLim;
-   cout<< "00000000000000000000000000000000000000000000000000000000000000000000000"<<endl;
-   cout<< "00 -->wtLim: No_evt ="<<fNent<<"   <Wt> = "<<aveWt<<"  wtLim=  "<<wtLim<<endl;
-   cout<< "00 -->wtLim: For eps = "<<eps  <<"    EFFICIENCY <Wt>/wtLim= "<<MCeff<<endl;
-   cout<< "00000000000000000000000000000000000000000000000000000000000000000000000"<<endl;
+   std::cout<< "00000000000000000000000000000000000000000000000000000000000000000000000"<<std::endl;
+   std::cout<< "00 -->wtLim: No_evt ="<<fNent<<"   <Wt> = "<<aveWt<<"  wtLim=  "<<wtLim<<std::endl;
+   std::cout<< "00 -->wtLim: For eps = "<<eps  <<"    EFFICIENCY <Wt>/wtLim= "<<MCeff<<std::endl;
+   std::cout<< "00000000000000000000000000000000000000000000000000000000000000000000000"<<std::endl;
 }
 
 //_________________________________________________________________________________
@@ -131,7 +131,7 @@ void TFoamMaxwt::GetMCeff(Double_t eps, Double_t &MCeff, Double_t &wtLim)
       sumWt += fWtHst2->GetBinContent(ib);
    }
    if( (sum == 0.0) || (sumWt == 0.0) ) {
-      cout<<"TFoamMaxwt::Make: zero content of histogram !!!,sum,sumWt ="<<sum<<sumWt<<endl;
+      std::cout<<"TFoamMaxwt::Make: zero content of histogram !!!,sum,sumWt ="<<sum<<sumWt<<std::endl;
    }
    aveWt = sumWt/sum;
    //--------------------------------------
@@ -153,11 +153,11 @@ void TFoamMaxwt::GetMCeff(Double_t eps, Double_t &MCeff, Double_t &wtLim)
    if(ibX == (fnBin+1) ) {
       wtLim = 1.0e200;
       MCeff   = 0.0;
-      cout<< "+++++ wtLim undefined. Higher uper limit in histogram"<<endl;
+      std::cout<< "+++++ wtLim undefined. Higher uper limit in histogram"<<std::endl;
    } else if( ibX == 1) {
       wtLim = 0.0;
       MCeff   =-1.0;
-      cout<< "+++++ wtLim undefined. Lower uper limit or more bins "<<endl;
+      std::cout<< "+++++ wtLim undefined. Lower uper limit or more bins "<<std::endl;
    } else {
       wtLim= (ibX)*fwmax/fnBin; // We over-estimate wtLim, under-estimate MCeff
       MCeff  = aveWt/wtLim;

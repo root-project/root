@@ -217,22 +217,22 @@ void TAttMarker::ResetAttMarker(Option_t *)
 
 
 //______________________________________________________________________________
-void TAttMarker::SaveMarkerAttributes(ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t sizdef)
+void TAttMarker::SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t sizdef)
 {
    // Save line attributes as C++ statement(s) on output stream out.
 
    if (fMarkerColor != coldef) {
       if (fMarkerColor > 228) {
          TColor::SaveColor(out, fMarkerColor);
-         out<<"   "<<name<<"->SetMarkerColor(ci);" << endl;
+         out<<"   "<<name<<"->SetMarkerColor(ci);" << std::endl;
       } else
-         out<<"   "<<name<<"->SetMarkerColor("<<fMarkerColor<<");"<<endl;
+         out<<"   "<<name<<"->SetMarkerColor("<<fMarkerColor<<");"<<std::endl;
    }
    if (fMarkerStyle != stydef) {
-      out<<"   "<<name<<"->SetMarkerStyle("<<fMarkerStyle<<");"<<endl;
+      out<<"   "<<name<<"->SetMarkerStyle("<<fMarkerStyle<<");"<<std::endl;
    }
    if (fMarkerSize != sizdef) {
-      out<<"   "<<name<<"->SetMarkerSize("<<fMarkerSize<<");"<<endl;
+      out<<"   "<<name<<"->SetMarkerSize("<<fMarkerSize<<");"<<std::endl;
    }
 }
 

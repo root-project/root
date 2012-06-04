@@ -57,7 +57,7 @@ namespace ROOT {
      // TROOT.h header file.
    public:
 #ifdef R__GLOBALSTL
-      typedef map<string, TClassRec*>           IdMap_t;
+      typedef std::map<string, TClassRec*>           IdMap_t;
 #else
       typedef std::map<std::string, TClassRec*> IdMap_t;
 #endif

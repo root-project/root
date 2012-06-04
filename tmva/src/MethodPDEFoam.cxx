@@ -1198,7 +1198,7 @@ void TMVA::MethodPDEFoam::WriteFoamsToFile() const
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodPDEFoam::ReadWeightsFromStream( istream& istr )
+void  TMVA::MethodPDEFoam::ReadWeightsFromStream( std::istream& istr )
 {
    // read options and internal parameters
 

@@ -1032,7 +1032,7 @@ void TMVA::RuleEnsemble::Print() const
 }
 
 //_______________________________________________________________________
-void TMVA::RuleEnsemble::PrintRaw( ostream & os ) const
+void TMVA::RuleEnsemble::PrintRaw( std::ostream & os ) const
 {
    // write rules to stream
    Int_t dp = os.precision();
@@ -1149,7 +1149,7 @@ void TMVA::RuleEnsemble::ReadFromXML( void* wghtnode )
 }
 
 //_______________________________________________________________________
-void TMVA::RuleEnsemble::ReadRaw( istream & istr )
+void TMVA::RuleEnsemble::ReadRaw( std::istream & istr )
 {
    // read rule ensemble from stream
    UInt_t nrules;
@@ -1384,9 +1384,9 @@ void TMVA::RuleEnsemble::MakeRuleMap(const std::vector<Event *> *events, UInt_t 
 }
 
 //_______________________________________________________________________
-ostream& TMVA::operator<< ( ostream& os, const RuleEnsemble & rules )
+std::ostream& TMVA::operator<< ( std::ostream& os, const RuleEnsemble & rules )
 {
-   // ostream operator
+   // std::ostream operator
    os << "DON'T USE THIS - TO BE REMOVED" << std::endl;
    rules.Print();
    return os;

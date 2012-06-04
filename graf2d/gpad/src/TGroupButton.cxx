@@ -216,7 +216,7 @@ void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-void TGroupButton::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGroupButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
@@ -233,21 +233,21 @@ void TGroupButton::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       <<","<<fYlowNDC
       <<","<<fXlowNDC+fWNDC
       <<","<<fYlowNDC+fHNDC
-      <<");"<<endl;
+      <<");"<<std::endl;
 
    SaveFillAttributes(out,"button",0,1001);
    SaveLineAttributes(out,"button",1,1,1);
    SaveTextAttributes(out,"button",22,0,1,62,.75);
 
    if (GetBorderSize() != 2) {
-      out<<"   button->SetBorderSize("<<GetBorderSize()<<");"<<endl;
+      out<<"   button->SetBorderSize("<<GetBorderSize()<<");"<<std::endl;
    }
    if (GetBorderMode() != 1) {
-      out<<"   button->SetBorderMode("<<GetBorderMode()<<");"<<endl;
+      out<<"   button->SetBorderMode("<<GetBorderMode()<<");"<<std::endl;
    }
 
-   out<<"   button->Draw();"<<endl;
-   out<<"   button->cd();"<<endl;
+   out<<"   button->Draw();"<<std::endl;
+   out<<"   button->cd();"<<std::endl;
 
    TIter next(GetListOfPrimitives());
    TObject *obj = next();  //do not save first primitive
@@ -255,6 +255,6 @@ void TGroupButton::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    while ((obj = next()))
          obj->SavePrimitive(out, (Option_t *)next.GetOption());
 
-   out<<"   "<<padsav->GetName()<<"->cd();"<<endl;
+   out<<"   "<<padsav->GetName()<<"->cd();"<<std::endl;
    padsav->cd();
 }

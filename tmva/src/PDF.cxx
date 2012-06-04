@@ -593,8 +593,8 @@ void TMVA::PDF::ValidatePDF( TH1* originalHist ) const
       if (y > 0) {
          ndof++;
          Double_t d = TMath::Abs( (y - yref*rref)/ey );
-         //         cout << "bin: " << bin << "  val: " << x << "  data(err): " << y << "(" << ey << ")   pdf: " 
-         //              << yref << "  dev(chi2): " << d << "(" << chi2 << ")  rref: " << rref << endl;
+         //         std::cout << "bin: " << bin << "  val: " << x << "  data(err): " << y << "(" << ey << ")   pdf: " 
+         //              << yref << "  dev(chi2): " << d << "(" << chi2 << ")  rref: " << rref << std::endl;
          chi2 += d*d;
          if (d > 1) { nc1++; if (d > 2) { nc2++; if (d > 3) { nc3++; if (d > 6) nc6++; } } }
       }
@@ -1009,7 +1009,7 @@ void TMVA::PDF::ReadXML( void* pdfnode )
 }
 
 //_______________________________________________________________________
-ostream& TMVA::operator<< ( ostream& os, const PDF& pdf )
+std::ostream& TMVA::operator<< ( std::ostream& os, const PDF& pdf )
 {
    // write the pdf
    Int_t dp = os.precision();
@@ -1046,9 +1046,9 @@ ostream& TMVA::operator<< ( ostream& os, const PDF& pdf )
 }
 
 //_______________________________________________________________________
-istream& TMVA::operator>> ( istream& istr, PDF& pdf )
+std::istream& TMVA::operator>> ( std::istream& istr, PDF& pdf )
 {
-   // read the tree from an istream
+   // read the tree from an std::istream
    TString devnullS;
    Int_t   valI;
    Int_t   nbins=-1; // default binning will cause an exit

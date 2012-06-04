@@ -109,7 +109,7 @@ public:
    virtual void   Paint(Option_t* options="");
    void           ResetTree();
    void           SaveEntryLists(const char* filename="", Bool_t overwrite=kFALSE); // *MENU*
-   void           SavePrimitive(ostream & out,Option_t *options);
+   void           SavePrimitive(std::ostream & out,Option_t *options);
    void           SaveTree(const char* filename="", Bool_t overwrite=kFALSE); // *MENU*
    void           SetAxisHistogramBinning(Int_t n=100); // *MENU*
    void           SetAxisHistogramHeight(Double_t h=0.5); // *MENU*

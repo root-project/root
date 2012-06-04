@@ -1162,7 +1162,7 @@ void TProfile3D::RebinAxis(Double_t x, TAxis *axis)
 }
 
 //______________________________________________________________________________
-void TProfile3D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TProfile3D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
@@ -1172,7 +1172,7 @@ void TProfile3D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
 
    char quote = '"';
-   out <<"   "<<endl;
+   out <<"   "<<std::endl;
    out <<"   "<<ClassName()<<" *";
 
    out << GetName() << " = new " << ClassName() << "(" << quote
@@ -1188,7 +1188,7 @@ void TProfile3D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
        << "," << GetZaxis()->GetXmax();
    out << "," << fTmin
        << "," << fTmax;
-   out << ");" << endl;
+   out << ");" << std::endl;
 
 
    // save bin entries
@@ -1196,14 +1196,14 @@ void TProfile3D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    for (bin=0;bin<fNcells;bin++) {
       Double_t bi = GetBinEntries(bin);
       if (bi) {
-         out<<"   "<<GetName()<<"->SetBinEntries("<<bin<<","<<bi<<");"<<endl;
+         out<<"   "<<GetName()<<"->SetBinEntries("<<bin<<","<<bi<<");"<<std::endl;
       }
    }
    //save bin contents
    for (bin=0;bin<fNcells;bin++) {
       Double_t bc = fArray[bin];
       if (bc) {
-         out<<"   "<<GetName()<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
+         out<<"   "<<GetName()<<"->SetBinContent("<<bin<<","<<bc<<");"<<std::endl;
       }
    }
    // save bin errors
@@ -1211,7 +1211,7 @@ void TProfile3D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       for (bin=0;bin<fNcells;bin++) {
          Double_t be = TMath::Sqrt(fSumw2.fArray[bin]);
          if (be) {
-            out<<"   "<<GetName()<<"->SetBinError("<<bin<<","<<be<<");"<<endl;
+            out<<"   "<<GetName()<<"->SetBinError("<<bin<<","<<be<<");"<<std::endl;
          }
       }
    }

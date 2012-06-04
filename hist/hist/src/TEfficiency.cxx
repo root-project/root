@@ -2801,7 +2801,7 @@ void TEfficiency::Paint(const Option_t* opt)
 }
 
 //______________________________________________________________________________
-void TEfficiency::SavePrimitive(ostream& out,Option_t* opt)
+void TEfficiency::SavePrimitive(std::ostream& out,Option_t* opt)
 {
    //have histograms fixed bins along each axis?
    Bool_t equi_bins = true;

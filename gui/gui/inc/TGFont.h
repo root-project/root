@@ -219,7 +219,7 @@ public:
                    Int_t numChars, Int_t x, Int_t y) const;
 
    void  Print(Option_t *option="") const;
-   virtual void SavePrimitive(ostream &out, Option_t * = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
 
    ClassDef(TGFont,0)   // GUI font description
 };

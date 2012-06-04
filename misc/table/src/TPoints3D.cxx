@@ -164,8 +164,8 @@ void TPoints3D::ls(Option_t *option) const
 //*-*                ==========================================
 
    TROOT::IndentLevel();
-   cout << IsA()->GetName() << " N=" <<GetN()<<" Option="<<option<<endl;
-//   IsOwner()?"Owner":"Not owner" << endl;
+   std::cout << IsA()->GetName() << " N=" <<GetN()<<" Option="<<option<<std::endl;
+//   IsOwner()?"Owner":"Not owner" << std::endl;
 }
 
 //______________________________________________________________________________
@@ -173,7 +173,7 @@ void TPoints3D::Print(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*Dump this 3-D polyline with its attributes*-*-*-*-*-*-*-*-*
 //*-*                ==========================================
-   cout <<"   " << IsA()->GetName() <<" Printing N=" <<GetN()<<" Option="<<option<<endl;
-//   IsOwner()?"Owner":"Not owner" << endl;
+   std::cout <<"   " << IsA()->GetName() <<" Printing N=" <<GetN()<<" Option="<<option<<std::endl;
+//   IsOwner()?"Owner":"Not owner" << std::endl;
 }
 

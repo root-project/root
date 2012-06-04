@@ -225,7 +225,7 @@ void TFeldmanCousins::SetMuStep(Double_t newMuStep)
 {
    //set the step in signal to use when generating tables
    if(newMuStep == 0.0) {
-      cout << "TFeldmanCousins::SetMuStep ERROR New step size is zero - unable to change value"<< endl;
+      std::cout << "TFeldmanCousins::SetMuStep ERROR New step size is zero - unable to change value"<< std::endl;
       return;
    } else {
       fMuStep = newMuStep;

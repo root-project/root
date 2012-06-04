@@ -34,6 +34,8 @@ END_HTML
 
 #include "RooSimultaneous.h"
 
+using namespace std;
+
 ClassImp(RooStats::HLFactory) ;
 
 

@@ -66,7 +66,7 @@ int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiCont
    // init unuran 
    bool ret =   unr.Init(dist,method); 
    if (!ret) { 
-      std::cerr << "Error initializing unuran with method " << unr.MethodName() << endl; 
+      std::cerr << "Error initializing unuran with method " << unr.MethodName() << std::endl; 
       return -1;
    } 
 
@@ -89,7 +89,7 @@ int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiCont
 
    double prob = href->Chi2Test(h1,"UU");
    double ksprob = href->KolmogorovTest(h1);
-   cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call \t\tChi2 Prob = "
+   std::cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call \t\tChi2 Prob = "
         << prob << "\tKS Prob = " << ksprob << std::endl;
    if (prob < 1E-06) { 
       std::cout << "Chi2 Test failed ! " << std::endl;
@@ -204,7 +204,7 @@ int unuranMulti2D() {
 #endif
 
    // test setting the mode
-   cout << "\nTest setting the mode in Unuran distribution:\n\n"; 
+   std::cout << "\nTest setting the mode in Unuran distribution:\n\n"; 
    double m[2] = {0,0};
    dist.SetMode(m);
 
@@ -235,7 +235,7 @@ int unuranMulti2D() {
 
    const double *xlow = dist.GetLowerDomain(); 
    const double *xup = dist.GetUpperDomain(); 
-   cout << "\nTest truncated distribution in domain [ " << xlow[0] << " : " << xup[0] 
+   std::cout << "\nTest truncated distribution in domain [ " << xlow[0] << " : " << xup[0] 
         << " , " << xlow[1] << " : " << xup[1] << " ] :\n\n"; 
    
 

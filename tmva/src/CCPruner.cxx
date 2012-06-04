@@ -98,7 +98,7 @@ void CCPruner::Optimize( )
    Double_t epsilon = std::numeric_limits<double>::epsilon();
    Double_t alpha = -1.0e10;
 
-   ofstream outfile;
+   std::ofstream outfile;
    if (fDebug) outfile.open("costcomplexity.log");
    if(!HaveStopCondition && (fValidationSample == NULL && fValidationDataSet == NULL) ) {
       if (fDebug) outfile << "ERROR: no validation sample, so cannot optimize pruning!" << std::endl;

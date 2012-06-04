@@ -16,11 +16,11 @@ int main(int argc,char *argv[])
     m1 = atoi(argv[2]);
     m2 = atoi(argv[3]);
   } else {
-    cout << endl 
-         << " Usage: QpRandomDriver n my mz " << endl
-         << " where n  = # primal variables, " << endl
-         << "       my = # equality constraints, " << endl
-         << "       mz = # inequality constraints " << endl << endl;
+    std::cout << std::endl 
+         << " Usage: QpRandomDriver n my mz " << std::endl
+         << " where n  = # primal variables, " << std::endl
+         << "       my = # equality constraints, " << std::endl
+         << "       mz = # inequality constraints " << std::endl << std::endl;
     return 1;
   }
 
@@ -46,22 +46,22 @@ int main(int argc,char *argv[])
   delete s;
 
   if (status == 0) {
-    cout.precision(4);
-    cout << endl << "Computed solution:\n\n" <<endl <<endl;
+    std::cout.precision(4);
+    std::cout << std::endl << "Computed solution:\n\n" <<std::endl <<std::endl;
     vars->fX.Print();
 
     TQpVar *temp = qp->MakeVariables(prob);
 
-    cout << endl << "Checking the solution...";
+    std::cout << std::endl << "Checking the solution...";
     if (SolutionMatches(vars,soln,temp,1e-4)) {
-      cout << "The solution appears to be correct." <<endl;
+      std::cout << "The solution appears to be correct." <<std::endl;
     } else {
-      cout << endl << "The solution may be wrong "
-	"(or the generated problem may be ill conditioned.)" <<endl;
+      std::cout << std::endl << "The solution may be wrong "
+	"(or the generated problem may be ill conditioned.)" <<std::endl;
     }
     delete temp;
   } else {
-    cout << "Could not solve this problem." <<endl;
+    std::cout << "Could not solve this problem." <<std::endl;
   }
 
   delete vars;

@@ -221,12 +221,12 @@ void TSlaveInfo::Print(Option_t *opt) const
    } else {
       TString msd  = fMsd.IsNull() ? "<null>" : fMsd.Data();
 
-      cout << "Slave: "          << fOrdinal
+      std::cout << "Slave: "          << fOrdinal
          << "  hostname: "     << fHostName
          << "  msd: "          << msd
          << "  perf index: "   << fPerfIndex
          << "  "               << stat
-         << endl;
+         << std::endl;
    }
 }
 
@@ -6384,7 +6384,7 @@ void TProof::ClearData(UInt_t what, const char *dsname)
       ShowData();
       gSystem->RedirectOutput(0, 0, &h);
       // Parse the output file now
-      ifstream in;
+      std::ifstream in;
       in.open(outtmp.Data());
       if (!in.is_open()) {
          Error("ClearData", "could not open temp file for logs: %s", outtmp.Data());

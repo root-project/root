@@ -41,7 +41,7 @@ public:
                             Double_t  phimin=0, Double_t  phimax=360, Option_t *option="");
    virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void   Paint(Option_t *option="");
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TCrown,1)  //A crown or segment of crown
 };

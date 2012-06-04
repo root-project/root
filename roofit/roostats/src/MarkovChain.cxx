@@ -50,6 +50,8 @@ END_HTML
 #include "THnSparse.h"
 #endif
 
+using namespace std;
+
 ClassImp(RooStats::MarkovChain);
 
 using namespace RooFit;

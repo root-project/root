@@ -41,9 +41,9 @@ TClProxy::TClProxy(const Char_t *service, TXmlRpc *rpc)
 //______________________________________________________________________________
 void TClProxy::Print(Option_t *) const
 {
-   cout << IsA()->GetName()
+   std::cout << IsA()->GetName()
       << ": service " << fRpc->GetService() << " @ "
-      << fRpc->GetServer() << endl;
+      << fRpc->GetServer() << std::endl;
 }
 
 

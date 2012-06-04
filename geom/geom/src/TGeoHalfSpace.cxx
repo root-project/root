@@ -181,18 +181,18 @@ Double_t TGeoHalfSpace::Safety(Double_t *point, Bool_t /*in*/) const
 }
 
 //_____________________________________________________________________________
-void TGeoHalfSpace::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoHalfSpace::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   point[0] = " << fP[0] << ";" << endl;
-   out << "   point[1] = " << fP[1] << ";" << endl;
-   out << "   point[2] = " << fP[2] << ";" << endl;
-   out << "   norm[0]  = " << fN[0] << ";" << endl;
-   out << "   norm[1]  = " << fN[1] << ";" << endl;
-   out << "   norm[2]  = " << fN[2] << ";" << endl;
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoHalfSpace(\"" << GetName() << "\", point,norm);" << endl;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   point[0] = " << fP[0] << ";" << std::endl;
+   out << "   point[1] = " << fP[1] << ";" << std::endl;
+   out << "   point[2] = " << fP[2] << ";" << std::endl;
+   out << "   norm[0]  = " << fN[0] << ";" << std::endl;
+   out << "   norm[1]  = " << fN[1] << ";" << std::endl;
+   out << "   norm[2]  = " << fN[2] << ";" << std::endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoHalfSpace(\"" << GetName() << "\", point,norm);" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }         
 

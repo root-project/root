@@ -75,7 +75,7 @@ public:
    virtual void Released(Int_t id) { Emit("Released(Int_t)",id);}   //*SIGNAL*
    virtual void Clicked(Int_t id)  { Emit("Clicked(Int_t)",id); }   //*SIGNAL*
 
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGToolBar,0)  //A bar containing picture buttons
 };

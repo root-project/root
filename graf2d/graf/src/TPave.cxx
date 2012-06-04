@@ -608,7 +608,7 @@ void TPave::Print(Option_t *option) const
 
 
 //______________________________________________________________________________
-void TPave::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TPave::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
@@ -620,20 +620,20 @@ void TPave::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    }
    if (fOption.Contains("NDC")) {
       out<<"pave = new TPave("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
-         <<","<<fBorderSize<<","<<quote<<fOption<<quote<<");"<<endl;
+         <<","<<fBorderSize<<","<<quote<<fOption<<quote<<");"<<std::endl;
    } else {
       out<<"pave = new TPave("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-         <<","<<fBorderSize<<","<<quote<<fOption<<quote<<");"<<endl;
+         <<","<<fBorderSize<<","<<quote<<fOption<<quote<<");"<<std::endl;
    }
    if (strcmp(GetName(),"TPave")) {
-      out<<"   pave->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+      out<<"   pave->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
    }
    if (fCornerRadius) {
-      out<<"   pave->SetCornerRadius("<<fCornerRadius<<");"<<endl;
+      out<<"   pave->SetCornerRadius("<<fCornerRadius<<");"<<std::endl;
    }
    SaveFillAttributes(out,"pave",19,1001);
    SaveLineAttributes(out,"pave",1,1,1);
-   out<<"   pave->Draw();"<<endl;
+   out<<"   pave->Draw();"<<std::endl;
 }
 
 

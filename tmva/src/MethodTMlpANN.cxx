@@ -425,7 +425,7 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromXML( void* wghtnode )
 }
  
 //_______________________________________________________________________
-void  TMVA::MethodTMlpANN::ReadWeightsFromStream( istream& istr )
+void  TMVA::MethodTMlpANN::ReadWeightsFromStream( std::istream& istr )
 {
    // read weights from stream
    // since the MLP can not read from the stream, we

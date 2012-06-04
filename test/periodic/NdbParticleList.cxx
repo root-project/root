@@ -49,5 +49,5 @@ NdbParticleList::Name()
 void
 NdbParticleList::Add(NdbParticle *, Int_t)
 {
-	cout << "NdbParticleList::add()" << endl;
+	std::cout << "NdbParticleList::add()" << std::endl;
 } // Add

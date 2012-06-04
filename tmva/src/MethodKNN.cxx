@@ -572,10 +572,10 @@ void TMVA::MethodKNN::ReadWeightsFromXML( void* wghtnode ) {
 }
 
 //_______________________________________________________________________
-void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
+void TMVA::MethodKNN::ReadWeightsFromStream(std::istream& is)
 {
    // read the weights
-   Log() << kINFO << "Starting ReadWeightsFromStream(istream& is) function..." << Endl;
+   Log() << kINFO << "Starting ReadWeightsFromStream(std::istream& is) function..." << Endl;
 
    if (!fEvent.empty()) {
       Log() << kINFO << "Erasing " << fEvent.size() << " previously stored events" << Endl;

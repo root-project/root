@@ -88,9 +88,9 @@ void TCondor::Print(Option_t * opt) const
 {
    // Print master status
 
-   cout << "OBJ: " << IsA()->GetName()
+   std::cout << "OBJ: " << IsA()->GetName()
       << "\tPool: \"" << fPool << "\""
-      << "\tState: " << fState << endl;
+      << "\tState: " << fState << std::endl;
    fClaims->Print(opt);
 }
 
@@ -477,8 +477,8 @@ void TCondorSlave::Print(Option_t * /*opt*/ ) const
 {
    // Print worker status
 
-   cout << "OBJ: " << IsA()->GetName()
+   std::cout << "OBJ: " << IsA()->GetName()
       << " " << fHostname << ":" << fPort
       << "  Perf: " << fPerfIdx
-      << "  Image: " << fImage << endl;
+      << "  Image: " << fImage << std::endl;
 }

@@ -57,6 +57,8 @@
 
 
 
+using namespace std;
+
 ClassImp(RooLinearVar)
 
 

@@ -431,7 +431,7 @@ Double_t TMath::GamCf(Double_t a,Double_t x)
       del = d*c;
       h   = h*del;
       if (Abs(del-1) < eps) break;
-      //if (i==itmax) cout << "*GamCf(a,x)* a too large or itmax too small" << endl;
+      //if (i==itmax) std::cout << "*GamCf(a,x)* a too large or itmax too small" << std::endl;
    }
    Double_t v = Exp(-x+a*Log(x)-gln)*h;
    return (1-v);
@@ -459,7 +459,7 @@ Double_t TMath::GamSer(Double_t a,Double_t x)
       del  = del*x/ap;
       sum += del;
       if (TMath::Abs(del) < Abs(sum*eps)) break;
-      //if (n==itmax) cout << "*GamSer(a,x)* a too large or itmax too small" << endl;
+      //if (n==itmax) std::cout << "*GamSer(a,x)* a too large or itmax too small" << std::endl;
    }
    Double_t v = sum*Exp(-x+a*Log(x)-gln);
    return v;

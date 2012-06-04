@@ -293,23 +293,23 @@ Double_t TGeoScaledShape::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoScaledShape::SavePrimitive(ostream &out, Option_t *option)
+void TGeoScaledShape::SavePrimitive(std::ostream &out, Option_t *option)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
    if (!fShape || !fScale) {
-      out << "##### Invalid shape or scale !. Aborting. #####" << endl;
+      out << "##### Invalid shape or scale !. Aborting. #####" << std::endl;
       return;
    }
    fShape->SavePrimitive(out, option);
    TString sname = fShape->GetPointerName();
    const Double_t *sc = fScale->GetScale();
-   out << "   // Scale factor:" << endl;
+   out << "   // Scale factor:" << std::endl;
    out << "   TGeoScale *pScale = new TGeoScale(\"" << fScale->GetName() 
-       << "\"," << sc[0] << "," << sc[1] << "," << sc[2] << ");" << endl;
+       << "\"," << sc[0] << "," << sc[1] << "," << sc[2] << ");" << std::endl;
    out << "   TGeoScaledShape *" << GetPointerName() << " = new TGeoScaledShape(\"" 
-       << GetName() << "\"," << sname << ", pScale);" << endl;
+       << GetName() << "\"," << sname << ", pScale);" << std::endl;
 }
 
 //_____________________________________________________________________________

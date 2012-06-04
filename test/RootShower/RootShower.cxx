@@ -588,14 +588,14 @@ void RootShower::CloseWindow()
          fRootShowerEnv->SetValue("RootShower.fE0",fE0);
          fRootShowerEnv->SetValue("RootShower.fB",fB);
          fRootShowerEnv->SaveLevel(kEnvLocal);
-         cout << " Saving stuff .... " << endl;
+         std::cout << " Saving stuff .... " << std::endl;
 #ifdef R__WIN32
          gSystem->Exec("del .rootshowerrc");
          gSystem->Rename(".rootshowerrc.new",".rootshowerrc");
 #endif
       }
    }
-   cout << "Terminating RootShower" << endl;
+   std::cout << "Terminating RootShower" << std::endl;
    DeleteWindow();
    gApplication->Terminate(0);
 }

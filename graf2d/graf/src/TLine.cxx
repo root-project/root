@@ -332,7 +332,7 @@ void TLine::Print(Option_t *) const
 
 
 //______________________________________________________________________________
-void TLine::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TLine::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
@@ -342,11 +342,11 @@ void TLine::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       out<<"   TLine *";
    }
    out<<"line = new TLine("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-      <<");"<<endl;
+      <<");"<<std::endl;
 
    SaveLineAttributes(out,"line",1,1,1);
 
-   out<<"   line->Draw();"<<endl;
+   out<<"   line->Draw();"<<std::endl;
 }
 
 

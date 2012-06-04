@@ -88,7 +88,7 @@ protected:
   void profileStop() ;
 
   inline Int_t getNPar() const { return _fcn->NDim() ; }
-  inline ofstream* logfile() const { return _fcn->GetLogFile(); }
+  inline std::ofstream* logfile() const { return _fcn->GetLogFile(); }
   inline Double_t& maxFCN() { return _fcn->GetMaxFCN() ; }
 
 private:

@@ -116,7 +116,7 @@ Int_t TFileCollection::AddFromFile(const char *textfile, Int_t nfiles, Int_t fir
    Int_t nf = 0;
    TString fn(textfile);
    if (!fn.IsNull() && !gSystem->ExpandPathName(fn)) {
-      ifstream f;
+      std::ifstream f;
       f.open(fn);
       if (f.is_open()) {
          Bool_t all = (nfiles <= 0) ? kTRUE : kFALSE;

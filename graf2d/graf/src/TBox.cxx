@@ -626,7 +626,7 @@ void TBox::Print(Option_t *) const
 
 
 //______________________________________________________________________________
-void TBox::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TBox::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
@@ -635,12 +635,12 @@ void TBox::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    } else {
       out<<"   TBox *";
    }
-   out<<"box = new TBox("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<endl;
+   out<<"box = new TBox("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<std::endl;
 
    SaveFillAttributes(out,"box",0,1001);
    SaveLineAttributes(out,"box",1,1,1);
 
-   out<<"   box->Draw();"<<endl;
+   out<<"   box->Draw();"<<std::endl;
 }
 
 

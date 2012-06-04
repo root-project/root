@@ -82,7 +82,7 @@ public:
                 kDoubleBorder, Pixel_t back = GetWhitePixel());
 
    virtual void Update(const char *path);
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGFSComboBox,0)  // Combo box widget for file system path
 };

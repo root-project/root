@@ -266,7 +266,7 @@ void TTask::ExecuteTask(Option_t *option)
    if (fBreakin) return;
    if (gDebug > 1) {
       TROOT::IndentLevel();
-      cout<<"Execute task:"<<GetName()<<" : "<<GetTitle()<<endl;
+      std::cout<<"Execute task:"<<GetName()<<" : "<<GetTitle()<<std::endl;
       TROOT::IncreaseDirLevel();
    }
    Exec(option);
@@ -306,7 +306,7 @@ void TTask::ExecuteTasks(Option_t *option)
 
       if (gDebug > 1) {
          TROOT::IndentLevel();
-         cout<<"Execute task:"<<task->GetName()<<" : "<<task->GetTitle()<<endl;
+         std::cout<<"Execute task:"<<task->GetName()<<" : "<<task->GetTitle()<<std::endl;
          TROOT::IncreaseDirLevel();
       }
       task->Exec(option);
@@ -329,7 +329,7 @@ void TTask::ls(Option_t *option) const
    // Indentation is used to identify the task tree.
 
    TROOT::IndentLevel();
-   cout <<GetName()<<"\t"<<GetTitle()<<endl;
+   std::cout <<GetName()<<"\t"<<GetTitle()<<std::endl;
    TROOT::IncreaseDirLevel();
 
    TString opta = option;

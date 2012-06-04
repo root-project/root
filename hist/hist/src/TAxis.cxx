@@ -620,60 +620,60 @@ void TAxis::RotateTitle(Bool_t rotate)
 }
 
 //______________________________________________________________________________
-void TAxis::SaveAttributes(ostream &out, const char *name, const char *subname)
+void TAxis::SaveAttributes(std::ostream &out, const char *name, const char *subname)
 {
     // Save axis attributes as C++ statement(s) on output stream out
 
    char quote = '"';
    if (strlen(GetTitle())) {
-      out<<"   "<<name<<subname<<"->SetTitle("<<quote<<GetTitle()<<quote<<");"<<endl;
+      out<<"   "<<name<<subname<<"->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
    }
    if (fTimeDisplay) {
-      out<<"   "<<name<<subname<<"->SetTimeDisplay(1);"<<endl;
-      out<<"   "<<name<<subname<<"->SetTimeFormat("<<quote<<GetTimeFormat()<<quote<<");"<<endl;
+      out<<"   "<<name<<subname<<"->SetTimeDisplay(1);"<<std::endl;
+      out<<"   "<<name<<subname<<"->SetTimeFormat("<<quote<<GetTimeFormat()<<quote<<");"<<std::endl;
    }
    if (fLabels) {
       TIter next(fLabels);
       TObjString *obj;
       while ((obj=(TObjString*)next())) {
-         out<<"   "<<name<<subname<<"->SetBinLabel("<<obj->GetUniqueID()<<","<<quote<<obj->GetName()<<quote<<");"<<endl;
+         out<<"   "<<name<<subname<<"->SetBinLabel("<<obj->GetUniqueID()<<","<<quote<<obj->GetName()<<quote<<");"<<std::endl;
       }
    }
 
    if (fFirst || fLast) {
-      out<<"   "<<name<<subname<<"->SetRange("<<fFirst<<","<<fLast<<");"<<endl;
+      out<<"   "<<name<<subname<<"->SetRange("<<fFirst<<","<<fLast<<");"<<std::endl;
    }
 
    if (TestBit(kLabelsHori)) {
-      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsHori);"<<endl;
+      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsHori);"<<std::endl;
    }
 
    if (TestBit(kLabelsVert)) {
-      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsVert);"<<endl;
+      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsVert);"<<std::endl;
    }
 
    if (TestBit(kLabelsDown)) {
-      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsDown);"<<endl;
+      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsDown);"<<std::endl;
    }
 
    if (TestBit(kLabelsUp)) {
-      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsUp);"<<endl;
+      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsUp);"<<std::endl;
    }
 
    if (TestBit(kCenterTitle)) {
-      out<<"   "<<name<<subname<<"->CenterTitle(true);"<<endl;
+      out<<"   "<<name<<subname<<"->CenterTitle(true);"<<std::endl;
    }
 
    if (TestBit(kRotateTitle)) {
-      out<<"   "<<name<<subname<<"->RotateTitle(true);"<<endl;
+      out<<"   "<<name<<subname<<"->RotateTitle(true);"<<std::endl;
    }
 
    if (TestBit(kMoreLogLabels)) {
-      out<<"   "<<name<<subname<<"->SetMoreLogLabels();"<<endl;
+      out<<"   "<<name<<subname<<"->SetMoreLogLabels();"<<std::endl;
    }
 
    if (TestBit(kNoExponent)) {
-      out<<"   "<<name<<subname<<"->SetNoExponent();"<<endl;
+      out<<"   "<<name<<subname<<"->SetNoExponent();"<<std::endl;
    }
 
    TAttAxis::SaveAttributes(out,name,subname);

@@ -114,7 +114,7 @@ public:
    virtual double Distance(const GSLSimAnFunc & func) const; 
 
    /**
-      print the position in the standard output ostream 
+      print the position in the standard output std::ostream 
       GSL prints in addition n iteration, n function calls, temperature and energy
       re-implement by derived classes if necessary
     */

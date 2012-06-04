@@ -266,7 +266,7 @@ int main() {
      return -1;
   }
   // save the generated number
-  ofstream file("testRandom.out");
+  std::ofstream file("testRandom.out");
   std::ostream & out = file; 
   int  j = 0; 
   int prec = std::cout.precision(9);

@@ -162,7 +162,7 @@ void TSlider::Paint(Option_t *option)
 
 
 //______________________________________________________________________________
-void TSlider::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TSlider::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
@@ -179,23 +179,23 @@ void TSlider::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       <<","<<fYlowNDC
       <<","<<fXlowNDC+fWNDC
       <<","<<fYlowNDC+fHNDC
-      <<");"<<endl;
+      <<");"<<std::endl;
 
    SaveFillAttributes(out,"slider",0,1001);
    SaveLineAttributes(out,"slider",1,1,1);
 
    if (GetBorderSize() != 2) {
-      out<<"   slider->SetBorderSize("<<GetBorderSize()<<");"<<endl;
+      out<<"   slider->SetBorderSize("<<GetBorderSize()<<");"<<std::endl;
    }
    if (GetBorderMode() != -1) {
-      out<<"   slider->SetBorderMode("<<GetBorderMode()<<");"<<endl;
+      out<<"   slider->SetBorderMode("<<GetBorderMode()<<");"<<std::endl;
    }
    Int_t lenMethod = strlen(GetMethod());
    if (lenMethod > 0) {
-      out<<"   slider->SetMethod("<<quote<<GetMethod()<<quote<<");"<<endl;
+      out<<"   slider->SetMethod("<<quote<<GetMethod()<<quote<<");"<<std::endl;
    }
 
-   out<<"   "<<padsav->GetName()<<"->cd();"<<endl;
+   out<<"   "<<padsav->GetName()<<"->cd();"<<std::endl;
    padsav->cd();
 }
 

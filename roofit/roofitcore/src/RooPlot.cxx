@@ -69,6 +69,8 @@
 #include <string.h>
 #include <assert.h>
 
+using namespace std;
+
 ClassImp(RooPlot)
 ;
 

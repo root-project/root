@@ -61,7 +61,7 @@ namespace TMVA {
       virtual void AttachXMLTo(void* parent);
       virtual void ReadFromXML( void* trfnode );
 
-      virtual void PrintTransformation( ostream & o );
+      virtual void PrintTransformation( std::ostream & o );
 
       // writer of function code
       virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part, UInt_t trCounter, Int_t cls );

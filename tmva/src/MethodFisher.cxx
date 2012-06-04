@@ -555,12 +555,12 @@ void TMVA::MethodFisher::PrintCoefficients( void )
       // Print normalisation expression (see Tools.cxx): "2*(x - xmin)/(xmax - xmin) - 1.0"
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
          Log() << kINFO 
-                 << setw(maxL+9) << TString("[") + GetInputLabel(ivar) + "]' = 2*(" 
-                 << setw(maxL+2) << TString("[") + GetInputLabel(ivar) + "]"
-                 << setw(3) << (GetXmin(ivar) > 0 ? " - " : " + ")
-                 << setw(6) << TMath::Abs(GetXmin(ivar)) << setw(3) << ")/"
-                 << setw(6) << (GetXmax(ivar) -  GetXmin(ivar) )
-                 << setw(3) << " - 1"
+                 << std::setw(maxL+9) << TString("[") + GetInputLabel(ivar) + "]' = 2*(" 
+                 << std::setw(maxL+2) << TString("[") + GetInputLabel(ivar) + "]"
+                 << std::setw(3) << (GetXmin(ivar) > 0 ? " - " : " + ")
+                 << std::setw(6) << TMath::Abs(GetXmin(ivar)) << std::setw(3) << ")/"
+                 << std::setw(6) << (GetXmax(ivar) -  GetXmin(ivar) )
+                 << std::setw(3) << " - 1"
                  << Endl;
       }
       Log() << kINFO << "The TMVA Reader will properly account for this normalisation, but if the" << Endl;
@@ -571,7 +571,7 @@ void TMVA::MethodFisher::PrintCoefficients( void )
 }
   
 //_______________________________________________________________________
-void TMVA::MethodFisher::ReadWeightsFromStream( istream& istr )
+void TMVA::MethodFisher::ReadWeightsFromStream( std::istream& istr )
 {
    // read Fisher coefficients from weight file
    istr >> fF0;
@@ -619,41 +619,41 @@ void TMVA::MethodFisher::MakeClassSpecific( std::ostream& fout, const TString& c
 {
    // write Fisher-specific classifier response
    Int_t dp = fout.precision();
-   fout << "   double              fFisher0;" << endl;
-   fout << "   std::vector<double> fFisherCoefficients;" << endl;
-   fout << "};" << endl;
-   fout << "" << endl;
-   fout << "inline void " << className << "::Initialize() " << endl;
-   fout << "{" << endl;
-   fout << "   fFisher0 = " << std::setprecision(12) << fF0 << ";" << endl;
+   fout << "   double              fFisher0;" << std::endl;
+   fout << "   std::vector<double> fFisherCoefficients;" << std::endl;
+   fout << "};" << std::endl;
+   fout << "" << std::endl;
+   fout << "inline void " << className << "::Initialize() " << std::endl;
+   fout << "{" << std::endl;
+   fout << "   fFisher0 = " << std::setprecision(12) << fF0 << ";" << std::endl;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-      fout << "   fFisherCoefficients.push_back( " << std::setprecision(12) << (*fFisherCoeff)[ivar] << " );" << endl;
+      fout << "   fFisherCoefficients.push_back( " << std::setprecision(12) << (*fFisherCoeff)[ivar] << " );" << std::endl;
    }
-   fout << endl;
-   fout << "   // sanity check" << endl;
-   fout << "   if (fFisherCoefficients.size() != fNvars) {" << endl;
-   fout << "      std::cout << \"Problem in class \\\"\" << fClassName << \"\\\"::Initialize: mismatch in number of input values\"" << endl;
-   fout << "                << fFisherCoefficients.size() << \" != \" << fNvars << std::endl;" << endl;
-   fout << "      fStatusIsClean = false;" << endl;
-   fout << "   }         " << endl;
-   fout << "}" << endl;
-   fout << endl;
-   fout << "inline double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << endl;
-   fout << "{" << endl;
-   fout << "   double retval = fFisher0;" << endl;
-   fout << "   for (size_t ivar = 0; ivar < fNvars; ivar++) {" << endl;
-   fout << "      retval += fFisherCoefficients[ivar]*inputValues[ivar];" << endl;
-   fout << "   }" << endl;
-   fout << endl;
-   fout << "   return retval;" << endl;
-   fout << "}" << endl;
-   fout << endl;
-   fout << "// Clean up" << endl;
-   fout << "inline void " << className << "::Clear() " << endl;
-   fout << "{" << endl;
-   fout << "   // clear coefficients" << endl;
-   fout << "   fFisherCoefficients.clear(); " << endl;
-   fout << "}" << endl;
+   fout << std::endl;
+   fout << "   // sanity check" << std::endl;
+   fout << "   if (fFisherCoefficients.size() != fNvars) {" << std::endl;
+   fout << "      std::cout << \"Problem in class \\\"\" << fClassName << \"\\\"::Initialize: mismatch in number of input values\"" << std::endl;
+   fout << "                << fFisherCoefficients.size() << \" != \" << fNvars << std::endl;" << std::endl;
+   fout << "      fStatusIsClean = false;" << std::endl;
+   fout << "   }         " << std::endl;
+   fout << "}" << std::endl;
+   fout << std::endl;
+   fout << "inline double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << std::endl;
+   fout << "{" << std::endl;
+   fout << "   double retval = fFisher0;" << std::endl;
+   fout << "   for (size_t ivar = 0; ivar < fNvars; ivar++) {" << std::endl;
+   fout << "      retval += fFisherCoefficients[ivar]*inputValues[ivar];" << std::endl;
+   fout << "   }" << std::endl;
+   fout << std::endl;
+   fout << "   return retval;" << std::endl;
+   fout << "}" << std::endl;
+   fout << std::endl;
+   fout << "// Clean up" << std::endl;
+   fout << "inline void " << className << "::Clear() " << std::endl;
+   fout << "{" << std::endl;
+   fout << "   // clear coefficients" << std::endl;
+   fout << "   fFisherCoefficients.clear(); " << std::endl;
+   fout << "}" << std::endl;
    fout << std::setprecision(dp);
 }
 

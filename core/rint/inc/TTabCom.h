@@ -68,7 +68,7 @@ public: // typedefs
    typedef TListIter TContIter;
 
 public: // member functions
-   Int_t Hook(char *buf, int *pLoc, ostream& out);
+   Int_t Hook(char *buf, int *pLoc, std::ostream& out);
 
    const TSeqCollection* GetListOfClasses();
    const TSeqCollection* GetListOfCppDirectives();
@@ -199,7 +199,7 @@ private: // member functions
    TTabCom& operator=(const TTabCom&); //private and not implemented
 
    Int_t      Complete(const TRegexp& re, const TSeqCollection* pListOfCandidates,
-                       const char appendage[], ostream& out, TString::ECaseCompare cmp = TString::kExact);
+                       const char appendage[], std::ostream& out, TString::ECaseCompare cmp = TString::kExact);
    void       CopyMatch( char dest[], const char localName[], const char appendage[]=0, const char fullName[]=0 ) const;
    EContext_t DetermineContext() const;
    TString    DeterminePath( const TString& fileName, const char defaultPath[] ) const;

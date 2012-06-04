@@ -77,7 +77,7 @@ public:
 
    virtual void    Paint(Option_t *option);
    static  void    PaintH3(TH1 *h, Option_t *option);
-   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void    SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void    SetPoints(Double_t *buff) const;
    virtual void    SetDirection(Float_t theta, Float_t phi);
    virtual void    SetPosition(Float_t x, Float_t y, Float_t z);

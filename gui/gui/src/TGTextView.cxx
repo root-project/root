@@ -1557,7 +1557,7 @@ const TGGC &TGTextView::GetDefaultSelectedBackgroundGC()
 }
 
 //______________________________________________________________________________
-void TGTextView::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGTextView::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a text edit widget as a C++ statement(s) on output stream out
 
@@ -1565,13 +1565,13 @@ void TGTextView::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out << "   TGTextView *";
    out << GetName() << " = new TGTextView(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight()
-       << ");"<< endl;
+       << ");"<< std::endl;
 
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    if (fCanvas->GetBackground() != TGFrame::fgWhitePixel) {
-      out << "   " << GetName() << "->ChangeBackground(" << fCanvas->GetBackground() << ");" << endl;
+      out << "   " << GetName() << "->ChangeBackground(" << fCanvas->GetBackground() << ");" << std::endl;
    }
 
    TGText *txt = GetText();
@@ -1585,5 +1585,5 @@ void TGTextView::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       fn = TString::Format("Txt%s", GetName()+5);
       txt->Save(fn.Data());
    }
-   out << "   " << GetName() << "->LoadFile(" << quote << fn.Data() << quote << ");" << endl;
+   out << "   " << GetName() << "->LoadFile(" << quote << fn.Data() << quote << ");" << std::endl;
 }

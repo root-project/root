@@ -762,9 +762,9 @@ void TGFrame::Print(Option_t *option) const
       return;
    }
 
-   cout <<  option << ClassName() << ":\tid=" << fId << " parent=" << fParent->GetId();
-   cout << " x=" << fX << " y=" << fY;
-   cout << " w=" << fWidth << " h=" << fHeight << endl;
+   std::cout <<  option << ClassName() << ":\tid=" << fId << " parent=" << fParent->GetId();
+   std::cout << " x=" << fX << " y=" << fY;
+   std::cout << " w=" << fWidth << " h=" << fHeight << std::endl;
 }
 
 //______________________________________________________________________________
@@ -2408,18 +2408,18 @@ Bool_t TGHeaderFrame::HandleMotion(Event_t* event)
 }
 
 //______________________________________________________________________________
-void TGFrame::SaveUserColor(ostream &out, Option_t *option)
+void TGFrame::SaveUserColor(std::ostream &out, Option_t *option)
 {
    // Save a user color in a C++ macro file - used in SavePrimitive().
 
    char quote = '"';
 
    if (gROOT->ClassSaved(TGFrame::Class())) {
-      out << endl;
+      out << std::endl;
    } else {
       //  declare a color variable to reflect required user changes
-      out << endl;
-      out << "   ULong_t ucolor;        // will reflect user color changes" << endl;
+      out << std::endl;
+      out << "   ULong_t ucolor;        // will reflect user color changes" << std::endl;
    }
    ULong_t ucolor;
    if (option && !strcmp(option, "slider"))
@@ -2429,7 +2429,7 @@ void TGFrame::SaveUserColor(ostream &out, Option_t *option)
    if ((ucolor != fgUserColor) || (ucolor == GetWhitePixel())) {
       const char *ucolorname = TColor::PixelAsHexString(ucolor);
       out << "   gClient->GetColorByName(" << quote << ucolorname << quote
-          << ",ucolor);" << endl;
+          << ",ucolor);" << std::endl;
       fgUserColor = ucolor;
    }
 }
@@ -2596,12 +2596,12 @@ TString TGMainFrame::GetMWMinpString() const
 }
 
 //______________________________________________________________________________
-void TGCompositeFrame::SavePrimitiveSubframes(ostream &out, Option_t *option /*= ""*/)
+void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Auxilary protected method  used to save subframes.
 
    if (fLayoutBroken)
-      out << "   " << GetName() << "->SetLayoutBroken(kTRUE);" << endl;
+      out << "   " << GetName() << "->SetLayoutBroken(kTRUE);" << std::endl;
 
    if (!fList) return;
 
@@ -2640,12 +2640,12 @@ void TGCompositeFrame::SavePrimitiveSubframes(ostream &out, Option_t *option /*=
       el->fFrame->SavePrimitive(out, option);
       out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
       el->fLayout->SavePrimitive(out, option);
-      out << ");"<< endl;
+      out << ");"<< std::endl;
       if (IsLayoutBroken()) {
          out << "   " << el->fFrame->GetName() << "->MoveResize(";
          out << el->fFrame->GetX() << "," << el->fFrame->GetY() << ",";
          out << el->fFrame->GetWidth() << ","  << el->fFrame->GetHeight();
-         out << ");" << endl;
+         out << ");" << std::endl;
       }
       // TG(H,V)Splitter->SetFrame(theframe) can only be saved _AFTER_
       // having saved "theframe", when "theframe" is either at right
@@ -2654,14 +2654,14 @@ void TGCompositeFrame::SavePrimitiveSubframes(ostream &out, Option_t *option /*=
       // (aka used before to be created)...
       if (vsplit && el->fFrame == vsplit->GetFrame()) {
          out << "   " << vsplit->GetName() << "->SetFrame(" << vsplit->GetFrame()->GetName();
-         if (vsplit->GetLeft()) out << ",kTRUE);" << endl;
-         else                 out << ",kFALSE);"<< endl;
+         if (vsplit->GetLeft()) out << ",kTRUE);" << std::endl;
+         else                 out << ",kFALSE);"<< std::endl;
          vsplit = 0;
       }
       if (hsplit && el->fFrame == hsplit->GetFrame()) {
          out << "   " << hsplit->GetName() << "->SetFrame(" << hsplit->GetFrame()->GetName();
-         if (hsplit->GetAbove()) out << ",kTRUE);" << endl;
-         else                  out << ",kFALSE);"<< endl;
+         if (hsplit->GetAbove()) out << ",kTRUE);" << std::endl;
+         else                  out << ",kFALSE);"<< std::endl;
          hsplit = 0;
       }
 
@@ -2683,7 +2683,7 @@ void TGCompositeFrame::SavePrimitiveSubframes(ostream &out, Option_t *option /*=
             if (eq != -1)
                slot_name.Remove(eq, rb-eq);
             out << "   " << el->fFrame->GetName() << "->Connect(" << quote << signal_name
-                << quote << ", 0, 0, " << quote << slot_name << quote << ");" << endl;
+                << quote << ", 0, 0, " << quote << slot_name << quote << ");" << std::endl;
 
             TList *lsl = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfSlots");
             if (lsl) {
@@ -2694,11 +2694,11 @@ void TGCompositeFrame::SavePrimitiveSubframes(ostream &out, Option_t *option /*=
          }
       }
    }
-   out << endl;
+   out << std::endl;
 }
 
 //______________________________________________________________________________
-void TGCompositeFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGCompositeFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a composite frame widget as a C++ statement(s) on output stream out.
 
@@ -2709,22 +2709,22 @@ void TGCompositeFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       fgCounter++;
    }
 
-   out << endl << "   // composite frame" << endl;
+   out << std::endl << "   // composite frame" << std::endl;
    out << "   TGCompositeFrame *";
    out << GetName() << " = new TGCompositeFrame(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         out << ");" << endl;
+         out << ");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    // setting layout manager if it differs from the composite frame type
    // coverity[returned_null]
@@ -2739,7 +2739,7 @@ void TGCompositeFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "   " << GetName() <<"->SetLayoutManager(";
       lm->SavePrimitive(out, option);
-      out << ");"<< endl;
+      out << ");"<< std::endl;
    }
 
    SavePrimitiveSubframes(out, option);
@@ -2822,7 +2822,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    }
 
    char quote = '"';
-   ofstream out;
+   std::ofstream out;
 
    TString ff = filename && strlen(filename) ? filename : "Rootappl.C";
 
@@ -2840,7 +2840,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
       ff += ".C";
    sname[i] = 0;
 
-   out.open(ff.Data(), ios::out);
+   out.open(ff.Data(), std::ios::out);
    if (!out.good()) {
       Error("SaveSource", "cannot open file: %s", ff.Data());
       delete [] sname;
@@ -2858,22 +2858,22 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    // write macro header, date/time stamp as string, and the used Root version
    TDatime t;
-   out <<"// Mainframe macro generated from application: "<< gApplication->Argv(0) << endl;
-   out <<"// By ROOT version "<< gROOT->GetVersion() <<" on "<<t.AsSQLString()<< endl;
-   out << endl;
+   out <<"// Mainframe macro generated from application: "<< gApplication->Argv(0) << std::endl;
+   out <<"// By ROOT version "<< gROOT->GetVersion() <<" on "<<t.AsSQLString()<< std::endl;
+   out << std::endl;
 
    TIter nexti(ilist);
    while((inc = (TObjString *)nexti())) {
-         out << "#ifndef ROOT_" << inc->GetString() << endl;
-         out << "#include " << quote << inc->GetString() << ".h" << quote << endl;
-         out << "#endif" << endl;
+         out << "#ifndef ROOT_" << inc->GetString() << std::endl;
+         out << "#include " << quote << inc->GetString() << ".h" << quote << std::endl;
+         out << "#endif" << std::endl;
          if (strstr(inc->GetString(),"TRootEmbeddedCanvas")) {
-            out << "#ifndef ROOT_TCanvas" << endl;
-            out << "#include " << quote << "TCanvas.h" << quote << endl;
-            out << "#endif" << endl;
+            out << "#ifndef ROOT_TCanvas" << std::endl;
+            out << "#include " << quote << "TCanvas.h" << quote << std::endl;
+            out << "#endif" << std::endl;
          }
    }
-   out << endl << "#include " << quote << "Riostream.h" << quote << endl;
+   out << std::endl << "#include " << quote << "Riostream.h" << quote << std::endl;
    // deletes created ListOfIncludes
    gROOT->GetListOfSpecials()->Remove(ilist);
    ilist->Delete();
@@ -2881,9 +2881,9 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    delete bc;
 
    // writes the macro entry point equal to the fname
-   out << endl;
-   out << "void " << sname << "()" << endl;
-   out <<"{"<< endl;
+   out << std::endl;
+   out << "void " << sname << "()" << std::endl;
+   out <<"{"<< std::endl;
    delete [] sname;
 
    gListOfHiddenFrames->Clear();
@@ -2898,27 +2898,27 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    GetClassHints((const char *&)fClassName, (const char *&)fResourceName);
    if (strlen(fClassName) || strlen(fResourceName)) {
       out << "   " << GetName() << "->SetClassHints(" << quote << fClassName
-          << quote << "," << quote << fResourceName << quote << ");" << endl;
+          << quote << "," << quote << fResourceName << quote << ");" << std::endl;
    }
 
    GetMWMHints(fMWMValue, fMWMFuncs, fMWMInput);
    if (fMWMValue || fMWMFuncs || fMWMInput) {
       out << "   " << GetName() << "->SetMWMHints(";
-      out << GetMWMvalueString() << "," << endl;
+      out << GetMWMvalueString() << "," << std::endl;
       out << "                        ";
-      out << GetMWMfuncString() << "," << endl;
+      out << GetMWMfuncString() << "," << std::endl;
       out << "                        ";
-      out << GetMWMinpString() << ");"<< endl;
+      out << GetMWMinpString() << ");"<< std::endl;
    }
 
 ///   GetWMPosition(fWMX, fWMY);
 ///   if ((fWMX != -1) || (fWMY != -1)) {
-///      out <<"   "<<GetName()<<"->SetWMPosition("<<fWMX<<","<<fWMY<<");"<<endl;
+///      out <<"   "<<GetName()<<"->SetWMPosition("<<fWMX<<","<<fWMY<<");"<<std::endl;
 ///   }   // does not work - fixed via Move() below...
 
    GetWMSize(fWMWidth, fWMHeight);
    if (fWMWidth != UInt_t(-1) || fWMHeight != UInt_t(-1)) {
-      out <<"   "<<GetName()<<"->SetWMSize("<<fWMWidth<<","<<fWMHeight<<");"<<endl;
+      out <<"   "<<GetName()<<"->SetWMSize("<<fWMWidth<<","<<fWMHeight<<");"<<std::endl;
    }
 
    GetWMSizeHints(fWMMinWidth, fWMMinHeight, fWMMaxWidth, fWMMaxHeight, fWMWidthInc, fWMHeightInc);
@@ -2927,18 +2927,18 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
       fWMWidthInc != UInt_t(-1) || fWMHeightInc != UInt_t(-1)) {
       out <<"   "<<GetName()<<"->SetWMSizeHints("<<fWMMinWidth<<","<<fWMMinHeight
           <<","<<fWMMaxWidth<<","<<fWMMaxHeight
-          <<","<<fWMWidthInc<<","<<fWMHeightInc <<");"<<endl;
+          <<","<<fWMWidthInc<<","<<fWMHeightInc <<");"<<std::endl;
    }
 
-   out << "   " <<GetName()<< "->MapSubwindows();" << endl;
+   out << "   " <<GetName()<< "->MapSubwindows();" << std::endl;
 
    TIter nexth(gListOfHiddenFrames);
    TGFrame *fhidden;
    while ((fhidden = (TGFrame*)nexth())) {
-      out << "   " <<fhidden->GetName()<< "->UnmapWindow();" << endl;
+      out << "   " <<fhidden->GetName()<< "->UnmapWindow();" << std::endl;
    }
 
-   out << endl;
+   out << std::endl;
    gListOfHiddenFrames->Clear();
 
    Bool_t usexy = kFALSE;
@@ -2949,21 +2949,21 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
       usexy = kTRUE;
 
    if (!usexy)
-      out << "   " <<GetName()<< "->Resize("<< GetName()<< "->GetDefaultSize());" << endl;
+      out << "   " <<GetName()<< "->Resize("<< GetName()<< "->GetDefaultSize());" << std::endl;
    else
-      out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<endl;
+      out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<std::endl;
 
-   out << "   " <<GetName()<< "->MapWindow();" <<endl;
+   out << "   " <<GetName()<< "->MapWindow();" <<std::endl;
 
    GetWMPosition(fWMX, fWMY);
    if ((fWMX != -1) || (fWMY != -1)) {
-      out <<"   "<<GetName()<<"->Move("<<fWMX<<","<<fWMY<<");"<<endl;
+      out <<"   "<<GetName()<<"->Move("<<fWMX<<","<<fWMY<<");"<<std::endl;
    }
 
    // needed in case the frame was resized
    // otherwhice the frame became bigger showing all hidden widgets (layout algorithm)
-   if (!usexy) out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<endl;
-   out << "}  " << endl;
+   if (!usexy) out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<std::endl;
+   out << "}  " << std::endl;
 
    // writing slots
    TList *sl = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfSlots");
@@ -2979,34 +2979,34 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
          lb = s.First('(');
          rb = s.First(')');
          eq = s.First('=');
-         out << endl;
+         out << std::endl;
 
          if (rb - lb > 1 && eq == -1) {
             p = TString::Format(" par%d", pnumber);
             s.Insert(rb, p);
             pnumber++;
-            out << "void " << s << endl;
-            out << "{" << endl;
+            out << "void " << s << std::endl;
+            out << "{" << std::endl;
             s = slobj->GetString();
             s[rb] = ' ';
-            out << "   cout << " << quote << "Slot " << s  << quote
+            out << "   std::cout << " << quote << "Slot " << s  << quote
                 << " <<" << p << " << " << quote << ")" << quote
-                << " << endl; " << endl;
+                << " << std::endl; " << std::endl;
             } else {
                if (eq != -1) {
                   s.Remove(eq, rb-eq);
-                  out << "void " << s << endl;
-                  out << "{" << endl;
-                  out << "   cout << " << quote << "Slot " << s
-                      << quote << " << endl; " << endl;
+                  out << "void " << s << std::endl;
+                  out << "{" << std::endl;
+                  out << "   std::cout << " << quote << "Slot " << s
+                      << quote << " << std::endl; " << std::endl;
                } else {
-                  out << "void " << slobj->GetString() << endl;
-                  out << "{" << endl;
-                  out << "   cout << " << quote << "Slot " << slobj->GetString()
-                      << quote << " << endl; " << endl;
+                  out << "void " << slobj->GetString() << std::endl;
+                  out << "{" << std::endl;
+                  out << "   std::cout << " << quote << "Slot " << slobj->GetString()
+                      << quote << " << std::endl; " << std::endl;
                }
             }
-         out << "}" << endl;
+         out << "}" << std::endl;
       }
       gROOT->GetListOfSpecials()->Remove(sl);
       sl->Delete();
@@ -3025,7 +3025,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGMainFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGMainFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a main frame widget as a C++ statement(s) on output stream out.
 
@@ -3038,12 +3038,12 @@ void TGMainFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    char quote = '"';
 
-   out << endl << "   // main frame" << endl;
+   out << std::endl << "   // main frame" << std::endl;
    out << "   TGMainFrame *";
    out << GetName() << " = new TGMainFrame(gClient->GetRoot(),10,10,"   // layout alg.
-       << GetOptionString() << ");" <<endl;
+       << GetOptionString() << ");" <<std::endl;
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    // setting layout manager if it differs from the main frame type
    // coverity[returned_null]
@@ -3058,47 +3058,47 @@ void TGMainFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "   " << GetName() <<"->SetLayoutManager(";
       lm->SavePrimitive(out, option);
-      out << ");"<< endl;
+      out << ");"<< std::endl;
    }
 
    SavePrimitiveSubframes(out, option);
 
    if (strlen(fWindowName)) {
       out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
-          << quote << ");" << endl;
+          << quote << ");" << std::endl;
    }
    if (strlen(fIconName)) {
-      out <<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<endl;
+      out <<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<std::endl;
    }
    if (strlen(fIconPixmap)) {
       out << "   " << GetName() << "->SetIconPixmap(" << quote << GetIconPixmap()
-          << quote << ");" << endl;
+          << quote << ");" << std::endl;
    }
 }
 
 //______________________________________________________________________________
-void TGHorizontalFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGHorizontalFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a horizontal frame widget as a C++ statement(s) on output stream out.
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
-   out << endl << "   // horizontal frame" << endl;
+   out << std::endl << "   // horizontal frame" << std::endl;
    out << "   TGHorizontalFrame *";
    out << GetName() << " = new TGHorizontalFrame(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         out << ");" << endl;
+         out << ");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    // setting layout manager if it differs from the main frame type
    // coverity[returned_null]
@@ -3113,35 +3113,35 @@ void TGHorizontalFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "   " << GetName() <<"->SetLayoutManager(";
       lm->SavePrimitive(out, option);
-      out << ");"<< endl;
+      out << ");"<< std::endl;
    }
 
    SavePrimitiveSubframes(out, option);
 }
 
 //______________________________________________________________________________
-void TGVerticalFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGVerticalFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save a vertical frame widget as a C++ statement(s) on output stream out.
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
-   out << endl << "   // vertical frame" << endl;
+   out << std::endl << "   // vertical frame" << std::endl;
    out << "   TGVerticalFrame *";
    out << GetName() << " = new TGVerticalFrame(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         out <<");" << endl;
+         out <<");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    // setting layout manager if it differs from the main frame type
    // coverity[returned_null]
@@ -3156,14 +3156,14 @@ void TGVerticalFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "   " << GetName() <<"->SetLayoutManager(";
       lm->SavePrimitive(out, option);
-      out << ");"<< endl;
+      out << ");"<< std::endl;
    }
 
    SavePrimitiveSubframes(out, option);
 }
 
 //______________________________________________________________________________
-void TGFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a frame widget as a C++ statement(s) on output stream out.
 
@@ -3175,19 +3175,19 @@ void TGFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         out <<");" << endl;
+         out <<");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 }
 
 //______________________________________________________________________________
-void TGGroupFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGGroupFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a group frame widget as a C++ statement(s) on output stream out.
 
@@ -3219,7 +3219,7 @@ void TGGroupFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
-   out << endl << "   // " << quote << GetTitle() << quote << " group frame" << endl;
+   out << std::endl << "   // " << quote << GetTitle() << quote << " group frame" << std::endl;
    out << "   TGGroupFrame *";
    out << GetName() <<" = new TGGroupFrame("<<fParent->GetName()
        << "," << quote << GetTitle() << quote;
@@ -3228,28 +3228,28 @@ void TGGroupFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       if (fFontStruct == GetDefaultFontStruct()) {
          if (fNormGC == GetDefaultGC()()) {
             if (GetOptions() & kVerticalFrame) {
-               out <<");" << endl;
+               out <<");" << std::endl;
             } else {
-               out << "," << GetOptionString() <<");" << endl;
+               out << "," << GetOptionString() <<");" << std::endl;
             }
          } else {
-            out << "," << GetOptionString() << "," << parGC.Data() <<");" << endl;
+            out << "," << GetOptionString() << "," << parGC.Data() <<");" << std::endl;
          }
       } else {
-         out << "," << GetOptionString() << "," << parGC.Data() << "," << parFont.Data() << ");" << endl;
+         out << "," << GetOptionString() << "," << parGC.Data() << "," << parFont.Data() << ");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << "," << parGC.Data() << "," << parFont.Data() << ",ucolor);"  << endl;
+      out << "," << GetOptionString() << "," << parGC.Data() << "," << parFont.Data() << ",ucolor);"  << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    if (GetTitlePos() != -1)
       out << "   " << GetName() <<"->SetTitlePos(";
    if (GetTitlePos() == 0)
-      out << "TGGroupFrame::kCenter);" << endl;
+      out << "TGGroupFrame::kCenter);" << std::endl;
    if (GetTitlePos() == 1)
-      out << "TGGroupFrame::kRight);" << endl;
+      out << "TGGroupFrame::kRight);" << std::endl;
 
    SavePrimitiveSubframes(out, option);
 
@@ -3258,10 +3258,10 @@ void TGGroupFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    // coverity[returned_null]
    // coverity[dereference]
    GetLayoutManager()->SavePrimitive(out, option);
-   out << ");"<< endl;
+   out << ");"<< std::endl;
 
    out << "   " << GetName() <<"->Resize(" << GetWidth() << ","
-       << GetHeight() << ");" << endl;
+       << GetHeight() << ");" << std::endl;
 }
 
 
@@ -3334,7 +3334,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    }
 
    char quote = '"';
-   ofstream out;
+   std::ofstream out;
 
    TString ff = filename && strlen(filename) ? filename : "Rootdlog.C";
 
@@ -3352,7 +3352,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
       ff += ".C";
    sname[i] = 0;
 
-   out.open(ff.Data(), ios::out);
+   out.open(ff.Data(), std::ios::out);
    if (!out.good()) {
       Error("SaveSource", "cannot open file: %s", ff.Data());
       delete [] sname;
@@ -3370,25 +3370,25 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    // write macro header, date/time stamp as string, and the used Root version
    TDatime t;
-   out <<"// Dialog macro generated from application: "<< gApplication->Argv(0) << endl;
-   out <<"// By ROOT version "<< gROOT->GetVersion() <<" on "<<t.AsSQLString()<< endl;
-   out << endl;
+   out <<"// Dialog macro generated from application: "<< gApplication->Argv(0) << std::endl;
+   out <<"// By ROOT version "<< gROOT->GetVersion() <<" on "<<t.AsSQLString()<< std::endl;
+   out << std::endl;
 
-   out << "#if !defined( __CINT__) || defined (__MAKECINT__)" << endl << endl;
+   out << "#if !defined( __CINT__) || defined (__MAKECINT__)" << std::endl << std::endl;
 
    TIter nexti(ilist);
    while((inc = (TObjString *)nexti())) {
-      out <<"#ifndef ROOT_"<< inc->GetString() << endl;
-      out <<"#include "<< quote << inc->GetString() <<".h"<< quote << endl;
-      out <<"#endif" << endl;
+      out <<"#ifndef ROOT_"<< inc->GetString() << std::endl;
+      out <<"#include "<< quote << inc->GetString() <<".h"<< quote << std::endl;
+      out <<"#endif" << std::endl;
       if (strstr(inc->GetString(),"TRootEmbeddedCanvas")) {
-         out <<"#ifndef ROOT_TCanvas"<< endl;
-         out <<"#include "<< quote <<"TCanvas.h"<< quote << endl;
-         out <<"#endif" << endl;
+         out <<"#ifndef ROOT_TCanvas"<< std::endl;
+         out <<"#include "<< quote <<"TCanvas.h"<< quote << std::endl;
+         out <<"#endif" << std::endl;
       }
    }
-   out << endl << "#include " << quote << "Riostream.h" << quote << endl;
-   out << endl << "#endif" << endl;
+   out << std::endl << "#include " << quote << "Riostream.h" << quote << std::endl;
+   out << std::endl << "#endif" << std::endl;
    // deletes created ListOfIncludes
    gROOT->GetListOfSpecials()->Remove(ilist);
    ilist->Delete();
@@ -3396,12 +3396,12 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    delete bc;
 
    // writes the macro entry point equal to the fname
-   out << endl;
-   out << "void " << sname << "()" << endl;
+   out << std::endl;
+   out << "void " << sname << "()" << std::endl;
    delete [] sname;
 
    //  Save GUI widgets as a C++ macro in a file
-   out <<"{"<< endl;
+   out <<"{"<< std::endl;
 
    gListOfHiddenFrames->Clear();
 
@@ -3416,27 +3416,27 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    if (strlen(fClassName) || strlen(fResourceName)) {
       out<<"   "<<GetName()<< "->SetClassHints("<<quote<<fClassName<<quote
                                             <<"," <<quote<<fResourceName<<quote
-                                            <<");"<<endl;
+                                            <<");"<<std::endl;
    }
 
    GetMWMHints(fMWMValue, fMWMFuncs, fMWMInput);
    if (fMWMValue || fMWMFuncs || fMWMInput) {
       out << "   " << GetName() << "->SetMWMHints(";
-      out << GetMWMvalueString() << "," << endl;
+      out << GetMWMvalueString() << "," << std::endl;
       out << "                        ";
-      out << GetMWMfuncString() << "," << endl;
+      out << GetMWMfuncString() << "," << std::endl;
       out << "                        ";
-      out << GetMWMinpString() << ");"<< endl;
+      out << GetMWMinpString() << ");"<< std::endl;
    }
 
    GetWMPosition(fWMX, fWMY);
    if ((fWMX != -1) || (fWMY != -1)) {
-      out <<"   "<<GetName()<<"->SetWMPosition("<<fWMX<<","<<fWMY<<");"<<endl;
+      out <<"   "<<GetName()<<"->SetWMPosition("<<fWMX<<","<<fWMY<<");"<<std::endl;
    }
 
    GetWMSize(fWMWidth, fWMHeight);
    if (fWMWidth != UInt_t(-1) || fWMHeight != UInt_t(-1)) {
-      out <<"   "<<GetName()<<"->SetWMSize("<<fWMWidth<<","<<fWMHeight<<");"<<endl;
+      out <<"   "<<GetName()<<"->SetWMSize("<<fWMWidth<<","<<fWMHeight<<");"<<std::endl;
    }
 
    GetWMSizeHints(fWMMinWidth,fWMMinHeight,fWMMaxWidth,fWMMaxHeight,fWMWidthInc,fWMHeightInc);
@@ -3446,22 +3446,22 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
       out <<"   "<<GetName()<<"->SetWMSizeHints("<<fWMMinWidth<<","<<fWMMinHeight
           <<","<<fWMMaxWidth<<","<<fWMMaxHeight <<","<<fWMWidthInc<<","<<fWMHeightInc
-          <<");"<<endl;
+          <<");"<<std::endl;
    }
 
    GetWMPosition(fWMX, fWMY);
    if ((fWMX != -1) || (fWMY != -1)) {
-      out <<"   "<<GetName()<<"->Move("<<fWMX<<","<<fWMY<<");"<<endl;
+      out <<"   "<<GetName()<<"->Move("<<fWMX<<","<<fWMY<<");"<<std::endl;
    }
 
-   out << "   " <<GetName()<< "->MapSubwindows();" << endl;
+   out << "   " <<GetName()<< "->MapSubwindows();" << std::endl;
 
    TIter nexth(gListOfHiddenFrames);
    TGFrame *fhidden;
    while ((fhidden = (TGFrame*)nexth())) {
-      out << "   " <<fhidden->GetName()<< "->UnmapWindow();" << endl;
+      out << "   " <<fhidden->GetName()<< "->UnmapWindow();" << std::endl;
    }
-   out << endl;
+   out << std::endl;
    gListOfHiddenFrames->Clear();
 
    Bool_t usexy = kFALSE;
@@ -3472,13 +3472,13 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
       usexy = kTRUE;
 
    if (!usexy)
-      out << "   " <<GetName()<< "->Resize("<< GetName()<< "->GetDefaultSize());" << endl;
+      out << "   " <<GetName()<< "->Resize("<< GetName()<< "->GetDefaultSize());" << std::endl;
    else
-      out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<endl;
+      out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<std::endl;
 
-   out << "   " <<GetName()<< "->MapWindow();" <<endl;
-   if (!usexy) out << "   " <<GetName()<< "->Resize();" << endl;
-   out << "}  " << endl;
+   out << "   " <<GetName()<< "->MapWindow();" <<std::endl;
+   if (!usexy) out << "   " <<GetName()<< "->Resize();" << std::endl;
+   out << "}  " << std::endl;
 
    // writing slots
    TList *sl = (TList *)gROOT->GetListOfSpecials()->FindObject("ListOfSlots");
@@ -3494,34 +3494,34 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
          lb = s.First('(');
          rb = s.First(')');
          eq = s.First('=');
-         out << endl;
+         out << std::endl;
 
          if (rb - lb > 1 && eq == -1) {
             p = TString::Format(" par%d", pnumber);
             s.Insert(rb, p);
             pnumber++;
-            out << "void " << s << endl;
-            out << "{" << endl;
+            out << "void " << s << std::endl;
+            out << "{" << std::endl;
             s = slobj->GetString();
             s[rb] = ' ';
-            out << "   cout << " << quote << "Slot " << s  << quote
+            out << "   std::cout << " << quote << "Slot " << s  << quote
                 << " <<" << p << " << " << quote << ")" << quote
-                << " << endl; " << endl;
+                << " << std::endl; " << std::endl;
             } else {
                if (eq != -1) {
                   s.Remove(eq, rb-eq);
-                  out << "void " << s << endl;
-                  out << "{" << endl;
-                  out << "   cout << " << quote << "Slot " << s
-                      << quote << " << endl; " << endl;
+                  out << "void " << s << std::endl;
+                  out << "{" << std::endl;
+                  out << "   std::cout << " << quote << "Slot " << s
+                      << quote << " << std::endl; " << std::endl;
                } else {
-                  out << "void " << slobj->GetString() << endl;
-                  out << "{" << endl;
-                  out << "   cout << " << quote << "Slot " << slobj->GetString()
-                      << quote << " << endl; " << endl;
+                  out << "void " << slobj->GetString() << std::endl;
+                  out << "{" << std::endl;
+                  out << "   std::cout << " << quote << "Slot " << slobj->GetString()
+                      << quote << " << std::endl; " << std::endl;
                }
             }
-         out << "}" << endl;
+         out << "}" << std::endl;
       }
       gROOT->GetListOfSpecials()->Remove(sl);
       sl->Delete();
@@ -3541,19 +3541,19 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGTransientFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGTransientFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a transient frame widget as a C++ statement(s) on output stream out.
 
    char quote = '"';
 
-   out << endl << "   // transient frame" << endl;
+   out << std::endl << "   // transient frame" << std::endl;
    out << "   TGTransientFrame *";
    out << GetName()<<" = new TGTransientFrame(gClient->GetRoot(),0"
-       << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() <<");" << endl;
+       << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() <<");" << std::endl;
 
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    // setting layout manager if it differs from transient frame type
    // coverity[returned_null]
@@ -3568,20 +3568,20 @@ void TGTransientFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "   " << GetName() <<"->SetLayoutManager(";
       lm->SavePrimitive(out, option);
-      out << ");"<< endl;
+      out << ");"<< std::endl;
    }
 
    SavePrimitiveSubframes(out, option);
 
    if (strlen(fWindowName)) {
       out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
-          << quote << ");" << endl;
+          << quote << ");" << std::endl;
    }
    if (strlen(fIconName)) {
-      out <<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<endl;
+      out <<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<std::endl;
    }
    if (strlen(fIconPixmap)) {
       out << "   " << GetName() << "->SetIconPixmap(" << quote << GetIconPixmap()
-          << quote << ");" << endl;
+          << quote << ");" << std::endl;
    }
 }

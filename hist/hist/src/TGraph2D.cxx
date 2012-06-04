@@ -402,7 +402,7 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
    TString fname = filename;
    gSystem->ExpandPathName(fname);
 
-   ifstream infile(fname.Data());
+   std::ifstream infile(fname.Data());
    if (!infile.good()) {
       MakeZombie();
       Error("TGraph2D", "Cannot open file: %s, TGraph2D is Zombie", filename);
@@ -1362,24 +1362,24 @@ Int_t TGraph2D::RemovePoint(Int_t ipoint)
 
 
 //______________________________________________________________________________
-void TGraph2D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Saves primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out << "   " << endl;
+   out << "   " << std::endl;
    if (gROOT->ClassSaved(TGraph2D::Class())) {
       out << "   ";
    } else {
       out << "   TGraph2D *";
    }
 
-   out << "graph2d = new TGraph2D(" << fNpoints << ");" << endl;
-   out << "   graph2d->SetName(" << quote << GetName() << quote << ");" << endl;
-   out << "   graph2d->SetTitle(" << quote << GetTitle() << quote << ");" << endl;
+   out << "graph2d = new TGraph2D(" << fNpoints << ");" << std::endl;
+   out << "   graph2d->SetName(" << quote << GetName() << quote << ");" << std::endl;
+   out << "   graph2d->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
 
    if (fDirectory == 0) {
-      out << "   " << GetName() << "->SetDirectory(0);" << endl;
+      out << "   " << GetName() << "->SetDirectory(0);" << std::endl;
    }
 
    SaveFillAttributes(out, "graph2d", 0, 1001);
@@ -1387,7 +1387,7 @@ void TGraph2D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    SaveMarkerAttributes(out, "graph2d", 1, 1, 1);
 
    for (Int_t i = 0; i < fNpoints; i++) {
-      out << "   graph2d->SetPoint(" << i << "," << fX[i] << "," << fY[i] << "," << fZ[i] << ");" << endl;
+      out << "   graph2d->SetPoint(" << i << "," << fX[i] << "," << fY[i] << "," << fZ[i] << ");" << std::endl;
    }
 
    // save list of functions
@@ -1395,13 +1395,13 @@ void TGraph2D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    TObject *obj;
    while ((obj = next())) {
       obj->SavePrimitive(out, "nodraw");
-      out << "   graph2d->GetListOfFunctions()->Add(" << obj->GetName() << ");" << endl;
+      out << "   graph2d->GetListOfFunctions()->Add(" << obj->GetName() << ");" << std::endl;
       if (obj->InheritsFrom("TPaveStats")) {
-         out << "   ptstats->SetParent(graph2d->GetListOfFunctions());" << endl;
+         out << "   ptstats->SetParent(graph2d->GetListOfFunctions());" << std::endl;
       }
    }
 
-   out << "   graph2d->Draw(" << quote << option << quote << ");" << endl;
+   out << "   graph2d->Draw(" << quote << option << quote << ");" << std::endl;
 }
 
 

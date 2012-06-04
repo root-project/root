@@ -726,7 +726,7 @@ TGLayoutManager *TGTab::GetLayoutManager() const
 }
 
 //______________________________________________________________________________
-void TGTab::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGTab::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a tab widget as a C++ statement(s) on output stream out.
 
@@ -754,7 +754,7 @@ void TGTab::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
-   out << endl << "   // tab widget" << endl;
+   out << std::endl << "   // tab widget" << std::endl;
 
    out << "   TGTab *";
    out << GetName() << " = new TGTab(" << fParent->GetName()
@@ -764,33 +764,33 @@ void TGTab::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       if (GetOptions() == kChildFrame) {
          if (fFontStruct == GetDefaultFontStruct()) {
             if (fNormGC == GetDefaultGC()()) {
-               out <<");" << endl;
+               out <<");" << std::endl;
             } else {
-               out << "," << parGC.Data() <<");" << endl;
+               out << "," << parGC.Data() <<");" << std::endl;
             }
          } else {
-            out << "," << parGC.Data() << "," << parFont.Data() <<");" << endl;
+            out << "," << parGC.Data() << "," << parFont.Data() <<");" << std::endl;
          }
       } else {
-         out << "," << parGC.Data() << "," << parFont.Data() << "," << GetOptionString() <<");" << endl;
+         out << "," << parGC.Data() << "," << parFont.Data() << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << parGC.Data() << "," << parFont.Data() << "," << GetOptionString()  << ",ucolor);" << endl;
+      out << "," << parGC.Data() << "," << parFont.Data() << "," << GetOptionString()  << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    TGCompositeFrame *cf;
    TGLayoutManager * lm;
    for (Int_t i=0; i<GetNumberOfTabs(); i++) {
       cf = GetTabContainer(i);
       if (!cf || !GetTabTab(i)) continue;
-      out << endl << "   // container of " << quote
-          << GetTabTab(i)->GetString() << quote << endl;
-      out << "   TGCompositeFrame *" << cf->GetName() << ";" << endl;
+      out << std::endl << "   // container of " << quote
+          << GetTabTab(i)->GetString() << quote << std::endl;
+      out << "   TGCompositeFrame *" << cf->GetName() << ";" << std::endl;
       out << "   " << cf->GetName() << " = " << GetName()
                    << "->AddTab(" << quote << GetTabTab(i)->GetString()
-                   << quote << ");" << endl;
+                   << quote << ");" << std::endl;
       lm = cf->GetLayoutManager();
       if (lm) {
          if ((cf->GetOptions() & kHorizontalFrame) &&
@@ -802,34 +802,34 @@ void TGTab::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
          } else {
             out << "   " << cf->GetName() <<"->SetLayoutManager(";
             lm->SavePrimitive(out, option);
-            out << ");" << endl;
+            out << ");" << std::endl;
          }
          if (!IsEnabled(i)) {
-            out << "   " << GetName() << "->SetEnabled(" << i << ", kFALSE);" << endl;
+            out << "   " << GetName() << "->SetEnabled(" << i << ", kFALSE);" << std::endl;
          }
       }
       cf->SavePrimitiveSubframes(out, option);
 
       if (GetTabTab(i)->IsCloseShown()) {
          out << "   TGTabElement *tab" << i << " = "
-             << GetName() << "->GetTabTab(" << i << ");" << endl;
-         out << "   tab" << i << "->ShowClose(kTRUE);" << endl;
+             << GetName() << "->GetTabTab(" << i << ");" << std::endl;
+         out << "   tab" << i << "->ShowClose(kTRUE);" << std::endl;
       }
       if (GetTabTab(i)->GetBackground() != GetTabTab(i)->GetDefaultFrameBackground()) {
          GetTabTab(i)->SaveUserColor(out, option);
          out << "   TGTabElement *tab" << i << " = "
-             << GetName() << "->GetTabTab(" << i << ");" << endl;
-         out << "   tab" << i << "->ChangeBackground(ucolor);" << endl;
+             << GetName() << "->GetTabTab(" << i << ");" << std::endl;
+         out << "   tab" << i << "->ChangeBackground(ucolor);" << std::endl;
       }
 
    }
-   out << endl << "   " << GetName() << "->SetTab(" << GetCurrent() << ");" << endl;
-   out << endl << "   " << GetName() << "->Resize(" << GetName()
-       << "->GetDefaultSize());" << endl;
+   out << std::endl << "   " << GetName() << "->SetTab(" << GetCurrent() << ");" << std::endl;
+   out << std::endl << "   " << GetName() << "->Resize(" << GetName()
+       << "->GetDefaultSize());" << std::endl;
 }
 
 // __________________________________________________________________________
-void TGTabLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGTabLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save tab layout manager as a C++ statement(s) on out stream.
 

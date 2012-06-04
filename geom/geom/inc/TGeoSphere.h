@@ -86,7 +86,7 @@ public:
    Bool_t                IsPointInside(Double_t *point, Bool_t checkR=kTRUE, Bool_t checkTh=kTRUE, Bool_t checkPh=kTRUE) const;
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
                                        Double_t theta2, Double_t phi1, Double_t phi2);
    virtual void          SetNumberOfDivisions(Int_t p);

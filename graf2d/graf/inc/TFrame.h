@@ -39,7 +39,7 @@ public:
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void  Paint(Option_t *option="");
    virtual void  Pop();
-   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void  UseCurrentStyle();  // *MENU*
 
    ClassDef(TFrame,1)  //Pad graphics frame

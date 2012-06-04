@@ -1134,35 +1134,35 @@ void TMVA::MethodBase::WriteStateToStream( std::ostream& tf ) const
    TString prefix = "";
    UserGroup_t * userInfo = gSystem->GetUserInfo();
 
-   tf << prefix << "#GEN -*-*-*-*-*-*-*-*-*-*-*- general info -*-*-*-*-*-*-*-*-*-*-*-" << endl << prefix << endl;
-   tf << prefix << "Method         : " << GetMethodTypeName() << "::" << GetMethodName() << endl;
+   tf << prefix << "#GEN -*-*-*-*-*-*-*-*-*-*-*- general info -*-*-*-*-*-*-*-*-*-*-*-" << std::endl << prefix << std::endl;
+   tf << prefix << "Method         : " << GetMethodTypeName() << "::" << GetMethodName() << std::endl;
    tf.setf(std::ios::left);
    tf << prefix << "TMVA Release   : " << std::setw(10) << GetTrainingTMVAVersionString() << "    ["
-      << GetTrainingTMVAVersionCode() << "]" << endl;
+      << GetTrainingTMVAVersionCode() << "]" << std::endl;
    tf << prefix << "ROOT Release   : " << std::setw(10) << GetTrainingROOTVersionString() << "    ["
-      << GetTrainingROOTVersionCode() << "]" << endl;
-   tf << prefix << "Creator        : " << userInfo->fUser << endl;
-   tf << prefix << "Date           : "; TDatime *d = new TDatime; tf << d->AsString() << endl; delete d;
-   tf << prefix << "Host           : " << gSystem->GetBuildNode() << endl;
-   tf << prefix << "Dir            : " << gSystem->WorkingDirectory() << endl;
-   tf << prefix << "Training events: " << Data()->GetNTrainingEvents() << endl;
+      << GetTrainingROOTVersionCode() << "]" << std::endl;
+   tf << prefix << "Creator        : " << userInfo->fUser << std::endl;
+   tf << prefix << "Date           : "; TDatime *d = new TDatime; tf << d->AsString() << std::endl; delete d;
+   tf << prefix << "Host           : " << gSystem->GetBuildNode() << std::endl;
+   tf << prefix << "Dir            : " << gSystem->WorkingDirectory() << std::endl;
+   tf << prefix << "Training events: " << Data()->GetNTrainingEvents() << std::endl;
 
    TString analysisType(((const_cast<TMVA::MethodBase*>(this)->GetAnalysisType()==Types::kRegression) ? "Regression" : "Classification"));
 
-   tf << prefix << "Analysis type  : " << "[" << ((GetAnalysisType()==Types::kRegression) ? "Regression" : "Classification") << "]" << endl;
-   tf << prefix << endl;
+   tf << prefix << "Analysis type  : " << "[" << ((GetAnalysisType()==Types::kRegression) ? "Regression" : "Classification") << "]" << std::endl;
+   tf << prefix << std::endl;
 
    delete userInfo;
 
    // First write all options
-   tf << prefix << endl << prefix << "#OPT -*-*-*-*-*-*-*-*-*-*-*-*- options -*-*-*-*-*-*-*-*-*-*-*-*-" << endl << prefix << endl;
+   tf << prefix << std::endl << prefix << "#OPT -*-*-*-*-*-*-*-*-*-*-*-*- options -*-*-*-*-*-*-*-*-*-*-*-*-" << std::endl << prefix << std::endl;
    WriteOptionsToStream( tf, prefix );
-   tf << prefix << endl;
+   tf << prefix << std::endl;
 
    // Second write variable info
-   tf << prefix << endl << prefix << "#VAR -*-*-*-*-*-*-*-*-*-*-*-* variables *-*-*-*-*-*-*-*-*-*-*-*-" << endl << prefix << endl;
+   tf << prefix << std::endl << prefix << "#VAR -*-*-*-*-*-*-*-*-*-*-*-* variables *-*-*-*-*-*-*-*-*-*-*-*-" << std::endl << prefix << std::endl;
    WriteVarsToStream( tf, prefix );
-   tf << prefix << endl;
+   tf << prefix << std::endl;
 }
 
 //_______________________________________________________________________
@@ -1301,13 +1301,13 @@ void TMVA::MethodBase::ReadStateFromFile()
       gTools().xmlengine().FreeDoc(doc);
    }
    else {
-      filebuf fb;
-      fb.open(tfname.Data(),ios::in);
+      std::filebuf fb;
+      fb.open(tfname.Data(),std::ios::in);
       if (!fb.is_open()) { // file not found --> Error
          Log() << kFATAL << "<ReadStateFromFile> "
                << "Unable to open input weight file: " << tfname << Endl;
       }
-      istream fin(&fb);
+      std::istream fin(&fb);
       ReadStateFromStream(fin);
       fb.close();
    }
@@ -1565,10 +1565,10 @@ void TMVA::MethodBase::WriteVarsToStream( std::ostream& o, const TString& prefix
 {
    // write the list of variables (name, min, max) for a given data
    // transformation method to the stream
-   o << prefix << "NVar " << DataInfo().GetNVariables() << endl;
+   o << prefix << "NVar " << DataInfo().GetNVariables() << std::endl;
    std::vector<VariableInfo>::const_iterator varIt = DataInfo().GetVariableInfos().begin();
    for (; varIt!=DataInfo().GetVariableInfos().end(); varIt++) { o << prefix; varIt->WriteToStream(o); }
-   o << prefix << "NSpec " << DataInfo().GetNSpectators() << endl;
+   o << prefix << "NSpec " << DataInfo().GetNSpectators() << std::endl;
    varIt = DataInfo().GetSpectatorInfos().begin();
    for (; varIt!=DataInfo().GetSpectatorInfos().end(); varIt++) { o << prefix; varIt->WriteToStream(o); }
 }
@@ -2765,217 +2765,217 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    Log() << kINFO << "Creating standalone response class: "
          << gTools().Color("lightblue") << classFileName << gTools().Color("reset") << Endl;
 
-   ofstream fout( classFileName );
+   std::ofstream fout( classFileName );
    if (!fout.good()) { // file could not be opened --> Error
       Log() << kFATAL << "<MakeClass> Unable to open file: " << classFileName << Endl;
    }
 
    // now create the class
    // preamble
-   fout << "// Class: " << className << endl;
-   fout << "// Automatically generated by MethodBase::MakeClass" << endl << "//" << endl;
+   fout << "// Class: " << className << std::endl;
+   fout << "// Automatically generated by MethodBase::MakeClass" << std::endl << "//" << std::endl;
 
    // print general information and configuration state
-   fout << endl;
-   fout << "/* configuration options =====================================================" << endl << endl;
+   fout << std::endl;
+   fout << "/* configuration options =====================================================" << std::endl << std::endl;
    WriteStateToStream( fout );
-   fout << endl;
-   fout << "============================================================================ */" << endl;
+   fout << std::endl;
+   fout << "============================================================================ */" << std::endl;
 
    // generate the class
-   fout << "" << endl;
-   fout << "#include <vector>" << endl;
-   fout << "#include <cmath>" << endl;
-   fout << "#include <string>" << endl;
-   fout << "#include <iostream>" << endl;
-   fout << "" << endl;
+   fout << "" << std::endl;
+   fout << "#include <vector>" << std::endl;
+   fout << "#include <cmath>" << std::endl;
+   fout << "#include <string>" << std::endl;
+   fout << "#include <iostream>" << std::endl;
+   fout << "" << std::endl;
    // now if the classifier needs to write some addicional classes for its response implementation
    // this code goes here: (at least the header declarations need to come before the main class
    this->MakeClassSpecificHeader( fout, className );
 
-   fout << "#ifndef IClassifierReader__def" << endl;
-   fout << "#define IClassifierReader__def" << endl;
-   fout << endl;
-   fout << "class IClassifierReader {" << endl;
-   fout << endl;
-   fout << " public:" << endl;
-   fout << endl;
-   fout << "   // constructor" << endl;
-   fout << "   IClassifierReader() : fStatusIsClean( true ) {}" << endl;
-   fout << "   virtual ~IClassifierReader() {}" << endl;
-   fout << endl;
-   fout << "   // return classifier response" << endl;
-   fout << "   virtual double GetMvaValue( const std::vector<double>& inputValues ) const = 0;" << endl;
-   fout << endl;
-   fout << "   // returns classifier status" << endl;
-   fout << "   bool IsStatusClean() const { return fStatusIsClean; }" << endl;
-   fout << endl;
-   fout << " protected:" << endl;
-   fout << endl;
-   fout << "   bool fStatusIsClean;" << endl;
-   fout << "};" << endl;
-   fout << endl;
-   fout << "#endif" << endl;
-   fout << endl;
-   fout << "class " << className << " : public IClassifierReader {" << endl;
-   fout << endl;
-   fout << " public:" << endl;
-   fout << endl;
-   fout << "   // constructor" << endl;
-   fout << "   " << className << "( std::vector<std::string>& theInputVars ) " << endl;
-   fout << "      : IClassifierReader()," << endl;
-   fout << "        fClassName( \"" << className << "\" )," << endl;
-   fout << "        fNvars( " << GetNvar() << " )," << endl;
-   fout << "        fIsNormalised( " << (IsNormalised() ? "true" : "false") << " )" << endl;
-   fout << "   {      " << endl;
-   fout << "      // the training input variables" << endl;
+   fout << "#ifndef IClassifierReader__def" << std::endl;
+   fout << "#define IClassifierReader__def" << std::endl;
+   fout << std::endl;
+   fout << "class IClassifierReader {" << std::endl;
+   fout << std::endl;
+   fout << " public:" << std::endl;
+   fout << std::endl;
+   fout << "   // constructor" << std::endl;
+   fout << "   IClassifierReader() : fStatusIsClean( true ) {}" << std::endl;
+   fout << "   virtual ~IClassifierReader() {}" << std::endl;
+   fout << std::endl;
+   fout << "   // return classifier response" << std::endl;
+   fout << "   virtual double GetMvaValue( const std::vector<double>& inputValues ) const = 0;" << std::endl;
+   fout << std::endl;
+   fout << "   // returns classifier status" << std::endl;
+   fout << "   bool IsStatusClean() const { return fStatusIsClean; }" << std::endl;
+   fout << std::endl;
+   fout << " protected:" << std::endl;
+   fout << std::endl;
+   fout << "   bool fStatusIsClean;" << std::endl;
+   fout << "};" << std::endl;
+   fout << std::endl;
+   fout << "#endif" << std::endl;
+   fout << std::endl;
+   fout << "class " << className << " : public IClassifierReader {" << std::endl;
+   fout << std::endl;
+   fout << " public:" << std::endl;
+   fout << std::endl;
+   fout << "   // constructor" << std::endl;
+   fout << "   " << className << "( std::vector<std::string>& theInputVars ) " << std::endl;
+   fout << "      : IClassifierReader()," << std::endl;
+   fout << "        fClassName( \"" << className << "\" )," << std::endl;
+   fout << "        fNvars( " << GetNvar() << " )," << std::endl;
+   fout << "        fIsNormalised( " << (IsNormalised() ? "true" : "false") << " )" << std::endl;
+   fout << "   {      " << std::endl;
+   fout << "      // the training input variables" << std::endl;
    fout << "      const char* inputVars[] = { ";
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       fout << "\"" << GetOriginalVarName(ivar) << "\"";
       if (ivar<GetNvar()-1) fout << ", ";
    }
-   fout << " };" << endl;
-   fout << endl;
-   fout << "      // sanity checks" << endl;
-   fout << "      if (theInputVars.size() <= 0) {" << endl;
-   fout << "         std::cout << \"Problem in class \\\"\" << fClassName << \"\\\": empty input vector\" << std::endl;" << endl;
-   fout << "         fStatusIsClean = false;" << endl;
-   fout << "      }" << endl;
-   fout << endl;
-   fout << "      if (theInputVars.size() != fNvars) {" << endl;
-   fout << "         std::cout << \"Problem in class \\\"\" << fClassName << \"\\\": mismatch in number of input values: \"" << endl;
-   fout << "                   << theInputVars.size() << \" != \" << fNvars << std::endl;" << endl;
-   fout << "         fStatusIsClean = false;" << endl;
-   fout << "      }" << endl;
-   fout << endl;
-   fout << "      // validate input variables" << endl;
-   fout << "      for (size_t ivar = 0; ivar < theInputVars.size(); ivar++) {" << endl;
-   fout << "         if (theInputVars[ivar] != inputVars[ivar]) {" << endl;
-   fout << "            std::cout << \"Problem in class \\\"\" << fClassName << \"\\\": mismatch in input variable names\" << std::endl" << endl;
-   fout << "                      << \" for variable [\" << ivar << \"]: \" << theInputVars[ivar].c_str() << \" != \" << inputVars[ivar] << std::endl;" << endl;
-   fout << "            fStatusIsClean = false;" << endl;
-   fout << "         }" << endl;
-   fout << "      }" << endl;
-   fout << endl;
-   fout << "      // initialize min and max vectors (for normalisation)" << endl;
+   fout << " };" << std::endl;
+   fout << std::endl;
+   fout << "      // sanity checks" << std::endl;
+   fout << "      if (theInputVars.size() <= 0) {" << std::endl;
+   fout << "         std::cout << \"Problem in class \\\"\" << fClassName << \"\\\": empty input vector\" << std::endl;" << std::endl;
+   fout << "         fStatusIsClean = false;" << std::endl;
+   fout << "      }" << std::endl;
+   fout << std::endl;
+   fout << "      if (theInputVars.size() != fNvars) {" << std::endl;
+   fout << "         std::cout << \"Problem in class \\\"\" << fClassName << \"\\\": mismatch in number of input values: \"" << std::endl;
+   fout << "                   << theInputVars.size() << \" != \" << fNvars << std::endl;" << std::endl;
+   fout << "         fStatusIsClean = false;" << std::endl;
+   fout << "      }" << std::endl;
+   fout << std::endl;
+   fout << "      // validate input variables" << std::endl;
+   fout << "      for (size_t ivar = 0; ivar < theInputVars.size(); ivar++) {" << std::endl;
+   fout << "         if (theInputVars[ivar] != inputVars[ivar]) {" << std::endl;
+   fout << "            std::cout << \"Problem in class \\\"\" << fClassName << \"\\\": mismatch in input variable names\" << std::endl" << std::endl;
+   fout << "                      << \" for variable [\" << ivar << \"]: \" << theInputVars[ivar].c_str() << \" != \" << inputVars[ivar] << std::endl;" << std::endl;
+   fout << "            fStatusIsClean = false;" << std::endl;
+   fout << "         }" << std::endl;
+   fout << "      }" << std::endl;
+   fout << std::endl;
+   fout << "      // initialize min and max vectors (for normalisation)" << std::endl;
    for (UInt_t ivar = 0; ivar < GetNvar(); ivar++) {
-      fout << "      fVmin[" << ivar << "] = " << std::setprecision(15) << GetXmin( ivar ) << ";" << endl;
-      fout << "      fVmax[" << ivar << "] = " << std::setprecision(15) << GetXmax( ivar ) << ";" << endl;
+      fout << "      fVmin[" << ivar << "] = " << std::setprecision(15) << GetXmin( ivar ) << ";" << std::endl;
+      fout << "      fVmax[" << ivar << "] = " << std::setprecision(15) << GetXmax( ivar ) << ";" << std::endl;
    }
-   fout << endl;
-   fout << "      // initialize input variable types" << endl;
+   fout << std::endl;
+   fout << "      // initialize input variable types" << std::endl;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-      fout << "      fType[" << ivar << "] = \'" << DataInfo().GetVariableInfo(ivar).GetVarType() << "\';" << endl;
+      fout << "      fType[" << ivar << "] = \'" << DataInfo().GetVariableInfo(ivar).GetVarType() << "\';" << std::endl;
    }
-   fout << endl;
-   fout << "      // initialize constants" << endl;
-   fout << "      Initialize();" << endl;
-   fout << endl;
+   fout << std::endl;
+   fout << "      // initialize constants" << std::endl;
+   fout << "      Initialize();" << std::endl;
+   fout << std::endl;
    if (GetTransformationHandler().GetTransformationList().GetSize() != 0) {
-      fout << "      // initialize transformation" << endl;
-      fout << "      InitTransform();" << endl;
+      fout << "      // initialize transformation" << std::endl;
+      fout << "      InitTransform();" << std::endl;
    }
-   fout << "   }" << endl;
-   fout << endl;
-   fout << "   // destructor" << endl;
-   fout << "   virtual ~" << className << "() {" << endl;
-   fout << "      Clear(); // method-specific" << endl;
-   fout << "   }" << endl;
-   fout << endl;
-   fout << "   // the classifier response" << endl;
-   fout << "   // \"inputValues\" is a vector of input values in the same order as the " << endl;
-   fout << "   // variables given to the constructor" << endl;
-   fout << "   double GetMvaValue( const std::vector<double>& inputValues ) const;" << endl;
-   fout << endl;
-   fout << " private:" << endl;
-   fout << endl;
-   fout << "   // method-specific destructor" << endl;
-   fout << "   void Clear();" << endl;
-   fout << endl;
+   fout << "   }" << std::endl;
+   fout << std::endl;
+   fout << "   // destructor" << std::endl;
+   fout << "   virtual ~" << className << "() {" << std::endl;
+   fout << "      Clear(); // method-specific" << std::endl;
+   fout << "   }" << std::endl;
+   fout << std::endl;
+   fout << "   // the classifier response" << std::endl;
+   fout << "   // \"inputValues\" is a vector of input values in the same order as the " << std::endl;
+   fout << "   // variables given to the constructor" << std::endl;
+   fout << "   double GetMvaValue( const std::vector<double>& inputValues ) const;" << std::endl;
+   fout << std::endl;
+   fout << " private:" << std::endl;
+   fout << std::endl;
+   fout << "   // method-specific destructor" << std::endl;
+   fout << "   void Clear();" << std::endl;
+   fout << std::endl;
    if (GetTransformationHandler().GetTransformationList().GetSize()!=0) {
-      fout << "   // input variable transformation" << endl;
+      fout << "   // input variable transformation" << std::endl;
       GetTransformationHandler().MakeFunction(fout, className,1);
-      fout << "   void InitTransform();" << endl;
-      fout << "   void Transform( std::vector<double> & iv, int sigOrBgd ) const;" << endl;
-      fout << endl;
+      fout << "   void InitTransform();" << std::endl;
+      fout << "   void Transform( std::vector<double> & iv, int sigOrBgd ) const;" << std::endl;
+      fout << std::endl;
    }
-   fout << "   // common member variables" << endl;
-   fout << "   const char* fClassName;" << endl;
-   fout << endl;
-   fout << "   const size_t fNvars;" << endl;
-   fout << "   size_t GetNvar()           const { return fNvars; }" << endl;
-   fout << "   char   GetType( int ivar ) const { return fType[ivar]; }" << endl;
-   fout << endl;
-   fout << "   // normalisation of input variables" << endl;
-   fout << "   const bool fIsNormalised;" << endl;
-   fout << "   bool IsNormalised() const { return fIsNormalised; }" << endl;
-   fout << "   double fVmin[" << GetNvar() << "];" << endl;
-   fout << "   double fVmax[" << GetNvar() << "];" << endl;
-   fout << "   double NormVariable( double x, double xmin, double xmax ) const {" << endl;
-   fout << "      // normalise to output range: [-1, 1]" << endl;
-   fout << "      return 2*(x - xmin)/(xmax - xmin) - 1.0;" << endl;
-   fout << "   }" << endl;
-   fout << endl;
-   fout << "   // type of input variable: 'F' or 'I'" << endl;
-   fout << "   char   fType[" << GetNvar() << "];" << endl;
-   fout << endl;
-   fout << "   // initialize internal variables" << endl;
-   fout << "   void Initialize();" << endl;
-   fout << "   double GetMvaValue__( const std::vector<double>& inputValues ) const;" << endl;
-   fout << "" << endl;
-   fout << "   // private members (method specific)" << endl;
+   fout << "   // common member variables" << std::endl;
+   fout << "   const char* fClassName;" << std::endl;
+   fout << std::endl;
+   fout << "   const size_t fNvars;" << std::endl;
+   fout << "   size_t GetNvar()           const { return fNvars; }" << std::endl;
+   fout << "   char   GetType( int ivar ) const { return fType[ivar]; }" << std::endl;
+   fout << std::endl;
+   fout << "   // normalisation of input variables" << std::endl;
+   fout << "   const bool fIsNormalised;" << std::endl;
+   fout << "   bool IsNormalised() const { return fIsNormalised; }" << std::endl;
+   fout << "   double fVmin[" << GetNvar() << "];" << std::endl;
+   fout << "   double fVmax[" << GetNvar() << "];" << std::endl;
+   fout << "   double NormVariable( double x, double xmin, double xmax ) const {" << std::endl;
+   fout << "      // normalise to output range: [-1, 1]" << std::endl;
+   fout << "      return 2*(x - xmin)/(xmax - xmin) - 1.0;" << std::endl;
+   fout << "   }" << std::endl;
+   fout << std::endl;
+   fout << "   // type of input variable: 'F' or 'I'" << std::endl;
+   fout << "   char   fType[" << GetNvar() << "];" << std::endl;
+   fout << std::endl;
+   fout << "   // initialize internal variables" << std::endl;
+   fout << "   void Initialize();" << std::endl;
+   fout << "   double GetMvaValue__( const std::vector<double>& inputValues ) const;" << std::endl;
+   fout << "" << std::endl;
+   fout << "   // private members (method specific)" << std::endl;
 
    // call the classifier specific output (the classifier must close the class !)
    MakeClassSpecific( fout, className );
 
-   fout << "   inline double " << className << "::GetMvaValue( const std::vector<double>& inputValues ) const" << endl;
-   fout << "   {" << endl;
-   fout << "      // classifier response value" << endl;
-   fout << "      double retval = 0;" << endl;
-   fout << endl;
-   fout << "      // classifier response, sanity check first" << endl;
-   fout << "      if (!IsStatusClean()) {" << endl;
-   fout << "         std::cout << \"Problem in class \\\"\" << fClassName << \"\\\": cannot return classifier response\"" << endl;
-   fout << "                   << \" because status is dirty\" << std::endl;" << endl;
-   fout << "         retval = 0;" << endl;
-   fout << "      }" << endl;
-   fout << "      else {" << endl;
-   fout << "         if (IsNormalised()) {" << endl;
-   fout << "            // normalise variables" << endl;
-   fout << "            std::vector<double> iV;" << endl;
-   fout << "            int ivar = 0;" << endl;
-   fout << "            for (std::vector<double>::const_iterator varIt = inputValues.begin();" << endl;
-   fout << "                 varIt != inputValues.end(); varIt++, ivar++) {" << endl;
-   fout << "               iV.push_back(NormVariable( *varIt, fVmin[ivar], fVmax[ivar] ));" << endl;
-   fout << "            }" << endl;
+   fout << "   inline double " << className << "::GetMvaValue( const std::vector<double>& inputValues ) const" << std::endl;
+   fout << "   {" << std::endl;
+   fout << "      // classifier response value" << std::endl;
+   fout << "      double retval = 0;" << std::endl;
+   fout << std::endl;
+   fout << "      // classifier response, sanity check first" << std::endl;
+   fout << "      if (!IsStatusClean()) {" << std::endl;
+   fout << "         std::cout << \"Problem in class \\\"\" << fClassName << \"\\\": cannot return classifier response\"" << std::endl;
+   fout << "                   << \" because status is dirty\" << std::endl;" << std::endl;
+   fout << "         retval = 0;" << std::endl;
+   fout << "      }" << std::endl;
+   fout << "      else {" << std::endl;
+   fout << "         if (IsNormalised()) {" << std::endl;
+   fout << "            // normalise variables" << std::endl;
+   fout << "            std::vector<double> iV;" << std::endl;
+   fout << "            int ivar = 0;" << std::endl;
+   fout << "            for (std::vector<double>::const_iterator varIt = inputValues.begin();" << std::endl;
+   fout << "                 varIt != inputValues.end(); varIt++, ivar++) {" << std::endl;
+   fout << "               iV.push_back(NormVariable( *varIt, fVmin[ivar], fVmax[ivar] ));" << std::endl;
+   fout << "            }" << std::endl;
    if (GetTransformationHandler().GetTransformationList().GetSize()!=0 && 
        GetMethodType() != Types::kLikelihood &&
        GetMethodType() != Types::kHMatrix) {
-      fout << "            Transform( iV, -1 );" << endl;
+      fout << "            Transform( iV, -1 );" << std::endl;
    }
-   fout << "            retval = GetMvaValue__( iV );" << endl;
-   fout << "         }" << endl;
-   fout << "         else {" << endl;
+   fout << "            retval = GetMvaValue__( iV );" << std::endl;
+   fout << "         }" << std::endl;
+   fout << "         else {" << std::endl;
    if (GetTransformationHandler().GetTransformationList().GetSize()!=0 && 
        GetMethodType() != Types::kLikelihood &&
        GetMethodType() != Types::kHMatrix) {
-      fout << "            std::vector<double> iV;" << endl;
-      fout << "            int ivar = 0;" << endl;
-      fout << "            for (std::vector<double>::const_iterator varIt = inputValues.begin();" << endl;
-      fout << "                 varIt != inputValues.end(); varIt++, ivar++) {" << endl;
-      fout << "               iV.push_back(*varIt);" << endl;
-      fout << "            }" << endl;
-      fout << "            Transform( iV, -1 );" << endl;
-      fout << "            retval = GetMvaValue__( iV );" << endl;
+      fout << "            std::vector<double> iV;" << std::endl;
+      fout << "            int ivar = 0;" << std::endl;
+      fout << "            for (std::vector<double>::const_iterator varIt = inputValues.begin();" << std::endl;
+      fout << "                 varIt != inputValues.end(); varIt++, ivar++) {" << std::endl;
+      fout << "               iV.push_back(*varIt);" << std::endl;
+      fout << "            }" << std::endl;
+      fout << "            Transform( iV, -1 );" << std::endl;
+      fout << "            retval = GetMvaValue__( iV );" << std::endl;
    }
    else {
-      fout << "            retval = GetMvaValue__( inputValues );" << endl;
+      fout << "            retval = GetMvaValue__( inputValues );" << std::endl;
    }
-   fout << "         }" << endl;
-   fout << "      }" << endl;
-   fout << endl;
-   fout << "      return retval;" << endl;
-   fout << "   }" << endl;
+   fout << "         }" << std::endl;
+   fout << "      }" << std::endl;
+   fout << std::endl;
+   fout << "      return retval;" << std::endl;
+   fout << "   }" << std::endl;
 
    // create output for transformation - if any
    if (GetTransformationHandler().GetTransformationList().GetSize()!=0)
@@ -2999,7 +2999,7 @@ void TMVA::MethodBase::PrintHelpMessage() const
       if (!o->good()) { // file could not be opened --> Error
          Log() << kFATAL << "<PrintHelpMessage> Unable to append to output file: " << GetReferenceFile() << Endl;
       }
-      std::cout.rdbuf( o->rdbuf() ); // redirect 'cout' to file
+      std::cout.rdbuf( o->rdbuf() ); // redirect 'std::cout' to file
    }
 
    //         "|--------------------------------------------------------------|"

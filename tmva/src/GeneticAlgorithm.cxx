@@ -68,7 +68,7 @@ TMVA::GeneticAlgorithm::GeneticAlgorithm( IFitterTarget& target, Int_t populatio
    // Parameters: 
    //     int populationSize : defines the number of "Individuals" which are created and tested 
    //                          within one Generation (Iteration of the Evolution)
-   //     vector<TMVA::Interval*> ranges : Interval holds the information of an interval, where the GetMin 
+   //     std::vector<TMVA::Interval*> ranges : Interval holds the information of an interval, where the GetMin 
    //                          gets the low and GetMax gets the high constraint of the variable
    //                          the size of "ranges" is the number of coefficients which are optimised
    // Purpose: 

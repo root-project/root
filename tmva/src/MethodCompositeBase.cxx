@@ -81,8 +81,8 @@ TMVA::MethodCompositeBase::MethodCompositeBase( Types::EMVA methodType,
 TMVA::IMethod* TMVA::MethodCompositeBase::GetMethod( const TString &methodTitle ) const
 {
    // returns pointer to MVA that corresponds to given method title
-   vector<IMethod*>::const_iterator itrMethod    = fMethods.begin();
-   vector<IMethod*>::const_iterator itrMethodEnd = fMethods.end();
+   std::vector<IMethod*>::const_iterator itrMethod    = fMethods.begin();
+   std::vector<IMethod*>::const_iterator itrMethodEnd = fMethods.end();
 
    for (; itrMethod != itrMethodEnd; itrMethod++) {
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
@@ -95,7 +95,7 @@ TMVA::IMethod* TMVA::MethodCompositeBase::GetMethod( const TString &methodTitle 
 TMVA::IMethod* TMVA::MethodCompositeBase::GetMethod( const Int_t index ) const
 {
    // returns pointer to MVA that corresponds to given method index
-   vector<IMethod*>::const_iterator itrMethod = fMethods.begin()+index;
+   std::vector<IMethod*>::const_iterator itrMethod = fMethods.begin()+index;
    if (itrMethod<fMethods.end()) return *itrMethod;
    else                          return 0;
 }
@@ -130,7 +130,7 @@ void TMVA::MethodCompositeBase::AddWeightsXMLTo( void* parent ) const
 TMVA::MethodCompositeBase::~MethodCompositeBase( void )
 {
    // delete methods
-   vector<IMethod*>::iterator itrMethod = fMethods.begin();
+   std::vector<IMethod*>::iterator itrMethod = fMethods.begin();
    for (; itrMethod != fMethods.end(); itrMethod++) {
       Log() << kVERBOSE << "Delete method: " << (*itrMethod)->GetName() << Endl;
       delete (*itrMethod);
@@ -206,7 +206,7 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodCompositeBase::ReadWeightsFromStream( istream& istr )
+void  TMVA::MethodCompositeBase::ReadWeightsFromStream( std::istream& istr )
 {
    // text streamer
    TString var, dummy;

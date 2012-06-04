@@ -218,19 +218,19 @@ void TAttFill::ResetAttFill(Option_t *)
 
 
 //______________________________________________________________________________
-void TAttFill::SaveFillAttributes(ostream &out, const char *name, Int_t coldef, Int_t stydef)
+void TAttFill::SaveFillAttributes(std::ostream &out, const char *name, Int_t coldef, Int_t stydef)
 {
     // Save fill attributes as C++ statement(s) on output stream out
 
    if (fFillColor != coldef) {
       if (fFillColor > 228) {
          TColor::SaveColor(out, fFillColor);
-         out<<"   "<<name<<"->SetFillColor(ci);" << endl;
+         out<<"   "<<name<<"->SetFillColor(ci);" << std::endl;
       } else
-         out<<"   "<<name<<"->SetFillColor("<<fFillColor<<");"<<endl;
+         out<<"   "<<name<<"->SetFillColor("<<fFillColor<<");"<<std::endl;
    }
    if (fFillStyle != stydef) {
-      out<<"   "<<name<<"->SetFillStyle("<<fFillStyle<<");"<<endl;
+      out<<"   "<<name<<"->SetFillStyle("<<fFillStyle<<");"<<std::endl;
    }
 }
 

@@ -2056,36 +2056,36 @@ int TGHtml::SetInsert(const char *insIx)
 }
 
 //______________________________________________________________________________
-void TGHtml::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGHtml::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a html widget as a C++ statement(s) on output stream out.
 
    out << "   TGHtml *";
    out << GetName() << " = new TGHtml(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight()
-       << ");"<< endl;
+       << ");"<< std::endl;
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    if (fCanvas->GetBackground() != TGFrame::GetWhitePixel()) {
-      out << "   " << GetName() << "->ChangeBackground(" << fCanvas->GetBackground() << ");" << endl;
+      out << "   " << GetName() << "->ChangeBackground(" << fCanvas->GetBackground() << ");" << std::endl;
    }
 
    TString fn;
    TGText txt(GetText());
    fn.Form("Html%s.htm", GetName()+5);
    txt.Save(fn.Data());
-   out << "   " << "FILE *f = fopen(\"" << fn.Data() << "\", \"r\");" << endl;
-   out << "   " << "if (f) {" << endl;
-   out << "      " << GetName() << "->Clear();" << endl;
-   out << "      " << GetName() << "->Layout();" << endl;
-   out << "      " << GetName() << "->SetBaseUri(\"\");" << endl;
-   out << "      " << "char *buf = (char *)calloc(4096, sizeof(char));" << endl;
-   out << "      " << "while (fgets(buf, 4096, f)) {" << endl;
-   out << "         " << GetName() << "->ParseText(buf);" << endl;
-   out << "      " << "}" << endl;
-   out << "      " << "free(buf);" << endl;
-   out << "      " << "fclose(f);" << endl;
-   out << "   " << "}" << endl;
-   out << "   " << GetName() << "->Layout();" << endl;
+   out << "   " << "FILE *f = fopen(\"" << fn.Data() << "\", \"r\");" << std::endl;
+   out << "   " << "if (f) {" << std::endl;
+   out << "      " << GetName() << "->Clear();" << std::endl;
+   out << "      " << GetName() << "->Layout();" << std::endl;
+   out << "      " << GetName() << "->SetBaseUri(\"\");" << std::endl;
+   out << "      " << "char *buf = (char *)calloc(4096, sizeof(char));" << std::endl;
+   out << "      " << "while (fgets(buf, 4096, f)) {" << std::endl;
+   out << "         " << GetName() << "->ParseText(buf);" << std::endl;
+   out << "      " << "}" << std::endl;
+   out << "      " << "free(buf);" << std::endl;
+   out << "      " << "fclose(f);" << std::endl;
+   out << "   " << "}" << std::endl;
+   out << "   " << GetName() << "->Layout();" << std::endl;
 }

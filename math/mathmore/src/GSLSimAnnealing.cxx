@@ -81,7 +81,7 @@ double GSLSimAnFunc::Distance(const GSLSimAnFunc & f) const {
 } 
 
 void GSLSimAnFunc::Print() { 
-   // print the position  x in standard ostream 
+   // print the position  x in standard std::ostream 
    // GSL prints also niter-  ntrials - temperature and then the energy and energy min value (from 1.10)
    std::cout << "\tx = ( "; 
    unsigned n = NDim(); 

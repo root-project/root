@@ -40,6 +40,8 @@
 #include "RooMsgService.h"
 #include "RooMath.h"
 
+using namespace std;
+
 ClassImp(RooStepFunction)
   ;
 

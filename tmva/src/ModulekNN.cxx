@@ -646,7 +646,7 @@ void TMVA::kNN::ModulekNN::Print() const
 }
 
 //-------------------------------------------------------------------------------------------
-void TMVA::kNN::ModulekNN::Print(ostream &os) const
+void TMVA::kNN::ModulekNN::Print(std::ostream &os) const
 {
    // print
    os << "----------------------------------------------------------------------"<< std::endl;

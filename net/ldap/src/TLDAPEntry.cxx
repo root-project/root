@@ -75,7 +75,7 @@ void TLDAPEntry::Print(Option_t *) const
 {
    // Print entry in LDIF format.
 
-   cout << "dn: "<< fDn << endl;
+   std::cout << "dn: "<< fDn << std::endl;
    TLDAPAttribute *attr = GetAttribute("objectClass");
    if (attr != 0)
       attr->Print();
@@ -85,7 +85,7 @@ void TLDAPEntry::Print(Option_t *) const
       if (TString(attr->GetName()).CompareTo("objectClass", TString::kIgnoreCase) != 0)
          attr->Print();
    }
-   cout << endl;
+   std::cout << std::endl;
 }
 
 //______________________________________________________________________________

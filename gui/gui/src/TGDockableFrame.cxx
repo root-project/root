@@ -450,31 +450,31 @@ void TGDockableFrame::SetWindowName(const char *name)
 }
 
 //______________________________________________________________________________
-void TGDockableFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGDockableFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a dockable frame widget as a C++ statement(s) on output stream out.
 
    char quote = '"';
 
-   out << endl << "   // dockable frame" << endl;
+   out << std::endl << "   // dockable frame" << std::endl;
    out << "   TGDockableFrame *";
    out << GetName()<<" = new TGDockableFrame(" << fParent->GetName();
 
    if (GetOptions() == kHorizontalFrame) {
       if (fWidgetId == -1) {
-         out << ");" << endl;
+         out << ");" << std::endl;
       } else {
-         out << "," << fWidgetId << ");" << endl;
+         out << "," << fWidgetId << ");" << std::endl;
       }
    } else {
-      out << "," << fWidgetId << "," << GetOptionString() << ");" << endl;
+      out << "," << fWidgetId << "," << GetOptionString() << ");" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    if (GetContainer()->GetList()->First()) {
       out << "   TGCompositeFrame *" << GetContainer()->GetName() << " = "
-          << GetName() << "->GetContainer();" << endl;
+          << GetName() << "->GetContainer();" << std::endl;
 
       TGFrameElement *el;
       TIter next(GetContainer()->GetList());
@@ -483,31 +483,31 @@ void TGDockableFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
          el->fFrame->SavePrimitive(out, option);
          out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
          el->fLayout->SavePrimitive(out, option);
-         out << ");"<< endl;
+         out << ");"<< std::endl;
       }
    }
-   out << endl << "   // next lines belong to the dockable frame widget" << endl;
+   out << std::endl << "   // next lines belong to the dockable frame widget" << std::endl;
    if (EnableUndock())
-      out << "   " << GetName() << "->EnableUndock(kTRUE);" << endl;
+      out << "   " << GetName() << "->EnableUndock(kTRUE);" << std::endl;
    else
-      out << "   " << GetName() << "->EnableUndock(kFALSE);" << endl;
+      out << "   " << GetName() << "->EnableUndock(kFALSE);" << std::endl;
 
    if (EnableHide())
-      out << "   " << GetName() << "->EnableHide(kTRUE);" << endl;
+      out << "   " << GetName() << "->EnableHide(kTRUE);" << std::endl;
    else
-      out << "   " << GetName() << "->EnableHide(kFALSE);" << endl;
+      out << "   " << GetName() << "->EnableHide(kFALSE);" << std::endl;
 
    if (fDockName != "")
       out << "   " << GetName() << "->SetWindowName(" << quote << fDockName
-          << quote << ");" << endl;
+          << quote << ");" << std::endl;
 
    if (IsUndocked())
-      out << "   " << GetName() << "->UndockContainer();" << endl;
+      out << "   " << GetName() << "->UndockContainer();" << std::endl;
    else
-      out << "   " << GetName() << "->DockContainer();" << endl;
+      out << "   " << GetName() << "->DockContainer();" << std::endl;
 
    if (IsHidden())
-      out << "   " << GetName() << "->HideContainer();" << endl;
+      out << "   " << GetName() << "->HideContainer();" << std::endl;
 
-   out << endl;
+   out << std::endl;
 }

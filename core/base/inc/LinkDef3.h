@@ -146,7 +146,7 @@
 #pragma link C++ struct Rectangle_t;
 #pragma link C++ struct timespec;
 
-#pragma link C++ function operator<<(ostream&, const TTimeStamp&);
+#pragma link C++ function operator<<(std::ostream&, const TTimeStamp&);
 #pragma link C++ function operator<<(TBuffer&, const TTimeStamp&);
 #pragma link C++ function operator>>(TBuffer&, TTimeStamp&);
 #pragma link C++ function operator==(const TTimeStamp&, const TTimeStamp&);
@@ -226,11 +226,11 @@
 #pragma link C++ class std::pair<const char*,double>+;
 #pragma link C++ class std::pair<const char*,void*>+;
 #pragma link C++ class std::pair<const char*,char*>+;
-#pragma link C++ class std::pair<const string,int>+;
-#pragma link C++ class std::pair<const string,long>+;
-#pragma link C++ class std::pair<const string,float>+;
-#pragma link C++ class std::pair<const string,double>+;
-#pragma link C++ class std::pair<const string,void*>+;
+#pragma link C++ class std::pair<const std::string,int>+;
+#pragma link C++ class std::pair<const std::string,long>+;
+#pragma link C++ class std::pair<const std::string,float>+;
+#pragma link C++ class std::pair<const std::string,double>+;
+#pragma link C++ class std::pair<const std::string,void*>+;
 #pragma link C++ class std::pair<const int,int>+;
 #pragma link C++ class std::pair<const int,long>+;
 #pragma link C++ class std::pair<const int,float>+;

@@ -44,7 +44,7 @@ public:
   ParamHistFunc(const ParamHistFunc& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new ParamHistFunc(*this, newname); }
 
-  //  void printMetaArgs(ostream& os) const ;
+  //  void printMetaArgs(std::ostream& os) const ;
 
   const RooArgList& paramList() const { return _paramSet ; }
 
@@ -92,7 +92,7 @@ protected:
     RooArgList _funcIntList ;
     RooArgList _lowIntList ;
     RooArgList _highIntList ;
-    // will want vector<RooRealVar*> for low and high also
+    // will want std::vector<RooRealVar*> for low and high also
   } ;
   mutable RooObjCacheManager _normIntMgr ; // The integration cache manager
 

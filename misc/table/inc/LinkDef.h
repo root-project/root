@@ -51,5 +51,5 @@
 #pragma link C++ class TTablePoints+;
 #pragma link C++ class TTable3Points+;
 
-#pragma link C++ function operator<<(ostream &, const TVolumePosition &);
+#pragma link C++ function operator<<(std::ostream &, const TVolumePosition &);
 #endif

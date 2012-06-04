@@ -212,7 +212,7 @@ Int_t TNtuple::Fill(Float_t x0,Float_t x1,Float_t x2,Float_t x3,Float_t x4
 }
 
 //_______________________________________________________________________
-Long64_t TNtuple::ReadStream(istream &inputStream, const char * /*branchDescriptor*/, char delimiter)
+Long64_t TNtuple::ReadStream(std::istream &inputStream, const char * /*branchDescriptor*/, char delimiter)
 {
    // Read from filename as many columns as variables in the ntuple
    // the function returns the number of rows found in the file

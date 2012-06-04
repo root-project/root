@@ -107,10 +107,10 @@ namespace TMVA {
          inline CCTreeNode* GetMother( ) { return dynamic_cast<CCTreeNode*>(GetParent()); }
 
          // printout of the node (can be read in with ReadDataRecord)
-         virtual void Print( ostream& os ) const;
+         virtual void Print( std::ostream& os ) const;
 
          // recursive printout of the node and its daughters 
-         virtual void PrintRec ( ostream& os ) const;
+         virtual void PrintRec ( std::ostream& os ) const;
 
          virtual void AddAttributesToNode(void* node) const;
          virtual void AddContentToNode(std::stringstream& s) const;

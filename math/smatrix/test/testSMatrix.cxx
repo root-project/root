@@ -49,8 +49,8 @@ int test1() {
 
   SVector<float,3> x(4,5,6);
   SVector<float,2> y(2.0,3.0);
-  cout << "x: " << x << endl;
-  cout << "y: " << y << endl;
+  std::cout << "x: " << x << std::endl;
+  std::cout << "y: " << y << std::endl;
 
 //   float yy1=2.; float yy2 = 3;
 //   SVector<float,2> y2(yy1,yy2);
@@ -71,12 +71,12 @@ int test1() {
   //Windows need template parameters
   A.Place_at<2,2>(B , 2, 1);
 #endif
-  cout << "A: " << endl << A << endl;
+  std::cout << "A: " << std::endl << A << std::endl;
 
   SVector<float,3> z(x+2);
   z.Place_at(y, 1);
   z.Place_at(y+3, 1);
-  cout << "z: " << endl << z << endl;
+  std::cout << "z: " << std::endl << z << std::endl;
 
   
 #ifdef TEST_STATIC_CHECK
@@ -92,8 +92,8 @@ int test1() {
   //SVector<float, 2> sp(p,2);
   SMatrix<float, 2,2> sm(m,4);
 
-  //cout << "sp: " << endl << sp << endl;
-  cout << "sm: " << endl << sm << endl;
+  //std::cout << "sp: " << std::endl << sp << std::endl;
+  std::cout << "sm: " << std::endl << sm << std::endl;
 
   //std::vector<float> vp(sp.begin(), sp.end() );
   std::vector<float> vm(sm.begin(), sm.end() );
@@ -102,30 +102,30 @@ int test1() {
   SVector<float, 4> sp2(sm.begin(),sm.end());
   SMatrix<float, 2,2> sm2(vm.begin(),vm.end());
 
-  if ( sp1 != sp2) { cout << "Test STL interface for SVector failed" << endl; return -1; }
-  if ( sm2 != sm) { cout << "Test STL interface for SMatrix failed" << endl; return -1; }
+  if ( sp1 != sp2) { std::cout << "Test STL interface for SVector failed" << std::endl; return -1; }
+  if ( sm2 != sm) { std::cout << "Test STL interface for SMatrix failed" << std::endl; return -1; }
 
 
   // test construction from identity
   SMatrix<float,3,3> i3 = SMatrixIdentity(); 
 
-  cout << "3x3 Identity\n" << i3 << endl;
+  std::cout << "3x3 Identity\n" << i3 << std::endl;
 
   SMatrix<float,2,3> i23 = SMatrixIdentity(); 
-  cout << "2x3 Identity\n" << i23 << endl;
+  std::cout << "2x3 Identity\n" << i23 << std::endl;
 
   SMatrix<float,3,3,MatRepSym<float,3> > is3 = SMatrixIdentity(); 
-  cout << "Sym matrix Identity\n" << is3 << endl;
+  std::cout << "Sym matrix Identity\n" << is3 << std::endl;
 
 
   // test operator = from identity
   A = SMatrixIdentity();
-  cout << "4x3 Identity\n" << A << endl;
+  std::cout << "4x3 Identity\n" << A << std::endl;
 
   std::vector<float> v(6);
   for (int i = 0; i <6; ++i) v[i] = double(i+1);
   SMatrix<float,3,3,MatRepSym<float,3> > s3(v.begin(), v.end() );
-  cout << s3 << endl;
+  std::cout << s3 << std::endl;
 
     
   return 0;
@@ -138,13 +138,13 @@ int test2() {
   A(0,0) = A(1,0) = 1;
   A(0,1) = 3;
   A(1,1) = A(2,2) = 2;
-  cout << "A: " << endl << A << endl;
+  std::cout << "A: " << std::endl << A << std::endl;
 
   SVector<double,3> x = A.Row(0);
-  cout << "x: " << x << endl;
+  std::cout << "x: " << x << std::endl;
 
   SVector<double,3> y = A.Col(1);
-  cout << "y: " << y << endl;
+  std::cout << "y: " << y << std::endl;
 
   return 0;
 #endif
@@ -157,20 +157,20 @@ int test3() {
   A(1,1) = A(2,2) = 2;
 
   SMatrix<double,3> B = A; // save A in B
-  cout << "A: " << endl << A << endl;
+  std::cout << "A: " << std::endl << A << std::endl;
 
   double det = 0.;
   A.Det(det);
-  cout << "Determinant: " << det << endl;
+  std::cout << "Determinant: " << det << std::endl;
   // WARNING: A has changed!!
-  cout << "A again: " << endl << A << endl;
+  std::cout << "A again: " << std::endl << A << std::endl;
   A = B; 
 
   A.Invert();
-  cout << "A^-1: " << endl << A << endl;
+  std::cout << "A^-1: " << std::endl << A << std::endl;
 
   // check if this is really the inverse:
-  cout << "A^-1 * B: " << endl << A * B << endl;
+  std::cout << "A^-1 * B: " << std::endl << A * B << std::endl;
 
   return 0;
 #endif
@@ -181,13 +181,13 @@ int test4() {
   SMatrix<double,3> A;
   A(0,0) = A(0,1) = A(1,0) = 1;
   A(1,1) = A(2,2) = 2;
-  cout << " A: " << endl << A << endl;
+  std::cout << " A: " << std::endl << A << std::endl;
 
   SVector<double,3> x(1,2,3);
-  cout << "x: " << x << endl;
+  std::cout << "x: " << x << std::endl;
 
   // we add 1 to each component of x and A
-  cout << " (x+1)^T * (A+1) * (x+1): " << Similarity(x+1,A+1) << endl;
+  std::cout << " (x+1)^T * (A+1) * (x+1): " << Similarity(x+1,A+1) << std::endl;
 
   return 0;
 #endif
@@ -198,17 +198,17 @@ int test5() {
   SMatrix<float,4,3> A;
   A(0,0) = A(0,1) = A(1,1) = A(2,2) = 4.;
   A(2,3) = 1.;
-  cout << "A: " << endl << A << endl;
+  std::cout << "A: " << std::endl << A << std::endl;
   SVector<float,4> x(1,2,3,4);
-  cout << " x: " << x << endl;
+  std::cout << " x: " << x << std::endl;
   SVector<float,3> a(1,2,3);
-  cout << " a: " << a << endl;
+  std::cout << " a: " << a << std::endl;
   SVector<float,4> y = x + A * a;
   //    SVector<float,4> y = A * a;
-  cout << " y: " << y << endl;
+  std::cout << " y: " << y << std::endl;
 
   SVector<float,3> b = (x+1) * (A+1);
-  cout << " b: " << b << endl;
+  std::cout << " b: " << b << std::endl;
 
   return 0;
 #endif
@@ -218,14 +218,14 @@ int test6() {
 #ifdef XXX
   SMatrix<float,4,2> A;
   A(0,0) = A(0,1) = A(1,1) = A(2,0) = A(3,1) = 4.;
-  cout << "A: " << endl << A << endl;
+  std::cout << "A: " << std::endl << A << std::endl;
   
   SMatrix<float,2,3> S;
   S(0,0) = S(0,1) = S(1,1) = S(0,2) = 1.;
-  cout << " S: " << endl << S << endl;
+  std::cout << " S: " << std::endl << S << std::endl;
   
   SMatrix<float,4,3> C = A * S;
-  cout << " C: " << endl << C << endl;
+  std::cout << " C: " << std::endl << C << std::endl;
   
   return 0;
 #endif
@@ -247,28 +247,28 @@ int test7() {
   z.Place_in_col(zv,0,1);
   z.Place_in_col(zv,0,2);
 
-  cout << "x\n" << x << "y\n" << y << "z\n" << z << endl;
+  std::cout << "x\n" << x << "y\n" << y << "z\n" << z << std::endl;
 
   // element wise multiplication
-  cout << "x * (- y) : " << endl << Times(x, -y) << endl;
+  std::cout << "x * (- y) : " << std::endl << Times(x, -y) << std::endl;
 
   x += z - y;
-  cout << "x += z - y: " << endl << x << endl;
+  std::cout << "x += z - y: " << std::endl << x << std::endl;
 
   // element wise square root
-  cout << "sqrt(z): " << endl << sqrt(z) << endl;
+  std::cout << "sqrt(z): " << std::endl << sqrt(z) << std::endl;
 
   // element wise multiplication with constant
-  cout << "2 * y: " << endl << 2 * y << endl;
+  std::cout << "2 * y: " << std::endl << 2 * y << std::endl;
 
   // a more complex expression (failure on Win32)
 #ifndef _WIN32
-  //cout << "fabs(-z + 3*x): " << endl << fabs(-z + 3*x) << endl;
-  cout << "fabs(3*x -z): " << endl << fabs(3*x -z) << endl;
+  //std::cout << "fabs(-z + 3*x): " << std::endl << fabs(-z + 3*x) << std::endl;
+  std::cout << "fabs(3*x -z): " << std::endl << fabs(3*x -z) << std::endl;
 #else 
   // doing directly gives internal compiler error on windows
   SMatrix<float,2,3>  ztmp = 3*x - z; 
-  cout << " fabs(-z+3*x) " << endl << fabs(ztmp) << endl;
+  std::cout << " fabs(-z+3*x) " << std::endl << fabs(ztmp) << std::endl;
 #endif
 
   return 0;
@@ -283,41 +283,41 @@ int test8() {
   A.Place_in_row(av1,0,0);
   A.Place_in_row(av2,1,0);
   
-  cout << "A: " << endl << A << endl;
+  std::cout << "A: " << std::endl << A << std::endl;
 
   SVector<float,3>    x(1,2,3);
   SVector<float,3>    y(4,5,6);
 
-  cout << "dot(x,y): " << Dot(x,y) << endl;
+  std::cout << "dot(x,y): " << Dot(x,y) << std::endl;
 
-  cout << "mag(x): " << Mag(x) << endl;
+  std::cout << "mag(x): " << Mag(x) << std::endl;
 
-  cout << "cross(x,y): " << Cross(x,y) << endl;
+  std::cout << "cross(x,y): " << Cross(x,y) << std::endl;
 
-  cout << "unit(x): " << Unit(x) << endl;
+  std::cout << "unit(x): " << Unit(x) << std::endl;
 
   SVector<float,3>    z(4,16,64);
-  cout << "x + y: " << x+y << endl;
+  std::cout << "x + y: " << x+y << std::endl;
 
-  cout << "x + y(0) " << (x+y)(0) << endl;
+  std::cout << "x + y(0) " << (x+y)(0) << std::endl;
 
-  cout << "x * -y: " << x * -y << endl;
+  std::cout << "x * -y: " << x * -y << std::endl;
   x += z - y;
-  cout << "x += z - y: " << x << endl;
+  std::cout << "x += z - y: " << x << std::endl;
 
   // element wise square root
-  cout << "sqrt(z): " << sqrt(z) << endl;
+  std::cout << "sqrt(z): " << sqrt(z) << std::endl;
 
   // element wise multiplication with constant
-  cout << "2 * y: " << 2 * y << endl;
+  std::cout << "2 * y: " << 2 * y << std::endl;
 
   // a more complex expression
-  cout << "fabs(-z + 3*x): " << fabs(-z + 3*x) << endl;
+  std::cout << "fabs(-z + 3*x): " << fabs(-z + 3*x) << std::endl;
 
   SVector<float,4> a;
   SVector<float,2> b(1,2);
   a.Place_at(b,2);
-  cout << "a: " << a << endl;
+  std::cout << "a: " << a << std::endl;
 #endif
 
   SVector<float,3> x2 = Square(x); 
@@ -336,18 +336,18 @@ int test9() {
 
   double det = 0.;
   A.Det2(det);
-  cout << "Determinant: " << det << endl;
+  std::cout << "Determinant: " << det << std::endl;
 
   int ifail; 
   SMatrix<double,3> Ainv = A.Inverse(ifail);
   if (ifail) { 
-    cout << "inversion failed\n";
+    std::cout << "inversion failed\n";
     return -1;
   } 
-  cout << "A^-1: " << endl << Ainv << endl;
+  std::cout << "A^-1: " << std::endl << Ainv << std::endl;
 
   // check if this is really the inverse:
-  cout << "A^-1 * A: " << endl << Ainv * A << endl;
+  std::cout << "A^-1 * A: " << std::endl << Ainv * A << std::endl;
 
   return 0;
 }
@@ -358,7 +358,7 @@ int test10() {
   double d[9] = { 1,2,3,4,5,6,7,8,9};
   SMatrix<double,3> A( d,d+9);
 
-  cout << "A: " << A << endl;
+  std::cout << "A: " << A << std::endl;
 
   SVector<double,2> v23 = A.SubRow<SVector<double,2> >( 0,1);    
   SVector<double,2> v69 = A.SubCol<SVector<double,2> >( 2,1);    
@@ -850,14 +850,14 @@ int test15() {
   iret |= compare( A1(0,0),u[0] );
   iret |= compare( A1(1,2),u[6] );
   iret |= compare( A1(2,3),u[11] );
-  //cout << A1 << endl;
+  //std::cout << A1 << std::endl;
 
   SMatrix<double,3,4> A2(w,6,true,true);
   iret |= compare( A2(0,0),w[0] );
   iret |= compare( A2(1,0),w[1] );
   iret |= compare( A2(2,0),w[3] );
   iret |= compare( A2(2,2),w[5] );
-  //cout << A2 << endl;
+  //std::cout << A2 << std::endl;
 
   // upper diagonal (needs 9 elements)
   SMatrix<double,3,4> A3(u,9,true,false);
@@ -866,10 +866,10 @@ int test15() {
   iret |= compare( A3(0,2),u[2] );
   iret |= compare( A3(1,2),u[5] );
   iret |= compare( A3(2,3),u[8] );
-  //cout << A3 << endl;
+  //std::cout << A3 << std::endl;
 
 
-  //cout << "test sym matrix " << endl;
+  //std::cout << "test sym matrix " << std::endl;
   SMatrix<double,3,3,MatRepSym<double,3> > S1(w,6,true); 
   iret |= compare( S1(0,0),w[0] );
   iret |= compare( S1(1,0),w[1] );

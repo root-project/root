@@ -1385,7 +1385,7 @@ const char *TColor::PixelAsHexString(ULong_t pixel)
 
 
 //______________________________________________________________________________
-void TColor::SaveColor(ostream &out, Int_t ci)
+void TColor::SaveColor(std::ostream &out, Int_t ci)
 {
    /* Begin_html
    Save a color with index > 228 as a C++ statement(s) on output stream out.
@@ -1406,13 +1406,13 @@ void TColor::SaveColor(ostream &out, Int_t ci)
    cname.Form("#%02x%02x%02x", ri, gi, bi);
 
    if (gROOT->ClassSaved(TColor::Class())) {
-      out << endl;
+      out << std::endl;
    } else {
-      out << endl;
-      out << "   Int_t ci;   // for color index setting" << endl;
+      out << std::endl;
+      out << "   Int_t ci;   // for color index setting" << std::endl;
    }
 
-   out<<"   ci = TColor::GetColor("<<quote<<cname.Data()<<quote<<");"<<endl;
+   out<<"   ci = TColor::GetColor("<<quote<<cname.Data()<<quote<<");"<<std::endl;
 }
 
 

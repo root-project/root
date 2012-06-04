@@ -83,7 +83,7 @@ public:
    Double_t       *GetEYlowd()  const {return fEYlowd;}
    Double_t       *GetEYhighd() const {return fEYhighd;}
    virtual void    Print(Option_t *chopt="") const;
-   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void    SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void    SetPointError(Double_t exl, Double_t exh,
                                  Double_t eyl, Double_t eyh,
                                  Double_t exld=0, Double_t exhd=0,  

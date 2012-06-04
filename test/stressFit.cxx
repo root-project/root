@@ -78,7 +78,7 @@ void StatusPrint(Int_t id,const TString &title,Bool_t status)
   TString header = TString("Test ")+number+" : "+title;
   const Int_t nch = header.Length();
   for (Int_t i = nch; i < kMAX; i++) header += '.';
-  cout << header << (status ? "OK" : "FAILED") << endl;
+  std::cout << header << (status ? "OK" : "FAILED") << std::endl;
 }
 
 //______________________________________________________________________________
@@ -603,16 +603,16 @@ Int_t stressFit(const char *theFitter, Int_t N)
 {
   TVirtualFitter::SetDefaultFitter(theFitter);
   
-  cout << "******************************************************************" <<endl;
-  cout << "*  Minimization - S T R E S S suite                              *" <<endl;
-  cout << "******************************************************************" <<endl;
-  cout << "******************************************************************" <<endl;
+  std::cout << "******************************************************************" <<std::endl;
+  std::cout << "*  Minimization - S T R E S S suite                              *" <<std::endl;
+  std::cout << "******************************************************************" <<std::endl;
+  std::cout << "******************************************************************" <<std::endl;
 
    TStopwatch timer;
    timer.Start();
 
-  cout << "*  Starting  S T R E S S  with fitter : "<<TVirtualFitter::GetDefaultFitter() <<endl;
-  cout << "******************************************************************" <<endl;
+  std::cout << "*  Starting  S T R E S S  with fitter : "<<TVirtualFitter::GetDefaultFitter() <<std::endl;
+  std::cout << "******************************************************************" <<std::endl;
 
   gBenchmark->Start("stressFit");
 

@@ -70,8 +70,8 @@ public:
    virtual void     PaintPrimitives(Int_t mode);
    virtual void     Print(Option_t *option="") const;
    virtual void     ReadFile(const char *filename, Option_t *option="", Int_t nlines=50, Int_t fromline=0); // *MENU*
-   virtual void     SaveLines(ostream &out, const char *name);
-   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void     SaveLines(std::ostream &out, const char *name);
+   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void     SetAllWith(const char *text, Option_t *option, Double_t value); // *MENU*
    virtual void     SetLabel(const char *label) {fLabel = label;} // *MENU*
    virtual void     SetMargin(Float_t margin=0.05) {fMargin=margin;} // *MENU*

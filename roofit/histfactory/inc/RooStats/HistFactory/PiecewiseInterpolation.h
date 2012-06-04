@@ -37,7 +37,7 @@ public:
 
   //  virtual Double_t defaultErrorLevel() const ;
 
-  //  void printMetaArgs(ostream& os) const ;
+  //  void printMetaArgs(std::ostream& os) const ;
 
   const RooArgList& lowList() const { return _lowSet ; }
   const RooArgList& highList() const { return _highSet ; }
@@ -74,7 +74,7 @@ protected:
     RooArgList _funcIntList ;
     RooArgList _lowIntList ;
     RooArgList _highIntList ;
-    // will want vector<RooRealVar*> for low and high also
+    // will want std::vector<RooRealVar*> for low and high also
   } ;
   mutable RooObjCacheManager _normIntMgr ; // The integration cache manager
 

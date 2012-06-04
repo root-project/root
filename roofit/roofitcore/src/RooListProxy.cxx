@@ -35,6 +35,8 @@
 #include "RooArgList.h"
 #include "RooAbsArg.h"
 
+using namespace std;
+
 ClassImp(RooListProxy)
 ;
 

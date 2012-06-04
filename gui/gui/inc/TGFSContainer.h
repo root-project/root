@@ -199,7 +199,7 @@ public:
                                 Int_t file_type, Bool_t is_link, const char *ext,
                                 Bool_t small);
 
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGFileContainer,0)  // Container containing file system objects
 };

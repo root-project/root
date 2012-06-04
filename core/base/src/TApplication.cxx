@@ -927,7 +927,7 @@ Long_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
       return 0;
    }
 
-   ::ifstream macro(exnam, ios::in);
+   ::std::ifstream macro(exnam, std::ios::in);
    if (!macro.good()) {
       ::Error("TApplication::ExecuteFile", "%s no such file", exnam);
       delete [] exnam;
@@ -1089,7 +1089,7 @@ void TApplication::StopIdleing()
 }
 
 //______________________________________________________________________________
-Int_t TApplication::TabCompletionHook(char* /*buf*/, int* /*pLoc*/, ostream& /*out*/)
+Int_t TApplication::TabCompletionHook(char* /*buf*/, int* /*pLoc*/, std::ostream& /*out*/)
 {
    // What to do when tab is pressed. Re-implemented by TRint.
    // See TTabCom::Hook() for meaning of return values.

@@ -134,7 +134,7 @@ protected:
    virtual void     Copy(TObject &hnew) const;
    virtual Int_t    BufferFill(Double_t x, Double_t w);
    virtual Bool_t   FindNewAxisLimits(const TAxis* axis, const Double_t point, Double_t& newMin, Double_t &newMax);
-   virtual void     SavePrimitiveHelp(ostream &out, const char *hname, Option_t *option = "");
+   virtual void     SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *option = "");
    static Bool_t    RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis);
    static Bool_t    SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2);
 
@@ -325,7 +325,7 @@ public:
    virtual void     RecursiveRemove(TObject *obj);
    virtual void     Reset(Option_t *option="");
    virtual void     ResetStats();
-   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void     Scale(Double_t c1=1, Option_t *option="");
    virtual void     SetAxisColor(Color_t color=1, Option_t *axis="X");
    virtual void     SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis="X");

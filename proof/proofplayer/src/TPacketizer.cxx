@@ -182,9 +182,9 @@ public:
 
    void Print(Option_t *) const
    {
-      cout << "OBJ: " << IsA()->GetName() << "\t" << fNodeName
+      std::cout << "OBJ: " << IsA()->GetName() << "\t" << fNodeName
            << "\tMySlaveCount " << fMySlaveCnt
-           << "\tSlaveCount " << fSlaveCnt << endl;
+           << "\tSlaveCount " << fSlaveCnt << std::endl;
    }
 
    void Reset()
@@ -627,7 +627,7 @@ TPacketizer::TFileNode *TPacketizer::NextUnAllocNode()
 
    fUnAllocated->Sort();
    PDB(kPacketizer,2) {
-      cout << "TPacketizer::NextUnAllocNode()" << endl;
+      std::cout << "TPacketizer::NextUnAllocNode()" << std::endl;
       fUnAllocated->Print();
    }
 
@@ -672,7 +672,7 @@ TPacketizer::TFileNode *TPacketizer::NextActiveNode()
 
    fActive->Sort();
    PDB(kPacketizer,2) {
-      cout << "TPacketizer::NextActiveNode()" << endl;
+      std::cout << "TPacketizer::NextActiveNode()" << std::endl;
       fActive->Print();
    }
 

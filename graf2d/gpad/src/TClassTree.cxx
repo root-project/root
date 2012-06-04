@@ -815,8 +815,8 @@ void TClassTree::ScanClasses(Int_t iclass)
    char *cname = new char[ncn+1];
    snprintf(cname,ncn,"%s::",fCnames[iclass]->Data());
        // open source file
-   ifstream sourceFile;
-   sourceFile.open( sourceName, ios::in );
+   std::ifstream sourceFile;
+   sourceFile.open( sourceName, std::ios::in );
    Int_t nlines = 0;
    if( sourceFile.good() ) {
       const Int_t kMAXLEN=1500;

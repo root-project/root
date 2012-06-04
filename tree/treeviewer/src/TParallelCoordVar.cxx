@@ -844,7 +844,7 @@ void TParallelCoordVar::Print(Option_t* /*option*/) const
 
 
 //______________________________________________________________________________
-void TParallelCoordVar::SavePrimitive(ostream & out, Option_t* options)
+void TParallelCoordVar::SavePrimitive(std::ostream & out, Option_t* options)
 {
    // Save the TParallelCoordVar as a macro. Can be used only in the context
    // of TParallelCoord::SavePrimitive (pointer "TParallelCoord* para" is
@@ -852,32 +852,32 @@ void TParallelCoordVar::SavePrimitive(ostream & out, Option_t* options)
 
    TString opt = options;
    if (opt.Contains("pcalled")) {
-      out<<"   var->SetBit(TParallelCoordVar::kLogScale,"<<TestBit(kLogScale)<<");"<<endl;
-      out<<"   var->SetBit(TParallelCoordVar::kShowBox,"<<TestBit(kShowBox)<<");"<<endl;
-      out<<"   var->SetBit(TParallelCoordVar::kShowBarHisto,"<<TestBit(kShowBarHisto)<<");"<<endl;
-      out<<"   var->SetHistogramBinning("<<fNbins<<");"<<endl;
-      out<<"   var->SetHistogramLineWidth("<<fHistoLW<<");"<<endl;
-      out<<"   var->SetInitMin("<<fMinInit<<");"<<endl;
-      out<<"   var->SetInitMax("<<fMaxInit<<");"<<endl;
-      out<<"   var->SetHistogramHeight("<<fHistoHeight<<");"<<endl;
-      out<<"   var->GetMinMaxMean();"<<endl;
-      out<<"   var->GetHistogram();"<<endl;
-      out<<"   var->SetFillStyle("<<GetFillStyle()<<");"<<endl;
-      out<<"   var->SetFillColor("<<GetFillColor()<<");"<<endl;
-      out<<"   var->SetLineColor("<<GetLineColor()<<");"<<endl;
-      out<<"   var->SetLineWidth("<<GetLineWidth()<<");"<<endl;
-      out<<"   var->SetLineStyle("<<GetLineStyle()<<");"<<endl;
-      if (TestBit(kShowBox)) out<<"   var->GetQuantiles();"<<endl;
+      out<<"   var->SetBit(TParallelCoordVar::kLogScale,"<<TestBit(kLogScale)<<");"<<std::endl;
+      out<<"   var->SetBit(TParallelCoordVar::kShowBox,"<<TestBit(kShowBox)<<");"<<std::endl;
+      out<<"   var->SetBit(TParallelCoordVar::kShowBarHisto,"<<TestBit(kShowBarHisto)<<");"<<std::endl;
+      out<<"   var->SetHistogramBinning("<<fNbins<<");"<<std::endl;
+      out<<"   var->SetHistogramLineWidth("<<fHistoLW<<");"<<std::endl;
+      out<<"   var->SetInitMin("<<fMinInit<<");"<<std::endl;
+      out<<"   var->SetInitMax("<<fMaxInit<<");"<<std::endl;
+      out<<"   var->SetHistogramHeight("<<fHistoHeight<<");"<<std::endl;
+      out<<"   var->GetMinMaxMean();"<<std::endl;
+      out<<"   var->GetHistogram();"<<std::endl;
+      out<<"   var->SetFillStyle("<<GetFillStyle()<<");"<<std::endl;
+      out<<"   var->SetFillColor("<<GetFillColor()<<");"<<std::endl;
+      out<<"   var->SetLineColor("<<GetLineColor()<<");"<<std::endl;
+      out<<"   var->SetLineWidth("<<GetLineWidth()<<");"<<std::endl;
+      out<<"   var->SetLineStyle("<<GetLineStyle()<<");"<<std::endl;
+      if (TestBit(kShowBox)) out<<"   var->GetQuantiles();"<<std::endl;
       TIter next(fRanges);
       TParallelCoordRange* range;
       Int_t i = 1;
       while ((range = (TParallelCoordRange*)next())) {
-         out<<"   //***************************************"<<endl;
-         out<<"   // Create the "<<i<<"th range owned by the axis \""<<GetTitle()<<"\"."<<endl;
-         out<<"   TParallelCoordSelect* sel = para->GetSelection(\""<<range->GetSelection()->GetTitle()<<"\");"<<endl;
-         out<<"   TParallelCoordRange* newrange = new TParallelCoordRange(var,"<<range->GetMin()<<","<<range->GetMax()<<",sel);"<<endl;
-         out<<"   var->AddRange(newrange);"<<endl;
-         out<<"   sel->Add(newrange);"<<endl;
+         out<<"   //***************************************"<<std::endl;
+         out<<"   // Create the "<<i<<"th range owned by the axis \""<<GetTitle()<<"\"."<<std::endl;
+         out<<"   TParallelCoordSelect* sel = para->GetSelection(\""<<range->GetSelection()->GetTitle()<<"\");"<<std::endl;
+         out<<"   TParallelCoordRange* newrange = new TParallelCoordRange(var,"<<range->GetMin()<<","<<range->GetMax()<<",sel);"<<std::endl;
+         out<<"   var->AddRange(newrange);"<<std::endl;
+         out<<"   sel->Add(newrange);"<<std::endl;
          ++i;
       }
    }

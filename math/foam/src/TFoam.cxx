@@ -59,12 +59,12 @@
 //     FoamX->GetMCvect( MCvect);   // get generated vector (x,y)
 //     Double_t x=MCvect[0];
 //     Double_t y=MCvect[1];
-//     if(loop<10) cout<<"(x,y) =  ( "<< x <<", "<< y <<" )"<<endl;
+//     if(loop<10) std::cout<<"(x,y) =  ( "<< x <<", "<< y <<" )"<<std::endl;
 //     hst_xy->Fill(x,y);           // fill scattergram
 //   }// loop
 //   Double_t mcResult, mcError;
 //   FoamX->GetIntegMC( mcResult, mcError);  // get MC integral, should be one
-//   cout << " mcResult= " << mcResult << " +- " << mcError <<endl;
+//   std::cout << " mcResult= " << mcResult << " +- " << mcError <<std::endl;
 //   // now hst_xy will be plotted visualizing generated distribution
 //   TCanvas *cKanwa = new TCanvas("cKanwa","Canvas for plotting",600,600);
 //   cKanwa->cd();
@@ -134,27 +134,27 @@
 ClassImp(TFoam);
 
 //FFFFFF  BoX-FORMATs for nice and flexible outputs
-#define BXOPE cout<<\
-"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"<<endl<<\
-"F                                                                              F"<<endl
-#define BXTXT(text) cout<<\
-"F                   "<<setw(40)<<         text           <<"                   F"<<endl
-#define BX1I(name,numb,text) cout<<\
-"F "<<setw(10)<<name<<" = "<<setw(10)<<numb<<" = "          <<setw(50)<<text<<" F"<<endl
-#define BX1F(name,numb,text)     cout<<"F "<<setw(10)<<name<<\
-          " = "<<setw(15)<<setprecision(8)<<numb<<"   =    "<<setw(40)<<text<<" F"<<endl
-#define BX2F(name,numb,err,text) cout<<"F "<<setw(10)<<name<<\
-" = "<<setw(15)<<setprecision(8)<<numb<<" +- "<<setw(15)<<setprecision(8)<<err<<\
-                                                      "  = "<<setw(25)<<text<<" F"<<endl
-#define BXCLO cout<<\
-"F                                                                              F"<<endl<<\
-"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"<<endl
+#define BXOPE std::cout<<\
+"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"<<std::endl<<\
+"F                                                                              F"<<std::endl
+#define BXTXT(text) std::cout<<\
+"F                   "<<std::setw(40)<<         text           <<"                   F"<<std::endl
+#define BX1I(name,numb,text) std::cout<<\
+"F "<<std::setw(10)<<name<<" = "<<std::setw(10)<<numb<<" = "          <<std::setw(50)<<text<<" F"<<std::endl
+#define BX1F(name,numb,text)     std::cout<<"F "<<std::setw(10)<<name<<\
+          " = "<<std::setw(15)<<std::setprecision(8)<<numb<<"   =    "<<std::setw(40)<<text<<" F"<<std::endl
+#define BX2F(name,numb,err,text) std::cout<<"F "<<std::setw(10)<<name<<\
+" = "<<std::setw(15)<<std::setprecision(8)<<numb<<" +- "<<std::setw(15)<<std::setprecision(8)<<err<< \
+                                                      "  = "<<std::setw(25)<<text<<" F"<<std::endl
+#define BXCLO std::cout<<\
+"F                                                                              F"<<std::endl<<\
+"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"<<std::endl
   //FFFFFF  BoX-FORMATs ends here
 
 static const Double_t gHigh= 1.0e150;
 static const Double_t gVlow=-1.0e150;
 
-#define SW2 setprecision(7) << setw(12)
+#define SW2 setprecision(7) << std::setw(12)
 
 //________________________________________________________________________________________________
 TFoam::TFoam() : 
@@ -243,7 +243,7 @@ TFoam::TFoam(const Char_t* Name) :
 TFoam::~TFoam()
 {
 // Default destructor
-//  cout<<" DESTRUCTOR entered "<<endl;
+//  std::cout<<" DESTRUCTOR entered "<<std::endl;
    Int_t i;
 
    if(fCells!= 0) {
@@ -405,7 +405,7 @@ void TFoam::Initialize()
       hname+=i;
       htitle=TString("Edge Histogram No. ");
       htitle+=i;
-      //cout<<"i= "<<i<<"  hname= "<<hname<<"  htitle= "<<htitle<<endl;
+      //std::cout<<"i= "<<i<<"  hname= "<<hname<<"  htitle= "<<htitle<<std::endl;
       (*fHistEdg)[i] = new TH1D(hname.Data(),htitle.Data(),fNBin,0.0, 1.0); // Initialize histogram for each edge
       ((TH1D*)(*fHistEdg)[i])->Sumw2();
    }
@@ -425,9 +425,9 @@ void TFoam::Initialize()
    //
    //        Define and explore root cell(s)
    InitCells();
-   //        PrintCells(); cout<<" ===== after InitCells ====="<<endl;
+   //        PrintCells(); std::cout<<" ===== after InitCells ====="<<std::endl;
    Grow();
-   //        PrintCells(); cout<<" ===== after Grow      ====="<<endl;
+   //        PrintCells(); std::cout<<" ===== after Grow      ====="<<std::endl;
 
    MakeActiveList(); // Final Preperations for the M.C. generation
 
@@ -729,8 +729,8 @@ void TFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
          Int_t iLo = (Int_t) (fNBin*xMin);
          Int_t iUp = (Int_t) (fNBin*xMax);
          //----------DEBUG printout
-         //cout<<"@@@@@  xMin xMax = "<<xMin   <<" "<<xMax<<"  iLo= "<<iLo<<"  iUp= "<<iUp;
-         //cout<<"  sswtBest/ssw= "<<sswtBest/ssw<<"  Gain/ssw= "<< Gain/ssw<<endl;
+         //std::cout<<"@@@@@  xMin xMax = "<<xMin   <<" "<<xMax<<"  iLo= "<<iLo<<"  iUp= "<<iUp;
+         //std::cout<<"  sswtBest/ssw= "<<sswtBest/ssw<<"  Gain/ssw= "<< Gain/ssw<<std::endl;
          //----------DEBUG auxilary Plot
          for(Int_t iBin=1;iBin<=fNBin;iBin++) {
             if( ((iBin-0.5)/fNBin > xMin) && ((iBin-0.5)/fNBin < xMax) ){
@@ -750,7 +750,7 @@ void TFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
       }
    } //kProj
    //----------DEBUG printout
-   //cout<<"@@@@@@@>>>>> kBest= "<<kBest<<"  maxGain/ssw= "<< maxGain/ssw<<endl;
+   //std::cout<<"@@@@@@@>>>>> kBest= "<<kBest<<"  maxGain/ssw= "<< maxGain/ssw<<std::endl;
    if( (kBest >= fDim) || (kBest<0) ) Error("Varedu", "Something wrong with kBest \n" );
 }          //TFoam::Varedu
 
@@ -780,7 +780,7 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
    for(kProj=0; kProj<fDim; kProj++)
       if( fMaskDiv[kProj] ) {
          //if( kProj==1 ){
-         //cout<<"==================== Carver histogram: kProj ="<<kProj<<"==================="<<endl;
+         //std::cout<<"==================== Carver histogram: kProj ="<<kProj<<"==================="<<std::endl;
          //((TH1D *)(*fHistEdg)[kProj])->Print("all");
          binMax = gVlow;
          for(iBin=0; iBin<fNBin;iBin++){
@@ -798,7 +798,7 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
             binTot  +=bins[iBin];
          }
          // primTot = binMax*fNBin;
-         //cout <<"Carver:  CarvTot "<<CarvTot<< "    primTot "<<primTot<<endl;
+         //std::cout <<"Carver:  CarvTot "<<CarvTot<< "    primTot "<<primTot<<std::endl;
          jLow =0;
          jUp  =fNBin-1;
          carvOne = gVlow;
@@ -833,7 +833,7 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
          if( carvTot > carvMax) {
             carvMax   = carvTot;
             //primMax   = primTot;
-            //cout <<"Carver:   primMax "<<primMax<<endl;
+            //std::cout <<"Carver:   primMax "<<primMax<<std::endl;
             kBest = kProj;    // Best edge
             xBest = ((Double_t)(jLow))/fNBin;
             yBest = ((Double_t)(jUp+1))/fNBin;
@@ -844,7 +844,7 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
             // if(jLow == 0 )     jDivi=jUp+1;
          }
          //======  extra histograms for debug purposes
-         //cout<<"kProj= "<<kProj<<" jLow= "<<jLow<<" jUp= "<<jUp<<endl;
+         //std::cout<<"kProj= "<<kProj<<" jLow= "<<jLow<<" jUp= "<<jUp<<std::endl;
          for(iBin=0;    iBin<fNBin;  iBin++)
             ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin+1,binMax);
          for(iBin=jLow; iBin<jUp+1;   iBin++)
@@ -888,17 +888,17 @@ void TFoam::Grow()
          if( (fLastCe%kEcho)==0) {
 	   if (fChat>0) {
 	     if(fDim<10)
-	       cout<<fDim<<flush;
+	       std::cout<<fDim<<std::flush;
              else
-	       cout<<"."<<flush;
-	     if( (fLastCe%(100*kEcho))==0)  cout<<"|"<<fLastCe<<endl<<flush;
+	       std::cout<<"."<<std::flush;
+	     if( (fLastCe%(100*kEcho))==0)  std::cout<<"|"<<fLastCe<<std::endl<<std::flush;
 	   }
 	 }
       }
       if( Divide( newCell )==0) break;  // and divide it into two
    }
    if (fChat>0) {
-     cout<<endl<<flush;
+     std::cout<<std::endl<<std::flush;
    }
    CheckAll(0);   // set arg=1 for more info
 }// Grow
@@ -917,16 +917,16 @@ Long_t  TFoam::PeekMax()
    for(i=0; i<=fLastCe; i++) {//without root
       if( fCells[i]->GetStat() == 1 ) {
          driv =  TMath::Abs( fCells[i]->GetDriv());
-         //cout<<"PeekMax: Driv = "<<driv<<endl;
+         //std::cout<<"PeekMax: Driv = "<<driv<<std::endl;
          if(driv > drivMax) {
             drivMax = driv;
             iCell = i;
          }
       }
    }
-   //  cout << 'TFoam_PeekMax: iCell=' << iCell << endl;
+   //  std::cout << 'TFoam_PeekMax: iCell=' << iCell << std::endl;
    if (iCell == -1)
-      cout << "STOP in TFoam::PeekMax: not found iCell=" <<  iCell << endl;
+      std::cout << "STOP in TFoam::PeekMax: not found iCell=" <<  iCell << std::endl;
    return(iCell);
 }                 // TFoam_PeekMax
 
@@ -1375,13 +1375,13 @@ void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
       Error("SetXdivPRD", "Wrong iDim  \n");
    }
    // Priting predefined division points
-   cout<<" SetXdivPRD, idim= "<<iDim<<"  len= "<<len<<"   "<<endl;
+   std::cout<<" SetXdivPRD, idim= "<<iDim<<"  len= "<<len<<"   "<<std::endl;
    for(i=0; i<len; i++) {
-      if (iDim < fDim) cout<< (*fXdivPRD[iDim])[i] <<"  ";
+      if (iDim < fDim) std::cout<< (*fXdivPRD[iDim])[i] <<"  ";
    }
-   cout<<endl;
-   for(i=0; i<len; i++)  cout<< xDiv[i] <<"   ";
-   cout<<endl;
+   std::cout<<std::endl;
+   for(i=0; i<len; i++)  std::cout<< xDiv[i] <<"   ";
+   std::cout<<std::endl;
    //
 }//SetXdivPRD
 
@@ -1398,7 +1398,7 @@ void TFoam::CheckAll(Int_t level)
    Long_t iCell;
 
    errors = 0; warnings = 0;
-   if (level==1) cout << "///////////////////////////// FOAM_Checks /////////////////////////////////" << endl;
+   if (level==1) std::cout << "///////////////////////////// FOAM_Checks /////////////////////////////////" << std::endl;
    for(iCell=1; iCell<=fLastCe; iCell++) {
       cell = fCells[iCell];
       //  checking general rules
@@ -1464,11 +1464,11 @@ void TFoam::PrintCells(void)
    Long_t iCell;
 
    for(iCell=0; iCell<=fLastCe; iCell++) {
-      cout<<"Cell["<<iCell<<"]={ ";
-      //cout<<"  "<< fCells[iCell]<<"  ";  // extra DEBUG
-      cout<<endl;
+      std::cout<<"Cell["<<iCell<<"]={ ";
+      //std::cout<<"  "<< fCells[iCell]<<"  ";  // extra DEBUG
+      std::cout<<std::endl;
       fCells[iCell]->Print("1");
-      cout<<"}"<<endl;
+      std::cout<<"}"<<std::endl;
    }
 }
 
@@ -1478,35 +1478,35 @@ void TFoam::RootPlot2dim(Char_t *filename)
 // Debugging tool which plots 2-dimensional cells as rectangles
 // in C++ format readable for root
 
-   ofstream outfile(filename, ios::out);
+   std::ofstream outfile(filename, std::ios::out);
    Double_t   x1,y1,x2,y2,x,y;
    Long_t    iCell;
    Double_t offs =0.1;
    Double_t lpag   =1-2*offs;
-   outfile<<"{" << endl;
-   outfile<<"cMap = new TCanvas(\"Map1\",\" Cell Map \",600,600);"<<endl;
+   outfile<<"{" << std::endl;
+   outfile<<"cMap = new TCanvas(\"Map1\",\" Cell Map \",600,600);"<<std::endl;
    //
-   outfile<<"TBox*a=new TBox();"<<endl;
-   outfile<<"a->SetFillStyle(0);"<<endl;  // big frame
-   outfile<<"a->SetLineWidth(4);"<<endl;
-   outfile<<"a->SetLineColor(2);"<<endl;
-   outfile<<"a->DrawBox("<<offs<<","<<offs<<","<<(offs+lpag)<<","<<(offs+lpag)<<");"<<endl;
+   outfile<<"TBox*a=new TBox();"<<std::endl;
+   outfile<<"a->SetFillStyle(0);"<<std::endl;  // big frame
+   outfile<<"a->SetLineWidth(4);"<<std::endl;
+   outfile<<"a->SetLineColor(2);"<<std::endl;
+   outfile<<"a->DrawBox("<<offs<<","<<offs<<","<<(offs+lpag)<<","<<(offs+lpag)<<");"<<std::endl;
    //
-   outfile<<"TText*t=new TText();"<<endl;  // text for numbering
-   outfile<<"t->SetTextColor(4);"<<endl;
+   outfile<<"TText*t=new TText();"<<std::endl;  // text for numbering
+   outfile<<"t->SetTextColor(4);"<<std::endl;
    if(fLastCe<51)
-      outfile<<"t->SetTextSize(0.025);"<<endl;  // text for numbering
+      outfile<<"t->SetTextSize(0.025);"<<std::endl;  // text for numbering
    else if(fLastCe<251)
-      outfile<<"t->SetTextSize(0.015);"<<endl;
+      outfile<<"t->SetTextSize(0.015);"<<std::endl;
    else
-      outfile<<"t->SetTextSize(0.008);"<<endl;
+      outfile<<"t->SetTextSize(0.008);"<<std::endl;
    //
-   outfile<<"TBox*b=new TBox();"<<endl;  // single cell
-   outfile <<"b->SetFillStyle(0);"<<endl;
+   outfile<<"TBox*b=new TBox();"<<std::endl;  // single cell
+   outfile <<"b->SetFillStyle(0);"<<std::endl;
    //
    if(fDim==2 && fLastCe<=2000) {
       TFoamVect  cellPosi(fDim); TFoamVect  cellSize(fDim);
-      outfile << "// =========== Rectangular cells  ==========="<< endl;
+      outfile << "// =========== Rectangular cells  ==========="<< std::endl;
       for(iCell=1; iCell<=fLastCe; iCell++) {
          if( fCells[iCell]->GetStat() == 1) {
             fCells[iCell]->GetHcub(cellPosi,cellSize);
@@ -1514,19 +1514,19 @@ void TFoam::RootPlot2dim(Char_t *filename)
             x2 = offs+lpag*(cellPosi[0]+cellSize[0]); y2 = offs+lpag*(cellPosi[1]+cellSize[1]);
             //     cell rectangle
             if(fLastCe<=2000)
-            outfile<<"b->DrawBox("<<x1<<","<<y1<<","<<x2<<","<<y2<<");"<<endl;
+            outfile<<"b->DrawBox("<<x1<<","<<y1<<","<<x2<<","<<y2<<");"<<std::endl;
             //     cell number
             if(fLastCe<=250) {
                x = offs+lpag*(cellPosi[0]+0.5*cellSize[0]); y = offs+lpag*(cellPosi[1]+0.5*cellSize[1]);
-               outfile<<"t->DrawText("<<x<<","<<y<<","<<"\""<<iCell<<"\""<<");"<<endl;
+               outfile<<"t->DrawText("<<x<<","<<y<<","<<"\""<<iCell<<"\""<<");"<<std::endl;
             }
          }
       }
-      outfile<<"// ============== End Rectangles ==========="<< endl;
+      outfile<<"// ============== End Rectangles ==========="<< std::endl;
    }//kDim=2
    //
    //
-   outfile << "}" << endl;
+   outfile << "}" << std::endl;
    outfile.close();
 }
 

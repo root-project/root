@@ -618,7 +618,7 @@ void TGTripleHSlider::SetPointerPosition(Float_t pos)
 }
 
 //______________________________________________________________________________
-void TGTripleHSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGTripleHSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
 
@@ -641,35 +641,35 @@ void TGTripleHSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    }
    if (!fConstrained) {
       if (fRelative)
-         out << ",kFALSE,kTRUE);" << endl;
+         out << ",kFALSE,kTRUE);" << std::endl;
       else
-         out << ",kFALSE,kFALSE);" << endl;
+         out << ",kFALSE,kFALSE);" << std::endl;
    }
    else if (fRelative) {
-      out << ",kTRUE);" << endl;
+      out << ",kTRUE);" << std::endl;
    }
    else {
-      out << ");" << endl;
+      out << ");" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    if (fVmin != 0 || fVmax != (Int_t)fWidth)
       out << "   " << GetName() << "->SetRange(" << fVmin << "," << fVmax
-          << ");" << endl;
+          << ");" << std::endl;
 
    if (fSmin != fWidth/8*3 || fSmax != fWidth/8*5)
       out << "   " << GetName() << "->SetPosition(" << GetMinPosition()
-          << "," << GetMaxPosition() << ");" << endl;
+          << "," << GetMaxPosition() << ");" << std::endl;
 
    if (fScale != 10)
-      out << "   " << GetName() << "->SetScale(" << fScale << ");" << endl;
+      out << "   " << GetName() << "->SetScale(" << fScale << ");" << std::endl;
 
-   out << "   " << GetName() << "->SetPointerPosition(" << fSCz << ");" << endl;
+   out << "   " << GetName() << "->SetPointerPosition(" << fSCz << ");" << std::endl;
 }
 
 //______________________________________________________________________________
-void TGTripleVSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGTripleVSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
 
@@ -692,29 +692,29 @@ void TGTripleVSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    }
    if (!fConstrained) {
       if (fRelative)
-         out << ",kFALSE,kTRUE);" << endl;
+         out << ",kFALSE,kTRUE);" << std::endl;
       else
-         out << ",kFALSE,kFALSE);" << endl;
+         out << ",kFALSE,kFALSE);" << std::endl;
    }
    else if (fRelative) {
-      out << ",kTRUE);" << endl;
+      out << ",kTRUE);" << std::endl;
    }
    else {
-      out << ");" << endl;
+      out << ");" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    if (fVmin != 0 || fVmax != (Int_t)fHeight)
       out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax
-          << ");" << endl;
+          << ");" << std::endl;
 
    if (fSmin != fHeight/8*3 || fSmax != fHeight/8*5)
       out << "   " << GetName() << "->SetPosition(" << GetMinPosition()
-          << "," << GetMaxPosition() << ");" << endl;
+          << "," << GetMaxPosition() << ");" << std::endl;
 
    if (fScale != 10)
-      out << "   " << GetName() << "->SetScale(" << fScale << ");" << endl;
+      out << "   " << GetName() << "->SetScale(" << fScale << ");" << std::endl;
 
-   out << "   " << GetName() << "->SetPointerPosition(" << fSCz << ");" << endl;
+   out << "   " << GetName() << "->SetPointerPosition(" << fSCz << ");" << std::endl;
 }

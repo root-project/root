@@ -169,7 +169,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    // and you execute your scripts multiple times.
    if (includes > 0) {
       ProcessLine("#include <iostream>", kTRUE);
-      ProcessLine("#include <string>", kTRUE); // for std::string iostream.
+      ProcessLine("#include <string>", kTRUE); // for std::string std::iostream.
       ProcessLine("#include <DllImport.h>", kTRUE);// Defined R__EXTERN
       if (includes > 1) {
          ProcessLine("#include <vector>", kTRUE);  // Needed because std::vector and std::pair are
@@ -698,7 +698,7 @@ Long_t TRint::ProcessRemote(const char *line, Int_t *)
 
 
 //______________________________________________________________________________
-Int_t TRint::TabCompletionHook(char *buf, int *pLoc, ostream& out)
+Int_t TRint::TabCompletionHook(char *buf, int *pLoc, std::ostream& out)
 {
    // Forward tab completion request to our TTabCom::Hook().
    if (gTabCom)

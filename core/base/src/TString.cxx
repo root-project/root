@@ -2064,9 +2064,9 @@ TString TString::Itoa(Int_t value, Int_t base)
    // Thus it is an enhanced version of sprintf (adapted from versions 0.4 of
    // http://www.jb.man.ac.uk/~slowe/cpp/itoa.html).
    // Usage: the following statement produce the same output, namely "1111"
-   //   cout << TString::Itoa(15,2) ;
-   //   cout << TString::Itoa(0xF,2) ; /// 0x prefix to handle hex
-   //   cout << TString::Itoa(017,2) ; /// 0  prefix to handle oct
+   //   std::cout << TString::Itoa(15,2) ;
+   //   std::cout << TString::Itoa(0xF,2) ; /// 0x prefix to handle hex
+   //   std::cout << TString::Itoa(017,2) ; /// 0  prefix to handle oct
    // In case of error returns the "!" string.
 
    std::string buf;

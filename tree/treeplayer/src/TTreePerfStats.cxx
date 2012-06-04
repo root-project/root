@@ -465,57 +465,57 @@ void TTreePerfStats::SaveAs(const char *filename, Option_t * /*option*/) const
 }
 
 //______________________________________________________________________________
-void TTreePerfStats::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TTreePerfStats::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TTreePerfStats::Class())) {
       out<<"   ";
    } else {
       out<<"   TTreePerfStats *";
    }
-   out<<"ps = new TTreePerfStats();"<<endl;
-   out<<"   ps->SetName("<<quote<<GetName()<<quote<<");"<<endl;
-   out<<"   ps->SetHostInfo("<<quote<<GetHostInfo()<<quote<<");"<<endl;
-   out<<"   ps->SetTreeCacheSize("<<fTreeCacheSize<<");"<<endl;
-   out<<"   ps->SetNleaves("<<fNleaves<<");"<<endl;
-   out<<"   ps->SetReadCalls("<<fReadCalls<<");"<<endl;
-   out<<"   ps->SetReadaheadSize("<<fReadaheadSize<<");"<<endl;
-   out<<"   ps->SetBytesRead("<<fBytesRead<<");"<<endl;
-   out<<"   ps->SetBytesReadExtra("<<fBytesReadExtra<<");"<<endl;
-   out<<"   ps->SetRealNorm("<<fRealNorm<<");"<<endl;
-   out<<"   ps->SetRealTime("<<fRealTime<<");"<<endl;
-   out<<"   ps->SetCpuTime("<<fCpuTime<<");"<<endl;
-   out<<"   ps->SetDiskTime("<<fDiskTime<<");"<<endl;
-   out<<"   ps->SetUnzipTime("<<fUnzipTime<<");"<<endl;
-   out<<"   ps->SetCompress("<<fCompress<<");"<<endl;
+   out<<"ps = new TTreePerfStats();"<<std::endl;
+   out<<"   ps->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
+   out<<"   ps->SetHostInfo("<<quote<<GetHostInfo()<<quote<<");"<<std::endl;
+   out<<"   ps->SetTreeCacheSize("<<fTreeCacheSize<<");"<<std::endl;
+   out<<"   ps->SetNleaves("<<fNleaves<<");"<<std::endl;
+   out<<"   ps->SetReadCalls("<<fReadCalls<<");"<<std::endl;
+   out<<"   ps->SetReadaheadSize("<<fReadaheadSize<<");"<<std::endl;
+   out<<"   ps->SetBytesRead("<<fBytesRead<<");"<<std::endl;
+   out<<"   ps->SetBytesReadExtra("<<fBytesReadExtra<<");"<<std::endl;
+   out<<"   ps->SetRealNorm("<<fRealNorm<<");"<<std::endl;
+   out<<"   ps->SetRealTime("<<fRealTime<<");"<<std::endl;
+   out<<"   ps->SetCpuTime("<<fCpuTime<<");"<<std::endl;
+   out<<"   ps->SetDiskTime("<<fDiskTime<<");"<<std::endl;
+   out<<"   ps->SetUnzipTime("<<fUnzipTime<<");"<<std::endl;
+   out<<"   ps->SetCompress("<<fCompress<<");"<<std::endl;
 
    Int_t i, npoints = fGraphIO->GetN();
-   out<<"   TGraphErrors *psGraphIO = new TGraphErrors("<<npoints<<");"<<endl;
-   out<<"   psGraphIO->SetName("<<quote<<fGraphIO->GetName()<<quote<<");"<<endl;
-   out<<"   psGraphIO->SetTitle("<<quote<<fGraphIO->GetTitle()<<quote<<");"<<endl;
-   out<<"   ps->SetGraphIO(psGraphIO);"<<endl;
+   out<<"   TGraphErrors *psGraphIO = new TGraphErrors("<<npoints<<");"<<std::endl;
+   out<<"   psGraphIO->SetName("<<quote<<fGraphIO->GetName()<<quote<<");"<<std::endl;
+   out<<"   psGraphIO->SetTitle("<<quote<<fGraphIO->GetTitle()<<quote<<");"<<std::endl;
+   out<<"   ps->SetGraphIO(psGraphIO);"<<std::endl;
    fGraphIO->SaveFillAttributes(out,"psGraphIO",0,1001);
    fGraphIO->SaveLineAttributes(out,"psGraphIO",1,1,1);
    fGraphIO->SaveMarkerAttributes(out,"psGraphIO",1,1,1);
    for (i=0;i<npoints;i++) {
-      out<<"   psGraphIO->SetPoint("<<i<<","<<fGraphIO->GetX()[i]<<","<<fGraphIO->GetY()[i]<<");"<<endl;
-      out<<"   psGraphIO->SetPointError("<<i<<",0,"<<fGraphIO->GetEY()[i]<<");"<<endl;
+      out<<"   psGraphIO->SetPoint("<<i<<","<<fGraphIO->GetX()[i]<<","<<fGraphIO->GetY()[i]<<");"<<std::endl;
+      out<<"   psGraphIO->SetPointError("<<i<<",0,"<<fGraphIO->GetEY()[i]<<");"<<std::endl;
    }
    npoints = fGraphTime->GetN();
-   out<<"   TGraphErrors *psGraphTime = new TGraphErrors("<<npoints<<");"<<endl;
-   out<<"   psGraphTime->SetName("<<quote<<fGraphTime->GetName()<<quote<<");"<<endl;
-   out<<"   psGraphTime->SetTitle("<<quote<<fGraphTime->GetTitle()<<quote<<");"<<endl;
-   out<<"   ps->SetGraphTime(psGraphTime);"<<endl;
+   out<<"   TGraphErrors *psGraphTime = new TGraphErrors("<<npoints<<");"<<std::endl;
+   out<<"   psGraphTime->SetName("<<quote<<fGraphTime->GetName()<<quote<<");"<<std::endl;
+   out<<"   psGraphTime->SetTitle("<<quote<<fGraphTime->GetTitle()<<quote<<");"<<std::endl;
+   out<<"   ps->SetGraphTime(psGraphTime);"<<std::endl;
    fGraphTime->SaveFillAttributes(out,"psGraphTime",0,1001);
    fGraphTime->SaveLineAttributes(out,"psGraphTime",1,1,1);
    fGraphTime->SaveMarkerAttributes(out,"psGraphTime",1,1,1);
    for (i=0;i<npoints;i++) {
-      out<<"   psGraphTime->SetPoint("<<i<<","<<fGraphTime->GetX()[i]<<","<<fGraphTime->GetY()[i]<<");"<<endl;
-      out<<"   psGraphTime->SetPointError("<<i<<",0,"<<fGraphTime->GetEY()[i]<<");"<<endl;
+      out<<"   psGraphTime->SetPoint("<<i<<","<<fGraphTime->GetX()[i]<<","<<fGraphTime->GetY()[i]<<");"<<std::endl;
+      out<<"   psGraphTime->SetPointError("<<i<<",0,"<<fGraphTime->GetEY()[i]<<");"<<std::endl;
    }
 
-   out<<"   ps->Draw("<<quote<<option<<quote<<");"<<endl;
+   out<<"   ps->Draw("<<quote<<option<<quote<<");"<<std::endl;
 }

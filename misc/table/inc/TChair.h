@@ -85,7 +85,7 @@ public:
 
                void      *ReAllocate(Int_t newsize) { return GetThisTable()->ReAllocate(newsize); }
                void      *ReAllocate()              { return GetThisTable()->ReAllocate(); }
-   virtual     void       SavePrimitive(ostream &out, Option_t *option="") {GetThisTable()->SavePrimitive(out,option);}
+   virtual     void       SavePrimitive(std::ostream &out, Option_t *option="") {GetThisTable()->SavePrimitive(out,option);}
 
    virtual     void       Set(Int_t n)                                   {GetThisTable()->Set(n);}
    virtual     void       Set(Int_t n, Char_t *array)                    {GetThisTable()->Set(n,array);}
@@ -122,9 +122,9 @@ inline const void *TChair::operator[](Int_t i) const
 // from Axel:
 // Change the signature of SavePrimitive from
 //
-//   void SavePrimitive(ofstream &out, Option_t *option);
+//   void SavePrimitive(std::ofstream &out, Option_t *option);
 // to
-//   void SavePrimitive(ostream &out, Option_t *option = "");
+//   void SavePrimitive(std::ostream &out, Option_t *option = "");
 //
 // With this change one can do, eg
 //    myhist.SavePrimitive(std::cout);

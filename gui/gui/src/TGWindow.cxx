@@ -194,14 +194,14 @@ void TGWindow::Print(Option_t *option) const
    if (opt.Contains("tree")) {
 
       const TGWindow *parent = fParent;
-      cout << ClassName() << ":\t" << fId << endl;
+      std::cout << ClassName() << ":\t" << fId << std::endl;
 
       while (parent && (parent != fClient->GetDefaultRoot())) {
-         cout << "\t" << parent->ClassName() << ":\t" << parent->GetId() << endl;
+         std::cout << "\t" << parent->ClassName() << ":\t" << parent->GetId() << std::endl;
          parent = parent->GetParent();
       }
    } else {
-      cout << ClassName() << ":\t" << fId << endl;
+      std::cout << ClassName() << ":\t" << fId << std::endl;
    }
 }
 

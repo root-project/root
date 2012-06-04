@@ -255,7 +255,7 @@ void TButton::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 
 //______________________________________________________________________________
-void TButton::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
@@ -286,7 +286,7 @@ void TButton::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       <<","<<fYlowNDC
       <<","<<fXlowNDC+fWNDC
       <<","<<fYlowNDC+fHNDC
-      <<");"<<endl;
+      <<");"<<std::endl;
    delete [] cmethod;
 
    SaveFillAttributes(out,"button",0,1001);
@@ -294,28 +294,28 @@ void TButton::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    SaveTextAttributes(out,"button",22,0,1,61,.65);
 
    if (GetBorderSize() != 2) {
-      out<<"   button->SetBorderSize("<<GetBorderSize()<<");"<<endl;
+      out<<"   button->SetBorderSize("<<GetBorderSize()<<");"<<std::endl;
    }
    if (GetBorderMode() != 1) {
-      out<<"   button->SetBorderMode("<<GetBorderMode()<<");"<<endl;
+      out<<"   button->SetBorderMode("<<GetBorderMode()<<");"<<std::endl;
    }
 
-   if (GetFraming()) out<<"button->SetFraming();"<<endl;
-   if (IsEditable()) out<<"button->SetEditable(kTRUE);"<<endl;
+   if (GetFraming()) out<<"button->SetFraming();"<<std::endl;
+   if (IsEditable()) out<<"button->SetEditable(kTRUE);"<<std::endl;
 
-   out<<"   button->Draw();"<<endl;
+   out<<"   button->Draw();"<<std::endl;
 
    TIter next(GetListOfPrimitives());
    TObject *obj = next();  //do not save first primitive
 
    Int_t nprim = 0;
    while ((obj = next())) {
-      if (!nprim) out<<"   button->cd();"<<endl;
+      if (!nprim) out<<"   button->cd();"<<std::endl;
       nprim++;
       obj->SavePrimitive(out, (Option_t *)next.GetOption());
    }
 
-   if (nprim) out<<"   "<<padsav->GetName()<<"->cd();"<<endl;
+   if (nprim) out<<"   "<<padsav->GetName()<<"->cd();"<<std::endl;
    padsav->cd();
 }
 

@@ -1559,7 +1559,7 @@ void TProfile::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TProfile::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
@@ -1579,11 +1579,11 @@ void TProfile::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
          if (i != 0) out << ", ";
          out << GetXaxis()->GetXbins()->fArray[i];
       }
-      out << "}; " << endl;
+      out << "}; " << std::endl;
    }
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    out<<"   "<<ClassName()<<" *";
 
    //histogram pointer has by default teh histogram name.
@@ -1604,21 +1604,21 @@ void TProfile::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    else
       out << "," << GetXaxis()->GetXmin()
           << "," << GetXaxis()->GetXmax()
-          <<","<<quote<<GetErrorOption()<<quote<<");"<<endl;
+          <<","<<quote<<GetErrorOption()<<quote<<");"<<std::endl;
 
    // save bin entries
    Int_t bin;
    for (bin=0;bin<fNcells;bin++) {
       Double_t bi = GetBinEntries(bin);
       if (bi) {
-         out<<"   "<<hname<<"->SetBinEntries("<<bin<<","<<bi<<");"<<endl;
+         out<<"   "<<hname<<"->SetBinEntries("<<bin<<","<<bi<<");"<<std::endl;
       }
    }
    //save bin contents
    for (bin=0;bin<fNcells;bin++) {
       Double_t bc = fArray[bin];
       if (bc) {
-         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
+         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");"<<std::endl;
       }
    }
    // save bin errors
@@ -1626,7 +1626,7 @@ void TProfile::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       for (bin=0;bin<fNcells;bin++) {
          Double_t be = TMath::Sqrt(fSumw2.fArray[bin]);
          if (be) {
-            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");"<<endl;
+            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");"<<std::endl;
          }
       }
    }

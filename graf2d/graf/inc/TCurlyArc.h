@@ -45,7 +45,7 @@ public:
    virtual void SetRadius(Double_t radius);          // *MENU* *ARGS={radius=>fR1}
    virtual void SetPhimin(Double_t phimin);          // *MENU* *ARGS={phimin=>fPhimin}
    virtual void SetPhimax(Double_t phimax);          // *MENU* *ARGS={phimax=>fPhimax}
-   virtual void SavePrimitive(ostream &out, Option_t * = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
 
    static void     SetDefaultWaveLength(Double_t WaveLength); 
    static void     SetDefaultAmplitude (Double_t Amplitude );    

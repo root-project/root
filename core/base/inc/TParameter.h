@@ -82,13 +82,13 @@ public:
    virtual void ls(Option_t *) const {
       // Print this parameter content
       TROOT::IndentLevel();
-      cout << "OBJ: " << IsA()->GetName() << "\t" << fName << " = " << fVal << endl;
+      std::cout << "OBJ: " << IsA()->GetName() << "\t" << fName << " = " << fVal << std::endl;
    }
 
    virtual void Print(Option_t *) const {
       // Print this parameter content
       TROOT::IndentLevel();
-      cout << IsA()->GetName() << "\t" << fName << " = " << fVal << endl;
+      std::cout << IsA()->GetName() << "\t" << fName << " = " << fVal << std::endl;
    }
 
    virtual Int_t Merge(TCollection *in);

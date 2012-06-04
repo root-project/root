@@ -124,7 +124,7 @@ TGXYLayoutHints::TGXYLayoutHints(Double_t x, Double_t y, Double_t w, Double_t h,
 }
 
 //______________________________________________________________________________
-void TGXYLayoutHints::SavePrimitive(ostream &out, Option_t * /*option = ""*/)
+void TGXYLayoutHints::SavePrimitive(std::ostream &out, Option_t * /*option = ""*/)
 {
    // Save XY layout hints as a C++ statement(s) on output stream.
    
@@ -289,7 +289,7 @@ TGDimension TGXYLayout::GetDefaultSize() const
 }
 
 //______________________________________________________________________________
-void TGXYLayout::SavePrimitive(ostream &out, Option_t * /*option = ""*/)
+void TGXYLayout::SavePrimitive(std::ostream &out, Option_t * /*option = ""*/)
 {
    // Save XY layout manager as a C++ statement(s) on output stream.
    

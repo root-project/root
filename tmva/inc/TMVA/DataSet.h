@@ -162,7 +162,7 @@ namespace TMVA {
       mutable Long64_t           fCurrentEventIdx;
 
       // event sampling
-      std::vector<Char_t>        fSampling;                    // random or importance sampling (not all events are taken) !! Bool_t are stored ( no vector<bool> taken for speed (performance) issues )
+      std::vector<Char_t>        fSampling;                    // random or importance sampling (not all events are taken) !! Bool_t are stored ( no std::vector<bool> taken for speed (performance) issues )
       std::vector<Int_t>         fSamplingNEvents;            // number of events which should be sampled
       std::vector<Float_t>       fSamplingWeight;              // weight change factor [weight is indicating if sampling is random (1.0) or importance (<1.0)] 
       mutable std::vector< std::vector< std::pair< Float_t, Long64_t >* > > fSamplingEventList;  // weights and indices for sampling
@@ -181,7 +181,7 @@ namespace TMVA {
       std::vector<Char_t>        fBlockBelongToTraining;       // when dividing the dataset to blocks, sets whether 
                                                                // the certain block is in the Training set or else 
                                                                // in the validation set 
-                                                               // boolean are stored, taken vector<Char_t> for performance reasons (instead of vector<Bool_t>)
+                                                               // boolean are stored, taken std::vector<Char_t> for performance reasons (instead of std::vector<Bool_t>)
       Long64_t                   fTrainingBlockSize;           // block size into which the training dataset is divided
 
       void  ApplyTrainingBlockDivision();

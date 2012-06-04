@@ -251,8 +251,8 @@ void TCollection::ls(Option_t *option) const
    // with names xxx*.
 
    TROOT::IndentLevel();
-   cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
-        << Int_t(TestBit(kCanDelete)) << endl;
+   std::cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
+        << Int_t(TestBit(kCanDelete)) << std::endl;
 
    TRegexp re(option,kTRUE);
    TIter next(this);

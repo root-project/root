@@ -974,7 +974,7 @@ Int_t TSQLFile::StreamKeysForDirectory(TDirectory* dir, Bool_t doupdate, Long64_
       const char* classname = (*row)[7];
 
       if (gDebug>4)
-        cout << "  Reading keyid = " << keyid << " name = " << keyname << endl;
+        std::cout << "  Reading keyid = " << keyid << " name = " << keyname << std::endl;
 
       if ((keyid>=sqlio::Ids_FirstKey) || (keyid==specialkeyid)) {
          if (doupdate) {
@@ -1419,7 +1419,7 @@ TSQLResult* TSQLFile::SQLQuery(const char* cmd, Int_t flag, Bool_t* ok)
    // If ok!=0, it will contains kTRUE is Query was successfull, otherwise kFALSE
 
    if (fLogFile!=0)
-      *fLogFile << cmd << endl;
+      *fLogFile << cmd << std::endl;
 
    if (ok!=0) *ok = kFALSE;
 
@@ -2397,7 +2397,7 @@ TObjArray* TSQLFile::SQLObjectsInfo(Long64_t keyid)
    TObjArray* arr = 0;
 
    if (fLogFile!=0)
-      *fLogFile << sqlcmd << endl;
+      *fLogFile << sqlcmd << std::endl;
    if (gDebug>2) Info("SQLObjectsInfo", "%s", sqlcmd.Data());
    fQuerisCounter++;
 
@@ -2502,7 +2502,7 @@ TSQLStatement* TSQLFile::GetBlobClassDataStmt(Long64_t objid, TSQLClassInfo* sql
                quote, SQLRawIdColumn(), quote);
 
    if (fLogFile!=0)
-      *fLogFile << sqlcmd << endl;
+      *fLogFile << sqlcmd << std::endl;
    if (gDebug>2) Info("BuildStatement", "%s", sqlcmd.Data());
    fQuerisCounter++;
 

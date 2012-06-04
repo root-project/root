@@ -59,7 +59,7 @@ public:
    virtual Color_t  GetTitleColor()  const {return fTitleColor;}
    virtual Style_t  GetTitleFont()   const {return fTitleFont;}
    virtual void     ResetAttAxis(Option_t *option="");
-   virtual void     SaveAttributes(ostream &out, const char *name, const char *subname);
+   virtual void     SaveAttributes(std::ostream &out, const char *name, const char *subname);
    virtual void     SetNdivisions(Int_t n=510, Bool_t optim=kTRUE);  // *MENU*
    virtual void     SetNdivisions(Int_t n1, Int_t n2, Int_t n3, Bool_t optim=kTRUE);
    virtual void     SetAxisColor(Color_t color=1);        // *MENU*

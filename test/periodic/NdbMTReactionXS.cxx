@@ -89,19 +89,19 @@ NdbMTReactionXS::Interpolate( Float_t e )
 
 	switch (IT) {
 		case IT_LINLOG:
-			cout << "Linear-Log interpolation" << endl;
+			std::cout << "Linear-Log interpolation" << std::endl;
 			return 0.0;
 
 		case IT_LOGLIN:
-			cout << "Log-Linear interpolation" << endl;
+			std::cout << "Log-Linear interpolation" << std::endl;
 			return 0.0;
 
 		case IT_LOGLOG:
-			cout << "Log-Log interpolation" << endl;
+			std::cout << "Log-Log interpolation" << std::endl;
 			return 0.0;
 
 		case IT_GAMOW:
-			cout << "GAMOW interpolation" << endl;
+			std::cout << "GAMOW interpolation" << std::endl;
 			return 0.0;
 
 		case IT_LINLIN:

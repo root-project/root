@@ -40,7 +40,7 @@
 
 #include <string.h>
 #include <string>
-#include <iosfwd>    // for ostream forward-declaration
+#include <iosfwd>    // for std::ostream forward-declaration
 
 #if 0
 #define HAVE_TYPE_TRAITS
@@ -72,7 +72,7 @@ class PCRECPP_EXP_DEFN StringPiece {
   StringPiece(const unsigned char* str)
     : ptr_(reinterpret_cast<const char*>(str)),
       length_(static_cast<int>(strlen(ptr_))) { }
-  StringPiece(const string& str)
+  StringPiece(const std::string& str)
     : ptr_(str.data()), length_(static_cast<int>(str.size())) { }
   StringPiece(const char* offset, int len)
     : ptr_(offset), length_(len) { }
@@ -161,7 +161,7 @@ class PCRECPP_EXP_DEFN StringPiece {
 // ------------------------------------------------------------------
 
 #ifdef HAVE_TYPE_TRAITS
-// This makes vector<StringPiece> really fast for some STL implementations
+// This makes std::vector<StringPiece> really fast for some STL implementations
 template<> struct __type_traits<pcrecpp::StringPiece> {
   typedef __true_type    has_trivial_default_constructor;
   typedef __true_type    has_trivial_copy_constructor;

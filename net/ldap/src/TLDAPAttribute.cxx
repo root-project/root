@@ -113,10 +113,10 @@ void TLDAPAttribute::Print(Option_t *) const
 
    Int_t counter = GetCount();
    if (counter == 0) {
-      cout << GetName() << ": " << endl;
+      std::cout << GetName() << ": " << std::endl;
    } else if (counter != 0) {
       for (Int_t i = 0; i < counter; i++) {
-         cout << GetName() << ": " << GetValue() << endl;
+         std::cout << GetName() << ": " << GetValue() << std::endl;
       }
    }
 }

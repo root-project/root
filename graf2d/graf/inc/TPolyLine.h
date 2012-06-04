@@ -75,7 +75,7 @@ public:
    virtual void    PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
    virtual void    PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
    virtual void    Print(Option_t *option="") const;
-   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void    SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void    SetNDC(Bool_t isNDC=kTRUE);
    virtual Int_t   SetNextPoint(Double_t x, Double_t y); // *MENU*
    virtual void    SetOption(Option_t *option="") {fOption = option;}

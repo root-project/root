@@ -45,7 +45,7 @@ TBasketSQL::TBasketSQL() : TBasket(), fResultPtr(0), fRowPtr(0), fInsertQuery(0)
 //_________________________________________________________________________
 TBasketSQL::TBasketSQL(const char *name, const char *title, TBranch *branch, 
                          TSQLResult ** rs, TString *insert_query, 
-                         vector<Int_t> *vc, TSQLRow **r) :
+                         std::vector<Int_t> *vc, TSQLRow **r) :
   fResultPtr(rs),fRowPtr(r)
 { 
    // Regular constructor.
@@ -84,7 +84,7 @@ TBasketSQL::~TBasketSQL()
 
 //_________________________________________________________________________
 void TBasketSQL::CreateBuffer(const char *name, TString title, 
-                              vector<Int_t> *vc, 
+                              std::vector<Int_t> *vc, 
                               TBranch *branch, TSQLResult ** rs)
 {
    // Create a TSQLBuffer for this basket.

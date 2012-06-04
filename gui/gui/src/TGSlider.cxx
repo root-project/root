@@ -537,7 +537,7 @@ TString TGSlider::GetTypeString() const
 }
 
 //______________________________________________________________________________
-void TGHSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGHSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
 
@@ -550,31 +550,31 @@ void TGHSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         out <<");" << endl;
+         out <<");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    if (fVmin != 0 || fVmax != (Int_t)fWidth)
-      out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax << ");" << endl;
+      out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax << ");" << std::endl;
 
    if (fPos != (Int_t)fWidth/2)
-      out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << endl;
+      out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << std::endl;
 
    if (fScale != 10)
-      out << "   " << GetName() <<"->SetScale(" << fScale << ");" << endl;
+      out << "   " << GetName() <<"->SetScale(" << fScale << ");" << std::endl;
 
    if (!IsEnabled())
-      out << "   " << GetName() <<"->SetState(kFALSE);" << endl;
+      out << "   " << GetName() <<"->SetState(kFALSE);" << std::endl;
 }
 
 //______________________________________________________________________________
-void TGVSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGVSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal slider as a C++ statement(s) on output stream out.
 
@@ -588,25 +588,25 @@ void TGVSlider::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    if (fBackground == GetDefaultFrameBackground()) {
 
       if (!GetOptions()) {
-         out <<");" << endl;
+         out <<");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    if (fVmin != 0 || fVmax != (Int_t)fHeight)
-      out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax << ");" << endl;
+      out << "   " << GetName() <<"->SetRange(" << fVmin << "," << fVmax << ");" << std::endl;
 
    if (fPos != (Int_t)fHeight/2)
-      out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << endl;
+      out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << std::endl;
 
    if (fScale != 10)
-      out << "   " << GetName() <<"->SetScale(" << fScale << ");" << endl;
+      out << "   " << GetName() <<"->SetScale(" << fScale << ");" << std::endl;
 
    if (!IsEnabled())
-      out << "   " << GetName() <<"->SetState(kFALSE);" << endl;
+      out << "   " << GetName() <<"->SetState(kFALSE);" << std::endl;
 }

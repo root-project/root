@@ -27,6 +27,8 @@
 #include "TClass.h"
 #include "RooThreshEntry.h"
 
+using namespace std;
+
 ClassImp(RooThreshEntry)
 ;
 

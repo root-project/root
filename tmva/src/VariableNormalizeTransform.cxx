@@ -519,7 +519,7 @@ void TMVA::VariableNormalizeTransform::ReadTransformationFromStream( std::istrea
 }
 
 //_______________________________________________________________________
-void TMVA::VariableNormalizeTransform::PrintTransformation( ostream& /* o */ ) 
+void TMVA::VariableNormalizeTransform::PrintTransformation( std::ostream& /* o */ ) 
 {
    // prints the transformation ranges
 

@@ -436,7 +436,7 @@ const TSeqCollection *TTabCom::GetListOfClasses()
       fclose(fout);
 
       // open the file
-      ifstream file1(tmpfilename);
+      std::ifstream file1(tmpfilename);
       if (!file1) {
          Error("TTabCom::GetListOfClasses", "could not open file \"%s\"",
                tmpfilename);
@@ -569,7 +569,7 @@ const TSeqCollection *TTabCom::GetListOfEnvVars()
       gSystem->Exec(cmd.Data());
 
       // open the file
-      ifstream file1(tmpfilename);
+      std::ifstream file1(tmpfilename);
       if (!file1) {
          Error("TTabCom::GetListOfEnvVars", "could not open file \"%s\"",
                tmpfilename);
@@ -720,7 +720,7 @@ const TSeqCollection *TTabCom::GetListOfUsers()
    if (!fpUsers) {
       fpUsers = new TContainer;
 
-      ifstream passwd;
+      std::ifstream passwd;
       TString user;
 
       passwd.open("/etc/passwd");
@@ -891,7 +891,7 @@ TString TTabCom::DetermineClass(const char varName[])
    ///////////////////////////////////
 
    assert(varName != 0);
-   IfDebug(cerr << "DetermineClass(\"" << varName << "\");" << endl);
+   IfDebug(std::cerr << "DetermineClass(\"" << varName << "\");" << std::endl);
 
    const char *tmpfile = tmpnam(0);
    if (!tmpfile) return "";
@@ -910,7 +910,7 @@ TString TTabCom::DetermineClass(const char varName[])
    int c;
 
    // open the file
-   ifstream file1(tmpfile);
+   std::ifstream file1(tmpfile);
    if (!file1) {
       Error("TTabCom::DetermineClass", "could not open file \"%s\"",
             tmpfile);
@@ -923,7 +923,7 @@ TString TTabCom::DetermineClass(const char varName[])
             varName);
       goto cleanup;
    }
-   IfDebug(cerr << (char) c << flush);
+   IfDebug(std::cerr << (char) c << std::flush);
 
    // in case of success, "class TClassName*)0x12345" remains,
    // since the opening '(' was removed.
@@ -939,11 +939,11 @@ TString TTabCom::DetermineClass(const char varName[])
    }
    // ignore ' '
    c = file1.get();
-   IfDebug(cerr << (char) c << flush);
+   IfDebug(std::cerr << (char) c << std::flush);
 
    // this is what we want
    type.ReadToDelim(file1, ')');
-   IfDebug(cerr << type << endl);
+   IfDebug(std::cerr << type << std::endl);
 
    // new version of CINT returns: "class TClassName*const)0x12345"
    // so we have to strip off "const"
@@ -974,9 +974,9 @@ Bool_t TTabCom::ExcludedByFignore(TString s)
       return kFALSE;
    } else {
 #ifdef R__SSTREAM
-      istringstream endings((char *) fignore);
+      std::istringstream endings((char *) fignore);
 #else
-      istrstream endings((char *) fignore);  // do i need to make a copy first?
+      std::istrstream endings((char *) fignore);  // do i need to make a copy first?
 #endif
       TString ending;
 
@@ -1052,7 +1052,7 @@ TString TTabCom::GetSysIncludePath()
    fclose(fout);
 
    // open the tmp file
-   ifstream file1(tmpfilename);
+   std::ifstream file1(tmpfilename);
    if (!file1) {                // error
       Error("TTabCom::GetSysIncludePath", "could not open file \"%s\"",
             tmpfilename);
@@ -1132,9 +1132,9 @@ TSeqCollection *TTabCom::NewListOfFilesInPath(const char path1[])
 
    TContainer *pList = new TContainer;  // maybe use RTTI here? (since its a static function)
 #ifdef R__SSTREAM
-   istringstream path((char *) path1);
+   std::istringstream path((char *) path1);
 #else
-   istrstream path((char *) path1);
+   std::istrstream path((char *) path1);
 #endif
 
    while (path.good())
@@ -1144,8 +1144,8 @@ TSeqCollection *TTabCom::NewListOfFilesInPath(const char path1[])
       if (dirName.IsNull())
          continue;
 
-      IfDebug(cerr << "NewListOfFilesInPath(): dirName = " << dirName <<
-              endl);
+      IfDebug(std::cerr << "NewListOfFilesInPath(): dirName = " << dirName <<
+              std::endl);
 
       AppendListOfFilesInDirectory(dirName, pList);
    }
@@ -1205,7 +1205,7 @@ void TTabCom::NoMsg(Int_t errorLevel)
    if (errorLevel < 0)          // reset
    {
       if (old_level == kNotDefined) {
-         cerr << "NoMsg(): ERROR 1. old_level==" << old_level << endl;
+         std::cerr << "NoMsg(): ERROR 1. old_level==" << old_level << std::endl;
          return;
       }
 
@@ -1214,7 +1214,7 @@ void TTabCom::NoMsg(Int_t errorLevel)
    } else                       // set
    {
       if (old_level != kNotDefined) {
-         cerr << "NoMsg(): ERROR 2. old_level==" << old_level << endl;
+         std::cerr << "NoMsg(): ERROR 2. old_level==" << old_level << std::endl;
          return;
       }
 
@@ -1240,7 +1240,7 @@ void TTabCom::NoMsg(Int_t errorLevel)
 Int_t TTabCom::Complete(const TRegexp & re,
                         const TSeqCollection * pListOfCandidates,
                         const char appendage[],
-                        ostream& out,
+                        std::ostream& out,
                         TString::ECaseCompare cmp)
 {
    // [private]
@@ -1253,7 +1253,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
    //  1 ==> after 1st char
    //  n ==> after nth char
 
-   IfDebug(cerr << "TTabCom::Complete() ..." << endl);
+   IfDebug(std::cerr << "TTabCom::Complete() ..." << std::endl);
    assert(fpLoc != 0);
    assert(pListOfCandidates != 0);
 
@@ -1276,11 +1276,11 @@ Int_t TTabCom::Complete(const TRegexp & re,
 
    int start = s2.Index(re);
 
-   IfDebug(cerr << "   s1: " << s1 << endl);
-   IfDebug(cerr << "   s2: " << s2 << endl);
-   IfDebug(cerr << "   s3: " << s3 << endl);
-   IfDebug(cerr << "start: " << start << endl);
-   IfDebug(cerr << endl);
+   IfDebug(std::cerr << "   s1: " << s1 << std::endl);
+   IfDebug(std::cerr << "   s2: " << s2 << std::endl);
+   IfDebug(std::cerr << "   s3: " << s3 << std::endl);
+   IfDebug(std::cerr << "start: " << start << std::endl);
+   IfDebug(std::cerr << std::endl);
 
    // -----------------------------------------
    // 2. go through each possible completion,
@@ -1317,7 +1317,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
          nMatches += 1;
          listOfMatches.Add(new TObjString(s5));
          listOfFullPaths.Add(new TObjString(s4));
-         IfDebug(cerr << "adding " << s5 << '\t' << s4 << endl);
+         IfDebug(std::cerr << "adding " << s5 << '\t' << s4 << std::endl);
       } else if (cmp == TString::kIgnoreCase) {
          TString ts5(s5);
          if (ts5.BeginsWith(s3, cmp))
@@ -1325,10 +1325,10 @@ Int_t TTabCom::Complete(const TRegexp & re,
             nMatches += 1;
             listOfMatches.Add(new TObjString(s5));
             listOfFullPaths.Add(new TObjString(s4));
-            IfDebug(cerr << "adding " << s5 << '\t' << s4 << endl);
+            IfDebug(std::cerr << "adding " << s5 << '\t' << s4 << std::endl);
          }
       } else {
-//rdm         IfDebug(cerr << "considered " << s5 << '\t' << s4 << endl);
+//rdm         IfDebug(std::cerr << "considered " << s5 << '\t' << s4 << std::endl);
       }
 
    }
@@ -1357,7 +1357,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
 
       pObj = pListOfCandidates->FindObject(short_name);
       if (pObj) {
-         IfDebug(cerr << endl << "class: " << pObj->ClassName() << endl);
+         IfDebug(std::cerr << std::endl << "class: " << pObj->ClassName() << std::endl);
          TString className = pObj->ClassName();
          if (0);
          else if (className == "TMethod" || className == "TFunction") {
@@ -1380,7 +1380,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
       for (int i = 0;
            (ch = AllAgreeOnChar(i, &listOfMatches, nGoodStrings));
            i += 1) {
-         IfDebug(cerr << " i=" << i << " ch=" << ch << endl);
+         IfDebug(std::cerr << " i=" << i << " ch=" << ch << std::endl);
          partialMatch.Append(ch);
       }
 
@@ -1400,7 +1400,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
          // and use it.
          CopyMatch(match, s, appendage, s0);
       } else {
-         IfDebug(cerr << "more than 1 GoodString" << endl);
+         IfDebug(std::cerr << "more than 1 GoodString" << std::endl);
 
          if (partialMatch.Length() > s3.Length())
             // this partial match is our (partial) completion.
@@ -1411,16 +1411,16 @@ Int_t TTabCom::Complete(const TRegexp & re,
             // print a list of all the ambiguous matches
             // (except for those excluded by "FileIgnore")
          {
-            IfDebug(cerr << "printing ambiguous matches" << endl);
-            out << endl;
+            IfDebug(std::cerr << "printing ambiguous matches" << std::endl);
+            out << std::endl;
             while ((pObj = next_match())) {
                s = pObj->GetName();
                s0 = next_fullpath()->GetName();
                if (!ExcludedByFignore(s) || nGoodStrings == 0) {
                   if (IsDirectory(s0))
-                     out << s << "/" << endl;
+                     out << s << "/" << std::endl;
                   else
-                     out << s << endl;
+                     out << s << std::endl;
                }
             }
             pos = -2;
@@ -1450,9 +1450,9 @@ Int_t TTabCom::Complete(const TRegexp & re,
          goto done;             /* RETURN */
       }
       // debugging output
-      IfDebug(cerr << "  i=" << i << endl);
-      IfDebug(cerr << "  L=" << l << endl);
-      IfDebug(cerr << "loc=" << loc << endl);
+      IfDebug(std::cerr << "  i=" << i << std::endl);
+      IfDebug(std::cerr << "  L=" << l << std::endl);
+      IfDebug(std::cerr << "loc=" << loc << std::endl);
 
       // slide everything (including the null terminator) over to make space
       for (; i >= loc; i -= 1) {
@@ -1509,20 +1509,20 @@ void TTabCom::CopyMatch(char dest[], const char localName[],
    const char *key = "filename";
    const int key_len = strlen(key);
 
-   IfDebug(cerr << "CopyMatch()." << endl);
-   IfDebug(cerr << "localName: " << (localName ? localName : "0") <<
-           endl);
-   IfDebug(cerr << "appendage: " << (appendage ? appendage : "0") <<
-           endl);
-   IfDebug(cerr << " fullName: " << (fullName ? fullName : "0") <<
-           endl);
+   IfDebug(std::cerr << "CopyMatch()." << std::endl);
+   IfDebug(std::cerr << "localName: " << (localName ? localName : "0") <<
+           std::endl);
+   IfDebug(std::cerr << "appendage: " << (appendage ? appendage : "0") <<
+           std::endl);
+   IfDebug(std::cerr << " fullName: " << (fullName ? fullName : "0") <<
+           std::endl);
 
 
    // check to see if "appendage" starts with "key"
    if (appendage && strncmp(appendage, key, key_len) == 0) {
       // filenames get special treatment
       appendage += key_len;
-      IfDebug(cerr << "new appendage: " << appendage << endl);
+      IfDebug(std::cerr << "new appendage: " << appendage << std::endl);
       if (IsDirectory(fullName)) {
          if (fullName)
             strcpy(dest + strlen(localName), "/");
@@ -1549,10 +1549,10 @@ TTabCom::EContext_t TTabCom::DetermineContext() const
    for (int context = 0; context < kNUM_PAT; ++context) {
       pEnd = Matchs(fBuf, *fpLoc, fPat[context], &pStart);
       if (pEnd) {
-         IfDebug(cerr << endl
+         IfDebug(std::cerr << std::endl
                  << "context=" << context << " "
                  << "RegExp=" << fRegExp[context]
-                 << endl);
+                 << std::endl);
          return EContext_t(context);  //* RETURN *//
       }
    }
@@ -1589,16 +1589,16 @@ TString TTabCom::DeterminePath(const TString & fileName,
          newBase = "";
          extendedPath = defaultPath;
       }
-      IfDebug(cerr << endl);
-      IfDebug(cerr << "    fileName: " << fileName << endl);
-      IfDebug(cerr << "    pathBase: " << newBase << endl);
+      IfDebug(std::cerr << std::endl);
+      IfDebug(std::cerr << "    fileName: " << fileName << std::endl);
+      IfDebug(std::cerr << "    pathBase: " << newBase << std::endl);
       if (defaultPath) {
-         IfDebug(cerr << " defaultPath: " << defaultPath << endl);
+         IfDebug(std::cerr << " defaultPath: " << defaultPath << std::endl);
       } else {
-         IfDebug(cerr << " defaultPath: " << endl);
+         IfDebug(std::cerr << " defaultPath: " << std::endl);
       }         
-      IfDebug(cerr << "extendedPath: " << extendedPath << endl);
-      IfDebug(cerr << endl);
+      IfDebug(std::cerr << "extendedPath: " << extendedPath << std::endl);
+      IfDebug(std::cerr << std::endl);
 
       return extendedPath;
    }
@@ -1612,9 +1612,9 @@ TString TTabCom::ExtendPath(const char originalPath[], TString newBase) const
    if (newBase.BeginsWith("/"))
       newBase.Remove(TString::kLeading, '/');
 #ifdef R__SSTREAM
-   stringstream str;
+   std::stringstream str;
 #else
-   strstream str;
+   std::strstream str;
 #endif
    TString dir;
    TString newPath;
@@ -1637,7 +1637,7 @@ TString TTabCom::ExtendPath(const char originalPath[], TString newBase) const
 }
 
 //______________________________________________________________________________
-Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
+Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
 {
    // [private]
 
@@ -1663,8 +1663,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
 
    switch (context) {
    case kUNKNOWN_CONTEXT:
-      cerr << endl << "tab completion not implemented for this context" <<
-          endl;
+      std::cerr << std::endl << "tab completion not implemented for this context" <<
+          std::endl;
       pos = -2;
       break;
 
@@ -1784,8 +1784,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
          // may be a namespace, class, object, or pointer
          TString name = s3("^[_a-zA-Z][_a-zA-Z0-9]*");
 
-         IfDebug(cerr << endl);
-         IfDebug(cerr << "name: " << '"' << name << '"' << endl);
+         IfDebug(std::cerr << std::endl);
+         IfDebug(std::cerr << "name: " << '"' << name << '"' << std::endl);
 
          // We need to decompose s3 a little more:
          // The part name is the partial symbol at the end of ::
@@ -1814,13 +1814,13 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
          TString sym = prefix("[_a-zA-Z][_a-zA-Z0-9]*::$");
          preprefix.Remove(preprefix.Length() - sym.Length(), sym.Length());
 
-         IfDebug(cerr << "prefix: " << '"' << prefix << '"' << endl);
-         IfDebug(cerr << "preprefix: " << '"' << preprefix << '"' << endl);
+         IfDebug(std::cerr << "prefix: " << '"' << prefix << '"' << std::endl);
+         IfDebug(std::cerr << "preprefix: " << '"' << preprefix << '"' << std::endl);
 
          TString namesp = prefix;
          if (namesp.Length() >= 2)
             namesp.Remove(namesp.Length() - 2, 2);  // Remove the '::' at the end of the string.
-         IfDebug(cerr << "namesp: " << '"' << namesp << '"' << endl);
+         IfDebug(std::cerr << "namesp: " << '"' << namesp << '"' << std::endl);
 
          // Make sure autoloading happens (if it can).
          delete TryMakeClassFromClassName(namesp);
@@ -1929,8 +1929,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
          //        to do it
          TString name = s1("[_a-zA-Z][-_a-zA-Z0-9<>():.]*$");
 
-         IfDebug(cerr << endl);
-         IfDebug(cerr << "name: " << '"' << name << '"' << endl);
+         IfDebug(std::cerr << std::endl);
+         IfDebug(std::cerr << "name: " << '"' << name << '"' << std::endl);
 
          switch (context) {
          case kCXX_DirectMember:
@@ -1991,8 +1991,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
          TString name = s3("^[_a-zA-Z][_a-zA-Z0-9]*");
          // "name" may now be the name of a class, object, or pointer
 
-         IfDebug(cerr << endl);
-         IfDebug(cerr << "name: " << '"' << name << '"' << endl);
+         IfDebug(std::cerr << std::endl);
+         IfDebug(std::cerr << "name: " << '"' << name << '"' << std::endl);
 
          // We need to decompose s3 a little more:
          // The partname is the method symbol and a bracket at the end of ::
@@ -2021,8 +2021,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
          TString sym = prefix("[_a-zA-Z][_a-zA-Z0-9]*::$");
          preprefix.Remove(preprefix.Length() - sym.Length(), sym.Length());
 
-         IfDebug(cerr << "prefix: " << '"' << prefix << '"' << endl);
-         IfDebug(cerr << "preprefix: " << '"' << preprefix << '"' << endl);
+         IfDebug(std::cerr << "prefix: " << '"' << prefix << '"' << std::endl);
+         IfDebug(std::cerr << "preprefix: " << '"' << preprefix << '"' << std::endl);
 
          pClass = MakeClassFromClassName(preprefix + name);
          if (!pClass) {
@@ -2037,7 +2037,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
          methodName.Chop();
          methodName.Remove(TString::kTrailing, ' ');
 
-         IfDebug(cerr << methodName << endl);
+         IfDebug(std::cerr << methodName << std::endl);
 
          // get methods
          TContainer *pList = new TContainer;
@@ -2050,7 +2050,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
          while ((pMethod = (TMethod *) nextMethod())) {
             if (methodName == pMethod->GetName()) {
                foundOne = kTRUE;
-               out << endl << pMethod->GetReturnTypeName()
+               out << std::endl << pMethod->GetReturnTypeName()
                    << " " << pMethod->GetName()
                    << pMethod->GetSignature();
                const char *comment = pMethod->GetCommentString();
@@ -2062,7 +2062,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
 
          // done
          if (foundOne) {
-            out << endl;
+            out << std::endl;
             pos = -2;
          } else {
             gSystem->Beep();
@@ -2097,8 +2097,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
             name = s3("^[_a-zA-Z][_a-zA-Z0-9:]*");
             // "name" may now be the name of a class, object, or pointer
          }
-         IfDebug(cerr << endl);
-         IfDebug(cerr << "name: " << '"' << name << '"' << endl);
+         IfDebug(std::cerr << std::endl);
+         IfDebug(std::cerr << "name: " << '"' << name << '"' << std::endl);
 
          // frodo: Again, passing the all string
          TString namerec = s1;
@@ -2138,7 +2138,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
             methodName.Chop();
             methodName.Remove(TString::kTrailing, ' ');
          }
-         IfDebug(cerr << methodName << endl);
+         IfDebug(std::cerr << methodName << std::endl);
 
          // get methods
          TContainer *pList = new TContainer;
@@ -2151,7 +2151,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
          while ((pMethod = (TMethod *) nextMethod())) {
             if (methodName == pMethod->GetName()) {
                foundOne = kTRUE;
-               out << endl << pMethod->GetReturnTypeName()
+               out << std::endl << pMethod->GetReturnTypeName()
                    << " " << pMethod->GetName()
                    << pMethod->GetSignature();
                const char *comment = pMethod->GetCommentString();
@@ -2163,7 +2163,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
 
          // done
          if (foundOne) {
-            out << endl;
+            out << std::endl;
             pos = -2;
          } else {
             gSystem->Beep();
@@ -2186,14 +2186,14 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
 
          // "abc().whatever[TAB]"
          if (l2 > l3 && s2[l2 - l3 - 1] == '.') {
-            cerr << endl <<
-                "tab completion not implemented for this context" << endl;
+            std::cerr << std::endl <<
+                "tab completion not implemented for this context" << std::endl;
             break;              // veto
          }
          // "abc()->whatever[TAB]"
          if (l2 > l3 + 1 && s2(l2 - l3 - 2, 2) == "->") {
-            cerr << endl <<
-                "tab completion not implemented for this context" << endl;
+            std::cerr << std::endl <<
+                "tab completion not implemented for this context" << std::endl;
             break;              // veto
          }
 
@@ -2220,7 +2220,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
       {
          // get function name
          TString functionName = s3("[_a-zA-Z][_a-zA-Z0-9]*");
-         IfDebug(cerr << functionName << endl);
+         IfDebug(std::cerr << functionName << std::endl);
 
          TContainer listOfMatchingGlobalFuncs;
          TIter nextGlobalFunc(GetListOfGlobalFunctions());
@@ -2232,17 +2232,17 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
          }
 
          if (listOfMatchingGlobalFuncs.IsEmpty()) {
-            cerr << endl << "no such function: " << dblquote(functionName)
-                << endl;
+            std::cerr << std::endl << "no such function: " << dblquote(functionName)
+                << std::endl;
          } else {
-            out << endl;
+            out << std::endl;
             TIter next(&listOfMatchingGlobalFuncs);
             TFunction *pFunction;
             while ((pFunction = (TFunction *) next())) {
                out << pFunction->GetReturnTypeName()
                    << " " << pFunction->GetName()
                    << pFunction->GetSignature()
-                   << endl;
+                   << std::endl;
             }
          }
 
@@ -2346,8 +2346,8 @@ TClass *TTabCom::MakeClassFromClassName(const char className[]) const
        pClass->GetListOfAllPublicDataMembers()->GetSize() == 0) {
       // i'm assuming this happens iff there was some error.
       // (misspelled the class name, for example)
-      cerr << endl << "class " << dblquote(className) << " not defined." <<
-          endl;
+      std::cerr << std::endl << "class " << dblquote(className) << " not defined." <<
+          std::endl;
       return 0;
    }
 
@@ -2540,8 +2540,8 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
    // not found...
    if (!varName_exists) {
-      cerr << endl << "variable " << dblquote(varName) << " not defined."
-         << endl;
+      std::cerr << std::endl << "variable " << dblquote(varName) << " not defined."
+         << std::endl;
       return 0;                 //* RETURN *//
    }
 
@@ -2560,8 +2560,8 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
       // this will happen if "varName" is a fundamental type (as opposed to class type).
       // or a pointer to a pointer.
       // or a function pointer.
-      cerr << endl << "problem determining class of " << dblquote(varName)
-         << endl;
+      std::cerr << std::endl << "problem determining class of " << dblquote(varName)
+         << std::endl;
       return 0;                 //* RETURN *//
    }
 
@@ -2616,8 +2616,8 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
          *fpLoc += 1;
 
          // 3. inform the user.
-         cerr << endl << dblquote(varName) <<
-            " is of pointer type. Use this operator: ->" << endl;
+         std::cerr << std::endl << dblquote(varName) <<
+            " is of pointer type. Use this operator: ->" << std::endl;
    }
 
    if (context == kCXX_IndirectMember || context == kCXX_IndirectProto) {
@@ -2626,7 +2626,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
          className.Chop();      // remove the '*'
 
          if (className[className.Length() - 1] == '*') {
-            cerr << endl << "can't handle pointers to pointers." << endl;
+            std::cerr << std::endl << "can't handle pointers to pointers." << std::endl;
             return 0;           // RETURN
          }
       } else {
@@ -2661,8 +2661,8 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
          *fpLoc -= 1;
 
          // 3. inform the user.
-         cerr << endl << dblquote(varName) <<
-             " is not of pointer type. Use this operator: ." << endl;
+         std::cerr << std::endl << dblquote(varName) <<
+             " is not of pointer type. Use this operator: ." << std::endl;
       }
    }
 
@@ -2676,9 +2676,9 @@ void TTabCom::SetPattern(EContext_t handle, const char regexp[])
 
    // prevent overflow
    if (handle >= kNUM_PAT) {
-      cerr << endl
+      std::cerr << std::endl
           << "ERROR: handle="
-          << (int) handle << " >= kNUM_PAT=" << (int) kNUM_PAT << endl;
+          << (int) handle << " >= kNUM_PAT=" << (int) kNUM_PAT << std::endl;
       return;
    }
 

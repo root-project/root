@@ -27,7 +27,7 @@
 #include "TGLabel.h"
 #include "TGNumberEntry.h"
 #include "TCurlyArc.h"
-#include "iostream"
+#include <iostream>
 
 ClassImp(TCurlyArcEditor)
 

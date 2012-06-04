@@ -61,6 +61,6 @@
 #pragma link C++ function ROOT::Fit::Fitter::LikelihoodFit(const ROOT::Fit::BinData &, bool);
 #pragma link C++ function ROOT::Fit::Fitter::LikelihoodFit(const ROOT::Fit::UnBinData &, bool);
 
-#pragma link C++ class vector<ROOT::Fit::ParameterSettings>;
+#pragma link C++ class std::vector<ROOT::Fit::ParameterSettings>;
 
 #endif

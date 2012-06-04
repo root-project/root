@@ -353,9 +353,9 @@ TObjArray *TPRegexp::MatchS(const TString &s, const TString &mods,
    // TObjArray *subStrL = TPRegexp("(a|(z))(bc)").MatchS("abc");
    // for (Int_t i = 0; i < subStrL->GetLast()+1; i++) {
    //    const TString subStr = ((TObjString *)subStrL->At(i))->GetString();
-   //    cout << "\"" << subStr << "\" ";
+   //    std::cout << "\"" << subStr << "\" ";
    // }
-   // cout << subStr << endl;
+   // std::cout << subStr << std::endl;
    //
    // produces:  "abc" "a" "" "bc"
    // For meaning of mods see ParseMods().
@@ -456,7 +456,7 @@ Int_t TPRegexp::Substitute(TString &s, const TString &replacePattern,
    //
    // TString s("aap noot mies");
    // const Int_t nrSub = TPRegexp("(\\w*) noot (\\w*)").Substitute(s,"$2 noot $1");
-   // cout << nrSub << " \"" << s << "\"" <<endl;
+   // std::cout << nrSub << " \"" << s << "\"" <<std::endl;
    //
    // produces: 2 "mies noot aap"
    // For meaning of mods see ParseMods().

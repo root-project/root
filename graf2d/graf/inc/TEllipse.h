@@ -69,7 +69,7 @@ public:
    virtual void   Paint(Option_t *option="");
    virtual void   PaintEllipse(Double_t x1, Double_t y1, Double_t r1,Double_t r2,Double_t phimin, Double_t phimax,Double_t theta,Option_t *option="");
    virtual void   Print(Option_t *option="") const;
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void   SetNoEdges(Bool_t noEdges=kTRUE); // *TOGGLE* *GETTER=GetNoEdges
    virtual void   SetPhimin(Double_t phi=0)   {fPhimin=phi;} // *MENU*
    virtual void   SetPhimax(Double_t phi=360) {fPhimax=phi;} // *MENU*

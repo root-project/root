@@ -41,7 +41,7 @@ public:
       gVirtualX->DrawLine(fId, GetHilightGC()(), 0, 1, fWidth-1, 1);
       gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth-1, 0, fWidth-1, 1);
    }
-   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGHorizontal3DLine,0)  //A horizontal 3D separator line
 };
@@ -59,7 +59,7 @@ public:
       gVirtualX->DrawLine(fId, GetHilightGC()(), 1, 0, 1, fHeight-1);
       gVirtualX->DrawLine(fId, GetHilightGC()(), 0, fHeight-1, 1, fHeight-1);
    }
-   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGVertical3DLine,0)  //A vertical 3D separator line
 };

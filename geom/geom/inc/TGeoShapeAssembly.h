@@ -59,7 +59,7 @@ public:
    void                  NeedsBBoxRecompute() {fBBoxOK = kFALSE;}
    void                  RecomputeBoxLast();
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void          SetPoints(Double_t *points) const;
    virtual void          SetPoints(Float_t *points) const;
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;

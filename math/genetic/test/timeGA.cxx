@@ -44,7 +44,7 @@ int GAMinimize(ROOT::Math::IMultiGenFunction& chi2Func, double& xm1, double& xm2
    // minimize the function
    ROOT::Math::GeneticMinimizer* min = new ROOT::Math::GeneticMinimizer();
    if (min == 0) { 
-      cout << "Error creating minimizer " << endl;
+      std::cout << "Error creating minimizer " << std::endl;
       return -1;
    }
 
@@ -65,7 +65,7 @@ int GAMinimize(ROOT::Math::IMultiGenFunction& chi2Func, double& xm1, double& xm2
 
    for (unsigned int i = 0; i < chi2Func.NDim(); ++i) { 
 #ifdef DEBUG
-      cout << "set variable " << i << " to value " << x0[i] << endl;
+      std::cout << "set variable " << i << " to value " << x0[i] << std::endl;
 #endif
       if ( i == 3 || i == 6 )
           min->SetLimitedVariable(i,"x" + ROOT::Math::Util::ToString(i),x0[i], 0.1,2,8);
@@ -79,7 +79,7 @@ int GAMinimize(ROOT::Math::IMultiGenFunction& chi2Func, double& xm1, double& xm2
    min->MinValue(); 
 
    // show the results
-   cout << "Min values by GeneticMinimizer: " << min->X()[3] << "  " << min->X()[6] << endl;
+   std::cout << "Min values by GeneticMinimizer: " << min->X()[3] << "  " << min->X()[6] << std::endl;
    xm1 = min->X()[3];
    xm2 = min->X()[6];
 
@@ -114,7 +114,7 @@ int GAMinTutorial()
    t.Start();
    GAMinimize(chi2Func, x1,x2);
    t.Stop();
-   cout << "Time :\t " << t.RealTime() << " " << t.CpuTime() << endl;
+   std::cout << "Time :\t " << t.RealTime() << " " << t.CpuTime() << std::endl;
 
    return 0; 
 }

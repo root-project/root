@@ -73,7 +73,7 @@ public:
    virtual void    Draw(Option_t *option="");
    Option_t       *GetOption() const {return fOption.Data();}
    virtual void    Print(Option_t *option="") const;
-   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void    SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void    SetOption(Option_t *option="") {fOption = option;}
    virtual void    SetAxis(Double_t * axis);       //Define new axis
    virtual void    SetAxis(Double_t x, Double_t y, Double_t z);

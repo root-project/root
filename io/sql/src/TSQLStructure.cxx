@@ -724,47 +724,47 @@ void TSQLStructure::PrintLevel(Int_t level) const
 {
    // print content of current structure
 
-   for(Int_t n=0;n<level;n++) cout << " ";
+   for(Int_t n=0;n<level;n++) std::cout << " ";
    switch (fType) {
-   case 0: cout << "Undefined type"; break;
-   case kSqlObject: cout << "Object ref = " << fValue; break;
-   case kSqlPointer: cout << "Pointer ptr = " << fValue; break;
+   case 0: std::cout << "Undefined type"; break;
+   case kSqlObject: std::cout << "Object ref = " << fValue; break;
+   case kSqlPointer: std::cout << "Pointer ptr = " << fValue; break;
    case kSqlVersion: {
       const TClass* cl = (const TClass*) fPointer;
-      cout << "Version cl = " << cl->GetName() << " ver = " << cl->GetClassVersion();
+      std::cout << "Version cl = " << cl->GetName() << " ver = " << cl->GetClassVersion();
       break;
    }
    case kSqlStreamerInfo: {
       const TStreamerInfo* info = (const TStreamerInfo*) fPointer;
-      cout << "Class: " << info->GetName();
+      std::cout << "Class: " << info->GetName();
       break;
    }
    case kSqlCustomElement:
    case kSqlElement: {
       const TStreamerElement* elem = (const TStreamerElement*) fPointer;
-      cout << "Member: " << elem->GetName();
+      std::cout << "Member: " << elem->GetName();
       break;
    }
    case kSqlValue: {
-      cout << "Value: " << fValue;
-      if (fRepeatCnt>1) cout << "  cnt:" << fRepeatCnt;
-      if (fPointer!=0) cout << "  type = " << (const char*)fPointer;
+      std::cout << "Value: " << fValue;
+      if (fRepeatCnt>1) std::cout << "  cnt:" << fRepeatCnt;
+      if (fPointer!=0) std::cout << "  type = " << (const char*)fPointer;
       break;
    }
    case kSqlArray: {
-      cout << "Array ";
-      if (fValue.Length()>0) cout << "  sz = " << fValue;
+      std::cout << "Array ";
+      if (fValue.Length()>0) std::cout << "  sz = " << fValue;
       break;
    }
    case kSqlCustomClass: {
       TClass* cl = (TClass*) fPointer;
-      cout << "CustomClass: " << cl->GetName() << "  ver = " << fValue;
+      std::cout << "CustomClass: " << cl->GetName() << "  ver = " << fValue;
       break;
    }
    default:
-      cout << "Unknown type";
+      std::cout << "Unknown type";
    }
-   cout << endl;
+   std::cout << std::endl;
 
    for(Int_t n=0;n<NumChilds();n++)
       GetChild(n)->PrintLevel(level+2);
@@ -1389,9 +1389,9 @@ Bool_t TSQLStructure::StoreObject(TSqlRegistry* reg, Long64_t objid, TClass* cl,
    if ((cl==0) || (objid<0)) return kFALSE;
 
    if (gDebug>1) {
-      cout << "Store object " << objid <<" cl = " << cl->GetName() << endl;
-      if (GetStreamerInfo()) cout << "Info = " << GetStreamerInfo()->GetName() << endl; else
-         if (GetElement()) cout << "Element = " << GetElement()->GetName() << endl;
+      std::cout << "Store object " << objid <<" cl = " << cl->GetName() << std::endl;
+      if (GetStreamerInfo()) std::cout << "Info = " << GetStreamerInfo()->GetName() << std::endl; else
+         if (GetElement()) std::cout << "Element = " << GetElement()->GetName() << std::endl;
    }
 
    Long64_t oldid = reg->fCurrentObjId;
@@ -1419,7 +1419,7 @@ Bool_t TSQLStructure::StoreObject(TSqlRegistry* reg, Long64_t objid, TClass* cl,
          normstore = StoreObjectInNormalForm(reg);
 
    if (gDebug>2)
-      cout << "Store object " << objid << " of class " << cl->GetName() << "  normal = " << normstore << " sqltype = " << GetType() << endl;
+      std::cout << "Store object " << objid << " of class " << cl->GetName() << "  normal = " << normstore << " sqltype = " << GetType() << std::endl;
 
    if (!normstore) {
 
@@ -1569,9 +1569,9 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TSQLTableData*
    Int_t columntyp = DefineElementColumnType(elem, reg->fFile);
 
    if (gDebug>4)
-      cout << "Element " << elem->GetName()
+      std::cout << "Element " << elem->GetName()
            << "   type = " << typ
-           << "  column = " << columntyp << endl;
+           << "  column = " << columntyp << std::endl;
 
    TString colname = DefineElementColumnName(elem, reg->fFile);
 
@@ -1625,7 +1625,7 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TSQLTableData*
       }
 
       if (objid<0) {
-         //cout << "!!!! Not standard " << elem->GetName() << " class = " << elem->GetClassPointer()->GetName() << endl;
+         //std::cout << "!!!! Not standard " << elem->GetName() << " class = " << elem->GetClassPointer()->GetName() << std::endl;
          objid = reg->GetNextObjId();
          if (!StoreObject(reg, objid, elem->GetClassPointer()))
             objid = -1;  // this is a case, when no data was stored for this object
@@ -2137,8 +2137,8 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TBufferSQL2* buf, TSQLObje
    Int_t coltype = DefineElementColumnType(elem, f);
 
    if (gDebug>4)
-      cout <<"TSQLStructure::LocateElementColumn " << elem->GetName() <<
-         " coltyp = " << coltype << " : " << elem->GetType() << " len = " << elem->GetArrayLength() << endl;
+      std::cout <<"TSQLStructure::LocateElementColumn " << elem->GetName() <<
+         " coltyp = " << coltype << " : " << elem->GetType() << " len = " << elem->GetArrayLength() << std::endl;
 
    if (coltype==kColUnknown) return kColUnknown;
 
@@ -2148,8 +2148,8 @@ Int_t TSQLStructure::LocateElementColumn(TSQLFile* f, TBufferSQL2* buf, TSQLObje
    TString colname = DefineElementColumnName(elem, f);
 
    if (gDebug>4)
-      cout << "         colname = " << colname << " in " <<
-            data->GetInfo()->GetClassTableName() << endl;
+      std::cout << "         colname = " << colname << " in " <<
+            data->GetInfo()->GetClassTableName() << std::endl;
 
    switch (coltype) {
    case kColSimple: {

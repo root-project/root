@@ -81,7 +81,7 @@ void TEveShape::CopyVizParams(const TEveElement* el)
 }
 
 //______________________________________________________________________________
-void TEveShape::WriteVizParams(ostream& out, const TString& var)
+void TEveShape::WriteVizParams(std::ostream& out, const TString& var)
 {
    // Write visualization parameters.
 

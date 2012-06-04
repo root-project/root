@@ -61,6 +61,8 @@
 #include "TMVA/MCFitter.h"
 #include "TMVA/Config.h"
 
+using std::stringstream;
+
 REGISTER_METHOD(FDA)
 
 ClassImp(TMVA::MethodFDA)
@@ -402,7 +404,7 @@ void TMVA::MethodFDA::PrintResults( const TString& fitter, std::vector<Double_t>
    // check maximum length of variable name
    Log() << kINFO;
    Log() << "Results for parameter fit using \"" << fitter << "\" fitter:" << Endl;
-   vector<TString>  parNames;
+   std::vector<TString>  parNames;
    for (UInt_t ipar=0; ipar<pars.size(); ipar++) parNames.push_back( Form("Par(%i)",ipar ) );
    gTools().FormattedOutput( pars, parNames, "Parameter" , "Fit result", Log(), "%g" );   
    Log() << "Discriminator expression: \"" << fFormulaStringP << "\"" << Endl;
@@ -581,7 +583,7 @@ void TMVA::MethodFDA::CalculateMulticlassValues( const TMVA::Event*& evt, std::v
 
 
 //_______________________________________________________________________
-void  TMVA::MethodFDA::ReadWeightsFromStream( istream& istr )
+void  TMVA::MethodFDA::ReadWeightsFromStream( std::istream& istr )
 {
    // read back the training results from a file (stream)
 
@@ -655,19 +657,19 @@ void TMVA::MethodFDA::ReadWeightsFromXML( void* wghtnode )
 void TMVA::MethodFDA::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
    // write FDA-specific classifier response
-   fout << "   double              fParameter[" << fNPars << "];" << endl;
-   fout << "};" << endl;
-   fout << "" << endl;
-   fout << "inline void " << className << "::Initialize() " << endl;
-   fout << "{" << endl;
+   fout << "   double              fParameter[" << fNPars << "];" << std::endl;
+   fout << "};" << std::endl;
+   fout << "" << std::endl;
+   fout << "inline void " << className << "::Initialize() " << std::endl;
+   fout << "{" << std::endl;
    for(UInt_t ipar=0; ipar<fNPars; ipar++) {
-      fout << "   fParameter[" << ipar << "] = " << fBestPars[ipar] << ";" << endl;
+      fout << "   fParameter[" << ipar << "] = " << fBestPars[ipar] << ";" << std::endl;
    }
-   fout << "}" << endl;
-   fout << endl;
-   fout << "inline double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << endl;
-   fout << "{" << endl;
-   fout << "   // interpret the formula" << endl;
+   fout << "}" << std::endl;
+   fout << std::endl;
+   fout << "inline double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << std::endl;
+   fout << "{" << std::endl;
+   fout << "   // interpret the formula" << std::endl;
 
    // replace parameters
    TString str = fFormulaStringT;
@@ -680,16 +682,16 @@ void TMVA::MethodFDA::MakeClassSpecific( std::ostream& fout, const TString& clas
       str.ReplaceAll( Form("[%i]", ivar+fNPars), Form("inputValues[%i]", ivar) );
    }
 
-   fout << "   double retval = " << str << ";" << endl;
-   fout << endl;
-   fout << "   return retval; " << endl;
-   fout << "}" << endl;
-   fout << endl;
-   fout << "// Clean up" << endl;
-   fout << "inline void " << className << "::Clear() " << endl;
-   fout << "{" << endl;
-   fout << "   // nothing to clear" << endl;
-   fout << "}" << endl;
+   fout << "   double retval = " << str << ";" << std::endl;
+   fout << std::endl;
+   fout << "   return retval; " << std::endl;
+   fout << "}" << std::endl;
+   fout << std::endl;
+   fout << "// Clean up" << std::endl;
+   fout << "inline void " << className << "::Clear() " << std::endl;
+   fout << "{" << std::endl;
+   fout << "   // nothing to clear" << std::endl;
+   fout << "}" << std::endl;
 }
 
 //_______________________________________________________________________

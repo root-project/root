@@ -177,7 +177,7 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const char *confDir,
       Info("ReadConfigFile", "using PROOF config file: %s", fFileName.Data());
 
    // Open the config file
-   fstream infile(fFileName.Data(), std::ios::in);
+   std::fstream infile(fFileName.Data(), std::ios::in);
    if (infile.is_open()) {
       Bool_t isMaster = kFALSE;
       Bool_t isSubmaster = kFALSE;

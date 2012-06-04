@@ -52,7 +52,7 @@ public:
    virtual void         Print(Option_t *option="") const;  //*MENU*
    virtual Int_t        ReadFile(const char *filename);
    virtual void         SaveSource(const char *filename);  //*MENU*
-   virtual void         SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void         SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void         SetParams(const char *params=0); //*MENU*
 
    ClassDef(TMacro,1)  // Class supporting a collection of lines with C++ code.

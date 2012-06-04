@@ -150,7 +150,7 @@ void   TH1K::Reset(Option_t *option)
 
 
 //______________________________________________________________________________
-void TH1K::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TH1K::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
    // Note the following restrictions in the code generated:
@@ -159,7 +159,7 @@ void TH1K::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    //  - Contours not saved
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    out<<"   "<<"TH1 *";
 
    out<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
@@ -167,28 +167,28 @@ void TH1K::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
                  <<","<<GetXaxis()->GetXmin()
                  <<","<<GetXaxis()->GetXmax()
                  <<","<<fKOrd;
-   out <<");"<<endl;
+   out <<");"<<std::endl;
 
    if (fDirectory == 0) {
-      out<<"   "<<GetName()<<"->SetDirectory(0);"<<endl;
+      out<<"   "<<GetName()<<"->SetDirectory(0);"<<std::endl;
    }
    if (TestBit(kNoStats)) {
-      out<<"   "<<GetName()<<"->SetStats(0);"<<endl;
+      out<<"   "<<GetName()<<"->SetStats(0);"<<std::endl;
    }
    if (fOption.Length() != 0) {
-      out<<"   "<<GetName()<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<std::endl;
    }
 
    if (fNIn) {
-      out<<"   Float_t Arr[]={"<<endl;
+      out<<"   Float_t Arr[]={"<<std::endl;
       for (int i=0; i<fNIn; i++) {
          out<< fArray[i];
          if (i != fNIn-1) {out<< ",";} else { out<< "};";}
-         if (i%10 == 9)   {out<< endl;}
+         if (i%10 == 9)   {out<< std::endl;}
       }
-      out<< endl;
+      out<< std::endl;
       out<<"   for(int i=0;i<" << fNIn << ";i++)"<<GetName()<<"->Fill(Arr[i]);";
-      out<< endl;
+      out<< std::endl;
    }
    SaveFillAttributes(out,GetName(),0,1001);
    SaveLineAttributes(out,GetName(),1,1,1);
@@ -200,7 +200,7 @@ void TH1K::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    opt.ToLower();
    if (!opt.Contains("nodraw")) {
       out<<"   "<<GetName()<<"->Draw("
-      <<quote<<option<<quote<<");"<<endl;
+      <<quote<<option<<quote<<");"<<std::endl;
    }
 }
 

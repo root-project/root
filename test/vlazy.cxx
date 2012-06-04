@@ -71,13 +71,13 @@ static TMatrix traditional_downsampling(const TMatrix &orig_matrix)
 
 int main()
 {
-   cout << "\nDownsample matrices using traditional and non-traditional methods"
-        << endl;
+   std::cout << "\nDownsample matrices using traditional and non-traditional methods"
+        << std::endl;
 
    TStopwatch sw;
 
    {
-      cout << "\nMake sure that both methods give the same results" << endl;
+      std::cout << "\nMake sure that both methods give the same results" << std::endl;
       TMatrix orig_m = THaarMatrixF(9,201);   // which is a pretty big matrix
       TMatrix small1 = traditional_downsampling(orig_m);
       TMatrix small2 = downsample_matrix(orig_m);
@@ -85,7 +85,7 @@ int main()
    }
 
    {
-      cout << "\nClock the traditional downsampling" << endl;
+      std::cout << "\nClock the traditional downsampling" << std::endl;
       sw.Start();
       for (int order = 1; order <= 10; order++) {
          TMatrix orig_m = THaarMatrixF(order);   // may be pretty big, btw
@@ -94,12 +94,12 @@ int main()
             small(0,0) = 1;                     // just to use the matrix
          }
       }
-      cout << "\tIt took " << sw.RealTime()
-           << " sec to complete the test" << endl;
+      std::cout << "\tIt took " << sw.RealTime()
+           << " sec to complete the test" << std::endl;
    }
 
    {
-      cout << "\nClock the 'new style' downsampling (with lazy matrices)"<< endl;
+      std::cout << "\nClock the 'new style' downsampling (with lazy matrices)"<< std::endl;
       sw.Start();
       for (int order = 1; order <= 10; order++) {
          TMatrix orig_m = THaarMatrixF(order);     // may be pretty big, btw
@@ -108,8 +108,8 @@ int main()
             small(0,0) = 1;                       // just to use the matrix
          }
       }
-      cout << "\tIt took " << sw.RealTime()
-           << " sec to complete the test" << endl;
+      std::cout << "\tIt took " << sw.RealTime()
+           << " sec to complete the test" << std::endl;
    }
    return 0;
 }

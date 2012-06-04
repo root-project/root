@@ -31,6 +31,8 @@
 using std::cout ;
 using std::endl ;
 
+using namespace std;
+
 ClassImp(RooSharedProperties)
 ;
 

@@ -57,7 +57,7 @@ public:
 };
 
 void HitNames::InitNames() {        // Create and fill names
-  //  cout << "HitNames::InitNames() are called" << endl;
+  //  std::cout << "HitNames::InitNames() are called" << std::endl;
   fNames = new char* [fSize];
   for (int i=0;i<fSize;i++) {
     fNames[i] = new char [20];
@@ -66,7 +66,7 @@ void HitNames::InitNames() {        // Create and fill names
 }
 void HitNames::DeleteNames() {      // Clean up
   if(!fNames) return;
-  //  cout << "HitNames::DeleteNames() are called" << endl;
+  //  std::cout << "HitNames::DeleteNames() are called" << std::endl;
   for (int i=0;i<fSize;i++) {
     delete fNames[i];
   }
@@ -163,8 +163,8 @@ Double_t Tester::TestByIndex() {      // benchmark access by index
     }
     timer.Stop();
   } else {
-    cout << "Class " << GetName()
-	 << " doesn't support access by index" << endl;
+    std::cout << "Class " << GetName()
+	 << " doesn't support access by index" << std::endl;
   }
   CleanUp();
   return timer.CpuTime();

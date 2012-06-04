@@ -65,7 +65,7 @@ public:
    TGFrame  *GetContainer() const { return fCanvas->GetContainer(); }
    virtual void Selected()  { Emit(" Selected()"); } //*SIGNAL*
 
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGShutterItem,0)  // Shutter widget item
 };
@@ -110,7 +110,7 @@ public:
    virtual TGDimension GetDefaultSize() const;
    virtual void        SetDefaultSize(UInt_t w, UInt_t h);
 
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
 
    virtual Bool_t ProcessMessage(Long_t cmd, Long_t parm1, Long_t parm2);
    virtual void   Selected(TGShutterItem *item) { Emit(" Selected(TGShutterItem*)", item); } //*SIGNAL*

@@ -462,14 +462,14 @@ Double_t TGeoCompositeShape::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoCompositeShape::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGeoCompositeShape::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
    if (fNode) fNode->SavePrimitive(out,option);
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoCompositeShape(\"" << GetName() << "\", pBoolNode);" << endl;
-   if (strlen(GetTitle())) out << "   " << GetPointerName() << "->SetTitle(\"" << GetTitle() << "\");" << endl;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoCompositeShape(\"" << GetName() << "\", pBoolNode);" << std::endl;
+   if (strlen(GetTitle())) out << "   " << GetPointerName() << "->SetTitle(\"" << GetTitle() << "\");" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 

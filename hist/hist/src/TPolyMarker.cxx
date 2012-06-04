@@ -321,27 +321,27 @@ void TPolyMarker::Print(Option_t *) const
 
 
 //______________________________________________________________________________
-void TPolyMarker::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TPolyMarker::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out.
 
    char quote = '"';
-   out<<"   "<<endl;
-   out<<"   Double_t *dum = 0;"<<endl;
+   out<<"   "<<std::endl;
+   out<<"   Double_t *dum = 0;"<<std::endl;
    if (gROOT->ClassSaved(TPolyMarker::Class())) {
       out<<"   ";
    } else {
       out<<"   TPolyMarker *";
    }
-   out<<"pmarker = new TPolyMarker("<<fN<<",dum,dum,"<<quote<<fOption<<quote<<");"<<endl;
+   out<<"pmarker = new TPolyMarker("<<fN<<",dum,dum,"<<quote<<fOption<<quote<<");"<<std::endl;
 
    SaveMarkerAttributes(out,"pmarker",1,1,1);
 
    for (Int_t i=0;i<Size();i++) {
-      out<<"   pmarker->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
+      out<<"   pmarker->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<std::endl;
    }
    out<<"   pmarker->Draw("
-      <<quote<<option<<quote<<");"<<endl;
+      <<quote<<option<<quote<<");"<<std::endl;
 }
 
 

@@ -193,7 +193,7 @@ Int_t TNtupleD::Fill(Double_t x0,Double_t x1,Double_t x2,Double_t x3,Double_t x4
 }
 
 //_______________________________________________________________________
-Long64_t TNtupleD::ReadStream(istream &inputStream, const char * /*branchDescriptor*/, char delimiter)
+Long64_t TNtupleD::ReadStream(std::istream &inputStream, const char * /*branchDescriptor*/, char delimiter)
 {
 // read from filename as many columns as variables in the ntuple
 // the function returns the number of rows found in the file

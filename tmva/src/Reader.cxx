@@ -324,7 +324,7 @@ TString TMVA::Reader::GetMethodTypeFromFile( const TString& filename )
 {
    // read the method type from the file
 
-   ifstream fin( filename );
+   std::ifstream fin( filename );
    if (!fin.good()) { // file not found --> Error
       Log() << kFATAL << "<BookMVA> fatal error: "
             << "unable to open input weight file: " << filename << Endl;
@@ -459,7 +459,7 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const char* 
 //_______________________________________________________________________
 Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, const TString& methodTag, Double_t aux )
 {
-   // Evaluate a vector<float> of input data for a given method
+   // Evaluate a std::vector<float> of input data for a given method
    // The parameter aux is obligatory for the cuts method where it represents the efficiency cutoff
 
    // create a temporary event from the vector.
@@ -483,7 +483,7 @@ Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, const 
 //_______________________________________________________________________
 Double_t TMVA::Reader::EvaluateMVA( const std::vector<Double_t>& inputVec, const TString& methodTag, Double_t aux )
 {
-   // Evaluate a vector<double> of input data for a given method
+   // Evaluate a std::vector<double> of input data for a given method
    // The parameter aux is obligatory for the cuts method where it represents the efficiency cutoff
 
    // performs a copy to float values which are internally used by all methods

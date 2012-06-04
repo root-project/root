@@ -398,7 +398,7 @@ void TEvePointSet::CopyVizParams(const TEveElement* el)
 }
 
 //______________________________________________________________________________
-void TEvePointSet::WriteVizParams(ostream& out, const TString& var)
+void TEvePointSet::WriteVizParams(std::ostream& out, const TString& var)
 {
    // Write visualization parameters.
 

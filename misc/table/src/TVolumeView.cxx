@@ -230,7 +230,7 @@ TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
   //
   //   All new-created sets become the structural ones anyway.
   //
-  //  cout << "ctor for " << GetName() << " - " << GetTitle() << endl;
+  //  std::cout << "ctor for " << GetName() << " - " << GetTitle() << std::endl;
    if (!gGeometry) new TGeometry;
    if (!nodePosition) {
       // Create the trivial position if any
@@ -859,7 +859,7 @@ TString TVolumeView::PathP() const
 }
 
 //_______________________________________________________________________
-void TVolumeView::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TVolumeView::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    //to be documented
    const Char_t *sceleton[] = {
@@ -900,17 +900,17 @@ void TVolumeView::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    }
    Int_t im = 0;
    for (Int_t lineNumber =0; lineNumber < sceletonSize; lineNumber++) {
-      out << sceleton[lineNumber];                             // cout << lineNumber << ". " << sceleton[lineNumber];
+      out << sceleton[lineNumber];                             // std::cout << lineNumber << ". " << sceleton[lineNumber];
       switch (lineNumber) {
-         case  1:  out  << "\"" << thisNodePath.Data() << "\";" ; // cout  << "\"" << thisNodePath.Data() << "\";" ;
+         case  1:  out  << "\"" << thisNodePath.Data() << "\";" ; // std::cout  << "\"" << thisNodePath.Data() << "\";" ;
             break;
-         case  2:  out   << thisPositionId << ";" ; // cout  << "\"" << thisNodePath.Data() << "\";" ;
+         case  2:  out   << thisPositionId << ";" ; // std::cout  << "\"" << thisNodePath.Data() << "\";" ;
             break;
-         case  3:  out << "{" << thisX << ", " << thisY << ", "<< thisZ << "};";  // cout << thisX << ";" ;
+         case  3:  out << "{" << thisX << ", " << thisY << ", "<< thisZ << "};";  // std::cout << thisX << ";" ;
             break;
-         case  5:  out << "\"" << matrixName << "\";" ;           // cout << "\"" << matrixName << "\";" ;
+         case  5:  out << "\"" << matrixName << "\";" ;           // std::cout << "\"" << matrixName << "\";" ;
             break;
-         case  6:  out <<  matrixType << ";" ;                    // cout <<  matrixType << ";" ;
+         case  6:  out <<  matrixType << ";" ;                    // std::cout <<  matrixType << ";" ;
             break;
          case  7:  out << thisMatrix[im++] << ", "; out << thisMatrix[im++] << ", "; out << thisMatrix[im++] << ", ";
             break;
@@ -921,8 +921,8 @@ void TVolumeView::SavePrimitive(ostream &out, Option_t * /*= ""*/)
          default:
             break;
       };
-//   cout << " " << endl;
-      out << " " << endl;
+//   std::cout << " " << std::endl;
+      out << " " << std::endl;
    }
 }
 

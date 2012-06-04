@@ -242,7 +242,7 @@ public:
                { return fCanvas->HandleContainerExpose(ev); }
    Bool_t  HandleCrossing(Event_t *ev)
                { return fCanvas->HandleContainerCrossing(ev); }
-   void    SavePrimitive(ostream &out, Option_t * = "");
+   void    SavePrimitive(std::ostream &out, Option_t * = "");
    void    SetEditable(Bool_t) { }
 };
 
@@ -1906,15 +1906,15 @@ Bool_t TRootCanvas::HandleDNDLeave()
 }
 
 //______________________________________________________________________________
-void TRootContainer::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TRootContainer::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save a canvas container as a C++ statement(s) on output stream out.
 
-   out << endl << "   // canvas container" << endl;
+   out << std::endl << "   // canvas container" << std::endl;
    out << "   Int_t canvasID = gVirtualX->InitWindow((ULong_t)"
-       << GetParent()->GetParent()->GetName() << "->GetId());" << endl;
-   out << "   Window_t winC = gVirtualX->GetWindowID(canvasID);" << endl;
+       << GetParent()->GetParent()->GetName() << "->GetId());" << std::endl;
+   out << "   Window_t winC = gVirtualX->GetWindowID(canvasID);" << std::endl;
    out << "   TGCompositeFrame *";
    out << GetName() << " = new TGCompositeFrame(gClient,winC"
-       << "," << GetParent()->GetName() << ");" << endl;
+       << "," << GetParent()->GetName() << ");" << std::endl;
 }

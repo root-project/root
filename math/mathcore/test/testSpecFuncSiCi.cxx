@@ -429,17 +429,17 @@ int testSiCi() {
       xmaxrel = x;
     }
     
-//     cout << "x=" << x << ": Si(x) = " << SiMathematica
+//     std::cout << "x=" << x << ": Si(x) = " << SiMathematica
 //          << ", sinint(x) = " << SiRoot
 //          << ", rel. diff = " << SiRoot/SiMathematica-1
-//          << endl;
+//          << std::endl;
   }
-  cout << "Si: Maximum relative deviation: " << maxrel
+  std::cout << "Si: Maximum relative deviation: " << maxrel
        << " for x=" << xmaxrel 
-       << (maxrel > 1E-15 ? " -> FAIL" : " -> pass") << endl;
-  cout << "Si: Maximum absolute deviation: " << maxabs
+       << (maxrel > 1E-15 ? " -> FAIL" : " -> pass") << std::endl;
+  std::cout << "Si: Maximum absolute deviation: " << maxabs
        << " for x=" << xmaxabs 
-       << (maxabs > 1E-15 ? " -> FAIL" : " -> pass") << endl;
+       << (maxabs > 1E-15 ? " -> FAIL" : " -> pass") << std::endl;
   if (maxrel > 1E-15) fail += 1;
   if (maxabs > 1E-15) fail += 2;
   
@@ -456,17 +456,17 @@ int testSiCi() {
       maxrel = std::fabs(CiRoot/CiMathematica-1);
       xmaxrel = x;
     }
-//     cout << "x=" << x << ": Ci(x) = " << CiMathematica
+//     std::cout << "x=" << x << ": Ci(x) = " << CiMathematica
 //          << ", cosint(x) = " << CiRoot
 //          << ", rel. diff = " << CiRoot/CiMathematica-1
-//          << endl;
+//          << std::endl;
   }
-  cout << "Ci: Maximum relative deviation: " << maxrel
+  std::cout << "Ci: Maximum relative deviation: " << maxrel
        << " for x=" << xmaxrel
-       << (maxrel > 1E-13 ? " -> FAIL" : " -> pass") <<endl;
-  cout << "Ci: Maximum absolute deviation: " << maxabs
+       << (maxrel > 1E-13 ? " -> FAIL" : " -> pass") <<std::endl;
+  std::cout << "Ci: Maximum absolute deviation: " << maxabs
        << " for x=" << xmaxabs 
-       << (maxabs > 1E-15 ? " -> FAIL" : " -> pass")<< endl;
+       << (maxabs > 1E-15 ? " -> FAIL" : " -> pass")<< std::endl;
    
   if (maxrel > 1E-13) fail += 4;
   if (maxabs > 1E-15) fail += 8;

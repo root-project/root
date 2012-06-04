@@ -63,12 +63,12 @@ namespace TMVA {
    class RuleEnsemble;
    class MsgLogger;
 
-   ostream& operator<<( ostream& os, const RuleEnsemble& event );
+   std::ostream& operator<<( std::ostream& os, const RuleEnsemble& event );
 
    class RuleEnsemble {
 
       // output operator for a RuleEnsemble
-      friend ostream& operator<< ( ostream& os, const RuleEnsemble& rules );
+      friend std::ostream& operator<< ( std::ostream& os, const RuleEnsemble& rules );
       
    public:
 
@@ -320,11 +320,11 @@ namespace TMVA {
       void  Print() const;
 
       // print the model in a cryptic way
-      void  PrintRaw   ( ostream& os  ) const; // obsolete
+      void  PrintRaw   ( std::ostream& os  ) const; // obsolete
       void* AddXMLTo   ( void* parent ) const;
    
       // read the model from input stream
-      void  ReadRaw    ( istream& istr ); // obsolete
+      void  ReadRaw    ( std::istream& istr ); // obsolete
       void  ReadFromXML( void* wghtnode ); 
 
 

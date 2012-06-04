@@ -200,9 +200,9 @@ void TLeafI::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 }
 
 //______________________________________________________________________________
-void TLeafI::ReadValue(istream &s, Char_t /*delim = ' '*/)
+void TLeafI::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
 {
-// read an integer from istream s and store it into the branch buffer
+// read an integer from std::istream s and store it into the branch buffer
    if (fIsUnsigned) {
       UInt_t *uvalue = (UInt_t*)GetValuePointer();
       for (Int_t i=0;i<fLen;i++) s >> uvalue[i];

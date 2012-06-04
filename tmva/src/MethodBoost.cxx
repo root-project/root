@@ -682,9 +682,9 @@ void TMVA::MethodBoost::FindMVACut()
       Double_t bSel=mvaBC->GetBinContent(1);
       Double_t separationGain=sepGain->GetSeparationGain(sSel,bSel,sTot,bTot);
       Double_t mvaCut=mvaSC->GetBinLowEdge(1);
-      //      cout << "minMVA =" << minMVA << " maxMVA = " << maxMVA << " width = " << mvaSC->GetBinWidth(1) <<  endl;
+      //      std::cout << "minMVA =" << minMVA << " maxMVA = " << maxMVA << " width = " << mvaSC->GetBinWidth(1) <<  std::endl;
 
-      //      for (Int_t ibin=1;ibin<=nBins;ibin++) cout << " cutvalues[" << ibin<<"]="<<mvaSC->GetBinLowEdge(ibin) << "  " << mvaSC->GetBinCenter(ibin) << endl;
+      //      for (Int_t ibin=1;ibin<=nBins;ibin++) std::cout << " cutvalues[" << ibin<<"]="<<mvaSC->GetBinLowEdge(ibin) << "  " << mvaSC->GetBinCenter(ibin) << std::endl;
       Double_t mvaCutOrientation=1; // 1 if mva > mvaCut --> Signal and -1 if mva < mvaCut (i.e. mva*-1 > mvaCut*-1) --> Signal
       Double_t SoBRight=1, SoBLeft=1;
       for (Int_t ibin=2;ibin<nBins;ibin++){ 
@@ -716,14 +716,14 @@ void TMVA::MethodBoost::FindMVACut()
       }
       
       
-      // cout << "Min="<<minMVA << " Max=" << maxMVA 
+      // std::cout << "Min="<<minMVA << " Max=" << maxMVA 
       //      << " sTot=" << sTot
       //      << " bTot=" << bTot
       //      << " sepGain="<<separationGain
       //      << " cut=" << mvaCut 
       //      << " cutOrientation="<<mvaCutOrientation
-      //      << endl;
-      // cout << "S/B right="<<SoBRight << " left="<<SoBLeft<<endl;
+      //      << std::endl;
+      // std::cout << "S/B right="<<SoBRight << " left="<<SoBLeft<<std::endl;
       // if (fMethodIndex==0)mvaCut = -1.9616885110735893e-02;
       // if (fMethodIndex==1)mvaCut = -6.8812005221843719e-02;
       lastMethod->SetSignalReferenceCut(mvaCut);
@@ -893,15 +893,15 @@ void TMVA::MethodBoost::CalcMethodWeight()
       }
       
       // if (ievt < 10)
-      // cout << " TYpe=" << DataInfo().IsSignal(ev) 
+      // std::cout << " TYpe=" << DataInfo().IsSignal(ev) 
       //      << " mvaValue="<<fMVAvalues->at(ievt)
       //      << " mvaCutVal="<<method->GetSignalReferenceCut()
       //      << " mvaCutValOrien="<<method->GetSignalReferenceCutOrientation()
       //      << " isSignallike="<<method->IsSignalLike(fMVAvalues->at(ievt))
-      //      << endl;
+      //      << std::endl;
    }
 
-   //   cout << "sumWrong="<<sumWrong << " sumAll="<<sumAll<<endl;
+   //   std::cout << "sumWrong="<<sumWrong << " sumAll="<<sumAll<<std::endl;
    fMethodError=sumWrong/sumAll;
 
    // calculating the fMethodError and the fBoostWeight out of it uses

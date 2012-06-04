@@ -316,7 +316,7 @@ void TParallelCoordRange::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
          pyold = py;
          break;
       default:
-         //cout<<"entry: "<<entry<<endl;
+         //std::cout<<"entry: "<<entry<<std::endl;
          break;
    }
 }

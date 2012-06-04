@@ -23,7 +23,7 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooTFnBinding(*this,newname); }
   inline virtual ~RooTFnBinding() { }
 
-  void printArgs(ostream& os) const ;
+  void printArgs(std::ostream& os) const ;
 
 protected:
 

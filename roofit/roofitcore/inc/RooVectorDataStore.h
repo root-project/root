@@ -196,7 +196,7 @@ public:
     } ;
 
     void write(Int_t i) {
-/*       cout << "write(" << this << ") [" << i << "] nativeReal = " << _nativeReal << " = " << _nativeReal->GetName() << " real = " << _real << " buf = " << _buf << " value = " << *_buf << " native getVal() = " << _nativeReal->getVal() << " getVal() = " << _real->getVal() << endl ; */
+/*       std::cout << "write(" << this << ") [" << i << "] nativeReal = " << _nativeReal << " = " << _nativeReal->GetName() << " real = " << _real << " buf = " << _buf << " value = " << *_buf << " native getVal() = " << _nativeReal->getVal() << " getVal() = " << _real->getVal() << std::endl ; */
       _vec[i] = *_buf ;
     }
     
@@ -288,7 +288,7 @@ public:
     }
     
     void setErrorBuffer(Double_t* newBuf) { 
-/*       cout << "setErrorBuffer(" << _nativeReal->GetName() << ") newBuf = " << newBuf << endl ; */
+/*       std::cout << "setErrorBuffer(" << _nativeReal->GetName() << ") newBuf = " << newBuf << std::endl ; */
       _bufE = newBuf ; 
       if (!_vecE) _vecE = new std::vector<Double_t> ;
       _vecE->reserve(_vec.capacity()) ;

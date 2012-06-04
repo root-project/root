@@ -175,7 +175,7 @@ using std::make_pair;
 // using std::cout;
 // using std::endl;
 
-void SearchCanvases(TSeqCollection* canvases, vector<TObject*>& objects);
+void SearchCanvases(TSeqCollection* canvases, std::vector<TObject*>& objects);
 
 typedef std::multimap<TObject*, TF1*> FitFuncMap_t;
 
@@ -205,7 +205,7 @@ TF1* TFitEditor::FindFunction()
    // If we are looking for previously fitted functions, look in the
    // fPrevFit data structure.
    } else if ( fTypeFit->GetSelected() == kFP_PREVFIT ) {
-      pair<fPrevFitIter, fPrevFitIter> look = fPrevFit.equal_range(fFitObject);
+      std::pair<fPrevFitIter, fPrevFitIter> look = fPrevFit.equal_range(fFitObject);
       for ( fPrevFitIter it = look.first; it != look.second; ++it ) {
          TF1* f = it->second;
          if ( strcmp( f->GetName(), name ) == 0 )
@@ -454,7 +454,7 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    if (!obj) {
       TList* l = new TList();
       l->Add(pad);
-      vector<TObject*> v;
+      std::vector<TObject*> v;
       SearchCanvases(l, v);
       if ( v.size() ) 
          obj = v[0];
@@ -1667,7 +1667,7 @@ void TFitEditor::FillFunctionList(Int_t)
       Int_t newid = kFP_ALTFUNC;
       
       // Look only for those functions used in the selected object
-      pair<fPrevFitIter, fPrevFitIter> look = fPrevFit.equal_range(fFitObject);
+      std::pair<fPrevFitIter, fPrevFitIter> look = fPrevFit.equal_range(fFitObject);
       // Then go over all those functions and add them to the list
       for ( fPrevFitIter it = look.first; it != look.second; ++it ) {
          fFuncList->AddEntry(it->second->GetName(), newid++);
@@ -1746,7 +1746,7 @@ void TFitEditor::FillMinMethodList(Int_t)
    }
 }
 
-void SearchCanvases(TSeqCollection* canvases, vector<TObject*>& objects)
+void SearchCanvases(TSeqCollection* canvases, std::vector<TObject*>& objects)
 {
    // Auxiliary function to recursively search for objects inside the
    // current canvases.
@@ -1767,7 +1767,7 @@ void SearchCanvases(TSeqCollection* canvases, vector<TObject*>& objects)
                 || dynamic_cast<TTree*>(obj) ) {
          bool insertNew = true;
          // Be careful no to insert the same element twice.
-         for ( vector<TObject*>::iterator i = objects.begin(); i != objects.end(); ++i )
+         for ( std::vector<TObject*>::iterator i = objects.begin(); i != objects.end(); ++i )
             if ( (*i) == obj ) {
                insertNew = false;
                break;
@@ -1794,7 +1794,7 @@ void TFitEditor::FillDataSetList()
 
    // Remove all the elements
    fDataSet->RemoveAll();
-   vector<TObject*> objects;
+   std::vector<TObject*> objects;
 
    // Get all the objects registered in gDirectory
    TIter next(gDirectory->GetList());
@@ -1817,7 +1817,7 @@ void TFitEditor::FillDataSetList()
    // Add the No selection.
    Int_t newid = kFP_NOSEL;
    fDataSet->AddEntry("No Selection", newid++);
-   for ( vector<TObject*>::iterator i = objects.begin(); i != objects.end(); ++i ) {
+   for ( std::vector<TObject*>::iterator i = objects.begin(); i != objects.end(); ++i ) {
       // Insert the name as the class name followed by the name of the
       // object.
       TString name = (*i)->ClassName(); name.Append("::"); name.Append((*i)->GetName());
@@ -2248,16 +2248,16 @@ void TFitEditor::DoDataSet(Int_t selected)
          lookStr = name;
       else 
          lookStr = name(0, name.First(' '));
-      //cout << "\t1 SITREE: '" << lookStr << "'" << endl;
+      //std::cout << "\t1 SITREE: '" << lookStr << "'" << std::endl;
       objSelected = gROOT->FindObject(lookStr);
    } else {
       // It's not a tree, so the name is the complete string
-      //cout << "\t1 NOTREE: '" << name << "'" << endl;
+      //std::cout << "\t1 NOTREE: '" << name << "'" << std::endl;
       objSelected = gROOT->FindObject(name);
    }
    if ( !objSelected ) 
    {
-      //cerr << "Object not found! Please report the error! " << endl;
+      //std::cerr << "Object not found! Please report the error! " << std::endl;
       return;
    }
 
@@ -3392,7 +3392,7 @@ TList* TFitEditor::GetListOfFittingFunctions(TObject* obj)
 
    TList *retList = new TList();
 
-   pair<fPrevFitIter, fPrevFitIter> look = fPrevFit.equal_range(obj);
+   std::pair<fPrevFitIter, fPrevFitIter> look = fPrevFit.equal_range(obj);
    for ( fPrevFitIter it = look.first; it != look.second; ++it ) {
       retList->Add(it->second);
    }

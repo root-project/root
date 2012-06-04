@@ -127,7 +127,7 @@ public:
       TEfficiency&  operator+=(const TEfficiency& rhs);
       TEfficiency&  operator=(const TEfficiency& rhs);
       void          Paint(Option_t* opt);
-      void          SavePrimitive(ostream& out,Option_t* opt="");
+      void          SavePrimitive(std::ostream& out,Option_t* opt="");
       void          SetBetaAlpha(Double_t alpha);
       void          SetBetaBeta(Double_t beta);    
       void          SetBetaBinParameters(Int_t bin, Double_t alpha, Double_t beta);

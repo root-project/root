@@ -132,7 +132,7 @@ public:
    GContext_t     GetNormGC() const { return fNormGC; }
    FontStruct_t   GetFontStruct() const { return fFontStruct; }
 
-   virtual void SavePrimitive(ostream &out, Option_t * = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
 
    ClassDef(TGTextLBEntry,0)  // Text listbox entry
 };
@@ -365,7 +365,7 @@ public:
    virtual void GetSelectedEntries(TList *selected);
    UInt_t  GetItemVsize() const { return fItemVsize; }
 
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    virtual void Selected(Int_t widgetId, Int_t id);   //*SIGNAL*
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); } //*SIGNAL*

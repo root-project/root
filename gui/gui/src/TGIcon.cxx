@@ -197,7 +197,7 @@ void TGIcon::SetImagePath(const char *path)
 }
 
 //______________________________________________________________________________
-void TGIcon::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGIcon::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save an icon widget as a C++ statement(s) on output stream out.
 
@@ -220,12 +220,12 @@ void TGIcon::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
          << quote << ")" << "," << GetWidth() << "," << GetHeight();
       if (fBackground == GetDefaultFrameBackground()) {
          if (!GetOptions()) {
-            out <<");" << endl;
+            out <<");" << std::endl;
          } else {
-            out << "," << GetOptionString() <<");" << endl;
+            out << "," << GetOptionString() <<");" << std::endl;
          }
       } else {
-         out << "," << GetOptionString() << ",ucolor);" << endl;
+         out << "," << GetOptionString() << ",ucolor);" << std::endl;
       }
    } else {
       TString name = fPath;
@@ -233,8 +233,8 @@ void TGIcon::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       name += fImage->GetName();
       name.Chop();
       out << GetName() << " = new TGIcon(" << fParent->GetName()  << ","
-          << quote << name.Data() << quote << ");" << endl;
+          << quote << name.Data() << quote << ");" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 }

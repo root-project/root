@@ -674,7 +674,7 @@ Double_t TMVA::VariableGaussTransform::OldCumulant(Float_t x, TH1* h ) const {
 
 
 //_______________________________________________________________________
-void TMVA::VariableGaussTransform::PrintTransformation( ostream& ) 
+void TMVA::VariableGaussTransform::PrintTransformation( std::ostream& ) 
 {
    // prints the transformation 
    Int_t cls = 0;

@@ -830,74 +830,74 @@ void TF2::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
 }
 
 //______________________________________________________________________________
-void TF2::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TF2::Class())) {
       out<<"   ";
    } else {
       out<<"   TF2 *";
    }
    if (!fMethodCall) {
-      out<<GetName()<<" = new TF2("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<");"<<endl;
+      out<<GetName()<<" = new TF2("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<");"<<std::endl;
    } else {
-      out<<GetName()<<" = new TF2("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<GetNpar()<<");"<<endl;
+      out<<GetName()<<" = new TF2("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<GetNpar()<<");"<<std::endl;
    }
 
    if (GetFillColor() != 0) {
       if (GetFillColor() > 228) {
          TColor::SaveColor(out, GetFillColor());
-         out<<"   "<<GetName()<<"->SetFillColor(ci);" << endl;
+         out<<"   "<<GetName()<<"->SetFillColor(ci);" << std::endl;
       } else 
-         out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
+         out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
    }
    if (GetFillStyle() != 1001) {
-      out<<"   "<<GetName()<<"->SetFillStyle("<<GetFillStyle()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetFillStyle("<<GetFillStyle()<<");"<<std::endl;
    }
    if (GetMarkerColor() != 1) {
       if (GetMarkerColor() > 228) {
          TColor::SaveColor(out, GetMarkerColor());
-         out<<"   "<<GetName()<<"->SetMarkerColor(ci);" << endl;
+         out<<"   "<<GetName()<<"->SetMarkerColor(ci);" << std::endl;
       } else 
-         out<<"   "<<GetName()<<"->SetMarkerColor("<<GetMarkerColor()<<");"<<endl;
+         out<<"   "<<GetName()<<"->SetMarkerColor("<<GetMarkerColor()<<");"<<std::endl;
    }
    if (GetMarkerStyle() != 1) {
-      out<<"   "<<GetName()<<"->SetMarkerStyle("<<GetMarkerStyle()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetMarkerStyle("<<GetMarkerStyle()<<");"<<std::endl;
    }
    if (GetMarkerSize() != 1) {
-      out<<"   "<<GetName()<<"->SetMarkerSize("<<GetMarkerSize()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetMarkerSize("<<GetMarkerSize()<<");"<<std::endl;
    }
    if (GetLineColor() != 1) {
       if (GetLineColor() > 228) {
          TColor::SaveColor(out, GetLineColor());
-         out<<"   "<<GetName()<<"->SetLineColor(ci);" << endl;
+         out<<"   "<<GetName()<<"->SetLineColor(ci);" << std::endl;
       } else 
-         out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<endl;
+         out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
    }
    if (GetLineWidth() != 4) {
-      out<<"   "<<GetName()<<"->SetLineWidth("<<GetLineWidth()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetLineWidth("<<GetLineWidth()<<");"<<std::endl;
    }
    if (GetLineStyle() != 1) {
-      out<<"   "<<GetName()<<"->SetLineStyle("<<GetLineStyle()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetLineStyle("<<GetLineStyle()<<");"<<std::endl;
    }
    if (GetNpx() != 100) {
-      out<<"   "<<GetName()<<"->SetNpx("<<GetNpx()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetNpx("<<GetNpx()<<");"<<std::endl;
    }
    if (GetChisquare() != 0) {
-      out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
    }
    Double_t parmin, parmax;
    for (Int_t i=0;i<fNpar;i++) {
-      out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<endl;
-      out<<"   "<<GetName()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
+      out<<"   "<<GetName()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
       GetParLimits(i,parmin,parmax);
-      out<<"   "<<GetName()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
    }
    out<<"   "<<GetName()<<"->Draw("
-      <<quote<<option<<quote<<");"<<endl;
+      <<quote<<option<<quote<<");"<<std::endl;
 }
 
 

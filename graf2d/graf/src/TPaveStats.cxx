@@ -513,14 +513,14 @@ void TPaveStats::Paint(Option_t *option)
 
 
 //______________________________________________________________________________
-void TPaveStats::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TPaveStats::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    /* Begin_Html
    Save primitive as a C++ statement(s) on output stream out.
    End_Html */
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TPaveStats::Class())) {
       out<<"   ";
    } else {
@@ -528,24 +528,24 @@ void TPaveStats::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    }
    if (fOption.Contains("NDC")) {
       out<<"ptstats = new "<<ClassName()<<"("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
-      <<","<<quote<<fOption<<quote<<");"<<endl;
+      <<","<<quote<<fOption<<quote<<");"<<std::endl;
    } else {
       out<<"ptstats = new "<<ClassName()<<"("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-      <<","<<quote<<fOption<<quote<<");"<<endl;
+      <<","<<quote<<fOption<<quote<<");"<<std::endl;
    }
    if (strcmp(GetName(),"TPave")) {
-      out<<"   ptstats->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+      out<<"   ptstats->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
    }
    if (fBorderSize != 4) {
-      out<<"   ptstats->SetBorderSize("<<fBorderSize<<");"<<endl;
+      out<<"   ptstats->SetBorderSize("<<fBorderSize<<");"<<std::endl;
    }
    SaveFillAttributes(out,"ptstats",19,1001);
    SaveLineAttributes(out,"ptstats",1,1,1);
    SaveTextAttributes(out,"ptstats",22,0,1,62,0);
    SaveLines(out,"ptstats");
-   out<<"   ptstats->SetOptStat("<<GetOptStat()<<");"<<endl;
-   out<<"   ptstats->SetOptFit("<<GetOptFit()<<");"<<endl;
-   out<<"   ptstats->Draw();"<<endl;
+   out<<"   ptstats->SetOptStat("<<GetOptStat()<<");"<<std::endl;
+   out<<"   ptstats->SetOptFit("<<GetOptFit()<<");"<<std::endl;
+   out<<"   ptstats->Draw();"<<std::endl;
 }
 
 

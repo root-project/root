@@ -126,34 +126,34 @@ void TPavesText::Paint(Option_t *option)
 
 
 //______________________________________________________________________________
-void TPavesText::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TPavesText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
    if (!strcmp(GetName(),"stats")) return;
    if (!strcmp(GetName(),"title")) return;
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TPavesText::Class())) {
       out<<"   ";
    } else {
       out<<"   TPavesText *";
    }
    out<<"pst = new TPavesText("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-      <<","<<fNpaves<<","<<quote<<fOption<<quote<<");"<<endl;
+      <<","<<fNpaves<<","<<quote<<fOption<<quote<<");"<<std::endl;
 
    if (strcmp(GetName(),"TPave")) {
-      out<<"   pst->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+      out<<"   pst->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
    }
    if (fLabel.Length() > 0) {
-      out<<"   pst->SetLabel("<<quote<<fLabel<<quote<<");"<<endl;
+      out<<"   pst->SetLabel("<<quote<<fLabel<<quote<<");"<<std::endl;
    }
    if (fBorderSize != 4) {
-      out<<"   pst->SetBorderSize("<<fBorderSize<<");"<<endl;
+      out<<"   pst->SetBorderSize("<<fBorderSize<<");"<<std::endl;
    }
    SaveFillAttributes(out,"pst",0,1001);
    SaveLineAttributes(out,"pst",1,1,1);
    SaveTextAttributes(out,"pst",22,0,1,62,0);
    TPaveText::SaveLines(out,"pst");
-   out<<"   pst->Draw();"<<endl;
+   out<<"   pst->Draw();"<<std::endl;
 }

@@ -32,7 +32,7 @@ namespace ROOT {
 
 
 /**
-    define ostream operators for output 
+    define std::ostream operators for output 
 */
 
 class FunctionMinimum;

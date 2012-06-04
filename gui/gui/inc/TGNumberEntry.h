@@ -152,7 +152,7 @@ public:
    virtual void   Layout();
    virtual Bool_t IsEditable() const { return kFALSE; }
    virtual void   InvalidInput(const char *instr) { Emit("InvalidInput(char*)", instr); }   //*SIGNAL*
-   virtual void   SavePrimitive(ostream &out, Option_t * = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t * = "");
 
    ClassDef(TGNumberEntryField,0)  // A text entry field used by a TGNumberEntry
 };
@@ -284,7 +284,7 @@ public:
    virtual Bool_t IsEditable() const { return kFALSE; }
 
    UInt_t GetDefaultHeight() const { return fNumericEntry->GetDefaultHeight(); }
-   virtual void SavePrimitive(ostream &out, Option_t * = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
    virtual TGLayoutManager *GetLayoutManager() const;
 
    ClassDef(TGNumberEntry,0)  // Entry field widget for several numeric formats

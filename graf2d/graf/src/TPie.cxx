@@ -1131,57 +1131,57 @@ void TPie::Paint(Option_t *option)
 
 
 //______________________________________________________________________________
-void TPie::SavePrimitive(ostream &out, Option_t *option)
+void TPie::SavePrimitive(std::ostream &out, Option_t *option)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
-   out << "   " << endl;
+   out << "   " << std::endl;
    if (gROOT->ClassSaved(TPie::Class())) {
       out << "   ";
    } else {
       out << "   TPie *";
    }
    out << GetName() << " = new TPie(\"" << GetName() << "\", \"" << GetTitle()
-       << "\", " << fNvals << ");" << endl;
+       << "\", " << fNvals << ");" << std::endl;
    out << "   " << GetName() << "->SetCircle(" << fX << ", " << fY << ", "
-       << fRadius << ");" << endl;
+       << fRadius << ");" << std::endl;
    out << "   " << GetName() << "->SetValueFormat(\"" << GetValueFormat()
-       << "\");" << endl;
+       << "\");" << std::endl;
    out << "   " << GetName() << "->SetLabelFormat(\"" << GetLabelFormat()
-       << "\");" << endl;
+       << "\");" << std::endl;
    out << "   " << GetName() << "->SetPercentFormat(\"" << GetPercentFormat()
-       << "\");" << endl;
+       << "\");" << std::endl;
    out << "   " << GetName() << "->SetLabelsOffset(" << GetLabelsOffset()
-       << ");" << endl;
+       << ");" << std::endl;
    out << "   " << GetName() << "->SetAngularOffset(" << GetAngularOffset()
-       << ");" << endl;
-   out << "   " << GetName() << "->SetTextAngle(" << GetTextAngle() << ");" << endl;
-   out << "   " << GetName() << "->SetTextColor(" << GetTextColor() << ");" << endl;
-   out << "   " << GetName() << "->SetTextFont(" << GetTextFont() << ");" << endl;
-   out << "   " << GetName() << "->SetTextSize(" << GetTextSize() << ");" << endl;
+       << ");" << std::endl;
+   out << "   " << GetName() << "->SetTextAngle(" << GetTextAngle() << ");" << std::endl;
+   out << "   " << GetName() << "->SetTextColor(" << GetTextColor() << ");" << std::endl;
+   out << "   " << GetName() << "->SetTextFont(" << GetTextFont() << ");" << std::endl;
+   out << "   " << GetName() << "->SetTextSize(" << GetTextSize() << ");" << std::endl;
 
 
    // Save the values for the slices
    for (Int_t i=0;i<fNvals;++i) {
       out << "   " << GetName() << "->GetSlice(" << i << ")->SetTitle(\""
-          << fPieSlices[i]->GetTitle() << "\");" << endl;
+          << fPieSlices[i]->GetTitle() << "\");" << std::endl;
       out << "   " << GetName() << "->GetSlice(" << i << ")->SetValue("
-          << fPieSlices[i]->GetValue() << ");" << endl;
+          << fPieSlices[i]->GetValue() << ");" << std::endl;
       out << "   " << GetName() << "->GetSlice(" << i << ")->SetRadiusOffset("
-          << fPieSlices[i]->GetRadiusOffset() << ");" << endl;
+          << fPieSlices[i]->GetRadiusOffset() << ");" << std::endl;
       out << "   " << GetName() << "->GetSlice(" << i << ")->SetFillColor("
-          << fPieSlices[i]->GetFillColor() << ");" << endl;
+          << fPieSlices[i]->GetFillColor() << ");" << std::endl;
       out << "   " << GetName() << "->GetSlice(" << i << ")->SetFillStyle("
-          << fPieSlices[i]->GetFillStyle() << ");" << endl;
+          << fPieSlices[i]->GetFillStyle() << ");" << std::endl;
       out << "   " << GetName() << "->GetSlice(" << i << ")->SetLineColor("
-          << fPieSlices[i]->GetLineColor() << ");" << endl;
+          << fPieSlices[i]->GetLineColor() << ");" << std::endl;
       out << "   " << GetName() << "->GetSlice(" << i << ")->SetLineStyle("
-          << fPieSlices[i]->GetLineStyle() << ");" << endl;
+          << fPieSlices[i]->GetLineStyle() << ");" << std::endl;
       out << "   " << GetName() << "->GetSlice(" << i << ")->SetLineWidth("
-          << fPieSlices[i]->GetLineWidth() << ");" << endl;
+          << fPieSlices[i]->GetLineWidth() << ");" << std::endl;
    }
 
-   out << "   " << GetName() << "->Draw(\"" << option << "\");" << endl;
+   out << "   " << GetName() << "->Draw(\"" << option << "\");" << std::endl;
 }
 
 

@@ -572,7 +572,7 @@ Bool_t TGVFileSplitter::HandleDoubleClick(Event_t *)
 }
 
 //______________________________________________________________________________
-void TGVSplitter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGVSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save a splitter widget as a C++ statement(s) on output stream out.
 
@@ -584,28 +584,28 @@ void TGVSplitter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         out <<");" << endl;
+         out <<");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
    // TGVSplitter->SetFrame( theframe ) can only be saved here
    // if fFrame is the frame on the left (since the frame on the
    // right will only be saved afterwards)... The other case is
    // handled in TGCompositeFrame::SavePrimitiveSubframes()
    if (GetLeft()) {
       out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
-      if (GetLeft()) out << ",kTRUE);" << endl;
-      else           out << ",kFALSE);"<< endl;
+      if (GetLeft()) out << ",kTRUE);" << std::endl;
+      else           out << ",kFALSE);"<< std::endl;
    }
 }
 
 //______________________________________________________________________________
-void TGHSplitter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGHSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save a splitter widget as a C++ statement(s) on output stream out.
 
@@ -617,28 +617,28 @@ void TGHSplitter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         out <<");" << endl;
+         out <<");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
    // TGHSplitter->SetFrame( theframe ) can only be saved here
    // if fFrame is the frame above (since the frame below will
    // only be saved afterwards)... The other case is handled in
    // TGCompositeFrame::SavePrimitiveSubframes()
    if (GetAbove()) {
       out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
-      if (GetAbove()) out << ",kTRUE);" << endl;
-      else            out << ",kFALSE);"<< endl;
+      if (GetAbove()) out << ",kTRUE);" << std::endl;
+      else            out << ",kFALSE);"<< std::endl;
    }
 }
 
 //______________________________________________________________________________
-void TGVFileSplitter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGVFileSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save a splitter widget as a C++ statement(s) on output stream out.
 
@@ -650,18 +650,18 @@ void TGVFileSplitter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         out <<");" << endl;
+         out <<");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    out << "   " << GetName() << "->SetFrame(" << GetFrame()->GetName();
-   if (GetLeft()) out << ",kTRUE);" << endl;
-   else           out << ",kFALSE);"<< endl;
+   if (GetLeft()) out << ",kTRUE);" << std::endl;
+   else           out << ",kFALSE);"<< std::endl;
 }
 

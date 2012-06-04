@@ -246,12 +246,12 @@ Bool_t TLM::EndSession(const Char_t *sessionid)
 //______________________________________________________________________________
 void TLM::TSlaveParams::Print(Option_t * /*option*/) const
 {
-   cout << IsA()->GetName()
+   std::cout << IsA()->GetName()
       << ":  " << fNode
       << ", " << fPerfidx
       << ", " << fImg
       << ", " << fAuth
       << ", " << fAccount
       << ", " << fType
-      << endl;
+      << std::endl;
 }

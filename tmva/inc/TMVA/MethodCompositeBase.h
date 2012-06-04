@@ -77,7 +77,7 @@ namespace TMVA {
       using MethodBase::GetMvaValue;
 
       // read weights from file
-      void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( std::istream& istr );
 
       // performs classifier training
       virtual void Train() = 0;

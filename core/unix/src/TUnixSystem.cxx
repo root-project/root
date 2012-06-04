@@ -2170,10 +2170,10 @@ void TUnixSystem::StackTrace()
    TString gdbmess = gEnv->GetValue("Root.StacktraceMessage", "");
    gdbmess = gdbmess.Strip();
 
-   cout.flush();
+   std::cout.flush();
    fflush(stdout);
 
-   cerr.flush();
+   std::cerr.flush();
    fflush(stderr);
 
    int fd = STDERR_FILENO;
@@ -2347,7 +2347,7 @@ void TUnixSystem::StackTrace()
 
       // open tmp file for demangled stack trace
       TString tmpf1 = "gdb-backtrace";
-      ofstream file1;
+      std::ofstream file1;
       if (demangle) {
          FILE *f = TempFileName(tmpf1);
          if (f) fclose(f);
@@ -2439,7 +2439,7 @@ void TUnixSystem::StackTrace()
          file1.close();
          snprintf(buffer, sizeof(buffer), "%s %s < %s > %s", filter, cppfiltarg, tmpf1.Data(), tmpf2.Data());
          Exec(buffer);
-         ifstream file2(tmpf2);
+         std::ifstream file2(tmpf2);
          TString line;
          while (file2) {
             line = "";

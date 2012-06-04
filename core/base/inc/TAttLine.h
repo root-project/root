@@ -49,7 +49,7 @@ public:
    virtual Width_t  GetLineWidth() const {return fLineWidth;}
    virtual void     Modify();
    virtual void     ResetAttLine(Option_t *option="");
-   virtual void     SaveLineAttributes(ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t widdef=1);
+   virtual void     SaveLineAttributes(std::ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t widdef=1);
    virtual void     SetLineAttributes(); // *MENU*
    virtual void     SetLineColor(Color_t lcolor) { fLineColor = lcolor;}
    virtual void     SetLineStyle(Style_t lstyle) { fLineStyle = lstyle;}

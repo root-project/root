@@ -245,9 +245,9 @@ Bool_t TMVA::Rule::operator<( const Rule& other ) const
 }
 
 //_______________________________________________________________________
-ostream& TMVA::operator<< ( ostream& os, const Rule& rule )
+std::ostream& TMVA::operator<< ( std::ostream& os, const Rule& rule )
 {
-   // ostream operator
+   // std::ostream operator
    rule.Print( os );
    return os;
 }
@@ -279,7 +279,7 @@ void TMVA::Rule::Copy( const Rule& other )
 }
 
 //_______________________________________________________________________
-void TMVA::Rule::Print( ostream& os ) const
+void TMVA::Rule::Print( std::ostream& os ) const
 {
    // print function
    const UInt_t nvars = fCut->GetNvars();
@@ -341,7 +341,7 @@ void TMVA::Rule::PrintLogger(const char *title) const
 }
 
 //_______________________________________________________________________
-void TMVA::Rule::PrintRaw( ostream& os ) const
+void TMVA::Rule::PrintRaw( std::ostream& os ) const
 {
    // extensive print function used to print info for the weight file
    Int_t dp = os.precision();
@@ -448,7 +448,7 @@ void TMVA::Rule::ReadFromXML( void* wghtnode )
 }
 
 //_______________________________________________________________________
-void TMVA::Rule::ReadRaw( istream& istr )
+void TMVA::Rule::ReadRaw( std::istream& istr )
 {
    // read function (format is the same as written by PrintRaw)
 

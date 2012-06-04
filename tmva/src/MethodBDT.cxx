@@ -134,6 +134,7 @@
 #include "TMVA/PDF.h"
 
 using std::vector;
+using std::make_pair;
 
 REGISTER_METHOD(BDT)
 
@@ -1102,13 +1103,13 @@ Double_t TMVA::MethodBDT::GetGradBoostMVA(TMVA::Event& e, UInt_t nTrees)
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBDT::UpdateTargets(vector<TMVA::Event*> eventSample, UInt_t cls)
+void TMVA::MethodBDT::UpdateTargets(std::vector<TMVA::Event*> eventSample, UInt_t cls)
 {
    //Calculate residua for all events;
 
    if(DoMulticlass()){
       UInt_t nClasses = DataInfo().GetNClasses();
-      for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+      for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
          fResiduals[*e].at(cls)+=fForest.back()->CheckEvent(*(*e),kFALSE);
          if(cls == nClasses-1){
             for(UInt_t i=0;i<nClasses;i++){
@@ -1125,7 +1126,7 @@ void TMVA::MethodBDT::UpdateTargets(vector<TMVA::Event*> eventSample, UInt_t cls
       }
    }
    else{
-      for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+      for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
          fResiduals[*e].at(0)+=fForest.back()->CheckEvent(*(*e),kFALSE);
          Double_t p_sig=1.0/(1.0+exp(-2.0*fResiduals[*e].at(0)));
          Double_t res = (DataInfo().IsSignal(*e)?1:0)-p_sig;
@@ -1135,10 +1136,10 @@ void TMVA::MethodBDT::UpdateTargets(vector<TMVA::Event*> eventSample, UInt_t cls
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBDT::UpdateTargetsRegression(vector<TMVA::Event*> eventSample, Bool_t first)
+void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<TMVA::Event*> eventSample, Bool_t first)
 {
    //Calculate current residuals for all events and update targets for next iteration
-   for (vector<TMVA::Event*>::iterator e=fEventSample.begin(); e!=fEventSample.end();e++) {
+   for (std::vector<TMVA::Event*>::iterator e=fEventSample.begin(); e!=fEventSample.end();e++) {
       if(!first){
          fWeightedResiduals[*e].first -= fForest.back()->CheckEvent(*(*e),kFALSE);
       }
@@ -1146,15 +1147,15 @@ void TMVA::MethodBDT::UpdateTargetsRegression(vector<TMVA::Event*> eventSample, 
    }
    
    fSumOfWeights = 0;
-   vector< pair<Double_t, Double_t> > temp;
-   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++){
+   vector< std::pair<Double_t, Double_t> > temp;
+   for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++){
       temp.push_back(make_pair(fabs(fWeightedResiduals[*e].first),fWeightedResiduals[*e].second));
       fSumOfWeights += (*e)->GetWeight();
    }
    fTransitionPoint = GetWeightedQuantile(temp,0.7,fSumOfWeights);
 
    Int_t i=0;
-   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+   for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
  
       if(temp[i].first<=fTransitionPoint)
          (*e)->SetTarget(0,fWeightedResiduals[*e].first);
@@ -1165,7 +1166,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(vector<TMVA::Event*> eventSample, 
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBDT::GetWeightedQuantile(vector<  pair<Double_t, Double_t> > vec, const Double_t quantile, const Double_t norm){
+Double_t TMVA::MethodBDT::GetWeightedQuantile(vector<  std::pair<Double_t, Double_t> > vec, const Double_t quantile, const Double_t norm){
    //calculates the quantile of the distribution of the first pair entries weighted with the values in the second pair entries
    Double_t temp = 0.0;
    std::sort(vec.begin(), vec.end());
@@ -1179,11 +1180,11 @@ Double_t TMVA::MethodBDT::GetWeightedQuantile(vector<  pair<Double_t, Double_t> 
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBDT::GradBoost( vector<TMVA::Event*> eventSample, DecisionTree *dt, UInt_t cls)
+Double_t TMVA::MethodBDT::GradBoost( std::vector<TMVA::Event*> eventSample, DecisionTree *dt, UInt_t cls)
 {
    //Calculate the desired response value for each region
-   std::map<TMVA::DecisionTreeNode*,vector<Double_t> > leaves;
-   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+   std::map<TMVA::DecisionTreeNode*,std::vector<Double_t> > leaves;
+   for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       Double_t weight = (*e)->GetWeight();
       TMVA::DecisionTreeNode* node = dt->GetEventNode(*(*e));
       if ((leaves[node]).empty()){
@@ -1195,7 +1196,7 @@ Double_t TMVA::MethodBDT::GradBoost( vector<TMVA::Event*> eventSample, DecisionT
          (leaves[node])[1]+=fabs((*e)->GetTarget(cls))*(1.0-fabs((*e)->GetTarget(cls))) * weight* weight;
       }
    }
-   for (std::map<TMVA::DecisionTreeNode*,vector<Double_t> >::iterator iLeave=leaves.begin();
+   for (std::map<TMVA::DecisionTreeNode*,std::vector<Double_t> >::iterator iLeave=leaves.begin();
         iLeave!=leaves.end();++iLeave){
       if ((iLeave->second)[1]<1e-30) (iLeave->second)[1]=1e-30;
 
@@ -1211,20 +1212,20 @@ Double_t TMVA::MethodBDT::GradBoost( vector<TMVA::Event*> eventSample, DecisionT
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBDT::GradBoostRegression( vector<TMVA::Event*> eventSample, DecisionTree *dt )
+Double_t TMVA::MethodBDT::GradBoostRegression( std::vector<TMVA::Event*> eventSample, DecisionTree *dt )
 {
    // Implementation of M_TreeBoost using a Huber loss function as desribed by Friedman 1999
    std::map<TMVA::DecisionTreeNode*,Double_t > leaveWeights;
-   std::map<TMVA::DecisionTreeNode*,vector< pair<Double_t, Double_t> > > leaves;
+   std::map<TMVA::DecisionTreeNode*,vector< std::pair<Double_t, Double_t> > > leaves;
    UInt_t i =0;
-   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+   for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       TMVA::DecisionTreeNode* node = dt->GetEventNode(*(*e));      
       (leaves[node]).push_back(make_pair(fWeightedResiduals[*e].first,(*e)->GetWeight()));
       (leaveWeights[node]) += (*e)->GetWeight();
       i++;
    }
 
-   for (std::map<TMVA::DecisionTreeNode*,vector< pair<Double_t, Double_t> > >::iterator iLeave=leaves.begin();
+   for (std::map<TMVA::DecisionTreeNode*,vector< std::pair<Double_t, Double_t> > >::iterator iLeave=leaves.begin();
         iLeave!=leaves.end();++iLeave){
       Double_t shift=0,diff= 0;
       Double_t ResidualMedian = GetWeightedQuantile(iLeave->second,0.5,leaveWeights[iLeave->first]);
@@ -1245,14 +1246,14 @@ Double_t TMVA::MethodBDT::GradBoostRegression( vector<TMVA::Event*> eventSample,
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBDT::InitGradBoost( vector<TMVA::Event*> eventSample)
+void TMVA::MethodBDT::InitGradBoost( std::vector<TMVA::Event*> eventSample)
 {
    // initialize targets for first tree
    fSumOfWeights = 0;
    fSepType=NULL; //set fSepType to NULL (regression trees are used for both classification an regression)
    std::vector<std::pair<Double_t, Double_t> > temp;
    if(DoRegression()){
-      for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+      for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
          fWeightedResiduals[*e]= make_pair((*e)->GetTarget(0), (*e)->GetWeight());
          fSumOfWeights+=(*e)->GetWeight();
          temp.push_back(make_pair(fWeightedResiduals[*e].first,fWeightedResiduals[*e].second));
@@ -1276,7 +1277,7 @@ void TMVA::MethodBDT::InitGradBoost( vector<TMVA::Event*> eventSample)
    }
    else if(DoMulticlass()){
       UInt_t nClasses = DataInfo().GetNClasses();
-      for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+      for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
          for (UInt_t i=0;i<nClasses;i++){
             //Calculate initial residua, assuming equal probability for all classes
             Double_t r = (*e)->GetClass()==i?(1-1.0/nClasses):(-1.0/nClasses);
@@ -1286,7 +1287,7 @@ void TMVA::MethodBDT::InitGradBoost( vector<TMVA::Event*> eventSample)
       }
    }
    else{
-      for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+      for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
          Double_t r = (DataInfo().IsSignal(*e)?1:0)-0.5; //Calculate initial residua
          (*e)->SetTarget(0,r);
          fResiduals[*e].push_back(0);         
@@ -1315,7 +1316,7 @@ Double_t TMVA::MethodBDT::TestTreeQuality( DecisionTree *dt )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBDT::Boost( vector<TMVA::Event*> eventSample, DecisionTree *dt, Int_t iTree, UInt_t cls )
+Double_t TMVA::MethodBDT::Boost( std::vector<TMVA::Event*> eventSample, DecisionTree *dt, Int_t iTree, UInt_t cls )
 {
    // apply the boosting alogrithim (the algorithm is selecte via the the "option" given
    // in the constructor. The return value is the boosting weight
@@ -1391,7 +1392,7 @@ void TMVA::MethodBDT::BoostMonitor(Int_t iTree)
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTree *dt )
+Double_t TMVA::MethodBDT::AdaBoost( std::vector<TMVA::Event*> eventSample, DecisionTree *dt )
 {
    // the AdaBoost implementation.
    // a new training sample is generated by weighting
@@ -1405,12 +1406,12 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
 
    Double_t err=0, sumGlobalw=0, sumGlobalwfalse=0, sumGlobalwfalse2=0;
 
-   vector<Double_t> sumw; //for individually re-scaling  each class
-   map<Node*,Int_t> sigEventsInNode; // how many signal events of the training tree
+   std::vector<Double_t> sumw; //for individually re-scaling  each class
+   std::map<Node*,Int_t> sigEventsInNode; // how many signal events of the training tree
 
    UInt_t maxCls = sumw.size();
    Double_t maxDev=0;
-   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+   for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       Double_t w = (*e)->GetWeight();
       sumGlobalw += w;
       UInt_t iclass=(*e)->GetClass();
@@ -1444,7 +1445,7 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
       }
       else if (fAdaBoostR2Loss=="exponential"){
          err = 0;
-         for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+         for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
             Double_t w = (*e)->GetWeight();
             Double_t  tmpDev = TMath::Abs(dt->CheckEvent(*(*e),kFALSE) - (*e)->GetTarget(0) ); 
             err += w * (1 - exp (-tmpDev/maxDev)) / sumGlobalw;
@@ -1462,7 +1463,7 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
 
 
    Double_t newSumGlobalw=0;
-   vector<Double_t> newSumw(sumw.size(),0);
+   std::vector<Double_t> newSumw(sumw.size(),0);
 
    Double_t boostWeight=1.;
    if (err >= 0.5) { // sanity check ... should never happen as otherwise there is apparently
@@ -1499,7 +1500,7 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
    Results* results = Data()->GetResults(GetMethodName(),Types::kTraining, Types::kMaxAnalysisType);
 
 
-   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+   for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
  
       if ((!( (dt->CheckEvent(*(*e),fUseYesNoLeaf) > fNodePurityLimit ) == DataInfo().IsSignal(*e))) || DoRegression()) {
          Double_t boostfactor = boostWeight;
@@ -1519,13 +1520,13 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
 
    // re-normalise the weights (independent for Signal and Background)
    Double_t globalNormWeight=sumGlobalw/newSumGlobalw;
-   vector<Double_t>  normWeightByClass;
+   std::vector<Double_t>  normWeightByClass;
    for (UInt_t i=0; i<sumw.size(); i++) normWeightByClass.push_back(sumw[i]/newSumw[i]);
 
    Log() << kDEBUG << "new Nsig="<<newSumw[0]*globalNormWeight << " new Nbkg="<<newSumw[1]*globalNormWeight << Endl;
 
 
-   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+   for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       if (fRenormByClass) (*e)->ScaleBoostWeight( normWeightByClass[(*e)->GetClass()] );
       else                (*e)->ScaleBoostWeight( globalNormWeight );
    }
@@ -1545,7 +1546,7 @@ Double_t TMVA::MethodBDT::AdaBoost( vector<TMVA::Event*> eventSample, DecisionTr
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBDT::Bagging( vector<TMVA::Event*> eventSample, Int_t iTree )
+Double_t TMVA::MethodBDT::Bagging( std::vector<TMVA::Event*> eventSample, Int_t iTree )
 {
    // call it boot-strapping, re-sampling or whatever you like, in the end it is nothing
    // else but applying "random" weights to each event.
@@ -1553,13 +1554,13 @@ Double_t TMVA::MethodBDT::Bagging( vector<TMVA::Event*> eventSample, Int_t iTree
    Double_t newWeight;
    TRandom3 *trandom   = new TRandom3(iTree);
    Double_t eventFraction = fUseNTrainEvents/Data()->GetNTrainingEvents();
-   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+   for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       newWeight = trandom->PoissonD(eventFraction);
       (*e)->SetBoostWeight(newWeight);
       newSumw+=(*e)->GetBoostWeight();
    }
    Double_t normWeight =  eventSample.size() / newSumw ;
-   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+   for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       (*e)->SetBoostWeight( (*e)->GetBoostWeight() * normWeight );
       // change this backwards      (*e)->ScaleBoostWeight( normWeight );
    }
@@ -1568,7 +1569,7 @@ Double_t TMVA::MethodBDT::Bagging( vector<TMVA::Event*> eventSample, Int_t iTree
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBDT::RegBoost( vector<TMVA::Event*> /* eventSample */, DecisionTree* /* dt */ )
+Double_t TMVA::MethodBDT::RegBoost( std::vector<TMVA::Event*> /* eventSample */, DecisionTree* /* dt */ )
 {
    // a special boosting only for Regression ...
    // maybe I'll implement it later...
@@ -1577,7 +1578,7 @@ Double_t TMVA::MethodBDT::RegBoost( vector<TMVA::Event*> /* eventSample */, Deci
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBDT::AdaBoostR2( vector<TMVA::Event*> eventSample, DecisionTree *dt )
+Double_t TMVA::MethodBDT::AdaBoostR2( std::vector<TMVA::Event*> eventSample, DecisionTree *dt )
 {
    // adaption of the AdaBoost to regression problems (see H.Drucker 1997)
 
@@ -1585,7 +1586,7 @@ Double_t TMVA::MethodBDT::AdaBoostR2( vector<TMVA::Event*> eventSample, Decision
 
    Double_t err=0, sumw=0, sumwfalse=0, sumwfalse2=0;
    Double_t maxDev=0;
-   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+   for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       Double_t w = (*e)->GetWeight();
       sumw += w;
 
@@ -1604,7 +1605,7 @@ Double_t TMVA::MethodBDT::AdaBoostR2( vector<TMVA::Event*> eventSample, Decision
    }
    else if (fAdaBoostR2Loss=="exponential"){
       err = 0;
-      for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+      for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
          Double_t w = (*e)->GetWeight();
          Double_t  tmpDev = TMath::Abs(dt->CheckEvent(*(*e),kFALSE) - (*e)->GetTarget(0) ); 
          err += w * (1 - exp (-tmpDev/maxDev)) / sumw;
@@ -1648,10 +1649,10 @@ Double_t TMVA::MethodBDT::AdaBoostR2( vector<TMVA::Event*> eventSample, Decision
 
    Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, Types::kMaxAnalysisType);
 
-   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+   for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       Double_t boostfactor =  TMath::Power(boostWeight,(1.-TMath::Abs(dt->CheckEvent(*(*e),kFALSE) - (*e)->GetTarget(0) )/maxDev ) );
       results->GetHist("BoostWeights")->Fill(boostfactor);
-      //      cout << "R2  " << boostfactor << "   " << boostWeight << "   " << (1.-TMath::Abs(dt->CheckEvent(*(*e),kFALSE) - (*e)->GetTarget(0) )/maxDev)  << endl;
+      //      std::cout << "R2  " << boostfactor << "   " << boostWeight << "   " << (1.-TMath::Abs(dt->CheckEvent(*(*e),kFALSE) - (*e)->GetTarget(0) )/maxDev)  << std::endl;
       if ( (*e)->GetWeight() > 0 ){
          Float_t newBoostWeight = (*e)->GetBoostWeight() * boostfactor;
          Float_t newWeight = (*e)->GetWeight() * (*e)->GetBoostWeight() * boostfactor;
@@ -1676,7 +1677,7 @@ Double_t TMVA::MethodBDT::AdaBoostR2( vector<TMVA::Event*> eventSample, Decision
 
    // re-normalise the weights
    Double_t normWeight =  sumw / newSumw;
-   for (vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
+   for (std::vector<TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       //Helge    (*e)->ScaleBoostWeight( sumw/newSumw);
       // (*e)->ScaleBoostWeight( normWeight);
       (*e)->SetBoostWeight( (*e)->GetBoostWeight() * normWeight );
@@ -1741,7 +1742,7 @@ void TMVA::MethodBDT::ReadWeightsFromXML(void* parent) {
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodBDT::ReadWeightsFromStream( istream& istr )
+void  TMVA::MethodBDT::ReadWeightsFromStream( std::istream& istr )
 {
    // read the weights (BDT coefficients)
    TString dummy;
@@ -1760,7 +1761,7 @@ void  TMVA::MethodBDT::ReadWeightsFromStream( istream& istr )
    for (int i=0;i<fNTrees;i++) {
       istr >> dummy >> iTree >> dummy >> boostWeight;
       if (iTree != i) {
-         fForest.back()->Print( cout );
+         fForest.back()->Print( std::cout );
          Log() << kFATAL << "Error while reading weight file; mismatch iTree="
                << iTree << " i=" << i
                << " dummy " << dummy
@@ -1895,7 +1896,7 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
          totalSumOfWeights += fBoostWeights[itree];
       }
 
-      vector< vector<Double_t> > vtemp;
+      vector< std::vector<Double_t> > vtemp;
       vtemp.push_back( response ); // this is the vector that will get sorted
       vtemp.push_back( weight ); 
       gTools().UsefulSortAscending( vtemp );
@@ -1977,7 +1978,7 @@ vector< Double_t > TMVA::MethodBDT::GetVariableImportance()
    }
    Double_t  sum=0;
    for (int itree = 0; itree < fNTrees; itree++) {
-      vector<Double_t> relativeImportance(fForest[itree]->GetVariableImportance());
+      std::vector<Double_t> relativeImportance(fForest[itree]->GetVariableImportance());
       for (UInt_t i=0; i< relativeImportance.size(); i++) {
          fVariableImportance[i] +=  fBoostWeights[itree] * relativeImportance[i];
       }
@@ -1999,7 +2000,7 @@ Double_t TMVA::MethodBDT::GetVariableImportance( UInt_t ivar )
    // which is later used in GetVariableImportance() to calculate the
    // relative variable importances.
 
-   vector<Double_t> relativeImportance = this->GetVariableImportance();
+   std::vector<Double_t> relativeImportance = this->GetVariableImportance();
    if (ivar < (UInt_t)relativeImportance.size()) return relativeImportance[ivar];
    else Log() << kFATAL << "<GetVariableImportance> ivar = " << ivar << " is out of range " << Endl;
 
@@ -2091,60 +2092,60 @@ void TMVA::MethodBDT::MakeClassSpecific( std::ostream& fout, const TString& clas
    nodeName.ReplaceAll("Read","");
    nodeName.Append("Node");
    // write BDT-specific classifier response
-   fout << "   std::vector<"<<nodeName<<"*> fForest;       // i.e. root nodes of decision trees" << endl;
-   fout << "   std::vector<double>                fBoostWeights; // the weights applied in the individual boosts" << endl;
-   fout << "};" << endl << endl;
-   fout << "double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << endl;
-   fout << "{" << endl;
-   fout << "   double myMVA = 0;" << endl;
+   fout << "   std::vector<"<<nodeName<<"*> fForest;       // i.e. root nodes of decision trees" << std::endl;
+   fout << "   std::vector<double>                fBoostWeights; // the weights applied in the individual boosts" << std::endl;
+   fout << "};" << std::endl << std::endl;
+   fout << "double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << std::endl;
+   fout << "{" << std::endl;
+   fout << "   double myMVA = 0;" << std::endl;
    if (fBoostType!="Grad"){
-      fout << "   double norm  = 0;" << endl;
+      fout << "   double norm  = 0;" << std::endl;
    }
-   fout << "   for (unsigned int itree=0; itree<fForest.size(); itree++){" << endl;
-   fout << "      "<<nodeName<<" *current = fForest[itree];" << endl;
-   fout << "      while (current->GetNodeType() == 0) { //intermediate node" << endl;
-   fout << "         if (current->GoesRight(inputValues)) current=("<<nodeName<<"*)current->GetRight();" << endl;
-   fout << "         else current=("<<nodeName<<"*)current->GetLeft();" << endl;
-   fout << "      }" << endl;
+   fout << "   for (unsigned int itree=0; itree<fForest.size(); itree++){" << std::endl;
+   fout << "      "<<nodeName<<" *current = fForest[itree];" << std::endl;
+   fout << "      while (current->GetNodeType() == 0) { //intermediate node" << std::endl;
+   fout << "         if (current->GoesRight(inputValues)) current=("<<nodeName<<"*)current->GetRight();" << std::endl;
+   fout << "         else current=("<<nodeName<<"*)current->GetLeft();" << std::endl;
+   fout << "      }" << std::endl;
    if (fBoostType=="Grad"){
-      fout << "      myMVA += current->GetResponse();" << endl;
+      fout << "      myMVA += current->GetResponse();" << std::endl;
    }
    else if (fUseWeightedTrees) {
-      if (fUseYesNoLeaf) fout << "      myMVA += fBoostWeights[itree] *  current->GetNodeType();" << endl;
-      else               fout << "      myMVA += fBoostWeights[itree] *  current->GetPurity();" << endl;
-      fout << "      norm  += fBoostWeights[itree];" << endl;
+      if (fUseYesNoLeaf) fout << "      myMVA += fBoostWeights[itree] *  current->GetNodeType();" << std::endl;
+      else               fout << "      myMVA += fBoostWeights[itree] *  current->GetPurity();" << std::endl;
+      fout << "      norm  += fBoostWeights[itree];" << std::endl;
    }
    else {
-      if (fUseYesNoLeaf) fout << "      myMVA += current->GetNodeType();" << endl;
-      else               fout << "      myMVA += current->GetPurity();" << endl;
-      fout << "      norm  += 1.;" << endl;
+      if (fUseYesNoLeaf) fout << "      myMVA += current->GetNodeType();" << std::endl;
+      else               fout << "      myMVA += current->GetPurity();" << std::endl;
+      fout << "      norm  += 1.;" << std::endl;
    }
-   fout << "   }" << endl;
+   fout << "   }" << std::endl;
    if (fBoostType=="Grad"){
-      fout << "   return 2.0/(1.0+exp(-2.0*myMVA))-1.0;" << endl;
+      fout << "   return 2.0/(1.0+exp(-2.0*myMVA))-1.0;" << std::endl;
    }
-   else fout << "   return myMVA /= norm;" << endl;
-   fout << "};" << endl << endl;
-   fout << "void " << className << "::Initialize()" << endl;
-   fout << "{" << endl;
+   else fout << "   return myMVA /= norm;" << std::endl;
+   fout << "};" << std::endl << std::endl;
+   fout << "void " << className << "::Initialize()" << std::endl;
+   fout << "{" << std::endl;
    //Now for each decision tree, write directly the constructors of the nodes in the tree structure
    for (int itree=0; itree<fNTrees; itree++) {
-      fout << "  // itree = " << itree << endl;
-      fout << "  fBoostWeights.push_back(" << fBoostWeights[itree] << ");" << endl;
-      fout << "  fForest.push_back( " << endl;
+      fout << "  // itree = " << itree << std::endl;
+      fout << "  fBoostWeights.push_back(" << fBoostWeights[itree] << ");" << std::endl;
+      fout << "  fForest.push_back( " << std::endl;
       this->MakeClassInstantiateNode((DecisionTreeNode*)fForest[itree]->GetRoot(), fout, className);
-      fout <<"   );" << endl;
+      fout <<"   );" << std::endl;
    }
-   fout << "   return;" << endl;
-   fout << "};" << endl;
-   fout << " " << endl;
-   fout << "// Clean up" << endl;
-   fout << "inline void " << className << "::Clear() " << endl;
-   fout << "{" << endl;
-   fout << "   for (unsigned int itree=0; itree<fForest.size(); itree++) { " << endl;
-   fout << "      delete fForest[itree]; " << endl;
-   fout << "   }" << endl;
-   fout << "}" << endl;
+   fout << "   return;" << std::endl;
+   fout << "};" << std::endl;
+   fout << " " << std::endl;
+   fout << "// Clean up" << std::endl;
+   fout << "inline void " << className << "::Clear() " << std::endl;
+   fout << "{" << std::endl;
+   fout << "   for (unsigned int itree=0; itree<fForest.size(); itree++) { " << std::endl;
+   fout << "      delete fForest[itree]; " << std::endl;
+   fout << "   }" << std::endl;
+   fout << "}" << std::endl;
 }
 
 //_______________________________________________________________________
@@ -2154,107 +2155,107 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
    TString nodeName = className;
    nodeName.ReplaceAll("Read","");
    nodeName.Append("Node");
-   //fout << "#ifndef NN" << endl; commented out on purpose see next line
-   fout << "#define NN new "<<nodeName << endl; // NN definition depends on individual methods. Important to have NO #ifndef if several BDT methods compile together
-   //fout << "#endif" << endl; commented out on purpose see previous line
-   fout << "   " << endl;
-   fout << "#ifndef "<<nodeName<<"__def" << endl;
-   fout << "#define "<<nodeName<<"__def" << endl;
-   fout << "   " << endl;
-   fout << "class "<<nodeName<<" {" << endl;
-   fout << "   " << endl;
-   fout << "public:" << endl;
-   fout << "   " << endl;
-   fout << "   // constructor of an essentially \"empty\" node floating in space" << endl;
-   fout << "   "<<nodeName<<" ( "<<nodeName<<"* left,"<<nodeName<<"* right," << endl;
+   //fout << "#ifndef NN" << std::endl; commented out on purpose see next line
+   fout << "#define NN new "<<nodeName << std::endl; // NN definition depends on individual methods. Important to have NO #ifndef if several BDT methods compile together
+   //fout << "#endif" << std::endl; commented out on purpose see previous line
+   fout << "   " << std::endl;
+   fout << "#ifndef "<<nodeName<<"__def" << std::endl;
+   fout << "#define "<<nodeName<<"__def" << std::endl;
+   fout << "   " << std::endl;
+   fout << "class "<<nodeName<<" {" << std::endl;
+   fout << "   " << std::endl;
+   fout << "public:" << std::endl;
+   fout << "   " << std::endl;
+   fout << "   // constructor of an essentially \"empty\" node floating in space" << std::endl;
+   fout << "   "<<nodeName<<" ( "<<nodeName<<"* left,"<<nodeName<<"* right," << std::endl;
    if (fUseFisherCuts){
-      fout << "                          int nFisherCoeff," << endl;
+      fout << "                          int nFisherCoeff," << std::endl;
       for (UInt_t i=0;i<GetNVariables()+1;i++){
-         fout << "                          double fisherCoeff"<<i<<"," << endl;
+         fout << "                          double fisherCoeff"<<i<<"," << std::endl;
       }
    }
-   fout << "                          int selector, double cutValue, bool cutType, " << endl;
-   fout << "                          int nodeType, double purity, double response ) :" << endl;
-   fout << "   fLeft         ( left         )," << endl;
-   fout << "   fRight        ( right        )," << endl;
-   if (fUseFisherCuts) fout << "   fNFisherCoeff ( nFisherCoeff )," << endl;
-   fout << "   fSelector     ( selector     )," << endl;
-   fout << "   fCutValue     ( cutValue     )," << endl;
-   fout << "   fCutType      ( cutType      )," << endl;
-   fout << "   fNodeType     ( nodeType     )," << endl;
-   fout << "   fPurity       ( purity       )," << endl;
-   fout << "   fResponse     ( response     ){" << endl;
+   fout << "                          int selector, double cutValue, bool cutType, " << std::endl;
+   fout << "                          int nodeType, double purity, double response ) :" << std::endl;
+   fout << "   fLeft         ( left         )," << std::endl;
+   fout << "   fRight        ( right        )," << std::endl;
+   if (fUseFisherCuts) fout << "   fNFisherCoeff ( nFisherCoeff )," << std::endl;
+   fout << "   fSelector     ( selector     )," << std::endl;
+   fout << "   fCutValue     ( cutValue     )," << std::endl;
+   fout << "   fCutType      ( cutType      )," << std::endl;
+   fout << "   fNodeType     ( nodeType     )," << std::endl;
+   fout << "   fPurity       ( purity       )," << std::endl;
+   fout << "   fResponse     ( response     ){" << std::endl;
    if (fUseFisherCuts){
       for (UInt_t i=0;i<GetNVariables()+1;i++){
-         fout << "     fFisherCoeff.push_back(fisherCoeff"<<i<<");" << endl;
+         fout << "     fFisherCoeff.push_back(fisherCoeff"<<i<<");" << std::endl;
       }
    }
-   fout << "   }" << endl << endl;
-   fout << "   virtual ~"<<nodeName<<"();" << endl << endl;
-   fout << "   // test event if it decends the tree at this node to the right" << endl;
-   fout << "   virtual bool GoesRight( const std::vector<double>& inputValues ) const;" << endl;
-   fout << "   "<<nodeName<<"* GetRight( void )  {return fRight; };" << endl << endl;
-   fout << "   // test event if it decends the tree at this node to the left " << endl;
-   fout << "   virtual bool GoesLeft ( const std::vector<double>& inputValues ) const;" << endl;
-   fout << "   "<<nodeName<<"* GetLeft( void ) { return fLeft; };   " << endl << endl;
-   fout << "   // return  S/(S+B) (purity) at this node (from  training)" << endl << endl;
-   fout << "   double GetPurity( void ) const { return fPurity; } " << endl;
-   fout << "   // return the node type" << endl;
-   fout << "   int    GetNodeType( void ) const { return fNodeType; }" << endl;
-   fout << "   double GetResponse(void) const {return fResponse;}" << endl << endl;
-   fout << "private:" << endl << endl;
-   fout << "   "<<nodeName<<"*   fLeft;     // pointer to the left daughter node" << endl;
-   fout << "   "<<nodeName<<"*   fRight;    // pointer to the right daughter node" << endl;
+   fout << "   }" << std::endl << std::endl;
+   fout << "   virtual ~"<<nodeName<<"();" << std::endl << std::endl;
+   fout << "   // test event if it decends the tree at this node to the right" << std::endl;
+   fout << "   virtual bool GoesRight( const std::vector<double>& inputValues ) const;" << std::endl;
+   fout << "   "<<nodeName<<"* GetRight( void )  {return fRight; };" << std::endl << std::endl;
+   fout << "   // test event if it decends the tree at this node to the left " << std::endl;
+   fout << "   virtual bool GoesLeft ( const std::vector<double>& inputValues ) const;" << std::endl;
+   fout << "   "<<nodeName<<"* GetLeft( void ) { return fLeft; };   " << std::endl << std::endl;
+   fout << "   // return  S/(S+B) (purity) at this node (from  training)" << std::endl << std::endl;
+   fout << "   double GetPurity( void ) const { return fPurity; } " << std::endl;
+   fout << "   // return the node type" << std::endl;
+   fout << "   int    GetNodeType( void ) const { return fNodeType; }" << std::endl;
+   fout << "   double GetResponse(void) const {return fResponse;}" << std::endl << std::endl;
+   fout << "private:" << std::endl << std::endl;
+   fout << "   "<<nodeName<<"*   fLeft;     // pointer to the left daughter node" << std::endl;
+   fout << "   "<<nodeName<<"*   fRight;    // pointer to the right daughter node" << std::endl;
    if (fUseFisherCuts){
-      fout << "   int                     fNFisherCoeff; // =0 if this node doesn use fisher, else =nvar+1 " << endl;
-      fout << "   std::vector<double>     fFisherCoeff;  // the fisher coeff (offset at the last element)" << endl;
+      fout << "   int                     fNFisherCoeff; // =0 if this node doesn use fisher, else =nvar+1 " << std::endl;
+      fout << "   std::vector<double>     fFisherCoeff;  // the fisher coeff (offset at the last element)" << std::endl;
    }
-   fout << "   int                     fSelector; // index of variable used in node selection (decision tree)   " << endl;
-   fout << "   double                  fCutValue; // cut value appplied on this node to discriminate bkg against sig" << endl;
-   fout << "   bool                    fCutType;  // true: if event variable > cutValue ==> signal , false otherwise" << endl;
-   fout << "   int                     fNodeType; // Type of node: -1 == Bkg-leaf, 1 == Signal-leaf, 0 = internal " << endl;
-   fout << "   double                  fPurity;   // Purity of node from training"<< endl;
-   fout << "   double                  fResponse; // Regression response value of node" << endl;
-   fout << "}; " << endl;
-   fout << "   " << endl;
-   fout << "//_______________________________________________________________________" << endl;
-   fout << "   "<<nodeName<<"::~"<<nodeName<<"()" << endl;
-   fout << "{" << endl;
-   fout << "   if (fLeft  != NULL) delete fLeft;" << endl;
-   fout << "   if (fRight != NULL) delete fRight;" << endl;
-   fout << "}; " << endl;
-   fout << "   " << endl;
-   fout << "//_______________________________________________________________________" << endl;
-   fout << "bool "<<nodeName<<"::GoesRight( const std::vector<double>& inputValues ) const" << endl;
-   fout << "{" << endl;
-   fout << "   // test event if it decends the tree at this node to the right" << endl;
-   fout << "   bool result;" << endl;
+   fout << "   int                     fSelector; // index of variable used in node selection (decision tree)   " << std::endl;
+   fout << "   double                  fCutValue; // cut value appplied on this node to discriminate bkg against sig" << std::endl;
+   fout << "   bool                    fCutType;  // true: if event variable > cutValue ==> signal , false otherwise" << std::endl;
+   fout << "   int                     fNodeType; // Type of node: -1 == Bkg-leaf, 1 == Signal-leaf, 0 = internal " << std::endl;
+   fout << "   double                  fPurity;   // Purity of node from training"<< std::endl;
+   fout << "   double                  fResponse; // Regression response value of node" << std::endl;
+   fout << "}; " << std::endl;
+   fout << "   " << std::endl;
+   fout << "//_______________________________________________________________________" << std::endl;
+   fout << "   "<<nodeName<<"::~"<<nodeName<<"()" << std::endl;
+   fout << "{" << std::endl;
+   fout << "   if (fLeft  != NULL) delete fLeft;" << std::endl;
+   fout << "   if (fRight != NULL) delete fRight;" << std::endl;
+   fout << "}; " << std::endl;
+   fout << "   " << std::endl;
+   fout << "//_______________________________________________________________________" << std::endl;
+   fout << "bool "<<nodeName<<"::GoesRight( const std::vector<double>& inputValues ) const" << std::endl;
+   fout << "{" << std::endl;
+   fout << "   // test event if it decends the tree at this node to the right" << std::endl;
+   fout << "   bool result;" << std::endl;
    if (fUseFisherCuts){
-     fout << "   if (fNFisherCoeff == 0){" << endl;
-     fout << "     result = (inputValues[fSelector] > fCutValue );" << endl;
-     fout << "   }else{" << endl;
-     fout << "     double fisher = fFisherCoeff.at(fFisherCoeff.size()-1);" << endl;
-     fout << "     for (unsigned int ivar=0; ivar<fFisherCoeff.size()-1; ivar++)" << endl;
-     fout << "       fisher += fFisherCoeff.at(ivar)*inputValues.at(ivar);" << endl;
-     fout << "     result = fisher > fCutValue;" << endl;
-     fout << "   }" << endl;
+     fout << "   if (fNFisherCoeff == 0){" << std::endl;
+     fout << "     result = (inputValues[fSelector] > fCutValue );" << std::endl;
+     fout << "   }else{" << std::endl;
+     fout << "     double fisher = fFisherCoeff.at(fFisherCoeff.size()-1);" << std::endl;
+     fout << "     for (unsigned int ivar=0; ivar<fFisherCoeff.size()-1; ivar++)" << std::endl;
+     fout << "       fisher += fFisherCoeff.at(ivar)*inputValues.at(ivar);" << std::endl;
+     fout << "     result = fisher > fCutValue;" << std::endl;
+     fout << "   }" << std::endl;
    }else{
-     fout << "     result = (inputValues[fSelector] > fCutValue );" << endl;
+     fout << "     result = (inputValues[fSelector] > fCutValue );" << std::endl;
    }
-   fout << "   if (fCutType == true) return result; //the cuts are selecting Signal ;" << endl;
-   fout << "   else return !result;" << endl;
-   fout << "}" << endl;
-   fout << "   " << endl;
-   fout << "//_______________________________________________________________________" << endl;
-   fout << "bool "<<nodeName<<"::GoesLeft( const std::vector<double>& inputValues ) const" << endl;
-   fout << "{" << endl;
-   fout << "   // test event if it decends the tree at this node to the left" << endl;
-   fout << "   if (!this->GoesRight(inputValues)) return true;" << endl;
-   fout << "   else return false;" << endl;
-   fout << "}" << endl;
-   fout << "   " << endl;
-   fout << "#endif" << endl;
-   fout << "   " << endl;
+   fout << "   if (fCutType == true) return result; //the cuts are selecting Signal ;" << std::endl;
+   fout << "   else return !result;" << std::endl;
+   fout << "}" << std::endl;
+   fout << "   " << std::endl;
+   fout << "//_______________________________________________________________________" << std::endl;
+   fout << "bool "<<nodeName<<"::GoesLeft( const std::vector<double>& inputValues ) const" << std::endl;
+   fout << "{" << std::endl;
+   fout << "   // test event if it decends the tree at this node to the left" << std::endl;
+   fout << "   if (!this->GoesRight(inputValues)) return true;" << std::endl;
+   fout << "   else return false;" << std::endl;
+   fout << "}" << std::endl;
+   fout << "   " << std::endl;
+   fout << "#endif" << std::endl;
+   fout << "   " << std::endl;
 }
 
 //_______________________________________________________________________
@@ -2265,22 +2266,22 @@ void TMVA::MethodBDT::MakeClassInstantiateNode( DecisionTreeNode *n, std::ostrea
       Log() << kFATAL << "MakeClassInstantiateNode: started with undefined node" <<Endl;
       return ;
    }
-   fout << "NN("<<endl;
+   fout << "NN("<<std::endl;
    if (n->GetLeft() != NULL){
       this->MakeClassInstantiateNode( (DecisionTreeNode*)n->GetLeft() , fout, className);
    }
    else {
       fout << "0";
    }
-   fout << ", " <<endl;
+   fout << ", " <<std::endl;
    if (n->GetRight() != NULL){
       this->MakeClassInstantiateNode( (DecisionTreeNode*)n->GetRight(), fout, className );
    }
    else {
       fout << "0";
    }
-   fout << ", " <<  endl
-        << setprecision(6);
+   fout << ", " <<  std::endl
+        << std::setprecision(6);
    if (fUseFisherCuts){
      fout << n->GetNFisherCoeff() << ", ";
      for (UInt_t i=0; i< GetNVariables()+1; i++) {

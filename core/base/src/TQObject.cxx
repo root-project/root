@@ -457,7 +457,7 @@ void TQConnectionList::ls(Option_t *option) const
 {
    // List signal name and list all connections in this signal list.
 
-   cout <<  "TQConnectionList:" << "\t" << GetName() << endl;
+   std::cout <<  "TQConnectionList:" << "\t" << GetName() << std::endl;
    ((TQConnectionList*)this)->R__FOR_EACH(TQConnection,Print)(option);
 }
 

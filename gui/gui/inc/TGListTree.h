@@ -138,7 +138,7 @@ public:
    virtual void    HandleDrag() {}
    virtual void    HandleDrop() {}
 
-   virtual void    SavePrimitive(ostream&, Option_t*, Int_t) {}
+   virtual void    SavePrimitive(std::ostream&, Option_t*, Int_t) {}
 
    ClassDef(TGListTreeItem,0)  // Abstract base-class for items that go into a TGListTree container.
 };
@@ -207,7 +207,7 @@ public:
    virtual void            SetColor(Color_t color) { fHasColor = true;fColor = color; }
    virtual void            ClearColor() { fHasColor = false; }
 
-   virtual void            SavePrimitive(ostream &out, Option_t *option, Int_t n);
+   virtual void            SavePrimitive(std::ostream &out, Option_t *option, Int_t n);
 
    ClassDef(TGListTreeItemStd,0)  //Item that goes into a TGListTree container
 };
@@ -293,7 +293,7 @@ protected:
    void  DrawNode(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y);
    virtual void UpdateChecked(TGListTreeItem *item, Bool_t redraw = kFALSE);
 
-   void  SaveChildren(ostream &out, TGListTreeItem *item, Int_t &n);
+   void  SaveChildren(std::ostream &out, TGListTreeItem *item, Int_t &n);
    void  RemoveReference(TGListTreeItem *item);
    void  PDeleteItem(TGListTreeItem *item);
    void  PDeleteChildren(TGListTreeItem *item);
@@ -459,7 +459,7 @@ public:
    ECheckMode GetCheckMode() const { return fCheckMode; }
    void SetCheckMode(ECheckMode mode) { fCheckMode = mode; }
 
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGListTree,0)  //Show items in a tree structured list
 };

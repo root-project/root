@@ -45,11 +45,11 @@ void TBonjourRecord::Print(Option_t *) const
 {
    // Print TBonjourRecord.
 
-   cout << "TBonjourRecord:"
+   std::cout << "TBonjourRecord:"
         << "\n\tService name: #" << GetServiceName() << "#"
         << "\n\tRegistered type: #" << GetRegisteredType() << "#"
         << "\n\tDomain: #" << GetReplyDomain() << "#"
         << "\n\tTXT Records (length): #" << GetTXTRecords()
                                   << "# (" << GetTXTRecordsLength() << ")"
-        << endl;
+        << std::endl;
 }

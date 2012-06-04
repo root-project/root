@@ -61,7 +61,7 @@ int unuranSimple( ) {
 
    TUnuran unr; 
    if (! unr.Init( "normal()", "method=arou") ) {
-      cout << "Error initializing unuran" << endl;
+      std::cout << "Error initializing unuran" << std::endl;
       return -1;
    }
 
@@ -77,11 +77,11 @@ int unuranSimple( ) {
 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using Unuran method arou =\t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using Unuran method arou =\t " <<   time << "\tns/call" << std::endl;
 
 
    if (! unr.Init( "normal()", "method=tdr") ) {
-      cout << "Error initializing unuran" << endl;
+      std::cout << "Error initializing unuran" << std::endl;
       return -1;
    }
    w.Start(); 
@@ -90,10 +90,10 @@ int unuranSimple( ) {
 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using Unuran method tdr =\t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using Unuran method tdr =\t " <<   time << "\tns/call" << std::endl;
 
    if (! unr.Init( "normal()", "method=hinv") ) {
-      cout << "Error initializing unuran" << endl;
+      std::cout << "Error initializing unuran" << std::endl;
       return -1;
    }
    w.Start(); 
@@ -102,14 +102,14 @@ int unuranSimple( ) {
 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using Unuran method hinv =\t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using Unuran method hinv =\t " <<   time << "\tns/call" << std::endl;
 
    w.Start();
    for (int i = 0; i < n; ++i) 
       gRandom->Gaus(0,1); 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using TRandom::Gaus  =\t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using TRandom::Gaus  =\t " <<   time << "\tns/call" << std::endl;
 
    // using Rannor
    w.Start();
@@ -118,7 +118,7 @@ int unuranSimple( ) {
       gRandom->Rannor(x1,x2); 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using TRandom::Rannor  =\t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using TRandom::Rannor  =\t " <<   time << "\tns/call" << std::endl;
 
 #ifdef HAVE_MATHMORE
    // using GSL Ziggurat
@@ -128,7 +128,7 @@ int unuranSimple( ) {
       rgsl.Gaus(0,1); 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using GSL::Gaus  =\t\t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using GSL::Gaus  =\t\t " <<   time << "\tns/call" << std::endl;
 
    // using GSL BoxMuller method
    w.Start();
@@ -136,7 +136,7 @@ int unuranSimple( ) {
       rgsl.GausBM(0,1); 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using GSL::GausBM  =  \t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using GSL::GausBM  =  \t " <<   time << "\tns/call" << std::endl;
 
    // using GSL Ratio method
    w.Start();
@@ -144,14 +144,14 @@ int unuranSimple( ) {
       rgsl.GausR(0,1); 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using GSL::GausR  =\t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using GSL::GausR  =\t " <<   time << "\tns/call" << std::endl;
 #endif
 
 
    // run unuran standard Normal methods 2 (Polar from Marsaglia)
 
    if (! unr.Init( "normal()", "method=cstd;variant=2") ) {
-      cout << "Error initializing unuran" << endl;
+      std::cout << "Error initializing unuran" << std::endl;
       return -1;
    }
    w.Start(); 
@@ -160,12 +160,12 @@ int unuranSimple( ) {
 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using Unuran GausPolarR =\t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using Unuran GausPolarR =\t " <<   time << "\tns/call" << std::endl;
 
    // run unuran standard Normal method 3 (KM)
 
    if (! unr.Init( "normal()", "method=cstd;variant=3") ) {
-      cout << "Error initializing unuran" << endl;
+      std::cout << "Error initializing unuran" << std::endl;
       return -1;
    }
    w.Start(); 
@@ -174,10 +174,10 @@ int unuranSimple( ) {
 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using Unuran Gaus  K-R   =\t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using Unuran Gaus  K-R   =\t " <<   time << "\tns/call" << std::endl;
   
    if (! unr.Init( "normal()", "method=cstd;variant=6") ) {
-      cout << "Error initializing unuran" << endl;
+      std::cout << "Error initializing unuran" << std::endl;
       return -1;
    }
    w.Start(); 
@@ -186,7 +186,7 @@ int unuranSimple( ) {
 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using Unuran Gaus exp6  =\t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using Unuran Gaus exp6  =\t " <<   time << "\tns/call" << std::endl;
 
 
 //    w.Start();
@@ -194,7 +194,7 @@ int unuranSimple( ) {
 //       rgsl.GausRatio(0,1); 
 //    w.Stop(); 
 //    time = w.CpuTime()*1.E9/n;
-//    cout << "Time using GSL::GausRatio  =\t\t " <<   time << "\tns/call" << endl;
+//    std::cout << "Time using GSL::GausRatio  =\t\t " <<   time << "\tns/call" << std::endl;
 
 #ifdef HAVE_CLHEP
    MTwistEngine eng(111);
@@ -204,7 +204,7 @@ int unuranSimple( ) {
       rg(0,1); 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using CLHEP::Gaus  =\t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using CLHEP::Gaus  =\t " <<   time << "\tns/call" << std::endl;
 #endif
 
    std::cout << "\nTest uniform generator\n" << std::endl;
@@ -213,7 +213,7 @@ int unuranSimple( ) {
       gRandom->Rndm(); 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using gRandom::Rndm  =\t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using gRandom::Rndm  =\t " <<   time << "\tns/call" << std::endl;
 
    TRandom1 r1;
    w.Start();
@@ -221,7 +221,7 @@ int unuranSimple( ) {
       r1.Rndm(); 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using TRandom1::Rndm  =\t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using TRandom1::Rndm  =\t " <<   time << "\tns/call" << std::endl;
 
    TRandom2 r2;
    w.Start();
@@ -229,7 +229,7 @@ int unuranSimple( ) {
       r2.Rndm(); 
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using TRandom2::Rndm  =\t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using TRandom2::Rndm  =\t " <<   time << "\tns/call" << std::endl;
 
 #ifdef HAVE_CLHEP
    RandFlat rf(eng);
@@ -238,7 +238,7 @@ int unuranSimple( ) {
       eng.flat(); // use directly the engine (faster!)
    w.Stop(); 
    time = w.CpuTime()*1.E9/n;
-   cout << "Time using CLHEP::MT  =\t\t " <<   time << "\tns/call" << endl;
+   std::cout << "Time using CLHEP::MT  =\t\t " <<   time << "\tns/call" << std::endl;
 
    { 
       RanecuEngine e; 
@@ -248,7 +248,7 @@ int unuranSimple( ) {
          e.flat(); 
       w.Stop(); 
       time = w.CpuTime()*1.E9/n;
-      cout << "Time using CLHEP::Ranecu  =\t " <<   time << "\tns/call" << endl;
+      std::cout << "Time using CLHEP::Ranecu  =\t " <<   time << "\tns/call" << std::endl;
    }
    { 
       Hurd160Engine e; 
@@ -258,7 +258,7 @@ int unuranSimple( ) {
          e.flat();
       w.Stop(); 
       time = w.CpuTime()*1.E9/n;
-      cout << "Time using CLHEP::Hard160  =\t " <<   time << "\tns/call" << endl;
+      std::cout << "Time using CLHEP::Hard160  =\t " <<   time << "\tns/call" << std::endl;
    }
    { 
       Hurd288Engine e; 
@@ -269,7 +269,7 @@ int unuranSimple( ) {
          //rf2(); 
       w.Stop(); 
       time = w.CpuTime()*1.E9/n;
-      cout << "Time using CLHEP::Hard288  =\t " <<   time << "\tns/call" << endl;
+      std::cout << "Time using CLHEP::Hard288  =\t " <<   time << "\tns/call" << std::endl;
    }
    { 
       DualRand e; 
@@ -280,7 +280,7 @@ int unuranSimple( ) {
       //rf2(); 
       w.Stop(); 
       time = w.CpuTime()*1.E9/n;
-      cout << "Time using CLHEP::DualRand  =\t " <<   time << "\tns/call" << endl;
+      std::cout << "Time using CLHEP::DualRand  =\t " <<   time << "\tns/call" << std::endl;
    }
    {
       TripleRand e; 
@@ -291,7 +291,7 @@ int unuranSimple( ) {
       //rf2(); 
       w.Stop(); 
       time = w.CpuTime()*1.E9/n;
-      cout << "Time using CLHEP::TripleRand  =\t " <<   time << "\tns/call" << endl;
+      std::cout << "Time using CLHEP::TripleRand  =\t " <<   time << "\tns/call" << std::endl;
    }
    {
       RanshiEngine e; 
@@ -302,7 +302,7 @@ int unuranSimple( ) {
          e.flat();
       w.Stop(); 
       time = w.CpuTime()*1.E9/n;
-      cout << "Time using CLHEP::Runshi  =\t " <<   time << "\tns/call" << endl;
+      std::cout << "Time using CLHEP::Runshi  =\t " <<   time << "\tns/call" << std::endl;
    }
    {
       RanluxEngine e; 
@@ -313,7 +313,7 @@ int unuranSimple( ) {
          e.flat();
       w.Stop(); 
       time = w.CpuTime()*1.E9/n;
-      cout << "Time using CLHEP::RunLux  =\t " <<   time << "\tns/call" << endl;
+      std::cout << "Time using CLHEP::RunLux  =\t " <<   time << "\tns/call" << std::endl;
    }
    {
       Ranlux64Engine e; 
@@ -323,7 +323,7 @@ int unuranSimple( ) {
          e.flat(); 
       w.Stop(); 
       time = w.CpuTime()*1.E9/n;
-      cout << "Time using CLHEP::RunLux64  =\t " <<   time << "\tns/call" << endl;
+      std::cout << "Time using CLHEP::RunLux64  =\t " <<   time << "\tns/call" << std::endl;
    }
    {
       HepJamesRandom e; 
@@ -334,16 +334,16 @@ int unuranSimple( ) {
          e.flat(); 
       w.Stop(); 
       time = w.CpuTime()*1.E9/n;
-      cout << "Time using CLHEP::HepJames  =\t " <<   time << "\tns/call" << endl;
+      std::cout << "Time using CLHEP::HepJames  =\t " <<   time << "\tns/call" << std::endl;
    }
 
 #endif
 
 
    // test the quality by looking at the cdf
-   cout <<"\n\nTest quality of Unuran arou" << endl;
+   std::cout <<"\n\nTest quality of Unuran arou" << std::endl;
    if (! unr.Init( "normal()", "method=arou") ) {
-      cout << "Error initializing unuran" << endl;
+      std::cout << "Error initializing unuran" << std::endl;
       return -1;
    }
 

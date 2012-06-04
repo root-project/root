@@ -30,7 +30,7 @@
 ClassImp(TBufferSQL);
 
 //________________________________________________________________________
-TBufferSQL::TBufferSQL(TBuffer::EMode mode, vector<Int_t> *vc, 
+TBufferSQL::TBufferSQL(TBuffer::EMode mode, std::vector<Int_t> *vc, 
                        TString *insert_query, TSQLRow ** r) : 
    TBufferFile(mode),
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r) 
@@ -41,7 +41,7 @@ TBufferSQL::TBufferSQL(TBuffer::EMode mode, vector<Int_t> *vc,
 }
 
 //________________________________________________________________________
-TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, vector<Int_t> *vc, 
+TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc, 
                        TString *insert_query, TSQLRow ** r) : 
    TBufferFile(mode,bufsiz), 
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r) 
@@ -52,7 +52,7 @@ TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, vector<Int_t> *vc,
 }
 
 //________________________________________________________________________
-TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, vector<Int_t> *vc, 
+TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc, 
                        TString *insert_query, TSQLRow ** r,
                        void *buf, Bool_t adopt) : 
    TBufferFile(mode,bufsiz,buf,adopt),
@@ -464,7 +464,7 @@ void TBufferSQL::WriteFastArray(const Int_t     *ii, Int_t n)
 {
    // WriteFastArray SQL implementation.   
 
-    //   cerr << "Column: " <<*fIter << "   i:" << *ii << endl;
+    //   std::cerr << "Column: " <<*fIter << "   i:" << *ii << std::endl;
    for(int i=0; i<n; ++i) {
       (*fInsertQuery) += ii[i];
       (*fInsertQuery) += ",";
@@ -771,7 +771,7 @@ void TBufferSQL::insert_test(const char* dsn, const char* usr,
 
    ptr->Next();
    ptr->MoveToInsertRow();
-   cerr << "IsAfterLast(): " << ptr->IsAfterLast() << endl;
+   std::cerr << "IsAfterLast(): " << ptr->IsAfterLast() << std::endl;
    ptr->UpdateInt(1, 5555);
    ptr->InsertRow();
    con->Commit();

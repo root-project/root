@@ -99,7 +99,7 @@ TVolume::TVolume(const char *name, const char *title, const char *shapename, Opt
    static Int_t counter = 0;
    counter++;
    SetTitle(title);
-   if(!(counter%1000))cout<<"TVolume count="<<counter<<" name="<<name<<endl;
+   if(!(counter%1000))std::cout<<"TVolume count="<<counter<<" name="<<name<<std::endl;
    if (!gGeometry) new TGeometry;
    Add(gGeometry->GetShape(shapename),kTRUE);
 //   fParent = gGeometry->GetCurrenTVolume();

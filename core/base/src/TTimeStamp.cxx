@@ -54,16 +54,16 @@ ClassImp(TTimeStamp);
 TVirtualMutex *gTimeMutex = 0; // local mutex
 
 //______________________________________________________________________________
-ostream& operator<<(ostream& os, const TTimeStamp& ts)
+std::ostream& operator<<(std::ostream& os, const TTimeStamp& ts)
 {
-   // Write time stamp to ostream.
+   // Write time stamp to std::ostream.
 
    if (os.good()) {
       if (os.tie()) os.tie()->flush(); // instead of opfx
       os << ts.AsString("c");
    }
    // instead of os.osfx()
-   if (os.flags() & ios::unitbuf) os.flush();
+   if (os.flags() & std::ios::unitbuf) os.flush();
    return os;
 }
 

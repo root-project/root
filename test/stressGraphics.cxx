@@ -259,11 +259,11 @@ void stressGraphics(Int_t verbose = 0)
    gRandom->SetSeed(65539);
 
    if (gOptionR) {
-      cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   GIFRef#   GIFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   PS2Ref#   PS2Err#" <<endl;
+      std::cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   GIFRef#   GIFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   PS2Ref#   PS2Err#" <<std::endl;
    } else {
-      cout << "**********************************************************************" <<endl;
-      cout << "*  Starting  Graphics - S T R E S S suite                            *" <<endl;
-      cout << "**********************************************************************" <<endl;
+      std::cout << "**********************************************************************" <<std::endl;
+      std::cout << "*  Starting  Graphics - S T R E S S suite                            *" <<std::endl;
+      std::cout << "**********************************************************************" <<std::endl;
    }
 
    gVerbose = verbose;
@@ -272,8 +272,8 @@ void stressGraphics(Int_t verbose = 0)
    gBenchmark->Start("stressGraphics");
 
    if (!gOptionR) {
-      cout << "*  Starting Basic Graphics - S T R E S S                             *" <<endl;
-      cout << "**********************************************************************" <<endl;
+      std::cout << "*  Starting Basic Graphics - S T R E S S                             *" <<std::endl;
+      std::cout << "**********************************************************************" <<std::endl;
    }
    tline        ();
    tmarker      ();
@@ -291,9 +291,9 @@ void stressGraphics(Int_t verbose = 0)
    transpad     ();
    statfitparam ();
    if (!gOptionR) {
-      cout << "**********************************************************************" <<endl;
-      cout << "*  Starting High Level 2D Primitives - S T R E S S                   *" <<endl;
-      cout << "**********************************************************************" <<endl;
+      std::cout << "**********************************************************************" <<std::endl;
+      std::cout << "*  Starting High Level 2D Primitives - S T R E S S                   *" <<std::endl;
+      std::cout << "**********************************************************************" <<std::endl;
    }
    tgaxis1      ();
    tgaxis2      ();
@@ -309,9 +309,9 @@ void stressGraphics(Int_t verbose = 0)
    tmultigraph2 ();
    waves        ();
    if (!gOptionR) {
-      cout << "**********************************************************************" <<endl;
-      cout << "*  Starting High Level 3D Primitives - S T R E S S                   *" <<endl;
-      cout << "**********************************************************************" <<endl;
+      std::cout << "**********************************************************************" <<std::endl;
+      std::cout << "*  Starting High Level 3D Primitives - S T R E S S                   *" <<std::endl;
+      std::cout << "**********************************************************************" <<std::endl;
    }
    options2d1   ();
    options2d2   ();
@@ -323,9 +323,9 @@ void stressGraphics(Int_t verbose = 0)
    tgraph2d2    ();
    tgraph2d3    ();
    if (!gOptionR) {
-      cout << "**********************************************************************" <<endl;
-      cout << "*  Starting complex drawing and TPad - S T R E S S                   *" <<endl;
-      cout << "**********************************************************************" <<endl;
+      std::cout << "**********************************************************************" <<std::endl;
+      std::cout << "*  Starting complex drawing and TPad - S T R E S S                   *" <<std::endl;
+      std::cout << "**********************************************************************" <<std::endl;
    }
    ntuple1      ();
    quarks       ();
@@ -335,7 +335,7 @@ void stressGraphics(Int_t verbose = 0)
    parallelcoord();
 ///clonepad     ();
    if (!gOptionR) {
-      cout << "**********************************************************************" <<endl;
+      std::cout << "**********************************************************************" <<std::endl;
 
       gBenchmark->Stop("stressGraphics");
 
@@ -391,21 +391,21 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
 
       const Int_t nch = strlen(gLine);
       if (TMath::Abs(res-ref)<=err) {
-         cout << gLine;
-         for (Int_t i = nch; i < 67; i++) cout << ".";
-         cout << " OK" << endl;
+         std::cout << gLine;
+         for (Int_t i = nch; i < 67; i++) std::cout << ".";
+         std::cout << " OK" << std::endl;
          if (!gOptionK) gSystem->Unlink(filename.Data());
       } else {
-         cout << gLine;
+         std::cout << gLine;
          Int_t ndots = 60;
          Int_t w = 3;
          if (gTestNum < 10) { ndots++; w--;}
-         for (Int_t i = nch; i < ndots; i++) cout << ".";
-         cout << setw(w) << gTestNum << " FAILED" << endl;
-         cout << "         Result    = "  << res << endl;
-         cout << "         Reference = "  << ref << endl;
-         cout << "         Error     = "  << TMath::Abs(res-ref)
-                                          << " (was " << err << ")"<< endl;
+         for (Int_t i = nch; i < ndots; i++) std::cout << ".";
+         std::cout << std::setw(w) << gTestNum << " FAILED" << std::endl;
+         std::cout << "         Result    = "  << res << std::endl;
+         std::cout << "         Reference = "  << ref << std::endl;
+         std::cout << "         Error     = "  << TMath::Abs(res-ref)
+                                          << " (was " << err << ")"<< std::endl;
          return 1;
       }
    } else {
@@ -2030,7 +2030,7 @@ void earth()
    TH2F *h2 = new TH2F("h02","Mercator",  50, -180, 180, 50, -80.5, 80.5);
    TH2F *h3 = new TH2F("h03","Sinusoidal",50, -180, 180, 50, -90.5, 90.5);
    TH2F *h4 = new TH2F("h04","Parabolic", 50, -180, 180, 50, -90.5, 90.5);
-   ifstream in;
+   std::ifstream in;
    in.open("../tutorials/graphics/earth.dat");
    if (!in) {
       in.clear();

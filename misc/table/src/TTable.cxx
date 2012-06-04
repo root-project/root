@@ -214,7 +214,7 @@ TTableDescriptor *TTable::GetTableDescriptors() const {
 }
 
 //______________________________________________________________________________
-void TTable::AsString(void *buf, EColumnType type, Int_t width,ostream &out) const
+void TTable::AsString(void *buf, EColumnType type, Int_t width,std::ostream &out) const
 {
   //
   // AsString represents the value provided via "void *b" with type defined
@@ -229,40 +229,40 @@ void TTable::AsString(void *buf, EColumnType type, Int_t width,ostream &out) con
    
    switch (type) {
       case kFloat:
-         out << dec  << setw(width) << setprecision(width-3) << *(float *)buf;
+         out << std::dec  << std::setw(width) << std::setprecision(width-3) << *(float *)buf;
          break;
       case kInt:
-         out << dec  <<  setw(width) << *(int *)buf;
+         out << std::dec  <<  std::setw(width) << *(int *)buf;
          break;
       case kLong:
-         out << dec  << setw(width) << *(Long_t *)buf;
+         out << std::dec  << std::setw(width) << *(Long_t *)buf;
          break;
       case kShort:
-         out << dec  << setw(width) << *(short *)buf;
+         out << std::dec  << std::setw(width) << *(short *)buf;
          break;
       case kDouble:
-         out << dec  << setw(width) << setprecision(width-3) << *(double *)buf;
+         out << std::dec  << std::setw(width) << std::setprecision(width-3) << *(double *)buf;
          break;
       case kUInt:
-         out << dec  << setw(width) << *(unsigned int *)buf;
+         out << std::dec  << std::setw(width) << *(unsigned int *)buf;
          break;
       case kULong:
-         out << dec  << setw(width) << *(ULong_t *)buf;
+         out << std::dec  << std::setw(width) << *(ULong_t *)buf;
          break;
       case kUShort:
-         out  << setw(width) << "0x" << hex << *(unsigned short *)buf;
+         out  << std::setw(width) << "0x" << std::hex << *(unsigned short *)buf;
          break;
       case kUChar:
-         out  << setw(width) << "0x" << hex << int(*(unsigned char *)buf);
+         out  << std::setw(width) << "0x" << std::hex << int(*(unsigned char *)buf);
          break;
       case kChar:
-         out << setw(width) << *(char *)buf;
+         out << std::setw(width) << *(char *)buf;
          break;
       case kBool:
-         out << setw(width) << *(Bool_t *)buf;
+         out << std::setw(width) << *(Bool_t *)buf;
          break;
       case kPtr:
-         out << "->" << setw(width) << *(void **)buf;
+         out << "->" << std::setw(width) << *(void **)buf;
          break;
       default:
          out << "\"NaN\"";
@@ -1557,7 +1557,7 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
       iOut += snprintf(strbuf+iOut,lenbuf-iOut,"struct %s {",typenam);
       delete [] typenam;
    } else {
-      cout << "struct " << dscT->GetName() << " {" << endl;
+      std::cout << "struct " << dscT->GetName() << " {" << std::endl;
    }
 
    TTableDescriptor::iterator dsc  = dscT->begin();
@@ -1572,7 +1572,7 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
          name.ReplaceAll("int","long");
          iOut += snprintf(strbuf+iOut,lenbuf-iOut," %s %s",name.Data(),(*dsc).fColumnName);
       } else
-         cout << '\t'<< name.Data() << '\t'<< (*dsc).fColumnName;
+         std::cout << '\t'<< name.Data() << '\t'<< (*dsc).fColumnName;
 
       Int_t indx;
       Int_t dim = (*dsc).fDimensions;
@@ -1580,7 +1580,7 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
          if (lenbuf>0)
             iOut += snprintf(strbuf+iOut,lenbuf-iOut,"[%d]",(*dsc).fIndexArray[indx]);
          else
-            cout <<  "[" << dec << (*dsc).fIndexArray[indx]<<"]";
+            std::cout <<  "[" << std::dec << (*dsc).fIndexArray[indx]<<"]";
       }
       // print comment if any
       TDataSet *nxc = nextComment();
@@ -1588,7 +1588,7 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
          iOut += snprintf(strbuf+iOut,lenbuf-iOut, ";");
       else {
          const char *title = nxc ? nxc->GetTitle() : " ";
-         cout << ";\t//" << title << endl;
+         std::cout << ";\t//" << title << std::endl;
       }
    } /* dsc */
 
@@ -1596,7 +1596,7 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
    if (lenbuf>0)
       iOut += snprintf(strbuf+iOut,lenbuf-iOut, "}");
    else
-      cout << "}" << endl;
+      std::cout << "}" << std::endl;
    return strbuf;
 }
 
@@ -1604,12 +1604,12 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
 const Char_t *TTable::PrintHeader() const
 {
   // Print general table inforamtion
-   cout << endl << " ---------------------------------------------------------------------------------------" << endl
+   std::cout << std::endl << " ---------------------------------------------------------------------------------------" << std::endl
         <<  " " << Path()
                 <<"  Allocated rows: "<<fN
                 <<"\t Used rows: "<<fMaxIndex
                 <<"\t Row size: "      << fSize << " bytes"
-        <<endl;
+        <<std::endl;
    return 0;
 }
 
@@ -1633,9 +1633,9 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
    Int_t rowNumber = rownumber;
    if (row  > Int_t(GetSize()) || GetSize() == UInt_t(0))  {
       PrintHeader();
-      cout  << " ======================================================================================" << endl
-           << "   There are " << GetSize() << " allocated rows for this table only"                     << endl
-             << " ======================================================================================" << endl;
+      std::cout  << " ======================================================================================" << std::endl
+           << "   There are " << GetSize() << " allocated rows for this table only"                     << std::endl
+             << " ======================================================================================" << std::endl;
       return 0;
    }
    if (rowNumber > Int_t(GetSize()-row)) rowNumber = GetSize()-row;
@@ -1659,20 +1659,20 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
    while (rowCount) {
       PrintHeader();
       if  (GetNRows() == 0) {// to Print empty table header
-         cout  << " ======================================================================================" << endl
-               << "   There is NO filled row in this table"                                                 << endl
-               << " ======================================================================================" << endl;
+         std::cout  << " ======================================================================================" << std::endl
+               << "   There is NO filled row in this table"                                                 << std::endl
+               << " ======================================================================================" << std::endl;
          return 0;
       }
-      cout << " Table: " << dscT->GetName()<< "\t";
+      std::cout << " Table: " << dscT->GetName()<< "\t";
       for (Int_t j = row+rowNumber-rowCount; j<row+rowNumber-rowCount+rowStep && j < row+rowNumber ;j++) {
          Int_t hW = width-2;
          if (j>=10) hW -= (int)TMath::Log10(float(j))-1;
-         cout  << setw(hW) << "["<<j<<"]";
-         cout  << " :" ;
+         std::cout  << std::setw(hW) << "["<<j<<"]";
+         std::cout  << " :" ;
       }
-      cout << endl
-      <<       " ======================================================================================" << endl;
+      std::cout << std::endl
+      <<       " ======================================================================================" << std::endl;
       TTableDescriptor::iterator member = dscT->begin();
       TTableDescriptor::iterator   dscE = dscT->end();
       TDataSetIter nextComment(dscT->MakeCommentField(kFALSE));
@@ -1682,7 +1682,7 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
          isdate = kFALSE;
          if (strcmp((*member).fColumnName,"fDatime") == 0 && membertype == "UInt_t")
                                                                                    isdate = kTRUE;
-         cout << membertype.Data();
+         std::cout << membertype.Data();
 
          // Add the dimensions to "array" members
          Int_t dim = (*member).fDimensions;
@@ -1707,49 +1707,49 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
          for (indexOffset=0; indexOffset < arrayLength && !breakLoop; indexOffset++) {
             nextRow = startRow;
 
-            if (!indexOffset) cout << "\t" << (*member).fColumnName;
-            else              cout << "\t" << setw(strlen((*member).fColumnName)) << " ";
+            if (!indexOffset) std::cout << "\t" << (*member).fColumnName;
+            else              std::cout << "\t" << std::setw(strlen((*member).fColumnName)) << " ";
 
             if (dim) {
-               for (Int_t i=0;i<dim;i++) cout << "["<<dec<<arrayLayout[i]<<"]";
+               for (Int_t i=0;i<dim;i++) std::cout << "["<<std::dec<<arrayLayout[i]<<"]";
                ArrayLayout(arrayLayout,(*member).fIndexArray,dim);
             }
-            cout << "\t";
-            if ( strlen((*member).fColumnName)+3*dim < 8) cout << "\t";
+            std::cout << "\t";
+            if ( strlen((*member).fColumnName)+3*dim < 8) std::cout << "\t";
 
             for (thisStepRows = 0;thisStepRows < thisLoopLenth; thisStepRows++,nextRow += GetRowSize()) {
                const char *pointer = nextRow + offset  + indexOffset*(*member).fTypeSize;
                if (isdate) {
                   cdatime = (UInt_t*)pointer;
                   TDatime::GetDateTime(cdatime[0],cdate,ctime);
-                  cout << cdate << "/" << ctime;
+                  std::cout << cdate << "/" << ctime;
                } else if ((*member).fType == kChar && dim == 1) {
                   char charbuffer[11];
                   strlcpy(charbuffer,pointer,TMath::Min(10,arrayLength)+1);
                   charbuffer[10] = 0;
-                  cout << "\"" << charbuffer;
+                  std::cout << "\"" << charbuffer;
                   if (arrayLength > 10)
-                     cout << " . . . ";
-                  cout << "\"";
+                     std::cout << " . . . ";
+                  std::cout << "\"";
                   breakLoop = kTRUE;
                } else {
-                  AsString((void *)pointer,EColumnType((*member).fType),width,cout);
-                  cout << " :";
+                  AsString((void *)pointer,EColumnType((*member).fType),width,std::cout);
+                  std::cout << " :";
                }
             }
             // Encode  the column's comment
             if (indexOffset==0) {
                TDataSet *nxc = nextComment();
-               cout << " " << (const char *)(nxc ? nxc->GetTitle() : "no comment");
+               std::cout << " " << (const char *)(nxc ? nxc->GetTitle() : "no comment");
             }
-            cout << endl;
+            std::cout << std::endl;
          }
          if (arrayLayout) delete [] arrayLayout;
       }
       rowCount -= thisLoopLenth;
       startRow  = nextRow;
    }
-   cout << "---------------------------------------------------------------------------------------" << endl;
+   std::cout << "---------------------------------------------------------------------------------------" << std::endl;
    return 0;
 }
 //______________________________________________________________________________
@@ -1792,23 +1792,23 @@ Int_t TTable::Purge(Option_t *opt)
 }
 
 //______________________________________________________________________________
-void TTable::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TTable::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 //   Save a primitive as a C++ statement(s) on output stream "out".
    UInt_t arrayLayout[10],arraySize[10];
    const unsigned char *pointer=0,*startRow=0;
    int i,rowCount;unsigned char ic;
 
-   out << "TDataSet *CreateTable() { " << endl;
+   out << "TDataSet *CreateTable() { " << std::endl;
 
    Int_t rowNumber =  GetNRows();
    TTableDescriptor *dscT = GetRowDescriptors();
 
 //                      Is anything Wrong??
    if (!rowNumber || !dscT ) {//
-      out << "// The output table was bad-defined!" << endl
-          << " fprintf(stderr, \"Bad table found. Please remove me\\n\");" << endl
-          << " return 0; } "    << endl;
+      out << "// The output table was bad-defined!" << std::endl
+          << " fprintf(stderr, \"Bad table found. Please remove me\\n\");" << std::endl
+          << " return 0; } "    << std::endl;
       return;
    }
 
@@ -1822,26 +1822,26 @@ void TTable::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 
    const char *className = IsA()->GetName();
 
-   out << "// -----------------------------------------------------------------" << endl;
+   out << "// -----------------------------------------------------------------" << std::endl;
    out << "// "   << Path()
        << " Allocated rows: "<< rowNumber
        <<"  Used rows: "<<      rowNumber
-       <<"  Row size: " << fSize << " bytes"                 << endl;
+       <<"  Row size: " << fSize << " bytes"                 << std::endl;
    out << "// "  << " Table: " << dscT->GetName()<<"[0]--> "
-       << dscT->GetName()<<"["<<rowNumber-1 <<"]"            << endl;
-   out << "// ====================================================================" << endl;
-   out << "// ------  Test whether this table share library was loaded ------"      << endl;
-   out << "  if (!TClass::GetClass(\"" << className << "\")) return 0;"    << endl;
-   out <<    dscT->GetName() << " " << rowId << ";" << endl
+       << dscT->GetName()<<"["<<rowNumber-1 <<"]"            << std::endl;
+   out << "// ====================================================================" << std::endl;
+   out << "// ------  Test whether this table share library was loaded ------"      << std::endl;
+   out << "  if (!TClass::GetClass(\"" << className << "\")) return 0;"    << std::endl;
+   out <<    dscT->GetName() << " " << rowId << ";" << std::endl
        <<  className << " *" << tableId << " = new "
        <<  className
-       << "(\""<<GetName()<<"\"," << GetNRows() << ");" << endl
-       << "//" <<endl ;
+       << "(\""<<GetName()<<"\"," << GetNRows() << ");" << std::endl
+       << "//" <<std::endl ;
 
 //              Row loop
    TDataSetIter nextComment(dscT->MakeCommentField(kFALSE));
    for (rowCount=0;rowCount<rowNumber; rowCount++,startRow += fSize, nextComment.Reset()) {     //row loop
-      out << "memset(" << "&" << rowId << ",0," << tableId << "->GetRowSize()" << ");" << endl ;
+      out << "memset(" << "&" << rowId << ",0," << tableId << "->GetRowSize()" << ");" << std::endl ;
 
 //              Member loop
    TTableDescriptor::iterator member  = dscT->begin();
@@ -1891,23 +1891,23 @@ void TTable::SavePrimitive(ostream &out, Option_t * /*= ""*/)
              || strchr("!#$%&()*+-,./:;<>=?@{}[]_|~",ic))) {//printable
                out << ic;
             } else {                                      //nonprintable
-               out << "\\x" << setw(2) << setfill('0') << hex << (unsigned)ic ;
-               out << setw(1) << setfill(' ') << dec;
+               out << "\\x" << std::setw(2) << std::setfill('0') << std::hex << (unsigned)ic ;
+               out << std::setw(1) << std::setfill(' ') << std::dec;
             }
          }
-         out << "\"," << dec << charLen << ");";
-         out << "// " << (const char*)memberTitle << endl;
+         out << "\"," << std::dec << charLen << ");";
+         out << "// " << (const char*)memberTitle << std::endl;
          continue;
       } //EndIf of char case
 
 //                      Normal member
       Int_t indexOffset;
       for (indexOffset=0; indexOffset < arrayLength ; indexOffset++) {//array loop
-         out << setw(3) << " " ;
+         out << std::setw(3) << " " ;
          out << " " << rowId << "." << (const char*)memberName;
 
          if (dim) {
-            for (i=0;i<dim;i++) {out << "["<<dec<<arrayLayout[i]<<"]";}
+            for (i=0;i<dim;i++) {out << "["<<std::dec<<arrayLayout[i]<<"]";}
             ArrayLayout(arrayLayout,arraySize,dim);}
 
 //                      Generate "="
@@ -1919,16 +1919,16 @@ void TTable::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 
 //                      Encode data member title
             if (indexOffset==0)  out << "; // " << (const char*)memberTitle;
-            out << ";" << endl;
+            out << ";" << std::endl;
          }//end array loop
       }//end of member loop
 
-      out << tableId << "->AddAt(&" << rowId <<");" << endl;
+      out << tableId << "->AddAt(&" << rowId <<");" << std::endl;
 
    }//end of row loop
-   out << "// ----------------- end of code ---------------" << endl
-       << " return (TDataSet *)tableSet;" << endl
-       << "}"  << endl;
+   out << "// ----------------- end of code ---------------" << std::endl
+       << " return (TDataSet *)tableSet;" << std::endl
+       << "}"  << std::endl;
    return;
 }
 
@@ -1994,7 +1994,7 @@ Char_t *TTable::MakeExpression(const Char_t *expressions[],Int_t nExpressions)
       return 0;
    }
 
-   ofstream str;
+   std::ofstream str;
    str.open(fileName);
    if (str.bad() ) {
       Error("MakeExpression","Can not open the temporary file <%s>",fileName);
@@ -2005,8 +2005,8 @@ Char_t *TTable::MakeExpression(const Char_t *expressions[],Int_t nExpressions)
    TTableDescriptor *dsc = GetRowDescriptors();
    const tableDescriptor_st *descTable  = dsc->GetTable();
    // Create function
-   str << "void SelectionQWERTY(float *"<<resID<<", float **"<<addressID<< ", int& i$, int& n$ )"   << endl;
-   str << "{"                                                        << endl;
+   str << "void SelectionQWERTY(float *"<<resID<<", float **"<<addressID<< ", int& i$, int& n$ )"   << std::endl;
+   str << "{"                                                        << std::endl;
    int i = 0;
    for (i=0; i < dsc->GetNRows(); i++,descTable++ ) {
       // Take the column name
@@ -2029,16 +2029,16 @@ LETSTRY:
       if (!isFloat)   str << "(" << type << "*)";
       str << addressID << "[" << i << "]";
       if (isScalar)   str << ")" ;
-      str << ";" << endl;
+      str << ";" << std::endl;
    }
    // Create expressions
    for (i=0; i < nExpressions; i++ ) {
       if (expressions[i] && expressions[i][0])
-         str << " "<<resID<<"["<<i<<"]=(float)(" << expressions[i] << ");"  << endl;
+         str << " "<<resID<<"["<<i<<"]=(float)(" << expressions[i] << ");"  << std::endl;
 //      if (i == nExpressions-1 && i !=0 )
-//          str  << "  if ("<<resID<<"["<<i<<"] == 0){ return; }" << endl;
+//          str  << "  if ("<<resID<<"["<<i<<"] == 0){ return; }" << std::endl;
    };
-   str << "}" << endl;
+   str << "}" << std::endl;
    str.close();
    // Create byte code and check syntax
    if (str.good()) return fileName;

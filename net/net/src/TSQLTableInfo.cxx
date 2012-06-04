@@ -76,21 +76,21 @@ void TSQLTableInfo::Print(Option_t*) const
    // Prints table and table columns info
    
    TROOT::IndentLevel();
-   cout << "Table:" << GetName();
+   std::cout << "Table:" << GetName();
    
    if ((GetTitle()!=0) && (strlen(GetTitle())!=0))
-      cout << " comm:'" << GetTitle() << "'";
+      std::cout << " comm:'" << GetTitle() << "'";
    
    if (fEngine.Length()>0)
-      cout << " engine:" << fEngine;
+      std::cout << " engine:" << fEngine;
 
    if (fCreateTime.Length()>0)
-      cout << " create:" << fCreateTime;
+      std::cout << " create:" << fCreateTime;
 
    if (fUpdateTime.Length()>0)
-      cout << " update:" << fUpdateTime;
+      std::cout << " update:" << fUpdateTime;
    
-   cout << endl;
+   std::cout << std::endl;
     
    TROOT::IncreaseDirLevel();
    if (fColumns!=0)

@@ -65,13 +65,13 @@ TGShapedFrame::~TGShapedFrame()
 }
 
 //______________________________________________________________________________
-void TGShapedFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGShapedFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a shaped frame as a C++ statement(s) on output stream out.
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
-   out << endl << "   // shaped frame" << endl;
+   out << std::endl << "   // shaped frame" << std::endl;
    out << "   TGShapedFrame *";
    out << GetName() << " = new TGShapedFrame(" << fImage->GetName()
        << "," << fParent->GetName() << "," << GetWidth() << ","
@@ -79,15 +79,15 @@ void TGShapedFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         out << ");" << endl;
+         out << ");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    // setting layout manager if it differs from the main frame type
    // coverity[returned_null]
@@ -102,7 +102,7 @@ void TGShapedFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "   " << GetName() <<"->SetLayoutManager(";
       lm->SavePrimitive(out, option);
-      out << ");"<< endl;
+      out << ");"<< std::endl;
    }
 
    SavePrimitiveSubframes(out, option);

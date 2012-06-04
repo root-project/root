@@ -40,10 +40,10 @@ bool testQuantiles(int type = 0, bool sorted = true) {
       std::random_shuffle(x, x+10);
       if (debug) { 
          std::cout << "shuffle data " << std::endl;
-         cout << " data = { ";
+         std::cout << " data = { ";
          for (int i = 0; i < n; ++i) 
-            cout << x[i] << "  ";
-         cout << " }\n";      
+            std::cout << x[i] << "  ";
+         std::cout << " }\n";      
       }
    }
     
@@ -57,31 +57,31 @@ bool testQuantiles(int type = 0, bool sorted = true) {
       for (int i = 0; i < np; ++i) { 
          printf("  %5.2f ",p[i]);
       }
-      cout << endl;
+      std::cout << std::endl;
       for (int i = 0; i < np; ++i) { 
          printf("  %5.3f ",quant[i]);
       }
-      cout << endl;
+      std::cout << std::endl;
    }
 
    // test if result is OK
    if (type == 0) type = 7; 
    if (type < 0) type = - type;
    bool ok = true; 
-   cout << "Testing for type " << type << " :\t\t"; 
+   std::cout << "Testing for type " << type << " :\t\t"; 
    for (int i = 0; i < np; ++i) {       
       double r_result = result[ (type-1)*np + i];
       if (TMath::AreEqualAbs(quant[i], r_result, 1.E-6) )
-         cout << ".";
+         std::cout << ".";
       else { 
-         cout << "  Failed for prob = " << p[i] << " -  R gives " << r_result << " TMath gives " << quant[i] << std::endl;
+         std::cout << "  Failed for prob = " << p[i] << " -  R gives " << r_result << " TMath gives " << quant[i] << std::endl;
          ok = false; 
       }
    }
    if (ok) 
-      cout << "\t OK !\n";
+      std::cout << "\t OK !\n";
    else
-      cout << "\nTest Failed for type " << type << std::endl;
+      std::cout << "\nTest Failed for type " << type << std::endl;
 
    return ok;
 }
@@ -96,18 +96,18 @@ int main(int argc,  char *argv[]) {
    }
 
    bool ok = true; 
-   cout << "Test ordered data ....\n";
+   std::cout << "Test ordered data ....\n";
    //itype == 0 is considered the defafult
    for (int itype = 0; itype < 10; ++itype) { 
       ok &= testQuantiles(itype,true);
    }
-   cout << "\nTest  data in random order....\n";
+   std::cout << "\nTest  data in random order....\n";
    for (int itype = 0; itype < 10; ++itype) { 
       ok &= testQuantiles(itype,false);
    }
 
    if (!ok) { 
-      cout << "Test sample quantiles FAILED " << endl;
+      std::cout << "Test sample quantiles FAILED " << std::endl;
       return -1;
    } 
    return 0;

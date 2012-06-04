@@ -6562,7 +6562,7 @@ void TH1::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
@@ -6587,7 +6587,7 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
          if (i != 0) out << ", ";
          out << GetXaxis()->GetXbins()->fArray[i];
       }
-      out << "}; " << endl;
+      out << "}; " << std::endl;
    }
    // If the histogram is 2 or 3 dimensional, check if the histogram
    // has equidistant Y bins or not.  If not, we create an array
@@ -6603,7 +6603,7 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             if (i != 0) out << ", ";
             out << GetYaxis()->GetXbins()->fArray[i];
          }
-         out << "}; " << endl;
+         out << "}; " << std::endl;
    }
    // IF the histogram is 3 dimensional, check if the histogram
    // has equidistant Z bins or not.  If not, we create an array
@@ -6619,11 +6619,11 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
             if (i != 0) out << ", ";
             out << GetZaxis()->GetXbins()->fArray[i];
          }
-         out << "}; " << endl;
+         out << "}; " << std::endl;
    }
 
    char quote = '"';
-   out <<"   "<<endl;
+   out <<"   "<<std::endl;
    out <<"   "<< ClassName() <<" *";
 
    // Histogram pointer has by default the histogram name.
@@ -6670,14 +6670,14 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
          out << "," << GetZaxis()->GetXmin()
          << "," << GetZaxis()->GetXmax();
    }
-   out << ");" << endl;
+   out << ");" << std::endl;
 
    // save bin contents
    Int_t bin;
    for (bin=0;bin<fNcells;bin++) {
       Double_t bc = GetBinContent(bin);
       if (bc) {
-         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
+         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");"<<std::endl;
       }
    }
 
@@ -6686,7 +6686,7 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       for (bin=0;bin<fNcells;bin++) {
          Double_t be = GetBinError(bin);
          if (be) {
-            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");"<<endl;
+            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");"<<std::endl;
          }
       }
    }
@@ -6695,44 +6695,44 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 }
 
 //______________________________________________________________________________
-void TH1::SavePrimitiveHelp(ostream &out, const char *hname, Option_t *option /*= ""*/)
+void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *option /*= ""*/)
 {
    // helper function for the SavePrimitive functions from TH1
    // or classes derived from TH1, eg TProfile, TProfile2D.
 
    char quote = '"';
    if (TMath::Abs(GetBarOffset()) > 1e-5) {
-      out<<"   "<<hname<<"->SetBarOffset("<<GetBarOffset()<<");"<<endl;
+      out<<"   "<<hname<<"->SetBarOffset("<<GetBarOffset()<<");"<<std::endl;
    }
    if (TMath::Abs(GetBarWidth()-1) > 1e-5) {
-      out<<"   "<<hname<<"->SetBarWidth("<<GetBarWidth()<<");"<<endl;
+      out<<"   "<<hname<<"->SetBarWidth("<<GetBarWidth()<<");"<<std::endl;
    }
    if (fMinimum != -1111) {
-      out<<"   "<<hname<<"->SetMinimum("<<fMinimum<<");"<<endl;
+      out<<"   "<<hname<<"->SetMinimum("<<fMinimum<<");"<<std::endl;
    }
    if (fMaximum != -1111) {
-      out<<"   "<<hname<<"->SetMaximum("<<fMaximum<<");"<<endl;
+      out<<"   "<<hname<<"->SetMaximum("<<fMaximum<<");"<<std::endl;
    }
    if (fNormFactor != 0) {
-      out<<"   "<<hname<<"->SetNormFactor("<<fNormFactor<<");"<<endl;
+      out<<"   "<<hname<<"->SetNormFactor("<<fNormFactor<<");"<<std::endl;
    }
    if (fEntries != 0) {
-      out<<"   "<<hname<<"->SetEntries("<<fEntries<<");"<<endl;
+      out<<"   "<<hname<<"->SetEntries("<<fEntries<<");"<<std::endl;
    }
    if (fDirectory == 0) {
-      out<<"   "<<hname<<"->SetDirectory(0);"<<endl;
+      out<<"   "<<hname<<"->SetDirectory(0);"<<std::endl;
    }
    if (TestBit(kNoStats)) {
-      out<<"   "<<hname<<"->SetStats(0);"<<endl;
+      out<<"   "<<hname<<"->SetStats(0);"<<std::endl;
    }
    if (fOption.Length() != 0) {
-      out<<"   "<<hname<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<endl;
+      out<<"   "<<hname<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<std::endl;
    }
 
    // save contour levels
    Int_t ncontours = GetContour();
    if (ncontours > 0) {
-      out<<"   "<<hname<<"->SetContour("<<ncontours<<");"<<endl;
+      out<<"   "<<hname<<"->SetContour("<<ncontours<<");"<<std::endl;
       Double_t zlevel;
       for (Int_t bin=0;bin<ncontours;bin++) {
          if (gPad->GetLogz()) {
@@ -6740,7 +6740,7 @@ void TH1::SavePrimitiveHelp(ostream &out, const char *hname, Option_t *option /*
          } else {
             zlevel = GetContourLevel(bin);
          }
-         out<<"   "<<hname<<"->SetContourLevel("<<bin<<","<<zlevel<<");"<<endl;
+         out<<"   "<<hname<<"->SetContourLevel("<<bin<<","<<zlevel<<");"<<std::endl;
       }
    }
 
@@ -6751,12 +6751,12 @@ void TH1::SavePrimitiveHelp(ostream &out, const char *hname, Option_t *option /*
       obj = lnk->GetObject();
       obj->SavePrimitive(out,"nodraw");
       if (obj->InheritsFrom(TF1::Class())) {
-         out<<"   "<<hname<<"->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
+         out<<"   "<<hname<<"->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<std::endl;
       } else if (obj->InheritsFrom("TPaveStats")) {
-         out<<"   "<<hname<<"->GetListOfFunctions()->Add(ptstats);"<<endl;
-         out<<"   ptstats->SetParent("<<hname<<");"<<endl;
+         out<<"   "<<hname<<"->GetListOfFunctions()->Add(ptstats);"<<std::endl;
+         out<<"   ptstats->SetParent("<<hname<<");"<<std::endl;
       } else {
-         out<<"   "<<hname<<"->GetListOfFunctions()->Add("<<obj->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<endl;
+         out<<"   "<<hname<<"->GetListOfFunctions()->Add("<<obj->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
       }
       lnk = (TObjOptLink*)lnk->Next();
    }
@@ -6772,7 +6772,7 @@ void TH1::SavePrimitiveHelp(ostream &out, const char *hname, Option_t *option /*
    opt.ToLower();
    if (!opt.Contains("nodraw")) {
       out<<"   "<<hname<<"->Draw("
-         <<quote<<option<<quote<<");"<<endl;
+         <<quote<<option<<quote<<");"<<std::endl;
    }
 }
 

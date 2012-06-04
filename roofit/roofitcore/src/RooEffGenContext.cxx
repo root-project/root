@@ -31,6 +31,8 @@
 #include "RooAbsPdf.h"
 #include "RooRandom.h"
 
+using namespace std;
+
 ClassImp(RooEffGenContext);
 
 //_____________________________________________________________________________

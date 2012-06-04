@@ -92,7 +92,7 @@ Double_t TPieSlice::GetValue()
 
 
 //______________________________________________________________________________
-void TPieSlice::SavePrimitive(ostream &/*out*/, Option_t * /*opts*/)
+void TPieSlice::SavePrimitive(std::ostream &/*out*/, Option_t * /*opts*/)
 {
    // Do nothing.
 }

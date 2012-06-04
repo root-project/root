@@ -94,7 +94,7 @@ public:
          htmp.Fill( fCdf->Eval(x) ); 
       } 
       double prob = fHref->Chi2Test(&htmp,"UU");
-      cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob << endl;
+      std::cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob << std::endl;
       if (prob < 1E-06) { 
          std::cout << "Chi2 Test failed ! " << std::endl;
          fHref->Chi2Test(&htmp,"UUP"); // print all chi2 test info
@@ -128,7 +128,7 @@ public:
          htmp.Fill( fCdf->Eval(x) ); 
       } 
       double prob = fHref->Chi2Test(&htmp,"UU");
-      cout << "Time using TF1::GetRandom()    \t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob << endl;
+      std::cout << "Time using TF1::GetRandom()    \t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob << std::endl;
       if (prob < 1E-06) { 
          std::cout << "Chi2 Test failed ! " << std::endl;
          fHref->Chi2Test(&htmp,"UUP"); // print all chi2 test info
@@ -192,7 +192,7 @@ int unuranDistr() {
    // arou: needs pdf and dpdf (estimated numerically in dist class)
    ret = unr.Init(dist,"arou"); 
    if (!ret) { 
-      std::cerr << "Error initializing unuran with method " << unr.MethodName() << endl; 
+      std::cerr << "Error initializing unuran with method " << unr.MethodName() << std::endl; 
       iret = -1;
    } 
    else 
@@ -201,7 +201,7 @@ int unuranDistr() {
    // nrou (needs only pdf , mode is an option) 
    ret = unr.Init(dist,"nrou"); 
    if (!ret) { 
-      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << endl; 
+      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << std::endl; 
       iret =  -2;
    } 
    else 
@@ -211,7 +211,7 @@ int unuranDistr() {
    // tdr: needs pdf and dpdf (estimated numerically in dist class)
    ret = unr.Init(dist,"tdr"); 
    if (!ret) { 
-      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << endl; 
+      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << std::endl; 
       iret =  -3;
    } 
    else 
@@ -223,7 +223,7 @@ int unuranDistr() {
    // hinv (needs cdf , pdf and dpdf are  optionally)
    ret = unr.Init(dist,"hinv"); 
    if (!ret) { 
-      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << endl; 
+      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << std::endl; 
       iret =  -4;
    } 
    else 
@@ -234,7 +234,7 @@ int unuranDistr() {
    ret = unr.Init(dist,"ninv"); 
    n/= 10; // method is too slow
    if (!ret) { 
-      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << endl; 
+      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << std::endl; 
       iret =  -5;
    } 
    else 
@@ -247,7 +247,7 @@ int unuranDistr() {
    // srou (need pdf mode sand area)
    ret = unr.Init(dist,"srou"); 
    if (!ret) { 
-      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << endl; 
+      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << std::endl; 
       iret =  -6;
    } 
    else 
@@ -256,7 +256,7 @@ int unuranDistr() {
    // srou (need pdf mode sand area)
    ret = unr.Init(dist,"ssr"); 
    if (!ret) { 
-      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << endl; 
+      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << std::endl; 
       iret =  -7;
    } 
    else 
@@ -265,7 +265,7 @@ int unuranDistr() {
    n*= 10;
    ret = unr.Init(dist,"utdr"); 
    if (!ret) { 
-      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << endl; 
+      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << std::endl; 
       iret =  -8;
    } 
    else 
@@ -286,7 +286,7 @@ int unuranDistr() {
 
    ret = unr.Init(dist,"auto"); 
    if (!ret) { 
-      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << endl; 
+      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << std::endl; 
       iret =  -10;
    } 
    else 
@@ -308,7 +308,7 @@ int unuranDistr() {
    // show now some plots 
    ret = unr.Init(dist,"auto"); 
    if (!ret) { 
-      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << endl; 
+      std::cerr << "Error initializing unuran with method " << unr.MethodName()  << std::endl; 
       iret =  -20;
    } 
    int n2 = n/10;

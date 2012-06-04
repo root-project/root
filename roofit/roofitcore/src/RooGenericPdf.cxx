@@ -45,6 +45,8 @@
 
 
 
+using namespace std;
+
 ClassImp(RooGenericPdf)
 
 

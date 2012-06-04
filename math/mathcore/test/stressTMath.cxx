@@ -26,8 +26,8 @@ double Time(TStopwatch & w) {
 
 template <typename T> double stressVector(unsigned int size, const char* type)
 {
-   cout << "Generating random vector of '" 
-        << type << "' and size " << size << " ..." << endl << endl;
+   std::cout << "Generating random vector of '" 
+        << type << "' and size " << size << " ..." << std::endl << std::endl;
 
    double totalTime = 0;
    double totalUnitTime = 0;
@@ -37,7 +37,7 @@ template <typename T> double stressVector(unsigned int size, const char* type)
 
 #ifdef DEBUG
    for ( unsigned int i = 0; i < size; ++i )
-      cout << vector[i] << " " << endl;
+      std::cout << vector[i] << " " << std::endl;
 #endif
 
    TStopwatch w;
@@ -48,8 +48,8 @@ template <typename T> double stressVector(unsigned int size, const char* type)
    for ( unsigned int i = 0; i < ntest; ++i )
       TMath::MinElement(size, vector);
    w.Stop();
-   cout << "MinMaxElement() \tTotal Time: " << Time(w) << "  (s)\t\t" 
-        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << endl;
+   std::cout << "MinMaxElement() \tTotal Time: " << Time(w) << "  (s)\t\t" 
+        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << std::endl;
    totalUnitTime += Time(w)/ntest;
    totalTime += Time(w);
 
@@ -58,8 +58,8 @@ template <typename T> double stressVector(unsigned int size, const char* type)
    for ( unsigned int i = 0; i < ntest; ++i )
       TMath::LocMin(size, vector);
    w.Stop();
-   cout << "LocMin/Max() \t\tTotal Time: " << Time(w) << "  (s)\t\t" 
-        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << endl;
+   std::cout << "LocMin/Max() \t\tTotal Time: " << Time(w) << "  (s)\t\t" 
+        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << std::endl;
    totalUnitTime += Time(w)/ntest;
    totalTime += Time(w);
 
@@ -68,8 +68,8 @@ template <typename T> double stressVector(unsigned int size, const char* type)
    for ( unsigned int i = 0; i < ntest; ++i )
       TMath::Mean(size, vector);
    w.Stop();
-   cout << "Mean() \t\t\tTotal Time: " << Time(w) << "  (s)\t\t" 
-        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << endl;
+   std::cout << "Mean() \t\t\tTotal Time: " << Time(w) << "  (s)\t\t" 
+        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << std::endl;
    totalUnitTime += Time(w)/ntest;
    totalTime += Time(w);
 
@@ -78,8 +78,8 @@ template <typename T> double stressVector(unsigned int size, const char* type)
    for ( unsigned int i = 0; i < ntest; ++i )
       TMath::Median(size, vector);
    w.Stop();
-   cout << "Median() \t\tTotal Time: " << Time(w) << "  (s)\t\t" 
-        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << endl;
+   std::cout << "Median() \t\tTotal Time: " << Time(w) << "  (s)\t\t" 
+        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << std::endl;
    totalUnitTime += Time(w)/ntest;
    totalTime += Time(w);
 
@@ -88,8 +88,8 @@ template <typename T> double stressVector(unsigned int size, const char* type)
    for ( unsigned int i = 0; i < ntest; ++i )
       TMath::RMS(size, vector);
    w.Stop();
-   cout << "RMS() \t\t\tTotal Time: " << Time(w) << "  (s)\t\t" 
-        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << endl;
+   std::cout << "RMS() \t\t\tTotal Time: " << Time(w) << "  (s)\t\t" 
+        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << std::endl;
    totalUnitTime += Time(w)/ntest;
    totalTime += Time(w);
 
@@ -98,8 +98,8 @@ template <typename T> double stressVector(unsigned int size, const char* type)
    for ( unsigned int i = 0; i < ntest; ++i )
       TMath::GeomMean(size, vector);
    w.Stop();
-   cout << "GeomMean() \t\tTotal Time: " << Time(w) << "  (s)\t\t" 
-        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << endl;
+   std::cout << "GeomMean() \t\tTotal Time: " << Time(w) << "  (s)\t\t" 
+        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << std::endl;
    totalUnitTime += Time(w)/ntest;
    totalTime += Time(w);
 
@@ -109,28 +109,28 @@ template <typename T> double stressVector(unsigned int size, const char* type)
    for ( unsigned int i = 0; i < ntest; ++i )
       TMath::Sort(size, vector, index, kFALSE);
    w.Stop();
-   cout << "Sort() \t\t\tTotal Time: " << Time(w) << "  (s)\t\t" 
-        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << endl;
+   std::cout << "Sort() \t\t\tTotal Time: " << Time(w) << "  (s)\t\t" 
+        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << std::endl;
    totalUnitTime += Time(w)/ntest;
    totalTime += Time(w);
 
    std::sort(vector, vector + size);
 #ifdef DEBUG
    for ( unsigned int i = 0; i < size; ++i )
-      cout << vector[i] << " " << endl;
+      std::cout << vector[i] << " " << std::endl;
 #endif
    ntest = 20000*NUMTEST;
    w.Start( kTRUE );
    for ( unsigned int i = 0; i < ntest; ++i )
       TMath::BinarySearch(size, vector, vector[ i % size ]);
    w.Stop();
-   cout << "BinarySearch() \t\tTotal Time: " << Time(w) << "  (s)\t\t" 
-        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << endl;
+   std::cout << "BinarySearch() \t\tTotal Time: " << Time(w) << "  (s)\t\t" 
+        << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << std::endl;
    totalUnitTime += Time(w)/ntest;
    totalTime += Time(w);
 
-   cout << "\nTotal Time :       "      << totalTime     << "  (s)\n"
-        <<   "Total Time/call :  " << totalUnitTime*1.E3 << "  (ms)\n" << endl;
+   std::cout << "\nTotal Time :       "      << totalTime     << "  (s)\n"
+        <<   "Total Time/call :  " << totalUnitTime*1.E3 << "  (ms)\n" << std::endl;
 
    delete [] vector;
    delete [] index;
@@ -142,7 +142,7 @@ void stressTMath(unsigned int size, const char * type)
 {
    double totalTime = 0;
    
-   cout << "Stress Test Start..." << endl;
+   std::cout << "Stress Test Start..." << std::endl;
 
    if ( strcmp(type, "Short_t") == 0 )
       totalTime += stressVector<Short_t>(size, type);
@@ -157,9 +157,9 @@ void stressTMath(unsigned int size, const char * type)
    else
       totalTime += stressVector<Double_t>(size, "Double_t");
    
-   //cout << "Total Test Time: " << totalTime << "\n" << endl;
+   //std::cout << "Total Test Time: " << totalTime << "\n" << std::endl;
 
-   cout << "End of Stress Test..." << endl;
+   std::cout << "End of Stress Test..." << std::endl;
 
    return;
 }
@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
       
    if ( argc > 1 ) { 
       if (strcmp(argv[1], "-h") == 0) { 
-         cout << "Usage: " << argv[0]
+         std::cout << "Usage: " << argv[0]
               << " [TYPE OF ARRAY] [SIZE OF ARRAY]\n\n"
               << "where [TYPE OF ARRAY] is one of the following:\n"
               << "\t\"Short_t\"\n"
@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
               << "\t\"Long_t\"\n"
               << "\t\"Long64_t\"\n"
               << "\t \"Double_t\"\n"
-              << endl;
+              << std::endl;
          return 1;
       }
       type = argv[1];

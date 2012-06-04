@@ -191,7 +191,7 @@ Double_t TConfidenceLevel::CLs(bool use_sMC) const
 
    Double_t clb = CLb(kFALSE);
    Double_t clsb = CLsb(use_sMC);
-   if(clb==0) { cout << "Warning: clb = 0 !" << endl; return 0;}
+   if(clb==0) { std::cout << "Warning: clb = 0 !" << std::endl; return 0;}
    else return clsb/clb;
 }
 

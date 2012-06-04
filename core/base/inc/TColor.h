@@ -119,7 +119,7 @@ public:
    static void    Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b);
    static void    Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b);
    static const char *PixelAsHexString(ULong_t pixel);
-   static void    SaveColor(ostream &out, Int_t ci);
+   static void    SaveColor(std::ostream &out, Int_t ci);
    static Bool_t  IsGrayscale();
    static void    SetGrayscale(Bool_t set = kTRUE);
    static void    SetPalette(Int_t ncolors, Int_t *colors);

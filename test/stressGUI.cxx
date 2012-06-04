@@ -218,23 +218,23 @@ void stressGUI()
    if (gOptionRef) {
       fprintf(sgref, "Test#     Size#\n");
    } else {
-      cout << "**********************************************************************" <<endl;
-      cout << "*  Starting  GUI - S T R E S S suite                                 *" <<endl;
-      cout << "**********************************************************************" <<endl;
+      std::cout << "**********************************************************************" <<std::endl;
+      std::cout << "*  Starting  GUI - S T R E S S suite                                 *" <<std::endl;
+      std::cout << "**********************************************************************" <<std::endl;
    }
    gTestNum = 0;
 
    gBenchmark->Start("stressGUI");
 
    if (!gOptionRef) {
-      cout << "*  Running macros in $ROOTSYS/tutorials/gui - S T R E S S            *" <<endl;
-      cout << "**********************************************************************" <<endl;
+      std::cout << "*  Running macros in $ROOTSYS/tutorials/gui - S T R E S S            *" <<std::endl;
+      std::cout << "**********************************************************************" <<std::endl;
    }
    run_tutorials();
    if (!gOptionRef) {
-      cout << "**********************************************************************" <<endl;
-      cout << "*  Starting Basic GUI Widgets - S T R E S S                          *" <<endl;
-      cout << "**********************************************************************" <<endl;
+      std::cout << "**********************************************************************" <<std::endl;
+      std::cout << "*  Starting Basic GUI Widgets - S T R E S S                          *" <<std::endl;
+      std::cout << "**********************************************************************" <<std::endl;
    }
    testLayout();
    testTextAlign();
@@ -248,9 +248,9 @@ void stressGUI()
    testNumberEntry();
    testTableLayout();
    if (!gOptionRef) {
-      cout << "**********************************************************************" <<endl;
-      cout << "*  Starting High Level GUI Widgets - S T R E S S                     *" <<endl;
-      cout << "**********************************************************************" <<endl;
+      std::cout << "**********************************************************************" <<std::endl;
+      std::cout << "*  Starting High Level GUI Widgets - S T R E S S                     *" <<std::endl;
+      std::cout << "**********************************************************************" <<std::endl;
    }
    testPack();
    testSearchDlg();
@@ -269,32 +269,32 @@ void stressGUI()
    if (!gOptionRef) {
 
       if (gOptionFull) {
-         cout << "**********************************************************************" <<endl;
-         cout << "*  Starting Drag and Drop playback - S T R E S S                     *" <<endl;
-         cout << "**********************************************************************" <<endl;
+         std::cout << "**********************************************************************" <<std::endl;
+         std::cout << "*  Starting Drag and Drop playback - S T R E S S                     *" <<std::endl;
+         std::cout << "**********************************************************************" <<std::endl;
          dnd_playback();
 
-         cout << "**********************************************************************" <<endl;
-         cout << "*  Starting MDI test playback - S T R E S S                          *" <<endl;
-         cout << "**********************************************************************" <<endl;
+         std::cout << "**********************************************************************" <<std::endl;
+         std::cout << "*  Starting MDI test playback - S T R E S S                          *" <<std::endl;
+         std::cout << "**********************************************************************" <<std::endl;
          mditest_playback();
 
-         cout << "**********************************************************************" <<endl;
-         cout << "*  Starting guitest recorder playback - S T R E S S                  *" <<endl;
-         cout << "**********************************************************************" <<endl;
+         std::cout << "**********************************************************************" <<std::endl;
+         std::cout << "*  Starting guitest recorder playback - S T R E S S                  *" <<std::endl;
+         std::cout << "**********************************************************************" <<std::endl;
          guitest_playback();
 
-         cout << "**********************************************************************" <<endl;
-         cout << "*  Starting fit panel recorder playback - S T R E S S                *" <<endl;
-         cout << "**********************************************************************" <<endl;
+         std::cout << "**********************************************************************" <<std::endl;
+         std::cout << "*  Starting fit panel recorder playback - S T R E S S                *" <<std::endl;
+         std::cout << "**********************************************************************" <<std::endl;
          fitpanel_playback();
 
-         cout << "**********************************************************************" <<endl;
-         cout << "*  Starting graphic editors recorder playback - S T R E S S          *" <<endl;
-         cout << "**********************************************************************" <<endl;
+         std::cout << "**********************************************************************" <<std::endl;
+         std::cout << "*  Starting graphic editors recorder playback - S T R E S S          *" <<std::endl;
+         std::cout << "**********************************************************************" <<std::endl;
          graph_edit_playback();
       }
-      cout << "**********************************************************************" <<endl;
+      std::cout << "**********************************************************************" <<std::endl;
 
       gBenchmark->Stop("stressGUI");
 
@@ -388,15 +388,15 @@ Bool_t VerifySize(const char *filename, const char *title)
       snprintf(gLine,80,"Test %2d: %s", gTestNum, title);
       const Int_t nch = strlen(gLine);
       if (success) {
-         cout << gLine;
-         for (Int_t i = nch; i < 67; i++) cout << ".";
-         cout << " OK" << endl;
+         std::cout << gLine;
+         for (Int_t i = nch; i < 67; i++) std::cout << ".";
+         std::cout << " OK" << std::endl;
       } else {
-         cout << gLine;
-         for (Int_t i = nch; i < 63; i++) cout << ".";
-         cout << " FAILED" << endl;
-         cout << "         File Size = "  << fsize << endl;
-         cout << "          Ref Size = "  << sizes[gTestNum] << endl;
+         std::cout << gLine;
+         for (Int_t i = nch; i < 63; i++) std::cout << ".";
+         std::cout << " FAILED" << std::endl;
+         std::cout << "         File Size = "  << fsize << std::endl;
+         std::cout << "          Ref Size = "  << sizes[gTestNum] << std::endl;
       }
    } else {
       fprintf(sgref, "%5d%10d\n", gTestNum, fsize);

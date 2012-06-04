@@ -66,7 +66,7 @@ namespace RooStats {
       //      void SetNumSteps(Int_t);
       // This class can make regularly spaced scans based on range stored in RooRealVars.
       // Choose number of steps for a rastor scan (specific for each dimension)
-      //      void SetNumSteps(map<RooAbsArg, Int_t>)
+      //      void SetNumSteps(std::map<RooAbsArg, Int_t>)
 
       // Get the size of the test (eg. rate of Type I error)
       virtual Double_t Size() const {return fSize;}

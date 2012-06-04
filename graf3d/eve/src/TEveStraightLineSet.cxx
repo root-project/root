@@ -150,7 +150,7 @@ void TEveStraightLineSet::CopyVizParams(const TEveElement* el)
 }
 
 //______________________________________________________________________________
-void TEveStraightLineSet::WriteVizParams(ostream& out, const TString& var)
+void TEveStraightLineSet::WriteVizParams(std::ostream& out, const TString& var)
 {
    // Write visualization parameters.
 

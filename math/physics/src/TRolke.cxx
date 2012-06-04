@@ -521,7 +521,7 @@ bool TRolke::GetLimitsML(Double_t& low, Double_t& high, Int_t& out_x)
       max = TMath::PoissonI(loop_x, background);
    }
    if (loop_x >= loop_max) {
-      std::cout << "internal error finding maximum of distribution" << endl;
+      std::cout << "internal error finding maximum of distribution" << std::endl;
       return false;
    }
 
@@ -559,7 +559,7 @@ bool TRolke::GetCriticalNumber(Int_t& ncrit, Int_t maxtry)
    }
 
    if (rolke_ncrit == -1) {
-     std::cerr << "TRolke GetCriticalNumber : Error: problem finding rolke inverse. Specify a larger maxtry value. maxtry was: " << maxj << ". highest x considered was j "<< j<< endl;
+     std::cerr << "TRolke GetCriticalNumber : Error: problem finding rolke inverse. Specify a larger maxtry value. maxtry was: " << maxj << ". highest x considered was j "<< j<< std::endl;
       ncrit = -1;
       return false;
    } else {
@@ -585,26 +585,26 @@ void TRolke::Print(Option_t*) const {
    std::cout << "*******************************************" <<std::endl;
    std::cout << "* TRolke::Print() - dump of internals:                " <<std::endl;
    std::cout << "*"<<std::endl;
-   std::cout << "* model id, mid = "<<f_mid <<endl;
+   std::cout << "* model id, mid = "<<f_mid <<std::endl;
    std::cout << "*"<<std::endl;
    std::cout << "*             x = "<<f_x   <<std::endl;
-   std::cout << "*            bm = "<<f_bm  <<endl;
-   std::cout << "*            em = "<<f_em  <<endl;
-   std::cout << "*           sde = "<<f_sde <<endl;
-   std::cout << "*           sdb = "<<f_sdb <<endl;
-   std::cout << "*             y = "<<f_y   <<endl;      
-   std::cout << "*           tau = "<<f_tau <<endl;
-   std::cout << "*             e = "<<f_e   <<endl;
-   std::cout << "*             b = "<<f_b   <<endl;
-   std::cout << "*             m = "<<f_m   <<endl;
-   std::cout << "*             z = "<<f_z   <<endl;
+   std::cout << "*            bm = "<<f_bm  <<std::endl;
+   std::cout << "*            em = "<<f_em  <<std::endl;
+   std::cout << "*           sde = "<<f_sde <<std::endl;
+   std::cout << "*           sdb = "<<f_sdb <<std::endl;
+   std::cout << "*             y = "<<f_y   <<std::endl;      
+   std::cout << "*           tau = "<<f_tau <<std::endl;
+   std::cout << "*             e = "<<f_e   <<std::endl;
+   std::cout << "*             b = "<<f_b   <<std::endl;
+   std::cout << "*             m = "<<f_m   <<std::endl;
+   std::cout << "*             z = "<<f_z   <<std::endl;
    std::cout << "*"<<std::endl;
-   std::cout << "*            CL = "<<fCL <<endl;
-   std::cout << "*      Bounding = "<<fBounding <<endl;      
+   std::cout << "*            CL = "<<fCL <<std::endl;
+   std::cout << "*      Bounding = "<<fBounding <<std::endl;      
    std::cout << "*"<<std::endl;
    std::cout << "* calculated on demand only:"<<std::endl;
-   std::cout << "*   fUpperLimit = "<<fUpperLimit<<endl; 
-   std::cout << "*   fLowerLimit = "<<fLowerLimit<<endl;      
+   std::cout << "*   fUpperLimit = "<<fUpperLimit<<std::endl; 
+   std::cout << "*   fLowerLimit = "<<fLowerLimit<<std::endl;      
    std::cout << "*******************************************" <<std::endl;
 }
 

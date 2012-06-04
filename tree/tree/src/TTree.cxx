@@ -6322,7 +6322,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor, cha
 }
 
 //______________________________________________________________________________
-char TTree::GetNewlineValue(istream &inputStream)
+char TTree::GetNewlineValue(std::istream &inputStream)
 {
    // Determine which newline this file is using.
    // Return '\r' for Windows '\r\n' as that already terminates.
@@ -6348,7 +6348,7 @@ char TTree::GetNewlineValue(istream &inputStream)
 }
 
 //______________________________________________________________________________
-Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, char delimiter)
+Long64_t TTree::ReadStream(std::istream& inputStream, const char *branchDescriptor, char delimiter)
 {
    // Create or simply read branches from an input stream.
    //

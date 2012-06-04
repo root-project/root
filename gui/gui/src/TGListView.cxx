@@ -1677,34 +1677,34 @@ const TGGC &TGListView::GetDefaultGC()
 }
 
 //______________________________________________________________________________
-void TGListView::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGListView::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a list view widget as a C++ statement(s) on output stream out.
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
-   out << endl << "   // list view" << endl;
+   out << std::endl << "   // list view" << std::endl;
    out <<"   TGListView *";
    out << GetName() << " = new TGListView(" << fParent->GetName()
        << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-         out <<");" << endl;
+         out <<");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    GetContainer()->SavePrimitive(out, option);
 
-   out << endl;
+   out << std::endl;
    out << "   " << GetName() << "->SetContainer(" << GetContainer()->GetName()
-                << ");" << endl;
+                << ");" << std::endl;
    out << "   " << GetName() << "->SetViewMode(";
    switch (fViewMode) {
       case kLVLargeIcons:
@@ -1720,29 +1720,29 @@ void TGListView::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
          out << "kLVDetails";
          break;
    }
-   out << ");" << endl;
+   out << ");" << std::endl;
 
-   out << "   " << GetContainer()->GetName() << "->Resize();" << endl;
+   out << "   " << GetContainer()->GetName() << "->Resize();" << std::endl;
 
    if (fHScrollbar && fHScrollbar->IsMapped()) {
    out << "   " << GetName() << "->SetHsbPosition(" << GetHsbPosition()
-       << ");" << endl;
+       << ");" << std::endl;
    }
 
    if (fVScrollbar && fVScrollbar->IsMapped()) {
    out << "   " << GetName() << "->SetVsbPosition(" << GetVsbPosition()
-       << ");" << endl;
+       << ");" << std::endl;
    }
 }
 
 //______________________________________________________________________________
-void TGLVContainer::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGLVContainer::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a list view container as a C++ statement(s) on output stream out.
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
-   out << endl << "   // list view container" << endl;
+   out << std::endl << "   // list view container" << std::endl;
    out << "   TGLVContainer *";
 
    if ((fParent->GetParent())->InheritsFrom(TGCanvas::Class())) {
@@ -1753,13 +1753,13 @@ void TGLVContainer::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    }
    if (fBackground == GetDefaultFrameBackground()) {
       if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
-         out <<");" << endl;
+         out <<");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 }

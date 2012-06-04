@@ -714,17 +714,17 @@ Double_t TGeoTorus::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoTorus::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoTorus::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;  
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   r    = " << fR << ";" << endl;
-   out << "   rmin = " << fRmin << ";" << endl;
-   out << "   rmax = " << fRmax << ";" << endl;
-   out << "   phi1 = " << fPhi1 << ";" << endl;
-   out << "   dphi = " << fDphi << ";" << endl;
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTorus(\"" << GetName() << "\",r,rmin,rmax,phi1,dphi);" << endl;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   r    = " << fR << ";" << std::endl;
+   out << "   rmin = " << fRmin << ";" << std::endl;
+   out << "   rmax = " << fRmax << ";" << std::endl;
+   out << "   phi1 = " << fPhi1 << ";" << std::endl;
+   out << "   dphi = " << fDphi << ";" << std::endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTorus(\"" << GetName() << "\",r,rmin,rmax,phi1,dphi);" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 

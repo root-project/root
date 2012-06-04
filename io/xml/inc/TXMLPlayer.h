@@ -46,11 +46,11 @@ class TXMLPlayer : public TObject {
       TString GetMemberTypeName(TDataMember* member);
       TString GetBasicTypeName(TStreamerElement* el);
       TString GetBasicTypeReaderMethodName(Int_t type, const char* realname);
-      void ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist);
+      void ProduceStreamerSource(std::ostream& fs, TClass* cl, TList* cllist);
       
-      void ReadSTLarg(ostream& fs, TString& argname, int argtyp, Bool_t isargptr, TClass* argcl, TString& tname, TString& ifcond);
-      void WriteSTLarg(ostream& fs, const char* accname, int argtyp, Bool_t isargptr, TClass* argcl);
-      Bool_t ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, Bool_t isWriting);
+      void ReadSTLarg(std::ostream& fs, TString& argname, int argtyp, Bool_t isargptr, TClass* argcl, TString& tname, TString& ifcond);
+      void WriteSTLarg(std::ostream& fs, const char* accname, int argtyp, Bool_t isargptr, TClass* argcl);
+      Bool_t ProduceSTLstreamer(std::ostream& fs, TClass* cl, TStreamerSTL* el, Bool_t isWriting);
       
       TString fGetterName;                   //!  buffer for name of getter method
       TString fSetterName;                   //!  buffer for name of setter method

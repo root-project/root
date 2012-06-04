@@ -206,13 +206,13 @@ void TGraphEdge::Paint(Option_t *)
 
 
 //______________________________________________________________________________
-void TGraphEdge::SavePrimitive(ostream &, Option_t *)
+void TGraphEdge::SavePrimitive(std::ostream &, Option_t *)
 {
    // Save primitive as a C++ statement(s) on output stream out   
 }
 
 //______________________________________________________________________________
-void TGraphEdge::SaveAttributes(ostream &out, const char* name)
+void TGraphEdge::SaveAttributes(std::ostream &out, const char* name)
 {
    // Save attributes as a C++ statement(s) on output stream out
    // called by TGraphStruct::SavePrimitive.

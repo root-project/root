@@ -543,7 +543,7 @@ void TMultiLayerPerceptron::SetData(TTree * data)
 {
    // Set the data source
    if (fData) {
-      cerr << "Error: data already defined." << endl;
+      std::cerr << "Error: data already defined." << std::endl;
       return;
    }
    fData = data;
@@ -757,7 +757,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option, Double_t minE
         fTraining->GetN(), fTest->GetN());
    // Text and Graph outputs
    if (verbosity % 2)
-      cout << "Training the Neural Network" << endl;
+      std::cout << "Training the Neural Network" << std::endl;
    if (verbosity / 2) {
       residual_plot = new TMultiGraph;
       if(newCanvas)
@@ -917,10 +917,10 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option, Double_t minE
       test_E = TMath::Sqrt(GetError(TMultiLayerPerceptron::kTest) / fTest->GetN());
       // Intermediate graph and text output
       if ((verbosity % 2) && ((!(iepoch % displayStepping)) || (iepoch == nEpoch - 1))) {
-         cout << "Epoch: " << iepoch
+         std::cout << "Epoch: " << iepoch
               << " learn=" << training_E
               << " test=" << test_E
-              << endl;
+              << std::endl;
       }
       if (verbosity / 2) {
          train_residual_plot->SetPoint(iepoch, iepoch,training_E);
@@ -949,7 +949,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option, Double_t minE
    delete [] dir;
    // Final Text and Graph outputs
    if (verbosity % 2)
-      cout << "Training done." << endl;
+      std::cout << "Training done." << std::endl;
    if (verbosity / 2) {
       TLegend *legend = new TLegend(.75, .80, .95, .95);
       legend->AddEntry(residual_plot->GetListOfGraphs()->At(0),
@@ -1519,44 +1519,44 @@ Bool_t TMultiLayerPerceptron::DumpWeights(Option_t * filename) const
    // Dumps the weights to a text file.
    // Set filename to "-" (default) to dump to the standard output
    TString filen = filename;
-   ostream * output;
+   std::ostream * output;
    if (filen == "") {   
       Error("TMultiLayerPerceptron::DumpWeights()","Invalid file name");
       return kFALSE;
    }
    if (filen == "-")
-      output = &cout;
+      output = &std::cout;
    else
-      output = new ofstream(filen.Data());
+      output = new std::ofstream(filen.Data());
    TNeuron *neuron = 0;
-   *output << "#input normalization" << endl;
+   *output << "#input normalization" << std::endl;
    Int_t nentries = fFirstLayer.GetEntriesFast();
    Int_t j=0;
    for (j=0;j<nentries;j++) {
       neuron = (TNeuron *) fFirstLayer.UncheckedAt(j);
       *output << neuron->GetNormalisation()[0] << " "
-              << neuron->GetNormalisation()[1] << endl;
+              << neuron->GetNormalisation()[1] << std::endl;
    }
-   *output << "#output normalization" << endl;
+   *output << "#output normalization" << std::endl;
    nentries = fLastLayer.GetEntriesFast();
    for (j=0;j<nentries;j++) {
       neuron = (TNeuron *) fLastLayer.UncheckedAt(j);
       *output << neuron->GetNormalisation()[0] << " "
-              << neuron->GetNormalisation()[1] << endl;
+              << neuron->GetNormalisation()[1] << std::endl;
    }
-   *output << "#neurons weights" << endl;
+   *output << "#neurons weights" << std::endl;
    TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
    while ((neuron = (TNeuron *) it->Next()))
-      *output << neuron->GetWeight() << endl;
+      *output << neuron->GetWeight() << std::endl;
    delete it;
    it = (TObjArrayIter *) fSynapses.MakeIterator();
    TSynapse *synapse = 0;
-   *output << "#synapses weights" << endl;
+   *output << "#synapses weights" << std::endl;
    while ((synapse = (TSynapse *) it->Next()))
-      *output << synapse->GetWeight() << endl;
+      *output << synapse->GetWeight() << std::endl;
    delete it;
    if (filen != "-") {
-      ((ofstream *) output)->close();
+      ((std::ofstream *) output)->close();
       delete output;
    }
    return kTRUE;
@@ -1574,7 +1574,7 @@ Bool_t TMultiLayerPerceptron::LoadWeights(Option_t * filename)
       return kFALSE;
    }
    char *buff = new char[100];
-   ifstream input(filen.Data());
+   std::ifstream input(filen.Data());
    // input normalzation
    input.getline(buff, 100);
    TObjArrayIter *it = (TObjArrayIter *) fFirstLayer.MakeIterator();
@@ -1664,88 +1664,88 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       header += ".h";
       TString source = filename;
       source += ".cxx";
-      ofstream headerfile(header);
-      ofstream sourcefile(source);
-      headerfile << "#ifndef " << basefilename << "_h" << endl;
-      headerfile << "#define " << basefilename << "_h" << endl << endl;
-      headerfile << "class " << classname << " { " << endl;
-      headerfile << "public:" << endl;
-      headerfile << "   " << classname << "() {}" << endl;
-      headerfile << "   ~" << classname << "() {}" << endl;
-      sourcefile << "#include \"" << header << "\"" << endl;
-      sourcefile << "#include <cmath>" << endl << endl;
+      std::ofstream headerfile(header);
+      std::ofstream sourcefile(source);
+      headerfile << "#ifndef " << basefilename << "_h" << std::endl;
+      headerfile << "#define " << basefilename << "_h" << std::endl << std::endl;
+      headerfile << "class " << classname << " { " << std::endl;
+      headerfile << "public:" << std::endl;
+      headerfile << "   " << classname << "() {}" << std::endl;
+      headerfile << "   ~" << classname << "() {}" << std::endl;
+      sourcefile << "#include \"" << header << "\"" << std::endl;
+      sourcefile << "#include <cmath>" << std::endl << std::endl;
       headerfile << "   double Value(int index";
       sourcefile << "double " << classname << "::Value(int index";
       for (i = 0; i < fFirstLayer.GetEntriesFast(); i++) {
          headerfile << ",double in" << i;
          sourcefile << ",double in" << i;
       }
-      headerfile << ");" << endl;
-      sourcefile << ") {" << endl;
+      headerfile << ");" << std::endl;
+      sourcefile << ") {" << std::endl;
       for (i = 0; i < fFirstLayer.GetEntriesFast(); i++)
          sourcefile << "   input" << i << " = (in" << i << " - "
              << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[1] << ")/"
              << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[0] << ";"
-             << endl;
-      sourcefile << "   switch(index) {" << endl;
+             << std::endl;
+      sourcefile << "   switch(index) {" << std::endl;
       TNeuron *neuron;
       TObjArrayIter *it = (TObjArrayIter *) fLastLayer.MakeIterator();
       Int_t idx = 0;
       while ((neuron = (TNeuron *) it->Next()))
-         sourcefile << "     case " << idx++ << ":" << endl
-                    << "         return neuron" << neuron << "();" << endl;
-      sourcefile << "     default:" << endl
-                 << "         return 0.;" << endl << "   }"
-                 << endl;
-      sourcefile << "}" << endl << endl;
-      headerfile << "   double Value(int index, double* input);" << endl;
-      sourcefile << "double " << classname << "::Value(int index, double* input) {" << endl;
+         sourcefile << "     case " << idx++ << ":" << std::endl
+                    << "         return neuron" << neuron << "();" << std::endl;
+      sourcefile << "     default:" << std::endl
+                 << "         return 0.;" << std::endl << "   }"
+                 << std::endl;
+      sourcefile << "}" << std::endl << std::endl;
+      headerfile << "   double Value(int index, double* input);" << std::endl;
+      sourcefile << "double " << classname << "::Value(int index, double* input) {" << std::endl;
       for (i = 0; i < fFirstLayer.GetEntriesFast(); i++)
          sourcefile << "   input" << i << " = (input[" << i << "] - "
              << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[1] << ")/"
              << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[0] << ";"
-             << endl;
-      sourcefile << "   switch(index) {" << endl;
+             << std::endl;
+      sourcefile << "   switch(index) {" << std::endl;
       delete it;
       it = (TObjArrayIter *) fLastLayer.MakeIterator();
       idx = 0;
       while ((neuron = (TNeuron *) it->Next()))
-         sourcefile << "     case " << idx++ << ":" << endl
-                    << "         return neuron" << neuron << "();" << endl;
-      sourcefile << "     default:" << endl
-                 << "         return 0.;" << endl << "   }"
-                 << endl;
-      sourcefile << "}" << endl << endl;
-      headerfile << "private:" << endl;
+         sourcefile << "     case " << idx++ << ":" << std::endl
+                    << "         return neuron" << neuron << "();" << std::endl;
+      sourcefile << "     default:" << std::endl
+                 << "         return 0.;" << std::endl << "   }"
+                 << std::endl;
+      sourcefile << "}" << std::endl << std::endl;
+      headerfile << "private:" << std::endl;
       for (i = 0; i < fFirstLayer.GetEntriesFast(); i++)
-         headerfile << "   double input" << i << ";" << endl;
+         headerfile << "   double input" << i << ";" << std::endl;
       delete it;
       it = (TObjArrayIter *) fNetwork.MakeIterator();
       idx = 0;
       while ((neuron = (TNeuron *) it->Next())) {
          if (!neuron->GetPre(0)) {
-            headerfile << "   double neuron" << neuron << "();" << endl;
+            headerfile << "   double neuron" << neuron << "();" << std::endl;
             sourcefile << "double " << classname << "::neuron" << neuron
-                       << "() {" << endl;
-            sourcefile << "   return input" << idx++ << ";" << endl;
-            sourcefile << "}" << endl << endl;
+                       << "() {" << std::endl;
+            sourcefile << "   return input" << idx++ << ";" << std::endl;
+            sourcefile << "}" << std::endl << std::endl;
          } else {
-            headerfile << "   double input" << neuron << "();" << endl;
+            headerfile << "   double input" << neuron << "();" << std::endl;
             sourcefile << "double " << classname << "::input" << neuron
-                       << "() {" << endl;
+                       << "() {" << std::endl;
             sourcefile << "   double input = " << neuron->GetWeight()
-                       << ";" << endl;
+                       << ";" << std::endl;
             TSynapse *syn = 0;
             Int_t n = 0;
             while ((syn = neuron->GetPre(n++))) {
-               sourcefile << "   input += synapse" << syn << "();" << endl;
+               sourcefile << "   input += synapse" << syn << "();" << std::endl;
             }
-            sourcefile << "   return input;" << endl;
-            sourcefile << "}" << endl << endl;
+            sourcefile << "   return input;" << std::endl;
+            sourcefile << "}" << std::endl << std::endl;
 
-            headerfile << "   double neuron" << neuron << "();" << endl;
-            sourcefile << "double " << classname << "::neuron" << neuron << "() {" << endl;
-            sourcefile << "   double input = input" << neuron << "();" << endl;
+            headerfile << "   double neuron" << neuron << "();" << std::endl;
+            sourcefile << "double " << classname << "::neuron" << neuron << "() {" << std::endl;
+            sourcefile << "   double input = input" << neuron << "();" << std::endl;
             switch(neuron->GetType()) {
                case (TNeuron::kSigmoid):
                   {
@@ -1784,98 +1784,98 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
                   }
             }
             sourcefile << neuron->GetNormalisation()[0] << ")+" ;
-            sourcefile << neuron->GetNormalisation()[1] << ";" << endl;
-            sourcefile << "}" << endl << endl;
+            sourcefile << neuron->GetNormalisation()[1] << ";" << std::endl;
+            sourcefile << "}" << std::endl << std::endl;
          }
       }
       delete it;
       TSynapse *synapse = 0;
       it = (TObjArrayIter *) fSynapses.MakeIterator();
       while ((synapse = (TSynapse *) it->Next())) {
-         headerfile << "   double synapse" << synapse << "();" << endl;
+         headerfile << "   double synapse" << synapse << "();" << std::endl;
          sourcefile << "double " << classname << "::synapse"
-                    << synapse << "() {" << endl;
+                    << synapse << "() {" << std::endl;
          sourcefile << "   return (neuron" << synapse->GetPre()
-                    << "()*" << synapse->GetWeight() << ");" << endl;
-         sourcefile << "}" << endl << endl;
+                    << "()*" << synapse->GetWeight() << ");" << std::endl;
+         sourcefile << "}" << std::endl << std::endl;
       }
       delete it;
-      headerfile << "};" << endl << endl;
-      headerfile << "#endif // " << basefilename << "_h" << endl << endl;
+      headerfile << "};" << std::endl << std::endl;
+      headerfile << "#endif // " << basefilename << "_h" << std::endl << std::endl;
       headerfile.close();
       sourcefile.close();
-      cout << header << " and " << source << " created." << endl;
+      std::cout << header << " and " << source << " created." << std::endl;
    }
    else if(lg == "FORTRAN") {
       TString implicit = "      implicit double precision (a-h,n-z)\n";
-      ofstream sigmoid("sigmoid.f");
-      sigmoid         << "      double precision FUNCTION SIGMOID(X)"        << endl
+      std::ofstream sigmoid("sigmoid.f");
+      sigmoid         << "      double precision FUNCTION SIGMOID(X)"        << std::endl
                     << implicit
-                << "      IF(X.GT.37.) THEN"                        << endl
-                    << "         SIGMOID = 1."                        << endl
-                << "      ELSE IF(X.LT.-709.) THEN"                << endl
-                    << "         SIGMOID = 0."                        << endl
-                    << "      ELSE"                                        << endl
-                    << "         SIGMOID = 1./(1.+EXP(-X))"                << endl
-                    << "      ENDIF"                                << endl
-                    << "      END"                                        << endl;
+                << "      IF(X.GT.37.) THEN"                        << std::endl
+                    << "         SIGMOID = 1."                        << std::endl
+                << "      ELSE IF(X.LT.-709.) THEN"                << std::endl
+                    << "         SIGMOID = 0."                        << std::endl
+                    << "      ELSE"                                        << std::endl
+                    << "         SIGMOID = 1./(1.+EXP(-X))"                << std::endl
+                    << "      ENDIF"                                << std::endl
+                    << "      END"                                        << std::endl;
       sigmoid.close();
       TString source = filename;
       source += ".f";
-      ofstream sourcefile(source);
+      std::ofstream sourcefile(source);
 
       // Header
       sourcefile << "      double precision function " << filename
-                 << "(x, index)" << endl;
+                 << "(x, index)" << std::endl;
       sourcefile << implicit;
       sourcefile << "      double precision x(" <<
-      fFirstLayer.GetEntriesFast() << ")" << endl << endl;
+      fFirstLayer.GetEntriesFast() << ")" << std::endl << std::endl;
 
       // Last layer
-      sourcefile << "C --- Last Layer" << endl;
+      sourcefile << "C --- Last Layer" << std::endl;
       TNeuron *neuron;
       TObjArrayIter *it = (TObjArrayIter *) fLastLayer.MakeIterator();
       Int_t idx = 0;
       TString ifelseif = "      if (index.eq.";
       while ((neuron = (TNeuron *) it->Next())) {
-         sourcefile << ifelseif.Data() << idx++ << ") then" << endl
+         sourcefile << ifelseif.Data() << idx++ << ") then" << std::endl
                     << "          " << filename
-                    << "=neuron" << neuron << "(x);" << endl;
+                    << "=neuron" << neuron << "(x);" << std::endl;
          ifelseif = "      else if (index.eq.";
       }
-      sourcefile << "      else" << endl
-                 << "          " << filename << "=0.d0" << endl
-                 << "      endif" << endl;
-      sourcefile << "      end" << endl;
+      sourcefile << "      else" << std::endl
+                 << "          " << filename << "=0.d0" << std::endl
+                 << "      endif" << std::endl;
+      sourcefile << "      end" << std::endl;
 
       // Network
-      sourcefile << "C --- First and Hidden layers" << endl;
+      sourcefile << "C --- First and Hidden layers" << std::endl;
       delete it;
       it = (TObjArrayIter *) fNetwork.MakeIterator();
       idx = 0;
       while ((neuron = (TNeuron *) it->Next())) {
          sourcefile << "      double precision function neuron"
-                    << neuron << "(x)" << endl
+                    << neuron << "(x)" << std::endl
                     << implicit;
          sourcefile << "      double precision x("
-                    << fFirstLayer.GetEntriesFast() << ")" << endl << endl;
+                    << fFirstLayer.GetEntriesFast() << ")" << std::endl << std::endl;
          if (!neuron->GetPre(0)) {
             sourcefile << "      neuron" << neuron
              << " = (x(" << idx+1 << ") - "
              << ((TNeuron *) fFirstLayer[idx])->GetNormalisation()[1]
              << "d0)/"
              << ((TNeuron *) fFirstLayer[idx])->GetNormalisation()[0]
-             << "d0" << endl;
+             << "d0" << std::endl;
             idx++;
          } else {
             sourcefile << "      neuron" << neuron
-                       << " = " << neuron->GetWeight() << "d0" << endl;
+                       << " = " << neuron->GetWeight() << "d0" << std::endl;
             TSynapse *syn;
             Int_t n = 0;
             while ((syn = neuron->GetPre(n++)))
                sourcefile << "      neuron" << neuron
                               << " = neuron" << neuron
-                          << " + synapse" << syn << "(x)" << endl;
+                          << " + synapse" << syn << "(x)" << std::endl;
             switch(neuron->GetType()) {
                case (TNeuron::kSigmoid):
                   {
@@ -1904,9 +1904,9 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
                   {
                      Int_t nn = 0;
                      TNeuron* side = neuron->GetInLayer(nn++);
-                     sourcefile << "      div = exp(neuron" << side << "())" << endl;
+                     sourcefile << "      div = exp(neuron" << side << "())" << std::endl;
                      while ((side = neuron->GetInLayer(nn++)))
-                        sourcefile << "      div = div + exp(neuron" << side << "())" << endl;
+                        sourcefile << "      div = div + exp(neuron" << side << "())" << std::endl;
                      sourcefile << "      neuron"  << neuron ;
                      sourcefile << "= (exp(neuron" << neuron << ") / div * ";
                      break;
@@ -1917,72 +1917,72 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
                   }
             }
             sourcefile << neuron->GetNormalisation()[0] << "d0)+" ;
-            sourcefile << neuron->GetNormalisation()[1] << "d0" << endl;
+            sourcefile << neuron->GetNormalisation()[1] << "d0" << std::endl;
          }
-         sourcefile << "      end" << endl;
+         sourcefile << "      end" << std::endl;
       }
       delete it;
 
       // Synapses
-      sourcefile << "C --- Synapses" << endl;
+      sourcefile << "C --- Synapses" << std::endl;
       TSynapse *synapse = 0;
       it = (TObjArrayIter *) fSynapses.MakeIterator();
       while ((synapse = (TSynapse *) it->Next())) {
          sourcefile << "      double precision function " << "synapse"
                     << synapse << "(x)\n" << implicit;
          sourcefile << "      double precision x("
-                    << fFirstLayer.GetEntriesFast() << ")" << endl << endl;
+                    << fFirstLayer.GetEntriesFast() << ")" << std::endl << std::endl;
          sourcefile << "      synapse" << synapse
                     << "=neuron" << synapse->GetPre()
-                    << "(x)*" << synapse->GetWeight() << "d0" << endl;
-         sourcefile << "      end" << endl << endl;
+                    << "(x)*" << synapse->GetWeight() << "d0" << std::endl;
+         sourcefile << "      end" << std::endl << std::endl;
       }
       delete it;
       sourcefile.close();
-      cout << source << " created." << endl;
+      std::cout << source << " created." << std::endl;
    }
    else if(lg == "PYTHON") {
       TString classname = filename;
       TString pyfile = filename;
       pyfile += ".py";
-      ofstream pythonfile(pyfile);
-      pythonfile << "from math import exp" << endl << endl;
-      pythonfile << "from math import tanh" << endl << endl;
-      pythonfile << "class " << classname << ":" << endl;
+      std::ofstream pythonfile(pyfile);
+      pythonfile << "from math import exp" << std::endl << std::endl;
+      pythonfile << "from math import tanh" << std::endl << std::endl;
+      pythonfile << "class " << classname << ":" << std::endl;
       pythonfile << "\tdef value(self,index";
       for (i = 0; i < fFirstLayer.GetEntriesFast(); i++) {
          pythonfile << ",in" << i;
       }
-      pythonfile << "):" << endl;
+      pythonfile << "):" << std::endl;
       for (i = 0; i < fFirstLayer.GetEntriesFast(); i++)
          pythonfile << "\t\tself.input" << i << " = (in" << i << " - "
              << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[1] << ")/"
-             << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[0] << endl;
+             << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[0] << std::endl;
       TNeuron *neuron;
       TObjArrayIter *it = (TObjArrayIter *) fLastLayer.MakeIterator();
       Int_t idx = 0;
       while ((neuron = (TNeuron *) it->Next()))
          pythonfile << "\t\tif index==" << idx++
-                    << ": return self.neuron" << neuron << "();" << endl;
-      pythonfile << "\t\treturn 0." << endl;
+                    << ": return self.neuron" << neuron << "();" << std::endl;
+      pythonfile << "\t\treturn 0." << std::endl;
       delete it;
       it = (TObjArrayIter *) fNetwork.MakeIterator();
       idx = 0;
       while ((neuron = (TNeuron *) it->Next())) {
-         pythonfile << "\tdef neuron" << neuron << "(self):" << endl;
+         pythonfile << "\tdef neuron" << neuron << "(self):" << std::endl;
          if (!neuron->GetPre(0))
-            pythonfile << "\t\treturn self.input" << idx++ << endl;
+            pythonfile << "\t\treturn self.input" << idx++ << std::endl;
          else {
-            pythonfile << "\t\tinput = " << neuron->GetWeight() << endl;
+            pythonfile << "\t\tinput = " << neuron->GetWeight() << std::endl;
             TSynapse *syn;
             Int_t n = 0;
             while ((syn = neuron->GetPre(n++)))
                pythonfile << "\t\tinput = input + self.synapse"
-                          << syn << "()" << endl;
+                          << syn << "()" << std::endl;
             switch(neuron->GetType()) {
                case (TNeuron::kSigmoid):
                   {
-                     pythonfile << "\t\tif input<-709. : return " << neuron->GetNormalisation()[1] << endl;
+                     pythonfile << "\t\tif input<-709. : return " << neuron->GetNormalisation()[1] << std::endl;
                      pythonfile << "\t\treturn ((1/(1+exp(-input)))*";
                      break;
                   }
@@ -2018,20 +2018,20 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
                   }
             }
             pythonfile << neuron->GetNormalisation()[0] << ")+" ;
-            pythonfile << neuron->GetNormalisation()[1] << endl;
+            pythonfile << neuron->GetNormalisation()[1] << std::endl;
          }
       }
       delete it;
       TSynapse *synapse = 0;
       it = (TObjArrayIter *) fSynapses.MakeIterator();
       while ((synapse = (TSynapse *) it->Next())) {
-         pythonfile << "\tdef synapse" << synapse << "(self):" << endl;
+         pythonfile << "\tdef synapse" << synapse << "(self):" << std::endl;
          pythonfile << "\t\treturn (self.neuron" << synapse->GetPre()
-                    << "()*" << synapse->GetWeight() << ")" << endl;
+                    << "()*" << synapse->GetWeight() << ")" << std::endl;
       }
       delete it;
       pythonfile.close();
-      cout << pyfile << " created." << endl;
+      std::cout << pyfile << " created." << std::endl;
    }
 }
 

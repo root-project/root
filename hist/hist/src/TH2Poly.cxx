@@ -1134,11 +1134,11 @@ Bool_t TH2Poly::IsIntersectingPolygon(Int_t bn, Double_t *x, Double_t *y,
 
 
 //______________________________________________________________________________
-void TH2Poly::SavePrimitive(ostream &out, Option_t *option)
+void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
-   out <<"   "<<endl;
+   out <<"   "<<std::endl;
    out <<"   "<< ClassName() <<" *";
 
    //histogram pointer has by default the histogram name.
@@ -1158,7 +1158,7 @@ void TH2Poly::SavePrimitive(ostream &out, Option_t *option)
        << GetTitle() << "\", " << fCellX << ", " << fXaxis.GetXmin()
        << ", " << fXaxis.GetXmax()
        << ", " << fCellY << ", " << fYaxis.GetXmin() << ", "
-       << fYaxis.GetXmax() << ");" << endl;
+       << fYaxis.GetXmax() << ");" << std::endl;
 
    // Save Bins
    TIter       next(fBins);
@@ -1172,12 +1172,12 @@ void TH2Poly::SavePrimitive(ostream &out, Option_t *option)
    }
 
    // save bin contents
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    Int_t bin;
    for (bin=1;bin<=fNcells;bin++) {
       Double_t bc = GetBinContent(bin);
       if (bc) {
-         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
+         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");"<<std::endl;
       }
    }
 
@@ -1186,7 +1186,7 @@ void TH2Poly::SavePrimitive(ostream &out, Option_t *option)
       for (bin=1;bin<=fNcells;bin++) {
          Double_t be = GetBinError(bin);
          if (be) {
-            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");"<<endl;
+            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");"<<std::endl;
          }
       }
    }

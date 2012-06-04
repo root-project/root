@@ -148,9 +148,9 @@
 //       stmt->StoreResult();
 //         
 //       // display info about selected field 
-//       cout << "NumFields = " << stmt->GetNumFields() << endl;
+//       std::cout << "NumFields = " << stmt->GetNumFields() << std::endl;
 //       for (int n=0;n<stmt->GetNumFields();n++) 
-//          cout << "Field " << n << "  = " << stmt->GetFieldName(n) << endl;
+//          std::cout << "Field " << n << "  = " << stmt->GetFieldName(n) << std::endl;
 //
 //       // extract rows one after another
 //       while (stmt->NextResultRow()) {
@@ -158,7 +158,7 @@
 //          UInt_t id2 = stmt->GetUInt(1);
 //          const char* name1 = stmt->GetString(2);
 //          const char* name2 = stmt->GetString(3);
-//          cout << id1 << " - " << id2 << "  " << name1 << "  " << name2 << endl;
+//          std::cout << id1 << " - " << id2 << "  " << name1 << "  " << name2 << std::endl;
 //       }
 //    }    
 //

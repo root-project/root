@@ -27,6 +27,8 @@
 #include "RooMsgService.h"
 #include "RooNumIntConfig.h"
 
+using namespace std;
+
 ClassImp(PiecewiseInterpolation)
 ;
 

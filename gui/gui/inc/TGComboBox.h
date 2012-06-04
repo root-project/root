@@ -146,7 +146,7 @@ public:
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); }  // *SIGNAL*
    virtual void Selected(const char *txt) { Emit("Selected(char*)", txt); } // *SIGNAL*
    virtual void ReturnPressed();                                     // *SIGNAL*
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGComboBox,0)  // Combo box widget
 };
@@ -166,7 +166,7 @@ public:
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel());
 
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
       
    ClassDef(TGLineStyleComboBox, 0)  // Line style combobox widget
     
@@ -188,7 +188,7 @@ public:
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel(), Bool_t none=kFALSE);
    
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGLineWidthComboBox, 0)  // Line width combobox widget
 

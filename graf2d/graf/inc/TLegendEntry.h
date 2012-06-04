@@ -53,7 +53,7 @@ public:
    virtual TObject      *GetObject() const { return fObject; }
    virtual Option_t     *GetOption() const { return fOption.Data(); }
    virtual void          Print( Option_t *option = "" ) const;
-   virtual void          SaveEntry( ostream &out, const char *name );
+   virtual void          SaveEntry( std::ostream &out, const char *name );
    virtual void          SetLabel( const char *label = "" ) { fLabel = label; } // *MENU*
    virtual void          SetObject(TObject* obj );
    virtual void          SetObject( const char *objectName );  // *MENU*

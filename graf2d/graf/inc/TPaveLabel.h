@@ -49,7 +49,7 @@ public:
    virtual void  Paint(Option_t *option="");
    virtual void  PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                       const char *label, Option_t *option="");
-   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void  SetLabel(const char *label) {fLabel = label;} // *MENU*
 
    ClassDef(TPaveLabel,1)  //PaveLabel. A Pave with a label

@@ -12,11 +12,11 @@
 
 void Ok(int i, int b)
 {
-   cout << "Test " << i;
+   std::cout << "Test " << i;
    if (b)
-      cout << "   ok" << endl;
+      std::cout << "   ok" << std::endl;
    else
-      cout << "   NOT ok" << endl;
+      std::cout << "   NOT ok" << std::endl;
 }
 
 
@@ -25,12 +25,12 @@ int main()
 {
    // create base string
    TString s = "aap noot mies";
-   cout << s << endl;
+   std::cout << s << std::endl;
 
    // use different constructors and excercise +, += and == operators
    TString s1 = TString("aa") + "p ";
    s1 += TString("noot ") + "mi" + "es";
-   cout << s1 << endl;
+   std::cout << s1 << std::endl;
    Ok(1, s1==s);
 
    // use single char constructor and excercise again += and == operators
@@ -38,13 +38,13 @@ int main()
    s2 += "ap ";
    s2 += "noot ";
    s2 += "mies";
-   cout << s2 << endl;
+   std::cout << s2 << std::endl;
    Ok(2, s2==s);
 
    // get and set a subrange (via TSubString)
    TString s3 = s(4,9);
    s3(0,4) = "mama papa";
-   cout << s3 << endl;
+   std::cout << s3 << std::endl;
    Ok(3, s3=="mama papa mies");
 
    // create a regular expression, make search in string and replace
@@ -52,23 +52,23 @@ int main()
    TRegexp re(" n.*t ");
    TString s4 = s;
    s4(re) = " pipo ";
-   cout << s4 << endl;
+   std::cout << s4 << std::endl;
    Ok(4, s4=="aap pipo mies");
 
    // use "const char*" operator and the Data() member function to access
    // the string as a const char*
    const char *a = (const char*)s;
-   cout << a << endl;
+   std::cout << a << std::endl;
    Ok(5, !strcmp(a, s.Data()));
 
    // return 13th character and replace it by 't', getting 14th character
    // should result in an error message since operator[] uses range checking
    TString s6 = s;
    s6[12] = 't';
-   cout << s6 << endl;
-   cout << "*** Error message ok, accessing intentionaly out-of-bounds" << endl;
+   std::cout << s6 << std::endl;
+   std::cout << "*** Error message ok, accessing intentionaly out-of-bounds" << std::endl;
    char b = s6[13];
-   cout << b << endl;
+   std::cout << b << std::endl;
    Ok(6, s6=="aap noot miet");
 
    // return 13th character and replace it by 'p', getting 14th character
@@ -76,25 +76,25 @@ int main()
    // range checking
    TString s7 = s;
    s7(12) = 'p';
-   cout << s7 << endl;
+   std::cout << s7 << std::endl;
    char c = s7(13);
-   cout << c << endl;
+   std::cout << c << std::endl;
    Ok(7, s7=="aap noot miep");
 
    // use Append, Remove, Prepend, Replace and Insert
    TString s8 = s;
    s8.Append(" tante ");
    s8.Append(s7(9,4));
-   cout << s8 << endl;
+   std::cout << s8 << std::endl;
 
    s8.Remove(0,14);
-   cout << s8 << endl;
+   std::cout << s8 << std::endl;
    s8.Prepend("oom jan");
-   cout << s8 << endl;
+   std::cout << s8 << std::endl;
    s8.Insert(7," en ");
-   cout << s8 << endl;
+   std::cout << s8 << std::endl;
    s8.Replace(4,3,"jaap");
-   cout << s8 << endl;
+   std::cout << s8 << std::endl;
    Ok(8, s8=="oom jaap en tante miep");
 
    // use CompareTo to compare char * and TString
@@ -148,12 +148,12 @@ int main()
 
    // test Resize and Strip
    s9.Prepend("   ");
-   cout << s9 << endl;
+   std::cout << s9 << std::endl;
 
    s9.Resize(50);
-   cout << s9 << "<<ends here" << endl;
+   std::cout << s9 << "<<ends here" << std::endl;
 
-   cout << s9.Strip(TString::kBoth) << "<<ends here" << endl;
+   std::cout << s9.Strip(TString::kBoth) << "<<ends here" << std::endl;
 
    Printf("Using Print: %s (%d)\n", (const char*) s9, s9.Length());
    
@@ -171,16 +171,16 @@ int main()
    Ok(32, (s23 < s24) != (s24 < s23));
 
    // test file access
-   ifstream f("tstring.cxx");
-   f.seekg(0, ios::end);
+   std::ifstream f("tstring.cxx");
+   f.seekg(0, std::ios::end);
    Ssiz_t size = f.tellg();
-   f.seekg(0, ios::beg);
+   f.seekg(0, std::ios::beg);
    
    TString fs;
    fs.ReadFile(f);
    Ok(33, size == fs.Length());
 
-   ifstream f2("tstring.cxx");
+   std::ifstream f2("tstring.cxx");
    fs.ReadLine(f2);  // read '// @(#)root/test:$Id: tstring.cxx 38977..."
    Ok(34, fs.Contains("root/test"));
 

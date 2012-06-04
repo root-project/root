@@ -84,7 +84,7 @@ public:
    virtual void        Print(Option_t *option="") const;
    virtual void        UpdatePosition(Option_t *option="");
    virtual TVolumePosition *Reset(TVolume *node=0,Double_t x=0, Double_t y=0, Double_t z=0, TRotMatrix *matrix=0);
-   virtual void        SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void        SetLineAttributes(); // *MENU*
    virtual void        SetMatrix(TRotMatrix *matrix=0);
    virtual void        SetNode(TVolume *node){ fNode = node;}
@@ -142,5 +142,5 @@ inline  TVolumePosition    &TVolumePosition::operator=(const TVolumePosition &rh
    return *this;
 }
 //______________________________________________________________________________
-ostream& operator<<(ostream& s,const TVolumePosition &target);
+std::ostream& operator<<(std::ostream& s,const TVolumePosition &target);
 #endif

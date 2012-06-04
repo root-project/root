@@ -181,8 +181,8 @@ public:
      {return Max(lb,Min(c,ub));}
 
    // I/O
-   friend ostream& operator<<(ostream& out, const TComplex& c);
-   friend istream& operator>>(istream& in, TComplex& c);
+   friend std::ostream& operator<<(std::ostream& out, const TComplex& c);
+   friend std::istream& operator>>(std::istream& in, TComplex& c);
 
    ClassDef(TComplex,1)  //Complex Class
 };

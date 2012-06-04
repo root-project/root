@@ -108,7 +108,7 @@ public:
    virtual TH1     *CreateHistogram();
    virtual void     Paint(Option_t *option="");
    virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
-   virtual void     SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void     SetNpy(Int_t npy=100); // *MENU*
    virtual void     SetContour(Int_t nlevels=20, const Double_t *levels=0);
    virtual void     SetContourLevel(Int_t level, Double_t value);

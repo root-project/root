@@ -315,7 +315,7 @@ void TMVA::Configurable::PrintOptions() const
 }
 
 //______________________________________________________________________
-void TMVA::Configurable::WriteOptionsToStream( ostream& o, const TString& prefix ) const 
+void TMVA::Configurable::WriteOptionsToStream( std::ostream& o, const TString& prefix ) const 
 {
    // write options to output stream (e.g. in writing the MVA weight files
 
@@ -415,7 +415,7 @@ void TMVA::Configurable::WriteOptionsReferenceToFile()
 }
 
 //______________________________________________________________________
-void TMVA::Configurable::ReadOptionsFromStream(istream& istr)
+void TMVA::Configurable::ReadOptionsFromStream(std::istream& istr)
 {
    // read option back from the weight file
 

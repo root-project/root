@@ -1283,20 +1283,20 @@ void TMultiGraph::RecursiveRemove(TObject *obj)
 
 
 //______________________________________________________________________________
-void TMultiGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TMultiGraph::Class())) {
       out<<"   ";
    } else {
       out<<"   TMultiGraph *";
    }
-   out<<"multigraph = new TMultiGraph();"<<endl;
-   out<<"   multigraph->SetName("<<quote<<GetName()<<quote<<");"<<endl;
-   out<<"   multigraph->SetTitle("<<quote<<GetTitle()<<quote<<");"<<endl;
+   out<<"multigraph = new TMultiGraph();"<<std::endl;
+   out<<"   multigraph->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
+   out<<"   multigraph->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
 
    if (fGraphs) {
       TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
@@ -1310,9 +1310,9 @@ void TMultiGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    }
    const char *l = strstr(option,"th2poly");
    if (l) {
-      out<<"   "<<l+7<<"->AddBin(multigraph);"<<endl;
+      out<<"   "<<l+7<<"->AddBin(multigraph);"<<std::endl;
    } else {
-      out<<"   multigraph->Draw(" <<quote<<option<<quote<<");"<<endl;
+      out<<"   multigraph->Draw(" <<quote<<option<<quote<<");"<<std::endl;
    }
    TAxis *xaxis = GetXaxis();
    TAxis *yaxis = GetYaxis();

@@ -451,7 +451,7 @@ Bool_t TGLabel::HasOwnFont() const
 }
 
 //______________________________________________________________________________
-void TGLabel::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGLabel::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a label widget as a C++ statement(s) on output stream out.
 
@@ -490,29 +490,29 @@ void TGLabel::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       if (!GetOptions()) {
          if (fFont->GetFontStruct() == GetDefaultFontStruct()) {
             if (fNormGC == GetDefaultGC()()) {
-               out <<");" << endl;
+               out <<");" << std::endl;
             } else {
-               out << "," << parGC.Data() << ");" << endl;
+               out << "," << parGC.Data() << ");" << std::endl;
             }
          } else {
-            out << "," << parGC.Data() << "," << parFont.Data() << ");" << endl;
+            out << "," << parGC.Data() << "," << parFont.Data() << ");" << std::endl;
          }
       } else {
-         out << "," << parGC.Data() << "," << parFont.Data() << "," << GetOptionString() <<");" << endl;
+         out << "," << parGC.Data() << "," << parFont.Data() << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << parGC.Data() << "," << parFont.Data() << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << parGC.Data() << "," << parFont.Data() << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    if (fDisabled)
-      out << "   " << GetName() << "->Disable();" << endl;
+      out << "   " << GetName() << "->Disable();" << std::endl;
 
-   out << "   " << GetName() << "->SetTextJustify(" <<  GetTextJustify() << ");" << endl;
+   out << "   " << GetName() << "->SetTextJustify(" <<  GetTextJustify() << ");" << std::endl;
    out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << ",";
-   out << fMTop << "," << fMBottom << ");" << endl;
-   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << endl;
+   out << fMTop << "," << fMBottom << ");" << std::endl;
+   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << std::endl;
 
 }
 

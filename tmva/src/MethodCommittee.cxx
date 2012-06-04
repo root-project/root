@@ -183,7 +183,7 @@ void TMVA::MethodCommittee::WriteStateToFile() const
    std::ofstream* fout = new std::ofstream( fname );
    if (!fout->good()) { // file not found --> Error
       Log() << kFATAL << "<WriteStateToFile> "
-              << "unable to open output  weight file: " << fname << endl;
+              << "unable to open output  weight file: " << fname << std::endl;
    }
    
    WriteStateToStream( *fout );
@@ -260,7 +260,7 @@ Double_t TMVA::MethodCommittee::AdaBoost( TMVA::MethodBase* method )
    if (Data()->GetNTrainingEvents()) Log() << kFATAL << "<AdaBoost> Data().TrainingTree() is zero pointer" << Endl;
 
    Double_t err=0, sumw=0, sumwfalse=0, count=0;
-   vector<Char_t> correctSelected;
+   std::vector<Char_t> correctSelected;
 
    // loop over all events in training tree
    MethodBase* mbase = (MethodBase*)method;
@@ -370,7 +370,7 @@ void TMVA::MethodCommittee::AddWeightsXMLTo( void* /*parent*/ ) const {
 }
   
 //_______________________________________________________________________
-void  TMVA::MethodCommittee::ReadWeightsFromStream( istream& istr )
+void  TMVA::MethodCommittee::ReadWeightsFromStream( std::istream& istr )
 {
    // read the state of the method from an input stream
 
@@ -472,7 +472,7 @@ vector< Double_t > TMVA::MethodCommittee::GetVariableImportance()
    fVariableImportance.resize(GetNvar());
    //    Double_t  sum=0;
    //    for (int itree = 0; itree < fNMembers; itree++){
-   //       vector<Double_t> relativeImportance(GetCommittee()[itree]->GetVariableImportance());
+   //       std::vector<Double_t> relativeImportance(GetCommittee()[itree]->GetVariableImportance());
    //       for (unsigned int i=0; i< relativeImportance.size(); i++) {
    //          fVariableImportance[i] += relativeImportance[i] ;
    //       } 
@@ -487,7 +487,7 @@ vector< Double_t > TMVA::MethodCommittee::GetVariableImportance()
 Double_t TMVA::MethodCommittee::GetVariableImportance(UInt_t ivar)
 {
    // return the variable importance
-   vector<Double_t> relativeImportance = this->GetVariableImportance();
+   std::vector<Double_t> relativeImportance = this->GetVariableImportance();
    if (ivar < (UInt_t)relativeImportance.size()) return relativeImportance[ivar];
    else  Log() << kFATAL << "<GetVariableImportance> ivar = " << ivar << " is out of range " << Endl;
 
@@ -514,8 +514,8 @@ const TMVA::Ranking* TMVA::MethodCommittee::CreateRanking()
 void TMVA::MethodCommittee::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
    // write specific classifier response
-   fout << "   // not implemented for class: \"" << className << "\"" << endl;
-   fout << "};" << endl;
+   fout << "   // not implemented for class: \"" << className << "\"" << std::endl;
+   fout << "};" << std::endl;
 }
 
 //_______________________________________________________________________

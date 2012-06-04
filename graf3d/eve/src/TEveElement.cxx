@@ -490,7 +490,7 @@ void TEveElement::CopyVizParamsFromDB()
 }
 
 //______________________________________________________________________________
-void TEveElement::SaveVizParams(ostream& out, const TString& tag, const TString& var)
+void TEveElement::SaveVizParams(std::ostream& out, const TString& tag, const TString& var)
 {
    // Save visualization parameters for this element with given tag.
    //
@@ -516,7 +516,7 @@ void TEveElement::SaveVizParams(ostream& out, const TString& tag, const TString&
 }
 
 //______________________________________________________________________________
-void TEveElement::WriteVizParams(ostream& out, const TString& var)
+void TEveElement::WriteVizParams(std::ostream& out, const TString& var)
 {
    // Write-out visual parameters for this object.
    // This is a virtual function and all sub-classes are required to

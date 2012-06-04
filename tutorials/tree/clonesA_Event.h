@@ -22,7 +22,7 @@ class TUsrHitBuffer:public TObject {
 //                                                                                                                                                                                                                                                             TUsrHitBuffer(){};
    TUsrHitBuffer(Int_t maxent = 10);
    virtual ~TUsrHitBuffer() {
-      cout << "~~~~~~dtor TUsrHitBuffer " << this << endl;
+      std::cout << "~~~~~~dtor TUsrHitBuffer " << this << std::endl;
       delete fHits;
    }
    
@@ -46,7 +46,7 @@ class TUsrHitBuffer:public TObject {
 class TMrbSubevent_Caen:public TObject {
 
  public:
-   TMrbSubevent_Caen() {cout << "ctor  TMrbSubevent_Caen" << this << endl;}
+   TMrbSubevent_Caen() {std::cout << "ctor  TMrbSubevent_Caen" << this << std::endl;}
    virtual ~TMrbSubevent_Caen() {}
    void Clear(Option_t * /* opt */ ="") {fHitBuffer.Clear();};
    TUsrHitBuffer * GetHitBuffer() {return &fHitBuffer;};

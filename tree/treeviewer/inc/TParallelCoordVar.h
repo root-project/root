@@ -101,7 +101,7 @@ public:
    void           PaintHistogram();
    void           PaintLabels();
    virtual void   Print(Option_t* option="") const; // *MENU*
-   void           SavePrimitive(ostream & out, Option_t *options);
+   void           SavePrimitive(std::ostream & out, Option_t *options);
    void           SetBoxPlot(Bool_t box); // *TOGGLE* *GETTER=GetBoxPlot
    void           SetBarHisto(Bool_t h) {SetBit(kShowBarHisto,h);} // *TOGGLE* *GETTER=GetBarHisto
    void           SetHistogramLineWidth(Int_t lw=2) {fHistoLW = lw;} // *MENU*

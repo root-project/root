@@ -37,14 +37,14 @@ TComplex::TComplex(Double_t re, Double_t im, Bool_t polar) : fRe(re), fIm(im)
 }
 
 //______________________________________________________________________________
-ostream& operator<<(ostream& out, const TComplex& c)
+std::ostream& operator<<(std::ostream& out, const TComplex& c)
 {
    out << "(" << c.fRe << "," << c.fIm << "i)";
    return out;
 }
 
 //______________________________________________________________________________
-istream& operator>>(istream& in, TComplex& c)
+std::istream& operator>>(std::istream& in, TComplex& c)
 {
    in >> c.fRe >> c.fIm;
    return in;

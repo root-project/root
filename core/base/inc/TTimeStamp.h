@@ -84,7 +84,7 @@ typedef struct tm       tm_t;
 
 class TVirtualMutex;
 class TTimeStamp;
-ostream &operator<<(ostream &os,  const TTimeStamp &ts);
+std::ostream &operator<<(std::ostream &os,  const TTimeStamp &ts);
 TBuffer &operator<<(TBuffer &buf, const TTimeStamp &ts);
 TBuffer &operator>>(TBuffer &buf, TTimeStamp &ts);
 Bool_t operator==(const TTimeStamp &lhs, const TTimeStamp &rhs);

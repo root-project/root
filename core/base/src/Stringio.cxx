@@ -23,13 +23,13 @@
 
 
 //______________________________________________________________________________
-istream& TString::ReadFile(istream& strm)
+std::istream& TString::ReadFile(std::istream& strm)
 {
    // Replace string with the contents of strm, stopping at an EOF.
 
    // get file size
    Ssiz_t end, cur = strm.tellg();
-   strm.seekg(0, ios::end);
+   strm.seekg(0, std::ios::end);
    end = strm.tellg();
    strm.seekg(cur);
 
@@ -60,18 +60,18 @@ istream& TString::ReadFile(istream& strm)
 }
 
 //______________________________________________________________________________
-istream& TString::ReadLine(istream& strm, Bool_t skipWhite)
+std::istream& TString::ReadLine(std::istream& strm, Bool_t skipWhite)
 {
    // Read a line from stream upto newline skipping any whitespace.
 
    if (skipWhite)
-      strm >> ws;
+      strm >> std::ws;
 
    return ReadToDelim(strm, '\n');
 }
 
 //______________________________________________________________________________
-istream& TString::ReadString(istream& strm)
+std::istream& TString::ReadString(std::istream& strm)
 {
    // Read a line from stream upto \0, including any newline.
 
@@ -79,7 +79,7 @@ istream& TString::ReadString(istream& strm)
 }
 
 //______________________________________________________________________________
-istream& TString::ReadToDelim(istream& strm, char delim)
+std::istream& TString::ReadToDelim(std::istream& strm, char delim)
 {
    // Read up to an EOF, or a delimiting character, whichever comes
    // first.  The delimiter is not stored in the string,
@@ -122,7 +122,7 @@ istream& TString::ReadToDelim(istream& strm, char delim)
 }
 
 //______________________________________________________________________________
-istream& TString::ReadToken(istream& strm)
+std::istream& TString::ReadToken(std::istream& strm)
 {
    // Read a token, delimited by whitespace, from the input stream.
 
@@ -131,7 +131,7 @@ istream& TString::ReadToken(istream& strm)
 
    Clobber(incr);
 
-   strm >> ws;                                   // Eat whitespace
+   strm >> std::ws;                                   // Eat whitespace
 
    UInt_t wid = strm.width(0);
    char c;
@@ -158,7 +158,7 @@ istream& TString::ReadToken(istream& strm)
 }
 
 //______________________________________________________________________________
-istream& operator>>(istream& strm, TString& s)
+std::istream& operator>>(std::istream& strm, TString& s)
 {
    // Read string from stream.
 
@@ -166,7 +166,7 @@ istream& operator>>(istream& strm, TString& s)
 }
 
 //______________________________________________________________________________
-ostream& operator<<(ostream& os, const TString& s)
+std::ostream& operator<<(std::ostream& os, const TString& s)
 {
    // Write string to stream.
 
@@ -177,14 +177,14 @@ ostream& operator<<(ostream& os, const TString& s)
       wid = (len < wid) ? wid - len : 0;
       os.width(wid);
       long flags = os.flags();
-      if (wid && !(flags & ios::left))
-         os << "";  // let the ostream fill
+      if (wid && !(flags & std::ios::left))
+         os << "";  // let the std::ostream fill
       os.write((char*)s.Data(), s.Length());
-      if (wid && (flags & ios::left))
-         os << "";  // let the ostream fill
+      if (wid && (flags & std::ios::left))
+         os << "";  // let the std::ostream fill
    }
    // instead of os.osfx();
-   if (os.flags() & ios::unitbuf)
+   if (os.flags() & std::ios::unitbuf)
       os.flush();
    return os;
 }

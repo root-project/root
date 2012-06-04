@@ -70,7 +70,7 @@ public:
    virtual void     Paint(Option_t *option="");
    virtual TString  PathP() const;
    virtual void     SetLineAttributes(); // *MENU*
-   virtual void     SavePrimitive(ostream &out, Option_t *option="");
+   virtual void     SavePrimitive(std::ostream &out, Option_t *option="");
    virtual void     SetVisibility(Int_t vis=1); // *MENU*
    virtual void     Sizeof3D() const;
    ClassDef(TVolumeView,1)  // Special kind of TDataSet

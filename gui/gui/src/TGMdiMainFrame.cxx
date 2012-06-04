@@ -1213,28 +1213,28 @@ Bool_t TGMdiContainer::HandleConfigureNotify(Event_t *event)
 }
 
 //______________________________________________________________________________
-void TGMdiMainFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGMdiMainFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a MDI main frame as a C++ statement(s) on output stream out
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
-   out << endl << "   // MDI main frame" << endl;
+   out << std::endl << "   // MDI main frame" << std::endl;
    out << "   TGMdiMainFrame *";
    out << GetName() << " = new TGMdiMainFrame(" << fParent->GetName()
        << "," << GetMenu()->GetName() << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         out << ");" << endl;
+         out << ");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    TGMdiFrameList *travel=fChildren;
    travel->SetCycleNext(travel);
@@ -1247,24 +1247,24 @@ void TGMdiMainFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       switch (fArrangementMode) {
       
          case kMdiTileHorizontal:
-            out << "kMdiTileHorizontal);" << endl;
+            out << "kMdiTileHorizontal);" << std::endl;
          break;
 
          case kMdiTileVertical:
-            out << "kMdiTileVertical);" << endl;
+            out << "kMdiTileVertical);" << std::endl;
          break;
 
          case kMdiCascade:
-            out << "kMdiCascade);" << endl;
+            out << "kMdiCascade);" << std::endl;
          break;
       }
    }
    if (fResizeMode != kMdiOpaque)
-      out << "   " << GetName() << "->SetResizeMode(kMdiNonOpaque);" << endl;
+      out << "   " << GetName() << "->SetResizeMode(kMdiNonOpaque);" << std::endl;
 
    if (fCurrent)
       out << "   " << GetName() << "->SetCurrent(" << GetCurrent()->GetName() 
-          << ");" << endl;
+          << ");" << std::endl;
 }
 
 

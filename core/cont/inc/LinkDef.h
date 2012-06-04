@@ -55,15 +55,15 @@
 #pragma link C++ class TRefTable-;
 #pragma link C++ class TVirtualCollectionProxy-;
 
-#pragma link C++ class vector<Int_t>;
-#pragma link C++ operators vector<Int_t>;
+#pragma link C++ class std::vector<Int_t>;
+#pragma link C++ operators std::vector<Int_t>;
 #ifdef G__VECTOR_HAS_CLASS_ITERATOR
-#pragma link C++ class vector<Int_t>::iterator;
-#pragma link C++ operators vector<Int_t>::iterator;
-#pragma link C++ class vector<Int_t>::const_iterator;
-#pragma link C++ operators vector<Int_t>::const_iterator;
-#pragma link C++ class vector<Int_t>::reverse_iterator;
-#pragma link C++ operators vector<Int_t>::reverse_iterator;
+#pragma link C++ class std::vector<Int_t>::iterator;
+#pragma link C++ operators std::vector<Int_t>::iterator;
+#pragma link C++ class std::vector<Int_t>::const_iterator;
+#pragma link C++ operators std::vector<Int_t>::const_iterator;
+#pragma link C++ class std::vector<Int_t>::reverse_iterator;
+#pragma link C++ operators std::vector<Int_t>::reverse_iterator;
 #endif
 
 #pragma link C++ nestedclass;

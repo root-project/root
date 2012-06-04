@@ -66,7 +66,7 @@ public:
    Int_t      GetCanvasWindowId() const { return fCWinId; }
    Bool_t     GetAutoFit() const { return fAutoFit; }
    void       SetAutoFit(Bool_t fit = kTRUE) { fAutoFit = fit; }
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    virtual Bool_t HandleDNDDrop(TDNDData *data);
    virtual Atom_t HandleDNDPosition(Int_t /*x*/, Int_t /*y*/, Atom_t action,

@@ -1123,7 +1123,7 @@ public:
    virtual void CheckToggled(const char *name, Bool_t on, const char *val); // *SIGNAL*
    virtual void RadioChanged(const char *name, const char *val); // *SIGNAL*
    virtual void InputSelected(const char *name, const char *val);   //*SIGNAL*
-   virtual void SavePrimitive(ostream &out, Option_t * = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
 
 protected:
    virtual void UpdateBackgroundStart();

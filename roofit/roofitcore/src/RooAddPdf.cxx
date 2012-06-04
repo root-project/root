@@ -70,6 +70,8 @@
 #include <algorithm>
 
 
+using namespace std;
+
 ClassImp(RooAddPdf)
 ;
 

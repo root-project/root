@@ -126,21 +126,21 @@ public:
 #else
       free(p);
 #endif
-      // cout << "Block at " << delBlock 
-      //   << " deallocated, fStackOffset = " << fStackOffset << endl;
+      // std::cout << "Block at " << delBlock 
+      //   << " deallocated, fStackOffset = " << fStackOffset << std::endl;
   }
 
   int ReadInt( int offset) {
       int* ip = (int*)(fStack+offset);
 
-      // cout << "read " << *ip << " from offset " << offset << endl;
+      // std::cout << "read " << *ip << " from offset " << offset << std::endl;
 
       return *ip;
   }
 
   void WriteInt( int offset, int Value) {
 
-      // cout << "writing " << Value << " to offset " << offset << endl;
+      // std::cout << "writing " << Value << " to offset " << offset << std::endl;
 
       int* ip = reinterpret_cast<int*>(fStack+offset);
       *ip = Value;
@@ -149,7 +149,7 @@ public:
   int ToInt( void* p) {
       unsigned char* pc = static_cast<unsigned char*>(p);
 
-      // cout << "toInt: p = " << p << " fStack = " << (void*) fStack << endl;
+      // std::cout << "toInt: p = " << p << " fStack = " << (void*) fStack << std::endl;
 	  // VC 7.1 warning:conversin from __w64 int to int
       int userBlock = pc - fStack;
       return userBlock - sizeof(int); // correct for starting int
@@ -179,8 +179,8 @@ public:
       while (beg < fStackOffset) {
 	  end = ReadInt( beg);
 
-	  // cout << "beg = " << beg << " end = " << end 
-	  //     << " fStackOffset = " << fStackOffset << endl;
+	  // std::cout << "beg = " << beg << " end = " << end 
+	  //     << " fStackOffset = " << fStackOffset << std::endl;
 
 	  int beg2 = ReadInt( end - sizeof(int));
 	  if ( beg != beg2) {

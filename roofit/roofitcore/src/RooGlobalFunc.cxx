@@ -19,7 +19,6 @@
 #include "RooFit.h"
 
 #include "RooGlobalFunc.h"
-#include "RooGlobalFunc.h"
 #include "RooCategory.h"
 #include "RooRealConstant.h"
 #include "RooDataSet.h"
@@ -29,6 +28,8 @@
 #include "RooFitResult.h"
 #include "RooAbsPdf.h"
 #include "TH1.h"
+
+using namespace std;
 
 namespace RooFit {
 
@@ -291,7 +292,7 @@ namespace RooFit {
   RooCmdArg ClassName(const char* name)     { return RooCmdArg("ClassName",0,0,0,0,name,0,0,0) ; }
   RooCmdArg BaseClassName(const char* name) { return RooCmdArg("BaseClassName",0,0,0,0,name,0,0,0) ; }
   RooCmdArg TagName(const char* name)     { return RooCmdArg("LabelName",0,0,0,0,name,0,0,0) ; }
-  RooCmdArg OutputStream(ostream& os)    { return RooCmdArg("OutputStream",0,0,0,0,0,0,reinterpret_cast<TObject*>(&os),0) ; }
+   RooCmdArg OutputStream(ostream& os)    { return RooCmdArg("OutputStream",0,0,0,0,0,0,reinterpret_cast<TObject*>(&os),0) ; }
   RooCmdArg Prefix(Bool_t flag)          { return RooCmdArg("Prefix",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Color(Color_t color)         { return RooCmdArg("Color",color,0,0,0,0,0,0,0) ; }
 

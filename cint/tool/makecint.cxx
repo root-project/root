@@ -757,7 +757,7 @@ void G__outputmakefile(int argc,char **argv)
   else if(G__flags & G__ismain) {
 #ifdef _AIX
 TODO!
-  cout << "$(OBJECT) : $(CINTLIB) $(READLINEA) $(DLFCN) G__setup" << G__CFG_OBJEXT << " $(COFILES) $(CXXOFILES) $(CIFO) $(CXXIFO)";
+  std::cout << "$(OBJECT) : $(CINTLIB) $(READLINEA) $(DLFCN) G__setup" << G__CFG_OBJEXT << " $(COFILES) $(CXXOFILES) $(CIFO) $(CXXIFO)";
  out << "\t";
    if (G__quiet) out << "@";
    out << "$(LD) $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(CIFO) $(CXXIFO) $(COFILES) $(CXXOFILES) G__setup" << G__CFG_OBJEXT << " $(READLINEA) $(DLFCN) $(LIBS)" 

@@ -209,7 +209,7 @@ public:
    virtual void      Resize(Option_t *option="");
    void              ResizeOpaque(Int_t set=1);
    void              SaveSource(const char *filename="", Option_t *option="");
-   void              SavePrimitive(ostream &out, Option_t *option = "");
+   void              SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void      SetCursor(ECursor cursor);
    virtual void      SetDoubleBuffer(Int_t mode=1);
    virtual void      SetFixedAspectRatio(Bool_t fixed = kTRUE);  // *TOGGLE*

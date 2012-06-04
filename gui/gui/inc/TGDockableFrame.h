@@ -153,7 +153,7 @@ public:
    TGCompositeFrame *GetContainer() const { return fContainer; }
    TGUndockedFrame  *GetUndocked() const { return fFrame; }
 
-   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGDockableFrame,0)  // Dockable widget
 };

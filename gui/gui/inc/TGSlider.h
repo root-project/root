@@ -143,7 +143,7 @@ public:
                      { return TGDimension(kSliderWidth, fHeight); }
    virtual void   Resize(UInt_t w, UInt_t h) { TGFrame::Resize(w, h ? h+16 : fHeight + 16); }
    virtual void   Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGVSlider,0)  // Vertical slider widget
 };
@@ -170,7 +170,7 @@ public:
                      { return TGDimension(fWidth, kSliderHeight); }
    virtual void   Resize(UInt_t w, UInt_t h) { TGFrame::Resize(w ? w+16 : fWidth + 16, h); }
    virtual void   Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGHSlider,0)  // Horizontal slider widget
 };

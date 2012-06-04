@@ -49,7 +49,7 @@ public:
    virtual void    PrintValue(Int_t i = 0) const;
    virtual void    ReadBasket(TBuffer&);
    virtual void    ReadBasketExport(TBuffer&, TClonesArray* list, Int_t n);
-   virtual void    ReadValue(istream &s, Char_t delim = ' ');
+   virtual void    ReadValue(std::istream &s, Char_t delim = ' ');
    virtual void    SetAddress(void* addr = 0);
    virtual void    SetMaximum(Char_t max) { fMaximum = max; }
    virtual void    SetMinimum(Char_t min) { fMinimum = min; }

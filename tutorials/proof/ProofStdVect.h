@@ -15,8 +15,8 @@
 
 #include <vector>
 #ifdef __MAKECINT__
-#pragma link C++ class vector<vector<bool> >+;
-#pragma link C++ class vector<vector<float> >+;
+#pragma link C++ class std::vector<std::vector<bool> >+;
+#pragma link C++ class std::vector<std::vector<float> >+;
 #endif
 
 class TFile;

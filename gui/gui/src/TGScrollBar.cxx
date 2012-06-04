@@ -932,7 +932,7 @@ void TGVScrollBar::SetPosition(Int_t pos)
 }
 
 //______________________________________________________________________________
-void TGHScrollBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGHScrollBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save an horizontal scrollbar as a C++ statement(s) on output stream out.
 
@@ -944,22 +944,22 @@ void TGHScrollBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         out <<");" << endl;
+         out <<");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
-   out << "   " << GetName() <<"->SetRange(" << GetRange() << "," << GetPageSize() << ");" << endl;
-   out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << endl;
+   out << "   " << GetName() <<"->SetRange(" << GetRange() << "," << GetPageSize() << ");" << std::endl;
+   out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << std::endl;
 }
 
 //______________________________________________________________________________
-void TGVScrollBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGVScrollBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save an vertical scrollbar as a C++ statement(s) on output stream out.
 
@@ -972,16 +972,16 @@ void TGVScrollBar::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    if (fBackground == GetDefaultFrameBackground()) {
 
       if (!GetOptions()) {
-         out <<");" << endl;
+         out <<");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
-   out << "   " << GetName() <<"->SetRange(" << GetRange() << "," << GetPageSize() << ");" << endl;
-   out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << endl;
+   out << "   " << GetName() <<"->SetRange(" << GetRange() << "," << GetPageSize() << ");" << std::endl;
+   out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << std::endl;
 }

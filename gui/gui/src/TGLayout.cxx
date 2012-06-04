@@ -100,14 +100,14 @@ void TGFrameElement::Print(Option_t *option) const
 
    TObject::Print(option);
 
-   cout << "\t";
+   std::cout << "\t";
    if (fFrame) {
-      cout << fFrame->ClassName() << "::" << fFrame->GetName();
+      std::cout << fFrame->ClassName() << "::" << fFrame->GetName();
    }
    if (fLayout) {
       fLayout->Print(option);
    }
-   cout << endl;
+   std::cout << std::endl;
 }
 
 //______________________________________________________________________________
@@ -153,53 +153,53 @@ void TGLayoutHints::Print(Option_t *) const
    Bool_t bor = kFALSE;
 
    if (fLayoutHints & kLHintsLeft) {
-      cout << "kLHintsLeft";
+      std::cout << "kLHintsLeft";
       bor = kTRUE;
    }
    if (fLayoutHints & kLHintsCenterX) {
-      if (bor) cout << " | ";
-      cout << "kLHintsCenterX";
+      if (bor) std::cout << " | ";
+      std::cout << "kLHintsCenterX";
       bor = kTRUE;
    }
    if (fLayoutHints & kLHintsRight) {
-      if (bor) cout << " | ";
-      cout << "kLHintsRight";
+      if (bor) std::cout << " | ";
+      std::cout << "kLHintsRight";
       bor = kTRUE;
    }
    if (fLayoutHints & kLHintsTop) {
-      if (bor) cout << " | ";
-      cout << "kLHintsTop";
+      if (bor) std::cout << " | ";
+      std::cout << "kLHintsTop";
       bor = kTRUE;
    }
    if (fLayoutHints & kLHintsCenterY) {
-      if (bor) cout << " | ";
-      cout << "kLHintsCenterY";
+      if (bor) std::cout << " | ";
+      std::cout << "kLHintsCenterY";
       bor = kTRUE;
    }
    if (fLayoutHints & kLHintsBottom) {
-      if (bor) cout << " | ";
-      cout << "kLHintsBottom";
+      if (bor) std::cout << " | ";
+      std::cout << "kLHintsBottom";
       bor = kTRUE;
    }
    if (fLayoutHints & kLHintsExpandX) {
-      if (bor) cout << " | ";
-      cout << "kLHintsExpandX";
+      if (bor) std::cout << " | ";
+      std::cout << "kLHintsExpandX";
       bor = kTRUE;
    }
    if (fLayoutHints & kLHintsExpandY) {
-      if (bor) cout << " | ";
-      cout << "kLHintsExpandY";
+      if (bor) std::cout << " | ";
+      std::cout << "kLHintsExpandY";
       bor = kTRUE;
    }
    if (fLayoutHints == kLHintsNoHints) {
-      if (bor) cout << " | ";
-      cout << "kLHintsNoHints";
+      if (bor) std::cout << " | ";
+      std::cout << "kLHintsNoHints";
    }
-   cout << ", fPadtop="    << fPadtop;
-   cout << ", fPadbottom=" << fPadbottom;
-   cout << ", fPadleft="   << fPadleft;
-   cout << ", fPadright="  << fPadright;
-   cout << endl;
+   std::cout << ", fPadtop="    << fPadtop;
+   std::cout << ", fPadbottom=" << fPadbottom;
+   std::cout << ", fPadleft="   << fPadleft;
+   std::cout << ", fPadright="  << fPadright;
+   std::cout << std::endl;
 }
 
 //______________________________________________________________________________
@@ -1000,7 +1000,7 @@ TGDimension TGListDetailsLayout::GetDefaultSize() const
 }
 
 // ________________________________________________________________________
-void TGLayoutHints::SavePrimitive(ostream &out, Option_t * option/*= ""*/)
+void TGLayoutHints::SavePrimitive(std::ostream &out, Option_t * option/*= ""*/)
 {
 
    // Save layout hints as a C++ statement(s) on output stream out
@@ -1060,7 +1060,7 @@ void TGLayoutHints::SavePrimitive(ostream &out, Option_t * option/*= ""*/)
 }
 
 // __________________________________________________________________________
-void TGVerticalLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGVerticalLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
    // Save vertical layout manager as a C++ statement(s) on output stream
@@ -1070,7 +1070,7 @@ void TGVerticalLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 }
 
 // __________________________________________________________________________
-void TGHorizontalLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGHorizontalLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
    // Save horizontal layout manager as a C++ statement(s) on output stream
@@ -1079,7 +1079,7 @@ void TGHorizontalLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 }
 
 // __________________________________________________________________________
-void TGRowLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGRowLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
    // Save row layout manager as a C++ statement(s) on output stream
@@ -1089,7 +1089,7 @@ void TGRowLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 }
 
 // __________________________________________________________________________
-void TGColumnLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGColumnLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
    // Save column layout manager as a C++ statement(s) on output stream
@@ -1100,7 +1100,7 @@ void TGColumnLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 }
 
 // __________________________________________________________________________
-void TGMatrixLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGMatrixLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
    // Save matrix layout manager as a C++ statement(s) on output stream
@@ -1114,7 +1114,7 @@ void TGMatrixLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 }
 
 // __________________________________________________________________________
-void TGTileLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGTileLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
    // Save tile layout manager as a C++ statement(s) on output stream
@@ -1125,7 +1125,7 @@ void TGTileLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 }
 
 // __________________________________________________________________________
-void TGListLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGListLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
    // Save list layout manager as a C++ statement(s) on output stream
@@ -1136,7 +1136,7 @@ void TGListLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 }
 
 // __________________________________________________________________________
-void TGListDetailsLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGListDetailsLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
    // Save list details layout manager as a C++ statement(s) on out stream

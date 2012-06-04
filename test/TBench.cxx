@@ -41,7 +41,7 @@ namespace {
          print();
       }
       void print(const std::string& msg="")  {
-         cout << msg << " --- Counter: " << name << " " << count << endl;
+         std::cout << msg << " --- Counter: " << name << " " << count << std::endl;
       }
    };
 }
@@ -812,7 +812,7 @@ TSTLhitStar::~TSTLhitStar() {
 
 void TSTLhitStar::Clear(Option_t *)
 {
-   for (vector<THit*>::iterator it = fList2.begin(); it<fList2.end(); it++) {
+   for (std::vector<THit*>::iterator it = fList2.begin(); it<fList2.end(); it++) {
       delete (*it);
    }
    fList2.erase(fList2.begin(),fList2.end());
@@ -887,7 +887,7 @@ TSTLhitStarList::~TSTLhitStarList() {
 
 void TSTLhitStarList::Clear(Option_t *)
 {
-   for (list<THit*>::iterator it = fList2.begin(); it!=fList2.end(); it++) {
+   for (std::list<THit*>::iterator it = fList2.begin(); it!=fList2.end(); it++) {
       delete (*it);
    }
    fList2.erase(fList2.begin(),fList2.end());
@@ -1185,7 +1185,7 @@ TSTLhitStarMap::~TSTLhitStarMap() {
 
 void TSTLhitStarMap::Clear(Option_t *)
 {
-   for (map<int,THit*>::iterator it = fList2.begin(); it!=fList2.end(); it++) {
+   for (std::map<int,THit*>::iterator it = fList2.begin(); it!=fList2.end(); it++) {
       delete (*it).second;
    }
    fList2.clear();

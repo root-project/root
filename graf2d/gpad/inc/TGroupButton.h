@@ -44,7 +44,7 @@ public:
    virtual void  DisplayColorTable(const char *action, Double_t x0, Double_t y0, Double_t wc, Double_t hc);
    virtual void  ExecuteAction();
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
    ClassDef(TGroupButton,0)  //A user interface button in a group of buttons.
 };
 

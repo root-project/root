@@ -70,7 +70,7 @@ public:
    virtual Int_t     Merge(TCollection *list);
    virtual void      Paint(Option_t *option="");
    virtual void      Print(Option_t *option="") const;
-   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual Int_t     SetNextPoint(Double_t x, Double_t y, Double_t z); // *MENU*
    virtual void      SetOption(Option_t *option="") {fOption = option;}
    virtual void      SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); // *MENU*

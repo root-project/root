@@ -114,33 +114,33 @@ void TSchemaRule::ls(Option_t *targetname) const
    // is typically much less verbose then Dump().
    
    TROOT::IndentLevel();
-   cout << "Schema Evolution Rule: ";
-   if (fRuleType==kReadRule) cout <<  "read ";
-   else if (fRuleType==kReadRawRule) cout << "readraw ";
-   cout << "\n";
+   std::cout << "Schema Evolution Rule: ";
+   if (fRuleType==kReadRule) std::cout <<  "read ";
+   else if (fRuleType==kReadRawRule) std::cout << "readraw ";
+   std::cout << "\n";
    TROOT::IncreaseDirLevel();
    TROOT::IndentLevel();
-   cout << "sourceClass=\"" << fSourceClass << "\" ";
-   if (fVersion.Length())  cout << "version=\"" << fVersion << "\" ";
-   if (fChecksum.Length()) cout << "checksum=\"" << fChecksum << "\" ";
-   if (targetname && targetname[0]) cout << "targetClass=\"" << targetname << "\" ";
-   else cout << "targetClass\"" << fTargetClass << "\" ";
-   cout << "\n";
+   std::cout << "sourceClass=\"" << fSourceClass << "\" ";
+   if (fVersion.Length())  std::cout << "version=\"" << fVersion << "\" ";
+   if (fChecksum.Length()) std::cout << "checksum=\"" << fChecksum << "\" ";
+   if (targetname && targetname[0]) std::cout << "targetClass=\"" << targetname << "\" ";
+   else std::cout << "targetClass\"" << fTargetClass << "\" ";
+   std::cout << "\n";
    TROOT::IndentLevel();
-   cout << "source=\"" << fSource << "\" ";
-   cout << "target=\"" << fTarget << "\" ";
-   cout << "\n";
+   std::cout << "source=\"" << fSource << "\" ";
+   std::cout << "target=\"" << fTarget << "\" ";
+   std::cout << "\n";
    if (fInclude.Length()) {
       TROOT::IndentLevel();
-      cout << "include=\"" << fInclude << "\" " << "\n";
+      std::cout << "include=\"" << fInclude << "\" " << "\n";
    }
    if (fAttributes.Length()) {
       TROOT::IndentLevel();
-      cout << "attributes=\"" << fAttributes << "\"" << "\n";
+      std::cout << "attributes=\"" << fAttributes << "\"" << "\n";
    }
    if (fCode.Length()) {
       TROOT::IndentLevel();
-      cout << "code=\"{" << fCode << "}\" "
+      std::cout << "code=\"{" << fCode << "}\" "
       << "\n";
    }
    TROOT::DecreaseDirLevel();

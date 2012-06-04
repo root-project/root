@@ -165,7 +165,7 @@ public:
    virtual void   PatternSelected(Style_t pattern = 0) 
                   { Emit("PatternSelected(Style_t)", pattern ? pattern : GetPattern()); }  // *SIGNAL*
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   virtual void   SavePrimitive(ostream &out, Option_t * = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t * = "");
 
    ClassDef(TGedPatternSelect,0)  //pattern selection check-button
 };

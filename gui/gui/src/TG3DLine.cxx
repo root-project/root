@@ -50,7 +50,7 @@ TGVertical3DLine::TGVertical3DLine(const TGWindow *p, UInt_t w, UInt_t h,
 }
 
 //______________________________________________________________________________
-void TGHorizontal3DLine::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGHorizontal3DLine::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save an vertical 3D line as a C++ statement(s) on output stream out.
 
@@ -62,19 +62,19 @@ void TGHorizontal3DLine::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         out << ");" << endl;
+         out << ");" << std::endl;
       } else {
-         out << "," << GetOptionString() << ");" << endl;
+         out << "," << GetOptionString() << ");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 }
 
 //______________________________________________________________________________
-void TGVertical3DLine::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGVertical3DLine::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save an vertical 3D line as a C++ statement(s) on output stream out.
 
@@ -86,13 +86,13 @@ void TGVertical3DLine::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         out << ");" << endl;
+         out << ");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 }

@@ -455,7 +455,7 @@ void TEveTrack::CopyVizParams(const TEveElement* el)
 }
 
 //______________________________________________________________________________
-void TEveTrack::WriteVizParams(ostream& out, const TString& var)
+void TEveTrack::WriteVizParams(std::ostream& out, const TString& var)
 {
    // Write visualization parameters.
 
@@ -1199,7 +1199,7 @@ void TEveTrackList::CopyVizParams(const TEveElement* el)
 }
 
 //______________________________________________________________________________
-void TEveTrackList::WriteVizParams(ostream& out, const TString& var)
+void TEveTrackList::WriteVizParams(std::ostream& out, const TString& var)
 {
    // Write visualization parameters.
 

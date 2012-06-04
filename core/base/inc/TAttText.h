@@ -50,7 +50,7 @@ public:
    virtual Float_t  GetTextSize()  const {return fTextSize;}
    virtual void     Modify();
    virtual void     ResetAttText(Option_t *toption="");
-   virtual void     SaveTextAttributes(ostream &out, const char *name, Int_t alidef=12, Float_t angdef=0, Int_t coldef=1, Int_t fondef=61, Float_t sizdef=1);
+   virtual void     SaveTextAttributes(std::ostream &out, const char *name, Int_t alidef=12, Float_t angdef=0, Int_t coldef=1, Int_t fondef=61, Float_t sizdef=1);
    virtual void     SetTextAttributes();  // *MENU*
    virtual void     SetTextAlign(Short_t align=11) { fTextAlign = align;}
    virtual void     SetTextAngle(Float_t tangle=0) { fTextAngle = tangle;}  // *MENU*

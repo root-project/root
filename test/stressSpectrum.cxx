@@ -253,9 +253,9 @@ void stressSpectrum(Int_t ntimes) {
 #else
 void stressSpectrum(Int_t ntimes=100) {
 #endif
-   cout << "****************************************************************************" <<endl;
-   cout << "*  Starting  stress S P E C T R U M                                        *" <<endl;
-   cout << "****************************************************************************" <<endl;
+   std::cout << "****************************************************************************" <<std::endl;
+   std::cout << "*  Starting  stress S P E C T R U M                                        *" <<std::endl;
+   std::cout << "****************************************************************************" <<std::endl;
    gBenchmark->Start("stressSpectrum");
    stress1(ntimes);
    stress2(300);

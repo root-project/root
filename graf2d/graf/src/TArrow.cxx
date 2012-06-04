@@ -345,7 +345,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 }
 
 //______________________________________________________________________________
-void TArrow::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TArrow::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
@@ -356,16 +356,16 @@ void TArrow::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       out<<"   TArrow *";
    }
    out<<"arrow = new TArrow("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-      <<","<<fArrowSize<<","<<quote<<GetDrawOption()<<quote<<");"<<endl;
+      <<","<<fArrowSize<<","<<quote<<GetDrawOption()<<quote<<");"<<std::endl;
 
    SaveFillAttributes(out,"arrow",0,1);
    SaveLineAttributes(out,"arrow",1,1,1);
 
    if (fAngle !=60) {
-      out << "   arrow->SetAngle(" << GetAngle() << ");" << endl;
+      out << "   arrow->SetAngle(" << GetAngle() << ");" << std::endl;
    }
 
-   out<<"   arrow->Draw();"<<endl;
+   out<<"   arrow->Draw();"<<std::endl;
 }
 
 

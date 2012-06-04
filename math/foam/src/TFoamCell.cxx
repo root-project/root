@@ -186,25 +186,25 @@ void TFoamCell::Print(Option_t *option) const
 
    if(!option) Error("Print", "No option set\n");
 
-   cout <<  " Status= "<<     fStatus   <<",";
-   cout <<  " Volume= "<<     fVolume   <<",";
-   cout <<  " TrueInteg= " << fIntegral <<",";
-   cout <<  " DriveInteg= "<< fDrive    <<",";
-   cout <<  " PrimInteg= " << fPrimary  <<",";
-   cout<< endl;
-   cout <<  " Xdiv= "<<fXdiv<<",";
-   cout <<  " Best= "<<fBest<<",";
-   cout <<  " Parent=  {"<< (GetPare() ? GetPare()->GetSerial() : -1) <<"} "; // extra DEBUG
-   cout <<  " Daught0= {"<< (GetDau0() ? GetDau0()->GetSerial() : -1 )<<"} "; // extra DEBUG
-   cout <<  " Daught1= {"<< (GetDau1() ? GetDau1()->GetSerial()  : -1 )<<"} "; // extra DEBUG
-   cout<< endl;
+   std::cout <<  " Status= "<<     fStatus   <<",";
+   std::cout <<  " Volume= "<<     fVolume   <<",";
+   std::cout <<  " TrueInteg= " << fIntegral <<",";
+   std::cout <<  " DriveInteg= "<< fDrive    <<",";
+   std::cout <<  " PrimInteg= " << fPrimary  <<",";
+   std::cout<< std::endl;
+   std::cout <<  " Xdiv= "<<fXdiv<<",";
+   std::cout <<  " Best= "<<fBest<<",";
+   std::cout <<  " Parent=  {"<< (GetPare() ? GetPare()->GetSerial() : -1) <<"} "; // extra DEBUG
+   std::cout <<  " Daught0= {"<< (GetDau0() ? GetDau0()->GetSerial() : -1 )<<"} "; // extra DEBUG
+   std::cout <<  " Daught1= {"<< (GetDau1() ? GetDau1()->GetSerial()  : -1 )<<"} "; // extra DEBUG
+   std::cout<< std::endl;
    //
    //
    if(fDim>0 ) {
       TFoamVect cellPosi(fDim); TFoamVect cellSize(fDim);
       GetHcub(cellPosi,cellSize);
-      cout <<"   Posi= "; cellPosi.Print("1"); cout<<","<< endl;
-      cout <<"   Size= "; cellSize.Print("1"); cout<<","<< endl;
+      std::cout <<"   Posi= "; cellPosi.Print("1"); std::cout<<","<< std::endl;
+      std::cout <<"   Size= "; cellSize.Print("1"); std::cout<<","<< std::endl;
    }
 }
 ///////////////////////////////////////////////////////////////////

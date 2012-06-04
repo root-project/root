@@ -200,7 +200,7 @@ public:
    Bool_t     SetImageBuffer(char **buffer, EImageFileTypes type = TImage::kPng);
    void       PaintImage(Drawable_t wid, Int_t x, Int_t y, Int_t xsrc = 0, Int_t ysrc = 0, UInt_t wsrc = 0, UInt_t hsrc = 0, Option_t *opt = "");
    void       SetPaletteEnabled(Bool_t on = kTRUE);  // *TOGGLE*
-   void       SavePrimitive(ostream &out, Option_t *option = "");
+   void       SavePrimitive(std::ostream &out, Option_t *option = "");
 
    static const ASVisual *GetVisual();
    static UInt_t AlphaBlend(UInt_t bot, UInt_t top);

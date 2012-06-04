@@ -39,6 +39,8 @@
 #include "RooStringVar.h"
 #include "RooMsgService.h"
 
+using namespace std;
+
 ClassImp(RooAbsString) 
 ;
 

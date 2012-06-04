@@ -95,7 +95,7 @@ public:
    TObject    *First() const;
    TObject    *Last() const;
 
-   //void PrintOn(ostream &os) const;
+   //void PrintOn(std::ostream &os) const;
 
    Int_t       Order() { return fOrder; }
    TObject    *operator[](Int_t i) const;
@@ -149,8 +149,8 @@ public:
 
    virtual void Split() = 0;
 #endif
-   // virtual void PrintOn(ostream &os) const = 0;
-   // friend ostream &operator<<(ostream &os, const TBtNode &node);
+   // virtual void PrintOn(std::ostream &os) const = 0;
+   // friend std::ostream &operator<<(std::ostream &os, const TBtNode &node);
 };
 
 
@@ -252,7 +252,7 @@ public:
    Int_t     MaxIndex() const { return fTree->fInnerMaxIndex; }
    Int_t     MaxPsize() const { return fTree->fInnerMaxIndex; }
 
-   // void      PrintOn(ostream &os) const;
+   // void      PrintOn(std::ostream &os) const;
 
    Int_t     IsFull() const { return fLast == MaxIndex(); }
    void      IsFull(TBtNode *n);
@@ -318,7 +318,7 @@ public:
    Int_t      MaxIndex() const { return fTree->fLeafMaxIndex; }
    Int_t      MaxPsize() const { return fTree->fLeafMaxIndex + 1; }
 
-   // void       PrintOn(ostream &os) const;
+   // void       PrintOn(std::ostream &os) const;
 
    Int_t      IsFull() const { return fLast == MaxIndex(); }
    Int_t      IsAlmostFull() const { return fLast >= MaxIndex() - 1; }
@@ -437,7 +437,7 @@ inline Int_t TBtLeafNode::Vsize() const
    return Psize()+1;
 }
 
-//inline ostream &operator<<(ostream& outputStream, const TBtNode &aNode)
+//inline std::ostream &operator<<(std::ostream& outputStream, const TBtNode &aNode)
 //{
 //   aNode.PrintOn(outputStream);
 //   return outputStream;

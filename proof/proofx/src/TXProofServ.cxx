@@ -330,9 +330,9 @@ Int_t TXProofServ::CreateServer()
       }
    }
 
-   // Everybody expects iostream to be available, so load it...
+   // Everybody expects std::iostream to be available, so load it...
    ProcessLine("#include <iostream>", kTRUE);
-   ProcessLine("#include <string>",kTRUE); // for std::string iostream.
+   ProcessLine("#include <string>",kTRUE); // for std::string std::iostream.
 
    // Load user functions
    const char *logon;

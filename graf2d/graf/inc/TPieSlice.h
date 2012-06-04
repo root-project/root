@@ -45,7 +45,7 @@ public:
    virtual Int_t  DistancetoPrimitive(Int_t,Int_t);
    Double_t       GetRadiusOffset();
    Double_t       GetValue();
-   void           SavePrimitive(ostream &out, Option_t *opts="");
+   void           SavePrimitive(std::ostream &out, Option_t *opts="");
    void           SetIsActive(Bool_t is) { fIsActive = is; }
    void           SetRadiusOffset(Double_t);  // *MENU*
    void           SetValue(Double_t);         // *MENU*

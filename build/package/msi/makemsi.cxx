@@ -53,8 +53,8 @@ public:
    string GetId() const;
    MSIDir* GetParent() const {return fParent;}
 
-   virtual void WriteRecurse(ostream& out, string indent) const = 0;
-   ostream& WriteLongShort(ostream& out) const;
+   virtual void WriteRecurse(std::ostream& out, string indent) const = 0;
+   std::ostream& WriteLongShort(std::ostream& out) const;
 
 private:
    void SetShortName(bool dir);
@@ -77,14 +77,14 @@ public:
 
    void AddFile(const char* file);
 
-   void Write(ostream& out) const;
+   void Write(std::ostream& out) const;
 
 private:
-   void WriteRecurse(ostream& out, string indent) const;
-   void WriteComponentsRecurse(ostream& out, string indent) const;
+   void WriteRecurse(std::ostream& out, string indent) const;
+   void WriteComponentsRecurse(std::ostream& out, string indent) const;
    const char* GetGuid() const {
       if (!fgGuids.size() && !fgNewGuids.size()) SetupGuids();
-      map<string, string>::const_iterator iGuid = fgGuids.find(GetId());
+      std::map<string, string>::const_iterator iGuid = fgGuids.find(GetId());
       if (iGuid == fgGuids.end()) return CreateGuid();
       return iGuid->second.c_str();
    }
@@ -92,11 +92,11 @@ private:
    static void SetupGuids();
    static void UpdateGuids();
 
-   map<string, MSIDir*> fSubdirs;
-   list<MSIFile*> fFiles;
+   std::map<string, MSIDir*> fSubdirs;
+   std::list<MSIFile*> fFiles;
 
-   static map<string, string> fgGuids;
-   static map<string, string> fgNewGuids; // guids created during this process
+   static std::map<string, string> fgGuids;
+   static std::map<string, string> fgNewGuids; // guids created during this process
    static const char* fgGuidFileName; // location of the GUID file
 };
 
@@ -106,7 +106,7 @@ class MSIFile: public MSIDirEntry {
 public:
    MSIFile(const char* name, MSIDir* parent): MSIDirEntry(name, parent, false) {}
 
-   void WriteRecurse(ostream& out, string indent) const {
+   void WriteRecurse(std::ostream& out, string indent) const {
       out << indent << "<File Id=\"" << GetId() << "\" ";
       WriteLongShort(out) << "DiskId=\"1\"></File>" << std::endl;
    };
@@ -130,11 +130,11 @@ void MSIDirEntry::SetShortName(bool dir) {
    string filename(GetPath());
    HANDLE hFind = ::FindFirstFile(filename.c_str(), &findData);
    if (hFind == INVALID_HANDLE_VALUE) {
-      cerr << "Cannot find " << filename << endl;
+      std::cerr << "Cannot find " << filename << std::endl;
    } else {
       bool foundDir = (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) > 0;
       if (foundDir == !dir)
-         cerr << filename << " is not what I expected it to be!" << endl;
+         std::cerr << filename << " is not what I expected it to be!" << std::endl;
       else
          fShortName = findData.cAlternateFileName;
    } 
@@ -157,7 +157,7 @@ string MSIDirEntry::GetMyId() const {
    return ret;
 }
 
-ostream& MSIDirEntry::WriteLongShort(ostream& out) const {
+std::ostream& MSIDirEntry::WriteLongShort(std::ostream& out) const {
    if (!fShortName.empty()) 
       out << "LongName=\"" << fLongName <<"\" Name=\"" << fShortName << "\" ";
    else out << "Name=\"" << fLongName << "\" ";
@@ -170,8 +170,8 @@ ostream& MSIDirEntry::WriteLongShort(ostream& out) const {
 // MSIDir DEFINITIONS
 ////////////////////////////////////////////////////////////////////////////////
 
-map<string, string> MSIDir::fgGuids;
-map<string, string> MSIDir::fgNewGuids;
+std::map<string, string> MSIDir::fgGuids;
+std::map<string, string> MSIDir::fgNewGuids;
 const char* MSIDir::fgGuidFileName = 0; // set to e.g. "guids.txt" make GUIDs persistent
 
 void MSIDir::AddFile(const char* file) {
@@ -185,7 +185,7 @@ void MSIDir::AddFile(const char* file) {
    } else subdir.erase();
 
    if (filename.empty()) {
-      cerr << "Cannot add empty filename!" << endl;
+      std::cerr << "Cannot add empty filename!" << std::endl;
       return;
    }
    if (subdir.empty()) fFiles.push_back(new MSIFile(filename.c_str(), this));
@@ -195,7 +195,7 @@ void MSIDir::AddFile(const char* file) {
    }
 }
 
-void MSIDir::Write(ostream& out) const {
+void MSIDir::Write(std::ostream& out) const {
    const DWORD bufsize = MAX_PATH;
    char pwd[bufsize];
    DWORD len = ::GetCurrentDirectory(bufsize, pwd);
@@ -268,7 +268,7 @@ void MSIDir::Write(ostream& out) const {
    out << "</Wix>" << std::endl;
 }
 
-void MSIDir::WriteRecurse(ostream& out, string indent) const {
+void MSIDir::WriteRecurse(std::ostream& out, string indent) const {
    // write to out recursively
    if (!fFiles.size() && !fSubdirs.size()) return;
 
@@ -284,13 +284,13 @@ void MSIDir::WriteRecurse(ostream& out, string indent) const {
          << GetGuid() << "\">" << std::endl;
       indent+="   ";
 
-      for (list<MSIFile*>::const_iterator iFile = fFiles.begin(); iFile != fFiles.end(); ++iFile) {
+      for (std::list<MSIFile*>::const_iterator iFile = fFiles.begin(); iFile != fFiles.end(); ++iFile) {
          (*iFile)->WriteRecurse(out, indent);
       }
       indent.erase(indent.length()-3, 3);
       out << indent << "</Component>" << std::endl;
    }
-   for (map<string, MSIDir*>::const_iterator iSubdir = fSubdirs.begin(); iSubdir != fSubdirs.end(); ++iSubdir)
+   for (std::map<string, MSIDir*>::const_iterator iSubdir = fSubdirs.begin(); iSubdir != fSubdirs.end(); ++iSubdir)
       iSubdir->second->WriteRecurse(out, indent);
 
    indent.erase(indent.length()-3, 3);
@@ -300,11 +300,11 @@ void MSIDir::WriteRecurse(ostream& out, string indent) const {
    }
 }
 
-void MSIDir::WriteComponentsRecurse(ostream& out, string indent) const {
+void MSIDir::WriteComponentsRecurse(std::ostream& out, string indent) const {
    // write all components to out
    if (!fFiles.empty()) 
       out << indent << "<ComponentRef Id=\"Component_" << GetId() << "\" />" << std::endl;
-   for (map<string, MSIDir*>::const_iterator iSubdir = fSubdirs.begin(); iSubdir != fSubdirs.end(); ++iSubdir)
+   for (std::map<string, MSIDir*>::const_iterator iSubdir = fSubdirs.begin(); iSubdir != fSubdirs.end(); ++iSubdir)
       iSubdir->second->WriteComponentsRecurse(out, indent);
 }
 
@@ -339,15 +339,15 @@ void MSIDir::UpdateGuids() {
 
    std::ofstream out(fgGuidFileName, std::ios_base::app);
    if (!out) {
-      cerr << "ERROR: cannot write to GUID file " 
-         << fgGuidFileName << "!" << endl;
-      cerr << "ERROR: You should NOT use this MSI file, but re-generate with with accessible GUID file!"
-         << endl;
+      std::cerr << "ERROR: cannot write to GUID file " 
+         << fgGuidFileName << "!" << std::endl;
+      std::cerr << "ERROR: You should NOT use this MSI file, but re-generate with with accessible GUID file!"
+         << std::endl;
       return;
    }
-   for (map<string, string>::const_iterator iGuid = fgNewGuids.begin(); iGuid != fgNewGuids.end(); ++iGuid)
-      out << iGuid->first << " " << iGuid->second << endl;
-   std::cout << "WARNING: new GUIDs created; please cvs checkin " << fgGuidFileName << "!" << endl;
+   for (std::map<string, string>::const_iterator iGuid = fgNewGuids.begin(); iGuid != fgNewGuids.end(); ++iGuid)
+      out << iGuid->first << " " << iGuid->second << std::endl;
+   std::cout << "WARNING: new GUIDs created; please cvs checkin " << fgGuidFileName << "!" << std::endl;
 }
 
 
@@ -358,21 +358,21 @@ void MSIDir::UpdateGuids() {
 
 int main(int argc, char *argv[]) {
    if (argc<4 || string(argv[2]) != "-T") {
-      cerr << "USAGE: " << argv[0] << " <msifile> -T <inputlistfile>" << endl;
+      std::cerr << "USAGE: " << argv[0] << " <msifile> -T <inputlistfile>" << std::endl;
       return 1;
    }
 
    string outfile = argv[1];
    std::ofstream out(outfile.c_str());
    if (!out) {
-      cerr << "Cannot open output file " << outfile << "!" << endl;
+      std::cerr << "Cannot open output file " << outfile << "!" << std::endl;
       return 2;
    }
 
    string infile = argv[3];
    std::ifstream in(infile.c_str());
    if (!in) {
-      cerr << "Cannot open input file " << infile << "!" << endl;
+      std::cerr << "Cannot open input file " << infile << "!" << std::endl;
       return 2;
    }
 

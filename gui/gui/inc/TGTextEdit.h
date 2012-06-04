@@ -140,7 +140,7 @@ public:
    virtual void   Saved() { Emit("Saved()"); }          //*SIGNAL*
    virtual void   SavedAs() { Emit("SavedAs()"); }      //*SIGNAL*
 
-   virtual void   SavePrimitive(ostream &out, Option_t * = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t * = "");
 
    ClassDef(TGTextEdit,0)  // Text edit widget
 };

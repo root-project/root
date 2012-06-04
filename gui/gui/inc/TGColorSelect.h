@@ -162,7 +162,7 @@ public:
    void SetEnabled(Bool_t e = kTRUE) {TGButton::SetEnabled(e); }
 
    virtual TGDimension GetDefaultSize() const { return TGDimension(43, 21); }
-   virtual void SavePrimitive(ostream &out, Option_t * = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
 
    virtual void ColorSelected(Pixel_t color = 0)
             { Emit("ColorSelected(Pixel_t)", color ? color : GetColor()); }  //*SIGNAL*

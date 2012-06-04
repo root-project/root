@@ -174,8 +174,8 @@ namespace TMVA {
       void FormattedOutput( const TMatrixD&, const std::vector<TString>& vert, const std::vector<TString>& horiz, 
                             MsgLogger& logger );
 
-      void WriteFloatArbitraryPrecision( Float_t  val, ostream& os );
-      void ReadFloatArbitraryPrecision ( Float_t& val, istream& is );
+      void WriteFloatArbitraryPrecision( Float_t  val, std::ostream& os );
+      void ReadFloatArbitraryPrecision ( Float_t& val, std::istream& is );
 
       // for histogramming
       TString GetXTitleWithUnit( const TString& title, const TString& unit );

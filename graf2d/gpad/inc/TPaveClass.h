@@ -43,7 +43,7 @@ public:
    virtual void  DrawClasses(const char *classes="this");   // *MENU*
    TClassTree   *GetClassTree() const {return fClassTree;}
    virtual void  SaveAs(const char *filename="",Option_t *option="") const; // *MENU*
-   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void  SetClasses(const char *classes="this", Option_t *option="ID");   // *MENU*
    virtual void  ShowClassesUsedBy(const char *classes="this");  // *MENU*
    virtual void  ShowClassesUsing(const char *classes="this");   // *MENU*

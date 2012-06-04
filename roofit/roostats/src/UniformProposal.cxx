@@ -47,6 +47,8 @@ END_HTML
 #include "TIterator.h"
 #endif
 
+using namespace std;
+
 ClassImp(RooStats::UniformProposal);
 
 using namespace RooFit;

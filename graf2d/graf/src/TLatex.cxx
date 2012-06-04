@@ -1864,8 +1864,8 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
 
    fError = 0 ;
    if (CheckLatexSyntax(newText)) {
-      cout<<"\n*ERROR<TLatex>: "<<fError<<endl;
-      cout<<"==> "<<text1<<endl;
+      std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
+      std::cout<<"==> "<<text1<<std::endl;
       return ;
    }
    fError = 0 ;
@@ -1895,8 +1895,8 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
    Short_t valign = fTextAlign - 10*halign;
    TextSpec_t newSpec = spec;
    if (fError != 0) {
-      cout<<"*ERROR<TLatex>: "<<fError<<endl;
-      cout<<"==> "<<text<<endl;
+      std::cout<<"*ERROR<TLatex>: "<<fError<<std::endl;
+      std::cout<<"==> "<<text<<std::endl;
    } else {
       fShow = kTRUE;
       newSpec.fSize = size;
@@ -2201,8 +2201,8 @@ Double_t TLatex::GetXsize()
    if( newText.Length() == 0) return 0;
    fError = 0 ;
    if (CheckLatexSyntax(newText)) {
-      cout<<"\n*ERROR<TLatex>: "<<fError<<endl;
-      cout<<"==> "<<GetTitle()<<endl;
+      std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
+      std::cout<<"==> "<<GetTitle()<<std::endl;
       return 0;
    }
    fError = 0 ;
@@ -2226,8 +2226,8 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
    if( newText.Length() == 0) return;
    fError = 0 ;
    if (CheckLatexSyntax(newText)) {
-      cout<<"\n*ERROR<TLatex>: "<<fError<<endl;
-      cout<<"==> "<<GetTitle()<<endl;
+      std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
+      std::cout<<"==> "<<GetTitle()<<std::endl;
       return;
    }
    fError = 0 ;
@@ -2275,8 +2275,8 @@ Double_t TLatex::GetYsize()
    if( newText.Length() == 0) return 0;
    fError = 0 ;
    if (CheckLatexSyntax(newText)) {
-      cout<<"\n*ERROR<TLatex>: "<<fError<<endl;
-      cout<<"==> "<<GetTitle()<<endl;
+      std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
+      std::cout<<"==> "<<GetTitle()<<std::endl;
       return 0;
    }
    fError = 0 ;
@@ -2323,7 +2323,7 @@ void TLatex::Savefs(TLatexFormSize *fs)
 
 
 //______________________________________________________________________________
-void TLatex::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TLatex::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
@@ -2335,13 +2335,13 @@ void TLatex::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    }
    TString s = GetTitle();
    s.ReplaceAll("\"","\\\"");
-   out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<endl;
-   if (TestBit(kTextNDC)) out<<"tex->SetNDC();"<<endl;
+   out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<std::endl;
+   if (TestBit(kTextNDC)) out<<"tex->SetNDC();"<<std::endl;
 
    SaveTextAttributes(out,"tex",11,0,1,62,0.05);
    SaveLineAttributes(out,"tex",1,1,1);
 
-   out<<"   tex->Draw();"<<endl;
+   out<<"   tex->Draw();"<<std::endl;
 }
 
 

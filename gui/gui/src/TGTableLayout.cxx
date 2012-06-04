@@ -662,7 +662,7 @@ TGDimension TGTableLayout::GetDefaultSize() const
 }
 
 // ________________________________________________________________________
-void TGTableLayoutHints::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGTableLayoutHints::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
    // Save table layout hints as a C++ statement(s) on output stream out.
@@ -734,7 +734,7 @@ void TGTableLayoutHints::SavePrimitive(ostream &out, Option_t * /*= ""*/)
 }
 
 // __________________________________________________________________________
-void TGTableLayout::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGTableLayout::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
 
    // Save table layout as a C++ statement(s) on output stream.

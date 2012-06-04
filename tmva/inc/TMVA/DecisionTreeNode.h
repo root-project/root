@@ -244,10 +244,10 @@ namespace TMVA {
       Float_t GetSeparationGain( void ) const  { return fTrainInfo->fSeparationGain; }
 
       // printout of the node
-      virtual void Print( ostream& os ) const;
+      virtual void Print( std::ostream& os ) const;
 
       // recursively print the node and its daughters (--> print the 'tree')
-      virtual void PrintRec( ostream&  os ) const;
+      virtual void PrintRec( std::ostream&  os ) const;
 
       virtual void AddAttributesToNode(void* node) const;
       virtual void AddContentToNode(std::stringstream& s) const;
@@ -315,8 +315,8 @@ namespace TMVA {
       // flag indicates whether this node is terminal
       inline Bool_t IsTerminal() const            { return fIsTerminalNode; }
       inline void SetTerminal( Bool_t s = kTRUE ) { fIsTerminalNode = s;    }
-      void PrintPrune( ostream& os ) const ;
-      void PrintRecPrune( ostream& os ) const;
+      void PrintPrune( std::ostream& os ) const ;
+      void PrintRecPrune( std::ostream& os ) const;
 
       void     SetCC(Double_t cc);
       Double_t GetCC() const {return (fTrainInfo? fTrainInfo->fCC : -1.);}
@@ -350,7 +350,7 @@ namespace TMVA {
    private:
 
       virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
-      virtual Bool_t ReadDataRecord( istream& is, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
+      virtual Bool_t ReadDataRecord( std::istream& is, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
       virtual void ReadContent(std::stringstream& s);
 
       ClassDef(DecisionTreeNode,0) // Node for the Decision Tree 

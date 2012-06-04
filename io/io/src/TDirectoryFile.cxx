@@ -1050,7 +1050,7 @@ void TDirectoryFile::ls(Option_t *option) const
 //  By default memory and disk objects are listed.
 //
    TROOT::IndentLevel();
-   cout <<ClassName()<<"*\t\t"<<GetName()<<"\t"<<GetTitle()<<endl;
+   std::cout <<ClassName()<<"*\t\t"<<GetName()<<"\t"<<GetTitle()<<std::endl;
    TROOT::IncreaseDirLevel();
 
    TString opta = option;

@@ -49,7 +49,7 @@ void TAlienResult::DumpResult()
 {
    // Dump result set.
 
-   cout << "BEGIN DUMP" << endl;
+   std::cout << "BEGIN DUMP" << std::endl;
    TIter next(this);
    TMap *map;
    while ((map = (TMap *) next())) {
@@ -61,16 +61,16 @@ void TAlienResult::DumpResult()
              dynamic_cast < TObjString * >(pair->Value());
 
          if (keyStr) {
-            cout << "Key: " << keyStr->GetString() << "   ";
+            std::cout << "Key: " << keyStr->GetString() << "   ";
          }
          if (valueStr) {
-            cout << "Value: " << valueStr->GetString();
+            std::cout << "Value: " << valueStr->GetString();
          }
-         cout << endl;
+         std::cout << std::endl;
       }
    }
 
-   cout << "END DUMP" << endl;
+   std::cout << "END DUMP" << std::endl;
 }
 
 //______________________________________________________________________________

@@ -109,7 +109,7 @@ public:
    virtual TBuffer3D    *MakeBuffer3D() const;
    Double_t             &Z(Int_t ipl) {return fZ[ipl];}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetCurrentZ(Double_t z, Int_t iz);
    void                  SetCurrentVertices(Double_t x0, Double_t y0, Double_t scale);
    virtual void          SetDimensions(Double_t *param);

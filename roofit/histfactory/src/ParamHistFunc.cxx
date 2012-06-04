@@ -40,6 +40,8 @@
 #include "RooWorkspace.h"
 #include "RooBinning.h"
 
+using namespace std;
+
 ClassImp(ParamHistFunc);
 
 

@@ -27,8 +27,8 @@
 #pragma link C++ function operator+(Double_t, const TComplex&);
 #pragma link C++ function operator/(Double_t, const TComplex&);
 #pragma link C++ function operator-(Double_t, const TComplex&);
-#pragma link C++ function operator>>(istream&,TComplex&);
-#pragma link C++ function operator<<(ostream&,const TComplex&);
+#pragma link C++ function operator>>(std::istream&,TComplex&);
+#pragma link C++ function operator<<(std::ostream&,const TComplex&);
 
 #pragma link C++ function TMath::Limits<Double_t>::Min();
 #pragma link C++ function TMath::Limits<Double_t>::Max();

@@ -412,8 +412,8 @@ void TQSlot::Print(Option_t *) const
 {
    // Print info about slot.
 
-   cout <<IsA()->GetName() << "\t" << GetName() << "\t"
-   << "Number of Connections = " << References() << endl;
+   std::cout <<IsA()->GetName() << "\t" << GetName() << "\t"
+   << "Number of Connections = " << References() << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -591,7 +591,7 @@ void TQConnection::ls(Option_t *option) const
    // List TQConnection full method name and list all signals
    // connected to this connection.
 
-   cout << "\t" <<  IsA()->GetName() << "\t" << GetName() << endl;
+   std::cout << "\t" <<  IsA()->GetName() << "\t" << GetName() << std::endl;
    ((TQConnection*)this)->R__FOR_EACH(TList,ls)(option);
 }
 
@@ -602,7 +602,7 @@ void TQConnection::PrintCollectionHeader(Option_t *) const
    // signals connected to this connection.
 
    TROOT::IndentLevel();
-   cout << IsA()->GetName() << "\t" << fReceiver << "\t" << GetName() << endl;
+   std::cout << IsA()->GetName() << "\t" << fReceiver << "\t" << GetName() << std::endl;
 }
 
 //______________________________________________________________________________

@@ -195,7 +195,7 @@ void TMVA::DecisionTreeNode::SetPurity( void )
 
 // print a node
 //_______________________________________________________________________
-void TMVA::DecisionTreeNode::Print(ostream& os) const
+void TMVA::DecisionTreeNode::Print(std::ostream& os) const
 {
    //print the node
    os << "< ***  "  << std::endl;
@@ -226,7 +226,7 @@ void TMVA::DecisionTreeNode::Print(ostream& os) const
 }
 
 //_______________________________________________________________________
-void TMVA::DecisionTreeNode::PrintRec(ostream& os) const
+void TMVA::DecisionTreeNode::PrintRec(std::ostream& os) const
 {
    //recursively print the node and its daughters (--> print the 'tree')
 
@@ -257,7 +257,7 @@ void TMVA::DecisionTreeNode::PrintRec(ostream& os) const
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::DecisionTreeNode::ReadDataRecord( istream& is, UInt_t tmva_Version_Code )
+Bool_t TMVA::DecisionTreeNode::ReadDataRecord( std::istream& is, UInt_t tmva_Version_Code )
 {
    // Read the data block
 
@@ -363,7 +363,7 @@ void TMVA::DecisionTreeNode::ResetValidationData( ) {
 }
 
 //_______________________________________________________________________
-void TMVA::DecisionTreeNode::PrintPrune( ostream& os ) const {
+void TMVA::DecisionTreeNode::PrintPrune( std::ostream& os ) const {
    // printout of the node (can be read in with ReadDataRecord)
 
    os << "----------------------" << std::endl
@@ -375,7 +375,7 @@ void TMVA::DecisionTreeNode::PrintPrune( ostream& os ) const {
 }
 
 //_______________________________________________________________________
-void TMVA::DecisionTreeNode::PrintRecPrune( ostream& os ) const {
+void TMVA::DecisionTreeNode::PrintRecPrune( std::ostream& os ) const {
    // recursive printout of the node and its daughters
 
    this->PrintPrune(os);

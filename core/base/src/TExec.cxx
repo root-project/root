@@ -156,7 +156,7 @@ void TExec::Paint(Option_t *)
 
 
 //______________________________________________________________________________
-void TExec::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TExec::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out.
 
@@ -166,7 +166,7 @@ void TExec::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    } else {
       out<<"   TExec *";
    }
-   out<<"exec = new TExec("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<");"<<endl;
+   out<<"exec = new TExec("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<");"<<std::endl;
 
-   out<<"   exec->Draw();"<<endl;
+   out<<"   exec->Draw();"<<std::endl;
 }

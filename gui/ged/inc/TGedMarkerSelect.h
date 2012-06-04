@@ -69,7 +69,7 @@ public:
    Style_t        GetMarkerStyle() const { return fMarkerStyle; }
    void           SetMarkerStyle(Style_t pattern);
    virtual void   MarkerSelected(Style_t marker = 0) { Emit("MarkerSelected(Style_t)", marker ? marker : GetMarkerStyle()); }  // *SIGNAL*
-   virtual void   SavePrimitive(ostream &out, Option_t * = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t * = "");
    virtual TGDimension GetDefaultSize() const { return TGDimension(38, 21); }
 
    ClassDef(TGedMarkerSelect,0)  // Marker selection button

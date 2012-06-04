@@ -99,7 +99,7 @@ public:
    virtual void      Hide();
    virtual void      DrawBorder();
    virtual void      SetLayoutHints(TGLayoutHints *l, TGButton *button = 0);
-   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGButtonGroup,0)  // Organizes TGButtons in a group
 };
@@ -117,7 +117,7 @@ public:
                     norm, font, back) { }
 
    virtual ~TGVButtonGroup() { }
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGVButtonGroup,0)  // A button group with one vertical column
 };
@@ -135,7 +135,7 @@ public:
                     norm, font, back) { }
 
    virtual ~TGHButtonGroup() { }
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGHButtonGroup,0)  // A button group with one horizontal row
 };

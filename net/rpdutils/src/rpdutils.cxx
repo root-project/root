@@ -5603,9 +5603,9 @@ int RpdRecvClientRSAKey()
                                     (unsigned char *)&gPubKey[kd],
                                     gRSASSLKey,
                                     RSA_PKCS1_PADDING)) < 0) {
-            char cerr[120];
-            ERR_error_string(ERR_get_error(), cerr);
-            ErrorInfo("RpdRecvClientRSAKey: SSL: error: '%s' ",cerr);
+            char errstr[120];
+            ERR_error_string(ERR_get_error(), errstr);
+            ErrorInfo("RpdRecvClientRSAKey: SSL: error: '%s' ",errstr);
          }
          nr -= lcmax;
          kd += ndec;

@@ -100,7 +100,7 @@ namespace TMVA {
       void AddWeightsXMLTo( void* parent ) const;
 
       // read weights from file
-      void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( std::istream& istr );
       void ReadWeightsFromXML(void* parent);
 
       // write method specific histos to target file

@@ -39,7 +39,7 @@
 //
 
 static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char *dmFull, Int_t offset);
-static TStreamerInfo *R__GenerateTClassForPair(const string &f, const string &s);
+static TStreamerInfo *R__GenerateTClassForPair(const std::string &f, const std::string &s);
 
 TEmulatedCollectionProxy::TEmulatedCollectionProxy(const TEmulatedCollectionProxy& copy)
    : TGenCollectionProxy(copy)
@@ -652,9 +652,9 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
 }
 
 
-static TStreamerInfo *R__GenerateTClassForPair(const string &fname, const string &sname)
+static TStreamerInfo *R__GenerateTClassForPair(const std::string &fname, const std::string &sname)
 {
-   // Generate a TStreamerInfo for a pair<fname,sname>
+   // Generate a TStreamerInfo for a std::pair<fname,sname>
    // This TStreamerInfo is then used as if it was read from a file to generate
    // and emulated TClass.
    

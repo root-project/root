@@ -138,7 +138,7 @@ public:
 
    static  void   SwitchFrames(TGFrame *frame, TGCompositeFrame *dest,
                                TGFrame *prev);
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGSplitFrame, 0) // Splittable composite frame
 };

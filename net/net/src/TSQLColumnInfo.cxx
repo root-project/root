@@ -85,31 +85,31 @@ void TSQLColumnInfo::Print(Option_t*) const
    // Prints column information to standard output
    
    TROOT::IndentLevel();
-   cout << "Column: " << GetName() 
+   std::cout << "Column: " << GetName() 
         << " type:'" << fTypeName << "'"; 
    if (fSQLType>=0) {
-      cout << " typeid:";
+      std::cout << " typeid:";
       switch (fSQLType) {
-         case TSQLServer::kSQL_CHAR : cout << "kSQL_CHAR"; break;
-         case TSQLServer::kSQL_VARCHAR : cout << "kSQL_VARCHAR"; break;
-         case TSQLServer::kSQL_INTEGER : cout << "kSQL_INTEGER"; break;
-         case TSQLServer::kSQL_FLOAT : cout << "kSQL_FLOAT"; break;
-         case TSQLServer::kSQL_DOUBLE : cout << "kSQL_DOUBLE"; break;
-         case TSQLServer::kSQL_NUMERIC : cout << "kSQL_NUMERIC"; break;
-         case TSQLServer::kSQL_BINARY : cout << "kSQL_BINARY"; break;
-         case TSQLServer::kSQL_TIMESTAMP : cout << "kSQL_TIMESTAMP"; break;
-         default: cout << fSQLType;
+         case TSQLServer::kSQL_CHAR : std::cout << "kSQL_CHAR"; break;
+         case TSQLServer::kSQL_VARCHAR : std::cout << "kSQL_VARCHAR"; break;
+         case TSQLServer::kSQL_INTEGER : std::cout << "kSQL_INTEGER"; break;
+         case TSQLServer::kSQL_FLOAT : std::cout << "kSQL_FLOAT"; break;
+         case TSQLServer::kSQL_DOUBLE : std::cout << "kSQL_DOUBLE"; break;
+         case TSQLServer::kSQL_NUMERIC : std::cout << "kSQL_NUMERIC"; break;
+         case TSQLServer::kSQL_BINARY : std::cout << "kSQL_BINARY"; break;
+         case TSQLServer::kSQL_TIMESTAMP : std::cout << "kSQL_TIMESTAMP"; break;
+         default: std::cout << fSQLType;
       }
    }
-   cout << " nullable:" << (fNullable ? "yes" : "no");
-   if (fSize>=0) cout << " size:" << fSize;
-   if (fLength>=0) cout << " len:" << fLength;
-   if (fScale>=0) cout << " scale:" << fScale;
+   std::cout << " nullable:" << (fNullable ? "yes" : "no");
+   if (fSize>=0) std::cout << " size:" << fSize;
+   if (fLength>=0) std::cout << " len:" << fLength;
+   if (fScale>=0) std::cout << " scale:" << fScale;
    if (fSigned>=0) { 
       if (fSigned==0)
-         cout << " unsigned";
+         std::cout << " unsigned";
       else
-         cout << " signed";
+         std::cout << " signed";
    }
-   cout << endl;
+   std::cout << std::endl;
 }

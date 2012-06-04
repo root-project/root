@@ -58,7 +58,7 @@ public:
                             Bool_t tops);
    virtual void  PaintWbox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                  Color_t color=33, Short_t bordersize=5, Short_t bordermode=-1);
-   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void  SetBorderMode(Short_t bordermode) {fBorderMode = bordermode;} // *MENU*
    virtual void  SetBorderSize(Short_t bordersize) {fBorderSize = bordersize;} // *MENU*
 

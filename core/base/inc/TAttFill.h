@@ -45,7 +45,7 @@ public:
    virtual Bool_t   IsTransparent() const;
    virtual void     Modify();
    virtual void     ResetAttFill(Option_t *option="");
-   virtual void     SaveFillAttributes(ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1001);
+   virtual void     SaveFillAttributes(std::ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1001);
    virtual void     SetFillAttributes(); // *MENU*
    virtual void     SetFillColor(Color_t fcolor) { fFillColor = fcolor; }
    virtual void     SetFillStyle(Style_t fstyle) { fFillStyle = fstyle; }

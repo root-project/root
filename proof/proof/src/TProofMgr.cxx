@@ -977,8 +977,8 @@ TFileCollection *TProofMgr::UploadFiles(const char *srcfiles,
    TString line;
    if (R_ISREG(fst.fMode)) {
       // Text file
-      ifstream f;
-      f.open(inpath.Data(), ifstream::out);
+      std::ifstream f;
+      f.open(inpath.Data(), std::ifstream::out);
       if (f.is_open()) {
          while (f.good()) {
             line.ReadToDelim(f);

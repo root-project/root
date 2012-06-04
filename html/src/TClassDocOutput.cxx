@@ -121,21 +121,21 @@ void TClassDocOutput::ListFunctions(std::ostream& classFile)
 
    // loop to get a pointers to method names
 
-   classFile << endl << "<div id=\"functions\">" << endl;
+   classFile << std::endl << "<div id=\"functions\">" << std::endl;
    TString mangled(fCurrentClass->GetName());
    NameSpace2FileName(mangled);
    classFile << "<h2><a id=\"" << mangled
-      << ":Function_Members\"></a>Function Members (Methods)</h2>" << endl;
+      << ":Function_Members\"></a>Function Members (Methods)</h2>" << std::endl;
 
    const char* tab4nbsp="&nbsp;&nbsp;&nbsp;&nbsp;";
    TString declFile;
    fHtml->GetDeclFileName(fCurrentClass, kFALSE, declFile);
    if (fCurrentClass->Property() & kIsAbstract)
       classFile << "&nbsp;<br /><b>"
-                << tab4nbsp << "This is an abstract class, constructors will not be documented.<br />" << endl
+                << tab4nbsp << "This is an abstract class, constructors will not be documented.<br />" << std::endl
                 << tab4nbsp << "Look at the <a href=\""
                 << gSystem->BaseName(declFile)
-                << "\">header</a> to check for available constructors.</b><br />" << endl;
+                << "\">header</a> to check for available constructors.</b><br />" << std::endl;
 
    Int_t minAccess = 0;
    if (fHtml->IsNamespace(fCurrentClass))
@@ -151,8 +151,8 @@ void TClassDocOutput::ListFunctions(std::ostream& classFile)
       const char* accesstxt[] = {"private", "protected", "public"};
 
       classFile << "id=\"func" << accessID[access] << "\"><b>" 
-         << accesstxt[access] << ":</b>" << endl
-         << "<table class=\"func\" id=\"tabfunc" << accessID[access] << "\" cellspacing=\"0\">" << endl;
+         << accesstxt[access] << ":</b>" << std::endl
+         << "<table class=\"func\" id=\"tabfunc" << accessID[access] << "\" cellspacing=\"0\">" << std::endl;
 
       TIter iMethWrap(methods);
       TDocMethodWrapper *methWrap = 0;
@@ -231,12 +231,12 @@ void TClassDocOutput::ListFunctions(std::ostream& classFile)
                classFile << "</span>";
             }
          }
-         classFile << "</td></tr>" << endl;
+         classFile << "</td></tr>" << std::endl;
       }
-      classFile << endl << "</table></div>" << endl;
+      classFile << std::endl << "</table></div>" << std::endl;
    }
 
-   classFile << "</div>" << endl; // class="functions"
+   classFile << "</div>" << std::endl; // class="functions"
 }
 
 //______________________________________________________________________________
@@ -254,11 +254,11 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
 
    if (!haveDataMembers) return;
 
-   classFile << endl << "<div id=\"datamembers\">" << endl;
+   classFile << std::endl << "<div id=\"datamembers\">" << std::endl;
    TString mangled(fCurrentClass->GetName());
    NameSpace2FileName(mangled);
    classFile << "<h2><a name=\"" << mangled
-      << ":Data_Members\"></a>Data Members</h2>" << endl;
+      << ":Data_Members\"></a>Data Members</h2>" << std::endl;
 
    for (Int_t access = 5; access >= 0 && !fHtml->IsNamespace(fCurrentClass); --access) {
       const TList* datamembers = 0;
@@ -274,8 +274,8 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
       const char* accesstxt[] = {"private", "protected", "public"};
 
       classFile << "id=\"" << what << accessID[access%3] << "\"><b>" 
-         << accesstxt[access%3] << ":</b>" << endl
-         << "<table class=\"data\" id=\"tab" << what << accessID[access%3] << "\" cellspacing=\"0\">" << endl;
+         << accesstxt[access%3] << ":</b>" << std::endl
+         << "<table class=\"data\" id=\"tab" << what << accessID[access%3] << "\" cellspacing=\"0\">" << std::endl;
 
       TIter iDM(datamembers);
       TDataMember *member = 0;
@@ -289,7 +289,7 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
                classFile << "<tr class=\"data";
                if (prevIsInh)
                   classFile << "inh";
-               classFile << "\"><td class=\"datatype\">};</td><td></td><td></td></tr>" << endl;
+               classFile << "\"><td class=\"datatype\">};</td><td></td><td></td></tr>" << std::endl;
             }
             prevEnumName = member->GetTypeName();
          }
@@ -368,19 +368,19 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
             classFile << "<td class=\"datadesc\">";
             ReplaceSpecialChars(classFile, member->GetTitle());
          } else classFile << "<td>";
-         classFile << "</td></tr>" << endl;
+         classFile << "</td></tr>" << std::endl;
       } // for members
 
       if (prevEnumName.Length()) {
          classFile << "<tr class=\"data";
          if (prevIsInh)
             classFile << "inh";
-         classFile << "\"><td class=\"datatype\">};</td><td></td><td></td></tr>" << endl;
+         classFile << "\"><td class=\"datatype\">};</td><td></td><td></td></tr>" << std::endl;
       }
-      classFile << endl << "</table></div>" << endl;
+      classFile << std::endl << "</table></div>" << std::endl;
    } // for access
 
-   classFile << "</div>" << endl; // datamembers
+   classFile << "</div>" << std::endl; // datamembers
 }
 
 //______________________________________________________________________________
@@ -443,13 +443,13 @@ Bool_t TClassDocOutput::ClassDotCharts(std::ostream& out)
    if (CreateDotClassChartLib(filenameLib + ".dot"))
       RunDot(filenameLib, &out);
 
-   out << "<div class=\"tabs\">" << endl
-       << "<a id=\"img" << title << "_Inh\" class=\"tabsel\" href=\"inh/" << title << "_Inh.png\" onclick=\"javascript:return SetImg('Charts','inh/" << title << "_Inh.png');\">Inheritance</a>" << endl
-       << "<a id=\"img" << title << "_InhMem\" class=\"tab\" href=\"inhmem/" << title << "_InhMem.png\" onclick=\"javascript:return SetImg('Charts','inhmem/" << title << "_InhMem.png');\">Inherited Members</a>" << endl
-       << "<a id=\"img" << title << "_Incl\" class=\"tab\" href=\"incl/" << title << "_Incl.png\" onclick=\"javascript:return SetImg('Charts','incl/" << title << "_Incl.png');\">Includes</a>" << endl
-       << "<a id=\"img" << title << "_Lib\" class=\"tab\" href=\"lib/" << title << "_Lib.png\" onclick=\"javascript:return SetImg('Charts','lib/" << title << "_Lib.png');\">Libraries</a><br/>" << endl
-       << "</div><div class=\"classcharts\"><div class=\"classchartswidth\"></div>" << endl
-       << "<img id=\"Charts\" alt=\"Class Charts\" class=\"classcharts\" usemap=\"#Map" << title << "_Inh\" src=\"inh/" << title << "_Inh.png\"/></div>" << endl;
+   out << "<div class=\"tabs\">" << std::endl
+       << "<a id=\"img" << title << "_Inh\" class=\"tabsel\" href=\"inh/" << title << "_Inh.png\" onclick=\"javascript:return SetImg('Charts','inh/" << title << "_Inh.png');\">Inheritance</a>" << std::endl
+       << "<a id=\"img" << title << "_InhMem\" class=\"tab\" href=\"inhmem/" << title << "_InhMem.png\" onclick=\"javascript:return SetImg('Charts','inhmem/" << title << "_InhMem.png');\">Inherited Members</a>" << std::endl
+       << "<a id=\"img" << title << "_Incl\" class=\"tab\" href=\"incl/" << title << "_Incl.png\" onclick=\"javascript:return SetImg('Charts','incl/" << title << "_Incl.png');\">Includes</a>" << std::endl
+       << "<a id=\"img" << title << "_Lib\" class=\"tab\" href=\"lib/" << title << "_Lib.png\" onclick=\"javascript:return SetImg('Charts','lib/" << title << "_Lib.png');\">Libraries</a><br/>" << std::endl
+       << "</div><div class=\"classcharts\"><div class=\"classchartswidth\"></div>" << std::endl
+       << "<img id=\"Charts\" alt=\"Class Charts\" class=\"classcharts\" usemap=\"#Map" << title << "_Inh\" src=\"inh/" << title << "_Inh.png\"/></div>" << std::endl;
 
    return kTRUE;
 }
@@ -468,16 +468,16 @@ void TClassDocOutput::ClassHtmlTree(std::ostream& out, TClass * classPtr,
 //
 
    if (dir == kBoth) {
-      out << "<!--INHERITANCE TREE-->" << endl;
+      out << "<!--INHERITANCE TREE-->" << std::endl;
 
       // draw class tree into nested tables recursively
       out << "<table><tr><td width=\"10%\"></td><td width=\"70%\">"
           << "<a href=\"ClassHierarchy.html\">Inheritance Chart</a>:</td></tr>";
       out << "<tr class=\"inhtree\"><td width=\"10%\"></td><td width=\"70%\">";
 
-      out << "<table class=\"inhtree\"><tr><td>" << endl;
+      out << "<table class=\"inhtree\"><tr><td>" << std::endl;
       out << "<table width=\"100%\" border=\"0\" ";
-      out << "cellpadding =\"0\" cellspacing=\"2\"><tr>" << endl;
+      out << "cellpadding =\"0\" cellspacing=\"2\"><tr>" << std::endl;
    } else {
       out << "<table><tr>";
    }
@@ -495,13 +495,13 @@ void TClassDocOutput::ClassHtmlTree(std::ostream& out, TClass * classPtr,
       while ((inheritFrom = (TBaseClass *) nextBase())) {
 
          if (first) {
-            out << "<td><table><tr>" << endl;
+            out << "<td><table><tr>" << std::endl;
             first = kFALSE;
          } else
-            out << "</tr><tr>" << endl;
+            out << "</tr><tr>" << std::endl;
          out << "<td bgcolor=\""
             << Form("#%02x%02x%02x", bgcolor, bgcolor, bgcolor)
-            << "\" align=\"right\">" << endl;
+            << "\" align=\"right\">" << std::endl;
          // get a class
          TClass *classInh = fHtml->GetClass((const char *) inheritFrom->GetName());
          if (classInh)
@@ -510,15 +510,15 @@ void TClassDocOutput::ClassHtmlTree(std::ostream& out, TClass * classPtr,
             out << "<tt>"
                 << (const char *) inheritFrom->GetName()
                 << "</tt>";
-         out << "</td>"<< endl;
+         out << "</td>"<< std::endl;
       }
       if (!first) {
-         out << "</tr></table></td>" << endl; // put it in additional row in table
+         out << "</tr></table></td>" << std::endl; // put it in additional row in table
          out << "<td>&larr;</td>";
       }
    }
 
-   out << "<td>" << endl; // put it in additional row in table
+   out << "<td>" << std::endl; // put it in additional row in table
    ////////////////////////////////////////////////////////
    // Output Class Name
 
@@ -533,7 +533,7 @@ void TClassDocOutput::ClassHtmlTree(std::ostream& out, TClass * classPtr,
          out << "<center><tt><a name=\"" << anchor;
          out << "\" href=\"" << htmlFile << "\">";
          ReplaceSpecialChars(out, className);
-         out << "</a></tt></center>" << endl;
+         out << "</a></tt></center>" << std::endl;
       } else
          ReplaceSpecialChars(out, className);
    }
@@ -543,12 +543,12 @@ void TClassDocOutput::ClassHtmlTree(std::ostream& out, TClass * classPtr,
          out << "<center><big><b><tt><a name=\"" << anchor;
          out << "\" href=\"" << htmlFile << "\">";
          ReplaceSpecialChars(out, className);
-         out << "</a></tt></b></big></center>" << endl;
+         out << "</a></tt></b></big></center>" << std::endl;
       } else
          ReplaceSpecialChars(out, className);
    }
 
-   out << "</td>" << endl; // put it in additional row in table
+   out << "</td>" << std::endl; // put it in additional row in table
 
    ////////////////////////////////////////////////////////
    // Loop down to child classes
@@ -558,21 +558,21 @@ void TClassDocOutput::ClassHtmlTree(std::ostream& out, TClass * classPtr,
       // 1. make a list of class names
       // 2. use DescendHierarchy
 
-      out << "<td><table><tr>" << endl;
+      out << "<td><table><tr>" << std::endl;
       fHierarchyLines = 0;
       DescendHierarchy(out,classPtr,10);
 
       out << "</tr></table>";
       if (dir==kBoth && fHierarchyLines>=10)
          out << "</td><td align=\"left\">&nbsp;<a href=\"ClassHierarchy.html\">[more...]</a>";
-      out<<"</td>" << endl;
+      out<<"</td>" << std::endl;
 
       // free allocated memory
    }
 
-   out << "</tr></table>" << endl;
+   out << "</tr></table>" << std::endl;
    if (dir == kBoth)
-      out << "</td></tr></table></td></tr></table>"<<endl;
+      out << "</td></tr></table></td></tr></table>"<<std::endl;
 }
 
 
@@ -618,15 +618,15 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
 // Input: filename - output dot file incl. path
 
    std::ofstream outdot(filename);
-   outdot << "strict digraph G {" << endl
-      << "rankdir=RL;" << endl
-      << "ranksep=2;" << endl
-      << "nodesep=0;" << endl
-      << "size=\"8,10\";" << endl
-      << "ratio=auto;" << endl
-      << "margin=0;" << endl
-      << "node [shape=plaintext,fontsize=40,width=4,height=0.75];" << endl
-      << "\"" << fCurrentClass->GetName() << "\" [shape=ellipse];" << endl;
+   outdot << "strict digraph G {" << std::endl
+      << "rankdir=RL;" << std::endl
+      << "ranksep=2;" << std::endl
+      << "nodesep=0;" << std::endl
+      << "size=\"8,10\";" << std::endl
+      << "ratio=auto;" << std::endl
+      << "margin=0;" << std::endl
+      << "node [shape=plaintext,fontsize=40,width=4,height=0.75];" << std::endl
+      << "\"" << fCurrentClass->GetName() << "\" [shape=ellipse];" << std::endl;
 
    std::stringstream ssDep;
    std::list<TClass*> writeBasesFor;
@@ -634,7 +634,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
    Bool_t haveBases = fCurrentClass->GetListOfBases() && 
       fCurrentClass->GetListOfBases()->GetSize();
    if (haveBases) {
-      outdot << "{" << endl;
+      outdot << "{" << std::endl;
       while (!writeBasesFor.empty()) {
          TClass* cl = writeBasesFor.front();
          writeBasesFor.pop_front();
@@ -643,7 +643,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
             const char* htmlFileName = fHtml->GetHtmlFileName(cl->GetName());
             if (htmlFileName)
                outdot << " [URL=\"" << htmlFileName << "\"]";
-            outdot << ";" << endl;
+            outdot << ";" << std::endl;
          }
          if (cl->GetListOfBases() && cl->GetListOfBases()->GetSize()) {
             ssDep << "  \"" << cl->GetName() << "\" -> {";
@@ -653,10 +653,10 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
                ssDep << " \"" << base->GetName() << "\";";
                writeBasesFor.push_back(base->GetClassPointer());
             }
-            ssDep << "}" << endl;
+            ssDep << "}" << std::endl;
          }
       }
-      outdot << "}" << endl; // cluster
+      outdot << "}" << std::endl; // cluster
    }
 
    std::map<TClass*, Int_t> derivesFromMe;
@@ -665,7 +665,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
    wroteNode.insert(fCurrentClass);
    static const unsigned int maxClassesPerDerived = 20;
    fHtml->GetDerivedClasses(fCurrentClass, derivesFromMe);
-   outdot << "{" << endl;
+   outdot << "{" << std::endl;
    for (Int_t level = 1; kTRUE; ++level) {
       Bool_t levelExists = kFALSE;
       for (std::map<TClass*, Int_t>::iterator iDerived = derivesFromMe.begin();
@@ -684,12 +684,12 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
                if (count < maxClassesPerDerived) {
                   writeNode = kTRUE;
                   ssDep << "\"" << iDerived->first->GetName() << "\" -> \""
-                     << clBaseDerived->GetName() << "\";" << endl;
+                     << clBaseDerived->GetName() << "\";" << std::endl;
                   ++count;
                } else if (count == maxClassesPerDerived) {
                   writeAndMoreFor = clBaseDerived;
                   ssDep << "\"...andmore" << clBaseDerived->GetName() << "\"-> \"" 
-                     << clBaseDerived->GetName() << "\";" << endl;
+                     << clBaseDerived->GetName() << "\";" << std::endl;
                   ++count;
                }
             }
@@ -701,19 +701,19 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
             const char* htmlFileName = fHtml->GetHtmlFileName(iDerived->first->GetName());
             if (htmlFileName)
                outdot << " [URL=\"" << htmlFileName << "\"]";
-            outdot << ";" << endl;
+            outdot << ";" << std::endl;
          } else if (writeAndMoreFor) {
                outdot << "  \"...andmore" << writeAndMoreFor->GetName()
-                      << "\" [label=\"...and more\",fontname=\"Times-Italic\",fillcolor=lightgrey,style=filled];" << endl;
+                      << "\" [label=\"...and more\",fontname=\"Times-Italic\",fillcolor=lightgrey,style=filled];" << std::endl;
          }
       }
       if (!levelExists) break;
    }
-   outdot << "}" << endl; // cluster
+   outdot << "}" << std::endl; // cluster
 
    outdot << ssDep.str();
 
-   outdot << "}" << endl; // digraph
+   outdot << "}" << std::endl; // digraph
 
    return kTRUE;
 }
@@ -725,15 +725,15 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
 // Input: filename - output dot file incl. path
 
    std::ofstream outdot(filename);
-   outdot << "strict digraph G {" << endl
-      << "ratio=auto;" << endl
-      << "rankdir=RL;" << endl
-      << "compound=true;" << endl
-      << "constraint=false;" << endl
-      << "ranksep=0.1;" << endl
-      << "nodesep=0;" << endl
-      << "margin=0;" << endl;
-   outdot << "  node [style=filled,width=0.7,height=0.15,fixedsize=true,shape=plaintext,fontsize=10];" << endl;
+   outdot << "strict digraph G {" << std::endl
+      << "ratio=auto;" << std::endl
+      << "rankdir=RL;" << std::endl
+      << "compound=true;" << std::endl
+      << "constraint=false;" << std::endl
+      << "ranksep=0.1;" << std::endl
+      << "nodesep=0;" << std::endl
+      << "margin=0;" << std::endl;
+   outdot << "  node [style=filled,width=0.7,height=0.15,fixedsize=true,shape=plaintext,fontsize=10];" << std::endl;
 
    std::stringstream ssDep;
    const int numColumns = 3;
@@ -746,11 +746,11 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
 
       const char* htmlFileName = fHtml->GetHtmlFileName(cl->GetName());
 
-      outdot << "subgraph \"cluster" << cl->GetName() << "\" {" << endl
-             << "  color=lightgray;" << endl
-             << "  label=\"" << cl->GetName() << "\";" << endl;
+      outdot << "subgraph \"cluster" << cl->GetName() << "\" {" << std::endl
+             << "  color=lightgray;" << std::endl
+             << "  label=\"" << cl->GetName() << "\";" << std::endl;
       if (cl != fCurrentClass && htmlFileName)
-         outdot << "  URL=\"" << htmlFileName << "\"" << endl;
+         outdot << "  URL=\"" << htmlFileName << "\"" << std::endl;
 
       //Bool_t haveMembers = (cl->GetListOfDataMembers() && cl->GetListOfDataMembers()->GetSize());
       Bool_t haveFuncs = cl->GetListOfMethods() && cl->GetListOfMethods()->GetSize();
@@ -768,10 +768,10 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
                dmMap[dm->GetName()] = dm;
          }
 
-         outdot << "subgraph \"clusterData0" << cl->GetName() << "\" {" << endl
-                << "  color=white;" << endl
-                << "  label=\"\";" << endl
-                << "  \"clusterNode0" << cl->GetName() << "\" [height=0,width=0,style=invis];" << endl;
+         outdot << "subgraph \"clusterData0" << cl->GetName() << "\" {" << std::endl
+                << "  color=white;" << std::endl
+                << "  label=\"\";" << std::endl
+                << "  \"clusterNode0" << cl->GetName() << "\" [height=0,width=0,style=invis];" << std::endl;
          TString prevColumnNode;
          Int_t pos = dmMap.size();
          Int_t column = 0;
@@ -793,27 +793,27 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
                outdot << ",color=\"#FFFF77\"";
             else
                outdot << ",color=\"#CCFFCC\"";
-            outdot << "];" << endl;
+            outdot << "];" << std::endl;
             if (pos % newColumnEvery == 1) {
                ++column;
-               outdot << "};" << endl // end dataR
-                      << "subgraph \"clusterData" << column << cl->GetName() << "\" {" << endl
-                      << "  color=white;" << endl
-                      << "  label=\"\";" << endl
-                      << "  \"clusterNode" << column << cl->GetName() << "\" [height=0,width=0,style=invis];" << endl;
+               outdot << "};" << std::endl // end dataR
+                      << "subgraph \"clusterData" << column << cl->GetName() << "\" {" << std::endl
+                      << "  color=white;" << std::endl
+                      << "  label=\"\";" << std::endl
+                      << "  \"clusterNode" << column << cl->GetName() << "\" [height=0,width=0,style=invis];" << std::endl;
             } else if (iDM != dmMap.begin() && pos % newColumnEvery == 0) {
                ssDep << "\"" << prevColumnNode
-                     << "\" -> \"" << nodeName << "\""<< " [style=invis,weight=100];" << endl;
+                     << "\" -> \"" << nodeName << "\""<< " [style=invis,weight=100];" << std::endl;
                prevColumnNode = nodeName;
             }
          }
 
          while (column < numColumns - 1) {
             ++column;
-            outdot << "  \"clusterNode" << column << cl->GetName() << "\" [height=0,width=0,style=invis];" << endl;
+            outdot << "  \"clusterNode" << column << cl->GetName() << "\" [height=0,width=0,style=invis];" << std::endl;
          }
 
-         outdot << "};" << endl; // subgraph dataL/R
+         outdot << "};" << std::endl; // subgraph dataL/R
       } // DATA MEMBERS
 
       // FUNCTION MEMBERS
@@ -828,10 +828,10 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
                methMap[meth->GetName()] = meth;
          }
 
-         outdot << "subgraph \"clusterFunc0" << cl->GetName() << "\" {" << endl
-                << "  color=white;" << endl
-                << "  label=\"\";" << endl
-                << "  \"clusterNode0" << cl->GetName() << "\" [height=0,width=0,style=invis];" << endl;
+         outdot << "subgraph \"clusterFunc0" << cl->GetName() << "\" {" << std::endl
+                << "  color=white;" << std::endl
+                << "  label=\"\";" << std::endl
+                << "  \"clusterNode0" << cl->GetName() << "\" [height=0,width=0,style=invis];" << std::endl;
 
          TString prevColumnNodeFunc;
          Int_t pos = methMap.size();
@@ -856,26 +856,26 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
                outdot << ",color=\"#FFFF77\"";
             else
                outdot << ",color=\"#CCFFCC\"";
-            outdot << "];" << endl;
+            outdot << "];" << std::endl;
             if (pos % newColumnEvery == 1) {
                ++column;
-               outdot << "};" << endl // end funcR
-                      << "subgraph \"clusterFunc" << column << cl->GetName() << "\" {" << endl
-                      << "  color=white;" << endl
-                      << "  label=\"\";" << endl;
+               outdot << "};" << std::endl // end funcR
+                      << "subgraph \"clusterFunc" << column << cl->GetName() << "\" {" << std::endl
+                      << "  color=white;" << std::endl
+                      << "  label=\"\";" << std::endl;
             } else if (iMeth != methMap.begin() && pos % newColumnEvery == 0) {
                ssDep << "\"" << prevColumnNodeFunc
-                     << "\" -> \"" << nodeName << "\""<< " [style=invis,weight=100];" << endl;
+                     << "\" -> \"" << nodeName << "\""<< " [style=invis,weight=100];" << std::endl;
                prevColumnNodeFunc = nodeName;
             }
          }
-         outdot << "};" << endl; // subgraph funcL/R
+         outdot << "};" << std::endl; // subgraph funcL/R
       }
 
-      outdot << "}" << endl; // cluster class
+      outdot << "}" << std::endl; // cluster class
 
       for (Int_t pos = 0; pos < numColumns - 1; ++pos)
-         ssDep << "\"clusterNode" << pos << cl->GetName() << "\" -> \"clusterNode" << pos + 1 << cl->GetName() << "\" [style=invis];" << endl;
+         ssDep << "\"clusterNode" << pos << cl->GetName() << "\" -> \"clusterNode" << pos + 1 << cl->GetName() << "\" [style=invis];" << std::endl;
 
       if (cl->GetListOfBases() && cl->GetListOfBases()->GetSize()) {
          TIter iBase(cl->GetListOfBases());
@@ -886,7 +886,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
                   << "\",lhead=\"cluster" << base->GetName() << "\"";
             if (base != cl->GetListOfBases()->First())
                ssDep << ",weight=0";
-            ssDep << "];" << endl;
+            ssDep << "];" << std::endl;
             writeBasesFor.push_back(base->GetClassPointer());
          }
       }
@@ -894,7 +894,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
 
    outdot << ssDep.str();
 
-   outdot << "}" << endl; // digraph
+   outdot << "}" << std::endl; // digraph
 
    return kTRUE;
 }
@@ -932,18 +932,18 @@ Bool_t TClassDocOutput::CreateDotClassChartIncl(const char* filename) {
    */
 
    std::ofstream outdot(filename);
-   outdot << "strict digraph G {" << endl
-      << "ratio=compress;" << endl
-      << "rankdir=TB;" << endl
-      << "concentrate=true;" << endl
-      << "ranksep=0;" << endl
-      << "nodesep=0;" << endl
-      << "size=\"8,10\";" << endl
-      << "node [fontsize=20,shape=plaintext];" << endl;
+   outdot << "strict digraph G {" << std::endl
+      << "ratio=compress;" << std::endl
+      << "rankdir=TB;" << std::endl
+      << "concentrate=true;" << std::endl
+      << "ranksep=0;" << std::endl
+      << "nodesep=0;" << std::endl
+      << "size=\"8,10\";" << std::endl
+      << "node [fontsize=20,shape=plaintext];" << std::endl;
 
    for (std::list<std::string>::iterator iFile = listFilesToParse.begin();
       iFile != listFilesToParse.end(); ++iFile) {
-      ifstream in(filesToParse[*iFile].c_str());
+      std::ifstream in(filesToParse[*iFile].c_str());
       std::string line;
       while (in && !in.eof()) {
          std::getline(in, line);
@@ -972,13 +972,13 @@ Bool_t TClassDocOutput::CreateDotClassChartIncl(const char* filename) {
             listFilesToParse.push_back(line);
             filesToParse[line] = sysfilename;
             if (*iFile == implFileName.Data() || *iFile == declFileName.Data())
-               outdot << "\"" << *iFile << "\" [style=filled,fillcolor=lightgray];" << endl;
+               outdot << "\"" << *iFile << "\" [style=filled,fillcolor=lightgray];" << std::endl;
          }
-         outdot << "\"" << *iFile << "\" -> \"" << line << "\";" << endl;
+         outdot << "\"" << *iFile << "\" -> \"" << line << "\";" << std::endl;
       }
    }
 
-   outdot << "}" << endl; // digraph
+   outdot << "}" << std::endl; // digraph
 
    return kTRUE;
 }
@@ -991,18 +991,18 @@ Bool_t TClassDocOutput::CreateDotClassChartLib(const char* filename) {
 // Input: filename - output dot file incl. path
 
    std::ofstream outdot(filename);
-   outdot << "strict digraph G {" << endl
-      << "ratio=auto;" << endl
-      << "rankdir=RL;" << endl
-      << "compound=true;" << endl
-      << "constraint=false;" << endl
-      << "ranksep=0.7;" << endl
-      << "nodesep=0.3;" << endl
-      << "size=\"8,8\";" << endl
-      << "ratio=compress;" << endl;
+   outdot << "strict digraph G {" << std::endl
+      << "ratio=auto;" << std::endl
+      << "rankdir=RL;" << std::endl
+      << "compound=true;" << std::endl
+      << "constraint=false;" << std::endl
+      << "ranksep=0.7;" << std::endl
+      << "nodesep=0.3;" << std::endl
+      << "size=\"8,8\";" << std::endl
+      << "ratio=compress;" << std::endl;
 
    TString libs(fCurrentClass->GetSharedLibs());
-   outdot << "\"All Libraries\" [URL=\"LibraryDependencies.html\",shape=box,rank=max,fillcolor=lightgray,style=filled];" << endl;
+   outdot << "\"All Libraries\" [URL=\"LibraryDependencies.html\",shape=box,rank=max,fillcolor=lightgray,style=filled];" << std::endl;
 
    if (libs.Length()) {
       TString firstLib(libs);
@@ -1018,8 +1018,8 @@ Bool_t TClassDocOutput::CreateDotClassChartLib(const char* filename) {
             firstLib.Remove(posExt, firstLib.Length());
       }
 
-      outdot << "\"All Libraries\" -> \"" << firstLib << "\" [style=invis];" << endl;
-      outdot << "\"" << firstLib << "\" -> {" << endl;
+      outdot << "\"All Libraries\" -> \"" << firstLib << "\" [style=invis];" << std::endl;
+      outdot << "\"" << firstLib << "\" -> {" << std::endl;
 
       if (firstLib != "libCore")
          libs += " libCore";
@@ -1044,11 +1044,11 @@ Bool_t TClassDocOutput::CreateDotClassChartLib(const char* filename) {
          outdot << " \"" << thisLib << "\";";
          thisLib = "";
       }
-      outdot << "}" << endl; // dependencies
+      outdot << "}" << std::endl; // dependencies
    } else
-      outdot << "\"No rlibmap information avaliable.\"" << endl;
+      outdot << "\"No rlibmap information avaliable.\"" << std::endl;
 
-   outdot << "}" << endl; // digraph
+   outdot << "}" << std::endl; // digraph
 
    return kTRUE;
 }
@@ -1065,7 +1065,7 @@ void TClassDocOutput::CreateClassHierarchy(std::ostream& out, const char* docFil
    if (!bases || bases->IsEmpty())
       return;
 
-   out << "<hr />" << endl;
+   out << "<hr />" << std::endl;
 
    out << "<table><tr><td><ul><li><tt>";
    if (docFileName) {
@@ -1082,7 +1082,7 @@ void TClassDocOutput::CreateClassHierarchy(std::ostream& out, const char* docFil
    fHierarchyLines = 0;
    DescendHierarchy(out, fCurrentClass);
 
-   out << "</tr></table>" << endl;
+   out << "</tr></table>" << std::endl;
 }
 
 //______________________________________________________________________________
@@ -1107,9 +1107,9 @@ Bool_t TClassDocOutput::CreateHierarchyDot()
       return kFALSE;
    }
 
-   dotout << "digraph G {" << endl
-          << "ratio=auto;" << endl
-          << "rankdir=RL;" << endl;
+   dotout << "digraph G {" << std::endl
+          << "ratio=auto;" << std::endl
+          << "rankdir=RL;" << std::endl;
 
    // loop on all classes
    TClassDocInfo* cdi = 0;
@@ -1136,10 +1136,10 @@ Bool_t TClassDocOutput::CreateHierarchyDot()
                dotout << "; ";
             dotout << "\"" << base->GetName() << "\"";
          }
-         dotout << "};" << endl;
+         dotout << "};" << std::endl;
       } else 
          // write out current class - no bases
-         dotout << "\"" << cdi->GetName() << "\";" << endl;
+         dotout << "\"" << cdi->GetName() << "\";" << std::endl;
 
    }
 
@@ -1156,13 +1156,13 @@ Bool_t TClassDocOutput::CreateHierarchyDot()
    Printf(fHtml->GetCounterFormat(), "", fHtml->GetCounter(), (filename + ".html").Data());
    // write out header
    WriteHtmlHeader(out, "Class Hierarchy");
-   out << "<h1>Class Hierarchy</h1>" << endl;
+   out << "<h1>Class Hierarchy</h1>" << std::endl;
 
    WriteSearch(out);
 
    RunDot(filename, &out);
 
-   out << "<img usemap=\"#Map" << title << "\" src=\"" << title << ".png\"/>" << endl;
+   out << "<img usemap=\"#Map" << title << "\" src=\"" << title << ".png\"/>" << std::endl;
    // write out footer
    WriteHtmlFooter(out);
    return kTRUE;
@@ -1211,7 +1211,7 @@ void TClassDocOutput::DescendHierarchy(std::ostream& out, TClass* basePtr, Int_t
 
    if (maxLines)
       if (fHierarchyLines >= maxLines) {
-         out << "<td></td>" << endl;
+         out << "<td></td>" << std::endl;
          return;
       }
 
@@ -1232,16 +1232,16 @@ void TClassDocOutput::DescendHierarchy(std::ostream& out, TClass* basePtr, Int_t
       if (!inheritFrom) continue;
 
       if (!numClasses)
-         out << "<td>&larr;</td><td><table><tr>" << endl;
+         out << "<td>&larr;</td><td><table><tr>" << std::endl;
       else
-         out << "</tr><tr>"<<endl;
+         out << "</tr><tr>"<<std::endl;
       fHierarchyLines++;
       numClasses++;
       UInt_t bgcolor=255-depth*8;
       out << "<td bgcolor=\""
           << Form("#%02x%02x%02x", bgcolor, bgcolor, bgcolor)
           << "\">";
-      out << "<table><tr><td>" << endl;
+      out << "<table><tr><td>" << std::endl;
 
       TString htmlFile(cdi->GetHtmlFileName());
       if (htmlFile.Length()) {
@@ -1264,18 +1264,18 @@ void TClassDocOutput::DescendHierarchy(std::ostream& out, TClass* basePtr, Int_t
         out << classPtr->GetName();
         out << "\">";
         ReplaceSpecialChars(out, classPtr->GetTitle());
-        out << "</a></tt>" << endl;
+        out << "</a></tt>" << std::endl;
       */
 
-      out << "</td>" << endl;
+      out << "</td>" << std::endl;
       DescendHierarchy(out,classPtr,maxLines, depth+1);
-      out << "</tr></table></td>" << endl;
+      out << "</tr></table></td>" << std::endl;
 
    }  // loop over all classes
    if (numClasses)
-      out << "</tr></table></td>" << endl;
+      out << "</tr></table></td>" << std::endl;
    else
-      out << "<td></td>" << endl;
+      out << "<td></td>" << std::endl;
 }
 
 //______________________________________________________________________________
@@ -1386,9 +1386,9 @@ void TClassDocOutput::WriteClassDescription(std::ostream& out, const TString& de
       } else
          ReplaceSpecialChars(out, inheritFrom->GetName());
    }
-   out << "</h1>" << endl;
+   out << "</h1>" << std::endl;
 
-   out << "<div class=\"classdescr\">" << endl;
+   out << "<div class=\"classdescr\">" << std::endl;
 
    if (description.Length())
       out << "<pre>" << description << "</pre>";
@@ -1415,13 +1415,13 @@ void TClassDocOutput::WriteClassDescription(std::ostream& out, const TString& de
 
    // create dot class charts or an html inheritance tree
    out << "<h2><a id=\"" << anchor
-      << ":Class_Charts\"></a>Class Charts</h2>" << endl;
+      << ":Class_Charts\"></a>Class Charts</h2>" << std::endl;
    if (!fHtml->IsNamespace(fCurrentClass))
       if (!ClassDotCharts(out))
          ClassHtmlTree(out, fCurrentClass);
 
    // header for the following function docs:
-   out << "<h2>Function documentation</h2>" << endl;
+   out << "<h2>Function documentation</h2>" << std::endl;
 }
 
 
@@ -1430,7 +1430,7 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
 {
    // Write out the introduction of a class description (shortcuts and links)
 
-   classFile << "<a name=\"TopOfPage\"></a>" << endl;
+   classFile << "<a name=\"TopOfPage\"></a>" << std::endl;
 
 
    // show box with lib, include
@@ -1460,15 +1460,15 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
       delete[] libDup;
    }
    classFile << "<script type=\"text/javascript\">WriteFollowPageBox('" 
-             << sTitle << "','" << sLib << "','" << sInclude << "');</script>" << endl;
+             << sTitle << "','" << sLib << "','" << sInclude << "');</script>" << std::endl;
 
    TString modulename;
    fHtml->GetModuleNameForClass(modulename, fCurrentClass);
    TModuleDocInfo* module = (TModuleDocInfo*) fHtml->GetListOfModules()->FindObject(modulename);
    WriteTopLinks(classFile, module, fCurrentClass->GetName(), kFALSE);
 
-   classFile << "<div class=\"descrhead\"><div class=\"descrheadcontent\">" << endl // descrhead line 3
-      << "<span class=\"descrtitle\">Source:</span>" << endl;
+   classFile << "<div class=\"descrhead\"><div class=\"descrheadcontent\">" << std::endl // descrhead line 3
+      << "<span class=\"descrtitle\">Source:</span>" << std::endl;
 
    // make a link to the '.cxx' file
    TString classFileName(fCurrentClass->GetName());
@@ -1480,15 +1480,15 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
    fHtml->GetImplFileName(fCurrentClass, kFALSE, sourceFileName);
    if (headerFileName.Length())
       classFile << "<a class=\"descrheadentry\" href=\"src/" << classFileName
-                << ".h.html\">header file</a>" << endl;
+                << ".h.html\">header file</a>" << std::endl;
    else
-      classFile << "<a class=\"descrheadentry\"> </a>" << endl;
+      classFile << "<a class=\"descrheadentry\"> </a>" << std::endl;
 
    if (sourceFileName.Length())
       classFile << "<a class=\"descrheadentry\" href=\"src/" << classFileName
-                << ".cxx.html\">source file</a>" << endl;
+                << ".cxx.html\">source file</a>" << std::endl;
    else
-      classFile << "<a class=\"descrheadentry\"> </a>" << endl;
+      classFile << "<a class=\"descrheadentry\"> </a>" << std::endl;
 
    if (!fHtml->IsNamespace(fCurrentClass) && !fHtml->HaveDot()) {
       // make a link to the inheritance tree (postscript)
@@ -1561,21 +1561,21 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
       classFile << "<a class=\"descrheadentry\" href=\"" << wikiLink << "\">wiki</a> ";
    }
 
-   classFile << endl << "</div></div>" << endl; // descrhead line 3
+   classFile << std::endl << "</div></div>" << std::endl; // descrhead line 3
 
-   classFile << "<div class=\"descrhead\"><div class=\"descrheadcontent\">" << endl // descrhead line 4
-      << "<span class=\"descrtitle\">Sections:</span>" << endl
+   classFile << "<div class=\"descrhead\"><div class=\"descrheadcontent\">" << std::endl // descrhead line 4
+      << "<span class=\"descrtitle\">Sections:</span>" << std::endl
       << "<a class=\"descrheadentry\" href=\"#" << currClassNameMangled;
    if (fHtml->IsNamespace(fCurrentClass))
       classFile << ":description\">namespace description</a> ";
    else
       classFile << ":description\">class description</a> ";
-   classFile << endl
-      << "<a class=\"descrheadentry\" href=\"#" << currClassNameMangled << ":Function_Members\">function members</a>" << endl
-      << "<a class=\"descrheadentry\" href=\"#" << currClassNameMangled << ":Data_Members\">data members</a>" << endl
-      << "<a class=\"descrheadentry\" href=\"#" << currClassNameMangled << ":Class_Charts\">class charts</a>" << endl
-      << "</div></div>" << endl // descrhead line 4
-      << "</div>" << endl; // toplinks, from TDocOutput::WriteTopLinks
+   classFile << std::endl
+      << "<a class=\"descrheadentry\" href=\"#" << currClassNameMangled << ":Function_Members\">function members</a>" << std::endl
+      << "<a class=\"descrheadentry\" href=\"#" << currClassNameMangled << ":Data_Members\">data members</a>" << std::endl
+      << "<a class=\"descrheadentry\" href=\"#" << currClassNameMangled << ":Class_Charts\">class charts</a>" << std::endl
+      << "</div></div>" << std::endl // descrhead line 4
+      << "</div>" << std::endl; // toplinks, from TDocOutput::WriteTopLinks
 
    WriteLocation(classFile, module, fCurrentClass->GetName());
 }

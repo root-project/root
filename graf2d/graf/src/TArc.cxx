@@ -88,23 +88,23 @@ void TArc::DrawArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t
 
 
 //______________________________________________________________________________
-void TArc::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TArc::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TArc::Class())) {
       out<<"   ";
    } else {
       out<<"   TArc *";
    }
    out<<"arc = new TArc("<<fX1<<","<<fY1<<","<<fR1
-      <<","<<fPhimin<<","<<fPhimax<<");"<<endl;
+      <<","<<fPhimin<<","<<fPhimax<<");"<<std::endl;
 
    SaveFillAttributes(out,"arc",0,1001);
    SaveLineAttributes(out,"arc",1,1,1);
 
-   if (GetNoEdges()) out<<"   arc->SetNoEdges();"<<endl;
+   if (GetNoEdges()) out<<"   arc->SetNoEdges();"<<std::endl;
 
-   out<<"   arc->Draw();"<<endl;
+   out<<"   arc->Draw();"<<std::endl;
 }

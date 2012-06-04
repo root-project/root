@@ -28,6 +28,11 @@
 
 #define R__USE_SHADOW_CLASS
 
+/* Now required, thus defined by default for backward compatibility */
+#define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
+#define R__SSTREAM         /* use sstream or strstream header */
+
+
 /*---- machines --------------------------------------------------------------*/
 
 #ifdef __hpux
@@ -50,7 +55,6 @@
 #   define R__SEEK64
 #   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   define NEED_STRCASECMP
-#   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #endif
 
 #ifdef __linux
@@ -73,8 +77,6 @@
 #   ifndef __USE_STD_IOSTREAM
 #   define __USE_STD_IOSTREAM
 #   endif
-#   define R__ANSISTREAM
-#   define R__SSTREAM
 #   define R__TMPLTSTREAM
 #   ifdef _XOPEN_SOURCE
 #      if _XOPEN_SOURCE+0 > 0
@@ -126,8 +128,6 @@
 #   define NEED_SIGJMP
 #   if __SUNPRO_CC > 0x420
 #      define R__SOLARIS_CC50
-#      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
-#      define R__SSTREAM         /* use sstream or strstream header */
 #      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   endif
 #   if __SUNPRO_CC >= 0x420
@@ -148,7 +148,6 @@
 #   define R__UNIX
 #   define NEED_STRING
 #   define NEED_SIGJMP
-#   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #endif
 
 #if defined(__sgi) && !defined(linux)
@@ -168,9 +167,6 @@
 #   if defined(__mips64) || defined(_ABI64)
 #      define R__B64
 #      undef R__SEEK64
-#   endif
-#   if !defined(__KCC)
-#      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
 #endif
 
@@ -375,7 +371,6 @@
 #   define R__UNIX
 #   if defined(__xlC__) || defined(__xlc__)
 #      define ANSICPP
-#      define R__ANSISTREAM
 #      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   endif
 #   if defined(__ppc64__)
@@ -412,16 +407,9 @@
 #   if __GNUC__ >= 3 || ( __GNUC__ == 2 && __GNUC_MINOR__ >= 95)
 #         define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   endif
-#   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 91    /* egcs 1.1.x */
-#      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
-#   endif
-#   if __GNUC__ >= 3 && __GNUC_MINOR__ >=0 && __GNUC_MINOR__ < 8
-#      define R__SSTREAM         /* use sstream or strstream header */
-#   endif
 #   if defined(__ia64__) &&  __GNUC__ < 3       /* gcc 2.9x (MINOR is 9!) */
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
-#      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
 #   if __GNUC__ > 4 || ( __GNUC__ == 4 && __GNUC_MINOR__ > 1)
 #      define R__PRAGMA_DIAGNOSTIC
@@ -438,7 +426,6 @@
 
 #ifdef __INTEL_COMPILER
 #   define R__INTEL_COMPILER
-#   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
 #   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
@@ -456,8 +443,7 @@
 #      define R__GLOBALSTL       /* STL in global name space */
 #   else
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
-#      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
-#      define R__TMPLTSTREAM     /* iostream implemented with templates */
+#      define R__TMPLTSTREAM     /* std::iostream implemented with templates */
 #   endif
 #   ifndef _INCLUDE_LONGLONG
 #      define _INCLUDE_LONGLONG
@@ -497,12 +483,6 @@
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
 #   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
-#   if _MSC_VER >= 1200
-#     define R__ANSISTREAM    /* ANSI C++ Standard Library conformant */
-#   endif
-#   if _MSC_VER >= 1310
-#     define R__SSTREAM       /* has <sstream> iso <strstream> */
-#   endif
 #   if _MSC_VER >= 1400
 #     define DONTNEED_VSNPRINTF
 #   endif

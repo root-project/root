@@ -47,7 +47,7 @@ int GAMinimize(ROOT::Math::IMultiGenFunction& chi2Func, double& xm1, double& xm2
    // minimize the function
    ROOT::Math::GeneticMinimizer* min = new ROOT::Math::GeneticMinimizer();
    if (min == 0) { 
-      cout << "Error creating minimizer " << endl;
+      std::cout << "Error creating minimizer " << std::endl;
       return -1;
    }
 
@@ -68,7 +68,7 @@ int GAMinimize(ROOT::Math::IMultiGenFunction& chi2Func, double& xm1, double& xm2
 
    for (unsigned int i = 0; i < chi2Func.NDim(); ++i) { 
 #ifdef DEBUG
-      cout << "set variable " << i << " to value " << x0[i] << endl;
+      std::cout << "set variable " << i << " to value " << x0[i] << std::endl;
 #endif
       if ( i == 3 || i == 6 )
           min->SetLimitedVariable(i,"x" + ROOT::Math::Util::ToString(i),x0[i], 0.1,2,8);
@@ -82,7 +82,7 @@ int GAMinimize(ROOT::Math::IMultiGenFunction& chi2Func, double& xm1, double& xm2
    min->MinValue(); 
 
    // show the results
-   cout << "Min values by GeneticMinimizer: " << min->X()[3] << "  " << min->X()[6] << endl;
+   std::cout << "Min values by GeneticMinimizer: " << min->X()[3] << "  " << min->X()[6] << std::endl;
    xm1 = min->X()[3];
    xm2 = min->X()[6];
 
@@ -95,7 +95,7 @@ const double* Min2Minimize(ROOT::Math::IMultiGenFunction& chi2Func, double xm1, 
    // minimize the function
    ROOT::Math::Minimizer * min = ROOT::Math::Factory::CreateMinimizer("Minuit2", "Migrad");
    if (min == 0) { 
-      cout << "Error creating minimizer " << endl;
+      std::cout << "Error creating minimizer " << std::endl;
       exit(-1);
    }
 
@@ -114,7 +114,7 @@ const double* Min2Minimize(ROOT::Math::IMultiGenFunction& chi2Func, double xm1, 
 
    for (unsigned int i = 0; i < chi2Func.NDim(); ++i) { 
 #ifdef DEBUG
-      cout << "set variable " << i << " to value " << x0[i] << endl;
+      std::cout << "set variable " << i << " to value " << x0[i] << std::endl;
 #endif
       min->SetVariable(i,"x" + ROOT::Math::Util::ToString(i),x0[i], 0.1);
    }
@@ -124,13 +124,13 @@ const double* Min2Minimize(ROOT::Math::IMultiGenFunction& chi2Func, double xm1, 
    double minval = min->MinValue(); 
 
    // show the results
-   cout << "--------------------------------------" << endl;
-   cout << "Minuit2Minimizer(" << xm1 << "," << xm2 << ")" << endl;
-   cout << "chi2  min value " << minval << endl; 
-   cout << " x minimum values " << min->X()[3] << "  " << min->X()[6] << endl;
+   std::cout << "--------------------------------------" << std::endl;
+   std::cout << "Minuit2Minimizer(" << xm1 << "," << xm2 << ")" << std::endl;
+   std::cout << "chi2  min value " << minval << std::endl; 
+   std::cout << " x minimum values " << min->X()[3] << "  " << min->X()[6] << std::endl;
    for (unsigned int i = 0; i < chi2Func.NDim(); ++i)
-      cout << min->X()[i] << " ";
-   cout << endl;
+      std::cout << min->X()[i] << " ";
+   std::cout << std::endl;
 
    return min->X();
 }

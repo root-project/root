@@ -34,7 +34,7 @@
 //   fit->Constrain(1,0.0,1.0);               // constrain fraction 1 to be between 0 and 1
 //   fit->SetRangeX(1,15);                    // use only the first 15 bins in the fit
 //   Int_t status = fit->Fit();               // perform the fit
-//   cout << "fit status: " << status << endl;
+//   std::cout << "fit status: " << status << std::endl;
 //   if (status == 0) {                       // check on fit status
 //     TH1F* result = (TH1F*) fit->GetPlot();
 //     data->Draw("Ep");

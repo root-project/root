@@ -249,14 +249,14 @@ Int_t TDataSetIter::Du() const {
    Int_t count = 0;
    while((nextset = (count) ? next():fWorkingDataSet)) {
       count++;
-      if (nextset->IsFolder()) cout << endl;
+      if (nextset->IsFolder()) std::cout << std::endl;
       TString path = nextset->Path();
-      cout << setw(2) << next.GetDepth() << ". ";
-      cout << path << setw(TMath::Max(Int_t(60-strlen(path.Data())),Int_t(0))) << "...";
+      std::cout << std::setw(2) << next.GetDepth() << ". ";
+      std::cout << path << std::setw(TMath::Max(Int_t(60-strlen(path.Data())),Int_t(0))) << "...";
       const Char_t *type = nextset->IsFolder() ? "directory" : "table" ;
-      cout << setw(10) << type;
-      cout  << " : " << setw(10) << nextset->GetTitle();
-      cout << endl;
+      std::cout << std::setw(10) << type;
+      std::cout  << " : " << std::setw(10) << nextset->GetTitle();
+      std::cout << std::endl;
    }
    return count;
 }

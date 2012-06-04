@@ -69,7 +69,7 @@ public:
    virtual void  Paint(Option_t *option="");
    virtual void  PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option="");
    virtual void  Print(Option_t *option="") const;
-   virtual void  SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void  SetX1(Double_t x1) {fX1=x1;}
    virtual void  SetX2(Double_t x2) {fX2=x2;}
    virtual void  SetY1(Double_t y1) {fY1=y1;}

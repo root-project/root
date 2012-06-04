@@ -378,7 +378,7 @@ TGShutterItem::~TGShutterItem()
 }
 
 //______________________________________________________________________________
-void TGShutterItem::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGShutterItem::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a shutter item widget as a C++ statement(s) on output stream out
 
@@ -402,23 +402,23 @@ void TGShutterItem::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    }
    outext[i]=0;
 
-   out << endl;
-   out << "   // " << quote << outext << quote << " shutter item " << endl;
+   out << std::endl;
+   out << "   // " << quote << outext << quote << " shutter item " << std::endl;
    out << "   TGShutterItem *";
    out << GetName() << " = new TGShutterItem(" << fParent->GetName()
        << ", new TGHotString(" << quote << outext << quote << "),"
-       << fButton->WidgetId() << "," << GetOptionString() << ");" << endl;
+       << fButton->WidgetId() << "," << GetOptionString() << ");" << std::endl;
 
    delete [] outext;
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    TList *list = ((TGCompositeFrame *)GetContainer())->GetList();
 
    if (!list) return;
 
    out << "   TGCompositeFrame *" << GetContainer()->GetName()
-       << " = (TGCompositeFrame *)" << GetName() << "->GetContainer();" << endl;
+       << " = (TGCompositeFrame *)" << GetName() << "->GetContainer();" << std::endl;
 
    TGFrameElement *el;
    TIter next(list);
@@ -427,28 +427,28 @@ void TGShutterItem::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       el->fFrame->SavePrimitive(out, option);
       out << "   " << GetContainer()->GetName() <<"->AddFrame(" << el->fFrame->GetName();
       el->fLayout->SavePrimitive(out, option);
-      out << ");"<< endl;
+      out << ");"<< std::endl;
    }
 }
 
 //______________________________________________________________________________
-void TGShutter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGShutter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a shutter widget as a C++ statement(s) on output stream out.
 
-   out << endl;
-   out << "   // shutter" << endl;
+   out << std::endl;
+   out << "   // shutter" << std::endl;
 
    out << "   TGShutter *";
    out << GetName() << " = new TGShutter(" << fParent->GetName() << ","
-       << GetOptionString() << ");" << endl;
+       << GetOptionString() << ");" << std::endl;
 
    if ((fDefWidth > 0) || (fDefHeight > 0)) {
       out << "   " << GetName() << "->SetDefaultSize(";
-      out << fDefWidth << "," << fDefHeight << ");" << endl;
+      out << fDefWidth << "," << fDefHeight << ");" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    if (!fList) return;
 
@@ -459,11 +459,11 @@ void TGShutter::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       el->fFrame->SavePrimitive(out, option);
       out << "   " << GetName() <<"->AddItem(" << el->fFrame->GetName();
       //el->fLayout->SavePrimitive(out, option);
-      out << ");"<< endl;
+      out << ");"<< std::endl;
    }
 
    out << "   " << GetName() << "->SetSelectedItem("
-       << GetSelectedItem()->GetName() << ");" << endl;
-   out << "   " <<GetName()<< "->Resize("<<GetWidth()<<","<<GetHeight()<<");"<<endl;
+       << GetSelectedItem()->GetName() << ");" << std::endl;
+   out << "   " <<GetName()<< "->Resize("<<GetWidth()<<","<<GetHeight()<<");"<<std::endl;
 }
 

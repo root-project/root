@@ -849,15 +849,15 @@ Double_t TGeoTube::SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t r
 }
 
 //_____________________________________________________________________________
-void TGeoTube::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoTube::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   rmin = " << fRmin << ";" << endl;
-   out << "   rmax = " << fRmax << ";" << endl;
-   out << "   dz   = " << fDz << ";" << endl;
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTube(\"" << GetName() << "\",rmin,rmax,dz);" << endl;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   rmin = " << fRmin << ";" << std::endl;
+   out << "   rmax = " << fRmax << ";" << std::endl;
+   out << "   dz   = " << fDz << ";" << std::endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTube(\"" << GetName() << "\",rmin,rmax,dz);" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
@@ -2001,17 +2001,17 @@ Double_t TGeoTubeSeg::SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_
 }
 
 //_____________________________________________________________________________
-void TGeoTubeSeg::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoTubeSeg::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   rmin = " << fRmin << ";" << endl;
-   out << "   rmax = " << fRmax << ";" << endl;
-   out << "   dz   = " << fDz << ";" << endl;
-   out << "   phi1 = " << fPhi1 << ";" << endl;
-   out << "   phi2 = " << fPhi2 << ";" << endl;
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTubeSeg(\"" << GetName() << "\",rmin,rmax,dz,phi1,phi2);" << endl;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   rmin = " << fRmin << ";" << std::endl;
+   out << "   rmax = " << fRmax << ";" << std::endl;
+   out << "   dz   = " << fDz << ";" << std::endl;
+   out << "   phi1 = " << fPhi1 << ";" << std::endl;
+   out << "   phi2 = " << fPhi2 << ";" << std::endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTubeSeg(\"" << GetName() << "\",rmin,rmax,dz,phi1,phi2);" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
@@ -2834,23 +2834,23 @@ void TGeoCtub::SetCtubDimensions(Double_t rmin, Double_t rmax, Double_t dz, Doub
 }
 
 //_____________________________________________________________________________
-void TGeoCtub::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoCtub::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   rmin = " << fRmin << ";" << endl;
-   out << "   rmax = " << fRmax << ";" << endl;
-   out << "   dz   = " << fDz << ";" << endl;
-   out << "   phi1 = " << fPhi1 << ";" << endl;
-   out << "   phi2 = " << fPhi2 << ";" << endl;
-   out << "   lx   = " << fNlow[0] << ";" << endl;
-   out << "   ly   = " << fNlow[1] << ";" << endl;
-   out << "   lz   = " << fNlow[2] << ";" << endl;
-   out << "   tx   = " << fNhigh[0] << ";" << endl;
-   out << "   ty   = " << fNhigh[1] << ";" << endl;
-   out << "   tz   = " << fNhigh[2] << ";" << endl;
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoCtub(\"" << GetName() << "\",rmin,rmax,dz,phi1,phi2,lx,ly,lz,tx,ty,tz);" << endl;   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   rmin = " << fRmin << ";" << std::endl;
+   out << "   rmax = " << fRmax << ";" << std::endl;
+   out << "   dz   = " << fDz << ";" << std::endl;
+   out << "   phi1 = " << fPhi1 << ";" << std::endl;
+   out << "   phi2 = " << fPhi2 << ";" << std::endl;
+   out << "   lx   = " << fNlow[0] << ";" << std::endl;
+   out << "   ly   = " << fNlow[1] << ";" << std::endl;
+   out << "   lz   = " << fNlow[2] << ";" << std::endl;
+   out << "   tx   = " << fNhigh[0] << ";" << std::endl;
+   out << "   ty   = " << fNhigh[1] << ";" << std::endl;
+   out << "   tz   = " << fNhigh[2] << ";" << std::endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoCtub(\"" << GetName() << "\",rmin,rmax,dz,phi1,phi2,lx,ly,lz,tx,ty,tz);" << std::endl;   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________

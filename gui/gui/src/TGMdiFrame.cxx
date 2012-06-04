@@ -185,7 +185,7 @@ TString TGMdiFrame::GetMdiHintsString() const
 }
 
 //______________________________________________________________________________
-void TGMdiFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGMdiFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a MDIframe as a C++ statement(s) on output stream out
 
@@ -195,7 +195,7 @@ void TGMdiFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    
    TGMdiTitleBar *tb = fMain->GetWindowList()->GetDecorFrame()->GetTitleBar();
    
-   out << endl <<"   // MDI frame "<< quote << GetWindowName() << quote << endl;
+   out << std::endl <<"   // MDI frame "<< quote << GetWindowName() << quote << std::endl;
    out << "   TGMdiFrame *";
    out << GetName() << " = new TGMdiFrame(" << fMain->GetName()
        << "," << GetWidth() + GetBorderWidth()*2 
@@ -203,26 +203,26 @@ void TGMdiFrame::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground == GetDefaultFrameBackground()) {
       if (!GetOptions()) {
-         out << ");" << endl;
+         out << ");" << std::endl;
       } else {
-         out << "," << GetOptionString() <<");" << endl;
+         out << "," << GetOptionString() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    SavePrimitiveSubframes(out, option);
    
    out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
-       << quote << ");" << endl;
+       << quote << ");" << std::endl;
    out << "   " << GetName() << "->SetMdiHints(" << GetMdiHintsString()
-       << ");" << endl;
+       << ");" << std::endl;
    if ((GetX() != 5) && (GetY() != 23))
       out << "   " << GetName() << "->Move(" << GetX() << "," << GetY() 
-          << ");" << endl;
+          << ");" << std::endl;
           
-   out << "   " << GetName() << "->MapSubwindows();" << endl;
-   out << "   " << GetName() << "->Layout();" << endl;
+   out << "   " << GetName() << "->MapSubwindows();" << std::endl;
+   out << "   " << GetName() << "->Layout();" << std::endl;
 }

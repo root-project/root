@@ -25,7 +25,7 @@ namespace ROOT {
 
    namespace Fit { 
 
-      // This is a proxy to a list<Box>
+      // This is a proxy to a std::list<Box>
       class ProxyListBox;
 
       class SparseData : public FitData  { 

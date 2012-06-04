@@ -35,6 +35,8 @@
 #include "RooStreamParser.h"
 #include "RooArgList.h"
 
+using namespace std;
+
 ClassImp(RooEfficiency)
   ;
 

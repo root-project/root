@@ -114,7 +114,7 @@ public:
    virtual void   ShowBottom();
    virtual void   ShowTop();
 
-   virtual void   SavePrimitive(ostream &out, Option_t * = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t * = "");
    virtual void   SetText(TGText *text);
    virtual void   AddText(TGText *text);
    virtual void   AddLine(const char *string);

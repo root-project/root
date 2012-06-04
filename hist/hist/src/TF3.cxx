@@ -652,52 +652,52 @@ void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
 }
 
 //______________________________________________________________________________
-void TF3::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TF3::Class())) {
       out<<"   ";
    } else {
       out<<"   TF3 *";
    }
    if (!fMethodCall) {
-      out<<GetName()<<" = new TF3("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<");"<<endl;
+      out<<GetName()<<" = new TF3("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<");"<<std::endl;
    } else {
-      out<<GetName()<<" = new TF3("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<","<<GetNpar()<<");"<<endl;
+      out<<GetName()<<" = new TF3("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<","<<GetNpar()<<");"<<std::endl;
    }
 
    if (GetFillColor() != 0) {
       if (GetFillColor() > 228) {
          TColor::SaveColor(out, GetFillColor());
-         out<<"   "<<GetName()<<"->SetFillColor(ci);" << endl;
+         out<<"   "<<GetName()<<"->SetFillColor(ci);" << std::endl;
       } else 
-         out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
+         out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
    }
    if (GetLineColor() != 1) {
       if (GetLineColor() > 228) {
          TColor::SaveColor(out, GetLineColor());
-         out<<"   "<<GetName()<<"->SetLineColor(ci);" << endl;
+         out<<"   "<<GetName()<<"->SetLineColor(ci);" << std::endl;
       } else 
-         out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<endl;
+         out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
    }
    if (GetNpz() != 100) {
-      out<<"   "<<GetName()<<"->SetNpz("<<GetNpz()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetNpz("<<GetNpz()<<");"<<std::endl;
    }
    if (GetChisquare() != 0) {
-      out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
    }
    Double_t parmin, parmax;
    for (Int_t i=0;i<fNpar;i++) {
-      out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<endl;
-      out<<"   "<<GetName()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
+      out<<"   "<<GetName()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
       GetParLimits(i,parmin,parmax);
-      out<<"   "<<GetName()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
    }
    out<<"   "<<GetName()<<"->Draw("
-      <<quote<<option<<quote<<");"<<endl;
+      <<quote<<option<<quote<<");"<<std::endl;
 }
 
 //______________________________________________________________________________

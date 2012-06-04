@@ -300,11 +300,11 @@ void TODBCServer::PrintDrivers()
    //   <name> : <options list>
     
    TList* lst = GetDrivers();
-   cout << "List of ODBC drivers:" << endl;
+   std::cout << "List of ODBC drivers:" << std::endl;
    TIter iter(lst);
    TNamed* n = 0;
    while ((n = (TNamed*) iter()) != 0) 
-      cout << "  " << n->GetName() << " : " << n->GetTitle() << endl; 
+      std::cout << "  " << n->GetName() << " : " << n->GetTitle() << std::endl; 
    delete lst;
 }
 
@@ -326,11 +326,11 @@ void TODBCServer::PrintDataSources()
    //   <name> : <options list>
     
    TList* lst = GetDataSources();
-   cout << "List of ODBC data sources:" << endl;
+   std::cout << "List of ODBC data sources:" << std::endl;
    TIter iter(lst);
    TNamed* n = 0;
    while ((n = (TNamed*) iter()) != 0) 
-      cout << "  " << n->GetName() << " : " << n->GetTitle() << endl; 
+      std::cout << "  " << n->GetName() << " : " << n->GetTitle() << std::endl; 
    delete lst;
 }
 

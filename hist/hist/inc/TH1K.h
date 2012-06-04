@@ -51,7 +51,7 @@ public:
     
     
    virtual void      Reset(Option_t *option="");
-   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
 
    void    SetKOrd(Int_t k){fKOrd=k;}
    

@@ -1371,7 +1371,7 @@ void TCanvas::ls(Option_t *option) const
    // List all pads.
 
    TROOT::IndentLevel();
-   cout <<"Canvas Name=" <<GetName()<<" Title="<<GetTitle()<<" Option="<<option<<endl;
+   std::cout <<"Canvas Name=" <<GetName()<<" Title="<<GetTitle()<<" Option="<<option<<std::endl;
    TROOT::IncreaseDirLevel();
    TPad::ls(option);
    TROOT::DecreaseDirLevel();
@@ -1608,38 +1608,38 @@ void TCanvas::RunAutoExec()
 
 
 //______________________________________________________________________________
-void TCanvas::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitives in this canvas in C++ macro file with GUI.
 
    // Write canvas options (in $TROOT or $TStyle)
    if (gStyle->GetOptFit()) {
-      out<<"   gStyle->SetOptFit(1);"<<endl;
+      out<<"   gStyle->SetOptFit(1);"<<std::endl;
    }
    if (!gStyle->GetOptStat()) {
-      out<<"   gStyle->SetOptStat(0);"<<endl;
+      out<<"   gStyle->SetOptStat(0);"<<std::endl;
    }
    if (!gStyle->GetOptTitle()) {
-      out<<"   gStyle->SetOptTitle(0);"<<endl;
+      out<<"   gStyle->SetOptTitle(0);"<<std::endl;
    }
    if (gROOT->GetEditHistograms()) {
-      out<<"   gROOT->SetEditHistograms();"<<endl;
+      out<<"   gROOT->SetEditHistograms();"<<std::endl;
    }
    if (GetShowEventStatus()) {
-      out<<"   "<<GetName()<<"->ToggleEventStatus();"<<endl;
+      out<<"   "<<GetName()<<"->ToggleEventStatus();"<<std::endl;
    }
    if (GetShowToolTips()) {
-      out<<"   "<<GetName()<<"->ToggleToolTips();"<<endl;
+      out<<"   "<<GetName()<<"->ToggleToolTips();"<<std::endl;
    }
    if (GetShowToolBar()) {
-      out<<"   "<<GetName()<<"->ToggleToolBar();"<<endl;
+      out<<"   "<<GetName()<<"->ToggleToolBar();"<<std::endl;
    }
    if (GetHighLightColor() != 5) {
       if (GetHighLightColor() > 228) {
          TColor::SaveColor(out, GetHighLightColor());
-         out<<"   "<<GetName()<<"->SetHighLightColor(ci);" << endl;
+         out<<"   "<<GetName()<<"->SetHighLightColor(ci);" << std::endl;
       } else
-         out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<endl;
+         out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<std::endl;
    }
 
    // Now recursively scan all pads of this canvas
@@ -1665,7 +1665,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    }
 
    char quote = '"';
-   ofstream out;
+   std::ofstream out;
    Int_t lenfile = strlen(filename);
    char * fname;
    char lcname[10];
@@ -1675,7 +1675,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    //    with a name equal to the canvasname.C
    if (lenfile) {
       fname = (char*)filename;
-      out.open(fname, ios::out);
+      out.open(fname, std::ios::out);
    } else {
       Int_t nch = strlen(cname);
       if (nch < 10) {
@@ -1687,7 +1687,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
       fname = new char[nch+3];
       strlcpy(fname,cname,nch+3);
       strncat(fname,".C",2);
-      out.open(fname, ios::out);
+      out.open(fname, std::ios::out);
    }
    if (!out.good ()) {
       Printf("SaveSource cannot open file: %s",fname);
@@ -1715,51 +1715,51 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
       topx = 1;    topy = 1;
    }
 
-   out <<"{"<<endl;
-   out <<"//=========Macro generated from canvas: "<<GetName()<<"/"<<GetTitle()<<endl;
-   out <<"//=========  ("<<t.AsString()<<") by ROOT version"<<gROOT->GetVersion()<<endl;
+   out <<"{"<<std::endl;
+   out <<"//=========Macro generated from canvas: "<<GetName()<<"/"<<GetTitle()<<std::endl;
+   out <<"//=========  ("<<t.AsString()<<") by ROOT version"<<gROOT->GetVersion()<<std::endl;
 
    if (gStyle->GetCanvasPreferGL())
-      out <<endl<<"   gStyle->SetCanvasPreferGL(kTRUE);"<<endl<<endl;
+      out <<std::endl<<"   gStyle->SetCanvasPreferGL(kTRUE);"<<std::endl<<std::endl;
 
    //   Write canvas parameters (TDialogCanvas case)
    if (InheritsFrom(TDialogCanvas::Class())) {
       out<<"   "<<ClassName()<<" *"<<cname<<" = new "<<ClassName()<<"("<<quote<<GetName()
-         <<quote<<", "<<quote<<GetTitle()<<quote<<","<<w<<","<<h<<");"<<endl;
+         <<quote<<", "<<quote<<GetTitle()<<quote<<","<<w<<","<<h<<");"<<std::endl;
    } else {
    //   Write canvas parameters (TCanvas case)
       out<<"   TCanvas *"<<cname<<" = new TCanvas("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
          <<quote;
       if (!HasMenuBar())
-         out<<",-"<<topx<<","<<topy<<","<<w<<","<<h<<");"<<endl;
+         out<<",-"<<topx<<","<<topy<<","<<w<<","<<h<<");"<<std::endl;
       else
-         out<<","<<topx<<","<<topy<<","<<w<<","<<h<<");"<<endl;
+         out<<","<<topx<<","<<topy<<","<<w<<","<<h<<");"<<std::endl;
    }
    //   Write canvas options (in $TROOT or $TStyle)
    if (gStyle->GetOptFit()) {
-      out<<"   gStyle->SetOptFit(1);"<<endl;
+      out<<"   gStyle->SetOptFit(1);"<<std::endl;
    }
    if (!gStyle->GetOptStat()) {
-      out<<"   gStyle->SetOptStat(0);"<<endl;
+      out<<"   gStyle->SetOptStat(0);"<<std::endl;
    }
    if (!gStyle->GetOptTitle()) {
-      out<<"   gStyle->SetOptTitle(0);"<<endl;
+      out<<"   gStyle->SetOptTitle(0);"<<std::endl;
    }
    if (gROOT->GetEditHistograms()) {
-      out<<"   gROOT->SetEditHistograms();"<<endl;
+      out<<"   gROOT->SetEditHistograms();"<<std::endl;
    }
    if (GetShowEventStatus()) {
-      out<<"   "<<GetName()<<"->ToggleEventStatus();"<<endl;
+      out<<"   "<<GetName()<<"->ToggleEventStatus();"<<std::endl;
    }
    if (GetShowToolTips()) {
-      out<<"   "<<GetName()<<"->ToggleToolTips();"<<endl;
+      out<<"   "<<GetName()<<"->ToggleToolTips();"<<std::endl;
    }
    if (GetHighLightColor() != 5) {
       if (GetHighLightColor() > 228) {
          TColor::SaveColor(out, GetHighLightColor());
-         out<<"   "<<GetName()<<"->SetHighLightColor(ci);" << endl;
+         out<<"   "<<GetName()<<"->SetHighLightColor(ci);" << std::endl;
       } else
-         out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<endl;
+         out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<std::endl;
    }
 
    //   Now recursively scan all pads of this canvas
@@ -1767,13 +1767,13 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    if (invalid) SetName("c1");
    TPad::SavePrimitive(out,option);
    //   Write canvas options related to pad editor
-   out<<"   "<<GetName()<<"->SetSelected("<<GetName()<<");"<<endl;
+   out<<"   "<<GetName()<<"->SetSelected("<<GetName()<<");"<<std::endl;
    if (GetShowToolBar()) {
-      out<<"   "<<GetName()<<"->ToggleToolBar();"<<endl;
+      out<<"   "<<GetName()<<"->ToggleToolBar();"<<std::endl;
    }
    if (invalid) SetName(" ");
 
-   out <<"}"<<endl;
+   out <<"}"<<std::endl;
    out.close();
    Info("SaveSource","C++ Macro file: %s has been generated", fname);
 

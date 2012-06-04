@@ -67,7 +67,7 @@ TVolumePosition::TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t 
    if (!node) return;
    static Int_t counter = 0;
    counter++;
-   if(!(counter%1000))cout<<"TVolumePosition count="<<counter<<" name="<<node->GetName()<<endl;
+   if(!(counter%1000))std::cout<<"TVolumePosition count="<<counter<<" name="<<node->GetName()<<std::endl;
 
    if (!gGeometry) new TGeometry;
    if (matrixname && strlen(matrixname)) fMatrix = gGeometry->GetRotMatrix(matrixname);
@@ -456,7 +456,7 @@ void TVolumePosition::Paint(Option_t *)
 void TVolumePosition::Print(Option_t *) const
 {
    //to be documented
-   cout << *this << endl;
+   std::cout << *this << std::endl;
 }
 
 //______________________________________________________________________________
@@ -480,12 +480,12 @@ TVolumePosition *TVolumePosition::Reset(TVolume *node,Double_t x, Double_t y, Do
 }
 
 //_______________________________________________________________________
-void TVolumePosition::SavePrimitive(ostream &, Option_t * /*= ""*/)
+void TVolumePosition::SavePrimitive(std::ostream &, Option_t * /*= ""*/)
 {
    //to be documented
 #if 0
-   out << "TVolumePosition *CreatePosition() { " << endl;
-   out << "  TVolumePosition *myPosition = 0;    " << endl;
+   out << "TVolumePosition *CreatePosition() { " << std::endl;
+   out << "  TVolumePosition *myPosition = 0;    " << std::endl;
    Double_t x = GetX();
    Double_t y = GetY();
    Double_t z = GetZ();
@@ -494,8 +494,8 @@ void TVolumePosition::SavePrimitive(ostream &, Option_t * /*= ""*/)
    : fNode(node),fX(x),fY(y),fZ(z),fMatrix(0)
 {
 /
-   out << "  return myPosition; "                << endl;
-   out << "} "                                   << endl;
+   out << "  return myPosition; "                << std::endl;
+   out << "} "                                   << std::endl;
 #endif
 
 }
@@ -610,21 +610,21 @@ void TVolumePosition::Streamer(TBuffer &R__b)
    }
 }
 //______________________________________________________________________________
-ostream& operator<<(ostream& s,const TVolumePosition &target)
+std::ostream& operator<<(std::ostream& s,const TVolumePosition &target)
 {
    //to be documented
    s << " Node: ";
-   if (target.GetNode()) s <<  target.GetNode()->GetName() << endl;
-   else                  s << "NILL" << endl;
+   if (target.GetNode()) s <<  target.GetNode()->GetName() << std::endl;
+   else                  s << "NILL" << std::endl;
    s << Form(" Position: x=%10.5f : y=%10.5f : z=%10.5f\n", target.GetX(), target.GetY(), target.GetZ());
    TRotMatrix *rot = (TRotMatrix *) target.GetMatrix();
    if (rot){
-      s << rot->IsA()->GetName() << "\t" << rot->GetName() << "\t" << rot->GetTitle() << endl;
+      s << rot->IsA()->GetName() << "\t" << rot->GetName() << "\t" << rot->GetTitle() << std::endl;
       Double_t *matrix = rot->GetMatrix();
       Int_t i = 0;
       for (i=0;i<3;i++) {
          for (Int_t j=0;j<3;j++) s << Form("%10.5f:", *matrix++);
-         s << endl;
+         s << std::endl;
       }
    }
    return s;

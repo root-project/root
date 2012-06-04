@@ -205,11 +205,11 @@ void TXMLSetup::PrintSetup()
 {
    // show setup values
 
-   cout << " *** Setup printout ***" << endl;
-   cout << "Attribute mode = " << fXmlLayout << endl;
-   cout << "Store streamer infos = " << (fStoreStreamerInfos ? "true" : "false") << endl;
-   cout << "Use dtd = " << (fUseDtd ? "true" : "false") << endl;
-   cout << "Use name spaces = " << (fUseNamespaces ? "true" : "false") << endl;
+   std::cout << " *** Setup printout ***" << std::endl;
+   std::cout << "Attribute mode = " << fXmlLayout << std::endl;
+   std::cout << "Store streamer infos = " << (fStoreStreamerInfos ? "true" : "false") << std::endl;
+   std::cout << "Use dtd = " << (fUseDtd ? "true" : "false") << std::endl;
+   std::cout << "Use name spaces = " << (fUseNamespaces ? "true" : "false") << std::endl;
 }
 
 //______________________________________________________________________________
@@ -286,6 +286,6 @@ Int_t TXMLSetup::AtoI(const char* sbuf, Int_t def, const char* errinfo)
 
    if (sbuf) return atoi(sbuf);
    if (errinfo)
-      cerr << "<Error in TXMLSetup::AtoI>" << errinfo << " not valid integer: sbuf <NULL>" << endl;
+      std::cerr << "<Error in TXMLSetup::AtoI>" << errinfo << " not valid integer: sbuf <NULL>" << std::endl;
    return def;
 }

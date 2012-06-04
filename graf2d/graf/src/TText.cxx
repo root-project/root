@@ -608,7 +608,7 @@ void TText::Print(Option_t *) const
 
 
 //______________________________________________________________________________
-void TText::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
@@ -620,12 +620,12 @@ void TText::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    }
    TString s = GetTitle();
    s.ReplaceAll("\"","\\\"");
-   out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<endl;
-   if (TestBit(kTextNDC)) out<<"   text->SetNDC();"<<endl;
+   out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<std::endl;
+   if (TestBit(kTextNDC)) out<<"   text->SetNDC();"<<std::endl;
 
    SaveTextAttributes(out,"text",11,0,1,62,0.05);
 
-   out<<"   text->Draw();"<<endl;
+   out<<"   text->Draw();"<<std::endl;
 }
 
 

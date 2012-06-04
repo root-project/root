@@ -304,30 +304,30 @@ void TAttText::ResetAttText(Option_t *)
 
 
 //______________________________________________________________________________
-void TAttText::SaveTextAttributes(ostream &out, const char *name, Int_t alidef,
+void TAttText::SaveTextAttributes(std::ostream &out, const char *name, Int_t alidef,
                                   Float_t angdef, Int_t coldef, Int_t fondef,
                                   Float_t sizdef)
 {
    // Save text attributes as C++ statement(s) on output stream out.
 
    if (fTextAlign != alidef) {
-      out<<"   "<<name<<"->SetTextAlign("<<fTextAlign<<");"<<endl;
+      out<<"   "<<name<<"->SetTextAlign("<<fTextAlign<<");"<<std::endl;
    }
    if (fTextColor != coldef) {
       if (fTextColor > 228) {
          TColor::SaveColor(out, fTextColor);
-         out<<"   "<<name<<"->SetTextColor(ci);" << endl;
+         out<<"   "<<name<<"->SetTextColor(ci);" << std::endl;
       } else
-         out<<"   "<<name<<"->SetTextColor("<<fTextColor<<");"<<endl;
+         out<<"   "<<name<<"->SetTextColor("<<fTextColor<<");"<<std::endl;
    }
    if (fTextFont != fondef) {
-      out<<"   "<<name<<"->SetTextFont("<<fTextFont<<");"<<endl;
+      out<<"   "<<name<<"->SetTextFont("<<fTextFont<<");"<<std::endl;
    }
    if (fTextSize != sizdef) {
-      out<<"   "<<name<<"->SetTextSize("<<fTextSize<<");"<<endl;
+      out<<"   "<<name<<"->SetTextSize("<<fTextSize<<");"<<std::endl;
    }
    if (fTextAngle != angdef) {
-      out<<"   "<<name<<"->SetTextAngle("<<fTextAngle<<");"<<endl;
+      out<<"   "<<name<<"->SetTextAngle("<<fTextAngle<<");"<<std::endl;
    }
 }
 

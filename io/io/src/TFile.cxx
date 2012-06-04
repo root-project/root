@@ -276,7 +276,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    // it is made a Zombie. One can detect this situation with a code like:
    //    TFile f("file.root");
    //    if (f.IsZombie()) {
-   //       cout << "Error opening file" << endl;
+   //       std::cout << "Error opening file" << std::endl;
    //       exit(-1);
    //    }
    //
@@ -1267,7 +1267,7 @@ void TFile::ls(Option_t *option) const
    // then objects on the file.
 
    TROOT::IndentLevel();
-   cout <<ClassName()<<"**\t\t"<<GetName()<<"\t"<<GetTitle()<<endl;
+   std::cout <<ClassName()<<"**\t\t"<<GetName()<<"\t"<<GetTitle()<<std::endl;
    TROOT::IncreaseDirLevel();
    TDirectoryFile::ls(option);
    TROOT::DecreaseDirLevel();
@@ -2340,7 +2340,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    //    dirnameProjectSource.cxx // contains all the constructors and destructors implementation.
    // and one header per class that is not nested inside another class.
    // The header file name is the fully qualified name of the class after all the special characters
-   // "<>,:" are replaced by underscored.  For example for pair<edm::Vertex,int> the file name is
+   // "<>,:" are replaced by underscored.  For example for std::pair<edm::Vertex,int> the file name is
    // pair_edm__Vertex_int_.h
    //
    // In the generated classes, map, multimap when the first template parameter is a class
@@ -2528,6 +2528,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       Error("MakeProject","Unable to create the source file %s.",spath.Data());
       return;
    }
+   fprintf(sfp, "namespace std {}\nusing namespace std;\n");
    fprintf(sfp, "#include \"%sProjectHeaders.h\"\n\n",subdirname.Data() );
    if (!genreflex) fprintf(sfp, "#include \"%sLinkDef.h\"\n\n",subdirname.Data() );
    fprintf(sfp, "#include \"%sProjectDict.cxx\"\n\n",subdirname.Data() );

@@ -67,7 +67,7 @@ public:
    virtual void   PaintLine(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
    virtual void   PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t  v2);
    virtual void   Print(Option_t *option="") const;
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
    void           SetHorizontal(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsHorizontal
    void           SetVertical(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsVertical
    virtual void   SetX1(Double_t x1) {fX1=x1;}

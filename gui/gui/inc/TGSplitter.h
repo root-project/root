@@ -89,7 +89,7 @@ public:
    const TGFrame *GetFrame() const { return fFrame; }
    Bool_t         GetLeft() const { return fLeft; }
    Bool_t         IsLeft() const { return fLeft; }
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
 
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
@@ -126,7 +126,7 @@ public:
    const TGFrame *GetFrame() const { return fFrame; }
    Bool_t         GetAbove() const { return fAbove; }
    Bool_t         IsAbove() const { return fAbove; }
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
 
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
@@ -146,7 +146,7 @@ public:
    virtual Bool_t HandleDoubleClick(Event_t *);
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
-   virtual void   SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
 
    void LayoutHeader(TGFrame *f);  //*SIGNAL*
    void LayoutListView();  //*SIGNAL*

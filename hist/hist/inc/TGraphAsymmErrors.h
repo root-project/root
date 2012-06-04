@@ -73,7 +73,7 @@ public:
    Double_t       *GetEYhigh() const {return fEYhigh;}
 
    virtual void    Print(Option_t *chopt="") const;
-   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void    SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void    SetPointError(Double_t exl, Double_t exh, Double_t eyl, Double_t eyh); // *MENU*
    virtual void    SetPointError(Int_t i, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh);
    virtual void    SetPointEXlow(Int_t i, Double_t exl);

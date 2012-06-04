@@ -420,7 +420,7 @@ void TDiamond::Paint(Option_t *)
 }
 
 //______________________________________________________________________________
-void TDiamond::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TDiamond::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out.
 
@@ -429,12 +429,12 @@ void TDiamond::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    } else {
       out<<"   TDiamond *";
    }
-   out<<"diamond = new TDiamond("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<endl;
+   out<<"diamond = new TDiamond("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<std::endl;
 
    SaveFillAttributes(out,"diamond",0,1001);
    SaveLineAttributes(out,"diamond",1,1,1);
    SaveTextAttributes(out,"diamond",11,0,1,62,0.05);
 
    SaveLines(out,"diamond");
-   out<<"   diamond->Draw();"<<endl;
+   out<<"   diamond->Draw();"<<std::endl;
 }

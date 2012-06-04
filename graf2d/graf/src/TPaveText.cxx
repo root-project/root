@@ -607,7 +607,7 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
    char *fname = StrDup(filename);
    if (fname[nch-1] == ';') { nch--; fname[nch]=0;}
 
-   ifstream file(fname,ios::in);
+   std::ifstream file(fname,std::ios::in);
    if (!file.good()) {
       Error("ReadFile", "illegal file name");
       delete [] fname;
@@ -667,7 +667,7 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
 
 
 //______________________________________________________________________________
-void TPaveText::SaveLines(ostream &out, const char *name)
+void TPaveText::SaveLines(std::ostream &out, const char *name)
 {
    // Save lines of this pavetext as C++ statements on output stream out
 
@@ -693,19 +693,19 @@ void TPaveText::SaveLines(ostream &out, const char *name)
             out<<"   TLine *";
          }
          out<<"line = "<<name<<"->AddLine("
-            <<linel->GetX1()<<","<<linel->GetY1()<<","<<linel->GetX2()<<","<<linel->GetY2()<<");"<<endl;
+            <<linel->GetX1()<<","<<linel->GetY1()<<","<<linel->GetX2()<<","<<linel->GetY2()<<");"<<std::endl;
          if (linel->GetLineColor() != 1) {
             if (linel->GetLineColor() > 228) {
                TColor::SaveColor(out, linel->GetLineColor());
-               out<<"   line->SetLineColor(ci);" << endl;
+               out<<"   line->SetLineColor(ci);" << std::endl;
             } else
-               out<<"   line->SetLineColor("<<linel->GetLineColor()<<");"<<endl;
+               out<<"   line->SetLineColor("<<linel->GetLineColor()<<");"<<std::endl;
          }
          if (linel->GetLineStyle() != 1) {
-            out<<"   line->SetLineStyle("<<linel->GetLineStyle()<<");"<<endl;
+            out<<"   line->SetLineStyle("<<linel->GetLineStyle()<<");"<<std::endl;
          }
          if (linel->GetLineWidth() != 1) {
-            out<<"   line->SetLineWidth("<<linel->GetLineWidth()<<");"<<endl;
+            out<<"   line->SetLineWidth("<<linel->GetLineWidth()<<");"<<std::endl;
          }
          continue;
       }
@@ -718,29 +718,29 @@ void TPaveText::SaveLines(ostream &out, const char *name)
             out<<"   TBox *";
          }
          out<<"box = "<<name<<"->AddBox("
-            <<lineb->GetX1()<<","<<lineb->GetY1()<<","<<lineb->GetX2()<<","<<lineb->GetY2()<<");"<<endl;
+            <<lineb->GetX1()<<","<<lineb->GetY1()<<","<<lineb->GetX2()<<","<<lineb->GetY2()<<");"<<std::endl;
          if (lineb->GetFillColor() != 18) {
             if (lineb->GetFillColor() > 228) {
                TColor::SaveColor(out, lineb->GetFillColor());
-               out<<"   box->SetFillColor(ci);" << endl;
+               out<<"   box->SetFillColor(ci);" << std::endl;
             } else
-               out<<"   box->SetFillColor("<<lineb->GetFillColor()<<");"<<endl;
+               out<<"   box->SetFillColor("<<lineb->GetFillColor()<<");"<<std::endl;
          }
          if (lineb->GetFillStyle() != 1001) {
-            out<<"   box->SetFillStyle("<<lineb->GetFillStyle()<<");"<<endl;
+            out<<"   box->SetFillStyle("<<lineb->GetFillStyle()<<");"<<std::endl;
          }
          if (lineb->GetLineColor() != 1) {
             if (lineb->GetLineColor() > 228) {
                TColor::SaveColor(out, lineb->GetLineColor());
-               out<<"   box->SetLineColor(ci);" << endl;
+               out<<"   box->SetLineColor(ci);" << std::endl;
             } else
-               out<<"   box->SetLineColor("<<lineb->GetLineColor()<<");"<<endl;
+               out<<"   box->SetLineColor("<<lineb->GetLineColor()<<");"<<std::endl;
          }
          if (lineb->GetLineStyle() != 1) {
-            out<<"   box->SetLineStyle("<<lineb->GetLineStyle()<<");"<<endl;
+            out<<"   box->SetLineStyle("<<lineb->GetLineStyle()<<");"<<std::endl;
          }
          if (lineb->GetLineWidth() != 1) {
-            out<<"   box->SetLineWidth("<<lineb->GetLineWidth()<<");"<<endl;
+            out<<"   box->SetLineWidth("<<lineb->GetLineWidth()<<");"<<std::endl;
          }
          continue;
       }
@@ -756,29 +756,29 @@ void TPaveText::SaveLines(ostream &out, const char *name)
             TString s = linet->GetTitle();
             s.ReplaceAll("\"","\\\"");
             out<<"text = "<<name<<"->AddText("
-               <<quote<<s.Data()<<quote<<");"<<endl;
+               <<quote<<s.Data()<<quote<<");"<<std::endl;
          } else {
             out<<"text = "<<name<<"->AddText("
-               <<linet->GetX()<<","<<linet->GetY()<<","<<quote<<linet->GetTitle()<<quote<<");"<<endl;
+               <<linet->GetX()<<","<<linet->GetY()<<","<<quote<<linet->GetTitle()<<quote<<");"<<std::endl;
          }
          if (linet->GetTextColor()) {
             if (linet->GetTextColor() > 228) {
                TColor::SaveColor(out, linet->GetTextColor());
-               out<<"   text->SetTextColor(ci);" << endl;
+               out<<"   text->SetTextColor(ci);" << std::endl;
             } else
-               out<<"   text->SetTextColor("<<linet->GetTextColor()<<");"<<endl;
+               out<<"   text->SetTextColor("<<linet->GetTextColor()<<");"<<std::endl;
          }
          if (linet->GetTextFont()) {
-            out<<"   text->SetTextFont("<<linet->GetTextFont()<<");"<<endl;
+            out<<"   text->SetTextFont("<<linet->GetTextFont()<<");"<<std::endl;
          }
          if (linet->GetTextSize()) {
-            out<<"   text->SetTextSize("<<linet->GetTextSize()<<");"<<endl;
+            out<<"   text->SetTextSize("<<linet->GetTextSize()<<");"<<std::endl;
          }
          if (linet->GetTextAngle() != GetTextAngle()) {
-            out<<"   text->SetTextAngle("<<linet->GetTextAngle()<<");"<<endl;
+            out<<"   text->SetTextAngle("<<linet->GetTextAngle()<<");"<<std::endl;
          }
          if (linet->GetTextAlign()) {
-            out<<"   text->SetTextAlign("<<linet->GetTextAlign()<<");"<<endl;
+            out<<"   text->SetTextAlign("<<linet->GetTextAlign()<<");"<<std::endl;
          }
       }
    // Next primitive is a Latex text
@@ -793,29 +793,29 @@ void TPaveText::SaveLines(ostream &out, const char *name)
             TString sl = latex->GetTitle();
             sl.ReplaceAll("\"","\\\"");
             out<<"text = "<<name<<"->AddText("
-               <<quote<<sl.Data()<<quote<<");"<<endl;
+               <<quote<<sl.Data()<<quote<<");"<<std::endl;
          } else {
             out<<"text = "<<name<<"->AddText("
-               <<latex->GetX()<<","<<latex->GetY()<<","<<quote<<latex->GetTitle()<<quote<<");"<<endl;
+               <<latex->GetX()<<","<<latex->GetY()<<","<<quote<<latex->GetTitle()<<quote<<");"<<std::endl;
          }
          if (latex->GetTextColor()) {
             if (latex->GetTextColor() > 228) {
                TColor::SaveColor(out, latex->GetTextColor());
-               out<<"   text->SetTextColor(ci);" << endl;
+               out<<"   text->SetTextColor(ci);" << std::endl;
             } else
-               out<<"   text->SetTextColor("<<latex->GetTextColor()<<");"<<endl;
+               out<<"   text->SetTextColor("<<latex->GetTextColor()<<");"<<std::endl;
          }
          if (latex->GetTextFont()) {
-            out<<"   text->SetTextFont("<<latex->GetTextFont()<<");"<<endl;
+            out<<"   text->SetTextFont("<<latex->GetTextFont()<<");"<<std::endl;
          }
          if (latex->GetTextSize()) {
-            out<<"   text->SetTextSize("<<latex->GetTextSize()<<");"<<endl;
+            out<<"   text->SetTextSize("<<latex->GetTextSize()<<");"<<std::endl;
          }
          if (latex->GetTextAngle() != GetTextAngle()) {
-            out<<"   text->SetTextAngle("<<latex->GetTextAngle()<<");"<<endl;
+            out<<"   text->SetTextAngle("<<latex->GetTextAngle()<<");"<<std::endl;
          }
          if (latex->GetTextAlign()) {
-            out<<"   text->SetTextAlign("<<latex->GetTextAlign()<<");"<<endl;
+            out<<"   text->SetTextAlign("<<latex->GetTextAlign()<<");"<<std::endl;
          }
       }
    }
@@ -823,12 +823,12 @@ void TPaveText::SaveLines(ostream &out, const char *name)
 
 
 //______________________________________________________________________________
-void TPaveText::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TPaveText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TPaveText::Class())) {
       out<<"   ";
    } else {
@@ -836,25 +836,25 @@ void TPaveText::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    }
    if (fOption.Contains("NDC")) {
       out<<"pt = new "<<ClassName()<<"("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
-      <<","<<quote<<fOption<<quote<<");"<<endl;
+      <<","<<quote<<fOption<<quote<<");"<<std::endl;
    } else {
       out<<"pt = new "<<ClassName()<<"("<<gPad->PadtoX(fX1)<<","<<gPad->PadtoY(fY1)<<","<<gPad->PadtoX(fX2)<<","<<gPad->PadtoY(fY2)
-      <<","<<quote<<fOption<<quote<<");"<<endl;
+      <<","<<quote<<fOption<<quote<<");"<<std::endl;
    }
    if (strcmp(GetName(),"TPave")) {
-      out<<"   pt->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+      out<<"   pt->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
    }
    if (fLabel.Length() > 0) {
-      out<<"   pt->SetLabel("<<quote<<fLabel<<quote<<");"<<endl;
+      out<<"   pt->SetLabel("<<quote<<fLabel<<quote<<");"<<std::endl;
    }
    if (fBorderSize != 4) {
-      out<<"   pt->SetBorderSize("<<fBorderSize<<");"<<endl;
+      out<<"   pt->SetBorderSize("<<fBorderSize<<");"<<std::endl;
    }
    SaveFillAttributes(out,"pt",19,1001);
    SaveLineAttributes(out,"pt",1,1,1);
    SaveTextAttributes(out,"pt",22,0,1,62,0);
    SaveLines(out,"pt");
-   out<<"   pt->Draw();"<<endl;
+   out<<"   pt->Draw();"<<std::endl;
 }
 
 

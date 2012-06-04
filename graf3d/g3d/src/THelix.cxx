@@ -286,17 +286,17 @@ void THelix::Print(Option_t *option) const
 {
    // Dump this helix with its attributes.
 
-   cout <<"    THelix Printing N=" <<fN<<" Option="<<option<<endl;
+   std::cout <<"    THelix Printing N=" <<fN<<" Option="<<option<<std::endl;
 }
 
 
 //______________________________________________________________________________
-void THelix::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void THelix::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out.
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(THelix::Class())) {
       out<<"   ";
    } else {
@@ -306,11 +306,11 @@ void THelix::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       <<fVt*TMath::Cos(fPhi0)<<","<<fVt*TMath::Sin(fPhi0)<<","<<fVz<<","
       <<fW<<","<<fRange[0]<<","<<fRange[1]<<","<<(Int_t)kHelixT<<","
       <<fAxis[0]<<","<<fAxis[1]<<","<<fAxis[2]<<","
-      <<quote<<fOption<<quote<<");"<<endl;
+      <<quote<<fOption<<quote<<");"<<std::endl;
 
    SaveLineAttributes(out,"helix",1,1,1);
 
-   out<<"   helix->Draw();"<<endl;
+   out<<"   helix->Draw();"<<std::endl;
 }
 
 

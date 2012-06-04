@@ -63,7 +63,7 @@ public:
    void           SetOption(const char *option = "")             {fOption = option;}
    void           SetRC(Bool_t redirect = kFALSE, Bool_t cut = kTRUE) {fScanRedirected = redirect; fCutEnabled = cut;}
    void           SetUserCode(const char *code, Bool_t autoexec=kTRUE) {fUserCode = code; fAutoexec=autoexec;} // *MENU*
-   void           SaveSource(ofstream &out);
+   void           SaveSource(std::ofstream &out);
 
    ClassDef(TTVRecord, 0)    // A draw record for TTreeViewer
 };
@@ -94,7 +94,7 @@ public:
 
    void           RemoveLastRecord();
    void           Show(TTVRecord *rec);
-   void           SaveSource(ofstream &out);
+   void           SaveSource(std::ofstream &out);
    void           UpdateRecord(const char *name);
 
    ClassDef(TTVSession, 0)   // A tree viewer session

@@ -26,6 +26,8 @@
 #include "RooRandom.h"
 #include "RooDataSet.h"
 
+using namespace std;
+
 ClassImp(RooKeysPdf)
 
 

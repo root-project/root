@@ -78,7 +78,7 @@ void TChainElement::ls(Option_t *) const
    // List files in the chain.
 
    TROOT::IndentLevel();
-   cout << GetTitle() << "tree:" << GetName() << " entries=" << fEntries << '\n';
+   std::cout << GetTitle() << "tree:" << GetName() << " entries=" << fEntries << '\n';
 }
 
 //_______________________________________________________________________

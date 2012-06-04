@@ -514,7 +514,7 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *,
 //                 ==================
 
    if (span < 0 || span > 1) {
-      cout << "Error: Span must be between 0 and 1" << endl;
+      std::cout << "Error: Span must be between 0 and 1" << std::endl;
       return 0;
    }
 
@@ -524,7 +524,7 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *,
    if (isPeriodic) {
       iper = 2;
       if (fMinX < 0 || fMaxX > 1) {
-         cout << "Error: x must be between 0 and 1 for periodic smooth" << endl;
+         std::cout << "Error: x must be between 0 and 1 for periodic smooth" << std::endl;
          return 0;
       }
    }
@@ -1051,7 +1051,7 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
    else if (opt.Contains("constant")) iKind = 2;
 
    if (f < 0 || f > 1) {
-      cout << "Error: Invalid f value" << endl;
+      std::cout << "Error: Invalid f value" << std::endl;
       return 0;
    }
 
@@ -1067,7 +1067,7 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
    } else if (opt.Contains("max")) {
       iTies = 3;
    } else {
-      cout << "Error: Method not known: " << ties << endl;
+      std::cout << "Error: Method not known: " << ties << std::endl;
       return 0;
    }
 

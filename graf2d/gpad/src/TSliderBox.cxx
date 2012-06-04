@@ -290,7 +290,7 @@ again:
 
 
 //______________________________________________________________________________
-void TSliderBox::SavePrimitive(ostream &, Option_t * /*= ""*/)
+void TSliderBox::SavePrimitive(std::ostream &, Option_t * /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 }

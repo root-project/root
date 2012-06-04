@@ -409,7 +409,7 @@ Double_t TMVA::MethodDT::PruneTree(const Int_t /* methodIndex */ )
       Double_t delta = fDeltaPruneStrength;
       
       DecisionTree*  dcopy;
-      vector<Double_t> q;
+      std::vector<Double_t> q;
       multimap<Double_t,Double_t> quality;
       Int_t nnodes=fTree->GetNNodes();
 
@@ -424,7 +424,7 @@ Double_t TMVA::MethodDT::PruneTree(const Int_t /* methodIndex */ )
          dcopy->SetPruneStrength(alpha+=delta);
          dcopy->PruneTree();
          q.push_back(TestTreeQuality(dcopy));
-         quality.insert(pair<const Double_t,Double_t>(q.back(),alpha));
+         quality.insert(std::pair<const Double_t,Double_t>(q.back(),alpha));
          nnodes=dcopy->GetNNodes();
          if (previousNnodes == nnodes) troubleCount++;
          else { 
@@ -518,7 +518,7 @@ void TMVA::MethodDT::ReadWeightsFromXML( void* wghtnode)
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodDT::ReadWeightsFromStream( istream& istr )
+void  TMVA::MethodDT::ReadWeightsFromStream( std::istream& istr )
 {
    delete fTree;
    fTree = new DecisionTree();

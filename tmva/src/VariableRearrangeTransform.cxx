@@ -149,7 +149,7 @@ void TMVA::VariableRearrangeTransform::ReadFromXML( void* trfnode )
 }
 
 //_______________________________________________________________________
-void TMVA::VariableRearrangeTransform::PrintTransformation( ostream& ) 
+void TMVA::VariableRearrangeTransform::PrintTransformation( std::ostream& ) 
 {
    // prints the transformation ranges
 }

@@ -42,6 +42,8 @@
 
 
 
+using namespace std;
+
 ClassImp(RooStats::UpperLimitMCSModule);
 
 

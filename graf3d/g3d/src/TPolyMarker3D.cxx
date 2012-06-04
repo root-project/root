@@ -289,7 +289,7 @@ void TPolyMarker3D::ls(Option_t *option) const
    // List this 3-D polymarker.
 
    TROOT::IndentLevel();
-   cout << "    TPolyMarker3D  N=" << Size() <<" Option="<<option<<endl;
+   std::cout << "    TPolyMarker3D  N=" << Size() <<" Option="<<option<<std::endl;
 }
 
 //______________________________________________________________________________
@@ -494,26 +494,26 @@ void TPolyMarker3D::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TPolyMarker3D::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TPolyMarker3D::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream.
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TPolyMarker3D::Class())) {
       out<<"   ";
    } else {
       out<<"   TPolyMarker3D *";
    }
-   out<<"pmarker3D = new TPolyMarker3D("<<fN<<","<<GetMarkerStyle()<<","<<quote<<fOption<<quote<<");"<<endl;
-   out<<"   pmarker3D->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+   out<<"pmarker3D = new TPolyMarker3D("<<fN<<","<<GetMarkerStyle()<<","<<quote<<fOption<<quote<<");"<<std::endl;
+   out<<"   pmarker3D->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
 
    SaveMarkerAttributes(out,"pmarker3D",1,1,1);
 
    for (Int_t i=0;i<Size();i++) {
-      out<<"   pmarker3D->SetPoint("<<i<<","<<fP[3*i]<<","<<fP[3*i+1]<<","<<fP[3*i+2]<<");"<<endl;
+      out<<"   pmarker3D->SetPoint("<<i<<","<<fP[3*i]<<","<<fP[3*i+1]<<","<<fP[3*i+2]<<");"<<std::endl;
    }
-   out<<"   pmarker3D->Draw();"<<endl;
+   out<<"   pmarker3D->Draw();"<<std::endl;
 }
 
 //______________________________________________________________________________

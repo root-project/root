@@ -2286,8 +2286,8 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    UInt_t lenmax = 0;
    UInt_t colDefaultSize = 9;
    UInt_t colPrecision = 9;
-   vector<TString> colFormats;
-   vector<Int_t> colSizes;
+   std::vector<TString> colFormats;
+   std::vector<Int_t> colSizes;
 
    if (opt.Contains("lenmax=")) {
       int start = opt.Index("lenmax=");
@@ -2382,7 +2382,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    Long64_t entry,entryNumber;
    Int_t i,nch;
    UInt_t ncols = 8;   // by default first 8 columns are printed only
-   ofstream out;
+   std::ofstream out;
    Int_t lenfile = 0;
    char * fname = 0;
    if (fScanRedirect) {
@@ -2396,7 +2396,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
          strlcpy(fname, fTree->GetName(),nch2+10);
          strlcat(fname, "-scan.dat",nch2+10);
       }
-      out.open(fname, ios::out);
+      out.open(fname, std::ios::out);
       if (!out.good ()) {
          if (!lenfile) delete [] fname;
          Error("Scan","Can not open file for redirection");
@@ -2514,7 +2514,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       onerow += Form(starFormat.Data(),var[ui]->PrintValue(-2));
    }
    if (fScanRedirect)
-      out<<onerow.Data()<<"*"<<endl;
+      out<<onerow.Data()<<"*"<<std::endl;
    else
       printf("%s*\n",onerow.Data());
    onerow = "*    Row   ";
@@ -2524,7 +2524,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       onerow += Form(numbFormat.Data(),var[ui]->PrintValue(-1));
    }
    if (fScanRedirect)
-      out<<onerow.Data()<<"*"<<endl;
+      out<<onerow.Data()<<"*"<<std::endl;
    else
       printf("%s*\n",onerow.Data());
    onerow = "***********";
@@ -2534,7 +2534,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       onerow += Form(starFormat.Data(),var[ui]->PrintValue(-2));
    }
    if (fScanRedirect)
-      out<<onerow.Data()<<"*"<<endl;
+      out<<onerow.Data()<<"*"<<std::endl;
    else
       printf("%s*\n",onerow.Data());
 //*-*- loop on all selected entries
@@ -2609,7 +2609,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
          }
          fSelectedRows++;
          if (fScanRedirect)
-            out<<onerow.Data()<<"*"<<endl;
+            out<<onerow.Data()<<"*"<<std::endl;
          else
             printf("%s*\n",onerow.Data());
          if (fTree->GetScanField() > 0 && fSelectedRows > 0) {
@@ -2634,7 +2634,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       onerow += Form(starFormat.Data(),var[ui]->PrintValue(-2));
    }
    if (fScanRedirect)
-      out<<onerow.Data()<<"*"<<endl;
+      out<<onerow.Data()<<"*"<<std::endl;
    else
       printf("%s*\n",onerow.Data());
    if (select) Printf("==> %lld selected %s", fSelectedRows,

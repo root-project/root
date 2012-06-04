@@ -1822,27 +1822,27 @@ const TGGC &TGRadioButton::GetDefaultGC()
 }
 
 //______________________________________________________________________________
-void TGButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a button widget as a C++ statement(s) on output stream out.
 
    char quote = '"';
 
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
    
    if (fState == kButtonDown) {
-      out << "   " << GetName() << "->SetState(kButtonDown);"  << endl;
+      out << "   " << GetName() << "->SetState(kButtonDown);"  << std::endl;
    }
    if (fState == kButtonDisabled) {
-      out << "   " << GetName() << "->SetState(kButtonDisabled);"  << endl;
+      out << "   " << GetName() << "->SetState(kButtonDisabled);"  << std::endl;
    }
    if (fState == kButtonEngaged) {
-      out << "   " << GetName() << "->SetState(kButtonEngaged);"  << endl;
+      out << "   " << GetName() << "->SetState(kButtonEngaged);"  << std::endl;
    }
    if (fBackground != fgDefaultFrameBackground) {
       SaveUserColor(out, option);
-      out << "   " << GetName() << "->ChangeBackground(ucolor);" << endl;
+      out << "   " << GetName() << "->ChangeBackground(ucolor);" << std::endl;
    }
 
    if (fTip) {
@@ -1850,16 +1850,16 @@ void TGButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       tiptext.ReplaceAll("\n", "\\n");
       out << "   ";
       out << GetName() << "->SetToolTipText(" << quote
-          << tiptext << quote << ");"  << endl;
+          << tiptext << quote << ");"  << std::endl;
    }
    if (strlen(fCommand)) {
       out << "   " << GetName() << "->SetCommand(" << quote << fCommand
-          << quote << ");" << endl;
+          << quote << ");" << std::endl;
    }
 }
 
 //______________________________________________________________________________
-void TGTextButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGTextButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a text button widget as a C++ statement(s) on output stream out.
 
@@ -1900,33 +1900,33 @@ void TGTextButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       if (fFontStruct == GetDefaultFontStruct()) {
          if (fNormGC == GetDefaultGC()()) {
             if (fWidgetId == -1) {
-               out << ");" << endl;
+               out << ");" << std::endl;
             } else {
-               out << "," << fWidgetId <<");" << endl;
+               out << "," << fWidgetId <<");" << std::endl;
             }
          } else {
-            out << "," << fWidgetId << "," << parGC << ");" << endl;
+            out << "," << fWidgetId << "," << parGC << ");" << std::endl;
          }
       } else {
-         out << "," << fWidgetId << "," << parGC << "," << parFont << ");" << endl;
+         out << "," << fWidgetId << "," << parGC << "," << parFont << ");" << std::endl;
       }
    } else {
-      out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");" << endl;
+      out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");" << std::endl;
    }
 
-   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");" << endl;
+   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");" << std::endl;
    out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << ",";
-   out << fMTop << "," << fMBottom << ");" << endl;
-   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << endl;
+   out << fMTop << "," << fMBottom << ");" << std::endl;
+   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << std::endl;
 
    out << "   " << GetName() << "->Resize(" << GetWidth() << "," << GetHeight()
-       << ");" << endl;
+       << ");" << std::endl;
 
    TGButton::SavePrimitive(out,option);
 }
 
 //______________________________________________________________________________
-void TGPictureButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGPictureButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a picture button widget as a C++ statement(s) on output stream out.
 
@@ -1960,23 +1960,23 @@ void TGPictureButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    if (GetOptions() == (kRaisedFrame | kDoubleBorder)) {
       if (fNormGC == GetDefaultGC()()) {
          if (fWidgetId == -1) {
-            out << ");" << endl;
+            out << ");" << std::endl;
          } else {
-            out << "," << fWidgetId << ");" << endl;
+            out << "," << fWidgetId << ");" << std::endl;
          }
       } else {
-         out << "," << fWidgetId << "," << parGC.Data() << ");" << endl;
+         out << "," << fWidgetId << "," << parGC.Data() << ");" << std::endl;
       }
    } else {
       out << "," << fWidgetId << "," << parGC.Data() << "," << GetOptionString()
-          << ");" << endl;
+          << ");" << std::endl;
    }
 
    TGButton::SavePrimitive(out,option);
 }
 
 //______________________________________________________________________________
-void TGCheckButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGCheckButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a check button widget as a C++ statement(s) on output stream out.
 
@@ -2016,35 +2016,35 @@ void TGCheckButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       if (fFontStruct == GetDefaultFontStruct()) {
          if (fNormGC == GetDefaultGC()()) {
             if (fWidgetId == -1) {
-               out << ");" << endl;
+               out << ");" << std::endl;
             } else {
-               out << "," << fWidgetId << ");" << endl;
+               out << "," << fWidgetId << ");" << std::endl;
             }
          } else {
-            out << "," << fWidgetId << "," << parGC << ");" << endl;
+            out << "," << fWidgetId << "," << parGC << ");" << std::endl;
          }
       } else {
-         out << "," << fWidgetId << "," << parGC << "," << parFont << ");" << endl;
+         out << "," << fWidgetId << "," << parGC << "," << parFont << ");" << std::endl;
       }
    } else {
-      out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");" << endl;
+      out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");" << std::endl;
    }
 
    TGButton::SavePrimitive(out,option);
    if (fState == kButtonDisabled) {
       if (IsDisabledAndSelected())
-         out << "   " << GetName() << "->SetDisabledAndSelected(kTRUE);" << endl;
+         out << "   " << GetName() << "->SetDisabledAndSelected(kTRUE);" << std::endl;
       else
-         out << "   " << GetName() << "->SetDisabledAndSelected(kFALSE);" << endl;
+         out << "   " << GetName() << "->SetDisabledAndSelected(kFALSE);" << std::endl;
    }
-   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");" << endl;
+   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");" << std::endl;
    out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << ",";
-   out << fMTop << "," << fMBottom << ");" << endl;
-   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << endl;
+   out << fMTop << "," << fMBottom << ");" << std::endl;
+   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << std::endl;
 }
 
 //______________________________________________________________________________
-void TGRadioButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGRadioButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a radio button widget as a C++ statement(s) on output stream out.
 
@@ -2084,31 +2084,31 @@ void TGRadioButton::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       if (fFontStruct == GetDefaultFontStruct()) {
          if (fNormGC == GetDefaultGC()()) {
             if (fWidgetId == -1) {
-               out <<");" << endl;
+               out <<");" << std::endl;
             } else {
-               out << "," << fWidgetId << ");" << endl;
+               out << "," << fWidgetId << ");" << std::endl;
             }
          } else {
-            out << "," << fWidgetId << "," << parGC << ");" << endl;
+            out << "," << fWidgetId << "," << parGC << ");" << std::endl;
          }
       } else {
-         out << "," << fWidgetId << "," << parGC << "," << parFont << ");" << endl;
+         out << "," << fWidgetId << "," << parGC << "," << parFont << ");" << std::endl;
       }
    } else {
-      out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");" << endl;
+      out << "," << fWidgetId << "," << parGC << "," << parFont << "," << GetOptionString() << ");" << std::endl;
    }
 
    TGButton::SavePrimitive(out,option);
    if (fState == kButtonDisabled) {
       if (IsDisabledAndSelected())
-         out << "   " << GetName() << "->SetDisabledAndSelected(kTRUE);" << endl;
+         out << "   " << GetName() << "->SetDisabledAndSelected(kTRUE);" << std::endl;
       else
-         out << "   " << GetName() << "->SetDisabledAndSelected(kFALSE);" << endl;
+         out << "   " << GetName() << "->SetDisabledAndSelected(kFALSE);" << std::endl;
    }
-   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");" << endl;
+   out << "   " << GetName() << "->SetTextJustify(" << fTMode << ");" << std::endl;
    out << "   " << GetName() << "->SetMargins(" << fMLeft << "," << fMRight << ",";
-   out << fMTop << "," << fMBottom << ");" << endl;
-   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << endl;
+   out << fMTop << "," << fMBottom << ");" << std::endl;
+   out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << std::endl;
 }
 
 //______________________________________________________________________________

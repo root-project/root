@@ -214,11 +214,11 @@ void TGedMarkerSelect::SetMarkerStyle(Style_t markerStyle)
 }
 
 //______________________________________________________________________________
-void TGedMarkerSelect::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGedMarkerSelect::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save the pattern select widget as a C++ statement(s) on output stream out
 
    out <<"   TGedMarkerSelect *";
    out << GetName() << " = new TGedMarkerSelect(" << fParent->GetName()
-       << "," << fMarkerStyle << "," << WidgetId() << ");" << endl;
+       << "," << fMarkerStyle << "," << WidgetId() << ");" << std::endl;
 }

@@ -387,12 +387,12 @@ public:
    TString     &Prepend(const TString &s);
    TString     &Prepend(const TString &s, Ssiz_t n);
    TString     &Prepend(char c, Ssiz_t rep = 1);  // Prepend c rep times
-   istream     &ReadFile(istream &str);      // Read to EOF or null character
-   istream     &ReadLine(istream &str,
+   std::istream     &ReadFile(std::istream &str);      // Read to EOF or null character
+   std::istream     &ReadLine(std::istream &str,
                          Bool_t skipWhite = kTRUE);   // Read to EOF or newline
-   istream     &ReadString(istream &str);             // Read to EOF or null character
-   istream     &ReadToDelim(istream &str, char delim = '\n'); // Read to EOF or delimitor
-   istream     &ReadToken(istream &str);                // Read separated by white space
+   std::istream     &ReadString(std::istream &str);             // Read to EOF or null character
+   std::istream     &ReadToDelim(std::istream &str, char delim = '\n'); // Read to EOF or delimitor
+   std::istream     &ReadToken(std::istream &str);                // Read separated by white space
    TString     &Remove(Ssiz_t pos);                     // Remove pos to end of string
    TString     &Remove(Ssiz_t pos, Ssiz_t n);           // Remove n chars starting at pos
    TString     &Remove(EStripType s, char c);           // Like Strip() but changing string directly
@@ -435,8 +435,8 @@ public:
 };
 
 // Related global functions
-istream  &operator>>(istream &str,       TString &s);
-ostream  &operator<<(ostream &str, const TString &s);
+std::istream  &operator>>(std::istream &str,       TString &s);
+std::ostream  &operator<<(std::ostream &str, const TString &s);
 #if defined(R__TEMPLATE_OVERLOAD_BUG)
 template <>
 #endif

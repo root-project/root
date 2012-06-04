@@ -229,7 +229,7 @@ public:
    TGMenuBar      *GetMenuBar() const { return fMenuBar; }
    virtual void    Activate(Bool_t) { }
    virtual void    Activate(TGMenuEntry *entry);
-   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void    SavePrimitive(std::ostream &out, Option_t *option = "");
 
    UInt_t GetEntrySep()  const { return fEntrySep; }
    virtual void SetEntrySep(UInt_t sep)  { fEntrySep = sep; }
@@ -295,7 +295,7 @@ public:
    TGPopupMenu *GetMenu() const { return fMenu; }
    const char  *GetName() const { return fLabel ? fLabel->GetString() : 0; }
    virtual void DoSendMessage();
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGMenuTitle,0)  // Menu title class
 };
@@ -358,7 +358,7 @@ public:
    virtual Bool_t  HandleButton(Event_t *event);
    virtual Bool_t  HandleMotion(Event_t *event);
    virtual Bool_t  HandleKey(Event_t *event);
-   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void    SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void    Layout();
            void    PopupConnection();
    TGFrameElement* GetLastOnLeft();

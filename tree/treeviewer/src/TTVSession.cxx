@@ -85,35 +85,35 @@ void TTVRecord::PlugIn(TTreeViewer *tv)
       item->SetSmallPic(gClient->GetPicture("cut-disable_t.xpm"));
 }
 //______________________________________________________________________________
-void TTVRecord::SaveSource(ofstream &out)
+void TTVRecord::SaveSource(std::ofstream &out)
 {
    // Save the TTVRecord in a C++ macro file
 
    char quote = '"';
-   out <<"//--- tree viewer record"<<endl;
-   out <<"   tv_record = tv_session->AddRecord(kTRUE);"<<endl;
-   out <<"   tv_session->SetRecordName("<<quote<<GetName()<<quote<<");"<<endl;
-   out <<"   tv_record->fX        = "<<quote<<fX.Data()<<quote<<";"<<endl;
-   out <<"   tv_record->fY        = "<<quote<<fY.Data()<<quote<<";"<<endl;
-   out <<"   tv_record->fZ        = "<<quote<<fZ.Data()<<quote<<";"<<endl;
-   out <<"   tv_record->fCut      = "<<quote<<fCut.Data()<<quote<<";"<<endl;
-   out <<"   tv_record->fXAlias   = "<<quote<<fXAlias.Data()<<quote<<";"<<endl;
-   out <<"   tv_record->fYAlias   = "<<quote<<fYAlias.Data()<<quote<<";"<<endl;
-   out <<"   tv_record->fZAlias   = "<<quote<<fZAlias.Data()<<quote<<";"<<endl;
-   out <<"   tv_record->fCutAlias = "<<quote<<fCutAlias.Data()<<quote<<";"<<endl;
-   out <<"   tv_record->fOption   = "<<quote<<fOption.Data()<<quote<<";"<<endl;
+   out <<"//--- tree viewer record"<<std::endl;
+   out <<"   tv_record = tv_session->AddRecord(kTRUE);"<<std::endl;
+   out <<"   tv_session->SetRecordName("<<quote<<GetName()<<quote<<");"<<std::endl;
+   out <<"   tv_record->fX        = "<<quote<<fX.Data()<<quote<<";"<<std::endl;
+   out <<"   tv_record->fY        = "<<quote<<fY.Data()<<quote<<";"<<std::endl;
+   out <<"   tv_record->fZ        = "<<quote<<fZ.Data()<<quote<<";"<<std::endl;
+   out <<"   tv_record->fCut      = "<<quote<<fCut.Data()<<quote<<";"<<std::endl;
+   out <<"   tv_record->fXAlias   = "<<quote<<fXAlias.Data()<<quote<<";"<<std::endl;
+   out <<"   tv_record->fYAlias   = "<<quote<<fYAlias.Data()<<quote<<";"<<std::endl;
+   out <<"   tv_record->fZAlias   = "<<quote<<fZAlias.Data()<<quote<<";"<<std::endl;
+   out <<"   tv_record->fCutAlias = "<<quote<<fCutAlias.Data()<<quote<<";"<<std::endl;
+   out <<"   tv_record->fOption   = "<<quote<<fOption.Data()<<quote<<";"<<std::endl;
    if (fScanRedirected)
-      out <<"   tv_record->fScanRedirected = kTRUE;"<<endl;
+      out <<"   tv_record->fScanRedirected = kTRUE;"<<std::endl;
    else
-      out <<"   tv_record->fScanRedirected = kFALSE;"<<endl;
+      out <<"   tv_record->fScanRedirected = kFALSE;"<<std::endl;
    if (fCutEnabled)
-      out <<"   tv_record->fCutEnabled = kTRUE;"<<endl;
+      out <<"   tv_record->fCutEnabled = kTRUE;"<<std::endl;
    else
-      out <<"   tv_record->fCutEnabled = kFALSE;"<<endl;
+      out <<"   tv_record->fCutEnabled = kFALSE;"<<std::endl;
    if (fUserCode.Length()) {
-      out <<"   tv_record->SetUserCode(\""<<fUserCode.Data()<<"\");"<<endl;
+      out <<"   tv_record->SetUserCode(\""<<fUserCode.Data()<<"\");"<<std::endl;
       if (fAutoexec) {
-         out <<"   tv_record->SetAutoexec();"<<endl;
+         out <<"   tv_record->SetAutoexec();"<<std::endl;
       }
    }
 }
@@ -229,20 +229,20 @@ void TTVSession::Show(TTVRecord *rec)
    fViewer->SetHistogramTitle(rec->GetName());
 }
 //______________________________________________________________________________
-void TTVSession::SaveSource(ofstream &out)
+void TTVSession::SaveSource(std::ofstream &out)
 {
    // Save the TTVSession in a C++ macro file
 
-   out<<"//--- session object"<<endl;
-   out<<"   tv_session = new TTVSession(treeview);"<<endl;
-   out<<"   treeview->SetSession(tv_session);"<<endl;
+   out<<"//--- session object"<<std::endl;
+   out<<"   tv_session = new TTVSession(treeview);"<<std::endl;
+   out<<"   treeview->SetSession(tv_session);"<<std::endl;
    TTVRecord *record;
    for (Int_t i=0; i<fRecords; i++) {
       record = GetRecord(i);
       record->SaveSource(out);
    }
-   out<<"//--- Connect first record"<<endl;
-   out<<"   tv_session->First();"<<endl;
+   out<<"//--- Connect first record"<<std::endl;
+   out<<"   tv_session->First();"<<std::endl;
 }
 //______________________________________________________________________________
 void TTVSession::UpdateRecord(const char *name)

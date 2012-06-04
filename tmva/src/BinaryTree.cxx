@@ -115,7 +115,7 @@ UInt_t TMVA::BinaryTree::CountNodes(TMVA::Node *n)
 }
 
 //_______________________________________________________________________
-void TMVA::BinaryTree::Print(ostream & os) const
+void TMVA::BinaryTree::Print(std::ostream & os) const
 {
    // recursively print the tree
    this->GetRoot()->PrintRec(os);
@@ -147,7 +147,7 @@ void TMVA::BinaryTree::ReadXML(void* node, UInt_t tmva_Version_Code ) {
 
 
 //_______________________________________________________________________
-ostream& TMVA::operator<< (ostream& os, const TMVA::BinaryTree& tree)
+std::ostream& TMVA::operator<< (std::ostream& os, const TMVA::BinaryTree& tree)
 {
    // print the tree recursinvely using the << operator
    tree.Print(os);
@@ -155,7 +155,7 @@ ostream& TMVA::operator<< (ostream& os, const TMVA::BinaryTree& tree)
 }
 
 //_______________________________________________________________________
-void TMVA::BinaryTree::Read(istream & istr, UInt_t tmva_Version_Code )
+void TMVA::BinaryTree::Read(std::istream & istr, UInt_t tmva_Version_Code )
 {
    // Read the binary tree from an input stream.
    // The input stream format depends on the tree type,
@@ -192,9 +192,9 @@ void TMVA::BinaryTree::Read(istream & istr, UInt_t tmva_Version_Code )
 }
 
 //_______________________________________________________________________
-istream& TMVA::operator>> (istream& istr, TMVA::BinaryTree& tree)
+std::istream& TMVA::operator>> (std::istream& istr, TMVA::BinaryTree& tree)
 { 
-   // read the tree from an istream
+   // read the tree from an std::istream
    tree.Read(istr);
    return istr;
 }

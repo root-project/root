@@ -1960,7 +1960,7 @@ void TGaxis::Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
 
 
 //______________________________________________________________________________
-void TGaxis::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGaxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
@@ -1971,54 +1971,54 @@ void TGaxis::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       out<<"   TGaxis *";
    }
    out<<"gaxis = new TGaxis("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-      <<","<<fWmin<<","<<fWmax<<","<<fNdiv<<","<<quote<<fChopt.Data()<<quote<<");"<<endl;
-   out<<"   gaxis->SetLabelOffset("<<GetLabelOffset()<<");"<<endl;
-   out<<"   gaxis->SetLabelSize("<<GetLabelSize()<<");"<<endl;
-   out<<"   gaxis->SetTickSize("<<GetTickSize()<<");"<<endl;
-   out<<"   gaxis->SetGridLength("<<GetGridLength()<<");"<<endl;
-   out<<"   gaxis->SetTitleOffset("<<GetTitleOffset()<<");"<<endl;
-   out<<"   gaxis->SetTitleSize("<<GetTitleSize()<<");"<<endl;
-   out<<"   gaxis->SetTitleColor("<<GetTextColor()<<");"<<endl;
-   out<<"   gaxis->SetTitleFont("<<GetTextFont()<<");"<<endl;
+      <<","<<fWmin<<","<<fWmax<<","<<fNdiv<<","<<quote<<fChopt.Data()<<quote<<");"<<std::endl;
+   out<<"   gaxis->SetLabelOffset("<<GetLabelOffset()<<");"<<std::endl;
+   out<<"   gaxis->SetLabelSize("<<GetLabelSize()<<");"<<std::endl;
+   out<<"   gaxis->SetTickSize("<<GetTickSize()<<");"<<std::endl;
+   out<<"   gaxis->SetGridLength("<<GetGridLength()<<");"<<std::endl;
+   out<<"   gaxis->SetTitleOffset("<<GetTitleOffset()<<");"<<std::endl;
+   out<<"   gaxis->SetTitleSize("<<GetTitleSize()<<");"<<std::endl;
+   out<<"   gaxis->SetTitleColor("<<GetTextColor()<<");"<<std::endl;
+   out<<"   gaxis->SetTitleFont("<<GetTextFont()<<");"<<std::endl;
 
    if (strlen(GetName())) {
-      out<<"   gaxis->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+      out<<"   gaxis->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
    }
    if (strlen(GetTitle())) {
-      out<<"   gaxis->SetTitle("<<quote<<GetTitle()<<quote<<");"<<endl;
+      out<<"   gaxis->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
    }
 
    if (fLabelColor != 1) {
       if (fLabelColor > 228) {
          TColor::SaveColor(out, fLabelColor);
-         out<<"   gaxis->SetLabelColor(ci);" << endl;
+         out<<"   gaxis->SetLabelColor(ci);" << std::endl;
       } else
-         out<<"   gaxis->SetLabelColor("<<GetLabelColor()<<");"<<endl;
+         out<<"   gaxis->SetLabelColor("<<GetLabelColor()<<");"<<std::endl;
    }
    if (fLineColor != 1) {
       if (fLineColor > 228) {
          TColor::SaveColor(out, fLineColor);
-         out<<"   gaxis->SetLineColor(ci);" << endl;
+         out<<"   gaxis->SetLineColor(ci);" << std::endl;
       } else
-         out<<"   gaxis->SetLineColor("<<GetLineColor()<<");"<<endl;
+         out<<"   gaxis->SetLineColor("<<GetLineColor()<<");"<<std::endl;
    }
    if (fLineStyle != 1) {
-      out<<"   gaxis->SetLineStyle("<<GetLineStyle()<<");"<<endl;
+      out<<"   gaxis->SetLineStyle("<<GetLineStyle()<<");"<<std::endl;
    }
    if (fLineWidth != 1) {
-      out<<"   gaxis->SetLineWidth("<<GetLineWidth()<<");"<<endl;
+      out<<"   gaxis->SetLineWidth("<<GetLineWidth()<<");"<<std::endl;
    }
    if (fLabelFont != 62) {
-      out<<"   gaxis->SetLabelFont("<<GetLabelFont()<<");"<<endl;
+      out<<"   gaxis->SetLabelFont("<<GetLabelFont()<<");"<<std::endl;
    }
    if (TestBit(TAxis::kMoreLogLabels)) {
-      out<<"   gaxis->SetMoreLogLabels();"<<endl;
+      out<<"   gaxis->SetMoreLogLabels();"<<std::endl;
    }
    if (TestBit(TAxis::kNoExponent)) {
-      out<<"   gaxis->SetNoExponent();"<<endl;
+      out<<"   gaxis->SetNoExponent();"<<std::endl;
    }
 
-   out<<"   gaxis->Draw();"<<endl;
+   out<<"   gaxis->Draw();"<<std::endl;
 }
 
 

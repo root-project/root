@@ -198,12 +198,12 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
 
 
 //______________________________________________________________________________
-void TPaveLabel::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TPaveLabel::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TPaveLabel::Class())) {
       out<<"   ";
    } else {
@@ -213,17 +213,17 @@ void TPaveLabel::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    s.ReplaceAll("\"","\\\"");
    if (fOption.Contains("NDC")) {
       out<<"pl = new TPaveLabel("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
-         <<","<<quote<<s.Data()<<quote<<","<<quote<<fOption<<quote<<");"<<endl;
+         <<","<<quote<<s.Data()<<quote<<","<<quote<<fOption<<quote<<");"<<std::endl;
    } else {
       out<<"pl = new TPaveLabel("<<gPad->PadtoX(fX1)<<","<<gPad->PadtoY(fY1)<<","<<gPad->PadtoX(fX2)<<","<<gPad->PadtoY(fY2)
-         <<","<<quote<<s.Data()<<quote<<","<<quote<<fOption<<quote<<");"<<endl;
+         <<","<<quote<<s.Data()<<quote<<","<<quote<<fOption<<quote<<");"<<std::endl;
    }
    if (fBorderSize != 3) {
-      out<<"   pl->SetBorderSize("<<fBorderSize<<");"<<endl;
+      out<<"   pl->SetBorderSize("<<fBorderSize<<");"<<std::endl;
    }
    SaveFillAttributes(out,"pl",19,1001);
    SaveLineAttributes(out,"pl",1,1,1);
    SaveTextAttributes(out,"pl",22,0,1,62,0);
 
-   out<<"   pl->Draw();"<<endl;
+   out<<"   pl->Draw();"<<std::endl;
 }

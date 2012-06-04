@@ -419,16 +419,16 @@ void TDocParser::Convert(std::ostream& out, std::istream& in, const char* relpat
          // Only write the raw, uninterpreted directive code:
          if (!InContext(kDirective)) {
             GetDocOutput()->AdjustSourcePath(fLineSource, relpath);
-            out << fLineSource << endl;
+            out << fLineSource << std::endl;
          }
       } else {
          // Write source for source and interpreted directives if they exist.
          if (fLineComment.Length() ) { 	 
             GetDocOutput()->AdjustSourcePath(fLineComment, relpath); 	 
-            out << fLineComment << endl; 	 
+            out << fLineComment << std::endl; 	 
          } else if (!InContext(kDirective)) {
             GetDocOutput()->AdjustSourcePath(fLineSource, relpath);
-            out << fLineSource << endl;
+            out << fLineSource << std::endl;
          }
       }
    }
@@ -1607,7 +1607,7 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
          sourceFileName.Data(), fCurrentClass->GetName());
       return;
    }
-   ifstream sourceFile(sourceFileName.Data());
+   std::ifstream sourceFile(sourceFileName.Data());
    if (!sourceFile || !sourceFile.good()) {
       Error("LocateMethods", "Can't open file '%s' for reading!", sourceFileName.Data());
       return;

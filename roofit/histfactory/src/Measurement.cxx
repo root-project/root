@@ -8,6 +8,8 @@
 #include "RooStats/HistFactory/Measurement.h"
 #include "RooStats/HistFactory/HistFactoryException.h"
 
+using namespace std;
+
 ClassImp(RooStats::HistFactory::Measurement) ;
 
 

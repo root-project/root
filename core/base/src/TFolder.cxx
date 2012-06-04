@@ -156,7 +156,7 @@ TFolder::~TFolder()
    TCollection::EmptyGarbageCollection();
    
    if (gDebug)
-      cerr << "TFolder dtor called for "<< GetName() << endl;
+      std::cerr << "TFolder dtor called for "<< GetName() << std::endl;
 }
 
 //______________________________________________________________________________
@@ -388,7 +388,7 @@ void TFolder::ls(Option_t *option) const
 
    if (!fFolders) return;
    TROOT::IndentLevel();
-   cout <<ClassName()<<"*\t\t"<<GetName()<<"\t"<<GetTitle()<<endl;
+   std::cout <<ClassName()<<"*\t\t"<<GetName()<<"\t"<<GetTitle()<<std::endl;
    TROOT::IncreaseDirLevel();
 
    TString opt = option;

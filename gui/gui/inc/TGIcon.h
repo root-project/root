@@ -67,7 +67,7 @@ public:
    virtual void ChangeBackgroundColor() { }
 
    virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGIcon,0)  // Icon GUI class
 };

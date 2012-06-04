@@ -201,15 +201,15 @@ TFoamVect& TFoamVect::operator =(Double_t x)
 //_____________________________________________________________________________
 void TFoamVect::Print(Option_t *option) const
 {
-// Printout of all vector components on "cout"
+// Printout of all vector components on "std::cout"
    if(!option) Error("Print ", "No option set \n");
    Int_t i;
-   Int_t pr = cout.precision(7); 
-   cout << "(";
-   for(i=0; i<fDim-1; i++) cout  << setw(12) << *(fCoords+i) << ",";
-   cout  << setw(12) << *(fCoords+fDim-1);
-   cout << ")";
-   cout.precision(pr);
+   Int_t pr = std::cout.precision(7); 
+   std::cout << "(";
+   for(i=0; i<fDim-1; i++) std::cout  << std::setw(12) << *(fCoords+i) << ",";
+   std::cout  << std::setw(12) << *(fCoords+fDim-1);
+   std::cout << ")";
+   std::cout.precision(pr);
 }
 //______________________________________________________________________________
 void TFoamVect::PrintList(void)
@@ -219,9 +219,9 @@ void TFoamVect::PrintList(void)
    if(this == 0) return;
    TFoamVect *current=this;
    while(current != 0) {
-      cout<<"vec["<<i<<"]=";
+      std::cout<<"vec["<<i<<"]=";
       current->Print("1");
-      cout<<endl;
+      std::cout<<std::endl;
       current = current->fNext;
       i++;
    }

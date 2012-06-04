@@ -139,8 +139,8 @@ public:
    virtual void PropagateVizParamsToElements(TEveElement* el=0);
    virtual void CopyVizParams(const TEveElement* el);
    virtual void CopyVizParamsFromDB();
-   void         SaveVizParams (ostream& out, const TString& tag, const TString& var);
-   virtual void WriteVizParams(ostream& out, const TString& var);
+   void         SaveVizParams (std::ostream& out, const TString& tag, const TString& var);
+   virtual void WriteVizParams(std::ostream& out, const TString& var);
 
    TEveElement*  GetMaster();
    TEveCompound* GetCompound()                { return fCompound; }

@@ -38,6 +38,8 @@
 
 
 
+using namespace std;
+
 ClassImp(RooLinkedList)
 ;
 

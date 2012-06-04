@@ -556,8 +556,8 @@ void THStack::ls(Option_t *option) const
    // List histograms in the stack
 
    TROOT::IndentLevel();
-   cout <<IsA()->GetName()
-      <<" Name= "<<GetName()<<" Title= "<<GetTitle()<<" Option="<<option<<endl;
+   std::cout <<IsA()->GetName()
+      <<" Name= "<<GetName()<<" Title= "<<GetTitle()<<" Option="<<option<<std::endl;
    TROOT::IncreaseDirLevel();
    if (fHists) fHists->ls(option);
    TROOT::DecreaseDirLevel();
@@ -841,26 +841,26 @@ void THStack::RecursiveRemove(TObject *obj)
 }
 
 //______________________________________________________________________________
-void THStack::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void THStack::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(THStack::Class())) {
       out<<"   ";
    } else {
       out<<"   THStack *";
    }
-   out<<GetName()<<" = new THStack();"<<endl;
-   out<<"   "<<GetName()<<"->SetName("<<quote<<GetName()<<quote<<");"<<endl;
-   out<<"   "<<GetName()<<"->SetTitle("<<quote<<GetTitle()<<quote<<");"<<endl;
+   out<<GetName()<<" = new THStack();"<<std::endl;
+   out<<"   "<<GetName()<<"->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
+   out<<"   "<<GetName()<<"->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
 
    if (fMinimum != -1111) {
-      out<<"   "<<GetName()<<"->SetMinimum("<<fMinimum<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetMinimum("<<fMinimum<<");"<<std::endl;
    }
    if (fMaximum != -1111) {
-      out<<"   "<<GetName()<<"->SetMaximum("<<fMaximum<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetMaximum("<<fMaximum<<");"<<std::endl;
    }
 
    static Int_t frameNumber = 0;
@@ -871,8 +871,8 @@ void THStack::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       hname += frameNumber;
       fHistogram->SetName(hname.Data());
       fHistogram->SavePrimitive(out,"nodraw");
-      out<<"   "<<GetName()<<"->SetHistogram("<<fHistogram->GetName()<<");"<<endl;
-      out<<"   "<<endl;
+      out<<"   "<<GetName()<<"->SetHistogram("<<fHistogram->GetName()<<");"<<std::endl;
+      out<<"   "<<std::endl;
    }
 
    TH1 *h;
@@ -881,12 +881,12 @@ void THStack::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       while (lnk) {
          h = (TH1*)lnk->GetObject();
          h->SavePrimitive(out,"nodraw");
-         out<<"   "<<GetName()<<"->Add("<<h->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<endl;
+         out<<"   "<<GetName()<<"->Add("<<h->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
          lnk = (TObjOptLink*)lnk->Next();
       }
    }
    out<<"   "<<GetName()<<"->Draw("
-      <<quote<<option<<quote<<");"<<endl;
+      <<quote<<option<<quote<<");"<<std::endl;
 }
 
 //______________________________________________________________________________

@@ -68,7 +68,7 @@ public:
    virtual void    PaintPrimitives();
    virtual void    Print( Option_t* option = "" ) const;
    virtual void    RecursiveRemove(TObject *obj);
-   virtual void    SavePrimitive(ostream &out, Option_t *option  = "");
+   virtual void    SavePrimitive(std::ostream &out, Option_t *option  = "");
    void            SetDefaults() { fEntrySeparation = 0.1f; fMargin = 0.25f; fNColumns = 1; fColumnSeparation = 0.0f; }
    void            SetColumnSeparation( Float_t columnSeparation )
                      { fColumnSeparation = columnSeparation; } // *MENU*

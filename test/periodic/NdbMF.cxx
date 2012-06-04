@@ -34,7 +34,7 @@ NdbMF::Section(const char *name )
 void
 NdbMF::Add(NdbMT& )
 {
-	cout << "NdbMF::add(sec)" << endl;
+	std::cout << "NdbMF::add(sec)" << std::endl;
 } // Add
 
 /* ---------- EnumerateENDFType ---------- */
@@ -45,6 +45,6 @@ NdbMF::Add(NdbMT& )
 Int_t
 NdbMF::EnumerateENDFType( Int_t )
 {
-	cout << "NdbMF ::enumerateENDFSection" << endl;
+	std::cout << "NdbMF ::enumerateENDFSection" << std::endl;
 	return 0;
 } // EnumerateENDFType

@@ -897,7 +897,7 @@ void TParallelCoordEditor::DoVariableSelect(const char* /*var*/)
 {
    // Slot to select a variable.
 
-   //cout<<((TGTextLBEntry*)fVariables->GetSelectedEntry())->GetTitle()<<endl;
+   //std::cout<<((TGTextLBEntry*)fVariables->GetSelectedEntry())->GetTitle()<<std::endl;
 }
 
 

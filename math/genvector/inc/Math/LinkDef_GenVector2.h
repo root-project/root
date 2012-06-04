@@ -8,14 +8,14 @@
 
 // conflict on solaris between template class T from std::vector and T(). 
 #ifndef __sun      
-#pragma link C++ class vector<ROOT::Math::XYZTVector >+;
-#pragma link C++ class vector<ROOT::Math::PtEtaPhiEVector >+;
+#pragma link C++ class std::vector<ROOT::Math::XYZTVector >+;
+#pragma link C++ class std::vector<ROOT::Math::PtEtaPhiEVector >+;
 #endif
 
-#pragma link C++ class vector<ROOT::Math::XYZVector >+;
-#pragma link C++ class vector<ROOT::Math::XYZPoint >+;
+#pragma link C++ class std::vector<ROOT::Math::XYZVector >+;
+#pragma link C++ class std::vector<ROOT::Math::XYZPoint >+;
 
-#pragma link C++ class vector<ROOT::Math::RhoEtaPhiVector >+;
-#pragma link C++ class vector<ROOT::Math::RhoEtaPhiPoint >+;
+#pragma link C++ class std::vector<ROOT::Math::RhoEtaPhiVector >+;
+#pragma link C++ class std::vector<ROOT::Math::RhoEtaPhiPoint >+;
 
 #endif       // endif Win32

@@ -533,25 +533,25 @@ void TEllipse::Print(Option_t *) const
 
 
 //______________________________________________________________________________
-void TEllipse::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TEllipse::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TEllipse::Class())) {
       out<<"   ";
    } else {
       out<<"   TEllipse *";
    }
    out<<"ellipse = new TEllipse("<<fX1<<","<<fY1<<","<<fR1<<","<<fR2
-      <<","<<fPhimin<<","<<fPhimax<<","<<fTheta<<");"<<endl;
+      <<","<<fPhimin<<","<<fPhimax<<","<<fTheta<<");"<<std::endl;
 
    SaveFillAttributes(out,"ellipse",0,1001);
    SaveLineAttributes(out,"ellipse",1,1,1);
 
-   if (GetNoEdges()) out<<"   ellipse->SetNoEdges();"<<endl;
+   if (GetNoEdges()) out<<"   ellipse->SetNoEdges();"<<std::endl;
 
-   out<<"   ellipse->Draw();"<<endl;
+   out<<"   ellipse->Draw();"<<std::endl;
 }
 
 

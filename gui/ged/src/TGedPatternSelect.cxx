@@ -641,11 +641,11 @@ void TGedPatternSelect::SetPattern(Style_t pattern, Bool_t emit)
 }
 
 //______________________________________________________________________________
-void TGedPatternSelect::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGedPatternSelect::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save the pattern select widget as a C++ statement(s) on output stream out
 
    out <<"   TGedPatternSelect *";
    out << GetName() << " = new TGedPatternSelect(" << fParent->GetName()
-       << "," << fPattern << "," << WidgetId() << ");" << endl;
+       << "," << fPattern << "," << WidgetId() << ");" << std::endl;
 }

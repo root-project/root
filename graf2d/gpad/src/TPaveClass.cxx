@@ -143,23 +143,23 @@ void TPaveClass::ShowClassesUsing(const char *classes)
 
 
 //______________________________________________________________________________
-void TPaveClass::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TPaveClass::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TPaveClass::Class())) {
       out<<"   ";
    } else {
       out<<"   TPaveClass *";
    }
    out<<"pclass = new TPaveClass("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-      <<","<<quote<<fLabel<<quote<<","<<quote<<fOption<<quote<<");"<<endl;
+      <<","<<quote<<fLabel<<quote<<","<<quote<<fOption<<quote<<");"<<std::endl;
 
    SaveFillAttributes(out,"pclass",0,1001);
    SaveLineAttributes(out,"pclass",1,1,1);
    SaveTextAttributes(out,"pclass",22,0,1,62,0);
 
-   out<<"   pclass->Draw();"<<endl;
+   out<<"   pclass->Draw();"<<std::endl;
 }

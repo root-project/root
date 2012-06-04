@@ -15,7 +15,7 @@
 #pragma link C++ class TSTLhitMultiMap+;
 //#pragma link C++ class TSTLhitHashSet;
 //#pragma link C++ class TSTLhitHashMultiset;
-#pragma link C++ class pair<int,THit>+;
+#pragma link C++ class std::pair<int,THit>+;
 
 #pragma link C++ class TSTLhitStar+;
 #pragma link C++ class TSTLhitStarList+;
@@ -24,7 +24,7 @@
 #pragma link C++ class TSTLhitStarMultiSet+;
 #pragma link C++ class TSTLhitStarMap+;
 #pragma link C++ class TSTLhitStarMultiMap+;
-#pragma link C++ class pair<int,THit*>+;
+#pragma link C++ class std::pair<int,THit*>+;
 
 #pragma link C++ class TCloneshit+;
 

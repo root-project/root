@@ -594,7 +594,7 @@ void TGButtonGroup::SetLayoutHints(TGLayoutHints *l, TGButton *button)
 }
 
 //______________________________________________________________________________
-void TGButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGButtonGroup::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a button group widget as a C++ statement(s) on output stream out.
 
@@ -626,7 +626,7 @@ void TGButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
-   out << endl << "   // buttongroup frame" << endl;
+   out << std::endl << "   // buttongroup frame" << std::endl;
 
    out << "   TGButtonGroup *";
    out << GetName() << " = new TGButtonGroup(" << fParent->GetName()
@@ -636,28 +636,28 @@ void TGButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       if (fFontStruct == GetDefaultFontStruct()) {
          if (fNormGC == GetDefaultGC()()) {
             if (!GetOptions()) {
-               out <<");" << endl;
+               out <<");" << std::endl;
             } else {
-               out << "," << GetOptionString() <<");" << endl;
+               out << "," << GetOptionString() <<");" << std::endl;
             }
          } else {
-            out << "," << GetOptionString() << "," << parGC.Data() <<");" << endl;
+            out << "," << GetOptionString() << "," << parGC.Data() <<");" << std::endl;
          }
       } else {
-         out << "," << GetOptionString() << "," << parGC.Data() << "," << parFont.Data() <<");" << endl;
+         out << "," << GetOptionString() << "," << parGC.Data() << "," << parFont.Data() <<");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << "," << parGC.Data() << "," << parFont.Data() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << "," << parGC.Data() << "," << parFont.Data() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    // setting layout manager
    out << "   " << GetName() <<"->SetLayoutManager(";
    // coverity[returned_null]
    // coverity[dereference]
    GetLayoutManager()->SavePrimitive(out, option);
-   out << ");"<< endl;
+   out << ");"<< std::endl;
 
    TGFrameElement *f;
    TIter next(GetList());
@@ -667,31 +667,31 @@ void TGButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       else {
          out << "   " << GetName() << "->AddFrame(" << f->fFrame->GetName();
          f->fLayout->SavePrimitive(out, option);
-         out << ");"<< endl;
+         out << ");"<< std::endl;
       }
    }
 
    if (IsExclusive())
-      out << "   " << GetName() <<"->SetExclusive(kTRUE);" << endl;
+      out << "   " << GetName() <<"->SetExclusive(kTRUE);" << std::endl;
 
    if (IsRadioButtonExclusive())
-      out << "   " << GetName() <<"->SetRadioButtonExclusive(kTRUE);" << endl;
+      out << "   " << GetName() <<"->SetRadioButtonExclusive(kTRUE);" << std::endl;
 
    if (!IsBorderDrawn())
-      out << "   " << GetName() <<"->SetBorderDrawn(kFALSE);" << endl;
+      out << "   " << GetName() <<"->SetBorderDrawn(kFALSE);" << std::endl;
 
 
    out << "   " << GetName() << "->Resize(" << GetWidth()
-       << "," << GetHeight() << ");" << endl;
+       << "," << GetHeight() << ");" << std::endl;
 
    if (!IsEnabled())
-      out << "   " << GetName() <<"->SetState(kFALSE);" << endl;
+      out << "   " << GetName() <<"->SetState(kFALSE);" << std::endl;
 
-   out << "   " << GetName() << "->Show();" << endl;
+   out << "   " << GetName() << "->Show();" << std::endl;
 }
 
 //______________________________________________________________________________
-void TGHButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGHButtonGroup::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a button group widget as a C++ statement(s) on output stream out.
 
@@ -719,7 +719,7 @@ void TGHButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
-   out << endl << "   // horizontal buttongroup frame" << endl;
+   out << std::endl << "   // horizontal buttongroup frame" << std::endl;
 
    out << "   TGHButtonGroup *";
    out << GetName() << " = new TGHButtonGroup(" << fParent->GetName()
@@ -729,18 +729,18 @@ void TGHButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       if (fFontStruct == GetDefaultFontStruct()) {
 
          if (fNormGC == GetDefaultGC()()) {
-            out << ");" << endl;
+            out << ");" << std::endl;
          } else {
-            out << "," << parGC.Data() <<");" << endl;
+            out << "," << parGC.Data() <<");" << std::endl;
          }
       } else {
-         out << "," << parGC.Data() << "," << parFont.Data() <<");" << endl;
+         out << "," << parGC.Data() << "," << parFont.Data() <<");" << std::endl;
       }
    } else {
-      out << "," << parGC.Data() << "," << parFont.Data() << ",ucolor);" << endl;
+      out << "," << parGC.Data() << "," << parFont.Data() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    TGFrameElement *f;
    TIter next(GetList());
@@ -750,35 +750,35 @@ void TGHButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
          out << "   " << GetName() << "->SetLayoutHints(";
          f->fLayout->SavePrimitive(out, "nocoma");
          out << "," << f->fFrame->GetName();
-         out << ");"<< endl;
+         out << ");"<< std::endl;
       }
       else {
          out << "   " << GetName() << "->AddFrame(" << f->fFrame->GetName();
          f->fLayout->SavePrimitive(out, option);
-         out << ");"<< endl;
+         out << ");"<< std::endl;
       }
    }
 
    if (!IsEnabled())
-      out << "   " << GetName() <<"->SetState(kFALSE);" << endl;
+      out << "   " << GetName() <<"->SetState(kFALSE);" << std::endl;
 
    if (IsExclusive())
-      out << "   " << GetName() <<"->SetExclusive(kTRUE);" << endl;
+      out << "   " << GetName() <<"->SetExclusive(kTRUE);" << std::endl;
 
    if (IsRadioButtonExclusive())
-      out << "   " << GetName() <<"->SetRadioButtonExclusive(kTRUE);" << endl;
+      out << "   " << GetName() <<"->SetRadioButtonExclusive(kTRUE);" << std::endl;
 
    if (!IsBorderDrawn())
-      out << "   " << GetName() <<"->SetBorderDrawn(kFALSE);" << endl;
+      out << "   " << GetName() <<"->SetBorderDrawn(kFALSE);" << std::endl;
 
    out << "   " << GetName() <<"->Resize(" << GetWidth() << ","
-       << GetHeight() << ");" << endl;
+       << GetHeight() << ");" << std::endl;
 
-   out << "   " << GetName() << "->Show();" << endl;
+   out << "   " << GetName() << "->Show();" << std::endl;
 }
 
 //______________________________________________________________________________
-void TGVButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGVButtonGroup::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a button group widget as a C++ statement(s) on output stream out.
 
@@ -806,7 +806,7 @@ void TGVButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
-   out << endl << "   // vertical buttongroup frame" << endl;
+   out << std::endl << "   // vertical buttongroup frame" << std::endl;
 
    out << "   TGVButtonGroup *";
    out << GetName() << " = new TGVButtonGroup(" << fParent->GetName()
@@ -815,18 +815,18 @@ void TGVButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    if (fBackground == GetDefaultFrameBackground()) {
       if (fFontStruct == GetDefaultFontStruct()) {
          if (fNormGC == GetDefaultGC()()) {
-            out <<");" << endl;
+            out <<");" << std::endl;
          } else {
-            out << "," << parGC.Data() <<");" << endl;
+            out << "," << parGC.Data() <<");" << std::endl;
          }
       } else {
-         out << "," << parGC.Data() << "," << parFont.Data() <<");" << endl;
+         out << "," << parGC.Data() << "," << parFont.Data() <<");" << std::endl;
       }
    } else {
-      out << "," << parGC.Data() << "," << parFont.Data() << ",ucolor);" << endl;
+      out << "," << parGC.Data() << "," << parFont.Data() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    TGFrameElement *f;
    TIter next(GetList());
@@ -836,24 +836,24 @@ void TGVButtonGroup::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       else {
          out << "   " << GetName() << "->AddFrame(" << f->fFrame->GetName();
          f->fLayout->SavePrimitive(out, option);
-         out << ");"<< endl;
+         out << ");"<< std::endl;
       }
    }
 
    if (!IsEnabled())
-      out << "   " << GetName() <<"->SetState(kFALSE);" << endl;
+      out << "   " << GetName() <<"->SetState(kFALSE);" << std::endl;
 
    if (IsExclusive())
-      out << "   " << GetName() <<"->SetExclusive(kTRUE);" << endl;
+      out << "   " << GetName() <<"->SetExclusive(kTRUE);" << std::endl;
 
    if (IsRadioButtonExclusive())
-      out << "   " << GetName() <<"->SetRadioButtonExclusive(kTRUE);" << endl;
+      out << "   " << GetName() <<"->SetRadioButtonExclusive(kTRUE);" << std::endl;
 
    if (!IsBorderDrawn())
-      out << "   " << GetName() <<"->SetBorderDrawn(kFALSE);" << endl;
+      out << "   " << GetName() <<"->SetBorderDrawn(kFALSE);" << std::endl;
 
    out << "   " << GetName() << "->Resize(" << GetWidth()
-       << "," << GetHeight() << ");"<< endl;
+       << "," << GetHeight() << ");"<< std::endl;
 
-   out << "   " << GetName() << "->Show();" << endl;
+   out << "   " << GetName() << "->Show();" << std::endl;
 }

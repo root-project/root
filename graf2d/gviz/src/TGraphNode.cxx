@@ -147,14 +147,14 @@ void TGraphNode::Paint(Option_t *)
 
 
 //______________________________________________________________________________
-void TGraphNode::SavePrimitive(ostream &, Option_t *)
+void TGraphNode::SavePrimitive(std::ostream &, Option_t *)
 {
    // Save primitive as a C++ statement(s) on output stream out
 }
 
 
 //______________________________________________________________________________
-void TGraphNode::SaveAttributes(ostream &out)
+void TGraphNode::SaveAttributes(std::ostream &out)
 {
    // Save attributes as a C++ statement(s) on output stream out
    // called by TGraphStruct::SavePrimitive.

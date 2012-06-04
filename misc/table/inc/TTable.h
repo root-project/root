@@ -104,7 +104,7 @@ public:
    virtual     void       AddAt(const void *c, Int_t i);
    virtual     void       AddAt(TDataSet *dataset,Int_t idx=0);
    virtual     Long_t     AppendRows(const void *row, UInt_t nRows);
-   virtual     void       AsString(void *buf, EColumnType type, Int_t width, ostream &out) const;
+   virtual     void       AsString(void *buf, EColumnType type, Int_t width, std::ostream &out) const;
               const void *At(Int_t i) const;
    virtual     void       Browse(TBrowser *b);
    virtual     void       CopySet(TTable &array);
@@ -146,7 +146,7 @@ public:
 
                void      *ReAllocate(Int_t newsize);
                void      *ReAllocate();
-   virtual     void       SavePrimitive(ostream &out, Option_t *option = "");
+   virtual     void       SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual     void       Set(Int_t n);
    virtual     void       Set(Int_t n, Char_t *array);
    virtual     void       SetNRows(Int_t n);
@@ -195,7 +195,7 @@ public:
          iterator(const TTable &table, vec_const_iterator &arowPtr) :
             fRowSize(table.GetRowSize()), fThisTable(&table),
             fCurrentRow(*(std::vector<Long_t>::iterator *)(void *)&arowPtr) {;}
-            //fCurrentRow(* const_cast<vector<Long_t>::iterator *>(&arowPtr) ) {;}
+            //fCurrentRow(* const_cast<std::vector<Long_t>::iterator *>(&arowPtr) ) {;}
          iterator(const iterator& iter) : fRowSize (iter.fRowSize), fThisTable(iter.fThisTable),fCurrentRow(iter.fCurrentRow){}
          iterator &operator=(const iterator& iter)   { fRowSize = iter.fRowSize; fThisTable = iter.fThisTable; fCurrentRow=iter.fCurrentRow; return *this; }
          void operator++()    { ++fCurrentRow;   }

@@ -247,7 +247,7 @@ Bool_t TDataSetManager::ReadGroupConfig(const char *cf)
       Info("ReadGroupConfig","reading group config from %s", cf);
 
    // Open the config file
-   ifstream in;
+   std::ifstream in;
    in.open(cf);
    if (!in.is_open()) {
       Error("ReadGroupConfig", "could not open config file %s", cf);

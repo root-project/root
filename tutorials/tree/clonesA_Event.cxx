@@ -22,7 +22,7 @@ TUsrHitBuffer::TUsrHitBuffer(Int_t maxent) {
    fNofEntries = maxent;
    fNofHits = 0;
    fHits = new TClonesArray("TUsrHit", fNofEntries);
-   cout << "ctor TUsrHitBuffer " << this << endl;
+   std::cout << "ctor TUsrHitBuffer " << this << std::endl;
 }
 
 //______________________________________________________
@@ -44,7 +44,7 @@ void TUsrHitBuffer::Clear(Option_t *) {
 
 void TUsrSevtData1::SetEvent(Int_t ev) {
    Clear();
-   cout << "TUsrSevtData1: " << ev << endl;
+   std::cout << "TUsrSevtData1: " << ev << std::endl;
    fTimeStamp = 100+ev; //in TMrbSubevent_Caen
    fSevtName  = "SubEvent_1_";
    fSevtName += ev;
@@ -58,7 +58,7 @@ void TUsrSevtData1::SetEvent(Int_t ev) {
 
 void TUsrSevtData2::SetEvent(Int_t ev) {
    Clear();
-   cout << "TUsrSevtData2: " << ev << endl;
+   std::cout << "TUsrSevtData2: " << ev << std::endl;
    fTimeStamp = 100+ev; //in TMrbSubevent_Caen
    fSevtName  = "SubEvent_2_";
    fSevtName += ev;

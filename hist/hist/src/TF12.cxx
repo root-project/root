@@ -159,7 +159,7 @@ Double_t TF12::EvalPar(const Double_t *x, const Double_t *params)
 
 
 //______________________________________________________________________________
-void TF12::SavePrimitive(ostream & /*out*/, Option_t * /*option*/ /*= ""*/)
+void TF12::SavePrimitive(std::ostream & /*out*/, Option_t * /*option*/ /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 

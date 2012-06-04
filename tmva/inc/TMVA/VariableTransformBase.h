@@ -118,7 +118,7 @@ namespace TMVA {
 
       // provides string vector giving explicit transformation
       virtual std::vector<TString>* GetTransformationStrings( Int_t cls ) const;
-      virtual void PrintTransformation( ostream & ) {}
+      virtual void PrintTransformation( std::ostream & ) {}
 
       const std::vector<TMVA::VariableInfo>& Variables() const { return fVariables; }
       const std::vector<TMVA::VariableInfo>& Targets()   const { return fTargets;   }

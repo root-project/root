@@ -763,7 +763,7 @@ void TEveManager::SaveVizDB(const TString& filename)
    TString exp_filename(filename);
    gSystem->ExpandPathName(exp_filename);
 
-   ofstream out(exp_filename, ios::out | ios::trunc);
+   std::ofstream out(exp_filename, std::ios::out | std::ios::trunc);
    out << "void " << re[1] << "()\n";
    out << "{\n";
    out << "   TEveManager::Create();\n";
