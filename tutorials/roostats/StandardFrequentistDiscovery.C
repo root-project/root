@@ -23,6 +23,7 @@
 #include "TH1F.h"
 #include "TF1.h"
 #include "TCanvas.h"
+#include "TStopwatch.h"
 
 #include "RooWorkspace.h"
 #include "RooAbsData.h"
