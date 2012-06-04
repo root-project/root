@@ -29,6 +29,7 @@ of each nuisance parameter in the model vs. the parameter of interest.
 #include "TROOT.h"
 #include "TCanvas.h"
 #include "TList.h"
+#include "TMath.h"
 #include "RooWorkspace.h"
 #include "RooAbsData.h"
 
@@ -112,14 +113,6 @@ void StandardProfileInspectorDemo(const char* infile = "",
   
   // now make plots
   TCanvas* c1 = new TCanvas("c1","ProfileInspectorDemo",800,200);
-  c1->Divide(list->GetSize());
-  for(int i=0; i<list->GetSize(); ++i){
-    c1->cd(i+1);
-    list->At(i)->Draw("al");
-  }
-
-  // now make plots
-  TCanvas* c1 = new TCanvas("c1","ProfileInspectorDemo",800,200);
   if(list->GetSize()>4){
     double n = list->GetSize();
     int nx = (int)sqrt(n) ;
@@ -133,5 +126,5 @@ void StandardProfileInspectorDemo(const char* infile = "",
     list->At(i)->Draw("al");
   }
   
-  
+  cout << endl;
 }
