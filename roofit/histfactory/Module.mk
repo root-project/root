@@ -49,6 +49,7 @@ HF_LIBS = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lMatrix \
 HF_LIBS += -lHistFactory 
 ifeq ($(BUILDMATHMORE),yes)
 HF_LIBS += -lMathMore
+HF_LIBS += $(GSLLIBDIR) $(GSLLIBS)
 endif
 endif
 
