@@ -444,7 +444,7 @@ int XrdROOTMgr::DoDirectiveRootSys(char *val, XrdOucStream *cfg, bool)
          if ((*ori)->Match(rootc->Dir(), rootc->Tag())) {
             if ((*ori)->IsParked()) {
                (*ori)->SetValid();
-               SafeDelete(rootc);
+               SafeDel(rootc);
                break;
             }
          }
@@ -462,7 +462,7 @@ int XrdROOTMgr::DoDirectiveRootSys(char *val, XrdOucStream *cfg, bool)
             fROOT.push_back(rootc);
          } else {
             TRACE(XERR, "could not validate "<<rootc->Export());
-            SafeDelete(rootc);
+            SafeDel(rootc);
          }
       }
    }

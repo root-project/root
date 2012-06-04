@@ -502,8 +502,11 @@ negotia:
       if (user != "")
          CheckNetrc(user, passwd, pwhash, kTRUE);
       if (passwd == "") {
-         if (fgPromptUser)
-            user = PromptUser(fRemote);
+         if (fgPromptUser) {
+            char *p = PromptUser(fRemote);
+            user = p;
+            delete [] p;
+         }
          rc = GetUserPasswd(user, passwd, pwhash, kTRUE);
       }
       fUser = user;

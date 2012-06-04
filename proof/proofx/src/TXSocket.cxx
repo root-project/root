@@ -445,12 +445,6 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    }
 
    // Local processing ...
-   if (!m) {
-      Error("ProcessUnsolicitedMsg", "undefined message - disabling");
-      PostMsg(kPROOF_STOP);
-      return rc;
-   }
-
    Int_t len = 0;
    if ((len = m->DataLen()) < (int)sizeof(kXR_int32)) {
       Error("ProcessUnsolicitedMsg", "empty or bad-formed message - disabling");
@@ -1000,8 +994,10 @@ Int_t TXSocket::Flush()
          }
 
          // Reset the asynchronous queue
-         while (sz--)
-            fASem.TryWait();
+         while (sz--) {
+            if (fASem.TryWait() == 1)
+               Printf("Warning in TXSocket::Flush: semaphore counter already 0 (sz: %d)", sz);
+         }
          fAQue.clear();
       }
    }
@@ -1449,12 +1445,15 @@ Int_t TXSocket::PickUpReady()
       Error("PickUpReady","queue is empty - protocol error ?");
       return -1;
    }
-   fBufCur = fAQue.front();
+   if (!(fBufCur = fAQue.front())) {
+      Error("PickUpReady","got invalid buffer - protocol error ?");
+      return -1;
+   }
    // Remove message from the queue
    fAQue.pop_front();
+
    // Set number of available bytes
-   if (fBufCur)
-      fByteLeft = fBufCur->fLen;
+   fByteLeft = fBufCur->fLen;
 
    if (gDebug > 2)
       Info("PickUpReady", "%p: %s: got message (%d bytes)",
@@ -1514,10 +1513,9 @@ TXSockBuf *TXSocket::PopUpSpare(Int_t size)
    }
 
    // Create a new buffer
-   char *b = (char *)malloc(size);
-   if (b)
-      buf = new TXSockBuf(b, size);
+   buf = new TXSockBuf((char *)malloc(size), size);
    nBuf++;
+
    if (gDebug > 2)
       Info("PopUpSpare","asked: %d, spare: %d/%d, maxsz: %d, NEW buf %p, sz: %d",
                         size, (int) fgSQue.size(), nBuf, maxsz, buf, buf->fSiz);
@@ -2124,9 +2122,13 @@ Int_t TXSocket::Reconnect()
    }
 
    if (gDebug > 0) {
-      Info("Reconnect", "%p (c:%p): attempt %s (logid: %d)", this, fConn,
-                        ((fConn && fConn->IsValid()) ? "succeeded!" : "failed"),
-                        fConn->GetLogConnID() );
+      if (fConn) {
+         Info("Reconnect", "%p (c:%p): attempt %s (logid: %d)", this, fConn,
+                           (fConn->IsValid() ? "succeeded!" : "failed"),
+                           fConn->GetLogConnID() );
+      } else {
+         Info("Reconnect", "%p (c:0x0): attempt failed", this);
+      }
    }
 
    // Done

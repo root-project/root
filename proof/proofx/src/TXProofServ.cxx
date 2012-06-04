@@ -891,7 +891,7 @@ Bool_t TXProofServ::HandleError(const void *)
       fProof->Close("S");
 
    // Avoid communicating back anything to the coordinator (it is gone)
-   ((TXSocket *)fSocket)->SetSessionID(-1);
+   if (fSocket) ((TXSocket *)fSocket)->SetSessionID(-1);
 
    Terminate(0);
 

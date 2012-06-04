@@ -2406,13 +2406,13 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          if (!fCreateSelObj) {
             fInput->Remove(fSelector);
             fOutput->Remove(fSelector);
-            output->Remove(fSelector);
+            if (output) output->Remove(fSelector);
          }
 
          // We have transferred copy of the output objects in TQueryResult,
          // so now we can cleanup the selector, making sure that we do not
          // touch the output objects
-         output->SetOwner(kFALSE);
+         if (output) output->SetOwner(kFALSE);
          if (fCreateSelObj) SafeDelete(fSelector);
 
          // Delete fOutput (not needed anymore, cannot be finalized twice),

@@ -27,6 +27,7 @@
 #include "XpdSysPthread.h"
 
 #include "XrdProofConn.h"
+#include "XrdProofdAux.h"
 #include "XProofProtocol.h"
 
 #include "XrdClient/XrdClientConnMgr.hh"
@@ -85,9 +86,6 @@ int XrdProofConn::fgTimeWait = 2;  // seconds
 XrdSysPlugin *XrdProofConn::fgSecPlugin = 0;       // Sec library plugin
 void         *XrdProofConn::fgSecGetProtocol = 0;  // Sec protocol getter
 
-#ifndef SafeDelete
-#define SafeDelete(x) { if (x) { delete x; x = 0; } }
-#endif
 #define URLTAG "["<<fUrl.Host<<":"<<fUrl.Port<<"]"
 
 //_____________________________________________________________________________
@@ -297,8 +295,8 @@ XrdProofConn::~XrdProofConn()
    }
 
    // Cleanup mutex
-   SafeDelete(fMutex);
-   SafeDelete(fConnectInterruptMtx);
+   SafeDel(fMutex);
+   SafeDel(fConnectInterruptMtx);
 }
 
 //_____________________________________________________________________________
@@ -553,7 +551,7 @@ XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqDa
                   TRACE(XERR, "reallocating "<<dataRecvSize<<" bytes");
                   free((void *) *answData);
                   *answData = 0;
-                  SafeDelete(xmsg);
+                  SafeDel(xmsg);
                   return xmsg;
                }
             }
@@ -581,7 +579,7 @@ XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqDa
                XPD::convertRespStatusToChar(xmsg->fHdr.status)<<
                "] (server "<<URLTAG<<") - Abort");
          // We cannot continue
-         SafeDelete(xmsg);
+         SafeDel(xmsg);
          return xmsg;
       }
       // The last message may be empty: not an error
@@ -672,7 +670,7 @@ XrdClientMessage *XrdProofConn::SendReq(XPClientRequest *req, const void *reqDat
       }
       if (abortcmd) {
          // Cleanup if failed
-         SafeDelete(answMex);
+         SafeDel(answMex);
       } else if (!resp) {
          // Sleep a while before retrying
          int sleeptime = 1;
@@ -1190,7 +1188,7 @@ bool XrdProofConn::Login()
             notdone = 0;
          }
          // Cleanup
-         SafeDelete(xrsp);
+         SafeDel(xrsp);
       } else {
          // We failed but we are done with this attempt
          resp = 0;
@@ -1320,7 +1318,7 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
          reqhdr.header.dlen = (credentials) ? credentials->size : 0;
          char *credbuf = (credentials) ? credentials->buffer : 0;
          xrsp = SendReq(&reqhdr, credbuf, &srvans, "XrdProofConn::Authenticate");
-         SafeDelete(credentials);
+         SafeDel(credentials);
          status = (xrsp) ? xrsp->HeaderStatus() : kXR_error;
          dlen = (xrsp) ? xrsp->DataLen() : 0;
          TRACE(HDBG, "server reply: status: "<<status<<" dlen: "<<dlen);
@@ -1334,7 +1332,7 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
             //
             // then get next part of the credentials
             credentials = protocol->getCredentials(secToken, &ei);
-            SafeDelete(secToken); // nb: srvans is released here
+            SafeDel(secToken); // nb: srvans is released here
             srvans = 0;
             if (!credentials) {
                TRACE(XERR, "cannot obtain credentials");
@@ -1348,7 +1346,7 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
                // Server does not implement yet full cycling, so we are
                // allowed to try the handshake only for one protocol; we
                // cleanup the message and fail;
-               SafeDelete(xrsp);
+               SafeDel(xrsp);
                failed = 1;
                break;
             } else {
@@ -1364,7 +1362,7 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
             }
          }
          // Cleanup message
-         SafeDelete(xrsp);
+         SafeDel(xrsp);
       }
 
       // If we are done

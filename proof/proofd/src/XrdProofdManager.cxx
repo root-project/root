@@ -512,7 +512,7 @@ XrdProofSched *XrdProofdManager::LoadScheduler()
    }
    // Check result
    if (!(sched->IsValid())) {
-      TRACE(XERR, " unable to instantiate the " << sched->Name() << " scheduler using " << cfn);
+      TRACE(XERR, " unable to instantiate the " << sched->Name() << " scheduler using " << (cfn ? cfn : "<nul>"));
       delete sched;
       return (XrdProofSched *)0;
    }
@@ -1129,6 +1129,7 @@ bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
                   } else if (ofs != (off_t)(-1)) {
                      TRACE(XERR, "Problems getting current position on file '" << fnpath << "'; errno: " << errno);
                   }
+                  fclose(flck);
                }
             }
             // Make sure that everybody can modify the file for updates
@@ -1640,6 +1641,8 @@ int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
          rw = 1;
       } else if (!strncmp(nxt, "url:", 4)) {
          url = nxt + 4;
+         XrdClientUrlInfo u(url);
+         if (u.Proto == "" && u.HostWPort == "") local = 1;
       } else if (!strncmp(nxt, "opt:", 4)) {
          opts = nxt + 4;
       }

@@ -442,8 +442,8 @@ int XrdProofdProofServMgr::AddSession(XrdProofdProtocol *p, XrdProofdProofServ *
    TRACE(REQ, "adding new active session ...");
 
    // Check inputs
-   if (!s || !p || !p->Client()) {
-      TRACE(XERR,"invalid inputs: "<<p<<", "<<s<<", "<<p->Client());
+   if (!s || !p->Client()) {
+      TRACE(XERR,"invalid inputs: "<<(s ? "" : "s, ") <<", "<< (p->Client() ? "" : "p->Client()"));
       return -1;
    }
    XrdProofdClient *c = p->Client();
@@ -470,7 +470,7 @@ bool XrdProofdProofServMgr::IsSessionSocket(const char *fpid)
 
    // Check inputs
    if (!fpid || strlen(fpid) <= 0) {
-      TRACE(XERR, "invalid input: "<<fpid);
+      TRACE(XERR, "invalid input: "<<(fpid ? fpid : "<nul>"));
       return 0;
    }
 
@@ -508,7 +508,7 @@ int XrdProofdProofServMgr::MvSession(const char *fpid)
 
    // Check inputs
    if (!fpid || strlen(fpid) <= 0) {
-      TRACE(XERR, "invalid input: "<<fpid);
+      TRACE(XERR, "invalid input: "<<(fpid ? fpid : "<nul>"));
       return -1;
    }
 
@@ -560,7 +560,7 @@ int XrdProofdProofServMgr::RmSession(const char *fpid)
 
    // Check inputs
    if (!fpid || strlen(fpid) <= 0) {
-      TRACE(XERR, "invalid input: "<<fpid);
+      TRACE(XERR, "invalid input: "<< (fpid ? fpid : "<nul>"));
       return -1;
    }
 
@@ -583,11 +583,11 @@ int XrdProofdProofServMgr::TouchSession(const char *fpid, const char *fpath)
    // Update the access time for the session pid file to the current time
    XPDLOC(SMGR, "ProofServMgr::TouchSession")
 
-   TRACE(REQ, "touching "<<fpid<<", "<<fpath<<" ...");
+   TRACE(REQ, "touching "<<(fpid ? fpid : "<nul>")<<", "<<(fpath ? fpath : "<nul>")<<" ...");
 
    // Check inputs
    if (!fpid || strlen(fpid) <= 0) {
-      TRACE(XERR, "invalid input: "<<fpid);
+      TRACE(XERR, "invalid input: "<<(fpid ? fpid : "<nul>"));
       return -1;
    }
 
@@ -617,7 +617,7 @@ int XrdProofdProofServMgr::VerifySession(const char *fpid,
 
    // Check inputs
    if (!fpid || strlen(fpid) <= 0) {
-      TRACE(XERR, "invalid input: "<<fpid);
+      TRACE(XERR, "invalid input: "<<(fpid ? fpid : "<nul>"));
       return -1;
    }
 
@@ -675,7 +675,7 @@ int XrdProofdProofServMgr::DeleteFromSessions(const char *fpid)
 
    // Check inputs
    if (!fpid || strlen(fpid) <= 0) {
-      TRACE(XERR, "invalid input: "<<fpid);
+      TRACE(XERR, "invalid input: "<<(fpid ? fpid : "<nul>"));
       return -1;
    }
 
@@ -861,7 +861,7 @@ bool XrdProofdProofServMgr::IsClientRecovering(const char *usr, const char *grp,
    XPDLOC(SMGR, "ProofServMgr::IsClientRecovering")
 
    if (!usr || !grp) {
-      TRACE(XERR, "invalid inputs: usr: "<<usr<<", grp:"<<grp<<" ...");
+      TRACE(XERR, "invalid inputs: usr: "<<(usr ? usr : "")<<", grp:"<<(grp ? grp : "")<<" ...");
       return false;
    }
 
@@ -1905,8 +1905,16 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
 
       char *argvv[6] = {0};
 
+      // We set to the user environment
+      if (!fMgr) {
+         emsg = "XrdProofdManager instance undefined!";
+         TRACE(XERR, emsg);
+         if (fcp.Post(0, emsg.c_str()) != 0)
+            TRACE(XERR, "cannot write to internal pipe; errno: "<<errno);
+         exit(1);
+      }
       char *sxpd = 0;
-      if (fMgr && fMgr->AdminPath()) {
+      if (fMgr->AdminPath()) {
          // We add our admin path to be able to identify processes coming from us
          size_t len = strlen(fMgr->AdminPath()) + strlen("xpdpath:") + 1;
          sxpd = new char[len];
@@ -2490,7 +2498,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       emsg += errlog;
       emsg.insert(npfx, 0);
       response->Send(kXP_ServerError, emsg.c_str());
-      SafeDelete(peersrv);
+      SafeDel(peersrv);
       return 0;
    }
 
@@ -2533,10 +2541,10 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       TRACEP(p, XERR, emsg.c_str());
       emsg.insert(npfx, 0);
       response->Send(kXR_attn, kXPD_errmsg, (char *) emsg.c_str(), emsg.length());
-      SafeDelete(peersrv);
+      SafeDel(peersrv);
       return 0;
    }
-   SafeDelete(peersrv);
+   SafeDel(peersrv);
    // Set the group, if any
    xps->SetGroup(p->Client()->Group());
 
@@ -2636,11 +2644,11 @@ int XrdProofdProofServMgr::ResolveSession(const char *fpid)
    // Handle a request to recover a session after stop&restart
    XPDLOC(SMGR, "ProofServMgr::ResolveSession")
 
-   TRACE(REQ,  "resolving "<< fpid<<" ...");
+   TRACE(REQ,  "resolving "<< (fpid ? fpid : "<nul>")<<" ...");
 
    // Check inputs
    if (!fpid || strlen(fpid)<= 0 || !(fMgr->ClientMgr()) || !fRecoverClients) {
-      TRACE(XERR, "invalid inputs: "<<fpid<<", "<<fMgr->ClientMgr()<<
+      TRACE(XERR, "invalid inputs: "<<(fpid ? fpid : "<nul>")<<", "<<fMgr->ClientMgr()<<
                   ", "<<fRecoverClients);
       return -1;
    }
@@ -4915,7 +4923,7 @@ int XrdProofSessionInfo::SaveToFile(const char *file)
 
    // Check inputs
    if (!file || strlen(file) <= 0) {
-      TRACE(XERR,"invalid input: "<<file);
+      TRACE(XERR,"invalid input: "<< (file ? file : "<nul>"));
       return -1;
    }
 
@@ -4978,7 +4986,7 @@ int XrdProofSessionInfo::ReadFromFile(const char *file)
 
    // Check inputs
    if (!file || strlen(file) <= 0) {
-      TRACE(XERR,"invalid input: "<<file);
+      TRACE(XERR,"invalid input: "<<(file ? file : "<nul>"));
       return -1;
    }
 
@@ -5052,7 +5060,7 @@ int XrdProofSessionInfo::ReadFromFile(const char *file)
          while ((len = read(fileno(fpid), line, wanted)) < 0 &&
                 errno == EINTR)
             errno = 0;
-         if (len < wanted) {
+         if (len < 0 || len < wanted) {
             break;
          } else {
             line[len] = '\0';

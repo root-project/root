@@ -64,7 +64,7 @@ XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
    // We must have a valid sandbox
    if (fSandbox.IsValid()) fIsValid = 1;
    
-   // The session launcher (we may have a plugin here, on day ...)
+   // The session launcher (we may have a plugin here, one day ...)
    fLauncher = new XrdProofdLauncher(this);
 }
 
@@ -73,6 +73,7 @@ XrdProofdClient::~XrdProofdClient()
 {
    // Destructor
 
+   SafeDel(fLauncher);
 }
 
 //__________________________________________________________________________
@@ -266,8 +267,10 @@ XrdProofdProofServ *XrdProofdClient::GetServObj(int id)
          xps = fProofServs[id];
       }
    }
-   xps->SetID(id);
-   xps->SetValid();
+   if (xps) {
+      xps->SetID(id);
+      xps->SetValid();
+   }
    if (TRACING(DBG)) {
       {  XrdSysMutexHelper mh(fMutex);
          if (fIsValid) {

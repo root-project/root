@@ -772,8 +772,7 @@ Int_t TXProofMgr::SendMsgToUsers(const char *msg, const char *usr)
    const Int_t kMAXBUF = 32768;
    char buf[kMAXBUF] = {0};
    char *p = &buf[0];
-   Int_t space = kMAXBUF - 1;
-   Int_t len = 0;
+   size_t space = kMAXBUF - 1;
    Int_t lusr = 0;
 
    // A specific user?
@@ -784,6 +783,7 @@ Int_t TXProofMgr::SendMsgToUsers(const char *msg, const char *usr)
       space -= lusr;
    }
 
+   ssize_t len = 0;
    // Is it from file ?
    if (!gSystem->AccessPathName(msg, kFileExists)) {
       // From file: can we read it ?
@@ -798,14 +798,27 @@ Int_t TXProofMgr::SendMsgToUsers(const char *msg, const char *usr)
          return -1;
       }
       // Determine the number of bytes to be read from the file.
-      Int_t left = (Int_t) lseek(fileno(f), (off_t) 0, SEEK_END);
-      lseek(fileno(f), (off_t) 0, SEEK_SET);
+      size_t left = 0;
+      off_t rcsk = lseek(fileno(f), (off_t) 0, SEEK_END);
+      if ((rcsk != (off_t)(-1))) {
+         left = (size_t) rcsk;
+         if ((lseek(fileno(f), (off_t) 0, SEEK_SET) == (off_t)(-1))) {
+            Error("SendMsgToUsers", "cannot rewind open file (seek to 0)");
+            fclose(f);      
+            return -1;
+         }
+      } else {
+         Error("SendMsgToUsers", "cannot get size of open file (seek to END)");
+         fclose(f);      
+         return -1;
+      }
       // Now readout from file
-      Int_t wanted = left;
+      size_t wanted = left;
       if (wanted > space) {
          wanted = space;
          Warning("SendMsgToUsers",
-                 "requested to send %d bytes: max size is %d bytes: truncating", left, space);
+                 "requested to send %lld bytes: max size is %lld bytes: truncating",
+                 (Long64_t)left, (Long64_t)space);
       }
       do {
          while ((len = read(fileno(f), p, wanted)) < 0 &&
@@ -817,7 +830,7 @@ Int_t TXProofMgr::SendMsgToUsers(const char *msg, const char *usr)
          }
 
          // Update counters
-         left -= len;
+         left = (len >= (ssize_t)left) ? 0 : left - len;
          p += len;
          wanted = (left > kMAXBUF-1) ? kMAXBUF-1 : left;
 
@@ -827,9 +840,10 @@ Int_t TXProofMgr::SendMsgToUsers(const char *msg, const char *usr)
    } else {
       // Add the message to the buffer
       len = strlen(msg);
-      if (len > space) {
+      if (len > (ssize_t)space) {
          Warning("SendMsgToUsers",
-                 "requested to send %d bytes: max size is %d bytes: truncating", len, space);
+                 "requested to send %lld bytes: max size is %lld bytes: truncating",
+                 (Long64_t)len, (Long64_t)space);
          len = space;
       }
       memcpy(p, msg, len);

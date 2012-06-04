@@ -53,7 +53,7 @@ XrdProofWorker::~XrdProofWorker()
 {
    // Destructor
 
-   SafeDelete(fMutex);
+   SafeDel(fMutex);
 }
 
 //______________________________________________________________________________

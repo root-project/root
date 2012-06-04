@@ -595,7 +595,7 @@ int XrdProofdClientMgr::CheckClient(XrdProofdProtocol *p,
          c->SetROOT(fMgr->ROOTMgr()->DefaultVersion());
       if (c->IsValid()) {
          // Set the group, if any
-         c->SetGroup(g->Name());
+         c->SetGroup(gname.c_str());
       }
    } else {
       emsg = "unable to instantiate object for client ";
@@ -901,8 +901,9 @@ int XrdProofdClientMgr::ParsePreviousClients(XrdOucString &emsg)
                   if (!fd) {
                      TRACE(XERR, "unable to create path: " <<discpath);
                      xrm = 1;
+                  } else {
+                     fclose(fd);
                   }
-                  fclose(fd);
                   if (!xrm)
                      fNDisconnected++;
                }
@@ -1338,7 +1339,7 @@ char *XrdProofdClientMgr::FilterSecConfig(int &nd)
 
    // Close files
    fclose(fin);
-   close(fd);
+   if (fd >= 0) close(fd);
 
    return rcfn;
 }

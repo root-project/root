@@ -1559,7 +1559,7 @@ char *XrdProofdNetMgr::ReadLogPaths(const char *url, const char *msg, int isess)
       reqhdr.proof.int1 = kQueryLogPaths;
       reqhdr.proof.int2 = isess;
       reqhdr.proof.sid = -1;
-      reqhdr.header.dlen = strlen(msg);
+      reqhdr.header.dlen = msg ? strlen(msg) : 0;
       const void *btmp = (const void *) msg;
       char **vout = &buf;
       // Send over

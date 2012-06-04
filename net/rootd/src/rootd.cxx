@@ -745,6 +745,7 @@ again:
    // lock the file
    if (lockf(fid, F_LOCK, (off_t)1) == -1) {
       ErrorInfo("RootdCloseTab: error locking %s", sfile);
+      close(fid);
       return;
    }
    if (gDebug > 2)
@@ -814,6 +815,7 @@ again:
    lseek(fid, 0, SEEK_SET);
    if (lockf(fid, F_ULOCK, (off_t)1) == -1) {
       ErrorInfo("RootdCloseTab: error unlocking %s", sfile);
+      close(fid);
       return;
    }
    if (gDebug > 2)

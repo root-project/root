@@ -161,8 +161,10 @@ void start_rootd(int argc, char **argv)
    
    // Force stdin/out to point to the socket FD (this will also bypass the
    // close on exec setting for the socket)
-   dup2(fd, STDIN_FILENO);
-   dup2(fd, STDOUT_FILENO);
+   if (dup2(fd, STDIN_FILENO) != 0)
+      Info("WARNING: failure duplicating STDIN (errno: %d)", errno);
+   if (dup2(fd, STDOUT_FILENO) != 0)
+      Info("WARNING: failure duplicating STDOUT (errno: %d)", errno);
 
    // Prepare execv
    int na = argc - 4;

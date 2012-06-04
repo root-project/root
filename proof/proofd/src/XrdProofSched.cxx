@@ -540,11 +540,11 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
          if (TRACING(REQ)) xps->DumpQueries();
          // Notify enqueing
          TRACE(REQ, "no workers currently available: session enqueued");
-         SafeDelete(acwseff);
+         SafeDel(acwseff);
          return 2;
       } else {
          TRACE(XERR, "no worker available: do nothing");
-         SafeDelete(acwseff);
+         SafeDel(acwseff);
          return -1;
       }
    }
@@ -552,7 +552,7 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
    // If the session has already assigned workers just return
    if (xps->Workers()->Num() > 0) {
       // Current assignement is valid
-      SafeDelete(acwseff);
+      SafeDel(acwseff);
       return 1;
    }
 
@@ -694,7 +694,8 @@ int XrdProofSched::Reschedule()
    // resume, assigning it workers and sending a resume message.
    // In this way there is not possibility of interference with other GetWorkers
    // return 0 in case of success and -1 in case of an error
-   XPDDOM(SCHED)
+
+   XPDLOC(SCHED, "Sched::Reschedule")
 
    if (fUseFIFO && TRACING(DBG)) DumpQueues("Reschedule");
 
@@ -702,6 +703,10 @@ int XrdProofSched::Reschedule()
       // Any advanced scheduling algorithms can be done here
 
       XrdProofdProofServ *xps = FirstSession();
+      if (!xps) {
+         TRACE(XERR, "got undefined session: protocol error!");
+         return -1;
+      }
       XrdOucString wrks;
       // Call GetWorkers in the manager to mark the assignment.
       XrdOucString qtag;
@@ -714,6 +719,7 @@ int XrdProofSched::Reschedule()
       }
       if (fMgr->GetWorkers(wrks, xps, qtag.c_str()) < 0 ) {
          // Something wrong
+         TRACE(XERR, "failure from GetWorkers: protocol error!");
          return -1;
       } else {
          // Send buffer
