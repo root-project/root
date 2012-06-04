@@ -1109,12 +1109,13 @@ bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
             // Assert the file with lock file path
             if (goodsrc) {
                fnpath.replace("/dataset.list", "/lock.location");
-               if (access(fnpath.c_str(), F_OK) != 0) {
-                  FILE *flck = fopen(fnpath.c_str(), "w");
-                  if (!flck) {
-                     TRACE(XERR, "Cannot open file '" << fnpath << "' with the lock file path; errno: " << errno);
-                  } else {
-                     // Write the default lock file path
+               FILE *flck = fopen(fnpath.c_str(), "a");
+               if (!flck) {
+                  TRACE(XERR, "Cannot open file '" << fnpath << "' with the lock file path; errno: " << errno);
+               } else {
+                  off_t ofs = lseek(fileno(flck), 0, SEEK_CUR);
+                  if (ofs == 0) {
+                     // New file: write the default lock file path
                      XrdOucString fnlock(url);
                      fnlock.replace("/", "%");
                      fnlock.replace(":", "%");
@@ -1125,6 +1126,8 @@ bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
                      if (XrdProofdAux::ChangeOwn(fnpath.c_str(), ui) != 0) {
                         TRACE(XERR, "Problems asserting ownership of " << fnpath);
                      }
+                  } else if (ofs != (off_t)(-1)) {
+                     TRACE(XERR, "Problems getting current position on file '" << fnpath << "'; errno: " << errno);
                   }
                }
             }
