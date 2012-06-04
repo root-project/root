@@ -12,7 +12,8 @@
 #pragma link C++ class RooStats::HistFactory::EstimateSummary+ ;
 #pragma link C++ class RooStats::HistFactory::HistoToWorkspaceFactory+ ;
 #pragma link C++ class RooStats::HistFactory::HistoToWorkspaceFactoryFast+ ;
-//#pragma link C++ class RooStats::HistFactory::HistoToWorkspaceFactoryNew+ ;
+#pragma link C++ class RooStats::HistFactory::RooBarlowBeestonLL+ ;  
+#pragma link C++ class RooStats::HistFactory::HistFactorySimultaneous+ ;  
 
 #pragma link C++ class RooStats::HistFactory::ConfigParser+ ;
 
@@ -31,7 +32,7 @@
 
 #pragma link C++ defined_in "include/RooStats/HistFactory/MakeModelAndMeasurementsFast.h"; 
 #pragma link C++ defined_in "include/RooStats/HistFactory/Systematics.h"; 
-
+#pragma link C++ defined_in "include/RooStats/HistFactory/HistFactoryModelUtils.h"; 
 
 
 #endif
