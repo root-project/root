@@ -416,34 +416,49 @@ namespace {
 void RepaintTree(QuartzView *view)
 {
    //Can be only QuartzView, ROOTOpenGLView should never have children views.
+   
+   //Repaint operations can throw, thus I need a try block to have
+   //a basic guarantee - no locked views.
+   
    assert(view != nil && "RepaintTree, view parameter is nil");
    
    TGCocoa *vx = (TGCocoa *)gVirtualX;
    vx->CocoaDrawON();
    
-   for (NSView<X11Window> *child in [view subviews]) {
-      if ([child isKindOfClass : [QuartzView class]]) {
-         QuartzView *qv = (QuartzView *)child;
-         if ([qv lockFocusIfCanDraw]) {
-            NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
-            assert(nsContext != nil && "RepaintTree, nsContext is nil");
-            CGContextRef cgContext = (CGContextRef)[nsContext graphicsPort];
-            assert(cgContext != 0 && "RepaintTree, cgContext is null");//remove this assert?
+   QuartzView *qv = nil;//View, on winch we lock focus before redraw.
+   CGContextRef oldCtx = 0;
+   try {   
+      for (NSView<X11Window> *child in [view subviews]) {
+         if ([child isKindOfClass : [QuartzView class]]) {
+            qv = (QuartzView *)child;
+            if ([qv lockFocusIfCanDraw]) {
+               NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
+               assert(nsContext != nil && "RepaintTree, nsContext is nil");
+               CGContextRef cgContext = (CGContextRef)[nsContext graphicsPort];
+               assert(cgContext != 0 && "RepaintTree, cgContext is null");//remove this assert?
 
-            CGContextRef oldCtx = qv.fContext;
-            qv.fContext = cgContext;
-            
-            TGWindow *window = gClient->GetWindowById(qv.fID);
-            assert(window != 0 && "RepaintTree, window was not found");
-            
-            gClient->NeedRedraw(window, kTRUE);
-            qv.fContext = oldCtx;
-            
-            [qv unlockFocus];
-            if ([[qv subviews] count])
-               RepaintTree(qv);
+               oldCtx = qv.fContext;
+               qv.fContext = cgContext;
+               
+               TGWindow *window = gClient->GetWindowById(qv.fID);
+               assert(window != 0 && "RepaintTree, window was not found");
+               
+               gClient->NeedRedraw(window, kTRUE);//This can throw.
+               qv.fContext = oldCtx;
+               
+               [qv unlockFocus];
+               if ([[qv subviews] count])
+                  RepaintTree(qv);
+            }
          }
       }
+   } catch (const std::exception &) {
+      //Roll-back all mods we still can roll-back.
+      [qv unlockFocus];
+      qv.fContext = oldCtx;
+      vx->CocoaDrawOFF();
+      //Now re-throw.
+      throw;
    }
    
    vx->CocoaDrawOFF();
@@ -455,6 +470,9 @@ void RepaintTree(QuartzView *view)
 void CommandBuffer::Flush(Details::CocoaPrivate *impl)
 {
    assert(impl != 0 && "Flush, impl parameter is null");
+
+   //Basic es-guarantee: state is unknown, but valid, no
+   //resource leaks, no locked focus.
 
    //All magic is here.
    CGContextRef prevContext = 0;
@@ -468,55 +486,65 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
       
       NSObject<X11Drawable> *drawable = impl->GetDrawable(cmd->fID);
       if (drawable.fIsPixmap) {
-         cmd->Execute();
+         cmd->Execute();//Can throw, ok.
          continue;
       }
       
       QuartzView *view = (QuartzView *)impl->GetWindow(cmd->fID).fContentView;
       
       if (prevView != view)
-         ClipOverlaps(view);
+         ClipOverlaps(view);//Can throw, ok.
       
       if (prevView && prevView != view && [[prevView subviews] count])
-         RepaintTree(prevView);
+         RepaintTree(prevView);//Can throw, ok.
       
       prevView = view;
       
-      if ([view lockFocusIfCanDraw]) {
-         NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
-         assert(nsContext != nil && "Flush, currentContext is nil");
-         currContext = (CGContextRef)[nsContext graphicsPort];
-         assert(currContext != 0 && "Flush, graphicsPort is null");//remove this assert?
-         
-         view.fContext = currContext;
-         if (prevContext && prevContext != currContext)
-            CGContextFlush(prevContext);
-         prevContext = currContext;
-         
-         //Context can be modified by a clip mask.
-         const Quartz::CGStateGuard ctxGuard(currContext);
-         if (view.fClipMaskIsValid)
-            CGContextClipToMask(currContext, CGRectMake(0, 0, view.fClipMask.fWidth, view.fClipMask.fHeight), view.fClipMask.fImage);
-         
-         cmd->Execute();
-         if (view.fBackBuffer) {
-            //Very "special" window.
-            CGImageRef image = [view.fBackBuffer createImageFromPixmap];//CGBitmapContextCreateImage(view.fBackBuffer.fContext);
-            if (image) {
-               const CGRect imageRect = CGRectMake(0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight);
-               CGContextDrawImage(view.fContext, imageRect, image);
-               CGImageRelease(image);
+      try {
+         if ([view lockFocusIfCanDraw]) {
+            NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
+            assert(nsContext != nil && "Flush, currentContext is nil");
+            currContext = (CGContextRef)[nsContext graphicsPort];
+            assert(currContext != 0 && "Flush, graphicsPort is null");//remove this assert?
+            
+            view.fContext = currContext;
+            if (prevContext && prevContext != currContext)
+               CGContextFlush(prevContext);
+            prevContext = currContext;
+            
+            //Context can be modified by a clip mask.
+            const Quartz::CGStateGuard ctxGuard(currContext);
+            if (view.fClipMaskIsValid)
+               CGContextClipToMask(currContext, CGRectMake(0, 0, view.fClipMask.fWidth, view.fClipMask.fHeight), view.fClipMask.fImage);
+            
+            cmd->Execute();//This can throw, we should restore as much as we can here.
+            
+            if (view.fBackBuffer) {
+               //Very "special" window.
+               CGImageRef image = [view.fBackBuffer createImageFromPixmap];//CGBitmapContextCreateImage(view.fBackBuffer.fContext);
+               if (image) {
+                  const CGRect imageRect = CGRectMake(0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight);
+                  CGContextDrawImage(view.fContext, imageRect, image);
+                  CGImageRelease(image);
+               }
             }
-         }
-         
+            
+            [view unlockFocus];
+            
+            view.fContext = 0;
+         }      
+      } catch (const std::exception &) {
+         //Focus was locked, roll-back:
          [view unlockFocus];
-         
+         //View's context was modified, roll-back:
          view.fContext = 0;
+         //Re-throw, something really bad happened (std::bad_alloc).
+         throw;
       }
    }
    
    if (prevView && [[prevView subviews] count])
-      RepaintTree(prevView);
+      RepaintTree(prevView);//This can throw, ok.
    
    if (currContext)
       CGContextFlush(currContext);
@@ -527,15 +555,18 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
 //______________________________________________________________________________
 void CommandBuffer::ClipOverlaps(QuartzView *view)
 {
+   //Basic es-guarantee, also, if initClipMask fails,
+   //view's clip mask will stay invalid (even if it was valid before).
+
    typedef std::vector<QuartzView *>::reverse_iterator reverse_iterator;
 
    assert(view != nil && "ClipOverlaps, view parameter is nil");
 
    fViewBranch.clear();
-   fViewBranch.reserve(view.fLevel + 1);
+   fViewBranch.reserve(view.fLevel + 1);//Can throw, ok.
    
    for (QuartzView *v = view; v; v = v.fParentView)
-      fViewBranch.push_back(v);
+      fViewBranch.push_back(v);//Can throw, ok.
    
    if (fViewBranch.size())
       fViewBranch.pop_back();//we do not need content view, it does not have any sibling.
@@ -564,7 +595,7 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
          //Check if two rects intersect.
          if (RectsOverlap(frame2, frame1)) {
             if (!view.fClipMaskIsValid) {
-               if (![view initClipMask])//initClipMask will issue an error message.
+               if (![view initClipMask])//initClipMask will issue an error message, also, this can throw.
                   return;//Forget about clipping at all.
                view.fClipMaskIsValid = YES;
             }

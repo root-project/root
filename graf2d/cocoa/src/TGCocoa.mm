@@ -486,7 +486,7 @@ void TGCocoa::ResizeWindow(Int_t wid)
    
    NSObject<X11Window> *window = fPimpl->GetWindow(wid);
    if (window.fBackBuffer) {
-      int currentDrawable = fSelectedDrawable;
+      const int currentDrawable = fSelectedDrawable;
       fSelectedDrawable = wid;
       SetDoubleBufferON();
       fSelectedDrawable = currentDrawable;
@@ -498,8 +498,12 @@ void TGCocoa::UpdateWindow(Int_t /*mode*/)
 {
    //This function is used by TCanvas/TPad:
    //draw "back buffer" image into the view.
+   
+   //Basic es-guarantee: X11Buffer::AddUpdateWindow modifies vector with commands,
+   //if the following call to TGCocoa::Update will produce an exception dusing X11Buffer::Flush,
+   //initial state of X11Buffer can not be restored, but it still must be in some valid state.
+   
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "UpdateWindow, no window was selected, can not update 'root' window");
-//   assert(fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap == NO && "UpdateWindow, called for a pixmap");
    
    NSObject<X11Window> *window = fPimpl->GetWindow(fSelectedDrawable);
 
