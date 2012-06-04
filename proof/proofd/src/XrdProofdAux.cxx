@@ -1579,7 +1579,8 @@ int XrdProofdAux::ParsePidPath(const char *path,
       }
    }
 
-   TRACE(HDBG,"path: "<<path<<" --> before: '"<<before<<"', pid: "<<pid<<", after: '"<<after<<"'");
+   TRACE(HDBG,"path: "<<(path ? path : "<nul>")<<" --> before: '"<<before
+                      <<"', pid: "<<pid<<", after: '"<<after<<"'");
 
    // Done
    return pid;

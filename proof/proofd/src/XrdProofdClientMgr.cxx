@@ -595,7 +595,7 @@ int XrdProofdClientMgr::CheckClient(XrdProofdProtocol *p,
          c->SetROOT(fMgr->ROOTMgr()->DefaultVersion());
       if (c->IsValid()) {
          // Set the group, if any
-         c->SetGroup(g->Name());
+         c->SetGroup(gname.c_str());
       }
    } else {
       emsg = "unable to instantiate object for client ";
@@ -632,7 +632,7 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
             XrdSysMutexHelper mh(fMutex);
             fProofdClients.remove(pc);
          }
-         SafeDel(pc);
+         SafeDelete(pc);
          p->SetClient(0);
       }
       TRACEP(p, DBG, "cannot find valid instance of XrdProofdClient");
@@ -720,7 +720,7 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
          if (CreateAdminPath(p, cpath, msg) != 0) {
             TRACEP(p, XERR, msg.c_str());
             fProofdClients.remove(pc);
-            SafeDel(pc);
+            SafeDelete(pc);
             p->SetClient(0);
             response->Send(kXP_ServerError, msg.c_str());
             return 0;
@@ -901,8 +901,9 @@ int XrdProofdClientMgr::ParsePreviousClients(XrdOucString &emsg)
                   if (!fd) {
                      TRACE(XERR, "unable to create path: " <<discpath);
                      xrm = 1;
+                  } else {
+                     fclose(fd);
                   }
-                  fclose(fd);
                   if (!xrm)
                      fNDisconnected++;
                }
@@ -1403,7 +1404,7 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
                }
             }
             if (freeclient) {
-               SafeDel(c);
+               SafeDelete(c);
             } else if (TRACING(DBG)) {
                XPDFORM(dmsg, "instance for {client, group} = {%s, %s} created"
                              " and added to the list (%p)", usr, grp, c);
@@ -1412,7 +1413,7 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
             if (TRACING(XERR)) {
                XPDFORM(dmsg, "instance for {client, group} = {%s, %s} is invalid", usr, grp);
             }
-            SafeDel(c);
+            SafeDelete(c);
          }
       } else {
          if (TRACING(XERR)) {

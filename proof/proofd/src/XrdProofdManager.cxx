@@ -205,13 +205,13 @@ XrdProofdManager::~XrdProofdManager()
    // Destructor
 
    // Destroy the configuration handler
-   SafeDel(fAdmin);
-   SafeDel(fClientMgr);
-   SafeDel(fNetMgr);
-   SafeDel(fPriorityMgr);
-   SafeDel(fProofSched);
-   SafeDel(fROOTMgr);
-   SafeDel(fSessionMgr);
+   SafeDelete(fAdmin);
+   SafeDelete(fClientMgr);
+   SafeDelete(fNetMgr);
+   SafeDelete(fPriorityMgr);
+   SafeDelete(fProofSched);
+   SafeDelete(fROOTMgr);
+   SafeDelete(fSessionMgr);
    SafeDelArray(fRootdArgsPtrs);
 }
 
@@ -512,7 +512,7 @@ XrdProofSched *XrdProofdManager::LoadScheduler()
    }
    // Check result
    if (!(sched->IsValid())) {
-      TRACE(XERR, " unable to instantiate the " << sched->Name() << " scheduler using " << cfn);
+      TRACE(XERR, " unable to instantiate the " << sched->Name() << " scheduler using " << (cfn ? cfn : "<nul>"));
       delete sched;
       return (XrdProofSched *)0;
    }
@@ -1414,7 +1414,7 @@ int XrdProofdManager::DoDirectiveGroupfile(char *val, XrdOucStream *cfg, bool rc
 
    // Defines file with the group info
    if (rcf) {
-      SafeDel(fGroupsMgr);
+      SafeDelete(fGroupsMgr);
    } else if (fGroupsMgr) {
       TRACE(XERR, "groups manager already initialized: ignoring ");
       return -1;
@@ -1641,6 +1641,8 @@ int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
          rw = 1;
       } else if (!strncmp(nxt, "url:", 4)) {
          url = nxt + 4;
+         XrdClientUrlInfo u(url);
+         if (u.Proto == "" && u.HostWPort == "") local = 1;
       } else if (!strncmp(nxt, "opt:", 4)) {
          opts = nxt + 4;
       }

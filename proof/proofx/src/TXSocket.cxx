@@ -445,12 +445,6 @@ UnsolRespProcResult TXSocket::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
    }
 
    // Local processing ...
-   if (!m) {
-      Error("ProcessUnsolicitedMsg", "undefined message - disabling");
-      PostMsg(kPROOF_STOP);
-      return rc;
-   }
-
    Int_t len = 0;
    if ((len = m->DataLen()) < (int)sizeof(kXR_int32)) {
       Error("ProcessUnsolicitedMsg", "empty or bad-formed message - disabling");
@@ -980,8 +974,8 @@ Int_t TXSocket::Flush()
    // Returns number of bytes in flushed buffers.
 
    Int_t nf = 0;
-   std::list<TXSockBuf *> splist;
-   std::list<TXSockBuf *>::iterator i;
+   list<TXSockBuf *> splist;
+   list<TXSockBuf *>::iterator i;
 
    {  R__LOCKGUARD(fAMtx);
 
@@ -1000,8 +994,10 @@ Int_t TXSocket::Flush()
          }
 
          // Reset the asynchronous queue
-         while (sz--)
-            fASem.TryWait();
+         while (sz--) {
+            if (fASem.TryWait() == 1)
+               Printf("Warning in TXSocket::Flush: semaphore counter already 0 (sz: %d)", sz);
+         }
          fAQue.clear();
       }
    }
@@ -1449,12 +1445,15 @@ Int_t TXSocket::PickUpReady()
       Error("PickUpReady","queue is empty - protocol error ?");
       return -1;
    }
-   fBufCur = fAQue.front();
+   if (!(fBufCur = fAQue.front())) {
+      Error("PickUpReady","got invalid buffer - protocol error ?");
+      return -1;
+   }
    // Remove message from the queue
    fAQue.pop_front();
+
    // Set number of available bytes
-   if (fBufCur)
-      fByteLeft = fBufCur->fLen;
+   fByteLeft = fBufCur->fLen;
 
    if (gDebug > 2)
       Info("PickUpReady", "%p: %s: got message (%d bytes)",
@@ -1489,7 +1488,7 @@ TXSockBuf *TXSocket::PopUpSpare(Int_t size)
 
    Int_t maxsz = 0;
    if (fgSQue.size() > 0) {
-      std::list<TXSockBuf *>::iterator i;
+      list<TXSockBuf *>::iterator i;
       for (i = fgSQue.begin(); i != fgSQue.end(); i++) {
          maxsz = ((*i)->fSiz > maxsz) ? (*i)->fSiz : maxsz;
          if ((*i) && (*i)->fSiz >= size) {
@@ -1514,10 +1513,9 @@ TXSockBuf *TXSocket::PopUpSpare(Int_t size)
    }
 
    // Create a new buffer
-   char *b = (char *)malloc(size);
-   if (b)
-      buf = new TXSockBuf(b, size);
+   buf = new TXSockBuf((char *)malloc(size), size);
    nBuf++;
+
    if (gDebug > 2)
       Info("PopUpSpare","asked: %d, spare: %d/%d, maxsz: %d, NEW buf %p, sz: %d",
                         size, (int) fgSQue.size(), nBuf, maxsz, buf, buf->fSiz);

@@ -330,9 +330,9 @@ Int_t TXProofServ::CreateServer()
       }
    }
 
-   // Everybody expects std::iostream to be available, so load it...
+   // Everybody expects iostream to be available, so load it...
    ProcessLine("#include <iostream>", kTRUE);
-   ProcessLine("#include <string>",kTRUE); // for std::string std::iostream.
+   ProcessLine("#include <string>",kTRUE); // for std::string iostream.
 
    // Load user functions
    const char *logon;
@@ -891,7 +891,7 @@ Bool_t TXProofServ::HandleError(const void *)
       fProof->Close("S");
 
    // Avoid communicating back anything to the coordinator (it is gone)
-   ((TXSocket *)fSocket)->SetSessionID(-1);
+   if (fSocket) ((TXSocket *)fSocket)->SetSessionID(-1);
 
    Terminate(0);
 
