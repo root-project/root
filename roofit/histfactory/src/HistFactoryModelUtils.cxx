@@ -1,6 +1,7 @@
 
 // A set of utils for navegating HistFactory models
 #include <stdexcept>    
+#include <typeinfo>
 
 #include "RooStats/HistFactory/ParamHistFunc.h"
 #include "TIterator.h"
