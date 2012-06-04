@@ -592,7 +592,7 @@ Double_t RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
       double gamma_hat_hat = ( -1*B + TMath::Sqrt(discrim) ) / (2*A);
 
       // Check for NAN
-      if( isnan(gamma_hat_hat) ) { 
+      if( TMath::IsNaN(gamma_hat_hat) ) { 
 	std::cout << "ERROR: gamma hat hat is NAN" << std::endl;
 	throw runtime_error("BarlowBeestonLL::evaluate() : gamma hat hat is NAN");
       }
