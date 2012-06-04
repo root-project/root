@@ -78,7 +78,7 @@ XrdNetPeer *XrdProofdLauncher::Launch(ProofdLaunch_t *in, int &pid)
                     xps->UNIXSockPath(), (int)errno);
       TRACE(XERR, emsg);      
       XrdProofdAux::LogEmsgToFile(in->fErrLog.c_str(), emsg.c_str(), npfx.c_str());
-      SafeDelete(unixsrv);
+      SafeDel(unixsrv);
       return peer;
    }
 
@@ -93,7 +93,7 @@ XrdNetPeer *XrdProofdLauncher::Launch(ProofdLaunch_t *in, int &pid)
       XPDFORM(emsg, "failure from 'system' (errno: %d)", (int)errno);
       TRACE(XERR, emsg);
       XrdProofdAux::LogEmsgToFile(in->fErrLog.c_str(), emsg.c_str(), npfx.c_str());
-      SafeDelete(unixsrv);
+      SafeDel(unixsrv);
       return peer;
    }
 
@@ -105,10 +105,10 @@ XrdNetPeer *XrdProofdLauncher::Launch(ProofdLaunch_t *in, int &pid)
       XPDFORM(emsg, "failure accepting callback (errno: %d)", -err);
       TRACE(XERR, emsg);
       XrdProofdAux::LogEmsgToFile(in->fErrLog.c_str(), emsg.c_str(), npfx.c_str());
-      SafeDelete(uconn);
+      SafeDel(uconn);
       return peer;
    }
-   SafeDelete(unixsrv);
+   SafeDel(unixsrv);
    TRACE(ALL, "proofserv connected!");
 
    //   

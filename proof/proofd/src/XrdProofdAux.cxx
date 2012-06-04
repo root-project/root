@@ -1523,7 +1523,7 @@ int XrdProofdAux::ReadMsg(int fd, XrdOucString &msg)
             msg += buf;
          }
          // Update counters
-         len -= nr;
+         len = (nr >= len) ? 0 : len - nr;
       } while (nr > 0 && len > 0);
 
       TRACE(HDBG,fd<<": buf: "<<buf);

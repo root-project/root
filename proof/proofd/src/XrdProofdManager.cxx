@@ -205,13 +205,13 @@ XrdProofdManager::~XrdProofdManager()
    // Destructor
 
    // Destroy the configuration handler
-   SafeDelete(fAdmin);
-   SafeDelete(fClientMgr);
-   SafeDelete(fNetMgr);
-   SafeDelete(fPriorityMgr);
-   SafeDelete(fProofSched);
-   SafeDelete(fROOTMgr);
-   SafeDelete(fSessionMgr);
+   SafeDel(fAdmin);
+   SafeDel(fClientMgr);
+   SafeDel(fNetMgr);
+   SafeDel(fPriorityMgr);
+   SafeDel(fProofSched);
+   SafeDel(fROOTMgr);
+   SafeDel(fSessionMgr);
    SafeDelArray(fRootdArgsPtrs);
 }
 
@@ -1129,6 +1129,7 @@ bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
                   } else if (ofs != (off_t)(-1)) {
                      TRACE(XERR, "Problems getting current position on file '" << fnpath << "'; errno: " << errno);
                   }
+                  fclose(flck);
                }
             }
             // Make sure that everybody can modify the file for updates
@@ -1413,7 +1414,7 @@ int XrdProofdManager::DoDirectiveGroupfile(char *val, XrdOucStream *cfg, bool rc
 
    // Defines file with the group info
    if (rcf) {
-      SafeDelete(fGroupsMgr);
+      SafeDel(fGroupsMgr);
    } else if (fGroupsMgr) {
       TRACE(XERR, "groups manager already initialized: ignoring ");
       return -1;

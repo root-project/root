@@ -540,11 +540,11 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
          if (TRACING(REQ)) xps->DumpQueries();
          // Notify enqueing
          TRACE(REQ, "no workers currently available: session enqueued");
-         SafeDelete(acwseff);
+         SafeDel(acwseff);
          return 2;
       } else {
          TRACE(XERR, "no worker available: do nothing");
-         SafeDelete(acwseff);
+         SafeDel(acwseff);
          return -1;
       }
    }
@@ -552,7 +552,7 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
    // If the session has already assigned workers just return
    if (xps->Workers()->Num() > 0) {
       // Current assignement is valid
-      SafeDelete(acwseff);
+      SafeDel(acwseff);
       return 1;
    }
 

@@ -2124,9 +2124,13 @@ Int_t TXSocket::Reconnect()
    }
 
    if (gDebug > 0) {
-      Info("Reconnect", "%p (c:%p): attempt %s (logid: %d)", this, fConn,
-                        ((fConn && fConn->IsValid()) ? "succeeded!" : "failed"),
-                        fConn->GetLogConnID() );
+      if (fConn) {
+         Info("Reconnect", "%p (c:%p): attempt %s (logid: %d)", this, fConn,
+                           (fConn->IsValid() ? "succeeded!" : "failed"),
+                           fConn->GetLogConnID() );
+      } else {
+         Info("Reconnect", "%p (c:0x0): attempt failed", this);
+      }
    }
 
    // Done

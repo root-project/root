@@ -320,10 +320,10 @@ int XrdProofdNetMgr::DoDirectiveBonjour(char *val, XrdOucStream *cfg, bool)
 void XrdProofdNetMgr::BalanceNodesOrder()
 {
    // Indices (this will be used twice).
-   std::list<XrdProofWorker *>::const_iterator iter, iter2;
-   std::list<XrdProofWorker *>::iterator iter3; // Not const, less efficient.
+   list<XrdProofWorker *>::const_iterator iter, iter2;
+   list<XrdProofWorker *>::iterator iter3; // Not const, less efficient.
    // Map to store information of the balancer.
-   std::map<XrdProofWorker *, BalancerInfo> info;
+   map<XrdProofWorker *, BalancerInfo> info;
    // Node with minimum number of workers distinct to 1.
    unsigned int min = UINT_MAX;
    // Total number of nodes and per iteration assignments.
@@ -331,7 +331,7 @@ void XrdProofdNetMgr::BalanceNodesOrder()
    // Number of iterations to get every node filled.
    unsigned int total_added = 0;
    // Temporary list to store the balanced configuration
-   std::list<XrdProofWorker *> tempNodes;
+   list<XrdProofWorker *> tempNodes;
    // Flag for the search and destroy loop.
    bool deleted;
 
@@ -377,7 +377,7 @@ void XrdProofdNetMgr::BalanceNodesOrder()
    // Finally, do the round robin assignment of nodes.
    // Stop when every node has its workers processed.
    while (total_added < total) {
-      for (std::map<XrdProofWorker *, BalancerInfo>::iterator i = info.begin(); i != info.end(); i++) {
+      for (map<XrdProofWorker *, BalancerInfo>::iterator i = info.begin(); i != info.end(); i++) {
          if (i->second.added < i->second.available) {
             // Be careful with the remainders (on prime number of nodes).
             unsigned int to_add = xrdmin(i->second.per_iteration,
@@ -1559,7 +1559,7 @@ char *XrdProofdNetMgr::ReadLogPaths(const char *url, const char *msg, int isess)
       reqhdr.proof.int1 = kQueryLogPaths;
       reqhdr.proof.int2 = isess;
       reqhdr.proof.sid = -1;
-      reqhdr.header.dlen = strlen(msg);
+      reqhdr.header.dlen = msg ? strlen(msg) : 0;
       const void *btmp = (const void *) msg;
       char **vout = &buf;
       // Send over

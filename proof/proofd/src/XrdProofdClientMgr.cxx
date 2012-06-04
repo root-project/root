@@ -632,7 +632,7 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
             XrdSysMutexHelper mh(fMutex);
             fProofdClients.remove(pc);
          }
-         SafeDelete(pc);
+         SafeDel(pc);
          p->SetClient(0);
       }
       TRACEP(p, DBG, "cannot find valid instance of XrdProofdClient");
@@ -720,7 +720,7 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
          if (CreateAdminPath(p, cpath, msg) != 0) {
             TRACEP(p, XERR, msg.c_str());
             fProofdClients.remove(pc);
-            SafeDelete(pc);
+            SafeDel(pc);
             p->SetClient(0);
             response->Send(kXP_ServerError, msg.c_str());
             return 0;
@@ -1338,7 +1338,7 @@ char *XrdProofdClientMgr::FilterSecConfig(int &nd)
 
    // Close files
    fclose(fin);
-   close(fd);
+   if (fd >= 0) close(fd);
 
    return rcfn;
 }
@@ -1403,7 +1403,7 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
                }
             }
             if (freeclient) {
-               SafeDelete(c);
+               SafeDel(c);
             } else if (TRACING(DBG)) {
                XPDFORM(dmsg, "instance for {client, group} = {%s, %s} created"
                              " and added to the list (%p)", usr, grp, c);
@@ -1412,7 +1412,7 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
             if (TRACING(XERR)) {
                XPDFORM(dmsg, "instance for {client, group} = {%s, %s} is invalid", usr, grp);
             }
-            SafeDelete(c);
+            SafeDel(c);
          }
       } else {
          if (TRACING(XERR)) {

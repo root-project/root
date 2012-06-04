@@ -227,6 +227,7 @@ int SshToolNotifyFailure(const char *Pipe)
         connect(sd, (struct sockaddr *) &servAddr,
                 sizeof(servAddr))) < 0) {
       ErrorInfo("SshToolNotifyFailure: cannot connect socket: exiting ");
+      close(sd);
       return 1;
    }
    // Sending "KO" ...
@@ -237,6 +238,7 @@ int SshToolNotifyFailure(const char *Pipe)
           ("SshToolNotifyFailure: sending might have been unsuccessful (bytes send: %d)",
            rc);
    }
+   close(sd);
 
    return 0;
 }

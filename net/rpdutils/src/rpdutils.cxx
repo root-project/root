@@ -944,7 +944,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
    }
 
    goingout:
-   if (ilck == 0) {
+   if (itab != ilck) {
       // unlock the file
       lseek(itab, 0, SEEK_SET);
       if (lockf(itab, F_ULOCK, (off_t) 1) == -1) {
@@ -2450,6 +2450,7 @@ int RpdSshAuth(const char *sstr)
          NetSend(kErrNoPipeInfo, kROOTD_ERR);
          delete[] uniquePipe;
          delete[] pipeFile;
+         close(unixFd);
          return auth;
       } else {
          // File open: fill it
@@ -4516,14 +4517,17 @@ int RpdCheckSshd(int opt)
       localAddr.sin_port = htons(0);
       if (bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr)) < 0) {
          ErrorInfo("RpdCheckSshd: cannot bind to local port %u", gSshdPort);
+         close(sd);
          return 0;
       }
       // connect to server
       if (connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr)) < 0) {
          ErrorInfo("RpdCheckSshd: cannot connect to local port %u",
                    gSshdPort);
+         close(sd);
          return 0;
       }
+      close(sd);
       // Sshd successfully contacted
       if (gDebug > 2)
          ErrorInfo("RpdCheckSshd: success!");
@@ -6634,6 +6638,7 @@ int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpw
    if (fstat(fid, &st) == -1) {
       ErrorInfo("RpdRetrieveSpecialPass: cannot stat descriptor %d"
                   " %s (errno: %d)", fid, GetErrno());
+      close(fid);
       rc = -1;
       goto back;
    }
@@ -6643,6 +6648,7 @@ int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpw
                 " 0%o (should be 0600)", rootdpass, (st.st_mode & 0777));
       ErrorInfo("RpdRetrieveSpecialPass: %d %d",
                 S_ISREG(st.st_mode),S_ISDIR(st.st_mode));
+      close(fid);
       rc = -2;
       goto back;
    }
