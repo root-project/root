@@ -760,7 +760,7 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
       TString outf(fOutputFilename);
       if (outf.IsNull()) {
          outf.Form("file:%s/FileMerger.root", gSystem->TempDirectory());
-         Info("Merge", "will merge the results to the file %s\n"
+         Info("PartialMerge", "will merge the results to the file %s\n"
               "since you didn't specify a merge filename",
               TUrl(outf).GetFile());
       }
@@ -768,7 +768,36 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
          return kFALSE;
       }
    }
-   
+
+   // Special treament for the single file case ...
+   if ((fFileList->GetEntries() == 1) && !fExcessFiles->GetEntries() &&
+      !(in_type & kIncremental) && !fCompressionChange && !fExplicitCompLevel) {
+      fOutputFile->Close();
+      SafeDelete(fOutputFile);
+
+      TFile *file = (TFile *) fFileList->First();
+      if (!file || (file && file->IsZombie())) {
+         Error("PartialMerge", "one-file case: problem attaching to file");
+         return kFALSE;
+      }
+      Bool_t result = kTRUE;
+      if (!(result = file->Cp(fOutputFilename))) {
+         Error("PartialMerge", "one-file case: could not copy '%s' to '%s'",
+                               file->GetPath(), fOutputFilename.Data());
+         return kFALSE;
+      }
+      if (file->TestBit(kCanDelete)) file->Close();
+
+      // Remove the temporary file
+      if (fLocal) {
+         TUrl u(file->GetPath(), kTRUE); 
+         if (gSystem->Unlink(u.GetFile()) != 0)
+            Warning("PartialMerge", "problems removing temporary local file '%s'", u.GetFile());
+      }
+      fFileList->Clear();
+      return result;
+   }
+
    fOutputFile->SetBit(kMustCleanup);
 
    TDirectory::TContext ctxt(0);
