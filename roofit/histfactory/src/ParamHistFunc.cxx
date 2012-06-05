@@ -810,17 +810,17 @@ Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*
     
     // Get the bin volume
     _dataSet.get( nominalItr );
-    Double_t binVolume  = _dataSet.binVolume(); //_binning->binWidth( nominalItr );
+    Double_t binVolumeDS  = _dataSet.binVolume(); //_binning->binWidth( nominalItr );
     
     // Finally, get the subtotal
-    value += paramVal*binVolume;
+    value += paramVal*binVolumeDS;
 
     ++nominalItr;
 
     /*
     std::cout << "Integrating : "
 	      << " bin: "  << nomValue
-	      << " binVolume:  "  << binVolume
+	      << " binVolume:  "  << binVolumeDS
 	      << " paramValue:  "  << paramVal
 	      << " nomValue:  "  << nomValue
 	      << " subTotal:  "  << value
