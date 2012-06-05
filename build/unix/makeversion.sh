@@ -15,6 +15,8 @@ if test "x`uname | grep -i cygwin`" != "x"; then
     dos2unix core/base/inc/RVersion.h
 fi
 
+echo "Update also doc/vXXX/index.html to `cat build/version_number`."
+echo ""
 echo "New version is `cat build/version_number`. Updating dependencies..."
 
 # compile all files that were out-of-date prior to makeversion.sh
