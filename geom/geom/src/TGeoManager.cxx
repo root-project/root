@@ -1746,7 +1746,7 @@ void TGeoManager::DrawTracks(Option_t *option)
    SetAnimateTracks();
    for (Int_t i=0; i<fNtracks; i++) {
       track = GetTrack(i);
-      track->Draw(option);
+      if (track) track->Draw(option);
    }
    SetAnimateTracks(kFALSE);
    ModifiedPad();
@@ -3641,6 +3641,7 @@ void TGeoManager::UpdateElements()
          }
       } else {
          elem = mat->GetElement();
+         if (!elem) continue;
          elem_table = fElementTable->GetElement(elem->Z());
          if (elem != elem_table) {
             elem_table->SetDefined(elem->IsDefined());

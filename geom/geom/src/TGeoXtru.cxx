@@ -172,24 +172,37 @@ void TGeoXtru::SetSeg(Int_t iseg)
 
 //_____________________________________________________________________________
 TGeoXtru::TGeoXtru()
+         :TGeoBBox(),
+          fNvert(0),
+          fNz(0),
+          fZcurrent(0.),
+          fX(0),
+          fY(0),
+          fZ(0),
+          fScale(0),
+          fX0(0),
+          fY0(0),
+          fThreadData(0),
+          fThreadSize(0)
 {
 // dummy ctor
    SetShapeBit(TGeoShape::kGeoXtru);
-   fNvert = 0;
-   fNz = 0;
-   fZcurrent = 0.;
-   fX = 0;
-   fY = 0;
-   fZ = 0;
-   fScale = 0;
-   fX0 = 0;
-   fY0 = 0;
-   fThreadSize = 0;
 }   
 
 //_____________________________________________________________________________
 TGeoXtru::TGeoXtru(Int_t nz)
-         :TGeoBBox(0, 0, 0)
+         :TGeoBBox(0, 0, 0),
+          fNvert(0),
+          fNz(nz),
+          fZcurrent(0.),
+          fX(0),
+          fY(0),
+          fZ(new Double_t[nz]),
+          fScale(new Double_t[nz]),
+          fX0(new Double_t[nz]),
+          fY0(new Double_t[nz]),
+          fThreadData(0),
+          fThreadSize(0)         
 {
 // Default constructor
    SetShapeBit(TGeoShape::kGeoXtru);
@@ -198,21 +211,22 @@ TGeoXtru::TGeoXtru(Int_t nz)
       SetShapeBit(TGeoShape::kGeoBad);
       return;
    }
-   fNvert = 0;
-   fNz = nz;   
-   fZcurrent = 0.;
-   fX = 0;
-   fY = 0;
-   fZ = new Double_t[nz];
-   fScale = new Double_t[nz];
-   fX0 = new Double_t[nz];
-   fY0 = new Double_t[nz];
-   fThreadSize = 0;
 }
 
 //_____________________________________________________________________________
 TGeoXtru::TGeoXtru(Double_t *param)
-         :TGeoBBox(0, 0, 0)
+         :TGeoBBox(0, 0, 0),
+          fNvert(0),
+          fNz(0),
+          fZcurrent(0.),
+          fX(0),
+          fY(0),
+          fZ(0),
+          fScale(0),
+          fX0(0),
+          fY0(0),
+          fThreadData(0),
+          fThreadSize(0)         
 {
 // Default constructor in GEANT3 style
 // param[0] = nz  // number of z planes
@@ -227,31 +241,22 @@ TGeoXtru::TGeoXtru(Double_t *param)
 // param[4*(nz-1)+3] = yn
 // param[4*(nz-1)+4] = scalen
    SetShapeBit(TGeoShape::kGeoXtru);
-   fNvert = 0;
-   fNz = 0;
-   fZcurrent = 0.;
-   fX = 0;
-   fY = 0;
-   fZ = 0;
-   fScale = 0;
-   fX0 = 0;
-   fY0 = 0;
-   fThreadSize = 0;
    SetDimensions(param);
 }
 
 //_____________________________________________________________________________
 TGeoXtru::TGeoXtru(const TGeoXtru& xt) :
   TGeoBBox(xt),
-  fNvert(xt.fNvert),
-  fNz(xt.fNz),
-  fZcurrent(xt.fZcurrent),
-  fX(xt.fX),
-  fY(xt.fY),
-  fZ(xt.fZ),
-  fScale(xt.fScale),
-  fX0(xt.fX0),
-  fY0(xt.fY0),
+  fNvert(0),
+  fNz(0),
+  fZcurrent(0),
+  fX(0),
+  fY(0),
+  fZ(0),
+  fScale(0),
+  fX0(0),
+  fY0(0),
+  fThreadData(0),
   fThreadSize(0)
 { 
    //copy constructor
@@ -263,16 +268,16 @@ TGeoXtru& TGeoXtru::operator=(const TGeoXtru& xt)
    //assignment operator
    if(this!=&xt) {
       TGeoBBox::operator=(xt);
-      fNvert=xt.fNvert;
-      fNz=xt.fNz;
-      fZcurrent=xt.fZcurrent;
-      fX=xt.fX;
-      fY=xt.fY;
-      fZ=xt.fZ;
-      fScale=xt.fScale;
-      fX0=xt.fX0;
-      fY0=xt.fY0;
-      ClearThreadData();
+      fNvert=0;
+      fNz=0;
+      fZcurrent=0;
+      fX=0;
+      fY=0;
+      fZ=0;
+      fScale=0;
+      fX0=0;
+      fY0=0;
+      fThreadSize=0;
    } 
    return *this;
 }

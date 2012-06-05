@@ -42,6 +42,10 @@ TGeoStateInfo::TGeoStateInfo()
    fVoxBits1 = new UChar_t[2 + ((maxDaughters-1)>>3)];
    fXtruXc = new Double_t[maxXtruVert];
    fXtruYc = new Double_t[maxXtruVert];
+   fVoxSlices[0] = fVoxSlices[1] = fVoxSlices[2] = -1;
+   fVoxInc[0] = fVoxInc[1] = fVoxInc[2] = 0;
+   fVoxInvdir[0] = fVoxInvdir[1] = fVoxInvdir[2] = 0;
+   fVoxLimits[0] = fVoxLimits[1] = fVoxLimits[2] = 0;
 }
 
 //_____________________________________________________________________________
@@ -82,6 +86,10 @@ TGeoStateInfo::TGeoStateInfo(const TGeoStateInfo &other)
    fVoxBits1 = new UChar_t[1 + ((maxDaughters-1)>>3)];
    fXtruXc = new Double_t[maxXtruVert];
    fXtruYc = new Double_t[maxXtruVert];
+   fVoxSlices[0] = fVoxSlices[1] = fVoxSlices[2] = -1;
+   fVoxInc[0] = fVoxInc[1] = fVoxInc[2] = 0;
+   fVoxInvdir[0] = fVoxInvdir[1] = fVoxInvdir[2] = 0;
+   fVoxLimits[0] = fVoxLimits[1] = fVoxLimits[2] = 0;
 }
 
 //_____________________________________________________________________________
@@ -99,9 +107,17 @@ TGeoStateInfo &TGeoStateInfo::operator=(const TGeoStateInfo &other)
    fDivCombi = other.fDivCombi;
    fVoxNcandidates = other.fVoxNcandidates;
    fVoxCurrent = other.fVoxCurrent;
+   fVoxCheckList = other.fVoxCheckList;
+   fVoxBits1 = other.fVoxBits1;
    fBoolSelected = other.fBoolSelected;
    fXtruSeg = other.fXtruSeg;
    fXtruIz = other.fXtruIz;
+   fXtruXc = other.fXtruXc;
+   fXtruYc = other.fXtruYc;
    fXtruPoly = other.fXtruPoly;
+   fVoxSlices[0] = fVoxSlices[1] = fVoxSlices[2] = -1;
+   fVoxInc[0] = fVoxInc[1] = fVoxInc[2] = 0;
+   fVoxInvdir[0] = fVoxInvdir[1] = fVoxInvdir[2] = 0;
+   fVoxLimits[0] = fVoxLimits[1] = fVoxLimits[2] = 0;
    return *this;
 }

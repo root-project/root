@@ -176,7 +176,15 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
          node = GetNode(i+1);
          // Clone daughter volume and node
          vd = node->GetVolume()->CloneVolume();
+         if (!vd) {
+            Fatal("Align", "Cannot clone volume %s", node->GetVolume()->GetName());
+            return;
+         }   
          nnode = node->MakeCopyNode();
+         if (!nnode) {
+            Fatal("Align", "Cannot make copy node for %s", node->GetName());
+            return;
+         }   
          // Correct pointers to mother and volume
          nnode->SetVolume(vd);
          nnode->SetMotherVolume(vm);
@@ -216,6 +224,7 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    for (i=fLevel-1; i>0; i--) {
       Bool_t dassm = vd->IsAssembly(); // is daughter assembly ?
       vd = GetVolume(i);
+      if (!vd) break;
       Bool_t cassm = vd->IsAssembly(); // is current assembly ?
       if (cassm) ((TGeoShapeAssembly*)vd->GetShape())->NeedsBBoxRecompute();
       if ((cassm || dassm) && vd->GetVoxels()) vd->GetVoxels()->SetNeedRebuild();
@@ -234,6 +243,7 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
       // Set aligned node to be checked
       i = fLevel;
       node = GetNode(i);
+      if (!node) return;
       if (node->IsOverlapping()) {
          Info("Align", "The check for overlaps for node: \n%s\n cannot be performed since the node is declared possibly overlapping",
               GetName());

@@ -351,7 +351,7 @@ void TGeoChecker::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
    }
    fTimer->Stop();
 
-   printf("CPU time/point = %5.2emus: Real time/point = %5.2emus\n",
+   if (itry) printf("CPU time/point = %5.2emus: Real time/point = %5.2emus\n",
 	       1000000.*fTimer->CpuTime()/itry,1000000.*fTimer->RealTime()/itry);
    bug->Write();
    delete bug;
@@ -360,7 +360,7 @@ void TGeoChecker::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
 
    CheckBoundaryReference();
 
-   printf("Effic = %3.1f%%\n",(100.*igen)/itry);
+   if (itry) printf("Effic = %3.1f%%\n",(100.*igen)/itry);
    TCanvas *c1 = new TCanvas("c1","Results",600,800);
    c1->Divide(1,2);
    c1->cd(1);
@@ -527,6 +527,10 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
 //      if ((i%1000)==0) printf("... remaining tracks %i\n", ntracks-i);
       nbound += PropagateInGeom(point,dir);
    }
+   if (!nbound) {
+      printf("No boundary crossed\n");
+      return;
+   }   
    fTimer->Stop();
    Double_t time1 = fTimer->CpuTime() *1.E6;
    Double_t time2 = time1/ntracks;
@@ -602,7 +606,7 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    h1->SetBit(TH1::kCanRebin);
    for (i=0; i<nuid; i++) {
       vol = fGeoManager->GetVolume(i);
-      if (!vol->GetNdaughters()) continue;
+      if (!vol || !vol->GetNdaughters()) continue;
       value = fVal1[i]*fVal2[i]/ntracks/time_tot_pertrack;
       h1->Fill(vol->GetName(), value);
       h2->Fill(vol->GetNdaughters(), fVal2[i]);
@@ -2086,7 +2090,7 @@ void TGeoChecker::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
       i++;
    }
    printf("Number of visible points : %i\n", i);
-   ratio = (Double_t)i/(Double_t)igen;
+   if (igen) ratio = (Double_t)i/(Double_t)igen;
    printf("efficiency : %g\n", ratio);
    for (Int_t m=0; m<128; m++) {
       marker = (TPolyMarker3D*)pm->At(m);

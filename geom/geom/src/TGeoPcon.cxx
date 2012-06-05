@@ -141,12 +141,12 @@ TGeoPcon::TGeoPcon(Double_t *param)
 //_____________________________________________________________________________
 TGeoPcon::TGeoPcon(const TGeoPcon& pc) : 
   TGeoBBox(pc),
-  fNz(pc.fNz),
-  fPhi1(pc.fPhi1),
-  fDphi(pc.fDphi),
-  fRmin(pc.fRmin),
-  fRmax(pc.fRmax),
-  fZ(pc.fZ)
+  fNz(0),
+  fPhi1(0.),
+  fDphi(0.),
+  fRmin(0),
+  fRmax(0),
+  fZ(0)
 { 
    //copy constructor
 }
@@ -157,12 +157,12 @@ TGeoPcon& TGeoPcon::operator=(const TGeoPcon& pc)
    //assignment operator
    if(this!=&pc) {
       TGeoBBox::operator=(pc);
-      fNz=pc.fNz;
-      fPhi1=pc.fPhi1;
-      fDphi=pc.fDphi;
-      fRmin=pc.fRmin;
-      fRmax=pc.fRmax;
-      fZ=pc.fZ;
+      fNz=0;
+      fPhi1=0.;
+      fDphi=0.;
+      fRmin=0;
+      fRmax=0;
+      fZ=0;
    } 
    return *this;
 }

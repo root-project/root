@@ -451,7 +451,7 @@ void TGeoTrack::PaintCollect(Double_t time, Double_t *box)
    TGeoTrack *track;
    for (Int_t i=0; i<nd; i++) {
       track = (TGeoTrack*)GetDaughter(i);
-      track->PaintCollect(time, box);
+      if (track) track->PaintCollect(time, box);
    }   
 }
 
@@ -509,9 +509,11 @@ void TGeoTrack::PaintTrack(Option_t *option)
    Int_t imin=0;
    Int_t imax=np-1;
    Int_t ip;
-   Double_t start[3], end[3], seg[6];
+   Double_t start[3] = {0.,0.,0.};
+   Double_t end[3] = {0.,0.,0.};
+   Double_t seg[6] = {0.,0.,0.,0.,0.,0.};
    Bool_t convert = (gGeoManager->GetTopVolume() == gGeoManager->GetMasterVolume())?kFALSE:kTRUE;
-   Double_t tmin,tmax;
+   Double_t tmin=0.,tmax=0.;
    Bool_t is_time = gGeoManager->GetTminTmax(tmin,tmax);
    if (is_time) {
       imin = GetPoint(tmin, start);
@@ -622,7 +624,7 @@ void TGeoTrack::Print(Option_t * /*option*/) const
    Int_t np = fNpoints>>2;
    printf(" TGeoTrack%6i : %s  ===============================\n", fId,GetName());
    printf("   parent =%6i    nd =%3i\n", (fParent)?fParent->GetId():-1, GetNdaughters());
-   Double_t x,y,z,t;
+   Double_t x=0,y=0,z=0,t=0;
    GetPoint(0,x,y,z,t);
    printf("   production vertex : (%g, %g, %g) at tof=%g\n", x,y,z,t);
    GetPoint(np-1,x,y,z,t);

@@ -1302,6 +1302,10 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
             numed = old->GetMedium()->GetId();
          }
          TGeoVolume *divvol = vol->Divide(NameShort(reftemp), axis, ndiv, start, step, numed);
+         if (!divvol) {
+            Fatal("VolProcess", "Cannot divide volume %s", vol->GetName());
+            return child;
+         }   
          if (old && old->GetNdaughters()) {
             divvol->ReplayCreation(old);
          }

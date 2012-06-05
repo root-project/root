@@ -1052,6 +1052,10 @@ void TGeoManagerEditor::DoCreateMaterial()
 {
 // Create a new material.
    TGeoElement *el = fGeometry->GetElementTable()->GetElement(fElementList->GetSelected());
+   if (!el) {
+      Error("DoCreateMaterial", "Cannot find selected element in list");
+      return;
+   }   
    Double_t density = fEntryDensity->GetNumber();
    const char *name = fMaterialName->GetText();
    fSelectedMaterial = new TGeoMaterial(name, el, density);

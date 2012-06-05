@@ -469,6 +469,7 @@ void TGeoShapeDialog::BuildListTree()
    // Existing shapes
    for (Int_t i=0; i<nshapes; i++) {
       shape = (TGeoShape*)gGeoManager->GetListOfShapes()->At(i);
+      if (!shape) continue;
       shapename = shape->IsA()->GetName();
       pic_shape = fClient->GetMimeTypeList()->GetIcon(shapename, kTRUE);
       fld_name = shapename;  // e.g. "TGeoBBox"

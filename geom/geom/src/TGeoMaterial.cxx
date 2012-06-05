@@ -276,6 +276,10 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
       const Double_t lambda0 = 35.*g/(cm*cm);  // [g/cm^2]
       Double_t nilinv = 0.0;
       TGeoElement *elem = GetElement();
+      if (!elem) {
+         Fatal("SetRadLen", "Element not found for material %s", GetName());
+         return;
+      }   
       Double_t nbAtomsPerVolume = TMath::Na()*fDensity/elem->A();
       nilinv += nbAtomsPerVolume*TMath::Power(elem->Neff(), 0.6666667);
       nilinv *= amu/lambda0;
@@ -453,6 +457,10 @@ void TGeoMaterial::FillMaterialEvolution(TObjArray *population, Double_t precisi
    TIter next(table->GetElementsRN());
    while ((elemrn=(TGeoElementRN*)next())) elemrn->ResetRatio();
    elem = GetElement();
+   if (!elem) {
+      Fatal("FillMaterialEvolution", "Element not found for material %s", GetName());
+      return;
+   }   
    if (!elem->IsRadioNuclide()) {
       population->Add(elem);
       return;

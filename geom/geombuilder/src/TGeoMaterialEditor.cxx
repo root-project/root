@@ -393,7 +393,7 @@ TGeoMixtureEditor::TGeoMixtureEditor(const TGWindow *p, Int_t width,
       TGeoElement *element;
       for (Int_t i=0; i<table->GetNelements(); i++) {
          element = table->GetElement(i);
-         fMixElem->AddEntry(element->GetTitle(),i);
+         if (element) fMixElem->AddEntry(element->GetTitle(),i);
       }
    }      
    fMixElem->Select(0);
@@ -540,6 +540,10 @@ void TGeoMixtureEditor::DoSelectElement(Int_t ielem)
 {
 // Slot for selecting an element.
    TGeoElement *el = gGeoManager->GetElementTable()->GetElement(ielem);
+   if (!el) {
+      Error("DoSelectElement", "No element at index %d", ielem);
+      return;
+   }   
    TString z = TString::Format("Z=%d",el->Z());
    TString a = TString::Format("A=%d",(Int_t)el->A());
    fAelem->SetText(a.Data());
