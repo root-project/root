@@ -12,7 +12,7 @@
 namespace llvm {
   class ExecutionEngine;
   class Function;
-  class GenericValue;
+  struct GenericValue;
 }
 
 namespace clang {
