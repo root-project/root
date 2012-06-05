@@ -1,5 +1,6 @@
 // request symbols
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/Callable.h"
 #include "cling/Interpreter/CValuePrinter.h"
 #include "cling/Interpreter/ValuePrinter.h"
 #include "cling/Interpreter/ValuePrinterInfo.h"
@@ -8,7 +9,8 @@
 #include "llvm/Support/raw_ostream.h"
 
 namespace cling {
-void libcling__symbol_requester() {
+void libcling__symbol_requester(const clang::FunctionDecl& Decl,
+                                const cling::Interpreter& Interp) {
    const char* const argv[] = {"libcling__symbol_requester", 0};
    cling::Interpreter I(1, argv);
    cling::UserInterface U(I);
@@ -16,5 +18,6 @@ void libcling__symbol_requester() {
    printValueDefault(llvm::outs(), 0, VPI);
    cling_PrintValue(0, 0, 0);
    flushOStream(llvm::outs());
+   Callable C(Decl,Interp);
 }
 }
