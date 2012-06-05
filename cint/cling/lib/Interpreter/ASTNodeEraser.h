@@ -28,12 +28,12 @@ namespace cling {
     ///\brief Removes given declaration from the AST. Removing includes reseting
     /// various internal stuctures in the compiler to their previous state. For
     /// example it resets the lookup tables if the declaration has name and can
-    /// be looked up. Reverts the redeclaration chain if the declaration was 
+    /// be looked up. Reverts the redeclaration chain if the declaration was
     /// redeclarable and so on.
     /// Note1 that the code generated for the declaration is not removed yet.
     /// Note2 does not do dependency analysis.
     ///
-    /// @param[in] D - The declaration to be removed. 
+    /// @param[in] D - The declaration to be removed.
     ///
     bool RevertDecl(clang::Decl *D);
   };

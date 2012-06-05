@@ -32,19 +32,20 @@ namespace cling {
     ///\brief Checks for clashing names when trying to extract a declaration.
     ///
     /// Returns true if there is another declaration with the same name
-    bool CheckForClashingNames(const llvm::SmallVector<clang::NamedDecl*, 4>& Decls, 
+    bool CheckForClashingNames(
+                           const llvm::SmallVector<clang::NamedDecl*, 4>& Decls,
                                clang::DeclContext* DC, clang::Scope* S);
 
     ///\brief Performs semantic checking on a newly-extracted tag declaration.
     ///
-    /// This routine performs all of the type-checking required for a tag 
+    /// This routine performs all of the type-checking required for a tag
     /// declaration once it has been built. It is used both to check tags before
     /// they have been moved onto the global scope.
     ///
     /// Sets NewTD->isInvalidDecl if an error was encountered.
     ///
     /// Returns true if the tag declaration is redeclaration.
-    bool CheckTagDeclaration(clang::TagDecl* NewTD, 
+    bool CheckTagDeclaration(clang::TagDecl* NewTD,
                              clang::LookupResult& Previous);
   };
 

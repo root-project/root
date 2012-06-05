@@ -16,12 +16,12 @@ namespace cling {
 
   private:
     bool Dump;
-    
+
   public:
     ASTDumper(bool Dump = false)
       : Dump(Dump) { }
     virtual ~ASTDumper();
-    
+
     virtual bool HandleTopLevelDecl(clang::DeclGroupRef D);
 
   private:

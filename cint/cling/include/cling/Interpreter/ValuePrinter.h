@@ -14,7 +14,7 @@ namespace llvm {
 }
 
 namespace cling {
-  
+
   // Can be re-implemented to print type-specific details, e.g. as
   //   template <typename ACTUAL>
   //   void dumpPtr(llvm::raw_ostream& o, const clang::Decl* a, ACTUAL* ac,
@@ -23,7 +23,7 @@ namespace cling {
   void printValue(llvm::raw_ostream& o, const void* const p,
                   TY* const u, const ValuePrinterInfo& VPI);
 
-  void printValueDefault(llvm::raw_ostream& o, const void* const p, 
+  void printValueDefault(llvm::raw_ostream& o, const void* const p,
                          const ValuePrinterInfo& PVI);
 
   void flushOStream(llvm::raw_ostream& o);
@@ -31,7 +31,7 @@ namespace cling {
   namespace valuePrinterInternal {
 
     template <typename T>
-    const T& PrintValue(llvm::raw_ostream* o, clang::Expr* E, 
+    const T& PrintValue(llvm::raw_ostream* o, clang::Expr* E,
                         clang::ASTContext* C, const T& value) {
       ValuePrinterInfo VPI(E, C);
       printValue(*o, &value, &value, VPI);
@@ -41,7 +41,7 @@ namespace cling {
     }
 
     template <typename T>
-    const T* PrintValue(llvm::raw_ostream* o, clang::Expr* E, 
+    const T* PrintValue(llvm::raw_ostream* o, clang::Expr* E,
                         clang::ASTContext* C, const T* value) {
       ValuePrinterInfo VPI(E, C);
       printValue(*o, value, value, VPI);
@@ -51,8 +51,8 @@ namespace cling {
     }
 
   } // namespace valuePrinterInternal
-  
-  
+
+
   // Can be re-implemented to print type-specific details, e.g. as
   //   template <typename ACTUAL>
   //   void dumpPtr(llvm::raw_ostream& o, const clang::Decl* a,

@@ -96,7 +96,7 @@ static bool tryLinker(const std::string& filename,
     bool hasError = llvm::sys::DynamicLibrary
       ::LoadLibraryPermanently(SoFile.str().c_str(), &errMsg);
     if (hasError) {
-      llvm::errs() << "Could not load shared library!\n" 
+      llvm::errs() << "Could not load shared library!\n"
                    << "\n"
                    << errMsg.c_str();
       L.releaseModule();
@@ -147,8 +147,8 @@ namespace cling {
   }
 
 
-  Interpreter::NamedDeclResult::NamedDeclResult(llvm::StringRef Decl, 
-                                                Interpreter* interp, 
+  Interpreter::NamedDeclResult::NamedDeclResult(llvm::StringRef Decl,
+                                                Interpreter* interp,
                                                 const DeclContext* Within)
     : m_Interpreter(interp),
       m_Context(m_Interpreter->getCI()->getASTContext()),
@@ -168,7 +168,7 @@ namespace cling {
         m_CurDeclContext = DC;
       else
         m_CurDeclContext = (*Lookup.first)->getDeclContext();
-      
+
       m_Result = (*Lookup.first);
     }
     else {
@@ -187,7 +187,7 @@ namespace cling {
     int i = 0;
     size_t found;
 
-    while ((found = m_Result.find("@")) && (found != std::string::npos)) { 
+    while ((found = m_Result.find("@")) && (found != std::string::npos)) {
       std::stringstream address;
       address << m_Addresses[i];
       m_Result = m_Result.insert(found + 1, address.str());
@@ -198,7 +198,7 @@ namespace cling {
     return m_Result.c_str();
   }
 
-  Interpreter::Interpreter(int argc, const char* const *argv, 
+  Interpreter::Interpreter(int argc, const char* const *argv,
                            const char* llvmdir /*= 0*/) :
     m_UniqueCounter(0), m_PrintAST(false), m_ValuePrinterEnabled(false) {
 
@@ -209,7 +209,7 @@ namespace cling {
     for (size_t I = 0, N = LeftoverArgsIdx.size(); I < N; ++I) {
       LeftoverArgs.push_back(argv[LeftoverArgsIdx[I]]);
     }
- 
+
     m_IncrParser.reset(new IncrementalParser(this, LeftoverArgs.size(),
                                              &LeftoverArgs[0],
                                              llvmdir));
@@ -245,7 +245,7 @@ namespace cling {
     // Warm them up
     m_IncrParser->Initialize();
 
-    m_ExecutionContext->addSymbol("local_cxa_atexit", 
+    m_ExecutionContext->addSymbol("local_cxa_atexit",
                   (void*)(intptr_t)&cling::runtime::internal::local_cxa_atexit);
 
     if (getCI()->getLangOpts().CPlusPlus) {
@@ -288,25 +288,25 @@ namespace cling {
       m_Opts.PrintHelp();
     }
   }
-   
+
   void Interpreter::AddIncludePath(llvm::StringRef incpath)
   {
     // Add the given path to the list of directories in which the interpreter
     // looks for include files. Only one path item can be specified at a
     // time, i.e. "path1:path2" is not supported.
-      
+
     CompilerInstance* CI = getCI();
     HeaderSearchOptions& headerOpts = CI->getHeaderSearchOpts();
     const bool IsUserSupplied = false;
     const bool IsFramework = false;
     const bool IsSysRootRelative = true;
-    headerOpts.AddPath(incpath, frontend::Angled, IsUserSupplied, IsFramework, 
+    headerOpts.AddPath(incpath, frontend::Angled, IsUserSupplied, IsFramework,
                        IsSysRootRelative);
-      
+
     Preprocessor& PP = CI->getPreprocessor();
     ApplyHeaderSearchOptions(PP.getHeaderSearchInfo(), headerOpts,
                                     PP.getLangOpts(),
-                                    PP.getTargetInfo().getTriple());      
+                                    PP.getTargetInfo().getTriple());
   }
 
   // Copied from clang/lib/Frontend/CompilerInvocation.cpp
@@ -328,20 +328,20 @@ namespace cling {
         case frontend::After:
           Res.push_back("-idirafter");
           break;
-        
+
         case frontend::Quoted:
           Res.push_back("-iquote");
           break;
-        
+
         case frontend::System:
           Res.push_back("-isystem");
           break;
-        
+
         case frontend::IndexHeaderMap:
           Res.push_back("-index-header-map");
           Res.push_back(E.IsFramework? "-F" : "-I");
           break;
-        
+
         case frontend::CSystem:
           Res.push_back("-c-isystem");
           break;
@@ -357,7 +357,7 @@ namespace cling {
         case frontend::ObjCXXSystem:
           Res.push_back("-objcxx-isystem");
           break;
-        
+
         case frontend::Angled:
           Res.push_back(E.IsFramework ? "-F" : "-I");
           break;
@@ -406,7 +406,7 @@ namespace cling {
     return m_IncrParser->getParser();
   }
 
-  ///\brief Maybe transform the input line to implement cint command line 
+  ///\brief Maybe transform the input line to implement cint command line
   /// semantics (declarations are global) and compile to produce a module.
   ///
   Interpreter::CompilationResult
@@ -480,7 +480,8 @@ namespace cling {
     return (getCI()->getASTContext().Idents.getOwn(out)).getName();
   }
 
-  bool Interpreter::RunFunction(llvm::StringRef fname, llvm::GenericValue* res) {
+  bool Interpreter::RunFunction(llvm::StringRef fname,
+                                llvm::GenericValue* res) {
     if (getCI()->getDiagnostics().hasErrorOccurred())
       return false;
 
@@ -495,7 +496,7 @@ namespace cling {
     if (FD) {
       if (!FD->isExternC()) {
         llvm::raw_string_ostream RawStr(mangledNameIfNeeded);
-        llvm::OwningPtr<MangleContext> 
+        llvm::OwningPtr<MangleContext>
           Mangle(getCI()->getASTContext().createMangleContext());
         Mangle->mangleName(FD, RawStr);
         RawStr.flush();
@@ -557,7 +558,7 @@ namespace cling {
       //       instantiation happened.  Our wrapper function should be the
       //       last decl in the set.
       //
-      FunctionDecl* TopLevelFD 
+      FunctionDecl* TopLevelFD
         = dyn_cast<FunctionDecl>(DGRs.back().getSingleDecl());
       assert(TopLevelFD && "No Decls Parsed?");
       DeclContext* CurContext = TheSema.CurContext;
@@ -565,17 +566,17 @@ namespace cling {
       ASTContext& Context(getCI()->getASTContext());
       // We have to be able to mark the expression for printout. There are three
       // scenarios:
-      // 0: Expression printing disabled - don't do anything just disable the 
+      // 0: Expression printing disabled - don't do anything just disable the
       //    consumer
       //    is our marker, even if there wasn't missing ';'.
-      // 1: Expression printing enabled - make sure we don't have NullStmt, which
-      //    is used as a marker to suppress the print out.
-      // 2: Expression printing auto - do nothing - rely on the omitted ';' to 
+      // 1: Expression printing enabled - make sure we don't have NullStmt,
+      //    which is used as a marker to suppress the print out.
+      // 2: Expression printing auto - do nothing - rely on the omitted ';' to
       //    not produce the suppress marker.
       if (CompoundStmt* CS = dyn_cast<CompoundStmt>(TopLevelFD->getBody())) {
         // Collect all Stmts, contained in the CompoundStmt
         llvm::SmallVector<Stmt *, 4> Stmts;
-        for (CompoundStmt::body_iterator iStmt = CS->body_begin(), 
+        for (CompoundStmt::body_iterator iStmt = CS->body_begin(),
                eStmt = CS->body_end(); iStmt != eStmt; ++iStmt)
           Stmts.push_back(*iStmt);
 
@@ -595,7 +596,7 @@ namespace cling {
                 E = PE->getSubExpr();
 
               // Change it with return stmt
-              Stmts[indexOfLastExpr] 
+              Stmts[indexOfLastExpr]
                 = TheSema.ActOnReturnStmt(SourceLocation(), E).take();
             }
             // even if void: we found an expression
@@ -604,11 +605,11 @@ namespace cling {
         }
 
         // case 1:
-        if (CO.ValuePrinting == CompilationOptions::VPEnabled) 
-          if (indexOfLastExpr < Stmts.size() - 1 && 
+        if (CO.ValuePrinting == CompilationOptions::VPEnabled)
+          if (indexOfLastExpr < Stmts.size() - 1 &&
               isa<NullStmt>(Stmts[indexOfLastExpr + 1]))
             Stmts.erase(Stmts.begin() + indexOfLastExpr);
-        // Stmts.insert(Stmts.begin() + indexOfLastExpr + 1, 
+        // Stmts.insert(Stmts.begin() + indexOfLastExpr + 1,
         //              TheSema.ActOnNullStmt(SourceLocation()).take());
 
         // Update the CompoundStmt body
@@ -621,7 +622,7 @@ namespace cling {
       // FIXME: Finish the transaction in better way
       m_IncrParser->Compile("", CO);
     }
-    else 
+    else
       m_IncrParser->Compile(Wrapper, CO);
 
     // get the result
@@ -657,7 +658,7 @@ namespace cling {
     code += "#include \"" + filename + "\"\n";
     return declare(code) == Interpreter::kSuccess;
   }
-  
+
 #ifndef _WIN32
   QualType
   Interpreter::lookupType(const std::string& typeName)
@@ -834,7 +835,7 @@ namespace cling {
               break;
             case NestedNameSpecifier::NamespaceAlias: {
                 // Namespace alias.
-                // Note: In the future, should we return the alias instead? 
+                // Note: In the future, should we return the alias instead?
                 NamespaceAliasDecl* NSAD = NNS->getAsNamespaceAlias();
                 NamespaceDecl* NSD = NSAD->getNamespace();
                 NSD = NSD->getCanonicalDecl();
@@ -1276,11 +1277,13 @@ namespace cling {
     //  a scope spec, and a decl context.
     //
     NestedNameSpecifier* classNNS = 0;
-    if (const NamespaceDecl* NSD = llvm::dyn_cast<const NamespaceDecl>(scopeDecl)) {
+    if (const NamespaceDecl* NSD
+        = llvm::dyn_cast<const NamespaceDecl>(scopeDecl)) {
       classNNS = NestedNameSpecifier::Create(Context, 0,
         const_cast<NamespaceDecl*>(NSD));
     }
-    else if (const RecordDecl* RD = llvm::dyn_cast<const RecordDecl>(scopeDecl)) {
+    else if (const RecordDecl* RD
+             = llvm::dyn_cast<const RecordDecl>(scopeDecl)) {
       const Type* T = Context.getRecordType(RD).getTypePtr();
       classNNS = NestedNameSpecifier::Create(Context, 0, false, T);
     }
@@ -1293,7 +1296,7 @@ namespace cling {
     }
     CXXScopeSpec SS;
     SS.MakeTrivial(Context, classNNS, SourceRange());
-    DeclContext* foundDC = 
+    DeclContext* foundDC =
        llvm::dyn_cast<DeclContext>(const_cast<Decl*>(scopeDecl));
     //
     //  Some validity checks on the passed decl.
@@ -1654,23 +1657,24 @@ namespace cling {
   }
 #endif
 
-  Interpreter::NamedDeclResult Interpreter::LookupDecl(llvm::StringRef Decl, 
-                                                       const DeclContext* Within) {
+  Interpreter::NamedDeclResult Interpreter::LookupDecl(llvm::StringRef Decl,
+                                                    const DeclContext* Within) {
     if (!Within)
       Within = getCI()->getASTContext().getTranslationUnitDecl();
     return Interpreter::NamedDeclResult(Decl, this, Within);
   }
 
-  void Interpreter::installLazyFunctionCreator(void* (*fp)(const std::string&)) {
+  void Interpreter::installLazyFunctionCreator(
+                                              void* (*fp)(const std::string&)) {
     m_ExecutionContext->installLazyFunctionCreator(fp);
   }
-  
+
   Value Interpreter::Evaluate(const char* expr, DeclContext* DC,
                               bool ValuePrinterReq) {
     Sema& TheSema = getCI()->getSema();
     if (!DC)
       DC = TheSema.getASTContext().getTranslationUnitDecl();
-    
+
     // Set up the declaration context
     DeclContext* CurContext;
 
@@ -1679,13 +1683,13 @@ namespace cling {
 
     Value Result;
     if (TheSema.ExternalSource) {
-      DynamicIDHandler* DIDH = 
+      DynamicIDHandler* DIDH =
         static_cast<DynamicIDHandler*>(TheSema.ExternalSource);
       DIDH->Callbacks->setEnabled();
       (ValuePrinterReq) ? echo(expr, &Result) : evaluate(expr, &Result);
       DIDH->Callbacks->setEnabled(false);
     }
-    else 
+    else
       (ValuePrinterReq) ? echo(expr, &Result) : evaluate(expr, &Result);
 
     TheSema.CurContext = CurContext;
@@ -1733,5 +1737,5 @@ namespace cling {
 
     return m_ExecutionContext->addSymbol(symbolName,  symbolAddress);
   }
-  
+
 } // namespace cling

@@ -27,7 +27,7 @@ namespace cling {
 
   class Interpreter;
 
-  /// \brief Used to stores the declarations, which are going to be 
+  /// \brief Used to stores the declarations, which are going to be
   /// available only at runtime. These are cling runtime builtins
   namespace runtime {
 
@@ -37,7 +37,7 @@ namespace cling {
     Interpreter* gCling = 0;
 
     namespace internal {
-      /// \brief Some of clang's routines rely on valid source locations and 
+      /// \brief Some of clang's routines rely on valid source locations and
       /// source ranges. This member can be looked up and source locations and
       /// ranges can be passed in as parameters to these routines.
       ///
@@ -45,7 +45,7 @@ namespace cling {
       /// when clang emits diagnostics on artificially inserted AST node.
       int InterpreterGeneratedCodeDiagnosticsMaybeIncorrect;
 
-	  
+	
 //__cxa_atexit is declared later for WIN32
 #if (!_WIN32)
       // Implemented in Interpreter.cpp
@@ -56,7 +56,7 @@ namespace cling {
       struct __trigger__cxa_atexit {
         ~__trigger__cxa_atexit(); // implemented in Interpreter.cpp
       } S;
-#endif 
+#endif
 
     } // end namespace internal
   } // end namespace runtime
@@ -65,7 +65,7 @@ namespace cling {
 using namespace cling::runtime;
 
 // Global d'tors only for C++:
-#if !_WIN32 
+#if !_WIN32
 
 extern "C"
 int cling_cxa_atexit(void (*func) (void*), void* arg, void* dso) {
@@ -76,7 +76,7 @@ int cling_cxa_atexit(void (*func) (void*), void* arg, void* dso) {
 
 extern "C" {
 
-  ///\brief Fake definition to avoid compilation missing function in windows 
+  ///\brief Fake definition to avoid compilation missing function in windows
   /// environment it wont ever be called
   void __dso_handle(){}
   //Fake definition to avoid compilation missing function in windows environment
@@ -85,7 +85,7 @@ extern "C" {
     return 0;
   }
 
-  ///\brief Manually provided by cling missing function resolution using 
+  ///\brief Manually provided by cling missing function resolution using
   /// sys::DynamicLibrary::AddSymbol()
   /// Included in extern C so its name is not mangled and easier to register
   int local_cxa_atexit(void (*func) (void*), void* arg,
@@ -95,6 +95,6 @@ extern "C" {
     return local_cxa_atexit(func, arg, dso, cling::runtime::gCling);
   }
 }
-#endif 
+#endif
 
 #endif // __cplusplus

@@ -35,7 +35,7 @@ int main( int argc, char **argv ) {
 
   clang::CompilerInstance* CI = interp.getCI();
   interp.AddIncludePath(".");
-  
+
   for (size_t I = 0, N = interp.getOptions().LibsToLoad.size(); I < N; ++I) {
     interp.loadFile(interp.getOptions().LibsToLoad[I]);
   }
@@ -45,7 +45,7 @@ int main( int argc, char **argv ) {
      = CI->getInvocation().getFrontendOpts().Inputs;
 
    // Interactive means no input (or one input that's "-")
-   bool Interactive = Inputs.empty() || (Inputs.size() == 1 
+   bool Interactive = Inputs.empty() || (Inputs.size() == 1
                                          && Inputs[0].File == "-");
 
    cling::UserInterface ui(interp);

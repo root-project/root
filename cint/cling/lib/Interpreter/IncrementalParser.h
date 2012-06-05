@@ -42,17 +42,17 @@ namespace cling {
   class CIFactory;
   class ExecutionContext;
   class Interpreter;
-  
+
   class IncrementalParser {
   public:
     ///\brief Contains information about the last input
-    struct Transaction {      
+    struct Transaction {
     private:
       clang::Decl* m_BeforeFirst;
       clang::Decl* m_LastDecl;
       void setBeforeFirstDecl(clang::DeclContext* DC) {
-        class DeclContextExt : public clang::DeclContext {            
-        public:           
+        class DeclContextExt : public clang::DeclContext {
+        public:
           static clang::Decl* getLastDecl(DeclContext* DC) {
             return ((DeclContextExt*)DC)->LastDecl;
           }
@@ -88,7 +88,7 @@ namespace cling {
     ///
     EParseResult Compile(llvm::StringRef input, const CompilationOptions& Opts);
 
-    void Parse(llvm::StringRef input, 
+    void Parse(llvm::StringRef input,
                llvm::SmallVector<clang::DeclGroupRef, 4>& DGRs);
 
     llvm::MemoryBuffer* getCurBuffer() const {
@@ -103,7 +103,7 @@ namespace cling {
     clang::Decl* getFirstTopLevelDecl() const { return m_FirstTopLevelDecl; }
     clang::Decl* getLastTopLevelDecl() const { return m_LastTopLevelDecl; }
     Transaction& getLastTransaction() { return m_LastTransaction; }
-    
+
     clang::CodeGenerator* GetCodeGenerator() const;
 
   private:
@@ -111,17 +111,38 @@ namespace cling {
     EParseResult Compile(llvm::StringRef input);
     EParseResult Parse(llvm::StringRef input);
 
-    Interpreter* m_Interpreter; // our interpreter context
-    llvm::OwningPtr<clang::CompilerInstance> m_CI; // compiler instance.
-    llvm::OwningPtr<clang::Parser> m_Parser; // parser (incremental)
-    bool m_DynamicLookupEnabled; // enable/disable dynamic scope
-    std::vector<llvm::MemoryBuffer*> m_MemoryBuffer; // One buffer for each command line, owner by the source file manager
-    clang::FileID m_VirtualFileID; // file ID of the memory buffer
-    ChainedConsumer* m_Consumer; // CI owns it
-    clang::Decl* m_FirstTopLevelDecl; // first top level decl
-    clang::Decl* m_LastTopLevelDecl; // last top level decl after most recent call to parse()
-    Transaction m_LastTransaction; // Holds information for the last transaction
-    bool m_SyntaxOnly; // whether to run codegen; cannot be flipped during lifetime of *this
+    // our interpreter context
+    Interpreter* m_Interpreter;
+
+   // compiler instance.
+    llvm::OwningPtr<clang::CompilerInstance> m_CI;
+
+    // parser (incremental)
+    llvm::OwningPtr<clang::Parser> m_Parser;
+
+    // enable/disable dynamic scope
+    bool m_DynamicLookupEnabled;
+
+    // One buffer for each command line, owner by the source file manager
+    std::vector<llvm::MemoryBuffer*> m_MemoryBuffer;
+
+    // file ID of the memory buffer
+    clang::FileID m_VirtualFileID;
+
+    // CI owns it
+    ChainedConsumer* m_Consumer;
+
+    // first top level decl
+    clang::Decl* m_FirstTopLevelDecl;
+
+    // last top level decl after most recent call to parse()
+    clang::Decl* m_LastTopLevelDecl;
+
+    // Holds information for the last transaction
+    Transaction m_LastTransaction;
+
+    // whether to run codegen; cannot be flipped during lifetime of *this
+    bool m_SyntaxOnly;
   };
 }
 #endif // CLING_INCREMENTAL_PARSER_H

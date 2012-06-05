@@ -29,8 +29,8 @@ namespace cling {
   /// When the compiler doesn't find the symbol in its symbol table it asks
   /// its ExternalSemaSource to look for the symbol.
   ///
-  /// In contrast to the compiler point of view, where these symbols must be 
-  /// errors, the interpreter's point of view these symbols are to be 
+  /// In contrast to the compiler point of view, where these symbols must be
+  /// errors, the interpreter's point of view these symbols are to be
   /// evaluated at runtime. For that reason the interpreter marks all unknown
   /// by the compiler symbols to be with delayed lookup (evaluation).
   /// One have to be carefull in the cases, in which the compiler expects that
@@ -40,13 +40,13 @@ namespace cling {
     InterpreterCallbacks* Callbacks;
     DynamicIDHandler(clang::Sema* Sema);
     ~DynamicIDHandler();
-    
+
     /// \brief Provides last resort lookup for failed unqualified lookups
     ///
     /// If there is failed lookup, tell sema to create an artificial declaration
     /// which is of dependent type. So the lookup result is marked as dependent
-    /// and the diagnostics are suppressed. After that is's an interpreter's 
-    /// responsibility to fix all these fake declarations and lookups. 
+    /// and the diagnostics are suppressed. After that is's an interpreter's
+    /// responsibility to fix all these fake declarations and lookups.
     /// It is done by the DynamicExprTransformer.
     ///
     /// @param[out] R The recovered symbol.
@@ -106,30 +106,30 @@ namespace cling {
 namespace cling {
   class Interpreter;
   class DynamicIDHandler;
-  
+
   typedef llvm::DenseMap<clang::Stmt*, clang::Stmt*> MapTy;
-  
-  /// \brief In order to implement the runtime type binding and expression 
-  /// evaluation we need to be able to compile code which contains unknown 
+
+  /// \brief In order to implement the runtime type binding and expression
+  /// evaluation we need to be able to compile code which contains unknown
   /// symbols (undefined variables, types, functions, etc.). This cannot be done
   /// by a compiler like clang, because it is not valid C++ code.
   ///
-  /// DynamicExprTransformer transforms these unknown symbols into valid C++ 
+  /// DynamicExprTransformer transforms these unknown symbols into valid C++
   /// code at AST (abstract syntax tree) level. Thus it provides an opportunity
   /// their evaluation to happen at runtime. Several steps are performed:
   ///
-  /// 1. Skip compiler's error diagnostics - if a compiler encounters unknown 
+  /// 1. Skip compiler's error diagnostics - if a compiler encounters unknown
   /// symbol, by definition, it must output an error and it mustn't produce
   /// machine code. Cling implements an extension to Clang semantic analyzer
   /// that allows the compiler to recover even an unknown symbol is encountered.
   /// For instance if the compiler sees a symbol it looks for its definition in
-  /// a internal structure (symbol table) and it is not found it asks whether 
+  /// a internal structure (symbol table) and it is not found it asks whether
   /// somebody else could provide the missing symbol. That is the place where
   /// the DynamicIDHandler, which is controlled by DynamicExprTransformer comes
   /// into play. It marks all unknown symbols as dependent as if they are
-  /// templates and are going to be resolved at first instantiation, with the 
+  /// templates and are going to be resolved at first instantiation, with the
   /// only difference that an instantiation never happens. The advantage is that
-  /// the unknown symbols are not diagnosed but the disadvantage is that 
+  /// the unknown symbols are not diagnosed but the disadvantage is that
   /// somebody needs to transform them into valid expressions with valid types.
   ///
   /// 2. Replace all dependent symbols - all artificially dependent symbols need
@@ -138,29 +138,29 @@ namespace cling {
   /// statements and declarations that might be possibly marked earlier as
   /// dependent and replaces them with valid expression, which preserves the
   /// meant behavior. Main implementation goal is to replace the as little
-  /// as possible part of the statement. The replacement is done immediately 
+  /// as possible part of the statement. The replacement is done immediately
   /// after the expected type can be deduced.
-  /// 
-  /// 2.1. EvaluateT - this is a templated function, which is put at the 
+  ///
+  /// 2.1. EvaluateT - this is a templated function, which is put at the
   /// place of the dependent expression. It will be called at runtime and it
   /// will use the runtime instance of the interpreter (cling interprets itself)
   /// to evaluate the replaced expression. The template parameter of the
-  /// function carries the expected expression type. If unknown symbol is 
+  /// function carries the expected expression type. If unknown symbol is
   /// encountered as a right-hand-side of an assignment one can claim that
-  /// the type of the unknown expression should be compatible with the type of 
+  /// the type of the unknown expression should be compatible with the type of
   /// the left-hand-side.
   ///
   /// 2.2 LifetimeHandler - in some more complex situation in order to preserve
   /// the behavior the expression must be replaced with more complex structures.
   ///
-  /// 3. Evaluate interface - this is the core function in the interpreter, which
-  /// does the delayed evaluation. It uses a callback function, which should be
-  /// reimplemented in the subsystem that provides the runtime types and 
-  /// addresses of the expressions.
+  /// 3. Evaluate interface - this is the core function in the interpreter,
+  /// which does the delayed evaluation. It uses a callback function, which
+  /// should be reimplemented in the subsystem that provides the runtime types
+  /// and addresses of the expressions.
   class EvaluateTSynthesizer : public VerifyingSemaConsumer,
                                public clang::StmtVisitor<EvaluateTSynthesizer,
                                                          ASTNodeInfo> {
-    
+
   private:
 
     /// \brief Stores the declaration of the EvaluateT function.
@@ -188,15 +188,16 @@ namespace cling {
 
     /// \brief Use instead of clang::SourceLocation() as end location.
     clang::SourceLocation m_NoELoc;
-    
+
   public:
 
-    typedef clang::StmtVisitor<EvaluateTSynthesizer, ASTNodeInfo> BaseStmtVisitor;
+    typedef clang::StmtVisitor<EvaluateTSynthesizer, ASTNodeInfo>
+      BaseStmtVisitor;
 
     using BaseStmtVisitor::Visit;
 
     EvaluateTSynthesizer(Interpreter* interp);
-    
+
     ~EvaluateTSynthesizer() { }
 
     MapTy& getSubstSymbolMap() { return m_SubstSymbolMap; }
@@ -207,10 +208,10 @@ namespace cling {
     ASTNodeInfo VisitCompoundStmt(clang::CompoundStmt* Node);
     ASTNodeInfo VisitIfStmt(clang::IfStmt* Node);
     /// \brief Transforms a declaration with initializer of dependent type.
-    /// If an object on the free store is being initialized we use the 
+    /// If an object on the free store is being initialized we use the
     /// EvaluateT
     /// If an object on the stack is being initialized it is transformed into
-    /// reference and an object on the free store is created in order to 
+    /// reference and an object on the free store is created in order to
     /// avoid the copy constructors, which might be private
     ///
     /// For example:
@@ -218,10 +219,10 @@ namespace cling {
     /// int i = 5;
     /// MyClass my(dep->Symbol(i))
     /// @endcode
-    /// where dep->Symbol() is of artificially dependent type it is being 
+    /// where dep->Symbol() is of artificially dependent type it is being
     /// transformed into:
     /// @code
-    /// cling::runtime::internal::LifetimeHandler 
+    /// cling::runtime::internal::LifetimeHandler
     /// __unique("dep->Sybmol(*(int*)@)",(void*[]){&i}, DC, "MyClass");
     /// MyClass &my(*(MyClass*)__unique.getMemory());
     /// @endcode
@@ -234,7 +235,8 @@ namespace cling {
     ASTNodeInfo VisitBinaryOperator(clang::BinaryOperator* Node);
     ASTNodeInfo VisitCallExpr(clang::CallExpr* E);
     ASTNodeInfo VisitDeclRefExpr(clang::DeclRefExpr* DRE);
-    ASTNodeInfo VisitDependentScopeDeclRefExpr(clang::DependentScopeDeclRefExpr* Node);
+    ASTNodeInfo VisitDependentScopeDeclRefExpr(
+                                        clang::DependentScopeDeclRefExpr* Node);
 
     ///\brief Sets callbacks so that DynamicIDHandler can use them, when it sees
     /// the unknown symbol again at runtime. This time the implementation of the
@@ -246,19 +248,19 @@ namespace cling {
     void SetCallbacks(InterpreterCallbacks* C) {
       m_DynIDHandler->Callbacks = C;
     }
-    
+
   protected:
     /// @{
     /// @name Helpers, which simplify node replacement
 
-    ///\brief Replaces given dependent AST node with an instantiation of 
+    ///\brief Replaces given dependent AST node with an instantiation of
     /// EvaluateT with the deduced type.
     ///
     /// @param[in] InstTy The deduced type used to create instantiation.
     /// @param[in] SubTree The AST node or subtree, which is being replaced.
     /// @param[in] ValuePrinterReq Whether to turn on the value printing or not
     ///
-    clang::Expr* SubstituteUnknownSymbol(const clang::QualType InstTy, 
+    clang::Expr* SubstituteUnknownSymbol(const clang::QualType InstTy,
                                          clang::Expr* SubTree,
                                          bool ValuePrinterReq = false);
 
@@ -275,7 +277,7 @@ namespace cling {
 
     ///\brief Builds the DynamicExprInfo class with proper info.
     ///
-    clang::Expr* BuildDynamicExprInfo(clang::Expr* SubTree, 
+    clang::Expr* BuildDynamicExprInfo(clang::Expr* SubTree,
                                       bool ValuePrinterReq = false);
 
     ///\brief Creates cstyle casts a pointer expression to a given qualified
@@ -304,5 +306,3 @@ namespace cling {
   };
 } // end namespace cling
 #endif // CLING_DYNAMIC_LOOKUP_H
-
-

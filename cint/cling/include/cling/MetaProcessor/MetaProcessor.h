@@ -40,7 +40,7 @@ namespace cling {
     ///\brief is using dynamic scopes enabled
     ///
     bool DynamicLookup : 1;
-    
+
     MetaProcessorOpts() {
       Quitting = 0;
       PrintingAST = 0;
@@ -49,7 +49,7 @@ namespace cling {
     }
   };
 
-  ///\brief Class that helps processing meta commands, which add extra 
+  ///\brief Class that helps processing meta commands, which add extra
   /// interactivity. Syntax .Command [arg0 arg1 ... argN]
   ///
   class MetaProcessor {
@@ -58,7 +58,7 @@ namespace cling {
     ///
     Interpreter& m_Interp;
 
-    ///\brief The input validator is used to figure out whether to switch to 
+    ///\brief The input validator is used to figure out whether to switch to
     /// multiline mode or not. Checks for balanced parenthesis, etc.
     ///
     llvm::OwningPtr<InputValidator> m_InputValidator;
@@ -69,17 +69,17 @@ namespace cling {
 
   private:
 
-    ///\brief Handle one of the special commands in cling. 
+    ///\brief Handle one of the special commands in cling.
     /// Syntax .Command [arg0 arg1 ... argN]
     ///
     /// Known commands:
     /// @code .q @endcode - Quits
     /// @code .L <filename> @endcode - Loads the filename (It might be lib too)
-    /// @code .(x|X) <filename>[(args)] @endcode - Loads the filename and 
+    /// @code .(x|X) <filename>[(args)] @endcode - Loads the filename and
     /// executes the function with signature void filename(args)
     /// @code .printAST [0|1] @endcode - Toggles the printing of input's
     /// corresponding AST nodes.
-    /// @code .rawInput [0|1] @endcode - Toggles wrapping and value printing of 
+    /// @code .rawInput [0|1] @endcode - Toggles wrapping and value printing of
     /// the input
     /// @code .I [path] @endcode - Dumps the include path. If argument is given
     /// adds the path to the list of include paths.
@@ -94,15 +94,15 @@ namespace cling {
     bool ProcessMeta(const std::string& input_line, cling::Value* result);
 
     ///\brief This method is used to get the token's value. That is usually done
-    /// by the Lexer by attaching the IdentifierInfo directly. However we are 
+    /// by the Lexer by attaching the IdentifierInfo directly. However we are
     /// in raw lexing mode and we cannot do that.
     ///
-    ///\returns This function is the dummy implementation of 
+    ///\returns This function is the dummy implementation of
     /// Token.getIdentifierInfo()->getName() for the raw lexer
     ///
     std::string GetRawTokenName(const clang::Token& Tok);
 
-    llvm::StringRef ReadToEndOfBuffer(clang::Lexer& RawLexer, 
+    llvm::StringRef ReadToEndOfBuffer(clang::Lexer& RawLexer,
                                       llvm::MemoryBuffer* MB);
 
     ///\brief Removes leading and trailing spaces, new lines and tabs if any
@@ -129,7 +129,7 @@ namespace cling {
     /// @param[out] result - the cling::Value as result of the execution of the
     ///             last statement
     ///
-    ///\returns 0 on success or the indentation of the next input line should 
+    ///\returns 0 on success or the indentation of the next input line should
     /// have in case of multi input mode.
     ///
     int process(const char* input_line, cling::Value* result = 0);

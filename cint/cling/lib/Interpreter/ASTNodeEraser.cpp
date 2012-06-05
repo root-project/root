@@ -18,7 +18,7 @@ using namespace clang;
 
 namespace cling {
 
-  ///\brief The class does the actual work of removing a declaration and 
+  ///\brief The class does the actual work of removing a declaration and
   /// resetting the internal structures of the compiler
   ///
   class DeclReverter : public DeclVisitor<DeclReverter, bool> {
@@ -31,14 +31,14 @@ namespace cling {
     ///\brief Function that contains common actions, done for every removal of
     /// declaration.
     ///
-    /// For example: We must uncache the cached include, which brought that 
+    /// For example: We must uncache the cached include, which brought that
     /// declaration in the AST.
     ///\param[in] D - A declaration.
     ///
     void PreVisitDecl(Decl* D);
 
     ///\brief If it falls back in the base class just remove the declaration
-    /// only from the declaration context. 
+    /// only from the declaration context.
     /// @param[in] D - The declaration to be removed.
     ///
     ///\returns true on success.
@@ -88,7 +88,7 @@ namespace cling {
     /// @{
 
     ///\brief Checks whether the declaration was pushed onto the declaration
-    /// chains. Returns 
+    /// chains. Returns
     /// @param[in] ND - The declaration that is being checked
     ///
     ///\returns true if the ND was found in the lookup chain.
@@ -113,12 +113,12 @@ namespace cling {
       }
 
       if (!PrevDecls.empty()) {
-        // Put 0 in the end of the array so that the loop will reset the 
+        // Put 0 in the end of the array so that the loop will reset the
         // pointer to latest redeclaration in the chain to itself.
         //
         PrevDecls.push_back(0);
 
-        // 0 <- A <- B <- C 
+        // 0 <- A <- B <- C
         for(unsigned i = PrevDecls.size() - 1; i > 0; --i) {
           PrevDecls[i-1]->setPreviousDeclaration(PrevDecls[i]);
         }
@@ -135,10 +135,10 @@ namespace cling {
     //SourceManager& SM = m_Sema->getSourceManager();
     //FileManager& FM = SM.getFileManager();
     //const FileEntry* OldEntry = SM.getFileEntryForID(SM.getFileID(Loc));
-    //const FileEntry* NewEntry 
+    //const FileEntry* NewEntry
     //  = FM.getFile(OldEntry->getName(), /*openFile*/ true);
     //std::string errStr = "";
-    // SM.overrideFileContents(OldEntry, FM.getBufferForFile(NewEntry, &errStr));
+    //SM.overrideFileContents(OldEntry, FM.getBufferForFile(NewEntry, &errStr));
   }
 
   // Gives us access to the protected members that we  need.
@@ -152,7 +152,7 @@ namespace cling {
           DC->removeDecl(D);
           return true;
         }
-      } 
+      }
       else {
         DC->removeDecl(D);
         return true;
@@ -163,7 +163,7 @@ namespace cling {
   };
 
   bool DeclReverter::VisitDecl(Decl* D) {
-    assert(D && "The Decl is null"); 
+    assert(D && "The Decl is null");
     PreVisitDecl(D);
 
     DeclContext* DC = D->getDeclContext();
@@ -178,14 +178,15 @@ namespace cling {
       }
     }
 
-    bool Successful = DeclContextExt::removeIfLast(DC, D); 
+    bool Successful = DeclContextExt::removeIfLast(DC, D);
 
-    // ExistsInDC && Successful 
+    // ExistsInDC && Successful
     // true          false      -> false // In the context but cannot delete
     // false         false      -> true  // Not in the context cannot delete
     // true          true       -> true  // In the context and can delete
     // false         true       -> assert // Not in the context but can delete ?
-    assert(!(!ExistsInDC && Successful) && "Not in the context but can delete?!");
+    assert(!(!ExistsInDC && Successful) && \
+           "Not in the context but can delete?!");
     if (ExistsInDC && !Successful)
       return false;
     else // in release we'd want the assert to fall into true
@@ -196,13 +197,13 @@ namespace cling {
     bool Successful = VisitDecl(ND);
 
     DeclContext* DC = ND->getDeclContext();
-    
+
     // If the decl was removed make sure that we fix the lookup
     if (Successful) {
       Scope* S = m_Sema->getScopeForContext(DC);
       if (S)
         S->RemoveDecl(ND);
-      
+
       if (isOnScopeChains(ND))
         m_Sema->IdResolver.RemoveDecl(ND);
 
@@ -220,18 +221,18 @@ namespace cling {
 
     // Find other decls that the old one has replaced
     StoredDeclsMap *Map = DC->getPrimaryContext()->getLookupPtr();
-    if (!Map) 
+    if (!Map)
       return false;
     StoredDeclsMap::iterator Pos = Map->find(VD->getDeclName());
     assert(Pos != Map->end() && "no lookup entry for decl");
-    
+
     if (Pos->second.isNull())
       // We need to rewire the list of the redeclarations in order to exclude
-      // the reverted one, because it gets found for example by 
+      // the reverted one, because it gets found for example by
       // Sema::MergeVarDecl and ends up in the lookup
       //
       if (VarDecl* MostRecentVD = RemoveFromRedeclChain(VD)) {
-        
+
         Pos->second.setOnlyValue(MostRecentVD);
         if (S)
           S->AddDecl(MostRecentVD);
@@ -256,7 +257,7 @@ namespace cling {
     //
     // The template specialization is attached to the list of specialization of
     // the templated function.
-    // When TemplatedF is looked up it finds the templated function and the 
+    // When TemplatedF is looked up it finds the templated function and the
     // lookup is extended by the templated function with its specializations.
     // In the end we don't need to remove the canonical decl because, it
     // doesn't end up in the lookup table.
@@ -266,7 +267,7 @@ namespace cling {
     does not have an interface for removing nodes...
     class FunctionTemplateDeclExt : public FunctionTemplateDecl {
     public:
-      static llvm::FoldingSet<FunctionTemplateSpecializationInfo>& 
+      static llvm::FoldingSet<FunctionTemplateSpecializationInfo>&
       getSpecializationsExt(FunctionTemplateDecl* FTD) {
         assert(FTD && "Cannot be null!");
         return ((FunctionTemplateDeclExt*) FTD)->getSpecializations();
@@ -280,9 +281,9 @@ namespace cling {
       // TODO: Can the canonical have another DeclContext and Scope, different
       // from the specialization's implementation?
       FunctionDecl* CanFD = FD->getCanonicalDecl();
-      FunctionTemplateDecl* FTD 
+      FunctionTemplateDecl* FTD
         = FD->getTemplateSpecializationInfo()->getTemplate();
-      llvm::FoldingSet<FunctionTemplateSpecializationInfo> &FS 
+      llvm::FoldingSet<FunctionTemplateSpecializationInfo> &FS
         = FunctionTemplateDeclExt::getSpecializationsExt(FTD);
       FS.RemoveNode(CanFD->getTemplateSpecializationInfo());
 #endif
@@ -291,8 +292,8 @@ namespace cling {
 
     // Find other decls that the old one has replaced
     StoredDeclsMap *Map = DC->getPrimaryContext()->getLookupPtr();
-    if (!Map) 
-      return false;      
+    if (!Map)
+      return false;
     StoredDeclsMap::iterator Pos = Map->find(FD->getDeclName());
     assert(Pos != Map->end() && "no lookup entry for decl");
 
@@ -312,7 +313,7 @@ namespace cling {
         }
 
         // We need to rewire the list of the redeclarations in order to exclude
-        // the reverted one, because it gets found for example by 
+        // the reverted one, because it gets found for example by
         // Sema::MergeVarDecl and ends up in the lookup
         //
         if (FunctionDecl* MostRecentFD = RemoveFromRedeclChain(FD)) {
@@ -323,7 +324,7 @@ namespace cling {
         }
       }
     }
-    else if (llvm::SmallVector<NamedDecl*, 4>* Decls 
+    else if (llvm::SmallVector<NamedDecl*, 4>* Decls
              = Pos->second.getAsVector()) {
       for(llvm::SmallVector<NamedDecl*, 4>::iterator I = Decls->begin();
           I != Decls->end(); ++I) {
@@ -350,7 +351,7 @@ namespace cling {
       Successful = VisitNamedDecl(&(*I)) && Successful;
     }
 
-    Successful = VisitNamedDecl(ED) && Successful; 
+    Successful = VisitNamedDecl(ED) && Successful;
 
     return Successful;
   }
@@ -364,11 +365,11 @@ namespace cling {
 
     // Find other decls that the old one has replaced
     StoredDeclsMap *Map = DC->getPrimaryContext()->getLookupPtr();
-    if (!Map) 
-      return false;      
+    if (!Map)
+      return false;
     StoredDeclsMap::iterator Pos = Map->find(NSD->getDeclName());
     assert(Pos != Map->end() && "no lookup entry for decl");
-    
+
     if (Pos->second.isNull())
       if (NSD != NSD->getOriginalNamespace()) {
         NamespaceDecl* NewNSD = NSD->getOriginalNamespace();
@@ -383,14 +384,14 @@ namespace cling {
 
   // See Sema::PushOnScopeChains
   bool DeclReverter::isOnScopeChains(NamedDecl* ND) {
-    
+
     // Named decls without name shouldn't be in. Eg: struct {int a};
     if (!ND->getDeclName())
       return false;
 
     // Out-of-line definitions shouldn't be pushed into scope in C++.
     // Out-of-line variable and function definitions shouldn't even in C.
-    if ((isa<VarDecl>(ND) || isa<FunctionDecl>(ND)) && ND->isOutOfLine() && 
+    if ((isa<VarDecl>(ND) || isa<FunctionDecl>(ND)) && ND->isOutOfLine() &&
         !ND->getDeclContext()->getRedeclContext()->Equals(
                         ND->getLexicalDeclContext()->getRedeclContext()))
       return false;
@@ -400,20 +401,20 @@ namespace cling {
         cast<FunctionDecl>(ND)->isFunctionTemplateSpecialization())
       return false;
 
-    IdentifierResolver::iterator 
+    IdentifierResolver::iterator
       IDRi = m_Sema->IdResolver.begin(ND->getDeclName()),
       IDRiEnd = m_Sema->IdResolver.end();
-    
+
     for (; IDRi != IDRiEnd; ++IDRi) {
-      if (ND == *IDRi) 
+      if (ND == *IDRi)
         return true;
     }
 
 
     // Check if the declaration is template instantiation, which is not in
-    // any DeclContext yet, because it came from 
+    // any DeclContext yet, because it came from
     // Sema::PerformPendingInstantiations
-    // if (isa<FunctionDecl>(D) && 
+    // if (isa<FunctionDecl>(D) &&
     //     cast<FunctionDecl>(D)->getTemplateInstantiationPattern())
     //   return false;ye
 

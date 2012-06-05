@@ -19,11 +19,11 @@ namespace cling {
     assert(Ctx && "ASTContext cannot be null!");
     // 1. Get the flags
     const QualType QT = m_Expr->getType();
-    
+
     if (E->isRValue() || QT.isLocalConstQualified() || QT.isConstant(*Ctx)){
       m_Flags |= VPI_Const;
     }
-    
+
     if (QT->isPointerType()) {
       // treat arrary-to-pointer decay as array:
       QualType PQT = QT->getPointeeType();

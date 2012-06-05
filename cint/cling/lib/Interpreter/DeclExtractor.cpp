@@ -33,7 +33,7 @@ namespace cling {
   void DeclExtractor::ExtractDecl(Decl* D) {
     FunctionDecl* FD = dyn_cast<FunctionDecl>(D);
     llvm::SmallVector<NamedDecl*, 4> TouchedDecls;
-    
+
     if (FD) {
       if (FD->getNameAsString().find("__cling_Un1Qu3"))
         return;
@@ -41,20 +41,21 @@ namespace cling {
       CompoundStmt* CS = dyn_cast<CompoundStmt>(FD->getBody());
       assert(CS && "Function body not a CompoundStmt?");
       DeclContext* DC = FD->getTranslationUnitDecl();
-      Scope* S = m_Sema->TUScope;     
+      Scope* S = m_Sema->TUScope;
       llvm::SmallVector<Stmt*, 4> Stmts;
 
       DC->removeDecl(FD);
       S->RemoveDecl(FD);
 
-      for (CompoundStmt::body_iterator I = CS->body_begin(), EI = CS->body_end();
+      for (CompoundStmt::body_iterator I = CS->body_begin(),
+             EI = CS->body_end();
            I != EI; ++I) {
         DeclStmt* DS = dyn_cast<DeclStmt>(*I);
         if (!DS) {
           Stmts.push_back(*I);
           continue;
         }
-        
+
         for (DeclStmt::decl_iterator J = DS->decl_begin();
              J != DS->decl_end(); ++J) {
           NamedDecl* ND = dyn_cast<NamedDecl>(*J);
@@ -64,19 +65,19 @@ namespace cling {
             OldDC->removeDecl(ND);
             if (OldS)
               OldS->RemoveDecl(ND);
-            
+
             ND->setDeclContext(DC);
             ND->setLexicalDeclContext(DC); //FIXME: Watch out
-            
+
             if (VarDecl* VD = dyn_cast<VarDecl>(ND)) {
               VD->setStorageClass(SC_None);
               VD->setStorageClassAsWritten(SC_None);
 
-              // if we want to print the result of the initializer of int i = 5 
+              // if we want to print the result of the initializer of int i = 5
               // or the default initializer int i
               if (I+1 == EI || !isa<NullStmt>(*(I+1))) {
                 QualType VDTy = VD->getType().getNonReferenceType();
-                Expr* DRE = m_Sema->BuildDeclRefExpr(VD, VDTy,VK_LValue, 
+                Expr* DRE = m_Sema->BuildDeclRefExpr(VD, VDTy,VK_LValue,
                                                      SourceLocation()
                                                      ).take();
                 Stmts.push_back(DRE);
@@ -85,7 +86,7 @@ namespace cling {
 
             // force recalc of the linkage (to external)
             ND->ClearLinkageCache();
-          
+
             TouchedDecls.push_back(ND);
 
             // There is no function diagnosing the redeclaration of enums so
@@ -104,7 +105,7 @@ namespace cling {
               }
             }
 
-            
+
           }
         }
       }
@@ -114,7 +115,7 @@ namespace cling {
         for (size_t i = 0; i < TouchedDecls.size(); ++i) {
           DC->addDecl(TouchedDecls[i]);
           if (!isa<UsingDirectiveDecl>(TouchedDecls[i]))
-            m_Sema->PushOnScopeChains(TouchedDecls[i], 
+            m_Sema->PushOnScopeChains(TouchedDecls[i],
                                       m_Sema->getScopeForContext(DC),
                                       /*AddToContext*/false);
           m_Sema->Consumer.HandleTopLevelDecl(DeclGroupRef(TouchedDecls[i]));
@@ -133,7 +134,8 @@ namespace cling {
   ///\brief Checks for clashing names when trying to extract a declaration.
   ///
   /// returns true if there is another declaration with the same name
-  bool DeclExtractor::CheckForClashingNames(const llvm::SmallVector<NamedDecl*, 4>& Decls, 
+  bool DeclExtractor::CheckForClashingNames(
+                                  const llvm::SmallVector<NamedDecl*, 4>& Decls,
                                             DeclContext* DC, Scope* S) {
     for (size_t i = 0; i < Decls.size(); ++i) {
       NamedDecl* ND = Decls[i];
@@ -145,7 +147,7 @@ namespace cling {
 
         m_Sema->LookupName(Previous, S);
         CheckTagDeclaration(TD, Previous);
-        
+
       }
       else if (VarDecl* VD = dyn_cast<VarDecl>(ND)) {
         LookupResult Previous(*m_Sema, ND->getDeclName(), ND->getLocation(),
@@ -164,7 +166,8 @@ namespace cling {
     return false;
   }
 
-  bool DeclExtractor::CheckTagDeclaration(TagDecl* NewTD, LookupResult& Previous){
+  bool DeclExtractor::CheckTagDeclaration(TagDecl* NewTD,
+                                          LookupResult& Previous){
     // If the decl is already known invalid, don't check it.
     if (NewTD->isInvalidDecl())
       return false;
@@ -173,14 +176,14 @@ namespace cling {
     // If this is not a definition, it must have a name.
     assert((Name != 0 || NewTD->isThisDeclarationADefinition()) &&
            "Nameless record must be a definition!");
-    
+
     // Figure out the underlying type if this a enum declaration. We need to do
     // this early, because it's needed to detect if this is an incompatible
     // redeclaration.
 
     TagDecl::TagKind Kind = NewTD->getTagKind();
     bool Invalid = false;
-    assert(NewTD->getNumTemplateParameterLists() == 0 
+    assert(NewTD->getNumTemplateParameterLists() == 0
            && "Cannot handle that yet!");
     bool isExplicitSpecialization = false;
 
@@ -207,8 +210,8 @@ namespace cling {
             << QT;
         }
         if (TI)
-          m_Sema->DiagnoseUnexpandedParameterPack(UnderlyingLoc, TI, 
-                                                  Sema::UPPC_FixedUnderlyingType);
+          m_Sema->DiagnoseUnexpandedParameterPack(UnderlyingLoc, TI,
+                                                Sema::UPPC_FixedUnderlyingType);
       }
     }
 
@@ -236,7 +239,8 @@ namespace cling {
     //   } else {
     //     DC = computeDeclContext(SS, true);
     //     if (!DC) {
-    //       Diag(SS.getRange().getBegin(), diag::err_dependent_nested_name_spec)
+    //       Diag(SS.getRange().getBegin(),
+    //            diag::err_dependent_nested_name_spec)
     //         << SS.getRange();
     //       return 0;
     //     }
@@ -264,15 +268,15 @@ namespace cling {
     //       IsDependent = true;
     //       return 0;
     //     }
-        
+
     //     // A tag 'foo::bar' must already exist.
-    //     Diag(NameLoc, diag::err_not_tag_in_scope) 
+    //     Diag(NameLoc, diag::err_not_tag_in_scope)
     //       << Kind << Name << DC << SS.getRange();
     //     Name = 0;
     //     Invalid = true;
     //   goto CreateNewDecl;
     // }
-    //} else 
+    //} else
     if (Name) {
       // If this is a named struct, check to see if there was a previous forward
       // declaration or definition.
@@ -291,7 +295,7 @@ namespace cling {
         }
         F.done();
       }
-    
+
       // Note:  there used to be some attempt at recovery here.
       if (Previous.isAmbiguous()) {
         NewTD->setInvalidDecl();
@@ -321,14 +325,14 @@ namespace cling {
       Previous.clear();
     }
 
-    if (m_Sema->getLangOpts().CPlusPlus && Name && DC && m_Sema->StdNamespace 
+    if (m_Sema->getLangOpts().CPlusPlus && Name && DC && m_Sema->StdNamespace
         && DC->Equals(m_Sema->getStdNamespace()) && Name->isStr("bad_alloc")) {
       // This is a declaration of or a reference to "std::bad_alloc".
       //isStdBadAlloc = true;
-    
+
       if (Previous.empty() && m_Sema->StdBadAlloc) {
         // std::bad_alloc has been implicitly declared (but made invisible to
-        // name lookup). Fill in this implicit declaration as the previous 
+        // name lookup). Fill in this implicit declaration as the previous
         // declaration, so that the declarations get chained appropriately.
         Previous.addDecl(m_Sema->getStdBadAlloc());
       }
@@ -366,14 +370,14 @@ namespace cling {
         // If this is a use of a previous tag, or if the tag is already declared
         // in the same scope (so that the definition/declaration completes or
         // rementions the tag), reuse the decl.
-        if (m_Sema->isDeclInScope(PrevDecl, SearchDC, 
-                                  m_Sema->getScopeForContext(m_Sema->CurContext),
+        if (m_Sema->isDeclInScope(PrevDecl, SearchDC,
+                                 m_Sema->getScopeForContext(m_Sema->CurContext),
                                   isExplicitSpecialization)) {
           // Make sure that this wasn't declared as an enum and now used as a
           // struct or something similar.
           SourceLocation KWLoc = NewTD->getLocStart();
           if (!m_Sema->isAcceptableTagRedeclaration(PrevTagDecl, Kind,
-                                            NewTD->isThisDeclarationADefinition(),
+                                          NewTD->isThisDeclarationADefinition(),
                                                     KWLoc, *Name)) {
             bool SafeToContinue
               = (PrevTagDecl->getTagKind() != TTK_Enum && Kind != TTK_Enum);
@@ -386,7 +390,7 @@ namespace cling {
             else
               m_Sema->Diag(KWLoc, diag::err_use_with_wrong_tag) << Name;
             m_Sema->Diag(PrevTagDecl->getLocation(), diag::note_previous_use);
-            
+
             if (SafeToContinue)
               Kind = PrevTagDecl->getTagKind();
             else {
@@ -396,11 +400,11 @@ namespace cling {
               Invalid = true;
             }
           }
-          
-          if (Kind == TTK_Enum && PrevTagDecl->getTagKind() == TTK_Enum) {            
+
+          if (Kind == TTK_Enum && PrevTagDecl->getTagKind() == TTK_Enum) {
             const EnumDecl *NewEnum = cast<EnumDecl>(NewTD);
             const EnumDecl *PrevEnum = cast<EnumDecl>(PrevTagDecl);
-            
+
             // All conflicts with previous declarations are recovered by
             // returning the previous declaration.
             if (NewEnum->isScoped() != PrevEnum->isScoped()) {
@@ -413,15 +417,16 @@ namespace cling {
             }
             else if (PrevEnum->isFixed()) {
               QualType T = NewEnum->getIntegerType();
-              
-              if (!m_Context->hasSameUnqualifiedType(T, 
+
+              if (!m_Context->hasSameUnqualifiedType(T,
                                                   PrevEnum->getIntegerType())) {
-                m_Sema->Diag(NameLoc.isValid() ? NameLoc : KWLoc, 
+                m_Sema->Diag(NameLoc.isValid() ? NameLoc : KWLoc,
                              diag::err_enum_redeclare_type_mismatch)
                   << T
                   << PrevEnum->getIntegerType();
-                m_Sema->Diag(PrevTagDecl->getLocation(), diag::note_previous_use);
-                
+                m_Sema->Diag(PrevTagDecl->getLocation(),
+                             diag::note_previous_use);
+
                 NewTD->setInvalidDecl();
                 return false;
               }
@@ -435,22 +440,23 @@ namespace cling {
               return false;
             }
           }
-          
+
           if (!Invalid) {
             // If this is a use, just return the declaration we found.
 
             // Diagnose attempts to redefine a tag.
             if (NewTD->isThisDeclarationADefinition()) {
               if (TagDecl* Def = PrevTagDecl->getDefinition()) {
-                // If we're defining a specialization and the previous definition
-                // is from an implicit instantiation, don't emit an error
-                // here; we'll catch this in the general case below.
+                // If we're defining a specialization and the previous
+                // definition is from an implicit instantiation, don't emit an
+                // error here; we'll catch this in the general case below.
                 if (!isExplicitSpecialization ||
                     !isa<CXXRecordDecl>(Def) ||
-                    cast<CXXRecordDecl>(Def)->getTemplateSpecializationKind() 
+                    cast<CXXRecordDecl>(Def)->getTemplateSpecializationKind()
                     == TSK_ExplicitSpecialization) {
                   m_Sema->Diag(NameLoc, diag::err_redefinition) << Name;
-                  m_Sema->Diag(Def->getLocation(), diag::note_previous_definition);
+                  m_Sema->Diag(Def->getLocation(),
+                               diag::note_previous_definition);
                   // If this is a redefinition, recover by making this
                   // struct be anonymous, which will make any later
                   // references get the previous definition.
@@ -472,14 +478,14 @@ namespace cling {
                   Invalid = true;
                 }
               }
-              
+
               // Okay, this is definition of a previously declared or referenced
               // tag PrevDecl. We're going to create a new Decl for it.
             }
           }
           // If we get here we have (another) forward declaration or we
           // have a definition.  Just create a new decl.
-          
+
         } else {
           // If we get here, this is a definition of a new tag type in a nested
           // scope, e.g. "struct foo; void bar() { struct foo; }", just create a
@@ -490,20 +496,20 @@ namespace cling {
         // If we get here, we're going to create a new Decl. If PrevDecl
         // is non-NULL, it's a definition of the tag declared by
         // PrevDecl. If it's NULL, we have a new definition.
-        
-        
+
+
         // Otherwise, PrevDecl is not a tag, but was found with tag
         // lookup.  This is only actually possible in C++, where a few
         // things like templates still live in the tag namespace.
       } else {
         assert(m_Sema->getLangOpts().CPlusPlus);
-        
+
         // Diagnose if the declaration is in scope.
-        if (!m_Sema->isDeclInScope(PrevDecl, SearchDC, 
+        if (!m_Sema->isDeclInScope(PrevDecl, SearchDC,
                                  m_Sema->getScopeForContext(m_Sema->CurContext),
                                    isExplicitSpecialization)) {
           // do nothing
-                    
+
           // Otherwise it's a declaration.  Call out a particularly common
           // case here.
         } else if (TypedefNameDecl *TND = dyn_cast<TypedefNameDecl>(PrevDecl)) {
@@ -511,9 +517,10 @@ namespace cling {
           if (isa<TypeAliasDecl>(PrevDecl)) Kind = 1;
           m_Sema->Diag(NameLoc, diag::err_tag_definition_of_typedef)
             << Name << Kind << TND->getUnderlyingType();
-          m_Sema->Diag(PrevDecl->getLocation(), diag::note_previous_decl) << PrevDecl;
+          m_Sema->Diag(PrevDecl->getLocation(),
+                       diag::note_previous_decl) << PrevDecl;
           Invalid = true;
-          
+
           // Otherwise, diagnose.
         } else {
           // The tag name clashes with something else in the target scope,

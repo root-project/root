@@ -83,7 +83,7 @@ namespace cling {
     bool m_ValuePrinterReq;
   public:
     DynamicExprInfo(const char* templ, void* addresses[], bool valuePrinterReq):
-      m_Template(templ), m_Result(templ), m_Addresses(addresses), 
+      m_Template(templ), m_Result(templ), m_Addresses(addresses),
       m_ValuePrinterReq(valuePrinterReq){}
 
     ///\brief Performs the insertions of the context in the expression just
@@ -147,18 +147,18 @@ namespace cling {
     ///
     struct CXAAtExitElement {
       ///\brief Constructs an element, whose destruction time will be managed by
-      /// the interpreter. (By registering a function to be called by exit 
+      /// the interpreter. (By registering a function to be called by exit
       /// or when a shared library is unloaded.)
       ///
-      /// Registers destructors for objects with static storage duration with 
-      /// the _cxa atexit function rather than the atexit function. This option 
-      /// is required for fully standards-compliant handling of static 
-      /// destructors(many of them created by cling), but will only work if 
-      /// your C library supports __cxa_atexit (means we have our own work 
-      /// around for Windows). More information about __cxa_atexit could be 
+      /// Registers destructors for objects with static storage duration with
+      /// the _cxa atexit function rather than the atexit function. This option
+      /// is required for fully standards-compliant handling of static
+      /// destructors(many of them created by cling), but will only work if
+      /// your C library supports __cxa_atexit (means we have our own work
+      /// around for Windows). More information about __cxa_atexit could be
       /// found in the Itanium C++ ABI spec.
       ///
-      ///\param [in] func - The function to be called on exit or unloading of 
+      ///\param [in] func - The function to be called on exit or unloading of
       ///                   shared lib.(The destructor of the object.)
       ///\param [in] arg - The argument the func to be called with.
       ///\param [in] dso - The dynamic shared object handle.
@@ -168,7 +168,7 @@ namespace cling {
       CXAAtExitElement(void (*func) (void*), void* arg, void* dso,
                        clang::Decl* fromTLD):
         m_Func(func), m_Arg(arg), m_DSO(dso), m_FromTLD(fromTLD) {}
-   
+
       ///\brief The function to be called.
       ///
       void (*m_Func)(void*);
@@ -181,12 +181,12 @@ namespace cling {
       ///
       void* m_DSO;
 
-      ///\brief Clang's top level declaration, whose unloading will trigger the 
+      ///\brief Clang's top level declaration, whose unloading will trigger the
       /// call this atexit function.
       ///
       clang::Decl* m_FromTLD;
     };
- 
+
     ///\brief Static object, which are bound to unloading of certain declaration
     /// to be destructed.
     ///
@@ -196,7 +196,7 @@ namespace cling {
     ///
     void handleFrontendOptions();
 
-    ///\brief Worker function, building block for interpreter's public 
+    ///\brief Worker function, building block for interpreter's public
     /// interfaces.
     ///
     ///\param [in] input - The input being compiled.
@@ -205,11 +205,11 @@ namespace cling {
     ///
     ///\returns Whether the operation was fully successful.
     ///
-    CompilationResult Declare(const std::string& input, 
+    CompilationResult Declare(const std::string& input,
                               const CompilationOptions& CO,
                               const clang::Decl** D = 0);
 
-    ///\brief Worker function, building block for interpreter's public 
+    ///\brief Worker function, building block for interpreter's public
     /// interfaces.
     ///
     ///\param [in] input - The input being compiled.
@@ -218,7 +218,7 @@ namespace cling {
     ///
     ///\returns Whether the operation was fully successful.
     ///
-    CompilationResult Evaluate(const std::string& input, 
+    CompilationResult Evaluate(const std::string& input,
                                const CompilationOptions& CO,
                                Value* V = 0);
 
@@ -241,7 +241,7 @@ namespace cling {
     ///
     bool RunFunction(llvm::StringRef fname, llvm::GenericValue* res = 0);
 
-    ///\brief Super efficient way of creating unique names, which will be used 
+    ///\brief Super efficient way of creating unique names, which will be used
     /// as a part of the compilation process.
     ///
     /// Creates the name directly in the compiler's identifier table, so that
@@ -256,16 +256,16 @@ namespace cling {
 
   public:
 
-    ///\brief Implements named parameter idiom - allows the idiom 
+    ///\brief Implements named parameter idiom - allows the idiom
     /// LookupDecl().LookupDecl()...
-    /// 
+    ///
     class NamedDeclResult {
     private:
       Interpreter* m_Interpreter;
       clang::ASTContext& m_Context;
       const clang::DeclContext* m_CurDeclContext;
       clang::NamedDecl* m_Result;
-      NamedDeclResult(llvm::StringRef Decl, Interpreter* interp, 
+      NamedDeclResult(llvm::StringRef Decl, Interpreter* interp,
                       const clang::DeclContext* Within = 0);
     public:
       NamedDeclResult& LookupDecl(llvm::StringRef);
@@ -279,7 +279,7 @@ namespace cling {
            return 0;
         }
       }
-      
+
       friend class Interpreter;
     };
 
@@ -291,7 +291,7 @@ namespace cling {
 
     ///\brief Shows the current version of the project.
     ///
-    ///\returns The current svn revision (svn Id). 
+    ///\returns The current svn revision (svn Id).
     ///
     const char* getVersion() const;
 
@@ -306,13 +306,13 @@ namespace cling {
     ///\brief Prints the current include paths that are used.
     ///
     void DumpIncludePath();
- 
+
     ///\brief Compiles the given input.
     ///
     /// This interface helps to run everything that cling can run. From
     /// declaring header files to running or evaluating single statements.
-    /// Note that this should be used when there is no idea of what kind of 
-    /// input is going to be processed. Otherwise if is known, for example 
+    /// Note that this should be used when there is no idea of what kind of
+    /// input is going to be processed. Otherwise if is known, for example
     /// only header files are going to be processed it is much faster to run the
     /// specific interface for doing that - in the particular case - declare().
     ///
@@ -327,16 +327,16 @@ namespace cling {
 
     ///\brief Compiles input line, which doesn't contain statements.
     ///
-    /// The interface circumvents the most of the extra work necessary to 
+    /// The interface circumvents the most of the extra work necessary to
     /// compile and run statements.
     ///
-    /// @param[in] input - The input containing only declarations (aka 
+    /// @param[in] input - The input containing only declarations (aka
     ///                    Top Level Declarations)
     /// @param[out] D - The first compiled declaration from the input
     ///
     ///\returns Whether the operation was fully successful.
     ///
-    CompilationResult declare(const std::string& input, 
+    CompilationResult declare(const std::string& input,
                               const clang::Decl** D = 0);
 
     ///\brief Compiles input line, which contains only expressions.
@@ -349,11 +349,11 @@ namespace cling {
     ///
     ///\returns Whether the operation was fully successful.
     ///
-    CompilationResult evaluate(const std::string& input, 
+    CompilationResult evaluate(const std::string& input,
                                Value* V = 0);
 
-    ///\brief Compiles input line, which contains only expressions and prints out
-    /// the result of its execution.
+    ///\brief Compiles input line, which contains only expressions and prints
+    /// out the result of its execution.
     ///
     /// The interface circumvents the most of the extra work necessary extract
     /// the declarations from the input.
@@ -374,7 +374,7 @@ namespace cling {
     ///\returns true for happiness.
     ///
     bool loadFile(const std::string& filename, bool allowSharedLib = true);
-    
+
 #ifndef _WIN32
     ///\brief Lookup a type by name, starting from the global
     /// namespace.
@@ -408,18 +408,19 @@ namespace cling {
 
     bool isPrintingAST() { return m_PrintAST; }
     void enablePrintAST(bool print = true);
-    
+
     clang::CompilerInstance* getCI() const;
     llvm::ExecutionEngine* getExecutionEngine() const;
     clang::Parser* getParser() const;
 
     void installLazyFunctionCreator(void* (*fp)(const std::string&));
-    
-    llvm::raw_ostream& getValuePrinterStream() const { return *m_ValuePrintStream; }
+
+    llvm::raw_ostream& getValuePrinterStream() const {
+       return *m_ValuePrintStream; }
 
     void runStaticInitializersOnce() const;
 
-    int CXAAtExit(void (*func) (void*), void* arg, void* dso);    
+    int CXAAtExit(void (*func) (void*), void* arg, void* dso);
 
     ///\brief Evaluates given expression within given declaration context.
     ///
@@ -430,7 +431,7 @@ namespace cling {
     ///
     ///\returns The result of the evaluation if the expression.
     ///
-    Value Evaluate(const char* expr, clang::DeclContext* DC, 
+    Value Evaluate(const char* expr, clang::DeclContext* DC,
                    bool ValuePrinterReq = false);
 
     ///\brief Looks up declaration within given declaration context. Does top
@@ -439,7 +440,7 @@ namespace cling {
     ///@param[in] Decl Declaration name.
     ///@param[in] Within Starting declaration context.
     ///
-    NamedDeclResult LookupDecl(llvm::StringRef Decl, 
+    NamedDeclResult LookupDecl(llvm::StringRef Decl,
                                const clang::DeclContext* Within = 0);
 
     ///\brief Sets callbacks needed for the dynamic lookup.
@@ -448,7 +449,7 @@ namespace cling {
 
     friend class runtime::internal::LifetimeHandler;
   };
-  
+
 } // namespace cling
 
 #endif // CLING_INTERPRETER_H

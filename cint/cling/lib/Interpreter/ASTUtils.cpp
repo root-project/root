@@ -19,8 +19,8 @@ namespace cling {
       Ty = Ctx.getPointerType(Ty);
     TypeSourceInfo* TSI = Ctx.CreateTypeSourceInfo(Ty);
     const llvm::APInt Addr(8 * sizeof(void *), Ptr);
-    
-    Expr* Result = IntegerLiteral::Create(Ctx, Addr, Ctx.UnsignedLongTy, 
+
+    Expr* Result = IntegerLiteral::Create(Ctx, Addr, Ctx.UnsignedLongTy,
                                           SourceLocation());
     Result = S->BuildCStyleCastExpr(SourceLocation(), TSI, SourceLocation(),
                                          Result).take();
@@ -32,7 +32,7 @@ namespace cling {
   NamespaceDecl* Lookup::Namespace(Sema* S, const char* Name,
                                    DeclContext* Within) {
     DeclarationName DName = &S->Context.Idents.get(Name);
-    LookupResult R(*S, DName, SourceLocation(), 
+    LookupResult R(*S, DName, SourceLocation(),
                    Sema::LookupNestedNameSpecifierName);
     if (!Within)
       S->LookupName(R, S->TUScope);
@@ -63,7 +63,7 @@ namespace cling {
     R.resolveKind();
 
     return R.getFoundDecl();
-    
+
   }
 
 } // end namespace cling

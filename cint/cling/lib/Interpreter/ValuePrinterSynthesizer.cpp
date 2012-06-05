@@ -23,7 +23,7 @@ using namespace clang;
 namespace cling {
 
 
-  ValuePrinterSynthesizer::ValuePrinterSynthesizer(Interpreter* Interp) 
+  ValuePrinterSynthesizer::ValuePrinterSynthesizer(Interpreter* Interp)
     : m_Interpreter(Interp)
   { }
 
@@ -36,7 +36,7 @@ namespace cling {
           return;
 
         if (CompoundStmt* CS = dyn_cast<CompoundStmt>(FD->getBody())) {
-          for (CompoundStmt::body_iterator 
+          for (CompoundStmt::body_iterator
                  J = CS->body_begin(), E = CS->body_end(); J != E; ++J) {
             if (J+1 ==  E || !isa<NullStmt>(*(J+1))) {
               Expr* To = 0;
@@ -50,7 +50,7 @@ namespace cling {
                 Expr* Result = 0;
                 if (m_Sema->getLangOpts().CPlusPlus)
                   Result = SynthesizeCppVP(To);
-                else 
+                else
                   Result = SynthesizeVP(To);
 
                 if (Result) {
@@ -69,14 +69,14 @@ namespace cling {
             Scope* S = m_Sema->getScopeForContext(DC);
             if (S)
               S->RemoveDecl(FD);
-            DC->removeDecl(FD); 
+            DC->removeDecl(FD);
           }
         }
       }
   }
 
   // We need to artificially create:
-  // cling::valuePrinterInternal::PrintValue((void*) raw_ostream, 
+  // cling::valuePrinterInternal::PrintValue((void*) raw_ostream,
   //                                         (ASTContext)Ctx, (Expr*)E, &i);
   Expr* ValuePrinterSynthesizer::SynthesizeCppVP(Expr* E) {
     QualType QT = E->getType();
@@ -95,33 +95,36 @@ namespace cling {
     DeclarationName PVName = &m_Context->Idents.get("PrintValue");
     LookupResult R(*m_Sema, PVName, NoSLoc, Sema::LookupOrdinaryName,
                    Sema::ForRedeclaration);
-    
+
     m_Sema->LookupQualifiedName(R, NSD);
     assert(!R.empty() && "Cannot find PrintValue(...)");
 
     CXXScopeSpec CSS;
-    Expr* UnresolvedLookup 
+    Expr* UnresolvedLookup
       = m_Sema->BuildDeclarationNameExpr(CSS, R, /*ADL*/ false).take();
-    
+
     // 2.4. Prepare the params
-    
+
     // 2.4.1 Lookup the llvm::raw_ostream
     CXXRecordDecl* RawOStreamRD
       = dyn_cast<CXXRecordDecl>(Lookup::Named(m_Sema, "raw_ostream",
-                                              Lookup::Namespace(m_Sema, "llvm")));
+                                              Lookup::Namespace(m_Sema,
+                                                                "llvm")));
 
     assert(RawOStreamRD && "Declaration of the expr not found!");
     QualType RawOStreamRDTy = m_Context->getTypeDeclType(RawOStreamRD);
     // 2.4.2 Lookup the expr type
     CXXRecordDecl* ExprRD
-      = dyn_cast<CXXRecordDecl>(Lookup::Named(m_Sema, "Expr", 
-                                              Lookup::Namespace(m_Sema, "clang")));
+      = dyn_cast<CXXRecordDecl>(Lookup::Named(m_Sema, "Expr",
+                                              Lookup::Namespace(m_Sema,
+                                                                "clang")));
    assert(ExprRD && "Declaration of the expr not found!");
     QualType ExprRDTy = m_Context->getTypeDeclType(ExprRD);
     // 2.4.3 Lookup ASTContext type
     CXXRecordDecl* ASTContextRD
-      = dyn_cast<CXXRecordDecl>(Lookup::Named(m_Sema, "ASTContext", 
-                                              Lookup::Namespace(m_Sema, "clang")));
+      = dyn_cast<CXXRecordDecl>(Lookup::Named(m_Sema, "ASTContext",
+                                              Lookup::Namespace(m_Sema,
+                                                                "clang")));
     assert(ASTContextRD && "Declaration of the expr not found!");
     QualType ASTContextRDTy = m_Context->getTypeDeclType(ASTContextRD);
 
@@ -135,10 +138,10 @@ namespace cling {
                                                        ASTContextRDTy,
                                                        (uint64_t)m_Context);
 
-    // E might contain temporaries. This means that the topmost expr is 
+    // E might contain temporaries. This means that the topmost expr is
     // ExprWithCleanups. This contains the information about the temporaries and
-    // signals when they should be destroyed. 
-    // Here we replace E with call to value printer and we must extend the life 
+    // signals when they should be destroyed.
+    // Here we replace E with call to value printer and we must extend the life
     // time of those temporaries to the end of the new CallExpr.
     bool NeedsCleanup = false;
     if (ExprWithCleanups* EWC = dyn_cast<ExprWithCleanups>(E)) {
@@ -154,13 +157,13 @@ namespace cling {
     CallArgs.push_back(E);
 
     Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
-    Expr* Result = m_Sema->ActOnCallExpr(S, UnresolvedLookup, NoSLoc, 
+    Expr* Result = m_Sema->ActOnCallExpr(S, UnresolvedLookup, NoSLoc,
                                          move_arg(CallArgs), NoSLoc).take();
 
     Result = m_Sema->ActOnFinishFullExpr(Result).take();
     if (NeedsCleanup && !isa<ExprWithCleanups>(Result)) {
       llvm::ArrayRef<ExprWithCleanups::CleanupObject> Cleanups;
-      ExprWithCleanups* EWC 
+      ExprWithCleanups* EWC
         = ExprWithCleanups::Create(*m_Context, Result, Cleanups);
       Result = EWC;
     }
@@ -183,15 +186,15 @@ namespace cling {
     DeclarationName PVName = &m_Context->Idents.get("cling_PrintValue");
     LookupResult R(*m_Sema, PVName, NoSLoc, Sema::LookupOrdinaryName,
                    Sema::ForRedeclaration);
-    
+
     Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
     m_Sema->LookupName(R, S);
     assert(!R.empty() && "Cannot find PrintValue(...)");
 
     CXXScopeSpec CSS;
-    Expr* UnresolvedLookup 
+    Expr* UnresolvedLookup
       = m_Sema->BuildDeclarationNameExpr(CSS, R, /*ADL*/ false).take();
-    
+
 
     Expr* VoidEArg = Synthesize::CStyleCastPtrExpr(m_Sema, m_Context->VoidPtrTy,
                                                    (uint64_t)E);
@@ -209,7 +212,7 @@ namespace cling {
     CallArgs.push_back(VoidCArg);
     CallArgs.push_back(E);
 
-    Expr* Result = m_Sema->ActOnCallExpr(S, UnresolvedLookup, NoSLoc, 
+    Expr* Result = m_Sema->ActOnCallExpr(S, UnresolvedLookup, NoSLoc,
                                          move_arg(CallArgs), NoSLoc).take();
     assert(Result && "Cannot create value printer!");
 

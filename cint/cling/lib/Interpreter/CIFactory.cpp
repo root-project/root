@@ -36,8 +36,8 @@ namespace cling {
   {
   }
 
-  /// \brief Retrieves the clang CC1 specific flags out of the compilation's jobs
-  /// Returns NULL on error.
+  /// \brief Retrieves the clang CC1 specific flags out of the compilation's
+  /// jobs. Returns NULL on error.
   static const clang::driver::ArgStringList
   *GetCC1Arguments(clang::DiagnosticsEngine *Diagnostics,
                    clang::driver::Compilation *Compilation) {
@@ -117,7 +117,8 @@ namespace cling {
       = new TextDiagnosticPrinter(llvm::errs(), DefaultDiagnosticOptions);
     llvm::IntrusiveRefCntPtr<clang::DiagnosticIDs> DiagIDs(new DiagnosticIDs());
     DiagnosticsEngine* Diagnostics
-      = new DiagnosticsEngine(DiagIDs, DiagnosticPrinter, /*Owns it*/ true); // LEAKS!
+      = new DiagnosticsEngine(DiagIDs, DiagnosticPrinter,
+                              /*Owns it*/ true); // LEAKS!
 
     std::vector<const char*> argvCompile(argv, argv + argc);
     // We do C++ by default; append right after argv[0] name

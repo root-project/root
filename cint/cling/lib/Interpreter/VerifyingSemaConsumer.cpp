@@ -43,7 +43,8 @@ namespace cling {
   }
 
   void VerifyingSemaConsumer::Detach(ChainedConsumer* o) {
-    for (llvm::SmallVector<ChainedConsumer*,2>::iterator I = m_Observers.begin();
+    for (llvm::SmallVector<ChainedConsumer*,2>::iterator I
+           = m_Observers.begin();
          I != m_Observers.end(); ++I) {
       if ((*I) == o) {
         m_Observers.erase(I);

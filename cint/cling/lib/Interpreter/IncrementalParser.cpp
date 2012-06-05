@@ -36,7 +36,7 @@
 using namespace clang;
 
 namespace cling {
-  IncrementalParser::IncrementalParser(Interpreter* interp, 
+  IncrementalParser::IncrementalParser(Interpreter* interp,
                                        int argc, const char* const *argv,
                                        const char* llvmdir):
     m_Interpreter(interp),
@@ -46,12 +46,12 @@ namespace cling {
     m_LastTopLevelDecl(0),
     m_SyntaxOnly(false)
   {
-    CompilerInstance* CI 
-      = CIFactory::createCI(llvm::MemoryBuffer::getMemBuffer("", "CLING"), 
+    CompilerInstance* CI
+      = CIFactory::createCI(llvm::MemoryBuffer::getMemBuffer("", "CLING"),
                             argc, argv, llvmdir);
     assert(CI && "CompilerInstance is (null)!");
     m_CI.reset(CI);
-    m_SyntaxOnly 
+    m_SyntaxOnly
       = CI->getFrontendOpts().ProgramAction == clang::frontend::ParseSyntaxOnly;
 
     CreateSLocOffsetGenerator();
@@ -72,9 +72,9 @@ namespace cling {
     m_Consumer->Add(ChainedConsumer::kValuePrinterSynthesizer, VPS);
     m_Consumer->Add(ChainedConsumer::kASTDumper, new ASTDumper());
     if (!m_SyntaxOnly) {
-      CodeGenerator* CG = CreateLLVMCodeGen(CI->getDiagnostics(), 
+      CodeGenerator* CG = CreateLLVMCodeGen(CI->getDiagnostics(),
                                             "cling input",
-                                            CI->getCodeGenOpts(), 
+                                            CI->getCodeGenOpts(),
                                   /*Owned by codegen*/ * new llvm::LLVMContext()
                                             );
       assert(CG && "No CodeGen?!");
@@ -85,7 +85,7 @@ namespace cling {
     CI->getPreprocessor().EnterMainSourceFile();
     // Initialize the parser after we have entered the main source file.
     m_Parser->Initialize();
-    // Perform initialization that occurs after the parser has been initialized 
+    // Perform initialization that occurs after the parser has been initialized
     // but before it parses anything. Initializes the consumers too.
     CI->getSema().Initialize();
   }
@@ -97,7 +97,7 @@ namespace cling {
   // order the overloads, for example
   //
   // Our work-around is creating a virtual file, which doesn't exist on the disk
-  // with enormous size (no allocation is done). That file has valid FileEntry 
+  // with enormous size (no allocation is done). That file has valid FileEntry
   // and so on... We use it for generating valid SourceLocations with valid
   // offsets so that it doesn't cause any troubles to the diagnostics.
   //
@@ -112,18 +112,18 @@ namespace cling {
   // |         ...         |     |       |    |
   // +~~~~~~~~~~~~~~~~~~~~~+     |       |    |
   // |     input_line_1    | ....+.......+..--+
-  // +---------------------+     |       |   
+  // +---------------------+     |       |
   // |     input_line_2    | ....+.....--+
   // +---------------------+     |
   // |          ...        |     |
   // +---------------------+     |
-  // |     input_line_N    | ..--+  
+  // |     input_line_N    | ..--+
   // +---------------------+
   //
   void IncrementalParser::CreateSLocOffsetGenerator() {
     SourceManager& SM = getCI()->getSourceManager();
     FileManager& FM = SM.getFileManager();
-    const FileEntry* FE 
+    const FileEntry* FE
       = FM.getVirtualFile("Interactrive/InputLineIncluder", 1U << 15U, time(0));
     m_VirtualFileID = SM.createFileID(FE, SourceLocation(), SrcMgr::C_User);
 
@@ -135,7 +135,7 @@ namespace cling {
        GetCodeGenerator()->ReleaseModule();
      }
   }
-  
+
   void IncrementalParser::Initialize() {
     CompilationOptions CO;
     CO.DeclarationExtraction = 0;
@@ -144,7 +144,7 @@ namespace cling {
   }
 
   IncrementalParser::EParseResult
-  IncrementalParser::Compile(llvm::StringRef input, 
+  IncrementalParser::Compile(llvm::StringRef input,
                              const CompilationOptions& Opts) {
 
     m_Consumer->pushCompilationOpts(Opts);
@@ -154,18 +154,18 @@ namespace cling {
     return Result;
   }
 
-  void IncrementalParser::Parse(llvm::StringRef input, 
+  void IncrementalParser::Parse(llvm::StringRef input,
                                 llvm::SmallVector<DeclGroupRef, 4>& DGRs) {
 
     Parse(input);
-    for (llvm::SmallVector<ChainedConsumer::DGRInfo, 64>::iterator 
+    for (llvm::SmallVector<ChainedConsumer::DGRInfo, 64>::iterator
            I = m_Consumer->DeclsQueue.begin(), E = m_Consumer->DeclsQueue.end();
          I != E; ++I) {
       DGRs.push_back((*I).D);
     }
   }
 
-  IncrementalParser::EParseResult 
+  IncrementalParser::EParseResult
   IncrementalParser::Compile(llvm::StringRef input) {
     // Just in case when Parse is called, we want to complete the transaction
     // coming from parse and then start new one.
@@ -180,7 +180,8 @@ namespace cling {
 
     // Check for errors coming from our custom consumers.
     DiagnosticConsumer& DClient = m_CI->getDiagnosticClient();
-    DClient.BeginSourceFile(getCI()->getLangOpts(), &getCI()->getPreprocessor());
+    DClient.BeginSourceFile(getCI()->getLangOpts(),
+                            &getCI()->getPreprocessor());
     m_Consumer->HandleTranslationUnit(getCI()->getASTContext());
 
     DClient.EndSourceFile();
@@ -194,7 +195,7 @@ namespace cling {
   }
 
   // Add the input to the memory buffer, parse it, and add it to the AST.
-  IncrementalParser::EParseResult 
+  IncrementalParser::EParseResult
   IncrementalParser::Parse(llvm::StringRef input) {
     Preprocessor& PP = m_CI->getPreprocessor();
     DiagnosticConsumer& DClient = m_CI->getDiagnosticClient();
@@ -204,12 +205,12 @@ namespace cling {
     DClient.BeginSourceFile(m_CI->getLangOpts(), &PP);
     // Reset the transaction information
     getLastTransaction().setBeforeFirstDecl(getCI()->getSema().CurContext);
-    
+
 
     if (input.size()) {
       std::ostringstream source_name;
       source_name << "input_line_" << (m_MemoryBuffer.size() + 1);
-      llvm::MemoryBuffer* MB  
+      llvm::MemoryBuffer* MB
         = llvm::MemoryBuffer::getMemBufferCopy(input, source_name.str());
       m_MemoryBuffer.push_back(MB);
       SourceManager& SM = getCI()->getSourceManager();
@@ -218,13 +219,13 @@ namespace cling {
       // candidates for example
       SourceLocation NewLoc = SM.getLocForStartOfFile(m_VirtualFileID);
       NewLoc = NewLoc.getLocWithOffset(m_MemoryBuffer.size() + 1);
-      
+
       // Create FileID for the current buffer
       FileID FID = SM.createFileIDForMemBuffer(m_MemoryBuffer.back(),
                                                /*LoadedID*/0,
                                                /*LoadedOffset*/0, NewLoc);
-      
-      PP.EnterSourceFile(FID, 0, NewLoc);      
+
+      PP.EnterSourceFile(FID, 0, NewLoc);
     }
 
     Parser::DeclGroupPtrTy ADecl;
@@ -241,11 +242,11 @@ namespace cling {
            m_FirstTopLevelDecl = *((*i)->getDeclContext()->decls_begin());
 
           m_LastTopLevelDecl = *i;
-        } 
+        }
         m_Consumer->HandleTopLevelDecl(DGR);
       } // ADecl
     };
-    
+
     // Process any TopLevelDecls generated by #pragma weak.
     for (llvm::SmallVector<Decl*,2>::iterator
            I = getCI()->getSema().WeakTopLevelDecls().begin(),
@@ -278,12 +279,12 @@ namespace cling {
     else {
       delete S.ExternalSource;
       S.ExternalSource = 0;
-    }      
+    }
   }
 
-  CodeGenerator* IncrementalParser::GetCodeGenerator() const { 
-    return 
-      (CodeGenerator*)m_Consumer->getConsumer(ChainedConsumer::kCodeGenerator); 
+  CodeGenerator* IncrementalParser::GetCodeGenerator() const {
+    return
+      (CodeGenerator*)m_Consumer->getConsumer(ChainedConsumer::kCodeGenerator);
   }
 
 } // namespace cling

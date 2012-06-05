@@ -63,8 +63,8 @@ namespace cling {
     public:
       SymbolResolverCallback(Interpreter* interp, bool enabled = false)
         : InterpreterCallbacks(interp, enabled), m_TesterDecl(0) {
-        m_Interpreter->process("cling::test::Tester = new cling::test::TestProxy();");        
-      }      
+        m_Interpreter->process("cling::test::Tester = new cling::test::TestProxy();");
+      }
       ~SymbolResolverCallback(){}
 
       bool LookupObject(clang::LookupResult& R, clang::Scope* S) {

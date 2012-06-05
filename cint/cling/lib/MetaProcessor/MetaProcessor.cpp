@@ -46,9 +46,9 @@ namespace cling {
       return 0;
     }
 
-    // Check if the current statement is now complete. If not, return to 
+    // Check if the current statement is now complete. If not, return to
     // prompt for more.
-    if (m_InputValidator->Validate(input_line, m_Interp.getCI()->getLangOpts()) 
+    if (m_InputValidator->Validate(input_line, m_Interp.getCI()->getLangOpts())
         == InputValidator::kIncomplete) {
       return m_InputValidator->getExpectedIndent();
     }
@@ -67,7 +67,7 @@ namespace cling {
   MetaProcessorOpts& MetaProcessor::getMetaProcessorOpts() {
     // Take interpreter's state
     m_Options.PrintingAST = m_Interp.isPrintingAST();
-    return m_Options; 
+    return m_Options;
   }
 
   bool MetaProcessor::ProcessMeta(const std::string& input_line, Value* result){
@@ -101,19 +101,19 @@ namespace cling {
    //  .L <filename>   //  Load code fragment.
    else if (Command == "L") {
      // TODO: Additional checks on params
-     bool success 
+     bool success
        = m_Interp.loadFile(SanitizeArg(ReadToEndOfBuffer(RawLexer, MB)));
      if (!success) {
        llvm::errs() << "Load file failed.\n";
      }
      return true;
-   } 
-   //  .(x|X) <filename> //  Execute function from file, function name is 
+   }
+   //  .(x|X) <filename> //  Execute function from file, function name is
    //                    //  filename without extension.
    else if ((Command == "x") || (Command == "X")) {
      // TODO: Additional checks on params
      llvm::sys::Path path(SanitizeArg(ReadToEndOfBuffer(RawLexer, MB)));
- 
+
      if (!path.isValid())
        return false;
 
@@ -136,10 +136,10 @@ namespace cling {
        bool print = !m_Interp.isPrintingAST();
        m_Interp.enablePrintAST(print);
        llvm::errs()<< (print?"P":"Not p") << "rinting AST\n";
-     } else { 
+     } else {
        Param = GetRawTokenName(Tok);
 
-       if (Param == "0") 
+       if (Param == "0")
          m_Interp.enablePrintAST(false);
        else
          m_Interp.enablePrintAST(true);
@@ -148,7 +148,7 @@ namespace cling {
      m_Options.PrintingAST = m_Interp.isPrintingAST();
      return true;
    }
-   //  .rawInput [0|1]  // Toggle the raw input or if 1 or 0 is given enable 
+   //  .rawInput [0|1]  // Toggle the raw input or if 1 or 0 is given enable
    //                   // or disable it.
    else if (Command == "rawInput") {
      // Check for params
@@ -160,12 +160,12 @@ namespace cling {
        // toggle:
        m_Options.RawInput = !m_Options.RawInput;
        llvm::errs() << (m_Options.RawInput?"U":"Not u") << "sing raw input\n";
-     } else { 
+     } else {
        Param = GetRawTokenName(Tok);
 
        if (Param == "0")
          m_Options.RawInput = false;
-       else 
+       else
          m_Options.RawInput = true;
      }
      return true;
@@ -195,12 +195,12 @@ namespace cling {
 
      // Check for params
      llvm::sys::Path path(SanitizeArg(ReadToEndOfBuffer(RawLexer, MB)));
-     
+
      if (path.isEmpty())
        m_Interp.DumpIncludePath();
      else {
        // TODO: Additional checks on params
-       
+
        if (path.isValid())
          m_Interp.AddIncludePath(path.c_str());
        else
@@ -230,7 +230,7 @@ namespace cling {
 
        if (Param == "0")
          m_Interp.enableDynamicLookup(false);
-       else 
+       else
          m_Interp.enableDynamicLookup(true);
      }
 
@@ -271,11 +271,11 @@ namespace cling {
     case tok::numeric_constant:
       return StringRef(Tok.getLiteralData(), Tok.getLength()).str();
     case tok::raw_identifier:
-      return StringRef(Tok.getRawIdentifierData(), Tok.getLength()).str(); 
+      return StringRef(Tok.getRawIdentifierData(), Tok.getLength()).str();
     }
   }
 
-  llvm::StringRef MetaProcessor::ReadToEndOfBuffer(Lexer& RawLexer, 
+  llvm::StringRef MetaProcessor::ReadToEndOfBuffer(Lexer& RawLexer,
                                                    llvm::MemoryBuffer* MB) {
     const char* CurPtr = RawLexer.getBufferLocation();
     if (CurPtr == MB->getBufferEnd()) {
@@ -309,9 +309,9 @@ namespace cling {
     llvm::outs() << ".(x|X) <filename>[args]\t\t - Same as .L and runs a ";
     llvm::outs() << "function with signature ret_type filename(args)\n";
     llvm::outs() << ".I [path]\t\t\t - Shows the include path. If a path is ";
-    llvm::outs() << "given - adds the path to the list with the include paths\n";
+    llvm::outs() << "given - adds the path to the include paths\n";
     llvm::outs() << ".@ \t\t\t\t - Cancels and ignores the multiline input\n";
-    llvm::outs() << ".rawInput [0|1]\t\t\t - Toggles the wrapping and printing ";
+    llvm::outs() << ".rawInput [0|1]\t\t\t - Toggle wrapping and printing ";
     llvm::outs() << "the execution results of the input\n";
     llvm::outs() << ".dynamicExtensions [0|1]\t - Toggles the use of the ";
     llvm::outs() << "dynamic scopes and the late binding\n";
@@ -326,7 +326,7 @@ namespace cling {
 
     llvm::outs() << "\n***\n\n";
 
-    for (SourceManager::fileinfo_iterator I = SM.fileinfo_begin(), 
+    for (SourceManager::fileinfo_iterator I = SM.fileinfo_begin(),
            E = SM.fileinfo_end(); I != E; ++I) {
       llvm::outs() << (*I).first->getName();
       llvm::outs() << "\n";
@@ -334,7 +334,7 @@ namespace cling {
   }
 
   // Run a file: .x file[(args)]
-  bool MetaProcessor::executeFile(const std::string& fileWithArgs, 
+  bool MetaProcessor::executeFile(const std::string& fileWithArgs,
                                   Value* result) {
     // Look for start of parameters:
 
@@ -354,14 +354,14 @@ namespace cling {
        = m_Interp.declare(std::string("#include \"")
                           + pairFileArgs.first.str()
                           + std::string("\""));
-    
+
     if (interpRes != Interpreter::kFailure) {
        std::string expression = pairFuncExt.first.str()
           + "(" + pairFileArgs.second.str();
        interpRes = m_Interp.evaluate(expression, result);
     }
-    
-    return (interpRes != Interpreter::kFailure);   
+
+    return (interpRes != Interpreter::kFailure);
   }
 } // end namespace cling
 

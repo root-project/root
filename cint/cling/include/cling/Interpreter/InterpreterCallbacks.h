@@ -13,7 +13,7 @@ namespace clang {
 }
 
 namespace cling {
-  /// \brief  This interface provides a way to observe the actions of the 
+  /// \brief  This interface provides a way to observe the actions of the
   /// interpreter as it does its thing.  Clients can define their hooks here to
   /// implement interpreter level tools.
   class InterpreterCallbacks {
@@ -33,7 +33,7 @@ namespace cling {
 
     virtual ~InterpreterCallbacks() {}
 
-    void setEnabled(bool e = true) { 
+    void setEnabled(bool e = true) {
       m_Enabled = e;
     }
 

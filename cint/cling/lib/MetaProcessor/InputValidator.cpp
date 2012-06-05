@@ -12,7 +12,7 @@ using namespace clang;
 
 namespace cling {
   InputValidator::InputValidator() {}
-  
+
   InputValidator::~InputValidator() {}
 
   InputValidator::Result
@@ -46,7 +46,7 @@ namespace cling {
       }
     }
     while (Tok.isNot(tok::eof));
-    if (!m_ParenStack.empty()) 
+    if (!m_ParenStack.empty())
       return kIncomplete;
 
     return kComplete;

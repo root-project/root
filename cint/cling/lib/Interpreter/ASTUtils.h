@@ -20,16 +20,16 @@ namespace clang {
 namespace cling {
   class Synthesize {
   public:
-    static clang::Expr* CStyleCastPtrExpr(clang::Sema* S, 
+    static clang::Expr* CStyleCastPtrExpr(clang::Sema* S,
                                           clang::QualType Ty, uint64_t Ptr);
   };
 
   class Lookup {
   public:
-    static clang::NamespaceDecl* Namespace(clang::Sema* S, 
+    static clang::NamespaceDecl* Namespace(clang::Sema* S,
                                            const char* Name,
                                            clang::DeclContext* Within = 0);
-    static clang::NamedDecl* Named(clang::Sema* S, 
+    static clang::NamedDecl* Named(clang::Sema* S,
                                    const char* Name,
                                    clang::DeclContext* Within = 0);
 

@@ -45,25 +45,26 @@ namespace cling {
     virtual bool HandleTopLevelDecl(clang::DeclGroupRef D);
     virtual void HandleInterestingDecl(clang::DeclGroupRef D);
     virtual void HandleTagDeclDefinition(clang::TagDecl* D);
-    virtual void HandleVTable(clang::CXXRecordDecl* RD, bool DefinitionRequired);
+    virtual void HandleVTable(clang::CXXRecordDecl* RD,
+                              bool DefinitionRequired);
     virtual void CompleteTentativeDefinition(clang::VarDecl* D);
     virtual void HandleTranslationUnit(clang::ASTContext& Ctx);
 
     virtual clang::ASTMutationListener* GetASTMutationListener();
     virtual clang::ASTDeserializationListener* GetASTDeserializationListener();
     virtual void PrintStats();
-    
+
     // SemaConsumer
     virtual void InitializeSema(clang::Sema& S);
     virtual void ForgetSema();
 
     // Transaction Support
     bool IsInTransaction() { return m_InTransaction; }
-    
+
     void Add(EConsumerIndex I, clang::ASTConsumer* C);
     void RecoverFromError();
-    clang::ASTConsumer** getConsumers() { 
-      return Consumers; 
+    clang::ASTConsumer** getConsumers() {
+      return Consumers;
     }
 
     bool Exists(EConsumerIndex I) {
@@ -109,7 +110,7 @@ namespace cling {
       kTopLevelDecl,
       kInterestingDecl,
       kTagDeclDefinition,
-      kVTable,      
+      kVTable,
       kCompleteTentativeDefinition
     };
     struct DGRInfo {

@@ -21,7 +21,7 @@ namespace cling {
       HandleTopLevelSingleDecl(*I);
     return true;
   }
-    
+
   void ASTDumper::HandleTopLevelSingleDecl(Decl* D) {
     PrintingPolicy Policy = D->getASTContext().getPrintingPolicy();
     Policy.Dump = Dump;
@@ -34,7 +34,7 @@ namespace cling {
         llvm::outs() << "\n------------------Declaration Body---------------\n";
         Body->dump();
       }
-      llvm::outs() << "\n---------------------------------------------------\n";  
+      llvm::outs() << "\n---------------------------------------------------\n";
     }
   }
 } // namespace cling

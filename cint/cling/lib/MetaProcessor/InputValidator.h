@@ -24,10 +24,10 @@ namespace cling {
       kMismatch,
       kNumResults
     };
-    
+
     InputValidator();
     ~InputValidator();
-    
+
     Result Validate(llvm::StringRef input_line, clang::LangOptions& LO);
     std::string& TakeInput() {
       return m_Input;

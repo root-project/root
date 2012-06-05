@@ -28,7 +28,7 @@ namespace cling {
                                              const char* const *argv,
                                              const char* llvmdir);
 
-    static clang::CompilerInstance* createCI(llvm::MemoryBuffer* buffer, 
+    static clang::CompilerInstance* createCI(llvm::MemoryBuffer* buffer,
                                              int argc,
                                              const char* const *argv,
                                              const char* llvmdir);

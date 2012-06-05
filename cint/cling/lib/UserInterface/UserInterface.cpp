@@ -16,7 +16,8 @@
 //---------------------------------------------------------------------------
 // Construct an interface for an interpreter
 //---------------------------------------------------------------------------
-cling::UserInterface::UserInterface(Interpreter& interp, const char* prompt /*= "[cling] $"*/):
+cling::UserInterface::UserInterface(Interpreter& interp,
+                                    const char* prompt /*= "[cling] $"*/):
 m_MetaProcessor(new MetaProcessor(interp))
 {
 }
@@ -48,7 +49,7 @@ void cling::UserInterface::runInteractively(bool nologo /* = false */)
   TI.SetPrompt(Prompt.c_str());
   std::string line;
   MetaProcessorOpts& MPOpts = m_MetaProcessor->getMetaProcessorOpts();
-  
+
   while (!MPOpts.Quitting) {
     TextInput::EReadResult RR = TI.ReadInput();
     TI.TakeInput(line);

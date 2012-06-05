@@ -22,7 +22,7 @@ namespace cling {
   /// available, but better extract the value using the template
   /// parameter that matches the Value's type.
   ///
-  /// The class represents a llvm::GenericValue with its corresponding 
+  /// The class represents a llvm::GenericValue with its corresponding
   /// clang::QualType. Use-cases:
   /// 1. Expression evaluation: we need to know the type of the GenericValue
   /// that we have gotten from the JIT
@@ -133,17 +133,21 @@ namespace cling {
   template <typename T>
   T Value::simplisticCastAs() const {
     const clang::Type* desugCanon = type->getUnqualifiedDesugaredType();
-    desugCanon = desugCanon->getCanonicalTypeUnqualified()->getTypePtr()->getUnqualifiedDesugaredType();
+    desugCanon = desugCanon->getCanonicalTypeUnqualified()->getTypePtr()
+       ->getUnqualifiedDesugaredType();
     if (desugCanon->isSignedIntegerOrEnumerationType()) {
       return (T) getAs<signed long long>();
     } else if (desugCanon->isUnsignedIntegerOrEnumerationType()) {
       return (T) getAs<unsigned long long>();
     } else if (desugCanon->isRealFloatingType()) {
       const clang::BuiltinType* BT = desugCanon->getAs<clang::BuiltinType>();
-      if (BT->getKind() == clang::BuiltinType::Double) return (T) getAs<double>();
-      else if (BT->getKind() == clang::BuiltinType::Float) return (T) getAs<float>();
+      if (BT->getKind() == clang::BuiltinType::Double)
+        return (T) getAs<double>();
+      else if (BT->getKind() == clang::BuiltinType::Float)
+        return (T) getAs<float>();
       /* not yet supported in JIT:
-      else if (BT->getKind() == clang::BuiltinType::LongDouble) return (T) getAs<long double>();
+      else if (BT->getKind() == clang::BuiltinType::LongDouble)
+        return (T) getAs<long double>();
       */
     } else if (desugCanon->isPointerType() || desugCanon->isObjectType()) {
       return (T) getAs<void*>();

@@ -30,5 +30,5 @@ void LifetimeHandler() {
 
   // Alpha a(dep->Call(i));
   // Alpha c(const_cast<char*>(dep->getVersion()), const_cast<char*>(dep1->getVersion()));
-  // c.printName();  
+  // c.printName();
 }

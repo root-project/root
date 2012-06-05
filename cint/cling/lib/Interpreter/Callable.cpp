@@ -27,7 +27,7 @@ cling::Callable::Callable(const clang::FunctionDecl& Decl,
   if (exec) {
     std::string mangledName;
     llvm::raw_string_ostream RawStr(mangledName);
-    llvm::OwningPtr<clang::MangleContext> 
+    llvm::OwningPtr<clang::MangleContext>
       Mangle(Interp.getCI()->getASTContext().createMangleContext());
     Mangle->mangleName(decl, RawStr);
     RawStr.flush();
@@ -42,9 +42,9 @@ bool cling::Callable::Invoke(const std::vector<llvm::GenericValue>& ArgValues,
   if (!isValid()) return false;
   if (Result) {
     *Result = Value(exec->runFunction(func, ArgValues),
-                    decl->getCallResultType()); 
+                    decl->getCallResultType());
   } else {
-    exec->runFunction(func, ArgValues); 
+    exec->runFunction(func, ArgValues);
   }
   return true;
 }

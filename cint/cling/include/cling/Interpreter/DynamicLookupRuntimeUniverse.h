@@ -22,11 +22,11 @@
 
 namespace cling {
 
-  /// \brief Used to stores the declarations, which are going to be 
+  /// \brief Used to stores the declarations, which are going to be
   /// available only at runtime. These are cling runtime builtins.
   namespace runtime {
 
-    /// \brief Provides builtins, which are neccessary for the dynamic scopes 
+    /// \brief Provides builtins, which are neccessary for the dynamic scopes
     /// and runtime bindings. These builtins should be used for other purposes.
     namespace internal {
 
@@ -36,7 +36,7 @@ namespace cling {
       /// When the interpreter "sees" invalid code it marks it and skip all the
       /// semantic checks (like with templates). Afterwords all these marked
       /// nodes are replaced with a call to EvaluateT, which makes valid
-      /// C++ code. It is templated because it can be used in expressions and 
+      /// C++ code. It is templated because it can be used in expressions and
       /// T is the type of the evaluated expression.
       ///
       /// @tparam T The type of the evaluated expression.
@@ -47,11 +47,11 @@ namespace cling {
       /// evaluated at runtime.
       template<typename T>
       T EvaluateT(DynamicExprInfo* ExprInfo, clang::DeclContext* DC ) {
-        Value result(gCling->Evaluate(ExprInfo->getExpr(), DC, 
+        Value result(gCling->Evaluate(ExprInfo->getExpr(), DC,
                                       ExprInfo->isValuePrinterRequested())
                      );
         // Check whether the expected return type and the actual return type are
-        // compatible with Sema::CheckAssingmentConstraints or 
+        // compatible with Sema::CheckAssingmentConstraints or
         // ASTContext::typesAreCompatible.
         return result.getAs<T>();
       }
@@ -60,7 +60,7 @@ namespace cling {
       /// void.
       template<>
       void EvaluateT(DynamicExprInfo* ExprInfo, clang::DeclContext* DC ) {
-        gCling->Evaluate(ExprInfo->getExpr(), DC, 
+        gCling->Evaluate(ExprInfo->getExpr(), DC,
                          ExprInfo->isValuePrinterRequested());
       }
 
@@ -77,13 +77,13 @@ namespace cling {
       /// where dep->Symbol() is a symbol not known at compile-time
       /// transformed into:
       /// @code
-      /// cling::runtime::internal::LifetimeHandler 
+      /// cling::runtime::internal::LifetimeHandler
       /// __unique("dep->Sybmol(*(int*)@)",(void*[]){&i}, DC, "MyClass");
       /// MyClass &my(*(MyClass*)__unique.getMemory());
       /// @endcode
       class LifetimeHandler {
       private:
-        /// \brief The memory on the free store, where the object will be 
+        /// \brief The memory on the free store, where the object will be
         /// created.
         void* m_Memory;
 
@@ -93,10 +93,10 @@ namespace cling {
         /// \brief Constructs an expression, which creates the object on the
         /// free store and tells the interpreter to evaluate it.
         ///
-        /// @param[in] ExprInfo Helper structure that keeps information about the
-        /// expression that is being replaced and the addresses of the variables
-        /// that the replaced expression contains.
-        /// @param[in] DC The declaration context, in which the expression will 
+        /// @param[in] ExprInfo Helper structure that keeps information about
+        /// the expression that is being replaced and the addresses of the
+        /// variables that the replaced expression contains.
+        /// @param[in] DC The declaration context, in which the expression will
         /// be evaluated at runtime
         /// @param[in] type The type of the object, which will help to delete
         /// it, when the LifetimeHandler goes out of scope.
@@ -108,7 +108,7 @@ namespace cling {
           std::string ctor("new ");
           ctor += type;
           ctor += ExprInfo->getExpr();
-          Value res = gCling->Evaluate(ctor.c_str(), DC, 
+          Value res = gCling->Evaluate(ctor.c_str(), DC,
                                        ExprInfo->isValuePrinterRequested()
                                        );
           m_Memory = (void*)res.value.PointerVal;
