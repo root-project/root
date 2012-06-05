@@ -20,6 +20,7 @@
 namespace llvm {
   class raw_ostream;
   struct GenericValue;
+  class ExecutionEngine;
 }
 
 namespace clang {
@@ -409,6 +410,7 @@ namespace cling {
     void enablePrintAST(bool print = true);
     
     clang::CompilerInstance* getCI() const;
+    llvm::ExecutionEngine* getExecutionEngine() const;
     clang::Parser* getParser() const;
 
     void installLazyFunctionCreator(void* (*fp)(const std::string&));

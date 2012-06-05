@@ -52,6 +52,10 @@ namespace cling {
     /// @returns true if the symbol is successfully registered, false otherwise.
     ///
     bool addSymbol(const char* symbolName,  void* symbolAddress);
+
+    llvm::ExecutionEngine* getExecutionEngine() const {
+      return m_engine;
+    }
     
   private:
     static void* HandleMissingFunction(const std::string&);

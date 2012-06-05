@@ -10,11 +10,12 @@
 #include <vector>
 
 namespace llvm {
+  class ExecutionEngine;
   class Function;
   class GenericValue;
 }
 
-namespace cling {
+namespace clang {
    class FunctionDecl;
 }
 
@@ -34,7 +35,9 @@ namespace cling {
     /// \brief declaration; can also be a clang::CXXMethodDecl
     const clang::FunctionDecl* decl;
     /// \brief llvm::ExecutionEngine's function representation
-    const llvm::Function* func;
+    llvm::Function* func;
+    /// \brief Interpreter that will run the function
+    llvm::ExecutionEngine* exec;
 
   public:
     /// \brief Default constructor, creates a Callable that IsInvalid().
@@ -54,25 +57,15 @@ namespace cling {
     /// Retrieve the Callable's function declaration.
     const clang::FunctionDecl* getDecl() const { return decl; }
 
-    /// \brief Invoke a free-standing (i.e. non-CXXMethod) function.
+    /// \brief Invoke a function passing arguments, possibly getting result.
     //
-    /// Invoke the function which must not be a CXXMethod. Pass in
-    /// the parameters ArgValues; the return value of the function
-    /// call ends up in Result.
+    /// Invoke the function. Pass in the parameters ArgValues; the return
+    /// value of the function call ends up in Result.
+    /// If the function represents a CXXMethodDecl, the first argument is
+    /// expected to be the this pointer of the object to un the function on.
     /// \return true if the call was successful.
      bool Invoke(const std::vector<llvm::GenericValue>& ArgValues,
                  Value* Result = 0) const;
-
-    /// \brief Invoke a CXXMethod i.e. member function.
-    //
-    /// Invoke the function which must be a CXXMethod. Pass in the
-    /// This pointer to the object on which to invoke the function and
-    /// the parameters ArgValues; the return  value of the function call
-    /// ends up in Result.
-    /// \return true if the call was successful.
-    bool InvokeThis(const llvm::GenericValue& This,
-                    const std::vector<llvm::GenericValue>& ArgValues,
-                    Value* Result = 0) const;
   };
 
 } // end namespace cling

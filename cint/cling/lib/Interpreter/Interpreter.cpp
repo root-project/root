@@ -398,6 +398,10 @@ namespace cling {
     return m_IncrParser->getCI();
   }
 
+   llvm::ExecutionEngine* Interpreter::getExecutionEngine() const {
+    return m_ExecutionContext->getExecutionEngine();
+  }
+
   Parser* Interpreter::getParser() const {
     return m_IncrParser->getParser();
   }
