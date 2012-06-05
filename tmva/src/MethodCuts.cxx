@@ -114,6 +114,8 @@ End_Html */
 #include "TMVA/VariableTransformBase.h"
 #include "TMVA/Results.h"
 
+using std::atof;
+
 REGISTER_METHOD(Cuts)
 
 ClassImp(TMVA::MethodCuts)

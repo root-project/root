@@ -19,6 +19,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "Riostream.h"
 #include "TTreePlayer.h"
@@ -80,6 +81,8 @@
 #include "Foption.h"
 #include "Fit/UnBinData.h"
 #include "Math/MinimizerOptions.h"
+
+
 
 R__EXTERN Foption_t Foption;
 R__EXTERN  TTree *gTree;

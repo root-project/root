@@ -518,15 +518,15 @@ void TGeoElementRN::SavePrimitive(std::ostream &out, Option_t *option)
    out << std::setw(5) << (Int_t)fA;
    out << std::setw(5) << fZ;
    out << std::setw(5) << fIso;
-   out << std::setw(10) << setiosflags(std::ios::fixed) << std::setprecision(5) << fLevel;
-   out << std::setw(10) << setiosflags(std::ios::fixed) << std::setprecision(5) << fDeltaM;
-   out << std::setw(10) << setiosflags(std::ios::scientific) << std::setprecision(3) << fHalfLife;
+   out << std::setw(10) << std::setiosflags(std::ios::fixed) << std::setprecision(5) << fLevel;
+   out << std::setw(10) << std::setiosflags(std::ios::fixed) << std::setprecision(5) << fDeltaM;
+   out << std::setw(10) << std::setiosflags(std::ios::scientific) << std::setprecision(3) << fHalfLife;
    out << std::setw(13) << fTitle.Data();
-   out << std::setw(10) << setiosflags(std::ios::fixed) << std::setprecision(5) << fNatAbun;
-   out << std::setw(10) << setiosflags(std::ios::fixed) << std::setprecision(5) << fTH_F;
-   out << std::setw(10) << setiosflags(std::ios::fixed) << std::setprecision(5) << fTG_F;
-   out << std::setw(10) << setiosflags(std::ios::fixed) << std::setprecision(5) << fTH_S;
-   out << std::setw(10) << setiosflags(std::ios::fixed) << std::setprecision(5) << fTG_S;
+   out << std::setw(10) << std::setiosflags(std::ios::fixed) << std::setprecision(5) << fNatAbun;
+   out << std::setw(10) << std::setiosflags(std::ios::fixed) << std::setprecision(5) << fTH_F;
+   out << std::setw(10) << std::setiosflags(std::ios::fixed) << std::setprecision(5) << fTG_F;
+   out << std::setw(10) << std::setiosflags(std::ios::fixed) << std::setprecision(5) << fTH_S;
+   out << std::setw(10) << std::setiosflags(std::ios::fixed) << std::setprecision(5) << fTG_S;
    out << std::setw(5) << fStatus;
    Int_t ndecays = 0;
    if (fDecays) ndecays = fDecays->GetEntries();
@@ -646,8 +646,8 @@ void TGeoDecayChannel::SavePrimitive(std::ostream &out, Option_t *)
    out << std::setw(50) << decayName.Data();
    out << std::setw(10) << fDecay;
    out << std::setw(10) << fDiso;
-   out << std::setw(12) << setiosflags(std::ios::fixed) << std::setprecision(6) << fBranchingRatio;
-   out << std::setw(12) << setiosflags(std::ios::fixed) << std::setprecision(6) << fQvalue;
+   out << std::setw(12) << std::setiosflags(std::ios::fixed) << std::setprecision(6) << fBranchingRatio;
+   out << std::setw(12) << std::setiosflags(std::ios::fixed) << std::setprecision(6) << fQvalue;
    out << std::endl;
 }
 

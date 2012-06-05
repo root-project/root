@@ -26,6 +26,7 @@ Bool_t  TColor::fgGrayscaleMode = kFALSE;
 Bool_t  TColor::fgInitDone = kFALSE;
 TArrayI TColor::fgPalette(0);
 
+using std::floor;
 
 //______________________________________________________________________________
 /* Begin_Html

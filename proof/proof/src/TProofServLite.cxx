@@ -55,6 +55,7 @@
 #include "TTimeStamp.h"
 #include "compiledata.h"
 
+using namespace std;
 
 // debug hook
 static volatile Int_t gProofServDebug = 1;

@@ -14,6 +14,8 @@
 #include "TGLIncludes.h"
 #include "TMathBase.h"
 
+using namespace std;
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TGLBoundingBox                                                       //

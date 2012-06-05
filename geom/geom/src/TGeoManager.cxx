@@ -272,6 +272,8 @@
 */
 //End_Html
 
+#include <stdlib.h>
+
 #include "Riostream.h"
 
 #include "TROOT.h"

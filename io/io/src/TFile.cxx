@@ -118,6 +118,8 @@
 #include "TSchemaRuleSet.h"
 #include "TThreadSlots.h"
 
+using std::sqrt;
+
 Long64_t TFile::fgBytesRead  = 0;
 Long64_t TFile::fgBytesWrite = 0;
 Long64_t TFile::fgFileCounter = 0;

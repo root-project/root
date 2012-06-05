@@ -61,6 +61,7 @@
 
 using std::vector;
 using std::stringstream;
+using std::exit;
 
 ClassImp(TMVA::MethodANNBase)
 

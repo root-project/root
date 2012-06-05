@@ -65,6 +65,8 @@ End_Html */
 #include "TMVA/Tools.h"
 #endif
 
+using std::atoi;
+
 // some additional TMlpANN options
 const Bool_t EnforceNormalization__=kTRUE;
 #if ROOT_VERSION_CODE > ROOT_VERSION(5,13,06)
