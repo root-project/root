@@ -515,7 +515,10 @@ read_bmp_image( FILE *infile, size_t data_offset, BITMAPINFOHEADER *bmp_info,
 		size_t ret;
 		cmap = safemalloc( cmap_entries * cmap_entry_size );
 		ret = fread(cmap, sizeof (CARD8), cmap_entries * cmap_entry_size, infile);
-		if (ret != cmap_entries * cmap_entry_size) return NULL;
+		if (ret != cmap_entries * cmap_entry_size) {
+         if (cmap) free(cmap);
+		   return NULL;
+	   }
 	}
 
 	if( add_colormap )
