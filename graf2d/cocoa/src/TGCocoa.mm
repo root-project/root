@@ -20,6 +20,7 @@
 
 #include <OpenGL/OpenGL.h>
 #include <Cocoa/Cocoa.h>
+#include <OpenGL/gl.h>
 
 #include "ROOTOpenGLView.h"
 #include "CocoaPrivate.h"
@@ -2477,26 +2478,16 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
 Handle_t TGCocoa::CreateOpenGLContext(Window_t windowID, Handle_t sharedID)
 {
    assert(!fPimpl->IsRootWindow(windowID) && "CreateOpenGLContext, windowID is a 'root' window");
-
    assert([fPimpl->GetWindow(windowID).fContentView isKindOfClass : [ROOTOpenGLView class]] && 
           "CreateOpenGLContext, view is not an OpenGL view");
-   
-   ROOTOpenGLView *glView = (ROOTOpenGLView *)fPimpl->GetWindow(windowID).fContentView;
-   //At the moment I can not have several gl contenxts, created for the same view.
-   assert([glView openGLContext] == nil && "CreateOpenGLContext, view's context is not nil");
-   NSOpenGLPixelFormat *pixelFormat = glView.pixelFormat;
 
-   NSOpenGLContext *sharedContext = nil;
+   NSOpenGLContext *sharedContext = fPimpl->GetGLContextForHandle(sharedID);
+   ROOTOpenGLView *glView = (ROOTOpenGLView *)fPimpl->GetWindow(windowID);
 
-   if (sharedID) {
-      NSObject<X11Window> *v = fPimpl->GetWindowForGLContext(sharedID);
-      assert([v isKindOfClass : [ROOTOpenGLView class]] && "CreateOpenGLContext, shared context's view is not an OpenGL view");
-      sharedContext = ((ROOTOpenGLView *)v).openGLContext;
-   }
-
-   Util::NSScopeGuard<NSOpenGLContext> newContext([[NSOpenGLContext alloc] initWithFormat : pixelFormat shareContext : sharedContext]);
-   glView.openGLContext = newContext.Get();   
-   const ULong_t ctxID = fPimpl->RegisterGLContextForView(windowID);
+   Util::NSScopeGuard<NSOpenGLContext> newContext([[NSOpenGLContext alloc] initWithFormat : glView.pixelFormat shareContext : sharedContext]);
+   [glView setOpenGLContext : newContext.Get()];
+  
+   const Handle_t ctxID = fPimpl->RegisterGLContext(newContext.Get());
    newContext.Release();
 
    return ctxID;
@@ -2509,22 +2500,70 @@ void TGCocoa::CreateOpenGLContext(Int_t /*wid*/)
 }
 
 //______________________________________________________________________________
-Bool_t TGCocoa::MakeOpenGLContextCurrent(Handle_t ctx)
+Bool_t TGCocoa::MakeOpenGLContextCurrent(Handle_t ctxID, Window_t windowID)
 {
-   assert(ctx > 0 && "MakeOpenGLContextCurrent, invalid context id");
+   assert(ctxID > 0 && "MakeOpenGLContextCurrent, invalid context id");
+
+   NSOpenGLContext *glContext = fPimpl->GetGLContextForHandle(ctxID);
+   if (!glContext) {
+      Error("MakeOpenGLContextCurrent", "No OpenGL context found for id %d", int(ctxID));
+
+      return kFALSE;
+   }
+
+   assert([fPimpl->GetWindow(windowID) isKindOfClass : [ROOTOpenGLView class]] && "MakeOpenGLContextCurrent, view is not an OpenGL view");
+   ROOTOpenGLView *glView = (ROOTOpenGLView *)fPimpl->GetWindow(windowID);
+
+   if ([glView isHiddenOrHasHiddenAncestor]) {
+      //This will result in "invalid drawable" message
+      //from -setView:.
+      return kFALSE;   
+   }
+
+   const NSRect visibleRect = [glView visibleRect];
+   if (visibleRect.size.width < 1. || visibleRect.size.height < 1.) {
+      //Another reason for "invalid drawable" message.
+      return kFALSE;
+   }
    
-   ROOTOpenGLView *glView = (ROOTOpenGLView *)fPimpl->GetWindowForGLContext(ctx);
-   [glView makeContextCurrent];
-   return [glView isGLContextCurrent];
+   if ([glContext view] != glView)
+      [glContext setView : glView];
+
+   [glView setOpenGLContext : glContext];
+   [glContext makeCurrentContext];
+
+   return kTRUE;
 }
 
 //______________________________________________________________________________
-void TGCocoa::FlushOpenGLBuffer(Handle_t ctx)
+Handle_t TGCocoa::GetCurrentOpenGLContext()
 {
-   assert(ctx > 0 && "FlushOpenGLBuffer, invalid context id");
+   NSOpenGLContext *currentContext = [NSOpenGLContext currentContext];
+   if (!currentContext) {
+      Error("GetCurrentOpenGLContext", "The current OpenGL context is null");
+      return Handle_t();
+   }
+   
+   const Handle_t contextID = fPimpl->GetHandleForGLContext(currentContext);
+   if (!contextID)
+      Error("GetCurrentOpenGLContext", "The current OpenGL context was not created/registered by TGCocoa");
+   
+   return contextID;
+}
 
-   ROOTOpenGLView *glView = (ROOTOpenGLView *)fPimpl->GetWindowForGLContext(ctx);
-   [glView flushGLBuffer];
+//______________________________________________________________________________
+void TGCocoa::FlushOpenGLBuffer(Handle_t ctxID)
+{
+   assert(ctxID > 0 && "FlushOpenGLBuffer, invalid context id");
+   
+   NSOpenGLContext *glContext = fPimpl->GetGLContextForHandle(ctxID);
+   assert(glContext != nil && "FlushOpenGLBuffer, bad context id");
+
+   if (glContext != [NSOpenGLContext currentContext])//???
+      return;
+
+   glFlush();//???
+   [glContext flushBuffer];
 }
 
 //______________________________________________________________________________

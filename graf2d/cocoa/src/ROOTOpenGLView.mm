@@ -1,6 +1,15 @@
-#import <cassert>
+// @(#)root/graf2d:$Id$
+// Author: Timur Pocheptsov   26/04/2012
 
-#import <OpenGL/gl.h>
+/*************************************************************************
+ * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#import <cassert>
 
 #import "ROOTOpenGLView.h"
 #import "QuartzWindow.h"
@@ -13,7 +22,6 @@
    
    NSOpenGLPixelFormat *fPixelFormat;
    NSOpenGLContext *fOpenGLContext;
-   BOOL fCtxIsCurrent;
 }
 
 @synthesize fID;
@@ -39,7 +47,6 @@
       fCurrentCursor = kPointer;
       fIsOverlapped = NO;
       fPixelFormat = [format retain];
-      fCtxIsCurrent = kFALSE;
       //Tracking area?
    }
 
@@ -51,7 +58,7 @@
 {
    [fPassiveKeyGrabs release];
    [fPixelFormat release];
-   [fOpenGLContext release];
+   //View does not own context.
 
    [super dealloc];
 }
@@ -71,36 +78,8 @@
 //______________________________________________________________________________
 - (void) setOpenGLContext : (NSOpenGLContext *) context
 {
-   if (context != fOpenGLContext) {
-      [fOpenGLContext release];
-      //
-      fOpenGLContext = [context retain];
-      if (![self isHidden])
-         [fOpenGLContext setView : self];
-   }
-}
-
-//______________________________________________________________________________
-- (void) makeContextCurrent
-{
-   fCtxIsCurrent = NO;
-   if (!fOpenGLContext)
-      return;
-   
-   if ([fOpenGLContext view] != self)
-      [fOpenGLContext setView : self];
-   
-   [fOpenGLContext makeCurrentContext];
-   fCtxIsCurrent = YES; 
-}
-
-//______________________________________________________________________________
-- (void) flushGLBuffer 
-{
-   assert(fOpenGLContext == [NSOpenGLContext currentContext] && "flushGLBuffer, view's GL context is not current");
-   //
-   glFlush();//???
-   [fOpenGLContext flushBuffer];
+   //View does not own context, no changes in any ref counter == weak reference.
+   fOpenGLContext = context;
 }
 
 //______________________________________________________________________________
@@ -119,12 +98,6 @@
 //______________________________________________________________________________
 - (void) update
 {
-}
-
-//______________________________________________________________________________
-- (BOOL) isGLContextCurrent
-{
-   return fCtxIsCurrent;
 }
 
 //X11Drawable protocol.
@@ -181,10 +154,23 @@
 }
 
 //______________________________________________________________________________
+- (BOOL) isFlipped 
+{
+   return YES;
+}
+
+//______________________________________________________________________________
 - (void) setOverlapped : (BOOL) overlap
 {
    fIsOverlapped = overlap;
    [self setHidden : fIsOverlapped];
+   if (!overlap) {
+      TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+      assert(vx != 0 && "setFrameSize:, gVirtualX is either null or has a type, different from TGCocoa");
+      [fOpenGLContext update];
+      vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
+      vx->GetEventTranslator()->GenerateExposeEvent(self, self.frame);
+   }
 }
 
 //______________________________________________________________________________
@@ -193,10 +179,50 @@
    fLevel = newLevel;
 }
 
+//______________________________________________________________________________
+- (void) setFrame : (NSRect) newFrame
+{
+   //In case of TBrowser, setFrame started infinite recursion:
+   //HandleConfigure for embedded main frame emits signal, slot
+   //calls layout, layout calls setFrame -> HandleConfigure and etc. etc.
+   if (CGRectEqualToRect(newFrame, self.frame))
+      return;
+
+   [super setFrame : newFrame];
+}
+
+//______________________________________________________________________________
+- (void) setFrameSize : (NSSize) newSize
+{
+   //Check, if setFrameSize calls setFrame.
+   
+   [super setFrameSize : newSize];
+   
+   [fOpenGLContext update];
+   
+   if ((fEventMask & kStructureNotifyMask) && (self.fMapState == kIsViewable || fIsOverlapped == YES)) {
+      TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+      assert(vx != 0 && "setFrameSize:, gVirtualX is either null or has a type, different from TGCocoa");
+      vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
+      vx->GetEventTranslator()->GenerateExposeEvent(self, self.frame);
+   }
+}
+
+//______________________________________________________________________________
+- (QuartzPixmap *) fBackBuffer
+{
+   return nil;
+}
+
+//______________________________________________________________________________
+- (void) setFBackBuffer : (QuartzPixmap *) bb
+{
+   (void)bb;
+}
+
 ////////
 //Shared methods:
 
 #import "SharedViewMethods.h"
 
 @end
-

@@ -159,18 +159,42 @@ void CocoaPrivate::DeleteDrawable(unsigned drawableID)
 }
 
 //______________________________________________________________________________
-ULong_t CocoaPrivate::RegisterGLContextForView(unsigned viewID)
+Handle_t CocoaPrivate::RegisterGLContext(NSOpenGLContext *glContext)
 {
-   //At the moment, let's assume we attach only 1 gl context to 1 view.
-   fGLContextMap[fFreeGLContextID] = viewID;
+   assert(fGLContextToHandle.find(glContext) == fGLContextToHandle.end() && "RegisterGLContext, context was registered already");
+
+   //Strong guarantee.
+
+   handle2ctx_map::iterator it = fHandleToGLContext.end();
+   try {
+      handle2ctx_map::value_type newVal(fFreeGLContextID, glContext);
+      it = fHandleToGLContext.insert(newVal).first;
+      fGLContextToHandle[glContext] = fFreeGLContextID;
+   } catch (const std::exception &) {//bad alloc in one of two insertions.
+      if (it != fHandleToGLContext.end())
+         fHandleToGLContext.erase(it);
+      throw;
+   }
+   
    return fFreeGLContextID++;
 }
 
 //______________________________________________________________________________
-NSObject<X11Window> *CocoaPrivate::GetWindowForGLContext(Handle_t glContextID)
+NSOpenGLContext *CocoaPrivate::GetGLContextForHandle(Handle_t ctxID)
 {
-   assert(fGLContextMap.find(glContextID) != fGLContextMap.end() && "GetWindowForGLContext, bad context id");
-   return GetWindow(fGLContextMap[glContextID]);
+   if (fHandleToGLContext.find(ctxID) == fHandleToGLContext.end())
+      return nil;
+   
+   return fHandleToGLContext[ctxID];
+}
+
+//______________________________________________________________________________
+Handle_t CocoaPrivate::GetHandleForGLContext(NSOpenGLContext *glContext)
+{
+   if (fGLContextToHandle.find(glContext) == fGLContextToHandle.end())
+      return Handle_t();
+   
+   return fGLContextToHandle[glContext];
 }
 
 //______________________________________________________________________________

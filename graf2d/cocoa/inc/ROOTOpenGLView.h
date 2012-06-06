@@ -34,10 +34,6 @@
 
 - (void) update;
 
-- (void) makeContextCurrent;
-- (BOOL) isGLContextCurrent;
-- (void) flushGLBuffer;
-
 //X11Drawable protocol
 
 @property (nonatomic, assign) unsigned fID;
@@ -64,6 +60,8 @@
 @property (nonatomic, assign) int           fDepth;
 @property (nonatomic, assign) int           fBitGravity;
 @property (nonatomic, assign) int           fWinGravity;
+
+@property (nonatomic, assign) QuartzPixmap *fBackBuffer;//nil.
 
 @property (nonatomic, assign) QuartzView          *fParentView;
 @property (nonatomic, assign) unsigned             fLevel;
