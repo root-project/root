@@ -239,6 +239,7 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    std::auto_ptr<TGLContextPrivate> safe_ptr(fPimpl = new TGLContextPrivate);
 
    fPimpl->fGLContext = gVirtualX->CreateOpenGLContext(widget->GetId(), shareList ? shareList->fPimpl->fGLContext : 0);
+   fPimpl->fWindowID = widget->GetId();
 
    fValid = kTRUE;
    fDevice->AddContext(this);
@@ -258,7 +259,7 @@ Bool_t TGLContext::MakeCurrent()
       return kFALSE;
    }
 
-   const Bool_t rez = gVirtualX->MakeOpenGLContextCurrent(fPimpl->fGLContext);
+   const Bool_t rez = gVirtualX->MakeOpenGLContextCurrent(fPimpl->fGLContext, fPimpl->fWindowID);
    if (rez) {
       if (!fgGlewInitDone)
          GlewInit();

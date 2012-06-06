@@ -10,6 +10,7 @@
 #include "TGLWSIncludes.h"
 #include "TGLContext.h"
 //#include "RConfigure.h"
+#include "GuiTypes.h"
 
 #ifdef WIN32
 
@@ -41,8 +42,9 @@ private:
 
 class TGLContextPrivate {
 public:
-
-   ULong_t fGLContext;
+   Handle_t fWindowID;
+   Handle_t fGLContext;
+   
 
    TGLContextPrivate()
       : fGLContext(0)
@@ -57,7 +59,7 @@ private:
    TGLContextPrivate(const TGLContextPrivate &);
    TGLContextPrivate &operator = (const TGLContextPrivate &);
 
-   static std::map<ULong_t, TGLContext *> fgContexts;
+   static std::map<Handle_t, TGLContext *> fgContexts;
 };
 
 #else

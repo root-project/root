@@ -108,6 +108,8 @@ TGLWidget* TGLWidget::Create(const TGLFormat &format,
 
 #ifdef WIN32
    glw->fWindowIndex = (Int_t) innerData.second;
+#elif defined(R__HAS_COCOA)
+   glw->fWindowIndex = wid;
 #else
    glw->fWindowIndex = gVirtualX->AddWindow(wid, width, height);
    glw->fInnerData   = innerData;
@@ -384,8 +386,8 @@ void TGLWidget::SetFormat()
 //==============================================================================
 
 //______________________________________________________________________________
-Window_t TGLWidget::CreateWindow(const TGWindow* /*parent*/, const TGLFormat &format,
-                                 UInt_t /*width*/, UInt_t /*height*/,
+Window_t TGLWidget::CreateWindow(const TGWindow* parent, const TGLFormat &format,
+                                 UInt_t width, UInt_t height,
                                  std::pair<void *, void *>& /*internalData*/)
 {
    // CreateWidget - MacOSX/Cocoa version.
@@ -408,10 +410,7 @@ Window_t TGLWidget::CreateWindow(const TGWindow* /*parent*/, const TGLFormat &fo
    if (format.HasMultiSampling())
       formatComponents.push_back(component_type(TGLFormat::kMultiSample, format.GetSamples()));
 
-   //return gVirtualX->CreateOpenGLWindow(parent->GetId(), width, height, formatComponents);
-
-   
-   return Window_t();
+   return gVirtualX->CreateOpenGLWindow(parent->GetId(), width, height, formatComponents);
 }
 
 //______________________________________________________________________________
