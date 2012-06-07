@@ -51,6 +51,7 @@ void cling::UserInterface::runInteractively(bool nologo /* = false */)
   MetaProcessorOpts& MPOpts = m_MetaProcessor->getMetaProcessorOpts();
 
   while (!MPOpts.Quitting) {
+    llvm::outs().flush();
     TextInput::EReadResult RR = TI.ReadInput();
     TI.TakeInput(line);
     if (RR == TextInput::kRREOF) {
