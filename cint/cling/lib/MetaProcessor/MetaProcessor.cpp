@@ -304,20 +304,21 @@ namespace cling {
     llvm::outs() << "Cling meta commands usage\n";
     llvm::outs() << "Syntax: .Command [arg0 arg1 ... argN]\n";
     llvm::outs() << "\n";
-    llvm::outs() << ".q\t\t\t\t - Exit the program\n";
+    llvm::outs() << ".q\t\t\t\t- Exit the program\n";
     llvm::outs() << ".L <filename>\t\t\t - Load file or library\n";
-    llvm::outs() << ".(x|X) <filename>[args]\t\t - Same as .L and runs a ";
-    llvm::outs() << "function with signature ret_type filename(args)\n";
-    llvm::outs() << ".I [path]\t\t\t - Shows the include path. If a path is ";
-    llvm::outs() << "given - adds the path to the include paths\n";
-    llvm::outs() << ".@ \t\t\t\t - Cancels and ignores the multiline input\n";
-    llvm::outs() << ".rawInput [0|1]\t\t\t - Toggle wrapping and printing ";
-    llvm::outs() << "the execution results of the input\n";
-    llvm::outs() << ".dynamicExtensions [0|1]\t - Toggles the use of the ";
-    llvm::outs() << "dynamic scopes and the late binding\n";
-    llvm::outs() << ".printAST [0|1]\t\t\t - Toggles the printing of input's ";
-    llvm::outs() << "corresponding AST nodes\n";
-    llvm::outs() << ".help\t\t\t\t - Shows this information\n";
+    llvm::outs() << ".(x|X) <filename>[args]\t\t- Same as .L and runs a ";
+    llvm::outs() << "function with signature ";
+	llvm::outs() << "\t\t\t\tret_type filename(args)\n";
+    llvm::outs() << ".I [path]\t\t\t- Shows the include path. If a path is ";
+    llvm::outs() << "given - \n\t\t\t\tadds the path to the include paths\n";
+    llvm::outs() << ".@ \t\t\t\t- Cancels and ignores the multiline input\n";
+    llvm::outs() << ".rawInput [0|1]\t\t\t- Toggle wrapping and printing ";
+    llvm::outs() << "the execution\n\t\t\t\tresults of the input\n";
+    llvm::outs() << ".dynamicExtensions [0|1]\t- Toggles the use of the ";
+    llvm::outs() << "dynamic scopes and the \t\t\t\tlate binding\n";
+    llvm::outs() << ".printAST [0|1]\t\t\t- Toggles the printing of input's ";
+    llvm::outs() << "corresponding \t\t\t\tAST nodes\n";
+    llvm::outs() << ".help\t\t\t\t- Shows this information\n";
   }
 
   void MetaProcessor::PrintFileStats() {
