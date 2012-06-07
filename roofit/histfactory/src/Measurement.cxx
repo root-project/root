@@ -129,10 +129,12 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
 
 
   // LM : fixes for Windows 
-  int success = gSystem->MakeDirectory(Directory.c_str() );    
-  if( success != 0 ) {
-    std::cout << "Error: Failed to make directory: " << Directory << std::endl;
-    throw hf_exc();
+  if( gSystem->OpenDirectory( Directory.c_str() ) == 0 ) {
+    int success = gSystem->MakeDirectory(Directory.c_str() );    
+    if( success != 0 ) {
+      std::cout << "Error: Failed to make directory: " << Directory << std::endl;
+      throw hf_exc();
+    }
   }
 
   // If supplied new Prefix, use that one:
