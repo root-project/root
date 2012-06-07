@@ -390,7 +390,7 @@ namespace cling {
 
     // print'em all
     for (unsigned i = 0; i < Res.size(); ++i) {
-      llvm::errs() << Res[i] <<"\n";
+      llvm::outs() << Res[i] <<"\n";
     }
   }
 

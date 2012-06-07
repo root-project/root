@@ -135,7 +135,7 @@ namespace cling {
        // toggle:
        bool print = !m_Interp.isPrintingAST();
        m_Interp.enablePrintAST(print);
-       llvm::errs()<< (print?"P":"Not p") << "rinting AST\n";
+       llvm::outs()<< (print?"P":"Not p") << "rinting AST\n";
      } else {
        Param = GetRawTokenName(Tok);
 
@@ -159,7 +159,7 @@ namespace cling {
      if (Tok.is(tok::eof)) {
        // toggle:
        m_Options.RawInput = !m_Options.RawInput;
-       llvm::errs() << (m_Options.RawInput?"U":"Not u") << "sing raw input\n";
+       llvm::outs() << (m_Options.RawInput?"U":"Not u") << "sing raw input\n";
      } else {
        Param = GetRawTokenName(Tok);
 
@@ -224,7 +224,7 @@ namespace cling {
        // toggle:
        bool dynlookup = !m_Interp.isDynamicLookupEnabled();
        m_Interp.enableDynamicLookup(dynlookup);
-       llvm::errs() << (dynlookup?"U":"Not u") <<"sing dynamic extensions\n";
+       llvm::outs() << (dynlookup?"U":"Not u") <<"sing dynamic extensions\n";
      } else {
        Param = GetRawTokenName(Tok);
 
