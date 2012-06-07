@@ -2156,9 +2156,13 @@ Int_t TBufferFile::WriteFastArray(void **start, const TClass *cl, Int_t n,
 
       for (Int_t j=0;j<n;j++) {
          //must write StreamerInfo if pointer is null
-         if (!strInfo && !start[j] ) {
-            TStreamerInfo *info = (TStreamerInfo*)((TClass*)cl)->GetStreamerInfo();
-            ForceWriteInfo(info,kFALSE);
+         if (!strInfo && !start[j]) {
+            if (cl->Property() & kIsAbstract) {
+               // Do not try to generate the StreamerInfo for an abstract class
+            } else {
+               TStreamerInfo *info = (TStreamerInfo*)((TClass*)cl)->GetStreamerInfo();
+               ForceWriteInfo(info,kFALSE);
+            }
          }
          strInfo = 2003;
          res |= WriteObjectAny(start[j],cl);
