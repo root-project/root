@@ -293,8 +293,11 @@ void TGLContext::SwapBuffers()
 //______________________________________________________________________________
 void TGLContext::Release()
 {
-   //Make the context invalid and (do thread switch, if needed)
-   //free resources.
+   //Make the context invalid and free resources.
+
+   TGLContextPrivate::RemoveContext(this);
+   gVirtualX->DeleteOpenGLContext(fPimpl->fGLContext);
+   fValid = kFALSE;
 }
 
 //==============================================================================
