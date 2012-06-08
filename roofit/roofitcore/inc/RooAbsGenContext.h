@@ -29,7 +29,7 @@ public:
 		   Bool_t _verbose= kFALSE) ;
   virtual ~RooAbsGenContext();
   
-  virtual RooDataSet *generate(Int_t nEvents= 0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE);
+  virtual RooDataSet *generate(Double_t nEvents= 0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE);
 
   Bool_t isValid() const { 
     // If true generator context is in a valid state

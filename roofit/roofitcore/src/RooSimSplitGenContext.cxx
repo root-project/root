@@ -207,18 +207,18 @@ void RooSimSplitGenContext::initGenerator(const RooArgSet &theEvent)
 
 
 //_____________________________________________________________________________
-RooDataSet* RooSimSplitGenContext::generate(Int_t nEvents, Bool_t skipInit, Bool_t extendedMode)
+RooDataSet* RooSimSplitGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t extendedMode)
 {
   if(!isValid()) {
     coutE(Generation) << ClassName() << "::" << GetName() << ": context is not valid" << endl;
     return 0;
   }
-  
+
+
   // Calculate the expected number of events if necessary
   if(nEvents <= 0) {
     nEvents= _expectedEvents;
   }
-  
   coutI(Generation) << ClassName() << "::" << GetName() << ":generate: will generate "
 		    << nEvents << " events" << endl;
     
@@ -231,15 +231,15 @@ RooDataSet* RooSimSplitGenContext::generate(Int_t nEvents, Bool_t skipInit, Bool
   }
 
   // Generate lookup table from expected event counts
-  vector<Int_t> nGen(_numPdf) ;
-  if (extendedMode) {
-
+  vector<Double_t> nGen(_numPdf) ;
+  if (extendedMode ) {
     _proxyIter->Reset() ;
     RooRealProxy* proxy ;
     Int_t i(0) ;
     while((proxy=(RooRealProxy*)_proxyIter->Next())) {
       RooAbsPdf* pdf=(RooAbsPdf*)proxy->absArg() ;
-      nGen[i] = Int_t(pdf->expectedEvents(&_allVarsPdf)+0.5) ;
+      //nGen[i] = Int_t(pdf->expectedEvents(&_allVarsPdf)+0.5) ;
+      nGen[i] = pdf->expectedEvents(&_allVarsPdf) ;
       i++ ;
     }     
     
@@ -271,6 +271,7 @@ RooDataSet* RooSimSplitGenContext::generate(Int_t nEvents, Bool_t skipInit, Bool
       }
     }
   }
+
     
 
   // Now loop over states

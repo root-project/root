@@ -133,9 +133,10 @@ void RooBinnedGenContext::setExpectedData(Bool_t flag)
 
 
 //_____________________________________________________________________________
-RooDataSet *RooBinnedGenContext::generate(Int_t nEvt, Bool_t /*skipInit*/, Bool_t extended)
+RooDataSet *RooBinnedGenContext::generate(Double_t nEvt, Bool_t /*skipInit*/, Bool_t extended)
 {
   
+
   // Scale to number of events and introduce Poisson fluctuations
   _hist->reset() ;
 
@@ -148,7 +149,7 @@ RooDataSet *RooBinnedGenContext::generate(Int_t nEvt, Bool_t /*skipInit*/, Bool_
       return 0 ;
     } else {
       // Don't round in expectedData mode
-      if (_expectedData) {
+      if (_expectedData || extended) {
 	nEvents = _pdf->expectedEvents(_vars) ;
       } else {
 	nEvents = Int_t(_pdf->expectedEvents(_vars)+0.5) ;

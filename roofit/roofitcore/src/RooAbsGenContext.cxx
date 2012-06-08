@@ -137,7 +137,7 @@ RooDataSet* RooAbsGenContext::createDataSet(const char* name, const char* title,
 
 
 //_____________________________________________________________________________
-RooDataSet *RooAbsGenContext::generate(Int_t nEvents, Bool_t skipInit, Bool_t extendedMode) 
+RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t extendedMode) 
 {
   // Generate the specified number of events with nEvents>0 and
   // and return a dataset containing the generated events. With nEvents<=0,

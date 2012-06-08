@@ -1714,7 +1714,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   if (protoData) {
     data = generate(whatVars,*protoData,nEvents,verbose,randProto,resampleProto) ;
   } else {
-    data = generate(whatVars,nEvents,verbose,autoBinned,binnedTag,expectedData) ;
+     data = generate(whatVars,nEvents,verbose,autoBinned,binnedTag,expectedData, extended) ;
   }
 
   // Rename dataset to given name if supplied
@@ -1841,7 +1841,7 @@ RooDataSet *RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) const
 
 
 //_____________________________________________________________________________
-RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t verbose, Bool_t autoBinned, const char* binnedTag, Bool_t expectedData) const 
+RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t verbose, Bool_t autoBinned, const char* binnedTag, Bool_t expectedData, Bool_t extended) const 
 {
   // Generate a new dataset containing the specified variables with
   // events sampled from our distribution. Generate the specified
@@ -1863,7 +1863,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t
   
   RooDataSet *generated = 0;
   if(0 != context && context->isValid()) {
-    generated= context->generate(nEvents);
+     generated= context->generate(nEvents, kFALSE, extended);
   }
   else {
     coutE(Generation)  << "RooAbsPdf::generate(" << GetName() << ") cannot create a valid context" << endl;
@@ -2117,7 +2117,8 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet& whatVars, const RooCmdAr
   const char* dsetName = pc.getString("dsetName") ;
 
   if (extended) {
-    nEvents = (nEvents==0?Int_t(expectedEvents(&whatVars)+0.5):nEvents) ;
+     //nEvents = (nEvents==0?Int_t(expectedEvents(&whatVars)+0.5):nEvents) ;
+    nEvents = (nEvents==0 ? expectedEvents(&whatVars) :nEvents) ;
     cxcoutI(Generation) << " Extended mode active, number of events generated (" << nEvents << ") is Poisson fluctuation on " 
 			<< GetName() << "::expectedEvents() = " << nEvents << endl ;
     // If Poisson fluctuation results in zero events, stop here
@@ -2168,8 +2169,9 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, Double_t nEven
       delete hist ;
       return 0 ;
     } else {
-      // Don't round in expectedData mode
-      if (expectedData) {
+
+      // Don't round in expectedData or extended mode
+      if (expectedData || extended) {
 	nEvents = expectedEvents(&whatVars) ;
       } else {
 	nEvents = Int_t(expectedEvents(&whatVars)+0.5) ;
