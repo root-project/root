@@ -63,7 +63,7 @@ public:
    virtual void        AddPoint(Double_t x, Double_t y, Double_t z, Double_t t) = 0;
    virtual TVirtualGeoTrack *FindTrackWithId(Int_t id) const;
    Int_t               GetId() const         {return fId;}
-   virtual Int_t       GetDaughterId(Int_t index) const {return GetDaughter(index)->GetId();}
+   virtual Int_t       GetDaughterId(Int_t index) const;
    TVirtualGeoTrack   *GetDaughter(Int_t index) const {return (TVirtualGeoTrack*)fTracks->At(index);}
    TVirtualGeoTrack   *GetMother() const {return fParent;}
    TObject            *GetMotherParticle() const {return (fParent)?fParent->GetParticle():0;}

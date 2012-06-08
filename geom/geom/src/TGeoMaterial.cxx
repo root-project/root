@@ -115,7 +115,7 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
    }
    if (fZ - Int_t(fZ) > 1E-3)
       Warning("ctor", "Material %s defined with fractional Z=%f", GetName(), fZ);
-   GetElement()->SetUsed();
+   if (GetElement()) GetElement()->SetUsed();
    gGeoManager->AddMaterial(this);
 }
 
@@ -146,7 +146,7 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rh
    }
    if (fZ - Int_t(fZ) > 1E-3)
       Warning("ctor", "Material %s defined with fractional Z=%f", GetName(), fZ);
-   GetElement()->SetUsed();
+   if (GetElement()) GetElement()->SetUsed();
    gGeoManager->AddMaterial(this);
 }
 
@@ -181,7 +181,7 @@ TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho)
    }
    if (fZ - Int_t(fZ) > 1E-3)
       Warning("ctor", "Material %s defined with fractional Z=%f", GetName(), fZ);
-   GetElement()->SetUsed();
+   if (GetElement()) GetElement()->SetUsed();
    gGeoManager->AddMaterial(this);
 }
 
