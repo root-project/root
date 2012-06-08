@@ -1,6 +1,8 @@
 
 #include "RooStats/HistFactory/Measurement.h"
 #include "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"
+#include "TFile.h"
+#include "TRoot.h"
 
 using namespace RooStats;
 using namespace HistFactory;
@@ -25,6 +27,12 @@ void example() {
 
 
   std::string InputFile = "./data/example.root";
+  // in case the file is not found
+  TFile * ifile = TFile::Open(InputFile.c_str());
+  if (!ifile) { 
+     std::cout << "Input file is not found - run prepareHistFactory script " << std::endl;
+     gROOT->ProcessLine(".! prepareHistFactory .");
+  }
 
   // Create the measurement
   Measurement meas("meas", "meas");
