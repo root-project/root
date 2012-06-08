@@ -35,7 +35,7 @@ public:
 
   virtual void printMultiline(ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
-  virtual RooDataSet *generate(Int_t nEvents= 0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE);
+  virtual RooDataSet *generate(Double_t nEvents= 0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE);
 
   virtual void setExpectedData(Bool_t) ;
 

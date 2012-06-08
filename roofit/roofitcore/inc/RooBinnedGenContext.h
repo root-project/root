@@ -33,7 +33,7 @@ public:
                    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
   virtual ~RooBinnedGenContext();
   
-  RooDataSet* generate(Int_t nEvents=0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE) ;
+  RooDataSet* generate(Double_t nEvents=0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE) ;
 
   virtual void setProtoDataOrder(Int_t*)  {}
 
