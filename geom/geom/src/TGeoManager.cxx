@@ -3632,6 +3632,7 @@ void TGeoManager::UpdateElements()
          for (i=0; i<nelem; i++) {
             elem = mix->GetElement(i);
             elem_table = fElementTable->GetElement(elem->Z());
+            if (!elem || !elem_table) continue;
             if (elem != elem_table) {
                elem_table->SetDefined(elem->IsDefined());
                elem_table->SetUsed(elem->IsUsed());

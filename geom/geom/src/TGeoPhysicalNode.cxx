@@ -177,11 +177,13 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
          // Clone daughter volume and node
          vd = node->GetVolume()->CloneVolume();
          if (!vd) {
+            delete [] id;
             Fatal("Align", "Cannot clone volume %s", node->GetVolume()->GetName());
             return;
          }   
          nnode = node->MakeCopyNode();
          if (!nnode) {
+            delete [] id;
             Fatal("Align", "Cannot make copy node for %s", node->GetName());
             return;
          }   
