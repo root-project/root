@@ -20,8 +20,10 @@
 #include <stdexcept>
 #include <cassert>
 
+#include <OpenGL/OpenGL.h>
 #include <Cocoa/Cocoa.h>
 
+#include "ROOTOpenGLView.h"
 #include "CocoaPrivate.h"
 #include "QuartzWindow.h"
 #include "CocoaUtils.h"
@@ -163,20 +165,34 @@ Handle_t CocoaPrivate::RegisterGLContext(NSOpenGLContext *glContext)
 {
    assert(fGLContextToHandle.find(glContext) == fGLContextToHandle.end() && "RegisterGLContext, context was registered already");
 
-   //Strong guarantee.
+   //Strong es-guarantee guarantee - if we have an exception, everything is rolled-back.
 
-   handle2ctx_map::iterator it = fHandleToGLContext.end();
+   bool contextInserted = false;
    try {
-      handle2ctx_map::value_type newVal(fFreeGLContextID, glContext);
-      it = fHandleToGLContext.insert(newVal).first;
+      fHandleToGLContext[fFreeGLContextID] = glContext;
+      contextInserted = true;
       fGLContextToHandle[glContext] = fFreeGLContextID;
    } catch (const std::exception &) {//bad alloc in one of two insertions.
-      if (it != fHandleToGLContext.end())
-         fHandleToGLContext.erase(it);
+      if (contextInserted)
+         fHandleToGLContext.erase(fHandleToGLContext.find(fFreeGLContextID));
       throw;
    }
    
    return fFreeGLContextID++;
+}
+
+//______________________________________________________________________________
+void CocoaPrivate::DeleteGLContext(Handle_t contextID)
+{
+   assert(fHandleToGLContext.find(contextID) != fHandleToGLContext.end() && "DeleteGLContext, bad context id");
+   
+   handle2ctx_map::iterator h2cIt = fHandleToGLContext.find(contextID);
+   
+   ctx2handle_map::iterator c2hIt = fGLContextToHandle.find(h2cIt->second.Get());
+   assert(c2hIt != fGLContextToHandle.end() && "DeleteGLContext, inconsistent context map");
+
+   fGLContextToHandle.erase(c2hIt);
+   fHandleToGLContext.erase(h2cIt);//RAII does work here.
 }
 
 //______________________________________________________________________________
@@ -185,7 +201,7 @@ NSOpenGLContext *CocoaPrivate::GetGLContextForHandle(Handle_t ctxID)
    if (fHandleToGLContext.find(ctxID) == fHandleToGLContext.end())
       return nil;
    
-   return fHandleToGLContext[ctxID];
+   return fHandleToGLContext[ctxID].Get();
 }
 
 //______________________________________________________________________________
@@ -195,6 +211,18 @@ Handle_t CocoaPrivate::GetHandleForGLContext(NSOpenGLContext *glContext)
       return Handle_t();
    
    return fGLContextToHandle[glContext];
+}
+
+//______________________________________________________________________________
+void CocoaPrivate::SetFakeGLWindow(QuartzWindow *fakeWin)
+{
+   fFakeGLWindow.Reset(fakeWin);
+}
+
+//______________________________________________________________________________
+QuartzWindow *CocoaPrivate::GetFakeGLWindow()
+{
+   return fFakeGLWindow.Get();
 }
 
 //______________________________________________________________________________

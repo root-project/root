@@ -41,6 +41,8 @@
 @class NSOpenGLContext;
 @class NSObject;
 
+@class QuartzWindow;
+
 class TGQuartz;
 class TGCocoa;
 
@@ -76,8 +78,12 @@ private:
    void                   DeleteDrawable(unsigned drawableID);
    
    Handle_t               RegisterGLContext(NSOpenGLContext *glContext);
+   void                   DeleteGLContext(Handle_t contextID);
    NSOpenGLContext       *GetGLContextForHandle(Handle_t contextID);
    Handle_t               GetHandleForGLContext(NSOpenGLContext *glContext);
+   
+   void                   SetFakeGLWindow(QuartzWindow *fakeWin);
+   QuartzWindow          *GetFakeGLWindow();
    
    //This function resets strong reference, if you still want NSObject for drawableID to live,
    //you have to retain the pointer (probably) and also drawableID will become id for nsObj (replacement).
@@ -85,31 +91,32 @@ private:
 
    //Color "parser": either parse string like "#ddeeaa", or
    //search rgb.txt like table for named color.
-   X11::ColorParser                            fX11ColorParser;
+   X11::ColorParser      fX11ColorParser;
    //Event translator, converts Cocoa events into X11 events
    //and generates X11 events.
-   X11::EventTranslator                        fX11EventTranslator;
+   X11::EventTranslator  fX11EventTranslator;
    //Command buffer - for "buffered" drawing commands.
-   X11::CommandBuffer                          fX11CommandBuffer;
+   X11::CommandBuffer    fX11CommandBuffer;
    //Font manager - cache CTFontRef for GUI.
-   FontCache                                   fFontManager;
+   FontCache             fFontManager;
 
    //Id for the new registered drawable.
-   unsigned                                    fCurrentDrawableID;
+   unsigned              fCurrentDrawableID;
    //Cache of ids.
-   std::vector<unsigned>                       fFreeDrawableIDs;
+   std::vector<unsigned> fFreeDrawableIDs;
    //Cocoa objects (views, windows, "pixmaps").
    std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> > > fDrawables;
    typedef std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> > >::iterator drawable_iterator;
    typedef std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> > >::const_iterator const_drawable_iterator;
    
-   typedef std::map<Handle_t, NSOpenGLContext *> handle2ctx_map;
+   typedef std::map<Handle_t, Util::NSStrongReference<NSOpenGLContext> > handle2ctx_map;
    typedef std::map<NSOpenGLContext *, Handle_t> ctx2handle_map;
    
    handle2ctx_map fHandleToGLContext;
    ctx2handle_map fGLContextToHandle;
 
    Handle_t fFreeGLContextID;
+   Util::NSStrongReference<QuartzWindow> fFakeGLWindow;
 };
 
 }//Details

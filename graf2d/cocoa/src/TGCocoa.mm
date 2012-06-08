@@ -74,7 +74,7 @@ namespace Details = ROOT::MacOSX::Details;
 namespace Util = ROOT::MacOSX::Util;
 namespace X11 = ROOT::MacOSX::X11;
 namespace Quartz = ROOT::Quartz;
-
+namespace OpenGL = ROOT::MacOSX::OpenGL;
 
 namespace {
 
@@ -2484,11 +2484,10 @@ Handle_t TGCocoa::CreateOpenGLContext(Window_t windowID, Handle_t sharedID)
    NSOpenGLContext *sharedContext = fPimpl->GetGLContextForHandle(sharedID);
    ROOTOpenGLView *glView = (ROOTOpenGLView *)fPimpl->GetWindow(windowID);
 
-   Util::NSScopeGuard<NSOpenGLContext> newContext([[NSOpenGLContext alloc] initWithFormat : glView.pixelFormat shareContext : sharedContext]);
+   const Util::NSScopeGuard<NSOpenGLContext> newContext([[NSOpenGLContext alloc] initWithFormat : glView.pixelFormat shareContext : sharedContext]);
    [glView setOpenGLContext : newContext.Get()];
   
    const Handle_t ctxID = fPimpl->RegisterGLContext(newContext.Get());
-   newContext.Release();
 
    return ctxID;
 }
@@ -2514,23 +2513,56 @@ Bool_t TGCocoa::MakeOpenGLContextCurrent(Handle_t ctxID, Window_t windowID)
    assert([fPimpl->GetWindow(windowID) isKindOfClass : [ROOTOpenGLView class]] && "MakeOpenGLContextCurrent, view is not an OpenGL view");
    ROOTOpenGLView *glView = (ROOTOpenGLView *)fPimpl->GetWindow(windowID);
 
-   if ([glView isHiddenOrHasHiddenAncestor]) {
-      //This will result in "invalid drawable" message
-      //from -setView:.
-      return kFALSE;   
-   }
+   if (OpenGL::GLViewIsValidDrawable(glView)) {
+      if ([glContext view] != glView)
+         [glContext setView : glView];
 
-   const NSRect visibleRect = [glView visibleRect];
-   if (visibleRect.size.width < 1. || visibleRect.size.height < 1.) {
-      //Another reason for "invalid drawable" message.
-      return kFALSE;
-   }
-   
-   if ([glContext view] != glView)
-      [glContext setView : glView];
+      [glView setOpenGLContext : glContext];
+      [glContext makeCurrentContext];
+      
+      return kTRUE;
+   } else {
+      //Oh, here's the real black magic.
+      //Our brilliant GL code is sure that MakeCurrent always succeeds.
+      //But it does not: if view is not visible, context can not be attached,
+      //gl operations will fail.
+      //Funny enough, but if you have invisible window with visible view,
+      //this trick works.
+      
+      //TODO: this code is a total mess, refactor.
 
-   [glView setOpenGLContext : glContext];
-   [glContext makeCurrentContext];
+      NSView *fakeView = nil;      
+      QuartzWindow *fakeWindow = fPimpl->GetFakeGLWindow();
+
+      if (!fakeWindow) {
+         //We did not find any window. Create a new one.
+         SetWindowAttributes_t attr = {};
+         const UInt_t width = std::max(glView.frame.size.width, CGFloat(100));//100 - is just a stupid hardcoded value.
+         const UInt_t height = std::max(glView.frame.size.height, CGFloat(100));
+
+         NSRect viewFrame = {};
+         viewFrame.size.width = width;
+         viewFrame.size.height = height;
+
+         const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+
+         //NOTE: defer parameter is 'NO', otherwise this trick will not help.
+         fakeWindow = [[QuartzWindow alloc] initWithContentRect : viewFrame styleMask : styleMask backing : NSBackingStoreBuffered defer : NO windowAttributes : &attr];
+         Util::NSScopeGuard<QuartzWindow> winGuard(fakeWindow);
+
+         fakeView = fakeWindow.fContentView;
+         [fakeView setHidden : NO];//!
+
+         fPimpl->SetFakeGLWindow(fakeWindow);//Can throw.
+         winGuard.Release();
+      } else {
+         fakeView = fakeWindow.fContentView;
+         [fakeView setHidden : NO];
+      }
+
+      [glContext setView : fakeView];
+      [glContext makeCurrentContext];
+   }
 
    return kTRUE;
 }
@@ -2567,9 +2599,25 @@ void TGCocoa::FlushOpenGLBuffer(Handle_t ctxID)
 }
 
 //______________________________________________________________________________
-void TGCocoa::DeleteOpenGLContext(Int_t /*wid*/)
+void TGCocoa::DeleteOpenGLContext(Int_t ctxID)
 {
-   // Deletes OpenGL context for window "wid"
+   //Historically, DeleteOpenGLContext was accepting window id,
+   //now it's a context id. DeleteOpenGLContext is not used in ROOT,
+   //only in TGLContext for Cocoa.
+   NSOpenGLContext *glContext = fPimpl->GetGLContextForHandle(ctxID);
+   
+   if (NSView *v = [glContext view]) {
+      if ([v isKindOfClass : [ROOTOpenGLView class]])
+         [(ROOTOpenGLView *)v setOpenGLContext : nil];
+   
+      [glContext clearDrawable];
+   }
+   
+   if (glContext == [NSOpenGLContext currentContext])
+      [NSOpenGLContext clearCurrentContext];
+
+   fPimpl->DeleteGLContext(ctxID);
+
 }
 
 //______________________________________________________________________________

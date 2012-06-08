@@ -16,6 +16,34 @@
 #import "X11Events.h"
 #import "TGCocoa.h"
 
+namespace ROOT {
+namespace MacOSX {
+namespace OpenGL {
+
+//______________________________________________________________________________
+bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
+{
+   assert(glView != nil && "GLViewIsValid, glView parameter is nil");
+   
+   if ([glView isHiddenOrHasHiddenAncestor]) {
+      //This will result in "invalid drawable" message
+      //from -setView:.
+      return false;
+   }
+
+   const NSRect visibleRect = [glView visibleRect];
+   if (visibleRect.size.width < 1. || visibleRect.size.height < 1.) {
+      //Another reason for "invalid drawable" message.
+      return false;
+   }
+
+   return true;
+}
+
+}
+}
+}
+
 @implementation ROOTOpenGLView {
    NSMutableArray *fPassiveKeyGrabs;
    BOOL            fIsOverlapped;
@@ -56,6 +84,7 @@
 //______________________________________________________________________________
 - (void) dealloc
 {
+   [fOpenGLContext clearDrawable];
    [fPassiveKeyGrabs release];
    [fPixelFormat release];
    //View does not own context.

@@ -104,4 +104,14 @@
 
 @end
 
+namespace ROOT {
+namespace MacOSX {
+namespace OpenGL {
+
+bool GLViewIsValidDrawable(ROOTOpenGLView *glView);
+
+}
+}
+}
+
 #endif
