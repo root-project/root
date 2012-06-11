@@ -1235,6 +1235,14 @@ void print_mask_info(ULong_t mask)
    return self;
 }
 
+//______________________________________________________________________________
+- (void) dealloc
+{
+   [fPassiveKeyGrabs release];
+   [fClipMask release];
+   [super dealloc];
+}
+
 //Overlap management.
 //______________________________________________________________________________
 - (BOOL) initClipMask

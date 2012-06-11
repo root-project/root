@@ -19,6 +19,7 @@
 
 #import "QuartzWindow.h"//TODO: Move conversion functions from QuartzWindow to X11Coords or something like this.
 #import "QuartzPixmap.h"
+#import "CocoaUtils.h"
 #import "X11Colors.h"
 
 //Call backs for data provider.
@@ -45,6 +46,8 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
 }
 
 }
+
+namespace Util = ROOT::MacOSX::Util;
 
 @implementation QuartzPixmap {
 @private
@@ -165,26 +168,23 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
                                                             ROOT_QuartzImage_GetBytesAtPosition, 0};
 
    
-   CGDataProviderRef provider = CGDataProviderCreateDirect(fData, fWidth * fHeight * 4, &providerCallbacks);
-   if (!provider) {
+   const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(fData, fWidth * fHeight * 4, &providerCallbacks));
+   if (!provider.Get()) {
       NSLog(@"QuartzPixmap: -pixmapToImage, CGDataProviderCreateDirect failed");
       return 0;
    }
 
    //RGB - this is only for TGCocoa::CreatePixmapFromData.
-   CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-   if (!colorSpace) {
+   const Util::CFScopeGuard<CGColorSpaceRef> colorSpace(CGColorSpaceCreateDeviceRGB());
+   if (!colorSpace.Get()) {
       NSLog(@"QuartzPixmap: -pixmapToImage, CGColorSpaceCreateDeviceRGB failed");
-      CGDataProviderRelease(provider);
       return 0;
    }
       
    //8 bits per component, 32 bits per pixel, 4 bytes per pixel, kCGImageAlphaLast:
    //all values hardcoded for TGCocoa.
-   CGImageRef image = CGImageCreate(cropArea.fWidth, cropArea.fHeight, 8, 32, fWidth * 4, colorSpace, kCGImageAlphaPremultipliedLast, provider, 0, false, kCGRenderingIntentDefault);
-   CGColorSpaceRelease(colorSpace);
-   CGDataProviderRelease(provider);
-   
+   CGImageRef image = CGImageCreate(cropArea.fWidth, cropArea.fHeight, 8, 32, fWidth * 4, colorSpace.Get(), kCGImageAlphaPremultipliedLast, provider.Get(), 0, false, kCGRenderingIntentDefault);
+
    return image;
 }
 
@@ -237,17 +237,17 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
       return;
    }
    
-   CGImageRef subImage = 0;
+   Util::CFScopeGuard<CGImageRef> subImage;
    bool needSubImage = false;
    if (area.fX || area.fY || area.fWidth != srcImage.fWidth || area.fHeight != srcImage.fHeight) {
       needSubImage = true;
-      subImage = CreateSubImage(srcImage, area);
-      if (!subImage) {
+      subImage.Reset(CreateSubImage(srcImage, area));
+      if (!subImage.Get()) {
          NSLog(@"QuartzPixmap: -copyImage:area:withMask:clipOrigin:toPoint:, subimage creation failed");
          return;
       }
    } else
-      subImage = srcImage.fImage;
+      subImage.Reset(srcImage.fImage);
 
    //Save context state.
    CGContextSaveGState(fContext);
@@ -266,12 +266,12 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
 
    dstPoint.fY = LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);
    const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
-   CGContextDrawImage(fContext, imageRect, subImage);
+   CGContextDrawImage(fContext, imageRect, subImage.Get());
    //Restore context state.
    CGContextRestoreGState(fContext);
 
-   if (needSubImage)
-      CGImageRelease(subImage);
+   if (!needSubImage)
+      subImage.Release();
 }
 
 //______________________________________________________________________________
@@ -286,12 +286,12 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
       return;
    }
    
-   CGImageRef image = [srcPixmap createImageFromPixmap : area];
-   
-   if (!image)
+   const Util::CFScopeGuard<CGImageRef> image([srcPixmap createImageFromPixmap : area]);   
+   if (!image.Get())
       return;
-      
+
    CGContextSaveGState(fContext);
+
    CGContextTranslateCTM(fContext, 0., fHeight);
    CGContextScaleCTM(fContext, 1., -1.);
    
@@ -305,11 +305,10 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
    
    dstPoint.fY = LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);
    const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
-   CGContextDrawImage(fContext, imageRect, image);
+   CGContextDrawImage(fContext, imageRect, image.Get());
+
    //Restore context state.
    CGContextRestoreGState(fContext);
-
-   CGImageRelease(image);
 }
 
 //______________________________________________________________________________
@@ -359,25 +358,22 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
 
       //This w * h * 4 is ONLY for TGCocoa::CreatePixmapFromData.
       //If needed something else, I'll make this code more generic.
-      CGDataProviderRef provider = CGDataProviderCreateDirect(data, width * height * 4, &providerCallbacks);
-      if (!provider) {
+      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(data, width * height * 4, &providerCallbacks));
+      if (!provider.Get()) {
          NSLog(@"QuartzPixmap: -initWithW:H:data: CGDataProviderCreateDirect failed");
          return nil;
       }
       
       //RGB - this is only for TGCocoa::CreatePixmapFromData.
-      CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-      if (!colorSpace) {
+      const Util::CFScopeGuard<CGColorSpaceRef> colorSpace(CGColorSpaceCreateDeviceRGB());
+      if (!colorSpace.Get()) {
          NSLog(@"QuartzPixmap: -initWithW:H:data: CGColorSpaceCreateDeviceRGB failed");
-         CGDataProviderRelease(provider);
          return nil;
       }
-      
+
       //8 bits per component, 32 bits per pixel, 4 bytes per pixel, kCGImageAlphaLast:
       //all values hardcoded for TGCocoa::CreatePixmapFromData.
-      fImage = CGImageCreate(width, height, 8, 32, width * 4, colorSpace, kCGImageAlphaLast, provider, 0, false, kCGRenderingIntentDefault);
-      CGColorSpaceRelease(colorSpace);
-      CGDataProviderRelease(provider);
+      fImage = CGImageCreate(width, height, 8, 32, width * 4, colorSpace.Get(), kCGImageAlphaLast, provider.Get(), 0, false, kCGRenderingIntentDefault);
       
       if (!fImage) {
          NSLog(@"QuartzPixmap: -initWithW:H:data: CGImageCreate failed");
@@ -386,7 +382,6 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
 
       fWidth = width;
       fHeight = height;
-
       fImageData = data;
 
       return self;
@@ -407,20 +402,20 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
       const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer, 
                                                                ROOT_QuartzImage_ReleaseBytePointer, 
                                                                ROOT_QuartzImage_GetBytesAtPosition, 0};
-      CGDataProviderRef provider = CGDataProviderCreateDirect(mask, width * height, &providerCallbacks);
-      if (!provider) {
+                                                               
+                                                               
+      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(mask, width * height, &providerCallbacks));
+      if (!provider.Get()) {
          NSLog(@"QuartzPixmap: -initMaskWithW:H:bitmapMask: CGDataProviderCreateDirect failed");
          return nil;
       }
 
-      fImage = CGImageMaskCreate(width, height, 8, 8, width, provider, 0, false);//null -> decode, false -> shouldInterpolate.
-      CGDataProviderRelease(provider);
-
+      fImage = CGImageMaskCreate(width, height, 8, 8, width, provider.Get(), 0, false);//null -> decode, false -> shouldInterpolate.
       if (!fImage) {
          NSLog(@"QuartzPixmap: -initMaskWithW:H:bitmapMask:, CGImageMaskCreate failed");
          return nil;
       }
-      
+
       fWidth = width;
       fHeight = height;
       fImageData = mask;
@@ -443,17 +438,16 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
       const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer, 
                                                                ROOT_QuartzImage_ReleaseBytePointer, 
                                                                ROOT_QuartzImage_GetBytesAtPosition, 0};
-      CGDataProviderRef provider = CGDataProviderCreateDirect(fImageData, width * height, &providerCallbacks);
-      if (!provider) {
+                                                               
+      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(fImageData, width * height, &providerCallbacks));
+      if (!provider.Get()) {
          NSLog(@"QuartzPixmap: -initMaskWithW:H: CGDataProviderCreateDirect failed");
          delete [] fImageData;
          fImageData = 0;
          return nil;
       }
 
-      fImage = CGImageMaskCreate(width, height, 8, 8, width, provider, 0, false);//null -> decode, false -> shouldInterpolate.
-      CGDataProviderRelease(provider);
-
+      fImage = CGImageMaskCreate(width, height, 8, 8, width, provider.Get(), 0, false);//null -> decode, false -> shouldInterpolate.
       if (!fImage) {
          NSLog(@"QuartzPixmap: -initMaskWithW:H:, CGImageMaskCreate failed");
          delete [] fImageData;
