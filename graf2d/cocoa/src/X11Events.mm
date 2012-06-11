@@ -1341,7 +1341,7 @@ void EventTranslator::GeneratePointerMotionEventActiveGrab(NSView<X11Window> * /
          NSView<X11Window> *candidateView = (NSView<X11Window> *)[[topLevel contentView] hitTest : mousePosition];
          if (candidateView) {
             //Do propagation.
-            candidateView = Detail::FindViewToPropagateEvent(candidateView, kPointerMotionMask, fButtonGrabView, fGrabEventMask);
+            candidateView = Detail::FindViewToPropagateEvent(candidateView, kPointerMotionMask | kButtonMotionMask, fButtonGrabView, fGrabEventMask);
             if (candidateView) {//We have such a view, send event to a corresponding ROOT's window.
                Detail::SendPointerMotionEvent(candidateView, theEvent);
             }
