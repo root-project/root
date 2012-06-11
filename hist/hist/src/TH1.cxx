@@ -5081,20 +5081,34 @@ Long64_t TH1::Merge(TCollection *li)
    Bool_t allHaveLimits = kTRUE;
    Bool_t allSameLimits = kTRUE;
    Bool_t foundLabelHist = kFALSE;
+   Bool_t firstNonEmptyHist = kTRUE;
 
 
    TIter next(&inlist);
    // start looping with this histogram 
    TH1 * h = this; 
+
    do  {
       // skip empty histograms
       if (h->fTsumw == 0 && h->GetEntries() == 0) continue;
+
 
       Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
       allHaveLimits = allHaveLimits && hasLimits;
 
       if (hasLimits) {
          h->BufferEmpty();
+
+         // this is done in case the first histograms are empty and 
+         // the histogram have different limits
+         if (firstNonEmptyHist ) { 
+            // set axis limits in the case the first histogram was empty
+            if (h != this && !SameLimitsAndNBins( fXaxis, *h->GetXaxis()) ) { 
+               fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),h->GetXaxis()->GetXmax());
+            }
+            firstNonEmptyHist = kFALSE;     
+         }
+
          // this is executed the first time an histogram with limits is found
          // to set some initial values on the new axis
          if (!initialLimitsFound) {

@@ -1446,6 +1446,7 @@ Long64_t TH2::Merge(TCollection *list)
    Bool_t initialLimitsFound = kFALSE;
    Bool_t allSameLimits = kTRUE;
    Bool_t allHaveLimits = kTRUE;
+   Bool_t firstNonEmptyHist = kTRUE;
 
    TIter next(&inlist);
    TH2 * h = this;
@@ -1458,6 +1459,20 @@ Long64_t TH2::Merge(TCollection *list)
 
       if (hasLimits) {
          h->BufferEmpty();
+
+         // this is done in case the first histograms are empty and 
+         // the histogram have different limits
+         if (firstNonEmptyHist ) { 
+            // set axis limits in the case the first histogram was empty
+            if (h != this ) { 
+               if (!SameLimitsAndNBins(fXaxis, *(h->GetXaxis())) ) 
+                  fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),h->GetXaxis()->GetXmax());
+               if (!SameLimitsAndNBins(fYaxis, *(h->GetYaxis())) ) 
+                  fYaxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),h->GetYaxis()->GetXmax());
+            }
+            firstNonEmptyHist = kFALSE;     
+         }
+
          if (!initialLimitsFound) {
             // this is executed the first time an histogram with limits is found
             // to set some initial values on the new axes
