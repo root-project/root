@@ -170,7 +170,7 @@ private:
       virtual ~TFileTree();
    };
 
-   TTree* Load(TDSetElement *elem, Bool_t &localfile);
+   TTree* Load(TDSetElement *elem, Bool_t &localfile, const char *objname = 0);
    TTree* GetTrees(TDSetElement *elem);
 public:
    TEventIterTree();

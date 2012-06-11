@@ -731,7 +731,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
             uf.SetOptions(uo);
             dse->SetName(uf.GetUrl());
          }
-         TTree *friendTree = Load(dse, loc);
+         TTree *friendTree = Load(dse, loc, dse->GetObjName());
          if (friendTree && main) {
             // Make sure it has not yet been added
             Bool_t addfriend = kTRUE;
@@ -772,7 +772,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
 }
 
 //______________________________________________________________________________
-TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile)
+TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile, const char *objname)
 {
    // Load a tree from s TDSetElement
 
@@ -783,7 +783,14 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile)
 
    const char *fn = e->GetFileName();
    const char *dn = e->GetDirectory();
-   const char *tn = e->GetObjName();
+   const char *tn = 0;
+   if (objname && strlen(objname) > 0) {
+      tn = objname;
+   } else {
+      tn = (fDSet->GetObjName() && strlen(fDSet->GetObjName()) > 0)
+         ? fDSet->GetObjName() : e->GetObjName();
+      if (!tn || (tn && strlen(tn) <= 0)) tn = "*";
+   }
    PDB(kLoop,2)
       Info("Load","loading: fn:'%s' dn:'%s' tn:'%s'", fn, dn, tn);
 

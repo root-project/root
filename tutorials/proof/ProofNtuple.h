@@ -24,11 +24,12 @@ public :
    TFile            *fFile;
    TProofOutputFile *fProofFile; // For optimized merging of the ntuple
    TNtuple          *fNtp;
+   TNtuple          *fNtp2;      // To test double TTree in the same file
    TRandom3         *fRandom;
    Bool_t            fPlotNtuple;
    TNtuple          *fNtpRndm;   // Ntuple with random numbers
 
-   ProofNtuple() : fFile(0), fProofFile(0), fNtp(0), fRandom(0), fPlotNtuple(kTRUE), fNtpRndm(0)  { }
+   ProofNtuple() : fFile(0), fProofFile(0), fNtp(0), fNtp2(0), fRandom(0), fPlotNtuple(kTRUE), fNtpRndm(0)  { }
    virtual ~ProofNtuple();
    virtual Int_t   Version() const { return 2; }
    virtual void    Begin(TTree *tree);
