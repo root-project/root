@@ -2287,8 +2287,10 @@ Double_t TEfficiency::GetEfficiency(Int_t bin) const
 	Double_t tw2 = fTotalHistogram->GetSumw2()->At(bin);
 	Double_t pw =  fPassedHistogram->GetBinContent(bin);
 
+        if (tw2 <= 0 ) return pw/tw; 
+
 	// tw/tw2 renormalize the weights
-	double norm = (tw2 > 0) ? tw/tw2 : 0.;
+	double norm = tw/tw2;
 	aa =  pw * norm + alpha;
 	bb =  (tw - pw) * norm + beta;	
       }
@@ -2338,8 +2340,10 @@ Double_t TEfficiency::GetEfficiencyErrorLow(Int_t bin) const
        Double_t alpha = TestBit(kUseBinPrior) ? GetBetaAlpha(bin) : GetBetaAlpha(); 
        Double_t beta  = TestBit(kUseBinPrior) ? GetBetaBeta(bin)  : GetBetaBeta();
 
+       if (tw2 <= 0) return 0; 
+
        // tw/tw2 renormalize the weights
-       Double_t norm = (tw2 > 0) ? tw/tw2 : 0.;
+       Double_t norm = tw/tw2;
        Double_t aa =  pw * norm + alpha;
        Double_t bb =  (tw - pw) * norm + beta;
        Double_t low = 0;
@@ -2415,8 +2419,10 @@ Double_t TEfficiency::GetEfficiencyErrorUp(Int_t bin) const
        Double_t alpha = TestBit(kUseBinPrior) ? GetBetaAlpha(bin) : GetBetaAlpha(); 
        Double_t beta  = TestBit(kUseBinPrior) ? GetBetaBeta(bin)  : GetBetaBeta();
 
+       if (tw2 <= 0) return 0; 
+
        // tw/tw2 renormalize the weights
-       Double_t norm = (tw2 > 0) ? tw/tw2 : 0.;
+       Double_t norm = tw/tw2;
        Double_t aa =  pw * norm + alpha;
        Double_t bb =  (tw - pw) * norm + beta;
        Double_t low = 0;

@@ -636,29 +636,38 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
 
 
       //using bayesian statistics
-      if(bIsBayesian) {
+      if(bIsBayesian) {         
          double aa,bb;
-         if (bEffective) {
-            // tw/tw2 renormalize the weights
-            double norm = (tw2 > 0) ? tw/tw2 : 0.;
-            aa =  pw * norm + alpha;
-            bb =  (tw - pw) * norm + beta;
-         }
-         else {
-            aa = double(p) + alpha;
-            bb = double(t-p) + beta;
-         }
-         if (usePosteriorMode)
-            eff = TEfficiency::BetaMode(aa,bb);
-         else
-            eff = TEfficiency::BetaMean(aa,bb);
 
-         if (useShortestInterval) {
-            TEfficiency::BetaShortestInterval(conf,aa,bb,low,upper);
+         if (bEffective && tw2 <= 0) { 
+            // case of bins with zero errors 
+            eff = pw/tw; 
+            low = eff; upper = eff;
          }
-         else {
-            low = TEfficiency::BetaCentralInterval(conf,aa,bb,false);
-            upper = TEfficiency::BetaCentralInterval(conf,aa,bb,true);
+         else { 
+
+            if (bEffective) {
+               // tw/tw2 renormalize the weights
+               double norm = tw/tw2;  // case of tw2 = 0 is treated above
+               aa =  pw * norm + alpha;
+               bb =  (tw - pw) * norm + beta;
+            }
+            else {
+               aa = double(p) + alpha;
+               bb = double(t-p) + beta;
+            }
+            if (usePosteriorMode)
+               eff = TEfficiency::BetaMode(aa,bb);
+            else
+               eff = TEfficiency::BetaMean(aa,bb);
+            
+            if (useShortestInterval) {
+               TEfficiency::BetaShortestInterval(conf,aa,bb,low,upper);
+            }
+            else {
+               low = TEfficiency::BetaCentralInterval(conf,aa,bb,false);
+               upper = TEfficiency::BetaCentralInterval(conf,aa,bb,true);
+            }
          }
       }
       // case of non-bayesian statistics
