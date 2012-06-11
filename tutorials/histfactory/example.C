@@ -2,7 +2,7 @@
 #include "RooStats/HistFactory/Measurement.h"
 #include "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"
 #include "TFile.h"
-#include "TRoot.h"
+#include "TROOT.h"
 
 using namespace RooStats;
 using namespace HistFactory;
