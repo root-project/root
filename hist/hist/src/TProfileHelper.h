@@ -171,6 +171,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
    Bool_t initialLimitsFound = kFALSE;
    Bool_t allSameLimits = kTRUE;
    Bool_t allHaveLimits = kTRUE;
+   Bool_t firstNonEmptyHist = kTRUE;
 
    TIter next(&inlist);
    T* h = p;
@@ -185,6 +186,24 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
 
       if (hasLimits) {
          h->BufferEmpty();
+
+         // this is done in case the first histograms are empty and 
+         // the histogram have different limits
+         if (firstNonEmptyHist ) { 
+            // set axis limits in the case the first histogram was empty
+            if (h != p ) { 
+               if (!p->SameLimitsAndNBins(p->fXaxis, *(h->GetXaxis())) ) 
+                  p->fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),h->GetXaxis()->GetXmax());
+               if (!p->SameLimitsAndNBins(p->fYaxis, *(h->GetYaxis())) ) 
+                  p->fYaxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),h->GetYaxis()->GetXmax());
+               if (!p->SameLimitsAndNBins(p->fZaxis, *(h->GetZaxis())) ) 
+                  p->fZaxis.Set(h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),h->GetZaxis()->GetXmax());
+            }
+            firstNonEmptyHist = kFALSE;     
+         }
+
+         // this is executed the first time an histogram with limits is found
+         // to set some initial values on the new axis
          if (!initialLimitsFound) {
             initialLimitsFound = kTRUE;
             newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
