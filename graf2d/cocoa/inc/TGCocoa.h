@@ -34,23 +34,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-namespace ROOT {
-namespace Quartz {
-
-class CGStateGuard {
-public:
-   CGStateGuard(void *ctx);
-   ~CGStateGuard();
-   
-private:
-   void *fCtx;
-   
-   CGStateGuard(const CGStateGuard &rhs);
-   CGStateGuard &operator = (const CGStateGuard &rhs);
-};
-
-}
-   
+namespace ROOT {   
 namespace MacOSX {
 
 namespace X11 {

@@ -21,6 +21,7 @@
 #include "CocoaPrivate.h"
 #include "QuartzWindow.h"
 #include "QuartzPixmap.h"
+#include "QuartzUtils.h"
 #include "X11Drawable.h"
 #include "X11Buffer.h"
 #include "TGWindow.h"

@@ -23,6 +23,7 @@
 #include "QuartzMarker.h"
 #include "CocoaPrivate.h"
 #include "QuartzWindow.h"
+#include "QuartzUtils.h"
 #include "X11Drawable.h"
 #include "QuartzText.h"
 #include "QuartzLine.h"

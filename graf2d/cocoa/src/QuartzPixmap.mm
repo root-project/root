@@ -17,8 +17,9 @@
 #import <cassert>
 #import <cstddef>
 
-#import "QuartzWindow.h"//TODO: Move conversion functions from QuartzWindow to X11Coords or something like this.
+#import "QuartzWindow.h"
 #import "QuartzPixmap.h"
+#import "QuartzUtils.h"
 #import "CocoaUtils.h"
 #import "X11Colors.h"
 
@@ -48,6 +49,7 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
 }
 
 namespace Util = ROOT::MacOSX::Util;
+namespace Quartz = ROOT::Quartz;
 
 @implementation QuartzPixmap {
 @private
@@ -250,7 +252,7 @@ namespace Util = ROOT::MacOSX::Util;
       subImage.Reset(srcImage.fImage);
 
    //Save context state.
-   CGContextSaveGState(fContext);
+   const Quartz::CGStateGuard stateGuard(fContext);
 
    CGContextTranslateCTM(fContext, 0., fHeight);
    CGContextScaleCTM(fContext, 1., -1.);
@@ -267,8 +269,6 @@ namespace Util = ROOT::MacOSX::Util;
    dstPoint.fY = LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);
    const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
    CGContextDrawImage(fContext, imageRect, subImage.Get());
-   //Restore context state.
-   CGContextRestoreGState(fContext);
 
    if (!needSubImage)
       subImage.Release();
@@ -290,7 +290,7 @@ namespace Util = ROOT::MacOSX::Util;
    if (!image.Get())
       return;
 
-   CGContextSaveGState(fContext);
+   const Quartz::CGStateGuard stateGuard(fContext);
 
    CGContextTranslateCTM(fContext, 0., fHeight);
    CGContextScaleCTM(fContext, 1., -1.);
@@ -306,9 +306,6 @@ namespace Util = ROOT::MacOSX::Util;
    dstPoint.fY = LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);
    const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
    CGContextDrawImage(fContext, imageRect, image.Get());
-
-   //Restore context state.
-   CGContextRestoreGState(fContext);
 }
 
 //______________________________________________________________________________
