@@ -50,9 +50,13 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
    
    NSOpenGLPixelFormat *fPixelFormat;
    NSOpenGLContext *fOpenGLContext;
+   
+   BOOL fUpdateContext;
 }
 
+@synthesize fUpdateContext;
 @synthesize fID;
+
 @synthesize fEventMask;
 @synthesize fParentView;
 @synthesize fLevel;
@@ -65,6 +69,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 @synthesize fBitGravity;
 @synthesize fWinGravity;
 @synthesize fClass;
+
 
 //______________________________________________________________________________
 - (id) initWithFrame : (NSRect) frameRect pixelFormat : (NSOpenGLPixelFormat *) format
@@ -84,24 +89,14 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 //______________________________________________________________________________
 - (void) dealloc
 {
-   [fOpenGLContext clearDrawable];
+   if (fOpenGLContext && [fOpenGLContext view] == self)
+      [fOpenGLContext clearDrawable];
+
    [fPassiveKeyGrabs release];
    [fPixelFormat release];
    //View does not own context.
 
    [super dealloc];
-}
-
-//______________________________________________________________________________
-- (void) clearGLContext
-{
-   //[NSOpenGLContext clearCurrentContext];
-}
-
-//______________________________________________________________________________
-- (NSOpenGLContext *) openGLContext
-{
-   return fOpenGLContext;
 }
 
 //______________________________________________________________________________
@@ -120,13 +115,10 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 //______________________________________________________________________________
 - (void) setPixelFormat : (NSOpenGLPixelFormat *) pixelFormat
 {
-   (void)pixelFormat;
-   //Do not modify fPixelFormat.
-}
-
-//______________________________________________________________________________
-- (void) update
-{
+   if (fPixelFormat != pixelFormat) {
+      [fPixelFormat release];
+      fPixelFormat = [pixelFormat retain];
+   }
 }
 
 //X11Drawable protocol.
@@ -148,6 +140,20 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 {
    assert(attr && "getAttributes, attr parameter is nil");
    ROOT::MacOSX::X11::GetWindowAttributes(self, attr);
+}
+
+//______________________________________________________________________________
+- (QuartzPixmap *) fBackBuffer
+{
+   //GL-view does not have/need any "back buffer".
+   return nil;
+}
+
+//______________________________________________________________________________
+- (void) setFBackBuffer : (QuartzPixmap *) notUsed
+{
+   //GL-view does not have/need any "back buffer".
+   (void)notUsed;
 }
 
 //______________________________________________________________________________
@@ -183,20 +189,21 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 }
 
 //______________________________________________________________________________
-- (BOOL) isFlipped 
-{
-   return YES;
-}
-
-//______________________________________________________________________________
 - (void) setOverlapped : (BOOL) overlap
 {
+   //If GL-view is overlapped by another view,
+   //it must be hidden (overwise it will be always on top,
+   //producing some strange-looking buggy GUI).
+
    fIsOverlapped = overlap;
    [self setHidden : fIsOverlapped];
+
    if (!overlap) {
       TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
       assert(vx != 0 && "setFrameSize:, gVirtualX is either null or has a type, different from TGCocoa");
       [fOpenGLContext update];
+      //View becomes visible, geometry can be changed at this point,
+      //notify ROOT's GL code about this changes.
       vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
       vx->GetEventTranslator()->GenerateExposeEvent(self, self.frame);
    }
@@ -206,6 +213,12 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 - (void) updateLevel : (unsigned) newLevel
 {
    fLevel = newLevel;
+}
+
+//______________________________________________________________________________
+- (BOOL) isFlipped 
+{
+   return YES;
 }
 
 //______________________________________________________________________________
@@ -227,7 +240,10 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
    
    [super setFrameSize : newSize];
    
-   [fOpenGLContext update];
+   if (![self isHiddenOrHasHiddenAncestor] && !fIsOverlapped)
+      [fOpenGLContext update];
+   else 
+      fUpdateContext = YES;
    
    if ((fEventMask & kStructureNotifyMask) && (self.fMapState == kIsViewable || fIsOverlapped == YES)) {
       TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
@@ -237,20 +253,17 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
    }
 }
 
-//______________________________________________________________________________
-- (QuartzPixmap *) fBackBuffer
-{
-   return nil;
-}
-
-//______________________________________________________________________________
-- (void) setFBackBuffer : (QuartzPixmap *) bb
-{
-   (void)bb;
-}
-
 ////////
 //Shared methods:
+//-setDrawableSize : (NSSize) newSize;
+//-setX:Y:width:height;
+//-setX:Y:;
+//-addPassiveKeyGrab:modifiers:;
+//-removePassiveKeyGrab:modifiers:;
+//-findPassiveKeyGrab:modifiers:;
+//-findPassiveKeyGrab:;
+//...
+//+ mouse and keyboard events.
 
 #import "SharedViewMethods.h"
 
