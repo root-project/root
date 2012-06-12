@@ -42,6 +42,7 @@ public:
 
 private:
    ENodeType fNodeType;  // Distinction between master, submaster and worker
+   TString   fName;      // Tag of the node (name:port)
    TString   fNodeName;  // Name of the node
    TString   fWorkDir;   // Working directory
    TString   fOrdinal;   // Worker ordinal number
@@ -51,6 +52,7 @@ private:
    TString   fMsd;       // Msd value [for submasters]
    Int_t     fPort;      // Port number
    Int_t     fPerfIndex; // Performance index
+   Int_t     fNWrks;     // Number of workers (when kSubMaster)
 
    void operator=(const TProofNodeInfo &);    // idem
 
@@ -60,6 +62,7 @@ public:
    TProofNodeInfo(const TProofNodeInfo &nodeInfo);
    ~TProofNodeInfo() { }
 
+   const char    *GetName() const { return fName; }
    ENodeType      GetNodeType() const { return fNodeType; }
    const TString &GetNodeName() const { return fNodeName; }
    const TString &GetWorkDir() const { return fWorkDir; }
@@ -70,6 +73,14 @@ public:
    const TString &GetMsd() const { return fMsd; }
    Int_t          GetPort() const { return fPort; }
    Int_t          GetPerfIndex() const { return fPerfIndex; }
+   Int_t          GetNWrks() const { return fNWrks; }
+
+   Bool_t         IsMaster() const { return (fNodeType == kMaster) ? kTRUE : kFALSE; }
+   Bool_t         IsSubMaster() const { return (fNodeType == kSubMaster) ? kTRUE : kFALSE; }
+   Bool_t         IsWorker() const { return (fNodeType == kWorker) ? kTRUE : kFALSE; }
+
+   void           SetNodeType(ENodeType nt) { fNodeType = nt; }
+   void           SetNWrks(Int_t nw) { fNWrks = nw; }
 
    void Assign(const TProofNodeInfo &n);
 

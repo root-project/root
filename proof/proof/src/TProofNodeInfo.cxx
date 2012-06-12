@@ -25,25 +25,16 @@
 
 ClassImp(TProofNodeInfo)
 
-// Macros used in decoding serialized info
-#define PNISETANY(a) \
-  { if (os->String() != "-") { a; } \
-    if (!(os = (TObjString *) nxos())) return; }
-#define PNISETSTRING(s) PNISETANY(s = os->GetName())
-#define PNISETINT(i) PNISETANY(i = os->String().Atoi())
-
 //______________________________________________________________________________
-TProofNodeInfo::TProofNodeInfo():
-   fNodeType(kWorker),
-   fPort(-1),
-   fPerfIndex(100)
+TProofNodeInfo::TProofNodeInfo()
+               : fNodeType(kWorker), fPort(-1), fPerfIndex(100), fNWrks(1)
 {
-   // Constructor.
+   // Default constructor.
 }
 
 //______________________________________________________________________________
 TProofNodeInfo::TProofNodeInfo(const char *str)
-               : fNodeType(kWorker), fPort(-1), fPerfIndex(100)
+               : fNodeType(kWorker), fPort(-1), fPerfIndex(100), fNWrks(1)
 {
    // Constructor from a string containing all the information in a serialized
    // way. Used to decode thr information coming from the coordinator
@@ -53,45 +44,44 @@ TProofNodeInfo::TProofNodeInfo(const char *str)
    if (!str || strlen(str) <= 0)
       return;
 
-   // Tokenize
-   TString ss(str);
-   TObjArray *oa = ss.Tokenize("|");
-   if (!oa)
-      return;
-   TIter nxos(oa);
-   TObjString *os = (TObjString *) nxos();
-   if (!os)
-      return;
-
-   // Node type
-   PNISETANY(fNodeType = GetNodeType(os->GetName()));
-
-   // Host and user name
-   PNISETSTRING(fNodeName);
-
+   TString ss(str), s;
+   Ssiz_t from = 0;
+   // NodeType
+   if (ss.Tokenize(s, from, "|") && !s.IsNull() && s != "-")
+      fNodeType = GetNodeType(s);
+   // NodeName
+   if (ss.Tokenize(s, from, "|") && !s.IsNull() && s != "-")
+      fNodeName = s;
    // Port
-   PNISETINT(fPort);
-
+   if (ss.Tokenize(s, from, "|") && !s.IsNull() && s != "-")
+      if (s.IsDigit()) fPort = s.Atoi();
    // Ordinal
-   PNISETSTRING(fOrdinal);
-
+   if (ss.Tokenize(s, from, "|") && !s.IsNull() && s != "-")
+      fOrdinal = s;
    // ID string
-   PNISETSTRING(fId);
-
-   // Performance index
-   PNISETINT(fPerfIndex);
-
+   if (ss.Tokenize(s, from, "|") && !s.IsNull() && s != "-")
+      fId = s;
+   // Performance
+   if (ss.Tokenize(s, from, "|") && !s.IsNull() && s != "-")
+      if (s.IsDigit()) fPerfIndex = s.Atoi();
    // Image
-   PNISETSTRING(fImage);
-
+   if (ss.Tokenize(s, from, "|") && !s.IsNull() && s != "-")
+      fImage = s;
    // Working dir
-   PNISETSTRING(fWorkDir);
-
+   if (ss.Tokenize(s, from, "|") && !s.IsNull() && s != "-")
+      fWorkDir = s;
    // Mass Storage Domain
-   PNISETSTRING(fMsd);
-
+   if (ss.Tokenize(s, from, "|") && !s.IsNull() && s != "-")
+      fMsd = s;
    // Config file (master or submaster; for backward compatibility)
-   PNISETSTRING(fConfig);
+   if (ss.Tokenize(s, from, "|") && !s.IsNull() && s != "-")
+      fConfig = s;
+   // Number of workers
+   if (ss.Tokenize(s, from, "|") && !s.IsNull() && s != "-")
+      if (s.IsDigit()) fNWrks = s.Atoi();
+
+   // Set the name
+   fName.Form("%s:%d", fNodeName.Data(), fPort);
 }
 
 //______________________________________________________________________________
@@ -99,6 +89,7 @@ TProofNodeInfo::TProofNodeInfo(const TProofNodeInfo &nodeInfo) : TObject(nodeInf
 {
    // Copy constructor.
 
+   fName      = nodeInfo.fName;
    fNodeType  = nodeInfo.fNodeType;
    fNodeName  = nodeInfo.fNodeName;
    fWorkDir   = nodeInfo.fWorkDir;
@@ -109,6 +100,7 @@ TProofNodeInfo::TProofNodeInfo(const TProofNodeInfo &nodeInfo) : TObject(nodeInf
    fMsd       = nodeInfo.fMsd;
    fPort      = nodeInfo.fPort;
    fPerfIndex = nodeInfo.fPerfIndex;
+   fNWrks     = nodeInfo.fNWrks;
 }
 
 //______________________________________________________________________________
@@ -116,6 +108,7 @@ void TProofNodeInfo::Assign(const TProofNodeInfo &n)
 {
    // Asssign content of node n to this node
 
+   fName      = n.fName;
    fNodeType  = n.fNodeType;
    fNodeName  = n.fNodeName;
    fWorkDir   = n.fWorkDir;
@@ -126,6 +119,7 @@ void TProofNodeInfo::Assign(const TProofNodeInfo &n)
    fMsd       = n.fMsd;
    fPort      = n.fPort;
    fPerfIndex = n.fPerfIndex;
+   fNWrks     = n.fNWrks;
 }
 
 //______________________________________________________________________________
@@ -137,16 +131,15 @@ void TProofNodeInfo::Print(const Option_t *opt) const
       Printf("%d %s:%d %s %s", fNodeType, fNodeName.Data(), fPort,
                                fOrdinal.Data(), fWorkDir.Data());
    } else {
-      Printf(" NodeType:      %d", fNodeType);
-      Printf(" NodeName:      %s", fNodeName.Data());
-      Printf(" WorkDir:       %s", fWorkDir.Data());
-      Printf(" Ordinal:       %s", fOrdinal.Data());
-      Printf(" Image:         %s", fImage.Data());
-      Printf(" Id:            %s", fId.Data());
-      Printf(" Config:        %s", fConfig.Data());
-      Printf(" Msd:           %s", fMsd.Data());
-      Printf(" Port:          %d", fPort);
-      Printf(" Performance:   %d\n", fPerfIndex);
+      Printf(" +++ TProofNodeInfo: %s +++", fName.Data());
+      Printf(" NodeName: %s, Port: %d, NodeType: %d, Ordinal: %s",
+             fNodeName.Data(), fPort, fNodeType, fOrdinal.Data());
+      Printf(" WorkDir: %s, Image: %s", fWorkDir.Data(), fImage.Data());
+      Printf(" Id: %s, Config: %s", fId.Data(), fConfig.Data());
+      Printf(" Msd: %s", fMsd.Data());
+      Printf(" Performance:   %d", fPerfIndex);
+      Printf(" NumberOfWrks:  %d", fNWrks);
+      Printf("+++++++++++++++++++++++++++++++++++++++++++");
    }
 }
 
