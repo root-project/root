@@ -22,7 +22,9 @@ NamespaceImp(RooStats)
 
 #include "TTree.h"
 
+#include "RooUniform.h"
 #include "RooProdPdf.h"
+#include "RooExtendPdf.h"
 #include "RooSimultaneous.h"
 #include "RooStats/ModelConfig.h"
 #include "RooStats/RooStatsUtils.h"
@@ -36,18 +38,25 @@ namespace RooStats {
 
 
 
- void FactorizePdf(const RooArgSet &observables, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints) {
+   void FactorizePdf(const RooArgSet &observables, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints) {
    // utility function to factorize constraint terms from a pdf 
    // (from G. Petrucciani)
-   const std::type_info & id = typeid(pdf);
-   if (id == typeid(RooProdPdf)) {
-      RooProdPdf *prod = dynamic_cast<RooProdPdf *>(&pdf);
-      RooArgList list(prod->pdfList());
-      for (int i = 0, n = list.getSize(); i < n; ++i) {
-         RooAbsPdf *pdfi = (RooAbsPdf *) list.at(i);
+      const std::type_info & id = typeid(pdf);
+      if (id == typeid(RooProdPdf)) {
+         RooProdPdf *prod = dynamic_cast<RooProdPdf *>(&pdf);
+         RooArgList list(prod->pdfList());
+         for (int i = 0, n = list.getSize(); i < n; ++i) {
+            RooAbsPdf *pdfi = (RooAbsPdf *) list.at(i);
             FactorizePdf(observables, *pdfi, obsTerms, constraints);
          }
-      } else if (id == typeid(RooSimultaneous) ) {    //|| id == typeid(RooSimultaneousOpt)) {
+      } else if (id == typeid(RooExtendPdf)) {
+         TIterator *iter = pdf.serverIterator(); 
+         // extract underlying pdf which is extended; first server is the pdf; second server is the number of events variable
+         RooAbsPdf *updf = dynamic_cast<RooAbsPdf *>(iter->Next());
+         assert(updf != 0);
+         delete iter;
+         FactorizePdf(observables, *updf, obsTerms, constraints);
+      } else if (id == typeid(RooSimultaneous)) {    //|| id == typeid(RooSimultaneousOpt)) {
          RooSimultaneous *sim  = dynamic_cast<RooSimultaneous *>(&pdf);
          assert(sim != 0);
          RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().Clone();
@@ -68,7 +77,7 @@ namespace RooStats {
       // utility function to factorize constraint terms from a pdf 
       // (from G. Petrucciani)
       if (!model.GetObservables() ) { 
-         oocoutE((TObject*)0,InputArguments) << "MakeNuisancePdf - invalid input model: missing observables  " << endl;
+         oocoutE((TObject*)0,InputArguments) << "RooStatsUtils::FactorizePdf - invalid input model: missing observables" << endl;
          return;
       }
       return FactorizePdf(*model.GetObservables(), pdf, obsTerms, constraints);
@@ -79,13 +88,17 @@ namespace RooStats {
       // make a nuisance pdf by factorizing out all constraint terms in a common pdf 
       RooArgList obsTerms, constraints;
       FactorizePdf(observables, pdf, obsTerms, constraints);
+      if(constraints.getSize() == 0) {
+         oocoutW((TObject *)0, Eval) << "RooStatsUtils::MakeNuisancePdf - no constraints found on nuisance parameters in the input model" << endl;
+         return 0;
+      }
       return new RooProdPdf(name,"", constraints);
    }
 
    RooAbsPdf * MakeNuisancePdf(const RooStats::ModelConfig &model, const char *name) { 
       // make a nuisance pdf by factorizing out all constraint terms in a common pdf
       if (!model.GetPdf() || !model.GetObservables() ) { 
-         oocoutE((TObject*)0,InputArguments) << "MakeNuisancePdf - invalid input model  " << endl;
+         oocoutE((TObject*)0, InputArguments) << "RooStatsUtils::MakeNuisancePdf - invalid input model: missing pdf and/or observables" << endl;
          return 0;
       }
       return MakeNuisancePdf(*model.GetPdf(), *model.GetObservables(), name);
