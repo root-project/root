@@ -147,8 +147,6 @@ private:
    TReaperTimer   *fReaperTimer;    // Timer used to control children state
    TIdleTOTimer   *fIdleTOTimer;    // Timer used to control children state
 
-   Int_t         fInflateFactor;    // Factor in 1/1000 to inflate the CPU time
-
    Int_t         fCompressMsg;     // Compression level for messages
 
    TDataSetManager* fDataSetManager; // dataset manager
@@ -274,8 +272,6 @@ public:
 
    void           GetOptions(Int_t *argc, char **argv);
    TList         *GetEnabledPackages() const { return fEnabledPackages; }
-
-   Int_t          GetInflateFactor() const { return fInflateFactor; }
 
    static Long_t  GetVirtMemMax();
    static Long_t  GetResMemMax();

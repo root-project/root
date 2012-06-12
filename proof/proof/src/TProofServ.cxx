@@ -663,8 +663,6 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fReaperTimer     = 0;
    fIdleTOTimer     = 0;
 
-   fInflateFactor   = 1000;
-
    fDataSetManager  = 0; // Initialized in Setup()
 
    fInputHandler    = 0;
@@ -1138,24 +1136,6 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
    TMessage req(kPROOF_GETPACKET);
    Double_t cputime = fCompute.CpuTime();
    Double_t realtime = fCompute.RealTime();
-
-   // Apply inflate factor, if needed
-   PDB(kLoop, 2)
-      Info("GetNextPacket", "inflate factor: %d"
-                            " (realtime: %f, cputime: %f, entries: %lld)",
-                            fInflateFactor, realtime, cputime, totalEntries);
-   if (fInflateFactor > 1000) {
-      UInt_t sleeptime = (UInt_t) (cputime * (fInflateFactor - 1000)) ;
-      Int_t i = 0;
-      for (i = kSigBus ; i <= kSigUser2 ; i++)
-         gSystem->IgnoreSignal((ESignals)i, kTRUE);
-      gSystem->Sleep(sleeptime);
-      for (i = kSigBus ; i <= kSigUser2 ; i++)
-         gSystem->IgnoreSignal((ESignals)i, kFALSE);
-      realtime += sleeptime / 1000.;
-      PDB(kLoop, 2)
-         Info("GetNextPacket","slept %d millisec", sleeptime);
-   }
 
    if (fProtocol > 18) {
       req << fLatency.RealTime();

@@ -946,11 +946,8 @@ Bool_t TXProofServ::HandleInput(const void *in)
 
    } else if (acod == kXPD_inflate) {
 
-      // Set inflate factor
-      fInflateFactor = (hin->fInt2 >= 1000) ? hin->fInt2 : fInflateFactor;
-      // Notify
-      Info("HandleInput", "kXPD_inflate: inflate factor set to %f",
-           (Float_t) fInflateFactor / 1000.);
+      // Obsolete type
+      Warning("HandleInput", "kXPD_inflate: obsolete message type");
 
    } else if (acod == kXPD_priority) {
 
