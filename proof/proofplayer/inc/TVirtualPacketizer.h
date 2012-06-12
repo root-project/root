@@ -121,6 +121,7 @@ public:
    enum EStatusBits { kIsInitializing = BIT(16), kIsDone = BIT(17), kIsTree = BIT(18) };
    virtual ~TVirtualPacketizer();
 
+   virtual Int_t           AssignWork(TDSet */*dset*/, Long64_t /*first*/, Long64_t /*num*/) { return -1; }
    Bool_t                  IsValid() const { return fValid; }
    Long64_t                GetEntriesProcessed() const { return (fProgressStatus? fProgressStatus->GetEntries() : 0); }
    virtual Int_t           GetEstEntriesProcessed(Float_t, Long64_t &ent, Long64_t &bytes, Long64_t &calls)

@@ -55,6 +55,7 @@ private:
    Double_t    fCalibFrac;       // Size of the calibrating packet as fraction of Ntot/Nwrk
    Long64_t    fNumPerWorker;    // Number of cycles per worker, if this option
                                  // is chosen
+   Bool_t      fFixedNum;        // Whether we must assign a fixed number of cycles per worker
 
    TPacketizerUnit();
    TPacketizerUnit(const TPacketizerUnit&);     // no implementation, will generate
@@ -64,6 +65,7 @@ public:
    TPacketizerUnit(TList *slaves, Long64_t num, TList *input, TProofProgressStatus *st = 0);
    virtual ~TPacketizerUnit();
 
+   Int_t         AssignWork(TDSet */*dset*/, Long64_t /*first*/, Long64_t num);
    TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
 
    Double_t      GetCurrentTime();

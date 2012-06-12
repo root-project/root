@@ -117,9 +117,12 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
    fCircProg->SetCircular(fCircN);
 
    // Check if we need to start the progress timer (multi-packetizers do not want
-   // timers from the packetizers they control ...)
+   // timers from the packetizers they control ...). Also submasters do not need
+   // that (the progress timer is the one at the top master).
    TString startProgress("yes");
    TProof::GetParameter(input, "PROOF_StartProgressTimer", startProgress);
+   // If we are on a submaster, check if there is something else to do
+   if (gProofServ && gProofServ->IsMaster() && !gProofServ->IsTopMaster()) startProgress = "no";
 
    // Init progress timer, if requested
    // The timer is destroyed (and therefore stopped) by the relevant TPacketizer implementation
