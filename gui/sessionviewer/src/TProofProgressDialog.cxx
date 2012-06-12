@@ -686,6 +686,9 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
             fProof ? fProof->GetParallel() : 0);
    fTitleLab->SetText(buf);
 
+   if (gDebug > 1)
+      Info("Progress","t: %lld, p: %lld, itm: %f, ptm: %f", total, processed, initTime, procTime);
+   
    if (initTime >= 0.) {
       // Set init time
       fInitTime = initTime;
