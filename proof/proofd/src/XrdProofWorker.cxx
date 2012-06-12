@@ -35,7 +35,7 @@
 
 //______________________________________________________________________________
 XrdProofWorker::XrdProofWorker(const char *str)
-   : fExport(256), fType('W'), fPort(-1), fPerfIdx(100), fActive(1)
+   : fExport(256), fType('W'), fPort(-1), fPerfIdx(100), fNwrks(1), fActive(1)
 {
    // Constructor from a config file-like string
 
@@ -57,6 +57,25 @@ XrdProofWorker::~XrdProofWorker()
 }
 
 //______________________________________________________________________________
+XrdProofWorker::XrdProofWorker(const XrdProofWorker &w)
+{
+   // Copy constructor
+
+   fMutex = new XrdSysRecMutex;
+   fExport = w.fExport;
+   fType = w.fType;
+   fHost = w.fHost;
+   fPort = w.fPort;
+   fPerfIdx = w.fPerfIdx;
+   fImage = w.fImage;
+   fWorkDir = w.fWorkDir;
+   fMsd = w.fMsd;
+   fId = w.fId;
+   fNwrks = w.fNwrks;
+   fOrd = "";
+}
+
+//______________________________________________________________________________
 void XrdProofWorker::Reset(const char *str)
 {
    // Set content from a config file-like string
@@ -73,6 +92,8 @@ void XrdProofWorker::Reset(const char *str)
    fWorkDir = "";
    fMsd = "";
    fId = "";
+   fNwrks = 1;
+   fOrd = "";
 
    // Make sure we got something to parse
    if (!str || strlen(str) <= 0)
@@ -201,6 +222,10 @@ const char *XrdProofWorker::Export(const char *ord)
       // Add ordinal
       fExport += '|' ;
       fExport += ord;
+   } else if (fOrd.length() > 0) {
+      // Add ordinal
+      fExport += '|' ;
+      fExport += fOrd;
    } else {
       // No ordinal at this level
       fExport += "|-";
@@ -232,6 +257,10 @@ const char *XrdProofWorker::Export(const char *ord)
       fExport += fMsd;
    } else
       fExport += "|-";
+
+   // Add Nwrks
+   fExport += "|-|" ;
+   fExport += fNwrks;
 
    // We are done
    TRACE(DBG, "sending: " << fExport);

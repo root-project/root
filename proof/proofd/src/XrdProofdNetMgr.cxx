@@ -1044,6 +1044,7 @@ bool XrdProofdNetMgr::IsLocal(const char *host, bool checkport)
    // Check if 'host' is this local host. If checkport is true,
    // matching of the local port with the one implied by host is also checked.
    // Return 1 if 'local', 0 otherwise
+   XPDLOC(NMGR, "NetMgr::IsLocal")
 
    int rc = 0;
    if (host && strlen(host) > 0) {
@@ -1051,6 +1052,7 @@ bool XrdProofdNetMgr::IsLocal(const char *host, bool checkport)
       if (uu.Port <= 0) uu.Port = 1093;
       // Fully qualified name
       char *fqn = XrdSysDNS::getHostName(uu.Host.c_str());
+      TRACE(HDBG, "fqn: '"<<fqn<<"' mgrh: '"<<fMgr->Host()<<"'");
       if (fqn && (strstr(fqn, "localhost") || !strcmp(fqn, "127.0.0.1") ||
                   !strcmp(fMgr->Host(), fqn))) {
          if (!checkport || (uu.Port == fMgr->Port()))

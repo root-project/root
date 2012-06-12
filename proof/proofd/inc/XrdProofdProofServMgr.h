@@ -69,6 +69,7 @@ public:
    int            fPid;
    int            fID;
    int            fSrvType;
+   int            fPLiteNWrks;
    int            fStatus;
    XrdOucString   fUser;
    XrdOucString   fGroup;

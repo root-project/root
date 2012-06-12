@@ -35,6 +35,7 @@ XrdProofdProofServ::XrdProofdProofServ()
    fStatus = kXPD_idle;
    fSrvPID = -1;
    fSrvType = kXPD_AnyServer;
+   fPLiteNWrks = -1;
    fID = -1;
    fIsShutdown = false;
    fIsValid = true;  // It is created for a valid server ...
@@ -227,6 +228,7 @@ void XrdProofdProofServ::Reset()
    ClearWorkers();
    // ClearWorkers depends on the fSrvType and fStatus
    fSrvType = kXPD_AnyServer;
+   fPLiteNWrks = -1;
    fStatus = kXPD_idle;
    // Cleanup queries info
    fQueries.clear();

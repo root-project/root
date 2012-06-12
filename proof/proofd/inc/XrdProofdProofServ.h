@@ -138,12 +138,14 @@ public:
    inline const char  *Group() const { XrdSysMutexHelper mhp(fMutex); return fGroup.c_str(); }
    int                 IdleTime();
    inline short int    ID() const { XrdSysMutexHelper mhp(fMutex); return fID; }
+   inline bool         IsPLite() const { XrdSysMutexHelper mhp(fMutex); return (fPLiteNWrks > 1); }
    inline bool         IsShutdown() const { XrdSysMutexHelper mhp(fMutex); return fIsShutdown; }
    inline bool         IsValid() const { XrdSysMutexHelper mhp(fMutex); return fIsValid; }
    inline bool         Match(short int id) const { XrdSysMutexHelper mhp(fMutex); return (id == fID); }
    inline const char  *Ordinal() const { XrdSysMutexHelper mhp(fMutex); return fOrdinal.c_str(); }
    inline XrdClientID *Parent() const { XrdSysMutexHelper mhp(fMutex); return fParent; }
    inline void         PingSem() const { XrdSysMutexHelper mhp(fMutex); if (fPingSem) fPingSem->Post(); }
+   inline int          PLiteNWrks() const { XrdSysMutexHelper mhp(fMutex); return fPLiteNWrks; }
    inline XrdProofdProtocol *Protocol() const { XrdSysMutexHelper mhp(fMutex); return fProtocol; }
    inline std::list<XrdProofQuery *> *Queries() const
                        { return (std::list<XrdProofQuery *> *)&fQueries; }
@@ -169,6 +171,7 @@ public:
    inline void         SetID(short int id) { XrdSysMutexHelper mhp(fMutex); fID = id;}
    void                SetOrdinal(const char *o) { XrdSysMutexHelper mhp(fMutex); fOrdinal = o; }
    inline void         SetParent(XrdClientID *cid) { XrdSysMutexHelper mhp(fMutex); fParent = cid; }
+   inline void         SetPLiteNWrks(int n) { XrdSysMutexHelper mhp(fMutex); fPLiteNWrks = n; }
    inline void         SetProtocol(XrdProofdProtocol *p) { XrdSysMutexHelper mhp(fMutex); fProtocol = p; }
    inline void         SetProtVer(int pv) { XrdSysMutexHelper mhp(fMutex); fProtVer = pv; }
    inline void         SetROOT(XrdROOT *r) { XrdSysMutexHelper mhp(fMutex); fROOT = r; }
@@ -225,6 +228,8 @@ public:
    short int                 fID;
    char                      fProtVer;
    XrdOucString              fFileout;
+   
+   int                       fPLiteNWrks;  // # of wrks when PLite master
 
    XrdNet                   *fUNIXSock;     // UNIX server socket for internal connections
    XrdOucString              fUNIXSockPath; // UNIX server socket path

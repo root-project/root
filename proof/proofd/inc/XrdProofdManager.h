@@ -118,6 +118,7 @@ class XrdProofdManager : public XrdProofdConfig {
    XrdSysRecMutex    fMutex;          // Atomize this instance
 
    bool              fSuperMst;       // true if this node is a SuperMst
+   bool              fRemotePLite;    // true if in remote PLite mode
 
    XrdOucString      fAdminPath;      // Path to the PROOF admin area
 

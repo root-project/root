@@ -1709,6 +1709,20 @@ void XrdProofdProofServMgr::ParseCreateBuffer(XrdProofdProtocol *p,
    } else
       cffile = "";
 
+   // Extract # number of workers, if plite master
+   XrdOucString plitenwk;
+   plitenwk.assign(buf,0,len-1);
+   int inwk = plitenwk.find("|plite:");
+   if (inwk != STR_NPOS) {
+      plitenwk.erase(0,inwk+7);
+      plitenwk.erase(plitenwk.find("|"));
+      int nwk = plitenwk.atoi();
+      if (nwk > -1) {
+         xps->SetPLiteNWrks(nwk);
+         TRACEP(p, DBG, "P-Lite master with "<<nwk<<" workers (0 means # or cores)");
+      }
+   }
+
    // Extract user envs, if any
    uenvs.assign(buf,0,len-1);
    int ienv = uenvs.find("|envs:");
@@ -1966,9 +1980,10 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
       // Close pipes
       fpc.Close();
       fcp.Close();
-
+      
       TRACE(FORK, (int)getpid()<<": user: "<<p->Client()->User()<<
-                  ", uid: "<<getuid()<<", euid:"<<geteuid()<<", psrv: "<<xps->ROOT()->PrgmSrv());
+                  ", uid: "<<getuid()<<", euid:"<<geteuid()<<
+                  ", psrv: "<<xps->ROOT()->PrgmSrv()<<", argvv[1]: "<<argvv[1]);
       // Run the program
       execv(xps->ROOT()->PrgmSrv(), argvv);
 
@@ -3889,10 +3904,16 @@ int XrdProofdProofServMgr::CreateProofServRootRc(XrdProofdProtocol *p,
    } else {
       fprintf(frc, "# Config file\n");
       if (fMgr->IsSuperMst()) {
-         fprintf(frc, "# Config file\n");
          fprintf(frc, "ProofServ.ProofConfFile: sm:\n");
+      } else if (xps->IsPLite()) {
+         fprintf(frc, "ProofServ.ProofConfFile: lite:\n");
+         fprintf(frc, "# Number of ProofLite workers\n");
+         fprintf(frc, "ProofLite.Workers: %d\n", xps->PLiteNWrks());
+         fprintf(frc, "# Users sandbox\n");
+         fprintf(frc, "ProofLite.Sandbox: %s\n", udir.c_str());
+         fprintf(frc, "# No subpaths\n");
+         fprintf(frc, "ProofLite.SubPath: 0\n");
       } else if (fProofPlugin.length() > 0) {
-         fprintf(frc, "# Config file\n");
          fprintf(frc, "ProofServ.ProofConfFile: %s\n", fProofPlugin.c_str());
       }
    }
@@ -4871,6 +4892,7 @@ XrdProofSessionInfo::XrdProofSessionInfo(XrdProofdClient *c, XrdProofdProofServ 
    fPid = s ? s->SrvPID() : -1;
    fID = s ? s->ID() : -1;
    fSrvType = s ? s->SrvType() : -1;
+   fPLiteNWrks = s ? s->PLiteNWrks() : -1;
    fStatus = s ? s->Status() : kXPD_unknown;
    fOrdinal = s ? s->Ordinal() : "";
    fTag = s ? s->Tag() : "";
@@ -4896,6 +4918,7 @@ void XrdProofSessionInfo::FillProofServ(XrdProofdProofServ &s, XrdROOTMgr *rmgr)
    if (fID >= 0)
       s.SetID(fID);
    s.SetSrvType(fSrvType);
+   s.SetPLiteNWrks(fPLiteNWrks);
    s.SetStatus(fStatus);
    s.SetOrdinal(fOrdinal.c_str());
    s.SetTag(fTag.c_str());
@@ -4932,7 +4955,7 @@ int XrdProofSessionInfo::SaveToFile(const char *file)
    if (fpid) {
       fprintf(fpid, "%s %s\n", fUser.c_str(), fGroup.c_str());
       fprintf(fpid, "%s\n", fUnixPath.c_str());
-      fprintf(fpid, "%d %d %d\n", fPid, fID, fSrvType);
+      fprintf(fpid, "%d %d %d %d\n", fPid, fID, fSrvType, fPLiteNWrks);
       fprintf(fpid, "%s %s %s\n", fOrdinal.c_str(), fTag.c_str(), fAlias.c_str());
       fprintf(fpid, "%s\n", fLogFile.c_str());
       fprintf(fpid, "%d %s\n", fSrvProtVers, fROOTTag.c_str());
@@ -4969,6 +4992,7 @@ void XrdProofSessionInfo::Reset()
    fStatus = kXPD_unknown;
    fID = -1;
    fSrvType = -1;
+   fPLiteNWrks = -1;
    fOrdinal = "";
    fTag = "";
    fAlias = "";

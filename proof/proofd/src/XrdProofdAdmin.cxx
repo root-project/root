@@ -779,11 +779,18 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
    bool ismaster = (access(wfile.c_str(), F_OK) == 0) ? 1 : 0;
    
    // Scan the directory to add the top master (only if top master)
-   XrdOucString xo;
+   XrdOucString xo, xf;
    int ilog, idas;
    struct dirent *ent = 0;
-   while ((ent = (struct dirent *)readdir(dir))) {         
+   while ((ent = (struct dirent *)readdir(dir))) {
+      if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) continue;
+      XPDFORM(xf, "%s/%s", sdir.c_str(), (const char *) ent->d_name);
+      struct stat st;
+      if (stat(xf.c_str(), &st) != 0) continue;
+      if (!S_ISREG(st.st_mode)) continue;
       xo = ent->d_name;
+      if (xo.matches("*-*-*-*-*.log") <= 0 && xo.matches("*-*-*-*-*.valgrind.log") <= 0) continue;
+      TRACEP(p, ALL, "xf: "<<xf<<"; st_mode: "<<st.st_mode);
       bool recordinfo = 0;
       if ((ilog = xo.find(".log")) != STR_NPOS) {
          xo.replace(".log", "");

@@ -36,6 +36,7 @@ class XrdProofWorker {
 
 public:
    XrdProofWorker(const char *str = 0);
+   XrdProofWorker(const XrdProofWorker &);
    virtual ~XrdProofWorker();
 
    void                    Reset(const char *str); // Set from 'str'
@@ -66,7 +67,7 @@ public:
    void                    MergeProofServs(const XrdProofWorker &other);
 
    std::list<XrdProofdProofServ *> fProofServs; // ProofServ sessions using
-   // this worker
+                                                // this worker
 
    // Worker definitions
    XrdOucString            fExport;      // export string
@@ -79,6 +80,9 @@ public:
    XrdOucString            fWorkDir;     // work directory
    XrdOucString            fMsd;         // mass storage domain
    XrdOucString            fId;          // ID string
+   int                     fNwrks;       // # workers if 'S' and P-Lite
+
+   XrdOucString            fOrd;          // Used only for temp exports
 
    bool                    fActive;      // TRUE if available
 

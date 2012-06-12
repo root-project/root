@@ -127,6 +127,7 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fWorkDir = "";
    fMUWorkDir = "";
    fSuperMst = 0;
+   fRemotePLite = 0;
    fNamespace = "/proofpool";
    fMastersAllowed.clear();
    fOperationMode = kXPD_OpModeOpen;
@@ -540,38 +541,89 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
    }
 
    // Query the scheduler for the list of workers
-   std::list<XrdProofWorker *> wrks;
+   std::list<XrdProofWorker *> wrks, uwrks;
    if ((rc = fProofSched->GetWorkers(xps, &wrks, query)) < 0) {
       TRACE(XERR, "error getting list of workers from the scheduler");
       return -1;
    }
+   std::list<XrdProofWorker *>::iterator iw, iaw;
    // If we got a new list we save it into the session object
    if (rc == 0) {
 
       TRACE(DBG, "list size: " << wrks.size());
-
-      // The full list
+      
       XrdOucString ord;
       int ii = -1;
-      std::list<XrdProofWorker *>::iterator iw;
-      for (iw = wrks.begin(); iw != wrks.end() ; iw++) {
-         XrdProofWorker *w = *iw;
-         // Count (fActive is increased inside here)
-         if (ii == -1)
-            ord = "master";
-         else
-            XPDFORM(ord, "%d", ii);
-         ii++;
-         xps->AddWorker(ord.c_str(), w);
-         // Add proofserv and increase the counter
-         w->AddProofServ(xps);
+      // If in remote PLite mode, we need to isolate the number of workers
+      // per unique node
+      if (fRemotePLite) {
+         bool merged = 0;
+         for (iw = wrks.begin(); iw != wrks.end() ; iw++) {
+            XrdProofWorker *w = *iw;
+            // Do we have it already in the unique list?
+            bool isnew = 1;
+            for (iaw = uwrks.begin(); iaw != uwrks.end() ; iaw++) {
+               XrdProofWorker *uw = *iaw;
+               if (w->fHost == uw->fHost && w->fPort == uw->fPort) {
+                  uw->fNwrks += 1;
+                  isnew = 0;
+                  merged = 1;
+                  break;
+               }
+            }
+            if (isnew) {
+               // Count (fActive is increased inside here)
+               if (ii == -1) {
+                  ord = "master";
+               } else {
+                  XPDFORM(ord, "%d", ii);
+               }
+               ii++;
+               XrdProofWorker *uw = new XrdProofWorker(*w);
+               uw->fType = 'S';
+               uw->fOrd = ord;
+               uwrks.push_back(uw);
+               // Setup connection with the proofserv using the original 
+               xps->AddWorker(ord.c_str(), w);
+               w->AddProofServ(xps);
+            }
+         }
+         for (iw = uwrks.begin(); iw != uwrks.end() ; iw++) {
+            XrdProofWorker *w = *iw;
+            // Master at the beginning
+            if (w->fType == 'M') {
+               if (lw.length() > 0) lw.insert('&',0);
+               lw.insert(w->Export(), 0);
+            } else {
+               // Add separator if not the first
+               if (lw.length() > 0) lw += '&';
+               // Add export version of the info
+               lw += w->Export(0);
+            }
+         }         
+
+      } else {
+
+         // The full list
+         for (iw = wrks.begin(); iw != wrks.end() ; iw++) {
+            XrdProofWorker *w = *iw;
+            // Count (fActive is increased inside here)
+            if (ii == -1)
+               ord = "master";
+            else
+               XPDFORM(ord, "%d", ii);
+            ii++;
+            xps->AddWorker(ord.c_str(), w);
+            // Add proofserv and increase the counter
+            w->AddProofServ(xps);
+         }
       }
    }
 
    int proto = (xps->ROOT()) ? xps->ROOT()->SrvProtVers() : -1;
    if (rc != 2 || (proto < 21 && rc == 0)) {
       // Get the list in exported format
-      xps->ExportWorkers(lw);
+      if (lw.length() <= 0) xps->ExportWorkers(lw);
       TRACE(DBG, "from ExportWorkers: " << lw);
    } else if (proto >= 21) {
       // Signal enqueing
@@ -579,6 +631,16 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
    }
 
    if (TRACING(REQ)) fNetMgr->Dump();
+
+   // Clear the temp list
+   if (uwrks.size() > 0) {
+      iw = uwrks.begin();
+      while (iw != uwrks.end()) {
+         XrdProofWorker *w = *iw;
+         iw = uwrks.erase(iw);
+         delete w;
+      }
+   }
 
    return rc;
 }
@@ -799,6 +861,10 @@ int XrdProofdManager::Config(bool rcf)
       const char *st[] = { "disabled", "enabled" };
       TRACE(ALL, "user config files are " << st[fNetMgr->WorkerUsrCfg()]);
    }
+
+   // If using the PLite optimization notify it
+   if (fRemotePLite)
+      TRACE(ALL, "multi-process on nodes handled with proof-lite");
 
    // Validate dataset sources (if not worker)
    fDataSetExp = "";
@@ -1173,6 +1239,7 @@ void XrdProofdManager::RegisterDirectives()
    Register("image", new XrdProofdDirective("image", (void *)&fImage, &DoDirectiveString));
    Register("workdir", new XrdProofdDirective("workdir", (void *)&fWorkDir, &DoDirectiveString));
    Register("sockpathdir", new XrdProofdDirective("sockpathdir", (void *)&fSockPathDir, &DoDirectiveString));
+   Register("remoteplite", new XrdProofdDirective("remoteplite", (void *)&fRemotePLite, &DoDirectiveInt));
 }
 
 //______________________________________________________________________________
