@@ -62,8 +62,14 @@ fi
 if [ -n "$PROOF_WRAPPERCMD" ]; then
    WRAPPER="$PROOF_WRAPPERCMD "
 else
+   if [ -n "$PROOF_TOPMASTER_WRAPPERCMD" -a "$1" = "proofserv" -a "$5" = "2" ]; then
+      WRAPPER="$PROOF_TOPMASTER_WRAPPERCMD "
+   fi
    if [ -n "$PROOF_MASTER_WRAPPERCMD" -a "$1" = "proofserv" ]; then
       WRAPPER="$PROOF_MASTER_WRAPPERCMD "
+   fi
+   if [ -n "$PROOF_SUBMASTER_WRAPPERCMD" -a "$1" = "proofserv" -a "$5" = "1" ]; then
+      WRAPPER="$PROOF_SUBMASTER_WRAPPERCMD "
    fi
    if [ -n "$PROOF_SLAVE_WRAPPERCMD" -a "$1" = "proofslave" ]; then
       WRAPPER="$PROOF_SLAVE_WRAPPERCMD "
