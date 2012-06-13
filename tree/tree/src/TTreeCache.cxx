@@ -1040,6 +1040,22 @@ void TTreeCache::SetEntryRange(Long64_t emin, Long64_t emax)
 }
 
 //_____________________________________________________________________________
+void TTreeCache::SetFile(TFile *file)
+{
+   // Overload to make sure that the object specific
+
+   // The infinite recursion is 'broken' by the fact that
+   // TFile::SetCacheRead remove the entry from fCacheReadMap _before_
+   // calling SetFile (and also by setting fFile to zero before the calling).
+   if (fFile) {
+      TFile *prevFile = fFile;
+      fFile = 0;
+      prevFile->SetCacheRead(0, fTree);
+   }
+   TFileCacheRead::SetFile(file);
+}
+
+//_____________________________________________________________________________
 void TTreeCache::SetLearnEntries(Int_t n)
 {
    // Static function to set the number of entries to be used in learning mode
