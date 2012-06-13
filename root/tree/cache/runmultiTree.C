@@ -6,12 +6,8 @@
 void print(TFileCacheRead *fcache)
 {
    TTreeCache *tcache = dynamic_cast<TTreeCache*>(fcache);
-   printf("Number of branches in the cache ...: %d\n",tcache->GetCachedBranches()->GetEntries());
-   printf("Cache Efficiency ..................: %f\n",tcache->GetEfficiency());
-   printf("Cache Efficiency Rel...............: %f\n",tcache->GetEfficiencyRel());
-   printf("Reading............................: %d transactions\n",fcache->GetFile()->GetReadCalls());
-   printf("Number of blocks in current cache..: %d, total size: %d\n",fcache->GetNseek(),fcache->GetNtot());
-   //fcache->Print();
+   fcache->Print();
+   printf("File Reading.......................: %d transactions\n",fcache->GetFile()->GetReadCalls());
 }
 
 void print(TTree *tree)
