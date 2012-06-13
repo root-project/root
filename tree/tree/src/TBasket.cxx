@@ -252,7 +252,12 @@ Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tr
       } else if (st == 0) {
          // fOffset might have been changed via TFileCacheRead::ReadBuffer(), reset it
          file->Seek(pos);
+         // If we are using a TTreeCache, disable reading from the default cache
+         // temporarily, to force reading directly from file
+         TTreeCache *fc = dynamic_cast<TTreeCache*>(file->GetCacheRead());
+         if (fc) fc->Disable();
          Int_t ret = file->ReadBuffer(buffer,len);
+         if (fc) fc->Enable();
          pf->AddNoCacheBytesRead(len);
          pf->AddNoCacheReadCalls(1);
          if (ret) {
@@ -472,7 +477,13 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       if (st < 0) {
          return 1;
       } else if (st == 0) {
+         // Read directly from file, not from the cache
+         // If we are using a TTreeCache, disable reading from the default cache
+         // temporarily, to force reading directly from file
+         TTreeCache *fc = dynamic_cast<TTreeCache*>(file->GetCacheRead());
+         if (fc) fc->Disable();
          Int_t ret = file->ReadBuffer(readBufferRef->Buffer(),pos,len);
+         if (fc) fc->Enable();
          pf->AddNoCacheBytesRead(len);
          pf->AddNoCacheReadCalls(1);
          if (ret) {

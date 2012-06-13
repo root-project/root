@@ -54,6 +54,7 @@ protected:
    Bool_t          fFirstTime;   //! save the fact that we processes the first entry
    Long64_t        fFirstEntry;  //! save the value of the first entry
    Bool_t          fReadDirectionSet; //! read direction established
+   Bool_t          fEnabled;     //! cache enabled for cached reading
    static  Int_t   fgLearnEntries; // number of entries used for learning mode
 
 private:
@@ -87,6 +88,9 @@ public:
    void                StartLearningPhase();
    virtual void        StopLearningPhase();
    virtual void        UpdateBranches(TTree *tree);
+   virtual Bool_t      IsEnabled() const {return fEnabled;}
+   virtual void        Enable() {fEnabled = kTRUE;}
+   virtual void        Disable() {fEnabled = kFALSE;}
 
    ClassDef(TTreeCache,2)  //Specialization of TFileCacheRead for a TTree
 };
