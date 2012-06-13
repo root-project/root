@@ -2457,6 +2457,11 @@ if test ! "x$enable_x11" = "xno" ; then
         result "For consistency they should be in the same directory"
         exit 1
     fi
+else
+    x11libdir=""
+    xpmlibdir=""
+    xftlibdir=""
+    xextlibdir=""
 fi
 
 ######################################################################
