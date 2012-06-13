@@ -3300,6 +3300,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    char chopt[128];
    Int_t nch = strlen(choptin);
    strlcpy(chopt,choptin,128);
+   Int_t hdim = fH->GetDimension();
 
    Hoption.Axis = Hoption.Bar    = Hoption.Curve   = Hoption.Error = 0;
    Hoption.Hist = Hoption.Line   = Hoption.Mark    = Hoption.Fill  = 0;
@@ -3325,10 +3326,10 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    MakeCuts(chopt);
 
    for (Int_t i=0;i<nch;i++) chopt[i] = toupper(chopt[i]);
-   if (fH->GetDimension() > 1) Hoption.Scat = 1;
+   if (hdim > 1) Hoption.Scat = 1;
    if (!nch) Hoption.Hist = 1;
    if (fFunctions->First()) Hoption.Func = 2;
-   if (fH->GetSumw2N() && fH->GetDimension() == 1) Hoption.Error = 2;
+   if (fH->GetSumw2N() && hdim == 1) Hoption.Error = 2;
 
    l = strstr(chopt,"SPEC");
    if (l) {
@@ -3428,13 +3429,18 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"CONT");
    if (l) {
-      Hoption.Scat = 0;
-      Hoption.Contour = 1; strncpy(l,"    ",4);
-      if (l[4] == '1') { Hoption.Contour = 11; l[4] = ' '; }
-      if (l[4] == '2') { Hoption.Contour = 12; l[4] = ' '; }
-      if (l[4] == '3') { Hoption.Contour = 13; l[4] = ' '; }
-      if (l[4] == '4') { Hoption.Contour = 14; l[4] = ' '; }
-      if (l[4] == '5') { Hoption.Contour = 15; l[4] = ' '; }
+      strncpy(l,"    ",4);
+      if (hdim>1) {
+         Hoption.Scat = 0;
+         Hoption.Contour = 1;
+         if (l[4] == '1') { Hoption.Contour = 11; l[4] = ' '; }
+         if (l[4] == '2') { Hoption.Contour = 12; l[4] = ' '; }
+         if (l[4] == '3') { Hoption.Contour = 13; l[4] = ' '; }
+         if (l[4] == '4') { Hoption.Contour = 14; l[4] = ' '; }
+         if (l[4] == '5') { Hoption.Contour = 15; l[4] = ' '; }
+      } else {
+         Hoption.Hist = 1;
+      }
    }
    l = strstr(chopt,"HBAR");
    if (l) {
@@ -3455,15 +3461,48 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l[3] == '4') { Hoption.Bar = 14; l[3] = ' '; }
    }
 
-   l = strstr(chopt,"ARR" ); if (l) { Hoption.Arrow  = 1; strncpy(l,"   ", 3); Hoption.Scat = 0; }
+   l = strstr(chopt,"ARR" );
+   if (l) {
+      strncpy(l,"   ", 3);
+      if (hdim>1) {
+         Hoption.Arrow  = 1;
+         Hoption.Scat = 0;
+      } else {
+         Hoption.Hist = 1;
+      }
+   }
    l = strstr(chopt,"BOX" );
    if (l) {
-      Hoption.Scat = 0;
-      Hoption.Box  = 1; strncpy(l,"   ", 3);
-      if (l[3] == '1') { Hoption.Box = 11; l[3] = ' '; }
+      strncpy(l,"   ", 3);
+      if (hdim>1) {
+         Hoption.Scat = 0;
+         Hoption.Box  = 1;
+         if (l[3] == '1') { Hoption.Box = 11; l[3] = ' '; }
+      } else {
+         Hoption.Hist = 1;
+      }
    }
-   l = strstr(chopt,"COLZ"); if (l) { Hoption.Color  = 2; strncpy(l,"    ",4); Hoption.Scat = 0; Hoption.Zscale = 1;}
-   l = strstr(chopt,"COL" ); if (l) { Hoption.Color  = 1; strncpy(l,"   ", 3); Hoption.Scat = 0; }
+   l = strstr(chopt,"COLZ");
+   if (l) {
+      strncpy(l,"    ",4);
+      if (hdim>1) {
+         Hoption.Color  = 2;
+         Hoption.Scat   = 0;
+         Hoption.Zscale = 1;
+      } else {
+         Hoption.Hist = 1;
+      }
+   }
+   l = strstr(chopt,"COL" );
+   if (l) {
+      strncpy(l,"   ", 3);
+      if (hdim>1) {
+         Hoption.Color = 1;
+         Hoption.Scat  = 0;
+      } else {
+         Hoption.Hist = 1;
+      }
+   }
    l = strstr(chopt,"CHAR"); if (l) { Hoption.Char   = 1; strncpy(l,"    ",4); Hoption.Scat = 0; }
    l = strstr(chopt,"FUNC"); if (l) { Hoption.Func   = 2; strncpy(l,"    ",4); Hoption.Hist = 0; }
    l = strstr(chopt,"HIST"); if (l) { Hoption.Hist   = 2; strncpy(l,"    ",4); Hoption.Func = 0; Hoption.Error = 0;}
@@ -3539,7 +3578,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    }
 
    if (strstr(chopt,"E")) {
-      if (fH->GetDimension() == 1) {
+      if (hdim == 1) {
          Hoption.Error = 1;
          if (strstr(chopt,"E0"))  Hoption.Error = 10;
          if (strstr(chopt,"E1"))  Hoption.Error = 11;
