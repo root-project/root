@@ -418,6 +418,19 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
          return 0;
       }
       break;
+   case 'L':
+      if (fMgr->SrvType() == kXPD_AnyServer || fMgr->RemotePLite()) {
+         p->SetConnType(kXPD_MasterMaster);
+         needauth = 1;
+         response->SetTag("m2l");
+         p->Request()->login.role[0] = 'm';
+      } else {
+         TRACEP(p, XERR,"PLite submaster mode not allowed - ignoring request");
+         response->Send(kXR_InvalidRequest,
+                             "Server not allowed to be PLite submaster - ignoring request");
+         return 0;
+      }
+      break;
    case 's':
       if (fMgr->SrvType() == kXPD_AnyServer || fMgr->SrvType() == kXPD_MasterWorker) {
          p->SetConnType(kXPD_MasterWorker);

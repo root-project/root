@@ -181,6 +181,7 @@ void TXSlave::Init(const char *host, Int_t stype)
       // Send session tag of the closest master to the slaves
       if (fNWrks > 1) {
          alias.Form("session-%s|ord:%s|plite:%d", fProof->GetName(), fOrdinal.Data(), fNWrks);
+         mode = 'L';
       } else {
          alias.Form("session-%s|ord:%s", fProof->GetName(), fOrdinal.Data());
       }

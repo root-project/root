@@ -204,7 +204,7 @@ TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
       fPort = fConn->fPort;
 
       // Create new proofserv if not client manager or administrator or internal mode
-      if (fMode == 'm' || fMode == 's' || fMode == 'M' || fMode == 'A') {
+      if (fMode == 'm' || fMode == 's' || fMode == 'M' || fMode == 'A'|| fMode == 'L') {
          // We attach or create
          if (!Create()) {
             // Failure

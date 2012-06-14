@@ -97,6 +97,8 @@ class XrdProofdManager : public XrdProofdConfig {
    rpdunixsrv       *RootdUnixSrv() const { return fRootdUnixSrv; }
    bool              RootdFork() const { return fRootdFork; }
 
+   bool              RemotePLite() const { return fRemotePLite; }
+
    std::list<XrdProofdDSInfo *> *DataSetSrcs() { return &fDataSetSrcs; }
 
    // Services
@@ -118,7 +120,7 @@ class XrdProofdManager : public XrdProofdConfig {
    XrdSysRecMutex    fMutex;          // Atomize this instance
 
    bool              fSuperMst;       // true if this node is a SuperMst
-   bool              fRemotePLite;    // true if in remote PLite mode
+   bool              fRemotePLite;    // true if remote PLite mode is allowed
 
    XrdOucString      fAdminPath;      // Path to the PROOF admin area
 
