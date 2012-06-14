@@ -71,6 +71,7 @@ TGLEventHandler::TGLEventHandler(TGWindow *w, TObject *obj) :
    fInPointerGrab      (kFALSE),
    fMouseTimerRunning  (kFALSE),
    fTooltipShown       (kFALSE),
+   fArcBall            (kFALSE),
    fTooltipPixelTolerance (3),
    fSecSelType(TGLViewer::kOnRequest),
    fDoInternalSelection(kTRUE),
@@ -800,6 +801,10 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
             break;
 
             // Camera
+         case kKey_A:
+         case kKey_a:
+            fArcBall = ! fArcBall;
+            break;
          case kKey_Plus:
          case kKey_J:
          case kKey_j:
@@ -945,7 +950,9 @@ Bool_t TGLEventHandler::Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t m
 {
    // Method to handle action TGLViewer::kDragCameraRotate.
 
-   return fGLViewer->CurrentCamera().Rotate(xDelta, -yDelta, mod1, mod2);
+   TGLCamera &cam = fGLViewer->CurrentCamera();
+   if (fArcBall) return cam.RotateArcBall(xDelta, -yDelta, mod1, mod2);
+   else          return cam.Rotate       (xDelta, -yDelta, mod1, mod2);
 }
 
 //______________________________________________________________________________

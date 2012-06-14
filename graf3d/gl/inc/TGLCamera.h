@@ -76,6 +76,7 @@ protected:
    TGLMatrix   fCamTrans;        //! transformation relative to fCamTrans
    Bool_t      fExternalCenter;  //! use external center insead of scene center
    Bool_t      fFixDefCenter;    //! use fixed default center
+   Bool_t      fWasArcBalled;    //! set when arc-ball rotation is used
    TGLVector3  fExtCenter;       //! external camera center
    TGLVector3  fDefCenter;       //! deafult camera center
    TGLVector3  fFDCenter;        //! fixed deafult camera center
@@ -136,6 +137,8 @@ public:
    virtual Bool_t Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2) = 0;
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t RotateRad(Double_t hRotate, Double_t vRotate);
+   virtual Bool_t RotateArcBall(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
+   virtual Bool_t RotateArcBallRad(Double_t hRotate, Double_t vRotate);
 
    virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) const = 0;
 
