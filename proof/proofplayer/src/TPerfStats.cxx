@@ -132,6 +132,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    // Master flag
    Bool_t isMaster = ((proof && proof->TestBit(TProof::kIsMaster)) ||
                       (gProofServ && gProofServ->IsMaster())) ? kTRUE : kFALSE;
+   Bool_t isEndMaster = (gProofServ && gProofServ->IsEndMaster()) ? kTRUE : kFALSE;
 
    TList *l = proof ? proof->GetListOfSlaveInfos() : 0 ;
    TIter nextslaveinfo(l);
@@ -201,7 +202,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
          Info("TPerfStats", "tree '%s' added to the output list", fTrace->GetName());
    }
 
-   if (fDoHist && isMaster) {
+   if (fDoHist && isEndMaster) {
       // Make Histograms
       Double_t time_per_bin = 1e-3; // 10ms
       Double_t min_time = 0;
@@ -366,8 +367,8 @@ void TPerfStats::SimpleEvent(EEventType type)
    // Simple event.
 
    if (type == kStop && fPacketsHist != 0) {
-      fNodeHist->LabelsDeflate("X");
-      fNodeHist->LabelsOption("auv","X");
+      fPacketsHist->LabelsDeflate("X");
+      fPacketsHist->LabelsOption("auv","X");
    }
 
    if (type == kStop && fDoQuota)

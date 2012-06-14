@@ -245,9 +245,9 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
    fProof->ResetMergePrg();
 
    // Broadcast main message
-   PDB(kGlobal,1) Info("Process","Calling Broadcast");
    mesg << set << fn << fInput << opt << num << fst << evl << sync << enl;
    Int_t nb = fProof->Broadcast(mesg);
+   PDB(kGlobal,1) Info("Process", "Broadcast called: %d workers notified", nb);
    fProof->fNotIdle += nb;
 
    // Redirect logs from master to special log frame

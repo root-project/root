@@ -1992,8 +1992,9 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    // Reset the merging progress information
    fProof->ResetMergePrg();
 
-   PDB(kGlobal,1) Info("Process","Calling Broadcast");
-   fProof->Broadcast(mesg);
+   Int_t nb = fProof->Broadcast(mesg);
+   PDB(kGlobal,1) Info("Process", "Broadcast called: %d workers notified", nb);
+   if (fProof->IsLite()) fProof->fNotIdle += nb;
 
    // Reset streamer choice
    if (fProof->fProtocol < 13)

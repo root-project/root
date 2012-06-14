@@ -43,7 +43,7 @@ private:
 public:
    TSlaveLite(const char *ord, Int_t perf,
               const char *image, TProof *proof, Int_t stype,
-              const char *workdir, const char *msd);
+              const char *workdir, const char *msd, Int_t = 1);
    virtual ~TSlaveLite();
 
    void   Close(Option_t *opt = "");

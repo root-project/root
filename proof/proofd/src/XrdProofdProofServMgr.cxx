@@ -1917,7 +1917,7 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
          exit(1);
       }
 
-      char *argvv[6] = {0};
+      char *argvv[7] = {0};
 
       // We set to the user environment
       if (!fMgr) {
@@ -1943,6 +1943,10 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
       char slog[10] = {0};
       snprintf(slog, 10, "%d", loglevel);
 
+      // Server type
+      char ssrv[10] = {0};
+      snprintf(ssrv, 10, "%d", xps->SrvType());
+
       // start server
       argvv[0] = (char *) xps->ROOT()->PrgmSrv();
       argvv[1] = (char *)((p->ConnType() == kXPD_MasterWorker) ? "proofslave"
@@ -1950,7 +1954,8 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
       argvv[2] = (char *)"xpd";
       argvv[3] = (char *)sxpd;
       argvv[4] = (char *)slog;
-      argvv[5] = 0;
+      argvv[5] = (char *)ssrv;
+      argvv[6] = 0;
 
       // Set environment for proofserv
       if (SetProofServEnv(p, (void *)&in) != 0) {
@@ -3718,13 +3723,16 @@ int XrdProofdProofServMgr::CreateProofServEnvFile(XrdProofdProtocol *p, void *in
             ev = new char[env.length()+1];
             strncpy(ev, env.c_str(), env.length());
             ev[env.length()] = 0;
-            fprintf(fenv, "%s\n", ev);
+            if (env.find("WRAPPERCMD") == STR_NPOS || !xps->IsPLite())
+               fprintf(fenv, "%s\n", ev);
             TRACE(DBG, ev);
             PutEnv(ev, in->fOld);
-            env.erase(ieq);
-            if (namelist.length() > 0)
-               namelist += ',';
-            namelist += env;
+            if (env.find("WRAPPERCMD") == STR_NPOS || !xps->IsPLite()) {
+               env.erase(ieq);
+               if (namelist.length() > 0)
+                  namelist += ',';
+               namelist += env;
+            }
          }
       }
       // The list of names, ','-separated

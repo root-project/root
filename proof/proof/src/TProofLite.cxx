@@ -90,7 +90,7 @@ TProofLite::TProofLite(const char *url, const char *conffile, const char *confdi
 
    // Client and master are merged
    fMasterServ = kTRUE;
-   SetBit(TProof::kIsClient);
+   if (fManager) SetBit(TProof::kIsClient);
    SetBit(TProof::kIsMaster);
 
    // Flag that we are a client
@@ -120,7 +120,12 @@ TProofLite::TProofLite(const char *url, const char *conffile, const char *confdi
    // the minimal number, i.e. 2 .
    if ((fNWorkers = GetNumberOfWorkers(url)) > 0) {
 
-      Printf(" +++ Starting PROOF-Lite with %d workers +++", fNWorkers);
+      TString stup;
+      if (gProofServ) {
+         Int_t port = gEnv->GetValue("ProofServ.XpdPort", 1093);
+         stup.Form("%s @ %s:%d ", gProofServ->GetOrdinal(), gSystem->HostName(), port);
+      }
+      Printf(" +++ Starting PROOF-Lite %swith %d workers +++", stup.Data(), fNWorkers);
       // Init the session now
       Init(url, conffile, confdir, loglevel, alias);
    }
@@ -352,6 +357,8 @@ Int_t TProofLite::Init(const char *, const char *conffile,
    // We register the session as a socket so that cleanup is done properly
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfSockets()->Add(this);
+   
+   AskParallel();
 
    return fActiveSlaves->GetSize();
 }
@@ -488,7 +495,8 @@ Int_t TProofLite::SetupWorkers(Int_t opt, TList *startedWorkers)
       for (; ord < nWrksTot; ord++) {
 
          // Ordinal for this worker server
-         fullord = Form("0.%d", ord);
+         const char *o = (gProofServ) ? gProofServ->GetOrdinal() : "0";
+         fullord.Form("%s.%d", o, ord);
 
          // Create environment files
          SetProofServEnv(fullord);
@@ -514,7 +522,8 @@ Int_t TProofLite::SetupWorkers(Int_t opt, TList *startedWorkers)
       for (; ord < nWrksTot; ord++) {
 
          // Ordinal for this worker server
-         fullord.Form("0.%d", ord + 1);
+         const char *o = (gProofServ) ? gProofServ->GetOrdinal() : "0";
+         fullord.Form("%s.%d", o, ord + 1);
          if (!clones.IsNull()) clones += " ";
          clones += fullord;
 
@@ -825,12 +834,19 @@ Int_t TProofLite::CreateSandbox()
    stag.Form("%s-%d-%d", gSystem->HostName(), (int)time(0), gSystem->GetPid());
    SetName(stag.Data());
 
+   Int_t subpath = gEnv->GetValue("ProofLite.SubPath", 1);
    // Subpath for this session in the fSandbox (<sandbox>/path-to-working-dir)
-   TString sessdir(gSystem->WorkingDirectory());
-   sessdir.ReplaceAll(gSystem->HomeDirectory(),"");
-   sessdir.ReplaceAll("/","-");
-   sessdir.Replace(0,1,"/",1);
-   sessdir.Insert(0, fSandbox.Data());
+   TString sessdir;
+   if (subpath != 0) {
+      sessdir = gSystem->WorkingDirectory();
+      sessdir.ReplaceAll(gSystem->HomeDirectory(),"");
+      sessdir.ReplaceAll("/","-");
+      sessdir.Replace(0,1,"/",1);
+      sessdir.Insert(0, fSandbox.Data());
+   } else {
+      // USe the sandbox
+      sessdir = fSandbox;
+   }
 
    // Session working and queries dir
    fWorkDir.Form("%s/session-%s", sessdir.Data(), stag.Data());
@@ -860,12 +876,22 @@ void TProofLite::Print(Option_t *option) const
 {
    // Print status of PROOF-Lite cluster.
 
+   TString ord;
+   if (gProofServ) ord.Form("%s ", gProofServ->GetOrdinal());
    if (IsParallel())
-      Printf("*** PROOF-Lite cluster (parallel mode, %d workers):", GetParallel());
+      Printf("*** PROOF-Lite cluster %s(parallel mode, %d workers):", ord.Data(), GetParallel());
    else
-      Printf("*** PROOF-Lite cluster (sequential mode)");
+      Printf("*** PROOF-Lite cluster %s(sequential mode)", ord.Data());
 
-   Printf("Host name:                  %s", gSystem->HostName());
+   if (gProofServ) {
+      TString url(gSystem->HostName());
+      // Add port to URL, if defined
+      Int_t port = gEnv->GetValue("ProofServ.XpdPort", 1093);
+      if (port > -1) url.Form("%s:%d",gSystem->HostName(), port);
+      Printf("URL:                        %s", url.Data());
+   } else {
+      Printf("Host name:                  %s", gSystem->HostName());
+   }
    Printf("User:                       %s", GetUser());
    TString ver(gROOT->GetVersion());
    if (gROOT->GetSvnRevision() > 0)
@@ -1238,7 +1264,7 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
 Int_t TProofLite::CreateSymLinks(TList *files)
 {
    // Create in each worker sandbox symlinks to the files in the list
-   // Used to make the caceh information available to workers.
+   // Used to make the cache information available to workers.
 
    Int_t rc = 0;
    if (files) {

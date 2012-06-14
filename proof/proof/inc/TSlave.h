@@ -45,7 +45,7 @@ typedef Int_t (*OldSlaveAuthSetup_t)(TSocket *, Bool_t, TString, TString);
 // using the plugin manager
 typedef TSlave *(*TSlave_t)(const char *url, const char *ord, Int_t perf,
                             const char *image, TProof *proof, Int_t stype,
-                            const char *workdir, const char *msd);
+                            const char *workdir, const char *msd, Int_t nwk);
 
 class TSlave : public TObject {
 
@@ -66,7 +66,7 @@ private:
    TSlave(const TSlave &s) : TObject(s) { }
    TSlave(const char *host, const char *ord, Int_t perf,
           const char *image, TProof *proof, Int_t stype,
-          const char *workdir, const char *msd);
+          const char *workdir, const char *msd, Int_t = 1);
 
    Int_t  OldAuthSetup(Bool_t master, TString wconf);
    void   Init(const char *host, Int_t port, Int_t stype);
@@ -74,7 +74,7 @@ private:
 
    static TSlave *Create(const char *url, const char *ord, Int_t perf,
                          const char *image, TProof *proof, Int_t stype,
-                         const char *workdir, const char *msd);
+                         const char *workdir, const char *msd, Int_t nwk = 1);
 
 protected:
    TString       fName;      //slave's hostname

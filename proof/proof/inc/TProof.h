@@ -133,9 +133,10 @@ class TSelector;
 // 31 -> 32: New log path trasmission
 // 32 -> 33: Development cycle 5.29/04 (fixed worker activation, new startup technology, ...)
 // 33 -> 34: Development cycle 5.33/02 (fix load issue, ...)
+// 34 -> 35: Development cycle 5.99/01 (PLite on workers, ...)
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 34;            // protocol version number
+const Int_t       kPROOF_Protocol        = 35;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
@@ -728,7 +729,7 @@ protected:
    TSlave *CreateSlave(const char *url, const char *ord,
                        Int_t perf, const char *image, const char *workdir);
    TSlave *CreateSubmaster(const char *url, const char *ord,
-                           const char *image, const char *msd);
+                           const char *image, const char *msd, Int_t nwk = 1);
 
    virtual void SaveWorkerInfo();
 

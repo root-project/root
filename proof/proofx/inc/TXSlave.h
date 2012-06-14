@@ -40,6 +40,7 @@ friend class TXProofMgr;
 
 private:
    Bool_t   fValid;
+   Int_t    fNWrks;     // Number of workers when submaster in remote plite
    TSignalHandler *fIntHandler;     //interrupt signal handler (ctrl-c)
 
    void  Init(const char *host, Int_t stype);
@@ -60,7 +61,7 @@ protected:
 public:
    TXSlave(const char *url, const char *ord, Int_t perf,
            const char *image, TProof *proof, Int_t stype,
-           const char *workdir, const char *msd);
+           const char *workdir, const char *msd, Int_t nwk = 1);
    virtual ~TXSlave();
 
    void   Close(Option_t *opt = "");

@@ -52,7 +52,7 @@ void TSlaveLite::DoError(int level, const char *location,
 //______________________________________________________________________________
 TSlaveLite::TSlaveLite(const char *ord, Int_t perf,
                const char *image, TProof *proof, Int_t stype,
-               const char *workdir, const char *msd) : TSlave()
+               const char *workdir, const char *msd, Int_t) : TSlave()
 {
    // Create a PROOF slave object. Called via the TProof ctor.
    fName = ord;  // Need this during the setup phase; see end of SetupServ
@@ -79,10 +79,10 @@ void TSlaveLite::Init()
    // Command to be executed
    TString cmd;
 #ifdef R__HAVE_CONFIG
-   cmd.Form(". %s/worker-%s.env; export ROOTBINDIR=\"%s\"; %s/proofserv proofslave lite %d %d &",
+   cmd.Form(". %s/worker-%s.env; export ROOTBINDIR=\"%s\"; %s/proofserv proofslave lite %d %d 0&",
             fWorkDir.Data(), fOrdinal.Data(), ROOTBINDIR, ROOTBINDIR,
 #else
-   cmd.Form(". %s/worker-%s.env; export ROOTBINDIR=\"%s/bin\"; %s/bin/proofserv proofslave lite %d %d &",
+   cmd.Form(". %s/worker-%s.env; export ROOTBINDIR=\"%s/bin\"; %s/bin/proofserv proofslave lite %d %d 0&",
             fWorkDir.Data(), fOrdinal.Data(), gSystem->Getenv("ROOTSYS"), gSystem->Getenv("ROOTSYS"),
 #endif
             gSystem->GetPid(), gDebug);

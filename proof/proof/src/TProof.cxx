@@ -941,6 +941,9 @@ Int_t TProof::Init(const char *, const char *conffile,
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
+      
+   AskParallel();
+
    return fActiveSlaves->GetSize();
 }
 
@@ -992,7 +995,7 @@ void TProof::ParseConfigField(const char *config)
          // or pass additional options for valgrind by prefixing 'valgrind_opts:'. For example,
          //    TProof::AddEnvVar("PROOF_MASTER_WRAPPERCMD", "valgrind_opts:--time-stamp --leak-check=full"
          // will add option "--time-stamp --leak-check=full" to our default options
-         TString mst, wrk, all;
+         TString mst, top, sub, wrk, all;
          TList *envs = fgProofEnvList;
          TNamed *n = 0;
          if (envs) {
@@ -1000,10 +1003,16 @@ void TProof::ParseConfigField(const char *config)
                all = n->GetTitle();
             if ((n = (TNamed *) envs->FindObject("PROOF_MASTER_WRAPPERCMD")))
                mst = n->GetTitle();
+            if ((n = (TNamed *) envs->FindObject("PROOF_TOPMASTER_WRAPPERCMD")))
+               top = n->GetTitle();
+            if ((n = (TNamed *) envs->FindObject("PROOF_SUBMASTER_WRAPPERCMD")))
+               sub = n->GetTitle();
             if ((n = (TNamed *) envs->FindObject("PROOF_SLAVE_WRAPPERCMD")))
                wrk = n->GetTitle();
          }
          if (all != "" && mst == "") mst = all;
+         if (all != "" && top == "") top = all;
+         if (all != "" && sub == "") sub = all;
          if (all != "" && wrk == "") wrk = all;
          if (all != "" && all.BeginsWith("valgrind_opts:")) {
             // The field is used to add an option Reset the setting
@@ -1014,7 +1023,10 @@ void TProof::ParseConfigField(const char *config)
          TString var, cmd;
          cmd.Form("%svalgrind -v --suppressions=<rootsys>/etc/valgrind-root.supp", cq);
          TString mstlab("NO"), wrklab("NO");
-         if (opt == "valgrind" || opt.Contains("master")) {
+         Bool_t doMaster = (opt == "valgrind" || (opt.Contains("master") &&
+                           !opt.Contains("topmaster") && !opt.Contains("submaster")))
+                         ? kTRUE : kFALSE;
+         if (doMaster) {
             if (!IsLite()) {
                // Check if we have to add a var
                if (mst == "" || mst.BeginsWith("valgrind_opts:")) {
@@ -1033,6 +1045,28 @@ void TProof::ParseConfigField(const char *config)
                   if (!opt.Contains("workers")) return;
                }
                if (opt == "valgrind" || opt == "valgrind=") opt = "valgrind=workers";
+            }
+         }
+         if (opt.Contains("topmaster")) {
+            // Check if we have to add a var
+            if (top == "" || top.BeginsWith("valgrind_opts:")) {
+               top.ReplaceAll("valgrind_opts:","");
+               var.Form("%s --log-file=<logfilemst>.valgrind.log %s", cmd.Data(), top.Data());
+               TProof::AddEnvVar("PROOF_TOPMASTER_WRAPPERCMD", var);
+               mstlab = "YES";
+            } else if (top != "") {
+               mstlab = "YES";
+            }
+         }
+         if (opt.Contains("submaster")) {
+            // Check if we have to add a var
+            if (sub == "" || sub.BeginsWith("valgrind_opts:")) {
+               sub.ReplaceAll("valgrind_opts:","");
+               var.Form("%s --log-file=<logfilemst>.valgrind.log %s", cmd.Data(), sub.Data());
+               TProof::AddEnvVar("PROOF_SUBMASTER_WRAPPERCMD", var);
+               mstlab = "YES";
+            } else if (sub != "") {
+               mstlab = "YES";
             }
          }
          if (opt.Contains("=workers") || opt.Contains("+workers")) {
@@ -1214,8 +1248,13 @@ Int_t TProof::AddWorkers(TList *workerList)
             u.SetUser(gProofServ->GetUser());
          u.SetPasswd(gProofServ->GetGroup());
       }
-      TSlave *slave = CreateSlave(u.GetUrl(), fullord, perfidx,
-                                  image, workdir);
+      TSlave *slave = 0;
+      if (worker->IsWorker()) {
+         slave = CreateSlave(u.GetUrl(), fullord, perfidx, image, workdir);
+      } else {
+         slave = CreateSubmaster(u.GetUrl(), fullord,
+                                 image, worker->GetMsd(), worker->GetNWrks());
+      }
 
       // Add to global list (we will add to the monitor list after
       // finalizing the server startup)
@@ -1231,7 +1270,7 @@ Int_t TProof::AddWorkers(TList *workerList)
 
       PDB(kGlobal,3)
          Info("AddWorkers", "worker on host %s created"
-              " and added to list", worker->GetNodeName().Data());
+              " and added to list (ord: %s)", worker->GetName(), slave->GetOrdinal());
 
       // Notify opening of connection
       nSlavesDone++;
@@ -1262,6 +1301,9 @@ Int_t TProof::AddWorkers(TList *workerList)
       Bool_t slaveOk = kTRUE;
       if (sl->IsValid()) {
          fAllMonitor->Add(sl->GetSocket());
+      PDB(kGlobal,3)
+         Info("AddWorkers", "worker on host %s finalized"
+              " and added to list", sl->GetOrdinal());
       } else {
          slaveOk = kFALSE;
          fBadSlaves->Add(sl);
@@ -1407,7 +1449,6 @@ Bool_t TProof::StartSlaves(Bool_t attach)
          gProofServ->SendAsynMessage(emsg.Data());
          return kFALSE;
       }
-
       // Setup the workers
       if (AddWorkers(workerList) < 0)
          return kFALSE;
@@ -1605,14 +1646,14 @@ TSlave *TProof::CreateSlave(const char *url, const char *ord,
 
 //______________________________________________________________________________
 TSlave *TProof::CreateSubmaster(const char *url, const char *ord,
-                                const char *image, const char *msd)
+                                const char *image, const char *msd, Int_t nwk)
 {
    // Create a new TSlave of type TSlave::kMaster.
    // Note: creation of TSlave is private with TProof as a friend.
    // Derived classes must use this function to create slaves.
 
    TSlave *sl = TSlave::Create(url, ord, 100, image, this,
-                               TSlave::kMaster, 0, msd);
+                               TSlave::kMaster, 0, msd, nwk);
 
    if (sl->IsValid()) {
       sl->SetInputHandler(new TProofInputHandler(this, sl->GetSocket()));
@@ -1999,9 +2040,9 @@ Bool_t TProof::IsDataReady(Long64_t &totalbytes, Long64_t &bytesready)
 
    EmitVA("IsDataReady(Long64_t,Long64_t)", 2, totalbytes, bytesready);
 
-   //PDB(kGlobal,2)
-   Info("IsDataReady", "%lld / %lld (%s)",
-        bytesready, totalbytes, fDataReady?"READY":"NOT READY");
+   PDB(kGlobal,2)
+      Info("IsDataReady", "%lld / %lld (%s)",
+           bytesready, totalbytes, fDataReady?"READY":"NOT READY");
 
    return fDataReady;
 }
@@ -3241,8 +3282,12 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
             if (IsLite()) {
                if (fNotIdle > 0) {
                   fNotIdle--;
+                  PDB(kGlobal,2)
+                     Info("HandleInputMessage", "%s: got kPROOF_SETIDLE", sl->GetOrdinal());
                } else {
-                  Warning("HandleInputMessage", "got kPROOF_SETIDLE but no running workers ! protocol error?");
+                  Warning("HandleInputMessage",
+                          "%s: got kPROOF_SETIDLE but no running workers ! protocol error?",
+                          sl->GetOrdinal());
                }
             } else {
                fNotIdle = 0;
@@ -3296,7 +3341,8 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
 
       case kPROOF_FEEDBACK:
          {
-            PDB(kGlobal,2) Info("HandleInputMessage","kPROOF_FEEDBACK: enter");
+            PDB(kGlobal,2)
+               Info("HandleInputMessage","kPROOF_FEEDBACK: enter");
             TList *out = (TList *) mess->ReadObject(TList::Class());
             out->SetOwner();
             if (fPlayer)
@@ -6177,7 +6223,7 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
    Int_t nwrks = (nodes > wlst->GetSize()) ? wlst->GetSize() : nodes;
    int cnt = 0;
    fEndMaster = TestBit(TProof::kIsMaster) ? kTRUE : kFALSE;
-   while (cnt < nwrks) {
+   while (nwrks--) {
       // Random choice, if requested
       if (random) {
          Int_t iwrk = (Int_t) (gRandom->Rndm() * wlst->GetSize());

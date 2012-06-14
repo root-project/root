@@ -46,7 +46,7 @@ TSlave_t TSlave::fgTXSlaveHook = 0;
 //______________________________________________________________________________
 TSlave::TSlave(const char *url, const char *ord, Int_t perf,
                const char *image, TProof *proof, Int_t stype,
-               const char *workdir, const char *msd)
+               const char *workdir, const char *msd, Int_t)
   : fImage(image), fProofWorkDir(workdir),
     fWorkDir(workdir), fPort(-1),
     fOrdinal(ord), fPerfIdx(perf),
@@ -446,7 +446,7 @@ Int_t TSlave::OldAuthSetup(Bool_t master, TString wconf)
 //______________________________________________________________________________
 TSlave *TSlave::Create(const char *url, const char *ord, Int_t perf,
                        const char *image, TProof *proof, Int_t stype,
-                       const char *workdir, const char *msd)
+                       const char *workdir, const char *msd, Int_t nwk)
 {
    // Static method returning the appropriate TSlave object for the remote
    // server.
@@ -487,7 +487,7 @@ TSlave *TSlave::Create(const char *url, const char *ord, Int_t perf,
 
    // Load the right class
    if (fgTXSlaveHook && tryxpd) {
-      s = (*fgTXSlaveHook)(url, ord, perf, image, proof, stype, workdir, msd);
+      s = (*fgTXSlaveHook)(url, ord, perf, image, proof, stype, workdir, msd, nwk);
    } else {
       s = new TSlave(url, ord, perf, image, proof, stype, workdir, msd);
    }

@@ -45,10 +45,10 @@ ClassImp(TXSlave)
 //---- problems in multi-threaded environments. --------------------------------
 TSlave *GetTXSlave(const char *url, const char *ord, Int_t perf,
                      const char *image, TProof *proof, Int_t stype,
-                     const char *workdir, const char *msd)
+                     const char *workdir, const char *msd, Int_t nwk)
 {
    return ((TSlave *)(new TXSlave(url, ord, perf, image,
-                                    proof, stype, workdir, msd)));
+                                    proof, stype, workdir, msd, nwk)));
 }
 
 class XSlaveInit {
@@ -100,7 +100,7 @@ Bool_t TXSlaveInterruptHandler::Notify()
 //______________________________________________________________________________
 TXSlave::TXSlave(const char *url, const char *ord, Int_t perf,
                const char *image, TProof *proof, Int_t stype,
-               const char *workdir, const char *msd) : TSlave()
+               const char *workdir, const char *msd, Int_t nwk) : TSlave()
 {
    // Create a PROOF slave object. Called via the TProof ctor.
    fImage = image;
@@ -111,6 +111,7 @@ TXSlave::TXSlave(const char *url, const char *ord, Int_t perf,
    fProof = proof;
    fSlaveType = (ESlaveType)stype;
    fMsd = msd;
+   fNWrks = nwk;
    fIntHandler = 0;
    fValid = kFALSE;
 
@@ -173,12 +174,16 @@ void TXSlave::Init(const char *host, Int_t stype)
       iam = "Master";
       mode = 's';
       // Send session tag of the closest master to the slaves
-      alias = Form("session-%s|ord:%s", fProof->GetName(), fOrdinal.Data());
+      alias.Form("session-%s|ord:%s", fProof->GetName(), fOrdinal.Data());
    } else if (fProof->IsMaster() && stype == kMaster) {
       iam = "Master";
       mode = 'm';
       // Send session tag of the closest master to the slaves
-      alias = Form("session-%s|ord:%s", fProof->GetName(), fOrdinal.Data());
+      if (fNWrks > 1) {
+         alias.Form("session-%s|ord:%s|plite:%d", fProof->GetName(), fOrdinal.Data(), fNWrks);
+      } else {
+         alias.Form("session-%s|ord:%s", fProof->GetName(), fOrdinal.Data());
+      }
    } else if (!fProof->IsMaster() && stype == kMaster) {
       iam = "Local Client";
       mode = (attach) ? 'A' : 'M';
@@ -188,7 +193,7 @@ void TXSlave::Init(const char *host, Int_t stype)
    }
 
    // Add conf file, if required
-   if (fProof->fConfFile.Length() > 0)
+   if (fProof->fConfFile.Length() > 0 && fNWrks < 1)
       alias += Form("|cf:%s",fProof->fConfFile.Data());
 
    // Send over env variables (may not be supported remotely)
