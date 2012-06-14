@@ -561,8 +561,10 @@ void TRecorderReplaying::RegisterWindow(Window_t w)
    }
 
    if ((gDebug > 0) && (fWaitingForWindow)) {
+      std::ios::fmtflags f = std::cout.flags(); // store flags
       std::cout << " Window registered: new ID: " << std::hex << w <<
               "  previous ID: " << fWin << std::dec << std::endl;
+      std::cout.flags( f ); // restore flags (reset std::hex)
    }
 
    // Lock mutex for guarding access to fWindowList
@@ -580,9 +582,12 @@ void TRecorderReplaying::RegisterWindow(Window_t w)
    // (Replaying was stopped because of that)
    if (fWaitingForWindow && fGuiEvent->fWindow == fWin) {
 
-      if (gDebug > 0)
+      if (gDebug > 0) {
+         std::ios::fmtflags f = std::cout.flags(); // store flags
          std::cout << " Window " << std::hex << fGuiEvent->fWindow <<
                  " registered." << std::dec << std::endl;
+         std::cout.flags( f ); // restore flags (reset std::hex)
+      }
 
       fNextEvent = fGuiEvent;
       // Sets that we do not wait for this window anymore
@@ -1105,6 +1110,7 @@ void TRecorderInactive::DumpRootEvent(TRecGuiEvent *e, Int_t n)
    // Prints out attributes of one GUI event TRecGuiEvent *e
    // Int_n n is number of event if called in cycle
 
+   std::ios::fmtflags f = std::cout.flags(); // store flags
    std::cout << "[" << n << "] " << std::dec <<  std::setw(10)
       << e->GetTime().AsString() << std::setw(15) << kRecEventNames[e->fType]
       << " fW:"   << std::hex << e->fWindow
@@ -1131,6 +1137,7 @@ void TRecorderInactive::DumpRootEvent(TRecGuiEvent *e, Int_t n)
       std::cout << " | fM:" << std::hex << e->fMasked;
 
    std::cout << std::endl;
+   std::cout.flags( f ); // restore flags (reset std::hex)
 }
 
 //______________________________________________________________________________
