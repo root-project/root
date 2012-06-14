@@ -538,8 +538,10 @@ void TSessionServerFrame::OnBtnConnectClicked()
       if (fViewer->GetActDesc()->fProofMgr->IsValid()) {
          fViewer->GetActDesc()->fProof = fViewer->GetActDesc()->fProofMgr->CreateSession(
          fViewer->GetActDesc()->fConfigFile);
+         desc = 0;
          sessions = fViewer->GetActDesc()->fProofMgr->QuerySessions("");
-         desc = (TProofDesc *)sessions->Last();
+         if (sessions) 
+            desc = (TProofDesc *)sessions->Last();
          if (desc) {
             fViewer->GetActDesc()->fProof->SetAlias(fViewer->GetActDesc()->fName);
             fViewer->GetActDesc()->fTag = desc->GetName();
