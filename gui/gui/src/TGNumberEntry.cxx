@@ -2171,8 +2171,10 @@ void TGNumberEntry::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       {  char hex[256];
          ULong_t l = GetHexNumber();
          IntToHexStr(hex, l);
+         std::ios::fmtflags f = out.flags(); // store flags
          out << "0x" << std::hex << "U," << digits << "," << WidgetId()
              << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         out.flags( f ); // restore flags (reset std::hex)
          break;
       }
    }
@@ -2284,8 +2286,10 @@ void TGNumberEntryField::SavePrimitive(std::ostream &out, Option_t *option /*= "
       {  char hex[256];
          ULong_t l = GetHexNumber();
          IntToHexStr(hex, l);
+         std::ios::fmtflags f = out.flags(); // store flags
          out << "0x" << std::hex << "U"
              << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         out.flags( f ); // restore flags (reset std::hex)
          break;
       }
    }
