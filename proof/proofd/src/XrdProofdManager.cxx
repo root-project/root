@@ -557,7 +557,6 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
       // If in remote PLite mode, we need to isolate the number of workers
       // per unique node
       if (fRemotePLite) {
-         bool merged = 0;
          for (iw = wrks.begin(); iw != wrks.end() ; iw++) {
             XrdProofWorker *w = *iw;
             // Do we have it already in the unique list?
@@ -567,7 +566,6 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
                if (w->fHost == uw->fHost && w->fPort == uw->fPort) {
                   uw->fNwrks += 1;
                   isnew = 0;
-                  merged = 1;
                   break;
                }
             }
