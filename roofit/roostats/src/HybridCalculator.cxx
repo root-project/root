@@ -40,8 +40,6 @@ int HybridCalculator::CheckHook(void) const {
 
 int HybridCalculator::PreNullHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const {
 
-   std::cout << "PreNullHook: " << fNullModel->GetNuisanceParameters() << " " << fPriorNuisanceNull << std::endl;
-   if(fNullModel->GetNuisanceParameters()) fNullModel->GetNuisanceParameters()->Print();
 
    // ****** any TestStatSampler ********
 
