@@ -63,7 +63,7 @@ TGeoPatternFinder::ThreadData_t::~ThreadData_t()
 {
    // Destructor.
 
-   if (fMatrix != gGeoIdentity) delete fMatrix;
+//   if (fMatrix != gGeoIdentity) delete fMatrix;
 }
 
 //______________________________________________________________________________
@@ -317,8 +317,13 @@ void TGeoPatternX::cd(Int_t idiv)
 TGeoMatrix* TGeoPatternX::CreateMatrix() const
 {
    // Return new matrix of type used by  this finder.
-   if (!IsReflected()) return new TGeoTranslation(0.,0.,0.);
+   if (!IsReflected()) {
+      TGeoMatrix *matrix = new TGeoTranslation(0.,0.,0.);
+      matrix->RegisterYourself();
+      return matrix;
+   }   
    TGeoCombiTrans *combi = new TGeoCombiTrans();
+   combi->RegisterYourself();
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
    return combi;   
@@ -487,11 +492,16 @@ void TGeoPatternY::cd(Int_t idiv)
 TGeoMatrix* TGeoPatternY::CreateMatrix() const
 {
    // Return new matrix of type used by  this finder.
-   if (!IsReflected()) return new TGeoTranslation(0.,0.,0.);
+   if (!IsReflected()) {
+      TGeoMatrix *matrix = new TGeoTranslation(0.,0.,0.);
+      matrix->RegisterYourself();
+      return matrix;
+   }   
    TGeoCombiTrans *combi = new TGeoCombiTrans();
+   combi->RegisterYourself();
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
-   return combi;   
+   return combi;
 }
 
 //_____________________________________________________________________________
@@ -653,8 +663,13 @@ void TGeoPatternZ::cd(Int_t idiv)
 TGeoMatrix* TGeoPatternZ::CreateMatrix() const
 {
    // Return new matrix of type used by  this finder.
-   if (!IsReflected()) return new TGeoTranslation(0.,0.,0.);
+   if (!IsReflected()) {
+      TGeoMatrix *matrix = new TGeoTranslation(0.,0.,0.);
+      matrix->RegisterYourself();
+      return matrix;
+   }   
    TGeoCombiTrans *combi = new TGeoCombiTrans();
+   combi->RegisterYourself();
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
    return combi;   
@@ -879,8 +894,13 @@ void TGeoPatternParaX::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*
 TGeoMatrix* TGeoPatternParaX::CreateMatrix() const
 {
    // Return new matrix of type used by  this finder.
-   if (!IsReflected()) return new TGeoTranslation(0.,0.,0.);
+   if (!IsReflected()) {
+      TGeoMatrix *matrix = new TGeoTranslation(0.,0.,0.);
+      matrix->RegisterYourself();
+      return matrix;
+   }   
    TGeoCombiTrans *combi = new TGeoCombiTrans();
+   combi->RegisterYourself();
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
    return combi;   
@@ -1035,8 +1055,13 @@ void TGeoPatternParaY::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*
 TGeoMatrix* TGeoPatternParaY::CreateMatrix() const
 {
    // Return new matrix of type used by  this finder.
-   if (!IsReflected()) return new TGeoTranslation(0.,0.,0.);
+   if (!IsReflected()) {
+      TGeoMatrix *matrix = new TGeoTranslation(0.,0.,0.);
+      matrix->RegisterYourself();
+      return matrix;
+   }   
    TGeoCombiTrans *combi = new TGeoCombiTrans();
+   combi->RegisterYourself();
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
    return combi;   
@@ -1195,8 +1220,13 @@ void TGeoPatternParaZ::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*
 TGeoMatrix* TGeoPatternParaZ::CreateMatrix() const
 {
    // Return new matrix of type used by  this finder.
-   if (!IsReflected()) return new TGeoTranslation(0.,0.,0.);
+   if (!IsReflected()) {
+      TGeoMatrix *matrix = new TGeoTranslation(0.,0.,0.);
+      matrix->RegisterYourself();
+      return matrix;
+   }   
    TGeoCombiTrans *combi = new TGeoCombiTrans();
+   combi->RegisterYourself();
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
    return combi;   
@@ -1364,8 +1394,13 @@ void TGeoPatternTrapZ::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*
 TGeoMatrix* TGeoPatternTrapZ::CreateMatrix() const
 {
    // Return new matrix of type used by  this finder.
-   if (!IsReflected()) return new TGeoTranslation(0.,0.,0.);
+   if (!IsReflected()) {
+      TGeoMatrix *matrix = new TGeoTranslation(0.,0.,0.);
+      matrix->RegisterYourself();
+      return matrix;
+   }   
    TGeoCombiTrans *combi = new TGeoCombiTrans();
+   combi->RegisterYourself();
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
    return combi;   
@@ -1676,8 +1711,13 @@ void TGeoPatternCylPhi::Streamer(TBuffer &R__b)
 TGeoMatrix* TGeoPatternCylPhi::CreateMatrix() const
 {
    // Return new matrix of type used by  this finder.
-   if (!IsReflected()) return new TGeoRotation();
+   if (!IsReflected()) {
+      TGeoRotation *matrix = new TGeoRotation();
+      matrix->RegisterYourself();
+      return matrix;
+   }   
    TGeoRotation *rot = new TGeoRotation();
+   rot->RegisterYourself();
    rot->ReflectZ(kTRUE);
    rot->ReflectZ(kFALSE);
    return rot;   
