@@ -52,7 +52,9 @@ TProof *TProofMgrLite::CreateSession(const char *cfg,
 {
    // Create a new session
 
-   Int_t nwrk = TProofLite::GetNumberOfWorkers(fUrl.GetOptions());
+   TString c(fUrl.GetOptions());
+   if (!c.Contains("workers=") && cfg && strstr(cfg, "workers=")) c = cfg;
+   Int_t nwrk = TProofLite::GetNumberOfWorkers(c);
    if (nwrk == 0) return (TProof *)0;
 
    // Check if we have already a running session

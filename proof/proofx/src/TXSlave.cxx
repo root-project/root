@@ -193,7 +193,7 @@ void TXSlave::Init(const char *host, Int_t stype)
    }
 
    // Add conf file, if required
-   if (fProof->fConfFile.Length() > 0 && fNWrks < 1)
+   if (fProof->fConfFile.Length() > 0 && fNWrks <= 1)
       alias += Form("|cf:%s",fProof->fConfFile.Data());
 
    // Send over env variables (may not be supported remotely)

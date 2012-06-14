@@ -721,6 +721,7 @@ Int_t TProof::Init(const char *, const char *conffile,
    }
 
    // Analysise the conffile field
+   if (fConfFile.Contains("workers=0")) fConfFile.ReplaceAll("workers=0", "masteronly");
    ParseConfigField(fConfFile);
 
    fWorkDir        = gSystem->WorkingDirectory();

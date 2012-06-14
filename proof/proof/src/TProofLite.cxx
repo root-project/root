@@ -422,15 +422,35 @@ Int_t TProofLite::GetNumberOfWorkers(const char *url)
       return 0;
    }
 
+   TString nw;
    Int_t nWorkers = -1;
    if (url && strlen(url)) {
-      TString o(url);
-      Int_t in = o.Index("workers=");
+      nw = url;
+      Int_t in = nw.Index("workers=");
       if (in != kNPOS) {
-         o.Remove(0, in + strlen("workers="));
-         while (!o.IsDigit())
-            o.Remove(o.Length()-1);
-         nWorkers = (!o.IsNull()) ? o.Atoi() : nWorkers;
+         nw.Remove(0, in + strlen("workers="));
+         while (!nw.IsDigit())
+            nw.Remove(nw.Length()-1);
+         if (!nw.IsNull()) {
+            if ((nWorkers = nw.Atoi()) <= 0) {
+               ::Warning("TProofLite::GetNumberOfWorkers",
+                         "number of workers specified by 'workers='"
+                         " is non-positive: using default");
+            }
+         }
+      }
+   } else if (fgProofEnvList) {
+      // Check PROOF_NWORKERS
+      TNamed *nm = (TNamed *) fgProofEnvList->FindObject("PROOF_NWORKERS");
+      if (nm) {
+         nw = nm->GetTitle();
+         if (nw.IsDigit()) {
+            if ((nWorkers = nw.Atoi()) == 0) {
+               ::Warning("TProofLite::GetNumberOfWorkers",
+                         "number of workers specified by 'workers='"
+                         " is non-positive: using default");
+            }
+         }
       }
    }
    if (nWorkers <= 0) {
