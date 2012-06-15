@@ -428,12 +428,16 @@ public:
             w->var("sig")->setVal(numberOnEvents[i] - numberOffEvents[i] / tau[i]);
             sbModel->SetSnapshot(*sbModel->GetParametersOfInterest());
             w->var("sig")->setVal(0);
-            bModel->SetSnapshot(*bModel->GetParametersOfInterest());
+            bModel->SetSnapshot(*bModel->GetParametersOfInterest());         
+
+            // has as initial value a non-zero value for sig (i.e start  with the S+B value)
+            sbModel->LoadSnapshot();
 
             // get significance using the ProfileLikelihoodCalculator
             ProfileLikelihoodCalculator *plc = new ProfileLikelihoodCalculator(*w->data("data"), *sbModel);
             plc->SetNullParameters(*bModel->GetSnapshot());
-            plc->SetAlternateParameters(*sbModel->GetSnapshot());
+            //plc->SetAlternateParameters(*sbModel->GetSnapshot());  // not needed for PLC
+
             regValue(plc->GetHypoTest()->Significance(), stringSignificance);
 
             // cleanup
