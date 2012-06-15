@@ -80,63 +80,62 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData& data) {
 }
 
 void ModelConfig::Print(Option_t*) const {
-   // print contents
-   ccoutI(InputArguments) << endl << "=== Using the following for " << GetName() << " ===" << endl;
+   // print contents of Model on the default print stream 
+   // It can be changed using RooPrintable
+   ostream& os = RooPrintable::defaultPrintStream();
 
-   // necessary so that GetObservables()->Print("") gets piped to the
-   // ccoutI(InputArguments) stream
-   ostream& oldstream = RooPrintable::defaultPrintStream(&ccoutI(InputArguments));
+   os << endl << "=== Using the following for " << GetName() << " ===" << endl;
 
+ 
    // args
    if(GetObservables()){
-      ccoutI(InputArguments) << "Observables:             ";
+      os << "Observables:             ";
       GetObservables()->Print("");
    }
    if(GetParametersOfInterest()) {
-      ccoutI(InputArguments) << "Parameters of Interest:  ";
+      os << "Parameters of Interest:  ";
       GetParametersOfInterest()->Print("");
    }
    if(GetNuisanceParameters()){
-      ccoutI(InputArguments) << "Nuisance Parameters:     ";
+      os << "Nuisance Parameters:     ";
       GetNuisanceParameters()->Print("");
    }
    if(GetGlobalObservables()){
-      ccoutI(InputArguments) << "Global Observables:      ";
+      os << "Global Observables:      ";
       GetGlobalObservables()->Print("");
    }
    if(GetConstraintParameters()){
-      ccoutI(InputArguments) << "Constraint Parameters:   ";
+      os << "Constraint Parameters:   ";
       GetConstraintParameters()->Print("");
    }
    if(GetConditionalObservables()){
-      ccoutI(InputArguments) << "Conditional Observables: ";
+      os << "Conditional Observables: ";
       GetConditionalObservables()->Print("");
    }
    if(GetProtoData()){
-      ccoutI(InputArguments) << "Proto Data:              ";
+      os << "Proto Data:              ";
       GetProtoData()->Print("");
    }
 
    // pdfs
    if(GetPdf()) {
-      ccoutI(InputArguments) << "PDF:                     ";
+      os << "PDF:                     ";
       GetPdf()->Print("");
    }
    if(GetPriorPdf()) {
-      ccoutI(InputArguments) << "Prior PDF:               ";
+      os << "Prior PDF:               ";
       GetPriorPdf()->Print("");
    }
 
    // snapshot
    const RooArgSet * snapshot = GetSnapshot();
    if(snapshot) {
-      ccoutI(InputArguments) << "Snapshot:                " << endl;
+      os << "Snapshot:                " << endl;
       snapshot->Print("v");
       delete snapshot;
    }
 
-   ccoutI(InputArguments) << endl;
-   RooPrintable::defaultPrintStream(&oldstream);
+   os << endl;
 }
 
 
@@ -183,20 +182,29 @@ const RooArgSet * ModelConfig::GetSnapshot() const{
    // User must delete returned RooArgSet.
    if ( !GetWS() ) return 0;
    if (!fSnapshotName.length()) return 0;
+   // calling loadSnapshot will also copy the current parameter values in the workspaces
+   // since we do not want to change the model parameters - we restore the previous ones 
+   if (! GetWS()->set(fSnapshotName.c_str() ) )return 0;
+   RooArgSet snapshotVars(*GetWS()->set(fSnapshotName.c_str() ) );
+   if (snapshotVars.getSize() == 0) return 0;
+   // make my snapshot which will contain a copy of the snapshot variables 
+   RooArgSet tempSnapshot; 
+   snapshotVars.snapshot(tempSnapshot);  
+   // load snapshot value from the workspace 
    if (!(GetWS()->loadSnapshot(fSnapshotName.c_str())) ) return 0;
-
-   return dynamic_cast<const RooArgSet*>(GetWS()->set(fSnapshotName.c_str() )->snapshot());
+   // by doing this snapshotVars will have the snapshot values - make the snapshot to return
+   const RooArgSet * modelSnapshot = dynamic_cast<const RooArgSet*>( snapshotVars.snapshot());
+   // restore now the variables of snapshot in ws to their original values
+   // need to const cast since assign is not const (but in reality in just assign values and does not change the set)
+   // and anyway the set is const 
+   snapshotVars.assignFast(tempSnapshot);
+   return modelSnapshot;  
 }
 
 void ModelConfig::LoadSnapshot() const{
    // load the snapshot from ws if it exists
    if ( !GetWS() ) return;
-
-   // kill output
-   RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
-   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
    GetWS()->loadSnapshot(fSnapshotName.c_str());
-   RooMsgService::instance().setGlobalKillBelow(level);
 }
 
 void ModelConfig::DefineSetInWS(const char* name, const RooArgSet& set) {
