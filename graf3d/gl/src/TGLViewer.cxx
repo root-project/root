@@ -1772,6 +1772,20 @@ void TGLViewer::SetPerspectiveCamera(ECameraType camera,
 }
 
 //______________________________________________________________________________
+void TGLViewer::ReinitializeCurrentCamera(const TGLVector3& hAxis, const TGLVector3& vAxis, Bool_t redraw)
+{
+   // Change base-vectors defining the camera-base transformation of current
+   // camera. hAxis and vAxis are the default directions for forward
+   // (inverted) and upwards.
+
+   TGLMatrix& cb = fCurrentCamera->RefCamBase();
+   cb.Set(cb.GetTranslation(), vAxis, hAxis);
+   fCurrentCamera->Setup(fOverallBoundingBox, kTRUE);
+   if (redraw)
+      RequestDraw();
+}
+
+//______________________________________________________________________________
 TGLAutoRotator* TGLViewer::GetAutoRotator()
 {
    // Get the auto-rotator for this viewer.

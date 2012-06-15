@@ -268,6 +268,7 @@ public:
                              Double_t center[3], Double_t hRotate, Double_t vRotate);
    void SetPerspectiveCamera(ECameraType camera, Double_t fov, Double_t dolly,
                              Double_t center[3], Double_t hRotate, Double_t vRotate);
+   void ReinitializeCurrentCamera(const TGLVector3& hAxis, const TGLVector3& vAxis, Bool_t redraw=kTRUE);
    void GetGuideState(Int_t & axesType, Bool_t & axesDepthTest, Bool_t & referenceOn, Double_t* referencePos) const;
    void SetGuideState(Int_t axesType, Bool_t axesDepthTest, Bool_t referenceOn, const Double_t* referencePos);
    void SetDrawCameraCenter(Bool_t x);
