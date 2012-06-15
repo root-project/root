@@ -75,8 +75,12 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData& data) {
       if(p.getSize()>0)
 	SetNuisanceParameters(p);
    }
+   
+   // print Modelconfig as an info message
 
+   std::ostream& oldstream = RooPrintable::defaultPrintStream(&ccoutI(InputArguments));
    Print();
+   RooPrintable::defaultPrintStream(&oldstream);
 }
 
 void ModelConfig::Print(Option_t*) const {
