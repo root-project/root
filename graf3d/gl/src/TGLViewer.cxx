@@ -883,7 +883,14 @@ Bool_t TGLViewer::SavePictureUsingFBO(const TString &fileName, Int_t w, Int_t h,
    catch (std::runtime_error& exc)
    {
       Error(eh, "%s",exc.what());
-      return kFALSE;
+      if (gEnv->GetValue("OpenGL.SavePictureFallbackToBB", 1)) {
+         Info(eh, "Falling back to saving image via back-buffer. Window must be fully visible.");
+         if (w != fViewport.Width() || h != fViewport.Height())
+            Warning(eh, "Back-buffer does not support image scaling, window size will be used.");
+         return SavePictureUsingBB(fileName);
+      } else {
+         return kFALSE;
+      }
    }
 
    TGLRect old_vp(fViewport);
