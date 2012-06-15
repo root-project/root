@@ -10593,6 +10593,13 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add)
    }
    Bool_t allord = strcmp(ord, "*") ? kFALSE : kTRUE;
 
+   // Check if this is for us
+   if (TestBit(TProof::kIsMaster) && gProofServ) {
+      if (!allord &&
+         strncmp(ord, gProofServ->GetOrdinal(), strlen(gProofServ->GetOrdinal())))
+         return 0;
+   }
+
    // Create the hash list of ordinal numbers
    THashList *ords = 0;
    if (!allord) {
@@ -10611,8 +10618,9 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add)
    TList *out = (add) ? fActiveSlaves : fInactiveSlaves;
 
    Int_t nwc = 0;
-   if (TestBit(TProof::kIsMaster)) {
-      fw = IsEndMaster() ? kFALSE : kTRUE;
+   if (IsEndMaster()) {
+      // We do not need to send forward 
+      fw = kFALSE;
       // Look for the worker in the initial list
       TObject *os = 0;
       TSlave *wrk = 0;
@@ -10649,8 +10657,8 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add)
             }
          }
       }
-      // If some worker not found, notify it
-      if (ords && ords->GetSize() > 0) {
+      // If some worker not found, notify it if at the end
+      if (!fw && ords && ords->GetSize() > 0) {
          TString oo;
          TIter nxo(ords);
          while ((os = nxo())) {
