@@ -3931,6 +3931,7 @@ Bool_t TGuiBldDragManager::HandleMotion(Event_t *event)
             break;
       }
    }
+   DrawGrabRectangles();
    return kTRUE;
 }
 
