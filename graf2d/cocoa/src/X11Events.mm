@@ -224,6 +224,39 @@ NSUInteger GetCocoaKeyModifiersFromROOTKeyModifiers(UInt_t rootModifiers)
    return cocoaModifiers;
 }
 
+//______________________________________________________________________________
+UInt_t GetKeyboardModifiers()
+{
+   const NSUInteger modifiers = [NSEvent modifierFlags];
+
+   UInt_t rootModifiers = 0;
+   if (modifiers & NSAlphaShiftKeyMask)
+      rootModifiers |= kKeyLockMask;
+   if (modifiers & NSShiftKeyMask)
+      rootModifiers |= kKeyShiftMask;
+   if (modifiers & NSControlKeyMask)
+      rootModifiers |= kKeyControlMask;
+   if (modifiers & NSAlternateKeyMask)
+      rootModifiers |= kKeyMod1Mask;
+   if (modifiers & NSCommandKeyMask)
+      rootModifiers |= kKeyMod2Mask;
+
+   return rootModifiers;
+}
+
+//______________________________________________________________________________
+UInt_t GetModifiers()
+{
+   UInt_t rootModifiers = GetKeyboardModifiers();
+   const NSUInteger buttons = [NSEvent pressedMouseButtons];
+   if (buttons & 1)
+      rootModifiers |= kButton1Mask;
+   if (buttons & 2)
+      rootModifiers |= kButton2Mask;
+
+   return rootModifiers;
+}
+
 namespace Detail {
 
 //Several aux. functions to extract parameters from Cocoa events.

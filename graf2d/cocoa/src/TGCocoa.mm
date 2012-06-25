@@ -972,8 +972,6 @@ void TGCocoa::TranslateCoordinates(Window_t srcWin, Window_t dstWin, Int_t srcX,
 
       if (QuartzWindow *qw = X11::FindWindowInPoint(srcX, srcY))
          child = qw.fID;
-      else
-         child = 0;
 
       return;
    }
@@ -3318,22 +3316,42 @@ void TGCocoa::LookupString(Event_t *event, char *buf, Int_t length, UInt_t &keys
 }
 
 //______________________________________________________________________________
-void TGCocoa::QueryPointer(Window_t /*wid*/, Window_t &/*rootw*/, Window_t &/*childw*/,
-                           Int_t &/*root_x*/, Int_t &/*root_y*/, Int_t &/*win_x*/,
-                           Int_t &/*win_y*/, UInt_t &/*mask*/)
+void TGCocoa::QueryPointer(Window_t winID, Window_t &rootWinID, Window_t &childWinID, Int_t &rootX, Int_t &rootY, Int_t &winX, Int_t &winY, UInt_t &mask)
 {
-   // Returns the root window the pointer is logically on and the pointer
-   // coordinates relative to the root window's origin.
-   //
-   // id             - specifies the window
-   // rotw           - the root window that the pointer is in
-   // childw         - the child window that the pointer is located in, if any
-   // root_x, root_y - the pointer coordinates relative to the root window's
-   //                  origin
-   // win_x, win_y   - the pointer coordinates relative to the specified
-   //                  window "id"
-   // mask           - the current state of the modifier keys and pointer
-   //                  buttons
+   //Emulate XQueryPointer(?).
+
+   //From TGX11/TGWin32.
+   if (!winID)
+      return;//Neither TGX11, nor TGWin32 set any of out parameters.
+   
+   //We have only one root window.
+   rootWinID = fPimpl->GetRootWindowID();
+   //Find cursor position (screen coordinates).
+   NSPoint screenPoint = [NSEvent mouseLocation];
+   screenPoint.y = X11::GlobalYCocoaToROOT(screenPoint.y);
+   rootX = screenPoint.x;
+   rootY = screenPoint.y;
+   
+   //Convert a screen point to winID's coordinate system.
+   if (winID > Window_t(fPimpl->GetRootWindowID())) {
+      NSObject<X11Window> *window = fPimpl->GetWindow(winID);
+      const NSPoint winPoint = X11::TranslateFromScreen(screenPoint, window.fContentView);
+      winX = winPoint.x;
+      winY = winPoint.y;
+   } else {
+      //Warning("QueryPointer", "Window %d parameter is a root window", (int)winID);
+      winX = 0;
+      winY = 0;
+   }
+
+   //Find child window in these coordinates (?).
+   if (QuartzWindow *childWin = X11::FindWindowInPoint(screenPoint.x, screenPoint.y)) {
+      childWinID = childWin.fID;
+      mask = X11::GetModifiers();
+   } else {
+      childWinID = 0;
+      mask = 0;
+   }   
 }
 
 //______________________________________________________________________________

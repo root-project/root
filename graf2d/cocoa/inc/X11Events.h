@@ -136,6 +136,8 @@ void MapUnicharToKeySym(unichar key, char *buf, Int_t len, UInt_t &rootKeySym);
 Int_t MapKeySymToKeyCode(Int_t keySym);
 NSUInteger GetCocoaKeyModifiersFromROOTKeyModifiers(UInt_t rootKeyModifiers);
 
+UInt_t GetModifiers();//Mouse buttons + keyboard modifiers.
+
 }//X11
 }//MacOSX
 }//ROOT
