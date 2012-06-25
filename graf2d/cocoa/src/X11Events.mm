@@ -1381,12 +1381,13 @@ void EventTranslator::GeneratePointerMotionEventActiveGrab(NSView<X11Window> * /
          }
       } else {
          //No such window - dispatch to the grab view.
-         if (fGrabEventMask & kPointerMotionMask)
+         //Else: either implicit grab, or user requested grab with owner_grab == False.
+         if ((fGrabEventMask & kPointerMotionMask) || (fGrabEventMask & kButtonMotionMask))
             Detail::SendPointerMotionEvent(fButtonGrabView, theEvent);
       }      
    } else {
       //Else: either implicit grab, or user requested grab with owner_grab == False.
-      if (fGrabEventMask & kPointerMotionMask)
+      if ((fGrabEventMask & kPointerMotionMask) || (fGrabEventMask & kButtonMotionMask))
          Detail::SendPointerMotionEvent(fButtonGrabView, theEvent);
    }   
 }
