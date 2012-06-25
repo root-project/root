@@ -262,6 +262,8 @@ void UnlockFocus(NSView<X11Window> *view);//For symmetry only.
 NSRect FindOverlapRect(const NSRect &viewRect, const NSRect &siblingViewRect);
 bool RectsOverlap(const NSRect &r1, const NSRect &r2);
 
+QuartzWindow *FindWindowInPoint(Int_t x, Int_t y);
+
 }//X11
 }//MacOSX
 }//ROOT

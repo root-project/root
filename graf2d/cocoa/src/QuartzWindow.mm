@@ -214,6 +214,31 @@ NSPoint TranslateCoordinates(NSView<X11Window> *from, NSView<X11Window> *to, NSP
 }
 
 //______________________________________________________________________________
+QuartzWindow *FindWindowInPoint(Int_t x, Int_t y)
+{
+   NSArray *orderedWindows = [NSApp orderedWindows];
+   for (NSWindow *window in orderedWindows) {
+      if (![window isKindOfClass : [QuartzWindow class]])
+         continue;
+      QuartzWindow *qw = (QuartzWindow *)window;
+      //Check if point is inside.
+      NSPoint screenPoint;
+      screenPoint.x = x;
+      screenPoint.y = y;      
+      
+      const NSPoint viewPoint = X11::TranslateFromScreen(screenPoint, qw.fContentView);
+      if (viewPoint.x < 0. || viewPoint.x > qw.fWidth)
+         continue;
+      if (viewPoint.y < 0. || viewPoint.y > qw.fHeight)
+         continue;
+         
+      return qw;
+   }
+   
+   return nil;
+}
+
+//______________________________________________________________________________
 void SetWindowAttributes(const SetWindowAttributes_t *attr, NSObject<X11Window> *window)
 {
    assert(attr != 0 && "SetWindowAttributes, attr parameter is null");
