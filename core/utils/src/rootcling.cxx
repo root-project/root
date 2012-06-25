@@ -2224,10 +2224,6 @@ bool NeedTemplateKeyword(const clang::CXXRecordDecl *cl)
    }  
 }
 
-bool HasCustomOperatorNewPlacement(G__ClassInfo& cl);
-bool HasCustomOperatorNewArrayPlacement(G__ClassInfo& cl);
-bool HasDefaultConstructor(G__ClassInfo& cl,string *args=0);
-
 //______________________________________________________________________________
 bool HasCustomOperatorNewPlacement(const char *which, const clang::RecordDecl &cl)
 {
