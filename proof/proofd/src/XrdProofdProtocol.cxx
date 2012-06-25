@@ -736,15 +736,35 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
 
    if (pmgr) {
 
-
       if (!Internal()) {
 
-         // Signal the client manager that a client has just gone
-         if (fgMgr && fgMgr->ClientMgr()) {
-            TRACE(HDBG, "fAdminPath: "<<fAdminPath);
-            XPDFORM(buf, "%s %p %d %d", fAdminPath.c_str(), pmgr, fCID, fPid);
-            TRACE(DBG, "sending to ClientMgr: "<<buf);
-            fgMgr->ClientMgr()->Pipe()->Post(XrdProofdClientMgr::kClientDisconnect, buf.c_str());
+         TRACE(REQ,"External disconnection of protocol associated with pid "<<fPid);
+
+         // Write disconnection file
+         XrdOucString discpath(fAdminPath, 0, fAdminPath.rfind("/cid"));
+         discpath += "/disconnected";
+         FILE *fd = fopen(discpath.c_str(), "w");
+            if (!fd) {
+            TRACE(XERR, "unable to create path: " <<discpath);
+         } else {
+            fclose(fd);  
+         } 
+
+         // Remove protocol and response from attached client/proofserv instances
+	 // Set reconnect flag if proofserv instances attached to this client are still running
+         pmgr->ResetClientSlot(fCID);
+         if(fgMgr && fgMgr->SessionMgr()) {
+            XrdSysMutexHelper mhp(fgMgr->SessionMgr()->Mutex());
+
+            fgMgr->SessionMgr()->DisconnectFromProofServ(fPid);
+            if(pmgr->Running()) {
+	       TRACE(REQ,"Non-idle proofserv processes attached to this client, setting reconnect time");
+	       fgMgr->SessionMgr()->SetReconnectTime(true);
+            }
+            fgMgr->SessionMgr()->CheckActiveSessions(0);
+	 }
+         else {
+	    TRACE(XERR,"No XrdProofdMgr ("<<fgMgr<<") or SessionMgr ("<<fgMgr->SessionMgr()<<")")
          }
 
       } else {
@@ -753,10 +773,15 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
          // of proxy servers and to notify the attached clients.
          // Tell the session manager that this session has gone
          if (fgMgr && fgMgr->SessionMgr()) {
+            XrdSysMutexHelper mhp(fgMgr->SessionMgr()->Mutex());
             TRACE(HDBG, "fAdminPath: "<<fAdminPath);
             buf.assign(fAdminPath, fAdminPath.rfind('/') + 1, -1);
-            TRACE(DBG, "sending to ProofServMgr: "<<buf);
-            fgMgr->SessionMgr()->Pipe()->Post(XrdProofdProofServMgr::kSessionRemoval, buf.c_str());
+            fgMgr->SessionMgr()->DeleteFromSessions(buf.c_str());
+            // Move the entry to the terminated sessions area
+            fgMgr->SessionMgr()->MvSession(buf.c_str());
+         }
+         else {
+	    TRACE(XERR,"No XrdProofdMgr ("<<fgMgr<<") or SessionMgr ("<<fgMgr->SessionMgr()<<")")
          }
       }
    }

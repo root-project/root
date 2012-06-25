@@ -144,21 +144,7 @@ void *XrdProofdProofServCron(void *p)
             TRACE(REQ, "kSessionRemoval: session: "<<fpid<<
                         " has been removed from the active list");
          } else if (msg.Type() == XrdProofdProofServMgr::kClientDisconnect) {
-            // A client just disconnected: we free the slots in the proofserv sesssions and
-            // we check the sessions status to see if any of them must be terminated
-            // read process id
-            int pid = 0;
-            if ((rc = msg.Get(pid)) != 0) {
-               TRACE(XERR, "kClientDisconnect: problems receiving process ID (buf: '"<<
-                           msg.Buf()<<"'); errno: "<<-rc);
-               continue;
-            }
-            TRACE(REQ, "kClientDisconnect: a client just disconnected: "<<pid);
-            // Free slots in the proof serv instances
-            mgr->DisconnectFromProofServ(pid);
-            TRACE(DBG, "quick check of active sessions");
-            // Quick check of active sessions in case of disconnections
-            mgr->CheckActiveSessions(0);
+            // obsolete
         } else if (msg.Type() == XrdProofdProofServMgr::kCleanSessions) {
             // Request for cleanup all sessions of a client (or all clients)
             XpdSrvMgrCreateCnt cnt(mgr, XrdProofdProofServMgr::kCleanSessionsCnt);
