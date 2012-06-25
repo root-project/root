@@ -437,7 +437,7 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
       if (!simPdf) {
          RooDataSet *one = pdf.generate(*fGlobalObservables, 1);
    
-         const RooArgSet *values = one->get();
+         const RooArgSet *values = one->get(0);
          if (!_allVars) {
             _allVars = pdf.getVariables();
          }
@@ -475,8 +475,8 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
    } else {
    
       // not using multigen for global observables
-      RooDataSet* one = pdf.generate( *fGlobalObservables, 1 );
-      const RooArgSet *values = one->get();
+      RooDataSet* one = pdf.generateSimGlobal( *fGlobalObservables, 1 );
+      const RooArgSet *values = one->get(0);
       RooArgSet* allVars = pdf.getVariables();
       *allVars = *values;
       delete allVars;
