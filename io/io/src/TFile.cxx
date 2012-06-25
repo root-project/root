@@ -1,4 +1,3 @@
-
 // @(#)root/io:$Id$
 // Author: Rene Brun   28/11/94
 
@@ -1241,7 +1240,7 @@ TList *TFile::GetStreamerInfoList()
          return 0;
       }
       key->ReadKeyBuffer(buf);
-      list = (TList*)key->ReadObjWithBuffer(buffer);
+      list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer));
       if (list) list->SetOwner();
       delete [] buffer;
       delete key;
@@ -2062,8 +2061,8 @@ void TFile::SetCacheRead(TFileCacheRead *cache, TObject* tree)
          // The only addition to fCacheReadMap is via an interface that takes
          // a TFileCacheRead* so the C-cast is safe.
          TFileCacheRead* tpf = (TFileCacheRead *)fCacheReadMap->GetValue(tree);
-         if (tpf && tpf->GetFile() == this) tpf->SetFile(0);
          fCacheReadMap->RemoveEntry(tree);
+         if (tpf && tpf->GetFile() == this) tpf->SetFile(0);
       }
    }
    if (cache) cache->SetFile(this);
