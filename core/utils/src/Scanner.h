@@ -41,6 +41,26 @@ class RScanner: public clang::RecursiveASTVisitor<RScanner>
 private:
    const SelectionRules &fSelectionRules;
    const clang::SourceManager* fSourceManager;
+   unsigned int fVerboseLevel;
+
+private:
+   static int fgAnonymousClassCounter;
+   static int fgBadClassCounter;
+   static int fgAnonymousEnumCounter;
+
+   static std::map <clang::Decl*, std::string> fgAnonymousClassMap;
+   static std::map <clang::Decl*, std::string> fgAnonymousEnumMap;
+
+private:
+   // only for debugging
+
+   static const int fgDeclLast = clang::Decl::Var;
+   bool fDeclTable [ fgDeclLast+1 ];
+
+   static const int fgTypeLast = clang::Type::TemplateTypeParm;
+   bool fTypeTable [ fgTypeLast+1 ];
+
+   clang::Decl * fLastDecl;
 
 public:
    static const char* fgClangDeclKey; // property key used for CLang declaration objects
@@ -60,9 +80,7 @@ public:
       AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass) : 
             fRuleIndex(index), fDecl(decl), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
             fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass) {}
-      AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass) : 
-            fRuleIndex(index), fDecl(decl), fRequestedName(requestName), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
-            fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass) {}
+            AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass);
       ~AnnotatedRecordDecl() {
          // Nothing to do we do not own the pointer;
       }
@@ -116,25 +134,6 @@ public:
    NamespaceColl_t fSelectedNamespaces;
 
 private:
-   static int fgAnonymousClassCounter;
-   static int fgBadClassCounter;
-   static int fgAnonymousEnumCounter;
-
-   static std::map <clang::Decl*, std::string> fgAnonymousClassMap;
-   static std::map <clang::Decl*, std::string> fgAnonymousEnumMap;
-
-private:
-   // only for debugging
-
-   static const int fgDeclLast = clang::Decl::Var;
-   bool fDeclTable [ fgDeclLast+1 ];
-
-   static const int fgTypeLast = clang::Type::TemplateTypeParm;
-   bool fTypeTable [ fgTypeLast+1 ];
-
-   clang::Decl * fLastDecl;
-
-private:
    void ShowInfo(const std::string &msg, const std::string &location = "") const;
    void ShowWarning(const std::string &msg, const std::string &location = "") const;
    void ShowError(const std::string &msg, const std::string &location = "") const;
@@ -178,7 +177,7 @@ private:
    unsigned int VarModifiers(clang::VarDecl* D) const;
 
 public:
-   RScanner (const SelectionRules &rules);
+   RScanner (const SelectionRules &rules, unsigned int verbose = 0);
    virtual ~ RScanner ();
 
 public:

@@ -41,6 +41,7 @@ void LinkdefReader::PopulatePragmaMap(){
    
    LinkdefReader::fgMapPragmaNames["TClass"] = kClass;
    LinkdefReader::fgMapPragmaNames["class"] = kClass;
+   LinkdefReader::fgMapPragmaNames["namespace"] = kNamespace;
    LinkdefReader::fgMapPragmaNames["function"] = kFunction;
    LinkdefReader::fgMapPragmaNames["global"] = kGlobal;
    LinkdefReader::fgMapPragmaNames["enum"] = kEnum;
@@ -237,14 +238,8 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
       }
          break;
          
-      case kEnum:
-      case kGlobal:	    
       case kFunction:
-      case kOperators:
-      case kClass:
-      case kUnion:
-      case kStruct:
-         if (name == kFunction) {
+         {
             bool name_or_proto = false; // if true = name, if flase = proto_name
             if (!ProcessFunctionPrototype(identifier, name_or_proto)) {
                return false;
@@ -264,7 +259,10 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
             fSelectionRules->AddFunctionSelectionRule(fsr);
             
          }
-         else if (name == kOperators) {
+         break;
+
+      case kOperators:
+         {
             if(!ProcessOperators(identifier)) // this creates the proto_pattern
                return false;
 //            std::cout<<"function selection rule for "<<identifier<<" (proto_pattern) to be impl."<<std::endl;
@@ -275,7 +273,9 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
             fsr.SetAttributeValue("proto_pattern", identifier);
             fSelectionRules->AddFunctionSelectionRule(fsr);
          }
-         else if (name == kGlobal) {
+         break;
+      case kGlobal:
+         {
  //           std::cout<<"variable selection rule for "<<identifier<<" to be impl."<<std::endl;
             VariableSelectionRule vsr(fCount++);
             if (linkOn) vsr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
@@ -284,7 +284,9 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
             else vsr.SetAttributeValue("name", identifier);
             fSelectionRules->AddVariableSelectionRule(vsr);
          }
-         else if (name == kEnum) {
+         break;
+      case kEnum:
+         {
 //            std::cout<<"enum selection rule for "<<identifier<<" to be impl."<<std::endl;
             
             EnumSelectionRule esr(fCount++);
@@ -294,7 +296,12 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
             else esr.SetAttributeValue("name", identifier);
             fSelectionRules->AddEnumSelectionRule(esr);
          }
-         else {
+         break;
+      case kClass:
+      case kNamespace:
+      case kUnion:
+      case kStruct:
+         {
 //            std::cout<<"class selection rule for "<<identifier<<" to be impl."<<std::endl;
             
             ClassSelectionRule csr(fCount++);

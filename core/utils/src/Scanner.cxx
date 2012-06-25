@@ -55,11 +55,90 @@ int RScanner::fgAnonymousEnumCounter  = 0;
 std::map <clang::Decl*, std::string> RScanner::fgAnonymousClassMap;
 std::map <clang::Decl*, std::string> RScanner::fgAnonymousEnumMap;
 
+
 //______________________________________________________________________________
-RScanner::RScanner (const SelectionRules &rules) : fSelectionRules(rules)
+RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass) : 
+   fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
+   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass) 
 {
-   fSourceManager = NULL;
-   
+   // Normalized the requested name.
+
+   const char *current = requestName;
+   // The level counting code would be usefull if we want to introduce missing spaces ...
+   // int level = 0;
+   while (*current != '\0') {
+      switch (*current) {
+      case ' ':
+      case '\n':
+      case '\t':
+         // white spaces.
+       
+         // Skip consecutive spaces.
+         while ( isspace(*current)  && isspace(*(current+1)) ) {
+            ++current;
+         }
+         // Skip space before '<' and ','
+         if (*current == ' ' && ( *(current+1) == '<' || *(current+1) == ',')) {
+            ++current;
+         } 
+         else if (*current == ' ' && *(current+1) == '>') {
+            // Skip space before '>' ; note that we should not get here if the previous non-space symbol was also a >
+            ++current;
+         } else {
+            fRequestedName += *current;
+            ++current;
+         }
+         break;
+      case '<':
+         // // Increment the nesting level unless followed by another <
+         // if ( *(current+1) != '<' ) {
+         //    ++level;
+         // }
+         fRequestedName += *current;
+         ++current;
+         // Skip all spaces after the '<'
+         while ( isspace(*current) ) {
+            ++current;
+         }
+         break;
+      case ',':
+         // Skip all spaces after the ','
+         fRequestedName += *current;
+         ++current;
+         while ( isspace(*current) ) {
+            ++current;
+         }
+         break;
+      case '>':
+         // // Increment the nesting level unless followed by another >
+         // if ( *(current+1) != '>' ) {
+         //    ++level;
+         // }
+         fRequestedName += *current;
+         ++current;
+         while ( isspace(*current) && *(current+1)!='>' ) {
+            ++current;
+         }
+         // If we are followed by a '>', let copy the space.
+         if ( isspace(*current) && *(current+1) == '>' ) {
+            fRequestedName += *current;
+            ++current;
+         }
+         break;
+      default:
+         fRequestedName += *current;
+         ++current;
+      }
+   }
+}
+
+//______________________________________________________________________________
+RScanner::RScanner (const SelectionRules &rules, unsigned int verbose /* = 0 */) : 
+   fSelectionRules(rules), fSourceManager(0), fVerboseLevel(verbose)
+{
+   // Regular constructor setting up the scanner to search for entities
+   // matching the 'rules'.
+
    for (int i = 0; i <= fgDeclLast; i ++)
       fDeclTable [i] = false;
    
@@ -591,6 +670,19 @@ std::string RScanner::FuncParameterList(clang::FunctionDecl* D) const
    return "(" + result + ")";
 }
 
+class RPredicateIsSameNamespace
+{
+private:
+   clang::NamespaceDecl *fTarget;
+public:
+   RPredicateIsSameNamespace(clang::NamespaceDecl *target) : fTarget(target) {}
+
+   bool operator()(const RScanner::AnnotatedNamespaceDecl& element) 
+   {
+      return (fTarget == element);
+   }
+};
+
 // This method visits a namespace node 
 bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
 {
@@ -609,20 +701,28 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
    if (selected) {
       
 #ifdef SELECTION_DEBUG
-      std::cout<<"\n\tSelected -> true";
+      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
 #endif
+      clang::DeclContext* primary_ctxt = N->getPrimaryContext();
+      clang::NamespaceDecl* primary = llvm::dyn_cast<clang::NamespaceDecl>(primary_ctxt);
       
-      std::string qual_name;
-      GetDeclQualName(N,qual_name);
-      std::cout<<"\tSelected namespace -> " << qual_name << "\n";
+      RPredicateIsSameNamespace pred(primary);
+      if ( find_if(fSelectedNamespaces.begin(),fSelectedNamespaces.end(),pred) == fSelectedNamespaces.end() ) {
+         // The namespace is not already registered.
 
-      fSelectedNamespaces.push_back(AnnotatedNamespaceDecl(N,selected->GetIndex(),selected->RequestOnlyTClass()));
-      
+         if (fVerboseLevel > 0) {
+            std::string qual_name;
+            GetDeclQualName(N,qual_name);
+            //      std::cout<<"\tSelected namespace -> " << qual_name << " ptr " << (void*)N <<   " decl ctxt " << (void*)N->getPrimaryContext() << " classname " <<primary->getNameAsString() << "\n";
+            std::cout<<"\tSelected namespace -> " << qual_name << "\n";
+         }
+         fSelectedNamespaces.push_back(AnnotatedNamespaceDecl(primary,selected->GetIndex(),selected->RequestOnlyTClass()));
+      }
       ret = true;
    }
    else {
 #ifdef SELECTION_DEBUG
-      std::cout<<"\n\tSelected -> false";
+      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> false";
 #endif
    }
    
@@ -648,24 +748,26 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
    }
    
    DumpDecl(D, "");
-   std::string qual_name2;
-   
-   if (GetDeclQualName(D, qual_name2))
-      std::cout<<"\tLooking -> " << qual_name2 << "\n";
-   if (qual_name2 == "TemplateClass") {
-      std::cout<<"  "<<D->clang::Decl::getDeclKindName()<<"\n";
+
+   if (fVerboseLevel > 2) {
+      std::string qual_name2;   
+      if (GetDeclQualName(D, qual_name2))
+         std::cout<<"\tLooking -> " << qual_name2 << "\n";
+      if (qual_name2 == "TemplateClass") {
+         std::cout<<"  "<<D->clang::Decl::getDeclKindName()<<"\n";
+      }
    }
-  
+   
    selected = fSelectionRules.IsDeclSelected(D);
    if (selected) {
       
 #ifdef SELECTION_DEBUG
-      std::cout<<"\n\tSelected -> true";
+      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
 #endif
-      
+
       std::string qual_name;
       GetDeclQualName(D,qual_name);
-      std::cout<<"\tSelected class -> " << qual_name << "\n";
+      if (fVerboseLevel > 0) std::cout<<"\tSelected class -> " << qual_name << "\n";
       
       if (selected->HasAttributeWithName("name")) {
          std::string name_value;
@@ -682,7 +784,7 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
    }
    else {
 #ifdef SELECTION_DEBUG
-      std::cout<<"\n\tSelected -> false";
+      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> false";
 #endif
    }
    
@@ -718,20 +820,20 @@ bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
    if(fSelectionRules.IsDeclSelected(D)) {
       
 #ifdef SELECTION_DEBUG
-      std::cout<<"\n\tSelected -> true";
+      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
 #endif
 
       clang::DeclContext *ctx = D->getDeclContext();
       
       clang::Decl* parent = dyn_cast<clang::Decl> (ctx);
       if (!parent) {
-         std::cout<<"Could not cast parent context to parent Decl"<<std::endl;
+         ShowWarning("Could not cast parent context to parent Decl","");
          return false;
       }
 
       std::string qual_name;
       GetDeclQualName(D,qual_name);
-      std::cout<<"\tSelected enum -> " << qual_name << "\n";
+      if (fVerboseLevel > 0) std::cout<<"\tSelected enum -> " << qual_name << "\n";
 
       //if ((fSelectionRules.isSelectionXMLFile() && ctx->isRecord()) || (fSelectionRules.isLinkdefFile() && ctx->isRecord() && fSelectionRules.IsDeclSelected(parent))) {
       if (ctx->isRecord() && fSelectionRules.IsDeclSelected(parent)) {
@@ -762,7 +864,7 @@ bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
    }
    else {
 #ifdef SELECTION_DEBUG
-      std::cout<<"\n\tSelected -> false";
+      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> false";
 #endif
    }
    
@@ -778,17 +880,17 @@ bool RScanner::VisitVarDecl(clang::VarDecl* D)
    
    if(fSelectionRules.IsDeclSelected(D)){
 #ifdef SELECTION_DEBUG
-      std::cout<<"\n\tSelected -> true";
+      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
 #endif
       std::string var_name;      
       var_name = D->getQualifiedNameAsString();
 
-      std::cout<<"\tSelected variable -> " << var_name << "\n";
+      if (fVerboseLevel > 0) std::cout<<"\tSelected variable -> " << var_name << "\n";
       
    }
    else {
 #ifdef SELECTION_DEBUG
-      std::cout<<"\n\tSelected -> false";
+      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> false";
 #endif
    }
    
@@ -803,17 +905,18 @@ bool RScanner::VisitFieldDecl(clang::FieldDecl* D)
    
    if(fSelectionRules.IsDeclSelected(D)){
 #ifdef SELECTION_DEBUG
-      std::cout<<"\n\tSelected -> true";
+      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
 #endif
 
+      // if (fVerboseLevel > 0) {
 //      std::string qual_name;
 //      GetDeclQualName(D,qual_name);
 //      std::cout<<"\tSelected field -> " << qual_name << "\n";
-      
+      // }
    }
    else {
 #ifdef SELECTION_DEBUG
-      std::cout<<"\n\tSelected -> false";
+      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> false";
 #endif
    }
    
@@ -830,7 +933,7 @@ bool RScanner::VisitFunctionDecl(clang::FunctionDecl* D)
    
    if(fSelectionRules.IsDeclSelected(D)){
 #ifdef SELECTION_DEBUG
-      std::cout<<"\n\tSelected -> true";
+      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
 #endif
       
       std::string qual_name;
@@ -844,11 +947,11 @@ bool RScanner::VisitFunctionDecl(clang::FunctionDecl* D)
       clang::DeclContext * ctx = D->getDeclContext();
       clang::Decl* parent = dyn_cast<clang::Decl> (ctx);
       if (!parent) {
-         std::cout<<"Could not cast parent context to parent Decl"<<std::endl;
+         ShowWarning("Could not cast parent context to parent Decl","");
          return false;
       }
 #ifdef SELECTION_DEBUG
-      std::cout<<"\n\tParams are "<<params;
+      if (fVerboseLevel > 3) std::cout<<"\n\tParams are "<<params;
 #endif
       
       if ((fSelectionRules.IsSelectionXMLFile() && ctx->isRecord()) || (fSelectionRules.IsLinkdefFile() && ctx->isRecord() && fSelectionRules.IsDeclSelected(parent))) {
@@ -865,7 +968,7 @@ bool RScanner::VisitFunctionDecl(clang::FunctionDecl* D)
    }
    else {
 #ifdef SELECTION_DEBUG
-      std::cout<<"\n\tSelected -> false";
+      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> false";
 #endif
    }
    
@@ -907,18 +1010,21 @@ std::string RScanner::GetClassName(clang::DeclContext* DC) const
 
 void RScanner::DumpDecl(clang::Decl* D, const char* msg) const
 {
+   if (fVerboseLevel > 3) {
+      return;
+   }
    std::string name;
    
    if (!D) {
 #ifdef SELECTION_DEBUG
-      printf("\nDEBUG - DECL is NULL: %s", msg);
+      if (fVerboseLevel > 3) printf("\nDEBUG - DECL is NULL: %s", msg);
 #endif
       return;
    }
    
    GetDeclName(D, name);
 #ifdef SELECTION_DEBUG
-   std::cout<<"\n\n"<<name<<" -> "<<D->getDeclKindName()<<": "<<msg;
+   if (fVerboseLevel > 3) std::cout<<"\n\n"<<name<<" -> "<<D->getDeclKindName()<<": "<<msg;
 #endif
 }
 
@@ -989,7 +1095,7 @@ bool RScanner::GetFunctionPrototype(clang::Decl* D, std::string& prototype) cons
       return true;
    }
    else {
-      std::cout<<"Warning - can't convert Decl to FunctionDecl"<<std::endl;
+      ShowWarning("can't convert Decl to FunctionDecl","");
       return false;
    }
 }
@@ -1000,21 +1106,23 @@ void RScanner::Scan(const clang::ASTContext &C)
    fSourceManager = &C.getSourceManager();
    
 #ifdef SELECTION_DEBUG
-   printf("\nDEBUG from Velislava - into the Scan() function!!!\n");
+   if (fVerboseLevel > 3) printf("\nDEBUG from Velislava - into the Scan() function!!!\n");
 #endif
 
 #ifdef SELECTION_DEBUG
-   fSelectionRules.PrintSelectionRules();
+   if (fVerboseLevel > 3) fSelectionRules.PrintSelectionRules();
 #endif
    
-   if (fSelectionRules.GetHasFileNameRule())
-      std::cout<<"File name detected"<<std::endl;
-   
+   if (fVerboseLevel > 0)  {
+      if (fSelectionRules.GetHasFileNameRule())
+         std::cout<<"File name detected"<<std::endl;
+   }
+
    TraverseDecl(C.getTranslationUnitDecl());
       
    if (!fSelectionRules.AreAllSelectionRulesUsed()) {
 #ifdef SELECTION_DEBUG
-      std::cout<<"\nDEBUG - unused sel rules"<<std::endl;
+      if (fVerboseLevel > 3) std::cout<<"\nDEBUG - unused sel rules"<<std::endl;
 #endif
    }
    

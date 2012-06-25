@@ -359,6 +359,100 @@ using namespace ROOT;
 #include "SelectionRules.h"
 #include "Scanner.h"
 
+// NOTE: This belongs in RConversionRules.cxx but can only be moved there if it is not shared with rootcint
+   void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext);
+
+   //--------------------------------------------------------------------------
+   void CreateNameTypeMap(const clang::CXXRecordDecl &cl, MembersTypeMap_t& nameType )
+   {
+      // Create the data member name-type map for given class
+
+      std::stringstream dims;
+      std::string typenameStr;
+
+      // Loop over the non static data member.
+      for(clang::RecordDecl::field_iterator field_iter = cl.field_begin(), end = cl.field_end();
+          field_iter != end;
+          ++field_iter)
+      {
+         // The CINT based code was filtering away static variables (they are not part of
+         // the list starting with field_begin in clang), and const enums (which should
+         // also not be part of this list).
+         // It was also filtering out the 'G__virtualinfo' artificial member.
+
+         typenameStr.clear();
+         dims.clear();
+         if (field_iter->getType()->isConstantArrayType()) {
+            const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(field_iter->getType().getTypePtr());
+            while (arrayType) {
+               dims << "[" << arrayType->getSize().getLimitedValue() << "]";
+               arrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual());
+            }
+         }
+         R__GetQualifiedName(typenameStr, field_iter->getType(), *(*field_iter));
+
+         nameType[field_iter->getName().data()] = TSchemaType(typenameStr.c_str(),dims.str().c_str());
+      }
+
+      // And now the base classes
+      // We also need to look at the base classes.
+      for(clang::CXXRecordDecl::base_class_const_iterator iter = cl.bases_begin(), end = cl.bases_end();
+          iter != end;
+          ++iter)
+      {
+         std::string basename( iter->getType()->getAsCXXRecordDecl()->getNameAsString() ); // Intentionally using only the unqualified name.
+         nameType[basename] = TSchemaType(basename.c_str(),"");
+      }         
+   }
+
+/**************************************************************************
+* R__map_cpp_name()
+**************************************************************************/
+char *R__map_cpp_name(const char *in)
+{
+   static G__FastAllocString *out_ptr = new G__FastAllocString(G__MAXNAME*6);
+   G__FastAllocString &out( *out_ptr );
+   unsigned int i=0,j=0,c;
+   while((c=in[i])) {
+      if (out.Capacity() < (j+3)) {
+         out.Resize(2*j);
+      }
+      switch(c) {
+         case '+': strcpy(out+j,"pL"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '-': strcpy(out+j,"mI"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '*': strcpy(out+j,"mU"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '/': strcpy(out+j,"dI"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '&': strcpy(out+j,"aN"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '%': strcpy(out+j,"pE"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '|': strcpy(out+j,"oR"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '^': strcpy(out+j,"hA"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '>': strcpy(out+j,"gR"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '<': strcpy(out+j,"lE"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '=': strcpy(out+j,"eQ"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '~': strcpy(out+j,"wA"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '.': strcpy(out+j,"dO"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '(': strcpy(out+j,"oP"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case ')': strcpy(out+j,"cP"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '[': strcpy(out+j,"oB"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case ']': strcpy(out+j,"cB"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '!': strcpy(out+j,"nO"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case ',': strcpy(out+j,"cO"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '$': strcpy(out+j,"dA"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case ' ': strcpy(out+j,"sP"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case ':': strcpy(out+j,"cL"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '"': strcpy(out+j,"dQ"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '@': strcpy(out+j,"aT"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '\'': strcpy(out+j,"sQ"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         case '\\': strcpy(out+j,"fI"); j+=2; break; // Okay: we resized the underlying buffer if needed
+         default: out[j++]=c; break;
+      }
+      ++i;
+   }
+   out[j]='\0';
+   return(out);
+}
+
+
 using namespace ROOT;
 
 const char *autoldtmpl = "G__auto%dLinkDef.h";
@@ -609,6 +703,7 @@ bool R__IsInt(const clang::FieldDecl *field)
 
 cling::Interpreter *gInterp = 0;
 
+#if NOTNEEDED
 const clang::NamedDecl *R__SlowSearchImpl(const char *name, const clang::DeclContext *ctxt = 0) 
 {
    // First find the left most part, search it and proceed with the search inside it.
@@ -684,19 +779,29 @@ const clang::NamedDecl *R__SlowSearch(const char *name, const clang::DeclContext
    }
    return result;
 }
+#endif
 
-const clang::CXXRecordDecl *R__SlowClassSearch(const char *name, const clang::DeclContext *ctxt = 0) 
+const clang::CXXRecordDecl *R__ScopeSearch(const char *name) 
+{
+   // Return the scope corresponding to 'name' or std::'name'
+  
+   const clang::CXXRecordDecl *result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupScope(name));
+   if (!result) {
+      std::string std_name("std::");
+      std_name += name;
+      result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupScope(std_name));
+   }
+   return result;
+}
+
+#if NOTNEEDED
+const clang::CXXRecordDecl *R__SlowClassSearch(const char *name) 
 {
    const clang::NamedDecl *result = R__SlowSearch(name,0);
 
    // Now, let's check with cling's lookupScope 
    const clang::CXXRecordDecl *result_cxx = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(result);
-   const clang::CXXRecordDecl *result_new = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupScope(name));
-   if (!result_new) {
-      std::string std_name("std::");
-      std_name += name;
-      result_new = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupScope(std_name));
-   }
+   const clang::CXXRecordDecl *result_new = R__ScopeSearch(name);
    if (result_cxx != result_new) {
       // Humm ok, we are not the same
       fprintf(stderr,"Error: lookupScope disagree with R__SlowSearchImpl on %s: lookupScope: %s slowClassSearch: %s\n",
@@ -709,6 +814,7 @@ const clang::CXXRecordDecl *R__SlowClassSearch(const char *name, const clang::De
       return 0;
    }
 }
+#endif 
 
 const clang::Type *R__GetUnderlyingType(clang::QualType type)
 {
@@ -717,6 +823,9 @@ const clang::Type *R__GetUnderlyingType(clang::QualType type)
    
    const clang::Type *rawtype = type.getTypePtr();
 
+   if (rawtype->isElaboratedTypeSpecifier() ) {
+      rawtype = rawtype->getCanonicalTypeInternal().getTypePtr();
+   }
    if (rawtype->isArrayType()) {
       rawtype = type.getTypePtr()->getBaseElementTypeUnsafe ();
    }   
@@ -789,14 +898,18 @@ const clang::CXXRecordDecl *R__SlowRawTypeSearch(const char *input_name, const c
          done = false;
       }
    }
-   const clang::NamedDecl *result = R__SlowSearch(name.c_str(),0);
+   // const clang::NamedDecl *result = R__SlowSearch(name.c_str(),0);
+   // if (!result) return 0;
+   // const clang::TypedefDecl *typedef_result = llvm::dyn_cast<clang::TypedefDecl>(result);
+   // if (typedef_result) {
+   //    result = R__GetUnderlyingRecordDecl(typedef_result->getUnderlyingType());
+   // }
 
-   if (!result) return 0;
-
-   const clang::TypedefDecl *typedef_result = llvm::dyn_cast<clang::TypedefDecl>(result);
-   if (typedef_result) {
-      result = R__GetUnderlyingRecordDecl(typedef_result->getUnderlyingType());
+   const clang::QualType qType = gInterp->lookupType(name.c_str());
+   if (qType.isNull()) {
+      return 0;
    }
+   const clang::NamedDecl *result = R__GetUnderlyingRecordDecl(qType);
    if (result) {
       // Try to find a complete definition if any.
       const clang::TagDecl *tagdecl = llvm::dyn_cast<clang::TagDecl>(result);
@@ -824,14 +937,42 @@ public:
    FDVisitor() : fFD(0) {}
 };
 
+//______________________________________________________________________________
+const clang::FunctionDecl *R__GetFuncWithProto(const clang::Decl* cinfo, 
+                                           const char *method, const char *proto)
+{
+   return gInterp->lookupFunctionProto(cinfo, method, proto);
+}
 
 //______________________________________________________________________________
-const clang::CXXMethodDecl *R__GetFuncWithProto(const clang::CXXRecordDecl* cinfo, 
+const clang::CXXMethodDecl *R__GetMethodWithProto(const clang::Decl* cinfo, 
                                                 const char *method, const char *proto)
 {
    const clang::FunctionDecl* funcD = gInterp->lookupFunctionProto(cinfo, method, proto);
    if (funcD) {
       return llvm::dyn_cast<const clang::CXXMethodDecl>(funcD);
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+const clang::CXXMethodDecl *R__GetMethodWithProto__Old(const clang::CXXRecordDecl* cinfo, 
+                                                const char *method, const char *proto)
+{
+   const clang::FunctionDecl* funcD = gInterp->lookupFunctionProto(cinfo, method, proto);
+   if (funcD) {
+      return llvm::dyn_cast<const clang::CXXMethodDecl>(funcD);
+   }
+   // Currently lookupFunctionProto does not look in base classes, so let's recurse
+   // ourselves ...
+   // NOTE: this is apriori bad for performance (extraneous parsing)
+   for(clang::CXXRecordDecl::base_class_const_iterator iter = cinfo->bases_begin(), end = cinfo->bases_end();
+       iter != end;
+       ++iter)
+   {
+      if (const clang::CXXMethodDecl *res = R__GetMethodWithProto((iter->getType()->getAsCXXRecordDecl ()),method,proto)) {
+         return res;
+      }
    }
    return 0;
 
@@ -924,7 +1065,7 @@ bool R__CheckPublicFuncWithProto(const clang::CXXRecordDecl *cl, const char *met
 {
    // Return true, if the function (defined by the name and prototype) exists and is public
 
-   const clang::CXXMethodDecl *method = R__GetFuncWithProto(cl,methodname,proto);
+   const clang::CXXMethodDecl *method = R__GetMethodWithProto(cl,methodname,proto);
    if (method && method->getAccess() == clang::AS_public) {
       return true;
    }
@@ -939,7 +1080,7 @@ bool ClassInfo__IsBase(const clang::RecordDecl *cl, const char* basename)
    }
    // This would be better but is to verbose for now.
    // clang::QualType basetype = TMetaUtils::LookupTypeDecl(*gInterp, basename);
-   const clang::NamedDecl *base = R__SlowClassSearch(basename);
+   const clang::NamedDecl *base = R__ScopeSearch(basename);
    if (base) {
       const clang::CXXRecordDecl* baseCRD = llvm::dyn_cast<clang::CXXRecordDecl>( base ); 
       if (baseCRD) return CRD->isDerivedFrom(baseCRD);
@@ -962,9 +1103,7 @@ bool R__IsBase(const clang::FieldDecl &m, const char* basename)
       return false;
    }
    
-   // This would be better but is to verbose for now.
-   // clang::QualType basetype = TMetaUtils::LookupTypeDecl(*gInterp, basename);
-   const clang::NamedDecl *base = R__SlowClassSearch(basename);
+   const clang::NamedDecl *base = R__ScopeSearch(basename);
    
    if (base) {
       const clang::CXXRecordDecl* baseCRD = llvm::dyn_cast<clang::CXXRecordDecl>( base ); 
@@ -976,7 +1115,7 @@ bool R__IsBase(const clang::FieldDecl &m, const char* basename)
 
 bool InheritsFromTObject(const clang::RecordDecl *cl)
 {
-   static const clang::CXXRecordDecl *TObject_decl = R__SlowClassSearch("TObject");
+   static const clang::CXXRecordDecl *TObject_decl = R__ScopeSearch("TObject");
 
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
    return R__IsBase(clxx, TObject_decl);
@@ -984,7 +1123,7 @@ bool InheritsFromTObject(const clang::RecordDecl *cl)
 
 bool InheritsFromTSelector(const clang::RecordDecl *cl)
 {
-   static const clang::CXXRecordDecl *TObject_decl = R__SlowClassSearch("TSelector");
+   static const clang::CXXRecordDecl *TObject_decl = R__ScopeSearch("TSelector");
 
    return R__IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl);
 }
@@ -1511,7 +1650,7 @@ void BeforeParseInit()
 
 }
 
-
+#if NOTNEEDED
 //______________________________________________________________________________
 bool CheckInputOperator(G__ClassInfo &cl, int dicttype)
 {
@@ -1584,6 +1723,40 @@ bool CheckInputOperator(G__ClassInfo &cl, int dicttype)
    delete [] proto;
    return has_input_error;
 }
+#endif
+
+//______________________________________________________________________________
+bool CheckInputOperator(const char *what, const char *proto, const string &fullname, const clang::RecordDecl *cl, int dicttype)
+{
+   // Check if the specificed operator (what) has been properly declared if the user has
+   // resquested a custom version.
+
+   const clang::FunctionDecl *method = R__GetFuncWithProto(llvm::dyn_cast<clang::Decl>(cl->getDeclContext()), what, proto);
+   bool has_input_error = false;
+   if (method != 0 && (method->getAccess() == clang::AS_public || method->getAccess() == clang::AS_none) ) {
+      std::string filename = R__GetFileName(cl);
+      if (strstr(filename.c_str(),"TBuffer.h")!=0 ||
+          strstr(filename.c_str(),"Rtypes.h" )!=0) {
+
+         has_input_error = true;
+      }
+   } else {
+      has_input_error = true;
+   }
+   if (has_input_error) {
+      if (dicttype==0||dicttype==1){
+         // We don't want to generate duplicated error messages in several dictionaries (when generating temporaries)
+         Error(0,
+               "in this version of ROOT, the option '!' used in a linkdef file\n"
+               "       implies the actual existence of customized operators.\n"
+               "       The following declaration is now required:\n"
+               "   TBuffer &%s(TBuffer &,%s *&);\n",what,fullname.c_str());
+
+      }
+   }
+   return has_input_error;
+ 
+}
 
 //______________________________________________________________________________
 bool CheckInputOperator(const clang::RecordDecl *cl, int dicttype)
@@ -1591,10 +1764,24 @@ bool CheckInputOperator(const clang::RecordDecl *cl, int dicttype)
    // Check if the operator>> has been properly declared if the user has
    // resquested a custom version.
 
-   bool has_input_error = false;
+   // G__ClassInfo clinfo(R__GetQualifiedName(*cl).c_str());
+   // return CheckInputOperator(clinfo,dicttype);
 
-   G__ClassInfo clinfo(R__GetQualifiedName(*cl).c_str());
-   return CheckInputOperator(clinfo,dicttype);
+
+   string fullname;
+   R__GetQualifiedName(fullname,*cl);
+   int ncha = fullname.length()+13;
+   char *proto = new char[ncha];
+   snprintf(proto,ncha,"TBuffer&,%s*&",fullname.c_str());
+   
+   Info(0, "Class %s: Do not generate operator>>()\n",
+        fullname.c_str());
+
+   // We do want to call both CheckInputOperator all the times.
+   bool has_input_error = CheckInputOperator("operator>>",proto,fullname,cl,dicttype);
+   has_input_error = CheckInputOperator("operator<<",proto,fullname,cl,dicttype) || has_input_error;
+   return has_input_error;
+
 #if 0
    // Need to find out if the operator>> is actually defined for
    // this class.
@@ -1866,6 +2053,10 @@ int GetClassVersion(const clang::RecordDecl *cl)
       // FIXME: Make it work for a namespace!
       return false;
    }
+   // Class_Version is know to be inline and we constrol (via the ClassDef macros)
+   // it's structure, so this is apriori fine, but we could consider replacing it
+   // with the slower but simpler:
+   //   gInterp->evaluate( classname + "::Class_Version()", &Value);
    std::string given_name("Class_Version");
    for (
         clang::CXXRecordDecl::method_iterator M = CRD->method_begin(),
@@ -1879,10 +2070,10 @@ int GetClassVersion(const clang::RecordDecl *cl)
             func = llvm::dyn_cast<clang::CompoundStmt>(M->getBody());
          } else {
             const clang::FunctionDecl *inst = M->getInstantiatedFromMemberFunction();
-            if (inst->getBody()) {
+            if (inst && inst->getBody()) {
                func = llvm::dyn_cast<clang::CompoundStmt>(inst->getBody());
             } else {
-               Error("GetClassVersion","Could not find the body for %s::ClassVersion!",R__GetQualifiedName(*cl).c_str());
+               Error("GetClassVersion","Could not find the body for %s::ClassVersion!\n",R__GetQualifiedName(*cl).c_str());
             }
          }
          if (func && !func->body_empty()) {
@@ -1980,6 +2171,7 @@ bool NeedTypedefShadowClass(G__ClassInfo& cl)
    return (cl.HasMethod("Class_Name") && !cl.IsTmplt());
 }
 
+#if NOTNEEDED
 //______________________________________________________________________________
 bool NeedTemplateKeyword(G__ClassInfo &cl)
 {
@@ -2014,6 +2206,7 @@ bool NeedTemplateKeyword(G__ClassInfo &cl)
    }
    return false;
 }
+#endif
 
 //______________________________________________________________________________
 bool NeedTemplateKeyword(const clang::CXXRecordDecl *cl)
@@ -2031,79 +2224,95 @@ bool NeedTemplateKeyword(const clang::CXXRecordDecl *cl)
    }  
 }
 
-bool HasCustomOperatorNew(G__ClassInfo& cl);
 bool HasCustomOperatorNewPlacement(G__ClassInfo& cl);
 bool HasCustomOperatorNewArrayPlacement(G__ClassInfo& cl);
 bool HasDefaultConstructor(G__ClassInfo& cl,string *args=0);
 
 //______________________________________________________________________________
-bool HasCustomOperatorNew(const clang::RecordDecl *cl)
+bool HasCustomOperatorNewPlacement(const char *which, const clang::RecordDecl &cl)
 {
-   // return true if we can find a custom operator new
+   // return true if we can find a custom operator new with placement
 
-   return false;
-#if 0
-   // Look for a custom operator new
-   bool custom = false;
-   G__ClassInfo gcl;
-   long offset;
-   const char *name = "operator new";
+   const char *name = which;
    const char *proto = "size_t";
+   const char *protoPlacement = "size_t,void*";
 
-   // first in the global namespace:
-   G__MethodInfo methodinfo = gcl.GetMethod(name,proto,&offset);
-   if  (methodinfo.IsValid()) {
-      custom = true;
+   // First search in the enclosing namespaces
+   const clang::FunctionDecl *operatornew = R__GetFuncWithProto(llvm::dyn_cast<clang::Decl>(cl.getDeclContext()), name, proto);
+   const clang::FunctionDecl *operatornewPlacement = R__GetFuncWithProto(llvm::dyn_cast<clang::Decl>(cl.getDeclContext()), name, protoPlacement);
+
+   const clang::DeclContext *ctxtnew = 0;
+   const clang::DeclContext *ctxtnewPlacement = 0;
+   
+   if (operatornew) {
+      ctxtnew = operatornew->getParent();
+   }
+   if (operatornewPlacement) {
+      ctxtnewPlacement = operatornewPlacement->getParent();
    }
 
-   // in nesting space:
-   gcl = cl.EnclosingSpace();
-   methodinfo = gcl.GetMethod(name,proto,&offset);
-   if  (methodinfo.IsValid()) {
-      custom = true;
+   // Then in the class and base classes
+   operatornew = R__GetFuncWithProto(&cl, name, proto);
+   operatornewPlacement = R__GetFuncWithProto(&cl, name, protoPlacement);
+
+   if (operatornew) {
+      ctxtnew = operatornew->getParent();
+   }
+   if (operatornew) {
+      ctxtnewPlacement = operatornewPlacement->getParent();
    }
 
-   // in class
-   methodinfo = cl.GetMethod(name,proto,&offset);
-   if  (methodinfo.IsValid()) {
-      custom = true;
+   if (ctxtnewPlacement == 0) {
+      return false;
    }
-
-   return custom;
-#endif
+   if (ctxtnew == 0) {
+      // Only a new with placement, no hiding
+      return true;
+   }
+   // Both are non zero
+   if (ctxtnew == ctxtnewPlacement) {
+      // Same declaration ctxt, no hiding
+      return true;
+   }
+   const clang::CXXRecordDecl* clnew = llvm::dyn_cast<clang::CXXRecordDecl>(ctxtnew);         
+   const clang::CXXRecordDecl* clnewPlacement = llvm::dyn_cast<clang::CXXRecordDecl>(ctxtnewPlacement);
+   if (clnew == 0 && clnewPlacement == 0) {
+      // They are both in different namespaces, I am not sure of the rules.
+      // we probably ought to find which one is closest ... for now bail
+      // (because rootcint was also bailing on that).
+      return true;
+   }
+   if (clnew != 0 && clnewPlacement == 0) {
+      // operator new is class method hiding the outer scope operator new with placement.
+      return false;
+   }
+   if (clnew == 0 && clnewPlacement != 0) {
+      // operator new is a not class method and can not hide new with placement which is a method
+      return true;
+   }
+   // Both are class methods   
+   if (clnew->isDerivedFrom(clnewPlacement)) {
+      // operator new is in a more derived part of the hierarchy, it is hiding operator new with placement.
+      return false;
+   }
+   // operator new with placement is in a more derived part of the hierarchy, it can't be hidden by operator new. 
+   return true;
 }
 
-bool HasCustomOperatorNew(G__ClassInfo& cl)
+//______________________________________________________________________________
+bool HasCustomOperatorNewPlacement(const clang::RecordDecl &cl)
 {
-   // return true if we can find a custom operator new
+   // return true if we can find a custom operator new with placement
 
-   // Look for a custom operator new
-   bool custom = false;
-   G__ClassInfo gcl;
-   long offset;
-   const char *name = "operator new";
-   const char *proto = "size_t";
+   return HasCustomOperatorNewPlacement("operator new",cl);
+}
 
-   // first in the global namespace:
-   G__MethodInfo methodinfo = gcl.GetMethod(name,proto,&offset);
-   if  (methodinfo.IsValid()) {
-      custom = true;
-   }
+//______________________________________________________________________________
+bool HasCustomOperatorNewArrayPlacement(const clang::RecordDecl &cl)
+{
+   // return true if we can find a custom operator new with placement
 
-   // in nesting space:
-   gcl = cl.EnclosingSpace();
-   methodinfo = gcl.GetMethod(name,proto,&offset);
-   if  (methodinfo.IsValid()) {
-      custom = true;
-   }
-
-   // in class
-   methodinfo = cl.GetMethod(name,proto,&offset);
-   if  (methodinfo.IsValid()) {
-      custom = true;
-   }
-
-   return custom;
+   return HasCustomOperatorNewPlacement("operator new[]",cl);
 }
 
 //______________________________________________________________________________
@@ -2275,7 +2484,7 @@ bool HasDefaultConstructor(const clang::CXXRecordDecl *cl, string *arg)
       if (result) {
          const char *name = "operator new";
          proto = "size_t";
-         const clang::CXXMethodDecl *method = R__GetFuncWithProto(cl,name,proto.c_str());
+         const clang::CXXMethodDecl *method = R__GetMethodWithProto(cl,name,proto.c_str());
          if (method && method->getAccess() != clang::AS_public) {
             result = false;
          }
@@ -2311,21 +2520,87 @@ bool HasCustomStreamerMemberFunction(const RScanner::AnnotatedRecordDecl &cl)
    static const char *proto = "TBuffer&";
 
    const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
-   const clang::CXXMethodDecl *method = R__GetFuncWithProto(clxx,"Streamer",proto);
+   const clang::CXXMethodDecl *method = R__GetMethodWithProto(clxx,"Streamer",proto);
    const clang::DeclContext *clxx_as_context = llvm::dyn_cast<clang::DeclContext>(clxx);
 
    return (method && method->getDeclContext() == clxx_as_context && ( cl.RequestNoStreamer() || !cl.RequestStreamerInfo()));
 }
 
-//______________________________________________________________________________
-bool IsTemplateFloat16(G__ClassInfo &cl)
-{
-   // Return true if any of the argument is or contains a Float16.
-   if (!cl.IsTmplt()) return false;
 
+bool StringBasedIsTemplateFloat16Double32(const char *which, const char *classname)
+{
+   G__FastAllocString arg( classname );
+   char *current, *next;
+   
+   // arg is now is the name of class template instantiation.
+   // We first need to find the start of the list of its template arguments
+   // then we have a comma separated list of type names.  We want to return
+   // the 'count+1'-th element in the list.
+   int len = strlen(arg);
+   int nesting = 0;
+   current = 0;
+   next = &(arg[0]);
+   for (int c = 0; c<len; c++) {
+      switch (arg[c]) {
+      case '<':
+         if (nesting==0) {
+            arg[c]=0;
+            current = next;
+            next = &(arg[c+1]);
+         }
+         nesting++;
+         break;
+      case '>':
+         nesting--;
+         if (nesting==0) {
+            arg[c]=0;
+            current = next;
+            next = &(arg[c+1]);
+            if (current) {
+               if (strcmp(current,which)==0) return true;
+               //G__ClassInfo subcl(current);
+               if (StringBasedIsTemplateFloat16Double32(which,current)) return true;
+            }
+         }
+         break;
+      case ',':
+         if (nesting==1) {
+            arg[c]=0;
+            current = next;
+            next = &(arg[c+1]);
+            if (current) {
+               if (strcmp(current,which)==0) return true;
+               //G__ClassInfo subcl(current);
+               if (StringBasedIsTemplateFloat16Double32(which,current)) return true;
+            }
+         }
+         break;
+      }
+   }
+
+   return false;
+
+}
+
+//______________________________________________________________________________
+bool IsTemplateFloat16(const RScanner::AnnotatedRecordDecl &cl)
+{
+   const clang::CXXRecordDecl* clxx =  llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
+   if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
+
+   // I would prefer to use the parser version:
+       // const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
+   // but unfortunately, it is useless here since the typedef have already
+   // been resolved here.
+   return StringBasedIsTemplateFloat16Double32("Float16_t",cl.GetRequestedName());
+
+#if NOTNEEDED
+   // Return true if any of the argument is or contains a Float16.
+   if (!clinfo.IsTmplt()) return false;
+   
    static G__TypeInfo ti;
    char *current, *next;
-   G__FastAllocString arg( cl.Name() );
+   G__FastAllocString arg( clinfo.Name() );
 
    // arg is now is the name of class template instantiation.
    // We first need to find the start of the list of its template arguments
@@ -2354,7 +2629,7 @@ bool IsTemplateFloat16(G__ClassInfo &cl)
             if (current) {
                if (strcmp(current,"Float16_t")==0) return true;
                G__ClassInfo subcl(current);
-               if (IsTemplateFloat16(subcl)) return true;
+               if (IsTemplateFloat16(cl,subcl)) return true;
             }
          }
          break;
@@ -2366,7 +2641,7 @@ bool IsTemplateFloat16(G__ClassInfo &cl)
             if (current) {
                if (strcmp(current,"Float16_t")==0) return true;
                G__ClassInfo subcl(current);
-               if (IsTemplateFloat16(subcl)) return true;
+               if (IsTemplateFloat16(cl,subcl)) return true;
             }
          }
          break;
@@ -2374,12 +2649,24 @@ bool IsTemplateFloat16(G__ClassInfo &cl)
    }
 
    return false;
+#endif
 }
 
 //______________________________________________________________________________
-bool IsTemplateDouble32(G__ClassInfo &cl)
+bool IsTemplateDouble32(const RScanner::AnnotatedRecordDecl &cl)
 {
    // Return true if any of the argument is or contains a double32.
+
+   const clang::CXXRecordDecl* clxx =  llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
+   if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
+
+   // I would prefer to use the parser version:
+   //    const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
+   // but unfortunately, it is useless here since the typedef have already
+   // been resolved here.
+   return StringBasedIsTemplateFloat16Double32("Double32_t",cl.GetRequestedName());
+
+#if NOTNEEDED
    if (!cl.IsTmplt()) return false;
 
    static G__TypeInfo ti;
@@ -2433,9 +2720,10 @@ bool IsTemplateDouble32(G__ClassInfo &cl)
    }
 
    return false;
+#endif
 }
 
-
+#if NOTNEEDED
 //______________________________________________________________________________
 bool IsSTLBitset(G__DataMemberInfo &m)
 {
@@ -2459,6 +2747,7 @@ bool IsSTLBitset(G__BaseClassInfo &m)
    string type(s);
    return TClassEdit::IsSTLBitset(type.c_str());
 }
+#endif
 
 //______________________________________________________________________________
 int IsSTLContainer(G__DataMemberInfo &m)
@@ -2704,7 +2993,7 @@ void WriteAuxFunctions(const RScanner::AnnotatedRecordDecl &cl)
    }
 
    string classname( GetLong64_Name(RStl::DropDefaultArg( cl.GetRequestedName()[0] ? cl.GetRequestedName() : R__GetQualifiedName(cl).c_str() ) ) );
-   string mappedname = G__map_cpp_name((char*)classname.c_str());
+   string mappedname = R__map_cpp_name((char*)classname.c_str());
 
    if ( ! TClassEdit::IsStdClass( classname.c_str() ) ) {
 
@@ -2722,7 +3011,7 @@ void WriteAuxFunctions(const RScanner::AnnotatedRecordDecl &cl)
       (*dictSrcOut) << "   // Wrappers around operator new" << std::endl
                     << "   static void *new_" << mappedname.c_str() << "(void *p) {" << std::endl
                     << "      return  p ? ";
-      if (HasCustomOperatorNewPlacement(clinfo)) {
+      if (HasCustomOperatorNewPlacement(*clxx)) {
          (*dictSrcOut) << "new(p) " << classname.c_str() << args << " : ";
       } else {
          (*dictSrcOut) << "::new((::ROOT::TOperatorNewHelper*)p) " << classname.c_str() << args << " : ";
@@ -2734,7 +3023,7 @@ void WriteAuxFunctions(const RScanner::AnnotatedRecordDecl &cl)
          // Can not can newArray if the destructor is not public.
          (*dictSrcOut) << "   static void *newArray_" << mappedname.c_str() << "(Long_t nElements, void *p) {" << std::endl;
          (*dictSrcOut) << "      return p ? ";
-         if (HasCustomOperatorNewArrayPlacement(clinfo)) {
+         if (HasCustomOperatorNewArrayPlacement(*clxx)) {
             (*dictSrcOut) << "new(p) " << classname.c_str() << "[nElements] : ";
          } else {
             (*dictSrcOut) << "::new((::ROOT::TOperatorNewHelper*)p) " << classname.c_str() << "[nElements] : ";
@@ -2979,7 +3268,7 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
 //______________________________________________________________________________
 int ElementStreamer(const clang::NamedDecl &forcontext, const clang::QualType &qti, const char *R__t,int rwmode,const char *tcl=0)
 {
-   static const clang::CXXRecordDecl *TObject_decl = R__SlowClassSearch("TObject");
+   static const clang::CXXRecordDecl *TObject_decl = R__ScopeSearch("TObject");
    enum {
       R__BIT_ISTOBJECT   = 0x10000000,
       R__BIT_HASSTREAMER = 0x20000000,
@@ -3549,10 +3838,13 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
 
    // We need to to go back to CINT to preserve functionality.
    G__ClassInfo clinfo( cl_input.GetRequestedName()[0] ? cl_input.GetRequestedName() : R__GetQualifiedName(cl_input).c_str() );
+   if (!clinfo.IsValid() && cl_input.GetRequestedName()[0] ) {
+      clinfo.Init(  R__GetQualifiedName(cl_input).c_str() );
+   }
 
    // coverity[fun_call_w_exception] - that's just fine.
    string classname = GetLong64_Name( RStl::DropDefaultArg( cl_input.GetRequestedName()[0] ? cl_input.GetRequestedName() : R__GetQualifiedName(cl_input).c_str() ) );
-   string mappedname = G__map_cpp_name((char*)classname.c_str());
+   string mappedname = R__map_cpp_name((char*)classname.c_str());
    string csymbol = classname;
    string args;
 
@@ -3605,8 +3897,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
    SchemaRuleClassMap_t::iterator rulesIt2 = G__ReadRawRules.find( R__GetQualifiedName(*cl).c_str() );
 
    MembersTypeMap_t nameTypeMap;
-   // Note Falling back on CINT for this ....
-   CreateNameTypeMap( clinfo, nameTypeMap );
+   CreateNameTypeMap( *cl, nameTypeMap );
 
    //--------------------------------------------------------------------------
    // Process the read rules
@@ -3857,7 +4148,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
    (*dictSrcOut) << "      return &instance;"  << std::endl
    << "   }" << std::endl;
 
-   if (!stl && !bset && !IsTemplateDouble32(clinfo) && !IsTemplateFloat16(clinfo)) {
+   if (!stl && !bset && !IsTemplateDouble32(cl_input) && !IsTemplateFloat16(cl_input)) {
       // The GenerateInitInstance for STL are not unique and should not be externally accessible
       (*dictSrcOut) << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol.c_str() << "*)" << std::endl
       << "   {\n      return GenerateInitInstanceLocal((" <<  csymbol.c_str() << "*)0);\n   }"
@@ -3891,7 +4182,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl)
 
    // coverity[fun_call_w_exception] - that's just fine.
    string classname = GetLong64_Name( RStl::DropDefaultArg( R__GetQualifiedName(*cl).c_str() ) );
-   string mappedname = G__map_cpp_name((char*)classname.c_str());
+   string mappedname = R__map_cpp_name((char*)classname.c_str());
 
    int nesting = 0;
    // We should probably unwind the namespace to properly nest it.
@@ -4444,7 +4735,7 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl)
          int isDouble32=0;
          if (strstr(type_name.c_str(),"Double32_t")) isDouble32=1;
 
-         // No need to test for static, there are not in this 'list.
+         // No need to test for static, there are not in this list.
          //   !(m.Property() & G__BIT_ISSTATIC)
          // No need to test for CINT artifiical members:
          //   strcmp(m.Name(), "G__virtualinfo")
@@ -4780,7 +5071,7 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
    // Write interface function for STL members
 
    string a;
-   string clName(G__map_cpp_name(R__GetFileName(cl.GetRecordDecl()).data()));
+   string clName(R__map_cpp_name(R__GetFileName(cl.GetRecordDecl()).data()));
    int version = GetClassVersion(cl.GetRecordDecl());
    if (version == 0) return;
    if (version < 0 && !(cl.RequestStreamerInfo()) ) return;
@@ -4844,7 +5135,7 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
       if (k!=0) {
          //          fprintf(stderr,"Add %s which is also",m.Type()->Name());
          //          fprintf(stderr," %s\n",R__TrueName(**field_iter) );
-         RStl::Instance().GenerateTClassFor( "", R__SlowClassSearch(type_name.c_str()) );
+         RStl::Instance().GenerateTClassFor( "", R__ScopeSearch(type_name.c_str()) );
       }      
    }
 
@@ -4912,7 +5203,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
    G__DataMemberInfo m(cl);
    char cdim[1024];
    string cvar;
-   string clName(G__map_cpp_name((char *)cl.Fullname()));
+   string clName(R__map_cpp_name((char *)cl.Fullname()));
    string fun;
    int version = GetClassVersion(cl);
    int clflag = 1;
@@ -5077,13 +5368,17 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 void WriteShowMembers(const RScanner::AnnotatedRecordDecl &cl, bool outside = false)
 {
    G__ClassInfo clinfo(cl.GetRequestedName()[0] ? cl.GetRequestedName() : R__GetQualifiedName(cl).c_str());
+   if (!clinfo.IsValid() && cl.GetRequestedName()[0] ) {
+      clinfo.Init(  R__GetQualifiedName(cl).c_str() );
+   }
+
    const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
 
    (*dictSrcOut) << "//_______________________________________";
    (*dictSrcOut) << "_______________________________________" << std::endl;
 
    string classname = GetLong64_Name( RStl::DropDefaultArg( cl.GetRequestedName()[0] ? cl.GetRequestedName() : R__GetQualifiedName(cl).c_str() ) );
-   string mappedname = G__map_cpp_name((char*)classname.c_str());
+   string mappedname = R__map_cpp_name((char*)classname.c_str());
 
    if (outside || clinfo.IsTmplt()) {
       (*dictSrcOut) << "namespace ROOT {" << std::endl
@@ -5116,7 +5411,7 @@ void WriteShowMembers(const RScanner::AnnotatedRecordDecl &cl, bool outside = fa
          WriteBodyShowMembers(clinfo, outside);
       } else {
          string clnameNoDefArg = GetLong64_Name( RStl::DropDefaultArg( cl.GetRequestedName()[0] ? cl.GetRequestedName() : R__GetQualifiedName(cl).c_str() ) );
-         string mappednameNoDefArg = G__map_cpp_name((char*)clnameNoDefArg.c_str());
+         string mappednameNoDefArg = R__map_cpp_name((char*)clnameNoDefArg.c_str());
 
          (*dictSrcOut) <<  "   ::ROOT::" << mappednameNoDefArg.c_str() << "_ShowMembers(this, R__insp);" << std::endl;
       }
@@ -5141,6 +5436,9 @@ void WriteClassCode(const RScanner::AnnotatedRecordDecl &cl)
    }
 
    G__ClassInfo clinfo(cl.GetRequestedName()[0] ? cl.GetRequestedName() : R__GetQualifiedName(cl).c_str());
+   if (!clinfo.IsValid() && cl.GetRequestedName()[0] ) {
+      clinfo.Init(  R__GetQualifiedName(cl).c_str() );
+   }
 
    if (ClassInfo__HasMethod(cl,"Streamer")) {
       if (clinfo.RootFlag()) WritePointersSTL(cl); // In particular this detect if the class has a version number.
@@ -6187,12 +6485,12 @@ int main(int argc, char **argv)
                              getenv("LLVMDIR"));
    interp.declare("namespace std {} using namespace std;");
 #ifdef ROOTBUILD
-   interp.declare("#include \"include/TObject.h\"");
+   interp.declare("#include \"include/Rtypes.h\"");
 #else
 # ifndef ROOTINCDIR
-   interp.declare("#include \"TObject.h\"");
+   interp.declare("#include \"Rtypes.h\"");
 # else
-   interp.declare("#include \"" ROOTINCDIR "/TObject.h\"");
+   interp.declare("#include \"" ROOTINCDIR "/Rtypes.h\"");
 # endif
 #endif
    gInterp = &interp;
@@ -6503,7 +6801,7 @@ int main(int argc, char **argv)
       main_dictname.erase(dh);
    }
    // Need to replace all the characters not allowed in a symbol ...
-   main_dictname = G__map_cpp_name((char*)main_dictname.c_str());
+   main_dictname = R__map_cpp_name((char*)main_dictname.c_str());
 
    time_t t = time(0);
    (*dictSrcOut) << "//"  << std::endl
@@ -6770,13 +7068,13 @@ int main(int argc, char **argv)
             continue;
          }
          if (iter->RequestOnlyTClass()) {
-            fprintf(stderr,"Skipping %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
+            // fprintf(stderr,"rootcling: Skipping class %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
             // For now delay those for later.
             continue;
          }
-         fprintf(stderr,"Seeing %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
          const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
          if (CRD) {
+            fprintf(stderr,"rootcling: Generating code for class %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
             std::string qualname( CRD->getQualifiedNameAsString() );
             if (IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().data() /* unqualified name without template arguement */) ) {
                   // coverity[fun_call_w_exception] - that's just fine.
@@ -6832,7 +7130,7 @@ int main(int argc, char **argv)
             continue;
          }
          G__ClassInfo clinfo( iter->GetRequestedName()[0] ? iter->GetRequestedName() : R__GetQualifiedName(*iter).c_str() );
-         fprintf(stderr,"Doing create %s %d\n",R__GetQualifiedName(*iter).c_str(),NeedShadowClass(clinfo));
+         fprintf(stderr,"rootcling: Writing TClass wrapper for class %s %d\n",R__GetQualifiedName(*iter).c_str(),NeedShadowClass(clinfo));
          if (NeedShadowClass(clinfo)) {
             (*dictSrcOut) << "namespace ROOT {" << std::endl
             << "   namespace Shadow {" << std::endl;

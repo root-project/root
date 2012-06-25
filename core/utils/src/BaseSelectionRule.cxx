@@ -130,28 +130,34 @@ bool BaseSelectionRule::IsSelected (const clang::NamedDecl *decl, const std::str
    }
    
    std::string name_value;
-   GetAttributeValue("name", name_value);
+   bool has_name_attribute = GetAttributeValue("name", name_value);
    std::string pattern_value;
-   GetAttributeValue("pattern", pattern_value);
+   bool has_pattern_attribute = GetAttributeValue("pattern", pattern_value);
    
    // do we have matching against the name (or pattern) attribute and if yes - select or veto
    bool has_name_rule = false;
    
-   if (GetCXXRecordDecl()) {
+   if (GetCXXRecordDecl() !=0 && GetCXXRecordDecl() != (void*)-1) {
       const clang::CXXRecordDecl *target = GetCXXRecordDecl();
       const clang::CXXRecordDecl *D = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
       if ( target && D && target == llvm::dyn_cast<clang::CXXRecordDecl>( D ) ) {
          //               fprintf(stderr,"DECL MATCH: %s %s\n",name_value.c_str(),name.c_str());
          has_name_rule = true;
       }
-   } else if (HasAttributeWithName("name")) {
+   } else if (has_name_attribute) {
       if (name_value == name) {
          has_name_rule = true;
-      } else {
+      } else if ( GetCXXRecordDecl() != (void*)-1 ) {
          // Try a real match!
          
          const clang::CXXRecordDecl *D = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
          const clang::CXXRecordDecl *target = R__SlowRawTypeSearch(name_value.c_str());
+         if ( target ) {
+            const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = target;
+         } else {
+            // If the lookup failed, let's not try it again, so mark the value has invalid.
+            const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = (clang::CXXRecordDecl*)-1;
+         }
          if ( target && D && target == llvm::dyn_cast<clang::CXXRecordDecl>( D ) ) {
 //               fprintf(stderr,"DECL MATCH: %s %s\n",name_value.c_str(),name.c_str());
                has_name_rule = true;
@@ -163,35 +169,35 @@ bool BaseSelectionRule::IsSelected (const clang::NamedDecl *decl, const std::str
 //         }
       }
    }
-   if (HasAttributeWithName("pattern") && CheckPattern(name, pattern_value, fSubPatterns, isLinkdef)) {
+   if (has_pattern_attribute && CheckPattern(name, pattern_value, fSubPatterns, isLinkdef)) {
       has_name_rule = true;
    }
    
    std::string proto_name_value;
-   GetAttributeValue("proto_name", proto_name_value);
+   bool has_proto_name_attribute = GetAttributeValue("proto_name", proto_name_value);
    std::string proto_pattern_value;
-   GetAttributeValue("proto_pattern", proto_pattern_value);
+   bool has_proto_pattern_attribute = GetAttributeValue("proto_pattern", proto_pattern_value);
    
    // do we have matching against the proto_name (or proto_pattern)  attribute and if yes - select or veto
    bool has_proto_rule = false;
    if (!prototype.empty())
-      has_proto_rule = (HasAttributeWithName("proto_name") && 
+      has_proto_rule = (has_proto_name_attribute && 
                         (proto_name_value==prototype)) ||
-      (HasAttributeWithName("proto_pattern") && 
+      (has_proto_pattern_attribute && 
        CheckPattern(prototype, proto_pattern_value, fSubPatterns, isLinkdef));
    
    // do we have matching against the file_name (or file_pattern) attribute and if yes - select or veto
    std::string file_name_value;
-   GetAttributeValue("file_name", file_name_value);
+   bool has_file_name_attribute = GetAttributeValue("file_name", file_name_value);
    std::string file_pattern_value;
-   GetAttributeValue("file_pattern", file_pattern_value);
+   bool has_file_pattern_attribute = GetAttributeValue("file_pattern", file_pattern_value);
    
    bool has_file_rule;
    if (file_name.empty()) has_file_rule = false;
    else {
-      has_file_rule = (HasAttributeWithName("file_name") && 
+      has_file_rule = (has_file_name_attribute && 
                        (file_name_value==file_name)) ||
-      (HasAttributeWithName("file_pattern") && 
+      (has_file_pattern_attribute && 
        CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef));
    }
    
@@ -211,7 +217,7 @@ bool BaseSelectionRule::IsSelected (const clang::NamedDecl *decl, const std::str
    bool otherSourceFile = false;
    // if file_name is passed and we have file_name or file_pattern attribute but the
    // passed file_name is different than that in the selection rule than return false (=kNo)
-   if (!file_name.empty() && (HasAttributeWithName("file_name")||HasAttributeWithName("file_pattern")) && !has_file_rule) 
+   if (!file_name.empty() && (has_file_name_attribute||has_file_pattern_attribute) && !has_file_rule) 
       otherSourceFile = true;
    
    if (otherSourceFile) {
@@ -237,10 +243,9 @@ bool BaseSelectionRule::IsSelected (const clang::NamedDecl *decl, const std::str
     }
     */
    
-   bool has_rule = ((HasAttributeWithName("file_name") ||
-                     HasAttributeWithName("file_pattern")) && has_file_rule) || /* we have source_file_name */
-   has_name_rule || /* OR we have explicit name rule */
-   has_proto_rule;  /* OR we have explicit prototype rule */
+   bool has_rule = ((has_file_name_attribute||has_file_pattern_attribute) && has_file_rule) || /* we have source_file_name */
+      has_name_rule || /* OR we have explicit name rule */
+      has_proto_rule;  /* OR we have explicit prototype rule */
    
    
    // if has_rule is true it means that we have a selection rule match for the Decl (represented here by it's name, 
@@ -296,12 +301,12 @@ void BaseSelectionRule::ProcessPattern(const std::string& pattern, std::list<std
       if (pos == -1) {
          if (!escape){ // if we don't find a '*', push_back temp (contains the last sub-pattern)
             out.push_back(temp);
-            std::cout<<"1. pushed = "<<temp<<std::endl;
+            // std::cout<<"1. pushed = "<<temp<<std::endl;
          }
          else { // if we don't find a star - add temp to split (in split we keep the previous sub-pattern + the last escaped '*')
             split += temp;
             out.push_back(split);
-            std::cout<<"1. pushed = "<<split<<std::endl;
+            // std::cout<<"1. pushed = "<<split<<std::endl;
          }
          return;
       }
@@ -313,7 +318,7 @@ void BaseSelectionRule::ProcessPattern(const std::string& pattern, std::list<std
             split += temp.substr(0, temp.length()-2);  // add evrything from the beginning of temp till the '\' to split (where we keep the last sub-pattern)
             split += temp.at(pos); // add the '*'
             out.push_back(split);  // push_back() split
-            std::cout<<"3. pushed = "<<split<<std::endl;
+            // std::cout<<"3. pushed = "<<split<<std::endl;
             temp.clear(); // empty temp (the '*' was at the last position of temp, so we don't have anything else to process)
          }
          temp = temp.substr(0, (temp.length()-1)); 
@@ -338,7 +343,7 @@ void BaseSelectionRule::ProcessPattern(const std::string& pattern, std::list<std
             escape = false;
             temp = temp.substr(pos);
             out.push_back(split);
-            std::cout<<"2. pushed = "<<split<<std::endl;
+            // std::cout<<"2. pushed = "<<split<<std::endl;
             // DEBUG std::cout<<"temp = "<<temp<<std::endl;
             split = "";
          }
