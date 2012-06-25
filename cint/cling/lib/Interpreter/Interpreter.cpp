@@ -720,7 +720,10 @@ namespace cling {
     if (Res.isUsable()) {
       // Accept it only if the whole name was parsed.
       if (P->NextToken().getKind() == clang::tok::eof) {
-        TheQT = Res.get().get();
+        TypeSourceInfo *TSI = 0;
+        // The QualType returned by the parser is an odd QualType (type + TypeSourceInfo)
+        // and can not be used directly.
+        TheQT = clang::Sema::GetTypeFromParser(Res.get(),&TSI);
       }
     }
     //
@@ -974,7 +977,7 @@ namespace cling {
 
   const FunctionDecl*
   Interpreter::lookupFunctionProto(const Decl* scopeDecl,
-    const std::string& funcName, const std::string& funcProto)
+                                   const std::string& funcName, const std::string& funcProto)
   {
     //
     //  Our return value.
@@ -1059,7 +1062,10 @@ namespace cling {
         // Bad parse, done.
         goto lookupFuncProtoDone;
       }
-      clang::QualType QT(Res.get().get());
+      TypeSourceInfo *TSI = 0;
+      // The QualType returned by the parser is an odd QualType (type + TypeSourceInfo)
+      // and can not be used directly.
+      clang::QualType QT(clang::Sema::GetTypeFromParser(Res.get(),&TSI));
       QT = QT.getCanonicalType();
       GivenArgTypes.push_back(QT);
       {
@@ -1147,7 +1153,7 @@ namespace cling {
       DeclarationName FuncName = FuncNameInfo.getName();
       SourceLocation FuncNameLoc = FuncNameInfo.getLoc();
       LookupResult Result(CI->getSema(), FuncName, FuncNameLoc,
-        Sema::LookupMemberName, Sema::ForRedeclaration);
+                          Sema::LookupMemberName, Sema::NotForRedeclaration);
       if (!CI->getSema().LookupQualifiedName(Result, foundDC)) {
         // Lookup failed.
         // Destroy the scope we created first, and
@@ -1470,7 +1476,7 @@ namespace cling {
       DeclarationName FuncName = FuncNameInfo.getName();
       SourceLocation FuncNameLoc = FuncNameInfo.getLoc();
       LookupResult Result(CI->getSema(), FuncName, FuncNameLoc,
-        Sema::LookupMemberName, Sema::ForRedeclaration);
+                          Sema::LookupMemberName, Sema::NotForRedeclaration);
       if (!CI->getSema().LookupQualifiedName(Result, foundDC)) {
         // Lookup failed.
         // Destroy the scope we created first, and
