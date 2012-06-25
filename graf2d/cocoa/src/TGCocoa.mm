@@ -969,7 +969,12 @@ void TGCocoa::TranslateCoordinates(Window_t srcWin, Window_t dstWin, Int_t srcX,
       //From man for XTranslateCoordinates it's not clear, what should be in child.
       dstX = srcX;
       dstY = srcY;
-      child = 0;//TODO: check, if X11 searches for any window.
+
+      if (QuartzWindow *qw = X11::FindWindowInPoint(srcX, srcY))
+         child = qw.fID;
+      else
+         child = 0;
+
       return;
    }
    
