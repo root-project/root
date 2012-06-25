@@ -302,7 +302,7 @@ Long64_t TChainIndex::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
       ReleaseSubTreeIndex(indexAndNumber.first, indexAndNumber.second);
       TChain* chain = dynamic_cast<TChain*> (fTree);
       R__ASSERT(chain);
-      if (rv > 0) {
+      if (rv >= 0) {
          return rv + chain->GetTreeOffset()[indexAndNumber.second];
       } else {
          return rv;
