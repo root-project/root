@@ -10,6 +10,8 @@
 #include <map>
 #include <sstream>
 
+// #include "clang/AST/DeclCXX.h"
+
 namespace ROOT
 {
    //--------------------------------------------------------------------------
@@ -388,8 +390,8 @@ namespace ROOT
    }
 
    //---------------------------------------------------------------------------
-   Bool_t HasValidDataMembers( SchemaRuleMap_t& rule,
-                             MembersTypeMap_t& members )
+   Bool_t HasValidDataMembers(SchemaRuleMap_t& rule,
+                              MembersTypeMap_t& members )
    {
       // Check if given rule contains references to valid data members
       std::list<std::string>           mem;

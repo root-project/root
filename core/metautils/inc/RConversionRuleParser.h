@@ -24,6 +24,10 @@ class G__ClassInfo;
 #include "TSchemaType.h"
 #endif
 
+//namespace clang {
+//   class CXXRecordDecl;
+//}
+
 namespace ROOT
 {
    //---------------------------------------------------------------------------
@@ -41,6 +45,7 @@ namespace ROOT
    // Create the data member name-type map
    //---------------------------------------------------------------------------
    void CreateNameTypeMap( G__ClassInfo &cl, MembersTypeMap_t& members );
+   //   void CreateNameTypeMap( const clang::CXXRecordDecl &cl, MembersTypeMap_t& members );
 
    //---------------------------------------------------------------------------
    // Check if given rule contains references to valid data members
