@@ -3567,8 +3567,8 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
       (*dictSrcOut) << "2, "; // bitset 'version number'
    } else if (stl) {
       (*dictSrcOut) << "-2, "; // "::TStreamerInfo::Class_Version(), ";
-   } else if( clinfo.RootFlag() & G__HASVERSION ) {
-      (*dictSrcOut) << clinfo.Version() << ", ";
+   } else if( cl_input.HasClassVersion() ) {
+      (*dictSrcOut) << cl_input.RequestedVersionNumber() << ", ";
    } else { // if (cl_input.RequestStreamerInfo()) {
 
       // Need to find out if the operator>> is actually defined for this class.
@@ -3607,7 +3607,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
    (*dictSrcOut) << "\"" << filename << "\", " << R__GetLineNumber(cl_input) << "," << std::endl
                  << "                  typeid(" << csymbol.c_str() << "), DefineBehavior(ptr, ptr)," << std::endl
                  << "                  ";
-   //   fprintf(fp, "                  (::ROOT::ClassInfo< %s >::ShowMembersFunc_t)&::ROOT::ShowMembers,%d);\n", classname.c_str(),cl.RootFlag());
+   //   fprintf(fp, "                  (::ROOT::ClassInfo< %s >::ShowMembersFunc_t)&::ROOT::ShowMembers,%d);\n", classname.c_str(),cl_input.RootFlag());
    if (!NeedShadowClass(clinfo)) {
       if (!ClassInfo__HasMethod(cl,"ShowMembers")) (*dictSrcOut) << "0, ";
    } else {
@@ -3621,7 +3621,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
       (*dictSrcOut) << "&" << mappedname.c_str() << "_Dictionary, ";
    }
 
-   (*dictSrcOut) << "isa_proxy, " << clinfo.RootFlag() << "," << std::endl
+   (*dictSrcOut) << "isa_proxy, " << cl_input.RootFlag() << "," << std::endl
                  << "                  sizeof(" << csymbol.c_str() << ") );" << std::endl;
    if (HasDefaultConstructor(cl,&args)) {
       (*dictSrcOut) << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << std::endl;
@@ -4992,13 +4992,8 @@ void WriteClassCode(const RScanner::AnnotatedRecordDecl &cl)
       return;
    }
 
-   G__ClassInfo clinfo(cl.GetRequestedName()[0] ? cl.GetRequestedName() : R__GetQualifiedName(cl).c_str());
-   if (!clinfo.IsValid() && cl.GetRequestedName()[0] ) {
-      clinfo.Init(  R__GetQualifiedName(cl).c_str() );
-   }
-
    if (ClassInfo__HasMethod(cl,"Streamer")) {
-      if (clinfo.RootFlag()) WritePointersSTL(cl); // In particular this detect if the class has a version number.
+      if (cl.RootFlag()) WritePointersSTL(cl); // In particular this detect if the class has a version number.
       if (!(cl.RequestNoStreamer())) {
          if ((cl.RequestStreamerInfo() /*G__AUTOSTREAMER*/)) {
             WriteAutoStreamer(cl);
@@ -5015,6 +5010,10 @@ void WriteClassCode(const RScanner::AnnotatedRecordDecl &cl)
    if (ClassInfo__HasMethod(cl,"ShowMembers")) {
       WriteShowMembers(cl);
    } else {
+      G__ClassInfo clinfo(cl.GetRequestedName()[0] ? cl.GetRequestedName() : R__GetQualifiedName(cl).c_str());
+      if (!clinfo.IsValid() && cl.GetRequestedName()[0] ) {
+         clinfo.Init(  R__GetQualifiedName(cl).c_str() );
+      }
       if (NeedShadowClass(clinfo)) {
          WriteShowMembers(cl, true);
       }

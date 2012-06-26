@@ -358,7 +358,7 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
                   if (options->fNoStreamer) csr.SetRequestNoStreamer(true);
                   if (options->fNoInputOper) csr.SetRequestNoInputOperator(true);
                   if (options->fRequestStreamerInfo) csr.SetRequestStreamerInfo(true);
-                  if (options->fVersionNumber >= 0) {} // csr.SetVersionNumber(fVersionNumber)
+                  if (options->fVersionNumber >= 0) csr.SetRequestedVersionNumber(options->fVersionNumber);
                }
                if ( csr.RequestStreamerInfo() && csr.RequestNoStreamer() ) {
                   std::cerr << "Warning: " << identifier << " option + mutual exclusive with -, + prevails\n";
@@ -851,14 +851,14 @@ public:
       }
 
       if (end.is(clang::tok::unknown)) {
-         if (!fOwner.AddRule(type.data(),"",linkOn,false))
+         if (!fOwner.AddRule(type.data(),"",linkOn,false,options))
          {
             Error(type.data(),tok, false);
          }
       } else {
          llvm::StringRef identifier(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
          
-         if (!fOwner.AddRule(type,identifier,linkOn,false))
+         if (!fOwner.AddRule(type,identifier,linkOn,false,options))
          {
             Error(type.data(),tok, false);
          }

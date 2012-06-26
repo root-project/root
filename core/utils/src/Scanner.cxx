@@ -57,9 +57,9 @@ std::map <clang::Decl*, std::string> RScanner::fgAnonymousEnumMap;
 
 
 //______________________________________________________________________________
-RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass) : 
+RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestVersionNumber) : 
    fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
-   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass) 
+   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber) 
 {
    // Normalized the requested name.
 
@@ -130,6 +130,20 @@ RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Reco
          ++current;
       }
    }
+}
+
+//______________________________________________________________________________
+int RScanner::AnnotatedRecordDecl::RootFlag() const 
+{
+   // Return the request (streamerInfo, has_version, etc.) combined in a single
+   // int.  See RScanner::AnnotatedRecordDecl::ERootFlag.
+
+   int result = 0;
+   if (fRequestNoStreamer) result = kNoStreamer;
+   if (fRequestNoInputOperator) result |= kNoInputOperator;
+   if (fRequestStreamerInfo) result |= kStreamerInfo;
+   if (fRequestedVersionNumber > -1) result |= kHasVersion;
+   return result;
 }
 
 //______________________________________________________________________________
@@ -767,16 +781,15 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
       GetDeclQualName(D,qual_name);
       if (fVerboseLevel > 0) std::cout<<"\tSelected class -> " << qual_name << "\n";
       
-      if (selected->HasAttributeWithName("name")) {
-         std::string name_value;
-         selected->GetAttributeValue("name", name_value);
+      std::string name_value;
+      if (selected->GetAttributeValue("name", name_value)) {
          fSelectedClasses.push_back(AnnotatedRecordDecl(selected->GetIndex(),D,name_value.c_str(),
                                                         selected->RequestStreamerInfo(),selected->RequestNoStreamer(),
-                                                        selected->RequestNoInputOperator(),selected->RequestOnlyTClass()));
+                                                        selected->RequestNoInputOperator(),selected->RequestOnlyTClass(),selected->RequestedVersionNumber()));
       } else {
          fSelectedClasses.push_back(AnnotatedRecordDecl(selected->GetIndex(),D,
                                                         selected->RequestStreamerInfo(),selected->RequestNoStreamer(),
-                                                        selected->RequestNoInputOperator(),selected->RequestOnlyTClass()));
+                                                        selected->RequestNoInputOperator(),selected->RequestOnlyTClass(),selected->RequestedVersionNumber()));
       }         
       ret = true;
    }

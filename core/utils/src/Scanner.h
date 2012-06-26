@@ -75,16 +75,27 @@ public:
       bool fRequestNoStreamer;
       bool fRequestNoInputOperator;
       bool fRequestOnlyTClass;
+      int  fRequestedVersionNumber;
       
    public:
-      AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass) : 
+      enum {
+         kNoStreamer      = 0x01,
+         kNoInputOperator = 0x02,
+         kUseByteCount    = 0x04,
+         kStreamerInfo    = 0x04,
+         kHasVersion      = 0x08
+      } ERootFlag;
+
+      AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber) : 
             fRuleIndex(index), fDecl(decl), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
-            fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass) {}
-            AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass);
-      ~AnnotatedRecordDecl() {
+            fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestedVersionNumber) 
+            {}
+      AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber);
+     ~AnnotatedRecordDecl() {
          // Nothing to do we do not own the pointer;
       }
       const char *GetRequestedName() const { return fRequestedName.c_str(); }
+      bool HasClassVersion() const { return fRequestedVersionNumber >=0 ; }
       bool RequestStreamerInfo() const { 
          // Equivalent to CINT's cl.RootFlag() & G__USEBYTECOUNT 
          return fRequestStreamerInfo; 
@@ -92,6 +103,8 @@ public:
       bool RequestNoInputOperator() const { return fRequestNoInputOperator; }
       bool RequestNoStreamer() const { return fRequestNoStreamer; }
       bool RequestOnlyTClass() const { return fRequestOnlyTClass; }
+      int  RequestedVersionNumber() const { return fRequestedVersionNumber; }
+      int  RootFlag() const;
       const clang::RecordDecl* GetRecordDecl() const { return fDecl; }
 
       operator clang::RecordDecl const *() const {

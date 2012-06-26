@@ -104,6 +104,11 @@ void ClassSelectionRule::SetRequestPrivate(bool value)
    fRequestPrivate = value;
 }
 
+void ClassSelectionRule::SetRequestedVersionNumber(int version)
+{
+   fRequestedVersionNumber = version;
+};
+
 bool ClassSelectionRule::RequestOnlyTClass() const
 {
    return fRequestOnlyTClass;
@@ -119,4 +124,7 @@ bool ClassSelectionRule::RequestPrivate() const
    return fRequestPrivate;
 }
 
-
+int ClassSelectionRule::RequestedVersionNumber() const
+{ 
+   return fRequestedVersionNumber;
+}

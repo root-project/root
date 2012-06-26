@@ -36,12 +36,13 @@ private:
    bool fRequestOnlyTClass;      // True if the user want the TClass intiliazer but *not* the interpreter meta data
    bool fRequestProtected;       // Explicit request to be able to access protected member from the interpreter.
    bool fRequestPrivate;         // Explicit request to be able to access private member from the interpreter.
+   int  fRequestedVersionNumber; // Explicit request for a specific version number (default to no request with -1).
    
 public:
    ClassSelectionRule(long index):
-      BaseSelectionRule(index), fIsInheritable(false), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false) {}
+   BaseSelectionRule(index), fIsInheritable(false), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false),fRequestedVersionNumber(-1) {}
    ClassSelectionRule(long index, bool inherit, ESelect sel, std::string attributeName, std::string attributeValue):
-      BaseSelectionRule(index, sel, attributeName, attributeValue), fIsInheritable(inherit), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false) {}
+   BaseSelectionRule(index, sel, attributeName, attributeValue), fIsInheritable(inherit), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false),fRequestedVersionNumber(-1) {}
    
 
    void AddFieldSelectionRule(VariableSelectionRule field); //adds entry to the filed selections list
@@ -57,12 +58,13 @@ public:
    bool IsInheritable() const; //checks if the class selection rule is inheritable
    void SetInheritable(bool inherit); //sets the inheritance rule for the class
 
-   void SetRequestStreamerInfo(bool pl);
-   void SetRequestNoStreamer(bool mn);
+   void SetRequestStreamerInfo(bool needStreamerInfo);
+   void SetRequestNoStreamer(bool noStreamer);
    void SetRequestNoInputOperator(bool excl);
    void SetRequestOnlyTClass(bool val);
    void SetRequestProtected(bool val);
    void SetRequestPrivate(bool val);
+   void SetRequestedVersionNumber(int version);
 
    bool RequestOnlyTClass() const;      // True if the user want the TClass intiliazer but *not* the interpreter meta data
    bool RequestNoStreamer() const;      // Request no Streamer function in the dictionary
@@ -70,6 +72,7 @@ public:
    bool RequestStreamerInfo() const;    // Request the ROOT 4+ I/O streamer
    bool RequestProtected() const;
    bool RequestPrivate() const;
+   int  RequestedVersionNumber() const;
 };
 
 #endif
