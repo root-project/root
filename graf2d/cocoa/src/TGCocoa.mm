@@ -286,6 +286,13 @@ const char *TGCocoa::DisplayName(const char *)
 }
 
 //______________________________________________________________________________
+Int_t TGCocoa::SupportsExtension(const char *) const
+{
+   //No, thank you, I'm not supporting any of X11 extensions!
+   return -1;
+}
+
+//______________________________________________________________________________
 void TGCocoa::CloseDisplay()
 {
    //Noop.
@@ -310,6 +317,30 @@ Int_t TGCocoa::GetScreen() const
 {
    //Noop.
    return 0;
+}
+
+//______________________________________________________________________________
+UInt_t TGCocoa::ScreenWidthMM() const
+{
+   //Comment from TVirtualX: Returns the width of the screen in millimeters.
+/*
+   NSArray *screens = [NSScreen screens];
+   assert(screens != nil && "screens array is nil");
+   
+   NSScreen *mainScreen = [screens objectAtIndex : 0];
+   assert(mainScreen != nil && "screen with index 0 is nil");
+
+   NSDictionary *screenParameters = [mainScreen deviceDescription];
+   assert(screenParameters != nil && "deviceDescription dictionary is nil");
+   
+   //This casts are just terrible and rely on the current documentation only.
+   //But this is ... elegant Objective-C.
+   NSNumber *screenNumber = (NSNumber *)[screenParameters objectForKey : @"NSScreenNumber"];
+   assert(screenNumber != nil && "no screen number in device description");
+   const CGSize screenSize = CGDisplayScreenSize([screenNumber integerValue]);
+  */
+
+   return CGDisplayScreenSize(CGMainDisplayID()).width;
 }
 
 //______________________________________________________________________________
@@ -1125,6 +1156,114 @@ void TGCocoa::SetClassHints(Window_t /*wid*/, char * /*className*/,
                               char * /*resourceName*/)
 {
    // Sets the windows class and resource name.
+}
+
+
+//"Window manager hints" set of functions.
+
+//______________________________________________________________________________
+void TGCocoa::SetMWMHints(Window_t wid, UInt_t value, UInt_t funcs, UInt_t /*input*/)
+{
+   // Sets decoration style.
+   assert(!fPimpl->IsRootWindow(wid) && "SetMWMHints, called for 'root' window");
+   
+   QuartzWindow *qw = fPimpl->GetWindow(wid).fQuartzWindow;
+   NSUInteger newMask = 0;
+   
+   if ([qw styleMask] & NSTitledWindowMask) {//Do not modify this.
+      newMask |= NSTitledWindowMask;
+      newMask |= NSClosableWindowMask;
+   }
+
+   if (value & kMWMFuncAll) {
+      newMask |= NSMiniaturizableWindowMask | NSResizableWindowMask;
+   } else {
+      if (value & kMWMDecorMinimize)
+         newMask |= NSMiniaturizableWindowMask;
+      if (funcs & kMWMFuncResize)
+         newMask |= NSResizableWindowMask;
+   }
+
+   [qw setStyleMask : newMask];
+   
+   if (funcs & kMWMDecorAll) {
+      if (!qw.fMainWindow) {//Do not touch buttons for transient window.
+         [[qw standardWindowButton : NSWindowZoomButton] setEnabled : YES];
+         [[qw standardWindowButton : NSWindowMiniaturizeButton] setEnabled : YES];
+      }
+   } else {
+      if (!qw.fMainWindow) {//Do not touch transient window's titlebar.
+         [[qw standardWindowButton : NSWindowZoomButton] setEnabled : funcs & kMWMDecorMaximize];
+         [[qw standardWindowButton : NSWindowMiniaturizeButton] setEnabled : funcs & kMWMDecorMinimize];
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TGCocoa::SetWMPosition(Window_t /*wid*/, Int_t /*x*/, Int_t /*y*/)
+{
+   // Tells the window manager the desired position [x,y] of window "wid".
+}
+
+//______________________________________________________________________________
+void TGCocoa::SetWMSize(Window_t /*wid*/, UInt_t /*w*/, UInt_t /*h*/)
+{
+   // Tells window manager the desired size of window "wid".
+   //
+   // w - the width
+   // h - the height
+}
+
+//______________________________________________________________________________
+void TGCocoa::SetWMSizeHints(Window_t wid, UInt_t wMin, UInt_t hMin, UInt_t wMax, UInt_t hMax, UInt_t /*wInc*/, UInt_t /*hInc*/)
+{
+   //
+   assert(!fPimpl->IsRootWindow(wid) && "SetWMSizeHints, called for 'root' window");
+
+   QuartzWindow *qw = fPimpl->GetWindow(wid).fQuartzWindow;   
+   //I can use CGSizeMake, but what if NSSize one bad day becomes something else? :)
+   NSSize minSize = {}; minSize.width = wMin, minSize.height = hMin;
+   [qw setMinSize : minSize];
+   NSSize maxSize = {}; maxSize.width = wMax, maxSize.height = hMax;
+   [qw setMaxSize : maxSize];
+}
+
+//______________________________________________________________________________
+void TGCocoa::SetWMState(Window_t /*wid*/, EInitialState /*state*/)
+{
+   // Sets the initial state of the window "wid": either kNormalState
+   // or kIconicState.
+}
+
+//______________________________________________________________________________
+void TGCocoa::SetWMTransientHint(Window_t wid, Window_t mainWid)
+{
+   //Comment from TVirtualX:
+   // Tells window manager that the window "wid" is a transient window
+   // of the window "main_id". A window manager may decide not to decorate
+   // a transient window or may treat it differently in other ways.
+   //End of TVirtualX's comment.
+   
+   //TGTransientFrame uses this hint to attach a window to some "main" window,
+   //so that transient window is alway above the main window. This is used for 
+   //dialogs and dockable panels.
+   assert(Int_t(wid) > fPimpl->GetRootWindowID() && "SetWMTransientHint, wid parameter is a root window");
+
+   if (fPimpl->IsRootWindow(mainWid))
+      return;
+   
+   QuartzWindow *mainWindow = fPimpl->GetWindow(mainWid).fQuartzWindow;
+   
+   if (![mainWindow isVisible])
+      return;
+   
+   QuartzWindow *transientWindow = fPimpl->GetWindow(wid).fQuartzWindow;
+
+   if (mainWindow != transientWindow) {
+      [[transientWindow standardWindowButton : NSWindowZoomButton] setEnabled : NO];
+      [mainWindow addTransientWindow : transientWindow];
+   } else
+      Warning("SetWMTransientHint", "transient and main windows are the same window");
 }
 
 /////////////////////////////////////////
@@ -2438,18 +2577,67 @@ void TGCocoa::QueryPointer(Window_t winID, Window_t &rootWinID, Window_t &childW
    }   
 }
 
+//"XImage" emulation.
+
 //______________________________________________________________________________
-void TGCocoa::NextEvent(Event_t &/*event*/)
+Drawable_t TGCocoa::CreateImage(UInt_t width, UInt_t height)
 {
+   // Allocates the memory needed for a drawable.
+   //
+   // width  - the width of the image, in pixels
+   // height - the height of the image, in pixels
+   return OpenPixmap(width, height);
 }
 
 //______________________________________________________________________________
-void TGCocoa::GetPasteBuffer(Window_t /*id*/, Atom_t /*atom*/, TString &/*text*/, Int_t &/*nchar*/, Bool_t /*del*/)
+void TGCocoa::GetImageSize(Drawable_t wid, UInt_t &width, UInt_t &height)
 {
-   // Gets contents of the paste buffer "atom" into the string "text".
-   // (nchar = number of characters) If "del" is true deletes the paste
-   // buffer afterwards.
+   // Returns the width and height of the image wid
+   assert(int(wid) > fPimpl->GetRootWindowID() && "GetImageSize, wid parameter is a bad image id");
+   
+   NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(wid);
+   width = drawable.fWidth;
+   height = drawable.fHeight;
 }
+
+//______________________________________________________________________________
+void TGCocoa::PutPixel(Drawable_t imageID, Int_t x, Int_t y, ULong_t pixel)
+{
+   // Overwrites the pixel in the image with the specified pixel value.
+   // The image must contain the x and y coordinates.
+   //
+   // imageID - specifies the image
+   // x, y  - coordinates
+   // pixel - the new pixel value
+   
+   assert([fPimpl->GetDrawable(imageID) isKindOfClass : [QuartzPixmap class]] && "PutPixel, imageID parameter is a bad pixmap id");
+   assert(x >= 0 && "PutPixel, x parameter is negative");
+   assert(y >= 0 && "PutPixel, y parameter is negative");
+
+   QuartzPixmap * const pixmap = (QuartzPixmap *)fPimpl->GetDrawable(imageID);
+
+   unsigned char rgb[3] = {};
+   X11::PixelToRGB(pixel, rgb);
+   [pixmap putPixel : rgb X : x Y : y];
+}
+
+//______________________________________________________________________________
+void TGCocoa::PutImage(Drawable_t drawableID, GContext_t gc, Drawable_t imageID, Int_t dstX, Int_t dstY, Int_t srcX, Int_t srcY, UInt_t width, UInt_t height)
+{
+   //TGX11 uses ZPixmap in CreateImage ... so background/foreground 
+   //in gc can NEVER be used (and the depth is ALWAYS > 1).
+   //This means .... I can call CopyArea!
+   
+   CopyArea(imageID, drawableID, gc, srcX, srcY, width, height, dstX, dstY);
+}
+
+//______________________________________________________________________________
+void TGCocoa::DeleteImage(Drawable_t /*img*/)
+{
+   // Deallocates the memory associated with the image img
+}
+
+//OpenGL management.
 
 //______________________________________________________________________________
 Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &formatComponents)
@@ -2660,6 +2848,225 @@ void TGCocoa::DeleteOpenGLContext(Int_t ctxID)
 
 }
 
+//Off-screen rendering for TPad/TCanvas.
+
+//______________________________________________________________________________
+void TGCocoa::SetDoubleBuffer(Int_t wid, Int_t mode)
+{
+   //In ROOT, canvas has a "double buffer" - pixmap attached to 'wid'.
+   assert(wid > fPimpl->GetRootWindowID() && "SetDoubleBuffer called for 'root' window");
+   
+   if (wid == 999) {//Comment in TVirtaulX suggests, that 999 means all windows.
+      Warning("SetDoubleBuffer", "called with wid == 999");
+   } else {
+      fSelectedDrawable = wid;
+      mode ? SetDoubleBufferON() : SetDoubleBufferOFF();
+   }   
+}
+
+//______________________________________________________________________________
+void TGCocoa::SetDoubleBufferOFF()
+{
+   fDirectDraw = true;
+}
+
+//______________________________________________________________________________
+void TGCocoa::SetDoubleBufferON()
+{
+   //Attach pixmap to the selected window (view).
+   fDirectDraw = false;
+   
+   assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "SetDoubleBufferON, called, but no correct window was selected before");
+   
+   NSObject<X11Window> *window = fPimpl->GetWindow(fSelectedDrawable);
+   
+   assert(window.fIsPixmap == NO && "SetDoubleBufferON, selected drawable is a pixmap, can not attach pixmap to pixmap");
+   
+   const unsigned currW = window.fWidth;
+   const unsigned currH = window.fHeight;
+   
+   if (QuartzPixmap *currentPixmap = window.fBackBuffer) {
+      if (currH == currentPixmap.fHeight && currW == currentPixmap.fWidth)
+         return;
+   }
+
+   Util::NSScopeGuard<QuartzPixmap> mem([QuartzPixmap alloc]);      
+   if (QuartzPixmap *pixmap = [mem.Get() initWithW : currW H : currH]) {
+      mem.Reset(pixmap);
+      pixmap.fID = fPimpl->RegisterDrawable(pixmap);//Can throw.
+      if (window.fBackBuffer) {//Now we can delete the old one, since the new was created.
+         if (fPimpl->fX11CommandBuffer.BufferSize())
+            fPimpl->fX11CommandBuffer.RemoveOperationsForDrawable(window.fBackBuffer.fID);
+         fPimpl->DeleteDrawable(window.fBackBuffer.fID);
+      }
+
+      window.fBackBuffer = pixmap;
+   } else {
+      Error("SetDoubleBufferON", "Can't create a pixmap");
+   }
+}
+
+//______________________________________________________________________________
+void TGCocoa::SetDrawMode(EDrawMode mode)
+{
+   // Sets the drawing mode.
+   //
+   //EDrawMode{kCopy, kXor};
+   fDrawMode = mode;
+}
+
+//Event management part.
+
+/////////////////////////////////////////////////////////
+// Next three functions are quite ugly piece of code. 
+// SendEvent is called by GUI classes to, for example,
+// execute menu actions or for similar purposes (button was pressed/released). 
+//
+// Problems:
+// 1. I can not dispatch them immediately: 
+// some commands can call DestroWindow(DestroySubwindows),
+// for example, on button release event in a dialog, and at the same time
+// on button release event GUI wants to repaint unpressed button (for example). 
+// But if window was deleted, repaint will cause a crash. So, event is "sent" - 
+// I put it into NSApplication's event queue. This
+// also has an obvious problem: 
+// 2. I put it into NSApplication event queue, and it
+// will be (probably) extracted and processed almost immediately after I put it here.
+// So in case we execute something heavy and time-consuming, GUI (probably) will "hang".
+// 3. Next problem, during execution of sent events, window can be destroyed before
+// all events for this window were processed.
+//
+// For now the solution is the following:
+// a) SendEvent creates NSEvent (of type NSApplicationDefined) and puts it into event queue.
+// MessageID for this event is "allocated" and saved in data2 property of NSEvent.
+// Map Window_t -> events_for_window is filled.
+// b) TMacOSXSystem extracts user-defined event from the queue and tries to execute it, using messageID - 
+// calls DispatchClientMessage function. DispatchClientMessage checks, if Event_t for messageID
+// can be found, and if yes (this assumes window is alive yet) calls window->HandleEvent(clientMessage).
+// If DestroyWindow is called for window, I also check, if any events for this window
+// were queued and delete them, so if event queue still has events for this window (this can happen :( ) -
+// they will not be executed.
+//
+// TODO: One thing I can try, instead of NSApplication's queue use queue data member in TGCocoa,
+// and process queued messages at the end of event loop's iteration (this solution, probably,
+// will have the same problems as NSApplication's queue).
+
+//______________________________________________________________________________
+void TGCocoa::SendEvent(Window_t wid, Event_t *event)
+{
+   if (fPimpl->IsRootWindow(wid))//ROOT's GUI can send events to 'root' window.
+      return;
+      
+   if (!wid || !event) //From TGX11.
+      return;
+
+   UInt_t messageID = fCurrentMessageID;
+   if (fFreeMessageIDs.size()) {
+      messageID = fFreeMessageIDs.back();
+      fFreeMessageIDs.pop_back();
+   } else
+      ++fCurrentMessageID;
+   
+   //Window 'wid' has an event with number 'messageID' in a NSApplication's queue.
+   fClientMessagesToWindow[wid].push_back(messageID);
+
+   const ClientMessage_t newMessage(wid, *event);
+   assert(fClientMessages.find(messageID) == fClientMessages.end() && "SendEvent, messageID is already busy");
+   fClientMessages[messageID] = newMessage;
+   
+   NSEvent *cocoaEvent = [NSEvent otherEventWithType : NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
+                          timestamp: 0. windowNumber : 0 context : nil subtype : 0 data1 : 0 data2 : NSInteger(messageID)];
+   [NSApp postEvent : cocoaEvent atStart : NO];
+}
+
+//______________________________________________________________________________
+void TGCocoa::DispatchClientMessage(UInt_t messageID)
+{
+   assert(messageID != 0 && "DispatchClientMessage, messageID parameter is 0");
+
+   message_iterator messageIter = fClientMessages.find(messageID);
+   if (messageIter == fClientMessages.end()) {
+      //Window for such event was deleted already?
+      return;
+   }
+
+   NSObject<X11Drawable> *widget = fPimpl->GetDrawable(messageIter->second.first);//:)
+   assert(widget.fID != 0 && "DispatchClientMessage, widget.fID is 0");
+   
+   TGWindow *window = gClient->GetWindowById(widget.fID);
+   Event_t clientMessage = messageIter->second.second;
+
+   fClientMessages.erase(messageIter);   
+   fFreeMessageIDs.push_back(messageID);
+
+   //Many thanks to ROOT's GUI, TGWindow can be deleted, but QuartzViews is still alive
+   //(DestroyWindow is never called for this window).
+   if (window)
+      window->HandleEvent(&clientMessage);
+}
+
+//______________________________________________________________________________
+void TGCocoa::RemoveEventsForWindow(Window_t wid)
+{
+   //Window 'wid' will be deleted, do not process any events for it (if
+   //we have any in NSApplication's queue).
+   //Remove events for window 'wid', recycle event IDs for future use.
+   //Remove entry for window 'wid' and all its event IDs.
+   typedef std::vector<UInt_t>::size_type size_type;
+
+   message_window_iterator iter = fClientMessagesToWindow.find(wid);
+   if (iter != fClientMessagesToWindow.end()) {
+      const std::vector<UInt_t> &messages = iter->second;
+      for (size_type i = 0, e = messages.size(); i < e; ++i) {
+         message_iterator messageIter = fClientMessages.find(messages[i]);
+         if (messageIter != fClientMessages.end()) {//May be, it was deleted already as a result of some DispatchClientMessage??
+            fClientMessages.erase(messageIter);
+            fFreeMessageIDs.push_back(messages[i]);
+         }
+      }
+
+      fClientMessagesToWindow.erase(iter);
+   }
+}
+
+//______________________________________________________________________________
+void TGCocoa::NextEvent(Event_t &/*event*/)
+{
+   //At the moment TGCocoa does not have any event queue. (this is different in cocoa_exp dev branch).
+}
+
+//______________________________________________________________________________
+Int_t TGCocoa::EventsPending()
+{
+   //At the moment TGCocoa does not have any event queue. (this is different in cocoa_exp dev branch).
+   return 0;
+}
+
+
+//______________________________________________________________________________
+Bool_t TGCocoa::CheckEvent(Window_t /*wid*/, EGEventType /*type*/, Event_t & /*ev*/)
+{
+   //At the moment TGCocoa does not have any event queue. (this is different in cocoa_exp dev branch).
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Handle_t TGCocoa::GetNativeEvent() const
+{
+   //Ne dlia tebia mama iagodku rastila.
+   return Handle_t();
+}
+
+/////////////////////////////////
+
+//______________________________________________________________________________
+void TGCocoa::GetPasteBuffer(Window_t /*id*/, Atom_t /*atom*/, TString &/*text*/, Int_t &/*nchar*/, Bool_t /*del*/)
+{
+   // Gets contents of the paste buffer "atom" into the string "text".
+   // (nchar = number of characters) If "del" is true deletes the paste
+   // buffer afterwards.
+}
+
 //______________________________________________________________________________
 UInt_t TGCocoa::ExecCommand(TGWin32Command * /*code*/)
 {
@@ -2679,13 +3086,6 @@ void TGCocoa::GetCharacterUp(Float_t &chupx, Float_t &chupy)
 {
    // Returns character up vector.
    chupx = chupy = 0;
-}
-
-//______________________________________________________________________________
-Handle_t  TGCocoa::GetNativeEvent() const
-{
-   // Returns the current native event handle.
-   return 0;
 }
 
 //______________________________________________________________________________
@@ -2761,71 +3161,6 @@ void TGCocoa::SetClipRegion(Int_t /*wid*/, Int_t /*x*/, Int_t /*y*/, UInt_t /*w*
    // x, y - origin of clipping rectangle
    // w, h - the clipping rectangle dimensions
 
-}
-
-//______________________________________________________________________________
-void TGCocoa::SetDoubleBuffer(Int_t wid, Int_t mode)
-{
-   //In ROOT, canvas has a "double buffer" - pixmap attached to 'wid'.
-   assert(wid > fPimpl->GetRootWindowID() && "SetDoubleBuffer called for 'root' window");
-   
-   if (wid == 999) {//Comment in TVirtaulX suggests, that 999 means all windows.
-      Warning("SetDoubleBuffer", "called with wid == 999");
-   } else {
-      fSelectedDrawable = wid;
-      mode ? SetDoubleBufferON() : SetDoubleBufferOFF();
-   }   
-}
-
-//______________________________________________________________________________
-void TGCocoa::SetDoubleBufferOFF()
-{
-   fDirectDraw = true;
-}
-
-//______________________________________________________________________________
-void TGCocoa::SetDoubleBufferON()
-{
-   //Attach pixmap to the selected window (view).
-   fDirectDraw = false;
-   
-   assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "SetDoubleBufferON, called, but no correct window was selected before");
-   
-   NSObject<X11Window> *window = fPimpl->GetWindow(fSelectedDrawable);
-   
-   assert(window.fIsPixmap == NO && "SetDoubleBufferON, selected drawable is a pixmap, can not attach pixmap to pixmap");
-   
-   const unsigned currW = window.fWidth;
-   const unsigned currH = window.fHeight;
-   
-   if (QuartzPixmap *currentPixmap = window.fBackBuffer) {
-      if (currH == currentPixmap.fHeight && currW == currentPixmap.fWidth)
-         return;
-   }
-
-   Util::NSScopeGuard<QuartzPixmap> mem([QuartzPixmap alloc]);      
-   if (QuartzPixmap *pixmap = [mem.Get() initWithW : currW H : currH]) {
-      mem.Reset(pixmap);
-      pixmap.fID = fPimpl->RegisterDrawable(pixmap);//Can throw.
-      if (window.fBackBuffer) {//Now we can delete the old one, since the new was created.
-         if (fPimpl->fX11CommandBuffer.BufferSize())
-            fPimpl->fX11CommandBuffer.RemoveOperationsForDrawable(window.fBackBuffer.fID);
-         fPimpl->DeleteDrawable(window.fBackBuffer.fID);
-      }
-
-      window.fBackBuffer = pixmap;
-   } else {
-      Error("SetDoubleBufferON", "Can't create a pixmap");
-   }
-}
-
-//______________________________________________________________________________
-void TGCocoa::SetDrawMode(EDrawMode mode)
-{
-   // Sets the drawing mode.
-   //
-   //EDrawMode{kCopy, kXor};
-   fDrawMode = mode;
 }
 
 //______________________________________________________________________________
@@ -2972,14 +3307,6 @@ void TGCocoa::SetDashes(GContext_t /*gc*/, Int_t /*offset*/, const char * /*dash
 }
 
 //______________________________________________________________________________
-Int_t TGCocoa::EventsPending()
-{
-   // Returns the number of events that have been received from the X server
-   // but have not been removed from the event queue.
-   return 0;
-}
-
-//______________________________________________________________________________
 void TGCocoa::Bell(Int_t /*percent*/)
 {
    // Sets the sound bell. Percent is loudness from -100% .. 100%.
@@ -3001,125 +3328,6 @@ void TGCocoa::ChangeProperty(Window_t /*wid*/, Atom_t /*property*/,
    //            properties
    // data     - the property data
    // len      - the length of the specified data format
-}
-
-//______________________________________________________________________________
-Bool_t TGCocoa::CheckEvent(Window_t /*wid*/, EGEventType /*type*/, Event_t & /*ev*/)
-{
-   //No need in this.
-   return kFALSE;
-}
-
-/////////////////////////////////////////////////////////
-// Next three functions are quite ugly piece of code
-// for now. SendEvent is called by GUI classes to, for example,
-// execute menu actions or for similar purposes (button was pressed). 
-//
-// Problems:
-// 1. I can not dispatch them immediately: 
-// some commands can call DestroWindow(DestroySubwindows),
-// for example, on button release event in a dialog, and at the same time
-// on button release event GUI wants to repaint unpressed button (for example). 
-// But if window was deleted, repaint will cause a crash. So, event is "sent" - 
-// I put it into NSApplication's event queue. This
-// also has an obvious problem: 
-// 2. I put it into NSApplication event queue, and it
-// will be (probably) extracted and processed almost immediately after I put it here.
-// So in case we execute something heavy and time-consuming, GUI (probably) will "hang".
-// 3. Next problem, during execution of sent events, window can be destroyed before
-// all events for this window were processed.
-//
-// For now the solution is the following:
-// a) SendEvent creates NSEvent (of type NSApplicationDefined) and puts it into event queue.
-// MessageID for this event is "allocated" and saved in data2 property of NSEvent.
-// Map Window_t -> events_for_window is filled.
-// b) TMacOSXSystem extracts user-defined event from the queue and tries to execute it, using messageID - 
-// calls DispatchClientMessage function. DispatchClientMessage checks, if Event_t for messageID
-// can be found, and if yes (this assumes window is alive yet) calls window->HandleEvent(clientMessage).
-// If DestroyWindow is called for window, I also check, if any events for this window
-// were queued and delete them, so if event queue still has events for this window (this can happen :( ) -
-// they will not be executed.
-//
-// TODO: One thing I can try, instead of NSApplication's queue use queue data member in TGCocoa,
-// and process queued messages at the end of event loop's iteration (this solution, probably,
-// will have the same problems as NSApplication's queue).
-
-//______________________________________________________________________________
-void TGCocoa::SendEvent(Window_t wid, Event_t *event)
-{
-   if (fPimpl->IsRootWindow(wid))//ROOT's GUI can send events to 'root' window.
-      return;
-      
-   if (!wid || !event) //From TGX11.
-      return;
-
-   UInt_t messageID = fCurrentMessageID;
-   if (fFreeMessageIDs.size()) {
-      messageID = fFreeMessageIDs.back();
-      fFreeMessageIDs.pop_back();
-   } else
-      ++fCurrentMessageID;
-   
-   //Window 'wid' has an event with number 'messageID' in a NSApplication's queue.
-   fClientMessagesToWindow[wid].push_back(messageID);
-
-   const ClientMessage_t newMessage(wid, *event);
-   assert(fClientMessages.find(messageID) == fClientMessages.end() && "SendEvent, messageID is already busy");
-   fClientMessages[messageID] = newMessage;
-   
-   NSEvent *cocoaEvent = [NSEvent otherEventWithType : NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
-                          timestamp: 0. windowNumber : 0 context : nil subtype : 0 data1 : 0 data2 : NSInteger(messageID)];
-   [NSApp postEvent : cocoaEvent atStart : NO];
-}
-
-//______________________________________________________________________________
-void TGCocoa::DispatchClientMessage(UInt_t messageID)
-{
-   assert(messageID != 0 && "DispatchClientMessage, messageID parameter is 0");
-
-   message_iterator messageIter = fClientMessages.find(messageID);
-   if (messageIter == fClientMessages.end()) {
-      //Window for such event was deleted already?
-      return;
-   }
-
-   NSObject<X11Drawable> *widget = fPimpl->GetDrawable(messageIter->second.first);//:)
-   assert(widget.fID != 0 && "DispatchClientMessage, widget.fID is 0");
-   
-   TGWindow *window = gClient->GetWindowById(widget.fID);
-   Event_t clientMessage = messageIter->second.second;
-
-   fClientMessages.erase(messageIter);   
-   fFreeMessageIDs.push_back(messageID);
-
-   //Many thanks to ROOT's GUI, TGWindow can be deleted, but QuartzViews is still alive
-   //(DestroyWindow is never called for this window).
-   if (window)
-      window->HandleEvent(&clientMessage);
-}
-
-//______________________________________________________________________________
-void TGCocoa::RemoveEventsForWindow(Window_t wid)
-{
-   //Window 'wid' will be deleted, do not process any events for it (if
-   //we have any in NSApplication's queue).
-   //Remove events for window 'wid', recycle event IDs for future use.
-   //Remove entry for window 'wid' and all its event IDs.
-   typedef std::vector<UInt_t>::size_type size_type;
-
-   message_window_iterator iter = fClientMessagesToWindow.find(wid);
-   if (iter != fClientMessagesToWindow.end()) {
-      const std::vector<UInt_t> &messages = iter->second;
-      for (size_type i = 0, e = messages.size(); i < e; ++i) {
-         message_iterator messageIter = fClientMessages.find(messages[i]);
-         if (messageIter != fClientMessages.end()) {//May be, it was deleted already as a result of some DispatchClientMessage??
-            fClientMessages.erase(messageIter);
-            fFreeMessageIDs.push_back(messages[i]);
-         }
-      }
-
-      fClientMessagesToWindow.erase(iter);
-   }
 }
 
 //______________________________________________________________________________
@@ -3173,111 +3381,6 @@ void TGCocoa::GrabKey(Window_t wid, Int_t keyCode, UInt_t rootKeyModifiers, Bool
       [view addPassiveKeyGrab : keyCode modifiers : cocoaKeyModifiers];
    else
       [view removePassiveKeyGrab : keyCode modifiers : cocoaKeyModifiers];
-}
-
-//______________________________________________________________________________
-void TGCocoa::SetMWMHints(Window_t wid, UInt_t value, UInt_t funcs, UInt_t /*input*/)
-{
-   // Sets decoration style.
-   assert(!fPimpl->IsRootWindow(wid) && "SetMWMHints, called for 'root' window");
-   
-   QuartzWindow *qw = fPimpl->GetWindow(wid).fQuartzWindow;
-   NSUInteger newMask = 0;
-   
-   if ([qw styleMask] & NSTitledWindowMask) {//Do not modify this.
-      newMask |= NSTitledWindowMask;
-      newMask |= NSClosableWindowMask;
-   }
-
-   if (value & kMWMFuncAll) {
-      newMask |= NSMiniaturizableWindowMask | NSResizableWindowMask;
-   } else {
-      if (value & kMWMDecorMinimize)
-         newMask |= NSMiniaturizableWindowMask;
-      if (funcs & kMWMFuncResize)
-         newMask |= NSResizableWindowMask;
-   }
-
-   [qw setStyleMask : newMask];
-   
-   if (funcs & kMWMDecorAll) {
-      if (!qw.fMainWindow) {//Do not touch buttons for transient window.
-         [[qw standardWindowButton : NSWindowZoomButton] setEnabled : YES];
-         [[qw standardWindowButton : NSWindowMiniaturizeButton] setEnabled : YES];
-      }
-   } else {
-      if (!qw.fMainWindow) {//Do not touch transient window's titlebar.
-         [[qw standardWindowButton : NSWindowZoomButton] setEnabled : funcs & kMWMDecorMaximize];
-         [[qw standardWindowButton : NSWindowMiniaturizeButton] setEnabled : funcs & kMWMDecorMinimize];
-      }
-   }
-}
-
-//______________________________________________________________________________
-void TGCocoa::SetWMPosition(Window_t /*wid*/, Int_t /*x*/, Int_t /*y*/)
-{
-   // Tells the window manager the desired position [x,y] of window "wid".
-}
-
-//______________________________________________________________________________
-void TGCocoa::SetWMSize(Window_t /*wid*/, UInt_t /*w*/, UInt_t /*h*/)
-{
-   // Tells window manager the desired size of window "wid".
-   //
-   // w - the width
-   // h - the height
-}
-
-//______________________________________________________________________________
-void TGCocoa::SetWMSizeHints(Window_t wid, UInt_t wMin, UInt_t hMin, UInt_t wMax, UInt_t hMax, UInt_t /*wInc*/, UInt_t /*hInc*/)
-{
-   //
-   assert(!fPimpl->IsRootWindow(wid) && "SetWMSizeHints, called for 'root' window");
-
-   QuartzWindow *qw = fPimpl->GetWindow(wid).fQuartzWindow;   
-   //I can use CGSizeMake, but what if NSSize one bad day becomes something else? :)
-   NSSize minSize = {}; minSize.width = wMin, minSize.height = hMin;
-   [qw setMinSize : minSize];
-   NSSize maxSize = {}; maxSize.width = wMax, maxSize.height = hMax;
-   [qw setMaxSize : maxSize];
-}
-
-//______________________________________________________________________________
-void TGCocoa::SetWMState(Window_t /*wid*/, EInitialState /*state*/)
-{
-   // Sets the initial state of the window "wid": either kNormalState
-   // or kIconicState.
-}
-
-//______________________________________________________________________________
-void TGCocoa::SetWMTransientHint(Window_t wid, Window_t mainWid)
-{
-   //Comment from TVirtualX:
-   // Tells window manager that the window "wid" is a transient window
-   // of the window "main_id". A window manager may decide not to decorate
-   // a transient window or may treat it differently in other ways.
-   //End of TVirtualX's comment.
-   
-   //TGTransientFrame uses this hint to attach a window to some "main" window,
-   //so that transient window is alway above the main window. This is used for 
-   //dialogs and dockable panels.
-   assert(Int_t(wid) > fPimpl->GetRootWindowID() && "SetWMTransientHint, wid parameter is a root window");
-
-   if (fPimpl->IsRootWindow(mainWid))
-      return;
-   
-   QuartzWindow *mainWindow = fPimpl->GetWindow(mainWid).fQuartzWindow;
-   
-   if (![mainWindow isVisible])
-      return;
-   
-   QuartzWindow *transientWindow = fPimpl->GetWindow(wid).fQuartzWindow;
-
-   if (mainWindow != transientWindow) {
-      [[transientWindow standardWindowButton : NSWindowZoomButton] setEnabled : NO];
-      [mainWindow addTransientWindow : transientWindow];
-   } else
-      Warning("SetWMTransientHint", "transient and main windows are the same window");
 }
 
 //______________________________________________________________________________
@@ -3476,93 +3579,11 @@ void TGCocoa::GetRegionBox(Region_t /*reg*/, Rectangle_t * /*rect*/)
 }
 
 //______________________________________________________________________________
-Drawable_t TGCocoa::CreateImage(UInt_t width, UInt_t height)
-{
-   // Allocates the memory needed for a drawable.
-   //
-   // width  - the width of the image, in pixels
-   // height - the height of the image, in pixels
-   return OpenPixmap(width, height);
-}
-
-//______________________________________________________________________________
-void TGCocoa::GetImageSize(Drawable_t wid, UInt_t &width, UInt_t &height)
-{
-   // Returns the width and height of the image wid
-   assert(int(wid) > fPimpl->GetRootWindowID() && "GetImageSize, wid parameter is a bad image id");
-   
-   NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(wid);
-   width = drawable.fWidth;
-   height = drawable.fHeight;
-}
-
-//______________________________________________________________________________
-void TGCocoa::PutPixel(Drawable_t imageID, Int_t x, Int_t y, ULong_t pixel)
-{
-   // Overwrites the pixel in the image with the specified pixel value.
-   // The image must contain the x and y coordinates.
-   //
-   // imageID - specifies the image
-   // x, y  - coordinates
-   // pixel - the new pixel value
-   
-   assert([fPimpl->GetDrawable(imageID) isKindOfClass : [QuartzPixmap class]] && "PutPixel, imageID parameter is a bad pixmap id");
-   assert(x >= 0 && "PutPixel, x parameter is negative");
-   assert(y >= 0 && "PutPixel, y parameter is negative");
-
-   QuartzPixmap * const pixmap = (QuartzPixmap *)fPimpl->GetDrawable(imageID);
-
-   unsigned char rgb[3] = {};
-   X11::PixelToRGB(pixel, rgb);
-   [pixmap putPixel : rgb X : x Y : y];
-}
-
-//______________________________________________________________________________
-void TGCocoa::PutImage(Drawable_t drawableID, GContext_t gc, Drawable_t imageID, Int_t dstX, Int_t dstY, Int_t srcX, Int_t srcY, UInt_t width, UInt_t height)
-{
-   //TGX11 uses ZPixmap in CreateImage ... so background/foreground 
-   //in gc can NEVER be used (and the depth is ALWAYS > 1).
-   //This means .... I can call CopyArea!
-   
-   CopyArea(imageID, drawableID, gc, srcX, srcY, width, height, dstX, dstY);
-}
-
-//______________________________________________________________________________
-void TGCocoa::DeleteImage(Drawable_t /*img*/)
-{
-   // Deallocates the memory associated with the image img
-}
-
-//______________________________________________________________________________
 void TGCocoa::ShapeCombineMask(Window_t, Int_t, Int_t, Pixmap_t)
 {
    // The Nonrectangular Window Shape Extension adds nonrectangular
    // windows to the System.
    // This allows for making shaped (partially transparent) windows
-}
-
-//______________________________________________________________________________
-UInt_t TGCocoa::ScreenWidthMM() const
-{
-   //Comment from TVirtualX: Returns the width of the screen in millimeters.
-/*
-   NSArray *screens = [NSScreen screens];
-   assert(screens != nil && "screens array is nil");
-   
-   NSScreen *mainScreen = [screens objectAtIndex : 0];
-   assert(mainScreen != nil && "screen with index 0 is nil");
-
-   NSDictionary *screenParameters = [mainScreen deviceDescription];
-   assert(screenParameters != nil && "deviceDescription dictionary is nil");
-   
-   //This casts are just terrible and rely on the current documentation only.
-   //But this is ... elegant Objective-C.
-   NSNumber *screenNumber = (NSNumber *)[screenParameters objectForKey : @"NSScreenNumber"];
-   assert(screenNumber != nil && "no screen number in device description");
-   const CGSize screenSize = CGDisplayScreenSize([screenNumber integerValue]);
-  */
-
-   return CGDisplayScreenSize(CGMainDisplayID()).width;
 }
 
 //______________________________________________________________________________
@@ -3656,21 +3677,13 @@ void TGCocoa::BeginModalSessionFor(Window_t wid)
 {
    assert(!fPimpl->IsRootWindow(wid) && "BeginModalSessionFor, called for 'root' window");
    
+   //TODO: remove this from TGCocoa and TVirtualX.
+   
    //We start special modal session _ONLY_ for dialogs.
    //Everything else is done in a different way.
    if (IsDialog(wid)) {
       //QuartzWindow *qw = fPimpl->GetWindow(wid).fQuartzWindow;
    }   
-}
-
-//______________________________________________________________________________
-Int_t TGCocoa::SupportsExtension(const char *) const
-{
-   // Returns 1 if window system server supports extension given by the
-   // argument, returns 0 in case extension is not supported and returns -1
-   // in case of error (like server not initialized).
-
-   return -1;
 }
 
 //______________________________________________________________________________
@@ -3719,6 +3732,8 @@ void *TGCocoa::GetCurrentContext()
 //______________________________________________________________________________
 bool TGCocoa::IsDialog(Window_t wid)const
 {
+   //TODO: remove this function from TGCocoa and TVirtualX.
+
    if (Int_t(wid) <= fPimpl->GetRootWindowID())
       return false;
       

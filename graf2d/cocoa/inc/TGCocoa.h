@@ -62,12 +62,14 @@ public:
    ///////////////////////////////////////
    //General.
    virtual Bool_t      Init(void *display);
-   virtual Int_t       OpenDisplay(const char *dpyName);
+   virtual Int_t       OpenDisplay(const char *displayName);
    virtual const char *DisplayName(const char *);
+   virtual Int_t       SupportsExtension(const char *extensionName) const;
    virtual void        CloseDisplay();
    virtual Display_t   GetDisplay()const;
    virtual Visual_t    GetVisual()const;
    virtual Int_t       GetScreen()const;
+   virtual UInt_t      ScreenWidthMM() const;
    virtual Int_t       GetDepth()const;
    virtual void        Update(Int_t mode);
    //End of general.
@@ -88,10 +90,8 @@ public:
    virtual void      UpdateWindow(Int_t mode);
    virtual Window_t  GetCurrentWindow() const;
    virtual void      CloseWindow();
-
-   //-"Qt ROOT".
-   virtual Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
-   virtual void      RemoveWindow(ULong_t qwid);
+   virtual Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h); //-"Qt ROOT".
+   virtual void      RemoveWindow(ULong_t qwid); //-"Qt ROOT".
 
 
    //-Functions used by GUI.
@@ -141,6 +141,17 @@ public:
    //End window-management part.
    ///////////////////////////////////////
    
+   /////////////////////////////
+   //Set of "Window manager hints".
+   virtual void      SetMWMHints(Window_t winID, UInt_t value, UInt_t decorators, UInt_t inputMode);
+   virtual void      SetWMPosition(Window_t winID, Int_t x, Int_t y);
+   virtual void      SetWMSize(Window_t winID, UInt_t w, UInt_t h);
+   virtual void      SetWMSizeHints(Window_t winID, UInt_t wMin, UInt_t hMin, UInt_t wMax, UInt_t hMax, UInt_t wInc, UInt_t hInc);
+   virtual void      SetWMState(Window_t winID, EInitialState state);
+   virtual void      SetWMTransientHint(Window_t winID, Window_t mainWinID);
+   //"Window manager hints".
+   /////////////////////////////
+
 
    ///////////////////////////////////////
    //GUI-rendering part.
@@ -256,22 +267,21 @@ public:
                                      Int_t &win_y, UInt_t &mask);
    //Cursors.
    /////////////////////////////
+   
+   /////////////////////////////
+   //"Images" - emulation of XCreateImage/XPutImage etc.
+   virtual Drawable_t   CreateImage(UInt_t width, UInt_t height);
+   virtual void         GetImageSize(Drawable_t wid, UInt_t &width, UInt_t &height);
+   virtual void         PutPixel(Drawable_t wid, Int_t x, Int_t y, ULong_t pixel);
+   virtual void         PutImage(Drawable_t wid, GContext_t gc, Drawable_t img, Int_t dx, Int_t dy,
+                                 Int_t x, Int_t y, UInt_t w, UInt_t h);
+   virtual void         DeleteImage(Drawable_t img);
+   //"Images".
+   /////////////////////////////
 
-   //Remaining bunch of functions is not sorted yet (and not imlemented at the moment).
 
-   virtual void      ChangeProperty(Window_t wid, Atom_t property, Atom_t type,
-                                    UChar_t *data, Int_t len);
-
-   //Set of "Window manager hints".
-   virtual void      SetMWMHints(Window_t wid, UInt_t value, UInt_t funcs, UInt_t input);
-   virtual void      SetWMPosition(Window_t wid, Int_t x, Int_t y);
-   virtual void      SetWMSize(Window_t wid, UInt_t w, UInt_t h);
-   virtual void      SetWMSizeHints(Window_t wid, UInt_t wmin, UInt_t hmin,
-                                       UInt_t wmax, UInt_t hmax, UInt_t winc, UInt_t hinc);
-   virtual void      SetWMState(Window_t wid, EInitialState state);
-   virtual void      SetWMTransientHint(Window_t wid, Window_t main_id);
-
-   //
+   /////////////////////////////
+   //OpenGL.
    virtual Window_t  CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &format);
    virtual Handle_t  CreateOpenGLContext(Window_t windowID, Handle_t sharedContext);
    virtual void      CreateOpenGLContext(Int_t wid);
@@ -279,13 +289,42 @@ public:
    virtual Handle_t  GetCurrentOpenGLContext();
    virtual void      FlushOpenGLBuffer(Handle_t ctx);
 
-   virtual void      DeleteOpenGLContext(Int_t wid);
+   virtual void      DeleteOpenGLContext(Int_t wid);   
+   //OpenGL.
+   /////////////////////////////
+
+   /////////////////////////////
+   //TPad's/TCanvas' specific - "double buffer" (off-screen rendering) + 'xor' mode.
+   virtual void      SetDoubleBuffer(Int_t wid, Int_t mode);
+   virtual void      SetDoubleBufferOFF();
+   virtual void      SetDoubleBufferON();
+   virtual void      SetDrawMode(EDrawMode mode);
+   //TPad's/TCanvas'.
+   /////////////////////////////
+
+   /////////////////////////////   
+   //Event management.
+   virtual void      SendEvent(Window_t wid, Event_t *ev);
+   virtual void      DispatchClientMessage(UInt_t messageID);
+   virtual void      RemoveEventsForWindow(Window_t wid);
+   virtual void      NextEvent(Event_t &event);
+   virtual Int_t     EventsPending();
+   virtual Bool_t    CheckEvent(Window_t wid, EGEventType type, Event_t &ev);
+   virtual Handle_t  GetNativeEvent() const;
+   //Event management.
+   /////////////////////////////
+
+   //The remaining bunch of functions is not sorted yet (and not imlemented at the moment).
+   virtual void      ChangeProperty(Window_t wid, Atom_t property, Atom_t type,
+                                    UChar_t *data, Int_t len);
+
+
 
    virtual UInt_t    ExecCommand(TGWin32Command *code);
    virtual void      GetCharacterUp(Float_t &chupx, Float_t &chupy);
 
    virtual Int_t     GetDoubleBuffer(Int_t wid);
-   virtual Handle_t  GetNativeEvent() const;
+
 
 
    virtual Pixmap_t  ReadGIF(Int_t x0, Int_t y0, const char *file, Window_t wid);
@@ -295,10 +334,6 @@ public:
    virtual void      SetCharacterUp(Float_t chupx, Float_t chupy);
    virtual void      SetClipOFF(Int_t wid);
    virtual void      SetClipRegion(Int_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);
-   virtual void      SetDoubleBuffer(Int_t wid, Int_t mode);
-   virtual void      SetDoubleBufferOFF();
-   virtual void      SetDoubleBufferON();
-   virtual void      SetDrawMode(EDrawMode mode);
 
    virtual void      SetTextMagnitude(Float_t mgn);
 
@@ -306,12 +341,9 @@ public:
    virtual void      Warp(Int_t ix, Int_t iy, Window_t wid);
    virtual Int_t     WriteGIF(char *name);
    virtual void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
-   virtual Int_t     SupportsExtension(const char *ext) const;
 
    virtual Bool_t       NeedRedraw(ULong_t tgwindow, Bool_t force);
 
-
-   virtual UInt_t       ScreenWidthMM() const;
    virtual Atom_t       InternAtom(const char *atom_name, Bool_t only_if_exist);
 
    virtual Bool_t       CreatePictureFromFile(Drawable_t wid, const char *filename,
@@ -323,14 +355,10 @@ public:
    virtual Bool_t       ReadPictureDataFromFile(const char *filename, char ***ret_data);
    virtual void         DeletePictureData(void *data);
    virtual void         SetDashes(GContext_t gc, Int_t offset, const char *dash_list, Int_t n);
-   virtual Int_t        EventsPending();
-   virtual void         NextEvent(Event_t &event);
+
+   
    virtual void         Bell(Int_t percent);
    
-   virtual Bool_t       CheckEvent(Window_t wid, EGEventType type, Event_t &ev);
-   virtual void         SendEvent(Window_t wid, Event_t *ev);
-   virtual void         DispatchClientMessage(UInt_t messageID);
-   virtual void         RemoveEventsForWindow(Window_t wid);
    virtual void         WMDeleteNotify(Window_t wid);
    virtual void         SetKeyAutoRepeat(Bool_t on = kTRUE);
    virtual void         GrabKey(Window_t wid, Int_t keycode, UInt_t modifier, Bool_t grab = kTRUE);
@@ -357,14 +385,6 @@ public:
    virtual Bool_t       PointInRegion(Int_t x, Int_t y, Region_t reg);
    virtual Bool_t       EqualRegion(Region_t rega, Region_t regb);
    virtual void         GetRegionBox(Region_t reg, Rectangle_t *rect);
-
-   virtual Drawable_t   CreateImage(UInt_t width, UInt_t height);
-   virtual void         GetImageSize(Drawable_t wid, UInt_t &width, UInt_t &height);
-   virtual void         PutPixel(Drawable_t wid, Int_t x, Int_t y, ULong_t pixel);
-   virtual void         PutImage(Drawable_t wid, GContext_t gc, Drawable_t img, Int_t dx, Int_t dy,
-                                 Int_t x, Int_t y, UInt_t w, UInt_t h);
-   virtual void         DeleteImage(Drawable_t img);
-
    //
    virtual void         ShapeCombineMask(Window_t wid, Int_t x, Int_t y, Pixmap_t mask);
 
