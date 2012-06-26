@@ -1614,7 +1614,7 @@ void print_mask_info(ULong_t mask)
       return 0;
    }
 
-   NSBitmapImageRep *imageRep = [self bitmapImageRepForCachingDisplayInRect : visRect];
+   NSBitmapImageRep *imageRep = [self bitmapImageRepForCachingDisplayInRect : visRect];//imageRect is autoreleased.
    if (!imageRep) {
       NSLog(@"QuartzView: -readColorBits: failed");
       return 0;
@@ -1626,7 +1626,14 @@ void print_mask_info(ULong_t mask)
    //
    const unsigned char *srcData = [imageRep bitmapData];
    //We have a source data now. Let's allocate buffer for ROOT's GUI and convert source data.
-   unsigned char *data = new unsigned char[area.fWidth * area.fHeight * 4];//bgra?
+   unsigned char *data = 0;
+   
+   try {
+      data = new unsigned char[area.fWidth * area.fHeight * 4];//bgra?
+   } catch (const std::bad_alloc &) {
+      return 0;
+   }
+   
    const NSInteger bitsPerPixel = [imageRep bitsPerPixel];
    //TODO: ohhh :(((
    assert(bitsPerPixel == 32 && "-readColorBits:, no alpha channel???");
