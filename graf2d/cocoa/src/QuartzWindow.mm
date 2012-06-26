@@ -1403,6 +1403,8 @@ void print_mask_info(ULong_t mask)
    //Check self.
    assert(self.fContext != 0 && "copyImage:area:withMask:clipOrigin:toPoint:, self.fContext is null");
    
+   //No RAII for subImage, since it can be really subimage or image itself and
+   //in these cases there is no need to release image.
    CGImageRef subImage = 0;
    bool needSubImage = false;
    if (area.fX || area.fY || area.fWidth != srcImage.fWidth || area.fHeight != srcImage.fHeight) {
