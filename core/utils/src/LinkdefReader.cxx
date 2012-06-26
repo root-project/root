@@ -846,7 +846,7 @@ public:
       }
       
       if (tok.isNot(clang::tok::semi)) {
-         Error("Error: missing ; at end of rule",tok);
+         Error("Error: missing ; at end of rule",tok,false);
          return;
       }
 
