@@ -826,18 +826,15 @@ Bool_t TTreeCache::FillBuffer()
       if (fEntryNext > fEntryMax) fEntryNext = fEntryMax;
    } while (kTRUE);
 
-   //in learning mode clear cache
-   if (fIsLearning) {
-      fEntryNext = -1;
-      fEntryCurrent = -1;
-      TFileCacheRead::Prefetch(0, 0);
-      TFileCacheRead::SecondPrefetch(0, 0);
-      fFirstBuffer = !fFirstBuffer;
-   }
-   if (!fIsLearning && fFirstTime){
-      // First time we add autoFlush entries , after fFillTimes * autoFlush
-      // only in reverse prefetching mode
-      fFirstTime = kFALSE;
+   if (fEnablePrefetching) {
+      if (fIsLearning) {
+         fFirstBuffer = !fFirstBuffer;
+      }
+      if (!fIsLearning && fFirstTime){
+         // First time we add autoFlush entries , after fFillTimes * autoFlush
+         // only in reverse prefetching mode
+         fFirstTime = kFALSE;
+      }
    }
    fIsLearning = kFALSE;
    return kTRUE;
