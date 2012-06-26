@@ -234,17 +234,17 @@ namespace Quartz = ROOT::Quartz;
       return;
    }
    
-   Util::CFScopeGuard<CGImageRef> subImage;
+   CGImageRef subImage = 0;//RAII not really needed.
    bool needSubImage = false;
    if (area.fX || area.fY || area.fWidth != srcImage.fWidth || area.fHeight != srcImage.fHeight) {
       needSubImage = true;
-      subImage.Reset(CreateSubImage(srcImage, area));
-      if (!subImage.Get()) {
+      subImage = CreateSubImage(srcImage, area);
+      if (!subImage) {
          NSLog(@"QuartzPixmap: -copyImage:area:withMask:clipOrigin:toPoint:, subimage creation failed");
          return;
       }
    } else
-      subImage.Reset(srcImage.fImage);
+      subImage = srcImage.fImage;
 
    //Save context state.
    const Quartz::CGStateGuard stateGuard(fContext);
@@ -263,10 +263,10 @@ namespace Quartz = ROOT::Quartz;
 
    dstPoint.fY = LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);
    const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
-   CGContextDrawImage(fContext, imageRect, subImage.Get());
+   CGContextDrawImage(fContext, imageRect, subImage);
 
-   if (!needSubImage)
-      subImage.Release();
+   if (needSubImage)
+      CGImageRelease(subImage);
 }
 
 //______________________________________________________________________________
