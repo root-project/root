@@ -162,23 +162,33 @@ String.prototype.endsWith = function(str, ignoreCase) {
       var array = {}
       array['array'] = new Array();
       var n = JSROOTIO.ntou4(str, o); o += 4;
-      for (var i = 0; i < n; ++i) {
-         if (array_type == 'D') {
+      if (array_type == 'D') {
+         for (var i = 0; i < n; ++i) {
             array['array'][i] = JSROOTIO.ntod(str, o); o += 8;
          }
-         if (array_type == 'F') {
+      }
+      if (array_type == 'F') {
+         for (var i = 0; i < n; ++i) {
             array['array'][i] = JSROOTIO.ntof(str, o); o += 4;
          }
-         if (array_type == 'L') {
+      }
+      if (array_type == 'L') {
+         for (var i = 0; i < n; ++i) {
             array['array'][i] = JSROOTIO.ntoi8(str, o); o += 8;
          }
-         if (array_type == 'I') {
+      }
+      if (array_type == 'I') {
+         for (var i = 0; i < n; ++i) {
             array['array'][i] = JSROOTIO.ntoi4(str, o); o += 4;
          }
-         if (array_type == 'S') {
+      }
+      if (array_type == 'S') {
+         for (var i = 0; i < n; ++i) {
             array['array'][i] = JSROOTIO.ntoi2(str, o); o += 2;
          }
-         if (array_type == 'C') {
+      }
+      if (array_type == 'C') {
+         for (var i = 0; i < n; ++i) {
             array['array'][i] = str.charCodeAt(o) & 0xff; o++;
          }
       }
@@ -682,6 +692,10 @@ String.prototype.endsWith = function(str, ignoreCase) {
                      o += 4;
                      break;
                   }
+                  if (pval < 1000000) {
+                     o += 4;
+                     break;
+                  }
                }
                if (JSROOTIO.GetStreamer(classname)) {
                   var clRef = gFile.fStreamerInfo.ReadClass(str, o);
@@ -987,6 +1001,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
 
       JSROOTIO.StreamerInfo.prototype.GetClassMap = function(clTag) {
          // find the tag 'clTag' in the list and return the class name
+         clTag |= 0x01;
          for (var i=0; i<gFile['fStreamerInfo'].fClassIndex; ++i) {
             if (gFile['fStreamerInfo'].fClassMap[i]['tag'] == clTag)
                return gFile['fStreamerInfo'].fClassMap[i]['name'];
@@ -1023,23 +1038,21 @@ String.prototype.endsWith = function(str, ignoreCase) {
             var so = JSROOTIO.ReadString(str, o); // class name
             o = so['off'];
             classInfo['name'] = so['str'];
-            classInfo['tag'] = 68 + startpos + kMapOffset;
+            if (gFile.fTagOffset == 0) gFile.fTagOffset = 68;
+            classInfo['tag'] = gFile.fTagOffset + startpos + kMapOffset;
          }
          else {
             // got a tag to an already seen class
             var clTag = (tag & ~kClassMask);
             classInfo['name'] = this.GetClassMap(clTag);
             if (classInfo['name'] == -1)
-               classInfo['name'] = this.GetClassMap(clTag - kMapOffset);
-            if (classInfo['name'] == -1)
-               classInfo['name'] = this.GetClassMap(clTag + 14);
+               classInfo['name'] = this.GetClassMap(clTag - 4);
          }
          classInfo['cnt'] = (bcnt & ~kByteCountMask);
          classInfo['off'] = o;
          if (tag == kNewClassTag) {
             // add class to fClassMap for later reference
-            //gFile['fStreamerInfo'].fClassMap[gFile['fStreamerInfo'].fClassIndex] = classInfo;
-            //gFile['fStreamerInfo'].fClassIndex++;
+            classInfo['tag'] |= 0x01;
             this.fClassMap[this.fClassIndex] = classInfo;
             this.fClassIndex++;
          }
@@ -1978,6 +1991,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
          if (findObject(obj_name+cycle)) return;
          var key = this.GetKey(obj_name, cycle);
          if (key == null) return;
+         this.fTagOffset = key.keyLen;
          var callback = function(file, objbuf) {
             if (objbuf && objbuf['unzipdata']) {
                if (key['className'] == 'TCanvas') {
@@ -2177,6 +2191,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
       this.fHistoIndex = 0;
       this.fSeekInfo = 0;
       this.fNbytesInfo = 0;
+      this.fTagOffset = 0;
 
       this.fStreamers = 0;
       this.fStreamerInfo = new JSROOTIO.StreamerInfo();

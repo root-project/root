@@ -342,11 +342,13 @@ var d, key_tree;
                },
                gridLineColor:'#e9e9e9',
                gridLineWidth:1,
+               min: histo['fXaxis']['fXmin'],
+               max: histo['fXaxis']['fXmax'],
                minPadding:0,
                maxPadding:0,
                offset: 0.2,
-               startOnTick:true,
-               endOnTick: true,
+               //startOnTick:true,
+               //endOnTick: true,
                tickLength:5,
                tickColor:'#ccc',
                showLastLabel: true
@@ -359,8 +361,10 @@ var d, key_tree;
                },
                gridLineColor:'#e9e9e9',
                lineColor:'#ccc',
-               maxPadding:0,
+               min: histo['fYaxis']['fXmin'],
+               max: histo['fYaxis']['fXmax'],
                minPadding:0,
+               maxPadding:0,
                tickWidth:1,
                tickLength:5,
                tickColor:'#ccc'
@@ -381,7 +385,7 @@ var d, key_tree;
                animation: false,
                //color: null, //fillcolor,
                data: bin_data,
-               pointStart: histo['fXaxis']['fXmin'],
+               //pointStart: histo['fXaxis']['fXmin'],
                stickyTracking: false
             }]
          });

@@ -75,32 +75,6 @@ function displayListOfKeys(keys) {
    JSROOTPainter.displayListOfKeys(keys, '#status');
 };
 
-function displayInflatedBuffer(buffer) {
-   var id = buffer['key']['className'] + " : " +
-            buffer['key']['name'] + " (" +
-            buffer['key']['title'] + ")";
-   var entryInfo = "<h5><a>" + id + "</a>&nbsp; </h5>\n<div>";
-   // contrive an id for the entry, make it unique
-   var randomId = "buffer-id-" + buffer['key']['name'];
-   var findElement = $('#report').find('#'+randomId);
-   if (findElement.length) {
-      return;
-   }
-   entryInfo += "<h6>Inflated Buffer:</h6><span id='" + randomId + "'></span></div>\n";
-   // insert the info for one entry as the last child within the report div
-   $("#report").append(entryInfo);
-   var content = "<pre style='font-size:x-small'>" +
-                 JSIO.htmlEscape(JSIO.formatByteArray(buffer['buffer'])) + "</pre>";
-   $("#"+randomId).html(content);
-};
-
-function displayInflatedBuffers(buffers) {
-   for (var i=0; i<buffers.length; ++i) {
-      if (buffers[i]['key']['className'] != "" && buffers[i]['key']['name'] != "")
-         displayInflatedBuffer(buffers[i])
-   }
-};
-
 function displayStreamerInfos(streamerInfo) {
    var findElement = $('#report').find('#treeview');
    if (findElement.length) {
@@ -167,7 +141,6 @@ function AssertPrerequisites(andThen) {
       loadScript('http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js', function() {
       loadScript(source_dir+'scripts/dtree.js', function() {
       loadScript(source_dir+'scripts/rawinflate.js', function() {
-      loadScript(source_dir+'scripts/JSIO.core.js', function() {
       loadScript('http://code.highcharts.com/highcharts.js', function() {
       loadScript('http://code.highcharts.com/modules/exporting.js', function() {
       loadScript(source_dir+'scripts/JSRootPainter.js', function() {
@@ -189,7 +162,7 @@ function AssertPrerequisites(andThen) {
             $('#report').append("</body></html>");
             $('#report').addClass("ui-accordion ui-accordion-icons ui-widget ui-helper-reset");
          }
-      }) }) }) }) }) }) }) }) });
+      }) }) }) }) }) }) }) });
       return true;
    }
    return false;
