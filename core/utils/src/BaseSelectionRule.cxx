@@ -458,26 +458,6 @@ bool BaseSelectionRule::GetMatchFound() const
    return fMatchFound;
 }
 
-bool BaseSelectionRule::RequestOnlyTClass() const
-{
-   return false;
-}
-
-bool BaseSelectionRule::RequestNoStreamer() const
-{
-   return false;
-}
-
-bool BaseSelectionRule::RequestNoInputOperator() const
-{
-   return false;
-}
-
-bool BaseSelectionRule::RequestStreamerInfo() const
-{
-   return false;
-}
-
 const clang::CXXRecordDecl *BaseSelectionRule::GetCXXRecordDecl() const
 {
    return fCXXRecordDecl;

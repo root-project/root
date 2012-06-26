@@ -85,7 +85,10 @@ public:
          // Nothing to do we do not own the pointer;
       }
       const char *GetRequestedName() const { return fRequestedName.c_str(); }
-      bool RequestStreamerInfo() const { return fRequestStreamerInfo; }
+      bool RequestStreamerInfo() const { 
+         // Equivalent to CINT's cl.RootFlag() & G__USEBYTECOUNT 
+         return fRequestStreamerInfo; 
+      }
       bool RequestNoInputOperator() const { return fRequestNoInputOperator; }
       bool RequestNoStreamer() const { return fRequestNoStreamer; }
       bool RequestOnlyTClass() const { return fRequestOnlyTClass; }

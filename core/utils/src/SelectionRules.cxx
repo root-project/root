@@ -302,83 +302,132 @@ bool SelectionRules::GetDeep() const
    else return false;
 }
 
+const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::RecordDecl *D) const
+{  
+   std::string str_name;    // name of the Decl
+   std::string qual_name;   // name of the Decl
+   GetDeclName(D, str_name, qual_name);
+   return IsClassSelected(D, qual_name);
+}
+
+const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::NamespaceDecl *D) const
+{  
+   std::string str_name;    // name of the Decl
+   std::string qual_name;   // name of the Decl
+   GetDeclName(D, str_name, qual_name);
+   return IsNamespaceSelected(D, qual_name);
+}
+
+const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::EnumDecl *D) const
+{  
+
+   std::string str_name;   // name of the Decl
+   std::string qual_name;  // fully qualified name of the Decl   
+   GetDeclName(D, str_name, qual_name);
+
+   if (IsParentClass(D)) {
+      const BaseSelectionRule *selector = IsMemberSelected(D, str_name);
+      if (!selector) // if the parent class is deselected, we could still select the enum
+         return IsEnumSelected(D, qual_name);
+      else           // if the parent class is selected so are all nested enums
+         return selector;
+   }
+   
+   // Enum is not part of a class
+   else {
+      if (IsLinkdefFile())
+         return IsLinkdefEnumSelected(D, qual_name);
+      return IsEnumSelected(D, qual_name);
+   }
+}
+
+const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::VarDecl* D) const
+{  
+
+   std::string str_name;   // name of the Decl
+   std::string qual_name;  // fully qualified name of the Decl   
+   GetDeclName(D, str_name, qual_name);
+
+   if (!IsLinkdefFile())
+      return IsVarSelected(D, qual_name);
+   else
+      return IsLinkdefVarSelected(D, qual_name);
+}
+ 
+const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FieldDecl* D) const
+{  
+   std::string str_name;   // name of the Decl
+   std::string qual_name;  // fully qualified name of the Decl   
+   GetDeclName(D, str_name, qual_name);
+
+   return IsMemberSelected(D, str_name);
+}
+
+const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FunctionDecl* D) const
+{  
+
+   std::string str_name;   // name of the Decl
+   std::string qual_name;  // fully qualified name of the Decl   
+   GetDeclName(D, str_name, qual_name);
+
+   if (!IsLinkdefFile())
+      return IsFunSelected(D, qual_name);
+   else
+      return IsLinkdefFunSelected(D, qual_name);
+}
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D) const
 {  
-   std::string str_name;   // name of the Decl
-   std::string kind;       // kind of the Decl
-   std::string qual_name;  // fully qualified name of the Decl
-   
    if (!D) {
       return 0;
    }
    
-   kind = D->getDeclKindName();
+   clang::Decl::Kind declkind = D->getKind();
    
-   GetDeclName(D, str_name, qual_name);
-   // fprintf(stderr,"IsDeclSelected: %s %s\n", str_name.c_str(), qual_name.c_str());
-   
-   if (kind == "CXXRecord") { // structs, unions and classes are all CXXRecords
-      return IsClassSelected(D, qual_name);
+   switch (declkind) {
+   case clang::Decl::CXXRecord: 
+   case clang::Decl::ClassTemplateSpecialization:
+   case clang::Decl::ClassTemplatePartialSpecialization:
+      // structs, unions and classes are all CXXRecords
+      return IsDeclSelected(llvm::dyn_cast<clang::RecordDecl>(D));
+   case clang::Decl::Namespace:
+      return IsDeclSelected(llvm::dyn_cast<clang::NamespaceDecl>(D));
+   case clang::Decl::Enum:
+      // Enum is part of a class
+      return IsDeclSelected(llvm::dyn_cast<clang::EnumDecl>(D));
+   case clang::Decl::Var:
+      return IsDeclSelected(llvm::dyn_cast<clang::VarDecl>(D));
+   case clang::Decl::Function:
+      return IsDeclSelected(llvm::dyn_cast<clang::FunctionDecl>(D));
+   case clang::Decl::CXXMethod:
+   case clang::Decl::CXXConstructor:
+   case clang::Decl::CXXDestructor: {
+      // std::string proto;
+      //  if (GetFunctionPrototype(D,proto))
+      //       std::cout<<"\n\tFunction prototype: "<<str_name + proto;
+      //  else 
+      //       std::cout<<"Error in prototype formation"; 
+      std::string str_name;   // name of the Decl
+      std::string qual_name;  // fully qualified name of the Decl   
+      GetDeclName(D, str_name, qual_name);
+      if (IsLinkdefFile()) {
+         return IsLinkdefMethodSelected(D, qual_name);
+      }
+      return IsMemberSelected(D, str_name);
    }
-   
-   if (kind == "ClassTemplateSpecialization") { // structs, unions and classes are all CXXRecords
-      return IsClassSelected(D, qual_name);
+   case clang::Decl::Field:
+      return IsDeclSelected(llvm::dyn_cast<clang::FieldDecl>(D));
+   default:
+      // Humm we are not treating this case!
+      return 0;
    }
 
-   if (kind == "ClassTemplatePartialSpecialization") { // structs, unions and classes are all CXXRecords      fprintf(stderr,"ClassTemplatePartialSpecialization: %s %s\n",llvm::dyn_cast<clang::NamedDecl>(D)->getNameAsString().c_str(),qual_name.c_str());
-      return IsClassSelected(D, qual_name);
-   }
-   
-   if (kind == "Namespace") { // structs, unions and classes are all CXXRecords
-      return IsNamespaceSelected(D, qual_name);
-   }
-   
-   if (kind == "Var" || kind == "Function") {
-      if (!IsLinkdefFile())
-         return IsVarFunEnumSelected(D, kind, qual_name);
-      else
-         return IsLinkdefVarFunEnumSelected(D, kind, qual_name);
-   } 
-   
-   if (kind == "Enum"){
-      
-      // Enum is part of a class
-      if (IsParentClass(D)) {
-         const BaseSelectionRule *selector = IsMemberSelected(D, kind, str_name);
-         if (!selector) // if the parent class is deselected, we could still select the enum
-            return IsVarFunEnumSelected(D, kind, qual_name);
-         else           // if the parent class is selected so are all nested enums
-            return selector;
-      }
-      
-      // Enum is not part of a class
-      else {
-         if (IsLinkdefFile())
-            return IsLinkdefVarFunEnumSelected(D, kind, qual_name);
-         return IsVarFunEnumSelected(D, kind, qual_name);
-      }
-   }
-   
-   if (kind == "CXXMethod" || kind == "CXXConstructor" || kind == "CXXDestructor" || kind == "Field") {
-      /* DEBUG
-       if(kind != "Field"){
-       std::string proto;
-       if (GetFunctionPrototype(D,proto))
-	    std::cout<<"\n\tFunction prototype: "<<str_name + proto;
-       else 
-	    std::cout<<"Error in prototype formation"; 
-       }
-       */
-      
-      if (IsLinkdefFile() && kind != "Field") {
-         return IsLinkdefMethodSelected(D, kind, qual_name);
-      }
-      return IsMemberSelected(D, kind, str_name);
-   }
-   
-   return 0;
+   std::string str_name;   // name of the Decl
+   std::string qual_name;  // fully qualified name of the Decl   
+   GetDeclName(D, str_name, qual_name);
+   // fprintf(stderr,"IsDeclSelected: %s %s\n", str_name.c_str(), qual_name.c_str());
 }
+
 
 bool SelectionRules::GetDeclName(clang::Decl* D, std::string& name, std::string& qual_name) const
 {
@@ -579,7 +628,7 @@ bool SelectionRules::GetParentName(clang::Decl* D, std::string& parent_name, std
 // which is for the selection.xml file case). If noName is true than we just continue - 
 // this means that the current class selection rule isn't applicable for this class.
 
-const BaseSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, const std::string& qual_name) const
+const ClassSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, const std::string& qual_name) const
 {
    clang::NamespaceDecl* N = llvm::dyn_cast<clang::NamespaceDecl> (D); //TagDecl has methods to understand of what kind is the Decl
    if (N==0) {
@@ -592,9 +641,9 @@ const BaseSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, con
       if (!GetDeclSourceFileName(N, file_name)){
       }
    }
-   const BaseSelectionRule *selector = 0;
+   const ClassSelectionRule *selector = 0;
    int fImplNo = 0;
-   const BaseSelectionRule *explicit_selector = 0;
+   const ClassSelectionRule *explicit_selector = 0;
    int fFileNo = 0;
    bool file;
    
@@ -684,7 +733,7 @@ const BaseSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, con
 }
 
 
-const BaseSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_name) const
+const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_name) const
 {
    clang::TagDecl* T = llvm::dyn_cast<clang::TagDecl> (D); //TagDecl has methods to understand of what kind is the Decl
    if (T) {
@@ -694,9 +743,9 @@ const BaseSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const s
             if (!GetDeclSourceFileName(D, file_name)){
             }
          }
-         const BaseSelectionRule *selector = 0;
+         const ClassSelectionRule *selector = 0;
          int fImplNo = 0;
-         const BaseSelectionRule *explicit_selector = 0;
+         const ClassSelectionRule *explicit_selector = 0;
          int fFileNo = 0;
          bool file;
          
@@ -802,30 +851,10 @@ const BaseSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const s
    
 }
 
-
-const BaseSelectionRule *SelectionRules::IsVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name) const
+const BaseSelectionRule *SelectionRules::IsVarSelected(clang::VarDecl* D, const std::string& qual_name) const
 {
-   std::list<VariableSelectionRule>::const_iterator it;
-   std::list<VariableSelectionRule>::const_iterator it_end;
-   std::string prototype;
-   
-   if (kind == "Var") {
-      it = fVariableSelectionRules.begin();
-      it_end = fVariableSelectionRules.end();
-   }
-   else if (kind == "Function") {
-      GetFunctionPrototype(D, prototype);
-      prototype = qual_name + prototype;
-#ifdef SELECTION_DEBUG
-      std::cout<<"\tIn isVarFunEnumSelected()"<<prototype<<std::endl;
-#endif
-      it = fFunctionSelectionRules.begin();
-      it_end = fFunctionSelectionRules.end();
-   }
-   else {
-      it = fEnumSelectionRules.begin();
-      it_end = fEnumSelectionRules.end();
-   }
+   std::list<VariableSelectionRule>::const_iterator it = fVariableSelectionRules.begin();
+   std::list<VariableSelectionRule>::const_iterator it_end =  fVariableSelectionRules.end();
    
    std::string file_name;
    if (GetHasFileNameRule()){
@@ -837,17 +866,13 @@ const BaseSelectionRule *SelectionRules::IsVarFunEnumSelected(clang::Decl* D, co
    }
    
    const BaseSelectionRule *selector = 0;
-   bool d, noMatch;
-   bool selected;
-   bool file;
    
    // iterate through all the rules 
    // we call this method only for genrefex variables, functions and enums - it is simpler than the class case:
    // if we have No - it is veto even if we have explicit yes as well
    for(; it != it_end; ++it) {
-      if (kind == "Var") selected = it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", file_name, d, noMatch, file, false);
-      else selected = it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, file_name, d, noMatch, file, false);
-      if (selected) {
+      bool d, noMatch, file;
+      if (it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", file_name, d, noMatch, file, false)) {
          selector = &(*it);
       }
       else if (!noMatch) {
@@ -859,27 +884,90 @@ const BaseSelectionRule *SelectionRules::IsVarFunEnumSelected(clang::Decl* D, co
    return selector;
 }
 
-
-const BaseSelectionRule *SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name) const
+const BaseSelectionRule *SelectionRules::IsFunSelected(clang::FunctionDecl* D, const std::string& qual_name) const
 {
    std::list<VariableSelectionRule>::const_iterator it;
    std::list<VariableSelectionRule>::const_iterator it_end;
    std::string prototype;
    
-   if (kind == "Var") {
-      it = fVariableSelectionRules.begin();
-      it_end = fVariableSelectionRules.end();
+   GetFunctionPrototype(D, prototype);
+   prototype = qual_name + prototype;
+#ifdef SELECTION_DEBUG
+   std::cout<<"\tIn isFunSelected()"<<prototype<<std::endl;
+#endif
+   it = fFunctionSelectionRules.begin();
+   it_end = fFunctionSelectionRules.end();
+   
+   std::string file_name;
+   if (GetHasFileNameRule()){
+      if (GetDeclSourceFileName(D, file_name)){
+#ifdef SELECTION_DEBUG
+         std::cout<<"\tSource file name: "<<file_name<<std::endl;
+#endif
+      }
    }
-   else if (kind == "Function") {
-      GetFunctionPrototype(D, prototype);
-      prototype = qual_name + prototype;
-      it = fFunctionSelectionRules.begin();
-      it_end = fFunctionSelectionRules.end();
+   
+   const BaseSelectionRule *selector = 0;
+   // iterate through all the rules 
+   // we call this method only for genrefex variables, functions and enums - it is simpler than the class case:
+   // if we have No - it is veto even if we have explicit yes as well
+   for(; it != it_end; ++it) {
+      bool d, noMatch, file;
+      if (it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, file_name, d, noMatch, file, false)) {
+         selector = &(*it);
+      }
+      else if (!noMatch) {
+         // The rule did explicitly request to not select this entity.
+         return 0;
+      }
    }
-   else {
-      it = fEnumSelectionRules.begin();
-      it_end = fEnumSelectionRules.end();
+   
+   return selector;
+}
+
+const BaseSelectionRule *SelectionRules::IsEnumSelected(clang::EnumDecl* D, const std::string& qual_name) const
+{
+   std::list<VariableSelectionRule>::const_iterator it;
+   std::list<VariableSelectionRule>::const_iterator it_end;
+   
+   it = fEnumSelectionRules.begin();
+   it_end = fEnumSelectionRules.end();
+   
+   std::string file_name;
+   if (GetHasFileNameRule()){
+      if (GetDeclSourceFileName(D, file_name)){
+#ifdef SELECTION_DEBUG
+         std::cout<<"\tSource file name: "<<file_name<<std::endl;
+#endif
+      }
    }
+   
+   const BaseSelectionRule *selector = 0;
+   
+   // iterate through all the rules 
+   // we call this method only for genrefex variables, functions and enums - it is simpler than the class case:
+   // if we have No - it is veto even if we have explicit yes as well
+   for(; it != it_end; ++it) {
+      bool d, noMatch, file;
+      if (it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", file_name, d, noMatch, file, false)) {
+         selector = &(*it);
+      }
+      else if (!noMatch) {
+         // The rule did explicitly request to not select this entity.
+         return 0;
+      }
+   }
+   
+   return selector;
+}
+
+const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(clang::VarDecl* D, const std::string& qual_name) const
+{
+   std::list<VariableSelectionRule>::const_iterator it;
+   std::list<VariableSelectionRule>::const_iterator it_end;
+
+   it = fVariableSelectionRules.begin();
+   it_end = fVariableSelectionRules.end();
    
    std::string file_name;
    if (GetHasFileNameRule()){
@@ -891,7 +979,6 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl
    }
    
    bool d, n;
-   bool selected;
    const BaseSelectionRule *selector = 0;
    int fImplNo = 0;
    const BaseSelectionRule *explicit_selector = 0;
@@ -900,10 +987,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl
    std::string name_value;
    std::string pattern_value;
    for(; it != it_end; ++it) {
-      if (kind == "Var") selected = it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", file_name, d, n, file, false);
-      else selected = it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, file_name, d, n, file, false);
-      
-      if(selected) {
+      if (it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", file_name, d, n, file, false)) {
          // explicit rules are with stronger priority in rootcint
          if (IsLinkdefFile()){
             if (it->GetAttributeValue("name", name_value)) {
@@ -944,6 +1028,143 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl
    }
 }
 
+const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(clang::FunctionDecl* D, const std::string& qual_name) const
+{
+   std::list<VariableSelectionRule>::const_iterator it;
+   std::list<VariableSelectionRule>::const_iterator it_end;
+   std::string prototype;
+   
+   GetFunctionPrototype(D, prototype);
+   prototype = qual_name + prototype;
+   it = fFunctionSelectionRules.begin();
+   it_end = fFunctionSelectionRules.end();
+   
+   std::string file_name;
+   if (GetHasFileNameRule()){
+      if (GetDeclSourceFileName(D, file_name)) {
+#ifdef SELECTION_DEBUG
+         std::cout<<"\tSource file name: "<<file_name<<std::endl;
+#endif
+      }
+   }
+   
+   bool d, n;
+   const BaseSelectionRule *selector = 0;
+   int fImplNo = 0;
+   const BaseSelectionRule *explicit_selector = 0;
+   bool file;
+   
+   std::string name_value;
+   std::string pattern_value;
+   for(; it != it_end; ++it) {
+      if (it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, file_name, d, n, file, false)) {
+         // explicit rules are with stronger priority in rootcint
+         if (IsLinkdefFile()){
+            if (it->GetAttributeValue("name", name_value)) {
+               if (name_value == qual_name) explicit_selector = &(*it);
+            }
+            if (it->HasAttributeWithName("pattern")) {
+               it->GetAttributeValue("pattern", pattern_value);
+               if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = &(*it);
+            }
+         }
+      }
+      else if (!n) {
+         if (!IsLinkdefFile()) return 0;
+         else {
+            if (it->GetAttributeValue("pattern", pattern_value)) {
+               if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
+               else 
+                  return 0;
+            }
+            else
+               return 0;
+         }
+      }
+   }
+   
+   if (IsLinkdefFile()) {
+      
+#ifdef SELECTION_DEBUG
+      std::cout<<"\n\tfYes = "<<fYes<<", fImplNo = "<<fImplNo<<std::endl;
+#endif
+      
+      if (explicit_selector) return explicit_selector;
+      else if (fImplNo > 0) return 0;
+      else return selector;
+   }
+   else{
+      return selector;
+   }
+}
+
+const BaseSelectionRule *SelectionRules::IsLinkdefEnumSelected(clang::EnumDecl* D, const std::string& qual_name) const
+{
+   std::list<VariableSelectionRule>::const_iterator it;
+   std::list<VariableSelectionRule>::const_iterator it_end;
+
+   it = fEnumSelectionRules.begin();
+   it_end = fEnumSelectionRules.end();
+   
+   std::string file_name;
+   if (GetHasFileNameRule()){
+      if (GetDeclSourceFileName(D, file_name)) {
+#ifdef SELECTION_DEBUG
+         std::cout<<"\tSource file name: "<<file_name<<std::endl;
+#endif
+      }
+   }
+   
+   bool d, n;
+   const BaseSelectionRule *selector = 0;
+   int fImplNo = 0;
+   const BaseSelectionRule *explicit_selector = 0;
+   bool file;
+   
+   std::string name_value;
+   std::string pattern_value;
+   for(; it != it_end; ++it) {
+      if (it->IsSelected(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", file_name, d, n, file, false)) {
+      
+         // explicit rules are with stronger priority in rootcint
+         if (IsLinkdefFile()){
+            if (it->GetAttributeValue("name", name_value)) {
+               if (name_value == qual_name) explicit_selector = &(*it);
+            }
+            if (it->HasAttributeWithName("pattern")) {
+               it->GetAttributeValue("pattern", pattern_value);
+               if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = &(*it);
+            }
+         }
+      }
+      else if (!n) {
+         if (!IsLinkdefFile()) return 0;
+         else {
+            if (it->GetAttributeValue("pattern", pattern_value)) {
+               if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
+               else 
+                  return 0;
+            }
+            else
+               return 0;
+         }
+      }
+   }
+   
+   if (IsLinkdefFile()) {
+      
+#ifdef SELECTION_DEBUG
+      std::cout<<"\n\tfYes = "<<fYes<<", fImplNo = "<<fImplNo<<std::endl;
+#endif
+      
+      if (explicit_selector) return explicit_selector;
+      else if (fImplNo > 0) return 0;
+      else return selector;
+   }
+   else{
+      return selector;
+   }
+}
 
 // In rootcint we could select and deselect methods independantly of the class/struct/union rules
 // That's why we first have to check the explicit rules for the functions - to see if there
@@ -958,7 +1179,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarFunEnumSelected(clang::Decl
 // of anything better)
 // 
 
-const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& kind, const std::string& qual_name) const
+const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D, const std::string& qual_name) const
 {
    std::list<FunctionSelectionRule>::const_iterator it = fFunctionSelectionRules.begin();
    std::list<FunctionSelectionRule>::const_iterator it_end = fFunctionSelectionRules.end();
@@ -980,7 +1201,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D,
    const BaseSelectionRule *implicit_rr = 0;
    bool file;
    
-   if (kind == "CXXMethod"){
+   if (D->getKind() == clang::Decl::CXXMethod){
       // we first check the explicit rules for the method (in case of constructors and destructors we check the parent)
       std::string pat_value;
       for(; it != it_end; ++it) {
@@ -1185,7 +1406,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D,
    
 }
 
-const BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const std::string& kind, const std::string& str_name) const
+const BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const std::string& str_name) const
 {
    std::string parent_name;
    std::string parent_qual_name;
@@ -1260,13 +1481,14 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const 
                return 0; // == BaseSelectionRule::kNo
             }
             else {
-               if (kind == "Field" || kind == "CXXMethod" || kind == "CXXConstructor" || kind == "CXXDestructor"){
+               clang::Decl::Kind kind = D->getKind();
+               if (kind == clang::Decl::Field || kind == clang::Decl::CXXMethod || kind == clang::Decl::CXXConstructor || kind == clang::Decl::CXXDestructor){
                   std::list<VariableSelectionRule> members;
                   std::list<VariableSelectionRule>::iterator mem_it;
                   std::list<VariableSelectionRule>::iterator mem_it_end;
                   std::string prototype;
                   
-                  if (kind == "Field") {
+                  if (kind == clang::Decl::Field) {
                      members = it->GetFieldSelectionRules();
                   }
                   else {

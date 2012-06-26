@@ -693,11 +693,10 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
    }
    
    bool ret = true;
-   const BaseSelectionRule *selected;
-   
+
    DumpDecl(N, "");
    
-   selected = fSelectionRules.IsDeclSelected(N);
+   const ClassSelectionRule *selected = fSelectionRules.IsDeclSelected(N);
    if (selected) {
       
 #ifdef SELECTION_DEBUG
@@ -740,7 +739,6 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
 {
    
    bool ret = true;
-   const BaseSelectionRule *selected;
    
    // in case it is implicit or a forward declaration, we are not interested.
    if(D && (D->isImplicit() || !D->isCompleteDefinition()) ) {
@@ -758,7 +756,7 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
       }
    }
    
-   selected = fSelectionRules.IsDeclSelected(D);
+   const ClassSelectionRule *selected = fSelectionRules.IsDeclSelected(D);
    if (selected) {
       
 #ifdef SELECTION_DEBUG

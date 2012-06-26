@@ -29,6 +29,7 @@
 class SelectionRules;
 class PragmaCreateCollector;
 class PragmaLinkCollector;
+class LinkdefReaderPragmaHandler;
 
 class LinkdefReader 
 {
@@ -68,7 +69,8 @@ private:
 
    friend class PragmaCreateCollector;
    friend class PragmaLinkCollector;
-   
+   friend class LinkdefReaderPragmaHandler;
+
 public:
    LinkdefReader();
 
@@ -77,8 +79,10 @@ public:
 private:
    static void PopulatePragmaMap();
    static void PopulateCppMap();
-   
-   bool AddRule(std::string ruletype, std::string identifier, bool linkOn, bool requestOnlyTClass);
+
+   struct Options;
+
+   bool AddRule(std::string ruletype, std::string identifier, bool linkOn, bool requestOnlyTClass, Options *option = 0);
    
    bool ProcessFunctionPrototype(std::string& proto, bool& name); // transforms the function prototypes to a more unified form
    bool ProcessOperators(std::string& pattern); // transforms the operators statement to the suitable function pattern

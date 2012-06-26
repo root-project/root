@@ -33,6 +33,15 @@
 std::map<std::string, LinkdefReader::EPragmaNames> LinkdefReader::fgMapPragmaNames;
 std::map<std::string, LinkdefReader::ECppNames> LinkdefReader::fgMapCppNames;
 
+struct LinkdefReader::Options {
+   Options() : fNoStreamer(0), fNoInputOper(0), fUseByteCount(0), fVersionNumber(-1) {}
+
+   int fNoStreamer;
+   int fNoInputOper;
+   int fUseByteCount;
+   int fVersionNumber;
+};
+
 /*
  This is a static function - which in our context means it is populated only ones
  */
@@ -78,7 +87,7 @@ LinkdefReader::LinkdefReader() : fLine(1), fCount(0)
  * The method that processes the pragma statement.
  * Sometimes I had to do strange things to reflect the strange behavior of rootcint
  */
-bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool linkOn, bool request_only_tclass)
+bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool linkOn, bool request_only_tclass, LinkdefReader::Options *options /* = 0 */)
 {
    
    EPragmaNames name = kUnknown;
@@ -342,6 +351,12 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
                   }
                   ++where;
                }
+               if (options) {
+                  if (options->fNoStreamer) csr.SetMinus(true);
+                  if (options->fNoInputOper) csr.SetExclamation(true);
+                  if (options->fUseByteCount) csr.SetPlus(true);
+                  if (options->fVersionNumber >= 0) {} // csr.SetVersionNumber(fVersionNumber)
+               }
                if ( csr.HasPlus() && csr.HasMinus() ) {
                   std::cerr << "Warning: " << identifier << " option + mutual exclusive with -, + prevails\n";
                   csr.SetMinus(false);
@@ -548,13 +563,96 @@ public:
    {
    }
    
-   void Error(const char *message, const clang::Token &tok) {
+   void Error(const char *message, const clang::Token &tok, bool source = true) {
       
-      std::cerr<<message;
+      std::cerr << message << '\n';
       tok.getLocation().dump(fSourceManager);
-      std::cerr<<'\n';
+      std::cerr << ":";
+      if (source) std::cerr << fSourceManager.getCharacterData(tok.getLocation());
       
    }
+
+   bool ProcessOptions(LinkdefReader::Options &options,
+                       clang::Preprocessor &PP,
+                       clang::Token &tok)
+   {
+      // Constructor parsing:
+      /*    options=...
+       * possible options:
+       *   nostreamer: set G__NOSTREAMER flag
+       *   noinputoper: set G__NOINPUTOPERATOR flag
+       *   evolution: set G__USEBYTECOUNT flag
+       *   nomap: (ignored by roocling; prevents entry in ROOT's rootmap file)
+       *   stub: (ignored by rootcling was a directly for CINT code generation)
+       *   version(x): sets the version number of the class to x
+       */
+
+      // We assume that the first toke in option or options
+      // assert( tok.getIdentifierInfo()->getName() != "option" or "options")
+
+      PP.Lex(tok);
+      if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::equal)) {
+         Error("Error: the 'options' keyword must be followed by an '='",tok);
+         return false;
+      }
+
+      PP.Lex(tok);
+      while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi)) 
+      {
+         if (!tok.getIdentifierInfo()) {
+            Error("Error: Malformed version option.",tok);
+          } else if (tok.getIdentifierInfo()->getName() == "nomap") { 
+            // For rlibmap rather than rootcling 
+            // so ignore
+         }
+         else if (tok.getIdentifierInfo()->getName() == "nostreamer") options.fNoStreamer = 1;
+         else if (tok.getIdentifierInfo()->getName() == "noinputoper") options.fNoInputOper = 1;
+         else if (tok.getIdentifierInfo()->getName() == "evolution") options.fUseByteCount = 1;
+         else if (tok.getIdentifierInfo()->getName() == "stub") {
+            // This was solely for CINT dictionary, ignore for now.
+            // options.fUseStubs = 1;
+         } else if (tok.getIdentifierInfo()->getName() == "version") {
+            clang::Token start = tok;
+            PP.Lex(tok);
+            if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::l_paren)) {
+               Error("Error: missing left parenthesis after version.",start);
+               return false;
+            }
+            PP.Lex(tok);
+            clang::Token number = tok;
+            if (tok.isNot(clang::tok::eod)) PP.Lex(tok);
+            if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::r_paren)) {
+               Error("Error: missing right parenthesis after version.",start);
+               return false;
+            }
+            if (!number.isLiteral()) {
+               std::cerr << "Error: Malformed version option, the value is not a non-negative number!";
+               Error("",tok);
+            }
+            std::string verStr(number.getLiteralData(),number.getLength());
+            bool noDigit       = false;
+            for( std::string::size_type i = 0; i<verStr.size(); ++i )
+               if( !isdigit( verStr[i] ) ) noDigit = true;
+
+            if( noDigit ) {
+               std::cerr << "Error: Malformed version option! \"" << verStr << "\" is not a non-negative number!";
+               Error("",start);
+            } else
+               options.fVersionNumber = atoi( verStr.c_str() );
+         }
+         else {
+            Error("Warning: ignoring unknown #pragma link option=",tok);
+         }
+         PP.Lex(tok);
+         if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::comma)) {
+            // no more options, we are done.
+            break;
+         }
+         PP.Lex(tok);
+      }
+      return true;
+   }
+
 };
 
 class PragmaExtraInclude : public LinkdefReaderPragmaHandler 
@@ -594,11 +692,11 @@ public:
          PP.Lex(tok);
       }
       if (tok.isNot(clang::tok::semi)) {
-         Error("Error: missing ; at end of rule",tok);
+         Error("Error: missing ; at end of rule",tok,false);
          return;
       }
       if (end.is(clang::tok::unknown)) {
-         Error("",tok);
+         Error("Error: Unknown token!",tok);
       } else {
          llvm::StringRef include(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
          
@@ -630,7 +728,7 @@ public:
       if (Introducer != clang::PIK_HashPragma) return; // only #pragma, not C-style.
       if (!tok.getIdentifierInfo()) return; // must be "link"
       if (tok.getIdentifierInfo()->getName() != "read") return;
-      
+
       PP.Lex(tok);
       //      if (DClient.hasErrorOccured()) {
       //         return;
@@ -653,7 +751,7 @@ public:
       //    return;
       // }
       if (end.is(clang::tok::unknown)) {
-         Error("",tok);
+         Error("Error: unknown token",tok);
       } else {
          llvm::StringRef include(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
          
@@ -668,6 +766,9 @@ public:
 
 class PragmaLinkCollector : public LinkdefReaderPragmaHandler 
 {
+   // Handles:
+   //  #pragma link [spec] options=... class classname[+-!]
+   //
 public:
    PragmaLinkCollector(LinkdefReader &owner, clang::SourceManager &sm) :
       // This handler only cares about "#pragma link"
@@ -695,17 +796,21 @@ public:
          return;
       }
       bool linkOn;
-      if ((tok.getIdentifierInfo()->getName() == "off")) {
-         linkOn = false;
-      } else if ((tok.getIdentifierInfo()->getName() == "C")) {
-         linkOn = true;
-         PP.Lex(tok);
-         if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::plusplus)) {
-            Error("Error ++ expected after '#pragma link C' at ",tok);
-            return;
+      if (tok.isAnyIdentifier()) {
+         if ((tok.getIdentifierInfo()->getName() == "off")) {
+            linkOn = false;
+         } else if ((tok.getIdentifierInfo()->getName() == "C")) {
+            linkOn = true;
+            PP.Lex(tok);
+            if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::plusplus)) {
+               Error("Error ++ expected after '#pragma link C' at ",tok);
+               return;
+            }
+         } else {
+            Error("Error #pragma link should be followed by off or C",tok);
          }
       } else {
-         Error("Error bad #pragma format at",tok);
+         Error("Error bad #pragma format. ",tok);
          return;
       }
       
@@ -716,12 +821,23 @@ public:
       }
       llvm::StringRef type = tok.getIdentifierInfo()->getName();
       
+      LinkdefReader::Options *options = 0;
+      if (type == "options" || type == "option") {
+         options = new LinkdefReader::Options();
+         if (!ProcessOptions(*options,PP,tok)) {
+            return;
+         }
+         if (tok.getIdentifierInfo()) type = tok.getIdentifierInfo()->getName();
+      }
+         
       PP.Lex(tok);
       const char *start = fSourceManager.getCharacterData(tok.getLocation());
       clang::Token end;
       end.startToken(); // Initialize token.
       while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi)) 
       {
+         // PP.DumpToken(tok, true);
+         // llvm::errs() << "\n";
          end = tok;
          PP.Lex(tok);
       }
@@ -732,16 +848,16 @@ public:
       }
 
       if (end.is(clang::tok::unknown)) {
-         if (!fOwner.AddRule(type,"",linkOn,false))
+         if (!fOwner.AddRule(type.data(),"",linkOn,false))
          {
-            Error("",tok);
+            Error(type.data(),tok, false);
          }
       } else {
          llvm::StringRef identifier(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
          
          if (!fOwner.AddRule(type,identifier,linkOn,false))
          {
-            Error("",tok);
+            Error(type.data(),tok, false);
          }
       }
 //      do {
@@ -796,7 +912,7 @@ public:
       }
       
       if (tok.isNot(clang::tok::semi)) {
-         Error("Error: missing ; at end of rule",tok);
+         Error("Error: missing ; at end of rule",tok,false);
          return;
       }
       

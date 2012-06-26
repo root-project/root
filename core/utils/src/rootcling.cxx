@@ -1591,10 +1591,6 @@ bool CheckInputOperator(const clang::RecordDecl *cl, int dicttype)
    // Check if the operator>> has been properly declared if the user has
    // resquested a custom version.
 
-   // G__ClassInfo clinfo(R__GetQualifiedName(*cl).c_str());
-   // return CheckInputOperator(clinfo,dicttype);
-
-
    string fullname;
    R__GetQualifiedName(fullname,*cl);
    int ncha = fullname.length()+13;
@@ -1607,72 +1603,6 @@ bool CheckInputOperator(const clang::RecordDecl *cl, int dicttype)
    // We do want to call both CheckInputOperator all the times.
    bool has_input_error = CheckInputOperator("operator>>",proto,fullname,cl,dicttype);
    has_input_error = CheckInputOperator("operator<<",proto,fullname,cl,dicttype) || has_input_error;
-   return has_input_error;
-
-#if 0
-   // Need to find out if the operator>> is actually defined for
-   // this class.
-   G__ClassInfo gcl;
-   long offset;
-
-   int ncha = strlen(cl.Fullname())+13;
-   char *proto = new char[ncha];
-   snprintf(proto,ncha,"TBuffer&,%s*&",cl.Fullname());
-
-   G__MethodInfo methodinfo = gcl.GetMethod("operator>>",proto,&offset);
-
-   Info(0, "Class %s: Do not generate operator>>()\n",
-        cl.Fullname());
-   G__MethodArgInfo args( methodinfo );
-   args.Next(); args.Next();
-   if (!methodinfo.IsValid() ||
-       !args.IsValid() ||
-       args.Type()==0 ||
-       args.Type()->Tagnum() != cl.Tagnum() ||
-       strstr(methodinfo.FileName(),"TBuffer.h")!=0 ||
-       strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
-
-      if (dicttype==0||dicttype==1){
-         // We don't want to generate duplicated error messages in several dictionaries (when generating temporaries)
-         Error(0,
-               "in this version of ROOT, the option '!' used in a linkdef file\n"
-               "       implies the actual existence of customized operators.\n"
-               "       The following declaration is now required:\n"
-               "   TBuffer &operator>>(TBuffer &,%s *&);\n",cl.Fullname());
-
-      }
-
-      has_input_error = true;
-   } else {
-      // Warning(0, "TBuffer &operator>>(TBuffer &,%s *&); defined at line %s %d \n",cl.Fullname(),methodinfo.FileName(),methodinfo.LineNumber());
-   }
-   // fprintf(stderr, "DEBUG: %s %d\n",methodinfo.FileName(),methodinfo.LineNumber());
-
-   methodinfo = gcl.GetMethod("operator<<",proto,&offset);
-   args.Init(methodinfo);
-   args.Next(); args.Next();
-   if (!methodinfo.IsValid() ||
-       !args.IsValid() ||
-       args.Type()==0 ||
-       args.Type()->Tagnum() != cl.Tagnum() ||
-       strstr(methodinfo.FileName(),"TBuffer.h")!=0 ||
-       strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
-
-      if (dicttype==0||dicttype==1){
-         Error(0,
-               "in this version of ROOT, the option '!' used in a linkdef file\n"
-               "       implies the actual existence of customized operator.\n"
-               "       The following declaration is now required:\n"
-               "   TBuffer &operator<<(TBuffer &,const %s *);\n",cl.Fullname());
-      }
-
-      has_input_error = true;
-   } else {
-      //fprintf(stderr, "DEBUG: %s %d\n",methodinfo.FileName(),methodinfo.LineNumber());
-   }
-
-   delete [] proto;
-#endif
    return has_input_error;
 }
 
@@ -2102,108 +2032,6 @@ bool HasCustomOperatorNewArrayPlacement(const clang::RecordDecl &cl)
    return HasCustomOperatorNewPlacement("operator new[]",cl);
 }
 
-//______________________________________________________________________________
-bool HasCustomOperatorNewPlacement(G__ClassInfo& cl)
-{
-   // return true if we can find a custom operator new
-
-   // Look for a custom operator new
-   bool custom = false;
-   G__ClassInfo gcl;
-   long offset;
-   const char *name = "operator new";
-   const char *proto = "size_t";
-   const char *protoPlacement = "size_t,void*";
-
-   // first in the global namespace:
-   G__MethodInfo methodinfo = gcl.GetMethod(name,proto,&offset);
-   G__MethodInfo methodinfoPlacement = gcl.GetMethod(name,protoPlacement,&offset);
-   if  (methodinfoPlacement.IsValid()) {
-      // We have a custom new placement in the global namespace
-      custom = true;
-   }
-
-   // in nesting space:
-   gcl = cl.EnclosingSpace();
-   methodinfo = gcl.GetMethod(name,proto,&offset);
-   methodinfoPlacement = gcl.GetMethod(name,protoPlacement,&offset);
-   if  (methodinfoPlacement.IsValid()) {
-      custom = true;
-   }
-
-   // in class
-   methodinfo = cl.GetMethod(name,proto,&offset);
-   methodinfoPlacement = cl.GetMethod(name,protoPlacement,&offset);
-   if  (methodinfoPlacement.IsValid()) {
-      // We have a custom operator new with placement in the class
-      // hierarchy.  We still need to check that it has not been
-      // overloaded by a simple operator new.
-
-      G__ClassInfo clNew(methodinfo.GetDefiningScopeTagnum());
-      G__ClassInfo clPlacement(methodinfoPlacement.GetDefiningScopeTagnum());
-
-      if (clNew.IsBase(clPlacement)) {
-         // the operator new hides the operator new with placement
-         custom = false;
-      } else {
-         custom = true;
-      }
-   }
-
-   return custom;
-}
-
-//______________________________________________________________________________
-bool HasCustomOperatorNewArrayPlacement(G__ClassInfo& cl)
-{
-   // return true if we can find a custom operator new
-
-   // Look for a custom operator new[]
-   bool custom = false;
-   G__ClassInfo gcl;
-   long offset;
-   const char *name = "operator new[]";
-   const char *proto = "size_t";
-   const char *protoPlacement = "size_t,void*";
-
-   // first in the global namespace:
-   G__MethodInfo methodinfo = gcl.GetMethod(name,proto,&offset);
-   G__MethodInfo methodinfoPlacement = gcl.GetMethod(name,protoPlacement,&offset);
-   if  (methodinfoPlacement.IsValid()) {
-      // We have a custom new[] placement in the global namespace
-      custom = true;
-   }
-
-   // in nesting space:
-   gcl = cl.EnclosingSpace();
-   methodinfo = gcl.GetMethod(name,proto,&offset);
-   methodinfoPlacement = gcl.GetMethod(name,protoPlacement,&offset);
-   if  (methodinfoPlacement.IsValid()) {
-      custom = true;
-   }
-
-   // in class
-   methodinfo = cl.GetMethod(name,proto,&offset);
-   methodinfoPlacement = cl.GetMethod(name,protoPlacement,&offset);
-   if  (methodinfoPlacement.IsValid()) {
-      // We have a custom operator new[] with placement in the class
-      // hierarchy.  We still need to check that it has not been
-      // overloaded by a simple operator new.
-
-      G__ClassInfo clNew(methodinfo.GetDefiningScopeTagnum());
-      G__ClassInfo clPlacement(methodinfoPlacement.GetDefiningScopeTagnum());
-
-      if (clNew.IsBase(clPlacement)) {
-         // the operator new[] hides the operator new with placement
-         custom = false;
-      } else {
-         custom = true;
-      }
-   }
-
-   return custom;
-}
-
 bool CheckConstructor(const clang::CXXRecordDecl *cl, const char *arg)
 {
    if ( (arg == 0 || arg[0] == '\0') && !cl->hasUserDeclaredConstructor() ) {
@@ -2621,37 +2449,6 @@ bool IsStreamableObject(const clang::FieldDecl &m)
 }
 
 //______________________________________________________________________________
-int IsStreamable(G__DataMemberInfo &m)
-{
-   // Is this member a Streamable object?
-
-   const char* mTypeName = ShortTypeName(m.Type()->Name());
-
-
-   if ((m.Property() & G__BIT_ISSTATIC) ||
-       strncmp(m.Title(), "!", 1) == 0        ||
-       strcmp(m.Name(), "G__virtualinfo") == 0) return 0;
-
-   if (((m.Type())->Property() & G__BIT_ISFUNDAMENTAL) ||
-       ((m.Type())->Property() & G__BIT_ISENUM)) return 0;
-
-   if (m.Property() & G__BIT_ISREFERENCE) return 0;
-
-   if (IsSTLContainer(m)) {
-      return 1;
-   }
-
-   if (!strcmp(mTypeName, "string") || !strcmp(mTypeName, "string*")) return 1;
-
-   if ((m.Type())->HasMethod("Streamer")) {
-      if (!(m.Type())->HasMethod("Class_Version")) return 1;
-      int version = GetClassVersion(*m.Type());
-      if (version > 0) return 1;
-   }
-   return 0;
-}
-
-//______________________________________________________________________________
 G__TypeInfo &TemplateArg(G__DataMemberInfo &m, int count = 0)
 {
    // Returns template argument. When count = 0 return first argument,
@@ -2748,7 +2545,6 @@ void WriteAuxFunctions(const RScanner::AnnotatedRecordDecl &cl)
    //    operator delete
    //    operator delete[]
 
-   G__ClassInfo clinfo(cl.GetRequestedName()[0] ? cl.GetRequestedName() : R__GetQualifiedName(cl).c_str());
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
    if (!clxx) {
       return;
@@ -3598,12 +3394,6 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
       return;
    }
 
-   // We need to to go back to CINT to preserve functionality.
-   G__ClassInfo clinfo( cl_input.GetRequestedName()[0] ? cl_input.GetRequestedName() : R__GetQualifiedName(cl_input).c_str() );
-   if (!clinfo.IsValid() && cl_input.GetRequestedName()[0] ) {
-      clinfo.Init(  R__GetQualifiedName(cl_input).c_str() );
-   }
-
    // coverity[fun_call_w_exception] - that's just fine.
    string classname = GetLong64_Name( RStl::DropDefaultArg( cl_input.GetRequestedName()[0] ? cl_input.GetRequestedName() : R__GetQualifiedName(cl_input).c_str() ) );
    string mappedname = R__map_cpp_name((char*)classname.c_str());
@@ -3735,6 +3525,11 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
 
 
    // Note this is falling back on CINT :(
+   // We need to to go back to CINT to preserve functionality.
+   G__ClassInfo clinfo( cl_input.GetRequestedName()[0] ? cl_input.GetRequestedName() : R__GetQualifiedName(cl_input).c_str() );
+   if (!clinfo.IsValid() && cl_input.GetRequestedName()[0] ) {
+      clinfo.Init(  R__GetQualifiedName(cl_input).c_str() );
+   }
    if (NeedShadowClass(clinfo)) {
       (*dictSrcOut) << "      // Make sure the shadow class has the right sizeof" << std::endl;
       if (G__ShadowMaker::IsStdPair(clinfo)) {
@@ -3774,7 +3569,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
       (*dictSrcOut) << "-2, "; // "::TStreamerInfo::Class_Version(), ";
    } else if( clinfo.RootFlag() & G__HASVERSION ) {
       (*dictSrcOut) << clinfo.Version() << ", ";
-   } else { // if (cl.RootFlag() & G__USEBYTECOUNT ) {
+   } else { // if (cl_input.RequestStreamerInfo()) {
 
       // Need to find out if the operator>> is actually defined for this class.
       G__ClassInfo gcl;
@@ -4374,10 +4169,10 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl)
       clsname.erase (0, nsname.size() + 2);
    }
    
-   G__ClassInfo clinfo(R__GetQualifiedName(cl).c_str());
 
    int enclSpaceNesting = 0;
    if (!nsname.empty()) {
+      G__ClassInfo clinfo(R__GetQualifiedName(cl).c_str());
       G__ShadowMaker nestTempShadowMaker(*dictSrcOut, "");
       enclSpaceNesting = nestTempShadowMaker.WriteNamespaceHeader(clinfo);
    }
@@ -5211,9 +5006,9 @@ void WriteClassCode(const RScanner::AnnotatedRecordDecl &cl)
             WriteStreamer(cl);
          }
       } else
-         Info(0, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n", clinfo.Fullname());
+         Info(0, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n",fullname.c_str());
    } else {
-      Info(0, "Class %s: Streamer() not declared\n", clinfo.Fullname());
+      Info(0, "Class %s: Streamer() not declared\n", fullname.c_str());
 
       if (cl.RequestStreamerInfo()) WritePointersSTL(cl);
    }
