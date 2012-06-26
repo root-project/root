@@ -78,13 +78,13 @@ public:
       int  fRequestedVersionNumber;
       
    public:
-      enum {
+      enum ERootFlag {
          kNoStreamer      = 0x01,
          kNoInputOperator = 0x02,
          kUseByteCount    = 0x04,
          kStreamerInfo    = 0x04,
          kHasVersion      = 0x08
-      } ERootFlag;
+      };
 
       AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber) : 
             fRuleIndex(index), fDecl(decl), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
