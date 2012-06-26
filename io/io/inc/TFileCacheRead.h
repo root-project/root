@@ -104,7 +104,7 @@ public:
    virtual Int_t       GetUnzipBuffer(char ** /*buf*/, Long64_t /*pos*/, Int_t /*len*/, Bool_t * /*free*/) { return -1; }
            Long64_t    GetPrefetchedBlocks() const { return fPrefetchedBlocks; }
    virtual Bool_t      IsAsyncReading() const { return fAsyncReading; };
-   virtual void        SetEnablePrefetching(Bool_t setPrefetching = kFALSE) { fEnablePrefetching = setPrefetching; }
+   virtual void        SetEnablePrefetching(Bool_t setPrefetching = kFALSE);
    virtual Bool_t      IsEnablePrefetching() const { return fEnablePrefetching; };
    virtual Bool_t      IsLearning() const {return kFALSE;}
    virtual void        Prefetch(Long64_t pos, Int_t len);
