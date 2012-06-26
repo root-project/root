@@ -1,6 +1,6 @@
 #! /bin/sh
 
-ROOT=bin/root.exe
+ROOT=bin/root
 
 dir=`pwd`
 cd tutorials
