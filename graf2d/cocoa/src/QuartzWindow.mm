@@ -1496,7 +1496,9 @@ void print_mask_info(ULong_t mask)
    area.fY = ROOT::MacOSX::X11::LocalYROOTToCocoa(srcPixmap, area.fY) - area.fHeight;
    
    if (!AdjustCropArea(srcPixmap, area)) {
-      NSLog(@"QuartzView: -copyPixmap:area:withMask:clipOrigin:toPoint, pixmap and copy are no intersection between pixmap rectangle and cropArea");
+      NSLog(@"src is x == %d, y == %d, w == %u, h == %u | pixmap is w == %u, h == %u", area.fX, area.fY, area.fWidth, area.fHeight, srcPixmap.fWidth, srcPixmap.fHeight);
+      
+      NSLog(@"QuartzView: -copyPixmap:area:withMask:clipOrigin:toPoint, no intersection between pixmap rectangle and cropArea");
       return;
    }
 

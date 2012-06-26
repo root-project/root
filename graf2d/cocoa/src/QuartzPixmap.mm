@@ -325,6 +325,20 @@ namespace Quartz = ROOT::Quartz;
    return fData;
 }
 
+//______________________________________________________________________________
+- (void) putPixel : (const unsigned char *) rgb X : (unsigned) x Y : (unsigned) y
+{
+   assert(rgb != nil && "putPixel:X:Y:, rgb parameter is nil");
+   assert(x < fWidth && "putPixel:X:Y:, x parameter is >= self.fWidth");
+   assert(y < fHeight && "putPixel:X:Y:, y parameter is >= self.fHeight");
+   
+   unsigned char *dst = fData + (fHeight - 1 - y) * fWidth * 4 + x * 4;
+   dst[0] = rgb[0];
+   dst[1] = rgb[1];
+   dst[2] = rgb[2];
+   dst[3] = 255;
+}
+
 @end
 
 @implementation QuartzImage {

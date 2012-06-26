@@ -51,6 +51,8 @@
 //
 - (unsigned char *) fData;
 
+- (void) putPixel : (const unsigned char *) data X : (unsigned) x Y : (unsigned) y;
+
 @end
 
 /////////////////////////////////////////////////////////

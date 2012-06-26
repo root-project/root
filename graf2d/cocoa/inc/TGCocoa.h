@@ -249,7 +249,11 @@ public:
    //Cursors.
    virtual Cursor_t     CreateCursor(ECursor cursor);
    virtual void         SetCursor(Window_t wid, Cursor_t curid);
-   virtual void         SetCursor(Int_t win, ECursor cursor);   
+   virtual void         SetCursor(Int_t win, ECursor cursor);
+   virtual void         QueryPointer(Int_t &x, Int_t &y);
+   virtual void         QueryPointer(Window_t wid, Window_t &rootw, Window_t &childw,
+                                     Int_t &root_x, Int_t &root_y, Int_t &win_x,
+                                     Int_t &win_y, UInt_t &mask);
    //Cursors.
    /////////////////////////////
 
@@ -284,8 +288,6 @@ public:
    virtual Handle_t  GetNativeEvent() const;
 
 
-
-   virtual void      QueryPointer(Int_t &ix, Int_t &iy);
    virtual Pixmap_t  ReadGIF(Int_t x0, Int_t y0, const char *file, Window_t wid);
    virtual Int_t     RequestLocator(Int_t mode, Int_t ctyp, Int_t &x, Int_t &y);
    virtual Int_t     RequestString(Int_t x, Int_t y, char *text);
@@ -341,9 +343,7 @@ public:
    virtual void         LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym);
    virtual void         GetPasteBuffer(Window_t wid, Atom_t atom, TString &text, Int_t &nchar,
                                        Bool_t del);
-   virtual void         QueryPointer(Window_t wid, Window_t &rootw, Window_t &childw,
-                                     Int_t &root_x, Int_t &root_y, Int_t &win_x,
-                                     Int_t &win_y, UInt_t &mask);
+
    virtual void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    virtual Region_t     CreateRegion();
    virtual void         DestroyRegion(Region_t reg);
@@ -357,12 +357,15 @@ public:
    virtual Bool_t       PointInRegion(Int_t x, Int_t y, Region_t reg);
    virtual Bool_t       EqualRegion(Region_t rega, Region_t regb);
    virtual void         GetRegionBox(Region_t reg, Rectangle_t *rect);
+
    virtual Drawable_t   CreateImage(UInt_t width, UInt_t height);
    virtual void         GetImageSize(Drawable_t wid, UInt_t &width, UInt_t &height);
    virtual void         PutPixel(Drawable_t wid, Int_t x, Int_t y, ULong_t pixel);
    virtual void         PutImage(Drawable_t wid, GContext_t gc, Drawable_t img, Int_t dx, Int_t dy,
                                  Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void         DeleteImage(Drawable_t img);
+
+   //
    virtual void         ShapeCombineMask(Window_t wid, Int_t x, Int_t y, Pixmap_t mask);
 
    //---- Drag and Drop -----

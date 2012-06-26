@@ -2389,6 +2389,56 @@ void TGCocoa::SetCursor(Window_t wid, Cursor_t cursorID)
 }
 
 //______________________________________________________________________________
+void TGCocoa::QueryPointer(Int_t &x, Int_t &y)
+{
+   // Returns the pointer position.
+   
+   //I ignore fSelectedDrawable here. If you have any problems with this, hehe, you can ask me :)
+   const NSPoint screenPoint = [NSEvent mouseLocation];
+   x = screenPoint.x;
+   y = X11::GlobalYCocoaToROOT(screenPoint.y);
+}
+
+//______________________________________________________________________________
+void TGCocoa::QueryPointer(Window_t winID, Window_t &rootWinID, Window_t &childWinID, Int_t &rootX, Int_t &rootY, Int_t &winX, Int_t &winY, UInt_t &mask)
+{
+   //Emulate XQueryPointer(?).
+
+   //From TGX11/TGWin32.
+   if (!winID)
+      return;//Neither TGX11, nor TGWin32 set any of out parameters.
+   
+   //We have only one root window.
+   rootWinID = fPimpl->GetRootWindowID();
+   //Find cursor position (screen coordinates).
+   NSPoint screenPoint = [NSEvent mouseLocation];
+   screenPoint.y = X11::GlobalYCocoaToROOT(screenPoint.y);
+   rootX = screenPoint.x;
+   rootY = screenPoint.y;
+   
+   //Convert a screen point to winID's coordinate system.
+   if (winID > Window_t(fPimpl->GetRootWindowID())) {
+      NSObject<X11Window> *window = fPimpl->GetWindow(winID);
+      const NSPoint winPoint = X11::TranslateFromScreen(screenPoint, window.fContentView);
+      winX = winPoint.x;
+      winY = winPoint.y;
+   } else {
+      //Warning("QueryPointer", "Window %d parameter is a root window", (int)winID);
+      winX = 0;
+      winY = 0;
+   }
+
+   //Find child window in these coordinates (?).
+   if (QuartzWindow *childWin = X11::FindWindowInPoint(screenPoint.x, screenPoint.y)) {
+      childWinID = childWin.fID;
+      mask = X11::GetModifiers();
+   } else {
+      childWinID = 0;
+      mask = 0;
+   }   
+}
+
+//______________________________________________________________________________
 void TGCocoa::NextEvent(Event_t &/*event*/)
 {
 }
@@ -2636,12 +2686,6 @@ Handle_t  TGCocoa::GetNativeEvent() const
 {
    // Returns the current native event handle.
    return 0;
-}
-
-//______________________________________________________________________________
-void TGCocoa::QueryPointer(Int_t & /*ix*/, Int_t &/*iy*/)
-{
-   // Returns the pointer position.
 }
 
 //______________________________________________________________________________
@@ -3316,45 +3360,6 @@ void TGCocoa::LookupString(Event_t *event, char *buf, Int_t length, UInt_t &keys
 }
 
 //______________________________________________________________________________
-void TGCocoa::QueryPointer(Window_t winID, Window_t &rootWinID, Window_t &childWinID, Int_t &rootX, Int_t &rootY, Int_t &winX, Int_t &winY, UInt_t &mask)
-{
-   //Emulate XQueryPointer(?).
-
-   //From TGX11/TGWin32.
-   if (!winID)
-      return;//Neither TGX11, nor TGWin32 set any of out parameters.
-   
-   //We have only one root window.
-   rootWinID = fPimpl->GetRootWindowID();
-   //Find cursor position (screen coordinates).
-   NSPoint screenPoint = [NSEvent mouseLocation];
-   screenPoint.y = X11::GlobalYCocoaToROOT(screenPoint.y);
-   rootX = screenPoint.x;
-   rootY = screenPoint.y;
-   
-   //Convert a screen point to winID's coordinate system.
-   if (winID > Window_t(fPimpl->GetRootWindowID())) {
-      NSObject<X11Window> *window = fPimpl->GetWindow(winID);
-      const NSPoint winPoint = X11::TranslateFromScreen(screenPoint, window.fContentView);
-      winX = winPoint.x;
-      winY = winPoint.y;
-   } else {
-      //Warning("QueryPointer", "Window %d parameter is a root window", (int)winID);
-      winX = 0;
-      winY = 0;
-   }
-
-   //Find child window in these coordinates (?).
-   if (QuartzWindow *childWin = X11::FindWindowInPoint(screenPoint.x, screenPoint.y)) {
-      childWinID = childWin.fID;
-      mask = X11::GetModifiers();
-   } else {
-      childWinID = 0;
-      mask = 0;
-   }   
-}
-
-//______________________________________________________________________________
 void TGCocoa::SetClipRectangles(GContext_t /*gc*/, Int_t /*x*/, Int_t /*y*/,
                                 Rectangle_t * /*recs*/, Int_t /*n*/)
 {
@@ -3473,7 +3478,7 @@ void TGCocoa::GetRegionBox(Region_t /*reg*/, Rectangle_t * /*rect*/)
 //______________________________________________________________________________
 Drawable_t TGCocoa::CreateImage(UInt_t width, UInt_t height)
 {
-   // Allocates the memory needed for an drawable.
+   // Allocates the memory needed for a drawable.
    //
    // width  - the width of the image, in pixels
    // height - the height of the image, in pixels
@@ -3492,39 +3497,34 @@ void TGCocoa::GetImageSize(Drawable_t wid, UInt_t &width, UInt_t &height)
 }
 
 //______________________________________________________________________________
-void TGCocoa::PutPixel(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/, ULong_t /*pixel*/)
+void TGCocoa::PutPixel(Drawable_t imageID, Int_t x, Int_t y, ULong_t pixel)
 {
    // Overwrites the pixel in the image with the specified pixel value.
    // The image must contain the x and y coordinates.
    //
-   // wid   - specifies the image
+   // imageID - specifies the image
    // x, y  - coordinates
    // pixel - the new pixel value
+   
+   assert([fPimpl->GetDrawable(imageID) isKindOfClass : [QuartzPixmap class]] && "PutPixel, imageID parameter is a bad pixmap id");
+   assert(x >= 0 && "PutPixel, x parameter is negative");
+   assert(y >= 0 && "PutPixel, y parameter is negative");
+
+   QuartzPixmap * const pixmap = (QuartzPixmap *)fPimpl->GetDrawable(imageID);
+
+   unsigned char rgb[3] = {};
+   X11::PixelToRGB(pixel, rgb);
+   [pixmap putPixel : rgb X : x Y : y];
 }
 
 //______________________________________________________________________________
-void TGCocoa::PutImage(Drawable_t /*wid*/, GContext_t /*gc*/,
-                       Drawable_t /*img*/, Int_t /*dx*/, Int_t /*dy*/,
-                       Int_t /*x*/, Int_t /*y*/, UInt_t /*w*/, UInt_t /*h*/)
+void TGCocoa::PutImage(Drawable_t drawableID, GContext_t gc, Drawable_t imageID, Int_t dstX, Int_t dstY, Int_t srcX, Int_t srcY, UInt_t width, UInt_t height)
 {
-   // Combines an image with a rectangle of the specified drawable. The
-   // section of the image defined by the x, y, width, and height arguments
-   // is drawn on the specified part of the drawable.
-   //
-   // wid  - the drawable
-   // gc   - the GC
-   // img  - the image you want combined with the rectangle
-   // dx   - the offset in X from the left edge of the image
-   // dy   - the offset in Y from the top edge of the image
-   // x, y - coordinates, which are relative to the origin of the
-   //        drawable and are the coordinates of the subimage
-   // w, h - the width and height of the subimage, which define the
-   //        rectangle dimensions
-   //
-   // GC components in use: function, plane-mask, subwindow-mode,
-   // clip-x-origin, clip-y-origin, and clip-mask.
-   // GC mode-dependent components: foreground and background.
-   // (see also the GCValues_t structure)
+   //TGX11 uses ZPixmap in CreateImage ... so background/foreground 
+   //in gc can NEVER be used (and the depth is ALWAYS > 1).
+   //This means .... I can call CopyArea!
+   
+   CopyArea(imageID, drawableID, gc, srcX, srcY, width, height, dstX, dstY);
 }
 
 //______________________________________________________________________________
