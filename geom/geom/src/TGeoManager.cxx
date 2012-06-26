@@ -3213,9 +3213,12 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
       fCurrentNavigator = AddNavigator();
       return;
    }      
-   Int_t nnavigators = GetListOfNavigators()->GetEntriesFast();
+   Int_t nnavigators = 0;
+   TGeoNavigatorArray *arr = GetListOfNavigators();
+   if (!arr) return;
+   nnavigators = arr->GetEntriesFast();
    for (Int_t i=0; i<nnavigators; i++) {
-      TGeoNavigator *nav = (TGeoNavigator*)GetListOfNavigators()->At(i);
+      TGeoNavigator *nav = (TGeoNavigator*)arr->At(i);
       nav->ResetAll();
       if (fClosed) nav->GetCache()->BuildInfoBranch();
    }
@@ -3631,8 +3634,9 @@ void TGeoManager::UpdateElements()
          nelem = mix->GetNelements();
          for (i=0; i<nelem; i++) {
             elem = mix->GetElement(i);
+            if (!elem) continue;
             elem_table = fElementTable->GetElement(elem->Z());
-            if (!elem || !elem_table) continue;
+            if (!elem_table) continue;
             if (elem != elem_table) {
                elem_table->SetDefined(elem->IsDefined());
                elem_table->SetUsed(elem->IsUsed());
@@ -3644,6 +3648,7 @@ void TGeoManager::UpdateElements()
          elem = mat->GetElement();
          if (!elem) continue;
          elem_table = fElementTable->GetElement(elem->Z());
+         if (!elem_table) continue;
          if (elem != elem_table) {
             elem_table->SetDefined(elem->IsDefined());
             elem_table->SetUsed(elem->IsUsed());
