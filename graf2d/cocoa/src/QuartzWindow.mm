@@ -26,6 +26,7 @@
 
 #import "QuartzWindow.h"
 #import "QuartzPixmap.h"
+#import "CocoaUtils.h"
 #import "X11Buffer.h"
 #import "X11Events.h"
 #import "TGWindow.h"
@@ -216,6 +217,8 @@ NSPoint TranslateCoordinates(NSView<X11Window> *from, NSView<X11Window> *to, NSP
 //______________________________________________________________________________
 QuartzWindow *FindWindowInPoint(Int_t x, Int_t y)
 {
+   const Util::AutoreleasePool pool;//array's counter is increased, all object in array are also retained.
+
    NSArray *orderedWindows = [NSApp orderedWindows];
    for (NSWindow *window in orderedWindows) {
       if (![window isKindOfClass : [QuartzWindow class]])

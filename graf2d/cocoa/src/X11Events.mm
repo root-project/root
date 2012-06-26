@@ -1732,7 +1732,7 @@ Ancestry EventTranslator::FindRelation(NSView<X11Window> *view1, NSView<X11Windo
 //______________________________________________________________________________
 void EventTranslator::SortTopLevelWindows()
 {
-   const ROOT::MacOSX::Util::AutoreleasePool pool;
+   const Util::AutoreleasePool pool;
 
    fWindowStack.clear();
 
