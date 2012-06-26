@@ -1,8 +1,7 @@
 #! /bin/sh
 
-ROOT=bin/root
-
 dir=`pwd`
+ROOT=$dir/bin/root
 cd tutorials
 # we need tutorials/hsimple.root
 if [ ! -f hsimple.root ]; then
