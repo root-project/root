@@ -1289,6 +1289,7 @@ void print_mask_info(ULong_t mask)
    
    if (!fClipMask) {
       fClipMask = [QuartzImage alloc];
+      
       if ([fClipMask initMaskWithW : (unsigned)size.width H : (unsigned)size.height]) {
          return YES;
       } else {

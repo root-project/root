@@ -1892,7 +1892,7 @@ Int_t TGCocoa::ResizePixmap(Int_t wid, UInt_t w, UInt_t h)
    if (w == pixmap.fWidth && h == pixmap.fHeight)
       return 1;
    
-   if ([pixmap resizeW : w H : h])
+   if ([pixmap resizeW : w H : h])//This can throw std::bad_alloc, ok, no resource will leak.
       return 1;
 
    return -1;
@@ -2117,7 +2117,7 @@ unsigned char *TGCocoa::GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w,
 
       Rectangle_t area = {};
       area.fX = x, area.fY = y, area.fWidth = w, area.fHeight = h;
-      return [fPimpl->GetDrawable(wid) readColorBits : area];
+      return [fPimpl->GetDrawable(wid) readColorBits : area];//readColorBits can throw std::bad_alloc, no resource will leak.
    }
 
    return 0;

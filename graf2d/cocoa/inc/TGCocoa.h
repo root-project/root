@@ -427,7 +427,7 @@ protected:
    
    //TODO:
    //There is no property support yet,
-   //only this two valus to make GUI work 
+   //only this two values to make GUI work 
    //(used in client messages). 
 
 public:
@@ -454,7 +454,7 @@ private:
    std::map<Window_t, std::vector<UInt_t> > fClientMessagesToWindow;
    typedef std::map<Window_t, std::vector<UInt_t> >::iterator message_window_iterator;
       
-   //I'd prefere to use = delete syntax from C++0x11, but this file is processed by CINT.
+   //I'd prefer to use = delete syntax from C++0x11, but this file is processed by CINT.
    TGCocoa(const TGCocoa &rhs);
    TGCocoa &operator = (const TGCocoa &rhs);
 

@@ -12,8 +12,7 @@
 //#define NDEBUG
 
 #import <algorithm>
-
-#import <cstdlib>
+#import <stdexcept>
 #import <cassert>
 #import <cstddef>
 
@@ -85,8 +84,8 @@ namespace Quartz = ROOT::Quartz;
 {
    if (fContext)
       CGContextRelease(fContext);
-   if (fData)
-      std::free(fData);
+
+   delete [] fData;
 
    [super dealloc];
 }
@@ -94,28 +93,29 @@ namespace Quartz = ROOT::Quartz;
 //______________________________________________________________________________
 - (BOOL) resizeW : (unsigned) width H : (unsigned) height
 {
-   assert(width > 0 && "Pixmap width must be positive");
-   assert(height > 0 && "Pixmap height must be positive");
+   assert(width > 0 && "resizeW:H:, Pixmap width must be positive");
+   assert(height > 0 && "resizeW:H:, Pixmap height must be positive");
 
-   unsigned char *memory = (unsigned char *)malloc(width * height * 4);//[0]
-   if (!memory) {
-      assert(0 && "resizeW:H:, malloc failed");
+   unsigned char *memory = 0;
+   
+   try {
+      memory = new unsigned char[width * height * 4];//[0]
+   } catch (const std::bad_alloc &) {
+      NSLog(@"QuartzPixmap: -resizeW:H:, memory allocation failed");
       return NO;
    }
 
-   CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();//[1]
-   if (!colorSpace) {
-      assert(0 && "resizeW:H:, CGColorSpaceCreateDeviceRGB failed");
-      std::free(memory);
+   const Util::CFScopeGuard<CGColorSpaceRef> colorSpace(CGColorSpaceCreateDeviceRGB());//[1]
+   if (!colorSpace.Get()) {
+      delete [] memory;
+      NSLog(@"QuartzPixmap: -resizeW:H:, CGColorSpaceCreateDeviceRGB failed");
       return NO;
    }
 
-   //
-   CGContextRef ctx = CGBitmapContextCreateWithData(memory, width, height, 8, width * 4, colorSpace, kCGImageAlphaPremultipliedLast, NULL, 0);
-   if (!ctx) {
-      assert(0 && "resizeW:H:, CGBitmapContextCreateWidthData failed");
-      CGColorSpaceRelease(colorSpace);
-      std::free(memory);
+   Util::CFScopeGuard<CGContextRef> ctx(CGBitmapContextCreateWithData(memory, width, height, 8, width * 4, colorSpace.Get(), kCGImageAlphaPremultipliedLast, NULL, 0));
+   if (!ctx.Get()) {
+      delete [] memory;
+      NSLog(@"QuartzPixmap: -resizeW:H:, CGBitmapContextCreateWithData failed");
       return NO;
    }
 
@@ -123,24 +123,19 @@ namespace Quartz = ROOT::Quartz;
       //New context was created OK, we can release now the old one.
       CGContextRelease(fContext);//[2]
    }
-   
-   if (fData) {
-      //Release old memory.
-      std::free(fData);
-   }
 
-   //Size to be used later - to identify,
-   //if we really have to resize.
+   //Release old memory.
+   delete [] fData;
+
+   //sizes, data.
    fWidth = width;
    fHeight = height;
    fData = memory;
 
-   fContext = ctx;//[2]
-
-   CGColorSpaceRelease(colorSpace);//[1]
+   fContext = ctx.Get();//[2]
+   ctx.Release();//Stop the ownership.
 
    return YES;
-
 }
 
 //______________________________________________________________________________
@@ -371,14 +366,14 @@ namespace Quartz = ROOT::Quartz;
       //If needed something else, I'll make this code more generic.
       const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(data, width * height * 4, &providerCallbacks));
       if (!provider.Get()) {
-         NSLog(@"QuartzPixmap: -initWithW:H:data: CGDataProviderCreateDirect failed");
+         NSLog(@"QuartzImage: -initWithW:H:data: CGDataProviderCreateDirect failed");
          return nil;
       }
       
       //RGB - this is only for TGCocoa::CreatePixmapFromData.
       const Util::CFScopeGuard<CGColorSpaceRef> colorSpace(CGColorSpaceCreateDeviceRGB());
       if (!colorSpace.Get()) {
-         NSLog(@"QuartzPixmap: -initWithW:H:data: CGColorSpaceCreateDeviceRGB failed");
+         NSLog(@"QuartzImage: -initWithW:H:data: CGColorSpaceCreateDeviceRGB failed");
          return nil;
       }
 
@@ -387,7 +382,7 @@ namespace Quartz = ROOT::Quartz;
       fImage = CGImageCreate(width, height, 8, 32, width * 4, colorSpace.Get(), kCGImageAlphaLast, provider.Get(), 0, false, kCGRenderingIntentDefault);
       
       if (!fImage) {
-         NSLog(@"QuartzPixmap: -initWithW:H:data: CGImageCreate failed");
+         NSLog(@"QuartzImage: -initWithW:H:data: CGImageCreate failed");
          return nil;
       }
 
@@ -417,13 +412,13 @@ namespace Quartz = ROOT::Quartz;
                                                                
       const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(mask, width * height, &providerCallbacks));
       if (!provider.Get()) {
-         NSLog(@"QuartzPixmap: -initMaskWithW:H:bitmapMask: CGDataProviderCreateDirect failed");
+         NSLog(@"QuartzImage: -initMaskWithW:H:bitmapMask: CGDataProviderCreateDirect failed");
          return nil;
       }
 
       fImage = CGImageMaskCreate(width, height, 8, 8, width, provider.Get(), 0, false);//null -> decode, false -> shouldInterpolate.
       if (!fImage) {
-         NSLog(@"QuartzPixmap: -initMaskWithW:H:bitmapMask:, CGImageMaskCreate failed");
+         NSLog(@"QuartzImage: -initMaskWithW:H:bitmapMask:, CGImageMaskCreate failed");
          return nil;
       }
 
@@ -440,11 +435,19 @@ namespace Quartz = ROOT::Quartz;
 //______________________________________________________________________________
 - (id) initMaskWithW : (unsigned) width H : (unsigned) height
 {
+   //Two-step initialization.
+
    assert(width > 0 && "initMaskWithW:H:, width parameter is zero");
    assert(height > 0 && "initMaskWithW:H:, height parameter is zero");
    
    if (self = [super init]) {
-      fImageData = new unsigned char[width * height];
+      try {
+         fImageData = new unsigned char[width * height];
+      } catch (const std::bad_exception &) {
+         NSLog(@"QuartzImage: -initMaskWithW:H:, memory allocation failed");
+         return nil;
+      }
+
       fIsStippleMask = YES;
       const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer, 
                                                                ROOT_QuartzImage_ReleaseBytePointer, 
@@ -452,7 +455,7 @@ namespace Quartz = ROOT::Quartz;
                                                                
       const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(fImageData, width * height, &providerCallbacks));
       if (!provider.Get()) {
-         NSLog(@"QuartzPixmap: -initMaskWithW:H: CGDataProviderCreateDirect failed");
+         NSLog(@"QuartzImage: -initMaskWithW:H: CGDataProviderCreateDirect failed");
          delete [] fImageData;
          fImageData = 0;
          return nil;
@@ -460,7 +463,7 @@ namespace Quartz = ROOT::Quartz;
 
       fImage = CGImageMaskCreate(width, height, 8, 8, width, provider.Get(), 0, false);//null -> decode, false -> shouldInterpolate.
       if (!fImage) {
-         NSLog(@"QuartzPixmap: -initMaskWithW:H:, CGImageMaskCreate failed");
+         NSLog(@"QuartzImage: -initMaskWithW:H:, CGImageMaskCreate failed");
          delete [] fImageData;
          fImageData = 0;
          return nil;
@@ -535,7 +538,15 @@ namespace Quartz = ROOT::Quartz;
 {
    assert([self isRectInside : area] == YES && "readColorBits: bad area parameter");
    //Image, bitmap - they all must be converted to ARGB (bitmap) or BGRA (image) (for libAfterImage).
-   unsigned char *buffer = new unsigned char[area.fWidth * area.fHeight * 4]();
+   unsigned char *buffer = 0;
+   
+   try {
+      buffer = new unsigned char[area.fWidth * area.fHeight * 4]();
+   } catch (const std::bad_alloc &) {
+      NSLog(@"QuartzImage: -readColorBits:, memory allocation failed");
+      return 0;
+   }
+
    unsigned char *dstPixel = buffer;
 
    if (CGImageIsMask(fImage)) {
