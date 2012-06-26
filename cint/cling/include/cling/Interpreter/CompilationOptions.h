@@ -42,7 +42,7 @@ namespace cling {
 
     CompilationOptions() {
       DeclarationExtraction = 1;
-      ValuePrinting = 2;
+      ValuePrinting = VPAuto;
       DynamicScoping = 0;
       Debug = 0;
       CodeGeneration = 1;

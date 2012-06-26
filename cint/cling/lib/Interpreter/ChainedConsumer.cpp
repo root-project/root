@@ -221,6 +221,7 @@ namespace cling {
     DeserializationListener.reset(new ChainedDeserializationListener(sListeners,
                                                                      this)
                                   );
+    pushCompilationOpts(CompilationOptions());
   }
 
   ChainedConsumer::~ChainedConsumer() {
