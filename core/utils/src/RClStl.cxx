@@ -76,20 +76,25 @@ void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRe
       }
    }
    
-   fList.insert( RScanner::AnnotatedRecordDecl(++fgCount,stlclass,requestedName,true,false,false,false) );
+   fList.insert( RScanner::AnnotatedRecordDecl(++fgCount,stlclass,requestedName,true,false,false,false,-1) );
    
+   TClassEdit::TSplitType splitType( requestedName, TClassEdit::kLong64 );
    for(unsigned int i=0; i <  templateCl->getTemplateArgs().size(); ++i) {
       const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(i) );
       if (arg.getKind() == clang::TemplateArgument::Type) {
          const clang::NamedDecl *decl = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();
-      
+         
          if (decl && TClassEdit::STLKind( decl->getName().data() ) != 0 )
-         {
-            const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
-            if (clxx) {
-               GenerateTClassFor( "", clxx );
+            {
+               const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
+               if (clxx) {
+                  if (!splitType.fElements.empty()) {
+                     GenerateTClassFor( splitType.fElements[i+1].c_str(), clxx);
+                  } else {
+                     GenerateTClassFor( "", clxx );
+                  }
+               }
             }
-         }
       }
    }
 
