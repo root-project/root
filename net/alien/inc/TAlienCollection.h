@@ -114,6 +114,7 @@ public:
 
    Bool_t      OverlapCollection(TGridCollection *comparator);
    void        Add(TGridCollection *addcollection);
+   void        AddFast(TGridCollection *addcollection);
    Bool_t      Stage(Bool_t bulk = kFALSE, Option_t* option = "");
    Bool_t      Prepare(Bool_t bulk = kFALSE) { return Stage(bulk,"option=0"); }
 

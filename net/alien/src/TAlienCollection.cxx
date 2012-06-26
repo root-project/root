@@ -955,6 +955,22 @@ leaveloop:
 }
 
 //______________________________________________________________________________
+void TAlienCollection::AddFast(TGridCollection * addcollection)
+{
+   // adds <addcollection> to this collection - NO check for identical elements
+
+   if ((!addcollection)) {
+      return;
+   }
+   addcollection->Reset();
+   TMap *addmap, *clonemap;
+   while ((addmap = addcollection->Next())) {
+      clonemap = (TMap *) addmap->Clone();
+      fFileGroupList->Add(clonemap);
+   }
+}
+
+//______________________________________________________________________________
 Bool_t TAlienCollection::LookupSUrls(Bool_t verbose)
 {
    // retrieves all the SURLS for the LFNS
