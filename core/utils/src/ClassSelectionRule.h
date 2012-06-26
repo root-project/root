@@ -30,18 +30,18 @@ private:
    std::list<FunctionSelectionRule> fMethodSelectionRules;
    bool fIsInheritable;
 
-   bool fPlus;        // for linkdef.h: true if we had '+' at the end of a class name
-   bool fMinus;       // for linkdef.h: true if we had '-' or "-!" at the end of a class name
-   bool fExclamation; // for linkdef.h: true if we had '!' at the end of a class name
-   bool fRequestOnlyTClass;  // True if the user want the TClass intiliazer but *not* the interpreter meta data
-   bool fRequestProtected; // Explicit request to be able to access protected member from the interpreter.
-   bool fRequestPrivate;   // Explicit request to be able to access private member from the interpreter.
+   bool fRequestStreamerInfo;    // for linkdef.h: true if we had '+' at the end of a class name
+   bool fRequestNoStreamer;      // for linkdef.h: true if we had '-' or "-!" at the end of a class name
+   bool fRequestNoInputOperator; // for linkdef.h: true if we had '!' at the end of a class name
+   bool fRequestOnlyTClass;      // True if the user want the TClass intiliazer but *not* the interpreter meta data
+   bool fRequestProtected;       // Explicit request to be able to access protected member from the interpreter.
+   bool fRequestPrivate;         // Explicit request to be able to access private member from the interpreter.
    
 public:
    ClassSelectionRule(long index):
-      BaseSelectionRule(index), fIsInheritable(false), fPlus(false), fMinus(false), fExclamation(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false) {}
+      BaseSelectionRule(index), fIsInheritable(false), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false) {}
    ClassSelectionRule(long index, bool inherit, ESelect sel, std::string attributeName, std::string attributeValue):
-      BaseSelectionRule(index, sel, attributeName, attributeValue), fIsInheritable(inherit), fPlus(false), fMinus(false), fExclamation(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false) {}
+      BaseSelectionRule(index, sel, attributeName, attributeValue), fIsInheritable(inherit), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false) {}
    
 
    void AddFieldSelectionRule(VariableSelectionRule field); //adds entry to the filed selections list
@@ -57,15 +57,9 @@ public:
    bool IsInheritable() const; //checks if the class selection rule is inheritable
    void SetInheritable(bool inherit); //sets the inheritance rule for the class
 
-   bool HasPlus() const;
-   void SetPlus(bool pl);
-
-   bool HasMinus() const;
-   void SetMinus(bool mn);
-
-   bool HasExclamation() const;
-   void SetExclamation(bool excl);
-   
+   void SetRequestStreamerInfo(bool pl);
+   void SetRequestNoStreamer(bool mn);
+   void SetRequestNoInputOperator(bool excl);
    void SetRequestOnlyTClass(bool val);
    void SetRequestProtected(bool val);
    void SetRequestPrivate(bool val);

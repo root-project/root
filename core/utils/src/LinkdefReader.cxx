@@ -38,7 +38,10 @@ struct LinkdefReader::Options {
 
    int fNoStreamer;
    int fNoInputOper;
-   int fUseByteCount;
+   union {
+      int fUseByteCount;
+      int fRequestStreamerInfo;
+   };
    int fVersionNumber;
 };
 
@@ -341,9 +344,9 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
                   char last = identifier.at(len - where);
                   switch ( last ) {
                      case ';': break;
-                     case '+': csr.SetPlus(true); break;
-                     case '!': csr.SetExclamation(true); break;
-                     case '-': csr.SetMinus(true); break;
+                     case '+': csr.SetRequestStreamerInfo(true); break;
+                     case '!': csr.SetRequestNoInputOperator(true); break;
+                     case '-': csr.SetRequestNoStreamer(true); break;
                      case ' ':
                      case '\t': break;
                      default:
@@ -352,14 +355,14 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
                   ++where;
                }
                if (options) {
-                  if (options->fNoStreamer) csr.SetMinus(true);
-                  if (options->fNoInputOper) csr.SetExclamation(true);
-                  if (options->fUseByteCount) csr.SetPlus(true);
+                  if (options->fNoStreamer) csr.SetRequestNoStreamer(true);
+                  if (options->fNoInputOper) csr.SetRequestNoInputOperator(true);
+                  if (options->fRequestStreamerInfo) csr.SetRequestStreamerInfo(true);
                   if (options->fVersionNumber >= 0) {} // csr.SetVersionNumber(fVersionNumber)
                }
-               if ( csr.HasPlus() && csr.HasMinus() ) {
+               if ( csr.RequestStreamerInfo() && csr.RequestNoStreamer() ) {
                   std::cerr << "Warning: " << identifier << " option + mutual exclusive with -, + prevails\n";
-                  csr.SetMinus(false);
+                  csr.SetRequestNoStreamer(false);
                }
                identifier.erase(len - (where-2));
             }
@@ -607,7 +610,7 @@ public:
          }
          else if (tok.getIdentifierInfo()->getName() == "nostreamer") options.fNoStreamer = 1;
          else if (tok.getIdentifierInfo()->getName() == "noinputoper") options.fNoInputOper = 1;
-         else if (tok.getIdentifierInfo()->getName() == "evolution") options.fUseByteCount = 1;
+         else if (tok.getIdentifierInfo()->getName() == "evolution") options.fRequestStreamerInfo = 1;
          else if (tok.getIdentifierInfo()->getName() == "stub") {
             // This was solely for CINT dictionary, ignore for now.
             // options.fUseStubs = 1;

@@ -59,34 +59,34 @@ void ClassSelectionRule::SetInheritable(bool inherit)
   fIsInheritable = inherit;
 }
 
-bool ClassSelectionRule::HasPlus() const
+bool ClassSelectionRule::RequestStreamerInfo() const
 {
-   return fPlus;
+   return fRequestStreamerInfo;
 }
 
-void ClassSelectionRule::SetPlus(bool pl)
+void ClassSelectionRule::SetRequestStreamerInfo(bool pl)
 {
-   fPlus = pl;
+   fRequestStreamerInfo = pl;
 }
 
-bool ClassSelectionRule::HasMinus() const
+bool ClassSelectionRule::RequestNoStreamer() const
 {
-   return fMinus;
+   return fRequestNoStreamer;
 }
 
-void ClassSelectionRule::SetMinus(bool mn)
+void ClassSelectionRule::SetRequestNoStreamer(bool mn)
 {
-   fMinus = mn;
+   fRequestNoStreamer = mn;
 }
 
-bool ClassSelectionRule::HasExclamation() const
+bool ClassSelectionRule::RequestNoInputOperator() const
 {
-   return fExclamation;
+   return fRequestNoInputOperator;
 }
 
-void ClassSelectionRule::SetExclamation(bool excl)
+void ClassSelectionRule::SetRequestNoInputOperator(bool excl)
 {
-   fExclamation = excl;
+   fRequestNoInputOperator = excl;
 }
 
 void ClassSelectionRule::SetRequestOnlyTClass(bool value)
@@ -119,18 +119,4 @@ bool ClassSelectionRule::RequestPrivate() const
    return fRequestPrivate;
 }
 
-bool ClassSelectionRule::RequestNoStreamer() const
-{
-   return HasMinus();
-}
-
-bool ClassSelectionRule::RequestNoInputOperator() const
-{
-   return HasExclamation();
-}
-
-bool ClassSelectionRule::RequestStreamerInfo() const
-{
-   return HasPlus();
-}
 
