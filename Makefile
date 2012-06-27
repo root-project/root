@@ -1089,7 +1089,7 @@ releasenotes:
 	@$(MAKERELNOTES)
 
 ifeq ($(BUILDX11),yes)
-html: $(ROOTX) changelog releasenotes
+html: $(ROOTX) $(ROOTEXE) changelog releasenotes
 else
 html: $(ROOTEXE) changelog releasenotes
 endif
