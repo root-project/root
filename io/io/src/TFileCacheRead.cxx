@@ -129,10 +129,10 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize)
    fEnablePrefetching = gEnv->GetValue("TFile.AsyncPrefetching", 0);
    
    if (fEnablePrefetching && strcmp(file->GetEndpointUrl()->GetProtocol(), "file")){
-      SetEnablePrefetching(true);
+      SetEnablePrefetchingImpl(true);
    }
    else {//disable the async pref for local files
-      fEnablePrefetching = 0;
+      SetEnablePrefetchingImpl(false);
    }
 
    fIsSorted    = kFALSE;
@@ -637,8 +637,28 @@ TFilePrefetch* TFileCacheRead::GetPrefetchObj(){
 }
 
 //______________________________________________________________________________
-void TFileCacheRead::SetEnablePrefetching(Bool_t setPrefetching) {
+void TFileCacheRead::SetEnablePrefetching(Bool_t setPrefetching) 
+{
+   // Set the prefetching mode of this file.
+   // if 'setPrefetching', enable the asynchronous prefetching
+   // (using TFilePrefetch) and if the gEnv and rootrc 
+   // variable Cache.Directory is set, also enable the local
+   // caching of the prefetched blocks.
+   // if 'setPrefetching', the old prefetcher is enabled is
+   // the gEnv and rootrc variable is TFile.AsyncReading
+   
+   SetEnablePrefetchingImpl(setPrefetching);
+}
+
+//______________________________________________________________________________
+void TFileCacheRead::SetEnablePrefetchingImpl(Bool_t setPrefetching) 
+{
+   // TFileCacheRead implementation of SetEnablePrefetching.
+   //
+   // This function is called from the constructor and should not be virtual.
+      
    fEnablePrefetching = setPrefetching;
+   
    if (!fPrefetch && fEnablePrefetching) {
       fPrefetch = new TFilePrefetch(fFile);
       const char* cacheDir = gEnv->GetValue("Cache.Directory", "");
@@ -655,7 +675,7 @@ void TFileCacheRead::SetEnablePrefetching(Bool_t setPrefetching) {
    }
 
    //environment variable used to switch to the new method of reading asynchronously
-   if (fEnablePrefetching){
+   if (fEnablePrefetching) {
       fAsyncReading = kFALSE;
    }
    else {
