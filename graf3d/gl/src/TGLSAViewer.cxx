@@ -63,6 +63,7 @@ DIRECT SCENE INTERACTIONS\n\n\
    \tt          --- outline mode\n\
    \tj          --- ZOOM in\n\
    \tk          --- ZOOM out\n\
+   \ta          --- switch on/off arc-ball camera rotation control\n\
    \tArrow Keys --- PAN (TRUCK) across scene\n\
    \tHome       --- reset current camera\n\
    \tCtrl-Home  --- switch external/automatic camera center\n\

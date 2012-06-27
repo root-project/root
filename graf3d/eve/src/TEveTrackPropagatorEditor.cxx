@@ -45,7 +45,8 @@ TEveTrackPropagatorSubEditor::TEveTrackPropagatorSubEditor(const TGWindow *p):
 
    fRefsCont(0),      fPMFrame(0),
    fFitDaughters(0),  fFitReferences(0),
-   fFitDecay(0),      fFitCluster2Ds(0),
+   fFitDecay(0),
+   fFitCluster2Ds(0), fFitLineSegments(0),
    fRnrDaughters(0),  fRnrReferences(0),
    fRnrDecay(0),      fRnrCluster2Ds(0),
    fRnrFV(0),
@@ -124,16 +125,19 @@ void TEveTrackPropagatorSubEditor::CreateRefsContainer(TGVerticalFrame* p)
       fFitReferences = new TGCheckButton(fitPM, "Fit Refs",        TEvePathMark::kReference);
       fFitDecay      = new TGCheckButton(fitPM, "Fit Decay",       TEvePathMark::kDecay);
       fFitCluster2Ds = new TGCheckButton(fitPM, "Fit 2D Clusters", TEvePathMark::kCluster2D);
+      fFitLineSegments = new TGCheckButton(fitPM, "Fit Line Segments", TEvePathMark::kLineSegment);
 
       fitPM->AddFrame(fFitDaughters);
       fitPM->AddFrame(fFitReferences);
       fitPM->AddFrame(fFitDecay);
       fitPM->AddFrame(fFitCluster2Ds);
+      fitPM->AddFrame(fFitLineSegments);
 
-      fFitDecay     ->Connect("Clicked()","TEveTrackPropagatorSubEditor", this, "DoFitPM()");
-      fFitReferences->Connect("Clicked()","TEveTrackPropagatorSubEditor", this, "DoFitPM()");
-      fFitDaughters ->Connect("Clicked()","TEveTrackPropagatorSubEditor", this, "DoFitPM()");
-      fFitCluster2Ds->Connect("Clicked()","TEveTrackPropagatorSubEditor", this, "DoFitPM()");
+      fFitDecay       ->Connect("Clicked()","TEveTrackPropagatorSubEditor", this, "DoFitPM()");
+      fFitReferences  ->Connect("Clicked()","TEveTrackPropagatorSubEditor", this, "DoFitPM()");
+      fFitDaughters   ->Connect("Clicked()","TEveTrackPropagatorSubEditor", this, "DoFitPM()");
+      fFitCluster2Ds  ->Connect("Clicked()","TEveTrackPropagatorSubEditor", this, "DoFitPM()");
+      fFitLineSegments->Connect("Clicked()","TEveTrackPropagatorSubEditor", this, "DoFitPM()");
    }
    // Kinematics fitting.
    {
@@ -260,6 +264,7 @@ void TEveTrackPropagatorSubEditor::SetModel(TEveTrackPropagator* m)
       fFitReferences->SetState(fM->fFitReferences ? kButtonDown : kButtonUp);
       fFitDecay->SetState(fM->fFitDecay ? kButtonDown : kButtonUp);
       fFitCluster2Ds->SetState(fM->fFitCluster2Ds ? kButtonDown : kButtonUp);
+      fFitLineSegments->SetState(fM->fFitLineSegments ? kButtonDown : kButtonUp);
 
       fPMAtt->SetModel(&fM->fPMAtt);
    }
@@ -357,6 +362,9 @@ void TEveTrackPropagatorSubEditor::DoFitPM()
          break;
       case TEvePathMark::kCluster2D:
          fM->SetFitCluster2Ds(on);
+         break;
+      case TEvePathMark::kLineSegment:
+         fM->SetFitLineSegments(on);
          break;
 
       default:

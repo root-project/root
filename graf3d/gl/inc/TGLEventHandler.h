@@ -48,6 +48,7 @@ protected:
    Bool_t            fInPointerGrab;
    Bool_t            fMouseTimerRunning;
    Bool_t            fTooltipShown;
+   Bool_t            fArcBall;
    Int_t             fTooltipPixelTolerance;
    Int_t             fSecSelType; // secondary selection type
    Bool_t            fDoInternalSelection;
@@ -102,6 +103,9 @@ public:
 
    Bool_t GetDoInternalSelection() const { return fDoInternalSelection; }
    void   SetDoInternalSelection(Bool_t x) { fDoInternalSelection = x; }
+
+   Bool_t GetArcBall() const   { return fArcBall; }
+   void   SetArcBall(Bool_t a) { fArcBall = a;    }
 
    ClassDef(TGLEventHandler, 0); // Base-class and default implementation of event-handler for TGLViewer.
 };

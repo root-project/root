@@ -237,7 +237,8 @@ TEveTrackPropagator::TEveTrackPropagator(const char* n, const char* t,
 
    fEditPathMarks (kTRUE),
    fFitDaughters  (kTRUE),   fFitReferences (kTRUE),
-   fFitDecay      (kTRUE),   fFitCluster2Ds (kTRUE),
+   fFitDecay      (kTRUE),
+   fFitCluster2Ds (kTRUE),   fFitLineSegments (kTRUE),
    fRnrDaughters  (kFALSE),  fRnrReferences (kFALSE),
    fRnrDecay      (kFALSE),  fRnrCluster2Ds (kFALSE),
    fRnrFV         (kFALSE),
@@ -368,6 +369,26 @@ Bool_t TEveTrackPropagator::GoToVertex(TEveVectorD& v, TEveVectorD& p)
 }
 
 //______________________________________________________________________________
+Bool_t TEveTrackPropagator::GoToLineSegment(const TEveVectorD& s, const TEveVectorD& r, TEveVectorD& p)
+{
+   // Propagate particle with momentum p to line with start point s and vector r to the second point.
+
+   Update(fV, p, kTRUE);
+
+   if (!fH.fValid)
+   {
+      TEveVectorD v;
+      ClosestPointBetweenLines(s, r, fV, p, v);
+      LineToVertex(v);
+      return kTRUE;
+   }
+   else
+   {
+      return LoopToLineSegment(s, r, p);
+   }
+}
+
+//______________________________________________________________________________
 Bool_t TEveTrackPropagator::GoToVertex(TEveVectorF& v, TEveVectorF& p)
 {
    // TEveVectorF wrapper.
@@ -375,6 +396,17 @@ Bool_t TEveTrackPropagator::GoToVertex(TEveVectorF& v, TEveVectorF& p)
    TEveVectorD vd(v), pd(p);
    Bool_t result = GoToVertex(vd, pd);
    v = vd; p = pd;
+   return result;
+}
+
+//______________________________________________________________________________
+Bool_t TEveTrackPropagator::GoToLineSegment(const TEveVectorF& s, const TEveVectorF& r, TEveVectorF& p)
+{
+   // TEveVectorF wrapper.
+
+   TEveVectorD sd(s), rd(r), pd(p);
+   Bool_t result = GoToLineSegment(sd, rd, pd);
+   p = pd;
    return result;
 }
 
@@ -441,7 +473,7 @@ void TEveTrackPropagator::Update(const TEveVector4D& v, const TEveVectorD& p,
 	 }
 	 else
 	 {
-            fH.fRKStep = fH.fMaxStep; 
+            fH.fRKStep = fH.fMaxStep;
 	 }
       }
    }
@@ -611,32 +643,7 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVectorD& v, TEveVectorD& p)
 
          TEveVectorD off(v - currV);
          off *= 1.0f / currV.fT;
-
-         // Calculate the required momentum rotation.
-         // lpd - last-points-delta
-         TEveVectorD lpd0(fPoints[np-1]);
-         lpd0 -= fPoints[np-2];
-         lpd0.Normalize();
-
-         for (Int_t i = first_point; i < np; ++i)
-         {
-            fPoints[i] += off * fPoints[i].fT;
-         }
-
-         TEveVectorD lpd1(fPoints[np-1]);
-         lpd1 -= fPoints[np-2];
-         lpd1.Normalize();
-
-         TEveTrans tt;
-         tt.SetupFromToVec(lpd0, lpd1);
-
-         // TEveVectorD pb4(p);
-         // printf("Rotating momentum: p0 = "); p.Dump();
-         tt.RotateIP(p);
-         // printf("                   p1 = "); p.Dump();
-         // printf("  n1=%f, n2=%f, dp = %f deg\n", pb4.Mag(), p.Mag(),
-         //        TMath::RadToDeg()*TMath::ACos(p.Dot(pb4)/(pb4.Mag()*p.Mag())));
-
+         DistributeOffset(off,  first_point, np, p);
          fV = v;
          return kTRUE;
       }
@@ -645,6 +652,127 @@ Bool_t TEveTrackPropagator::LoopToVertex(TEveVectorD& v, TEveVectorD& p)
    fPoints.push_back(v);
    fV = v;
    return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TEveTrackPropagator::LoopToLineSegment(const TEveVectorD& s, const TEveVectorD& r, TEveVectorD& p)
+{
+   // Propagate charged particle with momentum p to line segment with point s and vector r to the second point.
+   // It is expected that Update() with full-update was called before. Returns kFALSE if hits bounds.
+
+   const Double_t maxRsq = fMaxR * fMaxR;
+   const Double_t rMagInv = 1./r.Mag();
+
+   TEveVector4D currV(fV);
+   TEveVector4D forwV(fV);
+   TEveVectorD  forwP(p);
+
+   Int_t first_point = fPoints.size();
+   Int_t np          = first_point;
+
+   TEveVectorD forwC;
+   TEveVectorD currC;
+   do
+   {
+      Step(currV, p, forwV, forwP);
+      Update(forwV, forwP);
+
+      ClosestPointFromVertexToLineSegment(forwV, s, r, rMagInv, forwC);
+
+      // check forwV is over segment with orthogonal component of
+      // of momentum to vector r
+      TEveVectorD b = r; b.Normalize();
+      Double_t x = forwP.Dot(b);
+      TEveVectorD pTPM = forwP - x*b;
+      if (pTPM.Dot(forwC-forwV) < 0)
+      {
+         break;
+      }
+
+      if (IsOutsideBounds(forwV, maxRsq, fMaxZ))
+      {
+         fV = currV;
+         return kFALSE;
+      }
+
+      fPoints.push_back(forwV);
+      currV = forwV;
+      p     = forwP;
+      currC=forwC;
+      ++np;
+   } while (np < fNMax);
+
+   // Get closest point on segment relative to line with forw and currV points.
+   TEveVectorD v;
+   ClosestPointBetweenLines(s, r, currV, forwV - currV, v);
+
+   // make the remaining fractional step
+   if (np > first_point)
+   {
+      if ((v - currV).Mag() > kStepEps)
+      {
+
+         Double_t step_frac = (v-currV).Mag()/(currV-forwV).Mag();
+         if (step_frac > 0)
+         {
+            // Step for fraction of previous step size.
+            // We pass 'enforce_max_step' flag to Update().
+            Float_t orig_max_step = fH.fMaxStep;
+            fH.fMaxStep = step_frac * (forwV - currV).Mag();
+            Update(currV, p, kTRUE, kTRUE);
+            Step(currV, p, forwV, forwP);
+            p     = forwP;
+            currV = forwV;
+            fPoints.push_back(currV);
+            ++np;
+            fH.fMaxStep = orig_max_step;
+         }
+
+         // Distribute offset to desired crossing point over all segment.
+
+         TEveVectorD off(v - currV);
+         off *= 1.0f / currV.fT;
+         DistributeOffset(off, first_point, np, p);
+         fV = v;
+         return kTRUE;
+      }
+   }
+
+   fPoints.push_back(v);
+   fV = v;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TEveTrackPropagator::DistributeOffset(const TEveVectorD& off, Int_t first_point, Int_t np, TEveVectorD& p)
+{
+   // Distribute offset between first and last point index and rotate
+   // momentum.
+
+   // Calculate the required momentum rotation.
+   // lpd - last-points-delta
+   TEveVectorD lpd0(fPoints[np-1]);
+   lpd0 -= fPoints[np-2];
+   lpd0.Normalize();
+
+   for (Int_t i = first_point; i < np; ++i)
+   {
+      fPoints[i] += off * fPoints[i].fT;
+   }
+
+   TEveVectorD lpd1(fPoints[np-1]);
+   lpd1 -= fPoints[np-2];
+   lpd1.Normalize();
+
+   TEveTrans tt;
+   tt.SetupFromToVec(lpd0, lpd1);
+
+   // TEveVectorD pb4(p);
+   // printf("Rotating momentum: p0 = "); p.Dump();
+   tt.RotateIP(p);
+   // printf("                   p1 = "); p.Dump();
+   // printf("  n1=%f, n2=%f, dp = %f deg\n", pb4.Mag(), p.Mag(),
+   //        TMath::RadToDeg()*TMath::ACos(p.Dot(pb4)/(pb4.Mag()*p.Mag())));
 }
 
 //______________________________________________________________________________
@@ -790,6 +918,55 @@ Bool_t TEveTrackPropagator::IntersectPlane(const TEveVectorD& p,
       return HelixIntersectPlane(p, point, normal, itsect);
    else
       return LineIntersectPlane(p, point, normal, itsect);
+}
+
+//______________________________________________________________________________
+void TEveTrackPropagator::ClosestPointFromVertexToLineSegment(const TEveVectorD& v,
+                                                    const TEveVectorD& s,
+                                                    const TEveVectorD& r,
+                                                    Double_t rMagInv,
+                                                    TEveVectorD& c)
+{
+   // Get closest point from given vertex v to line segment defined with s and r.
+   // Argument rMagInv is cached. rMagInv= 1./rMag()
+
+   TEveVectorD dir = v - s;
+   TEveVectorD b1 = r*rMagInv;
+
+   // paralell distance
+   Double_t dot = dir.Dot(b1);
+   TEveVectorD dirI = dot *  b1;
+
+   Double_t facX = dot * rMagInv;
+   if ( facX <= 0)
+      c = s;
+   else if ( facX >= 1)
+      c = s + r;
+   else
+      c = s + dirI;
+}
+
+//______________________________________________________________________________
+Bool_t TEveTrackPropagator::ClosestPointBetweenLines(const TEveVectorD& p0,
+                                                     const TEveVectorD& u,
+                                                     const TEveVectorD& q0,
+                                                     const TEveVectorD& v,
+                                                     TEveVectorD& out)
+{
+   // Get closest point on line defined with vector p0 and u.
+   // Return false if the point is forced on the line segment.
+
+   TEveVectorD w0 = p0 -q0;
+   Double_t a = u.Mag2();
+   Double_t b = u.Dot(v);
+   Double_t c = v.Mag2();
+   Double_t d = u.Dot(w0);
+   Double_t e = v.Dot(w0);
+
+   Double_t x = (b*e - c*d)/(a*c -b*b);
+   Bool_t force = (x < 0 || x > 1);
+   out = p0 + TMath::Range(0., 1., x) * u;
+   return force;
 }
 
 //______________________________________________________________________________
@@ -948,6 +1125,15 @@ void TEveTrackPropagator::SetFitDecay(Bool_t x)
    // Set decay fitting and rebuild tracks.
 
    fFitDecay = x;
+   RebuildTracks();
+}
+
+//______________________________________________________________________________
+void TEveTrackPropagator::SetFitLineSegments(Bool_t x)
+{
+   // Set line segment fitting and rebuild tracks.
+
+   fFitLineSegments = x;
    RebuildTracks();
 }
 

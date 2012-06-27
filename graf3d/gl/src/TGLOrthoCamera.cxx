@@ -277,7 +277,7 @@ void TGLOrthoCamera::Apply(const TGLBoundingBox & /*box*/,
    TGLVector3 pos    = mx.GetTranslation();
    TGLVector3 fwd    = mx.GetBaseVec(1);
    TGLVector3 center = pos - fwd;
-   TGLVector3 up     = fCamBase.GetBaseVec(3);
+   TGLVector3 up     = mx.GetBaseVec(3);
 
    gluLookAt(pos[0],    pos[1],    pos[2],
              center[0], center[1], center[2],

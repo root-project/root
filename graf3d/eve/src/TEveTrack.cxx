@@ -409,11 +409,25 @@ void TEveTrack::MakeTrack(Bool_t recurse)
                   Warning("TEveTrack::MakeTrack", "Failed to intersect plane for Cluster2D. Ignoring path-mark.");
                }
             }
+            else if (rTP.GetFitLineSegments() && pm->fType == TEvePathMarkD::kLineSegment)
+            {
+               if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
+                  break;
+
+               if (fPropagator->GoToLineSegment(pm->fV, pm->fE, currP))
+               {
+                  currP.fX -= pm->fP.fX; currP.fY -= pm->fP.fY; currP.fZ -= pm->fP.fZ;
+               }
+               else
+               {
+                  break;
+               }
+            }
             else
             {
                if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
                   break;
-            }            
+            }
          } // loop path-marks
 
          if (!decay)
@@ -503,10 +517,11 @@ void TEveTrack::PrintPathMarks()
 
    for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
    {
-      printf("  %-9s  p: %8f %8f %8f Vertex: %8e %8e %8e %g \n",
+      printf("  %-9s  p: %8f %8f %8f Vertex: %8e %8e %8e %g Extra:%8f %8f %8f\n",
              pm->TypeName(),
              pm->fP.fX,  pm->fP.fY, pm->fP.fZ,
              pm->fV.fX,  pm->fV.fY, pm->fV.fZ,
+             pm->fE.fX,  pm->fE.fY, pm->fE.fZ,
              pm->fTime);
    }
 }
