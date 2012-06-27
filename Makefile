@@ -1088,7 +1088,11 @@ changelog:
 releasenotes:
 	@$(MAKERELNOTES)
 
+ifeq ($(BUILDX11),yes)
+html: $(ROOTX) $(ROOTEXE) changelog releasenotes
+else
 html: $(ROOTEXE) changelog releasenotes
+endif
 ifneq ($(USECONFIG),FALSE)
 	@if [ "x`which root.exe`" != "x$(DESTDIR)$(BINDIR)/root.exe" ] \
 	  || [ "`which root.exe`" -ot "bin/root.exe" ]; then \
