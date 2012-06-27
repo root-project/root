@@ -391,7 +391,7 @@ using namespace ROOT;
          }
          R__GetQualifiedName(typenameStr, field_iter->getType(), *(*field_iter));
 
-         nameType[field_iter->getName().data()] = TSchemaType(typenameStr.c_str(),dims.str().c_str());
+         nameType[field_iter->getName().str()] = TSchemaType(typenameStr.c_str(),dims.str().c_str());
       }
 
       // And now the base classes
@@ -1885,11 +1885,11 @@ string GetNonConstMemberName(const clang::FieldDecl &m, const string &prefix = "
       ret += type_name;
       ret += " &>( ";
       ret += prefix;
-      ret += m.getName().data();
+      ret += m.getName().str();
       ret += " )";
       return ret;
    } else {
-      return prefix+m.getName().data();
+      return prefix+m.getName().str();
    }
 }
 
@@ -3020,7 +3020,7 @@ int STLContainerStreamer(const clang::FieldDecl &m, int rwmode)
    //                                          TClassEdit::kDropStlDefault) );
    string stlType( ShortTypeName(mTypename.c_str()) );
    string stlName;
-   stlName = ShortTypeName(m.getName().data());
+   stlName = ShortTypeName(m.getName().str().c_str());
 
    string fulName1,fulName2;
    const char *tcl1=0,*tcl2=0;
@@ -3229,7 +3229,7 @@ int STLStringStreamer(const clang::FieldDecl &m, int rwmode)
    const char *mTypeName = ShortTypeName(mTypenameStr.c_str());
    if (!strcmp(mTypeName, "string")) {
       
-      std::string fieldname =  m.getName().data();
+      std::string fieldname =  m.getName().str();
       if (rwmode == 0) {
          // create read mode
          if (m.getType()->isConstantArrayType()) {
@@ -4140,10 +4140,10 @@ const char *GrabIndex(const clang::FieldDecl &member, int printError)
 
       if (where==0) {
          Error(0, "*** Datamember %s::%s: no size indication!\n",
-               member.getParent()->getName().data(), member.getName().data());
+               member.getParent()->getName().str().c_str(), member.getName().str().c_str());
       } else {
          Error(0,"*** Datamember %s::%s: size of array (%s) %s!\n",
-               member.getParent()->getName().data(), member.getName().data(), where, errorstring);
+               member.getParent()->getName().str().c_str(), member.getName().str().c_str(), where, errorstring);
       }
    }
    return index;
@@ -4314,23 +4314,23 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl)
                   }
                   (*dictSrcOut) << "      for (R__i = 0; R__i < " << s << "; R__i++)" << std::endl;
                   if (i == 0) {
-                     Error(0, "*** Datamember %s::%s: array of pointers to fundamental type (need manual intervention)\n", fullname.c_str(), field_iter->getName().data());
-                     (*dictSrcOut) << "         ;//R__b.ReadArray(" << field_iter->getName().data() << ");" << std::endl;
+                     Error(0, "*** Datamember %s::%s: array of pointers to fundamental type (need manual intervention)\n", fullname.c_str(), field_iter->getName().str().c_str());
+                     (*dictSrcOut) << "         ;//R__b.ReadArray(" << field_iter->getName().str() << ");" << std::endl;
                   } else {
-                     (*dictSrcOut) << "         ;//R__b.WriteArray(" << field_iter->getName().data() << ", __COUNTER__);" << std::endl;
+                     (*dictSrcOut) << "         ;//R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);" << std::endl;
                   }
                } else if (type.getTypePtr()->isPointerType()) {
                   const char *indexvar = GrabIndex(**field_iter, i==0);
                   if (indexvar==0) {
                      if (i == 0) {
-                        Error(0,"*** Datamember %s::%s: pointer to fundamental type (need manual intervention)\n", fullname.c_str(), field_iter->getName().data());
-                        (*dictSrcOut) << "      //R__b.ReadArray(" << field_iter->getName().data() << ");" << std::endl;
+                        Error(0,"*** Datamember %s::%s: pointer to fundamental type (need manual intervention)\n", fullname.c_str(), field_iter->getName().str().c_str());
+                        (*dictSrcOut) << "      //R__b.ReadArray(" << field_iter->getName().str() << ");" << std::endl;
                      } else {
-                        (*dictSrcOut) << "      //R__b.WriteArray(" << field_iter->getName().data() << ", __COUNTER__);" << std::endl;
+                        (*dictSrcOut) << "      //R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);" << std::endl;
                      }
                   } else {
                      if (i == 0) {
-                        (*dictSrcOut) << "      delete [] " << field_iter->getName().data() << ";" << std::endl
+                        (*dictSrcOut) << "      delete [] " << field_iter->getName().str() << ";" << std::endl
                                       << "      " << GetNonConstMemberName(**field_iter) << " = new "
                                       << ShortTypeName(**field_iter) << "[" << indexvar << "];" << std::endl;
                         if (isFloat16) {
@@ -4346,13 +4346,13 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl)
                      } else {
                         if (isFloat16) {
                            (*dictSrcOut) << "      R__b.WriteFastArrayFloat16("
-                                         << field_iter->getName().data() << "," << indexvar << ");" << std::endl;
+                                         << field_iter->getName().str() << "," << indexvar << ");" << std::endl;
                         } else if (isDouble32) {
                            (*dictSrcOut) << "      R__b.WriteFastArrayDouble32("
-                                         << field_iter->getName().data() << "," << indexvar << ");" << std::endl;
+                                         << field_iter->getName().str() << "," << indexvar << ");" << std::endl;
                         } else {
                            (*dictSrcOut) << "      R__b.WriteFastArray("
-                                         << field_iter->getName().data() << "," << indexvar << ");" << std::endl;
+                                         << field_iter->getName().str() << "," << indexvar << ");" << std::endl;
                         }
                      }
                   }
@@ -4360,30 +4360,30 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl)
                   if (i == 0) {
                      if (type.getTypePtr()->getArrayElementTypeNoTypeQual()->isArrayType()) { // if (m.ArrayDim() > 1) {
                         if ( underling_type->isEnumeralType() )
-                           (*dictSrcOut) << "      R__b.ReadStaticArray((Int_t*)" << field_iter->getName().data() << ");" << std::endl;
+                           (*dictSrcOut) << "      R__b.ReadStaticArray((Int_t*)" << field_iter->getName().str() << ");" << std::endl;
                         else {
                            if (isFloat16) {
                               (*dictSrcOut) << "      R__b.ReadStaticArrayFloat16((" << R__TrueName(**field_iter)
-                                            << "*)" << field_iter->getName().data() << ");" << std::endl;
+                                            << "*)" << field_iter->getName().str() << ");" << std::endl;
                            } else if (isDouble32) {
                               (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32((" << R__TrueName(**field_iter)
-                                            << "*)" << field_iter->getName().data() << ");" << std::endl;
+                                            << "*)" << field_iter->getName().str() << ");" << std::endl;
                            } else {
                               (*dictSrcOut) << "      R__b.ReadStaticArray((" << R__TrueName(**field_iter)
-                                            << "*)" << field_iter->getName().data() << ");" << std::endl;
+                                            << "*)" << field_iter->getName().str() << ");" << std::endl;
                            }
                         }
                      } else {
                         if ( underling_type->isEnumeralType() ) {
-                           (*dictSrcOut) << "      R__b.ReadStaticArray((Int_t*)" << field_iter->getName().data() << ");" << std::endl;
+                           (*dictSrcOut) << "      R__b.ReadStaticArray((Int_t*)" << field_iter->getName().str() << ");" << std::endl;
                         } else {
                            if (isFloat16) {
-                              (*dictSrcOut) << "      R__b.ReadStaticArrayFloat16(" << field_iter->getName().data() << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.ReadStaticArrayFloat16(" << field_iter->getName().str() << ");" << std::endl;
                            } else if (isDouble32) {
-                              (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32(" << field_iter->getName().data() << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32(" << field_iter->getName().str() << ");" << std::endl;
                            } else {
                               (*dictSrcOut) << "      R__b.ReadStaticArray((" << R__TrueName(**field_iter)
-                                            << "*)" << field_iter->getName().data() << ");" << std::endl;
+                                            << "*)" << field_iter->getName().str() << ");" << std::endl;
                            }
                         }
                      }
@@ -4393,38 +4393,38 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl)
 
                      if (type.getTypePtr()->getArrayElementTypeNoTypeQual()->isArrayType()) {// if (m.ArrayDim() > 1) {
                         if ( underling_type->isEnumeralType() )
-                           (*dictSrcOut) << "      R__b.WriteArray((Int_t*)" << field_iter->getName().data() << ", "
+                           (*dictSrcOut) << "      R__b.WriteArray((Int_t*)" << field_iter->getName().str() << ", "
                                          << s << ");" << std::endl;
                         else
                            if (isFloat16) {
                               (*dictSrcOut) << "      R__b.WriteArrayFloat16((" << R__TrueName(**field_iter)
-                                            << "*)" << field_iter->getName().data() << ", " << s << ");" << std::endl;
+                                            << "*)" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                            } else if (isDouble32) {
                               (*dictSrcOut) << "      R__b.WriteArrayDouble32((" << R__TrueName(**field_iter)
-                                            << "*)" << field_iter->getName().data() << ", " << s << ");" << std::endl;
+                                            << "*)" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                            } else {
                               (*dictSrcOut) << "      R__b.WriteArray((" << R__TrueName(**field_iter)
-                                            << "*)" << field_iter->getName().data() << ", " << s << ");" << std::endl;
+                                            << "*)" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                            }
                      } else {
                         if ( underling_type->isEnumeralType() )
-                           (*dictSrcOut) << "      R__b.WriteArray((Int_t*)" << field_iter->getName().data() << ", " << s << ");" << std::endl;
+                           (*dictSrcOut) << "      R__b.WriteArray((Int_t*)" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                         else
                            if (isFloat16) {
-                              (*dictSrcOut) << "      R__b.WriteArrayFloat16(" << field_iter->getName().data() << ", " << s << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.WriteArrayFloat16(" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                            } else if (isDouble32) {
-                              (*dictSrcOut) << "      R__b.WriteArrayDouble32(" << field_iter->getName().data() << ", " << s << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.WriteArrayDouble32(" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                            } else {
-                              (*dictSrcOut) << "      R__b.WriteArray(" << field_iter->getName().data() << ", " << s << ");" << std::endl;
+                              (*dictSrcOut) << "      R__b.WriteArray(" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                            }
                      }
                   }
                } else if ( underling_type->isEnumeralType() ) {
                   if (i == 0) {
-                     (*dictSrcOut) << "      void *ptr_" << field_iter->getName().data() << " = (void*)&" << field_iter->getName().data() << ";\n";
-                     (*dictSrcOut) << "      R__b >> *reinterpret_cast<Int_t*>(ptr_" << field_iter->getName().data() << ");" << std::endl;
+                     (*dictSrcOut) << "      void *ptr_" << field_iter->getName().str() << " = (void*)&" << field_iter->getName().str() << ";\n";
+                     (*dictSrcOut) << "      R__b >> *reinterpret_cast<Int_t*>(ptr_" << field_iter->getName().str() << ");" << std::endl;
                   } else
-                     (*dictSrcOut) << "      R__b << (Int_t)" << field_iter->getName().data() << ";" << std::endl;
+                     (*dictSrcOut) << "      R__b << (Int_t)" << field_iter->getName().str() << ";" << std::endl;
                } else {
                   if (isFloat16) {
                      if (i == 0)
@@ -4472,7 +4472,7 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl)
                      (*dictSrcOut) << "         R__b >> " << GetNonConstMemberName(**field_iter);
                   else {
                      if (R__IsBase(**field_iter,"TObject") && R__IsBase(**field_iter,"TArray"))
-                        (*dictSrcOut) << "         R__b << (TObject*)" << field_iter->getName().data();
+                        (*dictSrcOut) << "         R__b << (TObject*)" << field_iter->getName().str();
                      else
                         (*dictSrcOut) << "         R__b << " << GetNonConstMemberName(**field_iter);
                   }
@@ -4486,14 +4486,14 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl)
                   // Optimize this with control statement in title.
                   if (isPointerToPointer(**field_iter)) {
                      if (i == 0) {
-                        Error(0, "*** Datamember %s::%s: pointer to pointer (need manual intervention)\n", fullname.c_str(), field_iter->getName().data());
-                        (*dictSrcOut) << "      //R__b.ReadArray(" << field_iter->getName().data() << ");" << std::endl;
+                        Error(0, "*** Datamember %s::%s: pointer to pointer (need manual intervention)\n", fullname.c_str(), field_iter->getName().str().c_str());
+                        (*dictSrcOut) << "      //R__b.ReadArray(" << field_iter->getName().str() << ");" << std::endl;
                      } else {
-                        (*dictSrcOut) << "      //R__b.WriteArray(" << field_iter->getName().data() << ", __COUNTER__);";
+                        (*dictSrcOut) << "      //R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);";
                      }
                   } else {
                      if (R__GetQualifiedName(*R__GetUnderlyingType(field_iter->getType()),**field_iter) == "TClonesArray") {
-                        (*dictSrcOut) << "      " << field_iter->getName().data() << "->Streamer(R__b);" << std::endl;
+                        (*dictSrcOut) << "      " << field_iter->getName().str() << "->Streamer(R__b);" << std::endl;
                      } else {
                         if (i == 0) {
                            // The following:
@@ -4507,7 +4507,7 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl)
                            (*dictSrcOut) << "      R__b >> " << GetNonConstMemberName(**field_iter) << ";" << std::endl;
                         } else {
                            if (R__IsBase(**field_iter,"TObject") && R__IsBase(**field_iter,"TArray"))
-                              (*dictSrcOut) << "      R__b << (TObject*)" << field_iter->getName().data() << ";" << std::endl;
+                              (*dictSrcOut) << "      R__b << (TObject*)" << field_iter->getName().str() << ";" << std::endl;
                            else
                               (*dictSrcOut) << "      R__b << " << GetNonConstMemberName(**field_iter) << ";" << std::endl;
                         }
@@ -4528,7 +4528,7 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl)
                   const char *constwd = "const ";
                   if (strncmp(constwd,mTypeName,strlen(constwd))==0) {
                      mTypeName += strlen(constwd);
-                     (*dictSrcOut) << "         const_cast< " << mTypeName << " &>(" << field_iter->getName().data();
+                     (*dictSrcOut) << "         const_cast< " << mTypeName << " &>(" << field_iter->getName().str();
                      WriteArrayDimensions(field_iter->getType());
                      (*dictSrcOut) << "[R__i]).Streamer(R__b);" << std::endl;
                   } else {
@@ -4540,11 +4540,11 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl)
                   if (ClassInfo__HasMethod(R__GetUnderlyingRecordDecl(field_iter->getType()),"Streamer")) 
                      (*dictSrcOut) << "      " << GetNonConstMemberName(**field_iter) << ".Streamer(R__b);" << std::endl;
                   else {
-                     (*dictSrcOut) << "      R__b.StreamObject(&(" << field_iter->getName().data() << "),typeid("
-                                   << field_iter->getName().data() << "));" << std::endl;               //R__t.Streamer(R__b);\n");
+                     (*dictSrcOut) << "      R__b.StreamObject(&(" << field_iter->getName().str() << "),typeid("
+                                   << field_iter->getName().str() << "));" << std::endl;               //R__t.Streamer(R__b);\n");
                      //VP                     if (i == 0)
                      //VP                        Error(0, "*** Datamember %s::%s: object has no Streamer() method (need manual intervention)\n",
-                     //VP                                  fullname, field_iter->getName().data());
+                     //VP                                  fullname, field_iter->getName().str());
                      //VP                     fprintf(fp, "      //%s.Streamer(R__b);\n", m.Name());
                   }
                }
@@ -4628,7 +4628,7 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
    // Write interface function for STL members
 
    string a;
-   string clName(R__map_cpp_name(R__GetFileName(cl.GetRecordDecl()).data()));
+   string clName(R__map_cpp_name(R__GetFileName(cl.GetRecordDecl()).str().c_str()));
    int version = GetClassVersion(cl.GetRecordDecl());
    if (version == 0) return;
    if (version < 0 && !(cl.RequestStreamerInfo()) ) return;
@@ -4644,7 +4644,21 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
    {
       int k = IsSTLContainer(*iter);
       if (k!=0) {
-         RStl::Instance().GenerateTClassFor( cl.GetRequestedName(), iter->getType()->getAsCXXRecordDecl () );
+         clang::SourceManager& sourceManager = clxx->getASTContext().getSourceManager();
+         size_t len = sourceManager.getCharacterData(iter->getLocEnd()) - sourceManager.getCharacterData(iter->getLocStart());
+         llvm::StringRef baseAsWritten( sourceManager.getCharacterData(iter->getLocStart()), len+1 );
+         // And we need to skip the access specifier and white space.
+         size_t offset = 0;
+         switch (iter->getAccessSpecifierAsWritten()) {
+         case clang::AS_public   : offset += strlen("public"); break;
+         case clang::AS_protected: offset += strlen("protected"); break;
+         case clang::AS_private  : offset += strlen("private"); break;
+         case clang::AS_none     : break;
+         }
+         while( offset<=len && ( (baseAsWritten.data()+offset)[0] == ':' || isspace((baseAsWritten.data()+offset)[0]) ) ) {
+            ++offset;
+         }
+         RStl::Instance().GenerateTClassFor( baseAsWritten.str().c_str()+offset, iter->getType()->getAsCXXRecordDecl () );
       }
    }
 
@@ -4670,7 +4684,7 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
                if (strstr(type_name.c_str(),"**")) pCounter++;
                char *astar = (char*)strchr(a.c_str(),'*');
                if (!astar) {
-                  Error(0, "Expected '*' in type name '%s' of member '%s'\n", a.c_str(), field_iter->getName().data());
+                  Error(0, "Expected '*' in type name '%s' of member '%s'\n", a.c_str(), field_iter->getName().str().c_str());
                } else {
                   *astar = 0;
                }
@@ -6632,7 +6646,7 @@ int main(int argc, char **argv)
          if (CRD) {
             fprintf(stderr,"rootcling: Generating code for class %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
             std::string qualname( CRD->getQualifiedNameAsString() );
-            if (IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().data() /* unqualified name without template arguement */) ) {
+            if (IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
                   // coverity[fun_call_w_exception] - that's just fine.
                RStl::Instance().GenerateTClassFor( iter->GetRequestedName(), CRD );
             } else {
