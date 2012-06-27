@@ -365,23 +365,23 @@ var d, key_tree;
                   return legend_stats;
                }
             },
-+/*
-+            labels: {
-+               items: [{
-+                  html: '<table frame="box"><td>Tue May 29 11:21:59 2012, Run 180000</td></table>',
-+                  style: {
-+                     top: '360px',
-+                     left: '-50px'
-+                  }
-+               }, {
-+                  html: '<table frame="box"><td>Object published in db : Tue Apr 17 11:51:40 2012</td></table>',
-+                  style: {
-+                     top: '360px',
-+                     left: '210px'
-+                  }
-+               }]
-+            },
-+*/
+/*
+            labels: {
+               items: [{
+                  html: '<table frame="box"><td>Tue May 29 11:21:59 2012, Run 180000</td></table>',
+                  style: {
+                     top: '360px',
+                     left: '-50px'
+                  }
+               }, {
+                  html: '<table frame="box"><td>Object published in db : Tue Apr 17 11:51:40 2012</td></table>',
+                  style: {
+                     top: '360px',
+                     left: '210px'
+                  }
+               }]
+            },
+*/
             xAxis: {
                type: xaxis_type,
                title: {
