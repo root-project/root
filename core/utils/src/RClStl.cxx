@@ -78,7 +78,7 @@ void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRe
    
    fList.insert( RScanner::AnnotatedRecordDecl(++fgCount,stlclass,requestedName,true,false,false,false,-1) );
    
-   TClassEdit::TSplitType splitType( requestedName, TClassEdit::kLong64 );
+   TClassEdit::TSplitType splitType( requestedName, (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd) );
    for(unsigned int i=0; i <  templateCl->getTemplateArgs().size(); ++i) {
       const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(i) );
       if (arg.getKind() == clang::TemplateArgument::Type) {
