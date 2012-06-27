@@ -3234,7 +3234,7 @@ Atom_t  TGCocoa::InternAtom(const char *atomName, Bool_t /*only_if_exist*/)
    //TODO: this is a temporary hack to make
    //client message (close window) work.
 
-   assert(atomName != 0 && "InternAtom, atomName is null");
+   assert(atomName != 0 && "InternAtom, atomName parameter is null");
    
    if (!std::strcmp(atomName, "WM_DELETE_WINDOW"))
       return kIA_DELETE_WINDOW;
