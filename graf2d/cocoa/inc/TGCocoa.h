@@ -16,6 +16,7 @@
 #include <utility>
 #include <vector>
 #include <memory>
+#include <string>
 #include <map>
 
 #ifndef ROOT_TVirtualX
@@ -422,18 +423,6 @@ protected:
 
    EDrawMode fDrawMode;
    bool fDirectDraw;//Primitive in canvas tries to draw into window directly.
-   
-   //TODO:
-   //There is no property support yet,
-   //only this two values to make GUI work 
-   //(used in client messages). 
-
-public:
-
-   enum EInternAtom {
-      kIA_DELETE_WINDOW = 1,
-      kIA_ROOT_MESSAGE
-   };
 
 private:
    bool MakeProcessForeground();
@@ -450,6 +439,10 @@ private:
    //Quite ugly solution for the moment.
    std::map<Window_t, std::vector<UInt_t> > fClientMessagesToWindow;
    typedef std::map<Window_t, std::vector<UInt_t> >::iterator message_window_iterator;
+   
+   //
+   std::map<std::string, Atom_t> fNameToAtom;
+   std::vector<std::string> fAtomToName;
       
    //I'd prefer to use = delete syntax from C++0x11, but this file is processed by CINT.
    TGCocoa(const TGCocoa &rhs);

@@ -3228,19 +3228,27 @@ Bool_t TGCocoa::NeedRedraw(ULong_t /*tgwindow*/, Bool_t /*force*/)
 }
 
 //______________________________________________________________________________
-Atom_t  TGCocoa::InternAtom(const char *atomName, Bool_t /*only_if_exist*/)
+Atom_t  TGCocoa::InternAtom(const char *name, Bool_t onlyIfExist)
 {
    //X11 properties emulation.
    //TODO: this is a temporary hack to make
    //client message (close window) work.
 
-   assert(atomName != 0 && "InternAtom, atomName parameter is null");
+   assert(name != 0 && "InternAtom, atomName parameter is null");
    
-   if (!std::strcmp(atomName, "WM_DELETE_WINDOW"))
-      return kIA_DELETE_WINDOW;
-   else if (!std::strcmp(atomName, "_ROOT_MESSAGE"))
-      return kIA_ROOT_MESSAGE;
+   const std::string atomName(name);
+   const std::map<std::string, Atom_t>::const_iterator it = fNameToAtom.find(atomName);
    
+   if (it != fNameToAtom.end())
+      return it->second;
+   else if (!onlyIfExist) {
+      //Create a new atom.
+      fAtomToName.push_back(atomName);
+      fNameToAtom[atomName] = Atom_t(fAtomToName.size());
+      
+      return Atom_t(fAtomToName.size());
+   }
+ 
    return Atom_t();
 }
 
