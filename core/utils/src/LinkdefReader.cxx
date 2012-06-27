@@ -13,6 +13,10 @@
 //                                                                      //
 // LinkdefReader                                                        //
 //                                                                      //
+// The following #pragma are currently ignored (not needed for cling):  //
+//      #pragma link extra_include                                      //
+//                                                                      //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
@@ -396,20 +400,23 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
                   fSelectionRules->AddEnumSelectionRule(esr);
                   
                }
-               else {
-                  EnumSelectionRule esr(fCount++); // we need this because of implicit/explicit rules - check my notes on rootcint
-                  esr.SetSelected(BaseSelectionRule::kNo);
-                  esr.SetAttributeValue("pattern", identifier+"::*");
-                  fSelectionRules->AddEnumSelectionRule(esr);
+               // Since the rootcling default is 'off' (we need to explicilty annotate to turn it on), the nested type and function
+               // should be off by default.  Note that anyway, this is not yet relevant since the pcm actually ignore the on/off
+               // request and contains everything (for now).
+               // else {
+               //    EnumSelectionRule esr(fCount++); // we need this because of implicit/explicit rules - check my notes on rootcint
+               //    esr.SetSelected(BaseSelectionRule::kNo);
+               //    esr.SetAttributeValue("pattern", identifier+"::*");
+               //    fSelectionRules->AddEnumSelectionRule(esr);
                   
-                  if (fSelectionRules->GetHasFileNameRule()) {
-                     FunctionSelectionRule fsr(fCount++); // we need this because of implicit/explicit rules - check my notes on rootcint
-                     fsr.SetSelected(BaseSelectionRule::kNo);
-                     std::string value = identifier + "::*";
-                     fsr.SetAttributeValue("pattern", value);
-                     fSelectionRules->AddFunctionSelectionRule(fsr);
-                  }
-               }
+               //    if (fSelectionRules->GetHasFileNameRule()) {
+               //       FunctionSelectionRule fsr(fCount++); // we need this because of implicit/explicit rules - check my notes on rootcint
+               //       fsr.SetSelected(BaseSelectionRule::kNo);
+               //       std::string value = identifier + "::*";
+               //       fsr.SetAttributeValue("pattern", value);
+               //       fSelectionRules->AddFunctionSelectionRule(fsr);
+               //    }
+               // }
             }
             if (IsPatternRule(identifier)) {
                csr.SetAttributeValue("pattern", identifier);
@@ -703,7 +710,9 @@ public:
       } else {
          llvm::StringRef include(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
          
-         std::cerr << "Warning: #pragma extra_include not yet handled: " << include.str() << "\n";
+         // With the currrent state of root with cling, there is no neet for the extra include,
+         // the #include in the LinkDef should end up in the pcm list.
+         // std::cerr << "Warning: #pragma extra_include not yet handled: " << include.str() << "\n";
 //         if (!fOwner.AddInclude(include))
 //         {
 //            Error("",tok);
