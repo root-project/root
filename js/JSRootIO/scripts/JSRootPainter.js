@@ -17,13 +17,13 @@ var d, key_tree;
 
    if (typeof dTree != "function") {
       var e1 = new Error("This extension requires dtree.js");
-      e1.source = "JSROOTIO.RootFile.js";
+      e1.source = "JSROOTPainter.js";
       throw e1;
    }
 
    if (typeof Highcharts != "object") {
       var e1 = new Error("This extension requires highcharts.js");
-      e1.source = "JSROOTIO.RootFile.js";
+      e1.source = "JSROOTPainter.js";
       throw e1;
    }
 
@@ -160,6 +160,10 @@ var d, key_tree;
                backgroundColor:'#eee',
                borderWidth:1,
                borderColor:'#ccc',
+               marginBottom:70,
+               marginLeft:80,
+               marginRight:40,
+               marginTop:45,
                plotBackgroundColor:'#fff',
                plotBorderWidth:1,
                plotBorderColor:'#ccc',
@@ -168,9 +172,20 @@ var d, key_tree;
                zoomType: "xy"
             },
             credits: { enabled: false },
-            exporting: { enabled: true },
+            exporting: { 
+               buttons: {
+                  exportButton: {
+                     align: 'left',
+                     x: 15
+                  },
+                  printButton: {
+                     align: 'left',
+                     x: 45
+                  }
+               },
+               enabled: true 
+            },
             title: { text: histo['fTitle'] },
-            legend: { enabled: false },
             tooltip: {
                enabled:true,
                borderWidth:1,
@@ -182,6 +197,7 @@ var d, key_tree;
                }
             },
             legend: {
+               borderRadius: 0,
                enabled: legend_stats.length > 1 ? true : false,
                layout: 'vertical',
                backgroundColor: '#FFFFFF',
@@ -189,7 +205,7 @@ var d, key_tree;
                align: 'right',
                verticalAlign: 'top',
                x: -10,
-               y: 45,
+               y: 15,
                labelFormatter: function() {
                   return legend_stats;
                }
@@ -309,6 +325,10 @@ var d, key_tree;
                backgroundColor:'#eee',
                borderWidth:1,
                borderColor:'#ccc',
+               marginBottom:70,
+               marginLeft:80,
+               marginRight:40,
+               marginTop:45,
                plotBackgroundColor:'#fff',
                plotBorderWidth:1,
                plotBorderColor:'#ccc',
@@ -317,11 +337,22 @@ var d, key_tree;
                zoomType: "xy"
             },
             credits: { enabled: false },
-            exporting: { enabled: true },
-            title: { text: histo['fTitle'] },
-            legend: { enabled: false },
+            exporting: { 
+               buttons: {
+                  exportButton: {
+                     align: 'left',
+                     x: 15
+                  },
+                  printButton: {
+                     align: 'left',
+                     x: 45
+                  }
+               },
+               enabled: true 
+            },
             title: { text: histo['fTitle'] },
             legend: {
+               borderRadius: 0,
                enabled: legend_stats.length > 1 ? true : false,
                layout: 'vertical',
                backgroundColor: '#FFFFFF',
@@ -329,14 +360,32 @@ var d, key_tree;
                align: 'right',
                verticalAlign: 'top',
                x: -10,
-               y: 45,
+               y: 15,
                labelFormatter: function() {
                   return legend_stats;
                }
             },
++/*
++            labels: {
++               items: [{
++                  html: '<table frame="box"><td>Tue May 29 11:21:59 2012, Run 180000</td></table>',
++                  style: {
++                     top: '360px',
++                     left: '-50px'
++                  }
++               }, {
++                  html: '<table frame="box"><td>Object published in db : Tue Apr 17 11:51:40 2012</td></table>',
++                  style: {
++                     top: '360px',
++                     left: '210px'
++                  }
++               }]
++            },
++*/
             xAxis: {
                type: xaxis_type,
                title: {
+                  align: 'high',
                   text: histo['fXaxis']['fTitle'],
                   style: { fontWeight: 'normal' }
                },
@@ -356,6 +405,7 @@ var d, key_tree;
             yAxis: {
                type: yaxis_type,
                title: {
+                  align: 'high',
                   text: histo['fYaxis']['fTitle'],
                   style: { fontWeight: 'normal' }
                },
@@ -458,6 +508,10 @@ var d, key_tree;
                backgroundColor:'#eee',
                borderWidth:1,
                borderColor:'#ccc',
+               marginBottom:70,
+               marginLeft:80,
+               marginRight:40,
+               marginTop:45,
                plotBackgroundColor:'#fff',
                plotBorderWidth:1,
                plotBorderColor:'#ccc',
@@ -466,7 +520,19 @@ var d, key_tree;
                zoomType: "xy"
             },
             credits: { enabled: false },
-            exporting: { enabled: true },
+            exporting: { 
+               buttons: {
+                  exportButton: {
+                     align: 'left',
+                     x: 15
+                  },
+                  printButton: {
+                     align: 'left',
+                     x: 45
+                  }
+               },
+               enabled: true 
+            },
             title: { text: graph['fTitle'] },
             legend: { enabled: false },
             tooltip: {

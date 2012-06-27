@@ -37,6 +37,11 @@ String.prototype.endsWith = function(str, ignoreCase) {
 
    JSROOTIO.version = "1.6 2012/02/24";
 
+   JSROOTIO.BIT = function(bits, index) {
+      var mask = 1 << index;
+      return (bits & mask);
+   };
+
    JSROOTIO.ntou2 = function(b, o) {
       // convert (read) two bytes of buffer b into a UShort_t
       var n  = ((b.charCodeAt(o)   & 0xff) << 8) >>> 0;
@@ -309,7 +314,9 @@ String.prototype.endsWith = function(str, ignoreCase) {
       }
       if (class_name && class_name != '' && class_name != -1) {
          if (class_name == 'TObject' || class_name == 'TMethodCall') {
-            o += 10; // skip object bits & unique id
+            o += 2; // skip version
+            o += 4; // skip unique id
+            obj['fBits'] = JSROOTIO.ntou4(str, o); o += 4;
          }
          else if (class_name == 'TObjArray') {
             var array = JSROOTIO.ReadTObjArray(str, o);
@@ -327,8 +334,9 @@ String.prototype.endsWith = function(str, ignoreCase) {
          //o += 4;
       }
       else {
-         // skip TObject...
-         o += 10;
+         o += 2; // skip version
+         o += 4; // skip unique id
+         obj['fBits'] = JSROOTIO.ntou4(str, o); o += 4;
       }
       return {
          'cln' : class_name,
@@ -487,7 +495,9 @@ String.prototype.endsWith = function(str, ignoreCase) {
       var named = {};
       var ver = JSROOTIO.ReadVersion(str, o);
       o = ver['off'];
-      o += 10; // skipversion
+      o += 2; // skip version
+      o += 4; // skip unique id
+      named['fBits'] = JSROOTIO.ntou4(str, o); o += 4;
       var so = JSROOTIO.ReadTString(str, o); o = so['off'];
       named['name'] = so['str'];
       so = JSROOTIO.ReadTString(str, o); o = so['off'];
@@ -707,7 +717,9 @@ String.prototype.endsWith = function(str, ignoreCase) {
                obj[prop] = so['str'];
                break;
             case kTObject:
-               o += 10; // skip TObject...
+               o += 2; // skip version
+               o += 4; // skip unique id
+               obj['fBits'] = JSROOTIO.ntou4(str, o); o += 4;
                break;
             case kTNamed:
                var named = JSROOTIO.ReadTNamed(str, o);
@@ -822,8 +834,9 @@ String.prototype.endsWith = function(str, ignoreCase) {
                   o = array['off'];
                }
                else if (this[prop]['class'] === 'TObject') {
-                  // skip TObject
-                  o += 10;
+                  o += 2; // skip version
+                  o += 4; // skip unique id
+                  obj['fBits'] = JSROOTIO.ntou4(str, o); o += 4;
                }
                else if (this[prop]['class'] === 'TQObject') {
                   // skip TQObject
@@ -942,9 +955,11 @@ String.prototype.endsWith = function(str, ignoreCase) {
                   o = array['off'];
                   break;
                case "TObject":
-                  o += 10; // skip TObject...
+                  o += 2; // skip version
+                  o += 4; // skip unique id
+                  obj['fBits'] = JSROOTIO.ntou4(str, o); o += 4;
                   break;
-               case "TObject":
+               case "TQObject":
                   // skip TQObject...
                   break;
                default:
