@@ -302,11 +302,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
          class_name = clRef['name'];
       }
       else if (!clRef['name'] && clRef['tag']) {
-         class_name = gFile.fStreamerInfo.GetClassMap(clRef['tag']); //kMapOffset
-         if (class_name == -1)
-            class_name = gFile.fStreamerInfo.GetClassMap(clRef['tag'] + 2); //kMapOffset
-         if (class_name == -1)
-            class_name = gFile.fStreamerInfo.GetClassMap(clRef['tag'] - 2);
+         class_name = gFile.fStreamerInfo.GetClassMap(clRef['tag']);
          if (class_name != -1)
             obj['_typename'] = 'JSROOTIO.' + class_name;
          class_name = 0;
@@ -401,9 +397,11 @@ String.prototype.endsWith = function(str, ignoreCase) {
       for (var i = 0; i < nobjects; i++) {
          obj = this.ReadObjectAny(str, o, class_name);
          o = obj['off'];
-         list['array'][i] = obj['obj'];
-         if (obj['cln'] && obj['cln'] != '')
+         list['array'][i] = 0;
+         if (obj['cln'] && obj['cln'] != '' && obj['cln'] != -1) {
             class_name = obj['cln'];
+            list['array'][i] = obj['obj'];
+         }
       }
       list['off'] = o;
       return list;
@@ -1017,8 +1015,8 @@ String.prototype.endsWith = function(str, ignoreCase) {
          classInfo['off'] = o;
          classInfo['tag'] = 0;
          var tag = 0;
-         var startpos = o;
          var bcnt = JSROOTIO.ntou4(str, o); o += 4;
+         var startpos = o;
          if (!(bcnt & kByteCountMask) ||
               (bcnt == kNewClassTag)) {
             tag = bcnt;
@@ -1038,15 +1036,13 @@ String.prototype.endsWith = function(str, ignoreCase) {
             var so = JSROOTIO.ReadString(str, o); // class name
             o = so['off'];
             classInfo['name'] = so['str'];
-            if (gFile.fTagOffset == 0) gFile.fTagOffset = 68;
+            //if (gFile.fTagOffset == 0) gFile.fTagOffset = 68;
             classInfo['tag'] = gFile.fTagOffset + startpos + kMapOffset;
          }
          else {
             // got a tag to an already seen class
             var clTag = (tag & ~kClassMask);
             classInfo['name'] = this.GetClassMap(clTag);
-            if (classInfo['name'] == -1)
-               classInfo['name'] = this.GetClassMap(clTag - 4);
          }
          classInfo['cnt'] = (bcnt & ~kByteCountMask);
          classInfo['off'] = o;
@@ -1950,6 +1946,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
       JSROOTIO.RootFile.prototype.ReadObjBuffer = function(key, callback) {
          // read and inflate object buffer described by its key
          this.Seek(key['dataoffset'], this.ERelativeTo.kBeg);
+         this.fTagOffset = key.keyLen;
          var callback1 = function(file, buffer) {
             var noutot = 0;
             var objbuf = 0;
@@ -2026,6 +2023,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
          this.Seek(this.fSeekInfo, this.ERelativeTo.kBeg);
          var callback1 = function(file, buffer) {
             var key = file.ReadKey(buffer, 0);
+            this.fTagOffset = key.keyLen;
             if (key == 0) return;
             file.fKeys[file.fKeyIndex] = key;
             file.fKeyIndex++;
