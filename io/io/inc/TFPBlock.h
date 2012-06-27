@@ -36,6 +36,7 @@ private:
    Int_t     fFullSize;     // total size of segments that make up the block
    Int_t    *fLen;          // array of lengths of each segment
    Long64_t *fPos;          // array of positions of each segment
+   Long64_t *fRelOffset;    // relative offset of piece in the buffer
 
 public:
    TFPBlock(Long64_t*, Int_t*, Int_t);
@@ -49,6 +50,7 @@ public:
    Int_t     GetFullSize() const;
    Int_t     GetNoElem() const;
    char     *GetBuffer() const;
+   char     *GetPtrToPiece(Int_t index) const;
 
    void SetBuffer(char*);
    void SetPos(Int_t, Long64_t);
@@ -56,5 +58,69 @@ public:
 
    ClassDef(TFPBlock, 0);  // File prefetch block
 };
+
+//__________________________________________________________________
+inline Long64_t* TFPBlock::GetPos() const
+{
+   // Get pointer to the array of postions.
+
+   return fPos;
+}
+
+//__________________________________________________________________
+inline Int_t* TFPBlock::GetLen() const
+{
+   // Get pointer to the array of lengths.
+
+   return fLen;
+}
+
+//__________________________________________________________________
+inline Int_t TFPBlock::GetFullSize() const
+{
+   // Return size of the block.
+
+   return fFullSize;
+}
+
+//__________________________________________________________________
+inline Int_t TFPBlock::GetNoElem() const
+{
+   // Return number of elements in the block.
+
+   return fNblock;
+}
+
+//__________________________________________________________________
+inline Long64_t TFPBlock::GetPos(Int_t i) const
+{
+   // Get position of the element at index i.
+
+   return fPos[i];
+}
+
+//__________________________________________________________________
+inline Int_t TFPBlock::GetLen(Int_t i) const
+{
+  // Get length of the element at index i.
+
+   return fLen[i];
+}
+
+//__________________________________________________________________
+inline char* TFPBlock::GetBuffer() const
+{
+   // Get block buffer.
+
+   return fBuffer;
+}
+
+//__________________________________________________________________
+inline char* TFPBlock::GetPtrToPiece(Int_t index) const
+{
+   // Get block buffer.
+ 
+  return (fBuffer + fRelOffset[index]);
+}
 
 #endif

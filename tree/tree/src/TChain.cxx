@@ -1398,12 +1398,11 @@ Long64_t TChain::LoadTree(Long64_t entry)
       if (!fDirectory->GetList()->FindObject(this)) {
          tpf = (TTreeCache*) fFile->GetCacheRead();
          if (tpf) {
-           tpf->ResetCache();
-           if (tpf->IsEnablePrefetching()){
-              //wait for thread to finish current work
-              tpf->GetPrefetchObj()->GetMutexSynch()->Lock();
-              tpf->GetPrefetchObj()->GetMutexSynch()->UnLock();
-           }
+            tpf->ResetCache();
+            if (tpf->IsEnablePrefetching()){
+               //wait for thread to finish current work
+               tpf->GetPrefetchObj()->GetCondNextFile()->Wait();
+            }
          }
          fFile->SetCacheRead(0);
          if (fCanDeleteRefs) {
