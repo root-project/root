@@ -80,6 +80,8 @@ protected:
    Bool_t        fBIsSorted;
    Bool_t        fBIsTransferred;
 
+   void SetEnablePrefetchingImpl(Bool_t setPrefetching = kFALSE); // Can not be virtual as it is called from the constructor.
+   
 private:
    TFileCacheRead(const TFileCacheRead &);            //cannot be copied
    TFileCacheRead& operator=(const TFileCacheRead &);
