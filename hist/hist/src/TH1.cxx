@@ -1492,10 +1492,13 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
    ret &= CheckBinLimits(h1->GetYaxis(), h2->GetYaxis());
    ret &= CheckBinLimits(h1->GetZaxis(), h2->GetZaxis());
 
-   // check labels
-   ret &= CheckBinLabels(h1->GetXaxis(), h2->GetXaxis());
-   ret &= CheckBinLabels(h1->GetYaxis(), h2->GetYaxis());
-   ret &= CheckBinLabels(h1->GetZaxis(), h2->GetZaxis());
+   // check labels if histograms are both not empty
+   if ( (h1->fTsumw != 0 || h1->GetEntries() != 0) && 
+        (h2->fTsumw != 0 || h2->GetEntries() != 0) ) {
+      ret &= CheckBinLabels(h1->GetXaxis(), h2->GetXaxis());
+      ret &= CheckBinLabels(h1->GetYaxis(), h2->GetYaxis());
+      ret &= CheckBinLabels(h1->GetZaxis(), h2->GetZaxis());
+   }
 
    return ret;
 }
