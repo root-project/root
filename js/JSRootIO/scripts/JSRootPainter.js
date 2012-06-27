@@ -435,6 +435,7 @@ var d, key_tree;
                animation: false,
                //color: null, //fillcolor,
                data: bin_data,
+               turboThreshold: 5000,
                //pointStart: histo['fXaxis']['fXmin'],
                stickyTracking: false
             }]
