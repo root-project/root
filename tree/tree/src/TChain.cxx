@@ -1411,8 +1411,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
             tpf->ResetCache();
             if (tpf->IsEnablePrefetching()){
                //wait for thread to finish current work
-               tpf->GetPrefetchObj()->GetMutexSynch()->Lock();
-               tpf->GetPrefetchObj()->GetMutexSynch()->UnLock();
+               tpf->GetPrefetchObj()->GetCondNextFile()->Wait();
             }
          }
          fFile->SetCacheRead(0, fTree);

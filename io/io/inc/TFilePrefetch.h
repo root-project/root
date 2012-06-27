@@ -70,15 +70,16 @@ class TFilePrefetch : public TObject {
 
 private:
    TFile      *fFile;              // reference to the file
-   TList      *fPendingBlocks;     // list of pending block to be read
-   TList      *fReadBlocks;        // list of block read
+   TList      *fPendingBlocks;     // list of pending blocks to be read
+   TList      *fReadBlocks;        // list of blocks read
    TThread    *fConsumer;          // consumer thread
    TMutex     *fMutexPendingList;  // mutex for the pending list
    TMutex     *fMutexReadList;     // mutex for the list of read blocks
-   TMutex     *fMutexSynch;        // mutex for synchronisation between working and main thread
-   TCondition *fNewBlockAdded;     // condition used to signal the addition of a new pending block
-   TCondition *fReadBlockAdded;    // condition usd to signal the addition of a new red block
-   TSemaphore *fSem;               // semaphore used to kill the consumer thread
+   TCondition *fNewBlockAdded;     // signal the addition of a new pending block
+   TCondition *fReadBlockAdded;    // signal the addition of a new red block
+   TCondition *fCondNextFile;      // signal TChain that we can move to the next file
+   TSemaphore *fSemMasterWorker;   // semaphore used to kill the consumer thread
+   TSemaphore *fSemWorkerMaster;   // semaphore used to notify the master that worker is killed
    TString     fPathCache;         // path to the cache directory
    TStopwatch  fWaitTime;          // time wating to prefetch a buffer (in usec)
 
@@ -113,7 +114,7 @@ public:
    Long64_t  GetWaitTime();
 
    void      SetFile(TFile*);
-   TMutex*   GetMutexSynch() const { return fMutexSynch; };
+   TCondition* GetCondNextFile() const { return fCondNextFile; };
 
    ClassDef(TFilePrefetch, 0);  // File block prefetcher
 };
