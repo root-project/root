@@ -1975,7 +1975,7 @@ bool HasCustomOperatorNewPlacement(const char *which, const clang::RecordDecl &c
    if (operatornew) {
       ctxtnew = operatornew->getParent();
    }
-   if (operatornew) {
+   if (operatornewPlacement) {
       ctxtnewPlacement = operatornewPlacement->getParent();
    }
 
