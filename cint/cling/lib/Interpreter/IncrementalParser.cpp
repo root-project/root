@@ -140,7 +140,6 @@ namespace cling {
     CompilationOptions CO;
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
-    Compile("", CO); // Consume initialization.
   }
 
   IncrementalParser::EParseResult
@@ -197,36 +196,39 @@ namespace cling {
   // Add the input to the memory buffer, parse it, and add it to the AST.
   IncrementalParser::EParseResult
   IncrementalParser::Parse(llvm::StringRef input) {
+    if (input.empty()) return IncrementalParser::kSuccess;
+
     Preprocessor& PP = m_CI->getPreprocessor();
     DiagnosticConsumer& DClient = m_CI->getDiagnosticClient();
 
+    if (!PP.getCurrentLexer()) {
+       PP.EnterSourceFile(m_CI->getSourceManager().getMainFileID(),
+                          0, SourceLocation());
+    }
     PP.enableIncrementalProcessing();
 
     DClient.BeginSourceFile(m_CI->getLangOpts(), &PP);
     // Reset the transaction information
     getLastTransaction().setBeforeFirstDecl(getCI()->getSema().CurContext);
 
+    std::ostringstream source_name;
+    source_name << "input_line_" << (m_MemoryBuffer.size() + 1);
+    llvm::MemoryBuffer* MB
+       = llvm::MemoryBuffer::getMemBufferCopy(input, source_name.str());
+    m_MemoryBuffer.push_back(MB);
+    SourceManager& SM = getCI()->getSourceManager();
 
-    if (input.size()) {
-      std::ostringstream source_name;
-      source_name << "input_line_" << (m_MemoryBuffer.size() + 1);
-      llvm::MemoryBuffer* MB
-        = llvm::MemoryBuffer::getMemBufferCopy(input, source_name.str());
-      m_MemoryBuffer.push_back(MB);
-      SourceManager& SM = getCI()->getSourceManager();
+    // Create SourceLocation, which will allow clang to order the overload
+    // candidates for example
+    SourceLocation NewLoc = SM.getLocForStartOfFile(m_VirtualFileID);
+    NewLoc = NewLoc.getLocWithOffset(m_MemoryBuffer.size() + 1);
 
-      // Create SourceLocation, which will allow clang to order the overload
-      // candidates for example
-      SourceLocation NewLoc = SM.getLocForStartOfFile(m_VirtualFileID);
-      NewLoc = NewLoc.getLocWithOffset(m_MemoryBuffer.size() + 1);
+    // Create FileID for the current buffer
+    FileID FID = SM.createFileIDForMemBuffer(m_MemoryBuffer.back(),
+                                             /*LoadedID*/0,
+                                             /*LoadedOffset*/0, NewLoc);
 
-      // Create FileID for the current buffer
-      FileID FID = SM.createFileIDForMemBuffer(m_MemoryBuffer.back(),
-                                               /*LoadedID*/0,
-                                               /*LoadedOffset*/0, NewLoc);
-
-      PP.EnterSourceFile(FID, 0, NewLoc);
-    }
+    PP.EnterSourceFile(FID, 0, NewLoc);
 
     Parser::DeclGroupPtrTy ADecl;
 
