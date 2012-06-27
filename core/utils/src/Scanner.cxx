@@ -14,6 +14,8 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 
+#include "TClassEdit.h"
+
 #include <iostream>
 #include <sstream> // class ostringstream
 
@@ -63,7 +65,19 @@ RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Reco
 {
    // Normalized the requested name.
 
-   const char *current = requestName;
+   // const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (decl);
+   // if (tmplt_specialization) {
+   //    tmplt_specialization->getTemplateArgs ().data()->print(decl->getASTContext().getPrintingPolicy(),llvm::outs());
+   //    llvm::outs() << "\n";
+   // }
+   // const char *current = requestName;
+   // Strips spaces and std::
+   TClassEdit::TSplitType splitname(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
+   splitname.ShortType( fRequestedName, TClassEdit::kDropAllDefault );
+
+   
+
+#if Replaced_by_TClassEdit
    // The level counting code would be usefull if we want to introduce missing spaces ...
    // int level = 0;
    while (*current != '\0') {
@@ -130,6 +144,7 @@ RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Reco
          ++current;
       }
    }
+#endif
 }
 
 //______________________________________________________________________________
