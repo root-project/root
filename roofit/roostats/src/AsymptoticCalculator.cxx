@@ -452,8 +452,9 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
       oocoutP((TObject*)0,Eval) << "\t OBSERVED DATA :  qmu   = " << qmu << " condNLL = " << condNLL << " uncond " << fNLLObs << std::endl;
 
 
-
-   if (qmu < 0 || TMath::IsNaN(fNLLObs) ) {
+   // this tolerance is used to avoid having negative qmu due to numerical errors
+   double tol = 1.E-4 * ROOT::Math::MinimizerOptions::DefaultTolerance();
+   if (qmu < -tol || TMath::IsNaN(fNLLObs) ) {
 
       if (qmu < 0) 
          oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Found a negative value of the qmu - retry to do the unconditional fit " 
@@ -491,7 +492,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
       }
    }
 
-   if (qmu < 0 ) {       
+   if (qmu < -tol ) {       
       oocoutE((TObject*)0,Minimization) << "AsymptoticCalculator:  qmu is still < 0  for mu = " 
                                         <<  muTest->getVal() << " return a dummy result "  
                                         << std::endl;         
@@ -689,7 +690,6 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    // create an HypoTest result but where the sampling distributions are set to zero
    string resultname = "HypoTestAsymptotic_result";
    HypoTestResult* res = new HypoTestResult(resultname.c_str(), pnull, palt);
-   res->SetBackgroundAsAlt(true);
 
    if (verbose > 0) 
       //std::cout 
