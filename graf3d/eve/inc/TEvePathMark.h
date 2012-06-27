@@ -22,7 +22,7 @@ template <typename TT>
 class TEvePathMarkT
 {
 public:
-   enum EType_e { kReference, kDaughter, kDecay, kCluster2D };
+   enum EType_e { kReference, kDaughter, kDecay, kCluster2D, kLineSegment };
 
    EType_e         fType; // Mark-type.
    TEveVectorT<TT> fV;    // Vertex.

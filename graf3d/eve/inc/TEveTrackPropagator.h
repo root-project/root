@@ -176,6 +176,8 @@ private:
    TEveTrackPropagator(const TEveTrackPropagator&);            // Not implemented
    TEveTrackPropagator& operator=(const TEveTrackPropagator&); // Not implemented
 
+  void  DistributeOffset(const TEveVectorD& off, Int_t first_point, Int_t np, TEveVectorD& p);
+
 protected:
    EStepper_e               fStepper;
 
@@ -195,6 +197,7 @@ protected:
    Bool_t                   fFitReferences; // Pass through given track-references when extrapolating a track.
    Bool_t                   fFitDecay;      // Pass through decay point when extrapolating a track.
    Bool_t                   fFitCluster2Ds; // Pass through 2D-clusters when extrapolating a track.
+   Bool_t                   fFitLineSegments; // Pass through line when extrapolating a track.
    Bool_t                   fRnrDaughters;  // Render daughter path-marks.
    Bool_t                   fRnrReferences; // Render track-reference path-marks.
    Bool_t                   fRnrDecay;      // Render decay path-marks.
@@ -220,6 +223,7 @@ protected:
    void    Step(const TEveVector4D &v, const TEveVectorD &p, TEveVector4D &vOut, TEveVectorD &pOut);
 
    Bool_t  LoopToVertex(TEveVectorD& v, TEveVectorD& p);
+   Bool_t  LoopToLineSegment(const TEveVectorD& s, const TEveVectorD& r, TEveVectorD& p);
    void    LoopToBounds(TEveVectorD& p);
 
    Bool_t  LineToVertex (TEveVectorD& v);
@@ -231,8 +235,10 @@ protected:
                                TEveVectorD&itsect);
    Bool_t  LineIntersectPlane(const TEveVectorD& p, const TEveVectorD& point, const TEveVectorD& normal,
                               TEveVectorD& itsect);
+   Bool_t  PointOverVertex(const TEveVector4D& v0, const TEveVector4D& v, Double_t* p=0);
 
-   Bool_t PointOverVertex(const TEveVector4D& v0, const TEveVector4D& v, Double_t* p=0);
+   void    ClosestPointFromVertexToLineSegment(const TEveVectorD& v, const TEveVectorD& s, const TEveVectorD& r, Double_t rMagInv, TEveVectorD& c);
+   Bool_t ClosestPointBetweenLines(const TEveVectorD& , const TEveVectorD& , const TEveVectorD& , const TEveVectorD& , TEveVectorD& out);
 
 public:
    TEveTrackPropagator(const char* n="TEveTrackPropagator", const char* t="",
@@ -248,13 +254,15 @@ public:
    // propagation
    void   InitTrack(const TEveVectorD& v, Int_t charge);
    void   ResetTrack();
-   void   GoToBounds(TEveVectorD& p);
-   Bool_t GoToVertex(TEveVectorD& v, TEveVectorD& p);
+   virtual void   GoToBounds(TEveVectorD& p);
+   virtual Bool_t GoToVertex(TEveVectorD& v, TEveVectorD& p);
+   virtual Bool_t GoToLineSegment(const TEveVectorD& s, const TEveVectorD& r, TEveVectorD& p);
 
    // TEveVectorF wrappers
    void   InitTrack(const TEveVectorF& v, Int_t charge);
    void   GoToBounds(TEveVectorF& p);
    Bool_t GoToVertex(TEveVectorF& v, TEveVectorF&p);
+   Bool_t GoToLineSegment(const TEveVectorF& s, const TEveVectorF& r, TEveVectorF& p);
 
    Bool_t IntersectPlane(const TEveVectorD& p, const TEveVectorD& point, const TEveVectorD& normal,
                          TEveVectorD& itsect);
@@ -284,6 +292,7 @@ public:
    void   SetFitReferences(Bool_t x);
    void   SetFitDecay(Bool_t x);
    void   SetFitCluster2Ds(Bool_t x);
+   void   SetFitLineSegments(Bool_t x);
    void   SetRnrFV(Bool_t x);
    void   SetProjTrackBreaking(UChar_t x);
    void   SetRnrPTBMarkers(Bool_t x);
@@ -310,6 +319,7 @@ public:
    Bool_t  GetFitReferences() const { return fFitReferences; }
    Bool_t  GetFitDecay()      const { return fFitDecay;      }
    Bool_t  GetFitCluster2Ds() const { return fFitCluster2Ds; }
+   Bool_t  GetFitLineSegments() const { return fFitLineSegments; }
    Bool_t  GetRnrFV()         const { return fRnrFV;         }
    UChar_t GetProjTrackBreaking() const { return fProjTrackBreaking; }
    Bool_t  GetRnrPTBMarkers()     const { return fRnrPTBMarkers; }
@@ -317,7 +327,7 @@ public:
    TMarker& RefPMAtt()  { return fPMAtt; }
    TMarker& RefFVAtt()  { return fFVAtt; }
    TMarker& RefPTBAtt() { return fPTBAtt; }
-   
+
 
    static Bool_t IsOutsideBounds(const TEveVectorD& point, Double_t maxRsqr, Double_t maxZ);
 

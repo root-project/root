@@ -55,6 +55,7 @@ protected:
    TGButton           *fFitReferences;
    TGButton           *fFitDecay;
    TGButton           *fFitCluster2Ds;
+   TGButton           *fFitLineSegments;
    TGButton           *fRnrDaughters;
    TGButton           *fRnrReferences;
    TGButton           *fRnrDecay;

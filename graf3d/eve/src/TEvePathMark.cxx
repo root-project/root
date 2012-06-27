@@ -26,6 +26,11 @@
 //               fP - normal to detector plane,
 //               fE - large error direction, must be normalized.
 //               Track is propagated to plane and correction in fE direction is discarded.
+//  kLineSegment - line segment with vertex fV and vector fE
+//               fV - first point of line segment
+//               fP - normal to detector plane,
+//               fE - vector from fV to the second vertex of line segment
+
 
 ClassImp(TEvePathMarkT<Float_t>);
 ClassImp(TEvePathMarkT<Double_t>);
@@ -37,11 +42,12 @@ template<typename TT> const char* TEvePathMarkT<TT>::TypeName()
 
    switch (fType)
    {
-      case kDaughter:  return "Daughter";
-      case kReference: return "Reference";
-      case kDecay:     return "Decay";
-      case kCluster2D: return "Cluster2D";
-      default:         return "Unknown";
+      case kDaughter:    return "Daughter";
+      case kReference:   return "Reference";
+      case kDecay:       return "Decay";
+      case kCluster2D:   return "Cluster2D";
+      case kLineSegment: return "LineSegment";
+      default:           return "Unknown";
    }
 }
 
