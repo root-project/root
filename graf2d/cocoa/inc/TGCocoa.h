@@ -402,8 +402,6 @@ public:
    virtual Window_t     FindRWindow(Window_t win, Window_t dragwin, Window_t input, int x, int y, int maxd);
    virtual Bool_t       IsDNDAware(Window_t win, Atom_t *typelist);
 
-   virtual void         BeginModalSessionFor(Window_t wid);
-
    virtual Bool_t       IsCmdThread() const { return kTRUE; }
    
    //Non virtual, non-overriding functions.
@@ -438,7 +436,6 @@ public:
    };
 
 private:
-   bool IsDialog(Window_t wid)const;
    bool MakeProcessForeground();
 
    bool fForegroundProcess;

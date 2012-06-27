@@ -3673,20 +3673,6 @@ Bool_t TGCocoa::IsDNDAware(Window_t, Atom_t *)
 }
 
 //______________________________________________________________________________
-void TGCocoa::BeginModalSessionFor(Window_t wid)
-{
-   assert(!fPimpl->IsRootWindow(wid) && "BeginModalSessionFor, called for 'root' window");
-   
-   //TODO: remove this from TGCocoa and TVirtualX.
-   
-   //We start special modal session _ONLY_ for dialogs.
-   //Everything else is done in a different way.
-   if (IsDialog(wid)) {
-      //QuartzWindow *qw = fPimpl->GetWindow(wid).fQuartzWindow;
-   }   
-}
-
-//______________________________________________________________________________
 ROOT::MacOSX::X11::EventTranslator *TGCocoa::GetEventTranslator()const
 {
    return &fPimpl->fX11EventTranslator;
@@ -3727,26 +3713,6 @@ void *TGCocoa::GetCurrentContext()
    }
    
    return drawable.fContext;
-}
-
-//______________________________________________________________________________
-bool TGCocoa::IsDialog(Window_t wid)const
-{
-   //TODO: remove this function from TGCocoa and TVirtualX.
-
-   if (Int_t(wid) <= fPimpl->GetRootWindowID())
-      return false;
-      
-   TGWindow *window = gClient->GetWindowById(wid);
-   if (!window)
-      return false;
-      
-   const NSUInteger styleMask = [fPimpl->GetWindow(wid).fQuartzWindow styleMask];
-   
-   if (window->InheritsFrom("TGTransientFrame") && styleMask != NSBorderlessWindowMask)
-       return true;
-   
-   return false;
 }
 
 //______________________________________________________________________________
