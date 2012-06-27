@@ -253,6 +253,26 @@ long *valp;
             return cp + paren;  /* skip the right paren */
          }
          /* fall out */
+      case '_':
+         if (strncmp(cp, "__has_feature", 13) == 0 && !isalnum(cp[13])) {
+            int paren = 0;
+            int len;
+
+            cp += 13;
+            SKIPSPACE(cp);
+            if (*cp == '(') {
+               paren = 1;
+               cp++;
+            }
+            DO(cp = parse_variable(g, cp, &var));
+            len = cp - var;
+            SKIPSPACE(cp);
+            if (paren && *cp != ')')
+               return CALLFUNC(g, handle_error)(g, cp, ")");
+            *valp = 0; /* no features by default */
+           return cp + paren;  /* skip the right paren */            
+         }
+         /* fall out */
    }
 
    if (isdigit(*cp)) {
