@@ -90,7 +90,6 @@ TVirtualMC::~TVirtualMC()
 // methods
 //
 
-
 //_____________________________________________________________________________
 TVirtualMC *TVirtualMC::GetMC()
 {
