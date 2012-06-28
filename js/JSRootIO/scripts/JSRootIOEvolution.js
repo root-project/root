@@ -1938,6 +1938,11 @@ String.prototype.endsWith = function(str, ignoreCase) {
                obj_buf['irep'] = unzipdata.length;
             }
          }
+         /* Old zlib format */
+         else {
+            alert("R__unzip: Old zlib format is not supported!");
+            return null;
+         }
          return obj_buf;
       };
 
