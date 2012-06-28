@@ -275,7 +275,7 @@ int main(int argc, char** argv)
   }
   printf("*     Reference machine pcnotebrun.cern.ch  RedHat Linux 6.1                 *\n");
   printf("*         (Pentium III 600 Mhz 256 Mbytes RAM, IDE disk)                     *\n");
-  printf("*           (send your results to rootdev@root.cern.ch)                      *\n");
+  printf("*           (send your results to rootdev@cern.ch)                           *\n");
   printf("******************************************************************************\n");
   printf("* Time to fill the structures (seconds)   Reference      cx      Reference   *\n");
   printf("******************************************************************************\n");
@@ -321,7 +321,7 @@ int main(int argc, char** argv)
    head->AddText(line2);
    head->AddText("Reference machine pcnotebrun.cern.ch  RedHat Linux 6.1");
    head->AddText("(Pentium III 650 Mhz 256 Mbytes RAM, IDE disk)");
-   head->AddText("(send your results to rootdev@root.cern.ch)");
+   head->AddText("(send your results to rootdev@cern.ch)");
    head->Draw();
    TPad *pmain = new TPad("pmain","pmain",0,0,1,.8);
    pmain->SetFillColor(20);
