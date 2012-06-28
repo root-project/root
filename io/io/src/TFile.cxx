@@ -1308,6 +1308,11 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
    tobuf(buffer, nbytes);
    if (last == fEND-1) fEND = nfirst;
    Seek(nfirst);
+   // We could not update the meta data for this block on the file.
+   // This is not fatal as this only means that we won't get it 'right'
+   // if we ever need to Recover the file before the block is actually
+   // (attempted to be reused.
+   // coverity[unchecked_value] 
    WriteBuffer(psave, nb);
    Flush();
    delete [] psave;
