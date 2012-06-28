@@ -256,7 +256,6 @@ long *valp;
       case '_':
          if (strncmp(cp, "__has_feature", 13) == 0 && !isalnum(cp[13])) {
             int paren = 0;
-            int len;
 
             cp += 13;
             SKIPSPACE(cp);
@@ -265,7 +264,6 @@ long *valp;
                cp++;
             }
             DO(cp = parse_variable(g, cp, &var));
-            len = cp - var;
             SKIPSPACE(cp);
             if (paren && *cp != ')')
                return CALLFUNC(g, handle_error)(g, cp, ")");
