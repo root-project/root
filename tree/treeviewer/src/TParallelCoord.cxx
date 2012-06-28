@@ -158,8 +158,7 @@ TParallelCoord::~TParallelCoord()
 {
    // Destructor.
 
-   if (fCurrentEntries) delete fCurrentEntries;
-   if (fInitEntries != fCurrentEntries && fInitEntries != 0) delete fInitEntries;
+   if (fInitEntries != fCurrentEntries && fCurrentEntries != 0) delete fCurrentEntries;
    if (fVarList) {
       fVarList->Delete();
       delete fVarList;
