@@ -1088,6 +1088,7 @@ changelog:
 releasenotes:
 	@$(MAKERELNOTES)
 
+ifeq ($(BUILDX11),yes)
 html: rootexecs postbin changelog releasenotes
 ifneq ($(USECONFIG),FALSE)
 	@if [ "x`which root.exe`" != "x$(DESTDIR)$(BINDIR)/root.exe" ] \
@@ -1099,6 +1100,10 @@ ifneq ($(USECONFIG),FALSE)
 endif
 	@$(MAKELOGHTML)
 	@$(MAKEHTML)
+else
+html:
+	@echo "Error: Generating the html doc requires to enable the X11 component when running configure." && exit 1
+endif
 
 # Use DESTDIR to set a sandbox prior to calling "make install", e.g.:
 #   ./configure --prefix=/usr/
