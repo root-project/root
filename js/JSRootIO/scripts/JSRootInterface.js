@@ -7,8 +7,7 @@
 // source_dir is the variable defining where to take the scripts and the list tree icons
 // To use the local ones (e.g. when checking out the files in a web server), just let it 
 // empty: var source_dir = "";
-//var source_dir = "http://root.cern.ch/js/";
-var source_dir = "http://bellenot.web.cern.ch/bellenot/Public/Test/svn/JSRootIO/";
+var source_dir = "http://root.cern.ch/js/";
 var gFile;
 var obj_list = new Array();
 var obj_index;
