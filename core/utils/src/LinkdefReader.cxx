@@ -69,8 +69,10 @@ void LinkdefReader::PopulatePragmaMap(){
    LinkdefReader::fgMapPragmaNames["nestedclasses;"] = kNestedclasses;
    LinkdefReader::fgMapPragmaNames["operators"] = kOperators;
    LinkdefReader::fgMapPragmaNames["operator"] = kOperators;
+   // The following are listed here so we can officially ignore them
+   LinkdefReader::fgMapPragmaNames["nestedtypedef"] = kIgnore;
+   LinkdefReader::fgMapPragmaNames["typedef"] = kIgnore;
    // NOTE: need to add
-   // namespace
    // typedef
 }
 
@@ -260,7 +262,7 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
             if (!ProcessFunctionPrototype(identifier, name_or_proto)) {
                return false;
             }
-//            std::cout<<"function selection rule for "<<identifier<<" ("<<(name_or_proto?"name":"proto_name")<<") to be impl."<<std::endl;
+            //std::cout<<"function selection rule for "<<identifier<<" ("<<(name_or_proto?"name":"proto_name")<<") to be impl."<<std::endl;
             FunctionSelectionRule fsr(fCount++);
             if (linkOn) fsr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
             else fsr.SetSelected(BaseSelectionRule::kNo);
@@ -427,6 +429,10 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
             //csr.PrintAttributes(3);
          }
          break;
+      case kIgnore:
+         // All the pragma that were supported in CINT but are currently not relevant for CLING
+         // (mostly because we do not yet filter the dictionary/pcm).
+         break;
       case kUnknown:
          std::cerr<<"Warning unimplemented pragma statement - it does nothing: ";
          return false;
@@ -476,7 +482,7 @@ bool LinkdefReader::ProcessFunctionPrototype(std::string& proto, bool& name)
       // I don't have to escape the *-s because in rootcint there is no pattern recognition
       int pos3=pos1;
       while (true) {
-         pos3 = proto.find(" ", pos3);
+         pos3 = proto.find("  ", pos3);
          if (pos3 > -1) {
             proto.erase(pos3, 1);
          }

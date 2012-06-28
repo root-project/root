@@ -51,6 +51,7 @@ private:
       kUnion,
       kStruct,
       kOperators,
+      kIgnore,
       kUnknown
   };
 
