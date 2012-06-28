@@ -266,7 +266,7 @@ Undeclared symbol
 
 
 BUGS
-        Report  bugs  and  requirements  to cint@pcroot.cern.ch. Bugs
+        Report  bugs  and  requirements  to root-cint@cern.ch. Bugs
        tend to be fixed very quickly. Any  kind  of  comments  or
        messages will be appreciated.
 
@@ -275,7 +275,7 @@ SEE ALSO
 
 
 AUTHOR
-       Masaharu Goto  (cint@pcroot.cern.ch)
+       Masaharu Goto  (root-cint@cern.ch)
        Copyright  (c)  1995~1999 Masaharu Goto
 
 

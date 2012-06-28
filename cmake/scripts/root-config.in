@@ -407,7 +407,7 @@ win32gcc)
    ;;
 *)
    echo "root-config: \"$arch\" invalid architecture"
-   echo "Please report to rootdev@root.cern.ch"
+   echo "Please report to rootdev@cern.ch"
    exit 1
    ;;
 esac

@@ -2504,7 +2504,7 @@ const char *G__cint_version()
 int G__cintrevision(FILE* fp)
 {
    fprintf(fp, "\n");
-   fprintf(fp, "cint : C/C++ interpreter  (mailing list 'cint@root.cern.ch')\n");
+   fprintf(fp, "cint : C/C++ interpreter  (mailing list 'root-cint@cern.ch')\n");
    fprintf(fp, "   Copyright(c) : 1995~2010 Masaharu Goto (gotom@hanno.jp)\n");
    fprintf(fp, "   revision     : %s by M.Goto\n\n", G__cint_version());
 

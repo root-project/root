@@ -17,7 +17,7 @@ DESCRIPTION
 
         (This sounds smooth, however, I recommend to  start  from
        very simple example.  Linking non-trivial library won't be
-       easy. Contact cint@pcroot.cern.ch if you need help.)
+       easy. Contact root-cint@cern.ch if you need help.)
 
 
 
@@ -849,7 +849,7 @@ OPTIONS
 
 
 BUGS
-        Report  bugs  and  requirements to: cint@pcroot.cern.ch. Bugs
+        Report  bugs  and  requirements to: root-cint@cern.ch. Bugs
        tend actually to be fixed if they can be isolated,  so  it
        is in your interest to report them in such a way that they
        can be easily reproduced.  If will be helpful if you  send
@@ -862,6 +862,6 @@ SEE ALSO
 
 
 AUTHOR
-       Masaharu Goto (cint@pcroot.cern.ch)
+       Masaharu Goto (root-cint@cern.ch)
        Copyright (c) 1995~2000 Masaharu Goto
 

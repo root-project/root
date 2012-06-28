@@ -3,7 +3,7 @@ RELNOTE.txt
 cint 5.16.29/6.1.29  release note
 
  - CINT mailing list 
-    Cint mailing list 'cint@root.cern.ch' is started. Send request to 
+    Cint mailing list 'root-cint@cern.ch' is started. Send request to 
     'Majordomo@pcroot.cern.ch' containing following line for subscription.
 
        subscribe cint [preferred mail address]

@@ -34,16 +34,16 @@ has been gradually replaced this mailing list since September 2003. The <code>Ro
 <para>If you have a question, it is likely that it has been asked, answered, and stored in the <code>roottalk</code> or <code>RootTalk</code>
 Forum archives. Please use the search engine to see if your question has already been answered before sending a mail to the <code>roottalk</code> list or post a topic in the Forum.</para>
 <para>You can browse the <code>roottalk</code> archives at:  <uri xmlns:xlink="http://root.cern.ch/root/roottalk/AboutRootTalk.html">http://root.cern.ch/root/roottalk/AboutRootTalk.html</uri>.
-You can send your question without subscribing to:  <uri xmlns:xlink="mailto:roottalk@root.cern.ch">roottalk@root.cern.ch</uri></para>
+You can send your question without subscribing to:  <uri xmlns:xlink="mailto:roottalk@cern.ch">roottalk@cern.ch</uri></para>
 </sect1>
 
 <sect1>
 <title>Contact Information</title>
 <para>Several authors wrote this book and you may see a "change of voice" from one chapter to the next. We felt we could accept this in order to have the expert
 explain what they know best. If you would like to contribute a chapter or add to a section, please contact
-<uri xmlns:xlink="mailto:rootdoc@root.cern.ch">rootdoc@root.cern.ch</uri>. We count on you to send us suggestions on additional topics or on the topics that need more
+<uri xmlns:xlink="mailto:rootdoc@cern.ch">rootdoc@cern.ch</uri>. We count on you to send us suggestions on additional topics or on the topics that need more
 documentation. Please send your comments, corrections, questions, and suggestions to the <code>rootdoc</code> list:
-<uri xmlns:xlink="mailto:rootdoc@root.cern.ch">rootdoc@root.cern.ch</uri></para>
+<uri xmlns:xlink="mailto:rootdoc@cern.ch">rootdoc@cern.ch</uri></para>
 <para>We attempt to give the user insight into the many capabilities of ROOT. The book begins with the elementary functionality and progresses in complexity reaching the
 specialized topics at the end. The experienced user looking for special topics may find these chapters useful: see “Networking”, “Writing a Graphical User Interface”, “Threads”,
 and “PROOF: Parallel Processing”.</para>

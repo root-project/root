@@ -29,7 +29,7 @@ language may come out. Shall I invent a new technology on C++ based STL
 or will it end-up nonsense. 
 
 1998 Jan 10
- Masharu Goto   cint@pcroot.cern.ch , gotom@jpn.hp.com
+ Masharu Goto   root-cint@cern.ch , gotom@jpn.hp.com
 
 2001/Sep/29
  gcc-3.00 is supported from cint5.15.14. However, there are many problems

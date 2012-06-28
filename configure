@@ -1678,7 +1678,7 @@ for example
 
   $0 --help | more
 
-Report bugs to <rootdev@root.cern.ch>
+Report bugs to <rootdev@cern.ch>
 EOF
 }
 

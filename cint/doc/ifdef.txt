@@ -198,5 +198,5 @@ COMMENT
 
 
 AUTHOR
-       Masaharu Goto (cint@pcroot.cern.ch)
+       Masaharu Goto (root-cint@cern.ch)
        Copyright (c) 1994~2001 Masaharu Goto

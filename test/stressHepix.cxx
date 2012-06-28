@@ -58,7 +58,7 @@
 ///****************************************************************************
 //
 // If you run this benchmark on a new platform, please report the results
-// at rootdev@root.cern.ch. Send the output shown above and also the
+// at rootdev@cern.ch. Send the output shown above and also the
 // log file stressHepix.log that contains more details about the individual
 // tests. Your results will be shown at http://root.cern.ch/root/Benchmark.html
 //

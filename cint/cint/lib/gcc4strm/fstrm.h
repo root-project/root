@@ -7,7 +7,7 @@
  * Description:
  *  Stub file for making iostream library
  ************************************************************************
- * Copyright(c) 2007  Masaharu Goto (cint@pcroot.cern.ch)
+ * Copyright(c) 2007  Masaharu Goto (root-cint@cern.ch)
  *
  * For the licensing terms see the file COPYING
  *
