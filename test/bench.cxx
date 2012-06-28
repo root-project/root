@@ -307,7 +307,7 @@ int main(int argc, char **argv)
    }
    printf("*     Reference machine pcbrun4.cern.ch  RedHat Linux 7.3                     *\n");
    printf("*         (Pentium IV 2.4 Ghz 512 Mbytes RAM, IDE disk)                       *\n");
-   printf("*           (send your results to rootdev@root.cern.ch)                       *\n");
+   printf("*           (send your results to rootdev@cern.ch)                            *\n");
    printf("*******************************************************************************\n");
    printf("* Time to fill the structures  (seconds)   Reference      cx      Reference   *\n");
    printf("*******************************************************************************\n");

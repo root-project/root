@@ -3645,7 +3645,7 @@
 *-1619, a[N][M]; *a; t767.cxx , deleted in expr.c, left in var.c
 * 1620, power operator '**' disabled, t767.cxx
 * -   , platform/freebsd* renamed
-* -   , cint mailing list 'cint@root.cern.ch' started
+* -   , cint mailing list 'root-cint@cern.ch' started
 * 1621, char* a[] = {"abc"}; bug fix t768.h, dirty solution
 *
 * 5.15.26, Jan 7 2002

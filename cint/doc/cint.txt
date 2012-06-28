@@ -242,7 +242,7 @@ SEE ALSO
 
 
 AUTHOR
-       Masaharu Goto (cint@pcroot.cern.ch)
+       Masaharu Goto (root-cint@cern.ch)
        Copyright (c) 1995~2000 Masaharu Goto
 
 

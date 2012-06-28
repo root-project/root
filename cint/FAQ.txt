@@ -45,7 +45,7 @@ CINT C++ interpreter Frequently Asked Questions
 ############################################################################
 # Is there CINT related news group or mailing list?
 
- cint@root.cern.ch is the mailng list for CINT. Send request to 
+ root-cint@cern.ch is the mailng list for CINT. Send request to 
  'Majordomo@pcroot.cern.ch' containing following line for subscription.
 
        subscribe cint [preferred mail address]
@@ -53,10 +53,10 @@ CINT C++ interpreter Frequently Asked Questions
  Archive for CINT mailing list can be accessed as follows.
    http://root.cern.ch/root/cinttalk/AboutCint.html
 
- roottalk@pcroot.cern.ch is the mailing list for ROOT/CINT framework. This
+ roottalk@cern.ch is the mailing list for ROOT/CINT framework. This
  mailing list is mixture of ROOT and CINT.
 
- rootdev@pcroot.cern.ch is a mailing list distributed for ROOT/CINT 
+ rootdev@cern.ch is a mailing list distributed for ROOT/CINT 
  developpers. 
 
  root-bugs@pcroot.cern.ch is an entry for ROOT/CINT bug reporting system.

@@ -11,7 +11,7 @@ if(CPACK_GENERATOR MATCHES "NSIS")
   set(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY}")
   set(CPACK_NSIS_HELP_LINK "http:\\\\root.cern.ch")
   set(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\root.cern.ch\\drupal\\content\\about")
-  set(CPACK_NSIS_CONTACT "roottalk@root.cern.ch")
+  set(CPACK_NSIS_CONTACT "roottalk@cern.ch")
   set(CPACK_NSIS_MODIFY_PATH ON)
   # Register .root file type
   set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "

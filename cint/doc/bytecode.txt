@@ -14,7 +14,7 @@ choose level of bytecode optimization by '-O[n]' command line option or
   O4   :  + function called within a loop is bytecode compiled
   O5   : All interpreted functions will be bytecode compiled when called
 
-Default is O4. You need to consult cint@pcroot.cern.ch when using O5.
+Default is O4. You need to consult root-cint@cern.ch when using O5.
 There is another level O10 , but this can be only used with special care.
 
  (Not recommended, only experimental)

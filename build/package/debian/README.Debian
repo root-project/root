@@ -153,7 +153,7 @@ will happily answer questions in that forum.
 [1] http://root.cern.ch
 [2] http://root.cern.ch/root/htmldoc/ClassIndex.html
 [3] http://root.cern.ch/root/UsersGuide.html
-[4] mailto:roottalk@root.cern.ch
+[4] mailto:roottalk@cern.ch
 [5] http://root.cern.ch/root/AboutRootTalk.html
 
 
@@ -466,7 +466,7 @@ If you didn't get the packages from the official repositories, please
 do not use the regular Debian bug tracking system.  Instead, please
 send bug reports to the Debian GNU/Linux package maintainer
 <cholm@nbi.dk> and possibly also the ROOT mailing list
-<roottalk@root.cern.ch>. 
+<roottalk@cern.ch>. 
 
 Experimental Packages:
 ======================

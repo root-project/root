@@ -6,7 +6,7 @@
  * Description:
  *  definition of the dictionary API version
  ************************************************************************
- * Copyright(c) 1995~2008  Masaharu Goto (cint@pcroot.cern.ch)
+ * Copyright(c) 1995~2008  Masaharu Goto (root-cint@cern.ch)
  *
  * For the licensing terms see the file COPYING
  *

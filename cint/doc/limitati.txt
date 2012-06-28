@@ -709,7 +709,7 @@ Limitation of CINT
   because the 'MyNtuple' inside the function call is not properly parsed.
 
 # BUGS
-   Report bugs and requirements to cint@pcroot.cern.ch. Bugs tend to 
+   Report bugs and requirements to root-cint@cern.ch. Bugs tend to 
   be fixed very quickly. Any kind of comments or messages will be appreciated.
 
 # SEE ALSO
@@ -717,5 +717,5 @@ Limitation of CINT
 
 # AUTHOR
 
-  Masaharu Goto (cint@pcroot.cern.ch)
+  Masaharu Goto (root-cint@cern.ch)
   Copyright (c) 1995~2002 Masaharu Goto

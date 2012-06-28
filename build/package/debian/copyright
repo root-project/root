@@ -260,7 +260,7 @@ copyright statements.  These are reproduced below.
     except where otherwise noted in this file.
 
   cint/stl/bstring.h
-    Copyright(c) 1995~2006  Masaharu Goto (cint@pcroot.cern.ch)
+    Copyright(c) 1995~2006  Masaharu Goto (root-cint@cern.ch)
 
     Same license as the rest of the cint directory. 
 

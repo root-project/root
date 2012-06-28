@@ -6,7 +6,7 @@ cint 5.18.00         (CINT is pronounced "C-int")
 
  Author                 Masaharu Goto
  Copyright(c) 1995~2010 Masaharu Goto (gotom@hanno.jp)
- Mailing list           cint@root.cern.ch
+ Mailing list           root-cint@cern.ch
 
 
 Note: Search 'Installation' for installation instruction.
@@ -102,7 +102,7 @@ Getting the latest package =================================================
  see http://root.cern.ch/twiki/bin/view/ROOT/CINT
 
 CINT mailing list ==========================================================
-   cint@root.cern.ch
+   root-cint@cern.ch
      Send request to 'Majordomo@pcroot.cern.ch' containing following line for
      subscription.
 
@@ -209,7 +209,7 @@ The Author ===============================================================
  Masaharu Goto
 
   Please contact the author for bugs and requests by sending an e-mail to
- cint@root.cern.ch. You can also send message to 'rootdev@root.cern.ch' 
- or 'roottalk@root.cern.ch' for generic questions.
+ root-cint@cern.ch. You can also send message to 'rootdev@cern.ch' 
+ or 'roottalk@cern.ch' for generic questions.
 
   Bugs are tend to be fixed very quickly. (Normally 1-2 days.) 

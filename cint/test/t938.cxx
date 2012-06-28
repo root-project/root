@@ -1,6 +1,6 @@
 /* -*- C++ -*- */
 /*************************************************************************
- * Copyright(c) 1995~2005  Masaharu Goto (cint@pcroot.cern.ch)
+ * Copyright(c) 1995~2005  Masaharu Goto (root-cint@cern.ch)
  *
  * For the licensing terms see the file COPYING
  *
@@ -42,7 +42,7 @@ int main() {
 There are 2 problems.  To see the second problem I commented out the 
 line defining 'cont' after the first .L.
 
-cint : C/C++ interpreter  (mailing list 'cint@root.cern.ch')
+cint : C/C++ interpreter  (mailing list 'root-cint@cern.ch')
    Copyright(c) : 1995~2002 Masaharu Goto 
    revision     : 5.15.61, Oct 6 2002 by M.Goto
 
