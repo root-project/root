@@ -1443,7 +1443,7 @@ using namespace Cint::Internal;
  * user specified pragma statement
  **************************************************************************/
 extern "C" {
-   typedef void (*G__AppPragma_func_t)(char*);
+   typedef void (*G__AppPragma_func_t)(const char*);
 }
 
 struct G__AppPragma {

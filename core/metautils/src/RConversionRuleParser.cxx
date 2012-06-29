@@ -803,7 +803,7 @@ namespace ROOT
    }
 
    //--------------------------------------------------------------------------
-   void ProcessReadPragma( char* args )
+   void ProcessReadPragma( const char* args )
    {
       // I am being called when a read pragma is encountered
 
@@ -834,7 +834,7 @@ namespace ROOT
    }
 
    //--------------------------------------------------------------------------
-   void ProcessReadRawPragma( char* args )
+   void ProcessReadRawPragma( const char* args )
    {
       // I am being called then a readraw pragma is encountered
 

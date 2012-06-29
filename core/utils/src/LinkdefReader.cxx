@@ -22,6 +22,7 @@
 #include <iostream>
 #include "LinkdefReader.h"
 #include "SelectionRules.h"
+#include "RConversionRuleParser.h"
 
 #include "llvm/Support/raw_ostream.h"
 
@@ -773,7 +774,7 @@ public:
       } else {
          llvm::StringRef rule_text(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
          
-         ProcessReadPragma( rule_text.str().c_str() );
+         ROOT::ProcessReadPragma( rule_text.str().c_str() );
          //std::cerr << "Warning: #pragma read not yet handled: " << include.str() << "\n";
          //         if (!fOwner.AddInclude(include))
          //         {

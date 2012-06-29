@@ -86,12 +86,12 @@ namespace ROOT
    //---------------------------------------------------------------------------
    // Parse read pragma
    //---------------------------------------------------------------------------
-   void ProcessReadPragma( char* args );
+   void ProcessReadPragma( const char* args );
 
    //---------------------------------------------------------------------------
    // Parse readraw pragma
    //---------------------------------------------------------------------------
-   void ProcessReadRawPragma( char* args );
+   void ProcessReadRawPragma( const char* args );
 }
 #endif // !defined(__CINT__)
 
