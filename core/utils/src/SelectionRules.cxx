@@ -365,7 +365,9 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FieldDecl* D) con
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FunctionDecl* D) const
 {  
-
+   // Currently rootcling does not need any information about function.
+   return 0;
+#if 0
    std::string str_name;   // name of the Decl
    std::string qual_name;  // fully qualified name of the Decl   
    GetDeclName(D, str_name, qual_name);
@@ -374,6 +376,7 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FunctionDecl* D) 
       return IsFunSelected(D, qual_name);
    else
       return IsLinkdefFunSelected(D, qual_name);
+#endif
 }
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D) const
@@ -397,6 +400,7 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D) const
       return IsDeclSelected(llvm::dyn_cast<clang::EnumDecl>(D));
    case clang::Decl::Var:
       return IsDeclSelected(llvm::dyn_cast<clang::VarDecl>(D));
+#if ROOTCLING_NEEDS_FUNCTIONS_SELECTION
    case clang::Decl::Function:
       return IsDeclSelected(llvm::dyn_cast<clang::FunctionDecl>(D));
    case clang::Decl::CXXMethod:
@@ -415,6 +419,7 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D) const
       }
       return IsMemberSelected(D, str_name);
    }
+#endif
    case clang::Decl::Field:
       return IsDeclSelected(llvm::dyn_cast<clang::FieldDecl>(D));
    default:
@@ -422,9 +427,9 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D) const
       return 0;
    }
 
-   std::string str_name;   // name of the Decl
-   std::string qual_name;  // fully qualified name of the Decl   
-   GetDeclName(D, str_name, qual_name);
+   // std::string str_name;   // name of the Decl
+   // std::string qual_name;  // fully qualified name of the Decl   
+   // GetDeclName(D, str_name, qual_name);
    // fprintf(stderr,"IsDeclSelected: %s %s\n", str_name.c_str(), qual_name.c_str());
 }
 
@@ -497,6 +502,11 @@ bool SelectionRules::GetFunctionPrototype(clang::Decl* D, std::string& prototype
       }
       
       prototype = "(" + prototype + ")";
+      // {
+      //    std::string name,qual_name;
+      //    GetDeclName(D,name,qual_name);
+      //    std::cout << "For " << qual_name << " have prototype: '" << prototype << "'\n";
+      // }
       return true;
    }
    else {
@@ -1623,6 +1633,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
          }
       }
    }
+#if Function_rules_are_not_yet_useful_for_cling
    if (!fFunctionSelectionRules.empty()) {
       for(std::list<FunctionSelectionRule>::const_iterator it = fFunctionSelectionRules.begin(); 
           it != fFunctionSelectionRules.end(); ++it) {
@@ -1651,6 +1662,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
          }
       }
    }
+#endif
    if (!fEnumSelectionRules.empty()) {
       for(std::list<EnumSelectionRule>::const_iterator it = fEnumSelectionRules.begin(); 
           it != fEnumSelectionRules.end(); ++it) {

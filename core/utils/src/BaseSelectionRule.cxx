@@ -173,19 +173,33 @@ bool BaseSelectionRule::IsSelected (const clang::NamedDecl *decl, const std::str
       has_name_rule = true;
    }
    
+#if NOT_WORKING_AND_CURRENTLY_NOT_NEEDED
    std::string proto_name_value;
    bool has_proto_name_attribute = GetAttributeValue("proto_name", proto_name_value);
    std::string proto_pattern_value;
    bool has_proto_pattern_attribute = GetAttributeValue("proto_pattern", proto_pattern_value);
    
    // do we have matching against the proto_name (or proto_pattern)  attribute and if yes - select or veto
+   // The following selects functions on whether the requested prototype exactly matches the
+   // prototype issued by SelectionRules::GetFunctionPrototype which relies on
+   //    ParmVarDecl::getType()->getAsString()
+   // to get the type names.  Currently, this does not print the prototype in the usual
+   // human (written) forms.   For example:
+   //   For Hash have prototype: '(const class TString &)'
+   //   For Hash have prototype: '(const class TString*)'
+   //   For Hash have prototype: '(const char*)'
+   // In addition, the const can legally be in various place in the type name and thus
+   // a string based match will be hard to work out (it would need to normalize both
+   // the user input string and the clang provided string).
+   // Using lookup form cling would be probably be a better choice.
    bool has_proto_rule = false;
    if (!prototype.empty())
       has_proto_rule = (has_proto_name_attribute && 
                         (proto_name_value==prototype)) ||
       (has_proto_pattern_attribute && 
        CheckPattern(prototype, proto_pattern_value, fSubPatterns, isLinkdef));
-   
+#endif
+
    // do we have matching against the file_name (or file_pattern) attribute and if yes - select or veto
    std::string file_name_value;
    bool has_file_name_attribute = GetAttributeValue("file_name", file_name_value);
@@ -244,9 +258,13 @@ bool BaseSelectionRule::IsSelected (const clang::NamedDecl *decl, const std::str
     */
    
    bool has_rule = ((has_file_name_attribute||has_file_pattern_attribute) && has_file_rule) || /* we have source_file_name */
-      has_name_rule || /* OR we have explicit name rule */
+      has_name_rule /* OR we have explicit name rule */
+#if ROOTCLING_NEED_FUNCTION_RULES
+      // Current rootcling does not function rules.
       has_proto_rule;  /* OR we have explicit prototype rule */
-   
+#else
+   ;
+#endif
    
    // if has_rule is true it means that we have a selection rule match for the Decl (represented here by it's name, 
    // prototype or source file name)
