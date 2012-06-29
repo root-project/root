@@ -109,7 +109,7 @@ var d, key_tree;
 
    JSROOTPainter.displayHistogram = function(histo, idx, options) {
       var i, j;
-      var logx = false, logy = false, logz = false, grix = true, gridy = true;
+      var logx = false, logy = false, logz = false, gridx = true, gridy = true;
       var time_scalex = 1, time_scaley = 1;
       if (options && typeof(options) != 'undefined') {
          logx = options[logx];
@@ -509,7 +509,7 @@ var d, key_tree;
    };
 
    JSROOTPainter.displayGraph = function(graph, idx, options) {
-      var logx = false, logy = false, logz = false, grix = true, gridy = true;
+      var logx = false, logy = false, logz = false, gridx = true, gridy = true;
       var scalex = 1, scaley = 1;
       if (options && typeof(options) != 'undefined') {
          logx = options[logx];
