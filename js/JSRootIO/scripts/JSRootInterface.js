@@ -120,7 +120,7 @@ function showDirectory(dir_name, cycle, dir_id) {
    gFile.ReadDirectory(dir_name, cycle, dir_id);
 };
 
-function displayObject(obj, cycle, idx) {
+function displayObject(obj, cycle, idx, opt) {
    if (!obj['_typename'].match(/\bTH1/) &&
        !obj['_typename'].match(/\bTH2/) &&
        obj['_typename'] != 'JSROOTIO.TGraph') {
@@ -130,7 +130,7 @@ function displayObject(obj, cycle, idx) {
    var entryInfo = "<h5 id=\""+uid+"\"><a> " + obj['fName'] + ";" + cycle + "</a>&nbsp; </h5>\n";
    entryInfo += "<div id='histogram" + idx + "'>\n";
    $("#report").append(entryInfo);
-   JSROOTPainter.displayObject(obj, idx);
+   JSROOTPainter.displayObject(obj, idx, opt);
    addCollapsible('#'+uid);
 };
 
