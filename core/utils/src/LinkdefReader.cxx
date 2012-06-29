@@ -771,9 +771,10 @@ public:
       if (end.is(clang::tok::unknown)) {
          Error("Error: unknown token",tok);
       } else {
-         llvm::StringRef include(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
+         llvm::StringRef rule_text(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
          
-         std::cerr << "Warning: #pragma read not yet handled: " << include.str() << "\n";
+         ProcessReadPragma( rule_text.str().c_str() );
+         //std::cerr << "Warning: #pragma read not yet handled: " << include.str() << "\n";
          //         if (!fOwner.AddInclude(include))
          //         {
          //            Error("",tok);
