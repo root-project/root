@@ -388,11 +388,14 @@ namespace cling {
     ///\brief Lookup a class declaration by name, starting from the global
     /// namespace, also handles struct, union, namespace, and enum.
     ///
-    ///\param [in] className - The name of the class, struct, union,
-    ///                        namespace, or enum to lookup.
+    ///\param [in] className   - The name of the class, struct, union,
+    ///                          namespace, or enum to lookup.
+    ///\param [out] resultType - The type of the class, struct, union,
+    ///                          or enum to lookup; NULL otherwise.
     ///\returns The found declaration or null.
     ///
-    const clang::Decl* lookupScope(const std::string& className);
+    const clang::Decl* lookupScope(const std::string& className,
+                                   const clang::Type** resultType = 0);
 
     const clang::FunctionDecl* lookupFunctionProto(const clang::Decl* scopeDecl,
                                              const std::string& funcName,

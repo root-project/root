@@ -744,11 +744,18 @@ namespace cling {
   }
 
   const Decl*
-  Interpreter::lookupScope(const std::string& className)
+  Interpreter::lookupScope(const std::string& className,
+                           const Type** resultType /* = 0 */)
   {
     //
     //  Our return value.
     //
+    const Type* TheType = 0;
+    const Type** setResultType = &TheType;
+    if (resultType)
+      setResultType = resultType;
+    *setResultType = 0;
+
     const Decl* TheDecl = 0;
     //
     //  Some utilities.
@@ -850,8 +857,8 @@ namespace cling {
             case NestedNameSpecifier::TypeSpecWithTemplate: {
                 // Type name qualified with "template".
                 // Note: Do we need to check for a dependent type here?
-                const Type* Ty = NNS->getAsType();
-                const TagType* TagTy = Ty->getAs<TagType>();
+                *setResultType = NNS->getAsType();
+                const TagType* TagTy = (*setResultType)->getAs<TagType>();
                 if (TagTy) {
                   // It is a class, struct, or union.
                   TagDecl* TD = TagTy->getDecl();
@@ -915,6 +922,7 @@ namespace cling {
         if (const EnumType* ET = QT->getAs<EnumType>()) {
            EnumDecl* ED = ET->getDecl();
            TheDecl = ED->getDefinition();
+           *setResultType = QT.getTypePtr();
         }
       }
     }
