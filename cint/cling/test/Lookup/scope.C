@@ -4,9 +4,11 @@
 #include "clang/AST/Type.h"
 
 typedef int Int_t;
-.rawInput
+.rawInput 1
 template <typename T> struct W { T member; };
-.rawInput
-const Type* resType = 0;
-gCling->lookup("W<Int_t>");
-resType->dump(); // CHECK: W<Int_t>
+.rawInput 0
+const clang::Type* resType = 0;
+gCling->lookupScope("W<Int_t>", &resType);
+//resType->dump(); 
+clang::QualType(resType,0).getAsString().c_str()
+//CHECK: (const char * const) "W<Int_t>"
