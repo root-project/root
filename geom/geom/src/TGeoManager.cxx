@@ -825,16 +825,23 @@ TGeoNavigator *TGeoManager::AddNavigator()
    return nav;
 }   
 
+TTHREAD_TLS_DECLARE(TGeoNavigator*, tnav);
+
 //_____________________________________________________________________________
 TGeoNavigator *TGeoManager::GetCurrentNavigator() const
 {
 // Returns current navigator for the calling thread.
+   TTHREAD_TLS_INIT(TGeoNavigator*,tnav,0);
    if (!fMultiThread) return fCurrentNavigator;
+   TGeoNavigator *nav = TTHREAD_TLS_GET(TGeoNavigator*,tnav);
+   if (nav) return nav;
    Long_t threadId = TThread::SelfId();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end()) return 0;
    TGeoNavigatorArray *array = it->second;
-   return array->GetCurrentNavigator();
+   nav = array->GetCurrentNavigator();
+   TTHREAD_TLS_SET(TGeoNavigator*,tnav,nav);
+   return nav;
 }
 
 //_____________________________________________________________________________
