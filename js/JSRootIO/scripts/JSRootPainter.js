@@ -751,8 +751,7 @@ var d, key_tree;
       var k = 1;
       var tree_link = "";
       for (var i=0; i<keys.length; ++i) {
-//         tree_link = "javascript: //class "+keys[i]['className'];
-         var message = "Coming soon... " + keys[i]["className"]+" is not yet implemented.";
+         var message = keys[i]["className"]+" is not yet implemented.";
          tree_link = "javascript:  alert('" + message + "')";
          var node_img = source_dir+'img/page.gif';
          if (keys[i]['className'].match(/\bTH1/)  ||
@@ -782,7 +781,7 @@ var d, key_tree;
          }
          else if (keys[i]['className'].match('TGeoManager') ||
                   keys[i]['className'].match('TGeometry')) {
-            tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
+//            tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
             node_img = source_dir+'img/folder.gif';
          }
          else if (keys[i]['className'].match('TCanvas')) {
@@ -807,13 +806,11 @@ var d, key_tree;
       var tree_link = "";
       var content = "<p><a href='javascript: key_tree.openAll();'>open all</a> | <a href='javascript: key_tree.closeAll();'>close all</a></p>";
       var k = key_tree.aNodes.length;
-      //var dir_name = key_tree.aNodes[dir_id]['name'];
       var dir_name = key_tree.aNodes[dir_id]['title'];
       for (var i=0; i<keys.length; ++i) {
          var disp_name = keys[i]['name'];
          keys[i]['name'] = dir_name + "/" + keys[i]['name'];
-//         tree_link = "javascript: //class " + keys[i]['className'];
-         var message = "Coming soon... " + keys[i]["className"]+" is not yet implemented.";
+         var message = keys[i]["className"]+" is not yet implemented.";
          tree_link = "javascript:  alert('" + message + "')";
          var node_img = source_dir+'img/page.gif';
          var node_title = keys[i]['className'];
