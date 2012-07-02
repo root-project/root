@@ -81,6 +81,9 @@ var d, key_tree;
       'rgb(147,104,112)',
       'rgb(211,89,84)');
 
+   // Initialize colors of the default palette
+   var default_palette = new Array();
+
    var root_markers = new Array(
       'circle', 'circle', 'diamond', 'diamond', 'circle', 'diamond', 'circle',
       'circle', 'circle', 'circle', 'circle', 'circle', 'circle', 'circle',
@@ -92,6 +95,104 @@ var d, key_tree;
    JSROOTPainter = {};
 
    JSROOTPainter.version = "1.4 2012/02/24";
+
+   /**
+    * Converts an HSL color value to RGB. Conversion formula
+    * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+    * Assumes h, s, and l are contained in the set [0, 1] and
+    * returns r, g, and b in the set [0, 255].
+    *
+    * @param   Number  h       The hue
+    * @param   Number  s       The saturation
+    * @param   Number  l       The lightness
+    * @return  Array           The RGB representation
+    */
+   JSROOTPainter.HLStoRGB = function(h, l, s) {
+      var r, g, b;
+      if (s == 0) {
+         r = g = b = l; // achromatic
+      } else {
+         function hue2rgb(p, q, t){
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1/6) return p + (q - p) * 6 * t;
+            if (t < 1/2) return q;
+            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+         }
+         var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+         var p = 2 * l - q;
+         r = hue2rgb(p, q, h + 1/3);
+         g = hue2rgb(p, q, h);
+         b = hue2rgb(p, q, h - 1/3);
+      }
+      return 'rgb('+Math.round(r * 255)+','+Math.round(g * 255)+','+Math.round(b * 255)+')';
+   };
+
+   JSROOTPainter.GetMinMax = function(hist, what) {
+      if (what == 'max' && hist['fMaximum'] != -1111) return hist['fMaximum'];
+      if (what == 'min' && hist['fMinimum'] != -1111) return hist['fMinimum'];
+      var bin, binx, biny, binz;
+      var xfirst  = 1;;
+      var xlast   = hist['fXaxis']['fNbins'];
+      var yfirst  = 1;
+      var ylast   = hist['fYaxis']['fNbins'];
+      var zfirst  = 1;
+      var zlast   = hist['fZaxis']['fNbins'];
+      var maximum = Number.NEGATIVE_INFINITY;
+      var minimum = Number.POSITIVE_INFINITY;
+      var tmp_value;
+      for (binz=zfirst;binz<=zlast;binz++) {
+         for (biny=yfirst;biny<=ylast;biny++) {
+            for (binx=xfirst;binx<=xlast;binx++) {
+               //bin = hist.GetBin(binx,biny,binz);
+               //tmp_value = hist.GetBinContent(bin);
+               tmp_value = hist.GetBinContent(binx, biny);
+               if (tmp_value > maximum) maximum = tmp_value;
+               if (tmp_value < minimum) minimum = tmp_value;
+            }
+         }
+      }
+      hist['fMaximum'] = maximum;
+      hist['fMinimum'] = minimum;
+      if (what == 'max') return maximum;
+      if (what == 'min') return minimum;
+   }
+
+   JSROOTPainter.GetValueColor = function(hist, zc, options) {
+      var wmin = this.GetMinMax(hist, 'min');
+      var wmax = this.GetMinMax(hist, 'max');
+      var wlmin = wmin;
+      var wlmax = wmax;
+      var ndivz = hist['fContour'].length;
+      var scale = ndivz / (wlmax - wlmin);
+      if (options && options[logz]) {
+         if (wmin <= 0 && wmax > 0) wmin = Math.min(1.0, 0.001 * wmax);
+         wlmin = Math.log(wmin)/Math.log(10);
+         wlmax = Math.log(wmax)/Math.log(10);
+      }
+      if (default_palette.length == 0) {
+         var saturation = 1;
+         var lightness = 0.5;
+         var maxHue = 280;
+         var minHue = 0;
+         var maxPretty = 50;
+         var hue;
+         for (var i=0 ; i<maxPretty ; i++) {
+            hue = (maxHue - (i + 1) * ((maxHue - minHue) / maxPretty))/360.0;
+            var rgbval = this.HLStoRGB(hue, lightness, saturation);
+            default_palette.push(rgbval);
+         }
+      }
+      if (options && options[logz]) zc = Math.log(zc)/Math.log(10);
+      if (zc < wlmin) zc = wlmin;
+      var ncolors = default_palette.length
+      var color = Math.round(0.01 + (zc - wlmin) * scale);
+      var theColor = Math.round((color + 0.99) * ncolors / ndivz);
+      var icol = theColor % ncolors;
+      if (icol < 0) icol = 0;
+      return default_palette[icol];
+   };
 
    JSROOTPainter.displayObject = function(obj, idx, options) {
       if (obj['_typename'].match(/\bTH1/) ||
@@ -333,20 +434,30 @@ var d, key_tree;
          var scalebin = 20.0 * ((maxbin - minbin) / (maxbin * maxbin));
          var render_to = 'histogram' + idx;
          var bin_data = new Array();
+         var fill_color, line_color, bin_size;
          for (i=0; i<nbinsx; ++i) {
             for (var j=0; j<nbinsy; ++j) {
                var bin_content = histo.GetBinContent(i, j);
                if (bin_content > minbin) {
+                  if (histo['fOption'] == 'colz') {
+                     fill_color = line_color = this.GetValueColor(histo, bin_content, options);
+                     bin_size = 1.8;
+                  }
+                  else {
+                     fill_color = fillcolor;
+                     line_color = linecolor;
+                     bin_size = Math.sqrt(bin_content*scalebin);
+                  }
                   var point = {
                      color:null,
                      events:null,
                      id:null,
                      marker:{
                         enabled:true,
-                        fillColor:fillcolor,
-                        lineColor:linecolor,
+                        fillColor:fill_color,
+                        lineColor:line_color,
                         lineWidth:1,
-                        radius:Math.sqrt(bin_content*scalebin),
+                        radius:bin_size,
                         states:null,
                         symbol:"square" // null
                      },
