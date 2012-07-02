@@ -226,6 +226,12 @@
 //Cursors.
 @property (nonatomic, assign) ECursor fCurrentCursor;
 
+//DND
+@property (nonatomic, assign) BOOL fIsDNDAware;
+
+- (NSDragOperation) draggingEntered : (id<NSDraggingInfo>) sender;
+- (BOOL) performDragOperation : (id<NSDraggingInfo>) sender;
+
 @end
 
 

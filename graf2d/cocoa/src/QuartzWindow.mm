@@ -1135,8 +1135,8 @@ void print_mask_info(ULong_t mask)
    closeEvent.fWindow = fContentView.fID;
    closeEvent.fType = kClientMessage;
    closeEvent.fFormat = 32;//Taken from GUI classes.
-   closeEvent.fHandle = TGCocoa::kIA_DELETE_WINDOW;
-   closeEvent.fUser[0] = TGCocoa::kIA_DELETE_WINDOW;
+   closeEvent.fHandle = TGCocoa::fgDeleteWindowAtom;
+   closeEvent.fUser[0] = TGCocoa::fgDeleteWindowAtom;
    //Place it into the queue.
    TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "windowShouldClose, gVirtualX is either null or has a type different from TGCocoa");
@@ -1226,6 +1226,7 @@ void print_mask_info(ULong_t mask)
 @synthesize fOwnerEvents;
 @synthesize fSnapshotDraw;
 @synthesize fCurrentCursor;
+@synthesize fIsDNDAware;
 
 //______________________________________________________________________________
 - (id) initWithFrame : (NSRect) frame windowAttributes : (const SetWindowAttributes_t *)attr
@@ -2308,6 +2309,33 @@ void print_mask_info(ULong_t mask)
       [self addCursorRect : self.visibleRect cursor : cursor];
    else
       [super resetCursorRects];
+}
+
+//DND
+//______________________________________________________________________________
+- (NSDragOperation) draggingEntered : (id<NSDraggingInfo>) sender
+{
+   NSPasteboard * const pasteBoard = [sender draggingPasteboard];
+   const NSDragOperation sourceDragMask = [sender draggingSourceOperationMask];
+   
+   if ([[pasteBoard types] containsObject : NSFilenamesPboardType] && (sourceDragMask & NSDragOperationCopy))
+      return NSDragOperationCopy;
+      
+   return NSDragOperationNone;
+}
+
+//______________________________________________________________________________
+- (BOOL) performDragOperation : (id<NSDraggingInfo>) sender
+{
+   NSPasteboard * const pasteBoard = [sender draggingPasteboard];
+   const NSDragOperation sourceDragMask = [sender draggingSourceOperationMask];
+   
+   if ([[pasteBoard types] containsObject : NSFilenamesPboardType] && (sourceDragMask & NSDragOperationCopy)) {
+      NSLog(@"Drop event!");
+      //Create client message and send it.
+   }
+
+   return YES;//Always ok, even if file type is not supported - no need in "animation".
 }
 
 @end

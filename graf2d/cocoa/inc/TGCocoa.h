@@ -426,6 +426,7 @@ protected:
 
 private:
    bool MakeProcessForeground();
+   Atom_t FindAtom(const std::string &atomName, bool addIfNotFound);
 
    bool fForegroundProcess;
    std::vector<GCValues_t> fX11Contexts;
@@ -443,7 +444,11 @@ private:
    //
    std::map<std::string, Atom_t> fNameToAtom;
    std::vector<std::string> fAtomToName;
-      
+
+public:
+   static Atom_t fgDeleteWindowAtom;
+
+private:
    //I'd prefer to use = delete syntax from C++0x11, but this file is processed by CINT.
    TGCocoa(const TGCocoa &rhs);
    TGCocoa &operator = (const TGCocoa &rhs);

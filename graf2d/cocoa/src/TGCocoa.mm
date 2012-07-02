@@ -41,8 +41,6 @@
 #include "TColor.h"
 #include "TROOT.h"
 
-ClassImp(TGCocoa)
-
 //Style notes: I'm using a lot of asserts to check pre-conditions - mainly function parameters.
 //In asserts, expression always looks like 'p != 0' for "C++ pointer" (either object of built-in type
 //or C++ class), and 'p != nil' for object from Objective-C. There is no difference, this is to make
@@ -227,7 +225,19 @@ bool ParentRendersToChild(NSView<X11Window> *child)
           !child.fIsOverlapped;
 }
 
+//______________________________________________________________________________
+bool IsImageOrPixmap(NSObject<X11Drawable> *testObj)
+{
+   assert(testObj != 0 && "IsImageOrPixmap, testObj parameter is null");
+
+   return [testObj isKindOfClass : [QuartzPixmap class]] || [testObj isKindOfClass : [QuartzImage class]];
 }
+
+}
+
+ClassImp(TGCocoa)
+
+Atom_t TGCocoa::fgDeleteWindowAtom = 0;
 
 //______________________________________________________________________________
 TGCocoa::TGCocoa()
@@ -239,6 +249,7 @@ TGCocoa::TGCocoa()
               fCurrentMessageID(1)
 {
    fPimpl.reset(new Details::CocoaPrivate);
+   fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
 }
 
 //______________________________________________________________________________
@@ -252,6 +263,7 @@ TGCocoa::TGCocoa(const char *name, const char *title)
               fCurrentMessageID(1)
 {
    fPimpl.reset(new Details::CocoaPrivate);
+   fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
 }
 
 //______________________________________________________________________________
@@ -518,6 +530,10 @@ void TGCocoa::UpdateWindow(Int_t /*mode*/)
    //initial state of X11Buffer can not be restored, but it still must be in some valid state.
    
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "UpdateWindow, no window was selected, can not update 'root' window");
+
+   if (IsImageOrPixmap(fPimpl->GetDrawable(fSelectedDrawable)))//Have no idea, why this can happen with ROOT - done by TGDNDManager :(
+      return; //TODO: check, when DND is implemented, if this still is required.
+
    
    NSObject<X11Window> *window = fPimpl->GetWindow(fSelectedDrawable);
 
@@ -3235,13 +3251,17 @@ Atom_t  TGCocoa::InternAtom(const char *name, Bool_t onlyIfExist)
    //client message (close window) work.
 
    assert(name != 0 && "InternAtom, atomName parameter is null");
-   
-   const std::string atomName(name);
+   return FindAtom(name, !onlyIfExist);
+}
+
+//______________________________________________________________________________
+Atom_t TGCocoa::FindAtom(const std::string &atomName, bool addIfNotFound)
+{
    const std::map<std::string, Atom_t>::const_iterator it = fNameToAtom.find(atomName);
    
    if (it != fNameToAtom.end())
       return it->second;
-   else if (!onlyIfExist) {
+   else if (addIfNotFound) {
       //Create a new atom.
       fAtomToName.push_back(atomName);
       fNameToAtom[atomName] = Atom_t(fAtomToName.size());
@@ -3648,11 +3668,24 @@ void TGCocoa::ChangeProperties(Window_t, Atom_t, Atom_t, Int_t, UChar_t *, Int_t
 }
 
 //______________________________________________________________________________
-void TGCocoa::SetDNDAware(Window_t, Atom_t *)
+void TGCocoa::SetDNDAware(Window_t windowID, Atom_t *typeList)
 {
    // Add XdndAware property and the list of drag and drop types to the
    // Window win.
+   assert(windowID > (Window_t)fPimpl->GetRootWindowID() && "SetDNDAware, windowID parameter is a bad window id");
+   assert([fPimpl->GetDrawable(windowID) isKindOfClass : [QuartzView class]] || [fPimpl->GetDrawable(windowID) isKindOfClass : [QuartzWindow class]] &&
+          "SetDNDAware, window, specified by windowID is neither a QuartzView, nor a QuartzWindow");
+   
+   const Util::AutoreleasePool pool;
+   
+   QuartzView *view = (QuartzView *)fPimpl->GetWindow(windowID).fContentView;
+   NSArray *supportedTypes = [NSArray arrayWithObjects : NSFilenamesPboardType, nil];
+   [view registerForDraggedTypes : supportedTypes];
+   view.fIsDNDAware = YES;
 
+   if (typeList) {
+      //fPimpl->AddProperty(windowID, InternAtom("XdndAware"), typeList);
+   }
 }
 
 //______________________________________________________________________________
@@ -3672,12 +3705,15 @@ Window_t TGCocoa::FindRWindow(Window_t, Window_t, Window_t, int, int, int)
 }
 
 //______________________________________________________________________________
-Bool_t TGCocoa::IsDNDAware(Window_t, Atom_t *)
+Bool_t TGCocoa::IsDNDAware(Window_t windowID, Atom_t * /*typeList*/)
 {
-   // Checks if the Window is DND aware, and knows any of the DND formats
-   // passed in argument.
+   //Checks if the Window is DND aware. typeList is ignored.
+   assert(windowID > (Window_t)fPimpl->GetRootWindowID() && "IsDNDAware, windowID parameter is a bad window id");
+   assert([fPimpl->GetDrawable(windowID) isKindOfClass : [QuartzView class]] || [fPimpl->GetDrawable(windowID) isKindOfClass : [QuartzWindow class]] &&
+          "IsDNDAware, window, specified by windowID is neither a QuartzView, nor a QuartzWindow");
 
-   return kFALSE;
+   QuartzView *view = (QuartzView *)fPimpl->GetWindow(windowID).fContentView;
+   return view.fIsDNDAware;
 }
 
 //______________________________________________________________________________
