@@ -43,8 +43,8 @@ ClassImp(THnBase);
 //______________________________________________________________________________
 THnBase::THnBase(const char* name, const char* title, Int_t dim,
                  const Int_t* nbins, const Double_t* xmin, const Double_t* xmax):
-   TNamed(name, title), fNdimensions(dim), fAxes(dim), fEntries(0), fTsumw(0),
-   fTsumw2(-1.), fTsumwx(dim), fTsumwx2(dim),
+   TNamed(name, title), fNdimensions(dim), fAxes(dim), fBrowsables(dim),
+   fEntries(0), fTsumw(0), fTsumw2(-1.), fTsumwx(dim), fTsumwx2(dim),
    fIntegral(0), fIntegralStatus(kNoInt)
 {
    // Construct a THnBase with "dim" dimensions,
@@ -1383,7 +1383,7 @@ void THnBase::Browse(TBrowser *b)
    // dimension.
    if (fBrowsables.IsEmpty()) {
       for (Int_t dim = 0; dim < fNdimensions; ++dim) {
-         fBrowsables[dim] = new ROOT::THnBaseBrowsable(this, dim);
+         fBrowsables.AddAtAndExpand(new ROOT::THnBaseBrowsable(this, dim), dim);
       }
       fBrowsables.SetOwner();
    }
