@@ -2331,8 +2331,42 @@ void print_mask_info(ULong_t mask)
    const NSDragOperation sourceDragMask = [sender draggingSourceOperationMask];
    
    if ([[pasteBoard types] containsObject : NSFilenamesPboardType] && (sourceDragMask & NSDragOperationCopy)) {
-      NSLog(@"Drop event!");
-      //Create client message and send it.
+#if 0
+      //Gdk on windows creates three events on file drop: XdndEnter, XdndPosition, XdndDrop.
+      //1. Dnd enter.
+      Event_t event1 = {};
+      event1.fType = kClientMessage;
+      event1.fWindow = fID;
+      event1.fHandle = gVirtualX->InternAtom("XdndEnter", kFALSE);
+      event1.fFormat = 0;
+      event1.fUser[0] = long(fID);
+      event1.fUser[2] = gVirtualX->InternAtom("text/uri-list", kFALSE);
+      //
+      gVirtualX->SendEvent(fID, &event1);
+
+      //2. Dnd position.
+      Event_t event2 = {};
+      event2.fType = kClientMessage;
+      event2.fWindow = fID;
+      event2.fHandle = gVirtualX->InternAtom("XdndPosition", kFALSE);
+      event2.fFormat = 0;
+      event2.fUser[0] = long(fID);
+      event2.fUser[2] = 0;//Here I have to pack x and y for drop coordinates, shifting by 16 bits.
+      
+      gVirtualX->SendEvent(fID, &event2);
+
+      Event_t event3 = {};
+      event3.fType = kClientMessage;
+      event3.fWindow = fID;
+      event3.fHandle = gVirtualX->InternAtom("XdndDrop", kFALSE);
+      event3.fFormat = 0;
+      //Here I have to put string ("file://....") into the ROOT's paste board.
+      //
+      
+      gVirtualX->SendEvent(fID, &event3);
+#else
+      NSLog(@"File drop.");
+#endif
    }
 
    return YES;//Always ok, even if file type is not supported - no need in "animation".
