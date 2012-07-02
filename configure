@@ -1807,6 +1807,9 @@ if test "x$platform" = "xmacosx" ; then
    if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 6 ]; then
       macosx106=yes
    fi
+   if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 8 ]; then
+      macosx108=yes
+   fi
 fi
 
 if test "x$platform" = "xlinux" ; then
@@ -2576,20 +2579,25 @@ if test "x$enable_builtin_freetype" = "x" || \
 
    checking_msg "freetype-config"
    if `$cwhich freetype-config > /dev/null 2>&1` && test "x$host" = "x" ; then
-      $cwhich freetype-config
-
-      message "Checking for libfreetype version >= 9.3.0"
-      ttf2_version=`freetype-config --version | \
-          tr '.' ' ' | \
-          awk 'BEGIN { FS = " "; } \
-              { printf "%d", ($''1 * 1000 + $''2) * 1000 + $''3;}'`
-      # First good version is 9.3.0
-      if test $ttf2_version -lt 9003000 ; then
-         result "no (`freetype-config --version`)"
+      if test "x$macosx108" = "xyes" && file -h `$cwhich freetype-config` | grep 'xstub' > /dev/null 2>&1 ; then
          enable_builtin_freetype="yes"
+         result "XQuartz not installed"
       else
-         result "ok"
-         enable_builtin_freetype="no"
+         $cwhich freetype-config
+
+         message "Checking for libfreetype version >= 9.3.0"
+         ttf2_version=`freetype-config --version | \
+             tr '.' ' ' | \
+             awk 'BEGIN { FS = " "; } \
+                 { printf "%d", ($''1 * 1000 + $''2) * 1000 + $''3;}'`
+         # First good version is 9.3.0
+         if test $ttf2_version -lt 9003000 ; then
+            result "no (`freetype-config --version`)"
+            enable_builtin_freetype="yes"
+         else
+            result "ok"
+            enable_builtin_freetype="no"
+         fi
       fi
    else
       enable_builtin_freetype="yes"
