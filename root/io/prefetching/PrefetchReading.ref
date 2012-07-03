@@ -4,5 +4,5 @@ i = 0
 i = 1000
 i = 2000
 i = 3000
-fPrefetchedBlocks = 4
+fPrefetchedBlocks = 6
 (Int_t)0
