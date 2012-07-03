@@ -59,10 +59,13 @@ namespace cling {
           NamedDecl* ND = dyn_cast<NamedDecl>(*J);
           if (ND) {
             DeclContext* OldDC = ND->getDeclContext();
-            Scope* OldS = m_Sema->getScopeForContext(OldDC);
+
+            // Make sure the decl is not found at its old possition
             OldDC->removeDecl(ND);
-            if (OldS)
-              OldS->RemoveDecl(ND);
+            if (Scope* S = m_Sema->getScopeForContext(OldDC)) {
+              S->RemoveDecl(ND);
+              m_Sema->IdResolver.RemoveDecl(ND);
+            }
 
             if (ND->getDeclContext() == ND->getLexicalDeclContext())
               ND->setLexicalDeclContext(DC);
