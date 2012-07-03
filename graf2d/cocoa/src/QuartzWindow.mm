@@ -2310,7 +2310,7 @@ void print_mask_info(ULong_t mask)
    
    if (pngFileName) {
       const char * const path = gSystem->Which("$ROOTSYS/icons", pngFileName, kReadPermission);//This must be deleted.
-      ROOT::MacOSX::Util::ScopedArray<const char> arrayGuard(path);
+      const ROOT::MacOSX::Util::ScopedArray<const char> arrayGuard(path);
 
       if (!path || path[0] == 0) {
          //File was not found.
