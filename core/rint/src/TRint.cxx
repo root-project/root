@@ -426,10 +426,6 @@ void TRint::Run(Bool_t retrn)
          }
       } ENDTRY;
 
-      // Allow end-of-file on the terminal to be noticed
-      // after we finish processing the command line input files.
-      fInputHandler->Activate();
-
       if (QuitOpt()) {
          if (retrn) return;
          if (error) {
@@ -441,6 +437,10 @@ void TRint::Run(Bool_t retrn)
          Terminate(retval);
       }
 
+      // Allow end-of-file on the terminal to be noticed
+      // after we finish processing the command line input files.
+      fInputHandler->Activate();
+      
       ClearInputFiles();
 
       if (needGetlinemInit) Getlinem(kInit, GetPrompt());
