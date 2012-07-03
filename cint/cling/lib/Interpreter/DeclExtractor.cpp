@@ -42,6 +42,7 @@ namespace cling {
       assert(CS && "Function body not a CompoundStmt?");
       DeclContext* DC = FD->getTranslationUnitDecl();
       Scope* S = m_Sema->TUScope;
+      assert(S == m_Sema->getScopeForContext(DC) && "TU scope from DC?");
       llvm::SmallVector<Stmt*, 4> Stmts;
 
       DC->removeDecl(FD);
@@ -83,40 +84,40 @@ namespace cling {
                 Stmts.push_back(DRE);
               }
             }
-
             // force recalc of the linkage (to external)
             ND->ClearLinkageCache();
 
             TouchedDecls.push_back(ND);
-
-            // There is no function diagnosing the redeclaration of enums so
-            // either we have to do it by hand or we can call the top-most
-            // function that does the check.
-            //
-            // The scope for the enum constants is transparent and we have to
-            // do it in the same way as for the enum itself.
-            if (EnumDecl* ED = dyn_cast<EnumDecl>(ND)) {
-
-              for (EnumDecl::enumerator_iterator I = ED->enumerator_begin(),
-                     E = ED->enumerator_end(); I != E; ++I) {
-                assert(I->getDeclName() && "EnumConstantDecl with no name?");
-                m_Sema->PushOnScopeChains(*I, S, /*AddToContext*/false);
-              }
-            }
-
-
           }
         }
       }
 
       if (!CheckForClashingNames(TouchedDecls, DC, S)) {
+
         // Insert the extracted declarations before the wrapper
         for (size_t i = 0; i < TouchedDecls.size(); ++i) {
-          DC->addDecl(TouchedDecls[i]);
-          if (!isa<UsingDirectiveDecl>(TouchedDecls[i]))
-            m_Sema->PushOnScopeChains(TouchedDecls[i],
-                                      m_Sema->getScopeForContext(DC),
-                                      /*AddToContext*/false);
+          m_Sema->PushOnScopeChains(TouchedDecls[i],
+                                    m_Sema->getScopeForContext(DC),
+                    /*AddCurContext*/!isa<UsingDirectiveDecl>(TouchedDecls[i]));
+
+          // The transparent DeclContexts (eg. scopeless enum) doesn't have 
+          // scopes. While extracting their contents we need to update the
+          // lookup tables and telling them to pick up the new possitions
+          //  in the AST.
+          if (DeclContext* InnerDC = dyn_cast<DeclContext>(TouchedDecls[i])) {
+            if (InnerDC->isTransparentContext()) {
+              // We can't PushDeclContext, because we don't have scope.
+              Sema::ContextRAII pushedDC(*m_Sema, InnerDC);
+
+              for(DeclContext::decl_iterator DI = InnerDC->decls_begin(), 
+                    DE = InnerDC->decls_end(); DI != DE ; ++DI) {
+                if (NamedDecl* ND = dyn_cast<NamedDecl>(*DI))
+                  InnerDC->makeDeclVisibleInContext(ND);
+              }
+            }
+          }
+
+          // Pipe moved decl through the consumers
           m_Sema->Consumer.HandleTopLevelDecl(DeclGroupRef(TouchedDecls[i]));
         }
       }
@@ -124,9 +125,8 @@ namespace cling {
       // Add the wrapper even though it is empty. The ValuePrinterSynthesizer
       // take care of it
       CS->setStmts(*m_Context, Stmts.data(), Stmts.size());
-      DC->addDecl(FD);
       m_Sema->PushOnScopeChains(FD, m_Sema->getScopeForContext(DC),
-                                /*AddToContext*/false);
+                                /*AddToContext*/true);
     }
   }
 
@@ -145,6 +145,11 @@ namespace cling {
                               );
 
         m_Sema->LookupName(Previous, S);
+
+        // There is no function diagnosing the redeclaration of tags (eg. enums).
+        // So either we have to do it by hand or we can call the top-most
+        // function that does the check. Currently the top-most clang function
+        // doing the checks creates an AST node, which we don't want.
         CheckTagDeclaration(TD, Previous);
 
       }
