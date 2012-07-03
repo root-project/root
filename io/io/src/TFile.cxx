@@ -865,7 +865,7 @@ void TFile::Close(Option_t *option)
    fClassIndex = 0;
 
    // Finish any concurrent I/O operations before we close the file handles.
-   fCacheRead->Close();
+   if (fCacheRead) fCacheRead->Close();
    {
       TIter iter(fCacheReadMap);
       TObject *key = 0;
