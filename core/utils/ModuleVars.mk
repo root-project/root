@@ -16,6 +16,7 @@ ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
 ifeq ($(BUILDCLING),yes)
 ROOTCLINGS    := $(UTILSDIRS)/rootcling.cxx \
                  $(filter-out %RStl.cxx,$(filter-out %root%.cxx,$(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/*.cxx))))
+ROOTCLINGTMPS := $(ROOTCLINGS:.cxx=_tmp.cxx)
 ROOTCLINGTMPO := $(ROOTCLINGS:.cxx=_tmp.o)
 ROOTCLINGTMPEXE := $(UTILSDIRS)/rootcling_tmp$(EXEEXT)
 ifeq ($(ROOT_REVERT_TO_ROOTCINT),)
