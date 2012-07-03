@@ -1,5 +1,4 @@
 // RUN: cat %s | %cling -Xclang -verify -I%p | FileCheck %s
-// XFAIL: *
 
 // Test the ability of including a wrong file see diagnostics and remove the
 // cached files so that all the changes are going to be seen next time it gets
