@@ -30,7 +30,7 @@ namespace {
 //______________________________________________________________________________
 void GetTextColorForIndex(Color_t colorIndex, Float_t &r, Float_t &g, Float_t &b)
 {
-   if (const TColor *color = gROOT->GetColor(colorIndex))
+   if (const TColor * const color = gROOT->GetColor(colorIndex))
       color->GetRGB(r, g, b);
 }
 
