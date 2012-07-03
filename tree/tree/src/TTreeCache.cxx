@@ -590,7 +590,7 @@ Bool_t TTreeCache::FillBuffer()
             // Reverse reading with prefetching
             if (fEntryCurrent >0 && entry < fEntryNext) {
                // We can prefetch the next buffer
-               if (entry > fEntryCurrent) {
+               if (entry >= fEntryCurrent) {
                   entry = fEntryCurrent - tree->GetAutoFlush() * fFillTimes;
                }
                if (entry < 0) entry = 0;
@@ -607,7 +607,7 @@ Bool_t TTreeCache::FillBuffer()
             if (fEnablePrefetching) {
                if (entry < 0 && fEntryNext > 0) {
                   entry = fEntryCurrent;
-               } else if (entry > fEntryCurrent) {
+               } else if (entry >= fEntryCurrent) {
                   if (entry < fEntryNext) {
                      entry = fEntryNext;
                   }
