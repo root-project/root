@@ -12,6 +12,8 @@
 #ifndef ROOT_CocoaUtils
 #define ROOT_CocoaUtils
 
+#include <cstddef>
+
 #include <Foundation/Foundation.h>
 
 namespace ROOT {
@@ -272,6 +274,64 @@ private:
 
    CFScopeGuard(const CFScopeGuard &rhs);
    CFScopeGuard &operator = (const CFScopeGuard &rhs);
+};
+
+///////////////////////////////////////////////////
+//                                               //
+// Scoped array - scope guard for array.         //
+// Sometimes, I can not use std::vector,         //
+// for example, data is allocated in TGCocoa     //
+// and must be later freed in Objective-C code.  //
+// To make the code exception-safe, I still      //
+// have to care about memory, which is already   //
+// allocated. Not to have all this explicit      //
+// delete [] in error handlers (it's easy        //
+// to forget!!!) - I have ScopedArray.           //
+// One good day I'll delete this and use         //
+// standard library.                             //
+//                                               //
+///////////////////////////////////////////////////
+
+template<class T>
+class ScopedArray {
+public:
+   explicit ScopedArray(T * p = 0)
+      : fData(p)
+   {
+   }
+   
+   ~ScopedArray()
+   {
+      delete [] fData;
+   }
+   
+   void Reset(T * p)
+   {
+      if (p != fData)
+         delete [] fData;
+      p = fData;
+   }
+   
+   void Release()
+   {
+      fData = 0;
+   }
+   
+   T &operator [] (std::ptrdiff_t index)const
+   {
+      return fData[index];
+   }
+   
+   T *Get()const
+   {
+      return fData;
+   }
+
+private:
+   T *fData;
+
+   ScopedArray(const ScopedArray &rhs);
+   ScopedArray &operator = (const ScopedArray &rhs);
 };
 
 }//Util
