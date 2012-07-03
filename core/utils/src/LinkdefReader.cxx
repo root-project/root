@@ -15,7 +15,8 @@
 //                                                                      //
 // The following #pragma are currently ignored (not needed for cling):  //
 //      #pragma link extra_include                                      //
-//                                                                      //
+//      #pragma link spec typedef                                       //
+//      #pragma link spec nestedtypedef                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -66,11 +67,13 @@ void LinkdefReader::PopulatePragmaMap(){
    LinkdefReader::fgMapPragmaNames["struct"] = kStruct;
    LinkdefReader::fgMapPragmaNames["all"] = kAll;
    LinkdefReader::fgMapPragmaNames["defined_in"] = kDefinedIn;
+   LinkdefReader::fgMapPragmaNames["nestedclass"] = kNestedclasses;
    LinkdefReader::fgMapPragmaNames["nestedclasses"] = kNestedclasses;
    LinkdefReader::fgMapPragmaNames["nestedclasses;"] = kNestedclasses;
    LinkdefReader::fgMapPragmaNames["operators"] = kOperators;
    LinkdefReader::fgMapPragmaNames["operator"] = kOperators;
    // The following are listed here so we can officially ignore them
+   LinkdefReader::fgMapPragmaNames["nestedtypedefs"] = kIgnore;
    LinkdefReader::fgMapPragmaNames["nestedtypedef"] = kIgnore;
    LinkdefReader::fgMapPragmaNames["typedef"] = kIgnore;
    // NOTE: need to add
@@ -109,7 +112,7 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
    
    switch (name) {
       case kAll:
-         if(identifier == "globals"){
+         if (identifier == "globals"){
 //            std::cout<<"all enums and variables selection rule to be impl."<<std::endl;
             
             VariableSelectionRule vsr(fCount++);
@@ -167,7 +170,7 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
                }
             }
          }
-         else if (identifier == "classes") {
+         else if (identifier == "classes" || identifier == "namespaces") {
 //            std::cout<<"all classes selection rule to be impl."<<std::endl;
             
             
@@ -201,7 +204,8 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
             }
          }
          else {
-            std::cout<<"Warning at line "<<fLine<<" - possibly unimplemented pragma statement"<<std::endl;
+            std::cerr<<"Warning - possibly unimplemented pragma statement: "<<std::endl;
+            return false;
          }
          
          break;
@@ -582,11 +586,13 @@ public:
    
    void Error(const char *message, const clang::Token &tok, bool source = true) {
       
-      std::cerr << message << '\n';
+      std::cerr << message << " at ";
       tok.getLocation().dump(fSourceManager);
-      std::cerr << ":";
-      if (source) std::cerr << fSourceManager.getCharacterData(tok.getLocation());
-      
+      if (source) {
+         std::cerr << ":";
+         std::cerr << fSourceManager.getCharacterData(tok.getLocation());
+      }
+      std::cerr << '\n';
    }
 
    bool ProcessOptions(LinkdefReader::Options &options,
@@ -828,6 +834,7 @@ public:
             }
          } else {
             Error("Error #pragma link should be followed by off or C",tok);
+            return;
          }
       } else {
          Error("Error bad #pragma format. ",tok);
