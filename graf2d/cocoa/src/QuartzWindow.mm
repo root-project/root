@@ -2310,21 +2310,19 @@ void print_mask_info(ULong_t mask)
    
    if (pngFileName) {
       const char * const path = gSystem->Which("$ROOTSYS/icons", pngFileName, kReadPermission);//This must be deleted.
+      ROOT::MacOSX::Util::ScopedArray<const char> arrayGuard(path);
 
       if (!path || path[0] == 0) {
          //File was not found.
-         delete [] path;
          return nil;
       }
       
       NSString *nsPath = [NSString stringWithFormat : @"%s", path];//in autorelease pool.
-      delete [] path;
-
       NSImage * const cursorImage = [[NSImage alloc] initWithContentsOfFile : nsPath];//must call release.
 
       if (!cursorImage)
          return nil;
-      
+
       NSPoint hotSpot = ROOT::MacOSX::X11::GetCursorHotStop(cursorImage, fCurrentCursor);
       NSCursor * const customCursor = [[[NSCursor alloc] initWithImage : cursorImage hotSpot : hotSpot] autorelease];//in autorelease pool.
       

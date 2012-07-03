@@ -1977,11 +1977,12 @@ Pixmap_t TGCocoa::CreatePixmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
    assert(width > 0 && "CreatePixmap, width parameter is 0");
    assert(height > 0 && "CreatePixmap, height parameter is 0");
    
-   unsigned char *imageData = 0;      
+   unsigned char *imageData = 0;
    if (depth > 1)
       imageData = new unsigned char[width * height * 4]();
    else
       imageData = new unsigned char[width * height];
+   Util::ScopedArray<unsigned char> arrayGuard(imageData);
 
    X11::FillPixmapBuffer((unsigned char*)bitmap, width, height, foregroundPixel, backgroundPixel, depth, imageData);
 
@@ -1989,7 +1990,6 @@ Pixmap_t TGCocoa::CreatePixmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
    Util::NSScopeGuard<QuartzImage> mem([QuartzImage alloc]);
    if (!mem.Get()) {
       Error("CreatePixmap", "[QuartzImage alloc] failed");
-      delete [] imageData;
       return Pixmap_t();
    }
 
@@ -2001,13 +2001,12 @@ Pixmap_t TGCocoa::CreatePixmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
       image = [mem.Get() initMaskWithW : width H : height bitmapMask : imageData];
 
    if (!image) {
-      delete [] imageData;
       Error("CreatePixmap", "[QuartzImage initWithW:H:data:] failed");
       return Pixmap_t();
    }
 
    mem.Reset(image);
-   //Now imageData is owned by image.
+   arrayGuard.Release();//Now imageData is owned by image.
    image.fID = fPimpl->RegisterDrawable(image);//This can throw.
 
    return image.fID;      
@@ -2024,6 +2023,8 @@ Pixmap_t TGCocoa::CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t
    //I'm not using vector here, since I have to pass this pointer to Obj-C code
    //(and Obj-C object will own this memory later).
    unsigned char *imageData = new unsigned char[width * height * 4];
+   Util::ScopedArray<unsigned char> arrayGuard(imageData);
+
    std::copy(bits, bits + width * height * 4, imageData);
 
    //Convert bgra to rgba.
@@ -2035,19 +2036,17 @@ Pixmap_t TGCocoa::CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t
    Util::NSScopeGuard<QuartzImage> mem([QuartzImage alloc]);
    if (!mem.Get()) {
       Error("CreatePixmapFromData", "[QuartzImage alloc] failed");
-      delete [] imageData;
       return Pixmap_t();
    }
 
    QuartzImage * const image = [mem.Get() initWithW : width H : height data : imageData];
    if (!image) {
-      delete [] imageData;
       Error("CreatePixmapFromData", "[QuartzImage initWithW:H:data:] failed");
       return Pixmap_t();
    }
    
    mem.Reset(image);
-   //Now imageData is owned by image.
+   arrayGuard.Release();//Now imageData is owned by image.
    image.fID = fPimpl->RegisterDrawable(image);//This can throw.
    
    return image.fID;      
@@ -2067,6 +2066,7 @@ Pixmap_t TGCocoa::CreateBitmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
    //Posylaiu luchi ponosa avtoru.
 
    unsigned char * const imageData = new unsigned char[width * height]();
+   Util::ScopedArray<unsigned char> arrayGuard(imageData);
    for (unsigned i = 0, j = 0, e = width / 8 * height; i < e; ++i) {//TASImage supposes 8-bit bytes and packs mask bits.
       for(unsigned bit = 0; bit < 8; ++bit, ++j) {
          if (bitmap[i] & (1 << bit))
@@ -2080,18 +2080,15 @@ Pixmap_t TGCocoa::CreateBitmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
    Util::NSScopeGuard<QuartzImage> mem([QuartzImage alloc]);
    if (!mem.Get()) {
       Error("CreateBitmap", "[QuartzImage alloc] failed");
-      delete [] imageData;
       return Pixmap_t();
    }
 
    QuartzImage * const image = [mem.Get() initMaskWithW : width H : height bitmapMask: imageData];
-   if (!image) {//Error is already reported by QuartzImage.
-      delete [] imageData;
+   if (!image)//Error is already reported by QuartzImage.
       return Pixmap_t();
-   }
    
    mem.Reset(image);
-   //Now, imageData is owned by image.
+   arrayGuard.Release();//Now, imageData is owned by image.
    image.fID = fPimpl->RegisterDrawable(image);//This can throw.      
    return image.fID;      
 }

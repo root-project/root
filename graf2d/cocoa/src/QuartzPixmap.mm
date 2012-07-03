@@ -104,17 +104,17 @@ namespace Quartz = ROOT::Quartz;
       NSLog(@"QuartzPixmap: -resizeW:H:, memory allocation failed");
       return NO;
    }
+   
+   Util::ScopedArray<unsigned char> arrayGuard(memory);
 
    const Util::CFScopeGuard<CGColorSpaceRef> colorSpace(CGColorSpaceCreateDeviceRGB());//[1]
    if (!colorSpace.Get()) {
-      delete [] memory;
       NSLog(@"QuartzPixmap: -resizeW:H:, CGColorSpaceCreateDeviceRGB failed");
       return NO;
    }
 
    Util::CFScopeGuard<CGContextRef> ctx(CGBitmapContextCreateWithData(memory, width, height, 8, width * 4, colorSpace.Get(), kCGImageAlphaPremultipliedLast, NULL, 0));
    if (!ctx.Get()) {
-      delete [] memory;
       NSLog(@"QuartzPixmap: -resizeW:H:, CGBitmapContextCreateWithData failed");
       return NO;
    }
@@ -131,6 +131,8 @@ namespace Quartz = ROOT::Quartz;
    fWidth = width;
    fHeight = height;
    fData = memory;
+   
+   arrayGuard.Release();
 
    fContext = ctx.Get();//[2]
    ctx.Release();//Stop the ownership.
@@ -447,6 +449,8 @@ namespace Quartz = ROOT::Quartz;
          NSLog(@"QuartzImage: -initMaskWithW:H:, memory allocation failed");
          return nil;
       }
+      
+      Util::ScopedArray<unsigned char> arrayGuard(fImageData);
 
       fIsStippleMask = YES;
       const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer, 
@@ -456,7 +460,6 @@ namespace Quartz = ROOT::Quartz;
       const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(fImageData, width * height, &providerCallbacks));
       if (!provider.Get()) {
          NSLog(@"QuartzImage: -initMaskWithW:H: CGDataProviderCreateDirect failed");
-         delete [] fImageData;
          fImageData = 0;
          return nil;
       }
@@ -464,10 +467,11 @@ namespace Quartz = ROOT::Quartz;
       fImage = CGImageMaskCreate(width, height, 8, 8, width, provider.Get(), 0, false);//null -> decode, false -> shouldInterpolate.
       if (!fImage) {
          NSLog(@"QuartzImage: -initMaskWithW:H:, CGImageMaskCreate failed");
-         delete [] fImageData;
          fImageData = 0;
          return nil;
       }
+      
+      arrayGuard.Release();
       
       fWidth = width;
       fHeight = height;
