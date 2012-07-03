@@ -52,7 +52,7 @@ QuartzWindow *CreateTopLevelWindow(Int_t x, Int_t y, UInt_t w, UInt_t h, UInt_t 
    //TODO check mask.
    const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
    //
-   QuartzWindow *newWindow = [[QuartzWindow alloc] initWithContentRect : winRect styleMask : styleMask backing : NSBackingStoreBuffered defer : YES windowAttributes : attr];
+   QuartzWindow * const newWindow = [[QuartzWindow alloc] initWithContentRect : winRect styleMask : styleMask backing : NSBackingStoreBuffered defer : YES windowAttributes : attr];
    if (!newWindow)
       throw std::runtime_error("CreateTopLevelWindow failed");
    //
@@ -72,7 +72,7 @@ QuartzView *CreateChildView(QuartzView * /*parent*/, Int_t x, Int_t y, UInt_t w,
    viewRect.size.width = w;
    viewRect.size.height = h;
    
-   QuartzView *view = [[QuartzView alloc] initWithFrame : viewRect windowAttributes : attr];
+   QuartzView * const view = [[QuartzView alloc] initWithFrame : viewRect windowAttributes : attr];
    if (!view)
       throw std::runtime_error("CreateChildView failed");
    
@@ -85,10 +85,10 @@ void GetRootWindowAttributes(WindowAttributes_t *attr)
    //'root' window does not exist, but we can request its attributes.
    assert(attr != 0 && "GetRootWindowAttributes, attr parameter is null");
    
-   NSArray *screens = [NSScreen screens];
+   NSArray * const screens = [NSScreen screens];
    assert(screens != nil && "screens array is nil");
    
-   NSScreen *mainScreen = [screens objectAtIndex : 0];
+   NSScreen * const mainScreen = [screens objectAtIndex : 0];
    assert(mainScreen != nil && "screen with index 0 is nil");
 
    *attr = WindowAttributes_t();
@@ -117,10 +117,10 @@ void GetRootWindowAttributes(WindowAttributes_t *attr)
 //______________________________________________________________________________
 int GlobalYCocoaToROOT(CGFloat yCocoa)
 {
-   NSArray *screens = [NSScreen screens];
+   NSArray * const screens = [NSScreen screens];
    assert(screens != nil && "GlobalYCocoaToROOT, screens array is nil");
    
-   NSScreen *mainScreen = [screens objectAtIndex : 0];
+   NSScreen * const mainScreen = [screens objectAtIndex : 0];
    assert(mainScreen != nil && "GlobalYCocoaToROOT, screen at index 0 is nil");
    
    return int(mainScreen.frame.size.height - yCocoa);
@@ -130,10 +130,10 @@ int GlobalYCocoaToROOT(CGFloat yCocoa)
 int GlobalYROOTToCocoa(CGFloat yROOT)
 {
    //hehe :)) actually, no need in this function.
-   NSArray *screens = [NSScreen screens];
+   NSArray * const screens = [NSScreen screens];
    assert(screens != nil && "GlobalYROOTToCocoa, screens array is nil");
    
-   NSScreen *mainScreen = [screens objectAtIndex : 0];
+   NSScreen * const mainScreen = [screens objectAtIndex : 0];
    assert(mainScreen != nil && "GlobalYROOTToCocoa, screen at index 0 is nil");
    
    return int(mainScreen.frame.size.height - yROOT);
@@ -341,7 +341,7 @@ void SetWindowAttributes(const SetWindowAttributes_t *attr, NSObject<X11Window> 
       //This is quite a special case.
       //TODO: Must be checked yet, if I understand this correctly!
       if ([(NSObject *)window isKindOfClass : [QuartzWindow class]]) {
-         QuartzWindow *qw = (QuartzWindow *)window;
+         QuartzWindow * const qw = (QuartzWindow *)window;
          [qw setStyleMask : NSBorderlessWindowMask];
       }
    }
@@ -420,6 +420,7 @@ NSComparisonResult CompareViewsToLower(id view1, id view2, void *context)
         return NSOrderedAscending;
     if (view2 == topView)
         return NSOrderedDescending;
+
     return NSOrderedSame;
 }
 
@@ -458,7 +459,7 @@ NSPoint GetCursorHotStop(NSImage *image, ECursor cursor)
 //______________________________________________________________________________
 bool ViewIsTextView(unsigned viewID)
 {
-   TGWindow *window = gClient->GetWindowById(viewID);
+   const TGWindow * const window = gClient->GetWindowById(viewID);
    if (!window)
       return false;   
    return window->InheritsFrom("TGTextView");
@@ -477,7 +478,7 @@ bool ViewIsTextViewFrame(NSView<X11Window> *view, bool checkParent)
 {
    assert(view != nil && "ViewIsTextViewFrame, view parameter is nil");
    
-   TGWindow *window = gClient->GetWindowById(view.fID);
+   const TGWindow * const window = gClient->GetWindowById(view.fID);
    if (!window)
       return false;
 
@@ -1159,7 +1160,7 @@ void print_mask_info(ULong_t mask)
          //can be a problem: if drop-down menu is open and
          //you move window using title-bar, ROOT's menu will
          //"fell through" the main window, which is weird.
-         TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+         TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
          assert(vx != 0 && "sendEvent, gVirtualX is either null or not of TGCocoa type");
          if (vx->GetEventTranslator()->HasPointerGrab())
             vx->GetEventTranslator()->GenerateButtonReleaseEvent(fContentView, theEvent, theEvent.type == NSLeftMouseDown ? kButton1 : kButton3);//yes, button release???
@@ -1211,7 +1212,7 @@ void print_mask_info(ULong_t mask)
    closeEvent.fHandle = TGCocoa::fgDeleteWindowAtom;
    closeEvent.fUser[0] = TGCocoa::fgDeleteWindowAtom;
    //Place it into the queue.
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "windowShouldClose, gVirtualX is either null or has a type different from TGCocoa");
    vx->SendEvent(fContentView.fID, &closeEvent);
 
@@ -1325,7 +1326,7 @@ void print_mask_info(ULong_t mask)
       //Actually, check if view need this.
       const NSUInteger trackerOptions = NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInActiveApp | NSTrackingInVisibleRect;
       frame.origin = CGPointZero;
-      NSTrackingArea *tracker = [[NSTrackingArea alloc] initWithRect : frame options : trackerOptions owner : self userInfo : nil];
+      NSTrackingArea * const tracker = [[NSTrackingArea alloc] initWithRect : frame options : trackerOptions owner : self userInfo : nil];
       [self addTrackingArea : tracker];
       [tracker release];
       //
@@ -1526,7 +1527,7 @@ void print_mask_info(ULong_t mask)
 
    const NSRect frame = [srcView frame];   
    //imageRep is in autorelease pool now.
-   NSBitmapImageRep *imageRep = [srcView bitmapImageRepForCachingDisplayInRect : frame];
+   NSBitmapImageRep * const imageRep = [srcView bitmapImageRepForCachingDisplayInRect : frame];
    if (!imageRep) {
       NSLog(@"QuartzView: -copyView:area:toPoint failed");
       return;
@@ -1645,7 +1646,7 @@ void print_mask_info(ULong_t mask)
    
    if ([src isKindOfClass : [QuartzWindow class]]) {
       //Forget about mask (can I have it???)
-      QuartzWindow *qw = (QuartzWindow *)src;
+      QuartzWindow * const qw = (QuartzWindow *)src;
       //Will not work with OpenGL.
       [self copyView : (QuartzView *)qw.fContentView area : area toPoint : dstPoint];
    } else if ([src isKindOfClass : [QuartzView class]]) {
@@ -1680,7 +1681,7 @@ void print_mask_info(ULong_t mask)
       return 0;
    }
 
-   NSBitmapImageRep *imageRep = [self bitmapImageRepForCachingDisplayInRect : visRect];//imageRect is autoreleased.
+   NSBitmapImageRep * const imageRep = [self bitmapImageRepForCachingDisplayInRect : visRect];//imageRect is autoreleased.
    if (!imageRep) {
       NSLog(@"QuartzView: -readColorBits:, bitmapImageRepForCachingDisplayInRect failed");
       return 0;
@@ -1787,7 +1788,7 @@ void print_mask_info(ULong_t mask)
 - (void) mapRaised
 {
    //Move view to the top of subviews (in UIKit there is a special method).   
-   QuartzView *parent = fParentView;
+   QuartzView * const parent = fParentView;
    [self removeFromSuperview];
    [parent addSubview : self];
    [self setHidden : NO];
@@ -1860,7 +1861,7 @@ void print_mask_info(ULong_t mask)
 {
    using namespace ROOT::MacOSX::X11;
 
-   NSEnumerator *reverseEnumerator = [[fParentView subviews] reverseObjectEnumerator];
+   NSEnumerator * const reverseEnumerator = [[fParentView subviews] reverseObjectEnumerator];
    for (QuartzView *sibling in reverseEnumerator) {
       if (sibling == self)
          continue;
@@ -1905,7 +1906,7 @@ void print_mask_info(ULong_t mask)
 {
    if (self.fMapState == kIsViewable || fIsOverlapped == YES) {
       if (fEventMask & kStructureNotifyMask) {
-         TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+         TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
          assert(vx && "configureNotifyTree, gVirtualX is either null or has type different from TGCocoa");
          vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
       }
@@ -1921,7 +1922,7 @@ void print_mask_info(ULong_t mask)
 {
    //Remove and add (not to traverse twice).
    [self removePassiveKeyGrab : keyCode modifiers : modifiers];
-   PassiveKeyGrab *newGrab = [[PassiveKeyGrab alloc] initWithKey : keyCode modifiers : modifiers];
+   PassiveKeyGrab * const newGrab = [[PassiveKeyGrab alloc] initWithKey : keyCode modifiers : modifiers];
    [fPassiveKeyGrabs addObject : newGrab];
    [newGrab release];
 }
@@ -1942,7 +1943,7 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (PassiveKeyGrab *) findPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers
 {
-   NSEnumerator *enumerator = [fPassiveKeyGrabs objectEnumerator];
+   NSEnumerator * const enumerator = [fPassiveKeyGrabs objectEnumerator];
    while (PassiveKeyGrab *grab = (PassiveKeyGrab *)[enumerator nextObject]) {
       if ([grab matchKey : keyCode modifiers : modifiers])
          return grab;
@@ -1955,7 +1956,7 @@ void print_mask_info(ULong_t mask)
 - (PassiveKeyGrab *) findPassiveKeyGrab : (unichar) keyCode
 {
    //Do not check modifiers.
-   NSEnumerator *enumerator = [fPassiveKeyGrabs objectEnumerator];
+   NSEnumerator * const enumerator = [fPassiveKeyGrabs objectEnumerator];
    while (PassiveKeyGrab *grab = (PassiveKeyGrab *)[enumerator nextObject]) {
       if ([grab matchKey : keyCode])
          return grab;
@@ -1974,14 +1975,14 @@ void print_mask_info(ULong_t mask)
    (void)dirtyRect;
 
    if (fID) {
-      if (TGWindow *window = gClient->GetWindowById(fID)) {
+      if (TGWindow * const window = gClient->GetWindowById(fID)) {
          if (ViewIsTextViewFrame(self, true))//It's never painted, parent renders child. true == check the parent also.
             return;
 
-         NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
+         NSGraphicsContext * const nsContext = [NSGraphicsContext currentContext];
          assert(nsContext != nil && "drawRect, currentContext returned nil");
 
-         TGCocoa *vx = (TGCocoa *)gVirtualX;
+         TGCocoa * const vx = (TGCocoa *)gVirtualX;
          vx->CocoaDrawON();
 
          fContext = (CGContextRef)[nsContext graphicsPort];
@@ -1995,7 +1996,7 @@ void print_mask_info(ULong_t mask)
          if (fEventMask & kExposureMask) {
             if (ViewIsTextView(self)) {
                //Send Expose event, using child view (this is how it's done in GUI :( ).
-               NSView<X11Window> *viewFrame = FrameForTextView(self);
+               NSView<X11Window> * const viewFrame = FrameForTextView(self);
                if (viewFrame)
                   vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, [viewFrame visibleRect]);//Now we set fExposedRegion for TGView.
             }
@@ -2058,7 +2059,7 @@ void print_mask_info(ULong_t mask)
    [super setFrameSize : newSize];
    
    if ((fEventMask & kStructureNotifyMask) && (self.fMapState == kIsViewable || fIsOverlapped == YES)) {
-      TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+      TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
       assert(vx != 0 && "setFrameSize:, gVirtualX is either null or has a type, different from TGCocoa");
       vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
    }
@@ -2071,7 +2072,7 @@ void print_mask_info(ULong_t mask)
 {
    assert(fID != 0 && "mouseDown, fID is 0");
    
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "mouseDown, gVirtualX is either null or has a type, different from TGCocoa");
    vx->GetEventTranslator()->GenerateButtonPressEvent(self, theEvent, kButton1);
 }
@@ -2081,7 +2082,7 @@ void print_mask_info(ULong_t mask)
 {
    assert(fID != 0 && "scrollWheel, fID is 0");
 
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "scrollWheel, gVirtualX is either null or has a type, different from TGCocoa");
 
    const CGFloat deltaY = [theEvent deltaY];
@@ -2099,7 +2100,7 @@ void print_mask_info(ULong_t mask)
 - (void) printViewInformation
 {
    assert(fID != 0 && "printWindowInformation, fID is 0");
-   TGWindow *window = gClient->GetWindowById(fID);
+   const TGWindow * const window = gClient->GetWindowById(fID);
    assert(window != 0 && "printWindowInformation, window not found");
 
    NSLog(@"-----------------View %u info:---------------------", fID);
@@ -2121,7 +2122,7 @@ void print_mask_info(ULong_t mask)
    [self printViewInformation];
 #endif
 
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "rightMouseDown, gVirtualX is either null or has type different from TGCocoa");
    vx->GetEventTranslator()->GenerateButtonPressEvent(self, theEvent, kButton3);
 }
@@ -2131,7 +2132,7 @@ void print_mask_info(ULong_t mask)
 {
    assert(fID != 0 && "mouseUp, fID is 0");
 
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx && "mouseUp, gVirtualX is either null or has type different from TGCocoa");
    vx->GetEventTranslator()->GenerateButtonReleaseEvent(self, theEvent, kButton1);
 }
@@ -2142,7 +2143,7 @@ void print_mask_info(ULong_t mask)
 
    assert(fID != 0 && "rightMouseUp, fID is 0");
 
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "rightMouseUp, gVirtualX is either null or has type different from TGCocoa");
    vx->GetEventTranslator()->GenerateButtonReleaseEvent(self, theEvent, kButton2);
 }
@@ -2152,7 +2153,7 @@ void print_mask_info(ULong_t mask)
 {
    assert(fID != 0 && "mouseEntered, fID is 0");
    
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "mouseEntered, gVirtualX is null or not of TGCocoa type");
 
    vx->GetEventTranslator()->GenerateCrossingEvent(self, theEvent);  
@@ -2163,7 +2164,7 @@ void print_mask_info(ULong_t mask)
 {
    assert(fID != 0 && "mouseExited, fID is 0");
 
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "mouseExited, gVirtualX is null or not of TGCocoa type");
 
    vx->GetEventTranslator()->GenerateCrossingEvent(self, theEvent);
@@ -2188,7 +2189,7 @@ void print_mask_info(ULong_t mask)
 {
    assert(fID != 0 && "mouseDragged, fID is 0");
    
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "mouseMoved, gVirtualX is null or not of TGCocoa type");
    
    vx->GetEventTranslator()->GeneratePointerMotionEvent(self, theEvent);   
@@ -2199,7 +2200,7 @@ void print_mask_info(ULong_t mask)
 {
    assert(fID != 0 && "rightMouseDragged, fID is 0");
 
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "rightMouseMoved, gVirtualX is null or not of TGCocoa type");
    
    vx->GetEventTranslator()->GeneratePointerMotionEvent(self, theEvent);   
@@ -2210,7 +2211,7 @@ void print_mask_info(ULong_t mask)
 {
    assert(fID != 0 && "keyDown, fID is 0");
   
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "keyDown, gVirtualX is null or not of TGCocoa type");
    vx->GetEventTranslator()->GenerateKeyPressEvent(self, theEvent);
 }
@@ -2251,7 +2252,7 @@ void print_mask_info(ULong_t mask)
    if (!focusView)
       focusView = ((QuartzWindow *)[self window]).fContentView;
    
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "becomeFirstResponder, gVirtualX is null or not of TGCocoa type");
    vx->GetEventTranslator()->GenerateFocusChangeEvent(focusView);
 
@@ -2308,7 +2309,7 @@ void print_mask_info(ULong_t mask)
    }
    
    if (pngFileName) {
-      const char *path = gSystem->Which("$ROOTSYS/icons", pngFileName, kReadPermission);//This must be deleted.
+      const char * const path = gSystem->Which("$ROOTSYS/icons", pngFileName, kReadPermission);//This must be deleted.
 
       if (!path || path[0] == 0) {
          //File was not found.
@@ -2319,13 +2320,13 @@ void print_mask_info(ULong_t mask)
       NSString *nsPath = [NSString stringWithFormat : @"%s", path];//in autorelease pool.
       delete [] path;
 
-      NSImage *cursorImage = [[NSImage alloc] initWithContentsOfFile : nsPath];//must call release.
+      NSImage * const cursorImage = [[NSImage alloc] initWithContentsOfFile : nsPath];//must call release.
 
       if (!cursorImage)
          return nil;
       
       NSPoint hotSpot = ROOT::MacOSX::X11::GetCursorHotStop(cursorImage, fCurrentCursor);
-      NSCursor *customCursor = [[[NSCursor alloc] initWithImage : cursorImage hotSpot : hotSpot] autorelease];//in autorelease pool.
+      NSCursor * const customCursor = [[[NSCursor alloc] initWithImage : cursorImage hotSpot : hotSpot] autorelease];//in autorelease pool.
       
       [cursorImage release];
       
@@ -2440,7 +2441,7 @@ void print_mask_info(ULong_t mask)
       NSPasteboard * const rootPasteboard = [NSPasteboard pasteboardWithName : @"pasteboard_ROOT"];
       [rootPasteboard clearContents];
 
-      NSMutableArray *cpData = [[NSMutableArray alloc] init];
+      NSMutableArray * const cpData = [[NSMutableArray alloc] init];
       for (id file in files) {
          NSString *item = [@"file://" stringByAppendingString : file];
          [cpData addObject : item];
