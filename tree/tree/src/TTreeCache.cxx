@@ -582,13 +582,14 @@ Bool_t TTreeCache::FillBuffer()
               fReadDirectionSet = kTRUE;
            }
          }
-        
-         if (fReverseRead){ 
-            //reverse reading with prefetching
-            if (fEntryCurrent >0 && entry < fEntryNext){
-               //we can prefetch the next buffer
-               if (entry > fEntryCurrent)
+
+         if (fReverseRead) { 
+            // Reverse reading with prefetching
+            if (fEntryCurrent >0 && entry < fEntryNext) {
+               // We can prefetch the next buffer
+               if (entry >= fEntryCurrent) {
                   entry = fEntryCurrent - tree->GetAutoFlush() * fFillTimes;
+               }
                if (entry < 0) entry = 0;
             }
             else if (fEntryCurrent >= 0)
@@ -597,22 +598,23 @@ Bool_t TTreeCache::FillBuffer()
      
             if (entry < 0) return kFALSE;
             fFirstBuffer = !fFirstBuffer; 
-        }
-        else {
-           //normal reading with prefetching
-           if (fEnablePrefetching){
-              if (entry < 0 && fEntryNext > 0)
-                 entry = fEntryCurrent;
-              else if (entry > fEntryCurrent){
-                 if (entry < fEntryNext)
-                    entry = fEntryNext;
-              }
-              else {
-                //we are still reading from the oldest buffer, no need to prefetch a new one
-                return kFALSE;
-              }
-              fFirstBuffer = !fFirstBuffer;
-           }
+         }
+         else {
+            // Normal reading with prefetching
+            if (fEnablePrefetching) {
+               if (entry < 0 && fEntryNext > 0) {
+                  entry = fEntryCurrent;
+               } else if (entry >= fEntryCurrent) {
+                  if (entry < fEntryNext) {
+                     entry = fEntryNext;
+                  }
+               }
+               else {
+                  // We are still reading from the oldest buffer, no need to prefetch a new one
+                  return kFALSE;
+               }
+               fFirstBuffer = !fFirstBuffer;
+            }
          }
       }
    }
