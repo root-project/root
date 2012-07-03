@@ -63,13 +63,14 @@ void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRe
    }
    
    
-   if ( TClassEdit::STLKind( stlclass->getName().data() )  == TClassEdit::kVector ) {
+   if ( TClassEdit::STLKind( stlclass->getName().str().c_str() )  == TClassEdit::kVector ) {
       const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(0) );
       if (arg.getKind() == clang::TemplateArgument::Type) {
          const clang::NamedDecl *decl = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();
          if (decl) {
+            // NOTE: we should just compare the decl to the bool builtin!
             llvm::StringRef argname = decl->getName();
-            if ( 0 == strcmp(argname.data(),"bool") || 0 == strcmp(argname.data(),"Bool_t") ) {
+            if ( (argname.str() == "bool") || (argname.str() == "Bool_t") ) {
                Warning("std::vector<bool>", " is not fully supported yet!\nUse std::vector<char> or std::deque<bool> instead.\n");
             }
          }
@@ -84,7 +85,7 @@ void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRe
       if (arg.getKind() == clang::TemplateArgument::Type) {
          const clang::NamedDecl *decl = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();
          
-         if (decl && TClassEdit::STLKind( decl->getName().data() ) != 0 )
+         if (decl && TClassEdit::STLKind( decl->getName().str().c_str() ) != 0 )
             {
                const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
                if (clxx) {
@@ -155,7 +156,7 @@ void ROOT::RStl::WriteStreamer(FILE *file,const clang::CXXRecordDecl *stlcl)
    const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (stlcl);
    if (!tmplt_specialization) return;
 
-   int stltype = TClassEdit::STLKind(tmplt_specialization->getName().data()); 
+   int stltype = TClassEdit::STLKind(tmplt_specialization->getName().str().c_str()); 
 
    const clang::TemplateArgument &arg0( tmplt_specialization->getTemplateArgs().get(0) );
 
