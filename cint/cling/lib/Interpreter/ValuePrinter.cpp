@@ -117,7 +117,7 @@ static void StreamValue(llvm::raw_ostream& o, const void* const p,
       StreamObj(o, p, VPI);
     }
   }
-  else if (Ty.getAsString().compare("std::string") == 0) {
+  else if (Ty.getAsString().compare("class std::basic_string<char>") == 0) {
     StreamObj(o, p, VPI);
     o <<"c_str: ";
     StreamCharPtr(o, ((const char*) (*(const std::string*)p).c_str()));
