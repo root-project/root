@@ -453,8 +453,8 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize)
    
    if (it == fFonts[11].end()) {
       //This GetValue + Which I took from Olivier's code.
-      const char *fontDirectoryPath = gEnv->GetValue("Root.TTFontPath","$(ROOTSYS)/fonts");//This one I do not own.
-      char *fontFileName = gSystem->Which(fontDirectoryPath, "symbol.ttf", kReadPermission);//This must be deleted.
+      const char * const fontDirectoryPath = gEnv->GetValue("Root.TTFontPath","$(ROOTSYS)/fonts");//This one I do not own.
+      char * const fontFileName = gSystem->Which(fontDirectoryPath, "symbol.ttf", kReadPermission);//This must be deleted.
 
       if (!fontFileName || fontFileName[0] == 0) {
          ::Error("FontCache::SelectSymbolFont", "sumbol.ttf file not found");

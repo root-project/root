@@ -73,13 +73,13 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
 
    const Quartz::CGStateGuard ctxGuard(ctx);
 
-   const TColor *fillColor = gROOT->GetColor(GetFillColor());
+   const TColor * const fillColor = gROOT->GetColor(GetFillColor());
    if (!fillColor) {
       Error("DrawBox", "Fill color for index %d not found", GetFillColor());
       return;
    }
 
-   if (const TColorGradient *extendedColor = dynamic_cast<const TColorGradient *>(fillColor)) {
+   if (const TColorGradient * const extendedColor = dynamic_cast<const TColorGradient *>(fillColor)) {
       //Draw a box with a gradient fill and a shadow.
       Quartz::DrawBoxGradient(ctx, x1, y1, x2, y2, extendedColor, kTRUE);//kTRUE == draw shadow.
    } else {
@@ -118,13 +118,13 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint * xy)
    
    const Quartz::CGStateGuard ctxGuard(ctx);
 
-   const TColor *fillColor = gROOT->GetColor(GetFillColor());
+   const TColor * const fillColor = gROOT->GetColor(GetFillColor());
    if (!fillColor) {
       Error("DrawFillArea", "Could not find TColor for index %d", GetFillColor());
       return;
    }
 
-   if (const TColorGradient *extendedColor = dynamic_cast<const TColorGradient *>(fillColor)) {
+   if (const TColorGradient * const extendedColor = dynamic_cast<const TColorGradient *>(fillColor)) {
       Quartz::DrawFillAreaGradient(ctx, n, xy, extendedColor, kTRUE);//kTRUE == draw shadow.
    } else {
       SetContextStrokeColor(GetFillColor());
@@ -259,7 +259,7 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/, co
    }
    
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "DrawText, no pixmap selected");
-   NSObject<X11Drawable> *pixmap = fPimpl->GetDrawable(fSelectedDrawable);
+   NSObject<X11Drawable> * const pixmap = fPimpl->GetDrawable(fSelectedDrawable);
    assert(pixmap.fIsPixmap == YES && "DrawText, selected drawable is not a pixmap");
    
    CGContextRef ctx = (CGContextRef)GetCurrentContext();
@@ -494,7 +494,7 @@ Bool_t TGQuartz::SetContextFillColor(Int_t ci)
 
    CGContextRef ctx = (CGContextRef)GetCurrentContext();
 
-   const TColor *color = gROOT->GetColor(ci);
+   const TColor * const color = gROOT->GetColor(ci);
    if (!color)
       return kFALSE;
 
@@ -514,7 +514,7 @@ Bool_t TGQuartz::SetContextStrokeColor(Int_t ci)
 
    CGContextRef ctx = (CGContextRef)GetCurrentContext();
 
-   const TColor *color = gROOT->GetColor(ci);
+   const TColor * const color = gROOT->GetColor(ci);
    if (!color)
       return kFALSE;
 

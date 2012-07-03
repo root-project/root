@@ -175,7 +175,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
    //The only node in the tree is 'self'.
    if (self.fMapState == kIsViewable) {
       if (fEventMask & kStructureNotifyMask) {
-         TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+         TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
          assert(vx && "configureNotifyTree, gVirtualX is either null or has type different from TGCocoa");
          vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
       }
@@ -199,7 +199,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
    [self setHidden : fIsOverlapped];
 
    if (!overlap) {
-      TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+      TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
       assert(vx != 0 && "setFrameSize:, gVirtualX is either null or has a type, different from TGCocoa");
       [fOpenGLContext update];
       //View becomes visible, geometry can be changed at this point,
@@ -246,7 +246,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
       fUpdateContext = YES;
    
    if ((fEventMask & kStructureNotifyMask) && (self.fMapState == kIsViewable || fIsOverlapped == YES)) {
-      TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+      TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
       assert(vx != 0 && "setFrameSize:, gVirtualX is either null or has a type, different from TGCocoa");
       vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
       vx->GetEventTranslator()->GenerateExposeEvent(self, self.frame);

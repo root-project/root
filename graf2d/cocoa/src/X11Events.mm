@@ -554,7 +554,7 @@ void SendEnterEvent(NSView<X11Window> *view, NSEvent *theEvent, EXMagic detail)
    assert(theEvent != nil && "SendEnterEvent, event parameter is nil");
    assert(view.fID != 0 && "SendEnterEvent, view.fID is 0");
 
-   TGWindow *window = gClient->GetWindowById(view.fID);
+   TGWindow * const window = gClient->GetWindowById(view.fID);
    if (!window) {
 #ifdef DEBUG_ROOT_COCOA
       NSLog(@"SendEnterEvent, ROOT's widget %u was not found", view.fID);
@@ -590,7 +590,7 @@ void SendLeaveEvent(NSView<X11Window> *view, NSEvent *theEvent, EXMagic detail)
    assert(theEvent != nil && "SendLeaveEvent, event parameter is nil");
    assert(view.fID != 0 && "SendLeaveEvent, view.fID is 0");
    
-   TGWindow *window = gClient->GetWindowById(view.fID);
+   TGWindow * const window = gClient->GetWindowById(view.fID);
    if (!window) {
 #ifdef DEBUG_ROOT_COCOA
       NSLog(@"SendLeaveEvent, ROOT's widget %u was not found", view.fID);
@@ -622,7 +622,7 @@ void SendPointerMotionEvent(NSView<X11Window> *view, NSEvent *theEvent)
    assert(theEvent != nil && "SendPointerMotionEvent, event parameter is nil");
    assert(view.fID != 0 && "SendPointerMotionEvent, view.fID is 0");
    
-   TGWindow *window = gClient->GetWindowById(view.fID);
+   TGWindow * const window = gClient->GetWindowById(view.fID);
    if (!window) {
 #ifdef DEBUG_ROOT_COCOA
       NSLog(@"SendPointerMotionEvent, ROOT's widget %u was not found", view.fID);
@@ -655,7 +655,7 @@ void SendButtonPressEvent(NSView<X11Window> *view, NSEvent *theEvent, EMouseButt
    assert(theEvent != nil && "SendButtonPressEvent, event parameter is nil");
    assert(view.fID != 0 && "SendButtonPressEvent, view.fID is 0");
    
-   TGWindow *window = gClient->GetWindowById(view.fID);
+   TGWindow * const window = gClient->GetWindowById(view.fID);
    if (!window) {
 #ifdef DEBUG_ROOT_COCOA
       NSLog(@"SendButtonpressEvent, ROOT's widget %u was not found", view.fID);
@@ -703,7 +703,7 @@ void SendButtonReleaseEvent(NSView<X11Window> *view, NSEvent *theEvent, EMouseBu
    assert(theEvent != nil && "SendButtonReleaseEvent, event parameter is nil");
    assert(view.fID != 0 && "SendButtonReleaseEvent, view.fID is 0");
    
-   TGWindow *window = gClient->GetWindowById(view.fID);
+   TGWindow * const window = gClient->GetWindowById(view.fID);
    if (!window) {
 #ifdef DEBUG_ROOT_COCOA
       NSLog(@"SendButtonReleaseEvent, ROOT's widget %u was not found", view.fID);
@@ -728,7 +728,7 @@ void SendKeyPressEvent(NSView<X11Window> *view, NSView<X11Window> *childView, NS
    assert(theEvent != nil && "SendKeyPressEvent, event parameter is nil");
    assert(view.fID != 0 && "SendKeyPressEvent, view.fID is 0");
    
-   TGWindow *window = gClient->GetWindowById(view.fID);
+   TGWindow * const window = gClient->GetWindowById(view.fID);
    if (!window) {
 #ifdef DEBUG_ROOT_COCOA
       NSLog(@"SendKeyPressEvent, ROOT's widget %u was not found", view.fID);
@@ -765,7 +765,7 @@ void SendFocusInEvent(NSView<X11Window> *view, EXMagic mode)
 {
    assert(view != nil && "SendFocusInEvent, view parameter is nil");
    //
-   TGWindow *window = gClient->GetWindowById(view.fID);
+   TGWindow * const window = gClient->GetWindowById(view.fID);
    if (!window) {
 #ifdef DEBUG_ROOT_COCOA
       NSLog(@"SendFocusInEvent, ROOT's widget %u was not found", view.fID);
@@ -786,7 +786,7 @@ void SendFocusOutEvent(NSView<X11Window> *view, EXMagic mode)
 {
    assert(view != nil && "SendFocusOutEvent, view parameter is nil");
    //
-   TGWindow *window = gClient->GetWindowById(view.fID);
+   TGWindow * const window = gClient->GetWindowById(view.fID);
    if (!window) {
 #ifdef DEBUG_ROOT_COCOA
       NSLog(@"SendFocusOutEvent, ROOT's widget %u was not found", view.fID);
@@ -977,7 +977,7 @@ void EventTranslator::GenerateConfigureNotifyEvent(NSView<X11Window> *view, cons
    newEvent.fWidth = newFrame.size.width;
    newEvent.fHeight = newFrame.size.height;
 
-   TGWindow *window = gClient->GetWindowById(view.fID);
+   TGWindow * const window = gClient->GetWindowById(view.fID);
    assert(window != 0 && "GenerateConfigureNotifyEvent, window was not found");   
    window->HandleEvent(&newEvent);
 }
@@ -1009,7 +1009,7 @@ void EventTranslator::GenerateExposeEvent(NSView<X11Window> *view, const NSRect 
    exposeEvent.fWidth = exposedRect.size.width;
    exposeEvent.fHeight = exposedRect.size.height;
 
-   TGWindow *window = gClient->GetWindowById(view.fID);
+   TGWindow * const window = gClient->GetWindowById(view.fID);
    assert(window != 0 && "GenerateExposeEvent, window was not found");
    window->HandleEvent(&exposeEvent);
 }
@@ -1025,7 +1025,7 @@ void EventTranslator::GenerateCrossingEvent(NSView<X11Window> *view, NSEvent *th
       
       const bool isROOTView = [candidateView isKindOfClass : [QuartzView class]] || [candidateView isKindOfClass : [ROOTOpenGLView class]];
       if (candidateView && !isROOTView) {
-         NSLog(@"EventTranslator::GenerateCrossingEvent: error, hit test returned not a QuartzView!");
+         NSLog(@"EventTranslator::GenerateCrossingEvent: error, hit test returned neither a QuartzView nor a ROOTOpenGLView!");
          candidateView = nil;
       }
 
@@ -1435,7 +1435,7 @@ void EventTranslator::GenerateButtonPressEventActiveGrab(NSView<X11Window> * /*v
       
    if (fOwnerEvents) {
       SortTopLevelWindows();
-      if (QuartzWindow *topLevel = FindTopLevelWindowForMouseEvent()) {
+      if (QuartzWindow * const topLevel = FindTopLevelWindowForMouseEvent()) {
          const NSPoint mousePosition = [topLevel mouseLocationOutsideOfEventStream];
          NSView<X11Window> *candidateView = (NSView<X11Window> *)[[topLevel contentView] hitTest : mousePosition];
          if (candidateView) {
@@ -1491,7 +1491,7 @@ void EventTranslator::GenerateButtonReleaseEventActiveGrab(NSView<X11Window> *ev
    
    if (fOwnerEvents) {//X11: Either XGrabPointer with owner_events == True or passive grab (owner_events is always true)
       SortTopLevelWindows();
-      if (QuartzWindow *topLevel = FindTopLevelWindowForMouseEvent()) {
+      if (QuartzWindow * const topLevel = FindTopLevelWindowForMouseEvent()) {
          const NSPoint mousePosition = [topLevel mouseLocationOutsideOfEventStream];
          NSView<X11Window> *candidateView = (NSView<X11Window> *)[[topLevel contentView] hitTest : mousePosition];
          if (candidateView) {
@@ -1573,7 +1573,7 @@ void EventTranslator::GenerateKeyEventActiveGrab(NSEvent *theEvent)
    assert(theEvent != nil && "GenerateKeyEventActiveGrab, theEvent parameter is nil");
    assert(fKeyGrabView != nil && "GenerateKeyEventActiveGrab, theEvent parameter is nil");
    
-   if (NSView<X11Window> *candidateView = FindViewUnderPointer()) {
+   if (NSView<X11Window> * const candidateView = FindViewUnderPointer()) {
       //Since owner_events is always true in ROOT ...
       GenerateKeyEventForView(candidateView, theEvent);
    } else {// else part for grab view??
@@ -1596,7 +1596,7 @@ void EventTranslator::GenerateKeyReleaseEventNoGrab(NSEvent *theEvent)
 {
    assert(theEvent != nil && "GenerateKeyReleaseEventNoGrab, theEvent parameter is nil");
    
-   NSView<X11Window> *candidateView = FindViewUnderPointer();
+   NSView<X11Window> * const candidateView = FindViewUnderPointer();
 
    if (candidateView && Detail::IsParent(fFocusView, candidateView))
       GenerateKeyEventForView(candidateView, theEvent);
@@ -1628,7 +1628,7 @@ void EventTranslator::GenerateKeyEventForView(NSView<X11Window> *view, NSEvent *
       
    NSPoint mousePosition = {};
    SortTopLevelWindows();
-   if (QuartzWindow *topLevel = FindTopLevelWindowForMouseEvent())
+   if (QuartzWindow * const topLevel = FindTopLevelWindowForMouseEvent())
       mousePosition = [topLevel mouseLocationOutsideOfEventStream];
 
    if (eventType == kKeyPressMask)
@@ -1686,7 +1686,7 @@ void EventTranslator::FindKeyGrabView(NSView<X11Window> *fromView, NSEvent *theE
    assert(fromView != nil && "FindKeyGrabView, fromView parameter is nil");
    assert(theEvent != nil && "FindKeyGrabView, theEvent parameter is nil");
 
-   NSString *characters = [theEvent charactersIgnoringModifiers];
+   NSString * const characters = [theEvent charactersIgnoringModifiers];
    assert(characters != nil && "FindKeyGrabView, [theEvent characters] returned nil");
    assert([characters length] > 0 && "FindKeyGrabView, characters is an empty string");
 
@@ -1703,7 +1703,7 @@ void EventTranslator::FindKeyGrabView(NSView<X11Window> *fromView, NSEvent *theE
 NSView<X11Window> *EventTranslator::FindViewUnderPointer()
 {
    SortTopLevelWindows();
-   if (QuartzWindow *topLevel = FindTopLevelWindowForMouseEvent()) {
+   if (QuartzWindow * const topLevel = FindTopLevelWindowForMouseEvent()) {
       const NSPoint mousePosition = [topLevel mouseLocationOutsideOfEventStream];
       if (NSView<X11Window> *candidateView = (NSView<X11Window> *)[[topLevel contentView] hitTest : mousePosition])
          return candidateView;
@@ -1736,11 +1736,11 @@ void EventTranslator::SortTopLevelWindows()
 
    fWindowStack.clear();
 
-   NSArray *orderedWindows = [NSApp orderedWindows];
+   NSArray * const orderedWindows = [NSApp orderedWindows];
    for (NSWindow *window in orderedWindows) {
       if (![window isKindOfClass : [QuartzWindow class]])
          continue;
-      QuartzWindow *qw = (QuartzWindow *)window;
+      QuartzWindow * const qw = (QuartzWindow *)window;
       if (qw.fMapState == kIsViewable)
          fWindowStack.push_back((QuartzWindow *)window);
    }

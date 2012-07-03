@@ -74,7 +74,7 @@ DrawLine::DrawLine(Drawable_t wid, const GCValues_t &gc, const Point_t &p1, cons
 //______________________________________________________________________________
 void DrawLine::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->DrawLineAux(fID, fGC, fP1.fX, fP1.fY, fP2.fX, fP2.fY);
 }
@@ -92,7 +92,7 @@ DrawSegments::DrawSegments(Drawable_t wid, const GCValues_t &gc, const Segment_t
 //______________________________________________________________________________
 void DrawSegments::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->DrawSegmentsAux(fID, fGC, &fSegments[0], (Int_t)fSegments.size());
 }
@@ -107,7 +107,7 @@ ClearArea::ClearArea(Window_t wid, const Rectangle_t &area)
 //______________________________________________________________________________
 void ClearArea::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->ClearAreaAux(fID, fArea.fX, fArea.fY, fArea.fWidth, fArea.fHeight);   
 }
@@ -130,7 +130,7 @@ bool CopyArea::HasOperand(Drawable_t drawable)const
 //______________________________________________________________________________
 void CopyArea::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->CopyAreaAux(fSrc, fID, fGC, fArea.fX, fArea.fY, fArea.fWidth, fArea.fHeight, fDstPoint.fX, fDstPoint.fY);
 }
@@ -146,7 +146,7 @@ DrawString::DrawString(Drawable_t wid, const GCValues_t &gc, const Point_t &poin
 //______________________________________________________________________________
 void DrawString::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->DrawStringAux(fID, fGC, fPoint.fX, fPoint.fY, fText.c_str(), fText.length());
 }
@@ -161,7 +161,7 @@ FillRectangle::FillRectangle(Drawable_t wid, const GCValues_t &gc, const Rectang
 //______________________________________________________________________________
 void FillRectangle::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->FillRectangleAux(fID, fGC, fRectangle.fX, fRectangle.fY, fRectangle.fWidth, fRectangle.fHeight);
 }
@@ -179,7 +179,7 @@ FillPolygon::FillPolygon(Drawable_t wid, const GCValues_t &gc, const Point_t *po
 //______________________________________________________________________________   
 void FillPolygon::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->FillPolygonAux(fID, fGC, &fPolygon[0], (Int_t)fPolygon.size());
 }
@@ -194,7 +194,7 @@ DrawRectangle::DrawRectangle(Drawable_t wid, const GCValues_t &gc, const Rectang
 //______________________________________________________________________________
 void DrawRectangle::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->DrawRectangleAux(fID, fGC, fRectangle.fX, fRectangle.fY, fRectangle.fWidth, fRectangle.fHeight);
 }
@@ -229,7 +229,7 @@ DeletePixmap::DeletePixmap(Pixmap_t pixmap)
 //______________________________________________________________________________
 void DeletePixmap::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->DeletePixmapAux(fID);
 }
@@ -423,7 +423,7 @@ void RepaintTree(QuartzView *view)
    
    assert(view != nil && "RepaintTree, view parameter is nil");
    
-   TGCocoa *vx = (TGCocoa *)gVirtualX;
+   TGCocoa * const vx = (TGCocoa *)gVirtualX;
    vx->CocoaDrawON();
    
    QuartzView *qv = nil;//View, on winch we lock focus before redraw.
@@ -433,7 +433,7 @@ void RepaintTree(QuartzView *view)
          if ([child isKindOfClass : [QuartzView class]]) {
             qv = (QuartzView *)child;
             if ([qv lockFocusIfCanDraw]) {
-               NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
+               NSGraphicsContext * const nsContext = [NSGraphicsContext currentContext];
                assert(nsContext != nil && "RepaintTree, nsContext is nil");
                CGContextRef cgContext = (CGContextRef)[nsContext graphicsPort];
                assert(cgContext != 0 && "RepaintTree, cgContext is null");//remove this assert?
