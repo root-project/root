@@ -266,7 +266,7 @@ NSView<X11Window> *FindDNDAwareViewInPoint(NSArray *children, Window_t dragWinID
       if (child.fIsDNDAware && child.fID != dragWinID && child.fID != inputWinID)
          return child;//got it!
             
-      NSView<X11Window> *testView = FindDNDAwareViewInPoint(child, dragWinID, inputWinID, x, y, maxDepth - 1);
+      NSView<X11Window> *testView = FindDNDAwareViewInPoint([child subviews], dragWinID, inputWinID, x, y, maxDepth - 1);
       if (testView)
          return testView;
    }
