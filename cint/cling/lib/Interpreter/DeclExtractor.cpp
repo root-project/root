@@ -41,12 +41,9 @@ namespace cling {
       CompoundStmt* CS = dyn_cast<CompoundStmt>(FD->getBody());
       assert(CS && "Function body not a CompoundStmt?");
       DeclContext* DC = FD->getTranslationUnitDecl();
-      Scope* S = m_Sema->TUScope;
-      assert(S == m_Sema->getScopeForContext(DC) && "TU scope from DC?");
+      Scope* TUScope = m_Sema->TUScope;
+      assert(TUScope == m_Sema->getScopeForContext(DC) && "TU scope from DC?");
       llvm::SmallVector<Stmt*, 4> Stmts;
-
-      DC->removeDecl(FD);
-      S->RemoveDecl(FD);
 
       for (CompoundStmt::body_iterator I = CS->body_begin(),
              EI = CS->body_end();
@@ -95,7 +92,7 @@ namespace cling {
         }
       }
 
-      if (!CheckForClashingNames(TouchedDecls, DC, S)) {
+      if (!CheckForClashingNames(TouchedDecls, DC, TUScope)) {
 
         // Insert the extracted declarations before the wrapper
         for (size_t i = 0; i < TouchedDecls.size(); ++i) {
@@ -125,11 +122,10 @@ namespace cling {
         }
       }
 
-      // Add the wrapper even though it is empty. The ValuePrinterSynthesizer
-      // take care of it
       CS->setStmts(*m_Context, Stmts.data(), Stmts.size());
-      m_Sema->PushOnScopeChains(FD, m_Sema->getScopeForContext(DC),
-                                /*AddToContext*/true);
+      // Put the wrapper after its declarations. (Nice when AST dumping)
+      DC->removeDecl(FD);
+      DC->addDecl(FD);
     }
   }
 
