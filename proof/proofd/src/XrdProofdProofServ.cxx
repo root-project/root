@@ -339,7 +339,12 @@ int XrdProofdProofServ::FreeClientID(int pid)
       for (i = fClients.begin(); i != fClients.end(); ++i) {
          if ((*i) && (*i)->P()) {
             if ((*i)->P()->Pid() == pid || (*i)->P()->Pid() == -1) {
+               if (fProtocol == (*i)->P()) {
+                  SetProtocol(0);
+                  SetConnection(0);
+               }
                (*i)->Reset();
+               if (fParent == (*i)) SetParent(0);
                fNClients--;
                // Record time of last disconnection
                if (fNClients <= 0)
