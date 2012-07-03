@@ -5,12 +5,12 @@ a // CHECK: (int) 12
 const char* b = "b" // CHECK: (const char *) "b"
 
 struct C {int d;} E = {22};
-E // CHECK: (struct C) @0x{{[0-9A-Fa-f].*}}
+E // CHECK: (struct C) @0x{{[0-9A-Fa-f]{7,12}.}}
 E.d // CHECK: (int) 22
 
 #include <string>
 std::string s("xyz") 
-// CHECK: (std::string) @0x{{[0-9A-Fa-f]{8,}.}}
+// CHECK: (std::string) @0x{{[0-9A-Fa-f]{7,12}.}}
 // CHECK: c_str: "xyz"
 
 #include <limits.h>
@@ -26,10 +26,10 @@ public:
   }; 
 };
 Outer::Inner::C
-// CHECK: (enum Outer::Inner::E const) @0x{{[0-9A-Fa-f].*}}
+// CHECK: (enum Outer::Inner::E const) @0x{{[0-9A-Fa-f]{7,12}.}}
 // CHECK: (Outer::Inner::E::B) ? (Outer::Inner::E::C) : (int) 2 
 Outer::Inner::D
-// CHECK: (enum Outer::Inner::E const) @0x{{[0-9A-Fa-f].*}}
+// CHECK: (enum Outer::Inner::E const) @0x{{[0-9A-Fa-f]{7,12}.}}
 // CHECK: (Outer::Inner::E::D) : (int) -{{[0-9].*}}
 
 // Put an enum on the global scope
