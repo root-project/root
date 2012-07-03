@@ -87,6 +87,7 @@ void TImageDump::Open(const char *fname, Int_t type)
    fImage  = TImage::Create();
    fType   = type;
    SetName(fname);
+   SetTitle("IMG");
 }
 
 //______________________________________________________________________________
