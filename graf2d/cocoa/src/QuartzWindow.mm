@@ -238,11 +238,11 @@ QuartzWindow *FindWindowInPoint(Int_t x, Int_t y)
 {
    const Util::AutoreleasePool pool;//array's counter is increased, all object in array are also retained.
 
-   NSArray *orderedWindows = [NSApp orderedWindows];
+   NSArray * const orderedWindows = [NSApp orderedWindows];
    for (NSWindow *window in orderedWindows) {
       if (![window isKindOfClass : [QuartzWindow class]])
          continue;
-      QuartzWindow *qw = (QuartzWindow *)window;
+      QuartzWindow * const qw = (QuartzWindow *)window;
       //Check if point is inside.
       if (ScreenPointIsInView(qw.fContentView, x, y))
          return qw;
@@ -266,7 +266,7 @@ NSView<X11Window> *FindDNDAwareViewInPoint(NSArray *children, Window_t dragWinID
       if (child.fIsDNDAware && child.fID != dragWinID && child.fID != inputWinID)
          return child;//got it!
             
-      NSView<X11Window> *testView = FindDNDAwareViewInPoint([child subviews], dragWinID, inputWinID, x, y, maxDepth - 1);
+      NSView<X11Window> * const testView = FindDNDAwareViewInPoint([child subviews], dragWinID, inputWinID, x, y, maxDepth - 1);
       if (testView)
          return testView;
    }
@@ -284,11 +284,11 @@ NSView<X11Window> *FindDNDAwareViewInPoint(NSView *parentView, Window_t dragWinI
    const Util::AutoreleasePool pool;
 
    if (!parentView) {//Start from the screen as a 'root' window.
-      NSArray *orderedWindows = [NSApp orderedWindows];
+      NSArray * const orderedWindows = [NSApp orderedWindows];
       for (NSWindow *window in orderedWindows) {
          if (![window isKindOfClass : [QuartzWindow class]])
             continue;
-         QuartzWindow *qw = (QuartzWindow *)window;
+         QuartzWindow * const qw = (QuartzWindow *)window;
          if (qw.fMapState != kIsViewable)
             continue;
 
