@@ -259,7 +259,7 @@ NSView<X11Window> *FindDNDAwareViewInPoint(NSArray *children, Window_t dragWinID
    if (maxDepth <= 0)
       return nil;
 
-   NSEnumerator *reverseEnumerator = [children reverseObjectEnumerator];
+   NSEnumerator * const reverseEnumerator = [children reverseObjectEnumerator];
    for (NSView<X11Window> *child in reverseEnumerator) {
       if (!ScreenPointIsInView(child, x, y))
          continue;
