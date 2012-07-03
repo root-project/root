@@ -494,16 +494,17 @@ TFile::TFile(const TFile &) : TDirectoryFile(), fInfoCache(0)
 TFile::~TFile()
 {
    // File destructor.
+
    Close();
 
+   SafeDelete(fAsyncHandle);
+   SafeDelete(fCacheRead);
+   SafeDelete(fCacheWrite);
    SafeDelete(fProcessIDs);
    SafeDelete(fFree);
    SafeDelete(fArchive);
    SafeDelete(fInfoCache);
    SafeDelete(fOpenPhases);
-   SafeDelete(fAsyncHandle);
-   SafeDelete(fCacheRead);
-   SafeDelete(fCacheWrite);
 
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfClosedObjects()->Remove(this);
@@ -842,6 +843,9 @@ void TFile::Close(Option_t *option)
    delete fClassIndex;
    fClassIndex = 0;
 
+   // Finish any concurrent I/O operations before we close the file handles.
+   if (fCacheRead) fCacheRead->Close();
+     
    // Delete all supported directories structures from memory
    // If gDirectory points to this object or any of the nested
    // TDirectoryFile, TDirectoryFile::Close will induce the proper cd.
