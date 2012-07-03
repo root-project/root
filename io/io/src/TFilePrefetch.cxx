@@ -89,7 +89,7 @@ void TFilePrefetch::ReadAsync(TFPBlock* block, Bool_t &inCache)
    }
    else{
       fFile->ReadBuffers(block->GetBuffer(), block->GetPos(), block->GetLen(), block->GetNoElem());
-      if (fFile->GetArchive()){
+      if (fFile->GetArchive()) {
          for (Int_t i = 0; i < block->GetNoElem(); i++)
             block->SetPos(i, block->GetPos(i) - fFile->GetArchiveOffset());
       }
