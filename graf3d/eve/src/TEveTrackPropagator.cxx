@@ -353,6 +353,30 @@ void TEveTrackPropagator::ResetTrack()
 }
 
 //______________________________________________________________________________
+Int_t TEveTrackPropagator::GetCurrentPoint() const
+{
+   // Get index of current point on track.
+
+   return fPoints.size() - 1;
+}
+
+//______________________________________________________________________________
+Double_t TEveTrackPropagator::GetTrackLength(Int_t start_point, Int_t end_point) const
+{
+   // Calculate track length from start_point to end_point.
+   // If end_point is less than 0, distance to the end is returned.
+
+   if (end_point < 0) end_point = fPoints.size() - 1;
+
+   Double_t sum = 0;
+   for (Int_t i = start_point; i < end_point; ++i)
+   {
+      sum += (fPoints[i+1] - fPoints[i]).Mag();
+   }
+   return sum;
+}
+
+//______________________________________________________________________________
 Bool_t TEveTrackPropagator::GoToVertex(TEveVectorD& v, TEveVectorD& p)
 {
    // Propagate particle with momentum p to vertex v.
@@ -680,11 +704,11 @@ Bool_t TEveTrackPropagator::LoopToLineSegment(const TEveVectorD& s, const TEveVe
       ClosestPointFromVertexToLineSegment(forwV, s, r, rMagInv, forwC);
 
       // check forwV is over segment with orthogonal component of
-      // of momentum to vector r
+      // momentum to vector r
       TEveVectorD b = r; b.Normalize();
-      Double_t x = forwP.Dot(b);
+      Double_t    x = forwP.Dot(b);
       TEveVectorD pTPM = forwP - x*b;
-      if (pTPM.Dot(forwC-forwV) < 0)
+      if (pTPM.Dot(forwC - forwV) < 0)
       {
          break;
       }
@@ -698,7 +722,7 @@ Bool_t TEveTrackPropagator::LoopToLineSegment(const TEveVectorD& s, const TEveVe
       fPoints.push_back(forwV);
       currV = forwV;
       p     = forwP;
-      currC=forwC;
+      currC = forwC;
       ++np;
    } while (np < fNMax);
 
@@ -711,8 +735,9 @@ Bool_t TEveTrackPropagator::LoopToLineSegment(const TEveVectorD& s, const TEveVe
    {
       if ((v - currV).Mag() > kStepEps)
       {
-
-         Double_t step_frac = (v-currV).Mag()/(currV-forwV).Mag();
+         TEveVector last_step = forwV - currV;
+         TEveVector delta     = v - currV;
+         Double_t  step_frac  = last_step.Dot(delta) / last_step.Mag2();
          if (step_frac > 0)
          {
             // Step for fraction of previous step size.
@@ -922,25 +947,26 @@ Bool_t TEveTrackPropagator::IntersectPlane(const TEveVectorD& p,
 
 //______________________________________________________________________________
 void TEveTrackPropagator::ClosestPointFromVertexToLineSegment(const TEveVectorD& v,
-                                                    const TEveVectorD& s,
-                                                    const TEveVectorD& r,
-                                                    Double_t rMagInv,
-                                                    TEveVectorD& c)
+                                                              const TEveVectorD& s,
+                                                              const TEveVectorD& r,
+                                                              Double_t rMagInv,
+                                                              TEveVectorD& c)
 {
    // Get closest point from given vertex v to line segment defined with s and r.
    // Argument rMagInv is cached. rMagInv= 1./rMag()
 
    TEveVectorD dir = v - s;
-   TEveVectorD b1 = r*rMagInv;
+   TEveVectorD b1  = r * rMagInv;
 
    // paralell distance
-   Double_t dot = dir.Dot(b1);
-   TEveVectorD dirI = dot *  b1;
+   Double_t dot     = dir.Dot(b1);
+   TEveVectorD dirI = dot * b1;
 
    Double_t facX = dot * rMagInv;
-   if ( facX <= 0)
+
+   if (facX <= 0)
       c = s;
-   else if ( facX >= 1)
+   else if (facX >= 1)
       c = s + r;
    else
       c = s + dirI;

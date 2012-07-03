@@ -56,7 +56,8 @@ public:
    void   SetRnrPoints(Bool_t r);
    void   SetSmooth(Bool_t r);
 
-   void   ReduceSegmentLengths(Float_t max);
+   void    ReduceSegmentLengths(Float_t max);
+   Float_t CalculateLineLength() const;
 
    TEveVector GetLineStart() const;
    TEveVector GetLineEnd()   const;

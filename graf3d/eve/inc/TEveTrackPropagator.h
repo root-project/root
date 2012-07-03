@@ -176,7 +176,7 @@ private:
    TEveTrackPropagator(const TEveTrackPropagator&);            // Not implemented
    TEveTrackPropagator& operator=(const TEveTrackPropagator&); // Not implemented
 
-  void  DistributeOffset(const TEveVectorD& off, Int_t first_point, Int_t np, TEveVectorD& p);
+   void DistributeOffset(const TEveVectorD& off, Int_t first_point, Int_t np, TEveVectorD& p);
 
 protected:
    EStepper_e               fStepper;
@@ -238,7 +238,7 @@ protected:
    Bool_t  PointOverVertex(const TEveVector4D& v0, const TEveVector4D& v, Double_t* p=0);
 
    void    ClosestPointFromVertexToLineSegment(const TEveVectorD& v, const TEveVectorD& s, const TEveVectorD& r, Double_t rMagInv, TEveVectorD& c);
-   Bool_t ClosestPointBetweenLines(const TEveVectorD& , const TEveVectorD& , const TEveVectorD& , const TEveVectorD& , TEveVectorD& out);
+   Bool_t  ClosestPointBetweenLines(const TEveVectorD&, const TEveVectorD&, const TEveVectorD&, const TEveVectorD&, TEveVectorD& out);
 
 public:
    TEveTrackPropagator(const char* n="TEveTrackPropagator", const char* t="",
@@ -254,6 +254,10 @@ public:
    // propagation
    void   InitTrack(const TEveVectorD& v, Int_t charge);
    void   ResetTrack();
+
+   Int_t    GetCurrentPoint() const;
+   Double_t GetTrackLength(Int_t start_point=0, Int_t end_point=-1) const;
+
    virtual void   GoToBounds(TEveVectorD& p);
    virtual Bool_t GoToVertex(TEveVectorD& v, TEveVectorD& p);
    virtual Bool_t GoToLineSegment(const TEveVectorD& s, const TEveVectorD& r, TEveVectorD& p);
@@ -327,7 +331,6 @@ public:
    TMarker& RefPMAtt()  { return fPMAtt; }
    TMarker& RefFVAtt()  { return fFVAtt; }
    TMarker& RefPTBAtt() { return fPTBAtt; }
-
 
    static Bool_t IsOutsideBounds(const TEveVectorD& point, Double_t maxRsqr, Double_t maxZ);
 
