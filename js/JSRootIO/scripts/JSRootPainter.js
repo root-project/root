@@ -229,6 +229,7 @@ var d, key_tree;
       if (histo['fYaxis']['fTimeDisplay']) {
          time_scaley = 1000; yaxis_type = 'datetime';
       }
+      var zaxis_type = logz ? 'logarithmic' : 'linear';
       if (histo['_typename'].match(/\bTH1/)) {
          var scale = (histo['fXaxis']['fXmax'] - histo['fXaxis']['fXmin']) /
                       histo['fXaxis']['fNbins'];
@@ -587,7 +588,7 @@ var d, key_tree;
                      if (histo['fFunctions'][i]['fX1NDC'] > 1.0 || histo['fFunctions'][i]['fY1NDC'] > 1.0 ||
                          histo['fFunctions'][i]['fX1NDC'] < 0.0 || histo['fFunctions'][i]['fY1NDC'] < 0.0)
                         continue;
-                     var pos_x = histo['fFunctions'][i]['fX1NDC'] * scale_x;
+                     var pos_x = 10 + (histo['fFunctions'][i]['fX1NDC'] * scale_x);
                      var pos_y = (1.0 - histo['fFunctions'][i]['fY1NDC']) * scale_y;
                      var lines = '';
                      var nlines = histo['fFunctions'][i]['fLines'].length;

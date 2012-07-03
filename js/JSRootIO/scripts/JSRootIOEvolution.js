@@ -567,10 +567,21 @@ String.prototype.endsWith = function(str, ignoreCase) {
    };
 
    JSROOTIO.DisplayPrimitives = function(primitives, obj_name, cycle, opt) {
+      primitives['paves_text'] = new Array();
+      for (var i=0; i<primitives.length; ++i) {
+         var classname = primitives[i]['_typename'];
+         if (classname == 'JSROOTIO.TPaveText') {
+            primitives['paves_text'].push(primitives[i]);
+         }
+      }
       for (var i=0; i<primitives.length; ++i) {
          var classname = primitives[i]['_typename'];
          if (classname.match(/\bTH1/) || classname.match(/\bTH2/) ||
              classname == 'JSROOTIO.TGraph') {
+            for (var j=0; j<primitives['paves_text'].length; ++j) {
+               if (primitives[i]['fFunctions'])
+                  primitives[i]['fFunctions'].push(primitives['paves_text'][j]);
+            }
             displayObject(primitives[i], cycle, obj_index, opt);
             obj_list.push(obj_name+cycle);
             obj_index++;
@@ -586,6 +597,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
             JSROOTIO.DisplayPrimitives(primitives[i]['fPrimitives'], obj_name, cycle, options);
          }
       }
+      delete primitives['paves_text'];
    };
 
    JSROOTIO.Print = function(str, what) {
