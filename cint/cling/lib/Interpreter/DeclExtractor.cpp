@@ -67,8 +67,11 @@ namespace cling {
             if (OldS)
               OldS->RemoveDecl(ND);
 
+            if (ND->getDeclContext() == ND->getLexicalDeclContext())
+              ND->setLexicalDeclContext(DC);
+            else 
+              assert("Not implemented: Decl with different lexical context");
             ND->setDeclContext(DC);
-            ND->setLexicalDeclContext(DC); //FIXME: Watch out
 
             if (VarDecl* VD = dyn_cast<VarDecl>(ND)) {
               VD->setStorageClass(SC_None);
