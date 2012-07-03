@@ -7420,6 +7420,19 @@ void TTree::SetDirectory(TDirectory* dir)
    }
    if (fDirectory) {
       fDirectory->Remove(this);
+
+      // Delete or move the file cache if it points to this Tree
+      TFile *file = fDirectory->GetFile();
+      if (file) {
+         TFileCacheRead *pf = file->GetCacheRead(this);
+         file->SetCacheRead(0,this);
+         TFile *newfile = dir ? dir->GetFile() : 0;
+         if (newfile) {
+            newfile->SetCacheRead(pf,this);
+         } else {
+            delete pf;
+         }
+      }
    }
    fDirectory = dir;
    if (fDirectory) {
