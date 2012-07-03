@@ -94,6 +94,7 @@ public:
    virtual void        AddBranch(const char * /*branch*/, Bool_t /*subbranches*/ = kFALSE) {}
    virtual void        AddNoCacheBytesRead(Long64_t len) { fNoCacheBytesRead += len; }
    virtual void        AddNoCacheReadCalls(Int_t reads) { fNoCacheReadCalls += reads; }
+   virtual void        Close(Option_t *option="");
    virtual Int_t       GetBufferSize() const { return fBufferSize; };
    virtual Long64_t    GetBytesRead() const { return fBytesRead; }
    virtual Long64_t    GetNoCacheBytesRead() const { return fNoCacheBytesRead; }

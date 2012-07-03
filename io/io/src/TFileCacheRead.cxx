@@ -180,6 +180,21 @@ TFileCacheRead::~TFileCacheRead()
 }
 
 //_____________________________________________________________________________
+void TFileCacheRead::Close(Option_t * /* opt = "" */)
+{
+   // Close out any threads or asynchronous fetches used by the underlying 
+   // implementation.
+   // This is called by TFile::Close to prevent usage of the file handles
+   // after the closing of the file.
+   
+   if (fPrefetch) {
+      delete fPrefetch;
+      fPrefetch = 0;
+   }
+
+}
+
+//_____________________________________________________________________________
 void TFileCacheRead::Prefetch(Long64_t pos, Int_t len)
 {
    // Add block of length len at position pos in the list of blocks to
