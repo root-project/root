@@ -216,6 +216,24 @@ NSPoint TranslateCoordinates(NSView<X11Window> *from, NSView<X11Window> *to, NSP
 }
 
 //______________________________________________________________________________
+bool ScreenPointIsInView(NSView<X11Window> *view, Int_t x, Int_t y)
+{
+   assert(view != nil && "ScreenPointIsInView, view parameter is nil");
+   
+   NSPoint point = {};
+   point.x = x, point.y = y;
+   point = TranslateFromScreen(point, view);
+   const NSRect viewFrame = view.frame;
+
+   if (point.x < 0 || point.x > viewFrame.size.width)
+      return false;
+   if (point.y < 0 || point.y > viewFrame.size.height)
+      return false;
+   
+   return true;
+}
+
+//______________________________________________________________________________
 QuartzWindow *FindWindowInPoint(Int_t x, Int_t y)
 {
    const Util::AutoreleasePool pool;//array's counter is increased, all object in array are also retained.
@@ -226,20 +244,75 @@ QuartzWindow *FindWindowInPoint(Int_t x, Int_t y)
          continue;
       QuartzWindow *qw = (QuartzWindow *)window;
       //Check if point is inside.
-      NSPoint screenPoint;
-      screenPoint.x = x;
-      screenPoint.y = y;      
-      
-      const NSPoint viewPoint = X11::TranslateFromScreen(screenPoint, qw.fContentView);
-      if (viewPoint.x < 0. || viewPoint.x > qw.fWidth)
-         continue;
-      if (viewPoint.y < 0. || viewPoint.y > qw.fHeight)
-         continue;
-         
-      return qw;
+      if (ScreenPointIsInView(qw.fContentView, x, y))
+         return qw;
    }
    
    return nil;
+}
+
+//______________________________________________________________________________
+NSView<X11Window> *FindDNDAwareViewInPoint(NSArray *children, Window_t dragWinID, Window_t inputWinID, Int_t x, Int_t y, Int_t maxDepth)
+{
+   assert(children != nil && "FindDNDAwareViewInPoint, children parameter is nil");
+   
+   if (maxDepth <= 0)
+      return nil;
+
+   NSEnumerator *reverseEnumerator = [children reverseObjectEnumerator];
+   for (NSView<X11Window> *child in reverseEnumerator) {
+      if (!ScreenPointIsInView(child, x, y))
+         continue;
+      if (child.fIsDNDAware && child.fID != dragWinID && child.fID != inputWinID)
+         return child;//got it!
+            
+      NSView<X11Window> *testView = FindDNDAwareViewInPoint(child, dragWinID, inputWinID, x, y, maxDepth - 1);
+      if (testView)
+         return testView;
+   }
+
+   return nil;
+}
+
+//______________________________________________________________________________
+NSView<X11Window> *FindDNDAwareViewInPoint(NSView *parentView, Window_t dragWinID, Window_t inputWinID, Int_t x, Int_t y, Int_t maxDepth)
+{
+   //X and Y are ROOT's screen coordinates (Y is inverted).
+   if (maxDepth <= 0)
+      return nil;
+
+   const Util::AutoreleasePool pool;
+
+   if (!parentView) {//Start from the screen as a 'root' window.
+      NSArray *orderedWindows = [NSApp orderedWindows];
+      for (NSWindow *window in orderedWindows) {
+         if (![window isKindOfClass : [QuartzWindow class]])
+            continue;
+         QuartzWindow *qw = (QuartzWindow *)window;
+         if (qw.fMapState != kIsViewable)
+            continue;
+
+         //First, check this view itself, my be we found what we need already.
+         NSView<X11Window> *testView = qw.fContentView;
+         if (!ScreenPointIsInView(testView, x, y))
+            continue;
+         
+         if (testView.fIsDNDAware && testView.fID != dragWinID && testView.fID != inputWinID)
+            return testView;
+
+         //Recursive part, check children.
+         NSArray * const children = [testView subviews];
+         testView = FindDNDAwareViewInPoint(children, dragWinID, inputWinID, x, y, maxDepth - 1);
+         if (testView)
+            return testView;
+      }
+
+      //We did not find anything for 'root' window as parent.
+      return nil;
+   } else {
+      //Parent view is tested already (or should not be tested at all, check children.
+      return FindDNDAwareViewInPoint([parentView subviews], dragWinID, inputWinID, x, y, maxDepth);
+   }
 }
 
 //______________________________________________________________________________
@@ -2338,7 +2411,6 @@ void print_mask_info(ULong_t mask)
       event1.fType = kClientMessage;
       event1.fWindow = fID;
       event1.fHandle = gVirtualX->InternAtom("XdndEnter", kFALSE);
-      event1.fFormat = 0;
       event1.fUser[0] = long(fID);
       event1.fUser[2] = gVirtualX->InternAtom("text/uri-list", kFALSE);
       //
@@ -2349,9 +2421,12 @@ void print_mask_info(ULong_t mask)
       event2.fType = kClientMessage;
       event2.fWindow = fID;
       event2.fHandle = gVirtualX->InternAtom("XdndPosition", kFALSE);
-      event2.fFormat = 0;
       event2.fUser[0] = long(fID);
       event2.fUser[2] = 0;//Here I have to pack x and y for drop coordinates, shifting by 16 bits.
+      NSPoint dropPoint = [sender draggingLocation];
+      dropPoint = [self convertPointFromBase : dropPoint];
+      dropPoint = ROOT::MacOSX::X11::TranslateToScreen(self, dropPoint);
+      event2.fUser[2] = UShort_t(dropPoint.y) | (UShort_t(dropPoint.x) << 16);
       
       gVirtualX->SendEvent(fID, &event2);
 
@@ -2359,9 +2434,20 @@ void print_mask_info(ULong_t mask)
       event3.fType = kClientMessage;
       event3.fWindow = fID;
       event3.fHandle = gVirtualX->InternAtom("XdndDrop", kFALSE);
-      event3.fFormat = 0;
+   
       //Here I have to put string ("file://....") into the ROOT's paste board.
-      //
+      NSArray * const files = [pasteBoard propertyListForType : NSFilenamesPboardType];
+      NSPasteboard * const rootPasteboard = [NSPasteboard pasteboardWithName : @"pasteboard_ROOT"];
+      [rootPasteboard clearContents];
+
+      NSMutableArray *cpData = [[NSMutableArray alloc] init];
+      for (id file in files) {
+         NSString *item = [@"file://" stringByAppendingString : file];
+         [cpData addObject : item];
+      }
+
+      [rootPasteboard writeObjects : cpData];
+      [cpData release];
       
       gVirtualX->SendEvent(fID, &event3);
 #else

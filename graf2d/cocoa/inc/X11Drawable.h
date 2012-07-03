@@ -138,6 +138,8 @@
 //Cursors.
 @property (nonatomic, assign) ECursor fCurrentCursor;
 
+@property (nonatomic, assign) BOOL fIsDNDAware;
+
 @end
 
 #endif

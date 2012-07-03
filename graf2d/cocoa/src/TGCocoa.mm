@@ -3696,11 +3696,30 @@ void TGCocoa::SetTypeList(Window_t, Atom_t, Atom_t *)
 }
 
 //______________________________________________________________________________
-Window_t TGCocoa::FindRWindow(Window_t, Window_t, Window_t, int, int, int)
+Window_t TGCocoa::FindRWindow(Window_t winID, Window_t dragWinID, Window_t inputWinID, int x, int y, int maxDepth)
 {
+   //Comment from TVirtualX:
+
    // Recursively search in the children of Window for a Window which is at
    // location x, y and is DND aware, with a maximum depth of maxd.
+   // Ignore dragwin and input (???)
+   //End of comment from TVirtualX.
 
+
+   //Now my comments. The name of this function, as usually, says nothing about what it does.
+   //It's searching for some window, probably child of winID, or may be winID itself(?) and 
+   //window must be DND aware. So the name should be FindDNDAwareWindowRecursively or something like this.
+   
+   //This function is not documented, comments suck as soon as they are simply wrong - the
+   //first return statement in X11 version contradicts with comments
+   //about child. Since X11 version is more readable, I'm reproducing X11 version here,
+   //and ... my code can't be wrong, since there is nothing right about this function.
+
+   NSView<X11Window> * const testView = X11::FindDNDAwareViewInPoint(fPimpl->IsRootWindow(winID) ? nil : fPimpl->GetWindow(winID).fContentView, 
+                                                                     dragWinID, inputWinID, x, y, maxDepth);
+   if (testView)
+      return testView.fID;
+   
    return kNone;
 }
 
