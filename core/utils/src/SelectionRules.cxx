@@ -28,7 +28,7 @@
 
 #include "cling/Interpreter/Interpreter.h"
 
-const clang::CXXRecordDecl *R__ScopeSearch(const char *name) ;
+const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const clang::Type** resultType = 0) ;
 
 void SelectionRules::AddClassSelectionRule(const ClassSelectionRule& classSel)
 {
@@ -1727,9 +1727,10 @@ bool SelectionRules::SearchNames(cling::Interpreter &interp)
             std::string name_value;
             it->GetAttributeValue("name", name_value);
             // In Class selection rules, we should be interested in scopes.
-            const clang::CXXRecordDecl *target = R__ScopeSearch(name_value.c_str());            
+            const clang::Type *typeptr = 0;
+            const clang::CXXRecordDecl *target = R__ScopeSearch(name_value.c_str(), &typeptr);            
             if (target) {
-               it->SetCXXRecordDecl(target);
+               it->SetCXXRecordDecl(target,typeptr);
             }
          }
       }

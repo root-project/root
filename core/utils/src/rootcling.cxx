@@ -639,14 +639,14 @@ void R__GetQualifiedName(std::string &qual_name, const RScanner::AnnotatedRecord
    R__GetQualifiedName(qual_name,*annotated.GetRecordDecl());
 }
 
-std::string  R__GetQualifiedName(const clang::QualType &type, const clang::NamedDecl &forcontext)
+std::string R__GetQualifiedName(const clang::QualType &type, const clang::NamedDecl &forcontext)
 {
    std::string result;
    R__GetQualifiedName(result,type,forcontext);
    return result;
 }
 
-std::string  R__GetQualifiedName(const clang::Type &type, const clang::NamedDecl &forcontext)
+std::string R__GetQualifiedName(const clang::Type &type, const clang::NamedDecl &forcontext)
 {
    std::string result;
    R__GetQualifiedName(result,clang::QualType(&type,0),forcontext);
@@ -704,15 +704,15 @@ bool R__IsInt(const clang::FieldDecl *field)
 cling::Interpreter *gInterp = 0;
 
 
-const clang::CXXRecordDecl *R__ScopeSearch(const char *name) 
+const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const clang::Type** resultType = 0) 
 {
    // Return the scope corresponding to 'name' or std::'name'
   
-   const clang::CXXRecordDecl *result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupScope(name));
+   const clang::CXXRecordDecl *result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupScope(name,resultType));
    if (!result) {
       std::string std_name("std::");
       std_name += name;
-      result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupScope(std_name));
+      result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupScope(std_name,resultType));
    }
    return result;
 }

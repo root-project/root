@@ -28,6 +28,7 @@
 namespace clang {
    class NamedDecl;
    class CXXRecordDecl;
+   class Type;
 }
 
 class BaseSelectionRule
@@ -49,6 +50,7 @@ private:
    std::list<std::string> fFileSubPatterns; // a list of subpatterns, generated form a file_pattern attribute
    bool                   fMatchFound;      // this is true if this selection rule has been used at least once
    const clang::CXXRecordDecl  *fCXXRecordDecl;   // Record decl of the entity searched for.
+   const clang::Type           *fRequestedType;   // Same as the record decl but with some of the typedef preserved (Double32_t, Float16_t, etc..)
       
 public:
    BaseSelectionRule(long index) : fIndex(index),fIsSelected(kNo),fMatchFound(false),fCXXRecordDecl(0) {} 
@@ -72,8 +74,9 @@ public:
    void  SetMatchFound(bool match); // set fMatchFound
    bool  GetMatchFound() const;     // get fMatchFound
    
+   const clang::Type *GetRequestedType() const;
    const clang::CXXRecordDecl *GetCXXRecordDecl() const;
-   void SetCXXRecordDecl(const clang::CXXRecordDecl *decl);
+   void SetCXXRecordDecl(const clang::CXXRecordDecl *decl, const clang::Type *typeptr);
 
 protected:
    static bool  BeginsWithStar(const std::string& pattern); // returns true if a pattern begins with a star

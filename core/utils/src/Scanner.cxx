@@ -45,6 +45,9 @@
 
 // #define SELECTION_DEBUG
 
+void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext);
+void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl);
+
 /* -------------------------------------------------------------------------- */
 using namespace clang;
 const char* RScanner::fgClangDeclKey = "ClangDecl"; // property key used for connection with Clang objects
@@ -57,13 +60,32 @@ int RScanner::fgAnonymousEnumCounter  = 0;
 std::map <clang::Decl*, std::string> RScanner::fgAnonymousClassMap;
 std::map <clang::Decl*, std::string> RScanner::fgAnonymousEnumMap;
 
+//______________________________________________________________________________
+RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestVersionNumber) : 
+   fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
+   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber) 
+{
+   // Normalize the requested typename.
+   
+   // For comparison purposes.
+   TClassEdit::TSplitType splitname(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
+   splitname.ShortType( fRequestedName, TClassEdit::kDropAllDefault );
+   
+   std::string normalizedName;
+   R__GetQualifiedName(normalizedName,clang::QualType(requestedType,0),*decl);
+
+   std::string canonicalName;
+   R__GetQualifiedName(canonicalName,*decl);
+
+   fprintf(stderr,"Created annotation with: requested name=%-22s normalized name=%-22s canonical name=%-22s\n",fRequestedName.c_str(),normalizedName.c_str(),canonicalName.c_str());
+}
 
 //______________________________________________________________________________
 RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestVersionNumber) : 
    fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
    fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber) 
 {
-   // Normalized the requested name.
+   // Normalize the requested name.
 
    // const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (decl);
    // if (tmplt_specialization) {
@@ -796,7 +818,7 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
       
       std::string name_value;
       if (selected->GetAttributeValue("name", name_value)) {
-         fSelectedClasses.push_back(AnnotatedRecordDecl(selected->GetIndex(),D,name_value.c_str(),
+         fSelectedClasses.push_back(AnnotatedRecordDecl(selected->GetIndex(),selected->GetRequestedType(), D,name_value.c_str(),
                                                         selected->RequestStreamerInfo(),selected->RequestNoStreamer(),
                                                         selected->RequestNoInputOperator(),selected->RequestOnlyTClass(),selected->RequestedVersionNumber()));
       } else {

@@ -23,7 +23,7 @@
 #include <string.h>
 #include "clang/AST/DeclCXX.h"
 
-const clang::CXXRecordDecl *R__ScopeSearch(const char *name);
+const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const clang::Type** resultType = 0);
 
 BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue)
    : fIndex(index), fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(0)
@@ -476,13 +476,19 @@ bool BaseSelectionRule::GetMatchFound() const
    return fMatchFound;
 }
 
+const clang::Type *BaseSelectionRule::GetRequestedType() const
+{
+   return fRequestedType;
+}
+
 const clang::CXXRecordDecl *BaseSelectionRule::GetCXXRecordDecl() const
 {
    return fCXXRecordDecl;
 }
 
-void BaseSelectionRule::SetCXXRecordDecl(const clang::CXXRecordDecl *decl)
+void BaseSelectionRule::SetCXXRecordDecl(const clang::CXXRecordDecl *decl, const clang::Type *typeptr)
 {
    fCXXRecordDecl = decl;
+   fRequestedType = typeptr;
 }
 

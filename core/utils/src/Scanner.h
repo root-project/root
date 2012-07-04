@@ -91,6 +91,7 @@ public:
             fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestedVersionNumber) 
             {}
       AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber);
+      AnnotatedRecordDecl(long index, const clang::Type *requetedType, const clang::RecordDecl *decl, const char *requestedName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber);
      ~AnnotatedRecordDecl() {
          // Nothing to do we do not own the pointer;
       }
