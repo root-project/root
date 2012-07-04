@@ -2643,6 +2643,8 @@ int G__fgetline(char* string)
    // --
    //   'as aljaf alijflijaf lisflif\n'
    //   ----------------------------^
+   // Read until the end of the line, however if the last character is a continuation
+   // ('\') immedidately followed by a newline, this routine also read the next line.
    int c;
    int i = 0;
    while ((c = G__fgetc()) != '\n' && c != '\r' && c != EOF) {
