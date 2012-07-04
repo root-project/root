@@ -1546,8 +1546,8 @@ void BeforeParseInit()
    //---------------------------------------------------------------------------
    // Add the conversion rule processors
    //---------------------------------------------------------------------------
-   G__addpragma( (char*)"read", ProcessReadPragma );
-   G__addpragma( (char*)"readraw", ProcessReadRawPragma );
+   // G__addpragma( (char*)"read", ProcessReadPragma );
+   // G__addpragma( (char*)"readraw", ProcessReadRawPragma );
 
 }
 
@@ -6391,32 +6391,8 @@ int main(int argc, char **argv)
 #endif
 
    //---------------------------------------------------------------------------
-   // Write schema evolution reelated headers and declarations
+   // Parse the linkdef or selection.xml file.
    //---------------------------------------------------------------------------
-   if( !G__ReadRules.empty() || !G__ReadRawRules.empty() ) {
-      (*dictSrcOut) << "#include \"TBuffer.h\"" << std::endl;
-      (*dictSrcOut) << "#include \"TVirtualObject.h\"" << std::endl;
-      (*dictSrcOut) << "#include <vector>" << std::endl;
-      (*dictSrcOut) << "#include \"TSchemaHelper.h\"" << std::endl << std::endl;
-
-      std::list<std::string>           includes;
-      std::list<std::string>::iterator it;
-      GetRuleIncludes( includes );
-      for( it = includes.begin(); it != includes.end(); ++it )
-         (*dictSrcOut) << "#include <" << *it << ">" << std::endl;
-      (*dictSrcOut) << std::endl;
-   }
-
-   // Loop over all command line arguments and write include statements.
-   // Skip options and any LinkDef.h.
-   if (ifl && !icc) {
-      for (i = ic; i < argc; i++) {
-         if (*argv[i] != '-' && *argv[i] != '+' &&
-             !(R__IsSelectionFile(argv[i])))
-            (*dictSrcOut) << "#include \"" << argv[i] << "\"" << std::endl;
-      }
-      (*dictSrcOut) << std::endl;
-   }
 
    string linkdefFilename;
    if (il) {
@@ -6482,6 +6458,34 @@ int main(int argc, char **argv)
 
       Error(0,"Unrecognized selection file: %s",linkdefFilename.c_str());
 
+   }
+
+   //---------------------------------------------------------------------------
+   // Write schema evolution reelated headers and declarations
+   //---------------------------------------------------------------------------
+   if( !G__ReadRules.empty() || !G__ReadRawRules.empty() ) {
+      (*dictSrcOut) << "#include \"TBuffer.h\"" << std::endl;
+      (*dictSrcOut) << "#include \"TVirtualObject.h\"" << std::endl;
+      (*dictSrcOut) << "#include <vector>" << std::endl;
+      (*dictSrcOut) << "#include \"TSchemaHelper.h\"" << std::endl << std::endl;
+
+      std::list<std::string>           includes;
+      std::list<std::string>::iterator it;
+      GetRuleIncludes( includes );
+      for( it = includes.begin(); it != includes.end(); ++it )
+         (*dictSrcOut) << "#include <" << *it << ">" << std::endl;
+      (*dictSrcOut) << std::endl;
+   }
+
+   // Loop over all command line arguments and write include statements.
+   // Skip options and any LinkDef.h.
+   if (ifl && !icc) {
+      for (i = ic; i < argc; i++) {
+         if (*argv[i] != '-' && *argv[i] != '+' &&
+             !(R__IsSelectionFile(argv[i])))
+            (*dictSrcOut) << "#include \"" << argv[i] << "\"" << std::endl;
+      }
+      (*dictSrcOut) << std::endl;
    }
 
    selectionRules.SearchNames(interp);
