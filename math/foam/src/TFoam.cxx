@@ -751,7 +751,7 @@ void TFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
    } //kProj
    //----------DEBUG printout
    //std::cout<<"@@@@@@@>>>>> kBest= "<<kBest<<"  maxGain/ssw= "<< maxGain/ssw<<std::endl;
-   if( (kBest >= fDim) || (kBest<0) ) Error("Varedu", "Something wrong with kBest \n" );
+   if( (kBest >= fDim) || (kBest<0) ) Error("Varedu", "Something wrong with kBest - kBest = %d dim = %d\n",kBest,fDim);
 }          //TFoam::Varedu
 
 //________________________________________________________________________________________
@@ -850,7 +850,7 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
          for(iBin=jLow; iBin<jUp+1;   iBin++)
             ((TH1D *)(*fHistDbg)[kProj])->SetBinContent(iBin+1,yLevel);
       }//kProj
-   if( (kBest >= fDim) || (kBest<0) ) Error("Carver", "Something wrong with kBest \n" );
+   if( (kBest >= fDim) || (kBest<0) ) Error("Carver", "Something wrong with kBest - kBest = %d dim = %d\n",kBest,fDim);
    delete [] bins;
 }          //TFoam::Carver
 

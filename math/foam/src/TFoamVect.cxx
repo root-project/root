@@ -22,8 +22,6 @@ TFoamVect::TFoamVect()
 
    fDim    =0;
    fCoords =0;
-   fNext   =0;
-   fPrev   =0;
 }
 
 //______________________________________________________________________________
@@ -33,8 +31,6 @@ TFoamVect::TFoamVect(Int_t n)
 // and allocating dynamically array of components
 
    Int_t i;
-   fNext=0;
-   fPrev=0;
    fDim=n;
    fCoords = 0;
    if (n>0) {
@@ -53,19 +49,18 @@ TFoamVect::TFoamVect(const TFoamVect &Vect): TObject(Vect)
 {
 // Copy constructor
 
-   fNext=0;
-   fPrev=0;
-   fDim=Vect.fDim;
-   fCoords = 0;
-   if(fDim>0)  fCoords = new Double_t[fDim];
+   fDim = Vect.fDim; fCoords = 0;
+   if(fDim > 0)  fCoords = new Double_t[fDim];
+
    if(gDebug) {
       if(fCoords == 0) {
          Error("TFoamVect", "Constructor failed to allocate fCoords\n");
       }
    }
+
    for(Int_t i=0; i<fDim; i++)
       fCoords[i] = Vect.fCoords[i];
-   Error("TFoamVect","+++++ NEVER USE Copy constructor !!!!!\n ");
+
 }
 
 //___________________________________________________________________________
@@ -89,17 +84,15 @@ TFoamVect& TFoamVect::operator =(const TFoamVect& Vect)
 
    Int_t i;
    if (&Vect == this) return *this;
-   if( fDim != Vect.fDim )
-      Error("TFoamVect","operator=Dims. are different: %d and %d \n ",fDim,Vect.fDim);
+   if( Vect.fDim < 0 )
+       Error("TFoamVect","operator= : invalid  dimensions : %d and %d \n ",fDim,Vect.fDim);
    if( fDim != Vect.fDim ) {  // cleanup
       delete [] fCoords;
-      fCoords = new Double_t[fDim];
+      fCoords = new Double_t[Vect.fDim];
    }
    fDim=Vect.fDim;
    for(i=0; i<fDim; i++)
       fCoords[i] = Vect.fCoords[i];
-   fNext=Vect.fNext;
-   fPrev=Vect.fPrev;
    if(gDebug)  Info("TFoamVect", "SUBSITUTE operator =\n ");
    return *this;
 }
@@ -211,21 +204,7 @@ void TFoamVect::Print(Option_t *option) const
    std::cout << ")";
    std::cout.precision(pr);
 }
-//______________________________________________________________________________
-void TFoamVect::PrintList(void)
-{
-// Printout of all member vectors in the list starting from "this"
-   Long_t i=0;
-   if(this == 0) return;
-   TFoamVect *current=this;
-   while(current != 0) {
-      std::cout<<"vec["<<i<<"]=";
-      current->Print("1");
-      std::cout<<std::endl;
-      current = current->fNext;
-      i++;
-   }
-}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //                End of Class TFoamVect                                        //

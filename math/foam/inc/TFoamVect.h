@@ -22,8 +22,6 @@ class TFoamVect : public TObject {
 private:
    Int_t       fDim;                     // Dimension
    Double_t   *fCoords;                  // [fDim] Coordinates
-   TFoamVect  *fNext;                    // pointer for tree construction
-   TFoamVect  *fPrev;                    // pointer for tree construction
 public:
    TFoamVect();                          // Constructor
    TFoamVect(Int_t);                     // USER Constructor
@@ -43,7 +41,6 @@ public:
    TFoamVect  operator+( const  TFoamVect&); // +;  u=v+s, NEVER USE IT, SLOW!!!
    TFoamVect  operator-( const  TFoamVect&); // -;  u=v-s, NEVER USE IT, SLOW!!!
    void Print(Option_t *option) const;   // Prints vector
-   void PrintList();                         // Prints vector and the following linked list
    Int_t    GetDim() const { return fDim; }  // Returns dimension
    Double_t GetCoord(Int_t i) const {return fCoords[i];};   // Returns coordinate
 

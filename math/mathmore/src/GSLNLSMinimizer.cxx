@@ -101,6 +101,10 @@ public:
 
 private: 
 
+   // objects of this class are not meant for copying or assignment
+   FitTransformFunction(const FitTransformFunction& rhs);
+   FitTransformFunction& operator=(const FitTransformFunction& rhs);
+
    double DoEval(const double * x) const { 
       return fFunc( fTransform->Transformation(x) );
    }
