@@ -10,8 +10,6 @@
 
 #ifdef __CINT__
 
-#pragma link off class Reflex::DictionaryGenerator;
-
 #pragma link C++ nestedclasses;
 
 #pragma link C++ namespace Reflex;
