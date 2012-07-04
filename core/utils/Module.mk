@@ -42,7 +42,6 @@ INCLUDEFILES += $(ROOTCINTDEP) $(ROOTCLINGDEP) $(RLIBMAPDEP)
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-debug:=$(shell echo ROOTCLINGTMPS is $(ROOTCLINGTMPS) 1>&2) 
 ifeq ($(BUILDCLING),yes)
 .SECONDARY:      $(ROOTCLINGTMPS)
 endif
