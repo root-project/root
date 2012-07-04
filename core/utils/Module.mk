@@ -42,7 +42,9 @@ INCLUDEFILES += $(ROOTCINTDEP) $(ROOTCLINGDEP) $(RLIBMAPDEP)
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
+ifeq ($(BUILDCLING),yes)
 .SECONDARY:      $(ROOTCLINGTMPS)
+endif
 
 $(ROOTCINTEXE): $(CINTLIB) $(ROOTCINTO) $(METAUTILSO) $(SNPRINTFO) \
                 $(STRLCPYO) $(IOSENUM)
