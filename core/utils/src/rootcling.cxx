@@ -4667,34 +4667,12 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
        field_iter != end;
        ++field_iter)
    {
-      const char *comment = R__GetComment( **field_iter );
-
-      int pCounter = 0;
-      clang::QualType type = field_iter->getType();
-      std::string type_name = type.getAsString(clxx->getASTContext().getPrintingPolicy());
-//      type->dump();
-//      fprintf(stderr,"\n");
-      if (type->isPointerType()) {
-         const char *leftb = strchr(comment,'[');
-         if (leftb) {
-            const char *rightb = strchr(leftb,']');
-            if (rightb) {
-               pCounter++;
-               a = type_name;
-               if (strstr(type_name.c_str(),"**")) pCounter++;
-               char *astar = (char*)strchr(a.c_str(),'*');
-               if (!astar) {
-                  Error(0, "Expected '*' in type name '%s' of member '%s'\n", a.c_str(), field_iter->getName().str().c_str());
-               } else {
-                  *astar = 0;
-               }
-            }
-         }
-      }
+      std::string mTypename;
+      R__GetQualifiedName(mTypename, field_iter->getType(), *clxx);
 
       //member is a string
       {
-         const char*shortTypeName = ShortTypeName(type_name.c_str());
+         const char*shortTypeName = ShortTypeName(mTypename.c_str());
          if (!strcmp(shortTypeName, "string")) {
             continue;
          }
@@ -4706,7 +4684,7 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
       if (k!=0) {
          //          fprintf(stderr,"Add %s which is also",m.Type()->Name());
          //          fprintf(stderr," %s\n",R__TrueName(**field_iter) );
-         RStl::Instance().GenerateTClassFor( "", R__ScopeSearch(type_name.c_str()) );
+         RStl::Instance().GenerateTClassFor( "", R__ScopeSearch(mTypename.c_str()) );
       }      
    }
 
@@ -6492,6 +6470,7 @@ int main(int argc, char **argv)
       selectionRules.SetSelectionFileType(SelectionRules::kLinkdefFile);
 
       LinkdefReader ldefr;
+      clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap 
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs, getenv("LLVMDIR"))) {
          Error(0,"Parsing Linkdef file %s",linkdefFilename.c_str());
       }
