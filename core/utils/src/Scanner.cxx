@@ -75,8 +75,6 @@ RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Reco
    TClassEdit::TSplitType splitname(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
    splitname.ShortType( fRequestedName, TClassEdit::kDropAllDefault );
 
-   
-
 #if Replaced_by_TClassEdit
    // The level counting code would be usefull if we want to introduce missing spaces ...
    // int level = 0;

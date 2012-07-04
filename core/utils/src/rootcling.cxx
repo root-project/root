@@ -2998,7 +2998,7 @@ int STLContainerStreamer(const clang::FieldDecl &m, int rwmode)
 
    int stltype = abs(IsSTLContainer(m));
    std::string mTypename;
-   R__GetQualifiedName(mTypename, m.getType(),m);
+   R__GetQualifiedName(mTypename, m.getType(), m);
    
    const clang::CXXRecordDecl* clxx = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(R__GetUnderlyingRecordDecl(m.getType()));
 
@@ -6700,7 +6700,7 @@ int main(int argc, char **argv)
             continue;
          }
          G__ClassInfo clinfo( iter->GetRequestedName()[0] ? iter->GetRequestedName() : R__GetQualifiedName(*iter).c_str() );
-         fprintf(stderr,"rootcling: Writing TClass wrapper for class %s %d\n",R__GetQualifiedName(*iter).c_str(),NeedShadowClass(clinfo));
+         // fprintf(stderr,"rootcling: Writing TClass wrapper for class %s needShadowClass=%d\n",R__GetQualifiedName(*iter).c_str(),NeedShadowClass(clinfo));
          if (NeedShadowClass(clinfo)) {
             (*dictSrcOut) << "namespace ROOT {" << std::endl
             << "   namespace Shadow {" << std::endl;
