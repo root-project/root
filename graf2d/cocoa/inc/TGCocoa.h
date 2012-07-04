@@ -444,6 +444,8 @@ private:
    //
    std::map<std::string, Atom_t> fNameToAtom;
    std::vector<std::string> fAtomToName;
+   
+   Atom_t fSelectionNotifyProperty;
 
 public:
    static Atom_t fgDeleteWindowAtom;

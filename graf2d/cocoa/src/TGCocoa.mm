@@ -250,6 +250,7 @@ TGCocoa::TGCocoa()
 {
    fPimpl.reset(new Details::CocoaPrivate);
    fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
+   fSelectionNotifyProperty = FindAtom("COCOA_SELECTION_NOTIFY", true);
 }
 
 //______________________________________________________________________________
@@ -264,6 +265,7 @@ TGCocoa::TGCocoa(const char *name, const char *title)
 {
    fPimpl.reset(new Details::CocoaPrivate);
    fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
+   fSelectionNotifyProperty = FindAtom("COCOA_SELECTION_NOTIFY", true);
 }
 
 //______________________________________________________________________________
@@ -3621,13 +3623,40 @@ void TGCocoa::DeleteProperty(Window_t, Atom_t&)
 }
 
 //______________________________________________________________________________
-Int_t TGCocoa::GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
-                           Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**)
+Int_t TGCocoa::GetProperty(Window_t, Atom_t propertyID, Long_t, Long_t, Bool_t, Atom_t,
+                           Atom_t*, Int_t*, ULong_t *nitems, ULong_t *bytes, unsigned char **property)
 {
    // Returns the actual type of the property; the actual format of the property;
    // the number of 8-bit, 16-bit, or 32-bit items transferred; the number of
    // bytes remaining to be read in the property; and a pointer to the data
    // actually returned.
+  // NSLog(@"GetProperty %lu, %lu, ", windowID, propertyID);
+   const Atom_t dndProxy = InternAtom("XdndProxy", kFALSE);
+   const Atom_t dndTypeList = InternAtom("XdndTypeList", kFALSE);
+   
+   if (propertyID == dndProxy) {
+      Warning("GetProperty", "property == dndProxy, not implemented");
+      return 0;
+   } else if (propertyID == dndTypeList) {
+      Warning("GetProperty", "property == dndTypeList, not implemented");
+      return 0;
+   }
+   
+   //Retrieve data from the pasteboard.
+   
+   //This is just a hack to do the first test.
+   //Memory will be lost in TGDNDManager (as with Win32 and X11 versions).
+   //ASCII encoding for a string is just in this test.
+   NSPasteboard *p = [NSPasteboard pasteboardWithName : @"pasteboard_ROOT"];
+   NSArray *classes = [[NSArray alloc] initWithObjects : [NSString class], nil];
+   NSArray *copiedItems = [p readObjectsForClasses : classes options : nil];
+   for (NSString * item in copiedItems) {
+      const NSUInteger len = [item lengthOfBytesUsingEncoding : NSASCIIStringEncoding];
+      *property = (unsigned char *)malloc(len + 1);
+      [item getCString : (char *)*property maxLength : len + 1 encoding:NSASCIIStringEncoding];
+      *bytes = *nitems = len + 1;
+      return len + 1;
+   }
 
    return 0;
 }
@@ -3642,11 +3671,20 @@ void TGCocoa::ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t)
 }
 
 //______________________________________________________________________________
-void TGCocoa::ConvertSelection(Window_t, Atom_t&, Atom_t&, Atom_t&, Time_t&)
+void TGCocoa::ConvertSelection(Window_t winID, Atom_t &selection, Atom_t &target, Atom_t &/*property*/, Time_t &/*timeStamp*/)
 {
    // Requests that the specified selection be converted to the specified
    // target type.
 
+   Event_t newEvent = {};
+   newEvent.fType = kSelectionNotify;
+   newEvent.fWindow = winID;
+   newEvent.fUser[0] = winID;
+   newEvent.fUser[1] = selection;
+   newEvent.fUser[2] = target;
+   newEvent.fUser[3] = fSelectionNotifyProperty;
+   
+   SendEvent(winID, &newEvent);
 }
 
 //______________________________________________________________________________
