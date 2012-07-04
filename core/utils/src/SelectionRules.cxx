@@ -28,7 +28,6 @@
 
 #include "cling/Interpreter/Interpreter.h"
 
-const clang::CXXRecordDecl *R__SlowRawTypeSearch(const char *input_name, const clang::DeclContext *ctxt = 0);
 const clang::CXXRecordDecl *R__ScopeSearch(const char *name) ;
 
 void SelectionRules::AddClassSelectionRule(const ClassSelectionRule& classSel)
@@ -320,7 +319,15 @@ const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::NamespaceDecl *D
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::EnumDecl *D) const
 {  
-
+   // Currently rootcling does not need any information enums.
+   // Note that the code below was *not* properly matching the case
+   //   typedef enum { ... } abc;
+   // as the typedef is stored as an anonymous EnumDecl in clang.
+   // It is likely that using a direct lookup on the name would
+   // return the appropriate typedef (and then we would need to
+   // select 'both' the typedef and the anonymous enums.
+   return 0;
+#if 0
    std::string str_name;   // name of the Decl
    std::string qual_name;  // fully qualified name of the Decl   
    GetDeclName(D, str_name, qual_name);
@@ -339,11 +346,19 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::EnumDecl *D) cons
          return IsLinkdefEnumSelected(D, qual_name);
       return IsEnumSelected(D, qual_name);
    }
+#endif
 }
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::VarDecl* D) const
 {  
-
+   // Currently rootcling does not need any information about variable outside
+   // of a class.
+   // NOTE: In CINT the #pragma link C++ global
+   // was also used to affect the dictionary for enumeration constant
+   // if you reactivate this section, you may want to consider also 
+   // add support for clang::EnumConstantDecl (here and in Scanner.cxx)
+   return 0;
+#if 0
    std::string str_name;   // name of the Decl
    std::string qual_name;  // fully qualified name of the Decl   
    GetDeclName(D, str_name, qual_name);
@@ -352,6 +367,7 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::VarDecl* D) const
       return IsVarSelected(D, qual_name);
    else
       return IsLinkdefVarSelected(D, qual_name);
+#endif
 }
  
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FieldDecl* D) const
@@ -781,8 +797,10 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
                      if (name_value == qual_name) explicit_selector = &(*it);
                      else {
                         // Try a real match!
-//                        fprintf(stderr,"TRYING MATCH: %s %s\n",name_value.c_str(),qual_name.c_str());
-                        const clang::CXXRecordDecl *target = R__SlowRawTypeSearch(name_value.c_str());
+                        // Somehow we want to know if this is an explicit match, let's just the information 
+                        // in the selection rule rather than doing yet another lookup
+                        // const clang::CXXRecordDecl *target = R__SlowRawTypeSearch(name_value.c_str());
+                        const clang::CXXRecordDecl *target = it->GetCXXRecordDecl();
                         if ( target == llvm::dyn_cast<clang::CXXRecordDecl>( D ) ) {
                            explicit_selector = &(*it);
                         }
@@ -973,6 +991,7 @@ const BaseSelectionRule *SelectionRules::IsEnumSelected(clang::EnumDecl* D, cons
 
 const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(clang::VarDecl* D, const std::string& qual_name) const
 {
+
    std::list<VariableSelectionRule>::const_iterator it;
    std::list<VariableSelectionRule>::const_iterator it_end;
 
@@ -1608,6 +1627,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
          }
       }
    }
+#if Variable_rules_becomes_useful_for_rootcling
    if (!fVariableSelectionRules.empty()) {
       for(std::list<VariableSelectionRule>::const_iterator it = fVariableSelectionRules.begin(); 
           it != fVariableSelectionRules.end(); ++it) {
@@ -1633,7 +1653,8 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
          }
       }
    }
-#if Function_rules_are_not_yet_useful_for_cling
+#endif
+#if Function_rules_becomes_useful_for_rootcling
    if (!fFunctionSelectionRules.empty()) {
       for(std::list<FunctionSelectionRule>::const_iterator it = fFunctionSelectionRules.begin(); 
           it != fFunctionSelectionRules.end(); ++it) {
@@ -1663,6 +1684,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
       }
    }
 #endif
+#if Enums_rules_becomes_useful_for_rootcling
    if (!fEnumSelectionRules.empty()) {
       for(std::list<EnumSelectionRule>::const_iterator it = fEnumSelectionRules.begin(); 
           it != fEnumSelectionRules.end(); ++it) {
@@ -1688,6 +1710,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
          }
       }
    }
+#endif
    return true;
 }
 
@@ -1704,25 +1727,7 @@ bool SelectionRules::SearchNames(cling::Interpreter &interp)
             std::string name_value;
             it->GetAttributeValue("name", name_value);
             // In Class selection rules, we should be interested in scopes.
-            const clang::CXXRecordDecl *target = R__ScopeSearch(name_value.c_str()); // R__SlowRawTypeSearch(name_value.c_str());
-            
-            // bool needinstantiation = false;
-            // if (!target) {
-            //    needinstantiation = strchr(name_value.c_str(),'<') != 0;
-            // } else if (!target->isCompleteDefinition() ) {
-            //    // In case we got the target via a typedef, let's use it's final name.
-            //    name_value.clear();
-            //    target->getNameForDiagnostic(name_value,target->getASTContext().getPrintingPolicy(),true);
-            //    needinstantiation = true;
-            // }
-            // if (needinstantiation) {
-            //    // Force instantiation
-            //    std::string instantiate("template class ");
-            //    instantiate += name_value;
-            //    instantiate += " ;";
-            //    interp.declare(instantiate.c_str());
-            //    target = R__SlowRawTypeSearch(name_value.c_str());
-            // }
+            const clang::CXXRecordDecl *target = R__ScopeSearch(name_value.c_str());            
             if (target) {
                it->SetCXXRecordDecl(target);
             }

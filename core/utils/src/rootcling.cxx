@@ -767,6 +767,7 @@ size_t R__GetFullArrayLength(const clang::ConstantArrayType *arrayType)
    return len.getLimitedValue();
 }
 
+#if 0 
 const clang::CXXRecordDecl *R__SlowRawTypeSearch(const char *input_name, const clang::DeclContext *ctxt = 0) 
 {
    // Strip leading 'const' and '*' and '&'
@@ -825,6 +826,7 @@ const clang::CXXRecordDecl *R__SlowRawTypeSearch(const char *input_name, const c
       return 0;
    }
 }
+#endif
 
 class FDVisitor : public clang::RecursiveASTVisitor<FDVisitor> {
 private:
@@ -876,90 +878,6 @@ const clang::CXXMethodDecl *R__GetMethodWithProto__Old(const clang::CXXRecordDec
       }
    }
    return 0;
-
-#if 0
-#define USE_CLING_LOOKUP
-
-   // First check it exist under some name.
-   const clang::FunctionDecl *decl = gInterp->LookupDecl(method,cinfo).getAs<clang::FunctionDecl>();
-   bool found_at_least_one = false;
-   if (decl) {
-      found_at_least_one = true;
-   } else {
-      bool is_operator_new = (strcmp(method,"operator new")==0);
-      // Do a crawling search :( ...
-      for(clang::CXXRecordDecl::method_iterator iter = cinfo->method_begin(),
-          end = cinfo->method_end();
-          iter != end;
-          ++iter)
-      {
-         std::string methodname;
-         iter->getNameForDiagnostic( methodname, cinfo->getASTContext().getPrintingPolicy(), false );
-         if ( methodname == method ) {
-            found_at_least_one = true;
-            if (is_operator_new) return &*iter;
-            break;
-         }
-      }
-   }
-   if (!found_at_least_one) {
-      for(clang::CXXRecordDecl::base_class_const_iterator iter = cinfo->bases_begin(), end = cinfo->bases_end();
-          iter != end;
-          ++iter)
-      {
-         if (const clang::CXXMethodDecl *res = R__GetFuncWithProto((iter->getType()->getAsCXXRecordDecl ()),method,proto)) {
-            return res;
-         }
-      }
-   }
-#ifndef USE_CLING_LOOKUP
-   if (decl) {
-      // NOTE this is *wrong* we do not check that the routine has the right arguments!!!
-      return llvm::dyn_cast<clang::CXXMethodDecl>(decl);
-   }
-#else
-   if (found_at_least_one) {
-      // Build int (ClassInfo::*f)(arglist) = &ClassInfo::method;
-      // Then we will have the resolved overload of clang::FunctionDecl on the lhs.
-      std::string Str("");
-      gInterp->createUniqueName(Str);
-      Str += "void " + Str + "() {\n";
-      Str += "void (" + cinfo->getNameAsString() + "::*fptr)(" + proto + ") = &" + cinfo->getNameAsString()  + "::" + method + ";;";
-      Str += "\n};;";
-
-      std::string uniquename;
-      gInterp->createUniqueName(uniquename);
-
-      Str = "template<typename CLASS, typename RET> void " + uniquename + "lookup_arg(RET (CLASS::* const arg)(";
-      Str += proto;
-      Str += ") ) { };\n";
-
-      Str = "template<typename CLASS, typename RET> void " + uniquename + "lookup_arg(RET (CLASS::*)(";
-      Str += proto;
-      Str += ") ) { };\n";
-      Str += "void " + uniquename + "_wrapper() {\n";
-      Str += uniquename + "lookup_arg(& " + R__GetQualifiedName(*cinfo)  + "::" + method + ");\n";
-      Str += ";;};;";
-
-      const clang::Decl* D = 0;
-      const clang::FunctionDecl* ResultFD = 0;
-      cling::Value value;
-      if (gInterp->declare(Str, &D)
-          == cling::Interpreter::kSuccess) {
-         if (D) {
-            FDVisitor FDV = FDVisitor();
-            FDV.TraverseDecl(D->getASTContext().getTranslationUnitDecl());
-            ResultFD = FDV.getFD();
-         }
-         if (ResultFD) {
-            const clang::CXXMethodDecl *method = llvm::dyn_cast<clang::CXXMethodDecl>(ResultFD);
-            return method;
-         }
-      }
-   }
-#endif
-   return 0;
-#endif
 }
 
 bool R__CheckPublicFuncWithProto(const clang::CXXRecordDecl *cl, const char *methodname, const char *proto)
@@ -979,8 +897,6 @@ bool ClassInfo__IsBase(const clang::RecordDecl *cl, const char* basename)
    if (!CRD) {
       return false;
    }
-   // This would be better but is to verbose for now.
-   // clang::QualType basetype = TMetaUtils::LookupTypeDecl(*gInterp, basename);
    const clang::NamedDecl *base = R__ScopeSearch(basename);
    if (base) {
       const clang::CXXRecordDecl* baseCRD = llvm::dyn_cast<clang::CXXRecordDecl>( base ); 
@@ -6416,14 +6332,14 @@ int main(int argc, char **argv)
 
       std::ifstream file(linkdefFilename.c_str());
       if(file.is_open()){
-         Info(0,"Selection XML file");
+         Info(0,"Selection XML file\n");
 
          XMLReader xmlr;
          if (!xmlr.Parse(file, selectionRules)) {
             Error(0,"Parsing XML file %s",linkdefFilename.c_str());
          }
          else {
-            Info(0,"XML file successfully parsed");
+            Info(0,"XML file successfully parsed\n");
          }            
          file.close();
       }
@@ -6434,9 +6350,8 @@ int main(int argc, char **argv)
    } else if (R__IsLinkdefFile(linkdefFilename.c_str())) {
 
       std::ifstream file(linkdefFilename.c_str());
-      if(file.is_open()){
-         Info(0,"Linkdef file");
-
+      if(file.is_open()) {
+         Info(0,"Using linkdef file: %s\n",linkdefFilename.c_str());
          file.close();
       }
       else {
@@ -6451,7 +6366,7 @@ int main(int argc, char **argv)
          Error(0,"Parsing Linkdef file %s",linkdefFilename.c_str());
       }
       else {
-         Info(0,"Linkdef file successfully parsed");
+         Info(0,"Linkdef file successfully parsed.\n");
       }
 
    } else {
@@ -6627,7 +6542,7 @@ int main(int argc, char **argv)
          }
          const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
          if (CRD) {
-            fprintf(stderr,"rootcling: Generating code for class %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
+            Info(0,"Generating code for class %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
             std::string qualname( CRD->getQualifiedNameAsString() );
             if (IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
                   // coverity[fun_call_w_exception] - that's just fine.

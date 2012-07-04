@@ -23,7 +23,6 @@
 #include <string.h>
 #include "clang/AST/DeclCXX.h"
 
-const clang::CXXRecordDecl *R__SlowRawTypeSearch(const char *input_name, const clang::DeclContext *ctxt = 0);
 const clang::CXXRecordDecl *R__ScopeSearch(const char *name);
 
 BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue)
@@ -152,8 +151,7 @@ bool BaseSelectionRule::IsSelected (const clang::NamedDecl *decl, const std::str
          // Try a real match!
          
          const clang::CXXRecordDecl *D = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
-         const clang::CXXRecordDecl *target = R__SlowRawTypeSearch(name_value.c_str());
-            // R__ScopeSearch(name_value.c_str()); // R__SlowRawTypeSearch(name_value.c_str());
+         const clang::CXXRecordDecl *target = R__ScopeSearch(name_value.c_str());
          if ( target ) {
             const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = target;
          } else {
