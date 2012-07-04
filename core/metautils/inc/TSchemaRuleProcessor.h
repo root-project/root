@@ -123,16 +123,36 @@ namespace ROOT
          }
 
          //---------------------------------------------------------------------
-         static std::string Trim( const std::string& source, char character = ' ' )
+         static std::string Trim( const std::string& source )
          {
             // Trim the whitespaces at the beginning and at the end of
             // given source string
 
             std::string::size_type start, end;
-            for( start = 0; start < source.size() && isspace(source[start]); ++start) {}
+            for( start = 0; start < source.size(); ++start) {
+               if ( isspace(source[start]) ) {
+                  continue;
+               } else if ( source[start] == '\\' && (start+1)<source.size() && (source[start+1]=='\n' || source[start+1]=='\r') ) {
+                  ++start;
+                  continue;
+               } else {
+                  // Not a white space.
+                  break;
+               }
+            }
             if( start == source.size() )
                return "";
-            for( end = source.size()-1; end > start && source[end] == character; --end ) ;
+            for( end = source.size()-1; end > start; --end ) {
+               if ( (source[end]=='\n' || source[end]=='\r') && end > (start+1) && source[end-1] == '\\' ) {
+                  --end;
+                  continue;
+               } else if ( isspace(source[end]) ) {
+                  continue;
+               } else {
+                  // Not a white space.
+                  break;
+               }
+            }
             return source.substr( start, end-start+1 );
          }
 
