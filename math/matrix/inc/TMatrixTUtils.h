@@ -126,7 +126,7 @@ public:
   TMatrixTRow_const(const TMatrixTRow_const<Element>& trc):
     fMatrix(trc.fMatrix), fRowInd(trc.fRowInd), fInc(trc.fInc), fPtr(trc.fPtr) { }
   TMatrixTRow_const<Element>& operator=(const TMatrixTRow_const<Element>& trc) {
-    fMatrix=trc.fMatrix; fRowInd=trc.fRowInd; fInc=trc.fInc; fPtr=trc.fPtr; return *this;}
+    if(this != &trc) { fMatrix=trc.fMatrix; fRowInd=trc.fRowInd; fInc=trc.fInc; fPtr=trc.fPtr; } return *this;}
    virtual ~TMatrixTRow_const() { }
 
    inline const TMatrixTBase<Element> *GetMatrix  () const { return fMatrix; }
@@ -221,7 +221,7 @@ public:
    TMatrixTColumn_const(const TMatrixTColumn_const<Element>& trc):
      fMatrix(trc.fMatrix), fColInd(trc.fColInd), fInc(trc.fInc), fPtr(trc.fPtr) { }
    TMatrixTColumn_const<Element>& operator=(const TMatrixTColumn_const<Element>& trc) {
-     fMatrix=trc.fMatrix; fColInd=trc.fColInd; fInc=trc.fInc; fPtr=trc.fPtr; return *this;}
+     if(this != &trc) { fMatrix=trc.fMatrix; fColInd=trc.fColInd; fInc=trc.fInc; fPtr=trc.fPtr; } return *this;}
    virtual ~TMatrixTColumn_const() { }
 
    inline const TMatrixTBase <Element> *GetMatrix  () const { return fMatrix; }
@@ -317,7 +317,7 @@ public:
    TMatrixTDiag_const(const TMatrixTDiag_const<Element>& trc):
     fMatrix(trc.fMatrix), fInc(trc.fInc), fNdiag(trc.fNdiag), fPtr(trc.fPtr) { }
    TMatrixTDiag_const<Element>& operator=(const TMatrixTDiag_const<Element>& trc) {
-     fMatrix=trc.fMatrix; fInc=trc.fInc; fNdiag=trc.fNdiag; fPtr=trc.fPtr; return *this;}
+      if(this != &trc) { fMatrix=trc.fMatrix; fInc=trc.fInc; fNdiag=trc.fNdiag; fPtr=trc.fPtr; } return *this;}
    virtual ~TMatrixTDiag_const() { }
 
    inline const TMatrixTBase<Element> *GetMatrix() const { return fMatrix; }
@@ -406,7 +406,7 @@ public:
    TMatrixTFlat_const(const TMatrixTFlat_const<Element>& trc):
      fMatrix(trc.fMatrix), fNelems(trc.fNelems), fPtr(trc.fPtr) { }
    TMatrixTFlat_const<Element>& operator=(const TMatrixTFlat_const<Element>& trc) {
-    fMatrix=trc.fMatrix; fNelems=trc.fNelems; fPtr=trc.fPtr; return *this;}
+      if(this != &trc) { fMatrix=trc.fMatrix; fNelems=trc.fNelems; fPtr=trc.fPtr; } return *this;}
    virtual ~TMatrixTFlat_const() { }
 
    inline const TMatrixTBase<Element> *GetMatrix() const { return fMatrix; }
@@ -586,7 +586,7 @@ public:
    TMatrixTSparseRow_const(const TMatrixTSparseRow_const<Element>& trc):
      fMatrix(trc.fMatrix), fRowInd(trc.fRowInd), fNindex(trc.fNindex), fColPtr(trc.fColPtr), fDataPtr(trc.fDataPtr) { }
    TMatrixTSparseRow_const<Element>& operator=(const TMatrixTSparseRow_const<Element>& trc) {
-     fMatrix=trc.fMatrix; fRowInd=trc.fRowInd; fNindex=trc.fNindex; fColPtr=trc.fColPtr; fDataPtr=trc.fDataPtr; return *this;}
+     if(this != &trc) { fMatrix=trc.fMatrix; fRowInd=trc.fRowInd; fNindex=trc.fNindex; fColPtr=trc.fColPtr; fDataPtr=trc.fDataPtr; }  return *this;}
    virtual ~TMatrixTSparseRow_const() { }
 
    inline const TMatrixTBase<Element> *GetMatrix  () const { return fMatrix; }
@@ -650,7 +650,7 @@ public:
    TMatrixTSparseDiag_const(const TMatrixTSparseDiag_const<Element>& trc):
      fMatrix(trc.fMatrix), fNdiag(trc.fNdiag), fDataPtr(trc.fDataPtr) { }
    TMatrixTSparseDiag_const<Element>& operator=(const TMatrixTSparseDiag_const<Element>& trc) {
-     fMatrix=trc.fMatrix; fNdiag=trc.fNdiag; fDataPtr=trc.fDataPtr; return *this;}
+      if(this !=  &trc) { fMatrix=trc.fMatrix; fNdiag=trc.fNdiag; fDataPtr=trc.fDataPtr; } return *this;}
    virtual ~TMatrixTSparseDiag_const() { }
 
    inline const TMatrixTBase<Element> *GetMatrix () const { return fMatrix; }

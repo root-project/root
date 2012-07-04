@@ -404,6 +404,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
    // Assignment operator
 
    if(this!=&tlf) {
+
       TVirtualFitter::operator=(tlf);
       fParams.ResizeTo(tlf.fParams);      fParams=tlf.fParams;
       fParCovar.ResizeTo(tlf.fParCovar);  fParCovar=tlf.fParCovar;
@@ -413,46 +414,54 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fDesignTemp.ResizeTo(tlf.fDesignTemp);        fDesignTemp=tlf.fDesignTemp;
       fDesignTemp2.ResizeTo(tlf.fDesignTemp2);      fDesignTemp2=tlf.fDesignTemp2;
       fDesignTemp3.ResizeTo(tlf.fDesignTemp3);      fDesignTemp3=tlf.fDesignTemp3;
+
       fAtb.ResizeTo(tlf.fAtb);            fAtb=tlf.fAtb;
       fAtbTemp.ResizeTo(tlf.fAtbTemp);    fAtbTemp=tlf.fAtbTemp;
       fAtbTemp2.ResizeTo(tlf.fAtbTemp2);    fAtbTemp2=tlf.fAtbTemp2;
       fAtbTemp3.ResizeTo(tlf.fAtbTemp3);    fAtbTemp3=tlf.fAtbTemp3;
       
-      if (fFormula) delete [] fFormula;  
-      fFormula = 0; 
-      if (tlf.fFormula) { 
-         fFormula = new char[fFormulaSize+1]; 
-         strlcpy(fFormula,tlf.fFormula,fFormulaSize+1);
-      }
-
-      if (fFixedParams)   delete [] fFixedParams;
-      fFixedParams = 0; 
-      if ( tlf.fFixedParams && fNfixed > 0 ) {
-         fFixedParams=new Bool_t[tlf.fNfixed];
-         for(Int_t i=0; i<tlf.fNfixed; ++i) 
-            fFixedParams[i]=tlf.fFixedParams[i];
-      }
-
       fFunctions.Delete(); 
       fFunctions= *(TObjArray*) tlf.fFunctions.Clone();
+      
       fY=tlf.fY;
       fY2=tlf.fY2;
       fY2Temp=tlf.fY2Temp;
       fX=tlf.fX;
       fE=tlf.fE;
-      fInputFunction=(TFormula*)tlf.fInputFunction;
+      
+      if(fInputFunction) delete fInputFunction; fInputFunction = 0;
+      if(tlf.fInputFunction) {
+         *fInputFunction = *(tlf.fInputFunction);
+      }
+      
       fNpoints=tlf.fNpoints;
       fNfunctions=tlf.fNfunctions;
       fFormulaSize=tlf.fFormulaSize;
       fNdim=tlf.fNdim;
       fNfixed=tlf.fNfixed;
       fSpecial=tlf.fSpecial;
+
+      if(fFormula) delete [] fFormula; fFormula = 0; 
+      if (tlf.fFormula) { 
+         fFormula = new char[fFormulaSize+1]; 
+         strlcpy(fFormula,tlf.fFormula,fFormulaSize+1);
+      }
+
       fIsSet=tlf.fIsSet;
       fStoreData=tlf.fStoreData;
       fChisquare=tlf.fChisquare;
+     
       fH=tlf.fH;
       fRobust=tlf.fRobust;
       fFitsample=tlf.fFitsample;
+       
+      if(fFixedParams) delete [] fFixedParams; fFixedParams = 0; 
+      if ( tlf.fFixedParams && fNfixed > 0 ) {
+         fFixedParams=new Bool_t[fNfixed];
+         for(Int_t i=0; i< fNfixed; ++i) 
+            fFixedParams[i]=tlf.fFixedParams[i];
+      }
+
    } 
    return *this;
 }

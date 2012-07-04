@@ -146,6 +146,10 @@ namespace ROOT {
 
          private: 
 
+            // objects of this class are not meant to be copied / assigned
+            IntegralEvaluator(const IntegralEvaluator& rhs);
+            IntegralEvaluator& operator=(const IntegralEvaluator& rhs);
+
             unsigned int fDim; 
             const double * fParams;
             //ROOT::Math::IParamMultiFunction * fFunc;  // copy of function in order to be able to change parameters    
