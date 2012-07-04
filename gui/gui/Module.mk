@@ -49,8 +49,8 @@ GUIH3        := TRootGuiFactory.h TRootApplication.h TRootCanvas.h \
                 TGuiBuilder.h TGRedirectOutputGuard.h TGPasswdDialog.h \
                 TGTextEditor.h TGSpeedo.h TGDNDManager.h TGTable.h \
                 TGSimpleTableInterface.h TGSimpleTable.h TGTableCell.h \
-		TGTableHeader.h TGTableContainer.h TGTextEditor.h TGSpeedo.h \
-		TGDNDManager.h TGCommandPlugin.h TGFileBrowser.h \
+		TGTableHeader.h TGTableContainer.h \
+		TGCommandPlugin.h TGFileBrowser.h \
 		TRootBrowser.h TGSplitFrame.h TGShapedFrame.h TGEventHandler.h
 
 GUIH4        := HelpText.h
