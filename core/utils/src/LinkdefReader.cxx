@@ -18,6 +18,15 @@
 //      #pragma link spec typedef                                       //
 //      #pragma link spec nestedtypedef                                 //
 //                                                                      //
+// Note: some inconsistency in the way CINT parsed the #pragma:         //
+//   "#pragma link C++ class" is terminated by either a ';' or a newline//
+//      which ever come first and does NOT support line continuation.   //
+//   "#pragma read ..." is terminated by newline but support line       //
+//      continuation (i.e. '\' followed by newline means to also use the//
+//      next line.                                                      //
+//   This was change in CINT to consistently ignore the continuation    //
+//                                                                      //
+//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
