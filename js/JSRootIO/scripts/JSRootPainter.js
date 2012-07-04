@@ -166,7 +166,7 @@ var d, key_tree;
       var wlmax = wmax;
       var ndivz = hist['fContour'].length;
       var scale = ndivz / (wlmax - wlmin);
-      if (options && options[logz]) {
+      if (options && options['logz']) {
          if (wmin <= 0 && wmax > 0) wmin = Math.min(1.0, 0.001 * wmax);
          wlmin = Math.log(wmin)/Math.log(10);
          wlmax = Math.log(wmax)/Math.log(10);
@@ -184,7 +184,7 @@ var d, key_tree;
             default_palette.push(rgbval);
          }
       }
-      if (options && options[logz]) zc = Math.log(zc)/Math.log(10);
+      if (options && options['logz']) zc = Math.log(zc)/Math.log(10);
       if (zc < wlmin) zc = wlmin;
       var ncolors = default_palette.length
       var color = Math.round(0.01 + (zc - wlmin) * scale);
@@ -213,11 +213,11 @@ var d, key_tree;
       var logx = false, logy = false, logz = false, gridx = true, gridy = true;
       var time_scalex = 1, time_scaley = 1;
       if (options && typeof(options) != 'undefined') {
-         logx = options[logx];
-         logy = options[logy];
-         logz = options[logz];
-         gridx = options[gridx];
-         gridx = options[gridy];
+         logx = options['logx'];
+         logy = options['logy'];
+         logz = options['logz'];
+         gridx = options['gridx'];
+         gridx = options['gridy'];
       }
       // check for axis scale format, and convert if required
       // (highcharts time unit is in milliseconds)
@@ -624,11 +624,11 @@ var d, key_tree;
       var logx = false, logy = false, logz = false, gridx = true, gridy = true;
       var scalex = 1, scaley = 1;
       if (options && typeof(options) != 'undefined') {
-         logx = options[logx];
-         logy = options[logy];
-         logz = options[logz];
-         gridx = options[gridx];
-         gridx = options[gridy];
+         logx = options['logx'];
+         logy = options['logy'];
+         logz = options['logz'];
+         gridx = options['gridx'];
+         gridx = options['gridy'];
       }
       // check for axis scale format, and convert if required
       // (highcharts time unit is in milliseconds)
