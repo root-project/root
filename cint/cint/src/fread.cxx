@@ -424,10 +424,17 @@ static int G__fgetstream_newtemplate_internal(G__FastAllocString& string,
       bool next_double_quote = double_quote;
 
       switch (c) {
-         case ' ':
-         case '\f':
          case '\n':
          case '\r':
+            if (i && (single_quote == 0) && (double_quote == 0) && '\\' == string[i-1]) {
+               // This is a line continuation, we just ignore it.
+               --i;
+               ignoreflag = true;
+               breakflag = false; // Undo a possible marker match.
+               break;
+            }
+         case ' ':
+         case '\f':
          case '\t':
             commentflag = false;
             if (!single_quote && !double_quote) {
@@ -491,6 +498,11 @@ static int G__fgetstream_newtemplate_internal(G__FastAllocString& string,
             if (!ignoreflag) {
                string.Set(i++, c);
                c = G__fgetc() ;
+               if ( (c=='\n' || c=='\r') && (single_quote == 0) && (double_quote == 0)) {
+                  // This is a line continuation, we just ignore both the \ and \n.
+                  --i;
+                  ignoreflag = true;
+               }
             }
             break;
 
@@ -656,10 +668,17 @@ int G__fgetstream_template(G__FastAllocString& string, size_t offset, const char
       }
 
       switch (c) {
-         case ' ':
-         case '\f':
          case '\n':
          case '\r':
+            if (i && (single_quote == 0) && (double_quote == 0) && '\\' == string[i-1]) {
+               // This is a line continuation, we just ignore it.
+               --i;
+               ignoreflag = 1;
+               flag = 0; // Undo a possible marker match.
+               break;
+            }
+         case ' ':
+         case '\f':
          case '\t':
             commentflag = 0;
             if ((single_quote == 0) && (double_quote == 0)) {
@@ -729,7 +748,12 @@ int G__fgetstream_template(G__FastAllocString& string, size_t offset, const char
          case '\\':
             if (ignoreflag == 0) {
                string.Set(i++, c);
-               c = G__fgetc() ;
+               c = G__fgetc();
+               if ( (c=='\n' || c=='\r') && (single_quote == 0) && (double_quote == 0)) {
+                  // This is a line continuation, we just ignore both the \ and \n.
+                  --i;
+                  ignoreflag = 1;
+               }
             }
             break;
 
@@ -904,10 +928,17 @@ int G__getstream_template(const char* source, int* isrc,G__FastAllocString&  str
                }
             }
             break;
-         case ' ':
-         case '\f':
          case '\n':
          case '\r':
+            if (i && (single_quote == 0) && (double_quote == 0) && '\\' == string[i-1]) {
+               // This is a line continuation, we just ignore it.
+               --i;
+               ignoreflag = 1;
+               flag = 0; // Undo a possible marker match.
+               break;
+            }
+         case ' ':
+         case '\f':
          case '\t':
             if ((single_quote == 0) && (double_quote == 0)) {
                string.Set(i, 0);
@@ -1711,6 +1742,11 @@ int G__fdumpstream(G__FastAllocString& string, size_t offset, const char *endmar
             if (ignoreflag == 0) {
                string.Set(i++, c);
                c = G__fgetc() ;
+               if ( (c=='\n' || c=='\r') && (single_quote == 0) && (double_quote == 0)) {
+                  // This is a line continuation, we just ignore both the \ and \n.
+                  --i;
+                  ignoreflag = 1;
+               }
             }
             break;
 
@@ -1881,6 +1917,11 @@ int G__fgetstream(G__FastAllocString& string, size_t offset, const char *endmark
             if (!ignoreflag) {
                string.Set(i++, c);
                c = G__fgetc();
+               if ( (c=='\n' || c=='\r') && (single_quote == 0) && (double_quote == 0)) {
+                  // This is a line continuation, we just ignore both the \ and \n.
+                  --i;
+                  ignoreflag = 1;
+               }
             }
             break;
          case '/':
@@ -2054,9 +2095,16 @@ int G__fgetstream_spaces(G__FastAllocString& string, size_t offset, const char *
          }
       }
       switch (c) {
-         case '\f':
          case '\n':
          case '\r':
+            if (i && (single_quote == 0) && (double_quote == 0) && '\\' == string[i-1]) {
+               // This is a line continuation, we just ignore it.
+               --i;
+               ignoreflag = 1;
+               flag = 0; // Undo a possible marker match.
+               break;
+            }
+         case '\f':
          case '\t':
          case ' ':
             commentflag = 0;
@@ -2094,6 +2142,11 @@ int G__fgetstream_spaces(G__FastAllocString& string, size_t offset, const char *
             if (!ignoreflag) {
                string.Set(i++, c);
                c = G__fgetc();
+               if ( (c=='\n' || c=='\r') && (single_quote == 0) && (double_quote == 0)) {
+                  // This is a line continuation, we just ignore both the \ and \n.
+                  --i;
+                  ignoreflag = 1;
+               }
             }
             break;
          case '/':
@@ -2249,6 +2302,11 @@ int G__getstream(const char* source, int* isrc, char* string, const char* endmar
             if (!ignoreflag) {
                string[i++] = c;
                c = source[(*isrc)++];
+               if ( (c=='\n' || c=='\r') && (single_quote == 0) && (double_quote == 0)) {
+                  // This is a line continuation, we just ignore both the \ and \n.
+                  --i;
+                  ignoreflag = 1;
+               }
             }
             break;
          case '/':
