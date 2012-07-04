@@ -85,6 +85,7 @@ TSVG::TSVG() : TVirtualPS()
    fXsize       = 0.;
    fYsize       = 0.;
    fYsizeSVG    = 0;
+   SetTitle("SVG");
 }
 
 
@@ -100,6 +101,7 @@ TSVG::TSVG(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    //          has a default value (which is ignore in the SVG case).
 
    fStream = 0;
+   SetTitle("SVG");
    Open(fname, wtype);
 }
 

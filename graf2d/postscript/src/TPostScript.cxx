@@ -319,6 +319,7 @@ TPostScript::TPostScript() : TVirtualPS()
    fYsize           = 0.;
    fZone            = kFALSE;
    for (Int_t i=0; i<32; i++) fPatterns[i]=0;
+   SetTitle("PS");
 }
 
 
@@ -338,6 +339,7 @@ TPostScript::TPostScript(const char *fname, Int_t wtype)
    //     113 eps
 
    fStream = 0;
+   SetTitle("PS");
    Open(fname, wtype);
 }
 

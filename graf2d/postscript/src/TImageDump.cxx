@@ -60,6 +60,7 @@ TImageDump::TImageDump() : TVirtualPS()
    fImage     = 0;
    gVirtualPS = this;
    fType      = 0;
+   SetTitle("IMG");
 }
 
 //______________________________________________________________________________
@@ -76,6 +77,7 @@ TImageDump::TImageDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype
 
    Open(fname, wtype);
    gVirtualPS = this;
+   SetTitle("IMG");
 }
 
 //______________________________________________________________________________
@@ -87,7 +89,6 @@ void TImageDump::Open(const char *fname, Int_t type)
    fImage  = TImage::Create();
    fType   = type;
    SetName(fname);
-   SetTitle("IMG");
 }
 
 //______________________________________________________________________________
