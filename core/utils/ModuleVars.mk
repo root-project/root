@@ -36,7 +36,7 @@ endif
 ##### rlibmap #####
 RLIBMAP      := $(BUILDTOOLSDIR)/bin/rlibmap$(EXEEXT)
 
-else
+else # ifneq ($(HOST),)
 
 MODNAME      := utils
 MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
@@ -57,6 +57,7 @@ ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
 ifeq ($(BUILDCLING),yes)
 ROOTCLINGS    := $(UTILSDIRS)/rootcling.cxx \
                  $(filter-out %RStl.cxx,$(filter-out %_tmp.cxx,$(filter-out %rlibmap.cxx,$(filter-out %rootcling.cxx,$(filter-out %rootcint.cxx,$(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/*.cxx)))))))
+ROOTCLINGTMPS := $(ROOTCLINGS:.cxx=_tmp.cxx)
 ROOTCLINGTMPO := $(call stripsrc,$(ROOTCLINGS:.cxx=_tmp.o))
 
 ROOTCLINGTMPEXE := $(call stripsrc,$(UTILSDIRS)/rootcling_tmp$(EXEEXT))
