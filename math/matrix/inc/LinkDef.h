@@ -184,10 +184,10 @@
 #pragma link C++ function Add                 (      TVectorF       &,      Float_t   ,const TMatrixFSym    &,const TVectorF &);
 #pragma link C++ function Add                 (      TVectorF       &,      Float_t   ,const TMatrixFSparse &,const TVectorF &);
 #pragma link C++ function AddElemMult         (      TVectorF       &,      Float_t   ,const TVectorF       &,const TVectorF &);
-#pragma link C++ function AddElemMult         (      TVectorF       &,      Float_t   ,const TVectorF       &,const TVectorF &,
+#pragma link C++ function AddElemMult         (      TVectorF       &,      Float_t   ,const TVectorF       &,const TVectorF &, \
                                                const TVectorF &);
 #pragma link C++ function AddElemDiv          (      TVectorF       &,      Float_t   ,const TVectorF       &,const TVectorF &);
-#pragma link C++ function AddElemDiv          (      TVectorF       &,      Float_t   ,const TVectorF       &,const TVectorF &,
+#pragma link C++ function AddElemDiv          (      TVectorF       &,      Float_t   ,const TVectorF       &,const TVectorF &, \
                                                const TVectorF &);
 #pragma link C++ function ElementMult         (      TVectorF       &,const TVectorF &);
 #pragma link C++ function ElementMult         (      TVectorF       &,const TVectorF &,const TVectorF       &);
@@ -318,10 +318,10 @@
 #pragma link C++ function Add                 (      TVectorD       &,      Double_t  ,const TMatrixDSym    &,const TVectorD &);
 #pragma link C++ function Add                 (      TVectorD       &,      Double_t  ,const TMatrixDSparse &,const TVectorD &);
 #pragma link C++ function AddElemMult         (      TVectorD       &,      Double_t  ,const TVectorD       &,const TVectorD &);
-#pragma link C++ function AddElemMult         (      TVectorD       &,      Double_t  ,const TVectorD       &,const TVectorD &,
+#pragma link C++ function AddElemMult         (      TVectorD       &,      Double_t  ,const TVectorD       &,const TVectorD &, \
                                                const TVectorD &);
 #pragma link C++ function AddElemDiv          (      TVectorD       &,      Double_t  ,const TVectorD       &,const TVectorD &);
-#pragma link C++ function AddElemDiv          (      TVectorD       &,      Double_t  ,const TVectorD       &,const TVectorD &,
+#pragma link C++ function AddElemDiv          (      TVectorD       &,      Double_t  ,const TVectorD       &,const TVectorD &, \
                                                const TVectorD &);
 #pragma link C++ function ElementMult         (      TVectorD       &,const TVectorD &);
 #pragma link C++ function ElementMult         (      TVectorD       &,const TVectorD &,const TVectorD       &);

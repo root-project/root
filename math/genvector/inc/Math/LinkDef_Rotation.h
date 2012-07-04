@@ -45,10 +45,10 @@
 // #pragma link C++ function  ROOT::Math::EulerAngles::EulerAngles (const ROOT::Math::RotationY &);
 // #pragma link C++ function  ROOT::Math::EulerAngles::EulerAngles (const ROOT::Math::RotationZ &);
 // #pragma link C++ function  ROOT::Math::EulerAngles::EulerAngles (const ROOT::Math::Quaternion &);
-#pragma link C++ function  ROOT::Math::EulerAngles::operator= (const ROOT::Math::Rotation3D &)
-#pragma link C++ function  ROOT::Math::EulerAngles::operator= (const ROOT::Math::AxisAngle &)
-#pragma link C++ function  ROOT::Math::EulerAngles::operator= (const ROOT::Math::Quaternion &)
-#pragma link C++ function  ROOT::Math::EulerAngles::operator= (const ROOT::Math::RotationZYX &)
+#pragma link C++ function  ROOT::Math::EulerAngles::operator= (const ROOT::Math::Rotation3D &);
+#pragma link C++ function  ROOT::Math::EulerAngles::operator= (const ROOT::Math::AxisAngle &);
+#pragma link C++ function  ROOT::Math::EulerAngles::operator= (const ROOT::Math::Quaternion &);
+#pragma link C++ function  ROOT::Math::EulerAngles::operator= (const ROOT::Math::RotationZYX &);
 #pragma link C++ function  ROOT::Math::EulerAngles::operator= (const ROOT::Math::RotationX &);
 #pragma link C++ function  ROOT::Math::EulerAngles::operator= (const ROOT::Math::RotationY &);
 #pragma link C++ function  ROOT::Math::EulerAngles::operator= (const ROOT::Math::RotationZ &);
