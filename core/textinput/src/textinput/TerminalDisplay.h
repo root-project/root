@@ -72,7 +72,7 @@ namespace textinput {
                                size_t WriteOffset, size_t Requested);
     virtual void SetColor(char CIdx, const Color& C) = 0;
     virtual void WriteRawString(const char* text, size_t len) = 0;
-    virtual void ActOnEOL() {};
+    virtual void ActOnEOL() {}
 
     virtual void EraseToRight() = 0;
 

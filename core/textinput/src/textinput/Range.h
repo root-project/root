@@ -63,7 +63,7 @@ namespace textinput {
   class EditorRange {
   public:
     EditorRange() {}
-    EditorRange(Range E, Range D): fEdit(E), fDisplay(D) {};
+    EditorRange(Range E, Range D): fEdit(E), fDisplay(D) {}
     Range fEdit;
     Range fDisplay;
   };
