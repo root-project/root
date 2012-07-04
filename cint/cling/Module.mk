@@ -17,7 +17,8 @@ CLINGDEP     := $(CLINGO:.o=.d)
 
 CLINGLIB     := $(LPATH)/libCling.$(SOEXT)
 
-CLINGETC     := $(addprefix etc/cling/Interpreter/,RuntimeUniverse.h ValuePrinter.h ValuePrinterInfo.h)
+CLINGETC     := $(addprefix etc/cling/Interpreter/,RuntimeUniverse.h ValuePrinter.h ValuePrinterInfo.h) \
+                $(addprefix etc/cling/cint/,multimap multiset)
 
 # used in the main Makefile
 ALLLIBS      += $(CLINGLIB)
@@ -68,6 +69,14 @@ etc/cling/%.h: $(MODDIR)/include/cling/%.h
 	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@cp $< $@
 etc/cling/%.h: $(call stripsrc,$(MODDIR)/%.o)/include/cling/%.h
+	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	@cp $< $@
+
+etc/cling/cint/multimap: $(MODDIR)/include/cling/cint/multimap
+	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	@cp $< $@
+
+etc/cling/cint/multiset: $(MODDIR)/include/cling/cint/multiset
 	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@cp $< $@
 
