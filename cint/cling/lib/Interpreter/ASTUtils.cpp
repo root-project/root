@@ -7,6 +7,7 @@
 #include "ASTUtils.h"
 
 #include "clang/AST/DeclarationName.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/Lookup.h"
 

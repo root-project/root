@@ -6,6 +6,7 @@
 
 #include "DeclExtractor.h"
 
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclGroup.h"
 #include "clang/AST/Decl.h"
 #include "clang/Sema/Scope.h"
@@ -96,8 +97,6 @@ namespace cling {
       }
 
       if (!CheckForClashingNames(TouchedDecls, DC, TUScope)) {
-
-        // Insert the extracted declarations before the wrapper
         for (size_t i = 0; i < TouchedDecls.size(); ++i) {
           m_Sema->PushOnScopeChains(TouchedDecls[i],
                                     m_Sema->getScopeForContext(DC),
@@ -126,6 +125,7 @@ namespace cling {
       }
 
       CS->setStmts(*m_Context, Stmts.data(), Stmts.size());
+
       // Put the wrapper after its declarations. (Nice when AST dumping)
       DC->removeDecl(FD);
       DC->addDecl(FD);

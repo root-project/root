@@ -10,6 +10,7 @@
 #include "cling/Interpreter/ValuePrinterInfo.h"
 #include "cling/Interpreter/Value.h"
 
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Expr.h"
