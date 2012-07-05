@@ -503,9 +503,11 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
 
 
    // create nuisance parameter points
-   if(!fNuisanceParametersSampler && fPriorNuisance && fNuisancePars)
+   if(!fNuisanceParametersSampler && fPriorNuisance && fNuisancePars) {
       fNuisanceParametersSampler = new NuisanceParametersSampler(fPriorNuisance, fNuisancePars, fNToys, fExpectedNuisancePar);
-
+      if ((fUseMultiGen || fgAlwaysUseMultiGen) &&  fNuisanceParametersSampler )
+         oocoutI((TObject*)NULL,InputArguments) << "Cannot use multigen when nuisance parameters vary for every toy" << endl;
+   }
 
    // generate global observables
    RooArgSet observables(*fObservables);
@@ -569,9 +571,6 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
 
    // cannot use multigen when the nuisance parameters change for every toy
    bool useMultiGen = (fUseMultiGen || fgAlwaysUseMultiGen) && !fNuisanceParametersSampler; 
-   if ((fUseMultiGen || fgAlwaysUseMultiGen) &&  fNuisanceParametersSampler )
-      ooccoutI((TObject*)NULL,InputArguments) << "Cannot use multigen when nuisance parameters vary for every toy" << endl;
-
 
    if(events == 0) {
       if( pdf.canBeExtended() && pdf.expectedEvents(observables) > 0) {
