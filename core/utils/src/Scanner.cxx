@@ -65,7 +65,7 @@ RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type
    fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
    fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber) 
 {
-   // Normalize the requested typename.
+   // Normalize the requested type name.
    
    // For comparison purposes.
    TClassEdit::TSplitType splitname(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));

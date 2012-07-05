@@ -6369,6 +6369,7 @@ int main(int argc, char **argv)
          Info(0,"Linkdef file successfully parsed.\n");
       }
 
+      ldefr.LoadIncludes(interp);
    } else {
 
       Error(0,"Unrecognized selection file: %s",linkdefFilename.c_str());

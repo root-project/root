@@ -26,10 +26,15 @@
 #include <map>
 #include "llvm/ADT/StringRef.h"
 
+namespace cling {
+   class Interpreter;
+}
+
 class SelectionRules;
 class PragmaCreateCollector;
 class PragmaLinkCollector;
 class LinkdefReaderPragmaHandler;
+class PragmaExtraInclude;
 
 class LinkdefReader 
 {
@@ -37,6 +42,7 @@ private:
    long fLine;  // lines count - for error messages
    long fCount; // Number of rules created so far.
    SelectionRules *fSelectionRules; // set of rules being filleed.
+   std::string     fIncludes;       // Extra set of file to be included by the intepreter.
 private:
 
    enum EPragmaNames { // the processed pragma attributes
@@ -71,10 +77,12 @@ private:
    friend class PragmaCreateCollector;
    friend class PragmaLinkCollector;
    friend class LinkdefReaderPragmaHandler;
+   friend class PragmaExtraInclude;
 
 public:
    LinkdefReader();
 
+   bool LoadIncludes(cling::Interpreter &interp); 
    bool Parse(SelectionRules& sr, llvm::StringRef code, const std::vector<std::string> &parserArgs, const char *llvmdir);
    
 private:
@@ -83,6 +91,7 @@ private:
 
    struct Options;
 
+   bool AddInclude(std::string include);
    bool AddRule(std::string ruletype, std::string identifier, bool linkOn, bool requestOnlyTClass, Options *option = 0);
    
    bool ProcessFunctionPrototype(std::string& proto, bool& name); // transforms the function prototypes to a more unified form
