@@ -61,9 +61,8 @@ QualType ROOT::TMetaUtils::LookupTypeDecl(cling::Interpreter& interp,
 }
 
 //______________________________________________________________________________
-  QualType 
-  ROOT::TMetaUtils::GetPartiallyDesugaredType(const ASTContext& ctx, 
-                                              QualType qType, 
+QualType ROOT::TMetaUtils::GetPartiallyDesugaredType(const ASTContext& ctx, 
+                                                     QualType qType, 
                               const llvm::SmallSet<const Type*, 4>& typesToSkip)
 {
 //   -*-*-*-*-*"Desugars" a type while skipping the ones in the set*-*-*-*-*
@@ -102,15 +101,10 @@ QualType ROOT::TMetaUtils::LookupTypeDecl(cling::Interpreter& interp,
             continue;
 
          // Check if the type needs more desugaring and recurse.
-         if (isa<TypedefType>(SubTy.getTypePtr()))
+         if (isa<TypedefType>(SubTy) || isa<TemplateSpecializationType>(SubTy))
             desArgs.push_back(TemplateArgument(GetPartiallyDesugaredType(ctx,
                                                                          SubTy,
                                                                   typesToSkip)));
-         else if (isa<TemplateSpecializationType>(SubTy)) {
-            desArgs.push_back(TemplateArgument(GetPartiallyDesugaredType(ctx,
-                                                                         SubTy, 
-                                                                  typesToSkip)));
-         }
       }
 
       // If desugaring happened allocate new type in the AST.
