@@ -231,6 +231,9 @@ ifeq ($(BUILDXML),yes)
 MODULES      += roofit/histfactory
 endif
 endif
+ifeq ($(BUILDGEOCAD),yes)
+MODULES      += geom/geocad
+endif
 ifeq ($(BUILDGDML),yes)
 MODULES      += geom/gdml
 endif
@@ -299,7 +302,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 tmva math/genetic io/hdfs graf2d/fitsio roofit/roofitcore \
                 roofit/roofit roofit/roostats roofit/histfactory \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
-                geom/gdml graf3d/eve net/glite misc/memstat \
+                geom/geocad geom/gdml graf3d/eve net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz \
                 proof/proofbench proof/afdsmgrd cint/cling graf2d/ios \
                 graf2d/quartz graf2d/cocoa core/macosx

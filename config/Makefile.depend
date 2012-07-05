@@ -77,6 +77,7 @@ GEOMPAINTERLIBDEPM     = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB) $(GPADLIB) \
                          $(IOLIB) $(MATHCORELIB)
 GEOMBUILDERLIBDEPM     = $(GEOMLIB) $(G3DLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) \
                          $(GEDLIB)
+GEOCADLIBDEPM          = $(GEOMLIB)
 QTROOTLIBDEPM          = $(GUILIB) $(GQTLIB)
 GQTLIBDEPM             = $(GUILIB) $(GPADLIB) $(GRAFLIB) $(RINTLIB)
 RUBYLIBDEPM            = $(HISTLIB) $(MATHCORELIB)
@@ -192,6 +193,7 @@ HBOOKLIBDEP            = $(HBOOKLIBDEPM)
 GEOMLIBDEP             = $(GEOMLIBDEPM)
 GEOMPAINTERLIBDEP      = $(GEOMPAINTERLIBDEPM)
 GEOMBUILDERLIBDEP      = $(GEOMBUILDERLIBDEPM)
+GEOCADLIBDEP           = $(GEOCADLIBDEPM)
 QTROOTLIBDEP           = $(QTROOTLIBDEPM)
 GQTLIBDEP              = $(GQTLIBDEPM)
 RUBYLIBDEP             = $(RUBYLIBDEPM)
@@ -335,6 +337,7 @@ GEOMPAINTERLIBEXTRA     = lib/libGeom.lib lib/libTree.lib lib/libGraf3d.lib \
                           lib/libMathCore.lib
 GEOMBUILDERLIBEXTRA     = lib/libGeom.lib  lib/libGraf3d.lib lib/libGpad.lib \
                           lib/libGraf.lib lib/libGui.lib lib/libGed.lib
+GEOCADLIBEXTRA          = lib/libGeom.lib
 QTROOTLIBEXTRA          = lib/libGui.lib lib/libGQt.lib
 GQTLIBEXTRA             = lib/libGui.lib libGpad.lib lib/libGraf.lib \
                           lib/libRint.lib
@@ -465,6 +468,7 @@ GEOMLIBEXTRA            = -Llib -lRIO -lThread -lMathCore
 GEOMPAINTERLIBEXTRA     = -Llib -lGeom -lTree -lGraf3d -lHist -lGpad -lRIO \
                           -lMathCore
 GEOMBUILDERLIBEXTRA     = -Llib -lGeom -lGraf3d -lGpad -lGraf -lGui -lGed
+GEOCADLIBEXTRA          = -Llib -lGeom
 ASIMAGELIBEXTRA         = -Llib -lGraf -lMathCore
 ASIMAGEGUILIBEXTRA      = -Llib -lGraf -lHist -lGui -lASImage -lRIO
 ASIMAGEGSLIBEXTRA       = -Llib -lGraf -lASImage

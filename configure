@@ -65,6 +65,7 @@ options="                    \
    enable_gviz               \
    enable_gdml               \
    enable_genvector          \
+   enable_geocad             \
    enable_gfal               \
    enable_glite              \
    enable_globus             \
@@ -145,6 +146,7 @@ enable_cocoa=no
 enable_afs=no
 enable_alloc=no
 enable_gdml=no
+enable_geocad=no
 enable_globus=no
 enable_explicitlink=no
 enable_gsl_shared=no
@@ -170,6 +172,7 @@ enable_afdsmgrd=no
 
 if test "x$ENABLEALL" = "xyes"; then
     enable_gdml=yes
+    enable_geocad=yes
     enable_qt=yes
     enable_qtgsi=yes
     enable_roofit=yes
@@ -225,6 +228,7 @@ MINUIT2          \
 TABLE            \
 XMLDIR           \
 ROOTDICTTYPE     \
+CASROOT          \
 "
 configenvvars=
 for c in $envvars ; do
@@ -1504,6 +1508,7 @@ enable/disable options, prefix with either --enable- or --disable-
   fitsio             Read images and data from FITS files, requires cfitsio
   gviz               Graphs visualization support, requires graphviz
   gdml               GDML writer and reader
+  geocad             ROOT-CAD Interface
   gfal               GFAL support, requires libgfal
   globus             Globus authentication support, requires Globus toolkit
   glite              gLite support, requires libglite-api-wrapper v.3 from GSI (https://subversion.gsi.de/trac/dgrid/wiki)
@@ -1611,6 +1616,8 @@ with options, prefix with --with-, enables corresponding support
   monalisa-libdir    Monalisa support, location of libapmoncpp
   mysql-incdir       MySQL support, location of mysql.h
   mysql-libdir       MySQL support, location of libmysqlclient
+  occ-incdir         GEOCAD support, location of OpenCascade inc files
+  occ-libdir         GEOCAD support, location of OpenCascade lib files
   odbc-incdir        ODBC support, location of sqlext.h
   odbc-libdir        ODBC support, location of libiodbc or libodbc
   opengl-incdir      OpenGL support, location of GL/gl.h
@@ -1925,8 +1932,11 @@ if test $# -gt 0 ; then
       --with-gsl-incdir=*)     gslincdir=$optarg     ; enable_gsl="yes"     ;;
       --with-gsl-libdir=*)     gsllibdir=$optarg     ; enable_gsl="yes"     ;;
       --with-globus=*)         globusdir=$optarg     ; enable_globus="yes"  ;;
-      --with-globus-incdir=*)  globusincdir=$optarg  ; enable_globus="yes"    ;;
-      --with-globus-libdir=*)  globuslibdir=$optarg  ; enable_globus="yes"    ;;
+      --with-globus-incdir=*)  globusincdir=$optarg  ; enable_globus="yes"  ;;
+      --with-globus-libdir=*)  globuslibdir=$optarg  ; enable_globus="yes"  ;;
+      --with-geocad=*)         geocaddir=$optarg     ; enable_geocad="yes"  ;;
+      --with-occ-incdir=*)     occincdir=$optarg     ; enable_geocad="yes"  ;;
+      --with-occ-libdir=*)     occlibdir=$optarg     ; enable_geocad="yes"  ;;
       --with-gccxml=*)         gccxml=$optarg        ;;
       --with-hdfs-incdir=*)    hdfsincdir=$optarg    ; enable_hdfs="yes"    ;;
       --with-hdfs-libdir=*)    hdfslibdir=$optarg    ; enable_hdfs="yes"    ;;
@@ -4169,6 +4179,39 @@ check_explicit "$enable_asimage" "$enable_asimage_explicit" \
 
 ######################################################################
 #
+### echo %%% GEOCAD Library - Contributed library
+#
+# (See http://www.opencascade.org/)
+#
+# If the user has set the flags "--disable-geocad", we don't check for
+# OpenCascade at all.
+#
+if test ! "x$enable_geocad" = "xno"; then
+    # Check for OpenCascade include and library
+    check_header "XCAFApp_Application.hxx" "$occincdir" \
+        $CASROOT ${CASROOT:+$CASROOT/inc} /usr/include/opencascade \
+        /usr/include
+    occinc=$found_hdr
+    occincdir=$found_dir
+
+    check_library "libTKXCAF" "$enable_shared" "$occlibdir" \
+       $CASROOT ${CASROOT:+$CASROOT/lib} /usr/lib
+    occlib=$found_lib
+    occlibdir=$found_dir
+
+    if test ! "x$occlib" = "x" ; then
+       occlib="-lTKPrim -lTKBRep -lTKOffset -lTKGeomBase -lTKShHealing -lTKTopAlgo -lTKSTEP -lTKG2d -lTKBool -lTKBO -lTKXCAF -lTKXDESTEP -lTKLCAF -lTKernel -lTKXSBase -lTKG3d -lTKMath"
+    fi
+
+    if test "x$occincdir" = "x" || test "x$occlib" = "x"; then
+        enable_geocad="no"
+    fi
+fi
+check_explicit "$enable_geocad" "$enable_geocad_explicit" \
+     "Explicitly required GeoCad dependencies not fulfilled"
+
+######################################################################
+#
 ### echo %%% LDAP Support - Third party libraries
 #
 # (See openldap.org)
@@ -6161,6 +6204,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_roofit"   = "xyes" && pl="$pl libroot-roofit"
     test "x$enable_asimage"  = "xyes" && pl="$pl root-plugin-graf2d-asimage"
     test "x$enable_gdml"     = "xyes" && pl="$pl root-plugin-geom-gdml"
+    test "x$enable_geocad"   = "xyes" && pl="$pl root-plugin-geom-geocad"
     test "x$enable_qt"       = "xyes" && pl="$pl root-plugin-gui-qt root-plugin-graf2d-qt"
     test "x$enable_castor"   = "xyes" && pl="$pl root-plugin-io-castor"
     test "x$enable_chirp"    = "xyes" && pl="$pl root-plugin-io-chirp"
@@ -6617,6 +6661,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildminuit2@|$enable_minuit2|"      \
     -e "s|@buildunuran@|$enable_unuran|"        \
     -e "s|@buildgdml@|$enable_gdml|"            \
+    -e "s|@buildgeocad@|$enable_geocad|"        \
     -e "s|@buildmonalisa@|$enable_monalisa|"    \
     -e "s|@buildtable@|$enable_table|"          \
     -e "s|@buildtmva@|$enable_tmva|"            \
@@ -6679,6 +6724,9 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@mysqlincdir@|$mysqlincdir|"          \
     -e "s|@mysqllib@|$mysqllib|"                \
     -e "s|@mysqllibdir@|$mysqllibdir|"          \
+    -e "s|@occincdir@|$occincdir|"              \
+    -e "s|@occlib@|$occlib|"                    \
+    -e "s|@occlibdir@|$occlibdir|"              \
     -e "s|@odbcincdir@|$odbcincdir|"            \
     -e "s|@odbclib@|$odbclib|"                  \
     -e "s|@odbclibdir@|$odbclibdir|"            \
