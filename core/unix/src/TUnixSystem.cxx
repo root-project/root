@@ -2054,16 +2054,9 @@ UserGroup_t *TUnixSystem::GetGroupInfo(const char *group)
 //______________________________________________________________________________
 void TUnixSystem::Setenv(const char *name, const char *value)
 {
-   // Set environment variable. The string passed will be owned by
-   // the environment and can not be reused till a "name" is set
-   // again. The solution below will lose the space for the string
-   // in that case, but if this functions is not called thousands
-   // of times that should not be a problem.
+   // Set environment variable.
 
-   char *s = new char [strlen(name)+strlen(value) + 2];
-   sprintf(s, "%s=%s", name, value);
-
-   ::putenv(s);
+   ::setenv(name, value, 1);
 }
 
 //______________________________________________________________________________
@@ -2072,6 +2065,14 @@ const char *TUnixSystem::Getenv(const char *name)
    // Get environment variable.
 
    return ::getenv(name);
+}
+
+//______________________________________________________________________________
+void TUnixSystem::Unsetenv(const char *name)
+{
+   // Unset environment variable.
+
+   ::unsetenv(name);
 }
 
 //---- Processes ---------------------------------------------------------------

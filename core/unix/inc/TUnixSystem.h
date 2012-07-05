@@ -175,6 +175,7 @@ public:
    //---- Environment Manipulation -----------------------------
    const char       *Getenv(const char *name);
    void              Setenv(const char *name, const char *value);
+   void              Unsetenv(const char *name);
 
    //---- System Logging ---------------------------------------
    void              Openlog(const char *name, Int_t options, ELogFacility facility);
