@@ -12,9 +12,13 @@
 #ifndef ROOT_TMetaUtils
 #define ROOT_TMetaUtils
 
+#include "llvm/ADT/SmallSet.h"
+
 // All clang entities must stay opaque types
 namespace clang {
+   class ASTContext;
    class QualType;
+   class Type;
 }
 namespace cling {
    class Interpreter;
@@ -24,6 +28,10 @@ namespace ROOT {
    namespace TMetaUtils {
       clang::QualType LookupTypeDecl(cling::Interpreter& interp,
                                      const char* tyname);
-   }
+
+      clang::QualType GetPartiallyDesugaredType(const clang::ASTContext& ctx, 
+                                                clang::QualType qType, 
+                      const llvm::SmallSet<const clang::Type*, 4>& typesToSkip);
+    }
 }
 #endif // ROOT_TMetaUtils
