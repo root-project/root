@@ -2011,7 +2011,7 @@ void print_mask_info(ULong_t mask)
          const ROOT::Quartz::CGStateGuard ctxGuard(fContext);
 
          ROOT::MacOSX::Util::CFScopeGuard<CGImageRef> clipImageGuard;
-         QuartzWindow *topLevelParent = self.fQuartzWindow;
+         QuartzWindow * const topLevelParent = self.fQuartzWindow;
          if (topLevelParent.fShapeCombineMask) {
             //Attach clip mask to the context.
             const NSRect clipRect  = [self convertRect : [self visibleRect] toView : nil];

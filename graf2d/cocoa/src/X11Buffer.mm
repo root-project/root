@@ -518,13 +518,13 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
             //Either use shape combine mask, or clip mask.
             //TODO: find a way to combine both?
             ROOT::MacOSX::Util::CFScopeGuard<CGImageRef> clipImageGuard;
-            QuartzWindow *topLevelParent = view.fQuartzWindow;
+            QuartzWindow * const topLevelParent = view.fQuartzWindow;
             if (topLevelParent.fShapeCombineMask) {
                //Attach clip mask to the context.
-               const NSRect clipRect  = [view convertRect : [view visibleRect] toView : nil];
+               const NSRect clipRect  = [view convertRect : view.frame toView : nil];
                clipImageGuard.Reset(CGImageCreateWithImageInRect(topLevelParent.fShapeCombineMask.fImage, clipRect));
                //TODO: this geometry looks suspicious, check!
-               CGContextClipToMask(currContext, CGRectMake(0, 0, clipRect.size.width, clipRect.size.height), clipImageGuard.Get());
+               //CGContextClipToMask(currContext, CGRectMake(0, 0, clipRect.size.width, clipRect.size.height), clipImageGuard.Get());
             } else if (view.fClipMaskIsValid)
                CGContextClipToMask(currContext, CGRectMake(0, 0, view.fClipMask.fWidth, view.fClipMask.fHeight), view.fClipMask.fImage);
             
