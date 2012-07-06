@@ -857,7 +857,13 @@ namespace cling {
             case NestedNameSpecifier::TypeSpecWithTemplate: {
                 // Type name qualified with "template".
                 // Note: Do we need to check for a dependent type here?
-                *setResultType = NNS->getAsType();
+                NestedNameSpecifier *prefix = NNS->getPrefix();
+                if (prefix) {
+                   QualType temp = Context.getElaboratedType(ETK_None,prefix,QualType(NNS->getAsType(),0));
+                   *setResultType = temp.getTypePtr();
+                } else {
+                   *setResultType = NNS->getAsType();
+                }
                 const TagType* TagTy = (*setResultType)->getAs<TagType>();
                 if (TagTy) {
                   // It is a class, struct, or union.
