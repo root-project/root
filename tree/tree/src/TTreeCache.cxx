@@ -476,6 +476,7 @@ Bool_t TTreeCache::FillBuffer()
    //clear cache buffer
    TFileCacheRead::Prefetch(0,0);
    //store baskets
+   Int_t requestedLen = 0;
    for (Int_t i=0;i<fNbranches;i++) {
       TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
       if (b->GetDirectory()==0) continue;
@@ -504,6 +505,17 @@ Bool_t TTreeCache::FillBuffer()
          }
          fNReadPref++;
 
+         if ( (requestedLen+len) > 4*fBufferSizeMin ) {
+            // We are requesting way too much .... let's stop before we exhaust all the 
+            // available memory!
+            // We have not kept track of how far we have gone (on all baskets)
+            // fEntryNext ... left unchanged.
+            if (gDebug > 5) {
+               Info("FillBuffer","Breaking early because %d is greater than 4*%d and will restart at %lld",(requestedLen+len), fBufferSizeMin, fEntryNext);
+            }
+            break;
+         }
+         requestedLen += len;
          TFileCacheRead::Prefetch(pos,len);
       }
       if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtot);
