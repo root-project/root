@@ -6,9 +6,9 @@
 
 #include "ValuePrinterSynthesizer.h"
 
-#include "ASTUtils.h"
 #include "ChainedConsumer.h"
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclGroup.h"
@@ -89,8 +89,8 @@ namespace cling {
     // 1.1. Find gCling
     SourceLocation NoSLoc = SourceLocation();
 
-    NamespaceDecl* NSD = Lookup::Namespace(m_Sema, "cling");
-    NSD = Lookup::Namespace(m_Sema, "valuePrinterInternal", NSD);
+    NamespaceDecl* NSD = utils::Lookup::Namespace(m_Sema, "cling");
+    NSD = utils::Lookup::Namespace(m_Sema, "valuePrinterInternal", NSD);
 
 
     DeclarationName PVName = &m_Context->Idents.get("PrintValue");
@@ -108,36 +108,37 @@ namespace cling {
 
     // 2.4.1 Lookup the llvm::raw_ostream
     CXXRecordDecl* RawOStreamRD
-      = dyn_cast<CXXRecordDecl>(Lookup::Named(m_Sema, "raw_ostream",
-                                              Lookup::Namespace(m_Sema,
+      = dyn_cast<CXXRecordDecl>(utils::Lookup::Named(m_Sema, "raw_ostream",
+                                                 utils::Lookup::Namespace(m_Sema,
                                                                 "llvm")));
 
     assert(RawOStreamRD && "Declaration of the expr not found!");
     QualType RawOStreamRDTy = m_Context->getTypeDeclType(RawOStreamRD);
     // 2.4.2 Lookup the expr type
     CXXRecordDecl* ExprRD
-      = dyn_cast<CXXRecordDecl>(Lookup::Named(m_Sema, "Expr",
-                                              Lookup::Namespace(m_Sema,
+      = dyn_cast<CXXRecordDecl>(utils::Lookup::Named(m_Sema, "Expr",
+                                                 utils::Lookup::Namespace(m_Sema,
                                                                 "clang")));
    assert(ExprRD && "Declaration of the expr not found!");
     QualType ExprRDTy = m_Context->getTypeDeclType(ExprRD);
     // 2.4.3 Lookup ASTContext type
     CXXRecordDecl* ASTContextRD
-      = dyn_cast<CXXRecordDecl>(Lookup::Named(m_Sema, "ASTContext",
-                                              Lookup::Namespace(m_Sema,
+      = dyn_cast<CXXRecordDecl>(utils::Lookup::Named(m_Sema, "ASTContext",
+                                                 utils::Lookup::Namespace(m_Sema,
                                                                 "clang")));
     assert(ASTContextRD && "Declaration of the expr not found!");
     QualType ASTContextRDTy = m_Context->getTypeDeclType(ASTContextRD);
 
     Expr* RawOStreamTy
-      = Synthesize::CStyleCastPtrExpr(m_Sema, RawOStreamRDTy,
+      = utils::Synthesize::CStyleCastPtrExpr(m_Sema, RawOStreamRDTy,
                                (uint64_t)&m_Interpreter->getValuePrinterStream()
                                       );
 
-    Expr* ExprTy = Synthesize::CStyleCastPtrExpr(m_Sema, ExprRDTy, (uint64_t)E);
-    Expr* ASTContextTy = Synthesize::CStyleCastPtrExpr(m_Sema,
-                                                       ASTContextRDTy,
-                                                       (uint64_t)m_Context);
+    Expr* ExprTy = utils::Synthesize::CStyleCastPtrExpr(m_Sema, ExprRDTy, 
+                                                        (uint64_t)E);
+    Expr* ASTContextTy 
+      = utils::Synthesize::CStyleCastPtrExpr(m_Sema, ASTContextRDTy,
+                                             (uint64_t)m_Context);
 
     // E might contain temporaries. This means that the topmost expr is
     // ExprWithCleanups. This contains the information about the temporaries and
@@ -197,10 +198,12 @@ namespace cling {
       = m_Sema->BuildDeclarationNameExpr(CSS, R, /*ADL*/ false).take();
 
 
-    Expr* VoidEArg = Synthesize::CStyleCastPtrExpr(m_Sema, m_Context->VoidPtrTy,
-                                                   (uint64_t)E);
-    Expr* VoidCArg = Synthesize::CStyleCastPtrExpr(m_Sema, m_Context->VoidPtrTy,
-                                                   (uint64_t)m_Context);
+    Expr* VoidEArg = utils::Synthesize::CStyleCastPtrExpr(m_Sema, 
+                                                          m_Context->VoidPtrTy,
+                                                          (uint64_t)E);
+    Expr* VoidCArg = utils::Synthesize::CStyleCastPtrExpr(m_Sema, 
+                                                          m_Context->VoidPtrTy,
+                                                          (uint64_t)m_Context);
 
     if (!QT->isPointerType()) {
       while(ImplicitCastExpr* ICE = dyn_cast<ImplicitCastExpr>(E))

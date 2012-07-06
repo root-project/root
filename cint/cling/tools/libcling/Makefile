@@ -16,7 +16,7 @@ LINK_LIBS_IN_SHARED = 1
 SHARED_LIBRARY = 1
 
 LINK_COMPONENTS := analysis archive asmparser asmprinter bitreader bitwriter codegen core debuginfo engine executionengine instcombine instrumentation interpreter ipa ipo jit linker mc mcdisassembler mcjit mcparser native nativecodegen object runtimedyld scalaropts selectiondag support tablegen target transformutils
-USEDLIBS = clingUserInterface.a clingMetaProcessor.a clingInterpreter.a clingUITextInput.a clangFrontend.a clangSerialization.a clangDriver.a clangCodeGen.a clangParse.a clangSema.a clangAnalysis.a clangRewrite.a clangAST.a clangLex.a clangBasic.a clangEdit.a LLVMSupport.a
+USEDLIBS = clingUserInterface.a clingMetaProcessor.a clingInterpreter.a clingUITextInput.a clingUtils.a clangFrontend.a clangSerialization.a clangDriver.a clangCodeGen.a clangParse.a clangSema.a clangAnalysis.a clangRewrite.a clangAST.a clangLex.a clangBasic.a clangEdit.a LLVMSupport.a
 LLVMLIBS = LLVMSupport.a
 include $(CLING_LEVEL)/Makefile
 

@@ -6,9 +6,9 @@
 
 #include "DynamicLookup.h"
 
-#include "ASTUtils.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
+#include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/Lex/Preprocessor.h"
@@ -209,9 +209,9 @@ namespace cling {
 
     if (m_NoRange.isInvalid()) {
 
-      NamespaceDecl* NSD = Lookup::Namespace(m_Sema, "cling");
-      NSD = Lookup::Namespace(m_Sema, "runtime", NSD);
-      NSD = Lookup::Namespace(m_Sema, "internal", NSD);
+      NamespaceDecl* NSD = utils::Lookup::Namespace(m_Sema, "cling");
+      NSD = utils::Lookup::Namespace(m_Sema, "runtime", NSD);
+      NSD = utils::Lookup::Namespace(m_Sema, "internal", NSD);
 
       DeclarationName Name
         = &m_Context->Idents.get(

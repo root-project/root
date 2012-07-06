@@ -12,7 +12,7 @@
 ##===----------------------------------------------------------------------===##
 
 CLING_LEVEL = ../..
-LIBRARYNAME := clingMetaProcessor
+LIBRARYNAME := clingUtils
 BUILD_ARCHIVE = 1
 CXXFLAGS = -fno-rtti
 
