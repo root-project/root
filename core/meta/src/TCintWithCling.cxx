@@ -4045,15 +4045,9 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
    const char* clname = cl->GetName();
    Printf("Inspecting class %s\n", clname);
 
-   clang::QualType qualClass
-      = ROOT::TMetaUtils::LookupTypeDecl(*fInterpreter, clname);
-   if (qualClass.isNull()) {
-      Error("InspectMembers", "Cannot find QualType for class %s", clname);
-      return;
-   }
    const clang::ASTContext& astContext = fInterpreter->getCI()->getASTContext();
-   const clang::CXXRecordDecl* recordDecl
-      = qualClass.getDesugaredType(astContext)->getAsCXXRecordDecl();
+   const clang::CXXRecordDecl* recordDecl 
+     = llvm::dyn_cast<const clang::CXXRecordDecl>(fInterpreter->lookupScope(clname));
    if (!recordDecl) {
       Error("InspectMembers", "Cannot find RecordDecl for class %s", clname);
       return;
