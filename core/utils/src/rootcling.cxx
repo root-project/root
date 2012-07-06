@@ -204,6 +204,12 @@
 #  undef system
 #endif
 
+#include <vector>
+
+template <typename T> struct R__IsPointer { enum { kVal = 0 }; };
+
+template <typename T> struct R__IsPointer<T*> { enum { kVal = 1 }; };
+
 extern "C" {
    void  G__setothermain(int othermain);
    int  G__setglobalcomp(int globalcomp);
@@ -731,7 +737,7 @@ bool R__IsInt(const clang::FieldDecl *field)
 const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const clang::Type** resultType = 0) 
 {
    // Return the scope corresponding to 'name' or std::'name'
-  
+
    const clang::CXXRecordDecl *result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupScope(name,resultType));
    if (!result) {
       std::string std_name("std::");
@@ -748,6 +754,7 @@ const clang::Type *R__GetUnderlyingType(clang::QualType type)
    
    const clang::Type *rawtype = type.getTypePtr();
 
+   // NOTE: We probably meant isa<clang::ElaboratedType>
    if (rawtype->isElaboratedTypeSpecifier() ) {
       rawtype = rawtype->getCanonicalTypeInternal().getTypePtr();
    }
@@ -5759,6 +5766,11 @@ int main(int argc, char **argv)
    clingArgs.push_back(argv[0]);
    clingArgs.push_back("-I.");
    clingArgs.push_back("-DROOT_Math_VectorUtil_Cint"); // ignore that little problem maker
+   
+   if (! R__IsPointer<std::vector<int>::iterator>::kVal) {
+      // Tell cling (for parsing pragma) that std::vector's iterator is a class
+      clingArgs.push_back("-DG__VECTOR_HAS_CLASS_ITERATOR");
+   }
 
 #ifndef ROOTBUILD
 # ifndef ROOTINCDIR
@@ -6567,7 +6579,7 @@ int main(int argc, char **argv)
          }
          const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
          if (CRD) {
-            Info(0,"Generating code for class %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
+            Info(0,"Generating code for class %s\n", iter->GetNormalizedName() );
             std::string qualname( CRD->getQualifiedNameAsString() );
             if (IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
                   // coverity[fun_call_w_exception] - that's just fine.
