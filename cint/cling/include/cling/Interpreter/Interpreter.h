@@ -9,8 +9,6 @@
 
 #include "cling/Interpreter/InvocationOptions.h"
 
-#include "clang/AST/Type.h"
-
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
@@ -31,8 +29,11 @@ namespace clang {
   class Decl;
   class DeclContext;
   class Expr;
+  class FunctionDecl;
   class NamedDecl;
   class Parser;
+  class QualType;
+  class Type;
 }
 
 namespace cling {
