@@ -46,7 +46,7 @@
 #pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::Cylindrical3D<double> >+;
 #pragma link C++ class ROOT::Math::PositionVector3D<ROOT::Math::CylindricalEta3D<double> >+;
 
-#if 0
+#ifdef __CLING__
 // Work around CINT and autoloader deficiency with template default parameter
 // Those requests are solely for rlibmap, they do no need to be seen by rootcint.
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::DefaultCoordinateSystemTag >+;
