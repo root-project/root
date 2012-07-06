@@ -44,6 +44,7 @@ namespace ROOT {
       
       static std::string DropDefaultArg(const std::string &classname);
       void GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlClass);
+      void GenerateTClassFor(const clang::QualType &type);
       void Print();
       void WriteClassInit(FILE *file);
       void WriteStreamer(FILE *file,const clang::CXXRecordDecl *stlcl);

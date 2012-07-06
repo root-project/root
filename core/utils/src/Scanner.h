@@ -71,6 +71,7 @@ public:
       long fRuleIndex;
       const clang::RecordDecl* fDecl;
       std::string fRequestedName;
+      std::string fNormalizedName;
       bool fRequestStreamerInfo;
       bool fRequestNoStreamer;
       bool fRequestNoInputOperator;
@@ -96,6 +97,7 @@ public:
          // Nothing to do we do not own the pointer;
       }
       const char *GetRequestedName() const { return fRequestedName.c_str(); }
+      const char *GetNormalizedName() const { return fNormalizedName.c_str(); }
       bool HasClassVersion() const { return fRequestedVersionNumber >=0 ; }
       bool RequestStreamerInfo() const { 
          // Equivalent to CINT's cl.RootFlag() & G__USEBYTECOUNT 

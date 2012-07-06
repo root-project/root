@@ -179,6 +179,8 @@
 #include "clang/AST/CXXInheritance.h"
 
 
+#include "cling/Utils/AST.h"
+
 #ifdef __APPLE__
 #include <libgen.h> // Needed for basename
 #include <mach-o/dyld.h>
@@ -624,6 +626,31 @@ const char *R__GetComment(const clang::Decl &decl)
    return comment;
 }
 
+cling::Interpreter *gInterp = 0;
+void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl);
+
+void R__GetNormalizedName(std::string &norm_name, const clang::QualType &type, const clang::ASTContext &ctxt) 
+{
+   static llvm::SmallSet<const clang::Type*, 4> typeToSkip;
+   if (typeToSkip.empty()) {
+      clang::QualType toSkip = gInterp->lookupType("Double32_t");
+      if (!toSkip.isNull()) typeToSkip.insert(toSkip.getTypePtr());
+      toSkip = gInterp->lookupType("Float16_t");
+      if (!toSkip.isNull()) typeToSkip.insert(toSkip.getTypePtr());
+      toSkip = gInterp->lookupType("string");
+      if (!toSkip.isNull()) typeToSkip.insert(toSkip.getTypePtr());
+   }
+
+   clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, typeToSkip); 
+   
+   std::string normalizedNameStep1;
+   normalizedType.getAsStringInternal(normalizedNameStep1,ctxt.getPrintingPolicy());
+   
+   // Still remove the std:: and default template argument and insert the Long64_t
+   TClassEdit::TSplitType splitname(normalizedNameStep1.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
+   splitname.ShortType(norm_name, TClassEdit::kDropAllDefault );
+}
+
 void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext)
 {
    type.getAsStringInternal(qual_name,forcontext.getASTContext().getPrintingPolicy());
@@ -700,9 +727,6 @@ bool R__IsInt(const clang::FieldDecl *field)
 {
    return R__IsInt(field->getType().getTypePtr());
 }
-
-cling::Interpreter *gInterp = 0;
-
 
 const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const clang::Type** resultType = 0) 
 {
@@ -842,14 +866,14 @@ public:
 
 //______________________________________________________________________________
 const clang::FunctionDecl *R__GetFuncWithProto(const clang::Decl* cinfo, 
-                                           const char *method, const char *proto)
+                                               const char *method, const char *proto)
 {
    return gInterp->lookupFunctionProto(cinfo, method, proto);
 }
 
 //______________________________________________________________________________
 const clang::CXXMethodDecl *R__GetMethodWithProto(const clang::Decl* cinfo, 
-                                                const char *method, const char *proto)
+                                                  const char *method, const char *proto)
 {
    const clang::FunctionDecl* funcD = gInterp->lookupFunctionProto(cinfo, method, proto);
    if (funcD) {
@@ -2123,7 +2147,7 @@ bool IsTemplateFloat16(const RScanner::AnnotatedRecordDecl &cl)
        // const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
    // but unfortunately, it is useless here since the typedef have already
    // been resolved here.
-   return StringBasedIsTemplateFloat16Double32("Float16_t",cl.GetRequestedName());
+   return StringBasedIsTemplateFloat16Double32("Float16_t",cl.GetNormalizedName());
 
 #if KEEP_UNTIL_WE_RESOLVE_THE_TYPEDEF_AND_TEMPLATE_ISSUE
    // Return true if any of the argument is or contains a Float16.
@@ -2195,7 +2219,7 @@ bool IsTemplateDouble32(const RScanner::AnnotatedRecordDecl &cl)
    //    const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
    // but unfortunately, it is useless here since the typedef have already
    // been resolved here.
-   return StringBasedIsTemplateFloat16Double32("Double32_t",cl.GetRequestedName());
+   return StringBasedIsTemplateFloat16Double32("Double32_t",cl.GetNormalizedName());
 
 #if KEEP_UNTIL_WE_RESOLVE_THE_TYPEDEF_AND_TEMPLATE_ISSUE
    if (!cl.IsTmplt()) return false;
@@ -2466,7 +2490,7 @@ void WriteAuxFunctions(const RScanner::AnnotatedRecordDecl &cl)
       return;
    }
 
-   string classname( GetLong64_Name(RStl::DropDefaultArg( cl.GetRequestedName()[0] ? cl.GetRequestedName() : R__GetQualifiedName(cl).c_str() ) ) );
+   string classname( GetLong64_Name(RStl::DropDefaultArg( cl.GetNormalizedName() ) ) );
    string mappedname = R__map_cpp_name((char*)classname.c_str());
 
    if ( ! TClassEdit::IsStdClass( classname.c_str() ) ) {
@@ -3311,7 +3335,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
    }
 
    // coverity[fun_call_w_exception] - that's just fine.
-   string classname = GetLong64_Name( RStl::DropDefaultArg( cl_input.GetRequestedName()[0] ? cl_input.GetRequestedName() : R__GetQualifiedName(cl_input).c_str() ) );
+   string classname = GetLong64_Name( RStl::DropDefaultArg( cl_input.GetNormalizedName() ) );
    string mappedname = R__map_cpp_name((char*)classname.c_str());
    string csymbol = classname;
    string args;
@@ -4496,7 +4520,7 @@ void WriteAutoStreamer(const RScanner::AnnotatedRecordDecl &cl)
    {
       int k = IsSTLContainer(*iter);
       if (k!=0) {
-         RStl::Instance().GenerateTClassFor( cl.GetRequestedName(), iter->getType()->getAsCXXRecordDecl () );
+         RStl::Instance().GenerateTClassFor( iter->getType() );
       }
    }
    
@@ -4842,7 +4866,7 @@ void WriteShowMembers(const RScanner::AnnotatedRecordDecl &cl, bool outside = fa
    (*dictSrcOut) << "//_______________________________________";
    (*dictSrcOut) << "_______________________________________" << std::endl;
 
-   string classname = GetLong64_Name( RStl::DropDefaultArg( cl.GetRequestedName()[0] ? cl.GetRequestedName() : R__GetQualifiedName(cl).c_str() ) );
+   string classname = GetLong64_Name( RStl::DropDefaultArg( cl.GetNormalizedName() ) );
    string mappedname = R__map_cpp_name((char*)classname.c_str());
 
    if (outside || clinfo.IsTmplt()) {
@@ -4875,7 +4899,7 @@ void WriteShowMembers(const RScanner::AnnotatedRecordDecl &cl, bool outside = fa
       if (!clinfo.IsTmplt()) {
          WriteBodyShowMembers(clinfo, outside);
       } else {
-         string clnameNoDefArg = GetLong64_Name( RStl::DropDefaultArg( cl.GetRequestedName()[0] ? cl.GetRequestedName() : R__GetQualifiedName(cl).c_str() ) );
+         string clnameNoDefArg = GetLong64_Name( RStl::DropDefaultArg( cl.GetNormalizedName() ) );
          string mappednameNoDefArg = R__map_cpp_name((char*)clnameNoDefArg.c_str());
 
          (*dictSrcOut) <<  "   ::ROOT::" << mappednameNoDefArg.c_str() << "_ShowMembers(this, R__insp);" << std::endl;
@@ -4896,7 +4920,7 @@ void WriteClassCode(const RScanner::AnnotatedRecordDecl &cl)
    R__GetQualifiedName(fullname,cl);
    if (TClassEdit::IsSTLCont(fullname.c_str()) ) {
       // coverity[fun_call_w_exception] - that's just fine.
-      RStl::Instance().GenerateTClassFor(cl.GetRequestedName(), llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl()));
+      RStl::Instance().GenerateTClassFor(cl.GetNormalizedName(), llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl()));
       return;
    }
 
@@ -5921,7 +5945,7 @@ int main(int argc, char **argv)
 
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
-      if (clingArgs[i] != "-c")
+      if (clingArgs[parg] != "-c")
          pcmArgs.push_back(clingArgs[parg]);
    }
 
@@ -6547,7 +6571,7 @@ int main(int argc, char **argv)
             std::string qualname( CRD->getQualifiedNameAsString() );
             if (IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
                   // coverity[fun_call_w_exception] - that's just fine.
-               RStl::Instance().GenerateTClassFor( iter->GetRequestedName(), CRD );
+               RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD );
             } else {
                WriteClassInit(*iter);
             }               

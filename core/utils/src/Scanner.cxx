@@ -13,8 +13,13 @@
 #include "clang/AST/ASTConsumer.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
+#include "llvm/ADT/SmallSet.h"
+
+#include "cling/Interpreter/Interpreter.h"
+extern cling::Interpreter *gInterp;
 
 #include "TClassEdit.h"
+#include "TMetaUtils.h"
 
 #include <iostream>
 #include <sstream> // class ostringstream
@@ -47,6 +52,7 @@
 
 void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext);
 void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl);
+void R__GetNormalizedName(std::string &norm_name, const clang::QualType &type, const clang::ASTContext &ctxt);
 
 /* -------------------------------------------------------------------------- */
 using namespace clang;
@@ -68,16 +74,15 @@ RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type
    // Normalize the requested type name.
    
    // For comparison purposes.
-   TClassEdit::TSplitType splitname(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
-   splitname.ShortType( fRequestedName, TClassEdit::kDropAllDefault );
+   TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
+   splitname1.ShortType( fRequestedName, TClassEdit::kDropAllDefault );
    
-   std::string normalizedName;
-   R__GetQualifiedName(normalizedName,clang::QualType(requestedType,0),*decl);
+   R__GetNormalizedName( fNormalizedName, clang::QualType(requestedType,0), decl->getASTContext());
 
    std::string canonicalName;
    R__GetQualifiedName(canonicalName,*decl);
 
-   fprintf(stderr,"Created annotation with: requested name=%-22s normalized name=%-22s canonical name=%-22s\n",fRequestedName.c_str(),normalizedName.c_str(),canonicalName.c_str());
+   // fprintf(stderr,"Created annotation with: requested name=%-22s normalized name=%-22s canonical name=%-22s\n",fRequestedName.c_str(),fNormalizedName.c_str(),canonicalName.c_str());
 }
 
 //______________________________________________________________________________
@@ -96,6 +101,9 @@ RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Reco
    // Strips spaces and std::
    TClassEdit::TSplitType splitname(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
    splitname.ShortType( fRequestedName, TClassEdit::kDropAllDefault );
+
+   // NOTE: really dubious ... 
+   fNormalizedName = fRequestedName;
 
 #if Replaced_by_TClassEdit
    // The level counting code would be usefull if we want to introduce missing spaces ...

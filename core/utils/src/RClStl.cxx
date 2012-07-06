@@ -51,6 +51,56 @@ ROOT::RStl& ROOT::RStl::Instance()
 
 }
 
+void ROOT::RStl::GenerateTClassFor(const clang::QualType &type)
+{
+   // Force the generation of the TClass for the given class.
+
+   const clang::CXXRecordDecl *stlclass = type.getTypePtr()->getAsCXXRecordDecl();
+   if (stlclass == 0) {
+      return;
+   }
+   const clang::ClassTemplateSpecializationDecl *templateCl = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(stlclass);
+
+   if (templateCl == 0) {
+      Error("RStl::GenerateTClassFor","%s not in a template",
+            R__GetQualifiedName(*stlclass).c_str());      
+   }
+
+   if ( TClassEdit::STLKind( stlclass->getName().str().c_str() )  == TClassEdit::kVector ) {
+      const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(0) );
+      if (arg.getKind() == clang::TemplateArgument::Type) {
+         const clang::NamedDecl *decl = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();
+         if (decl) {
+            // NOTE: we should just compare the decl to the bool builtin!
+            llvm::StringRef argname = decl->getName();
+            if ( (argname.str() == "bool") || (argname.str() == "Bool_t") ) {
+               Warning("std::vector<bool>", " is not fully supported yet!\nUse std::vector<char> or std::deque<bool> instead.\n");
+            }
+         }
+      }
+   }
+   
+   fList.insert( RScanner::AnnotatedRecordDecl(++fgCount,type.getTypePtr(),stlclass,"",true,false,false,false,-1) );
+   
+   for(unsigned int i=0; i <  templateCl->getTemplateArgs().size(); ++i) {
+      const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(i) );
+      if (arg.getKind() == clang::TemplateArgument::Type) {
+         const clang::NamedDecl *decl = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();
+         
+         if (decl && TClassEdit::STLKind( decl->getName().str().c_str() ) != 0 )
+            {
+               const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
+               if (clxx) {
+                  // Do we need to strip the qualifier?
+                  GenerateTClassFor(arg.getAsType());
+               }
+            }
+      }
+   }
+
+   //    fprintf(stderr,"ROOT::RStl registered %s as %s\n",stlclassname.c_str(),registername.c_str());
+}
+
 void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlclass)
 {
    // Force the generation of the TClass for the given class.
