@@ -66,7 +66,7 @@ namespace utils {
           desArgs.push_back(TemplateArgument(GetPartiallyDesugaredType(Ctx,
                                                                        SubTy,
                                                                   TypesToSkip)));
-         else 
+         } else 
             desArgs.push_back(*I);
       }
       
