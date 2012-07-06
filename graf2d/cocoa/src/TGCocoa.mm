@@ -3606,11 +3606,25 @@ void TGCocoa::GetRegionBox(Region_t /*reg*/, Rectangle_t * /*rect*/)
 }
 
 //______________________________________________________________________________
-void TGCocoa::ShapeCombineMask(Window_t, Int_t, Int_t, Pixmap_t)
+void TGCocoa::ShapeCombineMask(Window_t windowID, Int_t /*x*/, Int_t /*y*/, Pixmap_t pixmapID)
 {
+   //Comment from TVirtualX:
    // The Nonrectangular Window Shape Extension adds nonrectangular
    // windows to the System.
    // This allows for making shaped (partially transparent) windows
+   
+   assert(!fPimpl->IsRootWindow(windowID) && "ShapeCombineMask, windowID parameter is a 'root' window");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "ShapeCombineMask, windowID parameter is a bad window id");
+   assert([fPimpl->GetDrawable(pixmapID) isKindOfClass : [QuartzImage class]] && "ShapeCombineMask, pixmapID parameter must point to QuartzImage object");
+   
+   QuartzWindow * const qw = fPimpl->GetWindow(windowID).fQuartzWindow;
+
+   QuartzImage * const image = (QuartzImage *)fPimpl->GetDrawable(pixmapID);
+   assert(image.fIsStippleMask == YES && "ShapeCombineMask, QuartzImage must be a stipple mask");
+
+   qw.fShapeCombineMask = image;   
+   [qw setOpaque : NO];
+   [qw setBackgroundColor : [NSColor clearColor]];
 }
 
 //______________________________________________________________________________

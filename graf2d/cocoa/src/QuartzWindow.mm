@@ -661,8 +661,8 @@ void print_mask_info(ULong_t mask)
 @private
    QuartzView *fContentView;
    BOOL fDelayedTransient;
+   QuartzImage *fShapeCombineMask;
 }
-
 
 @synthesize fMainWindow;
 @synthesize fBackBuffer;
@@ -718,7 +718,27 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) dealloc
 {
+   [fShapeCombineMask release];
    [super dealloc];
+}
+
+//______________________________________________________________________________
+- (QuartzImage *) fShapeCombineMask
+{
+   return fShapeCombineMask;
+}
+
+//______________________________________________________________________________
+- (void) setFShapeCombineMask : (QuartzImage *) mask
+{
+   if (mask != fShapeCombineMask) {
+      [fShapeCombineMask release];
+      if (mask) {
+         fShapeCombineMask = [mask retain];
+         
+         //Check window's shadow???
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -1989,6 +2009,17 @@ void print_mask_info(ULong_t mask)
          assert(fContext != 0 && "drawRect, graphicsPort returned null");
 
          const ROOT::Quartz::CGStateGuard ctxGuard(fContext);
+
+         ROOT::MacOSX::Util::CFScopeGuard<CGImageRef> clipImageGuard;
+         QuartzWindow *topLevelParent = self.fQuartzWindow;
+         if (topLevelParent.fShapeCombineMask) {
+            //Attach clip mask to the context.
+            const NSRect clipRect  = [self convertRect : [self visibleRect] toView : nil];
+            clipImageGuard.Reset(CGImageCreateWithImageInRect(topLevelParent.fShapeCombineMask.fImage, clipRect));
+            //TODO: this geometry looks suspicious, check!
+            CGContextClipToMask(fContext, CGRectMake(0, 0, clipRect.size.width, clipRect.size.height), clipImageGuard.Get());
+         }
+
 
          if (window->InheritsFrom("TGContainer"))//It always has an ExposureMask.
             vx->GetEventTranslator()->GenerateExposeEvent(self, [self visibleRect]);

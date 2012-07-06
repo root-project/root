@@ -24,6 +24,8 @@
 //                                            //
 ////////////////////////////////////////////////
 
+@class QuartzImage;
+
 @interface QuartzWindow : NSWindow<X11Window, NSWindowDelegate>
 
 //Life-cycle: "ctor".
@@ -34,6 +36,11 @@
 //This is to emulate "transient" window/main window relationship:
 @property (nonatomic, assign) QuartzWindow *fMainWindow;
 - (void) addTransientWindow : (QuartzWindow *) window;
+
+//Shape mask - non-rectangular window.
+@property (nonatomic, assign) QuartzImage *fShapeCombineMask;
+//@property (nonatomic, assign) NSPoint fShapeMaskShift;
+
 //1. X11Drawable protocol.
 
 @property (nonatomic, assign) unsigned fID;
