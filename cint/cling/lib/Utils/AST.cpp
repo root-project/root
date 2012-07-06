@@ -36,49 +36,53 @@ namespace utils {
                                                 QualType QT, 
                               const llvm::SmallSet<const Type*, 4>& TypesToSkip){
     // If there are no constains - use the standard desugaring.
-   if (!TypesToSkip.size())
+    if (!TypesToSkip.size())
       return QT.getDesugaredType(Ctx);
 
-   while(isa<TypedefType>(QT.getTypePtr())) {
+    while(isa<TypedefType>(QT.getTypePtr())) {
       if (!TypesToSkip.count(QT.getTypePtr())) 
-         QT = QT.getSingleStepDesugaredType(Ctx);
+        QT = QT.getSingleStepDesugaredType(Ctx);
       else
-         return QT;
-   }
+        return QT;
+    }
 
-   // In case of template specializations iterate over the arguments and 
-   // desugar them as well.
-   if(const TemplateSpecializationType* TST 
-      = dyn_cast<const TemplateSpecializationType>(QT.getTypePtr())) {
-
+    // In case of template specializations iterate over the arguments and 
+    // desugar them as well.
+    if(const TemplateSpecializationType* TST 
+       = dyn_cast<const TemplateSpecializationType>(QT.getTypePtr())) {
+     
+      bool mightHaveChanged = false;
       llvm::SmallVector<TemplateArgument, 4> desArgs;
       for(TemplateSpecializationType::iterator I = TST->begin(), E = TST->end();
           I != E; ++I) {
-         QualType SubTy = I->getAsType();
-      
-         if (SubTy.isNull())
-            continue;
+        QualType SubTy = I->getAsType();
+       
+        if (SubTy.isNull())
+          continue;
 
-         // Check if the type needs more desugaring and recurse.
-         if (isa<TypedefType>(SubTy) || isa<TemplateSpecializationType>(SubTy))
-            desArgs.push_back(TemplateArgument(GetPartiallyDesugaredType(Ctx,
-                                                                         SubTy,
+        // Check if the type needs more desugaring and recurse.
+        if (isa<TypedefType>(SubTy) || isa<TemplateSpecializationType>(SubTy)) {
+          mightHaveChanged = true;
+          desArgs.push_back(TemplateArgument(GetPartiallyDesugaredType(Ctx,
+                                                                       SubTy,
                                                                   TypesToSkip)));
+        } 
+        else
+          desArgs.push_back(TemplateArgument(SubTy));
       }
-
+      
       // If desugaring happened allocate new type in the AST.
-      if (desArgs.size()) {
-         QualType Result 
-            = Ctx.getTemplateSpecializationType(TST->getTemplateName(), 
-                                                desArgs.data(),
-                                                desArgs.size(),
-                                                TST->getCanonicalTypeInternal());
-         return Result;
+      if (mightHaveChanged) {
+        QualType Result 
+          = Ctx.getTemplateSpecializationType(TST->getTemplateName(), 
+                                              desArgs.data(),
+                                              desArgs.size(),
+                                              TST->getCanonicalTypeInternal());
+        return Result;
       }
-   }
-   return QT;   
-}
-
+    }
+    return QT;   
+  }
 
   NamespaceDecl* Lookup::Namespace(Sema* S, const char* Name,
                                    DeclContext* Within) {
