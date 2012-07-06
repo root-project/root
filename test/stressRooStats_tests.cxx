@@ -15,13 +15,13 @@
 #include "RooStats/NumberCountingUtils.h"
 #include "RooStats/RooStatsUtils.h"
 #include "RooStats/TestStatistic.h"
+#include "RooStats/HypoTestCalculatorGeneric.h"
 
 #include "stressRooStats_models.cxx" // Global functions that build complex RooStats models
 
 using namespace ROOT::Math;
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
 
 // testStatType = 0 Simple Likelihood Ratio (the LEP TestStat)
 //              = 1 Ratio of Profiled Likelihood Ratios (the Tevatron TestStat)
@@ -30,9 +30,15 @@ using namespace std;
 //              = 4 Profile Likelihood Signed (pll = -pll if mu < mu_hat)
 //              = 5 Max Likelihood Estimate as test statistic
 //              = 6 Number of Observed Events as test statistic
-enum ETestStatType { kSimpleLR = 0, kRatioLR = 1, kProfileLR = 2, kProfileLROneSided = 3, kProfileLRSigned = 4, kMLE = 5, kNObs = 6 };
-static const char * const kECalculatorTypeString[] = { "Undefined", "Hybrid", "Frequentist", "Asymptotic" };
-static const char * const kETestStatTypeString[] = { "Simple Likelihood Ratio", "Ratio Likelihood Ratio", "Profile Likelihood Ratio", "Profile Likelihood One Sided", "Profile Likelihood Signed", "Max Likelihood Estimate", "Number of Observed Events" };
+enum ECalculatorType { kAsymptotic = 0, kFrequentist = 1, kHybrid = 2 };
+enum ETestStatType { kSimpleLR = 0, kRatioLR = 1, kProfileLR = 2, kProfileLROneSided = 3, 
+   kProfileLROneSidedDiscovery = 4, kProfileLRSigned = 5, kMLE = 6, kNObs = 7 };
+static const char * const kECalculatorTypeString[] = { "Asymptotic", "Frequentist", "Hybrid" };
+static const char * const kETestStatTypeString[] = { "Simple Likelihood Ratio", "Ratio Of Profiled Likelihoods", 
+   "Profile Likelihood Ratio", "Profile Likelihood One-Sided", "Profile Likelihood One-Sided Discovery",
+   "Profile Likelihood Signed", "Max Likelihood Estimate", "Number Of Observed Events" };
+static HypoTestCalculatorGeneric * buildHypoTestCalculator(const ECalculatorType calculatorType, RooAbsData &data, 
+   const ModelConfig &nullModel, const ModelConfig &altModel, const UInt_t toysNull, const UInt_t toysAlt);
 static TestStatistic *buildTestStatistic(const ETestStatType testStatType, const ModelConfig &sbModel, const ModelConfig &bModel);
 
 
@@ -299,12 +305,12 @@ public:
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
    Bool_t isTestAvailable() {
-      if (fObsValueX < 0 || fObsValueX > 40) {
-         Warning("isTestAvailable", "Observed value X=s+b must be in the range [0,40]. Skipping test...");
+      if (fObsValueX < 0 || fObsValueX > 30) {
+         Warning("isTestAvailable", "Observed value X=s+b must be in the range [0,30]. Skipping test...");
          return kFALSE;
       }
-      if (fObsValueY < 0 || fObsValueY > 120) {
-         Warning("isTestAvailable", "Observed value Y=2*s*1.2^beta+b must be in the range [0,120]. Skipping test...");
+      if (fObsValueY < 0 || fObsValueY > 80) {
+         Warning("isTestAvailable", "Observed value Y=2*s*1.2^beta+b must be in the range [0,80]. Skipping test...");
          return kFALSE;
       }
       if (fConfidenceLevel <= 0.0 || fConfidenceLevel >= 1.0) {
@@ -400,7 +406,7 @@ public:
       const Double_t tau[numberTestSets] = {5.0, 2.0, 0.5};
       const Double_t significance[numberTestSets] =  {1.95, 3.02, 3.04};
 
-      for (Int_t i = 0; i < numberTestSets; i++) {
+      for (Int_t i = 0; i < numberTestSets; ++i) {
 
          TString stringSignificance = TString::Format("tplc4_significance_%d_%d_%lf", numberOnEvents[i], numberOffEvents[i], tau[i]);
 
@@ -809,12 +815,12 @@ public:
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
    Bool_t isTestAvailable() {
-      if (fObsValueX < 0 || fObsValueX > 40) {
-         Warning("isTestAvailable", "Observed value X=s+b must be in the range [0,40]. Skipping test...");
+      if (fObsValueX < 0 || fObsValueX > 30) {
+         Warning("isTestAvailable", "Observed value X=s+b must be in the range [0,30]. Skipping test...");
          return kFALSE;
       }
-      if (fObsValueY < 0 || fObsValueY > 120) {
-         Warning("isTestAvailable", "Observed value Y=2*s*1.2^beta+b must be in the range [0,120]. Skipping test...");
+      if (fObsValueY < 0 || fObsValueY > 80) {
+         Warning("isTestAvailable", "Observed value Y=2*s*1.2^beta+b must be in the range [0,80]. Skipping test...");
          return kFALSE;
       }
       if (fConfidenceLevel <= 0.0 || fConfidenceLevel >= 1.0) {
@@ -896,7 +902,7 @@ public:
 // Test the validity of the confidence interval computed by the MCMCCalculator
 // on a complex Poisson model distribution. Reference values and test values
 // are both computed with the MCMCCalculator. As such, this test can only
-// confirm if the BayesianCalculator has the same behaviour across different
+// confirm if the MCMCCalculator has the same behaviour across different
 // computing platforms or RooStats revisions.
 //
 // ModelConfig (explicit) : Poisson Product Model
@@ -935,12 +941,12 @@ public:
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
    Bool_t isTestAvailable() {
-      if (fObsValueX < 0 || fObsValueX > 40) {
-         Warning("isTestAvailable", "Observed value X=s+b must be in the range [0,40]. Skipping test...");
+      if (fObsValueX < 0 || fObsValueX > 30) {
+         Warning("isTestAvailable", "Observed value X=s+b must be in the range [0,30]. Skipping test...");
          return kFALSE;
       }
-      if (fObsValueY < 0 || fObsValueY > 120) {
-         Warning("isTestAvailable", "Observed value Y=2*s*1.2^beta+b must be in the range [0,120]. Skipping test...");
+      if (fObsValueY < 0 || fObsValueY > 80) {
+         Warning("isTestAvailable", "Observed value Y=2*s*1.2^beta+b must be in the range [0,80]. Skipping test...");
          return kFALSE;
       }
       if (fConfidenceLevel <= 0.0 || fConfidenceLevel >= 1.0) {
@@ -1019,6 +1025,7 @@ public:
 #include "RooStats/FrequentistCalculator.h"
 #include "RooStats/HybridCalculator.h"
 #include "RooStats/AsymptoticCalculator.h"
+#include "RooStats/HypoTestPlot.h"
 // Test Statistics
 #include "RooStats/ProfileLikelihoodTestStat.h"
 #include "RooStats/RatioOfProfiledLikelihoodsTestStat.h"
@@ -1080,7 +1087,7 @@ public:
       const Double_t tau[numberTestSets] = {5.0, 2.0, 0.5, 0.1};
       const Double_t significance[numberTestSets] =  {1.66, 2.93, 2.89, 2.2};
 
-      for (Int_t i = 0; i < numberTestSets; i++) {
+      for (Int_t i = 0; i < numberTestSets; ++i) {
 
          TString stringSignificance = TString::Format("tzbi_significance_%d_%d_%lf", numberOnEvents[i], numberOffEvents[i], tau[i]);
 
@@ -1148,6 +1155,24 @@ public:
       fTau(tau)
    {};
 
+   // Basic checks for the parameters passed to the test
+   // In case of invalid parameters, a warning is printed and the test is skipped
+   Bool_t isTestAvailable() {
+      if (fObsValueOn < 0 || fObsValueOn > 300) {
+         Warning("isTestAvailable", "Observed value on_source=s+b must be in the range [0,300]. Skipping test...");
+         return kFALSE;
+      }
+      if (fObsValueOff < 0 || fObsValueOff > 1100) {
+         Warning("isTestAvailable", "Observed value off_source=tau*b must be in the range [0,1100]. Skipping test...");
+         return kFALSE;
+      }
+      if (fTau < 0.1 || fTau > 5.0) {
+         Warning("isTestAvailable", "On/Off model parameter 'tau' must be in the range [0.1,5.0]. Skipping test...");
+         return kFALSE;
+      }
+      return kTRUE;
+   }
+
    Bool_t testCode() {
 
       // names of tested variables must be the same in write / comparison modes
@@ -1178,6 +1203,7 @@ public:
 
          ProfileLikelihoodCalculator *plc = new ProfileLikelihoodCalculator(*w->data("data"), *sbModel);
          plc->SetNullParameters(*bModel->GetSnapshot());
+         plc->SetAlternateParameters(*sbModel->GetSnapshot());
          regValue(plc->GetHypoTest()->Significance(), significanceString);
 
          // cleanup branch
@@ -1197,6 +1223,125 @@ public:
       // cleanup
       delete w;
 
+      return kTRUE ;
+   }
+} ;
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// HYPOTHESIS TEST CALCULATOR TEST - SIMULTANEOUS PDF MODEL
+//
+// This test evaluates the functionality of the HypoTestCalculator by
+// calculating the significance of the signal on a simple Simultaneous Pdf 
+// model with two channels. Reference values and test values are both computed 
+// with the HypoTestCalculator. As such, this test can only confirm if the 
+// HypoTestCalculator has the same behaviour across different computing 
+// platforms or RooStats revisions.
+//
+// ModelConfig (explicit) : Simultaneous Model
+//    built in stressRooStats_models.cxx
+//
+// Input Parameters:
+//    calculatorType -> Frequentist, Hybrid or Asymptotic
+//    testStatType -> Profile Likelihood Ratio, Simple Likelihood Ratio, etc...
+//
+// 06/2012 - Ioan Gabriel Bucur
+//
+///////////////////////////////////////////////////////////////////////////////
+
+class TestHypoTestCalculator2 : public RooUnitTest {
+private:
+   ECalculatorType fCalculatorType;
+   ETestStatType fTestStatType;
+
+public:
+   TestHypoTestCalculator2(
+      TFile* refFile,
+      Bool_t writeRef,
+      Int_t verbose,
+      ECalculatorType calculatorType = kAsymptotic,
+      ETestStatType testStatType = kProfileLROneSidedDiscovery
+   ) :
+      RooUnitTest(TString::Format("HypoTestCalculator Significance - Simultaneous Pdf - %s - %s",
+                     kECalculatorTypeString[calculatorType], kETestStatTypeString[testStatType]), refFile, writeRef, verbose),
+      fCalculatorType(calculatorType),
+      fTestStatType(testStatType)
+   {};
+
+   Bool_t testCode() {
+
+      // Build workspace and models
+      RooWorkspace* w = new RooWorkspace("w", kTRUE);
+      buildSimultaneousModel(w);
+      ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
+      ModelConfig *bModel = (ModelConfig *)w->obj("B");
+
+      // set snapshots
+      sbModel->SetSnapshot(*sbModel->GetParametersOfInterest()); // value set in model
+      w->var("sig")->setVal(0);
+      bModel->SetSnapshot(*bModel->GetParametersOfInterest());
+
+      HypoTestCalculatorGeneric *calc = 
+         buildHypoTestCalculator(fCalculatorType, *w->data("data"), *bModel, *sbModel, 200, 1);
+      if(fCalculatorType == kAsymptotic) { ((AsymptoticCalculator *)calc)->SetOneSidedDiscovery(kTRUE); }      
+
+      // ToyMCSampler configuration
+      ToyMCSampler *tmcs = (ToyMCSampler *)calc->GetTestStatSampler();
+      tmcs->SetTestStatistic(buildTestStatistic(fTestStatType, *bModel, *sbModel));
+      tmcs->SetUseMultiGen(kTRUE); // speedup
+
+      // Register result (test significance)
+      HypoTestResult *htr = calc->GetHypoTest();
+      regValue(htr->Significance(), TString::Format("thtc2_significance_%s_%s",
+                                                       kECalculatorTypeString[fCalculatorType],
+                                                       kETestStatTypeString[fTestStatType]));
+
+      // corresponding visual plots (in verbose mode) - from tutorials/roostats/StandardHypoTestDemo.C
+      if (_verb >= 1) {
+         if(fCalculatorType != kAsymptotic) {
+            TCanvas *c = new TCanvas("thtc2_canvas", "THTC2 Canvas");
+            
+            c->cd(1);
+            HypoTestPlot *plot = new HypoTestPlot(*htr,100);
+            plot->SetLogYaxis(kTRUE);
+            plot->Draw();
+
+            SamplingDistribution *altDist = htr->GetAltDistribution();
+            HypoTestResult htExp("Expected result");
+            htExp.Append(htr);
+            // find quantiles in alt (S+B) distribution
+            Double_t p[5], q[5];
+            for(Int_t i = 0; i < 5; ++i) {
+               Double_t sig = -2 + i;
+               p[i] = ROOT::Math::normal_cdf(sig,1);
+            }
+            std::vector<Double_t> values = altDist->GetSamplingDistribution(); 
+            TMath::Quantiles( values.size(), 5, &values[0], q, p, kFALSE);
+         
+            for(Int_t i = 0; i < 5; ++i) {
+               htExp.SetTestStatisticData( q[i] );
+               Double_t sig = -2 + i;
+               std::cout << "Expected p-value and significance at " << sig << " sigma = "
+                         << htExp.NullPValue() << " significance " << htExp.Significance() << " sigma " << std::endl;
+            }
+            c->SaveAs(TString::Format("thtc2_scan_%s_%s.pdf",
+                                    kECalculatorTypeString[fCalculatorType],
+                                    kETestStatTypeString[fTestStatType]));
+         } else {
+            for(Int_t i = 0; i < 5; ++i) {
+               Double_t sig = -2 + i;
+               Double_t pval = AsymptoticCalculator::GetExpectedPValues(htr->NullPValue(), htr->AlternatePValue(), -sig, kFALSE);
+               std::cout << "Expected p-value and significance at " << sig << " sigma = "
+                         << pval << " significance " << ROOT::Math::normal_quantile_c(pval,1) << " sigma " << std::endl;
+            }
+         } 
+      }
+      
+      delete calc;
+      delete htr;
+      delete w;
+      
       return kTRUE ;
    }
 } ;
@@ -1233,14 +1378,16 @@ public:
 //
 // Test the validity of the confidence interval computed by the HypoTestInverter
 // on a complex Poisson model distribution. Reference values and test values
-// are both computed with the MCMCCalculator. As such, this test can only
-// confirm if the BayesianCalculator has the same behaviour across different
+// are both computed with the HypoTestInverter. As such, this test can only
+// confirm if the HypoTestInverter has the same behaviour across different
 // computing platforms or RooStats revisions.
 //
 // ModelConfig (explicit) : Poisson Product Model
 //    built in stressRooStats_models.cxx
 //
 // Input Parameters:
+//    calculatorType -> Frequentist, Hybrid or Asymptotic
+//    testStatType -> Profile Likelihood Ratio, Simple Likelihood Ratio, etc...
 //    obsValueX -> observed value "x" when measuring sig + bkg1
 //    obsValueY -> observed value "y" when measuring 2*sig*1.2^beta + bkg2
 //    confidenceLevel -> Confidence Level of the interval we are calculating
@@ -1252,7 +1399,7 @@ public:
 
 class TestHypoTestInverter1 : public RooUnitTest {
 private:
-   HypoTestInverter::ECalculatorType fCalculatorType;
+   ECalculatorType fCalculatorType;
    ETestStatType fTestStatType;
    Int_t fObsValueX;
    Int_t fObsValueY;
@@ -1263,8 +1410,8 @@ public:
       TFile* refFile,
       Bool_t writeRef,
       Int_t verbose,
-      HypoTestInverter::ECalculatorType calculatorType,
-      ETestStatType testStatType,
+      ECalculatorType calculatorType = kAsymptotic,
+      ETestStatType testStatType = kProfileLR,
       Int_t obsValueX = 15,
       Int_t obsValueY = 30,
       Double_t confidenceLevel = 2 * normal_cdf(1) - 1
@@ -1281,12 +1428,12 @@ public:
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
    Bool_t isTestAvailable() {
-      if (fObsValueX < 0 || fObsValueX > 40) {
-         Warning("isTestAvailable", "Observed value X=s+b must be in the range [0,40]. Skipping test...");
+      if (fObsValueX < 0 || fObsValueX > 30) {
+         Warning("isTestAvailable", "Observed value X=s+b must be in the range [0,30]. Skipping test...");
          return kFALSE;
       }
-      if (fObsValueY < 0 || fObsValueY > 120) {
-         Warning("isTestAvailable", "Observed value Y=2*s*1.2^beta+b must be in the range [0,120]. Skipping test...");
+      if (fObsValueY < 0 || fObsValueY > 80) {
+         Warning("isTestAvailable", "Observed value Y=2*s*1.2^beta+b must be in the range [0,80]. Skipping test...");
          return kFALSE;
       }
       if (fConfidenceLevel <= 0.0 || fConfidenceLevel >= 1.0) {
@@ -1315,54 +1462,36 @@ public:
       w->var("sig")->setVal(0);
       bModel->SetSnapshot(*bModel->GetParametersOfInterest());
 
-      //TODO: check how to eliminate this code, maybe 0 should be default print level for AsymptoticCalculator
-      if (fCalculatorType == HypoTestInverter::kAsymptotic) {
-         AsymptoticCalculator::SetPrintLevel(0); // print only minimal output
-      }
-
-      // configure HypoTestInverter
-      HypoTestInverter *hti =
-         new HypoTestInverter(*w->data("data"), *sbModel, *bModel, NULL, fCalculatorType, 1.0 - fConfidenceLevel);
+      // build and configure HypoTestInverter
+      HypoTestCalculatorGeneric *calc = 
+         buildHypoTestCalculator(fCalculatorType, *w->data("data"), *sbModel, *bModel, 100, 1);
+      HypoTestInverter *hti = new HypoTestInverter(*calc, NULL, 1.0 - fConfidenceLevel);
       hti->SetTestStatistic(*buildTestStatistic(fTestStatType, *sbModel, *bModel));
       hti->SetFixedScan(10, w->var("sig")->getMin(), w->var("sig")->getMax()); // significant speedup
 
-      //TODO: check how to eliminate this code, calculator should autoconfigure itself
-      if (fCalculatorType == HypoTestInverter::kHybrid) {
-         // force prior nuisance pdf and set toys for speedup
-         HybridCalculator *hc = (HybridCalculator *)hti->GetHypoTestCalculator();
-         hc->ForcePriorNuisanceNull(*MakeNuisancePdf(*sbModel, "nuis_prior_null"));
-         hc->ForcePriorNuisanceAlt(*MakeNuisancePdf(*bModel, "nuis_prior_alt"));
-         hc->SetToys(100, 1);
-      }
-
-      //TODO: check how to eliminate this code
-      if (fCalculatorType == HypoTestInverter::kFrequentist) {
-         // set toys for speedup
-         FrequentistCalculator *fc = (FrequentistCalculator *)hti->GetHypoTestCalculator();
-         fc->SetToys(100, 1);
-      }
+      if(fCalculatorType == kAsymptotic) ((AsymptoticCalculator *)calc)->SetTwoSided();
 
       // ToyMCSampler configuration
       ToyMCSampler *tmcs = (ToyMCSampler *)hti->GetHypoTestCalculator()->GetTestStatSampler();
       tmcs->SetNEventsPerToy(1); // needed because we don't have an extended pdf
-      tmcs->SetAlwaysUseMultiGen(kTRUE); // speedup
+      tmcs->SetUseMultiGen(kTRUE); // speedup
 
       HypoTestInverterResult *interval = hti->GetInterval();
-      regValue(interval->LowerLimit(), TString::Format("hti1_lower_limit_sig1_calc_%s_%s_%d_%d_%lf",
+      regValue(interval->LowerLimit(), TString::Format("thti1_lower_limit_sig_%s_%s_%d_%d_%lf",
                                                        kECalculatorTypeString[fCalculatorType],
                                                        kETestStatTypeString[fTestStatType],
                                                        fObsValueX, fObsValueY, fConfidenceLevel));
-      regValue(interval->UpperLimit(), TString::Format("hti1_upper_limit_sig1_calc_%s_%s_%d_%d_%lf",
+      regValue(interval->UpperLimit(), TString::Format("thti1_upper_limit_sig_%s_%s_%d_%d_%lf",
                                                        kECalculatorTypeString[fCalculatorType],
                                                        kETestStatTypeString[fTestStatType],
                                                        fObsValueX, fObsValueY, fConfidenceLevel));
 
       if (_verb >= 1) {
-         HypoTestInverterPlot *plot = new HypoTestInverterPlot("hti1_scan", "Two-Sided Scan", interval);
-         TCanvas *c1 = new TCanvas("hti1_scan", "HTI Scan");
+         HypoTestInverterPlot *plot = new HypoTestInverterPlot("thti1_scan", "Two-Sided Scan", interval);
+         TCanvas *c1 = new TCanvas("thti1_canvas", "THTI Canvas");
          c1->SetLogy(false);
-         plot->Draw("");
-         c1->SaveAs(TString::Format("hti1_scan_%s_%s_%d_%d_%lf.pdf",
+         plot->Draw("2CL CLB");
+         c1->SaveAs(TString::Format("thti1_scan_%s_%s_%d_%d_%lf.pdf",
                                     kECalculatorTypeString[fCalculatorType],
                                     kETestStatTypeString[fTestStatType],
                                     fObsValueX, fObsValueY, fConfidenceLevel));
@@ -1370,23 +1499,187 @@ public:
          if (_verb == 2) {
             const int n = interval->ArraySize();
             if (n > 0 && interval->GetResult(0)->GetNullDistribution()) {
-               TCanvas *c2 = new TCanvas("HTI_TestStatistic_Distribution", "HTI Test Statistic Distributions", 2);
+               TCanvas *c2 = new TCanvas("thti1_teststat_dist", "HTI Test Statistic Distributions", 2);
                if (n > 1) {
                   int ny = TMath::CeilNint(sqrt(n));
                   int nx = TMath::CeilNint(double(n) / ny);
                   c2->Divide(nx, ny);
                }
-               for (int i = 0; i < n; i++) {
+               for (int i = 0; i < n; ++i) {
                   if (n > 1) c2->cd(i + 1);
                   SamplingDistPlot *pl = plot->MakeTestStatPlot(i);
                   if (pl == NULL) return kTRUE;
                   pl->SetLogYaxis(kTRUE);
                   pl->Draw();
                }
-               c2->SaveAs(TString::Format("hti1_teststat_distrib_%s_%s_%d_%d_%lf.pdf",
+               c2->SaveAs(TString::Format("thti1_teststat_distrib_%s_%s_%d_%d_%lf.pdf",
                                           kECalculatorTypeString[fCalculatorType],
                                           kETestStatTypeString[fTestStatType],
                                           fObsValueX, fObsValueY, fConfidenceLevel));
+            }
+         }
+      }
+
+      // cleanup
+      delete interval;
+      delete hti;
+      delete w;
+
+      return kTRUE ;
+   }
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// HYPOTESTINVERTER UPPER LIMIT - SIGNAL + BACKGROUND + EFFICIENCY MODEL
+//
+// Test the validity of the upper limit computed by the HypoTestInverter
+// on a complex model distribution with signal, background and efficiency. 
+// Reference values and test values are both computed with the HypoTestInverter. 
+// As such, this test can only confirm if the HypoTestInverter has the same 
+// behaviour across different computing platforms or RooStats revisions.
+//
+// ModelConfig (explicit) : Poisson Signal + Background + Efficiency
+//    built in stressRooStats_models.cxx
+//
+/// Input Parameters:
+//    calculatorType -> Frequentist, Hybrid or Asymptotic
+//    testStatType -> Profile Likelihood Ratio, Simple Likelihood Ratio, etc...
+//    obsValueX -> observed value "x" when measuring sig * eff + bkg
+//    confidenceLevel -> Confidence Level of the upper limit we are calculating
+//
+// 04/2012 - Ioan Gabriel Bucur
+//
+///////////////////////////////////////////////////////////////////////////////
+
+class TestHypoTestInverter2 : public RooUnitTest {
+private:
+   ECalculatorType fCalculatorType;
+   ETestStatType fTestStatType;
+   Int_t fObsValueX;
+   Double_t fConfidenceLevel;
+
+public:
+   TestHypoTestInverter2(
+      TFile* refFile, 
+      Bool_t writeRef, 
+      Int_t verbose, 
+      ECalculatorType calculatorType = kAsymptotic, 
+      ETestStatType testStatType = kProfileLROneSided, 
+      Int_t obsValueX = 10,
+      Double_t confidenceLevel = 2 * normal_cdf(1) - 1
+   ) : 
+      RooUnitTest(TString::Format("HypoTestInverter Upper Limit - Poisson Efficiency Model - %s - %s",
+                                  kECalculatorTypeString[calculatorType], kETestStatTypeString[testStatType]), refFile, writeRef, verbose),
+      fCalculatorType(calculatorType),
+      fTestStatType(testStatType),
+      fObsValueX(obsValueX),
+      fConfidenceLevel(confidenceLevel)
+   {};
+
+   // Basic checks for the parameters passed to the test
+   // In case of invalid parameters, a warning is printed and the test is skipped
+   Bool_t isTestAvailable() {
+      if (fObsValueX < 0 || fObsValueX > 50) {
+         Warning("isTestAvailable", "Observed value X=s*e+b must be in the range [0,70]. Skipping test...");
+         return kFALSE;
+      }
+     if (fConfidenceLevel <= 0.0 || fConfidenceLevel >= 1.0) {
+         Warning("isTestAvailable", "Confidence level must be in the range (0,1). Skipping test...");
+         return kFALSE;
+      }
+      return kTRUE;
+   }
+
+   Bool_t testCode() {
+
+      // Create workspace and model
+      RooWorkspace *w = new RooWorkspace("w", kTRUE);
+      buildPoissonEfficiencyModel(w);
+      ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
+      ModelConfig *bModel = (ModelConfig *)w->obj("B");
+
+      // add observed values to data set
+      w->var("x")->setVal(fObsValueX);
+      w->data("data")->add(*sbModel->GetObservables());
+
+      // set snapshots
+      sbModel->SetSnapshot(*sbModel->GetParametersOfInterest());
+      w->var("sig")->setVal(0);
+      bModel->SetSnapshot(*bModel->GetParametersOfInterest());
+
+      // calculate upper limit with HypoTestInverter
+      HypoTestCalculatorGeneric *calc = 
+         buildHypoTestCalculator(fCalculatorType, *w->data("data"), *sbModel, *bModel, 100, 100);
+      HypoTestInverter *hti = new HypoTestInverter(*calc, NULL, 1.0 - fConfidenceLevel);
+      hti->SetTestStatistic(*buildTestStatistic(fTestStatType, *sbModel, *bModel));
+      hti->SetFixedScan(10, w->var("sig")->getMin(), w->var("sig")->getMax()); // significant speedup
+
+      if(fCalculatorType == kAsymptotic) ((AsymptoticCalculator *)calc)->SetOneSided(kTRUE);
+
+      // needed because we have no extended pdf and the ToyMC Sampler evaluation returns an error
+      ToyMCSampler *tmcs = (ToyMCSampler *)hti->GetHypoTestCalculator()->GetTestStatSampler();
+      tmcs->SetNEventsPerToy(1);
+      tmcs->SetUseMultiGen(kTRUE); // make ToyMCSampler faster
+
+      // calculate interval and extract observed upper limit and expected upper limit (+- sigma)
+      HypoTestInverterResult *interval = hti->GetInterval();
+      regValue(interval->UpperLimit(), TString::Format("thti2_upper_limit_sig_%s_%s_%d_%lf",
+                                                       kECalculatorTypeString[fCalculatorType],
+                                                       kETestStatTypeString[fTestStatType],
+                                                       fObsValueX, fConfidenceLevel));
+      regValue(interval->GetExpectedUpperLimit( 0), TString::Format("thti2_exp_upper_limit_sig_%s_%s_%d_%lf",
+                                                       kECalculatorTypeString[fCalculatorType],
+                                                       kETestStatTypeString[fTestStatType],
+                                                       fObsValueX, fConfidenceLevel));
+      regValue(interval->GetExpectedUpperLimit(-2), TString::Format("thti2_exp_upper_limit_-2_sig_%s_%s_%d_%lf",
+                                                       kECalculatorTypeString[fCalculatorType],
+                                                       kETestStatTypeString[fTestStatType],
+                                                       fObsValueX, fConfidenceLevel));
+      regValue(interval->GetExpectedUpperLimit(-1), TString::Format("thti2_exp_upper_limit_-1_sig_%s_%s_%d_%lf",
+                                                       kECalculatorTypeString[fCalculatorType],
+                                                       kETestStatTypeString[fTestStatType],
+                                                       fObsValueX,  fConfidenceLevel));
+      regValue(interval->GetExpectedUpperLimit( 1), TString::Format("thti2_exp_upper_limit_+1_sig_%s_%s_%d_%lf",
+                                                       kECalculatorTypeString[fCalculatorType],
+                                                       kETestStatTypeString[fTestStatType],
+                                                       fObsValueX, fConfidenceLevel));
+      regValue(interval->GetExpectedUpperLimit( 2), TString::Format("thti2_exp_upper_limit_+2_sig_%s_%s_%d_%lf",
+                                                       kECalculatorTypeString[fCalculatorType],
+                                                       kETestStatTypeString[fTestStatType],
+                                                       fObsValueX, fConfidenceLevel));
+
+      if (_verb >= 1) {
+         HypoTestInverterPlot *plot = new HypoTestInverterPlot("thti2_scan", "HTI Upper Limit Scan", interval);
+         TCanvas *c1 = new TCanvas("HypoTestInverter Scan");
+         c1->SetLogy(false);
+         plot->Draw("2CL CLB");
+         c1->SaveAs(TString::Format("thti2_scan_%s_%s_%d_%lf.pdf",
+                                    kECalculatorTypeString[fCalculatorType],
+                                    kETestStatTypeString[fTestStatType],
+                                    fObsValueX, fConfidenceLevel));
+
+         if (_verb == 2) {
+            const int n = interval->ArraySize();
+            if (n > 0 && interval->GetResult(0)->GetNullDistribution()) {
+               TCanvas *c2 = new TCanvas("thti2_teststat_dist", "HTI Test Statistic Distributions", 2);
+               if (n > 1) {
+                  int ny = TMath::CeilNint(sqrt(n));
+                  int nx = TMath::CeilNint(double(n) / ny);
+                  c2->Divide(nx, ny);
+               }
+               for (int i = 0; i < n; ++i) {
+                  if (n > 1) c2->cd(i + 1);
+                  SamplingDistPlot *pl = plot->MakeTestStatPlot(i);
+                  if (pl == NULL) return kTRUE;
+                  pl->SetLogYaxis(kTRUE);
+                  pl->Draw();
+               }
+               c2->SaveAs(TString::Format("thti2_teststat_distrib_%s_%s_%d_%lf.pdf",
+                                          kECalculatorTypeString[fCalculatorType],
+                                          kETestStatTypeString[fTestStatType],
+                                          fObsValueX, fConfidenceLevel));
             }
          }
       }
@@ -1415,10 +1708,7 @@ public:
 
 
 
-
-
 // Other tests currently not included in any suite
-
 
 class TestHypoTestCalculator : public RooUnitTest {
 public:
@@ -1496,7 +1786,6 @@ public:
 
          ProfileLikelihoodTestStat *pllts = new ProfileLikelihoodTestStat(*bModel->GetPdf());
          pllts->SetAlwaysReuseNLL(kTRUE);
-         pllts->SetOneSidedDiscovery(kTRUE);
 
          MaxLikelihoodEstimateTestStat *mlets =
             new MaxLikelihoodEstimateTestStat(*sbModel->GetPdf(), *((RooRealVar *)sbModel->GetParametersOfInterest()->first()));
@@ -1516,23 +1805,23 @@ public:
          tmcs->SetTestStatistic(pllts);
          HypoTestResult *htr = htc->GetHypoTest();
          htr->Print();
-         cout << "PLLTS " << htr->Significance() << endl;
+         std::cout<< "PLLTS " << htr->Significance() << std::endl;
          tmcs->SetTestStatistic(mlets);
          htr = htc->GetHypoTest();
          htr->Print();
-         cout << "MLETS " << htr->Significance() << endl;
+         std::cout<< "MLETS " << htr->Significance() << std::endl;
          tmcs->SetTestStatistic(nevts);
          htr = htc->GetHypoTest();
          htr->Print();
-         cout << "NEVTS " << htr->Significance() << endl;
+         std::cout<< "NEVTS " << htr->Significance() << std::endl;
          tmcs->SetTestStatistic(slrts);
          htr = htc->GetHypoTest();
          htr->Print();
-         cout << "SLRTS " << htr->Significance() << endl;
+         std::cout<< "SLRTS " << htr->Significance() << std::endl;
          tmcs->SetTestStatistic(roplts);
          htr = htc->GetHypoTest();
          htr->Print();
-         cout << "ROPLTS " << htr->Significance() << endl;
+         std::cout<< "ROPLTS " << htr->Significance() << std::endl;
 
 
          regValue(htr->Significance(), "thtc_significance_hybrid");
@@ -1547,293 +1836,77 @@ public:
    }
 } ;
 
-
-#include "RooPoisson.h"
-
-class TestHypoTestCalculator2 : public RooUnitTest {
-public:
-   TestHypoTestCalculator2(
-      TFile* refFile,
-      Bool_t writeRef,
-      Int_t verbose
-   ) :
-      RooUnitTest("HypoTestCalculator Frequentist - Simultaneous Pdf", refFile, writeRef, verbose)
-   {};
-
-   Bool_t testCode() {
-
-      const Int_t fObsValueX = 20;
-      const Int_t fObsValueY = 30;
-      const Double_t fTau = 1.0;
-
-      if (_write == kTRUE) {
-
-         // register analytical Z_Bi value
-         Double_t Z_Bi = NumberCountingUtils::BinomialWithTauObsZ(fObsValueX, fObsValueY, fTau);
-         regValue(Z_Bi, "thtc_significance_frequentist");
-
-      } else {
-
-         // Build workspace and models
-         RooWorkspace* w = new RooWorkspace("w", kTRUE);
-         buildPoissonProductModel(w);
-         ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
-         ModelConfig *bModel = (ModelConfig *)w->obj("B");
-
-         sbModel->SetPdf(*w->pdf("sim_pdf"));
-         bModel->SetPdf(*w->pdf("sim_pdf"));
-
-         // add observed values to data set
-         w->var("x")->setVal(fObsValueX);
-         w->var("y")->setVal(fObsValueY);
-         w->data("data")->add(*sbModel->GetObservables());
-
-         // combined dataset for simultaneous pdf
-         RooDataSet *combData = new RooDataSet(
-            "combData",
-            "combined data",
-            *sbModel->GetObservables(),
-            Index(*dynamic_cast<RooCategory *>(w->obj("index"))),
-            Import("cat1", *dynamic_cast<RooDataSet *>(w->data("data"))),
-            Import("cat2", *dynamic_cast<RooDataSet *>(w->data("data")))
-         );
-
-   combData->Print("v");
-   for (Int_t i = 0; i < combData->numEntries(); i++) {
-      combData->get(i)->Print("v");
-   }
-
-
-
-         //w->data("combData")->get(0)->Print("v");
-        // w->data("combData")->get(1)->Print("v");
-
-/*
-         RooRealVar x("x","x",0,40);
-         RooRealVar mean("mean", "mean", 2, 0, 10);
-         RooRealVar mc("mc", "mc", 5, 0, 10);
-         RooPoisson p1("p1","p1",x,mean);
-         RooPoisson pc("pc","pc",mc,mean);
-         RooProdPdf pdf("pdf","pdf",RooArgList(p1,pc));
-
-         RooDataSet *data1 = p1.generate(x,100);
-         RooDataSet *data2 = pc.generate(x,50);
-*/
-
-
-//         w->Print();
-
-         // set snapshots
-         w->var("sig")->setVal(fObsValueX - w->var("bkg1")->getValV());
-         sbModel->SetSnapshot(*sbModel->GetParametersOfInterest());
-         w->var("sig")->setVal(0);
-         bModel->SetSnapshot(*bModel->GetParametersOfInterest());
-
-         // build test statistic
-         SimpleLikelihoodRatioTestStat *slrts =  new SimpleLikelihoodRatioTestStat(*bModel->GetPdf(), *sbModel->GetPdf());
-         slrts->SetNullParameters(*bModel->GetSnapshot());
-         slrts->SetAltParameters(*sbModel->GetSnapshot());
-         slrts->SetAlwaysReuseNLL(kTRUE);
-
-         RatioOfProfiledLikelihoodsTestStat *roplts = new RatioOfProfiledLikelihoodsTestStat(*bModel->GetPdf(), *sbModel->GetPdf());
-         roplts->SetAlwaysReuseNLL(kTRUE);
-
-         ProfileLikelihoodTestStat *pllts = new ProfileLikelihoodTestStat(*bModel->GetPdf());
-         pllts->SetOneSidedDiscovery(kTRUE);
-         pllts->SetAlwaysReuseNLL(kTRUE);
-
-         MaxLikelihoodEstimateTestStat *mlets =
-            new MaxLikelihoodEstimateTestStat(*sbModel->GetPdf(), *((RooRealVar *)sbModel->GetParametersOfInterest()->first()));
-
-         NumEventsTestStat *nevts = new NumEventsTestStat(*sbModel->GetPdf());
-
-
-         FrequentistCalculator *ftc = new FrequentistCalculator(*combData, *sbModel, *bModel);
-         ftc->SetToys(50000, 1000);
-         //   ftc->SetConditionalMLEsNull(w->set("nuis"));
-         //   ftc->SetConditionalMLEsAlt(w->set("nuis"));
-         ToyMCSampler *tmcs = (ToyMCSampler *)ftc->GetTestStatSampler();
-         tmcs->SetNEventsPerToy(1); // because the model is in number counting form
-         tmcs->SetAlwaysUseMultiGen(kTRUE);
-
-         HypoTestResult *htr;
-         ProfileLikelihoodCalculator *plc = new ProfileLikelihoodCalculator(*combData, *sbModel);
-         plc->SetNullParameters(*bModel->GetSnapshot());
-         htr = plc->GetHypoTest();
-         htr->Print();
-         cout << "PLC " << htr->Significance() << endl;
-
-         tmcs->SetTestStatistic(slrts);
-         htr = ftc->GetHypoTest();
-         htr->Print();
-         cout << "SLRTS " << htr->Significance() << endl;
-         tmcs->SetTestStatistic(pllts);
-         htr = ftc->GetHypoTest();
-         htr->Print();
-         cout << "PLLTS " << htr->Significance() << endl;
-         tmcs->SetTestStatistic(mlets);
-         htr = ftc->GetHypoTest();
-         htr->Print();
-         cout << "MLETS " << htr->Significance() << endl;
-         tmcs->SetTestStatistic(nevts);
-         htr = ftc->GetHypoTest();
-         htr->Print();
-         cout << "NEVTS " << htr->Significance() << endl;
-         tmcs->SetTestStatistic(roplts);
-         htr = ftc->GetHypoTest();
-         htr->Print();
-         cout << "ROPLTS " << htr->Significance() << endl;
-
-         regValue(htr->Significance(), "thtc_significance_frequentist");
-
-         delete ftc;
-         delete htr;
-         delete w;
-      }
-      return kTRUE ;
-   }
-} ;
-
-
-
-
-
-
-
-
-
-
-
-class TestHypoTestInverter2 : public RooUnitTest {
-private:
-   HypoTestInverter::ECalculatorType fCalculatorType;
-
-public:
-   TestHypoTestInverter2(TFile* refFile, Bool_t writeRef, Int_t verbose, HypoTestInverter::ECalculatorType calculatorType, ETestStatType /* testStatType */) : RooUnitTest(TString::Format("HypoTestInverter Upper Limit - Poisson Model with Signal, Background and Efficiency - Calculator Type %d", calculatorType), refFile, writeRef, verbose) {
-      fCalculatorType = calculatorType;
-   };
-
-   Bool_t testCode() {
-
-      const Double_t testSize = normal_cdf_c(1) * 2;
-
-      // Create workspace and model
-      RooWorkspace *w = new RooWorkspace("w", kTRUE);
-      createPoissonEfficiencyModel(w);
-      ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
-      ModelConfig *bModel = (ModelConfig *)w->obj("B");
-
-      // calculate upper limit with HypoTestInverter
-      HypoTestInverter *hti = new HypoTestInverter(*w->data("data"), *sbModel, *bModel, w->var("x"), fCalculatorType, testSize);
-      hti->SetFixedScan(10, 0, 20);
-      hti->UseCLs(kTRUE);
-
-      if (fCalculatorType == HypoTestInverter::kAsymptotic && _verb == 0) {
-         AsymptoticCalculator::SetPrintLevel(0); // print only minimal output
-      }
-
-      if (fCalculatorType == HypoTestInverter::kHybrid) {
-         // force prior nuisance pdf
-         HybridCalculator *hc = (HybridCalculator *)hti->GetHypoTestCalculator();
-         w->factory("PROD::priorbkg(constrb, constre)");
-         hc->ForcePriorNuisanceNull(*w->pdf("priorbkg"));
-         hc->ForcePriorNuisanceAlt(*w->pdf("priorbkg"));
-      }
-
-      // Set up the test statistic
-      ProfileLikelihoodTestStat *profll = new ProfileLikelihoodTestStat(*sbModel->GetPdf());
-      profll->SetOneSided(kTRUE);
-
-      // needed because we have no extended pdf and the ToyMC Sampler evaluation returns an error
-      ToyMCSampler *tmcs = (ToyMCSampler *)hti->GetHypoTestCalculator()->GetTestStatSampler();
-      tmcs->SetMaxToys(300);
-      tmcs->SetNEventsPerToy(1);
-      tmcs->SetTestStatistic(profll);
-//      tmcs->SetUseMultiGen(kTRUE); // make ToyMCSampler faster
-
-      // calculate interval and extract observed upper limit and expected upper limit (+- sigma)
-      HypoTestInverterResult *interval = hti->GetInterval();
-      regValue(interval->UpperLimit(), TString::Format("hti2_upper_limit_sig1_calc_%d", fCalculatorType));
-      regValue(interval->GetExpectedUpperLimit(0), TString::Format("hti2_exp_upper_limit_sig_calc_%d", fCalculatorType));
-      regValue(interval->GetExpectedUpperLimit(-1), TString::Format("hti2_exp_upper_limit-sigma_sig_calc_%d", fCalculatorType));
-      regValue(interval->GetExpectedUpperLimit(1), TString::Format("hti2_exp_upper_limit+sigma_sig_calc_%d", fCalculatorType));
-
-
-      if (_verb >= 1) {
-         HypoTestInverterPlot *plot = new HypoTestInverterPlot("HTI_Result_Plot", "HTI Upper Limit Scan", interval);
-         TCanvas *c1 = new TCanvas("HypoTestInverter Scan");
-         c1->SetLogy(false);
-         plot->Draw("2CL CLb");
-         c1->SaveAs(TString::Format("hti2 Upper Limit Scan - Calc %d.pdf", fCalculatorType));
-
-         if (_verb == 2) {
-            const int n = interval->ArraySize();
-            if (n > 0 && interval->GetResult(0)->GetNullDistribution()) {
-               TCanvas *c2 = new TCanvas("Test Statistic Distributions", "", 2);
-               if (n > 1) {
-                  int ny = TMath::CeilNint(sqrt(n));
-                  int nx = TMath::CeilNint(double(n) / ny);
-                  c2->Divide(nx, ny);
-               }
-               for (int i = 0; i < n; i++) {
-                  if (n > 1) c2->cd(i + 1);
-                  SamplingDistPlot *pl = plot->MakeTestStatPlot(i);
-                  if (pl == NULL) return kTRUE;
-                  pl->SetLogYaxis(kTRUE);
-                  pl->Draw();
-               }
-               c2->SaveAs(TString::Format("hti2 TestStat Distributions - Calc %d.pdf", fCalculatorType));
-            }
-         }
-      }
-
-      // cleanup
-      delete interval;
-      delete hti;
-      delete w;
-
-      return kTRUE ;
-   }
-};
-
 #include "RooStats/RatioOfProfiledLikelihoodsTestStat.h"
 #include "RooStats/MaxLikelihoodEstimateTestStat.h"
 #include "RooStats/NumEventsTestStat.h"
 
-static TestStatistic *buildTestStatistic(const ETestStatType testStatType, const ModelConfig &sbModel, const ModelConfig &bModel)
+static HypoTestCalculatorGeneric * buildHypoTestCalculator(const ECalculatorType calculatorType, RooAbsData &data, const ModelConfig &nullModel, const ModelConfig &altModel, const UInt_t toysNull, const UInt_t toysAlt)
+{
+   HypoTestCalculatorGeneric *calc = NULL;
+
+   if(calculatorType == kAsymptotic) {
+      AsymptoticCalculator::SetPrintLevel(0); // TODO: set this by default
+      AsymptoticCalculator *ac = new AsymptoticCalculator(data, altModel, nullModel);
+      calc = ac;
+   } else if(calculatorType == kFrequentist) {
+      FrequentistCalculator *fc = 
+         new FrequentistCalculator(data, altModel, nullModel);
+      // set toys for speedup
+      fc->SetToys(toysNull, toysAlt);
+      calc = fc;
+   } else { // kHybrid
+      HybridCalculator *hc = new HybridCalculator(data, altModel, nullModel);
+      // set toys for speedup
+      hc->SetToys(toysNull, toysAlt);
+      calc = hc;
+   }
+
+   assert(calc != NULL); // sanity check - should never happen
+   
+   return calc;
+}
+
+static TestStatistic *buildTestStatistic(const ETestStatType testStatType, const ModelConfig &nullModel, const ModelConfig &altModel)
 {
 
    TestStatistic *testStat = NULL;
 
    if (testStatType == kSimpleLR) {
-      SimpleLikelihoodRatioTestStat *slrts = new SimpleLikelihoodRatioTestStat(*sbModel.GetPdf(), *bModel.GetPdf());
-      slrts->SetNullParameters(*sbModel.GetSnapshot());
-      slrts->SetAltParameters(*bModel.GetSnapshot());
+      SimpleLikelihoodRatioTestStat *slrts = new SimpleLikelihoodRatioTestStat(*nullModel.GetPdf(), *altModel.GetPdf());
+      // TODO - different for HypoTestInverter and HypoTestCalculator
+      RooArgSet nullParams(*nullModel.GetSnapshot());
+      if(nullModel.GetNuisanceParameters()) nullParams.add(*nullModel.GetNuisanceParameters());
+      if(nullModel.GetSnapshot()) slrts->SetNullParameters(nullParams);
+      RooArgSet altParams(*altModel.GetSnapshot());
+      if(altModel.GetNuisanceParameters()) altParams.add(*altModel.GetNuisanceParameters());
+      if(altModel.GetSnapshot()) slrts->SetAltParameters(altParams);
       slrts->SetAlwaysReuseNLL(kTRUE);
       testStat = slrts;
    } else if (testStatType == kRatioLR)  {
       RatioOfProfiledLikelihoodsTestStat *roplts =
-         new RatioOfProfiledLikelihoodsTestStat(*sbModel.GetPdf(), *bModel.GetPdf(), bModel.GetSnapshot());
+         new RatioOfProfiledLikelihoodsTestStat(*nullModel.GetPdf(), *altModel.GetPdf(), altModel.GetSnapshot());
+      roplts->SetSubtractMLE(kFALSE);
       roplts->SetAlwaysReuseNLL(kTRUE);
       testStat = roplts;
    } else if (testStatType == kMLE) {
       MaxLikelihoodEstimateTestStat *mlets =
-         new MaxLikelihoodEstimateTestStat(*sbModel.GetPdf(), *((RooRealVar *)sbModel.GetParametersOfInterest()->first()));
+         new MaxLikelihoodEstimateTestStat(*nullModel.GetPdf(), *((RooRealVar *)nullModel.GetParametersOfInterest()->first()));
       testStat = mlets;
    } else if (testStatType == kNObs) {
-      NumEventsTestStat *nevtts = new NumEventsTestStat(*sbModel.GetPdf());
+      NumEventsTestStat *nevtts = new NumEventsTestStat(*nullModel.GetPdf());
       testStat = nevtts;
    } else { // kProfileLR, kProfileLROneSided and kProfileLRSigned
-      ProfileLikelihoodTestStat *plts = new ProfileLikelihoodTestStat(*sbModel.GetPdf());
+      ProfileLikelihoodTestStat *plts = new ProfileLikelihoodTestStat(*nullModel.GetPdf());
       if (testStatType == kProfileLROneSided) plts->SetOneSided(kTRUE);
-      if (testStatType == kProfileLRSigned) plts->SetSigned(kTRUE);
+      else if (testStatType == kProfileLROneSidedDiscovery) plts->SetOneSidedDiscovery(kTRUE);
+      else if (testStatType == kProfileLRSigned) plts->SetSigned(kTRUE);
       plts->SetAlwaysReuseNLL(kTRUE);
       testStat = plts;
    }
 
    assert(testStat != NULL); // sanity check - should never happen
 
-   return testStat; // fgNToys seems like a good choice for now
+   return testStat; 
 }
 
 
