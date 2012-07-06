@@ -2,6 +2,7 @@ set(LLVM_USED_LIBS
   clingUserInterface
   clingMetaProcessor
   clingInterpreter
+  clingUtils
   clangFrontend
   clangSerialization
   clangDriver
