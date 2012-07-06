@@ -32,14 +32,13 @@ packages and subversion [4] to get the source code.
      cd src
      svn co http://llvm.org/svn/llvm-project/llvm/trunk llvm
      cd llvm/tools
-     svn co  http://llvm.org/svn/llvm-project/cfe/trunk clang
-     svn co  http://root.cern.ch/svn/root/branches/dev/cling
+     svn co http://llvm.org/svn/llvm-project/cfe/trunk clang
+     svn co http://root.cern.ch/svn/root/trunk/cint/cling cling
      cd ..
 
    * Apply some patches
 
-     cat tools/cling/patches/llvm* | patch -p0
-     cat tools/cling/patches/clang* | ( cd tools/clang; patch -p0 ) 
+     cat tools/cling/patches/* | patch -p0
 
    * Configure, build and install them, either using CMake:
 
@@ -69,4 +68,3 @@ packages and subversion [4] to get the source code.
    To interpret a C file type: "./cling test.c". To invoke cling in the
 interactive mode type "cling" without file name.  Use ".L filename" to 
 load libraries or C++ files.  Type C++ code at the prompt to interpret it.
-
