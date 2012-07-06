@@ -66,9 +66,8 @@ namespace utils {
           desArgs.push_back(TemplateArgument(GetPartiallyDesugaredType(Ctx,
                                                                        SubTy,
                                                                   TypesToSkip)));
-        } 
-        else
-          desArgs.push_back(TemplateArgument(SubTy));
+         else 
+            desArgs.push_back(*I);
       }
       
       // If desugaring happened allocate new type in the AST.
