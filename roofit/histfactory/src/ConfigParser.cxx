@@ -922,7 +922,9 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
   HistFactory::Channel channel;
 
   // Set the default values:
-  
+  channel.SetInputFile( "" );
+  channel.SetHistoPath( "" );
+
   // Walk through the root node and
   // get its attributes
   TListIter attribIt = rootNode->GetAttributes();
@@ -947,14 +949,14 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
       std::cout << "Setting InputFile for this channel: " << attrVal << std::endl;
       channel.SetInputFile( attrVal );
       // Set the current (cached) value
-      m_currentInputFile = attrVal;
+      m_currentInputFile = attrVal;        
     }
 
     else if( curAttr->GetName() == TString( "HistoPath" ) ) {
       std::cout << "Setting HistoPath for this channel: " << attrVal << std::endl;
       // Set the current (cached) value
       channel.SetHistoPath( attrVal );
-      m_currentHistoPath = attrVal;
+      m_currentHistoPath = attrVal;  
     }
 
     else if( curAttr->GetName() == TString( "HistoName" ) ) {
@@ -989,6 +991,10 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
 
   while( node != 0 ) {
 
+    // Restore the Channel-Wide Defaults
+    m_currentInputFile = channel.GetInputFile();
+    m_currentHistoPath = channel.GetHistoPath();
+    
     if( node->GetNodeName() == TString( "" ) ) {
       std::cout << "Error: Encountered node in Channel with no name" << std::endl;
       throw hf_exc();
@@ -1484,6 +1490,7 @@ HistFactory::Sample ConfigParser::CreateSampleElement( TXMLNode* node ) {
 
     else if( attrName == TString( "InputFile" ) ) {
       sample.SetInputFile( attrVal );
+      m_currentInputFile = attrVal;
     }
 
     else if( attrName == TString( "HistoName" ) ) {
@@ -1492,6 +1499,7 @@ HistFactory::Sample ConfigParser::CreateSampleElement( TXMLNode* node ) {
 
     else if( attrName == TString( "HistoPath" ) ) {
       sample.SetHistoPath( attrVal );
+      m_currentHistoPath = attrVal;
     }
 
     else if( attrName == TString( "NormalizeByTheory" ) ) {
@@ -1591,7 +1599,6 @@ HistFactory::Sample ConfigParser::CreateSampleElement( TXMLNode* node ) {
 	    << " HistoPath: " << sample.GetHistoPath()
 	    << std::endl;
 
-
   // sample.hist = GetHisto(sample.FileName, sample.HistoPath, sample.HistoName);
 
   return sample;
@@ -1677,14 +1684,12 @@ HistFactory::HistoSys ConfigParser::MakeHistoSys( TXMLNode* node ) {
 
   HistFactory::HistoSys histoSys;
 
+  // Set Default values
   histoSys.SetInputFileLow( m_currentInputFile );
   histoSys.SetHistoPathLow( m_currentHistoPath );
 
   histoSys.SetInputFileHigh( m_currentInputFile );
   histoSys.SetHistoPathHigh( m_currentHistoPath );
-
-
-  // MUST SET DEFAULT VALUES!!!!J!LH:OIH:OIHO:H
 
   TListIter attribIt = node->GetAttributes();
   TXMLAttr* curAttr = 0;
@@ -1711,7 +1716,7 @@ HistFactory::HistoSys ConfigParser::MakeHistoSys( TXMLNode* node ) {
       histoSys.SetName( attrVal );
     }
 
-    else if( curAttr->GetName() == TString( "InputFileHigh" ) ) {
+    else if( curAttr->GetName() == TString( "HistoFileHigh" ) ) {
       histoSys.SetInputFileHigh( attrVal );
     }
     else if( curAttr->GetName() == TString( "HistoPathHigh" ) ) {
@@ -1721,7 +1726,7 @@ HistFactory::HistoSys ConfigParser::MakeHistoSys( TXMLNode* node ) {
       histoSys.SetHistoNameHigh( attrVal );
     }
 
-    else if( curAttr->GetName() == TString( "InputFileLow" ) ) {
+    else if( curAttr->GetName() == TString( "HistoFileLow" ) ) {
       histoSys.SetInputFileLow( attrVal );
     }
     else if( curAttr->GetName() == TString( "HistoPathLow" ) ) {
@@ -1775,7 +1780,6 @@ HistFactory::OverallSys ConfigParser::MakeOverallSys( TXMLNode* node ) {
 
   HistFactory::OverallSys overallSys;
 
-  // MUST SET DEFAULT VALUES!!!!J!LH:OIH:OIHO:H
   TListIter attribIt = node->GetAttributes();
   TXMLAttr* curAttr = 0;
   while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
@@ -1869,8 +1873,9 @@ HistFactory::ShapeSys ConfigParser::MakeShapeSys( TXMLNode* node ) {
   std::cout << "Making ShapeSys" << std::endl;
 
   HistFactory::ShapeSys shapeSys;
-  shapeSys.SetConstraintType( Constraint::Gaussian );
 
+  // Set the default values
+  shapeSys.SetConstraintType( Constraint::Gaussian );
   shapeSys.SetInputFile( m_currentInputFile );
   shapeSys.SetHistoPath( m_currentHistoPath );
 
@@ -1971,14 +1976,11 @@ HistFactory::StatError ConfigParser::ActivateStatError( TXMLNode* node ) {
 	
   std::cout << "Activating StatError" << std::endl;
 
-  // Have to figiure this out:
-  // Must use this channel's constraint type
-  // as defined by the StatErrorConfig
-
+  // Set default values
   HistFactory::StatError statError;
   statError.Activate( false );
   statError.SetUseHisto( false );
-
+  statError.SetHistoName( "" );
 
   // Loop over the node's attributes
   TListIter attribIt = node->GetAttributes();
@@ -2020,6 +2022,11 @@ HistFactory::StatError ConfigParser::ActivateStatError( TXMLNode* node ) {
 
   // Based on the input, determine
   // if we should use a histogram or not:
+  // Logic: One turns on using a histogram
+  // by setting the attribute "HistoName"
+  // If this is set AND the InputFile or
+  // HistoPath aren't set, we set those
+  // to the current default values
   if( statError.GetHistoName() != "" ) {
     statError.SetUseHisto( true );
 
@@ -2028,6 +2035,12 @@ HistFactory::StatError ConfigParser::ActivateStatError( TXMLNode* node ) {
     if( statError.GetInputFile() == "" ) {
       statError.SetInputFile( m_currentInputFile );
     }
+    if( statError.GetHistoPath() == "" ) {
+      statError.SetHistoPath( m_currentHistoPath );
+    }
+
+
+
 
   }
 
