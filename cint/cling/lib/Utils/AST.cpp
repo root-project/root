@@ -31,30 +31,32 @@ namespace utils {
 
   }
 
-   static
-   NestedNameSpecifier *GetPartiallyDesugaredNNS(const ASTContext& Ctx, 
-                                                  NestedNameSpecifier *scope, 
-                                                  const llvm::SmallSet<const Type*, 4>& TypesToSkip){
-     // Desugar the scope qualifier if needed.
+  static
+  NestedNameSpecifier *GetPartiallyDesugaredNNS(const ASTContext& Ctx, 
+                                                NestedNameSpecifier *scope, 
+                            const llvm::SmallSet<const Type*, 4>& TypesToSkip){
+    // Desugar the scope qualifier if needed.
 
-     const Type *scope_type = scope->getAsType();
-     if (scope_type) {
-        // this is not a namespace, so we might need to desugar
-        NestedNameSpecifier *outer_scope = scope->getPrefix();
-        if (outer_scope) {
-           outer_scope = GetPartiallyDesugaredNNS(Ctx, outer_scope, TypesToSkip);
-        }
+    const Type *scope_type = scope->getAsType();
+    if (scope_type) {
+      // this is not a namespace, so we might need to desugar
+      NestedNameSpecifier *outer_scope = scope->getPrefix();
+      if (outer_scope) {
+        outer_scope = GetPartiallyDesugaredNNS(Ctx, outer_scope, TypesToSkip);
+      }
 
-        QualType desugared = Transform::GetPartiallyDesugaredType(Ctx,
-                                                                  QualType(scope_type,0),
-                                                                  TypesToSkip);
-        // NOTE: Should check whether the type has changed or not.
-        return NestedNameSpecifier::Create(Ctx,outer_scope,false /* template keyword wanted */,
-                                           desugared.getTypePtr());
-     }
-     return scope;
+      QualType desugared = 
+        Transform::GetPartiallyDesugaredType(Ctx,
+                                             QualType(scope_type,0),
+                                             TypesToSkip);
+      // NOTE: Should check whether the type has changed or not.
+      return NestedNameSpecifier::Create(Ctx,outer_scope,
+                                         false /* template keyword wanted */,
+                                         desugared.getTypePtr());
+    }
+    return scope;
   }
-
+   
   QualType Transform::GetPartiallyDesugaredType(const ASTContext& Ctx, 
                                                 QualType QT, 
                               const llvm::SmallSet<const Type*, 4>& TypesToSkip){
@@ -71,16 +73,11 @@ namespace utils {
     NestedNameSpecifier *prefix = 0;
     const ElaboratedType *etype = llvm::dyn_cast<ElaboratedType>(QT.getTypePtr());
     if (etype) {
-       // We have to also desugar the prefix.
+      // We have to also desugar the prefix.
  
-       // Unfortunately this only look at one level, so in
-       //   A<type1>::B<type2>::C<type3>::D<type4>
-       // A<type1>::B<type2> will be left alone.
-       // while C<type3> is desugared by the following code
-       // and D<type4> is desugared by the loop below.
-       prefix = GetPartiallyDesugaredNNS(Ctx, etype->getQualifier(), TypesToSkip);
-       QT = etype->getNamedType();
-   }
+      prefix = GetPartiallyDesugaredNNS(Ctx, etype->getQualifier(), TypesToSkip);
+      QT = etype->getNamedType();
+    }
 
     // In case of template specializations iterate over the arguments and 
     // desugar them as well.
