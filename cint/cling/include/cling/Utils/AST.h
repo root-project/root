@@ -47,12 +47,14 @@ namespace utils {
     /// sugared type, which is to be skipped.
     ///\param[in] Ctx - The ASTContext.
     ///\param[in] QT - The type to be partially desugared.
+    ///\param[in] fullyQualify - if true insert Elaborated where needed.
     ///\param[in] TypesToSkip - The set of sugared types which shouldn't be 
     ///                         desugared.
     ///\returns Partially desugared QualType
     ///
     static clang::QualType GetPartiallyDesugaredType(const clang::ASTContext& Ctx, 
-                                                     clang::QualType QT, 
+                                                     clang::QualType QT,
+                                                     bool fullyQualify,
                        const llvm::SmallSet<const clang::Type*, 4>& TypesToSkip);
 
   };

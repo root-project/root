@@ -185,6 +185,10 @@ void ROOT::RStl::WriteClassInit(FILE* /*file*/)
 
    list_t::iterator iter;
    for(iter = fList.begin(); iter != fList.end(); ++iter) {
+      if (!iter->GetRecordDecl()->isCompleteDefinition()) {
+         fprintf(stderr,"Error: incomplete definition for %s\n",iter->GetNormalizedName());
+         continue;
+      }
       ::WriteClassInit( *iter );
       ::WriteAuxFunctions( *iter );
    }

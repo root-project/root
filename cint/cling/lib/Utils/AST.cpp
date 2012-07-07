@@ -48,6 +48,7 @@ namespace utils {
       QualType desugared = 
         Transform::GetPartiallyDesugaredType(Ctx,
                                              QualType(scope_type,0),
+                                             false,
                                              TypesToSkip);
       // NOTE: Should check whether the type has changed or not.
       return NestedNameSpecifier::Create(Ctx,outer_scope,
@@ -56,10 +57,53 @@ namespace utils {
     }
     return scope;
   }
-   
+
+  static
+  NestedNameSpecifier *CreateNestedNameSpecifier(const ASTContext& Ctx,
+                                                 NamespaceDecl *cl) {
+
+     NamespaceDecl *outer 
+        = llvm::dyn_cast_or_null<NamespaceDecl>(cl->getDeclContext());
+     if (outer && outer->getName().size()) {
+        NestedNameSpecifier *outerNNS = CreateNestedNameSpecifier(Ctx,outer);
+        return NestedNameSpecifier::Create(Ctx,outerNNS,
+                                           cl);
+     } else {
+        return NestedNameSpecifier::Create(Ctx, 
+                                           0, /* no starting '::'*/
+                                           cl);        
+     }
+  }
+
+  static
+  NestedNameSpecifier *CreateNestedNameSpecifier(const ASTContext& Ctx,
+                                                 TagDecl *cl) {
+
+    NamedDecl *outer = llvm::dyn_cast_or_null<NamedDecl>(cl->getDeclContext());
+      if (outer && outer->getName().size()) {
+        NestedNameSpecifier *outerNNS;
+        if (cl->getDeclContext()->isNamespace()) {
+          outerNNS = CreateNestedNameSpecifier(Ctx,
+                                       llvm::dyn_cast<NamespaceDecl>(outer));
+        } else {
+          outerNNS = CreateNestedNameSpecifier(Ctx,
+                                          llvm::dyn_cast<TagDecl>(outer));
+        }
+        return NestedNameSpecifier::Create(Ctx,outerNNS,
+                                           false /* template keyword wanted */,
+                                      Ctx.getTypeDeclType(cl).getTypePtr());
+      } else {
+        return NestedNameSpecifier::Create(Ctx, 
+                                           0, /* no starting '::'*/
+                                           false /* template keyword wanted */,
+                                      Ctx.getTypeDeclType(cl).getTypePtr());        
+     }
+  }
+
   QualType Transform::GetPartiallyDesugaredType(const ASTContext& Ctx, 
                                                 QualType QT, 
-                              const llvm::SmallSet<const Type*, 4>& TypesToSkip){
+                                                bool fullyQualify,
+                             const llvm::SmallSet<const Type*, 4>& TypesToSkip){
     // If there are no constains - use the standard desugaring.
     if (!TypesToSkip.size())
       return QT.getDesugaredType(Ctx);
@@ -76,7 +120,25 @@ namespace utils {
       // We have to also desugar the prefix.
  
       prefix = GetPartiallyDesugaredNNS(Ctx, etype->getQualifier(), TypesToSkip);
-      QT = etype->getNamedType();
+      QT = QualType(etype->getNamedType().getTypePtr(),QT.getLocalFastQualifiers());
+    } else if (fullyQualify) {
+      // Let's check whether this type should have been an elaborated type.
+      // in which case we want to add it ... but we can't really preserve
+      // the typedef in this case ...
+      CXXRecordDecl *cl = QT->getAsCXXRecordDecl();
+      if (cl) {
+         NamedDecl *outer 
+            = llvm::dyn_cast_or_null<NamedDecl>(cl->getDeclContext());
+         if (outer && outer->getName ().size()) {
+            if (cl->getDeclContext()->isNamespace()) {
+               prefix = CreateNestedNameSpecifier(Ctx,
+                                          llvm::dyn_cast<NamespaceDecl>(outer));
+            } else {
+               prefix = CreateNestedNameSpecifier(Ctx,
+                                          llvm::dyn_cast<TagDecl>(outer));
+            }
+         }
+      }
     }
 
     // In case of template specializations iterate over the arguments and 
@@ -96,13 +158,16 @@ namespace utils {
         }
 
         // Check if the type needs more desugaring and recurse.
-        if (isa<TypedefType>(SubTy) || isa<TemplateSpecializationType>(SubTy)) {
+        if (isa<TypedefType>(SubTy) 
+            || isa<TemplateSpecializationType>(SubTy)
+            || fullyQualify) {
           mightHaveChanged = true;
           desArgs.push_back(TemplateArgument(GetPartiallyDesugaredType(Ctx,
                                                                        SubTy,
+                                                                  fullyQualify,
                                                                   TypesToSkip)));
-         } else 
-            desArgs.push_back(*I);
+        } else 
+          desArgs.push_back(*I);
       }
       
       // If desugaring happened allocate new type in the AST.

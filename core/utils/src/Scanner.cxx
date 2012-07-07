@@ -99,11 +99,14 @@ RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Reco
    // }
    // const char *current = requestName;
    // Strips spaces and std::
-   TClassEdit::TSplitType splitname(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
-   splitname.ShortType( fRequestedName, TClassEdit::kDropAllDefault );
+   if (requestName && requestName[0]) {
+      TClassEdit::TSplitType splitname(requestName,(TClassEdit::EModType)(TClassEdit::kDropAllDefault | TClassEdit::kLong64 | TClassEdit::kDropStd));
+      splitname.ShortType( fRequestedName, TClassEdit::kDropAllDefault | TClassEdit::kLong64 | TClassEdit::kDropStd );
 
-   // NOTE: really dubious ... 
-   fNormalizedName = fRequestedName;
+      fNormalizedName = fRequestedName;
+   } else {
+      R__GetNormalizedName( fNormalizedName, decl->getASTContext().getTypeDeclType(decl), decl->getASTContext());
+   }
 
 #if Replaced_by_TClassEdit
    // The level counting code would be usefull if we want to introduce missing spaces ...
