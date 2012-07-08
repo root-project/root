@@ -32,15 +32,15 @@ namespace utils {
   }
 
   static
-  NestedNameSpecifier *GetPartiallyDesugaredNNS(const ASTContext& Ctx, 
-                                                NestedNameSpecifier *scope, 
+  NestedNameSpecifier* GetPartiallyDesugaredNNS(const ASTContext& Ctx, 
+                                                NestedNameSpecifier* scope, 
                             const llvm::SmallSet<const Type*, 4>& TypesToSkip){
     // Desugar the scope qualifier if needed.
 
-    const Type *scope_type = scope->getAsType();
+    const Type* scope_type = scope->getAsType();
     if (scope_type) {
       // this is not a namespace, so we might need to desugar
-      NestedNameSpecifier *outer_scope = scope->getPrefix();
+      NestedNameSpecifier* outer_scope = scope->getPrefix();
       if (outer_scope) {
         outer_scope = GetPartiallyDesugaredNNS(Ctx, outer_scope, TypesToSkip);
       }
@@ -48,8 +48,8 @@ namespace utils {
       QualType desugared = 
         Transform::GetPartiallyDesugaredType(Ctx,
                                              QualType(scope_type,0),
-                                             false,
-                                             TypesToSkip);
+                                             TypesToSkip, 
+                                             /*fullyQualify=*/false);
       // NOTE: Should check whether the type has changed or not.
       return NestedNameSpecifier::Create(Ctx,outer_scope,
                                          false /* template keyword wanted */,
@@ -59,13 +59,13 @@ namespace utils {
   }
 
   static
-  NestedNameSpecifier *CreateNestedNameSpecifier(const ASTContext& Ctx,
-                                                 NamespaceDecl *cl) {
+  NestedNameSpecifier* CreateNestedNameSpecifier(const ASTContext& Ctx,
+                                                 NamespaceDecl* cl) {
 
-     NamespaceDecl *outer 
+     NamespaceDecl* outer 
         = llvm::dyn_cast_or_null<NamespaceDecl>(cl->getDeclContext());
      if (outer && outer->getName().size()) {
-        NestedNameSpecifier *outerNNS = CreateNestedNameSpecifier(Ctx,outer);
+        NestedNameSpecifier* outerNNS = CreateNestedNameSpecifier(Ctx,outer);
         return NestedNameSpecifier::Create(Ctx,outerNNS,
                                            cl);
      } else {
@@ -76,10 +76,10 @@ namespace utils {
   }
 
   static
-  NestedNameSpecifier *CreateNestedNameSpecifier(const ASTContext& Ctx,
+  NestedNameSpecifier* CreateNestedNameSpecifier(const ASTContext& Ctx,
                                                  TagDecl *cl) {
 
-    NamedDecl *outer = llvm::dyn_cast_or_null<NamedDecl>(cl->getDeclContext());
+    NamedDecl* outer = llvm::dyn_cast_or_null<NamedDecl>(cl->getDeclContext());
       if (outer && outer->getName().size()) {
         NestedNameSpecifier *outerNNS;
         if (cl->getDeclContext()->isNamespace()) {
@@ -102,8 +102,8 @@ namespace utils {
 
   QualType Transform::GetPartiallyDesugaredType(const ASTContext& Ctx, 
                                                 QualType QT, 
-                                                bool fullyQualify,
-                             const llvm::SmallSet<const Type*, 4>& TypesToSkip){
+                               const llvm::SmallSet<const Type*, 4>& TypesToSkip,
+                                                bool fullyQualify /*=true*/){
     // If there are no constains - use the standard desugaring.
     if (!TypesToSkip.size())
       return QT.getDesugaredType(Ctx);
@@ -114,8 +114,9 @@ namespace utils {
       else
         return QT;
     }
-    NestedNameSpecifier *prefix = 0;
-    const ElaboratedType *etype = llvm::dyn_cast<ElaboratedType>(QT.getTypePtr());
+    NestedNameSpecifier* prefix = 0;
+    const ElaboratedType* etype 
+      = llvm::dyn_cast<ElaboratedType>(QT.getTypePtr());
     if (etype) {
       // We have to also desugar the prefix.
  
@@ -125,9 +126,9 @@ namespace utils {
       // Let's check whether this type should have been an elaborated type.
       // in which case we want to add it ... but we can't really preserve
       // the typedef in this case ...
-      CXXRecordDecl *cl = QT->getAsCXXRecordDecl();
+      CXXRecordDecl* cl = QT->getAsCXXRecordDecl();
       if (cl) {
-         NamedDecl *outer 
+         NamedDecl* outer 
             = llvm::dyn_cast_or_null<NamedDecl>(cl->getDeclContext());
          if (outer && outer->getName ().size()) {
             if (cl->getDeclContext()->isNamespace()) {
@@ -164,8 +165,8 @@ namespace utils {
           mightHaveChanged = true;
           desArgs.push_back(TemplateArgument(GetPartiallyDesugaredType(Ctx,
                                                                        SubTy,
-                                                                  fullyQualify,
-                                                                  TypesToSkip)));
+                                                                     TypesToSkip,
+                                                                 fullyQualify)));
         } else 
           desArgs.push_back(*I);
       }
