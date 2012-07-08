@@ -647,7 +647,7 @@ void R__GetNormalizedName(std::string &norm_name, const clang::QualType &type, c
       if (!toSkip.isNull()) typeToSkip.insert(toSkip.getTypePtr());
    }
 
-   clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, true, typeToSkip); 
+   clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, typeToSkip); 
    
    std::string normalizedNameStep1;
    normalizedType.getAsStringInternal(normalizedNameStep1,ctxt.getPrintingPolicy());
