@@ -9,13 +9,47 @@
 using namespace RooFit;
 using namespace RooStats;
 
+
+//__________________________________________________________________________________
+void buildSimultaneousModel(RooWorkspace *w)
+{
+   // Build model
+   w->factory("sig[2,0,10]");
+   w->factory("Uniform::u1(x1[0,1])");
+   w->factory("Uniform::u2(x2[0,1])");
+   w->factory("Gaussian::constr1(gbkg1[50,0,100], bkg1[50,0,100], 3)");
+   w->factory("Gaussian::constr2(gbkg2[50,0,100], bkg2[50,0,100], 2)");
+
+   w->factory("ExtendPdf::ext_pdf1(PROD::p1(u1,constr1), expr::n1('sig+bkg1', sig, bkg1))");
+   w->factory("ExtendPdf::ext_pdf2(PROD::p2(u2,constr2), expr::n2('sig+bkg2', sig, bkg2))");
+   w->factory("SIMUL::sim_pdf(index[cat1,cat2],cat1=ext_pdf1,cat2=ext_pdf2)");
+
+   // create combined signal + background model configuration
+   ModelConfig *sbModel = new ModelConfig("S+B", w);
+   sbModel->SetObservables("x1,x2,index");
+   sbModel->SetParametersOfInterest("sig");
+   sbModel->SetGlobalObservables("gbkg1,gbkg2");
+   sbModel->SetNuisanceParameters("bkg1,bkg2");
+   sbModel->SetPdf("sim_pdf");
+   w->import(*sbModel);
+
+   // create combined background model configuration
+   ModelConfig *bModel = new ModelConfig(*sbModel);
+   bModel->SetName("B");
+   w->import(*bModel);
+
+   // define data set
+   RooDataSet *data = w->pdf("sim_pdf")->generate(*sbModel->GetObservables(), Extended(), Name("data"));
+   w->import(*data);
+}
+
 //__________________________________________________________________________________
 void buildPoissonProductModel(RooWorkspace *w)
 {
    // Build product model
-   w->factory("expr::compsig('2*sig*pow(1.2, beta)', sig[0,20], beta[-3,3])");
+   w->factory("expr::comp_sig('2*sig*pow(1.2, beta)', sig[0,20], beta[-3,3])");
    w->factory("Poisson::poiss1(x[0,40], sum::splusb1(sig, bkg1[0,10]))");
-   w->factory("Poisson::poiss2(y[0,120], sum::splusb2(compsig, bkg2[0,10]))");
+   w->factory("Poisson::poiss2(y[0,120], sum::splusb2(comp_sig, bkg2[0,10]))");
    w->factory("Poisson::constr1(gbkg1[5,0,10], bkg1)");
    w->factory("Poisson::constr2(gbkg2[5,0,10], bkg2)");
    w->factory("Gaussian::constr3(beta0[0,-3,3], beta, 1)");
@@ -26,43 +60,23 @@ void buildPoissonProductModel(RooWorkspace *w)
    // Nuisance parameters Pdf (for HybridCalculator)
    w->factory("PROD::prior_nuis(constr1,constr2,constr3)");
 
-   // extended pdfs and simultaneous pdf
-   w->factory("ExtendPdf::epdf1(PROD::pdf1(poiss1,constr1),n1[0,10])");
-   w->factory("ExtendPdf::epdf2(PROD::pdf2(poiss2,constr2,constr3),n2[0,10])");
-   w->factory("SIMUL::sim_pdf(index[cat1,cat2],cat1=epdf1,cat2=epdf2)");
-
-   // build argument sets
-//   w->defineSet("obs", "x,y");
-//   w->defineSet("poi", "sig");
-//   w->defineSet("nuis", "bkg1,bkg2,beta");
-//   w->defineSet("globObs", "beta0,gbkg1,gbkg2");
-
    // create signal + background model configuration
    ModelConfig *sbModel = new ModelConfig("S+B", w);
    sbModel->SetObservables("x,y");
    sbModel->SetGlobalObservables("beta0,gbkg1,gbkg2");
    sbModel->SetParametersOfInterest("sig");
-   sbModel->SetNuisanceParameters("bkg1,bkg2,beta");
+   sbModel->SetNuisanceParameters("beta,bkg1,bkg2");
    sbModel->SetPdf("pdf");
+   w->import(*sbModel);
 
    // create background model configuration
    ModelConfig *bModel = new ModelConfig(*sbModel);
    bModel->SetName("B");
+   w->import(*bModel);
 
-   // set global observables to constant values
-   RooFIter iter = sbModel->GetGlobalObservables()->fwdIterator();
-   RooRealVar *var = dynamic_cast<RooRealVar *>(iter.next());
-   while(var != NULL) {
-      var->setConstant(); 
-      var = dynamic_cast<RooRealVar *>(iter.next());
-   }
-
-   // build data set and import it into the workspace sets
+   // define data set
    RooDataSet *data = new RooDataSet("data", "data", *sbModel->GetObservables());
    w->import(*data);
-
-   w->import(*sbModel);
-   w->import(*bModel);
 }
 
 
@@ -88,51 +102,34 @@ void buildOnOffModel(RooWorkspace *w)
    sbModel->SetObservables("n_on,n_off");
    sbModel->SetParametersOfInterest("sig");
    sbModel->SetNuisanceParameters("bkg");
+   w->import(*sbModel);
 
    // create background model configuration
    ModelConfig *bModel = new ModelConfig(*sbModel);
    bModel->SetName("B");
+   w->import(*bModel);
 
    // alternate priors
    w->factory("Gaussian::gauss_prior(bkg, n_off, expr::sqrty('sqrt(n_off)', n_off))");
    w->factory("Lognormal::lognorm_prior(bkg, n_off, expr::kappa('1+1./sqrt(n_off)',n_off))");
 
-   // define data set and import it into workspace
+   // define data set
    RooDataSet *data = new RooDataSet("data", "data", *sbModel->GetObservables());
    w->import(*data);
-
-   w->import(*sbModel);
-   w->import(*bModel);
 }
 
 
-void createPoissonEfficiencyModel(RooWorkspace *w)
+void buildPoissonEfficiencyModel(RooWorkspace *w)
 {
 
    // build models
    w->factory("Gaussian::constrb(b0[-5,5], b1[-5,5], 1)");
    w->factory("Gaussian::constre(e0[-5,5], e1[-5,5], 1)");
-   w->factory("expr::bkg('5 * pow(1.3, b1)', b1)"); // background model
-   w->factory("expr::eff('0.5 * pow(1.2, e1)', e1)"); // efficiency model
-   w->factory("expr::splusb('eff * sig + bkg', eff, bkg, sig[0,20])");
-   w->factory("Poisson::sb_poiss(x[0,40], splusb)");
-   w->factory("Poisson::b_poiss(x, bkg)");
-   w->factory("PROD::sb_pdf(sb_poiss, constrb, constre)");
-   w->factory("PROD::b_pdf(b_poiss, constrb)");
-   w->factory("PROD::priorbkg(constr1, constr2)");
-
-   w->var("b0")->setConstant(kTRUE);
-   w->var("e0")->setConstant(kTRUE);
-
-   // build argument sets
-   w->defineSet("obs", "x");
-   w->defineSet("poi", "sig");
-   w->defineSet("nuis", "b1,e1");
-   w->defineSet("globObs", "b0,e0");
-
-   // define data set and import it into workspace
-   RooDataSet *data = new RooDataSet("data", "data", *w->set("obs"));
-   w->import(*data);
+   w->factory("expr::bkg('5 * pow(1.3, b1)', b1)"); // background
+   w->factory("expr::eff('0.5 * pow(1.2, e1)', e1)"); // efficiency
+   w->factory("expr::esb('eff * sig + bkg', eff, bkg, sig[0,50])");
+   w->factory("Poisson::poiss(x[0,50], esb)");
+   w->factory("PROD::pdf(poiss, constrb, constre)");
 
    // create model configuration
    ModelConfig *sbModel = new ModelConfig("S+B", w);
@@ -140,16 +137,16 @@ void createPoissonEfficiencyModel(RooWorkspace *w)
    sbModel->SetParametersOfInterest("sig");
    sbModel->SetNuisanceParameters("b1,e1");
    sbModel->SetGlobalObservables("b0,e0");
-   sbModel->SetPdf("sb_pdf");
-   //sbModel->SetPriorPdf("prior");
-   sbModel->SetSnapshot(*sbModel->GetParametersOfInterest());
+   sbModel->SetPdf("pdf");
+   w->import(*sbModel);
 
    ModelConfig *bModel = new ModelConfig(*sbModel);
    bModel->SetName("B");
-   bModel->SetPdf("b_pdf");
-
-   w->import(*sbModel);
    w->import(*bModel);
+
+   // define data set and import it into workspace
+   RooDataSet *data = new RooDataSet("data", "data", *sbModel->GetObservables());
+   w->import(*data);
 }
 
 
