@@ -47,10 +47,10 @@ using namespace RooFit ;
 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
 //                                                                           //
-// RooStats Examples, Wouter Verkerke, Lorenzo Moneta, Ioan Gabriel Bucur    //
+// RooStats Unit Test S.T.R.E.S.S. Suite                                     //
+// Authors: Ioan Gabriel Bucur, Lorenzo Moneta, Wouter Verkerke              //
 //                                                                           //
-//                                                                           //
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*_*//
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
 
 
 //------------------------------------------------------------------------
@@ -114,6 +114,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
 
    list<RooUnitTest*> testList;
 
+
    // TEST PLC CONFINT SIMPLE GAUSSIAN : Confidence Level range is (0,1)
    testList.push_back(new TestProfileLikelihoodCalculator1(fref, writeRef, verbose, 0.99999)); // boundary case CL -> 1
    testList.push_back(new TestProfileLikelihoodCalculator1(fref, writeRef, verbose, 2 * ROOT::Math::normal_cdf(3) - 1)); // 3 sigma
@@ -128,7 +129,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    testList.push_back(new TestProfileLikelihoodCalculator2(fref, writeRef, verbose, 100));
    testList.push_back(new TestProfileLikelihoodCalculator2(fref, writeRef, verbose, 800)); // boundary Poisson value
 
-   // TEST PLC CONFINT PRODUCT POISSON : Observed value range is [0,40] for x=s+b and [0,120] for y=2*s*1.2^beta
+   // TEST PLC CONFINT PRODUCT POISSON : Observed value range is [0,30] for x=s+b and [0,80] for y=2*s*1.2^beta
    testList.push_back(new TestProfileLikelihoodCalculator3(fref, writeRef, verbose, 10, 30));
    testList.push_back(new TestProfileLikelihoodCalculator3(fref, writeRef, verbose, 20, 25));
    testList.push_back(new TestProfileLikelihoodCalculator3(fref, writeRef, verbose, 15, 20, 2 * ROOT::Math::normal_cdf(2) - 1));
@@ -145,12 +146,12 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    // TEST BC CONFINT SHORTEST SIMPLE POISSON
    testList.push_back(new TestBayesianCalculator2(fref, writeRef, verbose));
 
-   // TEST BC CONFINT CENTRAL PRODUCT POISSON : Observed value range is [0,40] for x=s+b and [0,120] for y=2*s*1.2^beta
+   // TEST BC CONFINT CENTRAL PRODUCT POISSON : Observed value range is [0,30] for x=s+b and [0,80] for y=2*s*1.2^beta
    testList.push_back(new TestBayesianCalculator3(fref, writeRef, verbose, 10, 30));
    testList.push_back(new TestBayesianCalculator3(fref, writeRef, verbose, 20, 25));
    testList.push_back(new TestBayesianCalculator3(fref, writeRef, verbose, 15, 20, 2 * ROOT::Math::normal_cdf(2) - 1));
 
-   // TEST MCMCC CONFINT PRODUCT POISSON : Observed value range is [0,40] for x=s+b and [0,120] for y=2*s*1.2^beta
+   // TEST MCMCC CONFINT PRODUCT POISSON : Observed value range is [0,30] for x=s+b and [0,80] for y=2*s*1.2^beta
    testList.push_back(new TestMCMCCalculator(fref, writeRef, verbose, 10, 30));
    testList.push_back(new TestMCMCCalculator(fref, writeRef, verbose, 20, 25));
    testList.push_back(new TestMCMCCalculator(fref, writeRef, verbose, 15, 20, 2 * ROOT::Math::normal_cdf(2) - 1));
@@ -165,25 +166,32 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    testList.push_back(new TestHypoTestCalculator1(fref, writeRef, verbose, 150, 10, 0.1));
    testList.push_back(new TestHypoTestCalculator1(fref, writeRef, verbose, 150, 400, 4.0));
 
-   // TEST HTI PRODUCT POISSON : Observed value range is [0,40] for x=s+b and [0,120] for y=2*s*1.2^beta
-   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kAsymptotic, kProfileLR, 10, 30));
-   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kAsymptotic, kProfileLR, 20, 25));
-   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kAsymptotic, kProfileLR, 15, 20, 2 * normal_cdf(2) - 1));
-   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kProfileLR, 10, 30));
-   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kProfileLR, 20, 25));
-   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kFrequentist, kProfileLR, 15, 20, 2 * normal_cdf(2) - 1));
-   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kHybrid, kProfileLR, 10, 30));
-   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kHybrid, kProfileLR, 20, 25));
-   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, HypoTestInverter::kHybrid, kProfileLR, 15, 20, 2 * normal_cdf(2) - 1));
+   // TEST HTC SIGNIFICANCE 
+   testList.push_back(new TestHypoTestCalculator2(fref, writeRef, verbose, kAsymptotic));
+   testList.push_back(new TestHypoTestCalculator2(fref, writeRef, verbose, kFrequentist, kSimpleLR));
+   testList.push_back(new TestHypoTestCalculator2(fref, writeRef, verbose, kFrequentist, kRatioLR));
+   testList.push_back(new TestHypoTestCalculator2(fref, writeRef, verbose, kFrequentist, kProfileLROneSidedDiscovery));
+   testList.push_back(new TestHypoTestCalculator2(fref, writeRef, verbose, kHybrid, kProfileLROneSidedDiscovery));
 
+   // TEST HTI PRODUCT POISSON : Observed value range is [0,30] for x=s+b and [0,80] for y=2*s*1.2^beta
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, kAsymptotic, kProfileLR, 10, 30));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, kAsymptotic, kProfileLR, 20, 25));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, kAsymptotic, kProfileLR, 15, 20, 2 * normal_cdf(2) - 1));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, kFrequentist, kProfileLR, 10, 30));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, kFrequentist, kProfileLR, 20, 25));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, kFrequentist, kProfileLR, 15, 20, 2 * normal_cdf(2) - 1));
+   testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, kHybrid, kProfileLR, 10, 30));
 
-   //testList.push_back(new TestProfileLikelihoodCalculator4(fref, writeRef, verbose));
-   // testList.push_back(new TestHypoTestCalculator2(fref, writeRef, verbose));
-   //  testList.push_back(new TestHypoTestCalculator3(fref, writeRef, verbose));
-
-   // TEST HYPO TEST CALCULATOR
-
-
+   // TEST HTI S+B+E POISSON : Observed value range is [0,50] for x = e*s+b
+   testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kAsymptotic, kProfileLROneSided, 10));
+   testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kAsymptotic, kProfileLROneSided, 20));
+//    testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kFrequentist, kSimpleLR, 10));
+//    testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kFrequentist, kSimpleLR, 20));
+   testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kFrequentist, kRatioLR));
+   testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kFrequentist, kProfileLROneSided));
+   testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kHybrid, kSimpleLR));
+ 
+   
    TString suiteType = TString::Format(" Starting S.T.R.E.S.S. %s",
                                        allTests ? "full suite" : (oneTest ? TString::Format("test %d", testNumber).Data() : "basic suite")
                                       );
@@ -286,7 +294,8 @@ int main(int argc, const char *argv[])
    Bool_t doDump      = kFALSE;
    Bool_t doTreeStore = kFALSE;
 
-   string refFileName = "http://root.cern.ch/files/stressRooStats_v534_ref.root" ;
+   //string refFileName = "http://root.cern.ch/files/stressRooStats_v534_ref.root" ;
+   string refFileName = "$ROOTSYS/test/stressRooStats_ref.root" ;
 
    // Parse command line arguments
    for (Int_t i = 1 ;  i < argc ; i++) {
@@ -341,19 +350,19 @@ int main(int argc, const char *argv[])
 
    }
 
-   if (doWrite && refFileName.find("http:") == 0) {
+//    if (doWrite && refFileName.find("http:") == 0) {
 
-      // Locate file name part in URL and update refFileName accordingly
-      char* buf = new char[refFileName.size() + 1];
-      strcpy(buf, refFileName.c_str());
-      char *ptr = strrchr(buf, '/');
-      if (!ptr) ptr = strrchr(buf, ':');
-      refFileName = ptr + 1;
-      delete[] buf;
+//       // Locate file name part in URL and update refFileName accordingly
+//       char* buf = new char[refFileName.size() + 1];
+//       strcpy(buf, refFileName.c_str());
+//       char *ptr = strrchr(buf, '/');
+//       if (!ptr) ptr = strrchr(buf, ':');
+//       refFileName = ptr + 1;
+//       delete[] buf;
 
-      cout << "stressRooStats: WARNING running in write mode, but reference file is web file, writing local file instead: "
-           << refFileName << endl;
-   }
+//       cout << "stressRooStats: WARNING running in write mode, but reference file is web file, writing local file instead: "
+//            << refFileName << endl;
+//    }
 
    // Disable caching of complex error function calculation, as we don't
    // want to write out the cache file as part of the validation procedure
