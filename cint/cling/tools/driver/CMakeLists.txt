@@ -16,6 +16,7 @@ target_link_libraries(cling
   clingUserInterface
   clingMetaProcessor
   clingInterpreter
+  clingUtils
   clangFrontend
   clangSerialization
   clangDriver
