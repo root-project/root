@@ -251,7 +251,6 @@ XrdProofdProofServ *XrdProofdClient::GetServObj(int id)
    }
    TRACE(DBG, "size = "<<siz<<"; capacity = "<<cap);
 
-   bool newcap = 0;
    {  XrdSysMutexHelper mh(fMutex);
       if (!fIsValid) return xps;
       if (id < (int)fProofServs.size()) {
@@ -265,7 +264,6 @@ XrdProofdProofServ *XrdProofdClient::GetServObj(int id)
             newsz = (id < newsz) ? newsz : id+1;
             fProofServs.reserve(newsz);
             cap = fProofServs.capacity();
-            newcap = 1;
          }
          int nnew = id - fProofServs.size() + 1;
          while (nnew--)
