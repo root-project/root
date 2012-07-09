@@ -96,6 +96,9 @@ public:
      ~AnnotatedRecordDecl() {
          // Nothing to do we do not own the pointer;
       }
+
+      long GetRuleIndex() const { return fRuleIndex; }
+
       const char *GetRequestedName() const { return fRequestedName.c_str(); }
       const char *GetNormalizedName() const { return fNormalizedName.c_str(); }
       bool HasClassVersion() const { return fRequestedVersionNumber >=0 ; }
@@ -114,7 +117,7 @@ public:
          return fDecl;
       }
       
-      bool operator<(const AnnotatedRecordDecl& right) 
+      bool operator<(const AnnotatedRecordDecl& right) const
       {
          return fRuleIndex < right.fRuleIndex;
       }
