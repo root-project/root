@@ -39,6 +39,9 @@
 //
 // Visual representation of a track.
 //
+// If member fDpDs is set, the momentum is reduced on all path-marks that do
+// not fix the momentum according to the distance travelled from the previous
+// pathmark.
 
 ClassImp(TEveTrack);
 
@@ -50,6 +53,7 @@ TEveTrack::TEveTrack() :
    fP(),
    fPEnd(),
    fBeta(0),
+   fDpDs(0),
    fPdg(0),
    fCharge(0),
    fLabel(kMinInt),
@@ -71,6 +75,7 @@ TEveTrack::TEveTrack(TParticle* t, Int_t label, TEveTrackPropagator* prop):
    fP(t->Px(), t->Py(), t->Pz()),
    fPEnd(),
    fBeta(t->P()/t->Energy()),
+   fDpDs(0),
    fPdg(0),
    fCharge(0),
    fLabel(label),
@@ -103,6 +108,7 @@ TEveTrack::TEveTrack(TEveMCTrack* t, TEveTrackPropagator* prop):
    fP(t->Px(), t->Py(), t->Pz()),
    fPEnd(),
    fBeta(t->P()/t->Energy()),
+   fDpDs(0),
    fPdg(0),
    fCharge(0),
    fLabel(t->fLabel),
@@ -135,6 +141,7 @@ TEveTrack::TEveTrack(TEveRecTrackD* t, TEveTrackPropagator* prop) :
    fP(t->fP),
    fPEnd(),
    fBeta(t->fBeta),
+   fDpDs(0),
    fPdg(0),
    fCharge(t->fSign),
    fLabel(t->fLabel),
@@ -161,6 +168,7 @@ TEveTrack::TEveTrack(TEveRecTrack* t, TEveTrackPropagator* prop) :
    fP(t->fP),
    fPEnd(),
    fBeta(t->fBeta),
+   fDpDs(0),
    fPdg(0),
    fCharge(t->fSign),
    fLabel(t->fLabel),
@@ -188,6 +196,7 @@ TEveTrack::TEveTrack(const TEveTrack& t) :
    fP(t.fP),
    fPEnd(),
    fBeta(t.fBeta),
+   fDpDs(t.fDpDs),
    fPdg(t.fPdg),
    fCharge(t.fCharge),
    fLabel(t.fLabel),
@@ -356,12 +365,14 @@ void TEveTrack::MakeTrack(Bool_t recurse)
          fPropagator->InitTrack(fV, fCharge);
          for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm, ++fLastPMIdx)
          {
+            Int_t start_point = fPropagator->GetCurrentPoint();
+
             if (rTP.GetFitReferences() && pm->fType == TEvePathMarkD::kReference)
             {
                if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
                   break;
-               // printf("%s fit reference  \n", fName.Data());
-               if (fPropagator->GoToVertex(pm->fV, currP)) {
+               if (fPropagator->GoToVertex(pm->fV, currP))
+               {
                   currP.fX = pm->fP.fX; currP.fY = pm->fP.fY; currP.fZ = pm->fP.fZ;
                }
                else
@@ -373,9 +384,15 @@ void TEveTrack::MakeTrack(Bool_t recurse)
             {
                if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
                   break;
-               // printf("%s fit daughter  \n", fName.Data());
-               if (fPropagator->GoToVertex(pm->fV, currP)) {
+               if (fPropagator->GoToVertex(pm->fV, currP))
+               {
                   currP.fX -= pm->fP.fX; currP.fY -= pm->fP.fY; currP.fZ -= pm->fP.fZ;
+                  if (fDpDs != 0)
+                  {
+                     Double_t dp = fDpDs * fPropagator->GetTrackLength(start_point);
+                     Double_t p  = currP.Mag();
+                     if (p > dp)   currP *= 1.0 - dp / p;
+                  }
                }
                else
                {
@@ -386,7 +403,6 @@ void TEveTrack::MakeTrack(Bool_t recurse)
             {
                if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
                   break;
-               // printf("%s fit decay \n", fName.Data());
                fPropagator->GoToVertex(pm->fV, currP);
                decay = kTRUE;
                ++fLastPMIdx;
@@ -403,6 +419,13 @@ void TEveTrack::MakeTrack(Bool_t recurse)
                      break;
                   if ( ! fPropagator->GoToVertex(vtopass, currP))
                      break;
+
+                  if (fDpDs != 0)
+                  {
+                     Double_t dp = fDpDs * fPropagator->GetTrackLength(start_point);
+                     Double_t p  = currP.Mag();
+                     if (p > dp)   currP *= 1.0 - dp / p;
+                  }
                }
                else
                {
@@ -416,7 +439,12 @@ void TEveTrack::MakeTrack(Bool_t recurse)
 
                if (fPropagator->GoToLineSegment(pm->fV, pm->fE, currP))
                {
-                  currP.fX -= pm->fP.fX; currP.fY -= pm->fP.fY; currP.fZ -= pm->fP.fZ;
+                  if (fDpDs != 0)
+                  {
+                     Double_t dp = fDpDs * fPropagator->GetTrackLength(start_point);
+                     Double_t p  = currP.Mag();
+                     if (p > dp)   currP *= 1.0 - dp / p;
+                  }
                }
                else
                {

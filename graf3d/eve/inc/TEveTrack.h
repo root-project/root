@@ -51,6 +51,7 @@ protected:
    TEveVectorD        fP;          // Starting momentum
    TEveVectorD        fPEnd;       // Momentum at the last point of extrapolation
    Double_t           fBeta;       // Relativistic beta factor
+   Double_t           fDpDs;       // Momentum loss over distance
    Int_t              fPdg;        // PDG code
    Int_t              fCharge;     // Charge in units of e0
    Int_t              fLabel;      // Simulation label
@@ -88,6 +89,9 @@ public:
    const TEveVectorD& GetVertex()      const { return fV;    }
    const TEveVectorD& GetMomentum()    const { return fP;    }
    const TEveVectorD& GetEndMomentum() const { return fPEnd; }
+
+   Double_t GetDpDs()        const { return fDpDs; }
+   void     SetDpDs(Double_t dpds) { fDpDs = dpds; }
 
    Int_t GetPdg()    const    { return fPdg;    }
    void  SetPdg(Int_t pdg)    { fPdg = pdg;     }
