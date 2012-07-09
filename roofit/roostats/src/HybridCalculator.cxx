@@ -24,23 +24,13 @@ using namespace std;
 
 
 int HybridCalculator::CheckHook(void) const {
-   if( (fNullModel->GetNuisanceParameters()
-        && fNullModel->GetNuisanceParameters()->getSize()>0
-        && !fPriorNuisanceNull)
-    || (fAltModel->GetNuisanceParameters()
-        && fAltModel->GetNuisanceParameters()->getSize()>0
-        && !fPriorNuisanceAlt)
-   ){
-      oocoutE((TObject*)0,InputArguments)  << "Must ForceNuisancePdf, inferring posterior from ModelConfig is not yet implemented" << endl;
+
+   if( fPriorNuisanceNull && (!fNullModel->GetNuisanceParameters() || fNullModel->GetNuisanceParameters()->getSize() == 0) ) {
+      oocoutE((TObject*)0,InputArguments)  << "HybridCalculator - Nuisance PDF has been specified, but is unaware of which parameters are the nuisance parameters. Must set nuisance parameters in the Null ModelConfig." << endl;
       return -1; // error
    }
-
-   if(    (!fNullModel->GetNuisanceParameters() && fPriorNuisanceNull)
-       || (!fAltModel->GetNuisanceParameters()  && fPriorNuisanceAlt)
-       || (fNullModel->GetNuisanceParameters()  && fNullModel->GetNuisanceParameters()->getSize()==0 && fPriorNuisanceNull)
-       || (fAltModel->GetNuisanceParameters()  && fAltModel->GetNuisanceParameters()->getSize()>0   && !fPriorNuisanceAlt)
-   ){
-      oocoutE((TObject*)0,InputArguments)  << "Nuisance PDF specified, but the pdf doesn't know which parameters are the nuisance parameters.  Must set nuisance parameters in the ModelConfig" << endl;
+   if( fPriorNuisanceAlt && (!fAltModel->GetNuisanceParameters() || fAltModel->GetNuisanceParameters()->getSize() == 0) ) {
+      oocoutE((TObject*)0,InputArguments)  << "HybridCalculator - Nuisance PDF has been specified, but is unaware of which parameters are the nuisance parameters. Must set nuisance parameters in the Alt ModelConfig" << endl;
       return -1; // error
    }
 
@@ -50,28 +40,22 @@ int HybridCalculator::CheckHook(void) const {
 
 int HybridCalculator::PreNullHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const {
 
+
    // ****** any TestStatSampler ********
 
    if(fPriorNuisanceNull) {
       // Setup Priors for ad hoc Hybrid
       fTestStatSampler->SetPriorNuisance(fPriorNuisanceNull);
    } else if(
-      fNullModel->GetNuisanceParameters()==NULL ||
-      fNullModel->GetNuisanceParameters()->getSize()==0
+      fNullModel->GetNuisanceParameters() == NULL ||
+      fNullModel->GetNuisanceParameters()->getSize() == 0
    ) {
       oocoutI((TObject*)0,InputArguments)
-       << "No nuisance parameters specified and no prior forced, reduces "
-       << "to simple hypothesis testing with no uncertainty" << endl;
+       << "HybridCalculator - No nuisance parameters specified for Null model and no prior forced. "
+       << "Case is reduced to simple hypothesis testing with no uncertainty." << endl;
    } else {
-      // TODO principled case:
-      // must create posterior from Model.PriorPdf and Model.Pdf
-
-      // Note, we do not want to use "prior" for nuisance parameters:
-      // fTestStatSampler->SetPriorNuisance(const_cast<RooAbsPdf*>(model.GetPriorPdf()));
-
-      oocoutE((TObject*)0,InputArguments) << "inferring posterior from ModelConfig is not yet implemented" << endl;
+      oocoutI((TObject*)0,InputArguments) << "HybridCalculator - Using uniform prior on nuisance parameters (Null model)." << endl;
    }
-
 
 
    // ***** ToyMCSampler specific *******
@@ -115,18 +99,11 @@ int HybridCalculator::PreAltHook(RooArgSet* /*parameterPoint*/, double obsTestSt
       fAltModel->GetNuisanceParameters()->getSize()==0
    ) {
       oocoutI((TObject*)0,InputArguments)
-         << "No nuisance parameters specified and no prior forced, reduces "
-         << "to simple hypothesis testing with no uncertainty" << endl;
+       << "HybridCalculator - No nuisance parameters specified for Alt model and no prior forced. "
+       << "Case is reduced to simple hypothesis testing with no uncertainty." << endl;
    } else {
-      // TODO principled case:
-      // must create posterior from Model.PriorPdf and Model.Pdf
-
-      // Note, we do not want to use "prior" for nuisance parameters:
-      // fTestStatSampler->SetPriorNuisance(const_cast<RooAbsPdf*>(model.GetPriorPdf()));
-
-      oocoutE((TObject*)0,InputArguments) << "inferring posterior from ModelConfig is not yet implemented" << endl;
+      oocoutI((TObject*)0,InputArguments) << "HybridCalculator - Using uniform prior on nuisance parameters (Alt model)." << endl;
    }
-
 
 
    // ***** ToyMCSampler specific *******
