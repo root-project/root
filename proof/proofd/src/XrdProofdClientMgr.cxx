@@ -71,7 +71,7 @@ void *XrdProofdClientCron(void *p)
       return (void *)0;
    }
    XrdProofdProofServMgr *smgr = mc->fSessionMgr;
-   if (!(mgr)) {
+   if (!(smgr)) {
       TRACE(REQ, "undefined session manager: cannot start");
       return (void *)0;
    }
@@ -93,45 +93,10 @@ void *XrdProofdClientCron(void *p)
             continue;
          }
          // Parse type
-         XrdOucString buf;
+         //XrdOucString buf;
          if (msg.Type() == XrdProofdClientMgr::kClientDisconnect) {
-            // Read admin path and pointer to the client instance
-            XrdOucString adminpath;
-            rc = msg.Get(adminpath);
-            void *cp = 0;
-            rc = (rc == 0) ? msg.Get(&cp) : rc;
-            XrdProofdClient *c = (XrdProofdClient *)cp;
-            int cid = -1;
-            rc = (rc == 0) ? msg.Get(cid) : rc;
-            int pid = -1;
-            rc = (rc == 0) ? msg.Get(pid) : rc;
-            if (rc != 0) {
-               TRACE(XERR, "kClientDisconnect: problems parsing message: '"<<
-                           msg.Buf()<<"'; errno: "<<-rc);
-               continue;
-            }
-            TRACE(DBG, "kClientDisconnect: got: '"<<adminpath<<"', "<<c<<", "<<cid);
-            if (c) {
-               // Reset the corresponding client slot in the list of this client
-               c->ResetClientSlot(cid);
-            } else {
-               TRACE(XERR, "kClientDisconnect: problems getting pointer to client instance: "<<c);
-            }
-
-            // Remove the client admin path
-            if (adminpath != "????") {
-               adminpath.erase(adminpath.rfind("/cid"));
-               if ((rc = XrdProofdAux::RmDir(adminpath.c_str())) != 0) {
-                  TRACE(XERR, "kClientDisconnect: problems removing admin path; errno: "<<-rc);
-                  continue;
-               }
-            }
-
-            // Tell the session manager that a client has gone
-            XPDFORM(buf, "%d", pid);
-            smgr->Pipe()->Post(XrdProofdProofServMgr::kClientDisconnect, buf.c_str());
-            TRACE(DBG,"sending to ProofServMgr: "<<buf);
-
+            // obsolete
+	    TRACE(XERR, "obsolete type: XrdProofdClientMgr::kClientDisconnect");
          } else {
             TRACE(XERR, "unknown type: "<<msg.Type());
             continue;
@@ -711,7 +676,7 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
             TRACEP(p, XERR, msg.c_str());
          }
          // Update counters
-         fNDisconnected--;
+         if(fNDisconnected) fNDisconnected--;
 
       } else {
          // The index of the next free slot will be the unique ID
@@ -803,12 +768,16 @@ int XrdProofdClientMgr::CheckAdminPath(XrdProofdProtocol *p,
    // Create the path now
    XPDFORM(cidpath, "%s/%s/cid", p->Client()->AdminPath(), lid.c_str());
 
-   // Check last access time
-   int rc = 0;
+   // Create disconnected path
+   XrdOucString discpath;
+   XPDFORM(discpath, "%s/%s/disconnected", p->Client()->AdminPath(), lid.c_str());
+
+   // Check last access time of disconnected if available, otherwise cid
    bool expired = false;
    struct stat st;
-   if ((rc = stat(cidpath.c_str(), &st)) != 0 ||
-       (expired = ((int)(time(0) - st.st_atime) > fReconnectTimeOut))) {
+   int rc = stat(discpath.c_str(), &st);
+   if (rc != 0) rc = stat(cidpath.c_str(), &st);
+   if (rc != 0 || (expired = ((int)(time(0) - st.st_atime) > fReconnectTimeOut))) {
       if (expired || (rc != 0 && errno != ENOENT)) {
          // Remove the file
          cidpath.replace("/cid", "");
@@ -1006,27 +975,12 @@ int XrdProofdClientMgr::CheckClients()
                            // during last cycle and it did not do it, so we close
                            // the link
                            xclose = 1;
-                           // This clients looks like disconnected
-                           FILE *fd = fopen(discpath.c_str(), "w");
-                           if (!fd) {
-                              TRACE(XERR, "unable to create path: " <<discpath);
-                           } else {
-                              fclose(fd);
-                           }
                         }
                      }
                   }
                } else {
                   // No id info, clean
                   xrm = 1;
-               }
-               // If too old remove the entry
-               if (xrm) {
-                  discpath.replace("/disconnected", "");
-                  TRACE(DBG, "removing path "<<discpath);
-                  if ((rc = XrdProofdAux::RmDir(discpath.c_str())) != 0) {
-                     TRACE(XERR, "problems removing "<<discpath<<"; error: "<<-rc);
-                  }
                }
                // If inactive since too long, close the associated link
                if (xclose) {
@@ -1044,11 +998,15 @@ int XrdProofdClientMgr::CheckClients()
                         p->Link()->Close();
                      } else {
                         TRACE(XERR, "protocol or link associated with ID "<<cid<<" are invalid");
+                        xrm = 1;
                      }
                   } else {
                      TRACE(XERR, "could not resolve client id from "<<cidpath);
+                     xrm = 1;
                   }
-
+               }
+               // If too old remove the entry
+               if (xrm) {
                   discpath.replace("/disconnected", "");
                   TRACE(DBG, "removing path "<<discpath);
                   if ((rc = XrdProofdAux::RmDir(discpath.c_str())) != 0) {
@@ -1365,7 +1323,7 @@ XrdProofdClient *XrdProofdClientMgr::GetClient(const char *usr, const char *grp,
          ui.fUser = usr;
          ui.fGroup = grp;
          bool full = (fMgr->SrvType() != kXPD_Worker)  ? 1 : 0;
-         c = new XrdProofdClient(ui, full, fMgr->ChangeOwn(), fEDest, fClntAdminPath.c_str());
+         c = new XrdProofdClient(ui, full, fMgr->ChangeOwn(), fEDest, fClntAdminPath.c_str(), fReconnectTimeOut);
          newclient = 1;
          bool freeclient = 1;
          if (c && c->IsValid()) {

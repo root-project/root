@@ -45,7 +45,7 @@ class XrdProofdClient {
 
  public:
    XrdProofdClient(XrdProofUI ui,
-                   bool master, bool changeown, XrdSysError *edest, const char *tmp);
+                   bool master, bool changeown, XrdSysError *edest, const char *tmp, int rtime);
 
    virtual ~XrdProofdClient();
 
@@ -73,6 +73,8 @@ class XrdProofdClient {
    XrdProofdProofServ     *GetServObj(int id);
 
    void                    Broadcast(const char *msg);
+
+   bool                    Running();
 
    XrdOucString            ExportSessions(XrdOucString &emsg, XrdProofdResponse *r = 0);
    void                    SkipSessionsCheck(std::list<XrdProofdProofServ *> *active,
@@ -105,6 +107,7 @@ class XrdProofdClient {
    bool                    fChangeOwn; // TRUE if ownership must be changed where relevant
    bool                    fIsValid; // TRUE if the instance is complete
    bool                    fAskedToTouch; // TRUE if a touch request has already been sent for this client
+   int                     fReconnectTimeOut; // Time given for disconnected clients to reconnect
 
    XrdProofUI              fUI;         // user info
    XrdROOT                *fROOT;        // ROOT vers instance to be used for proofserv
@@ -133,18 +136,20 @@ private:
    XrdProofdProtocol *fP;
    XrdProofdResponse *fR;
    unsigned short     fSid;
+   int                fResetTime;
 
    void               SetR() { fR = (fP && fSid > 0) ? fP->Response(fSid) : 0;}
 public:
    XrdClientID(XrdProofdProtocol *pt = 0, unsigned short id = 0)
-            { fP = pt; fSid = id; SetR();}
+            { fP = pt; fSid = id; SetR(); fResetTime = -1; }
    ~XrdClientID() { }
 
    XrdProofdClient   *C() const { return fP->Client(); }
    bool               IsValid() const { return (fP != 0); }
    XrdProofdProtocol *P() const { return fP; }
    XrdProofdResponse *R() const { return fR; }
-   void               Reset() { fP = 0; fSid = 0; SetR(); }
+   void               Reset() { fP = 0; fSid = 0; SetR(); fResetTime = time(0); }
+   int                ResetTime() { return fResetTime; }
    void               SetP(XrdProofdProtocol *p) { fP = p; SetR();}
    void               SetSid(unsigned short sid) { fSid = sid; SetR();}
    unsigned short     Sid() const { return fSid; }
