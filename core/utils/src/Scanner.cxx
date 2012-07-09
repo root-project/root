@@ -1180,8 +1180,22 @@ void RScanner::Scan(const clang::ASTContext &C)
 #endif
    }
    
+   // For debug, print the resulting list.
+   RScanner::ClassColl_t::const_iterator iter = fSelectedClasses.begin();
+   RScanner::ClassColl_t::const_iterator end = fSelectedClasses.end();
+   long previous = -1;
+   for( ; iter != end; ++iter) 
+   {
+      fprintf(stderr,"AnnotatedDecl rule=%ld class=%s\n",iter->GetRuleIndex(),iter->GetNormalizedName());
+      if (previous == iter->GetRuleIndex()) {
+         fprintf(stderr,"AnnotatedDecl dup=%ld\n",previous);
+      }
+      previous = iter->GetRuleIndex();
+   }
+
    // And finally resort the results according to the rule ordering.
    std::sort(fSelectedClasses.begin(),fSelectedClasses.end());
+
 }
 
 
