@@ -43,9 +43,16 @@ class TAlienFile : public TXNetFile {
 private:
    TString fLfn;       // logical file name
    TString fAuthz;     // authorization envelope
-
+   TString fGUID;      // GUID
+   TString fUrl;       // url for the opened copy
+   TString fPfn;       // physical file name
+   TString fSE;        // Storage element
+   Int_t   fImage;     // Image number
+   Int_t   fNreplicas; // Number of replicas
+   Long64_t fOpenedAt; // Absolute value for time when opened
+   Double_t fElapsed;  // Time elapsed to opem file
 public:
-   TAlienFile() : TXNetFile(), fLfn(), fAuthz() { }
+   TAlienFile() : TXNetFile(), fLfn(), fAuthz(), fGUID(), fUrl(), fPfn(), fSE(), fImage(0), fNreplicas(0), fOpenedAt(0), fElapsed(0) { }
    TAlienFile(const char *purl, Option_t *option = "",
               const char *ftitle = "", Int_t compress = 1,
               Bool_t parallelopen = kFALSE, const char *lurl = 0,
@@ -54,12 +61,32 @@ public:
 
    virtual void Close(const Option_t *opt = "");
 
+   const char  *GetGUID() const  {return fGUID;}
+   Double_t     GetElapsed() const {return fElapsed;}
+   Int_t        GetImage() const {return fImage;}
+   const char  *GetLfn() const   {return fLfn;}
+   Int_t        GetNreplicas() const {return fNreplicas;}
+   Long64_t     GetOpenTime() const {return fOpenedAt;}
+   const char  *GetPfn() const   {return fPfn;}
+   const char  *GetSE() const    {return fSE;}
+   const char  *GetUrl() const   {return fUrl;}
+
+protected:
+   void         SetGUID(const char *guid) {fGUID = guid;}
+   void         SetElapsed(Double_t real) {fElapsed = real;}
+   void         SetImage(Int_t image)   {fImage = image;}
+   void         SetNreplicas(Int_t nrep) {fNreplicas = nrep;}
+   void         SetPfn(const char *pfn) {fPfn = pfn;}
+   void         SetSE(const char *se)   {fSE = se;}
+   void         SetUrl(const char *url) {fUrl = url;}
+
+public:
    static TAlienFile *Open(const char *lfn, const Option_t *option = "",
                            const char *title = "", Int_t compress = 1,
                            Bool_t parallelopen = kFALSE);
    static TString     SUrl(const char *lfn);
 
-   ClassDef(TAlienFile, 3)  //A ROOT file that reads/writes via AliEn services and TXNetFile protocol
+   ClassDef(TAlienFile, 4)  //A ROOT file that reads/writes via AliEn services and TXNetFile protocol
 };
 
 #endif

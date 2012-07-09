@@ -38,6 +38,7 @@
 #include "TString.h"
 #include "Rtypes.h"
 #include "TSystem.h"
+#include "TStopwatch.h"
 #include "TVirtualMonitoring.h"
 #include "TVirtualMutex.h"
 #include "TProcessUUID.h"
@@ -87,6 +88,13 @@ TAlienFile::TAlienFile(const char *purl, Option_t *option,
    TUrl logicalurl(lurl);
    fLfn = logicalurl.GetFile();
    fAuthz = authz;
+   fGUID = "";
+   fUrl = "";
+   fPfn = "";
+   fSE = "";
+   fImage = 0;
+   fNreplicas = 0;
+   fOpenedAt = gSystem->Now();
 }
 
 //______________________________________________________________________________
@@ -111,6 +119,8 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t *option,
    TString fAName = name;
    TString fAOption = option;
    TUrl fAUrl;
+   TString sguid, pfnStr;
+   Int_t nreplicas = 0;
    Bool_t fAWritable;
    fAWritable = kFALSE;
    TString authz;
@@ -158,8 +168,10 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t *option,
    fAOption.ToUpper();
 
    TObjString *urlStr = 0;
+   TString urlStrs;
    TObjString *authzStr = 0;
    TObjString *seStr = 0;
+   TString seStrs, snreplicas;
 
    TString command;
    TString repcommand;
@@ -309,13 +321,27 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t *option,
 
          TObject *urlObject = map->GetValue("url");
          urlStr = dynamic_cast < TObjString * >(urlObject);
+         if (urlStr) urlStrs = urlStr->GetName();
 
          TObject *authzObject = map->GetValue("envelope");
          authzStr = dynamic_cast < TObjString * >(authzObject);
 
          TObject *seObject = map->GetValue("se");
          seStr = dynamic_cast < TObjString * >(seObject);
+         if (seStr) seStrs = seStr->GetName();
+         
+         TObject *nreplicasObject = map->GetValue("nSEs");
+         if (nreplicasObject) {
+            snreplicas = nreplicasObject->GetName();
+            nreplicas = snreplicas.Atoi();
+         }   
+         
+         TObject *guidObject = map->GetValue("guid");
+         if (guidObject) sguid = guidObject->GetName();
 
+         TObject *pfnObject = map->GetValue("pfn");
+         if (pfnObject) pfnStr = pfnObject->GetName();
+         
          if (map->GetValue("eof")) {
             imageeof = kTRUE;
             // there is only one result line .... in case it is at all ....
@@ -463,9 +489,12 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t *option,
       delete result;
       if (gDebug > 1)
          ::Info("TAlienFile","Opening AUrl <%s> lUrl <%s>",fAUrl.GetUrl(),lUrl.GetUrl());
+      TStopwatch timer;
+      timer.Start();
       TAlienFile *alienfile =
           new TAlienFile(fAUrl.GetUrl(), fAOption, ftitle, compress,
                          parallelopen, lUrl.GetUrl(), authz);
+      timer.Stop();                   
       if (alienfile->IsZombie()) {
          delete alienfile;
          if (fAWritable) {
@@ -474,6 +503,13 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t *option,
          }
          continue;
       } else {
+         alienfile->SetSE(seStrs);
+         alienfile->SetPfn(pfnStr);
+         alienfile->SetImage(imagenr);
+         alienfile->SetNreplicas(nreplicas);
+         alienfile->SetGUID(sguid);
+         alienfile->SetUrl(urlStrs);
+         alienfile->SetElapsed(timer.RealTime());
          return alienfile;
       }
    } while (imagenr < MAX_FILE_IMAGES);
