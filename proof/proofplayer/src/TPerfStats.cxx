@@ -132,7 +132,8 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    // Master flag
    Bool_t isMaster = ((proof && proof->TestBit(TProof::kIsMaster)) ||
                       (gProofServ && gProofServ->IsMaster())) ? kTRUE : kFALSE;
-   Bool_t isEndMaster = (gProofServ && gProofServ->IsEndMaster()) ? kTRUE : kFALSE;
+   Bool_t isEndMaster = ((gProofServ && gProofServ->IsEndMaster()) ||
+                         (proof && proof->IsLite())) ? kTRUE : kFALSE;
 
    TList *l = proof ? proof->GetListOfSlaveInfos() : 0 ;
    TIter nextslaveinfo(l);
