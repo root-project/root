@@ -189,6 +189,10 @@ void ROOT::RStl::WriteClassInit(FILE* /*file*/)
          fprintf(stderr,"Error: incomplete definition for %s\n",iter->GetNormalizedName());
          continue;
       }
+
+      // std::string fullname = R__GetQualifiedName(*iter->GetRecordDecl());      
+      // fprintf(stderr,"RStl is generating TClass for %ld %s %s %s\n",iter->GetRuleIndex(),iter->GetRequestedName(),iter->GetNormalizedName(),fullname.c_str());
+
       ::WriteClassInit( *iter );
       ::WriteAuxFunctions( *iter );
    }

@@ -35,7 +35,7 @@ namespace ROOT {
 
    class RStl {
    private:
-      typedef std::set<RScanner::AnnotatedRecordDecl> list_t;
+      typedef std::set<RScanner::AnnotatedRecordDecl,RScanner::AnnotatedRecordDecl::CompareByName> list_t;
       list_t fList;
 
    public:

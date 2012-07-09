@@ -121,6 +121,13 @@ public:
       {
          return fRuleIndex < right.fRuleIndex;
       }
+
+      struct CompareByName {
+         bool operator() (const AnnotatedRecordDecl& right, const AnnotatedRecordDecl& left) 
+         {
+            return left.fNormalizedName < right.fNormalizedName;
+         }
+      };
    };
    typedef std::vector<AnnotatedRecordDecl>   ClassColl_t;
    
