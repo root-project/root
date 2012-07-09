@@ -2604,7 +2604,10 @@ Bool_t TH1::Divide(const TH1 *h1)
       Warning("Divide","Attempt to divide histograms with different axis limits");
    } catch(DifferentBinLimits&) {
       Warning("Divide","Attempt to divide histograms with different bin limits");
+   } catch(DifferentLabels&) {
+      Warning("Divide","Attempt to divide histograms with different labels");
    }
+
 
    if (fDimension < 2) nbinsy = -1;
    if (fDimension < 3) nbinsz = -1;
@@ -2698,7 +2701,10 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
       Warning("Divide","Attempt to divide histograms with different axis limits");
    } catch(DifferentBinLimits&) {
       Warning("Divide","Attempt to divide histograms with different bin limits");
+   }  catch(DifferentLabels&) {
+      Warning("Divide","Attempt to divide histograms with different labels");
    }
+
 
    if (!c2) {
       Error("Divide","Coefficient of dividing histogram cannot be zero");
@@ -5545,7 +5551,10 @@ Bool_t TH1::Multiply(const TH1 *h1)
       Warning("Multiply","Attempt to multiply histograms with different axis limits");
    } catch(DifferentBinLimits&) {
       Warning("Multiply","Attempt to multiply histograms with different bin limits");
+   } catch(DifferentLabels&) {
+      Warning("Multiply","Attempt to multiply histograms with different labels");
    }
+
 
    if (fDimension < 2) nbinsy = -1;
    if (fDimension < 3) nbinsz = -1;
@@ -5629,6 +5638,8 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
       Warning("Multiply","Attempt to multiply histograms with different axis limits");
    } catch(DifferentBinLimits&) {
       Warning("Multiply","Attempt to multiply histograms with different bin limits");
+   } catch(DifferentLabels&) {
+      Warning("Multiply","Attempt to multiply histograms with different labels");
    }
 
    if (fDimension < 2) nbinsy = -1;
