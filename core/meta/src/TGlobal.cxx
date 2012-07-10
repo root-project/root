@@ -1,6 +1,6 @@
 // @(#)root/meta:$Id$
 // Author: Rene Brun   13/11/95
-
+ 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
