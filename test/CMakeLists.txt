@@ -138,6 +138,12 @@ if(ROOT_roofit_FOUND)
   ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit FAILREGEX "FAILED")  
 endif()
 
+#--stressRooStats----------------------------------------------------------------------------------
+if(ROOT_roofit_FOUND)
+  ROOT_EXECUTABLE(stressRooStats stressRooStats.cxx LIBRARIES RooStats)
+  ROOT_ADD_TEST(test-stressroostats COMMAND stressRooStats FAILREGEX "FAILED")  
+endif()
+
 #--stressFit---------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressFit stressFit.cxx LIBRARIES MathCore Matrix)
 ROOT_ADD_TEST(test-stressfit COMMAND stressFit FAILREGEX "FAILED")
@@ -158,9 +164,13 @@ ROOT_ADD_TEST(test-stressiterators COMMAND stressIterators FAILREGEX "FAILED")
 
 #--stressInterpreter-------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressInterpreter stressInterpreter.cxx LIBRARIES Core)
+if(WIN32)
+  set(cleantmpfiles POSTCMD cmd /c del AutoDict_*)
+endif()
 ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
               PRECMD ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/stressInterpreter.cxx 
                                               $<TARGET_FILE_DIR:stressInterpreter>/stressInterpreter.cxx
+              ${cleantmpfiles}
               FAILREGEX "FAILED|Error")
 
 #--stressHepix-------------------------------------------------------------------------------
