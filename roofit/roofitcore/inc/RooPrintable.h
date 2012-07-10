@@ -33,20 +33,20 @@ public:
   // Master print function
   enum ContentsOption { kName=1, kClassName=2, kValue=4, kArgs=8, kExtras=16, kAddress=32, kTitle=64,  kCollectionHeader=128} ; // Can be ORed
   enum StyleOption { kInline=1, kSingleLine=2, kStandard=3, kVerbose=4, kTreeStructure=5 } ; // Exclusive
-  virtual void printStream(ostream& os, Int_t contents, StyleOption style, TString indent="") const ;
+  virtual void printStream(std::ostream& os, Int_t contents, StyleOption style, TString indent="") const ;
   
   // Virtual hook function for class-specific content implementation
-  virtual void printAddress(ostream& os) const ;
-  virtual void printName(ostream& os) const ;
-  virtual void printTitle(ostream& os) const ;
-  virtual void printClassName(ostream& os) const ;
-  virtual void printValue(ostream& os) const ;
-  virtual void printArgs(ostream& os) const ;
-  virtual void printExtras(ostream& os) const ;
-  virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
-  virtual void printTree(ostream& os, TString indent="") const ;
+  virtual void printAddress(std::ostream& os) const ;
+  virtual void printName(std::ostream& os) const ;
+  virtual void printTitle(std::ostream& os) const ;
+  virtual void printClassName(std::ostream& os) const ;
+  virtual void printValue(std::ostream& os) const ;
+  virtual void printArgs(std::ostream& os) const ;
+  virtual void printExtras(std::ostream& os) const ;
+  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  virtual void printTree(std::ostream& os, TString indent="") const ;
 
-  static ostream& defaultPrintStream(ostream *os= 0);
+  static std::ostream& defaultPrintStream(std::ostream *os= 0);
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
   virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
    
@@ -63,7 +63,7 @@ protected:
 };
 
 namespace RooFit {
-ostream& operator<<(ostream& os, const RooPrintable& rp) ; 
+std::ostream& operator<<(std::ostream& os, const RooPrintable& rp) ; 
 }
 
 #ifndef __CINT__

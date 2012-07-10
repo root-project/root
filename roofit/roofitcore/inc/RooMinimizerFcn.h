@@ -49,7 +49,7 @@ class RooMinimizerFcn : public ROOT::Math::IBaseFunctionMultiDim {
   void SetEvalErrorWall(Bool_t flag) { _doEvalErrorWall = flag ; }
   void SetPrintEvalErrors(Int_t numEvalErrors) { _printEvalErrors = numEvalErrors ; }
   Bool_t SetLogFile(const char* inLogfile);
-  ofstream* GetLogFile() { return _logfile; }
+  std::ofstream* GetLogFile() { return _logfile; }
   void SetVerbose(Bool_t flag=kTRUE) { _verbose = flag ; }
 
   Double_t& GetMaxFCN() { return _maxFCN; }
@@ -85,7 +85,7 @@ private:
   Bool_t _doEvalErrorWall;
 
   int _nDim;
-  ofstream *_logfile;
+  std::ofstream *_logfile;
   bool _verbose;
 
   RooArgList* _floatParamList;

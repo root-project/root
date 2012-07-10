@@ -191,7 +191,7 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
          *attachedSet = nullPOI;
          double nullNLL = fNllNull->getVal();
          
-         //cout << std::endl << "SLRTS: null params:" << std::endl;
+         //std::cout << std::endl << "SLRTS: null params:" << std::endl;
          //attachedSet->Print("v");
          
 
@@ -215,11 +215,11 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
          *attachedSet = *fAltParameters;
          double altNLL = fNllAlt->getVal();
 
-         //cout << std::endl << "SLRTS: alt params:" << std::endl;
+         //std::cout << std::endl << "SLRTS: alt params:" << std::endl;
          //attachedSet->Print("v");
 
 
-         //cout << std::endl << "SLRTS null NLL: " << nullNLL << "    alt NLL: " << altNLL << std::endl << std::endl;
+         //std::cout << std::endl << "SLRTS null NLL: " << nullNLL << "    alt NLL: " << altNLL << std::endl << std::endl;
 
 
          if (!reuse) { 
@@ -238,9 +238,9 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
             fDetailedOutput->setRealValue( "nullNLL", nullNLL );
             fDetailedOutput->setRealValue( "altNLL", altNLL );
 
-//             cout << std::endl << "STORING THIS AS DETAILED OUTPUT:" << std::endl;
+//             std::cout << std::endl << "STORING THIS AS DETAILED OUTPUT:" << std::endl;
 //             fDetailedOutput->Print("v");
-//             cout << std::endl;
+//             std::cout << std::endl;
          }
 
 

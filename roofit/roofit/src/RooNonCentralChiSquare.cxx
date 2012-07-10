@@ -49,6 +49,8 @@
 
 #include "RooMsgService.h"
 
+using namespace std;
+
 ClassImp(RooNonCentralChiSquare) 
 
 RooNonCentralChiSquare::RooNonCentralChiSquare(const char *name, const char *title, 

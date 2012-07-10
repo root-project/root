@@ -37,6 +37,8 @@
 #include "RooUnblindPrecision.h"
 
 
+using namespace std;
+
 ClassImp(RooUnblindPrecision)
 ;
 

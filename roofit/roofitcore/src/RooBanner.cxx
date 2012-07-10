@@ -1,7 +1,6 @@
 #include "RooFit.h"
 
 #include "Rtypes.h"
-#include "Rtypes.h"
 #include "Riostream.h"
 
 //////////////////////////////////////////////////////////////////////////////
@@ -10,6 +9,8 @@
 // Print banner message when RooFit library is loaded
 // END_HTML
 //
+
+using namespace std;
 
 const char* VTAG="3.54" ;
 

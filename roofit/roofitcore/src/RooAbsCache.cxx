@@ -32,6 +32,8 @@
 #include "RooAbsArg.h"
 #include "RooArgList.h"
 
+using namespace std;
+
 ClassImp(RooAbsCache) 
    ;
 

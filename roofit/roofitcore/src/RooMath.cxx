@@ -31,6 +31,8 @@
 #include "RooSentinel.h"
 #include "TSystem.h"
 
+using namespace std;
+
 ClassImp(RooMath)
 ;
 

@@ -1,11 +1,12 @@
-
-#include "stdlib.h"
+#include "RooStats/HistFactory/Channel.h"
+#include <stdlib.h>
 
 #include "TFile.h"
 #include "TTimeStamp.h"
 
 #include "RooStats/HistFactory/HistFactoryException.h"
-#include "RooStats/HistFactory/Channel.h"
+
+using namespace std;
 
 RooStats::HistFactory::Channel::Channel() :
   fName( "" ) { ; }

@@ -36,6 +36,8 @@
 #include "RooUnblindUniform.h"
 
 
+using namespace std;
+
 ClassImp(RooUnblindUniform)
 ;
 

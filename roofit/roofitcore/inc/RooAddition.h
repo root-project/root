@@ -36,7 +36,7 @@ public:
 
   virtual Double_t defaultErrorLevel() const ;
 
-  void printMetaArgs(ostream& os) const ;
+  void printMetaArgs(std::ostream& os) const ;
 
   const RooArgList& list1() const { return _set ; }
   const RooArgList& list() const { return _set ; }

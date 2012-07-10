@@ -32,6 +32,8 @@ END_HTML
 
 #include "RooStats/HistFactory/FlexibleInterpVar.h"
 
+using namespace std;
+
 ClassImp(RooStats::HistFactory::FlexibleInterpVar)
 
 using namespace RooStats;

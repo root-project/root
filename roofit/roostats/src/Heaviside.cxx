@@ -26,6 +26,8 @@ END_HTML
 #include "RooAbsReal.h"
 #endif
 
+using namespace std;
+
 ClassImp(RooStats::Heaviside)
 
 using namespace RooFit;

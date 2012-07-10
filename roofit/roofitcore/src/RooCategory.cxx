@@ -37,6 +37,8 @@
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
 
+using namespace std;
+
 ClassImp(RooCategory) 
 ;
 

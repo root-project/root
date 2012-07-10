@@ -29,6 +29,8 @@
 #include <string.h>
 #include <ctype.h>
 
+using namespace std;
+
 ClassImp(RooBlindTools)
 
 

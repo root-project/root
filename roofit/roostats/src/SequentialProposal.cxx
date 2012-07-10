@@ -17,6 +17,8 @@
 #include <RooRandom.h>
 #include <RooStats/RooStatsUtils.h>
 
+using namespace std;
+
 ClassImp(RooStats::SequentialProposal)
 
 namespace RooStats { 

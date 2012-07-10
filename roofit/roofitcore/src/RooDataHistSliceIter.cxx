@@ -36,6 +36,8 @@
 #include "RooAbsLValue.h"
 #include "RooDataHistSliceIter.h"
 
+using namespace std;
+
 ClassImp(RooDataHistSliceIter)
 ;
 

@@ -30,6 +30,8 @@
 #include "RooNovosibirsk.h"
 #include "RooRealVar.h"
 
+using namespace std;
+
 ClassImp(RooNovosibirsk)
 
 

@@ -27,6 +27,8 @@
 #include "RooInt.h"
 #include "RooInt.h"
 
+using namespace std;
+
 ClassImp(RooInt)
 ;
 

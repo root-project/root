@@ -33,6 +33,8 @@
 
 #include "RooRangeBinning.h"
 
+using namespace std;
+
 ClassImp(RooRangeBinning) 
 ;
 

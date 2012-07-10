@@ -41,6 +41,8 @@
 
 
 
+using namespace std;
+
 ClassImp(RooDataWeightedAverage)
 ;
 

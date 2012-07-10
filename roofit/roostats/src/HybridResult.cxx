@@ -39,6 +39,8 @@ TConfidenceLevel class (http://root.cern.ch/root/html/TConfidenceLevel.html).
 
 
 /// ClassImp for building the THtml documentation of the class 
+using namespace std;
+
 ClassImp(RooStats::HybridResult)
 
 using namespace RooStats;

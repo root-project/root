@@ -43,6 +43,8 @@
 
 
 
+using namespace std;
+
 ClassImp(RooMCIntegrator)
 ;
 

@@ -14,6 +14,8 @@
 #include <math.h> 
 #include "TMath.h" 
 
+using namespace std;
+
 ClassImp(RooParamHistFunc) 
   ;  
 

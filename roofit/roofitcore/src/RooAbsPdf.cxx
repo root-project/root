@@ -154,6 +154,8 @@
 #include "RooRealIntegral.h"
 #include <string>
 
+using namespace std;
+
 ClassImp(RooAbsPdf) 
 ;
 ClassImp(RooAbsPdf::GenSpec)

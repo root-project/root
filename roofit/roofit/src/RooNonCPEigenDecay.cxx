@@ -54,6 +54,8 @@
 #include "TMath.h"
 #include "RooRealIntegral.h"
 
+using namespace std;
+
 ClassImp(RooNonCPEigenDecay);
 
 #define Debug_RooNonCPEigenDecay 1

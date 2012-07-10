@@ -30,6 +30,8 @@
 #include "TObject.h"
 #include "Riostream.h"
 
+using namespace std;
+
 ClassImp(RooPlotable)
 ;
 

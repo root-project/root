@@ -33,6 +33,8 @@
 #include "RooRealConstant.h"
 #include "RooRandom.h"
 
+using namespace std;
+
 ClassImp(RooGaussModel) 
 ;
 

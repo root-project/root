@@ -41,6 +41,8 @@
 #include "RooMsgService.h"
 #include "TMath.h"
 
+using namespace std;
+
 ClassImp(RooPolyVar)
 ;
 

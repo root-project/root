@@ -45,6 +45,8 @@
 #include <memory>
 #include <algorithm>
 
+using namespace std;
+
 ClassImp(RooRealSumPdf)
 ;
 

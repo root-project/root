@@ -24,6 +24,8 @@
 #include "RooAbsArg.h"
 #include "RooSetPair.h"
 
+using namespace std;
+
 ClassImp(RooHashTable)
 ;
 

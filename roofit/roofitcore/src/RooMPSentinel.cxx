@@ -31,6 +31,8 @@
 #include "RooMPSentinel.h"
 #include "RooRealMPFE.h"
 
+using namespace std;
+
 ClassImp(RooMPSentinel)
   ;
 

@@ -167,7 +167,7 @@ RooCacheManager<T>::RooCacheManager(const RooCacheManager& other, RooAbsArg* own
   _wired = kFALSE ;
   _lastIndex = -1 ;
 
-//   cout << "RooCacheManager:cctor(" << this << ")" << std::endl ;
+//   std::cout << "RooCacheManager:cctor(" << this << ")" << std::endl ;
 
   Int_t i ;
   for (i=0 ; i<other._size ; i++) {    

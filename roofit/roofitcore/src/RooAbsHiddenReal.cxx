@@ -36,6 +36,8 @@
 #include "RooCategory.h"
 #include "RooMsgService.h"
 
+using namespace std;
+
 ClassImp(RooAbsHiddenReal)
 ;
 

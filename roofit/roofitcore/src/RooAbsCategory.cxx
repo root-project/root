@@ -44,6 +44,8 @@
 #include "RooMsgService.h"
 #include "RooVectorDataStore.h"
 
+using namespace std;
+
 ClassImp(RooAbsCategory) 
 ;
 

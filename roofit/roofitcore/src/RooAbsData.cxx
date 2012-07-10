@@ -58,6 +58,8 @@
 #include "TH3.h"
 
 
+using namespace std;
+
 ClassImp(RooAbsData)
 ;
 

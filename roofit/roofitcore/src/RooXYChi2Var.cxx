@@ -44,6 +44,8 @@
 #include "RooRealBinding.h"
 #include "RooNumIntFactory.h"
 
+using namespace std;
+
 ClassImp(RooXYChi2Var)
 ;
 

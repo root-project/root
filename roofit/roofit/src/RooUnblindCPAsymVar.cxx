@@ -37,6 +37,8 @@
 #include "RooUnblindCPAsymVar.h"
 
 
+using namespace std;
+
 ClassImp(RooUnblindCPAsymVar)
 ;
 

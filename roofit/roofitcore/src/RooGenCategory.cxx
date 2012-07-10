@@ -48,6 +48,8 @@
 #include "Api.h"
 #endif
 
+using namespace std;
+
 ClassImp(RooGenCategory)
 
 

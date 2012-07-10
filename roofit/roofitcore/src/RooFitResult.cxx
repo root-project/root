@@ -56,6 +56,8 @@
 
 
 
+using namespace std;
+
 ClassImp(RooFitResult) 
 ;
 

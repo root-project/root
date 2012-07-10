@@ -64,7 +64,7 @@ protected:
   void initialize() const ;
   Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
-  virtual void printCompactTreeHook(ostream& os, const char* indent="") ;
+  virtual void printCompactTreeHook(std::ostream& os, const char* indent="") ;
 
   RooNumIntConfig _convIntConfig ; // Configuration of numeric convolution integral ;
   mutable RooConvIntegrandBinding* _integrand ; //! Binding of Convolution Integrand function

@@ -61,6 +61,8 @@
 #include "RooTrace.h"
 #include "RooVectorDataStore.h" 
 
+using namespace std;
+
 ClassImp(RooAbsOptTestStatistic)
 ;
 

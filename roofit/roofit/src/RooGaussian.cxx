@@ -33,6 +33,8 @@
 #include "RooRandom.h"
 #include "RooMath.h"
 
+using namespace std;
+
 ClassImp(RooGaussian)
 
 

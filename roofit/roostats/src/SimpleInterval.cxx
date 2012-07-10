@@ -37,6 +37,8 @@
 #include <string>
 
 
+using namespace std;
+
 ClassImp(RooStats::SimpleInterval) ;
 
 using namespace RooStats;

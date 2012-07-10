@@ -73,6 +73,8 @@ see also the following interesting references:
 
 #include "RooStats/HybridCalculatorOriginal.h"
 
+using namespace std;
+
 ClassImp(RooStats::HybridCalculatorOriginal)
 
 using namespace RooStats;

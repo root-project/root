@@ -32,6 +32,8 @@
 #include "RooRealIntegral.h"
 #include "RooRandom.h"
 
+using namespace std;
+
 ClassImp(RooBMixDecay) 
 ;
 

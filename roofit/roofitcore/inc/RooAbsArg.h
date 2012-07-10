@@ -68,7 +68,7 @@ public:
   virtual Bool_t isDerived() const { 
     // Does value or shape of this arg depend on any other arg?
     return kTRUE ;
-    //cout << IsA()->GetName() << "::isDerived(" << GetName() << ") = " << (_serverList.GetSize()>0 || _proxyList.GetSize()>0) << endl ;
+    //std::cout << IsA()->GetName() << "::isDerived(" << GetName() << ") = " << (_serverList.GetSize()>0 || _proxyList.GetSize()>0) << std::endl ;
     //return (_serverList.GetSize()>0 || _proxyList.GetSize()>0)?kTRUE:kFALSE; 
   }
   Bool_t isCloneOf(const RooAbsArg& other) const ; 
@@ -208,22 +208,22 @@ public:
   void attachDataStore(const RooAbsDataStore &set);
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) = 0 ;
-  virtual void writeToStream(ostream& os, Bool_t compact) const = 0 ;
+  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) = 0 ;
+  virtual void writeToStream(std::ostream& os, Bool_t compact) const = 0 ;
 
   inline virtual void Print(Option_t *options= 0) const {
     // Printing interface (human readable)
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  virtual void printName(ostream& os) const ;
-  virtual void printTitle(ostream& os) const ;
-  virtual void printClassName(ostream& os) const ;
-  virtual void printAddress(ostream& os) const ;
-  virtual void printArgs(ostream& os) const ;
-  virtual void printMetaArgs(ostream& /*os*/) const {} ;
-  virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
-  virtual void printTree(ostream& os, TString indent="") const ;
+  virtual void printName(std::ostream& os) const ;
+  virtual void printTitle(std::ostream& os) const ;
+  virtual void printClassName(std::ostream& os) const ;
+  virtual void printAddress(std::ostream& os) const ;
+  virtual void printArgs(std::ostream& os) const ;
+  virtual void printMetaArgs(std::ostream& /*os*/) const {} ;
+  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
+  virtual void printTree(std::ostream& os, TString indent="") const ;
 
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
 
@@ -238,7 +238,7 @@ public:
   void setStringAttribute(const Text_t* key, const Text_t* value) ;
   const Text_t* getStringAttribute(const Text_t* key) const ;
   inline const std::map<std::string,std::string>& stringAttributes() const { 
-    // Returns map<string,string> with all string attributes defined
+    // Returns std::map<string,string> with all string attributes defined
     return _stringAttrib ; 
   }
 
@@ -301,14 +301,14 @@ public:
   virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;
   
   void graphVizTree(const char* fileName, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
-  void graphVizTree(ostream& os, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
+  void graphVizTree(std::ostream& os, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
 
 /*   TGraphStruct* graph(Bool_t useFactoryTag=kFALSE, Double_t textSize=0.03) ; */
 
   void printComponentTree(const char* indent="",const char* namePat=0, Int_t nLevel=999) ;
   void printCompactTree(const char* indent="",const char* fileName=0, const char* namePat=0, RooAbsArg* client=0) ;
-  void printCompactTree(ostream& os, const char* indent="", const char* namePat=0, RooAbsArg* client=0) ;
-  virtual void printCompactTreeHook(ostream& os, const char *ind="") ;
+  void printCompactTree(std::ostream& os, const char* indent="", const char* namePat=0, RooAbsArg* client=0) ;
+  virtual void printCompactTreeHook(std::ostream& os, const char *ind="") ;
 
   // Dirty state accessor
   inline Bool_t isShapeDirty() const { 
@@ -497,7 +497,7 @@ public:
   std::map<std::string,std::string> _stringAttrib ; // String attributes
   std::set<std::string> _boolAttribTransient ; //! Transient boolean attributes (not copied in ctor)
 
-  void printAttribList(ostream& os) const;
+  void printAttribList(std::ostream& os) const;
 
   // Hooks for RooTreeData interface
   friend class RooCompositeDataStore ;
@@ -518,8 +518,8 @@ public:
   TString cleanBranchName() const ;
 
   // Global   
-  friend ostream& operator<<(ostream& os, const RooAbsArg &arg);  
-  friend istream& operator>>(istream& is, RooAbsArg &arg) ;
+  friend std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);  
+  friend std::istream& operator>>(std::istream& is, RooAbsArg &arg) ;
 
   // Debug stuff
   static Bool_t _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
@@ -550,7 +550,7 @@ public:
   ClassDef(RooAbsArg,5) // Abstract variable
 };
 
-ostream& operator<<(ostream& os, const RooAbsArg &arg);  
-istream& operator>>(istream& is, RooAbsArg &arg) ;
+std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);  
+std::istream& operator>>(std::istream& is, RooAbsArg &arg) ;
 
 #endif

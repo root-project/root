@@ -38,12 +38,12 @@ public:
   Bool_t map(const char* inKeyRegExp, const char* outKeyName, Int_t outKeyNum=NoCatIdx) ; 
 
   // Printing interface (human readable)
-  void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
-  void printMetaArgs(ostream& os) const ;
+  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printMetaArgs(std::ostream& os) const ;
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
 
 
   class Entry {

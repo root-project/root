@@ -34,7 +34,7 @@ public:
 
   virtual void attach(const RooArgSet& params) ;
 
-  virtual void printMultiline(ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  virtual void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
 
 protected:

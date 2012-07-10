@@ -40,6 +40,8 @@
 #include "RooDataSet.h"
 #include "RooDataHist.h"
 
+using namespace std;
+
 ClassImp(RooStats::PointSetInterval) ;
 
 using namespace RooStats;
