@@ -135,7 +135,7 @@ namespace cling {
     SourceManager& SM = m_Sema->getSourceManager();
     FileManager& FM = SM.getFileManager();
     const FileEntry* OldEntry = SM.getFileEntryForID(SM.getFileID(Loc));
-    FM.InvalidateCache(OldEntry);
+    if (OldEntry) FM.invalidateCache(OldEntry);
   }
 
   // Gives us access to the protected members that we  need.
