@@ -53,6 +53,7 @@
 #include <TMarker.h>
 #include <TPolyLine.h>
 #include <TLatex.h>
+#include <TLegend.h>
 #include <TEllipse.h>
 #include <TCurlyArc.h>
 #include <TArc.h>
@@ -82,50 +83,51 @@ void     TestReport2    ();
 void     DoCcode        (TCanvas *C);
 
 // Tests functions.
-void     tline          ();
-void     tmarker        ();
-void     tpolyline      ();
-void     patterns       ();
-void     ttext1         ();
-void     ttext2         ();
-void     tlatex1        ();
-void     tlatex2        ();
-void     tlatex3        ();
-void     tlatex4        ();
-void     tlatex5        ();
-void     kerning        ();
-void     itbf           ();
-void     transpad       ();
-void     statfitparam   ();
-void     tgaxis1        ();
-void     tgaxis2        ();
-void     tgaxis3        ();
-void     tgaxis4        ();
-void     labels1        ();
-void     tellipse       ();
+void     clonepad       ();
+void     earth          ();
 void     feynman        ();
-void     tgraph1        ();
-void     tgraph2        ();
-void     tgraph3        ();
-void     tmultigraph1   ();
-void     tmultigraph2   ();
+void     hbars          ();
+void     itbf           ();
+void     kerning        ();
+void     labels1        ();
+void     ntuple1        ();
 void     options2d1     ();
 void     options2d2     ();
 void     options2d3     ();
 void     options2d4     ();
 void     options2d5     ();
-void     earth          ();
+void     parallelcoord  ();
+void     patterns       ();
+void     quarks         ();
+void     statfitparam   ();
+void     tellipse       ();
+void     tgaxis1        ();
+void     tgaxis2        ();
+void     tgaxis3        ();
+void     tgaxis4        ();
+void     tgraph1        ();
+void     tgraph2        ();
 void     tgraph2d1      ();
 void     tgraph2d2      ();
 void     tgraph2d3      ();
-void     ntuple1        ();
-void     quarks         ();
+void     tgraph3        ();
 void     timage         ();
-void     zoomtf1        ();
-void     zoomfit        ();
-void     parallelcoord  ();
-void     clonepad       ();
+void     tlatex1        ();
+void     tlatex2        ();
+void     tlatex3        ();
+void     tlatex4        ();
+void     tlatex5        ();
+void     tline          ();
+void     tmarker        ();
+void     tmultigraph1   ();
+void     tmultigraph2   ();
+void     tpolyline      ();
+void     transpad       ();
+void     ttext1         ();
+void     ttext2         ();
 void     waves          ();
+void     zoomfit        ();
+void     zoomtf1        ();
 
 // Auxiliary functions
 void     patterns_box   (Int_t pat, Double_t x1, Double_t y1, Double_t x2, Double_t  y2);
@@ -153,7 +155,8 @@ Int_t     gPS2ErrNb[50];
 Bool_t    gOptionR;
 Bool_t    gOptionK;
 TH2F     *gH2;
-TFile    *gLocalFile;
+TFile    *gHsimple;
+TFile    *gCernstaff;
 char      gCfile[16];
 char      outfile[16];
 char      gLine[80];
@@ -215,22 +218,41 @@ void stressGraphics(Int_t verbose = 0)
    gROOT->SetStyle("Classic");
 
    // Check if $ROOTSYS/tutorials/hsimple.root exists
-   gLocalFile = new TFile("$(ROOTSYS)/tutorials/hsimple.root");
-   if (gLocalFile->IsZombie()) {
-      delete gLocalFile;
-      gLocalFile = new TFile("hsimple.root");
-      if (gLocalFile->IsZombie()) {
-         delete gLocalFile;
+   gHsimple = new TFile("$(ROOTSYS)/tutorials/hsimple.root");
+   if (gHsimple->IsZombie()) {
+      delete gHsimple;
+      gHsimple = new TFile("hsimple.root");
+      if (gHsimple->IsZombie()) {
+         delete gHsimple;
          printf("Create $(ROOTSYS)/tutorials/hsimple.root\n");
          gROOT->Macro("$(ROOTSYS)/tutorials/hsimple.C");
-         gLocalFile = new TFile("$(ROOTSYS)/tutorials/hsimple.root");
-         if (gLocalFile->IsZombie()) {
-            delete gLocalFile;
+         gHsimple = new TFile("$(ROOTSYS)/tutorials/hsimple.root");
+         if (gHsimple->IsZombie()) {
+            delete gHsimple;
             printf("Could not create $(ROOTSYS)/tutorials/hsimple.root\n");
             return;
          }
       }
    }
+   
+   // Check if $ROOTSYS/tutorials/tree/cernstaff.root exists
+   gCernstaff = new TFile("$(ROOTSYS)/tutorials/tree/cernstaff.root");
+   if (gCernstaff->IsZombie()) {
+      delete gCernstaff;
+      gCernstaff = new TFile("cernstaff.root");
+      if (gCernstaff->IsZombie()) {
+         delete gCernstaff;
+         printf("Create $(ROOTSYS)/tutorials/tree/cernstaff.root\n");
+         gROOT->Macro("$(ROOTSYS)/tutorials/tree/cernbuild.C(0,0)");
+         gCernstaff = new TFile("$(ROOTSYS)/tutorials/tree/cernstaff.root");
+         if (gCernstaff->IsZombie()) {
+            delete gCernstaff;
+            printf("Could not create $(ROOTSYS)/tutorials/tree/cernstaff.root\n");
+            return;
+         }
+      }
+   }
+
    gErrorIgnoreLevel = 0;
 
    // Read the reference file "stressGraphics.ref"
@@ -333,7 +355,8 @@ void stressGraphics(Int_t verbose = 0)
    zoomtf1      ();
    zoomfit      ();
    parallelcoord();
-///clonepad     ();
+   clonepad     ();
+   hbars        (); 
    if (!gOptionR) {
       std::cout << "**********************************************************************" <<std::endl;
 
@@ -2214,7 +2237,7 @@ void ntuple1()
    pad1->SetGrid();
    pad1->SetLogy();
    pad1->GetFrame()->SetFillColor(15);
-   TNtuple *ntuple = (TNtuple*)gLocalFile->Get("ntuple");
+   TNtuple *ntuple = (TNtuple*)gHsimple->Get("ntuple");
    ntuple->SetLineColor(1);
    ntuple->SetFillStyle(1001);
    ntuple->SetFillColor(45);
@@ -2413,10 +2436,7 @@ void zoomtf1()
    gPad->Modified();
 
    TestReport1(C, "Zoom/UnZoom a collection of TF1");
-   if (gOptionR) {
-      DoCcode(C);
-      TestReport2();
-   }
+   if (gOptionR) printf("%10d%10d\n",0,0);
 }
 
 
@@ -2427,7 +2447,7 @@ void zoomfit()
 
    TCanvas *C = StartTest(800,800);
 
-   TH1 *hpx = (TH1*)gLocalFile->Get("hpx");
+   TH1 *hpx = (TH1*)gHsimple->Get("hpx");
    hpx->Fit("gaus","q");
    hpx->GetXaxis()->SetRangeUser(.1,.3);
    gPad->Modified();
@@ -2443,13 +2463,60 @@ void zoomfit()
 
 
 //______________________________________________________________________________
+void hbars()
+{
+   // Ntuple drawing with alphanumeric variables
+   
+   TCanvas *C = StartTest(700,800);
+   
+   TTree *T = (TTree*)gCernstaff->Get("T");
+   T->SetFillColor(45);
+   C->SetFillColor(42);
+   C->Divide(1,2);
+   
+   //horizontal bar chart
+   C->cd(1); gPad->SetGrid(); gPad->SetLogx(); gPad->SetFrameFillColor(33);
+   T->Draw("Nation","","hbar2");
+   
+   //vertical bar chart
+   C->cd(2); gPad->SetGrid(); gPad->SetFrameFillColor(33);
+   T->Draw("Division>>hDiv","","goff");
+   TH1F *hDiv   = (TH1F*)gDirectory->Get("hDiv");
+   hDiv->SetStats(0);
+   TH1F *hDivFR = (TH1F*)hDiv->Clone("hDivFR");
+   T->Draw("Division>>hDivFR","Nation==\"FR\"","goff");
+   hDiv->SetBarWidth(0.45);
+   hDiv->SetBarOffset(0.1);
+   hDiv->SetFillColor(49);
+   TH1 *h1 = hDiv->DrawCopy("bar2");
+   hDivFR->SetBarWidth(0.4);
+   hDivFR->SetBarOffset(0.55);
+   hDivFR->SetFillColor(50);
+   TH1 *h2 = hDivFR->DrawCopy("bar2,same");
+   
+   TLegend *legend = new TLegend(0.55,0.65,0.76,0.82);
+   legend->AddEntry(h1,"All nations","f");
+   legend->AddEntry(h2,"French only","f");
+   legend->Draw();
+
+   
+   gPad->Modified();
+   gPad->Update();
+   
+   TestReport1(C, "Ntuple drawing with alphanumeric variables");
+   DoCcode(C);
+   TestReport2();
+}
+
+
+//______________________________________________________________________________
 void parallelcoord()
 {
    // Parallel Coordinates
 
    TCanvas *C = StartTest(800,700);
 
-   TNtuple *ntuple = (TNtuple*)gLocalFile->Get("ntuple");
+   TNtuple *ntuple = (TNtuple*)gHsimple->Get("ntuple");
 
    C->Divide(1,2);
 
@@ -2463,10 +2530,7 @@ void parallelcoord()
    ntuple->Draw("px:py:pz:random:px*py*pz","","candle");
 
    TestReport1(C, "Parallel Coordinates");
-   if (gOptionR) {
-      DoCcode(C);
-      TestReport2();
-   }
+   if (gOptionR) printf("%10d%10d\n",0,0);
 }
 
 
@@ -2477,11 +2541,13 @@ void clonepad()
 
    TCanvas *C = StartTest(700,500);
 
-   TH1 *hpxpy = (TH1*)gLocalFile->Get("hpxpy");
+   TH1 *hpxpy = (TH1*)gHsimple->Get("hpxpy");
    hpxpy->Draw();
    TCanvas *C2 = (TCanvas*)C->DrawClone();
 
    TestReport1(C2, "Draw a pad and clone it");
+   DoCcode(C2);
+   TestReport2();
 }
 
 
@@ -2622,9 +2688,7 @@ void waves()
    line->SetLineWidth(10); line->SetLineColor(0); line->Draw();
 
    TestReport1(C, "TGraph, TArc, TPalette and TColor");
-///DoCcode(C);
-///TestReport2();
-   if (gOptionR) printf("\n");
+   if (gOptionR) printf("%10d%10d\n",0,0);
 }
 
 
