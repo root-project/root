@@ -1,10 +1,10 @@
 Index: test/Makefile
 ===================================================================
---- test/Makefile	(revision 154169)
+--- test/Makefile	(revision 159991)
 +++ test/Makefile	(working copy)
-@@ -67,8 +67,17 @@
+@@ -62,8 +62,17 @@
  	$(MAKE) -C $(PROJ_OBJ_DIR)/../tools/clang/test lit.site.cfg Unit/lit.site.cfg
- extra-lit-site-cfgs:: clang-lit-site-cfg
+ extra-site-cfgs:: clang-site-cfg
  endif
 +
 +ifeq ($(NOCLING)$(shell test -f $(PROJ_OBJ_DIR)/../tools/cling/Makefile && echo OK), OK)
@@ -18,5 +18,5 @@ Index: test/Makefile
  endif
 +endif
  
- IGNORE_TESTS :=
- 
+ # ulimits like these are redundantly enforced by the buildbots, so
+ # just removing them here won't work.

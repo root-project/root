@@ -1,10 +1,10 @@
 Index: tools/CMakeLists.txt
 ===================================================================
---- tools/CMakeLists.txt	(revision 135908)
+--- tools/CMakeLists.txt	(revision 159991)
 +++ tools/CMakeLists.txt	(working copy)
-@@ -65,4 +65,8 @@
-   endif()
- endif( EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/clang/CMakeLists.txt )
+@@ -52,4 +52,8 @@
+ add_llvm_external_project(lld)
+ add_llvm_external_project(polly)
  
 +if( EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/cling/CMakeLists.txt )
 +  add_subdirectory( ${CMAKE_CURRENT_SOURCE_DIR}/cling )
