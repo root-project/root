@@ -366,12 +366,7 @@ public:
    virtual Int_t        KeysymToKeycode(UInt_t keysym);
    virtual Window_t     GetInputFocus();
    virtual void         SetInputFocus(Window_t wid);
-   virtual Window_t     GetPrimarySelectionOwner();
-   virtual void         SetPrimarySelectionOwner(Window_t wid);
-   virtual void         ConvertPrimarySelection(Window_t wid, Atom_t clipboard, Time_t when);
    virtual void         LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym);
-   virtual void         GetPasteBuffer(Window_t wid, Atom_t atom, TString &text, Int_t &nchar,
-                                       Bool_t del);
 
    virtual void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    virtual Region_t     CreateRegion();
@@ -390,6 +385,11 @@ public:
    virtual void         ShapeCombineMask(Window_t wid, Int_t x, Int_t y, Pixmap_t mask);
 
    //---- Drag and Drop -----
+   virtual Window_t     GetPrimarySelectionOwner();
+   virtual void         SetPrimarySelectionOwner(Window_t wid);
+   virtual void         ConvertPrimarySelection(Window_t wid, Atom_t clipboard, Time_t when);
+   virtual void         GetPasteBuffer(Window_t wid, Atom_t atom, TString &text, Int_t &nchar,
+                                       Bool_t del);
    virtual void         DeleteProperty(Window_t, Atom_t&);
    virtual Int_t        GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
                                     Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**);
@@ -446,6 +446,13 @@ private:
    std::vector<std::string> fAtomToName;
    
    Atom_t fSelectionNotifyProperty;
+   Atom_t fClipboardAtom;
+   Atom_t fTargetString;
+   
+   //This is just an ugly hack.
+   typedef std::map<Window_t, std::vector<char> > property_map;
+   typedef property_map::iterator property_map_iterator;
+   property_map fWindowProperty;
 
 public:
    static Atom_t fgDeleteWindowAtom;

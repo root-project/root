@@ -2434,7 +2434,7 @@ void print_mask_info(ULong_t mask)
    const NSDragOperation sourceDragMask = [sender draggingSourceOperationMask];
    
    if ([[pasteBoard types] containsObject : NSFilenamesPboardType] && (sourceDragMask & NSDragOperationCopy)) {
-#if 0
+#if 1
       //Gdk on windows creates three events on file drop: XdndEnter, XdndPosition, XdndDrop.
       //1. Dnd enter.
       Event_t event1 = {};
@@ -2467,7 +2467,7 @@ void print_mask_info(ULong_t mask)
    
       //Here I have to put string ("file://....") into the ROOT's paste board.
       NSArray * const files = [pasteBoard propertyListForType : NSFilenamesPboardType];
-      NSPasteboard * const rootPasteboard = [NSPasteboard pasteboardWithName : @"pasteboard_ROOT"];
+      NSPasteboard * const rootPasteboard = [NSPasteboard generalPasteboard];
       [rootPasteboard clearContents];
 
       NSMutableArray * const cpData = [[NSMutableArray alloc] init];

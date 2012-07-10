@@ -246,11 +246,13 @@ TGCocoa::TGCocoa()
               fDrawMode(kCopy),
               fDirectDraw(false),
               fForegroundProcess(false),
-              fCurrentMessageID(1)
+              fCurrentMessageID(1),
+              fTargetString(31)//Gdk has hardcoded GDK_TARGET_STRING, which is 31.
 {
    fPimpl.reset(new Details::CocoaPrivate);
    fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
    fSelectionNotifyProperty = FindAtom("COCOA_SELECTION_NOTIFY", true);
+   fClipboardAtom = FindAtom("CLIPBOARD", true);
 }
 
 //______________________________________________________________________________
@@ -261,7 +263,8 @@ TGCocoa::TGCocoa(const char *name, const char *title)
               fDrawMode(kCopy),
               fDirectDraw(false),
               fForegroundProcess(false),
-              fCurrentMessageID(1)
+              fCurrentMessageID(1),
+              fTargetString(31)//Gdk has hardcoded GDK_TARGET_STRING, which is 31.
 {
    fPimpl.reset(new Details::CocoaPrivate);
    fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
@@ -3075,11 +3078,16 @@ Handle_t TGCocoa::GetNativeEvent() const
 /////////////////////////////////
 
 //______________________________________________________________________________
-void TGCocoa::GetPasteBuffer(Window_t /*id*/, Atom_t /*atom*/, TString &/*text*/, Int_t &/*nchar*/, Bool_t /*del*/)
+void TGCocoa::GetPasteBuffer(Window_t windowID, Atom_t /*atom*/, TString &text, Int_t &nchar, Bool_t /*del*/)
 {
    // Gets contents of the paste buffer "atom" into the string "text".
    // (nchar = number of characters) If "del" is true deletes the paste
    // buffer afterwards.
+   
+   if (fWindowProperty.find(windowID) != fWindowProperty.end()) {
+      text = &fWindowProperty[windowID][0];
+      nchar = text.Length();
+   }
 }
 
 //______________________________________________________________________________
@@ -3340,24 +3348,6 @@ void TGCocoa::Bell(Int_t /*percent*/)
 }
 
 //______________________________________________________________________________
-void TGCocoa::ChangeProperty(Window_t /*wid*/, Atom_t /*property*/,
-                             Atom_t /*type*/, UChar_t * /*data*/,
-                             Int_t /*len*/)
-{
-   // Alters the property for the specified window and causes the X server
-   // to generate a PropertyNotify event on that window.
-   //
-   // wid       - the window whose property you want to change
-   // property - specifies the property name
-   // type     - the type of the property; the X server does not
-   //            interpret the type but simply passes it back to
-   //            an application that might ask about the window
-   //            properties
-   // data     - the property data
-   // len      - the length of the specified data format
-}
-
-//______________________________________________________________________________
 void TGCocoa::WMDeleteNotify(Window_t /*wid*/)
 {
    // Tells WM to send message when window is closed via WM.
@@ -3439,35 +3429,6 @@ void TGCocoa::SetInputFocus(Window_t wid)
       fPimpl->fX11EventTranslator.SetInputFocus(nil);
    else
       fPimpl->fX11EventTranslator.SetInputFocus(fPimpl->GetWindow(wid).fContentView);
-}
-
-//______________________________________________________________________________
-Window_t TGCocoa::GetPrimarySelectionOwner()
-{
-   // Returns the window id of the current owner of the primary selection.
-   // That is the window in which, for example some text is selected.
-
-   return kNone;
-}
-
-//______________________________________________________________________________
-void TGCocoa::SetPrimarySelectionOwner(Window_t /*wid*/)
-{
-   // Makes the window "wid" the current owner of the primary selection.
-   // That is the window in which, for example some text is selected.
-}
-
-//______________________________________________________________________________
-void TGCocoa::ConvertPrimarySelection(Window_t /*wid*/, Atom_t /*clipboard*/, Time_t /*when*/)
-{
-   // Causes a SelectionRequest event to be sent to the current primary
-   // selection owner. This event specifies the selection property
-   // (primary selection), the format into which to convert that data before
-   // storing it (target = XA_STRING), the property in which the owner will
-   // place the information (sel_property), the window that wants the
-   // information (id), and the time of the conversion request (when).
-   // The selection owner responds by sending a SelectionNotify event, which
-   // confirms the selected atom and type.
 }
 
 //______________________________________________________________________________
@@ -3627,6 +3588,147 @@ void TGCocoa::ShapeCombineMask(Window_t windowID, Int_t /*x*/, Int_t /*y*/, Pixm
    [qw setBackgroundColor : [NSColor clearColor]];
 }
 
+//"Drag and drop".
+
+//______________________________________________________________________________
+void TGCocoa::SetPrimarySelectionOwner(Window_t windowID)
+{
+   //Comment from TVirtualX:
+   // Makes the window "wid" the current owner of the primary selection.
+   // That is the window in which, for example some text is selected.
+   //End of comment.
+   
+   //Cocoa does not have "selection owner". I'm trying to emulate
+   //what we have on Windows (since on X11 this is just one function call):
+   //- get paste buffer
+   //- clear contents
+   //- send fake message (as on X11).
+   
+   if (!windowID)//From TGWin32.
+      return;
+
+#if 0
+   //TODO: check, if this really happens and probably remove assert.
+   assert(!fPimpl->IsRootWindow(windowID) && "SetPrimarySelectionOwner, windowID parameter is a 'root' window");
+      
+   NSPasteboard * const pasteBoard = [NSPasteboard generalPasteboard];
+   [pasteBoard clearContents];
+   
+   //X11 - SelectionRequest and SelectionClear can be sent.
+   //GDK on Windows sends only SelectionRequest, so do I.
+   Event_t selectionRequestEvent = {};
+   selectionRequestEvent.fType = kSelectionRequest;
+   selectionRequestEvent.fWindow = windowID;
+   selectionRequestEvent.fUser[0] = windowID;
+   selectionRequestEvent.fUser[1] = fClipboardAtom;
+   selectionRequestEvent.fUser[2] = fTargetString;
+   selectionRequestEvent.fUser[3] = fSelectionNotifyProperty;
+   
+   SendEvent(windowID, &selectionRequestEvent);
+#endif
+}
+
+//______________________________________________________________________________
+Window_t TGCocoa::GetPrimarySelectionOwner()
+{
+   //Comment from TVirtualX:
+   // Returns the window id of the current owner of the primary selection.
+   // That is the window in which, for example some text is selected.
+   //End of comment.
+
+   //Cocoa does not have a "selection owner". The result
+   //of this function is never used in a GUI, just a check,
+   //if there is an owner. I'll simply check, if I have anything
+   //in a clipboard and return a 'root' window.
+
+#if 0
+   NSPasteboard * const pasteBoard = [NSPasteboard generalPasteboard];
+   if (NSArray * const items = [pasteBoard pasteboardItems]) {
+      if ([items count]) {
+         NSLog(@"there is something in a clipboard");
+         return fPimpl->GetRootWindowID();
+      }
+   }
+#endif
+
+   return kNone;
+}
+
+//______________________________________________________________________________
+void TGCocoa::ConvertPrimarySelection(Window_t windowID, Atom_t clipboard, Time_t /*when*/)
+{
+   //From TGWin32 code it's clear, that this function only
+   //works with GDK_TARGET_STRING and it simply reads string from the clipboard
+   //and attaches this string as a window property.
+   //This implementation is very preliminary
+   //and ugly - it's a mix of TGWin32 and win32gdk's code, adopted
+   //for TGCocoa.
+
+#if 0
+
+   typedef std::vector<char>::size_type size_type;
+
+   //Comment from TVirtualX:
+   // Causes a SelectionRequest event to be sent to the current primary
+   // selection owner. This event specifies the selection property
+   // (primary selection), the format into which to convert that data before
+   // storing it (target = XA_STRING), the property in which the owner will
+   // place the information (sel_property), the window that wants the
+   // information (id), and the time of the conversion request (when).
+   // The selection owner responds by sending a SelectionNotify event, which
+   // confirms the selected atom and type.
+   //End of comment.
+   
+   if (!windowID)//From TGWin32.
+      return;
+
+   assert(!fPimpl->IsRootWindow(windowID) && "ConvertPrimarySelection, windowID parameter is a 'root' window");
+   
+   const Util::AutoreleasePool pool;
+   
+   NSPasteboard * const pasteBoard = [NSPasteboard generalPasteboard];
+   NSArray *classes = [NSArray arrayWithObject : [NSString class]];
+   NSArray *copiedItems = [pasteBoard readObjectsForClasses : classes options : nil];
+   
+   std::vector<char> property;
+
+   //How many NSString items can be in a clipboard?
+   //anyway, if I read an NSString from the buffer, it'll have
+   //(after converted to c-string) a null-terminator. Even
+   //if I concatenate all of them, '\0' at the end of the first
+   //one will be the end. So just stop after the first string.
+   for (NSString * item in copiedItems) {
+      const NSUInteger len = [item lengthOfBytesUsingEncoding : NSASCIIStringEncoding];
+      property.resize(len + 1);
+      [item getCString : &property[0] maxLength : len + 1 encoding : NSASCIIStringEncoding];
+      NSLog(@"ConvertPrimarySelection, in a buffer ... %@", item);
+      break;
+   }
+
+   //Attach a property.
+   if (property.size())
+      fWindowProperty[windowID].swap(property);
+   else
+      fWindowProperty[windowID].clear();
+
+   //Send selection notify.
+   Event_t selectionNotify = {};
+   selectionNotify.fWindow = windowID;
+   selectionNotify.fType = kSelectionNotify;
+   selectionNotify.fWindow = windowID;
+   selectionNotify.fUser[0] = windowID;
+   selectionNotify.fUser[1] = clipboard;
+   selectionNotify.fUser[2] = fTargetString;
+   selectionNotify.fUser[3] = fSelectionNotifyProperty;
+
+   SendEvent(windowID, &selectionNotify);
+
+#else
+   (void)windowID;
+   (void)clipboard;
+#endif
+}
+
 //______________________________________________________________________________
 void TGCocoa::DeleteProperty(Window_t, Atom_t&)
 {
@@ -3661,7 +3763,7 @@ Int_t TGCocoa::GetProperty(Window_t, Atom_t propertyID, Long_t, Long_t, Bool_t, 
    //This is just a hack to do the first test.
    //Memory will be lost in TGDNDManager (as with Win32 and X11 versions).
    //ASCII encoding for a string is just in this test.
-   NSPasteboard *p = [NSPasteboard pasteboardWithName : @"pasteboard_ROOT"];
+   NSPasteboard *p = [NSPasteboard generalPasteboard];
    NSArray *classes = [[NSArray alloc] initWithObjects : [NSString class], nil];
    NSArray *copiedItems = [p readObjectsForClasses : classes options : nil];
    for (NSString * item in copiedItems) {
@@ -3702,18 +3804,92 @@ void TGCocoa::ConvertSelection(Window_t winID, Atom_t &selection, Atom_t &target
 }
 
 //______________________________________________________________________________
-Bool_t TGCocoa::SetSelectionOwner(Window_t, Atom_t&)
+Bool_t TGCocoa::SetSelectionOwner(Window_t windowID, Atom_t &selection)
 {
+   //Comment from TVirtualX:
    // Changes the owner and last-change time for the specified selection.
+   //End of comment.
+   
+   //I do not have owners, so just clear general pasterboard (like it's done in TGWin32).
+#if 0
+   NSPasteboard * const pasterboard = [NSPasteboard generalPasteboard];
+   [pasterboard clearContents];
+   
+   //Send SelectionRequest message.
+   Event_t selectionRequestEvent = {};
+   selectionRequestEvent.fType = kSelectionRequest;
+   selectionRequestEvent.fWindow = windowID;
+   selectionRequestEvent.fUser[0] = windowID;
+   selectionRequestEvent.fUser[1] = fClipboardAtom;
+   selectionRequestEvent.fUser[2] = selection;
+   selectionRequestEvent.fUser[3] = fSelectionNotifyProperty;
+   
+   SendEvent(windowID, &selectionRequestEvent);
+
+   return kTRUE;
+#else
+   (void)windowID;
+   (void)selection;
 
    return kFALSE;
+#endif
 }
 
 //______________________________________________________________________________
-void TGCocoa::ChangeProperties(Window_t, Atom_t, Atom_t, Int_t, UChar_t *, Int_t)
+void TGCocoa::ChangeProperties(Window_t windowID, Atom_t propertyID, Atom_t type, Int_t format, UChar_t *data, Int_t len)
 {
+   //Comment from TVirtualX:
    // Alters the property for the specified window and causes the X server
    // to generate a PropertyNotify event on that window.
+   //End of comment.
+   
+      // Put data into Clipboard.
+   ChangeProperty(windowID, propertyID, type, data, len);
+}
+
+//______________________________________________________________________________
+void TGCocoa::ChangeProperty(Window_t windowID, Atom_t propertyID, Atom_t type, UChar_t *data, Int_t len)
+{
+   //Comment from TVirtualX:
+   // Alters the property for the specified window and causes the X server
+   // to generate a PropertyNotify event on that window.
+   //
+   // wid       - the window whose property you want to change
+   // property - specifies the property name
+   // type     - the type of the property; the X server does not
+   //            interpret the type but simply passes it back to
+   //            an application that might ask about the window
+   //            properties
+   // data     - the property data
+   // len      - the length of the specified data format
+   //End of comment.
+   
+   
+   //I took (mostly) the implementation from TGWin32 and win32gdk.
+   //In TGWin32/win32gdk this functions works only with GDK_TARGET_STRING and
+   //with selection property.
+
+   if (!windowID)
+      return;
+
+#if 0      
+   if (propertyID == fSelectionNotifyProperty && type == fTargetString) {
+      const Util::AutoreleasePool pool;
+
+      NSPasteboard * const pasteboard = [NSPasteboard generalPasteboard];
+      std::vector<char> cStr((char *)data, (char *)(data + len));
+      cStr.push_back('\0');
+      NSString * const cocoaStr = [NSString stringWithCString : &cStr[0] encoding : NSASCIIStringEncoding];
+      [pasteboard writeObjects : [NSArray arrayWithObject : cocoaStr]];
+   } else {
+      Warning("ChangeProperty", "General case is not implemented");
+   }
+#else
+   (void)propertyID;
+   (void)type;
+   (void)data;
+   (void)len;
+#endif
 }
 
 //______________________________________________________________________________
@@ -3776,6 +3952,13 @@ Window_t TGCocoa::FindRWindow(Window_t winID, Window_t dragWinID, Window_t input
 Bool_t TGCocoa::IsDNDAware(Window_t windowID, Atom_t * /*typeList*/)
 {
    //Checks if the Window is DND aware. typeList is ignored.
+
+   if (!windowID)//From TGWin32.
+      return kFALSE;
+
+   if (windowID <= fPimpl->GetRootWindowID())
+      return kFALSE;
+   
    assert(windowID > (Window_t)fPimpl->GetRootWindowID() && "IsDNDAware, windowID parameter is a bad window id");
    assert([fPimpl->GetDrawable(windowID) isKindOfClass : [QuartzView class]] || [fPimpl->GetDrawable(windowID) isKindOfClass : [QuartzWindow class]] &&
           "IsDNDAware, window, specified by windowID is neither a QuartzView, nor a QuartzWindow");
