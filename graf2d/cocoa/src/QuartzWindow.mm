@@ -1208,6 +1208,13 @@ void print_mask_info(ULong_t mask)
    fContentView.fCurrentCursor = cursor;
 }
 
+//______________________________________________________________________________
+- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize forType : (Atom_t) dataType
+{
+   assert(fContentView != nil && "setProperty:data:size:forType:, content view is nil");
+   
+   [fContentView setProperty : propName data : propData size : dataSize forType : dataType];
+}
 
 //NSWindowDelegate's methods.
 
@@ -1290,11 +1297,62 @@ void print_mask_info(ULong_t mask)
 
 @end
 
+//
+//
+//X11 "property".
+@interface QuartzWindowProperty : NSObject {
+   NSData *fPropertyData;
+   Atom_t fType;
+}
+
+@property (nonatomic, readonly) Atom_t fType;
+
+@end
+
+@implementation QuartzWindowProperty
+
+@synthesize fType;
+
+//______________________________________________________________________________
+- (id) initWithData : (unsigned char *) data size : (unsigned) dataSize type : (Atom_t) type
+{
+   if (self = [super init]) {
+      //Memory is zero-initialized, but just to make it explicit:
+      fPropertyData = nil;
+      fType = 0;
+
+      [self resetPropertyData : data size : dataSize type : type];
+   }
+
+   return self;
+}
+
+//______________________________________________________________________________
+- (void) dealloc
+{
+   [fPropertyData release];
+
+   [super dealloc];
+}
+
+//______________________________________________________________________________
+- (void) resetPropertyData : (unsigned char *) data size : (unsigned) dataSize type : (Atom_t) type
+{
+   [fPropertyData release];
+   
+   fPropertyData = [[NSData dataWithBytes : data length : dataSize] retain];
+   fType = type;
+}
+
+@end
+
 
 @implementation QuartzView {
    NSMutableArray *fPassiveKeyGrabs;
    BOOL            fIsOverlapped;
    QuartzImage    *fClipMask;
+   
+   NSMutableDictionary   *fX11Properties;
 }
 
 @synthesize fClipMaskIsValid;
@@ -1354,6 +1412,7 @@ void print_mask_info(ULong_t mask)
          ROOT::MacOSX::X11::SetWindowAttributes(attr, self);
          
       fCurrentCursor = kPointer;
+      fX11Properties = [[NSMutableDictionary alloc] init];
    }
    
    return self;
@@ -1364,6 +1423,7 @@ void print_mask_info(ULong_t mask)
 {
    [fPassiveKeyGrabs release];
    [fClipMask release];
+   [fX11Properties release];
    [super dealloc];
 }
 
@@ -2412,6 +2472,27 @@ void print_mask_info(ULong_t mask)
       [self addCursorRect : self.visibleRect cursor : cursor];
    else
       [super resetCursorRects];
+}
+
+//______________________________________________________________________________
+- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize forType : (Atom_t) dataType
+{
+   assert(propName != 0 && "setProperty:data:size:forType:, propName parameter is null");
+   assert(propData != 0 && "setProperty:data:size:forType:, propData parameter is null");
+   assert(dataSize != 0 && "setProperty:data:size:forType:, dataSize parameter is 0");
+
+   NSString * const key = [NSString stringWithCString : propName encoding : NSASCIIStringEncoding];
+   QuartzWindowProperty * property = (QuartzWindowProperty *)[fX11Properties valueForKey : key];
+   
+   //At the moment (and I think this will never change) TGX11 always calls XChangeProperty with PropModeReplace.
+   if (property)
+      [property resetPropertyData : propData size : dataSize type : dataType];
+   else {
+      //No property found, add a new one.
+      property = [[QuartzWindowProperty alloc] initWithData : propData size : dataSize type : dataType];
+      [fX11Properties setObject : property forKey : key];
+      [property release];
+   }
 }
 
 //DND

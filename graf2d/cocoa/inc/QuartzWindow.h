@@ -111,6 +111,9 @@
 //Cursors.
 @property (nonatomic, assign) ECursor fCurrentCursor;
 
+//"Properties" (X11 properties)
+- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize forType : (Atom_t) dataType;
+
 @end
 
 //////////////////////////////////////////////////////////////
@@ -232,6 +235,9 @@
 
 //Cursors.
 @property (nonatomic, assign) ECursor fCurrentCursor;
+
+//X11 "properties".
+- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize forType : (Atom_t) dataType;
 
 //DND
 @property (nonatomic, assign) BOOL fIsDNDAware;

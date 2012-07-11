@@ -252,6 +252,7 @@ TGCocoa::TGCocoa()
    fPimpl.reset(new Details::CocoaPrivate);
    fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
    fSelectionNotifyProperty = FindAtom("COCOA_SELECTION_NOTIFY", true);
+   NSLog(@"selectionnotifyprop %lu", fSelectionNotifyProperty);
    fClipboardAtom = FindAtom("CLIPBOARD", true);
 }
 
@@ -269,6 +270,8 @@ TGCocoa::TGCocoa(const char *name, const char *title)
    fPimpl.reset(new Details::CocoaPrivate);
    fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
    fSelectionNotifyProperty = FindAtom("COCOA_SELECTION_NOTIFY", true);
+   NSLog(@"selectionnotifyprop %lu", fSelectionNotifyProperty);
+   NSLog(@"atom name %s", fAtomToName[fSelectionNotifyProperty - 1].c_str());  
 }
 
 //______________________________________________________________________________
@@ -1176,9 +1179,30 @@ void TGCocoa::SetIconPixmap(Window_t /*wid*/, Pixmap_t /*pix*/)
 void TGCocoa::SetClassHints(Window_t /*wid*/, char * /*className*/,
                               char * /*resourceName*/)
 {
-   // Sets the windows class and resource name.
+   //Noop.
 }
 
+//______________________________________________________________________________
+void TGCocoa::ShapeCombineMask(Window_t windowID, Int_t /*x*/, Int_t /*y*/, Pixmap_t pixmapID)
+{
+   //Comment from TVirtualX:
+   // The Nonrectangular Window Shape Extension adds nonrectangular
+   // windows to the System.
+   // This allows for making shaped (partially transparent) windows
+   
+   assert(!fPimpl->IsRootWindow(windowID) && "ShapeCombineMask, windowID parameter is a 'root' window");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "ShapeCombineMask, windowID parameter is a bad window id");
+   assert([fPimpl->GetDrawable(pixmapID) isKindOfClass : [QuartzImage class]] && "ShapeCombineMask, pixmapID parameter must point to QuartzImage object");
+   
+   QuartzWindow * const qw = fPimpl->GetWindow(windowID).fQuartzWindow;
+
+   QuartzImage * const image = (QuartzImage *)fPimpl->GetDrawable(pixmapID);
+   assert(image.fIsStippleMask == YES && "ShapeCombineMask, QuartzImage must be a stipple mask");
+
+   qw.fShapeCombineMask = image;   
+   [qw setOpaque : NO];
+   [qw setBackgroundColor : [NSColor clearColor]];
+}
 
 //"Window manager hints" set of functions.
 
@@ -3566,28 +3590,6 @@ void TGCocoa::GetRegionBox(Region_t /*reg*/, Rectangle_t * /*rect*/)
    // Returns smallest enclosing rectangle.
 }
 
-//______________________________________________________________________________
-void TGCocoa::ShapeCombineMask(Window_t windowID, Int_t /*x*/, Int_t /*y*/, Pixmap_t pixmapID)
-{
-   //Comment from TVirtualX:
-   // The Nonrectangular Window Shape Extension adds nonrectangular
-   // windows to the System.
-   // This allows for making shaped (partially transparent) windows
-   
-   assert(!fPimpl->IsRootWindow(windowID) && "ShapeCombineMask, windowID parameter is a 'root' window");
-   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "ShapeCombineMask, windowID parameter is a bad window id");
-   assert([fPimpl->GetDrawable(pixmapID) isKindOfClass : [QuartzImage class]] && "ShapeCombineMask, pixmapID parameter must point to QuartzImage object");
-   
-   QuartzWindow * const qw = fPimpl->GetWindow(windowID).fQuartzWindow;
-
-   QuartzImage * const image = (QuartzImage *)fPimpl->GetDrawable(pixmapID);
-   assert(image.fIsStippleMask == YES && "ShapeCombineMask, QuartzImage must be a stipple mask");
-
-   qw.fShapeCombineMask = image;   
-   [qw setOpaque : NO];
-   [qw setBackgroundColor : [NSColor clearColor]];
-}
-
 //"Drag and drop".
 
 //______________________________________________________________________________
@@ -3607,7 +3609,7 @@ void TGCocoa::SetPrimarySelectionOwner(Window_t windowID)
    if (!windowID)//From TGWin32.
       return;
 
-#if 0
+#if 1
    //TODO: check, if this really happens and probably remove assert.
    assert(!fPimpl->IsRootWindow(windowID) && "SetPrimarySelectionOwner, windowID parameter is a 'root' window");
       
@@ -3641,7 +3643,7 @@ Window_t TGCocoa::GetPrimarySelectionOwner()
    //if there is an owner. I'll simply check, if I have anything
    //in a clipboard and return a 'root' window.
 
-#if 0
+#if 1
    NSPasteboard * const pasteBoard = [NSPasteboard generalPasteboard];
    if (NSArray * const items = [pasteBoard pasteboardItems]) {
       if ([items count]) {
@@ -3664,7 +3666,7 @@ void TGCocoa::ConvertPrimarySelection(Window_t windowID, Atom_t clipboard, Time_
    //and ugly - it's a mix of TGWin32 and win32gdk's code, adopted
    //for TGCocoa.
 
-#if 0
+#if 1
 
    typedef std::vector<char>::size_type size_type;
 
@@ -3758,8 +3760,10 @@ Int_t TGCocoa::GetProperty(Window_t, Atom_t propertyID, Long_t, Long_t, Bool_t, 
       return 0;
    }
    
-   //Retrieve data from the pasteboard.
+   NSLog(@"property id %lu, name is %s", propertyID, fAtomToName[propertyID - 1].c_str());
    
+   //Retrieve data from the pasteboard.
+   NSLog(@"extract something from the pasteboard?");
    //This is just a hack to do the first test.
    //Memory will be lost in TGDNDManager (as with Win32 and X11 versions).
    //ASCII encoding for a string is just in this test.
@@ -3767,6 +3771,7 @@ Int_t TGCocoa::GetProperty(Window_t, Atom_t propertyID, Long_t, Long_t, Bool_t, 
    NSArray *classes = [[NSArray alloc] initWithObjects : [NSString class], nil];
    NSArray *copiedItems = [p readObjectsForClasses : classes options : nil];
    for (NSString * item in copiedItems) {
+      NSLog(@"something? %@", item);
       const NSUInteger len = [item lengthOfBytesUsingEncoding : NSASCIIStringEncoding];
       *property = (unsigned char *)malloc(len + 1);
       [item getCString : (char *)*property maxLength : len + 1 encoding:NSASCIIStringEncoding];
@@ -3799,6 +3804,8 @@ void TGCocoa::ConvertSelection(Window_t winID, Atom_t &selection, Atom_t &target
    newEvent.fUser[1] = selection;
    newEvent.fUser[2] = target;
    newEvent.fUser[3] = fSelectionNotifyProperty;
+
+   NSLog(@"target for selection notify message %lu", fSelectionNotifyProperty);
    
    SendEvent(winID, &newEvent);
 }
@@ -3811,7 +3818,7 @@ Bool_t TGCocoa::SetSelectionOwner(Window_t windowID, Atom_t &selection)
    //End of comment.
    
    //I do not have owners, so just clear general pasterboard (like it's done in TGWin32).
-#if 0
+#if 1
    NSPasteboard * const pasterboard = [NSPasteboard generalPasteboard];
    [pasterboard clearContents];
    
@@ -3843,7 +3850,12 @@ void TGCocoa::ChangeProperties(Window_t windowID, Atom_t propertyID, Atom_t type
    // to generate a PropertyNotify event on that window.
    //End of comment.
    
-      // Put data into Clipboard.
+   // Put data into Clipboard.
+   if (!data || !len)//From TGWin32.
+      return;
+      
+      NSLog(@"ChangeProperties");
+      
    ChangeProperty(windowID, propertyID, type, data, len);
 }
 
@@ -3871,8 +3883,10 @@ void TGCocoa::ChangeProperty(Window_t windowID, Atom_t propertyID, Atom_t type, 
 
    if (!windowID)
       return;
+      
+   NSLog(@"ChangeProperty");
 
-#if 0      
+#if 1
    if (propertyID == fSelectionNotifyProperty && type == fTargetString) {
       const Util::AutoreleasePool pool;
 

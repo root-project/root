@@ -139,6 +139,9 @@ public:
    virtual void      SetIconName(Window_t wid, char *name);
    virtual void      SetIconPixmap(Window_t wid, Pixmap_t pix);
    virtual void      SetClassHints(Window_t wid, char *className, char *resourceName);
+   //Non-rectangular window:
+   virtual void      ShapeCombineMask(Window_t wid, Int_t x, Int_t y, Pixmap_t mask);
+
    //End window-management part.
    ///////////////////////////////////////
    
@@ -315,12 +318,31 @@ public:
    //Event management.
    /////////////////////////////
 
-   //The remaining bunch of functions is not sorted yet (and not imlemented at the moment).
+   /////////////////////////////   
+   //"Drag and drop" and "Copy and paste" (quotes are intentional :)).
+   virtual Window_t  GetPrimarySelectionOwner();
+   virtual void      SetPrimarySelectionOwner(Window_t wid);
+   virtual void      ConvertPrimarySelection(Window_t wid, Atom_t clipboard, Time_t when);
+   virtual void      GetPasteBuffer(Window_t wid, Atom_t atom, TString &text, Int_t &nchar,
+                                    Bool_t del);
    virtual void      ChangeProperty(Window_t wid, Atom_t property, Atom_t type,
                                     UChar_t *data, Int_t len);
+   virtual void      DeleteProperty(Window_t, Atom_t&);
+   virtual Int_t     GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
+                                    Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**);
+   virtual void      ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t);
+   virtual void      ConvertSelection(Window_t, Atom_t&, Atom_t&, Atom_t&, Time_t&);
+   virtual Bool_t    SetSelectionOwner(Window_t, Atom_t&);
+   virtual void      ChangeProperties(Window_t wid, Atom_t property, Atom_t type,
+                                      Int_t format, UChar_t *data, Int_t len);
+   virtual void      SetDNDAware(Window_t, Atom_t *);
+   virtual void      SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist);
+   virtual Window_t  FindRWindow(Window_t win, Window_t dragwin, Window_t input, int x, int y, int maxd);
+   virtual Bool_t    IsDNDAware(Window_t win, Atom_t *typelist);
+   //"Drag and drop" and "Copy and paste".
+   /////////////////////////////
 
-
-
+   //The remaining bunch of functions is not sorted yet (and not imlemented at the moment).
    virtual UInt_t    ExecCommand(TGWin32Command *code);
    virtual void      GetCharacterUp(Float_t &chupx, Float_t &chupy);
 
@@ -382,26 +404,6 @@ public:
    virtual Bool_t       EqualRegion(Region_t rega, Region_t regb);
    virtual void         GetRegionBox(Region_t reg, Rectangle_t *rect);
    //
-   virtual void         ShapeCombineMask(Window_t wid, Int_t x, Int_t y, Pixmap_t mask);
-
-   //---- Drag and Drop -----
-   virtual Window_t     GetPrimarySelectionOwner();
-   virtual void         SetPrimarySelectionOwner(Window_t wid);
-   virtual void         ConvertPrimarySelection(Window_t wid, Atom_t clipboard, Time_t when);
-   virtual void         GetPasteBuffer(Window_t wid, Atom_t atom, TString &text, Int_t &nchar,
-                                       Bool_t del);
-   virtual void         DeleteProperty(Window_t, Atom_t&);
-   virtual Int_t        GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
-                                    Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**);
-   virtual void         ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t);
-   virtual void         ConvertSelection(Window_t, Atom_t&, Atom_t&, Atom_t&, Time_t&);
-   virtual Bool_t       SetSelectionOwner(Window_t, Atom_t&);
-   virtual void         ChangeProperties(Window_t wid, Atom_t property, Atom_t type,
-                                         Int_t format, UChar_t *data, Int_t len);
-   virtual void         SetDNDAware(Window_t, Atom_t *);
-   virtual void         SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist);
-   virtual Window_t     FindRWindow(Window_t win, Window_t dragwin, Window_t input, int x, int y, int maxd);
-   virtual Bool_t       IsDNDAware(Window_t win, Atom_t *typelist);
 
    virtual Bool_t       IsCmdThread() const { return kTRUE; }
    
