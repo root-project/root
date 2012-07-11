@@ -108,6 +108,7 @@ $(CINTDIRDLLS)/pthread.dll: cint/cint/lib/pthread/pthd.h $(ROOTCINTTMPDEP) $(CIN
 	@$(MAKECINTDLL) $(PLATFORM) C pthread pthread pthd.h \
            "$(CINTTMP)" "$(ROOTCINTTMP)" \
 	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
-	   "$(CINTCFLAGS)" "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)" \
-	   "$(CXXOUT)"
+	   "$(CINTCFLAGS)" "$(LDFLAGS)" "$(THREADLIBEXTRA) $(OSTHREADLIBDIR) $(OSTHREADLIB) $(CINTDLLLIBLINK)" \
+	   "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)" \
+	   "$(CXXOUT)" 
 endif
