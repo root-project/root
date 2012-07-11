@@ -141,7 +141,11 @@
 @property (nonatomic, assign) BOOL fIsDNDAware;
 
 //"Properties" (X11 properties)
-- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize forType : (Atom_t) dataType;
+- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize 
+         forType : (Atom_t) dataType format : (unsigned) format;
+- (BOOL) hasProperty : (const char *) propName;
+- (unsigned char *) getProperty : (const char *) propName returnType : (Atom_t *) type 
+   returnFormat : (unsigned *) format nElements : (unsigned *) nElements;
 
 @end
 

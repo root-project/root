@@ -1209,11 +1209,28 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize forType : (Atom_t) dataType
+- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize forType : (Atom_t) dataType format : (unsigned) format
 {
    assert(fContentView != nil && "setProperty:data:size:forType:, content view is nil");
    
-   [fContentView setProperty : propName data : propData size : dataSize forType : dataType];
+   [fContentView setProperty : propName data : propData size : dataSize forType : dataType format : format];
+}
+
+//______________________________________________________________________________
+- (BOOL) hasProperty : (const char *) propName
+{
+   assert(fContentView != nil && "hasProperty:, content view is nil");
+   
+   return [fContentView hasProperty : propName];
+}
+
+//______________________________________________________________________________
+- (unsigned char *) getProperty : (const char *) propName returnType : (Atom_t *) type 
+   returnFormat : (unsigned *) format nElements : (unsigned *) nElements
+{
+   assert(fContentView != nil && "getProperty:returnType:returnFormat:nElements, content view is nil");
+   
+   return [fContentView getProperty : propName returnType : type returnFormat : format nElements : nElements];
 }
 
 //NSWindowDelegate's methods.
@@ -1303,6 +1320,7 @@ void print_mask_info(ULong_t mask)
 @interface QuartzWindowProperty : NSObject {
    NSData *fPropertyData;
    Atom_t fType;
+   unsigned fFormat;
 }
 
 @property (nonatomic, readonly) Atom_t fType;
@@ -1314,14 +1332,15 @@ void print_mask_info(ULong_t mask)
 @synthesize fType;
 
 //______________________________________________________________________________
-- (id) initWithData : (unsigned char *) data size : (unsigned) dataSize type : (Atom_t) type
+- (id) initWithData : (unsigned char *) data size : (unsigned) dataSize type : (Atom_t) type format : (unsigned) format
 {
    if (self = [super init]) {
       //Memory is zero-initialized, but just to make it explicit:
       fPropertyData = nil;
       fType = 0;
+      fFormat = 0;
 
-      [self resetPropertyData : data size : dataSize type : type];
+      [self resetPropertyData : data size : dataSize type : type format : format];
    }
 
    return self;
@@ -1336,11 +1355,18 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) resetPropertyData : (unsigned char *) data size : (unsigned) dataSize type : (Atom_t) type
+- (void) resetPropertyData : (unsigned char *) data size : (unsigned) dataSize type : (Atom_t) type format : (unsigned) format
 {
    [fPropertyData release];
    
+   fFormat = format;
+   if (format == 16)
+      dataSize *= 2;
+   else if (format == 32)
+      dataSize *= 4;
+
    fPropertyData = [[NSData dataWithBytes : data length : dataSize] retain];
+   
    fType = type;
 }
 
@@ -2475,7 +2501,7 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize forType : (Atom_t) dataType
+- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize forType : (Atom_t) dataType format : (unsigned) format
 {
    assert(propName != 0 && "setProperty:data:size:forType:, propName parameter is null");
    assert(propData != 0 && "setProperty:data:size:forType:, propData parameter is null");
@@ -2486,13 +2512,36 @@ void print_mask_info(ULong_t mask)
    
    //At the moment (and I think this will never change) TGX11 always calls XChangeProperty with PropModeReplace.
    if (property)
-      [property resetPropertyData : propData size : dataSize type : dataType];
+      [property resetPropertyData : propData size : dataSize type : dataType format : format];
    else {
       //No property found, add a new one.
-      property = [[QuartzWindowProperty alloc] initWithData : propData size : dataSize type : dataType];
+      property = [[QuartzWindowProperty alloc] initWithData : propData size : dataSize type : dataType format : format];
       [fX11Properties setObject : property forKey : key];
       [property release];
    }
+}
+
+//______________________________________________________________________________
+- (BOOL) hasProperty : (const char *) propName
+{
+   assert(propName != 0 && "hasProperty, propName parameter is null");
+   
+   NSString * const key = [NSString stringWithCString : propName encoding : NSASCIIStringEncoding];
+   QuartzWindowProperty * property = (QuartzWindowProperty *)[fX11Properties valueForKey : key];
+
+   return property != nil;
+}
+
+//______________________________________________________________________________
+- (unsigned char *) getProperty : (const char *) propName returnType : (Atom_t *) type 
+   returnFormat : (unsigned *) format nElements : (unsigned *) nElements
+{
+   (void) propName;
+   (void) type;
+   (void) format;
+   (void) nElements;
+
+   return 0;
 }
 
 //DND
@@ -2515,7 +2564,7 @@ void print_mask_info(ULong_t mask)
    const NSDragOperation sourceDragMask = [sender draggingSourceOperationMask];
    
    if ([[pasteBoard types] containsObject : NSFilenamesPboardType] && (sourceDragMask & NSDragOperationCopy)) {
-#if 1
+#if 0
       //Gdk on windows creates three events on file drop: XdndEnter, XdndPosition, XdndDrop.
       //1. Dnd enter.
       Event_t event1 = {};

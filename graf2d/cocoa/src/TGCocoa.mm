@@ -250,10 +250,19 @@ TGCocoa::TGCocoa()
               fTargetString(31)//Gdk has hardcoded GDK_TARGET_STRING, which is 31.
 {
    fPimpl.reset(new Details::CocoaPrivate);
+
+   //TODO: check docs about predefined atoms?
+   fAtomToName.resize(33);
+   
+   fAtomToName[3] = "XA_ATOM";
+   fNameToAtom["XA_ATOM"] = 4;
+   
+   fAtomToName[32] = "XA_WINDOW";
+   fNameToAtom["XA_WINDOW"] = 33;
+   //
+
    fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
    fSelectionNotifyProperty = FindAtom("COCOA_SELECTION_NOTIFY", true);
-   NSLog(@"selectionnotifyprop %lu", fSelectionNotifyProperty);
-   fClipboardAtom = FindAtom("CLIPBOARD", true);
 }
 
 //______________________________________________________________________________
@@ -268,10 +277,19 @@ TGCocoa::TGCocoa(const char *name, const char *title)
               fTargetString(31)//Gdk has hardcoded GDK_TARGET_STRING, which is 31.
 {
    fPimpl.reset(new Details::CocoaPrivate);
+   
+   //TODO: check docs about predefined atoms?
+   fAtomToName.resize(33);
+   
+   fAtomToName[3] = "XA_ATOM";
+   fNameToAtom["XA_ATOM"] = 4;
+   
+   fAtomToName[32] = "XA_WINDOW";
+   fNameToAtom["XA_WINDOW"] = 33;
+   //
+   
    fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
    fSelectionNotifyProperty = FindAtom("COCOA_SELECTION_NOTIFY", true);
-   NSLog(@"selectionnotifyprop %lu", fSelectionNotifyProperty);
-   NSLog(@"atom name %s", fAtomToName[fSelectionNotifyProperty - 1].c_str());  
 }
 
 //______________________________________________________________________________
@@ -3741,45 +3759,45 @@ void TGCocoa::DeleteProperty(Window_t, Atom_t&)
 }
 
 //______________________________________________________________________________
-Int_t TGCocoa::GetProperty(Window_t, Atom_t propertyID, Long_t, Long_t, Bool_t, Atom_t,
-                           Atom_t*, Int_t*, ULong_t *nitems, ULong_t *bytes, unsigned char **property)
+Int_t TGCocoa::GetProperty(Window_t windowID, Atom_t propertyID, Long_t, Long_t, Bool_t, Atom_t,
+                           Atom_t *actualType, Int_t *actualFormat, ULong_t *nItems, ULong_t *bytesAfterReturn, unsigned char **propertyReturn)
 {
+   //Comment from TVirtualX:
    // Returns the actual type of the property; the actual format of the property;
    // the number of 8-bit, 16-bit, or 32-bit items transferred; the number of
    // bytes remaining to be read in the property; and a pointer to the data
    // actually returned.
-  // NSLog(@"GetProperty %lu, %lu, ", windowID, propertyID);
-   const Atom_t dndProxy = InternAtom("XdndProxy", kFALSE);
-   const Atom_t dndTypeList = InternAtom("XdndTypeList", kFALSE);
+   //End of comment.
    
-   if (propertyID == dndProxy) {
-      Warning("GetProperty", "property == dndProxy, not implemented");
-      return 0;
-   } else if (propertyID == dndTypeList) {
-      Warning("GetProperty", "property == dndTypeList, not implemented");
-      return 0;
-   }
+   //TODO: actually, property can be set for a 'root' window. I have to save this data somehow.
+   assert(!fPimpl->IsRootWindow(windowID) && "GetProperty, windowID parameter is a 'root' window");
+   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "GetProperty, windowID is not a valid window id");
+   assert(propertyID > 0 && propertyID <= fAtomToName.size() && "GetProperty, propertyID parameter is not a valid atom");
+   assert(actualType != 0 && "GetProperty, actualType parameter is null");
+   assert(actualFormat != 0 && "GetProperty, actualFormat parameter is null");
+   assert(bytesAfterReturn != 0 && "GetProperty, bytesAfterReturn parameter is null");
+   assert(propertyReturn != 0 && "GetProperty, propertyReturn parameter is null");
    
-   NSLog(@"property id %lu, name is %s", propertyID, fAtomToName[propertyID - 1].c_str());
+   const Util::AutoreleasePool pool;
    
-   //Retrieve data from the pasteboard.
-   NSLog(@"extract something from the pasteboard?");
-   //This is just a hack to do the first test.
-   //Memory will be lost in TGDNDManager (as with Win32 and X11 versions).
-   //ASCII encoding for a string is just in this test.
-   NSPasteboard *p = [NSPasteboard generalPasteboard];
-   NSArray *classes = [[NSArray alloc] initWithObjects : [NSString class], nil];
-   NSArray *copiedItems = [p readObjectsForClasses : classes options : nil];
-   for (NSString * item in copiedItems) {
-      NSLog(@"something? %@", item);
-      const NSUInteger len = [item lengthOfBytesUsingEncoding : NSASCIIStringEncoding];
-      *property = (unsigned char *)malloc(len + 1);
-      [item getCString : (char *)*property maxLength : len + 1 encoding:NSASCIIStringEncoding];
-      *bytes = *nitems = len + 1;
-      return len + 1;
+   *bytesAfterReturn = 0;//In TGWin32 the value set to .. nItems?
+   *propertyReturn = 0;
+   *nItems = 0;
+   
+   const std::string &atomName = fAtomToName[propertyID - 1];
+   NSObject<X11Window> *window = fPimpl->GetWindow(windowID);
+   
+   if (![window hasProperty : atomName.c_str()]) {
+      Error("GetProperty", "Unknown property %s requested", atomName.c_str());
+      return 0;//actually, 0 is ... Success (X11)?
    }
 
-   return 0;
+   unsigned tmpFormat = 0, tmpElements = 0;
+   *propertyReturn = [window getProperty : atomName.c_str() returnType : actualType returnFormat : &tmpFormat nElements : &tmpElements];
+   *actualFormat = (Int_t)tmpFormat;
+   *nItems = tmpElements;
+
+   return *nItems;//Success (X11) is 0?
 }
 
 //______________________________________________________________________________
@@ -3818,7 +3836,7 @@ Bool_t TGCocoa::SetSelectionOwner(Window_t windowID, Atom_t &selection)
    //End of comment.
    
    //I do not have owners, so just clear general pasterboard (like it's done in TGWin32).
-#if 1
+#if 0
    NSPasteboard * const pasterboard = [NSPasteboard generalPasteboard];
    [pasterboard clearContents];
    
@@ -3850,13 +3868,26 @@ void TGCocoa::ChangeProperties(Window_t windowID, Atom_t propertyID, Atom_t type
    // to generate a PropertyNotify event on that window.
    //End of comment.
    
-   // Put data into Clipboard.
+   //TGX11 always calls XChangeProperty with PropModeReplace.
+   //I simply reset the property (or create a new one).
+   
+   assert(!fPimpl->IsRootWindow(windowID) && "ChangeProperties, windowID parameter is a 'root' window");
+   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "ChangeProperties, windowID parameter is not a valid window id");
+   assert(propertyID && propertyID <= fAtomToName.size() && "ChangeProperties, propertyID parameter is not a valid atom");
+
+   if (!windowID)//From TGWin32.
+      return;
+
    if (!data || !len)//From TGWin32.
       return;
-      
-      NSLog(@"ChangeProperties");
-      
-   ChangeProperty(windowID, propertyID, type, data, len);
+
+   const Util::AutoreleasePool pool;
+
+   const std::string &atomName = fAtomToName[propertyID - 1];
+   NSObject<X11Window> * const window = fPimpl->GetWindow(windowID);
+   [window setProperty : atomName.c_str() data : data size : len forType : type format : format];
+
+   //No property notify, ROOT does not know about this.
 }
 
 //______________________________________________________________________________
@@ -3876,62 +3907,85 @@ void TGCocoa::ChangeProperty(Window_t windowID, Atom_t propertyID, Atom_t type, 
    // len      - the length of the specified data format
    //End of comment.
    
-   
-   //I took (mostly) the implementation from TGWin32 and win32gdk.
-   //In TGWin32/win32gdk this functions works only with GDK_TARGET_STRING and
-   //with selection property.
+   //TGX11 always calls XChangeProperty with PropModeReplace.
+   //I simply reset the property (or create a new one).
 
-   if (!windowID)
+   assert(!fPimpl->IsRootWindow(windowID) && "ChangeProperty, windowID parameter is a 'root' window");
+   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "ChangeProperty, windowID parameter is not a valid window id");
+   assert(propertyID && propertyID <= fAtomToName.size() && "ChangeProperty, propertyID parameter is not a valid atom");
+
+   if (!windowID) //From TGWin32.
       return;
-      
-   NSLog(@"ChangeProperty");
+   
+   if (!data || !len) //From TGWin32.
+      return;
 
-#if 1
-   if (propertyID == fSelectionNotifyProperty && type == fTargetString) {
-      const Util::AutoreleasePool pool;
+   const Util::AutoreleasePool pool;
+   
+   const std::string &atomString = fAtomToName[propertyID - 1];
+   NSObject<X11Window> * const window = fPimpl->GetWindow(windowID);
+   [window setProperty : atomString.c_str() data : data size : len forType : type format : 8];
 
-      NSPasteboard * const pasteboard = [NSPasteboard generalPasteboard];
-      std::vector<char> cStr((char *)data, (char *)(data + len));
-      cStr.push_back('\0');
-      NSString * const cocoaStr = [NSString stringWithCString : &cStr[0] encoding : NSASCIIStringEncoding];
-      [pasteboard writeObjects : [NSArray arrayWithObject : cocoaStr]];
-   } else {
-      Warning("ChangeProperty", "General case is not implemented");
-   }
-#else
-   (void)propertyID;
-   (void)type;
-   (void)data;
-   (void)len;
-#endif
+   //ROOT ignores PropertyNotify events.
 }
 
 //______________________________________________________________________________
 void TGCocoa::SetDNDAware(Window_t windowID, Atom_t *typeList)
 {
+   //Comment from TVirtaulX:
    // Add XdndAware property and the list of drag and drop types to the
    // Window win.
+   //End of comment.
+   
+   
+   //TGX11 first replaces XdndAware property for a windowID, and then appends atoms from a typelist.
+   //I simply put all data for a property into a vector and set the property (either creating
+   //a new property or replacing the existing).
+   
    assert(windowID > (Window_t)fPimpl->GetRootWindowID() && "SetDNDAware, windowID parameter is a bad window id");
-   assert([fPimpl->GetDrawable(windowID) isKindOfClass : [QuartzView class]] || [fPimpl->GetDrawable(windowID) isKindOfClass : [QuartzWindow class]] &&
-          "SetDNDAware, window, specified by windowID is neither a QuartzView, nor a QuartzWindow");
+   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "SetDNDAware, windowID parameter is not a window");
    
    const Util::AutoreleasePool pool;
    
    QuartzView * const view = (QuartzView *)fPimpl->GetWindow(windowID).fContentView;
-   NSArray * const supportedTypes = [NSArray arrayWithObjects : NSFilenamesPboardType, nil];
+   NSArray * const supportedTypes = [NSArray arrayWithObjects : NSFilenamesPboardType, nil];//In a pool.
+
+   //Do this for Cocoa - to make it possible to drag something to a 
+   //ROOT's window (also this will change cursor shape while dragging).
    [view registerForDraggedTypes : supportedTypes];
+   //Declared property - for convenience, not to check atoms/shmatoms or X11 properties.
    view.fIsDNDAware = YES;
 
+   FindAtom("XdndAware", true);//Add it, if not yet.
+   const Atom_t xaAtomAtom = FindAtom("XA_ATOM", false);
+
+   assert(xaAtomAtom == 4 && "SetDNDAware, XA_ATOM is not defined");//This is a predefined atom.
+   
+   //ROOT's GUI uses Atom_t, which is unsigned long, and it's 64-bit.
+   //While calling XChangeProperty, it passes the address of this typelist
+   //and format is ... 32. I have to pack data into unsigned and force the size:
+   assert(sizeof(unsigned) == 4 && "SetDNDAware, sizeof(unsigned) must be 4");
+   //TODO: find fixed-width integer type (I do not have cstdint header at the moment?)
+
+   std::vector<unsigned> propertyData;
+   propertyData.push_back(4);//This '4' is from TGX11 (is it XA_ATOM???)
+
    if (typeList) {
-      //fPimpl->AddProperty(windowID, InternAtom("XdndAware"), typeList);
+      for (unsigned i = 0; typeList[i]; ++i)
+         propertyData.push_back(unsigned(typeList[i]));//hehe.
    }
+   
+   [view setProperty : "XdndAware" data : (unsigned char *)&propertyData[0] size : propertyData.size() forType : xaAtomAtom format : 32];
 }
 
 //______________________________________________________________________________
 void TGCocoa::SetTypeList(Window_t, Atom_t, Atom_t *)
 {
    // Add the list of drag and drop types to the Window win.
-
+   
+   //It's never called from GUI.
+   
+   Warning("SetTypeList", "Not implemented");
 }
 
 //______________________________________________________________________________
@@ -3970,12 +4024,11 @@ Bool_t TGCocoa::IsDNDAware(Window_t windowID, Atom_t * /*typeList*/)
    if (!windowID)//From TGWin32.
       return kFALSE;
 
-   if (windowID <= fPimpl->GetRootWindowID())
+   if (windowID <= (Window_t)fPimpl->GetRootWindowID())
       return kFALSE;
    
    assert(windowID > (Window_t)fPimpl->GetRootWindowID() && "IsDNDAware, windowID parameter is a bad window id");
-   assert([fPimpl->GetDrawable(windowID) isKindOfClass : [QuartzView class]] || [fPimpl->GetDrawable(windowID) isKindOfClass : [QuartzWindow class]] &&
-          "IsDNDAware, window, specified by windowID is neither a QuartzView, nor a QuartzWindow");
+   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "IsDNDAware, windowID parameter is not a window");
 
    QuartzView * const view = (QuartzView *)fPimpl->GetWindow(windowID).fContentView;
    return view.fIsDNDAware;
