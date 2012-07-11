@@ -20,7 +20,8 @@ if [ $PLATFORM != "clean" ]; then
    OPT=$1           ; shift
    CINTCXXFLAGS=$1  ; shift
    CINTCFLAGS=$1    ; shift
-   LDFLAGS=$1       ; shift 
+   LDFLAGS=$1       ; shift
+   LIBS=$1          ; shift
    SOFLAGS=$1       ; shift 
    SOEXT=$1         ; shift
    COMPILER=$1      ; shift
@@ -121,7 +122,7 @@ execute "$CINT -K -w1 -z$DLLNAME -n$DLLSOURCE -D__MAKECINT__ \
 execute "$COMP $OPT $COMPFLAGS -I. $CXXOUT$DLLOBJECT -I$DLLDIR \
          -c $DLLSOURCE"
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" $DLLNAME.$SOEXT \
-   $CINTDIRI/$DLLNAME.$SOEXT "$DLLOBJECT"
+   $CINTDIRI/$DLLNAME.$SOEXT "$DLLOBJECT" "$LIBS"
 rename $CINTDIRI/$DLLNAME
 
 rm -f $DLLSOURCE $DLLOBJECT $DLLHEADER

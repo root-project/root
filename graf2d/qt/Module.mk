@@ -142,5 +142,5 @@ lib/qtcint.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/cint/lib/qt/qtcint.h \
            "$(CINTTMP)" "$(ROOTCINTTMP)" \
 	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" \
            "$(CINTCXXFLAGS) $(GQTCXXFLAGS)" "$(CINTCFLAGS)" \
-           "$(LDFLAGS)  $(QTLIBDIR) $(QTLIB) $(CINTDLLLIBLINK)" "$(SOFLAGS)" \
+           "$(LDFLAGS)" "$(QTLIBDIR) $(QTLIB) $(CINTDLLLIBLINK)" "$(SOFLAGS)" \
            "$(SOEXT)" "$(COMPILER)" "$(CXXOUT)"
