@@ -14,8 +14,6 @@
 #include "TGDNDManager.h"
 #include "TRootCanvas.h"
 
-#include <iostream>
-
 #define ROOTDND_PROTOCOL_VERSION      4
 #define XA_ATOM ((Atom_t) 4)
 #define XA_WINDOW ((Atom_t) 33)
@@ -440,11 +438,9 @@ Bool_t TGDNDManager::HandleClientMessage(Event_t *event)
                        skip, (Atom_t) event->fUser[4]);
 
    } else if (event->fHandle == fgDNDDrop) {
-      std::cout<<"Got dnd drop\n";
       HandleDNDDrop((Window_t) event->fUser[0], (Time_t) event->fUser[2]);
 
    } else if (event->fHandle == fgDNDFinished) {
-      std::cout<<"DND finished!\n";
       HandleDNDFinished((Window_t) event->fUser[0]);
 
    } else {
@@ -778,7 +774,6 @@ Bool_t TGDNDManager::HandleDNDDrop(Window_t source, Time_t timestamp)
    // send a XdndFinished message to the source.
 
    if (fMain && fDropType != kNone) {
-      std::cout<<"ChangeProperties? with 0, 0"<<std::endl;
       gVirtualX->ChangeProperties(fMain->GetId(), fgXCDNDData, fDropType,
                                   8, (unsigned char *) 0, 0);
 
@@ -854,14 +849,11 @@ Bool_t TGDNDManager::HandleSelection(Event_t *event)
       unsigned char *data = 0;
 
 
-      std::cout<<"HandleSelection!\n";
-
       gVirtualX->GetProperty(event->fUser[0], event->fUser[3],
                              0, 0x8000000L, kTRUE, event->fUser[2],
                              &actual, &format, &count, &remaining, &data);
 
       if ((actual != fDropType) || (format != 8) || (count == 0) || !data) {
-         std::cout<<"Nothing! :(((\n";
          if (data) delete[] data;
          
          return kFALSE;
@@ -920,8 +912,6 @@ Bool_t TGDNDManager::StartDrag(TGFrame *src, int x_root, int y_root,
       // hmmm... failed to acquire ownership of XdndSelection!
       return kFALSE;
    }
-   
-   std::cout<<"Start drag ...\n";
 
    if (grabWin == kNone) grabWin = fMain->GetId();
 
@@ -953,8 +943,6 @@ Bool_t TGDNDManager::Drop()
    // Drop.
 
    if (!fDragging) return kFALSE;
-   
-   std::cout<<"Drop "<<fTargetIsDNDAware<<' '<<fDropAccepted<<' '<<fStatusPending<<std::endl;
 
    if (fTargetIsDNDAware) {
       if (fDropAccepted) {
@@ -1004,8 +992,6 @@ Bool_t TGDNDManager::Drag(int x_root, int y_root, Atom_t action, Time_t timestam
 
    Window_t newTarget = FindWindow(gVirtualX->GetDefaultRootWindow(),
                                    x_root, y_root, 15);
-
-   std::cout<<"Continue drag\n";
 
    if (newTarget == kNone) {
       Window_t t = GetRootProxy();
