@@ -42,6 +42,7 @@
 #include <TH2.h>
 #include <TNtuple.h>
 #include <TProfile.h>
+#include "TString.h"
 
 #include <TStyle.h>
 #include <TCanvas.h>
@@ -81,6 +82,8 @@ TCanvas *StartTest      (Int_t w, Int_t h);
 void     TestReport1    (TCanvas *C, const TString &title);
 void     TestReport2    ();
 void     DoCcode        (TCanvas *C);
+TString  stime(time_t* t, bool utc = false, bool display_time_zone = true);
+
 
 // Tests functions.
 void     clonepad       ();
@@ -105,6 +108,7 @@ void     tgaxis1        ();
 void     tgaxis2        ();
 void     tgaxis3        ();
 void     tgaxis4        ();
+void     tgaxis5        ();
 void     tgraph1        ();
 void     tgraph2        ();
 void     tgraph2d1      ();
@@ -321,6 +325,7 @@ void stressGraphics(Int_t verbose = 0)
    tgaxis2      ();
    tgaxis3      ();
    tgaxis4      ();
+   tgaxis5      ();
    labels1      ();
    tellipse     ();
    feynman      ();
@@ -1462,6 +1467,108 @@ void tgaxis4()
    DoCcode(C);
    TestReport2();
    delete h1;
+}
+
+
+//______________________________________________________________________________
+void tgaxis5()
+{
+   // 5th TGaxis test.
+   
+   TCanvas *C = StartTest(800,570);
+   
+   double f = 1.8;
+      
+   TLatex* tex1 = new TLatex;
+   tex1->SetNDC();
+   tex1->SetTextFont(102);
+   tex1->SetTextSize(0.07*f);
+   
+   TLatex* tex3 = new TLatex;
+   tex3->SetNDC();
+   tex3->SetTextFont(102);
+   tex3->SetTextSize(0.07*f);
+   tex3->SetTextColor(kBlue+2);
+   
+   TLatex* tex2 = new TLatex;
+   tex2->SetNDC();
+   tex2->SetTextFont(102);
+   tex2->SetTextSize(0.07*f);
+   tex2->SetTextColor(kOrange+3);
+   
+   time_t offset[] = {0,                   0, 1325376000, 1341100800};
+   time_t t[]      = {1331150400, 1336417200,          0, 36000};
+      
+   C->SetTopMargin(0);  C->SetBottomMargin(0);
+   C->SetLeftMargin(0); C->SetRightMargin(0);
+   C->Divide(2, 4, -1, -1);
+   TLine l;
+   l.DrawLine(0.5, 0, 0.5, 1.);
+   
+   for(int i = 0; i < 4; ++i){
+      for(int gmt = 0; gmt < 2; ++gmt){
+         const char* opt = (gmt ? "gmt" : "local");
+         TVirtualPad* p = C->cd(2*i + gmt + 1);
+         p->SetTopMargin(0); p->SetBottomMargin(0);
+         p->SetLeftMargin(0); p->SetRightMargin(0);
+         p->SetFillStyle(4000);
+
+         TGaxis* ga = new TGaxis (.4, .25, 5., .25, t[i], t[i] + 1,  1, "t");
+         ga->SetTimeFormat("TGaxis label: #color[2]{%Y-%m-%d %H:%M:%S}");
+         ga->SetLabelFont(102);
+         ga->SetLabelColor(kBlue+2);
+         
+         ga->SetTimeOffset(offset[i], opt);
+         ga->SetLabelOffset(0.04*f);
+         ga->SetLabelSize(0.07*f);
+         ga->SetLineColor(0);
+         ga->Draw();
+         
+         // Get offset string of axis time format: there is not acccessor 
+         // to time format in TGaxis.
+         // Assumes TAxis use the same format.
+         TAxis a(10, 0, 1600000000);
+         a.SetTimeOffset(offset[i], opt);
+         const char* offsettimeformat = a.GetTimeFormat();
+         
+         char buf[256];
+         if (offset[i] < t[i]) {
+            sprintf(buf, "#splitline{%s, %s}{offset: %ld, option %s}",
+                    stime(t+i).Data(), stime(t+i, true).Data(), offset[i], opt);
+         } else {
+            int h = t[i] / 3600;
+            int m = (t[i] - 3600 * h) / 60 ;
+            int s = (t[i] - h * 3600 - m * 60);
+            sprintf(buf, "#splitline{%d h %d m %d s}{offset: %s, option %s}",
+                    h, m, s, stime(offset + i, gmt).Data(), opt);
+         }
+         tex1->DrawLatex(.01, .75, buf);
+         tex2->DrawLatex(.01, .50, offsettimeformat);
+         time_t t_ = t[i] + offset[i];
+         sprintf(buf, "Expecting:    #color[2]{%s}", stime(&t_, gmt, false).Data());
+         tex3->DrawLatex(.01, .24, buf);
+         if(i > 0) l.DrawLine(0, 0.95, 1, 0.95);
+      }
+   }
+   
+   TestReport1(C, "TGaxis 5 (Time on axis: reference test)");
+   DoCcode(C);
+   TestReport2();
+}
+
+
+//______________________________________________________________________________
+TString stime(time_t* t, bool utc, bool display_time_zone)
+{
+   // function used by tgaxis5
+   
+   struct tm* tt;   
+   if (utc) tt = gmtime(t);
+   else     tt = localtime(t);
+   char buf[256];
+   if (display_time_zone) strftime(buf, sizeof(buf), "%H:%M:%S %Z", tt);
+   else                   strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tt);
+   return TString(buf);
 }
 
 
