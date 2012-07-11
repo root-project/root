@@ -108,6 +108,17 @@ namespace utils {
     if (!TypesToSkip.size())
       return QT.getDesugaredType(Ctx);
 
+    // In case of Int_t* we need to strip the pointer first, desugar and attach
+    // the pointer once again.
+    if (QT->isPointerType()) {
+      // Get the qualifiers.
+      Qualifiers quals = QT.getQualifiers();      
+      QT = GetPartiallyDesugaredType(Ctx, QT->getPointeeType(), TypesToSkip);
+      QT = Ctx.getPointerType(QT);
+      // Add back the qualifiers.
+      QT = Ctx.getQualifiedType(QT, quals);
+    }
+
     while(isa<TypedefType>(QT.getTypePtr())) {
       if (!TypesToSkip.count(QT.getTypePtr())) 
         QT = QT.getSingleStepDesugaredType(Ctx);
