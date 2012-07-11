@@ -3126,10 +3126,9 @@ void TGCocoa::GetPasteBuffer(Window_t windowID, Atom_t /*atom*/, TString &text, 
    // (nchar = number of characters) If "del" is true deletes the paste
    // buffer afterwards.
    
-   if (fWindowProperty.find(windowID) != fWindowProperty.end()) {
-      text = &fWindowProperty[windowID][0];
-      nchar = text.Length();
-   }
+   (void) windowID;
+   (void) text;
+   (void) nchar;
 }
 
 //______________________________________________________________________________
@@ -3627,15 +3626,13 @@ void TGCocoa::SetPrimarySelectionOwner(Window_t windowID)
    if (!windowID)//From TGWin32.
       return;
 
-#if 1
    //TODO: check, if this really happens and probably remove assert.
    assert(!fPimpl->IsRootWindow(windowID) && "SetPrimarySelectionOwner, windowID parameter is a 'root' window");
-      
-   NSPasteboard * const pasteBoard = [NSPasteboard generalPasteboard];
-   [pasteBoard clearContents];
+   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "SetPrimarySelectionOwner, windowID parameter is not a valid window");
    
    //X11 - SelectionRequest and SelectionClear can be sent.
-   //GDK on Windows sends only SelectionRequest, so do I.
+   //GDK on Windows sends only SelectionRequest, so do I 
+   //(actually, we do not care about "other clients" - we do not have them).
    Event_t selectionRequestEvent = {};
    selectionRequestEvent.fType = kSelectionRequest;
    selectionRequestEvent.fWindow = windowID;
@@ -3645,7 +3642,6 @@ void TGCocoa::SetPrimarySelectionOwner(Window_t windowID)
    selectionRequestEvent.fUser[3] = fSelectionNotifyProperty;
    
    SendEvent(windowID, &selectionRequestEvent);
-#endif
 }
 
 //______________________________________________________________________________
@@ -3656,38 +3652,12 @@ Window_t TGCocoa::GetPrimarySelectionOwner()
    // That is the window in which, for example some text is selected.
    //End of comment.
 
-   //Cocoa does not have a "selection owner". The result
-   //of this function is never used in a GUI, just a check,
-   //if there is an owner. I'll simply check, if I have anything
-   //in a clipboard and return a 'root' window.
-
-#if 1
-   NSPasteboard * const pasteBoard = [NSPasteboard generalPasteboard];
-   if (NSArray * const items = [pasteBoard pasteboardItems]) {
-      if ([items count]) {
-         NSLog(@"there is something in a clipboard");
-         return fPimpl->GetRootWindowID();
-      }
-   }
-#endif
-
    return kNone;
 }
 
 //______________________________________________________________________________
 void TGCocoa::ConvertPrimarySelection(Window_t windowID, Atom_t clipboard, Time_t /*when*/)
 {
-   //From TGWin32 code it's clear, that this function only
-   //works with GDK_TARGET_STRING and it simply reads string from the clipboard
-   //and attaches this string as a window property.
-   //This implementation is very preliminary
-   //and ugly - it's a mix of TGWin32 and win32gdk's code, adopted
-   //for TGCocoa.
-
-#if 1
-
-   typedef std::vector<char>::size_type size_type;
-
    //Comment from TVirtualX:
    // Causes a SelectionRequest event to be sent to the current primary
    // selection owner. This event specifies the selection property
@@ -3703,50 +3673,10 @@ void TGCocoa::ConvertPrimarySelection(Window_t windowID, Atom_t clipboard, Time_
       return;
 
    assert(!fPimpl->IsRootWindow(windowID) && "ConvertPrimarySelection, windowID parameter is a 'root' window");
+   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "ConvertPrimarySelection, windowID parameter is not a valid window");
    
-   const Util::AutoreleasePool pool;
-   
-   NSPasteboard * const pasteBoard = [NSPasteboard generalPasteboard];
-   NSArray *classes = [NSArray arrayWithObject : [NSString class]];
-   NSArray *copiedItems = [pasteBoard readObjectsForClasses : classes options : nil];
-   
-   std::vector<char> property;
-
-   //How many NSString items can be in a clipboard?
-   //anyway, if I read an NSString from the buffer, it'll have
-   //(after converted to c-string) a null-terminator. Even
-   //if I concatenate all of them, '\0' at the end of the first
-   //one will be the end. So just stop after the first string.
-   for (NSString * item in copiedItems) {
-      const NSUInteger len = [item lengthOfBytesUsingEncoding : NSASCIIStringEncoding];
-      property.resize(len + 1);
-      [item getCString : &property[0] maxLength : len + 1 encoding : NSASCIIStringEncoding];
-      NSLog(@"ConvertPrimarySelection, in a buffer ... %@", item);
-      break;
-   }
-
-   //Attach a property.
-   if (property.size())
-      fWindowProperty[windowID].swap(property);
-   else
-      fWindowProperty[windowID].clear();
-
-   //Send selection notify.
-   Event_t selectionNotify = {};
-   selectionNotify.fWindow = windowID;
-   selectionNotify.fType = kSelectionNotify;
-   selectionNotify.fWindow = windowID;
-   selectionNotify.fUser[0] = windowID;
-   selectionNotify.fUser[1] = clipboard;
-   selectionNotify.fUser[2] = fTargetString;
-   selectionNotify.fUser[3] = fSelectionNotifyProperty;
-
-   SendEvent(windowID, &selectionNotify);
-
-#else
-   (void)windowID;
+   const Util::AutoreleasePool pool;   
    (void)clipboard;
-#endif
 }
 
 //______________________________________________________________________________
@@ -3810,11 +3740,16 @@ void TGCocoa::ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t)
 }
 
 //______________________________________________________________________________
-void TGCocoa::ConvertSelection(Window_t winID, Atom_t &selection, Atom_t &target, Atom_t &/*property*/, Time_t &/*timeStamp*/)
+void TGCocoa::ConvertSelection(Window_t windowID, Atom_t &selection, Atom_t &target, Atom_t &/*property*/, Time_t &/*timeStamp*/)
 {
    // Requests that the specified selection be converted to the specified
    // target type.
-
+   
+   (void) windowID;
+   (void) selection;
+   (void) target;
+   
+   /*
    Event_t newEvent = {};
    newEvent.fType = kSelectionNotify;
    newEvent.fWindow = winID;
@@ -3825,7 +3760,9 @@ void TGCocoa::ConvertSelection(Window_t winID, Atom_t &selection, Atom_t &target
 
    NSLog(@"target for selection notify message %lu", fSelectionNotifyProperty);
    
-   SendEvent(winID, &newEvent);
+   SendEvent(winID, &newEvent);*/
+   
+   
 }
 
 //______________________________________________________________________________

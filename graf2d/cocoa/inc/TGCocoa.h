@@ -451,11 +451,7 @@ private:
    Atom_t fClipboardAtom;
    Atom_t fTargetString;
    
-   //This is just an ugly hack.
-   typedef std::map<Window_t, std::vector<char> > property_map;
-   typedef property_map::iterator property_map_iterator;
-   property_map fWindowProperty;
-
+   
 public:
    static Atom_t fgDeleteWindowAtom;
 
