@@ -36,12 +36,17 @@ QT = gCling->lookupType("Int_t*");
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
 // CHECK:(const char * const) "int *"
 
-//TODO: QT = gCling->lookupType("IntPtr_t&");
-//TODO: QT = gCling->lookupType("IntPtr_t[32]");
-
 QT = gCling->lookupType("const IntPtr_t*");
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
 // CHECK:(const char * const) "int *const *"
+
+
+// Test desugaring reference (both r- or l- value) types:
+QT = gCling->lookupType("const IntPtr_t&");
+Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
+// CHECK:(const char * const) "int *const &"
+
+//TODO: QT = gCling->lookupType("IntPtr_t[32]");
 
 
 //Desugar template parameters:

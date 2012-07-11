@@ -120,6 +120,23 @@ namespace utils {
       QT = Ctx.getQualifiedType(QT, quals);
     }
 
+    // In case of Int_t& we need to strip the pointer first, desugar and attach
+    // the pointer once again.
+    if (QT->isReferenceType()) {
+      // Get the qualifiers.
+      bool isLValueRefTy = isa<LValueReferenceType>(QT.getTypePtr());
+      Qualifiers quals = QT.getQualifiers();
+      QT = GetPartiallyDesugaredType(Ctx, QT->getPointeeType(), TypesToSkip, 
+                                     fullyQualify);
+      // Add the r- or l- value reference type back to the desugared one
+      if (isLValueRefTy)
+        QT = Ctx.getLValueReferenceType(QT);
+      else
+        QT = Ctx.getRValueReferenceType(QT);
+      // Add back the qualifiers.
+      QT = Ctx.getQualifiedType(QT, quals);
+    }
+
     while(isa<TypedefType>(QT.getTypePtr())) {
       if (!TypesToSkip.count(QT.getTypePtr())) 
         QT = QT.getSingleStepDesugaredType(Ctx);
