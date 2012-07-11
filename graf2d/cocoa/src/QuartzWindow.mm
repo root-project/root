@@ -1370,6 +1370,18 @@ void print_mask_info(ULong_t mask)
    fType = type;
 }
 
+//______________________________________________________________________________
+- (NSData *) fPropertyData
+{
+   return fPropertyData;
+}
+
+//______________________________________________________________________________
+- (unsigned) fFormat
+{
+   return fFormat;
+}
+
 @end
 
 
@@ -2527,7 +2539,7 @@ void print_mask_info(ULong_t mask)
    assert(propName != 0 && "hasProperty, propName parameter is null");
    
    NSString * const key = [NSString stringWithCString : propName encoding : NSASCIIStringEncoding];
-   QuartzWindowProperty * property = (QuartzWindowProperty *)[fX11Properties valueForKey : key];
+   QuartzWindowProperty * const property = (QuartzWindowProperty *)[fX11Properties valueForKey : key];
 
    return property != nil;
 }
@@ -2536,12 +2548,39 @@ void print_mask_info(ULong_t mask)
 - (unsigned char *) getProperty : (const char *) propName returnType : (Atom_t *) type 
    returnFormat : (unsigned *) format nElements : (unsigned *) nElements
 {
-   (void) propName;
-   (void) type;
-   (void) format;
-   (void) nElements;
+   assert(propName != 0 && "getProperty:returnType:returnFormat:nElements, propName parameter is null");
+   assert(type != 0 && "getProperty:returnType:returnFormat:nElements, type parameter is null");
+   assert(format != 0 && "getProperty:returnType:returnFormat:nElements, format parameter is null");
+   assert(nElements != 0 && "getProperty:returnType:returnFormat:nElements, nElements parameter is null");
 
-   return 0;
+   NSString * const key = [NSString stringWithCString : propName encoding : NSASCIIStringEncoding];
+   QuartzWindowProperty * const property = (QuartzWindowProperty *)[fX11Properties valueForKey : key];
+   assert(property != 0 && "getProperty:returnType:returnFormat:nElements, property not found");
+
+   NSData * const propData = property.fPropertyData;
+   
+   const NSUInteger dataSize = [propData length];
+   unsigned char *buff = 0;
+   try {
+      buff = new unsigned char[dataSize]();
+   } catch (const std::bad_alloc &) {
+      NSLog(@"QuartzWindow: -getProperty:returnType:returnFormat:nElements, memory allocation failed");//Hmm, can I log, if new failed? :)
+      return 0;
+   }
+
+   [propData getBytes : buff length : dataSize];
+   *format = property.fFormat;
+   
+   *format = dataSize;
+   
+   if (*format == 16)
+      *nElements= dataSize / 2;
+   else if (*format == 32)
+      *nElements = dataSize / 4;
+      
+   *type = property.fType;
+
+   return buff;
 }
 
 //DND
