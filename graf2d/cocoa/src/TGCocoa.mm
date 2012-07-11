@@ -247,7 +247,8 @@ TGCocoa::TGCocoa()
               fDirectDraw(false),
               fForegroundProcess(false),
               fCurrentMessageID(1),
-              fTargetString(31)//Gdk has hardcoded GDK_TARGET_STRING, which is 31.
+              fTargetString(31),//Gdk has hardcoded GDK_TARGET_STRING, which is 31.
+              fSelectionOwner(kNone)
 {
    fPimpl.reset(new Details::CocoaPrivate);
 
@@ -256,6 +257,9 @@ TGCocoa::TGCocoa()
    
    fAtomToName[3] = "XA_ATOM";
    fNameToAtom["XA_ATOM"] = 4;
+   
+   fAtomToName[30] = "XA_STRING";
+   fNameToAtom["XA_STRING"] = 31;
    
    fAtomToName[32] = "XA_WINDOW";
    fNameToAtom["XA_WINDOW"] = 33;
@@ -274,7 +278,8 @@ TGCocoa::TGCocoa(const char *name, const char *title)
               fDirectDraw(false),
               fForegroundProcess(false),
               fCurrentMessageID(1),
-              fTargetString(31)//Gdk has hardcoded GDK_TARGET_STRING, which is 31.
+              fTargetString(31),//Gdk has hardcoded GDK_TARGET_STRING, which is 31.
+              fSelectionOwner(kNone)
 {
    fPimpl.reset(new Details::CocoaPrivate);
    
@@ -283,7 +288,10 @@ TGCocoa::TGCocoa(const char *name, const char *title)
    
    fAtomToName[3] = "XA_ATOM";
    fNameToAtom["XA_ATOM"] = 4;
-   
+
+   fAtomToName[30] = "XA_STRING";
+   fNameToAtom["XA_STRING"] = 31;
+
    fAtomToName[32] = "XA_WINDOW";
    fNameToAtom["XA_WINDOW"] = 33;
    //
@@ -3633,6 +3641,9 @@ void TGCocoa::SetPrimarySelectionOwner(Window_t windowID)
    //X11 - SelectionRequest and SelectionClear can be sent.
    //GDK on Windows sends only SelectionRequest, so do I 
    //(actually, we do not care about "other clients" - we do not have them).
+
+   fSelectionOwner = windowID;
+
    Event_t selectionRequestEvent = {};
    selectionRequestEvent.fType = kSelectionRequest;
    selectionRequestEvent.fWindow = windowID;
@@ -3652,7 +3663,7 @@ Window_t TGCocoa::GetPrimarySelectionOwner()
    // That is the window in which, for example some text is selected.
    //End of comment.
 
-   return kNone;
+   return fSelectionOwner;
 }
 
 //______________________________________________________________________________
@@ -3675,7 +3686,7 @@ void TGCocoa::ConvertPrimarySelection(Window_t windowID, Atom_t clipboard, Time_
    assert(!fPimpl->IsRootWindow(windowID) && "ConvertPrimarySelection, windowID parameter is a 'root' window");
    assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "ConvertPrimarySelection, windowID parameter is not a valid window");
    
-   const Util::AutoreleasePool pool;   
+   const Util::AutoreleasePool pool;
    (void)clipboard;
 }
 
@@ -3700,7 +3711,10 @@ Int_t TGCocoa::GetProperty(Window_t windowID, Atom_t propertyID, Long_t, Long_t,
    //End of comment.
    
    //TODO: actually, property can be set for a 'root' window. I have to save this data somehow.
-   assert(!fPimpl->IsRootWindow(windowID) && "GetProperty, windowID parameter is a 'root' window");
+   if (fPimpl->IsRootWindow(windowID))
+      return 0;
+   
+//   assert(!fPimpl->IsRootWindow(windowID) && "GetProperty, windowID parameter is a 'root' window");
    assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "GetProperty, windowID is not a valid window id");
    assert(propertyID > 0 && propertyID <= fAtomToName.size() && "GetProperty, propertyID parameter is not a valid atom");
    assert(actualType != 0 && "GetProperty, actualType parameter is null");
@@ -3740,29 +3754,20 @@ void TGCocoa::ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t)
 }
 
 //______________________________________________________________________________
-void TGCocoa::ConvertSelection(Window_t windowID, Atom_t &selection, Atom_t &target, Atom_t &/*property*/, Time_t &/*timeStamp*/)
+void TGCocoa::ConvertSelection(Window_t windowID, Atom_t &selection, Atom_t &target, Atom_t &property, Time_t &/*timeStamp*/)
 {
    // Requests that the specified selection be converted to the specified
    // target type.
    
-   (void) windowID;
-   (void) selection;
-   (void) target;
-   
-   /*
    Event_t newEvent = {};
-   newEvent.fType = kSelectionNotify;
-   newEvent.fWindow = winID;
-   newEvent.fUser[0] = winID;
+   newEvent.fType = kSelectionRequest;
+   newEvent.fWindow = windowID;
+   newEvent.fUser[0] = windowID;
    newEvent.fUser[1] = selection;
    newEvent.fUser[2] = target;
-   newEvent.fUser[3] = fSelectionNotifyProperty;
-
-   NSLog(@"target for selection notify message %lu", fSelectionNotifyProperty);
+   newEvent.fUser[3] = property;// fSelectionNotifyProperty;
    
-   SendEvent(winID, &newEvent);*/
-   
-   
+   SendEvent(windowID, &newEvent);
 }
 
 //______________________________________________________________________________
@@ -3772,12 +3777,9 @@ Bool_t TGCocoa::SetSelectionOwner(Window_t windowID, Atom_t &selection)
    // Changes the owner and last-change time for the specified selection.
    //End of comment.
    
-   //I do not have owners, so just clear general pasterboard (like it's done in TGWin32).
-#if 0
-   NSPasteboard * const pasterboard = [NSPasteboard generalPasteboard];
-   [pasterboard clearContents];
-   
    //Send SelectionRequest message.
+   fSelectionOwner = windowID;
+
    Event_t selectionRequestEvent = {};
    selectionRequestEvent.fType = kSelectionRequest;
    selectionRequestEvent.fWindow = windowID;
@@ -3789,12 +3791,6 @@ Bool_t TGCocoa::SetSelectionOwner(Window_t windowID, Atom_t &selection)
    SendEvent(windowID, &selectionRequestEvent);
 
    return kTRUE;
-#else
-   (void)windowID;
-   (void)selection;
-
-   return kFALSE;
-#endif
 }
 
 //______________________________________________________________________________
@@ -3812,6 +3808,8 @@ void TGCocoa::ChangeProperties(Window_t windowID, Atom_t propertyID, Atom_t type
    assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "ChangeProperties, windowID parameter is not a valid window id");
    assert(propertyID && propertyID <= fAtomToName.size() && "ChangeProperties, propertyID parameter is not a valid atom");
 
+
+
    if (!windowID)//From TGWin32.
       return;
 
@@ -3821,6 +3819,7 @@ void TGCocoa::ChangeProperties(Window_t windowID, Atom_t propertyID, Atom_t type
    const Util::AutoreleasePool pool;
 
    const std::string &atomName = fAtomToName[propertyID - 1];
+   
    NSObject<X11Window> * const window = fPimpl->GetWindow(windowID);
    [window setProperty : atomName.c_str() data : data size : len forType : type format : format];
 
@@ -3860,6 +3859,7 @@ void TGCocoa::ChangeProperty(Window_t windowID, Atom_t propertyID, Atom_t type, 
    const Util::AutoreleasePool pool;
    
    const std::string &atomString = fAtomToName[propertyID - 1];
+   
    NSObject<X11Window> * const window = fPimpl->GetWindow(windowID);
    [window setProperty : atomString.c_str() data : data size : len forType : type format : 8];
 

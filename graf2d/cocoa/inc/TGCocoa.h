@@ -451,7 +451,8 @@ private:
    Atom_t fClipboardAtom;
    Atom_t fTargetString;
    
-   
+   Window_t fSelectionOwner;
+
 public:
    static Atom_t fgDeleteWindowAtom;
 

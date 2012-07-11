@@ -2571,7 +2571,7 @@ void print_mask_info(ULong_t mask)
    [propData getBytes : buff length : dataSize];
    *format = property.fFormat;
    
-   *format = dataSize;
+   *nElements = dataSize;
    
    if (*format == 16)
       *nElements= dataSize / 2;
