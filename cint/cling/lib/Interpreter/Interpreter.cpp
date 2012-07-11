@@ -1745,7 +1745,7 @@ namespace cling {
 
   int Interpreter::CXAAtExit(void (*func) (void*), void* arg, void* dso) {
      // Register a CXAAtExit function
-     clang::Decl* LastTLD = m_IncrParser->getLastTopLevelDecl();
+     Decl* LastTLD = m_IncrParser->getLastTransaction().getLastDeclSlow();
      m_AtExitFuncs.push_back(CXAAtExitElement(func, arg, dso, LastTLD));
      return 0; // happiness
   }
