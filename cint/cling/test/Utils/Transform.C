@@ -31,16 +31,20 @@ const clang::Type* t = 0;
 clang::QualType QT;
 using namespace cling::utils;
 
-gCling->lookupScope("B<Long_t, Int_t*>", &t);
-QT = clang::QualType(t, 0);
+// Test desugaring pointers types:
+QT = gCling->lookupType("Int_t*");
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
-// CHECK:(const char * const) "B<long, int *>"
+// CHECK:(const char * const) "int *"
 
-gCling->lookupScope("B<Long_t, const IntPtr_t*>", &t);
-QT = clang::QualType(t, 0);
+//TODO: QT = gCling->lookupType("IntPtr_t&");
+//TODO: QT = gCling->lookupType("IntPtr_t[32]");
+
+QT = gCling->lookupType("const IntPtr_t*");
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
-// CHECK:(const char * const) "B<long, int *const *>"
+// CHECK:(const char * const) "int *const *"
 
+
+//Desugar template parameters:
 gCling->lookupScope("A<B<Double32_t, Int_t*> >", &t);
 QT = clang::QualType(t, 0);
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()

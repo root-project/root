@@ -113,7 +113,8 @@ namespace utils {
     if (QT->isPointerType()) {
       // Get the qualifiers.
       Qualifiers quals = QT.getQualifiers();      
-      QT = GetPartiallyDesugaredType(Ctx, QT->getPointeeType(), TypesToSkip);
+      QT = GetPartiallyDesugaredType(Ctx, QT->getPointeeType(), TypesToSkip, 
+                                     fullyQualify);
       QT = Ctx.getPointerType(QT);
       // Add back the qualifiers.
       QT = Ctx.getQualifiedType(QT, quals);
