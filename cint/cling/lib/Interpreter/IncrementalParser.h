@@ -100,8 +100,6 @@ namespace cling {
     void enableDynamicLookup(bool value = true);
     bool isDynamicLookupEnabled() const { return m_DynamicLookupEnabled; }
     bool isSyntaxOnly() const { return m_SyntaxOnly; }
-    clang::Decl* getFirstTopLevelDecl() const { return m_FirstTopLevelDecl; }
-    clang::Decl* getLastTopLevelDecl() const { return m_LastTopLevelDecl; }
     Transaction& getLastTransaction() { return m_LastTransaction; }
 
     clang::CodeGenerator* GetCodeGenerator() const;
@@ -131,12 +129,6 @@ namespace cling {
 
     // CI owns it
     ChainedConsumer* m_Consumer;
-
-    // first top level decl
-    clang::Decl* m_FirstTopLevelDecl;
-
-    // last top level decl after most recent call to parse()
-    clang::Decl* m_LastTopLevelDecl;
 
     // Holds information for the last transaction
     Transaction m_LastTransaction;
