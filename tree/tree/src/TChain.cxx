@@ -1406,27 +1406,36 @@ Long64_t TChain::LoadTree(Long64_t entry)
    // FIXME: The "unless" case here causes us to leak memory.
    if (fFile) {
       if (!fDirectory->GetList()->FindObject(this)) {
-         tpf = (TTreeCache*) fFile->GetCacheRead(fTree);
-         if (tpf) {
-            tpf->ResetCache();
-            if (tpf->IsEnablePrefetching()){
-               //wait for thread to finish current work
-               tpf->GetPrefetchObj()->GetCondNextFile()->Wait();
+         if (fTree) {
+            // (fFile != 0 && fTree == 0) can happen when 
+            // InvalidateCurrentTree is called (for example from
+            // AddFriend).  Having fTree === 0 is necessary in that
+            // case because in some cases GetTree is used as a check
+            // to see if a TTree is already loaded.
+            // However, this prevent using the following to reuse
+            // the TTreeCache object.
+            tpf = (TTreeCache*) fFile->GetCacheRead(fTree);
+            if (tpf) {
+               tpf->ResetCache();
+               if (tpf->IsEnablePrefetching()){
+                  //wait for thread to finish current work
+                  tpf->GetPrefetchObj()->GetCondNextFile()->Wait();
+               }
             }
+            fFile->SetCacheRead(0, fTree);
+            // If the tree has clones, copy them into the chain
+            // clone list so we can change their branch addresses
+            // when necessary.
+            //
+            // This is to support the syntax:
+            //
+            //      TTree* clone = chain->GetTree()->CloneTree(0);
+            //
+            // We need to call the invalidate exactly here, since
+            // we no longer need the value of fTree and it is 
+            // about to be deleted.
+            InvalidateCurrentTree();
          }
-         fFile->SetCacheRead(0, fTree);
-         // If the tree has clones, copy them into the chain
-         // clone list so we can change their branch addresses
-         // when necessary.
-         //
-         // This is to support the syntax:
-         //
-         //      TTree* clone = chain->GetTree()->CloneTree(0);
-         //
-         // We need to call the invalidate exactly here, since
-         // we no longer need the value of fTree and it is 
-         // about to be deleted.
-         if (fTree) InvalidateCurrentTree();
 
          if (fCanDeleteRefs) {
             fFile->Close("R");
