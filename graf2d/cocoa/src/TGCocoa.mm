@@ -45,10 +45,23 @@
 //In asserts, expression always looks like 'p != 0' for "C++ pointer" (either object of built-in type
 //or C++ class), and 'p != nil' for object from Objective-C. There is no difference, this is to make
 //asserts more explicit. In conditional statement, it'll always be 'if (p)'  or 'if (!p)' for both
-//C++ and Objective-C.
+//C++ and Objective-C pointers/code.
+
 //I never use const qualifier for pointers to Objective-C objects since they are useless:
 //there are no cv-qualified methods (member-functions in C++) in Objective-C, and I do not use
 //'->' operator to access instance variables (data-members in C++) of Objective-C's object.
+//I also declare pointer as a const, if it's const:
+//NSWindow * const topLevelWindow = ... (and note, not pointer to const - no use with Obj-C).
+
+//Asserts on drawables ids usually only check, that it's not a 'root' window id (unless operation
+//is permitted on a 'root' window):
+//a) assert(!fPimpl->IsRootWindow(windowID)) and later I also check that windowID != 0 (kNone).
+//b) assert(drawableID > fPimpl->GetRootWindowID()) so drawableID can not be kNone and
+//   can not be a 'root' window.
+
+//ROOT window has id 1. So if id > 1 (id > fPimpl->GetRootWindowID())
+//id is considered as valid (if it's out of range and > maximum valid id, this will be 
+//caught by CocoaPrivate.
 
 namespace Details = ROOT::MacOSX::Details;
 namespace Util = ROOT::MacOSX::Util;
@@ -225,14 +238,6 @@ bool ParentRendersToChild(NSView<X11Window> *child)
           !child.fIsOverlapped;
 }
 
-//______________________________________________________________________________
-bool IsImageOrPixmap(NSObject<X11Drawable> *testObj)
-{
-   assert(testObj != 0 && "IsImageOrPixmap, testObj parameter is null");
-
-   return [testObj isKindOfClass : [QuartzPixmap class]] || [testObj isKindOfClass : [QuartzImage class]];
-}
-
 }
 
 ClassImp(TGCocoa)
@@ -369,22 +374,6 @@ Int_t TGCocoa::GetScreen() const
 UInt_t TGCocoa::ScreenWidthMM() const
 {
    //Comment from TVirtualX: Returns the width of the screen in millimeters.
-/*
-   NSArray *screens = [NSScreen screens];
-   assert(screens != nil && "screens array is nil");
-   
-   NSScreen *mainScreen = [screens objectAtIndex : 0];
-   assert(mainScreen != nil && "screen with index 0 is nil");
-
-   NSDictionary *screenParameters = [mainScreen deviceDescription];
-   assert(screenParameters != nil && "deviceDescription dictionary is nil");
-   
-   //This casts are just terrible and rely on the current documentation only.
-   //But this is ... elegant Objective-C.
-   NSNumber *screenNumber = (NSNumber *)[screenParameters objectForKey : @"NSScreenNumber"];
-   assert(screenNumber != nil && "no screen number in device description");
-   const CGSize screenSize = CGDisplayScreenSize([screenNumber integerValue]);
-  */
 
    return CGDisplayScreenSize(CGMainDisplayID()).width;
 }
@@ -431,6 +420,9 @@ Int_t TGCocoa::InitWindow(ULong_t parentID)
    //it's a kind of simplified CreateWindow (with only
    //one parameter). This function is called by TRootCanvas,
    //to create a special window inside TGCanvas.
+   
+   assert(parentID != 0 && "InitWindow, parentID parameter is 0");//0 is an invalid id.
+   
    WindowAttributes_t attr = {};
 
    if (fPimpl->IsRootWindow(parentID)) {
@@ -455,7 +447,7 @@ Window_t TGCocoa::GetWindowID(Int_t windowID)
 void TGCocoa::SelectWindow(Int_t windowID)
 {
    //This function can be called from pad/canvas, both for window and for pixmap.
-   assert(windowID > (Int_t)fPimpl->GetRootWindowID() && "SelectWindow, windowID parameter is not a valid window");
+   assert(windowID > (Int_t)fPimpl->GetRootWindowID() && "SelectWindow, windowID parameter is not a valid id");
 
    fSelectedDrawable = windowID;
 }
@@ -517,14 +509,14 @@ void TGCocoa::GetGeometry(Int_t wid, Int_t & x, Int_t &y, UInt_t &w, UInt_t &h)
 }
 
 //______________________________________________________________________________
-void TGCocoa::MoveWindow(Int_t wid, Int_t x, Int_t y)
+void TGCocoa::MoveWindow(Int_t windowID, Int_t x, Int_t y)
 {
-   if (!wid)//From TGX11.
+   assert(!fPimpl->IsRootWindow(windowID) && "MoveWindow, called for 'root' window");
+
+   if (!windowID)//From TGX11.
       return;
 
-   assert(!fPimpl->IsRootWindow(wid) && "MoveWindow, called for 'root' window");
-
-   [fPimpl->GetWindow(wid) setX : x Y : y];
+   [fPimpl->GetWindow(windowID) setX : x Y : y];
 }
 
 //______________________________________________________________________________
@@ -542,7 +534,7 @@ void TGCocoa::ResizeWindow(Int_t windowID)
    if (!windowID)//From TGX11.
       return;
    
-   assert(!fPimpl->IsRootWindow(windowID) && "ResizeWindow, called for root window");
+   assert(windowID > (Int_t)fPimpl->GetRootWindowID() && "ResizeWindow, windowID parameter is not a valid id");
    
    NSObject<X11Window> * const window = fPimpl->GetWindow(windowID);
    if (window.fBackBuffer) {
@@ -558,24 +550,22 @@ void TGCocoa::UpdateWindow(Int_t /*mode*/)
 {
    //This function is used by TCanvas/TPad:
    //draw "back buffer" image into the view.
+   //fContentView (destination) MUST be a QuartzView.
    
    //Basic es-guarantee: X11Buffer::AddUpdateWindow modifies vector with commands,
    //if the following call to TGCocoa::Update will produce an exception dusing X11Buffer::Flush,
    //initial state of X11Buffer can not be restored, but it still must be in some valid state.
    
-   assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "UpdateWindow, no window was selected, can not update 'root' window");
+   assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "UpdateWindow, fSelectedDrawable is not a valid window id");
 
-   if (IsImageOrPixmap(fPimpl->GetDrawable(fSelectedDrawable)))//Have no idea, why this can happen with ROOT - done by TGDNDManager :(
+   if (fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap == YES)//Have no idea, why this can happen with ROOT - done by TGDNDManager :(
       return; //TODO: check, when DND is implemented, if this still is required.
 
-   
    NSObject<X11Window> * const window = fPimpl->GetWindow(fSelectedDrawable);
 
    if (QuartzPixmap * const pixmap = window.fBackBuffer) {
       assert([window.fContentView isKindOfClass : [QuartzView class]] && "UpdateWindow, content view is not a QuartzView");
-      
       QuartzView *dstView = (QuartzView *)window.fContentView;
-      assert(dstView != nil && "UpdateWindow, destination view is nil");
       
       if (dstView.fIsOverlapped)
          return;
@@ -1320,7 +1310,7 @@ void TGCocoa::SetWMTransientHint(Window_t wid, Window_t mainWid)
    //TGTransientFrame uses this hint to attach a window to some "main" window,
    //so that transient window is alway above the main window. This is used for 
    //dialogs and dockable panels.
-   assert(wid > fPimpl->GetRootWindowID() && "SetWMTransientHint, wid parameter is a root window");
+   assert(wid > fPimpl->GetRootWindowID() && "SetWMTransientHint, wid parameter is not a valid window id");
 
    if (fPimpl->IsRootWindow(mainWid))
       return;
@@ -1984,7 +1974,7 @@ void TGCocoa::CopyPixmap(Int_t pixmapID, Int_t x, Int_t y)
 {
    assert(pixmapID > (Int_t)fPimpl->GetRootWindowID() && "CopyPixmap, pixmapID parameter is not a valid id");
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "CopyPixmap, fSelectedDrawable is not a valid window id");
-   assert(!IsImageOrPixmap(fPimpl->GetDrawable(fSelectedDrawable)) && "CopyPixmap, fSelectedDrawable is not a valid window");
+   assert(fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap == NO && "CopyPixmap, fSelectedDrawable is not a valid window");
    
    NSObject<X11Drawable> * const source = fPimpl->GetDrawable(pixmapID);
    assert([source isKindOfClass : [QuartzPixmap class]] && "CopyPixmap, source is not a pixmap");
@@ -2251,8 +2241,8 @@ void TGCocoa::PutImage(Drawable_t drawableID, GContext_t gc, Drawable_t imageID,
 void TGCocoa::DeleteImage(Drawable_t imageID)
 {
    // Deallocates the memory associated with the image img
-   assert(IsImageOrPixmap(fPimpl->GetDrawable(imageID)) && "DeleteImage, imageID parameter is not a valid image id");
-
+   assert([fPimpl->GetDrawable(imageID) isKindOfClass : [QuartzPixmap class]] &&
+          "DeleteImage, imageID parameter is not a valid image id");
    DeletePixmap(imageID);
 }
 
@@ -2269,6 +2259,9 @@ void TGCocoa::GrabButton(Window_t wid, EMouseButton button, UInt_t keyModifiers,
    //Confine will never be used - no such feature on MacOSX and
    //I'm not going to emulate it..
    //This function also does ungrab.
+   
+   if (!wid)//From TGWin32.
+      return;
    
    assert(!fPimpl->IsRootWindow(wid) && "GrabButton, called for 'root' window");
    
@@ -3270,7 +3263,7 @@ void TGCocoa::SetPrimarySelectionOwner(Window_t windowID)
 
    //TODO: check, if this really happens and probably remove assert.
    assert(!fPimpl->IsRootWindow(windowID) && "SetPrimarySelectionOwner, windowID parameter is a 'root' window");
-   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "SetPrimarySelectionOwner, windowID parameter is not a valid window");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "SetPrimarySelectionOwner, windowID parameter is not a valid window");
    
    //X11 - SelectionRequest and SelectionClear can be sent.
    //GDK on Windows sends only SelectionRequest, so do I 
@@ -3341,7 +3334,7 @@ void TGCocoa::ConvertPrimarySelection(Window_t windowID, Atom_t clipboard, Time_
       return;
 
    assert(!fPimpl->IsRootWindow(windowID) && "ConvertPrimarySelection, windowID parameter is a 'root' window");
-   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "ConvertPrimarySelection, windowID parameter is not a valid window");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "ConvertPrimarySelection, windowID parameter is not a valid window");
    
    const Util::AutoreleasePool pool;
    (void)clipboard;
@@ -3381,13 +3374,13 @@ Int_t TGCocoa::GetProperty(Window_t windowID, Atom_t propertyID, Long_t, Long_t,
    if (fPimpl->IsRootWindow(windowID))
       return 0;
    
-   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "GetProperty, windowID is not a valid window id");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "GetProperty, windowID is not a valid window id");
    assert(propertyID > 0 && propertyID <= fAtomToName.size() && "GetProperty, propertyID parameter is not a valid atom");
    assert(actualType != 0 && "GetProperty, actualType parameter is null");
    assert(actualFormat != 0 && "GetProperty, actualFormat parameter is null");
    assert(bytesAfterReturn != 0 && "GetProperty, bytesAfterReturn parameter is null");
    assert(propertyReturn != 0 && "GetProperty, propertyReturn parameter is null");
-   
+
    const Util::AutoreleasePool pool;
    
    *bytesAfterReturn = 0;//In TGWin32 the value set to .. nItems?
@@ -3423,7 +3416,7 @@ void TGCocoa::GetPasteBuffer(Window_t windowID, Atom_t propertyID, TString &text
       return;
    
    assert(!fPimpl->IsRootWindow(windowID) && "GetPasteBuffer, windowID parameter is a 'root' window");
-   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "GetPasteBuffer, windowID parameter is not a valid window");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "GetPasteBuffer, windowID parameter is not a valid window");
    assert(propertyID && propertyID <= fAtomToName.size() && "GetPasteBuffer, propertyID parameter is not a valid atom");
    
    const Util::AutoreleasePool pool;
@@ -3471,15 +3464,15 @@ void TGCocoa::ChangeProperty(Window_t windowID, Atom_t propertyID, Atom_t type, 
    //TGX11 always calls XChangeProperty with PropModeReplace.
    //I simply reset the property (or create a new one).
 
-   assert(!fPimpl->IsRootWindow(windowID) && "ChangeProperty, windowID parameter is a 'root' window");
-   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "ChangeProperty, windowID parameter is not a valid window id");
-   assert(propertyID && propertyID <= fAtomToName.size() && "ChangeProperty, propertyID parameter is not a valid atom");
-
    if (!windowID) //From TGWin32.
       return;
    
    if (!data || !len) //From TGWin32.
       return;
+
+   assert(!fPimpl->IsRootWindow(windowID) && "ChangeProperty, windowID parameter is a 'root' window");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "ChangeProperty, windowID parameter is not a valid window id");
+   assert(propertyID && propertyID <= fAtomToName.size() && "ChangeProperty, propertyID parameter is not a valid atom");
 
    const Util::AutoreleasePool pool;
    
@@ -3487,7 +3480,6 @@ void TGCocoa::ChangeProperty(Window_t windowID, Atom_t propertyID, Atom_t type, 
    
    NSObject<X11Window> * const window = fPimpl->GetWindow(windowID);
    [window setProperty : atomString.c_str() data : data size : len forType : type format : 8];
-
    //ROOT ignores PropertyNotify events.
 }
 
@@ -3501,16 +3493,16 @@ void TGCocoa::ChangeProperties(Window_t windowID, Atom_t propertyID, Atom_t type
    
    //TGX11 always calls XChangeProperty with PropModeReplace.
    //I simply reset the property (or create a new one).
-   
-   assert(!fPimpl->IsRootWindow(windowID) && "ChangeProperties, windowID parameter is a 'root' window");
-   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "ChangeProperties, windowID parameter is not a valid window id");
-   assert(propertyID && propertyID <= fAtomToName.size() && "ChangeProperties, propertyID parameter is not a valid atom");
 
    if (!windowID)//From TGWin32.
       return;
 
    if (!data || !len)//From TGWin32.
       return;
+   
+   assert(!fPimpl->IsRootWindow(windowID) && "ChangeProperties, windowID parameter is a 'root' window");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "ChangeProperties, windowID parameter is not a valid window id");
+   assert(propertyID && propertyID <= fAtomToName.size() && "ChangeProperties, propertyID parameter is not a valid atom");
 
    const Util::AutoreleasePool pool;
 
@@ -3518,7 +3510,6 @@ void TGCocoa::ChangeProperties(Window_t windowID, Atom_t propertyID, Atom_t type
    
    NSObject<X11Window> * const window = fPimpl->GetWindow(windowID);
    [window setProperty : atomName.c_str() data : data size : len forType : type format : format];
-
    //No property notify, ROOT does not know about this.
 }
 
@@ -3531,15 +3522,14 @@ void TGCocoa::DeleteProperty(Window_t windowID, Atom_t &propertyID)
    // event on the window unless the property does not exist.
    //End of comment.
 
-   //Strange signature - why propertyID is a reference?
-   
-   //TODO: check, if ROOT sets/deletes properties on a 'root' window.
-   assert(!fPimpl->IsRootWindow(windowID) && "DeleteProperty, windowID parameter is a 'root' window");
-   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "DeleteProperty, windowID parameter is not a valid window");
-   assert(propertyID && propertyID <= fAtomToName.size() && "DeleteProperty, propertyID parameter is invalid atom");
-   
    if (!windowID)//Can this happen?
       return;
+
+   //Strange signature - why propertyID is a reference?
+   //TODO: check, if ROOT sets/deletes properties on a 'root' window.
+   assert(!fPimpl->IsRootWindow(windowID) && "DeleteProperty, windowID parameter is a 'root' window");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "DeleteProperty, windowID parameter is not a valid window");
+   assert(propertyID && propertyID <= fAtomToName.size() && "DeleteProperty, propertyID parameter is invalid atom");
    
    const std::string &atomString = fAtomToName[propertyID - 1];
    [fPimpl->GetWindow(windowID) removeProperty : atomString.c_str()];
@@ -3559,7 +3549,7 @@ void TGCocoa::SetDNDAware(Window_t windowID, Atom_t *typeList)
    //a new property or replacing the existing).
    
    assert(windowID > fPimpl->GetRootWindowID() && "SetDNDAware, windowID parameter is a bad window id");
-   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "SetDNDAware, windowID parameter is not a window");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "SetDNDAware, windowID parameter is not a window");
    
    const Util::AutoreleasePool pool;
    
@@ -3599,14 +3589,10 @@ Bool_t TGCocoa::IsDNDAware(Window_t windowID, Atom_t * /*typeList*/)
 {
    //Checks if the Window is DND aware. typeList is ignored.
 
-   if (!windowID)//From TGWin32.
-      return kFALSE;
-
-   if (windowID <= fPimpl->GetRootWindowID())
+   if (windowID <= fPimpl->GetRootWindowID())//kNone or 'root'.
       return kFALSE;
    
-   assert(windowID > fPimpl->GetRootWindowID() && "IsDNDAware, windowID parameter is a bad window id");
-   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "IsDNDAware, windowID parameter is not a window");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "IsDNDAware, windowID parameter is not a window");
 
    QuartzView * const view = (QuartzView *)fPimpl->GetWindow(windowID).fContentView;
    return view.fIsDNDAware;
