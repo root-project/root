@@ -98,8 +98,9 @@ class ToyMCSampler: public TestStatSampler {
       ToyMCSampler();
       ToyMCSampler(TestStatistic &ts, Int_t ntoys);
       virtual ~ToyMCSampler();
+   
+      static void SetAlwaysUseMultiGen(Bool_t flag);
 
-      static void SetAlwaysUseMultiGen(Bool_t flag) { fgAlwaysUseMultiGen = flag ; }
       void SetUseMultiGen(Bool_t flag) { fUseMultiGen = flag ; }
 
       // main interface

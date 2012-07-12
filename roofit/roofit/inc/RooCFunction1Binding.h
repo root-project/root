@@ -123,13 +123,7 @@ class RooCFunction1Ref : public TObject {
     return fmap().lookupArgName(_ptr,iarg) ;    
   }
 
-  static RooCFunction1Map<VO,VI>& fmap() {
-    // Return reference to function pointer-to-name mapping service
-    if (!_fmap) {
-      _fmap = new RooCFunction1Map<VO,VI> ;
-    }
-    return *_fmap ;
-  }
+ static RooCFunction1Map<VO,VI>& fmap();
 
  private:
 

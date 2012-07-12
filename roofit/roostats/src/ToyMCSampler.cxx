@@ -126,6 +126,7 @@ void NuisanceParametersSampler::Refresh() {
 Bool_t ToyMCSampler::fgAlwaysUseMultiGen = kFALSE ;
 
 
+void ToyMCSampler::SetAlwaysUseMultiGen(Bool_t flag) { fgAlwaysUseMultiGen = flag ; }
 
 
 

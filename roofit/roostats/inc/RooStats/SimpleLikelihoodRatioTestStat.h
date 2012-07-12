@@ -121,7 +121,8 @@ class SimpleLikelihoodRatioTestStat : public TestStatistic {
 	 if (fDetailedOutput) delete fDetailedOutput;
       }
 
-     static void SetAlwaysReuseNLL(Bool_t flag) { fAlwaysReuseNll = flag ; }
+   static void SetAlwaysReuseNLL(Bool_t flag);
+
      void SetReuseNLL(Bool_t flag) { fReuseNll = flag ; }
 
       //_________________________________________
