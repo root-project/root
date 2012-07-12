@@ -66,16 +66,16 @@ public:
 private:
    CocoaPrivate();
    
-   int GetRootWindowID()const;
-   bool IsRootWindow(int wid)const;
+   Window_t GetRootWindowID()const;
+   bool IsRootWindow(Window_t windowID)const;
    
    CocoaPrivate(const CocoaPrivate &rhs);
    CocoaPrivate &operator = (const CocoaPrivate &rhs);
 
-   unsigned               RegisterDrawable(NSObject *nsObj);
-   NSObject<X11Drawable> *GetDrawable(unsigned drawableD)const;
-   NSObject<X11Window>   *GetWindow(unsigned windowID)const;
-   void                   DeleteDrawable(unsigned drawableID);
+   Drawable_t             RegisterDrawable(NSObject *nsObj);
+   NSObject<X11Drawable> *GetDrawable(Drawable_t drawableD)const;
+   NSObject<X11Window>   *GetWindow(Window_t windowID)const;
+   void                   DeleteDrawable(Drawable_t drawableID);
    
    Handle_t               RegisterGLContext(NSOpenGLContext *glContext);
    void                   DeleteGLContext(Handle_t contextID);
@@ -87,7 +87,7 @@ private:
    
    //This function resets strong reference, if you still want NSObject for drawableID to live,
    //you have to retain the pointer (probably) and also drawableID will become id for nsObj (replacement).
-   void                   ReplaceDrawable(unsigned drawableID, NSObject *nsObj);
+   void                   ReplaceDrawable(Drawable_t drawableID, NSObject *nsObj);
 
    //Color "parser": either parse string like "#ddeeaa", or
    //search rgb.txt like table for named color.
@@ -101,9 +101,9 @@ private:
    FontCache             fFontManager;
 
    //Id for the new registered drawable.
-   unsigned              fCurrentDrawableID;
-   //Cache of ids.
-   std::vector<unsigned> fFreeDrawableIDs;
+   Drawable_t            fCurrentDrawableID;
+   //"Cache" of ids.
+   std::vector<Drawable_t> fFreeDrawableIDs;
    //Cocoa objects (views, windows, "pixmaps").
    std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> > > fDrawables;
    typedef std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> > >::iterator drawable_iterator;

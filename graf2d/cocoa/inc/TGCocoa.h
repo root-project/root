@@ -430,7 +430,7 @@ public:
 protected:
    void *GetCurrentContext();
 
-   Int_t fSelectedDrawable;
+   Drawable_t fSelectedDrawable;
 
    std::auto_ptr<ROOT::MacOSX::Details::CocoaPrivate> fPimpl; //!
    Int_t fCocoaDraw;

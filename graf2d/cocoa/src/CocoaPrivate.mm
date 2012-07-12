@@ -49,7 +49,7 @@ CocoaPrivate::~CocoaPrivate()
 }
 
 //______________________________________________________________________________
-int CocoaPrivate::GetRootWindowID()const
+Window_t CocoaPrivate::GetRootWindowID()const
 {
    //First I had root ID == 0, but this is None in X11 and
    //it can be used by ROOT, for example, I had trouble with
@@ -58,16 +58,20 @@ int CocoaPrivate::GetRootWindowID()const
 }
 
 //______________________________________________________________________________
-bool CocoaPrivate::IsRootWindow(int wid)const
+bool CocoaPrivate::IsRootWindow(Window_t windowID)const
 {
-   return wid == GetRootWindowID();
+   return windowID == GetRootWindowID();
 }
 
 //______________________________________________________________________________
-unsigned CocoaPrivate::RegisterDrawable(NSObject *nsObj)
+Drawable_t CocoaPrivate::RegisterDrawable(NSObject *nsObj)
 {
    //Return integer identifier for a new "drawable" (like in X11)
-   unsigned newID = fCurrentDrawableID;
+
+   if (fCurrentDrawableID == 999)//I have to skip this, many thanks to ROOT who uses 999 as "all windows".
+      ++fCurrentDrawableID;
+
+   Drawable_t newID = fCurrentDrawableID;
 
    if (fFreeDrawableIDs.size()) {
       newID = fFreeDrawableIDs.back();
@@ -76,22 +80,21 @@ unsigned CocoaPrivate::RegisterDrawable(NSObject *nsObj)
       fCurrentDrawableID++;
 
    assert(fDrawables.find(newID) == fDrawables.end() && "RegisterDrawable, id for new drawable is still in use");
-
    fDrawables[newID] = nsObj;
 
    return newID;
 }
 
 //______________________________________________________________________________
-NSObject<X11Drawable> *CocoaPrivate::GetDrawable(unsigned drawableID)const
+NSObject<X11Drawable> *CocoaPrivate::GetDrawable(Drawable_t drawableID)const
 {
    const_drawable_iterator drawableIter = fDrawables.find(drawableID);
    
 #ifdef DEBUG_ROOT_COCOA
    if (drawableIter == fDrawables.end()) {
-      NSLog(@"Fatal error: requested non-existing drawable %u", drawableID);
+      NSLog(@"Fatal error: requested non-existing drawable %lu", drawableID);
       //We do not care about efficiency, ROOT's gonna die on assert :)
-      std::vector<unsigned>::const_iterator deletedDrawable = std::find(fFreeDrawableIDs.begin(), fFreeDrawableIDs.end(), drawableID);
+      std::vector<Drawable_t>::const_iterator deletedDrawable = std::find(fFreeDrawableIDs.begin(), fFreeDrawableIDs.end(), drawableID);
       if (deletedDrawable != fFreeDrawableIDs.end()) {
          NSLog(@"This drawable was deleted already");
       } else {
@@ -104,14 +107,14 @@ NSObject<X11Drawable> *CocoaPrivate::GetDrawable(unsigned drawableID)const
 }
 
 //______________________________________________________________________________
-NSObject<X11Window> *CocoaPrivate::GetWindow(unsigned windowID)const
+NSObject<X11Window> *CocoaPrivate::GetWindow(Window_t windowID)const
 {
    const_drawable_iterator winIter = fDrawables.find(windowID);
 #ifdef DEBUG_ROOT_COCOA
    if (winIter == fDrawables.end()) {
-      NSLog(@"Fatal error: requested non-existing drawable %u", windowID);
+      NSLog(@"Fatal error: requested non-existing drawable %lu", windowID);
       //We do not care about efficiency, ROOT's gonna die on assert :)
-      std::vector<unsigned>::const_iterator deletedDrawable = std::find(fFreeDrawableIDs.begin(), fFreeDrawableIDs.end(), windowID);
+      std::vector<Drawable_t>::const_iterator deletedDrawable = std::find(fFreeDrawableIDs.begin(), fFreeDrawableIDs.end(), windowID);
       if (deletedDrawable != fFreeDrawableIDs.end()) {
          NSLog(@"This window was deleted already");
       } else {
@@ -124,7 +127,7 @@ NSObject<X11Window> *CocoaPrivate::GetWindow(unsigned windowID)const
 }
 
 //______________________________________________________________________________
-void CocoaPrivate::DeleteDrawable(unsigned drawableID)
+void CocoaPrivate::DeleteDrawable(Drawable_t drawableID)
 {
    drawable_iterator drawableIter = fDrawables.find(drawableID);
    assert(drawableIter != fDrawables.end() && "DeleteDrawable, non existing drawableID");
@@ -226,7 +229,7 @@ QuartzWindow *CocoaPrivate::GetFakeGLWindow()
 }
 
 //______________________________________________________________________________
-void CocoaPrivate::ReplaceDrawable(unsigned drawableID, NSObject *nsObj)
+void CocoaPrivate::ReplaceDrawable(Drawable_t drawableID, NSObject *nsObj)
 {
    drawable_iterator drawableIter = fDrawables.find(drawableID);
    assert(drawableIter != fDrawables.end() && "ReplaceDrawable, can not replace non existing drawable");
