@@ -94,7 +94,7 @@ TAlienFile::TAlienFile(const char *purl, Option_t *option,
    fSE = "";
    fImage = 0;
    fNreplicas = 0;
-   fOpenedAt = gSystem->Now();
+   fOpenedAt = time(0);
 }
 
 //______________________________________________________________________________
