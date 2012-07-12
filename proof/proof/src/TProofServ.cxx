@@ -1512,8 +1512,12 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          {  UInt_t mask;
             mess->ReadString(str, sizeof(str));
             sscanf(str, "%d %u", &fLogLevel, &mask);
+            Bool_t levelchanged = (fLogLevel != gProofDebugLevel) ? kTRUE : kFALSE;
             gProofDebugLevel = fLogLevel;
             gProofDebugMask  = (TProofDebug::EProofDebugMask) mask;
+            if (levelchanged)
+               Info("HandleSocketInput:kPROOF_LOGLEVEL", "debug level set to %d (mask: 0x%x)",
+                    gProofDebugLevel, gProofDebugMask);
             if (IsMaster())
                fProof->SetLogLevel(fLogLevel, mask);
          }
