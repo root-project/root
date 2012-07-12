@@ -1233,6 +1233,14 @@ void print_mask_info(ULong_t mask)
    return [fContentView getProperty : propName returnType : type returnFormat : format nElements : nElements];
 }
 
+//______________________________________________________________________________
+- (void) removeProperty : (const char *) propName
+{
+   assert(fContentView != nil && "removeProperty:, content view is nil");
+   
+   [fContentView removeProperty : propName];
+}
+
 //NSWindowDelegate's methods.
 
 //______________________________________________________________________________
@@ -2581,6 +2589,15 @@ void print_mask_info(ULong_t mask)
    *type = property.fType;
 
    return buff;
+}
+
+//______________________________________________________________________________
+- (void) removeProperty : (const char *) propName
+{
+   assert(propName != 0 && "removeProperty:, propName parameter is null");
+   
+   NSString * const key = [NSString stringWithCString : propName encoding : NSASCIIStringEncoding];
+   [fX11Properties removeObjectForKey : key];
 }
 
 //DND

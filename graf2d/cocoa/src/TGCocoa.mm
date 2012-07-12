@@ -3125,18 +3125,45 @@ Handle_t TGCocoa::GetNativeEvent() const
    return Handle_t();
 }
 
-/////////////////////////////////
-
 //______________________________________________________________________________
-void TGCocoa::GetPasteBuffer(Window_t windowID, Atom_t /*atom*/, TString &text, Int_t &nchar, Bool_t /*del*/)
+void TGCocoa::GetPasteBuffer(Window_t windowID, Atom_t propertyID, TString &text, Int_t &nChars, Bool_t clearBuffer)
 {
+   //Comment from TVirtualX:
    // Gets contents of the paste buffer "atom" into the string "text".
    // (nchar = number of characters) If "del" is true deletes the paste
    // buffer afterwards.
+   //End of comment.
+
+   if (!windowID)//From TGX11.
+      return;
    
-   (void) windowID;
-   (void) text;
-   (void) nchar;
+   assert(!fPimpl->IsRootWindow(windowID) && "GetPasteBuffer, windowID parameter is a 'root' window");
+   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "GetPasteBuffer, windowID parameter is not a valid window");
+   assert(propertyID && propertyID <= fAtomToName.size() && "GetPasteBuffer, propertyID parameter is not a valid atom");
+   
+   const Util::AutoreleasePool pool;
+   
+   const std::string &atomString = fAtomToName[propertyID - 1];
+   NSObject<X11Window> *window = fPimpl->GetWindow(windowID);
+   
+   if (![window hasProperty : atomString.c_str()]) {
+      Error("GetPasteBuffer", "No property %s on a window", atomString.c_str());
+      return;
+   }
+
+   Atom_t tmpType = 0;
+   unsigned tmpFormat = 0, nElements = 0;
+   
+   const Util::ScopedArray<char> propertyData((char *)[window getProperty : atomString.c_str() returnType : &tmpType returnFormat : &tmpFormat nElements : &nElements]);
+   assert(tmpFormat == 8 && "GetPasteBuffer, property has wrong format");
+   
+   text.Insert(0, propertyData.Get(), nElements);
+   nChars = (Int_t)nElements;
+
+   if (clearBuffer) {
+      //For the moment - just remove the property (anyway, ChangeProperty/ChangeProperties will re-create it).
+      [window removeProperty : atomString.c_str()];
+   }
 }
 
 //______________________________________________________________________________
@@ -3688,15 +3715,31 @@ void TGCocoa::ConvertPrimarySelection(Window_t windowID, Atom_t clipboard, Time_
    
    const Util::AutoreleasePool pool;
    (void)clipboard;
+   
+   //Noop.
 }
 
 //______________________________________________________________________________
-void TGCocoa::DeleteProperty(Window_t, Atom_t&)
+void TGCocoa::DeleteProperty(Window_t windowID, Atom_t &propertyID)
 {
+   //Comment from TVirtualX:
    // Deletes the specified property only if the property was defined on the
    // specified window and causes the X server to generate a PropertyNotify
    // event on the window unless the property does not exist.
+   //End of comment.
 
+   //Strange signature - why propertyID is a reference?
+   
+   //TODO: check, if ROOT sets/deletes properties on a 'root' window.
+   assert(!fPimpl->IsRootWindow(windowID) && "DeleteProperty, windowID parameter is a 'root' window");
+   assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "DeleteProperty, windowID parameter is not a valid window");
+   assert(propertyID && propertyID <= fAtomToName.size() && "DeleteProperty, propertyID parameter is invalid atom");
+   
+   if (!windowID)//Can this happen?
+      return;
+   
+   const std::string &atomString = fAtomToName[propertyID - 1];
+   [fPimpl->GetWindow(windowID) removeProperty : atomString.c_str()];
 }
 
 //______________________________________________________________________________

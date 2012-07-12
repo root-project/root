@@ -146,6 +146,7 @@
 - (BOOL) hasProperty : (const char *) propName;
 - (unsigned char *) getProperty : (const char *) propName returnType : (Atom_t *) type 
    returnFormat : (unsigned *) format nElements : (unsigned *) nElements;
+- (void) removeProperty : (const char *) propName;
 
 @end
 
