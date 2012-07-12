@@ -49,6 +49,8 @@ public:              // public because of Sun CC bug
 private:
    TList      *fPackets;         // All processed packets
    TMap       *fWrkStats;        // Worker status, keyed by correspondig TSlave
+   TList      *fWrkExcluded;     // List of nodes excluded from distribution
+                                 // (submasters with no active workers)
    TStopwatch *fStopwatch;       // For measuring the start time of each packet
    Long64_t    fProcessing;      // Event being processed
    Long64_t    fAssigned;        // Entries processed or being processed.

@@ -223,11 +223,23 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
 
    fWrkStats = new TMap;
    fWrkStats->SetOwner(kFALSE);
+   fWrkExcluded = 0;
 
    TSlave *slave;
    TIter si(slaves);
-   while ((slave = (TSlave*) si.Next()))
-      fWrkStats->Add(slave, new TSlaveStat(slave, input));
+   while ((slave = (TSlave*) si.Next())) {
+      if (slave->GetParallel() > 0) {
+         fWrkStats->Add(slave, new TSlaveStat(slave, input));
+      } else {
+         if (!fWrkExcluded) {
+            fWrkExcluded = new TList;
+            fWrkExcluded->SetOwner(kFALSE);
+         }
+         PDB(kPacketizer,2)
+            Info("TPacketizerUnit", "node '%s' has NO active worker: excluded from work distribution", slave->GetOrdinal());
+         fWrkExcluded->Add(slave);
+      }
+   }
 
    fTotalEntries = 0;
    fNumPerWorker = -1;
@@ -285,6 +297,7 @@ TPacketizerUnit::~TPacketizerUnit()
    if (fWrkStats)
       fWrkStats->DeleteValues();
    SafeDelete(fWrkStats);
+   SafeDelete(fWrkExcluded);
    SafeDelete(fPackets);
    SafeDelete(fStopwatch);
 }
@@ -335,7 +348,12 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
 
    // Find slave
    TSlaveStat *slstat = (TSlaveStat*) fWrkStats->GetValue(sl);
-   R__ASSERT(slstat != 0);
+   if (!slstat) {
+      // If the worker is none of the known lists, we abort
+      if (!fWrkExcluded->FindObject(sl)) R__ASSERT(slstat != 0);
+      // Just return, this worker node is not active
+      return 0;
+   }
 
    PDB(kPacketizer,2)
       Info("GetNextPacket","worker-%s: fAssigned %lld\t", sl->GetOrdinal(), fAssigned);
@@ -355,7 +373,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
       // Calculate the progress made in the last packet
       TProofProgressStatus *progress = 0;
       if (status) {
-         // upadte the worker status
+         // update the worker status
          numev = status->GetEntries() - slstat->GetEntriesProcessed();
          progress = slstat->AddProcessed(status);
          if (progress) {
@@ -477,10 +495,10 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
                if (wrkStat->fRate > 0) {
                   nrm++;
                   sumRate += wrkStat->fRate;
-                  PDB(kPacketizer,3)
-                     Info("GetNextPacket", "%d: worker-%s: rate %lf /s (sum: %lf /s)",
-                                           nrm, tmpWrk->GetOrdinal(), wrkStat->fRate, sumRate);
                }
+               PDB(kPacketizer,3)
+                  Info("GetNextPacket", "%d: worker-%s: rate %lf /s (sum: %lf /s)",
+                                          nrm, tmpWrk->GetOrdinal(), wrkStat->fRate, sumRate);
             } else {
                Warning("GetNextPacket", "dynamic_cast<TSlaveStat *> failing on value for '%s (%s)'! Skipping",
                                         tmpWrk->GetName(), tmpWrk->GetOrdinal());
