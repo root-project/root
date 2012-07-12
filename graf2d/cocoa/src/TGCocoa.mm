@@ -2700,9 +2700,12 @@ void TGCocoa::PutImage(Drawable_t drawableID, GContext_t gc, Drawable_t imageID,
 }
 
 //______________________________________________________________________________
-void TGCocoa::DeleteImage(Drawable_t /*img*/)
+void TGCocoa::DeleteImage(Drawable_t imageID)
 {
    // Deallocates the memory associated with the image img
+   assert(IsImageOrPixmap(fPimpl->GetDrawable(imageID)) && "DeleteImage, imageID parameter is not a valid image id");
+
+   DeletePixmap(imageID);
 }
 
 //OpenGL management.
