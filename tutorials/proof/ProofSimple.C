@@ -66,7 +66,8 @@ void ProofSimple::Begin(TTree * /*tree*/)
       if (option.Tokenize(s, from, ";") && s.IsDigit()) fNhist = s.Atoi();
    }
    if (fNhist < 1) {
-      Abort("fNhist must be > 0!", kAbortProcess);
+      Abort("fNhist must be > 0! Hint: proof->SetParameter(\"ProofSimple_NHist\","
+            " (Long_t) <nhist>)", kAbortProcess);
       return;
    }
 
@@ -102,7 +103,8 @@ void ProofSimple::SlaveBegin(TTree * /*tree*/)
       if (option.Tokenize(s, from, ";") && s.IsDigit()) fNhist = s.Atoi();
    }
    if (fNhist < 1) {
-      Abort("fNhist must be > 0!", kAbortProcess);
+      Abort("fNhist must be > 0! Hint: proof->SetParameter(\"ProofSimple_NHist\","
+            " (Long_t) <nhist>)", kAbortProcess);
       return;
    }
    fHist = new TH1F*[fNhist];
