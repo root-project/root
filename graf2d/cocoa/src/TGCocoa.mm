@@ -1846,7 +1846,14 @@ void TGCocoa::DrawString(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, const 
 
       if (ParentRendersToChild(view)) {//Ufff.
          if (X11::LockFocus(view)) {
-            DrawStringAux(view.fID, gcVals, x, y, text, len);
+
+            try {
+               DrawStringAux(view.fID, gcVals, x, y, text, len);
+            } catch (const std::exception &) {
+               X11::UnlockFocus(view);
+               return;
+            }
+
             X11::UnlockFocus(view);
             return;
          }
