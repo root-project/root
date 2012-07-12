@@ -3714,7 +3714,6 @@ Int_t TGCocoa::GetProperty(Window_t windowID, Atom_t propertyID, Long_t, Long_t,
    if (fPimpl->IsRootWindow(windowID))
       return 0;
    
-//   assert(!fPimpl->IsRootWindow(windowID) && "GetProperty, windowID parameter is a 'root' window");
    assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "GetProperty, windowID is not a valid window id");
    assert(propertyID > 0 && propertyID <= fAtomToName.size() && "GetProperty, propertyID parameter is not a valid atom");
    assert(actualType != 0 && "GetProperty, actualType parameter is null");
@@ -3807,8 +3806,6 @@ void TGCocoa::ChangeProperties(Window_t windowID, Atom_t propertyID, Atom_t type
    assert(!fPimpl->IsRootWindow(windowID) && "ChangeProperties, windowID parameter is a 'root' window");
    assert(!IsImageOrPixmap(fPimpl->GetDrawable(windowID)) && "ChangeProperties, windowID parameter is not a valid window id");
    assert(propertyID && propertyID <= fAtomToName.size() && "ChangeProperties, propertyID parameter is not a valid atom");
-
-
 
    if (!windowID)//From TGWin32.
       return;

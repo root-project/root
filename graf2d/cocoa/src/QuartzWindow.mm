@@ -2599,19 +2599,54 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (BOOL) performDragOperation : (id<NSDraggingInfo>) sender
 {
+   //We can drag some files (images, pdfs, source code files) from
+   //finder to ROOT's window (mainly TCanvas or text editor).
+   //The logic is totally screwed here :((( - ROOT will try to
+   //read a property of some window (not 'self', unfortunately) -
+   //this works since on Window all data is in a global clipboard
+   //(on X11 it simply does not work at all).
+   //I'm attaching the file name as a property for the top level window,
+   //there is no other way to make this data accessible for ROOT.
+
    NSPasteboard * const pasteBoard = [sender draggingPasteboard];
    const NSDragOperation sourceDragMask = [sender draggingSourceOperationMask];
-   
+
    if ([[pasteBoard types] containsObject : NSFilenamesPboardType] && (sourceDragMask & NSDragOperationCopy)) {
-#if 0
-      //Gdk on windows creates three events on file drop: XdndEnter, XdndPosition, XdndDrop.
+
+      //Here I try to put string ("file://....") into window's property to make
+      //it accesible from ROOT's GUI.
+      const Atom_t textUriAtom = gVirtualX->InternAtom("text/uri-list", kFALSE);
+
+      NSArray * const files = [pasteBoard propertyListForType : NSFilenamesPboardType];
+      for (NSString *path in files) {
+         //ROOT can not process several files, use the first one.
+         NSString * const item = [@"file://" stringByAppendingString : path];
+         //Yes, only ASCII encoding, but after all, ROOT's not able to work with NON-ASCII strings.
+         const NSUInteger len = [item lengthOfBytesUsingEncoding : NSASCIIStringEncoding] + 1;
+         try {
+            std::vector<unsigned char> propertyData(len);
+            [item getCString : (char *)&propertyData[0] maxLength : propertyData.size() encoding : NSASCIIStringEncoding];
+            //There is no any guarantee, that this will ever work, logic in TGDNDManager is totally crazy.
+            NSView<X11Window> * const targetView = self.fQuartzWindow.fContentView;
+            [targetView setProperty : "_XC_DND_DATA" data : &propertyData[0] size : propertyData.size() forType : textUriAtom format : 8];
+         } catch (const std::bad_alloc &) {
+            NSLog(@"QuartzView: -performDragOperation, memory allocation failed");//Hehe, can I log something in case of bad_alloc??? ;)
+            return NO;
+         }
+
+         break;
+      }
+      
+      //Property is attached now.
+
+      //Gdk on windows creates three events on file drop (WM_DROPFILES): XdndEnter, XdndPosition, XdndDrop.
       //1. Dnd enter.
       Event_t event1 = {};
       event1.fType = kClientMessage;
       event1.fWindow = fID;
       event1.fHandle = gVirtualX->InternAtom("XdndEnter", kFALSE);
       event1.fUser[0] = long(fID);
-      event1.fUser[2] = gVirtualX->InternAtom("text/uri-list", kFALSE);
+      event1.fUser[2] = textUriAtom;//gVirtualX->InternAtom("text/uri-list", kFALSE);
       //
       gVirtualX->SendEvent(fID, &event1);
 
@@ -2633,25 +2668,8 @@ void print_mask_info(ULong_t mask)
       event3.fType = kClientMessage;
       event3.fWindow = fID;
       event3.fHandle = gVirtualX->InternAtom("XdndDrop", kFALSE);
-   
-      //Here I have to put string ("file://....") into the ROOT's paste board.
-      NSArray * const files = [pasteBoard propertyListForType : NSFilenamesPboardType];
-      NSPasteboard * const rootPasteboard = [NSPasteboard generalPasteboard];
-      [rootPasteboard clearContents];
 
-      NSMutableArray * const cpData = [[NSMutableArray alloc] init];
-      for (id file in files) {
-         NSString *item = [@"file://" stringByAppendingString : file];
-         [cpData addObject : item];
-      }
-
-      [rootPasteboard writeObjects : cpData];
-      [cpData release];
-      
       gVirtualX->SendEvent(fID, &event3);
-#else
-      NSLog(@"File drop.");
-#endif
    }
 
    return YES;//Always ok, even if file type is not supported - no need in "animation".

@@ -348,8 +348,6 @@ public:
 
    virtual Int_t     GetDoubleBuffer(Int_t wid);
 
-
-
    virtual Pixmap_t  ReadGIF(Int_t x0, Int_t y0, const char *file, Window_t wid);
    virtual Int_t     RequestLocator(Int_t mode, Int_t ctyp, Int_t &x, Int_t &y);
    virtual Int_t     RequestString(Int_t x, Int_t y, char *text);
