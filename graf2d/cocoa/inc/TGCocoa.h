@@ -441,6 +441,7 @@ protected:
 private:
    bool MakeProcessForeground();
    Atom_t FindAtom(const std::string &atomName, bool addIfNotFound);
+   void SetApplicationIcon();
 
    bool fForegroundProcess;
    std::vector<GCValues_t> fX11Contexts;
@@ -464,6 +465,8 @@ private:
    Atom_t fTargetString;
    
    Window_t fSelectionOwner;
+   
+   bool fSetIcon;
 
 public:
    static Atom_t fgDeleteWindowAtom;

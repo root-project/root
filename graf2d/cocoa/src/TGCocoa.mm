@@ -35,11 +35,13 @@
 #include "TGLFormat.h"
 #include "TGClient.h"
 #include "TGWindow.h"
+#include "TSystem.h"
 #include "TGFrame.h"
 #include "TGCocoa.h"
 #include "TError.h"
 #include "TColor.h"
 #include "TROOT.h"
+#include "TEnv.h"
 
 //Style notes: I'm using a lot of asserts to check pre-conditions - mainly function parameters.
 //In asserts, expression always looks like 'p != 0' for "C++ pointer" (either object of built-in type
@@ -253,7 +255,8 @@ TGCocoa::TGCocoa()
               fForegroundProcess(false),
               fCurrentMessageID(1),
               fTargetString(31),//Gdk has hardcoded GDK_TARGET_STRING, which is 31.
-              fSelectionOwner(kNone)
+              fSelectionOwner(kNone),
+              fSetIcon(true)
 {
    fPimpl.reset(new Details::CocoaPrivate);
 
@@ -284,7 +287,8 @@ TGCocoa::TGCocoa(const char *name, const char *title)
               fForegroundProcess(false),
               fCurrentMessageID(1),
               fTargetString(31),//Gdk has hardcoded GDK_TARGET_STRING, which is 31.
-              fSelectionOwner(kNone)
+              fSelectionOwner(kNone),
+              fSetIcon(true)
 {
    fPimpl.reset(new Details::CocoaPrivate);
    
@@ -870,6 +874,9 @@ void TGCocoa::MapWindow(Window_t wid)
    
    if (MakeProcessForeground())
       [fPimpl->GetWindow(wid) mapWindow];
+      
+   if (fSetIcon)
+      SetApplicationIcon();
 }
 
 //______________________________________________________________________________
@@ -4093,3 +4100,20 @@ Atom_t TGCocoa::FindAtom(const std::string &atomName, bool addIfNotFound)
    return Atom_t();
 }
 
+//______________________________________________________________________________
+void TGCocoa::SetApplicationIcon()
+{
+   if (gEnv) {
+      const char * const iconDirectoryPath = gEnv->GetValue("Gui.IconPath","$(ROOTSYS)/icons");//This one I do not own.
+      if (iconDirectoryPath) {
+         const Util::ScopedArray<char> fileName(gSystem->Which(iconDirectoryPath, "RootIcon.ico", kReadPermission));
+         if (fileName.Get()) {
+            const Util::AutoreleasePool pool;
+            NSString *cocoaStr = [NSString stringWithCString : fileName.Get() encoding : NSASCIIStringEncoding];//Aha, ASCII ;) do not install root in ...
+            NSImage *image = [[[NSImage alloc] initWithContentsOfFile : cocoaStr] autorelease];
+            [NSApp setApplicationIconImage : image];
+         }
+      }
+      fSetIcon = false;
+   }
+}
