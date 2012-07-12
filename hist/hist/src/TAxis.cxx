@@ -953,13 +953,6 @@ void TAxis::SetTimeFormat(const char *tformat)
 
    TString timeformat = tformat;
 
-   Int_t lnF = timeformat.Length();
-   Int_t idG = timeformat.Index("GMT");
-
-   if (idG) {
-      if (idG+3==lnF) timeformat.Append(Form("%d",TTimeStamp::GetZoneOffset()));
-   }
-
    if (timeformat.Index("%F")>=0 || timeformat.IsNull()) {
       fTimeFormat = timeformat;
       return;
@@ -967,7 +960,7 @@ void TAxis::SetTimeFormat(const char *tformat)
 
    Int_t idF = fTimeFormat.Index("%F");
    if (idF>=0) {
-      lnF = fTimeFormat.Length();
+      Int_t lnF = fTimeFormat.Length();
       TString stringtimeoffset = fTimeFormat(idF,lnF);
       fTimeFormat = tformat;
       fTimeFormat.Append(stringtimeoffset);
@@ -982,13 +975,10 @@ void TAxis::SetTimeFormat(const char *tformat)
 void TAxis::SetTimeOffset(Double_t toffset, Option_t *option)
 {
    // Change the time offset
-   // If option = "gmt" the time offset is treated as a GMT time.
+   // If option = "gmt", set display mode to GMT.
 
    TString opt = option;
    opt.ToLower();
-
-   Bool_t gmt = kFALSE;
-   if (opt.Contains("gmt")) gmt = kTRUE;
 
    char tmp[20];
    time_t timeoff;
@@ -998,20 +988,20 @@ void TAxis::SetTimeOffset(Double_t toffset, Option_t *option)
    fTimeFormat.Append("%F");
 
    timeoff = (time_t)((Long_t)(toffset));
+   // offset is always saved in GMT to allow file transport
+   // to different time zones
    utctis = gmtime(&timeoff);
-
+   
    strftime(tmp,20,"%Y-%m-%d %H:%M:%S",utctis);
    fTimeFormat.Append(tmp);
 
    // append the decimal part of the time offset
    Double_t ds = toffset-(Int_t)toffset;
-   if(ds!= 0) {
-      snprintf(tmp,20,"s%g",ds);
-      fTimeFormat.Append(tmp);
-   }
+   snprintf(tmp,20,"s%g",ds);
+   fTimeFormat.Append(tmp);
 
-   // If the time is GMT, stamp fTimeFormat
-   if (gmt) fTimeFormat.Append(Form(" GMT%d",TTimeStamp::GetZoneOffset()));
+   // add GMT/local option
+   if (opt.Contains("gmt")) fTimeFormat.Append(" GMT");
 }
 
 
