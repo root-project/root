@@ -1851,7 +1851,7 @@ void TGCocoa::DrawString(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, const 
                DrawStringAux(view.fID, gcVals, x, y, text, len);
             } catch (const std::exception &) {
                X11::UnlockFocus(view);
-               return;
+               throw;
             }
 
             X11::UnlockFocus(view);
