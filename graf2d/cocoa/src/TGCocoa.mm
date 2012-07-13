@@ -774,7 +774,7 @@ void TGCocoa::SelectInput(Window_t windowID, UInt_t evmask)
    // set at window creation time via the SetWindowAttributes_t::fEventMask
    // attribute.
    
-   //TGuiBldDragManager selects input on a ROOT window.
+   //TGuiBldDragManager selects input on a 'root' window.
    //TGWin32 has a check on windowID == 0.
    if (windowID <= fPimpl->GetRootWindowID())
       return;
