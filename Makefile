@@ -261,12 +261,6 @@ ifeq ($(BUILDALIEN),yes)
 MODULES      += net/alien
 endif
 endif
-ifeq ($(BUILDCLARENS),yes)
-MODULES      += proof/clarens
-endif
-ifeq ($(BUILDPEAC),yes)
-MODULES      += proof/peac
-endif
 ifneq ($(ARCH),win32)
 MODULES      += net/rpdutils net/rootd proof/proofd proof/pq2 proof/proofbench
 endif
@@ -294,7 +288,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 net/ldap net/krb5auth net/rpdutils net/globusauth \
                 bindings/pyroot bindings/ruby io/gfal misc/minicern \
                 graf2d/qt gui/qtroot gui/qtgsi net/netx net/alien \
-                proof/proofd proof/proofx proof/clarens proof/peac proof/pq2 \
+                proof/proofd proof/proofx proof/pq2 \
                 sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
                 tmva math/genetic io/hdfs graf2d/fitsio roofit/roofitcore \
                 roofit/roofit roofit/roostats roofit/histfactory \

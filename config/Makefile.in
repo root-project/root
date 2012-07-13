@@ -342,12 +342,6 @@ BUILDTABLE     := @buildtable@
 
 BUILDTMVA      := @buildtmva@
 
-BUILDCLARENS   := @buildclarens@
-CLARENSINC     := $(filter-out -I/usr/include, @clarensincdir@)
-CLARENSLIBS    := @clarenslibs@
-
-BUILDPEAC      := @buildpeac@
-
 BUILDAFDSMGRD  := @buildafdsmgrd@
 AFDSMGRDAPMON  := @afdsmgrdapmon@
 
