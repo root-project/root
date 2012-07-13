@@ -2054,7 +2054,7 @@ Pixmap_t TGCocoa::CreatePixmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
    Util::NSScopeGuard<QuartzImage> mem([QuartzImage alloc]);
    if (!mem.Get()) {
       Error("CreatePixmap", "[QuartzImage alloc] failed");
-      return Pixmap_t();
+      return kNone;
    }
 
    QuartzImage *image = nil;
@@ -2066,7 +2066,7 @@ Pixmap_t TGCocoa::CreatePixmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
 
    if (!image) {
       Error("CreatePixmap", "[QuartzImage initWithW:H:data:] failed");
-      return Pixmap_t();
+      return kNone;
    }
 
    mem.Reset(image);
@@ -2100,13 +2100,13 @@ Pixmap_t TGCocoa::CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t
    Util::NSScopeGuard<QuartzImage> mem([QuartzImage alloc]);
    if (!mem.Get()) {
       Error("CreatePixmapFromData", "[QuartzImage alloc] failed");
-      return Pixmap_t();
+      return kNone;
    }
 
    QuartzImage * const image = [mem.Get() initWithW : width H : height data : imageData];
    if (!image) {
       Error("CreatePixmapFromData", "[QuartzImage initWithW:H:data:] failed");
-      return Pixmap_t();
+      return kNone;
    }
    
    mem.Reset(image);
@@ -2144,12 +2144,12 @@ Pixmap_t TGCocoa::CreateBitmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
    Util::NSScopeGuard<QuartzImage> mem([QuartzImage alloc]);
    if (!mem.Get()) {
       Error("CreateBitmap", "[QuartzImage alloc] failed");
-      return Pixmap_t();
+      return kNone;
    }
 
    QuartzImage * const image = [mem.Get() initMaskWithW : width H : height bitmapMask: imageData];
    if (!image)//Error is already reported by QuartzImage.
-      return Pixmap_t();
+      return kNone;
    
    mem.Reset(image);
    arrayGuard.Release();//Now, imageData is owned by image.
@@ -2990,7 +2990,7 @@ Handle_t TGCocoa::GetCurrentOpenGLContext()
    NSOpenGLContext * const currentContext = [NSOpenGLContext currentContext];
    if (!currentContext) {
       Error("GetCurrentOpenGLContext", "The current OpenGL context is null");
-      return Handle_t();
+      return kNone;
    }
    
    const Handle_t contextID = fPimpl->GetHandleForGLContext(currentContext);
@@ -3243,8 +3243,9 @@ Bool_t TGCocoa::CheckEvent(Window_t /*wid*/, EGEventType /*type*/, Event_t & /*e
 //______________________________________________________________________________
 Handle_t TGCocoa::GetNativeEvent() const
 {
-   //Ne dlia tebia mama iagodku rastila.
-   return Handle_t();
+   //I can not give an access to the native event,
+   //it even, probably, does not exist already.
+   return kNone;
 }
 
 //"Drag and drop", "Copy and paste", X11 properties.
@@ -3682,7 +3683,7 @@ Pixmap_t TGCocoa::ReadGIF(Int_t /*x0*/, Int_t /*y0*/, const char * /*file*/, Win
    // If id is NULL - loads the specified gif file at position [x0,y0] in the
    // current window. Otherwise creates pixmap from gif file
 
-   return 0;
+   return kNone;
 }
 
 //______________________________________________________________________________
@@ -4107,7 +4108,7 @@ Atom_t TGCocoa::FindAtom(const std::string &atomName, bool addIfNotFound)
       return Atom_t(fAtomToName.size());
    }
  
-   return Atom_t();
+   return kNone;
 }
 
 //______________________________________________________________________________
