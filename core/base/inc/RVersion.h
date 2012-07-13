@@ -14,12 +14,12 @@
  *
 */
 
-#define ROOT_RELEASE "5.32/03"
-#define ROOT_RELEASE_DATE "May  9 2012"
-#define ROOT_RELEASE_TIME "12:21:27"
-#define ROOT_SVN_REVISION 44167
+#define ROOT_RELEASE "5.32/04"
+#define ROOT_RELEASE_DATE "Jul 13 2012"
+#define ROOT_RELEASE_TIME "11:06:55"
+#define ROOT_SVN_REVISION 45011
 #define ROOT_SVN_BRANCH "branches/v5-32-00-patches"
-#define ROOT_VERSION_CODE 335875
+#define ROOT_VERSION_CODE 335876
 #define ROOT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 #endif
