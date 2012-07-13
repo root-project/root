@@ -54,7 +54,6 @@ options="                    \
    enable_castor             \
    enable_chirp              \
    enable_cintex             \
-   enable_clarens            \
    enable_cling              \
    enable_cocoa              \
    enable_dcache             \
@@ -81,7 +80,6 @@ options="                    \
    enable_odbc               \
    enable_opengl             \
    enable_oracle             \
-   enable_peac               \
    enable_pgsql              \
    enable_pythia6            \
    enable_pythia8            \
@@ -1498,7 +1496,6 @@ enable/disable options, prefix with either --enable- or --disable-
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
   chirp              Chirp filesystem support, requires cctools >= 3.2.2
   cintex             Build the libCintex Reflex interface library
-  clarens            Clarens RPC support, optionally used by PROOF
   cling              Use cling as interpreter backend (experimental!), needs --with-llvm-config
   cocoa              Use native Cocoa/Quartz graphics backend (MacOS X only)
   dcache             dCache support, requires libdcap from DESY
@@ -1525,7 +1522,6 @@ enable/disable options, prefix with either --enable- or --disable-
   odbc               ODBC support, requires libiodbc or libodbc
   opengl             OpenGL support, requires libGL and libGLU
   oracle             Oracle support, requires libocci
-  peac               PEAC, PROOF Enabled Analysis Center, requires Clarens
   pgsql              PostgreSQL support, requires libpq
   pythia6            Pythia6 EG support, requires libPythia6
   pythia8            Pythia8 EG support, requires libPythia8
@@ -5998,81 +5994,6 @@ result $enable_memstat
 
 ######################################################################
 #
-### echo %%% Clarens Support - Third party libraries
-#
-# (See http://clarens.sourceforge.net/)
-#
-checking_msg "Clarens support"
-
-if test ! "x$enable_clarens" = "xno" ; then
-
-    myxmlrpc=`$cwhich xmlrpc-c-config 2> /dev/null`
-    if test ! "x$myxmlrpc" = "x" && test -x "$myxmlrpc" ; then
-        clarensincdir=`xmlrpc-c-config curl-client --cflags 2> /dev/null`
-        if test $? -ne 0 ; then clarensincdir= ; fi
-        clarenslibs=`xmlrpc-c-config curl-client --ldadd 2> /dev/null`
-        if test $? -ne 0 ; then clarenslibs= ; fi
-        if test "x$clarensincdir" = "x" ; then
-            clarensincdir=`xmlrpc-c-config client --cflags 2> /dev/null`
-            if test $? -ne 0 ; then clarensincdir= ; fi
-            clarenslibs=`xmlrpc-c-config client --ldadd 2> /dev/null`
-            if test $? -ne 0 ; then clarenslibs= ; fi
-        fi
-        if test "x$clarensincdir" = "x" ; then
-            clarensincdir=`xmlrpc-c-config --cflags 2> /dev/null`
-            if test $? -ne 0 ; then clarensincdir= ; fi
-            clarenslibs=`xmlrpc-c-config --ldadd 2> /dev/null`
-            if test $? -ne 0 ; then clarenslibs= ; fi
-        fi
-    else
-        clarensincdir=""
-        clarenslibs=""
-    fi
-    if test "x$cryptolib" = "x" ; then
-        # depends also on libcrypto
-        clarensincdir=""
-        clarenslibs=""
-    fi
-    if test "x$clarensincdir" = "x" || test "x$clarenslibs" = "x"; then
-        enable_clarens="no"
-    fi
-fi
-
-if test "x$enable_clarens" = "xyes" ; then
-    result "yes"
-else
-    result "no"
-fi
-check_explicit "$enable_clarens" "$enable_clarens_explicit" \
-     "Explicitly required Clarens dependencies not fulfilled"
-
-######################################################################
-#
-### echo %%% PEAC Support - depends on Clarens
-#
-# (See http://www.clarens.org)
-#
-checking_msg "PEAC support"
-
-if test ! "x$enable_peac" = "xno" ; then
-
-    if test "x$enable_clarens" = "xno"; then
-        enable_peac="no"
-    fi
-fi
-
-if test "x$enable_peac" = "xyes" ; then
-    buildpeac="yes"
-else
-    buildpeac="no"
-fi
-
-result "$buildpeac"
-check_explicit "$enable_peac" "$enable_peac_explicit" \
-     "Explicitly required Peac dependencies not fulfilled"
-
-######################################################################
-#
 ### echo %%% Check for afdsmgrd support
 #
 # afdsmgrd -- Dataset manager for PROOF-based analysis facilities
@@ -6200,7 +6121,6 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_unuran"   = "xyes" && pl="$pl libroot-math-unuran"
     test "x$enable_table"    = "xyes" && pl="$pl libroot-misc-table"
     test "x$enable_ldap"     = "xyes" && pl="$pl libroot-net-ldap"
-    test "x$enable_clarens"  = "xyes" && pl="$pl libroot-proof-clarens"
     test "x$enable_roofit"   = "xyes" && pl="$pl libroot-roofit"
     test "x$enable_asimage"  = "xyes" && pl="$pl root-plugin-graf2d-asimage"
     test "x$enable_gdml"     = "xyes" && pl="$pl root-plugin-geom-gdml"
@@ -6223,7 +6143,6 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_krb5"     = "xyes" && pl="$pl root-plugin-net-krb5"
     test "x$enable_monalisa" = "xyes" && pl="$pl root-plugin-net-monalisa"
     test "x$enable_srp"      = "xyes" && pl="$pl root-plugin-net-srp"
-    test "x$enable_peac"     = "xyes" && pl="$pl root-plugin-proof-peac"
     test "x$enable_mysql"    = "xyes" && pl="$pl root-plugin-sql-mysql"
     test "x$enable_odbc"     = "xyes" && pl="$pl root-plugin-sql-odbc"
     test "x$enable_oracle"   = "xyes" && pl="$pl root-plugin-sql-oracle"
@@ -6619,8 +6538,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@cintmaxstruct@|$cintmaxstruct|"      \
     -e "s|@cintmaxtypedef@|$cintmaxtypedef|"    \
     -e "s|@cintlongline@|$cintlongline|"        \
-    -e "s|@clarensincdir@|$clarensincdir|"      \
-    -e "s|@clarenslibs@|$clarenslibs|"          \
     -e "s|@cintincdir@|$cintincdir|"            \
     -e "s|@cppunit@|$cppunit|"                  \
     -e "s|@datadir@|$datadir|"                  \
@@ -6838,8 +6755,6 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildsrputil@|$enable_srputil|"      \
     -e "s|@buildkrb5@|$enable_krb5|"            \
     -e "s|@buildglobus@|$enable_globus|"        \
-    -e "s|@buildclarens@|$enable_clarens|"      \
-    -e "s|@buildpeac@|$buildpeac|"              \
     -e "s|@buildafdsmgrd@|$enable_afdsmgrd|"    \
     -e "s|@afdsmgrdapmon@|$afdsmgrdapmon|"      \
     -e "s|@buildglite@|$enable_glite|"          \
