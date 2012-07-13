@@ -113,7 +113,8 @@ namespace RooStats {
      bool IsTwoSided() const { return fLimitType == twoSided; }
      bool IsOneSidedDiscovery() const { return fLimitType == oneSidedDiscovery; }
 
-     static void SetAlwaysReuseNLL(Bool_t flag) { fgAlwaysReuseNll = flag ; }
+     static void SetAlwaysReuseNLL(Bool_t flag);
+
      void SetReuseNLL(Bool_t flag) { fReuseNll = flag ; }
 
      void SetMinimizer(const char* minimizer){ fMinimizer=minimizer;}

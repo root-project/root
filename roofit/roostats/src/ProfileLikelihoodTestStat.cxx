@@ -28,6 +28,8 @@ using namespace std;
 
 Bool_t RooStats::ProfileLikelihoodTestStat::fgAlwaysReuseNll = kTRUE ;
 
+void RooStats::ProfileLikelihoodTestStat::SetAlwaysReuseNLL(Bool_t flag) { fgAlwaysReuseNll = flag ; }
+
 Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, RooAbsData& data, RooArgSet& paramsOfInterest) {
         // interna function to evaluate test statistics
         // can do depending on type: 

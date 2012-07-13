@@ -175,7 +175,7 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
 	    fAltProfile.EnableDetailedOutput(fDetailedOutputEnabled);
     }
 
-    static void SetAlwaysReuseNLL(Bool_t flag) { fgAlwaysReuseNll = flag ; }
+   static void SetAlwaysReuseNLL(Bool_t flag); 
 
    void SetReuseNLL(Bool_t flag) { 
       fNullProfile.SetReuseNLL(flag);  
