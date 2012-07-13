@@ -765,7 +765,7 @@ void TGCocoa::ChangeWindowAttributes(Window_t wid, SetWindowAttributes_t *attr)
 }
 
 //______________________________________________________________________________
-void TGCocoa::SelectInput(Window_t wid, UInt_t evmask)
+void TGCocoa::SelectInput(Window_t windowID, UInt_t evmask)
 {
    //No-throw guarantee.
 
@@ -774,9 +774,12 @@ void TGCocoa::SelectInput(Window_t wid, UInt_t evmask)
    // set at window creation time via the SetWindowAttributes_t::fEventMask
    // attribute.
    
-   assert(!fPimpl->IsRootWindow(wid) && "SelectInput, called for 'root' window");
+   //TGuiBldDragManager selects input on a ROOT window.
+   //TGWin32 has a check on windowID == 0.
+   if (windowID <= fPimpl->GetRootWindowID())
+      return;
    
-   NSObject<X11Window> * const window = fPimpl->GetWindow(wid);
+   NSObject<X11Window> * const window = fPimpl->GetWindow(windowID);
    //XSelectInput overrides previous mask.
    window.fEventMask = evmask;
 }
