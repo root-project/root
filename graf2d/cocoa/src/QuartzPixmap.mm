@@ -15,6 +15,7 @@
 #import <stdexcept>
 #import <cassert>
 #import <cstddef>
+#import <new>
 
 #import "QuartzWindow.h"
 #import "QuartzPixmap.h"
@@ -99,7 +100,7 @@ namespace Quartz = ROOT::Quartz;
    unsigned char *memory = 0;
    
    try {
-      memory = new unsigned char[width * height * 4];//[0]
+      memory = new unsigned char[width * height * 4]();//[0]
    } catch (const std::bad_alloc &) {
       NSLog(@"QuartzPixmap: -resizeW:H:, memory allocation failed");
       return NO;
@@ -401,8 +402,8 @@ namespace Quartz = ROOT::Quartz;
 //______________________________________________________________________________
 - (id) initMaskWithW : (unsigned) width H : (unsigned) height bitmapMask : (unsigned char *)mask
 {
-   assert(width > 0 && "initMaskWithW:H:bitmapMask:, width parameter is zero");
-   assert(height > 0 && "initMaskWithW:H:bitmapMask:, height parameter is zero");
+   assert(width != 0 && "initMaskWithW:H:bitmapMask:, width parameter is zero");
+   assert(height != 0 && "initMaskWithW:H:bitmapMask:, height parameter is zero");
    assert(mask != 0 && "initMaskWithW:H:bitmapMask:, mask parameter is null");
    
    if (self = [super init]) {
@@ -439,13 +440,13 @@ namespace Quartz = ROOT::Quartz;
 {
    //Two-step initialization.
 
-   assert(width > 0 && "initMaskWithW:H:, width parameter is zero");
-   assert(height > 0 && "initMaskWithW:H:, height parameter is zero");
+   assert(width != 0 && "initMaskWithW:H:, width parameter is zero");
+   assert(height != 0 && "initMaskWithW:H:, height parameter is zero");
    
    if (self = [super init]) {
       try {
          fImageData = new unsigned char[width * height];
-      } catch (const std::bad_exception &) {
+      } catch (const std::bad_alloc &) {
          NSLog(@"QuartzImage: -initMaskWithW:H:, memory allocation failed");
          return nil;
       }
@@ -480,6 +481,56 @@ namespace Quartz = ROOT::Quartz;
    }
    
    return nil;
+}
+
+//______________________________________________________________________________
+- (id) initFromPixmap : (QuartzPixmap *) pixmap
+{
+   //Two-step initialization.
+   assert(pixmap != nil && "initFromPixmap:, pixmap parameter is nil");
+   assert(pixmap.fWidth != 0 && "initFromPixmap:, pixmap width is zero");
+   assert(pixmap.fHeight != 0 && "initFromPixmap:, pixmap height is zero");
+
+   unsigned char *data = 0;
+   try {
+      data = new unsigned char[pixmap.fWidth * pixmap.fHeight * 4]();//QuartzPixmap has only one data format.
+      std::copy(pixmap.fData, pixmap.fData + pixmap.fWidth * pixmap.fHeight * 4, data);      
+   } catch (const std::bad_alloc &) {
+      NSLog(@"QuartzImage: -initFromPixmap:, memory allocation failed");
+      return nil;
+   }
+   
+   if (!(self = [self initWithW: pixmap.fWidth H: pixmap.fHeight data : data])) {
+      delete [] data;
+      return nil;
+   }
+   
+   return self;
+}
+
+//______________________________________________________________________________
+- (id) initFromImage : (QuartzImage *) image
+{
+   assert(image != nil && "initFromImage:, image parameter is nil");
+   assert(image.fWidth != 0 && "initFromImage:, image width is 0");
+   assert(image.fHeight != 0 && "initFromImage:, image height is 0");
+   assert(image.fIsStippleMask == NO && "initFromImage:, image is a stipple mask, not implemented");
+   
+   unsigned char *data = 0;
+   try {
+      data = new unsigned char[image.fWidth * image.fHeight * 4];
+      std::copy(image->fImageData, image->fImageData + image.fWidth * image.fHeight * 4, data);
+   } catch (const std::bad_alloc &) {
+      NSLog(@"QuartzImage: -initFromImage:, memory allocation failed");
+      return nil;
+   }
+
+   if (!(self = [self initWithW : image.fWidth H : image.fHeight data : data])) {
+      delete [] data;
+      return nil;
+   }
+
+   return self;
 }
 
 //______________________________________________________________________________

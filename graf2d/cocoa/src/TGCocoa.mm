@@ -1150,12 +1150,37 @@ void TGCocoa::SetWindowBackground(Window_t wid, ULong_t color)
 }
 
 //______________________________________________________________________________
-void TGCocoa::SetWindowBackgroundPixmap(Window_t wid, Pixmap_t /*pxm*/)
+void TGCocoa::SetWindowBackgroundPixmap(Window_t windowID, Pixmap_t pixmapID)
 {
    // Sets the background pixmap of the window "wid" to the specified
    // pixmap "pxm".
-   if (!wid)//From TGX11.
+
+   if (!windowID)//From TGX11/TGWin32.
       return;
+
+   assert(!fPimpl->IsRootWindow(windowID) && "SetWindowBackgroundPixmap, windowID parameter is a 'root' window");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "SetWindowBackgroundPixmap, windowID parameter is not a window");
+
+   NSObject<X11Window> * const window = fPimpl->GetWindow(windowID);   
+   if (pixmapID == kNone) {
+      window.fBackgroundPixmap = nil;
+      return;
+   }
+   
+   assert(pixmapID > fPimpl->GetRootWindowID() && "SetWindowBackgroundPixmap, pixmapID parameter is not a valid pixmap id");
+   assert(fPimpl->GetDrawable(pixmapID).fIsPixmap == YES && "SetWindowBackgroundPixmap, pixmapID parameter is not a pixmap");
+
+   NSObject<X11Drawable> * const pixmapOrImage = fPimpl->GetDrawable(pixmapID);
+   //X11 doc says, that pixmap can be freed immediately after call XSetWindowBackgroundPixmap, so I have to copy a pixmap.
+   Util::NSScopeGuard<QuartzImage> backgroundImage([QuartzImage alloc]);
+
+   if ([pixmapOrImage isKindOfClass : [QuartzPixmap class]]) {
+      if ([backgroundImage.Get() initFromPixmap : (QuartzPixmap *)pixmapOrImage])
+         window.fBackgroundPixmap = backgroundImage.Get();//the window is retaining the image.
+   } else {
+      if ([backgroundImage.Get() initFromImage : (QuartzImage *)pixmapOrImage])
+         window.fBackgroundPixmap = backgroundImage.Get();//the window is retaining the image.
+   }
 }
 
 //______________________________________________________________________________
@@ -1608,10 +1633,15 @@ void TGCocoa::FillRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UIn
             FillRectangleAux(wid, gcVals, x, y, w, h);
       }
    } else {
+      /*
       if (!IsCocoaDraw())
          fPimpl->fX11CommandBuffer.AddFillRectangle(wid, gcVals, x, y, w, h);
       else
-         FillRectangleAux(wid, gcVals, x, y, w, h);
+      */
+      //Commented part: looks like it was not good idea: we can draw into 
+      //pixmap just to set the contents of this pixmap, outside of any GUI rendering.
+      //TODO: check, if other functions are also affected.
+      FillRectangleAux(wid, gcVals, x, y, w, h);
    }   
 }
 
@@ -1878,11 +1908,11 @@ void TGCocoa::DrawString(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, const 
 }
 
 //______________________________________________________________________________
-void TGCocoa::ClearAreaAux(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
+void TGCocoa::ClearAreaAux(Window_t windowID, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   assert(!fPimpl->IsRootWindow(wid) && "ClearAreaAux, called for the 'root' window");
+   assert(!fPimpl->IsRootWindow(windowID) && "ClearAreaAux, called for the 'root' window");
    
-   QuartzView * const view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
+   QuartzView * const view = (QuartzView *)fPimpl->GetWindow(windowID).fContentView;
    assert(view.fContext != 0 && "ClearAreaAux, view.fContext is null");
 
    //w and h can be 0 (comment from TGX11) - clear the entire window.
@@ -1890,13 +1920,28 @@ void TGCocoa::ClearAreaAux(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
       w = view.fWidth;
    if (!h)
       h = view.fHeight;
-   
-   CGFloat rgb[3] = {};
-   X11::PixelToRGB(view.fBackgroundPixel, rgb);
+      
+   if (!view.fBackgroundPixmap) {
+      //Simple solid fill.
+      CGFloat rgb[3] = {};
+      X11::PixelToRGB(view.fBackgroundPixel, rgb);
 
-   const Quartz::CGStateGuard ctxGuard(view.fContext);
-   CGContextSetRGBFillColor(view.fContext, rgb[0], rgb[1], rgb[2], 1.);//alpha can be also used.
-   CGContextFillRect(view.fContext, CGRectMake(x, y, w, h));
+      const Quartz::CGStateGuard ctxGuard(view.fContext);
+      CGContextSetRGBFillColor(view.fContext, rgb[0], rgb[1], rgb[2], 1.);//alpha can be also used.
+      CGContextFillRect(view.fContext, CGRectMake(x, y, w, h));
+   } else {
+      const CGRect fillRect = CGRectMake(x, y, w, h);
+      CGSize patternPhase = {};
+      const CGPoint origin = [view convertPoint : view.frame.origin toView : nil];
+      patternPhase.width = origin.x;
+      patternPhase.height = origin.y;
+
+      const Quartz::CGStateGuard ctxGuard(view.fContext);//Will restore context state.
+
+      PatternContext patternContext = {0, 0, 0, view.fBackgroundPixmap, patternPhase};
+      SetFillPattern(view.fContext, &patternContext);
+      CGContextFillRect(view.fContext, fillRect);
+   }
 }
 
 //______________________________________________________________________________

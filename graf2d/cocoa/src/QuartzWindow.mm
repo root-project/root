@@ -1001,6 +1001,22 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
+- (void) setFBackgroundPixmap : (QuartzImage *) pixmap
+{
+   assert(fContentView != nil && "setFBackgroundPixmap, content view is nil");
+
+   fContentView.fBackgroundPixmap = pixmap;
+}
+
+//______________________________________________________________________________
+- (QuartzImage *) fBackgroundPixmap
+{
+   assert(fContentView != nil && "fBackgroundPixmap, content view is nil");
+   
+   return fContentView.fBackgroundPixmap;
+}
+
+//______________________________________________________________________________
 - (int) fMapState
 {
    //Top-level window can be only kIsViewable or kIsUnmapped (not unviewable).
@@ -1399,6 +1415,7 @@ void print_mask_info(ULong_t mask)
    QuartzImage    *fClipMask;
    
    NSMutableDictionary   *fX11Properties;
+   QuartzImage    *fBackgroundPixmap;
 }
 
 @synthesize fClipMaskIsValid;
@@ -1470,6 +1487,7 @@ void print_mask_info(ULong_t mask)
    [fPassiveKeyGrabs release];
    [fClipMask release];
    [fX11Properties release];
+   [fBackgroundPixmap release];
    [super dealloc];
 }
 
@@ -1853,6 +1871,28 @@ void print_mask_info(ULong_t mask)
    
    return data;
 }
+
+
+//______________________________________________________________________________
+- (void) setFBackgroundPixmap : (QuartzImage *) pixmap
+{
+   if (fBackgroundPixmap != pixmap) {
+      [fBackgroundPixmap release];
+      if (pixmap)
+         fBackgroundPixmap = [pixmap retain];
+      else
+         fBackgroundPixmap = nil;
+   }
+}
+
+//______________________________________________________________________________
+- (QuartzImage *) fBackgroundPixmap
+{
+   //I do not autorelease, screw this idiom!
+
+   return fBackgroundPixmap;
+}
+
 
 //______________________________________________________________________________
 - (int) fMapState

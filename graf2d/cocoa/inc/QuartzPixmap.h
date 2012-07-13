@@ -69,6 +69,8 @@
 - (id) initWithW : (unsigned) width H : (unsigned) height data : (unsigned char *) data;
 - (id) initMaskWithW : (unsigned) width H : (unsigned) height bitmapMask : (unsigned char *) mask;
 - (id) initMaskWithW : (unsigned) width H : (unsigned) height;
+- (id) initFromPixmap : (QuartzPixmap *) pixmap;
+- (id) initFromImage : (QuartzImage *) image;
 
 - (void) dealloc;
 @property (nonatomic, readonly) BOOL fIsStippleMask;
