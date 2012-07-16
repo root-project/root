@@ -8,6 +8,7 @@
 #define CLING_INCREMENTAL_PARSER_H
 
 #include "ChainedConsumer.h"
+#include "Transaction.h"
 #include "cling/Interpreter/CompilationOptions.h"
 
 #include "clang/AST/DeclBase.h"
@@ -45,33 +46,6 @@ namespace cling {
 
   class IncrementalParser {
   public:
-    ///\brief Contains information about the last input
-    struct Transaction {
-    private:
-      clang::Decl* m_BeforeFirst;
-      clang::Decl* m_LastDecl;
-      void setBeforeFirstDecl(clang::DeclContext* DC) {
-        class DeclContextExt : public clang::DeclContext {
-        public:
-          static clang::Decl* getLastDecl(DeclContext* DC) {
-            return ((DeclContextExt*)DC)->LastDecl;
-          }
-        };
-        m_BeforeFirst = DeclContextExt::getLastDecl(DC);
-      }
-    public:
-      clang::Decl* getFirstDecl() const {
-        return m_BeforeFirst->getNextDeclInContext();
-      }
-      clang::Decl* getLastDeclSlow() const {
-        clang::Decl* Result = getFirstDecl();
-        while (Result->getNextDeclInContext())
-          Result = Result->getNextDeclInContext();
-
-        return Result;
-      }
-      friend class IncrementalParser;
-    };
     enum EParseResult {
       kSuccess,
       kSuccessWithWarnings,
@@ -83,6 +57,12 @@ namespace cling {
     void Initialize();
     clang::CompilerInstance* getCI() const { return m_CI.get(); }
     clang::Parser* getParser() const { return m_Parser.get(); }
+
+    // Transaction Support
+    void beginTransaction();
+    void endTransaction();
+    void commitCurrentTransaction();
+
 
     ///\brief Compiles the given input with the given compilation options.
     ///
@@ -100,7 +80,13 @@ namespace cling {
     void enableDynamicLookup(bool value = true);
     bool isDynamicLookupEnabled() const { return m_DynamicLookupEnabled; }
     bool isSyntaxOnly() const { return m_SyntaxOnly; }
-    Transaction& getLastTransaction() { return m_LastTransaction; }
+    const Transaction* getLastTransaction() const { 
+      return m_Transactions.back(); 
+    }
+
+    Transaction* getLastTransaction() { 
+      return m_Transactions.back(); 
+    }
 
     clang::CodeGenerator* GetCodeGenerator() const;
 
@@ -130,8 +116,9 @@ namespace cling {
     // CI owns it
     ChainedConsumer* m_Consumer;
 
-    // Holds information for the last transaction
-    Transaction m_LastTransaction;
+    ///\brief Holds information for the all transactions.
+    ///
+    llvm::SmallVector<Transaction*, 64> m_Transactions;
 
     // whether to run codegen; cannot be flipped during lifetime of *this
     bool m_SyntaxOnly;

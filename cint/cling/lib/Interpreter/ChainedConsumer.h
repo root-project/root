@@ -12,10 +12,10 @@
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/SmallVector.h"
 
-#include "clang/AST/DeclGroup.h"
 #include "clang/Sema/SemaConsumer.h"
 
 namespace clang {
+  class DeclGroupRef;
   class ASTContext;
 }
 
@@ -24,6 +24,7 @@ namespace cling {
   class ASTNodeEraser;
   class ChainedMutationListener;
   class ChainedDeserializationListener;
+  class Transaction;
   class VerifyingSemaConsumer;
 
   class ChainedConsumer: public clang::SemaConsumer {
@@ -58,7 +59,6 @@ namespace cling {
     virtual void InitializeSema(clang::Sema& S);
     virtual void ForgetSema();
 
-    // Transaction Support
     bool IsInTransaction() { return m_InTransaction; }
 
     void Add(EConsumerIndex I, clang::ASTConsumer* C);
@@ -76,9 +76,8 @@ namespace cling {
     }
 
     bool IsConsumerEnabled(EConsumerIndex I);
-    bool IsQueueing() { return m_Queueing; }
+    bool IsQueueing();
 
-    void DumpQueue();
     void Update(VerifyingSemaConsumer* ESSC);
     void pushCompilationOpts(CompilationOptions CO) {
       COStack.push_back(CO);
@@ -97,6 +96,10 @@ namespace cling {
       return COStack.back();
     }
 
+    Transaction* getTransaction() { return m_CurTransaction; }
+    const Transaction* getTransaction() const { return m_CurTransaction; }
+    void setTransaction(Transaction* curT) { m_CurTransaction = curT; }
+
   private:
     clang::ASTConsumer* Consumers[kConsumersCount]; // owns them
     llvm::SmallVector<CompilationOptions, 2> COStack;
@@ -106,23 +109,11 @@ namespace cling {
     bool m_InTransaction;
     clang::ASTContext* m_Context;
     clang::Sema* m_Sema;
-    enum HandlerIndex {
-      kTopLevelDecl,
-      kInterestingDecl,
-      kTagDeclDefinition,
-      kVTable,
-      kCompleteTentativeDefinition
-    };
-    struct DGRInfo {
-      clang::DeclGroupRef D;
-      HandlerIndex I;
-      DGRInfo(clang::DeclGroupRef d, HandlerIndex i) : D(d), I(i){}
-    };
-    llvm::SmallVector<DGRInfo, 64> DeclsQueue;
-    bool m_Queueing;
+
+    Transaction* m_CurTransaction;
 
     friend class IncrementalParser;
   };
 } // namespace cling
 
-#endif
+#endif // CLING_CHAINED_CONSUMER_H

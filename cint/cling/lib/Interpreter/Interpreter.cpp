@@ -428,7 +428,7 @@ namespace cling {
     }
 
     if (D)
-      *D = m_IncrParser->getLastTransaction().getFirstDecl();
+      *D = m_IncrParser->getLastTransaction()->getFirstDecl().getSingleDecl();
 
     return Interpreter::kSuccess;
   }
@@ -520,7 +520,7 @@ namespace cling {
 
     if (m_IncrParser->Compile(input, CO) != IncrementalParser::kFailed) {
       if (D)
-        *D = m_IncrParser->getLastTransaction().getFirstDecl();
+        *D = m_IncrParser->getLastTransaction()->getFirstDecl().getSingleDecl();
       return Interpreter::kSuccess;
     }
 
@@ -619,8 +619,7 @@ namespace cling {
 
       TheSema.CurContext = CurContext;
 
-      // FIXME: Finish the transaction in better way
-      m_IncrParser->Compile("", CO);
+      m_IncrParser->commitCurrentTransaction();
     }
     else
       m_IncrParser->Compile(Wrapper, CO);
@@ -1724,6 +1723,8 @@ namespace cling {
   }
 
   void Interpreter::enableDynamicLookup(bool value /*=true*/) {
+    // Load the dynamic lookup specifics.
+    declare("#include \"cling/Interpreter/DynamicLookupRuntimeUniverse.h\"");
     m_IncrParser->enableDynamicLookup(value);
   }
 
@@ -1744,10 +1745,11 @@ namespace cling {
   }
 
   int Interpreter::CXAAtExit(void (*func) (void*), void* arg, void* dso) {
-     // Register a CXAAtExit function
-     Decl* LastTLD = m_IncrParser->getLastTransaction().getLastDeclSlow();
-     m_AtExitFuncs.push_back(CXAAtExitElement(func, arg, dso, LastTLD));
-     return 0; // happiness
+    // Register a CXAAtExit function
+    Decl* LastTLD 
+      = m_IncrParser->getLastTransaction()->getLastDecl().getSingleDecl();
+    m_AtExitFuncs.push_back(CXAAtExitElement(func, arg, dso, LastTLD));
+    return 0; // happiness
   }
 
   bool Interpreter::addSymbol(const char* symbolName,  void* symbolAddress){
