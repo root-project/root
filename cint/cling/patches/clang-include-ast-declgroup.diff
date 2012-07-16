@@ -1,0 +1,34 @@
+Index: tools/clang/include/clang/AST/DeclGroup.h
+===================================================================
+--- tools/clang/include/clang/AST/DeclGroup.h	(revision 160041)
++++ tools/clang/include/clang/AST/DeclGroup.h	(working copy)
+@@ -128,6 +128,29 @@
+     X.D = static_cast<Decl*>(Ptr);
+     return X;
+   }
++
++  /// operator== - Determine whether the specified DeclGroupRefs are identical.
++  ///
++  friend bool operator==(const DeclGroupRef LHS, const DeclGroupRef RHS) {
++    if (LHS.D == RHS.D) {
++      if (LHS.isSingleDecl() && RHS.isSingleDecl())
++        return true;
++
++      if (LHS.isDeclGroup() && RHS.isDeclGroup()){
++        const DeclGroup &LDG = LHS.getDeclGroup();
++        const DeclGroup &RDG = RHS.getDeclGroup();
++        if (LDG.size() != RDG.size())
++          return false;
++
++        for (size_t i = 0; i < LDG.size(); ++i)
++          if (LDG[i] != RDG[i])
++            return false;
++
++        return true;
++      }
++    }      
++    return false;
++  }
+ };
+ 
+ } // end clang namespace
