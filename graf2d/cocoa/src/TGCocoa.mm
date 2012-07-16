@@ -377,7 +377,9 @@ Int_t TGCocoa::GetScreen() const
 //______________________________________________________________________________
 UInt_t TGCocoa::ScreenWidthMM() const
 {
-   //Comment from TVirtualX: Returns the width of the screen in millimeters.
+   //Comment from TVirtualX: 
+   // Returns the width of the screen in millimeters.
+   //End of comment.
 
    return CGDisplayScreenSize(CGMainDisplayID()).width;
 }
@@ -385,6 +387,11 @@ UInt_t TGCocoa::ScreenWidthMM() const
 //______________________________________________________________________________
 Int_t TGCocoa::GetDepth() const
 {
+   //Comment from TVirtualX:
+   // Returns depth of screen (number of bit planes).
+   // Equivalent to GetPlanes().
+   //End of comment.
+
    NSArray * const screens = [NSScreen screens];
    assert(screens != nil && "screens array is nil");
    
@@ -397,11 +404,11 @@ Int_t TGCocoa::GetDepth() const
 //______________________________________________________________________________
 void TGCocoa::Update(Int_t mode)
 {
-   //Mode == 2 - force widgets to redraw,
-   //Mode == 3 - execute graphics requests.
    if (mode == 2) {
+      assert(gClient != 0 && "Update, gClient is null");
       gClient->DoRedraw();//Call DoRedraw for all widgets, who need to be updated.
    } else if (mode > 0) {
+      //Execute buffered commands.
       fPimpl->fX11CommandBuffer.Flush(fPimpl.get());
    }
 }
@@ -418,15 +425,19 @@ Window_t TGCocoa::GetDefaultRootWindow() const
 //______________________________________________________________________________
 Int_t TGCocoa::InitWindow(ULong_t parentID)
 {
-   //InitWindow is a strange name, since this function
-   //creates a window, but this name is in TVirtualX interface.
+   //InitWindow is a bad name, since this function
+   //creates a window, but this name comes from the TVirtualX interface.
    //Actually, there is no special need in this function, 
    //it's a kind of simplified CreateWindow (with only
    //one parameter). This function is called by TRootCanvas,
    //to create a special window inside TGCanvas.
-   
+   //TGX11/TGWin32 have internal array of such special windows,
+   //they return index into this array, instead of drawable's ids.
+   //I simply re-use CreateWindow and return drawable's id.
+
    assert(parentID != 0 && "InitWindow, parentID parameter is 0");//0 is an invalid id.
-   
+
+   //Use parent's attributes (as it's done in TGX11).
    WindowAttributes_t attr = {};
 
    if (fPimpl->IsRootWindow(parentID)) {
@@ -459,28 +470,37 @@ void TGCocoa::SelectWindow(Int_t windowID)
 //______________________________________________________________________________
 void TGCocoa::ClearWindow()
 {
-   //Clear the selected drawable (can be window or pixmap, so the name is ambiguous).
+   //Clear the selected drawable OR pixmap (the name - from TVirtualX interface - is bad).
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "ClearWindow, fSelectedDrawable is invalid");
 
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(fSelectedDrawable);
    if (drawable.fIsPixmap) {
       //Pixmaps are white by default.
+      //This is bad - we can not have transparent sub-pads (in TCanvas)
+      //because of this. But there is no way how gVirtualX can
+      //obtain real pad's color and check for its transparency.
       CGContextRef pixmapCtx = drawable.fContext;
+      assert(pixmapCtx != 0 && "ClearWindow, pixmap's context is null");
       const Quartz::CGStateGuard ctxGuard(pixmapCtx);
       CGContextSetRGBFillColor(pixmapCtx, 1., 1., 1., 1.);
       CGContextFillRect(pixmapCtx, CGRectMake(0, 0, drawable.fWidth, drawable.fHeight));
    } else {
+      //For a window call ClearArea, 0, 0 for width and height means the whole window.
       ClearArea(fSelectedDrawable, 0, 0, 0, 0);
    }
 }
 
 //______________________________________________________________________________
-void TGCocoa::GetGeometry(Int_t wid, Int_t & x, Int_t &y, UInt_t &w, UInt_t &h)
+void TGCocoa::GetGeometry(Int_t windowID, Int_t & x, Int_t &y, UInt_t &w, UInt_t &h)
 {
    //In TGX11, GetGeometry works with special windows, created by InitWindow
-   //(so this function is called from TCanvas/TGCanvas/TRootCanvas).
-   //It also translates x and y from parent's coordinates into screen coordinates.
-   if (wid < 0 || fPimpl->IsRootWindow(wid)) {
+   //(thus this function is called from TCanvas/TGCanvas/TRootCanvas).
+   
+   //IMPORTANT: this function also translates x and y 
+   //from parent's coordinates into screen coordinates - so, again, name "GetGeometry" 
+   //from the TVirtualX interface is bad and misleading.
+
+   if (windowID < 0 || fPimpl->IsRootWindow(windowID)) {
       //Comment in TVirtualX suggests, that wid can be < 0.
       //This will be screen's geometry.
       WindowAttributes_t attr = {};
@@ -490,7 +510,7 @@ void TGCocoa::GetGeometry(Int_t wid, Int_t & x, Int_t &y, UInt_t &w, UInt_t &h)
       w = attr.fWidth;
       h = attr.fHeight;
    } else {
-      NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
+      NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(windowID);
       x = drawable.fX;
       y = drawable.fY;
       w = drawable.fWidth;
@@ -515,6 +535,9 @@ void TGCocoa::GetGeometry(Int_t wid, Int_t & x, Int_t &y, UInt_t &w, UInt_t &h)
 //______________________________________________________________________________
 void TGCocoa::MoveWindow(Int_t windowID, Int_t x, Int_t y)
 {
+   //windowID is either kNone or a valid window id.
+   //x and y are coordinates of a top-left corner relative to the parent's coordinate system.
+
    assert(!fPimpl->IsRootWindow(windowID) && "MoveWindow, called for 'root' window");
 
    if (!windowID)//From TGX11.
@@ -526,19 +549,21 @@ void TGCocoa::MoveWindow(Int_t windowID, Int_t x, Int_t y)
 //______________________________________________________________________________
 void TGCocoa::RescaleWindow(Int_t /*wid*/, UInt_t /*w*/, UInt_t /*h*/)
 {
-   //
+   //This function is for TRootCanvas and related stuff, never gets
+   //called/used from/by any our GUI class.
+   //Noop.
 }
 
 //______________________________________________________________________________
 void TGCocoa::ResizeWindow(Int_t windowID)
 {
-   //This function does not resize window (it was done already), 
+   //This function does not resize window (it was done already by layout management?), 
    //it resizes "back buffer" if any.
 
    if (!windowID)//From TGX11.
       return;
    
-   assert(windowID > (Int_t)fPimpl->GetRootWindowID() && "ResizeWindow, windowID parameter is not a valid id");
+   assert(!fPimpl->IsRootWindow(windowID) && "ResizeWindow, windowID parameter is a 'root' window");
    
    NSObject<X11Window> * const window = fPimpl->GetWindow(windowID);
    if (window.fBackBuffer) {

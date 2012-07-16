@@ -65,12 +65,12 @@ public:
    virtual Bool_t      Init(void *display);
    virtual Int_t       OpenDisplay(const char *displayName);
    virtual const char *DisplayName(const char *);
-   virtual Int_t       SupportsExtension(const char *extensionName) const;
+   virtual Int_t       SupportsExtension(const char *extensionName)const;
    virtual void        CloseDisplay();
    virtual Display_t   GetDisplay()const;
    virtual Visual_t    GetVisual()const;
    virtual Int_t       GetScreen()const;
-   virtual UInt_t      ScreenWidthMM() const;
+   virtual UInt_t      ScreenWidthMM()const;
    virtual Int_t       GetDepth()const;
    virtual void        Update(Int_t mode);
    //End of general.
