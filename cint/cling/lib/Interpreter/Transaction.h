@@ -33,7 +33,12 @@ namespace cling {
     ///
     bool m_Completed;
 
+    ///\brief The enclosing transaction if nested. 
+    ///
     Transaction* m_Parent;
+
+    ///\brief List of nested transactions if any.
+    ///
     NestedTransactions m_NestedTransactions;
 
   public:
@@ -43,7 +48,7 @@ namespace cling {
     ///\ brief Returns the first declaration of the transaction.
     ///
     clang::DeclGroupRef getFirstDecl() const {
-      if (!isEmpty())
+      if (!empty())
         return m_DeclQueue.front();
       return clang::DeclGroupRef();
     }
@@ -51,7 +56,7 @@ namespace cling {
     ///\brief Returns the last declaration of a completed transaction.
     ///
     clang::DeclGroupRef getLastDecl() const {
-      if (!isEmpty() && isCompleted())
+      if (!empty() && isCompleted())
         return m_DeclQueue.back();
       return clang::DeclGroupRef();
     }
@@ -60,7 +65,7 @@ namespace cling {
     /// in still incomplete.
     ///
     clang::DeclGroupRef getCurrentLastDecl() const {
-      if (!isEmpty())
+      if (!empty())
         return m_DeclQueue.back();
       return clang::DeclGroupRef();
     }
@@ -122,15 +127,18 @@ namespace cling {
 
     ///\brief Returns whether there are declarations in the transaction.
     ///
-    bool isEmpty() const { return m_DeclQueue.empty(); }
+    bool empty() const { return m_DeclQueue.empty(); }
 
-    ///\brief Appends a declaration to the transaction.
+    ///\brief Appends a declaration group to the transaction if doesn't exist.
     ///
-    void append(clang::DeclGroupRef DGR);
+    void appendUnique(clang::DeclGroupRef DGR);
 
     ///\brief Clears all declarations in the transaction.
     ///
-    void clear() { m_DeclQueue.clear(); }
+    void clear() { 
+      m_DeclQueue.clear(); 
+      m_NestedTransactions.clear();
+    }
 
     ///\brief Prints out all the declarations in the transaction.
     ///

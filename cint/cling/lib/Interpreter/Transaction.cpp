@@ -12,8 +12,7 @@ using namespace clang;
 
 namespace cling {
 
-  void Transaction::append(DeclGroupRef DGR) {
-    // For now don't allow duplicates.
+  void Transaction::appendUnique(DeclGroupRef DGR) {
     for (const_iterator I = decls_begin(), E = decls_end(); I != E; ++I) {
       if (DGR.isNull() || *I == DGR)
         return;

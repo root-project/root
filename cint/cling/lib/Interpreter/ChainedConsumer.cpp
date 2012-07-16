@@ -239,7 +239,7 @@ namespace cling {
   }
 
   bool ChainedConsumer::HandleTopLevelDecl(DeclGroupRef D) {
-    m_CurTransaction->append(D);
+    m_CurTransaction->appendUnique(D);
     return true;
   }
 
@@ -248,7 +248,7 @@ namespace cling {
   }
 
   void ChainedConsumer::HandleTagDeclDefinition(TagDecl* D) {
-    m_CurTransaction->append(DeclGroupRef(D));
+    m_CurTransaction->appendUnique(DeclGroupRef(D));
   }
 
   void ChainedConsumer::HandleVTable(CXXRecordDecl* RD,
@@ -263,7 +263,7 @@ namespace cling {
   void ChainedConsumer::HandleTranslationUnit(ASTContext& Ctx) {
 
     // We don't want to chase our tail
-    if (m_CurTransaction->isEmpty())
+    if (m_CurTransaction->empty())
       return;
 
     // Check for errors...
