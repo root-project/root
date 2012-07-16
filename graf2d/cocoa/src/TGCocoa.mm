@@ -1172,15 +1172,20 @@ void TGCocoa::SetWindowBackgroundPixmap(Window_t windowID, Pixmap_t pixmapID)
 
    NSObject<X11Drawable> * const pixmapOrImage = fPimpl->GetDrawable(pixmapID);
    //X11 doc says, that pixmap can be freed immediately after call XSetWindowBackgroundPixmap, so I have to copy a pixmap.
-   Util::NSScopeGuard<QuartzImage> backgroundImage([QuartzImage alloc]);
+   Util::NSScopeGuard<QuartzImage> backgroundImage;
 
    if ([pixmapOrImage isKindOfClass : [QuartzPixmap class]]) {
-      if ([backgroundImage.Get() initFromPixmap : (QuartzPixmap *)pixmapOrImage])
+      backgroundImage.Reset([[QuartzImage alloc] initFromPixmap : (QuartzPixmap *)pixmapOrImage]);
+      if (backgroundImage.Get())
          window.fBackgroundPixmap = backgroundImage.Get();//the window is retaining the image.
    } else {
-      if ([backgroundImage.Get() initFromImage : (QuartzImage *)pixmapOrImage])
+      backgroundImage.Reset([[QuartzImage alloc] initFromImage : (QuartzImage *)pixmapOrImage]);
+      if (backgroundImage.Get())
          window.fBackgroundPixmap = backgroundImage.Get();//the window is retaining the image.
    }
+   
+   if (!backgroundImage.Get())
+      Error("SetWindowBackgroundPixmap", "QuartzImage initialization failed");//More concrete message was issued by QuartzImage.
 }
 
 //______________________________________________________________________________
@@ -1994,13 +1999,12 @@ Int_t TGCocoa::OpenPixmap(UInt_t w, UInt_t h)
    newSize.width = w;
    newSize.height = h;
 
-   Util::NSScopeGuard<QuartzPixmap> obj([QuartzPixmap alloc]);
-   if (QuartzPixmap * const pixmap = [obj.Get() initWithW : w H : h]) {
-      obj.Reset(pixmap);
-      pixmap.fID = fPimpl->RegisterDrawable(pixmap);//Can throw.
-      return (Int_t)pixmap.fID;
+   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h]);
+   if (pixmap.Get()) {
+      pixmap.Get().fID = fPimpl->RegisterDrawable(pixmap.Get());//Can throw.
+      return (Int_t)pixmap.Get().fID;
    } else {
-      Error("OpenPixmap", "Pixmap initialization failed");
+      Error("OpenPixmap", "QuartzPixmap initialization failed");//More concrete message was issued by QuartzPixmap.
       return -1;
    }
 }
@@ -2096,29 +2100,22 @@ Pixmap_t TGCocoa::CreatePixmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
    X11::FillPixmapBuffer((unsigned char*)bitmap, width, height, foregroundPixel, backgroundPixel, depth, imageData);
 
    //Now we can create CGImageRef.
-   Util::NSScopeGuard<QuartzImage> mem([QuartzImage alloc]);
-   if (!mem.Get()) {
-      Error("CreatePixmap", "[QuartzImage alloc] failed");
-      return kNone;
-   }
-
-   QuartzImage *image = nil;
+   Util::NSScopeGuard<QuartzImage> image;
    
    if (depth > 1)
-      image = [mem.Get() initWithW : width H : height data: imageData];
+      image.Reset([[QuartzImage alloc] initWithW : width H : height data: imageData]);
    else
-      image = [mem.Get() initMaskWithW : width H : height bitmapMask : imageData];
+      image.Reset([[QuartzImage alloc] initMaskWithW : width H : height bitmapMask : imageData]);
 
-   if (!image) {
-      Error("CreatePixmap", "[QuartzImage initWithW:H:data:] failed");
+   if (!image.Get()) {
+      Error("CreatePixmap", "QuartzImage initialization failed");//More concrete message was issued by QuartzImage.
       return kNone;
    }
 
-   mem.Reset(image);
    arrayGuard.Release();//Now imageData is owned by image.
-   image.fID = fPimpl->RegisterDrawable(image);//This can throw.
+   image.Get().fID = fPimpl->RegisterDrawable(image.Get());//This can throw.
 
-   return image.fID;      
+   return image.Get().fID;
 }
 
 //______________________________________________________________________________
@@ -2142,23 +2139,17 @@ Pixmap_t TGCocoa::CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t
       std::swap(p[0], p[2]);
 
    //Now we can create CGImageRef.
-   Util::NSScopeGuard<QuartzImage> mem([QuartzImage alloc]);
-   if (!mem.Get()) {
-      Error("CreatePixmapFromData", "[QuartzImage alloc] failed");
+   Util::NSScopeGuard<QuartzImage> image([[QuartzImage alloc] initWithW : width H : height data : imageData]);
+
+   if (!image.Get()) {
+      Error("CreatePixmapFromData", "QuartzImage initialziation failed");//More concrete message was issued by QuartzImage.
       return kNone;
    }
 
-   QuartzImage * const image = [mem.Get() initWithW : width H : height data : imageData];
-   if (!image) {
-      Error("CreatePixmapFromData", "[QuartzImage initWithW:H:data:] failed");
-      return kNone;
-   }
-   
-   mem.Reset(image);
    arrayGuard.Release();//Now imageData is owned by image.
-   image.fID = fPimpl->RegisterDrawable(image);//This can throw.
+   image.Get().fID = fPimpl->RegisterDrawable(image.Get());//This can throw.
    
-   return image.fID;      
+   return image.Get().fID;
 }
 
 //______________________________________________________________________________
@@ -2186,20 +2177,15 @@ Pixmap_t TGCocoa::CreateBitmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
    }
 
    //Now we can create CGImageRef.
-   Util::NSScopeGuard<QuartzImage> mem([QuartzImage alloc]);
-   if (!mem.Get()) {
-      Error("CreateBitmap", "[QuartzImage alloc] failed");
+   Util::NSScopeGuard<QuartzImage> image([[QuartzImage alloc] initMaskWithW : width H : height bitmapMask: imageData]);
+   if (!image.Get()) {
+      Error("CreateBitmap", "QuartzImage initialization failed");//More concrete message was issued by QuartzImage.
       return kNone;
    }
 
-   QuartzImage * const image = [mem.Get() initMaskWithW : width H : height bitmapMask: imageData];
-   if (!image)//Error is already reported by QuartzImage.
-      return kNone;
-   
-   mem.Reset(image);
-   arrayGuard.Release();//Now, imageData is owned by image.
-   image.fID = fPimpl->RegisterDrawable(image);//This can throw.      
-   return image.fID;      
+   arrayGuard.Release();//Now imageData is owned by image.
+   image.Get().fID = fPimpl->RegisterDrawable(image.Get());//This can throw.
+   return image.Get().fID;
 }
 
 //______________________________________________________________________________
@@ -3125,19 +3111,20 @@ void TGCocoa::SetDoubleBufferON()
          return;
    }
 
-   Util::NSScopeGuard<QuartzPixmap> mem([QuartzPixmap alloc]);      
-   if (QuartzPixmap * const pixmap = [mem.Get() initWithW : currW H : currH]) {
-      mem.Reset(pixmap);
-      pixmap.fID = fPimpl->RegisterDrawable(pixmap);//Can throw.
+   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : currW H : currH]);
+   if (pixmap.Get()) {
+      //TODO: Actually, this "back buffer" pixmap can be retained in a window (view), no need
+      //register it as a separate drawable in fPimpl?
+      pixmap.Get().fID = fPimpl->RegisterDrawable(pixmap.Get());//Can throw.
       if (window.fBackBuffer) {//Now we can delete the old one, since the new was created.
          if (fPimpl->fX11CommandBuffer.BufferSize())
             fPimpl->fX11CommandBuffer.RemoveOperationsForDrawable(window.fBackBuffer.fID);
          fPimpl->DeleteDrawable(window.fBackBuffer.fID);
       }
 
-      window.fBackBuffer = pixmap;
+      window.fBackBuffer = pixmap.Get();
    } else {
-      Error("SetDoubleBufferON", "Can't create a pixmap");
+      Error("SetDoubleBufferON", "QuartzPixmap initialization failed");//More concrete message was issued by QuartzPixmap.
    }
 }
 

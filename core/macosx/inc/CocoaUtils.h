@@ -109,6 +109,11 @@ private:
 template<class DerivedType>
 class NSScopeGuard {
 public:
+   NSScopeGuard()
+      : fNSObject(nil)
+   {
+   }
+
    explicit NSScopeGuard(NSObject *nsObject)
                : fNSObject(nsObject)
    {   

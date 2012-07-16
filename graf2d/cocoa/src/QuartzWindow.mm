@@ -1507,19 +1507,10 @@ void print_mask_info(ULong_t mask)
       }
    }
    
-   if (!fClipMask) {
-      fClipMask = [QuartzImage alloc];
-      
-      if ([fClipMask initMaskWithW : (unsigned)size.width H : (unsigned)size.height]) {
-         return YES;
-      } else {
-         [fClipMask release];
-         fClipMask = nil;
-         return NO;
-      }
-   }
+   if (!fClipMask)
+      fClipMask = [[QuartzImage alloc] initMaskWithW : (unsigned)size.width H : (unsigned)size.height];
 
-   return YES;
+   return fClipMask != nil;//BOOL is char, no pointer conversion.
 }
 
 //______________________________________________________________________________
