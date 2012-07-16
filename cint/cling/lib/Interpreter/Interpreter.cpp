@@ -821,12 +821,12 @@ namespace cling {
     //
     //  Try parsing the name as a nested-name-specifier.
     //
-    CXXScopeSpec SS;
     if (P->TryAnnotateCXXScopeToken(false)) {
       // error path
       goto lookupClassDone;
     }
     if (P->getCurToken().getKind() == tok::annot_cxxscope) {
+      CXXScopeSpec SS;
       CI->getSema().RestoreNestedNameSpecifierAnnotation(
         P->getCurToken().getAnnotationValue(),
         P->getCurToken().getAnnotationRange(),
