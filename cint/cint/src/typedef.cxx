@@ -1401,7 +1401,18 @@ int G__search_typename(const char* typenamein, int typein, int tagnum, int refty
    if (flag == 0 && typein) {
       // If we already have a type/class of the same name that is registered in G__struct as forward declared and/or autoload,
       // let's invalidate this entry.
-      int alias = G__defined_tagname(type_name,4);
+
+      int store_def_tagnum = G__def_tagnum;
+      int store_tagdefining = G__tagdefining;
+      int store_tmplt_def_tagnum = G__tmplt_def_tagnum;
+      G__def_tagnum = G__static_parent_tagnum;
+      G__tagdefining = G__static_parent_tagnum;
+      G__tmplt_def_tagnum = G__static_parent_tagnum;
+      int alias = G__defined_tagname(type_name,4 | 0x1000); // We are looking for an exact match
+      G__def_tagnum = store_def_tagnum;
+      G__tagdefining = store_tagdefining;
+      G__tmplt_def_tagnum = store_tmplt_def_tagnum;
+
       if (alias != -1 && G__struct.type[alias] == 'a') {
          char *old = G__struct.name[alias];
          G__struct.namerange->Remove(old, alias);
