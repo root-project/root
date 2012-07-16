@@ -102,7 +102,7 @@ namespace cling {
     m_Transactions.push_back(NewCurT);
   }
 
-  void IncrementalParser::endTransaction() {
+  void IncrementalParser::endTransaction() const {
     Transaction* CurT = m_Consumer->getTransaction();
     CurT->setCompleted();
     if (CurT->isNestedTransaction()) {
@@ -112,7 +112,17 @@ namespace cling {
     }
   }
 
-  void IncrementalParser::commitCurrentTransaction() {
+  void IncrementalParser::commitTransaction(const Transaction* T) const {
+    assert(T->isCompleted() && "Transaction not ended!?");
+    const Transaction* OldT = m_Consumer->getTransaction();
+    m_Consumer->setTransaction(T);
+    commitCurrentTransaction();
+    m_Consumer->setTransaction(OldT);
+  }
+
+  void IncrementalParser::commitCurrentTransaction() const {
+    assert(m_Consumer->getTransaction()->isCompleted() 
+           && "Transaction not ended!?");
     m_Consumer->HandleTranslationUnit(getCI()->getASTContext());
   }
   

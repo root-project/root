@@ -58,11 +58,30 @@ namespace cling {
     clang::CompilerInstance* getCI() const { return m_CI.get(); }
     clang::Parser* getParser() const { return m_Parser.get(); }
 
-    // Transaction Support
-    void beginTransaction();
-    void endTransaction();
-    void commitCurrentTransaction();
+    /// @{
+    /// @name Transaction Support
 
+    ///\brief Starts a transaction.
+    ///
+    void beginTransaction();
+
+    ///\brief Finishes a transaction.
+    ///
+    void endTransaction() const;
+
+    ///\brief Commits a given transaction. I.e pipes it through the consumer
+    /// chain including codegen.
+    ///
+    ///\param[in] T - The transaction to be committed.
+    ///
+    void commitTransaction(const Transaction* T) const;
+
+    ///\brief Commits the current transaction if it was compete. I.e pipes it 
+    /// through the consumer chain, including codegen.
+    ///
+    void commitCurrentTransaction() const;
+
+    /// @}
 
     ///\brief Compiles the given input with the given compilation options.
     ///
