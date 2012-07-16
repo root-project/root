@@ -76,7 +76,6 @@ namespace cling {
     }
 
     bool IsConsumerEnabled(EConsumerIndex I);
-    bool IsQueueing();
 
     void Update(VerifyingSemaConsumer* ESSC);
     void pushCompilationOpts(CompilationOptions CO) {

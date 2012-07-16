@@ -374,10 +374,6 @@ namespace cling {
     m_Sema->getDiagnostics().Reset();
   }
 
-  bool ChainedConsumer::IsQueueing() {
-    return !m_CurTransaction->isCompleted(); 
-  }
-
   bool ChainedConsumer::IsConsumerEnabled(EConsumerIndex I) {
       if (!Exists(I))
         return false;
