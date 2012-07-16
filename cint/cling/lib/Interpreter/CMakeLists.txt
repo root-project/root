@@ -31,6 +31,7 @@ add_cling_library(clingInterpreter
   IncrementalParser.cpp
   Interpreter.cpp
   InvocationOptions.cpp
+  Transaction.cpp
   ValuePrinter.cpp
   ValuePrinterInfo.cpp
   ValuePrinterSynthesizer.cpp
