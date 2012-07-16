@@ -38,6 +38,7 @@
 #include "clang/Sema/TemplateDeduction.h"
 
 #include "llvm/Linker.h"
+#include "llvm/LLVMContext.h"
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MemoryBuffer.h"
@@ -202,6 +203,7 @@ namespace cling {
                            const char* llvmdir /*= 0*/) :
     m_UniqueCounter(0), m_PrintAST(false), m_ValuePrinterEnabled(false) {
 
+    m_LLVMContext.reset(new llvm::LLVMContext);
     std::vector<unsigned> LeftoverArgsIdx;
     m_Opts = InvocationOptions::CreateFromArgs(argc, argv, LeftoverArgsIdx);
     std::vector<const char*> LeftoverArgs;

@@ -73,7 +73,7 @@ namespace cling {
       CodeGenerator* CG = CreateLLVMCodeGen(CI->getDiagnostics(),
                                             "cling input",
                                             CI->getCodeGenOpts(),
-                                  /*Owned by codegen*/ * new llvm::LLVMContext()
+                                            *m_Interpreter->getLLVMContext()
                                             );
       assert(CG && "No CodeGen?!");
       m_Consumer->Add(ChainedConsumer::kCodeGenerator, CG);
