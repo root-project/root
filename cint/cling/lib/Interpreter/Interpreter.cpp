@@ -1528,17 +1528,17 @@ namespace cling {
       //
       //  Dump what was found.
       //
-      if (Result.getResultKind() == LookupResult::Found) {
-        NamedDecl* ND = Result.getFoundDecl();
-        std::string buf;
-        llvm::raw_string_ostream tmp(buf);
-        ND->print(tmp, 0);
-        fprintf(stderr, "Found: %s\n", tmp.str().c_str());
-      } else if (Result.getResultKind() == LookupResult::FoundOverloaded) {
-        fprintf(stderr, "Found overload set!\n");
-        Result.print(llvm::outs());
-        fprintf(stderr, "\n");
-      }
+      //if (Result.getResultKind() == LookupResult::Found) {
+      //  NamedDecl* ND = Result.getFoundDecl();
+      //  std::string buf;
+      //  llvm::raw_string_ostream tmp(buf);
+      //  ND->print(tmp, 0);
+      //  fprintf(stderr, "Found: %s\n", tmp.str().c_str());
+      //} else if (Result.getResultKind() == LookupResult::FoundOverloaded) {
+      //  fprintf(stderr, "Found overload set!\n");
+      //  Result.print(llvm::outs());
+      //  fprintf(stderr, "\n");
+      //}
       {
         //
         //  Construct the overload candidate set.
@@ -1554,16 +1554,16 @@ namespace cling {
               // Class method, not static, not a constructor, so has
               // an implicit object argument.
               CXXMethodDecl* MD = cast<CXXMethodDecl>(FD);
-              {
-                std::string buf;
-                llvm::raw_string_ostream tmp(buf);
-                MD->print(tmp, 0);
-                fprintf(stderr, "Considering method: %s\n",
-                  tmp.str().c_str());
-              }
+              //{
+              //  std::string buf;
+              //  llvm::raw_string_ostream tmp(buf);
+              //  MD->print(tmp, 0);
+              //  fprintf(stderr, "Considering method: %s\n",
+              //    tmp.str().c_str());
+              //}
               if (FuncTemplateArgs && (FuncTemplateArgs->size() != 0)) {
                 // Explicit template args were given, cannot use a plain func.
-                fprintf(stderr, "rejected: template args given\n");
+                //fprintf(stderr, "rejected: template args given\n");
                 continue;
               }
               CI->getSema().AddMethodCandidate(MD, I.getPair(),
@@ -1574,22 +1574,22 @@ namespace cling {
                 Candidates);
             }
             else {
-              {
-                std::string buf;
-                llvm::raw_string_ostream tmp(buf);
-                FD->print(tmp, 0);
-                fprintf(stderr, "Considering func: %s\n", tmp.str().c_str());
-              }
+              //{
+              //  std::string buf;
+              //  llvm::raw_string_ostream tmp(buf);
+              //  FD->print(tmp, 0);
+              //  fprintf(stderr, "Considering func: %s\n", tmp.str().c_str());
+              //}
               const FunctionProtoType* Proto = dyn_cast<FunctionProtoType>(
                 FD->getType()->getAs<clang::FunctionType>());
               if (!Proto) {
                 // Function has no prototype, cannot do overloading.
-                fprintf(stderr, "rejected: no prototype\n");
+                //fprintf(stderr, "rejected: no prototype\n");
                 continue;
               }
               if (FuncTemplateArgs && (FuncTemplateArgs->size() != 0)) {
                 // Explicit template args were given, cannot use a plain func.
-                fprintf(stderr, "rejected: template args given\n");
+                //fprintf(stderr, "rejected: template args given\n");
                 continue;
               }
               CI->getSema().AddOverloadCandidate(FD, I.getPair(),
@@ -1604,13 +1604,13 @@ namespace cling {
                 !isa<CXXConstructorDecl>(FTD->getTemplatedDecl())) {
               // Class method template, not static, not a constructor, so has
               // an implicit object argument.
-              {
-                std::string buf;
-                llvm::raw_string_ostream tmp(buf);
-                FTD->print(tmp, 0);
-                fprintf(stderr, "Considering method template: %s\n",
-                  tmp.str().c_str());
-              }
+              //{
+              //  std::string buf;
+              //  llvm::raw_string_ostream tmp(buf);
+              //  FTD->print(tmp, 0);
+              //  fprintf(stderr, "Considering method template: %s\n",
+              //    tmp.str().c_str());
+              //}
               CI->getSema().AddMethodTemplateCandidate(FTD, I.getPair(),
                 cast<CXXRecordDecl>(FTD->getDeclContext()),
                 const_cast<TemplateArgumentListInfo*>(FuncTemplateArgs),
@@ -1620,13 +1620,13 @@ namespace cling {
                 Candidates);
             }
             else {
-              {
-                std::string buf;
-                llvm::raw_string_ostream tmp(buf);
-                FTD->print(tmp, 0);
-                fprintf(stderr, "Considering func template: %s\n",
-                  tmp.str().c_str());
-              }
+              //{
+              //  std::string buf;
+              //  llvm::raw_string_ostream tmp(buf);
+              //  FTD->print(tmp, 0);
+              //  fprintf(stderr, "Considering func template: %s\n",
+              //    tmp.str().c_str());
+              //}
               CI->getSema().AddTemplateOverloadCandidate(FTD, I.getPair(),
                 const_cast<TemplateArgumentListInfo*>(FuncTemplateArgs),
                 llvm::makeArrayRef<Expr*>(GivenArgs.data(), GivenArgs.size()),
@@ -1634,14 +1634,14 @@ namespace cling {
             }
           }
           else {
-            {
-              std::string buf;
-              llvm::raw_string_ostream tmp(buf);
-              FD->print(tmp, 0);
-              fprintf(stderr, "Considering non-func: %s\n",
-                tmp.str().c_str());
-              fprintf(stderr, "rejected: not a function\n");
-            }
+            //{
+            //  std::string buf;
+            //  llvm::raw_string_ostream tmp(buf);
+            //  FD->print(tmp, 0);
+            //  fprintf(stderr, "Considering non-func: %s\n",
+            //    tmp.str().c_str());
+            //  fprintf(stderr, "rejected: not a function\n");
+            //}
           }
         }
         //
@@ -1659,14 +1659,14 @@ namespace cling {
       //
       //  Dump the overloading result.
       //
-      if (TheDecl) {
-        std::string buf;
-        llvm::raw_string_ostream tmp(buf);
-        TheDecl->print(tmp, 0);
-        fprintf(stderr, "Match: %s\n", tmp.str().c_str());
-        TheDecl->dump();
-        fprintf(stderr, "\n");
-      }
+      //if (TheDecl) {
+      //  std::string buf;
+      //  llvm::raw_string_ostream tmp(buf);
+      //  TheDecl->print(tmp, 0);
+      //  fprintf(stderr, "Match: %s\n", tmp.str().c_str());
+      //  TheDecl->dump();
+      //  fprintf(stderr, "\n");
+      //}
     }
   lookupFuncArgsDone:
     //
