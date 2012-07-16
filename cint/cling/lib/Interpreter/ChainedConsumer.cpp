@@ -202,7 +202,7 @@ namespace cling {
 
   ChainedConsumer::ChainedConsumer()
     :  Consumers(), MutationListener(0), DeserializationListener(0),
-       m_InTransaction(false), m_Context(0), m_Sema(0), m_CurTransaction(0) {
+       m_Context(0), m_Sema(0), m_CurTransaction(0) {
 
     // Collect the mutation listeners and deserialization listeners of all
     // children, and create a multiplex listener each if so.
@@ -263,15 +263,12 @@ namespace cling {
   void ChainedConsumer::HandleTranslationUnit(ASTContext& Ctx) {
 
     // We don't want to chase our tail
-    if (IsInTransaction() || m_CurTransaction->isEmpty())
+    if (m_CurTransaction->isEmpty())
       return;
-
-    m_InTransaction = true;
 
     // Check for errors...
     if (m_Sema->getDiagnostics().hasErrorOccurred()) {
       RecoverFromError();
-      m_InTransaction = false;
       return;
     }
 
@@ -284,8 +281,6 @@ namespace cling {
         Consumers[i]->HandleTopLevelDecl(*I);
       }
     }
-
-    m_InTransaction = false;
 
     for (size_t i = 0; i < kConsumersCount; ++i)
       if (IsConsumerEnabled((EConsumerIndex)i))

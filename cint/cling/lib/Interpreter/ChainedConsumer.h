@@ -41,7 +41,9 @@ namespace cling {
     ChainedConsumer();
     virtual ~ChainedConsumer();
 
-    // ASTConsumer
+    /// \{
+    /// \name ASTConsumer overrides
+
     virtual void Initialize(clang::ASTContext& Context);
     virtual bool HandleTopLevelDecl(clang::DeclGroupRef D);
     virtual void HandleInterestingDecl(clang::DeclGroupRef D);
@@ -55,11 +57,15 @@ namespace cling {
     virtual clang::ASTDeserializationListener* GetASTDeserializationListener();
     virtual void PrintStats();
 
-    // SemaConsumer
+    /// \}
+
+    /// \{
+    /// \name SemaConsumer overrides
+
     virtual void InitializeSema(clang::Sema& S);
     virtual void ForgetSema();
 
-    bool IsInTransaction() { return m_InTransaction; }
+    /// \}
 
     void Add(EConsumerIndex I, clang::ASTConsumer* C);
     void RecoverFromError();
@@ -95,6 +101,9 @@ namespace cling {
       return COStack.back();
     }
 
+    /// \{
+    /// \name Transaction Support
+
     Transaction* getTransaction() { return m_CurTransaction; }
     const Transaction* getTransaction() const { return m_CurTransaction; }
     void setTransaction(Transaction* curT) { m_CurTransaction = curT; }
@@ -102,19 +111,18 @@ namespace cling {
       m_CurTransaction = const_cast<Transaction*>(curT); 
     }
 
+    /// \}
+
   private:
     clang::ASTConsumer* Consumers[kConsumersCount]; // owns them
     llvm::SmallVector<CompilationOptions, 2> COStack;
     llvm::OwningPtr<ASTNodeEraser> NodeEraser;
     llvm::OwningPtr<ChainedMutationListener> MutationListener;
     llvm::OwningPtr<ChainedDeserializationListener> DeserializationListener;
-    bool m_InTransaction;
     clang::ASTContext* m_Context;
     clang::Sema* m_Sema;
 
     Transaction* m_CurTransaction;
-
-    friend class IncrementalParser;
   };
 } // namespace cling
 

@@ -58,8 +58,8 @@ namespace cling {
     clang::CompilerInstance* getCI() const { return m_CI.get(); }
     clang::Parser* getParser() const { return m_Parser.get(); }
 
-    /// @{
-    /// @name Transaction Support
+    /// \{
+    /// \name Transaction Support
 
     ///\brief Starts a transaction.
     ///
@@ -81,7 +81,7 @@ namespace cling {
     ///
     void commitCurrentTransaction() const;
 
-    /// @}
+    /// \}
 
     ///\brief Compiles the given input with the given compilation options.
     ///
