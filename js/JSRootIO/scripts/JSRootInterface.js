@@ -193,17 +193,16 @@ function ReadFile() {
    var url = $("#urlToLoad").val();
    if (url == "" || url == " ") return;
    $("#status").append("load: " + url + "<br/>");
-   $("#report").get(0).innerHTML = '';
-   obj_list.splice(0, obj_list.length);
-   //obj_list = [];
-   obj_index = 0;
-   last_index = 0;
    delete gFile;
    gFile = new JSROOTIO.RootFile(url);
    $('#report').append("</body></html>");
 };
 
 function ResetUI() {
+   $("#report").get(0).innerHTML = '';
+   obj_list.splice(0, obj_list.length);
+   obj_index = 0;
+   last_index = 0;
    $("#status").html("<br/>JSROOTIO.RootFile.js version: " + JSROOTIO.version + "<br/>");
    $('#report').get(0).innerHTML = '';
 };
