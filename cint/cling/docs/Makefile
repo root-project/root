@@ -9,9 +9,10 @@
 
 CLING_LEVEL := ..
 PROJ_OBJ_DIR = .
-DOXYGEN = doxygen
 
 include $(CLING_LEVEL)/Makefile
+
+DOXYGEN = doxygen
 
 PROJ_docsdir := $(PROJ_docsdir)/cling
 
@@ -71,9 +72,8 @@ regendoc: gen-doxygen-cfg
 	  $(RM) -rf $(PROJ_OBJ_DIR)/doxygen ; \
 	fi
 	$(Verb) $(DOXYGEN) $(PROJ_OBJ_DIR)/doxygen.cfg
-	$(Verb) cat $(PROJ_OBJ_DIR)/doxygen/html/index.html \
-		| sed "s/[$$]LatestRev[$$]/`svnversion $(PROJ_SRC_DIR)`/g" \
-		> $(PROJ_OBJ_DIR)/doxygen/html/index.html
+	$(Verb) sed -i "s/[$$]LatestRev[$$]/`svnversion $(PROJ_SRC_DIR)`/g" \
+	 $(PROJ_OBJ_DIR)/doxygen/html/*.html
 
 $(PROJ_OBJ_DIR)/doxygen.tar.gz: $(DOXYFILES) $(PROJ_OBJ_DIR)/doxygen.cfg
 	$(Echo) Packaging doxygen documentation
