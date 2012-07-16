@@ -408,6 +408,10 @@ namespace cling {
     return m_IncrParser->getParser();
   }
 
+  llvm::Module* Interpreter::getModule() const {
+    return m_IncrParser->GetCodeGenerator()->GetModule();
+  }
+
   ///\brief Maybe transform the input line to implement cint command line
   /// semantics (declarations are global) and compile to produce a module.
   ///

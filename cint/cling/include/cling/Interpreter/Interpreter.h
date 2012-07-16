@@ -20,6 +20,7 @@ namespace llvm {
   struct GenericValue;
   class ExecutionEngine;
   class LLVMContext;
+  class Module;
 }
 
 namespace clang {
@@ -427,6 +428,8 @@ namespace cling {
     clang::CompilerInstance* getCI() const;
     llvm::ExecutionEngine* getExecutionEngine() const;
     clang::Parser* getParser() const;
+
+    llvm::Module* getModule() const;
 
     void installLazyFunctionCreator(void* (*fp)(const std::string&));
 
