@@ -2084,31 +2084,28 @@ Pixmap_t TGCocoa::CreatePixmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
    assert(width > 0 && "CreatePixmap, width parameter is 0");
    assert(height > 0 && "CreatePixmap, height parameter is 0");
    
-   unsigned char *imageData = 0;
+   std::vector<unsigned char> imageData;
    if (depth > 1)
-      imageData = new unsigned char[width * height * 4]();
+      imageData.resize(width * height * 4);
    else
-      imageData = new unsigned char[width * height];
-   Util::ScopedArray<unsigned char> arrayGuard(imageData);
+      imageData.resize(width * height);
 
-   X11::FillPixmapBuffer((unsigned char*)bitmap, width, height, foregroundPixel, backgroundPixel, depth, imageData);
+   X11::FillPixmapBuffer((unsigned char*)bitmap, width, height, foregroundPixel, backgroundPixel, depth, &imageData[0]);
 
    //Now we can create CGImageRef.
    Util::NSScopeGuard<QuartzImage> image;
    
    if (depth > 1)
-      image.Reset([[QuartzImage alloc] initWithW : width H : height data: imageData]);
+      image.Reset([[QuartzImage alloc] initWithW : width H : height data: &imageData[0]]);
    else
-      image.Reset([[QuartzImage alloc] initMaskWithW : width H : height bitmapMask : imageData]);
+      image.Reset([[QuartzImage alloc] initMaskWithW : width H : height bitmapMask : &imageData[0]]);
 
    if (!image.Get()) {
       Error("CreatePixmap", "QuartzImage initialization failed");//More concrete message was issued by QuartzImage.
       return kNone;
    }
 
-   arrayGuard.Release();//Now imageData is owned by image.
    image.Get().fID = fPimpl->RegisterDrawable(image.Get());//This can throw.
-
    return image.Get().fID;
 }
 
@@ -2122,27 +2119,22 @@ Pixmap_t TGCocoa::CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t
 
    //I'm not using vector here, since I have to pass this pointer to Obj-C code
    //(and Obj-C object will own this memory later).
-   unsigned char *imageData = new unsigned char[width * height * 4];
-   Util::ScopedArray<unsigned char> arrayGuard(imageData);
-
-   std::copy(bits, bits + width * height * 4, imageData);
+   std::vector<unsigned char> imageData(bits, bits + width * height * 4);
 
    //Convert bgra to rgba.
-   unsigned char *p = imageData;
+   unsigned char *p = &imageData[0];
    for (unsigned i = 0, e = width * height; i < e; ++i, p += 4)
       std::swap(p[0], p[2]);
 
    //Now we can create CGImageRef.
-   Util::NSScopeGuard<QuartzImage> image([[QuartzImage alloc] initWithW : width H : height data : imageData]);
+   Util::NSScopeGuard<QuartzImage> image([[QuartzImage alloc] initWithW : width H : height data : &imageData[0]]);
 
    if (!image.Get()) {
       Error("CreatePixmapFromData", "QuartzImage initialziation failed");//More concrete message was issued by QuartzImage.
       return kNone;
    }
 
-   arrayGuard.Release();//Now imageData is owned by image.
-   image.Get().fID = fPimpl->RegisterDrawable(image.Get());//This can throw.
-   
+   image.Get().fID = fPimpl->RegisterDrawable(image.Get());//This can throw.   
    return image.Get().fID;
 }
 
@@ -2157,10 +2149,9 @@ Pixmap_t TGCocoa::CreateBitmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
    
    //TASImage has a bug, it calculates size in pixels (making a with to multiple-of eight and 
    //allocates memory as each bit occupies one byte, and later packs bits into bytes.
-   //Posylaiu luchi ponosa avtoru.
-
-   unsigned char * const imageData = new unsigned char[width * height]();
-   Util::ScopedArray<unsigned char> arrayGuard(imageData);
+   
+   std::vector<unsigned char> imageData(width * height);
+   
    for (unsigned i = 0, j = 0, e = width / 8 * height; i < e; ++i) {//TASImage supposes 8-bit bytes and packs mask bits.
       for(unsigned bit = 0; bit < 8; ++bit, ++j) {
          if (bitmap[i] & (1 << bit))
@@ -2171,13 +2162,12 @@ Pixmap_t TGCocoa::CreateBitmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
    }
 
    //Now we can create CGImageRef.
-   Util::NSScopeGuard<QuartzImage> image([[QuartzImage alloc] initMaskWithW : width H : height bitmapMask: imageData]);
+   Util::NSScopeGuard<QuartzImage> image([[QuartzImage alloc] initMaskWithW : width H : height bitmapMask : &imageData[0]]);
    if (!image.Get()) {
       Error("CreateBitmap", "QuartzImage initialization failed");//More concrete message was issued by QuartzImage.
       return kNone;
    }
 
-   arrayGuard.Release();//Now imageData is owned by image.
    image.Get().fID = fPimpl->RegisterDrawable(image.Get());//This can throw.
    return image.Get().fID;
 }

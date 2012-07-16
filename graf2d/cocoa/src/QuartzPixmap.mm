@@ -353,24 +353,33 @@ namespace Quartz = ROOT::Quartz;
 //______________________________________________________________________________
 - (id) initWithW : (unsigned) width H : (unsigned) height data : (unsigned char *) data
 {
-   //This ctor initializes CGImageRef using 'data'. 'self' takes the 'data's onwership
-   //only if initialization was successful.
-
    assert(width != 0 && "initWithW:H:data:, width parameter is 0");
    assert(height != 0 && "initWithW:H:data:, height parameter is 0");
    assert(data != 0 && "initWithW:H:data:, data parameter is null");
 
    if (self = [super init]) {
       Util::NSScopeGuard<QuartzImage> selfGuard(self);
+
+      //This w * h * 4 is ONLY for TGCocoa::CreatePixmapFromData.
+      //If needed something else, I'll make this code more generic.
+      
+      unsigned char *dataCopy = 0;
+      try {
+         dataCopy = new unsigned char[width * height * 4]();
+      } catch (const std::bad_alloc &) {
+         NSLog(@"QuartzImage: -initWithW:H:data:, memory allocation failed");
+         return nil;
+      }
+      
+      std::copy(data, data + width * height * 4, dataCopy);
+      Util::ScopedArray<unsigned char> arrayGuard(dataCopy);
    
       fIsStippleMask = NO;
       const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer, 
                                                                ROOT_QuartzImage_ReleaseBytePointer, 
                                                                ROOT_QuartzImage_GetBytesAtPosition, 0};
 
-      //This w * h * 4 is ONLY for TGCocoa::CreatePixmapFromData.
-      //If needed something else, I'll make this code more generic.
-      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(data, width * height * 4, &providerCallbacks));
+      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(dataCopy, width * height * 4, &providerCallbacks));
       if (!provider.Get()) {
          NSLog(@"QuartzImage: -initWithW:H:data: CGDataProviderCreateDirect failed");
          return nil;
@@ -393,10 +402,11 @@ namespace Quartz = ROOT::Quartz;
       }
 
       selfGuard.Release();
+      arrayGuard.Release();
 
       fWidth = width;
       fHeight = height;
-      fImageData = data;
+      fImageData = dataCopy;
    }
    
    return self;
@@ -414,6 +424,17 @@ namespace Quartz = ROOT::Quartz;
    
    if (self = [super init]) {
       Util::NSScopeGuard<QuartzImage> selfGuard(self);
+      
+      unsigned char *dataCopy = 0;
+      try {
+         dataCopy = new unsigned char[width * height]();
+      } catch (const std::bad_alloc &) {
+         NSLog(@"QuartzImage: -initMaskWithW:H:bitmapMask:, memory allocation failed");
+         return nil;
+      }
+
+      std::copy(mask, mask + width * height, dataCopy);      
+      Util::ScopedArray<unsigned char> arrayGuard(dataCopy);
    
       fIsStippleMask = YES;
       const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer, 
@@ -421,7 +442,7 @@ namespace Quartz = ROOT::Quartz;
                                                                ROOT_QuartzImage_GetBytesAtPosition, 0};
                                                                
                                                                
-      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(mask, width * height, &providerCallbacks));
+      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(dataCopy, width * height, &providerCallbacks));
       if (!provider.Get()) {
          NSLog(@"QuartzImage: -initMaskWithW:H:bitmapMask: CGDataProviderCreateDirect failed");
          return nil;
@@ -434,10 +455,11 @@ namespace Quartz = ROOT::Quartz;
       }
       
       selfGuard.Release();
+      arrayGuard.Release();
 
       fWidth = width;
       fHeight = height;
-      fImageData = mask;
+      fImageData = dataCopy;
    }
    
    return self;
@@ -455,7 +477,7 @@ namespace Quartz = ROOT::Quartz;
       Util::NSScopeGuard<QuartzImage> selfGuard(self);
 
       try {
-         fImageData = new unsigned char[width * height];
+         fImageData = new unsigned char[width * height]();
       } catch (const std::bad_alloc &) {
          NSLog(@"QuartzImage: -initMaskWithW:H:, memory allocation failed");
          return nil;
@@ -495,19 +517,7 @@ namespace Quartz = ROOT::Quartz;
    assert(pixmap.fWidth != 0 && "initFromPixmap:, pixmap width is zero");
    assert(pixmap.fHeight != 0 && "initFromPixmap:, pixmap height is zero");
 
-   unsigned char *data = 0;
-   try {
-      data = new unsigned char[pixmap.fWidth * pixmap.fHeight * 4]();//QuartzPixmap has only one data format.
-      std::copy(pixmap.fData, pixmap.fData + pixmap.fWidth * pixmap.fHeight * 4, data);      
-   } catch (const std::bad_alloc &) {
-      NSLog(@"QuartzImage: -initFromPixmap:, memory allocation failed");
-      return nil;
-   }
-   
-   if (!(self = [self initWithW : pixmap.fWidth H : pixmap.fHeight data : data]))
-      delete [] data;
-   
-   return self;
+   return [self initWithW : pixmap.fWidth H : pixmap.fHeight data : pixmap.fData];
 }
 
 //______________________________________________________________________________
@@ -518,19 +528,7 @@ namespace Quartz = ROOT::Quartz;
    assert(image.fHeight != 0 && "initFromImage:, image height is 0");
    assert(image.fIsStippleMask == NO && "initFromImage:, image is a stipple mask, not implemented");
    
-   unsigned char *data = 0;
-   try {
-      data = new unsigned char[image.fWidth * image.fHeight * 4];
-      std::copy(image->fImageData, image->fImageData + image.fWidth * image.fHeight * 4, data);
-   } catch (const std::bad_alloc &) {
-      NSLog(@"QuartzImage: -initFromImage:, memory allocation failed");
-      return nil;
-   }
-
-   if (!(self = [self initWithW : image.fWidth H : image.fHeight data : data]))
-      delete [] data;
-
-   return self;
+   return [self initWithW : image.fWidth H : image.fHeight data : image->fImageData];
 }
 
 //______________________________________________________________________________
