@@ -808,6 +808,17 @@ namespace cling {
     PP.EnterSourceFile(FID, 0, SourceLocation());
     PP.Lex(const_cast<Token&>(P->getCurToken()));
     //
+    //  Prevent failing on an assert in TryAnnotateCXXScopeToken.
+    //
+    if (!P->getCurToken().is(clang::tok::identifier) && !P->getCurToken().
+          is(clang::tok::coloncolon) && !(P->getCurToken().is(
+          clang::tok::annot_template_id) && P->NextToken().is(
+          clang::tok::coloncolon)) && !P->getCurToken().is(
+          clang::tok::kw_decltype)) {
+      // error path
+      goto lookupClassDone;
+    }
+    //
     //  Try parsing the name as a nested-name-specifier.
     //
     CXXScopeSpec SS;
