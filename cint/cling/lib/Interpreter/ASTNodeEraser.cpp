@@ -186,8 +186,10 @@ namespace cling {
            "Not in the context but can delete?!");
     if (ExistsInDC && !Successful)
       return false;
-    else // in release we'd want the assert to fall into true
+    else { // in release we'd want the assert to fall into true
+      m_Sema->getDiagnostics().Reset();
       return true;
+    }
   }
 
   bool DeclReverter::VisitNamedDecl(NamedDecl* ND) {

@@ -365,8 +365,6 @@ namespace cling {
     }
 
     m_CurTransaction->clear();
-
-    m_Sema->getDiagnostics().Reset();
   }
 
   bool ChainedConsumer::IsConsumerEnabled(EConsumerIndex I) {
