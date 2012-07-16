@@ -135,6 +135,11 @@ void* ExecutionContext::HandleMissingFunction(const std::string& mangled_name)
   return (void*)reinterpret_cast<size_t>(unresolvedSymbol);
 }
 
+void ExecutionContext::ResetUnresolved()
+{
+    m_vec_unresolved.clear();
+}
+
 void*
 ExecutionContext::NotifyLazyFunctionCreators(const std::string& mangled_name)
 {

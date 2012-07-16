@@ -30,6 +30,11 @@ namespace cling {
   public:
     typedef void* (*LazyFunctionCreatorFunc_t)(const std::string&);
 
+  public:
+    static void ResetUnresolved();
+
+  public:
+
     ExecutionContext();
     ~ExecutionContext();
 
