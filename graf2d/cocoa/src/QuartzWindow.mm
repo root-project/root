@@ -665,7 +665,6 @@ void print_mask_info(ULong_t mask)
 }
 
 @synthesize fMainWindow;
-@synthesize fBackBuffer;
 
 //QuartzWindow's life cycle.
 //______________________________________________________________________________
@@ -1026,6 +1025,22 @@ void print_mask_info(ULong_t mask)
       return kIsUnmapped;
       
    return kIsViewable;
+}
+
+//______________________________________________________________________________
+- (QuartzPixmap *) fBackBuffer
+{
+   assert(fContentView != nil && "fBackBuffer, content view is nil");
+   
+   return fContentView.fBackBuffer;
+}
+
+//______________________________________________________________________________
+- (void) setFBackBuffer : (QuartzPixmap *) backBuffer
+{
+   assert(fContentView != nil && "setFBackBuffer, content view is nil");
+   
+   fContentView.fBackBuffer = backBuffer;
 }
 
 //______________________________________________________________________________
@@ -1410,12 +1425,14 @@ void print_mask_info(ULong_t mask)
 
 
 @implementation QuartzView {
+   QuartzPixmap *fBackBuffer;
    NSMutableArray *fPassiveKeyGrabs;
    BOOL            fIsOverlapped;
    QuartzImage    *fClipMask;
    
    NSMutableDictionary   *fX11Properties;
    QuartzImage    *fBackgroundPixmap;
+   
 }
 
 @synthesize fClipMaskIsValid;
@@ -1432,7 +1449,6 @@ void print_mask_info(ULong_t mask)
 @synthesize fBackgroundPixel;
 //SetWindowAttributes_t/WindowAttributes_t
 /////////////////////
-@synthesize fBackBuffer;
 @synthesize fParentView;
 @synthesize fLevel;
 @synthesize fGrabButton;
@@ -1448,6 +1464,7 @@ void print_mask_info(ULong_t mask)
 {
    if (self = [super initWithFrame : frame]) {
       //Make this explicit (though memory is zero initialized).
+      fBackBuffer = nil;
       fClipMaskIsValid = NO;
       fClipMask = nil;
 
@@ -1484,6 +1501,7 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) dealloc
 {
+   [fBackBuffer release];
    [fPassiveKeyGrabs release];
    [fClipMask release];
    [fX11Properties release];
@@ -1897,6 +1915,25 @@ void print_mask_info(ULong_t mask)
    }
 
    return kIsViewable;
+}
+
+//______________________________________________________________________________
+- (QuartzPixmap *) fBackBuffer
+{
+   return fBackBuffer;//No autorelease, I know the object's lifetime myself.
+}
+
+//______________________________________________________________________________
+- (void) setFBackBuffer : (QuartzPixmap *) backBuffer
+{
+   if (fBackBuffer != backBuffer) {
+      [fBackBuffer release];
+      
+      if (backBuffer)
+         fBackBuffer = [backBuffer retain];
+      else
+         fBackBuffer = nil;
+   }
 }
 
 //______________________________________________________________________________

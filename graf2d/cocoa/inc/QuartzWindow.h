@@ -86,7 +86,7 @@
 /////////////////////////////////////////////////////////////////
 
 //"Back buffer" is a bitmap, attached to a window by TCanvas.
-@property (nonatomic, assign) QuartzPixmap          *fBackBuffer;
+@property (nonatomic, retain) QuartzPixmap          *fBackBuffer;
 @property (nonatomic, assign) QuartzView            *fParentView;
 @property (nonatomic, readonly) NSView<X11Window>   *fContentView;
 @property (nonatomic, readonly) QuartzWindow        *fQuartzWindow;
@@ -195,7 +195,7 @@
 /////////////////////////////////////////////////////////////////
 
 
-@property (nonatomic, assign) QuartzPixmap        *fBackBuffer;
+@property (nonatomic, retain) QuartzPixmap        *fBackBuffer;
 @property (nonatomic, assign) QuartzView          *fParentView;
 @property (nonatomic, assign) unsigned             fLevel;
 @property (nonatomic, readonly) NSView<X11Window> *fContentView;

@@ -682,13 +682,7 @@ void TGCocoa::DestroyWindow(Window_t wid)
 
    assert(fPimpl->GetDrawable(wid).fIsPixmap == NO &&  "DestroyWindow, can not be called for QuartzPixmap or QuartzImage object");
    
-   NSObject<X11Window> * const window = fPimpl->GetWindow(wid);
-   if (window.fBackBuffer) {
-      if (fPimpl->fX11CommandBuffer.BufferSize())
-         fPimpl->fX11CommandBuffer.RemoveOperationsForDrawable(window.fBackBuffer.fID);
-      fPimpl->DeleteDrawable(window.fBackBuffer.fID);
-   }
-   
+   NSObject<X11Window> * const window = fPimpl->GetWindow(wid);   
    if (fPimpl->fX11CommandBuffer.BufferSize())
       fPimpl->fX11CommandBuffer.RemoveOperationsForDrawable(wid);
 
@@ -3113,15 +3107,6 @@ void TGCocoa::SetDoubleBufferON()
 
    Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : currW H : currH]);
    if (pixmap.Get()) {
-      //TODO: Actually, this "back buffer" pixmap can be retained in a window (view), no need
-      //register it as a separate drawable in fPimpl?
-      pixmap.Get().fID = fPimpl->RegisterDrawable(pixmap.Get());//Can throw.
-      if (window.fBackBuffer) {//Now we can delete the old one, since the new was created.
-         if (fPimpl->fX11CommandBuffer.BufferSize())
-            fPimpl->fX11CommandBuffer.RemoveOperationsForDrawable(window.fBackBuffer.fID);
-         fPimpl->DeleteDrawable(window.fBackBuffer.fID);
-      }
-
       window.fBackBuffer = pixmap.Get();
    } else {
       Error("SetDoubleBufferON", "QuartzPixmap initialization failed");//More concrete message was issued by QuartzPixmap.

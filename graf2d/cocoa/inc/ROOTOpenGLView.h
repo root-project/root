@@ -75,7 +75,7 @@
 @property (nonatomic, assign) int   fBitGravity;
 @property (nonatomic, assign) int   fWinGravity;
 
-@property (nonatomic, assign) QuartzPixmap *fBackBuffer;//nil.
+@property (nonatomic, retain) QuartzPixmap *fBackBuffer;//nil.
 
 @property (nonatomic, assign) QuartzView          *fParentView;
 @property (nonatomic, assign) unsigned             fLevel;

@@ -91,7 +91,7 @@
 
 
 //"Back buffer" is a bitmap, used by canvas window (only).
-@property (nonatomic, assign) QuartzPixmap *fBackBuffer;
+@property (nonatomic, retain) QuartzPixmap *fBackBuffer;
 //Parent view can be only QuartzView.
 @property (nonatomic, assign) QuartzView *fParentView;
 @property (nonatomic, assign) unsigned    fLevel;//Window's "level" in a hierarchy.
