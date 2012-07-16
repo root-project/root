@@ -2084,11 +2084,7 @@ Pixmap_t TGCocoa::CreatePixmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
    assert(width > 0 && "CreatePixmap, width parameter is 0");
    assert(height > 0 && "CreatePixmap, height parameter is 0");
    
-   std::vector<unsigned char> imageData;
-   if (depth > 1)
-      imageData.resize(width * height * 4);
-   else
-      imageData.resize(width * height);
+   std::vector<unsigned char> imageData (depth > 1 ? width * height * 4 : width * height);
 
    X11::FillPixmapBuffer((unsigned char*)bitmap, width, height, foregroundPixel, backgroundPixel, depth, &imageData[0]);
 

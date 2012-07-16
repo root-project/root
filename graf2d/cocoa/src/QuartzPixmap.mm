@@ -415,9 +415,6 @@ namespace Quartz = ROOT::Quartz;
 //______________________________________________________________________________
 - (id) initMaskWithW : (unsigned) width H : (unsigned) height bitmapMask : (unsigned char *) mask
 {
-   //Ctor creates CGImageRef from 'mask', takes the 'mask's ownership if initialization
-   //was successful.
-
    assert(width != 0 && "initMaskWithW:H:bitmapMask:, width parameter is zero");
    assert(height != 0 && "initMaskWithW:H:bitmapMask:, height parameter is zero");
    assert(mask != 0 && "initMaskWithW:H:bitmapMask:, mask parameter is null");
