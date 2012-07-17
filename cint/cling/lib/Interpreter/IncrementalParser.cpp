@@ -151,6 +151,9 @@ namespace cling {
       }      
     }
 
+    // Pull all template instantiations in that came from the consumers.
+    getCI()->getSema().PerformPendingInstantiations();
+
     m_Consumer->HandleTranslationUnit(getCI()->getASTContext());
     CurT->setState(Transaction::kCommitted);
   }

@@ -22,8 +22,6 @@ namespace cling {
     if (!TransformTopLevelDecl(DGR))
       return false;
     
-    // Pull all template instantiations in, coming from the consumers.
-    m_Sema->PerformPendingInstantiations();
     return true;
   }
 
