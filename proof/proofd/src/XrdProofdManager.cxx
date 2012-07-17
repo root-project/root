@@ -810,6 +810,7 @@ int XrdProofdManager::Config(bool rcf)
 
    // Data directory, if specified
    if (fDataDir.length() > 0) {
+      if (fDataDir.endswith('/')) fDataDir.erasefromend(1);
       // Make sure it exists
       if (XrdProofdAux::AssertDir(fDataDir.c_str(), ui, fChangeOwn) != 0) {
          XPDERR("unable to assert data dir: " << fDataDir);
