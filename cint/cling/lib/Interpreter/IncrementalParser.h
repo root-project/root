@@ -148,9 +148,6 @@ namespace cling {
     ///
     Transaction* Parse(llvm::StringRef input);
 
-    llvm::MemoryBuffer* getCurBuffer() const {
-      return m_MemoryBuffer.back();
-    }
     void enablePrintAST(bool print /*=true*/) {
       m_Consumer->getCompilationOpts().Debug = print;
     }
@@ -158,12 +155,12 @@ namespace cling {
     bool isDynamicLookupEnabled() const { return m_DynamicLookupEnabled; }
     bool isSyntaxOnly() const { return m_SyntaxOnly; }
 
-    clang::CodeGenerator* GetCodeGenerator() const;
+    clang::CodeGenerator* getCodeGenerator() const;
 
   private:
     void CreateSLocOffsetGenerator();
     EParseResult Compile(llvm::StringRef input);
     EParseResult ParseInternal(llvm::StringRef input);
   };
-}
+} // end namespace cling
 #endif // CLING_INCREMENTAL_PARSER_H

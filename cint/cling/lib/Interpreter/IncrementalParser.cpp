@@ -229,8 +229,8 @@ namespace cling {
   }
 
   IncrementalParser::~IncrementalParser() {
-     if (GetCodeGenerator()) {
-       GetCodeGenerator()->ReleaseModule();
+     if (getCodeGenerator()) {
+       getCodeGenerator()->ReleaseModule();
      }
      for (unsigned i = 0; i < m_Transactions.size(); ++i)
        delete m_Transactions[i];
@@ -265,11 +265,10 @@ namespace cling {
   IncrementalParser::Compile(llvm::StringRef input) {
     // Just in case when Parse is called, we want to complete the transaction
     // coming from parse and then start new one.
-    //m_Consumer->HandleTranslationUnit(getCI()->getASTContext());
 
     // Reset the module builder to clean up global initializers, c'tors, d'tors:
-    if (GetCodeGenerator()) {
-      GetCodeGenerator()->Initialize(getCI()->getASTContext());
+    if (getCodeGenerator()) {
+      getCodeGenerator()->Initialize(getCI()->getASTContext());
     }
 
     beginTransaction();
@@ -372,7 +371,7 @@ namespace cling {
     }
   }
 
-  CodeGenerator* IncrementalParser::GetCodeGenerator() const {
+  CodeGenerator* IncrementalParser::getCodeGenerator() const {
     return
       (CodeGenerator*)m_Consumer->getConsumer(ChainedConsumer::kCodeGenerator);
   }

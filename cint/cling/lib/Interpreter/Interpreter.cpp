@@ -409,7 +409,7 @@ namespace cling {
   }
 
   llvm::Module* Interpreter::getModule() const {
-    return m_IncrParser->GetCodeGenerator()->GetModule();
+    return m_IncrParser->getCodeGenerator()->GetModule();
   }
 
   void Interpreter::resetUnresolved() const {
@@ -648,7 +648,7 @@ namespace cling {
   bool Interpreter::loadFile(const std::string& filename,
                              bool allowSharedLib /*=true*/) {
     if (allowSharedLib) {
-      llvm::Module* module = m_IncrParser->GetCodeGenerator()->GetModule();
+      llvm::Module* module = m_IncrParser->getCodeGenerator()->GetModule();
       if (module) {
         if (tryLinker(filename, getOptions(), module))
           return true;
@@ -1760,7 +1760,7 @@ namespace cling {
   void Interpreter::runStaticInitializersOnce() const {
     // Forward to ExecutionContext; should not be called by
     // anyone except for IncrementalParser.
-    llvm::Module* module = m_IncrParser->GetCodeGenerator()->GetModule();
+    llvm::Module* module = m_IncrParser->getCodeGenerator()->GetModule();
     m_ExecutionContext->runStaticInitializersOnce(module);
   }
 
