@@ -5,8 +5,8 @@
 
 <h4>TASImage</h4>
 <ul>
-   <li>In some cases dashed lines with a line width greater than "1" were 
-      not drawn.
+   <li>In some cases dashed lines with a line width greater than "1" were not 
+      drawn.
    </li>
    <li> The <tt>TLatex</tt> symbol <tt>#tilde</tt>, was misplaced.
    </li>
@@ -14,7 +14,17 @@
 
 <h4>X11 fonts</h4>
 <ul>
-   <li>A coverity fix in <tt>Rotated.cxx</tt> had a side effect
-       on rotated text drawn with X11 fonts.
+   <li>A coverity fix in <tt>Rotated.cxx</tt> had a side effect on rotated text
+      drawn with X11 fonts.
+   </li>
+</ul>
+
+<h4>TGaxis</h4>
+<ul>
+   <li> The time axis behavior should now be correct along time zone and summer
+      saving time. A fix has been done with the of Philippe Gras (CEA Saclay.
+      IRFU/SEDI) and Julian Sitarek (IFAE). Time axis transported from a time 
+      zone to an other in a ROOT file are correct too. A new example test have
+      been introduced to test the time axis (timeonaxis3.C)
    </li>
 </ul>
