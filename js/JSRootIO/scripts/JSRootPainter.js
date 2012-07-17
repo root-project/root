@@ -249,7 +249,9 @@ var d, key_tree;
             for (i=0; i<histo['fFunctions'].length; ++i) {
                if (histo['fFunctions'][i]['fName'] == 'stats') {
                   for (j=0; j<histo['fFunctions'][i]['fLines'].length; ++j) {
-                     legend_stats += histo['fFunctions'][i]['fLines'][j].fTitle;
+                     // should be "&Chi;<sup>2</sup>"...
+                     var line = histo['fFunctions'][i]['fLines'][j].fTitle.replace("#chi^{2}", "X<sup>2</sup>");
+                     legend_stats += line;//histo['fFunctions'][i]['fLines'][j].fTitle;
                      legend_stats += '<br/>';
                   }
                }
@@ -303,6 +305,7 @@ var d, key_tree;
                }
             },
             legend: {
+               //useHTML: true, // should fix the html formatting, but screws-up the text positioning...
                borderRadius: 0,
                enabled: legend_stats.length > 1 ? true : false,
                layout: 'vertical',
@@ -426,7 +429,9 @@ var d, key_tree;
             for (i=0; i<histo['fFunctions'].length; ++i) {
                if (histo['fFunctions'][i]['fName'] == 'stats') {
                   for (j=0; j<histo['fFunctions'][i]['fLines'].length; ++j) {
-                     legend_stats += histo['fFunctions'][i]['fLines'][j].fTitle;
+                     // should be "&Chi;<sup>2</sup>"...
+                     var line = histo['fFunctions'][i]['fLines'][j].fTitle.replace("#chi^{2}", "X<sup>2</sup>");
+                     legend_stats += line;//histo['fFunctions'][i]['fLines'][j].fTitle;
                      legend_stats += '<br/>';
                   }
                }
@@ -509,6 +514,7 @@ var d, key_tree;
             },
             title: { text: histo['fTitle'] },
             legend: {
+               //useHTML: true, // should fix the html formatting, but screws-up the text positioning...
                borderRadius: 0,
                enabled: legend_stats.length > 1 ? true : false,
                layout: 'vertical',
