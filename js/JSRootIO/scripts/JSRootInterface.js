@@ -10,7 +10,7 @@
 var source_dir = "http://root.cern.ch/js/";
 var gFile;
 var obj_list = new Array();
-var obj_index;
+var obj_index = 0;
 var last_index = 0;
 
 function addCollapsible(element) {
