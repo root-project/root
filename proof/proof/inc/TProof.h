@@ -33,6 +33,9 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
+#ifndef ROOT_TMacro
+#include "TMacro.h"
+#endif
 #ifndef ROOT_MessageTypes
 #include "MessageTypes.h"
 #endif
@@ -487,6 +490,8 @@ private:
    TList          *fSlaveInfo;       //!list returned by kPROOF_GETSLAVEINFO
    Bool_t          fSendGroupView;   //if true send new group view
    TList          *fActiveSlaves;    //list of active slaves (subset of all slaves)
+   TString         fActiveSlavesSaved;// comma-separated list of active slaves (before last call to
+                                      // SetParallel or Activate/DeactivateWorkers)
    TList          *fInactiveSlaves;  //list of inactive slaves (good but not used for processing)
    TList          *fUniqueSlaves;    //list of all active slaves with unique file systems
    TList          *fAllUniqueSlaves;  //list of all active slaves with unique file systems, including all submasters
@@ -522,6 +527,9 @@ private:
    FILE           *fLogFileW;        //temp file to redirect logs
    FILE           *fLogFileR;        //temp file to read redirected logs
    Bool_t          fLogToWindowOnly; //send log to window only
+   
+   Bool_t          fSaveLogToMacro;  // Whether to save received logs to TMacro fMacroLog (use with care)
+   TMacro          fMacroLog;        // Macro with the saved (last) log
 
    TProofMergePrg  fMergePrg;        //Merging progress
 
@@ -669,7 +677,9 @@ private:
    Int_t    GetNumberOfBadSlaves() const;
 
    Bool_t   IsEndMaster() const { return fEndMaster; }
-   Int_t    ModifyWorkerLists(const char *ord, Bool_t add);
+   Int_t    ModifyWorkerLists(const char *ord, Bool_t add, Bool_t save);
+   void     RestoreActiveList();
+   void     SaveActiveList();
 
    Bool_t   IsSync() const { return fSync; }
    void     InterruptCurrentMonitor();
@@ -777,6 +787,12 @@ public:
    Int_t       Ping();
    void        Touch();
    Int_t       Exec(const char *cmd, Bool_t plusMaster = kFALSE);
+   Int_t       Exec(const char *cmd, const char *ord);
+   
+   TString     Getenv(const char *env, const char *ord = "0");
+   Int_t       GetRC(const char *RCenv, Int_t &env, const char *ord = "0");
+   Int_t       GetRC(const char *RCenv, Double_t &env, const char *ord = "0");
+   Int_t       GetRC(const char *RCenv, TString &env, const char *ord = "0");
 
    virtual Long64_t Process(TDSet *dset, const char *selector,
                             Option_t *option = "", Long64_t nentries = -1,
@@ -1015,8 +1031,8 @@ public:
    TProofMgr  *GetManager() { return fManager; }
    void        SetManager(TProofMgr *mgr);
 
-   Int_t       ActivateWorker(const char *ord);
-   Int_t       DeactivateWorker(const char *ord);
+   Int_t       ActivateWorker(const char *ord, Bool_t save = kTRUE);
+   Int_t       DeactivateWorker(const char *ord, Bool_t save = kTRUE);
 
    const char *GetDataPoolUrl() const { return fManager ? fManager->GetMssUrl() : 0; }
    void        SetDataPoolUrl(const char *url) { if (fManager) fManager->SetMssUrl(url); }

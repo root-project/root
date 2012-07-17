@@ -511,6 +511,8 @@ void TProof::InitMembers()
    fLogFileW = 0;
    fLogFileR = 0;
    fLogToWindowOnly = kFALSE;
+   fSaveLogToMacro = kFALSE;
+   fMacroLog.SetName("ProofLogMacro");
 
    fWaitingSlaves = 0;
    fQueries = 0;
@@ -5464,6 +5466,12 @@ void TProof::RecvLogFile(TSocket *s, Int_t size)
    const Int_t kMAXBUF = 16384;  //32768  //16384  //65536;
    char buf[kMAXBUF];
 
+   // If macro saving is enabled prepare macro
+   if (fSaveLogToMacro && fMacroLog.GetListOfLines()) {
+      fMacroLog.GetListOfLines()->SetOwner(kTRUE);
+      fMacroLog.GetListOfLines()->Clear();
+   }
+
    // Append messages to active logging unit
    Int_t fdout = -1;
    if (!fLogToWindowOnly) {
@@ -5485,9 +5493,9 @@ void TProof::RecvLogFile(TSocket *s, Int_t size)
          left = kMAXBUF-1;
       rec = s->RecvRaw(&buf, left);
       filesize = (rec > 0) ? (filesize + rec) : filesize;
-      if (!fLogToWindowOnly) {
+      if (!fLogToWindowOnly && !fSaveLogToMacro) {
          if (rec > 0) {
-
+            
             char *p = buf;
             r = rec;
             while (r) {
@@ -5510,6 +5518,8 @@ void TProof::RecvLogFile(TSocket *s, Int_t size)
       if (rec > 0) {
          buf[rec] = 0;
          EmitVA("LogMessage(const char*,Bool_t)", 2, buf, kFALSE);
+         // If macro saving is enabled add to TMacro
+         if (fSaveLogToMacro) fMacroLog.AddLine(buf);
       }
    }
 
@@ -5734,15 +5744,46 @@ Int_t TProof::Exec(const char *cmd, ESlaves list, Bool_t plusMaster)
       if (IsLite()) {
          gROOT->ProcessLine(cmd);
       } else {
-         Int_t n = GetParallel();
-         SetParallelSilent(0);
+         DeactivateWorker("*");
          Int_t res = SendCommand(cmd, list);
-         SetParallelSilent(n);
+         ActivateWorker("restore");
          if (res < 0)
             return res;
       }
    }
    return SendCommand(cmd, list);
+}
+
+//______________________________________________________________________________
+Int_t TProof::Exec(const char *cmd, const char *ord)
+{
+   // Send command to be executed on node of ordinal 'ord' (use "0" for master).
+   // Command can be any legal command line command. Commands like
+   // ".x file.C" or ".L file.C" will cause the file file.C to be send
+   // to the PROOF cluster. Returns -1 in case of error, >=0 in case of
+   // succes.
+
+   if (!IsValid()) return -1;
+
+   TString s = cmd;
+   s = s.Strip(TString::kBoth);
+
+   if (!s.Length()) return 0;
+
+   Int_t res = 0;
+   if (IsLite()) {
+      gROOT->ProcessLine(cmd);
+   } else {
+
+      // Deactivate all workers
+      DeactivateWorker("*");
+      // Reactivate the target ones, if needed
+      if (strcmp(ord, "master") && strcmp(ord, "0") && strcmp(ord, "*")) ActivateWorker(ord);
+      res = SendCommand(cmd, kActive);
+      ActivateWorker("restore");
+   }
+   // Done
+   return res;
 }
 
 //______________________________________________________________________________
@@ -5763,6 +5804,115 @@ Int_t TProof::SendCommand(const char *cmd, ESlaves list)
 
    return fStatus;
 }
+
+//______________________________________________________________________________
+TString TProof::Getenv(const char *env, const char *ord)
+{
+   // Get value of environment variable 'env' on node 'ord'
+
+   // The command to be executed
+   TString cmd = TString::Format("gSystem->Getenv(\"%s\")", env); 
+   // Enable macro-saving for logs
+   fSaveLogToMacro = kTRUE;
+   Exec(cmd.Data(), ord);
+   // Disable macro-saving
+   fSaveLogToMacro = kFALSE;
+   // Get the line
+   TObjString *os = fMacroLog.GetLineWith("const char");
+   if (os) {
+      TString info;
+      Ssiz_t from = 0;
+      os->GetString().Tokenize(info, from, "\"");
+      os->GetString().Tokenize(info, from, "\"");
+      if (gDebug > 0) Printf("%s: '%s'", env, info.Data());
+      return info;
+   }
+   return TString("");   
+}   
+
+//______________________________________________________________________________
+Int_t TProof::GetRC(const char *rcenv, Int_t &env, const char *ord)
+{
+   // Get into 'env' the value of integer RC env variable 'rcenv' on node 'ord'
+
+   // The command to be executed
+   TString cmd = TString::Format("if (gEnv->Lookup(\"%s\")) { gEnv->GetValue(\"%s\",\"\"); }", rcenv, rcenv);
+   // Enable macro-saving for logs
+   fSaveLogToMacro = kTRUE;
+   Exec(cmd.Data(), ord);
+   // Disable macro-saving
+   fSaveLogToMacro = kFALSE;
+   // Get the line
+   TObjString *os = fMacroLog.GetLineWith("const char");
+   Int_t rc = -1;
+   if (os) {
+      Ssiz_t fst =  os->GetString().First('\"');
+      Ssiz_t lst =  os->GetString().Last('\"');
+      TString info = os->GetString()(fst+1, lst-fst-1);
+      if (info.IsDigit()) {
+         env = info.Atoi();
+         rc = 0;
+         if (gDebug > 0)
+            Printf("%s: %d", rcenv, env);
+      }
+   }
+   return rc;
+}   
+
+//______________________________________________________________________________
+Int_t TProof::GetRC(const char *rcenv, Double_t &env, const char *ord)
+{
+   // Get into 'env' the value of double RC env variable 'rcenv' on node 'ord'
+
+   // The command to be executed
+   TString cmd = TString::Format("if (gEnv->Lookup(\"%s\")) { gEnv->GetValue(\"%s\",\"\"); }", rcenv, rcenv);
+   // Enable macro-saving for logs
+   fSaveLogToMacro = kTRUE;
+   Exec(cmd.Data(), ord);
+   // Disable macro-saving
+   fSaveLogToMacro = kFALSE;
+   // Get the line
+   TObjString *os = fMacroLog.GetLineWith("const char");
+   Int_t rc = -1;
+   if (os) {
+      Ssiz_t fst =  os->GetString().First('\"');
+      Ssiz_t lst =  os->GetString().Last('\"');
+      TString info = os->GetString()(fst+1, lst-fst-1);
+      if (info.IsFloat()) {
+         env = info.Atof();
+         rc = 0;
+         if (gDebug > 0)
+            Printf("%s: %f", rcenv, env);
+      }
+   }
+   return rc;
+}   
+
+//______________________________________________________________________________
+Int_t TProof::GetRC(const char *rcenv, TString &env, const char *ord)
+{
+   // Get into 'env' the value of string RC env variable 'rcenv' on node 'ord'
+
+   // The command to be executed
+   TString cmd = TString::Format("if (gEnv->Lookup(\"%s\")) { gEnv->GetValue(\"%s\",\"\"); }", rcenv, rcenv);
+   // Enable macro-saving for logs
+   fSaveLogToMacro = kTRUE;
+   Exec(cmd.Data(), ord);
+   // Disable macro-saving
+   fSaveLogToMacro = kFALSE;
+   // Get the line
+   TObjString *os = fMacroLog.GetLineWith("const char");
+   Int_t rc = -1;
+   if (os) {
+      Ssiz_t fst =  os->GetString().First('\"');
+      Ssiz_t lst =  os->GetString().Last('\"');
+      env = os->GetString()(fst+1, lst-fst-1);
+      rc = 0;
+      if (gDebug > 0)
+         Printf("%s: %s", rcenv, env.Data());
+   }
+   return rc;
+}   
 
 //______________________________________________________________________________
 Int_t TProof::SendCurrentState(ESlaves list)
@@ -10491,7 +10641,7 @@ void TProof::InterruptCurrentMonitor()
 }
 
 //_____________________________________________________________________________
-Int_t TProof::ActivateWorker(const char *ord)
+Int_t TProof::ActivateWorker(const char *ord, Bool_t save)
 {
    // Make sure that the worker identified by the ordinal number 'ord' is
    // in the active list. The request will be forwarded to the master
@@ -10504,11 +10654,11 @@ Int_t TProof::ActivateWorker(const char *ord)
    // Return <0 if something went wrong (-2 if at least one worker was not found)
    // or the number of workers with status change (on master; 0 on client).
 
-   return ModifyWorkerLists(ord, kTRUE);
+   return ModifyWorkerLists(ord, kTRUE, save);
 }
 
 //_____________________________________________________________________________
-Int_t TProof::DeactivateWorker(const char *ord)
+Int_t TProof::DeactivateWorker(const char *ord, Bool_t save)
 {
    // Remove the worker identified by the ordinal number 'ord' from the
    // the active list. The request will be forwarded to the master
@@ -10521,11 +10671,11 @@ Int_t TProof::DeactivateWorker(const char *ord)
    // Return <0 if something went wrong (-2 if at least one worker was not found)
    // or the number of workers with status change (on master; 0 on client).
 
-   return ModifyWorkerLists(ord, kFALSE);
+   return ModifyWorkerLists(ord, kFALSE, save);
 }
 
 //_____________________________________________________________________________
-Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add)
+Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add, Bool_t save)
 {
    // Modify the worker active/inactive list by making the worker identified by
    // the ordinal number 'ord' active (add == TRUE) or inactive (add == FALSE).
@@ -10535,6 +10685,8 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add)
    // with the worker. The end-master will move the worker from one list to the
    // other active and rebuild the list of unique active workers.
    // Use ord = "*" to deactivate all active workers.
+   // If save is TRUE the current active list is saved before any modification is
+   // done; re-running with ord = "restore" restores the saved list  
    // Return <0 if something went wrong (-2 if at least one worker was not found)
    // or the number of workers with status change (on master; 0 on client).
 
@@ -10544,17 +10696,19 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add)
            "an ordinal number - e.g. \"0.4\" or \"*\" for all - is required as input");
       return -1;
    }
-   Bool_t allord = strcmp(ord, "*") ? kFALSE : kTRUE;
-
-   // Create the hash list of ordinal numbers
-   THashList *ords = 0;
-   if (!allord) {
-      ords = new THashList();
-      TString oo(ord), o;
-      Int_t from = 0;
-      while(oo.Tokenize(o, from, ","))
-         ords->Add(new TObjString(o));
+   if (gDebug > 0)
+      Info("ModifyWorkerLists", "ord: '%s' (add: %d, save: %d)", ord, add, save);
+   
+   if (IsEndMaster()) {
+      if (!strcmp(ord, "restore")) {
+         // We are asked to restore the previous settings
+         RestoreActiveList();
+      } else { 
+         if (save) SaveActiveList();
+      }
    }
+   
+   Bool_t allord = strcmp(ord, "*") ? kFALSE : kTRUE;
 
    Bool_t fw = kTRUE;    // Whether to forward one step down
    Bool_t rs = kFALSE;   // Whether to rescan for unique workers
@@ -10564,8 +10718,18 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add)
    TList *out = (add) ? fActiveSlaves : fInactiveSlaves;
 
    Int_t nwc = 0;
-   if (TestBit(TProof::kIsMaster)) {
-      fw = IsEndMaster() ? kFALSE : kTRUE;
+   if (IsEndMaster()) {
+      // Create the hash list of ordinal numbers
+      THashList *ords = 0;
+      if (!allord) {
+         ords = new THashList();
+         TString oo(ord), o;
+         Int_t from = 0;
+         while(oo.Tokenize(o, from, ","))
+            ords->Add(new TObjString(o));
+      }
+      // We do not need to send forward 
+      fw = kFALSE;
       // Look for the worker in the initial list
       TObject *os = 0;
       TSlave *wrk = 0;
@@ -10642,7 +10806,8 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add)
          if (fStatus != 0) {
             nwc = (fStatus < nwc) ? fStatus : nwc;
             if (fStatus == -2) {
-               if (gDebug > 0) Warning("ModifyWorkerLists", "request not completely full filled");
+               if (gDebug > 0)
+                  Warning("ModifyWorkerLists", "request not completely full filled");
             } else {
                Error("ModifyWorkerLists", "request failed");
             }
@@ -10662,6 +10827,33 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add)
    }
    // Done
    return nwc;
+}
+
+//_____________________________________________________________________________
+void TProof::SaveActiveList()
+{
+   // Save current list of active workers
+   
+   if (!fActiveSlavesSaved.IsNull()) fActiveSlavesSaved = "";
+   if (fInactiveSlaves->GetSize() == 0) {
+      fActiveSlavesSaved = "*";
+   } else {
+      TIter nxw(fActiveSlaves);
+      TSlave *wk = 0;
+      while ((wk = (TSlave *)nxw())) { fActiveSlavesSaved += TString::Format("%s,", wk->GetOrdinal()); }
+   }
+}
+
+//_____________________________________________________________________________
+void TProof::RestoreActiveList()
+{
+   // Restore saved list of active workers
+   
+   // Clear the current active list
+   DeactivateWorker("*", kFALSE);
+   // Restore the previous active list
+   if (!fActiveSlavesSaved.IsNull())
+      ActivateWorker(fActiveSlavesSaved, kFALSE);
 }
 
 //_____________________________________________________________________________
