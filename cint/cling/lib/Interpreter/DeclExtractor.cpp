@@ -26,7 +26,7 @@ namespace cling {
 
   }
 
-  bool DeclExtractor::TransformTopLevelDecl(DeclGroupRef DGR) {
+  bool DeclExtractor::HandleTopLevelDecl(DeclGroupRef DGR) {
     bool hasNoErrors = true;
     for (DeclGroupRef::iterator I = DGR.begin(), E = DGR.end(); I != E; ++I)
       hasNoErrors = hasNoErrors && ExtractDecl(*I);

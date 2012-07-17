@@ -59,15 +59,12 @@ namespace cling {
     assert(m_Consumer && "Expected ChainedConsumer!");
     // Add consumers to the ChainedConsumer, which owns them
     EvaluateTSynthesizer* ES = new EvaluateTSynthesizer(interp);
-    ES->Attach(m_Consumer);
     m_Consumer->Add(ChainedConsumer::kEvaluateTSynthesizer, ES);
 
     DeclExtractor* DE = new DeclExtractor();
-    DE->Attach(m_Consumer);
     m_Consumer->Add(ChainedConsumer::kDeclExtractor, DE);
 
     ValuePrinterSynthesizer* VPS = new ValuePrinterSynthesizer(interp);
-    VPS->Attach(m_Consumer);
     m_Consumer->Add(ChainedConsumer::kValuePrinterSynthesizer, VPS);
     m_Consumer->Add(ChainedConsumer::kASTDumper, new ASTDumper());
     if (!m_SyntaxOnly) {

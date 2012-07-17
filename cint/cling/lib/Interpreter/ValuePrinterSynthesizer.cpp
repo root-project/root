@@ -30,7 +30,7 @@ namespace cling {
 
   ValuePrinterSynthesizer::~ValuePrinterSynthesizer() {}
 
-  bool ValuePrinterSynthesizer::TransformTopLevelDecl(DeclGroupRef DGR) {
+  bool ValuePrinterSynthesizer::HandleTopLevelDecl(DeclGroupRef DGR) {
     for (DeclGroupRef::iterator I = DGR.begin(), E = DGR.end(); I != E; ++I)
       if (FunctionDecl* FD = dyn_cast<FunctionDecl>(*I)) {
         if (FD->getNameAsString().find("__cling_Un1Qu3"))

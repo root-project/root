@@ -7,11 +7,10 @@
 #ifndef CLING_DYNAMIC_LOOKUP_H
 #define CLING_DYNAMIC_LOOKUP_H
 
-#include "VerifyingSemaConsumer.h"
-
 #include "clang/AST/StmtVisitor.h"
-#include "clang/Sema/Ownership.h"
 #include "clang/Sema/ExternalSemaSource.h"
+#include "clang/Sema/Ownership.h"
+#include "clang/Sema/SemaConsumer.h"
 
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/Support/Casting.h"
@@ -157,7 +156,7 @@ namespace cling {
   /// which does the delayed evaluation. It uses a callback function, which
   /// should be reimplemented in the subsystem that provides the runtime types
   /// and addresses of the expressions.
-  class EvaluateTSynthesizer : public VerifyingSemaConsumer,
+  class EvaluateTSynthesizer : public clang::SemaConsumer,
                                public clang::StmtVisitor<EvaluateTSynthesizer,
                                                          ASTNodeInfo> {
 
@@ -189,6 +188,12 @@ namespace cling {
     /// \brief Use instead of clang::SourceLocation() as end location.
     clang::SourceLocation m_NoELoc;
 
+    /// \brief Needed for the AST transformations, owned by Sema
+    clang::ASTContext* m_Context;
+
+    /// \brief Needed for the AST transformations, owned by CompilerInstance
+    clang::Sema* m_Sema;
+
   public:
 
     typedef clang::StmtVisitor<EvaluateTSynthesizer, ASTNodeInfo>
@@ -200,9 +205,12 @@ namespace cling {
 
     ~EvaluateTSynthesizer() { }
 
-    MapTy& getSubstSymbolMap() { return m_SubstSymbolMap; }
+    void Initialize(clang::ASTContext& Ctx) { m_Context = &Ctx; }
 
-    bool TransformTopLevelDecl(clang::DeclGroupRef DGR);
+    void InitializeSema(clang::Sema& S) { m_Sema = &S; }
+    bool HandleTopLevelDecl(clang::DeclGroupRef DGR);
+
+    MapTy& getSubstSymbolMap() { return m_SubstSymbolMap; }
 
     ASTNodeInfo VisitStmt(clang::Stmt* Node);
     ASTNodeInfo VisitCompoundStmt(clang::CompoundStmt* Node);

@@ -7,8 +7,7 @@
 #ifndef CLING_DECL_EXTRACTOR_H
 #define CLING_DECL_EXTRACTOR_H
 
-#include "VerifyingSemaConsumer.h"
-
+#include "clang/Sema/SemaConsumer.h"
 #include "clang/Sema/Lookup.h"
 
 namespace clang {
@@ -19,12 +18,23 @@ namespace clang {
 }
 
 namespace cling {
-  class DeclExtractor : public VerifyingSemaConsumer {
+  class DeclExtractor : public clang::SemaConsumer {
+
+  private:
+    ///\brief Needed for the AST transformations, owned by Sema
+    clang::ASTContext* m_Context;
+
+    ///\brief Needed for the AST transformations, owned by CompilerInstance
+    clang::Sema* m_Sema;
 
   public:
     DeclExtractor();
     virtual ~DeclExtractor();
-    bool TransformTopLevelDecl(clang::DeclGroupRef DGR);
+
+    void Initialize(clang::ASTContext& Ctx) { m_Context = &Ctx; }
+
+    void InitializeSema(clang::Sema& S) { m_Sema = &S; }
+    bool HandleTopLevelDecl(clang::DeclGroupRef DGR);
 
   private:
 

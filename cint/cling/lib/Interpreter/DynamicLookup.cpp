@@ -190,7 +190,7 @@ namespace cling {
   {
   }
 
-  bool EvaluateTSynthesizer::TransformTopLevelDecl(DeclGroupRef DGR) {
+  bool EvaluateTSynthesizer::HandleTopLevelDecl(DeclGroupRef DGR) {
     // include the DynamicLookup specific builtins
     if (!m_EvalDecl) {
       TemplateDecl* D
