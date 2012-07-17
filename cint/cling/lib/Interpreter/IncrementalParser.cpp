@@ -141,6 +141,11 @@ namespace cling {
     // We are sure it's safe to pipe it through
     for (Transaction::const_iterator I = CurT->decls_begin(), 
            E = CurT->decls_end(); I != E; ++I) {
+      // FIXME: Here we should keep in mind that the consumer has stopped at the
+      // first occurrence of error, however the consumer might change one some
+      // decls in the transaction. In general it is fine if the address of the
+      // decl is the same, i.e. the consumer doesn't create new declarations.
+
       // if an error was seen somewhere in the consumer chain rollback 
       if (!m_Consumer->HandleTopLevelDecl(*I)) {
         rollbackTransaction(CurT);

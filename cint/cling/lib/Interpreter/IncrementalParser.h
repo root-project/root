@@ -81,7 +81,26 @@ namespace cling {
     ///
     void commitCurrentTransaction() const;
 
+    ///\brief Reverts the AST into its previous state.
+    ///
+    /// If one of the declarations caused error in clang it is rolled back from
+    /// the AST. This is essential feature for the error recovery subsystem.
+    ///
+    ///\param[in] T - The transaction to be reverted from the AST
+    ///
     void rollbackTransaction(Transaction* T) const; 
+
+    ///\brief Returns the last transaction the incremental parser saw.
+    ///
+    Transaction* getLastTransaction() { 
+      return m_Transactions.back(); 
+    }
+
+    ///\brief Returns the last transaction the incremental parser saw.
+    ///
+    const Transaction* getLastTransaction() const { 
+      return m_Transactions.back(); 
+    }
 
     /// \}
 
@@ -101,13 +120,6 @@ namespace cling {
     void enableDynamicLookup(bool value = true);
     bool isDynamicLookupEnabled() const { return m_DynamicLookupEnabled; }
     bool isSyntaxOnly() const { return m_SyntaxOnly; }
-    const Transaction* getLastTransaction() const { 
-      return m_Transactions.back(); 
-    }
-
-    Transaction* getLastTransaction() { 
-      return m_Transactions.back(); 
-    }
 
     clang::CodeGenerator* GetCodeGenerator() const;
 
