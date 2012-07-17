@@ -2,7 +2,7 @@
 // see also a variant in staff.C
 // Author: Rene Brun
    
-TFile *cernbuild(Int_t get=0) {
+TFile *cernbuild(Int_t get=0, Int_t print=1) {
 
    Int_t           Category;
    UInt_t          Flag;
@@ -67,7 +67,7 @@ TFile *cernbuild(Int_t get=0) {
       sscanf(&line[32],"%d %d  %d %d %s %s",&Grade,&Step,&Hrweek,&Cost,Division,Nation);
       tree->Fill();
    }
-   tree->Print();
+   if (print) tree->Print();
    tree->Write();
 
    fclose(fp);

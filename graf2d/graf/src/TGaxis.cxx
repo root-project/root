@@ -31,6 +31,7 @@
 #include "TColor.h"
 #include "TClass.h"
 #include "TTimeStamp.h"
+#include "TSystem.h"
 
 Int_t TGaxis::fgMaxDigits = 5;
 const Int_t kHori = BIT(9); //defined in TPad
@@ -703,7 +704,10 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       timeformat = fTimeFormat;
    }
 
-// Determine the time offset and correct for time offset not being integer.
+   //GMT option
+   if (fTimeFormat.Index("GMT")>=0) optionTime =2;
+
+   // Determine the time offset and correct for time offset not being integer.
    Double_t timeoffset =0;
    if (optionTime) {
       if (idF>=0) {
@@ -711,26 +715,28 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          TString stringtimeoffset = fTimeFormat(idF+2,lnF);
          Int_t year, mm, dd, hh, mi, ss;
          if (sscanf(stringtimeoffset.Data(), "%d-%d-%d %d:%d:%d", &year, &mm, &dd, &hh, &mi, &ss) == 6) {
-            struct tm tp;
-            struct tm* tptest;
-            time_t timeoffsettest;
-            // get timezone offset for the current location
-            Int_t zoneoffset_seconds = TTimeStamp::GetZoneOffset();
-            // convert offset in hours
-            Int_t zoneoffset_hours   = zoneoffset_seconds/3600;
-            tp.tm_year  = year-1900;
-            tp.tm_mon   = mm-1;
-            tp.tm_mday  = dd;
-            tp.tm_hour  = hh - zoneoffset_hours;
-            tp.tm_min   = mi ;
-            tp.tm_sec   = ss;
-            tp.tm_isdst =  1; //daylight saving time is on.
+           struct tm tp;
+            tp.tm_year   = year-1900;
+            tp.tm_mon    = mm-1;
+            tp.tm_mday   = dd;
+            tp.tm_hour   = hh;
+            tp.tm_min    = mi;
+            tp.tm_sec    = ss;
+            tp.tm_isdst  = -1; //automatic determination of daylight saving time
+            TString tz   = (TString)gSystem->Getenv("TZ"); //save timezone
+            Bool_t isUTC = kFALSE;
+            if (gSystem->Getenv("TZ") && tz.Length()==0) isUTC=kTRUE;
+            gSystem->Setenv("TZ", "UTC"); //sets timezone to UTC
+            tzset();
             timeoffset  = mktime(&tp);
-            if (timeoffset<0.) timeoffset=0.;
-            // have to correct this time to go back to UTC
-            timeoffsettest = (time_t)((Long_t)timeoffset);
-            tptest = gmtime(&timeoffsettest);
-            timeoffset += timeoffsettest - mktime(tptest);
+            //restore TZ
+            if (tz.Length()) {
+               gSystem->Setenv("TZ", tz.Data());
+            } else {
+               if (isUTC) gSystem->Setenv("TZ", "");
+               else       gSystem->Unsetenv("TZ");
+            }
+            tzset();
             // Add the time offset's decimal part if it is there
             Int_t ids   = stringtimeoffset.Index("s");
             if (ids >= 0) {
@@ -740,16 +746,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                sscanf(sdp.Data(),"%g",&dp);
                timeoffset += dp;
             }
-            // if optionTime = 2 gmtime will be used instead of localtime
-            Int_t idG = stringtimeoffset.Index("GMT");
-            if (idG>=0) {
-               lnF = stringtimeoffset.Length();
-               TString gmtoffset = stringtimeoffset(idG+3,lnF);
-               Int_t itz;
-               sscanf(gmtoffset.Data(), "%d", &itz);
-               timeoffset += zoneoffset_seconds-itz;
-               optionTime = 2;
-            }
          } else {
             Error(where, "Time offset has not the right format");
          }
@@ -758,7 +754,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       }
       wmin += timeoffset - (int)(timeoffset);
       wmax += timeoffset - (int)(timeoffset);
-    // correct for time offset at a good limit (min, hour, day, month, year)
+
+      // correct for time offset at a good limit (min, hour, day, month, year)
       struct tm* tp0;
       time_t timetp = (time_t)((Long_t)(timeoffset));
       Double_t range = wmax - wmin;
@@ -1960,7 +1957,7 @@ void TGaxis::Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
 
 
 //______________________________________________________________________________
-void TGaxis::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGaxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
@@ -1971,54 +1968,54 @@ void TGaxis::SavePrimitive(ostream &out, Option_t * /*= ""*/)
       out<<"   TGaxis *";
    }
    out<<"gaxis = new TGaxis("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-      <<","<<fWmin<<","<<fWmax<<","<<fNdiv<<","<<quote<<fChopt.Data()<<quote<<");"<<endl;
-   out<<"   gaxis->SetLabelOffset("<<GetLabelOffset()<<");"<<endl;
-   out<<"   gaxis->SetLabelSize("<<GetLabelSize()<<");"<<endl;
-   out<<"   gaxis->SetTickSize("<<GetTickSize()<<");"<<endl;
-   out<<"   gaxis->SetGridLength("<<GetGridLength()<<");"<<endl;
-   out<<"   gaxis->SetTitleOffset("<<GetTitleOffset()<<");"<<endl;
-   out<<"   gaxis->SetTitleSize("<<GetTitleSize()<<");"<<endl;
-   out<<"   gaxis->SetTitleColor("<<GetTextColor()<<");"<<endl;
-   out<<"   gaxis->SetTitleFont("<<GetTextFont()<<");"<<endl;
+      <<","<<fWmin<<","<<fWmax<<","<<fNdiv<<","<<quote<<fChopt.Data()<<quote<<");"<<std::endl;
+   out<<"   gaxis->SetLabelOffset("<<GetLabelOffset()<<");"<<std::endl;
+   out<<"   gaxis->SetLabelSize("<<GetLabelSize()<<");"<<std::endl;
+   out<<"   gaxis->SetTickSize("<<GetTickSize()<<");"<<std::endl;
+   out<<"   gaxis->SetGridLength("<<GetGridLength()<<");"<<std::endl;
+   out<<"   gaxis->SetTitleOffset("<<GetTitleOffset()<<");"<<std::endl;
+   out<<"   gaxis->SetTitleSize("<<GetTitleSize()<<");"<<std::endl;
+   out<<"   gaxis->SetTitleColor("<<GetTextColor()<<");"<<std::endl;
+   out<<"   gaxis->SetTitleFont("<<GetTextFont()<<");"<<std::endl;
 
    if (strlen(GetName())) {
-      out<<"   gaxis->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+      out<<"   gaxis->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
    }
    if (strlen(GetTitle())) {
-      out<<"   gaxis->SetTitle("<<quote<<GetTitle()<<quote<<");"<<endl;
+      out<<"   gaxis->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
    }
 
    if (fLabelColor != 1) {
       if (fLabelColor > 228) {
          TColor::SaveColor(out, fLabelColor);
-         out<<"   gaxis->SetLabelColor(ci);" << endl;
+         out<<"   gaxis->SetLabelColor(ci);" << std::endl;
       } else
-         out<<"   gaxis->SetLabelColor("<<GetLabelColor()<<");"<<endl;
+         out<<"   gaxis->SetLabelColor("<<GetLabelColor()<<");"<<std::endl;
    }
    if (fLineColor != 1) {
       if (fLineColor > 228) {
          TColor::SaveColor(out, fLineColor);
-         out<<"   gaxis->SetLineColor(ci);" << endl;
+         out<<"   gaxis->SetLineColor(ci);" << std::endl;
       } else
-         out<<"   gaxis->SetLineColor("<<GetLineColor()<<");"<<endl;
+         out<<"   gaxis->SetLineColor("<<GetLineColor()<<");"<<std::endl;
    }
    if (fLineStyle != 1) {
-      out<<"   gaxis->SetLineStyle("<<GetLineStyle()<<");"<<endl;
+      out<<"   gaxis->SetLineStyle("<<GetLineStyle()<<");"<<std::endl;
    }
    if (fLineWidth != 1) {
-      out<<"   gaxis->SetLineWidth("<<GetLineWidth()<<");"<<endl;
+      out<<"   gaxis->SetLineWidth("<<GetLineWidth()<<");"<<std::endl;
    }
    if (fLabelFont != 62) {
-      out<<"   gaxis->SetLabelFont("<<GetLabelFont()<<");"<<endl;
+      out<<"   gaxis->SetLabelFont("<<GetLabelFont()<<");"<<std::endl;
    }
    if (TestBit(TAxis::kMoreLogLabels)) {
-      out<<"   gaxis->SetMoreLogLabels();"<<endl;
+      out<<"   gaxis->SetMoreLogLabels();"<<std::endl;
    }
    if (TestBit(TAxis::kNoExponent)) {
-      out<<"   gaxis->SetNoExponent();"<<endl;
+      out<<"   gaxis->SetNoExponent();"<<std::endl;
    }
 
-   out<<"   gaxis->Draw();"<<endl;
+   out<<"   gaxis->Draw();"<<std::endl;
 }
 
 
@@ -2148,14 +2145,6 @@ void TGaxis::SetTimeFormat(const char *tformat)
 
    TString timeformat = tformat;
 
-
-   Int_t lnF = timeformat.Length();
-   Int_t idG = timeformat.Index("GMT");
-
-   if (idG) {
-      if (idG+3==lnF) timeformat.Append(Form("%d",TTimeStamp::GetZoneOffset()));
-   }
-
    if (timeformat.Index("%F")>=0 || timeformat.IsNull()) {
       fTimeFormat = timeformat;
       return;
@@ -2163,7 +2152,7 @@ void TGaxis::SetTimeFormat(const char *tformat)
 
    Int_t idF = fTimeFormat.Index("%F");
    if (idF>=0) {
-      lnF = fTimeFormat.Length();
+      Int_t lnF = fTimeFormat.Length();
       TString stringtimeoffset = fTimeFormat(idF,lnF);
       fTimeFormat = tformat;
       fTimeFormat.Append(stringtimeoffset);
@@ -2178,13 +2167,10 @@ void TGaxis::SetTimeFormat(const char *tformat)
 void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
 {
    // Change the time offset.
-   // If option = "gmt" the time offset is treated as a GMT time.
+   // If option = "gmt", set display mode to GMT.
 
    TString opt = option;
    opt.ToLower();
-
-   Bool_t gmt = kFALSE;
-   if (opt.Contains("gmt")) gmt = kTRUE;
 
    char tmp[20];
    time_t timeoff;
@@ -2194,20 +2180,21 @@ void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
    fTimeFormat.Append("%F");
 
    timeoff = (time_t)((Long_t)(toffset));
+
+   // offset is always saved in GMT to allow file transport
+   // to different time zones
    utctis = gmtime(&timeoff);
 
-   strftime(tmp,20,"%Y-%m-%d %H:%M:%S",utctis);
+   strftime(tmp, 20,"%Y-%m-%d %H:%M:%S",utctis);
    fTimeFormat.Append(tmp);
 
    // append the decimal part of the time offset
    Double_t ds = toffset-(Int_t)toffset;
-   if(ds!= 0) {
-      snprintf(tmp,20,"s%g",ds);
-      fTimeFormat.Append(tmp);
-   }
-
-   // If the time is GMT, stamp fTimeFormat
-   if (gmt) fTimeFormat.Append(Form(" GMT%d",TTimeStamp::GetZoneOffset()));
+   snprintf(tmp,20,"s%g",ds);
+   fTimeFormat.Append(tmp);
+   
+   // add GMT/local option
+   if (opt.Contains("gmt")) fTimeFormat.Append(" GMT");
 }
 
 

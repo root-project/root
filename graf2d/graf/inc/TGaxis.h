@@ -105,7 +105,7 @@ public:
                                  Double_t gridlength = 0, Bool_t drawGridOnly = kFALSE);
    virtual void        Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
                              ,Double_t XT, Double_t YT, Double_t &U,   Double_t &V);
-   virtual void        SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
    void                SetFunction(const char *funcname="");
    void                SetOption(Option_t *option="");
    void                SetLabelColor(Int_t labelcolor) {fLabelColor = labelcolor;} // *MENU*
