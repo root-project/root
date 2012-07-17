@@ -137,8 +137,16 @@ namespace cling {
     ///
     EParseResult Compile(llvm::StringRef input, const CompilationOptions& Opts);
 
-    void Parse(llvm::StringRef input,
-               llvm::SmallVector<clang::DeclGroupRef, 4>& DGRs);
+    ///\brief Parses the given input without calling the custom consumers and 
+    /// code generation.
+    ///
+    /// I.e changes to the decls in the transaction commiting it will cause 
+    /// different executable code.
+    ///
+    ///\param[in] input - The code to parse.
+    ///\returns The transaction coresponding to the input.
+    ///
+    Transaction* Parse(llvm::StringRef input);
 
     llvm::MemoryBuffer* getCurBuffer() const {
       return m_MemoryBuffer.back();
@@ -155,7 +163,7 @@ namespace cling {
   private:
     void CreateSLocOffsetGenerator();
     EParseResult Compile(llvm::StringRef input);
-    EParseResult Parse(llvm::StringRef input);
+    EParseResult ParseInternal(llvm::StringRef input);
   };
 }
 #endif // CLING_INCREMENTAL_PARSER_H

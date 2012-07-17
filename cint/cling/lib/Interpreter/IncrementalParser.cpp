@@ -123,9 +123,13 @@ namespace cling {
   void IncrementalParser::commitTransaction(const Transaction* T) const {
     assert(T->isCompleted() && "Transaction not ended!?");
     const Transaction* OldT = m_Consumer->getTransaction();
-    m_Consumer->setTransaction(T);
+    if (OldT != T)
+      m_Consumer->setTransaction(T);
+
     commitCurrentTransaction();
-    m_Consumer->setTransaction(OldT);
+
+    if (OldT != T)
+      m_Consumer->setTransaction(OldT);
   }
 
   void IncrementalParser::commitCurrentTransaction() const {
@@ -249,14 +253,12 @@ namespace cling {
     return Result;
   }
 
-  void IncrementalParser::Parse(llvm::StringRef input,
-                                llvm::SmallVector<DeclGroupRef, 4>& DGRs) {
-
+  Transaction* IncrementalParser::Parse(llvm::StringRef input) {
     beginTransaction();
-    Parse(input);
+    ParseInternal(input);
     endTransaction();
-    const Transaction* T = m_Consumer->getTransaction();
-    DGRs.append(T->decls_begin(), T->decls_end());
+
+    return getLastTransaction();
   }
 
   IncrementalParser::EParseResult
@@ -271,7 +273,7 @@ namespace cling {
     }
 
     beginTransaction();
-    EParseResult Result = Parse(input);
+    EParseResult Result = ParseInternal(input);
     endTransaction();
 
     // Check for errors coming from our custom consumers.
@@ -292,7 +294,7 @@ namespace cling {
 
   // Add the input to the memory buffer, parse it, and add it to the AST.
   IncrementalParser::EParseResult
-  IncrementalParser::Parse(llvm::StringRef input) {
+  IncrementalParser::ParseInternal(llvm::StringRef input) {
     if (input.empty()) return IncrementalParser::kSuccess;
 
     Preprocessor& PP = m_CI->getPreprocessor();

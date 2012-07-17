@@ -558,9 +558,8 @@ namespace cling {
     QualType RetTy = getCI()->getASTContext().VoidTy;
 
     if (V) {
-      llvm::SmallVector<clang::DeclGroupRef, 4> DGRs;
-      m_IncrParser->Parse(Wrapper, DGRs);
-      assert(DGRs.size() && "No decls created by Parse!");
+      Transaction* CurT = m_IncrParser->Parse(Wrapper);
+      assert(CurT->size() && "No decls created by Parse!");
 
       // Find the wrapper function declaration.
       //
@@ -568,8 +567,8 @@ namespace cling {
       //       instantiation happened.  Our wrapper function should be the
       //       last decl in the set.
       //
-      FunctionDecl* TopLevelFD
-        = dyn_cast<FunctionDecl>(DGRs.back().getSingleDecl());
+      FunctionDecl* TopLevelFD 
+        = dyn_cast<FunctionDecl>(CurT->getLastDecl().getSingleDecl());
       assert(TopLevelFD && "No Decls Parsed?");
       DeclContext* CurContext = TheSema.CurContext;
       TheSema.CurContext = TopLevelFD;
@@ -629,7 +628,7 @@ namespace cling {
 
       TheSema.CurContext = CurContext;
 
-      m_IncrParser->commitCurrentTransaction();
+      m_IncrParser->commitTransaction(CurT);
     }
     else
       m_IncrParser->Compile(Wrapper, CO);
