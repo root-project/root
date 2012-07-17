@@ -21,13 +21,20 @@ namespace cling {
 
     void Initialize(clang::ASTContext& Ctx) { m_Context = &Ctx; }
     void InitializeSema(clang::Sema& S) { m_Sema = &S; }
+
+    ///\brief Common interface that clang implements and pass all seen 
+    /// declarations through it.
+    ///
+    ///\param[in] DGR - A declaration group ref.
+    ///\returns true on success
+    ///
     bool HandleTopLevelDecl(clang::DeclGroupRef DGR);
     void ForgetSema();
 
 
     void Attach(ChainedConsumer* o);
     void Detach(ChainedConsumer* o);
-    virtual void TransformTopLevelDecl(clang::DeclGroupRef DGR) = 0;
+    virtual bool TransformTopLevelDecl(clang::DeclGroupRef DGR) = 0;
     void Notify();
 
   protected:

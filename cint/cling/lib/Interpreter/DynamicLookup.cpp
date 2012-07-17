@@ -190,7 +190,7 @@ namespace cling {
   {
   }
 
-  void EvaluateTSynthesizer::TransformTopLevelDecl(DeclGroupRef DGR) {
+  bool EvaluateTSynthesizer::TransformTopLevelDecl(DeclGroupRef DGR) {
     // include the DynamicLookup specific builtins
     if (!m_EvalDecl) {
       TemplateDecl* D
@@ -236,6 +236,8 @@ namespace cling {
         assert ((!isa<BlockDecl>(*Di) || !isa<ObjCMethodDecl>(*Di))
                 && "Not implemented yet!");
       }
+
+    return true;
   }
 
   // StmtVisitor

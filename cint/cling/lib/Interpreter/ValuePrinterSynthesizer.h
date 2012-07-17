@@ -25,7 +25,7 @@ namespace cling {
 public:
     ValuePrinterSynthesizer(Interpreter* Interp);
     virtual ~ValuePrinterSynthesizer();
-    void TransformTopLevelDecl(clang::DeclGroupRef DGR);
+    bool TransformTopLevelDecl(clang::DeclGroupRef DGR);
 
   private:
     clang::Expr* SynthesizeCppVP(clang::Expr* E);

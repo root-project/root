@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 
 #include "IncrementalParser.h"
+#include "ASTNodeEraser.h"
 
 #include "ASTDumper.h"
 #include "ChainedConsumer.h"
@@ -105,6 +106,16 @@ namespace cling {
   void IncrementalParser::endTransaction() const {
     Transaction* CurT = m_Consumer->getTransaction();
     CurT->setCompleted();
+    const DiagnosticsEngine& Diags = getCI()->getSema().getDiagnostics();
+
+    //TODO: Make the enum orable.
+    if (Diags.getNumWarnings() > 0)
+      CurT->setIssuedDiags(Transaction::kWarnings);
+
+    if (Diags.hasErrorOccurred() || Diags.hasFatalErrorOccurred())
+      CurT->setIssuedDiags(Transaction::kErrors);
+
+      
     if (CurT->isNestedTransaction()) {
       assert(!CurT->getParent()->isCompleted() 
              && "Parent transaction completed!?");
@@ -121,9 +132,50 @@ namespace cling {
   }
 
   void IncrementalParser::commitCurrentTransaction() const {
-    assert(m_Consumer->getTransaction()->isCompleted() 
-           && "Transaction not ended!?");
+    Transaction* CurT = m_Consumer->getTransaction();
+    assert(CurT->isCompleted() && "Transaction not ended!?");
+
+    // Check for errors...
+    if (CurT->getIssuedDiags() == Transaction::kErrors) {
+      rollbackTransaction(CurT);
+      return;
+    }
+
+    // We are sure it's safe to pipe it through
+    for (Transaction::const_iterator I = CurT->decls_begin(), 
+           E = CurT->decls_end(); I != E; ++I) {
+      // if an error was seen somewhere in the consumer chain rollback 
+      if (!m_Consumer->HandleTopLevelDecl(*I)) {
+        rollbackTransaction(CurT);
+        return;
+      }      
+    }
+
     m_Consumer->HandleTranslationUnit(getCI()->getASTContext());
+    CurT->setState(Transaction::kCommitted);
+  }
+
+  void IncrementalParser::rollbackTransaction(Transaction* T) const {
+    ASTNodeEraser NodeEraser(&getCI()->getSema());
+
+    for (Transaction::const_reverse_iterator I = T->rdecls_begin(),
+           E = T->rdecls_end(); I != E; ++I) {
+      const DeclGroupRef& DGR = (*I);
+
+      for (DeclGroupRef::const_iterator
+             Di = DGR.end() - 1, E = DGR.begin() - 1; Di != E; --Di) {
+        DeclContext* DC = (*Di)->getDeclContext();
+        assert(DC == (*Di)->getLexicalDeclContext() && \
+               "Cannot handle that yet");
+
+        // Get rid of the declaration. If the declaration has name we should
+        // heal the lookup tables as well
+        bool Successful = NodeEraser.RevertDecl(*Di);
+        assert(Successful && "Cannot handle that yet!");
+      }
+    }
+
+    T->setState(Transaction::kRolledBack);
   }
   
 
@@ -220,7 +272,6 @@ namespace cling {
     DClient.BeginSourceFile(getCI()->getLangOpts(),
                             &getCI()->getPreprocessor());
     commitCurrentTransaction();
-    //m_Consumer->HandleTranslationUnit(getCI()->getASTContext());
 
     DClient.EndSourceFile();
     m_CI->getDiagnostics().Reset();

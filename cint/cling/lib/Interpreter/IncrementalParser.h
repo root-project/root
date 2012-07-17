@@ -81,6 +81,8 @@ namespace cling {
     ///
     void commitCurrentTransaction() const;
 
+    void rollbackTransaction(Transaction* T) const; 
+
     /// \}
 
     ///\brief Compiles the given input with the given compilation options.

@@ -21,7 +21,6 @@ namespace clang {
 
 namespace cling {
 
-  class ASTNodeEraser;
   class ChainedMutationListener;
   class ChainedDeserializationListener;
   class Transaction;
@@ -68,7 +67,6 @@ namespace cling {
     /// \}
 
     void Add(EConsumerIndex I, clang::ASTConsumer* C);
-    void RecoverFromError();
     clang::ASTConsumer** getConsumers() {
       return Consumers;
     }
@@ -116,7 +114,6 @@ namespace cling {
   private:
     clang::ASTConsumer* Consumers[kConsumersCount]; // owns them
     llvm::SmallVector<CompilationOptions, 2> COStack;
-    llvm::OwningPtr<ASTNodeEraser> NodeEraser;
     llvm::OwningPtr<ChainedMutationListener> MutationListener;
     llvm::OwningPtr<ChainedDeserializationListener> DeserializationListener;
     clang::ASTContext* m_Context;

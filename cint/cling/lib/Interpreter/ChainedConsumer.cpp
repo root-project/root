@@ -6,7 +6,6 @@
 
 #include "ChainedConsumer.h"
 
-#include "ASTNodeEraser.h"
 #include "Transaction.h"
 
 #include "clang/AST/ASTMutationListener.h"
@@ -239,8 +238,17 @@ namespace cling {
   }
 
   bool ChainedConsumer::HandleTopLevelDecl(DeclGroupRef D) {
-    m_CurTransaction->appendUnique(D);
-    return true;
+    bool hasNoErrors = true;
+    if (!m_CurTransaction->isCompleted())
+      m_CurTransaction->appendUnique(D);
+    else {
+      // Pass through the consumers
+      for (size_t i = 0; i < kConsumersCount; ++i) {
+        if (IsConsumerEnabled((EConsumerIndex)i))
+          hasNoErrors = hasNoErrors && Consumers[i]->HandleTopLevelDecl(D);
+      }
+    }
+    return hasNoErrors;
   }
 
   void ChainedConsumer::HandleInterestingDecl(DeclGroupRef D) {
@@ -261,27 +269,6 @@ namespace cling {
   }
 
   void ChainedConsumer::HandleTranslationUnit(ASTContext& Ctx) {
-
-    // We don't want to chase our tail
-    if (m_CurTransaction->empty())
-      return;
-
-    // Check for errors...
-    if (m_Sema->getDiagnostics().hasErrorOccurred()) {
-      RecoverFromError();
-      return;
-    }
-
-    // Pass through the consumers
-    for (size_t i = 0; i < kConsumersCount; ++i) {
-      if (!IsConsumerEnabled((EConsumerIndex)i))
-        continue;
-      for (Transaction::const_iterator I = m_CurTransaction->decls_begin(), 
-             E = m_CurTransaction->decls_end(); I != E; ++I) {
-        Consumers[i]->HandleTopLevelDecl(*I);
-      }
-    }
-
     for (size_t i = 0; i < kConsumersCount; ++i)
       if (IsConsumerEnabled((EConsumerIndex)i))
         Consumers[i]->HandleTranslationUnit(Ctx);
@@ -304,9 +291,6 @@ namespace cling {
   void ChainedConsumer::InitializeSema(Sema& S) {
     m_Sema = &S;
 
-    if (!NodeEraser)
-      NodeEraser.reset(new ASTNodeEraser(m_Sema));
-
     for (size_t i = 0; i < kConsumersCount; ++i)
       if (Exists((EConsumerIndex)i))
         if (SemaConsumer* SC = dyn_cast<SemaConsumer>(Consumers[i]))
@@ -328,45 +312,6 @@ namespace cling {
     DeserializationListener->AddListener(I, C->GetASTDeserializationListener());
   }
 
-  void ChainedConsumer::RecoverFromError() {
-
-    for (Transaction::const_reverse_iterator I = m_CurTransaction->rdecls_begin(),
-           E = m_CurTransaction->rdecls_end(); I != E; ++I) {
-      const DeclGroupRef& DGR = (*I);
-
-      for (DeclGroupRef::const_iterator
-             Di = DGR.end() - 1, E = DGR.begin() - 1; Di != E; --Di) {
-        DeclContext* DC = (*Di)->getDeclContext();
-        assert(DC == (*Di)->getLexicalDeclContext() && \
-               "Cannot handle that yet");
-
-        // Get rid of the declaration. If the declaration has name we should
-        // heal the lookup tables as well
-
-        bool Successful = NodeEraser->RevertDecl(*Di);
-        assert(Successful && "Cannot handle that yet!");
-
-        // Pop if the same declaration has come through other function
-        // For example CXXRecordDecl comes from HandleTopLevelDecl and
-        // HandleTagDecl
-        // Not terribly efficient but it happens only when there are errors
-        // for (llvm::SmallVector<DGRInfo, 64>::reverse_iterator J = I + 1;
-        //      J != DeclsQueue.rend(); ++J) {
-        //   DeclGroupRef& DGRJ = (*J).D;
-        //   for (DeclGroupRef::iterator
-        //          Dj = DGRJ.end() - 1, E = DGRJ.begin() - 1; Dj != E; --Dj) {
-        //     if ((*Dj) && (*Dj) == *Di)
-        //       // Set the declaration to 0, we don't want to call the dtor
-        //       // of the DeclGroupRef
-        //       (*Dj) = 0;
-        //   }
-        // }
-      }
-    }
-
-    m_CurTransaction->clear();
-  }
-
   bool ChainedConsumer::IsConsumerEnabled(EConsumerIndex I) {
       if (!Exists(I))
         return false;
@@ -386,7 +331,7 @@ namespace cling {
   }
 
   void ChainedConsumer::Update(VerifyingSemaConsumer* VSC) {
-    RecoverFromError();
+    //RecoverFromError();
   }
 
 } // namespace cling

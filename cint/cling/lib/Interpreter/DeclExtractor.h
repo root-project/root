@@ -24,14 +24,22 @@ namespace cling {
   public:
     DeclExtractor();
     virtual ~DeclExtractor();
-    void TransformTopLevelDecl(clang::DeclGroupRef DGR);
+    bool TransformTopLevelDecl(clang::DeclGroupRef DGR);
 
   private:
-    void ExtractDecl(clang::Decl* D);
+
+    ///\brief Tries to extract the declaration on the global scope (translation
+    /// unit scope).
+    ///
+    ///\param D[in] - The declaration to be extracted.
+    ///\returns true on success.
+    ///
+    bool ExtractDecl(clang::Decl* D);
 
     ///\brief Checks for clashing names when trying to extract a declaration.
     ///
-    /// Returns true if there is another declaration with the same name
+    ///\returns true if there is another declaration with the same name
+    ///
     bool CheckForClashingNames(
                            const llvm::SmallVector<clang::NamedDecl*, 4>& Decls,
                                clang::DeclContext* DC, clang::Scope* S);
@@ -44,7 +52,8 @@ namespace cling {
     ///
     /// Sets NewTD->isInvalidDecl if an error was encountered.
     ///
-    /// Returns true if the tag declaration is redeclaration.
+    ///\returns true if the tag declaration is redeclaration.
+    ///
     bool CheckTagDeclaration(clang::TagDecl* NewTD,
                              clang::LookupResult& Previous);
   };

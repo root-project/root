@@ -30,11 +30,11 @@ namespace cling {
 
   ValuePrinterSynthesizer::~ValuePrinterSynthesizer() {}
 
-  void ValuePrinterSynthesizer::TransformTopLevelDecl(DeclGroupRef DGR) {
+  bool ValuePrinterSynthesizer::TransformTopLevelDecl(DeclGroupRef DGR) {
     for (DeclGroupRef::iterator I = DGR.begin(), E = DGR.end(); I != E; ++I)
       if (FunctionDecl* FD = dyn_cast<FunctionDecl>(*I)) {
         if (FD->getNameAsString().find("__cling_Un1Qu3"))
-          return;
+          return true;
 
         if (CompoundStmt* CS = dyn_cast<CompoundStmt>(FD->getBody())) {
           for (CompoundStmt::body_iterator
@@ -74,6 +74,7 @@ namespace cling {
           }
         }
       }
+    return true;
   }
 
   // We need to artificially create:

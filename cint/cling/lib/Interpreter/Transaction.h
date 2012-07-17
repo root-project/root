@@ -41,9 +41,34 @@ namespace cling {
     ///
     NestedTransactions m_NestedTransactions;
 
+    unsigned m_State : 2;
+
+    unsigned m_IssuedDiags : 2;
+
   public:
 
-    Transaction() : m_Completed(false), m_Parent(0) {}
+    Transaction() : m_Completed(false), m_Parent(0), m_State(kUnknown), 
+                    m_IssuedDiags(kNone) {}
+
+    enum State {
+      kUnknown,
+      kRolledBack,
+      kCommitted
+    };
+
+    enum IssuedDiags {
+      kErrors,
+      kWarnings,
+      kNone
+    };
+
+    State getState() const { return static_cast<State>(m_State); }
+    void setState(State val) { m_State = val; }
+
+    IssuedDiags getIssuedDiags() const { 
+      return static_cast<IssuedDiags>(m_IssuedDiags); 
+    }
+    void setIssuedDiags(IssuedDiags val) { m_IssuedDiags = val; }
 
     ///\ brief Returns the first declaration of the transaction.
     ///
@@ -75,10 +100,7 @@ namespace cling {
     /// We assume that when the last declaration of the transaction is set,
     /// the transaction is completed.
     ///
-    bool isCompleted() const {
-      return m_Completed;
-    }
-
+    bool isCompleted() const { return m_Completed; }
     void setCompleted(bool val = true) { m_Completed = val; }
 
     Transaction* getParent() { return m_Parent; }

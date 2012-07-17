@@ -26,18 +26,21 @@ namespace cling {
 
   }
 
-  void DeclExtractor::TransformTopLevelDecl(DeclGroupRef DGR) {
+  bool DeclExtractor::TransformTopLevelDecl(DeclGroupRef DGR) {
+    bool hasNoErrors = true;
     for (DeclGroupRef::iterator I = DGR.begin(), E = DGR.end(); I != E; ++I)
-      ExtractDecl(*I);
+      hasNoErrors = hasNoErrors && ExtractDecl(*I);
+
+    return hasNoErrors;
   }
 
-  void DeclExtractor::ExtractDecl(Decl* D) {
+  bool DeclExtractor::ExtractDecl(Decl* D) {
     FunctionDecl* FD = dyn_cast<FunctionDecl>(D);
     llvm::SmallVector<NamedDecl*, 4> TouchedDecls;
 
     if (FD) {
       if (FD->getNameAsString().find("__cling_Un1Qu3"))
-        return;
+        return true;
 
       CompoundStmt* CS = dyn_cast<CompoundStmt>(FD->getBody());
       assert(CS && "Function body not a CompoundStmt?");
@@ -95,8 +98,8 @@ namespace cling {
           }
         }
       }
-
-      if (!CheckForClashingNames(TouchedDecls, DC, TUScope)) {
+      bool hasNoErrors = !CheckForClashingNames(TouchedDecls, DC, TUScope);
+      if (hasNoErrors) {
         for (size_t i = 0; i < TouchedDecls.size(); ++i) {
           m_Sema->PushOnScopeChains(TouchedDecls[i],
                                     m_Sema->getScopeForContext(DC),
@@ -129,12 +132,15 @@ namespace cling {
       // Put the wrapper after its declarations. (Nice when AST dumping)
       DC->removeDecl(FD);
       DC->addDecl(FD);
+
+      return hasNoErrors;
     }
+    return true;
   }
 
   ///\brief Checks for clashing names when trying to extract a declaration.
   ///
-  /// returns true if there is another declaration with the same name
+  ///\returns true if there is another declaration with the same name
   bool DeclExtractor::CheckForClashingNames(
                                   const llvm::SmallVector<NamedDecl*, 4>& Decls,
                                             DeclContext* DC, Scope* S) {
