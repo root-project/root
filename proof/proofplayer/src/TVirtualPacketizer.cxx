@@ -204,12 +204,14 @@ Long64_t TVirtualPacketizer::GetEntries(Bool_t tree, TDSetElement *e)
       if ( key == 0 ) {
          Error("GetEntries","Cannot find tree \"%s\" in %s",
                e->GetObjName(), e->GetFileName() );
+         gDirectory = dirsave;
          delete file;
          return -1;
       }
       TTree *t = (TTree *) key->ReadObj();
       if ( t == 0 ) {
          // Error always reported?
+         gDirectory = dirsave;
          delete file;
          return -1;
       }
@@ -222,6 +224,7 @@ Long64_t TVirtualPacketizer::GetEntries(Bool_t tree, TDSetElement *e)
    }
 
    delete file;
+   gDirectory = dirsave;
 
    return entries;
 }
