@@ -223,6 +223,8 @@ namespace cling {
      if (GetCodeGenerator()) {
        GetCodeGenerator()->ReleaseModule();
      }
+     for (unsigned i = 0; i < m_Transactions.size(); ++i)
+       delete m_Transactions[i];
   }
 
   void IncrementalParser::Initialize() {
