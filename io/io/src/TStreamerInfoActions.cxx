@@ -1230,7 +1230,10 @@ void TStreamerInfo::Compile()
          // Make sure the StreamerInfo for the base class is also
          // not optimized.
          TClass *bclass = element->GetClassPointer();
-         Int_t clversion = ((TStreamerBase*)element)->GetBaseVersion();
+         Int_t clversion = 0;
+         if (element->IsA() == TStreamerBase::Class()) {
+            clversion = ((TStreamerBase*)element)->GetBaseVersion();
+         }
          TStreamerInfo *binfo = ((TStreamerInfo*)bclass->GetStreamerInfo(clversion));
          if (binfo) {
             // binfo might be null in cases where:
