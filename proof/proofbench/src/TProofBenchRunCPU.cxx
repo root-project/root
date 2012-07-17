@@ -323,7 +323,7 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
          }
 
          // Process
-         fProof->Process(fSelName, nevents_all, fSelOption);
+         fProof->Process(fSelName, nevents_all);
 
          TList *l = fProof->GetOutputList();
 

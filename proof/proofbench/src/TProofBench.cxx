@@ -172,7 +172,6 @@ Int_t TProofBench::RunCPU(Long64_t nevents, Int_t start, Int_t stop, Int_t step)
    TPBHistType htype(TPBHistType::kHist1D);
    fRunCPU = new TProofBenchRunCPU(&htype, fNHist, fOutFile);
    if (!fCPUSel.IsNull()) fRunCPU->SetSelName(fCPUSel);
-   if (!fSelOption.IsNull()) fRunDS->SetSelOption(fSelOption);
    if (!fCPUPar.IsNull()) fRunCPU->SetParList(fCPUPar);
    fRunCPU->Run(nevents, start, stop, step, fNtries, fDebug, -1);
 
@@ -201,7 +200,6 @@ Int_t TProofBench::RunCPUx(Long64_t nevents, Int_t start, Int_t stop)
    TPBHistType htype(TPBHistType::kHist1D);
    fRunCPU = new TProofBenchRunCPU(&htype, fNHist, fOutFile);
    if (!fCPUSel.IsNull()) fRunCPU->SetSelName(fCPUSel);
-   if (!fSelOption.IsNull()) fRunDS->SetSelOption(fSelOption);
    if (!fCPUPar.IsNull()) fRunCPU->SetParList(fCPUPar);
    fRunCPU->Run(nevents, start, stop, -2, fNtries, fDebug, -1);
 
@@ -343,7 +341,6 @@ Int_t TProofBench::RunDataSet(const char *dset,
    if (!readType) readType = new TPBReadType(TPBReadType::kReadOpt);
    fRunDS = new TProofBenchRunDataRead(fDS, readType, fOutFile); 
    if (!fDataSel.IsNull()) fRunDS->SetSelName(fDataSel);
-   if (!fSelOption.IsNull()) fRunDS->SetSelOption(fSelOption);
    if (!fDataPar.IsNull()) fRunDS->SetParList(fDataPar);
    fRunDS->Run(dset, start, stop, step, fNtries, fDebug, -1);
    if (!fReadType) SafeDelete(readType);
@@ -376,7 +373,6 @@ Int_t TProofBench::RunDataSetx(const char *dset, Int_t start, Int_t stop)
    if (!readType) readType = new TPBReadType(TPBReadType::kReadOpt);
    fRunDS = new TProofBenchRunDataRead(fDS, readType, fOutFile); 
    if (!fDataSel.IsNull()) fRunDS->SetSelName(fDataSel);
-   if (!fSelOption.IsNull()) fRunDS->SetSelOption(fSelOption);
    if (!fDataPar.IsNull()) fRunDS->SetParList(fDataPar);
    fRunDS->Run(dset, start, stop, -2, fNtries, fDebug, -1);
    if (!fReadType) SafeDelete(readType);

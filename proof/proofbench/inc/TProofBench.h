@@ -61,7 +61,6 @@ protected:
    TString fDataPar;             // List of par files to be loaded for data benchmarks
    TString fDataGenSel;          // Selector to be used for generate data for benchmarks
    TString fDataGenPar;          // List of par files to be loaded to generate data for benchmarks
-   TString fSelOption;           // Option field for processing the selector 
 
    TProofBenchRunCPU      *fRunCPU; // Instance to run CPU scans
    TProofBenchRunDataRead *fRunDS;  // Instance to run data-read scans
@@ -103,7 +102,6 @@ public:
    void  SetDataPar(const char *par) { fDataPar = par; }
    void  SetDataGenSel(const char *sel) { fDataGenSel = sel; }
    void  SetDataGenPar(const char *par) { fDataGenPar = par; }
-   void  SetSelOption(const char *opt) { fSelOption = opt; }
 
    void  SetProofDS(TProof *p);
 

@@ -271,7 +271,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
                      " %d active worker(s).", dsn.Data(), nactive); 
 
          TTime starttime = gSystem->Now();
-         fProof->Process(dsn, fSelName, fSelOption);
+         fProof->Process(dsn, fSelName);
                  
          DeleteParameters();
 
