@@ -354,7 +354,7 @@ namespace cling {
     Interpreter::CompilationResult interpRes
        = m_Interp.declare(std::string("#include \"")
                           + pairFileArgs.first.str()
-                          + std::string("\""));
+                          + std::string("\"\n"));
 
     if (interpRes != Interpreter::kFailure) {
        std::string expression = pairFuncExt.first.str()
