@@ -45,6 +45,35 @@ namespace cling {
   class Interpreter;
 
   class IncrementalParser {
+  private:
+    // our interpreter context
+    Interpreter* m_Interpreter;
+
+    // compiler instance.
+    llvm::OwningPtr<clang::CompilerInstance> m_CI;
+
+    // parser (incremental)
+    llvm::OwningPtr<clang::Parser> m_Parser;
+
+    // enable/disable dynamic scope
+    bool m_DynamicLookupEnabled;
+
+    // One buffer for each command line, owner by the source file manager
+    std::vector<llvm::MemoryBuffer*> m_MemoryBuffer;
+
+    // file ID of the memory buffer
+    clang::FileID m_VirtualFileID;
+
+    // CI owns it
+    ChainedConsumer* m_Consumer;
+
+    ///\brief Holds information for the all transactions.
+    ///
+    llvm::SmallVector<Transaction*, 64> m_Transactions;
+
+    // whether to run codegen; cannot be flipped during lifetime of *this
+    bool m_SyntaxOnly;
+
   public:
     enum EParseResult {
       kSuccess,
@@ -127,34 +156,6 @@ namespace cling {
     void CreateSLocOffsetGenerator();
     EParseResult Compile(llvm::StringRef input);
     EParseResult Parse(llvm::StringRef input);
-
-    // our interpreter context
-    Interpreter* m_Interpreter;
-
-   // compiler instance.
-    llvm::OwningPtr<clang::CompilerInstance> m_CI;
-
-    // parser (incremental)
-    llvm::OwningPtr<clang::Parser> m_Parser;
-
-    // enable/disable dynamic scope
-    bool m_DynamicLookupEnabled;
-
-    // One buffer for each command line, owner by the source file manager
-    std::vector<llvm::MemoryBuffer*> m_MemoryBuffer;
-
-    // file ID of the memory buffer
-    clang::FileID m_VirtualFileID;
-
-    // CI owns it
-    ChainedConsumer* m_Consumer;
-
-    ///\brief Holds information for the all transactions.
-    ///
-    llvm::SmallVector<Transaction*, 64> m_Transactions;
-
-    // whether to run codegen; cannot be flipped during lifetime of *this
-    bool m_SyntaxOnly;
   };
 }
 #endif // CLING_INCREMENTAL_PARSER_H
