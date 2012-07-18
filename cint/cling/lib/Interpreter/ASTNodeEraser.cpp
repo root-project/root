@@ -142,17 +142,26 @@ namespace cling {
     /// @}
   };
 
+  DeclReverter::~DeclReverter() {
+    FileManager& FM = m_Sema->getSourceManager().getFileManager();
+    for (FileEntries::iterator I = m_FilesToUncache.begin(), 
+           E = m_FilesToUncache.end(); I != E; ++I) {
+      FM.invalidateCache(*I);
+    }
+
+    // Clean up the pending instantiations
+    m_Sema->PendingInstantiations.clear();
+    m_Sema->PendingLocalImplicitInstantiations.clear();
+    
+    m_Sema = 0;
+  }
+
   void DeclReverter::PreVisitDecl(Decl *D) {
     const SourceLocation Loc = D->getLocStart();
     const SourceManager& SM = m_Sema->getSourceManager();
     const FileEntry* OldEntry = SM.getFileEntryForID(SM.getFileID(Loc));
     if (OldEntry && !m_FilesToUncache.count(OldEntry)) 
       m_FilesToUncache.insert(OldEntry);
-
-    // Clean up the pending instantiations
-    m_Sema->PendingInstantiations.clear();
-    m_Sema->PendingLocalImplicitInstantiations.clear();
-
   }
 
   // Gives us access to the protected members that we  need.
@@ -436,16 +445,6 @@ namespace cling {
 
 
     return false;
-  }
-
-  DeclReverter::~DeclReverter() {
-    FileManager& FM = m_Sema->getSourceManager().getFileManager();
-    for (FileEntries::iterator I = m_FilesToUncache.begin(), 
-           E = m_FilesToUncache.end(); I != E; ++I) {
-      FM.invalidateCache(*I);
-    }
-    
-    m_Sema = 0;
   }
 
   ASTNodeEraser::ASTNodeEraser(Sema* S) : m_Sema(S) {
