@@ -374,6 +374,7 @@ var d, key_tree;
                      if (histo['fFunctions'][i]['fX1NDC'] > 1.0 || histo['fFunctions'][i]['fY1NDC'] > 1.0 ||
                          histo['fFunctions'][i]['fX1NDC'] < 0.0 || histo['fFunctions'][i]['fY1NDC'] < 0.0)
                         continue;
+                     var leg_x, leg_y, leg_w, leg_h;
                      var pos_x = histo['fFunctions'][i]['fX1NDC'] * scale_x;
                      var pos_y = (1.0 - histo['fFunctions'][i]['fY1NDC']) * scale_y;
                      var lines = '';
@@ -392,7 +393,21 @@ var d, key_tree;
                          color: 'black'
                      }).add();
                      var box = text.getBBox();
-                     chart.renderer.rect(box.x - 5, box.y - 2, box.width + 10, box.height + 4, 0)
+                     if (box.x == 0 && box.y == 0) {
+                        // Firefox bug?
+                        leg_x = pos_x - 4;
+                        leg_y = pos_y + 4;
+                        leg_w = (box.width - pos_x) + 10;
+                        leg_h = (box.height - pos_y) - 3;
+                     }
+                     else {
+                        // normal case
+                        leg_x = box.x - 5;
+                        leg_y = box.y - 2;
+                        leg_w = box.width + 10;
+                        leg_h = box.height + 4;
+                     }
+                     chart.renderer.rect(leg_x, leg_y, leg_w, leg_h, 0)
                      .attr({
                          fill: '#FFFFFF',
                          stroke: 'gray',
@@ -403,6 +418,7 @@ var d, key_tree;
                }
             }
          });
+         chart_list.push(chart);
       }
       else if (histo['_typename'].match(/\bTH2/)) {
          var nbinsx = histo['fXaxis']['fNbins'];
@@ -594,6 +610,7 @@ var d, key_tree;
                      if (histo['fFunctions'][i]['fX1NDC'] > 1.0 || histo['fFunctions'][i]['fY1NDC'] > 1.0 ||
                          histo['fFunctions'][i]['fX1NDC'] < 0.0 || histo['fFunctions'][i]['fY1NDC'] < 0.0)
                         continue;
+                     var leg_x, leg_y, leg_w, leg_h;
                      var pos_x = 10 + (histo['fFunctions'][i]['fX1NDC'] * scale_x);
                      var pos_y = (1.0 - histo['fFunctions'][i]['fY1NDC']) * scale_y;
                      var lines = '';
@@ -612,7 +629,21 @@ var d, key_tree;
                          color: 'black'
                      }).add();
                      var box = text.getBBox();
-                     chart.renderer.rect(box.x - 5, box.y - 2, box.width + 10, box.height + 4, 0)
+                     if (box.x == 0 && box.y == 0) {
+                        // Firefox bug?
+                        leg_x = pos_x - 4;
+                        leg_y = pos_y + 4;
+                        leg_w = (box.width - pos_x) + 10;
+                        leg_h = (box.height - pos_y) - 3;
+                     }
+                     else {
+                        // normal case
+                        leg_x = box.x - 5;
+                        leg_y = box.y - 2;
+                        leg_w = box.width + 10;
+                        leg_h = box.height + 4;
+                     }
+                     chart.renderer.rect(leg_x, leg_y, leg_w, leg_h, 0)
                      .attr({
                          fill: '#FFFFFF',
                          stroke: 'gray',
@@ -623,6 +654,7 @@ var d, key_tree;
                }
             }
          });
+         chart_list.push(chart);
       }
    };
 
@@ -788,6 +820,7 @@ var d, key_tree;
                      if (graph['fHistogram']['fFunctions'][i]['fX1NDC'] > 1.0 || graph['fHistogram']['fFunctions'][i]['fY1NDC'] > 1.0 ||
                          graph['fHistogram']['fFunctions'][i]['fX1NDC'] < 0.0 || graph['fHistogram']['fFunctions'][i]['fY1NDC'] < 0.0)
                         continue;
+                     var leg_x, leg_y, leg_w, leg_h;
                      var pos_x = graph['fHistogram']['fFunctions'][i]['fX1NDC'] * scale_x;
                      var pos_y = (1.0 - graph['fHistogram']['fFunctions'][i]['fY1NDC']) * scale_y;
                      var lines = '';
@@ -806,7 +839,21 @@ var d, key_tree;
                          color: 'black'
                      }).add();
                      var box = text.getBBox();
-                     chart.renderer.rect(box.x - 5, box.y - 2, box.width + 10, box.height + 4, 0)
+                     if (box.x == 0 && box.y == 0) {
+                        // Firefox bug?
+                        leg_x = pos_x - 4;
+                        leg_y = pos_y + 4;
+                        leg_w = (box.width - pos_x) + 10;
+                        leg_h = (box.height - pos_y) - 3;
+                     }
+                     else {
+                        // normal case
+                        leg_x = box.x - 5;
+                        leg_y = box.y - 2;
+                        leg_w = box.width + 10;
+                        leg_h = box.height + 4;
+                     }
+                     chart.renderer.rect(leg_x, leg_y, leg_w, leg_h, 0)
                      .attr({
                          fill: '#FFFFFF',
                          stroke: 'gray',
@@ -817,6 +864,7 @@ var d, key_tree;
                }
             }
          });
+         chart_list.push(chart);
       }
    };
 

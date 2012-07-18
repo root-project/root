@@ -12,6 +12,7 @@ var gFile;
 var obj_list = new Array();
 var obj_index = 0;
 var last_index = 0;
+var chart_list = new Array();
 
 function addCollapsible(element) {
    $(element)
@@ -153,11 +154,7 @@ function AssertPrerequisites(andThen) {
             var url = $("#urlToLoad").val();
             if (url == "" || url == " ") return;
             $("#status").append("load: " + url + "<br/>");
-            $("#report").get(0).innerHTML = '';
-            obj_list.splice(0, obj_list.length);
-            //obj_list = [];
-            obj_index = 0;
-            delete gFile;
+            ResetUI();
             gFile = new JSROOTIO.RootFile(url);
             $('#report').append("</body></html>");
             $('#report').addClass("ui-accordion ui-accordion-icons ui-widget ui-helper-reset");
@@ -193,16 +190,34 @@ function ReadFile() {
    var url = $("#urlToLoad").val();
    if (url == "" || url == " ") return;
    $("#status").append("load: " + url + "<br/>");
-   delete gFile;
+   if (gFile) {
+      gFile.Delete();
+      delete gFile;
+   }
+   gFile = null;
    gFile = new JSROOTIO.RootFile(url);
    $('#report').append("</body></html>");
 };
 
 function ResetUI() {
-   $("#report").get(0).innerHTML = '';
    obj_list.splice(0, obj_list.length);
    obj_index = 0;
    last_index = 0;
+   while (chart_list.length > 0) {
+      var chart = chart_list.pop();
+      chart.destroy();
+      delete chart;
+      chart = null;
+   }
+   if (gFile) {
+      gFile.Delete();
+      delete gFile;
+   }
+   gFile = null;
+   $("#report").get(0).innerHTML = '';
+   $("#report").innerHTML = '';
+   delete $("#report").get(0);
+   //window.location.reload(true);
    $("#status").html("<br/>JSROOTIO.RootFile.js version: " + JSROOTIO.version + "<br/>");
    $('#report').get(0).innerHTML = '';
 };

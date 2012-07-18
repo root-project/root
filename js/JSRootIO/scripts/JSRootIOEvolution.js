@@ -1533,9 +1533,13 @@ String.prototype.endsWith = function(str, ignoreCase) {
                   _dir.fFile.fDirectories[_dir.fFile.fDirIndex] = _dir;
                   _dir.fFile.fDirIndex++;
                   displayDirectory(_dir, cycle, dir_id);
+                  delete buffer;
+                  buffer = null;
                };
                _dir.fFile.ReadBuffer(_dir.fNbytesKeys, callback2, _dir);
             }
+            delete buffer;
+            buffer = null;
          };
          this.fFile.ReadBuffer(nbytes, callback1, this);
       };
@@ -1748,6 +1752,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
             var accept_ranges = xhr.getResponseHeader("Accept-Ranges");
             return parseInt(header);
          }
+         xhr = null;
          return -1;
       }
 
@@ -1757,13 +1762,15 @@ String.prototype.endsWith = function(str, ignoreCase) {
             // IE9 Fallback
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function() {
-               if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 206)) {
+               if (this.readyState == 4 && (this.status == 200 || this.status == 206)) {
                   var filecontent = new String("");
-                  var array = new VBArray(xhr.responseBody).toArray();
+                  var array = new VBArray(this.responseBody).toArray();
                   for (var i = 0; i < array.length; i++) {
                      filecontent = filecontent + String.fromCharCode(array[i]);
                   }
                   callbk(file, filecontent, obj); // Call callback func with data
+                  delete filecontent;
+                  filecontent = null;
                }
             }
             xhr.open('GET', url, true);
@@ -1771,22 +1778,23 @@ String.prototype.endsWith = function(str, ignoreCase) {
             xhr.setRequestHeader("Range", xhr_header);
             xhr.setRequestHeader("If-Modified-Since", "Wed, 31 Dec 1980 00:00:00 GMT");
             xhr.send(null);
+            xhr = null;
          }
          var other = function(url, pos, len, file, callbk, obj) {
             //
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function() {
-               if (xhr.readyState == 4 && (xhr.status == 0 || xhr.status == 200 ||
-                   xhr.status == 206)) {
+               if (this.readyState == 4 && (this.status == 0 || this.status == 200 ||
+                   this.status == 206)) {
                   var HasArrayBuffer = ('ArrayBuffer' in window && 'Uint8Array' in window);
-                  if (HasArrayBuffer && 'mozResponse' in xhr) {
-                     Buf = xhr.mozResponse;
-                  } else if (HasArrayBuffer && xhr.mozResponseArrayBuffer) {
-                     Buf = xhr.mozResponseArrayBuffer;
-                  } else if ('responseType' in xhr) {
-                     Buf = xhr.response;
+                  if (HasArrayBuffer && 'mozResponse' in this) {
+                     Buf = this.mozResponse;
+                  } else if (HasArrayBuffer && this.mozResponseArrayBuffer) {
+                     Buf = this.mozResponseArrayBuffer;
+                  } else if ('responseType' in this) {
+                     Buf = this.response;
                   } else {
-                     Buf = xhr.responseText;
+                     Buf = this.responseText;
                      HasArrayBuffer = false;
                   }
                   if (HasArrayBuffer) {
@@ -1800,6 +1808,8 @@ String.prototype.endsWith = function(str, ignoreCase) {
                      var filecontent = Buf;
                   }
                   callbk(file, filecontent, obj); // Call callback func with data
+                  delete filecontent;
+                  filecontent = null;
                }
             };
             xhr.open('GET', url, true);
@@ -1818,6 +1828,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
                xhr.overrideMimeType("text/plain; charset=x-user-defined");
             }
             xhr.send(null);
+            xhr = null;
          }
          // Multi-browser support
          if (typeof ActiveXObject == "function")
@@ -2036,6 +2047,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
                var hdr = file.R__unzip_header(buffer, 0);
                if (hdr == null) {
                   delete buffer;
+                  buffer = null;
                   return;
                }
                objbuf = file.R__unzip(hdr['srcsize'], buffer, 0, hdr['tgtsize']);
@@ -2046,19 +2058,8 @@ String.prototype.endsWith = function(str, ignoreCase) {
                obj_buf['irep'] = buffer.length;
                objbuf = obj_buf;
             }
-            if (objbuf && objbuf['unzipdata']) {
-               // this part is only there to be able display the unzipped
-               // buffers on the demo web page...
-               var key_buffer = {};
-               var buff_array = new Array();
-               for (var k = 0; k < objbuf['unzipdata'].length; ++k)
-                  buff_array[k] = objbuf['unzipdata'].charCodeAt(k);
-               key_buffer['key'] = key;
-               key_buffer['buffer'] = buff_array;
-               file.fBuffers[file.fBufferIndex] = key_buffer;
-               file.fBufferIndex++;
-            }
             delete buffer;
+            buffer = null;
             callback(file, objbuf);
          };
          this.ReadBuffer(key['nbytes'] - key['keyLen'], callback1);
@@ -2093,6 +2094,8 @@ String.prototype.endsWith = function(str, ignoreCase) {
                   obj_list.push(obj_name+cycle);
                   obj_index++;
                }
+               delete objbuf['unzipdata'];
+               objbuf['unzipdata'] = null;
             }
          };
          this.ReadObjBuffer(key, callback);
@@ -2112,10 +2115,14 @@ String.prototype.endsWith = function(str, ignoreCase) {
                if (objbuf && objbuf['unzipdata']) {
                   file.fStreamerInfo.ExtractStreamerInfo(objbuf['unzipdata']);
                   //JSROOTIO.GenerateStreamers(file);
+                  delete objbuf['unzipdata'];
+                  objbuf['unzipdata'] = null;
                }
             };
             file.ReadObjBuffer(key, callback2);
             JSROOTPainter.displayListOfKeys(file.fKeys, '#status');
+            delete buffer;
+            buffer = null;
             // the next two lines are for debugging/info purpose
             //$("#status").append("file header: " + file.fLogMsg  + "<br/>");
             //JSROOTPainter.displayListOfKeyDetails(file.fKeys, '#status');
@@ -2130,6 +2137,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
             var header = file.ReadHeader(buffer);
             if (header == null) {
                delete buffer;
+               buffer = null;
                return;
             }
 
@@ -2228,13 +2236,21 @@ String.prototype.endsWith = function(str, ignoreCase) {
                            file.fKeyIndex++;
                         }
                         file.ReadStreamerInfo();
+                        delete buffer;
+                        buffer = null;
                      };
                      file.ReadBuffer(file.fNbytesKeys, callback4);
                   }
+                  delete str;
+                  str = null;
                };
                file.ReadBuffer(Math.max(300, nbytes), callback3);
+               delete str;
+               str = null;
             };
             file.ReadBuffer(300, callback2);
+            delete buffer;
+            buffer = null;
          };
          this.ReadBuffer(256, callback1);
       };
@@ -2248,6 +2264,8 @@ String.prototype.endsWith = function(str, ignoreCase) {
             if (objbuf && objbuf['unzipdata']) {
                var directory = new JSROOTIO.TDirectory(file, key['className']);
                directory.Stream(objbuf['unzipdata'], 0, cycle, dir_id);
+               delete objbuf['unzipdata'];
+               objbuf['unzipdata'] = null;
             }
          };
          this.ReadObjBuffer(key, callback);
@@ -2260,14 +2278,25 @@ String.prototype.endsWith = function(str, ignoreCase) {
          this.fEND = this.GetSize(fileurl);
       };
 
+      JSROOTIO.RootFile.prototype.Delete = function() {
+         if (this.fDirectories) this.fDirectories.splice(0, this.fDirectories.length);
+         this.fDirectories = null;
+         this.fDirIndex = 0;
+         if (this.fKeys) this.fKeys.splice(0, this.fKeys.length);
+         this.fKeys = null;
+         this.fKeyIndex = 0;
+         if (this.fStreamers) this.fStreamers.splice(0, this.fStreamers.length);
+         this.fStreamers = null;
+         this.fSeekInfo = 0;
+         this.fNbytesInfo = 0;
+         this.fTagOffset = 0;
+         this.fStreamerInfo = null;
+      };
+
       this.fDirectories = new Array();
       this.fDirIndex = 0;
       this.fKeys = new Array();
       this.fKeyIndex = 0;
-      this.fBuffers = new Array();
-      this.fBufferIndex = 0;
-      this.fHistograms = new Array();
-      this.fHistoIndex = 0;
       this.fSeekInfo = 0;
       this.fNbytesInfo = 0;
       this.fTagOffset = 0;
