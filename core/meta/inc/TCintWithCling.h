@@ -67,21 +67,21 @@ private: // Static Data Members
 
 private: // Data Members
 
-   Int_t fMore; // 1 if more input is required
-   Int_t fExitCode; // value passed to exit() in interpreter
-   char fPrompt[64]; // proposed prompt string
-   G__dictposition fDictPos; // CINT dictionary context after init
-   G__dictposition fDictPosGlobals; // CINT dict context after ResetGlobals()
-   TString fSharedLibs; // list of shared libraries loaded by G__loadfile
-   Int_t fSharedLibsSerial; // last time we set fSharedLibs
-   Int_t fGlobalsListSerial; // last time we refresh the ROOT list of globals.
-   TString fIncludePath; // list of CINT include paths
-   TString fRootmapLoadPath; // dynamic load path used for rootmap files
-   TEnv* fMapfile; // map of classes and libraries
-   TObjArray* fRootmapFiles; // list of non-default rootmap files loaded
-   Bool_t fLockProcessLine; // true if ProcessLine should lock gCINTMutex
-   cling::Interpreter* fInterpreter; // cling
-   cling::MetaProcessor* fMetaProcessor; // cling's command processor
+   Int_t fMore; // The brace indent level for the cint command line processor.
+   Int_t fExitCode; // Value passed to exit() in interpreter.
+   char fPrompt[64]; // Command line prompt string.
+   G__dictposition fDictPos; // CINT dictionary context after initialization is complete.
+   G__dictposition fDictPosGlobals; // CINT dict context after ResetGlobals().
+   TString fSharedLibs; // Shared libraries loaded by G__loadfile().
+   Int_t fSharedLibsSerial; // Last time we set fSharedLibs.
+   Int_t fGlobalsListSerial; // Last time we refreshed the ROOT list of globals.
+   TString fIncludePath; // Interpreter include path.
+   TString fRootmapLoadPath; // Dynamic load path for rootmap files.
+   TEnv* fMapfile; // Association of classes to libraries.
+   TObjArray* fRootmapFiles; // Loaded rootmap files.
+   Bool_t fLockProcessLine;  // True if ProcessLine should lock gCINTMutex.
+   cling::Interpreter* fInterpreter; // The interpreter.
+   cling::MetaProcessor* fMetaProcessor; // The metaprocessor.
 
 public: // Public Interface
 
@@ -341,22 +341,7 @@ public: // Public Interface
 
 private: // Private Utility Functions
 
-   TCintWithCling()
-      : fMore(-1)
-      , fExitCode(0)
-      , fSharedLibsSerial(0)
-      , fGlobalsListSerial(0)
-      , fIncludePath()
-      , fRootmapLoadPath()
-      , fMapfile(0)
-      , fRootmapFiles(0)
-      , fLockProcessLine(kFALSE)
-      , fInterpreter(0)
-      , fMetaProcessor()
-   {
-      // For Dictionary() only.
-   }
-
+   TCintWithCling();
    TCintWithCling(const TCintWithCling&); // NOT IMPLEMENTED
    TCintWithCling& operator=(const TCintWithCling&); // NOT IMPLEMENTED
 
