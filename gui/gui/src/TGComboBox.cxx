@@ -47,6 +47,7 @@
 #include "Riostream.h"
 #include "TGTextEntry.h"
 #include "KeySymbols.h"
+#include "RConfigure.h"
 
 
 ClassImp(TGComboBoxPopup)
@@ -481,6 +482,13 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
          fListBox->GetContainer()->AddInput(kPointerMotionMask);
          fComboFrame->PlacePopup(ax, ay, fWidth-2, fComboFrame->GetDefaultHeight());
          fDDButton->SetState(kButtonUp);
+#ifdef R__HAS_COCOA
+         //tp: I need this modification - "button" is not repainted correctly
+         //with Cocoa, when combobox is closed (reason is quite complex), happens
+         //when item is wider than combobox.
+         //TODO: find another way :)
+         fClient->NeedRedraw(fDDButton);
+#endif
       } else if (fTextEntry) {
          return fTextEntry->HandleButton(event);
       }
