@@ -282,6 +282,7 @@ Bool_t TRFIOFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    }
 
    fBytesRead += k;
+   fReadCalls++;
 #ifdef WIN32
    SetFileBytesRead(GetFileBytesRead() + k);
    SetFileReadCalls(GetFileReadCalls() + 1);
