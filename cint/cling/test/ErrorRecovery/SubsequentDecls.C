@@ -1,5 +1,4 @@
 // RUN: cat %s | %cling -Xclang -verify -I%p | FileCheck %s
-// until FunctionTemplateSpecialization are handled again (r44109): XFAIL:*
 // Test the removal of decls which are stored in vector of redeclarables 
 
 .rawInput 1

@@ -100,8 +100,8 @@ namespace cling {
     /// @{
 
     ///\brief Checks whether the declaration was pushed onto the declaration
-    /// chains. Returns
-    /// @param[in] ND - The declaration that is being checked
+    /// chains.
+    /// @param[in] ND - The declaration that is being checked.
     ///
     ///\returns true if the ND was found in the lookup chain.
     ///
@@ -109,7 +109,7 @@ namespace cling {
 
     ///\brief Removes given declaration from the chain of redeclarations.
     /// Rebuilds the chain and sets properly first and last redeclaration.
-    /// @param[in] R - The redeclarable, its chain to be rebuilt
+    /// @param[in] R - The redeclarable, its chain to be rebuilt.
     ///
     ///\returns the most recent redeclaration in the new chain.
     ///
@@ -287,32 +287,36 @@ namespace cling {
     // In the end we don't need to remove the canonical decl because, it
     // doesn't end up in the lookup table.
     //
-#if 0
-    getSpecializations() now returns a FoldingSetVector which
-    does not have an interface for removing nodes...
     class FunctionTemplateDeclExt : public FunctionTemplateDecl {
     public:
-      static llvm::FoldingSet<FunctionTemplateSpecializationInfo>&
-      getSpecializationsExt(FunctionTemplateDecl* FTD) {
-        assert(FTD && "Cannot be null!");
-        return ((FunctionTemplateDeclExt*) FTD)->getSpecializations();
+      static void removeSpecialization(FunctionTemplateDecl* self, 
+                                const FunctionTemplateSpecializationInfo* info) {
+        assert(self && "Cannot be null!");
+        typedef llvm::SmallVector<FunctionTemplateSpecializationInfo*, 4> FTSI;
+        FunctionTemplateDeclExt* This = (FunctionTemplateDeclExt*) self;
+        // We can't just copy because in the end of the scope we will call the
+        // dtor of the elements.
+        FunctionTemplateSpecializationInfo* specInfos
+          = &(*This->getSpecializations().begin());
+        size_t specInfoSize = This->getSpecializations().size();
+        
+        This->getSpecializations().clear();
+        for (size_t i = 0; i < specInfoSize; ++i)
+          if (&specInfos[i] != info) {
+            This->addSpecialization(&specInfos[i], /*InsertPos*/(void*)0);
+          }
       }
     };
-#endif
 
     if (FD->isFunctionTemplateSpecialization()) {
-#if 0
       // 1. Remove the canonical decl.
       // TODO: Can the canonical have another DeclContext and Scope, different
       // from the specialization's implementation?
       FunctionDecl* CanFD = FD->getCanonicalDecl();
       FunctionTemplateDecl* FTD
         = FD->getTemplateSpecializationInfo()->getTemplate();
-      llvm::FoldingSet<FunctionTemplateSpecializationInfo> &FS
-        = FunctionTemplateDeclExt::getSpecializationsExt(FTD);
-      FS.RemoveNode(CanFD->getTemplateSpecializationInfo());
-#endif
-      assert("FunctionTemplateSpecialization not handled yet" && 0);
+      FunctionTemplateDeclExt::removeSpecialization(FTD, 
+                                         CanFD->getTemplateSpecializationInfo());
     }
 
     // Find other decls that the old one has replaced
