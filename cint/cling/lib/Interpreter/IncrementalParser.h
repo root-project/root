@@ -44,6 +44,12 @@ namespace cling {
   class ExecutionContext;
   class Interpreter;
 
+  ///\brief Responsible for the incremental parsing and compilation of input.
+  ///
+  /// The class manages the entire process of compilation line-by-line by 
+  /// appending the compiled delta to clang'a AST. It provides basic operations
+  /// on the already compiled code. See cling::Transaction class.
+  ///
   class IncrementalParser {
   private:
     // our interpreter context
