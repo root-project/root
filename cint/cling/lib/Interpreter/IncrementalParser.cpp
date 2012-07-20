@@ -167,24 +167,10 @@ namespace cling {
   void IncrementalParser::rollbackTransaction(Transaction* T) const {
     ASTNodeEraser NodeEraser(&getCI()->getSema());
 
-    for (Transaction::const_reverse_iterator I = T->rdecls_begin(),
-           E = T->rdecls_end(); I != E; ++I) {
-      const DeclGroupRef& DGR = (*I);
-
-      for (DeclGroupRef::const_iterator
-             Di = DGR.end() - 1, E = DGR.begin() - 1; Di != E; --Di) {
-        DeclContext* DC = (*Di)->getDeclContext();
-        assert(DC == (*Di)->getLexicalDeclContext() && \
-               "Cannot handle that yet");
-
-        // Get rid of the declaration. If the declaration has name we should
-        // heal the lookup tables as well
-        bool Successful = NodeEraser.RevertDecl(*Di);
-        assert(Successful && "Cannot handle that yet!");
-      }
-    }
-
-    T->setState(Transaction::kRolledBack);
+    if (NodeEraser.RevertTransaction(T))
+      T->setState(Transaction::kRolledBack);
+    else
+      T->setState(Transaction::kRolledBackWithErrors);
   }
   
 
@@ -263,9 +249,6 @@ namespace cling {
 
   IncrementalParser::EParseResult
   IncrementalParser::Compile(llvm::StringRef input) {
-    // Just in case when Parse is called, we want to complete the transaction
-    // coming from parse and then start new one.
-
     // Reset the module builder to clean up global initializers, c'tors, d'tors:
     if (getCodeGenerator()) {
       getCodeGenerator()->Initialize(getCI()->getASTContext());

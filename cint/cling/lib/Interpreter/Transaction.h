@@ -53,6 +53,7 @@ namespace cling {
     enum State {
       kUnknown,
       kRolledBack,
+      kRolledBackWithErrors,
       kCommitted
     };
 
