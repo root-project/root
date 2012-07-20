@@ -16,7 +16,8 @@ namespace clang {
 }
 
 namespace cling {
-  ///\brief Contains information about the last input.
+  ///\brief Contains information about the consumed input at once.
+  ///
   class Transaction {
   private:
 
@@ -63,6 +64,33 @@ namespace cling {
       kNone
     };
 
+    /// \{
+    /// \name Iteration
+
+    typedef DeclQueue::const_iterator const_iterator;
+    typedef DeclQueue::const_reverse_iterator const_reverse_iterator;
+    const_iterator decls_begin() const { return m_DeclQueue.begin(); }
+    const_iterator decls_end() const { return m_DeclQueue.end(); }
+    const_reverse_iterator rdecls_begin() const { return m_DeclQueue.rbegin(); }
+    const_reverse_iterator rdecls_end() const { return m_DeclQueue.rend(); }
+
+    typedef NestedTransactions::const_iterator const_nested_iterator;
+    typedef NestedTransactions::const_reverse_iterator const_reverse_nested_iterator;
+    const_nested_iterator nested_decls_begin() const {
+      return m_NestedTransactions.begin();
+    }
+    const_nested_iterator nested_decls_end() const {
+      return m_NestedTransactions.end();
+    }
+    const_reverse_nested_iterator rnested_decls_begin() const {
+      return m_NestedTransactions.rbegin();
+    }
+    const_reverse_nested_iterator rnested_decls_end() const {
+      return m_NestedTransactions.rend();
+    }
+
+    /// \}
+
     State getState() const { return static_cast<State>(m_State); }
     void setState(State val) { m_State = val; }
 
@@ -104,13 +132,29 @@ namespace cling {
     bool isCompleted() const { return m_Completed; }
     void setCompleted(bool val = true) { m_Completed = val; }
 
+    ///\brief If the transaction was nested into another transaction returns
+    /// the parent.
+    ///
     Transaction* getParent() { return m_Parent; }
+
+    ///\brief If the transaction was nested into another transaction returns
+    /// the parent.
+    ///
     const Transaction* getParent() const { return m_Parent; }
+
+    ///\brief Sets the nesting transaction of a nested transaction.
+    ///
+    ///\param parent[in] - The nesting transaction.
+    ///
     void setParent(Transaction* parent) { m_Parent = parent; }
 
     bool isNestedTransaction() { return m_Parent; }
-
     bool hasNestedTransactions() const { return !m_NestedTransactions.empty(); }
+
+    ///\brief Adds nested transaction to the transaction.
+    ///
+    ///\param nested[in] - The transaction to be nested.
+    ///
     void addNestedTransaction(Transaction* nested) {
       nested->setParent(nested);
       // Leave a marker in the parent transaction, where the nested transaction
@@ -119,29 +163,6 @@ namespace cling {
       m_DeclQueue.push_back(clang::DeclGroupRef());
 
       m_NestedTransactions.push_back(nested);
-
-    }
-
-    typedef DeclQueue::const_iterator const_iterator;
-    typedef DeclQueue::const_reverse_iterator const_reverse_iterator;
-    const_iterator decls_begin() const { return m_DeclQueue.begin(); }
-    const_iterator decls_end() const { return m_DeclQueue.end(); }
-    const_reverse_iterator rdecls_begin() const { return m_DeclQueue.rbegin(); }
-    const_reverse_iterator rdecls_end() const { return m_DeclQueue.rend(); }
-
-    typedef NestedTransactions::const_iterator const_nested_iterator;
-    typedef NestedTransactions::const_reverse_iterator const_reverse_nested_iterator;
-    const_nested_iterator nested_decls_begin() const {
-      return m_NestedTransactions.begin();
-    }
-    const_nested_iterator nested_decls_end() const {
-      return m_NestedTransactions.end();
-    }
-    const_reverse_nested_iterator rnested_decls_begin() const {
-      return m_NestedTransactions.rbegin();
-    }
-    const_reverse_nested_iterator rnested_decls_end() const {
-      return m_NestedTransactions.rend();
     }
 
     ///\brief Returns the declaration count.
