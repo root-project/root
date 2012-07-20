@@ -526,7 +526,7 @@ void TGColorSelect::DoRedraw()
 
       if (fState == kButtonDown) { ++x; ++y; }
 
-      DrawTriangle(GetShadowGC()(), x, y);
+      DrawTriangle(GetBlackGC()(), x, y);
 
    } else {
 
