@@ -1,18 +1,44 @@
-Index: tools/clang/include/clang/AST/DeclGroup.h
+Index: tools/clang/lib/AST/DeclGroup.cpp
 ===================================================================
---- tools/clang/include/clang/AST/DeclGroup.h	(revision 160041)
-+++ tools/clang/include/clang/AST/DeclGroup.h	(working copy)
-@@ -128,6 +128,29 @@
-     X.D = static_cast<Decl*>(Ptr);
-     return X;
-   }
+--- tools/clang/lib/AST/DeclGroup.cpp	(revision 160362)
++++ tools/clang/lib/AST/DeclGroup.cpp	(working copy)
+@@ -15,18 +15,40 @@
+ #include "clang/AST/Decl.h"
+ #include "clang/AST/ASTContext.h"
+ #include "llvm/Support/Allocator.h"
+-using namespace clang;
+ 
+-DeclGroup* DeclGroup::Create(ASTContext &C, Decl **Decls, unsigned NumDecls) {
+-  assert(NumDecls > 1 && "Invalid DeclGroup");
+-  unsigned Size = sizeof(DeclGroup) + sizeof(Decl*) * NumDecls;
+-  void* Mem = C.Allocate(Size, llvm::AlignOf<DeclGroup>::Alignment);
+-  new (Mem) DeclGroup(NumDecls, Decls);
+-  return static_cast<DeclGroup*>(Mem);
+-}
++namespace clang {
++  DeclGroup* DeclGroup::Create(ASTContext &C, Decl **Decls, unsigned NumDecls) {
++    assert(NumDecls > 1 && "Invalid DeclGroup");
++    unsigned Size = sizeof(DeclGroup) + sizeof(Decl*) * NumDecls;
++    void* Mem = C.Allocate(Size, llvm::AlignOf<DeclGroup>::Alignment);
++    new (Mem) DeclGroup(NumDecls, Decls);
++    return static_cast<DeclGroup*>(Mem);
++  }
+ 
+-DeclGroup::DeclGroup(unsigned numdecls, Decl** decls) : NumDecls(numdecls) {
+-  assert(numdecls > 0);
+-  assert(decls);
+-  memcpy(this+1, decls, numdecls * sizeof(*decls));
+-}
++  DeclGroup::DeclGroup(unsigned numdecls, Decl** decls) : NumDecls(numdecls) {
++    assert(numdecls > 0);
++    assert(decls);
++    memcpy(this+1, decls, numdecls * sizeof(*decls));
++  }
 +
-+  /// operator== - Determine whether the specified DeclGroupRefs are identical.
-+  ///
-+  friend bool operator==(const DeclGroupRef LHS, const DeclGroupRef RHS) {
++  bool operator==(const DeclGroupRef LHS, const DeclGroupRef RHS) {
 +    if (LHS.D == RHS.D) {
 +      if (LHS.isSingleDecl() && RHS.isSingleDecl())
-+        return true;
++        return LHS.D->getKind() == RHS.D->getKind();
 +
 +      if (LHS.isDeclGroup() && RHS.isDeclGroup()){
 +        const DeclGroup &LDG = LHS.getDeclGroup();
@@ -21,7 +47,7 @@ Index: tools/clang/include/clang/AST/DeclGroup.h
 +          return false;
 +
 +        for (size_t i = 0; i < LDG.size(); ++i)
-+          if (LDG[i] != RDG[i])
++          if (LDG[i] != RDG[i] || LDG[i]->getKind() != RDG[i]->getKind())
 +            return false;
 +
 +        return true;
@@ -29,6 +55,19 @@ Index: tools/clang/include/clang/AST/DeclGroup.h
 +    }      
 +    return false;
 +  }
++} // end namespace clang
+Index: tools/clang/include/clang/AST/DeclGroup.h
+===================================================================
+--- tools/clang/include/clang/AST/DeclGroup.h	(revision 160362)
++++ tools/clang/include/clang/AST/DeclGroup.h	(working copy)
+@@ -128,6 +128,10 @@
+     X.D = static_cast<Decl*>(Ptr);
+     return X;
+   }
++
++  /// operator== - Determine whether the specified DeclGroupRefs are identical.
++  ///
++  friend bool operator==(const DeclGroupRef LHS, const DeclGroupRef RHS);
  };
  
  } // end clang namespace
