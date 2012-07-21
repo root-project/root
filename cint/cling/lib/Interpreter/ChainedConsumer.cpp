@@ -56,7 +56,7 @@ namespace cling {
 
   void ChainedDeserializationListener::ReaderInitialized(ASTReader* Reader) {
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
-      if (Consumer->IsConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
+      if (Consumer->isConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
         if (Listeners[i])
           Listeners[i]->ReaderInitialized(Reader);
   }
@@ -64,7 +64,7 @@ namespace cling {
   void ChainedDeserializationListener::IdentifierRead(serialization::IdentID ID,
                                                          IdentifierInfo* II) {
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
-      if (Consumer->IsConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
+      if (Consumer->isConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
         if (Listeners[i])
           Listeners[i]->IdentifierRead(ID, II);
   }
@@ -72,7 +72,7 @@ namespace cling {
   void ChainedDeserializationListener::TypeRead(serialization::TypeIdx Idx,
                                                    QualType T) {
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
-      if (Consumer->IsConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
+      if (Consumer->isConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
         if (Listeners[i])
           Listeners[i]->TypeRead(Idx, T);
   }
@@ -80,7 +80,7 @@ namespace cling {
   void ChainedDeserializationListener::DeclRead(serialization::DeclID ID,
                                                    const Decl* D) {
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
-      if (Consumer->IsConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
+      if (Consumer->isConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
         if (Listeners[i])
           Listeners[i]->DeclRead(ID, D);
   }
@@ -89,7 +89,7 @@ namespace cling {
                                                    serialization::SelectorID ID,
                                                        Selector Sel) {
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
-      if (Consumer->IsConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
+      if (Consumer->isConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
         if (Listeners[i])
           Listeners[i]->SelectorRead(ID, Sel);
   }
@@ -98,7 +98,7 @@ namespace cling {
                                          serialization::PreprocessedEntityID ID,
                                                           MacroDefinition* MD) {
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
-      if (Consumer->IsConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
+      if (Consumer->isConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
         if (Listeners[i])
           Listeners[i]->MacroDefinitionRead(ID, MD);
   }
@@ -147,7 +147,7 @@ namespace cling {
 
   void ChainedMutationListener::CompletedTagDefinition(const TagDecl* D) {
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
-      if (Consumer->IsConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
+      if (Consumer->isConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
         if (Listeners[i])
           Listeners[i]->CompletedTagDefinition(D);
   }
@@ -155,7 +155,7 @@ namespace cling {
   void ChainedMutationListener::AddedVisibleDecl(const DeclContext* DC,
                                                  const Decl* D) {
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
-      if (Consumer->IsConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
+      if (Consumer->isConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
         if (Listeners[i])
           Listeners[i]->AddedVisibleDecl(DC, D);
   }
@@ -163,7 +163,7 @@ namespace cling {
   void ChainedMutationListener::AddedCXXImplicitMember(const CXXRecordDecl* RD,
                                                        const Decl* D) {
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
-      if (Consumer->IsConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
+      if (Consumer->isConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
         if (Listeners[i])
           Listeners[i]->AddedCXXImplicitMember(RD, D);
   }
@@ -172,7 +172,7 @@ namespace cling {
    const ClassTemplateSpecializationDecl* D
    ) {
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
-      if (Consumer->IsConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
+      if (Consumer->isConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
         if (Listeners[i])
           Listeners[i]->AddedCXXTemplateSpecialization(TD, D);
   }
@@ -181,27 +181,27 @@ namespace cling {
    const FunctionDecl* D
    ) {
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
-      if (Consumer->IsConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
+      if (Consumer->isConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
         if (Listeners[i])
           Listeners[i]->AddedCXXTemplateSpecialization(TD, D);
   }
   void ChainedMutationListener::CompletedImplicitDefinition(
                                                         const FunctionDecl* D) {
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
-      if (Consumer->IsConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
+      if (Consumer->isConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
         if (Listeners[i])
           Listeners[i]->CompletedImplicitDefinition(D);
   }
   void ChainedMutationListener::StaticDataMemberInstantiated(const VarDecl* D) {
     for (size_t i = 0; i < ChainedConsumer::kConsumersCount; ++i)
-      if (Consumer->IsConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
+      if (Consumer->isConsumerEnabled((ChainedConsumer::EConsumerIndex)i))
         if (Listeners[i])
           Listeners[i]->StaticDataMemberInstantiated(D);
   }
 
   ChainedConsumer::ChainedConsumer()
-    :  Consumers(), MutationListener(0), DeserializationListener(0),
-       m_Context(0), m_Sema(0), m_CurTransaction(0) {
+    :  Consumers(), MutationListener(0), DeserializationListener(0), 
+       m_CurTransaction(0) {
 
     // Collect the mutation listeners and deserialization listeners of all
     // children, and create a multiplex listener each if so.
@@ -231,7 +231,6 @@ namespace cling {
   }
 
   void ChainedConsumer::Initialize(ASTContext& Context) {
-    m_Context = &Context;
     for (size_t i = 0; i < kConsumersCount; ++i)
       if (Exists((EConsumerIndex)i))
         Consumers[i]->Initialize(Context);
@@ -244,7 +243,7 @@ namespace cling {
     else {
       // Pass through the consumers
       for (size_t i = 0; i < kConsumersCount; ++i) {
-        if (IsConsumerEnabled((EConsumerIndex)i))
+        if (isConsumerEnabled((EConsumerIndex)i))
           hasNoErrors = hasNoErrors && Consumers[i]->HandleTopLevelDecl(D);
       }
     }
@@ -270,7 +269,7 @@ namespace cling {
 
   void ChainedConsumer::HandleTranslationUnit(ASTContext& Ctx) {
     for (size_t i = 0; i < kConsumersCount; ++i)
-      if (IsConsumerEnabled((EConsumerIndex)i))
+      if (isConsumerEnabled((EConsumerIndex)i))
         Consumers[i]->HandleTranslationUnit(Ctx);
   }
 
@@ -289,8 +288,6 @@ namespace cling {
   }
 
   void ChainedConsumer::InitializeSema(Sema& S) {
-    m_Sema = &S;
-
     for (size_t i = 0; i < kConsumersCount; ++i)
       if (Exists((EConsumerIndex)i))
         if (SemaConsumer* SC = dyn_cast<SemaConsumer>(Consumers[i]))
@@ -312,7 +309,7 @@ namespace cling {
     DeserializationListener->AddListener(I, C->GetASTDeserializationListener());
   }
 
-  bool ChainedConsumer::IsConsumerEnabled(EConsumerIndex I) {
+  bool ChainedConsumer::isConsumerEnabled(EConsumerIndex I) {
       if (!Exists(I))
         return false;
 

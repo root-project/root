@@ -78,7 +78,7 @@ namespace cling {
       return Consumers[I];
     }
 
-    bool IsConsumerEnabled(EConsumerIndex I);
+    bool isConsumerEnabled(EConsumerIndex I);
 
     void pushCompilationOpts(CompilationOptions CO) {
       COStack.push_back(CO);
@@ -114,9 +114,6 @@ namespace cling {
     llvm::SmallVector<CompilationOptions, 2> COStack;
     llvm::OwningPtr<ChainedMutationListener> MutationListener;
     llvm::OwningPtr<ChainedDeserializationListener> DeserializationListener;
-    clang::ASTContext* m_Context;
-    clang::Sema* m_Sema;
-
     Transaction* m_CurTransaction;
   };
 } // namespace cling
