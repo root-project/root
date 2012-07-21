@@ -24,7 +24,6 @@ namespace cling {
   class ChainedMutationListener;
   class ChainedDeserializationListener;
   class Transaction;
-  class VerifyingSemaConsumer;
 
   class ChainedConsumer: public clang::SemaConsumer {
 
@@ -81,7 +80,6 @@ namespace cling {
 
     bool IsConsumerEnabled(EConsumerIndex I);
 
-    void Update(VerifyingSemaConsumer* ESSC);
     void pushCompilationOpts(CompilationOptions CO) {
       COStack.push_back(CO);
     }

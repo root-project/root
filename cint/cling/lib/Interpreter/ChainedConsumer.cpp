@@ -330,8 +330,4 @@ namespace cling {
       return false;
   }
 
-  void ChainedConsumer::Update(VerifyingSemaConsumer* VSC) {
-    //RecoverFromError();
-  }
-
 } // namespace cling
