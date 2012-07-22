@@ -144,7 +144,7 @@ namespace cling {
 
     ///\brief Sets the nesting transaction of a nested transaction.
     ///
-    ///\param parent[in] - The nesting transaction.
+    ///\param[in] parent - The nesting transaction.
     ///
     void setParent(Transaction* parent) { m_Parent = parent; }
 
