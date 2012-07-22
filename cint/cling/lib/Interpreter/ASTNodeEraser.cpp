@@ -153,8 +153,6 @@ namespace cling {
     // Clean up the pending instantiations
     m_Sema->PendingInstantiations.clear();
     m_Sema->PendingLocalImplicitInstantiations.clear();
-    
-    m_Sema = 0;
   }
 
   void DeclReverter::PreVisitDecl(Decl *D) {

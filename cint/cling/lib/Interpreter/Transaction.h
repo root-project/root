@@ -99,7 +99,7 @@ namespace cling {
     }
     void setIssuedDiags(IssuedDiags val) { m_IssuedDiags = val; }
 
-    ///\ brief Returns the first declaration of the transaction.
+    ///\brief Returns the first declaration of the transaction.
     ///
     clang::DeclGroupRef getFirstDecl() const {
       if (!empty())
