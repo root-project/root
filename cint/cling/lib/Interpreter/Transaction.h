@@ -153,7 +153,7 @@ namespace cling {
 
     ///\brief Adds nested transaction to the transaction.
     ///
-    ///\param nested[in] - The transaction to be nested.
+    ///\param[in] nested - The transaction to be nested.
     ///
     void addNestedTransaction(Transaction* nested) {
       nested->setParent(nested);
