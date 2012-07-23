@@ -95,7 +95,7 @@ namespace {
       }
 
    // if this new object falls inside self, make sure its lifetime is proper
-      if ( pymeth->fSelf && ObjectProxy_Check( result ) ) {
+      if ( ObjectProxy_Check( pymeth->fSelf ) && ObjectProxy_Check( result ) ) {
          Long_t ptrdiff = (Long_t)((ObjectProxy*)result)->GetObject() - (Long_t)pymeth->fSelf->GetObject();
          if ( 0 <= ptrdiff && ptrdiff < (Long_t)pymeth->fSelf->ObjectIsA()->Size() ) {
             if ( PyObject_SetAttr( result, PyStrings::gLifeLine, (PyObject*)pymeth->fSelf ) == -1 )
