@@ -1924,6 +1924,25 @@ namespace {
    };
 
 
+//- TFile::Get -----------------------------------------------------------------
+   PyObject* TFileGetAttr( PyObject* self, PyObject* attr )
+   {
+   // Pythonization of TFile::Get that raises AttributeError on failure.
+      PyObject* result = CallPyObjMethod( self, "Get", attr );
+      if ( !result )
+         return result;
+
+      if ( !PyObject_IsTrue( result ) ) {
+         PyObject* astr = PyObject_Str( attr );
+         PyErr_Format( PyExc_AttributeError, "TFile object has no attribute \'%s\'",
+                       PyROOT_PyUnicode_AsString( astr ) );
+         Py_DECREF( astr );
+         Py_DECREF( result );
+         return 0;
+      }
+      return result;
+   }
+
 //- simplistic len() functions -------------------------------------------------
    PyObject* ReturnThree( ObjectProxy*, PyObject* ) {
       return PyInt_FromLong( 3 );
@@ -2244,7 +2263,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       return Utility::AddToClass( pyclass, "FitFCN", new TFitterFitFCN );
 
    if ( name == "TFile" )     // allow member-style access to entries in file
-      return Utility::AddToClass( pyclass, "__getattr__", "Get" );
+      return Utility::AddToClass( pyclass, "__getattr__", TFileGetAttr, METH_O );
 
    if ( name.substr(0,8) == "TVector3" ) {
       Utility::AddToClass( pyclass, "__len__", (PyCFunction) ReturnThree, METH_NOARGS );
