@@ -208,7 +208,7 @@ TGeoMatrix::~TGeoMatrix()
 {
 // Destructor
    if (IsRegistered() && gGeoManager) {
-      if (gGeoManager->GetListOfVolumes()) {
+      if (!gGeoManager->IsCleaning()) {
          gGeoManager->GetListOfMatrices()->Remove(this);
          Warning("dtor", "Registered matrix %s was removed", GetName());
       }

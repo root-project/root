@@ -76,6 +76,7 @@ private :
    Bool_t                fLoopVolumes;      //! flag volume lists loop
    Bool_t                fStreamVoxels;     // flag to allow voxelization I/O
    Bool_t                fIsGeomReading;    //! flag set when reading geometry
+   Bool_t                fIsGeomCleaning;   //! flag to notify that the manager is being destructed
    Bool_t                fPhiCut;           // flag for phi cuts
    Bool_t                fTimeCut;          // time cut for tracks
    Bool_t                fDrawExtra;        //! flag that the list of physical nodes has to be drawn
@@ -450,6 +451,7 @@ public:
    static TGeoManager    *Import(const char *filename, const char *name="", Option_t *option="");
    static Bool_t          IsLocked();
    Bool_t                 IsStreamingVoxels() const {return fStreamVoxels;}
+   Bool_t                 IsCleaning() const {return fIsGeomCleaning;}
 
    //--- list getters
    TObjArray             *GetListOfNodes()              {return fNodes;}

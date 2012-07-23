@@ -350,6 +350,7 @@ TGeoManager::TGeoManager()
       fDrawExtra = kFALSE;
       fStreamVoxels = kFALSE;
       fIsGeomReading = kFALSE;
+      fIsGeomCleaning = kFALSE;
       fClosed = kFALSE;
       fLoopVolumes = kFALSE;
       fBits = 0;
@@ -446,6 +447,7 @@ void TGeoManager::Init()
    fDrawExtra = kFALSE;
    fStreamVoxels = kFALSE;
    fIsGeomReading = kFALSE;
+   fIsGeomCleaning = kFALSE;
    fClosed = kFALSE;
    fLoopVolumes = kFALSE;
    fBits = new UChar_t[50000]; // max 25000 nodes per volume
@@ -524,6 +526,7 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fLoopVolumes(gm.fLoopVolumes),
   fStreamVoxels(gm.fStreamVoxels),
   fIsGeomReading(gm.fIsGeomReading),
+  fIsGeomCleaning(kFALSE),
   fPhiCut(gm.fPhiCut),
   fTimeCut(gm.fTimeCut),
   fDrawExtra(gm.fDrawExtra),
@@ -603,6 +606,7 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fLoopVolumes=gm.fLoopVolumes;
       fStreamVoxels=gm.fStreamVoxels;
       fIsGeomReading=gm.fIsGeomReading;
+      fIsGeomCleaning = kFALSE;
       fPhiCut=gm.fPhiCut;
       fTimeCut=gm.fTimeCut;
       fDrawExtra=gm.fDrawExtra;
@@ -657,6 +661,7 @@ TGeoManager::~TGeoManager()
 {
 //   Destructor
    if (gGeoManager != this) gGeoManager = this;
+   fIsGeomCleaning = kTRUE;
 
    if (gROOT->GetListOfFiles()) { //in case this function is called from TROOT destructor
       gROOT->GetListOfGeometries()->Remove(this);
@@ -695,6 +700,7 @@ TGeoManager::~TGeoManager()
       delete [] fKeyPNEId;
       delete [] fValuePNEId;
    }
+   fIsGeomCleaning = kFALSE;
    gGeoIdentity = 0;
    gGeoManager = 0;
 }
