@@ -21,6 +21,7 @@ void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
    if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
       pyobj->ObjectIsA()->Destructor( pyobj->fObject );
    }
+   pyobj->fObject = NULL;
 }
 
 
