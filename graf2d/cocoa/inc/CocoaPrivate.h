@@ -38,6 +38,7 @@
 @protocol X11Drawable;
 @protocol X11Window;
 
+@class ROOTApplicationDelegate;
 @class NSOpenGLContext;
 @class NSObject;
 
@@ -117,6 +118,8 @@ private:
 
    Handle_t fFreeGLContextID;
    Util::NSStrongReference<QuartzWindow> fFakeGLWindow;
+   
+   Util::NSScopeGuard<ROOTApplicationDelegate> fApplicationDelegate;
 };
 
 }//Details

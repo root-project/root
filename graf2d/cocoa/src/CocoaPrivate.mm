@@ -23,6 +23,7 @@
 #include <OpenGL/OpenGL.h>
 #include <Cocoa/Cocoa.h>
 
+#include "ROOTApplicationDelegate.h"
 #include "ROOTOpenGLView.h"
 #include "CocoaPrivate.h"
 #include "QuartzWindow.h"
@@ -36,7 +37,8 @@ namespace Details {
 CocoaPrivate::CocoaPrivate()
                : fCurrentDrawableID(GetRootWindowID() + 1), //Any real window has id > rootID.
                                                             //0 is also used by some X11 functions as None.
-                 fFreeGLContextID(1)
+                 fFreeGLContextID(1),
+                 fApplicationDelegate([[ROOTApplicationDelegate alloc] init])
 {
    //Init NSApplication, if it was not done yet.
    Util::AutoreleasePool pool;
