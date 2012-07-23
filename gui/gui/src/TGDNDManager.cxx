@@ -832,7 +832,6 @@ Bool_t TGDNDManager::HandleSelectionRequest(Event_t *event)
       gVirtualX->SendEvent(event->fUser[0], &xevent);
 
       return kTRUE;
-
    } else {
       return kFALSE;  // not for us...
    }

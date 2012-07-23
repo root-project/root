@@ -3139,8 +3139,9 @@ void TGCocoa::SendEvent(Window_t wid, Event_t *event)
    if (!wid || !event) //From TGX11.
       return;
 
-
-   fPimpl->fX11EventTranslator.fEventQueue.push_back(*event);
+   Event_t newEvent = *event;
+   newEvent.fWindow = wid;
+   fPimpl->fX11EventTranslator.fEventQueue.push_back(newEvent);
 }
 
 //______________________________________________________________________________
@@ -3295,7 +3296,7 @@ void TGCocoa::ConvertPrimarySelection(Window_t windowID, Atom_t clipboard, Time_
    
    const Util::AutoreleasePool pool;
    (void)clipboard;
-   
+
    //Noop.
 }
 
