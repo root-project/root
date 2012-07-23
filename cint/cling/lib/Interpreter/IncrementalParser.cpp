@@ -93,7 +93,7 @@ namespace cling {
     // If we are in the middle of transaction and we see another begin 
     // transaction - it must be nested transaction.
     if (OldCurT && !OldCurT->isCompleted()) {
-      OldCurT->addNestedTransaction(NewCurT);
+      OldCurT->addNestedTransaction(NewCurT); // takes the ownership
       return;
     }
 
@@ -218,7 +218,7 @@ namespace cling {
      if (getCodeGenerator()) {
        getCodeGenerator()->ReleaseModule();
      }
-     for (unsigned i = 0; i < m_Transactions.size(); ++i)
+     for (size_t i = 0; i < m_Transactions.size(); ++i)
        delete m_Transactions[i];
   }
 
