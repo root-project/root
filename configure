@@ -838,6 +838,9 @@ check_link() {
        fi
        cat <<EOF > conftest.mk
 include ${ac_srcdir}/config/Makefile.${arch}
+CC  = ${altcc}
+CXX = ${altcxx}
+LD  = ${altld}
 conftest: conftest.c
 	\$(CC) \$(CFLAGS) \$(LDFLAGS) \$< -o \$@ $linkdir $linklib
 
@@ -852,6 +855,9 @@ EOF
        fi
        cat <<EOF > conftest.mk
 include ${ac_srcdir}/config/Makefile.${arch}
+CC  = ${altcc}
+CXX = ${altcxx}
+LD  = ${altld}
 conftest:conftest.c
 	\$(CC) \$(CFLAGS) \$(LDFLAGS) \$< -o \$@ $linkdir $linklib
 
@@ -886,7 +892,7 @@ check_cxxopt() {
 
     # Assert that we got enough arguments
     if test $# -lt 1 ; then
-        echo "check_compopt: need at least one argument"
+        echo "check_cxxopt: need at least one argument"
         cxxopt_result=0
         return 1
     fi
@@ -897,6 +903,9 @@ check_cxxopt() {
     logmsg " trying to compile with option $cxxopt"
     cat <<EOF > conftest.mk
 include ${ac_srcdir}/config/Makefile.${arch}
+CC  = ${altcc}
+CXX = ${altcxx}
+LD  = ${altld}
 conftest: conftest.cxx
 	\$(CXX) \$(CFLAGS) $cxxopt \$(LDFLAGS) \$< -o \$@
 
