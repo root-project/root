@@ -274,18 +274,14 @@ void TMacOSXSystem::ProcessApplicationDefinedEvent(void *e)
    assert(event != nil && "AddFileActivityEvent, event parameter is nil");
    assert(event.type == NSApplicationDefined && "AddFileActivityEvent, event parameter has wrong type");
    
-   if (event.data2) {
-      gVirtualX->DispatchClientMessage(event.data2);
-   } else {
-      std::map<int, Private::MacOSXSystem::DescriptorType>::iterator fdIter = fPimpl->fFileDescriptors.find(event.data1);
-      assert(fdIter != fPimpl->fFileDescriptors.end() && "WaitForAllEvents, file descriptor from NSEvent not found");
-      if (fdIter->second == Private::MacOSXSystem::kDTRead)
-         fReadready->Set(event.data1);
-      else
-         fWriteready->Set(event.data1);
-      
-      ++fNfd;
-   }
+   std::map<int, Private::MacOSXSystem::DescriptorType>::iterator fdIter = fPimpl->fFileDescriptors.find(event.data1);
+   assert(fdIter != fPimpl->fFileDescriptors.end() && "WaitForAllEvents, file descriptor from NSEvent not found");
+   if (fdIter->second == Private::MacOSXSystem::kDTRead)
+      fReadready->Set(event.data1);
+   else
+      fWriteready->Set(event.data1);
+   
+   ++fNfd;
 }
 
 //______________________________________________________________________________
@@ -382,6 +378,14 @@ void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
 
       //Wait for GUI events and for something else, like read/write from stdin/stdout (?).
       WaitEvents(nextto);
+      
+      if (gXDisplay && gXDisplay->Notify()) {
+         gVirtualX->Update(2);
+         gVirtualX->Update(3);
+         if (!pendingOnly) 
+            return;
+      }      
+
       if (pendingOnly)
          return;
    }

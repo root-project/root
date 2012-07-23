@@ -253,7 +253,6 @@ TGCocoa::TGCocoa()
               fDrawMode(kCopy),
               fDirectDraw(false),
               fForegroundProcess(false),
-              fCurrentMessageID(1),
               fTargetString(31),//Gdk has hardcoded GDK_TARGET_STRING, which is 31.
               fSelectionOwner(kNone),
               fSetIcon(true)
@@ -285,7 +284,6 @@ TGCocoa::TGCocoa(const char *name, const char *title)
               fDrawMode(kCopy),
               fDirectDraw(false),
               fForegroundProcess(false),
-              fCurrentMessageID(1),
               fTargetString(31),//Gdk has hardcoded GDK_TARGET_STRING, which is 31.
               fSelectionOwner(kNone),
               fSetIcon(true)
@@ -720,7 +718,6 @@ void TGCocoa::DestroyWindow(Window_t wid)
    if (gClient->GetWaitForEvent() == kDestroyNotify && wid == gClient->GetWaitForWindow())
       gClient->SetWaitForWindow(kNone);
 
-   RemoveEventsForWindow(wid);
    fPimpl->DeleteDrawable(wid);
 }
 
@@ -948,8 +945,6 @@ void TGCocoa::UnmapWindow(Window_t wid)
    //Interrupt modal loop (TGClient::WaitForUnmap).
    if (gClient->GetWaitForEvent() == kUnmapNotify && gClient->GetWaitForWindow() == wid)
       gClient->SetWaitForWindow(kNone);
-   
-   //RemoveEventsForWindow(wid);//????
 }
 
 //______________________________________________________________________________
@@ -3135,40 +3130,6 @@ void TGCocoa::SetDrawMode(EDrawMode mode)
 
 //Event management part.
 
-/////////////////////////////////////////////////////////
-// Next three functions are quite ugly piece of code. 
-// SendEvent is called by GUI classes to, for example,
-// execute menu actions or for similar purposes (button was pressed/released). 
-//
-// Problems:
-// 1. I can not dispatch them immediately: 
-// some commands can call DestroWindow(DestroySubwindows),
-// for example, on button release event in a dialog, and at the same time
-// on button release event GUI wants to repaint unpressed button (for example). 
-// But if window was deleted, repaint will cause a crash. So, event is "sent" - 
-// I put it into NSApplication's event queue. This
-// also has an obvious problem: 
-// 2. I put it into NSApplication event queue, and it
-// will be (probably) extracted and processed almost immediately after I put it here.
-// So in case we execute something heavy and time-consuming, GUI (probably) will "hang".
-// 3. Next problem, during execution of sent events, window can be destroyed before
-// all events for this window were processed.
-//
-// For now the solution is the following:
-// a) SendEvent creates NSEvent (of type NSApplicationDefined) and puts it into event queue.
-// MessageID for this event is "allocated" and saved in data2 property of NSEvent.
-// Map Window_t -> events_for_window is filled.
-// b) TMacOSXSystem extracts user-defined event from the queue and tries to execute it, using messageID - 
-// calls DispatchClientMessage function. DispatchClientMessage checks, if Event_t for messageID
-// can be found, and if yes (this assumes window is alive yet) calls window->HandleEvent(clientMessage).
-// If DestroyWindow is called for window, I also check, if any events for this window
-// were queued and delete them, so if event queue still has events for this window (this can happen :( ) -
-// they will not be executed.
-//
-// TODO: One thing I can try, instead of NSApplication's queue use queue data member in TGCocoa,
-// and process queued messages at the end of event loop's iteration (this solution, probably,
-// will have the same problems as NSApplication's queue).
-
 //______________________________________________________________________________
 void TGCocoa::SendEvent(Window_t wid, Event_t *event)
 {
@@ -3178,93 +3139,43 @@ void TGCocoa::SendEvent(Window_t wid, Event_t *event)
    if (!wid || !event) //From TGX11.
       return;
 
-   UInt_t messageID = fCurrentMessageID;
-   if (fFreeMessageIDs.size()) {
-      messageID = fFreeMessageIDs.back();
-      fFreeMessageIDs.pop_back();
-   } else
-      ++fCurrentMessageID;
-   
-   //Window 'wid' has an event with number 'messageID' in a NSApplication's queue.
-   fClientMessagesToWindow[wid].push_back(messageID);
 
-   const ClientMessage_t newMessage(wid, *event);
-   assert(fClientMessages.find(messageID) == fClientMessages.end() && "SendEvent, messageID is already busy");
-   fClientMessages[messageID] = newMessage;
-   
-   NSEvent * const cocoaEvent = [NSEvent otherEventWithType : NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
-                                 timestamp: 0. windowNumber : 0 context : nil subtype : 0 data1 : 0 data2 : NSInteger(messageID)];
-   [NSApp postEvent : cocoaEvent atStart : NO];
+   fPimpl->fX11EventTranslator.fEventQueue.push_back(*event);
 }
 
 //______________________________________________________________________________
-void TGCocoa::DispatchClientMessage(UInt_t messageID)
+void TGCocoa::NextEvent(Event_t &event)
 {
-   assert(messageID != 0 && "DispatchClientMessage, messageID parameter is 0");
-
-   message_iterator messageIter = fClientMessages.find(messageID);
-   if (messageIter == fClientMessages.end()) {
-      //Window for such event was deleted already?
-      return;
-   }
-
-   NSObject<X11Drawable> * const widget = fPimpl->GetDrawable(messageIter->second.first);//:)
-   assert(widget.fID != 0 && "DispatchClientMessage, widget.fID is 0");
+   assert(fPimpl->fX11EventTranslator.fEventQueue.size() > 0 && "NextEvent, event queue is empty");
    
-   TGWindow * const window = gClient->GetWindowById(widget.fID);
-   Event_t clientMessage = messageIter->second.second;
-
-   fClientMessages.erase(messageIter);   
-   fFreeMessageIDs.push_back(messageID);
-
-   //Many thanks to ROOT's GUI, TGWindow can be deleted, but QuartzViews is still alive
-   //(DestroyWindow is never called for this window).
-   if (window)
-      window->HandleEvent(&clientMessage);
-}
-
-//______________________________________________________________________________
-void TGCocoa::RemoveEventsForWindow(Window_t wid)
-{
-   //Window 'wid' will be deleted, do not process any events for it (if
-   //we have any in NSApplication's queue).
-   //Remove events for window 'wid', recycle event IDs for future use.
-   //Remove entry for window 'wid' and all its event IDs.
-   typedef std::vector<UInt_t>::size_type size_type;
-
-   message_window_iterator iter = fClientMessagesToWindow.find(wid);
-   if (iter != fClientMessagesToWindow.end()) {
-      const std::vector<UInt_t> &messages = iter->second;
-      for (size_type i = 0, e = messages.size(); i < e; ++i) {
-         message_iterator messageIter = fClientMessages.find(messages[i]);
-         if (messageIter != fClientMessages.end()) {//May be, it was deleted already as a result of some DispatchClientMessage??
-            fClientMessages.erase(messageIter);
-            fFreeMessageIDs.push_back(messages[i]);
-         }
-      }
-
-      fClientMessagesToWindow.erase(iter);
-   }
-}
-
-//______________________________________________________________________________
-void TGCocoa::NextEvent(Event_t &/*event*/)
-{
-   //At the moment TGCocoa does not have any event queue. (this is different in cocoa_exp dev branch).
+   event = fPimpl->fX11EventTranslator.fEventQueue.front();
+   fPimpl->fX11EventTranslator.fEventQueue.pop_front();
 }
 
 //______________________________________________________________________________
 Int_t TGCocoa::EventsPending()
 {
-   //At the moment TGCocoa does not have any event queue. (this is different in cocoa_exp dev branch).
-   return 0;
+   return (Int_t)fPimpl->fX11EventTranslator.fEventQueue.size();
 }
 
 
 //______________________________________________________________________________
-Bool_t TGCocoa::CheckEvent(Window_t /*wid*/, EGEventType /*type*/, Event_t & /*ev*/)
+Bool_t TGCocoa::CheckEvent(Window_t windowID, EGEventType type, Event_t &event)
 {
-   //At the moment TGCocoa does not have any event queue. (this is different in cocoa_exp dev branch).
+   typedef X11::EventQueue_t::iterator iterator_type;
+   
+   iterator_type it = fPimpl->fX11EventTranslator.fEventQueue.begin();
+   iterator_type eIt = fPimpl->fX11EventTranslator.fEventQueue.end();
+   
+   for (; it != eIt; ++it) {
+      const Event_t &queuedEvent = *it;
+      if (queuedEvent.fWindow == windowID && queuedEvent.fType == type) {
+         event = queuedEvent;
+         fPimpl->fX11EventTranslator.fEventQueue.erase(it);
+         return kTRUE;
+      }
+   }
+
    return kFALSE;
 }
 
@@ -3419,7 +3330,7 @@ Int_t TGCocoa::GetProperty(Window_t windowID, Atom_t propertyID, Long_t, Long_t,
    //TODO: actually, property can be set for a 'root' window. I have to save this data somehow.
    if (fPimpl->IsRootWindow(windowID))
       return 0;
-   
+
    assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "GetProperty, windowID is not a valid window id");
    assert(propertyID > 0 && propertyID <= fAtomToName.size() && "GetProperty, propertyID parameter is not a valid atom");
    assert(actualType != 0 && "GetProperty, actualType parameter is null");

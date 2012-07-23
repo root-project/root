@@ -13,6 +13,7 @@
 #define ROOT_X11Events
 
 #include <vector>
+#include <deque>
 
 #ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
@@ -26,6 +27,8 @@
 // EventTranslator tries to emulate X11 behavior.                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+class TGCocoa;
 
 @protocol X11Window;
 
@@ -51,8 +54,10 @@ enum PointerGrab {
    kPGPassiveGrab
 };
 
-class EventTranslator {
+typedef std::deque<Event_t> EventQueue_t;
 
+class EventTranslator {
+   friend class ::TGCocoa;
 public:
    EventTranslator();
 
@@ -100,7 +105,6 @@ private:
 
    void GenerateButtonReleaseEventNoGrab(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
    void GenerateButtonReleaseEventActiveGrab(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
-   bool CancelImplicitOrPassiveGrab();
    
    void GenerateKeyPressEventNoGrab(NSEvent *theEvent);
    void GenerateKeyReleaseEventNoGrab(NSEvent *theEvent);
@@ -130,6 +134,7 @@ private:
    NSView<X11Window> *fFocusView;
    
    std::vector<QuartzWindow *> fWindowStack;
+   EventQueue_t fEventQueue;
 };
 
 void MapUnicharToKeySym(unichar key, char *buf, Int_t len, UInt_t &rootKeySym);
