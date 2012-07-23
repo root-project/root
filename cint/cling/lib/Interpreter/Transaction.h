@@ -51,6 +51,8 @@ namespace cling {
     Transaction() : m_Completed(false), m_Parent(0), m_State(kUnknown), 
                     m_IssuedDiags(kNone) {}
 
+    ~Transaction();
+
     enum State {
       kUnknown,
       kRolledBack,
