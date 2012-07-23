@@ -35,7 +35,7 @@
 {
    //Popup windows, menus, color-selectors, etc. - they all have
    //a problem: due to some reason, Cocoa changes the z-stack order
-   //of such a window during switching application (using alt-tab).
+   //of such a window while switching between applications (using alt-tab, for example).
    //This leads to a very annoying effect: you open a menu, alt-tab,
    //alt-tab back and ... popup or menu is now behind the main window.
    //I have to save/restore this z-stack order here.
@@ -72,7 +72,7 @@
 {
    //Popup windows, menus, color-selectors, etc. - they all have
    //a problem: due to some reason, Cocoa changes the z-stack order
-   //of such a window during switching application (using alt-tab).
+   //of such a window while switching between applications (using alt-tab, for example).
    //This leads to a very annoying effect: you open a menu, alt-tab,
    //alt-tab back and ... popup or menu is now behind the main window.
    //I have to save/restore this z-stack order here.
