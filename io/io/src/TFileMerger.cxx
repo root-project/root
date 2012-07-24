@@ -683,7 +683,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                                    obj->GetName(), obj->GetTitle());
                            status = kFALSE;
                         }
-                        delete nobj;
+                        cl->Destructor(nobj); // just in case the class is not loaded.
                      }
                   }
                   nextsource = (TFile*)sourcelist->After( nextsource );
@@ -716,10 +716,11 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                delete obj;
             } else {
                // Don't overwrite, if the object were not merged.
+               // NOTE: this is probably wrong for emulated objects.
                if ( obj->Write( oldkeyname, canBeMerged ? TObject::kOverwrite : 0) <= 0) {
                   status = kFALSE;
                }
-               delete obj;
+               cl->Destructor(obj); // just in case the class is not loaded.
             }
             info.Reset();
          } // while ( ( TKey *key = (TKey*)nextkey() ) )
