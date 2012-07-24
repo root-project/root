@@ -162,6 +162,10 @@ namespace cling {
 
     m_Consumer->HandleTranslationUnit(getCI()->getASTContext());
     CurT->setState(Transaction::kCommitted);
+
+    if (!m_SyntaxOnly) {
+      m_Interpreter->runStaticInitializersOnce();
+    }
   }
 
   void IncrementalParser::rollbackTransaction(Transaction* T) const {
@@ -266,10 +270,6 @@ namespace cling {
 
     DClient.EndSourceFile();
     m_CI->getDiagnostics().Reset();
-
-    if (!m_SyntaxOnly) {
-      m_Interpreter->runStaticInitializersOnce();
-    }
 
     return Result;
   }
