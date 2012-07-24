@@ -476,7 +476,7 @@ namespace cling {
 
         // Get rid of the declaration. If the declaration has name we should
         // heal the lookup tables as well
-        Successful = Successful && RevertDecl(*Di);
+        Successful = RevertDecl(*Di) && Successful;
         assert(Successful && "Cannot handle that yet!");
       }
     }
