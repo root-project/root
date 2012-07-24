@@ -40,8 +40,9 @@ class XrdProofdConfig;
 class XrdProofdManager;
 class XrdProofdProtocol;
 class XrdProtocol_Config;
-class XrdSysError;
 class XrdSecService;
+class XrdSysError;
+class XrdSysPlugin;
 
 
 class XrdProofdClientMgr : public XrdProofdConfig {
@@ -49,7 +50,8 @@ class XrdProofdClientMgr : public XrdProofdConfig {
    XrdSysRecMutex    *fMutex;
    XrdProofdManager  *fMgr;
    XrdOucString       fSecLib;
-   XrdSecService     *fCIA;            // Authentication Server
+   XrdSecService     *fCIA;            // Security framework
+   XrdSysPlugin      *fSecPlugin;      // Security framework plugin
 
    int                fCheckFrequency;
    XrdProofdPipe      fPipe;
