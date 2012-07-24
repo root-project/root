@@ -1202,19 +1202,30 @@ void print_mask_info(ULong_t mask)
    assert(fContentView != nil && "sendEvent, content view is nil");
 
    if (theEvent.type == NSLeftMouseDown || theEvent.type == NSRightMouseDown) {
+      bool generateFakeRelease = false;
+      
       const NSPoint windowPoint = [theEvent locationInWindow];
+      
+      if (windowPoint.x <= 4 || windowPoint.x >= self.fWidth - 4)
+         generateFakeRelease = true;
+         
+      if (windowPoint.y <= 4 || windowPoint.y >= self.fHeight - 4)
+         generateFakeRelease = true;
+         
       const NSPoint viewPoint =  [fContentView convertPointFromBase : windowPoint];
-      if (viewPoint.y <= 0 && windowPoint.y >= 0) {
-         //Very special case: mouse is in a title bar. 
-         //There are not NSView<X11Window> object in this area,
-         //this event will never go to any QuartzView, and this
-         //can be a problem: if drop-down menu is open and
-         //you move window using title-bar, ROOT's menu will
-         //"fell through" the main window, which is weird.
-         TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-         assert(vx != 0 && "sendEvent, gVirtualX is either null or not of TGCocoa type");
-         if (vx->GetEventTranslator()->HasPointerGrab())
-            vx->GetEventTranslator()->GenerateButtonReleaseEvent(fContentView, theEvent, theEvent.type == NSLeftMouseDown ? kButton1 : kButton3);//yes, button release???
+
+      if (viewPoint.y <= 0 && windowPoint.y >= 0)
+         generateFakeRelease = true;
+
+      TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
+      assert(vx != 0 && "sendEvent, gVirtualX is either null or not of TGCocoa type");
+      if (vx->GetEventTranslator()->HasPointerGrab() && generateFakeRelease) {
+         vx->GetEventTranslator()->GenerateButtonReleaseEvent(fContentView, theEvent, theEvent.type == NSLeftMouseDown ? kButton1 : kButton3);//yes, button release???
+
+         //Yes, ignore this event completely (this means, you are not able to immediately start
+         //resizing a window, if some popup is open. Actually, this is more or less
+         //the same as with X11.app and X11 version.
+         return;
       }
    }
 
@@ -2276,7 +2287,7 @@ void print_mask_info(ULong_t mask)
 - (void) mouseDown : (NSEvent *) theEvent
 {
    assert(fID != 0 && "mouseDown, fID is 0");
-   
+
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "mouseDown, gVirtualX is either null or has a type, different from TGCocoa");
    vx->GetEventTranslator()->GenerateButtonPressEvent(self, theEvent, kButton1);
