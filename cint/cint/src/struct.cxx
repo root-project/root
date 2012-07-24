@@ -47,6 +47,21 @@ int G__defined_tagname(const char* tagname, int noerror);
 int G__search_tagname(const char* tagname, int type);
 
 
+void NameMap::Remove(const char* name, int idx) {
+   NameMap_t::iterator iMap = fMap.find(name);
+   if (iMap != fMap.end()) {
+      iMap->second.erase(idx);
+      if (iMap->second.empty())
+         fMap.erase(iMap);
+      else {
+         // We need to reinsert it with a different index
+         const char *new_name = G__struct.name[*(iMap->second.begin())];
+         fMap[new_name] = iMap->second;
+         fMap.erase(iMap);            
+      }
+   }
+}
+
 //______________________________________________________________________________
 char* G__savestring(char** pbuf, char* name)
 {
