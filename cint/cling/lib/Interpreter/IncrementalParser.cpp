@@ -120,18 +120,6 @@ namespace cling {
     }
   }
 
-  void IncrementalParser::commitTransaction(const Transaction* T) const {
-    assert(T->isCompleted() && "Transaction not ended!?");
-    const Transaction* OldT = m_Consumer->getTransaction();
-    if (OldT != T)
-      m_Consumer->setTransaction(T);
-
-    commitCurrentTransaction();
-
-    if (OldT != T)
-      m_Consumer->setTransaction(OldT);
-  }
-
   void IncrementalParser::commitCurrentTransaction() const {
     Transaction* CurT = m_Consumer->getTransaction();
     assert(CurT->isCompleted() && "Transaction not ended!?");

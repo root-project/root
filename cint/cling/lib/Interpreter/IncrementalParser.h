@@ -104,13 +104,6 @@ namespace cling {
     ///
     void endTransaction() const;
 
-    ///\brief Commits a given transaction. I.e pipes it through the consumer
-    /// chain including codegen.
-    ///
-    ///\param[in] T - The transaction to be committed.
-    ///
-    void commitTransaction(const Transaction* T) const;
-
     ///\brief Commits the current transaction if it was compete. I.e pipes it 
     /// through the consumer chain, including codegen.
     ///

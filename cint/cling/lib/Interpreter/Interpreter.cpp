@@ -558,7 +558,7 @@ namespace cling {
     QualType RetTy = getCI()->getASTContext().VoidTy;
 
     if (V) {
-      Transaction* CurT = m_IncrParser->Parse(Wrapper);
+      const Transaction* CurT = m_IncrParser->Parse(Wrapper);
       assert(CurT->size() && "No decls created by Parse!");
 
       // Find the wrapper function declaration.
@@ -628,7 +628,7 @@ namespace cling {
 
       TheSema.CurContext = CurContext;
 
-      m_IncrParser->commitTransaction(CurT);
+      m_IncrParser->commitCurrentTransaction();
     }
     else
       m_IncrParser->Compile(Wrapper, CO);
