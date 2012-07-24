@@ -563,6 +563,8 @@ void TGCocoa::ResizeWindow(Int_t windowID)
    
    assert(!fPimpl->IsRootWindow(windowID) && "ResizeWindow, windowID parameter is a 'root' window");
    
+   const Util::AutoreleasePool pool;
+   
    NSObject<X11Window> * const window = fPimpl->GetWindow(windowID);
    if (window.fBackBuffer) {
       const Drawable_t currentDrawable = fSelectedDrawable;
@@ -918,7 +920,8 @@ void TGCocoa::MapRaised(Window_t wid)
    // stack of all windows.
    
    assert(!fPimpl->IsRootWindow(wid) && "MapRaised, called for 'root' window");
-   //ROOT::MacOSX::Util::AutoreleasePool pool;//TODO
+   
+   const Util::AutoreleasePool pool;
 
    if (MakeProcessForeground())
       [fPimpl->GetWindow(wid) mapRaised];
