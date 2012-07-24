@@ -37,7 +37,7 @@ CXXFLAGS     += -wd1572
 CFLAGS       += -wd1572
 CINTCXXFLAGS += -wd1572
 CINTCFLAGS   += -wd1572
-ICC_GE_9      = 9
+ICC_GE_9      = $(ICC_MAJOR)
 endif
 
 ifeq ($(ICC_MAJOR),10)
@@ -45,19 +45,19 @@ CXXFLAGS     += -wd1572 -wd873 -wd672
 CFLAGS       += -wd1572
 CINTCXXFLAGS += -wd1572 -wd873
 CINTCFLAGS   += -wd1572
-ICC_GE_9      = 10
+ICC_GE_9      = $(ICC_MAJOR)
 ifneq ($(ICC_MINOR),0)
-ICC_GE_101    = 101
+ICC_GE_101    = $(ICC_MAJOR)$(ICC_MINOR)
 endif
 endif
 
-ifeq ($(ICC_MAJOR),11)
-CXXFLAGS     += -wd1572 -wd873 -wd672
-CFLAGS       += -wd1572
-CINTCXXFLAGS += -wd1572 -wd873
-CINTCFLAGS   += -wd1572
-ICC_GE_9      = 11
-ICC_GE_101    = 110
+ifeq ($(findstring $(ICC_MAJOR),10 9),)
+CXXFLAGS     += -m64 -wd1572 -wd873 -wd672
+CFLAGS       += -m64 -wd1572
+CINTCXXFLAGS += -m64 -wd1572 -wd873
+CINTCFLAGS   += -m64 -wd1572
+ICC_GE_9      = $(ICC_MAJOR)
+ICC_GE_101    = $(ICC_MAJOR)$(ICC_MINOR)
 endif
 
 # Linker:
