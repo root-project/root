@@ -1287,14 +1287,8 @@ public:
    void Insert(const char* name, int idx) {
       fMap[name].insert(idx); 
    }
-   void Remove(const char* name, int idx) {
-      NameMap_t::iterator iMap = fMap.find(name);
-      if (iMap != fMap.end()) {
-         iMap->second.erase(idx);
-         if (iMap->second.empty())
-            fMap.erase(iMap);
-      }
-   }
+   void Remove(const char* name, int idx);
+
    Range Find(const char* name) {
       NameMap_t::const_iterator iMap = fMap.find(name);
       if (iMap != fMap.end() && !iMap->second.empty())
