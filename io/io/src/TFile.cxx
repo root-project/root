@@ -649,6 +649,12 @@ void TFile::Init(Bool_t create)
          frombuf(buffer, &fSeekInfo);
          frombuf(buffer, &fNbytesInfo);
       }
+      if (fBEGIN < 0 || fBEGIN > fEND) {
+         // humm fBEGIN is wrong ....
+         Error("Init","file %s has an incorrect header length (%lld) or incorrect end of file length (%lld)",
+               GetName(),fBEGIN,fEND);
+         goto zombie;
+      }
       fSeekDir = fBEGIN;
       //*-*-------------Read Free segments structure if file is writable
       if (fWritable) {
@@ -664,6 +670,12 @@ void TFile::Init(Bool_t create)
       char *buffer_keyloc = 0;
 
       Int_t nbytes = fNbytesName + TDirectoryFile::Sizeof();
+      if ( (nbytes + fBEGIN) > fEND) {
+         // humm fBEGIN is wrong ....
+         Error("Init","file %s has an incorrect header length (%lld) or incorrect end of file length (%lld)",
+              GetName(),fBEGIN+nbytes,fEND);
+         goto zombie;
+      }
       if (nbytes+fBEGIN > kBEGIN+200) {
          delete [] header;
          header       = new char[nbytes];
