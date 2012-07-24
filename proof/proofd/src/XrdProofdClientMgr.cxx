@@ -33,6 +33,7 @@
 #include "XrdOuc/XrdOucErrInfo.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSec/XrdSecInterface.hh"
+#include "XrdSys/XrdSysPlugin.hh"
 
 #include "XrdProofdClient.h"
 #include "XrdProofdClientMgr.h"
@@ -116,7 +117,7 @@ void *XrdProofdClientCron(void *p)
 //______________________________________________________________________________
 XrdProofdClientMgr::XrdProofdClientMgr(XrdProofdManager *mgr,
                                        XrdProtocol_Config *pi, XrdSysError *e)
-                  : XrdProofdConfig(pi->ConfigFN, e)
+                  : XrdProofdConfig(pi->ConfigFN, e), fSecPlugin(0)
 {
    // Constructor
    XPDLOC(CMGR, "XrdProofdClientMgr")
@@ -1191,19 +1192,17 @@ XrdSecService *XrdProofdClientMgr::LoadSecurity()
       return 0;
    }
 
-   // Open the security library
-   void *lh = 0;
-   if (!(lh = dlopen(seclib, RTLD_NOW))) {
-      TRACE(XERR, dlerror()<<" opening shared library "<< seclib);
-      return 0;
+   // Create the plug-in instance
+   if (!(fSecPlugin = new XrdSysPlugin((fEDest ? fEDest : (XrdSysError *)0), seclib))) {
+      TRACE(XERR, "could not create plugin instance for "<<seclib);
+      return (XrdSecService *)0;
    }
 
-   // Get the server object creator
-   XrdSecServLoader_t ep = 0;
-   if (!(ep = (XrdSecServLoader_t)dlsym(lh, "XrdSecgetService"))) {
-      TRACE(XERR, dlerror() <<" finding XrdSecgetService() in "<<seclib);
-      dlclose(lh);
-      return 0;
+   // Get the function
+   XrdSecServLoader_t ep = (XrdSecServLoader_t) fSecPlugin->getPlugin("XrdSecgetService");
+   if (!ep) {
+      TRACE(XERR, "could not find 'XrdSecgetService()' in "<<seclib);
+      return (XrdSecService *)0;
    }
 
    // Extract in a temporary file the directives prefixed "xpd.sec..." (filtering
@@ -1211,7 +1210,7 @@ XrdSecService *XrdProofdClientMgr::LoadSecurity()
    int nd = 0;
    char *rcfn = FilterSecConfig(nd);
    if (!rcfn) {
-      dlclose(lh);
+      SafeDelete(fSecPlugin);
       if (nd == 0) {
          // No directives to be processed
          TRACE(XERR, "no security directives: strong authentication disabled");
@@ -1226,7 +1225,7 @@ XrdSecService *XrdProofdClientMgr::LoadSecurity()
    XrdSecService *cia = 0;
    if (!(cia = (*ep)((fEDest ? fEDest->logger() : (XrdSysLogger *)0), rcfn))) {
       TRACE(XERR, "Unable to create security service object via " << seclib);
-      dlclose(lh);
+      SafeDelete(fSecPlugin);
       unlink(rcfn);
       delete[] rcfn;
       return 0;
@@ -1237,7 +1236,6 @@ XrdSecService *XrdProofdClientMgr::LoadSecurity()
    // Unlink the temporary file and cleanup its path
    unlink(rcfn);
    delete[] rcfn;
-   dlclose(lh);
 
    // All done
    return cia;
