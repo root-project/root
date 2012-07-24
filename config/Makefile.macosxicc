@@ -50,21 +50,12 @@ ICC_MINOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$3 }' | \
                 cut -d'.' -f2)
 endif
 
-ifeq ($(ICC_MAJOR),8)
-ifneq ($(ICC_MINOR),0)
-CXXFLAGS     += -wd1572
-CFLAGS       += -wd1572
-CINTCXXFLAGS += -wd1572
-CINTCFLAGS   += -wd1572
-endif
-endif
-
 ifeq ($(ICC_MAJOR),9)
 CXXFLAGS     += -wd1572 -wd873 -wd672
 CFLAGS       += -wd1572
 CINTCXXFLAGS += -wd1572 -wd873
 CINTCFLAGS   += -wd1572
-ICC_GE_9      = 9
+ICC_GE_9      = $(ICC_MAJOR)
 endif
 
 ifeq ($(ICC_MAJOR),10)
@@ -72,28 +63,19 @@ CXXFLAGS     += -wd1572 -wd873 -wd672
 CFLAGS       += -wd1572
 CINTCXXFLAGS += -wd1572 -wd873
 CINTCFLAGS   += -wd1572
-ICC_GE_9      = 10
+ICC_GE_9      = $(ICC_MAJOR)
 ifneq ($(ICC_MINOR),0)
-ICC_GE_101    = 101
+ICC_GE_101    = $(ICC_MAJOR)$(ICC_MINOR)
 endif
 endif
 
-ifeq ($(ICC_MAJOR),11)
+ifeq ($(findstring $(ICC_MAJOR),10 9),)
 CXXFLAGS     += -wd1572 -wd873 -wd672 -wd279
 CFLAGS       += -wd1572 -wd279
 CINTCXXFLAGS += -wd1572 -wd873 -wd279
 CINTCFLAGS   += -wd1572 -wd279
-ICC_GE_9      = 11
-ICC_GE_101    = 110
-endif
-
-ifeq ($(ICC_MAJOR),12)
-CXXFLAGS     += -wd1572 -wd873 -wd672 -wd279
-CFLAGS       += -wd1572 -wd279
-CINTCXXFLAGS += -wd1572 -wd873 -wd279
-CINTCFLAGS   += -wd1572 -wd279
-ICC_GE_9      = 12
-ICC_GE_101    = 120
+ICC_GE_9      = $(ICC_MAJOR)
+ICC_GE_101    = $(ICC_MAJOR)$(ICC_MINOR)
 endif
 
 # Linker:
@@ -117,7 +99,7 @@ SOFLAGS       = -dynamiclib -single_module \
 endif
 endif
 ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
-ifeq ($(ICC_MAJOR),11)
+ifeq ($(findstring $(ICC_MAJOR),10 9),)
 SOEXT         = so
 # not yet supported by icc 10.x xilibtool
 else
@@ -137,7 +119,7 @@ CILIBS        = -lm $(EXTRA_LDFLAGS) -ldl
 ifeq ($(F77),ifort)
 F77           = ifort
 F77FLAGS      = -fPIC
-ifeq ($(ICC_MAJOR),12)
+ifeq ($(findstring $(ICC_MAJOR),11 10 9),)
 ifneq ($(subst ia32,,$(shell which ifort)),$(shell which ifort))
 F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ia32/ifort|compiler/lib|') \
                 -lifcore

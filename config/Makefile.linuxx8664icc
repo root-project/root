@@ -51,7 +51,7 @@ CXXFLAGS     += -wd1572
 CFLAGS       += -wd1572
 CINTCXXFLAGS += -wd1572
 CINTCFLAGS   += -wd1572
-ICC_GE_9      = 9
+ICC_GE_9      = $(ICC_MAJOR)
 endif
 
 ifeq ($(ICC_MAJOR),10)
@@ -59,30 +59,20 @@ CXXFLAGS     += -wd1572
 CFLAGS       += -wd1572
 CINTCXXFLAGS += -wd1572
 CINTCFLAGS   += -wd1572
-ICC_GE_9      = 10
+ICC_GE_9      = $(ICC_MAJOR)
 ifneq ($(ICC_MINOR),0)
-ICC_GE_101    = 101
+ICC_GE_101    = $(ICC_MAJOR)$(ICC_MINOR)
 endif
 endif
 
-ifeq ($(ICC_MAJOR),11)
+ifeq ($(findstring $(ICC_MAJOR),10 9),)
 CXXFLAGS     += -m64 -wd1572 -wd279
 CFLAGS       += -m64 -wd1572 -wd279
 CINTCXXFLAGS += -m64 -wd1572 -wd279
 CINTCFLAGS   += -m64 -wd1572 -wd279
 LDFLAGS      += -m64
-ICC_GE_9      = 11
-ICC_GE_101    = 110
-endif
-
-ifeq ($(ICC_MAJOR),12)
-CXXFLAGS     += -m64 -wd1572 -wd279
-CFLAGS       += -m64 -wd1572 -wd279
-CINTCXXFLAGS += -m64 -wd1572 -wd279
-CINTCFLAGS   += -m64 -wd1572 -wd279
-LDFLAGS      += -m64
-ICC_GE_9      = 12
-ICC_GE_101    = 120
+ICC_GE_9      = $(ICC_MAJOR)
+ICC_GE_101    = $(ICC_MAJOR)$(ICC_MINOR)
 endif
 
 # System libraries:
@@ -96,7 +86,7 @@ CRYPTLIBS     = -lcrypt
 ifeq ($(F77),ifort)
 F77           = ifort
 F77FLAGS      = -fPIC
-ifeq ($(ICC_MAJOR),12)
+ifeq ($(findstring $(ICC_MAJOR),11 10 9),)
 F77LIBS      := -L$(shell which ifort | sed -e 's|bin/intel64/ifort|compiler/lib|') \
                 -lifcore
 F77FLAGS     += -m64
