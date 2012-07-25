@@ -459,10 +459,6 @@ namespace cling {
     m_DeclReverter = 0;
   }
 
-  bool ASTNodeEraser::RevertDecl(Decl* D) {
-    return m_DeclReverter->Visit(D);
-  }
-
   bool ASTNodeEraser::RevertTransaction(const Transaction* T) {
     bool Successful = true;
     for (Transaction::const_reverse_iterator I = T->rdecls_begin(),
@@ -482,6 +478,10 @@ namespace cling {
     }
 
     return Successful;
+  }
+
+  bool ASTNodeEraser::RevertDecl(Decl* D) {
+    return m_DeclReverter->Visit(D);
   }
 
 } // end namespace cling
