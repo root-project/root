@@ -592,7 +592,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
                logy:primitives[i]['fLogy'],
                logz:primitives[i]['fLogz'],
                gridx:primitives[i]['fGridx'],
-               gridx:primitives[i]['fGridy']
+               gridy:primitives[i]['fGridy']
             }
             JSROOTIO.DisplayPrimitives(primitives[i]['fPrimitives'], obj_name, cycle, options);
          }
@@ -2081,7 +2081,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
                         logy:canvas['fLogy'],
                         logz:canvas['fLogz'],
                         gridx:canvas['fGridx'],
-                        gridx:canvas['fGridy']
+                        gridy:canvas['fGridy']
                      }
                      JSROOTIO.DisplayPrimitives(canvas['fPrimitives'], obj_name, cycle, options);
                   }
