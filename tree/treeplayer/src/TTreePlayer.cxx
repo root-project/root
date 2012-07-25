@@ -2201,6 +2201,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       selector->SlaveTerminate();   //<==call user termination function
       selector->Terminate();        //<==call user termination function
    }
+   fTree->SetNotify(0); // Detach the selector from the tree.
    fSelectorUpdate = 0;
    if (gMonitoringWriter)
       gMonitoringWriter->SendProcessingStatus("DONE");
