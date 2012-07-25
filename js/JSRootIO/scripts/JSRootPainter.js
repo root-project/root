@@ -217,7 +217,7 @@ var d, key_tree;
          logy = options['logy'];
          logz = options['logz'];
          gridx = options['gridx'];
-         gridx = options['gridy'];
+         gridy = options['gridy'];
       }
       // check for axis scale format, and convert if required
       // (highcharts time unit is in milliseconds)
@@ -667,7 +667,7 @@ var d, key_tree;
          logy = options['logy'];
          logz = options['logz'];
          gridx = options['gridx'];
-         gridx = options['gridy'];
+         gridy = options['gridy'];
       }
       // check for axis scale format, and convert if required
       // (highcharts time unit is in milliseconds)
