@@ -995,7 +995,7 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc)
       Expand(newSize);
 
    // move
-   for (Int_t i = 0; i <= tc->GetEntriesFast(); i++) {
+   for (Int_t i = 0; i < tc->GetEntriesFast(); ++i) {
       fCont[oldSize+i] = tc->fCont[i];
       (*fKeep)[oldSize+i] = (*(tc->fKeep))[i];
       tc->fCont[i] = 0;
