@@ -44,7 +44,7 @@ namespace textinput {
 
   TerminalDisplayWin::~TerminalDisplayWin() {
     if (IsTTY()) {
-      ::SetConsoleTextAttribute(fOut, fDefaultAttributes)
+      ::SetConsoleTextAttribute(fOut, fDefaultAttributes);
       // We allocated CONOUT$:
       CloseHandle(fOut);
     }
