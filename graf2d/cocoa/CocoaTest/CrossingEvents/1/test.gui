@@ -1,0 +1,28 @@
++window
+   +geometry
+      x : 500
+      y : 500
+      width : 600
+      height : 600
+   -geometry
+   color : ff0000
+   +input
+      256
+      512
+   -input
+   +children
+      +window
+         +geometry
+            x : 150
+            y : 150
+            width : 300
+            height : 300
+         -geometry
+         color : ff9900
+         +input
+            256
+            512
+         -input
+      -window
+   -children
+-window
