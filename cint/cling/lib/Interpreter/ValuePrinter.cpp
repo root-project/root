@@ -130,12 +130,13 @@ static void StreamValue(llvm::raw_ostream& o, const void* const p,
   }
   else if (Ty->isEnumeralType()) {
     StreamObj(o, p, VPI);
-    int value = *(int*)p;
     clang::EnumDecl* ED = Ty->getAs<clang::EnumType>()->getDecl();
+    uint64_t value = *(uint64_t*)p;
     bool IsFirst = true;
-    llvm::APSInt ValAsAPSInt = C.MakeIntValue(value, C.IntTy);
+    llvm::APSInt ValAsAPSInt = C.MakeIntValue(value, ED->getPromotionType());
     for (clang::EnumDecl::enumerator_iterator I = ED->enumerator_begin(),
            E = ED->enumerator_end(); I != E; ++I) {
+      ValAsAPSInt.setIsSigned(I->getInitVal().isSigned());
       if (I->getInitVal() == ValAsAPSInt) {
         if (!IsFirst) {
           o << " ? ";
@@ -144,7 +145,7 @@ static void StreamValue(llvm::raw_ostream& o, const void* const p,
         IsFirst = false;
       }
     }
-    o << " : (int) " << value << "\n";
+    o << " : (int) " << (int)value << "\n";
   }
   else if (Ty->isReferenceType())
     StreamRef(o, p);
