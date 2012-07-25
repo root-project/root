@@ -237,7 +237,7 @@ var d, key_tree;
          scale *= time_scalex;
          var bin_data = new Array();
          var legend_stats = '';
-         for (i=0; i<histo['fArray'].length; ++i) {
+         for (i=1; i<histo['fArray'].length-1; ++i) {
             bin_data.push(histo['fArray'][i]);
          }
          var fillcolor = root_colors[histo['fFillColor']];
@@ -331,7 +331,8 @@ var d, key_tree;
                minPadding:0,
                maxPadding:0,
                offset: 0.2,
-               startOnTick:true,
+               startOnTick:false,
+               endOnTick:false,
                tickLength:5,
                tickColor:'#ccc'
             },
@@ -360,7 +361,7 @@ var d, key_tree;
                borderRadius: 0,
                borderColor: fillcolor,
                borderWidth: 0,
-               pointStart: histo['fXaxis']['fXmin'],
+               pointStart: histo['fXaxis']['fXmin'] + (scale / 2.0),
                pointInterval: scale,
                shadow: false,
                stickyTracking: false
