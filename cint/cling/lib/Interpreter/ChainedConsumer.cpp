@@ -238,9 +238,9 @@ namespace cling {
 
   bool ChainedConsumer::HandleTopLevelDecl(DeclGroupRef D) {
     bool hasNoErrors = true;
-    if (!m_CurTransaction->isCompleted())
-      m_CurTransaction->appendUnique(D);
-    else {
+    m_CurTransaction->appendUnique(D);
+    
+    if (m_CurTransaction->isCompleted()){
       // Pass through the consumers
       for (size_t i = 0; i < kConsumersCount; ++i) {
         if (isConsumerEnabled((EConsumerIndex)i))
@@ -320,7 +320,7 @@ namespace cling {
       case kValuePrinterSynthesizer :
         return CO.ValuePrinting == CompilationOptions::VPAuto;
       case kASTDumper : return CO.Debug;
-      case kCodeGenerator : return CO.CodeGeneration;
+      case kCodeGenerator : return false;
       case kConsumersCount : return false;
       }
 

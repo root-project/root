@@ -495,7 +495,7 @@ namespace cling {
     if (getCI()->getDiagnostics().hasErrorOccurred())
       return false;
 
-    if (m_IncrParser->isSyntaxOnly()) {
+    if (!m_IncrParser->hasCodeGenerator()) {
       return true;
     }
 

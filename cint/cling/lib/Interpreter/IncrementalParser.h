@@ -77,8 +77,8 @@ namespace cling {
     ///
     llvm::SmallVector<Transaction*, 64> m_Transactions;
 
-    // whether to run codegen; cannot be flipped during lifetime of *this
-    bool m_SyntaxOnly;
+    ///\brief Code generator
+    llvm::OwningPtr<clang::CodeGenerator> m_CodeGen;
 
   public:
     enum EParseResult {
@@ -89,9 +89,14 @@ namespace cling {
     IncrementalParser(Interpreter* interp, int argc, const char* const *argv,
                       const char* llvmdir);
     ~IncrementalParser();
+
     void Initialize();
+
     clang::CompilerInstance* getCI() const { return m_CI.get(); }
     clang::Parser* getParser() const { return m_Parser.get(); }
+    clang::CodeGenerator* getCodeGenerator() const { return m_CodeGen.get(); }
+    bool hasCodeGenerator() const { return m_CodeGen.get(); }
+    
 
     /// \{
     /// \name Transaction Support
@@ -152,9 +157,6 @@ namespace cling {
     }
     void enableDynamicLookup(bool value = true);
     bool isDynamicLookupEnabled() const { return m_DynamicLookupEnabled; }
-    bool isSyntaxOnly() const { return m_SyntaxOnly; }
-
-    clang::CodeGenerator* getCodeGenerator() const;
 
   private:
     void CreateSLocOffsetGenerator();

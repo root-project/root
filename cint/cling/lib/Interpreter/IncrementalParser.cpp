@@ -42,16 +42,19 @@ namespace cling {
                                        const char* llvmdir):
     m_Interpreter(interp),
     m_DynamicLookupEnabled(false),
-    m_Consumer(0),
-    m_SyntaxOnly(false)
+    m_Consumer(0)
   {
     CompilerInstance* CI
       = CIFactory::createCI(llvm::MemoryBuffer::getMemBuffer("", "CLING"),
                             argc, argv, llvmdir);
     assert(CI && "CompilerInstance is (null)!");
     m_CI.reset(CI);
-    m_SyntaxOnly
-      = CI->getFrontendOpts().ProgramAction == clang::frontend::ParseSyntaxOnly;
+    if (CI->getFrontendOpts().ProgramAction != clang::frontend::ParseSyntaxOnly){
+      m_CodeGen.reset(CreateLLVMCodeGen(CI->getDiagnostics(), "cling input",
+                                        CI->getCodeGenOpts(),
+                                        *m_Interpreter->getLLVMContext()
+                                        ));
+    }
 
     CreateSLocOffsetGenerator();
 
@@ -67,15 +70,7 @@ namespace cling {
     ValuePrinterSynthesizer* VPS = new ValuePrinterSynthesizer(interp);
     m_Consumer->Add(ChainedConsumer::kValuePrinterSynthesizer, VPS);
     m_Consumer->Add(ChainedConsumer::kASTDumper, new ASTDumper());
-    if (!m_SyntaxOnly) {
-      CodeGenerator* CG = CreateLLVMCodeGen(CI->getDiagnostics(),
-                                            "cling input",
-                                            CI->getCodeGenOpts(),
-                                            *m_Interpreter->getLLVMContext()
-                                            );
-      assert(CG && "No CodeGen?!");
-      m_Consumer->Add(ChainedConsumer::kCodeGenerator, CG);
-    }
+
     m_Parser.reset(new Parser(CI->getPreprocessor(), CI->getSema(),
                               false /*skipFuncBodies*/));
     CI->getPreprocessor().EnterMainSourceFile();
@@ -142,18 +137,27 @@ namespace cling {
       if (!m_Consumer->HandleTopLevelDecl(*I)) {
         rollbackTransaction(CurT);
         return;
-      }      
+      }
     }
 
     // Pull all template instantiations in that came from the consumers.
     getCI()->getSema().PerformPendingInstantiations();
 
     m_Consumer->HandleTranslationUnit(getCI()->getASTContext());
-    CurT->setState(Transaction::kCommitted);
 
-    if (!m_SyntaxOnly) {
+    if (hasCodeGenerator()) {
+      // codegen the transaction
+      for (Transaction::const_iterator I = CurT->decls_begin(), 
+             E = CurT->decls_end(); I != E; ++I) {
+        getCodeGenerator()->HandleTopLevelDecl(*I);
+      }
+
+      getCodeGenerator()->HandleTranslationUnit(getCI()->getASTContext());
+      // run the static initializers that came from codegenning
       m_Interpreter->runStaticInitializersOnce();
     }
+
+    CurT->setState(Transaction::kCommitted);
   }
 
   void IncrementalParser::rollbackTransaction(Transaction* T) const {
@@ -164,7 +168,6 @@ namespace cling {
     else
       T->setState(Transaction::kRolledBackWithErrors);
   }
-  
 
   // Each input line is contained in separate memory buffer. The SourceManager
   // assigns sort-of invalid FileID for each buffer, i.e there is no FileEntry
@@ -207,7 +210,7 @@ namespace cling {
   }
 
   IncrementalParser::~IncrementalParser() {
-     if (getCodeGenerator()) {
+     if (hasCodeGenerator()) {
        getCodeGenerator()->ReleaseModule();
      }
      for (size_t i = 0; i < m_Transactions.size(); ++i)
@@ -242,7 +245,7 @@ namespace cling {
   IncrementalParser::EParseResult
   IncrementalParser::Compile(llvm::StringRef input) {
     // Reset the module builder to clean up global initializers, c'tors, d'tors:
-    if (getCodeGenerator()) {
+    if (hasCodeGenerator()) {
       getCodeGenerator()->Initialize(getCI()->getASTContext());
     }
 
@@ -341,10 +344,4 @@ namespace cling {
       S.ExternalSource = 0;
     }
   }
-
-  CodeGenerator* IncrementalParser::getCodeGenerator() const {
-    return
-      (CodeGenerator*)m_Consumer->getConsumer(ChainedConsumer::kCodeGenerator);
-  }
-
 } // namespace cling

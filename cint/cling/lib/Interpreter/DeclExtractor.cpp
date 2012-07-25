@@ -5,6 +5,8 @@
 //------------------------------------------------------------------------------
 
 #include "DeclExtractor.h"
+#include "ChainedConsumer.h"
+#include "Transaction.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclGroup.h"
@@ -123,7 +125,8 @@ namespace cling {
           }
 
           // Pipe moved decl through the consumers
-          m_Sema->Consumer.HandleTopLevelDecl(DeclGroupRef(TouchedDecls[i]));
+          ChainedConsumer* consumer = (ChainedConsumer*) &m_Sema->getASTConsumer();
+          consumer->getTransaction()->appendUnique(DeclGroupRef(TouchedDecls[i]));
         }
       }
 
