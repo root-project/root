@@ -51,13 +51,14 @@ void NameMap::Remove(const char* name, int idx) {
    NameMap_t::iterator iMap = fMap.find(name);
    if (iMap != fMap.end()) {
       iMap->second.erase(idx);
-      if (iMap->second.empty())
+      if (iMap->second.empty()) {
          fMap.erase(iMap);
-      else {
+      } else {
          // We need to reinsert it with a different index
-         const char *new_name = G__struct.name[*(iMap->second.begin())];
-         fMap[new_name] = iMap->second;
-         fMap.erase(iMap);            
+         std::set<int> tmpSet = iMap->second;
+         fMap.erase(iMap);
+         const char *new_name = G__struct.name[*(tmpSet.begin())];
+         fMap[new_name] = tmpSet;
       }
    }
 }
