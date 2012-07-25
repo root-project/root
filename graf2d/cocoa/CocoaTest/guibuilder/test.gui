@@ -6,6 +6,10 @@
       height : 600
    -geometry
    color : ff0000
+   +input
+      256
+      512
+   -input
    +children
       +window
          +geometry

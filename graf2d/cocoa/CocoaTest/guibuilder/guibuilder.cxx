@@ -158,11 +158,13 @@ TestFrame * GuiBuilder::BuildWindow(TestFrame * parentFrame)
    //2. create a new window now.
    
    if(!backgroundColor)
-      backgroundColor = 0xfefefe;
+      backgroundColor = 0xaeaeae;
    
    std::auto_ptr<TestFrame> newFrame(new TestFrame(parentFrame, newGeom.width, newGeom.height, parentFrame ? kChildFrame : kMainFrame, backgroundColor));
 
    gVirtualX->MoveWindow(newFrame->GetId(), newGeom.x, newGeom.y);
+   if (inputMask)
+      gVirtualX->SelectInput(newFrame->GetId(), inputMask);
       
    if(currentLine_->find("+children") != std::string::npos)
    {
