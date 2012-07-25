@@ -256,16 +256,16 @@ namespace cling {
       // Make sure that the universe won't be included to compile time by using
       // -D __CLING__ as CompilerInstance's arguments
 
-      declare("#include \"cling/Interpreter/RuntimeUniverse.h\"\n");
-      declare("#include \"cling/Interpreter/ValuePrinter.h\"\n");
+      declare("#include \"cling/Interpreter/RuntimeUniverse.h\"");
+      declare("#include \"cling/Interpreter/ValuePrinter.h\"");
 
       // Set up the gCling variable
       std::stringstream initializer;
-      initializer << "gCling=(cling::Interpreter*)" << (uintptr_t)this << ";\n";
+      initializer << "gCling=(cling::Interpreter*)" << (uintptr_t)this << ";";
       evaluate(initializer.str());
     }
     else {
-      declare("#include \"cling/Interpreter/CValuePrinter.h\"\n");
+      declare("#include \"cling/Interpreter/CValuePrinter.h\"");
     }
 
     handleFrontendOptions();
@@ -663,7 +663,7 @@ namespace cling {
     }
 
     std::string code;
-    code += "#include \"" + filename + "\"\n";
+    code += "#include \"" + filename + "\"";
     return declare(code) == Interpreter::kSuccess;
   }
 

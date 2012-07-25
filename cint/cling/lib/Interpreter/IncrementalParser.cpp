@@ -283,8 +283,18 @@ namespace cling {
 
     std::ostringstream source_name;
     source_name << "input_line_" << (m_MemoryBuffer.size() + 1);
+
+    // Create an uninitialized memory buffer,
+    // copy code in and append "\n"
+    size_t InputSize = input.size(); // don't include trailing 0
+    // MemBuffer size should *not* include terminating zero
     llvm::MemoryBuffer* MB
-       = llvm::MemoryBuffer::getMemBufferCopy(input, source_name.str());
+      = llvm::MemoryBuffer::getNewUninitMemBuffer(InputSize + 1,
+                                                  source_name.str());
+    char* MBStart = const_cast<char*>(MB->getBufferStart());
+    memcpy(MBStart, input.data(), InputSize);
+    memcpy(MBStart + InputSize, "\n", 2);
+
     m_MemoryBuffer.push_back(MB);
     SourceManager& SM = getCI()->getSourceManager();
 
