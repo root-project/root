@@ -20,7 +20,9 @@
 
 namespace textinput {
   TerminalDisplayWin::TerminalDisplayWin():
-    TerminalDisplay(false), fStartLine(0), fIsAttached(false) {
+    TerminalDisplay(false), fStartLine(0), fIsAttached(false),
+    fDefaultAttributes(0)
+  {
     fOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
     bool isConsole = ::GetConsoleMode(fOut, &fOldMode) != 0;
     SetIsTTY(isConsole);
@@ -32,12 +34,17 @@ namespace textinput {
         FILE_ATTRIBUTE_NORMAL, NULL);
       ::GetConsoleMode(fOut, &fOldMode);
       fMyMode = fOldMode | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
+
+      CONSOLE_SCREEN_BUFFER_INFO csbi;
+      ::GetConsoleScreenBufferInfo(fOut, &csbi);
+      fDefaultAttributes = csbi.wAttributes;
     }
     HandleResizeEvent();
   }
 
   TerminalDisplayWin::~TerminalDisplayWin() {
     if (IsTTY()) {
+      ::SetConsoleTextAttribute(fOut, fDefaultAttributes)
       // We allocated CONOUT$:
       CloseHandle(fOut);
     }
