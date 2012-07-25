@@ -9,12 +9,25 @@
 RC     := root-config
 ifeq ($(shell which $(RC) 2>&1 | sed -ne "s@.*/$(RC)@$(RC)@p"),$(RC))
 MKARCH := $(wildcard $(shell $(RC) --etcdir)/Makefile.arch)
+RCONFIG := $(wildcard $(shell $(RC) --incdir)/RConfigure.h)
 endif
 ifneq ($(MKARCH),)
 include $(MKARCH)
 else
+ifeq ($(ROOTSYS),)
 ROOTSYS = ..
+endif
 include $(ROOTSYS)/etc/Makefile.arch
+endif
+# Tutorials dir needed by stressProof
+ifneq ($(RCONFIG),)
+TUTDIR := $(wildcard $(shell grep ROOTDOCDIR $(RCONFIG) | sed "s|.*\"\(.*\)\"|\1|")/tutorials)
+endif
+ifeq ($(TUTDIR),)
+ifeq ($(ROOTSYS),)
+ROOTSYS = ..
+endif
+TUTDIR := $(ROOTSYS)/tutorials
 endif
 -include ../MyConfig.mk
 
@@ -768,7 +781,7 @@ TrackMathCoreDict.$(SrcSuf): 	TrackMathCore.h TrackMathCoreLinkDef.h
 	$(ROOTCINT) -f $@ -c $^	
 
 stressProof.$(ObjSuf):	stressProof.$(SrcSuf)
-	$(CXX)  $(CXXFLAGS) -I$(ROOTSYS)/tutorials -c $<
+	$(CXX)  $(CXXFLAGS) -I$(TUTDIR) -c $<
 
 TrackMathCoreRflx.$(SrcSuf): 	TrackMathCore.h TrackMathCoreRflx.xml
 			@echo "Generating dictionary $@ using gccxml ..."
