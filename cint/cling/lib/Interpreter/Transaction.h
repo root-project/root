@@ -7,7 +7,7 @@
 #ifndef CLING_TRANSACTION_H
 #define CLING_TRANSACTION_H
 
-#include "cling/Interpreter/CompilationOptions.h"
+#include "CompilationOptions.h"
 
 #include "clang/AST/DeclGroup.h"
 

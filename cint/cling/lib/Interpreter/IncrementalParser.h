@@ -8,9 +8,9 @@
 #define CLING_INCREMENTAL_PARSER_H
 
 #include "ChainedConsumer.h"
+#include "CompilationOptions.h"
 #include "Transaction.h"
 #include "TransactionTransformer.h"
-#include "cling/Interpreter/CompilationOptions.h"
 
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclGroup.h"

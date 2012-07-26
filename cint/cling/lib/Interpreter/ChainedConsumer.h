@@ -7,7 +7,7 @@
 #ifndef CLING_CHAINED_CONSUMER_H
 #define CLING_CHAINED_CONSUMER_H
 
-#include "cling/Interpreter/CompilationOptions.h"
+#include "CompilationOptions.h"
 
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/SmallVector.h"
