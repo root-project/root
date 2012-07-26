@@ -10,7 +10,6 @@
 #include "DeclCollector.h"
 #include "CompilationOptions.h"
 #include "Transaction.h"
-#include "TransactionTransformer.h"
 
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclGroup.h"
@@ -44,6 +43,7 @@ namespace cling {
   class DeclCollector;
   class ExecutionContext;
   class Interpreter;
+  class TransactionTransformer;
 
   ///\brief Responsible for the incremental parsing and compilation of input.
   ///
