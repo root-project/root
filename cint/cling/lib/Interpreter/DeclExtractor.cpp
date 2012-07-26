@@ -5,7 +5,6 @@
 //------------------------------------------------------------------------------
 
 #include "DeclExtractor.h"
-#include "ChainedConsumer.h"
 #include "Transaction.h"
 
 #include "clang/AST/ASTContext.h"
@@ -30,6 +29,8 @@ namespace cling {
   Transaction* DeclExtractor::Transform(Transaction* T) {
     if (!T->getCompilationOpts().DeclarationExtraction)
       return T;
+
+    CurT = T;
 
     for (Transaction::const_iterator I = T->decls_begin(), 
            E = T->decls_end(); I != E; ++I)
@@ -129,9 +130,8 @@ namespace cling {
             }
           }
 
-          // Pipe moved decl through the consumers
-          ChainedConsumer* consumer = (ChainedConsumer*) &m_Sema->getASTConsumer();
-          consumer->getTransaction()->appendUnique(DeclGroupRef(TouchedDecls[i]));
+          // Append the new top level decl to the current transaction.
+          CurT->appendUnique(DeclGroupRef(TouchedDecls[i]));
         }
       }
 

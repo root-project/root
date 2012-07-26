@@ -7,7 +7,7 @@
 #ifndef CLING_INCREMENTAL_PARSER_H
 #define CLING_INCREMENTAL_PARSER_H
 
-#include "ChainedConsumer.h"
+#include "DeclCollector.h"
 #include "CompilationOptions.h"
 #include "Transaction.h"
 #include "TransactionTransformer.h"
@@ -40,8 +40,8 @@ namespace clang {
 
 
 namespace cling {
-  class ChainedConsumer;
   class CIFactory;
+  class DeclCollector;
   class ExecutionContext;
   class Interpreter;
 
@@ -72,7 +72,7 @@ namespace cling {
     clang::FileID m_VirtualFileID;
 
     // CI owns it
-    ChainedConsumer* m_Consumer;
+    DeclCollector* m_Consumer;
 
     ///\brief Holds information for the all transactions.
     ///

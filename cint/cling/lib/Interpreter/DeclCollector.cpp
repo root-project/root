@@ -4,7 +4,7 @@
 // author:  Vassil Vassilev <vasil.georgiev.vasilev@cern.ch>
 //------------------------------------------------------------------------------
 
-#include "ChainedConsumer.h"
+#include "DeclCollector.h"
 
 #include "Transaction.h"
 
@@ -14,33 +14,34 @@
 using namespace clang;
 
 namespace cling {
+
   // pin the vtable here.
-  ChainedConsumer::~ChainedConsumer() {
+  DeclCollector::~DeclCollector() {
   }
 
-  bool ChainedConsumer::HandleTopLevelDecl(DeclGroupRef DGR) {
+  bool DeclCollector::HandleTopLevelDecl(DeclGroupRef DGR) {
     m_CurTransaction->appendUnique(DGR);
     return true;
   }
 
-  void ChainedConsumer::HandleInterestingDecl(DeclGroupRef DGR) {
+  void DeclCollector::HandleInterestingDecl(DeclGroupRef DGR) {
     assert("Not implemented yet!");
   }
 
-  void ChainedConsumer::HandleTagDeclDefinition(TagDecl* TD) {
+  void DeclCollector::HandleTagDeclDefinition(TagDecl* TD) {
     m_CurTransaction->appendUnique(DeclGroupRef(TD));
   }
 
-  void ChainedConsumer::HandleVTable(CXXRecordDecl* RD,
+  void DeclCollector::HandleVTable(CXXRecordDecl* RD,
                                      bool DefinitionRequired) {
     assert("Not implemented yet!");
   }
 
-  void ChainedConsumer::CompleteTentativeDefinition(VarDecl* VD) {
+  void DeclCollector::CompleteTentativeDefinition(VarDecl* VD) {
     assert("Not implemented yet!");
   }
 
-  void ChainedConsumer::HandleTranslationUnit(ASTContext& Ctx) {
+  void DeclCollector::HandleTranslationUnit(ASTContext& Ctx) {
     assert("Not implemented yet!");
   }
 } // namespace cling

@@ -6,7 +6,7 @@
 
 #include "cling/Interpreter/CIFactory.h"
 
-#include "ChainedConsumer.h"
+#include "DeclCollector.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/Basic/TargetInfo.h"
@@ -238,7 +238,7 @@ namespace cling {
     CI->setASTContext(Ctx);
 
     // Set up the ASTConsumers
-    CI->setASTConsumer(new ChainedConsumer());
+    CI->setASTConsumer(new DeclCollector());
 
     // Set up Sema
     CodeCompleteConsumer* CCC = 0;

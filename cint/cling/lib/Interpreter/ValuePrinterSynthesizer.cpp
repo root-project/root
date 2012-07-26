@@ -6,7 +6,6 @@
 
 #include "ValuePrinterSynthesizer.h"
 
-#include "ChainedConsumer.h"
 #include "Transaction.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Utils/AST.h"

@@ -1,11 +1,11 @@
 //--------------------------------------------------------------------*- C++ -*-
 // CLING - the C++ LLVM-based InterpreterG :)
 // version: $Id$
-// author:  Axel Naumann <axel@cern.ch>
+// author:  Vassil Vassilev <vasil.georgiev.vasilev@cern.ch>
 //------------------------------------------------------------------------------
 
-#ifndef CLING_CHAINED_CONSUMER_H
-#define CLING_CHAINED_CONSUMER_H
+#ifndef CLING_DECL_COLLECTOR_H
+#define CLING_DECL_COLLECTOR_H
 
 #include "clang/AST/ASTConsumer.h"
 
@@ -18,13 +18,13 @@ namespace cling {
 
   class Transaction;
 
-  class ChainedConsumer: public clang::ASTConsumer {
+  class DeclCollector: public clang::ASTConsumer {
   private:
     Transaction* m_CurTransaction;
 
   public:
-    ChainedConsumer() : m_CurTransaction(0) {}
-    virtual ~ChainedConsumer();
+    DeclCollector() : m_CurTransaction(0) {}
+    virtual ~DeclCollector();
 
     /// \{
     /// \name ASTConsumer overrides
@@ -53,4 +53,4 @@ namespace cling {
   };
 } // namespace cling
 
-#endif // CLING_CHAINED_CONSUMER_H
+#endif // CLING_DECL_COLLECTOR_H

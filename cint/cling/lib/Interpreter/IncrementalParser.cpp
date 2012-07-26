@@ -8,7 +8,7 @@
 #include "ASTNodeEraser.h"
 
 #include "ASTDumper.h"
-#include "ChainedConsumer.h"
+#include "DeclCollector.h"
 #include "DeclExtractor.h"
 #include "DynamicLookup.h"
 #include "ValuePrinterSynthesizer.h"
@@ -48,7 +48,12 @@ namespace cling {
       = CIFactory::createCI(llvm::MemoryBuffer::getMemBuffer("", "CLING"),
                             argc, argv, llvmdir);
     assert(CI && "CompilerInstance is (null)!");
+
+    m_Consumer = dyn_cast<DeclCollector>(&CI->getASTConsumer());
+    assert(m_Consumer && "Expected ChainedConsumer!");
+
     m_CI.reset(CI);
+
     if (CI->getFrontendOpts().ProgramAction != clang::frontend::ParseSyntaxOnly){
       m_CodeGen.reset(CreateLLVMCodeGen(CI->getDiagnostics(), "cling input",
                                         CI->getCodeGenOpts(),
@@ -58,8 +63,6 @@ namespace cling {
 
     CreateSLocOffsetGenerator();
 
-    m_Consumer = dyn_cast<ChainedConsumer>(&CI->getASTConsumer());
-    assert(m_Consumer && "Expected ChainedConsumer!");
     // Add consumers to the IncrementalParser, which owns them
     m_TTransformers.push_back(new EvaluateTSynthesizer(interp, &CI->getSema()));
 
@@ -87,6 +90,10 @@ namespace cling {
      for (size_t i = 0; i < m_TTransformers.size(); ++i)
        delete m_TTransformers[i];
   }
+
+  // pin the vtable here since there is no point to create dedicated to that
+  // cpp file.
+  TransactionTransformer::~TransactionTransformer() {}
 
 
   void IncrementalParser::beginTransaction(const CompilationOptions& Opts) {
