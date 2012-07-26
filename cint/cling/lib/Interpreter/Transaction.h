@@ -7,6 +7,8 @@
 #ifndef CLING_TRANSACTION_H
 #define CLING_TRANSACTION_H
 
+#include "cling/Interpreter/CompilationOptions.h"
+
 #include "clang/AST/DeclGroup.h"
 
 #include "llvm/ADT/SmallVector.h"
@@ -46,10 +48,16 @@ namespace cling {
 
     unsigned m_IssuedDiags : 2;
 
+    ///\brief Options controlling the transformers and code generator.
+    ///
+    CompilationOptions m_Opts;
+
   public:
 
-    Transaction() : m_Completed(false), m_Parent(0), m_State(kUnknown), 
-                    m_IssuedDiags(kNone) {}
+    Transaction(const CompilationOptions& Opts) 
+      : m_Completed(false), m_Parent(0), m_State(kUnknown), m_IssuedDiags(kNone),
+        m_Opts(Opts)
+    { }
 
     ~Transaction();
 
@@ -100,6 +108,8 @@ namespace cling {
       return static_cast<IssuedDiags>(m_IssuedDiags); 
     }
     void setIssuedDiags(IssuedDiags val) { m_IssuedDiags = val; }
+
+    const CompilationOptions& getCompilationOpts() const { return m_Opts; }
 
     ///\brief Returns the first declaration of the transaction.
     ///
