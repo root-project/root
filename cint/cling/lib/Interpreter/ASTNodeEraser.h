@@ -4,8 +4,8 @@
 // author:  Vassil Vassilev <vvasilev@cern.ch>
 //------------------------------------------------------------------------------
 
-#ifndef CLING_ASTREVERSION
-#define CLING_ASTREVERSION
+#ifndef CLING_AST_NODE_ERASER
+#define CLING_AST_NODE_ERASER
 
 namespace clang {
   class Decl;
@@ -23,6 +23,7 @@ namespace cling {
   private:
     clang::Sema* m_Sema;
     DeclReverter* m_DeclReverter;
+
   public:
     ASTNodeEraser(clang::Sema* S);
     ~ASTNodeEraser();
@@ -58,4 +59,4 @@ namespace cling {
   };
 } // end namespace cling
 
-#endif // CLING_ASTREVERSION
+#endif // CLING_AST_NODE_ERASER
