@@ -725,10 +725,10 @@ namespace cling {
     if (Res.isUsable()) {
       // Accept it only if the whole name was parsed.
       if (P->NextToken().getKind() == clang::tok::eof) {
-        TypeSourceInfo *TSI = 0;
-        // The QualType returned by the parser is an odd QualType (type + TypeSourceInfo)
-        // and can not be used directly.
-        TheQT = clang::Sema::GetTypeFromParser(Res.get(),&TSI);
+        TypeSourceInfo* TSI = 0;
+        // The QualType returned by the parser is an odd QualType
+        // (type + TypeSourceInfo) and cannot be used directly.
+        TheQT = clang::Sema::GetTypeFromParser(Res.get(), &TSI);
       }
     }
     //
