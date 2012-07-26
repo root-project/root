@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 
 #include "DynamicLookup.h"
+#include "Transaction.h"
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
@@ -183,14 +184,19 @@ namespace {
 namespace cling {
 
   // Constructors
-  EvaluateTSynthesizer::EvaluateTSynthesizer(Interpreter* interp)
-    : m_EvalDecl(0),
-      m_CurDeclContext(0),
-      m_Interpreter(interp)
-  {
-  }
+  EvaluateTSynthesizer::EvaluateTSynthesizer(Interpreter* interp, Sema* S)
+    : TransactionTransformer(S), m_EvalDecl(0), m_CurDeclContext(0), 
+      m_Interpreter(interp), m_Context(&S->getASTContext()) 
+  { }
 
-  bool EvaluateTSynthesizer::HandleTopLevelDecl(DeclGroupRef DGR) {
+  // pin the vtable here.
+  EvaluateTSynthesizer::~EvaluateTSynthesizer()
+  { }
+
+  Transaction* EvaluateTSynthesizer::Transform(Transaction* T) {
+    if (!T->getCompilationOpts().DynamicScoping)
+      return T;
+
     // include the DynamicLookup specific builtins
     if (!m_EvalDecl) {
       TemplateDecl* D
@@ -225,19 +231,23 @@ namespace cling {
       m_NoSLoc = m_NoRange.getBegin();
       m_NoELoc =  m_NoRange.getEnd();
     }
-    for (DeclGroupRef::iterator Di = DGR.begin(), E = DGR.end(); Di != E; ++Di)
-      if (ShouldVisit(*Di) && (*Di)->hasBody()) {
-        if (FunctionDecl* FD = dyn_cast<FunctionDecl>(*Di)) {
-          // Set the decl context, which is needed by Evaluate.
-          m_CurDeclContext = FD->getDeclContext();
-          ASTNodeInfo NewBody = Visit((*Di)->getBody());
-          FD->setBody(NewBody.getAsSingleNode());
+    for (Transaction::const_iterator I = T->decls_begin(), 
+           E = T->decls_end(); I != E; ++I)
+      for (DeclGroupRef::const_iterator J = (*I).begin(), 
+             JE = (*I).end(); J != JE; ++J)
+        if (ShouldVisit(*J) && (*J)->hasBody()) {
+          if (FunctionDecl* FD = dyn_cast<FunctionDecl>(*J)) {
+            // Set the decl context, which is needed by Evaluate.
+            m_CurDeclContext = FD->getDeclContext();
+            ASTNodeInfo NewBody = Visit((*J)->getBody());
+            FD->setBody(NewBody.getAsSingleNode());
+          }
+          assert ((!isa<BlockDecl>(*J) || !isa<ObjCMethodDecl>(*J))
+                  && "Not implemented yet!");
         }
-        assert ((!isa<BlockDecl>(*Di) || !isa<ObjCMethodDecl>(*Di))
-                && "Not implemented yet!");
-      }
 
-    return true;
+    //TODO: Check for error before returning.
+    return T;
   }
 
   // StmtVisitor

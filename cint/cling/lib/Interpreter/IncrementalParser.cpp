@@ -60,16 +60,12 @@ namespace cling {
 
     m_Consumer = dyn_cast<ChainedConsumer>(&CI->getASTConsumer());
     assert(m_Consumer && "Expected ChainedConsumer!");
-    // Add consumers to the ChainedConsumer, which owns them
-    EvaluateTSynthesizer* ES = new EvaluateTSynthesizer(interp);
-    m_Consumer->Add(ChainedConsumer::kEvaluateTSynthesizer, ES);
+    // Add consumers to the IncrementalParser, which owns them
+    m_TTransformers.push_back(new EvaluateTSynthesizer(interp, &CI->getSema()));
 
-    DeclExtractor* DE = new DeclExtractor();
-    m_Consumer->Add(ChainedConsumer::kDeclExtractor, DE);
-
-    ValuePrinterSynthesizer* VPS = new ValuePrinterSynthesizer(interp);
-    m_Consumer->Add(ChainedConsumer::kValuePrinterSynthesizer, VPS);
-    m_Consumer->Add(ChainedConsumer::kASTDumper, new ASTDumper());
+    m_TTransformers.push_back(new DeclExtractor(&getCI()->getSema()));
+    m_TTransformers.push_back(new ValuePrinterSynthesizer(interp, &CI->getSema()));
+    m_TTransformers.push_back(new ASTDumper());
 
     m_Parser.reset(new Parser(CI->getPreprocessor(), CI->getSema(),
                               false /*skipFuncBodies*/));
@@ -81,8 +77,20 @@ namespace cling {
     CI->getSema().Initialize();
   }
 
-  void IncrementalParser::beginTransaction() {
-    Transaction* NewCurT = new Transaction();
+  IncrementalParser::~IncrementalParser() {
+     if (hasCodeGenerator()) {
+       getCodeGenerator()->ReleaseModule();
+     }
+     for (size_t i = 0; i < m_Transactions.size(); ++i)
+       delete m_Transactions[i];
+
+     for (size_t i = 0; i < m_TTransformers.size(); ++i)
+       delete m_TTransformers[i];
+  }
+
+
+  void IncrementalParser::beginTransaction(const CompilationOptions& Opts) {
+    Transaction* NewCurT = new Transaction(Opts);
     Transaction* OldCurT = m_Consumer->getTransaction();
     m_Consumer->setTransaction(NewCurT);
     // If we are in the middle of transaction and we see another begin 
@@ -115,7 +123,7 @@ namespace cling {
     }
   }
 
-  void IncrementalParser::commitCurrentTransaction() const {
+  void IncrementalParser::commitCurrentTransaction() {
     Transaction* CurT = m_Consumer->getTransaction();
     assert(CurT->isCompleted() && "Transaction not ended!?");
 
@@ -125,27 +133,20 @@ namespace cling {
       return;
     }
 
-    // We are sure it's safe to pipe it through
-    for (Transaction::const_iterator I = CurT->decls_begin(), 
-           E = CurT->decls_end(); I != E; ++I) {
-      // FIXME: Here we should keep in mind that the consumer has stopped at the
-      // first occurrence of error, however the consumer might change one some
-      // decls in the transaction. In general it is fine if the address of the
-      // decl is the same, i.e. the consumer doesn't create new declarations.
-
-      // if an error was seen somewhere in the consumer chain rollback 
-      if (!m_Consumer->HandleTopLevelDecl(*I)) {
+    // We are sure it's safe to pipe it through the transformers
+    for (size_t i = 0; i < m_TTransformers.size(); ++i)
+      if (!m_TTransformers[i]->Transform(CurT)) {
+        // Roll back on error in a transformer
         rollbackTransaction(CurT);
         return;
       }
-    }
 
     // Pull all template instantiations in that came from the consumers.
     getCI()->getSema().PerformPendingInstantiations();
 
     m_Consumer->HandleTranslationUnit(getCI()->getASTContext());
 
-    if (hasCodeGenerator()) {
+    if (CurT->getCompilationOpts().CodeGeneration && hasCodeGenerator()) {
       // codegen the transaction
       for (Transaction::const_iterator I = CurT->decls_begin(), 
              E = CurT->decls_end(); I != E; ++I) {
@@ -209,14 +210,6 @@ namespace cling {
     assert(!m_VirtualFileID.isInvalid() && "No VirtualFileID created?");
   }
 
-  IncrementalParser::~IncrementalParser() {
-     if (hasCodeGenerator()) {
-       getCodeGenerator()->ReleaseModule();
-     }
-     for (size_t i = 0; i < m_Transactions.size(); ++i)
-       delete m_Transactions[i];
-  }
-
   void IncrementalParser::Initialize() {
     CompilationOptions CO;
     CO.DeclarationExtraction = 0;
@@ -227,29 +220,12 @@ namespace cling {
   IncrementalParser::Compile(llvm::StringRef input,
                              const CompilationOptions& Opts) {
 
-    m_Consumer->pushCompilationOpts(Opts);
-    EParseResult Result = Compile(input);
-    m_Consumer->popCompilationOpts();
-
-    return Result;
-  }
-
-  Transaction* IncrementalParser::Parse(llvm::StringRef input) {
-    beginTransaction();
-    ParseInternal(input);
-    endTransaction();
-
-    return getLastTransaction();
-  }
-
-  IncrementalParser::EParseResult
-  IncrementalParser::Compile(llvm::StringRef input) {
     // Reset the module builder to clean up global initializers, c'tors, d'tors:
     if (hasCodeGenerator()) {
       getCodeGenerator()->Initialize(getCI()->getASTContext());
     }
 
-    beginTransaction();
+    beginTransaction(Opts);
     EParseResult Result = ParseInternal(input);
     endTransaction();
 
@@ -263,6 +239,14 @@ namespace cling {
     m_CI->getDiagnostics().Reset();
 
     return Result;
+  }
+
+  Transaction* IncrementalParser::Parse(llvm::StringRef input) {
+    beginTransaction(CompilationOptions());
+    ParseInternal(input);
+    endTransaction();
+
+    return getLastTransaction();
   }
 
   // Add the input to the memory buffer, parse it, and add it to the AST.

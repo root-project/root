@@ -7,17 +7,20 @@
 #ifndef CLING_VALUE_PRINTER_SYNTHESIZER_H
 #define CLING_VALUE_PRINTER_SYNTHESIZER_H
 
-#include "clang/Sema/SemaConsumer.h"
+#include "TransactionTransformer.h"
 
 namespace clang {
-  class Expr;
+  class ASTContext;
   class CompoundStmt;
+  class DeclGroupRef;
+  class Expr;
+  class Sema;
 }
 
 namespace cling {
   class Interpreter;
 
-  class ValuePrinterSynthesizer : public clang::SemaConsumer {
+  class ValuePrinterSynthesizer : public TransactionTransformer {
 
   private:
     Interpreter* m_Interpreter;
@@ -25,19 +28,14 @@ namespace cling {
     ///\brief Needed for the AST transformations, owned by Sema
     clang::ASTContext* m_Context;
 
-    ///\brief Needed for the AST transformations, owned by CompilerInstance
-    clang::Sema* m_Sema;
-
 public:
-    ValuePrinterSynthesizer(Interpreter* Interp);
+    ValuePrinterSynthesizer(Interpreter* Interp, clang::Sema* S);
     virtual ~ValuePrinterSynthesizer();
 
-    void Initialize(clang::ASTContext& Ctx) { m_Context = &Ctx; }
-
-    void InitializeSema(clang::Sema& S) { m_Sema = &S; }
-    bool HandleTopLevelDecl(clang::DeclGroupRef DGR);
+    virtual Transaction* Transform(Transaction* T);
 
   private:
+    bool tryAttachVP(clang::DeclGroupRef DGR);
     clang::Expr* SynthesizeCppVP(clang::Expr* E);
     clang::Expr* SynthesizeVP(clang::Expr* E);
     unsigned ClearNullStmts(clang::CompoundStmt* CS);

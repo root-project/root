@@ -7,6 +7,7 @@
 #include "ValuePrinterSynthesizer.h"
 
 #include "ChainedConsumer.h"
+#include "Transaction.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Utils/AST.h"
 
@@ -24,13 +25,29 @@ using namespace clang;
 namespace cling {
 
 
-  ValuePrinterSynthesizer::ValuePrinterSynthesizer(Interpreter* Interp)
-    : m_Interpreter(Interp)
+  ValuePrinterSynthesizer::ValuePrinterSynthesizer(Interpreter* Interp, 
+                                                   clang::Sema* S)
+    : TransactionTransformer(S), m_Interpreter(Interp), 
+      m_Context(&S->getASTContext())
   { }
 
-  ValuePrinterSynthesizer::~ValuePrinterSynthesizer() {}
+  // pin the vtable here.
+  ValuePrinterSynthesizer::~ValuePrinterSynthesizer()
+  { }
 
-  bool ValuePrinterSynthesizer::HandleTopLevelDecl(DeclGroupRef DGR) {
+  Transaction* ValuePrinterSynthesizer::Transform(Transaction* T) {
+    if (!T->getCompilationOpts().ValuePrinting)
+      return T;
+
+    for (Transaction::const_iterator I = T->decls_begin(), 
+           E = T->decls_end(); I != E; ++I)
+      if(!tryAttachVP(*I))
+        return 0;
+
+    return T;
+  }
+
+  bool ValuePrinterSynthesizer::tryAttachVP(DeclGroupRef DGR) {
     for (DeclGroupRef::iterator I = DGR.begin(), E = DGR.end(); I != E; ++I)
       if (FunctionDecl* FD = dyn_cast<FunctionDecl>(*I)) {
         if (FD->getNameAsString().find("__cling_Un1Qu3"))

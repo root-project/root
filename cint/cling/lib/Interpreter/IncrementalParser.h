@@ -9,6 +9,7 @@
 
 #include "ChainedConsumer.h"
 #include "Transaction.h"
+#include "TransactionTransformer.h"
 #include "cling/Interpreter/CompilationOptions.h"
 
 #include "clang/AST/DeclBase.h"
@@ -78,7 +79,12 @@ namespace cling {
     llvm::SmallVector<Transaction*, 64> m_Transactions;
 
     ///\brief Code generator
+    ///
     llvm::OwningPtr<clang::CodeGenerator> m_CodeGen;
+
+    ///\brief Contains the transaction transformers.
+    ///
+    llvm::SmallVector<TransactionTransformer*, 4> m_TTransformers;
 
   public:
     enum EParseResult {
@@ -103,7 +109,7 @@ namespace cling {
 
     ///\brief Starts a transaction.
     ///
-    void beginTransaction();
+    void beginTransaction(const CompilationOptions& Opts);
 
     ///\brief Finishes a transaction.
     ///
@@ -112,7 +118,7 @@ namespace cling {
     ///\brief Commits the current transaction if it was compete. I.e pipes it 
     /// through the consumer chain, including codegen.
     ///
-    void commitCurrentTransaction() const;
+    void commitCurrentTransaction();
 
     ///\brief Reverts the AST into its previous state.
     ///
@@ -160,7 +166,6 @@ namespace cling {
 
   private:
     void CreateSLocOffsetGenerator();
-    EParseResult Compile(llvm::StringRef input);
     EParseResult ParseInternal(llvm::StringRef input);
   };
 } // end namespace cling

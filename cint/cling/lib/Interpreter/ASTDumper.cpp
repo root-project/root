@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 
 #include "ASTDumper.h"
+#include "Transaction.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -14,17 +15,26 @@ using namespace clang;
 
 namespace cling {
 
+  // pin the vtable to this file
   ASTDumper::~ASTDumper() {}
 
-  bool ASTDumper::HandleTopLevelDecl(DeclGroupRef D) {
-    for (DeclGroupRef::iterator I = D.begin(), E = D.end(); I != E; ++I)
-      HandleTopLevelSingleDecl(*I);
-    return true;
+
+  Transaction* ASTDumper::Transform(Transaction* T) {
+    if (!T->getCompilationOpts().Debug)
+      return T;
+
+    for (Transaction::const_iterator I = T->decls_begin(), 
+           E = T->decls_end(); I != E; ++I)
+      for (DeclGroupRef::const_iterator J = (*I).begin(), 
+             JE = (*I).end(); J != JE; ++J)
+        printDecl(*J);
+
+    return T;
   }
 
-  void ASTDumper::HandleTopLevelSingleDecl(Decl* D) {
+  void ASTDumper::printDecl(Decl* D) {
     PrintingPolicy Policy = D->getASTContext().getPrintingPolicy();
-    Policy.Dump = Dump;
+    Policy.Dump = m_Dump;
 
     if (D) {
       llvm::outs() << "\n-------------------Declaration---------------------\n";

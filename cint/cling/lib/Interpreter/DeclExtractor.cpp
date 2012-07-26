@@ -19,21 +19,26 @@ using namespace clang;
 
 namespace cling {
 
+  DeclExtractor::DeclExtractor(Sema* S) 
+    : TransactionTransformer(S), m_Context(&S->getASTContext()) 
+  { }
 
-  DeclExtractor::DeclExtractor() {
+  // pin the vtable here
+  DeclExtractor::~DeclExtractor() 
+  { } 
 
-  }
+  Transaction* DeclExtractor::Transform(Transaction* T) {
+    if (!T->getCompilationOpts().DeclarationExtraction)
+      return T;
 
-  DeclExtractor::~DeclExtractor() {
+    for (Transaction::const_iterator I = T->decls_begin(), 
+           E = T->decls_end(); I != E; ++I)
+      for (DeclGroupRef::const_iterator J = (*I).begin(), 
+             JE = (*I).end(); J != JE; ++J)
+        if(!ExtractDecl(*J))
+          return 0;
 
-  }
-
-  bool DeclExtractor::HandleTopLevelDecl(DeclGroupRef DGR) {
-    bool hasNoErrors = true;
-    for (DeclGroupRef::iterator I = DGR.begin(), E = DGR.end(); I != E; ++I)
-      hasNoErrors = hasNoErrors && ExtractDecl(*I);
-
-    return hasNoErrors;
+    return T;
   }
 
   bool DeclExtractor::ExtractDecl(Decl* D) {

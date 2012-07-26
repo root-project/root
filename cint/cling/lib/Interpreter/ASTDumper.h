@@ -7,25 +7,31 @@
 #ifndef CLING_AST_DUMPER_H
 #define CLING_AST_DUMPER_H
 
-#include "clang/AST/ASTConsumer.h"
-#include "clang/AST/DeclGroup.h"
+#include "TransactionTransformer.h"
+
+namespace clang {
+  class Decl;
+}
 
 namespace cling {
 
-  class ASTDumper : public clang::ASTConsumer {
+  class Transaction;
+
+  // TODO : This is not really a transformer. Factor out.
+  class ASTDumper : public TransactionTransformer {
 
   private:
-    bool Dump;
+    bool m_Dump;
 
   public:
     ASTDumper(bool Dump = false)
-      : Dump(Dump) { }
+      : TransactionTransformer(0), m_Dump(Dump) { }
     virtual ~ASTDumper();
 
-    virtual bool HandleTopLevelDecl(clang::DeclGroupRef D);
+    virtual Transaction* Transform(Transaction* T);
 
   private:
-    void HandleTopLevelSingleDecl(clang::Decl* D);
+    void printDecl(clang::Decl* D);
   };
 
 } // namespace cling

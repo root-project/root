@@ -7,10 +7,12 @@
 #ifndef CLING_DECL_EXTRACTOR_H
 #define CLING_DECL_EXTRACTOR_H
 
-#include "clang/Sema/SemaConsumer.h"
+#include "TransactionTransformer.h"
+
 #include "clang/Sema/Lookup.h"
 
 namespace clang {
+  class ASTContext;
   class Decl;
   class DeclContext;
   class NamedDecl;
@@ -18,23 +20,22 @@ namespace clang {
 }
 
 namespace cling {
-  class DeclExtractor : public clang::SemaConsumer {
-
+  class DeclExtractor : public TransactionTransformer {
   private:
-    ///\brief Needed for the AST transformations, owned by Sema
     clang::ASTContext* m_Context;
-
-    ///\brief Needed for the AST transformations, owned by CompilerInstance
-    clang::Sema* m_Sema;
-
   public:
-    DeclExtractor();
+    DeclExtractor(clang::Sema* S);
+
     virtual ~DeclExtractor();
 
-    void Initialize(clang::ASTContext& Ctx) { m_Context = &Ctx; }
-
-    void InitializeSema(clang::Sema& S) { m_Sema = &S; }
-    bool HandleTopLevelDecl(clang::DeclGroupRef DGR);
+    ///\brief Iterates over the transaction and finds cling specific wrappers.
+    /// Scans the wrappers for declarations and extracts them onto the global
+    /// scope.
+    ///
+    ///\param[in] T - The transaction to be transformed.
+    ///\returns The transformed transaction or 0 on error.
+    ///
+    virtual Transaction* Transform(Transaction* T);
 
   private:
 
