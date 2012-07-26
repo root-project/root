@@ -96,8 +96,6 @@ namespace cling {
                       const char* llvmdir);
     ~IncrementalParser();
 
-    void Initialize();
-
     clang::CompilerInstance* getCI() const { return m_CI.get(); }
     clang::Parser* getParser() const { return m_Parser.get(); }
     clang::CodeGenerator* getCodeGenerator() const { return m_CodeGen.get(); }
@@ -159,7 +157,7 @@ namespace cling {
     Transaction* Parse(llvm::StringRef input);
 
     void enablePrintAST(bool print /*=true*/) {
-      m_Consumer->getCompilationOpts().Debug = print;
+      //m_Consumer->getCompilationOpts().Debug = print;
     }
     void enableDynamicLookup(bool value = true);
     bool isDynamicLookupEnabled() const { return m_DynamicLookupEnabled; }

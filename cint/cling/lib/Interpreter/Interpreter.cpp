@@ -244,9 +244,6 @@ namespace cling {
       }
     }
 
-    // Warm them up
-    m_IncrParser->Initialize();
-
     m_ExecutionContext->addSymbol("local_cxa_atexit",
                   (void*)(intptr_t)&cling::runtime::internal::local_cxa_atexit);
 
