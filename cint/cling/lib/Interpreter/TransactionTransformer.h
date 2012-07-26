@@ -23,12 +23,12 @@ namespace cling {
     Transaction* CurT;
 
   public:
-
     ///\brief Initializes a new transaction transformer.
     ///
     ///\param[in] S - The semantic analysis object.
     ///
     TransactionTransformer(clang::Sema* S): m_Sema(S), CurT(0) {}
+    virtual ~TransactionTransformer();
 
     ///\brief Retrieves a pointer to the semantic analysis object used for this
     /// transaction transform.
