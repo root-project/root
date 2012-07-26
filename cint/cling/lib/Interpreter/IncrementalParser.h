@@ -156,9 +156,6 @@ namespace cling {
     ///
     Transaction* Parse(llvm::StringRef input);
 
-    void enablePrintAST(bool print /*=true*/) {
-      //m_Consumer->getCompilationOpts().Debug = print;
-    }
     void enableDynamicLookup(bool value = true);
     bool isDynamicLookupEnabled() const { return m_DynamicLookupEnabled; }
 

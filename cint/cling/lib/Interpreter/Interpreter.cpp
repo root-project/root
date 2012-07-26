@@ -1749,11 +1749,6 @@ namespace cling {
     return m_IncrParser->isDynamicLookupEnabled();
   }
 
-  void Interpreter::enablePrintAST(bool print /*=true*/) {
-    m_IncrParser->enablePrintAST(print);
-    m_PrintAST = !m_PrintAST;
-  }
-
   void Interpreter::runStaticInitializersOnce() const {
     // Forward to ExecutionContext; should not be called by
     // anyone except for IncrementalParser.
