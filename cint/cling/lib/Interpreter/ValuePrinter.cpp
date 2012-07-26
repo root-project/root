@@ -145,7 +145,7 @@ static void StreamValue(llvm::raw_ostream& o, const void* const p,
         IsFirst = false;
       }
     }
-    o << " : (int) " << (int)value << "\n";
+    o << " : (int) " << ValAsAPSInt.toString(/*Radix = */10) << "\n";
   }
   else if (Ty->isReferenceType())
     StreamRef(o, p);
