@@ -848,17 +848,17 @@ TObject *TDirectoryFile::Get(const char *namecycle)
    char     name[kMaxLen];
 
    DecodeNameCycle(namecycle, name, cycle);
-   char *namobj = name;
    Int_t nch = strlen(name);
    for (Int_t i = nch-1; i > 0; i--) {
       if (name[i] == '/') {
          name[i] = 0;
          TDirectory* dirToSearch=GetDirectory(name);
-         namobj = name + i + 1;
+         const char *subnamecycle = namecycle + i + 1;
          name[i] = '/';
-         return dirToSearch?dirToSearch->Get(namobj):0;
+         return dirToSearch?dirToSearch->Get(subnamecycle):0;
       }
    }
+   const char *namobj = name;
 
 //*-*---------------------Case of Object in memory---------------------
 //                        ========================
@@ -948,21 +948,21 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const TClass* expe
    char     name[kMaxLen];
 
    DecodeNameCycle(namecycle, name, cycle);
-   char *namobj = name;
    Int_t nch = strlen(name);
    for (Int_t i = nch-1; i > 0; i--) {
       if (name[i] == '/') {
          name[i] = 0;
          TDirectory* dirToSearch=GetDirectory(name);
-         namobj = name + i + 1;
+         const char *subnamecycle = namecycle + i + 1;
          name[i] = '/';
          if (dirToSearch) {
-            return dirToSearch->GetObjectChecked(namobj, expectedClass);
+            return dirToSearch->GetObjectChecked(subnamecycle, expectedClass);
          } else {
             return 0;
          }
       }
    }
+   const char *namobj = name;
 
 //*-*---------------------Case of Object in memory---------------------
 //                        ========================
