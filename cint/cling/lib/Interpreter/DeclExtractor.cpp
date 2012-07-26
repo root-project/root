@@ -44,12 +44,12 @@ namespace cling {
 
   bool DeclExtractor::ExtractDecl(Decl* D) {
     FunctionDecl* FD = dyn_cast<FunctionDecl>(D);
-    llvm::SmallVector<NamedDecl*, 4> TouchedDecls;
 
     if (FD) {
       if (FD->getNameAsString().find("__cling_Un1Qu3"))
         return true;
 
+      llvm::SmallVector<NamedDecl*, 4> TouchedDecls;
       CompoundStmt* CS = dyn_cast<CompoundStmt>(FD->getBody());
       assert(CS && "Function body not a CompoundStmt?");
       DeclContext* DC = FD->getTranslationUnitDecl();
@@ -57,8 +57,7 @@ namespace cling {
       assert(TUScope == m_Sema->getScopeForContext(DC) && "TU scope from DC?");
       llvm::SmallVector<Stmt*, 4> Stmts;
 
-      for (CompoundStmt::body_iterator I = CS->body_begin(),
-             EI = CS->body_end();
+      for (CompoundStmt::body_iterator I = CS->body_begin(), EI = CS->body_end();
            I != EI; ++I) {
         DeclStmt* DS = dyn_cast<DeclStmt>(*I);
         if (!DS) {
