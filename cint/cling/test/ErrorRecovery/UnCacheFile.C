@@ -1,4 +1,5 @@
 // RUN: cat %s | %cling -Xclang -verify -I%p | FileCheck %s
+// XFAIL: *
 
 // Test the ability of including a wrong file see diagnostics and remove the
 // cached files so that all the changes are going to be seen next time it gets
@@ -6,6 +7,11 @@
 
 #include <iostream>
 #include <fstream>
+
+// clang caches the missed too. If the file is missing it doesn't matter whether
+// we create it later or not.
+#include "TmpClassDef.h"
+
 std::ofstream myfile;
 myfile.open("TmpClassDef.h");
 myfile << "class MyClass{};\n"
@@ -27,3 +33,6 @@ myfile.close();
 MyClass my;
 my.gimme12()
 // CHECK: (int const) 12
+
+// cleanup
+remove("TmpClassDef.h");
