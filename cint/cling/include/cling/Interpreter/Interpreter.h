@@ -138,8 +138,6 @@ namespace cling {
     ///
     bool m_PrintAST;
 
-    bool m_ValuePrinterEnabled; // whether the value printer is loaded
-
     ///\brief Flag toggling the dynamic scopes on or off.
     ///
     bool m_DynamicLookupEnabled;
