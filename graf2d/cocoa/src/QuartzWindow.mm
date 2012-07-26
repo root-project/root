@@ -1492,12 +1492,7 @@ void print_mask_info(ULong_t mask)
       [self setCanDrawConcurrently : NO];
       
       [self setHidden : YES];
-      //Actually, check if view need this.
-      const NSUInteger trackerOptions = NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInActiveApp | NSTrackingInVisibleRect;
-      frame.origin = CGPointZero;
-      NSTrackingArea * const tracker = [[NSTrackingArea alloc] initWithRect : frame options : trackerOptions owner : self userInfo : nil];
-      [self addTrackingArea : tracker];
-      [tracker release];
+      //Actually, check if view need this.      
       //
       if (attr)
          ROOT::MacOSX::X11::SetWindowAttributes(attr, self);
@@ -1518,6 +1513,36 @@ void print_mask_info(ULong_t mask)
    [fX11Properties release];
    [fBackgroundPixmap release];
    [super dealloc];
+}
+
+//______________________________________________________________________________
+- (void)updateTrackingAreas
+{
+   if (!fID)
+      return;
+
+   if (NSIsEmptyRect([self visibleRect]))
+      return;
+
+   
+   const ROOT::MacOSX::Util::AutoreleasePool pool;
+
+   if (NSArray *trackingArray = [self trackingAreas]) {
+      const NSUInteger size = [trackingArray count];
+      for (NSUInteger i = 0; i < size; ++i) {
+         NSTrackingArea *t = [trackingArray objectAtIndex:i];
+         [self removeTrackingArea:t];
+      }
+   }
+   
+   const NSUInteger trackerOptions = NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInActiveApp | NSTrackingInVisibleRect;
+   NSRect frame = {};
+   frame.size.width = self.fWidth;
+   frame.size.height = self.fHeight;
+   
+   NSTrackingArea * const tracker = [[NSTrackingArea alloc] initWithRect : frame options : trackerOptions owner : self userInfo : nil];
+   [self addTrackingArea : tracker];
+   [tracker release];
 }
 
 //Overlap management.
