@@ -23,8 +23,8 @@ add_cling_library(clingInterpreter
   ASTDumper.cpp
   ASTNodeEraser.cpp
   Callable.cpp
-  ChainedConsumer.cpp
   CIFactory.cpp
+  DeclCollector.cpp
   DeclExtractor.cpp
   DynamicLookup.cpp
   ExecutionContext.cpp
