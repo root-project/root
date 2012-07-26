@@ -7,95 +7,37 @@
 #ifndef CLING_CHAINED_CONSUMER_H
 #define CLING_CHAINED_CONSUMER_H
 
-#include "CompilationOptions.h"
-
-#include "llvm/ADT/OwningPtr.h"
-#include "llvm/ADT/SmallVector.h"
-
-#include "clang/Sema/SemaConsumer.h"
+#include "clang/AST/ASTConsumer.h"
 
 namespace clang {
-  class DeclGroupRef;
   class ASTContext;
+  class DeclGroupRef;
 }
 
 namespace cling {
 
-  class ChainedMutationListener;
-  class ChainedDeserializationListener;
   class Transaction;
 
-  class ChainedConsumer: public clang::SemaConsumer {
+  class ChainedConsumer: public clang::ASTConsumer {
+  private:
+    Transaction* m_CurTransaction;
 
   public:
-    enum EConsumerIndex {
-      kEvaluateTSynthesizer,
-      kDeclExtractor,
-      kValuePrinterSynthesizer,
-      kASTDumper,
-      kCodeGenerator,
-      kConsumersCount
-    };
-    ChainedConsumer();
+    ChainedConsumer() : m_CurTransaction(0) {}
     virtual ~ChainedConsumer();
 
     /// \{
     /// \name ASTConsumer overrides
 
-    virtual void Initialize(clang::ASTContext& Context);
-    virtual bool HandleTopLevelDecl(clang::DeclGroupRef D);
-    virtual void HandleInterestingDecl(clang::DeclGroupRef D);
-    virtual void HandleTagDeclDefinition(clang::TagDecl* D);
+    virtual bool HandleTopLevelDecl(clang::DeclGroupRef DGR);
+    virtual void HandleInterestingDecl(clang::DeclGroupRef DGR);
+    virtual void HandleTagDeclDefinition(clang::TagDecl* TD);
     virtual void HandleVTable(clang::CXXRecordDecl* RD,
                               bool DefinitionRequired);
-    virtual void CompleteTentativeDefinition(clang::VarDecl* D);
+    virtual void CompleteTentativeDefinition(clang::VarDecl* VD);
     virtual void HandleTranslationUnit(clang::ASTContext& Ctx);
 
-    virtual clang::ASTMutationListener* GetASTMutationListener();
-    virtual clang::ASTDeserializationListener* GetASTDeserializationListener();
-    virtual void PrintStats();
-
     /// \}
-
-    /// \{
-    /// \name SemaConsumer overrides
-
-    virtual void InitializeSema(clang::Sema& S);
-    virtual void ForgetSema();
-
-    /// \}
-
-    void Add(EConsumerIndex I, clang::ASTConsumer* C);
-    clang::ASTConsumer** getConsumers() {
-      return Consumers;
-    }
-
-    bool Exists(EConsumerIndex I) {
-      return Consumers[I] != 0;
-    }
-
-    clang::ASTConsumer* getConsumer(EConsumerIndex I) {
-      return Consumers[I];
-    }
-
-    bool isConsumerEnabled(EConsumerIndex I);
-
-    void pushCompilationOpts(CompilationOptions CO) {
-      COStack.push_back(CO);
-    }
-
-    void popCompilationOpts() {
-      assert(COStack.size() && "Cannot pop elements back.");
-      COStack.pop_back();
-    }
-
-    CompilationOptions& getCompilationOpts() {
-      return COStack.back();
-    }
-
-    const CompilationOptions& getCompilationOpts() const{
-      return COStack.back();
-    }
 
     /// \{
     /// \name Transaction Support
@@ -108,13 +50,6 @@ namespace cling {
     }
 
     /// \}
-
-  private:
-    clang::ASTConsumer* Consumers[kConsumersCount]; // owns them
-    llvm::SmallVector<CompilationOptions, 2> COStack;
-    llvm::OwningPtr<ChainedMutationListener> MutationListener;
-    llvm::OwningPtr<ChainedDeserializationListener> DeserializationListener;
-    Transaction* m_CurTransaction;
   };
 } // namespace cling
 
