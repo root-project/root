@@ -1530,8 +1530,8 @@ void print_mask_info(ULong_t mask)
    if (NSArray *trackingArray = [self trackingAreas]) {
       const NSUInteger size = [trackingArray count];
       for (NSUInteger i = 0; i < size; ++i) {
-         NSTrackingArea *t = [trackingArray objectAtIndex:i];
-         [self removeTrackingArea:t];
+         NSTrackingArea * const t = [trackingArray objectAtIndex : i];
+         [self removeTrackingArea : t];
       }
    }
    
