@@ -140,6 +140,10 @@ namespace cling {
 
     bool m_ValuePrinterEnabled; // whether the value printer is loaded
 
+    ///\brief Flag toggling the dynamic scopes on or off.
+    ///
+    bool m_DynamicLookupEnabled;
+
     ///\brief Stream to dump values into.
     ///
     /// TODO: Since it is only used by the ValuePrinterSynthesizer it should be
@@ -420,7 +424,7 @@ namespace cling {
 #endif
 
     void enableDynamicLookup(bool value = true);
-    bool isDynamicLookupEnabled();
+    bool isDynamicLookupEnabled() { return m_DynamicLookupEnabled; }
 
     bool isPrintingAST() { return m_PrintAST; }
     void enablePrintAST(bool print = true) { m_PrintAST = print;}

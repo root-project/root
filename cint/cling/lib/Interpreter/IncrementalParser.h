@@ -62,9 +62,6 @@ namespace cling {
     // parser (incremental)
     llvm::OwningPtr<clang::Parser> m_Parser;
 
-    // enable/disable dynamic scope
-    bool m_DynamicLookupEnabled;
-
     // One buffer for each command line, owner by the source file manager
     std::vector<llvm::MemoryBuffer*> m_MemoryBuffer;
 
@@ -155,9 +152,6 @@ namespace cling {
     ///\returns The transaction coresponding to the input.
     ///
     Transaction* Parse(llvm::StringRef input);
-
-    void enableDynamicLookup(bool value = true);
-    bool isDynamicLookupEnabled() const { return m_DynamicLookupEnabled; }
 
   private:
     void CreateSLocOffsetGenerator();

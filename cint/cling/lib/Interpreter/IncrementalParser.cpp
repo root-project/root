@@ -40,10 +40,8 @@ namespace cling {
   IncrementalParser::IncrementalParser(Interpreter* interp,
                                        int argc, const char* const *argv,
                                        const char* llvmdir):
-    m_Interpreter(interp),
-    m_DynamicLookupEnabled(false),
-    m_Consumer(0)
-  {
+    m_Interpreter(interp), m_Consumer(0) {
+
     CompilerInstance* CI
       = CIFactory::createCI(llvm::MemoryBuffer::getMemBuffer("", "CLING"),
                             argc, argv, llvmdir);
@@ -325,18 +323,5 @@ namespace cling {
       return IncrementalParser::kSuccessWithWarnings;
 
     return IncrementalParser::kSuccess;
-  }
-
-  void IncrementalParser::enableDynamicLookup(bool value) {
-    m_DynamicLookupEnabled = value;
-    Sema& S = m_CI->getSema();
-    if (isDynamicLookupEnabled()) {
-      assert(!S.ExternalSource && "Already set Sema ExternalSource");
-      S.ExternalSource = new DynamicIDHandler(&S);
-    }
-    else {
-      delete S.ExternalSource;
-      S.ExternalSource = 0;
-    }
   }
 } // namespace cling
