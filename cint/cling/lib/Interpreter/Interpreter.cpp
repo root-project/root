@@ -1741,13 +1741,13 @@ namespace cling {
   }
 
   void Interpreter::enableDynamicLookup(bool value /*=true*/) {
-    // Load the dynamic lookup specifics.
-    declare("#include \"cling/Interpreter/DynamicLookupRuntimeUniverse.h\"");
     m_DynamicLookupEnabled = value;
 
     Sema& S = getCI()->getSema();
     if (isDynamicLookupEnabled()) {
       assert(!S.ExternalSource && "Already set Sema ExternalSource");
+      // Load the dynamic lookup specifics.
+      declare("#include \"cling/Interpreter/DynamicLookupRuntimeUniverse.h\"");
       S.ExternalSource = new DynamicIDHandler(&S);
     }
     else {
