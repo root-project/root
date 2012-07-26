@@ -423,7 +423,7 @@ namespace cling {
     bool isDynamicLookupEnabled();
 
     bool isPrintingAST() { return m_PrintAST; }
-    void enablePrintAST(bool print = true);
+    void enablePrintAST(bool print = true) { m_PrintAST = print;}
 
     clang::CompilerInstance* getCI() const;
     llvm::ExecutionEngine* getExecutionEngine() const;
