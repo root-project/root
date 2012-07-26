@@ -259,7 +259,8 @@ An example of tranparency usage with parallel coordinates can be found
 in <tt>$ROOTSYS/tutorials/tree/parallelcoordtrans.C</tt>. Right now the 
 transparency is implemented only for PDF output, SVG output, and for gif,
 jpg and png outputs.
-*/
+ 
+End_Html */
 
 
 //______________________________________________________________________________
