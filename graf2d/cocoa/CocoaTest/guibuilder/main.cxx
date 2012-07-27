@@ -1,7 +1,7 @@
 #include <fstream>
 
 #include "TApplication.h"
-#include "TestFrame.h"
+#include "testframe.h"
 
 #include "guibuilder.h"
 
