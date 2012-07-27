@@ -566,35 +566,17 @@ String.prototype.endsWith = function(str, ignoreCase) {
       return gFile.fStreamers[clname];
    };
 
-   JSROOTIO.DisplayPrimitives = function(primitives, obj_name, cycle, opt) {
-      primitives['paves_text'] = new Array();
-      for (var i=0; i<primitives.length; ++i) {
-         var classname = primitives[i]['_typename'];
-         if (classname == 'JSROOTIO.TPaveText') {
-            primitives['paves_text'].push(primitives[i]);
-         }
-      }
+   JSROOTIO.DisplayPrimitives = function(primitives, obj_name, cycle, pad) {
       for (var i=0; i<primitives.length; ++i) {
          var classname = primitives[i]['_typename'];
          if (classname.match(/\bTH1/) || classname.match(/\bTH2/) ||
              classname == 'JSROOTIO.TGraph') {
-            for (var j=0; j<primitives['paves_text'].length; ++j) {
-               if (primitives[i]['fFunctions'])
-                  primitives[i]['fFunctions'].push(primitives['paves_text'][j]);
-            }
-            displayObject(primitives[i], cycle, obj_index, opt);
+            displayObject(primitives[i], cycle, obj_index, pad);
             obj_list.push(obj_name+cycle);
             obj_index++;
          }
          if (primitives[i]['fPrimitives']) {
-            var options = {
-               logx:primitives[i]['fLogx'],
-               logy:primitives[i]['fLogy'],
-               logz:primitives[i]['fLogz'],
-               gridx:primitives[i]['fGridx'],
-               gridy:primitives[i]['fGridy']
-            }
-            JSROOTIO.DisplayPrimitives(primitives[i]['fPrimitives'], obj_name, cycle, options);
+            JSROOTIO.DisplayPrimitives(primitives[i]['fPrimitives'], obj_name, cycle, primitives[i]);
          }
       }
       delete primitives['paves_text'];
@@ -2076,14 +2058,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
                if (key['className'] == 'TCanvas') {
                   var canvas = JSROOTIO.ReadTCanvas(objbuf['unzipdata'], 0);
                   if (canvas && canvas['fPrimitives']) {
-                     var options = {
-                        logx:canvas['fLogx'],
-                        logy:canvas['fLogy'],
-                        logz:canvas['fLogz'],
-                        gridx:canvas['fGridx'],
-                        gridy:canvas['fGridy']
-                     }
-                     JSROOTIO.DisplayPrimitives(canvas['fPrimitives'], obj_name, cycle, options);
+                     JSROOTIO.DisplayPrimitives(canvas['fPrimitives'], obj_name, cycle, canvas);
                   }
                }
                else if (JSROOTIO.GetStreamer(key['className'])) {

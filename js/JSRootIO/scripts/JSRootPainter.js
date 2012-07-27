@@ -159,14 +159,14 @@ var d, key_tree;
       if (what == 'min') return minimum;
    }
 
-   JSROOTPainter.GetValueColor = function(hist, zc, options) {
+   JSROOTPainter.GetValueColor = function(hist, zc, pad) {
       var wmin = this.GetMinMax(hist, 'min');
       var wmax = this.GetMinMax(hist, 'max');
       var wlmin = wmin;
       var wlmax = wmax;
       var ndivz = hist['fContour'].length;
       var scale = ndivz / (wlmax - wlmin);
-      if (options && options['logz']) {
+      if (pad && typeof(pad) != 'undefined' && pad['fLogx']) {
          if (wmin <= 0 && wmax > 0) wmin = Math.min(1.0, 0.001 * wmax);
          wlmin = Math.log(wmin)/Math.log(10);
          wlmax = Math.log(wmax)/Math.log(10);
@@ -184,7 +184,8 @@ var d, key_tree;
             default_palette.push(rgbval);
          }
       }
-      if (options && options['logz']) zc = Math.log(zc)/Math.log(10);
+      if (pad && typeof(pad) != 'undefined' && pad['fLogx'])
+         zc = Math.log(zc)/Math.log(10);
       if (zc < wlmin) zc = wlmin;
       var ncolors = default_palette.length
       var color = Math.round(0.01 + (zc - wlmin) * scale);
@@ -194,30 +195,30 @@ var d, key_tree;
       return default_palette[icol];
    };
 
-   JSROOTPainter.displayObject = function(obj, idx, options) {
+   JSROOTPainter.displayObject = function(obj, idx, pad) {
       if (obj['_typename'].match(/\bTH1/) ||
           obj['_typename'].match(/\bTH2/)) {
-         JSROOTPainter.displayHistogram(obj, idx, options);
+         JSROOTPainter.displayHistogram(obj, idx, pad);
          return true;
       }
       else if (obj['_typename'] == 'JSROOTIO.TGraph') {
-         JSROOTPainter.displayGraph(obj, idx, options);
+         JSROOTPainter.displayGraph(obj, idx, pad);
          return true;
       }
       else
          return false;
    };
 
-   JSROOTPainter.displayHistogram = function(histo, idx, options) {
+   JSROOTPainter.displayHistogram = function(histo, idx, pad) {
       var i, j;
       var logx = false, logy = false, logz = false, gridx = true, gridy = true;
       var time_scalex = 1, time_scaley = 1;
-      if (options && typeof(options) != 'undefined') {
-         logx = options['logx'];
-         logy = options['logy'];
-         logz = options['logz'];
-         gridx = options['gridx'];
-         gridy = options['gridy'];
+      if (pad && typeof(pad) != 'undefined') {
+         logx = pad['fLogx'];
+         logy = pad['fLogy'];
+         logz = pad['fLogz'];
+         gridx = pad['fGridx'];
+         gridy = pad['fGridy'];
       }
       // check for axis scale format, and convert if required
       // (highcharts time unit is in milliseconds)
@@ -367,54 +368,66 @@ var d, key_tree;
                stickyTracking: false
             }]
          }, function(chart) {
-            if (typeof(histo['fFunctions']) != 'undefined') {
+            function display_pavetext(pave) {
+               if (pave['fName'] == 'title') return;
                var scale_x = chart.plotLeft + chart.plotWidth + chart.marginRight;
                var scale_y = chart.plotTop + chart.plotHeight + chart.marginBottom - 15;
+               var leg_x, leg_y, leg_w, leg_h;
+               var pos_x = pave['fX1NDC'] * scale_x;
+               var pos_y = (1.0 - pave['fY1NDC']) * scale_y;
+               var lines = '';
+               var nlines = pave['fLines'].length;
+               for (j=0; j<nlines; ++j) {
+                  lines = lines + '<br>' + pave['fLines'][j]['fTitle'];
+               }
+               pos_y -= (nlines * 15);
+               var text = chart.renderer.text(
+                   lines, pos_x, pos_y)
+               .attr({
+                   zIndex: 5
+               })
+               .css({
+                   fontSize: '8pt',
+                   color: 'black'
+               }).add();
+               var box = text.getBBox();
+               if (box.x == 0 && box.y == 0) {
+                  // Firefox bug?
+                  leg_x = pos_x - 4;
+                  leg_y = pos_y + 4;
+                  leg_w = (box.width - pos_x) + 10;
+                  leg_h = (box.height - pos_y) - 3;
+               }
+               else {
+                  // normal case
+                  leg_x = box.x - 5;
+                  leg_y = box.y - 2;
+                  leg_w = box.width + 10;
+                  leg_h = box.height + 4;
+               }
+               chart.renderer.rect(leg_x, leg_y, leg_w, leg_h, 0)
+               .attr({
+                   fill: '#FFFFFF',
+                   stroke: 'gray',
+                   'stroke-width': 1,
+                   zIndex: 4
+               }).add();
+            };
+            if (typeof(histo['fFunctions']) != 'undefined') {
                for (i=0; i<histo['fFunctions'].length; ++i) {
                   if (histo['fFunctions'][i]['_typename'] == 'JSROOTIO.TPaveText') {
-                     if (histo['fFunctions'][i]['fX1NDC'] > 1.0 || histo['fFunctions'][i]['fY1NDC'] > 1.0 ||
-                         histo['fFunctions'][i]['fX1NDC'] < 0.0 || histo['fFunctions'][i]['fY1NDC'] < 0.0)
-                        continue;
-                     var leg_x, leg_y, leg_w, leg_h;
-                     var pos_x = histo['fFunctions'][i]['fX1NDC'] * scale_x;
-                     var pos_y = (1.0 - histo['fFunctions'][i]['fY1NDC']) * scale_y;
-                     var lines = '';
-                     var nlines = histo['fFunctions'][i]['fLines'].length;
-                     for (j=0; j<nlines; ++j) {
-                        lines = lines + '<br>' + histo['fFunctions'][i]['fLines'][j]['fTitle'];
-                     }
-                     pos_y -= (nlines * 15);
-                     var text = chart.renderer.text(
-                         lines, pos_x, pos_y)
-                     .attr({
-                         zIndex: 5
-                     })
-                     .css({
-                         fontSize: '8pt',
-                         color: 'black'
-                     }).add();
-                     var box = text.getBBox();
-                     if (box.x == 0 && box.y == 0) {
-                        // Firefox bug?
-                        leg_x = pos_x - 4;
-                        leg_y = pos_y + 4;
-                        leg_w = (box.width - pos_x) + 10;
-                        leg_h = (box.height - pos_y) - 3;
-                     }
-                     else {
-                        // normal case
-                        leg_x = box.x - 5;
-                        leg_y = box.y - 2;
-                        leg_w = box.width + 10;
-                        leg_h = box.height + 4;
-                     }
-                     chart.renderer.rect(leg_x, leg_y, leg_w, leg_h, 0)
-                     .attr({
-                         fill: '#FFFFFF',
-                         stroke: 'gray',
-                         'stroke-width': 1,
-                         zIndex: 4
-                     }).add();
+                     if (histo['fFunctions'][i]['fX1NDC'] < 1.0 && histo['fFunctions'][i]['fY1NDC'] < 1.0 &&
+                         histo['fFunctions'][i]['fX1NDC'] > 0.0 && histo['fFunctions'][i]['fY1NDC'] > 0.0)
+                     display_pavetext(histo['fFunctions'][i]);
+                  }
+               }
+            }
+            if (pad && typeof(pad['fPrimitives']) != 'undefined') {
+               for (i=0; i<pad['fPrimitives'].length; ++i) {
+                  if (pad['fPrimitives'][i]['_typename'] == 'JSROOTIO.TPaveText') {
+                     if (pad['fPrimitives'][i]['fX1NDC'] < 1.0 && pad['fPrimitives'][i]['fY1NDC'] < 1.0 &&
+                         pad['fPrimitives'][i]['fX1NDC'] > 0.0 && pad['fPrimitives'][i]['fY1NDC'] > 0.0)
+                     display_pavetext(pad['fPrimitives'][i]);
                   }
                }
             }
@@ -463,7 +476,7 @@ var d, key_tree;
                var bin_content = histo.GetBinContent(i, j);
                if (bin_content > minbin) {
                   if (histo['fOption'] == 'colz') {
-                     fill_color = line_color = this.GetValueColor(histo, bin_content, options);
+                     fill_color = line_color = this.GetValueColor(histo, bin_content, pad);
                      bin_size = 1.8;
                   }
                   else {
@@ -603,54 +616,66 @@ var d, key_tree;
                stickyTracking: false
             }]
          }, function(chart) {
-            if (typeof(histo['fFunctions']) != 'undefined') {
+            function display_pavetext(pave) {
+               if (pave['fName'] == 'title') return;
                var scale_x = chart.plotLeft + chart.plotWidth + chart.marginRight;
                var scale_y = chart.plotTop + chart.plotHeight + chart.marginBottom - 15;
+               var leg_x, leg_y, leg_w, leg_h;
+               var pos_x = 10 + (pave['fX1NDC'] * scale_x);
+               var pos_y = (1.0 - pave['fY1NDC']) * scale_y;
+               var lines = '';
+               var nlines = pave['fLines'].length;
+               for (j=0; j<nlines; ++j) {
+                  lines = lines + '<br>' + pave['fLines'][j]['fTitle'];
+               }
+               pos_y -= (nlines * 15);
+               var text = chart.renderer.text(
+                   lines, pos_x, pos_y)
+               .attr({
+                   zIndex: 5
+               })
+               .css({
+                   fontSize: '8pt',
+                   color: 'black'
+               }).add();
+               var box = text.getBBox();
+               if (box.x == 0 && box.y == 0) {
+                  // Firefox bug?
+                  leg_x = pos_x - 4;
+                  leg_y = pos_y + 4;
+                  leg_w = (box.width - pos_x) + 10;
+                  leg_h = (box.height - pos_y) - 3;
+               }
+               else {
+                  // normal case
+                  leg_x = box.x - 5;
+                  leg_y = box.y - 2;
+                  leg_w = box.width + 10;
+                  leg_h = box.height + 4;
+               }
+               chart.renderer.rect(leg_x, leg_y, leg_w, leg_h, 0)
+               .attr({
+                   fill: '#FFFFFF',
+                   stroke: 'gray',
+                   'stroke-width': 1,
+                   zIndex: 4
+               }).add();
+            }
+            if (typeof(histo['fFunctions']) != 'undefined') {
                for (i=0; i<histo['fFunctions'].length; ++i) {
                   if (histo['fFunctions'][i]['_typename'] == 'JSROOTIO.TPaveText') {
-                     if (histo['fFunctions'][i]['fX1NDC'] > 1.0 || histo['fFunctions'][i]['fY1NDC'] > 1.0 ||
-                         histo['fFunctions'][i]['fX1NDC'] < 0.0 || histo['fFunctions'][i]['fY1NDC'] < 0.0)
-                        continue;
-                     var leg_x, leg_y, leg_w, leg_h;
-                     var pos_x = 10 + (histo['fFunctions'][i]['fX1NDC'] * scale_x);
-                     var pos_y = (1.0 - histo['fFunctions'][i]['fY1NDC']) * scale_y;
-                     var lines = '';
-                     var nlines = histo['fFunctions'][i]['fLines'].length;
-                     for (j=0; j<nlines; ++j) {
-                        lines = lines + '<br>' + histo['fFunctions'][i]['fLines'][j]['fTitle'];
-                     }
-                     pos_y -= (nlines * 15);
-                     var text = chart.renderer.text(
-                         lines, pos_x, pos_y)
-                     .attr({
-                         zIndex: 5
-                     })
-                     .css({
-                         fontSize: '8pt',
-                         color: 'black'
-                     }).add();
-                     var box = text.getBBox();
-                     if (box.x == 0 && box.y == 0) {
-                        // Firefox bug?
-                        leg_x = pos_x - 4;
-                        leg_y = pos_y + 4;
-                        leg_w = (box.width - pos_x) + 10;
-                        leg_h = (box.height - pos_y) - 3;
-                     }
-                     else {
-                        // normal case
-                        leg_x = box.x - 5;
-                        leg_y = box.y - 2;
-                        leg_w = box.width + 10;
-                        leg_h = box.height + 4;
-                     }
-                     chart.renderer.rect(leg_x, leg_y, leg_w, leg_h, 0)
-                     .attr({
-                         fill: '#FFFFFF',
-                         stroke: 'gray',
-                         'stroke-width': 1,
-                         zIndex: 4
-                     }).add();
+                     if (histo['fFunctions'][i]['fX1NDC'] < 1.0 && histo['fFunctions'][i]['fY1NDC'] < 1.0 &&
+                         histo['fFunctions'][i]['fX1NDC'] > 0.0 && histo['fFunctions'][i]['fY1NDC'] > 0.0)
+                     display_pavetext(histo['fFunctions'][i]);
+                  }
+               }
+            }
+            if (pad && typeof(pad['fPrimitives']) != 'undefined') {
+               for (i=0; i<pad['fPrimitives'].length; ++i) {
+                  if (pad['fPrimitives'][i]['_typename'] == 'JSROOTIO.TPaveText') {
+                     if (pad['fPrimitives'][i]['fX1NDC'] < 1.0 && pad['fPrimitives'][i]['fY1NDC'] < 1.0 &&
+                         pad['fPrimitives'][i]['fX1NDC'] > 0.0 && pad['fPrimitives'][i]['fY1NDC'] > 0.0)
+                     display_pavetext(pad['fPrimitives'][i]);
                   }
                }
             }
@@ -659,15 +684,15 @@ var d, key_tree;
       }
    };
 
-   JSROOTPainter.displayGraph = function(graph, idx, options) {
+   JSROOTPainter.displayGraph = function(graph, idx, pad) {
       var logx = false, logy = false, logz = false, gridx = true, gridy = true;
       var scalex = 1, scaley = 1;
-      if (options && typeof(options) != 'undefined') {
-         logx = options['logx'];
-         logy = options['logy'];
-         logz = options['logz'];
-         gridx = options['gridx'];
-         gridy = options['gridy'];
+      if (pad && typeof(pad) != 'undefined') {
+         logx = pad['fLogx'];
+         logy = pad['fLogy'];
+         logz = pad['fLogz'];
+         gridx = pad['fGridx'];
+         gridy = pad['fGridy'];
       }
       // check for axis scale format, and convert if required
       // (highcharts time unit is in milliseconds)
@@ -813,54 +838,66 @@ var d, key_tree;
                stickyTracking: false
             }]
          }, function(chart) {
-            if (typeof(graph['fHistogram']['fFunctions']) != 'undefined') {
+            function display_pavetext(pave) {
+               if (pave['fName'] == 'title') return;
                var scale_x = chart.plotLeft + chart.plotWidth + chart.marginRight;
                var scale_y = chart.plotTop + chart.plotHeight + chart.marginBottom - 15;
+               var leg_x, leg_y, leg_w, leg_h;
+               var pos_x = pave['fX1NDC'] * scale_x;
+               var pos_y = (1.0 - pave['fY1NDC']) * scale_y;
+               var lines = '';
+               var nlines = pave['fLines'].length;
+               for (j=0; j<nlines; ++j) {
+                  lines = lines + '<br>' + pave['fLines'][j]['fTitle'];
+               }
+               pos_y -= (nlines * 15);
+               var text = chart.renderer.text(
+                   lines, pos_x, pos_y)
+               .attr({
+                   zIndex: 5
+               })
+               .css({
+                   fontSize: '8pt',
+                   color: 'black'
+               }).add();
+               var box = text.getBBox();
+               if (box.x == 0 && box.y == 0) {
+                  // Firefox bug?
+                  leg_x = pos_x - 4;
+                  leg_y = pos_y + 4;
+                  leg_w = (box.width - pos_x) + 10;
+                  leg_h = (box.height - pos_y) - 3;
+               }
+               else {
+                  // normal case
+                  leg_x = box.x - 5;
+                  leg_y = box.y - 2;
+                  leg_w = box.width + 10;
+                  leg_h = box.height + 4;
+               }
+               chart.renderer.rect(leg_x, leg_y, leg_w, leg_h, 0)
+               .attr({
+                   fill: '#FFFFFF',
+                   stroke: 'gray',
+                   'stroke-width': 1,
+                   zIndex: 4
+               }).add();
+            }
+            if (typeof(graph['fHistogram']['fFunctions']) != 'undefined') {
                for (i=0; i<graph['fHistogram']['fFunctions'].length; ++i) {
                   if (graph['fHistogram']['fFunctions'][i]['_typename'] == 'JSROOTIO.TPaveText') {
-                     if (graph['fHistogram']['fFunctions'][i]['fX1NDC'] > 1.0 || graph['fHistogram']['fFunctions'][i]['fY1NDC'] > 1.0 ||
-                         graph['fHistogram']['fFunctions'][i]['fX1NDC'] < 0.0 || graph['fHistogram']['fFunctions'][i]['fY1NDC'] < 0.0)
-                        continue;
-                     var leg_x, leg_y, leg_w, leg_h;
-                     var pos_x = graph['fHistogram']['fFunctions'][i]['fX1NDC'] * scale_x;
-                     var pos_y = (1.0 - graph['fHistogram']['fFunctions'][i]['fY1NDC']) * scale_y;
-                     var lines = '';
-                     var nlines = graph['fHistogram']['fFunctions'][i]['fLines'].length;
-                     for (j=0; j<nlines; ++j) {
-                        lines = lines + '<br>' + graph['fHistogram']['fFunctions'][i]['fLines'][j]['fTitle'];
-                     }
-                     pos_y -= (nlines * 15);
-                     var text = chart.renderer.text(
-                         lines, pos_x, pos_y)
-                     .attr({
-                         zIndex: 5
-                     })
-                     .css({
-                         fontSize: '8pt',
-                         color: 'black'
-                     }).add();
-                     var box = text.getBBox();
-                     if (box.x == 0 && box.y == 0) {
-                        // Firefox bug?
-                        leg_x = pos_x - 4;
-                        leg_y = pos_y + 4;
-                        leg_w = (box.width - pos_x) + 10;
-                        leg_h = (box.height - pos_y) - 3;
-                     }
-                     else {
-                        // normal case
-                        leg_x = box.x - 5;
-                        leg_y = box.y - 2;
-                        leg_w = box.width + 10;
-                        leg_h = box.height + 4;
-                     }
-                     chart.renderer.rect(leg_x, leg_y, leg_w, leg_h, 0)
-                     .attr({
-                         fill: '#FFFFFF',
-                         stroke: 'gray',
-                         'stroke-width': 1,
-                         zIndex: 4
-                     }).add();
+                     if (graph['fHistogram']['fFunctions'][i]['fX1NDC'] < 1.0 && graph['fHistogram']['fFunctions'][i]['fY1NDC'] < 1.0 &&
+                         graph['fHistogram']['fFunctions'][i]['fX1NDC'] > 0.0 && graph['fHistogram']['fFunctions'][i]['fY1NDC'] > 0.0)
+                     display_pavetext(graph['fHistogram']['fFunctions'][i]);
+                  }
+               }
+            }
+            if (pad && typeof(pad['fPrimitives']) != 'undefined') {
+               for (i=0; i<pad['fPrimitives'].length; ++i) {
+                  if (pad['fPrimitives'][i]['_typename'] == 'JSROOTIO.TPaveText') {
+                     if (pad['fPrimitives'][i]['fX1NDC'] < 1.0 && pad['fPrimitives'][i]['fY1NDC'] < 1.0 &&
+                         pad['fPrimitives'][i]['fX1NDC'] > 0.0 && pad['fPrimitives'][i]['fY1NDC'] > 0.0)
+                     display_pavetext(pad['fPrimitives'][i]);
                   }
                }
             }

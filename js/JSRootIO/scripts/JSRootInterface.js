@@ -121,17 +121,18 @@ function showDirectory(dir_name, cycle, dir_id) {
    gFile.ReadDirectory(dir_name, cycle, dir_id);
 };
 
-function displayObject(obj, cycle, idx, opt) {
+function displayObject(obj, cycle, idx, pad) {
    if (!obj['_typename'].match(/\bTH1/) &&
        !obj['_typename'].match(/\bTH2/) &&
-       obj['_typename'] != 'JSROOTIO.TGraph') {
+       obj['_typename'] != 'JSROOTIO.TGraph' &&
+       obj['_typename'] != 'JSROOTIO.TProfile') {
       return;
    }
    var uid = "uid_accordion_"+(++last_index);
    var entryInfo = "<h5 id=\""+uid+"\"><a> " + obj['fName'] + ";" + cycle + "</a>&nbsp; </h5>\n";
    entryInfo += "<div id='histogram" + idx + "'>\n";
    $("#report").append(entryInfo);
-   JSROOTPainter.displayObject(obj, idx, opt);
+   JSROOTPainter.displayObject(obj, idx, pad);
    addCollapsible('#'+uid);
 };
 
@@ -205,7 +206,8 @@ function ResetUI() {
    last_index = 0;
    while (chart_list.length > 0) {
       var chart = chart_list.pop();
-      chart.destroy();
+      if (chart.destroy && typeof(chart.destroy) === "function")
+         chart.destroy();
       delete chart;
       chart = null;
    }
