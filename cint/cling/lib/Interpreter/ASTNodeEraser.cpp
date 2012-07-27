@@ -31,8 +31,18 @@ namespace cling {
     typedef llvm::DenseSet<const FileEntry*> FileEntries;
 
     ///\brief The Sema object being reverted (contains the AST as well).
+    ///
     Sema* m_Sema;
+
+    ///\brief The current transaction being reverted.
+    ///
     const Transaction* m_CurTransaction;
+
+    ///\brief The mangler used to get the mangled names of the declarations
+    /// that we are removing from the module.
+    ///
+    llvm::OwningPtr<MangleContext> m_Mangler;
+
 
     ///\brief Reverted declaration contains a SourceLocation, representing a 
     /// place in the file where it was seen. Clang caches that file and even if
@@ -43,8 +53,9 @@ namespace cling {
     FileEntries m_FilesToUncache;
 
   public:
-    DeclReverter(Sema* S, const Transaction* T): m_Sema(S), m_CurTransaction(T) 
-    { }
+    DeclReverter(Sema* S, const Transaction* T): m_Sema(S), m_CurTransaction(T) {
+      m_Mangler.reset(m_Sema->getASTContext().createMangleContext());
+    }
     ~DeclReverter();
 
     ///\brief Interface with nice name, forwarding to Visit.
@@ -249,14 +260,12 @@ namespace cling {
     // if it was successfully removed from the AST we have to check whether
     // code was generated and remove it.
     if (Successful && m_CurTransaction->getState() == Transaction::kCommitted) {
-      MangleContext& Mangler = *m_Sema->getASTContext().createMangleContext();
-
       std::string mangledName = ND->getName();
 
-      if (Mangler.shouldMangleDeclName(ND)) {
+      if (m_Mangler->shouldMangleDeclName(ND)) {
         mangledName = "";
         llvm::raw_string_ostream RawStr(mangledName);
-        Mangler.mangleName(ND, RawStr);
+        m_Mangler->mangleName(ND, RawStr);
         RawStr.flush();
       }
 
