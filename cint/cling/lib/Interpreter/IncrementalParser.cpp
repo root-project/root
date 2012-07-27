@@ -339,7 +339,6 @@ namespace cling {
 
     ASTNodeEraser NodeEraser(&getCI()->getSema());
     NodeEraser.RevertTransaction(T);
-    int i;
   }
 
 } // namespace cling
