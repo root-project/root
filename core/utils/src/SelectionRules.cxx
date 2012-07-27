@@ -1354,7 +1354,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D,
       
       
       std::string parent_name, parent_qual_name;
-      if (!GetParentName(D, parent_name, parent_qual_name)) return false;
+      if (!GetParentName(D, parent_name, parent_qual_name)) return 0;
       
       std::string file_name;
       if (GetHasFileNameRule()){
@@ -1456,7 +1456,7 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const 
       const BaseSelectionRule *selector = 0;
       Int_t fImplNo = 0;
       bool dontC, noName;
-      const BaseSelectionRule *explicit_selector = false;
+      const BaseSelectionRule *explicit_selector = 0;
       int fFileNo = 0;
       bool file;
       
