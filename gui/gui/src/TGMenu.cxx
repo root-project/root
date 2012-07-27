@@ -71,6 +71,7 @@
 #include "TGButton.h"
 #include "TQConnection.h"
 #include "TParameter.h"
+#include "RConfigure.h"
 #include "TEnv.h"
 
 const TGGC   *TGPopupMenu::fgDefaultGC = 0;
@@ -757,6 +758,9 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                                  (ce->fPopup->GetParent())->GetId(),
                                   ce->fEx+currentMenu->fMenuWidth, ce->fEy,
                                   ax, ay, wdummy);
+#ifdef R__HAS_COCOA
+                  gVirtualX->SetWMTransientHint(ce->fPopup->GetId(), GetId());
+#endif
                   ce->fPopup->PlaceMenu(ax-5, ay-1, kFALSE, kFALSE);
                }
             }
@@ -793,7 +797,9 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                                        (submenu->GetParent())->GetId(),
                                        ce->fEx+menu->fMenuWidth, ce->fEy,
                                        ax, ay, wdummy);
-
+#ifdef R__HAS_COCOA
+                        gVirtualX->SetWMTransientHint(submenu->GetId(), GetId());
+#endif
                         submenu->PlaceMenu(ax-5, ay-1, kFALSE, kFALSE);
                      }
                      break;
@@ -1456,7 +1462,9 @@ Bool_t TGPopupMenu::HandleTimer(TTimer *)
                                        (fCurrent->fPopup->GetParent())->GetId(),
                                        fCurrent->fEx+fMenuWidth, fCurrent->fEy,
                                        ax, ay, wdummy);
-
+#ifdef R__HAS_COCOA
+         gVirtualX->SetWMTransientHint(fCurrent->fPopup->GetId(), GetId());
+#endif
          fCurrent->fPopup->PlaceMenu(ax-5, ay-1, kFALSE, kFALSE);
       }
    }
@@ -2040,6 +2048,9 @@ void TGMenuTitle::SetState(Bool_t state)
                                          0, 0, ax, ay, wdummy);
 
          // place the menu just under the window:
+#ifdef R__HAS_COCOA
+         gVirtualX->SetWMTransientHint(fMenu->GetId(), GetId());
+#endif
          fMenu->PlaceMenu(ax-1, ay+fHeight, kTRUE, kFALSE); //kTRUE);
       }
    } else {

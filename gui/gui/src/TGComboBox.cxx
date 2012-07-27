@@ -480,6 +480,9 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
                                          0, fHeight, ax, ay, wdummy);
          // Drop down listbox of combo box should react to pointer motion...
          fListBox->GetContainer()->AddInput(kPointerMotionMask);
+#ifdef R__HAS_COCOA
+         gVirtualX->SetWMTransientHint(fComboFrame->GetId(), GetId());
+#endif
          fComboFrame->PlacePopup(ax, ay, fWidth-2, fComboFrame->GetDefaultHeight());
          fDDButton->SetState(kButtonUp);
 #ifdef R__HAS_COCOA

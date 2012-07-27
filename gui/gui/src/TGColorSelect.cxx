@@ -50,6 +50,7 @@
 #include "TGColorSelect.h"
 #include "TGColorDialog.h"
 #include "TGResourcePool.h"
+#include "RConfigure.h"
 #include "TG3DLine.h"
 #include "TColor.h"
 #include "Riostream.h"
@@ -453,6 +454,9 @@ Bool_t TGColorSelect::HandleButton(Event_t *event)
          gVirtualX->TranslateCoordinates(fId, gClient->GetDefaultRoot()->GetId(),
                                          0, fHeight, ax, ay, wdummy);
 
+#ifdef R__HAS_COCOA
+         gVirtualX->SetWMTransientHint(fColorPopup->GetId(), GetId());
+#endif
          fColorPopup->PlacePopup(ax, ay, fColorPopup->GetDefaultWidth(),
                                          fColorPopup->GetDefaultHeight());
          fColorPopup = 0;
