@@ -1192,6 +1192,11 @@ void print_mask_info(ULong_t mask)
 
    [fContentView setHidden : YES];
    [self orderOut : self];
+   
+   if (fMainWindow && !fDelayedTransient) {
+      [fMainWindow removeChildWindow : self];
+      fMainWindow = nil;
+   }
 }
 
 //Events.
