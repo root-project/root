@@ -153,6 +153,8 @@ namespace cling {
     ///
     Transaction* Parse(llvm::StringRef input);
 
+    void unloadTransaction(Transaction* T);
+
   private:
     void CreateSLocOffsetGenerator();
     EParseResult ParseInternal(llvm::StringRef input);

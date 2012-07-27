@@ -265,6 +265,8 @@ namespace cling {
 
   public:
 
+    void unload();
+
     ///\brief Implements named parameter idiom - allows the idiom
     /// LookupDecl().LookupDecl()...
     ///

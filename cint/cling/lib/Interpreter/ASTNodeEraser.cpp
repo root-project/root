@@ -7,13 +7,17 @@
 #include "ASTNodeEraser.h"
 #include "Transaction.h"
 
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclVisitor.h"
 #include "clang/AST/DependentDiagnostic.h"
+#include "clang/AST/Mangle.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
+
+#include "llvm/Module.h"
 
 using namespace clang;
 
@@ -28,6 +32,7 @@ namespace cling {
 
     ///\brief The Sema object being reverted (contains the AST as well).
     Sema* m_Sema;
+    const Transaction* m_CurTransaction;
 
     ///\brief Reverted declaration contains a SourceLocation, representing a 
     /// place in the file where it was seen. Clang caches that file and even if
@@ -38,8 +43,16 @@ namespace cling {
     FileEntries m_FilesToUncache;
 
   public:
-    DeclReverter(Sema* S): m_Sema(S) {}
+    DeclReverter(Sema* S, const Transaction* T): m_Sema(S), m_CurTransaction(T) 
+    { }
     ~DeclReverter();
+
+    ///\brief Interface with nice name, forwarding to Visit.
+    ///
+    ///\param[in] D - The declaration to forward.
+    ///\returns true on success.
+    ///
+    bool RevertDecl(Decl* D) { return Visit(D); }
 
     ///\brief Function that contains common actions, done for every removal of
     /// declaration.
@@ -231,10 +244,29 @@ namespace cling {
       if (isOnScopeChains(ND))
         m_Sema->IdResolver.RemoveDecl(ND);
 
-      return true;
     }
 
-    return false;
+    // if it was successfully removed from the AST we have to check whether
+    // code was generated and remove it.
+    if (Successful && m_CurTransaction->getState() == Transaction::kCommitted) {
+      MangleContext& Mangler = *m_Sema->getASTContext().createMangleContext();
+
+      std::string mangledName = ND->getName();
+
+      if (Mangler.shouldMangleDeclName(ND)) {
+        mangledName = "";
+        llvm::raw_string_ostream RawStr(mangledName);
+        Mangler.mangleName(ND, RawStr);
+        RawStr.flush();
+      }
+
+      llvm::GlobalValue* GV 
+        = m_CurTransaction->getModule()->getNamedValue(mangledName);
+
+      GV->eraseFromParent();
+    }
+
+    return Successful;
   }
 
   bool DeclReverter::VisitVarDecl(VarDecl* VD) {
@@ -451,16 +483,15 @@ namespace cling {
   }
 
   ASTNodeEraser::ASTNodeEraser(Sema* S) : m_Sema(S) {
-    m_DeclReverter = new DeclReverter(S);
   }
 
   ASTNodeEraser::~ASTNodeEraser() {
-    delete m_DeclReverter;
-    m_DeclReverter = 0;
   }
 
   bool ASTNodeEraser::RevertTransaction(const Transaction* T) {
+    DeclReverter DeclRev(m_Sema, T);
     bool Successful = true;
+
     for (Transaction::const_reverse_iterator I = T->rdecls_begin(),
            E = T->rdecls_end(); I != E; ++I) {
       const DeclGroupRef& DGR = (*I);
@@ -472,16 +503,11 @@ namespace cling {
 
         // Get rid of the declaration. If the declaration has name we should
         // heal the lookup tables as well
-        Successful = RevertDecl(*Di) && Successful;
+        Successful = DeclRev.RevertDecl(*Di) && Successful;
         assert(Successful && "Cannot handle that yet!");
       }
     }
 
     return Successful;
   }
-
-  bool ASTNodeEraser::RevertDecl(Decl* D) {
-    return m_DeclReverter->Visit(D);
-  }
-
 } // end namespace cling

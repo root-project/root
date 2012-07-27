@@ -175,18 +175,15 @@ namespace cling {
    //
    //  Unload code fragment.
    //
-   //if (cmd_char == 'U') {
-   //   llvm::sys::Path path(param);
-   //   if (path.isDynamicLibrary()) {
-   //      std::cerr << "[i] Failure: cannot unload shared libraries yet!"
-   //                << std::endl;
-   //   }
-   //   bool success = m_Interp.unloadFile(param);
-   //   if (!success) {
-   //      //fprintf(stderr, "Unload file failed.\n");
-   //   }
-   //   return true;
-   //}
+   if (Command == "U") {
+     // llvm::sys::Path path(param);
+     // if (path.isDynamicLibrary()) {
+     //   std::cerr << "[i] Failure: cannot unload shared libraries yet!"
+     //             << std::endl;
+     // }
+     m_Interp.unload();
+     return true;
+   }
    //
    //  Unrecognized command.
    //
