@@ -87,6 +87,7 @@ gen-doxygen-cfg:
 	$(Echo) $(PROJ_OBJ_DIR)/doxygen.cfg
 	cat $(PROJ_SRC_DIR)/doxygen.cfg.in | sed \
 	  -e 's,@docs_srcdir@,'$(PROJ_SRC_DIR)",g" \
+	  -e 's,@cling_srcdir@,'$(call realpath, $(PROJ_SRC_DIR)/$(CLING_LEVEL))",g" \
 	  -e 's/@DOT@/dot/g' \
 	  -e 's/@PACKAGE_VERSION@/mainline/' \
 	  -e 's/@docs_builddir@/./g' > $(PROJ_OBJ_DIR)/doxygen.cfg
