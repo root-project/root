@@ -391,7 +391,7 @@ SHOW_INCLUDE_FILES     = YES
 # will list include files with double quotes in the documentation 
 # rather than with sharp brackets.
 
-FORCE_LOCAL_INCLUDES   = NO
+FORCE_LOCAL_INCLUDES   = YES
 
 # If the INLINE_INFO tag is set to YES (the default) then a tag [inline] 
 # is inserted in the documentation for inline members.
