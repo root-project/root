@@ -144,7 +144,7 @@ namespace cling {
 
     // We are sure it's safe to pipe it through the transformers
     for (size_t i = 0; i < m_TTransformers.size(); ++i)
-      if (!m_TTransformers[i]->Transform(CurT)) {
+      if (!m_TTransformers[i]->TransformTransaction(*CurT)) {
         // Roll back on error in a transformer
         rollbackTransaction(CurT);
         return;

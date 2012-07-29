@@ -28,7 +28,7 @@ namespace cling {
       : TransactionTransformer(0), m_Dump(Dump) { }
     virtual ~ASTDumper();
 
-    virtual Transaction* Transform(Transaction* T);
+    virtual void Transform();
 
   private:
     void printDecl(clang::Decl* D);

@@ -19,17 +19,15 @@ namespace cling {
   ASTDumper::~ASTDumper() {}
 
 
-  Transaction* ASTDumper::Transform(Transaction* T) {
-    if (!T->getCompilationOpts().Debug)
-      return T;
+  void ASTDumper::Transform() {
+    if (!getTransaction()->getCompilationOpts().Debug)
+      return;
 
-    for (Transaction::const_iterator I = T->decls_begin(), 
-           E = T->decls_end(); I != E; ++I)
+    for (Transaction::const_iterator I = getTransaction()->decls_begin(), 
+           E = getTransaction()->decls_end(); I != E; ++I)
       for (DeclGroupRef::const_iterator J = (*I).begin(), 
              JE = (*I).end(); J != JE; ++J)
         printDecl(*J);
-
-    return T;
   }
 
   void ASTDumper::printDecl(Decl* D) {

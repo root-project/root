@@ -203,7 +203,7 @@ namespace cling {
 
     ~EvaluateTSynthesizer();
 
-    virtual Transaction* Transform(Transaction* T);
+    virtual void Transform();
 
     MapTy& getSubstSymbolMap() { return m_SubstSymbolMap; }
 

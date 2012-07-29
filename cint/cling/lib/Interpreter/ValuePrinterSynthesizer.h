@@ -32,7 +32,7 @@ public:
     ValuePrinterSynthesizer(Interpreter* Interp, clang::Sema* S);
     virtual ~ValuePrinterSynthesizer();
 
-    virtual Transaction* Transform(Transaction* T);
+    virtual void Transform();
 
   private:
     bool tryAttachVP(clang::DeclGroupRef DGR);

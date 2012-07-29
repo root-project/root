@@ -26,20 +26,16 @@ namespace cling {
   DeclExtractor::~DeclExtractor() 
   { } 
 
-  Transaction* DeclExtractor::Transform(Transaction* T) {
-    if (!T->getCompilationOpts().DeclarationExtraction)
-      return T;
+  void DeclExtractor::Transform() {
+    if (!getTransaction()->getCompilationOpts().DeclarationExtraction)
+      return;
 
-    CurT = T;
-
-    for (Transaction::const_iterator I = T->decls_begin(), 
-           E = T->decls_end(); I != E; ++I)
+    for (Transaction::const_iterator I = getTransaction()->decls_begin(), 
+           E = getTransaction()->decls_end(); I != E; ++I)
       for (DeclGroupRef::const_iterator J = (*I).begin(), 
              JE = (*I).end(); J != JE; ++J)
         if(!ExtractDecl(*J))
-          return 0;
-
-    return T;
+          setTransaction(0); // On error set to NULL.
   }
 
   bool DeclExtractor::ExtractDecl(Decl* D) {
@@ -130,7 +126,7 @@ namespace cling {
           }
 
           // Append the new top level decl to the current transaction.
-          CurT->appendUnique(DeclGroupRef(TouchedDecls[i]));
+          getTransaction()->appendUnique(DeclGroupRef(TouchedDecls[i]));
         }
       }
 

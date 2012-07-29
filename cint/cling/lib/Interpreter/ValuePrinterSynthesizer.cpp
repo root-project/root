@@ -34,16 +34,14 @@ namespace cling {
   ValuePrinterSynthesizer::~ValuePrinterSynthesizer()
   { }
 
-  Transaction* ValuePrinterSynthesizer::Transform(Transaction* T) {
-    if (!T->getCompilationOpts().ValuePrinting)
-      return T;
+  void ValuePrinterSynthesizer::Transform() {
+    if (!getTransaction()->getCompilationOpts().ValuePrinting)
+      return;
 
-    for (Transaction::const_iterator I = T->decls_begin(), 
-           E = T->decls_end(); I != E; ++I)
+    for (Transaction::const_iterator I = getTransaction()->decls_begin(), 
+           E = getTransaction()->decls_end(); I != E; ++I)
       if(!tryAttachVP(*I))
-        return 0;
-
-    return T;
+        return setTransaction(0); // On error set the to NULL.
   }
 
   bool ValuePrinterSynthesizer::tryAttachVP(DeclGroupRef DGR) {

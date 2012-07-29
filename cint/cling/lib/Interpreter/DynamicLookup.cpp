@@ -193,9 +193,9 @@ namespace cling {
   EvaluateTSynthesizer::~EvaluateTSynthesizer()
   { }
 
-  Transaction* EvaluateTSynthesizer::Transform(Transaction* T) {
-    if (!T->getCompilationOpts().DynamicScoping)
-      return T;
+  void EvaluateTSynthesizer::Transform() {
+    if (!getTransaction()->getCompilationOpts().DynamicScoping)
+      return;
 
     // include the DynamicLookup specific builtins
     if (!m_EvalDecl) {
@@ -231,8 +231,8 @@ namespace cling {
       m_NoSLoc = m_NoRange.getBegin();
       m_NoELoc =  m_NoRange.getEnd();
     }
-    for (Transaction::const_iterator I = T->decls_begin(), 
-           E = T->decls_end(); I != E; ++I)
+    for (Transaction::const_iterator I = getTransaction()->decls_begin(), 
+           E = getTransaction()->decls_end(); I != E; ++I)
       for (DeclGroupRef::const_iterator J = (*I).begin(), 
              JE = (*I).end(); J != JE; ++J)
         if (ShouldVisit(*J) && (*J)->hasBody()) {
@@ -247,7 +247,6 @@ namespace cling {
         }
 
     //TODO: Check for error before returning.
-    return T;
   }
 
   // StmtVisitor

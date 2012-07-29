@@ -32,10 +32,7 @@ namespace cling {
     /// Scans the wrappers for declarations and extracts them onto the global
     /// scope.
     ///
-    ///\param[in] T - The transaction to be transformed.
-    ///\returns The transformed transaction or 0 on error.
-    ///
-    virtual Transaction* Transform(Transaction* T);
+    virtual void Transform();
 
   private:
 
