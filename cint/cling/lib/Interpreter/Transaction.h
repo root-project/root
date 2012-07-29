@@ -24,6 +24,13 @@ namespace llvm {
 namespace cling {
   ///\brief Contains information about the consumed input at once.
   ///
+  /// A transaction could be:
+  /// - transformed - some declarations in the transaction could be modified, 
+  /// deleted or some new declarations could be added.
+  /// - rolled back - the declarations of the transactions could be reverted so
+  /// that they weren't seen at all.
+  /// - committed - code could be produced for the contents of the transaction.
+  ///
   class Transaction {
   private:
 

@@ -18,6 +18,12 @@ namespace cling {
 
   class Transaction;
 
+  ///\brief Collects declarations and fills them in cling::Transaction.
+  ///
+  /// cling::Transaction becomes is a main building block in the interpreter. 
+  /// cling::DeclCollector is responsible for appending all the declarations seen 
+  /// by clang.
+  ///
   class DeclCollector: public clang::ASTConsumer {
   private:
     Transaction* m_CurTransaction;
