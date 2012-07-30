@@ -433,7 +433,9 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    gGXBatch         = new TVirtualX("Batch", "ROOT Interface to batch graphics");
    gVirtualX        = gGXBatch;
 
-#ifdef R__WIN32
+#if defined(R__WIN32)
+   fBatch = kFALSE;
+#elif defined(R__HAS_COCOA)
    fBatch = kFALSE;
 #else
    if (gSystem->Getenv("DISPLAY"))
