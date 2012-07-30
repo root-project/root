@@ -8,6 +8,9 @@
 #include <iostream>
 #include <fstream>
 
+// cleanup
+remove("TmpClassDef.h");
+
 // clang caches the missed too. If the file is missing it doesn't matter whether
 // we create it later or not.
 #include "TmpClassDef.h"
@@ -34,5 +37,3 @@ MyClass my;
 my.gimme12()
 // CHECK: (int const) 12
 
-// cleanup
-remove("TmpClassDef.h");
