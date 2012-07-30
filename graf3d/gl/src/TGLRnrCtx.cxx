@@ -108,10 +108,6 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fColorSetStack->push_back(0);
 
    fSelectBuffer = new TGLSelectBuffer;
-   fQuadric = gluNewQuadric();
-   gluQuadricOrientation(fQuadric, (GLenum)GLU_OUTSIDE);
-   gluQuadricNormals    (fQuadric, (GLenum)GLU_SMOOTH);
-
    if (fViewer == 0)
    {
       // Assume external usage, initialize for highest quality.
@@ -353,7 +349,6 @@ void TGLRnrCtx::CloseDLCapture()
    fDLCaptureOpen = kFALSE;
 }
 
-
 /******************************************************************************/
 // TGLFont interface
 /******************************************************************************/
@@ -397,6 +392,26 @@ void TGLRnrCtx::RegisterFont(Int_t size, const char* name, Int_t mode, TGLFont& 
    // The font is scaled relative to current render scale.
 
   RegisterFontNoScale(TMath::Nint(size*fRenderScale), name, mode, out);
+}
+
+/******************************************************************************/
+// fQuadric's initialization.
+/******************************************************************************/
+
+//______________________________________________________________________
+GLUquadric *TGLRnrCtx::GetGluQuadric()
+{
+   // Initialize fQuadric.
+   
+   if (!fQuadric) {
+      if ((fQuadric = gluNewQuadric())) {
+         gluQuadricOrientation(fQuadric, (GLenum)GLU_OUTSIDE);
+         gluQuadricNormals(fQuadric, (GLenum)GLU_SMOOTH);
+      } else
+         Error("TGLRnrCtx::GetGluQuadric", "gluNewQuadric failed");
+   }
+   
+   return fQuadric;
 }
 
 
