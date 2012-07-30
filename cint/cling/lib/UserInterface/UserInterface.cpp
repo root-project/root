@@ -12,6 +12,7 @@
 #include "textinput/TerminalDisplay.h"
 
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/PathV1.h"
 
 //---------------------------------------------------------------------------
 // Construct an interface for an interpreter
@@ -39,14 +40,18 @@ void cling::UserInterface::runInteractively(bool nologo /* = false */)
   if (!nologo) {
     PrintLogo();
   }
+
+  // History file is $HOME/.cling_history
   static const char* histfile = ".cling_history";
-  std::string Prompt("[cling]$ ");
+  llvm::sys::Path histfilePath = llvm::sys::Path::GetUserHomeDirectory();
+  histfilePath.appendComponent(histfile);
 
   using namespace textinput;
   StreamReader* R = StreamReader::Create();
   TerminalDisplay* D = TerminalDisplay::Create();
-  TextInput TI(*R, *D, histfile);
-  TI.SetPrompt(Prompt.c_str());
+  TextInput TI(*R, *D, histfilePath.c_str());
+
+  TI.SetPrompt("[cling]$ ");
   std::string line;
   MetaProcessorOpts& MPOpts = m_MetaProcessor->getMetaProcessorOpts();
 
@@ -60,7 +65,7 @@ void cling::UserInterface::runInteractively(bool nologo /* = false */)
     }
 
     int indent = m_MetaProcessor->process(line.c_str());
-    Prompt = "[cling]";
+    std::string Prompt = "[cling]";
     if (MPOpts.RawInput)
       Prompt.append("! ");
     else
