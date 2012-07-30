@@ -72,6 +72,12 @@ TEventIter::TEventIter()
    fElemNum = 0;
    fElemCur = -1;
    ResetBit(TEventIter::kData);
+   if ((fPackets = new TList)) {
+      fPackets->SetName("ProcessedPackets");
+      Info("TEventIter", "fPackets list created");
+   } else {
+      Warning("TEventIter", "fPackets list could not be created");
+   }
 }
 
 //______________________________________________________________________________
@@ -96,6 +102,12 @@ TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num
    fElemNum = 0;
    fElemCur = -1;
    ResetBit(TEventIter::kData);
+   if ((fPackets = new TList)) {
+      fPackets->SetName("ProcessedPackets");
+      Info("TEventIter", "fPackets list created");
+   } else {
+      Warning("TEventIter", "fPackets list could not be created");
+   }
 }
 
 //______________________________________________________________________________
@@ -103,6 +115,10 @@ TEventIter::~TEventIter()
 {
    // Destructor
 
+   if (fPackets) {
+      fPackets->SetOwner(kTRUE);
+      SafeDelete(fPackets);
+   }
    delete fFile;
 }
 
@@ -253,13 +269,28 @@ Int_t TEventIterUnit::GetNextPacket(Long64_t &fst, Long64_t &num,
 
    if (fDSet->TestBit(TDSet::kIsLocal)) {
       if (fElem) {
-         SafeDelete(fElem);
+         if (fPackets) {
+            fPackets->Add(fElem);
+            PDB(kLoop, 2)
+               Info("GetNextEvent", "packet added to list (sz: %d)", fPackets->GetSize());
+            fElem = 0;
+         } else {
+            SafeDelete(fElem);
+         }
          return -1;
       } else {
          fElem = new TDSetElement("", "", "", 0, fNum);
          fElem->SetBit(TDSetElement::kEmpty);
       }
    } else {
+      if (fPackets) {
+         fPackets->Add(fElem);
+         PDB(kLoop, 2)
+            Info("GetNextEvent", "packet added to list (sz: %d)", fPackets->GetSize());
+         fElem = 0;
+      } else {
+         SafeDelete(fElem);
+      }
       SafeDelete(fElem);
       if (!(fElem = fDSet->Next()))
          return -1;
@@ -302,14 +333,28 @@ Long64_t TEventIterUnit::GetNextEvent()
 
       if (fDSet->TestBit(TDSet::kIsLocal)) {
          if (fElem) {
-            SafeDelete(fElem);
+            if (fPackets) {
+               fPackets->Add(fElem);
+               PDB(kLoop, 2)
+                  Info("GetNextEvent", "packet added to list (sz: %d)", fPackets->GetSize());
+               fElem = 0;
+            } else {
+               SafeDelete(fElem);
+            }
             return -1;
          } else {
             fElem = new TDSetElement("", "", "", 0, fNum);
             fElem->SetBit(TDSetElement::kEmpty);
          }
       } else {
-         SafeDelete(fElem);
+         if (fPackets) {
+            fPackets->Add(fElem);
+            PDB(kLoop, 2)
+               Info("GetNextEvent", "packet added to list (sz: %d)", fPackets->GetSize());
+            fElem = 0;
+         } else {
+            SafeDelete(fElem);
+         }
          if (!(fElem = fDSet->Next()))
             return -1;
       }
@@ -388,7 +433,15 @@ Int_t TEventIterObj::GetNextPacket(Long64_t &first, Long64_t &num,
          fOldBytesRead = bytesRead;
       }
 
-      SafeDelete(fElem);
+      if (fElem) {
+         // Save it to the list of processed packets
+         if (fPackets) {
+            fPackets->Add(fElem);
+            fElem = 0;
+         } else {
+            SafeDelete(fElem);
+         }
+      }
       fElem = fDSet->Next(fKeys->GetSize());
       if (fElem && fElem->GetEntryList()) {
          Error("GetNextPacket", "entry- or event-list not available");
@@ -495,7 +548,15 @@ Long64_t TEventIterObj::GetNextEvent()
          fOldBytesRead = bytesRead;
       }
 
-      SafeDelete(fElem);
+      if (fElem) {
+         // Save it to the list of processed packets
+         if (fPackets) {
+            fPackets->Add(fElem);
+            fElem = 0;
+         } else {
+            SafeDelete(fElem);
+         }
+      }
       fElem = fDSet->Next(fKeys->GetSize());
       if (fElem && fElem->GetEntryList()) {
          Error("GetNextEvent", "Entry- or event-list not available");
@@ -952,7 +1013,15 @@ Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num,
          fOldBytesRead = totBytesRead;
       }
       
-      SafeDelete(fElem);
+      if (fElem) {
+         // Save it to the list of processed packets
+         if (fPackets) {
+            fPackets->Add(fElem);
+            fElem = 0;
+         } else {
+            SafeDelete(fElem);
+         }
+      }
       while (!fElem) {
          // For a corrupted/invalid file the request for a new packet is with totalEntries = -1
          // (the default) so that the packetizer invalidates the element
@@ -1122,9 +1191,15 @@ Long64_t TEventIterTree::GetNextEvent()
       if (fElem) {
          rest = fElem->GetNum();
          if (fElemCur >= 0) rest -= (fElemCur + 1 - fElemFirst);
+         // Save it to the list of processed packets
+         if (fPackets) {
+            fPackets->Add(fElem);
+            fElem = 0;
+         } else {
+            SafeDelete(fElem);
+         }
       }
       
-      SafeDelete(fElem);
       while (!fElem) {
          // For a corrupted/invalid file the request for a new packet is with totalEntries = -1
          // (the default) so that the packetizer invalidates the element

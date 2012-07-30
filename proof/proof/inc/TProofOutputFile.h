@@ -26,7 +26,6 @@
 #endif
 
 class TCollection;
-class TProofOutputFile;
 class TString;
 class TList;
 class TFile;
@@ -82,7 +81,10 @@ private:
 protected:
 
 public:
-   enum EStatusBits { kOutputFileNameSet = BIT(16)};
+   enum EStatusBits {
+      kOutputFileNameSet = BIT(16),
+      kRetrieve          = BIT(17)  // If set, the file is copied to the final destination via the client
+   };
    TProofOutputFile() : fDir(), fRawDir(), fFileName(), fOptionsAnchor(), fOutputFileName(),
                         fWorkerOrdinal(), fLocalHost(), fIsLocal(kFALSE), fMerged(kFALSE),
                         fRunType(kMerge), fTypeOpt(kRemote), fMergeHistosOneGo(kFALSE),
@@ -106,6 +108,10 @@ public:
    Bool_t      IsMerged() const { return fMerged; }
    Bool_t      IsRegister() const { return ((fTypeOpt & kRegister) || (fTypeOpt & kVerify)) ? kTRUE : kFALSE; }
 
+   Bool_t      IsRetrieve() const { return (TestBit(TProofOutputFile::kRetrieve)) ? kTRUE : kFALSE; }
+   void        SetRetrieve(Bool_t on = kTRUE) { if (on) { SetBit(TProofOutputFile::kRetrieve);
+                                                        } else { ResetBit(TProofOutputFile::kRetrieve); }}
+
    Int_t AdoptFile(TFile *f);                    // Adopt a TFile already open
    TFile* OpenFile(const char *opt);             // Open a file with the specified name in fFileName1
    Long64_t Merge(TCollection *list);
@@ -115,7 +121,7 @@ public:
 
    static Int_t AssertDir(const char *dirpath);
 
-   ClassDef(TProofOutputFile,4) // Wrapper class to steer the merging of files produced on workers
+   ClassDef(TProofOutputFile,5) // Wrapper class to steer the merging of files produced on workers
 };
 
 #endif

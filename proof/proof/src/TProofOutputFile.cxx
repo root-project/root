@@ -46,6 +46,7 @@ TProofOutputFile::TProofOutputFile(const char *path,
    fMerged = kFALSE;
    fMerger = 0;
    fDataSet = 0;
+   ResetBit(TProofOutputFile::kRetrieve);
 
    Init(path, dsname);
 }
@@ -114,12 +115,17 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
    fFileName = u.GetFile();
    // The name is used to identify this entity
    SetName(gSystem->BaseName(fFileName.Data()));
-   if (dsname && strlen(dsname) > 0) {
-      // This is the dataset name in case such option is chosen
-      SetTitle(dsname);
-   } else {
-      // Default dataset name
-      SetTitle(GetName());
+   // The title is the dataset name in the case such option is chosen.
+   // In the merging case it can be the final location of the file on the client if the retrieve
+   // option is chosen; if the case, this set in TProofPlayer::MergeOutputFiles.
+   if (fRunType == kDataset) {
+      if (dsname && strlen(dsname) > 0) {
+         // This is the dataset name in case such option is chosen
+         SetTitle(dsname);
+      } else {
+         // Default dataset name
+         SetTitle(GetName());
+      }
    }
    // Options and anchor, if any
    if (u.GetOptions() && strlen(u.GetOptions()) > 0)

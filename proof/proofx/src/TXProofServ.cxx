@@ -691,12 +691,17 @@ Int_t TXProofServ::Setup()
    }
    fWorkDir = gEnv->GetValue("ProofServ.Sandbox", Form("~/%s", kPROOF_WorkDir));
 
+   // Get top session tag, i.e. the tag of the PROOF session
+   if ((fTopSessionTag = gEnv->GetValue("ProofServ.TopSessionTag", "-1")) == "-1") {
+      Error("Setup", "Top session tag missing");
+      return -1;
+   }
    // Get Session tag
-   if ((fTopSessionTag = gEnv->GetValue("ProofServ.SessionTag", "-1")) == "-1") {
+   if ((fSessionTag = gEnv->GetValue("ProofServ.SessionTag", "-1")) == "-1") {
       Error("Setup", "Session tag missing");
       return -1;
    }
-   fSessionTag = fTopSessionTag;
+
    // Make sure the process ID is in the tag
    TString spid = Form("-%d", gSystem->GetPid());
    if (!fSessionTag.EndsWith(spid)) {

@@ -1168,6 +1168,9 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
       // used to flag files as missing
       req << totalEntries;
 
+      // Send the time spent in saving the partial result to file
+      if (fProtocol > 34) req << fSaveOutput.RealTime();
+
       PDB(kLoop, 1) {
          PDB(kLoop, 2) status->Print();
          Info("GetNextPacket","cacheSize: %lld, learnent: %d", cacheSize, learnent);
@@ -1188,6 +1191,14 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
    if (rc <= 0) {
       Error("GetNextPacket","Send() failed, returned %d", rc);
       return 0;
+   }
+
+   // Save the current output
+   if (fPlayer) {
+      fSaveOutput.Start();
+      if (fPlayer->SavePartialResults(kFALSE) < 0)
+         Warning("GetNextPacket", "problems saving partial results");
+      fSaveOutput.Stop();
    }
 
    TDSetElement  *e = 0;
@@ -3936,6 +3947,7 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
 
       // Reset latency stopwatch
       fLatency.Reset();
+      fSaveOutput.Reset();
 
       // Process
       PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", fPlayer->IsA()->GetName());
@@ -4556,7 +4568,8 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out)
                // Extract the list
                if (ds->GetList()->GetSize() > 0) {
                   // Register the dataset (quota checks are done inside here)
-                  msg.Form("Registering and verifying dataset '%s' ... ", ds->GetName());
+                  const char *vfmsg = regopt.Contains("V") ? " and verifying" : ""; 
+                  msg.Form("Registering%s dataset '%s' ... ", vfmsg, ds->GetName());
                   SendAsynMessage(msg.Data(), kFALSE);
                   Int_t rc = 0;
                   FlushLogFile();
@@ -4572,11 +4585,12 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out)
                   }
                   if (rc != 0) {
                      Warning("RegisterDataSets",
-                              "failure registering dataset '%s'", ds->GetName());
-                     msg.Form("Registering and verifying dataset '%s' ... failed! See log for more details", ds->GetName());
+                              "failure registering or verifying dataset '%s'", ds->GetName());
+                     msg.Form("Registering%s dataset '%s' ... failed! See log for more details", vfmsg, ds->GetName());
                   } else {
-                     Info("RegisterDataSets", "dataset '%s' successfully registered", ds->GetName());
-                     msg.Form("Registering and verifying dataset '%s' ... OK", ds->GetName());
+                     Info("RegisterDataSets", "dataset '%s' successfully registered%s",
+                                              ds->GetName(), (strlen(vfmsg) > 0) ? " and verified" : "");
+                     msg.Form("Registering%s dataset '%s' ... OK", vfmsg, ds->GetName());
                      // Add tag to the list of processed tags to avoid double processing
                      // (there may be more objects with the same name, created by each worker)
                      tags.Add(new TObjString(tag));
@@ -5789,7 +5803,7 @@ Int_t TProofServ::HandleWorkerLists(TMessage *mess)
    switch (type) {
       case TProof::kActivateWorker:
          (*mess) >> ord;
-         if (ord != "*" && !ord.BeginsWith(GetOrdinal())) break;
+         if (ord != "*" && !ord.BeginsWith(GetOrdinal()) && ord != "restore") break;
          if (fProof) {
             Int_t nact = fProof->GetListOfActiveSlaves()->GetSize();
             Int_t nactmax = fProof->GetListOfSlaves()->GetSize() -
@@ -5799,13 +5813,15 @@ Int_t TProofServ::HandleWorkerLists(TMessage *mess)
                Int_t nactnew = fProof->GetListOfActiveSlaves()->GetSize();
                if (ord == "*") {
                   if (nactnew == nactmax) {
-                     Info("HandleWorkerList", "all workers (re-)activated");
+                     PDB(kGlobal, 1) Info("HandleWorkerList", "all workers (re-)activated");
                   } else {
-                     if (IsEndMaster()) Info("HandleWorkerList", "%d workers could not be (re-)activated", nactmax - nactnew);
+                     if (IsEndMaster())
+                        PDB(kGlobal, 1) Info("HandleWorkerList", "%d workers could not be (re-)activated", nactmax - nactnew);
                   }
                } else if (ord.BeginsWith(GetOrdinal())) {
                   if (nactnew == (nact + nwc)) {
-                     if (nwc > 0) Info("HandleWorkerList","worker(s) %s (re-)activated", ord.Data());
+                     if (nwc > 0)
+                        PDB(kGlobal, 1) Info("HandleWorkerList","worker(s) %s (re-)activated", ord.Data());
                   } else {
                      if (nwc != -2 && IsEndMaster()) {
                         Error("HandleWorkerList", "some worker(s) could not be (re-)activated;"
@@ -5816,7 +5832,7 @@ Int_t TProofServ::HandleWorkerLists(TMessage *mess)
                   }
                }
             } else {
-               Info("HandleWorkerList","all workers are already active");
+               PDB(kGlobal, 1) Info("HandleWorkerList","all workers are already active");
             }
          } else {
             Warning("HandleWorkerList","undefined PROOF session: protocol error?");
@@ -5824,7 +5840,7 @@ Int_t TProofServ::HandleWorkerLists(TMessage *mess)
          break;
       case TProof::kDeactivateWorker:
          (*mess) >> ord;
-         if (ord != "*" && !ord.BeginsWith(GetOrdinal())) break;
+         if (ord != "*" && !ord.BeginsWith(GetOrdinal()) && ord != "restore") break;
          if (fProof) {
             Int_t nact = fProof->GetListOfActiveSlaves()->GetSize();
             if (nact > 0) {
@@ -5832,13 +5848,15 @@ Int_t TProofServ::HandleWorkerLists(TMessage *mess)
                Int_t nactnew = fProof->GetListOfActiveSlaves()->GetSize();
                if (ord == "*") {
                   if (nactnew == 0) {
-                     Info("HandleWorkerList","all workers deactivated");
+                     PDB(kGlobal, 1) Info("HandleWorkerList","all workers deactivated");
                   } else {
-                     if (IsEndMaster()) Info("HandleWorkerList","%d workers could not be deactivated", nactnew);
+                     if (IsEndMaster())
+                        PDB(kGlobal, 1) Info("HandleWorkerList","%d workers could not be deactivated", nactnew);
                   }
                } else {
                   if (nactnew == (nact - nwc)) {
-                     if (nwc > 0) Info("HandleWorkerList","worker(s) %s deactivated", ord.Data());
+                     if (nwc > 0)
+                        PDB(kGlobal, 1) Info("HandleWorkerList","worker(s) %s deactivated", ord.Data());
                   } else {
                      if (nwc != -2 && IsEndMaster()) {
                         Error("HandleWorkerList", "some worker(s) could not be deactivated:"
@@ -5849,7 +5867,7 @@ Int_t TProofServ::HandleWorkerLists(TMessage *mess)
                   }
                }
             } else {
-               Info("HandleWorkerList","all workers are already inactive");
+               PDB(kGlobal, 1) Info("HandleWorkerList","all workers are already inactive");
             }
          } else {
             Warning("HandleWorkerList","undefined PROOF session: protocol error?");

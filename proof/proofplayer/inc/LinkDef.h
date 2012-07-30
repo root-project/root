@@ -46,7 +46,6 @@
 #pragma link C++ class TDrawFeedback+;
 #pragma link C++ class TStatsFeedback+;
 #pragma link C++ class TStatus-;
-#pragma link C++ class TProofOutputFile+;
 
 #pragma link C++ class TOutputListSelectorDataMap+;
 

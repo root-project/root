@@ -63,6 +63,7 @@
 #include "TParameter.h"
 #include "TProof.h"
 #include "TProofNodeInfo.h"
+#include "TProofOutputFile.h"
 #include "TVirtualProofPlayer.h"
 #include "TVirtualPacketizer.h"
 #include "TProofServ.h"
@@ -4478,6 +4479,281 @@ void TProof::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
+Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
+{
+   // Extract from opt information about output handling settings.
+   // The understood keywords are:
+   //     of=<file>, outfile=<file>         output file location
+   //     ds=<dsname>, dataset=<dsname>     dataset name ('of' and 'ds' are
+   //                                       mutually exclusive,execution stops
+   //                                       if both are found)
+   //     sft[=<opt>], savetofile[=<opt>]   control saving to file
+   //
+   // For 'mvf', the <opt> integer has the following meaning:   
+   //     <opt> = <how>*10 + <force>
+   //             <force> = 0      save to file if memory threshold is reached
+   //                              (the memory threshold is set by the cluster
+   //                              admin); in case an output file is defined, the
+   //                              files are merged at the end; 
+   //                       1      save results to file.
+   //             <how> =   0      save at the end of the query
+   //                       1      save results after each packet (to reduce the
+   //                              loss in case of crash).
+   // 
+   // Setting 'ds' automatically sets 'mvf=1'; it is still possible to set 'mvf=11'
+   // to save results after each packet.
+   //
+   // The separator from the next option is either a ' ' or a ';'
+   // 
+   // All recognized settings are removed from the input string opt.
+   // If action == 0, set up the output file accordingly, if action == 1 clean related
+   // output file settings.
+   // If the final target file is local then 'target' is set to the final local path
+   // when action == 0 and used to retrieve the file with TFile::Cp when action == 1.
+   //
+   // Output file settings are in the form
+   //
+   //       <previous_option>of=name <next_option>
+   //       <previous_option>outfile=name,...;<next_option>
+   //
+   // The separator from the next option is either a ' ' or a ';'
+   // Called interanally by TProof::Process.
+   //
+   // Returns 0 on success, -1 on error.
+
+   TString outfile, dsname, stfopt;
+   if (action == 0) {     
+      TString tagf, tagd, tags, oo;
+      Ssiz_t from = 0, iof = kNPOS, iod = kNPOS, ios = kNPOS;
+      while (opt.Tokenize(oo, from, "[; ]")) {
+         if (oo.BeginsWith("of=")) {
+            tagf = "of=";
+            iof = opt.Index(tagf);
+         } else if (oo.BeginsWith("outfile=")) {
+            tagf = "outfile=";
+            iof = opt.Index(tagf);
+         } else if (oo.BeginsWith("ds")) {
+            tagd = "ds";
+            iod = opt.Index(tagd);
+         } else if (oo.BeginsWith("dataset")) {
+            tagd = "dataset";
+            iod = opt.Index(tagd);
+         } else if (oo.BeginsWith("stf")) {
+            tags = "stf";
+            ios = opt.Index(tags);
+         } else if (oo.BeginsWith("savetofile")) {
+            tags = "savetofile";
+            ios = opt.Index(tags);
+         }
+      }      
+      // Check consistency
+      if (iof != kNPOS && iod != kNPOS) {
+         Error("HandleOutputOptions", "options 'of'/'outfile' and 'ds'/'dataset' are incompatible!");
+         return -1;
+      }
+      
+      // Check output file first
+      if (iof != kNPOS) {
+         from = iof + tagf.Length();
+         if (!opt.Tokenize(outfile, from, "[; ]") || outfile.IsNull()) {
+            Error("HandleOutputOptions", "could not extract output file settings string! (%s)", opt.Data());
+            return -1;
+         }
+         // For removal from original options string
+         tagf += outfile;
+      }
+      // Check dataset
+      if (iod != kNPOS) {
+         from = iod + tagd.Length();
+         if (!opt.Tokenize(dsname, from, "[; ]"))
+            if (gDebug > 0) Info("HandleOutputOptions", "no dataset name found: use default");
+         // For removal from original options string
+         tagd += dsname;
+         // The name may be empty or beginning with a '='
+         if (dsname.BeginsWith("=")) dsname.Replace(0, 1, "");
+         if (dsname.Contains("|V")) {
+            target = "ds|V";
+            dsname.ReplaceAll("|V", "");
+         }
+         if (dsname.IsNull()) dsname = "dataset_<qtag>"; 
+      }
+      // Default outfile, if nothing is defined, for the case the server decides to go by file
+      if (outfile.IsNull() && dsname.IsNull()) {
+         // Default settings
+         outfile = "master:";
+      }
+      // Check stf
+      if (ios != kNPOS) {
+         from = ios + tags.Length();
+         if (!opt.Tokenize(stfopt, from, "[; ]"))
+            if (gDebug > 0) Info("HandleOutputOptions", "save-to-file not found: use defualt");
+         // For removal from original options string
+         tags += stfopt;
+         // It must be digit
+         if (!stfopt.IsNull()) {
+            if (stfopt.BeginsWith("=")) stfopt.Replace(0,1,"");
+            if (!stfopt.IsNull()) {
+               if (!stfopt.IsDigit()) {
+                  Error("HandleOutputOptions", "save-to-file option must be a digit! (%s)", stfopt.Data());
+                  return -1;         
+               }
+            } else {
+               // Default
+               stfopt = "1";
+            }
+         } else {
+            // Default
+            stfopt = "1";
+         }
+      }
+      // Remove from original options string
+      opt.ReplaceAll(tagf, "");
+      opt.ReplaceAll(tagd, "");
+      opt.ReplaceAll(tags, "");
+   }
+
+   // Parse now
+   if (action == 0) {
+      // Output file
+      if (!outfile.IsNull()) {
+         if (!outfile.BeginsWith("master:")) {
+            // Check if the target file is on a local file system and need to be retrieved
+            if (!strcmp(TUrl(outfile.Data(), kTRUE).GetProtocol(), "file")) {
+               if (gSystem->AccessPathName(gSystem->DirName(outfile.Data()), kWritePermission)) {
+                  Warning("HandleOutputOptions",
+                        "directory '%s' for the output file does not exists or is not writable:"
+                        " saving to master", gSystem->DirName(outfile.Data()));
+                  outfile.Form("master:%s", gSystem->BaseName(outfile.Data()));
+               } else {
+                  // The target file is local, so we need to retrieve it
+                  target = outfile;
+                  outfile.Form("master:%s", gSystem->BaseName(target.Data()));
+               }
+            }
+         }
+         if (outfile.BeginsWith("master:")) {
+            outfile.ReplaceAll("master:", "");
+            if (outfile.IsNull() || !gSystem->IsAbsoluteFileName(outfile)) {
+               // Get the master data dir
+               TString ddir, emsg;
+               if (Exec("gProofServ->GetDataDir()", "0", kTRUE) == 0) {
+                  TObjString *os = fMacroLog.GetLineWith("const char");
+                  if (os) {
+                     Ssiz_t fst =  os->GetString().First('\"');
+                     Ssiz_t lst =  os->GetString().Last('\"');
+                     ddir = os->GetString()(fst+1, lst-fst-1);
+                  } else {
+                     emsg = "could not find 'const char *' string in macro log! cannot continue";
+                  }
+               } else {
+                  emsg = "could not retrieve master data directory info! cannot continue";
+               }
+               if (!emsg.IsNull()) {
+                  Error("HandleOutputOptions", "%s", emsg.Data());
+                  return -1;
+               }
+               if (outfile.IsNull()) {
+                  outfile.Form("%s/<file>", ddir.Data());
+               } else {
+                  outfile.Insert(0, TString::Format("%s/", ddir.Data()));
+               }
+            }
+         }
+         // Set the parameter
+         if (!outfile.BeginsWith("of:")) outfile.Insert(0, "of:");
+         SetParameter("PROOF_DefaultOutputOption", outfile.Data());
+      }
+      // Dataset creation
+      if (!dsname.IsNull()) {
+         dsname.Insert(0, "ds:");
+         // Set the parameter
+         SetParameter("PROOF_DefaultOutputOption", dsname.Data());
+         // Check the Save-To-File option
+         if (!stfopt.IsNull()) {
+            Int_t ostf = (Int_t) stfopt.Atoi();
+            if (ostf%10 <= 0) {
+               Warning("HandleOutputOptions", "Dataset required bu Save-To-File disabled: enabling!");
+               stfopt.Form("%d", ostf+1);
+            }
+         } else {
+            // Minimal setting
+            stfopt = "1";
+         }
+      }
+      // Save-To-File options
+      if (!stfopt.IsNull()) {
+         // Set the parameter
+         SetParameter("PROOF_SavePartialResults", (Int_t) stfopt.Atoi());
+      }
+   } else {
+      // Retrieve the file, if required
+      if (GetOutputList()) {
+         if (target == "ds|V") {
+            // Find the dataset
+            TIter nxo(GetOutputList());
+            TObject *o = 0;
+            while ((o = nxo())) {
+               if (o->InheritsFrom(TFileCollection::Class())) {
+                  VerifyDataSet(o->GetName());
+                  break;
+               }
+            }
+         } else {
+            TProofOutputFile *pf = 0;
+            if (!target.IsNull())
+               pf = (TProofOutputFile *) GetOutputList()->FindObject(gSystem->BaseName(target.Data()));
+            if (pf) {
+               // Copy the file
+               if (TFile::Cp(pf->GetOutputFileName(), target)) {
+                  Printf(" Output successfully copied to %s", target.Data());
+               } else {
+                  Warning("HandleOutputOptions", "problems copying output to %s", target.Data());
+               }
+            }
+            // Should we open an output file ?
+            TFile *fout = 0;
+            if (!target.IsNull() && !pf && GetOutputList()->GetSize() > 0) {
+               fout = TFile::Open(target, "RECREATE");
+               if (!fout || (fout && fout->IsZombie())) {
+                  SafeDelete(fout);
+                  Warning("HandleOutputOptions", "problems opening output file %s", target.Data());
+               }
+            }
+            TObject *o = 0;            
+            TIter nxo(GetOutputList());
+            while ((o = nxo())) {
+               TProofOutputFile *pof = dynamic_cast<TProofOutputFile *>(o);
+               if (pof && pof->IsRetrieve()) {
+                  // Retrieve this file to the local path indicated in the title
+                  if (TFile::Cp(pof->GetOutputFileName(), pof->GetTitle())) {
+                     Printf(" Output successfully copied to %s", pof->GetTitle());
+                  } else {
+                     Warning("HandleOutputOptions",
+                             "problems copying %s to %s", pof->GetOutputFileName(), pof->GetTitle());
+                  }
+               } else if (fout) {
+                  // Write the object to the open output file
+                  o->Write();
+               }
+            }
+            // Clean-up
+            if (fout) {
+               fout->Close();
+               SafeDelete(fout);
+               Printf(" Output saved to %s", target.Data());               
+            }
+         }
+      }
+      // Remove the parameter
+      DeleteParameters("PROOF_DefaultOutputOption");
+      // Remove the parameter
+      DeleteParameters("PROOF_SavePartialResults");
+   }
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
 void TProof::SetFeedback(TString &opt, TString &optfb, Int_t action)
 {
    // Extract from opt in optfb information about wanted feedback settings.
@@ -4488,9 +4764,10 @@ void TProof::SetFeedback(TString &opt, TString &optfb, Int_t action)
    // Feedback requirements are in the form
    //
    //       <previous_option>fb=name1,name2,name3,... <next_option>
-   //       <previous_option>feedback=name1,name2,name3,... <next_option>
+   //       <previous_option>feedback=name1,name2,name3,...;<next_option>
    //
    // The special name 'stats' triggers feedback about events and packets.
+   // The separator from the next option is either a ' ' or a ';'.
    // Called interanally by TProof::Process.
 
    Ssiz_t from = 0;
@@ -4570,9 +4847,11 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
    // Set PROOF to running state
    SetRunStatus(TProof::kRunning);
    
-   TString opt(option), optfb;
+   TString opt(option), optfb, outfile;
    // Enable feedback, if required
    if (opt.Contains("fb=") || opt.Contains("feedback=")) SetFeedback(opt, optfb, 0);
+   // Define output file, either from 'opt' or the default one
+   if (HandleOutputOptions(opt, outfile, 0) != 0) return -1;
 
    // Resolve query mode
    fSync = (GetQueryMode(opt) == kSync);
@@ -4599,6 +4878,9 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
          sh = gSystem->RemoveSignalHandler(gApplication->GetSignalHandler());
    }
 
+   // Make sure we get a fresh result
+   fOutputList.Clear();
+   
    Long64_t rv = -1;
    if (selector && strlen(selector)) {
       rv = fPlayer->Process(dset, selector, opt.Data(), nentries, first);
@@ -4611,6 +4893,8 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
 
    // Disable feedback, if required
    if (!optfb.IsNull()) SetFeedback(opt, optfb, 1);
+   // Disable output file settings (opt is ignored in here)
+   if (HandleOutputOptions(opt, outfile, 1) != 0) return -1;
 
    if (fSync) {
       // reactivate the default application interrupt handler
@@ -5802,13 +6086,15 @@ Int_t TProof::Exec(const char *cmd, ESlaves list, Bool_t plusMaster)
 }
 
 //______________________________________________________________________________
-Int_t TProof::Exec(const char *cmd, const char *ord)
+Int_t TProof::Exec(const char *cmd, const char *ord, Bool_t logtomacro)
 {
    // Send command to be executed on node of ordinal 'ord' (use "0" for master).
    // Command can be any legal command line command. Commands like
    // ".x file.C" or ".L file.C" will cause the file file.C to be send
-   // to the PROOF cluster. Returns -1 in case of error, >=0 in case of
-   // succes.
+   // to the PROOF cluster.
+   // If logtomacro is TRUE the text result of the action is saved in the fMacroLog
+   // TMacro, accessible via TMacro::GetMacroLog();
+   // Returns -1 in case of error, >=0 in case of succes.
 
    if (!IsValid()) return -1;
 
@@ -5825,8 +6111,12 @@ Int_t TProof::Exec(const char *cmd, const char *ord)
       // Deactivate all workers
       DeactivateWorker("*");
       // Reactivate the target ones, if needed
-      if (strcmp(ord, "master") && strcmp(ord, "0") && strcmp(ord, "*")) ActivateWorker(ord);
+      if (strcmp(ord, "master") && strcmp(ord, "0")) ActivateWorker(ord);
+      // Honour log-to-macro-saving settings
+      Bool_t oldSaveLog = fSaveLogToMacro;
+      fSaveLogToMacro = logtomacro;
       res = SendCommand(cmd, kActive);
+      fSaveLogToMacro = oldSaveLog;
       ActivateWorker("restore");
    }
    // Done
@@ -5859,11 +6149,7 @@ TString TProof::Getenv(const char *env, const char *ord)
 
    // The command to be executed
    TString cmd = TString::Format("gSystem->Getenv(\"%s\")", env); 
-   // Enable macro-saving for logs
-   fSaveLogToMacro = kTRUE;
-   Exec(cmd.Data(), ord);
-   // Disable macro-saving
-   fSaveLogToMacro = kFALSE;
+   if (Exec(cmd.Data(), ord, kTRUE) != 0) return TString("");
    // Get the line
    TObjString *os = fMacroLog.GetLineWith("const char");
    if (os) {
@@ -5884,11 +6170,8 @@ Int_t TProof::GetRC(const char *rcenv, Int_t &env, const char *ord)
 
    // The command to be executed
    TString cmd = TString::Format("if (gEnv->Lookup(\"%s\")) { gEnv->GetValue(\"%s\",\"\"); }", rcenv, rcenv);
-   // Enable macro-saving for logs
-   fSaveLogToMacro = kTRUE;
-   Exec(cmd.Data(), ord);
-   // Disable macro-saving
-   fSaveLogToMacro = kFALSE;
+   // Exectute the command saving the logs to macro
+   if (Exec(cmd.Data(), ord, kTRUE) != 0) return -1;
    // Get the line
    TObjString *os = fMacroLog.GetLineWith("const char");
    Int_t rc = -1;
@@ -5913,11 +6196,8 @@ Int_t TProof::GetRC(const char *rcenv, Double_t &env, const char *ord)
 
    // The command to be executed
    TString cmd = TString::Format("if (gEnv->Lookup(\"%s\")) { gEnv->GetValue(\"%s\",\"\"); }", rcenv, rcenv);
-   // Enable macro-saving for logs
-   fSaveLogToMacro = kTRUE;
-   Exec(cmd.Data(), ord);
-   // Disable macro-saving
-   fSaveLogToMacro = kFALSE;
+   // Exectute the command saving the logs to macro
+   if (Exec(cmd.Data(), ord, kTRUE) != 0) return -1;
    // Get the line
    TObjString *os = fMacroLog.GetLineWith("const char");
    Int_t rc = -1;
@@ -5942,11 +6222,8 @@ Int_t TProof::GetRC(const char *rcenv, TString &env, const char *ord)
 
    // The command to be executed
    TString cmd = TString::Format("if (gEnv->Lookup(\"%s\")) { gEnv->GetValue(\"%s\",\"\"); }", rcenv, rcenv);
-   // Enable macro-saving for logs
-   fSaveLogToMacro = kTRUE;
-   Exec(cmd.Data(), ord);
-   // Disable macro-saving
-   fSaveLogToMacro = kFALSE;
+   // Exectute the command saving the logs to macro
+   if (Exec(cmd.Data(), ord, kTRUE) != 0) return -1;
    // Get the line
    TObjString *os = fMacroLog.GetLineWith("const char");
    Int_t rc = -1;
@@ -9277,8 +9554,44 @@ TObject *TProof::GetOutput(const char *name)
    // Get specified object that has been produced during the processing
    // (see Process()).
 
-   // Can be called by MarkBad on the master before the player is initialized
-   return (fPlayer) ? fPlayer->GetOutput(name) : (TObject *)0;
+
+   if (TestBit(TProof::kIsMaster))
+      // Can be called by MarkBad on the master before the player is initialized
+      return (fPlayer) ? fPlayer->GetOutput(name) : (TObject *)0;
+   
+   // This checks also associated output files 
+   return (GetOutputList()) ? GetOutputList()->FindObject(name) : (TObject *)0;
+}
+
+//______________________________________________________________________________
+TObject *TProof::GetOutput(const char *name, TList *out)
+{
+   // Find object 'name' in list 'out' or in the files specified in there
+
+   TObject *o = 0;
+   if (!name || (name && strlen(name) <= 0) ||
+       !out || (out && out->GetSize() <= 0)) return o;
+   if ((o = out->FindObject(name))) return o;
+
+   // For the time being we always check for all the files; this may require
+   // some caching
+   TProofOutputFile *pf = 0;
+   TIter nxo(out);
+   while ((o = nxo())) {
+      if ((pf = dynamic_cast<TProofOutputFile *> (o))) {
+         TFile *f = 0;
+         if (!(f = (TFile *) gROOT->GetListOfFiles()->FindObject(pf->GetOutputFileName()))) {
+            f = TFile::Open(pf->GetOutputFileName());
+            if (!f || (f && f->IsZombie())) {
+               ::Warning("TProof::GetOutput", "problems opening file %s", pf->GetOutputFileName());
+            }
+         }
+         if (f && (o = f->Get(name))) return o;
+      }
+   }
+   
+   // Done, unsuccessfully
+   return o;
 }
 
 //______________________________________________________________________________
@@ -9286,6 +9599,7 @@ TList *TProof::GetOutputList()
 {
    // Get list with all object created during processing (see Process()).
 
+   if (fOutputList.GetSize() > 0) return &fOutputList;
    if (fPlayer) {
       fOutputList.AttachList(fPlayer->GetOutputList());
       return &fOutputList;

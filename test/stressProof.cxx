@@ -61,8 +61,9 @@
 // *   Test 23 : File-resident output: multi trees ................ OK *   * //
 // *   Test 24 : TTree friends (and TPacketizerFile) .............. OK *   * //
 // *   Test 25 : TTree friends, same file ......................... OK *   * //
-// *   Test 26 : Simple: selector by object ....................... OK *   * //
-// *   Test 27 : H1 dataset: selector by object ................... OK *   * //
+// *   Test 26 : Simple generation: merge-via-file ................ OK *   * //
+// *   Test 27 : Simple: selector by object ....................... OK *   * //
+// *   Test 28 : H1 dataset: selector by object ................... OK *   * //
 // *  * All registered tests have been passed  :-)                     *   * //
 // *  ******************************************************************   * //
 // *                                                                       * //
@@ -131,7 +132,7 @@
 
 #include "proof/getProof.C"
 
-#define PT_NUMTEST 27
+#define PT_NUMTEST 28
 
 static const char *urldef = "proof://localhost:40000";
 static TString gtutdir;
@@ -561,7 +562,7 @@ public:
 Double_t ProofTest::gRefReal[PT_NUMTEST] = {
    3.047808,   // #1:  Open a session
    0.021979,   // #2:  Get session logs
-   3.148925,   // #3:  Simple random number generation
+   4.779971,   // #3:  Simple random number generation
    0.276155,   // #4:  Dataset handling with H1 files
    5.355514,   // #5:  H1: chain processing
    2.414207,   // #6:  H1: file collection processing
@@ -584,8 +585,9 @@ Double_t ProofTest::gRefReal[PT_NUMTEST] = {
    0.000000,   // #23: File-resident output: multi trees
    7.452465,   // #24: TTree friends (and TPacketizerFile)
    0.259239,   // #25: TTree friends, same file
-   0.000000,   // #26: Simple random number generation by TSelector object
-   0.000000    // #27: H1: by-object processing
+   6.868858,   // #26: Simple generation: merge-via-file
+   6.362017,   // #27: Simple random number generation by TSelector object
+   5.519631    // #28: H1: by-object processing
 };
 
 //
@@ -756,6 +758,12 @@ typedef struct {
    const char *fName;
    Int_t fType;
 } PT_Packetizer_t;
+
+// Options
+typedef struct {
+   Int_t fOne;
+   Int_t fTwo;
+} PT_Option_t;
 
 static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
 
@@ -974,9 +982,9 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
    // Test admin functionality
    testList->Add(new ProofTest("Admin functionality", 16, &PT_AdminFunc, 0, "1"));
    // Test merging via submergers
-   Bool_t useMergers = kTRUE;
+   PT_Option_t pfoptm = {1, 0};
    testList->Add(new ProofTest("Dynamic sub-mergers functionality", 17,
-                                &PT_Simple, (void *)&useMergers, "1", "ProofSimple", kTRUE));
+                                &PT_Simple, (void *)&pfoptm, "1", "ProofSimple", kTRUE));
    // Test range chain and dataset processing EventProc
    testList->Add(new ProofTest("Event range processing", 18,
                                &PT_EventRange, 0, "1,11", "ProofEventProc,ProcFileElements", kTRUE));
@@ -987,7 +995,7 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
    testList->Add(new ProofTest("File-resident output: merge", 20, &PT_POFNtuple, 0, "1", "ProofNtuple", kTRUE));
    // Test TProofOutputFile technology for ntuple creation using submergers
    testList->Add(new ProofTest("File-resident output: merge w/ submergers", 21,
-                               &PT_POFNtuple, (void *)&useMergers, "1", "ProofNtuple", kTRUE));
+                               &PT_POFNtuple, (void *)&pfoptm, "1", "ProofNtuple", kTRUE));
    // Test TProofOutputFile technology for dataset creation (tests TProofDraw too)
    testList->Add(new ProofTest("File-resident output: create dataset", 22, &PT_POFDataset, 0, "1", "ProofNtuple", kTRUE));
    // Test selecting different TTrees in same files
@@ -999,10 +1007,14 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
    testList->Add(new ProofTest("TTree friends, same file", 25,
                                &PT_Friends, (void *)&sameFile, "1", "ProofFriends,ProofAux", kTRUE));
 
+   // Test merging via submergers
+   PT_Option_t pfopts = {0, 1};
+   testList->Add(new ProofTest("Simple generation: merge-via-file", 26,
+                                &PT_Simple, (void *)&pfopts, "1", "ProofSimple", kTRUE));
    // Simple histogram generation by TSelector object
-   testList->Add(new ProofTest("Simple: selector by object", 26, &PT_SimpleByObj, 0, "1", "ProofSimple", kTRUE));
+   testList->Add(new ProofTest("Simple: selector by object", 27, &PT_SimpleByObj, 0, "1", "ProofSimple", kTRUE));
    // H1 analysis over HTTP by TSeletor object
-   testList->Add(new ProofTest("H1 chain: selector by object", 27, &PT_H1ChainByObj, 0, "1", "h1analysis", kTRUE));
+   testList->Add(new ProofTest("H1 chain: selector by object", 28, &PT_H1ChainByObj, 0, "1", "h1analysis", kTRUE));
    // The selectors
    if (PT_AssertTutorialDir(gTutDir) != 0) {
       printf("*  Some of the tutorial files are missing! Stop\n");
@@ -1572,7 +1584,7 @@ Int_t PT_CheckSimple(TQueryResult *qr, Long64_t nevt, Int_t nhist)
    PutPoint();
    TH1F **hist = new TH1F*[nhist];
    for (Int_t i=0; i < nhist; i++) {
-      hist[i] = dynamic_cast<TH1F *>(out->FindObject(Form("h%d",i)));
+      hist[i] = dynamic_cast<TH1F *>(TProof::GetOutput(Form("h%d",i), out));
       if (!hist[i]) {
          printf("\n >>> Test failure: 'h%d' histo not found\n", i);
          return -1;
@@ -2102,7 +2114,7 @@ Int_t PT_GetLogs(void *args, RunTimes &tt)
 }
 
 //_____________________________________________________________________________
-Int_t PT_Simple(void *submergers, RunTimes &tt)
+Int_t PT_Simple(void *opts, RunTimes &tt)
 {
    // Test run for the ProofSimple analysis (see tutorials)
 
@@ -2113,10 +2125,14 @@ Int_t PT_Simple(void *submergers, RunTimes &tt)
       return -1;
    }
 
+   PT_Option_t *ptopt = (PT_Option_t *) opts;
+   
    // Setup submergers if required
-   if (submergers) {
+   if (ptopt && ptopt->fOne > 0) {
       gProof->SetParameter("PROOF_UseMergers", 0);
    }
+   // Setup save-to-file, if required
+   TString opt = (ptopt && ptopt->fTwo > 0) ? "stf" : "" ;
 
    // Define the number of events and histos
    Long64_t nevt = 1000000;
@@ -2131,7 +2147,7 @@ Int_t PT_Simple(void *submergers, RunTimes &tt)
    PutPoint();
    {  SwitchProgressGuard spg;
       gTimer.Start();
-      gProof->Process(gSimpleSel.Data(), nevt);
+      gProof->Process(gSimpleSel.Data(), nevt, opt);
       gTimer.Stop();
    }
 
@@ -2467,7 +2483,9 @@ Int_t PT_H1MultiDSetEntryList(void *, RunTimes &tt)
    }
 
    // Unlink the entry list file
+#if 0
    gSystem->Unlink("elist.root");
+#endif
    // Cleanup entry-list from the input list
    nxi.Reset();
    while ((o = nxi())) {
@@ -3563,7 +3581,7 @@ Int_t PT_EventRange(void *arg, RunTimes &tt)
 }
 
 //_____________________________________________________________________________
-Int_t PT_POFNtuple(void *submergers, RunTimes &tt)
+Int_t PT_POFNtuple(void *opts, RunTimes &tt)
 {
    // Test TProofOutputFile technology to create a ntuple, with or without
    // submergers
@@ -3575,8 +3593,10 @@ Int_t PT_POFNtuple(void *submergers, RunTimes &tt)
       return -1;
    }
 
+   PT_Option_t *ptopt = (PT_Option_t *) opts;
+   
    // Setup submergers if required
-   if (submergers) {
+   if (ptopt && ptopt->fTwo > 0) {
       gProof->SetParameter("PROOF_UseMergers", 0);
    }
 

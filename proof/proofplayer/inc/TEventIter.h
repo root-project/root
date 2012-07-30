@@ -72,6 +72,8 @@ protected:
    TEntryList    *fEntryList;    //! entry list for processing
    Long64_t       fEntryListPos; //! current position in the entrylist
 
+   TList         *fPackets;      // list of packets processed packets
+
    Int_t          LoadDir();     // Load the directory pointed to by fElem
 
 public:
@@ -87,6 +89,8 @@ public:
    virtual void      InvalidatePacket();
    virtual void      PreProcessEvent(Long64_t) = 0;
    virtual void      StopProcess(Bool_t abort);
+
+   TList            *GetPackets() { return fPackets; }
 
    static TEventIter *Create(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
 
