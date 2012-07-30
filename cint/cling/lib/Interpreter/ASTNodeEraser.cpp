@@ -510,9 +510,6 @@ namespace cling {
 
       for (DeclGroupRef::const_iterator
              Di = DGR.end() - 1, E = DGR.begin() - 1; Di != E; --Di) {
-        DeclContext* DC = (*Di)->getDeclContext();
-        assert(DC == (*Di)->getLexicalDeclContext() && "Cannot handle that yet");
-
         // Get rid of the declaration. If the declaration has name we should
         // heal the lookup tables as well
         Successful = DeclRev.RevertDecl(*Di) && Successful;

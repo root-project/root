@@ -55,6 +55,7 @@ namespace cling {
     std::string& getInput() {
       return m_Input;
     }
+
     ///\brief Retrieves the number of spaces that the next input line should be
     /// indented.
     ///
