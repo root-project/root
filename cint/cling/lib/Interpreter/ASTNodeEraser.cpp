@@ -17,6 +17,8 @@
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
 
+#include "llvm/Constants.h"
+#include "llvm/DerivedTypes.h"
 #include "llvm/Module.h"
 
 using namespace clang;
@@ -272,6 +274,7 @@ namespace cling {
       llvm::GlobalValue* GV 
         = m_CurTransaction->getModule()->getNamedValue(mangledName);
 
+      GV->replaceAllUsesWith(llvm::UndefValue::get(GV->getType()));
       GV->eraseFromParent();
     }
 
