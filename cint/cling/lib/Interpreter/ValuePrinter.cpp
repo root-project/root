@@ -133,10 +133,9 @@ static void StreamValue(llvm::raw_ostream& o, const void* const p,
     clang::EnumDecl* ED = Ty->getAs<clang::EnumType>()->getDecl();
     uint64_t value = *(uint64_t*)p;
     bool IsFirst = true;
-    llvm::APSInt ValAsAPSInt = C.MakeIntValue(value, ED->getPromotionType());
+    llvm::APSInt ValAsAPSInt = C.MakeIntValue(value, Ty);
     for (clang::EnumDecl::enumerator_iterator I = ED->enumerator_begin(),
            E = ED->enumerator_end(); I != E; ++I) {
-      ValAsAPSInt.setIsSigned(I->getInitVal().isSigned());
       if (I->getInitVal() == ValAsAPSInt) {
         if (!IsFirst) {
           o << " ? ";
