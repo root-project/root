@@ -1862,8 +1862,8 @@ trapcmd="rm -rf Makefile.tmp RConfigure.tmp RConfigure-out.tmp \
          RConfigOptions.tmp RConfigOptions-out.tmp \
          Makefile-comp.tmp root-config.tmp rootrc.tmp \
          rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp rootd.tmp \
-         proofd.tmp rootd.xinetd.tmp proofd.xinetd.tmp conftest.mk \
-         conftest.c conftest conftest.dSYM"
+         proofd.tmp rootd.xinetd.tmp proofd.xinetd.tmp proofserv.tmp \
+         roots.tmp conftest.mk conftest.c conftest conftest.dSYM"
 trap "$trapcmd; exit 1" 1 2 3 15
 trap "$trapcmd" 0
 
