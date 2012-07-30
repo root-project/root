@@ -201,6 +201,40 @@ void TVirtualX::DeleteOpenGLContext(Int_t /*wid*/)
 }
 
 //______________________________________________________________________________
+Window_t TVirtualX::CreateOpenGLWindow(Window_t /*parentID*/, UInt_t /*width*/, UInt_t /*height*/, const std::vector<std::pair<UInt_t, Int_t> > &/*format*/)
+{
+   //Create window with special pixel format. Noop everywhere except Cocoa.
+   return Window_t();
+}
+
+//______________________________________________________________________________
+Handle_t TVirtualX::CreateOpenGLContext(Window_t /*windowID*/, Handle_t /*shareWith*/)
+{
+   // Creates OpenGL context for window "windowID".
+   return Handle_t();
+}
+
+//______________________________________________________________________________
+Bool_t TVirtualX::MakeOpenGLContextCurrent(Handle_t /*ctx*/, Window_t /*windowID*/)
+{
+   // Makes context ctx current OpenGL context.
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Handle_t TVirtualX::GetCurrentOpenGLContext()
+{
+   // Asks OpenGL subsystem about the current OpenGL context.
+   return Handle_t();
+}
+
+//______________________________________________________________________________
+void TVirtualX::FlushOpenGLBuffer(Handle_t /*ctx*/)
+{
+   // Flushes OpenGL buffer.
+}
+
+//______________________________________________________________________________
 void TVirtualX::DrawBox(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/,
                         EBoxMode /*mode*/)
 {

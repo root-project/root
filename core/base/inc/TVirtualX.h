@@ -24,6 +24,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <utility>
+#include <vector>
+
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
@@ -87,6 +90,14 @@ public:
    virtual void      CopyPixmap(Int_t wid, Int_t xpos, Int_t ypos);
    virtual void      CreateOpenGLContext(Int_t wid=0);
    virtual void      DeleteOpenGLContext(Int_t wid=0);
+   
+   //---- OpenGL related stuff, required only with R__HAS_COCOA ----
+   virtual Window_t  CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &format);
+   virtual Handle_t  CreateOpenGLContext(Window_t windowID, Handle_t sharedContext);
+   virtual Bool_t    MakeOpenGLContextCurrent(Handle_t ctx, Window_t windowID);
+   virtual Handle_t  GetCurrentOpenGLContext();
+   virtual void      FlushOpenGLBuffer(Handle_t ctx);
+
    virtual void      DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode);
    virtual void      DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
                                    Int_t nx, Int_t ny, Int_t *ic);
