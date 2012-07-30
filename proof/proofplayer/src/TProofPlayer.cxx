@@ -2374,6 +2374,7 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                      if (!srv.EndsWith("/")) srv += "/";
                   }
                   TUrl usrv(srv);
+                  Bool_t localFile = kFALSE;
                   if (pf->IsRetrieve()) {
                      // This file will be retrieved by the client: we created it in the data dir
                      // and save the file URL on the client in the title
@@ -2382,24 +2383,30 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                      // The output file path on the master
                      outfile.Form("%s/%s", gProofServ->GetDataDir(), bn.Data());
                      // Save the client path in the title if not defined yet
-                     if (strlen(pf->GetTitle()) <= 0) pf->SetTitle(bn);                        
+                     if (strlen(pf->GetTitle()) <= 0) pf->SetTitle(bn);
+                     // The file is local
+                     localFile = kTRUE;
                   } else {
                      // Check if the file is on the master or elsewhere
                      if (outfile.BeginsWith("master:")) outfile.Replace(0, 7, "");
                      // Check locality
+                     TUrl uof(outfile.Data(), kTRUE);
                      TString lfn;
-                     ftyp = TFile::GetType(outfile.Data(), "RECREATE", &lfn);
-                     if (ftyp == TFile::kLocal && !srv.IsNull())
+                     ftyp = TFile::GetType(uof.GetUrl(), "RECREATE", &lfn);
+                     if (ftyp == TFile::kLocal && !srv.IsNull()) {
                         // Check if is a different server
-                        if (usrv.GetPort() > 0 &&
-                            usrv.GetPort() != TUrl(outfile.Data(), kTRUE).GetPort()) ftyp = TFile::kNet;
+                        if (uof.GetPort() > 0 && usrv.GetPort() > 0 &&
+                            usrv.GetPort() != uof.GetPort()) ftyp = TFile::kNet;
+                     }
                      // If it is really local set the file name
                      if (ftyp == TFile::kLocal) outfile = lfn;
+                     // The file maybe local
+                     if (ftyp == TFile::kLocal || ftyp == TFile::kFile) localFile = kTRUE;
                   }
                   // The remote output file name (the one to be used by the client)
                   TString outfilerem(outfile);
                   // For local files we add the local server
-                  if (ftyp == TFile::kLocal) {
+                  if (localFile) {
                      // Remove prefix, if any, if included and if Xrootd
                      TString pfx  = gEnv->GetValue("Path.Localroot","");
                      TString srvProto = usrv.GetProtocol();
