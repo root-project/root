@@ -11,20 +11,16 @@
 using namespace clang;
 
 namespace cling {
-  InputValidator::InputValidator() {}
-
-  InputValidator::~InputValidator() {}
-
-  InputValidator::Result
-  InputValidator::Validate(llvm::StringRef input_line, LangOptions& LO) {
+  InputValidator::ValidationResult
+  InputValidator::validate(llvm::StringRef line, LangOptions& LO) {
     if (!m_Input.empty())
       m_Input.append("\n");
     else
       m_Input = "";
 
-    m_Input.append(input_line);
+    m_Input.append(line);
 
-    llvm::MemoryBuffer* MB = llvm::MemoryBuffer::getMemBuffer(input_line);
+    llvm::MemoryBuffer* MB = llvm::MemoryBuffer::getMemBuffer(line);
     Lexer RawLexer(SourceLocation(), LO, MB->getBufferStart(),
                    MB->getBufferStart(), MB->getBufferEnd());
     Token Tok;
@@ -52,7 +48,7 @@ namespace cling {
     return kComplete;
   }
 
-  void InputValidator::Reset() {
+  void InputValidator::reset() {
     m_Input = "";
     while (!m_ParenStack.empty())
       m_ParenStack.pop();
