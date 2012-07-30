@@ -21,6 +21,15 @@ namespace cling {
   /// are balanced.
   ///
   class InputValidator {
+  private:
+    ///\brief The input being collected.
+    ///
+    std::string m_Input;
+
+    ///\brief Stack used for checking the brace balance.
+    ///
+    std::stack<int> m_ParenStack;
+
   public:
     InputValidator() {}
     ~InputValidator() {}
@@ -54,9 +63,6 @@ namespace cling {
     ///\brief Resets the collected input and its corresponding brace stack.
     ///
     void reset();
-  private:
-    std::string m_Input;
-    std::stack<int> m_ParenStack;
   };
 }
 #endif // CLING_INPUT_VALIDATOR_H
