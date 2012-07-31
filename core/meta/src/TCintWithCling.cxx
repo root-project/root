@@ -2,7 +2,7 @@
 // vim: sw=3 ts=3 expandtab foldmethod=indent
 
 /*************************************************************************
- * Copyright (C) 1995-2011, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -75,6 +75,8 @@
 #ifdef __APPLE__
 #include <dlfcn.h>
 #endif // __APPLE__
+
+//#define R__CINTWITHCLING_MODULES
 
 using namespace std;
 
@@ -3631,6 +3633,9 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    TString dictDir = ROOTLIBDIR;
 #endif // ROOTINCDIR
 
+   clang::HeaderSearch& HS = fInterpreter->getCI()->getPreprocessor().getHeaderSearchInfo();
+   HS.setModuleCachePath(dictDir.Data());
+
    for (size_t i = 0, e = gModuleHeaderInfoBuffer.size(); i < e ; ++i) {
       // process buffered module registrations
       ((TCintWithCling*)gCint)->RegisterModule(gModuleHeaderInfoBuffer[i].fModuleName,
@@ -3641,9 +3646,13 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter);
 
    // to pull in gPluginManager
+#ifndef R__CINTWITHCLING_MODULES
    fInterpreter->declare("#include \"TPluginManager.h\"");
    fInterpreter->declare("#include \"TGenericClassInfo.h\"");
    fInterpreter->declare("#include \"Rtypes.h\"");
+#else
+   // Already done through modules
+#endif // R__CINTWITHCLING_MODULES
 
    // Initialize the CINT interpreter interface.
    fMore      = 0;
@@ -3737,18 +3746,18 @@ void TCintWithCling::RegisterModule(const char* modulename, const char** headers
 # else
    searchPath += rootsys + "/lib";
 # endif
-#else // ROOTINCDIR
+#else // ROOTLIBDIR
 # ifdef R__WIN32
    searchPath += ROOTBINDIR;
 # else
    searchPath += ROOTLIBDIR;
 # endif
-#endif // ROOTINCDIR
+#endif // ROOTLIBDIR
    gSystem->ExpandPathName(searchPath);
 
    if (!gSystem->FindFile(searchPath, pcmFileName)) {
-      Error("RegisterModule()", "Cannot find dictionary module %s in %s",
-            pcmFileName.Data(), searchPath.Data());
+      Error("RegisterModule()", "Cannot find dictionary module %s_dict.pcm in %s",
+            modulename, searchPath.Data());
       return;
    }
 
@@ -3757,9 +3766,11 @@ void TCintWithCling::RegisterModule(const char* modulename, const char** headers
    clang::ModuleMap& ModuleMap = PP.getHeaderSearchInfo().getModuleMap();
 
    TCintWithCling::Info("RegisterModule", "Loading PCM %s", pcmFileName.Data());
+   TString modulename_dict = modulename;
+   modulename_dict += "_dict";
 
    std::pair<clang::Module*, bool> modCreation
-      = ModuleMap.findOrCreateModule(modulename, 0 /*ActiveModule*/,
+      = ModuleMap.findOrCreateModule(modulename_dict.Data(), 0 /*ActiveModule*/,
                                      false /*Framework*/, false /*Explicit*/);
    if (!modCreation.second) {
       Error("RegisterModule()",
@@ -3791,6 +3802,7 @@ void TCintWithCling::RegisterModule(const char* modulename, const char** headers
             = PP.getFileManager().getDirectory(srHdrDir);
          if (Dir) {
 #ifdef R__CINTWITHCLING_MODULES
+#if 0
 NEEDS PATCH IN CLANG >>>
 Index: /build/llvm/src/tools/clang/include/clang/Lex/HeaderSearch.h
 ===================================================================
@@ -3809,6 +3821,7 @@ Index: /build/llvm/src/tools/clang/include/clang/Lex/HeaderSearch.h
    /// ClearFileInfo - Forget everything we know about headers so far.
    void ClearFileInfo() {
 <<< NEEDS PATCH IN CLANG
+#endif
             HdrSearch.setDirectoryHasModuleMap(Dir);
 #endif
          }
