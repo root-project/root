@@ -700,7 +700,7 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) addTransientWindow : (QuartzWindow *)window
+- (void) addTransientWindow : (QuartzWindow *) window
 {
    assert(window != nil && "addTransientWindow, window parameter is nil");
 
@@ -716,7 +716,7 @@ void print_mask_info(ULong_t mask)
 
 
 //______________________________________________________________________________
-- (void) makeKeyAndOrderFront:(id)sender
+- (void) makeKeyAndOrderFront : (id) sender
 {
    (void) sender;
    //The more I know Cocoa, the less I like it.

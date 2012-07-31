@@ -36,6 +36,8 @@
 //This is to emulate "transient" window/main window relationship:
 @property (nonatomic, assign) QuartzWindow *fMainWindow;
 - (void) addTransientWindow : (QuartzWindow *) window;
+//This for spaces.
+- (void) makeKeyAndOrderFront : (id) sender;
 
 //Shape mask - non-rectangular window.
 @property (nonatomic, assign) QuartzImage *fShapeCombineMask;
