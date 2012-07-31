@@ -83,6 +83,8 @@ $(call stripsrc,$(UTILSDIRS)/%_tmp.cxx): $(UTILSDIRS)/%.cxx
 
 $(call stripsrc,$(UTILSDIRS)/rootcint_tmp.o): $(call stripsrc,\
 	   $(UTILSDIRS)/rootcint_tmp.cxx)
+$(call stripsrc,$(UTILSDIRS)/rootcling_tmp.o): $(call stripsrc,\
+	   $(UTILSDIRS)/rootcling_tmp.cxx)
 
 $(call stripsrc,$(UTILSDIRS)/rootcling_tmp.o): $(call stripsrc,\
 	   $(UTILSDIRS)/rootcling_tmp.cxx)
