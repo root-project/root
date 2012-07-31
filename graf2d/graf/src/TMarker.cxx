@@ -27,12 +27,6 @@ ClassImp(TMarker)
 //______________________________________________________________________________
 //
 // Manages Markers. Marker attributes are managed by TAttMarker.
-// The list of standard ROOT markers is shown in this picture
-//Begin_Html
-/*
-<img src="gif/markers.gif">
-*/
-//End_Html
 //
 
 
