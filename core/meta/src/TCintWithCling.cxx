@@ -820,7 +820,7 @@ tcling_MethodInfo* tcling_ClassInfo::GetMethod(const char* fname,
       InheritanceMode imode /*= WithInheritance*/) const
 {
    if (!IsValid()) {
-      return false;
+      return 0;
    }
    if (!IsValidClang()) {
       G__MethodInfo* mi = new G__MethodInfo(fClassInfo->GetMethod(
