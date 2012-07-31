@@ -1064,7 +1064,7 @@ void TTreeCache::SetEntryRange(Long64_t emin, Long64_t emax)
 }
 
 //_____________________________________________________________________________
-void TTreeCache::SetFile(TFile *file)
+void TTreeCache::SetFile(TFile *file, TFile::ECacheAction action)
 {
    // Overload to make sure that the object specific
 
@@ -1074,9 +1074,9 @@ void TTreeCache::SetFile(TFile *file)
    if (fFile) {
       TFile *prevFile = fFile;
       fFile = 0;
-      prevFile->SetCacheRead(0, fTree);
+      prevFile->SetCacheRead(0, fTree, action);
    }
-   TFileCacheRead::SetFile(file);
+   TFileCacheRead::SetFile(file, action);
 }
 
 //_____________________________________________________________________________
