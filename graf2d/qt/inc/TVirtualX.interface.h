@@ -21,6 +21,11 @@ public:
    virtual void      ClosePixmap();
    virtual void      CloseWindow();
    virtual void      CopyPixmap(Int_t wid, Int_t xpos, Int_t ypos);
+
+   //TVirtualX has two versions of CreateOpenGLContext.
+   //Two suppress a compiler's warning:
+   using TVirtualX::CreateOpenGLContext;
+   
    virtual void      CreateOpenGLContext(Int_t wid=0);
    virtual void      DeleteOpenGLContext(Int_t wid=0);
    virtual void      DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode);
