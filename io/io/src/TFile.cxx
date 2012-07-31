@@ -2071,13 +2071,26 @@ void TFile::SetCompressionSettings(Int_t settings)
 }
 
 //______________________________________________________________________________
-void TFile::SetCacheRead(TFileCacheRead *cache, TObject* tree)
+void TFile::SetCacheRead(TFileCacheRead *cache, TObject* tree, ECacheAction action)
 {
    // Set a pointer to the read cache.
    // NOTE:  This relinquish ownership of the previous cache, so if you do not
    // already have a pointer to the previous cache (and there was a previous
    // cache), you ought to retrieve (and delete it if needed) using:
    //    TFileCacheRead *older = myfile->GetCacheRead();
+   //
+   // NOTE: the action specifies how to behave when detaching a cache from the
+   // the TFile.  If set to (default) kDisconnect, the contents of the cache
+   // will be flushed when it is removed from the file, and it will disconnect
+   // the cache object from the file.  In almost all cases, this is what you want.
+   // If you want to disconnect the cache temporarily from this tree and re-attach
+   // later to the same fil, you can set action to kDoNotDisconnect.  This will allow 
+   // things like prefetching to continue in the background while it is no longer the 
+   // default cache for the TTree.  Except for a few expert use cases, kDisconnect is
+   // likely the correct setting.
+   // 
+   // WARNING: if action=kDoNotDisconnect, you MUST delete the cache before TFile.
+   //
 
    if (tree) {
       if (cache) fCacheReadMap->Add(tree, cache);
@@ -2086,11 +2099,11 @@ void TFile::SetCacheRead(TFileCacheRead *cache, TObject* tree)
          // a TFileCacheRead* so the C-cast is safe.
          TFileCacheRead* tpf = (TFileCacheRead *)fCacheReadMap->GetValue(tree);
          fCacheReadMap->RemoveEntry(tree);
-         if (tpf && tpf->GetFile() == this) tpf->SetFile(0);
+         if (tpf && (tpf->GetFile() == this) && (action != kDoNotDisconnect)) tpf->SetFile(0, action);
       }
    }
-   if (cache) cache->SetFile(this);
-   else if (!tree && fCacheRead) fCacheRead->SetFile(0);
+   if (cache) cache->SetFile(this, action);
+   else if (!tree && fCacheRead && (action != kDoNotDisconnect)) fCacheRead->SetFile(0, action);
    // For backward compatibility the last Cache set is the default cache.
    fCacheRead = cache;
 }

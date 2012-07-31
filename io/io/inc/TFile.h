@@ -52,6 +52,9 @@ public:
    // Open timeout constants
    enum EOpenTimeOut { kInstantTimeout = 0, kEternalTimeout = 999999999 };
 
+   // TTreeCache flushing semantics
+   enum ECacheAction { kDisconnect = 0, kDoNotDisconnect = 1 };
+
 protected:
    Double_t         fSumBuffer;      //Sum of buffer sizes of objects written so far
    Double_t         fSum2Buffer;     //Sum of squares of buffer sizes of objects written so far
@@ -232,7 +235,7 @@ public:
    virtual Int_t       Recover();
    virtual Int_t       ReOpen(Option_t *mode);
    virtual void        Seek(Long64_t offset, ERelativeTo pos = kBeg);
-   virtual void        SetCacheRead(TFileCacheRead *cache, TObject* tree = 0);
+   virtual void        SetCacheRead(TFileCacheRead *cache, TObject* tree = 0, ECacheAction action = kDisconnect);
    virtual void        SetCacheWrite(TFileCacheWrite *cache);
    virtual void        SetCompressionAlgorithm(Int_t algorithm=0);
    virtual void        SetCompressionLevel(Int_t level=1);

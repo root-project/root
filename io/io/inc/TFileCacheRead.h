@@ -25,7 +25,10 @@
 #include "TObject.h"
 #endif
 
-class TFile;
+#ifndef ROOT_TFile
+#include "TFile.h"
+#endif
+
 class TBranch;
 class TFilePrefetch;
 
@@ -116,7 +119,7 @@ public:
    virtual Int_t       ReadBufferExtNormal(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    virtual Int_t       ReadBufferExtPrefetch(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
-   virtual void        SetFile(TFile *file);
+   virtual void        SetFile(TFile *file, TFile::ECacheAction action = TFile::kDisconnect);
    virtual void        SetSkipZip(Bool_t /*skip*/ = kTRUE) {} // This function is only used by TTreeCacheUnzip (ignore it)
    virtual void        Sort();
    virtual void        SecondSort();                          //Method used to sort and merge the chunks in the second block
