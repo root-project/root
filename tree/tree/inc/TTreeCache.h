@@ -82,7 +82,7 @@ public:
    virtual Int_t       ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len);
    virtual void        ResetCache();
    virtual void        SetEntryRange(Long64_t emin,   Long64_t emax);
-   virtual void        SetFile(TFile *file);
+   virtual void        SetFile(TFile *file, TFile::ECacheAction action=TFile::kDisconnect);
    static void         SetLearnEntries(Int_t n = 10);
    void                StartLearningPhase();
    virtual void        StopLearningPhase();
