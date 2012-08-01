@@ -8186,7 +8186,7 @@ AFTERIMAGE_LIBS="$AFTERIMAGE_LIBS -lm"
 
 
 TTF_INCLUDES=
-set -x
+
 if test "x$with_ttf" = "xno"; then
   have_ttf=disabled
 else
