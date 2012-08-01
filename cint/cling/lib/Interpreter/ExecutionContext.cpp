@@ -214,7 +214,9 @@ ExecutionContext::executeFunction(llvm::StringRef funcname,
     // Function expects to receive the storage for the returned aggregate as
     // first argument. Make sure returnValue is able to receive it, i.e.
     // that it has the pointer set:
-    assert(returnValue && GVTOP(*returnValue) || "must call function returning aggregate with returnValue pointing to the storage space for return value!");
+    assert(returnValue && GVTOP(*returnValue) && \
+           "must call function returning aggregate with returnValue pointing " \
+           "to the storage space for return value!");
 
     args.push_back(*returnValue);
     // will get set as arg0, must not assign.
