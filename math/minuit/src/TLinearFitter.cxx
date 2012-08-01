@@ -423,16 +423,16 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fFunctions.Delete(); 
       fFunctions= *(TObjArray*) tlf.fFunctions.Clone();
       
-      fY=tlf.fY;
-      fY2=tlf.fY2;
-      fY2Temp=tlf.fY2Temp;
-      fX=tlf.fX;
-      fE=tlf.fE;
+      fY.ResizeTo(tlf.fY);    fY = tlf.fY; 
+      fX.ResizeTo(tlf.fX);    fX = tlf.fX;
+      fE.ResizeTo(tlf.fE);    fE = tlf.fE;
+
+      fY2 = tlf.fY2;
+      fY2Temp = tlf.fY2Temp;
+      for(Int_t i = 0; i < 1000; i++) fVal[i] = tlf.fVal[i];
       
       if(fInputFunction) delete fInputFunction; fInputFunction = 0;
-      if(tlf.fInputFunction) {
-         *fInputFunction = *(tlf.fInputFunction);
-      }
+      if(tlf.fInputFunction) fInputFunction = new TFormula(*tlf.fInputFunction);
       
       fNpoints=tlf.fNpoints;
       fNfunctions=tlf.fNfunctions;
