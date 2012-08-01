@@ -1,0 +1,293 @@
+Index: tools/clang/include/clang/Lex/HeaderSearch.h
+===================================================================
+--- tools/clang/include/clang/Lex/HeaderSearch.h	(revision 160726)
++++ tools/clang/include/clang/Lex/HeaderSearch.h	(working copy)
+@@ -283,6 +283,11 @@
+   
+   /// \brief Retrieve the path to the module cache.
+   StringRef getModuleCachePath() const { return ModuleCachePath; }
++
++  /// \brief Consider modules when including files from this directory.
++  void setDirectoryHasModuleMap(const DirectoryEntry* Dir) {
++    DirectoryHasModuleMap[Dir] = true;
++  }
+   
+   /// \brief Forget everything we know about headers so far.
+   void ClearFileInfo() {
+Index: tools/clang/include/clang/Serialization/ASTReader.h
+===================================================================
+--- tools/clang/include/clang/Serialization/ASTReader.h	(revision 160726)
++++ tools/clang/include/clang/Serialization/ASTReader.h	(working copy)
+@@ -686,7 +686,15 @@
+   /// need to be emitted, such as inline function definitions or
+   /// Objective-C protocols.
+   std::deque<Decl *> InterestingDecls;
++public:
++  /// \brief Currently deserializing Decls
++  ///
++  /// Decls that are currently read but have not been completed yet.
++  llvm::SmallPtrSet<Decl *, 16> DeclsInFlight;
+ 
++  llvm::SmallPtrSet<Decl *, 16> RedeclsAddedToAST;
++
++private:
+   /// \brief The set of redeclarable declaraations that have been deserialized
+   /// since the last time the declaration chains were linked.
+   llvm::SmallPtrSet<Decl *, 16> RedeclsDeserialized;
+@@ -738,7 +746,7 @@
+   /// the given canonical declaration.
+   MergedDeclsMap::iterator
+   combineStoredMergedDecls(Decl *Canon, serialization::GlobalDeclID CanonID);
+-  
++
+   /// \brief Ready to load the previous declaration of the given Decl.
+   void loadAndAttachPreviousDecl(Decl *D, serialization::DeclID ID);
+ 
+@@ -853,6 +861,8 @@
+ 
+   void finishPendingActions();
+ 
++  bool needPendingInstantiation(ValueDecl* D) const;
++
+   /// \brief Produce an error diagnostic and return true.
+   ///
+   /// This routine should only be used for fatal errors that have to
+Index: tools/clang/lib/Serialization/ASTReader.cpp
+===================================================================
+--- tools/clang/lib/Serialization/ASTReader.cpp	(revision 160726)
++++ tools/clang/lib/Serialization/ASTReader.cpp	(working copy)
+@@ -4928,6 +4928,9 @@
+         if (!ND)
+           continue;
+ 
++        if (This->Reader.DeclsInFlight.count(ND))
++          continue;
++
+         if (ND->getDeclName() != This->Name) {
+           assert(!This->Name.getCXXNameType().isNull() && 
+                  "Name mismatch without a type");
+@@ -5569,7 +5572,11 @@
+     ValueDecl *D = cast<ValueDecl>(GetDecl(PendingInstantiations[Idx++]));
+     SourceLocation Loc
+       = SourceLocation::getFromRawEncoding(PendingInstantiations[Idx++]);
+-    Pending.push_back(std::make_pair(D, Loc));
++
++    // For modules, find out whether an instantiation already exists
++    if (!getContext().getLangOpts().Modules
++        || needPendingInstantiation(D))
++      Pending.push_back(std::make_pair(D, Loc));
+   }  
+   PendingInstantiations.clear();
+ }
+@@ -6466,6 +6473,9 @@
+ }
+ 
+ ASTReader::~ASTReader() {
++  assert(DeclsInFlight.empty() && "DeclsInFlight not empty!");
++  assert(RedeclsAddedToAST.empty() && "RedeclsAddedToAST not empty!");
++
+   for (DeclContextVisibleUpdatesPending::iterator
+            I = PendingVisibleUpdates.begin(),
+            E = PendingVisibleUpdates.end();
+Index: tools/clang/lib/Serialization/ASTReaderDecl.cpp
+===================================================================
+--- tools/clang/lib/Serialization/ASTReaderDecl.cpp	(revision 160726)
++++ tools/clang/lib/Serialization/ASTReaderDecl.cpp	(working copy)
+@@ -348,6 +348,13 @@
+     DeclContext *LexicalDC = ReadDeclAs<DeclContext>(Record, Idx);
+     // Avoid calling setLexicalDeclContext() directly because it uses
+     // Decl::getASTContext() internally which is unsafe during derialization.
++    NamedDecl* ND = dyn_cast<NamedDecl>(D);
++    if (ND && ND->getIdentifier()) {
++      std::string N(ND->getNameAsString());
++      if (N[1] == 'S' && N[2] == '_') {
++        llvm::errs() << "FOO\n";
++      }
++    }
+     D->setDeclContextsImpl(SemaDC, LexicalDC, Reader.getContext());
+   }
+   D->setLocation(Reader.ReadSourceLocation(F, RawLocation));
+@@ -520,7 +527,9 @@
+   FD->IsConstexpr = Record[Idx++];
+   FD->EndRangeLoc = ReadSourceLocation(Record, Idx);
+ 
+-  switch ((FunctionDecl::TemplatedKind)Record[Idx++]) {
++  FunctionDecl::TemplatedKind TmpltKind
++    = (FunctionDecl::TemplatedKind) Record[Idx++];
++  switch (TmpltKind) {
+   case FunctionDecl::TK_NonTemplate:
+     mergeRedeclarable(FD, Redecl);      
+     break;
+@@ -623,6 +632,9 @@
+   for (unsigned I = 0; I != NumParams; ++I)
+     Params.push_back(ReadDeclAs<ParmVarDecl>(Record, Idx));
+   FD->setParams(Reader.getContext(), Params);
++
++  if (TmpltKind != FunctionDecl::TK_NonTemplate)
++    Reader.DeclsInFlight.erase(FD);
+ }
+ 
+ void ASTDeclReader::VisitObjCMethodDecl(ObjCMethodDecl *MD) {
+@@ -901,6 +913,7 @@
+   // Only true variables (not parameters or implicit parameters) can be merged.
+   if (VD->getKind() == Decl::Var)
+     mergeRedeclarable(VD, Redecl);
++  else Reader.DeclsInFlight.erase(VD);
+   
+   if (uint64_t Val = Record[Idx++]) {
+     VD->setInit(Reader.ReadExpr(F));
+@@ -1311,7 +1324,7 @@
+      
+   VisitTemplateDecl(D);
+   D->IdentifierNamespace = Record[Idx++];
+-  
++  mergeRedeclarable(D, Redecl);
+   return Redecl;
+ }
+ 
+@@ -1515,6 +1528,7 @@
+ template <typename T>
+ ASTDeclReader::RedeclarableResult 
+ ASTDeclReader::VisitRedeclarable(Redeclarable<T> *D) {
++  Reader.DeclsInFlight.insert(static_cast<T *>(D));
+   DeclID FirstDeclID = ReadDeclID(Record, Idx);
+   
+   // 0 indicates that this declaration was the only declaration of its entity,
+@@ -1545,6 +1559,7 @@
+ void ASTDeclReader::mergeRedeclarable(Redeclarable<T> *D, 
+                                       RedeclarableResult &Redecl) {
+   // If modules are not available, there is no reason to perform this merge.
++  Reader.DeclsInFlight.erase(static_cast<T*>(D));
+   if (!Reader.getContext().getLangOpts().Modules)
+     return;
+   
+@@ -1750,14 +1765,20 @@
+ }
+ 
+ ASTDeclReader::FindExistingResult::~FindExistingResult() {
+-  if (!AddResult || Existing)
++  if (!AddResult || Existing) {
+     return;
++  }
+   
+   DeclContext *DC = New->getDeclContext()->getRedeclContext();
+   if (DC->isTranslationUnit() && Reader.SemaObj) {
+-    Reader.SemaObj->IdResolver.tryAddTopLevelDecl(New, New->getDeclName());
++    if (Reader.SemaObj->IdResolver.tryAddTopLevelDecl(New, New->getDeclName()))
++      Reader.RedeclsAddedToAST.insert(New);
+   } else if (DC->isNamespace()) {
++    DeclContext* oldCtx = New->getLexicalDeclContext();
++    New->setLexicalDeclContext(DC);
+     DC->addDecl(New);
++    New->setLexicalDeclContext(oldCtx);
++    Reader.RedeclsAddedToAST.insert(New);
+   }
+ }
+ 
+@@ -1779,7 +1800,7 @@
+     for (IdentifierResolver::iterator I = IdResolver.begin(Name), 
+                                    IEnd = IdResolver.end();
+          I != IEnd; ++I) {
+-      if (isSameEntity(*I, D))
++      if (*I != D && isSameEntity(*I, D))
+         return FindExistingResult(Reader, D, *I);
+     }
+   }
+@@ -1787,7 +1808,9 @@
+   if (DC->isNamespace()) {
+     for (DeclContext::lookup_result R = DC->lookup(Name);
+          R.first != R.second; ++R.first) {
+-      if (isSameEntity(*R.first, D))
++      if (*R.first != D
++          && !Reader.DeclsInFlight.count(*R.first)
++          && isSameEntity(*R.first, D))
+         return FindExistingResult(Reader, D, *R.first);
+     }
+   }
+@@ -2125,9 +2148,23 @@
+   // AST consumer might need to know about, queue it.
+   // We don't pass it to the consumer immediately because we may be in recursive
+   // loading, and some declarations may still be initializing.
+-  if (isConsumerInterestedIn(D))
++  bool HaveModules = getContext().getLangOpts().Modules;
++  if (HaveModules) {
++    if (RedeclsAddedToAST.count(D)) {
++      RedeclsAddedToAST.erase(D);
++      if (isConsumerInterestedIn(D))
++        InterestingDecls.push_back(D);
++    }
++  } else if (isConsumerInterestedIn(D))
+     InterestingDecls.push_back(D);
+-  
++#ifdef AXEL_ORIG_WORKS
++  if (!HaveModules || RedeclsAddedToAST.count(D)) {
++    if (isConsumerInterestedIn(D))
++      InterestingDecls.push_back(D);
++    if (HaveModules)
++      RedeclsAddedToAST.erase(D);
++  }
++#endif
+   return D;
+ }
+ 
+@@ -2478,3 +2515,60 @@
+     }
+   }
+ }
++
++/// \brief Return a template specialization of ND (should be a TemplateDecl)
++///  that matches FD or TD.
++static NamedDecl* findMatchingSpecialization(FunctionDecl* FD,
++                                             ClassTemplateSpecializationDecl*TD,
++                                             NamedDecl* ND) {
++  TemplateDecl* Templt = dyn_cast<TemplateDecl>(ND);
++  if (!Templt) return 0;
++  if (FD) {
++    FunctionTemplateDecl* FTD = dyn_cast<FunctionTemplateDecl>(Templt);
++    if (!FTD) return 0;
++    const TemplateArgumentList* TmpltArgs = FD->getTemplateSpecializationArgs();
++    assert(TmpltArgs || "Template without arguments");
++    void* InsertionPoint;
++    return FTD->findSpecialization(TmpltArgs->data(), TmpltArgs->size(),
++                                   InsertionPoint);
++  } else {
++    ClassTemplateDecl* CTD = dyn_cast<ClassTemplateDecl>(Templt);
++    if (!CTD) return 0;
++    const TemplateArgumentList& TmpltArgs = TD->getTemplateArgs();
++    void* InsertionPoint;
++    return CTD->findSpecialization(TmpltArgs.data(), TmpltArgs.size(),
++                                   InsertionPoint);
++  }
++  return 0;
++}
++
++/// \brief Find out whether an instantiation (outside the module) already exists
++bool ASTReader::needPendingInstantiation(ValueDecl* D) const {
++  DeclContext *DC = D->getDeclContext()->getRedeclContext();
++  DeclarationName Name = D->getDeclName();
++  assert(Name && "unnamed template");
++
++  FunctionDecl* FD = dyn_cast<FunctionDecl>(D);
++  ClassTemplateSpecializationDecl* CD
++    = FD ? 0 : dyn_cast<ClassTemplateSpecializationDecl>(D);
++
++  NamedDecl* FoundSpecialization = 0;
++  if (DC->isTranslationUnit() && SemaObj) {
++    IdentifierResolver &IdResolver = SemaObj->IdResolver;
++    for (IdentifierResolver::iterator I = IdResolver.begin(Name), 
++           IEnd = IdResolver.end();
++         I != IEnd && !FoundSpecialization; ++I)
++      FoundSpecialization = findMatchingSpecialization(FD, CD, *I);
++  } else {
++    // templates are redeclarables, i.e. they must have been merged into
++    // the primary context. Use localUncachedLookup to not pick up template
++    // decls from modules again.
++    llvm::SmallVector<NamedDecl*, 6> Results;
++    DC->getPrimaryContext()->localUncachedLookup(Name, Results);
++    for (llvm::SmallVector<NamedDecl *, 6>::const_iterator
++           I = Results.begin(), E = Results.end();
++         I != E && FoundSpecialization; ++I)
++      FoundSpecialization = findMatchingSpecialization(FD, CD, *I);
++  }
++  return FoundSpecialization && isSameEntity(FoundSpecialization, D);
++}
