@@ -76,7 +76,7 @@
 #include <dlfcn.h>
 #endif // __APPLE__
 
-//#define R__CINTWITHCLING_MODULES
+#define R__CINTWITHCLING_MODULES
 
 using namespace std;
 
@@ -3802,26 +3802,6 @@ void TCintWithCling::RegisterModule(const char* modulename, const char** headers
             = PP.getFileManager().getDirectory(srHdrDir);
          if (Dir) {
 #ifdef R__CINTWITHCLING_MODULES
-#if 0
-NEEDS PATCH IN CLANG >>>
-Index: /build/llvm/src/tools/clang/include/clang/Lex/HeaderSearch.h
-===================================================================
---- /build/llvm/src/tools/clang/include/clang/Lex/HeaderSearch.h	(revision 153080)
-+++ /build/llvm/src/tools/clang/include/clang/Lex/HeaderSearch.h	(working copy)
-@@ -260,6 +260,11 @@
-   
-   /// \brief Retrieve the path to the module cache.
-   StringRef getModuleCachePath() const { return ModuleCachePath; }
-+
-+  /// \brief Consider modules when including files from this directory.
-+  void setDirectoryHasModuleMap(const DirectoryEntry* Dir) {
-+    DirectoryHasModuleMap[Dir] = true;
-+  }
-   
-   /// ClearFileInfo - Forget everything we know about headers so far.
-   void ClearFileInfo() {
-<<< NEEDS PATCH IN CLANG
-#endif
             HdrSearch.setDirectoryHasModuleMap(Dir);
 #endif
          }
