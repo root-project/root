@@ -26,6 +26,11 @@ ifeq ($(ARCH),win32)
 GLS          := $(filter-out $(MODDIRS)/TX11GL.cxx, $(GLS))
 GLH          := $(filter-out $(MODDIRI)/TX11GL.h, $(GLH))
 endif
+# Excluded from OSX Cocoa builds
+ifeq ($(BUILDCOCOA),yes)
+GLS          := $(filter-out $(MODDIRS)/TX11GL.cxx, $(GLS))
+GLH          := $(filter-out $(MODDIRI)/TX11GL.h, $(GLH))
+endif
 
 # Excluded from rootcint
 GLH1         := $(MODDIRI)/gl2ps.h $(MODDIRI)/CsgOps.h \
@@ -39,10 +44,13 @@ GLH2         := $(filter-out $(GLH1), $(GLH))
 
 ifneq ($(OPENGLLIB),)
 GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
-                $(X11LIBDIR) -lX11 -lm
+                $(XLIBS) -lm
 endif
 ifeq ($(ARCH),win32)
 GLLIBS       := opengl32.lib glu32.lib
+endif
+ifeq ($(BUILDCOCOA),yes)
+GLLIBS       := -framework OpenGL
 endif
 
 GLO          := $(call stripsrc,$(GLS:.cxx=.o))

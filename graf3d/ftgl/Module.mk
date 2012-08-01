@@ -28,9 +28,6 @@ ALLLIBS     += $(FTGLLIB)
 # include all dependency files
 INCLUDEFILES += $(FTGLDEP)
 
-ifeq ($(ARCH),win32)
-GLLIBS       := opengl32.lib glu32.lib
-endif
 ifeq ($(MACOSX_MINOR),3)
 FTGLLIBEXTRA += -lz
 endif
@@ -46,7 +43,7 @@ $(FTGLLIB):     $(FTGLO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) $(FTGLLIBDEP)
 		   "$(SOFLAGS)" libFTGL.$(SOEXT) $@ \
 		   "$(FTGLO)" \
 		   "$(FREETYPELDFLAGS) $(FREETYPELIB) \
-		    $(FTGLLIBEXTRA) $(XLIBS) $(GLLIBS)"
+		    $(FTGLLIBEXTRA) $(GLLIBS)"
 
 all-$(MODNAME): $(FTGLLIB)
 

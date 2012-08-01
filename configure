@@ -140,7 +140,7 @@ for c in $options ; do eval ${c}_explicit="" ; done
 
 enable_cxx11=no
 enable_cling=no
-enable_cocoa=no
+enable_cocoa=
 enable_afs=no
 enable_alloc=no
 enable_gdml=no
@@ -2343,6 +2343,12 @@ fi
 if test ! "x$platform" = "xmacosx"; then
     enable_cocoa="no"
 fi
+if test "x$macosx108" = "xyes" && test "x$enable_cocoa" = "x"; then
+   enable_cocoa="yes"
+fi
+if test "x$enable_cocoa" = "x"; then
+   enable_cocoa="no"
+fi
 
 hascocoa="undef"
 if test "x$enable_cocoa" = "xyes"; then
@@ -2350,6 +2356,17 @@ if test "x$enable_cocoa" = "xyes"; then
     hascocoa="define"
     enable_x11="no"
     result "yes"
+    message "Checking for OSX SDK"
+    osxsdk=`make -s -f ${ac_srcdir}/config/Makefile.$arch CONFIGURE=yes showsdk`
+    result "$osxsdk"
+    if [ ! -d $osxsdk ]; then
+        result "`basename $0`: no OSX SDK found at $osxsdk"
+        result "Run "xcode-select" to update the developer directory path"
+        exit 1
+    else
+	openglincdir=${osxsdk}/System/Library/Frameworks/OpenGL.framework/Headers
+	opengllibdir=${osxsdk}/System/Library/Frameworks/OpenGL.framework/Libraries
+    fi
 fi
 
 ######################################################################
@@ -2752,7 +2769,7 @@ if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
         /usr/include/Mesa /usr/local/include/Mesa /usr/Mesa/include \
         /usr/local/Mesa/include /usr/Mesa /usr/local/Mesa /opt/Mesa \
         /opt/Mesa/include /opt/graphics/OpenGL/include"
-    check_header "GL/gl.h" "$openglincdir" $openglincdirs
+    check_header "GL/gl.h gl.h" "$openglincdir" $openglincdirs
     openglinc=$found_hdr
     openglincdir=$found_dir
 

@@ -32,7 +32,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TMath.h"
-//#include "RConfigure.h"
+#include "RConfigure.h"
 
 #ifdef R__HAS_COCOA
 #   define X_DISPLAY_MISSING 1

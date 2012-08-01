@@ -77,7 +77,7 @@ End_Html */
 #include "TEnv.h"
 #include "TStyle.h"
 #include "TText.h"
-//#include "RConfigure.h"
+#include "RConfigure.h"
 
 #ifndef WIN32
 #ifndef R__HAS_COCOA

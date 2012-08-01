@@ -23,6 +23,8 @@ MACOSXVERS    = 10.$(MACOSX_MINOR)
 else
 MACOSXVERS    = $(MACOSX_DEPLOYMENT_TARGET)
 endif
+XCODE_PATH   := $(shell /usr/bin/xcode-select -print-path)
+OSXSDK       := $(XCODE_PATH)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$(MACOSXVERS).sdk
 
 # Compiler:
 CXX           = icc
@@ -153,4 +155,21 @@ MACOSX_SSL_DEPRECATED = yes
 endif
 ifeq ($(MACOSX_MINOR),8)
 MACOSX_SSL_DEPRECATED = yes
+endif
+
+ifeq ($(CONFIGURE),yes)
+showcxx:
+	@echo "$(CXX)"
+
+showcc:
+	@echo "$(CC)"
+
+showld:
+	@echo "$(LD)"
+
+showf77:
+	@echo "$(F77ORG)"
+
+showsdk:
+	@echo "$(OSXSDK)"
 endif

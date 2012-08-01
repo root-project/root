@@ -18,7 +18,7 @@
 
 #include "TASPluginGS.h"
 #include "TSystem.h"
-//#include "RConfigure.h"
+#include "RConfigure.h"
 
 #ifdef R__HAS_COCOA
 #   define X_DISPLAY_MISSING 1
