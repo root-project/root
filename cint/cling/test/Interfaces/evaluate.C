@@ -1,7 +1,4 @@
 // RUN: cat %s | %cling | FileCheck %s
-// XFAIL: *
-//   due to last test:
-//   cling: /home/axel/build/cling/trunk/lib/ExecutionEngine/JIT/JIT.cpp:400: virtual llvm::GenericValue llvm::JIT::runFunction(llvm::Function *, const std::vector<GenericValue> &): Assertion `(FTy->getNumParams() == ArgValues.size() || (FTy->isVarArg() && FTy->getNumParams() <= ArgValues.size())) && "Wrong number of arguments passed into function!"' failed.
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Value.h"
@@ -20,6 +17,12 @@ int* IntP = (int*)0x12;
 gCling->evaluate("IntP;", &V);
 V // CHECK: (cling::Value) boxes [(int *) 0x12]
 
-gCling->evaluate("V", &V);
-V // CHECK: (cling::Value) boxes [(cling::Value) ???]
+cling::Value Result;
+Result.value = llvm::PTOGV(&V); // SRet
+gCling->evaluate("V", &Result);
+Result // CHECK: (cling::Value) boxes [(cling::Value) ]
+V // CHECK: (cling::Value) boxes [(int *) 0x12]
 
+// Savannah #96277
+gCling->evaluate("double sin(double); double one = sin(3.141/2);", &V);
+one // CHECK: (double) 1.000000e+00

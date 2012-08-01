@@ -635,12 +635,15 @@ namespace cling {
       m_IncrParser->Compile(Wrapper, CO);
 
     // get the result
-    llvm::GenericValue val;
-    if (RunFunction(WrapperName, &val)) {
-      if (V)
-        *V = Value(val, RetTy);
-
+    if (!V) {
+      if (RunFunction(WrapperName)) {
+        return Interpreter::kSuccess;
+      }
+    } else if (RunFunction(WrapperName, &V->value)) {
+      V->type = RetTy;
       return Interpreter::kSuccess;
+    } else {
+      *V = Value();
     }
 
     return Interpreter::kFailure;

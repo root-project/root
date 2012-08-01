@@ -157,8 +157,7 @@ void
 ExecutionContext::executeFunction(llvm::StringRef funcname,
                                   llvm::GenericValue* returnValue)
 {
-  // Call an extern C function without arguments
-  //runCodeGen();
+  // Call a function without arguments, or with an SRet argument, see SRet below
 
   // Rewire atexit:
   llvm::Function* atExit = m_engine->FindFunctionNamed("__cxa_atexit");
@@ -209,16 +208,25 @@ ExecutionContext::executeFunction(llvm::StringRef funcname,
   m_engine->UnregisterJITEventListener(&listener);
 
   std::vector<llvm::GenericValue> args;
-  llvm::GenericValue val;
-  if (!returnValue)
-    returnValue = &val;
+  bool wantReturn = (returnValue);
 
-  *returnValue = m_engine->runFunction(f, args);
-  //
-  //fprintf(stderr, "Finished running generated code with JIT.\n");
-  //
-  //Print the result.
-  //llvm::outs() << "Result: " << ret.IntVal << "\n";
+  if (f->hasStructRetAttr()) {
+    // Function expects to receive the storage for the returned aggregate as
+    // first argument. Make sure returnValue is able to receive it, i.e.
+    // that it has the pointer set:
+    assert(returnValue && GVTOP(*returnValue) || "must call function returning aggregate with returnValue pointing to the storage space for return value!");
+
+    args.push_back(*returnValue);
+    // will get set as arg0, must not assign.
+    wantReturn = false;
+  }
+
+  if (wantReturn) {
+    *returnValue = m_engine->runFunction(f, args);
+  } else {
+    m_engine->runFunction(f, args);
+  }
+
   m_engine->freeMachineCodeForFunction(f);
 }
 
