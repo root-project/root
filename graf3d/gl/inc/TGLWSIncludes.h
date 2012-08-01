@@ -23,7 +23,9 @@
 #  if defined(__APPLE__) && !defined(R__HAS_COCOA)
 #    define GLEW_APPLE_GLX
 #  endif
-#  include <GL/glxew.h>
+#  if !defined(R__HAS_COCOA)
+#    include <GL/glxew.h>
+#  endif
 #endif
 
 #endif
