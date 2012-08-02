@@ -47,18 +47,24 @@ int G__defined_tagname(const char* tagname, int noerror);
 int G__search_tagname(const char* tagname, int type);
 
 
-void NameMap::Remove(const char* name, int idx) {
+   void NameMap::Remove(const char* name, int idx, char **name_pool) {
    NameMap_t::iterator iMap = fMap.find(name);
    if (iMap != fMap.end()) {
       iMap->second.erase(idx);
+
       if (iMap->second.empty()) {
          fMap.erase(iMap);
       } else {
+         NameMap::Range r2(iMap->second);
+
          // We need to reinsert it with a different index
          std::set<int> tmpSet = iMap->second;
          fMap.erase(iMap);
-         const char *new_name = G__struct.name[*(tmpSet.begin())];
+         const char *new_name = name_pool[*(tmpSet.begin())];
          fMap[new_name] = tmpSet;
+         // if (strcmp(new_name,name)!=0) {
+         //    fprintf(stderr,"problem %s is not %s\n",name,new_name);
+         // }
       }
    }
 }
@@ -537,7 +543,7 @@ int G__class_autoloading(int* ptagnum)
                std::string origName(G__struct.name[tagnum]);
                std::string fullName(G__fulltagname(tagnum,0));
                if (G__struct.name[tagnum][0]) {
-                  G__struct.namerange->Remove(G__struct.name[tagnum], tagnum);
+                  G__struct.namerange->Remove(G__struct.name[tagnum], tagnum, G__struct.name);
                   G__struct.name[tagnum][0] = '@';
                }
                int found_tagnum = G__defined_tagname(fullName.c_str(),3);
@@ -554,7 +560,7 @@ int G__class_autoloading(int* ptagnum)
                   // to the real type (aka mytemp<Long64_t> vs mytemp<long long> or the
                   // stl containers with or without their (default) allocators.
                   char *old = G__struct.name[tagnum];
-                  G__struct.namerange->Remove(old, tagnum);
+                  G__struct.namerange->Remove(old, tagnum, G__struct.name);
 
                   G__struct.name[tagnum] = (char*)malloc(strlen(old)+50);
                   strcpy(G__struct.name[tagnum],"@@ ex autload entry @@"); // Okay, we allocated enough space
@@ -1463,7 +1469,7 @@ void G__set_class_autoloading_table(char* classname, char* libname)
          }
          G__struct.libname[tagnum] = 0;
       } else if (G__struct.name[tagnum][0]) {
-         G__struct.namerange->Remove(G__struct.name[tagnum], tagnum);
+         G__struct.namerange->Remove(G__struct.name[tagnum], tagnum, G__struct.name);
          G__struct.name[tagnum][0] = '@';
       }
       G__enable_autoloading = store_enable_autoloading;
