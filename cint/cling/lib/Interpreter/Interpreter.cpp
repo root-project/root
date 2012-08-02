@@ -1437,8 +1437,8 @@ namespace cling {
     //
     //  Get ready for arg list parsing.
     //
-    std::vector<QualType> GivenArgTypes;
-    std::vector<Expr*> GivenArgs;
+    llvm::SmallVector<QualType, 4> GivenArgTypes;
+    llvm::SmallVector<Expr*, 4> GivenArgs;
     //
     //  If we are looking up a member function, construct
     //  the implicit object argument.
