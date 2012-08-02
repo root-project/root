@@ -1248,6 +1248,8 @@ int G__defined_typename_noerror(const char* type_name, int noerror)
    if (G__newtype.namerange) {
       NameMap::Range nameRange = G__newtype.namerange->Find(temp);
       if (nameRange) {
+         if (nameRange.Last() > G__newtype.alltype) 
+            fprintf(stderr,"G__defined_typename_noerror %s, max=%d still have a set range of %d to %d\n",temp.data(),G__newtype.alltype,nameRange.First(),nameRange.Last());
          for (i = nameRange.First(); i <= nameRange.Last(); ++i) {
             if ((len == G__newtype.hash[i]) && !strcmp(G__newtype.name[i], temp)) {
                thisflag = 0;
@@ -1415,7 +1417,7 @@ int G__search_typename(const char* typenamein, int typein, int tagnum, int refty
 
       if (alias != -1 && G__struct.type[alias] == 'a') {
          char *old = G__struct.name[alias];
-         G__struct.namerange->Remove(old, alias);
+         G__struct.namerange->Remove(old, alias,G__struct.name);
          
          G__struct.name[alias] = (char*)malloc(strlen(old)+60);
          strcpy(G__struct.name[alias],"@@ ex autload entry remove by typedef declaration @@"); // Okay, we allocated enough space

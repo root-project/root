@@ -1287,7 +1287,7 @@ public:
    void Insert(const char* name, int idx) {
       fMap[name].insert(idx); 
    }
-   void Remove(const char* name, int idx);
+   void Remove(const char* name, int idx, char **namepool);
 
    Range Find(const char* name) {
       NameMap_t::const_iterator iMap = fMap.find(name);

@@ -2523,7 +2523,7 @@ int G__instantiate_templateclass(const char *tagnamein, int noerror)
     char *p2 = strchr(G__struct.name[tagnum],'<');
     if(p1 && p2 && (p1-tagname)==(p2-G__struct.name[tagnum]) &&
        0==strncmp(tagname,G__struct.name[tagnum],p1-tagname)) {
-      G__struct.namerange->Remove(G__struct.name[tagnum], tagnum);
+      G__struct.namerange->Remove(G__struct.name[tagnum], tagnum, G__struct.name);
       free((void*)G__struct.name[tagnum]);
       G__struct.name[tagnum] = (char*)malloc(strlen(tagname)+1);
       strcpy(G__struct.name[tagnum],tagname); // Okay we allocated enough space

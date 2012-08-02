@@ -176,7 +176,7 @@ static void G__close_inputfiles_upto(G__dictposition* pos)
             int hash = G__struct.hash[itag];
             char* libname = G__struct.libname[itag];
             int parent_tagnum = G__struct.parent_tagnum[itag];
-            G__struct.namerange->Remove(G__struct.name[itag], itag);
+            G__struct.namerange->Remove(G__struct.name[itag], itag, G__struct.name);
             G__struct.name[itag] = 0; // autoload entry - must not delete it, just set it to 0
             G__struct.libname[itag] = 0; // same here
             int alltag = G__struct.alltag;
@@ -383,7 +383,7 @@ static int G__free_typedef_upto(int typenum)
    for (--G__newtype.alltype; G__newtype.alltype >= typenum; --G__newtype.alltype) {
       // -- Free a typedef definition.
       // Free the typedef name.
-      G__newtype.namerange->Remove(G__newtype.name[G__newtype.alltype], G__newtype.alltype);
+      G__newtype.namerange->Remove(G__newtype.name[G__newtype.alltype], G__newtype.alltype, G__newtype.name);
       free((void*) G__newtype.name[G__newtype.alltype]);
       G__newtype.name[G__newtype.alltype] = 0;
       //
@@ -545,7 +545,7 @@ static int G__free_struct_upto(int tagnum)
          G__struct.incsetup_memfunc[G__struct.alltag] = 0;
       }
       // freeing tagname
-      G__struct.namerange->Remove(G__struct.name[G__struct.alltag], G__struct.alltag);
+      G__struct.namerange->Remove(G__struct.name[G__struct.alltag], G__struct.alltag, G__struct.name);
       free((void*) G__struct.name[G__struct.alltag]);
       G__struct.name[G__struct.alltag] = 0;
    }
