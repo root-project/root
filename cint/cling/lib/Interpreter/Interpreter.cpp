@@ -1074,12 +1074,13 @@ namespace cling {
 
   static
   bool
-  FuncArgTypesMatch(CompilerInstance* CI, std::vector<QualType>& GivenArgTypes,
-    const FunctionProtoType* FPT)
+  FuncArgTypesMatch(CompilerInstance* CI, 
+                    llvm::SmallVector<QualType, 4>& GivenArgTypes,
+                    const FunctionProtoType* FPT)
   {
     FunctionProtoType::arg_type_iterator ATI = FPT->arg_type_begin();
     FunctionProtoType::arg_type_iterator E = FPT->arg_type_end();
-    std::vector<QualType>::iterator GAI = GivenArgTypes.begin();
+    llvm::SmallVector<QualType, 4>::iterator GAI = GivenArgTypes.begin();
     for (; ATI && (ATI != E); ++ATI, ++GAI) {
       if (!CI->getASTContext().hasSameType(*ATI, *GAI)) {
         return false;
@@ -1092,7 +1093,7 @@ namespace cling {
   bool
   IsOverload(CompilerInstance* CI,
     const TemplateArgumentListInfo* FuncTemplateArgs,
-    std::vector<QualType>& GivenArgTypes, FunctionDecl* FD,
+    llvm::SmallVector<QualType, 4>& GivenArgTypes, FunctionDecl* FD,
     bool UseUsingDeclRules)
   {
     //FunctionTemplateDecl* FTD = FD->getDescribedFunctionTemplate();
@@ -1195,8 +1196,8 @@ namespace cling {
     //
     //  Parse the prototype now.
     //
-    std::vector<QualType> GivenArgTypes;
-    std::vector<Expr*> GivenArgs;
+    llvm::SmallVector<QualType, 4> GivenArgTypes;
+    llvm::SmallVector<Expr*, 4> GivenArgs;
     while (P->getCurToken().isNot(tok::eof)) {
       TypeResult Res(ParserExt::ParseTypeNameFwd(P));
       if (!Res.isUsable()) {
