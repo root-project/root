@@ -1,0 +1,22 @@
+Index: tools/clang/include/clang/Parse/Parser.h
+===================================================================
+--- tools/clang/include/clang/Parse/Parser.h	(revision 160958)
++++ tools/clang/include/clang/Parse/Parser.h	(working copy)
+@@ -277,7 +277,7 @@
+   /// the EOF was encountered.
+   bool ParseTopLevelDecl(DeclGroupPtrTy &Result);
+ 
+-private:
++protected:
+   //===--------------------------------------------------------------------===//
+   // Low-Level token peeking and consumption methods.
+   //
+@@ -676,7 +676,7 @@
+     return Diag(Tok, DiagID);
+   }
+ 
+-private:
++protected:
+   void SuggestParentheses(SourceLocation Loc, unsigned DK,
+                           SourceRange ParenRange);
+   void CheckNestedObjCContexts(SourceLocation AtLoc);
