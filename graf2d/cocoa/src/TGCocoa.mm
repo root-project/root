@@ -1841,10 +1841,14 @@ void TGCocoa::CopyArea(Drawable_t src, Drawable_t dst, GContext_t gc, Int_t srcX
             CopyAreaAux(src, dst, gcVals, srcX, srcY, width, height, dstX, dstY);
       }
    } else {
-      if (!IsCocoaDraw())
-         fPimpl->fX11CommandBuffer.AddCopyArea(src, dst, gcVals, srcX, srcY, width, height, dstX, dstY);
-      else
+      if (fPimpl->GetDrawable(src).fIsPixmap) {
          CopyAreaAux(src, dst, gcVals, srcX, srcY, width, height, dstX, dstY);
+      } else {
+         if (!IsCocoaDraw())
+            fPimpl->fX11CommandBuffer.AddCopyArea(src, dst, gcVals, srcX, srcY, width, height, dstX, dstY);
+         else
+            CopyAreaAux(src, dst, gcVals, srcX, srcY, width, height, dstX, dstY);
+      }
    }  
 }
 
