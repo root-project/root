@@ -392,7 +392,6 @@ namespace cling {
     ///
     bool loadFile(const std::string& filename, bool allowSharedLib = true);
 
-#ifndef _WIN32
     ///\brief Lookup a type by name, starting from the global
     /// namespace.
     ///
@@ -421,7 +420,6 @@ namespace cling {
     const clang::FunctionDecl* lookupFunctionArgs(const clang::Decl* scopeDecl,
                                             const std::string& funcName,
                                             const std::string& funcArgs);
-#endif
 
     void enableDynamicLookup(bool value = true);
     bool isDynamicLookupEnabled() { return m_DynamicLookupEnabled; }
