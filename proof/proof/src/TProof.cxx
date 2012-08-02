@@ -4577,11 +4577,6 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
          }
          if (dsname.IsNull()) dsname = "dataset_<qtag>"; 
       }
-      // Default outfile, if nothing is defined, for the case the server decides to go by file
-      if (outfile.IsNull() && dsname.IsNull()) {
-         // Default settings
-         outfile = "master:";
-      }
       // Check stf
       if (ios != kNPOS) {
          from = ios + tags.Length();
@@ -9581,9 +9576,10 @@ TObject *TProof::GetOutput(const char *name, TList *out)
       if ((pf = dynamic_cast<TProofOutputFile *> (o))) {
          TFile *f = 0;
          if (!(f = (TFile *) gROOT->GetListOfFiles()->FindObject(pf->GetOutputFileName()))) {
-            f = TFile::Open(pf->GetOutputFileName());
+            TString fn = TString::Format("%s/%s", pf->GetDir(), pf->GetFileName());
+            f = TFile::Open(fn.Data());
             if (!f || (f && f->IsZombie())) {
-               ::Warning("TProof::GetOutput", "problems opening file %s", pf->GetOutputFileName());
+               ::Warning("TProof::GetOutput", "problems opening file %s", fn.Data());
             }
          }
          if (f && (o = f->Get(name))) return o;
@@ -12279,5 +12275,3 @@ Int_t TProof::SavePerfTree(const char *pf, const char *ref)
    // Done
    return 0;
 }
-
-

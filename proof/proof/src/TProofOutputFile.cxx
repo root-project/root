@@ -193,16 +193,10 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
       // Make sure the the path exists
       if (AssertDir(dirPath) != 0)
          Error("Init", "problems asserting path '%s'", dirPath.Data());
-      // Check if a local data server has been specified
-      if (gSystem->Getenv("LOCALDATASERVER")) {
-         fDir = gSystem->Getenv("LOCALDATASERVER");
-         if (!fDir.EndsWith("/")) fDir += "/";
-      }
-      TString dirProto = TUrl(fDir).GetProtocol();
-      // Remove prefix, if any, if included and if Xrootd
-      TString pfx  = gEnv->GetValue("Path.Localroot","");
-      if (!pfx.IsNull() && dirPath.BeginsWith(pfx) &&
-          (dirProto == "root" || dirProto == "xrd")) dirPath.Remove(0, pfx.Length());
+      // Take into account local server settings
+      TProofServ::GetLocalServer(fDir);
+      TProofServ::FilterLocalroot(dirPath, fDir);
+      // The path to be used to address the file
       fDir += dirPath;
    }
    // Notify
@@ -302,12 +296,10 @@ Int_t TProofOutputFile::AdoptFile(TFile *f)
    fRawDir = fDir;
 
    // Remove prefix, if any
-   TString pfx  = gEnv->GetValue("Path.Localroot","");
-   if (!pfx.IsNull()) fDir.ReplaceAll(pfx, "");
-   // Include the local data server info, if any
-   if (gSystem->Getenv("LOCALDATASERVER")) {
-      TString localDS(gSystem->Getenv("LOCALDATASERVER"));
-      if (!localDS.EndsWith("/")) localDS += "/";
+   TString localDS;
+   TProofServ::GetLocalServer(localDS);
+   if (!localDS.IsNull()) {
+      TProofServ::FilterLocalroot(fDir, localDS);
       fDir.Insert(0, localDS);
    }
 

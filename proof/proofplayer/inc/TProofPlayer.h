@@ -225,7 +225,8 @@ public:
    Long64_t  GetCacheSize();
    Int_t     GetLearnEntries();
 
-   Int_t     SavePartialResults(Bool_t queryend = kFALSE);
+   void      SetOutputFilePath(const char *fp) { fOutputFilePath = fp; }
+   Int_t     SavePartialResults(Bool_t queryend = kFALSE, Bool_t force = kFALSE);
 
    void              SetProcessing(Bool_t on = kTRUE);
    TProofProgressStatus  *GetProgressStatus() const { return fProgressStatus; }

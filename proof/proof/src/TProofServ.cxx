@@ -4475,6 +4475,23 @@ void TProofServ::ProcessNext(TString *slb)
          fQMgr->SaveQuery(pq, fMaxQueries);
    }
 
+   // If we were requested to save results on the master and we are not in save-to-file mode
+   // then we save the results
+   if (IsTopMaster() && fPlayer->GetOutputList()) {
+      TObject *ostf = fPlayer->GetOutputList()->FindObject("PROOF_SavedToFile");
+      TNamed *nof = (TNamed *) input->FindObject("PROOF_DefaultOutputOption");
+      if (nof) {
+         TString oopt(nof->GetTitle());
+         if (oopt.BeginsWith("of:") && !ostf) {
+            oopt.Replace(0, 3, "");
+            if (!oopt.IsNull()) fPlayer->SetOutputFilePath(oopt);
+            fPlayer->SavePartialResults(kTRUE, kTRUE);
+         }
+      }
+      // Remove temporary object
+      if (ostf) fPlayer->GetOutputList()->Remove(ostf);
+   }
+   
    // Send back the results
    TQueryResult *pqr = pq->CloneInfo();
    // At least the TDSet name in the light object
@@ -7252,6 +7269,42 @@ Float_t TProofServ::GetMemStop()
 {
    // MemStop getter
    return fgMemStop;
+}
+
+//______________________________________________________________________________
+void TProofServ::GetLocalServer(TString &dsrv)
+{
+   // Extract LOCALDATASERVER info in 'dsrv'
+ 
+   // Check if a local data server has been specified
+   if (gSystem->Getenv("LOCALDATASERVER")) {
+      dsrv = gSystem->Getenv("LOCALDATASERVER");
+      if (!dsrv.EndsWith("/")) dsrv += "/";
+   }
+   
+   // Done
+   return;
+}
+
+//______________________________________________________________________________
+void TProofServ::FilterLocalroot(TString &path, const char *dsrv)
+{
+   // If 'path' is local and 'dsrv' is Xrootd, apply 'path.Localroot' settings,
+   // if any.
+   // The final path via the server is dsrv+path.
+
+   TUrl u(path, kTRUE);
+   if (!strcmp(u.GetProtocol(), "file")) {
+      // Remove prefix, if any, if included and if Xrootd
+      TString pfx  = gEnv->GetValue("Path.Localroot","");
+      if (!pfx.IsNull() && !strncmp(u.GetFile(), pfx.Data(), pfx.Length())) {
+         TString srvp = TUrl(dsrv).GetProtocol();
+         if (srvp == "root" || srvp == "xrd") path.Remove(0, pfx.Length());
+      }
+   }
+   
+   // Done
+   return;
 }
 
 //______________________________________________________________________________

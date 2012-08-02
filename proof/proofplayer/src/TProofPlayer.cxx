@@ -721,7 +721,7 @@ void TProofPlayer::DeleteDrawFeedback(TDrawFeedback *f)
 }
 
 //______________________________________________________________________________
-Int_t TProofPlayer::SavePartialResults(Bool_t queryend)
+Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
 {
    // Save the partial results of this query to a dedicated file under the user
    // data directory. The file name has the form
@@ -731,7 +731,7 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend)
    // The packets list 'packets' is saved if given.
    // Trees not attached to any file are attached to the open file.
    // If 'queryend' is kTRUE evrything is written out (TTrees included).
-   // The actual saving action is controlled by fSavePartialResults and
+   // The actual saving action is controlled by 'force' and by fSavePartialResults /
    // fSaveResultsPerPacket:
    //
    //    fSavePartialResults = kFALSE/kTRUE  no-saving/saving
@@ -743,9 +743,13 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend)
    // The switch fSaveResultsPerPacket is instead controlled by the user or admin
    // who can also force saving in all cases; parameter PROOF_SavePartialResults or
    // RC env ProofPlayer.SavePartialResults .
+   // However, if 'force' is kTRUE, fSavePartialResults and fSaveResultsPerPacket
+   // are ignored.
    // Return -1 in case of problems, 0 otherwise.
 
-   if (!fSavePartialResults) {
+   Bool_t save = (force || (fSavePartialResults &&
+                 (queryend || fSaveResultsPerPacket))) ? kTRUE : kFALSE;
+   if (!save) {
       PDB(kOutput, 2)
          Info("SavePartialResults", "partial result saving disabled");
       return 0;
@@ -761,7 +765,9 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend)
       return -1;
    }
 
-   PDB(kOutput, 1) Info("SavePartialResults", "start saving partial results");
+   PDB(kOutput, 1)
+      Info("SavePartialResults", "start saving partial results {%d,%d,%d,%d}",
+                                 queryend, force, fSavePartialResults, fSaveResultsPerPacket);
 
    // Get list of processed packets from the iterator
    PDB(kOutput, 2) Info("SavePartialResults", "fEvIter: %p", fEvIter);
@@ -848,7 +854,7 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend)
          TProofOutputFile *po = 0;
          // Get directions
          TNamed *nm = (TNamed *) fInput->FindObject("PROOF_DefaultOutputOption");
-         TString oname = (nm) ? nm->GetTitle() : "";
+         TString oname = (nm) ? nm->GetTitle() : fOutputFilePath.Data();
          if (nm && oname.BeginsWith("ds:")) {
             oname.Replace(0, 3, "");
             TString qtag =
@@ -859,15 +865,30 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend)
          } else {
             // Create the TProofOutputFile for automatic merging
             po = new TProofOutputFile(gSystem->BaseName(fOutputFilePath), "M");
-            if (nm) {
-               oname.Replace(0, 3, "");
-               oname.ReplaceAll("<file>", gSystem->BaseName(fOutputFilePath));
-               po->SetOutputFileName(oname.Data());
-               po->SetName(gSystem->BaseName(oname.Data()));
+            if (oname.BeginsWith("of:")) oname.Replace(0, 3, "");
+            if (gProofServ->IsTopMaster()) {
+               if (!strcmp(TUrl(oname, kTRUE).GetProtocol(), "file")) {
+                  TString dsrv;
+                  TProofServ::GetLocalServer(dsrv);
+                  TProofServ::FilterLocalroot(oname, dsrv);
+                  oname.Insert(0, dsrv);
+               }
+            } else {
+               if (nm) {
+                  // The name has been sent by the client: resolve local place holders
+                  oname.ReplaceAll("<file>", gSystem->BaseName(fOutputFilePath));
+               } else {
+                  // We did not get any indication; the final file will be in the datadir on
+                  // the top master and it will be resolved there
+                  oname.Form("<datadir>/%s", gSystem->BaseName(fOutputFilePath));
+               }
             }
+            po->SetOutputFileName(oname.Data());
+            po->SetName(gSystem->BaseName(oname.Data()));
          }
          po->AdoptFile(fOutputFile);
          fOutput->Add(po);
+         fOutput->Add(new TParameter<Bool_t>("PROOF_SavedToFile", kTRUE));
       }
    }
    fOutputFile->Close();
@@ -1266,9 +1287,10 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    // Clean-up the envelop for the current element
    TPair *currentElem = 0;
    if ((currentElem = (TPair *) fInput->FindObject("PROOF_CurrentElement"))) {
-      fInput->Remove(currentElem);
-      delete currentElem->Key();
-      delete currentElem;
+      if ((currentElem = (TPair *) fInput->Remove(currentElem))) {
+         delete currentElem->Key();
+         delete currentElem;
+      }
    }
 
    // Final memory footprint
@@ -2367,12 +2389,8 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                }
                if (gProofServ && gProofServ->IsTopMaster()) {
                   TFile::EFileType ftyp = TFile::kLocal;
-                  // Check if a local data server has been specified
                   TString srv;
-                  if (gSystem->Getenv("LOCALDATASERVER")) {
-                     srv = gSystem->Getenv("LOCALDATASERVER");
-                     if (!srv.EndsWith("/")) srv += "/";
-                  }
+                  TProofServ::GetLocalServer(srv);
                   TUrl usrv(srv);
                   Bool_t localFile = kFALSE;
                   if (pf->IsRetrieve()) {
@@ -2408,10 +2426,7 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                   // For local files we add the local server
                   if (localFile) {
                      // Remove prefix, if any, if included and if Xrootd
-                     TString pfx  = gEnv->GetValue("Path.Localroot","");
-                     TString srvProto = usrv.GetProtocol();
-                     if (!pfx.IsNull() && outfile.BeginsWith(pfx) &&
-                        (srvProto == "root" || srvProto == "xrd")) outfilerem.Remove(0, pfx.Length());
+                     TProofServ::FilterLocalroot(outfilerem, srv);
                      outfilerem.Insert(0, srv);
                   }
                   // Save the new remote output filename
@@ -3137,25 +3152,19 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
                      fOutput->Add(new TNamed(key.Data(), pf->GetOutputFileName()));
                }
                TString of;
-               if (gSystem->Getenv("LOCALDATASERVER")) {
-                  of = gSystem->Getenv("LOCALDATASERVER");
-               } else {
+               TProofServ::GetLocalServer(of);
+               if (of.IsNull()) {
                   // Assume an xroot server running on the machine
-                  of.Form("root://%s", gSystem->HostName());
+                  of.Form("root://%s/", gSystem->HostName());
                   if (gSystem->Getenv("XRDPORT")) {
                      TString sp(gSystem->Getenv("XRDPORT"));
                      if (sp.IsDigit())
-                        of += Form(":%s", sp.Data());
+                        of.Form("root://%s:%s/", gSystem->HostName(), sp.Data());
                   }
                }
                TString sessionPath(gProofServ->GetSessionDir());
-               // Take into account a prefix, if included and if xrootd
-               TString sproto = TUrl(sessionPath).GetProtocol();
-               TString pfx  = gEnv->GetValue("Path.Localroot","");
-               if (!pfx.IsNull() && sessionPath.BeginsWith(pfx) &&
-                  (sproto == "root" || sproto == "xrd"))
-                  sessionPath.Remove(0, pfx.Length());
-               of += TString::Format("/%s/%s", sessionPath.Data(), pf->GetFileName());
+               TProofServ::FilterLocalroot(sessionPath, of);
+               of += TString::Format("%s/%s", sessionPath.Data(), pf->GetFileName());
                if (TestBit(TVirtualProofPlayer::kIsSubmerger)) {
                   if (!of.EndsWith(".merger")) of += ".merger";
                } else {

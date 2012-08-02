@@ -283,7 +283,7 @@ Int_t TEventIterUnit::GetNextPacket(Long64_t &fst, Long64_t &num,
          fElem->SetBit(TDSetElement::kEmpty);
       }
    } else {
-      if (fPackets) {
+      if (fPackets && fElem) {
          fPackets->Add(fElem);
          PDB(kLoop, 2)
             Info("GetNextEvent", "packet added to list (sz: %d)", fPackets->GetSize());
@@ -291,7 +291,6 @@ Int_t TEventIterUnit::GetNextPacket(Long64_t &fst, Long64_t &num,
       } else {
          SafeDelete(fElem);
       }
-      SafeDelete(fElem);
       if (!(fElem = fDSet->Next()))
          return -1;
    }
@@ -347,7 +346,7 @@ Long64_t TEventIterUnit::GetNextEvent()
             fElem->SetBit(TDSetElement::kEmpty);
          }
       } else {
-         if (fPackets) {
+         if (fPackets && fElem) {
             fPackets->Add(fElem);
             PDB(kLoop, 2)
                Info("GetNextEvent", "packet added to list (sz: %d)", fPackets->GetSize());

@@ -342,6 +342,10 @@ public:
    static void    SetLastMsg(const char *lastmsg);
    static void    SetLastEntry(Long64_t lastentry);
 
+   // To handle local data server related paths
+   static void    FilterLocalroot(TString &path, const char *url = "root://dum/");
+   static void    GetLocalServer(TString &dsrv);
+
    static Bool_t      IsActive();
    static TProofServ *This();
 

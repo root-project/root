@@ -134,7 +134,8 @@ public:
 
    virtual TVirtualPacketizer *GetPacketizer() const { return 0; }
 
-   virtual Int_t     SavePartialResults(Bool_t queryend = kFALSE) = 0;
+   virtual void      SetOutputFilePath(const char *fp) = 0;
+   virtual Int_t     SavePartialResults(Bool_t queryend = kFALSE, Bool_t force = kFALSE) = 0;
 
    static TVirtualProofPlayer *Create(const char *player, TProof *p, TSocket *s = 0);
 
