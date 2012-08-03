@@ -29,7 +29,7 @@ namespace {
     JITtedFunctionCollector(): m_functions(), m_engine(0) { }
     virtual ~JITtedFunctionCollector() { }
 
-    virtual void NotifyFunctionEmitted(const llvm::Function&, void *, size_t,
+    virtual void NotifyFunctionEmitted(const llvm::Function& F, void *, size_t,
                               const JITEventListener::EmittedFunctionDetails&) {
       m_functions.push_back(const_cast<llvm::Function *>(&F));
     }
@@ -60,7 +60,6 @@ std::vector<ExecutionContext::LazyFunctionCreatorFunc_t>
 
 ExecutionContext::ExecutionContext():
   m_engine(0),
-  m_posInitGlobals(0),
   m_RunningStaticInits(false)
 {
 }
