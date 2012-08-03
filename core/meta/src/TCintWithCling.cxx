@@ -313,7 +313,7 @@ class tcling_DataMemberInfo {
 public:
    ~tcling_DataMemberInfo();
    explicit tcling_DataMemberInfo(cling::Interpreter*);
-   explicit tcling_DataMemberInfo(tcling_ClassInfo*);
+   explicit tcling_DataMemberInfo(cling::Interpreter*, tcling_ClassInfo*);
    tcling_DataMemberInfo(const tcling_DataMemberInfo&);
    tcling_DataMemberInfo& operator=(const tcling_DataMemberInfo&);
    G__DataMemberInfo* GetDataMemberInfo() const;
@@ -1992,10 +1992,11 @@ tcling_DataMemberInfo::tcling_DataMemberInfo(cling::Interpreter* interp)
    InternalNextValidMember();
 }
 
-tcling_DataMemberInfo::tcling_DataMemberInfo(tcling_ClassInfo* tcling_class_info)
+tcling_DataMemberInfo::tcling_DataMemberInfo(cling::Interpreter* interp,
+                                             tcling_ClassInfo* tcling_class_info)
    : fDataMemberInfo(0)
    , fClassInfo(0)
-   , fInterp(0)
+   , fInterp(interp)
    , fTClingClassInfo(0)
    , fFirstTime(true)
 {
@@ -2010,7 +2011,6 @@ tcling_DataMemberInfo::tcling_DataMemberInfo(tcling_ClassInfo* tcling_class_info
    }
    fDataMemberInfo = new G__DataMemberInfo(*tcling_class_info->GetClassInfo());
    fClassInfo = new G__ClassInfo(*tcling_class_info->GetClassInfo());
-   fInterp = tcling_class_info->GetInterpreter();
    fTClingClassInfo = new tcling_ClassInfo(*tcling_class_info);
    fIter = llvm::dyn_cast<clang::DeclContext>(tcling_class_info->GetDecl())->
            decls_begin();
@@ -3814,9 +3814,9 @@ void TCintWithCling::RegisterModule(const char* modulename, const char** headers
 
 #ifdef R__CINTWITHCLING_MODULES
          ModuleMap.addHeader(modCreation.first, hdrFileEntry);
-         Info("RegisterModule()", "   #including %s...", *hdr);
 #endif
       }
+      Info("RegisterModule()", "   #including %s...", *hdr);
       fInterpreter->parse(TString::Format("#include \"%s\"", *hdr).Data());
    }   
 }
@@ -4763,7 +4763,7 @@ void TCintWithCling::CreateListOfDataMembers(TClass* cl)
       return;
    }
    cl->fData = new TList;
-   tcling_DataMemberInfo t((tcling_ClassInfo*)cl->GetClassInfo());
+   tcling_DataMemberInfo t(fInterpreter, (tcling_ClassInfo*)cl->GetClassInfo());
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
       if (t.IsValid() && t.Name() && strcmp(t.Name(), "G__virtualinfo")) {
@@ -6552,7 +6552,7 @@ void TCintWithCling::DataMemberInfo_Delete(DataMemberInfo_t* dminfo) const
 DataMemberInfo_t* TCintWithCling::DataMemberInfo_Factory(ClassInfo_t* clinfo /*= 0*/) const
 {
    tcling_ClassInfo* tcling_class_info = (tcling_ClassInfo*) clinfo;
-   return (DataMemberInfo_t*) new tcling_DataMemberInfo(tcling_class_info);
+   return (DataMemberInfo_t*) new tcling_DataMemberInfo(fInterpreter, tcling_class_info);
 }
 
 //______________________________________________________________________________
