@@ -32,9 +32,6 @@ namespace cling {
     typedef void* (*LazyFunctionCreatorFunc_t)(const std::string&);
 
   public:
-    static void ResetUnresolved();
-
-  public:
 
     ExecutionContext();
     ~ExecutionContext();
@@ -76,8 +73,11 @@ namespace cling {
 
     llvm::ExecutionEngine* m_engine; // Owned by JIT
 
-    // prevent the recursive run of the static inits
+    /// \brief prevent the recursive run of the static inits
     bool m_RunningStaticInits;
+
+    /// \brief Whether cxa_at_exit has been rewired to the Interpreter's version
+    bool m_CxaAtExitRemapped;
   };
 } // end cling
 #endif // CLING_EXECUTIONCONTEXT_H

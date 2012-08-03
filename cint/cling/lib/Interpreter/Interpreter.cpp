@@ -407,10 +407,6 @@ namespace cling {
     return m_IncrParser->getCodeGenerator()->GetModule();
   }
 
-  void Interpreter::resetUnresolved() const {
-    m_ExecutionContext->ResetUnresolved();
-  }
-
   ///\brief Maybe transform the input line to implement cint command line
   /// semantics (declarations are global) and compile to produce a module.
   ///

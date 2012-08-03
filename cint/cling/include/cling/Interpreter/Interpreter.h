@@ -454,7 +454,6 @@ namespace cling {
     clang::Parser* getParser() const;
 
     llvm::Module* getModule() const;
-    void resetUnresolved() const;
 
     void installLazyFunctionCreator(void* (*fp)(const std::string&));
 

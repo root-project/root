@@ -60,7 +60,8 @@ std::vector<ExecutionContext::LazyFunctionCreatorFunc_t>
 
 ExecutionContext::ExecutionContext():
   m_engine(0),
-  m_RunningStaticInits(false)
+  m_RunningStaticInits(false),
+  m_CxaAtExitRemapped(false)
 {
 }
 
@@ -108,11 +109,6 @@ void* ExecutionContext::HandleMissingFunction(const std::string& mangled_name)
   return (void*)reinterpret_cast<size_t>(unresolvedSymbol);
 }
 
-void ExecutionContext::ResetUnresolved()
-{
-    m_unresolvedSymbols.clear();
-}
-
 void*
 ExecutionContext::NotifyLazyFunctionCreators(const std::string& mangled_name)
 {
@@ -131,15 +127,20 @@ ExecutionContext::executeFunction(llvm::StringRef funcname,
 {
   // Call a function without arguments, or with an SRet argument, see SRet below
 
-  // Rewire atexit:
-  llvm::Function* atExit = m_engine->FindFunctionNamed("__cxa_atexit");
-  llvm::Function* clingAtExit = m_engine->FindFunctionNamed("cling_cxa_atexit");
-  if (atExit && clingAtExit) {
-    void* clingAtExitAddr = m_engine->getPointerToFunction(clingAtExit);
-    if (clingAtExitAddr) {
+  if (!m_CxaAtExitRemapped) {
+    // Rewire atexit:
+    llvm::Function* atExit = m_engine->FindFunctionNamed("__cxa_atexit");
+    llvm::Function* clingAtExit = m_engine->FindFunctionNamed("cling_cxa_atexit");
+    if (atExit && clingAtExit) {
+      void* clingAtExitAddr = m_engine->getPointerToFunction(clingAtExit);
+      assert(clingAtExitAddr && "cannot find cling_cxa_atexit");
       m_engine->updateGlobalMapping(atExit, clingAtExitAddr);
+      m_CxaAtExitRemapped = true;
     }
   }
+
+  // We don't care whether something was unresolved before.
+  m_unresolvedSymbols.clear();
 
   llvm::Function* f = m_engine->FindFunctionNamed(funcname.data());
   if (!f) {
