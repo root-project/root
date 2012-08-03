@@ -43,7 +43,7 @@ namespace {
 void JITtedFunctionCollector::UnregisterFunctionMapping(
                                                   llvm::ExecutionEngine &engine)
 {
-  for (std::vector<llvm::Function *>::reverse_iterator
+  for (llvm::SmallVectorImpl<llvm::Function *>::reverse_iterator
          it = m_functions.rbegin(), et = m_functions.rend();
        it != et; ++it) {
     llvm::Function *ff = *it;
