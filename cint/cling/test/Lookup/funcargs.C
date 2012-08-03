@@ -3,6 +3,7 @@
 #include "cling/Interpreter/Interpreter.h"
 #include "clang/AST/Decl.h"
 
+#include <cstdio>
 using namespace std;
 
 
@@ -11,8 +12,8 @@ using namespace std;
 //  otherwise known as the translation unit decl.
 //
 const clang::Decl* G = gCling->lookupScope("");
-G
-//CHECK: (const clang::Decl *) 0x{{[1-9a-f][0-9a-f]*$}}
+printf("G: 0x%lx\n", (unsigned long) G);
+//CHECK: G: 0x{{[1-9a-f][0-9a-f]*$}}
 
 
 
@@ -25,8 +26,8 @@ void f() { int x = 1; }
 .rawInput 0
 
 const clang::FunctionDecl* F = gCling->lookupFunctionArgs(G, "f", "");
-F
-//CHECK-NEXT: (const clang::FunctionDecl *) 0x{{[1-9a-f][0-9a-f]*$}}
+printf("F: 0x%lx\n", (unsigned long) F);
+//CHECK-NEXT: F: 0x{{[1-9a-f][0-9a-f]*$}}
 F->print(llvm::outs());
 //CHECK-NEXT: void f() {
 //CHECK-NEXT:     int x = 1;
@@ -44,8 +45,8 @@ void a(int v) { int x = v; }
 
 const clang::FunctionDecl* A = gCling->lookupFunctionArgs(G, "a", "0");
 //CHECK: 0
-A
-//CHECK-NEXT: (const clang::FunctionDecl *) 0x{{[1-9a-f][0-9a-f]*$}}
+printf("A: 0x%lx\n", (unsigned long) A);
+//CHECK-NEXT: A: 0x{{[1-9a-f][0-9a-f]*$}}
 A->print(llvm::outs());
 //CHECK-NEXT: void a(int v) {
 //CHECK-NEXT:     int x = v;
@@ -64,8 +65,8 @@ void b(int vi, double vd) { int x = vi; double y = vd; }
 const clang::FunctionDecl* B = gCling->lookupFunctionArgs(G, "b", "0,0.0");
 //CHECK: 0
 //CHECK-NEXT: 0,0
-B
-//CHECK-NEXT: (const clang::FunctionDecl *) 0x{{[1-9a-f][0-9a-f]*$}}
+printf("B: 0x%lx\n", (unsigned long) B);
+//CHECK-NEXT: B: 0x{{[1-9a-f][0-9a-f]*$}}
 B->print(llvm::outs());
 //CHECK-NEXT: void b(int vi, double vd) {
 //CHECK-NEXT:     int x = vi;
@@ -86,8 +87,8 @@ void c(int vi, double vd) { int x = vi; double y = vd; }
 const clang::FunctionDecl* C1 = gCling->lookupFunctionArgs(G, "c", "0,0");
 //CHECK: 0
 //CHECK-NEXT: 0,0
-C1
-//CHECK-NEXT: (const clang::FunctionDecl *) 0x{{[1-9a-f][0-9a-f]*$}}
+printf("C1: 0x%lx\n", (unsigned long) C1);
+//CHECK-NEXT: C1: 0x{{[1-9a-f][0-9a-f]*$}}
 C1->print(llvm::outs());
 //CHECK-NEXT: void c(int vi, int vj) {
 //CHECK-NEXT:     int x = vi;
@@ -97,8 +98,8 @@ C1->print(llvm::outs());
 const clang::FunctionDecl* C2 = gCling->lookupFunctionArgs(G, "c", "0,0.0");
 //CHECK: 0
 //CHECK-NEXT: 0,0
-C2
-//CHECK-NEXT: (const clang::FunctionDecl *) 0x{{[1-9a-f][0-9a-f]*$}}
+printf("C2: 0x%lx\n", (unsigned long) C2);
+//CHECK-NEXT: C2: 0x{{[1-9a-f][0-9a-f]*$}}
 C2->print(llvm::outs());
 //CHECK-NEXT: void c(int vi, double vd) {
 //CHECK-NEXT:     int x = vi;
@@ -113,14 +114,17 @@ C2->print(llvm::outs());
 
 .rawInput 1
 template <class T> void d(T v) { T x = v; }
+// Note: In CINT, looking up a class template specialization causes
+//       instantiation, but looking up a function template specialization
+//       does not.
 template void d(int);
 template void d(double);
 .rawInput 0
 
 const clang::FunctionDecl* D1 = gCling->lookupFunctionArgs(G, "d<int>", "0");
 //CHECK: 0
-D1
-//CHECK-NEXT: (const clang::FunctionDecl *) 0x{{[1-9a-f][0-9a-f]*$}}
+printf("D1: 0x%lx\n", (unsigned long) D1);
+//CHECK-NEXT: D1: 0x{{[1-9a-f][0-9a-f]*$}}
 D1->print(llvm::outs());
 //CHECK-NEXT: void d(int v) {
 //CHECK-NEXT:     int x = v;
@@ -128,8 +132,8 @@ D1->print(llvm::outs());
 
 const clang::FunctionDecl* D2 = gCling->lookupFunctionArgs(G, "d<double>", "0.0");
 //CHECK: 0
-D2
-//CHECK-NEXT: (const clang::FunctionDecl *) 0x{{[1-9a-f][0-9a-f]*$}}
+printf("D2: 0x%lx\n", (unsigned long) D2);
+//CHECK-NEXT: D2: 0x{{[1-9a-f][0-9a-f]*$}}
 D2->print(llvm::outs());
 //CHECK-NEXT: void d(double v) {
 //CHECK-NEXT:     double x = v;
@@ -148,11 +152,11 @@ class A {
 .rawInput 0
 
 const clang::Decl* class_A = gCling->lookupScope("A");
-class_A
-//CHECK: (const clang::Decl *) 0x{{[1-9a-f][0-9a-f]*$}}
+printf("class_A: 0x%lx\n", (unsigned long) class_A);
+//CHECK: class_A: 0x{{[1-9a-f][0-9a-f]*$}}
 const clang::FunctionDecl* class_A_F = gCling->lookupFunctionArgs(class_A, "A_f", "");
-class_A_F
-//CHECK-NEXT: (const clang::FunctionDecl *) 0x{{[1-9a-f][0-9a-f]*$}}
+printf("class_A_F: 0x%lx\n", (unsigned long) class_A_F);
+//CHECK-NEXT: class_A_F: 0x{{[1-9a-f][0-9a-f]*$}}
 class_A_F->print(llvm::outs());
 //CHECK-NEXT: void A_f() {
 //CHECK-NEXT:     int x = 1;
@@ -171,12 +175,12 @@ class B {
 .rawInput 0
 
 const clang::Decl* class_B = gCling->lookupScope("B");
-class_B
-//CHECK: (const clang::Decl *) 0x{{[1-9a-f][0-9a-f]*$}}
+printf("class_B: 0x%lx\n", (unsigned long) class_B);
+//CHECK: class_B: 0x{{[1-9a-f][0-9a-f]*$}}
 const clang::FunctionDecl* class_B_F = gCling->lookupFunctionArgs(class_B, "B_f", "0");
-//CHECK: 0
-class_B_F
-//CHECK-NEXT: (const clang::FunctionDecl *) 0x{{[1-9a-f][0-9a-f]*$}}
+//CHECK-NEXT: 0
+printf("class_B_F: 0x%lx\n", (unsigned long) class_B_F);
+//CHECK-NEXT: class_B_F: 0x{{[1-9a-f][0-9a-f]*$}}
 class_B_F->print(llvm::outs());
 //CHECK-NEXT: void B_f(int v) {
 //CHECK-NEXT:     int x = v;
@@ -197,15 +201,17 @@ class D : public C {
 .rawInput 0
 
 const clang::Decl* class_D = gCling->lookupScope("D");
-class_D
-//CHECK: (const clang::Decl *) 0x{{[1-9a-f][0-9a-f]*$}}
+printf("class_D: 0x%lx\n", (unsigned long) class_D);
+//CHECK: class_D: 0x{{[1-9a-f][0-9a-f]*$}}
 const clang::FunctionDecl* class_D_F = gCling->lookupFunctionArgs(class_D, "C_f", "");
-class_D_F
-//CHECK-NEXT: (const clang::FunctionDecl *) 0x{{[1-9a-f][0-9a-f]*$}}
+printf("class_D_F: 0x%lx\n", (unsigned long) class_D_F);
+//CHECK-NEXT: class_D_F: 0x{{[1-9a-f][0-9a-f]*$}}
 class_D_F->print(llvm::outs());
 //CHECK-NEXT: void C_f() {
 //CHECK-NEXT:     int x = 1;
 //CHECK-NEXT: }
+
+
 
 //
 //  Test finding a member function taking an int arg in a base class.
@@ -220,12 +226,12 @@ class F : public E {
 .rawInput 0
 
 const clang::Decl* class_F = gCling->lookupScope("F");
-class_F
-//CHECK: (const clang::Decl *) 0x{{[1-9a-f][0-9a-f]*$}}
+printf("class_F: 0x%lx\n", (unsigned long) class_F);
+//CHECK: class_F: 0x{{[1-9a-f][0-9a-f]*$}}
 const clang::FunctionDecl* class_F_F = gCling->lookupFunctionArgs(class_F, "E_f", "0");
-//CHECK: 0
-class_F_F
-//CHECK-NEXT: (const clang::FunctionDecl *) 0x{{[1-9a-f][0-9a-f]*$}}
+//CHECK-NEXT: 0
+printf("class_F_F: 0x%lx\n", (unsigned long) class_F_F);
+//CHECK-NEXT: class_F_F: 0x{{[1-9a-f][0-9a-f]*$}}
 class_F_F->print(llvm::outs());
 //CHECK-NEXT: void E_f(int v) {
 //CHECK-NEXT:     int x = v;
