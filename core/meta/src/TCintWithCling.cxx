@@ -3647,9 +3647,9 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
 
    // to pull in gPluginManager
 #ifndef R__CINTWITHCLING_MODULES
-   fInterpreter->declare("#include \"TPluginManager.h\"");
-   fInterpreter->declare("#include \"TGenericClassInfo.h\"");
-   fInterpreter->declare("#include \"Rtypes.h\"");
+   fInterpreter->parse("#include \"TPluginManager.h\"");
+   fInterpreter->parse("#include \"TGenericClassInfo.h\"");
+   fInterpreter->parse("#include \"Rtypes.h\"");
 #else
    // Already done through modules
 #endif // R__CINTWITHCLING_MODULES
@@ -3755,63 +3755,69 @@ void TCintWithCling::RegisterModule(const char* modulename, const char** headers
 #endif // ROOTLIBDIR
    gSystem->ExpandPathName(searchPath);
 
+   Bool_t haveModule = kTRUE;
    if (!gSystem->FindFile(searchPath, pcmFileName)) {
       Error("RegisterModule()", "Cannot find dictionary module %s_dict.pcm in %s",
             modulename, searchPath.Data());
-      return;
+      haveModule = kFALSE;
    }
 
    clang::CompilerInstance * CI = fInterpreter->getCI ();
    clang::Preprocessor& PP = CI->getPreprocessor();
    clang::ModuleMap& ModuleMap = PP.getHeaderSearchInfo().getModuleMap();
 
-   TCintWithCling::Info("RegisterModule", "Loading PCM %s", pcmFileName.Data());
-   TString modulename_dict = modulename;
-   modulename_dict += "_dict";
+   std::pair<clang::Module*, bool> modCreation;
+   if (haveModule) {
+      TCintWithCling::Info("RegisterModule", "Loading PCM %s", pcmFileName.Data());
+      TString modulename_dict = modulename;
+      modulename_dict += "_dict";
 
-   std::pair<clang::Module*, bool> modCreation
-      = ModuleMap.findOrCreateModule(modulename_dict.Data(), 0 /*ActiveModule*/,
-                                     false /*Framework*/, false /*Explicit*/);
-   if (!modCreation.second) {
-      Error("RegisterModule()",
-            "Duplicate deficition of dictionary module %s in %s.",
-            /*"\nOriginal module was found in %s.", - if only we could...*/
-            pcmFileName.Data(), searchPath.Data());
-      // Go on, add new headers nonetheless.
+      modCreation
+         = ModuleMap.findOrCreateModule(modulename_dict.Data(), 0 /*ActiveModule*/,
+                                        false /*Framework*/, false /*Explicit*/);
+      if (!modCreation.second) {
+         Error("RegisterModule()",
+               "Duplicate deficition of dictionary module %s in %s.",
+               /*"\nOriginal module was found in %s.", - if only we could...*/
+               pcmFileName.Data(), searchPath.Data());
+         // Go on, add new headers nonetheless.
+      }
    }
 
    clang::HeaderSearch& HdrSearch = PP.getHeaderSearchInfo();
    for (const char** hdr = headers; *hdr; ++hdr) {
-      const clang::DirectoryLookup* CurDir;
-      const clang::FileEntry* hdrFileEntry
-         =  HdrSearch.LookupFile(*hdr, false /*isAngled*/, 0 /*FromDir*/,
-                                 CurDir, 0 /*CurFileEnt*/, 0 /*SearchPath*/,
-                                 0 /*RelativePath*/, 0 /*SuggestedModule*/);
-      if (!hdrFileEntry) {
-         Warning("RegisterModule()",
-                 "Cannot find header file %s included in dictionary module %s"
-                 " in include search path!",
-                 *hdr, modulename);
-         hdrFileEntry = PP.getFileManager().getFile(*hdr, /*OpenFile=*/false,
-                                                    /*CacheFailure=*/false);
-      } else {
-         // Tell HeaderSearch that the header's directory has a module.map
-         llvm::StringRef srHdrDir(hdrFileEntry->getName());
-         srHdrDir = llvm::sys::path::parent_path(srHdrDir);
-         const clang::DirectoryEntry* Dir
-            = PP.getFileManager().getDirectory(srHdrDir);
-         if (Dir) {
+      if (haveModule) {
+         const clang::DirectoryLookup* CurDir;
+         const clang::FileEntry* hdrFileEntry
+            =  HdrSearch.LookupFile(*hdr, false /*isAngled*/, 0 /*FromDir*/,
+                                    CurDir, 0 /*CurFileEnt*/, 0 /*SearchPath*/,
+                                    0 /*RelativePath*/, 0 /*SuggestedModule*/);
+         if (!hdrFileEntry) {
+            Warning("RegisterModule()",
+                    "Cannot find header file %s included in dictionary module %s"
+                    " in include search path!",
+                    *hdr, modulename);
+            hdrFileEntry = PP.getFileManager().getFile(*hdr, /*OpenFile=*/false,
+                                                       /*CacheFailure=*/false);
+         } else {
+            // Tell HeaderSearch that the header's directory has a module.map
+            llvm::StringRef srHdrDir(hdrFileEntry->getName());
+            srHdrDir = llvm::sys::path::parent_path(srHdrDir);
+            const clang::DirectoryEntry* Dir
+               = PP.getFileManager().getDirectory(srHdrDir);
+            if (Dir) {
 #ifdef R__CINTWITHCLING_MODULES
-            HdrSearch.setDirectoryHasModuleMap(Dir);
+               HdrSearch.setDirectoryHasModuleMap(Dir);
 #endif
+            }
          }
-      }
 
 #ifdef R__CINTWITHCLING_MODULES
-      ModuleMap.addHeader(modCreation.first, hdrFileEntry);
-      Info("RegisterModule()", "   #including %s...", *hdr);
+         ModuleMap.addHeader(modCreation.first, hdrFileEntry);
+         Info("RegisterModule()", "   #including %s...", *hdr);
 #endif
-      fInterpreter->declare(TString::Format("#include \"%s\"", *hdr).Data());
+      }
+      fInterpreter->parse(TString::Format("#include \"%s\"", *hdr).Data());
    }   
 }
 
