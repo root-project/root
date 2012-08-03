@@ -50,6 +50,16 @@ namespace cling {
       return value;
     }
 
+    template <typename T>
+    const T* PrintValue(llvm::raw_ostream* o, clang::Expr* E,
+                        clang::ASTContext* C, T* value) {
+      ValuePrinterInfo VPI(E, C);
+      printValue(*o, value, value, VPI);
+      // Only because we don't want to include llvm::raw_ostream in the header
+      flushOStream(*o);
+      return value;
+    }
+
   } // namespace valuePrinterInternal
 
 

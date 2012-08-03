@@ -20,3 +20,9 @@ foo(A(12)).Var
 // CHECK: (const int) 12
 // CHECK: A d'tor
 // End PR #93006
+
+ // Savannah #96523
+int *p = (int*)0x123;
+p // CHECK: (int *) 0x123
+const int *q = (int*)0x123;
+q // CHECK: (const int *) 0x123

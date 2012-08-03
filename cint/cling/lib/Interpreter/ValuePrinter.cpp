@@ -52,7 +52,7 @@ static void StreamRef(llvm::raw_ostream& o, const void* v) {
 }
 
 static void StreamPtr(llvm::raw_ostream& o, const void* v) {
-  o << *(void**)v << "\n";
+  o << v << "\n";
 }
 
 static void StreamObj(llvm::raw_ostream& o, const void* v,
