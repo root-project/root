@@ -223,7 +223,9 @@ namespace cling {
     ///
     ///\param [in] input - The input being compiled.
     ///\param [in] CompilationOptions - The option set driving the compilation.
-    ///\param [out] V - The result of the evaluation of the input.
+    ///\param [in/out] V - The result of the evaluation of the input. Must be
+    ///       initialized to point to the return value's location if the 
+    ///       expression result is an aggregate.
     ///
     ///\returns Whether the operation was fully successful.
     ///
@@ -244,7 +246,9 @@ namespace cling {
     ///\brief Runs given function.
     ///
     ///\param [in] fname - The function name.
-    ///\param [out] res - The return result of the run function.
+    ///\param [in/out] res - The return result of the run function. Must be
+    ///       initialized to point to the return value's location if the 
+    ///       expression result is an aggregate.
     ///
     ///\returns true if successful otherwise false.
     ///
@@ -334,7 +338,9 @@ namespace cling {
     /// specific interface for doing that - in the particular case - declare().
     ///
     ///\param[in] input - The input to be compiled.
-    ///\param[out] V - The result of the evaluation of the input.
+    ///\param[in/out] V - The result of the evaluation of the input. Must be
+    ///       initialized to point to the return value's location if the 
+    ///       expression result is an aggregate.
     ///\param[out] D - The first declaration of the compiled input.
     ///
     ///\returns Whether the operation was fully successful.
@@ -374,7 +380,9 @@ namespace cling {
     /// the declarations from the input.
     ///
     /// @param[in] input - The input containing only expressions
-    /// @param[out] V - The value of the executed input
+    /// @param[in/out] V - The value of the executed input. Must be
+    ///       initialized to point to the return value's location if the 
+    ///       expression result is an aggregate.
     ///
     ///\returns Whether the operation was fully successful.
     ///
@@ -388,7 +396,9 @@ namespace cling {
     /// the declarations from the input.
     ///
     /// @param[in] input - The input containing only expressions.
-    /// @param[out] V - The value of the executed input.
+    /// @param[in/out] V - The value of the executed input. Must be
+    ///       initialized to point to the return value's location if the 
+    ///       expression result is an aggregate.
     ///
     ///\returns Whether the operation was fully successful.
     ///
