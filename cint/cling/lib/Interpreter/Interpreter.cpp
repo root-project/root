@@ -439,6 +439,18 @@ namespace cling {
   }
 
   Interpreter::CompilationResult
+  Interpreter::parse(const std::string& input) {
+    CompilationOptions CO;
+    CO.CodeGeneration = 0;
+    CO.DeclarationExtraction = 0;
+    CO.ValuePrinting = 0;
+    CO.DynamicScoping = isDynamicLookupEnabled();
+    CO.Debug = isPrintingAST();
+
+    return Declare(input, CO);
+  }
+
+  Interpreter::CompilationResult
   Interpreter::declare(const std::string& input, const Decl** D /* = 0 */) {
     CompilationOptions CO;
     CO.DeclarationExtraction = 0;

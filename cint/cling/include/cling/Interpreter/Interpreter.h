@@ -333,14 +333,26 @@ namespace cling {
     /// only header files are going to be processed it is much faster to run the
     /// specific interface for doing that - in the particular case - declare().
     ///
-    ///\param [in] input - The input to be compiled.
-    ///\param [out] V - The result of the evaluation of the input.
-    ///\param [out] D - The first declaration of the compiled input.
+    ///\param[in] input - The input to be compiled.
+    ///\param[out] V - The result of the evaluation of the input.
+    ///\param[out] D - The first declaration of the compiled input.
     ///
     ///\returns Whether the operation was fully successful.
     ///
     CompilationResult process(const std::string& input, Value* V = 0,
                               const clang::Decl** D = 0);
+
+    ///\brief Parses input line, which doesn't contain statements. No code 
+    /// generation is done.
+    ///
+    /// Same as declare without codegening. Useful when a library is loaded and
+    /// the header files need to be imported.
+    ///
+    ///\param[in] input - The input containing the declarations.
+    ///
+    ///\returns Whether the operation was fully successful.
+    ///
+    CompilationResult parse(const std::string& input);
 
     ///\brief Compiles input line, which doesn't contain statements.
     ///
