@@ -10,6 +10,7 @@
 #include "llvm/ADT/StringRef.h"
 
 #include <vector>
+#include <set>
 
 namespace llvm {
   class Module;
@@ -70,8 +71,8 @@ namespace cling {
     void printModule(llvm::Module* m);
     void InitializeBuilder(llvm::Module* m);
 
-    static std::vector<std::string> m_vec_unresolved;
-    static std::vector<LazyFunctionCreatorFunc_t> m_vec_lazy_function;
+    static std::set<std::string> m_unresolvedSymbols;
+    static std::vector<LazyFunctionCreatorFunc_t> m_lazyFuncCreator;
 
     llvm::ExecutionEngine* m_engine; // Owned by JIT
 

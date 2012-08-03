@@ -9,17 +9,17 @@ extern "C" int functionWithoutDefinition();
 
 int i = 42;
 i = functionWithoutDefinition();
-// CHECK: Error: Symbol 'functionWithoutDefinition' unresolved
+// CHECK: ExecutionContext::executeFunction: symbol 'functionWithoutDefinition' unresolved
 i = foo();
-// CHECK: Error: Symbol '{{.*}}foo{{.*}}' unresolved
+// CHECK: ExecutionContext::executeFunction: symbol '{{.*}}foo{{.*}}' unresolved
 
 extern "C" int printf(const char* fmt, ...);
 printf("got i=%d\n", i); // CHECK: got i=42
 int a = 12// CHECK: (int) 12
 
 foo()
-// CHECK: Error: Symbol '{{.*}}foo{{.*}}' unresolved
+// CHECK: ExecutionContext::executeFunction: symbol '{{.*}}foo{{.*}}' unresolved
 functionWithoutDefinition();
-// CHECK: Error: Symbol 'functionWithoutDefinition' unresolved
+// CHECK: ExecutionContext::executeFunction: symbol 'functionWithoutDefinition' unresolved
 
 i = 13 //CHECK: (int) 13

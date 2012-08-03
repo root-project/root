@@ -17,69 +17,46 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/DynamicLibrary.h"
 
-#include <cstdio>
-#include <iostream>
-
 using namespace cling;
 
 namespace {
   class JITtedFunctionCollector : public llvm::JITEventListener {
   private:
-    std::vector<llvm::Function *> m_vec_functions;
+    llvm::SmallVector<llvm::Function*, 24> m_functions;
     llvm::ExecutionEngine *m_engine;
 
   public:
-    JITtedFunctionCollector(): m_vec_functions(), m_engine(0) { }
+    JITtedFunctionCollector(): m_functions(), m_engine(0) { }
     virtual ~JITtedFunctionCollector() { }
 
     virtual void NotifyFunctionEmitted(const llvm::Function&, void *, size_t,
-                               const JITEventListener::EmittedFunctionDetails&);
-    virtual void NotifyFreeingMachineCode(void *OldPtr) {}
+                              const JITEventListener::EmittedFunctionDetails&) {
+      m_functions.push_back(const_cast<llvm::Function *>(&F));
+    }
+    virtual void NotifyFreeingMachineCode(void* /*OldPtr*/) {}
 
-    void CleanupList();
     void UnregisterFunctionMapping(llvm::ExecutionEngine&);
   };
 }
 
 
-void JITtedFunctionCollector::NotifyFunctionEmitted(const llvm::Function &F,
-                                                    void *Code, size_t Size,
-                        const JITEventListener::EmittedFunctionDetails &Details)
-{
-  //BB std::cerr << "JITtedFunctionCollector::NotifyFunctionEmitted: "
-  //BB              "m_vec_functions.push_back("
-  //BB           << F.getName().data() << "); Code @ " << Code << std::endl;
-  m_vec_functions.push_back(const_cast<llvm::Function *>(&F));
-}
-
-void JITtedFunctionCollector::CleanupList()
-{
-  m_vec_functions.clear();
-}
-
 void JITtedFunctionCollector::UnregisterFunctionMapping(
                                                   llvm::ExecutionEngine &engine)
 {
-  std::vector<llvm::Function *>::reverse_iterator it;
-
-  for (it=m_vec_functions.rbegin(); it < m_vec_functions.rend(); it++) {
-    llvm::Function *ff = (llvm::Function *)*it;
-    //BB std::cerr << "JITtedFunctionCollector::UnregisterFunctionMapping: "
-    //BB              "updateGlobalMapping("
-    //BB           << ff->getName().data() << ", 0); Global @"
-    //BB           << engine.getPointerToGlobalIfAvailable(ff) << std::endl;
+  for (std::vector<llvm::Function *>::reverse_iterator
+         it = m_functions.rbegin(), et = m_functions.rend();
+       it != et; ++it) {
+    llvm::Function *ff = *it;
     engine.freeMachineCodeForFunction(ff);
     engine.updateGlobalMapping(ff, 0);
-    //BB std::cerr << "Global after delete @"
-    //BB           << engine.getPointerToGlobalIfAvailable(ff) << std::endl;
   }
-  m_vec_functions.clear();
+  m_functions.clear();
 }
 
 
-std::vector<std::string> ExecutionContext::m_vec_unresolved;
+std::set<std::string> ExecutionContext::m_unresolvedSymbols;
 std::vector<ExecutionContext::LazyFunctionCreatorFunc_t>
-  ExecutionContext::m_vec_lazy_function;
+  ExecutionContext::m_lazyFuncCreator;
 
 ExecutionContext::ExecutionContext():
   m_engine(0),
@@ -119,17 +96,14 @@ ExecutionContext::~ExecutionContext()
 void unresolvedSymbol()
 {
   // throw exception?
-  std::cerr << "Error: calling unresolved symbol (should never happen)!"
-            << std::endl;
+  llvm::errs() << "ExecutionContext: calling unresolved symbol (should never happen)!\n";
 }
 
 void* ExecutionContext::HandleMissingFunction(const std::string& mangled_name)
 {
   // Not found in the map, add the symbol in the list of unresolved symbols
-  std::vector<std::string>::iterator it;
-  it = find (m_vec_unresolved.begin(), m_vec_unresolved.end(), mangled_name);
-  if (it == m_vec_unresolved.end())
-    m_vec_unresolved.push_back(mangled_name);
+  m_unresolvedSymbols.insert(mangled_name);
+
   // Avoid "ISO C++ forbids casting between pointer-to-function and
   // pointer-to-object":
   return (void*)reinterpret_cast<size_t>(unresolvedSymbol);
@@ -137,18 +111,17 @@ void* ExecutionContext::HandleMissingFunction(const std::string& mangled_name)
 
 void ExecutionContext::ResetUnresolved()
 {
-    m_vec_unresolved.clear();
+    m_unresolvedSymbols.clear();
 }
 
 void*
 ExecutionContext::NotifyLazyFunctionCreators(const std::string& mangled_name)
 {
-  void *ret = 0;
-
-  std::vector<LazyFunctionCreatorFunc_t>::iterator it;
-  for (it=m_vec_lazy_function.begin(); it < m_vec_lazy_function.end(); it++) {
-    ret = (void*)((LazyFunctionCreatorFunc_t)*it)(mangled_name);
-    if (ret != 0) return ret;
+  for (std::vector<LazyFunctionCreatorFunc_t>::iterator it
+         = m_lazyFuncCreator.begin(), et = m_lazyFuncCreator.end();
+       it != et; ++it) {
+    void* ret = (void*)((LazyFunctionCreatorFunc_t)*it)(mangled_name);
+    if (ret) return ret;
   }
   return HandleMissingFunction(mangled_name);
 }
@@ -171,9 +144,7 @@ ExecutionContext::executeFunction(llvm::StringRef funcname,
 
   llvm::Function* f = m_engine->FindFunctionNamed(funcname.data());
   if (!f) {
-    fprintf(stderr, "executeFunction: Could not find function named: %s\n",
-            funcname.data()
-            );
+    llvm::errs() << "ExecutionContext::executeFunction: could not find function named " << funcname << '\n';
     return;
   }
   JITtedFunctionCollector listener;
@@ -181,30 +152,22 @@ ExecutionContext::executeFunction(llvm::StringRef funcname,
   m_engine->RegisterJITEventListener(&listener);
   m_engine->getPointerToFunction(f);
   // check if there is any unresolved symbol in the list
-  if (!m_vec_unresolved.empty()) {
-    std::cerr << "ExecutionContext::executeFunction:" << std::endl;
-    for (size_t i = 0, e = m_vec_unresolved.size(); i != e; ++i) {
-      std::cerr << "Error: Symbol \'" << m_vec_unresolved[i] <<
-        "\' unresolved!" << std::endl;
-      llvm::Function *ff
-        = m_engine->FindFunctionNamed(m_vec_unresolved[i].c_str());
-      if (ff) {
-        m_engine->updateGlobalMapping(ff, 0);
-        m_engine->freeMachineCodeForFunction(ff);
-      }
-      else {
-        std::cerr << "Error: Canot find symbol \'" << m_vec_unresolved[i] <<
-          std::endl;
-      }
+  if (!m_unresolvedSymbols.empty()) {
+    for (std::set<std::string>::const_iterator i = m_unresolvedSymbols.begin(),
+           e = m_unresolvedSymbols.end(); i != e; ++i) {
+      llvm::errs() << "ExecutionContext::executeFunction: symbol \'" << *i << "\' unresolved!\n";
+      llvm::Function *ff = m_engine->FindFunctionNamed(i->c_str());
+      assert(ff && "cannot find function to free");
+      m_engine->updateGlobalMapping(ff, 0);
+      m_engine->freeMachineCodeForFunction(ff);
     }
-    m_vec_unresolved.clear();
+    m_unresolvedSymbols.clear();
     // cleanup functions
     listener.UnregisterFunctionMapping(*m_engine);
     m_engine->UnregisterJITEventListener(&listener);
     return;
   }
   // cleanup list and unregister our listener
-  listener.CleanupList();
   m_engine->UnregisterJITEventListener(&listener);
 
   std::vector<llvm::GenericValue> args;
@@ -296,8 +259,7 @@ ExecutionContext::printModule(llvm::Module* m)
 void
 ExecutionContext::installLazyFunctionCreator(LazyFunctionCreatorFunc_t fp)
 {
-  m_vec_lazy_function.push_back(fp);
-  //m_engine->InstallLazyFunctionCreator(fp);
+  m_lazyFuncCreator.push_back(fp);
 }
 
 bool ExecutionContext::addSymbol(const char* symbolName,  void* symbolAddress){
