@@ -1535,7 +1535,6 @@ namespace cling {
             expr->printPretty(tmp, Context, /*PrinterHelper=*/0,
               Policy, /*Indentation=*/0);
             proto += tmp.str();
-            fprintf(stderr, "%s\n", proto.c_str());
           }
           if (!P->getCurToken().is(tok::comma)) {
             break;
