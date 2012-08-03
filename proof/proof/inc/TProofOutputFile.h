@@ -83,7 +83,9 @@ protected:
 public:
    enum EStatusBits {
       kOutputFileNameSet = BIT(16),
-      kRetrieve          = BIT(17)  // If set, the file is copied to the final destination via the client
+      kRetrieve          = BIT(17), // If set, the file is copied to the final destination via the client
+      kSwapFile          = BIT(18)  // Set when the represented file is the result of the automatic
+                                    // save-to-file functionality 
    };
    TProofOutputFile() : fDir(), fRawDir(), fFileName(), fOptionsAnchor(), fOutputFileName(),
                         fWorkerOrdinal(), fLocalHost(), fIsLocal(kFALSE), fMerged(kFALSE),

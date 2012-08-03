@@ -888,7 +888,8 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
          }
          po->AdoptFile(fOutputFile);
          fOutput->Add(po);
-         fOutput->Add(new TParameter<Bool_t>("PROOF_SavedToFile", kTRUE));
+         // Flag the nature of this file
+         po->SetBit(TProofOutputFile::kSwapFile);
       }
    }
    fOutputFile->Close();
@@ -2431,6 +2432,8 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                   }
                   // Save the new remote output filename
                   pf->SetOutputFileName(outfilerem);
+                  // Align the filename
+                  pf->SetFileName(gSystem->BaseName(outfilerem));
                }
                if (!filemerger->OutputFile(outfile)) {
                   Error("MergeOutputFiles", "cannot open the output file");

@@ -4478,18 +4478,26 @@ void TProofServ::ProcessNext(TString *slb)
    // If we were requested to save results on the master and we are not in save-to-file mode
    // then we save the results
    if (IsTopMaster() && fPlayer->GetOutputList()) {
-      TObject *ostf = fPlayer->GetOutputList()->FindObject("PROOF_SavedToFile");
-      TNamed *nof = (TNamed *) input->FindObject("PROOF_DefaultOutputOption");
-      if (nof) {
-         TString oopt(nof->GetTitle());
-         if (oopt.BeginsWith("of:") && !ostf) {
-            oopt.Replace(0, 3, "");
-            if (!oopt.IsNull()) fPlayer->SetOutputFilePath(oopt);
-            fPlayer->SavePartialResults(kTRUE, kTRUE);
+      Bool_t save = kTRUE;
+      TIter nxo(fPlayer->GetOutputList());
+      TObject *xo = 0;
+      while ((xo = nxo())) {
+         if (xo->InheritsFrom("TProofOutputFile") && xo->TestBit(TProofOutputFile::kSwapFile)) {
+            save = kFALSE;
+            break;
          }
       }
-      // Remove temporary object
-      if (ostf) fPlayer->GetOutputList()->Remove(ostf);
+      if (save) {
+         TNamed *nof = (TNamed *) input->FindObject("PROOF_DefaultOutputOption");
+         if (nof) {
+            TString oopt(nof->GetTitle());
+            if (oopt.BeginsWith("of:")) {
+               oopt.Replace(0, 3, "");
+               if (!oopt.IsNull()) fPlayer->SetOutputFilePath(oopt);
+               fPlayer->SavePartialResults(kTRUE, kTRUE);
+            }
+         }
+      }
    }
    
    // Send back the results

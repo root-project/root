@@ -4612,17 +4612,18 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
       // Output file
       if (!outfile.IsNull()) {
          if (!outfile.BeginsWith("master:")) {
-            // Check if the target file is on a local file system and need to be retrieved
-            if (!strcmp(TUrl(outfile.Data(), kTRUE).GetProtocol(), "file")) {
-               if (gSystem->AccessPathName(gSystem->DirName(outfile.Data()), kWritePermission)) {
-                  Warning("HandleOutputOptions",
-                        "directory '%s' for the output file does not exists or is not writable:"
-                        " saving to master", gSystem->DirName(outfile.Data()));
-                  outfile.Form("master:%s", gSystem->BaseName(outfile.Data()));
-               } else {
-                  // The target file is local, so we need to retrieve it
-                  target = outfile;
+            if (gSystem->AccessPathName(gSystem->DirName(outfile.Data()), kWritePermission)) {
+               Warning("HandleOutputOptions",
+                     "directory '%s' for the output file does not exists or is not writable:"
+                     " saving to master", gSystem->DirName(outfile.Data()));
+               outfile.Form("master:%s", gSystem->BaseName(outfile.Data()));
+            } else {
+               // The target file is local, so we need to retrieve it
+               target = outfile;
+               if (!stfopt.IsNull()) {
                   outfile.Form("master:%s", gSystem->BaseName(target.Data()));
+               } else {
+                  outfile = "";
                }
             }
          }
@@ -4655,8 +4656,10 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
             }
          }
          // Set the parameter
-         if (!outfile.BeginsWith("of:")) outfile.Insert(0, "of:");
-         SetParameter("PROOF_DefaultOutputOption", outfile.Data());
+         if (!outfile.IsNull()) {
+            if (!outfile.BeginsWith("of:")) outfile.Insert(0, "of:");
+            SetParameter("PROOF_DefaultOutputOption", outfile.Data());
+         }
       }
       // Dataset creation
       if (!dsname.IsNull()) {
@@ -4705,30 +4708,49 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
                   Warning("HandleOutputOptions", "problems copying output to %s", target.Data());
                }
             }
-            // Should we open an output file ?
             TFile *fout = 0;
-            if (!target.IsNull() && !pf && GetOutputList()->GetSize() > 0) {
-               fout = TFile::Open(target, "RECREATE");
-               if (!fout || (fout && fout->IsZombie())) {
-                  SafeDelete(fout);
-                  Warning("HandleOutputOptions", "problems opening output file %s", target.Data());
-               }
-            }
-            TObject *o = 0;            
+            TObject *o = 0;
             TIter nxo(GetOutputList());
+            Bool_t swapcopied = kFALSE;
             while ((o = nxo())) {
                TProofOutputFile *pof = dynamic_cast<TProofOutputFile *>(o);
-               if (pof && pof->IsRetrieve()) {
-                  // Retrieve this file to the local path indicated in the title
-                  if (TFile::Cp(pof->GetOutputFileName(), pof->GetTitle())) {
-                     Printf(" Output successfully copied to %s", pof->GetTitle());
-                  } else {
-                     Warning("HandleOutputOptions",
-                             "problems copying %s to %s", pof->GetOutputFileName(), pof->GetTitle());
+               if (pof) {
+                  if (pof->TestBit(TProofOutputFile::kSwapFile) && !target.IsNull()) {
+                     // Copy the file
+                     if (TFile::Cp(pof->GetOutputFileName(), target)) {
+                        Printf(" Output successfully copied to %s", target.Data());
+                        swapcopied = kTRUE;
+                     } else {
+                        Warning("HandleOutputOptions", "problems copying output to %s", target.Data());
+                     }
+                  } else if (pof->IsRetrieve()) {
+                     // Retrieve this file to the local path indicated in the title
+                     if (TFile::Cp(pof->GetOutputFileName(), pof->GetTitle())) {
+                        Printf(" Output successfully copied to %s", pof->GetTitle());
+                     } else {
+                        Warning("HandleOutputOptions",
+                              "problems copying %s to %s", pof->GetOutputFileName(), pof->GetTitle());
+                     }
                   }
-               } else if (fout) {
-                  // Write the object to the open output file
-                  o->Write();
+               }
+            }
+            if (!target.IsNull() && !swapcopied) {
+               if (!fout && !pf) {
+                  fout = TFile::Open(target, "RECREATE");
+                  if (!fout || (fout && fout->IsZombie())) {
+                     SafeDelete(fout);
+                     Warning("HandleOutputOptions", "problems opening output file %s", target.Data());
+                  }
+               }
+               if (fout) { 
+                  nxo.Reset();
+                  while ((o = nxo())) {
+                     TProofOutputFile *pof = dynamic_cast<TProofOutputFile *>(o);
+                     if (!pof) {
+                        // Write the object to the open output file
+                        o->Write();
+                     }
+                  }
                }
             }
             // Clean-up

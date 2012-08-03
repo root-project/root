@@ -47,6 +47,7 @@ TProofOutputFile::TProofOutputFile(const char *path,
    fMerger = 0;
    fDataSet = 0;
    ResetBit(TProofOutputFile::kRetrieve);
+   ResetBit(TProofOutputFile::kSwapFile);
 
    Init(path, dsname);
 }
