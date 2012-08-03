@@ -3313,8 +3313,8 @@ void tcling_CallFunc::SetFunc(tcling_MethodInfo* info) const
 void tcling_CallFunc::SetFuncProto(tcling_ClassInfo* info, const char* method, const char* proto, long* offset) const
 {
    fCallFunc->SetFuncProto(info->GetClassInfo(), method, proto, offset);
-   const clang::Decl* decl =
-      fInterp->lookupFunctionProto(info->GetDecl(), method, proto);
+   //const clang::Decl* decl =
+   //   fInterp->lookupFunctionProto(info->GetDecl(), method, proto);
 }
 
 //______________________________________________________________________________
