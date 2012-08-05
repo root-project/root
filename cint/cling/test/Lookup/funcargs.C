@@ -23,6 +23,17 @@ printf("G: 0x%lx\n", (unsigned long) G);
 
 .rawInput 1
 void f() { int x = 1; }
+void a(int v) { int x = v; }
+void b(int vi, double vd) { int x = vi; double y = vd; }
+void c(int vi, int vj) { int x = vi; int y = vj; }
+void c(int vi, double vd) { int x = vi; double y = vd; }
+template <class T> void d(T v) { T x = v; }
+// Note: In CINT, looking up a class template specialization causes
+//       instantiation, but looking up a function template specialization
+//       does not, so we explicitly request the instantiations we are
+//       going to lookup so they will be there to find.
+template void d(int);
+template void d(double);
 .rawInput 0
 
 const clang::FunctionDecl* F = gCling->lookupFunctionArgs(G, "f", "");
@@ -39,14 +50,9 @@ F->print(llvm::outs());
 //  Test finding a global function taking a single int argument.
 //
 
-.rawInput 1
-void a(int v) { int x = v; }
-.rawInput 0
-
 const clang::FunctionDecl* A = gCling->lookupFunctionArgs(G, "a", "0");
-//CHECK: 0
 printf("A: 0x%lx\n", (unsigned long) A);
-//CHECK-NEXT: A: 0x{{[1-9a-f][0-9a-f]*$}}
+//CHECK: A: 0x{{[1-9a-f][0-9a-f]*$}}
 A->print(llvm::outs());
 //CHECK-NEXT: void a(int v) {
 //CHECK-NEXT:     int x = v;
@@ -58,15 +64,9 @@ A->print(llvm::outs());
 //  Test finding a global function taking an int and a double argument.
 //
 
-.rawInput 1
-void b(int vi, double vd) { int x = vi; double y = vd; }
-.rawInput 0
-
 const clang::FunctionDecl* B = gCling->lookupFunctionArgs(G, "b", "0,0.0");
-//CHECK: 0
-//CHECK-NEXT: 0,0
 printf("B: 0x%lx\n", (unsigned long) B);
-//CHECK-NEXT: B: 0x{{[1-9a-f][0-9a-f]*$}}
+//CHECK: B: 0x{{[1-9a-f][0-9a-f]*$}}
 B->print(llvm::outs());
 //CHECK-NEXT: void b(int vi, double vd) {
 //CHECK-NEXT:     int x = vi;
@@ -79,16 +79,9 @@ B->print(llvm::outs());
 //  Test finding a global overloaded function.
 //
 
-.rawInput 1
-void c(int vi, int vj) { int x = vi; int y = vj; }
-void c(int vi, double vd) { int x = vi; double y = vd; }
-.rawInput 0
-
 const clang::FunctionDecl* C1 = gCling->lookupFunctionArgs(G, "c", "0,0");
-//CHECK: 0
-//CHECK-NEXT: 0,0
 printf("C1: 0x%lx\n", (unsigned long) C1);
-//CHECK-NEXT: C1: 0x{{[1-9a-f][0-9a-f]*$}}
+//CHECK: C1: 0x{{[1-9a-f][0-9a-f]*$}}
 C1->print(llvm::outs());
 //CHECK-NEXT: void c(int vi, int vj) {
 //CHECK-NEXT:     int x = vi;
@@ -96,10 +89,8 @@ C1->print(llvm::outs());
 //CHECK-NEXT: }
 
 const clang::FunctionDecl* C2 = gCling->lookupFunctionArgs(G, "c", "0,0.0");
-//CHECK: 0
-//CHECK-NEXT: 0,0
 printf("C2: 0x%lx\n", (unsigned long) C2);
-//CHECK-NEXT: C2: 0x{{[1-9a-f][0-9a-f]*$}}
+//CHECK: C2: 0x{{[1-9a-f][0-9a-f]*$}}
 C2->print(llvm::outs());
 //CHECK-NEXT: void c(int vi, double vd) {
 //CHECK-NEXT:     int x = vi;
@@ -112,28 +103,17 @@ C2->print(llvm::outs());
 //  Test finding simple global template instantiations.
 //
 
-.rawInput 1
-template <class T> void d(T v) { T x = v; }
-// Note: In CINT, looking up a class template specialization causes
-//       instantiation, but looking up a function template specialization
-//       does not.
-template void d(int);
-template void d(double);
-.rawInput 0
-
 const clang::FunctionDecl* D1 = gCling->lookupFunctionArgs(G, "d<int>", "0");
-//CHECK: 0
 printf("D1: 0x%lx\n", (unsigned long) D1);
-//CHECK-NEXT: D1: 0x{{[1-9a-f][0-9a-f]*$}}
+//CHECK: D1: 0x{{[1-9a-f][0-9a-f]*$}}
 D1->print(llvm::outs());
 //CHECK-NEXT: void d(int v) {
 //CHECK-NEXT:     int x = v;
 //CHECK-NEXT: }
 
 const clang::FunctionDecl* D2 = gCling->lookupFunctionArgs(G, "d<double>", "0.0");
-//CHECK: 0
 printf("D2: 0x%lx\n", (unsigned long) D2);
-//CHECK-NEXT: D2: 0x{{[1-9a-f][0-9a-f]*$}}
+//CHECK: D2: 0x{{[1-9a-f][0-9a-f]*$}}
 D2->print(llvm::outs());
 //CHECK-NEXT: void d(double v) {
 //CHECK-NEXT:     double x = v;
@@ -141,23 +121,46 @@ D2->print(llvm::outs());
 
 
 
-//
-//  Test finding a member function taking no args.
-//
-
 .rawInput 1
-class A {
-   void A_f() { int x = 1; }
+class B {
+   void B_f() { int x = 1; }
+   void B_g(int v) { int x = v; }
+   void B_h(int vi, double vd) { int x = vi; double y = vd; }
 };
+class A : public B {
+   void A_f() { int x = 1; }
+   void A_g(int v) { int x = v; }
+   void A_h(int vi, double vd) { int x = vi; double y = vd; }
+   void A_j(int vi, int vj) { int x = vi; int y = vj; }
+   void A_j(int vi, double vd) { int x = vi; double y = vd; }
+   template <class T> void A_k(T v) { T x = v; }
+};
+// Note: In CINT, looking up a class template specialization causes
+//       instantiation, but looking up a function template specialization
+//       does not, so we explicitly request the instantiations we are
+//       going to lookup so they will be there to find.
+template void A::A_k(int);
+template void A::A_k(double);
 .rawInput 0
 
 const clang::Decl* class_A = gCling->lookupScope("A");
 printf("class_A: 0x%lx\n", (unsigned long) class_A);
 //CHECK: class_A: 0x{{[1-9a-f][0-9a-f]*$}}
-const clang::FunctionDecl* class_A_F = gCling->lookupFunctionArgs(class_A, "A_f", "");
-printf("class_A_F: 0x%lx\n", (unsigned long) class_A_F);
-//CHECK-NEXT: class_A_F: 0x{{[1-9a-f][0-9a-f]*$}}
-class_A_F->print(llvm::outs());
+//
+const clang::Decl* class_B = gCling->lookupScope("B");
+printf("class_B: 0x%lx\n", (unsigned long) class_B);
+//CHECK-NEXT: class_B: 0x{{[1-9a-f][0-9a-f]*$}}
+
+
+
+//
+//  Test finding a member function taking no args.
+//
+
+const clang::FunctionDecl* func_A_f = gCling->lookupFunctionArgs(class_A, "A_f", "");
+printf("func_A_f: 0x%lx\n", (unsigned long) func_A_f);
+//CHECK-NEXT: func_A_f: 0x{{[1-9a-f][0-9a-f]*$}}
+func_A_f->print(llvm::outs());
 //CHECK-NEXT: void A_f() {
 //CHECK-NEXT:     int x = 1;
 //CHECK-NEXT: }
@@ -168,22 +171,51 @@ class_A_F->print(llvm::outs());
 //  Test finding a member function taking an int arg.
 //
 
-.rawInput 1
-class B {
-   void B_f(int v) { int x = v; }
-};
-.rawInput 0
-
-const clang::Decl* class_B = gCling->lookupScope("B");
-printf("class_B: 0x%lx\n", (unsigned long) class_B);
-//CHECK: class_B: 0x{{[1-9a-f][0-9a-f]*$}}
-const clang::FunctionDecl* class_B_F = gCling->lookupFunctionArgs(class_B, "B_f", "0");
-//CHECK-NEXT: 0
-printf("class_B_F: 0x%lx\n", (unsigned long) class_B_F);
-//CHECK-NEXT: class_B_F: 0x{{[1-9a-f][0-9a-f]*$}}
-class_B_F->print(llvm::outs());
-//CHECK-NEXT: void B_f(int v) {
+const clang::FunctionDecl* func_A_g = gCling->lookupFunctionArgs(class_A, "A_g", "0");
+printf("func_A_g: 0x%lx\n", (unsigned long) func_A_g);
+//CHECK: func_A_g: 0x{{[1-9a-f][0-9a-f]*$}}
+func_A_g->print(llvm::outs());
+//CHECK-NEXT: void A_g(int v) {
 //CHECK-NEXT:     int x = v;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding a member function taking an int and a double argument.
+//
+
+const clang::FunctionDecl* func_A_h = gCling->lookupFunctionArgs(class_A, "A_h", "0,0.0");
+printf("func_A_h: 0x%lx\n", (unsigned long) func_A_h);
+//CHECK: func_A_h: 0x{{[1-9a-f][0-9a-f]*$}}
+func_A_h->print(llvm::outs());
+//CHECK-NEXT: void A_h(int vi, double vd) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     double y = vd;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding an overloaded member function.
+//
+
+const clang::FunctionDecl* func_A_j1 = gCling->lookupFunctionArgs(class_A, "A_j", "0,0");
+printf("func_A_j1: 0x%lx\n", (unsigned long) func_A_j1);
+//CHECK: func_A_j1: 0x{{[1-9a-f][0-9a-f]*$}}
+func_A_j1->print(llvm::outs());
+//CHECK-NEXT: void A_j(int vi, int vj) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     int y = vj;
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* func_A_j2 = gCling->lookupFunctionArgs(class_A, "A_j", "0,0.0");
+printf("func_A_j2: 0x%lx\n", (unsigned long) func_A_j2);
+//CHECK: func_A_j2: 0x{{[1-9a-f][0-9a-f]*$}}
+func_A_j2->print(llvm::outs());
+//CHECK-NEXT: void A_j(int vi, double vd) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     double y = vd;
 //CHECK-NEXT: }
 
 
@@ -192,22 +224,11 @@ class_B_F->print(llvm::outs());
 //  Test finding a member function taking no args in a base class.
 //
 
-.rawInput 1
-class C {
-   void C_f() { int x = 1; }
-};
-class D : public C {
-};
-.rawInput 0
-
-const clang::Decl* class_D = gCling->lookupScope("D");
-printf("class_D: 0x%lx\n", (unsigned long) class_D);
-//CHECK: class_D: 0x{{[1-9a-f][0-9a-f]*$}}
-const clang::FunctionDecl* class_D_F = gCling->lookupFunctionArgs(class_D, "C_f", "");
-printf("class_D_F: 0x%lx\n", (unsigned long) class_D_F);
-//CHECK-NEXT: class_D_F: 0x{{[1-9a-f][0-9a-f]*$}}
-class_D_F->print(llvm::outs());
-//CHECK-NEXT: void C_f() {
+const clang::FunctionDecl* func_B_F = gCling->lookupFunctionArgs(class_A, "B_f", "");
+printf("func_B_F: 0x%lx\n", (unsigned long) func_B_F);
+//CHECK: func_B_F: 0x{{[1-9a-f][0-9a-f]*$}}
+func_B_F->print(llvm::outs());
+//CHECK-NEXT: void B_f() {
 //CHECK-NEXT:     int x = 1;
 //CHECK-NEXT: }
 
@@ -217,24 +238,28 @@ class_D_F->print(llvm::outs());
 //  Test finding a member function taking an int arg in a base class.
 //
 
-.rawInput 1
-class E {
-   void E_f(int v) { int x = v; }
-};
-class F : public E {
-};
-.rawInput 0
-
-const clang::Decl* class_F = gCling->lookupScope("F");
-printf("class_F: 0x%lx\n", (unsigned long) class_F);
-//CHECK: class_F: 0x{{[1-9a-f][0-9a-f]*$}}
-const clang::FunctionDecl* class_F_F = gCling->lookupFunctionArgs(class_F, "E_f", "0");
-//CHECK-NEXT: 0
-printf("class_F_F: 0x%lx\n", (unsigned long) class_F_F);
-//CHECK-NEXT: class_F_F: 0x{{[1-9a-f][0-9a-f]*$}}
-class_F_F->print(llvm::outs());
-//CHECK-NEXT: void E_f(int v) {
+const clang::FunctionDecl* func_B_G = gCling->lookupFunctionArgs(class_A, "B_g", "0");
+printf("func_B_G: 0x%lx\n", (unsigned long) func_B_G);
+//CHECK: func_B_G: 0x{{[1-9a-f][0-9a-f]*$}}
+func_B_G->print(llvm::outs());
+//CHECK-NEXT: void B_g(int v) {
 //CHECK-NEXT:     int x = v;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding a member function taking an int and a double argument
+//  in a base class.
+//
+
+const clang::FunctionDecl* func_B_h = gCling->lookupFunctionArgs(class_A, "B_h", "0,0.0");
+printf("func_B_h: 0x%lx\n", (unsigned long) func_B_h);
+//CHECK: func_B_h: 0x{{[1-9a-f][0-9a-f]*$}}
+func_B_h->print(llvm::outs());
+//CHECK-NEXT: void B_h(int vi, double vd) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     double y = vd;
 //CHECK-NEXT: }
 
 
