@@ -126,6 +126,8 @@ class B {
    void B_f() { int x = 1; }
    void B_g(int v) { int x = v; }
    void B_h(int vi, double vd) { int x = vi; double y = vd; }
+   void B_j(int vi, int vj) { int x = vi; int y = vj; }
+   void B_j(int vi, double vd) { int x = vi; double y = vd; }
 };
 class A : public B {
    void A_f() { int x = 1; }
@@ -258,6 +260,30 @@ printf("func_B_h: 0x%lx\n", (unsigned long) func_B_h);
 //CHECK: func_B_h: 0x{{[1-9a-f][0-9a-f]*$}}
 func_B_h->print(llvm::outs());
 //CHECK-NEXT: void B_h(int vi, double vd) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     double y = vd;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding an overloaded member function in a base class.
+//
+
+const clang::FunctionDecl* func_B_j1 = gCling->lookupFunctionArgs(class_A, "B_j", "0,0");
+printf("func_B_j1: 0x%lx\n", (unsigned long) func_B_j1);
+//CHECK: func_B_j1: 0x{{[1-9a-f][0-9a-f]*$}}
+func_B_j1->print(llvm::outs());
+//CHECK-NEXT: void B_j(int vi, int vj) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     int y = vj;
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* func_B_j2 = gCling->lookupFunctionArgs(class_A, "B_j", "0,0.0");
+printf("func_B_j2: 0x%lx\n", (unsigned long) func_B_j2);
+//CHECK: func_B_j2: 0x{{[1-9a-f][0-9a-f]*$}}
+func_B_j2->print(llvm::outs());
+//CHECK-NEXT: void B_j(int vi, double vd) {
 //CHECK-NEXT:     int x = vi;
 //CHECK-NEXT:     double y = vd;
 //CHECK-NEXT: }
