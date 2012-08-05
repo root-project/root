@@ -128,6 +128,7 @@ class B {
    void B_h(int vi, double vd) { int x = vi; double y = vd; }
    void B_j(int vi, int vj) { int x = vi; int y = vj; }
    void B_j(int vi, double vd) { int x = vi; double y = vd; }
+   template <class T> void B_k(T v) { T x = v; }
 };
 class A : public B {
    void A_f() { int x = 1; }
@@ -143,6 +144,8 @@ class A : public B {
 //       going to lookup so they will be there to find.
 template void A::A_k(int);
 template void A::A_k(double);
+template void A::B_k(int);
+template void A::B_k(double);
 .rawInput 0
 
 const clang::Decl* class_A = gCling->lookupScope("A");
@@ -223,6 +226,28 @@ func_A_j2->print(llvm::outs());
 
 
 //
+//  Test finding simple member function template instantiations.
+//
+
+const clang::FunctionDecl* func_A_k1 = gCling->lookupFunctionArgs(class_A, "A_k<int>", "0");
+printf("func_A_k1: 0x%lx\n", (unsigned long) func_A_k1);
+//CHECK: func_A_k1: 0x{{[1-9a-f][0-9a-f]*$}}
+func_A_k1->print(llvm::outs());
+//CHECK-NEXT: void A_k(int v) {
+//CHECK-NEXT:     int x = v;
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* func_A_k2 = gCling->lookupFunctionArgs(class_A, "A_k<double>", "0.0");
+printf("func_A_k2: 0x%lx\n", (unsigned long) func_A_k2);
+//CHECK: func_A_k2: 0x{{[1-9a-f][0-9a-f]*$}}
+func_A_k2->print(llvm::outs());
+//CHECK-NEXT: void A_k(double v) {
+//CHECK-NEXT:     double x = v;
+//CHECK-NEXT: }
+
+
+
+//
 //  Test finding a member function taking no args in a base class.
 //
 
@@ -286,6 +311,28 @@ func_B_j2->print(llvm::outs());
 //CHECK-NEXT: void B_j(int vi, double vd) {
 //CHECK-NEXT:     int x = vi;
 //CHECK-NEXT:     double y = vd;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding simple member function template instantiations in a base class.
+//
+
+const clang::FunctionDecl* func_B_k1 = gCling->lookupFunctionArgs(class_A, "B_k<int>", "0");
+printf("func_B_k1: 0x%lx\n", (unsigned long) func_B_k1);
+//CHECK: func_B_k1: 0x{{[1-9a-f][0-9a-f]*$}}
+func_B_k1->print(llvm::outs());
+//CHECK-NEXT: void B_k(int v) {
+//CHECK-NEXT:     int x = v;
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* func_B_k2 = gCling->lookupFunctionArgs(class_A, "B_k<double>", "0.0");
+printf("func_B_k2: 0x%lx\n", (unsigned long) func_B_k2);
+//CHECK: func_B_k2: 0x{{[1-9a-f][0-9a-f]*$}}
+func_B_k2->print(llvm::outs());
+//CHECK-NEXT: void B_k(double v) {
+//CHECK-NEXT:     double x = v;
 //CHECK-NEXT: }
 
 
