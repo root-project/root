@@ -223,7 +223,7 @@ namespace cling {
     ///
     ///\param [in] input - The input being compiled.
     ///\param [in] CompilationOptions - The option set driving the compilation.
-    ///\param [in/out] V - The result of the evaluation of the input. Must be
+    ///\param [in,out] V - The result of the evaluation of the input. Must be
     ///       initialized to point to the return value's location if the 
     ///       expression result is an aggregate.
     ///
@@ -246,7 +246,7 @@ namespace cling {
     ///\brief Runs given function.
     ///
     ///\param [in] fname - The function name.
-    ///\param [in/out] res - The return result of the run function. Must be
+    ///\param [in,out] res - The return result of the run function. Must be
     ///       initialized to point to the return value's location if the 
     ///       expression result is an aggregate.
     ///
@@ -338,7 +338,7 @@ namespace cling {
     /// specific interface for doing that - in the particular case - declare().
     ///
     ///\param[in] input - The input to be compiled.
-    ///\param[in/out] V - The result of the evaluation of the input. Must be
+    ///\param[in,out] V - The result of the evaluation of the input. Must be
     ///       initialized to point to the return value's location if the 
     ///       expression result is an aggregate.
     ///\param[out] D - The first declaration of the compiled input.
@@ -380,7 +380,7 @@ namespace cling {
     /// the declarations from the input.
     ///
     /// @param[in] input - The input containing only expressions
-    /// @param[in/out] V - The value of the executed input. Must be
+    /// @param[in,out] V - The value of the executed input. Must be
     ///       initialized to point to the return value's location if the 
     ///       expression result is an aggregate.
     ///
@@ -396,7 +396,7 @@ namespace cling {
     /// the declarations from the input.
     ///
     /// @param[in] input - The input containing only expressions.
-    /// @param[in/out] V - The value of the executed input. Must be
+    /// @param[in,out] V - The value of the executed input. Must be
     ///       initialized to point to the return value's location if the 
     ///       expression result is an aggregate.
     ///
