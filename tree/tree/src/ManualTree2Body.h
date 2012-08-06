@@ -2,6 +2,7 @@
 #include "TROOT.h"
 #include "TSelectorCint.h"
 #include "TClassEdit.h"
+#include "Api.h"
 
 TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel)
 {
@@ -12,8 +13,8 @@ static int G__ManualTree2_119_0_147(G__value* result7, G__CONST char* funcname, 
 {
    // We need to emulate TTree::Process and properly capture the fact that we go an intepreted TSelector object.
 
-   ClassInfo_t* ti = gInterpreter->ClassInfo_Factory( &libp->para[0] );
-   TClass *ptrClass = TClass::GetClass( gInterpreter->ClassInfo_Name( ti ) );
+   Cint::G__ClassInfo* ti = new G__ClassInfo( libp->para[0] );
+   TClass *ptrClass = TClass::GetClass( ti->Name() );
    TSelector *sel = (TSelector*) G__int(libp->para[0]);
 
    //Interpreted selector: cannot be used as such
@@ -43,7 +44,7 @@ static int G__ManualTree2_119_0_147(G__value* result7, G__CONST char* funcname, 
    }
 
    delete selectcint;
-   gInterpreter->ClassInfo_Delete( ti );
+   delete ti;
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -53,8 +54,8 @@ static int G__ManualTree2_119_0_211(G__value* result7, G__CONST char* funcname, 
   // return BranchImp(name,classname,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
 
    // Here find the class name 
-   ClassInfo_t* ti = gInterpreter->ClassInfo_Factory( &libp->para[2] );
-   TClass *ptrClass = TClass::GetClass( gInterpreter->ClassInfo_Name( ti ) );
+   G__ClassInfo* ti = new G__ClassInfo( libp->para[2] );
+   TClass *ptrClass = TClass::GetClass( ti->Name() );
    const char* classname = (const char*)G__int(libp->para[1]);
    TClass *claim = TClass::GetClass(classname);
    void *ptr;
@@ -147,7 +148,7 @@ static int G__ManualTree2_119_0_211(G__value* result7, G__CONST char* funcname, 
          }         
       }
    }
-   gInterpreter->ClassInfo_Delete( ti );
+   delete ti;
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -158,7 +159,7 @@ static int G__ManualTree2_119_0_214(G__value* result7, G__CONST char* funcname, 
    // We need to emulate 
    // return BranchImp(name,TBuffer::GetClass(typeid(T)),addobj,bufsize,splitlevel);
 
-   TypeInfo_t *ti = gInterpreter->TypeInfo_Factory( & libp->para[1] );
+   G__TypeInfo *ti = new G__TypeInfo( libp->para[1] );
    TClass* ptrClass = 0;
    EDataType datatype = kOther_t;
    {
@@ -243,7 +244,7 @@ static int G__ManualTree2_119_0_214(G__value* result7, G__CONST char* funcname, 
          }         
       }
    }
-   gInterpreter->TypeInfo_Delete( ti );
+   delete ti;
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -254,7 +255,7 @@ static int G__ManualTree2_119_0_216(G__value* result7, G__CONST char* funcname, 
 
    G__setnull(result7);
 
-   TypeInfo_t *ti = gInterpreter->TypeInfo_Factory( & libp->para[1] );
+   G__TypeInfo *ti = new G__TypeInfo( libp->para[1] );
    string type( TClassEdit::ShortType( gInterpreter->TypeInfo_Name( ti ) ,TClassEdit::kDropTrailStar) );
    TClass *ptrClass = TClass::GetClass(type.c_str());
    TDataType *data = gROOT->GetType(type.c_str());
@@ -270,6 +271,6 @@ static int G__ManualTree2_119_0_216(G__value* result7, G__CONST char* funcname, 
    }
    ((TTree*)(G__getstructoffset()))->SetBranchAddress((const char*)G__int(libp->para[0]),(void*)G__int(libp->para[1]),branchPtr,ptrClass,datatype,gInterpreter->TypeInfo_RefType(ti)==G__PARAP2P);
 
-   gInterpreter->TypeInfo_Delete( ti );
+   delete ti;
    return(1 || funcname || hash || result7 || libp) ;
 }

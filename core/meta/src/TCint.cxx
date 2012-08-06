@@ -2701,13 +2701,6 @@ ClassInfo_t *TCint::ClassInfo_Factory(const char *name) const
    return new G__ClassInfo(name);
 }
 //______________________________________________________________________________
-ClassInfo_t *TCint::ClassInfo_Factory(G__value *pvalue) const
-{
-   // Interface to CINT function
-
-   return new G__ClassInfo(*pvalue);
-}
-//______________________________________________________________________________
 int TCint::ClassInfo_GetMethodNArg(ClassInfo_t *cinfo, const char *method,const char *proto) const
 {
    // Interface to CINT function
@@ -3377,14 +3370,6 @@ TypeInfo_t *TCint::TypeInfo_Factory() const
    // Interface to CINT function
 
    G__TypeInfo *info = new G__TypeInfo();
-   return info;
-}
-//______________________________________________________________________________
-TypeInfo_t *TCint::TypeInfo_Factory(G__value *pvalue) const
-{
-   // Interface to CINT function
-
-   G__TypeInfo *info = new G__TypeInfo(*pvalue);
    return info;
 }
 //______________________________________________________________________________

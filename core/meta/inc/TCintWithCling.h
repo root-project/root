@@ -223,10 +223,8 @@ public: // Public Interface
    virtual void   ClassInfo_DeleteArray(ClassInfo_t* info, void* arena, bool dtorOnly) const;
    virtual void   ClassInfo_Destruct(ClassInfo_t* info, void* arena) const;
    virtual ClassInfo_t*  ClassInfo_Factory() const;
-   //virtual ClassInfo_t  *ClassInfo_Factory(G__value * /* value */) const;
    virtual ClassInfo_t*  ClassInfo_Factory(ClassInfo_t* cl) const;
    virtual ClassInfo_t*  ClassInfo_Factory(const char* name) const;
-   virtual ClassInfo_t*  ClassInfo_Factory(G__value*) const;
    virtual int    ClassInfo_GetMethodNArg(ClassInfo_t* info, const char* method, const char* proto) const;
    virtual bool   ClassInfo_HasDefaultConstructor(ClassInfo_t* info) const;
    virtual bool   ClassInfo_HasMethod(ClassInfo_t* info, const char* name) const;
@@ -316,7 +314,6 @@ public: // Public Interface
    // G__TypeInfo interface
    virtual void   TypeInfo_Delete(TypeInfo_t* tinfo) const;
    virtual TypeInfo_t* TypeInfo_Factory() const;
-   virtual TypeInfo_t* TypeInfo_Factory(G__value* /* value */) const;
    virtual TypeInfo_t* TypeInfo_FactoryCopy(TypeInfo_t* /* tinfo */) const;
    virtual void   TypeInfo_Init(TypeInfo_t* tinfo, const char* funcname) const;
    virtual bool   TypeInfo_IsValid(TypeInfo_t* tinfo) const;
