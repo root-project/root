@@ -30,7 +30,30 @@ template <class T> void G_d(T v) { T x = v; }
 //       going to lookup so they will be there to find.
 template void G_d(int);
 template void G_d(double);
+namespace N {
+void H_f() { int x = 1; }
+void H_a(int v) { int x = v; }
+void H_b(int vi, double vd) { int x = vi; double y = vd; }
+void H_c(int vi, int vj) { int x = vi; int y = vj; }
+void H_c(int vi, double vd) { int x = vi; double y = vd; }
+template <class T> void H_d(T v) { T x = v; }
+// Note: In CINT, looking up a class template specialization causes
+//       instantiation, but looking up a function template specialization
+//       does not, so we explicitly request the instantiations we are
+//       going to lookup so they will be there to find.
+template void H_d(int);
+template void H_d(double);
+} // namespace N
 .rawInput 0
+
+
+
+//
+//  We need to fetch the namespace N declaration.
+//
+const clang::Decl* namespace_N = gCling->lookupScope("N");
+printf("namespace_N: 0x%lx\n", (unsigned long) namespace_N);
+//CHECK: namespace_N: 0x{{[1-9a-f][0-9a-f]*$}}
 
 
 
@@ -186,6 +209,322 @@ G_d2_proto->print(llvm::outs());
 //CHECK-NEXT: void G_d(double v) {
 //CHECK-NEXT:     double x = v;
 //CHECK-NEXT: }
+
+
+
+//
+//  Test finding a namespace function taking no args.
+//
+
+const clang::FunctionDecl* H_f_args = gCling->lookupFunctionArgs(namespace_N, "H_f", "");
+const clang::FunctionDecl* H_f_proto = gCling->lookupFunctionProto(namespace_N, "H_f", "");
+
+printf("H_f_args: 0x%lx\n", (unsigned long) H_f_args);
+//CHECK: H_f_args: 0x{{[1-9a-f][0-9a-f]*$}}
+H_f_args->print(llvm::outs());
+//CHECK-NEXT: void H_f() {
+//CHECK-NEXT:     int x = 1;
+//CHECK-NEXT: }
+
+printf("H_f_proto: 0x%lx\n", (unsigned long) H_f_proto);
+//CHECK: H_f_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+H_f_proto->print(llvm::outs());
+//CHECK-NEXT: void H_f() {
+//CHECK-NEXT:     int x = 1;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding a namespace function taking a single int argument.
+//
+
+const clang::FunctionDecl* H_a_args = gCling->lookupFunctionArgs(namespace_N, "H_a", "0");
+const clang::FunctionDecl* H_a_proto = gCling->lookupFunctionProto(namespace_N, "H_a", "int");
+
+printf("H_a_args: 0x%lx\n", (unsigned long) H_a_args);
+//CHECK: H_a_args: 0x{{[1-9a-f][0-9a-f]*$}}
+H_a_args->print(llvm::outs());
+//CHECK-NEXT: void H_a(int v) {
+//CHECK-NEXT:     int x = v;
+//CHECK-NEXT: }
+
+printf("H_a_proto: 0x%lx\n", (unsigned long) H_a_proto);
+//CHECK: H_a_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+H_a_proto->print(llvm::outs());
+//CHECK-NEXT: void H_a(int v) {
+//CHECK-NEXT:     int x = v;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding a namespace function taking an int and a double argument.
+//
+
+const clang::FunctionDecl* H_b_args = gCling->lookupFunctionArgs(namespace_N, "H_b", "0,0.0");
+const clang::FunctionDecl* H_b_proto = gCling->lookupFunctionProto(namespace_N, "H_b", "int,double");
+
+printf("H_b_args: 0x%lx\n", (unsigned long) H_b_args);
+//CHECK: H_b_args: 0x{{[1-9a-f][0-9a-f]*$}}
+H_b_args->print(llvm::outs());
+//CHECK-NEXT: void H_b(int vi, double vd) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     double y = vd;
+//CHECK-NEXT: }
+
+printf("H_b_proto: 0x%lx\n", (unsigned long) H_b_proto);
+//CHECK: H_b_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+H_b_proto->print(llvm::outs());
+//CHECK-NEXT: void H_b(int vi, double vd) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     double y = vd;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding a namespace overloaded function.
+//
+
+const clang::FunctionDecl* H_c1_args = gCling->lookupFunctionArgs(namespace_N, "H_c", "0,0");
+const clang::FunctionDecl* H_c1_proto = gCling->lookupFunctionProto(namespace_N, "H_c", "int,int");
+
+printf("H_c1_args: 0x%lx\n", (unsigned long) H_c1_args);
+//CHECK: H_c1_args: 0x{{[1-9a-f][0-9a-f]*$}}
+H_c1_args->print(llvm::outs());
+//CHECK-NEXT: void H_c(int vi, int vj) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     int y = vj;
+//CHECK-NEXT: }
+
+printf("H_c1_proto: 0x%lx\n", (unsigned long) H_c1_proto);
+//CHECK: H_c1_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+H_c1_proto->print(llvm::outs());
+//CHECK-NEXT: void H_c(int vi, int vj) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     int y = vj;
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* H_c2_args = gCling->lookupFunctionArgs(namespace_N, "H_c", "0,0.0");
+const clang::FunctionDecl* H_c2_proto = gCling->lookupFunctionProto(namespace_N, "H_c", "int,double");
+
+printf("H_c2_args: 0x%lx\n", (unsigned long) H_c2_args);
+//CHECK: H_c2_args: 0x{{[1-9a-f][0-9a-f]*$}}
+H_c2_args->print(llvm::outs());
+//CHECK-NEXT: void H_c(int vi, double vd) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     double y = vd;
+//CHECK-NEXT: }
+
+printf("H_c2_proto: 0x%lx\n", (unsigned long) H_c2_proto);
+//CHECK: H_c2_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+H_c2_proto->print(llvm::outs());
+//CHECK-NEXT: void H_c(int vi, double vd) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     double y = vd;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding simple namespace template instantiations.
+//
+
+const clang::FunctionDecl* H_d1_args = gCling->lookupFunctionArgs(namespace_N, "H_d<int>", "0");
+const clang::FunctionDecl* H_d1_proto = gCling->lookupFunctionProto(namespace_N, "H_d<int>", "int");
+
+printf("H_d1_args: 0x%lx\n", (unsigned long) H_d1_args);
+//CHECK: H_d1_args: 0x{{[1-9a-f][0-9a-f]*$}}
+H_d1_args->print(llvm::outs());
+//CHECK-NEXT: void H_d(int v) {
+//CHECK-NEXT:     int x = v;
+//CHECK-NEXT: }
+
+printf("H_d1_proto: 0x%lx\n", (unsigned long) H_d1_proto);
+//CHECK: H_d1_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+H_d1_proto->print(llvm::outs());
+//CHECK-NEXT: void H_d(int v) {
+//CHECK-NEXT:     int x = v;
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* H_d2_args = gCling->lookupFunctionArgs(namespace_N, "H_d<double>", "0.0");
+const clang::FunctionDecl* H_d2_proto = gCling->lookupFunctionProto(namespace_N, "H_d<double>", "double");
+
+printf("H_d2_args: 0x%lx\n", (unsigned long) H_d2_args);
+//CHECK: H_d2_args: 0x{{[1-9a-f][0-9a-f]*$}}
+H_d2_args->print(llvm::outs());
+//CHECK-NEXT: void H_d(double v) {
+//CHECK-NEXT:     double x = v;
+//CHECK-NEXT: }
+
+printf("H_d2_proto: 0x%lx\n", (unsigned long) H_d2_proto);
+//CHECK: H_d2_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+H_d2_proto->print(llvm::outs());
+//CHECK-NEXT: void H_d(double v) {
+//CHECK-NEXT:     double x = v;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding a global function taking no args, from a nested namespace.
+//
+
+const clang::FunctionDecl* G_f_args = gCling->lookupFunctionArgs(namespace_N, "G_f", "");
+const clang::FunctionDecl* G_f_proto = gCling->lookupFunctionProto(namespace_N, "G_f", "");
+
+printf("G_f_args: 0x%lx\n", (unsigned long) G_f_args);
+//CHECK: G_f_args: 0x{{[1-9a-f][0-9a-f]*$}}
+G_f_args->print(llvm::outs());
+//CHECK-NEXT: void G_f() {
+//CHECK-NEXT:     int x = 1;
+//CHECK-NEXT: }
+
+printf("G_f_proto: 0x%lx\n", (unsigned long) G_f_proto);
+//CHECK: G_f_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+G_f_proto->print(llvm::outs());
+//CHECK-NEXT: void G_f() {
+//CHECK-NEXT:     int x = 1;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding a global function taking a single int argument,
+//  from a nested namespace.
+//
+
+const clang::FunctionDecl* G_a_args = gCling->lookupFunctionArgs(namespace_N, "G_a", "0");
+const clang::FunctionDecl* G_a_proto = gCling->lookupFunctionProto(namespace_N, "G_a", "int");
+
+printf("G_a_args: 0x%lx\n", (unsigned long) G_a_args);
+//CHECK: G_a_args: 0x{{[1-9a-f][0-9a-f]*$}}
+G_a_args->print(llvm::outs());
+//CHECK-NEXT: void G_a(int v) {
+//CHECK-NEXT:     int x = v;
+//CHECK-NEXT: }
+
+printf("G_a_proto: 0x%lx\n", (unsigned long) G_a_proto);
+//CHECK: G_a_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+G_a_proto->print(llvm::outs());
+//CHECK-NEXT: void G_a(int v) {
+//CHECK-NEXT:     int x = v;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding a global function taking an int and a double argument,
+//  from a nested namespace.
+//
+
+const clang::FunctionDecl* G_b_args = gCling->lookupFunctionArgs(namespace_N, "G_b", "0,0.0");
+const clang::FunctionDecl* G_b_proto = gCling->lookupFunctionProto(namespace_N, "G_b", "int,double");
+
+printf("G_b_args: 0x%lx\n", (unsigned long) G_b_args);
+//CHECK: G_b_args: 0x{{[1-9a-f][0-9a-f]*$}}
+G_b_args->print(llvm::outs());
+//CHECK-NEXT: void G_b(int vi, double vd) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     double y = vd;
+//CHECK-NEXT: }
+
+printf("G_b_proto: 0x%lx\n", (unsigned long) G_b_proto);
+//CHECK: G_b_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+G_b_proto->print(llvm::outs());
+//CHECK-NEXT: void G_b(int vi, double vd) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     double y = vd;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding a global overloaded function, from a nested namespace.
+//
+
+const clang::FunctionDecl* G_c1_args = gCling->lookupFunctionArgs(namespace_N, "G_c", "0,0");
+const clang::FunctionDecl* G_c1_proto = gCling->lookupFunctionProto(namespace_N, "G_c", "int,int");
+
+printf("G_c1_args: 0x%lx\n", (unsigned long) G_c1_args);
+//CHECK: G_c1_args: 0x{{[1-9a-f][0-9a-f]*$}}
+G_c1_args->print(llvm::outs());
+//CHECK-NEXT: void G_c(int vi, int vj) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     int y = vj;
+//CHECK-NEXT: }
+
+printf("G_c1_proto: 0x%lx\n", (unsigned long) G_c1_proto);
+//CHECK: G_c1_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+G_c1_proto->print(llvm::outs());
+//CHECK-NEXT: void G_c(int vi, int vj) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     int y = vj;
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* G_c2_args = gCling->lookupFunctionArgs(namespace_N, "G_c", "0,0.0");
+const clang::FunctionDecl* G_c2_proto = gCling->lookupFunctionProto(namespace_N, "G_c", "int,double");
+
+printf("G_c2_args: 0x%lx\n", (unsigned long) G_c2_args);
+//CHECK: G_c2_args: 0x{{[1-9a-f][0-9a-f]*$}}
+G_c2_args->print(llvm::outs());
+//CHECK-NEXT: void G_c(int vi, double vd) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     double y = vd;
+//CHECK-NEXT: }
+
+printf("G_c2_proto: 0x%lx\n", (unsigned long) G_c2_proto);
+//CHECK: G_c2_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+G_c2_proto->print(llvm::outs());
+//CHECK-NEXT: void G_c(int vi, double vd) {
+//CHECK-NEXT:     int x = vi;
+//CHECK-NEXT:     double y = vd;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding simple global template instantiations,
+//  from a nested namespace.
+//
+
+const clang::FunctionDecl* G_d1_args = gCling->lookupFunctionArgs(namespace_N, "G_d<int>", "0");
+const clang::FunctionDecl* G_d1_proto = gCling->lookupFunctionProto(namespace_N, "G_d<int>", "int");
+
+printf("G_d1_args: 0x%lx\n", (unsigned long) G_d1_args);
+//CHECK: G_d1_args: 0x{{[1-9a-f][0-9a-f]*$}}
+G_d1_args->print(llvm::outs());
+//CHECK-NEXT: void G_d(int v) {
+//CHECK-NEXT:     int x = v;
+//CHECK-NEXT: }
+
+printf("G_d1_proto: 0x%lx\n", (unsigned long) G_d1_proto);
+//CHECK: G_d1_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+G_d1_proto->print(llvm::outs());
+//CHECK-NEXT: void G_d(int v) {
+//CHECK-NEXT:     int x = v;
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* G_d2_args = gCling->lookupFunctionArgs(namespace_N, "G_d<double>", "0.0");
+const clang::FunctionDecl* G_d2_proto = gCling->lookupFunctionProto(namespace_N, "G_d<double>", "double");
+
+printf("G_d2_args: 0x%lx\n", (unsigned long) G_d2_args);
+//CHECK: G_d2_args: 0x{{[1-9a-f][0-9a-f]*$}}
+G_d2_args->print(llvm::outs());
+//CHECK-NEXT: void G_d(double v) {
+//CHECK-NEXT:     double x = v;
+//CHECK-NEXT: }
+
+printf("G_d2_proto: 0x%lx\n", (unsigned long) G_d2_proto);
+//CHECK: G_d2_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+G_d2_proto->print(llvm::outs());
+//CHECK-NEXT: void G_d(double v) {
+//CHECK-NEXT:     double x = v;
+//CHECK-NEXT: }
+
+
+
 
 
 
