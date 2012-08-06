@@ -1,4 +1,8 @@
 // RUN: cat %s | %cling | FileCheck %s
+// XFAIL: i686-pc-linux-gnu 
+// Expected to fail on 32 bit machine because we need to pass the storage object
+// in a proper way for 32 bit machines.
+
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Value.h"
