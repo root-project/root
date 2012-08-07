@@ -387,7 +387,7 @@ private:
    double m_B_d;
    int* m_B_ip;
 public:
-   ~B() { delete m_B_ip; m_B_ip = 0; }
+   virtual ~B() { delete m_B_ip; m_B_ip = 0; }
    B() : m_B_i(0), m_B_d(0.0), m_B_ip(0) {}
    B(int vi, double vd) : m_B_i(vi), m_B_d(vd), m_B_ip(0) {}
    template <class T> B(T v) : m_B_i(0), m_B_d(0.0), m_B_ip(0) { m_B_i = (T) v; }
@@ -399,6 +399,14 @@ public:
    void B_j(int vi, double vd) { int x = vi; double y = vd; }
    template <class T> void B_k(T v) { T x = v; }
    void B_m(const int& v) { int y = v; }
+   void* operator new(std::size_t sz) { return ::operator new(sz); }
+   void* operator new(std::size_t sz, void* arena) { return arena; }
+   void* operator new[](std::size_t sz) { return ::operator new[](sz); }
+   void* operator new[](std::size_t sz, void* arena) { return arena; }
+   void operator delete(void* vp) { ::operator delete(vp); }
+   void operator delete(void* vp, void* arena) {}
+   void operator delete[](void* vp) { ::operator delete[](vp); }
+   void operator delete[](void* vp, void* arena) {}
 };
 class A : public B {
 private:
@@ -412,6 +420,14 @@ public:
    void A_j(int vi, double vd) { int x = vi; double y = vd; }
    template <class T> void A_k(T v) { T x = v; }
    void A_m(const int& v) { int y = v; }
+   void* operator new(std::size_t sz) { return ::operator new(sz); }
+   void* operator new(std::size_t sz, void* arena) { return arena; }
+   void* operator new[](std::size_t sz) { return ::operator new[](sz); }
+   void* operator new[](std::size_t sz, void* arena) { return arena; }
+   void operator delete(void* vp) { ::operator delete(vp); }
+   void operator delete(void* vp, void* arena) {}
+   void operator delete[](void* vp) { ::operator delete[](vp); }
+   void operator delete[](void* vp, void* arena) {}
 };
 // Note: In CINT, looking up a class template specialization causes
 //       instantiation, but looking up a function template specialization
@@ -421,6 +437,11 @@ template void A::A_k(int);
 template void A::A_k(double);
 template void A::B_k(int);
 template void A::B_k(double);
+B b_obj;
+B* b_ptr = &b_obj;
+B* b_ary = new B[3];
+char b_arena[sizeof(B)*10];
+char b_ary_arena[256];
 .rawInput 0
 
 const clang::Decl* class_A = gCling->lookupScope("A");
@@ -911,7 +932,7 @@ printf("func_B_dtr_args name: %s\n", buf.c_str());
 //CHECK-NEXT: func_B_dtr_args name: B::~B
 
 func_B_dtr_args->print(llvm::outs());
-//CHECK-NEXT: void ~B() {
+//CHECK-NEXT: virtual void ~B() {
 //CHECK-NEXT:     delete this->m_B_ip;
 //CHECK-NEXT:     this->m_B_ip = 0;
 //CHECK-NEXT: }
@@ -925,9 +946,247 @@ printf("func_B_dtr_proto name: %s\n", buf.c_str());
 //CHECK-NEXT: func_B_dtr_proto name: B::~B
 
 func_B_dtr_proto->print(llvm::outs());
-//CHECK-NEXT: void ~B() {
+//CHECK-NEXT: virtual void ~B() {
 //CHECK-NEXT:     delete this->m_B_ip;
 //CHECK-NEXT:     this->m_B_ip = 0;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding free store operator new.
+//
+
+const clang::FunctionDecl* func_B_new_args = gCling->lookupFunctionArgs(class_B, "operator new", "sizeof(B)");
+const clang::FunctionDecl* func_B_new_proto = gCling->lookupFunctionProto(class_B, "operator new", "std::size_t");
+
+printf("func_B_new_args: 0x%lx\n", (unsigned long) func_B_new_args);
+//CHECK: func_B_new_args: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_new_args)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_new_args name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_new_args name: B::operator new
+
+func_B_new_args->print(llvm::outs());
+//CHECK-NEXT: void *operator new(std::size_t sz) {
+//CHECK-NEXT:     return ::operator new(sz);
+//CHECK-NEXT: }
+
+printf("func_B_new_proto: 0x%lx\n", (unsigned long) func_B_new_proto);
+//CHECK: func_B_new_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_new_proto)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_new_proto name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_new_proto name: B::operator new
+
+func_B_new_proto->print(llvm::outs());
+//CHECK-NEXT: void *operator new(std::size_t sz) {
+//CHECK-NEXT:     return ::operator new(sz);
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* func_B_new_plcmt_args = gCling->lookupFunctionArgs(class_B, "operator new", "sizeof(B),((B*)&b_arena[0])+2");
+const clang::FunctionDecl* func_B_new_plcmt_proto = gCling->lookupFunctionProto(class_B, "operator new", "std::size_t,void*");
+
+printf("func_B_new_plcmt_args: 0x%lx\n", (unsigned long) func_B_new_plcmt_args);
+//CHECK: func_B_new_plcmt_args: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_new_plcmt_args)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_new_plcmt_args name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_new_plcmt_args name: B::operator new
+
+func_B_new_plcmt_args->print(llvm::outs());
+//CHECK-NEXT: void *operator new(std::size_t sz, void *arena) {
+//CHECK-NEXT:     return arena;
+//CHECK-NEXT: }
+
+printf("func_B_new_plcmt_proto: 0x%lx\n", (unsigned long) func_B_new_plcmt_proto);
+//CHECK: func_B_new_plcmt_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_new_plcmt_proto)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_new_plcmt_proto name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_new_plcmt_proto name: B::operator new
+
+func_B_new_plcmt_proto->print(llvm::outs());
+//CHECK-NEXT: void *operator new(std::size_t sz, void *arena) {
+//CHECK-NEXT:     return arena;
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* func_B_new_ary_args = gCling->lookupFunctionArgs(class_B, "operator new[]", "sizeof(B)*3");
+const clang::FunctionDecl* func_B_new_ary_proto = gCling->lookupFunctionProto(class_B, "operator new[]", "std::size_t");
+
+printf("func_B_new_ary_args: 0x%lx\n", (unsigned long) func_B_new_ary_args);
+//CHECK: func_B_new_ary_args: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_new_ary_args)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_new_ary_args name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_new_ary_args name: B::operator new[]
+
+func_B_new_ary_args->print(llvm::outs());
+//CHECK-NEXT: void *operator new[](std::size_t sz) {
+//CHECK-NEXT:     return ::operator new[](sz);
+//CHECK-NEXT: }
+
+printf("func_B_new_ary_proto: 0x%lx\n", (unsigned long) func_B_new_ary_proto);
+//CHECK: func_B_new_ary_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_new_ary_proto)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_new_ary_proto name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_new_ary_proto name: B::operator new[]
+
+func_B_new_ary_proto->print(llvm::outs());
+//CHECK-NEXT: void *operator new[](std::size_t sz) {
+//CHECK-NEXT:     return ::operator new[](sz);
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* func_B_new_ary_plcmt_args = gCling->lookupFunctionArgs(class_B, "operator new[]", "sizeof(B)*3,&b_ary_arena[0]");
+const clang::FunctionDecl* func_B_new_ary_plcmt_proto = gCling->lookupFunctionProto(class_B, "operator new[]", "std::size_t,void*");
+
+printf("func_B_new_ary_plcmt_args: 0x%lx\n", (unsigned long) func_B_new_ary_plcmt_args);
+//CHECK: func_B_new_ary_plcmt_args: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_new_ary_plcmt_args)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_new_ary_plcmt_args name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_new_ary_plcmt_args name: B::operator new[]
+
+func_B_new_ary_plcmt_args->print(llvm::outs());
+//CHECK-NEXT: void *operator new[](std::size_t sz, void *arena) {
+//CHECK-NEXT:     return arena;
+//CHECK-NEXT: }
+
+printf("func_B_new_ary_plcmt_proto: 0x%lx\n", (unsigned long) func_B_new_ary_plcmt_proto);
+//CHECK: func_B_new_ary_plcmt_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_new_ary_plcmt_proto)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_new_ary_plcmt_proto name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_new_ary_plcmt_proto name: B::operator new[]
+
+func_B_new_ary_plcmt_proto->print(llvm::outs());
+//CHECK-NEXT: void *operator new[](std::size_t sz, void *arena) {
+//CHECK-NEXT:     return arena;
+//CHECK-NEXT: }
+
+//
+//  Test finding free store operator delete.
+//
+
+const clang::FunctionDecl* func_B_del_args = gCling->lookupFunctionArgs(class_B, "operator delete", "b_ptr");
+const clang::FunctionDecl* func_B_del_proto = gCling->lookupFunctionProto(class_B, "operator delete", "void*");
+
+printf("func_B_del_args: 0x%lx\n", (unsigned long) func_B_del_args);
+//CHECK: func_B_del_args: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_del_args)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_del_args name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_del_args name: B::operator delete
+
+func_B_del_args->print(llvm::outs());
+//CHECK-NEXT: void operator delete(void *vp) {
+//CHECK-NEXT:     ::operator delete(vp);
+//CHECK-NEXT: }
+
+printf("func_B_del_proto: 0x%lx\n", (unsigned long) func_B_del_proto);
+//CHECK: func_B_del_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_del_proto)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_del_proto name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_del_proto name: B::operator delete
+
+func_B_del_proto->print(llvm::outs());
+//CHECK-NEXT: void operator delete(void *vp) {
+//CHECK-NEXT:     ::operator delete(vp);
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* func_B_del_plcmt_args = gCling->lookupFunctionArgs(class_B, "operator delete", "((B*)&b_arena[0])+2,&b_arena[0]");
+const clang::FunctionDecl* func_B_del_plcmt_proto = gCling->lookupFunctionProto(class_B, "operator delete", "void*,void*");
+
+printf("func_B_del_plcmt_args: 0x%lx\n", (unsigned long) func_B_del_plcmt_args);
+//CHECK: func_B_del_plcmt_args: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_del_plcmt_args)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_del_plcmt_args name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_del_plcmt_args name: B::operator delete
+
+func_B_del_plcmt_args->print(llvm::outs());
+//CHECK-NEXT: void operator delete(void *vp, void *arena) {
+//CHECK-NEXT: }
+
+printf("func_B_del_plcmt_proto: 0x%lx\n", (unsigned long) func_B_del_plcmt_proto);
+//CHECK: func_B_del_plcmt_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_del_plcmt_proto)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_del_plcmt_proto name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_del_plcmt_proto name: B::operator delete
+
+func_B_del_plcmt_proto->print(llvm::outs());
+//CHECK-NEXT: void operator delete(void *vp, void *arena) {
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* func_B_del_ary_args = gCling->lookupFunctionArgs(class_B, "operator delete[]", "b_ary");
+const clang::FunctionDecl* func_B_del_ary_proto = gCling->lookupFunctionProto(class_B, "operator delete[]", "void*");
+
+printf("func_B_del_ary_args: 0x%lx\n", (unsigned long) func_B_del_ary_args);
+//CHECK: func_B_del_ary_args: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_del_ary_args)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_del_ary_args name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_del_ary_args name: B::operator delete[]
+
+func_B_del_ary_args->print(llvm::outs());
+//CHECK-NEXT: void operator delete[](void *vp) {
+//CHECK-NEXT:     ::operator delete[](vp);
+//CHECK-NEXT: }
+
+printf("func_B_del_ary_proto: 0x%lx\n", (unsigned long) func_B_del_ary_proto);
+//CHECK: func_B_del_ary_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_del_ary_proto)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_del_ary_proto name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_del_ary_proto name: B::operator delete[]
+
+func_B_del_ary_proto->print(llvm::outs());
+//CHECK-NEXT: void operator delete[](void *vp) {
+//CHECK-NEXT:     ::operator delete[](vp);
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* func_B_del_ary_plcmt_args = gCling->lookupFunctionArgs(class_B, "operator delete[]", "(B*)b_arena[3],&b_arena[0]");
+const clang::FunctionDecl* func_B_del_ary_plcmt_proto = gCling->lookupFunctionProto(class_B, "operator delete[]", "void*,void*");
+
+printf("func_B_del_ary_plcmt_args: 0x%lx\n", (unsigned long) func_B_del_ary_plcmt_args);
+//CHECK: func_B_del_ary_plcmt_args: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_del_ary_plcmt_args)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_del_ary_plcmt_args name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_del_ary_plcmt_args name: B::operator delete[]
+
+func_B_del_ary_plcmt_args->print(llvm::outs());
+//CHECK-NEXT: void operator delete[](void *vp, void *arena) {
+//CHECK-NEXT: }
+
+printf("func_B_del_ary_plcmt_proto: 0x%lx\n", (unsigned long) func_B_del_ary_plcmt_proto);
+//CHECK: func_B_del_ary_plcmt_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_del_ary_plcmt_proto)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_del_ary_plcmt_proto name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_del_ary_plcmt_proto name: B::operator delete[]
+
+func_B_del_ary_plcmt_proto->print(llvm::outs());
+//CHECK-NEXT: void operator delete[](void *vp, void *arena) {
 //CHECK-NEXT: }
 
 
@@ -938,4 +1197,10 @@ func_B_dtr_proto->print(llvm::outs());
 
 "abc"
 //CHECK: (const char [4]) @0x{{[0-9a-f]+}}
+
+//
+//  Cleanup.
+//
+
+delete[] b_ary;
 
