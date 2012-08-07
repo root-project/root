@@ -363,7 +363,6 @@ public:
    ~tcling_TypeInfo();
    explicit tcling_TypeInfo(cling::Interpreter*);
    explicit tcling_TypeInfo(cling::Interpreter*, const char* name);
-   explicit tcling_TypeInfo(G__value* val);
    tcling_TypeInfo(const tcling_TypeInfo&);
    tcling_TypeInfo& operator=(const tcling_TypeInfo&);
    G__TypeInfo* GetTypeInfo() const;
@@ -2524,31 +2523,6 @@ tcling_TypeInfo::tcling_TypeInfo(cling::Interpreter* interp, const char* name)
    }
    fDecl = const_cast<clang::Decl*>(decl);
    //fprintf(stderr, "tcling_TypeInfo(name): cling class found: %s  "
-   //        "tagnum: %d  Decl: 0x%lx\n", name, tagnum, (long) fDecl);
-}
-
-tcling_TypeInfo::tcling_TypeInfo(G__value* val)
-   : fTypeInfo(0), fClassInfo(0), fDecl(0)
-{
-   fTypeInfo = new G__TypeInfo(*val);
-   int tagnum = fTypeInfo->Tagnum();
-   if (tagnum == -1) {
-      fClassInfo = new G__ClassInfo;
-      return;
-   }
-   fClassInfo = new G__ClassInfo(tagnum);
-   return;
-   const char* name = fClassInfo->Fullname();
-   //fprintf(stderr, "tcling_TypeInfo(val): looking up cling class: %s  "
-   //        "tagnum: %d\n", name, tagnum);
-   const clang::Decl* decl = fInterp->lookupScope(name);
-   if (!decl) {
-      //fprintf(stderr, "tcling_TypeInfo(val): cling class not found: %s  "
-      //        "tagnum: %d\n", name, tagnum);
-      return;
-   }
-   fDecl = const_cast<clang::Decl*>(decl);
-   //fprintf(stderr, "tcling_TypeInfo(val): cling class found: %s  "
    //        "tagnum: %d  Decl: 0x%lx\n", name, tagnum, (long) fDecl);
 }
 
@@ -6279,15 +6253,6 @@ ClassInfo_t* TCintWithCling::ClassInfo_Factory(const char* name) const
 }
 
 //______________________________________________________________________________
-ClassInfo_t* TCintWithCling::ClassInfo_Factory(G__value* pvalue) const
-{
-   Fatal("ClassInfo_Factory(G__value *pvalue)",
-      "Can not / should not be implemented ...");
-   return 0;
-   // return new G__ClassInfo(*pvalue);
-}
-
-//______________________________________________________________________________
 int TCintWithCling::ClassInfo_GetMethodNArg(ClassInfo_t* cinfo, const char* method, const char* proto) const
 {
    tcling_ClassInfo* tcling_info = (tcling_ClassInfo*) cinfo;
@@ -6845,15 +6810,6 @@ void TCintWithCling::TypeInfo_Delete(TypeInfo_t* tinfo) const
 TypeInfo_t* TCintWithCling::TypeInfo_Factory() const
 {
    return (TypeInfo_t*) new tcling_TypeInfo(fInterpreter);
-}
-
-//______________________________________________________________________________
-TypeInfo_t* TCintWithCling::TypeInfo_Factory(G__value* pvalue) const
-{
-   Fatal("TypeInfo_Factory(G__value* pvalue)",
-      "Can not / should not be implemented ...");
-   return 0;
-   //return (TypeInfo_t*) new tcling_TypeInfo(pvalue);
 }
 
 //______________________________________________________________________________
