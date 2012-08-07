@@ -161,6 +161,15 @@
 }
 
 {
+   String reallocated in TStreamerInfo::Compile
+   Memcheck:Leak
+   fun:_Znam
+   fun:_ZN7TString7ReplaceEiiPKci
+   fun:_ZN13TStreamerInfo7CompileEv
+
+}
+
+{
    StreamerInfo virtual table mechanism
    Memcheck:Leak
    fun:_Znam
