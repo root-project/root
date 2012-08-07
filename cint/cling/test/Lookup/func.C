@@ -1,9 +1,14 @@
 // RUN: cat %s | %cling 2>&1 | FileCheck %s
 // Test Interpreter::lookupFunctionArgs()
+
 #include "cling/Interpreter/Interpreter.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/PrettyPrinter.h"
 
 #include <cstdio>
+#include <string>
+
 using namespace std;
 
 
@@ -11,9 +16,17 @@ using namespace std;
 //  We need to fetch the global scope declaration,
 //  otherwise known as the translation unit decl.
 //
+
 const clang::Decl* G = gCling->lookupScope("");
 printf("G: 0x%lx\n", (unsigned long) G);
 //CHECK: G: 0x{{[1-9a-f][0-9a-f]*$}}
+
+//
+//  Some tools for printing.
+//
+
+std::string buf;
+clang::PrintingPolicy Policy(G->getASTContext().getPrintingPolicy());
 
 
 
@@ -369,6 +382,13 @@ H_d2_proto->print(llvm::outs());
 
 .rawInput 1
 class B {
+private:
+   int m_B_i;
+   double m_B_d;
+public:
+   B() : m_B_i(0), m_B_d(0.0) {}
+   B(int vi, double vd) : m_B_i(vi), m_B_d(vd) {}
+   template <class T> B(T v) { m_B_i = (T) v; }
    void B_f() { int x = 1; }
    void B_g(int v) { int x = v; }
    void B_h(int vi, double vd) { int x = vi; double y = vd; }
@@ -377,6 +397,10 @@ class B {
    template <class T> void B_k(T v) { T x = v; }
 };
 class A : public B {
+private:
+   int m_A_i;
+   double m_A_d;
+public:
    void A_f() { int x = 1; }
    void A_g(int v) { int x = v; }
    void A_h(int vi, double vd) { int x = vi; double y = vd; }
@@ -405,6 +429,72 @@ printf("class_B: 0x%lx\n", (unsigned long) class_B);
 
 
 //
+//  Test finding constructors.
+//
+//
+const clang::FunctionDecl* func_B_ctr1_args = gCling->lookupFunctionArgs(class_B, "B", "");
+const clang::FunctionDecl* func_B_ctr1_proto = gCling->lookupFunctionProto(class_B, "B", "");
+
+printf("func_B_ctr1_args: 0x%lx\n", (unsigned long) func_B_ctr1_args);
+//CHECK: func_B_ctr1_args: 0x{{[1-9a-f][0-9a-f]*$}}
+func_B_ctr1_args->print(llvm::outs());
+//CHECK-NEXT: B() : m_B_i(0), m_B_d(0) {
+//CHECK-NEXT: }
+
+printf("func_B_ctr1_proto: 0x%lx\n", (unsigned long) func_B_ctr1_proto);
+//CHECK: func_B_ctr1_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+func_B_ctr1_proto->print(llvm::outs());
+//CHECK-NEXT: B() : m_B_i(0), m_B_d(0) {
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* func_B_ctr2_args = gCling->lookupFunctionArgs(class_B, "B", "0,0.0");
+const clang::FunctionDecl* func_B_ctr2_proto = gCling->lookupFunctionProto(class_B, "B", "int,double");
+
+printf("func_B_ctr2_args: 0x%lx\n", (unsigned long) func_B_ctr2_args);
+//CHECK: func_B_ctr2_args: 0x{{[1-9a-f][0-9a-f]*$}}
+func_B_ctr2_args->print(llvm::outs());
+//CHECK-NEXT: B(int vi, double vd) : m_B_i(vi), m_B_d(vd) {
+//CHECK-NEXT: }
+
+printf("func_B_ctr2_proto: 0x%lx\n", (unsigned long) func_B_ctr2_proto);
+//CHECK: func_B_ctr2_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+func_B_ctr2_proto->print(llvm::outs());
+//CHECK-NEXT: B(int vi, double vd) : m_B_i(vi), m_B_d(vd) {
+//CHECK-NEXT: }
+
+B* force_B_char_ctr = new B('a');
+const clang::FunctionDecl* func_B_ctr3_args = gCling->lookupFunctionArgs(class_B, "B", "'a'");
+const clang::FunctionDecl* func_B_ctr3_proto = gCling->lookupFunctionProto(class_B, "B", "char");
+
+printf("func_B_ctr3_args: 0x%lx\n", (unsigned long) func_B_ctr3_args);
+//CHECK: func_B_ctr3_args: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_ctr3_args)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_ctr3_args name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_ctr3_args name: B::B<char>
+
+func_B_ctr3_args->print(llvm::outs());
+//CHECK-NEXT:  {
+//CHECK-NEXT:     this->m_B_i = (char)v; 
+//CHECK-NEXT: }
+
+printf("func_B_ctr3_proto: 0x%lx\n", (unsigned long) func_B_ctr3_proto);
+//CHECK: func_B_ctr3_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_ctr3_proto)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_ctr3_proto name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_ctr3_proto name: B::B<char>
+
+func_B_ctr3_proto->print(llvm::outs());
+//CHECK-NEXT:  {
+//CHECK-NEXT:     this->m_B_i = (char)v; 
+//CHECK-NEXT: }
+
+
+
+//
 //  Test finding a member function taking no args.
 //
 
@@ -412,7 +502,7 @@ const clang::FunctionDecl* func_A_f_args = gCling->lookupFunctionArgs(class_A, "
 const clang::FunctionDecl* func_A_f_proto = gCling->lookupFunctionProto(class_A, "A_f", "");
 
 printf("func_A_f_args: 0x%lx\n", (unsigned long) func_A_f_args);
-//CHECK-NEXT: func_A_f_args: 0x{{[1-9a-f][0-9a-f]*$}}
+//CHECK: func_A_f_args: 0x{{[1-9a-f][0-9a-f]*$}}
 func_A_f_args->print(llvm::outs());
 //CHECK-NEXT: void A_f() {
 //CHECK-NEXT:     int x = 1;
