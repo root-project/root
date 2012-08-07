@@ -398,6 +398,7 @@ public:
    void B_j(int vi, int vj) { int x = vi; int y = vj; }
    void B_j(int vi, double vd) { int x = vi; double y = vd; }
    template <class T> void B_k(T v) { T x = v; }
+   void B_m(const int& v) { int y = v; }
 };
 class A : public B {
 private:
@@ -410,6 +411,7 @@ public:
    void A_j(int vi, int vj) { int x = vi; int y = vj; }
    void A_j(int vi, double vd) { int x = vi; double y = vd; }
    template <class T> void A_k(T v) { T x = v; }
+   void A_m(const int& v) { int y = v; }
 };
 // Note: In CINT, looking up a class template specialization causes
 //       instantiation, but looking up a function template specialization
@@ -587,6 +589,29 @@ func_A_k2_proto->print(llvm::outs());
 
 
 //
+//  Test finding a member function taking a const int reference arg.
+//
+
+const clang::FunctionDecl* func_A_m_args = gCling->lookupFunctionArgs(class_A, "A_m", "0");
+const clang::FunctionDecl* func_A_m_proto = gCling->lookupFunctionProto(class_A, "A_m", "const int&");
+
+printf("func_A_m_args: 0x%lx\n", (unsigned long) func_A_m_args);
+//CHECK: func_A_m_args: 0x{{[1-9a-f][0-9a-f]*$}}
+func_A_m_args->print(llvm::outs());
+//CHECK-NEXT: void A_m(const int &v) {
+//CHECK-NEXT:     int y = v;
+//CHECK-NEXT: }
+
+printf("func_A_m_proto: 0x%lx\n", (unsigned long) func_A_m_proto);
+//CHECK: func_A_m_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+func_A_m_proto->print(llvm::outs());
+//CHECK-NEXT: void A_m(const int &v) {
+//CHECK-NEXT:     int y = v;
+//CHECK-NEXT: }
+
+
+
+//
 //  Test finding a member function taking no args in a base class.
 //
 
@@ -738,6 +763,29 @@ printf("func_B_k2_proto: 0x%lx\n", (unsigned long) func_B_k2_proto);
 func_B_k2_proto->print(llvm::outs());
 //CHECK-NEXT: void B_k(double v) {
 //CHECK-NEXT:     double x = v;
+//CHECK-NEXT: }
+
+
+
+//
+//  Test finding a member function taking a const int reference arg in a base class.
+//
+
+const clang::FunctionDecl* func_B_m_args = gCling->lookupFunctionArgs(class_A, "B_m", "0");
+const clang::FunctionDecl* func_B_m_proto = gCling->lookupFunctionProto(class_A, "B_m", "const int&");
+
+printf("func_B_m_args: 0x%lx\n", (unsigned long) func_B_m_args);
+//CHECK: func_B_m_args: 0x{{[1-9a-f][0-9a-f]*$}}
+func_B_m_args->print(llvm::outs());
+//CHECK-NEXT: void B_m(const int &v) {
+//CHECK-NEXT:     int y = v;
+//CHECK-NEXT: }
+
+printf("func_B_m_proto: 0x%lx\n", (unsigned long) func_B_m_proto);
+//CHECK: func_B_m_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+func_B_m_proto->print(llvm::outs());
+//CHECK-NEXT: void B_m(const int &v) {
+//CHECK-NEXT:     int y = v;
 //CHECK-NEXT: }
 
 
