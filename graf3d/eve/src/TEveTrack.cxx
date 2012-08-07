@@ -125,10 +125,9 @@ TEveTrack::TEveTrack(TEveMCTrack* t, TEveTrackPropagator* prop):
    fMainColorPtr = &fLineColor;
 
    TParticlePDG* pdgp = t->GetPDG();
-   if (pdgp == 0) {
-      t->ResetPdgCode(); pdgp = t->GetPDG();
+   if (pdgp) {
+      fCharge = (Int_t) TMath::Nint(pdgp->Charge()/3);
    }
-   fCharge = (Int_t) TMath::Nint(pdgp->Charge()/3);
 
    SetName(t->GetName());
 }
