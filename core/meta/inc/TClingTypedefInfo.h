@@ -39,10 +39,15 @@ private:
 
 public:
 
-   explicit TClingTypedefInfo(cling::Interpreter *);
+   explicit TClingTypedefInfo(cling::Interpreter *interp)
+         : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0)
+   {
+      const clang::TranslationUnitDecl *TU = fInterp->getCI()->getASTContext().getTranslationUnitDecl();
+      const clang::DeclContext *DC = llvm::cast<clang::DeclContext>(TU);
+      fIter = DC->decls_begin();
+   }
+
    explicit TClingTypedefInfo(cling::Interpreter *, const char *);
-   TClingTypedefInfo(const TClingTypedefInfo &);
-   TClingTypedefInfo &operator=(const TClingTypedefInfo &);
 
    clang::Decl         *GetDecl() const;
    void                 Init(const char *name);

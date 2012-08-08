@@ -26,17 +26,6 @@
 #include "TClingTypedefInfo.h"
 
 //______________________________________________________________________________
-TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp)
-   : fInterp(interp), fFirstTime(true), fDescend(false),
-     fDecl(0)
-{
-   const clang::TranslationUnitDecl *TU =
-      fInterp->getCI()->getASTContext().getTranslationUnitDecl();
-   const clang::DeclContext *DC = llvm::cast<clang::DeclContext>(TU);
-   fIter = DC->decls_begin();
-}
-
-//______________________________________________________________________________
 TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
                                      const char *name)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0)
@@ -48,27 +37,6 @@ TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
    if (fDecl) {
       AdvanceToDecl(fDecl);
    }
-}
-
-//______________________________________________________________________________
-TClingTypedefInfo::TClingTypedefInfo(const TClingTypedefInfo &rhs)
-   : fInterp(rhs.fInterp), fFirstTime(rhs.fFirstTime), fDescend(rhs.fDescend),
-     fIter(rhs.fIter), fDecl(rhs.fDecl), fIterStack(rhs.fIterStack)
-{
-}
-
-//______________________________________________________________________________
-TClingTypedefInfo &TClingTypedefInfo::operator=(const TClingTypedefInfo &rhs)
-{
-   if (this != &rhs) {
-      fInterp = rhs.fInterp;
-      fFirstTime = rhs.fFirstTime;
-      fDescend = rhs.fDescend;
-      fIter = rhs.fIter;
-      fDecl = rhs.fDecl;
-      fIterStack = rhs.fIterStack;
-   }
-   return *this;
 }
 
 //______________________________________________________________________________
