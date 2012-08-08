@@ -80,7 +80,7 @@
    fun:_Zna?
    fun:_ZN7TString7ReplaceEiiPKci
    fun:_ZN7TStringaSEPKc
-   fun:_ZN9TDataType7SetTypeEPKc
+   ...
    fun:_ZN9TDataTypeC1EPv
 }
 
