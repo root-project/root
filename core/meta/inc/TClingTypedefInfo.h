@@ -26,13 +26,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class tcling_TypedefInfo {
+class TClingTypedefInfo {
 public:
-   ~tcling_TypedefInfo();
-   explicit tcling_TypedefInfo(cling::Interpreter*);
-   explicit tcling_TypedefInfo(cling::Interpreter*, const char*);
-   tcling_TypedefInfo(const tcling_TypedefInfo&);
-   tcling_TypedefInfo& operator=(const tcling_TypedefInfo&);
+   ~TClingTypedefInfo();
+   explicit TClingTypedefInfo(cling::Interpreter*);
+   explicit TClingTypedefInfo(cling::Interpreter*, const char*);
+   TClingTypedefInfo(const TClingTypedefInfo&);
+   TClingTypedefInfo& operator=(const TClingTypedefInfo&);
    G__TypedefInfo* GetTypedefInfo() const;
    clang::Decl* GetDecl() const;
    void Init(const char* name);
