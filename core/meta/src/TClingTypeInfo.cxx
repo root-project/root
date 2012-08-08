@@ -28,7 +28,7 @@
 
 
 
-tcling_TypeInfo::~tcling_TypeInfo()
+TClingTypeInfo::~TClingTypeInfo()
 {
    delete fTypeInfo;
    fTypeInfo = 0;
@@ -37,14 +37,14 @@ tcling_TypeInfo::~tcling_TypeInfo()
    fDecl = 0;
 }
 
-tcling_TypeInfo::tcling_TypeInfo(cling::Interpreter* interp)
+TClingTypeInfo::TClingTypeInfo(cling::Interpreter* interp)
    : fTypeInfo(0), fClassInfo(0), fInterp(interp), fDecl(0)
 {
    fTypeInfo = new G__TypeInfo;
    fClassInfo = new G__ClassInfo;
 }
 
-tcling_TypeInfo::tcling_TypeInfo(cling::Interpreter* interp, const char* name)
+TClingTypeInfo::TClingTypeInfo(cling::Interpreter* interp, const char* name)
    : fTypeInfo(0), fClassInfo(0), fInterp(interp), fDecl(0)
 {
    fTypeInfo = new G__TypeInfo(name);
@@ -55,20 +55,20 @@ tcling_TypeInfo::tcling_TypeInfo(cling::Interpreter* interp, const char* name)
    }
    fClassInfo = new G__ClassInfo(tagnum);
    return;
-   //fprintf(stderr, "tcling_TypeInfo(name): looking up cling class: %s  "
+   //fprintf(stderr, "TClingTypeInfo(name): looking up cling class: %s  "
    //        "tagnum: %d\n", name, tagnum);
    const clang::Decl* decl = fInterp->lookupScope(name);
    if (!decl) {
-      //fprintf(stderr, "tcling_TypeInfo(name): cling class not found: %s  "
+      //fprintf(stderr, "TClingTypeInfo(name): cling class not found: %s  "
       //        "tagnum: %d\n", name, tagnum);
       return;
    }
    fDecl = const_cast<clang::Decl*>(decl);
-   //fprintf(stderr, "tcling_TypeInfo(name): cling class found: %s  "
+   //fprintf(stderr, "TClingTypeInfo(name): cling class found: %s  "
    //        "tagnum: %d  Decl: 0x%lx\n", name, tagnum, (long) fDecl);
 }
 
-tcling_TypeInfo::tcling_TypeInfo(const tcling_TypeInfo& rhs)
+TClingTypeInfo::TClingTypeInfo(const TClingTypeInfo& rhs)
 {
    fTypeInfo = new G__TypeInfo(*rhs.fTypeInfo);
    fClassInfo = new G__ClassInfo(rhs.fClassInfo->Tagnum());
@@ -76,7 +76,7 @@ tcling_TypeInfo::tcling_TypeInfo(const tcling_TypeInfo& rhs)
    fDecl = rhs.fDecl;
 }
 
-tcling_TypeInfo& tcling_TypeInfo::operator=(const tcling_TypeInfo& rhs)
+TClingTypeInfo& TClingTypeInfo::operator=(const TClingTypeInfo& rhs)
 {
    if (this == &rhs) {
       return *this;
@@ -90,22 +90,22 @@ tcling_TypeInfo& tcling_TypeInfo::operator=(const tcling_TypeInfo& rhs)
    return *this;
 }
 
-G__TypeInfo* tcling_TypeInfo::GetTypeInfo() const
+G__TypeInfo* TClingTypeInfo::GetTypeInfo() const
 {
    return fTypeInfo;
 }
 
-G__ClassInfo* tcling_TypeInfo::GetClassInfo() const
+G__ClassInfo* TClingTypeInfo::GetClassInfo() const
 {
    return fClassInfo;
 }
 
-clang::Decl* tcling_TypeInfo::GetDecl() const
+clang::Decl* TClingTypeInfo::GetDecl() const
 {
    return fDecl;
 }
 
-void tcling_TypeInfo::Init(const char* name)
+void TClingTypeInfo::Init(const char* name)
 {
    fTypeInfo->Init(name);
    int tagnum = fTypeInfo->Tagnum();
@@ -117,45 +117,45 @@ void tcling_TypeInfo::Init(const char* name)
    fClassInfo  = new G__ClassInfo(tagnum);
    return;
    const char* fullname = fClassInfo->Fullname();
-   //fprintf(stderr, "tcling_TypeInfo::Init(name): looking up cling class: %s  "
+   //fprintf(stderr, "TClingTypeInfo::Init(name): looking up cling class: %s  "
    //        "tagnum: %d\n", fullname, tagnum);
    const clang::Decl* decl = fInterp->lookupScope(fullname);
    if (!decl) {
-      //fprintf(stderr, "tcling_TypeInfo::Init(name): cling class not found: %s  "
+      //fprintf(stderr, "TClingTypeInfo::Init(name): cling class not found: %s  "
       //        "tagnum: %d\n", fullname, tagnum);
       return;
    }
    fDecl = const_cast<clang::Decl*>(decl);
-   //fprintf(stderr, "tcling_TypeInfo::Init(name): cling class found: %s  "
+   //fprintf(stderr, "TClingTypeInfo::Init(name): cling class found: %s  "
    //        "tagnum: %d  Decl: 0x%lx\n", fullname, tagnum, (long) fDecl);
 }
 
-bool tcling_TypeInfo::IsValid() const
+bool TClingTypeInfo::IsValid() const
 {
    return fTypeInfo->IsValid();
 }
 
-const char* tcling_TypeInfo::Name() const
+const char* TClingTypeInfo::Name() const
 {
    return fTypeInfo->Name();
 }
 
-long tcling_TypeInfo::Property() const
+long TClingTypeInfo::Property() const
 {
    return fTypeInfo->Property();
 }
 
-int tcling_TypeInfo::RefType() const
+int TClingTypeInfo::RefType() const
 {
    return fTypeInfo->Reftype();
 }
 
-int tcling_TypeInfo::Size() const
+int TClingTypeInfo::Size() const
 {
    return fTypeInfo->Size();
 }
 
-const char* tcling_TypeInfo::TrueName() const
+const char* TClingTypeInfo::TrueName() const
 {
    return fTypeInfo->TrueName();
 }
