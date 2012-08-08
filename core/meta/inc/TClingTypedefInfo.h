@@ -36,15 +36,17 @@ public:
    G__TypedefInfo* GetTypedefInfo() const;
    clang::Decl* GetDecl() const;
    void Init(const char* name);
-   bool IsValid() const;
    bool IsValidCint() const;
    bool IsValidClang() const;
+   bool IsValid() const;
+   int AdvanceToDecl(const clang::Decl*);
+   int InternalNext();
+   int Next();
    long Property() const;
    int Size() const;
    const char* TrueName() const;
    const char* Name() const;
    const char* Title() const;
-   int Next();
 private:
    //
    //  CINT info.
@@ -56,8 +58,16 @@ private:
    //
    /// Cling interpreter, we do *not* own.
    cling::Interpreter* fInterp;
-   /// Clang AST Node for this typedef, we do *not* own.
+   /// We need to skip the first increment to support the cint Next() semantics.
+   bool fFirstTime;
+   /// Flag for signaling the need to descend on this advancement.
+   bool fDescend;
+   /// Current decl in scope.
+   clang::DeclContext::decl_iterator fIter;
+   /// Current decl.
    clang::Decl* fDecl;
+   /// Recursion stack for traversing nested scopes.
+   std::vector<clang::DeclContext::decl_iterator> fIterStack;
 };
 
 #endif // ROOT_TClingTypedefInfo
