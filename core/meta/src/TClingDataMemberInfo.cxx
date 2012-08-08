@@ -25,7 +25,7 @@
 
 #include "TClingDataMemberInfo.h"
 
-tcling_DataMemberInfo::~tcling_DataMemberInfo()
+TClingDataMemberInfo::~TClingDataMemberInfo()
 {
    // CINT material.
    delete fDataMemberInfo;
@@ -37,7 +37,7 @@ tcling_DataMemberInfo::~tcling_DataMemberInfo()
    fTClingClassInfo = 0;
 }
 
-tcling_DataMemberInfo::tcling_DataMemberInfo(cling::Interpreter* interp)
+TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter* interp)
    : fDataMemberInfo(0)
    , fClassInfo(0)
    , fInterp(interp)
@@ -53,7 +53,7 @@ tcling_DataMemberInfo::tcling_DataMemberInfo(cling::Interpreter* interp)
    InternalNext();
 }
 
-tcling_DataMemberInfo::tcling_DataMemberInfo(cling::Interpreter* interp,
+TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter* interp,
       tcling_ClassInfo* tcling_class_info)
    : fDataMemberInfo(0)
    , fClassInfo(0)
@@ -82,7 +82,7 @@ tcling_DataMemberInfo::tcling_DataMemberInfo(cling::Interpreter* interp,
    }
 }
 
-tcling_DataMemberInfo::tcling_DataMemberInfo(const tcling_DataMemberInfo& rhs)
+TClingDataMemberInfo::TClingDataMemberInfo(const TClingDataMemberInfo& rhs)
 {
    fDataMemberInfo = new G__DataMemberInfo(*rhs.fDataMemberInfo);
    fClassInfo = new G__ClassInfo(*rhs.fClassInfo);
@@ -93,8 +93,8 @@ tcling_DataMemberInfo::tcling_DataMemberInfo(const tcling_DataMemberInfo& rhs)
    fIterStack = rhs.fIterStack;
 }
 
-tcling_DataMemberInfo& tcling_DataMemberInfo::operator=(
-   const tcling_DataMemberInfo& rhs)
+TClingDataMemberInfo& TClingDataMemberInfo::operator=(
+   const TClingDataMemberInfo& rhs)
 {
    if (this == &rhs) {
       return *this;
@@ -112,27 +112,27 @@ tcling_DataMemberInfo& tcling_DataMemberInfo::operator=(
    return *this;
 }
 
-G__DataMemberInfo* tcling_DataMemberInfo::GetDataMemberInfo() const
+G__DataMemberInfo* TClingDataMemberInfo::GetDataMemberInfo() const
 {
    return fDataMemberInfo;
 }
 
-G__ClassInfo* tcling_DataMemberInfo::GetClassInfo() const
+G__ClassInfo* TClingDataMemberInfo::GetClassInfo() const
 {
    return fClassInfo;
 }
 
-tcling_ClassInfo* tcling_DataMemberInfo::GetTClingClassInfo() const
+tcling_ClassInfo* TClingDataMemberInfo::GetTClingClassInfo() const
 {
    return fTClingClassInfo;
 }
 
-clang::Decl* tcling_DataMemberInfo::GetDecl() const
+clang::Decl* TClingDataMemberInfo::GetDecl() const
 {
    return *fIter;
 }
 
-int tcling_DataMemberInfo::ArrayDim() const
+int TClingDataMemberInfo::ArrayDim() const
 {
    if (!IsValid()) {
       return -1;
@@ -188,7 +188,7 @@ int tcling_DataMemberInfo::ArrayDim() const
    return cnt;
 }
 
-bool tcling_DataMemberInfo::IsValidCint() const
+bool TClingDataMemberInfo::IsValidCint() const
 {
    if (gAllowCint) {
       return fDataMemberInfo->IsValid();
@@ -196,7 +196,7 @@ bool tcling_DataMemberInfo::IsValidCint() const
    return false;
 }
 
-bool tcling_DataMemberInfo::IsValidClang() const
+bool TClingDataMemberInfo::IsValidClang() const
 {
    if (gAllowClang) {
       return *fIter;
@@ -204,12 +204,12 @@ bool tcling_DataMemberInfo::IsValidClang() const
    return false;
 }
 
-bool tcling_DataMemberInfo::IsValid() const
+bool TClingDataMemberInfo::IsValid() const
 {
    return IsValidCint() || IsValidClang();
 }
 
-int tcling_DataMemberInfo::MaxIndex(int dim) const
+int TClingDataMemberInfo::MaxIndex(int dim) const
 {
    if (!IsValid()) {
       return -1;
@@ -285,7 +285,7 @@ int tcling_DataMemberInfo::MaxIndex(int dim) const
    return max;
 }
 
-int tcling_DataMemberInfo::InternalNext()
+int TClingDataMemberInfo::InternalNext()
 {
    // Move to next acceptable data member.
    while (*fIter) {
@@ -327,7 +327,7 @@ int tcling_DataMemberInfo::InternalNext()
    return 0;
 }
 
-bool tcling_DataMemberInfo::Next()
+bool TClingDataMemberInfo::Next()
 {
    if (!gAllowClang) {
       if (gAllowCint) {
@@ -338,7 +338,7 @@ bool tcling_DataMemberInfo::Next()
    return InternalNext();
 }
 
-long tcling_DataMemberInfo::Offset() const
+long TClingDataMemberInfo::Offset() const
 {
    if (!IsValid()) {
       return -1L;
@@ -379,7 +379,7 @@ long tcling_DataMemberInfo::Offset() const
    return -1L;
 }
 
-long tcling_DataMemberInfo::Property() const
+long TClingDataMemberInfo::Property() const
 {
    if (!IsValid()) {
       return 0L;
@@ -480,7 +480,7 @@ long tcling_DataMemberInfo::Property() const
          if (property != cint_property) {
             if (gDebug > 0) {
                fprintf(stderr,
-                       "VALIDITY: tcling_DataMemberInfo::Property:  "
+                       "VALIDITY: TClingDataMemberInfo::Property:  "
                        "cint: 0x%lx  clang: 0x%lx\n",
                        (unsigned long) cint_property,
                        (unsigned long) property);
@@ -491,7 +491,7 @@ long tcling_DataMemberInfo::Property() const
    return property;
 }
 
-long tcling_DataMemberInfo::TypeProperty() const
+long TClingDataMemberInfo::TypeProperty() const
 {
    if (!IsValid()) {
       return 0L;
@@ -510,7 +510,7 @@ long tcling_DataMemberInfo::TypeProperty() const
    return tcling_TypeInfo(fInterp, QT).Property();
 }
 
-int tcling_DataMemberInfo::TypeSize() const
+int TClingDataMemberInfo::TypeSize() const
 {
    if (!IsValid()) {
       return -1;
@@ -544,7 +544,7 @@ int tcling_DataMemberInfo::TypeSize() const
    return static_cast<int>(Context.getTypeSizeInChars(QT).getQuantity());
 }
 
-const char* tcling_DataMemberInfo::TypeName() const
+const char* TClingDataMemberInfo::TypeName() const
 {
    if (!IsValid()) {
       return 0;
@@ -570,7 +570,7 @@ const char* tcling_DataMemberInfo::TypeName() const
    return 0;
 }
 
-const char* tcling_DataMemberInfo::TypeTrueName() const
+const char* TClingDataMemberInfo::TypeTrueName() const
 {
    if (!IsValid()) {
       return 0;
@@ -596,7 +596,7 @@ const char* tcling_DataMemberInfo::TypeTrueName() const
    return 0;
 }
 
-const char* tcling_DataMemberInfo::Name() const
+const char* TClingDataMemberInfo::Name() const
 {
    if (!IsValid()) {
       return 0;
@@ -621,7 +621,7 @@ const char* tcling_DataMemberInfo::Name() const
    return 0;
 }
 
-const char* tcling_DataMemberInfo::Title() const
+const char* TClingDataMemberInfo::Title() const
 {
    if (!IsValid()) {
       return 0;
@@ -639,7 +639,7 @@ const char* tcling_DataMemberInfo::Title() const
    return "";
 }
 
-const char* tcling_DataMemberInfo::ValidArrayIndex() const
+const char* TClingDataMemberInfo::ValidArrayIndex() const
 {
    if (!IsValid()) {
       return 0;

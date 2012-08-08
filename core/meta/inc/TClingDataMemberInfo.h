@@ -26,13 +26,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class tcling_DataMemberInfo {
+class TClingDataMemberInfo {
 public:
-   ~tcling_DataMemberInfo();
-   explicit tcling_DataMemberInfo(cling::Interpreter*);
-   tcling_DataMemberInfo(cling::Interpreter*, tcling_ClassInfo*);
-   tcling_DataMemberInfo(const tcling_DataMemberInfo&);
-   tcling_DataMemberInfo& operator=(const tcling_DataMemberInfo&);
+   ~TClingDataMemberInfo();
+   explicit TClingDataMemberInfo(cling::Interpreter*);
+   TClingDataMemberInfo(cling::Interpreter*, tcling_ClassInfo*);
+   TClingDataMemberInfo(const TClingDataMemberInfo&);
+   TClingDataMemberInfo& operator=(const TClingDataMemberInfo&);
    G__DataMemberInfo* GetDataMemberInfo() const;
    G__ClassInfo* GetClassInfo() const;
    tcling_ClassInfo* GetTClingClassInfo() const;
