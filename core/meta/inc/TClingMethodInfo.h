@@ -30,20 +30,25 @@ class tcling_MethodInfo {
 public:
    ~tcling_MethodInfo();
    explicit tcling_MethodInfo(cling::Interpreter*);
-   explicit tcling_MethodInfo(cling::Interpreter*, G__MethodInfo* info); // FIXME
+   // FIXME: We need this only for cint support, remove when cint is gone.
+   explicit tcling_MethodInfo(cling::Interpreter*, G__MethodInfo* info);
    explicit tcling_MethodInfo(cling::Interpreter*, tcling_ClassInfo*);
    tcling_MethodInfo(const tcling_MethodInfo&);
    tcling_MethodInfo& operator=(const tcling_MethodInfo&);
    G__MethodInfo* GetMethodInfo() const;
+   const clang::FunctionDecl* GetMethodDecl() const;
    void CreateSignature(TString& signature) const;
-   void Init(clang::Decl*);
-   G__InterfaceMethod InterfaceMethod() const;
+   void Init(const clang::FunctionDecl*);
+   void* InterfaceMethod() const;
+   bool IsValidCint() const;
+   bool IsValidClang() const;
    bool IsValid() const;
    int NArg() const;
    int NDefaultArg() const;
-   int Next() const;
+   int InternalNext();
+   int Next();
    long Property() const;
-   void* Type() const;
+   tcling_TypeInfo* Type() const;
    const char* GetMangledName() const;
    const char* GetPrototype() const;
    const char* Name() const;
@@ -60,14 +65,14 @@ private:
    //
    /// Cling interpreter, we do *not* own.
    cling::Interpreter* fInterp;
-   /// Class, namespace, or translation unit we were initialized with.
-   tcling_ClassInfo* fInitialClassInfo;
-   /// Class, namespace, or translation unit we are iterating over now.
-   clang::Decl* fDecl;
+   /// Set of DeclContext that we will iterate over.
+   llvm::SmallVector<clang::DeclContext*, 2> fContexts;
+   /// Flag for first time incrementing iterator, cint semantics are weird.
+   bool fFirstTime;
+   /// Index in fContexts of DeclContext we are iterating over.
+   unsigned int fContextIdx;
    /// Our iterator.
-   clang::DeclContext::specific_decl_iterator<clang::FunctionDecl> fIter;
-   /// Our iterator's current function.
-   clang::Decl* fFunction;
+   clang::DeclContext::decl_iterator fIter;
 };
 
 #endif // ROOT_TClingMethodInfo
