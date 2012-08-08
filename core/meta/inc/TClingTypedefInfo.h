@@ -39,7 +39,6 @@ private:
 
 public:
 
-   ~TClingTypedefInfo();
    explicit TClingTypedefInfo(cling::Interpreter *);
    explicit TClingTypedefInfo(cling::Interpreter *, const char *);
    TClingTypedefInfo(const TClingTypedefInfo &);

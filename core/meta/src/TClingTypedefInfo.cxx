@@ -26,16 +26,6 @@
 #include "TClingTypedefInfo.h"
 
 //______________________________________________________________________________
-TClingTypedefInfo::~TClingTypedefInfo()
-{
-   //fFirstTime = true;
-   //fDescend = false;
-   //fIter = clang::DeclContext::decl_iterator();
-   fDecl = 0;
-   //fIterStack.clear();
-}
-
-//______________________________________________________________________________
 TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp)
    : fInterp(interp), fFirstTime(true), fDescend(false),
      fDecl(0)
