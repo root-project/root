@@ -749,11 +749,11 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 {
    // Read the nbuf blocks described in arrays pos and len,
    // where pos[i] is the seek position of block i of length len[i].
-   // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer
+   // Note that for nbuf=1, this call is equivalent to TFile::ReadBuffer
    // This function is overloaded by TNetFile, TWebFile, etc.
    // Returns kTRUE in case of failure.
-   // Note: This is the overloading made in TXNetFile, If ReadBuffers
-   // is supported by xrootd it will try to gt the whole list from one single
+   // Note: This is the overloading made in TXNetFile. If ReadBuffers
+   // is supported by xrootd it will try to get the whole list from one single
    // call avoiding the latency of multiple calls
 
    if (IsZombie()) {
@@ -776,9 +776,10 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
    Double_t start = 0;
    if (gPerfStats) start = TTimeStamp();
 
-   if (fArchiveOffset)
+   if (fArchiveOffset) {
       for (Int_t i = 0; i < nbuf; i++)
          pos[i] += fArchiveOffset;
+   }
 
    // A null buffer means that we want to use the async stuff
    //  hence we have to sync the cache size in XrdClient with the supposed
