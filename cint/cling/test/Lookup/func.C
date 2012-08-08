@@ -1229,6 +1229,42 @@ func_B_star_proto->print(llvm::outs());
 //CHECK-NEXT:     return *this;
 //CHECK-NEXT: }
 
+
+
+//
+//  Test finding binary member operator.
+//
+
+const clang::FunctionDecl* func_B_plus_args = gCling->lookupFunctionArgs(class_B, "operator+", "b_obj");
+const clang::FunctionDecl* func_B_plus_proto = gCling->lookupFunctionProto(class_B, "operator+", "B");
+
+printf("func_B_plus_args: 0x%lx\n", (unsigned long) func_B_plus_args);
+//CHECK: func_B_plus_args: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_plus_args)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_plus_args name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_plus_args name: B::operator+
+
+func_B_plus_args->print(llvm::outs());
+//CHECK-NEXT: B operator+(B b) {
+//CHECK-NEXT:     return b;
+//CHECK-NEXT: }
+
+printf("func_B_plus_proto: 0x%lx\n", (unsigned long) func_B_plus_proto);
+//CHECK: func_B_plus_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_plus_proto)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_plus_proto name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_plus_proto name: B::operator+
+
+func_B_plus_proto->print(llvm::outs());
+//CHECK-NEXT: B operator+(B b) {
+//CHECK-NEXT:     return b;
+//CHECK-NEXT: }
+
+
 //
 //  One final check to make sure we are at the right line in the output.
 //
