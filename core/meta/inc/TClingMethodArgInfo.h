@@ -30,15 +30,18 @@ class tcling_MethodArgInfo {
 public:
    ~tcling_MethodArgInfo();
    explicit tcling_MethodArgInfo(cling::Interpreter*);
-   explicit tcling_MethodArgInfo(cling::Interpreter*, tcling_MethodInfo*);
+   explicit tcling_MethodArgInfo(cling::Interpreter*, const tcling_MethodInfo*);
    tcling_MethodArgInfo(const tcling_MethodArgInfo&);
    tcling_MethodArgInfo& operator=(const tcling_MethodArgInfo&);
    G__MethodInfo* GetMethodArgInfo() const;
+   bool IsValidClang() const;
+   bool IsValidCint() const;
    bool IsValid() const;
-   int Next() const;
+   int Next();
    long Property() const;
    const char* DefaultValue() const;
    const char* Name() const;
+   const tcling_TypeInfo* Type() const;
    const char* TypeName() const;
 private:
    //
@@ -51,6 +54,10 @@ private:
    //
    /// Cling interpreter, we do *not* own.
    cling::Interpreter* fInterp;
+   /// Function we return info about, we do *not* own.
+   const tcling_MethodInfo* fMethodInfo;
+   /// Iterator, current parameter index.
+   int fIdx;
 };
 
 #endif // ROOT_TClingMethodArgInfo
