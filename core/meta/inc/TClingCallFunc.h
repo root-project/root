@@ -35,22 +35,26 @@ public:
    tcling_CallFunc& operator=(const tcling_CallFunc&);
    void Exec(void* address) const;
    long ExecInt(void* address) const;
-   long ExecInt64(void* address) const;
+   long long ExecInt64(void* address) const;
    double ExecDouble(void* address) const;
-   void* FactoryMethod() const;
-   void Init() const;
-   G__InterfaceMethod InterfaceMethod() const;
+   tcling_MethodInfo* FactoryMethod() const;
+   void Init();
+   void* InterfaceMethod() const;
+   bool IsValidCint() const;
+   bool IsValidClang() const;
    bool IsValid() const;
-   void ResetArg() const;
-   void SetArg(long param) const;
-   void SetArg(double param) const;
-   void SetArg(long long param) const;
-   void SetArg(unsigned long long param) const;
-   void SetArgArray(long* paramArr, int nparam) const;
-   void SetArgs(const char* param) const;
-   void SetFunc(tcling_ClassInfo* info, const char* method, const char* params, long* offset) const;
-   void SetFunc(tcling_MethodInfo* info) const;
-   void SetFuncProto(tcling_ClassInfo* info, const char* method, const char* proto, long* offset) const;
+   void ResetArg();
+   void SetArg(long param);
+   void SetArg(double param);
+   void SetArg(long long param);
+   void SetArg(unsigned long long param);
+   void SetArgArray(long* paramArr, int nparam);
+   void SetArgs(const char* params);
+   void SetFunc(const tcling_ClassInfo* info, const char* method, const char* params, long* offset);
+   void SetFunc(const tcling_MethodInfo* info);
+   void SetFuncProto(const tcling_ClassInfo* info, const char* method, const char* proto, long* offset);
+   void Init(const clang::FunctionDecl*);
+   llvm::GenericValue Invoke(const std::vector<llvm::GenericValue>& ArgValues) const;
 private:
    //
    // CINT material.
@@ -62,8 +66,14 @@ private:
    //
    /// Cling interpreter, we do *not* own.
    cling::Interpreter* fInterp;
-   /// Current method.
+   /// Current method, we own.
    tcling_MethodInfo* fMethod;
+   /// Execution Engine function for current method, we do *not* own.
+   llvm::Function* fEEFunc;
+   /// Pointer to actual compiled code, we do *not* own.
+   void* fEEAddr;
+   /// Arguments to pass to function.
+   std::vector<llvm::GenericValue> fArgs;
 };
 
 #endif // ROOT_CallFunc

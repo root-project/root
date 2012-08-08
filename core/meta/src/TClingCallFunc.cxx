@@ -30,144 +30,908 @@ tcling_CallFunc::~tcling_CallFunc()
 {
    delete fCallFunc;
    fCallFunc = 0;
+   //fInterp = 0;
    delete fMethod;
    fMethod = 0;
+   //fEEFunc = 0;
+   //fEEAddr = 0;
+   //fArgs.clear();
 }
 
 tcling_CallFunc::tcling_CallFunc(cling::Interpreter* interp)
-   : fCallFunc(0), fInterp(interp), fMethod(0)
+   : fCallFunc(0), fInterp(interp), fMethod(0), fEEFunc(0), fEEAddr(0)
 {
    fCallFunc = new G__CallFunc();
    fMethod = new tcling_MethodInfo(interp);
 }
 
 tcling_CallFunc::tcling_CallFunc(const tcling_CallFunc& rhs)
-   : fCallFunc(0), fInterp(rhs.fInterp), fMethod(0)
+   : fCallFunc(0), fInterp(rhs.fInterp), fMethod(0), fEEFunc(rhs.fEEFunc),
+     fEEAddr(rhs.fEEAddr), fArgs(rhs.fArgs)
 {
-   if (!rhs.IsValid()) {
-      fCallFunc = new G__CallFunc();
-      fMethod = new tcling_MethodInfo(rhs.fInterp);
-      return;
-   }
    fCallFunc = new G__CallFunc(*rhs.fCallFunc);
    fMethod = new tcling_MethodInfo(*rhs.fMethod);
 }
 
 tcling_CallFunc& tcling_CallFunc::operator=(const tcling_CallFunc& rhs)
 {
-   if (this == &rhs) {
-      return *this;
-   }
-   if (!rhs.IsValid()) {
-      delete fCallFunc;
-      fCallFunc = new G__CallFunc();
-      fInterp = rhs.fInterp;
-      delete fMethod;
-      fMethod = new tcling_MethodInfo(rhs.fInterp);
-   }
-   else {
+   if (this != &rhs) {
       delete fCallFunc;
       fCallFunc = new G__CallFunc(*rhs.fCallFunc);
       fInterp = rhs.fInterp;
       delete fMethod;
       fMethod = new tcling_MethodInfo(*rhs.fMethod);
+      fEEFunc = rhs.fEEFunc;
+      fEEAddr = rhs.fEEAddr;
+      fArgs = rhs.fArgs;
    }
    return *this;
 }
 
 void tcling_CallFunc::Exec(void* address) const
 {
-   fCallFunc->Exec(address);
+   if (!IsValid()) {
+      return;
+   }
+   if (!IsValidClang()) {
+      if (gAllowCint) {
+         fCallFunc->Exec(address);
+      }
+      return;
+   }
+   if (!gAllowClang) {
+      return;
+   }
+   const clang::Decl* D = fMethod->GetMethodDecl();
+   const clang::DeclContext* DC = D->getDeclContext();
+   if (DC->isTranslationUnit() || DC->isNamespace()) {
+      // Free function.
+      Invoke(fArgs);
+   }
+   else {
+      // Member function.
+      if (const clang::CXXConstructorDecl* CD =
+               llvm::dyn_cast<clang::CXXConstructorDecl>(D)) {
+         clang::ASTContext& Context = CD->getASTContext();
+         const clang::RecordDecl* RD = llvm::cast<clang::RecordDecl>(DC);
+         if (!RD->getDefinition()) {
+            // Forward-declared class, we do not know what the size is.
+            return;
+         }
+         const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
+         int64_t size = Layout.getSize().getQuantity();
+         address = malloc(size);
+      }
+      else {
+         if (!address) {
+            fprintf(stderr, "tcling_CallFunc::Exec: error: "
+                    "calling member function with no object pointer!\n");
+         }
+      }
+      std::vector<llvm::GenericValue> args;
+      args.push_back(llvm::PTOGV(address));
+      args.insert(args.end(), fArgs.begin(), fArgs.end());
+      Invoke(args);
+   }
 }
 
 long tcling_CallFunc::ExecInt(void* address) const
 {
-   return fCallFunc->ExecInt(address);
+   if (!IsValid()) {
+      return 0L;
+   }
+   if (!IsValidClang()) {
+      if (gAllowCint) {
+         return fCallFunc->ExecInt(address);
+      }
+      return 0L;
+   }
+   if (!gAllowClang) {
+      return 0L;
+   }
+   llvm::GenericValue val;
+   const clang::Decl* D = fMethod->GetMethodDecl();
+   const clang::DeclContext* DC = D->getDeclContext();
+   if (DC->isTranslationUnit() || DC->isNamespace()) {
+      // Free function.
+      val = Invoke(fArgs);
+   }
+   else {
+      // Member function.
+      if (const clang::CXXConstructorDecl* CD =
+               llvm::dyn_cast<clang::CXXConstructorDecl>(D)) {
+         clang::ASTContext& Context = CD->getASTContext();
+         const clang::RecordDecl* RD = llvm::cast<clang::RecordDecl>(DC);
+         if (!RD->getDefinition()) {
+            // Forward-declared class, we do not know what the size is.
+            return 0L;
+         }
+         const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
+         int64_t size = Layout.getSize().getQuantity();
+         address = malloc(size);
+      }
+      else {
+         if (!address) {
+            fprintf(stderr, "tcling_CallFunc::Exec: error: "
+                    "calling member function with no object pointer!\n");
+         }
+      }
+      std::vector<llvm::GenericValue> args;
+      llvm::GenericValue this_ptr;
+      this_ptr.IntVal = llvm::APInt(sizeof(long) * CHAR_BIT,
+                                    reinterpret_cast<long>(address));
+      args.push_back(this_ptr);
+      args.insert(args.end(), fArgs.begin(), fArgs.end());
+      val  = Invoke(args);
+   }
+   return static_cast<long>(val.IntVal.getSExtValue());
 }
 
-long tcling_CallFunc::ExecInt64(void* address) const
+long long tcling_CallFunc::ExecInt64(void* address) const
 {
-   return fCallFunc->ExecInt64(address);
+   if (!IsValid()) {
+      return 0LL;
+   }
+   if (!IsValidClang()) {
+      if (gAllowCint) {
+         return fCallFunc->ExecInt64(address);
+      }
+      return 0LL;
+   }
+   if (!gAllowClang) {
+      return 0LL;
+   }
+   llvm::GenericValue val;
+   const clang::Decl* D = fMethod->GetMethodDecl();
+   const clang::DeclContext* DC = D->getDeclContext();
+   if (DC->isTranslationUnit() || DC->isNamespace()) {
+      // Free function.
+      val = Invoke(fArgs);
+   }
+   else {
+      // Member function.
+      if (const clang::CXXConstructorDecl* CD =
+               llvm::dyn_cast<clang::CXXConstructorDecl>(D)) {
+         clang::ASTContext& Context = CD->getASTContext();
+         const clang::RecordDecl* RD = llvm::cast<clang::RecordDecl>(DC);
+         if (!RD->getDefinition()) {
+            // Forward-declared class, we do not know what the size is.
+            return 0LL;
+         }
+         const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
+         int64_t size = Layout.getSize().getQuantity();
+         address = malloc(size);
+      }
+      else {
+         if (!address) {
+            fprintf(stderr, "tcling_CallFunc::Exec: error: "
+                    "calling member function with no object pointer!\n");
+         }
+      }
+      std::vector<llvm::GenericValue> args;
+      args.push_back(llvm::PTOGV(address));
+      args.insert(args.end(), fArgs.begin(), fArgs.end());
+      val = Invoke(args);
+   }
+   return static_cast<long long>(val.IntVal.getSExtValue());
 }
 
 double tcling_CallFunc::ExecDouble(void* address) const
 {
-   return fCallFunc->ExecDouble(address);
+   if (!IsValid()) {
+      return 0.0;
+   }
+   if (!IsValidClang()) {
+      if (gAllowCint) {
+         return fCallFunc->ExecDouble(address);
+      }
+      return 0.0;
+   }
+   if (!gAllowClang) {
+      return 0.0;
+   }
+   llvm::GenericValue val;
+   const clang::Decl* D = fMethod->GetMethodDecl();
+   const clang::DeclContext* DC = D->getDeclContext();
+   if (DC->isTranslationUnit() || DC->isNamespace()) {
+      // Free function.
+      val = Invoke(fArgs);
+   }
+   else {
+      // Member function.
+      if (const clang::CXXConstructorDecl* CD =
+               llvm::dyn_cast<clang::CXXConstructorDecl>(D)) {
+         clang::ASTContext& Context = CD->getASTContext();
+         const clang::RecordDecl* RD = llvm::cast<clang::RecordDecl>(DC);
+         if (!RD->getDefinition()) {
+            // Forward-declared class, we do not know what the size is.
+            return 0.0;
+         }
+         const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
+         int64_t size = Layout.getSize().getQuantity();
+         address = malloc(size);
+      }
+      else {
+         if (!address) {
+            fprintf(stderr, "tcling_CallFunc::Exec: error: "
+                    "calling member function with no object pointer!\n");
+         }
+      }
+      std::vector<llvm::GenericValue> args;
+      args.push_back(llvm::PTOGV(address));
+      args.insert(args.end(), fArgs.begin(), fArgs.end());
+      val = Invoke(args);
+   }
+   return val.DoubleVal;
 }
 
-void* tcling_CallFunc::FactoryMethod() const
+tcling_MethodInfo* tcling_CallFunc::FactoryMethod() const
 {
-   G__MethodInfo* info = new G__MethodInfo(fCallFunc->GetMethodInfo());
-   tcling_MethodInfo* tcling_mi = new tcling_MethodInfo(fInterp, info);
-   delete info;
-   info = 0;
-   return (void*) tcling_mi; // FIXME
+   if (gAllowCint) {
+      G__MethodInfo mi = fCallFunc->GetMethodInfo();
+      return new tcling_MethodInfo(fInterp, &mi);
+   }
+   if (!gAllowClang) {
+      return new tcling_MethodInfo(fInterp);
+   }
+   return new tcling_MethodInfo(*fMethod);
 }
 
-void tcling_CallFunc::Init() const
+void tcling_CallFunc::Init()
 {
-   fCallFunc->Init();
+   if (gAllowCint) {
+      fCallFunc->Init();
+   }
+   if (gAllowClang) {
+      delete fMethod;
+      fMethod = 0;
+      fEEFunc = 0;
+      fEEAddr = 0;
+      fArgs.clear();
+   }
 }
 
-G__InterfaceMethod tcling_CallFunc::InterfaceMethod() const
+void* tcling_CallFunc::InterfaceMethod() const
 {
-   return fCallFunc->InterfaceMethod();
+   if (!IsValidClang()) {
+      if (gAllowCint) {
+         return (void*) fCallFunc->InterfaceMethod();
+      }
+      return 0;
+   }
+   if (!gAllowClang) {
+      return 0;
+   }
+   return fEEAddr;
+}
+
+bool tcling_CallFunc::IsValidCint() const
+{
+   if (gAllowCint) {
+      return fCallFunc->IsValid();
+   }
+   return false;
+}
+
+bool tcling_CallFunc::IsValidClang() const
+{
+   if (gAllowClang) {
+      return fEEAddr;
+   }
+   return false;
 }
 
 bool tcling_CallFunc::IsValid() const
 {
-   return fCallFunc->IsValid();
+   return IsValidCint() || IsValidClang();
 }
 
-void tcling_CallFunc::ResetArg() const
+void tcling_CallFunc::ResetArg()
 {
-   fCallFunc->ResetArg();
+   if (gAllowCint) {
+      fCallFunc->ResetArg();
+   }
+   if (gAllowClang) {
+      fArgs.clear();
+   }
 }
 
-void tcling_CallFunc::SetArg(long param) const
+void tcling_CallFunc::SetArg(long param)
 {
-   fCallFunc->SetArg(param);
+   if (gAllowCint) {
+      fCallFunc->SetArg(param);
+   }
+   if (gAllowClang) {
+      llvm::GenericValue gv;
+      gv.IntVal = llvm::APInt(sizeof(long) * 8, param);
+      fArgs.push_back(gv);
+   }
 }
 
-void tcling_CallFunc::SetArg(double param) const
+void tcling_CallFunc::SetArg(double param)
 {
-   fCallFunc->SetArg(param);
+   if (gAllowCint) {
+      fCallFunc->SetArg(param);
+   }
+   if (gAllowClang) {
+      llvm::GenericValue gv;
+      gv.DoubleVal = param;
+      fArgs.push_back(gv);
+   }
 }
 
-void tcling_CallFunc::SetArg(long long param) const
+void tcling_CallFunc::SetArg(long long param)
 {
-   fCallFunc->SetArg(param);
+   if (gAllowCint) {
+      fCallFunc->SetArg(param);
+   }
+   if (gAllowClang) {
+      llvm::GenericValue gv;
+      gv.IntVal = llvm::APInt(sizeof(long long) * 8, param);
+      fArgs.push_back(gv);
+   }
 }
 
-void tcling_CallFunc::SetArg(unsigned long long param) const
+void tcling_CallFunc::SetArg(unsigned long long param)
 {
-   fCallFunc->SetArg(param);
+   if (gAllowCint) {
+      fCallFunc->SetArg(param);
+   }
+   if (gAllowClang) {
+      llvm::GenericValue gv;
+      gv.IntVal = llvm::APInt(sizeof(unsigned long long) * 8, param);
+      fArgs.push_back(gv);
+   }
 }
 
-void tcling_CallFunc::SetArgArray(long* paramArr, int nparam) const
+void tcling_CallFunc::SetArgArray(long* paramArr, int nparam)
 {
-   fCallFunc->SetArgArray(paramArr, nparam);
+   if (gAllowCint) {
+      fCallFunc->SetArgArray(paramArr, nparam);
+   }
+   if (gAllowClang) {
+      for (int i = 0; i < nparam; ++i) {
+         llvm::GenericValue gv;
+         gv.IntVal = llvm::APInt(sizeof(long) * 8, paramArr[i]);
+         fArgs.push_back(gv);
+      }
+   }
 }
 
-void tcling_CallFunc::SetArgs(const char* param) const
+static int evaluateArgList(cling::Interpreter* interp,
+                           const std::string& ArgList,
+                           std::vector<cling::Value>& EvaluatedArgs)
 {
-   fCallFunc->SetArgs(param);
+   //
+   //  Our return value.
+   //
+   int return_code = 1;
+   //
+   //  Some utilities.
+   //
+   clang::CompilerInstance* CI = interp->getCI();
+   clang::Parser* P = interp->getParser();
+   clang::Preprocessor& PP = CI->getPreprocessor();
+   clang::ASTContext& Context = CI->getASTContext();
+   //
+   //  Tell the diagnostic engine to ignore all diagnostics.
+   //
+   bool OldSuppressAllDiagnostics =
+      PP.getDiagnostics().getSuppressAllDiagnostics();
+   PP.getDiagnostics().setSuppressAllDiagnostics(true);
+   //
+   //  Get ready for arg list parsing.
+   //
+   //std::vector<QualType> GivenArgTypes;
+   //std::vector<Expr*> GivenArgs;
+   //
+   //  Tell the parser to not attempt spelling correction.
+   //
+   bool OldSpellChecking = PP.getLangOpts().SpellChecking;
+   const_cast<clang::LangOptions&>(PP.getLangOpts()).SpellChecking = 0;
+   //
+   //  Tell the diagnostic consumer we are switching files.
+   //
+   clang::DiagnosticConsumer& DClient = CI->getDiagnosticClient();
+   DClient.BeginSourceFile(CI->getLangOpts(), &PP);
+   //
+   //  Create a fake file to parse the arguments.
+   //
+   llvm::MemoryBuffer* SB = llvm::MemoryBuffer::getMemBufferCopy(
+                               ArgList + "\n", "arg.list.file");
+   clang::FileID FID = CI->getSourceManager().createFileIDForMemBuffer(SB);
+   //
+   //  Turn on ignoring of the main file eof token.
+   //
+   //  Note: We need this because token readahead in the following
+   //        routine calls ends up parsing it multiple times.
+   //
+   bool ResetIncrementalProcessing = false;
+   if (!PP.isIncrementalProcessingEnabled()) {
+      ResetIncrementalProcessing = true;
+      PP.enableIncrementalProcessing();
+   }
+   //
+   //  Switch to the new file the way #include does.
+   //
+   //  Note: To switch back to the main file we must consume an eof token.
+   //
+   PP.EnterSourceFile(FID, 0, clang::SourceLocation());
+   PP.Lex(const_cast<clang::Token&>(P->getCurToken()));
+   //
+   //  Parse the arguments now.
+   //
+   {
+      clang::PrintingPolicy Policy(Context.getPrintingPolicy());
+      Policy.SuppressTagKeyword = true;
+      Policy.SuppressUnwrittenScope = true;
+      Policy.SuppressInitializers = true;
+      Policy.AnonymousTagLocations = false;
+      //std::string proto;
+      {
+         //bool first_time = true;
+         while (P->getCurToken().isNot(clang::tok::eof)) {
+            clang::ExprResult Res = P->ParseAssignmentExpression();
+            if (Res.isUsable()) {
+               clang::Expr* expr = Res.release();
+               //GivenArgs.push_back(expr);
+               //QualType QT = expr->getType().getCanonicalType();
+               //QualType NonRefQT(QT.getNonReferenceType());
+               //GivenArgTypes.push_back(NonRefQT);
+               //if (first_time) {
+               //  first_time = false;
+               //}
+               //else {
+               //  proto += ',';
+               //}
+               std::string empty;
+               llvm::raw_string_ostream tmp(empty);
+               expr->printPretty(tmp, Context, /*PrinterHelper=*/0,
+                                 Policy, /*Indentation=*/0);
+               //proto += tmp.str();
+               //fprintf(stderr, "%s\n", proto.c_str());
+               cling::Value val;
+               cling::Interpreter::CompilationResult cres =
+                  interp->evaluate(tmp.str(), &val);
+               if (cres != cling::Interpreter::kSuccess) {
+                  // Bad expression, all done.
+                  break;
+               }
+               EvaluatedArgs.push_back(val);
+            }
+            if (!P->getCurToken().is(clang::tok::comma)) {
+               break;
+            }
+            P->ConsumeToken();
+         }
+      }
+   }
+   if (P->getCurToken().isNot(clang::tok::eof)) {
+      // We did not consume all of the arg list, bad parse.
+      goto evaluateArgListDone;
+   }
+   //
+   //  Success.
+   //
+   return_code = 0;
+   //
+   //  Cleanup after the arg list parse.
+   //
+   P->SkipUntil(clang::tok::eof, /*StopAtSemi*/false, /*DontConsume*/false,
+                /*StopAtCodeCompletion*/false);
+   DClient.EndSourceFile();
+   CI->getDiagnostics().Reset();
+evaluateArgListDone:
+   //
+   // Advance the parser to the end of the file, and pop the include stack.
+   //
+   // Note: Consuming the EOF token will pop the include stack.
+   //
+   P->SkipUntil(clang::tok::eof, /*StopAtSemi*/false, /*DontConsume*/false,
+                /*StopAtCodeCompletion*/false);
+   if (ResetIncrementalProcessing) {
+      PP.enableIncrementalProcessing(false);
+   }
+   DClient.EndSourceFile();
+   CI->getDiagnostics().Reset();
+   PP.getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
+   const_cast<clang::LangOptions&>(PP.getLangOpts()).SpellChecking =
+      OldSpellChecking;
+   return return_code;
 }
 
-void tcling_CallFunc::SetFunc(tcling_ClassInfo* info, const char* method, const char* params, long* offset) const
+void tcling_CallFunc::SetArgs(const char* params)
 {
-   fCallFunc->SetFunc(info->GetClassInfo(), method, params, offset);
+   if (gAllowCint) {
+      fCallFunc->SetArgs(params);
+   }
+   if (gAllowClang) {
+      std::vector<cling::Value> Args;
+      evaluateArgList(fInterp, params, Args);
+      clang::ASTContext& Context = fInterp->getCI()->getASTContext();
+      for (unsigned I = 0U, E = Args.size(); I < E; ++I) {
+         cling::Value val = Args[I];
+         if (!val.type->isIntegralType(Context) &&
+               !val.type->isRealFloatingType() && !val.type->isPointerType()) {
+            // Invalid argument type.
+            break;
+         }
+         fArgs.push_back(val.value);
+      }
+   }
 }
 
-void tcling_CallFunc::SetFunc(tcling_MethodInfo* info) const
+void tcling_CallFunc::SetFunc(const tcling_ClassInfo* info, const char* method, const char* params, long* offset)
 {
-   fCallFunc->SetFunc(*info->GetMethodInfo());
+   if (gAllowCint) {
+      fCallFunc->SetFunc(info->GetClassInfo(), method, params, offset);
+   }
+   if (gAllowClang) {
+      delete fMethod;
+      fMethod = new tcling_MethodInfo(fInterp);
+      fEEFunc = 0;
+      fEEAddr = 0;
+      const clang::FunctionDecl* decl =
+         fInterp->lookupFunctionArgs(info->GetDecl(), method, params);
+      if (!decl) {
+         return;
+      }
+      fMethod->Init(decl);
+      Init(decl);
+      if (offset) {
+         offset = 0L;
+      }
+      // FIXME: We should eliminate the double parse here!
+      fArgs.clear();
+      std::vector<cling::Value> Args;
+      evaluateArgList(fInterp, params, Args);
+      clang::ASTContext& Context = fInterp->getCI()->getASTContext();
+      for (unsigned I = 0U, E = Args.size(); I < E; ++I) {
+         cling::Value val = Args[I];
+         if (!val.type->isIntegralType(Context) &&
+               !val.type->isRealFloatingType() && !val.type->isPointerType()) {
+            // Invalid argument type, cint skips it, strange.
+            continue;
+         }
+         fArgs.push_back(val.value);
+      }
+   }
 }
 
-void tcling_CallFunc::SetFuncProto(tcling_ClassInfo* info, const char* method, const char* proto, long* offset) const
+void tcling_CallFunc::SetFunc(const tcling_MethodInfo* info)
 {
-   fCallFunc->SetFuncProto(info->GetClassInfo(), method, proto, offset);
-   //const clang::Decl* decl =
-   //   fInterp->lookupFunctionProto(info->GetDecl(), method, proto);
+   if (gAllowCint) {
+      fCallFunc->SetFunc(*info->GetMethodInfo());
+   }
+   if (gAllowClang) {
+      delete fMethod;
+      fMethod = 0;
+      fEEFunc = 0;
+      fEEAddr = 0;
+      fMethod = new tcling_MethodInfo(*info);
+      if (!fMethod->IsValidClang()) {
+         return;
+      }
+      Init(fMethod->GetMethodDecl());
+   }
+}
+
+void tcling_CallFunc::SetFuncProto(const tcling_ClassInfo* info, const char* method,
+                                   const char* proto, long* offset)
+{
+   if (gAllowCint) {
+      fCallFunc->SetFuncProto(info->GetClassInfo(), method, proto, offset);
+   }
+   if (gAllowClang) {
+      delete fMethod;
+      fMethod = new tcling_MethodInfo(fInterp);
+      fEEFunc = 0;
+      fEEAddr = 0;
+      if (!info->IsValidClang()) {
+         return;
+      }
+      const clang::FunctionDecl* FD =
+         fInterp->lookupFunctionProto(info->GetDecl(), method, proto);
+      if (!FD) {
+         return;
+      }
+      fMethod->Init(FD);
+      Init(FD);
+      if (offset) {
+         offset = 0L;
+      }
+   }
+}
+
+static llvm::Type* getLLVMTypeFromBuiltinKind(llvm::LLVMContext& Context,
+      clang::BuiltinType::Kind BuiltinKind)
+{
+   llvm::Type* TY = 0;
+   switch (BuiltinKind) {
+      case clang::BuiltinType::Half:
+      case clang::BuiltinType::ObjCId:
+      case clang::BuiltinType::ObjCClass:
+      case clang::BuiltinType::ObjCSel:
+      case clang::BuiltinType::Dependent:
+      case clang::BuiltinType::Overload:
+      case clang::BuiltinType::BoundMember:
+      case clang::BuiltinType::PseudoObject:
+      case clang::BuiltinType::UnknownAny:
+      case clang::BuiltinType::ARCUnbridgedCast:
+      case clang::BuiltinType::Char16:
+      case clang::BuiltinType::Char32:
+         // We do not use these, make gcc be quiet.
+         break;
+      case clang::BuiltinType::Void:
+         TY = llvm::Type::getVoidTy(Context);
+         break;
+      case clang::BuiltinType::Bool:
+         TY = llvm::IntegerType::get(Context, sizeof(bool) * CHAR_BIT);
+         break;
+      case clang::BuiltinType::Char_U:
+         TY = llvm::IntegerType::get(Context, sizeof(unsigned char) * CHAR_BIT);
+         break;
+      case clang::BuiltinType::UChar:
+         TY = llvm::IntegerType::get(Context, sizeof(unsigned char) * CHAR_BIT);
+         break;
+      case clang::BuiltinType::WChar_U:
+         TY = llvm::IntegerType::get(Context, sizeof(unsigned wchar_t) *
+                                     CHAR_BIT);
+         break;
+#if 0
+      case clang::BuiltinType::Char16:
+         TY = llvm::IntegerType::get(Context, sizeof(char16_t) * CHAR_BIT);
+         break;
+      case clang::BuiltinType::Char32:
+         TY = llvm::IntegerType::get(Context, sizeof(char32_t) * CHAR_BIT);
+         break;
+#endif // 0
+      case clang::BuiltinType::UShort:
+         TY = llvm::IntegerType::get(Context, sizeof(unsigned short) *
+                                     CHAR_BIT);
+         break;
+      case clang::BuiltinType::UInt:
+         TY = llvm::IntegerType::get(Context, sizeof(unsigned int) * CHAR_BIT);
+         break;
+      case clang::BuiltinType::ULong:
+         TY = llvm::IntegerType::get(Context, sizeof(unsigned long) * CHAR_BIT);
+         break;
+      case clang::BuiltinType::ULongLong:
+         TY = llvm::IntegerType::get(Context, sizeof(unsigned long long) *
+                                     CHAR_BIT);
+         break;
+      case clang::BuiltinType::UInt128:
+         TY = llvm::IntegerType::get(Context, sizeof(__uint128_t) * CHAR_BIT);
+         break;
+      case clang::BuiltinType::Char_S:
+         TY = llvm::IntegerType::get(Context, sizeof(signed char) * CHAR_BIT);
+         break;
+      case clang::BuiltinType::SChar:
+         TY = llvm::IntegerType::get(Context, sizeof(signed char) * CHAR_BIT);
+         break;
+      case clang::BuiltinType::WChar_S:
+         TY = llvm::IntegerType::get(Context, sizeof(signed wchar_t) *
+                                     CHAR_BIT);
+         break;
+      case clang::BuiltinType::Short:
+         TY = llvm::IntegerType::get(Context, sizeof(signed short) * CHAR_BIT);
+         break;
+      case clang::BuiltinType::Int:
+         TY = llvm::IntegerType::get(Context, sizeof(signed int) * CHAR_BIT);
+         break;
+      case clang::BuiltinType::Long:
+         TY = llvm::IntegerType::get(Context, sizeof(signed long) * CHAR_BIT);
+         break;
+      case clang::BuiltinType::LongLong:
+         TY = llvm::IntegerType::get(Context, sizeof(signed long long) *
+                                     CHAR_BIT);
+         break;
+      case clang::BuiltinType::Int128:
+         TY = llvm::IntegerType::get(Context, sizeof(__int128_t) * CHAR_BIT);
+         break;
+      case clang::BuiltinType::Float:
+         TY = llvm::Type::getFloatTy(Context);
+         break;
+      case clang::BuiltinType::Double:
+         TY = llvm::Type::getDoubleTy(Context);
+         break;
+      case clang::BuiltinType::LongDouble:
+         TY = llvm::Type::getFP128Ty(Context);
+         break;
+      case clang::BuiltinType::NullPtr:
+         TY = llvm::PointerType::getUnqual(llvm::IntegerType::get(Context,
+                                           CHAR_BIT));
+         break;
+   }
+   return TY;
+}
+
+static llvm::Type* getLLVMType(llvm::LLVMContext& Context, clang::QualType QT)
+{
+   llvm::Type* TY = 0;
+   QT = QT.getCanonicalType();
+   const clang::BuiltinType* BT = QT->getAs<clang::BuiltinType>();
+   // Note: nullptr is a builtin type.
+   if (QT->isPointerType() || QT->isReferenceType()) {
+      clang::QualType PT = QT->getPointeeType();
+      PT = PT.getCanonicalType();
+      const clang::BuiltinType* PBT = llvm::dyn_cast<clang::BuiltinType> (PT);
+      if (PBT) {
+         // Pointer to something simple, preserve that.
+         if (PT->isVoidType()) {
+            // We have pointer to void, llvm cannot handle that,
+            // force it to pointer to char.
+            TY = llvm::PointerType::getUnqual(
+                    llvm::IntegerType::get(Context, CHAR_BIT));
+         }
+         else {
+            // We have pointer to clang builtin type, preserve that.
+            clang::BuiltinType::Kind kind = PBT->getKind();
+            llvm::Type* llvm_pt = getLLVMTypeFromBuiltinKind(Context, kind);
+            TY = llvm::PointerType::getUnqual(llvm_pt);
+         }
+      }
+      else {
+         // Force it to pointer to char.
+         TY = llvm::PointerType::getUnqual(
+                 llvm::IntegerType::get(Context, CHAR_BIT));
+      }
+   }
+   else if (QT->isRealFloatingType()) {
+      clang::BuiltinType::Kind kind = BT->getKind();
+      TY = getLLVMTypeFromBuiltinKind(Context, kind);
+   }
+   else if (QT->isIntegralOrEnumerationType()) {
+      if (BT) {
+         clang::BuiltinType::Kind kind = BT->getKind();
+         TY = getLLVMTypeFromBuiltinKind(Context, kind);
+      }
+      else {
+         const clang::EnumType* ET = QT->getAs<clang::EnumType>();
+         clang::QualType IT = ET->getDecl()->getIntegerType();
+         IT = IT.getCanonicalType();
+         const clang::BuiltinType* IBT = llvm::dyn_cast<clang::BuiltinType>(IT);
+         clang::BuiltinType::Kind kind = IBT->getKind();
+         TY = getLLVMTypeFromBuiltinKind(Context, kind);
+      }
+   }
+   else if (QT->isVoidType()) {
+      TY = llvm::Type::getVoidTy(Context);
+   }
+   return TY;
+}
+
+void tcling_CallFunc::Init(const clang::FunctionDecl* FD)
+{
+   fEEFunc = 0;
+   fEEAddr = 0;
+   bool isMemberFunc = false;
+   const clang::DeclContext* DC = FD->getDeclContext();
+   if (!DC->isTranslationUnit() && !DC->isNamespace()) {
+      isMemberFunc = true;
+   }
+   //
+   //  Mangle the function name, if necessary.
+   //
+   const char* FuncName = 0;
+   std::string MangledName;
+   llvm::raw_string_ostream OS(MangledName);
+   llvm::OwningPtr<clang::MangleContext> Mangle(fInterp->getCI()->
+         getASTContext().createMangleContext());
+   if (!Mangle->shouldMangleDeclName(FD)) {
+      clang::IdentifierInfo* II = FD->getIdentifier();
+      FuncName = II->getNameStart();
+   }
+   else {
+      if (const clang::CXXConstructorDecl* D =
+               llvm::dyn_cast<clang::CXXConstructorDecl>(FD)) {
+         //Ctor_Complete,          // Complete object ctor
+         //Ctor_Base,              // Base object ctor
+         //Ctor_CompleteAllocating // Complete object allocating ctor (unused)
+         Mangle->mangleCXXCtor(D, clang::Ctor_Complete, OS);
+      }
+      else if (const clang::CXXDestructorDecl* D =
+                  llvm::dyn_cast<clang::CXXDestructorDecl>(FD)) {
+         //Dtor_Deleting, // Deleting dtor
+         //Dtor_Complete, // Complete object dtor
+         //Dtor_Base      // Base object dtor
+         Mangle->mangleCXXDtor(D, clang::Dtor_Deleting, OS);
+      }
+      else {
+         Mangle->mangleName(FD, OS);
+      }
+      OS.flush();
+      FuncName = MangledName.c_str();
+   }
+   //
+   //  Check the execution engine for the function.
+   //
+   llvm::ExecutionEngine* EE = fInterp->getExecutionEngine();
+   fEEFunc = EE->FindFunctionNamed(FuncName);
+   if (fEEFunc) {
+      // Execution engine had it, get the mapping.
+      fEEAddr = EE->getPointerToFunction(fEEFunc);
+   }
+   else {
+      // Execution engine does not have it, check
+      // the loaded shareable libraries.
+      void* FP = EE->getPointerToNamedFunction(FuncName,
+                 /*AbortOnFailure=*/false);
+      if (FP == unresolvedSymbol) {
+         // The ExecutionContext will refuse to do anything after this,
+         // so we must force it back to normal.
+         fInterp->resetUnresolved();
+      }
+      else if (FP) {
+         // Create a llvm function we can use to call it with later.
+         llvm::LLVMContext& Context = *fInterp->getLLVMContext();
+         unsigned NumParams = FD->getNumParams();
+         llvm::SmallVector<llvm::Type*, 8> Params;
+         if (isMemberFunc) {
+            // Force the invisible this pointer arg to pointer to char.
+            Params.push_back(llvm::PointerType::getUnqual(
+                                llvm::IntegerType::get(Context, CHAR_BIT)));
+         }
+         for (unsigned I = 0U; I < NumParams; ++I) {
+            const clang::ParmVarDecl* PVD = FD->getParamDecl(I);
+            clang::QualType QT = PVD->getType();
+            Params.push_back(getLLVMType(Context, QT));
+         }
+         llvm::Type* ReturnType = 0;
+         if (llvm::isa<clang::CXXConstructorDecl>(FD)) {
+            // Force the return type of a constructor to be long.
+            ReturnType = llvm::IntegerType::get(Context, sizeof(long) *
+                                                CHAR_BIT);
+         }
+         else {
+            ReturnType = getLLVMType(Context, FD->getResultType());
+         }
+         // Create the llvm function type.
+         llvm::FunctionType* FT = llvm::FunctionType::get(ReturnType, Params,
+                                  /*isVarArg=*/false);
+         // Create the ExecutionEngine function.
+         // Note: We use weak linkage here so lookup failure does not abort.
+         llvm::Function* F = llvm::Function::Create(FT,
+                             llvm::GlobalValue::ExternalWeakLinkage,
+                             FuncName, fInterp->getModule());
+         // FIXME: This probably does not work for Windows!
+         // See ASTContext::getFunctionType() for proper way to set it.
+         // Actually this probably is not needed.
+         F->setCallingConv(llvm::CallingConv::C);
+         // Map the created ExecutionEngine function to the
+         // address found in the shareable library, so the next
+         // time we do a lookup it will be found.
+         EE->addGlobalMapping(F, FP);
+         // Set our state.
+         fEEFunc = F;
+         fEEAddr = FP;
+      }
+   }
+}
+
+llvm::GenericValue tcling_CallFunc::Invoke(
+   const std::vector<llvm::GenericValue>& ArgValues) const
+{
+   // FIXME: We need to think about thunks for the this pointer adjustment,
+   //        and the return pointer adjustment.
+   //if (!IsValid()) {
+   //   return;
+   //}
+   std::vector<llvm::GenericValue> Args;
+   llvm::FunctionType* FT = fEEFunc->getFunctionType();
+   for (unsigned I = 0U, E = FT->getNumParams(); I < E; ++I) {
+      llvm::Type* TY = FT->getParamType(I);
+      if (TY->getTypeID() == llvm::Type::PointerTyID) {
+         // The cint interface passes these as integers, and we must
+         // convert them to pointers because GenericValue stores
+         // integer and pointer values in different data members.
+         Args.push_back(llvm::PTOGV(reinterpret_cast<void*>(
+                                       ArgValues[I].IntVal.getSExtValue())));
+      }
+      else {
+         Args.push_back(ArgValues[I]);
+      }
+   }
+   return fInterp->getExecutionEngine()->runFunction(fEEFunc, Args);
 }
 
