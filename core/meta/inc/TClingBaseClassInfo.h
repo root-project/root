@@ -30,14 +30,13 @@ class tcling_BaseClassInfo {
 public:
    ~tcling_BaseClassInfo();
    explicit tcling_BaseClassInfo(cling::Interpreter*); // NOT IMPLEMENTED.
-   explicit tcling_BaseClassInfo(tcling_ClassInfo*);
+   explicit tcling_BaseClassInfo(cling::Interpreter*, tcling_ClassInfo*);
    tcling_BaseClassInfo(const tcling_BaseClassInfo&);
    tcling_BaseClassInfo& operator=(const tcling_BaseClassInfo&);
-   G__BaseClassInfo* GetBaseClassInfo() const;
-   tcling_ClassInfo* GetDerivedClassInfo() const;
-   tcling_ClassInfo* GetClassInfo() const;
-   long GetOffsetBase() const;
    int InternalNext(int onlyDirect);
+   bool IsValidCint() const;
+   bool IsValidClang() const;
+   bool IsValid() const;
    int Next();
    int Next(int onlyDirect);
    long Offset() const;
@@ -46,7 +45,6 @@ public:
    const char* FullName() const;
    const char* Name() const;
    const char* TmpltName() const;
-   bool IsValid() const;
 private:
    //
    // CINT material.
@@ -59,7 +57,7 @@ private:
    /// Cling interpreter, we do *not* own.
    cling::Interpreter* fInterp;
    /// Class we were intialized with, we own.
-   tcling_ClassInfo* fDerivedClassInfo;
+   tcling_ClassInfo* fClassInfo;
    /// Flag to provide Cint semantics for iterator advancement (not first time)
    bool fFirstTime;
    /// Flag for signaling the need to descend on this advancement.
@@ -69,7 +67,7 @@ private:
    /// Current iterator.
    clang::CXXRecordDecl::base_class_const_iterator fIter;
    /// Class info of base class our iterator is currently pointing at, we own.
-   tcling_ClassInfo* fClassInfo;
+   tcling_ClassInfo* fBaseInfo;
    /// Iterator stack.
    std::vector < std::pair < std::pair < const clang::Decl*,
        clang::CXXRecordDecl::base_class_const_iterator > , long > > fIterStack;

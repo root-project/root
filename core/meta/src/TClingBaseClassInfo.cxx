@@ -30,219 +30,168 @@ tcling_BaseClassInfo::~tcling_BaseClassInfo()
    delete fBaseClassInfo;
    fBaseClassInfo = 0;
    fInterp = 0;
-   delete fDerivedClassInfo;
-   fDerivedClassInfo = 0;
-   fDecl = 0;
-   fIter = 0;
    delete fClassInfo;
    fClassInfo = 0;
+   //fFirstTime = true;
+   //fDescend = false;
+   fDecl = 0;
+   fIter = 0;
+   delete fBaseInfo;
+   fBaseInfo = 0;
+   //fIterStack.clear();
+   //fOffset = 0L;
 }
 
-tcling_BaseClassInfo::tcling_BaseClassInfo(tcling_ClassInfo* tcling_class_info)
-   : fBaseClassInfo(0)
-   , fInterp(0)
-   , fDerivedClassInfo(0)
-   , fFirstTime(true)
-   , fDescend(false)
-   , fDecl(0)
-   , fIter(0)
-   , fClassInfo(0)
-   , fOffset(0L)
+tcling_BaseClassInfo::tcling_BaseClassInfo(cling::Interpreter* interp,
+      tcling_ClassInfo* tcling_class_info)
+   : fBaseClassInfo(0), fInterp(interp), fClassInfo(0), fFirstTime(true),
+     fDescend(false), fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L)
 {
-   if (!tcling_class_info || !tcling_class_info->IsValid()) {
-      G__ClassInfo cli;
-      fBaseClassInfo = new G__BaseClassInfo(cli);
-      fInterp = 0;
-      fDerivedClassInfo = new tcling_ClassInfo(fInterp);
+   if (!tcling_class_info) {
+      G__ClassInfo ci;
+      fBaseClassInfo = new G__BaseClassInfo(ci);
+      fClassInfo = new tcling_ClassInfo(interp);
       return;
    }
-   fInterp = tcling_class_info->GetInterpreter();
    fBaseClassInfo = new G__BaseClassInfo(*tcling_class_info->GetClassInfo());
-   fDerivedClassInfo = new tcling_ClassInfo(*tcling_class_info);
+   fClassInfo = new tcling_ClassInfo(*tcling_class_info);
+   const clang::CXXRecordDecl* CRD =
+      llvm::dyn_cast<clang::CXXRecordDecl>(fClassInfo->GetDecl());
+   if (!CRD) {
+      // We were initialized with something that is not a class.
+      // FIXME: We should prevent this from happening!
+      return;
+   }
+   fDecl = CRD;
+   fIter = CRD->bases_begin();
 }
 
 tcling_BaseClassInfo::tcling_BaseClassInfo(const tcling_BaseClassInfo& rhs)
-   : fBaseClassInfo(0)
-   , fInterp(0)
-   , fDerivedClassInfo(0)
-   , fFirstTime(true)
-   , fDescend(false)
-   , fDecl(0)
-   , fIter(0)
-   , fClassInfo(0)
-   , fOffset(0L)
+   : fBaseClassInfo(0), fInterp(rhs.fInterp), fClassInfo(0),
+     fFirstTime(rhs.fFirstTime), fDescend(rhs.fDescend), fDecl(rhs.fDecl),
+     fIter(rhs.fIter), fBaseInfo(0), fIterStack(rhs.fIterStack),
+     fOffset(rhs.fOffset)
 {
-   if (!rhs.IsValid()) {
-      G__ClassInfo cli;
-      fBaseClassInfo = new G__BaseClassInfo(cli);
-      fInterp = 0;
-      fDerivedClassInfo = new tcling_ClassInfo(fInterp);
-      return;
-   }
    fBaseClassInfo = new G__BaseClassInfo(*rhs.fBaseClassInfo);
-   fInterp = rhs.fInterp;
-   fDerivedClassInfo = new tcling_ClassInfo(*rhs.fDerivedClassInfo);
-   fFirstTime = rhs.fFirstTime;
-   fDescend = rhs.fDescend;
-   fDecl = rhs.fDecl;
-   fIter = rhs.fIter;
    fClassInfo = new tcling_ClassInfo(*rhs.fClassInfo);
-   fIterStack = rhs.fIterStack;
-   fOffset = rhs.fOffset;
+   fBaseInfo = new tcling_ClassInfo(*rhs.fBaseInfo);
 }
 
 tcling_BaseClassInfo& tcling_BaseClassInfo::operator=(
    const tcling_BaseClassInfo& rhs)
 {
-   if (this == &rhs) {
-      return *this;
-   }
-   if (!rhs.IsValid()) {
-      delete fBaseClassInfo;
-      fBaseClassInfo = 0;
-      G__ClassInfo cli;
-      fBaseClassInfo = new G__BaseClassInfo(cli);
-      fInterp = 0;
-      delete fDerivedClassInfo;
-      fDerivedClassInfo = 0;
-      fDerivedClassInfo = new tcling_ClassInfo(fInterp);
-      fFirstTime = true;
-      fDescend = false;
-      fDecl = 0;
-      fIter = 0;
-      delete fClassInfo;
-      fClassInfo = 0;
-      // FIXME: Change this to use the swap trick to free the memory.
-      fIterStack.clear();
-      fOffset = 0L;
-   }
-   else {
+   if (this != &rhs) {
       delete fBaseClassInfo;
       fBaseClassInfo = new G__BaseClassInfo(*rhs.fBaseClassInfo);
       fInterp = rhs.fInterp;
-      delete fDerivedClassInfo;
-      fDerivedClassInfo = new tcling_ClassInfo(*rhs.fDerivedClassInfo);
+      delete fClassInfo;
+      fClassInfo = new tcling_ClassInfo(*rhs.fClassInfo);
       fFirstTime = rhs.fFirstTime;
       fDescend = rhs.fDescend;
       fDecl = rhs.fDecl;
       fIter = rhs.fIter;
-      delete fClassInfo;
-      fClassInfo = new tcling_ClassInfo(*rhs.fClassInfo);
+      delete fBaseInfo;
+      fBaseInfo = new tcling_ClassInfo(*rhs.fBaseInfo);
       fIterStack = rhs.fIterStack;
       fOffset = rhs.fOffset;
    }
    return *this;
 }
 
-G__BaseClassInfo* tcling_BaseClassInfo::GetBaseClassInfo() const
+bool tcling_BaseClassInfo::IsValidCint() const
 {
-   return fBaseClassInfo;
+   if (gAllowCint) {
+      return fBaseClassInfo->IsValid();
+   }
+   return false;
 }
 
-tcling_ClassInfo* tcling_BaseClassInfo::GetDerivedClassInfo() const
+bool tcling_BaseClassInfo::IsValidClang() const
 {
-   return fDerivedClassInfo;
+   if (gAllowClang) {
+      return
+         // inited with a valid class, and
+         fClassInfo->IsValidClang() &&
+         // the base class we are iterating over is valid, and
+         fDecl &&
+         // our internal iterator is currently valid, and
+         fIter &&
+         (fIter != llvm::dyn_cast<clang::CXXRecordDecl>(fDecl)->bases_end()) &&
+         // our current base has a tcling_ClassInfo, and
+         fBaseInfo &&
+         // our current base is a valid class
+         fBaseInfo->IsValidClang();
+   }
+   return false;
 }
 
-tcling_ClassInfo* tcling_BaseClassInfo::GetClassInfo() const
+bool tcling_BaseClassInfo::IsValid() const
 {
-   return fClassInfo;
-}
-
-long tcling_BaseClassInfo::GetOffsetBase() const
-{
-   return fOffset;
+   return IsValidCint() || IsValidClang();
 }
 
 int tcling_BaseClassInfo::InternalNext(int onlyDirect)
 {
    // Exit early if the iterator is already invalid.
-   if (fIter == llvm::dyn_cast<clang::CXXRecordDecl>(fDecl)->bases_end()) {
+   if (!fDecl || !fIter ||
+         (fIter == llvm::dyn_cast<clang::CXXRecordDecl>(fDecl)->bases_end())) {
       return 0;
    }
-   // Advance the iterator.
-   if (fFirstTime) {
-      // The cint semantics are strange.
-      const clang::CXXRecordDecl* CRD =
-         llvm::dyn_cast<clang::CXXRecordDecl>(fDerivedClassInfo->GetDecl());
-      if (!CRD) {
-         // We were initialized with something that is not a class.
-         // FIXME: We should prevent this from happening!
-         return 0;
-      }
-      fIter = CRD->bases_begin();
-      fFirstTime = false;
-   }
-   else if (!onlyDirect && fDescend) {
-      // We previous processed a base class which itself has bases,
-      // now we process the bases of that base class.
-      fDescend = false;
-      const clang::RecordType* Ty =
-         fIter->getType()->getAs<clang::RecordType>();
-      clang::CXXRecordDecl* Base =
-         llvm::cast_or_null<clang::CXXRecordDecl>(
-            Ty->getDecl()->getDefinition());
-      clang::ASTContext& Context = Base->getASTContext();
-      const clang::RecordDecl* RD = llvm::dyn_cast<clang::RecordDecl>(fDecl);
-      const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
-      int64_t offset = Layout.getBaseClassOffset(Base).getQuantity();
-      fOffset += static_cast<long>(offset);
-      fIterStack.push_back(std::make_pair(
-                              std::make_pair(fDecl, fIter), static_cast<long>(offset)));
-      fDecl = Base;
-      fIter = Base->bases_begin();
-   }
-   else {
-      // Simple case, move on to the next base class specifier.
-      ++fIter;
-   }
-   // Fix it if we went past the end.
-   while (
-      (fIter == llvm::dyn_cast<clang::CXXRecordDecl>(fDecl)->bases_end()) &&
-      fIterStack.size()
-   ) {
-      // All done with this base class.
-      fDecl = fIterStack.back().first.first;
-      fIter = fIterStack.back().first.second;
-      fOffset -= fIterStack.back().second;
-      fIterStack.pop_back();
-      ++fIter;
-   }
-   // Check for final termination.
-   if (fIter == llvm::dyn_cast<clang::CXXRecordDecl>(fDecl)->bases_end()) {
-      // We have reached the end of the direct bases, all done.
-      return 0;
-   }
-   return 1;
-}
-
-int tcling_BaseClassInfo::Next()
-{
-   return Next(1);
-}
-
-int tcling_BaseClassInfo::Next(int onlyDirect)
-{
-   if (!IsValid()) {
-      return 0;
-   }
-   if (!fDerivedClassInfo->GetDecl()) {
-      return fBaseClassInfo->Next(onlyDirect);
-   }
+   // Advance to the next valid base.
    while (1) {
       // Advance the iterator.
-      int valid_flag = InternalNext(onlyDirect);
-      // Check if we have reached the end of the direct bases.
-      if (!valid_flag) {
-         // We have, all done.
-         delete fClassInfo;
-         fClassInfo = 0;
+      if (fFirstTime) {
+         // The cint semantics are strange.
+         fFirstTime = false;
+      }
+      else if (!onlyDirect && fDescend) {
+         // We previously processed a base class which itself has bases,
+         // now we process the bases of that base class.
+         fDescend = false;
+         const clang::RecordType* Ty = fIter->getType()->
+                                       getAs<clang::RecordType>();
+         // Note: We made sure this would work when we selected the
+         //       base for processing.
+         clang::CXXRecordDecl* Base = llvm::cast<clang::CXXRecordDecl>(
+                                         Ty->getDecl()->getDefinition());
+         clang::ASTContext& Context = Base->getASTContext();
+         const clang::RecordDecl* RD = llvm::dyn_cast<clang::RecordDecl>(fDecl);
+         const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
+         int64_t offset = Layout.getBaseClassOffset(Base).getQuantity();
+         fOffset += static_cast<long>(offset);
+         fIterStack.push_back(std::make_pair(std::make_pair(fDecl, fIter),
+                                             static_cast<long>(offset)));
+         fDecl = Base;
+         fIter = Base->bases_begin();
+      }
+      else {
+         // Simple case, move on to the next base class specifier.
+         ++fIter;
+      }
+      // Fix it if we went past the end.
+      while (
+         (fIter == llvm::dyn_cast<clang::CXXRecordDecl>(fDecl)->bases_end()) &&
+         fIterStack.size()
+      ) {
+         // All done with this base class.
+         fDecl = fIterStack.back().first.first;
+         fIter = fIterStack.back().first.second;
+         fOffset -= fIterStack.back().second;
+         fIterStack.pop_back();
+         ++fIter;
+      }
+      // Check for final termination.
+      if (fIter == llvm::dyn_cast<clang::CXXRecordDecl>(fDecl)->bases_end()) {
+         // We have reached the end of the direct bases, all done.
+         delete fBaseInfo;
+         fBaseInfo = 0;
+         // Iterator is now invalid.
          return 0;
       }
       // Check if current base class is a dependent type, that is, an
       // uninstantiated template class.
-      const clang::RecordType* Ty =
-         fIter->getType()->getAs<clang::RecordType>();
+      const clang::RecordType* Ty = fIter->getType()->
+                                    getAs<clang::RecordType>();
       if (!Ty) {
          // A dependent type (uninstantiated template), skip it.
          continue;
@@ -261,19 +210,42 @@ int tcling_BaseClassInfo::Next(int onlyDirect)
          fDescend = true;
       }
       // Update info for this base class.
-      fClassInfo = new tcling_ClassInfo(fInterp, Base);
+      delete fBaseInfo;
+      fBaseInfo = new tcling_ClassInfo(fInterp, Base);
+      // Iterator is now valid.
       return 1;
    }
 }
 
+int tcling_BaseClassInfo::Next(int onlyDirect)
+{
+   if (!gAllowClang) {
+      if (gAllowCint) {
+         return fBaseClassInfo->Next(onlyDirect);
+      }
+      return 0;
+   }
+   return InternalNext(onlyDirect);
+}
+
+int tcling_BaseClassInfo::Next()
+{
+   return Next(1);
+}
+
 long tcling_BaseClassInfo::Offset() const
 {
-   //return fBaseClassInfo->Offset();
    if (!IsValid()) {
       return -1;
    }
-   if (!fDerivedClassInfo->GetDecl()) {
-      return fBaseClassInfo->Offset();
+   if (!IsValidClang()) {
+      if (gAllowCint) {
+         return fBaseClassInfo->Offset();
+      }
+      return -1;
+   }
+   if (!gAllowClang) {
+      return -1;
    }
    const clang::RecordType* Ty = fIter->getType()->getAs<clang::RecordType>();
    if (!Ty) {
@@ -292,23 +264,29 @@ long tcling_BaseClassInfo::Offset() const
    const clang::RecordDecl* RD = llvm::dyn_cast<clang::RecordDecl>(fDecl);
    const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
    int64_t offset = Layout.getBaseClassOffset(Base).getQuantity();
-   return fOffset + static_cast<long>(offset);
+   long clang_val = fOffset + static_cast<long>(offset);
+   return clang_val;
 }
 
 long tcling_BaseClassInfo::Property() const
 {
-   //return fBaseClassInfo->Property();
    if (!IsValid()) {
-      return 0;
+      return 0L;
    }
-   if (!fDerivedClassInfo->GetDecl()) {
-      return fBaseClassInfo->Property();
+   if (!IsValidClang()) {
+      if (gAllowCint) {
+         return fBaseClassInfo->Property();
+      }
+      return 0L;
+   }
+   if (!gAllowClang) {
+      return 0L;
    }
    long property = 0L;
    if (fIter->isVirtual()) {
       property |= G__BIT_ISVIRTUALBASE;
    }
-   if (fDecl == fDerivedClassInfo->GetDecl()) {
+   if (fDecl == fClassInfo->GetDecl()) {
       property |= G__BIT_ISDIRECTINHERIT;
    }
    switch (fIter->getAccessSpecifier()) {
@@ -333,68 +311,69 @@ long tcling_BaseClassInfo::Property() const
 
 long tcling_BaseClassInfo::Tagnum() const
 {
-   //return fBaseClassInfo->Tagnum();
    if (!IsValid()) {
-      return -1;
+      return -1L;
    }
-   if (!fDerivedClassInfo->GetDecl()) {
-      return fBaseClassInfo->Tagnum();
+   if (!IsValidClang()) {
+      if (gAllowCint) {
+         return fBaseClassInfo->Tagnum();
+      }
+      return -1L;
    }
-   // Note: This *must* return a *cint* tagnum for now.
-   return fClassInfo->Tagnum();
+   if (!gAllowClang) {
+      return -1L;
+   }
+   return fBaseInfo->Tagnum();
 }
 
 const char* tcling_BaseClassInfo::FullName() const
 {
-   //return fBaseClassInfo->Fullname();
    if (!IsValid()) {
       return 0;
    }
-   if (!fDerivedClassInfo->GetDecl()) {
-      return fBaseClassInfo->Fullname();
+   if (!IsValidClang()) {
+      if (gAllowCint) {
+         return fBaseClassInfo->Fullname();
+      }
+      return 0;
    }
-   return fClassInfo->FullName();
+   if (!gAllowClang) {
+      return 0;
+   }
+   return fBaseInfo->FullName();
 }
 
 const char* tcling_BaseClassInfo::Name() const
 {
-   //return fBaseClassInfo->Name();
    if (!IsValid()) {
       return 0;
    }
-   if (!fDerivedClassInfo->GetDecl()) {
-      return fBaseClassInfo->Name();
+   if (!IsValidClang()) {
+      if (gAllowCint) {
+         return fBaseClassInfo->Name();
+      }
+      return 0;
    }
-   return fClassInfo->Name();
+   if (!gAllowClang) {
+      return 0;
+   }
+   return fBaseInfo->Name();
 }
 
 const char* tcling_BaseClassInfo::TmpltName() const
 {
-   //return fBaseClassInfo->TmpltName();
    if (!IsValid()) {
       return 0;
    }
-   if (!fDerivedClassInfo->GetDecl()) {
-      return fBaseClassInfo->TmpltName();
+   if (!IsValidClang()) {
+      if (gAllowCint) {
+         return fBaseClassInfo->TmpltName();
+      }
+      return 0;
    }
-   return fClassInfo->TmpltName();
-}
-
-bool tcling_BaseClassInfo::IsValid() const
-{
-   if (!fDerivedClassInfo->GetDecl()) {
-      return fBaseClassInfo->IsValid();
+   if (!gAllowClang) {
+      return 0;
    }
-   if (
-      fDecl && // the base class we are currently iterating over is valid, and
-      // our internal iterator is currently valid, and
-      fIter &&
-      (fIter != llvm::dyn_cast<clang::CXXRecordDecl>(fDecl)->bases_end()) &&
-      fClassInfo && // our current base has a tcling_ClassInfo, and
-      fClassInfo->IsValid() // our current base is a valid class
-   ) {
-      return true;
-   }
-   return false;
+   return fBaseInfo->TmpltName();
 }
 
