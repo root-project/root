@@ -319,7 +319,7 @@ TThread::VoidRtnFunc_t TFilePrefetch::ThreadProc(void* arg)
 
    pClass->fNewBlockAdded->Wait();
    
-   while(pClass->fSemMasterWorker->TryWait() == 1) {
+   while( pClass->fSemMasterWorker->TryWait() != 0 ) {
  
       pClass->ReadListOfBlocks();
    
