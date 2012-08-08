@@ -34,7 +34,7 @@ private:
    bool                 fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
    bool                 fDescend; // Flag for signaling the need to descend on this advancement.
    clang::DeclContext::decl_iterator fIter; // Current decl in scope.
-   clang::Decl         *fDecl; // Current decl.
+   const clang::Decl   *fDecl; // Current decl.
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
 
 public:
@@ -49,7 +49,7 @@ public:
 
    explicit TClingTypedefInfo(cling::Interpreter *, const char *);
 
-   clang::Decl         *GetDecl() const;
+   const clang::Decl   *GetDecl() const;
    void                 Init(const char *name);
    bool                 IsValid() const;
    int                  AdvanceToDecl(const clang::Decl *);

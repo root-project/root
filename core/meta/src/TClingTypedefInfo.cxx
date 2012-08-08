@@ -30,7 +30,7 @@ TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
                                      const char *name)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0)
 {
-   fDecl = const_cast<clang::Decl *>(fInterp->lookupScope(name));
+   fDecl = fInterp->lookupScope(name);
    if (fDecl && !llvm::isa<clang::TypedefDecl>(fDecl)) {
       fDecl = 0;
    }
@@ -40,7 +40,7 @@ TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
 }
 
 //______________________________________________________________________________
-clang::Decl *TClingTypedefInfo::GetDecl() const
+const clang::Decl *TClingTypedefInfo::GetDecl() const
 {
    return fDecl;
 }
@@ -55,10 +55,9 @@ void TClingTypedefInfo::Init(const char *name)
    fFirstTime = true;
    fDescend = false;
    fIter = clang::DeclContext::decl_iterator();
-   fDecl = 0;
    fIterStack.clear();
-   const clang::Decl *decl = fInterp->lookupScope(name);
-   if (!decl) {
+   fDecl = fInterp->lookupScope(name);
+   if (!fDecl) {
       if (gDebug > 0) {
          fprintf(stderr,
                  "TClingTypedefInfo::Init(name): "
@@ -66,7 +65,6 @@ void TClingTypedefInfo::Init(const char *name)
       }
       return;
    }
-   fDecl = const_cast<clang::Decl *>(decl);
    if (gDebug > 0) {
       fprintf(stderr,
               "TClingTypedefInfo::Init(name): "
