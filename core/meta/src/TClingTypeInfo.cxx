@@ -24,139 +24,251 @@
 
 #include "TClingTypeInfo.h"
 
+#include "Property.h" // for G__BIT_*, after CINT is gone,
+                      // replace with the following 
+//#include "TClingProperty.h" // After CINT is gone, instead of Property.h
+#include "Rtypes.h" // for gDebug
+#include "cling/Interpreter/Interpreter.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/Type.h"
+#include "clang/AST/PrettyPrinter.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include <cstdio>
+#include <string>
+
+using namespace std;
+
 //______________________________________________________________________________
-
-
-
-TClingTypeInfo::~TClingTypeInfo()
+tcling_TypeInfo::tcling_TypeInfo(cling::Interpreter *interp, const char *name)
+   : fInterp(interp)
 {
-   delete fTypeInfo;
-   fTypeInfo = 0;
-   delete fClassInfo;
-   fClassInfo = 0;
-   fDecl = 0;
+   Init(name);
 }
 
-TClingTypeInfo::TClingTypeInfo(cling::Interpreter* interp)
-   : fTypeInfo(0), fClassInfo(0), fInterp(interp), fDecl(0)
+//______________________________________________________________________________
+void tcling_TypeInfo::Init(const char *name)
 {
-   fTypeInfo = new G__TypeInfo;
-   fClassInfo = new G__ClassInfo;
-}
-
-TClingTypeInfo::TClingTypeInfo(cling::Interpreter* interp, const char* name)
-   : fTypeInfo(0), fClassInfo(0), fInterp(interp), fDecl(0)
-{
-   fTypeInfo = new G__TypeInfo(name);
-   int tagnum = fTypeInfo->Tagnum();
-   if (tagnum == -1) {
-      fClassInfo = new G__ClassInfo;
-      return;
+   fQualType = clang::QualType();
+   if (gDebug > 0) {
+      fprintf(stderr,
+              "tcling_TypeInfo::Init(name): looking up clang type: %s", name);
    }
-   fClassInfo = new G__ClassInfo(tagnum);
-   return;
-   //fprintf(stderr, "TClingTypeInfo(name): looking up cling class: %s  "
-   //        "tagnum: %d\n", name, tagnum);
-   const clang::Decl* decl = fInterp->lookupScope(name);
-   if (!decl) {
-      //fprintf(stderr, "TClingTypeInfo(name): cling class not found: %s  "
-      //        "tagnum: %d\n", name, tagnum);
-      return;
+   clang::QualType QT = fInterp->lookupType(name);
+   if (QT.isNull()) {
+      if (gDebug > 0) {
+         fprintf(stderr,
+                 "tcling_TypeInfo::Init(name): clang type not found: %s", name);
+      }
+      std::string buf = TClassEdit::InsertStd(name);
+      QT = fInterp->lookupType(buf);
+      if (QT.isNull()) {
+         if (gDebug > 0) {
+            fprintf(stderr,
+                    "tcling_TypeInfo::Init(name):  "
+                    "clang type not found name: %s\n", buf.c_str());
+         }
+      }
+      else {
+         fQualType = QT;
+         if (gDebug > 0) {
+            fprintf(stderr,
+                    "tcling_TypeInfo::Init(name): found clang type name: %s\n",
+                    buf.c_str());
+         }
+      }
    }
-   fDecl = const_cast<clang::Decl*>(decl);
-   //fprintf(stderr, "TClingTypeInfo(name): cling class found: %s  "
-   //        "tagnum: %d  Decl: 0x%lx\n", name, tagnum, (long) fDecl);
-}
-
-TClingTypeInfo::TClingTypeInfo(const TClingTypeInfo& rhs)
-{
-   fTypeInfo = new G__TypeInfo(*rhs.fTypeInfo);
-   fClassInfo = new G__ClassInfo(rhs.fClassInfo->Tagnum());
-   fInterp = rhs.fInterp;
-   fDecl = rhs.fDecl;
-}
-
-TClingTypeInfo& TClingTypeInfo::operator=(const TClingTypeInfo& rhs)
-{
-   if (this == &rhs) {
-      return *this;
+   else {
+      fQualType = QT;
+      if (gDebug > 0) {
+         fprintf(stderr,
+                 "tcling_TypeInfo::Init(name): clang type found: %s\n", name);
+      }
    }
-   delete fTypeInfo;
-   fTypeInfo = new G__TypeInfo(*rhs.fTypeInfo);
-   delete fClassInfo;
-   fClassInfo = new G__ClassInfo(rhs.fClassInfo->Tagnum());
-   fInterp = rhs.fInterp;
-   fDecl = rhs.fDecl;
-   return *this;
 }
 
-G__TypeInfo* TClingTypeInfo::GetTypeInfo() const
+//______________________________________________________________________________
+bool tcling_TypeInfo::IsValid() const
 {
-   return fTypeInfo;
+   return !fQualType.isNull();
 }
 
-G__ClassInfo* TClingTypeInfo::GetClassInfo() const
+//______________________________________________________________________________
+const char *tcling_TypeInfo::Name() const
 {
-   return fClassInfo;
-}
-
-clang::Decl* TClingTypeInfo::GetDecl() const
-{
-   return fDecl;
-}
-
-void TClingTypeInfo::Init(const char* name)
-{
-   fTypeInfo->Init(name);
-   int tagnum = fTypeInfo->Tagnum();
-   if (tagnum == -1) {
-      fClassInfo = new G__ClassInfo;
-      fDecl = 0;
-      return;
+   if (!IsValid()) {
+      return 0;
    }
-   fClassInfo  = new G__ClassInfo(tagnum);
-   return;
-   const char* fullname = fClassInfo->Fullname();
-   //fprintf(stderr, "TClingTypeInfo::Init(name): looking up cling class: %s  "
-   //        "tagnum: %d\n", fullname, tagnum);
-   const clang::Decl* decl = fInterp->lookupScope(fullname);
-   if (!decl) {
-      //fprintf(stderr, "TClingTypeInfo::Init(name): cling class not found: %s  "
-      //        "tagnum: %d\n", fullname, tagnum);
-      return;
+   // Note: This *must* be static because we are returning a pointer inside it!
+   static std::string buf;
+   buf.clear();
+   clang::PrintingPolicy Policy(fInterp->getCI()->getASTContext().
+                                getPrintingPolicy());
+   fQualType.getAsStringInternal(buf, Policy);
+   return buf.c_str();
+}
+
+//______________________________________________________________________________
+long tcling_TypeInfo::Property() const
+{
+   if (!IsValid()) {
+      return 0L;
    }
-   fDecl = const_cast<clang::Decl*>(decl);
-   //fprintf(stderr, "TClingTypeInfo::Init(name): cling class found: %s  "
-   //        "tagnum: %d  Decl: 0x%lx\n", fullname, tagnum, (long) fDecl);
+   long property = 0L;
+   if (llvm::isa<clang::TypedefType>(*fQualType)) {
+      property |= G__BIT_ISTYPEDEF;
+   }
+   clang::QualType QT = fQualType.getCanonicalType();
+   if (QT.isConstQualified()) {
+      property |= G__BIT_ISCONSTANT;
+   }
+   while (1) {
+      if (QT->isArrayType()) {
+         QT = llvm::cast<clang::ArrayType>(QT)->getElementType();
+         continue;
+      }
+      else if (QT->isReferenceType()) {
+         property |= G__BIT_ISREFERENCE;
+         QT = llvm::cast<clang::ReferenceType>(QT)->getPointeeType();
+         continue;
+      }
+      else if (QT->isPointerType()) {
+         property |= G__BIT_ISPOINTER;
+         if (QT.isConstQualified()) {
+            property |= G__BIT_ISPCONSTANT;
+         }
+         QT = llvm::cast<clang::PointerType>(QT)->getPointeeType();
+         continue;
+      }
+      else if (QT->isMemberPointerType()) {
+         QT = llvm::cast<clang::MemberPointerType>(QT)->getPointeeType();
+         continue;
+      }
+      break;
+   }
+   if (QT->isBuiltinType()) {
+      property |= G__BIT_ISFUNDAMENTAL;
+   }
+   if (QT.isConstQualified()) {
+      property |= G__BIT_ISCONSTANT;
+   }
+   return property;
 }
 
-bool TClingTypeInfo::IsValid() const
+//______________________________________________________________________________
+int tcling_TypeInfo::RefType() const
 {
-   return fTypeInfo->IsValid();
+   if (!IsValid()) {
+      return 0;
+   }
+   int cnt = 0;
+   bool is_ref = false;
+   clang::QualType QT = fQualType.getCanonicalType();
+   while (1) {
+      if (QT->isArrayType()) {
+         QT = llvm::cast<clang::ArrayType>(QT)->getElementType();
+         continue;
+      }
+      else if (QT->isReferenceType()) {
+         is_ref = true;
+         QT = llvm::cast<clang::ReferenceType>(QT)->getPointeeType();
+         continue;
+      }
+      else if (QT->isPointerType()) {
+         ++cnt;
+         QT = llvm::cast<clang::PointerType>(QT)->getPointeeType();
+         continue;
+      }
+      else if (QT->isMemberPointerType()) {
+         QT = llvm::cast<clang::MemberPointerType>(QT)->getPointeeType();
+         continue;
+      }
+      break;
+   }
+   int val = 0;
+   if (cnt > 1) {
+      val = cnt;
+   }
+   if (is_ref) {
+      if (cnt < 2) {
+         val = G__PARAREFERENCE;
+      }
+      else {
+         val |= G__PARAREF;
+      }
+   }
+   return val;
 }
 
-const char* TClingTypeInfo::Name() const
+//______________________________________________________________________________
+int tcling_TypeInfo::Size() const
 {
-   return fTypeInfo->Name();
+   if (!IsValid()) {
+      return 1;
+   }
+   if (fQualType->isDependentType()) {
+      // Dependent on a template parameter, we do not know what it is yet.
+      return 0;
+   }
+   if (const clang::RecordType *RT = fQualType->getAs<clang::RecordType>()) {
+      if (!RT->getDecl()->getDefinition()) {
+         // This is a forward-declared class.
+         return 0;
+      }
+   }
+   clang::ASTContext &Context = fInterp->getCI()->getASTContext();
+   // Note: This is an int64_t.
+   clang::CharUnits::QuantityType Quantity =
+      Context.getTypeSizeInChars(fQualType).getQuantity();
+   return static_cast<int>(Quantity);
 }
 
-long TClingTypeInfo::Property() const
+//______________________________________________________________________________
+const char *tcling_TypeInfo::StemName() const
 {
-   return fTypeInfo->Property();
+   if (!IsValid()) {
+      return 0;
+   }
+   clang::QualType QT = fQualType.getCanonicalType();
+   while (1) {
+      if (QT->isArrayType()) {
+         QT = llvm::cast<clang::ArrayType>(QT)->getElementType();
+         continue;
+      }
+      else if (QT->isReferenceType()) {
+         QT = llvm::cast<clang::ReferenceType>(QT)->getPointeeType();
+         continue;
+      }
+      else if (QT->isPointerType()) {
+         QT = llvm::cast<clang::PointerType>(QT)->getPointeeType();
+         continue;
+      }
+      else if (QT->isMemberPointerType()) {
+         QT = llvm::cast<clang::MemberPointerType>(QT)->getPointeeType();
+         continue;
+      }
+      break;
+   }
+   // Note: This *must* be static because we are returning a pointer inside it.
+   static std::string buf;
+   buf.clear();
+   clang::PrintingPolicy Policy(fInterp->getCI()->getASTContext().
+                                getPrintingPolicy());
+   QT.getAsStringInternal(buf, Policy);
+   return buf.c_str();
 }
 
-int TClingTypeInfo::RefType() const
+//______________________________________________________________________________
+const char *tcling_TypeInfo::TrueName() const
 {
-   return fTypeInfo->Reftype();
-}
-
-int TClingTypeInfo::Size() const
-{
-   return fTypeInfo->Size();
-}
-
-const char* TClingTypeInfo::TrueName() const
-{
-   return fTypeInfo->TrueName();
+   if (!IsValid()) {
+      return 0;
+   }
+   // Note: This *must* be static because we are returning a pointer inside it.
+   static std::string buf;
+   buf.clear();
+   clang::PrintingPolicy Policy(fInterp->getCI()->getASTContext().
+                                getPrintingPolicy());
+   fQualType.getCanonicalType().getAsStringInternal(buf, Policy);
+   return buf.c_str();
 }
 

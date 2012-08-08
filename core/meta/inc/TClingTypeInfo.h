@@ -25,38 +25,44 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "clang/AST/Type.h"
+
+namespace cling {
+class Interpreter;
+}
+
+extern "C" struct G__value;
+
 class TClingTypeInfo {
-public:
-   ~TClingTypeInfo();
-   explicit TClingTypeInfo(cling::Interpreter*);
-   explicit TClingTypeInfo(cling::Interpreter*, const char* name);
-   TClingTypeInfo(const TClingTypeInfo&);
-   TClingTypeInfo& operator=(const TClingTypeInfo&);
-   G__TypeInfo* GetTypeInfo() const;
-   G__ClassInfo* GetClassInfo() const;
-   clang::Decl* GetDecl() const;
-   void Init(const char* name);
-   bool IsValid() const;
-   const char* Name() const;
-   long Property() const;
-   int RefType() const;
-   int Size() const;
-   const char* TrueName() const;
+
 private:
-   //
-   //  CINT part
-   //
-   /// CINT type info, we own.
-   G__TypeInfo* fTypeInfo;
-   /// CINT class info, we own.
-   G__ClassInfo* fClassInfo;
-   //
-   //  Cling part
-   //
-   /// Cling interpreter, we do *not* own.
-   cling::Interpreter* fInterp;
-   /// Clang AST Node for the type, we do *not* own.
-   clang::Decl* fDecl;
+   cling::Interpreter  *fInterp;    //Cling interpreter, we do *not* own.
+   clang::QualType      fQualType;  //Clang qualified type we are querying.
+
+public:
+
+   explicit TClingTypeInfo(cling::Interpreter *interp)
+      : fInterp(interp) {}
+
+   TClingTypeInfo(cling::Interpreter *interp, clang::QualType ty)
+      : fInterp(interp), fQualType(ty) {}
+
+   TClingTypeInfo(cling::Interpreter *interp, const char *name);
+
+   cling::Interpreter  *GetInterpreter() const { return fInterp; }
+
+   clang::QualType      GetQualType() const { return fQualType; }
+
+   void                 Init(const char *name); // Set type by name.
+   void                 Init(clang::QualType ty) { fQualType = ty; }
+   bool                 IsValid() const { return !fQualType.isNull(); }
+   const char          *Name() const; // Get name of type.
+   long                 Property() const; // Get properties of type.
+   int                  RefType() const; // Get CINT reftype of type.
+   int                  Size() const; // Get size in bytes of type.
+   const char          *StemName() const; // Get name of type chain leaf node.
+   const char          *TrueName() const; // Get name of type with no typedefs.
+
 };
 
 #endif // ROOT_TClingTypeInfo
