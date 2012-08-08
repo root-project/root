@@ -84,6 +84,8 @@ public:
    void operator delete(void* vp, void* arena) {}
    void operator delete[](void* vp) { ::operator delete[](vp); }
    void operator delete[](void* vp, void* arena) {}
+   B& operator*(B* bptr) { return *bptr; }
+   B operator+(B b) { return b; }
 };
 class A : public B {
 private:
@@ -1193,6 +1195,39 @@ func_B_del_ary_plcmt_proto->print(llvm::outs());
 //CHECK-NEXT: }
 
 
+
+//
+//  Test finding unary member operator.
+//
+
+const clang::FunctionDecl* func_B_star_args = gCling->lookupFunctionArgs(class_B, "operator*", "b_ptr");
+const clang::FunctionDecl* func_B_star_proto = gCling->lookupFunctionProto(class_B, "operator*", "B*");
+
+printf("func_B_star_args: 0x%lx\n", (unsigned long) func_B_star_args);
+//CHECK: func_B_star_args: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_star_args)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_star_args name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_star_args name: B::operator*
+
+func_B_star_args->print(llvm::outs());
+//CHECK-NEXT: B &operator*(B *bptr) {
+//CHECK-NEXT:     return *bptr;
+//CHECK-NEXT: }
+
+printf("func_B_star_proto: 0x%lx\n", (unsigned long) func_B_star_proto);
+//CHECK: func_B_star_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+
+buf.clear();
+llvm::dyn_cast<clang::NamedDecl>(func_B_star_proto)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+printf("func_B_star_proto name: %s\n", buf.c_str());
+//CHECK-NEXT: func_B_star_proto name: B::operator*
+
+func_B_star_proto->print(llvm::outs());
+//CHECK-NEXT: B &operator*(B *bptr) {
+//CHECK-NEXT:     return *bptr;
+//CHECK-NEXT: }
 
 //
 //  One final check to make sure we are at the right line in the output.
