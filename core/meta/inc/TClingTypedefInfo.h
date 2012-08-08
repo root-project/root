@@ -29,24 +29,24 @@
 class TClingTypedefInfo {
 public:
    ~TClingTypedefInfo();
-   explicit TClingTypedefInfo(cling::Interpreter*);
-   explicit TClingTypedefInfo(cling::Interpreter*, const char*);
-   TClingTypedefInfo(const TClingTypedefInfo&);
-   TClingTypedefInfo& operator=(const TClingTypedefInfo&);
-   clang::Decl* GetDecl() const;
-   void Init(const char* name);
+   explicit TClingTypedefInfo(cling::Interpreter *);
+   explicit TClingTypedefInfo(cling::Interpreter *, const char *);
+   TClingTypedefInfo(const TClingTypedefInfo &);
+   TClingTypedefInfo &operator=(const TClingTypedefInfo &);
+   clang::Decl *GetDecl() const;
+   void Init(const char *name);
    bool IsValid() const;
-   int AdvanceToDecl(const clang::Decl*);
+   int AdvanceToDecl(const clang::Decl *);
    int InternalNext();
    int Next();
    long Property() const;
    int Size() const;
-   const char* TrueName() const;
-   const char* Name() const;
-   const char* Title() const;
+   const char *TrueName() const;
+   const char *Name() const;
+   const char *Title() const;
 private:
    /// Cling interpreter, we do *not* own.
-   cling::Interpreter* fInterp;
+   cling::Interpreter *fInterp;
    /// We need to skip the first increment to support the cint Next() semantics.
    bool fFirstTime;
    /// Flag for signaling the need to descend on this advancement.
@@ -54,7 +54,7 @@ private:
    /// Current decl in scope.
    clang::DeclContext::decl_iterator fIter;
    /// Current decl.
-   clang::Decl* fDecl;
+   clang::Decl *fDecl;
    /// Recursion stack for traversing nested scopes.
    std::vector<clang::DeclContext::decl_iterator> fIterStack;
 };

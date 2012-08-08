@@ -34,21 +34,21 @@ TClingTypedefInfo::~TClingTypedefInfo()
    //fIterStack.clear();
 }
 
-TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter* interp)
+TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp)
    : fInterp(interp), fFirstTime(true), fDescend(false),
      fDecl(0)
 {
-   const clang::TranslationUnitDecl* TU =
+   const clang::TranslationUnitDecl *TU =
       fInterp->getCI()->getASTContext().getTranslationUnitDecl();
-   const clang::DeclContext* DC = llvm::cast<clang::DeclContext>(TU);
+   const clang::DeclContext *DC = llvm::cast<clang::DeclContext>(TU);
    fIter = DC->decls_begin();
 }
 
-TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter* interp,
-                                     const char* name)
+TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
+                                     const char *name)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0)
 {
-   fDecl = const_cast<clang::Decl*>(fInterp->lookupScope(name));
+   fDecl = const_cast<clang::Decl *>(fInterp->lookupScope(name));
    if (fDecl && !llvm::isa<clang::TypedefDecl>(fDecl)) {
       fDecl = 0;
    }
@@ -57,13 +57,13 @@ TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter* interp,
    }
 }
 
-TClingTypedefInfo::TClingTypedefInfo(const TClingTypedefInfo& rhs)
+TClingTypedefInfo::TClingTypedefInfo(const TClingTypedefInfo &rhs)
    : fInterp(rhs.fInterp), fFirstTime(rhs.fFirstTime), fDescend(rhs.fDescend),
      fIter(rhs.fIter), fDecl(rhs.fDecl), fIterStack(rhs.fIterStack)
 {
 }
 
-TClingTypedefInfo& TClingTypedefInfo::operator=(const TClingTypedefInfo& rhs)
+TClingTypedefInfo &TClingTypedefInfo::operator=(const TClingTypedefInfo &rhs)
 {
    if (this != &rhs) {
       fInterp = rhs.fInterp;
@@ -76,12 +76,12 @@ TClingTypedefInfo& TClingTypedefInfo::operator=(const TClingTypedefInfo& rhs)
    return *this;
 }
 
-clang::Decl* TClingTypedefInfo::GetDecl() const
+clang::Decl *TClingTypedefInfo::GetDecl() const
 {
    return fDecl;
 }
 
-void TClingTypedefInfo::Init(const char* name)
+void TClingTypedefInfo::Init(const char *name)
 {
    if (gDebug > 0) {
       fprintf(stderr,
@@ -92,7 +92,7 @@ void TClingTypedefInfo::Init(const char* name)
    fIter = clang::DeclContext::decl_iterator();
    fDecl = 0;
    fIterStack.clear();
-   const clang::Decl* decl = fInterp->lookupScope(name);
+   const clang::Decl *decl = fInterp->lookupScope(name);
    if (!decl) {
       if (gDebug > 0) {
          fprintf(stderr,
@@ -101,7 +101,7 @@ void TClingTypedefInfo::Init(const char* name)
       }
       return;
    }
-   fDecl = const_cast<clang::Decl*>(decl);
+   fDecl = const_cast<clang::Decl *>(decl);
    if (gDebug > 0) {
       fprintf(stderr,
               "TClingTypedefInfo::Init(name): "
@@ -116,10 +116,10 @@ bool TClingTypedefInfo::IsValid() const
    return fDecl;
 }
 
-int TClingTypedefInfo::AdvanceToDecl(const clang::Decl* target_decl)
+int TClingTypedefInfo::AdvanceToDecl(const clang::Decl *target_decl)
 {
-   const clang::TranslationUnitDecl* TU = target_decl->getTranslationUnitDecl();
-   const clang::DeclContext* DC = llvm::cast<clang::DeclContext>(TU);
+   const clang::TranslationUnitDecl *TU = target_decl->getTranslationUnitDecl();
+   const clang::DeclContext *DC = llvm::cast<clang::DeclContext>(TU);
    fFirstTime = true;
    fDescend = false;
    fIter = DC->decls_begin();
@@ -158,7 +158,7 @@ int TClingTypedefInfo::InternalNext()
             // Descend into the decl context of the current decl.
             fDescend = false;
             fIterStack.push_back(fIter);
-            clang::DeclContext* DC = llvm::cast<clang::DeclContext>(*fIter);
+            clang::DeclContext *DC = llvm::cast<clang::DeclContext>(*fIter);
             fIter = DC->decls_begin();
          }
          // Fix it if we went past the end.
@@ -200,7 +200,7 @@ long TClingTypedefInfo::Property() const
    }
    long property = 0L;
    property |= G__BIT_ISTYPEDEF;
-   const clang::TypedefDecl* TD = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
+   const clang::TypedefDecl *TD = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
    clang::QualType QT = TD->getUnderlyingType().getCanonicalType();
    if (QT.isConstQualified()) {
       property |= G__BIT_ISCONSTANT;
@@ -243,15 +243,15 @@ int TClingTypedefInfo::Size() const
    if (!IsValid()) {
       return 1;
    }
-   clang::ASTContext& Context = fDecl->getASTContext();
-   const clang::TypedefDecl* TD = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
+   clang::ASTContext &Context = fDecl->getASTContext();
+   const clang::TypedefDecl *TD = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
    clang::QualType QT = TD->getUnderlyingType();
    if (QT->isDependentType()) {
       // The underlying type is dependent on a template parameter,
       // we have no idea what it is yet.
       return 0;
    }
-   if (const clang::RecordType* RT = QT->getAs<clang::RecordType>()) {
+   if (const clang::RecordType *RT = QT->getAs<clang::RecordType>()) {
       if (!RT->getDecl()->getDefinition()) {
          // This is a typedef to a forward-declared type.
          return 0;
@@ -263,7 +263,7 @@ int TClingTypedefInfo::Size() const
    return static_cast<int>(Quantity);
 }
 
-const char* TClingTypedefInfo::TrueName() const
+const char *TClingTypedefInfo::TrueName() const
 {
    if (!IsValid()) {
       return "(unknown)";
@@ -271,12 +271,12 @@ const char* TClingTypedefInfo::TrueName() const
    // Note: This must be static because we return a pointer to the internals.
    static std::string truename;
    truename.clear();
-   const clang::TypedefDecl* TD = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
+   const clang::TypedefDecl *TD = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
    truename = TD->getUnderlyingType().getAsString();
    return truename.c_str();
 }
 
-const char* TClingTypedefInfo::Name() const
+const char *TClingTypedefInfo::Name() const
 {
    if (!IsValid()) {
       return "(unknown)";
@@ -290,7 +290,7 @@ const char* TClingTypedefInfo::Name() const
    return fullname.c_str();
 }
 
-const char* TClingTypedefInfo::Title() const
+const char *TClingTypedefInfo::Title() const
 {
    if (!IsValid()) {
       return "";
