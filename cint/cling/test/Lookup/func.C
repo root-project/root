@@ -57,13 +57,90 @@ template <class T> void H_d(T v) { T x = v; }
 template void H_d(int);
 template void H_d(double);
 } // namespace N
+
+class B {
+private:
+   long m_B_i;
+   double m_B_d;
+   int* m_B_ip;
+public:
+   virtual ~B() { delete m_B_ip; m_B_ip = 0; }
+   B() : m_B_i(0), m_B_d(0.0), m_B_ip(0) {}
+   B(int vi, double vd) : m_B_i(vi), m_B_d(vd), m_B_ip(0) {}
+   template <class T> B(T v) : m_B_i(0), m_B_d(0.0), m_B_ip(0) { m_B_i = (T) v; }
+   template <class T> B(T* v) : m_B_i(0), m_B_d(0.0), m_B_ip(0) { m_B_i = (long) (T*) v; m_B_d = 1.0; }
+   void B_f() { int x = 1; }
+   void B_g(int v) { int x = v; }
+   void B_h(int vi, double vd) { int x = vi; double y = vd; }
+   void B_j(int vi, int vj) { int x = vi; int y = vj; }
+   void B_j(int vi, double vd) { int x = vi; double y = vd; }
+   template <class T> void B_k(T v) { T x = v; }
+   void B_m(const int& v) { int y = v; }
+   void* operator new(std::size_t sz) { return ::operator new(sz); }
+   void* operator new(std::size_t sz, void* arena) { return arena; }
+   void* operator new[](std::size_t sz) { return ::operator new[](sz); }
+   void* operator new[](std::size_t sz, void* arena) { return arena; }
+   void operator delete(void* vp) { ::operator delete(vp); }
+   void operator delete(void* vp, void* arena) {}
+   void operator delete[](void* vp) { ::operator delete[](vp); }
+   void operator delete[](void* vp, void* arena) {}
+};
+class A : public B {
+private:
+   int m_A_i;
+   double m_A_d;
+public:
+   void A_f() { int x = 1; }
+   void A_g(int v) { int x = v; }
+   void A_h(int vi, double vd) { int x = vi; double y = vd; }
+   void A_j(int vi, int vj) { int x = vi; int y = vj; }
+   void A_j(int vi, double vd) { int x = vi; double y = vd; }
+   template <class T> void A_k(T v) { T x = v; }
+   void A_m(const int& v) { int y = v; }
+   void* operator new(std::size_t sz) { return ::operator new(sz); }
+   void* operator new(std::size_t sz, void* arena) { return arena; }
+   void* operator new[](std::size_t sz) { return ::operator new[](sz); }
+   void* operator new[](std::size_t sz, void* arena) { return arena; }
+   void operator delete(void* vp) { ::operator delete(vp); }
+   void operator delete(void* vp, void* arena) {}
+   void operator delete[](void* vp) { ::operator delete[](vp); }
+   void operator delete[](void* vp, void* arena) {}
+};
+// Note: In CINT, looking up a class template specialization causes
+//       instantiation, but looking up a function template specialization
+//       does not, so we explicitly request the instantiations we are
+//       going to lookup so they will be there to find.
+template void A::A_k(int);
+template void A::A_k(double);
+template void A::B_k(int);
+template void A::B_k(double);
+B b_obj;
+B* b_ptr = &b_obj;
+B* b_ary = new B[3];
+char b_arena[sizeof(B)*10];
+char b_ary_arena[256];
 .rawInput 0
+
+
+
+//
+//  We need these class declarations.
+//
+
+const clang::Decl* class_A = gCling->lookupScope("A");
+printf("class_A: 0x%lx\n", (unsigned long) class_A);
+//CHECK: class_A: 0x{{[1-9a-f][0-9a-f]*$}}
+
+const clang::Decl* class_B = gCling->lookupScope("B");
+printf("class_B: 0x%lx\n", (unsigned long) class_B);
+//CHECK-NEXT: class_B: 0x{{[1-9a-f][0-9a-f]*$}}
 
 
 
 //
 //  We need to fetch the namespace N declaration.
 //
+
 const clang::Decl* namespace_N = gCling->lookupScope("N");
 printf("namespace_N: 0x%lx\n", (unsigned long) namespace_N);
 //CHECK: namespace_N: 0x{{[1-9a-f][0-9a-f]*$}}
@@ -377,80 +454,6 @@ H_d2_proto->print(llvm::outs());
 //CHECK-NEXT: void H_d(double v) {
 //CHECK-NEXT:     double x = v;
 //CHECK-NEXT: }
-
-
-
-.rawInput 1
-class B {
-private:
-   long m_B_i;
-   double m_B_d;
-   int* m_B_ip;
-public:
-   virtual ~B() { delete m_B_ip; m_B_ip = 0; }
-   B() : m_B_i(0), m_B_d(0.0), m_B_ip(0) {}
-   B(int vi, double vd) : m_B_i(vi), m_B_d(vd), m_B_ip(0) {}
-   template <class T> B(T v) : m_B_i(0), m_B_d(0.0), m_B_ip(0) { m_B_i = (T) v; }
-   template <class T> B(T* v) : m_B_i(0), m_B_d(0.0), m_B_ip(0) { m_B_i = (long) (T*) v; m_B_d = 1.0; }
-   void B_f() { int x = 1; }
-   void B_g(int v) { int x = v; }
-   void B_h(int vi, double vd) { int x = vi; double y = vd; }
-   void B_j(int vi, int vj) { int x = vi; int y = vj; }
-   void B_j(int vi, double vd) { int x = vi; double y = vd; }
-   template <class T> void B_k(T v) { T x = v; }
-   void B_m(const int& v) { int y = v; }
-   void* operator new(std::size_t sz) { return ::operator new(sz); }
-   void* operator new(std::size_t sz, void* arena) { return arena; }
-   void* operator new[](std::size_t sz) { return ::operator new[](sz); }
-   void* operator new[](std::size_t sz, void* arena) { return arena; }
-   void operator delete(void* vp) { ::operator delete(vp); }
-   void operator delete(void* vp, void* arena) {}
-   void operator delete[](void* vp) { ::operator delete[](vp); }
-   void operator delete[](void* vp, void* arena) {}
-};
-class A : public B {
-private:
-   int m_A_i;
-   double m_A_d;
-public:
-   void A_f() { int x = 1; }
-   void A_g(int v) { int x = v; }
-   void A_h(int vi, double vd) { int x = vi; double y = vd; }
-   void A_j(int vi, int vj) { int x = vi; int y = vj; }
-   void A_j(int vi, double vd) { int x = vi; double y = vd; }
-   template <class T> void A_k(T v) { T x = v; }
-   void A_m(const int& v) { int y = v; }
-   void* operator new(std::size_t sz) { return ::operator new(sz); }
-   void* operator new(std::size_t sz, void* arena) { return arena; }
-   void* operator new[](std::size_t sz) { return ::operator new[](sz); }
-   void* operator new[](std::size_t sz, void* arena) { return arena; }
-   void operator delete(void* vp) { ::operator delete(vp); }
-   void operator delete(void* vp, void* arena) {}
-   void operator delete[](void* vp) { ::operator delete[](vp); }
-   void operator delete[](void* vp, void* arena) {}
-};
-// Note: In CINT, looking up a class template specialization causes
-//       instantiation, but looking up a function template specialization
-//       does not, so we explicitly request the instantiations we are
-//       going to lookup so they will be there to find.
-template void A::A_k(int);
-template void A::A_k(double);
-template void A::B_k(int);
-template void A::B_k(double);
-B b_obj;
-B* b_ptr = &b_obj;
-B* b_ary = new B[3];
-char b_arena[sizeof(B)*10];
-char b_ary_arena[256];
-.rawInput 0
-
-const clang::Decl* class_A = gCling->lookupScope("A");
-printf("class_A: 0x%lx\n", (unsigned long) class_A);
-//CHECK: class_A: 0x{{[1-9a-f][0-9a-f]*$}}
-
-const clang::Decl* class_B = gCling->lookupScope("B");
-printf("class_B: 0x%lx\n", (unsigned long) class_B);
-//CHECK-NEXT: class_B: 0x{{[1-9a-f][0-9a-f]*$}}
 
 
 
