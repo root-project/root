@@ -56,7 +56,7 @@ TFilePrefetch::~TFilePrefetch()
    fSemMasterWorker->Post();
 
    TMutex *mutexCond = fNewBlockAdded->GetMutex();
-   while (fSemWorkerMaster->Wait(10) != 0) {
+   while ( fSemWorkerMaster->Wait(10) != 0 ) {
       mutexCond->Lock();
       fNewBlockAdded->Signal();
       mutexCond->UnLock();
@@ -336,7 +336,7 @@ TThread::VoidRtnFunc_t TFilePrefetch::ThreadProc(void* arg)
    return (TThread::VoidRtnFunc_t) 1;
 }
 
-//########################################### CACHING PART ###############################################################
+//############################# CACHING PART ###################################
 
 //____________________________________________________________________________________________
 Int_t TFilePrefetch::SumHex(const char *hex)

@@ -409,27 +409,29 @@ Int_t TFileCacheRead::ReadBufferExtPrefetch(char *buf, Long64_t pos, Int_t len, 
       }
    }
 
-   //try to prefetch from the first block                                                                                                                  
-   if (loc < 0)
+   // try to prefetch from the first block
+   if (loc < 0) {
       loc = (Int_t)TMath::BinarySearch(fNseek,fSeekSort,pos);
+   }
 
    if (loc >= 0 && loc < fNseek && pos == fSeekSort[loc]) {
       if (buf && fPrefetch){
-         //prefetch with the new method                  
+         // prefetch with the new method                  
          fPrefetch->ReadBuffer(buf, pos, len);
       }
       return 1;
    }
    else if (buf && fPrefetch){
-      //try to preferch from the second block                                                                                                               
+      // try to preferch from the second block
       loc = (Int_t)TMath::BinarySearch(fBNseek, fBSeekSort, pos);
- 
+
       if (loc >= 0 && loc < fBNseek && pos == fBSeekSort[loc]){
-         if (fPrefetch->ReadBuffer(buf, pos, len))
-             return 1;
+         if (fPrefetch->ReadBuffer(buf, pos, len)) {
+           return 1;
+        }
       }
    }   
-   
+
    return 0;
 }
 
@@ -505,13 +507,15 @@ Int_t TFileCacheRead::ReadBufferExtNormal(char *buf, Long64_t pos, Int_t len, In
       }
 
       if (gDebug > 0)
-         Info("ReadBuffer","pos=%lld, len=%d, retval=%d, loc=%d, fseekSort[loc]=%lld, fSeekLen[loc]=%d", pos, len, retval, loc, fSeekSort[loc], fSeekLen[loc]);
+         Info("ReadBuffer","pos=%lld, len=%d, retval=%d, loc=%d, "
+              "fseekSort[loc]=%lld, fSeekLen[loc]=%d",
+              pos, len, retval, loc, fSeekSort[loc], fSeekLen[loc]);
       
       return retval;
    } else {
 
       if (loc < 0)
-         loc = (Int_t)TMath::BinarySearch(fNseek,fSeekSort,pos);
+         loc = (Int_t)TMath::BinarySearch(fNseek, fSeekSort, pos);
 
       if (loc >= 0 && loc <fNseek && pos == fSeekSort[loc]) {
          if (buf) {

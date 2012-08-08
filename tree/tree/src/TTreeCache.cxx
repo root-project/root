@@ -613,7 +613,8 @@ Bool_t TTreeCache::FillBuffer()
                   }
                }
                else {
-                  // We are still reading from the oldest buffer, no need to prefetch a new one
+                  // We are still reading from the oldest buffer,
+                  // no need to prefetch a new one
                   return kFALSE;
                }
                fFirstBuffer = !fFirstBuffer;
@@ -962,7 +963,7 @@ Int_t TTreeCache::ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len){
    // even if the cache lookup succeeds, because it will try to prefetch the next block 
    // as soon as we start reading from the current block.
 
-   if (TFileCacheRead::ReadBuffer(buf,pos,len) == 1){
+   if (TFileCacheRead::ReadBuffer(buf, pos, len) == 1){
       //call FillBuffer to prefetch next block if necessary
       //(if we are currently reading from the last block available)
       FillBuffer();
@@ -971,7 +972,7 @@ Int_t TTreeCache::ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len){
    }
 
    //keep on prefetching until request is satisfied
-   while (1){
+   while (1) {
       if(TFileCacheRead::ReadBuffer(buf, pos, len)) {
          break;
       }
@@ -986,8 +987,8 @@ Int_t TTreeCache::ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len){
 //_____________________________________________________________________________
 Int_t TTreeCache::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
-   // Read buffer at position pos.
-   // If pos is in the list of prefetched blocks read from fBuffer.
+   // Read buffer at position pos if the request is in the list of
+   // prefetched blocks read from fBuffer.
    // Otherwise try to fill the cache from the list of selected branches,
    // and recheck if pos is now in the list.
    // Returns 
