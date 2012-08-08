@@ -25,6 +25,7 @@
 
 #include "TClingTypedefInfo.h"
 
+//______________________________________________________________________________
 TClingTypedefInfo::~TClingTypedefInfo()
 {
    //fFirstTime = true;
@@ -34,6 +35,7 @@ TClingTypedefInfo::~TClingTypedefInfo()
    //fIterStack.clear();
 }
 
+//______________________________________________________________________________
 TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp)
    : fInterp(interp), fFirstTime(true), fDescend(false),
      fDecl(0)
@@ -44,6 +46,7 @@ TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp)
    fIter = DC->decls_begin();
 }
 
+//______________________________________________________________________________
 TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
                                      const char *name)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0)
@@ -57,12 +60,14 @@ TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
    }
 }
 
+//______________________________________________________________________________
 TClingTypedefInfo::TClingTypedefInfo(const TClingTypedefInfo &rhs)
    : fInterp(rhs.fInterp), fFirstTime(rhs.fFirstTime), fDescend(rhs.fDescend),
      fIter(rhs.fIter), fDecl(rhs.fDecl), fIterStack(rhs.fIterStack)
 {
 }
 
+//______________________________________________________________________________
 TClingTypedefInfo &TClingTypedefInfo::operator=(const TClingTypedefInfo &rhs)
 {
    if (this != &rhs) {
@@ -76,11 +81,13 @@ TClingTypedefInfo &TClingTypedefInfo::operator=(const TClingTypedefInfo &rhs)
    return *this;
 }
 
+//______________________________________________________________________________
 clang::Decl *TClingTypedefInfo::GetDecl() const
 {
    return fDecl;
 }
 
+//______________________________________________________________________________
 void TClingTypedefInfo::Init(const char *name)
 {
    if (gDebug > 0) {
@@ -111,11 +118,13 @@ void TClingTypedefInfo::Init(const char *name)
    AdvanceToDecl(fDecl);
 }
 
+//______________________________________________________________________________
 bool TClingTypedefInfo::IsValid() const
 {
    return fDecl;
 }
 
+//______________________________________________________________________________
 int TClingTypedefInfo::AdvanceToDecl(const clang::Decl *target_decl)
 {
    const clang::TranslationUnitDecl *TU = target_decl->getTranslationUnitDecl();
@@ -133,6 +142,7 @@ int TClingTypedefInfo::AdvanceToDecl(const clang::Decl *target_decl)
    return 0;
 }
 
+//______________________________________________________________________________
 int TClingTypedefInfo::InternalNext()
 {
    if (!*fIter) {
@@ -188,11 +198,13 @@ int TClingTypedefInfo::InternalNext()
    }
 }
 
+//______________________________________________________________________________
 int TClingTypedefInfo::Next()
 {
    return InternalNext();
 }
 
+//______________________________________________________________________________
 long TClingTypedefInfo::Property() const
 {
    if (!IsValid()) {
@@ -238,6 +250,7 @@ long TClingTypedefInfo::Property() const
    return property;
 }
 
+//______________________________________________________________________________
 int TClingTypedefInfo::Size() const
 {
    if (!IsValid()) {
@@ -263,6 +276,7 @@ int TClingTypedefInfo::Size() const
    return static_cast<int>(Quantity);
 }
 
+//______________________________________________________________________________
 const char *TClingTypedefInfo::TrueName() const
 {
    if (!IsValid()) {
@@ -276,6 +290,7 @@ const char *TClingTypedefInfo::TrueName() const
    return truename.c_str();
 }
 
+//______________________________________________________________________________
 const char *TClingTypedefInfo::Name() const
 {
    if (!IsValid()) {
@@ -290,6 +305,7 @@ const char *TClingTypedefInfo::Name() const
    return fullname.c_str();
 }
 
+//______________________________________________________________________________
 const char *TClingTypedefInfo::Title() const
 {
    if (!IsValid()) {

@@ -27,36 +27,36 @@
 //////////////////////////////////////////////////////////////////////////
 
 class TClingTypedefInfo {
+
+private:
+
+   cling::Interpreter  *fInterp; // Cling interpreter, we do *not* own.
+   bool                 fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
+   bool                 fDescend; // Flag for signaling the need to descend on this advancement.
+   clang::DeclContext::decl_iterator fIter; // Current decl in scope.
+   clang::Decl         *fDecl; // Current decl.
+   std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
+
 public:
+
    ~TClingTypedefInfo();
    explicit TClingTypedefInfo(cling::Interpreter *);
    explicit TClingTypedefInfo(cling::Interpreter *, const char *);
    TClingTypedefInfo(const TClingTypedefInfo &);
    TClingTypedefInfo &operator=(const TClingTypedefInfo &);
-   clang::Decl *GetDecl() const;
-   void Init(const char *name);
-   bool IsValid() const;
-   int AdvanceToDecl(const clang::Decl *);
-   int InternalNext();
-   int Next();
-   long Property() const;
-   int Size() const;
-   const char *TrueName() const;
-   const char *Name() const;
-   const char *Title() const;
-private:
-   /// Cling interpreter, we do *not* own.
-   cling::Interpreter *fInterp;
-   /// We need to skip the first increment to support the cint Next() semantics.
-   bool fFirstTime;
-   /// Flag for signaling the need to descend on this advancement.
-   bool fDescend;
-   /// Current decl in scope.
-   clang::DeclContext::decl_iterator fIter;
-   /// Current decl.
-   clang::Decl *fDecl;
-   /// Recursion stack for traversing nested scopes.
-   std::vector<clang::DeclContext::decl_iterator> fIterStack;
+
+   clang::Decl         *GetDecl() const;
+   void                 Init(const char *name);
+   bool                 IsValid() const;
+   int                  AdvanceToDecl(const clang::Decl *);
+   int                  InternalNext();
+   int                  Next();
+   long                 Property() const;
+   int                  Size() const;
+   const char          *TrueName() const;
+   const char          *Name() const;
+   const char          *Title() const;
+
 };
 
 #endif // ROOT_TClingTypedefInfo
