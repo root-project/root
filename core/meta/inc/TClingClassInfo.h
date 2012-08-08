@@ -25,7 +25,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class tcling_ClassInfo {
+class TClingClassInfo {
 public: // Types
    enum MatchMode {
       ExactMatch = 0,
@@ -37,13 +37,13 @@ public: // Types
       WithInheritance = 1
    };
 public:
-   ~tcling_ClassInfo();
-   explicit tcling_ClassInfo(); // NOT IMPLEMENTED
-   explicit tcling_ClassInfo(cling::Interpreter*);
-   explicit tcling_ClassInfo(cling::Interpreter*, const char*);
-   explicit tcling_ClassInfo(cling::Interpreter*, const clang::Decl*);
-   tcling_ClassInfo(const tcling_ClassInfo&);
-   tcling_ClassInfo& operator=(const tcling_ClassInfo&);
+   ~TClingClassInfo();
+   explicit TClingClassInfo(); // NOT IMPLEMENTED
+   explicit TClingClassInfo(cling::Interpreter*);
+   explicit TClingClassInfo(cling::Interpreter*, const char*);
+   explicit TClingClassInfo(cling::Interpreter*, const clang::Decl*);
+   TClingClassInfo(const TClingClassInfo&);
+   TClingClassInfo& operator=(const TClingClassInfo&);
    G__ClassInfo* GetClassInfo() const;
    cling::Interpreter* GetInterpreter();
    const clang::Decl* GetDecl() const;
