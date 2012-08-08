@@ -27,8 +27,6 @@
 
 TClingTypedefInfo::~TClingTypedefInfo()
 {
-   delete fTypedefInfo;
-   fTypedefInfo = 0;
    //fFirstTime = true;
    //fDescend = false;
    //fIter = clang::DeclContext::decl_iterator();
@@ -37,53 +35,37 @@ TClingTypedefInfo::~TClingTypedefInfo()
 }
 
 TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter* interp)
-   : fTypedefInfo(0), fInterp(interp), fFirstTime(true), fDescend(false),
+   : fInterp(interp), fFirstTime(true), fDescend(false),
      fDecl(0)
 {
-   fTypedefInfo = new G__TypedefInfo();
-   if (gAllowClang) {
-      const clang::TranslationUnitDecl* TU =
-         fInterp->getCI()->getASTContext().getTranslationUnitDecl();
-      const clang::DeclContext* DC = llvm::cast<clang::DeclContext>(TU);
-      fIter = DC->decls_begin();
-   }
+   const clang::TranslationUnitDecl* TU =
+      fInterp->getCI()->getASTContext().getTranslationUnitDecl();
+   const clang::DeclContext* DC = llvm::cast<clang::DeclContext>(TU);
+   fIter = DC->decls_begin();
 }
 
 TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter* interp,
-                                       const char* name)
-   : fTypedefInfo(0), fInterp(interp), fFirstTime(true), fDescend(false),
-     fDecl(0)
+                                     const char* name)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0)
 {
-   if (!gAllowCint) {
-      fTypedefInfo = new G__TypedefInfo();
+   fDecl = const_cast<clang::Decl*>(fInterp->lookupScope(name));
+   if (fDecl && !llvm::isa<clang::TypedefDecl>(fDecl)) {
+      fDecl = 0;
    }
-   else {
-      fTypedefInfo = new G__TypedefInfo(name);
-   }
-   if (gAllowClang) {
-      fDecl = const_cast<clang::Decl*>(fInterp->lookupScope(name));
-      if (fDecl && !llvm::isa<clang::TypedefDecl>(fDecl)) {
-         fDecl = 0;
-      }
-      if (fDecl) {
-         AdvanceToDecl(fDecl);
-      }
+   if (fDecl) {
+      AdvanceToDecl(fDecl);
    }
 }
 
 TClingTypedefInfo::TClingTypedefInfo(const TClingTypedefInfo& rhs)
-   : fTypedefInfo(0), fInterp(rhs.fInterp), fFirstTime(rhs.fFirstTime),
-     fDescend(rhs.fDescend), fIter(rhs.fIter), fDecl(rhs.fDecl),
-     fIterStack(rhs.fIterStack)
+   : fInterp(rhs.fInterp), fFirstTime(rhs.fFirstTime), fDescend(rhs.fDescend),
+     fIter(rhs.fIter), fDecl(rhs.fDecl), fIterStack(rhs.fIterStack)
 {
-   fTypedefInfo = new G__TypedefInfo(*rhs.fTypedefInfo);
 }
 
 TClingTypedefInfo& TClingTypedefInfo::operator=(const TClingTypedefInfo& rhs)
 {
    if (this != &rhs) {
-      delete fTypedefInfo;
-      fTypedefInfo = new G__TypedefInfo(*rhs.fTypedefInfo);
       fInterp = rhs.fInterp;
       fFirstTime = rhs.fFirstTime;
       fDescend = rhs.fDescend;
@@ -92,11 +74,6 @@ TClingTypedefInfo& TClingTypedefInfo::operator=(const TClingTypedefInfo& rhs)
       fIterStack = rhs.fIterStack;
    }
    return *this;
-}
-
-G__TypedefInfo* TClingTypedefInfo::GetTypedefInfo() const
-{
-   return fTypedefInfo;
 }
 
 clang::Decl* TClingTypedefInfo::GetDecl() const
@@ -115,62 +92,28 @@ void TClingTypedefInfo::Init(const char* name)
    fIter = clang::DeclContext::decl_iterator();
    fDecl = 0;
    fIterStack.clear();
-   if (gAllowCint) {
-      fTypedefInfo->Init(name);
-      if (gDebug > 0) {
-         if (!fTypedefInfo->IsValid()) {
-            fprintf(stderr,
-                    "TClingTypedefInfo::Init(name): "
-                    "could not find cint typedef for name: %s\n", name);
-         }
-         else {
-            fprintf(stderr,
-                    "TClingTypedefInfo::Init(name): "
-                    "found cint typedef for name: %s  tagnum: %d\n",
-                    name, fTypedefInfo->Tagnum());
-         }
-      }
-   }
-   if (gAllowClang) {
-      const clang::Decl* decl = fInterp->lookupScope(name);
-      if (!decl) {
-         if (gDebug > 0) {
-            fprintf(stderr,
-                    "TClingTypedefInfo::Init(name): "
-                    "cling typedef not found name: %s\n", name);
-         }
-         return;
-      }
-      fDecl = const_cast<clang::Decl*>(decl);
+   const clang::Decl* decl = fInterp->lookupScope(name);
+   if (!decl) {
       if (gDebug > 0) {
          fprintf(stderr,
                  "TClingTypedefInfo::Init(name): "
-                 "found cling typedef name: %s  decl: 0x%lx\n",
-                 name, (long) fDecl);
+                 "cling typedef not found name: %s\n", name);
       }
-      AdvanceToDecl(fDecl);
+      return;
    }
-}
-
-bool TClingTypedefInfo::IsValidCint() const
-{
-   if (gAllowCint) {
-      return fTypedefInfo->IsValid();
+   fDecl = const_cast<clang::Decl*>(decl);
+   if (gDebug > 0) {
+      fprintf(stderr,
+              "TClingTypedefInfo::Init(name): "
+              "found cling typedef name: %s  decl: 0x%lx\n",
+              name, (long) fDecl);
    }
-   return false;
-}
-
-bool TClingTypedefInfo::IsValidClang() const
-{
-   if (gAllowClang) {
-      return fDecl;
-   }
-   return false;
+   AdvanceToDecl(fDecl);
 }
 
 bool TClingTypedefInfo::IsValid() const
 {
-   return IsValidCint() || IsValidClang();
+   return fDecl;
 }
 
 int TClingTypedefInfo::AdvanceToDecl(const clang::Decl* target_decl)
@@ -214,16 +157,12 @@ int TClingTypedefInfo::InternalNext()
          else {
             // Descend into the decl context of the current decl.
             fDescend = false;
-            //fprintf(stderr,
-            //   "TClingTypedefInfo::InternalNext: pushing ...\n");
             fIterStack.push_back(fIter);
             clang::DeclContext* DC = llvm::cast<clang::DeclContext>(*fIter);
             fIter = DC->decls_begin();
          }
          // Fix it if we went past the end.
          while (!*fIter && fIterStack.size()) {
-            //fprintf(stderr,
-            //   "TClingTypedefInfo::InternalNext: popping ...\n");
             fIter = fIterStack.back();
             fIterStack.pop_back();
             ++fIter;
@@ -235,31 +174,8 @@ int TClingTypedefInfo::InternalNext()
             return 0;
          }
       }
-#if 0
-      if (clang::NamedDecl* ND =
-               llvm::dyn_cast<clang::NamedDecl>(*fIter)) {
-         clang::ASTContext& Context = ND->getASTContext();
-         clang::PrintingPolicy Policy(Context.getPrintingPolicy());
-         std::string tmp;
-         ND->getNameForDiagnostic(tmp, Policy, /*Qualified=*/true);
-         fprintf(stderr,
-                 "TClingTypedefInfo::InternalNext:  "
-                 "0x%08lx %s  %s\n",
-                 (long) *fIter, fIter->getDeclKindName(), tmp.c_str());
-      }
-#endif // 0
       // Return if this decl is a typedef.
       if (llvm::isa<clang::TypedefDecl>(*fIter)) {
-         //if (const clang::TypedefDecl* TD =
-         //      llvm::dyn_cast<clang::TypedefDecl>(*fIter)) {
-         //clang::QualType QT = TD->getUnderlyingType();
-         //if (const clang::RecordType* RT = QT->getAs<clang::RecordType>()) {
-         //   if (!RT->getDecl()->getDefinition()) {
-         //      // This is a typedef to a forward-declared type, skip it.
-         //      continue;
-         //   }
-         //}
-         // Iterator is now valid.
          fDecl = *fIter;
          return 1;
       }
@@ -274,24 +190,12 @@ int TClingTypedefInfo::InternalNext()
 
 int TClingTypedefInfo::Next()
 {
-   if (!gAllowClang) {
-      return fTypedefInfo->Next();
-   }
    return InternalNext();
 }
 
 long TClingTypedefInfo::Property() const
 {
    if (!IsValid()) {
-      return 0L;
-   }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fTypedefInfo->Property();
-      }
-      return 0L;
-   }
-   if (!gAllowClang) {
       return 0L;
    }
    long property = 0L;
@@ -339,15 +243,6 @@ int TClingTypedefInfo::Size() const
    if (!IsValid()) {
       return 1;
    }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fTypedefInfo->Size();
-      }
-      return 1;
-   }
-   if (!gAllowClang) {
-      return 1;
-   }
    clang::ASTContext& Context = fDecl->getASTContext();
    const clang::TypedefDecl* TD = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
    clang::QualType QT = TD->getUnderlyingType();
@@ -373,15 +268,6 @@ const char* TClingTypedefInfo::TrueName() const
    if (!IsValid()) {
       return "(unknown)";
    }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fTypedefInfo->TrueName();
-      }
-      return "(unknown)";
-   }
-   if (!gAllowClang) {
-      return "(unknown)";
-   }
    // Note: This must be static because we return a pointer to the internals.
    static std::string truename;
    truename.clear();
@@ -393,15 +279,6 @@ const char* TClingTypedefInfo::TrueName() const
 const char* TClingTypedefInfo::Name() const
 {
    if (!IsValid()) {
-      return "(unknown)";
-   }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fTypedefInfo->Name();
-      }
-      return "(unknown)";
-   }
-   if (!gAllowClang) {
       return "(unknown)";
    }
    // Note: This must be static because we return a pointer to the internals.
@@ -416,15 +293,6 @@ const char* TClingTypedefInfo::Name() const
 const char* TClingTypedefInfo::Title() const
 {
    if (!IsValid()) {
-      return "";
-   }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fTypedefInfo->Title();
-      }
-      return "";
-   }
-   if (!gAllowClang) {
       return "";
    }
    // FIXME: Implement when rootcling can provide it.

@@ -33,11 +33,8 @@ public:
    explicit TClingTypedefInfo(cling::Interpreter*, const char*);
    TClingTypedefInfo(const TClingTypedefInfo&);
    TClingTypedefInfo& operator=(const TClingTypedefInfo&);
-   G__TypedefInfo* GetTypedefInfo() const;
    clang::Decl* GetDecl() const;
    void Init(const char* name);
-   bool IsValidCint() const;
-   bool IsValidClang() const;
    bool IsValid() const;
    int AdvanceToDecl(const clang::Decl*);
    int InternalNext();
@@ -48,14 +45,6 @@ public:
    const char* Name() const;
    const char* Title() const;
 private:
-   //
-   //  CINT info.
-   //
-   /// CINT typedef info for this class, we own.
-   G__TypedefInfo* fTypedefInfo;
-   //
-   //  clang info.
-   //
    /// Cling interpreter, we do *not* own.
    cling::Interpreter* fInterp;
    /// We need to skip the first increment to support the cint Next() semantics.
