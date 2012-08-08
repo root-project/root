@@ -30,7 +30,7 @@ class tcling_DataMemberInfo {
 public:
    ~tcling_DataMemberInfo();
    explicit tcling_DataMemberInfo(cling::Interpreter*);
-   explicit tcling_DataMemberInfo(cling::Interpreter*, tcling_ClassInfo*);
+   tcling_DataMemberInfo(cling::Interpreter*, tcling_ClassInfo*);
    tcling_DataMemberInfo(const tcling_DataMemberInfo&);
    tcling_DataMemberInfo& operator=(const tcling_DataMemberInfo&);
    G__DataMemberInfo* GetDataMemberInfo() const;
@@ -38,8 +38,11 @@ public:
    tcling_ClassInfo* GetTClingClassInfo() const;
    clang::Decl* GetDecl() const;
    int ArrayDim() const;
+   bool IsValidCint() const;
+   bool IsValidClang() const;
    bool IsValid() const;
    int MaxIndex(int dim) const;
+   int InternalNext();
    bool Next();
    long Offset() const;
    long Property() const;
@@ -50,8 +53,6 @@ public:
    const char* Name() const;
    const char* Title() const;
    const char* ValidArrayIndex() const;
-private:
-   void InternalNextValidMember();
 private:
    //
    // CINT material.
