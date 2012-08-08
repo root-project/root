@@ -38,6 +38,7 @@ public: // Types
    };
 public:
    ~tcling_ClassInfo();
+   explicit tcling_ClassInfo(); // NOT IMPLEMENTED
    explicit tcling_ClassInfo(cling::Interpreter*);
    explicit tcling_ClassInfo(cling::Interpreter*, const char*);
    explicit tcling_ClassInfo(cling::Interpreter*, const clang::Decl*);
@@ -50,9 +51,9 @@ public:
    void Delete(void* arena) const;
    void DeleteArray(void* arena, bool dtorOnly) const;
    void Destruct(void* arena) const;
-   tcling_MethodInfo* GetMethod(const char* fname, const char* arg,
-                                long* poffset, MatchMode mode = ConversionMatch,
-                                InheritanceMode imode = WithInheritance) const;
+   tcling_MethodInfo GetMethod(const char* fname, const char* arg,
+                               long* poffset, MatchMode mode = ConversionMatch,
+                               InheritanceMode imode = WithInheritance) const;
    int GetMethodNArg(const char* method, const char* proto) const;
    bool HasDefaultConstructor() const;
    bool HasMethod(const char* name) const;
@@ -66,6 +67,8 @@ public:
    bool IsValidClang() const;
    bool IsValidMethod(const char* method, const char* proto,
                       long* offset) const;
+   int AdvanceToDecl(const clang::Decl*);
+   int InternalNext();
    int Next();
    void* New() const;
    void* New(int n) const;
@@ -91,8 +94,16 @@ private:
    //
    /// Cling interpreter, we do *not* own.
    cling::Interpreter* fInterp;
-   /// Clang AST Node for this class, we do *not* own.
-   const clang::Decl* fDecl;
+   /// We need to skip the first increment to support the cint Next() semantics.
+   bool fFirstTime;
+   /// Flag for signaling the need to descend on this advancement.
+   bool fDescend;
+   /// Current decl in scope.
+   clang::DeclContext::decl_iterator fIter;
+   /// Current decl.
+   clang::Decl* fDecl;
+   /// Recursion stack for traversing nested scopes.
+   std::vector<clang::DeclContext::decl_iterator> fIterStack;
 };
 
 #endif // ROOT_TClingClassInfo

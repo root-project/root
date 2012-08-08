@@ -29,19 +29,26 @@ tcling_ClassInfo::~tcling_ClassInfo()
    delete fClassInfo;
    fClassInfo = 0;
    fInterp = 0;
+   //fFirstTime = true;
+   //fDescend = false;
+   //fIter = clang::DeclContext::decl_iterator();
    fDecl = 0;
+   fIterStack.clear();
 }
 
-tcling_ClassInfo::tcling_ClassInfo(cling::Interpreter* interp)
-   : fClassInfo(new G__ClassInfo), fInterp(interp), fDecl(0)
-{
-}
+// NOT IMPLEMENTED
+//tcling_ClassInfo::tcling_ClassInfo()
+//   : fClassInfo(0), fInterp(0), fFirstTime(true), fDescend(false),
+//     fDecl(0)
+//{
+//}
 
 tcling_ClassInfo::tcling_ClassInfo(const tcling_ClassInfo& rhs)
+   : fClassInfo(0), fInterp(rhs.fInterp), fFirstTime(rhs.fFirstTime),
+     fDescend(rhs.fDescend), fIter(rhs.fIter), fDecl(rhs.fDecl),
+     fIterStack(rhs.fIterStack)
 {
    fClassInfo = new G__ClassInfo(*rhs.fClassInfo);
-   fInterp = rhs.fInterp;
-   fDecl = rhs.fDecl;
 }
 
 tcling_ClassInfo& tcling_ClassInfo::operator=(const tcling_ClassInfo& rhs)
@@ -50,84 +57,144 @@ tcling_ClassInfo& tcling_ClassInfo::operator=(const tcling_ClassInfo& rhs)
       delete fClassInfo;
       fClassInfo = new G__ClassInfo(*rhs.fClassInfo);
       fInterp = rhs.fInterp;
+      fFirstTime = rhs.fFirstTime;
+      fDescend = rhs.fDescend;
+      fIter = rhs.fIter;
       fDecl = rhs.fDecl;
+      fIterStack.clear();
+      fIterStack = rhs.fIterStack;
    }
    return *this;
 }
 
+tcling_ClassInfo::tcling_ClassInfo(cling::Interpreter* interp)
+   : fClassInfo(0), fInterp(interp), fFirstTime(true), fDescend(false),
+     fDecl(0)
+{
+   fClassInfo = new G__ClassInfo();
+   clang::TranslationUnitDecl* TU =
+      interp->getCI()->getASTContext().getTranslationUnitDecl();
+   fIter = TU->decls_begin();
+   InternalNext();
+   fFirstTime = true;
+   fDecl = 0;
+}
+
 tcling_ClassInfo::tcling_ClassInfo(cling::Interpreter* interp, const char* name)
-   : fClassInfo(0), fInterp(interp), fDecl(0)
+   : fClassInfo(0), fInterp(interp), fFirstTime(true), fDescend(false),
+     fDecl(0)
 {
    if (gDebug > 0) {
       fprintf(stderr,
-         "tcling_ClassInfo(name): looking up class name: %s\n", name);
+              "tcling_ClassInfo(name): looking up class name: %s\n", name);
    }
-   fClassInfo = new G__ClassInfo(name);
-   if (gDebug > 0) {
-      if (!fClassInfo->IsValid()) {
-         fprintf(stderr,
-            "tcling_ClassInfo(name): could not find cint class for name: %s\n",
-            name);
-      }
-      else {
-         fprintf(stderr,
-            "tcling_ClassInfo(name): found cint class for name: %s  "
-            "tagnum: %d\n", name, fClassInfo->Tagnum());
-      }
-   }
-   clang::Decl* decl = const_cast<clang::Decl*>(fInterp->lookupScope(name));
-   if (!decl) {
+   if (gAllowCint) {
+      fClassInfo = new G__ClassInfo(name);
       if (gDebug > 0) {
-         fprintf(stderr, "tcling_ClassInfo(name): cling class not found "
-                 "name: %s\n", name);
-      }
-      std::string buf = TClassEdit::InsertStd(name);
-      decl = const_cast<clang::Decl*>(fInterp->lookupScope(buf));
-      if (!decl) {
-         if (gDebug > 0) {
-            fprintf(stderr, "tcling_ClassInfo(name): cling class not found "
-                    "name: %s\n", buf.c_str());
-         }
-      }
-      else {
-         fDecl = decl;
-         if (gDebug > 0) {
+         if (!fClassInfo->IsValid()) {
             fprintf(stderr,
-               "tcling_ClassInfo(name): found cling class name: %s  "
-               "decl: 0x%lx\n", buf.c_str(), (long) fDecl);
+                    "tcling_ClassInfo(name): could not find cint class for name: %s\n",
+                    name);
+         }
+         else {
+            fprintf(stderr,
+                    "tcling_ClassInfo(name): found cint class for name: %s  "
+                    "tagnum: %d\n", name, fClassInfo->Tagnum());
          }
       }
    }
    else {
-      fDecl = decl;
-      if (gDebug > 0) {
-         fprintf(stderr, "tcling_ClassInfo(name): found cling class name: %s  "
-                 "decl: 0x%lx\n", name, (long) fDecl);
+      fClassInfo = new G__ClassInfo;
+   }
+   if (gAllowClang) {
+      const clang::Decl* decl = fInterp->lookupScope(name);
+      if (!decl) {
+         if (gDebug > 0) {
+            fprintf(stderr, "tcling_ClassInfo(name): cling class not found "
+                    "name: %s\n", name);
+         }
+         std::string buf = TClassEdit::InsertStd(name);
+         decl = fInterp->lookupScope(buf);
+         if (!decl) {
+            if (gDebug > 0) {
+               fprintf(stderr, "tcling_ClassInfo(name): cling class not found "
+                       "name: %s\n", buf.c_str());
+            }
+         }
+         else {
+            if (gDebug > 0) {
+               fprintf(stderr,
+                       "tcling_ClassInfo(name): found cling class name: %s  "
+                       "decl: 0x%lx\n", buf.c_str(), (long) decl);
+            }
+         }
+      }
+      else {
+         if (gDebug > 0) {
+            fprintf(stderr, "tcling_ClassInfo(name): found cling class name: %s  "
+                    "decl: 0x%lx\n", name, (long) decl);
+         }
+      }
+      if (decl) {
+         // Position our iterator on the found decl.
+         AdvanceToDecl(decl);
+         //fFirstTime = true;
+         //fDescend = false;
+         //fIter = clang::DeclContext::decl_iterator();
+         //fTemplateDecl = 0;
+         //fSpecIter = clang::ClassTemplateDecl::spec_iterator(0);
+         //fDecl = const_cast<clang::Decl*>(decl);
+         //fIterStack.clear();
       }
    }
 }
 
 tcling_ClassInfo::tcling_ClassInfo(cling::Interpreter* interp,
                                    const clang::Decl* decl)
-   : fClassInfo(0), fInterp(interp), fDecl(decl)
+   : fClassInfo(0), fInterp(interp), fFirstTime(true), fDescend(false),
+     fDecl(0)
 {
-   std::string buf;
-   clang::PrintingPolicy P(fDecl->getASTContext().getPrintingPolicy());
-   llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameForDiagnostic(buf, P, true);
-   if (gDebug > 0) {
-      fprintf(stderr, "tcling_ClassInfo(decl): looking up class name: %s  "
-              "decl: 0x%lx\n", buf.c_str(), (long) fDecl);
+   if (gAllowCint) {
+      std::string buf;
+      clang::PrintingPolicy Policy(decl->getASTContext().getPrintingPolicy());
+      llvm::dyn_cast<clang::NamedDecl>(decl)->
+      getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+      if (gDebug > 0) {
+         fprintf(stderr, "tcling_ClassInfo(decl): looking up class name: %s  "
+                 "decl: 0x%lx\n", buf.c_str(), (long) decl);
+      }
+      fClassInfo = new G__ClassInfo(buf.c_str());
+      if (gDebug > 0) {
+         if (!fClassInfo->IsValid()) {
+            fprintf(stderr,
+                    "tcling_ClassInfo(decl): could not find cint class for "
+                    "name: %s  decl: 0x%lx\n", buf.c_str(), (long) decl);
+         }
+         else {
+            fprintf(stderr, "tcling_ClassInfo(decl): found cint class for "
+                    "name: %s  tagnum: %d\n", buf.c_str(),
+                    fClassInfo->Tagnum());
+         }
+      }
    }
-   fClassInfo = new G__ClassInfo(buf.c_str());
-   if (gDebug > 0) {
-      if (!fClassInfo->IsValid()) {
-         fprintf(stderr,
-            "tcling_ClassInfo(decl): could not find cint class for "
-            "name: %s  decl: 0x%lx\n", buf.c_str(), (long) fDecl);
+   else {
+      fClassInfo = new G__ClassInfo();
+   }
+   if (gAllowClang) {
+      if (decl) {
+         // Position our iterator on the given decl.
+         AdvanceToDecl(decl);
+         //fFirstTime = true;
+         //fDescend = false;
+         //fIter = clang::DeclContext::decl_iterator();
+         //fTemplateDecl = 0;
+         //fSpecIter = clang::ClassTemplateDecl::spec_iterator(0);
+         //fDecl = const_cast<clang::Decl*>(decl);
+         //fIterStack.clear();
       }
       else {
-         fprintf(stderr, "tcling_ClassInfo(decl): found cint class for "
-                 "name: %s  tagnum: %d\n", buf.c_str(), fClassInfo->Tagnum());
+         // FIXME: Maybe initialize iterator to global namespace?
+         fDecl = 0;
       }
    }
 }
@@ -153,37 +220,46 @@ long tcling_ClassInfo::ClassProperty() const
       return 0L;
    }
    if (!IsValidClang()) {
-      return fClassInfo->ClassProperty();
+      if (gAllowCint) {
+         return fClassInfo->ClassProperty();
+      }
+      return 0L;
+   }
+   if (!gAllowClang) {
+      return 0L;
    }
    const clang::RecordDecl* RD = llvm::dyn_cast<clang::RecordDecl>(fDecl);
    if (!RD) {
       // We are an enum or namespace.
       // The cint interface always returns 0L for these guys.
-      if (IsValidCint()) {
-         long cint_property = fClassInfo->ClassProperty();
-         if (cint_property != 0L) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                  "VALIDITY: tcling_ClassInfo::ClassProperty: %s  "
-                  "cint: 0x%lx  clang: 0x%lx\n", fClassInfo->Fullname(),
-                  cint_property, 0L);
+      if (gAllowCint) {
+         if (IsValidCint()) {
+            long cint_property = fClassInfo->ClassProperty();
+            if (cint_property != 0L) {
+               if (gDebug > 0) {
+                  fprintf(stderr,
+                          "VALIDITY: tcling_ClassInfo::ClassProperty: %s  "
+                          "cint: 0x%lx  clang: 0x%lx\n", fClassInfo->Fullname(),
+                          cint_property, 0L);
+               }
             }
-            return cint_property;
          }
       }
       return 0L;
    }
    if (RD->isUnion()) {
       // The cint interface always returns 0L for these guys.
-      if (IsValidCint()) {
-         long cint_property = fClassInfo->ClassProperty();
-         if (cint_property != 0L) {
-            if (gDebug > 0) {
-               fprintf(stderr, "VALIDITY: tcling_ClassInfo::ClassProperty: %s  "
-                       "cint: 0x%lx  clang: 0x%lx\n", fClassInfo->Fullname(),
-                       cint_property, 0L);
+      if (gAllowCint) {
+         if (IsValidCint()) {
+            long cint_property = fClassInfo->ClassProperty();
+            if (cint_property != 0L) {
+               if (gDebug > 0) {
+                  fprintf(stderr,
+                          "VALIDITY: tcling_ClassInfo::ClassProperty: %s  "
+                          "cint: 0x%lx  clang: 0x%lx\n", fClassInfo->Fullname(),
+                          cint_property, 0L);
+               }
             }
-            return cint_property;
          }
       }
       return 0L;
@@ -250,10 +326,6 @@ long tcling_ClassInfo::ClassProperty() const
    //              cint_property, property);
    //   }
    //}
-   // FIXME: Remove this when we are ready to accept the differences.
-   if (IsValidCint()) {
-      return fClassInfo->ClassProperty();
-   }
    return property;
 }
 
@@ -264,14 +336,16 @@ void tcling_ClassInfo::Delete(void* arena) const
       return;
    }
    if (!IsValidClang()) {
-      fClassInfo->Delete(arena);
+      if (gAllowCint) {
+         fClassInfo->Delete(arena);
+      }
+      return;
+   }
+   if (!gAllowClang) {
       return;
    }
    // TODO: Implement this when cling provides function call.
-   if (IsValidCint()) {
-      fClassInfo->Delete(arena);
-      return;
-   }
+   return;
 }
 
 void tcling_ClassInfo::DeleteArray(void* arena, bool dtorOnly) const
@@ -281,97 +355,118 @@ void tcling_ClassInfo::DeleteArray(void* arena, bool dtorOnly) const
       return;
    }
    if (!IsValidClang()) {
-      fClassInfo->DeleteArray(arena, dtorOnly);
+      if (gAllowCint) {
+         fClassInfo->DeleteArray(arena, dtorOnly);
+      }
+      return;
+   }
+   if (!gAllowClang) {
       return;
    }
    // TODO: Implement this when cling provides function call.
-   if (IsValidCint()) {
-      fClassInfo->DeleteArray(arena, dtorOnly);
-      return;
-   }
+   return;
 }
 
 void tcling_ClassInfo::Destruct(void* arena) const
 {
    // Note: This is an interpreter function.
-   return fClassInfo->Destruct(arena);
+   if (!IsValid()) {
+      return;
+   }
+   if (!IsValidClang()) {
+      if (gAllowCint) {
+         fClassInfo->Destruct(arena);
+      }
+      return;
+   }
+   if (!gAllowClang) {
+      return;
+   }
+   // TODO: Implement this when cling provides function call.
+   return;
 }
 
-tcling_MethodInfo* tcling_ClassInfo::GetMethod(const char* fname,
+tcling_MethodInfo tcling_ClassInfo::GetMethod(const char* fname,
       const char* arg, long* poffset, MatchMode mode /*= ConversionMatch*/,
       InheritanceMode imode /*= WithInheritance*/) const
 {
    if (!IsValid()) {
-      return 0;
+      tcling_MethodInfo tmi(fInterp);
+      return tmi;
    }
    if (!IsValidClang()) {
-      G__MethodInfo* mi = new G__MethodInfo(fClassInfo->GetMethod(
-            fname, arg, poffset, (Cint::G__ClassInfo::MatchMode) mode,
-            (Cint::G__ClassInfo::InheritanceMode) imode));
-      tcling_MethodInfo* tmi = new tcling_MethodInfo(fInterp, mi);
-      delete mi;
-      mi = 0;
+      if (gAllowCint) {
+         G__MethodInfo mi = fClassInfo->GetMethod(fname, arg, poffset,
+                            (Cint::G__ClassInfo::MatchMode) mode,
+                            (Cint::G__ClassInfo::InheritanceMode) imode);
+         tcling_MethodInfo tmi(fInterp, &mi);
+         return tmi;
+      }
+      tcling_MethodInfo tmi(fInterp);
       return tmi;
    }
-   // FIXME: Implement this with clang!
-   if (IsValidCint()) {
-      G__MethodInfo* mi = new G__MethodInfo(fClassInfo->GetMethod(
-            fname, arg, poffset, (Cint::G__ClassInfo::MatchMode) mode,
-            (Cint::G__ClassInfo::InheritanceMode) imode));
-      tcling_MethodInfo* tmi = new tcling_MethodInfo(fInterp, mi);
-      delete mi;
-      mi = 0;
+   if (!gAllowClang) {
+      tcling_MethodInfo tmi(fInterp);
       return tmi;
    }
-   return 0;
+   const clang::FunctionDecl* FD =
+      fInterp->lookupFunctionArgs(fDecl, fname, arg);
+   if (poffset) {
+      *poffset = 0L;
+   }
+   tcling_MethodInfo tmi(fInterp);
+   tmi.Init(FD);
+   return tmi;
 }
 
 int tcling_ClassInfo::GetMethodNArg(const char* method, const char* proto) const
 {
    // Note: Used only by TQObject.cxx:170 and only for interpreted classes.
    if (!IsValid()) {
-      return false;
+      return -1;
    }
    if (!IsValidClang()) {
-      G__MethodInfo meth;
-      long offset = 0L;
-      meth = fClassInfo->GetMethod(method, proto, &offset);
-      if (meth.IsValid()) {
-         return meth.NArg();
+      if (gAllowCint) {
+         G__MethodInfo meth;
+         long offset = 0L;
+         meth = fClassInfo->GetMethod(method, proto, &offset);
+         if (meth.IsValid()) {
+            return meth.NArg();
+         }
+         return -1;
       }
       return -1;
    }
-   if (IsValidCint()) {
-      G__MethodInfo meth;
-      long offset = 0L;
-      meth = fClassInfo->GetMethod(method, proto, &offset);
-      int cint_val = -1;
-      if (meth.IsValid()) {
-         cint_val = meth.NArg();
-      }
-      const clang::FunctionDecl* decl =
-         fInterp->lookupFunctionProto(fDecl, method, proto);
-      int clang_val = -1;
-      if (decl) {
-         clang_val = static_cast<int>(decl->getNumParams());
-      }
-      if (clang_val != cint_val) {
-         if (gDebug > 0) {
-            fprintf(stderr,
-               "VALIDITY: tcling_ClassInfo::GetMethodNArg(method,proto): "
-               "%s(%s)  cint: %d  clang: %d\n",
-               method, proto, cint_val, clang_val);
-         }
-      }
-      return cint_val;
+   if (!gAllowClang) {
+      return -1;
    }
+   int clang_val = -1;
    const clang::FunctionDecl* decl =
       fInterp->lookupFunctionProto(fDecl, method, proto);
-   if (!decl) {
-      return -1;
+   if (decl) {
+      unsigned num_params = decl->getNumParams();
+      clang_val = static_cast<int>(num_params);
    }
-   unsigned clang_val = decl->getNumParams();
-   return static_cast<int>(clang_val);
+   if (gAllowCint) {
+      if (IsValidCint()) {
+         G__MethodInfo meth;
+         long offset = 0L;
+         meth = fClassInfo->GetMethod(method, proto, &offset);
+         int cint_val = -1;
+         if (meth.IsValid()) {
+            cint_val = meth.NArg();
+         }
+         if (clang_val != cint_val) {
+            if (gDebug > 0) {
+               fprintf(stderr,
+                       "VALIDITY: tcling_ClassInfo::GetMethodNArg(method,proto): "
+                       "%s(%s)  cint: %d  clang: %d\n",
+                       method, proto, cint_val, clang_val);
+            }
+         }
+      }
+   }
+   return clang_val;
 }
 
 bool tcling_ClassInfo::HasDefaultConstructor() const
@@ -381,13 +476,16 @@ bool tcling_ClassInfo::HasDefaultConstructor() const
       return false;
    }
    if (!IsValidClang()) {
-      return fClassInfo->HasDefaultConstructor();
+      if (gAllowCint) {
+         return fClassInfo->HasDefaultConstructor();
+      }
+      return false;
+   }
+   if (!gAllowClang) {
+      return false;
    }
    // FIXME: Look for root ioctor when we have function lookup, and
    //        rootcling can tell us what the name of the ioctor is.
-   if (IsValidCint()) {
-      return fClassInfo->HasDefaultConstructor();
-   }
    return false;
 }
 
@@ -397,52 +495,49 @@ bool tcling_ClassInfo::HasMethod(const char* name) const
       return false;
    }
    if (!IsValidClang()) {
-      return fClassInfo->HasMethod(name);
-   }
-   const clang::CXXRecordDecl* CRD =
-      llvm::dyn_cast<clang::CXXRecordDecl>(fDecl);
-   if (!CRD) {
-      // We are an enum or namespace.
-      // FIXME: Make it work for a namespace!
-      if (IsValidCint()) {
-         int cint_val = fClassInfo->HasMethod(name);
-         int clang_val = false;
-         if (clang_val != cint_val) {
-            if (gDebug > 0) {
-               fprintf(stderr, "VALIDITY: tcling_ClassInfo::HasMethod(name): "
-                       "%s(%s)  cint: %d  clang: %d\n", fClassInfo->Fullname(),
-                       name, cint_val, clang_val);
-            }
-            return cint_val;
-         }
+      if (gAllowCint) {
+         return fClassInfo->HasMethod(name);
       }
       return false;
    }
-   bool result = false;
-   std::string given_name(name);
-   for (
-      clang::CXXRecordDecl::method_iterator M = CRD->method_begin(),
-      MEnd = CRD->method_end();
-      M != MEnd;
-      ++M
-   ) {
-      if (M->getNameAsString() == given_name) {
-         result = true;
-      }
+   if (!gAllowClang) {
+      return false;
    }
-   if (IsValidCint()) {
-      int cint_val = fClassInfo->HasMethod(name);
-      int clang_val = result;
-      if (clang_val != cint_val) {
-         if (gDebug > 0) {
-            fprintf(stderr, "VALIDITY: tcling_ClassInfo::HasMethod(name): "
-                    "%s(%s)  cint: %d  clang: %d\n", fClassInfo->Fullname(),
-                    name, cint_val, clang_val);
+   bool found = false;
+   std::string given_name(name);
+   if (!llvm::isa<clang::EnumDecl>(fDecl)) {
+      // We are a class, struct, union, namespace, or translation unit.
+      clang::DeclContext* DC = llvm::cast<clang::DeclContext>(fDecl);
+      llvm::SmallVector<clang::DeclContext*, 2> fContexts;
+      DC->collectAllContexts(fContexts);
+      for (unsigned I = 0; !found && (I < fContexts.size()); ++I) {
+         DC = fContexts[I];
+         for (clang::DeclContext::decl_iterator iter = DC->decls_begin();
+               *iter; ++iter) {
+            if (const clang::FunctionDecl* FD =
+                     llvm::dyn_cast<clang::FunctionDecl>(*iter)) {
+               if (FD->getNameAsString() == given_name) {
+                  found = true;
+                  break;
+               }
+            }
          }
       }
-      return cint_val;
    }
-   return result;
+   if (gAllowCint) {
+      if (IsValidCint()) {
+         int cint_val = fClassInfo->HasMethod(name);
+         int clang_val = found;
+         if (clang_val != cint_val) {
+            if (gDebug > 0) {
+               fprintf(stderr, "VALIDITY: tcling_ClassInfo::HasMethod(name): "
+                       "%s::%s  cint: %d  clang: %d\n", fClassInfo->Fullname(),
+                       name, cint_val, clang_val);
+            }
+         }
+      }
+   }
+   return found;
 }
 
 void tcling_ClassInfo::Init(const char* name)
@@ -451,48 +546,69 @@ void tcling_ClassInfo::Init(const char* name)
       fprintf(stderr, "tcling_ClassInfo::Init(name): looking up class: %s\n",
               name);
    }
+   fFirstTime = true;
+   fDescend = false;
+   fIter = clang::DeclContext::decl_iterator();
    fDecl = 0;
-   fClassInfo->Init(name);
-   if (gDebug > 0) {
-      if (!fClassInfo->IsValid()) {
-         fprintf(stderr, "tcling_ClassInfo::Init(name): could not find cint "
-                 "class for name: %s\n", name);
-      }
-      else {
-         fprintf(stderr, "tcling_ClassInfo::Init(name): found cint class for "
-                 "name: %s  tagnum: %d\n", name, fClassInfo->Tagnum());
-      }
-   }
-   clang::Decl* decl = const_cast<clang::Decl*>(fInterp->lookupScope(name));
-   if (!decl) {
+   fIterStack.clear();
+   if (gAllowCint) {
+      fClassInfo->Init(name);
       if (gDebug > 0) {
-         fprintf(stderr, "tcling_ClassInfo::Init(name): cling class not found "
-                 "name: %s\n", name);
-      }
-      // FIXME: Remove this call!
-      std::string buf = TClassEdit::InsertStd(name);
-      decl = const_cast<clang::Decl*>(fInterp->lookupScope(buf));
-      if (!decl) {
-         if (gDebug > 0) {
-            fprintf(stderr,
-               "tcling_ClassInfo::Init(name): cling class not found "
-               "name: %s\n", buf.c_str());
+         if (!fClassInfo->IsValid()) {
+            fprintf(stderr, "tcling_ClassInfo::Init(name): "
+                    "could not find cint class for name: %s\n", name);
          }
-      }
-      else {
-         fDecl = decl;
-         if (gDebug > 0) {
-            fprintf(stderr,
-               "tcling_ClassInfo::Init(name): found cling class "
-               "name: %s  decl: 0x%lx\n", buf.c_str(), (long) fDecl);
+         else {
+            fprintf(stderr, "tcling_ClassInfo::Init(name): "
+                    "found cint class for name: %s  tagnum: %d\n",
+                    name, fClassInfo->Tagnum());
          }
       }
    }
    else {
-      fDecl = decl;
-      if (gDebug > 0) {
-         fprintf(stderr, "tcling_ClassInfo::Init(name): found cling class "
-                 "name: %s  decl: 0x%lx\n", name, (long) fDecl);
+      delete fClassInfo;
+      fClassInfo = new G__ClassInfo;
+   }
+   if (gAllowClang) {
+      const clang::Decl* decl = fInterp->lookupScope(name);
+      if (!decl) {
+         if (gDebug > 0) {
+            fprintf(stderr, "tcling_ClassInfo::Init(name): "
+                    "cling class not found name: %s\n", name);
+         }
+         std::string buf = TClassEdit::InsertStd(name);
+         decl = fInterp->lookupScope(buf);
+         if (!decl) {
+            if (gDebug > 0) {
+               fprintf(stderr,
+                       "tcling_ClassInfo::Init(name): cling class not found "
+                       "name: %s\n", buf.c_str());
+            }
+         }
+         else {
+            if (gDebug > 0) {
+               fprintf(stderr,
+                       "tcling_ClassInfo::Init(name): found cling class "
+                       "name: %s  decl: 0x%lx\n", buf.c_str(), (long) decl);
+            }
+         }
+      }
+      else {
+         if (gDebug > 0) {
+            fprintf(stderr, "tcling_ClassInfo::Init(name): found cling class "
+                    "name: %s  decl: 0x%lx\n", name, (long) decl);
+         }
+      }
+      if (decl) {
+         // Position our iterator on the given decl.
+         AdvanceToDecl(decl);
+         //fFirstTime = true;
+         //fDescend = false;
+         //fIter = clang::DeclContext::decl_iterator();
+         //fTemplateDecl = 0;
+         //fSpecIter = clang::ClassTemplateDecl::spec_iterator(0);
+         //fDecl = const_cast<clang::Decl*>(decl);
+         //fIterStack.clear();
       }
    }
 }
@@ -503,7 +619,17 @@ void tcling_ClassInfo::Init(int tagnum)
       fprintf(stderr, "tcling_ClassInfo::Init(tagnum): looking up tagnum: %d\n",
               tagnum);
    }
+   if (!gAllowCint) {
+      delete fClassInfo;
+      fClassInfo = new G__ClassInfo;
+      fDecl = 0;
+      return;
+   }
+   fFirstTime = true;
+   fDescend = false;
+   fIter = clang::DeclContext::decl_iterator();
    fDecl = 0;
+   fIterStack.clear();
    fClassInfo->Init(tagnum);
    if (!fClassInfo->IsValid()) {
       if (gDebug > 0) {
@@ -512,46 +638,58 @@ void tcling_ClassInfo::Init(int tagnum)
       }
       return;
    }
-   const char* name = fClassInfo->Fullname();
-   if (gDebug > 0) {
-      fprintf(stderr, "tcling_ClassInfo::Init(tagnum): found cint class "
-              "name: %s  tagnum: %d\n", name, tagnum);
-   }
-   if (!name || (name[0] == '\0')) {
-      // No name, or name is blank, could be anonymous
-      // class/struct/union or enum.  Cint does not give
-      // us enough information to find the same decl in clang.
-      return;
-   }
-   clang::Decl* decl = const_cast<clang::Decl*>(fInterp->lookupScope(name));
-   if (!decl) {
+   if (gAllowClang) {
+      const char* name = fClassInfo->Fullname();
       if (gDebug > 0) {
-         fprintf(stderr,
-            "tcling_ClassInfo::Init(tagnum): cling class not found "
-            "name: %s  tagnum: %d\n", name, tagnum);
+         fprintf(stderr, "tcling_ClassInfo::Init(tagnum): found cint class "
+                 "name: %s  tagnum: %d\n", name, tagnum);
       }
-      std::string buf = TClassEdit::InsertStd(name);
-      decl = const_cast<clang::Decl*>(fInterp->lookupScope(buf));
+      if (!name || (name[0] == '\0')) {
+         // No name, or name is blank, could be anonymous
+         // class/struct/union or enum.  Cint does not give
+         // us enough information to find the same decl in clang.
+         return;
+      }
+      const clang::Decl* decl = fInterp->lookupScope(name);
       if (!decl) {
          if (gDebug > 0) {
             fprintf(stderr,
-               "tcling_ClassInfo::Init(tagnum): cling class not found "
-               "name: %s  tagnum: %d\n", buf.c_str(), tagnum);
+                    "tcling_ClassInfo::Init(tagnum): cling class not found "
+                    "name: %s  tagnum: %d\n", name, tagnum);
+         }
+         std::string buf = TClassEdit::InsertStd(name);
+         decl = const_cast<clang::Decl*>(fInterp->lookupScope(buf));
+         if (!decl) {
+            if (gDebug > 0) {
+               fprintf(stderr,
+                       "tcling_ClassInfo::Init(tagnum): cling class not found "
+                       "name: %s  tagnum: %d\n", buf.c_str(), tagnum);
+            }
+         }
+         else {
+            if (gDebug > 0) {
+               fprintf(stderr, "tcling_ClassInfo::Init(tagnum): "
+                       "found cling class name: %s  decl: 0x%lx\n",
+                       buf.c_str(), (long) decl);
+            }
          }
       }
       else {
-         fDecl = decl;
          if (gDebug > 0) {
             fprintf(stderr, "tcling_ClassInfo::Init(tagnum): found cling class "
-                    "name: %s  decl: 0x%lx\n", buf.c_str(), (long) fDecl);
+                    "name: %s  decl: 0x%lx\n", name, (long) decl);
          }
       }
-   }
-   else {
-      fDecl = decl;
-      if (gDebug > 0) {
-         fprintf(stderr, "tcling_ClassInfo::Init(tagnum): found cling class "
-                 "name: %s  decl: 0x%lx\n", name, (long) fDecl);
+      if (decl) {
+         // Position our iterator on the given decl.
+         AdvanceToDecl(decl);
+         //fFirstTime = true;
+         //fDescend = false;
+         //fIter = clang::DeclContext::decl_iterator();
+         //fTemplateDecl = 0;
+         //fSpecIter = clang::ClassTemplateDecl::spec_iterator(0);
+         //fDecl = const_cast<clang::Decl*>(decl);
+         //fIterStack.clear();
       }
    }
 }
@@ -562,20 +700,28 @@ bool tcling_ClassInfo::IsBase(const char* name) const
       return false;
    }
    if (!IsValidClang()) {
-      return fClassInfo->IsBase(name);
+      if (gAllowCint) {
+         return fClassInfo->IsBase(name);
+      }
+      return false;
+   }
+   if (!gAllowClang) {
+      return false;
    }
    tcling_ClassInfo base(fInterp, name);
    if (!base.IsValid()) {
-      if (IsValidCint()) {
-         int cint_val = fClassInfo->IsBase(name);
-         int clang_val = 0;
-         if (clang_val != cint_val) {
-            if (gDebug > 0) {
-               fprintf(stderr, "VALIDITY: tcling_ClassInfo::IsBase(name): "
-                       "%s(%s)  cint: %d  clang: %d\n", fClassInfo->Fullname(),
-                       name, cint_val, clang_val);
+      if (gAllowCint) {
+         if (IsValidCint()) {
+            int cint_val = fClassInfo->IsBase(name);
+            int clang_val = 0;
+            if (clang_val != cint_val) {
+               if (gDebug > 0) {
+                  fprintf(stderr,
+                          "VALIDITY: tcling_ClassInfo::IsBase(name): "
+                          "%s(%s)  cint: %d  clang: %d\n",
+                          fClassInfo->Fullname(), name, cint_val, clang_val);
+               }
             }
-            return cint_val;
          }
       }
       return false;
@@ -598,21 +744,23 @@ bool tcling_ClassInfo::IsBase(const char* name) const
    const clang::CXXRecordDecl* CRD =
       llvm::dyn_cast<clang::CXXRecordDecl>(fDecl);
    if (!CRD) {
-      // We are an enum or namespace, we cannot be the base of anything.
+      // We are an enum, namespace, or translation unit,
+      // we cannot be the base of anything.
       return false;
    }
    const clang::CXXRecordDecl* baseCRD =
       llvm::dyn_cast<clang::CXXRecordDecl>(base.GetDecl());
-   if (IsValidCint()) {
-      int cint_val = fClassInfo->IsBase(name);
-      int clang_val = CRD->isDerivedFrom(baseCRD);
-      if (clang_val != cint_val) {
-         if (gDebug > 0) {
-            fprintf(stderr, "VALIDITY: tcling_ClassInfo::IsBase(name): "
-                    "%s(%s)  cint: %d  clang: %d\n", fClassInfo->Fullname(),
-                    name, cint_val, clang_val);
+   if (gAllowCint) {
+      if (IsValidCint()) {
+         int cint_val = fClassInfo->IsBase(name);
+         int clang_val = CRD->isDerivedFrom(baseCRD);
+         if (clang_val != cint_val) {
+            if (gDebug > 0) {
+               fprintf(stderr, "VALIDITY: tcling_ClassInfo::IsBase(name): "
+                       "%s(%s)  cint: %d  clang: %d\n", fClassInfo->Fullname(),
+                       name, cint_val, clang_val);
+            }
          }
-         return cint_val;
       }
    }
    return CRD->isDerivedFrom(baseCRD);
@@ -631,15 +779,18 @@ bool tcling_ClassInfo::IsEnum(cling::Interpreter* interp, const char* name)
 bool tcling_ClassInfo::IsLoaded() const
 {
    if (!IsValid()) {
-      return 0;
+      return false;
    }
    if (!IsValidClang()) {
-      return fClassInfo->IsLoaded();
+      if (gAllowCint) {
+         return fClassInfo->IsLoaded();
+      }
+      return false;
    }
-   // FIXME: What could this mean for clang?
-   if (IsValidCint()) {
-      return fClassInfo->IsLoaded();
+   if (!gAllowClang) {
+      return false;
    }
+   // All clang classes are considered loaded.
    return true;
 }
 
@@ -650,42 +801,167 @@ bool tcling_ClassInfo::IsValid() const
 
 bool tcling_ClassInfo::IsValidCint() const
 {
-   if (fClassInfo) {
-      if (fClassInfo->IsValid()) {
-         return true;
-      }
+   if (gAllowCint) {
+      return fClassInfo->IsValid();
    }
    return false;
 }
 
 bool tcling_ClassInfo::IsValidClang() const
 {
-   return fDecl;
+   if (gAllowClang) {
+      return fDecl;
+   }
+   return false;
 }
 
 bool tcling_ClassInfo::IsValidMethod(const char* method, const char* proto,
                                      long* offset) const
 {
    if (!IsValid()) {
-      return 0;
+      return false;
    }
    if (!IsValidClang()) {
-      return fClassInfo->GetMethod(method, proto, offset).IsValid();
+      if (gAllowCint) {
+         return fClassInfo->GetMethod(method, proto, offset).IsValid();
+      }
+      return false;
    }
-   // FIXME: Fix this when we have function lookup.
-   if (IsValidCint()) {
-      return fClassInfo->GetMethod(method, proto, offset).IsValid();
+   if (gAllowCint) {
+      if (IsValidCint()) {
+         bool cint_val = fClassInfo->GetMethod(method, proto, offset).IsValid();
+         bool clang_val = GetMethod(method, proto, offset).IsValid();
+         if (clang_val != cint_val) {
+            if (gDebug > 0) {
+               fprintf(stderr,
+                       "VALIDITY: tcling_ClassInfo::IsValidMethod: %s(%s)  "
+                       "cint: %d  clang: %d\n", method, proto, cint_val, clang_val);
+            }
+         }
+      }
    }
-   return false;
+   return GetMethod(method, proto, offset).IsValid();
+}
+
+int tcling_ClassInfo::AdvanceToDecl(const clang::Decl* target_decl)
+{
+   const clang::TranslationUnitDecl* TU = target_decl->getTranslationUnitDecl();
+   const clang::DeclContext* DC = llvm::cast<clang::DeclContext>(TU);
+   fFirstTime = true;
+   fDescend = false;
+   fIter = DC->decls_begin();
+   fDecl = 0;
+   fIterStack.clear();
+   while (InternalNext()) {
+      if (fDecl == target_decl) {
+         return 1;
+      }
+   }
+   return 0;
+}
+
+int tcling_ClassInfo::InternalNext()
+{
+   if (!*fIter) {
+      // Iterator is already invalid.
+      return 0;
+   }
+   while (true) {
+      // Advance to next usable decl, or return if there is no next usable decl.
+      if (fFirstTime) {
+         // The cint semantics are strange.
+         fFirstTime = false;
+      }
+      else {
+         // Advance the iterator one decl, descending into the current decl
+         // context if necessary.
+         if (!fDescend) {
+            // Do not need to scan the decl context of the current decl,
+            // move on to the next decl.
+            ++fIter;
+         }
+         else {
+            // Descend into the decl context of the current decl.
+            fDescend = false;
+            //fprintf(stderr,
+            //   "tcling_ClassInfo::InternalNext:  "
+            //   "pushing ...\n");
+            fIterStack.push_back(fIter);
+            clang::DeclContext* DC = llvm::cast<clang::DeclContext>(*fIter);
+            fIter = DC->decls_begin();
+         }
+         // Fix it if we went past the end.
+         while (!*fIter && fIterStack.size()) {
+            //fprintf(stderr,
+            //   "tcling_ClassInfo::InternalNext:  "
+            //   "popping ...\n");
+            fIter = fIterStack.back();
+            fIterStack.pop_back();
+            ++fIter;
+         }
+         // Check for final termination.
+         if (!*fIter) {
+            // We have reached the end of the translation unit, all done.
+            fDecl = 0;
+            return 0;
+         }
+      }
+#if 0
+      if (clang::NamedDecl* ND =
+               llvm::dyn_cast<clang::NamedDecl>(*fIter)) {
+         clang::ASTContext& Context = ND->getASTContext();
+         clang::PrintingPolicy Policy(Context.getPrintingPolicy());
+         std::string tmp;
+         ND->getNameForDiagnostic(tmp, Policy, /*Qualified=*/true);
+         fprintf(stderr,
+                 "tcling_ClassInfo::InternalNext:  "
+                 "0x%08lx %s  %s\n",
+                 (long) *fIter, fIter->getDeclKindName(), tmp.c_str());
+      }
+#endif // 0
+      // Return if this decl is a class, struct, union, enum, or namespace.
+      clang::Decl::Kind DK = fIter->getKind();
+      if ((DK == clang::Decl::Namespace) || (DK == clang::Decl::Enum) ||
+            (DK == clang::Decl::CXXRecord) ||
+            (DK == clang::Decl::ClassTemplateSpecialization)) {
+         const clang::TagDecl* TD = llvm::dyn_cast<clang::TagDecl>(*fIter);
+         if (TD && !TD->isCompleteDefinition()) {
+            // For classes and enums, stop only on definitions.
+            continue;
+         }
+         if (DK == clang::Decl::Namespace) {
+            // For namespaces, stop only on the first definition.
+            if (!fIter->isCanonicalDecl()) {
+               // Not the first definition.
+               fDescend = true;
+               continue;
+            }
+         }
+         if (DK != clang::Decl::Enum) {
+            // We do not descend into enums.
+            clang::DeclContext* DC = llvm::cast<clang::DeclContext>(*fIter);
+            if (*DC->decls_begin()) {
+               // Next iteration will begin scanning the decl context
+               // contained by this decl.
+               fDescend = true;
+            }
+         }
+         // Iterator is now valid.
+         fDecl = *fIter;
+         return 1;
+      }
+   }
 }
 
 int tcling_ClassInfo::Next()
 {
-   int cint_val = fClassInfo->Next();
-   if (cint_val) {
-      Init(fClassInfo->Tagnum());
+   if (!gAllowClang) {
+      if (gAllowCint) {
+         return fClassInfo->Next();
+      }
+      return 0;
    }
-   return cint_val;
+   return InternalNext();
 }
 
 void* tcling_ClassInfo::New() const
@@ -695,12 +971,15 @@ void* tcling_ClassInfo::New() const
       return 0;
    }
    if (!IsValidClang()) {
-      return fClassInfo->New();
+      if (gAllowCint) {
+         return fClassInfo->New();
+      }
+      return 0;
+   }
+   if (!gAllowClang) {
+      return 0;
    }
    // TODO: Fix this when cling implements function call.
-   if (IsValidCint()) {
-      return fClassInfo->New();
-   }
    return 0;
 }
 
@@ -711,12 +990,15 @@ void* tcling_ClassInfo::New(int n) const
       return 0;
    }
    if (!IsValidClang()) {
-      return fClassInfo->New(n);
+      if (gAllowCint) {
+         return fClassInfo->New(n);
+      }
+      return 0;
+   }
+   if (!gAllowClang) {
+      return 0;
    }
    // TODO: Fix this when cling implements function call.
-   if (IsValidCint()) {
-      return fClassInfo->New(n);
-   }
    return 0;
 }
 
@@ -727,12 +1009,15 @@ void* tcling_ClassInfo::New(int n, void* arena) const
       return 0;
    }
    if (!IsValidClang()) {
-      return fClassInfo->New(n, arena);
+      if (gAllowCint) {
+         return fClassInfo->New(n, arena);
+      }
+      return 0;
+   }
+   if (!gAllowClang) {
+      return 0;
    }
    // TODO: Fix this when cling implements function call.
-   if (IsValidCint()) {
-      return fClassInfo->New(n, arena);
-   }
    return 0;
 }
 
@@ -743,12 +1028,15 @@ void* tcling_ClassInfo::New(void* arena) const
       return 0;
    }
    if (!IsValidClang()) {
-      return fClassInfo->New(arena);
+      if (gAllowCint) {
+         return fClassInfo->New(arena);
+      }
+      return 0;
+   }
+   if (!gAllowClang) {
+      return 0;
    }
    // TODO: Fix this when cling implements function call.
-   if (IsValidCint()) {
-      return fClassInfo->New(arena);
-   }
    return 0;
 }
 
@@ -758,25 +1046,32 @@ long tcling_ClassInfo::Property() const
       return 0L;
    }
    if (!IsValidClang()) {
-      return fClassInfo->Property();
+      if (gAllowCint) {
+         return fClassInfo->Property();
+      }
+      return 0L;
+   }
+   if (!gAllowClang) {
+      return 0L;
    }
    long property = 0L;
    property |= G__BIT_ISCPPCOMPILED;
    clang::Decl::Kind DK = fDecl->getKind();
-   if (DK == clang::Decl::Namespace) {
+   if ((DK == clang::Decl::Namespace) || (DK == clang::Decl::TranslationUnit)) {
       property |= G__BIT_ISNAMESPACE;
-      if (IsValidCint()) {
-         long cint_property = fClassInfo->Property();
-         cint_property &= ~static_cast<long>(G__BIT_ISCPPCOMPILED);
-         long clang_property = property;
-         clang_property &= ~static_cast<long>(G__BIT_ISCPPCOMPILED);
-         if (cint_property && (cint_property != clang_property)) {
-            if (gDebug > 0) {
-               fprintf(stderr, "VALIDITY: tcling_ClassInfo::Property: %s  "
-                       "cint: 0x%lx  clang: 0x%lx\n", fClassInfo->Fullname(),
-                       cint_property, clang_property);
+      if (gAllowCint) {
+         if (IsValidCint()) {
+            long cint_property = fClassInfo->Property();
+            cint_property &= ~static_cast<long>(G__BIT_ISCPPCOMPILED);
+            long clang_property = property;
+            clang_property &= ~static_cast<long>(G__BIT_ISCPPCOMPILED);
+            if (cint_property && (cint_property != clang_property)) {
+               if (gDebug > 0) {
+                  fprintf(stderr, "VALIDITY: tcling_ClassInfo::Property: %s  "
+                          "cint: 0x%lx  clang: 0x%lx\n", fClassInfo->Fullname(),
+                          cint_property, clang_property);
+               }
             }
-            return fClassInfo->Property();
          }
       }
       return property;
@@ -784,34 +1079,38 @@ long tcling_ClassInfo::Property() const
    // Note: Now we have class, enum, struct, union only.
    const clang::TagDecl* TD = llvm::dyn_cast<clang::TagDecl>(fDecl);
    if (!TD) {
-      if (IsValidCint()) {
-         long cint_property = fClassInfo->Property();
-         cint_property &= ~static_cast<long>(G__BIT_ISCPPCOMPILED);
-         if (cint_property != 0L) {
-            if (gDebug > 0) {
-               fprintf(stderr, "VALIDITY: tcling_ClassInfo::Property: %s  "
-                       "cint: 0x%lx  clang: 0x%lx\n", fClassInfo->Fullname(),
-                       cint_property, 0L);
+      if (gAllowCint) {
+         if (IsValidCint()) {
+            long cint_property = fClassInfo->Property();
+            cint_property &= ~static_cast<long>(G__BIT_ISCPPCOMPILED);
+            if (cint_property != 0L) {
+               if (gDebug > 0) {
+                  fprintf(stderr,
+                          "VALIDITY: tcling_ClassInfo::Property: %s  "
+                          "cint: 0x%lx  clang: 0x%lx\n", fClassInfo->Fullname(),
+                          cint_property, 0L);
+               }
             }
-            return fClassInfo->Property();
          }
       }
       return 0L;
    }
    if (TD->isEnum()) {
       property |= G__BIT_ISENUM;
-      if (IsValidCint()) {
-         long cint_property = fClassInfo->Property();
-         cint_property &= ~static_cast<long>(G__BIT_ISCPPCOMPILED);
-         long clang_property = property;
-         clang_property &= ~static_cast<long>(G__BIT_ISCPPCOMPILED);
-         if (cint_property && (cint_property != clang_property)) {
-            if (gDebug > 0) {
-               fprintf(stderr, "VALIDITY: tcling_ClassInfo::Property: %s  "
-                       "cint: 0x%lx  clang: 0x%lx\n", fClassInfo->Fullname(),
-                       cint_property, clang_property);
+      if (gAllowCint) {
+         if (IsValidCint()) {
+            long cint_property = fClassInfo->Property();
+            cint_property &= ~static_cast<long>(G__BIT_ISCPPCOMPILED);
+            long clang_property = property;
+            clang_property &= ~static_cast<long>(G__BIT_ISCPPCOMPILED);
+            if (cint_property && (cint_property != clang_property)) {
+               if (gDebug > 0) {
+                  fprintf(stderr,
+                          "VALIDITY: tcling_ClassInfo::Property: %s  "
+                          "cint: 0x%lx  clang: 0x%lx\n", fClassInfo->Fullname(),
+                          cint_property, clang_property);
+               }
             }
-            return fClassInfo->Property();
          }
       }
       return property;
@@ -831,18 +1130,20 @@ long tcling_ClassInfo::Property() const
    if (CRD->isAbstract()) {
       property |= G__BIT_ISABSTRACT;
    }
-   if (IsValidCint()) {
-      long cint_property = fClassInfo->Property();
-      cint_property &= ~static_cast<long>(G__BIT_ISCPPCOMPILED);
-      cint_property &= ~static_cast<long>(G__BIT_ISABSTRACT);
-      long clang_property = property;
-      clang_property &= ~static_cast<long>(G__BIT_ISCPPCOMPILED);
-      clang_property &= ~static_cast<long>(G__BIT_ISABSTRACT);
-      if (cint_property && (cint_property != clang_property)) {
-         if (gDebug > 0) {
-            fprintf(stderr, "VALIDITY: tcling_ClassInfo::Property: %s  "
-                    "cint: 0x%lx  clang: 0x%lx\n", fClassInfo->Fullname(),
-                    cint_property, clang_property);
+   if (gAllowCint) {
+      if (IsValidCint()) {
+         long cint_property = fClassInfo->Property();
+         cint_property &= ~static_cast<long>(G__BIT_ISCPPCOMPILED);
+         cint_property &= ~static_cast<long>(G__BIT_ISABSTRACT);
+         long clang_property = property;
+         clang_property &= ~static_cast<long>(G__BIT_ISCPPCOMPILED);
+         clang_property &= ~static_cast<long>(G__BIT_ISABSTRACT);
+         if (cint_property && (cint_property != clang_property)) {
+            if (gDebug > 0) {
+               fprintf(stderr, "VALIDITY: tcling_ClassInfo::Property: %s  "
+                       "cint: 0x%lx  clang: 0x%lx\n", fClassInfo->Fullname(),
+                       cint_property, clang_property);
+            }
          }
       }
    }
@@ -855,12 +1156,15 @@ int tcling_ClassInfo::RootFlag() const
       return 0;
    }
    if (!IsValidClang()) {
-      return fClassInfo->RootFlag();
+      if (gAllowCint) {
+         return fClassInfo->RootFlag();
+      }
+      return 0;
    }
-   // TODO: Fix this when rootcling provides the value.
-   if (IsValidCint()) {
-      return fClassInfo->RootFlag();
+   if (!gAllowClang) {
+      return 0;
    }
+   // FIXME: Implement this when rootcling provides the value.
    return 0;
 }
 
@@ -870,36 +1174,44 @@ int tcling_ClassInfo::Size() const
       return -1;
    }
    if (!IsValidClang()) {
-      return fClassInfo->Size();
+      if (gAllowCint) {
+         return fClassInfo->Size();
+      }
+      return -1;
+   }
+   if (!gAllowClang) {
+      return -1;
    }
    clang::Decl::Kind DK = fDecl->getKind();
    if (DK == clang::Decl::Namespace) {
       // Namespaces are special for cint.
-      if (IsValidCint()) {
-         int cint_size = fClassInfo->Size();
-         if ((cint_size != 0) && (cint_size != 1)) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                  "VALIDITY: tcling_ClassInfo::Size: namespace %s  "
-                  "cint: %d  clang: %d\n", fClassInfo->Fullname(),
-                  cint_size, 1);
+      if (gAllowCint) {
+         if (IsValidCint()) {
+            int cint_size = fClassInfo->Size();
+            if ((cint_size != 0) && (cint_size != 1)) {
+               if (gDebug > 0) {
+                  fprintf(stderr,
+                          "VALIDITY: tcling_ClassInfo::Size: namespace %s  "
+                          "cint: %d  clang: %d\n", fClassInfo->Fullname(),
+                          cint_size, 1);
+               }
             }
-            return cint_size;
          }
       }
       return 1;
    }
    else if (DK == clang::Decl::Enum) {
       // Enums are special for cint.
-      if (IsValidCint()) {
-         int cint_size = fClassInfo->Size();
-         if ((cint_size != 0) && (cint_size != 4)) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                  "VALIDITY: tcling_ClassInfo::Size: enum %s  cint: "
-                  "%d  clang: %d\n", fClassInfo->Fullname(), cint_size, 0);
+      if (gAllowCint) {
+         if (IsValidCint()) {
+            int cint_size = fClassInfo->Size();
+            if ((cint_size != 0) && (cint_size != 4)) {
+               if (gDebug > 0) {
+                  fprintf(stderr,
+                          "VALIDITY: tcling_ClassInfo::Size: enum %s  cint: "
+                          "%d  clang: %d\n", fClassInfo->Fullname(), cint_size, 0);
+               }
             }
-            return cint_size;
          }
       }
       return 0;
@@ -907,32 +1219,38 @@ int tcling_ClassInfo::Size() const
    const clang::RecordDecl* RD = llvm::dyn_cast<clang::RecordDecl>(fDecl);
    if (!RD) {
       // Should not happen.
-      if (IsValidCint()) {
-         int cint_size = fClassInfo->Size();
-         if (cint_size != -1) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                  "VALIDITY: tcling_ClassInfo::Size: %s  cint: %d  "
-                  "clang: %d\n", fClassInfo->Fullname(), cint_size, -1);
+      if (gAllowCint) {
+         if (IsValidCint()) {
+            int cint_size = fClassInfo->Size();
+            if (cint_size != -1) {
+               if (gDebug > 0) {
+                  fprintf(stderr,
+                          "VALIDITY: tcling_ClassInfo::Size: %s  cint: %d  "
+                          "clang: %d\n", fClassInfo->Fullname(), cint_size, -1);
+               }
             }
-            return cint_size;
          }
       }
       return -1;
+   }
+   if (!RD->getDefinition()) {
+      // Forward-declared class.
+      return 0;
    }
    clang::ASTContext& Context = fDecl->getASTContext();
    const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
    int64_t size = Layout.getSize().getQuantity();
    int clang_size = static_cast<int>(size);
-   if (IsValidCint()) {
-      int cint_size = fClassInfo->Size();
-      if (cint_size && (cint_size != clang_size)) {
-         if (gDebug > 0) {
-            fprintf(stderr,
-               "VALIDITY: tcling_ClassInfo::Size: %s  cint: %d  "
-               "clang: %d\n", fClassInfo->Fullname(), cint_size, clang_size);
+   if (gAllowCint) {
+      if (IsValidCint()) {
+         int cint_size = fClassInfo->Size();
+         if (cint_size && (cint_size != clang_size)) {
+            if (gDebug > 0) {
+               fprintf(stderr,
+                       "VALIDITY: tcling_ClassInfo::Size: %s  cint: %d  "
+                       "clang: %d\n", fClassInfo->Fullname(), cint_size, clang_size);
+            }
          }
-         return cint_size;
       }
    }
    return clang_size;
@@ -945,13 +1263,15 @@ long tcling_ClassInfo::Tagnum() const
       return -1L;
    }
    if (!IsValidClang()) {
-      return fClassInfo->Tagnum();
+      if (gAllowCint) {
+         return fClassInfo->Tagnum();
+      }
+      return -1L;
    }
-   // TODO: What could this possibly mean for clang?
-   if (IsValidCint()) {
-      return fClassInfo->Tagnum();
+   if (!gAllowClang) {
+      return -1;
    }
-   return -1;
+   return reinterpret_cast<long>(fDecl);
 }
 
 const char* tcling_ClassInfo::FileName() const
@@ -960,12 +1280,15 @@ const char* tcling_ClassInfo::FileName() const
       return 0;
    }
    if (!IsValidClang()) {
-      return fClassInfo->FileName();
+      if (gAllowCint) {
+         return fClassInfo->FileName();
+      }
+      return 0;
    }
-   // TODO: Fix this when rootcling provides the information.
-   if (IsValidCint()) {
-      return fClassInfo->FileName();
+   if (!gAllowClang) {
+      return 0;
    }
+   // FIXME: Implement this when rootcling provides the information.
    return 0;
 }
 
@@ -975,22 +1298,30 @@ const char* tcling_ClassInfo::FullName() const
       return 0;
    }
    if (!IsValidClang()) {
-      return fClassInfo->Fullname();
+      if (gAllowCint) {
+         return fClassInfo->Fullname();
+      }
+      return 0;
+   }
+   if (!gAllowClang) {
+      return 0;
    }
    // Note: This *must* be static because we are returning a pointer inside it!
    static std::string buf;
    buf.clear();
-   clang::PrintingPolicy P(fDecl->getASTContext().getPrintingPolicy());
+   clang::PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
    llvm::dyn_cast<clang::NamedDecl>(fDecl)->
-      getNameForDiagnostic(buf, P, /*Qualified=*/true);
-   if (IsValidCint()) {
-      const char* cint_fullname = fClassInfo->Fullname();
-      if (buf != cint_fullname) {
-         if (gDebug > 0) {
-            fprintf(stderr, "VALIDITY: tcling_ClassInfo::FullName: cint: %s  "
-                    "clang: %s\n", cint_fullname, buf.c_str());
+   getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+   if (gAllowCint) {
+      if (IsValidCint()) {
+         const char* cint_fullname = fClassInfo->Fullname();
+         if (buf != cint_fullname) {
+            if (gDebug > 0) {
+               fprintf(stderr,
+                       "VALIDITY: tcling_ClassInfo::FullName:  "
+                       "cint: %s  clang: %s\n", cint_fullname, buf.c_str());
+            }
          }
-         return cint_fullname;
       }
    }
    return buf.c_str();
@@ -1002,22 +1333,30 @@ const char* tcling_ClassInfo::Name() const
       return 0;
    }
    if (!IsValidClang()) {
-      return fClassInfo->Name();
+      if (gAllowCint) {
+         return fClassInfo->Name();
+      }
+      return 0;
+   }
+   if (!gAllowClang) {
+      return 0;
    }
    // Note: This *must* be static because we are returning a pointer inside it!
    static std::string buf;
    buf.clear();
-   clang::PrintingPolicy P(fDecl->getASTContext().getPrintingPolicy());
+   clang::PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
    llvm::dyn_cast<clang::NamedDecl>(fDecl)->
-      getNameForDiagnostic(buf, P, /*Qualified=*/false);
-   if (IsValidCint()) {
-      const char* cint_name = fClassInfo->Name();
-      if (buf != cint_name) {
-         if (gDebug > 0) {
-            fprintf(stderr, "VALIDITY: tcling_ClassInfo::Name: cint: %s  "
-                    "clang: %s\n", cint_name, buf.c_str());
+   getNameForDiagnostic(buf, Policy, /*Qualified=*/false);
+   if (gAllowCint) {
+      if (IsValidCint()) {
+         const char* cint_name = fClassInfo->Name();
+         if (buf != cint_name) {
+            if (gDebug > 0) {
+               fprintf(stderr,
+                       "VALIDITY: tcling_ClassInfo::Name:  "
+                       "cint: %s  clang: %s\n", cint_name, buf.c_str());
+            }
          }
-         return cint_name;
       }
    }
    return buf.c_str();
@@ -1029,13 +1368,15 @@ const char* tcling_ClassInfo::Title() const
       return 0;
    }
    if (!IsValidClang()) {
-      return fClassInfo->Title();
+      if (gAllowCint) {
+         return fClassInfo->Title();
+      }
+      return 0;
    }
-   // TODO: We need to get this by enhancing the lexer
-   //       to retain class comments.
-   if (IsValidCint()) {
-      return fClassInfo->Title();
+   if (!gAllowClang) {
+      return 0;
    }
+   // FIXME: Implement this when rootcling provides the info.
    return 0;
 }
 
@@ -1045,21 +1386,29 @@ const char* tcling_ClassInfo::TmpltName() const
       return 0;
    }
    if (!IsValidClang()) {
-      return fClassInfo->TmpltName();
+      if (gAllowCint) {
+         return fClassInfo->TmpltName();
+      }
+      return 0;
+   }
+   if (!gAllowClang) {
+      return 0;
    }
    // Note: This *must* be static because we are returning a pointer inside it!
    static std::string buf;
    buf.clear();
    // Note: This does *not* include the template arguments!
    buf = llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameAsString();
-   if (IsValidCint()) {
-      const char* cint_tmpltname = fClassInfo->TmpltName();
-      if (buf != cint_tmpltname) {
-         if (gDebug > 0) {
-            fprintf(stderr, "VALIDITY: tcling_ClassInfo::TmpltName: cint: %s  "
-                    "clang: %s\n", cint_tmpltname, buf.c_str());
+   if (gAllowCint) {
+      if (IsValidCint()) {
+         const char* cint_tmpltname = fClassInfo->TmpltName();
+         if (buf != cint_tmpltname) {
+            if (gDebug > 0) {
+               fprintf(stderr,
+                       "VALIDITY: tcling_ClassInfo::TmpltName:  "
+                       "cint: %s  clang: %s\n", cint_tmpltname, buf.c_str());
+            }
          }
-         return cint_tmpltname;
       }
    }
    return buf.c_str();
