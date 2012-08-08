@@ -25,7 +25,7 @@
 
 #include "TClingMethodArgInfo.h"
 
-tcling_MethodArgInfo::~tcling_MethodArgInfo()
+TClingMethodArgInfo::~TClingMethodArgInfo()
 {
    delete fMethodArgInfo;
    fMethodArgInfo = 0;
@@ -33,13 +33,13 @@ tcling_MethodArgInfo::~tcling_MethodArgInfo()
    fMethodInfo = 0;
 }
 
-tcling_MethodArgInfo::tcling_MethodArgInfo(cling::Interpreter* interp)
+TClingMethodArgInfo::TClingMethodArgInfo(cling::Interpreter* interp)
    : fMethodArgInfo(0), fInterp(interp), fMethodInfo(0), fIdx(-1)
 {
    fMethodArgInfo = new G__MethodArgInfo();
 }
 
-tcling_MethodArgInfo::tcling_MethodArgInfo(cling::Interpreter* interp,
+TClingMethodArgInfo::TClingMethodArgInfo(cling::Interpreter* interp,
       const tcling_MethodInfo* mi)
    : fMethodArgInfo(0), fInterp(interp), fMethodInfo(0), fIdx(-1)
 {
@@ -51,15 +51,15 @@ tcling_MethodArgInfo::tcling_MethodArgInfo(cling::Interpreter* interp,
    fMethodInfo = mi;
 }
 
-tcling_MethodArgInfo::tcling_MethodArgInfo(const tcling_MethodArgInfo& rhs)
+TClingMethodArgInfo::TClingMethodArgInfo(const TClingMethodArgInfo& rhs)
    : fMethodArgInfo(0), fInterp(rhs.fInterp), fMethodInfo(rhs.fMethodInfo),
      fIdx(rhs.fIdx)
 {
    fMethodArgInfo = new G__MethodArgInfo(*rhs.fMethodArgInfo);
 }
 
-tcling_MethodArgInfo& tcling_MethodArgInfo::operator=(
-   const tcling_MethodArgInfo& rhs)
+TClingMethodArgInfo& TClingMethodArgInfo::operator=(
+   const TClingMethodArgInfo& rhs)
 {
    if (this != &rhs) {
       delete fMethodArgInfo;
@@ -71,7 +71,7 @@ tcling_MethodArgInfo& tcling_MethodArgInfo::operator=(
    return *this;
 }
 
-bool tcling_MethodArgInfo::IsValidClang() const
+bool TClingMethodArgInfo::IsValidClang() const
 {
    if (!gAllowClang) {
       return false;
@@ -86,7 +86,7 @@ bool tcling_MethodArgInfo::IsValidClang() const
           (fIdx < static_cast<int>(fMethodInfo->GetMethodDecl()->getNumParams()));
 }
 
-bool tcling_MethodArgInfo::IsValidCint() const
+bool TClingMethodArgInfo::IsValidCint() const
 {
    if (gAllowCint) {
       return fMethodArgInfo->IsValid();
@@ -94,12 +94,12 @@ bool tcling_MethodArgInfo::IsValidCint() const
    return false;
 }
 
-bool tcling_MethodArgInfo::IsValid() const
+bool TClingMethodArgInfo::IsValid() const
 {
    return IsValidCint() || IsValidClang();
 }
 
-int tcling_MethodArgInfo::Next()
+int TClingMethodArgInfo::Next()
 {
    if (!IsValidClang()) {
       if (gAllowCint) {
@@ -111,7 +111,7 @@ int tcling_MethodArgInfo::Next()
    return IsValidClang();
 }
 
-long tcling_MethodArgInfo::Property() const
+long TClingMethodArgInfo::Property() const
 {
    if (!IsValid()) {
       return 0L;
@@ -168,7 +168,7 @@ long tcling_MethodArgInfo::Property() const
          if (property != cint_property) {
             if (gDebug > 0) {
                fprintf(stderr,
-                       "VALIDITY: tcling_MethodArgInfo::Property: "
+                       "VALIDITY: TClingMethodArgInfo::Property: "
                        "%s  cint: 0x%lx  clang: 0x%lx\n", fMethodInfo->Name(),
                        cint_property, property);
             }
@@ -178,7 +178,7 @@ long tcling_MethodArgInfo::Property() const
    return property;
 }
 
-const char* tcling_MethodArgInfo::DefaultValue() const
+const char* TClingMethodArgInfo::DefaultValue() const
 {
    if (!IsValid()) {
       return 0;
@@ -228,7 +228,7 @@ const char* tcling_MethodArgInfo::DefaultValue() const
          if (buf != cint_val) {
             if (gDebug > 0) {
                fprintf(stderr,
-                       "VALIDITY: tcling_MethodArgInfo::DefaultValue: "
+                       "VALIDITY: TClingMethodArgInfo::DefaultValue: "
                        "cint: %s  clang: %s\n", cint_val, buf.c_str());
             }
          }
@@ -237,7 +237,7 @@ const char* tcling_MethodArgInfo::DefaultValue() const
    return buf.c_str();
 }
 
-const char* tcling_MethodArgInfo::Name() const
+const char* TClingMethodArgInfo::Name() const
 {
    if (!IsValid()) {
       return 0;
@@ -263,7 +263,7 @@ const char* tcling_MethodArgInfo::Name() const
          if (buf != cint_name) {
             if (gDebug > 0) {
                fprintf(stderr,
-                       "VALIDITY: tcling_MethodArgInfo::Name: "
+                       "VALIDITY: TClingMethodArgInfo::Name: "
                        "cint: %s  clang: %s\n", cint_name, buf.c_str());
             }
          }
@@ -272,7 +272,7 @@ const char* tcling_MethodArgInfo::Name() const
    return buf.c_str();
 }
 
-const tcling_TypeInfo* tcling_MethodArgInfo::Type() const
+const tcling_TypeInfo* TClingMethodArgInfo::Type() const
 {
    static tcling_TypeInfo ti(fInterp);
    if (!IsValidClang()) {
@@ -291,7 +291,7 @@ const tcling_TypeInfo* tcling_MethodArgInfo::Type() const
    return &ti;
 }
 
-const char* tcling_MethodArgInfo::TypeName() const
+const char* TClingMethodArgInfo::TypeName() const
 {
    if (!IsValidClang()) {
       if (gAllowCint) {

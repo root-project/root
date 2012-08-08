@@ -26,13 +26,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class tcling_MethodArgInfo {
+class TClingMethodArgInfo {
 public:
-   ~tcling_MethodArgInfo();
-   explicit tcling_MethodArgInfo(cling::Interpreter*);
-   explicit tcling_MethodArgInfo(cling::Interpreter*, const tcling_MethodInfo*);
-   tcling_MethodArgInfo(const tcling_MethodArgInfo&);
-   tcling_MethodArgInfo& operator=(const tcling_MethodArgInfo&);
+   ~TClingMethodArgInfo();
+   explicit TClingMethodArgInfo(cling::Interpreter*);
+   explicit TClingMethodArgInfo(cling::Interpreter*, const tcling_MethodInfo*);
+   TClingMethodArgInfo(const TClingMethodArgInfo&);
+   TClingMethodArgInfo& operator=(const TClingMethodArgInfo&);
    G__MethodInfo* GetMethodArgInfo() const;
    bool IsValidClang() const;
    bool IsValidCint() const;
