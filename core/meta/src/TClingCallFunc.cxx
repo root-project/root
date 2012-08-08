@@ -26,7 +26,7 @@
 
 #include "TClingCallFunc.h"
 
-tcling_CallFunc::~tcling_CallFunc()
+TClingCallFunc::~TClingCallFunc()
 {
    delete fCallFunc;
    fCallFunc = 0;
@@ -38,14 +38,14 @@ tcling_CallFunc::~tcling_CallFunc()
    //fArgs.clear();
 }
 
-tcling_CallFunc::tcling_CallFunc(cling::Interpreter* interp)
+TClingCallFunc::TClingCallFunc(cling::Interpreter* interp)
    : fCallFunc(0), fInterp(interp), fMethod(0), fEEFunc(0), fEEAddr(0)
 {
    fCallFunc = new G__CallFunc();
    fMethod = new tcling_MethodInfo(interp);
 }
 
-tcling_CallFunc::tcling_CallFunc(const tcling_CallFunc& rhs)
+TClingCallFunc::TClingCallFunc(const TClingCallFunc& rhs)
    : fCallFunc(0), fInterp(rhs.fInterp), fMethod(0), fEEFunc(rhs.fEEFunc),
      fEEAddr(rhs.fEEAddr), fArgs(rhs.fArgs)
 {
@@ -53,7 +53,7 @@ tcling_CallFunc::tcling_CallFunc(const tcling_CallFunc& rhs)
    fMethod = new tcling_MethodInfo(*rhs.fMethod);
 }
 
-tcling_CallFunc& tcling_CallFunc::operator=(const tcling_CallFunc& rhs)
+TClingCallFunc& TClingCallFunc::operator=(const TClingCallFunc& rhs)
 {
    if (this != &rhs) {
       delete fCallFunc;
@@ -68,7 +68,7 @@ tcling_CallFunc& tcling_CallFunc::operator=(const tcling_CallFunc& rhs)
    return *this;
 }
 
-void tcling_CallFunc::Exec(void* address) const
+void TClingCallFunc::Exec(void* address) const
 {
    if (!IsValid()) {
       return;
@@ -104,7 +104,7 @@ void tcling_CallFunc::Exec(void* address) const
       }
       else {
          if (!address) {
-            fprintf(stderr, "tcling_CallFunc::Exec: error: "
+            fprintf(stderr, "TClingCallFunc::Exec: error: "
                     "calling member function with no object pointer!\n");
          }
       }
@@ -115,7 +115,7 @@ void tcling_CallFunc::Exec(void* address) const
    }
 }
 
-long tcling_CallFunc::ExecInt(void* address) const
+long TClingCallFunc::ExecInt(void* address) const
 {
    if (!IsValid()) {
       return 0L;
@@ -152,7 +152,7 @@ long tcling_CallFunc::ExecInt(void* address) const
       }
       else {
          if (!address) {
-            fprintf(stderr, "tcling_CallFunc::Exec: error: "
+            fprintf(stderr, "TClingCallFunc::Exec: error: "
                     "calling member function with no object pointer!\n");
          }
       }
@@ -167,7 +167,7 @@ long tcling_CallFunc::ExecInt(void* address) const
    return static_cast<long>(val.IntVal.getSExtValue());
 }
 
-long long tcling_CallFunc::ExecInt64(void* address) const
+long long TClingCallFunc::ExecInt64(void* address) const
 {
    if (!IsValid()) {
       return 0LL;
@@ -204,7 +204,7 @@ long long tcling_CallFunc::ExecInt64(void* address) const
       }
       else {
          if (!address) {
-            fprintf(stderr, "tcling_CallFunc::Exec: error: "
+            fprintf(stderr, "TClingCallFunc::Exec: error: "
                     "calling member function with no object pointer!\n");
          }
       }
@@ -216,7 +216,7 @@ long long tcling_CallFunc::ExecInt64(void* address) const
    return static_cast<long long>(val.IntVal.getSExtValue());
 }
 
-double tcling_CallFunc::ExecDouble(void* address) const
+double TClingCallFunc::ExecDouble(void* address) const
 {
    if (!IsValid()) {
       return 0.0;
@@ -253,7 +253,7 @@ double tcling_CallFunc::ExecDouble(void* address) const
       }
       else {
          if (!address) {
-            fprintf(stderr, "tcling_CallFunc::Exec: error: "
+            fprintf(stderr, "TClingCallFunc::Exec: error: "
                     "calling member function with no object pointer!\n");
          }
       }
@@ -265,7 +265,7 @@ double tcling_CallFunc::ExecDouble(void* address) const
    return val.DoubleVal;
 }
 
-tcling_MethodInfo* tcling_CallFunc::FactoryMethod() const
+tcling_MethodInfo* TClingCallFunc::FactoryMethod() const
 {
    if (gAllowCint) {
       G__MethodInfo mi = fCallFunc->GetMethodInfo();
@@ -277,7 +277,7 @@ tcling_MethodInfo* tcling_CallFunc::FactoryMethod() const
    return new tcling_MethodInfo(*fMethod);
 }
 
-void tcling_CallFunc::Init()
+void TClingCallFunc::Init()
 {
    if (gAllowCint) {
       fCallFunc->Init();
@@ -291,7 +291,7 @@ void tcling_CallFunc::Init()
    }
 }
 
-void* tcling_CallFunc::InterfaceMethod() const
+void* TClingCallFunc::InterfaceMethod() const
 {
    if (!IsValidClang()) {
       if (gAllowCint) {
@@ -305,7 +305,7 @@ void* tcling_CallFunc::InterfaceMethod() const
    return fEEAddr;
 }
 
-bool tcling_CallFunc::IsValidCint() const
+bool TClingCallFunc::IsValidCint() const
 {
    if (gAllowCint) {
       return fCallFunc->IsValid();
@@ -313,7 +313,7 @@ bool tcling_CallFunc::IsValidCint() const
    return false;
 }
 
-bool tcling_CallFunc::IsValidClang() const
+bool TClingCallFunc::IsValidClang() const
 {
    if (gAllowClang) {
       return fEEAddr;
@@ -321,12 +321,12 @@ bool tcling_CallFunc::IsValidClang() const
    return false;
 }
 
-bool tcling_CallFunc::IsValid() const
+bool TClingCallFunc::IsValid() const
 {
    return IsValidCint() || IsValidClang();
 }
 
-void tcling_CallFunc::ResetArg()
+void TClingCallFunc::ResetArg()
 {
    if (gAllowCint) {
       fCallFunc->ResetArg();
@@ -336,7 +336,7 @@ void tcling_CallFunc::ResetArg()
    }
 }
 
-void tcling_CallFunc::SetArg(long param)
+void TClingCallFunc::SetArg(long param)
 {
    if (gAllowCint) {
       fCallFunc->SetArg(param);
@@ -348,7 +348,7 @@ void tcling_CallFunc::SetArg(long param)
    }
 }
 
-void tcling_CallFunc::SetArg(double param)
+void TClingCallFunc::SetArg(double param)
 {
    if (gAllowCint) {
       fCallFunc->SetArg(param);
@@ -360,7 +360,7 @@ void tcling_CallFunc::SetArg(double param)
    }
 }
 
-void tcling_CallFunc::SetArg(long long param)
+void TClingCallFunc::SetArg(long long param)
 {
    if (gAllowCint) {
       fCallFunc->SetArg(param);
@@ -372,7 +372,7 @@ void tcling_CallFunc::SetArg(long long param)
    }
 }
 
-void tcling_CallFunc::SetArg(unsigned long long param)
+void TClingCallFunc::SetArg(unsigned long long param)
 {
    if (gAllowCint) {
       fCallFunc->SetArg(param);
@@ -384,7 +384,7 @@ void tcling_CallFunc::SetArg(unsigned long long param)
    }
 }
 
-void tcling_CallFunc::SetArgArray(long* paramArr, int nparam)
+void TClingCallFunc::SetArgArray(long* paramArr, int nparam)
 {
    if (gAllowCint) {
       fCallFunc->SetArgArray(paramArr, nparam);
@@ -540,7 +540,7 @@ evaluateArgListDone:
    return return_code;
 }
 
-void tcling_CallFunc::SetArgs(const char* params)
+void TClingCallFunc::SetArgs(const char* params)
 {
    if (gAllowCint) {
       fCallFunc->SetArgs(params);
@@ -561,7 +561,7 @@ void tcling_CallFunc::SetArgs(const char* params)
    }
 }
 
-void tcling_CallFunc::SetFunc(const tcling_ClassInfo* info, const char* method, const char* params, long* offset)
+void TClingCallFunc::SetFunc(const tcling_ClassInfo* info, const char* method, const char* params, long* offset)
 {
    if (gAllowCint) {
       fCallFunc->SetFunc(info->GetClassInfo(), method, params, offset);
@@ -598,7 +598,7 @@ void tcling_CallFunc::SetFunc(const tcling_ClassInfo* info, const char* method, 
    }
 }
 
-void tcling_CallFunc::SetFunc(const tcling_MethodInfo* info)
+void TClingCallFunc::SetFunc(const tcling_MethodInfo* info)
 {
    if (gAllowCint) {
       fCallFunc->SetFunc(*info->GetMethodInfo());
@@ -616,7 +616,7 @@ void tcling_CallFunc::SetFunc(const tcling_MethodInfo* info)
    }
 }
 
-void tcling_CallFunc::SetFuncProto(const tcling_ClassInfo* info, const char* method,
+void TClingCallFunc::SetFuncProto(const tcling_ClassInfo* info, const char* method,
                                    const char* proto, long* offset)
 {
    if (gAllowCint) {
@@ -801,7 +801,7 @@ static llvm::Type* getLLVMType(llvm::LLVMContext& Context, clang::QualType QT)
    return TY;
 }
 
-void tcling_CallFunc::Init(const clang::FunctionDecl* FD)
+void TClingCallFunc::Init(const clang::FunctionDecl* FD)
 {
    fEEFunc = 0;
    fEEAddr = 0;
@@ -909,7 +909,7 @@ void tcling_CallFunc::Init(const clang::FunctionDecl* FD)
    }
 }
 
-llvm::GenericValue tcling_CallFunc::Invoke(
+llvm::GenericValue TClingCallFunc::Invoke(
    const std::vector<llvm::GenericValue>& ArgValues) const
 {
    // FIXME: We need to think about thunks for the this pointer adjustment,

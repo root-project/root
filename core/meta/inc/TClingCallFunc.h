@@ -27,12 +27,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class tcling_CallFunc {
+class TClingCallFunc {
 public:
-   ~tcling_CallFunc();
-   explicit tcling_CallFunc(cling::Interpreter*);
-   tcling_CallFunc(const tcling_CallFunc&);
-   tcling_CallFunc& operator=(const tcling_CallFunc&);
+   ~TClingCallFunc();
+   explicit TClingCallFunc(cling::Interpreter*);
+   TClingCallFunc(const TClingCallFunc&);
+   TClingCallFunc& operator=(const TClingCallFunc&);
    void Exec(void* address) const;
    long ExecInt(void* address) const;
    long long ExecInt64(void* address) const;
