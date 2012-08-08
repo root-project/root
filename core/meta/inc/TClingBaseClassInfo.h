@@ -26,13 +26,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class tcling_BaseClassInfo {
+class TClingBaseClassInfo {
 public:
-   ~tcling_BaseClassInfo();
-   explicit tcling_BaseClassInfo(cling::Interpreter*); // NOT IMPLEMENTED.
-   explicit tcling_BaseClassInfo(cling::Interpreter*, tcling_ClassInfo*);
-   tcling_BaseClassInfo(const tcling_BaseClassInfo&);
-   tcling_BaseClassInfo& operator=(const tcling_BaseClassInfo&);
+   ~TClingBaseClassInfo();
+   explicit TClingBaseClassInfo(cling::Interpreter*); // NOT IMPLEMENTED.
+   explicit TClingBaseClassInfo(cling::Interpreter*, tcling_ClassInfo*);
+   TClingBaseClassInfo(const TClingBaseClassInfo&);
+   TClingBaseClassInfo& operator=(const TClingBaseClassInfo&);
    int InternalNext(int onlyDirect);
    bool IsValidCint() const;
    bool IsValidClang() const;

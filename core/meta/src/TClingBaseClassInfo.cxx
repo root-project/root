@@ -25,7 +25,7 @@
 
 #include "TClingBaseClassInfo.h"
 
-tcling_BaseClassInfo::~tcling_BaseClassInfo()
+TClingBaseClassInfo::~TClingBaseClassInfo()
 {
    delete fBaseClassInfo;
    fBaseClassInfo = 0;
@@ -42,7 +42,7 @@ tcling_BaseClassInfo::~tcling_BaseClassInfo()
    //fOffset = 0L;
 }
 
-tcling_BaseClassInfo::tcling_BaseClassInfo(cling::Interpreter* interp,
+TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
       tcling_ClassInfo* tcling_class_info)
    : fBaseClassInfo(0), fInterp(interp), fClassInfo(0), fFirstTime(true),
      fDescend(false), fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L)
@@ -66,7 +66,7 @@ tcling_BaseClassInfo::tcling_BaseClassInfo(cling::Interpreter* interp,
    fIter = CRD->bases_begin();
 }
 
-tcling_BaseClassInfo::tcling_BaseClassInfo(const tcling_BaseClassInfo& rhs)
+TClingBaseClassInfo::TClingBaseClassInfo(const TClingBaseClassInfo& rhs)
    : fBaseClassInfo(0), fInterp(rhs.fInterp), fClassInfo(0),
      fFirstTime(rhs.fFirstTime), fDescend(rhs.fDescend), fDecl(rhs.fDecl),
      fIter(rhs.fIter), fBaseInfo(0), fIterStack(rhs.fIterStack),
@@ -77,8 +77,8 @@ tcling_BaseClassInfo::tcling_BaseClassInfo(const tcling_BaseClassInfo& rhs)
    fBaseInfo = new tcling_ClassInfo(*rhs.fBaseInfo);
 }
 
-tcling_BaseClassInfo& tcling_BaseClassInfo::operator=(
-   const tcling_BaseClassInfo& rhs)
+TClingBaseClassInfo& TClingBaseClassInfo::operator=(
+   const TClingBaseClassInfo& rhs)
 {
    if (this != &rhs) {
       delete fBaseClassInfo;
@@ -98,7 +98,7 @@ tcling_BaseClassInfo& tcling_BaseClassInfo::operator=(
    return *this;
 }
 
-bool tcling_BaseClassInfo::IsValidCint() const
+bool TClingBaseClassInfo::IsValidCint() const
 {
    if (gAllowCint) {
       return fBaseClassInfo->IsValid();
@@ -106,7 +106,7 @@ bool tcling_BaseClassInfo::IsValidCint() const
    return false;
 }
 
-bool tcling_BaseClassInfo::IsValidClang() const
+bool TClingBaseClassInfo::IsValidClang() const
 {
    if (gAllowClang) {
       return
@@ -125,12 +125,12 @@ bool tcling_BaseClassInfo::IsValidClang() const
    return false;
 }
 
-bool tcling_BaseClassInfo::IsValid() const
+bool TClingBaseClassInfo::IsValid() const
 {
    return IsValidCint() || IsValidClang();
 }
 
-int tcling_BaseClassInfo::InternalNext(int onlyDirect)
+int TClingBaseClassInfo::InternalNext(int onlyDirect)
 {
    // Exit early if the iterator is already invalid.
    if (!fDecl || !fIter ||
@@ -217,7 +217,7 @@ int tcling_BaseClassInfo::InternalNext(int onlyDirect)
    }
 }
 
-int tcling_BaseClassInfo::Next(int onlyDirect)
+int TClingBaseClassInfo::Next(int onlyDirect)
 {
    if (!gAllowClang) {
       if (gAllowCint) {
@@ -228,12 +228,12 @@ int tcling_BaseClassInfo::Next(int onlyDirect)
    return InternalNext(onlyDirect);
 }
 
-int tcling_BaseClassInfo::Next()
+int TClingBaseClassInfo::Next()
 {
    return Next(1);
 }
 
-long tcling_BaseClassInfo::Offset() const
+long TClingBaseClassInfo::Offset() const
 {
    if (!IsValid()) {
       return -1;
@@ -268,7 +268,7 @@ long tcling_BaseClassInfo::Offset() const
    return clang_val;
 }
 
-long tcling_BaseClassInfo::Property() const
+long TClingBaseClassInfo::Property() const
 {
    if (!IsValid()) {
       return 0L;
@@ -309,7 +309,7 @@ long tcling_BaseClassInfo::Property() const
    return property;
 }
 
-long tcling_BaseClassInfo::Tagnum() const
+long TClingBaseClassInfo::Tagnum() const
 {
    if (!IsValid()) {
       return -1L;
@@ -326,7 +326,7 @@ long tcling_BaseClassInfo::Tagnum() const
    return fBaseInfo->Tagnum();
 }
 
-const char* tcling_BaseClassInfo::FullName() const
+const char* TClingBaseClassInfo::FullName() const
 {
    if (!IsValid()) {
       return 0;
@@ -343,7 +343,7 @@ const char* tcling_BaseClassInfo::FullName() const
    return fBaseInfo->FullName();
 }
 
-const char* tcling_BaseClassInfo::Name() const
+const char* TClingBaseClassInfo::Name() const
 {
    if (!IsValid()) {
       return 0;
@@ -360,7 +360,7 @@ const char* tcling_BaseClassInfo::Name() const
    return fBaseInfo->Name();
 }
 
-const char* tcling_BaseClassInfo::TmpltName() const
+const char* TClingBaseClassInfo::TmpltName() const
 {
    if (!IsValid()) {
       return 0;
