@@ -439,7 +439,7 @@ Int_t TGCocoa::InitWindow(ULong_t parentID)
    WindowAttributes_t attr = {};
 
    if (fPimpl->IsRootWindow(parentID)) {
-      ROOT::MacOSX::X11::GetRootWindowAttributes(&attr);   
+      X11::GetRootWindowAttributes(&attr);
    } else {
       [fPimpl->GetWindow(parentID) getAttributes : &attr];
    }
@@ -502,7 +502,7 @@ void TGCocoa::GetGeometry(Int_t windowID, Int_t & x, Int_t &y, UInt_t &w, UInt_t
       //Comment in TVirtualX suggests, that wid can be < 0.
       //This will be screen's geometry.
       WindowAttributes_t attr = {};
-      ROOT::MacOSX::X11::GetRootWindowAttributes(&attr);
+      X11::GetRootWindowAttributes(&attr);
       x = attr.fX;
       y = attr.fY;
       w = attr.fWidth;
@@ -762,7 +762,7 @@ void TGCocoa::GetWindowAttributes(Window_t wid, WindowAttributes_t &attr)
 
    if (fPimpl->IsRootWindow(wid)) {
       //'root' window.
-      ROOT::MacOSX::X11::GetRootWindowAttributes(&attr);
+      X11::GetRootWindowAttributes(&attr);
    } else {
       [fPimpl->GetWindow(wid) getAttributes : &attr];
    }
@@ -810,7 +810,7 @@ void TGCocoa::ReparentChild(Window_t wid, Window_t pid, Int_t x, Int_t y)
    assert(!fPimpl->IsRootWindow(wid) && "ReparentChild, can not re-parent 'root' window");
    //TODO: does ROOT cares about reparent X11 events?
 
-   const ROOT::MacOSX::Util::AutoreleasePool pool;//TODO: check?
+   const Util::AutoreleasePool pool;//TODO: check?
 
    NSView<X11Window> * const view = fPimpl->GetWindow(wid).fContentView;
    if (fPimpl->IsRootWindow(pid)) {
@@ -828,8 +828,6 @@ void TGCocoa::ReparentChild(Window_t wid, Window_t pid, Int_t x, Int_t y)
       [newTopLevel addChild : view];
       fPimpl->ReplaceDrawable(wid, newTopLevel);
 
-      [view updateLevel : 0];
-
       [view release];
       [newTopLevel release];
    } else {
@@ -839,7 +837,7 @@ void TGCocoa::ReparentChild(Window_t wid, Window_t pid, Int_t x, Int_t y)
       NSObject<X11Window> * const newParent = fPimpl->GetWindow(pid);
       assert(newParent.fIsPixmap == NO && "ReparentChild, pixmap can not be a new parent");
       [view setX : x Y : y];
-      [newParent addChild : view];//It'll also update view's level, no need to call updateLevel.
+      [newParent addChild : view];
       [view release];
    }
 }
@@ -1134,7 +1132,7 @@ void TGCocoa::GetWindowSize(Drawable_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_
    
    if (fPimpl->IsRootWindow(wid)) {
       WindowAttributes_t attr = {};
-      ROOT::MacOSX::X11::GetRootWindowAttributes(&attr);
+      X11::GetRootWindowAttributes(&attr);
       x = attr.fX;
       y = attr.fY;
       w = attr.fWidth;
@@ -2328,16 +2326,16 @@ void TGCocoa::GrabButton(Window_t wid, EMouseButton button, UInt_t keyModifiers,
    NSObject<X11Window> * const widget = fPimpl->GetWindow(wid);
    
    if (grab) {
-      widget.fOwnerEvents = YES;   //This is how TGX11 works.
-      widget.fGrabButton = button;
-      widget.fGrabButtonEventMask = eventMask;
-      widget.fGrabKeyModifiers = keyModifiers;
+      widget.fPassiveGrabOwnerEvents = YES;   //This is how TGX11 works.
+      widget.fPassiveGrabButton = button;
+      widget.fPassiveGrabEventMask = eventMask;
+      widget.fPassiveGrabKeyModifiers = keyModifiers;
       //Set the cursor.
    } else {
-      widget.fOwnerEvents = NO;
-      widget.fGrabButton = -1;//0 is kAnyButton.
-      widget.fGrabButtonEventMask = 0;
-      widget.fGrabKeyModifiers = 0;
+      widget.fPassiveGrabOwnerEvents = NO;
+      widget.fPassiveGrabButton = -1;//0 is kAnyButton.
+      widget.fPassiveGrabEventMask = 0;
+      widget.fPassiveGrabKeyModifiers = 0;
    }
 }
 
@@ -3959,13 +3957,13 @@ void TGCocoa::GetRegionBox(Region_t /*reg*/, Rectangle_t * /*rect*/)
 }
 
 //______________________________________________________________________________
-ROOT::MacOSX::X11::EventTranslator *TGCocoa::GetEventTranslator()const
+X11::EventTranslator *TGCocoa::GetEventTranslator()const
 {
    return &fPimpl->fX11EventTranslator;
 }
 
 //______________________________________________________________________________
-ROOT::MacOSX::X11::CommandBuffer *TGCocoa::GetCommandBuffer()const
+X11::CommandBuffer *TGCocoa::GetCommandBuffer()const
 {
    return &fPimpl->fX11CommandBuffer;
 }

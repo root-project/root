@@ -12,7 +12,6 @@
 #import <cassert>
 
 #import "ROOTOpenGLView.h"
-#import "QuartzWindow.h"
 #import "X11Events.h"
 #import "TGCocoa.h"
 
@@ -45,7 +44,6 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 }
 
 @implementation ROOTOpenGLView {
-   NSMutableArray *fPassiveKeyGrabs;
    BOOL            fIsOverlapped;
    
    NSOpenGLPixelFormat *fPixelFormat;
@@ -55,32 +53,14 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 }
 
 @synthesize fUpdateContext;
-@synthesize fID;
-
-@synthesize fEventMask;
-@synthesize fParentView;
-@synthesize fLevel;
-@synthesize fGrabButton;
-@synthesize fGrabButtonEventMask;
-@synthesize fGrabKeyModifiers;
-@synthesize fOwnerEvents;
-@synthesize fCurrentCursor;
-@synthesize fDepth;
-@synthesize fBitGravity;
-@synthesize fWinGravity;
-@synthesize fClass;
-
 
 //______________________________________________________________________________
 - (id) initWithFrame : (NSRect) frameRect pixelFormat : (NSOpenGLPixelFormat *) format
 {
-   if (self = [super initWithFrame : frameRect]) {
-      fPassiveKeyGrabs = [[NSMutableArray alloc] init];
+   if (self = [super initWithFrame : frameRect windowAttributes : 0]) {
       [self setHidden : YES];//Not sure.
-      fCurrentCursor = kPointer;
       fIsOverlapped = NO;
       fPixelFormat = [format retain];
-      //Tracking area?
    }
 
    return self;
@@ -92,10 +72,8 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
    if (fOpenGLContext && [fOpenGLContext view] == self)
       [fOpenGLContext clearDrawable];
 
-   [fPassiveKeyGrabs release];
    [fPixelFormat release];
    //View does not own context.
-
    [super dealloc];
 }
 
@@ -124,22 +102,9 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 //X11Drawable protocol.
 
 //______________________________________________________________________________
-- (BOOL) fIsPixmap
-{
-   return NO;
-}
-
-//______________________________________________________________________________
 - (BOOL) fIsOpenGLWidget
 {
    return YES;
-}
-
-//______________________________________________________________________________
-- (void) getAttributes : (WindowAttributes_t *) attr
-{
-   assert(attr && "getAttributes, attr parameter is nil");
-   ROOT::MacOSX::X11::GetWindowAttributes(self, attr);
 }
 
 //______________________________________________________________________________
@@ -153,7 +118,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 - (void) setFBackBuffer : (QuartzPixmap *) notUsed
 {
    //GL-view does not have/need any "back buffer".
-   (void)notUsed;
+   (void) notUsed;
 }
 
 //______________________________________________________________________________
@@ -174,7 +139,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 {
    //The only node in the tree is 'self'.
    if (self.fMapState == kIsViewable) {
-      if (fEventMask & kStructureNotifyMask) {
+      if (self.fEventMask & kStructureNotifyMask) {
          TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
          assert(vx && "configureNotifyTree, gVirtualX is either null or has type different from TGCocoa");
          vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
@@ -210,12 +175,6 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 }
 
 //______________________________________________________________________________
-- (void) updateLevel : (unsigned) newLevel
-{
-   fLevel = newLevel;
-}
-
-//______________________________________________________________________________
 - (BOOL) isFlipped 
 {
    return YES;
@@ -245,7 +204,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
    else 
       fUpdateContext = YES;
    
-   if ((fEventMask & kStructureNotifyMask) && (self.fMapState == kIsViewable || fIsOverlapped == YES)) {
+   if ((self.fEventMask & kStructureNotifyMask) && (self.fMapState == kIsViewable || fIsOverlapped == YES)) {
       TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
       assert(vx != 0 && "setFrameSize:, gVirtualX is either null or has a type, different from TGCocoa");
       vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
@@ -253,18 +212,17 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
    }
 }
 
-////////
-//Shared methods:
-//-setDrawableSize : (NSSize) newSize;
-//-setX:Y:width:height;
-//-setX:Y:;
-//-addPassiveKeyGrab:modifiers:;
-//-removePassiveKeyGrab:modifiers:;
-//-findPassiveKeyGrab:modifiers:;
-//-findPassiveKeyGrab:;
-//...
-//+ mouse and keyboard events.
-
-#import "SharedViewMethods.h"
+//______________________________________________________________________________
+- (void) drawRect : (NSRect) dirtyRect
+{
+   (void) dirtyRect;
+/*
+   if ((fEventMask & kStructureNotifyMask) && (self.fMapState == kIsViewable || fIsOverlapped == YES)) {
+      TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
+      assert(vx != 0 && "drawRect:, gVirtualX is either null or has a type, different from TGCocoa");
+      vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
+      vx->GetEventTranslator()->GenerateExposeEvent(self, self.frame);
+   }*/
+}
 
 @end
