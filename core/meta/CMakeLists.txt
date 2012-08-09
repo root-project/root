@@ -5,11 +5,18 @@
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 ROOT_GLOB_HEADERS(headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
 
+file(GLOB tcling_headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/TCling*.h)
+file(GLOB tcling_sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TCling*.cxx)
+
+list(REMOVE_ITEM headers ${tcling_headers})
+
 if(BuildCling)
   add_definitions(-DR__WITH_CLING)
+  list(REMOVE_ITEM headers TCint.h)
+  list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TCint.cxx)
 else()
   list(REMOVE_ITEM headers TCintWithCling.h)
-  list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TCintWithCling.cxx)
+  list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TCintWithCling.cxx ${tcling_sources})
 endif()
 
 ROOT_GENERATE_DICTIONARY(G__Meta ${headers} LINKDEF LinkDef.h OPTIONS -DG__API)
