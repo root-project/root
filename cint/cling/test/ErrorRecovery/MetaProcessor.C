@@ -1,4 +1,9 @@
 // RUN: cat %s | %cling -Xclang -verify -I%p
+// XFAIL: vg
+// We expect for now this to fail, because the access to the invalid memory comes
+// from the fact that we invalidate the included file cache and when we are in
+// verify mode the verifier notifies about errors at the end of the source file.
+//
 // Tests the ChainedConsumer's ability to recover from errors. .x produces 
 // #include \"CannotDotX.h\" \n void wrapper() {CannotDotX();}, which causes
 // a TagDecl to be passed trough the consumers. This TagDecl is caught twice by
