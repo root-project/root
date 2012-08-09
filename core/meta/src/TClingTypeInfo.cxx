@@ -24,10 +24,9 @@
 
 #include "TClingTypeInfo.h"
 
-#include "Property.h" // for G__BIT_*, after CINT is gone,
-                      // replace with the following 
-//#include "TClingProperty.h" // After CINT is gone, instead of Property.h
+#include "TClingProperty.h"
 #include "Rtypes.h" // for gDebug
+#include "TClassEdit.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Type.h"
@@ -39,32 +38,32 @@
 using namespace std;
 
 //______________________________________________________________________________
-tcling_TypeInfo::tcling_TypeInfo(cling::Interpreter *interp, const char *name)
+TClingTypeInfo::TClingTypeInfo(cling::Interpreter *interp, const char *name)
    : fInterp(interp)
 {
    Init(name);
 }
 
 //______________________________________________________________________________
-void tcling_TypeInfo::Init(const char *name)
+void TClingTypeInfo::Init(const char *name)
 {
    fQualType = clang::QualType();
    if (gDebug > 0) {
       fprintf(stderr,
-              "tcling_TypeInfo::Init(name): looking up clang type: %s", name);
+              "TClingTypeInfo::Init(name): looking up clang type: %s", name);
    }
    clang::QualType QT = fInterp->lookupType(name);
    if (QT.isNull()) {
       if (gDebug > 0) {
          fprintf(stderr,
-                 "tcling_TypeInfo::Init(name): clang type not found: %s", name);
+                 "TClingTypeInfo::Init(name): clang type not found: %s", name);
       }
       std::string buf = TClassEdit::InsertStd(name);
       QT = fInterp->lookupType(buf);
       if (QT.isNull()) {
          if (gDebug > 0) {
             fprintf(stderr,
-                    "tcling_TypeInfo::Init(name):  "
+                    "TClingTypeInfo::Init(name):  "
                     "clang type not found name: %s\n", buf.c_str());
          }
       }
@@ -72,7 +71,7 @@ void tcling_TypeInfo::Init(const char *name)
          fQualType = QT;
          if (gDebug > 0) {
             fprintf(stderr,
-                    "tcling_TypeInfo::Init(name): found clang type name: %s\n",
+                    "TClingTypeInfo::Init(name): found clang type name: %s\n",
                     buf.c_str());
          }
       }
@@ -81,19 +80,13 @@ void tcling_TypeInfo::Init(const char *name)
       fQualType = QT;
       if (gDebug > 0) {
          fprintf(stderr,
-                 "tcling_TypeInfo::Init(name): clang type found: %s\n", name);
+                 "TClingTypeInfo::Init(name): clang type found: %s\n", name);
       }
    }
 }
 
 //______________________________________________________________________________
-bool tcling_TypeInfo::IsValid() const
-{
-   return !fQualType.isNull();
-}
-
-//______________________________________________________________________________
-const char *tcling_TypeInfo::Name() const
+const char *TClingTypeInfo::Name() const
 {
    if (!IsValid()) {
       return 0;
@@ -108,7 +101,7 @@ const char *tcling_TypeInfo::Name() const
 }
 
 //______________________________________________________________________________
-long tcling_TypeInfo::Property() const
+long TClingTypeInfo::Property() const
 {
    if (!IsValid()) {
       return 0L;
@@ -155,7 +148,7 @@ long tcling_TypeInfo::Property() const
 }
 
 //______________________________________________________________________________
-int tcling_TypeInfo::RefType() const
+int TClingTypeInfo::RefType() const
 {
    if (!IsValid()) {
       return 0;
@@ -200,7 +193,7 @@ int tcling_TypeInfo::RefType() const
 }
 
 //______________________________________________________________________________
-int tcling_TypeInfo::Size() const
+int TClingTypeInfo::Size() const
 {
    if (!IsValid()) {
       return 1;
@@ -223,7 +216,7 @@ int tcling_TypeInfo::Size() const
 }
 
 //______________________________________________________________________________
-const char *tcling_TypeInfo::StemName() const
+const char *TClingTypeInfo::StemName() const
 {
    if (!IsValid()) {
       return 0;
@@ -258,7 +251,7 @@ const char *tcling_TypeInfo::StemName() const
 }
 
 //______________________________________________________________________________
-const char *tcling_TypeInfo::TrueName() const
+const char *TClingTypeInfo::TrueName() const
 {
    if (!IsValid()) {
       return 0;

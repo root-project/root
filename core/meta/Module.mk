@@ -18,8 +18,7 @@ METADS       := $(call stripsrc,$(MODDIRS)/G__Meta.cxx)
 METADO       := $(METADS:.cxx=.o)
 METADH       := $(METADS:.cxx=.h)
 
-METAH        := $(filter-out $(MODDIRI)/LinkDef% \
-                $(MODDIRI)/TClingProperty.h,$(wildcard $(MODDIRI)/*.h))
+METAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 METAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 ifeq ($(BUILDCLING),yes)
 METADCLINGCXXFLAGS:= -DR__WITH_CLING
