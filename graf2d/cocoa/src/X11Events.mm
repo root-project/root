@@ -506,7 +506,11 @@ NSView<X11Window> *FindViewToPropagateEvent(NSView<X11Window> *viewFrom, Mask_t 
 //______________________________________________________________________________
 NSView<X11Window> *FindViewToPropagateEvent(NSView<X11Window> *viewFrom, Mask_t checkMask, NSView<X11Window> *grabView, Mask_t grabMask)
 {
-   //This function does not check passive grabs.
+   //This function is called when we have a grab and owner_events == true,
+   //in this case the grab view itself (and its grab mask) is checked
+   //at the end (if no view was found before). Grab view can be in a hierarchy
+   //of a 'viewFrom' view and can have matching fEventMask.
+
    assert(viewFrom != nil && "FindViewToPropagateEvent, view parameter is nil");
    
    if (viewFrom.fEventMask & checkMask)
