@@ -1272,11 +1272,7 @@ void EventTranslator::SetPointerGrab(NSView<X11Window> *grabView, unsigned event
    //"jumps" to the grab view.
 
    if (grabView != fViewUnderPointer) {
-      NSPoint location = {};
-      location.x = grabView.fWidth / 2;
-      location.y = grabView.fHeight / 2;
-      location = [grabView convertPoint : location toView : nil];
-      
+      const NSPoint location = [[grabView window] mouseLocationOutsideOfEventStream];
       const Util::NSScopeGuard<FakeCrossingEvent> event([[FakeCrossingEvent alloc] initWithWindow : [grabView window] location : location]);
       if (!event.Get()) {
          //Hehe, if this happend, is it still possible to log????
