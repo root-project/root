@@ -301,8 +301,9 @@ UInt_t GetModifiers()
    const NSUInteger buttons = [NSEvent pressedMouseButtons];
    if (buttons & 1)
       rootModifiers |= kButton1Mask;
+   //Right mouse button is kButton3 (and mask is kButton3Mask).
    if (buttons & 2)
-      rootModifiers |= kButton2Mask;
+      rootModifiers |= kButton3Mask;
 
    return rootModifiers;
 }

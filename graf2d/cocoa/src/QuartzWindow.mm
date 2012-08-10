@@ -2237,7 +2237,7 @@ void print_mask_info(ULong_t mask)
 
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "rightMouseUp, gVirtualX is either null or has type different from TGCocoa");
-   vx->GetEventTranslator()->GenerateButtonReleaseEvent(self, theEvent, kButton2);
+   vx->GetEventTranslator()->GenerateButtonReleaseEvent(self, theEvent, kButton3);
 }
 
 //______________________________________________________________________________
