@@ -26,15 +26,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class tcling_MethodInfo {
+class TClingMethodInfo {
 public:
-   ~tcling_MethodInfo();
-   explicit tcling_MethodInfo(cling::Interpreter*);
+   ~TClingMethodInfo();
+   explicit TClingMethodInfo(cling::Interpreter*);
    // FIXME: We need this only for cint support, remove when cint is gone.
-   explicit tcling_MethodInfo(cling::Interpreter*, G__MethodInfo* info);
-   explicit tcling_MethodInfo(cling::Interpreter*, tcling_ClassInfo*);
-   tcling_MethodInfo(const tcling_MethodInfo&);
-   tcling_MethodInfo& operator=(const tcling_MethodInfo&);
+   explicit TClingMethodInfo(cling::Interpreter*, G__MethodInfo* info);
+   explicit TClingMethodInfo(cling::Interpreter*, tcling_ClassInfo*);
+   TClingMethodInfo(const TClingMethodInfo&);
+   TClingMethodInfo& operator=(const TClingMethodInfo&);
    G__MethodInfo* GetMethodInfo() const;
    const clang::FunctionDecl* GetMethodDecl() const;
    void CreateSignature(TString& signature) const;
