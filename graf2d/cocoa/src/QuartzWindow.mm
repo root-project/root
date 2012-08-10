@@ -380,6 +380,7 @@ void SetWindowAttributes(const SetWindowAttributes_t *attr, NSObject<X11Window> 
       if ([(NSObject *)window isKindOfClass : [QuartzWindow class]]) {
          QuartzWindow * const qw = (QuartzWindow *)window;
          [qw setStyleMask : NSBorderlessWindowMask];
+         [qw setAlphaValue : 0.95];
       }
    }
 }
