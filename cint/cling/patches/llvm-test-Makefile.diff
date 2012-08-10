@@ -1,12 +1,11 @@
 Index: test/Makefile
 ===================================================================
---- test/Makefile	(revision 159991)
+--- test/Makefile	(revision 161655)
 +++ test/Makefile	(working copy)
-@@ -62,8 +62,17 @@
- 	$(MAKE) -C $(PROJ_OBJ_DIR)/../tools/clang/test lit.site.cfg Unit/lit.site.cfg
+@@ -63,6 +63,15 @@
  extra-site-cfgs:: clang-site-cfg
  endif
-+
+ 
 +ifeq ($(NOCLING)$(shell test -f $(PROJ_OBJ_DIR)/../tools/cling/Makefile && echo OK), OK)
 +LIT_ALL_TESTSUITES += $(PROJ_OBJ_DIR)/../tools/cling/test
 +
@@ -14,9 +13,8 @@ Index: test/Makefile
 +cling-lit-site-cfg: FORCE
 +	$(MAKE) -C $(PROJ_OBJ_DIR)/../tools/cling/test lit.site.cfg
 +extra-lit-site-cfgs:: cling-lit-site-cfg
- endif
- endif
 +endif
++
+ ifeq ($(shell test -f $(PROJ_OBJ_DIR)/../tools/clang/tools/extra/Makefile && echo OK), OK)
+ LIT_ALL_TESTSUITES += $(PROJ_OBJ_DIR)/../tools/clang/tools/extra/test
  
- # ulimits like these are redundantly enforced by the buildbots, so
- # just removing them here won't work.
