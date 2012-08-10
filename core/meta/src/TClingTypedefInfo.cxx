@@ -25,69 +25,93 @@
 
 #include "TClingTypedefInfo.h"
 
+#include "TClingProperty.h"
+#include "TError.h"
+#include "Rtypes.h" // for gDebug
+
 //______________________________________________________________________________
 TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
                                      const char *name)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0)
 {
+   // Lookup named typedef and initialize the iterator to point to it.
+   if (gDebug > 0) {
+      Info("TClingTypedefInfo::TClingTypedefInfo(interp,name)",
+           "looking up typedef: %s\n", name);
+   }
    fDecl = fInterp->lookupScope(name);
    if (fDecl && !llvm::isa<clang::TypedefDecl>(fDecl)) {
+      // If what the lookup found is not a typedef, ignore it.
       fDecl = 0;
    }
    if (fDecl) {
+      if (gDebug > 0) {
+         Info("TClingTypedefInfo::TClingTypedefInfo(interp,name)",
+              "found typedef name: %s  decl: 0x%lx\n", name, (long) fDecl);
+      }
+      // Initialize iterator to point at found typedef.
       AdvanceToDecl(fDecl);
+   }
+   else {
+      if (gDebug > 0) {
+         Info("TClingTypedefInfo::TClingTypedefInfo(interp,name)",
+              "typedef not found name: %s\n", name);
+      }
    }
 }
 
 //______________________________________________________________________________
 const clang::Decl *TClingTypedefInfo::GetDecl() const
 {
+   // Get the current typedef declaration.
    return fDecl;
 }
 
 //______________________________________________________________________________
 void TClingTypedefInfo::Init(const char *name)
 {
+   // Lookup named typedef and reset the iterator to point to it.
    if (gDebug > 0) {
-      fprintf(stderr,
-              "TClingTypedefInfo::Init(name): looking up typedef: %s\n", name);
+      Info("TClingTypedefInfo::Init(name)", "looking up typedef: %s\n", name);
    }
+   // Reset the iterator to invalid.
    fFirstTime = true;
    fDescend = false;
    fIter = clang::DeclContext::decl_iterator();
    fIterStack.clear();
+   // Ask the cling interpreter to lookup the name for us.
    fDecl = fInterp->lookupScope(name);
    if (!fDecl) {
       if (gDebug > 0) {
-         fprintf(stderr,
-                 "TClingTypedefInfo::Init(name): "
-                 "cling typedef not found name: %s\n", name);
+         Info("TClingTypedefInfo::Init(name)",
+              "typedef not found name: %s\n", name);
       }
       return;
    }
    if (gDebug > 0) {
-      fprintf(stderr,
-              "TClingTypedefInfo::Init(name): "
-              "found cling typedef name: %s  decl: 0x%lx\n",
-              name, (long) fDecl);
+      Info("TClingTypedefInfo::Init(name)", "found typedef name: "
+           "%s  decl: 0x%lx\n", name, (long) fDecl);
    }
+   // Initialize iterator to point at found typedef.
    AdvanceToDecl(fDecl);
 }
 
 //______________________________________________________________________________
 bool TClingTypedefInfo::IsValid() const
 {
+   // Return true if the current iterator position is valid.
    return fDecl;
 }
 
 //______________________________________________________________________________
 int TClingTypedefInfo::AdvanceToDecl(const clang::Decl *target_decl)
 {
-   const clang::TranslationUnitDecl *TU = target_decl->getTranslationUnitDecl();
-   const clang::DeclContext *DC = llvm::cast<clang::DeclContext>(TU);
+   // Set the iterator to point at the given declaration.
+   const clang::TranslationUnitDecl *tu = target_decl->getTranslationUnitDecl();
+   const clang::DeclContext *dc = llvm::cast<clang::DeclContext>(tu);
    fFirstTime = true;
    fDescend = false;
-   fIter = DC->decls_begin();
+   fIter = dc->decls_begin();
    fDecl = 0;
    fIterStack.clear();
    while (InternalNext()) {
@@ -101,6 +125,7 @@ int TClingTypedefInfo::AdvanceToDecl(const clang::Decl *target_decl)
 //______________________________________________________________________________
 int TClingTypedefInfo::InternalNext()
 {
+   // Increment the iterator, return true if new position is valid.
    if (!*fIter) {
       // Iterator is already invalid.
       return 0;
@@ -124,8 +149,8 @@ int TClingTypedefInfo::InternalNext()
             // Descend into the decl context of the current decl.
             fDescend = false;
             fIterStack.push_back(fIter);
-            clang::DeclContext *DC = llvm::cast<clang::DeclContext>(*fIter);
-            fIter = DC->decls_begin();
+            clang::DeclContext *dc = llvm::cast<clang::DeclContext>(*fIter);
+            fIter = dc->decls_begin();
          }
          // Fix it if we went past the end.
          while (!*fIter && fIterStack.size()) {
@@ -146,9 +171,9 @@ int TClingTypedefInfo::InternalNext()
          return 1;
       }
       // Descend into namespaces and classes.
-      clang::Decl::Kind DK = fIter->getKind();
-      if ((DK == clang::Decl::Namespace) || (DK == clang::Decl::CXXRecord) ||
-            (DK == clang::Decl::ClassTemplateSpecialization)) {
+      clang::Decl::Kind dk = fIter->getKind();
+      if ((dk == clang::Decl::Namespace) || (dk == clang::Decl::CXXRecord) ||
+            (dk == clang::Decl::ClassTemplateSpecialization)) {
          fDescend = true;
       }
    }
@@ -157,50 +182,52 @@ int TClingTypedefInfo::InternalNext()
 //______________________________________________________________________________
 int TClingTypedefInfo::Next()
 {
+   // Increment the iterator.
    return InternalNext();
 }
 
 //______________________________________________________________________________
 long TClingTypedefInfo::Property() const
 {
+   // Return a bit mask of metadata about the current typedef.
    if (!IsValid()) {
       return 0L;
    }
    long property = 0L;
    property |= G__BIT_ISTYPEDEF;
-   const clang::TypedefDecl *TD = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
-   clang::QualType QT = TD->getUnderlyingType().getCanonicalType();
-   if (QT.isConstQualified()) {
+   const clang::TypedefDecl *td = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
+   clang::QualType qt = td->getUnderlyingType().getCanonicalType();
+   if (qt.isConstQualified()) {
       property |= G__BIT_ISCONSTANT;
    }
    while (1) {
-      if (QT->isArrayType()) {
-         QT = llvm::cast<clang::ArrayType>(QT)->getElementType();
+      if (qt->isArrayType()) {
+         qt = llvm::cast<clang::ArrayType>(qt)->getElementType();
          continue;
       }
-      else if (QT->isReferenceType()) {
+      else if (qt->isReferenceType()) {
          property |= G__BIT_ISREFERENCE;
-         QT = llvm::cast<clang::ReferenceType>(QT)->getPointeeType();
+         qt = llvm::cast<clang::ReferenceType>(qt)->getPointeeType();
          continue;
       }
-      else if (QT->isPointerType()) {
+      else if (qt->isPointerType()) {
          property |= G__BIT_ISPOINTER;
-         if (QT.isConstQualified()) {
+         if (qt.isConstQualified()) {
             property |= G__BIT_ISPCONSTANT;
          }
-         QT = llvm::cast<clang::PointerType>(QT)->getPointeeType();
+         qt = llvm::cast<clang::PointerType>(qt)->getPointeeType();
          continue;
       }
-      else if (QT->isMemberPointerType()) {
-         QT = llvm::cast<clang::MemberPointerType>(QT)->getPointeeType();
+      else if (qt->isMemberPointerType()) {
+         qt = llvm::cast<clang::MemberPointerType>(qt)->getPointeeType();
          continue;
       }
       break;
    }
-   if (QT->isBuiltinType()) {
+   if (qt->isBuiltinType()) {
       property |= G__BIT_ISFUNDAMENTAL;
    }
-   if (QT.isConstQualified()) {
+   if (qt.isConstQualified()) {
       property |= G__BIT_ISCONSTANT;
    }
    return property;
@@ -209,46 +236,50 @@ long TClingTypedefInfo::Property() const
 //______________________________________________________________________________
 int TClingTypedefInfo::Size() const
 {
+   // Return the size in bytes of the underlying type of the current typedef.
    if (!IsValid()) {
       return 1;
    }
-   clang::ASTContext &Context = fDecl->getASTContext();
-   const clang::TypedefDecl *TD = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
-   clang::QualType QT = TD->getUnderlyingType();
-   if (QT->isDependentType()) {
+   clang::ASTContext &context = fDecl->getASTContext();
+   const clang::TypedefDecl *td = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
+   clang::QualType qt = td->getUnderlyingType();
+   if (qt->isDependentType()) {
       // The underlying type is dependent on a template parameter,
       // we have no idea what it is yet.
       return 0;
    }
-   if (const clang::RecordType *RT = QT->getAs<clang::RecordType>()) {
-      if (!RT->getDecl()->getDefinition()) {
+   if (const clang::RecordType *rt = qt->getAs<clang::RecordType>()) {
+      if (!rt->getDecl()->getDefinition()) {
          // This is a typedef to a forward-declared type.
          return 0;
       }
    }
    // Note: This is an int64_t.
-   clang::CharUnits::QuantityType Quantity =
-      Context.getTypeSizeInChars(QT).getQuantity();
-   return static_cast<int>(Quantity);
+   clang::CharUnits::QuantityType quantity =
+      context.getTypeSizeInChars(qt).getQuantity();
+   // Truncate cast to fit the CINT interface.
+   return static_cast<int>(quantity);
 }
 
 //______________________________________________________________________________
 const char *TClingTypedefInfo::TrueName() const
 {
+   // Get the name of the underlying type of the current typedef.
    if (!IsValid()) {
       return "(unknown)";
    }
    // Note: This must be static because we return a pointer to the internals.
    static std::string truename;
    truename.clear();
-   const clang::TypedefDecl *TD = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
-   truename = TD->getUnderlyingType().getAsString();
+   const clang::TypedefDecl *td = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
+   truename = td->getUnderlyingType().getAsString();
    return truename.c_str();
 }
 
 //______________________________________________________________________________
 const char *TClingTypedefInfo::Name() const
 {
+   // Get the name of the current typedef.
    if (!IsValid()) {
       return "(unknown)";
    }
@@ -264,6 +295,7 @@ const char *TClingTypedefInfo::Name() const
 //______________________________________________________________________________
 const char *TClingTypedefInfo::Title() const
 {
+   // Get the source code comment attached to the current typedef.
    if (!IsValid()) {
       return "";
    }

@@ -26,6 +26,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "cling/Interpreter/Interpreter.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/Decl.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include <vector>
+
 class TClingTypedefInfo {
 
 private:
