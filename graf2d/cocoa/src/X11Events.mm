@@ -393,7 +393,7 @@ unsigned GetModifiersFromCocoaEvent(NSEvent *theEvent)
    if (buttons & 1)
       rootModifiers |= kButton1Mask;
    if (buttons & 2)
-      rootModifiers |= kButton2Mask;
+      rootModifiers |= kButton3Mask;
 
    return rootModifiers;
 }

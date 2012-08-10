@@ -439,7 +439,7 @@ void TGPrintDialog::GetPrinters()
    TObject *obj;
    Int_t idx = 1, dflt =1;
 
-   if (gVirtualX->InheritsFrom("TGX11")) {
+   if (gVirtualX->InheritsFrom("TGX11") || gVirtualX->InheritsFrom("TGCocoa")) {
       char *lpstat = gSystem->Which(gSystem->Getenv("PATH"), "lpstat", 
                                     kExecutePermission);
       if (lpstat == 0) return;
