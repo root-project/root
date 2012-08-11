@@ -279,7 +279,7 @@ namespace cling {
     DClient.BeginSourceFile(m_CI->getLangOpts(), &PP);
 
     std::ostringstream source_name;
-    source_name << "input_line_" << (m_MemoryBuffer.size() + 1);
+    source_name << "input_line_" << (m_MemoryBuffers.size() + 1);
 
     // Create an uninitialized memory buffer,
     // copy code in and append "\n"
@@ -292,16 +292,16 @@ namespace cling {
     memcpy(MBStart, input.data(), InputSize);
     memcpy(MBStart + InputSize, "\n", 2);
 
-    m_MemoryBuffer.push_back(MB);
+    m_MemoryBuffers.push_back(MB);
     SourceManager& SM = getCI()->getSourceManager();
 
     // Create SourceLocation, which will allow clang to order the overload
     // candidates for example
     SourceLocation NewLoc = SM.getLocForStartOfFile(m_VirtualFileID);
-    NewLoc = NewLoc.getLocWithOffset(m_MemoryBuffer.size() + 1);
+    NewLoc = NewLoc.getLocWithOffset(m_MemoryBuffers.size() + 1);
 
     // Create FileID for the current buffer
-    FileID FID = SM.createFileIDForMemBuffer(m_MemoryBuffer.back(),
+    FileID FID = SM.createFileIDForMemBuffer(m_MemoryBuffers.back(),
                                              /*LoadedID*/0,
                                              /*LoadedOffset*/0, NewLoc);
 
