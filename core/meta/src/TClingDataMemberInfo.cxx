@@ -25,125 +25,45 @@
 
 #include "TClingDataMemberInfo.h"
 
-TClingDataMemberInfo::~TClingDataMemberInfo()
-{
-   // CINT material.
-   delete fDataMemberInfo;
-   fDataMemberInfo = 0;
-   delete fClassInfo;
-   fClassInfo = 0;
-   // Clang material.
-   delete fTClingClassInfo;
-   fTClingClassInfo = 0;
-}
+#include "TClingProperty.h"
+#include "TClingTypeInfo.h"
 
-TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter* interp)
-   : fDataMemberInfo(0)
-   , fClassInfo(0)
-   , fInterp(interp)
-   , fTClingClassInfo(0)
-   , fFirstTime(true)
-{
-   fDataMemberInfo = new G__DataMemberInfo;
-   fClassInfo = new G__ClassInfo();
-   fTClingClassInfo = new tcling_ClassInfo(fInterp);
-   fIter = fInterp->getCI()->getASTContext().getTranslationUnitDecl()->
-           decls_begin();
-   // Move to first global variable.
-   InternalNext();
-}
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
+#include "clang/AST/PrettyPrinter.h"
+#include "clang/AST/RecordLayout.h"
+#include "clang/AST/Type.h"
 
-TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter* interp,
-      tcling_ClassInfo* tcling_class_info)
-   : fDataMemberInfo(0)
-   , fClassInfo(0)
-   , fInterp(interp)
-   , fTClingClassInfo(0)
-   , fFirstTime(true)
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/raw_ostream.h"
+
+#include <string>
+
+TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
+      TClingClassInfo *ci)
+   : fInterp(interp), fClassInfo(0), fFirstTime(true)
 {
-   if (!tcling_class_info || !tcling_class_info->IsValid()) {
-      fDataMemberInfo = new G__DataMemberInfo;
-      fClassInfo = new G__ClassInfo();
-      fTClingClassInfo = new tcling_ClassInfo(fInterp);
+   if (!ci || !ci->IsValid()) {
+      fClassInfo = new TClingClassInfo(fInterp);
       fIter = fInterp->getCI()->getASTContext().getTranslationUnitDecl()->
               decls_begin();
       // Move to first global variable.
       InternalNext();
       return;
    }
-   fDataMemberInfo = new G__DataMemberInfo(*tcling_class_info->GetClassInfo());
-   fClassInfo = new G__ClassInfo(*tcling_class_info->GetClassInfo());
-   fTClingClassInfo = new tcling_ClassInfo(*tcling_class_info);
-   if (tcling_class_info->IsValidClang()) {
-      fIter = llvm::cast<clang::DeclContext>(tcling_class_info->GetDecl())->
-              decls_begin();
+   fClassInfo = new TClingClassInfo(*ci);
+   if (ci->IsValid()) {
+      fIter = llvm::cast<clang::DeclContext>(ci->GetDecl())->decls_begin();
       // Move to first data member.
       InternalNext();
    }
 }
 
-TClingDataMemberInfo::TClingDataMemberInfo(const TClingDataMemberInfo& rhs)
-{
-   fDataMemberInfo = new G__DataMemberInfo(*rhs.fDataMemberInfo);
-   fClassInfo = new G__ClassInfo(*rhs.fClassInfo);
-   fInterp = rhs.fInterp;
-   fTClingClassInfo = new tcling_ClassInfo(*rhs.fTClingClassInfo);
-   fFirstTime = rhs.fFirstTime;
-   fIter = rhs.fIter;
-   fIterStack = rhs.fIterStack;
-}
-
-TClingDataMemberInfo& TClingDataMemberInfo::operator=(
-   const TClingDataMemberInfo& rhs)
-{
-   if (this == &rhs) {
-      return *this;
-   }
-   delete fDataMemberInfo;
-   fDataMemberInfo = new G__DataMemberInfo(*rhs.fDataMemberInfo);
-   fInterp = rhs.fInterp;
-   delete fClassInfo;
-   fClassInfo = new G__ClassInfo(*rhs.fClassInfo);
-   delete fTClingClassInfo;
-   fTClingClassInfo = new tcling_ClassInfo(*rhs.fTClingClassInfo);
-   fFirstTime = rhs.fFirstTime;
-   fIter = rhs.fIter;
-   fIterStack = rhs.fIterStack;
-   return *this;
-}
-
-G__DataMemberInfo* TClingDataMemberInfo::GetDataMemberInfo() const
-{
-   return fDataMemberInfo;
-}
-
-G__ClassInfo* TClingDataMemberInfo::GetClassInfo() const
-{
-   return fClassInfo;
-}
-
-tcling_ClassInfo* TClingDataMemberInfo::GetTClingClassInfo() const
-{
-   return fTClingClassInfo;
-}
-
-clang::Decl* TClingDataMemberInfo::GetDecl() const
-{
-   return *fIter;
-}
-
 int TClingDataMemberInfo::ArrayDim() const
 {
    if (!IsValid()) {
-      return -1;
-   }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fDataMemberInfo->ArrayDim();
-      }
-      return -1;
-   }
-   if (!gAllowClang) {
       return -1;
    }
    // Sanity check the current data member.
@@ -162,7 +82,7 @@ int TClingDataMemberInfo::ArrayDim() const
    }
    // To get this information we must count the number
    // of arry type nodes in the canonical type chain.
-   const clang::ValueDecl* VD = llvm::dyn_cast<clang::ValueDecl>(*fIter);
+   const clang::ValueDecl *VD = llvm::dyn_cast<clang::ValueDecl>(*fIter);
    clang::QualType QT = VD->getType().getCanonicalType();
    int cnt = 0;
    while (1) {
@@ -188,39 +108,9 @@ int TClingDataMemberInfo::ArrayDim() const
    return cnt;
 }
 
-bool TClingDataMemberInfo::IsValidCint() const
-{
-   if (gAllowCint) {
-      return fDataMemberInfo->IsValid();
-   }
-   return false;
-}
-
-bool TClingDataMemberInfo::IsValidClang() const
-{
-   if (gAllowClang) {
-      return *fIter;
-   }
-   return false;
-}
-
-bool TClingDataMemberInfo::IsValid() const
-{
-   return IsValidCint() || IsValidClang();
-}
-
 int TClingDataMemberInfo::MaxIndex(int dim) const
 {
    if (!IsValid()) {
-      return -1;
-   }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fDataMemberInfo->MaxIndex(dim);
-      }
-      return -1;
-   }
-   if (!gAllowClang) {
       return -1;
    }
    // Sanity check the current data member.
@@ -239,7 +129,7 @@ int TClingDataMemberInfo::MaxIndex(int dim) const
    }
    // To get this information we must count the number
    // of arry type nodes in the canonical type chain.
-   const clang::ValueDecl* VD = llvm::dyn_cast<clang::ValueDecl>(*fIter);
+   const clang::ValueDecl *VD = llvm::dyn_cast<clang::ValueDecl>(*fIter);
    clang::QualType QT = VD->getType().getCanonicalType();
    int paran = ArrayDim();
    if ((dim < 0) || (dim >= paran)) {
@@ -251,7 +141,7 @@ int TClingDataMemberInfo::MaxIndex(int dim) const
    while (1) {
       if (QT->isArrayType()) {
          if (cnt == 0) {
-            if (const clang::ConstantArrayType* CAT =
+            if (const clang::ConstantArrayType *CAT =
                      llvm::dyn_cast<clang::ConstantArrayType>(QT)
                ) {
                max = static_cast<int>(CAT->getSize().getZExtValue());
@@ -327,29 +217,9 @@ int TClingDataMemberInfo::InternalNext()
    return 0;
 }
 
-bool TClingDataMemberInfo::Next()
-{
-   if (!gAllowClang) {
-      if (gAllowCint) {
-         return fDataMemberInfo->Next();
-      }
-      return false;
-   }
-   return InternalNext();
-}
-
 long TClingDataMemberInfo::Offset() const
 {
    if (!IsValid()) {
-      return -1L;
-   }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fDataMemberInfo->Offset();
-      }
-      return -1L;
-   }
-   if (!gAllowClang) {
       return -1L;
    }
    // Sanity check the current data member.
@@ -364,10 +234,10 @@ long TClingDataMemberInfo::Offset() const
    }
    if (DK == clang::Decl::Field) {
       // The current member is a non-static data member.
-      const clang::FieldDecl* FD = llvm::dyn_cast<clang::FieldDecl>(*fIter);
-      clang::ASTContext& Context = FD->getASTContext();
-      const clang::RecordDecl* RD = FD->getParent();
-      const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
+      const clang::FieldDecl *FD = llvm::dyn_cast<clang::FieldDecl>(*fIter);
+      clang::ASTContext &Context = FD->getASTContext();
+      const clang::RecordDecl *RD = FD->getParent();
+      const clang::ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
       uint64_t bits = Layout.getFieldOffset(FD->getFieldIndex());
       int64_t offset = Context.toCharUnitsFromBits(bits).getQuantity();
       return static_cast<long>(offset);
@@ -382,15 +252,6 @@ long TClingDataMemberInfo::Offset() const
 long TClingDataMemberInfo::Property() const
 {
    if (!IsValid()) {
-      return 0L;
-   }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fDataMemberInfo->Property();
-      }
-      return 0L;
-   }
-   if (!gAllowClang) {
       return 0L;
    }
    long property = 0L;
@@ -411,82 +272,68 @@ long TClingDataMemberInfo::Property() const
          // IMPOSSIBLE
          break;
    }
-   if (const clang::VarDecl* VarD = llvm::dyn_cast<clang::VarDecl>(*fIter)) {
-      if (VarD->getStorageClass() == clang::SC_Static) {
+   if (const clang::VarDecl *vard = llvm::dyn_cast<clang::VarDecl>(*fIter)) {
+      if (vard->getStorageClass() == clang::SC_Static) {
          property |= G__BIT_ISSTATIC;
       }
    }
-   const clang::ValueDecl* ValueD = llvm::dyn_cast<clang::ValueDecl>(*fIter);
-   clang::QualType QT = ValueD->getType();
-   if (llvm::isa<clang::TypedefType>(QT)) {
+   const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(*fIter);
+   clang::QualType qt = vd->getType();
+   if (llvm::isa<clang::TypedefType>(qt)) {
       property |= G__BIT_ISTYPEDEF;
    }
-   QT = QT.getCanonicalType();
-   if (QT.isConstQualified()) {
+   qt = qt.getCanonicalType();
+   if (qt.isConstQualified()) {
       property |= G__BIT_ISCONSTANT;
    }
    while (1) {
-      if (QT->isArrayType()) {
+      if (qt->isArrayType()) {
          property |= G__BIT_ISARRAY;
-         QT = llvm::cast<clang::ArrayType>(QT)->getElementType();
+         qt = llvm::cast<clang::ArrayType>(qt)->getElementType();
          continue;
       }
-      else if (QT->isReferenceType()) {
+      else if (qt->isReferenceType()) {
          property |= G__BIT_ISREFERENCE;
-         QT = llvm::cast<clang::ReferenceType>(QT)->getPointeeType();
+         qt = llvm::cast<clang::ReferenceType>(qt)->getPointeeType();
          continue;
       }
-      else if (QT->isPointerType()) {
+      else if (qt->isPointerType()) {
          property |= G__BIT_ISPOINTER;
-         if (QT.isConstQualified()) {
+         if (qt.isConstQualified()) {
             property |= G__BIT_ISPCONSTANT;
          }
-         QT = llvm::cast<clang::PointerType>(QT)->getPointeeType();
+         qt = llvm::cast<clang::PointerType>(qt)->getPointeeType();
          continue;
       }
-      else if (QT->isMemberPointerType()) {
-         QT = llvm::cast<clang::MemberPointerType>(QT)->getPointeeType();
+      else if (qt->isMemberPointerType()) {
+         qt = llvm::cast<clang::MemberPointerType>(qt)->getPointeeType();
          continue;
       }
       break;
    }
-   if (QT->isBuiltinType()) {
+   if (qt->isBuiltinType()) {
       property |= G__BIT_ISFUNDAMENTAL;
    }
-   if (QT.isConstQualified()) {
+   if (qt.isConstQualified()) {
       property |= G__BIT_ISCONSTANT;
    }
-   const clang::DeclContext* DC = fIter->getDeclContext();
-   if (const clang::TagDecl* TD = llvm::dyn_cast<clang::TagDecl>(DC)) {
-      if (TD->isClass()) {
+   const clang::DeclContext *dc = fIter->getDeclContext();
+   if (const clang::TagDecl *td = llvm::dyn_cast<clang::TagDecl>(dc)) {
+      if (td->isClass()) {
          property |= G__BIT_ISCLASS;
       }
-      else if (TD->isStruct()) {
+      else if (td->isStruct()) {
          property |= G__BIT_ISSTRUCT;
       }
-      else if (TD->isUnion()) {
+      else if (td->isUnion()) {
          property |= G__BIT_ISUNION;
       }
-      else if (TD->isEnum()) {
+      else if (td->isEnum()) {
          property |= G__BIT_ISENUM;
       }
    }
-   if (DC->isNamespace() && !DC->isTranslationUnit()) {
+   if (dc->isNamespace() && !dc->isTranslationUnit()) {
       property |= G__BIT_ISNAMESPACE;
-   }
-   if (gAllowCint) {
-      if (IsValidCint()) {
-         long cint_property = fDataMemberInfo->Property();
-         if (property != cint_property) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                       "VALIDITY: TClingDataMemberInfo::Property:  "
-                       "cint: 0x%lx  clang: 0x%lx\n",
-                       (unsigned long) cint_property,
-                       (unsigned long) property);
-            }
-         }
-      }
    }
    return property;
 }
@@ -496,18 +343,9 @@ long TClingDataMemberInfo::TypeProperty() const
    if (!IsValid()) {
       return 0L;
    }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fDataMemberInfo->Type()->Property();
-      }
-      return 0L;
-   }
-   if (!gAllowClang) {
-      return 0L;
-   }
-   const clang::ValueDecl* ValueD = llvm::dyn_cast<clang::ValueDecl>(*fIter);
-   clang::QualType QT = ValueD->getType();
-   return tcling_TypeInfo(fInterp, QT).Property();
+   const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(*fIter);
+   clang::QualType qt = vd->getType();
+   return TClingTypeInfo(fInterp, qt).Property();
 }
 
 int TClingDataMemberInfo::TypeSize() const
@@ -515,142 +353,86 @@ int TClingDataMemberInfo::TypeSize() const
    if (!IsValid()) {
       return -1;
    }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fDataMemberInfo->Type()->Size();
-      }
-      return -1;
-   }
-   if (!gAllowClang) {
-      return -1;
-   }
    // Sanity check the current data member.
-   clang::Decl::Kind DK = fIter->getKind();
-   if (
-      (DK != clang::Decl::Field) &&
-      (DK != clang::Decl::Var) &&
-      (DK != clang::Decl::EnumConstant)
-   ) {
+   clang::Decl::Kind dk = fIter->getKind();
+   if ((dk != clang::Decl::Field) && (dk != clang::Decl::Var) &&
+         (dk != clang::Decl::EnumConstant)) {
       // Error, was not a data member, variable, or enumerator.
       return -1;
    }
-   const clang::ValueDecl* VD = llvm::dyn_cast<clang::ValueDecl>(*fIter);
-   clang::QualType QT = VD->getType();
-   if (QT->isIncompleteType()) {
+   const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(*fIter);
+   clang::QualType qt = vd->getType();
+   if (qt->isIncompleteType()) {
       // We cannot determine the size of forward-declared types.
       return -1;
    }
-   clang::ASTContext& Context = fIter->getASTContext();
-   return static_cast<int>(Context.getTypeSizeInChars(QT).getQuantity());
+   clang::ASTContext &context = fIter->getASTContext();
+   // Truncate cast to fit to cint interface.
+   return static_cast<int>(context.getTypeSizeInChars(qt).getQuantity());
 }
 
-const char* TClingDataMemberInfo::TypeName() const
+const char *TClingDataMemberInfo::TypeName() const
 {
    if (!IsValid()) {
-      return 0;
-   }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fDataMemberInfo->Type()->Name();
-      }
-      return 0;
-   }
-   if (!gAllowClang) {
       return 0;
    }
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
-   clang::PrintingPolicy P(fIter->getASTContext().getPrintingPolicy());
-   P.AnonymousTagLocations = false;
-   if (const clang::ValueDecl* VD = llvm::dyn_cast<clang::ValueDecl>(*fIter)) {
-      buf = VD->getType().getAsString(P);
+   clang::PrintingPolicy policy(fIter->getASTContext().getPrintingPolicy());
+   policy.AnonymousTagLocations = false;
+   if (const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(*fIter)) {
+      buf = vd->getType().getAsString(policy);
       return buf.c_str();
    }
    return 0;
 }
 
-const char* TClingDataMemberInfo::TypeTrueName() const
+const char *TClingDataMemberInfo::TypeTrueName() const
 {
    if (!IsValid()) {
-      return 0;
-   }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fDataMemberInfo->Type()->TrueName();
-      }
-      return 0;
-   }
-   if (!gAllowClang) {
       return 0;
    }
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
-   clang::PrintingPolicy P(fIter->getASTContext().getPrintingPolicy());
-   P.AnonymousTagLocations = false;
-   if (const clang::ValueDecl* VD = llvm::dyn_cast<clang::ValueDecl>(*fIter)) {
-      buf = VD->getType().getCanonicalType().getAsString(P);
+   clang::PrintingPolicy policy(fIter->getASTContext().getPrintingPolicy());
+   policy.AnonymousTagLocations = false;
+   if (const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(*fIter)) {
+      buf = vd->getType().getCanonicalType().getAsString(policy);
       return buf.c_str();
    }
    return 0;
 }
 
-const char* TClingDataMemberInfo::Name() const
+const char *TClingDataMemberInfo::Name() const
 {
    if (!IsValid()) {
-      return 0;
-   }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fDataMemberInfo->Name();
-      }
-      return 0;
-   }
-   if (!gAllowClang) {
       return 0;
    }
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
-   if (const clang::NamedDecl* ND = llvm::dyn_cast<clang::NamedDecl>(*fIter)) {
-      clang::PrintingPolicy Policy(fIter->getASTContext().getPrintingPolicy());
-      ND->getNameForDiagnostic(buf, Policy, /*Qualified=*/false);
+   if (const clang::NamedDecl *nd = llvm::dyn_cast<clang::NamedDecl>(*fIter)) {
+      clang::PrintingPolicy policy(fIter->getASTContext().getPrintingPolicy());
+      nd->getNameForDiagnostic(buf, policy, /*Qualified=*/false);
       return buf.c_str();
    }
    return 0;
 }
 
-const char* TClingDataMemberInfo::Title() const
+const char *TClingDataMemberInfo::Title() const
 {
    if (!IsValid()) {
-      return 0;
-   }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fDataMemberInfo->Title();
-      }
-      return 0;
-   }
-   if (!gAllowClang) {
       return 0;
    }
    // FIXME: Implement when rootcint makes this available!
    return "";
 }
 
-const char* TClingDataMemberInfo::ValidArrayIndex() const
+const char *TClingDataMemberInfo::ValidArrayIndex() const
 {
    if (!IsValid()) {
-      return 0;
-   }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fDataMemberInfo->ValidArrayIndex();
-      }
-      return 0;
-   }
-   if (!gAllowClang) {
       return 0;
    }
    // FIXME: Implement when rootcint makes this available!

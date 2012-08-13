@@ -26,38 +26,35 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+
+namespace cling {
+class Interpreter;
+}
+
+class TClingMethodInfo;
+class TClingTypeInfo;
+
 class TClingMethodArgInfo {
-public:
-   ~TClingMethodArgInfo();
-   explicit TClingMethodArgInfo(cling::Interpreter*);
-   explicit TClingMethodArgInfo(cling::Interpreter*, const tcling_MethodInfo*);
-   TClingMethodArgInfo(const TClingMethodArgInfo&);
-   TClingMethodArgInfo& operator=(const TClingMethodArgInfo&);
-   G__MethodInfo* GetMethodArgInfo() const;
-   bool IsValidClang() const;
-   bool IsValidCint() const;
-   bool IsValid() const;
-   int Next();
-   long Property() const;
-   const char* DefaultValue() const;
-   const char* Name() const;
-   const tcling_TypeInfo* Type() const;
-   const char* TypeName() const;
+
 private:
-   //
-   // CINT material.
-   //
-   /// cint method argument iterator, we own.
-   G__MethodArgInfo* fMethodArgInfo;
-   //
-   // Cling material.
-   //
-   /// Cling interpreter, we do *not* own.
-   cling::Interpreter* fInterp;
-   /// Function we return info about, we do *not* own.
-   const tcling_MethodInfo* fMethodInfo;
-   /// Iterator, current parameter index.
-   int fIdx;
+
+   cling::Interpreter       *fInterp; // Cling interpreter, we do *not* own.
+   const TClingMethodInfo   *fMethodInfo; // Function we return info about, we do *not* own.
+   int                       fIdx; // Iterator, current parameter index.
+
+public:
+
+   explicit TClingMethodArgInfo(cling::Interpreter *interp) : fInterp(interp), fMethodInfo(0), fIdx(-1) {}
+   TClingMethodArgInfo(cling::Interpreter *interp, const TClingMethodInfo *mi) : fInterp(interp), fMethodInfo(mi), fIdx(-1) {}
+
+   bool                   IsValid() const;
+   int                    Next();
+   long                   Property() const;
+   const char            *DefaultValue() const;
+   const char            *Name() const;
+   const TClingTypeInfo  *Type() const;
+   const char            *TypeName() const;
+
 };
 
 #endif // ROOT_TClingMethodArgInfo

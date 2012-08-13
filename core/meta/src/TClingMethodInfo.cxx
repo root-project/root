@@ -25,100 +25,58 @@
 
 #include "TClingMethodInfo.h"
 
-TClingMethodInfo::~TClingMethodInfo()
-{
-   delete fMethodInfo;
-   fMethodInfo = 0;
-   fInterp = 0;
-   //fContexts.clear();
-   //fFirstTime = true;
-   //fContextIdx = 0U;
-   //fIter = clang::DeclContext::decl_iterator();
-}
+#include "TClingCallFunc.h"
+#include "TClingClassInfo.h"
+#include "TClingMethodArgInfo.h"
+#include "TClingProperty.h"
+#include "TClingTypeInfo.h"
 
-TClingMethodInfo::TClingMethodInfo(cling::Interpreter* interp)
-   : fMethodInfo(0), fInterp(interp), fFirstTime(true), fContextIdx(0U)
-{
-   fMethodInfo = new G__MethodInfo();
-}
+#include "cling/Interpreter/Interpreter.h"
 
-TClingMethodInfo::TClingMethodInfo(cling::Interpreter* interp,
-                                     G__MethodInfo* info)
-   : fMethodInfo(0), fInterp(interp), fFirstTime(true), fContextIdx(0U)
-{
-   fMethodInfo = new G__MethodInfo(*info);
-   // Note: We leave the clang part invalid, this routine can only
-   //       be used when there is no clang decl for the containing class.
-}
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/DeclCXX.h"
+#include "clang/AST/Mangle.h"
+#include "clang/AST/PrettyPrinter.h"
+#include "clang/AST/Type.h"
+#include "clang/Basic/IdentifierTable.h"
 
-TClingMethodInfo::TClingMethodInfo(cling::Interpreter* interp,
-                                     tcling_ClassInfo* tcling_class_info)
-   : fMethodInfo(0), fInterp(interp), fFirstTime(true), fContextIdx(0U)
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/ADT/OwningPtr.h"
+
+#include <string>
+
+TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
+                                   TClingClassInfo *ci)
+   : fInterp(interp), fFirstTime(true), fContextIdx(0U)
 {
-   if (!tcling_class_info || !tcling_class_info->IsValid()) {
-      fMethodInfo = new G__MethodInfo();
+   if (!ci || !ci->IsValid()) {
       return;
    }
-   fMethodInfo = new G__MethodInfo();
-   if (gAllowCint) {
-      fMethodInfo->Init(*tcling_class_info->GetClassInfo());
-   }
-   if (gAllowClang) {
-      clang::DeclContext* DC = llvm::cast<clang::DeclContext>(
-                                  const_cast<clang::Decl*>(tcling_class_info->GetDecl()));
-      DC->collectAllContexts(fContexts);
-      fIter = DC->decls_begin();
-      InternalNext();
-   }
+   clang::DeclContext *dc =
+      llvm::cast<clang::DeclContext>(const_cast<clang::Decl*>(ci->GetDecl()));
+   dc->collectAllContexts(fContexts);
+   fIter = dc->decls_begin();
+   InternalNext();
 }
 
-TClingMethodInfo::TClingMethodInfo(const TClingMethodInfo& rhs)
-   : fMethodInfo(0), fInterp(rhs.fInterp), fContexts(rhs.fContexts),
-     fFirstTime(rhs.fFirstTime), fContextIdx(rhs.fContextIdx),
-     fIter(rhs.fIter)
+const clang::FunctionDecl *TClingMethodInfo::GetMethodDecl() const
 {
-   fMethodInfo = new G__MethodInfo(*rhs.fMethodInfo);
-}
-
-TClingMethodInfo& TClingMethodInfo::operator=(const TClingMethodInfo& rhs)
-{
-   if (this != &rhs) {
-      delete fMethodInfo;
-      fMethodInfo = new G__MethodInfo(*rhs.fMethodInfo);
-      fInterp = rhs.fInterp;
-      fContexts = rhs.fContexts;
-      fFirstTime = rhs.fFirstTime;
-      fContextIdx = rhs.fContextIdx;
-      fIter = rhs.fIter;
-   }
-   return *this;
-}
-
-G__MethodInfo* TClingMethodInfo::GetMethodInfo() const
-{
-   return fMethodInfo;
-}
-
-const clang::FunctionDecl* TClingMethodInfo::GetMethodDecl() const
-{
-   if (!gAllowClang) {
+   if (!IsValid()) {
       return 0;
    }
-   if (!IsValidClang()) {
-      return 0;
-   }
-   const clang::FunctionDecl* FD = llvm::dyn_cast<clang::FunctionDecl>(*fIter);
-   return FD;
+   return llvm::dyn_cast<clang::FunctionDecl>(*fIter);
 }
 
-void TClingMethodInfo::CreateSignature(TString& signature) const
+void TClingMethodInfo::CreateSignature(TString &signature) const
 {
    signature = "(";
    if (!IsValid()) {
       signature += ")";
       return;
    }
-   tcling_MethodArgInfo arg(fInterp, this);
+   TClingMethodArgInfo arg(fInterp, this);
    int idx = 0;
    while (arg.Next()) {
       if (idx) {
@@ -138,10 +96,8 @@ void TClingMethodInfo::CreateSignature(TString& signature) const
    signature += ")";
 }
 
-void TClingMethodInfo::Init(const clang::FunctionDecl* decl)
+void TClingMethodInfo::Init(const clang::FunctionDecl *decl)
 {
-   delete fMethodInfo;
-   fMethodInfo = new G__MethodInfo;
    fContexts.clear();
    fFirstTime = true;
    fContextIdx = 0U;
@@ -149,11 +105,8 @@ void TClingMethodInfo::Init(const clang::FunctionDecl* decl)
    if (!decl) {
       return;
    }
-   if (!gAllowClang) {
-      return;
-   }
-   clang::DeclContext* DC =
-      const_cast<clang::DeclContext*>(decl->getDeclContext());
+   clang::DeclContext *DC =
+      const_cast<clang::DeclContext *>(decl->getDeclContext());
    DC = DC->getPrimaryContext();
    DC->collectAllContexts(fContexts);
    fIter = DC->decls_begin();
@@ -162,54 +115,21 @@ void TClingMethodInfo::Init(const clang::FunctionDecl* decl)
          break;
       }
    }
-   // FIXME: What about fMethodInfo?
 }
 
-void* TClingMethodInfo::InterfaceMethod() const
+void *TClingMethodInfo::InterfaceMethod() const
 {
    if (!IsValid()) {
       return 0;
    }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         G__InterfaceMethod p = fMethodInfo->InterfaceMethod();
-         if (!p) {
-            struct G__bytecodefunc* bytecode = fMethodInfo->GetBytecode();
-            if (bytecode) {
-               p = (G__InterfaceMethod) G__exec_bytecode;
-            }
-         }
-         return (void*) p;
-      }
-      return 0;
-   }
-   if (!gAllowClang) {
-      return 0;
-   }
-   tcling_CallFunc cf(fInterp);
+   TClingCallFunc cf(fInterp);
    cf.SetFunc(this);
    return cf.InterfaceMethod();
 }
 
-bool TClingMethodInfo::IsValidCint() const
-{
-   if (gAllowCint) {
-      return fMethodInfo->IsValid();
-   }
-   return false;
-}
-
-bool TClingMethodInfo::IsValidClang() const
-{
-   if (gAllowClang) {
-      return *fIter;
-   }
-   return false;
-}
-
 bool TClingMethodInfo::IsValid() const
 {
-   return IsValidClang() || IsValidCint();
+   return *fIter;
 }
 
 int TClingMethodInfo::NArg() const
@@ -217,30 +137,9 @@ int TClingMethodInfo::NArg() const
    if (!IsValid()) {
       return -1;
    }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fMethodInfo->NArg();
-      }
-      return -1;
-   }
-   if (!gAllowClang) {
-      return -1;
-   }
-   const clang::FunctionDecl* FD = llvm::cast<clang::FunctionDecl>(*fIter);
-   unsigned num_params = FD->getNumParams();
-   if (gAllowCint) {
-      if (IsValidCint()) {
-         int cint_val = fMethodInfo->NArg();
-         int clang_val = static_cast<int>(num_params);
-         if (clang_val != cint_val) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                       "VALIDITY: TClingMethodInfo::NArg: cint: %d  "
-                       "clang: %d\n", cint_val, clang_val);
-            }
-         }
-      }
-   }
+   const clang::FunctionDecl *fd = llvm::cast<clang::FunctionDecl>(*fIter);
+   unsigned num_params = fd->getNumParams();
+   // Truncate cast to fit cint interface.
    return static_cast<int>(num_params);
 }
 
@@ -249,32 +148,11 @@ int TClingMethodInfo::NDefaultArg() const
    if (!IsValid()) {
       return -1;
    }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fMethodInfo->NDefaultArg();
-      }
-      return -1;
-   }
-   if (!gAllowClang) {
-      return -1;
-   }
-   const clang::FunctionDecl* FD = llvm::cast<clang::FunctionDecl>(*fIter);
-   unsigned num_params = FD->getNumParams();
-   unsigned min_args = FD->getMinRequiredArguments();
+   const clang::FunctionDecl *fd = llvm::cast<clang::FunctionDecl>(*fIter);
+   unsigned num_params = fd->getNumParams();
+   unsigned min_args = fd->getMinRequiredArguments();
    unsigned defaulted_params = num_params - min_args;
-   if (gAllowCint) {
-      if (IsValidCint()) {
-         int cint_val = fMethodInfo->NDefaultArg();
-         int clang_val = static_cast<int>(defaulted_params);
-         if (clang_val != cint_val) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                       "VALIDITY: TClingMethodInfo::NDefaultArg: cint: %d  "
-                       "clang: %d\n", cint_val, clang_val);
-            }
-         }
-      }
-   }
+   // Truncate cast to fit cint interface.
    return static_cast<int>(defaulted_params);
 }
 
@@ -300,8 +178,8 @@ int TClingMethodInfo::InternalNext()
             // Iterator is now invalid.
             return 0;
          }
-         clang::DeclContext* DC = fContexts[fContextIdx];
-         fIter = DC->decls_begin();
+         clang::DeclContext *dc = fContexts[fContextIdx];
+         fIter = dc->decls_begin();
          if (*fIter) {
             // Good, a non-empty context.
             break;
@@ -317,12 +195,6 @@ int TClingMethodInfo::InternalNext()
 
 int TClingMethodInfo::Next()
 {
-   if (!gAllowClang) {
-      if (gAllowCint) {
-         return fMethodInfo->Next();
-      }
-      return 0;
-   }
    return InternalNext();
 }
 
@@ -331,20 +203,11 @@ long TClingMethodInfo::Property() const
    if (!IsValid()) {
       return 0L;
    }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fMethodInfo->Property();
-      }
-      return 0L;
-   }
-   if (!gAllowClang) {
-      return 0L;
-   }
    long property = 0L;
    property |= G__BIT_ISCOMPILED;
-   const clang::FunctionDecl* FD =
+   const clang::FunctionDecl *fd =
       llvm::dyn_cast<clang::FunctionDecl>(*fIter);
-   switch (FD->getAccess()) {
+   switch (fd->getAccess()) {
       case clang::AS_public:
          property |= G__BIT_ISPUBLIC;
          break;
@@ -361,190 +224,126 @@ long TClingMethodInfo::Property() const
          // IMPOSSIBLE
          break;
    }
-   if (FD->getStorageClass() == clang::SC_Static) {
+   if (fd->getStorageClass() == clang::SC_Static) {
       property |= G__BIT_ISSTATIC;
    }
-   clang::QualType QT = FD->getResultType().getCanonicalType();
-   if (QT.isConstQualified()) {
+   clang::QualType qt = fd->getResultType().getCanonicalType();
+   if (qt.isConstQualified()) {
       property |= G__BIT_ISCONSTANT;
    }
    while (1) {
-      if (QT->isArrayType()) {
-         QT = llvm::cast<clang::ArrayType>(QT)->getElementType();
+      if (qt->isArrayType()) {
+         qt = llvm::cast<clang::ArrayType>(qt)->getElementType();
          continue;
       }
-      else if (QT->isReferenceType()) {
+      else if (qt->isReferenceType()) {
          property |= G__BIT_ISREFERENCE;
-         QT = llvm::cast<clang::ReferenceType>(QT)->getPointeeType();
+         qt = llvm::cast<clang::ReferenceType>(qt)->getPointeeType();
          continue;
       }
-      else if (QT->isPointerType()) {
+      else if (qt->isPointerType()) {
          property |= G__BIT_ISPOINTER;
-         if (QT.isConstQualified()) {
+         if (qt.isConstQualified()) {
             property |= G__BIT_ISPCONSTANT;
          }
-         QT = llvm::cast<clang::PointerType>(QT)->getPointeeType();
+         qt = llvm::cast<clang::PointerType>(qt)->getPointeeType();
          continue;
       }
-      else if (QT->isMemberPointerType()) {
-         QT = llvm::cast<clang::MemberPointerType>(QT)->getPointeeType();
+      else if (qt->isMemberPointerType()) {
+         qt = llvm::cast<clang::MemberPointerType>(qt)->getPointeeType();
          continue;
       }
       break;
    }
-   if (QT.isConstQualified()) {
+   if (qt.isConstQualified()) {
       property |= G__BIT_ISCONSTANT;
    }
-   if (const clang::CXXMethodDecl* MD =
-            llvm::dyn_cast<clang::CXXMethodDecl>(FD)) {
-      if (MD->getTypeQualifiers() & clang::Qualifiers::Const) {
+   if (const clang::CXXMethodDecl *md =
+            llvm::dyn_cast<clang::CXXMethodDecl>(fd)) {
+      if (md->getTypeQualifiers() & clang::Qualifiers::Const) {
          property |= G__BIT_ISCONSTANT | G__BIT_ISMETHCONSTANT;
       }
-      if (MD->isVirtual()) {
+      if (md->isVirtual()) {
          property |= G__BIT_ISVIRTUAL;
       }
-      if (MD->isPure()) {
+      if (md->isPure()) {
          property |= G__BIT_ISPUREVIRTUAL;
       }
-      if (const clang::CXXConstructorDecl* CD =
-               llvm::dyn_cast<clang::CXXConstructorDecl>(MD)) {
-         if (CD->isExplicit()) {
+      if (const clang::CXXConstructorDecl *cd =
+               llvm::dyn_cast<clang::CXXConstructorDecl>(md)) {
+         if (cd->isExplicit()) {
             property |= G__BIT_ISEXPLICIT;
          }
       }
-      else if (const clang::CXXConversionDecl* CD =
-                  llvm::dyn_cast<clang::CXXConversionDecl>(MD)) {
-         if (CD->isExplicit()) {
+      else if (const clang::CXXConversionDecl *cd =
+                  llvm::dyn_cast<clang::CXXConversionDecl>(md)) {
+         if (cd->isExplicit()) {
             property |= G__BIT_ISEXPLICIT;
-         }
-      }
-   }
-   if (gAllowCint) {
-      if (IsValidCint()) {
-         long cint_property = fMethodInfo->Property();
-         if (property != cint_property) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                       "VALIDITY: TClingMethodInfo::Property: "
-                       "cint: 0x%lx  clang: 0x%lx\n",
-                       (unsigned long) cint_property,
-                       (unsigned long) property);
-            }
          }
       }
    }
    return property;
 }
 
-tcling_TypeInfo* TClingMethodInfo::Type() const
+TClingTypeInfo *TClingMethodInfo::Type() const
 {
-   static tcling_TypeInfo ti(fInterp);
+   static TClingTypeInfo ti(fInterp);
    ti.Init(clang::QualType());
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         ti.Init(fMethodInfo->Type()->Name());
-      }
+   if (!IsValid()) {
       return &ti;
    }
-   if (!gAllowClang) {
-      return &ti;
-   }
-   clang::QualType QT = llvm::cast<clang::FunctionDecl>(*fIter)->
+   clang::QualType qt = llvm::cast<clang::FunctionDecl>(*fIter)->
                         getResultType();
-   ti.Init(QT);
-   if (gAllowCint) {
-      if (IsValidCint()) {
-         const char* cint_name = fMethodInfo->Type()->Name();
-         const char* clang_name = ti.Name();
-         if (clang_name != cint_name) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                       "VALIDITY: TClingMethodInfo::Type: cint: %s  "
-                       "clang: %s\n", cint_name, clang_name);
-            }
-         }
-      }
-   }
+   ti.Init(qt);
    return &ti;
 }
 
-const char* TClingMethodInfo::GetMangledName() const
+const char *TClingMethodInfo::GetMangledName() const
 {
    if (!IsValid()) {
       return 0;
    }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fMethodInfo->GetMangledName();
-      }
-      return 0;
-   }
-   if (!gAllowClang) {
-      return 0;
-   }
-   const char* fname = 0;
+   const char *fname = 0;
    static std::string mangled_name;
    mangled_name.clear();
-   llvm::raw_string_ostream OS(mangled_name);
-   llvm::OwningPtr<clang::MangleContext> Mangle(fIter->getASTContext().
+   llvm::raw_string_ostream os(mangled_name);
+   llvm::OwningPtr<clang::MangleContext> mangle(fIter->getASTContext().
          createMangleContext());
-   const clang::NamedDecl* ND = llvm::dyn_cast<clang::NamedDecl>(*fIter);
-   if (!ND) {
+   const clang::NamedDecl *nd = llvm::dyn_cast<clang::NamedDecl>(*fIter);
+   if (!nd) {
       return 0;
    }
-   if (!Mangle->shouldMangleDeclName(ND)) {
-      clang::IdentifierInfo* II = ND->getIdentifier();
-      fname = II->getNameStart();
+   if (!mangle->shouldMangleDeclName(nd)) {
+      clang::IdentifierInfo *ii = nd->getIdentifier();
+      fname = ii->getNameStart();
    }
    else {
-      if (const clang::CXXConstructorDecl* D =
-               llvm::dyn_cast<clang::CXXConstructorDecl>(ND)) {
+      if (const clang::CXXConstructorDecl *d =
+               llvm::dyn_cast<clang::CXXConstructorDecl>(nd)) {
          //Ctor_Complete,          // Complete object ctor
          //Ctor_Base,              // Base object ctor
          //Ctor_CompleteAllocating // Complete object allocating ctor (unused)
-         Mangle->mangleCXXCtor(D, clang::Ctor_Complete, OS);
+         mangle->mangleCXXCtor(d, clang::Ctor_Complete, os);
       }
-      else if (const clang::CXXDestructorDecl* D =
-                  llvm::dyn_cast<clang::CXXDestructorDecl>(ND)) {
+      else if (const clang::CXXDestructorDecl *d =
+                  llvm::dyn_cast<clang::CXXDestructorDecl>(nd)) {
          //Dtor_Deleting, // Deleting dtor
          //Dtor_Complete, // Complete object dtor
          //Dtor_Base      // Base object dtor
-         Mangle->mangleCXXDtor(D, clang::Dtor_Deleting, OS);
+         mangle->mangleCXXDtor(d, clang::Dtor_Deleting, os);
       }
       else {
-         Mangle->mangleName(ND, OS);
+         mangle->mangleName(nd, os);
       }
-      OS.flush();
+      os.flush();
       fname = mangled_name.c_str();
-   }
-   if (gAllowCint) {
-      if (IsValidCint()) {
-         const char* cint_val = fMethodInfo->GetMangledName();
-         const char* clang_val = fname;
-         if (clang_val != cint_val) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                       "VALIDITY: TClingMethodInfo::GetMangledName: "
-                       "cint: %s  clang: %s\n", cint_val, clang_val);
-            }
-         }
-      }
    }
    return fname;
 }
 
-const char* TClingMethodInfo::GetPrototype() const
+const char *TClingMethodInfo::GetPrototype() const
 {
    if (!IsValid()) {
-      return 0;
-   }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fMethodInfo->GetPrototype();
-      }
-      return 0;
-   }
-   if (!gAllowClang) {
       return 0;
    }
    static std::string buf;
@@ -552,12 +351,12 @@ const char* TClingMethodInfo::GetPrototype() const
    buf += Type()->Name();
    buf += ' ';
    std::string name;
-   clang::PrintingPolicy Policy(fIter->getASTContext().getPrintingPolicy());
-   const clang::NamedDecl* ND = llvm::cast<clang::NamedDecl>(*fIter);
-   ND->getNameForDiagnostic(name, Policy, /*Qualified=*/true);
+   clang::PrintingPolicy policy(fIter->getASTContext().getPrintingPolicy());
+   const clang::NamedDecl *nd = llvm::cast<clang::NamedDecl>(*fIter);
+   nd->getNameForDiagnostic(name, policy, /*Qualified=*/true);
    buf += name;
    buf += '(';
-   tcling_MethodArgInfo arg(fInterp, this);
+   TClingMethodArgInfo arg(fInterp, this);
    int idx = 0;
    while (arg.Next()) {
       if (idx) {
@@ -575,88 +374,35 @@ const char* TClingMethodInfo::GetPrototype() const
       ++idx;
    }
    buf += ')';
-   if (gAllowCint) {
-      if (IsValidCint()) {
-         const char* cint_val  = fMethodInfo->GetPrototype();
-         const char* clang_val = buf.c_str();
-         if (clang_val != cint_val) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                       "VALIDITY: TClingMethodInfo::GetPrototype:  "
-                       "cint: %s  clang: %s\n", cint_val, clang_val);
-            }
-         }
-      }
-   }
    return buf.c_str();
 }
 
-const char* TClingMethodInfo::Name() const
+const char *TClingMethodInfo::Name() const
 {
    if (!IsValid()) {
       return 0;
    }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fMethodInfo->Name();
-      }
-      return 0;
-   }
-   if (!gAllowClang) {
-      return 0;
-   }
    static std::string buf;
    buf.clear();
-   clang::PrintingPolicy Policy(fIter->getASTContext().getPrintingPolicy());
+   clang::PrintingPolicy policy(fIter->getASTContext().getPrintingPolicy());
    llvm::dyn_cast<clang::NamedDecl>(*fIter)->
-   getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
-   if (gAllowCint) {
-      if (IsValidCint()) {
-         const char* cint_val = fMethodInfo->Name();
-         const char* clang_val = buf.c_str();
-         if (clang_val != cint_val) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                       "VALIDITY: TClingMethodInfo::Name: "
-                       "cint: %s  clang: %s\n", cint_val, clang_val);
-            }
-         }
-      }
-   }
+   getNameForDiagnostic(buf, policy, /*Qualified=*/true);
    return buf.c_str();
 }
 
-const char* TClingMethodInfo::TypeName() const
+const char *TClingMethodInfo::TypeName() const
 {
    if (!IsValid()) {
       // FIXME: Cint does not check!
       return 0;
    }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fMethodInfo->Type()->Name();
-      }
-      return 0;
-   }
-   if (!gAllowClang) {
-      return 0;
-   }
    return Type()->Name();
 }
 
-const char* TClingMethodInfo::Title() const
+const char *TClingMethodInfo::Title() const
 {
    // FIXME: Implement this when we have comment parsing!
    if (!IsValid()) {
-      return 0;
-   }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fMethodInfo->Title();
-      }
-      return 0;
-   }
-   if (!gAllowClang) {
       return 0;
    }
    return "";

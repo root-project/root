@@ -26,54 +26,87 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TClingClassInfo.h"
+
+#include "cling/Interpreter/Interpreter.h"
+
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/Decl.h"
+#include "clang/Frontend/CompilerInstance.h"
+
+#include <vector>
+
+namespace clang {
+class Decl;
+}
+
+class TClingClassInfo;
+
 class TClingDataMemberInfo {
-public:
-   ~TClingDataMemberInfo();
-   explicit TClingDataMemberInfo(cling::Interpreter*);
-   TClingDataMemberInfo(cling::Interpreter*, tcling_ClassInfo*);
-   TClingDataMemberInfo(const TClingDataMemberInfo&);
-   TClingDataMemberInfo& operator=(const TClingDataMemberInfo&);
-   G__DataMemberInfo* GetDataMemberInfo() const;
-   G__ClassInfo* GetClassInfo() const;
-   tcling_ClassInfo* GetTClingClassInfo() const;
-   clang::Decl* GetDecl() const;
-   int ArrayDim() const;
-   bool IsValidCint() const;
-   bool IsValidClang() const;
-   bool IsValid() const;
-   int MaxIndex(int dim) const;
-   int InternalNext();
-   bool Next();
-   long Offset() const;
-   long Property() const;
-   long TypeProperty() const;
-   int TypeSize() const;
-   const char* TypeName() const;
-   const char* TypeTrueName() const;
-   const char* Name() const;
-   const char* Title() const;
-   const char* ValidArrayIndex() const;
+
 private:
-   //
-   // CINT material.
-   //
-   /// CINT data member info, we own.
-   G__DataMemberInfo* fDataMemberInfo;
-   /// CINT class info, we own.
-   G__ClassInfo* fClassInfo;
-   //
-   // Clang material.
-   //
-   /// Cling interpreter, we do *not* own.
-   cling::Interpreter* fInterp;
-   /// Class we are iterating over, we own.
-   tcling_ClassInfo* fTClingClassInfo;
-   /// We need to skip the first increment to support the cint Next() semantics.
-   bool fFirstTime;
-   /// Current decl.
-   clang::DeclContext::decl_iterator fIter;
-   /// Recursion stack for traversing nested transparent scopes.
-   std::vector<clang::DeclContext::decl_iterator> fIterStack;
+
+   cling::Interpreter    *fInterp; // Cling interpreter, we do *not* own.
+   TClingClassInfo       *fClassInfo; // Class we are iterating over, we own.
+   bool                   fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
+   clang::DeclContext::decl_iterator fIter; // Current decl.
+   std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested transparent scopes.
+
+public:
+
+   ~TClingDataMemberInfo() { delete fClassInfo; }
+
+   explicit TClingDataMemberInfo(cling::Interpreter *interp)
+         : fInterp(interp), fClassInfo(0), fFirstTime(true)
+   {
+      fClassInfo = new TClingClassInfo(fInterp);
+      fIter = fInterp->getCI()->getASTContext().getTranslationUnitDecl()->decls_begin();
+      // Move to first global variable.
+      InternalNext();
+   }
+
+   TClingDataMemberInfo(cling::Interpreter *, TClingClassInfo *);
+
+   TClingDataMemberInfo(const TClingDataMemberInfo &rhs)
+   {
+      fInterp = rhs.fInterp;
+      fClassInfo = new TClingClassInfo(*rhs.fClassInfo);
+      fFirstTime = rhs.fFirstTime;
+      fIter = rhs.fIter;
+      fIterStack = rhs.fIterStack;
+   }
+
+   TClingDataMemberInfo &operator=(const TClingDataMemberInfo &rhs)
+   {
+      if (this != &rhs) {
+         fInterp = rhs.fInterp;
+         delete fClassInfo;
+         fClassInfo = new TClingClassInfo(*rhs.fClassInfo);
+         fFirstTime = rhs.fFirstTime;
+         fIter = rhs.fIter;
+         fIterStack = rhs.fIterStack;
+      }
+      return *this;
+   }
+
+
+   int                ArrayDim() const;
+   TClingClassInfo   *GetClassInfo() const { return fClassInfo; }
+   clang::Decl       *GetDecl() const { return *fIter; }
+   bool               IsValid() const { return *fIter; }
+   int                MaxIndex(int dim) const;
+   int                InternalNext();
+   bool               Next() { return InternalNext(); }
+   long               Offset() const;
+   long               Property() const;
+   long               TypeProperty() const;
+   int                TypeSize() const;
+   const char        *TypeName() const;
+   const char        *TypeTrueName() const;
+   const char        *Name() const;
+   const char        *Title() const;
+   const char        *ValidArrayIndex() const;
+
 };
 
 #endif // ROOT_TClingDataMemberInfo

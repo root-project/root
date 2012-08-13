@@ -25,90 +25,35 @@
 
 #include "TClingMethodArgInfo.h"
 
-TClingMethodArgInfo::~TClingMethodArgInfo()
-{
-   delete fMethodArgInfo;
-   fMethodArgInfo = 0;
-   fInterp = 0;
-   fMethodInfo = 0;
-}
+#include "TClingMethodInfo.h"
+#include "TClingProperty.h"
+#include "TClingTypeInfo.h"
 
-TClingMethodArgInfo::TClingMethodArgInfo(cling::Interpreter* interp)
-   : fMethodArgInfo(0), fInterp(interp), fMethodInfo(0), fIdx(-1)
-{
-   fMethodArgInfo = new G__MethodArgInfo();
-}
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
+#include "clang/AST/PrettyPrinter.h"
+#include "clang/AST/Type.h"
 
-TClingMethodArgInfo::TClingMethodArgInfo(cling::Interpreter* interp,
-      const tcling_MethodInfo* mi)
-   : fMethodArgInfo(0), fInterp(interp), fMethodInfo(0), fIdx(-1)
-{
-   if (!mi) {
-      fMethodArgInfo = new G__MethodArgInfo();
-      return;
-   }
-   fMethodArgInfo = new G__MethodArgInfo(*mi->GetMethodInfo());
-   fMethodInfo = mi;
-}
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/raw_ostream.h"
 
-TClingMethodArgInfo::TClingMethodArgInfo(const TClingMethodArgInfo& rhs)
-   : fMethodArgInfo(0), fInterp(rhs.fInterp), fMethodInfo(rhs.fMethodInfo),
-     fIdx(rhs.fIdx)
-{
-   fMethodArgInfo = new G__MethodArgInfo(*rhs.fMethodArgInfo);
-}
-
-TClingMethodArgInfo& TClingMethodArgInfo::operator=(
-   const TClingMethodArgInfo& rhs)
-{
-   if (this != &rhs) {
-      delete fMethodArgInfo;
-      fMethodArgInfo = new G__MethodArgInfo(*rhs.fMethodArgInfo);
-      fInterp = rhs.fInterp;
-      fMethodInfo = rhs.fMethodInfo;
-      fIdx = rhs.fIdx;
-   }
-   return *this;
-}
-
-bool TClingMethodArgInfo::IsValidClang() const
-{
-   if (!gAllowClang) {
-      return false;
-   }
-   if (!fMethodInfo) {
-      return false;
-   }
-   if (!fMethodInfo->IsValidClang()) {
-      return false;
-   }
-   return (fIdx > -1) &&
-          (fIdx < static_cast<int>(fMethodInfo->GetMethodDecl()->getNumParams()));
-}
-
-bool TClingMethodArgInfo::IsValidCint() const
-{
-   if (gAllowCint) {
-      return fMethodArgInfo->IsValid();
-   }
-   return false;
-}
+#include <string>
 
 bool TClingMethodArgInfo::IsValid() const
 {
-   return IsValidCint() || IsValidClang();
+   if (!fMethodInfo || !fMethodInfo->IsValid()) {
+      return false;
+   }
+   int numParams = static_cast<int>(fMethodInfo->GetMethodDecl()->getNumParams());
+   return (fIdx > -1) && (fIdx < numParams);
 }
 
 int TClingMethodArgInfo::Next()
 {
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fMethodArgInfo->Next();
-      }
-      return 0;
-   }
    ++fIdx;
-   return IsValidClang();
+   return IsValid();
 }
 
 long TClingMethodArgInfo::Property() const
@@ -116,190 +61,114 @@ long TClingMethodArgInfo::Property() const
    if (!IsValid()) {
       return 0L;
    }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fMethodArgInfo->Property();
-      }
-      return 0L;
-   }
-   if (!gAllowClang) {
-      return 0L;
-   }
    long property = 0L;
-   const clang::FunctionDecl* FD = fMethodInfo->GetMethodDecl();
-   const clang::ParmVarDecl* PVD = FD->getParamDecl(fIdx);
-   if (PVD->hasDefaultArg() || PVD->hasInheritedDefaultArg()) {
+   const clang::FunctionDecl *fd = fMethodInfo->GetMethodDecl();
+   const clang::ParmVarDecl *pvd = fd->getParamDecl(fIdx);
+   if (pvd->hasDefaultArg() || pvd->hasInheritedDefaultArg()) {
       property |= G__BIT_ISDEFAULT;
    }
-   clang::QualType QT = PVD->getOriginalType().getCanonicalType();
-   if (QT.isConstQualified()) {
+   clang::QualType qt = pvd->getOriginalType().getCanonicalType();
+   if (qt.isConstQualified()) {
       property |= G__BIT_ISCONSTANT;
    }
    while (1) {
-      if (QT->isArrayType()) {
-         QT = llvm::cast<clang::ArrayType>(QT)->getElementType();
+      if (qt->isArrayType()) {
+         qt = llvm::cast<clang::ArrayType>(qt)->getElementType();
          continue;
       }
-      else if (QT->isReferenceType()) {
+      else if (qt->isReferenceType()) {
          property |= G__BIT_ISREFERENCE;
-         QT = llvm::cast<clang::ReferenceType>(QT)->getPointeeType();
+         qt = llvm::cast<clang::ReferenceType>(qt)->getPointeeType();
          continue;
       }
-      else if (QT->isPointerType()) {
+      else if (qt->isPointerType()) {
          property |= G__BIT_ISPOINTER;
-         if (QT.isConstQualified()) {
+         if (qt.isConstQualified()) {
             property |= G__BIT_ISPCONSTANT;
          }
-         QT = llvm::cast<clang::PointerType>(QT)->getPointeeType();
+         qt = llvm::cast<clang::PointerType>(qt)->getPointeeType();
          continue;
       }
-      else if (QT->isMemberPointerType()) {
-         QT = llvm::cast<clang::MemberPointerType>(QT)->getPointeeType();
+      else if (qt->isMemberPointerType()) {
+         qt = llvm::cast<clang::MemberPointerType>(qt)->getPointeeType();
          continue;
       }
       break;
    }
-   if (QT.isConstQualified()) {
+   if (qt.isConstQualified()) {
       property |= G__BIT_ISCONSTANT;
-   }
-   if (gAllowCint) {
-      if (IsValidCint()) {
-         long cint_property = fMethodArgInfo->Property();
-         if (property != cint_property) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                       "VALIDITY: TClingMethodArgInfo::Property: "
-                       "%s  cint: 0x%lx  clang: 0x%lx\n", fMethodInfo->Name(),
-                       cint_property, property);
-            }
-         }
-      }
    }
    return property;
 }
 
-const char* TClingMethodArgInfo::DefaultValue() const
+const char *TClingMethodArgInfo::DefaultValue() const
 {
    if (!IsValid()) {
       return 0;
    }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fMethodArgInfo->DefaultValue();
-      }
-      return 0;
-   }
-   if (!gAllowClang) {
-      return 0;
-   }
-   const clang::FunctionDecl* FD = fMethodInfo->GetMethodDecl();
-   const clang::ParmVarDecl* PVD = FD->getParamDecl(fIdx);
-   const clang::Expr* expr = PVD->getDefaultArg();
-   clang::ASTContext& Context = PVD->getASTContext();
-   clang::PrintingPolicy Policy(Context.getPrintingPolicy());
+   const clang::FunctionDecl *fd = fMethodInfo->GetMethodDecl();
+   const clang::ParmVarDecl *pvd = fd->getParamDecl(fIdx);
+   const clang::Expr *expr = pvd->getDefaultArg();
+   clang::ASTContext &context = pvd->getASTContext();
+   clang::PrintingPolicy policy(context.getPrintingPolicy());
    static std::string buf;
    buf.clear();
-   llvm::raw_string_ostream Out(buf);
+   llvm::raw_string_ostream out(buf);
    if (expr) {
-      bool ImplicitInit = false;
-      if (const clang::CXXConstructExpr* Construct =
+      bool implicitInit = false;
+      if (const clang::CXXConstructExpr *construct =
                llvm::dyn_cast<clang::CXXConstructExpr>(expr)) {
-         ImplicitInit = (PVD->getInitStyle() == clang::VarDecl::CallInit) &&
-                        (Construct->getNumArgs() == 0) &&
-                        !Construct->isListInitialization();
+         implicitInit = (pvd->getInitStyle() == clang::VarDecl::CallInit) &&
+                        (construct->getNumArgs() == 0) &&
+                        !construct->isListInitialization();
       }
-      if (!ImplicitInit) {
-         if (PVD->getInitStyle() == clang::VarDecl::CallInit) {
-            //Out << "(";
+      if (!implicitInit) {
+         if (pvd->getInitStyle() == clang::VarDecl::CallInit) {
+            //out << "(";
          }
-         else if (PVD->getInitStyle() == clang::VarDecl::CInit) {
-            //Out << " = ";
+         else if (pvd->getInitStyle() == clang::VarDecl::CInit) {
+            //out << " = ";
          }
-         expr->printPretty(Out, Context, 0, Policy, /*Indentation=*/0);
-         if (PVD->getInitStyle() == clang::VarDecl::CallInit) {
-            //Out << ")";
+         expr->printPretty(out, context, 0, policy, /*Indentation=*/0);
+         if (pvd->getInitStyle() == clang::VarDecl::CallInit) {
+            //out << ")";
          }
-         Out.flush();
-      }
-   }
-   if (gAllowCint) {
-      if (IsValidCint()) {
-         const char* cint_val = fMethodArgInfo->DefaultValue();
-         if (buf != cint_val) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                       "VALIDITY: TClingMethodArgInfo::DefaultValue: "
-                       "cint: %s  clang: %s\n", cint_val, buf.c_str());
-            }
-         }
+         out.flush();
       }
    }
    return buf.c_str();
 }
 
-const char* TClingMethodArgInfo::Name() const
+const char *TClingMethodArgInfo::Name() const
 {
    if (!IsValid()) {
       return 0;
    }
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fMethodArgInfo->Name();
-      }
-      return 0;
-   }
-   if (!gAllowClang) {
-      return 0;
-   }
-   const clang::FunctionDecl* FD = fMethodInfo->GetMethodDecl();
-   const clang::ParmVarDecl* PVD = FD->getParamDecl(fIdx);
+   const clang::FunctionDecl *fd = fMethodInfo->GetMethodDecl();
+   const clang::ParmVarDecl *pvd = fd->getParamDecl(fIdx);
    static std::string buf;
    buf.clear();
-   clang::PrintingPolicy Policy(PVD->getASTContext().getPrintingPolicy());
-   PVD->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
-   if (gAllowCint) {
-      if (IsValidCint()) {
-         const char* cint_name = fMethodArgInfo->Name();
-         if (buf != cint_name) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                       "VALIDITY: TClingMethodArgInfo::Name: "
-                       "cint: %s  clang: %s\n", cint_name, buf.c_str());
-            }
-         }
-      }
-   }
+   clang::PrintingPolicy policy(pvd->getASTContext().getPrintingPolicy());
+   pvd->getNameForDiagnostic(buf, policy, /*Qualified=*/true);
    return buf.c_str();
 }
 
-const tcling_TypeInfo* TClingMethodArgInfo::Type() const
+const TClingTypeInfo *TClingMethodArgInfo::Type() const
 {
-   static tcling_TypeInfo ti(fInterp);
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         ti.Init(fMethodArgInfo->Type()->Name());
-      }
+   static TClingTypeInfo ti(fInterp);
+   if (!IsValid()) {
       return &ti;
    }
-   if (!gAllowClang) {
-      return &ti;
-   }
-   const clang::FunctionDecl* FD = fMethodInfo->GetMethodDecl();
-   const clang::ParmVarDecl* PVD = FD->getParamDecl(fIdx);
-   clang::QualType QT = PVD->getOriginalType();
-   ti.Init(QT);
+   const clang::FunctionDecl *fd = fMethodInfo->GetMethodDecl();
+   const clang::ParmVarDecl *pvd = fd->getParamDecl(fIdx);
+   clang::QualType qt = pvd->getOriginalType();
+   ti.Init(qt);
    return &ti;
 }
 
-const char* TClingMethodArgInfo::TypeName() const
+const char *TClingMethodArgInfo::TypeName() const
 {
-   if (!IsValidClang()) {
-      if (gAllowCint) {
-         return fMethodArgInfo->Type()->Name();
-      }
-      return 0;
-   }
-   if (!gAllowClang) {
+   if (!IsValid()) {
       return 0;
    }
    return Type()->Name();

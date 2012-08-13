@@ -25,8 +25,33 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TClingMethodInfo.h"
+
+#include "clang/AST/DeclBase.h"
+
+#include <vector>
+
+namespace cling {
+class Interpreter;
+}
+
+namespace clang {
+class Decl;
+}
+
 class TClingClassInfo {
+
+private:
+
+   cling::Interpreter   *fInterp; // Cling interpreter, we do *not* own.
+   bool                  fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
+   bool                  fDescend; // Flag for signaling the need to descend on this advancement.
+   clang::DeclContext::decl_iterator fIter; // Current decl in scope.
+   clang::Decl          *fDecl; // Current decl, we do *not* own.
+   std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
+
 public: // Types
+
    enum MatchMode {
       ExactMatch = 0,
       ConversionMatch = 1,
@@ -36,74 +61,49 @@ public: // Types
       InThisScope = 0,
       WithInheritance = 1
    };
+
 public:
-   ~TClingClassInfo();
+
    explicit TClingClassInfo(); // NOT IMPLEMENTED
-   explicit TClingClassInfo(cling::Interpreter*);
-   explicit TClingClassInfo(cling::Interpreter*, const char*);
-   explicit TClingClassInfo(cling::Interpreter*, const clang::Decl*);
-   TClingClassInfo(const TClingClassInfo&);
-   TClingClassInfo& operator=(const TClingClassInfo&);
-   G__ClassInfo* GetClassInfo() const;
-   cling::Interpreter* GetInterpreter();
-   const clang::Decl* GetDecl() const;
-   long ClassProperty() const;
-   void Delete(void* arena) const;
-   void DeleteArray(void* arena, bool dtorOnly) const;
-   void Destruct(void* arena) const;
-   tcling_MethodInfo GetMethod(const char* fname, const char* arg,
-                               long* poffset, MatchMode mode = ConversionMatch,
-                               InheritanceMode imode = WithInheritance) const;
-   int GetMethodNArg(const char* method, const char* proto) const;
-   bool HasDefaultConstructor() const;
-   bool HasMethod(const char* name) const;
-   void Init(const char* name);
-   void Init(int tagnum);
-   bool IsBase(const char* name) const;
-   static bool IsEnum(cling::Interpreter* interp, const char* name);
-   bool IsLoaded() const;
-   bool IsValid() const;
-   bool IsValidCint() const;
-   bool IsValidClang() const;
-   bool IsValidMethod(const char* method, const char* proto,
-                      long* offset) const;
-   int AdvanceToDecl(const clang::Decl*);
-   int InternalNext();
-   int Next();
-   void* New() const;
-   void* New(int n) const;
-   void* New(int n, void* arena) const;
-   void* New(void* arena) const;
-   long Property() const;
-   int RootFlag() const;
-   int Size() const;
-   long Tagnum() const;
-   const char* FileName() const;
-   const char* FullName() const;
-   const char* Name() const;
-   const char* Title() const;
-   const char* TmpltName() const;
-private:
-   //
-   //  CINT material
-   //
-   /// CINT class info for this class, we own.
-   G__ClassInfo* fClassInfo;
-   //
-   //  Cling material
-   //
-   /// Cling interpreter, we do *not* own.
-   cling::Interpreter* fInterp;
-   /// We need to skip the first increment to support the cint Next() semantics.
-   bool fFirstTime;
-   /// Flag for signaling the need to descend on this advancement.
-   bool fDescend;
-   /// Current decl in scope.
-   clang::DeclContext::decl_iterator fIter;
-   /// Current decl.
-   clang::Decl* fDecl;
-   /// Recursion stack for traversing nested scopes.
-   std::vector<clang::DeclContext::decl_iterator> fIterStack;
+   explicit TClingClassInfo(cling::Interpreter *);
+   explicit TClingClassInfo(cling::Interpreter *, const char *);
+   explicit TClingClassInfo(cling::Interpreter *, const clang::Decl *);
+
+   const clang::Decl   *GetDecl() const { return fDecl; }
+   long                 ClassProperty() const;
+   void                 Delete(void *arena) const;
+   void                 DeleteArray(void *arena, bool dtorOnly) const;
+   void                 Destruct(void *arena) const;
+   TClingMethodInfo     GetMethod(const char *fname, const char *arg,
+                                  long *poffset, MatchMode mode = ConversionMatch,
+                                  InheritanceMode imode = WithInheritance) const;
+   int                  GetMethodNArg(const char *method, const char *proto) const;
+   bool                 HasDefaultConstructor() const;
+   bool                 HasMethod(const char *name) const;
+   void                 Init(const char *name);
+   void                 Init(int tagnum);
+   bool                 IsBase(const char *name) const;
+   static bool          IsEnum(cling::Interpreter *interp, const char *name);
+   bool                 IsLoaded() const;
+   bool                 IsValid() const;
+   bool                 IsValidMethod(const char *method, const char *proto, long *offset) const;
+   int                  AdvanceToDecl(const clang::Decl *);
+   int                  InternalNext();
+   int                  Next();
+   void                *New() const;
+   void                *New(int n) const;
+   void                *New(int n, void *arena) const;
+   void                *New(void *arena) const;
+   long                 Property() const;
+   int                  RootFlag() const;
+   int                  Size() const;
+   long                 Tagnum() const;
+   const char          *FileName() const;
+   const char          *FullName() const;
+   const char          *Name() const;
+   const char          *Title() const;
+   const char          *TmpltName() const;
+
 };
 
 #endif // ROOT_TClingClassInfo

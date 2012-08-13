@@ -27,53 +27,83 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TClingMethodInfo.h"
+
+#include "llvm/ExecutionEngine/GenericValue.h"
+
+namespace cling {
+class Interpreter;
+}
+
+namespace llvm {
+class Function;
+}
+
+#include <vector>
+
+class TClingClassInfo;
+
 class TClingCallFunc {
-public:
-   ~TClingCallFunc();
-   explicit TClingCallFunc(cling::Interpreter*);
-   TClingCallFunc(const TClingCallFunc&);
-   TClingCallFunc& operator=(const TClingCallFunc&);
-   void Exec(void* address) const;
-   long ExecInt(void* address) const;
-   long long ExecInt64(void* address) const;
-   double ExecDouble(void* address) const;
-   tcling_MethodInfo* FactoryMethod() const;
-   void Init();
-   void* InterfaceMethod() const;
-   bool IsValidCint() const;
-   bool IsValidClang() const;
-   bool IsValid() const;
-   void ResetArg();
-   void SetArg(long param);
-   void SetArg(double param);
-   void SetArg(long long param);
-   void SetArg(unsigned long long param);
-   void SetArgArray(long* paramArr, int nparam);
-   void SetArgs(const char* params);
-   void SetFunc(const tcling_ClassInfo* info, const char* method, const char* params, long* offset);
-   void SetFunc(const tcling_MethodInfo* info);
-   void SetFuncProto(const tcling_ClassInfo* info, const char* method, const char* proto, long* offset);
-   void Init(const clang::FunctionDecl*);
-   llvm::GenericValue Invoke(const std::vector<llvm::GenericValue>& ArgValues) const;
+
 private:
-   //
-   // CINT material.
-   //
-   /// cint method iterator, we own.
-   G__CallFunc* fCallFunc;
-   //
-   // Cling material.
-   //
-   /// Cling interpreter, we do *not* own.
-   cling::Interpreter* fInterp;
-   /// Current method, we own.
-   tcling_MethodInfo* fMethod;
-   /// Execution Engine function for current method, we do *not* own.
-   llvm::Function* fEEFunc;
-   /// Pointer to actual compiled code, we do *not* own.
-   void* fEEAddr;
-   /// Arguments to pass to function.
-   std::vector<llvm::GenericValue> fArgs;
+
+   cling::Interpreter               *fInterp; // Cling interpreter, we do *not* own.
+   TClingMethodInfo                 *fMethod; // Current method, we own.
+   llvm::Function                   *fEEFunc; // Execution Engine function for current method, we do *not* own.
+   void                             *fEEAddr; // Pointer to actual compiled code, we do *not* own.
+   std::vector<llvm::GenericValue>   fArgs; // Arguments to pass to function.
+
+public:
+
+   ~TClingCallFunc() { delete fMethod; }
+
+   explicit TClingCallFunc(cling::Interpreter *interp)
+      : fInterp(interp), fMethod(0), fEEFunc(0), fEEAddr(0)
+   {
+      fMethod = new TClingMethodInfo(interp);
+   }
+
+   TClingCallFunc(const TClingCallFunc &rhs)
+      : fInterp(rhs.fInterp), fMethod(0), fEEFunc(rhs.fEEFunc),
+        fEEAddr(rhs.fEEAddr), fArgs(rhs.fArgs)
+   {
+      fMethod = new TClingMethodInfo(*rhs.fMethod);
+   }
+
+   TClingCallFunc &operator=(const TClingCallFunc &rhs)
+   {
+      if (this != &rhs) {
+         fInterp = rhs.fInterp;
+         delete fMethod;
+         fMethod = new TClingMethodInfo(*rhs.fMethod);
+         fEEFunc = rhs.fEEFunc;
+         fEEAddr = rhs.fEEAddr;
+         fArgs = rhs.fArgs;
+      }
+      return *this;
+   }
+
+   void                Exec(void *address) const;
+   long                ExecInt(void *address) const;
+   long long           ExecInt64(void *address) const;
+   double              ExecDouble(void *address) const;
+   TClingMethodInfo   *FactoryMethod() const;
+   void                Init();
+   void               *InterfaceMethod() const;
+   bool                IsValid() const;
+   void                ResetArg();
+   void                SetArg(long param);
+   void                SetArg(double param);
+   void                SetArg(long long param);
+   void                SetArg(unsigned long long param);
+   void                SetArgArray(long *paramArr, int nparam);
+   void                SetArgs(const char *params);
+   void                SetFunc(const TClingClassInfo *info, const char *method, const char *params, long *offset);
+   void                SetFunc(const TClingMethodInfo *info);
+   void                SetFuncProto(const TClingClassInfo *info, const char *method, const char *proto, long *offset);
+   void                Init(const clang::FunctionDecl *);
+   llvm::GenericValue  Invoke(const std::vector<llvm::GenericValue> &ArgValues) const;
+
 };
 
 #endif // ROOT_CallFunc
