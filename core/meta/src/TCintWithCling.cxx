@@ -1593,6 +1593,7 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
    if (tagnum >= 0) {
       TClingClassInfo tci(fInterpreter, classname);
       if (!tci.IsValid()) {
+         Warning("CheckClassInfo", "class '%s' exists in CINT, but not in the AST!\n", classname);
          delete[] classname;
          return kFALSE;
       }
