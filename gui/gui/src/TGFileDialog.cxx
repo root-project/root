@@ -101,6 +101,10 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 {
    // Create a file selection dialog. Depending on the dlg_type it can be
    // used for opening or saving a file.
+   // About the first two arguments, p is the parent Window, usually the 
+   // desktop (root) window, and main is the main (TGMainFrame) application 
+   // window (the one opening the dialog), onto which the dialog is 
+   // usually centered, and which is waiting for it to close. 
 
    SetCleanup(kDeepCleanup);
    Connect("CloseWindow()", "TGFileDialog", this, "CloseWindow()");
