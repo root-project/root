@@ -1853,7 +1853,12 @@ const char* TCintWithCling::GetInterpreterTypeName(const char* name, Bool_t full
    if (full) {
       return cl.FullName();
    }
-   return cl.Name();
+   // Well well well, for backward compatibility we need to act a bit too
+   // much like CINT.
+   TClassEdit::TSplitType splitname( cl.Name(), TClassEdit::kDropStd );
+   static std::string result;
+   splitname.ShortType(result, TClassEdit::kDropStd );
+   return result.c_str();
 }
 
 //______________________________________________________________________________
