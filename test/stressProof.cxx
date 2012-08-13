@@ -2483,9 +2483,7 @@ Int_t PT_H1MultiDSetEntryList(void *, RunTimes &tt)
    }
 
    // Unlink the entry list file
-#if 0
    gSystem->Unlink("elist.root");
-#endif
    // Cleanup entry-list from the input list
    nxi.Reset();
    while ((o = nxi())) {
