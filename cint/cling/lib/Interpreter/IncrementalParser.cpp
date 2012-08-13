@@ -281,8 +281,7 @@ namespace cling {
     std::ostringstream source_name;
     source_name << "input_line_" << (m_MemoryBuffers.size() + 1);
 
-    // Create an uninitialized memory buffer,
-    // copy code in and append "\n"
+    // Create an uninitialized memory buffer, copy code in and append "\n"
     size_t InputSize = input.size(); // don't include trailing 0
     // MemBuffer size should *not* include terminating zero
     llvm::MemoryBuffer* MB
@@ -305,7 +304,7 @@ namespace cling {
                                              /*LoadedID*/0,
                                              /*LoadedOffset*/0, NewLoc);
 
-    PP.EnterSourceFile(FID, 0, NewLoc);
+    PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
 
     Parser::DeclGroupPtrTy ADecl;
 
