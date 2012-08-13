@@ -98,13 +98,13 @@ void ProofTests::SlaveBegin(TTree * /*tree*/)
                   }
                }
             } else {
-               Info("SlaveBegin", "%d: info 'h1avg' or 'h1rms' not found!", fTestType);
+               Warning("SlaveBegin", "%d: info 'h1avg' or 'h1rms' not found!", fTestType);
             }
          } else {
-            Info("SlaveBegin", "%d: input histo 'h1data' not found!", fTestType);
+            Warning("SlaveBegin", "%d: input histo 'h1data' not found!", fTestType);
          }
       } else {
-         Info("SlaveBegin", "%d: input list 'h1list' not found!", fTestType);
+         Warning("SlaveBegin", "%d: input list 'h1list' not found!", fTestType);
       }
       // H2
       TList *h2list = dynamic_cast<TList*>(fInput->FindObject("h2list"));
@@ -121,20 +121,20 @@ void ProofTests::SlaveBegin(TTree * /*tree*/)
                   }
                }
             } else {
-               Info("SlaveBegin", "%d: info 'h2avg' or 'h2rms' not found!", fTestType);
+               Warning("SlaveBegin", "%d: info 'h2avg' or 'h2rms' not found!", fTestType);
             }
          } else {
-            Info("SlaveBegin", "%d: input histo 'h2data' not found!", fTestType);
+            Warning("SlaveBegin", "%d: input histo 'h2data' not found!", fTestType);
          }
       } else {
-         Info("SlaveBegin", "%d: input list 'h2list' not found!", fTestType);
+         Warning("SlaveBegin", "%d: input list 'h2list' not found!", fTestType);
       }
 
       TNamed *iob = dynamic_cast<TNamed*>(fInput->FindObject("InputObject"));
       if (iob) {
          fStat->Fill(4.);
       } else {
-         Info("SlaveBegin", "%d: input histo 'InputObject' not found!", fTestType);
+         Warning("SlaveBegin", "%d: input histo 'InputObject' not found!", fTestType);
       }
    } else if (fTestType == 1) {
       // We should find in the input list the name of a test variable which should exist
@@ -143,7 +143,7 @@ void ProofTests::SlaveBegin(TTree * /*tree*/)
       if (nm) {
          if (gEnv->Lookup(nm->GetTitle())) fStat->Fill(2.);
       } else {
-         Info("SlaveBegin", "%d: TNamed with the test env info not found!", fTestType);
+         Warning("SlaveBegin", "%d: TNamed with the test env info not found!", fTestType);
       }
    } else if (fTestType == 2) {
       // We should find in the input list the list of names of test variables which should exist
@@ -156,10 +156,12 @@ void ProofTests::SlaveBegin(TTree * /*tree*/)
             if (gEnv->Lookup(nam)) {
                Double_t xx = gEnv->GetValue(nam, -1.);
                if (xx > 1.) fStat->Fill(xx);
+            } else {
+               Warning("SlaveBegin", "RC-env '%s' not found!", nam.Data());
             }
          }
       } else {
-         Info("SlaveBegin", "%d: TNamed with the test env info not found!", fTestType);
+         Warning("SlaveBegin", "%d: TNamed with the test env info not found!", fTestType);
       }
    }
 }
