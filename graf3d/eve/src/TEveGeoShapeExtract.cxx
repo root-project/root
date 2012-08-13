@@ -47,7 +47,6 @@ TEveGeoShapeExtract::TEveGeoShapeExtract(const char* n, const char* t) :
    fTrans[0] = fTrans[5] = fTrans[10] = fTrans[15] = 1;
    fRGBA [0] = fRGBA [1] = fRGBA [2]  = fRGBA [3]  = 1;
    fRGBALine[0] = fRGBALine[1] = fRGBALine[2] = 0; fRGBALine[3] = 1;
-   gGeoManager = TEveGeoShape::GetGeoMangeur(); // To inforce phony geo-manager on load time.
 }
 
 //______________________________________________________________________________
