@@ -1591,6 +1591,11 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
    }
    Int_t tagnum = G__defined_tagname(classname, flag); // This function might modify the name (to add space between >>).
    if (tagnum >= 0) {
+      TClingClassInfo tci(fInterpreter, classname);
+      if (!tci.IsValid()) {
+         delete[] classname;
+         return kFALSE;
+      }
       G__ClassInfo info(tagnum);
       // If autoloading is off then Property() == 0 for autoload entries.
       if (!autoload && !info.Property()) {
