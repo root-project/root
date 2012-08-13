@@ -862,12 +862,6 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) setFDelayedTransient : (BOOL) d
-{
-   fDelayedTransient = d;
-}
-
-//______________________________________________________________________________
 - (QuartzImage *) fShapeCombineMask
 {
    return fShapeCombineMask;
@@ -884,6 +878,12 @@ void print_mask_info(ULong_t mask)
          //Check window's shadow???
       }
    }
+}
+
+//______________________________________________________________________________
+- (void) setFDelayedTransient : (BOOL) d
+{
+   fDelayedTransient = d;
 }
 
 ///////////////////////////////////////////////////////////
