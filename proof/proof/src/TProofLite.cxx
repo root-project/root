@@ -1172,6 +1172,9 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
          sh = gSystem->RemoveSignalHandler(gApplication->GetSignalHandler());
    }
 
+   // Make sure we get a fresh result
+   fOutputList.Clear();
+
    // Start the additional workers now if using fork-based startup
    TList *startedWorkers = 0;
    if (fForkStartup) {
