@@ -353,6 +353,63 @@ NSView<X11Window> *FindViewUnderPointer()
 }
 
 //______________________________________________________________________________
+QuartzWindow *FindWindowForPointerEvent(NSEvent *pointerEvent)
+{
+   //FindWindowForPointerEvent is required because due to grabs the receiver of the event
+   //can be different from the actual window under cursor.
+
+   assert(pointerEvent != nil && "FindWindowForPointerEvent, pointerEvent parameter is nil");
+
+   const Util::AutoreleasePool pool;
+
+   NSArray * const orderedWindows = [NSApp orderedWindows];
+   for (NSWindow *nsWindow in orderedWindows) {
+      if (![nsWindow isKindOfClass : [QuartzWindow class]])
+         continue;
+
+      QuartzWindow * const qWindow = (QuartzWindow *)nsWindow;
+      if (qWindow.fMapState != kIsViewable)//Can it be false and still in this array???
+         continue;
+
+      NSPoint mousePosition = [pointerEvent locationInWindow];
+      //The event has a window, so position is in this window's coordinate system,
+      //convert it into screen point first.
+      if ([pointerEvent window])
+         mousePosition = [[pointerEvent window] convertBaseToScreen : mousePosition];
+      
+      mousePosition = [qWindow convertScreenToBase : mousePosition];
+
+      const NSSize windowSize = qWindow.frame.size;
+      if (mousePosition.x >= 0 && mousePosition.x <= windowSize.width && mousePosition.y >= 0 && mousePosition.y <= windowSize.height)
+         return qWindow;
+   }
+
+   return nil;
+}
+
+//______________________________________________________________________________
+NSView<X11Window> *FindViewForPointerEvent(NSEvent *pointerEvent)
+{
+   //FindViewForPointerEvent is required because of grabs - the receiver of the
+   //event can be different from the actual window under cursor.
+   
+   assert(pointerEvent != nil && "FindViewForPointerEvent, pointerEvent parameter is nil");
+   
+   const Util::AutoreleasePool pool;
+   
+   if (QuartzWindow *topLevel = FindWindowForPointerEvent(pointerEvent)) {
+      NSPoint mousePosition = [pointerEvent locationInWindow];
+      if ([pointerEvent window])
+         mousePosition = [[pointerEvent window] convertBaseToScreen : mousePosition];
+      
+      mousePosition = [topLevel convertScreenToBase : mousePosition];
+      return (NSView<X11Window> *)[[topLevel contentView] hitTest : mousePosition];
+   }
+
+   return nil;
+}
+
+//______________________________________________________________________________
 void SetWindowAttributes(const SetWindowAttributes_t *attr, NSObject<X11Window> *window)
 {
    assert(attr != 0 && "SetWindowAttributes, attr parameter is null");
@@ -805,6 +862,12 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
+- (void) setFDelayedTransient : (BOOL) d
+{
+   fDelayedTransient = d;
+}
+
+//______________________________________________________________________________
 - (QuartzImage *) fShapeCombineMask
 {
    return fShapeCombineMask;
@@ -821,12 +884,6 @@ void print_mask_info(ULong_t mask)
          //Check window's shadow???
       }
    }
-}
-
-//______________________________________________________________________________
-- (void) setFDelayedTransient : (BOOL) d
-{
-   fDelayedTransient = d;
 }
 
 ///////////////////////////////////////////////////////////
@@ -1832,7 +1889,7 @@ void print_mask_info(ULong_t mask)
 - (BOOL) acceptsCrossingEvents : (unsigned) eventMask
 {
    bool accepts = fEventMask & eventMask;
-   if (fCurrentGrabType == X11::kPGPassiveGrab)//In ROOT passive grabs are always owner_events == true.
+   if (fCurrentGrabType == X11::kPGPassiveGrab)//In ROOT passive grabs are always with owner_events == true.
       accepts = accepts || (fPassiveGrabEventMask & eventMask);
 
    if (fCurrentGrabType == X11::kPGActiveGrab) {

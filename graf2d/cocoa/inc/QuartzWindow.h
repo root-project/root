@@ -286,8 +286,19 @@ bool RectsOverlap(const NSRect &r1, const NSRect &r2);
 bool ScreenPointIsInView(NSView<X11Window> *view, Int_t x, Int_t y);
 QuartzWindow *FindWindowInPoint(Int_t x, Int_t y);
 NSView<X11Window> *FindDNDAwareViewInPoint(NSView *parentView, Window_t dragWinID, Window_t inputWinID, Int_t x, Int_t y, Int_t maxDepth);
+
+
+//Pointer == mouse cursor in X11's terms.
+
+//These two functions use "mouse location outside of event stream" - simply
+//ask for the current cursor location
+//(" ... regardless of the current event being handled or of any events pending").
 QuartzWindow *FindWindowUnderPointer();
 NSView<X11Window> *FindViewUnderPointer();
+
+//These two functions use coordinates from the event to find a window/view.
+QuartzWindow *FindWindowForPointerEvent(NSEvent *pointerEvent);
+NSView<X11Window> *FindViewForPointerEvent(NSEvent *pointerEvent);
 
 }//X11
 }//MacOSX
