@@ -28,6 +28,7 @@
 #include "TClingCallFunc.h"
 #include "TClingClassInfo.h"
 #include "TClingMethodArgInfo.h"
+#include "Property.h"
 #include "TClingProperty.h"
 #include "TClingTypeInfo.h"
 

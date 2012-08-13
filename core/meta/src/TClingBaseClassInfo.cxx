@@ -26,6 +26,7 @@
 #include "TClingBaseClassInfo.h"
 
 #include "TClingClassInfo.h"
+#include "Property.h"
 #include "TClingProperty.h"
 
 #include "cling/Interpreter/Interpreter.h"

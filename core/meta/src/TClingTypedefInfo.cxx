@@ -25,6 +25,7 @@
 
 #include "TClingTypedefInfo.h"
 
+#include "Property.h"
 #include "TClingProperty.h"
 #include "TError.h"
 #include "Rtypes.h" // for gDebug

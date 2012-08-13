@@ -12,6 +12,7 @@
 #ifndef ROOT_TClingProperty
 #define ROOT_TClingProperty
 
+#if 0
 //
 //  Property() result values.
 //
@@ -70,6 +71,8 @@
 
 #define G__CLS_HASVIRTUAL        0x00001000
 #define G__CLS_ISABSTRACT        0x00002000
+
+#endif // 0
 
 //
 //  Reftype() result values.

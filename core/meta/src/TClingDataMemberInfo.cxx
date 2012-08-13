@@ -25,6 +25,7 @@
 
 #include "TClingDataMemberInfo.h"
 
+#include "Property.h"
 #include "TClingProperty.h"
 #include "TClingTypeInfo.h"
 

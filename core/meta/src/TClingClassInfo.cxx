@@ -26,6 +26,7 @@
 
 #include "TClassEdit.h"
 #include "TClingMethodInfo.h"
+#include "Property.h"
 #include "TClingProperty.h"
 #include "TClingTypeInfo.h"
 #include "TError.h"
