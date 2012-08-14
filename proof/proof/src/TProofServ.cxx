@@ -3177,7 +3177,7 @@ Int_t TProofServ::SetupCommon()
    if (quotas.IsNull())
       quotas = gEnv->GetValue("ProofServ.UserQuotas", "");
    if (!quotas.IsNull()) {
-      // Parse it; format ("maxquerykept:10 hwmsz:800m maxsz:1g")
+      // Parse it; format ("maxquerykept=10 hwmsz=800m maxsz=1g")
       TString tok;
       Ssiz_t from = 0;
       while (quotas.Tokenize(tok, from, " ")) {
