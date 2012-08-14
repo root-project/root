@@ -2,7 +2,7 @@ Index: tools/clang/test/Modules/redecl-templates.mm
 ===================================================================
 --- tools/clang/test/Modules/redecl-templates.mm	(revision 0)
 +++ tools/clang/test/Modules/redecl-templates.mm	(revision 0)
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,29 @@
 +// template <typename T> int foo(T);
 +// int usesfootoo() { return foo((float)1); }
 +// template <typename T> int foo(T) { return 0; }
@@ -30,9 +30,8 @@ Index: tools/clang/test/Modules/redecl-templates.mm
 +// RUN: %clang_cc1 -fmodules -x objective-c++ -fmodule-cache-path %t -emit-module -fmodule-name=redecl_templates_left %S/Inputs/module.map
 +// RUN: %clang_cc1 -fmodules -x objective-c++ -fmodule-cache-path %t -emit-module -fmodule-name=redecl_templates_right %S/Inputs/module.map
 +// RUN: %clang_cc1 -fmodules -fmodule-cache-path %t -w %s -emit-obj -o %t.obj
-+// RUN: echo 'int call(); int main(int,char*[]) { return call(); }' | %clang -x objective-c++ - -c -o %t_main.obj
++// RUN: echo 'int call(); int main(int,char*[]) { return call(); }' | %clang -x objective-c++ -fmodules -fmodule-cache-path %t - -c -o %t_main.obj
 +// RUN: %clang -lstdc++ %t_main.obj %t.obj
-+// XFAIL: *
 Index: tools/clang/test/Modules/Inputs/module.map
 ===================================================================
 --- tools/clang/test/Modules/Inputs/module.map	(revision 161655)
@@ -427,17 +426,7 @@ Index: tools/clang/lib/Serialization/ASTReader.cpp
 ===================================================================
 --- tools/clang/lib/Serialization/ASTReader.cpp	(revision 161655)
 +++ tools/clang/lib/Serialization/ASTReader.cpp	(working copy)
-@@ -4640,6 +4640,9 @@
- }
- 
- Decl *ASTReader::GetDecl(DeclID ID) {
-+  if (ID == 42710) 
-+    printf("br cond here\n");
-+
-   if (ID < NUM_PREDEF_DECL_IDS) {    
-     switch ((PredefinedDeclIDs)ID) {
-     case PREDEF_DECL_NULL_ID:
-@@ -4930,6 +4933,9 @@
+@@ -4930,6 +4930,9 @@
          if (!ND)
            continue;
  
@@ -447,7 +436,7 @@ Index: tools/clang/lib/Serialization/ASTReader.cpp
          if (ND->getDeclName() != This->Name) {
            assert(!This->Name.getCXXNameType().isNull() && 
                   "Name mismatch without a type");
-@@ -5571,7 +5577,11 @@
+@@ -5571,7 +5574,11 @@
      ValueDecl *D = cast<ValueDecl>(GetDecl(PendingInstantiations[Idx++]));
      SourceLocation Loc
        = SourceLocation::getFromRawEncoding(PendingInstantiations[Idx++]);
@@ -460,7 +449,7 @@ Index: tools/clang/lib/Serialization/ASTReader.cpp
    }  
    PendingInstantiations.clear();
  }
-@@ -6468,6 +6478,9 @@
+@@ -6468,6 +6475,9 @@
  }
  
  ASTReader::~ASTReader() {
