@@ -330,6 +330,14 @@ namespace {
 
       const char* clname = PyBytes_AS_STRING(pyname);
 
+   // make sure that ROOT.py is loaded and fully initialized by accessing on it
+      PyObject* mod = PyImport_ImportModule( (char*)"ROOT" );
+      if ( mod ) {
+         PyObject* dummy = PyObject_GetAttrString( mod, (char*)"kRed" );
+         Py_XDECREF( dummy );
+         Py_DECREF( mod );
+      }
+
    // TBuffer and its derived classes can't write themselves, but can be created
    // directly from the buffer, so handle them in a special case
       void* newObj = 0;
