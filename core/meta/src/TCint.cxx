@@ -842,18 +842,34 @@ void TCint::UpdateListOfGlobalFunctions()
          Bool_t needToAdd = kTRUE;
          // first remove if already in list
          TList* listFuncs = ((THashTable*)(gROOT->fGlobalFunctions))->GetListForObject(t.Name());
-         if (listFuncs && (vt = (void*)t.InterfaceMethod())) {
+         if (listFuncs) {
+            vt = (void*)t.InterfaceMethod();
             Long_t prop = -1;
             TIter iFunc(listFuncs);
             TFunction* f = 0;
             Bool_t foundStart = kFALSE;
             while (needToAdd && (f = (TFunction*)iFunc())) {
                if (strcmp(f->GetName(),t.Name())) {
+                  // The function are sorted alphabetically,
+                  // until we get to the first overload, we skip th test
+                  // and then when we get to what is not an overload,
+                  // we can quit.
                   if (foundStart) break;
-                  continue;
+                  else continue;
                }
                foundStart = kTRUE;
-               if (vt == f->InterfaceMethod()) {
+               if (!vt) {
+                  // an interpreted function.
+                  if (prop == -1)
+                     prop = t.Property();
+                  // Do not call TFunction::InterfaceMethod in this case
+                  // as it might lead to a spurrious warning message:
+                  //   "Error: non class,struct,union object $bench used with . or ->"
+                  // in case of some user function definition.
+                  needToAdd = !(prop & G__BIT_ISCOMPILED) 
+                                && !(f->Property() & G__BIT_ISCOMPILED)
+                                && !( 0 == strcmp( t.GetMangledName() , f->GetMangledName()) );
+              } else if (vt == f->InterfaceMethod()) {
                   if (prop == -1)
                      prop = t.Property();
                   needToAdd = !((prop & G__BIT_ISCOMPILED)
