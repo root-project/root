@@ -98,6 +98,28 @@ protected:
    Bool_t             fShowCloseTab;               // kTRUE to show close icon on tab elements
 
 public:
+   enum ENewBrowserMessages {
+      kBrowse = 11011,
+      kOpenFile,
+      kClone,
+      kHelpAbout,
+      kHelpOnBrowser,
+      kHelpOnCanvas,
+      kHelpOnMenus,
+      kHelpOnGraphicsEd,
+      kHelpOnObjects,
+      kHelpOnPS,
+      kHelpOnRemote,
+      kNewEditor,
+      kNewCanvas,
+      kNewHtml,
+      kExecPluginMacro,
+      kExecPluginCmd,
+      kCloseTab,
+      kCloseWindow,
+      kQuitRoot
+   };
+
    enum EInsertPosition {
       kLeft, kRight, kBottom
    };
@@ -110,8 +132,8 @@ public:
 
    void              CreateBrowser(const char *name);
    void              CloneBrowser();
-   void              CloseWindow();
-   void              CloseTab(Int_t id);
+   virtual void      CloseWindow();
+   virtual void      CloseTab(Int_t id);
    virtual void      CloseTabs();
    void              DoTab(Int_t id);
    TGFrame          *GetActFrame() const { return (TGFrame *)fEditFrame; }

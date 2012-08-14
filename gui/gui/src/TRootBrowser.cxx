@@ -94,28 +94,6 @@ static const char *gPluginFileTypes[] = {
    0,              0
 };
 
-enum ENewBrowserMessages {
-   kBrowse = 11011,
-   kOpenFile,
-   kClone,
-   kHelpAbout,
-   kHelpOnBrowser,
-   kHelpOnCanvas,
-   kHelpOnMenus,
-   kHelpOnGraphicsEd,
-   kHelpOnObjects,
-   kHelpOnPS,
-   kHelpOnRemote,
-   kNewEditor,
-   kNewCanvas,
-   kNewHtml,
-   kExecPluginMacro,
-   kExecPluginCmd,
-   kCloseTab,
-   kCloseWindow,
-   kQuitRoot
-};
-
 //_____________________________________________________________________________
 //
 // TRootBrowser
@@ -780,7 +758,7 @@ void TRootBrowser::HandleMenu(Int_t id)
          }
          break;
       case kCloseTab:
-         RemoveTab(kRight, fTabRight->GetCurrent());
+         CloseTab(fTabRight->GetCurrent());
          break;
       case kCloseWindow:
          CloseWindow();
