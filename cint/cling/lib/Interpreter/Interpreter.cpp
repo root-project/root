@@ -474,7 +474,7 @@ namespace cling {
   Interpreter::echo(const std::string& input, Value* V /* = 0 */) {
     CompilationOptions CO;
     CO.DeclarationExtraction = 0;
-    CO.ValuePrinting = 2;
+    CO.ValuePrinting = CompilationOptions::VPEnabled;
 
     return Evaluate(input, CO, V);
   }
