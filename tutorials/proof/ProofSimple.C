@@ -447,8 +447,6 @@ void ProofSimple::Terminate()
    }
 
    // Process the ntuple, if required
-   
-   Printf("ntuple opts: %d  %d", fHasNtuple, fPlotNtuple);
    if (fHasNtuple != 1 || !fPlotNtuple) return;
 
    if (!(fNtp = dynamic_cast<TNtuple *>(TProof::GetOutput("ntuple", fOutput)))) {
