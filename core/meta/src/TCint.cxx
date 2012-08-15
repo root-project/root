@@ -860,15 +860,13 @@ void TCint::UpdateListOfGlobalFunctions()
                foundStart = kTRUE;
                if (!vt) {
                   // an interpreted function.
-                  if (prop == -1)
-                     prop = t.Property();
+
                   // Do not call TFunction::InterfaceMethod in this case
                   // as it might lead to a spurrious warning message:
                   //   "Error: non class,struct,union object $bench used with . or ->"
                   // in case of some user function definition.
-                  needToAdd = !(prop & G__BIT_ISCOMPILED) 
-                                && !(f->Property() & G__BIT_ISCOMPILED)
-                                && !( 0 == strcmp( t.GetMangledName() , f->GetMangledName()) );
+                  needToAdd = (f->Property() & G__BIT_ISCOMPILED)
+                              || !( 0 == strcmp( t.GetMangledName() , f->GetMangledName()) );
               } else if (vt == f->InterfaceMethod()) {
                   if (prop == -1)
                      prop = t.Property();
