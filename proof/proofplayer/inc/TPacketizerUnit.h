@@ -59,6 +59,8 @@ private:
                                  // is chosen
    Bool_t      fFixedNum;        // Whether we must assign a fixed number of cycles per worker
 
+   Long64_t    fPacketSeq;       // Sequential number of the last packet assigned
+
    TPacketizerUnit();
    TPacketizerUnit(const TPacketizerUnit&);     // no implementation, will generate
    void operator=(const TPacketizerUnit&);  // error on accidental usage
