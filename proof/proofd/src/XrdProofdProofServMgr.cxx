@@ -1971,8 +1971,6 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
       // Close pipes
       fpc.Close();
       fcp.Close();
-
-      TRACE(FORK, (int)getpid()<<": tag:"<<in.fSessionTag<<" top:"<<in.fTopSessionTag<<" xps:"<<xps->Tag());
       
       TRACE(FORK, (int)getpid()<<": user: "<<p->Client()->User()<<
                   ", uid: "<<getuid()<<", euid:"<<geteuid()<<
