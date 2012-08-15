@@ -90,16 +90,6 @@ TProofMgr::TProofMgr(const char *url, Int_t, const char *alias)
       fUrl.SetPort(port);
    }
 
-   // Make sure that the user is defined
-   if (strlen(fUrl.GetUser()) <= 0) {
-      // Fill in the default user
-      UserGroup_t *pw = gSystem->GetUserInfo();
-      if (pw) {
-         fUrl.SetUser(pw->fUser);
-         delete pw;
-      }
-   }
-
    // Check and save the host FQDN ...
    if (strcmp(fUrl.GetHost(), "__lite__")) {
       if (strcmp(fUrl.GetHost(), fUrl.GetHostFQDN()))

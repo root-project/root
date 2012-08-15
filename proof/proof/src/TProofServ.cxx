@@ -3106,8 +3106,7 @@ Int_t TProofServ::SetupCommon()
    if (IsMaster()) {
       // Send session tag to client
       TMessage m(kPROOF_SESSIONTAG);
-      m << fTopSessionTag;
-      if (GetProtocol() > 24) m << fGroup;
+      m << fTopSessionTag << fGroup << fUser;
       fSocket->Send(m);
       // Group priority
       fGroupPriority = GetPriority();

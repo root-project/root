@@ -358,7 +358,7 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
    // file and other PROOF related files are (like motd and noproof files).
    // Loglevel is the log level (default = 1). User specified custom config
    // files will be first looked for in $HOME/.conffile.
-
+ 
    // Default initializations
    InitMembers();
 
@@ -386,16 +386,6 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
    // Port
    if (fUrl.GetPort() == TUrl(" ").GetPort())
       fUrl.SetPort(TUrl("proof:// ").GetPort());
-
-   // User
-   if (strlen(fUrl.GetUser()) <= 0) {
-      // Get user logon name
-      UserGroup_t *pw = gSystem->GetUserInfo();
-      if (pw) {
-         fUrl.SetUser(pw->fUser);
-         delete pw;
-      }
-   }
 
    // Make sure to store the FQDN, so to get a solid reference for subsequent checks
    if (!strcmp(fUrl.GetHost(), "__master__"))
@@ -435,8 +425,36 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
    // Flag that we are a client
    if (TestBit(TProof::kIsClient))
       if (!gSystem->Getenv("ROOTPROOFCLIENT")) gSystem->Setenv("ROOTPROOFCLIENT","");
-
+      
    Init(masterurl, conffile, confdir, loglevel, alias);
+
+   // If the user was not set, get it from the master
+   if (strlen(fUrl.GetUser()) <= 0) {
+      TString usr, emsg;
+      if (Exec("gProofServ->GetUser()", "0", kTRUE) == 0) {
+         TObjString *os = fMacroLog.GetLineWith("const char");
+         if (os) {
+            Ssiz_t fst =  os->GetString().First('\"');
+            Ssiz_t lst =  os->GetString().Last('\"');
+            usr = os->GetString()(fst+1, lst-fst-1);
+         } else {
+            emsg = "could not find 'const char *' string in macro log";
+         }
+      } else {
+         emsg = "could not retrieve user info";
+      }
+      if (!emsg.IsNull()) {
+         // Get user logon name
+         UserGroup_t *pw = gSystem->GetUserInfo();
+         if (pw) {
+            usr = pw->fUser;
+            delete pw;
+         }
+         Warning("TProof", "%s: using local default %s", emsg.Data(), usr.Data());
+      }
+      // Set the user name in the main URL
+      fUrl.SetUser(usr.Data());
+   }
 
    // If called by a manager, make sure it stays in last position
    // for cleaning
@@ -3337,9 +3355,15 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
             SetName(stag);
             // In the TSlave object
             sl->SetSessionTag(stag);
-            // New servers send also the group
+            // Server may have also sent the group
             if ((mess->BufferSize() > mess->Length()))
                (*mess) >> fGroup;
+            // Server may have also sent the user
+            if ((mess->BufferSize() > mess->Length())) {
+               TString usr;
+               (*mess) >> usr;
+               if (!usr.IsNull()) fUrl.SetUser(usr.Data());
+            }
          }
          break;
 
@@ -6124,9 +6148,11 @@ Int_t TProof::Exec(const char *cmd, const char *ord, Bool_t logtomacro)
    if (IsLite()) {
       gROOT->ProcessLine(cmd);
    } else {
-
+      Bool_t oldRedirLog = fRedirLog;
+      fRedirLog = kTRUE;
       // Deactivate all workers
       DeactivateWorker("*");
+      fRedirLog = kFALSE;
       // Reactivate the target ones, if needed
       if (strcmp(ord, "master") && strcmp(ord, "0")) ActivateWorker(ord);
       // Honour log-to-macro-saving settings
@@ -6134,7 +6160,9 @@ Int_t TProof::Exec(const char *cmd, const char *ord, Bool_t logtomacro)
       fSaveLogToMacro = logtomacro;
       res = SendCommand(cmd, kActive);
       fSaveLogToMacro = oldSaveLog;
+      fRedirLog = kTRUE;      
       ActivateWorker("restore");
+      fRedirLog = oldRedirLog;
    }
    // Done
    return res;

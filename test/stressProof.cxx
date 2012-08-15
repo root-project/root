@@ -2030,6 +2030,16 @@ Int_t PT_Open(void *args, RunTimes &tt)
       printf("\n >>> Test failure: could not start the session\n");
       return -1;
    }
+   
+   // Re-check locality: if the logged user name is different from the local one, we may
+   // not have all the rights we need, so we go no-local
+   if (gLocalCluster) {
+      UserGroup_t *pw = gSystem->GetUserInfo();
+      if (pw) {
+         if (strcmp(pw->fUser, p->GetUser())) gLocalCluster = kFALSE;
+         delete pw;
+      }
+   }
 
    // Set debug level, if required
    if (gverbose > 1) {
@@ -3599,31 +3609,7 @@ Int_t PT_POFNtuple(void *opts, RunTimes &tt)
    }
 
    // Output file
-   TString fout = TString::Format("%s/ProofNtuple.root", gSystem->WorkingDirectory());
-   // Cleanup any existing instance of the output file
-   gSystem->Unlink(fout);
-
-   if (!gLocalCluster) {
-      // Setup a local basic xrootd to receive the file
-      Bool_t xrdok = kFALSE;
-      Int_t port = 9000;
-      while (port < 9010) {
-         if (checkXrootdAt(port) != 1) {
-            if (startXrootdAt(port, gSystem->WorkingDirectory(), kTRUE) == 0) {
-               xrdok = kTRUE;
-               break;
-            }
-         }
-         port++;
-      }
-      if (!xrdok) {
-         printf(" >>> PT_POFNtuple: could not start basic xrootd on ports 9000-9009 - skip this test");
-         return 1;
-      }
-      fout.Insert(0, TString::Format("root://%s:%d/", TUrl(gSystem->HostName()).GetHostFQDN(), port));
-      // Make a copy of the files on the master before merging
-      gProof->AddInput(new TNamed("PROOF_OUTPUTFILE_LOCATION", "LOCAL"));
-   }
+   TString fout("<datadir>/ProofNtuple.root");
    gProof->AddInput(new TNamed("PROOF_OUTPUTFILE", fout.Data()));
 
    // We use the 'NtpRndm' for a fixed values of randoms; we need to send over the file
