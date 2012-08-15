@@ -91,6 +91,7 @@ public:
    virtual Bool_t      IsEnabled() const {return fEnabled;}
    virtual void        Enable() {fEnabled = kTRUE;}
    virtual void        Disable() {fEnabled = kFALSE;}
+   virtual void        LearnPrefill();
    virtual Int_t       GetEntryMin() const {return fEntryMin;}
    virtual Int_t       GetEntryMax() const {return fEntryMax;}
 
