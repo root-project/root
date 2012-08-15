@@ -281,8 +281,13 @@ Int_t ProofAux::GenerateTree(const char *fnt, Long64_t ent, TString &fn)
 
    // Add to the list
    TString fds(fn);
-   if (!strcmp(uu.GetProtocol(), "file"))
-      fds.Insert(0, TString::Format("root://%s/", gSystem->HostName()));
+   if (!strcmp(uu.GetProtocol(), "file")) {
+      if (gSystem->Getenv("LOCALDATASERVER")) {
+         fds.Insert(0, TString::Format("%s/", gSystem->Getenv("LOCALDATASERVER")));
+      } else {
+         fds.Insert(0, TString::Format("root://%s/", gSystem->HostName()));
+      }
+   }
    fMainList->Add(new TObjString(fds));
 
    // Done
@@ -377,7 +382,7 @@ Int_t ProofAux::GenerateFriend(const char *fnt, const char *fnf)
    TTree *Tfrnd = new TTree("Tfrnd", "Friend tree for tutorial 'friends'");
    Tfrnd->SetDirectory(fo);
    Float_t r = 0;
-   Tfrnd->Branch("r",&x,"r/F");
+   Tfrnd->Branch("r",&r,"r/F");
    Long64_t ent = Tin->GetEntries();
    for (Long64_t i = 0; i < ent; i++) {
       b_x->GetEntry(i);
@@ -403,8 +408,13 @@ Int_t ProofAux::GenerateFriend(const char *fnt, const char *fnf)
 
    // Add to the list
    TUrl uu(fout);
-   if (!strcmp(uu.GetProtocol(), "file"))
-      fout.Insert(0, TString::Format("root://%s/", gSystem->HostName()));
+   if (!strcmp(uu.GetProtocol(), "file")) {
+      if (gSystem->Getenv("LOCALDATASERVER")) {
+         fout.Insert(0, TString::Format("%s/", gSystem->Getenv("LOCALDATASERVER")));
+      } else {
+         fout.Insert(0, TString::Format("root://%s/", gSystem->HostName()));
+      }
+   }
    fFriendList->Add(new TObjString(fout));
 
    // Done
