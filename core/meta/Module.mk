@@ -52,7 +52,7 @@ INCLUDEFILES += $(METADEP)
 include/%.h:    $(METADIRI)/%.h
 		cp $< $@
 
-$(METADS):      $(METAHFORD) $(METAL) $(ROOTCINTTMPDEP)
+$(METADS):      $(METAHFORD) $(METAL) $(ROOTCINTTMPDEP) $(LLVMDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -DG__API $(METADCLINGCXXFLAGS) $(METAHFORD) $(METAL)
@@ -71,6 +71,9 @@ distclean::     distclean-$(MODNAME)
 
 # Optimize dictionary with stl containers.
 $(METADO): NOOPT = $(OPT)
+$(call stripsrc,$(MODDIRS)/TCintWithCling.o): $(LLVMDEP)
 $(call stripsrc,$(MODDIRS)/TCintWithCling.o): CXXFLAGS += $(METACLINGCXXFLAGS)
+$(call stripsrc,$(patsubst %.cxx,%.o,$(wildcard $(MODDIRS)/TCling*.cxx))): \
+   $(LLVMDEP)
 $(call stripsrc,$(patsubst %.cxx,%.o,$(wildcard $(MODDIRS)/TCling*.cxx))): \
    CXXFLAGS += $(METACLINGCXXFLAGS)

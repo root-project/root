@@ -328,8 +328,9 @@ CINTMAXSTRUCT  := @cintmaxstruct@
 CINTMAXTYPEDEF := @cintmaxtypedef@
 CINTLONGLINE   := @cintlongline@
 
-BUILDCLING     := @buildcling@
+BUILTINLLVM    := @builtinllvm@
 LLVMCONFIG     := @llvmconfig@
+BUILDCLING     := @buildcling@
 
 BUILDCINTEX    := @buildcintex@
 

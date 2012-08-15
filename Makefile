@@ -221,7 +221,7 @@ MODULES      += math/unuran
 endif
 ifeq ($(BUILDCLING),yes)
 # put cling right behind of CINT; e.g. UTILS need it
-MODULES      := $(subst cint/cint,cint/cint cint/cling,$(MODULES))
+MODULES      := $(subst cint/cint,cint/cint interpreter/llvm cint/cling,$(MODULES))
 endif
 ifeq ($(BUILDCINTEX),yes)
 MODULES      += cint/cintex
@@ -300,7 +300,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 geom/geocad geom/gdml graf3d/eve net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz \
                 proof/proofbench proof/afdsmgrd cint/cling graf2d/ios \
-                graf2d/quartz graf2d/cocoa core/macosx
+                graf2d/quartz graf2d/cocoa core/macosx interpreter/llvm
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -1050,7 +1050,7 @@ endif
 	@rm -rf README/ReleaseNotes
 	@rm -f etc/svninfo.txt
 	@(find . -path '*/daemons' -prune -o -name *.d -exec rm -rf {} \; >/dev/null 2>&1;true)
-	@(find . -name *.o -exec rm -rf {} \; >/dev/null 2>&1;true)
+	@(find . -path '*/interpreter/llvm/src' -prune -o -name *.o -exec rm -rf {} \; >/dev/null 2>&1;true)
 	-@([ -d test ] && (cd test && $(MAKE) distclean); true)
 
 maintainer-clean:: distclean

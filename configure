@@ -50,6 +50,7 @@ options="                    \
    enable_builtin_pcre       \
    enable_builtin_zlib       \
    enable_builtin_lzma       \
+   enable_builtin_llvm       \
    enable_cxx11              \
    enable_castor             \
    enable_chirp              \
@@ -166,6 +167,7 @@ enable_builtin_glew=no
 enable_builtin_pcre=no
 enable_builtin_zlib=no
 enable_builtin_lzma=no
+enable_builtin_llvm=yes
 enable_afdsmgrd=no
 
 if test "x$ENABLEALL" = "xyes"; then
@@ -1494,18 +1496,19 @@ enable/disable options, prefix with either --enable- or --disable-
   asimage            Image processing support, requires libAfterImage
   astiff             Include tiff support in image processing
   bonjour            Bonjour support, requires libdns_sd and/or Avahi
-  builtin-afterimage Built included libAfterImage, or use system libAfterImage
-  builtin-ftgl       Built included libFTGL, or use system libftgl
-  builtin-freetype   Built included libfreetype, or use system libfreetype
-  builtin-glew       Built included libGLEW, or use system libGLEW
-  builtin-pcre       Built included libpcre, or use system libpcre
-  builtin-zlib       Built included libz, or use system libz
-  builtin-lzma       Built included liblzma, or use system liblzma
+  builtin-afterimage Build included libAfterImage, or use system libAfterImage
+  builtin-ftgl       Build included libFTGL, or use system libftgl
+  builtin-freetype   Build included libfreetype, or use system libfreetype
+  builtin-glew       Build included libGLEW, or use system libGLEW
+  builtin-pcre       Build included libpcre, or use system libpcre
+  builtin-zlib       Build included libz, or use system libz
+  builtin-lzma       Build included liblzma, or use system liblzma
+  builtin-llvm       Build included libclang, or use system libclang
   c++11              Build using C++11 compatible mode, requires gcc > 4.7.x or clang
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
   chirp              Chirp filesystem support, requires cctools >= 3.2.2
   cintex             Build the libCintex Reflex interface library
-  cling              Use cling as interpreter backend (experimental!), needs --with-llvm-config
+  cling              Use cling as interpreter backend (experimental!)
   cocoa              Use native Cocoa/Quartz graphics backend (MacOS X only)
   dcache             dCache support, requires libdcap from DESY
   explicitlink       Explicitly link with all dependent libraries
@@ -1952,7 +1955,7 @@ if test $# -gt 0 ; then
       --with-krb5-libdir=*)    krb5libdir=$optarg    ; enable_krb5="yes"    ;;
       --with-ldap-incdir=*)    ldapincdir=$optarg    ; enable_ldap="yes"    ;;
       --with-ldap-libdir=*)    ldaplibdir=$optarg    ; enable_ldap="yes"    ;;
-      --with-llvm-config=*)    llvmconfig=$optarg    ;; # require explicit --enable-cling
+      --with-llvm-config=*)    llvmconfig=$optarg    ; enable_builtin_llvm=no;; # require explicit --enable-cling
       --with-mysql-incdir=*)   mysqlincdir=$optarg   ; enable_mysql="yes"   ;;
       --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
       --with-monalisa-incdir=*)monalisaincdir=$optarg; enable_monalisa="yes";;
@@ -6066,22 +6069,27 @@ message "Checking whether to integrate experimental cling"
 hascling="undef"
 clingextrares=""
 if test ! "x$enable_cling" = "xno"; then
-    # allow LLVMDIR instead of --with-llvm-config
-    if test "x$llvmconfig" = "x" ; then
-        if test ! "x$LLVMDIR" = "x" ; then
-            llvmconfig="$LLVMDIR/bin"
-        else
-            clingextrares="(needs --with-llvm-config or \$LLVMDIR)"
+    if test "x$enable_builtin_llvm" = "x" || \
+       test "x$enable_builtin_llvm" = "xno" ; then
+	
+        # allow LLVMDIR instead of --with-llvm-config
+        if test "x$llvmconfig" = "x" ; then
+            if test ! "x$LLVMDIR" = "x" ; then
+                llvmconfig="$LLVMDIR/bin"
+            else
+                clingextrares="(needs --with-llvm-config or \$LLVMDIR)"
+            fi
         fi
-        result "no"
-    fi
-    if test ! "x$llvmconfig" = "x"; then
-        if test -d "$llvmconfig"; then
-            llvmconfig=$llvmconfig/llvm-config
+        if test ! "x$llvmconfig" = "x"; then
+            if test -d "$llvmconfig"; then
+                llvmconfig=$llvmconfig/llvm-config
+            fi
+            if test -f $llvmconfig && test -x $llvmconfig; then
+                hascling="define"
+            fi
         fi
-        if test -f $llvmconfig && test -x $llvmconfig; then
-            hascling="define"
-        fi
+    else
+        hascling="define"
     fi
 fi
 if test "x$hascling" = "xundef"; then
@@ -6553,6 +6561,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@buildglew@|$enable_builtin_glew|"    \
     -e "s|@builtinfreetype@|$enable_builtin_freetype|"      \
     -e "s|@builtinpcre@|$enable_builtin_pcre|"  \
+    -e "s|@builtinllvm@|$enable_builtin_llvm|"  \
     -e "s|@hasxrd@|$enable_xrootd|"             \
     -e "s|@castorincdir@|$castorincdir|"        \
     -e "s|@castorlib@|$castorlib|"              \

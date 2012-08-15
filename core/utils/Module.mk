@@ -83,8 +83,6 @@ $(call stripsrc,$(UTILSDIRS)/%_tmp.cxx): $(UTILSDIRS)/%.cxx
 
 $(call stripsrc,$(UTILSDIRS)/rootcint_tmp.o): $(call stripsrc,\
 	   $(UTILSDIRS)/rootcint_tmp.cxx)
-$(call stripsrc,$(UTILSDIRS)/rootcling_tmp.o): $(call stripsrc,\
-	   $(UTILSDIRS)/rootcling_tmp.cxx)
 
 $(call stripsrc,$(UTILSDIRS)/rootcling_tmp.o): $(call stripsrc,\
 	   $(UTILSDIRS)/rootcling_tmp.cxx)
@@ -93,9 +91,12 @@ $(call stripsrc,$(UTILSDIRS)/RStl_tmp.o): $(call stripsrc,\
 	   $(UTILSDIRS)/RStl_tmp.cxx)
 
 $(ROOTCINTTMPO): CXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD -I$(UTILSDIRS)
+$(ROOTCLINGTMPO): $(LLVMDEP)
 $(ROOTCLINGTMPO): CXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD -I$(UTILSDIRS) \
 	   $(ROOTCLINGCXXFLAGS)
+$(ROOTCLINGO): $(LLVMDEP)
 $(ROOTCLINGO): CXXFLAGS += -UR__HAVE_CONFIG -I$(UTILSDIRS) $(ROOTCLINGCXXFLAGS)
+$(ROOTCLINGUTILO): $(LLVMDEP)
 $(ROOTCLINGUTILO): CXXFLAGS += -UR__HAVE_CONFIG -I$(UTILSDIRS) \
 	   $(ROOTCLINGCXXFLAGS)
 

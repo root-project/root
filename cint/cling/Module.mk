@@ -32,9 +32,9 @@ ifneq ($(LLVMCONFIG),)
 # include dir for picking up RuntimeUniverse.h etc - need to
 # 1) copy relevant headers to include/
 # 2) rely on TCling to addIncludePath instead of using CLING_..._INCL below
-CLINGCXXFLAGS := $(shell $(LLVMCONFIG) --cxxflags) -I$(MODDIR)/include \
+CLINGCXXFLAGS = $(shell $(LLVMCONFIG) --cxxflags) -I$(CLINGDIR)/include \
 	'-DR__LLVMDIR="$(shell cd $(shell $(LLVMCONFIG) --libdir)/..; pwd)"'
-CLINGLLVMLIBS:= -L$(shell $(LLVMCONFIG) --libdir) \
+CLINGLLVMLIBS = -L$(shell $(LLVMCONFIG) --libdir) \
 	$(addprefix -lclang,\
 		Frontend Serialization Driver CodeGen Parse Sema Analysis Rewrite AST Lex Basic Edit) \
 	$(patsubst -lLLVM%Disassembler,,\
@@ -48,7 +48,7 @@ endif
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) 
 
-$(CLINGLIB):   $(CLINGO)
+$(CLINGLIB):   $(CLINGO) $(LLVMDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
 		"$(SOFLAGS)" libCling.$(SOEXT) $@ "$(CLINGO)" \
 		"$(CLINGLLVMLIBS) $(CLINGLIBEXTRA)"
@@ -65,27 +65,28 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean::     distclean-$(MODNAME)
 
-etc/cling/%.h: $(MODDIR)/include/cling/%.h
-	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
-	@cp $< $@
-etc/cling/%.h: $(call stripsrc,$(MODDIR)/%.o)/include/cling/%.h
-	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+etc/cling/%.h: $(CLINGDIR)/include/cling/%.h
+	$(MAKEDIR)
 	@cp $< $@
 
-etc/cling/cint/multimap: $(MODDIR)/include/cling/cint/multimap
-	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+etc/cling/%.h: $(call stripsrc,$(CLINGDIR)/%.o)/include/cling/%.h
+	$(MAKEDIR)
 	@cp $< $@
 
-etc/cling/cint/multiset: $(MODDIR)/include/cling/cint/multiset
-	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+etc/cling/cint/multimap: $(CLINGDIR)/include/cling/cint/multimap
+	$(MAKEDIR)
 	@cp $< $@
 
-$(MODDIR)/%.o: $(MODDIR)/%.cpp
+etc/cling/cint/multiset: $(CLINGDIR)/include/cling/cint/multiset
+	$(MAKEDIR)
+	@cp $< $@
+
+$(CLINGDIR)/%.o: $(CLINGDIR)/%.cpp $(LLVMDEP)
 	$(MAKEDEP) -R -f$(@:.o=.d) -Y -w 1000 -- $(CXXFLAGS) $(CLINGCXXFLAGS) -D__cplusplus -- $<
 	$(CXX) $(OPT) $(CLINGCXXFLAGS) $(CXXOUT)$@ -c $<
 
-$(call stripsrc,$(MODDIR)/%.o): $(MODDIR)/%.cpp
-	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+$(call stripsrc,$(CLINGDIR)/%.o): $(CLINGDIR)/%.cpp $(LLVMDEP)
+	$(MAKEDIR)
 	$(MAKEDEP) -R -f$(@:.o=.d) -Y -w 1000 -- $(CXXFLAGS) $(CLINGCXXFLAGS)  -D__cplusplus -- $<
 	$(CXX) $(OPT) $(CLINGCXXFLAGS) $(CXXOUT)$@ -c $<
 
