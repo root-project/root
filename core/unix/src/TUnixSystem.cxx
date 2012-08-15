@@ -621,7 +621,7 @@ void TUnixSystem::SetDisplay()
 
          STRUCT_UTMP *utmp_entry = (STRUCT_UTMP *)SearchUtmpEntry(ReadUtmpFile(), tty);
          if (utmp_entry) {
-            if (utmp_entry->ut_host[0])
+            if (utmp_entry->ut_host[0]) {
                if (strchr(utmp_entry->ut_host, ':')) {
                   Setenv("DISPLAY", utmp_entry->ut_host);
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
@@ -633,6 +633,7 @@ void TUnixSystem::SetDisplay()
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
                           disp);
                }
+            }
 #ifndef UTMP_NO_ADDR
             else if (utmp_entry->ut_addr) {
                struct hostent *he;
