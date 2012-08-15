@@ -156,12 +156,14 @@ namespace cling {
     m_Consumer->HandleTranslationUnit(getCI()->getASTContext());
 
     if (CurT->getCompilationOpts().CodeGeneration && hasCodeGenerator()) {
+      // Reset the module builder to clean up global initializers, c'tors, d'tors
+      getCodeGenerator()->Initialize(getCI()->getASTContext());
+
       // codegen the transaction
       for (Transaction::const_iterator I = CurT->decls_begin(), 
              E = CurT->decls_end(); I != E; ++I) {
         getCodeGenerator()->HandleTopLevelDecl(*I);
       }
-
       getCodeGenerator()->HandleTranslationUnit(getCI()->getASTContext());
       // run the static initializers that came from codegenning
       m_Interpreter->runStaticInitializersOnce();
@@ -222,11 +224,6 @@ namespace cling {
   IncrementalParser::EParseResult
   IncrementalParser::Compile(llvm::StringRef input,
                              const CompilationOptions& Opts) {
-
-    // Reset the module builder to clean up global initializers, c'tors, d'tors:
-    if (hasCodeGenerator()) {
-      getCodeGenerator()->Initialize(getCI()->getASTContext());
-    }
 
     beginTransaction(Opts);
     EParseResult Result = ParseInternal(input);
