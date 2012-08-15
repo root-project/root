@@ -4930,6 +4930,9 @@ namespace {
         if (!ND)
           continue;
 
+        if (This->Reader.DeclsInFlight.count(ND))
+          continue;
+
         if (ND->getDeclName() != This->Name) {
           assert(!This->Name.getCXXNameType().isNull() && 
                  "Name mismatch without a type");
@@ -5571,7 +5574,11 @@ void ASTReader::ReadPendingInstantiations(
     ValueDecl *D = cast<ValueDecl>(GetDecl(PendingInstantiations[Idx++]));
     SourceLocation Loc
       = SourceLocation::getFromRawEncoding(PendingInstantiations[Idx++]);
-    Pending.push_back(std::make_pair(D, Loc));
+
+    // For modules, find out whether an instantiation already exists
+    if (!getContext().getLangOpts().Modules
+        || needPendingInstantiation(D))
+      Pending.push_back(std::make_pair(D, Loc));
   }  
   PendingInstantiations.clear();
 }
@@ -6468,6 +6475,9 @@ ASTReader::ASTReader(Preprocessor &PP, ASTContext &Context,
 }
 
 ASTReader::~ASTReader() {
+  assert(DeclsInFlight.empty() && "DeclsInFlight not empty!");
+  assert(RedeclsAddedToAST.empty() && "RedeclsAddedToAST not empty!");
+
   for (DeclContextVisibleUpdatesPending::iterator
            I = PendingVisibleUpdates.begin(),
            E = PendingVisibleUpdates.end();

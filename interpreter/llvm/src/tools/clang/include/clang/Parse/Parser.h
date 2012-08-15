@@ -277,7 +277,7 @@ public:
   /// the EOF was encountered.
   bool ParseTopLevelDecl(DeclGroupPtrTy &Result);
 
-private:
+protected:
   //===--------------------------------------------------------------------===//
   // Low-Level token peeking and consumption methods.
   //
@@ -676,7 +676,7 @@ public:
     return Diag(Tok, DiagID);
   }
 
-private:
+protected:
   void SuggestParentheses(SourceLocation Loc, unsigned DK,
                           SourceRange ParenRange);
   void CheckNestedObjCContexts(SourceLocation AtLoc);

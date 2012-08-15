@@ -686,7 +686,15 @@ private:
   /// need to be emitted, such as inline function definitions or
   /// Objective-C protocols.
   std::deque<Decl *> InterestingDecls;
+public:
+  /// \brief Currently deserializing Decls
+  ///
+  /// Decls that are currently read but have not been completed yet.
+  llvm::SmallPtrSet<Decl *, 16> DeclsInFlight;
 
+  llvm::SmallPtrSet<Decl *, 16> RedeclsAddedToAST;
+
+private:
   /// \brief The set of redeclarable declaraations that have been deserialized
   /// since the last time the declaration chains were linked.
   llvm::SmallPtrSet<Decl *, 16> RedeclsDeserialized;
@@ -738,7 +746,7 @@ private:
   /// the given canonical declaration.
   MergedDeclsMap::iterator
   combineStoredMergedDecls(Decl *Canon, serialization::GlobalDeclID CanonID);
-  
+
   /// \brief Ready to load the previous declaration of the given Decl.
   void loadAndAttachPreviousDecl(Decl *D, serialization::DeclID ID);
 
@@ -852,6 +860,8 @@ private:
   void PassInterestingDeclToConsumer(Decl *D);
 
   void finishPendingActions();
+
+  bool needPendingInstantiation(ValueDecl* D) const;
 
   /// \brief Produce an error diagnostic and return true.
   ///

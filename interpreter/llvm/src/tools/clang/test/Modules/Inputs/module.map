@@ -38,6 +38,8 @@ module redeclarations_left { header "redeclarations_left.h" }
 module redeclarations_right { header "redeclarations_right.h" }
 module redecl_namespaces_left { header "redecl_namespaces_left.h" }
 module redecl_namespaces_right { header "redecl_namespaces_right.h" }
+module redecl_templates_left { header "redecl_templates_left.h" }
+module redecl_templates_right { header "redecl_templates_right.h" }
 module load_failure { header "load_failure.h" }
 
 module decldef {
