@@ -32,6 +32,7 @@
 #include "TError.h"
 
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/Value.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -40,10 +41,12 @@
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
 #include "clang/Frontend/CompilerInstance.h"
-
+ 
+#include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include <sstream>
 #include <string>
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
@@ -179,31 +182,67 @@ long TClingClassInfo::ClassProperty() const
 
 void TClingClassInfo::Delete(void *arena) const
 {
-   // Note: This is an interpreter function.
+   // Invoke operator delete on a pointer to an object
+   // of this class type.
    if (!IsValid()) {
       return;
    }
-   // TODO: Implement this when cling provides function call.
+   std::ostringstream os;
+   os << "delete (" << Name() << "*)"
+      << reinterpret_cast<unsigned long>(arena) << ";";
+   cling::Value val;
+   cling::Interpreter::CompilationResult err =
+      fInterp->evaluate(os.str(), &val);
+   if (err != cling::Interpreter::kSuccess) {
+      return;
+   }
    return;
 }
 
 void TClingClassInfo::DeleteArray(void *arena, bool dtorOnly) const
 {
-   // Note: This is an interpreter function.
+   // Invoke operator delete[] on a pointer to an array object
+   // of this class type.
    if (!IsValid()) {
       return;
    }
-   // TODO: Implement this when cling provides function call.
+   if (dtorOnly) {
+      // There is no syntax in C++ for invoking the placement delete array
+      // operator, so we have to placement delete each element by hand.
+      // Unfortunately we do not know how many elements to delete.
+      Error("DeleteArray", "Placement delete of an array is unsupported!\n");
+   }
+   else {
+      std::ostringstream os;
+      os << "delete[] (" << Name() << "*)"
+         << reinterpret_cast<unsigned long>(arena) << ";";
+      cling::Value val;
+      cling::Interpreter::CompilationResult err =
+         fInterp->evaluate(os.str(), &val);
+      if (err != cling::Interpreter::kSuccess) {
+         return;
+      }
+   }
    return;
 }
 
 void TClingClassInfo::Destruct(void *arena) const
 {
-   // Note: This is an interpreter function.
+   // Invoke placement operator delete on a pointer to an array object
+   // of this class type.
    if (!IsValid()) {
       return;
    }
-   // TODO: Implement this when cling provides function call.
+   const char *name = Name();
+   std::ostringstream os;
+   os << "((" << name << "*)" << reinterpret_cast<unsigned long>(arena)
+      << ")->" << name << "::~" << name << "();";
+   cling::Value val;
+   cling::Interpreter::CompilationResult err =
+      fInterp->evaluate(os.str(), &val);
+   if (err != cling::Interpreter::kSuccess) {
+      return;
+   }
    return;
 }
 
@@ -573,42 +612,81 @@ int TClingClassInfo::Next()
 
 void *TClingClassInfo::New() const
 {
-   // Note: This is an interpreter function.
+   // Invoke a new expression to use the class constructor
+   // that takes no arguments to create an object of this class type.
    if (!IsValid()) {
       return 0;
    }
-   // TODO: Fix this when cling implements function call.
-   return 0;
+   std::ostringstream os;
+   os << "new " << Name() << ";";
+   cling::Value val;
+   cling::Interpreter::CompilationResult err =
+      fInterp->evaluate(os.str(), &val);
+   if (err != cling::Interpreter::kSuccess) {
+      return 0;
+   }
+   return llvm::GVTOP(val.value);
 }
 
 void *TClingClassInfo::New(int n) const
 {
-   // Note: This is an interpreter function.
+   // Invoke a new expression to use the class constructor
+   // that takes no arguments to create an array object
+   // of this class type.
    if (!IsValid()) {
       return 0;
    }
-   // TODO: Fix this when cling implements function call.
-   return 0;
+   std::ostringstream os;
+   os << "new " << Name() << "[" << n << "];";
+   cling::Value val;
+   cling::Interpreter::CompilationResult err =
+      fInterp->evaluate(os.str(), &val);
+   if (err != cling::Interpreter::kSuccess) {
+      return 0;
+   }
+   return llvm::GVTOP(val.value);
 }
 
 void *TClingClassInfo::New(int n, void *arena) const
 {
-   // Note: This is an interpreter function.
+   // Invoke a placement new expression to use the class
+   // constructor that takes no arguments to create an
+   // array of objects of this class type in the given
+   // memory arena.
    if (!IsValid()) {
       return 0;
    }
-   // TODO: Fix this when cling implements function call.
+   std::ostringstream os;
+   os << "new ((void*)" << reinterpret_cast<unsigned long>(arena) << ") "
+      << Name() << "[" << n << "];";
+   cling::Value val;
+   cling::Interpreter::CompilationResult err =
+      fInterp->evaluate(os.str(), &val);
+   if (err != cling::Interpreter::kSuccess) {
+      return 0;
+   }
+   return llvm::GVTOP(val.value);
    return 0;
 }
 
 void *TClingClassInfo::New(void *arena) const
 {
-   // Note: This is an interpreter function.
+   // Invoke a placement new expression to use the class
+   // constructor that takes no arguments to create an
+   // object of this class type in the given memory arena.
    if (!IsValid()) {
       return 0;
    }
-   // TODO: Fix this when cling implements function call.
-   return 0;
+   std::ostringstream os;
+   os << "new ((void*)" << reinterpret_cast<unsigned long>(arena) << ") "
+      << Name() << ";";
+   cling::Value val;
+   cling::Interpreter::CompilationResult err =
+      fInterp->evaluate(os.str(), &val);
+   if (err != cling::Interpreter::kSuccess) {
+      return 0;
+   }
+   return llvm::GVTOP(val.value);
 }
 
 long TClingClassInfo::Property() const
