@@ -145,7 +145,13 @@ Int_t TJoinHelper::Join()
       // does not imply anything about the value of this predicate, the
       // predicate should be re-evaluated upon such return.
 
-      if (r == 0 && fJoined) break;
+      if (r == 0 || r == 1) {
+         // If we received the signal or timed out, let's check the value
+         if (fJoined) break;
+      } else {
+         // If any other error occured, there is no point in trying again
+         break;
+      }
 
       gSystem->ProcessEvents();
    }
