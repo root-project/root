@@ -256,7 +256,7 @@ int main(int argc,const char *argv[])
       printf("   -g            enable graphics; default is to run in text mode.\n");
       printf("   -cpu          show CPU times used by each successful test; used for calibration.\n");
       printf("   -clearcache   clear memory cache associated with the files processed when local.\n");
-      printf("   -noprogress   do not show progress whose escaped chars may confuse some wrapper applications.\n");
+      printf("   -noprogress   do not show progress (escaped chars may confuse some wrapper applications)\n");
       printf("   -tut tutdir   specify alternative location for the ROOT tutorials; allows to run multiple\n");
       printf("                 concurrent instances of stressProof, for tests, for example.\n");
       printf("                 Can be also passed via the env STRESSPROOF_TUTORIALDIR.\n");
