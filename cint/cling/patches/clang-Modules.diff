@@ -34,7 +34,7 @@ Index: tools/clang/test/Modules/redecl-templates.mm
 +// RUN: %clang -lstdc++ %t_main.obj %t.obj
 Index: tools/clang/test/Modules/Inputs/module.map
 ===================================================================
---- tools/clang/test/Modules/Inputs/module.map	(revision 161655)
+--- tools/clang/test/Modules/Inputs/module.map	(revision 161724)
 +++ tools/clang/test/Modules/Inputs/module.map	(working copy)
 @@ -38,6 +38,8 @@
  module redeclarations_right { header "redeclarations_right.h" }
@@ -111,7 +111,7 @@ Index: tools/clang/test/Modules/Inputs/redecl_templates_left.h
 +  //}
 Index: tools/clang/include/clang/Serialization/ASTReader.h
 ===================================================================
---- tools/clang/include/clang/Serialization/ASTReader.h	(revision 161655)
+--- tools/clang/include/clang/Serialization/ASTReader.h	(revision 161724)
 +++ tools/clang/include/clang/Serialization/ASTReader.h	(working copy)
 @@ -686,7 +686,15 @@
    /// need to be emitted, such as inline function definitions or
@@ -149,7 +149,7 @@ Index: tools/clang/include/clang/Serialization/ASTReader.h
    /// This routine should only be used for fatal errors that have to
 Index: tools/clang/include/clang/Lex/HeaderSearch.h
 ===================================================================
---- tools/clang/include/clang/Lex/HeaderSearch.h	(revision 161655)
+--- tools/clang/include/clang/Lex/HeaderSearch.h	(revision 161724)
 +++ tools/clang/include/clang/Lex/HeaderSearch.h	(working copy)
 @@ -283,6 +283,11 @@
    
@@ -165,7 +165,7 @@ Index: tools/clang/include/clang/Lex/HeaderSearch.h
    void ClearFileInfo() {
 Index: tools/clang/lib/Serialization/ASTReaderDecl.cpp
 ===================================================================
---- tools/clang/lib/Serialization/ASTReaderDecl.cpp	(revision 161655)
+--- tools/clang/lib/Serialization/ASTReaderDecl.cpp	(revision 161724)
 +++ tools/clang/lib/Serialization/ASTReaderDecl.cpp	(working copy)
 @@ -520,7 +520,9 @@
    FD->IsConstexpr = Record[Idx++];
@@ -221,25 +221,16 @@ Index: tools/clang/lib/Serialization/ASTReaderDecl.cpp
    if (!Reader.getContext().getLangOpts().Modules)
      return;
    
-@@ -1731,7 +1739,16 @@
+@@ -1731,7 +1739,7 @@
      return (FuncX->getLinkage() == FuncY->getLinkage()) &&
        FuncX->getASTContext().hasSameType(FuncX->getType(), FuncY->getType());
    }
 -  
-+
-+  if (const FunctionTemplateDecl* FTDX = dyn_cast<FunctionTemplateDecl>(X)) {
-+    const FunctionTemplateDecl* FTDY = cast<FunctionTemplateDecl>(Y);
-+    if (isSameEntity(FTDX->getTemplatedDecl(), FTDY->getTemplatedDecl())) {
-+      return FTDX->getTemplatedDecl()->getNumParams() 
-+        == FTDY->getTemplatedDecl()->getNumParams();
-+
-+    }
-+  }
 +    
    // Variables with the same type and linkage match.
    if (VarDecl *VarX = dyn_cast<VarDecl>(X)) {
      VarDecl *VarY = cast<VarDecl>(Y);
-@@ -1744,20 +1761,26 @@
+@@ -1744,20 +1752,26 @@
      NamespaceDecl *NamespaceY = cast<NamespaceDecl>(Y);
      return NamespaceX->isInline() == NamespaceY->isInline();
    }
@@ -269,7 +260,7 @@ Index: tools/clang/lib/Serialization/ASTReaderDecl.cpp
    }
  }
  
-@@ -1779,7 +1802,7 @@
+@@ -1779,7 +1793,7 @@
      for (IdentifierResolver::iterator I = IdResolver.begin(Name), 
                                     IEnd = IdResolver.end();
           I != IEnd; ++I) {
@@ -278,7 +269,7 @@ Index: tools/clang/lib/Serialization/ASTReaderDecl.cpp
          return FindExistingResult(Reader, D, *I);
      }
    }
-@@ -1787,7 +1810,9 @@
+@@ -1787,7 +1801,9 @@
    if (DC->isNamespace()) {
      for (DeclContext::lookup_result R = DC->lookup(Name);
           R.first != R.second; ++R.first) {
@@ -289,7 +280,7 @@ Index: tools/clang/lib/Serialization/ASTReaderDecl.cpp
          return FindExistingResult(Reader, D, *R.first);
      }
    }
-@@ -1798,22 +1823,41 @@
+@@ -1798,22 +1814,41 @@
  void ASTDeclReader::attachPreviousDecl(Decl *D, Decl *previous) {
    assert(D && previous);
    if (TagDecl *TD = dyn_cast<TagDecl>(D)) {
@@ -339,7 +330,7 @@ Index: tools/clang/lib/Serialization/ASTReaderDecl.cpp
    }
  }
  
-@@ -1846,9 +1890,11 @@
+@@ -1846,9 +1881,11 @@
                                                     cast<NamespaceDecl>(Latest));
    } else {
      RedeclarableTemplateDecl *TD = cast<RedeclarableTemplateDecl>(D);
@@ -353,7 +344,7 @@ Index: tools/clang/lib/Serialization/ASTReaderDecl.cpp
    }
  }
  
-@@ -2125,9 +2171,16 @@
+@@ -2125,9 +2162,16 @@
    // AST consumer might need to know about, queue it.
    // We don't pass it to the consumer immediately because we may be in recursive
    // loading, and some declarations may still be initializing.
@@ -372,7 +363,7 @@ Index: tools/clang/lib/Serialization/ASTReaderDecl.cpp
    return D;
  }
  
-@@ -2275,7 +2328,7 @@
+@@ -2275,7 +2319,7 @@
    }
    MergedDeclsMap::iterator MergedPos = combineStoredMergedDecls(CanonDecl, ID);
    if (MergedPos != MergedDecls.end())
@@ -381,7 +372,7 @@ Index: tools/clang/lib/Serialization/ASTReaderDecl.cpp
    
    // Build up the list of redeclarations.
    RedeclChainVisitor Visitor(*this, SearchDecls, RedeclsDeserialized, CanonID);
-@@ -2478,3 +2531,60 @@
+@@ -2478,3 +2522,60 @@
      }
    }
  }
@@ -444,7 +435,7 @@ Index: tools/clang/lib/Serialization/ASTReaderDecl.cpp
 +}
 Index: tools/clang/lib/Serialization/ASTReader.cpp
 ===================================================================
---- tools/clang/lib/Serialization/ASTReader.cpp	(revision 161655)
+--- tools/clang/lib/Serialization/ASTReader.cpp	(revision 161724)
 +++ tools/clang/lib/Serialization/ASTReader.cpp	(working copy)
 @@ -4930,6 +4930,9 @@
          if (!ND)
