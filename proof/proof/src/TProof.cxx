@@ -4642,12 +4642,14 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
                      " saving to master", gSystem->DirName(outfile.Data()));
                outfile.Form("master:%s", gSystem->BaseName(outfile.Data()));
             } else {
-               // The target file is local, so we need to retrieve it
-               target = outfile;
-               if (!stfopt.IsNull()) {
-                  outfile.Form("master:%s", gSystem->BaseName(target.Data()));
-               } else {
-                  outfile = "";
+               if (!IsLite()) {
+                  // The target file is local, so we need to retrieve it
+                  target = outfile;
+                  if (!stfopt.IsNull()) {
+                     outfile.Form("master:%s", gSystem->BaseName(target.Data()));
+                  } else {
+                     outfile = "";
+                  }
                }
             }
          }
@@ -4656,26 +4658,29 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
             if (outfile.IsNull() || !gSystem->IsAbsoluteFileName(outfile)) {
                // Get the master data dir
                TString ddir, emsg;
-               if (Exec("gProofServ->GetDataDir()", "0", kTRUE) == 0) {
-                  TObjString *os = fMacroLog.GetLineWith("const char");
-                  if (os) {
-                     Ssiz_t fst =  os->GetString().First('\"');
-                     Ssiz_t lst =  os->GetString().Last('\"');
-                     ddir = os->GetString()(fst+1, lst-fst-1);
+               if (!IsLite()) {
+                  if (Exec("gProofServ->GetDataDir()", "0", kTRUE) == 0) {
+                     TObjString *os = fMacroLog.GetLineWith("const char");
+                     if (os) {
+                        Ssiz_t fst =  os->GetString().First('\"');
+                        Ssiz_t lst =  os->GetString().Last('\"');
+                        ddir = os->GetString()(fst+1, lst-fst-1);
+                     } else {
+                        emsg = "could not find 'const char *' string in macro log! cannot continue";
+                     }
                   } else {
-                     emsg = "could not find 'const char *' string in macro log! cannot continue";
+                     emsg = "could not retrieve master data directory info! cannot continue";
                   }
-               } else {
-                  emsg = "could not retrieve master data directory info! cannot continue";
+                  if (!emsg.IsNull()) {
+                     Error("HandleOutputOptions", "%s", emsg.Data());
+                     return -1;
+                  }
                }
-               if (!emsg.IsNull()) {
-                  Error("HandleOutputOptions", "%s", emsg.Data());
-                  return -1;
-               }
+               if (!ddir.IsNull()) ddir += "/";
                if (outfile.IsNull()) {
-                  outfile.Form("%s/<file>", ddir.Data());
+                  outfile.Form("%s<file>", ddir.Data());
                } else {
-                  outfile.Insert(0, TString::Format("%s/", ddir.Data()));
+                  outfile.Insert(0, TString::Format("%s", ddir.Data()));
                }
             }
          }
@@ -4712,24 +4717,41 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
       if (GetOutputList()) {
          if (target == "ds|V") {
             // Find the dataset
+            dsname = "";
             TIter nxo(GetOutputList());
             TObject *o = 0;
             while ((o = nxo())) {
                if (o->InheritsFrom(TFileCollection::Class())) {
                   VerifyDataSet(o->GetName());
+                  dsname = o->GetName();
                   break;
                }
             }
+            if (!dsname.IsNull()) {
+               TFileCollection *fc = GetDataSet(dsname);
+               if (fc) {
+                  fc->Print();
+               } else {
+                  Warning("HandleOutputOptions", "could not retrieve TFileCollection for dataset '%s'", dsname.Data());
+               }
+            } else {
+               Warning("HandleOutputOptions", "dataset not found!");
+            }
          } else {
+            Bool_t targetcopied = kFALSE;
             TProofOutputFile *pf = 0;
             if (!target.IsNull())
                pf = (TProofOutputFile *) GetOutputList()->FindObject(gSystem->BaseName(target.Data()));
             if (pf) {
                // Copy the file
-               if (TFile::Cp(pf->GetOutputFileName(), target)) {
-                  Printf(" Output successfully copied to %s", target.Data());
-               } else {
-                  Warning("HandleOutputOptions", "problems copying output to %s", target.Data());
+               if (strcmp(TUrl(pf->GetOutputFileName(), kTRUE).GetUrl(),
+                          TUrl(target, kTRUE).GetUrl())) {
+                  if (TFile::Cp(pf->GetOutputFileName(), target)) {
+                     Printf(" Output successfully copied to %s", target.Data());
+                     targetcopied = kTRUE;
+                  } else {
+                     Warning("HandleOutputOptions", "problems copying output to %s", target.Data());
+                  }
                }
             }
             TFile *fout = 0;
@@ -4740,20 +4762,27 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
                TProofOutputFile *pof = dynamic_cast<TProofOutputFile *>(o);
                if (pof) {
                   if (pof->TestBit(TProofOutputFile::kSwapFile) && !target.IsNull()) {
+                     if (pof == pf && targetcopied) continue;
                      // Copy the file
-                     if (TFile::Cp(pof->GetOutputFileName(), target)) {
-                        Printf(" Output successfully copied to %s", target.Data());
-                        swapcopied = kTRUE;
-                     } else {
-                        Warning("HandleOutputOptions", "problems copying output to %s", target.Data());
+                     if (strcmp(TUrl(pf->GetOutputFileName(), kTRUE).GetUrl(),
+                                TUrl(target, kTRUE).GetUrl())) {
+                        if (TFile::Cp(pof->GetOutputFileName(), target)) {
+                           Printf(" Output successfully copied to %s", target.Data());
+                           swapcopied = kTRUE;
+                        } else {
+                           Warning("HandleOutputOptions", "problems copying output to %s", target.Data());
+                        }
                      }
                   } else if (pof->IsRetrieve()) {
                      // Retrieve this file to the local path indicated in the title
-                     if (TFile::Cp(pof->GetOutputFileName(), pof->GetTitle())) {
-                        Printf(" Output successfully copied to %s", pof->GetTitle());
-                     } else {
-                        Warning("HandleOutputOptions",
-                              "problems copying %s to %s", pof->GetOutputFileName(), pof->GetTitle());
+                     if (strcmp(TUrl(pf->GetOutputFileName(), kTRUE).GetUrl(),
+                                TUrl(pof->GetTitle(), kTRUE).GetUrl())) {
+                        if (TFile::Cp(pof->GetOutputFileName(), pof->GetTitle())) {
+                           Printf(" Output successfully copied to %s", pof->GetTitle());
+                        } else {
+                           Warning("HandleOutputOptions",
+                                 "problems copying %s to %s", pof->GetOutputFileName(), pof->GetTitle());
+                        }
                      }
                   }
                }
@@ -4934,7 +4963,7 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
 
    // Disable feedback, if required
    if (!optfb.IsNull()) SetFeedback(opt, optfb, 1);
-   // Disable output file settings (opt is ignored in here)
+   // Finalise output file settings (opt is ignored in here)
    if (HandleOutputOptions(opt, outfile, 1) != 0) return -1;
 
    if (fSync) {

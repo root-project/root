@@ -283,7 +283,8 @@ Int_t ProofAux::GenerateTree(const char *fnt, Long64_t ent, TString &fn)
    TString fds(fn);
    if (!strcmp(uu.GetProtocol(), "file")) {
       if (gSystem->Getenv("LOCALDATASERVER")) {
-         fds.Insert(0, TString::Format("%s/", gSystem->Getenv("LOCALDATASERVER")));
+         if (strcmp(TUrl(gSystem->Getenv("LOCALDATASERVER"), kTRUE).GetProtocol(), "file"))
+            fds.Insert(0, TString::Format("%s/", gSystem->Getenv("LOCALDATASERVER")));
       } else {
          fds.Insert(0, TString::Format("root://%s/", gSystem->HostName()));
       }
@@ -410,7 +411,8 @@ Int_t ProofAux::GenerateFriend(const char *fnt, const char *fnf)
    TUrl uu(fout);
    if (!strcmp(uu.GetProtocol(), "file")) {
       if (gSystem->Getenv("LOCALDATASERVER")) {
-         fout.Insert(0, TString::Format("%s/", gSystem->Getenv("LOCALDATASERVER")));
+         if (strcmp(TUrl(gSystem->Getenv("LOCALDATASERVER"), kTRUE).GetProtocol(), "file"))
+            fout.Insert(0, TString::Format("%s/", gSystem->Getenv("LOCALDATASERVER")));
       } else {
          fout.Insert(0, TString::Format("root://%s/", gSystem->HostName()));
       }

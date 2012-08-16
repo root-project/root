@@ -72,9 +72,12 @@ TEventIter::TEventIter()
    fElemNum = 0;
    fElemCur = -1;
    ResetBit(TEventIter::kData);
+   
    if ((fPackets = new TList)) {
-      fPackets->SetName("ProcessedPackets");
-      Info("TEventIter", "fPackets list created");
+      TString n("ProcessedPackets_");
+      if (gProofServ) n += gProofServ->GetOrdinal();
+      fPackets->SetName(n);
+      Info("TEventIter", "fPackets list '%s' created", n.Data());
    } else {
       Warning("TEventIter", "fPackets list could not be created");
    }
@@ -102,9 +105,12 @@ TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num
    fElemNum = 0;
    fElemCur = -1;
    ResetBit(TEventIter::kData);
+  
    if ((fPackets = new TList)) {
-      fPackets->SetName("ProcessedPackets");
-      Info("TEventIter", "fPackets list created");
+      TString n("ProcessedPackets_");
+      if (gProofServ) n += gProofServ->GetOrdinal();
+      fPackets->SetName(n);
+      Info("TEventIter", "fPackets list '%s' created", n.Data());
    } else {
       Warning("TEventIter", "fPackets list could not be created");
    }

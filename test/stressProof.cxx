@@ -1137,7 +1137,7 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
       if (!all && !dryrun) {
          // Notify the enabled tests
          printf("*                                                               **\r");
-         printf("*  Running only tests %s (and related)\n", ten.Data());
+         printf("*  Running only test(s) %s (and related)\n", ten.Data());
          printf("******************************************************************\n");
       }      
    }

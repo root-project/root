@@ -771,6 +771,7 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
 
    // Get list of processed packets from the iterator
    PDB(kOutput, 2) Info("SavePartialResults", "fEvIter: %p", fEvIter);
+   
    TList *packets = (fEvIter) ? fEvIter->GetPackets() : 0; 
    PDB(kOutput, 2) Info("SavePartialResults", "list of packets: %p, sz: %d",
                                               packets, (packets ? packets->GetSize(): -1));
@@ -797,7 +798,12 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
    fOutputFile->cd();
 
    // Write first the packets list, if required
-   if (packets) packets->Write(0, TObject::kSingleKey | TObject::kOverwrite);
+   if (packets) {
+      TDirectory *packetsDir = fOutputFile->mkdir("packets");
+      if (packetsDir) packetsDir->cd();
+      packets->Write(0, TObject::kSingleKey | TObject::kOverwrite);
+      fOutputFile->cd();
+   }
 
    Bool_t notempty = kFALSE;
    // Write out the output list
@@ -863,6 +869,7 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
             // Create the TProofOutputFile for dataset creation
             po = new TProofOutputFile(gSystem->BaseName(fOutputFilePath), "DR", oname.Data());
          } else {
+            Bool_t hasddir = kFALSE;
             // Create the TProofOutputFile for automatic merging
             po = new TProofOutputFile(gSystem->BaseName(fOutputFilePath), "M");
             if (oname.BeginsWith("of:")) oname.Replace(0, 3, "");
@@ -881,9 +888,13 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
                   // We did not get any indication; the final file will be in the datadir on
                   // the top master and it will be resolved there
                   oname.Form("<datadir>/%s", gSystem->BaseName(fOutputFilePath));
+                  hasddir = kTRUE;
                }
             }
             po->SetOutputFileName(oname.Data());
+            if (hasddir)
+               // Reset the bit, so that <datadir> has a chance to be resolved in AddOutputObject
+               po->ResetBit(TProofOutputFile::kOutputFileNameSet);
             po->SetName(gSystem->BaseName(oname.Data()));
          }
          po->AdoptFile(fOutputFile);
@@ -2388,13 +2399,16 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                   TString fileLoc = TString::Format("%s/%s", pf->GetDir(), pf->GetFileName());
                   filemerger->AddFile(fileLoc);
                }
+               // Datadir
+               TString ddir;
+               if (gProofServ) ddir.Form("%s/", gProofServ->GetDataDir());
                // Set the output file
                TString outfile(pf->GetOutputFileName());
-               if (gProofServ) {
-                  outfile.ReplaceAll("<datadir>", gProofServ->GetDataDir());
+               if (outfile.Contains("<datadir>/")) {
+                  outfile.ReplaceAll("<datadir>/", ddir.Data());
                   pf->SetOutputFileName(outfile);
                }
-               if (gProofServ && gProofServ->IsTopMaster()) {
+               if ((gProofServ && gProofServ->IsTopMaster()) || fProof->IsLite()) {
                   TFile::EFileType ftyp = TFile::kLocal;
                   TString srv;
                   TProofServ::GetLocalServer(srv);
@@ -2406,7 +2420,7 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                      if (outfile.BeginsWith("client:")) outfile.Replace(0, 7, "");
                      TString bn = gSystem->BaseName(TUrl(outfile.Data(), kTRUE).GetFile());
                      // The output file path on the master
-                     outfile.Form("%s/%s", gProofServ->GetDataDir(), bn.Data());
+                     outfile.Form("%s%s", ddir.Data(), bn.Data());
                      // Save the client path in the title if not defined yet
                      if (strlen(pf->GetTitle()) <= 0) pf->SetTitle(bn);
                      // The file is local
@@ -2919,43 +2933,56 @@ void TProofPlayerRemote::MergeOutput()
    while ((obj = nxo())) {
       TProofOutputFile *pf = dynamic_cast<TProofOutputFile *>(obj);
       if (pf) {
-         PDB(kOutput,2) Info("MergeOutput","found TProofOutputFile '%s'", obj->GetName());
-         TString dir(pf->GetOutputFileName());
-         PDB(kOutput,2) Info("MergeOutput","outputfilename: '%s'", dir.Data());
-         // The dir
-         if (dir.Last('/') != kNPOS) dir.Remove(dir.Last('/')+1);
-         PDB(kOutput,2) Info("MergeOutput","dir: '%s'", dir.Data());
-         pf->SetDir(dir);
-         // The raw dir; for xrootd based system we include the 'localroot', if any 
-         TUrl u(dir);
-         dir = u.GetFile();
-         TString pfx  = gEnv->GetValue("Path.Localroot","");
-         if (!pfx.IsNull() &&
-            (!strcmp(u.GetProtocol(), "root") || !strcmp(u.GetProtocol(), "xrd")))
-            dir.Insert(0, pfx);
-         PDB(kOutput,2) Info("MergeOutput","rawdir: '%s'", dir.Data());
-         pf->SetDir(dir, kTRUE);
-         // The worker ordinal
-         pf->SetWorkerOrdinal(gProofServ ? gProofServ->GetOrdinal() : "0");
-         // The saved output file name, if any
-         key.Form("PROOF_OutputFileName_%s", pf->GetFileName());
-         if ((nm = (TNamed *) fOutput->FindObject(key.Data()))) {
-            pf->SetOutputFileName(nm->GetTitle());
-            rmlist.Add(nm);
-         } else if (TestBit(TVirtualProofPlayer::kIsSubmerger)) {
-            pf->SetOutputFileName(0);
-            pf->ResetBit(TProofOutputFile::kOutputFileNameSet);
+         if (gProofServ) {
+            PDB(kOutput,2) Info("MergeOutput","found TProofOutputFile '%s'", obj->GetName());
+            TString dir(pf->GetOutputFileName());
+            PDB(kOutput,2) Info("MergeOutput","outputfilename: '%s'", dir.Data());
+            // The dir
+            if (dir.Last('/') != kNPOS) dir.Remove(dir.Last('/')+1);
+            PDB(kOutput,2) Info("MergeOutput","dir: '%s'", dir.Data());
+            pf->SetDir(dir);
+            // The raw dir; for xrootd based system we include the 'localroot', if any 
+            TUrl u(dir);
+            dir = u.GetFile();
+            TString pfx  = gEnv->GetValue("Path.Localroot","");
+            if (!pfx.IsNull() &&
+               (!strcmp(u.GetProtocol(), "root") || !strcmp(u.GetProtocol(), "xrd")))
+               dir.Insert(0, pfx);
+            PDB(kOutput,2) Info("MergeOutput","rawdir: '%s'", dir.Data());
+            pf->SetDir(dir, kTRUE);
+            // The worker ordinal
+            pf->SetWorkerOrdinal(gProofServ ? gProofServ->GetOrdinal() : "0");
+            // The saved output file name, if any
+            key.Form("PROOF_OutputFileName_%s", pf->GetFileName());
+            if ((nm = (TNamed *) fOutput->FindObject(key.Data()))) {
+               pf->SetOutputFileName(nm->GetTitle());
+               rmlist.Add(nm);
+            } else if (TestBit(TVirtualProofPlayer::kIsSubmerger)) {
+               pf->SetOutputFileName(0);
+               pf->ResetBit(TProofOutputFile::kOutputFileNameSet);
+            }
+            // The filename (order is important to exclude '.merger' from the key)
+            dir = pf->GetFileName();
+            if (TestBit(TVirtualProofPlayer::kIsSubmerger)) {
+               dir += ".merger";
+               pf->SetMerged(kFALSE);
+            } else {
+               if (dir.EndsWith(".merger")) dir.Remove(dir.Last('.'));
+            }
+            pf->SetFileName(dir);
+         } else if (fProof->IsLite()) {
+            // The ordinal
+            pf->SetWorkerOrdinal("0");
+            // The dir
+            pf->SetDir(gSystem->DirName(pf->GetOutputFileName()));
+            // The filename and raw dir
+            TUrl u(pf->GetOutputFileName(), kTRUE);
+            pf->SetFileName(gSystem->BaseName(u.GetFile()));
+            pf->SetDir(gSystem->DirName(u.GetFile()), kTRUE);
+            // Notify the output path
+            Printf("\nOutput file: %s", pf->GetOutputFileName());
          }
-         // The filename (order is important to exclude '.merger' from the key)
-         dir = pf->GetFileName();
-         if (TestBit(TVirtualProofPlayer::kIsSubmerger)) {
-            dir += ".merger";
-            pf->SetMerged(kFALSE);
-         } else {
-            if (dir.EndsWith(".merger")) dir.Remove(dir.Last('.'));
-         }
-         pf->SetFileName(dir);
-       } else {
+      } else {
          PDB(kOutput,2) Info("MergeOutput","output object '%s' is not a TProofOutputFile", obj->GetName());
       }
    }
@@ -3142,39 +3169,49 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
    TProofOutputFile *pf = dynamic_cast<TProofOutputFile*>(obj);
    if (pf) {
       fMergeFiles = kTRUE;
-      if (!IsClient()) {
+      if (!IsClient() || fProof->IsLite()) {
          if (pf->IsMerge()) {
             Bool_t hasfout = (pf->GetOutputFileName() &&
                               strlen(pf->GetOutputFileName()) > 0 &&
                               pf->TestBit(TProofOutputFile::kOutputFileNameSet)) ? kTRUE : kFALSE;
             Bool_t setfout = (!hasfout || TestBit(TVirtualProofPlayer::kIsSubmerger)) ? kTRUE : kFALSE;
             if (setfout) {
-               // If submerger, save first the existing filename, if any
-               if (TestBit(TVirtualProofPlayer::kIsSubmerger) && hasfout) {
-                  TString key = TString::Format("PROOF_OutputFileName_%s", pf->GetFileName());
-                  if (!fOutput->FindObject(key.Data()))
-                     fOutput->Add(new TNamed(key.Data(), pf->GetOutputFileName()));
-               }
-               TString of;
-               TProofServ::GetLocalServer(of);
-               if (of.IsNull()) {
-                  // Assume an xroot server running on the machine
-                  of.Form("root://%s/", gSystem->HostName());
-                  if (gSystem->Getenv("XRDPORT")) {
-                     TString sp(gSystem->Getenv("XRDPORT"));
-                     if (sp.IsDigit())
-                        of.Form("root://%s:%s/", gSystem->HostName(), sp.Data());
+
+               TString ddir;
+               if (gProofServ) ddir.Form("%s/", gProofServ->GetDataDir());
+               // Set the output file
+               TString outfile(pf->GetOutputFileName());
+               outfile.ReplaceAll("<datadir>/", ddir.Data());
+               pf->SetOutputFileName(outfile);
+
+               if (gProofServ) {
+                  // If submerger, save first the existing filename, if any
+                  if (TestBit(TVirtualProofPlayer::kIsSubmerger) && hasfout) {
+                     TString key = TString::Format("PROOF_OutputFileName_%s", pf->GetFileName());
+                     if (!fOutput->FindObject(key.Data()))
+                        fOutput->Add(new TNamed(key.Data(), pf->GetOutputFileName()));
                   }
+                  TString of;
+                  TProofServ::GetLocalServer(of);
+                  if (of.IsNull()) {
+                     // Assume an xroot server running on the machine
+                     of.Form("root://%s/", gSystem->HostName());
+                     if (gSystem->Getenv("XRDPORT")) {
+                        TString sp(gSystem->Getenv("XRDPORT"));
+                        if (sp.IsDigit())
+                           of.Form("root://%s:%s/", gSystem->HostName(), sp.Data());
+                     }
+                  }
+                  TString sessionPath(gProofServ->GetSessionDir());
+                  TProofServ::FilterLocalroot(sessionPath, of);
+                  of += TString::Format("%s/%s", sessionPath.Data(), pf->GetFileName());
+                  if (TestBit(TVirtualProofPlayer::kIsSubmerger)) {
+                     if (!of.EndsWith(".merger")) of += ".merger";
+                  } else {
+                     if (of.EndsWith(".merger")) of.Remove(of.Last('.'));
+                  }
+                  pf->SetOutputFileName(of);
                }
-               TString sessionPath(gProofServ->GetSessionDir());
-               TProofServ::FilterLocalroot(sessionPath, of);
-               of += TString::Format("%s/%s", sessionPath.Data(), pf->GetFileName());
-               if (TestBit(TVirtualProofPlayer::kIsSubmerger)) {
-                  if (!of.EndsWith(".merger")) of += ".merger";
-               } else {
-                  if (of.EndsWith(".merger")) of.Remove(of.Last('.'));
-               }
-               pf->SetOutputFileName(of);
             }
             // Notify
             PDB(kOutput, 1) pf->Print();

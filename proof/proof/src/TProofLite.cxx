@@ -1042,9 +1042,11 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    // For the time being cannot accept other queries if not idle, even if in async
    // mode; needs to set up an event handler to manage that
    
-   TString opt(option), optfb;
+   TString opt(option), optfb, outfile;
    // Enable feedback, if required
    if (opt.Contains("fb=") || opt.Contains("feedback=")) SetFeedback(opt, optfb, 0);
+   // Define output file, either from 'opt' or the default one
+   if (HandleOutputOptions(opt, outfile, 0) != 0) return -1;
 
    // Resolve query mode
    fSync = (GetQueryMode(opt) == kSync);
@@ -1296,6 +1298,8 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
          SetPerfTree(0);
       }
    }
+   // Finalise output file settings (opt is ignored in here)
+   if (HandleOutputOptions(opt, outfile, 1) != 0) return -1;
 
    // Done
    return rv;
