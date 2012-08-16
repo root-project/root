@@ -1074,9 +1074,9 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
 
    } else if ( ti.Property() & G__BIT_ISENUM ) {
    // special case (CINT): represent enums as unsigned integers
-      if ( cpd == "&" )
+      if ( cpd == "&" && !isConst ) {
          h = gConvFactories.find( "long&" );
-      else
+      } else
          h = gConvFactories.find( "UInt_t" );
    }
 
