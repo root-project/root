@@ -1740,15 +1740,6 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
       FuncX->getASTContext().hasSameType(FuncX->getType(), FuncY->getType());
   }
 
-  if (const FunctionTemplateDecl* FTDX = dyn_cast<FunctionTemplateDecl>(X)) {
-    const FunctionTemplateDecl* FTDY = cast<FunctionTemplateDecl>(Y);
-    if (isSameEntity(FTDX->getTemplatedDecl(), FTDY->getTemplatedDecl())) {
-      return FTDX->getTemplatedDecl()->getNumParams() 
-        == FTDY->getTemplatedDecl()->getNumParams();
-
-    }
-  }
-    
   // Variables with the same type and linkage match.
   if (VarDecl *VarX = dyn_cast<VarDecl>(X)) {
     VarDecl *VarY = cast<VarDecl>(Y);
