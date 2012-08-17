@@ -126,6 +126,12 @@ TString TProofServ::fgSysLogEntity("undef:default");
 // File where to log: default stderr
 FILE *TProofServ::fgErrorHandlerFile = 0;
 
+// Integrate with crash reporter.
+#ifdef __APPLE__
+extern "C" const char *__crashreporter_info__;
+const char *__crashreporter_info__ = 0;
+#endif
+
 // To control allowed actions while processing
 Int_t TProofServ::fgRecursive = 0;
 
@@ -6073,6 +6079,12 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
    
    if (tosyslog)
       gSystem->Syslog(loglevel, buf);
+
+#ifdef __APPLE__
+   if (__crashreporter_info__)
+      delete [] __crashreporter_info__;
+   __crashreporter_info__ = StrDup(buf);
+#endif
    
    if (abort) {
 
