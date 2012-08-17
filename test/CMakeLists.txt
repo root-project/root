@@ -179,8 +179,9 @@ ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
 
 #--stressProof-------------------------------------------------------------------------------
 if(NOT WIN32)
+  add_custom_target(TestData ALL COMMAND ${CMAKE_COMMAND} -DDST=${CMAKE_SOURCE_DIR}/files -P ${CMAKE_CURRENT_SOURCE_DIR}/rootDownloadData.cmake)  
   ROOT_EXECUTABLE(stressProof stressProof.cxx LIBRARIES Proof ProofPlayer Hist)
-  ROOT_ADD_TEST(test-stressproof COMMAND stressProof lite:// FAILREGEX "FAILED")  
+  ROOT_ADD_TEST(test-stressproof COMMAND stressProof lite:// -h1 ${CMAKE_SOURCE_DIR}/files/h1 -event ${CMAKE_SOURCE_DIR}/files/event FAILREGEX "FAILED")  
 endif()
 
 #--testbits----------------------------------------------------------------------------------
