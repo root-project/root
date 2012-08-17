@@ -55,7 +55,7 @@ void HypoTestPlot::ApplyResult(HypoTestResult& result, Option_t* opt) {
    }
 
    if(result.HasTestStatisticData()) {
-      Float_t theMin(0.), theMax(0.), theYMax(0.);
+      Double_t theMin(0.), theMax(0.), theYMax(0.);
       GetAbsoluteInterval(theMin, theMax, theYMax);
 
       AddLine(result.GetTestStatisticData(), 0, result.GetTestStatisticData(), theYMax*0.66, "test statistic data");
