@@ -1,0 +1,209 @@
+Index: tools/clang/include/clang/Frontend/VerifyDiagnosticConsumer.h
+===================================================================
+--- tools/clang/include/clang/Frontend/VerifyDiagnosticConsumer.h	(revision 161724)
++++ tools/clang/include/clang/Frontend/VerifyDiagnosticConsumer.h	(working copy)
+@@ -12,9 +12,9 @@
+ 
+ #include "clang/Basic/Diagnostic.h"
+ #include "clang/Lex/Preprocessor.h"
+-#include "llvm/ADT/DenseSet.h"
++#include "llvm/ADT/DenseMap.h"
+ #include "llvm/ADT/OwningPtr.h"
+-#include "llvm/ADT/SmallPtrSet.h"
++#include "llvm/ADT/PointerIntPair.h"
+ #include "llvm/ADT/STLExtras.h"
+ #include <climits>
+ 
+@@ -166,11 +166,6 @@
+     }
+   };
+ 
+-#ifndef NDEBUG
+-  typedef llvm::DenseSet<FileID> FilesWithDiagnosticsSet;
+-  typedef llvm::SmallPtrSet<const FileEntry *, 4> FilesParsedForDirectivesSet;
+-#endif
+-
+ private:
+   DiagnosticsEngine &Diags;
+   DiagnosticConsumer *PrimaryClient;
+@@ -178,13 +173,26 @@
+   OwningPtr<TextDiagnosticBuffer> Buffer;
+   const Preprocessor *CurrentPreprocessor;
+   unsigned ActiveSourceFiles;
+-#ifndef NDEBUG
+-  FilesWithDiagnosticsSet FilesWithDiagnostics;
+-  FilesParsedForDirectivesSet FilesParsedForDirectives;
+-#endif
+   ExpectedData ED;
+   void CheckDiagnostics();
+ 
++#ifndef NDEBUG
++  class FileStatus : private llvm::PointerIntPair<const FileEntry*, 1, bool> {
++    typedef llvm::PointerIntPair<const FileEntry*, 1, bool> base;
++
++    public:
++    FileStatus(const FileEntry *File, bool Parsed)
++      : base(File, Parsed) { }
++
++    const FileEntry *getFile() const { return getPointer(); }
++    void setParsedForDirectives(bool Value = true) { setInt(Value); }
++    bool wasParsedForDirectives() const { return getInt(); }
++  };
++
++  typedef llvm::SmallDenseMap<FileID, FileStatus, 4> FilesProcessedMap;
++  FilesProcessedMap FilesProcessed;
++#endif
++
+ public:
+   /// Create a new verifying diagnostic client, which will issue errors to
+   /// the currently-attached diagnostic client when a diagnostic does not match 
+@@ -197,12 +205,9 @@
+ 
+   virtual void EndSourceFile();
+ 
+-  /// \brief Manually register a file as parsed.
+-  inline void appendParsedFile(const FileEntry *File) {
+-#ifndef NDEBUG
+-    FilesParsedForDirectives.insert(File);
+-#endif
+-  }
++  /// \brief Update list of processed files, optionally marking the file as
++  /// parsed for directives.
++  void UpdateProcessedFile(SourceManager &SM, FileID FID, bool MarkParsed);
+ 
+   virtual bool HandleComment(Preprocessor &PP, SourceRange Comment);
+ 
+Index: tools/clang/lib/Frontend/VerifyDiagnosticConsumer.cpp
+===================================================================
+--- tools/clang/lib/Frontend/VerifyDiagnosticConsumer.cpp	(revision 161724)
++++ tools/clang/lib/Frontend/VerifyDiagnosticConsumer.cpp	(working copy)
+@@ -48,26 +48,48 @@
+ #ifndef NDEBUG
+ namespace {
+ class VerifyFileTracker : public PPCallbacks {
+-  typedef VerifyDiagnosticConsumer::FilesParsedForDirectivesSet ListType;
+-  ListType &FilesList;
++  VerifyDiagnosticConsumer &Verify;
+   SourceManager &SM;
+ 
+ public:
+-  VerifyFileTracker(ListType &FilesList, SourceManager &SM)
+-    : FilesList(FilesList), SM(SM) { }
++  VerifyFileTracker(VerifyDiagnosticConsumer &Verify, SourceManager &SM)
++    : Verify(Verify), SM(SM) { }
+ 
+   /// \brief Hook into the preprocessor and update the list of parsed
+   /// files when the preprocessor indicates a new file is entered.
+   virtual void FileChanged(SourceLocation Loc, FileChangeReason Reason,
+                            SrcMgr::CharacteristicKind FileType,
+                            FileID PrevFID) {
+-    if (const FileEntry *E = SM.getFileEntryForID(SM.getFileID(Loc)))
+-      FilesList.insert(E);
++    Verify.UpdateProcessedFile(SM, SM.getFileID(Loc), /*MarkParsed=*/true);
+   }
+ };
+ } // End anonymous namespace.
+ #endif
+ 
++void VerifyDiagnosticConsumer::UpdateProcessedFile(SourceManager &SM,
++                                                   FileID FID,
++                                                   bool MarkParsed) {
++#ifndef NDEBUG
++  if (FID.isInvalid())
++    return;
++
++  assert((!CurrentPreprocessor || &CurrentPreprocessor->getSourceManager() == &SM)
++         && "SourceManager changed!");
++
++  const FileEntry* FE = SM.getFileEntryForID(FID);
++  std::pair<FilesProcessedMap::iterator, bool> I =
++    FilesProcessed.insert(std::make_pair(FID, FileStatus(FE, MarkParsed)));
++
++  // If already in map, check for matching FileEntry and mark as parsed,
++  // if required.
++  if (!I.second) {
++    assert(I.first->second.getFile() == FE && "Mismatched FileEntry!");
++    if (MarkParsed)
++      I.first->second.setParsedForDirectives();
++  }
++#endif
++}
++
+ // DiagnosticConsumer interface.
+ 
+ void VerifyDiagnosticConsumer::BeginSourceFile(const LangOptions &LangOpts,
+@@ -78,7 +100,7 @@
+       CurrentPreprocessor = PP;
+       const_cast<Preprocessor*>(PP)->addCommentHandler(this);
+ #ifndef NDEBUG
+-      VerifyFileTracker *V = new VerifyFileTracker(FilesParsedForDirectives,
++      VerifyFileTracker *V = new VerifyFileTracker(*this,
+                                                    PP->getSourceManager());
+       const_cast<Preprocessor*>(PP)->addPPCallbacks(V);
+ #endif
+@@ -107,10 +129,10 @@
+ void VerifyDiagnosticConsumer::HandleDiagnostic(
+       DiagnosticsEngine::Level DiagLevel, const Diagnostic &Info) {
+ #ifndef NDEBUG
+-  if (Info.hasSourceManager()) {
+-    FileID FID = Info.getSourceManager().getFileID(Info.getLocation());
+-    if (!FID.isInvalid())
+-      FilesWithDiagnostics.insert(FID);
++  SourceLocation Loc = Info.getLocation();
++  if (!Loc.isMacroID() && Info.hasSourceManager()) {
++    SourceManager &SM = Info.getSourceManager();
++    UpdateProcessedFile(SM, SM.getFileID(Loc), /*MarkParsed=*/false);
+   }
+ #endif
+   // Send the diagnostic to the buffer, we will check it once we reach the end
+@@ -618,19 +640,41 @@
+     // within these files.  If a fatal error occurs, this suggests that
+     // this file is being parsed separately from the main file.
+     HeaderSearch &HS = CurrentPreprocessor->getHeaderSearchInfo();
+-    for (FilesWithDiagnosticsSet::iterator I = FilesWithDiagnostics.begin(),
+-                                         End = FilesWithDiagnostics.end();
+-            I != End; ++I) {
+-      const FileEntry *E = SM.getFileEntryForID(*I);
+-      // Don't check files already parsed or those handled as modules.
+-      if (E && (FilesParsedForDirectives.count(E)
+-                  || HS.findModuleForHeader(E)))
++    for (FilesProcessedMap::iterator I = FilesProcessed.begin(),
++                                   End = FilesProcessed.end();
++           I != End; ++I) {
++      // Skip FileIDs explicitly marked as parsed
++      if (I->second.wasParsedForDirectives())
+         continue;
+ 
+-      if (findDirectives(*CurrentPreprocessor, *I))
++      FileID FID = I->first;
++      const FileEntry *FE = I->second.getFile();
++
++      // Check whether the file has been parsed under another FileID.
++      // This can happen, for example, in pre-compiled headers.
++      if (FE && SM.isLoadedFileID(FID)) {
++        bool FoundAlias = false;
++        for (FilesProcessedMap::iterator J = FilesProcessed.begin();
++               J != End; ++J) {
++          const FileStatus &S = J->second;
++          if (S.wasParsedForDirectives() && S.getFile() == FE) {
++            FoundAlias = true;
++            break;
++          }
++        }
++        if (FoundAlias)
++          continue;
++
++        // Or it could be a module header file.
++        if (HS.findModuleForHeader(FE))
++          continue;
++      }
++
++      // Parse file now and report fatal error if directives found.
++      if (findDirectives(*CurrentPreprocessor, FID))
+         llvm::report_fatal_error(Twine("-verify directives found after rather"
+                                        " than during normal parsing of ",
+-                                 StringRef(E ? E->getName() : "(unknown)")));
++                                 StringRef(FE ? FE->getName() : "(unknown)")));
+     }
+ #endif
+ 
