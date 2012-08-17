@@ -129,7 +129,7 @@ namespace RooStats {
 
     void addObject(TObject *obj, Option_t *drawOptions=0); // for TH1Fs only
     void addOtherObject(TObject *obj, Option_t *drawOptions=0);
-    void GetAbsoluteInterval(Float_t &theMin, Float_t &theMax, Float_t &theYMax) const;
+    void GetAbsoluteInterval(Double_t &theMin, Double_t &theMax, Double_t &theYMax) const;
 
     ClassDef(SamplingDistPlot,1)  // Class containing the results of the HybridCalculator
   };
