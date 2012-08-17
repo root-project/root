@@ -3622,8 +3622,17 @@ int XrdProofdProofServMgr::CreateProofServEnvFile(XrdProofdProtocol *p, void *in
    XrdOucString locdatasrv;
    if (strlen(fMgr->RootdExe()) <= 0) {
       XPDFORM(locdatasrv, "root://%s", fMgr->Host());
-   } else { 
-      XPDFORM(locdatasrv, "rootd://%s:%d", fMgr->Host(), fMgr->Port());
+   } else {
+      XrdOucString uh(fMgr->Host());
+      if (fMgr->MultiUser()) {
+         XPDFORM(uh, "%s@%s", fMgr->EffectiveUser(), fMgr->Host());
+      } else {
+         XPDFORM(uh, "<effuser>@%s", fMgr->Host());
+      } 
+      XPDFORM(locdatasrv, "rootd://%s:%d", uh.c_str(), fMgr->Port());
+   }
+   if (fMgr->ResolveKeywords(locdatasrv, p->Client()) <= 0) {
+      TRACE(XERR, "WARNING: problems resolving some placeholders for LOCALDATASERVER: "<< locdatasrv);
    }
    len = strlen("LOCALDATASERVER=") + locdatasrv.length() + 2;
    ev = new char[len];

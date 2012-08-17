@@ -71,7 +71,7 @@ Int_t ProcFileElements::ProcFileElement::Overlapping(ProcFileElement *e)
          return 1;
       }
    } else if (fFirst == e->fFirst) {
-      // Overlapping or illy adjacent
+      // Overlapping or adjacent
       if (fFirst == fLast || e->fFirst == e->fLast) return 0;
       return 1;
    } else {
@@ -144,11 +144,11 @@ Int_t ProcFileElements::Add(Long64_t fst, Long64_t lst)
       return -1;
    }
    
-   // Create (tempoarry element)
+   // Create (temporary element)
    ProcFileElements::ProcFileElement *ne =
       new ProcFileElements::ProcFileElement(fst, lst);
 
-   // Check if if it is adjacent or overalapping with an existing one
+   // Check if if it is adjacent or overlapping with an existing one
    TIter nxe(fElements);
    ProcFileElements::ProcFileElement *e = 0;
    while ((e = (ProcFileElements::ProcFileElement *)nxe())) {
@@ -167,11 +167,29 @@ Int_t ProcFileElements::Add(Long64_t fst, Long64_t lst)
       rc = 1;
    }
 
-   // New overall ranges
-   if (fElements) {
-      if ((e = (ProcFileElements::ProcFileElement *) fElements->First())) fFirst = e->fFirst;
-      if ((e = (ProcFileElements::ProcFileElement *) fElements->Last())) fLast = e->fLast;
+   // Make sure that all what can be merged is merged (because of the order, some elements
+   // which could be merged are not merged, making the determination of fFirst and fLast below
+   // to give incorrect values)
+   
+   ProcFileElements::ProcFileElement *ep = 0, *en = 0;
+   TObjLink *olp = fElements->FirstLink(), *oln = 0;
+   while (olp && (ep = (ProcFileElements::ProcFileElement *) olp->GetObject())) {
+      oln = olp->Next();
+      while (oln) {
+         if ((en = (ProcFileElements::ProcFileElement *) oln->GetObject())) {
+            if (ep->MergeElement(en) == 0) {
+               fElements->Remove(en);
+               delete en;
+            }
+         }
+         oln = oln->Next();
+      }
+      olp = olp->Next();
    }
+
+   // New overall ranges
+   if ((e = (ProcFileElements::ProcFileElement *) fElements->First())) fFirst = e->fFirst;
+   if ((e = (ProcFileElements::ProcFileElement *) fElements->Last())) fLast = e->fLast;
    
    // Done
    return rc;

@@ -1188,6 +1188,7 @@ int XrdProofdManager::ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl)
    //     <group>            user group
    //     <uid>              user ID
    //     <gid>              user group ID
+   //     <effuser>          effective user name (for multiuser or user mapping modes)
    // Return the number of keywords resolved.
    XPDLOC(ALL, "Manager::ResolveKeywords")
 
@@ -1213,6 +1214,15 @@ int XrdProofdManager::ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl)
       sport += Port();
       if (s.replace("<port>", sport.c_str()))
          nk++;
+   }
+
+   // Parse <effuser> of the process
+   if (s.find("<effuser>") != STR_NPOS) {
+      XrdProofUI eui;
+      if (XrdProofdAux::GetUserInfo(geteuid(), eui) == 0) {
+         if (s.replace("<effuser>", eui.fUser.c_str()))
+            nk++;
+      }
    }
 
    // Parse <user>

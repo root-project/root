@@ -787,7 +787,7 @@ public:
    Int_t       Ping();
    void        Touch();
    Int_t       Exec(const char *cmd, Bool_t plusMaster = kFALSE);
-   Int_t       Exec(const char *cmd, const char *ord);
+   Int_t       Exec(const char *cmd, const char *ord, Bool_t logtomacro = kFALSE);
    
    TString     Getenv(const char *env, const char *ord = "0");
    Int_t       GetRC(const char *RCenv, Int_t &env, const char *ord = "0");

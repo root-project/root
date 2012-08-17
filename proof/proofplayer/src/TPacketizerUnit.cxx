@@ -94,6 +94,7 @@ TPacketizerUnit::TSlaveStat::TSlaveStat(TSlave *slave, TList *input)
 
    // Initialize the circularity ntple for speed calculations
    fCircNtp = new TNtupleD("Speed Circ Ntp", "Circular process info","tm:ev");
+   fCircNtp->SetDirectory(0);
    TProof::GetParameter(input, "PROOF_TPacketizerUnitCircularity", fCircLvl);
    fCircLvl = (fCircLvl > 0) ? fCircLvl : 5;
    fCircNtp->SetCircular(fCircLvl);
@@ -106,7 +107,6 @@ TPacketizerUnit::TSlaveStat::~TSlaveStat()
 {
    // Destructor
 
-   fCircNtp->SetDirectory(0);
    SafeDelete(fCircNtp);
 }
 

@@ -2152,15 +2152,16 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                   pf->Print();
                   continue;
                }
+               // If only one instance the list in the merger is not yet created: do it now
+               if (!pf->IsMerged()) {
+                  pf->Print();
+                  TString fileLoc = TString::Format("%s/%s", pf->GetDir(), pf->GetFileName());
+                  filemerger->AddFile(fileLoc);
+               }
                // Set the output file
                if (!filemerger->OutputFile(pf->GetOutputFileName())) {
                   Error("MergeOutputFiles", "cannot open the output file");
                   continue;
-               }
-               // If only one instance the list in the merger is not yet created: do it now
-               if (!pf->IsMerged()) {
-                  TString fileLoc = TString::Format("%s/%s", pf->GetDir(), pf->GetFileName());
-                  filemerger->AddFile(fileLoc);
                }
                // Merge
                PDB(kSubmerger,2) filemerger->PrintFiles("");

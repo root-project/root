@@ -115,6 +115,7 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
    fCircN = 5;
    TProof::GetParameter(input, "PROOF_ProgressCircularity", fCircN);
    fCircProg->SetCircular(fCircN);
+   fCircProg->SetDirectory(0);
 
    // Check if we need to start the progress timer (multi-packetizers do not want
    // timers from the packetizers they control ...)
@@ -168,7 +169,6 @@ TVirtualPacketizer::~TVirtualPacketizer()
 {
    // Destructor.
 
-   fCircProg->SetDirectory(0);
    SafeDelete(fCircProg);
    SafeDelete(fProgress);
    SafeDelete(fFailedPackets);
