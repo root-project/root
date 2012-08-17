@@ -3631,9 +3631,8 @@ int XrdProofdProofServMgr::CreateProofServEnvFile(XrdProofdProtocol *p, void *in
       } 
       XPDFORM(locdatasrv, "rootd://%s:%d", uh.c_str(), fMgr->Port());
    }
-   if (fMgr->ResolveKeywords(locdatasrv, p->Client()) <= 0) {
-      TRACE(XERR, "WARNING: problems resolving some placeholders for LOCALDATASERVER: "<< locdatasrv);
-   }
+   int nrk = fMgr->ResolveKeywords(locdatasrv, p->Client());
+   TRACE(HDBG, nrk << " placeholders resolved for LOCALDATASERVER");
    len = strlen("LOCALDATASERVER=") + locdatasrv.length() + 2;
    ev = new char[len];
    snprintf(ev, len, "LOCALDATASERVER=%s", locdatasrv.c_str());
