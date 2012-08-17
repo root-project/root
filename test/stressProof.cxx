@@ -1329,9 +1329,11 @@ Int_t PT_H1AssertFiles(const char *h1src)
             printf("\n >>> Test failure: file %s not found in archive %s\n", src.Data(), h1src);
             return -1;
          }
-         gSystem->RedirectOutput(0, 0, &gRH);
-         printf("%d\b", i);
-         gSystem->RedirectOutput(glogfile, "a", &gRH);
+         if (guseprogress) {
+            gSystem->RedirectOutput(0, 0, &gRH);
+            printf("%d\b", i);
+            gSystem->RedirectOutput(glogfile, "a", &gRH);
+         }
       }
       gh1sep = '#';
    } else {
@@ -1344,9 +1346,11 @@ Int_t PT_H1AssertFiles(const char *h1src)
             printf("\n >>> Test failure: file %s does not exist\n", src.Data());
             return -1;
          }
-         gSystem->RedirectOutput(0, 0, &gRH);
-         printf("%d\b", i);
-         gSystem->RedirectOutput(glogfile, "a", &gRH);
+         if (guseprogress) {
+            gSystem->RedirectOutput(0, 0, &gRH);
+            printf("%d\b", i);
+            gSystem->RedirectOutput(glogfile, "a", &gRH);
+         }
       }
    }
    gh1src = h1src;
@@ -1430,9 +1434,11 @@ Int_t PT_EventAssertFiles(const char *eventsrc, Int_t nf = 10)
             printf("\n >>> Test failure: problems retrieving %s\n", src.Data());
             return -1;
          }
-         gSystem->RedirectOutput(0, 0, &gRH);
-         printf("%d\b", i);
-         gSystem->RedirectOutput(glogfile, "a", &gRH);
+         if (guseprogress) {
+            gSystem->RedirectOutput(0, 0, &gRH);
+            printf("%d\b", i);
+            gSystem->RedirectOutput(glogfile, "a", &gRH);
+         }
       }
       geventlocal = kTRUE;
       // Done
@@ -1448,9 +1454,11 @@ Int_t PT_EventAssertFiles(const char *eventsrc, Int_t nf = 10)
          printf("\n >>> Test failure: file %s does not exist\n", src.Data());
          return -1;
       }
-      gSystem->RedirectOutput(0, 0, &gRH);
-      printf("%d\b", i);
-      gSystem->RedirectOutput(glogfile, "a", &gRH);
+      if (guseprogress) {
+         gSystem->RedirectOutput(0, 0, &gRH);
+         printf("%d\b", i);
+         gSystem->RedirectOutput(glogfile, "a", &gRH);
+      }
    }
    geventsrc = eventsrc;
 
