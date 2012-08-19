@@ -10,6 +10,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Stmt.h"
+#include "clang/Sema/Sema.h"
 
 using namespace clang;
 
@@ -32,7 +33,10 @@ namespace cling {
 
   void ASTDumper::printDecl(Decl* D) {
     PrintingPolicy Policy = D->getASTContext().getPrintingPolicy();
-    Policy.Dump = m_Dump;
+    if (m_Dump)
+      Policy.DumpSourceManager = &m_Sema->getSourceManager();
+    else
+      Policy.DumpSourceManager = 0;
 
     if (D) {
       llvm::outs() << "\n-------------------Declaration---------------------\n";

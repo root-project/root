@@ -1532,8 +1532,8 @@ namespace cling {
             }
             std::string empty;
             llvm::raw_string_ostream tmp(empty);
-            expr->printPretty(tmp, Context, /*PrinterHelper=*/0,
-              Policy, /*Indentation=*/0);
+            expr->printPretty(tmp, /*PrinterHelper=*/0, Policy, 
+                              /*Indentation=*/0);
             proto += tmp.str();
           }
           if (!P->getCurToken().is(tok::comma)) {
