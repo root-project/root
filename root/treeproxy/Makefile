@@ -4,13 +4,13 @@
 #Set the list of files to be deleted by clean (Targets can also be specified).:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.clog *.log red.h generatedSel.h val3dimSel.h forproxy.root \
 	withfriend.h vec.root vectorintSel.h vectorintEmuSel.h *.rootmap make_tuple.root make_tuple_sel.h \
-	btagobjsSel.h
+	btagobjsSel.h fullmcSel.h
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += search reducedSpill leaflist valdim3 vectorint vectorintEmu make_tuple friendchain btagobjsProxy
+TEST_TARGETS += search reducedSpill leaflist valdim3 vectorint vectorintEmu make_tuple friendchain btagobjsProxy fullmc
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -124,6 +124,15 @@ val3dimSel_h.$(DllSuf): val3dimSel.h createvaldim3_C.$(DllSuf) Track_C.$(DllSuf)
 valdim3.log: val3dimSel_h.$(DllSuf) forproxy.root
 
 valdim3: valdim3.log
+	$(TestDiff)
+
+fullmcSel.h: fullmc.cxx $(CORELIBS) runfullmc_C.$(DllSuf) full-mcfile.root
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l 'runfullmc.C+(4)' > fullmcSel_h.create.log 2>&1 || handleError.sh --result=$$? --log=fullmcSel_h.create.log --test=$@ --rm=$@
+
+fullmc.clog: fullmcSel_h.$(DllSuf) $(CORELIBS) runfullmc_C.$(DllSuf) fullmc.cxx full-mcfile.root fullmcSel.h
+	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runfullmc.C+(5)' > fullmc.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$@ 
+
+fullmc: fullmc.clog
 	$(TestDiff)
 
 vec.root: $(CORELIBS) runvectorint_C.$(DllSuf)
