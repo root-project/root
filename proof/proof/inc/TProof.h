@@ -380,11 +380,6 @@ public:
       kOverwriteIfExists   = 1,
       kMergeIfExists       = 2
    };
-   enum EUploadDataSetAnswer {
-      kError               = -1,
-      kDataSetExists       = -2,
-      kFail                = -3
-   };
    enum EUploadPackageOpt {
       kUntar               = 0x0,  //Untar over existing dir [default]
       kRemoveOld           = 0x1   //Remove existing dir with same name

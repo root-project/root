@@ -1255,8 +1255,14 @@ void TUploadDataSetDlg::UploadDataSet()
    fCloseDlgButton->SetState(kButtonDisabled);
 
    if (strlen(destination) < 2) destination = 0;
+   
+   // GG 17/8/2012 -- BEGIN
+   // NB: UploadDataSet is obsolete; these changes are the minimal ones to make
+   // the build after the removal of an obsolete structure in TProof.h;
+   // but all this needs to be reconsidered.
    ret = fViewer->GetActDesc()->fProof->UploadDataSet(dsetName,
                   datasetFiles, destination, flags, skippedFiles);
+#if 0
    if (ret == TProof::kDataSetExists) {
       // ask user what to do :
       // cancel/overwrite and change option
@@ -1279,7 +1285,8 @@ void TUploadDataSetDlg::UploadDataSet()
                           skippedFiles);
       }
    }
-   if (ret == TProof::kError) {
+#endif
+   if (ret != 0) {
       // Inform user
       new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
                    "Failed uploading dataset/files to the cluster",
@@ -1304,7 +1311,7 @@ void TUploadDataSetDlg::UploadDataSet()
                            skippedFiles, destination,
                            TProof::kAppend |
                            TProof::kOverwriteAllFiles);
-            if (ret == TProof::kError) {
+            if (ret != 0) {
                // Inform user
                new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
                             TString::Format("Failed uploading \"%s\" to the cluster",
@@ -1329,7 +1336,7 @@ void TUploadDataSetDlg::UploadDataSet()
             ret = fViewer->GetActDesc()->fProof->UploadDataSet(dsetName,
                   obj->GetFirstUrl()->GetUrl(), destination,
                   TProof::kAppend | TProof::kOverwriteAllFiles);
-            if (ret == TProof::kError) {
+            if (ret != 0) {
                // Inform user
                new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
                             TString::Format("Failed uploading \"%s\" to the cluster",
@@ -1350,6 +1357,8 @@ void TUploadDataSetDlg::UploadDataSet()
                    "Files have been succesfully uploaded to the cluster",
                    kMBIconAsterisk, kMBOk, &retval);
    }
+   // GG 17/8/2012 -- END
+
    // finally, update list of datasets in session viewer
    fViewer->GetSessionFrame()->UpdateListOfDataSets();
    fUploading = kFALSE;
