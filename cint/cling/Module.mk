@@ -46,7 +46,7 @@ CLINGLLVMLIBS = -L$(shell $(LLVMCONFIG) --libdir) \
 endif
 
 ##### local rules #####
-.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) 
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 $(CLINGLIB):   $(CLINGO) $(LLVMDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
@@ -66,19 +66,19 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 etc/cling/%.h: $(CLINGDIR)/include/cling/%.h
-	$(MAKEDIR)
+	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@cp $< $@
 
 etc/cling/%.h: $(call stripsrc,$(CLINGDIR)/%.o)/include/cling/%.h
-	$(MAKEDIR)
+	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@cp $< $@
 
 etc/cling/cint/multimap: $(CLINGDIR)/include/cling/cint/multimap
-	$(MAKEDIR)
+	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@cp $< $@
 
 etc/cling/cint/multiset: $(CLINGDIR)/include/cling/cint/multiset
-	$(MAKEDIR)
+	+@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@cp $< $@
 
 $(CLINGDIR)/%.o: $(CLINGDIR)/%.cpp $(LLVMDEP)
