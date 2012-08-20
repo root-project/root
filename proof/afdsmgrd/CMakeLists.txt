@@ -7,7 +7,7 @@
 # Variables for afdsmgrd: all of them are *absolute* paths
 #
 
-set(AFDSMGRD_UNPACK_DIR  ${CMAKE_CURRENT_BINARY_DIR}/afdsmgrdUnpack)
+set(AFDSMGRD_UNPACK_DIR  ${CMAKE_CURRENT_BINARY_DIR}/afdsmgrd)
 set(AFDSMGRD_INSTALL_DIR ${AFDSMGRD_UNPACK_DIR}/install)
 set(AFDSMGRD_BUILD_DIR   ${AFDSMGRD_UNPACK_DIR}/build)
 set(AFDSMGRD_BIN         ${AFDSMGRD_INSTALL_DIR}/bin/afdsmgrd)
@@ -18,6 +18,13 @@ if(monalisa)
   set(AFDSMGRD_MONALISA_DIR "${MONALISA_DIR}")
 elseif(alien)
   set(AFDSMGRD_MONALISA_DIR "${ALIEN_DIR}")
+endif()
+
+# MonALISA is disabled when no MonALISA directory was given
+if(AFDSMGRD_MONALISA_DIR)
+  set(AFDSMGRD_MONALISA_DISABLED 0)
+else()
+  set(AFDSMGRD_MONALISA_DISABLED 1)
 endif()
 
 #
@@ -41,16 +48,16 @@ string(REPLACE "\n" ":" AFDSMGRD_INCDIR_Path ${AFDSMGRD_INCDIR_Raw})
 # afdsmgrd steering target, always built (i.e., "phony", i.e., always ood). Let
 # this target depend on ALL known ROOT libraries (TODO: Maybe there is a better
 # way to get the list of ROOT libs?)
-add_custom_target(afdsmgrd ALL
-  DEPENDS Core Cint RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix
-    Physics MathCore Thread Proof afdsmgrdInstall)
+add_custom_target(afdsmgrd ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/afdsmgrdInstall)
 
 # make install on afdsmgrd
 add_custom_command(
-  OUTPUT afdsmgrdInstall
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/afdsmgrdInstall
   COMMENT "Building afdsmgrd"
-  DEPENDS afdsmgrdPrepare
+  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/afdsmgrdPrepare
+
   COMMAND ${CMAKE_COMMAND} -E remove -f afdsmgrdInstall
+
   COMMAND make install -C ${AFDSMGRD_BUILD_DIR}
 
   # Workaround: on some configurations libdir is not created (because there is
@@ -62,9 +69,9 @@ add_custom_command(
 
 # CMake configuration of afdsmgrd
 add_custom_command(
-  OUTPUT afdsmgrdPrepare
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/afdsmgrdPrepare
   COMMENT "Preparing afdsmgrd"
-  DEPENDS ${AFDSMGRD_UNPACK_DIR}
+  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/afdsmgrdUnpack
 
   # The file afdsmgrdPrepare is created to signal a success: reset it
   COMMAND ${CMAKE_COMMAND} -E remove -f afdsmgrdPrepare
@@ -77,6 +84,7 @@ add_custom_command(
     -DCMAKE_INSTALL_PREFIX="${AFDSMGRD_INSTALL_DIR}"
     -DROOTSYS="${CMAKE_BINARY_DIR}"
     -DApMon_PREFIX="${AFDSMGRD_MONALISA_DIR}"
+    -DApMon_DISABLED="${AFDSMGRD_MONALISA_DISABLED}"
     -DCMAKE_BUILD_TYPE=Release
     -DEXTRA_INCDIR="${AFDSMGRD_INCDIR_Path}"
 
@@ -87,11 +95,13 @@ add_custom_command(
 # Unpacks afdsmgrd tar.gz found in source directory into build directory (which
 # is current working directory by default)
 add_custom_command(
-  OUTPUT ${AFDSMGRD_UNPACK_DIR}
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/afdsmgrdUnpack
+  DEPENDS Core Cint RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix
+    Physics MathCore Thread Proof
   COMMENT "Unpacking afdsmgrd tarball"
   COMMAND ${CMAKE_COMMAND} -E tar xzf
     ${CMAKE_CURRENT_SOURCE_DIR}/afdsmgrd-v*.tar.gz
-  COMMAND ${CMAKE_COMMAND} -E rename afdsmgrd ${AFDSMGRD_UNPACK_DIR}
+  COMMAND ${CMAKE_COMMAND} -E touch afdsmgrdUnpack
 )
 
 #

@@ -10,66 +10,81 @@ AFDSMGRDDIR  := $(MODDIR)
 AFDSMGRDBIN  := bin/afdsmgrd
 AFDSMGRDTAR  := $(shell cd $(AFDSMGRDDIR) && ls -1 afdsmgrd-v*.tar.gz | tail -1)
 
+AFDSMGRDPREP   := $(AFDSMGRDDIR)/afdsmgrdPrepare
+AFDSMGRDINST   := $(AFDSMGRDDIR)/afdsmgrdInstall
+AFDSMGRDUNPACK := $(AFDSMGRDDIR)/afdsmgrdUnpack
+
+AFDSMGRDBUILDDIR := $(AFDSMGRDDIR)/afdsmgrd/build
+
 # This one triggers the build from ROOT
 ALLEXECS     += $(AFDSMGRDBIN)
+
+# ApMon: from Makefile.config
+ifeq ($(AFDSMGRDAPMON),)
+	AFDSMGRDAPMONDISABLED := 1
+else
+	AFDSMGRDAPMONDISABLED := 0
+endif
 
 # Phony targets
 .PHONY: all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-# The tar file is unpacked and the project is configured and built through
-# afdsmgrd's custom built system. Proper variables are passed to ./configure,
-# including the option to enable/disable ApMon, and files are installed under
-# $ROOTSYS properly directly by invoking "make install"
-$(AFDSMGRDBIN): $(ALLLIBS)
-	@( cd $(AFDSMGRDDIR) && \
-	   if [ ! -d afdsmgrd ]; then \
-	     echo "*** Unpacking afdsmgrd tarball ***" ; \
-	     tar xzf "$(AFDSMGRDTAR)" ; \
-	   fi && \
-	   cd afdsmgrd && \
-	   if [ ! -d build ]; then \
-	     ./configure --with-rootsys="$(ROOT_SRCDIR)" "$(AFDSMGRDAPMON)" \
-	       --prefix="$(ROOT_SRCDIR)" --root-mode ; \
-	   fi && \
-	   make install ; \
-	 )
+# This target is directly invoked by ROOT's make
+$(AFDSMGRDBIN): $(AFDSMGRDINST)
+
+# Build afdsmgrd and install it under ROOT's source (ROOT_MODE is on)
+$(AFDSMGRDINST): $(AFDSMGRDPREP)
+	@echo 'Building afdsmgrd'
+	@$(MAKE) install -C "$(AFDSMGRDBUILDDIR)" --no-print-directory
+	@touch "$(AFDSMGRDINST)"
+
+# Prepare afdsmgrd: run cmake
+$(AFDSMGRDPREP): $(AFDSMGRDUNPACK)
+	@echo 'Preparing afdsmgrd'
+	@( mkdir -p "$(AFDSMGRDBUILDDIR)" && \
+	   cd "$(AFDSMGRDBUILDDIR)" && \
+	   cmake .. \
+	     -DROOT_MODE=TRUE \
+	     -DROOTSYS="$(ROOT_SRCDIR)" \
+         -DApMon_PREFIX="$(AFDSMGRDAPMON)" \
+         -DApMon_DISABLED="$(AFDSMGRDAPMONDISABLED)" \
+	     -DCMAKE_BUILD_TYPE=Release )
+	@touch "$(AFDSMGRDPREP)"
+
+# Unpack latest afdsmgrd tarball
+$(AFDSMGRDUNPACK): $(ALLLIBS)
+	@echo 'Unpacking afdsmgrd tarball'
+	@( cd "$(AFDSMGRDDIR)" && \
+	   tar xzf "$(AFDSMGRDTAR)" && \
+	   touch "$(AFDSMGRDUNPACK)" )
 
 # Default target invoked when building this module
 all-$(MODNAME): $(AFDSMGRDBIN)
 
-# Simple cleanup of afdsmgrd. The "clean" target of afdsmgrd is called without
-# removing the directory where the source was unpacked. If the project hasn't
-# been built yet, it just exits without printing a single message
+# Shallow cleanup of afdsmgrd: a rebuild will be forced at next "make". This is
+# a silent target if afdsmgrd hasn't been built (yet)
 clean-$(MODNAME):
-	@( rm -f $(ROOT_SRCDIR)/$(AFDSMGRDBIN) ; \
-	   cd "$(AFDSMGRDDIR)" ; \
-	   if [ -d afdsmgrd ]; then \
-	     echo "*** Cleaning up afdsmgrd ***" ; \
-	     cd afdsmgrd && \
-	     make clean ; \
-	   fi ; \
-	)
+	@( if [ -f "$(AFDSMGRDBUILDDIR)/Makefile" ] ; then \
+	     echo 'Shallow cleanup of afdsmgrd' ; \
+	     $(MAKE) clean -C "$(AFDSMGRDBUILDDIR)" --no-print-directory ; \
+	     rm -f "$(AFDSMGRDINST)" ; \
+	   fi )
 
-# Append this clean-afdsmgrd action to the global "clean" target in main
-# Makefile
+# Append this clean-afdsmgrd action to the global "clean" target
 clean:: clean-$(MODNAME)
 
-# Deep cleanup of afdsmgrd. If the unpack directory exists, it is removed and a
-# message is printed out. If the directory does not exist (afdsmgrd was never
-# built before) it does nothing without printing a single message. Every file
-# copied during afdsmgrd's "make install" is removed by means of the uninstall
-# feature ("make uninstall")
+# Deep cleanup of afdsmgrd: generated files are unstaged from ROOT's source
+# directory and all compilation-time temporary files are removed
 distclean-$(MODNAME):
-	@( cd "$(AFDSMGRDDIR)" ; \
-	   if [ -d afdsmgrd ]; then \
-	     echo "*** Completely cleaning up afdsmgrd ***" ; \
-	     cd afdsmgrd && \
-	     make uninstall && \
-	     cd .. && \
-	     rm -r afdsmgrd ; \
-	   fi ; \
-	)
+	@( if [ -f "$(AFDSMGRDBUILDDIR)/Makefile" ] ; then \
+	     echo 'Unstaging afdsmgrd files from ROOT' ; \
+	     $(MAKE) uninstall -C "$(AFDSMGRDBUILDDIR)" --no-print-directory ; \
+	   fi )
+	@( if [ -d "$(AFDSMGRDDIR)/afdsmgrd" ] ; then \
+	     echo 'Deep cleanup of afdsmgrd' ; \
+	     rm -rf "$(AFDSMGRDPREP)" "$(AFDSMGRDINST)" "$(AFDSMGRDUNPACK)" \
+	       "$(AFDSMGRDDIR)/afdsmgrd" ; \
+	   fi )
 
-# Append this distclean-afdsmgrd action to the global "distclean" target in
-# main Makefile
+# Append this distclean-afdsmgrd action to the global "distclean" target
 distclean:: distclean-$(MODNAME)
