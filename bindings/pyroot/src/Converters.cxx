@@ -747,8 +747,8 @@ Bool_t PyROOT::TLongLongArrayConverter::SetArg(
 
 //- converters for special cases ----------------------------------------------
 #define PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( name, type, F1, F2 )  \
-PyROOT::T##name##Converter::T##name##Converter() :                            \
-      TRootObjectConverter( TClass::GetClass( #type ) ) {}                    \
+PyROOT::T##name##Converter::T##name##Converter( Bool_t keepControl ) :        \
+      TRootObjectConverter( TClass::GetClass( #type ), keepControl ) {}       \
                                                                               \
 Bool_t PyROOT::T##name##Converter::SetArg(                                    \
       PyObject* pyobject, TParameter_t& para, G__CallFunc* func, Long_t user )\
@@ -1203,7 +1203,7 @@ namespace {
       NFp_t( "const char*",        &CreateCStringConverter            ),
       NFp_t( "char*",              &CreateNonConstCStringConverter    ),
       NFp_t( "TString",            &CreateTStringConverter            ),
-      NFp_t( "TString&",           &CreateTStringConverter            ),
+      NFp_t( "const TString&",     &CreateTStringConverter            ),
       NFp_t( "std::string",        &CreateSTLStringConverter          ),
       NFp_t( "string",             &CreateSTLStringConverter          ),
       NFp_t( "const std::string&", &CreateSTLStringConverter          ),

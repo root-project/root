@@ -226,7 +226,7 @@ namespace PyROOT {
 #define PYROOT_DECLARE_STRING_CONVERTER( name, strtype )                      \
    class T##name##Converter : public TRootObjectConverter {                   \
    public:                                                                    \
-      T##name##Converter();                                                   \
+      T##name##Converter( Bool_t keepControl = kTRUE );                       \
    public:                                                                    \
    virtual Bool_t SetArg( PyObject*, TParameter_t&, G__CallFunc* = 0, Long_t = 0 );\
       virtual PyObject* FromMemory( void* address );                          \
