@@ -106,7 +106,7 @@ PPCTargetLowering::PPCTargetLowering(PPCTargetMachine &TM)
   // from FP_ROUND:  that rounds to nearest, this rounds to zero.
   setOperationAction(ISD::FP_ROUND_INREG, MVT::ppcf128, Custom);
 
-  // We do not currently implment this libm ops for PowerPC.
+  // We do not currently implement these libm ops for PowerPC.
   setOperationAction(ISD::FFLOOR, MVT::ppcf128, Expand);
   setOperationAction(ISD::FCEIL,  MVT::ppcf128, Expand);
   setOperationAction(ISD::FTRUNC, MVT::ppcf128, Expand);
@@ -394,8 +394,10 @@ PPCTargetLowering::PPCTargetLowering(PPCTargetMachine &TM)
     setOperationAction(ISD::BUILD_VECTOR, MVT::v4f32, Custom);
   }
 
-  if (Subtarget->has64BitSupport())
+  if (Subtarget->has64BitSupport()) {
     setOperationAction(ISD::PREFETCH, MVT::Other, Legal);
+    setOperationAction(ISD::READCYCLECOUNTER, MVT::i64, Legal);
+  }
 
   setOperationAction(ISD::ATOMIC_LOAD,  MVT::i32, Expand);
   setOperationAction(ISD::ATOMIC_STORE, MVT::i32, Expand);

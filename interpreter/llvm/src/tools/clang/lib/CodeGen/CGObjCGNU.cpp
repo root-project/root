@@ -653,8 +653,11 @@ class CGObjCGNUstep : public CGObjCGNU {
     }
 };
 
-/// Class used when targeting the ObjFW runtime.
-class CGObjCObjFW: public CGObjCGCC {
+/// The ObjFW runtime, which closely follows the GCC runtime's
+/// compiler ABI.  Support here is due to Jonathan Schleifer, the
+/// ObjFW maintainer.
+class CGObjCObjFW : public CGObjCGCC {
+  /// Emit class references unconditionally as direct symbol references.
   virtual llvm::Value *GetClassNamed(CGBuilderTy &Builder,
                                      const std::string &Name, bool isWeak) {
     if (isWeak)
@@ -2510,25 +2513,8 @@ void CGObjCGNU::EmitThrowStmt(CodeGenFunction &CGF,
     ExceptionAsObject = CGF.ObjCEHValueStack.back();
   }
   ExceptionAsObject = CGF.Builder.CreateBitCast(ExceptionAsObject, IdTy);
-
-  // Note: This may have to be an invoke, if we want to support constructs like:
-  // @try {
-  //  @throw(obj);
-  // }
-  // @catch(id) ...
-  //
-  // This is effectively turning @throw into an incredibly-expensive goto, but
-  // it may happen as a result of inlining followed by missed optimizations, or
-  // as a result of stupidity.
-  llvm::BasicBlock *UnwindBB = CGF.getInvokeDest();
-  if (!UnwindBB) {
-    CGF.Builder.CreateCall(ExceptionThrowFn, ExceptionAsObject);
-    CGF.Builder.CreateUnreachable();
-  } else {
-    CGF.Builder.CreateInvoke(ExceptionThrowFn, UnwindBB, UnwindBB,
-                             ExceptionAsObject);
-  }
-  // Clear the insertion point to indicate we are in unreachable code.
+  CGF.EmitCallOrInvoke(ExceptionThrowFn, ExceptionAsObject);
+  CGF.Builder.CreateUnreachable();
   CGF.Builder.ClearInsertionPoint();
 }
 

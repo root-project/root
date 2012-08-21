@@ -292,6 +292,32 @@ TEST(DeclarationMatcher, ClassIsDerived) {
       record(isDerivedFrom(record(hasName("X")).bind("test")))));
 }
 
+TEST(ClassTemplate, DoesNotMatchClass) {
+  DeclarationMatcher ClassX = classTemplate(hasName("X"));
+  EXPECT_TRUE(notMatches("class X;", ClassX));
+  EXPECT_TRUE(notMatches("class X {};", ClassX));
+}
+
+TEST(ClassTemplate, MatchesClassTemplate) {
+  DeclarationMatcher ClassX = classTemplate(hasName("X"));
+  EXPECT_TRUE(matches("template<typename T> class X {};", ClassX));
+  EXPECT_TRUE(matches("class Z { template<class T> class X {}; };", ClassX));
+}
+
+TEST(ClassTemplate, DoesNotMatchClassTemplateExplicitSpecialization) {
+  EXPECT_TRUE(notMatches("template<typename T> class X { };"
+                         "template<> class X<int> { int a; };",
+              classTemplate(hasName("X"),
+                            hasDescendant(field(hasName("a"))))));
+}
+
+TEST(ClassTemplate, DoesNotMatchClassTemplatePartialSpecialization) {
+  EXPECT_TRUE(notMatches("template<typename T, typename U> class X { };"
+                         "template<typename T> class X<T, int> { int a; };",
+              classTemplate(hasName("X"),
+                            hasDescendant(field(hasName("a"))))));
+}
+
 TEST(AllOf, AllOverloadsWork) {
   const char Program[] =
       "struct T { }; int f(int, T*); void g(int x) { T t; f(x, &t); }";
@@ -1017,6 +1043,27 @@ TEST(Function, MatchesFunctionDeclarations) {
                  CallFunctionF));
 }
 
+TEST(FunctionTemplate, MatchesFunctionTemplateDeclarations) {
+  EXPECT_TRUE(
+      matches("template <typename T> void f(T t) {}",
+      functionTemplate(hasName("f"))));
+}
+
+TEST(FunctionTemplate, DoesNotMatchFunctionDeclarations) {
+  EXPECT_TRUE(
+      notMatches("void f(double d); void f(int t) {}",
+      functionTemplate(hasName("f"))));
+}
+
+TEST(FunctionTemplate, DoesNotMatchFunctionTemplateSpecializations) {
+  EXPECT_TRUE(
+      notMatches("void g(); template <typename T> void f(T t) {}"
+                 "template <> void f(int t) { g(); }",
+      functionTemplate(hasName("f"),
+                       hasDescendant(declarationReference(
+                                            to(function(hasName("g"))))))));
+}
+
 TEST(Matcher, Argument) {
   StatementMatcher CallArgumentY = expression(call(
       hasArgument(0, declarationReference(to(variable(hasName("y")))))));
@@ -1099,6 +1146,12 @@ TEST(Returns, MatchesReturnTypes) {
                       function(returns(hasDeclaration(record(hasName("Y")))))));
 }
 
+TEST(IsExternC, MatchesExternCFunctionDeclarations) {
+  EXPECT_TRUE(matches("extern \"C\" void f() {}", function(isExternC())));
+  EXPECT_TRUE(matches("extern \"C\" { void f() {} }", function(isExternC())));
+  EXPECT_TRUE(notMatches("void f() {}", function(isExternC())));
+}
+
 TEST(HasAnyParameter, DoesntMatchIfInnerMatcherDoesntMatch) {
   EXPECT_TRUE(notMatches("class Y {}; class X { void x(int) {} };",
       method(hasAnyParameter(hasType(record(hasName("X")))))));
@@ -1114,6 +1167,46 @@ TEST(HasName, MatchesParameterVariableDeclartions) {
       method(hasAnyParameter(hasName("x")))));
   EXPECT_TRUE(notMatches("class Y {}; class X { void x(int) {} };",
       method(hasAnyParameter(hasName("x")))));
+}
+
+TEST(Matcher, MatchesClassTemplateSpecialization) {
+  EXPECT_TRUE(matches("template<typename T> struct A {};"
+                      "template<> struct A<int> {};",
+                      classTemplateSpecialization()));
+  EXPECT_TRUE(matches("template<typename T> struct A {}; A<int> a;",
+                      classTemplateSpecialization()));
+  EXPECT_TRUE(notMatches("template<typename T> struct A {};",
+                         classTemplateSpecialization()));
+}
+
+TEST(Matcher, MatchesTypeTemplateArgument) {
+  EXPECT_TRUE(matches(
+      "template<typename T> struct B {};"
+      "B<int> b;",
+      classTemplateSpecialization(hasAnyTemplateArgument(refersToType(
+          asString("int"))))));
+}
+
+TEST(Matcher, MatchesDeclarationReferenceTemplateArgument) {
+  EXPECT_TRUE(matches(
+      "struct B { int next; };"
+      "template<int(B::*next_ptr)> struct A {};"
+      "A<&B::next> a;",
+      classTemplateSpecialization(hasAnyTemplateArgument(
+          refersToDeclaration(field(hasName("next")))))));
+}
+
+TEST(Matcher, MatchesSpecificArgument) {
+  EXPECT_TRUE(matches(
+      "template<typename T, typename U> class A {};"
+      "A<bool, int> a;",
+      classTemplateSpecialization(hasTemplateArgument(
+          1, refersToType(asString("int"))))));
+  EXPECT_TRUE(notMatches(
+      "template<typename T, typename U> class A {};"
+      "A<int, bool> a;",
+      classTemplateSpecialization(hasTemplateArgument(
+          1, refersToType(asString("int"))))));
 }
 
 TEST(Matcher, ConstructorCall) {
@@ -1920,6 +2013,19 @@ TEST(Member, MatchesInMemberFunctionCall) {
                       memberExpression(member(hasName("first")))));
 }
 
+TEST(Member, MatchesMemberAllocationFunction) {
+  EXPECT_TRUE(matches("namespace std { typedef typeof(sizeof(int)) size_t; }"
+                      "class X { void *operator new(std::size_t); };",
+                      method(ofClass(hasName("X")))));
+
+  EXPECT_TRUE(matches("class X { void operator delete(void*); };",
+                      method(ofClass(hasName("X")))));
+
+  EXPECT_TRUE(matches("namespace std { typedef typeof(sizeof(int)) size_t; }"
+                      "class X { void operator delete[](void*, std::size_t); };",
+                      method(ofClass(hasName("X")))));
+}
+
 TEST(HasObjectExpression, DoesNotMatchMember) {
   EXPECT_TRUE(notMatches(
       "class X {}; struct Z { X m; }; void f(Z z) { z.m; }",
@@ -1981,6 +2087,28 @@ TEST(IsConstQualified, DoesNotMatchInappropriately) {
                          variable(hasType(isConstQualified()))));
   EXPECT_TRUE(notMatches("int const* p;",
                          variable(hasType(isConstQualified()))));
+}
+
+TEST(CastExpression, MatchesExplicitCasts) {
+  EXPECT_TRUE(matches("char *p = reinterpret_cast<char *>(&p);",
+                      expression(castExpr())));
+  EXPECT_TRUE(matches("void *p = (void *)(&p);", expression(castExpr())));
+  EXPECT_TRUE(matches("char q, *p = const_cast<char *>(&q);",
+                      expression(castExpr())));
+  EXPECT_TRUE(matches("char c = char(0);", expression(castExpr())));
+}
+TEST(CastExpression, MatchesImplicitCasts) {
+  // This test creates an implicit cast from int to char.
+  EXPECT_TRUE(matches("char c = 0;", expression(castExpr())));
+  // This test creates an implicit cast from lvalue to rvalue.
+  EXPECT_TRUE(matches("char c = 0, d = c;", expression(castExpr())));
+}
+
+TEST(CastExpression, DoesNotMatchNonCasts) {
+  EXPECT_TRUE(notMatches("char c = '0';", expression(castExpr())));
+  EXPECT_TRUE(notMatches("char c, &q = c;", expression(castExpr())));
+  EXPECT_TRUE(notMatches("int i = (0);", expression(castExpr())));
+  EXPECT_TRUE(notMatches("int i = 0;", expression(castExpr())));
 }
 
 TEST(ReinterpretCast, MatchesSimpleCase) {
@@ -2049,6 +2177,201 @@ TEST(HasDestinationType, MatchesSimpleCase) {
                               pointsTo(TypeMatcher(anything())))))));
 }
 
+TEST(HasImplicitDestinationType, MatchesSimpleCase) {
+  // This test creates an implicit const cast.
+  EXPECT_TRUE(matches("int x; const int i = x;",
+                      expression(implicitCast(
+                          hasImplicitDestinationType(isInteger())))));
+  // This test creates an implicit array-to-pointer cast.
+  EXPECT_TRUE(matches("int arr[3]; int *p = arr;",
+                      expression(implicitCast(hasImplicitDestinationType(
+                          pointsTo(TypeMatcher(anything())))))));
+}
+
+TEST(HasImplicitDestinationType, DoesNotMatchIncorrectly) {
+  // This test creates an implicit cast from int to char.
+  EXPECT_TRUE(notMatches("char c = 0;",
+                      expression(implicitCast(hasImplicitDestinationType(
+                          unless(anything()))))));
+  // This test creates an implicit array-to-pointer cast.
+  EXPECT_TRUE(notMatches("int arr[3]; int *p = arr;",
+                      expression(implicitCast(hasImplicitDestinationType(
+                          unless(anything()))))));
+}
+
+TEST(ImplicitCast, MatchesSimpleCase) {
+  // This test creates an implicit const cast.
+  EXPECT_TRUE(matches("int x = 0; const int y = x;",
+                      variable(hasInitializer(implicitCast()))));
+  // This test creates an implicit cast from int to char.
+  EXPECT_TRUE(matches("char c = 0;",
+                      variable(hasInitializer(implicitCast()))));
+  // This test creates an implicit array-to-pointer cast.
+  EXPECT_TRUE(matches("int arr[6]; int *p = arr;",
+                      variable(hasInitializer(implicitCast()))));
+}
+
+TEST(ImplicitCast, DoesNotMatchIncorrectly) {
+  // This test verifies that implicitCast() matches exactly when implicit casts
+  // are present, and that it ignores explicit and paren casts.
+
+  // These two test cases have no casts.
+  EXPECT_TRUE(notMatches("int x = 0;",
+                         variable(hasInitializer(implicitCast()))));
+  EXPECT_TRUE(notMatches("int x = 0, &y = x;",
+                         variable(hasInitializer(implicitCast()))));
+
+  EXPECT_TRUE(notMatches("int x = 0; double d = (double) x;",
+                         variable(hasInitializer(implicitCast()))));
+  EXPECT_TRUE(notMatches("const int *p; int *q = const_cast<int *>(p);",
+                         variable(hasInitializer(implicitCast()))));
+
+  EXPECT_TRUE(notMatches("int x = (0);",
+                         variable(hasInitializer(implicitCast()))));
+}
+
+TEST(IgnoringImpCasts, MatchesImpCasts) {
+  // This test checks that ignoringImpCasts matches when implicit casts are
+  // present and its inner matcher alone does not match.
+  // Note that this test creates an implicit const cast.
+  EXPECT_TRUE(matches("int x = 0; const int y = x;",
+                      variable(hasInitializer(ignoringImpCasts(
+                          declarationReference(to(variable(hasName("x")))))))));
+  // This test creates an implict cast from int to char.
+  EXPECT_TRUE(matches("char x = 0;",
+                      variable(hasInitializer(ignoringImpCasts(
+                          integerLiteral(equals(0)))))));
+}
+
+TEST(IgnoringImpCasts, DoesNotMatchIncorrectly) {
+  // These tests verify that ignoringImpCasts does not match if the inner
+  // matcher does not match.
+  // Note that the first test creates an implicit const cast.
+  EXPECT_TRUE(notMatches("int x; const int y = x;",
+                         variable(hasInitializer(ignoringImpCasts(
+                             unless(anything()))))));
+  EXPECT_TRUE(notMatches("int x; int y = x;",
+                         variable(hasInitializer(ignoringImpCasts(
+                             unless(anything()))))));
+
+  // These tests verify that ignoringImplictCasts does not look through explicit
+  // casts or parentheses.
+  EXPECT_TRUE(notMatches("char* p = static_cast<char*>(0);",
+                      variable(hasInitializer(ignoringImpCasts(
+                          integerLiteral())))));
+  EXPECT_TRUE(notMatches("int i = (0);",
+                      variable(hasInitializer(ignoringImpCasts(
+                          integerLiteral())))));
+  EXPECT_TRUE(notMatches("float i = (float)0;",
+                      variable(hasInitializer(ignoringImpCasts(
+                          integerLiteral())))));
+  EXPECT_TRUE(notMatches("float i = float(0);",
+                      variable(hasInitializer(ignoringImpCasts(
+                          integerLiteral())))));
+}
+
+TEST(IgnoringImpCasts, MatchesWithoutImpCasts) {
+  // This test verifies that expressions that do not have implicit casts
+  // still match the inner matcher.
+  EXPECT_TRUE(matches("int x = 0; int &y = x;",
+                      variable(hasInitializer(ignoringImpCasts(
+                          declarationReference(to(variable(hasName("x")))))))));
+}
+
+TEST(IgnoringParenCasts, MatchesParenCasts) {
+  // This test checks that ignoringParenCasts matches when parentheses and/or
+  // casts are present and its inner matcher alone does not match.
+  EXPECT_TRUE(matches("int x = (0);",
+                         variable(hasInitializer(ignoringParenCasts(
+                             integerLiteral(equals(0)))))));
+  EXPECT_TRUE(matches("int x = (((((0)))));",
+                         variable(hasInitializer(ignoringParenCasts(
+                             integerLiteral(equals(0)))))));
+
+  // This test creates an implict cast from int to char in addition to the
+  // parentheses.
+  EXPECT_TRUE(matches("char x = (0);",
+                         variable(hasInitializer(ignoringParenCasts(
+                             integerLiteral(equals(0)))))));
+
+  EXPECT_TRUE(matches("char x = (char)0;",
+                         variable(hasInitializer(ignoringParenCasts(
+                             integerLiteral(equals(0)))))));
+  EXPECT_TRUE(matches("char* p = static_cast<char*>(0);",
+                      variable(hasInitializer(ignoringParenCasts(
+                          integerLiteral(equals(0)))))));
+}
+
+TEST(IgnoringParenCasts, MatchesWithoutParenCasts) {
+  // This test verifies that expressions that do not have any casts still match.
+  EXPECT_TRUE(matches("int x = 0;",
+                         variable(hasInitializer(ignoringParenCasts(
+                             integerLiteral(equals(0)))))));
+}
+
+TEST(IgnoringParenCasts, DoesNotMatchIncorrectly) {
+  // These tests verify that ignoringImpCasts does not match if the inner
+  // matcher does not match.
+  EXPECT_TRUE(notMatches("int x = ((0));",
+                         variable(hasInitializer(ignoringParenCasts(
+                             unless(anything()))))));
+
+  // This test creates an implicit cast from int to char in addition to the
+  // parentheses.
+  EXPECT_TRUE(notMatches("char x = ((0));",
+                         variable(hasInitializer(ignoringParenCasts(
+                             unless(anything()))))));
+
+  EXPECT_TRUE(notMatches("char *x = static_cast<char *>((0));",
+                         variable(hasInitializer(ignoringParenCasts(
+                             unless(anything()))))));
+}
+
+TEST(IgnoringParenAndImpCasts, MatchesParenImpCasts) {
+  // This test checks that ignoringParenAndImpCasts matches when
+  // parentheses and/or implicit casts are present and its inner matcher alone
+  // does not match.
+  // Note that this test creates an implicit const cast.
+  EXPECT_TRUE(matches("int x = 0; const int y = x;",
+                      variable(hasInitializer(ignoringParenImpCasts(
+                          declarationReference(to(variable(hasName("x")))))))));
+  // This test creates an implicit cast from int to char.
+  EXPECT_TRUE(matches("const char x = (0);",
+                         variable(hasInitializer(ignoringParenImpCasts(
+                             integerLiteral(equals(0)))))));
+}
+
+TEST(IgnoringParenAndImpCasts, MatchesWithoutParenImpCasts) {
+  // This test verifies that expressions that do not have parentheses or
+  // implicit casts still match.
+  EXPECT_TRUE(matches("int x = 0; int &y = x;",
+                      variable(hasInitializer(ignoringParenImpCasts(
+                          declarationReference(to(variable(hasName("x")))))))));
+  EXPECT_TRUE(matches("int x = 0;",
+                         variable(hasInitializer(ignoringParenImpCasts(
+                             integerLiteral(equals(0)))))));
+}
+
+TEST(IgnoringParenAndImpCasts, DoesNotMatchIncorrectly) {
+  // These tests verify that ignoringParenImpCasts does not match if
+  // the inner matcher does not match.
+  // This test creates an implicit cast.
+  EXPECT_TRUE(notMatches("char c = ((3));",
+                         variable(hasInitializer(ignoringParenImpCasts(
+                             unless(anything()))))));
+  // These tests verify that ignoringParenAndImplictCasts does not look
+  // through explicit casts.
+  EXPECT_TRUE(notMatches("float y = (float(0));",
+                      variable(hasInitializer(ignoringParenImpCasts(
+                          integerLiteral())))));
+  EXPECT_TRUE(notMatches("float y = (float)0;",
+                      variable(hasInitializer(ignoringParenImpCasts(
+                          integerLiteral())))));
+  EXPECT_TRUE(notMatches("char* p = static_cast<char*>(0);",
+                      variable(hasInitializer(ignoringParenImpCasts(
+                          integerLiteral())))));
+}
+
 TEST(HasSourceExpression, MatchesImplicitCasts) {
   EXPECT_TRUE(matches("class string {}; class URL { public: URL(string s); };"
                       "void r() {string a_string; URL url = a_string; }",
@@ -2112,6 +2435,40 @@ TEST(UsingDeclaration, ThroughUsingDeclaration) {
   EXPECT_TRUE(notMatches(
       "namespace a { void f(); } using a::f; void g() { a::f(); }",
       declarationReference(throughUsingDecl(anything()))));
+}
+
+TEST(SingleDecl, IsSingleDecl) {
+  StatementMatcher SingleDeclStmt =
+      declarationStatement(hasSingleDecl(variable(hasInitializer(anything()))));
+  EXPECT_TRUE(matches("void f() {int a = 4;}", SingleDeclStmt));
+  EXPECT_TRUE(notMatches("void f() {int a;}", SingleDeclStmt));
+  EXPECT_TRUE(notMatches("void f() {int a = 4, b = 3;}",
+                          SingleDeclStmt));
+}
+
+TEST(DeclStmt, ContainsDeclaration) {
+  DeclarationMatcher MatchesInit = variable(hasInitializer(anything()));
+
+  EXPECT_TRUE(matches("void f() {int a = 4;}",
+                      declarationStatement(containsDeclaration(0,
+                                                               MatchesInit))));
+  EXPECT_TRUE(matches("void f() {int a = 4, b = 3;}",
+                      declarationStatement(containsDeclaration(0, MatchesInit),
+                                           containsDeclaration(1,
+                                                               MatchesInit))));
+  unsigned WrongIndex = 42;
+  EXPECT_TRUE(notMatches("void f() {int a = 4, b = 3;}",
+                         declarationStatement(containsDeclaration(WrongIndex,
+                                                      MatchesInit))));
+}
+
+TEST(DeclCount, DeclCountIsCorrect) {
+  EXPECT_TRUE(matches("void f() {int i,j;}",
+                      declarationStatement(declCountIs(2))));
+  EXPECT_TRUE(notMatches("void f() {int i,j; int k;}",
+                         declarationStatement(declCountIs(3))));
+  EXPECT_TRUE(notMatches("void f() {int i,j, k, l;}",
+                         declarationStatement(declCountIs(3))));
 }
 
 TEST(While, MatchesWhileLoops) {
@@ -2266,6 +2623,50 @@ TEST(IsTemplateInstantiation, DoesNotMatchNonTemplate) {
   EXPECT_TRUE(notMatches(
       "class A {}; class Y { A a; };",
       record(isTemplateInstantiation())));
+}
+
+TEST(IsExplicitTemplateSpecialization,
+     DoesNotMatchPrimaryTemplate) {
+  EXPECT_TRUE(notMatches(
+      "template <typename T> class X {};",
+      record(isExplicitTemplateSpecialization())));
+  EXPECT_TRUE(notMatches(
+      "template <typename T> void f(T t);",
+      function(isExplicitTemplateSpecialization())));
+}
+
+TEST(IsExplicitTemplateSpecialization,
+     DoesNotMatchExplicitTemplateInstantiations) {
+  EXPECT_TRUE(notMatches(
+      "template <typename T> class X {};"
+      "template class X<int>; extern template class X<long>;",
+      record(isExplicitTemplateSpecialization())));
+  EXPECT_TRUE(notMatches(
+      "template <typename T> void f(T t) {}"
+      "template void f(int t); extern template void f(long t);",
+      function(isExplicitTemplateSpecialization())));
+}
+
+TEST(IsExplicitTemplateSpecialization,
+     DoesNotMatchImplicitTemplateInstantiations) {
+  EXPECT_TRUE(notMatches(
+      "template <typename T> class X {}; X<int> x;",
+      record(isExplicitTemplateSpecialization())));
+  EXPECT_TRUE(notMatches(
+      "template <typename T> void f(T t); void g() { f(10); }",
+      function(isExplicitTemplateSpecialization())));
+}
+
+TEST(IsExplicitTemplateSpecialization,
+     MatchesExplicitTemplateSpecializations) {
+  EXPECT_TRUE(matches(
+      "template <typename T> class X {};"
+      "template<> class X<int> {};",
+      record(isExplicitTemplateSpecialization())));
+  EXPECT_TRUE(matches(
+      "template <typename T> void f(T t) {}"
+      "template<> void f(int t) {}",
+      function(isExplicitTemplateSpecialization())));
 }
 
 } // end namespace ast_matchers

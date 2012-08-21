@@ -30,12 +30,14 @@ namespace clang {
   class PragmaHandler;
   class Scope;
   class BalancedDelimiterTracker;
+  class CorrectionCandidateCallback;
   class DeclGroupRef;
   class DiagnosticBuilder;
   class Parser;
   class ParsingDeclRAIIObject;
   class ParsingDeclSpec;
   class ParsingDeclarator;
+  class ParsingFieldDeclarator;
   class PragmaUnusedHandler;
   class ColonProtectionRAIIObject;
   class InMessageExpressionRAIIObject;
@@ -202,6 +204,9 @@ class Parser : public CodeCompletionHandler {
   /// \brief Gathers and cleans up TemplateIdAnnotations when parsing of a
   /// top-level declaration is finished.
   SmallVector<TemplateIdAnnotation *, 16> TemplateIds;
+
+  /// \brief Identifiers which have been declared within a tentative parse.
+  SmallVector<IdentifierInfo *, 8> TentativelyDeclaredIdentifiers;
 
   IdentifierInfo *getSEHExceptKeyword();
 
@@ -481,7 +486,28 @@ protected:
   // find a type name by attempting typo correction.
   bool TryAnnotateTypeOrScopeToken(bool EnteringContext = false,
                                    bool NeedType = false);
+  bool TryAnnotateTypeOrScopeTokenAfterScopeSpec(bool EnteringContext,
+                                                 bool NeedType,
+                                                 CXXScopeSpec &SS,
+                                                 bool IsNewScope);
   bool TryAnnotateCXXScopeToken(bool EnteringContext = false);
+  enum AnnotatedNameKind {
+    /// Annotation has failed and emitted an error.
+    ANK_Error,
+    /// The identifier is a tentatively-declared name.
+    ANK_TentativeDecl,
+    /// The identifier is a template name. FIXME: Add an annotation for that.
+    ANK_TemplateName,
+    /// The identifier can't be resolved.
+    ANK_Unresolved,
+    /// Annotation was successful.
+    ANK_Success
+  };
+  AnnotatedNameKind TryAnnotateName(bool IsAddressOfOperand,
+                                    CorrectionCandidateCallback *CCC = 0);
+
+  /// Push a tok::annot_cxxscope token onto the token stream.
+  void AnnotateScopeToken(CXXScopeSpec &SS, bool IsNewAnnotation);
 
   /// TryAltiVecToken - Check for context-sensitive AltiVec identifier tokens,
   /// replacing them with the non-context-sensitive keywords.  This returns
@@ -528,12 +554,15 @@ protected:
   class TentativeParsingAction {
     Parser &P;
     Token PrevTok;
+    size_t PrevTentativelyDeclaredIdentifierCount;
     unsigned short PrevParenCount, PrevBracketCount, PrevBraceCount;
     bool isActive;
 
   public:
     explicit TentativeParsingAction(Parser& p) : P(p) {
       PrevTok = P.Tok;
+      PrevTentativelyDeclaredIdentifierCount =
+          P.TentativelyDeclaredIdentifiers.size();
       PrevParenCount = P.ParenCount;
       PrevBracketCount = P.BracketCount;
       PrevBraceCount = P.BraceCount;
@@ -542,6 +571,8 @@ protected:
     }
     void Commit() {
       assert(isActive && "Parsing action was finished!");
+      P.TentativelyDeclaredIdentifiers.resize(
+          PrevTentativelyDeclaredIdentifierCount);
       P.PP.CommitBacktrackedTokens();
       isActive = false;
     }
@@ -549,6 +580,8 @@ protected:
       assert(isActive && "Parsing action was finished!");
       P.PP.Backtrack();
       P.Tok = PrevTok;
+      P.TentativelyDeclaredIdentifiers.resize(
+          PrevTentativelyDeclaredIdentifierCount);
       P.ParenCount = PrevParenCount;
       P.BracketCount = PrevBracketCount;
       P.BraceCount = PrevBraceCount;
@@ -1056,7 +1089,6 @@ protected:
                                           ParsingDeclSpec *DS = 0);
   bool isDeclarationAfterDeclarator();
   bool isStartOfFunctionDefinition(const ParsingDeclarator &Declarator);
-  bool isStartOfDelayParsedFunctionDefinition(const ParsingDeclarator &Declarator);
   DeclGroupPtrTy ParseDeclarationOrFunctionDefinition(
                                                   ParsedAttributesWithRange &attrs,
                                                   ParsingDeclSpec *DS = 0,
@@ -1559,7 +1591,7 @@ protected:
                             Decl *TagDecl);
 
   struct FieldCallback {
-    virtual Decl *invoke(FieldDeclarator &Field) = 0;
+    virtual void invoke(ParsingFieldDeclarator &Field) = 0;
     virtual ~FieldCallback() {}
 
   private:
@@ -1567,7 +1599,7 @@ protected:
   };
   struct ObjCPropertyCallback;
 
-  void ParseStructDeclaration(DeclSpec &DS, FieldCallback &Callback);
+  void ParseStructDeclaration(ParsingDeclSpec &DS, FieldCallback &Callback);
 
   bool isDeclarationSpecifier(bool DisambiguatingWithExpression = false);
   bool isTypeSpecifierQualifier();
@@ -1643,11 +1675,11 @@ protected:
   /// isCXXFunctionDeclarator - Disambiguates between a function declarator or
   /// a constructor-style initializer, when parsing declaration statements.
   /// Returns true for function declarator and false for constructor-style
-  /// initializer. If 'warnIfAmbiguous' is true a warning will be emitted to
-  /// indicate that the parens were disambiguated as function declarator.
+  /// initializer. Sets 'IsAmbiguous' to true to indicate that this declaration 
+  /// might be a constructor-style initializer.
   /// If during the disambiguation process a parsing error is encountered,
   /// the function returns true to let the declaration parsing code handle it.
-  bool isCXXFunctionDeclarator(bool warnIfAmbiguous);
+  bool isCXXFunctionDeclarator(bool *IsAmbiguous = 0);
 
   /// isCXXConditionDeclaration - Disambiguates between a declaration or an
   /// expression for a condition of a if/switch/while/for statement.
@@ -1706,6 +1738,11 @@ protected:
   TPResult
   isCXXDeclarationSpecifier(TPResult BracedCastResult = TPResult::False(),
                             bool *HasMissingTypename = 0);
+
+  /// \brief Determine whether an identifier has been tentatively declared as a
+  /// non-type. Such tentative declarations should not be found to name a type
+  /// during a tentative parse, but also should not be annotated as a non-type.
+  bool isTentativelyDeclared(IdentifierInfo *II);
 
   // "Tentative parsing" functions, used for disambiguation. If a parsing error
   // is encountered they will return TPResult::Error().
@@ -1834,6 +1871,10 @@ protected:
                                   ParsedAttributes &Attrs,
                                   SourceLocation *EndLoc);
 
+  void ParseTypeTagForDatatypeAttribute(IdentifierInfo &AttrName,
+                                        SourceLocation AttrNameLoc,
+                                        ParsedAttributes &Attrs,
+                                        SourceLocation *EndLoc);
 
   void ParseTypeofSpecifier(DeclSpec &DS);
   SourceLocation ParseDecltypeSpecifier(DeclSpec &DS);
@@ -1903,6 +1944,7 @@ protected:
   void ParseFunctionDeclarator(Declarator &D,
                                ParsedAttributes &attrs,
                                BalancedDelimiterTracker &Tracker,
+                               bool IsAmbiguous,
                                bool RequiresArg = false);
   bool isFunctionDeclaratorIdentifierList();
   void ParseFunctionDeclaratorIdentifierList(

@@ -308,16 +308,16 @@ public:
     MethodImplKind(MethodImplKind) {
   }
 
-  Decl *invoke(FieldDeclarator &FD) {
+  void invoke(ParsingFieldDeclarator &FD) {
     if (FD.D.getIdentifier() == 0) {
       P.Diag(AtLoc, diag::err_objc_property_requires_field_name)
         << FD.D.getSourceRange();
-      return 0;
+      return;
     }
     if (FD.BitfieldSize) {
       P.Diag(AtLoc, diag::err_objc_property_bitfield)
         << FD.D.getSourceRange();
-      return 0;
+      return;
     }
 
     // Install the property declarator into interfaceDecl.
@@ -344,7 +344,7 @@ public:
     if (!isOverridingProperty)
       Props.push_back(Property);
 
-    return Property;
+    FD.complete(Property);
   }
 };
 
@@ -493,7 +493,7 @@ void Parser::ParseObjCInterfaceDeclList(tok::ObjCKeywordKind contextKey,
                                     OCDS, AtLoc, LParenLoc, MethodImplKind);
 
       // Parse all the comma separated declarators.
-      DeclSpec DS(AttrFactory);
+      ParsingDeclSpec DS(*this);
       ParseStructDeclaration(DS, Callback);
 
       ExpectAndConsume(tok::semi, diag::err_expected_semi_decl_list);
@@ -1306,7 +1306,7 @@ void Parser::ParseObjCClassInstanceVariables(Decl *interfaceDecl,
         P(P), IDecl(IDecl), visibility(V), AllIvarDecls(AllIvarDecls) {
       }
 
-      Decl *invoke(FieldDeclarator &FD) {
+      void invoke(ParsingFieldDeclarator &FD) {
         P.Actions.ActOnObjCContainerStartDefinition(IDecl);
         // Install the declarator into the interface decl.
         Decl *Field
@@ -1316,12 +1316,12 @@ void Parser::ParseObjCClassInstanceVariables(Decl *interfaceDecl,
         P.Actions.ActOnObjCContainerFinishDefinition();
         if (Field)
           AllIvarDecls.push_back(Field);
-        return Field;
+        FD.complete(Field);
       }
     } Callback(*this, interfaceDecl, visibility, AllIvarDecls);
     
     // Parse all the comma separated declarators.
-    DeclSpec DS(AttrFactory);
+    ParsingDeclSpec DS(*this);
     ParseStructDeclaration(DS, Callback);
 
     if (Tok.is(tok::semi)) {
@@ -1616,8 +1616,8 @@ Decl *Parser::ParseObjCAtAliasDeclaration(SourceLocation atLoc) {
   SourceLocation classLoc = ConsumeToken(); // consume class-name;
   ExpectAndConsume(tok::semi, diag::err_expected_semi_after, 
                    "@compatibility_alias");
-  return Actions.ActOnCompatiblityAlias(atLoc, aliasId, aliasLoc,
-                                        classId, classLoc);
+  return Actions.ActOnCompatibilityAlias(atLoc, aliasId, aliasLoc,
+                                         classId, classLoc);
 }
 
 ///   property-synthesis:
@@ -1927,11 +1927,35 @@ void Parser::StashAwayMethodOrFunctionBodyTokens(Decl *MDecl) {
   LexedMethod* LM = new LexedMethod(this, MDecl);
   CurParsedObjCImpl->LateParsedObjCMethods.push_back(LM);
   CachedTokens &Toks = LM->Toks;
-  // Begin by storing the '{' token.
+  // Begin by storing the '{' or 'try' or ':' token.
   Toks.push_back(Tok);
+  if (Tok.is(tok::kw_try)) {
+    ConsumeToken();
+    if (Tok.is(tok::colon)) {
+      Toks.push_back(Tok);
+      ConsumeToken();
+      while (Tok.isNot(tok::l_brace)) {
+        ConsumeAndStoreUntil(tok::l_paren, Toks, /*StopAtSemi=*/false);
+        ConsumeAndStoreUntil(tok::r_paren, Toks, /*StopAtSemi=*/false);
+      }
+    }
+    Toks.push_back(Tok); // also store '{'
+  }
+  else if (Tok.is(tok::colon)) {
+    ConsumeToken();
+    while (Tok.isNot(tok::l_brace)) {
+      ConsumeAndStoreUntil(tok::l_paren, Toks, /*StopAtSemi=*/false);
+      ConsumeAndStoreUntil(tok::r_paren, Toks, /*StopAtSemi=*/false);
+    }
+    Toks.push_back(Tok); // also store '{'
+  }
   ConsumeBrace();
   // Consume everything up to (and including) the matching right brace.
   ConsumeAndStoreUntil(tok::r_brace, Toks, /*StopAtSemi=*/false);
+  while (Tok.is(tok::kw_catch)) {
+    ConsumeAndStoreUntil(tok::l_brace, Toks, /*StopAtSemi=*/false);
+    ConsumeAndStoreUntil(tok::r_brace, Toks, /*StopAtSemi=*/false);
+  }
 }
 
 ///   objc-method-def: objc-method-proto ';'[opt] '{' body '}'
@@ -1971,15 +1995,10 @@ Decl *Parser::ParseObjCMethodDefinition() {
 
   // Allow the rest of sema to find private method decl implementations.
   Actions.AddAnyMethodToGlobalPool(MDecl);
-
-  if (CurParsedObjCImpl) {
-    // Consume the tokens and store them for later parsing.
-    StashAwayMethodOrFunctionBodyTokens(MDecl);
-  } else {
-    ConsumeBrace();
-    SkipUntil(tok::r_brace, /*StopAtSemi=*/false);
-  }
-
+  assert (CurParsedObjCImpl 
+          && "ParseObjCMethodDefinition - Method out of @implementation");
+  // Consume the tokens and store them for later parsing.
+  StashAwayMethodOrFunctionBodyTokens(MDecl);
   return MDecl;
 }
 
@@ -2868,8 +2887,9 @@ void Parser::ParseLexedObjCMethodDefs(LexedMethod &LM, bool parseMethod) {
   // Consume the previously pushed token.
   ConsumeAnyToken();
     
-  assert(Tok.is(tok::l_brace) && "Inline objective-c method not starting with '{'");
-  SourceLocation BraceLoc = Tok.getLocation();
+  assert((Tok.is(tok::l_brace) || Tok.is(tok::kw_try) ||
+          Tok.is(tok::colon)) && 
+          "Inline objective-c method not starting with '{' or 'try' or ':'");
   // Enter a scope for the method or c-fucntion body.
   ParseScope BodyScope(this,
                        parseMethod
@@ -2878,28 +2898,18 @@ void Parser::ParseLexedObjCMethodDefs(LexedMethod &LM, bool parseMethod) {
     
   // Tell the actions module that we have entered a method or c-function definition 
   // with the specified Declarator for the method/function.
-  Actions.ActOnStartOfObjCMethodOrCFunctionDef(getCurScope(), MCDecl, parseMethod);
-    
-  if (SkipFunctionBodies && trySkippingFunctionBody()) {
-    BodyScope.Exit();
-    (void)Actions.ActOnFinishFunctionBody(MCDecl, 0);
-    return;
+  if (parseMethod)
+    Actions.ActOnStartOfObjCMethodDef(getCurScope(), MCDecl);
+  else
+    Actions.ActOnStartOfFunctionDef(getCurScope(), MCDecl);
+  if (Tok.is(tok::kw_try))
+    MCDecl = ParseFunctionTryBlock(MCDecl, BodyScope);
+  else {
+    if (Tok.is(tok::colon))
+      ParseConstructorInitializer(MCDecl);
+    MCDecl = ParseFunctionStatementBody(MCDecl, BodyScope);
   }
-    
-  StmtResult FnBody(ParseCompoundStatementBody());
-    
-  // If the function body could not be parsed, make a bogus compoundstmt.
-  if (FnBody.isInvalid()) {
-    Sema::CompoundScopeRAII CompoundScope(Actions);
-    FnBody = Actions.ActOnCompoundStmt(BraceLoc, BraceLoc,
-                                       MultiStmtArg(Actions), false);
-  }
-    
-  // Leave the function body scope.
-  BodyScope.Exit();
-    
-  (void)Actions.ActOnFinishFunctionBody(MCDecl, FnBody.take());
-
+  
   if (Tok.getLocation() != OrigLoc) {
     // Due to parsing error, we either went over the cached tokens or
     // there are still cached tokens left. If it's the latter case skip the

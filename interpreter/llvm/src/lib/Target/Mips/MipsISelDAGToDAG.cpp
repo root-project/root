@@ -242,13 +242,14 @@ bool MipsDAGToDAGISel::ReplaceUsesWithZeroReg(MachineRegisterInfo *MRI,
 
   // Replace uses with ZeroReg.
   for (MachineRegisterInfo::use_iterator U = MRI->use_begin(DstReg),
-       E = MRI->use_end(); U != E; ++U) {
+       E = MRI->use_end(); U != E;) {
     MachineOperand &MO = U.getOperand();
+    unsigned OpNo = U.getOperandNo();
     MachineInstr *MI = MO.getParent();
+    ++U;
 
     // Do not replace if it is a phi's operand or is tied to def operand.
-    if (MI->isPHI() || MI->isRegTiedToDefOperand(U.getOperandNo()) ||
-        MI->isPseudo())
+    if (MI->isPHI() || MI->isRegTiedToDefOperand(OpNo) || MI->isPseudo())
       continue;
 
     MO.setReg(ZeroReg);
@@ -288,21 +289,6 @@ SDNode *MipsDAGToDAGISel::getGlobalBaseReg() {
 bool MipsDAGToDAGISel::
 SelectAddr(SDNode *Parent, SDValue Addr, SDValue &Base, SDValue &Offset) {
   EVT ValTy = Addr.getValueType();
-
-  // If Parent is an unaligned f32 load or store, select a (base + index)
-  // floating point load/store instruction (luxc1 or suxc1).
-  const LSBaseSDNode *LS = 0;
-
-  if (Parent && (LS = dyn_cast<LSBaseSDNode>(Parent))) {
-    EVT VT = LS->getMemoryVT();
-
-    if (VT.getSizeInBits() / 8 > LS->getAlignment()) {
-      assert(TLI.allowsUnalignedMemoryAccesses(VT) &&
-             "Unaligned loads/stores not supported for this type.");
-      if (VT == MVT::f32)
-        return false;
-    }
-  }
 
   // if Address is FI, get the TargetFrameIndex.
   if (FrameIndexSDNode *FIN = dyn_cast<FrameIndexSDNode>(Addr)) {
@@ -362,6 +348,8 @@ SelectAddr(SDNode *Parent, SDValue Addr, SDValue &Base, SDValue &Offset) {
     }
 
     // If an indexed floating point load/store can be emitted, return false.
+    const LSBaseSDNode *LS = dyn_cast<LSBaseSDNode>(Parent);
+
     if (LS &&
         (LS->getMemoryVT() == MVT::f32 || LS->getMemoryVT() == MVT::f64) &&
         Subtarget.hasMips32r2Or64())

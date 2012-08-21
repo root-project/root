@@ -50,6 +50,7 @@
 #include "clang/ASTMatchers/ASTMatchersMacros.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/Support/Regex.h"
+#include <iterator>
 
 namespace clang {
 namespace ast_matchers {
@@ -163,6 +164,14 @@ const internal::VariadicDynCastAllOfMatcher<
   Decl,
   CXXRecordDecl> record;
 
+/// \brief Matches C++ class template declarations.
+///
+/// Example matches Z
+///   template<class T> class Z {};
+const internal::VariadicDynCastAllOfMatcher<
+  Decl,
+  ClassTemplateDecl> classTemplate;
+
 /// \brief Matches C++ class template specializations.
 ///
 /// Given
@@ -193,6 +202,75 @@ AST_MATCHER_P(ClassTemplateSpecializationDecl, hasAnyTemplateArgument,
       return true;
   }
   return false;
+}
+
+/// \brief Matches expressions that match InnerMatcher after any implicit casts
+/// are stripped off.
+///
+/// Parentheses and explicit casts are not discarded.
+/// Given
+///   int arr[5];
+///   int a = 0;
+///   char b = 0;
+///   const int c = a;
+///   int *d = arr;
+///   long e = (long) 0l;
+/// The matchers
+///    variable(hasInitializer(ignoringImpCasts(integerLiteral())))
+///    variable(hasInitializer(ignoringImpCasts(declarationReference())))
+/// would match the declarations for a, b, c, and d, but not e.
+/// while
+///    variable(hasInitializer(integerLiteral()))
+///    variable(hasInitializer(declarationReference()))
+/// only match the declarations for b, c, and d.
+AST_MATCHER_P(Expr, ignoringImpCasts,
+              internal::Matcher<Expr>, InnerMatcher) {
+  return InnerMatcher.matches(*Node.IgnoreImpCasts(), Finder, Builder);
+}
+
+/// \brief Matches expressions that match InnerMatcher after parentheses and
+/// casts are stripped off.
+///
+/// Implicit and non-C Style casts are also discarded.
+/// Given
+///   int a = 0;
+///   char b = (0);
+///   void* c = reinterpret_cast<char*>(0);
+///   char d = char(0);
+/// The matcher
+///    variable(hasInitializer(ignoringParenCasts(integerLiteral())))
+/// would match the declarations for a, b, c, and d.
+/// while
+///    variable(hasInitializer(integerLiteral()))
+/// only match the declaration for a.
+AST_MATCHER_P(Expr, ignoringParenCasts, internal::Matcher<Expr>, InnerMatcher) {
+  return InnerMatcher.matches(*Node.IgnoreParenCasts(), Finder, Builder);
+}
+
+/// \brief Matches expressions that match InnerMatcher after implicit casts and
+/// parentheses are stripped off.
+///
+/// Explicit casts are not discarded.
+/// Given
+///   int arr[5];
+///   int a = 0;
+///   char b = (0);
+///   const int c = a;
+///   int *d = (arr);
+///   long e = ((long) 0l);
+/// The matchers
+///    variable(hasInitializer(ignoringParenImpCasts(
+///       integerLiteral())))
+///    variable(hasInitializer(ignoringParenImpCasts(
+///       declarationReference())))
+/// would match the declarations for a, b, c, and d, but not e.
+/// while
+///    variable(hasInitializer(integerLiteral()))
+///    variable(hasInitializer(declarationReference()))
+/// would only match the declaration for a.
+AST_MATCHER_P(Expr, ignoringParenImpCasts,
+              internal::Matcher<Expr>, InnerMatcher) {
+  return InnerMatcher.matches(*Node.IgnoreParenImpCasts(), Finder, Builder);
 }
 
 /// \brief Matches classTemplateSpecializations where the n'th TemplateArgument
@@ -315,6 +393,13 @@ const internal::VariadicDynCastAllOfMatcher<Decl, FieldDecl> field;
 ///   void f();
 const internal::VariadicDynCastAllOfMatcher<Decl, FunctionDecl> function;
 
+/// \brief Matches C++ function template declarations.
+///
+/// Example matches f
+///   template<class T> void f(T t) {}
+const internal::VariadicDynCastAllOfMatcher<
+  Decl,
+  FunctionTemplateDecl> functionTemplate;
 
 /// \brief Matches statements.
 ///
@@ -691,6 +776,19 @@ const internal::VariadicDynCastAllOfMatcher<
   Expr,
   ImplicitCastExpr> implicitCast;
 
+/// \brief Matches any cast nodes of Clang's AST.
+///
+/// Example: castExpr() matches each of the following:
+///   (int) 3;
+///   const_cast<Expr *>(SubExpr);
+///   char c = 0;
+/// but does not match
+///   int i = (0);
+///   int k = 0;
+const internal::VariadicDynCastAllOfMatcher<
+  Expr,
+  CastExpr> castExpr;
+
 /// \brief Matches functional cast expressions
 ///
 /// Example: Matches Foo(bar);
@@ -980,6 +1078,8 @@ internal::PolymorphicMatcherWithParam1<internal::NotMatcher, M> unless(const M &
 
 /// \brief Matches a type if the declaration of the type matches the given
 /// matcher.
+///
+/// Usable as: Matcher<QualType>, Matcher<CallExpr>, Matcher<CXXConstructExpr>
 inline internal::PolymorphicMatcherWithParam1< internal::HasDeclarationMatcher,
                                      internal::Matcher<Decl> >
     hasDeclaration(const internal::Matcher<Decl> &InnerMatcher) {
@@ -1066,6 +1166,8 @@ AST_POLYMORPHIC_MATCHER_P(hasType, internal::Matcher<QualType>,
 ///             and z (matcher = variable(hasType(record(hasName("X")))))
 ///  class X {};
 ///  void y(X &x) { x; X z; }
+///
+/// Usable as: Matcher<Expr>, Matcher<ValueDecl>
 inline internal::PolymorphicMatcherWithParam1<
   internal::matcher_hasTypeMatcher,
   internal::Matcher<QualType> >
@@ -1189,6 +1291,21 @@ AST_MATCHER_P(DeclRefExpr, throughUsingDecl,
   return false;
 }
 
+/// \brief Matches the Decl of a DeclStmt which has a single declaration.
+///
+/// Given
+///   int a, b;
+///   int c;
+/// declarationStatement(hasSingleDecl(anything()))
+///   matches 'int c;' but not 'int a, b;'.
+AST_MATCHER_P(DeclStmt, hasSingleDecl, internal::Matcher<Decl>, InnerMatcher) {
+  if (Node.isSingleDecl()) {
+    const Decl *FoundDecl = Node.getSingleDecl();
+    return InnerMatcher.matches(*FoundDecl, Finder, Builder);
+  }
+  return false;
+}
+
 /// \brief Matches a variable declaration that has an initializer expression
 /// that matches the given matcher.
 ///
@@ -1232,6 +1349,44 @@ AST_POLYMORPHIC_MATCHER_P2(
   return (N < Node.getNumArgs() &&
           InnerMatcher.matches(
               *Node.getArg(N)->IgnoreParenImpCasts(), Finder, Builder));
+}
+
+/// \brief Matches declaration statements that contain a specific number of
+/// declarations.
+///
+/// Example: Given
+///   int a, b;
+///   int c;
+///   int d = 2, e;
+/// declCountIs(2)
+///   matches 'int a, b;' and 'int d = 2, e;', but not 'int c;'.
+AST_MATCHER_P(DeclStmt, declCountIs, unsigned, N) {
+  return std::distance(Node.decl_begin(), Node.decl_end()) == (ptrdiff_t)N;
+}
+
+/// \brief Matches the n'th declaration of a declaration statement.
+///
+/// Note that this does not work for global declarations because the AST
+/// breaks up multiple-declaration DeclStmt's into multiple single-declaration
+/// DeclStmt's.
+/// Example: Given non-global declarations
+///   int a, b = 0;
+///   int c;
+///   int d = 2, e;
+/// declarationStatement(containsDeclaration(
+///       0, variable(hasInitializer(anything()))))
+///   matches only 'int d = 2, e;', and
+/// declarationStatement(containsDeclaration(1, variable()))
+///   matches 'int a, b = 0' as well as 'int d = 2, e;'
+///   but 'int c;' is not matched.
+AST_MATCHER_P2(DeclStmt, containsDeclaration, unsigned, N,
+               internal::Matcher<Decl>, InnerMatcher) {
+  const unsigned NumDecls = std::distance(Node.decl_begin(), Node.decl_end());
+  if (N >= NumDecls)
+    return false;
+  DeclStmt::const_decl_iterator Iterator = Node.decl_begin();
+  std::advance(Iterator, N);
+  return InnerMatcher.matches(**Iterator, Finder, Builder);
 }
 
 /// \brief Matches a constructor initializer.
@@ -1381,6 +1536,18 @@ AST_MATCHER_P(FunctionDecl, returns, internal::Matcher<QualType>, Matcher) {
   return Matcher.matches(Node.getResultType(), Finder, Builder);
 }
 
+/// \brief Matches extern "C" function declarations.
+///
+/// Given:
+///   extern "C" void f() {}
+///   extern "C" { void g() {} }
+///   void h() {}
+/// function(isExternC())
+///   matches the declaration of f and g, but not the declaration h
+AST_MATCHER(FunctionDecl, isExternC) {
+  return Node.isExternC();
+}
+
 /// \brief Matches the condition expression of an if statement, for loop,
 /// or conditional operator.
 ///
@@ -1499,6 +1666,9 @@ AST_MATCHER_P(CompoundStmt, statementCountIs, unsigned, N) {
 ///
 /// Example matches true (matcher = boolLiteral(equals(true)))
 ///   true
+///
+/// Usable as: Matcher<CharacterLiteral>, Matcher<CXXBoolLiteral>,
+///            Matcher<FloatingLiteral>, Matcher<IntegerLiteral>
 template <typename ValueT>
 internal::PolymorphicMatcherWithParam1<internal::ValueEqualsMatcher, ValueT>
 equals(const ValueT &Value) {
@@ -1624,6 +1794,8 @@ AST_MATCHER_P(ConditionalOperator, hasFalseExpression,
 ///   extern int vb;  // Doesn't match, as it doesn't define the variable.
 ///   void fa() {}
 ///   void fb();  // Doesn't match, as it has no body.
+///
+/// Usable as: Matcher<TagDecl>, Matcher<VarDecl>, Matcher<FunctionDecl>
 inline internal::PolymorphicMatcherWithParam0<internal::IsDefinitionMatcher>
 isDefinition() {
   return internal::PolymorphicMatcherWithParam0<
@@ -1775,11 +1947,28 @@ AST_MATCHER_P(UsingShadowDecl, hasTargetDecl,
 ///   template <> class X<A> {}; X<A> x;
 /// record(hasName("::X"), isTemplateInstantiation())
 ///   does not match, as X<A> is an explicit template specialization.
+///
+/// Usable as: Matcher<FunctionDecl>, Matcher<VarDecl>, Matcher<CXXRecordDecl>
 inline internal::PolymorphicMatcherWithParam0<
   internal::IsTemplateInstantiationMatcher>
 isTemplateInstantiation() {
   return internal::PolymorphicMatcherWithParam0<
     internal::IsTemplateInstantiationMatcher>();
+}
+
+/// \brief Matches explicit template specializations of function, class, or
+/// static member variable template instantiations.
+///
+/// Given
+///   template<typename T> void A(T t) { }
+///   template<> void A(int N) { }
+/// function(isExplicitSpecialization())
+///   matches the specialization A<int>().
+inline internal::PolymorphicMatcherWithParam0<
+  internal::IsExplicitTemplateSpecializationMatcher>
+isExplicitTemplateSpecialization() {
+  return internal::PolymorphicMatcherWithParam0<
+    internal::IsExplicitTemplateSpecializationMatcher>();
 }
 
 } // end namespace ast_matchers

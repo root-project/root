@@ -32,7 +32,7 @@ namespace ento {
 class CallEvent;
 class ProgramState;
 class ProgramStateManager;
-class SubRegionMap;
+class ScanReachableSymbols;
 
 class StoreManager {
 protected:
@@ -85,11 +85,6 @@ public:
   ///  used to query and manipulate MemRegion objects.
   MemRegionManager& getRegionManager() { return MRMgr; }
 
-  /// getSubRegionMap - Returns an opaque map object that clients can query
-  ///  to get the subregions of a given MemRegion object.  It is the
-  //   caller's responsibility to 'delete' the returned map.
-  virtual SubRegionMap *getSubRegionMap(Store store) = 0;
-
   virtual Loc getLValueVar(const VarDecl *VD, const LocationContext *LC) {
     return svalBuilder.makeLoc(MRMgr.getVarRegion(VD, LC));
   }
@@ -120,7 +115,10 @@ public:
   virtual SVal ArrayToPointer(Loc Array) = 0;
 
   /// Evaluates DerivedToBase casts.
-  virtual SVal evalDerivedToBase(SVal derived, QualType basePtrType) = 0;
+  SVal evalDerivedToBase(SVal derived, const CastExpr *Cast);
+
+  /// Evaluates a derived-to-base cast through a single level of derivation.
+  virtual SVal evalDerivedToBase(SVal derived, QualType derivedPtrType) = 0;
 
   /// \brief Evaluates C++ dynamic_cast cast.
   /// The callback may result in the following 3 scenarios:
@@ -132,15 +130,6 @@ public:
   /// valid only if Failed flag is set to false.
   virtual SVal evalDynamicCast(SVal base, QualType derivedPtrType,
                                  bool &Failed) = 0;
-
-  class CastResult {
-    ProgramStateRef state;
-    const MemRegion *region;
-  public:
-    ProgramStateRef getState() const { return state; }
-    const MemRegion* getRegion() const { return region; }
-    CastResult(ProgramStateRef s, const MemRegion* r = 0) : state(s), region(r){}
-  };
 
   const ElementRegion *GetElementZeroRegion(const MemRegion *R, QualType T);
 
@@ -202,6 +191,12 @@ public:
   StoreRef enterStackFrame(Store store,
                            const CallEvent &Call,
                            const StackFrameContext *CalleeCtx);
+
+  /// Finds the transitive closure of symbols within the given region.
+  ///
+  /// Returns false if the visitor aborted the scan.
+  virtual bool scanReachableSymbols(Store S, const MemRegion *R,
+                                    ScanReachableSymbols &Visitor) = 0;
 
   virtual void print(Store store, raw_ostream &Out,
                      const char* nl, const char *sep) = 0;
@@ -273,24 +268,6 @@ inline StoreRef &StoreRef::operator=(StoreRef const &newStore) {
   }
   return *this;
 }
-
-// FIXME: Do we still need this?
-/// SubRegionMap - An abstract interface that represents a queryable map
-///  between MemRegion objects and their subregions.
-class SubRegionMap {
-  virtual void anchor();
-public:
-  virtual ~SubRegionMap() {}
-
-  class Visitor {
-    virtual void anchor();
-  public:
-    virtual ~Visitor() {}
-    virtual bool Visit(const MemRegion* Parent, const MemRegion* SubRegion) = 0;
-  };
-
-  virtual bool iterSubRegions(const MemRegion *region, Visitor& V) const = 0;
-};
 
 // FIXME: Do we need to pass ProgramStateManager anymore?
 StoreManager *CreateRegionStoreManager(ProgramStateManager& StMgr);

@@ -1131,18 +1131,27 @@ void Driver::BuildActions(const ToolChain &TC, const DerivedArgList &Args,
       if (Args.hasArg(options::OPT_Qunused_arguments))
         continue;
 
+      // Special case when final phase determined by binary name, rather than
+      // by a command-line argument with a corresponding Arg.
+      if (CCCIsCPP)
+        Diag(clang::diag::warn_drv_input_file_unused_by_cpp)
+          << InputArg->getAsString(Args)
+          << getPhaseName(InitialPhase);
       // Special case '-E' warning on a previously preprocessed file to make
       // more sense.
-      if (InitialPhase == phases::Compile && FinalPhase == phases::Preprocess &&
-          getPreprocessedType(InputType) == types::TY_INVALID)
+      else if (InitialPhase == phases::Compile &&
+               FinalPhase == phases::Preprocess &&
+               getPreprocessedType(InputType) == types::TY_INVALID)
         Diag(clang::diag::warn_drv_preprocessed_input_file_unused)
           << InputArg->getAsString(Args)
-          << FinalPhaseArg->getOption().getName();
+          << !!FinalPhaseArg
+          << FinalPhaseArg ? FinalPhaseArg->getOption().getName() : "";
       else
         Diag(clang::diag::warn_drv_input_file_unused)
           << InputArg->getAsString(Args)
           << getPhaseName(InitialPhase)
-          << FinalPhaseArg->getOption().getName();
+          << !!FinalPhaseArg
+          << FinalPhaseArg ? FinalPhaseArg->getOption().getName() : "";
       continue;
     }
 
@@ -1210,8 +1219,14 @@ Action *Driver::ConstructPhaseAction(const ArgList &Args, phases::ID Phase,
     }
     return new PreprocessJobAction(Input, OutputTy);
   }
-  case phases::Precompile:
-    return new PrecompileJobAction(Input, types::TY_PCH);
+  case phases::Precompile: {
+    types::ID OutputTy = types::TY_PCH;
+    if (Args.hasArg(options::OPT_fsyntax_only)) {
+      // Syntax checks should not emit a PCH file
+      OutputTy = types::TY_Nothing;
+    }
+    return new PrecompileJobAction(Input, OutputTy);
+  }
   case phases::Compile: {
     if (Args.hasArg(options::OPT_fsyntax_only)) {
       return new CompileJobAction(Input, types::TY_Nothing);
@@ -1672,7 +1687,8 @@ std::string Driver::GetTemporaryPath(StringRef Prefix, const char *Suffix)
   // FIXME: Grumble, makeUnique sometimes leaves the file around!?  PR3837.
   P.eraseFromDisk(false, 0);
 
-  P.appendSuffix(Suffix);
+  if (Suffix)
+    P.appendSuffix(Suffix);
   return P.str();
 }
 
@@ -1759,6 +1775,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
       break;
     case llvm::Triple::OpenBSD:
       TC = new toolchains::OpenBSD(*this, Target, Args);
+      break;
+    case llvm::Triple::Bitrig:
+      TC = new toolchains::Bitrig(*this, Target, Args);
       break;
     case llvm::Triple::NetBSD:
       TC = new toolchains::NetBSD(*this, Target, Args);

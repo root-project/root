@@ -385,4 +385,19 @@ TEST(RecursiveASTVisitor, VisitsImplicitCopyConstructors) {
       "int main() { Simple s; Simple t(s); }\n"));
 }
 
+TEST(RecursiveASTVisitor, VisitsExtension) {
+  DeclRefExprVisitor Visitor;
+  Visitor.ExpectMatch("s", 1, 24);
+  EXPECT_TRUE(Visitor.runOver(
+    "int s = __extension__ (s);\n"));
+}
+
+TEST(RecursiveASTVisitor, VisitsCompoundLiteralType) {
+  TypeLocVisitor Visitor;
+  Visitor.ExpectMatch("struct S", 1, 26);
+  EXPECT_TRUE(Visitor.runOver(
+      "int f() { return (struct S { int a; }){.a = 0}.a; }",
+      TypeLocVisitor::Lang_C));
+}
+
 } // end namespace clang

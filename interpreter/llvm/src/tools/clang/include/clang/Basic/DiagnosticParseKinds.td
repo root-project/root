@@ -415,9 +415,6 @@ def err_expected_init_in_condition_lparen : Error<
   "variable declaration in condition cannot have a parenthesized initializer">;
 def err_extraneous_rparen_in_condition : Error<
   "extraneous ')' after condition, expected a statement">;
-def warn_parens_disambiguated_as_function_decl : Warning<
-  "parentheses were disambiguated as a function declarator">,
-  InGroup<VexingParse>;
 def warn_dangling_else : Warning<
   "add explicit braces to avoid dangling else">,
   InGroup<DanglingElse>;
@@ -679,6 +676,10 @@ def err_availability_redundant : Error<
 def warn_availability_and_unavailable : Warning<
   "'unavailable' availability overrides all other availability information">,
   InGroup<Availability>;
+
+// Type safety attributes
+def err_type_safety_unknown_flag : Error<
+  "invalid comparison flag %0; use 'layout_compatible' or 'must_be_null'">;
 
 // Language specific pragmas
 // - Generic warnings

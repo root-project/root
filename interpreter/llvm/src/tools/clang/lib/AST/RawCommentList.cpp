@@ -9,8 +9,12 @@
 
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Comment.h"
 #include "clang/AST/CommentLexer.h"
 #include "clang/AST/CommentBriefParser.h"
+#include "clang/AST/CommentSema.h"
+#include "clang/AST/CommentParser.h"
+#include "clang/AST/CommentCommandTraits.h"
 #include "llvm/ADT/STLExtras.h"
 
 using namespace clang;
@@ -139,10 +143,11 @@ const char *RawComment::extractBriefText(const ASTContext &Context) const {
   // a separate allocator for all temporary stuff.
   llvm::BumpPtrAllocator Allocator;
 
-  comments::Lexer L(Allocator,
+  comments::CommandTraits Traits;
+  comments::Lexer L(Allocator, Traits,
                     Range.getBegin(), comments::CommentOptions(),
                     RawText.begin(), RawText.end());
-  comments::BriefParser P(L);
+  comments::BriefParser P(L, Traits);
 
   const std::string Result = P.Parse();
   const unsigned BriefTextLength = Result.size();
@@ -152,6 +157,24 @@ const char *RawComment::extractBriefText(const ASTContext &Context) const {
   BriefTextValid = true;
 
   return BriefTextPtr;
+}
+
+comments::FullComment *RawComment::parse(const ASTContext &Context,
+                                         const Decl *D) const {
+  // Make sure that RawText is valid.
+  getRawText(Context.getSourceManager());
+
+  comments::CommandTraits Traits;
+  comments::Lexer L(Context.getAllocator(), Traits,
+                    getSourceRange().getBegin(), comments::CommentOptions(),
+                    RawText.begin(), RawText.end());
+  comments::Sema S(Context.getAllocator(), Context.getSourceManager(),
+                   Context.getDiagnostics(), Traits);
+  S.setDecl(D);
+  comments::Parser P(L, S, Context.getAllocator(), Context.getSourceManager(),
+                     Context.getDiagnostics(), Traits);
+
+  return P.parseFullComment();
 }
 
 namespace {

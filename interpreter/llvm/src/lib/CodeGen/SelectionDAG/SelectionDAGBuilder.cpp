@@ -3460,7 +3460,7 @@ void SelectionDAGBuilder::visitAtomicLoad(const LoadInst &I) {
 
   SDValue InChain = getRoot();
 
-  EVT VT = EVT::getEVT(I.getType());
+  EVT VT = TLI.getValueType(I.getType());
 
   if (I.getAlignment() * 8 < VT.getSizeInBits())
     report_fatal_error("Cannot generate unaligned atomic load");
@@ -3490,7 +3490,7 @@ void SelectionDAGBuilder::visitAtomicStore(const StoreInst &I) {
 
   SDValue InChain = getRoot();
 
-  EVT VT = EVT::getEVT(I.getValueOperand()->getType());
+  EVT VT = TLI.getValueType(I.getValueOperand()->getType());
 
   if (I.getAlignment() * 8 < VT.getSizeInBits())
     report_fatal_error("Cannot generate unaligned atomic store");
@@ -5511,6 +5511,22 @@ bool SelectionDAGBuilder::visitMemCmpCall(const CallInst &I) {
   return false;
 }
 
+/// visitUnaryFloatCall - If a call instruction is a unary floating-point
+/// operation (as expected), translate it to an SDNode with the specified opcode
+/// and return true.
+bool SelectionDAGBuilder::visitUnaryFloatCall(const CallInst &I,
+                                              unsigned Opcode) {
+  // Sanity check that it really is a unary floating-point call.
+  if (I.getNumArgOperands() != 1 ||
+      !I.getArgOperand(0)->getType()->isFloatingPointTy() ||
+      I.getType() != I.getArgOperand(0)->getType() ||
+      !I.onlyReadsMemory())
+    return false;
+
+  SDValue Tmp = getValue(I.getArgOperand(0));
+  setValue(&I, DAG.getNode(Opcode, getCurDebugLoc(), Tmp.getValueType(), Tmp));
+  return true;
+}
 
 void SelectionDAGBuilder::visitCall(const CallInst &I) {
   // Handle inline assembly differently.
@@ -5541,150 +5557,97 @@ void SelectionDAGBuilder::visitCall(const CallInst &I) {
 
     // Check for well-known libc/libm calls.  If the function is internal, it
     // can't be a library call.
-    if (!F->hasLocalLinkage() && F->hasName()) {
-      StringRef Name = F->getName();
-      if ((LibInfo->has(LibFunc::copysign) && Name == "copysign") ||
-          (LibInfo->has(LibFunc::copysignf) && Name == "copysignf") ||
-          (LibInfo->has(LibFunc::copysignl) && Name == "copysignl")) {
+    LibFunc::Func Func;
+    if (!F->hasLocalLinkage() && F->hasName() &&
+        LibInfo->getLibFunc(F->getName(), Func) &&
+        LibInfo->hasOptimizedCodeGen(Func)) {
+      switch (Func) {
+      default: break;
+      case LibFunc::copysign:
+      case LibFunc::copysignf:
+      case LibFunc::copysignl:
         if (I.getNumArgOperands() == 2 &&   // Basic sanity checks.
             I.getArgOperand(0)->getType()->isFloatingPointTy() &&
             I.getType() == I.getArgOperand(0)->getType() &&
-            I.getType() == I.getArgOperand(1)->getType()) {
+            I.getType() == I.getArgOperand(1)->getType() &&
+            I.onlyReadsMemory()) {
           SDValue LHS = getValue(I.getArgOperand(0));
           SDValue RHS = getValue(I.getArgOperand(1));
           setValue(&I, DAG.getNode(ISD::FCOPYSIGN, getCurDebugLoc(),
                                    LHS.getValueType(), LHS, RHS));
           return;
         }
-      } else if ((LibInfo->has(LibFunc::fabs) && Name == "fabs") ||
-                 (LibInfo->has(LibFunc::fabsf) && Name == "fabsf") ||
-                 (LibInfo->has(LibFunc::fabsl) && Name == "fabsl")) {
-        if (I.getNumArgOperands() == 1 &&   // Basic sanity checks.
-            I.getArgOperand(0)->getType()->isFloatingPointTy() &&
-            I.getType() == I.getArgOperand(0)->getType()) {
-          SDValue Tmp = getValue(I.getArgOperand(0));
-          setValue(&I, DAG.getNode(ISD::FABS, getCurDebugLoc(),
-                                   Tmp.getValueType(), Tmp));
+        break;
+      case LibFunc::fabs:
+      case LibFunc::fabsf:
+      case LibFunc::fabsl:
+        if (visitUnaryFloatCall(I, ISD::FABS))
           return;
-        }
-      } else if ((LibInfo->has(LibFunc::sin) && Name == "sin") ||
-                 (LibInfo->has(LibFunc::sinf) && Name == "sinf") ||
-                 (LibInfo->has(LibFunc::sinl) && Name == "sinl")) {
-        if (I.getNumArgOperands() == 1 &&   // Basic sanity checks.
-            I.getArgOperand(0)->getType()->isFloatingPointTy() &&
-            I.getType() == I.getArgOperand(0)->getType() &&
-            I.onlyReadsMemory()) {
-          SDValue Tmp = getValue(I.getArgOperand(0));
-          setValue(&I, DAG.getNode(ISD::FSIN, getCurDebugLoc(),
-                                   Tmp.getValueType(), Tmp));
+        break;
+      case LibFunc::sin:
+      case LibFunc::sinf:
+      case LibFunc::sinl:
+        if (visitUnaryFloatCall(I, ISD::FSIN))
           return;
-        }
-      } else if ((LibInfo->has(LibFunc::cos) && Name == "cos") ||
-                 (LibInfo->has(LibFunc::cosf) && Name == "cosf") ||
-                 (LibInfo->has(LibFunc::cosl) && Name == "cosl")) {
-        if (I.getNumArgOperands() == 1 &&   // Basic sanity checks.
-            I.getArgOperand(0)->getType()->isFloatingPointTy() &&
-            I.getType() == I.getArgOperand(0)->getType() &&
-            I.onlyReadsMemory()) {
-          SDValue Tmp = getValue(I.getArgOperand(0));
-          setValue(&I, DAG.getNode(ISD::FCOS, getCurDebugLoc(),
-                                   Tmp.getValueType(), Tmp));
+        break;
+      case LibFunc::cos:
+      case LibFunc::cosf:
+      case LibFunc::cosl:
+        if (visitUnaryFloatCall(I, ISD::FCOS))
           return;
-        }
-      } else if ((LibInfo->has(LibFunc::sqrt) && Name == "sqrt") ||
-                 (LibInfo->has(LibFunc::sqrtf) && Name == "sqrtf") ||
-                 (LibInfo->has(LibFunc::sqrtl) && Name == "sqrtl")) {
-        if (I.getNumArgOperands() == 1 &&   // Basic sanity checks.
-            I.getArgOperand(0)->getType()->isFloatingPointTy() &&
-            I.getType() == I.getArgOperand(0)->getType() &&
-            I.onlyReadsMemory()) {
-          SDValue Tmp = getValue(I.getArgOperand(0));
-          setValue(&I, DAG.getNode(ISD::FSQRT, getCurDebugLoc(),
-                                   Tmp.getValueType(), Tmp));
+        break;
+      case LibFunc::sqrt:
+      case LibFunc::sqrtf:
+      case LibFunc::sqrtl:
+        if (visitUnaryFloatCall(I, ISD::FSQRT))
           return;
-        }
-      } else if ((LibInfo->has(LibFunc::floor) && Name == "floor") ||
-                 (LibInfo->has(LibFunc::floorf) && Name == "floorf") ||
-                 (LibInfo->has(LibFunc::floorl) && Name == "floorl")) {
-        if (I.getNumArgOperands() == 1 && // Basic sanity checks.
-            I.getArgOperand(0)->getType()->isFloatingPointTy() &&
-            I.getType() == I.getArgOperand(0)->getType()) {
-          SDValue Tmp = getValue(I.getArgOperand(0));
-          setValue(&I, DAG.getNode(ISD::FFLOOR, getCurDebugLoc(),
-                                   Tmp.getValueType(), Tmp));
+        break;
+      case LibFunc::floor:
+      case LibFunc::floorf:
+      case LibFunc::floorl:
+        if (visitUnaryFloatCall(I, ISD::FFLOOR))
           return;
-        }
-      } else if ((LibInfo->has(LibFunc::nearbyint) && Name == "nearbyint") ||
-                 (LibInfo->has(LibFunc::nearbyintf) && Name == "nearbyintf") ||
-                 (LibInfo->has(LibFunc::nearbyintl) && Name == "nearbyintl")) {
-        if (I.getNumArgOperands() == 1 && // Basic sanity checks.
-            I.getArgOperand(0)->getType()->isFloatingPointTy() &&
-            I.getType() == I.getArgOperand(0)->getType()) {
-          SDValue Tmp = getValue(I.getArgOperand(0));
-          setValue(&I, DAG.getNode(ISD::FNEARBYINT, getCurDebugLoc(),
-                                   Tmp.getValueType(), Tmp));
+        break;
+      case LibFunc::nearbyint:
+      case LibFunc::nearbyintf:
+      case LibFunc::nearbyintl:
+        if (visitUnaryFloatCall(I, ISD::FNEARBYINT))
           return;
-        }
-      } else if ((LibInfo->has(LibFunc::ceil) && Name == "ceil") ||
-                 (LibInfo->has(LibFunc::ceilf) && Name == "ceilf") ||
-                 (LibInfo->has(LibFunc::ceill) && Name == "ceill")) {
-        if (I.getNumArgOperands() == 1 && // Basic sanity checks.
-            I.getArgOperand(0)->getType()->isFloatingPointTy() &&
-            I.getType() == I.getArgOperand(0)->getType()) {
-          SDValue Tmp = getValue(I.getArgOperand(0));
-          setValue(&I, DAG.getNode(ISD::FCEIL, getCurDebugLoc(),
-                                   Tmp.getValueType(), Tmp));
+        break;
+      case LibFunc::ceil:
+      case LibFunc::ceilf:
+      case LibFunc::ceill:
+        if (visitUnaryFloatCall(I, ISD::FCEIL))
           return;
-        }
-      } else if ((LibInfo->has(LibFunc::rint) && Name == "rint") ||
-                 (LibInfo->has(LibFunc::rintf) && Name == "rintf") ||
-                 (LibInfo->has(LibFunc::rintl) && Name == "rintl")) {
-        if (I.getNumArgOperands() == 1 && // Basic sanity checks.
-            I.getArgOperand(0)->getType()->isFloatingPointTy() &&
-            I.getType() == I.getArgOperand(0)->getType()) {
-          SDValue Tmp = getValue(I.getArgOperand(0));
-          setValue(&I, DAG.getNode(ISD::FRINT, getCurDebugLoc(),
-                                   Tmp.getValueType(), Tmp));
+        break;
+      case LibFunc::rint:
+      case LibFunc::rintf:
+      case LibFunc::rintl:
+        if (visitUnaryFloatCall(I, ISD::FRINT))
           return;
-        }
-      } else if ((LibInfo->has(LibFunc::trunc) && Name == "trunc") ||
-                 (LibInfo->has(LibFunc::truncf) && Name == "truncf") ||
-                 (LibInfo->has(LibFunc::truncl) && Name == "truncl")) {
-        if (I.getNumArgOperands() == 1 && // Basic sanity checks.
-            I.getArgOperand(0)->getType()->isFloatingPointTy() &&
-            I.getType() == I.getArgOperand(0)->getType()) {
-          SDValue Tmp = getValue(I.getArgOperand(0));
-          setValue(&I, DAG.getNode(ISD::FTRUNC, getCurDebugLoc(),
-                                   Tmp.getValueType(), Tmp));
+        break;
+      case LibFunc::trunc:
+      case LibFunc::truncf:
+      case LibFunc::truncl:
+        if (visitUnaryFloatCall(I, ISD::FTRUNC))
           return;
-        }
-      } else if ((LibInfo->has(LibFunc::log2) && Name == "log2") ||
-                 (LibInfo->has(LibFunc::log2f) && Name == "log2f") ||
-                 (LibInfo->has(LibFunc::log2l) && Name == "log2l")) {
-        if (I.getNumArgOperands() == 1 && // Basic sanity checks.
-            I.getArgOperand(0)->getType()->isFloatingPointTy() &&
-            I.getType() == I.getArgOperand(0)->getType() &&
-            I.onlyReadsMemory()) {
-          SDValue Tmp = getValue(I.getArgOperand(0));
-          setValue(&I, DAG.getNode(ISD::FLOG2, getCurDebugLoc(),
-                                   Tmp.getValueType(), Tmp));
+        break;
+      case LibFunc::log2:
+      case LibFunc::log2f:
+      case LibFunc::log2l:
+        if (visitUnaryFloatCall(I, ISD::FLOG2))
           return;
-        }
-      } else if ((LibInfo->has(LibFunc::exp2) && Name == "exp2") ||
-                 (LibInfo->has(LibFunc::exp2f) && Name == "exp2f") ||
-                 (LibInfo->has(LibFunc::exp2l) && Name == "exp2l")) {
-        if (I.getNumArgOperands() == 1 && // Basic sanity checks.
-            I.getArgOperand(0)->getType()->isFloatingPointTy() &&
-            I.getType() == I.getArgOperand(0)->getType() &&
-            I.onlyReadsMemory()) {
-          SDValue Tmp = getValue(I.getArgOperand(0));
-          setValue(&I, DAG.getNode(ISD::FEXP2, getCurDebugLoc(),
-                                   Tmp.getValueType(), Tmp));
+        break;
+      case LibFunc::exp2:
+      case LibFunc::exp2f:
+      case LibFunc::exp2l:
+        if (visitUnaryFloatCall(I, ISD::FEXP2))
           return;
-        }
-      } else if (Name == "memcmp") {
+        break;
+      case LibFunc::memcmp:
         if (visitMemCmpCall(I))
           return;
+        break;
       }
     }
   }

@@ -158,6 +158,11 @@ def warn_redefinition_in_param_list : Warning<
 def warn_empty_parens_are_function_decl : Warning<
   "empty parentheses interpreted as a function declaration">,
   InGroup<VexingParse>;
+def warn_parens_disambiguated_as_function_declaration : Warning<
+  "parentheses were disambiguated as a function declaration">,
+  InGroup<VexingParse>;
+def note_additional_parens_for_variable_declaration : Note<
+  "add a pair of parentheses to declare a variable">;
 def note_empty_parens_function_call : Note<
   "change this ',' to a ';' to call %0">;
 def note_empty_parens_default_ctor : Note<
@@ -368,9 +373,11 @@ def note_strlcpycat_wrong_size : Note<
   
 def warn_strncat_large_size : Warning<
   "the value of the size argument in 'strncat' is too large, might lead to a " 
-  "buffer overflow">, InGroup<StrncatSize>, DefaultIgnore;
+  "buffer overflow">, InGroup<StrncatSize>;
 def warn_strncat_src_size : Warning<"size argument in 'strncat' call appears " 
-  "to be size of the source">, InGroup<StrncatSize>, DefaultIgnore;
+  "to be size of the source">, InGroup<StrncatSize>;
+def warn_strncat_wrong_size : Warning<
+  "the value of the size argument to 'strncat' is wrong">, InGroup<StrncatSize>;
 def note_strncat_wrong_size : Note<
   "change the argument to be the free space in the destination buffer minus " 
   "the terminating null byte">;
@@ -731,6 +738,9 @@ def warn_objc_property_attr_mutually_exclusive : Warning<
 def warn_objc_missing_super_dealloc : Warning<
   "method possibly missing a [super dealloc] call">,
   InGroup<ObjCMissingSuperCalls>;
+def error_dealloc_bad_result_type : Error<
+  "dealloc return type must be correctly specified as 'void' under ARC, "
+  "instead of %0">;
 def warn_objc_missing_super_finalize : Warning<
   "method possibly missing a [super finalize] call">,
   InGroup<ObjCMissingSuperCalls>;
@@ -805,7 +815,7 @@ def err_friend_def_in_local_class : Error<
   "friend function cannot be defined in a local class">;
   
 def err_abstract_type_in_decl : Error<
-  "%select{return|parameter|variable|field}0 type %1 is an abstract class">;
+  "%select{return|parameter|variable|field|ivar}0 type %1 is an abstract class">;
 def err_allocation_of_abstract_type : Error<
   "allocating an object of abstract class type %0">;
 def err_throw_abstract_type : Error<
@@ -898,6 +908,9 @@ def err_access_field_ctor : Error<
   // hopes that someone will bother noticing and reporting if they appear
   "field of type %0 has %select{private|protected}2 "
   "%select{default |copy |move |*ERROR* |*ERROR* |*ERROR* |}1constructor">,
+  AccessControl;
+def err_access_friend_function : Error<
+  "friend function %1 is a %select{private|protected}0 member of %3">,
   AccessControl;
 
 def err_access_dtor : Error<
@@ -1476,6 +1489,11 @@ def note_non_literal_user_provided_dtor : Note<
   "%0 is not literal because it has a user-provided destructor">;
 def note_non_literal_nontrivial_dtor : Note<
   "%0 is not literal because it has a non-trivial destructor">;
+def warn_private_extern : Warning<
+  "use of __private_extern__ on a declaration may not produce external symbol "
+  "private to the linkage unit and is deprecated">, InGroup<PrivateExtern>;
+def note_private_extern : Note<
+  "use __attribute__((visibility(\"hidden\"))) attribute instead">;
 
 // C++11 char16_t/char32_t
 def warn_cxx98_compat_unicode_type : Warning<
@@ -1529,6 +1547,8 @@ def err_attribute_argument_n_not_int : Error<
   "'%0' attribute requires parameter %1 to be an integer constant">;
 def err_attribute_argument_n_not_string : Error<
   "'%0' attribute requires parameter %1 to be a string">;
+def err_attribute_argument_n_not_identifier : Error<
+  "'%0' attribute requires parameter %1 to be an identifier">;
 def err_attribute_argument_out_of_bounds : Error<
   "'%0' attribute parameter %1 is out of bounds">;
 def err_attribute_requires_objc_interface : Error<
@@ -1537,6 +1557,8 @@ def err_attribute_uuid_malformed_guid : Error<
   "uuid attribute contains a malformed GUID">;
 def warn_nonnull_pointers_only : Warning<
   "nonnull attribute only applies to pointer arguments">;
+def err_attribute_pointers_only : Error<
+  "'%0' attribute only applies to pointer arguments">;
 def err_attribute_invalid_implicit_this_argument : Error<
   "'%0' attribute is invalid for the implicit this argument">;
 def err_ownership_type : Error<
@@ -1752,7 +1774,6 @@ def err_attribute_can_be_applied_only_to_value_decl : Error<
 def warn_attribute_not_on_decl : Error<
   "%0 attribute ignored when parsing type">;
 
-
 // Availability attribute
 def warn_availability_unknown_platform : Warning<
   "unknown platform %0 in availability macro">, InGroup<Availability>;
@@ -1888,6 +1909,9 @@ def warn_impcast_different_enum_types : Warning<
 def warn_impcast_bool_to_null_pointer : Warning<
     "initialization of pointer of type %0 to null from a constant boolean "
     "expression">, InGroup<BoolConversion>;
+def warn_non_literal_null_pointer : Warning<
+    "expression which evaluates to zero treated as a null pointer constant of "
+    "type %0">, InGroup<NonLiteralNullConversion>;
 def warn_impcast_null_pointer_to_integer : Warning<
     "implicit conversion of NULL constant to %0">,
     InGroup<NullConversion>;
@@ -3559,8 +3583,7 @@ def err_arc_autoreleasing_capture : Error<
 def err_arc_thread_ownership : Error<
   "thread-local variable has non-trivial ownership: type is %0">;
 def err_arc_indirect_no_ownership : Error<
-  "%select{pointer|reference}1 to non-const type %0 with no explicit ownership">,
-  InGroup<AutomaticReferenceCounting>;
+  "%select{pointer|reference}1 to non-const type %0 with no explicit ownership">;
 def err_arc_array_param_no_ownership : Error<
   "must explicitly describe intended ownership of an object array parameter">;
 def err_arc_pseudo_dtor_inconstant_quals : Error<
@@ -3662,6 +3685,10 @@ def err_illegal_decl_array_of_references : Error<
   "'%0' declared as array of references of type %1">;
 def err_decl_negative_array_size : Error<
   "'%0' declared as an array with a negative size">;
+def err_array_static_outside_prototype : Error<
+  "%0 used in array declarator outside of function prototype">;
+def err_array_static_not_outermost : Error<
+  "%0 used in non-outermost array type derivation">;
 def err_array_star_outside_prototype : Error<
   "star modifier used outside of function prototype">;
 def err_illegal_decl_pointer_to_reference : Error<
@@ -4938,6 +4965,12 @@ def err_typecheck_cast_to_union_no_type : Error<
   "cast to union type from type %0 not present in union">;
 def err_cast_pointer_from_non_pointer_int : Error<
   "operand of type %0 cannot be cast to a pointer type">;
+def warn_cast_pointer_from_sel : Warning<
+  "cast of type %0 to %1 is deprecated; use sel_getName instead">,
+  InGroup<SelTypeCast>;
+def warn_bad_function_cast : Warning<
+  "cast from function call of type %0 to non-matching type %1">,
+  InGroup<BadFunctionCast>, DefaultIgnore;
 def err_cast_pointer_to_non_pointer_int : Error<
   "pointer cannot be cast to type %0">;
 def err_typecheck_expect_scalar_operand : Error<
@@ -5327,9 +5360,6 @@ def warn_array_index_exceeds_bounds : Warning<
 def note_array_index_out_of_bounds : Note<
   "array %0 declared here">;
 
-def warn_printf_write_back : Warning<
-  "use of '%%n' in format string discouraged (potentially insecure)">,
-  InGroup<FormatSecurity>;
 def warn_printf_insufficient_data_args : Warning<
   "more '%%' conversions than data arguments">, InGroup<Format>;
 def warn_printf_data_arg_not_used : Warning<
@@ -5455,6 +5485,23 @@ def warn_identity_field_assign : Warning<
   "assigning %select{field|instance variable}0 to itself">,
   InGroup<SelfAssignmentField>;
 
+// Type safety attributes
+def err_type_tag_for_datatype_not_ice : Error<
+  "'type_tag_for_datatype' attribute requires the initializer to be "
+  "an %select{integer|integral}0 constant expression">;
+def err_type_tag_for_datatype_too_large : Error<
+  "'type_tag_for_datatype' attribute requires the initializer to be "
+  "an %select{integer|integral}0 constant expression "
+  "that can be represented by a 64 bit integer">;
+def warn_type_tag_for_datatype_wrong_kind : Warning<
+  "this type tag was not designed to be used with this function">,
+  InGroup<TypeSafety>;
+def warn_type_safety_type_mismatch : Warning<
+  "argument type %0 doesn't match specified '%1' type tag "
+  "%select{that requires %3|}2">, InGroup<TypeSafety>;
+def warn_type_safety_null_pointer_required : Warning<
+  "specified %0 type tag requires a null pointer">, InGroup<TypeSafety>;
+
 // Generic selections.
 def err_assoc_type_incomplete : Error<
   "type %0 in generic association incomplete">;
@@ -5486,8 +5533,7 @@ def err_builtin_annotation_second_arg : Error<
 
 // CFString checking
 def err_cfstring_literal_not_string_constant : Error<
-  "CFString literal is not a string constant">,
-  InGroup<DiagGroup<"CFString-literal">>;
+  "CFString literal is not a string constant">;
 def warn_cfstring_truncated : Warning<
   "input conversion stopped due to an input byte that does not "
   "belong to the input codeset UTF-8">,
@@ -5549,12 +5595,10 @@ def note_insert_fallthrough_fixit : Note<
 def note_insert_break_fixit : Note<
   "insert 'break;' to avoid fall-through">;
 def err_fallthrough_attr_wrong_target : Error<
-  "clang::fallthrough attribute is only allowed on empty statements">,
-  InGroup<IgnoredAttributes>;
+  "clang::fallthrough attribute is only allowed on empty statements">;
 def note_fallthrough_insert_semi_fixit : Note<"did you forget ';'?">;
 def err_fallthrough_attr_outside_switch : Error<
-  "fallthrough annotation is outside switch statement">,
-  InGroup<IgnoredAttributes>;
+  "fallthrough annotation is outside switch statement">;
 def warn_fallthrough_attr_invalid_placement : Warning<
   "fallthrough annotation does not directly precede switch label">,
   InGroup<ImplicitFallthrough>;
@@ -5754,6 +5798,8 @@ def ext_typecheck_base_super : Warning<
 def warn_missing_method_return_type : Warning<
   "method has no return type specified; defaults to 'id'">,
   InGroup<MissingMethodReturnType>, DefaultIgnore;
+def warn_direct_ivar_access : Warning<"instance variable %0 is being "
+  "directly accessed">, InGroup<DiagGroup<"direct-ivar-access">>, DefaultIgnore;
 
 // Spell-checking diagnostics
 def err_unknown_type_or_class_name_suggest : Error<

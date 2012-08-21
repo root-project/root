@@ -1064,8 +1064,10 @@ Sema::CheckClassTemplate(Scope *S, unsigned TagSpec, TagUseKind TUK,
 
   // Add alignment attributes if necessary; these attributes are checked when
   // the ASTContext lays out the structure.
-  AddAlignmentAttributesForRecord(NewClass);
-  AddMsStructLayoutForRecord(NewClass);
+  if (TUK == TUK_Definition) {
+    AddAlignmentAttributesForRecord(NewClass);
+    AddMsStructLayoutForRecord(NewClass);
+  }
 
   ClassTemplateDecl *NewTemplate
     = ClassTemplateDecl::Create(Context, SemanticContext, NameLoc,
@@ -1138,6 +1140,8 @@ Sema::CheckClassTemplate(Scope *S, unsigned TagSpec, TagUseKind TUK,
   }
   if (PrevClassTemplate)
     mergeDeclAttributes(NewClass, PrevClassTemplate->getTemplatedDecl());
+
+  ActOnDocumentableDecl(NewTemplate);
 
   return NewTemplate;
 }
@@ -5514,6 +5518,13 @@ Sema::ActOnClassTemplateSpecialization(Scope *S, unsigned TagSpec,
   if (Attr)
     ProcessDeclAttributeList(S, Specialization, Attr);
 
+  // Add alignment attributes if necessary; these attributes are checked when
+  // the ASTContext lays out the structure.
+  if (TUK == TUK_Definition) {
+    AddAlignmentAttributesForRecord(Specialization);
+    AddMsStructLayoutForRecord(Specialization);
+  }
+
   if (ModulePrivateLoc.isValid())
     Diag(Specialization->getLocation(), diag::err_module_private_specialization)
       << (isPartialSpecialization? 1 : 0)
@@ -5568,7 +5579,9 @@ Sema::ActOnClassTemplateSpecialization(Scope *S, unsigned TagSpec,
 Decl *Sema::ActOnTemplateDeclarator(Scope *S,
                               MultiTemplateParamsArg TemplateParameterLists,
                                     Declarator &D) {
-  return HandleDeclarator(S, D, move(TemplateParameterLists));
+  Decl *NewDecl = HandleDeclarator(S, D, move(TemplateParameterLists));
+  ActOnDocumentableDecl(NewDecl);
+  return NewDecl;
 }
 
 Decl *Sema::ActOnStartOfFunctionTemplateDef(Scope *FnBodyScope,

@@ -1,4 +1,4 @@
-// RUN: %clang_cc1 -analyze -analyzer-checker=core -verify %s
+// RUN: %clang_cc1 -analyze -analyzer-checker=core -analyzer-ipa=dynamic-bifurcate -verify %s
 
 // Test inlining of ObjC class methods.
 
@@ -65,6 +65,26 @@ int foo() {
 @implementation AAA
 @end
 @implementation AAA (MyCat)
++ (int)getInt {
+    return 0;
+}
+@end
+
+// ObjC class method is called by name. Definition is in the parent category.
+@interface PPP : NSObject
+@end
+@interface PPP (MyCat)
++ (int)getInt;
+@end
+@interface CCC : PPP
+@end
+int foo4() {
+    int y = [CCC getInt];
+    return 5/y; // expected-warning {{Division by zero}}
+}
+@implementation PPP
+@end
+@implementation PPP (MyCat)
 + (int)getInt {
     return 0;
 }
@@ -159,3 +179,33 @@ int foo2() {
   int y = [MyParentSelf testSelf];
   return 5/y; // Should warn here.
 }
+
+// TODO: We do not inline 'getNum' in the following case, where the value of 
+// 'self' in call '[self getNum]' is available and evaualtes to 
+// 'SelfUsedInParentChild' if it's called from fooA.
+// Self region should get created before we call foo and yje call to super 
+// should keep it live. 
+@interface SelfUsedInParent : NSObject
++ (int)getNum;
++ (int)foo;
+@end
+@implementation SelfUsedInParent
++ (int)getNum {return 5;}
++ (int)foo {
+  return [self getNum];
+}
+@end
+@interface SelfUsedInParentChild : SelfUsedInParent
++ (int)getNum;
++ (int)fooA;
+@end
+@implementation SelfUsedInParentChild
++ (int)getNum {return 0;}
++ (int)fooA {
+  return [super foo];
+}
+@end
+int checkSelfUsedInparentClassMethod() {
+    return 5/[SelfUsedInParentChild fooA];
+}
+

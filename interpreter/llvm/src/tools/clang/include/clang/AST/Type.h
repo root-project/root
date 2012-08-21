@@ -378,8 +378,6 @@ public:
     return hasConst();
   }
 
-  bool isSupersetOf(Qualifiers Other) const;
-
   /// \brief Determine whether this set of qualifiers is a strict superset of
   /// another set of qualifiers, not considering qualifier compatibility.
   bool isStrictSupersetOf(Qualifiers Other) const;
@@ -1140,8 +1138,6 @@ private:
     unsigned TC : 8;
 
     /// Dependent - Whether this type is a dependent type (C++ [temp.dep.type]).
-    /// Note that this should stay at the end of the ivars for Type so that
-    /// subclasses can pack their bitfields into the same word.
     unsigned Dependent : 1;
 
     /// \brief Whether this type somehow involves a template parameter, even
@@ -2680,6 +2676,9 @@ public:
   bool getNoReturnAttr() const { return getExtInfo().getNoReturn(); }
   CallingConv getCallConv() const { return getExtInfo().getCC(); }
   ExtInfo getExtInfo() const { return ExtInfo(FunctionTypeBits.ExtInfo); }
+  bool isConst() const { return getTypeQuals() & Qualifiers::Const; }
+  bool isVolatile() const { return getTypeQuals() & Qualifiers::Volatile; }
+  bool isRestrict() const { return getTypeQuals() & Qualifiers::Restrict; }
 
   /// \brief Determine the type of an expression that calls a function of
   /// this type.

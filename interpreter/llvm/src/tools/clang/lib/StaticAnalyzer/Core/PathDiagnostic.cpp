@@ -59,6 +59,48 @@ PathDiagnosticMacroPiece::~PathDiagnosticMacroPiece() {}
 
 
 PathPieces::~PathPieces() {}
+
+void PathPieces::flattenTo(PathPieces &Primary, PathPieces &Current,
+                           bool ShouldFlattenMacros) const {
+  for (PathPieces::const_iterator I = begin(), E = end(); I != E; ++I) {
+    PathDiagnosticPiece *Piece = I->getPtr();
+
+    switch (Piece->getKind()) {
+    case PathDiagnosticPiece::Call: {
+      PathDiagnosticCallPiece *Call = cast<PathDiagnosticCallPiece>(Piece);
+      IntrusiveRefCntPtr<PathDiagnosticEventPiece> CallEnter =
+        Call->getCallEnterEvent();
+      if (CallEnter)
+        Current.push_back(CallEnter);
+      Call->path.flattenTo(Primary, Primary, ShouldFlattenMacros);
+      IntrusiveRefCntPtr<PathDiagnosticEventPiece> callExit =
+        Call->getCallExitEvent();
+      if (callExit)
+        Current.push_back(callExit);
+      break;
+    }
+    case PathDiagnosticPiece::Macro: {
+      PathDiagnosticMacroPiece *Macro = cast<PathDiagnosticMacroPiece>(Piece);
+      if (ShouldFlattenMacros) {
+        Macro->subPieces.flattenTo(Primary, Primary, ShouldFlattenMacros);
+      } else {
+        Current.push_back(Piece);
+        PathPieces NewPath;
+        Macro->subPieces.flattenTo(Primary, NewPath, ShouldFlattenMacros);
+        // FIXME: This probably shouldn't mutate the original path piece.
+        Macro->subPieces = NewPath;
+      }
+      break;
+    }
+    case PathDiagnosticPiece::Event:
+    case PathDiagnosticPiece::ControlFlow:
+      Current.push_back(Piece);
+      break;
+    }
+  }
+}
+
+
 PathDiagnostic::~PathDiagnostic() {}
 
 PathDiagnostic::PathDiagnostic(const Decl *declWithIssue,
@@ -115,13 +157,13 @@ void PathDiagnosticConsumer::HandlePathDiagnostic(PathDiagnostic *D) {
           return; // FIXME: Emit a warning?
       
         // Check the source ranges.
-        for (PathDiagnosticPiece::range_iterator RI = piece->ranges_begin(),
-             RE = piece->ranges_end();
-             RI != RE; ++RI) {
-          SourceLocation L = SMgr.getExpansionLoc(RI->getBegin());
+        ArrayRef<SourceRange> Ranges = piece->getRanges();
+        for (ArrayRef<SourceRange>::iterator I = Ranges.begin(),
+                                             E = Ranges.end(); I != E; ++I) {
+          SourceLocation L = SMgr.getExpansionLoc(I->getBegin());
           if (!L.isFileID() || SMgr.getFileID(L) != FID)
             return; // FIXME: Emit a warning?
-          L = SMgr.getExpansionLoc(RI->getEnd());
+          L = SMgr.getExpansionLoc(I->getEnd());
           if (!L.isFileID() || SMgr.getFileID(L) != FID)
             return; // FIXME: Emit a warning?
         }
@@ -148,23 +190,14 @@ void PathDiagnosticConsumer::HandlePathDiagnostic(PathDiagnostic *D) {
 
   if (PathDiagnostic *orig = Diags.FindNodeOrInsertPos(profile, InsertPos)) {
     // Keep the PathDiagnostic with the shorter path.
+    // Note, the enclosing routine is called in deterministic order, so the
+    // results will be consistent between runs (no reason to break ties if the
+    // size is the same).
     const unsigned orig_size = orig->full_size();
     const unsigned new_size = D->full_size();
-    
-    if (orig_size <= new_size) {
-      bool shouldKeepOriginal = true;
-      if (orig_size == new_size) {
-        // Here we break ties in a fairly arbitrary, but deterministic, way.
-        llvm::FoldingSetNodeID fullProfile, fullProfileOrig;
-        D->FullProfile(fullProfile);
-        orig->FullProfile(fullProfileOrig);
-        if (fullProfile.ComputeHash() < fullProfileOrig.ComputeHash())
-          shouldKeepOriginal = false;
-      }
+    if (orig_size <= new_size)
+      return;
 
-      if (shouldKeepOriginal)
-        return;
-    }
     Diags.RemoveNode(orig);
     delete orig;
   }
@@ -207,8 +240,8 @@ struct CompareDiagnostics {
 };  
 }
 
-void
-PathDiagnosticConsumer::FlushDiagnostics(SmallVectorImpl<std::string> *Files) {
+void PathDiagnosticConsumer::FlushDiagnostics(
+                                     PathDiagnosticConsumer::FilesMade *Files) {
   if (flushed)
     return;
   
@@ -284,6 +317,44 @@ static SourceLocation getValidSourceLocation(const Stmt* S,
 
   return L;
 }
+
+static PathDiagnosticLocation
+getLocationForCaller(const StackFrameContext *SFC,
+                     const LocationContext *CallerCtx,
+                     const SourceManager &SM) {
+  const CFGBlock &Block = *SFC->getCallSiteBlock();
+  CFGElement Source = Block[SFC->getIndex()];
+
+  switch (Source.getKind()) {
+  case CFGElement::Invalid:
+    llvm_unreachable("Invalid CFGElement");
+  case CFGElement::Statement:
+    return PathDiagnosticLocation(cast<CFGStmt>(Source).getStmt(),
+                                  SM, CallerCtx);
+  case CFGElement::Initializer: {
+    const CFGInitializer &Init = cast<CFGInitializer>(Source);
+    return PathDiagnosticLocation(Init.getInitializer()->getInit(),
+                                  SM, CallerCtx);
+  }
+  case CFGElement::AutomaticObjectDtor: {
+    const CFGAutomaticObjDtor &Dtor = cast<CFGAutomaticObjDtor>(Source);
+    return PathDiagnosticLocation::createEnd(Dtor.getTriggerStmt(),
+                                             SM, CallerCtx);
+  }
+  case CFGElement::BaseDtor:
+  case CFGElement::MemberDtor: {
+    const AnalysisDeclContext *CallerInfo = CallerCtx->getAnalysisDeclContext();
+    if (const Stmt *CallerBody = CallerInfo->getBody())
+      return PathDiagnosticLocation::createEnd(CallerBody, SM, CallerCtx);
+    return PathDiagnosticLocation::create(CallerInfo->getDecl(), SM);
+  }
+  case CFGElement::TemporaryDtor:
+    llvm_unreachable("not yet implemented!");
+  }
+
+  llvm_unreachable("Unknown CFGElement kind");
+}
+
 
 PathDiagnosticLocation
   PathDiagnosticLocation::createBegin(const Decl *D,
@@ -368,6 +439,19 @@ PathDiagnosticLocation
   }
   else if (const PostStmt *PS = dyn_cast<PostStmt>(&P)) {
     S = PS->getStmt();
+  }
+  else if (const PostImplicitCall *PIE = dyn_cast<PostImplicitCall>(&P)) {
+    return PathDiagnosticLocation(PIE->getLocation(), SMng);
+  }
+  else if (const CallEnter *CE = dyn_cast<CallEnter>(&P)) {
+    return getLocationForCaller(CE->getCalleeContext(),
+                                CE->getLocationContext(),
+                                SMng);
+  }
+  else if (const CallExitEnd *CEE = dyn_cast<CallExitEnd>(&P)) {
+    return getLocationForCaller(CEE->getCalleeContext(),
+                                CEE->getLocationContext(),
+                                SMng);
   }
 
   return PathDiagnosticLocation(S, SMng, P.getLocationContext());
@@ -525,43 +609,6 @@ PathDiagnosticLocation PathDiagnostic::getLocation() const {
 // Manipulation of PathDiagnosticCallPieces.
 //===----------------------------------------------------------------------===//
 
-static PathDiagnosticLocation
-getLocationForCaller(const StackFrameContext *SFC,
-                     const LocationContext *CallerCtx,
-                     const SourceManager &SM) {
-  const CFGBlock &Block = *SFC->getCallSiteBlock();
-  CFGElement Source = Block[SFC->getIndex()];
-
-  switch (Source.getKind()) {
-  case CFGElement::Invalid:
-    llvm_unreachable("Invalid CFGElement");
-  case CFGElement::Statement:
-    return PathDiagnosticLocation(cast<CFGStmt>(Source).getStmt(),
-                                  SM, CallerCtx);
-  case CFGElement::Initializer: {
-    const CFGInitializer &Init = cast<CFGInitializer>(Source);
-    return PathDiagnosticLocation(Init.getInitializer()->getInit(),
-                                  SM, CallerCtx);
-  }
-  case CFGElement::AutomaticObjectDtor: {
-    const CFGAutomaticObjDtor &Dtor = cast<CFGAutomaticObjDtor>(Source);
-    return PathDiagnosticLocation::createEnd(Dtor.getTriggerStmt(),
-                                             SM, CallerCtx);
-  }
-  case CFGElement::BaseDtor:
-  case CFGElement::MemberDtor: {
-    const AnalysisDeclContext *CallerInfo = CallerCtx->getAnalysisDeclContext();
-    if (const Stmt *CallerBody = CallerInfo->getBody())
-      return PathDiagnosticLocation::createEnd(CallerBody, SM, CallerCtx);
-    return PathDiagnosticLocation::create(CallerInfo->getDecl(), SM);
-  }
-  case CFGElement::TemporaryDtor:
-    llvm_unreachable("not yet implemented!");
-  }
-
-  llvm_unreachable("Unknown CFGElement kind");
-}
-
 PathDiagnosticCallPiece *
 PathDiagnosticCallPiece::construct(const ExplodedNode *N,
                                    const CallExitEnd &CE,
@@ -671,7 +718,9 @@ void PathDiagnosticPiece::Profile(llvm::FoldingSetNodeID &ID) const {
   ID.AddString(str);
   // FIXME: Add profiling support for code hints.
   ID.AddInteger((unsigned) getDisplayHint());
-  for (range_iterator I = ranges_begin(), E = ranges_end(); I != E; ++I) {
+  ArrayRef<SourceRange> Ranges = getRanges();
+  for (ArrayRef<SourceRange>::iterator I = Ranges.begin(), E = Ranges.end();
+                                        I != E; ++I) {
     ID.AddInteger(I->getBegin().getRawEncoding());
     ID.AddInteger(I->getEnd().getRawEncoding());
   }  

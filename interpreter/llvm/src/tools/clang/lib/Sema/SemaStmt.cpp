@@ -656,7 +656,7 @@ Sema::ActOnFinishSwitchStmt(SourceLocation SwitchLoc, Stmt *Switch,
     = CondExpr->isTypeDependent() || CondExpr->isValueDependent();
   unsigned CondWidth
     = HasDependentValue ? 0 : Context.getIntWidth(CondTypeBeforePromotion);
-  bool CondIsSigned 
+  bool CondIsSigned
     = CondTypeBeforePromotion->isSignedIntegerOrEnumerationType();
 
   // Accumulate all of the case values in a vector so that we can sort them
@@ -973,7 +973,7 @@ Sema::ActOnFinishSwitchStmt(SourceLocation SwitchLoc, Stmt *Switch,
             << CondTypeBeforePromotion;
         }
 
-        llvm::APSInt Hi = 
+        llvm::APSInt Hi =
           RI->second->getRHS()->EvaluateKnownConstInt(Context);
         AdjustAPSInt(Hi, CondWidth, CondIsSigned);
         while (EI != EIend && EI->first < Hi)
@@ -1021,12 +1021,12 @@ Sema::ActOnFinishSwitchStmt(SourceLocation SwitchLoc, Stmt *Switch,
       switch (UnhandledNames.size()) {
       case 0: break;
       case 1:
-        Diag(CondExpr->getExprLoc(), TheDefaultStmt 
+        Diag(CondExpr->getExprLoc(), TheDefaultStmt
           ? diag::warn_def_missing_case1 : diag::warn_missing_case1)
           << UnhandledNames[0];
         break;
       case 2:
-        Diag(CondExpr->getExprLoc(), TheDefaultStmt 
+        Diag(CondExpr->getExprLoc(), TheDefaultStmt
           ? diag::warn_def_missing_case2 : diag::warn_missing_case2)
           << UnhandledNames[0] << UnhandledNames[1];
         break;
@@ -1063,10 +1063,10 @@ void
 Sema::DiagnoseAssignmentEnum(QualType DstType, QualType SrcType,
                              Expr *SrcExpr) {
   unsigned DIAG = diag::warn_not_in_enum_assignement;
-  if (Diags.getDiagnosticLevel(DIAG, SrcExpr->getExprLoc()) 
+  if (Diags.getDiagnosticLevel(DIAG, SrcExpr->getExprLoc())
       == DiagnosticsEngine::Ignored)
     return;
-  
+
   if (const EnumType *ET = DstType->getAs<EnumType>())
     if (!Context.hasSameType(SrcType, DstType) &&
         SrcType->isIntegerType()) {
@@ -1081,7 +1081,7 @@ Sema::DiagnoseAssignmentEnum(QualType DstType, QualType SrcType,
         typedef SmallVector<std::pair<llvm::APSInt, EnumConstantDecl*>, 64>
         EnumValsTy;
         EnumValsTy EnumVals;
-        
+
         // Gather all enum values, set their type and sort them,
         // allowing easier comparison with rhs constant.
         for (EnumDecl::enumerator_iterator EDI = ED->enumerator_begin();
@@ -1095,7 +1095,7 @@ Sema::DiagnoseAssignmentEnum(QualType DstType, QualType SrcType,
         std::stable_sort(EnumVals.begin(), EnumVals.end(), CmpEnumVals);
         EnumValsTy::iterator EIend =
         std::unique(EnumVals.begin(), EnumVals.end(), EqEnumVals);
-        
+
         // See which case values aren't in enum.
         EnumValsTy::const_iterator EI = EnumVals.begin();
         while (EI != EIend && EI->first < RhsVal)
@@ -1236,7 +1236,7 @@ public:
   }; // end class DeclExtractor
 
   // DeclMatcher checks to see if the decls are used in a non-evauluated
-  // context.  
+  // context.
   class DeclMatcher : public EvaluatedExprVisitor<DeclMatcher> {
     llvm::SmallPtrSet<VarDecl*, 8> &Decls;
     bool FoundDecl;
@@ -1435,7 +1435,7 @@ ExprResult
 Sema::CheckObjCForCollectionOperand(SourceLocation forLoc, Expr *collection) {
   if (!collection)
     return ExprError();
-  
+
   // Bail out early if we've got a type-dependent expression.
   if (collection->isTypeDependent()) return Owned(collection);
 
@@ -1460,7 +1460,7 @@ Sema::CheckObjCForCollectionOperand(SourceLocation forLoc, Expr *collection) {
 
   // If we have a forward-declared type, we can't do this check.
   // Under ARC, it is an error not to have a forward-declared class.
-  if (iface && 
+  if (iface &&
       RequireCompleteType(forLoc, QualType(objectType, 0),
                           getLangOpts().ObjCAutoRefCount
                             ? diag::err_arc_collection_forward
@@ -1504,13 +1504,12 @@ Sema::CheckObjCForCollectionOperand(SourceLocation forLoc, Expr *collection) {
 
 StmtResult
 Sema::ActOnObjCForCollectionStmt(SourceLocation ForLoc,
-                                 SourceLocation LParenLoc,
                                  Stmt *First, Expr *collection,
                                  SourceLocation RParenLoc) {
-  
-  ExprResult CollectionExprResult = 
+
+  ExprResult CollectionExprResult =
     CheckObjCForCollectionOperand(ForLoc, collection);
-  
+
   if (First) {
     QualType FirstType;
     if (DeclStmt *DS = dyn_cast<DeclStmt>(First)) {
@@ -1541,12 +1540,12 @@ Sema::ActOnObjCForCollectionStmt(SourceLocation ForLoc,
         return StmtError(Diag(ForLoc, diag::err_selector_element_type)
                            << FirstType << First->getSourceRange());
   }
-  
+
   if (CollectionExprResult.isInvalid())
     return StmtError();
-  
-  return Owned(new (Context) ObjCForCollectionStmt(First, 
-                                                   CollectionExprResult.take(), 0, 
+
+  return Owned(new (Context) ObjCForCollectionStmt(First,
+                                                   CollectionExprResult.take(), 0,
                                                    ForLoc, RParenLoc));
 }
 
@@ -1590,7 +1589,7 @@ static bool FinishForRangeVarDecl(Sema &SemaRef, VarDecl *Decl, Expr *Init,
   // In ARC, infer lifetime.
   // FIXME: ARC may want to turn this into 'const __unsafe_unretained' if
   // we're doing the equivalent of fast iteration.
-  if (SemaRef.getLangOpts().ObjCAutoRefCount && 
+  if (SemaRef.getLangOpts().ObjCAutoRefCount &&
       SemaRef.inferObjCARCLifetime(Decl))
     Decl->setInvalidDecl();
 
@@ -1686,9 +1685,9 @@ static bool ObjCEnumerationCollection(Expr *Collection) {
           && Collection->getType()->getAs<ObjCObjectPointerType>() != 0;
 }
 
-/// ActOnCXXForRangeStmt - Check and build a C++0x for-range statement.
+/// ActOnCXXForRangeStmt - Check and build a C++11 for-range statement.
 ///
-/// C++0x [stmt.ranged]:
+/// C++11 [stmt.ranged]:
 ///   A range-based for statement is equivalent to
 ///
 ///   {
@@ -1705,15 +1704,14 @@ static bool ObjCEnumerationCollection(Expr *Collection) {
 /// The body of the loop is not available yet, since it cannot be analysed until
 /// we have determined the type of the for-range-declaration.
 StmtResult
-Sema::ActOnCXXForRangeStmt(SourceLocation ForLoc, SourceLocation LParenLoc,
+Sema::ActOnCXXForRangeStmt(SourceLocation ForLoc,
                            Stmt *First, SourceLocation ColonLoc, Expr *Range,
                            SourceLocation RParenLoc) {
   if (!First || !Range)
     return StmtError();
-  
+
   if (ObjCEnumerationCollection(Range))
-    return ActOnObjCForCollectionStmt(ForLoc, LParenLoc, First, Range,
-                                      RParenLoc);
+    return ActOnObjCForCollectionStmt(ForLoc, First, Range, RParenLoc);
 
   DeclStmt *DS = dyn_cast<DeclStmt>(First);
   assert(DS && "first part of for range not a decl stmt");
@@ -1965,13 +1963,13 @@ Sema::BuildCXXForRangeStmt(SourceLocation ForLoc, SourceLocation ColonLoc,
                                              ColonLoc, RParenLoc));
 }
 
-/// FinishObjCForCollectionStmt - Attach the body to a objective-C foreach 
+/// FinishObjCForCollectionStmt - Attach the body to a objective-C foreach
 /// statement.
 StmtResult Sema::FinishObjCForCollectionStmt(Stmt *S, Stmt *B) {
   if (!S || !B)
     return StmtError();
   ObjCForCollectionStmt * ForStmt = cast<ObjCForCollectionStmt>(S);
-  
+
   ForStmt->setBody(B);
   return S;
 }
@@ -1986,7 +1984,7 @@ StmtResult Sema::FinishCXXForRangeStmt(Stmt *S, Stmt *B) {
 
   if (isa<ObjCForCollectionStmt>(S))
     return FinishObjCForCollectionStmt(S, B);
-  
+
   CXXForRangeStmt *ForStmt = cast<CXXForRangeStmt>(S);
   ForStmt->setBody(B);
 
@@ -2215,7 +2213,7 @@ Sema::ActOnCapScopeReturnStmt(SourceLocation ReturnLoc, Expr *RetValExp) {
         FnRetType = RetValExp->getType();
       else
         FnRetType = CurCap->ReturnType = Context.DependentTy;
-    } else { 
+    } else {
       if (RetValExp) {
         // C++11 [expr.lambda.prim]p4 bans inferring the result from an
         // initializer list, because it is not an expression (even
@@ -2315,7 +2313,7 @@ Sema::ActOnReturnStmt(SourceLocation ReturnLoc, Expr *RetValExp) {
   // Check for unexpanded parameter packs.
   if (RetValExp && DiagnoseUnexpandedParameterPack(RetValExp))
     return StmtError();
-  
+
   if (isa<CapturingScopeInfo>(getCurFunction()))
     return ActOnCapScopeReturnStmt(ReturnLoc, RetValExp);
 
@@ -2331,7 +2329,7 @@ Sema::ActOnReturnStmt(SourceLocation ReturnLoc, Expr *RetValExp) {
     FnRetType = MD->getResultType();
     if (MD->hasRelatedResultType() && MD->getClassInterface()) {
       // In the implementation of a method with a related return type, the
-      // type used to type-check the validity of return statements within the 
+      // type used to type-check the validity of return statements within the
       // method body is a pointer to the type of the class being implemented.
       RelatedRetType = Context.getObjCInterfaceType(MD->getClassInterface());
       RelatedRetType = Context.getObjCObjectPointerType(RelatedRetType);
@@ -2468,295 +2466,6 @@ Sema::ActOnReturnStmt(SourceLocation ReturnLoc, Expr *RetValExp) {
     FunctionScopes.back()->Returns.push_back(Result);
 
   return Owned(Result);
-}
-
-/// CheckAsmLValue - GNU C has an extremely ugly extension whereby they silently
-/// ignore "noop" casts in places where an lvalue is required by an inline asm.
-/// We emulate this behavior when -fheinous-gnu-extensions is specified, but
-/// provide a strong guidance to not use it.
-///
-/// This method checks to see if the argument is an acceptable l-value and
-/// returns false if it is a case we can handle.
-static bool CheckAsmLValue(const Expr *E, Sema &S) {
-  // Type dependent expressions will be checked during instantiation.
-  if (E->isTypeDependent())
-    return false;
-
-  if (E->isLValue())
-    return false;  // Cool, this is an lvalue.
-
-  // Okay, this is not an lvalue, but perhaps it is the result of a cast that we
-  // are supposed to allow.
-  const Expr *E2 = E->IgnoreParenNoopCasts(S.Context);
-  if (E != E2 && E2->isLValue()) {
-    if (!S.getLangOpts().HeinousExtensions)
-      S.Diag(E2->getLocStart(), diag::err_invalid_asm_cast_lvalue)
-        << E->getSourceRange();
-    else
-      S.Diag(E2->getLocStart(), diag::warn_invalid_asm_cast_lvalue)
-        << E->getSourceRange();
-    // Accept, even if we emitted an error diagnostic.
-    return false;
-  }
-
-  // None of the above, just randomly invalid non-lvalue.
-  return true;
-}
-
-/// isOperandMentioned - Return true if the specified operand # is mentioned
-/// anywhere in the decomposed asm string.
-static bool isOperandMentioned(unsigned OpNo, 
-                         ArrayRef<AsmStmt::AsmStringPiece> AsmStrPieces) {
-  for (unsigned p = 0, e = AsmStrPieces.size(); p != e; ++p) {
-    const AsmStmt::AsmStringPiece &Piece = AsmStrPieces[p];
-    if (!Piece.isOperand()) continue;
-
-    // If this is a reference to the input and if the input was the smaller
-    // one, then we have to reject this asm.
-    if (Piece.getOperandNo() == OpNo)
-      return true;
-  }
-  return false;
-}
-
-StmtResult Sema::ActOnAsmStmt(SourceLocation AsmLoc, bool IsSimple,
-                              bool IsVolatile, unsigned NumOutputs,
-                              unsigned NumInputs, IdentifierInfo **Names,
-                              MultiExprArg constraints, MultiExprArg exprs,
-                              Expr *asmString, MultiExprArg clobbers,
-                              SourceLocation RParenLoc, bool MSAsm) {
-  unsigned NumClobbers = clobbers.size();
-  StringLiteral **Constraints =
-    reinterpret_cast<StringLiteral**>(constraints.get());
-  Expr **Exprs = exprs.get();
-  StringLiteral *AsmString = cast<StringLiteral>(asmString);
-  StringLiteral **Clobbers = reinterpret_cast<StringLiteral**>(clobbers.get());
-
-  SmallVector<TargetInfo::ConstraintInfo, 4> OutputConstraintInfos;
-
-  // The parser verifies that there is a string literal here.
-  if (!AsmString->isAscii())
-    return StmtError(Diag(AsmString->getLocStart(),diag::err_asm_wide_character)
-      << AsmString->getSourceRange());
-
-  for (unsigned i = 0; i != NumOutputs; i++) {
-    StringLiteral *Literal = Constraints[i];
-    if (!Literal->isAscii())
-      return StmtError(Diag(Literal->getLocStart(),diag::err_asm_wide_character)
-        << Literal->getSourceRange());
-
-    StringRef OutputName;
-    if (Names[i])
-      OutputName = Names[i]->getName();
-
-    TargetInfo::ConstraintInfo Info(Literal->getString(), OutputName);
-    if (!Context.getTargetInfo().validateOutputConstraint(Info))
-      return StmtError(Diag(Literal->getLocStart(),
-                            diag::err_asm_invalid_output_constraint)
-                       << Info.getConstraintStr());
-
-    // Check that the output exprs are valid lvalues.
-    Expr *OutputExpr = Exprs[i];
-    if (CheckAsmLValue(OutputExpr, *this)) {
-      return StmtError(Diag(OutputExpr->getLocStart(),
-                  diag::err_asm_invalid_lvalue_in_output)
-        << OutputExpr->getSourceRange());
-    }
-
-    OutputConstraintInfos.push_back(Info);
-  }
-
-  SmallVector<TargetInfo::ConstraintInfo, 4> InputConstraintInfos;
-
-  for (unsigned i = NumOutputs, e = NumOutputs + NumInputs; i != e; i++) {
-    StringLiteral *Literal = Constraints[i];
-    if (!Literal->isAscii())
-      return StmtError(Diag(Literal->getLocStart(),diag::err_asm_wide_character)
-        << Literal->getSourceRange());
-
-    StringRef InputName;
-    if (Names[i])
-      InputName = Names[i]->getName();
-
-    TargetInfo::ConstraintInfo Info(Literal->getString(), InputName);
-    if (!Context.getTargetInfo().validateInputConstraint(OutputConstraintInfos.data(),
-                                                NumOutputs, Info)) {
-      return StmtError(Diag(Literal->getLocStart(),
-                            diag::err_asm_invalid_input_constraint)
-                       << Info.getConstraintStr());
-    }
-
-    Expr *InputExpr = Exprs[i];
-
-    // Only allow void types for memory constraints.
-    if (Info.allowsMemory() && !Info.allowsRegister()) {
-      if (CheckAsmLValue(InputExpr, *this))
-        return StmtError(Diag(InputExpr->getLocStart(),
-                              diag::err_asm_invalid_lvalue_in_input)
-                         << Info.getConstraintStr()
-                         << InputExpr->getSourceRange());
-    }
-
-    if (Info.allowsRegister()) {
-      if (InputExpr->getType()->isVoidType()) {
-        return StmtError(Diag(InputExpr->getLocStart(),
-                              diag::err_asm_invalid_type_in_input)
-          << InputExpr->getType() << Info.getConstraintStr()
-          << InputExpr->getSourceRange());
-      }
-    }
-
-    ExprResult Result = DefaultFunctionArrayLvalueConversion(Exprs[i]);
-    if (Result.isInvalid())
-      return StmtError();
-
-    Exprs[i] = Result.take();
-    InputConstraintInfos.push_back(Info);
-  }
-
-  // Check that the clobbers are valid.
-  for (unsigned i = 0; i != NumClobbers; i++) {
-    StringLiteral *Literal = Clobbers[i];
-    if (!Literal->isAscii())
-      return StmtError(Diag(Literal->getLocStart(),diag::err_asm_wide_character)
-        << Literal->getSourceRange());
-
-    StringRef Clobber = Literal->getString();
-
-    if (!Context.getTargetInfo().isValidClobber(Clobber))
-      return StmtError(Diag(Literal->getLocStart(),
-                  diag::err_asm_unknown_register_name) << Clobber);
-  }
-
-  AsmStmt *NS =
-    new (Context) AsmStmt(Context, AsmLoc, IsSimple, IsVolatile, MSAsm,
-                          NumOutputs, NumInputs, Names, Constraints, Exprs,
-                          AsmString, NumClobbers, Clobbers, RParenLoc);
-  // Validate the asm string, ensuring it makes sense given the operands we
-  // have.
-  SmallVector<AsmStmt::AsmStringPiece, 8> Pieces;
-  unsigned DiagOffs;
-  if (unsigned DiagID = NS->AnalyzeAsmString(Pieces, Context, DiagOffs)) {
-    Diag(getLocationOfStringLiteralByte(AsmString, DiagOffs), DiagID)
-           << AsmString->getSourceRange();
-    return StmtError();
-  }
-
-  // Validate tied input operands for type mismatches.
-  for (unsigned i = 0, e = InputConstraintInfos.size(); i != e; ++i) {
-    TargetInfo::ConstraintInfo &Info = InputConstraintInfos[i];
-
-    // If this is a tied constraint, verify that the output and input have
-    // either exactly the same type, or that they are int/ptr operands with the
-    // same size (int/long, int*/long, are ok etc).
-    if (!Info.hasTiedOperand()) continue;
-
-    unsigned TiedTo = Info.getTiedOperand();
-    unsigned InputOpNo = i+NumOutputs;
-    Expr *OutputExpr = Exprs[TiedTo];
-    Expr *InputExpr = Exprs[InputOpNo];
-
-    if (OutputExpr->isTypeDependent() || InputExpr->isTypeDependent())
-      continue;
-
-    QualType InTy = InputExpr->getType();
-    QualType OutTy = OutputExpr->getType();
-    if (Context.hasSameType(InTy, OutTy))
-      continue;  // All types can be tied to themselves.
-
-    // Decide if the input and output are in the same domain (integer/ptr or
-    // floating point.
-    enum AsmDomain {
-      AD_Int, AD_FP, AD_Other
-    } InputDomain, OutputDomain;
-
-    if (InTy->isIntegerType() || InTy->isPointerType())
-      InputDomain = AD_Int;
-    else if (InTy->isRealFloatingType())
-      InputDomain = AD_FP;
-    else
-      InputDomain = AD_Other;
-
-    if (OutTy->isIntegerType() || OutTy->isPointerType())
-      OutputDomain = AD_Int;
-    else if (OutTy->isRealFloatingType())
-      OutputDomain = AD_FP;
-    else
-      OutputDomain = AD_Other;
-
-    // They are ok if they are the same size and in the same domain.  This
-    // allows tying things like:
-    //   void* to int*
-    //   void* to int            if they are the same size.
-    //   double to long double   if they are the same size.
-    //
-    uint64_t OutSize = Context.getTypeSize(OutTy);
-    uint64_t InSize = Context.getTypeSize(InTy);
-    if (OutSize == InSize && InputDomain == OutputDomain &&
-        InputDomain != AD_Other)
-      continue;
-
-    // If the smaller input/output operand is not mentioned in the asm string,
-    // then we can promote the smaller one to a larger input and the asm string
-    // won't notice.
-    bool SmallerValueMentioned = false;
-
-    // If this is a reference to the input and if the input was the smaller
-    // one, then we have to reject this asm.
-    if (isOperandMentioned(InputOpNo, Pieces)) {
-      // This is a use in the asm string of the smaller operand.  Since we
-      // codegen this by promoting to a wider value, the asm will get printed
-      // "wrong".
-      SmallerValueMentioned |= InSize < OutSize;
-    }
-    if (isOperandMentioned(TiedTo, Pieces)) {
-      // If this is a reference to the output, and if the output is the larger
-      // value, then it's ok because we'll promote the input to the larger type.
-      SmallerValueMentioned |= OutSize < InSize;
-    }
-
-    // If the smaller value wasn't mentioned in the asm string, and if the
-    // output was a register, just extend the shorter one to the size of the
-    // larger one.
-    if (!SmallerValueMentioned && InputDomain != AD_Other &&
-        OutputConstraintInfos[TiedTo].allowsRegister())
-      continue;
-
-    // Either both of the operands were mentioned or the smaller one was
-    // mentioned.  One more special case that we'll allow: if the tied input is
-    // integer, unmentioned, and is a constant, then we'll allow truncating it
-    // down to the size of the destination.
-    if (InputDomain == AD_Int && OutputDomain == AD_Int &&
-        !isOperandMentioned(InputOpNo, Pieces) &&
-        InputExpr->isEvaluatable(Context)) {
-      CastKind castKind =
-        (OutTy->isBooleanType() ? CK_IntegralToBoolean : CK_IntegralCast);
-      InputExpr = ImpCastExprToType(InputExpr, OutTy, castKind).take();
-      Exprs[InputOpNo] = InputExpr;
-      NS->setInputExpr(i, InputExpr);
-      continue;
-    }
-
-    Diag(InputExpr->getLocStart(),
-         diag::err_asm_tying_incompatible_types)
-      << InTy << OutTy << OutputExpr->getSourceRange()
-      << InputExpr->getSourceRange();
-    return StmtError();
-  }
-
-  return Owned(NS);
-}
-
-StmtResult Sema::ActOnMSAsmStmt(SourceLocation AsmLoc,
-                                std::string &AsmString,
-                                SourceLocation EndLoc) {
-  // MS-style inline assembly is not fully supported, so emit a warning.
-  Diag(AsmLoc, diag::warn_unsupported_msasm);
-
-  MSAsmStmt *NS =
-    new (Context) MSAsmStmt(Context, AsmLoc, AsmString, EndLoc);
-
-  return Owned(NS);
 }
 
 StmtResult
@@ -3012,17 +2721,17 @@ StmtResult Sema::BuildMSDependentExistsStmt(SourceLocation KeywordLoc,
                                             Stmt *Nested)
 {
   return new (Context) MSDependentExistsStmt(KeywordLoc, IsIfExists,
-                                             QualifierLoc, NameInfo, 
+                                             QualifierLoc, NameInfo,
                                              cast<CompoundStmt>(Nested));
 }
 
 
-StmtResult Sema::ActOnMSDependentExistsStmt(SourceLocation KeywordLoc, 
+StmtResult Sema::ActOnMSDependentExistsStmt(SourceLocation KeywordLoc,
                                             bool IsIfExists,
-                                            CXXScopeSpec &SS, 
+                                            CXXScopeSpec &SS,
                                             UnqualifiedId &Name,
                                             Stmt *Nested) {
-  return BuildMSDependentExistsStmt(KeywordLoc, IsIfExists, 
+  return BuildMSDependentExistsStmt(KeywordLoc, IsIfExists,
                                     SS.getWithLocInContext(Context),
                                     GetNameFromUnqualifiedId(Name),
                                     Nested);

@@ -434,6 +434,7 @@ static const char *getActionName(frontend::ActionKind Kind) {
   case frontend::PluginAction:
     llvm_unreachable("Invalid kind!");
 
+  case frontend::ASTDeclList:            return "-ast-list";
   case frontend::ASTDump:                return "-ast-dump";
   case frontend::ASTDumpXML:             return "-ast-dump-xml";
   case frontend::ASTPrint:               return "-ast-print";
@@ -1126,7 +1127,6 @@ static bool ParseAnalyzerArgs(AnalyzerOptions &Opts, ArgList &Args,
   Opts.AnalyzeSpecificFunction = Args.getLastArgValue(OPT_analyze_function);
   Opts.UnoptimizedCFG = Args.hasArg(OPT_analysis_UnoptimizedCFG);
   Opts.CFGAddImplicitDtors = Args.hasArg(OPT_analysis_CFGAddImplicitDtors);
-  Opts.CFGAddInitializers = Args.hasArg(OPT_analysis_CFGAddInitializers);
   Opts.TrimGraph = Args.hasArg(OPT_trim_egraph);
   Opts.MaxNodes = Args.getLastArgIntValue(OPT_analyzer_max_nodes, 150000,Diags);
   Opts.MaxLoop = Args.getLastArgIntValue(OPT_analyzer_max_loop, 4, Diags);
@@ -1438,6 +1438,8 @@ static InputKind ParseFrontendArgs(FrontendOptions &Opts, ArgList &Args,
     switch (A->getOption().getID()) {
     default:
       llvm_unreachable("Invalid option in group!");
+    case OPT_ast_list:
+      Opts.ProgramAction = frontend::ASTDeclList; break;
     case OPT_ast_dump:
       Opts.ProgramAction = frontend::ASTDump; break;
     case OPT_ast_dump_xml:
@@ -2094,9 +2096,10 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
                                  Opts.Deprecated);
 
   // FIXME: Eliminate this dependency.
-  unsigned Opt = getOptimizationLevel(Args, IK, Diags);
+  unsigned Opt = getOptimizationLevel(Args, IK, Diags),
+       OptSize = getOptimizationLevelSize(Args, IK, Diags);
   Opts.Optimize = Opt != 0;
-  Opts.OptimizeSize = getOptimizationLevelSize(Args, IK, Diags);
+  Opts.OptimizeSize = OptSize != 0;
 
   // This is the __NO_INLINE__ define, which just depends on things like the
   // optimization level and -fno-inline, not actually whether the backend has

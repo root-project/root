@@ -70,10 +70,9 @@ void af1_c() {
   myglobalpointer = my_malloc(12); // no-warning
 }
 
-// TODO: We will be able to handle this after we add support for tracking allocations stored in struct fields.
 void af1_d() {
   struct stuff mystuff;
-  mystuff.somefield = my_malloc(12); // false negative
+  mystuff.somefield = my_malloc(12); // expected-warning{{Memory is never released; potential leak}}
 }
 
 // Test that we can pass out allocated memory via pointer-to-pointer.
@@ -209,11 +208,11 @@ void f7_realloc() {
 }
 
 void PR6123() {
-  int *x = malloc(11); // expected-warning{{Cast a region whose size is not a multiple of the destination type size.}}
+  int *x = malloc(11); // expected-warning{{Cast a region whose size is not a multiple of the destination type size}}
 }
 
 void PR7217() {
-  int *buf = malloc(2); // expected-warning{{Cast a region whose size is not a multiple of the destination type size.}}
+  int *buf = malloc(2); // expected-warning{{Cast a region whose size is not a multiple of the destination type size}}
   buf[1] = 'c'; // not crash
 }
 

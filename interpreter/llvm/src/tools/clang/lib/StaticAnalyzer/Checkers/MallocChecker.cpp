@@ -38,9 +38,6 @@ class RefState {
               Allocated,
               // Reference to released/freed memory.
               Released,
-              // Reference to escaped memory - no assumptions can be made of
-              // the state after the reference escapes.
-              Escaped,
               // The responsibility for freeing resources has transfered from
               // this reference. A relinquished symbol should not be freed.
               Relinquished } K;
@@ -63,7 +60,6 @@ public:
     return RefState(Allocated, s);
   }
   static RefState getReleased(const Stmt *s) { return RefState(Released, s); }
-  static RefState getEscaped(const Stmt *s) { return RefState(Escaped, s); }
   static RefState getRelinquished(const Stmt *s) {
     return RefState(Relinquished, s);
   }
@@ -194,7 +190,6 @@ private:
   ///\brief Check if the memory associated with this symbol was released.
   bool isReleased(SymbolRef Sym, CheckerContext &C) const;
 
-  bool checkEscape(SymbolRef Sym, const Stmt *S, CheckerContext &C) const;
   bool checkUseAfterFree(SymbolRef Sym, CheckerContext &C,
                          const Stmt *S = 0) const;
 
@@ -679,14 +674,8 @@ ProgramStateRef MallocChecker::FreeMemAux(CheckerContext &C,
   SymbolRef Sym = SR->getSymbol();
   const RefState *RS = state->get<RegionState>(Sym);
 
-  // If the symbol has not been tracked, return. This is possible when free() is
-  // called on a pointer that does not get its pointee directly from malloc(). 
-  // Full support of this requires inter-procedural analysis.
-  if (!RS)
-    return 0;
-
   // Check double free.
-  if (RS->isReleased() || RS->isRelinquished()) {
+  if (RS && (RS->isReleased() || RS->isRelinquished())) {
     if (ExplodedNode *N = C.generateSink()) {
       if (!BT_DoubleFree)
         BT_DoubleFree.reset(
@@ -902,10 +891,8 @@ ProgramStateRef MallocChecker::ReallocMem(CheckerContext &C,
     if (ProgramStateRef stateFree = FreeMemAux(C, CE, StateSizeIsZero,0,false)){
       // The semantics of the return value are:
       // If size was equal to 0, either NULL or a pointer suitable to be passed
-      // to free() is returned.
-      stateFree = stateFree->set<ReallocPairs>(ToPtr,
-                                            ReallocPair(FromPtr, FreesOnFail));
-      C.getSymbolManager().addSymbolDependency(ToPtr, FromPtr);
+      // to free() is returned. We just free the input pointer and do not add
+      // any constrains on the output pointer.
       return stateFree;
     }
 
@@ -1008,10 +995,10 @@ void MallocChecker::reportLeak(SymbolRef Sym, ExplodedNode *N,
   SmallString<200> buf;
   llvm::raw_svector_ostream os(buf);
   os << "Memory is never released; potential leak";
-  if (Region) {
+  if (Region && Region->canPrintPretty()) {
     os << " of memory pointed to by '";
-    Region->dumpPretty(os);
-    os <<'\'';
+    Region->printPretty(os);
+    os << '\'';
   }
 
   BugReport *R = new BugReport(*BT_Leak, os.str(), N, LocUsedForUniqueing);
@@ -1084,21 +1071,6 @@ void MallocChecker::checkEndPath(CheckerContext &C) const {
   }
 }
 
-bool MallocChecker::checkEscape(SymbolRef Sym, const Stmt *S,
-                                CheckerContext &C) const {
-  ProgramStateRef state = C.getState();
-  const RefState *RS = state->get<RegionState>(Sym);
-  if (!RS)
-    return false;
-
-  if (RS->isAllocated()) {
-    state = state->set<RegionState>(Sym, RefState::getEscaped(S));
-    C.addTransition(state);
-    return true;
-  }
-  return false;
-}
-
 void MallocChecker::checkPreStmt(const CallExpr *CE, CheckerContext &C) const {
   // We will check for double free in the post visit.
   if (isFreeFunction(C.getCalleeDecl(CE), C.getASTContext()))
@@ -1125,7 +1097,8 @@ void MallocChecker::checkPreStmt(const ReturnStmt *S, CheckerContext &C) const {
     return;
 
   // Check if we are returning a symbol.
-  SVal RetVal = C.getState()->getSVal(E, C.getLocationContext());
+  ProgramStateRef State = C.getState();
+  SVal RetVal = State->getSVal(E, C.getLocationContext());
   SymbolRef Sym = RetVal.getAsSymbol();
   if (!Sym)
     // If we are returning a field of the allocated struct or an array element,
@@ -1136,16 +1109,18 @@ void MallocChecker::checkPreStmt(const ReturnStmt *S, CheckerContext &C) const {
         if (const SymbolicRegion *BMR =
               dyn_cast<SymbolicRegion>(MR->getBaseRegion()))
           Sym = BMR->getSymbol();
-  if (!Sym)
-    return;
 
   // Check if we are returning freed memory.
-  if (checkUseAfterFree(Sym, C, E))
-    return;
+  if (Sym)
+    if (checkUseAfterFree(Sym, C, E))
+      return;
 
-  // If this function body is not inlined, check if the symbol is escaping.
-  if (C.getLocationContext()->getParent() == 0)
-    checkEscape(Sym, E, C);
+  // If this function body is not inlined, stop tracking any returned symbols.
+  if (C.getLocationContext()->getParent() == 0) {
+    State =
+      State->scanReachableSymbols<StopTrackingCallback>(RetVal).getState();
+    C.addTransition(State);
+  }
 }
 
 // TODO: Blocks should be either inlined or should call invalidate regions
@@ -1252,12 +1227,6 @@ void MallocChecker::checkBind(SVal loc, SVal val, const Stmt *S,
       SVal StoredVal = state->getSVal(regionLoc->getRegion());
       if (StoredVal != val)
         escapes = (state == (state->bindLoc(*regionLoc, val)));
-    }
-    if (!escapes) {
-      // Case 4: We do not currently model what happens when a symbol is
-      // assigned to a struct field, so be conservative here and let the symbol
-      // go. TODO: This could definitely be improved upon.
-      escapes = !isa<VarRegion>(regionLoc->getRegion());
     }
   }
 
@@ -1486,8 +1455,7 @@ MallocChecker::checkRegionChanges(ProgramStateRef State,
     // relinquished symbols.
     if (const RefState *RS = State->get<RegionState>(sym)) {
       if (RS->isAllocated())
-        State = State->set<RegionState>(sym,
-                                        RefState::getEscaped(RS->getStmt()));
+        State = State->remove<RegionState>(sym);
     }
   }
   return State;
@@ -1518,7 +1486,7 @@ MallocChecker::MallocBugVisitor::VisitNode(const ExplodedNode *N,
 
   const RefState *RS = state->get<RegionState>(Sym);
   const RefState *RSPrev = statePrev->get<RegionState>(Sym);
-  if (!RS && !RSPrev)
+  if (!RS)
     return 0;
 
   const Stmt *S = 0;
@@ -1577,11 +1545,6 @@ MallocChecker::MallocBugVisitor::VisitNode(const ExplodedNode *N,
 
     // Is this is the first appearance of the reallocated symbol?
     if (!statePrev->get<RegionState>(FailedReallocSymbol)) {
-      // If we ever hit this assert, that means BugReporter has decided to skip
-      // node pairs or visit them out of order.
-      assert(state->get<RegionState>(FailedReallocSymbol) &&
-        "Missed the reallocation point");
-
       // We're at the reallocation point.
       Msg = "Attempt to reallocate memory";
       StackHint = new StackHintGeneratorForSymbol(Sym,

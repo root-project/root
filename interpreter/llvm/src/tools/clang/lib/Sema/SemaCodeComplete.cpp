@@ -2369,11 +2369,11 @@ AddFunctionTypeQualsToCompletionString(CodeCompletionBuilder &Result,
 
   // Handle multiple qualifiers.
   std::string QualsStr;
-  if (Proto->getTypeQuals() & Qualifiers::Const)
+  if (Proto->isConst())
     QualsStr += " const";
-  if (Proto->getTypeQuals() & Qualifiers::Volatile)
+  if (Proto->isVolatile())
     QualsStr += " volatile";
-  if (Proto->getTypeQuals() & Qualifiers::Restrict)
+  if (Proto->isRestrict())
     QualsStr += " restrict";
   Result.AddInformativeChunk(Result.getAllocator().CopyString(QualsStr));
 }
@@ -2543,7 +2543,7 @@ CodeCompletionResult::CreateCodeCompletionString(ASTContext &Ctx,
 
   if (IncludeBriefComments) {
     // Add documentation comment, if it exists.
-    if (const RawComment *RC = Ctx.getRawCommentForDecl(ND)) {
+    if (const RawComment *RC = Ctx.getRawCommentForAnyRedecl(ND)) {
       Result.addBriefComment(RC->getBriefText(Ctx));
     }
   }
@@ -4476,7 +4476,6 @@ static void AddObjCExpressionResults(ResultBuilder &Results, bool NeedAt) {
   Builder.AddResultTypeChunk("NSDictionary *");
   Builder.AddTypedTextChunk(OBJC_AT_KEYWORD_NAME(NeedAt,"{"));
   Builder.AddPlaceholderChunk("key");
-  Builder.AddChunk(CodeCompletionString::CK_HorizontalSpace);
   Builder.AddChunk(CodeCompletionString::CK_Colon);
   Builder.AddChunk(CodeCompletionString::CK_HorizontalSpace);
   Builder.AddPlaceholderChunk("object, ...");

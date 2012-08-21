@@ -642,7 +642,13 @@ llvm::Optional<unsigned> Parser::ParseLambdaIntroducer(LambdaIntroducer &Intro){
   while (Tok.isNot(tok::r_square)) {
     if (!first) {
       if (Tok.isNot(tok::comma)) {
-        if (Tok.is(tok::code_completion)) {
+        // Provide a completion for a lambda introducer here. Except
+        // in Objective-C, where this is Almost Surely meant to be a message
+        // send. In that case, fail here and let the ObjC message
+        // expression parser perform the completion.
+        if (Tok.is(tok::code_completion) &&
+            !(getLangOpts().ObjC1 && Intro.Default == LCD_None &&
+              !Intro.Captures.empty())) {
           Actions.CodeCompleteLambdaIntroducer(getCurScope(), Intro, 
                                                /*AfterAmpersand=*/false);
           ConsumeCodeCompletionToken();
@@ -804,7 +810,7 @@ ExprResult Parser::ParseLambdaExpressionAfterIntroducer(
 
     D.AddTypeInfo(DeclaratorChunk::getFunction(/*hasProto=*/true,
                                            /*isVariadic=*/EllipsisLoc.isValid(),
-                                           EllipsisLoc,
+                                           /*isAmbiguous=*/false, EllipsisLoc,
                                            ParamInfo.data(), ParamInfo.size(),
                                            DS.getTypeQualifiers(),
                                            /*RefQualifierIsLValueRef=*/true,
@@ -849,6 +855,7 @@ ExprResult Parser::ParseLambdaExpressionAfterIntroducer(
     ParsedAttributes Attr(AttrFactory);
     D.AddTypeInfo(DeclaratorChunk::getFunction(/*hasProto=*/true,
                      /*isVariadic=*/false,
+                     /*isAmbiguous=*/false,
                      /*EllipsisLoc=*/SourceLocation(),
                      /*Params=*/0, /*NumParams=*/0,
                      /*TypeQuals=*/0,
@@ -981,6 +988,21 @@ ExprResult Parser::ParseCXXTypeid() {
 
   ExprResult Result;
 
+  // C++0x [expr.typeid]p3:
+  //   When typeid is applied to an expression other than an lvalue of a
+  //   polymorphic class type [...] The expression is an unevaluated
+  //   operand (Clause 5).
+  //
+  // Note that we can't tell whether the expression is an lvalue of a
+  // polymorphic class type until after we've parsed the expression; we
+  // speculatively assume the subexpression is unevaluated, and fix it up
+  // later.
+  //
+  // We enter the unevaluated context before trying to determine whether we
+  // have a type-id, because the tentative parse logic will try to resolve
+  // names, and must treat them as unevaluated.
+  EnterExpressionEvaluationContext Unevaluated(Actions, Sema::Unevaluated);
+
   if (isTypeIdInParens()) {
     TypeResult Ty = ParseTypeName();
 
@@ -993,16 +1015,6 @@ ExprResult Parser::ParseCXXTypeid() {
     Result = Actions.ActOnCXXTypeid(OpLoc, LParenLoc, /*isType=*/true,
                                     Ty.get().getAsOpaquePtr(), RParenLoc);
   } else {
-    // C++0x [expr.typeid]p3:
-    //   When typeid is applied to an expression other than an lvalue of a
-    //   polymorphic class type [...] The expression is an unevaluated
-    //   operand (Clause 5).
-    //
-    // Note that we can't tell whether the expression is an lvalue of a
-    // polymorphic class type until after we've parsed the expression; we
-    // speculatively assume the subexpression is unevaluated, and fix it up
-    // later.
-    EnterExpressionEvaluationContext Unevaluated(Actions, Sema::Unevaluated);
     Result = ParseExpression();
 
     // Match the ')'.
@@ -2396,10 +2408,14 @@ Parser::ParseCXXDeleteExpression(bool UseGlobal, SourceLocation Start) {
   // Array delete?
   bool ArrayDelete = false;
   if (Tok.is(tok::l_square) && NextToken().is(tok::r_square)) {
-    // FIXME: This could be the start of a lambda-expression. We should
-    // disambiguate this, but that will require arbitrary lookahead if
-    // the next token is '(':
-    //   delete [](int*){ /* ... */
+    // C++11 [expr.delete]p1:
+    //   Whenever the delete keyword is followed by empty square brackets, it
+    //   shall be interpreted as [array delete].
+    //   [Footnote: A lambda expression with a lambda-introducer that consists
+    //              of empty square brackets can follow the delete keyword if
+    //              the lambda expression is enclosed in parentheses.]
+    // FIXME: Produce a better diagnostic if the '[]' is unambiguously a
+    //        lambda-introducer.
     ArrayDelete = true;
     BalancedDelimiterTracker T(*this, tok::l_square);
 

@@ -16,7 +16,7 @@ void AnalysisManager::anchor() { }
 
 AnalysisManager::AnalysisManager(ASTContext &ctx, DiagnosticsEngine &diags,
                                  const LangOptions &lang,
-                                 PathDiagnosticConsumer *pd,
+                                 const PathDiagnosticConsumers &PDC,
                                  StoreManagerCreator storemgr,
                                  ConstraintManagerCreator constraintmgr, 
                                  CheckerManager *checkerMgr,
@@ -25,15 +25,16 @@ AnalysisManager::AnalysisManager(ASTContext &ctx, DiagnosticsEngine &diags,
                                  AnalysisPurgeMode purge,
                                  bool eager, bool trim,
                                  bool useUnoptimizedCFG,
-                                 bool addImplicitDtors, bool addInitializers,
+                                 bool addImplicitDtors,
                                  bool eagerlyTrimEGraph,
                                  AnalysisIPAMode ipa,
                                  unsigned inlineMaxStack,
                                  unsigned inlineMaxFunctionSize,
                                  AnalysisInliningMode IMode,
                                  bool NoRetry)
-  : AnaCtxMgr(useUnoptimizedCFG, addImplicitDtors, addInitializers),
-    Ctx(ctx), Diags(diags), LangOpts(lang), PD(pd),
+  : AnaCtxMgr(useUnoptimizedCFG, addImplicitDtors, /*addInitializers=*/true),
+    Ctx(ctx), Diags(diags), LangOpts(lang),
+    PathConsumers(PDC),
     CreateStoreMgr(storemgr), CreateConstraintMgr(constraintmgr),
     CheckerMgr(checkerMgr), 
     MaxNodes(maxnodes), MaxVisit(maxvisit),
@@ -49,29 +50,19 @@ AnalysisManager::AnalysisManager(ASTContext &ctx, DiagnosticsEngine &diags,
   AnaCtxMgr.getCFGBuildOptions().setAllAlwaysAdd();
 }
 
-AnalysisManager::AnalysisManager(ASTContext &ctx, DiagnosticsEngine &diags,
-                                 AnalysisManager &ParentAM)
-  : AnaCtxMgr(ParentAM.AnaCtxMgr.getUseUnoptimizedCFG(),
-              ParentAM.AnaCtxMgr.getCFGBuildOptions().AddImplicitDtors,
-              ParentAM.AnaCtxMgr.getCFGBuildOptions().AddInitializers),
-    Ctx(ctx), Diags(diags),
-    LangOpts(ParentAM.LangOpts), PD(ParentAM.getPathDiagnosticConsumer()),
-    CreateStoreMgr(ParentAM.CreateStoreMgr),
-    CreateConstraintMgr(ParentAM.CreateConstraintMgr),
-    CheckerMgr(ParentAM.CheckerMgr),
-    MaxNodes(ParentAM.MaxNodes),
-    MaxVisit(ParentAM.MaxVisit),
-    VisualizeEGDot(ParentAM.VisualizeEGDot),
-    VisualizeEGUbi(ParentAM.VisualizeEGUbi),
-    PurgeDead(ParentAM.PurgeDead),
-    EagerlyAssume(ParentAM.EagerlyAssume),
-    TrimGraph(ParentAM.TrimGraph),
-    EagerlyTrimEGraph(ParentAM.EagerlyTrimEGraph),
-    IPAMode(ParentAM.IPAMode),
-    InlineMaxStackDepth(ParentAM.InlineMaxStackDepth),
-    InlineMaxFunctionSize(ParentAM.InlineMaxFunctionSize),
-    InliningMode(ParentAM.InliningMode),
-    NoRetryExhausted(ParentAM.NoRetryExhausted)
-{
-  AnaCtxMgr.getCFGBuildOptions().setAllAlwaysAdd();
+AnalysisManager::~AnalysisManager() {
+  FlushDiagnostics();
+  for (PathDiagnosticConsumers::iterator I = PathConsumers.begin(),
+       E = PathConsumers.end(); I != E; ++I) {
+    delete *I;
+  }
+}
+
+void AnalysisManager::FlushDiagnostics() {
+  PathDiagnosticConsumer::FilesMade filesMade;
+  for (PathDiagnosticConsumers::iterator I = PathConsumers.begin(),
+       E = PathConsumers.end();
+       I != E; ++I) {
+    (*I)->FlushDiagnostics(&filesMade);
+  }
 }

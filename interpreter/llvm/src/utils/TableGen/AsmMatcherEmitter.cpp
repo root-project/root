@@ -2447,7 +2447,9 @@ void AsmMatcherEmitter::run(raw_ostream &OS) {
   emitSubtargetFeatureFlagEnumeration(Info, OS);
 
   // Emit the function to match a register name to number.
-  emitMatchRegisterName(Target, AsmParser, OS);
+  // This should be omitted for Mips target
+  if (AsmParser->getValueAsBit("ShouldEmitMatchRegisterName"))
+    emitMatchRegisterName(Target, AsmParser, OS);
 
   OS << "#endif // GET_REGISTER_MATCHER\n\n";
 
@@ -2649,7 +2651,7 @@ void AsmMatcherEmitter::run(raw_ostream &OS) {
   OS << "    for (unsigned i = 0; i != " << MaxNumOperands << "; ++i) {\n";
   OS << "      if (i + 1 >= Operands.size()) {\n";
   OS << "        OperandsValid = (it->Classes[i] == " <<"InvalidMatchClass);\n";
-  OS << "        if (!OperandsValid) ErrorInfo = i + 1;\n;";
+  OS << "        if (!OperandsValid) ErrorInfo = i + 1;\n";
   OS << "        break;\n";
   OS << "      }\n";
   OS << "      unsigned Diag = validateOperandClass(Operands[i+1],\n";

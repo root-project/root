@@ -333,7 +333,7 @@ ExprResult Sema::BuildCXXTypeId(QualType TypeInfoType,
       //   When typeid is applied to an expression other than an glvalue of a
       //   polymorphic class type [...] [the] expression is an unevaluated
       //   operand. [...]
-      if (RecordD->isPolymorphic() && E->Classify(Context).isGLValue()) {
+      if (RecordD->isPolymorphic() && E->isGLValue()) {
         // The subexpression is potentially evaluated; switch the context
         // and recheck the subexpression.
         ExprResult Result = TranformToPotentiallyEvaluated(E);
@@ -3542,9 +3542,25 @@ static bool EvaluateBinaryTypeTrait(Sema &Self, BinaryTypeTrait BTT,
     // We model the initialization as a copy-initialization of a temporary
     // of the appropriate type, which for this expression is identical to the
     // return statement (since NRVO doesn't apply).
+
+    // Functions aren't allowed to return function or array types.
+    if (RhsT->isFunctionType() || RhsT->isArrayType())
+      return false;
+
+    // A return statement in a void function must have void type.
+    if (RhsT->isVoidType())
+      return LhsT->isVoidType();
+
+    // A function definition requires a complete, non-abstract return type.
+    if (Self.RequireCompleteType(KeyLoc, RhsT, 0) ||
+        Self.RequireNonAbstractType(KeyLoc, RhsT, 0))
+      return false;
+
+    // Compute the result of add_rvalue_reference.
     if (LhsT->isObjectType() || LhsT->isFunctionType())
       LhsT = Self.Context.getRValueReferenceType(LhsT);
-    
+
+    // Build a fake source and destination for initialization.
     InitializedEntity To(InitializedEntity::InitializeTemporary(RhsT));
     OpaqueValueExpr From(KeyLoc, LhsT.getNonLValueExprType(Self.Context),
                          Expr::getValueKindForType(LhsT));
@@ -4100,13 +4116,14 @@ static bool ConvertForConditional(Sema &Self, ExprResult &E, QualType T) {
 ///
 /// See C++ [expr.cond]. Note that LHS is never null, even for the GNU x ?: y
 /// extension. In this case, LHS == Cond. (But they're not aliases.)
-QualType Sema::CXXCheckConditionalOperands(ExprResult &Cond, ExprResult &LHS, ExprResult &RHS,
-                                           ExprValueKind &VK, ExprObjectKind &OK,
+QualType Sema::CXXCheckConditionalOperands(ExprResult &Cond, ExprResult &LHS,
+                                           ExprResult &RHS, ExprValueKind &VK,
+                                           ExprObjectKind &OK,
                                            SourceLocation QuestionLoc) {
   // FIXME: Handle C99's complex types, vector types, block pointers and Obj-C++
   // interface pointers.
 
-  // C++0x 5.16p1
+  // C++11 [expr.cond]p1
   //   The first expression is contextually converted to bool.
   if (!Cond.get()->isTypeDependent()) {
     ExprResult CondRes = CheckCXXBooleanCondition(Cond.take());
@@ -4123,7 +4140,7 @@ QualType Sema::CXXCheckConditionalOperands(ExprResult &Cond, ExprResult &LHS, Ex
   if (LHS.get()->isTypeDependent() || RHS.get()->isTypeDependent())
     return Context.DependentTy;
 
-  // C++0x 5.16p2
+  // C++11 [expr.cond]p2
   //   If either the second or the third operand has type (cv) void, ...
   QualType LTy = LHS.get()->getType();
   QualType RTy = RHS.get()->getType();
@@ -4136,12 +4153,26 @@ QualType Sema::CXXCheckConditionalOperands(ExprResult &Cond, ExprResult &LHS, Ex
     RHS = DefaultFunctionArrayLvalueConversion(RHS.take());
     if (LHS.isInvalid() || RHS.isInvalid())
       return QualType();
+
+    // Finish off the lvalue-to-rvalue conversion by copy-initializing a
+    // temporary if necessary. DefaultFunctionArrayLvalueConversion doesn't
+    // do this part for us.
+    ExprResult &NonVoid = LVoid ? RHS : LHS;
+    if (NonVoid.get()->getType()->isRecordType() &&
+        NonVoid.get()->isGLValue()) {
+      InitializedEntity Entity =
+          InitializedEntity::InitializeTemporary(NonVoid.get()->getType());
+      NonVoid = PerformCopyInitialization(Entity, SourceLocation(), NonVoid);
+      if (NonVoid.isInvalid())
+        return QualType();
+    }
+
     LTy = LHS.get()->getType();
     RTy = RHS.get()->getType();
 
     //   ... and one of the following shall hold:
     //   -- The second or the third operand (but not both) is a throw-
-    //      expression; the result is of the type of the other and is an rvalue.
+    //      expression; the result is of the type of the other and is a prvalue.
     bool LThrow = isa<CXXThrowExpr>(LHS.get());
     bool RThrow = isa<CXXThrowExpr>(RHS.get());
     if (LThrow && !RThrow)
@@ -4150,7 +4181,7 @@ QualType Sema::CXXCheckConditionalOperands(ExprResult &Cond, ExprResult &LHS, Ex
       return LTy;
 
     //   -- Both the second and third operands have type void; the result is of
-    //      type void and is an rvalue.
+    //      type void and is a prvalue.
     if (LVoid && RVoid)
       return Context.VoidTy;
 
@@ -4163,10 +4194,10 @@ QualType Sema::CXXCheckConditionalOperands(ExprResult &Cond, ExprResult &LHS, Ex
 
   // Neither is void.
 
-  // C++0x 5.16p3
+  // C++11 [expr.cond]p3
   //   Otherwise, if the second and third operand have different types, and
-  //   either has (cv) class type, and attempt is made to convert each of those
-  //   operands to the other.
+  //   either has (cv) class type [...] an attempt is made to convert each of
+  //   those operands to the type of the other.
   if (!Context.hasSameType(LTy, RTy) &&
       (LTy->isRecordType() || RTy->isRecordType())) {
     ImplicitConversionSequence ICSLeftToRight, ICSRightToLeft;
@@ -4199,7 +4230,31 @@ QualType Sema::CXXCheckConditionalOperands(ExprResult &Cond, ExprResult &LHS, Ex
     }
   }
 
-  // C++0x 5.16p4
+  // C++11 [expr.cond]p3
+  //   if both are glvalues of the same value category and the same type except
+  //   for cv-qualification, an attempt is made to convert each of those
+  //   operands to the type of the other.
+  ExprValueKind LVK = LHS.get()->getValueKind();
+  ExprValueKind RVK = RHS.get()->getValueKind();
+  if (!Context.hasSameType(LTy, RTy) &&
+      Context.hasSameUnqualifiedType(LTy, RTy) &&
+      LVK == RVK && LVK != VK_RValue) {
+    // Since the unqualified types are reference-related and we require the
+    // result to be as if a reference bound directly, the only conversion
+    // we can perform is to add cv-qualifiers.
+    Qualifiers LCVR = Qualifiers::fromCVRMask(LTy.getCVRQualifiers());
+    Qualifiers RCVR = Qualifiers::fromCVRMask(RTy.getCVRQualifiers());
+    if (RCVR.isStrictSupersetOf(LCVR)) {
+      LHS = ImpCastExprToType(LHS.take(), RTy, CK_NoOp, LVK);
+      LTy = LHS.get()->getType();
+    }
+    else if (LCVR.isStrictSupersetOf(RCVR)) {
+      RHS = ImpCastExprToType(RHS.take(), LTy, CK_NoOp, RVK);
+      RTy = RHS.get()->getType();
+    }
+  }
+
+  // C++11 [expr.cond]p4
   //   If the second and third operands are glvalues of the same value
   //   category and have the same type, the result is of that type and
   //   value category and it is a bit-field if the second or the third
@@ -4207,9 +4262,7 @@ QualType Sema::CXXCheckConditionalOperands(ExprResult &Cond, ExprResult &LHS, Ex
   // We only extend this to bitfields, not to the crazy other kinds of
   // l-values.
   bool Same = Context.hasSameType(LTy, RTy);
-  if (Same &&
-      LHS.get()->isGLValue() &&
-      LHS.get()->getValueKind() == RHS.get()->getValueKind() &&
+  if (Same && LVK == RVK && LVK != VK_RValue &&
       LHS.get()->isOrdinaryOrBitFieldObject() &&
       RHS.get()->isOrdinaryOrBitFieldObject()) {
     VK = LHS.get()->getValueKind();
@@ -4219,8 +4272,8 @@ QualType Sema::CXXCheckConditionalOperands(ExprResult &Cond, ExprResult &LHS, Ex
     return LTy;
   }
 
-  // C++0x 5.16p5
-  //   Otherwise, the result is an rvalue. If the second and third operands
+  // C++11 [expr.cond]p5
+  //   Otherwise, the result is a prvalue. If the second and third operands
   //   do not have the same type, and either has (cv) class type, ...
   if (!Same && (LTy->isRecordType() || RTy->isRecordType())) {
     //   ... overload resolution is used to determine the conversions (if any)
@@ -4230,8 +4283,8 @@ QualType Sema::CXXCheckConditionalOperands(ExprResult &Cond, ExprResult &LHS, Ex
       return QualType();
   }
 
-  // C++0x 5.16p6
-  //   LValue-to-rvalue, array-to-pointer, and function-to-pointer standard
+  // C++11 [expr.cond]p6
+  //   Lvalue-to-rvalue, array-to-pointer, and function-to-pointer standard
   //   conversions are performed on the second and third operands.
   LHS = DefaultFunctionArrayLvalueConversion(LHS.take());
   RHS = DefaultFunctionArrayLvalueConversion(RHS.take());
@@ -4284,9 +4337,11 @@ QualType Sema::CXXCheckConditionalOperands(ExprResult &Cond, ExprResult &LHS, Ex
   }
 
   //   -- The second and third operands have pointer type, or one has pointer
-  //      type and the other is a null pointer constant; pointer conversions
-  //      and qualification conversions are performed to bring them to their
-  //      composite pointer type. The result is of the composite pointer type.
+  //      type and the other is a null pointer constant, or both are null
+  //      pointer constants, at least one of which is non-integral; pointer
+  //      conversions and qualification conversions are performed to bring them
+  //      to their composite pointer type. The result is of the composite
+  //      pointer type.
   //   -- The second and third operands have pointer to member type, or one has
   //      pointer to member type and the other is a null pointer constant;
   //      pointer to member conversions and qualification conversions are
@@ -4324,7 +4379,7 @@ QualType Sema::CXXCheckConditionalOperands(ExprResult &Cond, ExprResult &LHS, Ex
 /// \brief Find a merged pointer type and convert the two expressions to it.
 ///
 /// This finds the composite pointer type (or member pointer type) for @p E1
-/// and @p E2 according to C++0x 5.9p2. It converts both expressions to this
+/// and @p E2 according to C++11 5.9p2. It converts both expressions to this
 /// type and returns it.
 /// It does not emit diagnostics.
 ///
@@ -4344,15 +4399,27 @@ QualType Sema::FindCompositePointerType(SourceLocation Loc,
   assert(getLangOpts().CPlusPlus && "This function assumes C++");
   QualType T1 = E1->getType(), T2 = E2->getType();
 
-  if (!T1->isAnyPointerType() && !T1->isMemberPointerType() &&
-      !T2->isAnyPointerType() && !T2->isMemberPointerType())
-   return QualType();
-
-  // C++0x 5.9p2
+  // C++11 5.9p2
   //   Pointer conversions and qualification conversions are performed on
   //   pointer operands to bring them to their composite pointer type. If
   //   one operand is a null pointer constant, the composite pointer type is
-  //   the type of the other operand.
+  //   std::nullptr_t if the other operand is also a null pointer constant or,
+  //   if the other operand is a pointer, the type of the other operand.
+  if (!T1->isAnyPointerType() && !T1->isMemberPointerType() &&
+      !T2->isAnyPointerType() && !T2->isMemberPointerType()) {
+    if (T1->isNullPtrType() &&
+        E2->isNullPointerConstant(Context, Expr::NPC_ValueDependentIsNull)) {
+      E2 = ImpCastExprToType(E2, T1, CK_NullToPointer).take();
+      return T1;
+    }
+    if (T2->isNullPtrType() &&
+        E1->isNullPointerConstant(Context, Expr::NPC_ValueDependentIsNull)) {
+      E1 = ImpCastExprToType(E1, T2, CK_NullToPointer).take();
+      return T2;
+    }
+    return QualType();
+  }
+
   if (E1->isNullPointerConstant(Context, Expr::NPC_ValueDependentIsNull)) {
     if (T2->isMemberPointerType())
       E1 = ImpCastExprToType(E1, T2, CK_NullToMemberPointer).take();

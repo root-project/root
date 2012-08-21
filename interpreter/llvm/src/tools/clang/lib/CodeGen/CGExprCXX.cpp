@@ -123,7 +123,14 @@ static bool canDevirtualizeMemberFunctionCalls(ASTContext &Context,
     
     return false;
   }
-  
+
+  // We can devirtualize calls on an object accessed by a class member access
+  // expression, since by C++11 [basic.life]p6 we know that it can't refer to
+  // a derived class object constructed in the same location.
+  if (const MemberExpr *ME = dyn_cast<MemberExpr>(Base))
+    if (const ValueDecl *VD = dyn_cast<ValueDecl>(ME->getMemberDecl()))
+      return VD->getType()->isRecordType();
+
   // We can always devirtualize calls on temporary object expressions.
   if (isa<CXXConstructExpr>(Base))
     return true;
@@ -1643,15 +1650,9 @@ llvm::Value *CodeGenFunction::EmitCXXTypeidExpr(const CXXTypeidExpr *E) {
   //   polymorphic class type, the result refers to a std::type_info object
   //   representing the type of the most derived object (that is, the dynamic
   //   type) to which the glvalue refers.
-  if (E->getExprOperand()->isGLValue()) {
-    if (const RecordType *RT =
-          E->getExprOperand()->getType()->getAs<RecordType>()) {
-      const CXXRecordDecl *RD = cast<CXXRecordDecl>(RT->getDecl());
-      if (RD->isPolymorphic())
-        return EmitTypeidFromVTable(*this, E->getExprOperand(), 
-                                    StdTypeInfoPtrTy);
-    }
-  }
+  if (E->isPotentiallyEvaluated())
+    return EmitTypeidFromVTable(*this, E->getExprOperand(), 
+                                StdTypeInfoPtrTy);
 
   QualType OperandTy = E->getExprOperand()->getType();
   return Builder.CreateBitCast(CGM.GetAddrOfRTTIDescriptor(OperandTy),

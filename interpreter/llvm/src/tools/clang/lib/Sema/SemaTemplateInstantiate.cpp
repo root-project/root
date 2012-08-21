@@ -988,12 +988,11 @@ TemplateInstantiator::RebuildElaboratedType(SourceLocation KeywordLoc,
 
     SourceLocation TagLocation = KeywordLoc;
 
-    // FIXME: type might be anonymous.
     IdentifierInfo *Id = TD->getIdentifier();
 
     // TODO: should we even warn on struct/class mismatches for this?  Seems
     // like it's likely to produce a lot of spurious errors.
-    if (Keyword != ETK_None && Keyword != ETK_Typename) {
+    if (Id && Keyword != ETK_None && Keyword != ETK_Typename) {
       TagTypeKind Kind = TypeWithKeyword::getTagTypeKindForKeyword(Keyword);
       if (!SemaRef.isAcceptableTagRedeclaration(TD, Kind, /*isDefinition*/false,
                                                 TagLocation, *Id)) {
@@ -2005,6 +2004,9 @@ Sema::InstantiateClass(SourceLocation PointOfInstantiation,
   }
 
   if (!Instantiation->isInvalidDecl()) {
+    // Perform any dependent diagnostics from the pattern.
+    PerformDependentDiagnostics(Pattern, TemplateArgs);
+
     // Instantiate any out-of-line class template partial
     // specializations now.
     for (TemplateDeclInstantiator::delayed_partial_spec_iterator 

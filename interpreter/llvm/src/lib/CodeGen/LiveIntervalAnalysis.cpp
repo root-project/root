@@ -45,6 +45,7 @@ NewLiveIntervals("new-live-intervals", cl::Hidden,
                  cl::desc("Use new algorithm forcomputing live intervals"));
 
 char LiveIntervals::ID = 0;
+char &llvm::LiveIntervalsID = LiveIntervals::ID;
 INITIALIZE_PASS_BEGIN(LiveIntervals, "liveintervals",
                 "Live Interval Analysis", false, false)
 INITIALIZE_AG_DEPENDENCY(AliasAnalysis)
@@ -256,7 +257,6 @@ void LiveIntervals::handleVirtualRegisterDef(MachineBasicBlock *mbb,
       // new valno in the killing blocks.
       assert(vi.AliveBlocks.empty() && "Phi join can't pass through blocks");
       DEBUG(dbgs() << " phi-join");
-      ValNo->setHasPHIKill(true);
     } else {
       // Iterate over all of the blocks that the variable is completely
       // live in, adding [insrtIndex(begin), instrIndex(end)+4) to the
@@ -357,7 +357,6 @@ void LiveIntervals::handleVirtualRegisterDef(MachineBasicBlock *mbb,
       SlotIndex killIndex = getMBBEndIdx(mbb);
       LiveRange LR(defIndex, killIndex, ValNo);
       interval.addRange(LR);
-      ValNo->setHasPHIKill(true);
       DEBUG(dbgs() << " phi-join +" << LR);
     } else {
       llvm_unreachable("Multiply defined register");
@@ -708,7 +707,7 @@ bool LiveIntervals::shrinkToUses(LiveInterval *li,
       continue;
     if (VNI->isPHIDef()) {
       // This is a dead PHI. Remove it.
-      VNI->setIsUnused(true);
+      VNI->markUnused();
       NewLI.removeRange(*LII);
       DEBUG(dbgs() << "Dead PHI at " << VNI->def << " may separate interval\n");
       CanSeparate = true;
@@ -780,6 +779,25 @@ LiveIntervals::intervalIsInOneMBB(const LiveInterval &LI) const {
   return MBB1 == MBB2 ? MBB1 : NULL;
 }
 
+bool
+LiveIntervals::hasPHIKill(const LiveInterval &LI, const VNInfo *VNI) const {
+  for (LiveInterval::const_vni_iterator I = LI.vni_begin(), E = LI.vni_end();
+       I != E; ++I) {
+    const VNInfo *PHI = *I;
+    if (PHI->isUnused() || !PHI->isPHIDef())
+      continue;
+    const MachineBasicBlock *PHIMBB = getMBBFromIndex(PHI->def);
+    // Conservatively return true instead of scanning huge predecessor lists.
+    if (PHIMBB->pred_size() > 100)
+      return true;
+    for (MachineBasicBlock::const_pred_iterator
+         PI = PHIMBB->pred_begin(), PE = PHIMBB->pred_end(); PI != PE; ++PI)
+      if (VNI == LI.getVNInfoBefore(Indexes->getMBBEndIdx(*PI)))
+        return true;
+  }
+  return false;
+}
+
 float
 LiveIntervals::getSpillWeight(bool isDef, bool isUse, unsigned loopDepth) {
   // Limit the loop depth ridiculousness.
@@ -804,7 +822,6 @@ LiveRange LiveIntervals::addLiveRangeToEndOfBlock(unsigned reg,
   VNInfo* VN = Interval.getNextValue(
     SlotIndex(getInstructionIndex(startInst).getRegSlot()),
     getVNInfoAllocator());
-  VN->setHasPHIKill(true);
   LiveRange LR(
      SlotIndex(getInstructionIndex(startInst).getRegSlot()),
      getMBBEndIdx(startInst->getParent()), VN);

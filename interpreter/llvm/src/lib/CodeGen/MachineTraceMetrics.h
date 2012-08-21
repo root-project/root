@@ -47,22 +47,27 @@
 #ifndef LLVM_CODEGEN_MACHINE_TRACE_METRICS_H
 #define LLVM_CODEGEN_MACHINE_TRACE_METRICS_H
 
-#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 
 namespace llvm {
 
+class InstrItineraryData;
+class MachineBasicBlock;
+class MachineInstr;
+class MachineLoop;
+class MachineLoopInfo;
+class MachineRegisterInfo;
 class TargetInstrInfo;
 class TargetRegisterInfo;
-class MachineBasicBlock;
-class MachineRegisterInfo;
-class MachineLoopInfo;
-class MachineLoop;
 class raw_ostream;
 
 class MachineTraceMetrics : public MachineFunctionPass {
+  const MachineFunction *MF;
   const TargetInstrInfo *TII;
   const TargetRegisterInfo *TRI;
+  const InstrItineraryData *ItinData;
   const MachineRegisterInfo *MRI;
   const MachineLoopInfo *Loops;
 
@@ -74,6 +79,7 @@ public:
   void getAnalysisUsage(AnalysisUsage&) const;
   bool runOnMachineFunction(MachineFunction&);
   void releaseMemory();
+  void verifyAnalysis() const;
 
   friend class Ensemble;
   friend class Trace;
@@ -99,6 +105,19 @@ public:
 
   /// Get the fixed resource information about MBB. Compute it on demand.
   const FixedBlockInfo *getResources(const MachineBasicBlock*);
+
+  /// A virtual register or regunit required by a basic block or its trace
+  /// successors.
+  struct LiveInReg {
+    /// The virtual register required, or a register unit.
+    unsigned Reg;
+
+    /// For virtual registers: Minimum height of the defining instruction.
+    /// For regunits: Height of the highest user in the trace.
+    unsigned Height;
+
+    LiveInReg(unsigned Reg, unsigned Height = 0) : Reg(Reg), Height(Height) {}
+  };
 
   /// Per-basic block information that relates to a specific trace through the
   /// block. Convergent traces means that only one of these is required per
@@ -126,7 +145,10 @@ public:
     /// Includes instructions in this block.
     unsigned InstrHeight;
 
-    TraceBlockInfo() : Pred(0), Succ(0), InstrDepth(~0u), InstrHeight(~0u) {}
+    TraceBlockInfo() :
+      Pred(0), Succ(0),
+      InstrDepth(~0u), InstrHeight(~0u),
+      HasValidInstrDepths(false), HasValidInstrHeights(false) {}
 
     /// Returns true if the depth resources have been computed from the trace
     /// above this block.
@@ -137,12 +159,46 @@ public:
     bool hasValidHeight() const { return InstrHeight != ~0u; }
 
     /// Invalidate depth resources when some block above this one has changed.
-    void invalidateDepth() { InstrDepth = ~0u; }
+    void invalidateDepth() { InstrDepth = ~0u; HasValidInstrDepths = false; }
 
     /// Invalidate height resources when a block below this one has changed.
-    void invalidateHeight() { InstrHeight = ~0u; }
+    void invalidateHeight() { InstrHeight = ~0u; HasValidInstrHeights = false; }
+
+    // Data-dependency-related information. Per-instruction depth and height
+    // are computed from data dependencies in the current trace, using
+    // itinerary data.
+
+    /// Instruction depths have been computed. This implies hasValidDepth().
+    bool HasValidInstrDepths;
+
+    /// Instruction heights have been computed. This implies hasValidHeight().
+    bool HasValidInstrHeights;
+
+    /// Critical path length. This is the number of cycles in the longest data
+    /// dependency chain through the trace. This is only valid when both
+    /// HasValidInstrDepths and HasValidInstrHeights are set.
+    unsigned CriticalPath;
+
+    /// Live-in registers. These registers are defined above the current block
+    /// and used by this block or a block below it.
+    /// This does not include PHI uses in the current block, but it does
+    /// include PHI uses in deeper blocks.
+    SmallVector<LiveInReg, 4> LiveIns;
 
     void print(raw_ostream&) const;
+  };
+
+  /// InstrCycles represents the cycle height and depth of an instruction in a
+  /// trace.
+  struct InstrCycles {
+    /// Earliest issue cycle as determined by data dependencies and instruction
+    /// latencies from the beginning of the trace. Data dependencies from
+    /// before the trace are not included.
+    unsigned Depth;
+
+    /// Minimum number of cycles from this instruction is issued to the of the
+    /// trace, as determined by data dependencies and instruction latencies.
+    unsigned Height;
   };
 
   /// A trace represents a plausible sequence of executed basic blocks that
@@ -152,6 +208,8 @@ public:
     Ensemble &TE;
     TraceBlockInfo &TBI;
 
+    unsigned getBlockNum() const { return &TBI - &TE.BlockInfo[0]; }
+
   public:
     explicit Trace(Ensemble &te, TraceBlockInfo &tbi) : TE(te), TBI(tbi) {}
     void print(raw_ostream&) const;
@@ -160,6 +218,42 @@ public:
     unsigned getInstrCount() const {
       return TBI.InstrDepth + TBI.InstrHeight;
     }
+
+    /// Return the resource depth of the top/bottom of the trace center block.
+    /// This is the number of cycles required to execute all instructions from
+    /// the trace head to the trace center block. The resource depth only
+    /// considers execution resources, it ignores data dependencies.
+    /// When Bottom is set, instructions in the trace center block are included.
+    unsigned getResourceDepth(bool Bottom) const;
+
+    /// Return the resource length of the trace. This is the number of cycles
+    /// required to execute the instructions in the trace if they were all
+    /// independent, exposing the maximum instruction-level parallelism.
+    ///
+    /// Any blocks in Extrablocks are included as if they were part of the
+    /// trace.
+    unsigned getResourceLength(ArrayRef<const MachineBasicBlock*> Extrablocks =
+                               ArrayRef<const MachineBasicBlock*>()) const;
+
+    /// Return the length of the (data dependency) critical path through the
+    /// trace.
+    unsigned getCriticalPath() const { return TBI.CriticalPath; }
+
+    /// Return the depth and height of MI. The depth is only valid for
+    /// instructions in or above the trace center block. The height is only
+    /// valid for instructions in or below the trace center block.
+    InstrCycles getInstrCycles(const MachineInstr *MI) const {
+      return TE.Cycles.lookup(MI);
+    }
+
+    /// Return the slack of MI. This is the number of cycles MI can be delayed
+    /// before the critical path becomes longer.
+    /// MI must be an instruction in the trace center block.
+    unsigned getInstrSlack(const MachineInstr *MI) const;
+
+    /// Return the Depth of a PHI instruction in a trace center block successor.
+    /// The PHI does not have to be part of the trace.
+    unsigned getPHIDepth(const MachineInstr *PHI) const;
   };
 
   /// A trace ensemble is a collection of traces selected using the same
@@ -167,18 +261,24 @@ public:
   /// every block in the function.
   class Ensemble {
     SmallVector<TraceBlockInfo, 4> BlockInfo;
+    DenseMap<const MachineInstr*, InstrCycles> Cycles;
     friend class Trace;
 
     void computeTrace(const MachineBasicBlock*);
     void computeDepthResources(const MachineBasicBlock*);
     void computeHeightResources(const MachineBasicBlock*);
+    unsigned computeCrossBlockCriticalPath(const TraceBlockInfo&);
+    void computeInstrDepths(const MachineBasicBlock*);
+    void computeInstrHeights(const MachineBasicBlock*);
+    void addLiveIns(const MachineInstr *DefMI,
+                    ArrayRef<const MachineBasicBlock*> Trace);
 
   protected:
-    MachineTraceMetrics &CT;
+    MachineTraceMetrics &MTM;
     virtual const MachineBasicBlock *pickTracePred(const MachineBasicBlock*) =0;
     virtual const MachineBasicBlock *pickTraceSucc(const MachineBasicBlock*) =0;
     explicit Ensemble(MachineTraceMetrics*);
-    MachineLoop *getLoopFor(const MachineBasicBlock*);
+    const MachineLoop *getLoopFor(const MachineBasicBlock*) const;
     const TraceBlockInfo *getDepthResources(const MachineBasicBlock*) const;
     const TraceBlockInfo *getHeightResources(const MachineBasicBlock*) const;
 
@@ -187,6 +287,7 @@ public:
     virtual const char *getName() const =0;
     void print(raw_ostream&) const;
     void invalidate(const MachineBasicBlock *MBB);
+    void verify() const;
 
     /// Get the trace that passes through MBB.
     /// The trace is computed on demand.
@@ -208,6 +309,12 @@ public:
 
   /// Invalidate cached information about MBB. This must be called *before* MBB
   /// is erased, or the CFG is otherwise changed.
+  ///
+  /// This invalidates per-block information about resource usage for MBB only,
+  /// and it invalidates per-trace information for any trace that passes
+  /// through MBB.
+  ///
+  /// Call Ensemble::getTrace() again to update any trace handles.
   void invalidate(const MachineBasicBlock *MBB);
 
 private:

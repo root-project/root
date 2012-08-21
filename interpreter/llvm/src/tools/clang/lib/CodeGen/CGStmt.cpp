@@ -1686,4 +1686,42 @@ void CodeGenFunction::EmitMSAsmStmt(const MSAsmStmt &S) {
   // MS-style inline assembly is not fully supported, so sema emits a warning.
   if (!CGM.getCodeGenOpts().EmitMicrosoftInlineAsm)
     return;
+
+  assert (S.isSimple() && "CodeGen can only handle simple MSAsmStmts.");
+
+  std::vector<llvm::Value*> Args;
+  std::vector<llvm::Type *> ArgTypes;
+  std::string Constraints;
+
+  // Clobbers
+  for (unsigned i = 0, e = S.getNumClobbers(); i != e; ++i) {
+    StringRef Clobber = S.getClobber(i);
+
+    if (Clobber != "memory" && Clobber != "cc")
+      Clobber = Target.getNormalizedGCCRegisterName(Clobber);
+
+    if (i != 0)
+      Constraints += ',';
+
+    Constraints += "~{";
+    Constraints += Clobber;
+    Constraints += '}';
+  }
+
+  // Add machine specific clobbers
+  std::string MachineClobbers = Target.getClobbers();
+  if (!MachineClobbers.empty()) {
+    if (!Constraints.empty())
+      Constraints += ',';
+    Constraints += MachineClobbers;
+  }
+
+  llvm::FunctionType *FTy =
+    llvm::FunctionType::get(VoidTy, ArgTypes, false);
+
+  llvm::InlineAsm *IA =
+    llvm::InlineAsm::get(FTy, *S.getAsmString(), Constraints, true);
+  llvm::CallInst *Result = Builder.CreateCall(IA, Args);
+  Result->addAttribute(~0, llvm::Attribute::NoUnwind);
+  Result->addAttribute(~0, llvm::Attribute::IANSDialect);
 }

@@ -68,7 +68,6 @@ static bool isAttributeLateParsed(const IdentifierInfo &II) {
         .Default(false);
 }
 
-
 /// ParseGNUAttributes - Parse a non-empty attributes list.
 ///
 /// [GNU] attributes:
@@ -191,6 +190,11 @@ void Parser::ParseGNUAttributeArgs(IdentifierInfo *AttrName,
   // just parse the arguments as a list of expressions
   if (IsThreadSafetyAttribute(AttrName->getName())) {
     ParseThreadSafetyAttribute(*AttrName, AttrNameLoc, Attrs, EndLoc);
+    return;
+  }
+  // Type safety attributes have their own grammar.
+  if (AttrName->isStr("type_tag_for_datatype")) {
+    ParseTypeTagForDatatypeAttribute(*AttrName, AttrNameLoc, Attrs, EndLoc);
     return;
   }
 
@@ -866,7 +870,8 @@ void Parser::ParseLexedAttributes(ParsingClass &Class) {
 void Parser::ParseLexedAttributeList(LateParsedAttrList &LAs, Decl *D,
                                      bool EnterScope, bool OnDefinition) {
   for (unsigned i = 0, ni = LAs.size(); i < ni; ++i) {
-    LAs[i]->addDecl(D);
+    if (D)
+      LAs[i]->addDecl(D);
     ParseLexedAttribute(*LAs[i], EnterScope, OnDefinition);
     delete LAs[i];
   }
@@ -1015,6 +1020,70 @@ void Parser::ParseThreadSafetyAttribute(IdentifierInfo &AttrName,
     Attrs.addNew(&AttrName, AttrNameLoc, 0, AttrNameLoc, 0, SourceLocation(),
                  ArgExprs.take(), ArgExprs.size(), AttributeList::AS_GNU);
   }
+  if (EndLoc)
+    *EndLoc = T.getCloseLocation();
+}
+
+void Parser::ParseTypeTagForDatatypeAttribute(IdentifierInfo &AttrName,
+                                              SourceLocation AttrNameLoc,
+                                              ParsedAttributes &Attrs,
+                                              SourceLocation *EndLoc) {
+  assert(Tok.is(tok::l_paren) && "Attribute arg list not starting with '('");
+
+  BalancedDelimiterTracker T(*this, tok::l_paren);
+  T.consumeOpen();
+
+  if (Tok.isNot(tok::identifier)) {
+    Diag(Tok, diag::err_expected_ident);
+    T.skipToEnd();
+    return;
+  }
+  IdentifierInfo *ArgumentKind = Tok.getIdentifierInfo();
+  SourceLocation ArgumentKindLoc = ConsumeToken();
+
+  if (Tok.isNot(tok::comma)) {
+    Diag(Tok, diag::err_expected_comma);
+    T.skipToEnd();
+    return;
+  }
+  ConsumeToken();
+
+  SourceRange MatchingCTypeRange;
+  TypeResult MatchingCType = ParseTypeName(&MatchingCTypeRange);
+  if (MatchingCType.isInvalid()) {
+    T.skipToEnd();
+    return;
+  }
+
+  bool LayoutCompatible = false;
+  bool MustBeNull = false;
+  while (Tok.is(tok::comma)) {
+    ConsumeToken();
+    if (Tok.isNot(tok::identifier)) {
+      Diag(Tok, diag::err_expected_ident);
+      T.skipToEnd();
+      return;
+    }
+    IdentifierInfo *Flag = Tok.getIdentifierInfo();
+    if (Flag->isStr("layout_compatible"))
+      LayoutCompatible = true;
+    else if (Flag->isStr("must_be_null"))
+      MustBeNull = true;
+    else {
+      Diag(Tok, diag::err_type_safety_unknown_flag) << Flag;
+      T.skipToEnd();
+      return;
+    }
+    ConsumeToken(); // consume flag
+  }
+
+  if (!T.consumeClose()) {
+    Attrs.addNewTypeTagForDatatype(&AttrName, AttrNameLoc, 0, AttrNameLoc,
+                                   ArgumentKind, ArgumentKindLoc,
+                                   MatchingCType.release(), LayoutCompatible,
+                                   MustBeNull, AttributeList::AS_GNU);
+  }
+
   if (EndLoc)
     *EndLoc = T.getCloseLocation();
 }
@@ -1340,12 +1409,7 @@ Parser::DeclGroupPtrTy Parser::ParseDeclGroup(ParsingDeclSpec &DS,
       // Look at the next token to make sure that this isn't a function
       // declaration.  We have to check this because __attribute__ might be the
       // start of a function definition in GCC-extended K&R C.
-      // FIXME. Delayed parsing not done for c/c++ functions nested in namespace
-      !isDeclarationAfterDeclarator() && 
-      (!CurParsedObjCImpl || Tok.isNot(tok::l_brace) || 
-       (getLangOpts().CPlusPlus && 
-        (D.getCXXScopeSpec().isSet() || 
-         !Actions.CurContext->isTranslationUnit())))) {
+      !isDeclarationAfterDeclarator()) {
 
     if (isStartOfFunctionDefinition(D)) {
       if (DS.getStorageClassSpec() == DeclSpec::SCS_typedef) {
@@ -1401,14 +1465,6 @@ Parser::DeclGroupPtrTy Parser::ParseDeclGroup(ParsingDeclSpec &DS,
     DeclsInGroup.push_back(FirstDecl);
 
   bool ExpectSemi = Context != Declarator::ForContext;
-
-  if (CurParsedObjCImpl && D.isFunctionDeclarator() &&
-      Tok.is(tok::l_brace)) {
-    // Consume the tokens and store them for later parsing.
-    StashAwayMethodOrFunctionBodyTokens(FirstDecl);
-    CurParsedObjCImpl->HasCFunction = true;
-    ExpectSemi = false;
-  }
   
   // If we don't have a comma, it is either the end of the list (a ';') or an
   // error, bail out.
@@ -2773,7 +2829,7 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
 /// [GNU]   declarator[opt] ':' constant-expression attributes[opt]
 ///
 void Parser::
-ParseStructDeclaration(DeclSpec &DS, FieldCallback &Fields) {
+ParseStructDeclaration(ParsingDeclSpec &DS, FieldCallback &Fields) {
 
   if (Tok.is(tok::kw___extension__)) {
     // __extension__ silences extension warnings in the subexpression.
@@ -2788,7 +2844,9 @@ ParseStructDeclaration(DeclSpec &DS, FieldCallback &Fields) {
   // If there are no declarators, this is a free-standing declaration
   // specifier. Let the actions module cope with it.
   if (Tok.is(tok::semi)) {
-    Actions.ParsedFreeStandingDeclSpec(getCurScope(), AS_none, DS);
+    Decl *TheDecl = Actions.ParsedFreeStandingDeclSpec(getCurScope(), AS_none,
+                                                       DS);
+    DS.complete(TheDecl);
     return;
   }
 
@@ -2796,8 +2854,7 @@ ParseStructDeclaration(DeclSpec &DS, FieldCallback &Fields) {
   bool FirstDeclarator = true;
   SourceLocation CommaLoc;
   while (1) {
-    ParsingDeclRAIIObject PD(*this, ParsingDeclRAIIObject::NoParent);
-    FieldDeclarator DeclaratorInfo(DS);
+    ParsingFieldDeclarator DeclaratorInfo(*this, DS);
     DeclaratorInfo.D.setCommaLoc(CommaLoc);
 
     // Attributes are only allowed here on successive declarators.
@@ -2825,8 +2882,7 @@ ParseStructDeclaration(DeclSpec &DS, FieldCallback &Fields) {
     MaybeParseGNUAttributes(DeclaratorInfo.D);
 
     // We're done with this declarator;  invoke the callback.
-    Decl *D = Fields.invoke(DeclaratorInfo);
-    PD.complete(D);
+    Fields.invoke(DeclaratorInfo);
 
     // If we don't have a comma, it is either the end of the list (a ';')
     // or an error, bail out.
@@ -2881,9 +2937,6 @@ void Parser::ParseStructUnionBody(SourceLocation RecordLoc,
       continue;
     }
 
-    // Parse all the comma separated declarators.
-    DeclSpec DS(AttrFactory);
-
     if (!Tok.is(tok::at)) {
       struct CFieldCallback : FieldCallback {
         Parser &P;
@@ -2894,16 +2947,18 @@ void Parser::ParseStructUnionBody(SourceLocation RecordLoc,
                        SmallVectorImpl<Decl *> &FieldDecls) :
           P(P), TagDecl(TagDecl), FieldDecls(FieldDecls) {}
 
-        virtual Decl *invoke(FieldDeclarator &FD) {
+        void invoke(ParsingFieldDeclarator &FD) {
           // Install the declarator into the current TagDecl.
           Decl *Field = P.Actions.ActOnField(P.getCurScope(), TagDecl,
                               FD.D.getDeclSpec().getSourceRange().getBegin(),
                                                  FD.D, FD.BitfieldSize);
           FieldDecls.push_back(Field);
-          return Field;
+          FD.complete(Field);
         }
       } Callback(*this, TagDecl, FieldDecls);
 
+      // Parse all the comma separated declarators.
+      ParsingDeclSpec DS(*this);
       ParseStructDeclaration(DS, Callback);
     } else { // Handle @defs
       ConsumeToken();
@@ -3110,6 +3165,8 @@ void Parser::ParseEnumSpecifier(SourceLocation StartLoc, DeclSpec &DS,
       // anything that's a simple-type-specifier followed by '(' as an
       // expression. This suffices because function types are not valid
       // underlying types anyway.
+      EnterExpressionEvaluationContext Unevaluated(Actions,
+                                                   Sema::ConstantEvaluated);
       TPResult TPR = isExpressionOrTypeSpecifierSimple(NextToken().getKind());
       // If the next token starts an expression, we know we're parsing a
       // bit-field. This is the common case.
@@ -4318,17 +4375,20 @@ void Parser::ParseDirectDeclarator(Declarator &D) {
       // The paren may be part of a C++ direct initializer, eg. "int x(1);".
       // In such a case, check if we actually have a function declarator; if it
       // is not, the declarator has been fully parsed.
+      bool IsAmbiguous = false;
       if (getLangOpts().CPlusPlus && D.mayBeFollowedByCXXDirectInit()) {
-        // When not in file scope, warn for ambiguous function declarators, just
-        // in case the author intended it as a variable definition.
-        bool warnIfAmbiguous = D.getContext() != Declarator::FileContext;
-        if (!isCXXFunctionDeclarator(warnIfAmbiguous))
+        // The name of the declarator, if any, is tentatively declared within
+        // a possible direct initializer.
+        TentativelyDeclaredIdentifiers.push_back(D.getIdentifier());
+        bool IsFunctionDecl = isCXXFunctionDeclarator(&IsAmbiguous);
+        TentativelyDeclaredIdentifiers.pop_back();
+        if (!IsFunctionDecl)
           break;
       }
       ParsedAttributes attrs(AttrFactory);
       BalancedDelimiterTracker T(*this, tok::l_paren);
       T.consumeOpen();
-      ParseFunctionDeclarator(D, attrs, T);
+      ParseFunctionDeclarator(D, attrs, T, IsAmbiguous);
       PrototypeScope.Exit();
     } else if (Tok.is(tok::l_square)) {
       ParseBracketDeclarator(D);
@@ -4445,7 +4505,7 @@ void Parser::ParseParenDeclarator(Declarator &D) {
   // function prototype scope, including parameter declarators.
   ParseScope PrototypeScope(this,
                             Scope::FunctionPrototypeScope|Scope::DeclScope);
-  ParseFunctionDeclarator(D, attrs, T, RequiresArg);
+  ParseFunctionDeclarator(D, attrs, T, false, RequiresArg);
   PrototypeScope.Exit();
 }
 
@@ -4471,6 +4531,7 @@ void Parser::ParseParenDeclarator(Declarator &D) {
 void Parser::ParseFunctionDeclarator(Declarator &D,
                                      ParsedAttributes &FirstArgAttrs,
                                      BalancedDelimiterTracker &Tracker,
+                                     bool IsAmbiguous,
                                      bool RequiresArg) {
   assert(getCurScope()->isFunctionPrototypeScope() &&
          "Should call from a Function scope");
@@ -4588,7 +4649,7 @@ void Parser::ParseFunctionDeclarator(Declarator &D,
   // Remember that we parsed a function type, and remember the attributes.
   D.AddTypeInfo(DeclaratorChunk::getFunction(HasProto,
                                              /*isVariadic=*/EllipsisLoc.isValid(),
-                                             EllipsisLoc,
+                                             IsAmbiguous, EllipsisLoc,
                                              ParamInfo.data(), ParamInfo.size(),
                                              DS.getTypeQualifiers(),
                                              RefQualifierIsLValueRef,

@@ -971,9 +971,9 @@ struct XMLDumper : public XMLDeclVisitor<XMLDumper>,
   }
 
   void visitFunctionProtoTypeAttrs(FunctionProtoType *T) {
-    setFlag("const", T->getTypeQuals() & Qualifiers::Const);
-    setFlag("volatile", T->getTypeQuals() & Qualifiers::Volatile);
-    setFlag("restrict", T->getTypeQuals() & Qualifiers::Restrict);
+    setFlag("const", T->isConst());
+    setFlag("volatile", T->isVolatile());
+    setFlag("restrict", T->isRestrict());
   }
   void visitFunctionProtoTypeChildren(FunctionProtoType *T) {
     push("parameters");
@@ -1022,12 +1022,17 @@ struct XMLDumper : public XMLDeclVisitor<XMLDumper>,
 };
 }
 
+void Decl::dumpXML() const {
+  dump(llvm::errs());
+}
+
 void Decl::dumpXML(raw_ostream &out) const {
   XMLDumper(out, getASTContext()).dispatch(const_cast<Decl*>(this));
 }
 
 #else /* ifndef NDEBUG */
 
+void Decl::dumpXML() const {}
 void Decl::dumpXML(raw_ostream &out) const {}
 
 #endif

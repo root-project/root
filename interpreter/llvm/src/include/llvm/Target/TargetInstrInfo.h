@@ -14,6 +14,7 @@
 #ifndef LLVM_TARGET_TARGETINSTRINFO_H
 #define LLVM_TARGET_TARGETINSTRINFO_H
 
+#include "llvm/ADT/SmallSet.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/CodeGen/DFAPacketizer.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -27,6 +28,7 @@ class MachineMemOperand;
 class MachineRegisterInfo;
 class MDNode;
 class MCInst;
+class MCSchedModel;
 class SDNode;
 class ScheduleHazardRecognizer;
 class SelectionDAG;
@@ -185,14 +187,6 @@ public:
                              unsigned DestReg, unsigned SubIdx,
                              const MachineInstr *Orig,
                              const TargetRegisterInfo &TRI) const = 0;
-
-  /// scheduleTwoAddrSource - Schedule the copy / re-mat of the source of the
-  /// two-addrss instruction inserted by two-address pass.
-  virtual void scheduleTwoAddrSource(MachineInstr *SrcMI,
-                                     MachineInstr *UseMI,
-                                     const TargetRegisterInfo &TRI) const {
-    // Do nothing.
-  }
 
   /// duplicate - Create a duplicate of the Orig instruction in MF. This is like
   /// MachineFunction::CloneMachineInstr(), but the target may update operands
@@ -417,6 +411,51 @@ public:
                             const SmallVectorImpl<MachineOperand> &Cond,
                             unsigned TrueReg, unsigned FalseReg) const {
     llvm_unreachable("Target didn't implement TargetInstrInfo::insertSelect!");
+  }
+
+  /// analyzeSelect - Analyze the given select instruction, returning true if
+  /// it cannot be understood. It is assumed that MI->isSelect() is true.
+  ///
+  /// When successful, return the controlling condition and the operands that
+  /// determine the true and false result values.
+  ///
+  ///   Result = SELECT Cond, TrueOp, FalseOp
+  ///
+  /// Some targets can optimize select instructions, for example by predicating
+  /// the instruction defining one of the operands. Such targets should set
+  /// Optimizable.
+  ///
+  /// @param         MI Select instruction to analyze.
+  /// @param Cond    Condition controlling the select.
+  /// @param TrueOp  Operand number of the value selected when Cond is true.
+  /// @param FalseOp Operand number of the value selected when Cond is false.
+  /// @param Optimizable Returned as true if MI is optimizable.
+  /// @returns False on success.
+  virtual bool analyzeSelect(const MachineInstr *MI,
+                             SmallVectorImpl<MachineOperand> &Cond,
+                             unsigned &TrueOp, unsigned &FalseOp,
+                             bool &Optimizable) const {
+    assert(MI && MI->isSelect() && "MI must be a select instruction");
+    return true;
+  }
+
+  /// optimizeSelect - Given a select instruction that was understood by
+  /// analyzeSelect and returned Optimizable = true, attempt to optimize MI by
+  /// merging it with one of its operands. Returns NULL on failure.
+  ///
+  /// When successful, returns the new select instruction. The client is
+  /// responsible for deleting MI.
+  ///
+  /// If both sides of the select can be optimized, PreferFalse is used to pick
+  /// a side.
+  ///
+  /// @param MI          Optimizable select instruction.
+  /// @param PreferFalse Try to optimize FalseOp instead of TrueOp.
+  /// @returns Optimized instruction or NULL.
+  virtual MachineInstr *optimizeSelect(MachineInstr *MI,
+                                       bool PreferFalse = false) const {
+    // This function must be implemented if Optimizable is ever set.
+    llvm_unreachable("Target must implement TargetInstrInfo::optimizeSelect!");
   }
 
   /// copyPhysReg - Emit instructions to copy a pair of physical registers.
@@ -693,6 +732,20 @@ public:
     return false;
   }
 
+  /// optimizeLoadInstr - Try to remove the load by folding it to a register
+  /// operand at the use. We fold the load instructions if and only if the
+  /// def and use are in the same BB. We only look at one load and see
+  /// whether it can be folded into MI. FoldAsLoadDefReg is the virtual register
+  /// defined by the load we are trying to fold. DefMI returns the machine
+  /// instruction that defines FoldAsLoadDefReg, and the function returns
+  /// the machine instruction generated due to folding.
+  virtual MachineInstr* optimizeLoadInstr(MachineInstr *MI,
+                        const MachineRegisterInfo *MRI,
+                        unsigned &FoldAsLoadDefReg,
+                        MachineInstr *&DefMI) const {
+    return 0;
+  }
+
   /// FoldImmediate - 'Reg' is known to be defined by a move immediate
   /// instruction, try to fold the immediate into the use instruction.
   virtual bool FoldImmediate(MachineInstr *UseMI, MachineInstr *DefMI,
@@ -775,7 +828,7 @@ public:
                               SDNode *Node) const = 0;
 
   /// Return the default expected latency for a def based on it's opcode.
-  unsigned defaultDefLatency(const InstrItineraryData *ItinData,
+  unsigned defaultDefLatency(const MCSchedModel *SchedModel,
                              const MachineInstr *DefMI) const;
 
   /// isHighLatencyDef - Return true if this opcode has high latency to its

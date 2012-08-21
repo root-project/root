@@ -360,8 +360,13 @@ void ExprEngine::ProcessInitializer(const CFGInitializer Init,
 
   ProgramStateRef State = Pred->getState();
 
-  // We don't set EntryNode and currentStmt. And we don't clean up state.
   const CXXCtorInitializer *BMI = Init.getInitializer();
+
+  PrettyStackTraceLoc CrashInfo(getContext().getSourceManager(),
+                                BMI->getSourceLocation(),
+                                "Error evaluating initializer");
+
+  // We don't set EntryNode and currentStmt. And we don't clean up state.
   const StackFrameContext *stackFrame =
                            cast<StackFrameContext>(Pred->getLocationContext());
   const CXXConstructorDecl *decl =
@@ -383,7 +388,7 @@ void ExprEngine::ProcessInitializer(const CFGInitializer Init,
       State = State->bindLoc(FieldLoc, InitVal);
     }
   } else {
-    assert(BMI->isBaseInitializer());
+    assert(BMI->isBaseInitializer() || BMI->isDelegatingInitializer());
     // We already did all the work when visiting the CXXConstructExpr.
   }
 
@@ -602,11 +607,6 @@ void ExprEngine::Visit(const Stmt *S, ExplodedNode *Pred,
     case Stmt::AtomicExprClass:
       // Fall through.
 
-    // Currently all handling of 'throw' just falls to the CFG.  We
-    // can consider doing more if necessary.
-    case Stmt::CXXThrowExprClass:
-      // Fall through.
-      
     // Cases we intentionally don't evaluate, since they don't need
     // to be explicitly evaluated.
     case Stmt::AddrLabelExprClass:
@@ -875,22 +875,18 @@ void ExprEngine::Visit(const Stmt *S, ExplodedNode *Pred,
       Bldr.addNodes(Dst);
       break;
 
-    case Stmt::ObjCMessageExprClass: {
+    case Stmt::ObjCMessageExprClass:
       Bldr.takeNodes(Pred);
-      ObjCMethodCall Call(cast<ObjCMessageExpr>(S),
-                          Pred->getState(),
-                          Pred->getLocationContext());
-      VisitObjCMessage(Call, Pred, Dst);
+      VisitObjCMessage(cast<ObjCMessageExpr>(S), Pred, Dst);
       Bldr.addNodes(Dst);
       break;
-    }
 
-    case Stmt::ObjCAtThrowStmtClass: {
+    case Stmt::ObjCAtThrowStmtClass:
+    case Stmt::CXXThrowExprClass:
       // FIXME: This is not complete.  We basically treat @throw as
       // an abort.
-      Bldr.generateNode(S, Pred, Pred->getState());
+      Bldr.generateNode(S, Pred, Pred->getState(), /*IsSink=*/true);
       break;
-    }
 
     case Stmt::ReturnStmtClass:
       Bldr.takeNodes(Pred);
@@ -1526,10 +1522,17 @@ void ExprEngine::VisitMemberExpr(const MemberExpr *M, ExplodedNode *Pred,
 
   // For all other cases, compute an lvalue.    
   SVal L = state->getLValue(field, baseExprVal);
-  if (M->isGLValue())
+  if (M->isGLValue()) {
+    if (field->getType()->isReferenceType()) {
+      if (const MemRegion *R = L.getAsRegion())
+        L = state->getSVal(R);
+      else
+        L = UnknownVal();
+    }
+
     Bldr.generateNode(M, Pred, state->BindExpr(M, LCtx, L), false, 0,
                       ProgramPoint::PostLValueKind);
-  else {
+  } else {
     Bldr.takeNodes(Pred);
     evalLoad(Dst, M, M, Pred, state, L);
     Bldr.addNodes(Dst);

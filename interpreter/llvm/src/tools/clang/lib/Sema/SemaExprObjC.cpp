@@ -575,27 +575,33 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
   return MaybeBindToTemporary(BoxedExpr);
 }
 
+/// Build an ObjC subscript pseudo-object expression, given that
+/// that's supported by the runtime.
 ExprResult Sema::BuildObjCSubscriptExpression(SourceLocation RB, Expr *BaseExpr,
                                         Expr *IndexExpr,
                                         ObjCMethodDecl *getterMethod,
                                         ObjCMethodDecl *setterMethod) {
-  // Subscripting is only supported in the non-fragile ABI.
-  if (LangOpts.ObjCRuntime.isFragile())
-    return ExprError();
+  assert(!LangOpts.ObjCRuntime.isSubscriptPointerArithmetic());
 
-  // If the expression is type-dependent, there's nothing for us to do.
-  assert ((!BaseExpr->isTypeDependent() && !IndexExpr->isTypeDependent()) &&
-          "base or index cannot have dependent type here");
+  // We can't get dependent types here; our callers should have
+  // filtered them out.
+  assert((!BaseExpr->isTypeDependent() && !IndexExpr->isTypeDependent()) &&
+         "base or index cannot have dependent type here");
+
+  // Filter out placeholders in the index.  In theory, overloads could
+  // be preserved here, although that might not actually work correctly.
   ExprResult Result = CheckPlaceholderExpr(IndexExpr);
   if (Result.isInvalid())
     return ExprError();
   IndexExpr = Result.get();
   
-  // Perform lvalue-to-rvalue conversion.
+  // Perform lvalue-to-rvalue conversion on the base.
   Result = DefaultLvalueConversion(BaseExpr);
   if (Result.isInvalid())
     return ExprError();
   BaseExpr = Result.get();
+
+  // Build the pseudo-object expression.
   return Owned(ObjCSubscriptRefExpr::Create(Context, 
                                             BaseExpr,
                                             IndexExpr,
@@ -1772,9 +1778,9 @@ ExprResult Sema::ActOnSuperMessage(Scope *S,
   // is acting as a keyword.
   if (Method->isInstanceMethod()) {
     if (Sel.getMethodFamily() == OMF_dealloc)
-      ObjCShouldCallSuperDealloc = false;
+      getCurFunction()->ObjCShouldCallSuperDealloc = false;
     if (Sel.getMethodFamily() == OMF_finalize)
-      ObjCShouldCallSuperFinalize = false;
+      getCurFunction()->ObjCShouldCallSuperFinalize = false;
 
     // Since we are in an instance method, this is an instance
     // message to the superclass instance.
@@ -2860,15 +2866,15 @@ diagnoseObjCARCConversion(Sema &S, SourceRange castRange,
       << castRange
       << castExpr->getSourceRange();
     bool br = S.isKnownName("CFBridgingRelease");
-    ACCResult  CreateRule = 
+    ACCResult CreateRule = 
       ARCCastChecker(S.Context, exprACTC, castACTC, true).Visit(castExpr);
+    assert(CreateRule != ACC_bottom && "This cast should already be accepted.");
     if (CreateRule != ACC_plusOne)
     {
       DiagnosticBuilder DiagB = S.Diag(noteLoc, diag::note_arc_bridge);
       addFixitForObjCARCConversion(S, DiagB, CCK, afterLParen,
                                    castType, castExpr, "__bridge ", 0);
     }
-    assert (CreateRule != ACC_bottom);
     if (CreateRule != ACC_plusZero)
     {
       DiagnosticBuilder DiagB = S.Diag(br ? castExpr->getExprLoc() : noteLoc,
@@ -2895,13 +2901,13 @@ diagnoseObjCARCConversion(Sema &S, SourceRange castRange,
       << castExpr->getSourceRange();
     ACCResult CreateRule = 
       ARCCastChecker(S.Context, exprACTC, castACTC, true).Visit(castExpr);
+    assert(CreateRule != ACC_bottom && "This cast should already be accepted.");
     if (CreateRule != ACC_plusOne)
     {
       DiagnosticBuilder DiagB = S.Diag(noteLoc, diag::note_arc_bridge);
       addFixitForObjCARCConversion(S, DiagB, CCK, afterLParen,
                                    castType, castExpr, "__bridge ", 0);
     }
-    assert (CreateRule != ACC_bottom);
     if (CreateRule != ACC_plusZero)
     {
       DiagnosticBuilder DiagB = S.Diag(br ? castExpr->getExprLoc() : noteLoc,

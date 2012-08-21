@@ -43,7 +43,6 @@ namespace ento {
 class AnalysisManager;
 class CallEvent;
 class SimpleCall;
-class ObjCMethodCall;
 
 class ExprEngine : public SubEngine {
   AnalysisManager &AMgr;
@@ -348,7 +347,7 @@ public:
   void VisitObjCForCollectionStmt(const ObjCForCollectionStmt *S, 
                                   ExplodedNode *Pred, ExplodedNodeSet &Dst);
 
-  void VisitObjCMessage(const ObjCMethodCall &Msg, ExplodedNode *Pred,
+  void VisitObjCMessage(const ObjCMessageExpr *ME, ExplodedNode *Pred,
                         ExplodedNodeSet &Dst);
 
   /// VisitReturnStmt - Transfer function logic for return statements.
@@ -431,10 +430,6 @@ public:
   }
   
 protected:
-  void evalObjCMessage(StmtNodeBuilder &Bldr, const ObjCMethodCall &Msg,
-                       ExplodedNode *Pred, ProgramStateRef state,
-                       bool GenSink);
-
   /// evalBind - Handle the semantics of binding a value to a specific location.
   ///  This method is used by evalStore, VisitDeclStmt, and others.
   void evalBind(ExplodedNodeSet &Dst, const Stmt *StoreE, ExplodedNode *Pred,
@@ -468,8 +463,10 @@ public:
                                   const LocationContext *LCtx,
                                   ProgramStateRef State);
 
+  /// Evaluate a call, running pre- and post-call checks and allowing checkers
+  /// to be responsible for handling the evaluation of the call itself.
   void evalCall(ExplodedNodeSet &Dst, ExplodedNode *Pred,
-                const SimpleCall &Call);
+                const CallEvent &Call);
 
   /// \brief Default implementation of call evaluation.
   void defaultEvalCall(NodeBuilder &B, ExplodedNode *Pred,
@@ -494,7 +491,19 @@ private:
                     const ProgramPointTag *tag, bool isLoad);
 
   bool shouldInlineDecl(const Decl *D, ExplodedNode *Pred);
-  bool inlineCall(const CallEvent &Call, ExplodedNode *Pred);
+  bool inlineCall(const CallEvent &Call, const Decl *D, NodeBuilder &Bldr,
+                  ExplodedNode *Pred, ProgramStateRef State);
+
+  /// \brief Conservatively evaluate call by invalidating regions and binding
+  /// a conjured return value.
+  void conservativeEvalCall(const CallEvent &Call, NodeBuilder &Bldr,
+                            ExplodedNode *Pred, ProgramStateRef State);
+
+  /// \brief Either inline or process the call conservatively (or both), based
+  /// on DynamicDispatchBifurcation data.
+  void BifurcateCall(const MemRegion *BifurReg,
+                     const CallEvent &Call, const Decl *D, NodeBuilder &Bldr,
+                     ExplodedNode *Pred);
 
   bool replayWithoutInlining(ExplodedNode *P, const LocationContext *CalleeLC);
 };

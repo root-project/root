@@ -58,6 +58,8 @@ namespace {
     bool shouldWalkTypesOfTypeLocs() const { return false; }
 
     bool TraverseDecl(Decl *D) {
+      if (D == NULL)
+        return false;
       if (filterMatches(D)) {
         Out.changeColor(llvm::raw_ostream::BLUE) <<
             (Dump ? "Dumping " : "Printing ") << getName(D) << ":\n";
@@ -66,6 +68,7 @@ namespace {
           D->dump(Out);
         else
           D->print(Out, /*Indentation=*/0, /*PrintInstantiation=*/true);
+        Out << "\n";
         // Don't traverse child nodes to avoid output duplication.
         return true;
       }
@@ -86,6 +89,27 @@ namespace {
     bool Dump;
     std::string FilterString;
   };
+
+  class ASTDeclNodeLister : public ASTConsumer,
+                     public RecursiveASTVisitor<ASTDeclNodeLister> {
+  public:
+    ASTDeclNodeLister(raw_ostream *Out = NULL)
+        : Out(Out ? *Out : llvm::outs()) {}
+
+    virtual void HandleTranslationUnit(ASTContext &Context) {
+      TraverseDecl(Context.getTranslationUnitDecl());
+    }
+
+    bool shouldWalkTypesOfTypeLocs() const { return false; }
+
+    virtual bool VisitNamedDecl(NamedDecl *D) {
+      Out << D->getQualifiedNameAsString() << "\n";
+      return true;
+    }
+
+  private:
+    raw_ostream &Out;
+  };
 } // end anonymous namespace
 
 ASTConsumer *clang::CreateASTPrinter(raw_ostream *Out,
@@ -95,6 +119,10 @@ ASTConsumer *clang::CreateASTPrinter(raw_ostream *Out,
 
 ASTConsumer *clang::CreateASTDumper(StringRef FilterString) {
   return new ASTPrinter(0, /*Dump=*/ true, FilterString);
+}
+
+ASTConsumer *clang::CreateASTDeclNodeLister() {
+  return new ASTDeclNodeLister(0);
 }
 
 //===----------------------------------------------------------------------===//
