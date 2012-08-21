@@ -130,7 +130,7 @@ const char *TClingMethodArgInfo::DefaultValue() const
          else if (pvd->getInitStyle() == clang::VarDecl::CInit) {
             //out << " = ";
          }
-         expr->printPretty(out, context, 0, policy, /*Indentation=*/0);
+         expr->printPretty(out, 0, policy, /*Indentation=*/0);
          if (pvd->getInitStyle() == clang::VarDecl::CallInit) {
             //out << ")";
          }

@@ -380,8 +380,8 @@ static int evaluateArgList(cling::Interpreter *interp,
                //}
                std::string empty;
                llvm::raw_string_ostream tmp(empty);
-               expr->printPretty(tmp, Context, /*PrinterHelper=*/0,
-                                 Policy, /*Indentation=*/0);
+               expr->printPretty(tmp, /*PrinterHelper=*/0, Policy, 
+                                 /*Indentation=*/0);
                //proto += tmp.str();
                //fprintf(stderr, "%s\n", proto.c_str());
                cling::Value val;
