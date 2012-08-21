@@ -4,6 +4,7 @@
 #include "Utility.h"
 
 // ROOT
+#include "TInterpreter.h"
 #include "TBaseClass.h"
 #include "TClass.h"
 #include "TClassEdit.h"
@@ -236,13 +237,18 @@ PyROOT::TScopeAdapter::TScopeAdapter( const TMemberAdapter& mb ) :
 }
 
 //____________________________________________________________________________
-PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string & name, Bool_t quiet )
+PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string& name, Bool_t quiet )
 {
 // lookup a scope (class) by name
    Int_t oldEIL = gErrorIgnoreLevel;
    if ( quiet )
       gErrorIgnoreLevel = 3000;
    TClass* klass = TClass::GetClass( name.c_str() );
+   if (klass && klass->GetListOfAllPublicMethods()->GetSize() == 0) {
+   // sometimes I/O interferes, leading to zero methods: reload from CINT
+      ClassInfo_t* cl = gInterpreter->ClassInfo_Factory( name.c_str() );
+      if ( cl ) gInterpreter->SetClassInfo( klass, kTRUE );
+   }
    gErrorIgnoreLevel = oldEIL;
 
    return klass;
