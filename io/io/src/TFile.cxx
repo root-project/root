@@ -4610,7 +4610,7 @@ void TFile::CpProgress(Long64_t bytesread, Long64_t size, TStopwatch &watch)
    watch.Stop();
    Double_t lCopy_time = watch.RealTime();
    fprintf(stderr, "| %.02f %% [%.01f MB/s]\r",
-           100.0*(size?(bytesread/size):1), bytesread/lCopy_time/1048576.);
+           100.0*(size?(bytesread/((float)size)):1), bytesread/lCopy_time/1048576.);
    watch.Continue();
 }
 
