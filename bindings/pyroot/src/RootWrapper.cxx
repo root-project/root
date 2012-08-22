@@ -778,6 +778,9 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
       return 0;
    }
 
+// get actual class for recycling checking and/or downcasting
+   TClass* clActual = isRef ? 0 : klass->GetActualClass( address );
+
 // obtain pointer to TObject base class (if possible) for memory mgmt; this is
 // done before downcasting, as upcasting from the current class may be easier and
 // downcasting is unnecessary if the python side object gets recycled by the
@@ -787,18 +790,15 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
       object = (TObject*)((Long_t)address - GetObjectOffset( klass, TObject::Class(), address, false ) );
 
    // use the old reference if the object already exists
-      PyObject* oldPyObject = TMemoryRegulator::RetrieveObject( object );
+      PyObject* oldPyObject = TMemoryRegulator::RetrieveObject( object, clActual ? clActual : klass );
       if ( oldPyObject )
          return oldPyObject;
    }
                        
 // upgrade to real class for object returns
-   if ( ! isRef ) {
-      TClass* clActual = klass->GetActualClass( address );
-      if ( clActual ) {
-         address = (void*)((Long_t)address - GetObjectOffset( klass, clActual, address ) );
-         klass = clActual;
-      }
+   if ( clActual ) {
+      address = (void*)((Long_t)address - GetObjectOffset( klass, clActual, address ) );
+      klass = clActual;
    }
 
 // actual binding
