@@ -832,6 +832,13 @@ namespace cling {
     return TheQT;
   }
 
+  ///\brief Cleanup Parser state after a failed lookup.
+  /// 
+  /// After a failed lookup we need to discard the remaining unparsed input,
+  /// restore the original state of the incremental parsing flag, signal
+  /// the diagnostic client that the current input file is done, clear any
+  /// pending diagnostics, restore the suppress diagnostics flag, and restore
+  /// the spell checking language options.
   class ParserStateRAII {
   private:
     CompilerInstance* CI;
