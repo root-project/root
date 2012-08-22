@@ -586,8 +586,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
                                                 << " - using standard q asymptotic formulae  " << std::endl;
          }         
       }
-      else 
-         useQTilde = fUseQTilde;
+      useQTilde = fUseQTilde;
    }
 
 
