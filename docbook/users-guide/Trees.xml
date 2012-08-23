@@ -1425,7 +1425,12 @@ KEY: TTree    T;1     staff data from ascii file
 <programlisting language="c++">root[] <emphasis role="bold"><code>TTree *MyTree = </code></emphasis><emphasis role="bold"><code>T</code></emphasis>
 </programlisting>
 
-<para>CINT allows us to get simply the object by using it. Here we define a pointer to a <emphasis role="bold"><code>TTree</code></emphasis> object and assign it the value of "<code>T</code>", the <emphasis role="bold"><code>TTree</code></emphasis> in the file. CINT looks for "<code>T</code>" and returns it. To show the different <code>Draw</code> options, we create a canvas with four sub-pads. We will use one sub-pad for each <code>Draw</code> command.</para>
+<para>CINT allows us to get simply the object by using it. Here we define a pointer to a <emphasis role="bold"><code>TTree</code></emphasis> object and assign it the value of "<code>T</code>", the <emphasis role="bold"><code>TTree</code></emphasis> in the file. CINT looks for an object named "<code>T</code>" in the current ROOT file and returns it.</para><para>In contrast, in compiled code, you can use:</para>
+
+<programlisting language="c++"><emphasis role="bold"><code>TTree *MyTree;</code></emphasis><emphasis role="bold"><code>f.GetObject("T",MyTree);</code></emphasis>
+</programlisting>
+
+<para>To show the different <code>Draw</code> options, we create a canvas with four sub-pads. We will use one sub-pad for each <code>Draw</code> command.</para>
 
 <programlisting language="c++">root[] <emphasis role="bold"><code>TCanvas</code></emphasis><emphasis role="bold"><code> *myCanvas = new TCanvas()</code></emphasis>
 root[]<emphasis role="bold"><code> myCanvas-&gt;Divide(2,2)</code></emphasis>
