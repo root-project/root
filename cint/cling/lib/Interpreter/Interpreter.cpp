@@ -250,8 +250,12 @@ namespace cling {
       // only at runtime
       // Make sure that the universe won't be included to compile time by using
       // -D __CLING__ as CompilerInstance's arguments
-
-      declare("#include \"cling/Interpreter/RuntimeUniverse.h\"");
+#ifdef _WIN32
+	  // We have to use the #defined __CLING__ on windows first. 
+      //FIXME: Find proper fix.
+      declare("#ifdef __CLING__ \n#endif");  
+#endif
+	  declare("#include \"cling/Interpreter/RuntimeUniverse.h\"");
       declare("#include \"cling/Interpreter/ValuePrinter.h\"");
 
       // Set up the gCling variable
