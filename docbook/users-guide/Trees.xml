@@ -1425,7 +1425,7 @@ KEY: TTree    T;1     staff data from ascii file
 <programlisting language="c++">root[] <emphasis role="bold"><code>TTree *MyTree = </code></emphasis><emphasis role="bold"><code>T</code></emphasis>
 </programlisting>
 
-<para>CINT allows us to get simply the object by using it. Here we define a pointer to a <emphasis role="bold"><code>TTree</code></emphasis> object and assign it the value of "<code>T</code>", the <emphasis role="bold"><code>TTree</code></emphasis> in the file. CINT looks for an object named "<code>T</code>" in the current ROOT file and returns it.</para><para>In contrast, in compiled code, you can use:</para>
+<para>CINT allows us to get simply the object by using it. Here we define a pointer to a <emphasis role="bold"><code>TTree</code></emphasis> object and assign it the value of "<code>T</code>", the <emphasis role="bold"><code>TTree</code></emphasis> in the file. CINT looks for an object named "<code>T</code>" in the current ROOT file and returns it (this assumes that "T" has not previously been used to declare a variable or function).</para><para>In contrast, in compiled code, you can use:</para>
 
 <programlisting language="c++"><emphasis role="bold"><code>TTree *MyTree;</code></emphasis><emphasis role="bold"><code>f.GetObject("T",MyTree);</code></emphasis>
 </programlisting>
