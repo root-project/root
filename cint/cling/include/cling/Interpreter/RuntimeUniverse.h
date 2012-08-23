@@ -5,11 +5,11 @@
 //------------------------------------------------------------------------------
 #ifndef __CLING__
 #error "This file must not be included by compiled programs."
-#endif
+#else
 
 #ifdef CLING_RUNTIME_UNIVERSE_H
 #error "CLING_RUNTIME_UNIVERSE_H Must only include once."
-#endif
+#else
 
 #define CLING_RUNTIME_UNIVERSE_H
 
@@ -98,3 +98,7 @@ extern "C" {
 #endif
 
 #endif // __cplusplus
+
+#endif // CLING_RUNTIME_UNIVERSE_H (error)
+
+#endif // __CLING__
