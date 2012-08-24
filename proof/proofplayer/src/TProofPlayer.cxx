@@ -836,6 +836,8 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
                notempty = kTRUE;
                // Flag for removal from the outputlist
                torm.Add(o);
+               // Prevent double-deletion attempts
+               t->SetDirectory(0);
             } else {
                // ... or we set in automatic flush mode
                t->SetAutoFlush();
