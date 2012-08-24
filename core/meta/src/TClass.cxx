@@ -3179,12 +3179,36 @@ void TClass::ResetClassInfo(Long_t tagnum)
 {
    // Make sure that the current ClassInfo is up to date.
 
-   if (fClassInfo && gCint->ClassInfo_Tagnum(fClassInfo) != tagnum) {
+   if (!fClassInfo || gCint->ClassInfo_Tagnum(fClassInfo) != tagnum) {
+      if (!fClassInfo)
+         fClassInfo = gInterpreter->ClassInfo_Factory();
       gCint->ClassInfo_Init(fClassInfo,(Int_t)tagnum);
-      if (fBase) {
+
+      // Make sure to clean out all caches.
+
+      // Not owning lists, don't call Delete()
+      delete fAllPubData;     fAllPubData  =0;
+      delete fAllPubMethod;   fAllPubMethod=0;
+
+      if (fBase) 
          fBase->Delete();
-         delete fBase; fBase = 0;
-      }
+      delete fBase; fBase = 0;
+      
+      if (fData)
+         fData->Delete();
+      delete fData;   fData = 0;
+      
+      if (fMethod)
+         fMethod->Delete();
+      delete fMethod;   fMethod=0;
+      
+      if (fRealData)
+         fRealData->Delete();
+      delete fRealData;  fRealData=0;
+      
+      if (fStreamerInfo)
+         fStreamerInfo->Delete();
+      delete fStreamerInfo; fStreamerInfo=0;
    }
 }
 
