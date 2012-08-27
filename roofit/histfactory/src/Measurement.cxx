@@ -1,6 +1,7 @@
 
 #include <ctime>
 #include <iostream>
+#include <algorithm>
 #include <sys/stat.h>
 #include "TSystem.h"
 #include "TTimeStamp.h"
