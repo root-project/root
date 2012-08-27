@@ -78,22 +78,22 @@ Begin_Html
 <pre>
 void loopChain() {
    TFile *fe = TFile::Open("myelist.root");
-   TEntryList *myelist = (TEntryList*)fe->Get("myelist");
+   TEntryList *myelist = (TEntryList*)fe-&gt;Get("myelist");
    TChain *ch = new TChain("ntuple");
-   ch->Add("hsimple.root");
-   ch->Add("hsimple2.root");
-   Long64_t listEntries = myelist->GetN();
-   Long64_t chainEntries = ch->GetEntries();
+   ch-&gt;Add("hsimple.root");
+   ch-&gt;Add("hsimple2.root");
+   Long64_t listEntries = myelist-&gt;GetN();
+   Long64_t chainEntries = ch-&gt;GetEntries();
    Int_t treenum = 0;
-   ch->SetEntryList(myelist);
+   ch-&gt;SetEntryList(myelist);
 
-   for (entry=start;entry<end;entry++) {
-      entryNumber = treechain->GetEntryNumber(entry);
-      if (entryNumber < 0) break;
-      localEntry = fTree->LoadTree(entryNumber);
-      if (localEntry < 0) break;
-      // then either call branch->GetEntry(localEntry);
-      // or  entryNumber->GetEntry(entryNumber);
+   for (entry=start;entry &lt; end;entry++) {
+      entryNumber = treechain-&gt;GetEntryNumber(entry);
+      if (entryNumber &lt; 0) break;
+      localEntry = fTree-&gt;LoadTree(entryNumber);
+      if (localEntry &lt; 0) break;
+      // then either call branch-&gt;GetEntry(localEntry);
+      // or  entryNumber-&gt;GetEntry(entryNumber);
       // In the later case the LoadTree is then somewhat redudant.
    }
  }
@@ -103,7 +103,7 @@ When using the TEntryList interface directly, you can get the 'tree number' and 
 the current tree (i.e. value similar to the return value of LoadTree) from calling
 TEntryList::GetEntryAndTree:
 <pre>
-    Long64_t treeEntry = myelist->GetEntryAndTree(el,treenum);
+    Long64_t treeEntry = myelist-&gt;GetEntryAndTree(el,treenum);
 </pre>
 to obtain the entry number within the chain you need to add to it the value
 of
@@ -111,12 +111,12 @@ of
 such that the loop in the previous example can also be written as:
 
 <pre>for (Long64_t el = 0; el &lt; listEntries; el++) {
-   Long64_t treeEntry = myelist->GetEntryAndTree(el,treenum);
-   Long64_t chainEntry = treeEntry+ch->GetTreeOffset()[treenum];  
+   Long64_t treeEntry = myelist-&gt;GetEntryAndTree(el,treenum);
+   Long64_t chainEntry = treeEntry+ch-&gt;GetTreeOffset()[treenum];  
    printf("el=%lld, treeEntry=%lld, chainEntry=%lld, treenum=%d\n", el, treeEntry, chainEntry, treenum);
 
-   ch->LoadTree(chainEntry); // this also returns treeEntry
-   needed_branch->GetEntry(treeEntry);
+   ch-&gt;LoadTree(chainEntry); // this also returns treeEntry
+   needed_branch-&gt;GetEntry(treeEntry);
 }
 </pre>
 
