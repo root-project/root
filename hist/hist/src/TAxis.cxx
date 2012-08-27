@@ -87,7 +87,7 @@ TAxis::~TAxis()
 }
 
 //______________________________________________________________________________
-TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis)
+TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis), fLabels(0)
 {
    // Copy constructor.
 
