@@ -33,7 +33,8 @@ namespace HistFactory{
   bool AddSummaries( std::vector<EstimateSummary> & summary, std::vector<std::vector<EstimateSummary> > &master);
   std::vector<std::pair<std::string, std::string> > get_comb(std::vector<std::string> names);
   void AddSubStrings( std::vector<std::string> & vs, std::string s);
-
+  std::vector<std::string> GetChildrenFromString( std::string str );
+  //void AddStringValPairToMap( std::map<std::string, double>& map, double val, std::string children);
   std::vector<EstimateSummary> GetChannelEstimateSummaries(Measurement& measurement, Channel& channel);
 
 

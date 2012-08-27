@@ -39,8 +39,8 @@ namespace HistFactory{
   class HistoToWorkspaceFactoryFast: public TObject {
     
   public:
-    
-    HistoToWorkspaceFactoryFast(  std::string, std::string , std::vector<std::string> , double =200, double =20, int =0, int =6, TFile* =NULL);
+    typedef std::map<std::string, double> param_map;
+    HistoToWorkspaceFactoryFast(  std::string, std::string , std::vector<std::string> , double =200, double =20, int =0, int =6, TFile* =NULL, param_map = param_map() );
     HistoToWorkspaceFactoryFast(  RooStats::HistFactory::Measurement& Meas );
     static void ConfigureWorkspaceForMeasurement( const std::string& ModelName, RooWorkspace* ws_single, Measurement& measurement );
     
@@ -109,6 +109,7 @@ namespace HistFactory{
     //string fFileNamePrefix;
     //string fRowTitle;
     std::vector<std::string> fSystToFix;
+    std::map<std::string, double> fParamValues;
     double fNomLumi, fLumiError;
     int fLowBin, fHighBin;    
     //std::stringstream fResultsPrefixStr;

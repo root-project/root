@@ -13,6 +13,11 @@ namespace HistFactory {
 
     PreprocessFunction();
 
+    
+    PreprocessFunction(std::string Name, std::string Expression, std::string Dependents);
+    std::string GetCommand(std::string Name, std::string Expression, std::string Dependents);
+			   
+
     void Print(std::ostream& = std::cout);  
 
     void SetName( const std::string& Name) { fName = Name; }

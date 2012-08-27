@@ -164,6 +164,26 @@ namespace HistFactory{
     }
   }
 
+  // Turn a string of "children" (space separated items)
+  // into a vector of strings
+  std::vector<std::string> GetChildrenFromString( std::string str ) {
+
+    std::vector<std::string> child_vec;
+
+    const string delims("\\ ");
+    string::size_type begIdx, endIdx;
+    begIdx=str.find_first_not_of(delims);
+    while(begIdx!=string::npos){
+      endIdx=str.find_first_of(delims, begIdx);
+      if(endIdx==string::npos) endIdx=str.length();
+      std::string child_name = str.substr(begIdx,endIdx-begIdx);
+      child_vec.push_back(child_name);
+      begIdx=str.find_first_not_of(delims, endIdx);
+    }
+
+    return child_vec;
+  }
+
   /*
   bool AddSummaries( vector<EstimateSummary> & channel, vector<vector<EstimateSummary> > &master){
     string channel_str=channel[0].channel;
