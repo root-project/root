@@ -45,6 +45,7 @@ $(LLVMDIRO): $(LLVMDIRS)
 		echo "*** Configuring LLVM in $@..."; \
 		cd $(notdir $@); \
 		LLVMCC="$(CC)"; \
+		LLVMCXX="$(CXX)"; \
 		if [ $(ARCH) = "aix5" ]; then \
 			LLVM_CFLAGS="-DBOOL=int"; \
 		fi; \
@@ -82,11 +83,12 @@ $(LLVMDIRO): $(LLVMDIRS)
 		fi; \
 		if [ $(ARCH) = "hpuxia64acc" ]; then \
 			LLVMCC="cc"; \
+			LLVMCXX="aCC"; \
 			LLVM_CFLAGS="+DD64 -Ae"; \
 		fi; \
 		GNUMAKE=$(MAKE) $(LLVMDIRS)/configure $$LLVM_HOST \
 		--prefix=$(ROOT_OBJDIR)/$(LLVMDIRI) \
-		--enable-targets=host-only CC=$$LLVMCC CFLAGS="$$LLVM_CFLAGS")
+		--enable-targets=host CC=$$LLVMCC CXX=$LLVMCXX CFLAGS="$$LLVM_CFLAGS" CXXFLAGS="$$LLVM_CFLAGS")
 
 all-$(MODNAME): $(LLVMLIB)
 
