@@ -105,10 +105,11 @@ namespace HistFactory{
   HistoToWorkspaceFactoryFast::~HistoToWorkspaceFactoryFast(){
   }
 
-  HistoToWorkspaceFactoryFast::HistoToWorkspaceFactoryFast(string /*filePrefix*/, string /*row*/, vector<string> syst, double nomL, double lumiE, int low, int high, TFile* /*file*/):
+  HistoToWorkspaceFactoryFast::HistoToWorkspaceFactoryFast(string /*filePrefix*/, string /*row*/, vector<string> syst, double nomL, double lumiE, int low, int high, TFile* /*file*/, std::map<std::string, double> paramValMap):
     //fFileNamePrefix(filePrefix),
     //fRowTitle(row),
       fSystToFix(syst),
+      fParamValues(paramValMap),
       fNomLumi(nomL),
       fLumiError(lumiE),
       fLowBin(low),
@@ -129,6 +130,7 @@ namespace HistFactory{
     // fFileNamePrefix( measurement.GetOutputFilePrefix() ),
     // fRowTitle( measurement.GetName() ),
     fSystToFix( measurement.GetConstantParams() ),
+    fParamValues( measurement.GetParamValues() ),
     fNomLumi( measurement.GetLumi() ),
     fLumiError( measurement.GetLumi()*measurement.GetLumiRelErr() ),
     fLowBin( measurement.GetBinLow() ),
@@ -1781,6 +1783,22 @@ namespace HistFactory{
     //combined->import(*simPdf, RenameVariable("SigXsecOverSM","SigXsecOverSM_comb"));
     cout << "check pointer " << simPdf << endl;
     //    cout << "check val " << simPdf->getVal() << endl;
+
+
+    std::map< std::string, double>::iterator param_itr = fParamValues.begin();
+    for( ; param_itr != fParamValues.end(); ++param_itr ){
+      // make sure they are fixed
+      std::string paramName = param_itr->first;
+      double paramVal = param_itr->second;
+      
+      RooRealVar* temp = combined->var( paramName.c_str() );
+      if(temp) {
+        temp->setVal( paramVal );
+        cout <<"setting " << paramName << " to the value: " << paramVal <<  endl;
+      } else 
+	cout << "could not find variable " << paramName << " could not set its value" << endl;
+    }
+
 
     for(unsigned int i=0; i<fSystToFix.size(); ++i){
       // make sure they are fixed

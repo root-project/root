@@ -135,11 +135,14 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
     }
 
     // Get the list of functions
-    // These apply to all measurements
+    // These apply to all measurements, so we
+    // first create the list of preprocess functions 
+    // (before we create the list of measurements)
+    // and then we add them to all measurements
 
     // For now, we create this list twice
     // simply for compatability
-    std::vector< std::string > preprocessFunctions;
+    // std::vector< std::string > preprocessFunctions;
     std::vector< RooStats::HistFactory::PreprocessFunction > functionObjects;
 
     node = rootNode->GetChildren();
@@ -149,7 +152,7 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
 	// For now, add both the objects itself and
 	// it's command string (for easy compatability)
 	RooStats::HistFactory::PreprocessFunction Func = ParseFunctionConfig( node );
-	preprocessFunctions.push_back( Func.GetCommand() ); 
+	// preprocessFunctions.push_back( Func.GetCommand() ); 
 	functionObjects.push_back( Func );
       }
       node = node->GetNextNode();
@@ -193,7 +196,6 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
       }
 
       node = node->GetNextNode();
-
     }
 
     std::cout << "Done Processing Measurements" << std::endl;
@@ -208,16 +210,14 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
       std::cout << std::endl;
     }
 
-
     // Add the preprocessed functions to each measurement
-    for( unsigned int i = 0; i < measurement_list.size(); ++i) {
-      measurement_list.at(i).SetPreprocessFunctions( preprocessFunctions );
-    }
+    // for( unsigned int i = 0; i < measurement_list.size(); ++i) {
+    //   measurement_list.at(i).SetPreprocessFunctions( preprocessFunctions );
+    // }
     // Add the preprocessed functions to each measurement
     for( unsigned int i = 0; i < measurement_list.size(); ++i) {
       measurement_list.at(i).SetFunctionObjects( functionObjects );
     }
-
 
     // Create an instance of the class
     // that collects histograms
@@ -248,10 +248,7 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
       for( unsigned int j = 0; j < channel_list.size(); ++j ) {
 	measurement.GetChannels().push_back( channel_list.at(j) );
       }
-
     }
-
-
   }
   catch(std::exception& e)
     {
@@ -259,352 +256,10 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
       throw hf_exc();
     }
 
-
-
   return measurement_list;
-
 
 }
 									     
-
-// DEPRECATED:
-/*
-void ConfigParser::FillMeasurementsAndChannelsFromXML(string input, 
-		   std::vector< RooStats::HistFactory::Measurement >& measurement_list,
-		   std::vector< RooStats::HistFactory::Channel >&     channel_list ) {
-
-  
-  // Open an input "Driver" XML file (input),
-  // Parse that file and its channel files
-  // and fill the input vectors with the lists of
-  // measurements and channels
-
-
-  // Open the Driver XML File
-  TDOMParser xmlparser;
-  Int_t parseError = xmlparser.ParseFile( input.c_str() );
-  if( parseError ) { 
-    std::cerr << "Loading of xml document \"" << input
-          << "\" failed" << std::endl;
-  } 
-
-
-  // Read the Driver XML File
-  cout << "reading input : " << input << endl;
-  TXMLDocument* xmldoc = xmlparser.GetXMLDocument();
-  TXMLNode* rootNode = xmldoc->GetRootNode();
-
-
-  // Check that it is the proper DOCTYPE
-  if( rootNode->GetNodeName() != TString( "Combination" ) ){
-    std::cout << "Error: Driver DOCTYPE not equal to 'Combination'" << std::endl;
-    throw hf_exc();
-  }
-
-  // Loop over the Combination's attributes
-  std::string OutputFilePrefix;
-
-  TListIter attribIt = rootNode->GetAttributes();
-  TXMLAttr* curAttr = 0;
-  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
-
-      // Get the Name, Val of this node
-      TString attrName    = curAttr->GetName();
-      std::string attrVal = curAttr->GetValue();
-
-      if( attrName == TString( "" ) ) {
-	std::cout << " Error: Attribute for 'Combination' with no name found" << std::endl;
-	throw hf_exc();
-      }
-
-      else if( attrName == TString( "OutputFilePrefix" ) ) {
-	OutputFilePrefix = string(curAttr->GetValue());
-	std::cout << "output file prefix is : " << OutputFilePrefix << endl;
-      }
-
-      / *
-      else if( attrName == TString( "InputFile" ) ) {
-        channel.InputFile = attrVal ;
-      }
-      * /
-
-      else {
-	std::cout << " Error: Unknown attribute for 'Combination' encountered: " 
-		  << attrName << std::endl;
-	throw hf_exc();
-      }
-
-      // node = node->GetNextNode();
-
-  }
-
-  TXMLNode* node = NULL;
-
-  // Get the list of channel XML files to combine
-  // Do this first so we can quickly exit
-  // if no channels are found
-  std::vector< std::string > xml_channel_files;
-  node = rootNode->GetChildren();
-  while( node != 0 ) {
-    if( node->GetNodeName() == TString( "Input" ) ) {
-      xml_channel_files.push_back(node->GetText());
-    }
-    node = node->GetNextNode();
-  }
-
-  // If no channel xml files are found, exit
-  if(xml_channel_files.empty()){
-    cerr << "no input channels found" << endl;
-    exit(1);
-  }
-  else {
-    std::cout << "Found Channels: ";
-    for( unsigned int i=0; i < xml_channel_files.size(); ++i )   std::cout << " " << xml_channel_files.at(i);
-    std::cout << std::endl;
-  }
-
-  // Get the list of functions
-  // These apply to all measurements
-  std::vector< std::string > preprocessFunctions;
-  node = rootNode->GetChildren();
-  while( node != 0 ) {
-    if( node->GetNodeName() == TString( "Function" ) ) {
-      preprocessFunctions.push_back( ParseFunctionConfig( node ) ); 
-    }
-    node = node->GetNextNode();
-  }
-
-  std::cout << std::endl;
-
-  // Fill the list of measurements
-  //std::vector< HistFactory::Measurement > measurement_list;
-  node = rootNode->GetChildren();
-  while( node != 0 ) {
-
-    if( node->GetNodeName() == TString( "" ) ) {
-      std::cout << "Error: Node found in Measurement Driver XML with no name" << std::endl;
-      throw hf_exc();
-    }
-
-    else if( node->GetNodeName() == TString( "Measurement" ) ) {
-      HistFactory::Measurement measurement = CreateMeasurementFromDriverNode( node );
-      // Set the prefix (obtained above)
-      measurement.OutputFilePrefix = OutputFilePrefix;
-      measurement_list.push_back( measurement );
-    }
-
-    else if( node->GetNodeName() == TString( "Function" ) ) {
-      // Already processed these (directly above)
-      ;
-    }
-
-    else if( node->GetNodeName() == TString( "Input" ) ) {
-      // Already processed these (directly above)
-      ;
-    }
-
-    else if( IsAcceptableNode( node ) ) { ; }
-    
-    else {
-      std::cout << "Error: Unknown node found in Measurement Driver XML: "
-		<< node->GetNodeName() << std::endl;
-      throw hf_exc();
-    }
-
-    node = node->GetNextNode();
-
-  }
-
-  std::cout << "Done Processing Measurements" << std::endl;
-
-  if( measurement_list.size() == 0 ) {
-    std::cout << "Error: No Measurements found in XML Driver File" << std::endl;
-    throw hf_exc();
-  }
-  else {
-    std::cout << "Found Measurements: ";
-    for( unsigned int i=0; i < measurement_list.size(); ++i )   std::cout << " " << measurement_list.at(i).GetName();
-    std::cout << std::endl;
-  }
-
-
-  // Add the preprocessed functions to each measurement
-  for( unsigned int i = 0; i < measurement_list.size(); ++i) {
-    measurement_list.at(i).preprocessFunctions = preprocessFunctions;
-  }
-
-  // Create an instance of the class
-  // that collects histograms
-  HistCollector collector;
-
-  // Fill the list of channels
-  // std::vector< HistFactory::Channel > channel_list;
-  for( unsigned int i = 0; i < xml_channel_files.size(); ++i ) {
-    std::string channel_xml = xml_channel_files.at(i);
-    std::cout << "Parsing Channel: " << channel_xml << std::endl;
-    HistFactory::Channel channel =  ParseChannelXMLFile( channel_xml );
-
-    // Get the histograms for the channel
-    collector.CollectHistograms( channel );
-
-    channel_list.push_back( channel );
-  }
-
-  // Finally, add the channels to the measurements:
-  for( unsigned int i = 0; i < measurement_list.size(); ++i) {
-
-    HistFactory::Measurement& measurement = measurement_list.at(i);
-
-    for( unsigned int j = 0; j < channel_list.size(); ++j ) {
-      measurement.channels.push_back( channel_list.at(j) );
-    }
-
-  }
-
-}  
-*/
-
-  // At this point, we have fully processed
-  // the XML.  Thus, we are done.
-
-  // Remember, the vectors:
-  //  - measurement_list
-  //  - channel_list 
-  // are filled by reference from this
-  // function's argument list
-  // Cheers.
-
-
-  // --------------------------------------------------------------- //
-  // --------------------------------------------------------------- //
-
-  /*
-  // At this point, we have all the information we need
-  // from the xml files.
-  
-  // We will make the measurements 1-by-1
-  // This part will be migrated to the
-  // MakeModelAndMeasurements function,
-  // but is here for now.
-
-  for(unsigned int i = 0; i < measurement_list.size(); ++i) {
-
-    HistFactory::Measurement measurement = measurement_list.at(i);
-
-    // Add the channels to this measurement
-    for( unsigned int chanItr = 0; chanItr < channel_list.size(); ++chanItr ) {
-      measurement.channels.push_back( channel_list.at( chanItr ) );
-    }
-
-    
-    // Create the workspaces for the channels
-    vector<RooWorkspace*> channel_workspaces;
-    vector<string>        channel_names;
-    TFile* outFile = new TFile(outputFileName.c_str(), "recreate");
-    HistoToWorkspaceFactory factory(outputFileNamePrefix, rowTitle, systToFix, nominalLumi, lumiError, lowBin, highBin , outFile);
-
-
-    // Loop over channels and make the individual 
-    // channel fits:
-
-
-    // read the xml for each channel and combine
-
-    for( unsigned int chanItr = 0; chanItr < channel_list.size(); ++chanItr ) {
-
-      HistFactory::Channel channel = channel_list.at( chanItr );
-
-      string ch_name=channel.Name;
-      channel_names.push_back(ch_name);
-
-      RooWorkspace* ws = factory.MakeSingleChannelModel( channel );
-      channel_workspaces.push_back(ws);
-
-      // set poi in ModelConfig
-      ModelConfig* proto_config = (ModelConfig *) ws->obj("ModelConfig");
-
-      std::cout << "Setting Parameter of Interest as :" << measurement.POI << endl;
-      RooRealVar* poi = (RooRealVar*) ws->var( (measurement.POI).c_str() );
-      RooArgSet * params= new RooArgSet;
-      if(poi){
-	params->add(*poi);
-      }
-      proto_config->SetParametersOfInterest(*params);
-
-
-      // Gamma/Uniform Constraints:
-      // turn some Gaussian constraints into Gamma/Uniform/LogNorm constraints, rename model newSimPdf
-      if( measurement.gammaSyst.size()>0 || measurement.uniformSyst.size()>0 || measurement.logNormSyst.size()>0) {
-	factory.EditSyst( ws, ("model_"+ch_name).c_str(), gammaSyst, uniformSyst, logNormSyst);
-	proto_config->SetPdf( *ws->pdf("newSimPdf") );
-      }
-
-      // fill out ModelConfig and export
-      RooAbsData* expData = ws->data("expData");
-      if(poi){
-	proto_config->GuessObsAndNuisance(*expData);
-      }
-      ws->writeToFile( (outputFileNamePrefix+"_"+ch_name+"_"+rowTitle+"_model.root").c_str() );
-
-      // do fit unless exportOnly requested
-      if(!exportOnly){
-	if(!poi){
-	  cout <<"can't do fit for this channel, no parameter of interest"<<endl;
-	} else{
-	  factory.FitModel(ws, ch_name, "newSimPdf", "expData", false);
-	}
-      }
-      fprintf(factory.pFile, " & " );
-    }
-
-
-    // Now, combine the channels
-    RooWorkspace* ws=factory.MakeCombinedModel(channel_names, channel_workspaces);
-    // Gamma/Uniform Constraints:
-    // turn some Gaussian constraints into Gamma/Uniform/logNormal constraints, rename model newSimPdf
-    if(gammaSyst.size()>0 || uniformSyst.size()>0 || logNormSyst.size()>0) 
-      factory.EditSyst(ws, "simPdf", gammaSyst, uniformSyst, logNormSyst);
-    //
-    // set parameter of interest according to the configuration
-    //
-    ModelConfig * combined_config = (ModelConfig *) ws->obj("ModelConfig");
-    cout << "Setting Parameter of Interest as :" << measurement.POI << endl;
-    RooRealVar* poi = (RooRealVar*) ws->var( (measurement.POI).c_str() );
-    //RooRealVar* poi = (RooRealVar*) ws->var((POI+"_comb").c_str());
-    RooArgSet * params= new RooArgSet;
-    cout << poi << endl;
-    if(poi){
-      params->add(*poi);
-    }
-    combined_config->SetParametersOfInterest(*params);
-    ws->Print();
-
-    // Set new PDF if there are gamma/uniform constraint terms
-    if(gammaSyst.size()>0 || uniformSyst.size()>0 || logNormSyst.size()>0) 
-      combined_config->SetPdf(*ws->pdf("newSimPdf"));
-
-    RooAbsData* simData = ws->data("simData");
-    combined_config->GuessObsAndNuisance(*simData);
-    //	  ws->writeToFile(("results/model_combined_edited.root").c_str());
-    ws->writeToFile( (outputFileNamePrefix+"_combined_"+rowTitle+"_model.root").c_str() );
-
-    // TO DO:
-    // Totally factorize the statistical test in "fit Model" to a different area
-    if(!exportOnly){
-      if(!poi){
-	cout <<"can't do fit for this channel, no parameter of interest"<<endl;
-      } else{
-	factory.FitModel(ws, "combined", "simPdf", "simData", false);
-      }
-    }
-
-
-  } // End Loop over measurement_list
-
-  // Done
-  */
-
-
 
 HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode* node ) {
 
@@ -663,7 +318,6 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode
   } // End Loop over attributes
 
 
-
   // Then, get the properties of the children nodes
   TXMLNode* child = node->GetChildren();
   while( child != 0 ) {
@@ -686,7 +340,12 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode
       TListIter paramIt = child->GetAttributes();
       TXMLAttr* curParam = 0;
       while( ( curParam = dynamic_cast< TXMLAttr* >( paramIt() ) ) != 0 ) {
-	if( curParam->GetName() == TString( "Const" ) ) {
+
+	if( curParam->GetName() == TString( "" ) ) {
+	  std::cout << "Error: Found tag attribute with no name in ParamSetting" << std::endl;
+	  throw hf_exc();
+	}
+	else if( curParam->GetName() == TString( "Const" ) ) {
 	  if(curParam->GetValue()==TString("True")){
 	    // Fix here...?
 	    if( child->GetText() == NULL ) {
@@ -696,6 +355,24 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode
 	    }
 	    AddSubStrings( measurement.GetConstantParams(), child->GetText() );
 	  }
+	}
+	else if( curParam->GetName() == TString( "Val" ) ) {
+	  double val = atof(curParam->GetValue());
+	  if( child->GetText() == NULL ) {
+	    std::cout << "Error: node: " << child->GetName() 
+		      << " has no text." << std::endl;
+	    throw hf_exc();
+	  }
+	  std::vector<std::string> child_nodes = GetChildrenFromString(child->GetText());
+	  for(unsigned int i = 0; i < child_nodes.size(); ++i) {
+	    measurement.SetParamValue( child_nodes.at(i), val);
+	  }
+	  // AddStringValPairToMap( measurement.GetParamValues(), val, child->GetText() );
+	}
+	else {
+	  std::cout << "Found tag attribute with unknown name in ParamSetting: "
+		    << curAttr->GetName() << std::endl;
+	  throw hf_exc();
 	}
       }
     }
@@ -753,7 +430,6 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode
 	throw hf_exc();
       }
 
-
       if (type=="Gamma" && rel!=0) {
 	for (vector<string>::const_iterator it=syst.begin(); it!=syst.end(); it++) {
 	  // Fix Here...?
@@ -781,7 +457,6 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode
 	  measurement.GetNoSyst()[(*it).c_str()] = 1.0; // MB : dummy value
 	}
       }
-
     } // End adding of Constraint terms
 
 
@@ -794,7 +469,6 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode
     }
 
     child = child->GetNextNode();
-
   }
 
   measurement.PrintTree();
@@ -804,81 +478,6 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode
 
 }
 
-
-
-
-
-// Deprecated
-/*
-HistFactory::Channel ConfigParser::ReadXmlConfig( string filen, Double_t lumi ) {
-
-  
-
-  //  Open an xml file, 
-  //  parse it, and return
-  //  a list of channels
-
-
-  TString lumiStr;
-  lumiStr+=lumi;
-  lumiStr.ReplaceAll(' ', TString());
-
-  std::cout << "Parsing file: " << filen ;
-
-  TDOMParser xmlparser;
-  string channelName;
-  string inputFileName;
-  string histoName;
-  string histoPathName;
-
-  // reading in the file and parse by DOM
-  Int_t parseError = xmlparser.ParseFile( filen.c_str() );
-  if( parseError ) { 
-    std::cout << "Loading of xml document \"" << filen
-	      << "\" failed" << std::endl;
-  } 
-
-
-  HistFactory::Measurement measurement;
-
-  TXMLDocument* xmldoc = xmlparser.GetXMLDocument();
-  TXMLNode* rootNode = xmldoc->GetRootNode();
-
-  // not assuming that combination is the only option
-  // single channel is also ok
-
-  if( rootNode->GetNodeName() == TString( "" ) ){
-
-    std::cout << "Error: Encounterd XML with no DOCTYPE" << std::endl;
-    throw hf_exc();
-
-  }
-
-
-  else if( rootNode->GetNodeName() == TString( "Channel" ) ){
-
-    HistFactory::Channel channel = ParseChannelXMLFile( rootNode );
-    measurement.channels.push_back( channel );
-
-  }
-
-  else if( rootNode->GetNodeName() == TString( "Combination" ) ){
-
-    ConfigureMeasurementFromDriverXML( measurement );
-
-    std::cout << "Stuff" << std::endl;
-
-  }
-  // above two are the only options
-  else {
-    std::cout << "Found XML file with unknown DOCTYPE: " << rootNode->GetNodeName()
-	      << std::endl;
-    throw hf_exc();
-  }
-
-
-}
-*/
 
 
 HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
@@ -899,7 +498,6 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
     std::cout << "Loading of xml document \"" << filen
 	      << "\" failed" << std::endl;
   } 
-
 
   TXMLDocument* xmldoc = xmlparser.GetXMLDocument();
   TXMLNode* rootNode = xmldoc->GetRootNode();
@@ -971,10 +569,8 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
       throw hf_exc();
     }
 
-
   } // End loop over the channel tag's attributes
     
-
   // Check that the channel was properly initiated:
   
   if( channel.GetName() == "" ) {
@@ -1023,7 +619,6 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
 
   } // End loop over tags in this channel
 
-
   std::cout << "Created Channel: " << std::endl;
   channel.Print();
 
@@ -1031,298 +626,6 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
 
 }
 
-
-
-
-    /*
-
-    // Setup default values:
-    EstimateSummary::ConstraintType StatConstraintType = EstimateSummary::Gaussian; //"Gaussian";
-    Double_t RelErrorThreshold = .05;
-    node = rootNode->GetChildren();
-    while( node != 0 ) {
-      if( node->GetNodeName() == TString( "StatErrorConfig" ) ) {
-	
-	// Loop over the node's attributes
-        attribIt = node->GetAttributes();
-        curAttr = 0;
-        while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
-
-          if( curAttr->GetName() == TString( "RelErrorThreshold" ) ) {
-            RelErrorThreshold = atof(curAttr->GetValue()) ;
-          }
-
-          if( curAttr->GetName() == TString( "ConstraintType" ) ) {
-	    // Allowable Values:  Gaussian
-	    if( curAttr->GetValue()==TString("Gaussian") || curAttr->GetValue()==TString("Gauss")  )    StatConstraintType = EstimateSummary::Gaussian;
-	    else if( curAttr->GetValue()==TString("Poisson") || curAttr->GetValue()==TString("Pois")  ) StatConstraintType = EstimateSummary::Poisson;
-	    else cout << "Invalid Stat Constraint Type: " << curAttr->GetValue() << endl;
-          }
-	} // End: Loop Over Attributes
-
-      } // End: Loop Over Nodes
-	node = node->GetNextNode();
-    }
-
-
-    node = rootNode->GetChildren();
-    while( node != 0 ) {
-
-      if( node->GetNodeName() == TString( "Sample" ) ) {
-	inputFileName_cache=inputFileName;
-	histoName_cache=histoName;
-	histoPathName_cache=histoPathName;
-	EstimateSummary sample_channel;
-	sample_channel.channel=channelName;
-
-	// Set the Stat Paramaters
-	// (These are uniform over a channel, but
-	// they are only used if a particular sample
-	// requests to use them)
-	sample_channel.StatConstraintType=StatConstraintType;
-	sample_channel.RelErrorThreshold=RelErrorThreshold;
-
-	// For each sample, include a possible
-	// external histogram for the stat error:
-	/ *
-	string statErrorName="";
-	string statErrorPath="";
-	string statErrorFile="";
-	* /
-	attribIt = node->GetAttributes();
-	curAttr = 0;
-	while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
-	  if( curAttr->GetName() == TString( "Name" ) ) {
-	    // name of the smaple
-	    sample_channel.name=curAttr->GetValue();
-	  }
-	  if( curAttr->GetName() == TString( "InputFile" ) ) {
-	    inputFileName = curAttr->GetValue() ;
-	  }
-	  if( curAttr->GetName() == TString( "HistoName" ) ) {
-	    histoName = curAttr->GetValue() ;
-	  }
-	  if( curAttr->GetName() == TString( "HistoPath" ) ) {
-	    histoPathName=curAttr->GetValue();
-	  }
-	  if( curAttr->GetName() == TString( "NormalizeByTheory" ) ) {
-	    if((curAttr->GetValue()==TString("False"))){
-	      sample_channel.normName=lumiStr;
-	    }
-	  }
-	  / * 
-	  if( curAttr->GetName() == TString( "IncludeStatError" ) ) { 
-	    if((curAttr->GetValue()==TString("True"))){
-	      sample_channel.IncludeStatError = true; // Added McStat
-	    }
-	  }
-	  if( curAttr->GetName() == TString( "ShapeFactorName" ) ) {
-	    sample_channel.shapeFactorName = curAttr->GetValue();
-	  }
-	  * /
-	} // (Casting to TH1F* here...
-	cout << "Getting nominal histogram: " << histoPathName << "/" << histoName << " in file " << inputFileName << endl;
-	//sample_channel.nominal = (TH1F*) GetHisto(inputFileName, histoPathName, histoName);
-	sample_channel.nominal = GetHisto(inputFileName, histoPathName, histoName);
-	// Set the rel Error hist later,
-	// if necessary
-	//sample_channel.relStatError = NULL;
-
-	TXMLNode* sys = node->GetChildren();
-	AddSystematic(sample_channel, sys, inputFileName, histoPathName, histoName);
-	summary.push_back(sample_channel);
-	inputFileName=inputFileName_cache;
-	histoName=histoName_cache;
-	histoPathName=histoPathName_cache;
-	//sample_channel.print();
-      }
-      node = node->GetNextNode();
-    }
-
-    */
-
-/*
-void HistFactory::AddSystematic( EstimateSummary & sample_channel, TXMLNode* node, string inputFileName, string histoPathName, string histoName){
-
-  while( node != 0 ) {
-
-    if( node->GetNodeName() == TString( "NormFactor" ) ){
-      TListIter attribIt = node->GetAttributes();
-      EstimateSummary::NormFactor norm;
-      TXMLAttr* curAttr = 0;
-      while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
-	if( curAttr->GetName() == TString( "Name" ) ) {
-	  norm.name = curAttr->GetValue() ;
-	}
-	if( curAttr->GetName() == TString( "Val" ) ) {
-	  norm.val = atof(curAttr->GetValue()) ;
-	}
-	if( curAttr->GetName() == TString( "Low" ) ) {
-	  norm.low = atof(curAttr->GetValue()) ;
-	}
-	if( curAttr->GetName() == TString( "High" ) ) {
-	  norm.high = atof(curAttr->GetValue()) ;
-	}
-	if( curAttr->GetName() == TString( "Const" ) ) {
-	  norm.constant =  (curAttr->GetValue()==TString("True"));
-	}
-      }
-
-      sample_channel.normFactor.push_back(norm);
-    }
-
-    if( node->GetNodeName() == TString( "HistoSys" ) ){
-      TListIter attribIt = node->GetAttributes();
-      TXMLAttr* curAttr = 0;
-      string Name, histoPathHigh, histoPathLow, 
-	histoNameLow, histoNameHigh, inputFileHigh, inputFileLow;
-      inputFileLow=inputFileName; inputFileHigh=inputFileName;
-      histoPathLow=histoPathName; histoPathHigh=histoPathName;
-      histoNameLow=histoName; histoNameHigh=histoName;
-      while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
-	if( curAttr->GetName() == TString( "Name" ) ) {
-	  Name = curAttr->GetValue() ;
-	}
-	if( curAttr->GetName() == TString( "InputFileHigh" ) ) {
-	  inputFileHigh = curAttr->GetValue() ;
-	}
-	if( curAttr->GetName() == TString( "HistoPathHigh" ) ) {
-	  histoPathHigh = curAttr->GetValue() ;
-	}
-	if( curAttr->GetName() == TString( "HistoNameHigh" ) ) {
-	  histoNameHigh = curAttr->GetValue() ;
-	}
-	if( curAttr->GetName() == TString( "InputFileLow" ) ) {
-	  inputFileLow = curAttr->GetValue() ;
-	}
-	if( curAttr->GetName() == TString( "HistoPathLow" ) ) {
-	  histoPathLow = curAttr->GetValue() ;
-	}
-	if( curAttr->GetName() == TString( "HistoNameLow" ) ) {
-	  histoNameLow = curAttr->GetValue() ;
-	}
-      }
-      //sample_channel.AddSyst(Name, 
-      //		     (TH1F*) GetHisto( inputFileLow, histoPathLow, histoNameLow),
-      //		     (TH1F*) GetHisto( inputFileHigh, histoPathHigh, histoNameHigh));
-      sample_channel.AddSyst(Name, 
-			     GetHisto( inputFileLow, histoPathLow, histoNameLow),
-			     GetHisto( inputFileHigh, histoPathHigh, histoNameHigh));
-    }
-
-    if( node->GetNodeName() == TString( "OverallSys" ) ){
-      TListIter attribIt = node->GetAttributes();
-      TXMLAttr* curAttr = 0;
-      string Name;
-      Double_t Low=0, High=0;
-      while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
-	if( curAttr->GetName() == TString( "Name" ) ) {
-	  Name = curAttr->GetValue() ;
-	}
-	if( curAttr->GetName() == TString( "High" ) ) {
-	  High = atof(curAttr->GetValue()) ;
-	}
-	if( curAttr->GetName() == TString( "Low" ) ) {
-	  Low = atof(curAttr->GetValue()) ;
-	}
-      }
-      sample_channel.overallSyst[Name] = UncertPair(Low, High); 
-    }
-
-
-    if( node->GetNodeName() == TString( "StatError" ) ){
-      TListIter attribIt = node->GetAttributes();
-      TXMLAttr* curAttr = 0;
-      bool   statErrorActivate = false;
-      string statHistName = "";
-      string statHistPath = "";
-      string statHistFile = inputFileName;
-
-      while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
-	if( curAttr->GetName() == TString( "Activate" ) ) {
-	  if( curAttr->GetValue() == TString("True") ) statErrorActivate = true;
-	}
-	if( curAttr->GetName() == TString( "InputFile" ) ) {
-	  statHistFile = curAttr->GetValue() ;
-	}
-	if( curAttr->GetName() == TString( "HistoName" ) ) {
-	  statHistName = curAttr->GetValue() ;
-	}
-	if( curAttr->GetName() == TString( "HistoPath" ) ) {
-	  statHistPath = curAttr->GetValue() ;
-	}
-      }
-      if( statErrorActivate) {
-	sample_channel.IncludeStatError = true;
-	// Get an external histogram if necessary
-	if( statHistName != "" ) {
-	  cout << "Getting rel StatError histogram: " << statHistPath << "/" << statHistName << " in file " << statHistFile << endl;
-	  sample_channel.relStatError = (TH1*) GetHisto(statHistFile, statHistPath, statHistName);
-	} else {
-	  sample_channel.relStatError = NULL;
-	}
-      }
-    } // END: StatError Node
-    
-    if( node->GetNodeName() == TString( "ShapeFactor" ) ){
-      TListIter attribIt = node->GetAttributes();
-      TXMLAttr* curAttr = 0;
-      string Name="";
-      while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
-	if( curAttr->GetName() == TString( "Name" ) ) {
-	  Name = curAttr->GetValue() ;
-	}
-      }
-      sample_channel.shapeFactorName=Name; 
-    } // END: ShapeFactor Node
-    
-    if( node->GetNodeName() == TString( "ShapeSys" ) ){
-      TListIter attribIt = node->GetAttributes();
-      TXMLAttr* curAttr = 0;
-      string Name="";
-      string HistoName;
-      string HistoPath;
-      string HistoFile = inputFileName;
-      EstimateSummary::ConstraintType ConstraintType = EstimateSummary::Gaussian; //"Gaussian";
-
-      while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
-	if( curAttr->GetName() == TString( "Name" ) ) {
-	  Name = curAttr->GetValue() ;
-	}
-	if( curAttr->GetName() == TString( "HistoName" ) ) {
-	 HistoName = curAttr->GetValue() ;
-	}
-	if( curAttr->GetName() == TString( "HistoPath" ) ) {
-	  HistoPath = curAttr->GetValue() ;
-	}
-	if( curAttr->GetName() == TString( "HistoFile" ) ) {
-	  HistoFile = curAttr->GetValue() ;
-	}
-	if( curAttr->GetName() == TString( "ConstraintType" ) ) {
-	  if( curAttr->GetValue()==TString("Gaussian")     || curAttr->GetValue()==TString("Gauss") ) ConstraintType = EstimateSummary::Gaussian;
-	  else if( curAttr->GetValue()==TString("Poisson") || curAttr->GetValue()==TString("Pois") )  ConstraintType = EstimateSummary::Poisson;
-	}
-      }
-      // Now, set the EstimateSummary accordingly
-      EstimateSummary::ShapeSys Sys;
-      Sys.name = Name;
-      Sys.hist = NULL;
-      cout << "Getting rel ShapeSys constraint histogram: " << HistoPath << "/" << HistoName << " in file " << HistoFile << endl;
-      Sys.hist = (TH1*) GetHisto(HistoFile, HistoPath, HistoName);
-      if( Sys.hist == NULL ) {
-	cout << "Failed to get histogram: " << HistoPath << "/" <<HistoName << " in file " << HistoFile << endl;
-      }
-      Sys.constraint = ConstraintType;
-      sample_channel.shapeSysts.push_back( Sys );
-    } // END: ShapeFactor Node
-
-
-    node=node->GetNextNode();
-  }
-
-
-}
-*/
 
 
 HistFactory::Data ConfigParser::CreateDataElement( TXMLNode* node ) {
@@ -1387,7 +690,6 @@ HistFactory::Data ConfigParser::CreateDataElement( TXMLNode* node ) {
 	      << " HistoPath: " << data.GetHistoPath()
 	      << std::endl;
 
-
     // data.hist = GetHisto(data.FileName, data.HistoPath, data.HistoName);
 
     return data;
@@ -1404,7 +706,6 @@ HistFactory::StatErrorConfig ConfigParser::CreateStatErrorConfigElement( TXMLNod
   // Setup default values:
   config.SetConstraintType( Constraint::Gaussian );
   config.SetRelErrorThreshold( 0.05 ); // 5%
-
 
   // Loop over the node's attributes
   TListIter attribIt = node->GetAttributes();
@@ -1441,9 +742,7 @@ HistFactory::StatErrorConfig ConfigParser::CreateStatErrorConfigElement( TXMLNod
 	cout << "Invalid Stat Constraint Type: " << curAttr->GetValue() << endl;
 	throw hf_exc();
       }
-
     }
-
   } // End: Loop Over Attributes
 
   std::cout << "Created StatErrorConfig Element with" 
@@ -1523,7 +822,6 @@ HistFactory::Sample ConfigParser::CreateSampleElement( TXMLNode* node ) {
       std::cout << " Error: Unknown attribute for 'Sample' encountered: " << attrName << std::endl;
       throw hf_exc();
     }
-
   }
 
   // Quickly check the properties of the Sample Node
@@ -1590,7 +888,6 @@ HistFactory::Sample ConfigParser::CreateSampleElement( TXMLNode* node ) {
 
     child=child->GetNextNode();
   }
-
 
   std::cout << "Created Sample Node with"
 	    << " Name: " << sample.GetName()
@@ -1957,20 +1254,6 @@ HistFactory::ShapeSys ConfigParser::MakeShapeSys( TXMLNode* node ) {
 
 }
 
-  /*
-
-  // Now, set the EstimateSummary accordingly
-  EstimateSummary::ShapeSys Sys;
-  Sys.name = Name;
-  Sys.hist = NULL;
-  cout << "Getting rel ShapeSys constraint histogram: " << HistoPath << "/" << HistoName << " in file " << HistoFile << endl;
-  Sys.hist = (TH1*) GetHisto(HistoFile, HistoPath, HistoName);
-  if( Sys.hist == NULL ) {
-    cout << "Failed to get histogram: " << HistoPath << "/" <<HistoName << " in file " << HistoFile << endl;
-  }
-  Sys.constraint = ConstraintType;
-  */
-
 
 HistFactory::StatError ConfigParser::ActivateStatError( TXMLNode* node ) {
 	
@@ -2039,9 +1322,6 @@ HistFactory::StatError ConfigParser::ActivateStatError( TXMLNode* node ) {
       statError.SetHistoPath( m_currentHistoPath );
     }
 
-
-
-
   }
 
   /*
@@ -2067,27 +1347,51 @@ RooStats::HistFactory::PreprocessFunction ConfigParser::ParseFunctionConfig( TXM
 
   std::cout << "Parsing FunctionConfig" << std::endl;
 
-  RooStats::HistFactory::PreprocessFunction func;
-
   //std::string name, expression, dependents;
   TListIter attribIt = functionNode->GetAttributes();
   TXMLAttr* curAttr = 0;
+
+  std::string Name = "";
+  std::string Expression = "";
+  std::string Dependents = "";
+
+  // Add protection to ensure that all parts are there
   while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
     if( curAttr->GetName() == TString( "Name" ) ) {
-      func.SetName( curAttr->GetValue() );
+      Name = curAttr->GetValue();
+      //func.SetName( curAttr->GetValue() );
       //name = curAttr->GetValue() ;
     }
     if( curAttr->GetName() == TString( "Expression" ) ) {
-      func.SetExpression( curAttr->GetValue() );
+      Expression = curAttr->GetValue();
+      //func.SetExpression( curAttr->GetValue() );
     }
     if( curAttr->GetName() == TString( "Dependents" ) ) {
-      func.SetDependents( curAttr->GetValue() );
+      Dependents = curAttr->GetValue();
+      //func.SetDependents( curAttr->GetValue() );
     }    
   }
   
-  std::string command = "expr::"+func.GetName()+"('"+func.GetExpression()+"',{"+func.GetDependents()+"})";
-  func.SetCommand( command );
-  //  cout << "will pre-process this line " << ret <<endl;
+  if( Name=="" ){
+    std::cout << "Error processing PreprocessFunction: Name attribute is empty" << std::endl;
+    throw hf_exc();
+  }
+  if( Expression=="" ){
+    std::cout << "Error processing PreprocessFunction: Expression attribute is empty" << std::endl;
+    throw hf_exc();
+  }
+  if( Dependents=="" ){
+    std::cout << "Error processing PreprocessFunction: Dependents attribute is empty" << std::endl;
+    throw hf_exc();
+  }
+
+  RooStats::HistFactory::PreprocessFunction func(Name, Expression, Dependents);
+  
+  std::cout << "Created Preprocess Function: " << func.GetCommand() << std::endl;
+
+  //std::string command = "expr::"+func.GetName()+"('"+func.GetExpression()+"',{"+func.GetDependents()+"})";
+  //func.SetCommand( command );
+  // //  cout << "will pre-process this line " << ret <<endl;
   return func;
 
 }
