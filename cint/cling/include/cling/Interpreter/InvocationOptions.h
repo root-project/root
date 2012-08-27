@@ -15,11 +15,16 @@ namespace cling {
   class InvocationOptions {
   public:
     InvocationOptions():
-      NoLogo(false), ShowVersion(false), Verbose(false), Help(false) {}
+      NoLogo(false), ShowVersion(false), Verbose(false), Help(false),
+      MetaString(".") {}
     bool NoLogo;
     bool ShowVersion;
     bool Verbose;
     bool Help;
+
+    /// \brief A line starting with this string is assumed to contain a
+    ///        directive for the MetaProcessor. Defaults to "."
+    std::string MetaString;
 
     std::vector<std::string> LibsToLoad;
     std::vector<llvm::sys::Path> LibSearchPath;
