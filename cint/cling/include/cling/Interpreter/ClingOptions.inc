@@ -6,7 +6,7 @@ OPTION("--metastr=", _metastr_EQ, Joined, INVALID, INVALID, 0, 0,
        "Set the meta command tag, default '.'", 0)
 OPTION("--metastr", _metastr, Separate, INVALID, INVALID, 0, 0,
        "Set the meta command tag, default '.'", 0)
-OPTION("--nologo", nologo, Flag, INVALID, INVALID, 0, 0,
+OPTION("--nologo", _nologo, Flag, INVALID, INVALID, 0, 0,
        "Do not show startup-banner", 0)
 OPTION("--version", _version, Flag, INVALID, version, 0, 0, 0, 0)
 OPTION("-L", L, JoinedOrSeparate, INVALID, INVALID, 0, 0,
