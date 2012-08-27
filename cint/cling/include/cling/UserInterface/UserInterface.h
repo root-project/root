@@ -21,7 +21,7 @@ namespace cling {
     ///
     void PrintLogo();
   public:
-    UserInterface(Interpreter& interp, const char* prompt = "[cling] $");
+    UserInterface(Interpreter& interp);
     ~UserInterface();
 
     MetaProcessor* getMetaProcessor() { return m_MetaProcessor; }

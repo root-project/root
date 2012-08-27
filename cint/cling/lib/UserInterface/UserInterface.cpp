@@ -17,8 +17,7 @@
 //---------------------------------------------------------------------------
 // Construct an interface for an interpreter
 //---------------------------------------------------------------------------
-cling::UserInterface::UserInterface(Interpreter& interp,
-                                    const char* prompt /*= "[cling] $"*/):
+cling::UserInterface::UserInterface(Interpreter& interp):
 m_MetaProcessor(new MetaProcessor(interp))
 {
 }
