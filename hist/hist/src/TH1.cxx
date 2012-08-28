@@ -3353,10 +3353,10 @@ Int_t TH1::FindBin(Double_t x, Double_t y, Double_t z)
 //   ===============================================
 //
 //      2-D and 3-D histograms are represented with a one dimensional
-//      structure. This function tries to rebin the axis if the given point
-//      belongs to an under-/overflow bin.
-//      This has the advantage that all existing functions, such as
-//        GetBinContent, GetBinError, GetBinFunction work for all dimensions.
+//      structure. This has the advantage that all existing functions, such as
+//      GetBinContent, GetBinError, GetBinFunction work for all dimensions.
+//      This function tries to rebin the axis if the given point belongs to an
+//       under-/overflow bin AND if the TH1::kCanRebin bit is sei
 //     See also TH1::GetBin, TAxis::FindBin and TAxis::FindFixBin
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
@@ -3387,10 +3387,10 @@ Int_t TH1::FindFixBin(Double_t x, Double_t y, Double_t z) const
 //   ===============================================
 //
 //      2-D and 3-D histograms are represented with a one dimensional
-//      structure. This function DOES not try to rebin the axis if the given
-//      point belongs to an under-/overflow bin.
-//      This has the advantage that all existing functions, such as
-//        GetBinContent, GetBinError, GetBinFunction work for all dimensions.
+//      structure. This has the advantage that all existing functions, such as
+//      GetBinContent, GetBinError, GetBinFunction work for all dimensions.
+//      This function DOES NOT try to rebin the axis if the given point belongs
+//      to an under-/overflow bin.
 //     See also TH1::GetBin, TAxis::FindBin and TAxis::FindFixBin
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
