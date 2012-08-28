@@ -88,7 +88,7 @@ $(LLVMDIRO): $(LLVMDIRS)
 		fi; \
 		GNUMAKE=$(MAKE) $(LLVMDIRS)/configure $$LLVM_HOST \
 		--prefix=$(ROOT_OBJDIR)/$(LLVMDIRI) \
-		--enable-targets=host CC=$$LLVMCC CXX=$LLVMCXX CFLAGS="$$LLVM_CFLAGS" CXXFLAGS="$$LLVM_CFLAGS")
+		--enable-targets=host CC=$$LLVMCC CXX=$$LLVMCXX CFLAGS="$$LLVM_CFLAGS" CXXFLAGS="$$LLVM_CFLAGS")
 
 all-$(MODNAME): $(LLVMLIB)
 
