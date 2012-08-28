@@ -96,8 +96,7 @@ RLIBMAP      := bin/rlibmap$(EXEEXT)
 INCLUDEFILES += $(ROOTCINTDEP) $(ROOTCLINGDEP) $(RLIBMAPDEP)
 
 ifeq ($(BUILDCLING),yes)
-ROOTCLINGCXXFLAGS = $(filter-out -Wcast-qual,$(CLINGCXXFLAGS)) \
-  '-DR__CLANG="$(LLVMCONFIG:llvm-config=clang++)"'
+ROOTCLINGCXXFLAGS = $(filter-out -Wcast-qual,$(CLINGCXXFLAGS))
 ifneq ($(CXX:g++=),$(CXX))
 ROOTCLINGCXXFLAGS += -Wno-shadow -Wno-unused-parameter
 endif

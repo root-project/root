@@ -5453,7 +5453,7 @@ static int GenerateModule(const char* dictname, const std::vector<std::string>& 
 {
    // Generate the clang module given the arguments.
    // Returns != 0 on error.
-   std::string clangInvocation(R__CLANG);
+   std::string clangInvocation("clang");
    std::string dictNameStem(dictname);
    size_t posDotPcmFile = dictNameStem.find('.');
    if (posDotPcmFile != std::string::npos) {
