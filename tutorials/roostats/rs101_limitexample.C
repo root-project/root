@@ -44,7 +44,7 @@
 #include "RooStats/ProposalFunction.h"
 #include "RooStats/ProposalHelper.h"
 #include "RooFitResult.h"
-
+#include "TGraph2D.h"
 
 // use this order for safety on library loading
 using namespace RooFit ;
@@ -181,15 +181,36 @@ void rs101_limitexample()
   // 3-d plot of the parameter points
   dataCanvas->cd(2);
   // also plot the points in the markov chain
-  TTree& chain =  ((RooTreeDataStore*) mcInt->GetChainAsDataSet()->store())->tree();
-  chain.SetMarkerStyle(6);
-  chain.SetMarkerColor(kRed);
-  chain.Draw("s:ratioSigEff:ratioBkgEff","weight_MarkovChain_local_","box"); // 3-d box proporional to posterior
+  RooDataSet * chainData = mcInt->GetChainAsDataSet();
+
+  assert(chainData);
+  std::cout << "plotting the chain data - nentries = " << chainData->numEntries() << std::endl;
+  TTree* chain =  RooStats::GetAsTTree("chainTreeData","chainTreeData",*chainData);
+  assert(chain);
+  chain->SetMarkerStyle(6);
+  chain->SetMarkerColor(kRed);
+
+  chain->Draw("s:ratioSigEff:ratioBkgEff","nll_MarkovChain_local_","box"); // 3-d box proporional to posterior
 
   // the points used in the profile construction
-  TTree& parameterScan =  ((RooTreeDataStore*) fc.GetPointsToScan()->store())->tree();
-  parameterScan.SetMarkerStyle(24);
-  parameterScan.Draw("s:ratioSigEff:ratioBkgEff","","same");
+  RooDataSet * parScanData = (RooDataSet*) fc.GetPointsToScan();
+  assert(parScanData);
+  std::cout << "plotting the scanned points used in the frequentist construction - npoints = " << parScanData->numEntries() << std::endl;
+  // getting the tree and drawing it -crashes (very strange....);
+  // TTree* parameterScan =  RooStats::GetAsTTree("parScanTreeData","parScanTreeData",*parScanData);
+  // assert(parameterScan);
+  // parameterScan->Draw("s:ratioSigEff:ratioBkgEff","","candle goff");
+  TGraph2D *gr = new TGraph2D(parScanData->numEntries());
+  for (int ievt = 0; ievt < parScanData->numEntries(); ++ievt) { 
+     const RooArgSet * evt = parScanData->get(ievt); 
+     double x = evt->getRealValue("ratioBkgEff");
+     double y = evt->getRealValue("ratioSigEff");
+     double z = evt->getRealValue("s");
+     gr->SetPoint(ievt, x,y,z);
+     // std::cout << ievt << "  " << x << "  " << y << "  " << z << std::endl;
+  }
+  gr->SetMarkerStyle(24);
+  gr->Draw("P SAME");
 
   delete wspace;
   delete lrint;
