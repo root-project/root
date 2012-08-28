@@ -3626,32 +3626,21 @@ void TProofServ::HandleArchive(TMessage *mess, TString *slb)
 }
 
 //______________________________________________________________________________
-TMap *TProofServ::GetDataSetNodeMap(const char *dsn, TString &emsg)
+TMap *TProofServ::GetDataSetNodeMap(TFileCollection *fc, TString &emsg)
 {
-   // Get a map {server-name, list-of-files} for the daset dsn to be used in
+   // Get a map {server-name, list-of-files} for collection 'fc' to be used in
    // TPacketizerFile. Returns a pointer to the map (ownership of the caller).
    // Or (TMap *)0 and an error message in emsg.
 
    TMap *fcmap = 0;
    emsg = "";
    
-   // Make sure we have something in input and a dataset manager
-   if (!fDataSetManager) {
-      emsg.Form("dataset manager not initialized!");
-      return fcmap;
-   }
-   if (!dsn || (dsn && strlen(dsn) <= 0)) {
-      emsg.Form("dataset name undefined!");
+   // Sanity checks
+   if (!fc) {
+      emsg.Form("file collection undefined!");
       return fcmap;
    }
 
-   TFileCollection *fc = 0;
-   // Get the dataset
-   if (!(fc = fDataSetManager->GetDataSet(dsn))) {
-      emsg.Form("requested dataset '%s' does not exists", dsn);
-      return fcmap;
-   }
-    
    // Prepare data set map
    fcmap = new TMap();
 
@@ -3740,8 +3729,26 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
             if (!dsn.Contains(":") || dsn.BeginsWith("dataset:")) {
                dsn.ReplaceAll("dataset:", "");
                // Get the map for TPacketizerFile
-               TMap *fcmap = GetDataSetNodeMap(dsn, emsg);
-               if (!fcmap) {
+               // Make sure we have something in input and a dataset manager
+               if (!fDataSetManager) {
+                  emsg.Form("dataset manager not initialized!");
+               } else {
+                  TFileCollection *fc = 0;
+                  // Get the dataset
+                  if (!(fc = fDataSetManager->GetDataSet(dsn))) {
+                     emsg.Form("requested dataset '%s' does not exists", dsn.Data());
+                  } else {
+                     TMap *fcmap = GetDataSetNodeMap(fc, emsg);
+                     if (fcmap) {
+                        input->Remove(ftp);
+                        delete ftp;
+                        fcmap->SetOwner(kTRUE);
+                        fcmap->SetName("PROOF_FilesToProcess");
+                        input->Add(fcmap);
+                     }
+                  }
+               }
+               if (!emsg.IsNull()) {
                   SendAsynMessage(TString::Format("HandleProcess on %s: %s",
                                                   fPrefix.Data(), emsg.Data()));
                   Error("HandleProcess", "%s", emsg.Data());
@@ -3749,11 +3756,6 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
                   if (sync) SendLogFile();
                   return;
                }
-               input->Remove(ftp);
-               delete ftp;
-               fcmap->SetOwner(kTRUE);
-               fcmap->SetName("PROOF_FilesToProcess");
-               input->Add(fcmap);
             }
          }
       }
@@ -4464,8 +4466,11 @@ void TProofServ::ProcessNext(TString *slb)
    if (fDataSetManager && fPlayer->GetOutputList()) {
       TNamed *psr = (TNamed *) fPlayer->GetOutputList()->FindObject("PROOFSERV_RegisterDataSet");
       if (psr) {
-         if (RegisterDataSets(input, fPlayer->GetOutputList()) != 0)
-            Warning("ProcessNext", "problems registering produced datasets");
+         {  TProofServLogHandlerGuard hg(fLogFile,  fSocket);
+            TString emsg;
+            if (RegisterDataSets(input, fPlayer->GetOutputList(), fDataSetManager, emsg) != 0)
+               Warning("ProcessNext", "problems registering produced datasets: %s", emsg.Data());
+         }
          do {
             fPlayer->GetOutputList()->Remove(psr);
             delete psr;
@@ -4556,18 +4561,22 @@ void TProofServ::ProcessNext(TString *slb)
 }
 
 //______________________________________________________________________________
-Int_t TProofServ::RegisterDataSets(TList *in, TList *out)
+Int_t TProofServ::RegisterDataSets(TList *in, TList *out,
+                                   TDataSetManager *dsm, TString &msg)
 {
    // Register TFileCollections in 'out' as datasets according to the rules in 'in'
 
    PDB(kDataset, 1)
-      Info("RegisterDataSets", "enter: %d objs in the output list", (out ? out->GetSize() : -1));
+      ::Info("TProofServ::RegisterDataSets",
+             "enter: %d objs in the output list", (out ? out->GetSize() : -1));
 
-   if (!in || !out) return 0;
-
+   if (!in || !out || !dsm) {
+      ::Error("TProofServ::RegisterDataSets", "invalid inputs: %p, %p, %p", in, out, dsm);
+      return 0;
+   }
+   msg = "";
    THashList tags;
    TList torm;
-   TString msg;
    TIter nxo(out);
    TObject *o = 0;
    while ((o = nxo())) {
@@ -4593,53 +4602,41 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out)
             regopt.ReplaceAll(":sortidx:", "");
          }
          // Register this dataset
-         if (fDataSetManager) {
-            if (fDataSetManager->TestBit(TDataSetManager::kAllowRegister)) {
-               // Extract the list
-               if (ds->GetList()->GetSize() > 0) {
-                  // Register the dataset (quota checks are done inside here)
-                  const char *vfmsg = regopt.Contains("V") ? " and verifying" : ""; 
-                  msg.Form("Registering%s dataset '%s' ... ", vfmsg, ds->GetName());
-                  SendAsynMessage(msg.Data(), kFALSE);
-                  Int_t rc = 0;
-                  FlushLogFile();
-                  {  TProofServLogHandlerGuard hg(fLogFile,  fSocket);
-                     // Always allow verification for this action
-                     Bool_t allowVerify = fDataSetManager->TestBit(TDataSetManager::kAllowVerify) ? kTRUE : kFALSE;
-                     if (regopt.Contains("V") && !allowVerify)
-                        fDataSetManager->SetBit(TDataSetManager::kAllowVerify);
-                     rc = fDataSetManager->RegisterDataSet(ds->GetName(), ds, regopt);
-                     // Reset to the previous state if needed
-                     if (regopt.Contains("V") && !allowVerify)
-                        fDataSetManager->ResetBit(TDataSetManager::kAllowVerify);
-                  }
-                  if (rc != 0) {
-                     Warning("RegisterDataSets",
-                              "failure registering or verifying dataset '%s'", ds->GetName());
-                     msg.Form("Registering%s dataset '%s' ... failed! See log for more details", vfmsg, ds->GetName());
-                  } else {
-                     Info("RegisterDataSets", "dataset '%s' successfully registered%s",
-                                              ds->GetName(), (strlen(vfmsg) > 0) ? " and verified" : "");
-                     msg.Form("Registering%s dataset '%s' ... OK", vfmsg, ds->GetName());
-                     // Add tag to the list of processed tags to avoid double processing
-                     // (there may be more objects with the same name, created by each worker)
-                     tags.Add(new TObjString(tag));
-                  }
-                  SendAsynMessage(msg.Data(), kTRUE);
-                  // Notify
-                  PDB(kDataset, 2) {
-                     Info("RegisterDataSets","printing collection");
-                     ds->Print("F");
-                  }
+         if (dsm->TestBit(TDataSetManager::kAllowRegister)) {
+            // Extract the list
+            if (ds->GetList()->GetSize() > 0) {
+               // Register the dataset (quota checks are done inside here)
+               const char *vfmsg = regopt.Contains("V") ? " and verifying" : ""; 
+               msg.Form("Registering%s dataset '%s' ... ", vfmsg, ds->GetName());
+               // Always allow verification for this action
+               Bool_t allowVerify = dsm->TestBit(TDataSetManager::kAllowVerify) ? kTRUE : kFALSE;
+               if (regopt.Contains("V") && !allowVerify) dsm->SetBit(TDataSetManager::kAllowVerify);
+               // Main action
+               Int_t rc = dsm->RegisterDataSet(ds->GetName(), ds, regopt);
+               // Reset to the previous state if needed
+               if (regopt.Contains("V") && !allowVerify) dsm->ResetBit(TDataSetManager::kAllowVerify);
+               if (rc != 0) {
+                  ::Warning("TProofServ::RegisterDataSets",
+                            "failure registering or verifying dataset '%s'", ds->GetName());
+                  msg.Form("Registering%s dataset '%s' ... failed! See log for more details", vfmsg, ds->GetName());
                } else {
-                  Warning("RegisterDataSets", "collection '%s' is empty", o->GetName());
+                  ::Info("TProofServ::RegisterDataSets", "dataset '%s' successfully registered%s",
+                                                         ds->GetName(), (strlen(vfmsg) > 0) ? " and verified" : "");
+                  msg.Form("Registering%s dataset '%s' ... OK", vfmsg, ds->GetName());
+                  // Add tag to the list of processed tags to avoid double processing
+                  // (there may be more objects with the same name, created by each worker)
+                  tags.Add(new TObjString(tag));
+               }
+               // Notify
+               PDB(kDataset, 2) {
+                  ::Info("TProofServ::RegisterDataSets", "printing collection");
+                  ds->Print("F");
                }
             } else {
-               Info("RegisterDataSets", "dataset registration not allowed");
-               return -1;
+               ::Warning("TProofServ::RegisterDataSets", "collection '%s' is empty", o->GetName());
             }
          } else {
-            Error("RegisterDataSets", "dataset manager is undefined!");
+            ::Info("TProofServ::RegisterDataSets", "dataset registration not allowed");
             return -1;
          }
       }
@@ -4656,7 +4653,7 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out)
    }
    tags.SetOwner(kTRUE);
 
-   PDB(kDataset, 1) Info("RegisterDataSets", "exit");
+   PDB(kDataset, 1) ::Info("TProofServ::RegisterDataSets", "exit");
    // Done
    return 0;
 }

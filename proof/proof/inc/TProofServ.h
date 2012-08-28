@@ -200,9 +200,6 @@ private:
    // Results handling
    Int_t         SendResults(TSocket *sock, TList *outlist = 0, TQueryResult *pq = 0);
    Bool_t        AcceptResults(Int_t connections, TVirtualProofPlayer *mergerPlayer);
-   
-   TMap         *GetDataSetNodeMap(const char *dsn, TString &emsg);
-   Int_t         RegisterDataSets(TList *in, TList *out);
 
    // Waiting queries handlers
    void          SetIdle(Bool_t st = kTRUE);
@@ -345,6 +342,10 @@ public:
    // To handle local data server related paths
    static void    FilterLocalroot(TString &path, const char *url = "root://dum/");
    static void    GetLocalServer(TString &dsrv);
+
+   // To prepara ethe map of files to process
+   static TMap   *GetDataSetNodeMap(TFileCollection *fc, TString &emsg);
+   static Int_t   RegisterDataSets(TList *in, TList *out, TDataSetManager *dsm, TString &e);
 
    static Bool_t      IsActive();
    static TProofServ *This();

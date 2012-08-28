@@ -10921,7 +10921,19 @@ Int_t TProof::VerifyDataSet(const char *uri, const char *optStr)
       return nmissingfiles;
    }
 
-   //Let PROOF master prepare node-files map
+   // Do parallel verification
+   return VerifyDataSetParallel(uri, optStr);
+}
+
+//______________________________________________________________________________
+Int_t TProof::VerifyDataSetParallel(const char *uri, const char *optStr)
+{
+   // Internal function for parallel dataset verification used TProof::VerifyDataSet and
+   // TProofLite::VerifyDataSet
+
+   Int_t nmissingfiles = 0;
+   
+   // Let PROOF master prepare node-files map
    SetParameter("PROOF_FilesToProcess", Form("dataset:%s", uri));
 
    // Use TPacketizerFile
@@ -11002,10 +11014,10 @@ Int_t TProof::VerifyDataSet(const char *uri, const char *optStr)
       }
    }
 
-   Info("VerifyDataset", "%s: changed? %d (# files opened = %d, # files touched = %d,"
-                         " # missing files = %d)",
-                         uri, changed_ds, nopened, ntouched, nmissingfiles);
-
+   Info("VerifyDataSetParallel", "%s: changed? %d (# files opened = %d, # files touched = %d,"
+                                 " # missing files = %d)",
+                                 uri, changed_ds, nopened, ntouched, nmissingfiles);
+   // Done
    return nmissingfiles;
 }
 

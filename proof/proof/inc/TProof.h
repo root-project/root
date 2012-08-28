@@ -743,6 +743,8 @@ protected:
 
    void         SetDSet(TDSet *dset) { fDSet = dset; }
    virtual void ValidateDSet(TDSet *dset);
+   
+   Int_t   VerifyDataSetParallel(const char *uri, const char *optStr);
 
    TPluginHandler *GetProgressDialog() const { return fProgressDialog; }
 
