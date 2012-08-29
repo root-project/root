@@ -6050,10 +6050,10 @@ if test "x$enable_afdsmgrd" = "xyes" ; then
     fi
 
     if test ! "x$afdsmgrdapmondir" = "x" ; then
-        afdsmgrdapmon="--with-apmon=$afdsmgrdapmondir"
+        afdsmgrdapmon="$afdsmgrdapmondir"
         afdsmgrdapmonmsg=", using ApMon at $afdsmgrdapmondir"
     else
-        afdsmgrdapmon="--disable-apmon"
+        afdsmgrdapmon=""
         afdsmgrdapmonmsg=", ApMon support disabled"
     fi
 else
