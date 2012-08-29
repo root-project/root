@@ -2983,9 +2983,13 @@ Int_t TProofServ::SetupCommon()
 
    // Check and make sure "data" directory exists
    fDataDir = gEnv->GetValue("ProofServ.DataDir","");
+   Ssiz_t isep = kNPOS;
    if (fDataDir.IsNull()) {
       // Use default
       fDataDir.Form("%s/%s/<ord>/<stag>", fWorkDir.Data(), kPROOF_DataDir);
+   } else if ((isep = fDataDir.Last(' ')) !=  kNPOS) {
+      fDataDirOpts = fDataDir(isep + 1, fDataDir.Length());
+      fDataDir.Remove(isep);
    }
    ResolveKeywords(fDataDir);
    if (gSystem->AccessPathName(fDataDir))
@@ -4466,11 +4470,9 @@ void TProofServ::ProcessNext(TString *slb)
    if (fDataSetManager && fPlayer->GetOutputList()) {
       TNamed *psr = (TNamed *) fPlayer->GetOutputList()->FindObject("PROOFSERV_RegisterDataSet");
       if (psr) {
-         {  TProofServLogHandlerGuard hg(fLogFile,  fSocket);
-            TString emsg;
-            if (RegisterDataSets(input, fPlayer->GetOutputList(), fDataSetManager, emsg) != 0)
-               Warning("ProcessNext", "problems registering produced datasets: %s", emsg.Data());
-         }
+         TString emsg;
+         if (RegisterDataSets(input, fPlayer->GetOutputList(), fDataSetManager, emsg) != 0)
+            Warning("ProcessNext", "problems registering produced datasets: %s", emsg.Data());
          do {
             fPlayer->GetOutputList()->Remove(psr);
             delete psr;

@@ -27,6 +27,9 @@
 #include <TFile.h>
 #include <TProofOutputFile.h>
 #include <TNtuple.h>
+#include <TFileCollection.h>
+#include <TFileInfo.h>
+#include <THashList.h>
 
 //_____________________________________________________________________________
 ProofSimple::ProofSimple()
@@ -418,16 +421,26 @@ void ProofSimple::Terminate()
    nside = (nside*nside < fNhist) ? nside+1 : nside;
    c1->Divide(nside,nside,0,0);
 
+   Bool_t tryfc = kFALSE;
    TH1F *h = 0;
    for (Int_t i=0; i < fNhist; i++) {
-      h = dynamic_cast<TH1F *>(TProof::GetOutput(Form("h%d",i), fOutput));
+      if (!(h = dynamic_cast<TH1F *>(TProof::GetOutput(Form("h%d",i), fOutput)))) {
+         // Not found: try TFileCollection
+         tryfc = kTRUE;
+         break;
+      }
       c1->cd(i+1);
-      if (h) h->DrawCopy();
+      h->DrawCopy();
    }
 
-   // Final update
-   c1->cd();
-   c1->Update();
+   // If the histograms are not found they may be in files: is there a file collection?
+   if (tryfc && GetHistosFromFC(c1) != 0) {
+      Warning("Terminate", "histograms not found");
+   } else {
+      // Final update
+      c1->cd();
+      c1->Update();
+   }
 
    // Analyse hlab, if there
    if (fHLab && !gROOT->IsBatch()) {
@@ -528,3 +541,63 @@ void ProofSimple::PlotNtuple(TNtuple *ntp, const char *ntptitle)
    c1->Update();
 }
 
+//_____________________________________________________________________________
+Int_t ProofSimple::GetHistosFromFC(TCanvas *cv)
+{
+   // Check for the histograms in the files of a possible TFileCollection
+
+   TIter nxo(fOutput);
+   TFileCollection *fc = 0;
+   Bool_t fc_found = kFALSE, hs_found = kFALSE;
+   while ((fc = (TFileCollection *) nxo())) {
+      if (strcmp(fc->ClassName(), "TFileCollection")) continue;
+      fc_found = kTRUE;
+      if (!fHist) {
+         fHist = new TH1F*[fNhist];
+         for (Int_t i = 0; i < fNhist; i++) { fHist[i] = 0; }
+      } else {
+         for (Int_t i = 0; i < fNhist; i++) { SafeDelete(fHist[i]); }
+      }
+      // Go through the list of files
+      TIter nxf(fc->GetList());
+      TFileInfo *fi = 0;
+      while ((fi = (TFileInfo *) nxf())) {
+         TFile *f = TFile::Open(fi->GetCurrentUrl()->GetUrl());
+         if (f) {
+            for (Int_t i = 0; i < fNhist; i++) {
+               TString hn = TString::Format("h%d", i);
+               TH1F *h = (TH1F *) f->Get(hn);
+               if (h) {
+                  hs_found = kTRUE;
+                  if (!fHist[i]) {
+                     fHist[i] = (TH1F *) h->Clone();
+                     fHist[i]->SetDirectory(0);
+                  } else {
+                     fHist[i]->Add(h);
+                  }
+               } else {
+                  Error("GetHistosFromFC", "histo '%s' not found in file '%s'",
+                        hn.Data(), fi->GetCurrentUrl()->GetUrl());
+               }
+            }
+            f->Close();
+         } else {
+            Error("GetHistosFromFC", "file '%s' could not be open", fi->GetCurrentUrl()->GetUrl());
+         }
+      }
+      if (hs_found) break;
+   }
+   if (!fc_found) return -1;
+   if (!hs_found) return -1;
+   
+   for (Int_t i = 0; i < fNhist; i++) {
+      cv->cd(i+1);
+      if (fHist[i]) {
+         fHist[i]->DrawCopy();
+      }
+   }
+   Info("GetHistosFromFC", "histograms read from %d files in TFileCollection '%s'",
+                           fc->GetList()->GetSize(), fc->GetName());
+   // Done
+   return 0;
+}

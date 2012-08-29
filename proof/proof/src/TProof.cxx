@@ -10945,6 +10945,7 @@ Int_t TProof::VerifyDataSetParallel(const char *uri, const char *optStr)
    SetParameter("PROOF_VerifyDataSet", uri);
    // Add options
    SetParameter("PROOF_VerifyDataSetOption", optStr);
+   SetParameter("PROOF_SavePartialResults", (Int_t)0);
    Int_t oldifiip = -1;
    if (TProof::GetParameter(GetInputList(), "PROOF_IncludeFileInfoInPacket", oldifiip) != 0) oldifiip = -1;
    SetParameter("PROOF_IncludeFileInfoInPacket", (Int_t)1);
@@ -10954,8 +10955,6 @@ Int_t TProof::VerifyDataSetParallel(const char *uri, const char *optStr)
    SetParameter("PROOF_MSS", mss);
    const char* stageoption="";
    SetParameter("PROOF_StageOption", stageoption);
-
-   GetInputList()->Print();
 
    // Process verification in parallel
    Process("TSelVerifyDataSet", (Long64_t) 1);
@@ -10977,6 +10976,7 @@ Int_t TProof::VerifyDataSetParallel(const char *uri, const char *optStr)
    } else {
       DeleteParameters("PROOF_IncludeFileInfoInPacket");
    }
+   DeleteParameters("PROOF_SavePartialResults");
 
    // Merge outputs
    Int_t nopened = 0;

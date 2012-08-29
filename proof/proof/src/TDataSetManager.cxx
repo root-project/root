@@ -1655,7 +1655,13 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
       // We need a raw open firts to get the real size of the file
       TUrl urlNoAnchor(furl);
       urlNoAnchor.SetAnchor("");
-      urlNoAnchor.SetOptions("filetype=raw");
+      TString unaopts = urlNoAnchor.GetOptions();
+      if (!unaopts.IsNull()) {
+         unaopts += "&filetype=raw";
+      } else {
+         unaopts = "filetype=raw";
+      }
+      urlNoAnchor.SetOptions(unaopts);
       // Wait max 5 secs per file
       if (!(file = TFile::Open(urlNoAnchor.GetUrl(), fileopt))) return rc;
 
@@ -1675,7 +1681,15 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
             
             eurl.SetOptions(url->GetOptions());
             eurl.SetAnchor(url->GetAnchor());
-            fileinfo->AddUrl(eurl.GetUrl(), kTRUE);
+
+            // Fix the hostname
+            if (!strcmp(eurl.GetHost(), "localhost") || !strcmp(eurl.GetHost(), "127.0.0.1") ||
+               !strcmp(eurl.GetHost(), "localhost.localdomain")) {
+               eurl.SetHost(TUrl(gSystem->HostName()).GetHostFQDN());
+            }
+            // Add only if different
+            if (strcmp(eurl.GetUrl(), url->GetUrl()))
+               fileinfo->AddUrl(eurl.GetUrl(), kTRUE);
 
             if (gDebug > 0) ::Info("TDataSetManager::ScanFile", "added URL %s", eurl.GetUrl());
          }
@@ -1715,7 +1729,15 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
 
          eurl.SetOptions(url->GetOptions());
          eurl.SetAnchor(url->GetAnchor());
-         fileinfo->AddUrl(eurl.GetUrl(), kTRUE);
+
+         // Fix the hostname
+         if (!strcmp(eurl.GetHost(), "localhost") || !strcmp(eurl.GetHost(), "127.0.0.1") ||
+             !strcmp(eurl.GetHost(), "localhost.localdomain")) {
+             eurl.SetHost(TUrl(gSystem->HostName()).GetHostFQDN());
+         }
+         // Add only if different
+         if (strcmp(eurl.GetUrl(), url->GetUrl()))
+            fileinfo->AddUrl(eurl.GetUrl(), kTRUE);
 
          if (gDebug > 0) ::Info("TDataSetManager::ScanFile", "added URL %s", eurl.GetUrl());
       }

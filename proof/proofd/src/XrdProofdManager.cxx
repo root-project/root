@@ -138,6 +138,7 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    // Data dir
    fDataDir = "";        // Default <workdir>/<user>/data
    fDataDirOpts = "";    // Default: no action
+   fDataDirUrlOpts = ""; // Default: none
 
    // Rootd file serving enabled by default in readonly mode
    fRootdExe = "<>";
@@ -811,20 +812,22 @@ int XrdProofdManager::Config(bool rcf)
    // Data directory, if specified
    if (fDataDir.length() > 0) {
       if (fDataDir.endswith('/')) fDataDir.erasefromend(1);
-      // Make sure it exists
-      if (XrdProofdAux::AssertDir(fDataDir.c_str(), ui, fChangeOwn) != 0) {
-         XPDERR("unable to assert data dir: " << fDataDir);
-         return -1;
-      }
-      // Get the right privileges now
-      XrdSysPrivGuard pGuard((uid_t)ui.fUid, (gid_t)ui.fGid);
-      if (XpdBadPGuard(pGuard, ui.fUid)) {
-         TRACE(XERR, "could not get privileges to set/change ownership of " << fDataDir);
-         return -1;
-      }
-      if (chmod(fDataDir.c_str(), 0777) != 0) {
-         XPDERR("problems setting permissions 0777 data dir: " << fDataDir);
-         return -1;
+      if (fDataDirOpts.length() > 0) {
+         // Make sure it exists
+         if (XrdProofdAux::AssertDir(fDataDir.c_str(), ui, fChangeOwn) != 0) {
+            XPDERR("unable to assert data dir: " << fDataDir << " (opts: "<<fDataDirOpts<<")");
+            return -1;
+         }
+         // Get the right privileges now
+         XrdSysPrivGuard pGuard((uid_t)ui.fUid, (gid_t)ui.fGid);
+         if (XpdBadPGuard(pGuard, ui.fUid)) {
+            TRACE(XERR, "could not get privileges to set/change ownership of " << fDataDir);
+            return -1;
+         }
+         if (chmod(fDataDir.c_str(), 0777) != 0) {
+            XPDERR("problems setting permissions 0777 data dir: " << fDataDir);
+            return -1;
+         }
       }
       TRACE(ALL, "data directories under: " << fDataDir);
    }
@@ -1178,6 +1181,7 @@ bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
                if (!flck) {
                   TRACE(XERR, "Cannot open file '" << fnpath << "' with the lock file path; errno: " << errno);
                } else {
+                  errno = 0;
                   off_t ofs = lseek(fileno(flck), 0, SEEK_CUR);
                   if (ofs == 0) {
                      // New file: write the default lock file path
@@ -1188,13 +1192,15 @@ bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
                      fprintf(flck, "%s\n", fnlock.c_str());
                      if (fclose(flck) != 0)
                         TRACE(XERR, "Problems closing file '" << fnpath << "'; errno: " << errno);
+                     flck = 0;
                      if (XrdProofdAux::ChangeOwn(fnpath.c_str(), ui) != 0) {
                         TRACE(XERR, "Problems asserting ownership of " << fnpath);
                      }
-                  } else if (ofs != (off_t)(-1)) {
+                  } else if (ofs == (off_t)(-1)) {
                      TRACE(XERR, "Problems getting current position on file '" << fnpath << "'; errno: " << errno);
                   }
-                  fclose(flck);
+                  if (flck && fclose(flck) != 0)
+                     TRACE(XERR, "Problems closing file '" << fnpath << "'; errno: " << errno);
                }
             }
             // Make sure that everybody can modify the file for updates
@@ -1759,12 +1765,20 @@ int XrdProofdManager::DoDirectiveDataDir(char *val, XrdOucStream *cfg, bool)
 
    // Data directory and write permissions
    fDataDir = val;
+   fDataDirOpts = "";
+   fDataDirUrlOpts = "";
    XrdOucString opts;
    char *nxt = 0;
    while ((nxt = cfg->GetWord()) && (opts.length() == 0)) {
       opts = nxt;
    }
    if (opts.length() > 0) fDataDirOpts = opts;
+   // Check if URL type options have been spcified in the main url
+   int iq = STR_NPOS;
+   if ((iq = fDataDir.rfind('?')) != STR_NPOS) {
+      fDataDirUrlOpts.assign(fDataDir, iq + 1);
+      fDataDir.erase(iq);
+   }
 
    // Done
    return 0;

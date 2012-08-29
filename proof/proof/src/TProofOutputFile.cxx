@@ -261,7 +261,7 @@ TFile* TProofOutputFile::OpenFile(const char* opt)
    // Create the path
    TString fileLoc;
    fileLoc.Form("%s/%s%s", fRawDir.Data(), fFileName.Data(), fOptionsAnchor.Data());
-
+   
    // Open the file
    TFile *retFile = TFile::Open(fileLoc, opt);
 
@@ -278,32 +278,34 @@ Int_t TProofOutputFile::AdoptFile(TFile *f)
       Error("AdoptFile", "file is undefined or zombie!");
       return -1;
    }
-   if (!f->GetEndpointUrl()) {
+   const TUrl *u = f->GetEndpointUrl();
+   if (!u) {
       Error("AdoptFile", "file end-point url is undefined!");
       return -1;
    }
 
    // Set the name and dir
-   TUrl u(*(f->GetEndpointUrl()));
    fIsLocal = kFALSE;
-   if (!strcmp(u.GetProtocol(), "file")) {
+   if (!strcmp(u->GetProtocol(), "file")) {
       fIsLocal = kTRUE;
-      fDir = u.GetFile();
+      fDir = u->GetFile();
    } else {
-      fDir = u.GetUrl();
+      fDir = u->GetUrl();
    }
    fFileName = gSystem->BaseName(fDir.Data());
    fDir.ReplaceAll(fFileName, "");
    fRawDir = fDir;
 
-   // Remove prefix, if any
-   TString localDS;
-   TProofServ::GetLocalServer(localDS);
-   if (!localDS.IsNull()) {
-      TProofServ::FilterLocalroot(fDir, localDS);
-      fDir.Insert(0, localDS);
+   // If local remove prefix, if any
+   if (fIsLocal) {
+      TString localDS;
+      TProofServ::GetLocalServer(localDS);
+      if (!localDS.IsNull()) {
+         TProofServ::FilterLocalroot(fDir, localDS);
+         fDir.Insert(0, localDS);
+      }
    }
-
+   
    return 0;
 }
 

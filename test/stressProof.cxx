@@ -16,8 +16,8 @@
 // * $ root                                                                * //
 // * root[] .include $ROOTSYS/tutorials                                    * //
 // * root[] .L stressProof.cxx+                                            * //
-// * root[] stressProof(master, wrks, verbose, logfile, dyn, \             * //
-// *                    skipds, tests, h1src, eventsrc, dryrun)            * //
+// * root[] stressProof(master, tests, wrks, verbose, logfile, dyn, \      * //
+// *                    dyn, skipds, h1src, eventsrc, dryrun)              * //
 // *                                                                       * //
 // * The arguments have the same meaning as above except for               * //
 // *     verbose [Int_t]   increasing verbosity (0 == minimal)             * //
@@ -196,10 +196,10 @@ static TString gPackEvent("/proof/event.par");
 static TString gPack1("/proof/packtest1.par");
 static TString gPack2("/proof/packtest2.par");
 
-int stressProof(const char *url = "proof://localhost:40000",
-                Int_t nwrks = -1, const char *verbose = "1",
-                const char *logfile = 0, Bool_t dyn = kFALSE,
-                Bool_t skipds = kTRUE, const char *tests = 0,
+int stressProof(const char *url = 0,
+                const char *tests = 0, Int_t nwrks = -1,
+                const char *verbose = "1", const char *logfile = 0,
+                Bool_t dyn = kFALSE, Bool_t skipds = kTRUE, 
                 const char *h1src = 0, const char *eventsrc = 0,
                 Bool_t dryrun = kFALSE, Bool_t showcpu = kFALSE,
                 Bool_t clearcache = kFALSE, Bool_t useprogress = kTRUE, const char *tutdir = 0);
@@ -381,8 +381,8 @@ int main(int argc,const char *argv[])
       gROOT->SetBatch(kTRUE);
    }
 
-   int rc = stressProof(url, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest,
-                        tests, h1src, eventsrc, dryrun, showcpu, clearcache, useprogress, tutdir);
+   int rc = stressProof(url, tests, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest,
+                        h1src, eventsrc, dryrun, showcpu, clearcache, useprogress, tutdir);
 
    gSystem->Exit(rc);
 }
@@ -769,8 +769,8 @@ typedef struct {
 static PT_Packetizer_t gStd_Old = { "TPacketizer", 0 };
 
 //_____________________________________________________________________________
-int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *logfile,
-                Bool_t dyn, Bool_t skipds, const char *tests,
+int stressProof(const char *url, const char *tests, Int_t nwrks,
+                const char *verbose, const char *logfile, Bool_t dyn, Bool_t skipds,
                 const char *h1src, const char *eventsrc,
                 Bool_t dryrun, Bool_t showcpu, Bool_t clearcache, Bool_t useprogress,
                 const char *tutdir)
@@ -903,7 +903,7 @@ int stressProof(const char *url, Int_t nwrks, const char *verbose, const char *l
          }
       } else if (!gh1src.BeginsWith(h1src)) {
          if (gverbose > 0) {
-            printf("*  Taking H1 files from: %s\n", h1src);
+            printf("*  Taking 'h1' files from: %s\n", h1src);
             printf("******************************************************************\n");
          }
          gh1src = h1src;

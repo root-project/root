@@ -97,6 +97,7 @@ private:
    TString       fQueryDir;         //directory containing query results and status
    TString       fDataSetDir;       //directory containing info about known data sets
    TString       fDataDir;          //directory containing data files produced during queries
+   TString       fDataDirOpts;      //Url type options for fDataDir
    TString       fAdminPath;        //admin path for this session
    TString       fOutputFile;       //path with the temporary results of the current or last query
    TProofLockPath *fPackageLock;    //package dir locker
@@ -256,6 +257,7 @@ public:
    const char    *GetSessionDir() const { return fSessionDir; }
    const char    *GetPackageDir() const { return fPackageDir; }
    const char    *GetDataDir()    const { return fDataDir; }
+   const char    *GetDataDirOpts() const { return fDataDirOpts; }
    Int_t          GetProtocol()   const { return fProtocol; }
    const char    *GetOrdinal()    const { return fOrdinal; }
    Int_t          GetGroupId()    const { return fGroupId; }

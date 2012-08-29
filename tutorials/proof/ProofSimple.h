@@ -18,6 +18,7 @@ class TFile;
 class TProofOutputFile;
 class TNtuple;
 class TRandom3;
+class TCanvas;
 
 class ProofSimple : public TSelector {
 public :
@@ -51,6 +52,7 @@ public :
 
    void            FillNtuple(Long64_t entry);
    void            PlotNtuple(TNtuple *, const char *);
+   Int_t           GetHistosFromFC(TCanvas *);
    
    // Setters and getters (for TDataMember)
    Int_t GetNhist() { return fNhist; }

@@ -3993,7 +3993,11 @@ int XrdProofdProofServMgr::CreateProofServRootRc(XrdProofdProtocol *p,
       XPDFORM(rc, "ProofServ.DataDir: %s/%s/%s/%s/%s", fMgr->DataDir(),
                   p->Client()->Group(), p->Client()->User(), xps->Ordinal(),
                   in->fSessionTag.c_str());
-      fprintf(frc, "%s\n", rc.c_str());
+      if (fMgr->DataDirUrlOpts() && strlen(fMgr->DataDirUrlOpts()) > 0) {
+         fprintf(frc, "%s %s\n", rc.c_str(), fMgr->DataDirUrlOpts());
+      } else {
+         fprintf(frc, "%s\n", rc.c_str());
+      }
    }
 
    // Done with this

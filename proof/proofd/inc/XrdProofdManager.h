@@ -89,6 +89,7 @@ class XrdProofdManager : public XrdProofdConfig {
    const char       *WorkDir() const { return fWorkDir.c_str(); }
    const char       *DataDir() const { return fDataDir.c_str(); }
    const char       *DataDirOpts() const { return fDataDirOpts.c_str(); }
+   const char       *DataDirUrlOpts() const { return fDataDirUrlOpts.c_str(); }
    const char       *DataSetExp() const { return fDataSetExp.c_str(); }
 
    const char       *RootdExe() const { return fRootdExe.c_str(); }
@@ -141,6 +142,7 @@ class XrdProofdManager : public XrdProofdConfig {
    XrdOucString      fLocalroot;      // Local root prefix (directive oss.localroot)
    XrdOucString      fDataDir;        // Directory under which to create the sub-dirs for users data
    XrdOucString      fDataDirOpts;    // String specifying options for fDataDir handling
+   XrdOucString      fDataDirUrlOpts; // String specifying URL type options for fDataDir
    XrdOucString      fDataSetExp;     // List of local dataset repositories to be asserted
 
    XrdOucString      fRootdExe;       // Path to 'rootd' to be use for protocol 'rootd://'

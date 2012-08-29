@@ -779,9 +779,15 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
    // Open the file
    const char *oopt = "UPDATE";
    // Check if the file has already been defined
+   TString baseName(fOutputFilePath); 
    if (fOutputFilePath.IsNull()) {
-      fOutputFilePath.Form("%s/output-%s.q%d.root", gProofServ->GetDataDir(),
-                           gProofServ->GetTopSessionTag(),  gProofServ->GetQuerySeqNum());
+      baseName.Form("output-%s.q%d.root", gProofServ->GetTopSessionTag(), gProofServ->GetQuerySeqNum());
+      if (gProofServ->GetDataDirOpts() && strlen(gProofServ->GetDataDirOpts()) > 0) {
+         fOutputFilePath.Form("%s/%s?%s", gProofServ->GetDataDir(), baseName.Data(),
+                                          gProofServ->GetDataDirOpts());
+      } else {
+         fOutputFilePath.Form("%s/%s", gProofServ->GetDataDir(), baseName.Data());
+      }
       Info("SavePartialResults", "file with (partial) output: '%s'", fOutputFilePath.Data());
       oopt = "RECREATE";
    }
@@ -858,7 +864,7 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
 
    // Close the file if required
    if (notempty) {
-      if (!fOutput->FindObject(gSystem->BaseName(fOutputFilePath))) {
+      if (!fOutput->FindObject(baseName)) {
          TProofOutputFile *po = 0;
          // Get directions
          TNamed *nm = (TNamed *) fInput->FindObject("PROOF_DefaultOutputOption");
@@ -869,11 +875,11 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
                TString::Format("%s_q%d", gProofServ->GetTopSessionTag(), gProofServ->GetQuerySeqNum());
             oname.ReplaceAll("<qtag>", qtag);
             // Create the TProofOutputFile for dataset creation
-            po = new TProofOutputFile(gSystem->BaseName(fOutputFilePath), "DR", oname.Data());
+            po = new TProofOutputFile(baseName, "DRO", oname.Data());
          } else {
             Bool_t hasddir = kFALSE;
             // Create the TProofOutputFile for automatic merging
-            po = new TProofOutputFile(gSystem->BaseName(fOutputFilePath), "M");
+            po = new TProofOutputFile(baseName, "M");
             if (oname.BeginsWith("of:")) oname.Replace(0, 3, "");
             if (gProofServ->IsTopMaster()) {
                if (!strcmp(TUrl(oname, kTRUE).GetProtocol(), "file")) {
@@ -885,11 +891,11 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
             } else {
                if (nm) {
                   // The name has been sent by the client: resolve local place holders
-                  oname.ReplaceAll("<file>", gSystem->BaseName(fOutputFilePath));
+                  oname.ReplaceAll("<file>", baseName);
                } else {
                   // We did not get any indication; the final file will be in the datadir on
                   // the top master and it will be resolved there
-                  oname.Form("<datadir>/%s", gSystem->BaseName(fOutputFilePath));
+                  oname.Form("<datadir>/%s", baseName.Data());
                   hasddir = kTRUE;
                }
             }
@@ -1346,9 +1352,21 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       while ((o = nxo())) {
          // Special treatment for files
          if (o->IsA() == TProofOutputFile::Class()) {
-            ((TProofOutputFile *)o)->SetWorkerOrdinal(gProofServ->GetOrdinal());
-            if (!strcmp(((TProofOutputFile *)o)->GetDir(),""))
-               ((TProofOutputFile *)o)->SetDir(gProofServ->GetSessionDir());
+            TProofOutputFile *of = (TProofOutputFile *)o;
+            of->Print();
+            of->SetWorkerOrdinal(gProofServ->GetOrdinal());
+            const char *dir = of->GetDir();
+            if (!dir || (dir && strlen(dir) <= 0)) {
+               of->SetDir(gProofServ->GetSessionDir());
+            } else if (dir && strlen(dir) > 0) {
+               TUrl u(dir);
+               if (!strcmp(u.GetHost(), "localhost") || !strcmp(u.GetHost(), "127.0.0.1") ||
+                   !strcmp(u.GetHost(), "localhost.localdomain")) {
+                  u.SetHost(TUrl(gSystem->HostName()).GetHostFQDN());
+                  of->SetDir(u.GetUrl(kTRUE));
+               }
+               of->Print();
+            }
          }
       }
 
@@ -2402,12 +2420,17 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                   filemerger->AddFile(fileLoc);
                }
                // Datadir
-               TString ddir;
-               if (gProofServ) ddir.Form("%s/", gProofServ->GetDataDir());
+               TString ddir, ddopts;
+               if (gProofServ) {
+                  ddir.Form("%s/", gProofServ->GetDataDir());
+                  if (gProofServ->GetDataDirOpts()) ddopts= gProofServ->GetDataDirOpts();
+               }
                // Set the output file
                TString outfile(pf->GetOutputFileName());
                if (outfile.Contains("<datadir>/")) {
                   outfile.ReplaceAll("<datadir>/", ddir.Data());
+                  if (!ddopts.IsNull())
+                     outfile += TString::Format("?%s", ddopts.Data());
                   pf->SetOutputFileName(outfile);
                }
                if ((gProofServ && gProofServ->IsTopMaster()) || fProof->IsLite()) {
@@ -3179,11 +3202,15 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
             Bool_t setfout = (!hasfout || TestBit(TVirtualProofPlayer::kIsSubmerger)) ? kTRUE : kFALSE;
             if (setfout) {
 
-               TString ddir;
-               if (gProofServ) ddir.Form("%s/", gProofServ->GetDataDir());
+               TString ddir, ddopts;
+               if (gProofServ) {
+                  ddir.Form("%s/", gProofServ->GetDataDir());
+                  if (gProofServ->GetDataDirOpts()) ddopts = gProofServ->GetDataDirOpts();
+               }
                // Set the output file
                TString outfile(pf->GetOutputFileName());
                outfile.ReplaceAll("<datadir>/", ddir.Data());
+               if (!ddopts.IsNull()) outfile += TString::Format("?%s", ddopts.Data());
                pf->SetOutputFileName(outfile);
 
                if (gProofServ) {
