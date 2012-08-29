@@ -307,7 +307,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <listitem><para>a pass on all entries is made like in <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw()</code></para></listitem>
 <listitem><para>    <code>var1 = majorname</code></para></listitem>
 <listitem><para>    <code>var2 = minorname</code></para></listitem>
-<listitem><para>    <code>sel  = 231 x majorname + minorname</code></para></listitem>
+<listitem><para>    <code>sel  = 2ˆ{31} x majorname + minorname</code></para></listitem>
 <listitem><para>    for each entry in the tree the sel expression is evaluated and the results array is sorted into <code>fIndexValues</code></para></listitem>
 </itemizedlist>
 <para>Once the index is computed, using the <emphasis role="bold"><code>TTree</code></emphasis><code>::GetEntryWithIndex(majornumber, minornumber)</code>         one entry can be retrieved. Example:</para>
