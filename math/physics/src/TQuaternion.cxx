@@ -154,7 +154,7 @@ Double_t TQuaternion::GetQAngle() const {
    // Get angle of quaternion (rad)
    // N.B : this angle is half of the corresponding rotation angle
 
-   if (fRealPart == 0) return 0;
+   if (fRealPart == 0) return TMath::PiOver2(); 
    Double_t denominator = fVectorPart.Mag();
    return atan(denominator/fRealPart);
 }
