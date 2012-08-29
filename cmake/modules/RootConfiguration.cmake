@@ -326,6 +326,8 @@ set(hascling ${has${cling}})
 set(haslzmacompression ${has${lzma}})
 set(hascocoa ${has${cocoa}})
 set(usec++11 ${has${c++11}})
+set(hasllvm undef)
+set(llvmdir /**/)
 
 #---root-config----------------------------------------------------------------------------------------------
 ROOT_SHOW_OPTIONS(features)
