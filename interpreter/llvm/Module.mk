@@ -26,14 +26,20 @@ LLVMDIRS     := $(MODDIRS)
 
 ##### libllvm #####
 LLVMLIB      := $(LLVMDIRI)/lib/libclang.a
-LLVMCONFIG   ?= interpreter/llvm/inst/bin/llvm-config
+ifeq ($(strip $(LLVMCONFIG)),)
+LLVMCONFIG   := interpreter/llvm/inst/bin/llvm-config
+endif
 LLVMVERSION  := $(shell echo $(subst rc,,$(subst svn,,$(subst PACKAGE_VERSION=,,\
 	$(shell grep 'PACKAGE_VERSION=' $(LLVMDIRS)/configure)))))
 LLVMRES      := etc/cling/lib/clang/$(LLVMVERSION)/include/stddef.h
 LLVMDEP      := $(LLVMLIB) $(LLVMRES)
 
+ifneq ($(FORCELLVM),)
+FORCELLVMTARGET=FORCELLVMTARGET
+endif
+
 ##### local rules #####
-.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) FORCELLVMTARGET
 
 # clang resource directory gets copied to lib/clang/
 # clang version extraction as in tools/clang/lib/Headers/Makefile
@@ -41,7 +47,7 @@ $(LLVMRES): $(LLVMLIB)
 		mkdir -p $(dir $(LLVMRES))
 		cp $(LLVMDIRI)/lib/clang/$(LLVMVERSION)/include/* $(dir $(LLVMRES))
 
-$(LLVMLIB): $(LLVMDIRO)
+$(LLVMLIB): $(LLVMDIRO) $(FORCELLVMTARGET)
 		@(echo "*** Building $@..."; \
 		cd $(LLVMDIRO); \
 		$(MAKE) ENABLE_OPTIMIZED=1; \
