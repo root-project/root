@@ -31,7 +31,6 @@ INCLUDEFILES += $(CLINGDEP)
 # include dir for picking up RuntimeUniverse.h etc - need to
 # 1) copy relevant headers to include/
 # 2) rely on TCling to addIncludePath instead of using CLING_..._INCL below
-LLVMCONFIG   ?= interpreter/llvm/inst/bin/llvm-config
 CLINGCXXFLAGS = $(shell $(LLVMCONFIG) --cxxflags) -I$(CLINGDIR)/include \
 	-fno-strict-aliasing
 CLINGLLVMLIBS = -L$(shell $(LLVMCONFIG) --libdir) \

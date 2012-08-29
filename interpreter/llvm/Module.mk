@@ -26,16 +26,26 @@ LLVMDIRS     := $(MODDIRS)
 
 ##### libllvm #####
 LLVMLIB      := $(LLVMDIRI)/lib/libclang.a
-LLVMCONFIG   := $(LLVMDIRI)/bin/llvm-config
-LLVMDEP      := $(LLVMLIB)
+LLVMCONFIG   ?= interpreter/llvm/inst/bin/llvm-config
+LLVMVERSION  := $(shell echo $(subst rc,,$(subst svn,,$(subst PACKAGE_VERSION=,,\
+	$(shell grep 'PACKAGE_VERSION=' $(LLVMDIRS)/configure)))))
+LLVMRES      := etc/cling/lib/clang/$(LLVMVERSION)/include/stddef.h
+LLVMDEP      := $(LLVMLIB) $(LLVMRES)
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
+
+# clang resource directory gets copied to lib/clang/
+# clang version extraction as in tools/clang/lib/Headers/Makefile
+$(LLVMRES): $(LLVMLIB)
+		mkdir -p $(dir $(LLVMRES))
+		cp $(LLVMDIRI)/lib/clang/$(LLVMVERSION)/include/* $(dir $(LLVMRES))
 
 $(LLVMLIB): $(LLVMDIRO)
 		@(echo "*** Building $@..."; \
 		cd $(LLVMDIRO); \
 		$(MAKE) ENABLE_OPTIMIZED=1; \
+		@rm -rf $(LLVMDIRI)/lib/clang; \
 		$(MAKE) ENABLE_OPTIMIZED=1 install)
 
 $(LLVMDIRO): $(LLVMDIRS)
