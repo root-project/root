@@ -4639,6 +4639,13 @@ static int G__defined_type(G__FastAllocString& type_name, int len)
       // -- We have an enumerator.
       G__var_type = 'i';
    }
+
+   // If the tagnum's type is \0 and the typenum is set then this is
+   // a leftover auotload entry for a typedef. Ignore the tagnum.
+   if (G__tagnum != -1 && G__struct.type[G__tagnum] == 0 && G__typenum) {
+      G__tagnum = -1;
+   }
+
    //
    //  Define a variable.
    //
