@@ -166,18 +166,17 @@
 #include "Rtypes.h"
 #include <iostream>
 #include <memory>
+#include <vector>
 #include "Shadow.h"
 #include "cintdictversion.h"
 #include "FastAllocString.h"
 #include "cling/Interpreter/Interpreter.h"
-#include "cling/Interpreter/CIFactory.h"
 #include "cling/Interpreter/Value.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/Pragma.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/AST/CXXInheritance.h"
-
 
 #include "cling/Utils/AST.h"
 
@@ -204,7 +203,11 @@
 #  undef system
 #endif
 
-#include <vector>
+#ifdef ROOTBUILD
+# define ROOTBUILDVAL true
+#else
+# define ROOTBUILDVAL false
+#endif
 
 template <typename T> struct R__IsPointer { enum { kVal = 0 }; };
 
@@ -633,6 +636,8 @@ const char *R__GetComment(const clang::Decl &decl)
 }
 
 cling::Interpreter *gInterp = 0;
+std::string gResourceDir;
+
 void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl);
 
 void R__GetNormalizedName(std::string &norm_name, const clang::QualType &type, const clang::ASTContext &ctxt) 
@@ -5453,7 +5458,7 @@ static int GenerateModule(const char* dictname, const std::vector<std::string>& 
 {
    // Generate the clang module given the arguments.
    // Returns != 0 on error.
-   std::string clangInvocation("clang");
+   std::string clangInvocation("interpreter/llvm/inst/bin/clang");
    std::string dictNameStem(dictname);
    size_t posDotPcmFile = dictNameStem.find('.');
    if (posDotPcmFile != std::string::npos) {
@@ -5785,23 +5790,10 @@ int main(int argc, char **argv)
       clingArgs.push_back("-DG__VECTOR_HAS_CLASS_ITERATOR");
    }
 
-#ifndef ROOTBUILD
-# ifndef ROOTINCDIR
+#if !defined(ROOTBUILD) && defined(ROOTINCDIR)
    SetRootSys();
-   if (getenv("ROOTSYS")) {
-      std::string incl_rootsys = std::string("-I") + getenv("ROOTSYS");
-      path.push_back(incl_rootsys + "/include");
-      path.push_back(incl_rootsys + "/src");
-   } else {
-      Error(0, "%s: environment variable ROOTSYS not defined\n", argv[0]);
-      return 1;
-   }
-# else
-   path.push_back(std::string("-I") + ROOTINCDIR);
-# endif
-#else
-   path.push_back("-Iinclude");
 #endif
+   path.push_back(std::string("-I") + TMetaUtils::GetROOTIncludeDir(ROOTBUILDVAL));
 
    argvv[0] = argv[0];
    argcc = 1;
@@ -5976,26 +5968,19 @@ int main(int argc, char **argv)
 
    // cling-only arguments
    clingArgs.push_back("-fsyntax-only");
-   std::string interpInclude("-I");
-#ifndef ROOTBUILD
-# ifndef ROOTINCDIR
-   std::string rootsys = getenv("ROOTSYS");
-   interpInclude += rootsys + "/etc";
-# else
-   interpInclude += ROOTETCDIR;
-# endif
-#else
-   interpInclude += "etc";
-#endif
-   clingArgs.push_back(interpInclude.c_str());
+   std::string interpInclude
+      = TMetaUtils::GetInterpreterExtraIncludePath(ROOTBUILDVAL);
+   clingArgs.push_back(interpInclude);
 
    std::vector<const char*> clingArgsC;
    for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
         iclingArgs < nclingArgs; ++iclingArgs) {
       clingArgsC.push_back(clingArgs[iclingArgs].c_str());
    }
+
+   gResourceDir = TMetaUtils::GetLLVMResourceDir(ROOTBUILDVAL);
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
-                             getenv("LLVMDIR"));
+                             gResourceDir.c_str());
    interp.declare("namespace std {} using namespace std;");
 #ifdef ROOTBUILD
    interp.declare("#include \"include/Rtypes.h\"");
@@ -6411,7 +6396,8 @@ int main(int argc, char **argv)
 
       LinkdefReader ldefr;
       clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap 
-      if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs, getenv("LLVMDIR"))) {
+      if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
+                       gResourceDir.c_str())) {
          Error(0,"Parsing Linkdef file %s",linkdefFilename.c_str());
       }
       else {

@@ -471,29 +471,14 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    , fMetaProcessor(0)
 {
    // Initialize the CINT+cling interpreter interface.
-
-   TString interpInclude;
-#ifndef ROOTINCDIR
-   TString rootsys = gSystem->Getenv("ROOTSYS");
-   interpInclude = rootsys + "/etc";
-#else // ROOTINCDIR
-   interpInclude = ROOTETCDIR;
-#endif // ROOTINCDIR
-   interpInclude.Prepend("-I");
-   const char* interpArgs[] = {"cling4root", interpInclude.Data(), "-Xclang", "-fmodules"};
-
-   TString llvmDir;
-   if (gSystem->Getenv("$(LLVMDIR)")) {
-      llvmDir = gSystem->ExpandPathName("$(LLVMDIR)");
-   }
-#ifdef R__LLVMDIR
-   if (llvmDir.IsNull()) {
-      llvmDir = R__LLVMDIR;
-   }
-#endif // R__LLVMDIR
+   const char* interpArgs[]
+      = {"cling4root",
+         ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false).c_str(),
+         "-Xclang", "-fmodules"};
 
    fInterpreter = new cling::Interpreter(sizeof(interpArgs) / sizeof(char*),
-                                         interpArgs, llvmDir); 
+                                         interpArgs,
+                                         ROOT::TMetaUtils::GetLLVMResourceDir(false).c_str());
    fInterpreter->installLazyFunctionCreator(autoloadCallback);
 
    // Add the current path to the include path
@@ -501,14 +486,14 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
 
    // Add the root include directory and etc/ to list searched by default.
    // Use explicit TCintWithCling::AddIncludePath() to avoid vtable: we're in the c'tor!
+   TCintWithCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
+
 #ifndef ROOTINCDIR
-   TCintWithCling::AddIncludePath(rootsys + "/include");
-   TString dictDir = rootsys + "/lib";
+   TString dictDir = getenv("ROOTSYS");
+   dictDir += "/lib";
 #else // ROOTINCDIR
-   TCintWithCling::AddIncludePath(ROOTINCDIR);
    TString dictDir = ROOTLIBDIR;
 #endif // ROOTINCDIR
-
    clang::HeaderSearch& HS = fInterpreter->getCI()->getPreprocessor().getHeaderSearchInfo();
    HS.setModuleCachePath(dictDir.Data());
 
