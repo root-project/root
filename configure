@@ -6067,6 +6067,8 @@ result "$enable_afdsmgrd$afdsmgrdapmonmsg"
 #
 message "Checking whether to integrate experimental cling"
 hascling="undef"
+hasllvm="undef"
+llvmdir="/**/"
 clingextrares=""
 if test ! "x$enable_cling" = "xno"; then
     if test "x$enable_builtin_llvm" = "x" || \
@@ -6086,6 +6088,8 @@ if test ! "x$enable_cling" = "xno"; then
             fi
             if test -f $llvmconfig && test -x $llvmconfig; then
                 hascling="define"
+                hasllvm="define"
+                llvmdir='"'"`dirname llvmconfig`"'"'
             fi
         fi
     else
@@ -6848,6 +6852,8 @@ sed \
     -e "s|@hascling@|$hascling|"           \
     -e "s|@hascocoa@|$hascocoa|"           \
     -e "s|@usec++11@|$usecxx11|"           \
+    -e "s|@hasllvm@|$hasllvm|"           \
+    -e "s|@llvmdir@|$llvmdir|"           \
     < RConfigure.tmp > RConfigure-out.tmp
 rm -f RConfigure.tmp
 

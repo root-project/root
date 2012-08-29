@@ -28,12 +28,12 @@ ALLHDRS      += $(CLINGETC)
 # include all dependency files
 INCLUDEFILES += $(CLINGDEP)
 
-ifneq ($(LLVMCONFIG),)
 # include dir for picking up RuntimeUniverse.h etc - need to
 # 1) copy relevant headers to include/
 # 2) rely on TCling to addIncludePath instead of using CLING_..._INCL below
+LLVMCONFIG   ?= interpreter/llvm/inst/bin/llvm-config
 CLINGCXXFLAGS = $(shell $(LLVMCONFIG) --cxxflags) -I$(CLINGDIR)/include \
-	'-DR__LLVMDIR="$(shell cd $(shell $(LLVMCONFIG) --libdir)/..; pwd)"'
+	-fno-strict-aliasing
 CLINGLLVMLIBS = -L$(shell $(LLVMCONFIG) --libdir) \
 	$(addprefix -lclang,\
 		Frontend Serialization Driver CodeGen Parse Sema Analysis Rewrite AST Lex Basic Edit) \
@@ -43,7 +43,6 @@ CLINGLLVMLIBS = -L$(shell $(LLVMCONFIG) --libdir) \
 	  archive bitreader all-targets codegen selectiondag asmprinter \
 	  mcparser scalaropts instcombine transformutils analysis target))) \
 	$(shell $(LLVMCONFIG) --ldflags)
-endif
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
