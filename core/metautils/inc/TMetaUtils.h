@@ -12,4 +12,20 @@
 #ifndef ROOT_TMetaUtils
 #define ROOT_TMetaUtils
 
+#include <string>
+
+namespace ROOT {
+class TMetaUtils {
+public:
+   // Return the -I needed to find RuntimeUniverse.h
+   static std::string GetInterpreterExtraIncludePath(bool rootbuild);
+
+   // Return the LLVM / clang resource directory
+   static std::string GetLLVMResourceDir(bool rootbuild);
+
+   // Return the ROOT include directory
+   static std::string GetROOTIncludeDir(bool rootbuild);
+}; // class TMetaUtils
+} // namespace ROOT
+
 #endif // ROOT_TMetaUtils
