@@ -209,6 +209,12 @@
 # define ROOTBUILDVAL false
 #endif
 
+#ifdef R__EXTERN_LLVMDIR
+# define R__LLVMDIR R__EXTERN_LLVMDIR
+#else
+# define R__LLVMDIR "./interpreter/llvm/inst" // only works for rootbuild for now!
+#endif
+
 template <typename T> struct R__IsPointer { enum { kVal = 0 }; };
 
 template <typename T> struct R__IsPointer<T*> { enum { kVal = 1 }; };
@@ -5458,7 +5464,7 @@ static int GenerateModule(const char* dictname, const std::vector<std::string>& 
 {
    // Generate the clang module given the arguments.
    // Returns != 0 on error.
-   std::string clangInvocation("interpreter/llvm/inst/bin/clang");
+   std::string clangInvocation(R__LLVMDIR "/bin/clang");
    std::string dictNameStem(dictname);
    size_t posDotPcmFile = dictNameStem.find('.');
    if (posDotPcmFile != std::string::npos) {
