@@ -185,8 +185,11 @@ void h1analysis::Begin(TTree * /*tree*/)
          fInput->Add(new TNamed("fillList",""));
          // We send a clone to avoid double deletes when importing the result
          fInput->Add(elist);
+         // This is needed to avoid warnings from output-to-members mapping
+         elist = 0;
       }
    }
+   if (fillList) Info("Begin", "creating an entry-list");
    // case when one uses the entry list generated in a previous call
    if (option.Contains("useList")) {
       useList  = kTRUE;
@@ -239,6 +242,7 @@ void h1analysis::SlaveBegin(TTree *tree)
             fillList = kFALSE;
       }
    }
+   if (fillList) Info("SlaveBegin", "creating an entry-list");
 }
 
 //_____________________________________________________________________
@@ -291,6 +295,8 @@ Bool_t h1analysis::Process(Long64_t entry)
 void h1analysis::SlaveTerminate()
 {
    // nothing to be done
+
+   if (fillList) Info("SlaveTerminate", "elist created with %lld entries", elist->GetN());
 }
 
 //_____________________________________________________________________

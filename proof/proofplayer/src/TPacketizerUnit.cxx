@@ -214,6 +214,7 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
    
    fProcessing = 0;
    fAssigned = 0;
+   fPacketSeq = 0;
 
    fStopwatch = new TStopwatch();
 
@@ -495,11 +496,15 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    slstat->fLastProcessed = fProcessing;
    // Set the start time of the current packet
    slstat->fTimeInstant = cTime;
+   
+   // Update the sequential number
+   fPacketSeq++;
+   TString sseq = TString::Format("p%lld", fPacketSeq);
 
    PDB(kPacketizer,2)
       Info("GetNextPacket", "worker-%s: num %lld, processing %lld, remaining %lld",sl->GetOrdinal(),
                             num, fProcessing, (fTotalEntries - fAssigned - fProcessing));
-   TDSetElement *elem = new TDSetElement("", "", "", fAssigned, fProcessing);
+   TDSetElement *elem = new TDSetElement(sseq, sseq, "", fAssigned, fProcessing);
    elem->SetBit(TDSetElement::kEmpty);
 
    // Update the total counter

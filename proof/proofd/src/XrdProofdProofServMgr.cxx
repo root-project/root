@@ -1796,7 +1796,7 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
    }
 
    // Start setting up the unique tag and relevant dirs for this session
-   ProofServEnv_t in = {xps, loglevel, cffile.c_str(), "", "", "", "", "", 1};
+   ProofServEnv_t in = {xps, loglevel, cffile.c_str(), "", "", tag.c_str(), "", "", 1};
    GetTagDirs(0, p, xps, in.fSessionTag, in.fTopSessionTag, in.fSessionDir, in.fWrkDir);
 
    // Fork an agent process to handle this session
@@ -2139,6 +2139,8 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
    fpc.Close();
    fcp.Close();
 
+   TRACEP(p, FORK, "tags: tag:"<<in.fSessionTag<<" top:"<<in.fTopSessionTag<<" xps:"<<xps->Tag());
+
    // Notify the user
    if (prc <= 0) {
       // Timed-out or failed: we are done; if timed-out finalize the notification message
@@ -2354,7 +2356,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
                                              <<","<<p->CID()<<","<<loglevel<<"}");
 
    // Start setting up the unique tag and relevant dirs for this session
-   ProofServEnv_t in = {xps, loglevel, cffile.c_str(), "", "", "", "", "", 0};
+   ProofServEnv_t in = {xps, loglevel, cffile.c_str(), "", "", tag.c_str(), "", "", 0};
    GetTagDirs(0, p, xps, in.fSessionTag, in.fTopSessionTag, in.fSessionDir, in.fWrkDir);
 
    XrdOucString emsg;
@@ -3319,11 +3321,11 @@ void XrdProofdProofServMgr::GetTagDirs(int pid,
       XPDFORM(sesstag, "%s-%d-", host.c_str(), (int)time(0));
 
       // Session dir
-      topsesstag = sesstag;
       sessiondir = udir;
       if (p->ConnType() == kXPD_ClientMaster) {
          sessiondir += "/session-";
          sessiondir += sesstag;
+         topsesstag = sesstag;
       } else {
          sessiondir += "/";
          sessiondir += xps->Tag();
@@ -3343,8 +3345,8 @@ void XrdProofdProofServMgr::GetTagDirs(int pid,
       sesstag += pid;
 
       // Session dir
-      topsesstag = sesstag;
       if (p->ConnType() == kXPD_ClientMaster) {
+         topsesstag = sesstag;
          sessiondir += pid;
          xps->SetTag(sesstag.c_str());
       }
@@ -3367,7 +3369,7 @@ void XrdProofdProofServMgr::GetTagDirs(int pid,
    } else {
       TRACE(XERR, "negative pid ("<<pid<<"): should not have got here!");  
    }
-
+   
    // Done
    return;
 }
@@ -3821,10 +3823,12 @@ int XrdProofdProofServMgr::CreateProofServRootRc(XrdProofdProtocol *p,
       fprintf(frc, "ProofServ.Image: %s\n", fMgr->Image());
    }
 
-   // Session tag
+   // Session tags
    if (in->fOld) {
       fprintf(frc, "# Session tag\n");
-      fprintf(frc, "ProofServ.SessionTag: %s\n", in->fTopSessionTag.c_str());
+      fprintf(frc, "ProofServ.SessionTag: %s\n", in->fSessionTag.c_str());
+      fprintf(frc, "# Top Session tag\n");
+      fprintf(frc, "ProofServ.TopSessionTag: %s\n", in->fTopSessionTag.c_str());
    }
 
    // Session admin path
@@ -3960,7 +3964,11 @@ int XrdProofdProofServMgr::CreateProofServRootRc(XrdProofdProtocol *p,
       XPDFORM(rc, "ProofServ.DataDir: %s/%s/%s/%s/%s", fMgr->DataDir(),
                   p->Client()->Group(), p->Client()->User(), xps->Ordinal(),
                   in->fSessionTag.c_str());
-      fprintf(frc, "%s\n", rc.c_str());
+      if (fMgr->DataDirUrlOpts() && strlen(fMgr->DataDirUrlOpts()) > 0) {
+         fprintf(frc, "%s %s\n", rc.c_str(), fMgr->DataDirUrlOpts());
+      } else {
+         fprintf(frc, "%s\n", rc.c_str());
+      }
    }
 
    // Done with this

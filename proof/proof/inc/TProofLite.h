@@ -72,7 +72,7 @@ private:
    void  NotifyStartUp(const char *action, Int_t done, Int_t tot);
    Int_t SetProofServEnv(const char *ord);
    Int_t InitDataSetManager();
-   Int_t RegisterDataSets(TList *in, TList *out);
+
    void  ResolveKeywords(TString &s, const char *logfile);
 
    void SendInputDataFile();

@@ -46,6 +46,8 @@ TProofOutputFile::TProofOutputFile(const char *path,
    fMerged = kFALSE;
    fMerger = 0;
    fDataSet = 0;
+   ResetBit(TProofOutputFile::kRetrieve);
+   ResetBit(TProofOutputFile::kSwapFile);
 
    Init(path, dsname);
 }
@@ -114,12 +116,17 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
    fFileName = u.GetFile();
    // The name is used to identify this entity
    SetName(gSystem->BaseName(fFileName.Data()));
-   if (dsname && strlen(dsname) > 0) {
-      // This is the dataset name in case such option is chosen
-      SetTitle(dsname);
-   } else {
-      // Default dataset name
-      SetTitle(GetName());
+   // The title is the dataset name in the case such option is chosen.
+   // In the merging case it can be the final location of the file on the client if the retrieve
+   // option is chosen; if the case, this set in TProofPlayer::MergeOutputFiles.
+   if (fRunType == kDataset) {
+      if (dsname && strlen(dsname) > 0) {
+         // This is the dataset name in case such option is chosen
+         SetTitle(dsname);
+      } else {
+         // Default dataset name
+         SetTitle(GetName());
+      }
    }
    // Options and anchor, if any
    if (u.GetOptions() && strlen(u.GetOptions()) > 0)
@@ -187,16 +194,10 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
       // Make sure the the path exists
       if (AssertDir(dirPath) != 0)
          Error("Init", "problems asserting path '%s'", dirPath.Data());
-      // Check if a local data server has been specified
-      if (gSystem->Getenv("LOCALDATASERVER")) {
-         fDir = gSystem->Getenv("LOCALDATASERVER");
-         if (!fDir.EndsWith("/")) fDir += "/";
-      }
-      TString dirProto = TUrl(fDir).GetProtocol();
-      // Remove prefix, if any, if included and if Xrootd
-      TString pfx  = gEnv->GetValue("Path.Localroot","");
-      if (!pfx.IsNull() && dirPath.BeginsWith(pfx) &&
-          (dirProto == "root" || dirProto == "xrd")) dirPath.Remove(0, pfx.Length());
+      // Take into account local server settings
+      TProofServ::GetLocalServer(fDir);
+      TProofServ::FilterLocalroot(dirPath, fDir);
+      // The path to be used to address the file
       fDir += dirPath;
    }
    // Notify
@@ -260,7 +261,7 @@ TFile* TProofOutputFile::OpenFile(const char* opt)
    // Create the path
    TString fileLoc;
    fileLoc.Form("%s/%s%s", fRawDir.Data(), fFileName.Data(), fOptionsAnchor.Data());
-
+   
    // Open the file
    TFile *retFile = TFile::Open(fileLoc, opt);
 
@@ -277,34 +278,34 @@ Int_t TProofOutputFile::AdoptFile(TFile *f)
       Error("AdoptFile", "file is undefined or zombie!");
       return -1;
    }
-   if (!f->GetEndpointUrl()) {
+   const TUrl *u = f->GetEndpointUrl();
+   if (!u) {
       Error("AdoptFile", "file end-point url is undefined!");
       return -1;
    }
 
    // Set the name and dir
-   TUrl u(*(f->GetEndpointUrl()));
    fIsLocal = kFALSE;
-   if (!strcmp(u.GetProtocol(), "file")) {
+   if (!strcmp(u->GetProtocol(), "file")) {
       fIsLocal = kTRUE;
-      fDir = u.GetFile();
+      fDir = u->GetFile();
    } else {
-      fDir = u.GetUrl();
+      fDir = u->GetUrl();
    }
    fFileName = gSystem->BaseName(fDir.Data());
    fDir.ReplaceAll(fFileName, "");
    fRawDir = fDir;
 
-   // Remove prefix, if any
-   TString pfx  = gEnv->GetValue("Path.Localroot","");
-   if (!pfx.IsNull()) fDir.ReplaceAll(pfx, "");
-   // Include the local data server info, if any
-   if (gSystem->Getenv("LOCALDATASERVER")) {
-      TString localDS(gSystem->Getenv("LOCALDATASERVER"));
-      if (!localDS.EndsWith("/")) localDS += "/";
-      fDir.Insert(0, localDS);
+   // If local remove prefix, if any
+   if (fIsLocal) {
+      TString localDS;
+      TProofServ::GetLocalServer(localDS);
+      if (!localDS.IsNull()) {
+         TProofServ::FilterLocalroot(fDir, localDS);
+         fDir.Insert(0, localDS);
+      }
    }
-
+   
    return 0;
 }
 

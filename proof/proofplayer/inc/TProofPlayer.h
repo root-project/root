@@ -69,7 +69,7 @@ class TStatus;
 class TTimer;
 class THashList;
 class TH1;
-
+class TFile;
 
 //------------------------------------------------------------------------
 
@@ -107,6 +107,12 @@ protected:
 
    TTimer       *fDispatchTimer;    //Dispatch pending events while processing
 
+   TString       fOutputFilePath;   //Path to file with (partial) results of the query
+   TFile        *fOutputFile;       //TFile object attached to fOutputFilePath
+   Long_t        fSaveMemThreshold; //Threshold for saving output to file
+   Bool_t        fSavePartialResults; //Whether to save the partial results
+   Bool_t        fSaveResultsPerPacket; //Whether to save partial results after each packet
+   
    static THashList *fgDrawInputPars;  // List of input parameters to be kept on drawing actions
 
    void         *GetSender() { return this; }  //used to set gTQSender
@@ -218,6 +224,9 @@ public:
    virtual void      SetInitTime() { }
    Long64_t  GetCacheSize();
    Int_t     GetLearnEntries();
+
+   void      SetOutputFilePath(const char *fp) { fOutputFilePath = fp; }
+   Int_t     SavePartialResults(Bool_t queryend = kFALSE, Bool_t force = kFALSE);
 
    void              SetProcessing(Bool_t on = kTRUE);
    TProofProgressStatus  *GetProgressStatus() const { return fProgressStatus; }

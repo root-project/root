@@ -56,6 +56,8 @@ private:
    Long64_t    fNumPerWorker;    // Number of cycles per worker, if this option
                                  // is chosen
 
+   Long64_t    fPacketSeq;       // Sequential number of the last packet assigned
+
    TPacketizerUnit();
    TPacketizerUnit(const TPacketizerUnit&);     // no implementation, will generate
    void operator=(const TPacketizerUnit&);  // error on accidental usage
