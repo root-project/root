@@ -2,6 +2,7 @@
 
 if [ $# -ne 1 ]; then
    echo "Must specify LLVM/clang revision number"
+   exit 1
 fi
 
 GOLDEN=$1
