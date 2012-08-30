@@ -72,6 +72,22 @@ RawComment *ASTContext::getRawCommentForDeclNoCache(const Decl *D) const {
       return NULL;
   }
 
+  if (const VarDecl *VD = dyn_cast<VarDecl>(D)) {
+    if (VD->isStaticDataMember() &&
+        VD->getTemplateSpecializationKind() == TSK_ImplicitInstantiation)
+      return NULL;
+  }
+
+  if (const CXXRecordDecl *CRD = dyn_cast<CXXRecordDecl>(D)) {
+    if (CRD->getTemplateSpecializationKind() == TSK_ImplicitInstantiation)
+      return NULL;
+  }
+
+  if (const EnumDecl *ED = dyn_cast<EnumDecl>(D)) {
+    if (ED->getTemplateSpecializationKind() == TSK_ImplicitInstantiation)
+      return NULL;
+  }
+
   // TODO: handle comments for function parameters properly.
   if (isa<ParmVarDecl>(D))
     return NULL;
@@ -196,15 +212,72 @@ RawComment *ASTContext::getRawCommentForDeclNoCache(const Decl *D) const {
 namespace {
 /// If we have a 'templated' declaration for a template, adjust 'D' to
 /// refer to the actual template.
+/// If we have an implicit instantiation, adjust 'D' to refer to template.
 const Decl *adjustDeclToTemplate(const Decl *D) {
   if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
+    // Is this function declaration part of a function template?
     if (const FunctionTemplateDecl *FTD = FD->getDescribedFunctionTemplate())
-      D = FTD;
-  } else if (const CXXRecordDecl *RD = dyn_cast<CXXRecordDecl>(D)) {
-    if (const ClassTemplateDecl *CTD = RD->getDescribedClassTemplate())
-      D = CTD;
+      return FTD;
+
+    // Nothing to do if function is not an implicit instantiation.
+    if (FD->getTemplateSpecializationKind() != TSK_ImplicitInstantiation)
+      return D;
+
+    // Function is an implicit instantiation of a function template?
+    if (const FunctionTemplateDecl *FTD = FD->getPrimaryTemplate())
+      return FTD;
+
+    // Function is instantiated from a member definition of a class template?
+    if (const FunctionDecl *MemberDecl =
+            FD->getInstantiatedFromMemberFunction())
+      return MemberDecl;
+
+    return D;
   }
-  // FIXME: Alias templates?
+  if (const VarDecl *VD = dyn_cast<VarDecl>(D)) {
+    // Static data member is instantiated from a member definition of a class
+    // template?
+    if (VD->isStaticDataMember())
+      if (const VarDecl *MemberDecl = VD->getInstantiatedFromStaticDataMember())
+        return MemberDecl;
+
+    return D;
+  }
+  if (const CXXRecordDecl *CRD = dyn_cast<CXXRecordDecl>(D)) {
+    // Is this class declaration part of a class template?
+    if (const ClassTemplateDecl *CTD = CRD->getDescribedClassTemplate())
+      return CTD;
+
+    // Class is an implicit instantiation of a class template or partial
+    // specialization?
+    if (const ClassTemplateSpecializationDecl *CTSD =
+            dyn_cast<ClassTemplateSpecializationDecl>(CRD)) {
+      if (CTSD->getSpecializationKind() != TSK_ImplicitInstantiation)
+        return D;
+      llvm::PointerUnion<ClassTemplateDecl *,
+                         ClassTemplatePartialSpecializationDecl *>
+          PU = CTSD->getSpecializedTemplateOrPartial();
+      return PU.is<ClassTemplateDecl*>() ?
+          static_cast<const Decl*>(PU.get<ClassTemplateDecl *>()) :
+          static_cast<const Decl*>(
+              PU.get<ClassTemplatePartialSpecializationDecl *>());
+    }
+
+    // Class is instantiated from a member definition of a class template?
+    if (const MemberSpecializationInfo *Info =
+                   CRD->getMemberSpecializationInfo())
+      return Info->getInstantiatedFrom();
+
+    return D;
+  }
+  if (const EnumDecl *ED = dyn_cast<EnumDecl>(D)) {
+    // Enum is instantiated from a member definition of a class template?
+    if (const EnumDecl *MemberDecl = ED->getInstantiatedFromMemberEnum())
+      return MemberDecl;
+
+    return D;
+  }
+  // FIXME: Adjust alias templates?
   return D;
 }
 } // unnamed namespace
@@ -295,6 +368,10 @@ comments::FullComment *ASTContext::getCommentForDecl(const Decl *D) const {
   if (!RC)
     return NULL;
 
+  // If the RawComment was attached to other redeclaration of this Decl, we
+  // should parse the comment in context of that other Decl.  This is important
+  // because comments can contain references to parameter names which can be
+  // different across redeclarations.
   if (D != OriginalDecl)
     return getCommentForDecl(OriginalDecl);
 
@@ -1060,6 +1137,27 @@ CharUnits ASTContext::getDeclAlign(const Decl *D, bool RefAsPointee) const {
   }
 
   return toCharUnitsFromBits(Align);
+}
+
+// getTypeInfoDataSizeInChars - Return the size of a type, in
+// chars. If the type is a record, its data size is returned.  This is
+// the size of the memcpy that's performed when assigning this type
+// using a trivial copy/move assignment operator.
+std::pair<CharUnits, CharUnits>
+ASTContext::getTypeInfoDataSizeInChars(QualType T) const {
+  std::pair<CharUnits, CharUnits> sizeAndAlign = getTypeInfoInChars(T);
+
+  // In C++, objects can sometimes be allocated into the tail padding
+  // of a base-class subobject.  We decide whether that's possible
+  // during class layout, so here we can just trust the layout results.
+  if (getLangOpts().CPlusPlus) {
+    if (const RecordType *RT = T->getAs<RecordType>()) {
+      const ASTRecordLayout &layout = getASTRecordLayout(RT->getDecl());
+      sizeAndAlign.first = layout.getDataSize();
+    }
+  }
+
+  return sizeAndAlign;
 }
 
 std::pair<CharUnits, CharUnits>
@@ -5702,7 +5800,7 @@ ASTContext::ProtocolCompatibleWithProtocol(ObjCProtocolDecl *lProto,
   return false;
 }
 
-/// QualifiedIdConformsQualifiedId - compare id<p,...> with id<p1,...>
+/// QualifiedIdConformsQualifiedId - compare id<pr,...> with id<pr1,...>
 /// return true if lhs's protocols conform to rhs's protocol; false
 /// otherwise.
 bool ASTContext::QualifiedIdConformsQualifiedId(QualType lhs, QualType rhs) {
@@ -5711,8 +5809,8 @@ bool ASTContext::QualifiedIdConformsQualifiedId(QualType lhs, QualType rhs) {
   return false;
 }
 
-/// ObjCQualifiedClassTypesAreCompatible - compare  Class<p,...> and
-/// Class<p1, ...>.
+/// ObjCQualifiedClassTypesAreCompatible - compare  Class<pr,...> and
+/// Class<pr1, ...>.
 bool ASTContext::ObjCQualifiedClassTypesAreCompatible(QualType lhs, 
                                                       QualType rhs) {
   const ObjCObjectPointerType *lhsQID = lhs->getAs<ObjCObjectPointerType>();
@@ -6315,10 +6413,13 @@ QualType ASTContext::mergeFunctionTypes(QualType lhs, QualType rhs,
     for (unsigned i = 0; i < proto_nargs; ++i) {
       QualType argTy = proto->getArgType(i);
       
-      // Look at the promotion type of enum types, since that is the type used
+      // Look at the converted type of enum types, since that is the type used
       // to pass enum values.
-      if (const EnumType *Enum = argTy->getAs<EnumType>())
-        argTy = Enum->getDecl()->getPromotionType();
+      if (const EnumType *Enum = argTy->getAs<EnumType>()) {
+        argTy = Enum->getDecl()->getIntegerType();
+        if (argTy.isNull())
+          return QualType();
+      }
       
       if (argTy->isPromotableIntegerType() ||
           getCanonicalType(argTy).getUnqualifiedType() == FloatTy)

@@ -119,6 +119,9 @@ def analyzer_disable_checker_EQ : Joined<"-analyzer-disable-checker=">,
 def analyzer_checker_help : Flag<"-analyzer-checker-help">,
   HelpText<"Display the list of analyzer checkers that are available">;
 
+def analyzer_config : Separate<"-analyzer-config">,
+  HelpText<"Choose analyzer options to enable">;
+
 //===----------------------------------------------------------------------===//
 // Migrator Options
 //===----------------------------------------------------------------------===//
@@ -415,6 +418,8 @@ def static_define : Flag<"-static-define">,
   HelpText<"Should __STATIC__ be defined">;
 def stack_protector : Separate<"-stack-protector">,
   HelpText<"Enable stack protectors">;
+def stack_protector_buffer_size : Separate<"-stack-protector-buffer-size">,
+  HelpText<"Lower bound for a buffer to be considered for stack protection">;
 def fvisibility : Separate<"-fvisibility">,
   HelpText<"Default symbol visibility">;
 def ftemplate_depth : Separate<"-ftemplate-depth">,

@@ -399,7 +399,7 @@ namespace cling {
           // We want to call LifetimeHandler(DynamicExprInfo* ExprInfo,
           //                                 DeclContext DC,
           //                                 const char* type)
-          ASTOwningVector<Expr*> Inits(*m_Sema);
+          llvm::SmallVector<Expr*, 8> Inits;
           // Add MyClass in LifetimeHandler unique(DynamicExprInfo* ExprInfo
           //                                       DC,
           //                                       "MyClass")
@@ -441,7 +441,7 @@ namespace cling {
           ExprResult InitExprResult
             = m_Sema->ActOnParenListExpr(m_NoSLoc,
                                          m_NoELoc,
-                                         move_arg(Inits));
+                                         Inits);
           m_Sema->AddInitializerToDecl(HandlerInstance,
                                        InitExprResult.take(),
                                        /*DirectInit*/ true,
@@ -588,7 +588,7 @@ namespace cling {
     assert(SubTree && "No subtree specified!");
 
     //Build the arguments for the call
-    ASTOwningVector<Expr*> CallArgs(*m_Sema);
+    llvm::SmallVector<Expr*, 8> CallArgs;
 
     // Build Arg0
     Expr* Arg0 = BuildDynamicExprInfo(SubTree, ValuePrinterReq);
@@ -653,7 +653,7 @@ namespace cling {
                                                 m_NoRange,
                                                 DeclarationName() );
 
-    ASTOwningVector<Expr*> Inits(*m_Sema);
+    llvm::SmallVector<Expr*, 8> Inits;
     Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
     for (unsigned int i = 0; i < Addresses.size(); ++i) {
 
@@ -667,7 +667,7 @@ namespace cling {
 
     // We need valid source locations to avoid assert(InitList.isExplicit()...)
     InitListExpr* ILE = m_Sema->ActOnInitList(m_NoSLoc,
-                                              move_arg(Inits),
+                                              Inits,
                                               m_NoELoc).takeAs<InitListExpr>();
     Expr* ExprAddresses = m_Sema->BuildCompoundLiteralExpr(m_NoSLoc,
                                      m_Context->CreateTypeSourceInfo(VarAddrTy),
@@ -685,7 +685,7 @@ namespace cling {
     else
       VPReq = m_Sema->ActOnCXXBoolLiteral(m_NoSLoc, tok::kw_false).take();
 
-    ASTOwningVector<Expr*> CtorArgs(*m_Sema);
+    llvm::SmallVector<Expr*, 8> CtorArgs;
     CtorArgs.push_back(ExprTemplate);
     CtorArgs.push_back(ExprAddresses);
     CtorArgs.push_back(VPReq);
@@ -693,7 +693,7 @@ namespace cling {
     // 5. Call the constructor
     QualType ExprInfoTy = m_Context->getTypeDeclType(ExprInfo);
     ExprResult Initializer = m_Sema->ActOnParenListExpr(m_NoSLoc, m_NoELoc,
-                                                        move_arg(CtorArgs));
+                                                        CtorArgs);
     Expr* Result = m_Sema->BuildCXXNew(m_NoSLoc,
                                        /*UseGlobal=*/false,
                                        m_NoSLoc,
@@ -761,8 +761,8 @@ namespace cling {
   // function is created.
   CallExpr*
   EvaluateTSynthesizer::BuildEvalCallExpr(const QualType InstTy,
-                                            Expr* SubTree,
-                                            ASTOwningVector<Expr*>& CallArgs) {
+                                          Expr* SubTree,
+                                        llvm::SmallVector<Expr*, 8>& CallArgs) {
     // Set up new context for the new FunctionDecl
     DeclContext* PrevContext = m_Sema->CurContext;
 
@@ -804,7 +804,7 @@ namespace cling {
     CallExpr* EvalCall = m_Sema->ActOnCallExpr(S,
                                                DRE,
                                                SubTree->getLocStart(),
-                                               move_arg(CallArgs),
+                                               CallArgs,
                                                SubTree->getLocEnd()
                                                ).takeAs<CallExpr>();
     assert (EvalCall && "Cannot create call to Eval");

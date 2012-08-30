@@ -667,7 +667,8 @@ static void AddStmtsExprs(llvm::BitstreamWriter &Stream,
   RECORD(STMT_BREAK);
   RECORD(STMT_RETURN);
   RECORD(STMT_DECL);
-  RECORD(STMT_ASM);
+  RECORD(STMT_GCCASM);
+  RECORD(STMT_MSASM);
   RECORD(EXPR_PREDEFINED);
   RECORD(EXPR_DECL_REF);
   RECORD(EXPR_INTEGER_LITERAL);
@@ -1329,8 +1330,6 @@ namespace {
 /// \brief Write the header search block for the list of files that 
 ///
 /// \param HS The header search structure to save.
-///
-/// \param Chain Whether we're creating a chained AST file.
 void ASTWriter::WriteHeaderSearch(const HeaderSearch &HS, StringRef isysroot) {
   SmallVector<const FileEntry *, 16> FilesByUID;
   HS.getFileMgr().GetUniqueIDMapping(FilesByUID);
@@ -1678,10 +1677,12 @@ void ASTWriter::WritePreprocessor(const Preprocessor &PP, bool IsModule) {
   for (Preprocessor::macro_iterator I = PP.macro_begin(Chain == 0), 
                                     E = PP.macro_end(Chain == 0);
        I != E; ++I) {
-    const IdentifierInfo *Name = I->first;
-    if (!IsModule || I->second->isPublic()) {
-      MacroDefinitionsSeen.insert(Name);
-      MacrosToEmit.push_back(std::make_pair(I->first, I->second));
+    // FIXME: We'll need to store macro history in PCH.
+    if (I->first->hasMacroDefinition()) {
+      if (!IsModule || I->second->isPublic()) {
+        MacroDefinitionsSeen.insert(I->first);
+        MacrosToEmit.push_back(std::make_pair(I->first, I->second));
+      }
     }
   }
   

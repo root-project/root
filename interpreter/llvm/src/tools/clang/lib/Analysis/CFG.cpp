@@ -467,6 +467,30 @@ private:
         CachedBoolEvals[S] = Result; // update or insert
         return Result;
       }
+      else {
+        switch (Bop->getOpcode()) {
+          default: break;
+          // For 'x & 0' and 'x * 0', we can determine that
+          // the value is always false.
+          case BO_Mul:
+          case BO_And: {
+            // If either operand is zero, we know the value
+            // must be false.
+            llvm::APSInt IntVal;
+            if (Bop->getLHS()->EvaluateAsInt(IntVal, *Context)) {
+              if (IntVal.getBoolValue() == false) {
+                return TryResult(false);
+              }
+            }
+            if (Bop->getRHS()->EvaluateAsInt(IntVal, *Context)) {
+              if (IntVal.getBoolValue() == false) {
+                return TryResult(false);
+              }
+            }
+          }
+          break;
+        }
+      }
     }
 
     return evaluateAsBooleanConditionNoCache(S);
@@ -1021,6 +1045,14 @@ CFGBlock *CFGBuilder::Visit(Stmt * S, AddStmtChoice asc) {
 
     case Stmt::ExprWithCleanupsClass:
       return VisitExprWithCleanups(cast<ExprWithCleanups>(S), asc);
+
+    case Stmt::CXXDefaultArgExprClass:
+      // FIXME: The expression inside a CXXDefaultArgExpr is owned by the
+      // called function's declaration, not by the caller. If we simply add
+      // this expression to the CFG, we could end up with the same Expr
+      // appearing multiple times.
+      // PR13385 / <rdar://problem/12156507>
+      return VisitStmt(S, asc);
 
     case Stmt::CXXBindTemporaryExprClass:
       return VisitCXXBindTemporaryExpr(cast<CXXBindTemporaryExpr>(S), asc);
@@ -3449,12 +3481,12 @@ class StmtPrinterHelper : public PrinterHelper  {
   StmtMapTy StmtMap;
   DeclMapTy DeclMap;
   signed currentBlock;
-  unsigned currentStmt;
+  unsigned currStmt;
   const LangOptions &LangOpts;
 public:
 
   StmtPrinterHelper(const CFG* cfg, const LangOptions &LO)
-    : currentBlock(0), currentStmt(0), LangOpts(LO)
+    : currentBlock(0), currStmt(0), LangOpts(LO)
   {
     for (CFG::const_iterator I = cfg->begin(), E = cfg->end(); I != E; ++I ) {
       unsigned j = 1;
@@ -3515,7 +3547,7 @@ public:
 
   const LangOptions &getLangOpts() const { return LangOpts; }
   void setBlockID(signed i) { currentBlock = i; }
-  void setStmtID(unsigned i) { currentStmt = i; }
+  void setStmtID(unsigned i) { currStmt = i; }
 
   virtual bool handledStmt(Stmt *S, raw_ostream &OS) {
     StmtMapTy::iterator I = StmtMap.find(S);
@@ -3524,7 +3556,7 @@ public:
       return false;
 
     if (currentBlock >= 0 && I->second.first == (unsigned) currentBlock
-                          && I->second.second == currentStmt) {
+                          && I->second.second == currStmt) {
       return false;
     }
 
@@ -3539,7 +3571,7 @@ public:
       return false;
 
     if (currentBlock >= 0 && I->second.first == (unsigned) currentBlock
-                          && I->second.second == currentStmt) {
+                          && I->second.second == currStmt) {
       return false;
     }
 

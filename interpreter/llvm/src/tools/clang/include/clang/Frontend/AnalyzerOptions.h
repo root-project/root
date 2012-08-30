@@ -17,6 +17,7 @@
 
 #include <string>
 #include <vector>
+#include "llvm/ADT/StringMap.h"
 
 namespace clang {
 class ASTConsumer;
@@ -78,6 +79,7 @@ class AnalyzerOptions {
 public:
   /// \brief Pair of checker name and enable/disable.
   std::vector<std::pair<std::string, bool> > CheckersControlList;
+  llvm::StringMap<std::string> Config;
   AnalysisStores AnalysisStoreOpt;
   AnalysisConstraints AnalysisConstraintsOpt;
   AnalysisDiagClients AnalysisDiagOpt;
@@ -109,7 +111,7 @@ public:
     AnalysisConstraintsOpt = RangeConstraintsModel;
     AnalysisDiagOpt = PD_HTML;
     AnalysisPurgeOpt = PurgeStmt;
-    IPAMode = Inlining;
+    IPAMode = BasicInlining;
     ShowCheckerHelp = 0;
     AnalyzeAll = 0;
     AnalyzerDisplayProgress = 0;

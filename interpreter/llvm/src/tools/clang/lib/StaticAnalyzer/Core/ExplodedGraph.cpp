@@ -115,7 +115,7 @@ bool ExplodedGraph::shouldCollect(const ExplodedNode *node) {
   // Condition 9.
   const ProgramPoint SuccLoc = succ->getLocation();
   if (const StmtPoint *SP = dyn_cast<StmtPoint>(&SuccLoc))
-    if (CallEvent::mayBeInlined(SP->getStmt()))
+    if (CallEvent::isCallStmt(SP->getStmt()))
       return false;
 
   return true;
@@ -162,6 +162,16 @@ void ExplodedGraph::reclaimRecentlyAllocatedNodes() {
 // ExplodedNode.
 //===----------------------------------------------------------------------===//
 
+// An NodeGroup's storage type is actually very much like a TinyPtrVector:
+// it can be either a pointer to a single ExplodedNode, or a pointer to a
+// BumpVector allocated with the ExplodedGraph's allocator. This allows the
+// common case of single-node NodeGroups to be implemented with no extra memory.
+//
+// Consequently, each of the NodeGroup methods have up to four cases to handle:
+// 1. The flag is set and this group does not actually contain any nodes.
+// 2. The group is empty, in which case the storage value is null.
+// 3. The group contains a single node.
+// 4. The group contains more than one node.
 typedef BumpVector<ExplodedNode *> ExplodedNodeVector;
 typedef llvm::PointerUnion<ExplodedNode *, ExplodedNodeVector *> GroupStorage;
 
@@ -175,6 +185,8 @@ void ExplodedNode::addPredecessor(ExplodedNode *V, ExplodedGraph &G) {
 }
 
 void ExplodedNode::NodeGroup::replaceNode(ExplodedNode *node) {
+  assert(!getFlag());
+
   GroupStorage &Storage = reinterpret_cast<GroupStorage&>(P);
   assert(Storage.is<ExplodedNode *>());
   Storage = node;

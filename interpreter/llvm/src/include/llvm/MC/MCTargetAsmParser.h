@@ -34,8 +34,8 @@ public:
   };
 
 private:
-  MCTargetAsmParser(const MCTargetAsmParser &);   // DO NOT IMPLEMENT
-  void operator=(const MCTargetAsmParser &);  // DO NOT IMPLEMENT
+  MCTargetAsmParser(const MCTargetAsmParser &) LLVM_DELETED_FUNCTION;
+  void operator=(const MCTargetAsmParser &) LLVM_DELETED_FUNCTION;
 protected: // Can only create subclasses.
   MCTargetAsmParser();
 
@@ -88,7 +88,10 @@ public:
   virtual bool
   MatchInstruction(SMLoc IDLoc,
                    SmallVectorImpl<MCParsedAsmOperand*> &Operands,
-                   SmallVectorImpl<MCInst> &MCInsts) {
+                   SmallVectorImpl<MCInst> &MCInsts,
+                   unsigned &OrigErrorInfo,
+                   bool matchingInlineAsm = false) {
+    OrigErrorInfo = ~0x0;
     return true;
   }
 

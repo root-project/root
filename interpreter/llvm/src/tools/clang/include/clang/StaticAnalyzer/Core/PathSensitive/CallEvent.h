@@ -68,15 +68,22 @@ public:
   }
 };
 
+/// \class RuntimeDefinition 
 /// \brief Defines the runtime definition of the called function.
+/// 
+/// Encapsulates the information we have about which Decl will be used 
+/// when the call is executed on the given path. When dealing with dynamic
+/// dispatch, the information is based on DynamicTypeInfo and might not be 
+/// precise.
 class RuntimeDefinition {
-  /// The Declaration of the function which will be called at runtime.
-  /// 0 if not available.
+  /// The Declaration of the function which could be called at runtime.
+  /// NULL if not available.
   const Decl *D;
 
   /// The region representing an object (ObjC/C++) on which the method is
   /// called. With dynamic dispatch, the method definition depends on the
-  /// runtime type of this object. 0 when there is no dynamic dispatch.
+  /// runtime type of this object. NULL when the DynamicTypeInfo is
+  /// precise.
   const MemRegion *R;
 
 public:
@@ -84,8 +91,15 @@ public:
   RuntimeDefinition(const Decl *InD): D(InD), R(0) {}
   RuntimeDefinition(const Decl *InD, const MemRegion *InR): D(InD), R(InR) {}
   const Decl *getDecl() { return D; }
-  const MemRegion *getDispatchRegion() { return R; }
+    
+  /// \brief Check if the definition we have is precise. 
+  /// If not, it is possible that the call dispatches to another definition at 
+  /// execution time.
   bool mayHaveOtherDefinitions() { return R != 0; }
+  
+  /// When other definitions are possible, returns the region whose runtime type 
+  /// determines the method definition.
+  const MemRegion *getDispatchRegion() { return R; }
 };
 
 /// \brief Represents an abstract call to a function or method along a
@@ -139,16 +153,6 @@ protected:
     : State(Original.State), LCtx(Original.LCtx), Origin(Original.Origin),
       Data(Original.Data), Location(Original.Location), RefCount(0) {}
 
-
-  ProgramStateRef getState() const {
-    return State;
-  }
-
-  const LocationContext *getLocationContext() const {
-    return LCtx;
-  }
-
-
   /// Copies this CallEvent, with vtable intact, into a new block of memory.
   virtual void cloneTo(void *Dest) const = 0;
 
@@ -176,6 +180,16 @@ public:
   /// called. May be null.
   virtual const Decl *getDecl() const {
     return Origin.dyn_cast<const Decl *>();
+  }
+
+  /// \brief The state in which the call is being evaluated.
+  ProgramStateRef getState() const {
+    return State;
+  }
+
+  /// \brief The context in which the call is being evaluated.
+  const LocationContext *getLocationContext() const {
+    return LCtx;
   }
 
   /// \brief Returns the definition of the function or method that will be
@@ -277,12 +291,9 @@ public:
     return cloneWithState<CallEvent>(NewState);
   }
 
-  /// \brief Returns true if this is a statement that can be considered for
-  /// inlining.
-  ///
-  /// FIXME: This should go away once CallEvents are cheap and easy to
-  /// construct from ExplodedNodes.
-  static bool mayBeInlined(const Stmt *S);
+  /// \brief Returns true if this is a statement is a function or method call
+  /// of some kind.
+  static bool isCallStmt(const Stmt *S);
 
   // Iterator access to formal parameters and their types.
 private:
@@ -651,10 +662,10 @@ protected:
   ///               a new symbolic region will be used.
   /// \param St The path-sensitive state at this point in the program.
   /// \param LCtx The location context at this point in the program.
-  CXXConstructorCall(const CXXConstructExpr *CE, const MemRegion *target,
+  CXXConstructorCall(const CXXConstructExpr *CE, const MemRegion *Target,
                      ProgramStateRef St, const LocationContext *LCtx)
     : AnyFunctionCall(CE, St, LCtx) {
-    Data = target;
+    Data = Target;
   }
 
   CXXConstructorCall(const CXXConstructorCall &Other) : AnyFunctionCall(Other){}
@@ -796,6 +807,9 @@ public:
   /// \brief Returns the value of the receiver at the time of this call.
   SVal getReceiverSVal() const;
 
+  /// \brief Return the value of 'self' if available.
+  SVal getSelfSVal() const;
+
   /// \brief Get the interface for the receiver.
   ///
   /// This works whether this is an instance message or a class message.
@@ -803,6 +817,9 @@ public:
   const ObjCInterfaceDecl *getReceiverInterface() const {
     return getOriginExpr()->getReceiverInterface();
   }
+
+  /// \brief Checks if the receiver refers to 'self' or 'super'.
+  bool isReceiverSelfOrSuper() const;
 
   /// Returns how the message was written in the source (property access,
   /// subscript, or explicit message send).

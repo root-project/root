@@ -147,7 +147,7 @@ static void AnalyzerOptsToArgs(const AnalyzerOptions &Opts, ToArgsList &Res) {
                   getAnalysisPurgeModeName(Opts.AnalysisPurgeOpt));
   if (!Opts.AnalyzeSpecificFunction.empty())
     Res.push_back("-analyze-function", Opts.AnalyzeSpecificFunction);
-  if (Opts.IPAMode != Inlining)
+  if (Opts.IPAMode != BasicInlining)
     Res.push_back("-analyzer-ipa", getAnalysisIPAModeName(Opts.IPAMode));
   if (Opts.InliningMode != NoRedundancy)
     Res.push_back("-analyzer-inlining-mode",
@@ -812,7 +812,7 @@ static void LangOptsToArgs(const LangOptions &Opts, ToArgsList &Res) {
   Res.push_back("-fobjc-runtime=" + Opts.ObjCRuntime.getAsString());
   if (Opts.ObjCAutoRefCount)
     Res.push_back("-fobjc-arc");
-  if (Opts.ObjCRuntimeHasWeak)
+  if (Opts.ObjCARCWeak)
     Res.push_back("-fobjc-runtime-has-weak");
   if (!Opts.ObjCInferRelatedResultType)
     Res.push_back("-fno-objc-infer-related-result-type");
@@ -1154,6 +1154,36 @@ static bool ParseAnalyzerArgs(AnalyzerOptions &Opts, ArgList &Args,
     for (unsigned i = 0, e = checkers.size(); i != e; ++i)
       Opts.CheckersControlList.push_back(std::make_pair(checkers[i], enable));
   }
+  
+  // Go through the analyzer configuration options.
+  for (arg_iterator it = Args.filtered_begin(OPT_analyzer_config),
+       ie = Args.filtered_end(); it != ie; ++it) {
+    const Arg *A = *it;
+    A->claim();
+    // We can have a list of comma separated config names, e.g:
+    // '-analyzer-config key1=val1,key2=val2'
+    StringRef configList = A->getValue(Args);
+    SmallVector<StringRef, 4> configVals;
+    configList.split(configVals, ",");
+    for (unsigned i = 0, e = configVals.size(); i != e; ++i) {
+      StringRef key, val;
+      llvm::tie(key, val) = configVals[i].split("=");
+      if (val.empty()) {
+        Diags.Report(SourceLocation(),
+                     diag::err_analyzer_config_no_value) << configVals[i];
+        Success = false;
+        break;
+      }
+      if (val.find('=') != StringRef::npos) {
+        Diags.Report(SourceLocation(),
+                     diag::err_analyzer_config_multiple_values)
+          << configVals[i];
+        Success = false;
+        break;
+      }
+      Opts.Config[key] = val;
+    }
+  }
 
   return Success;
 }
@@ -1263,10 +1293,11 @@ static bool ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args, InputKind IK,
   Opts.EmitGcovArcs = Args.hasArg(OPT_femit_coverage_data);
   Opts.EmitGcovNotes = Args.hasArg(OPT_femit_coverage_notes);
   Opts.EmitOpenCLArgMetadata = Args.hasArg(OPT_cl_kernel_arg_info);
-  Opts.EmitMicrosoftInlineAsm = Args.hasArg(OPT_fenable_experimental_ms_inline_asm);
   Opts.CoverageFile = Args.getLastArgValue(OPT_coverage_file);
   Opts.DebugCompilationDir = Args.getLastArgValue(OPT_fdebug_compilation_dir);
   Opts.LinkBitcodeFile = Args.getLastArgValue(OPT_mlink_bitcode_file);
+  Opts.SSPBufferSize =
+    Args.getLastArgIntValue(OPT_stack_protector_buffer_size, 8, Diags);
   Opts.StackRealignment = Args.hasArg(OPT_mstackrealign);
   if (Arg *A = Args.getLastArg(OPT_mstack_alignment)) {
     StringRef Val = A->getValue(Args);
@@ -1941,13 +1972,15 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
       Opts.setGC(LangOptions::HybridGC);
     else if (Args.hasArg(OPT_fobjc_arc)) {
       Opts.ObjCAutoRefCount = 1;
-      if (!Opts.ObjCRuntime.isNonFragile())
-        Diags.Report(diag::err_arc_nonfragile_abi);
-    }
+      if (!Opts.ObjCRuntime.allowsARC())
+        Diags.Report(diag::err_arc_unsupported_on_runtime);
 
-    Opts.ObjCRuntimeHasWeak = Opts.ObjCRuntime.hasWeak();
-    if (Args.hasArg(OPT_fobjc_runtime_has_weak))
-      Opts.ObjCRuntimeHasWeak = 1;
+      // Only set ObjCARCWeak if ARC is enabled.
+      if (Args.hasArg(OPT_fobjc_runtime_has_weak))
+        Opts.ObjCARCWeak = 1;
+      else
+        Opts.ObjCARCWeak = Opts.ObjCRuntime.allowsWeak();
+    }
 
     if (Args.hasArg(OPT_fno_objc_infer_related_result_type))
       Opts.ObjCInferRelatedResultType = 0;
@@ -2108,6 +2141,8 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
 
   Opts.FastMath = Args.hasArg(OPT_ffast_math);
   Opts.FiniteMathOnly = Args.hasArg(OPT_ffinite_math_only);
+
+  Opts.EmitMicrosoftInlineAsm = Args.hasArg(OPT_fenable_experimental_ms_inline_asm);
 
   unsigned SSP = Args.getLastArgIntValue(OPT_stack_protector, 0, Diags);
   switch (SSP) {

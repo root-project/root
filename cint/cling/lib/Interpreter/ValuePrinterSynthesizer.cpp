@@ -167,7 +167,7 @@ namespace cling {
     }
 
 
-    ASTOwningVector<Expr*> CallArgs(*m_Sema);
+    llvm::SmallVector<Expr*, 8> CallArgs;
     CallArgs.push_back(RawOStreamTy);
     CallArgs.push_back(ExprTy);
     CallArgs.push_back(ASTContextTy);
@@ -175,7 +175,7 @@ namespace cling {
 
     Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
     Expr* Result = m_Sema->ActOnCallExpr(S, UnresolvedLookup, NoSLoc,
-                                         move_arg(CallArgs), NoSLoc).take();
+                                         CallArgs, NoSLoc).take();
 
     Result = m_Sema->ActOnFinishFullExpr(Result).take();
     if (NeedsCleanup && !isa<ExprWithCleanups>(Result)) {
@@ -226,13 +226,13 @@ namespace cling {
       E = m_Sema->BuildUnaryOp(S, NoSLoc, UO_AddrOf, E).take();
     }
 
-    ASTOwningVector<Expr*> CallArgs(*m_Sema);
+    llvm::SmallVector<Expr*, 8> CallArgs;
     CallArgs.push_back(VoidEArg);
     CallArgs.push_back(VoidCArg);
     CallArgs.push_back(E);
 
     Expr* Result = m_Sema->ActOnCallExpr(S, UnresolvedLookup, NoSLoc,
-                                         move_arg(CallArgs), NoSLoc).take();
+                                         CallArgs, NoSLoc).take();
     assert(Result && "Cannot create value printer!");
 
     return Result;

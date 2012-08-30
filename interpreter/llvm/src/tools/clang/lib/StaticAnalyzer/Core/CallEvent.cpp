@@ -230,10 +230,10 @@ void CallEvent::dump(raw_ostream &Out) const {
 }
 
 
-bool CallEvent::mayBeInlined(const Stmt *S) {
-  // FIXME: Kill this.
+bool CallEvent::isCallStmt(const Stmt *S) {
   return isa<CallExpr>(S) || isa<ObjCMessageExpr>(S)
-                          || isa<CXXConstructExpr>(S);
+                          || isa<CXXConstructExpr>(S)
+                          || isa<CXXNewExpr>(S);
 }
 
 static void addParameterValuesToBindings(const StackFrameContext *CalleeCtx,
@@ -574,6 +574,14 @@ QualType ObjCMethodCall::getDeclaredResultType() const {
   return D->getResultType();
 }
 
+SVal ObjCMethodCall::getSelfSVal() const {
+  const LocationContext *LCtx = getLocationContext();
+  const ImplicitParamDecl *SelfDecl = LCtx->getSelfDecl();
+  if (!SelfDecl)
+    return SVal();
+  return getState()->getSVal(getState()->getRegion(SelfDecl, LCtx));
+}
+
 SVal ObjCMethodCall::getReceiverSVal() const {
   // FIXME: Is this the best way to handle class receivers?
   if (!isInstanceMessage())
@@ -584,10 +592,23 @@ SVal ObjCMethodCall::getReceiverSVal() const {
 
   // An instance message with no expression means we are sending to super.
   // In this case the object reference is the same as 'self'.
-  const LocationContext *LCtx = getLocationContext();
-  const ImplicitParamDecl *SelfDecl = LCtx->getSelfDecl();
-  assert(SelfDecl && "No message receiver Expr, but not in an ObjC method");
-  return getState()->getSVal(getState()->getRegion(SelfDecl, LCtx));
+  assert(getOriginExpr()->getReceiverKind() == ObjCMessageExpr::SuperInstance);
+  SVal SelfVal = getSelfSVal();
+  assert(SelfVal.isValid() && "Calling super but not in ObjC method");
+  return SelfVal;
+}
+
+bool ObjCMethodCall::isReceiverSelfOrSuper() const {
+  if (getOriginExpr()->getReceiverKind() == ObjCMessageExpr::SuperInstance ||
+      getOriginExpr()->getReceiverKind() == ObjCMessageExpr::SuperClass)
+      return true;
+
+  if (!isInstanceMessage())
+    return false;
+
+  SVal RecVal = getSVal(getOriginExpr()->getInstanceReceiver());
+
+  return (RecVal == getSelfSVal());
 }
 
 SourceRange ObjCMethodCall::getSourceRange() const {
@@ -820,7 +841,8 @@ CallEventManager::getCaller(const StackFrameContext *CalleeCtx,
       return getSimpleCall(CE, State, CallerCtx);
 
     switch (CallSite->getStmtClass()) {
-    case Stmt::CXXConstructExprClass: {
+    case Stmt::CXXConstructExprClass:
+    case Stmt::CXXTemporaryObjectExprClass: {
       SValBuilder &SVB = State->getStateManager().getSValBuilder();
       const CXXMethodDecl *Ctor = cast<CXXMethodDecl>(CalleeCtx->getDecl());
       Loc ThisPtr = SVB.getCXXThis(Ctor, CalleeCtx);

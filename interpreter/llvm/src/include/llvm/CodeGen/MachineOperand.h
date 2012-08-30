@@ -60,12 +60,15 @@ private:
   /// union.
   unsigned char OpKind; // MachineOperandType
 
-  /// SubReg - Subregister number, only valid for MO_Register.  A value of 0
-  /// indicates the MO_Register has no subReg.
-  unsigned char SubReg;
+  // This union is discriminated by OpKind.
+  union {
+    /// SubReg - Subregister number, only valid for MO_Register.  A value of 0
+    /// indicates the MO_Register has no subReg.
+    unsigned char SubReg;
 
-  /// TargetFlags - This is a set of target-specific operand flags.
-  unsigned char TargetFlags;
+    /// TargetFlags - This is a set of target-specific operand flags.
+    unsigned char TargetFlags;
+  };
 
   /// IsDef/IsImp/IsKill/IsDead flags - These are only valid for MO_Register
   /// operands.
@@ -120,6 +123,14 @@ private:
   /// by the MachineInstr before all input registers are read.  This is used to
   /// model the GCC inline asm '&' constraint modifier.
   bool IsEarlyClobber : 1;
+
+  /// IsTied - True if this MO_Register operand is tied to another operand on
+  /// the instruction. Tied operands form def-use pairs that must be assigned
+  /// the same physical register by the register allocator, but they will have
+  /// different virtual registers while the code is in SSA form.
+  ///
+  /// See MachineInstr::isRegTiedToUseOperand() and isRegTiedToDefOperand().
+  bool IsTied : 1;
 
   /// IsDebug - True if this MO_Register 'use' operand is in a debug pseudo,
   /// not a real instruction.  Such uses should be ignored during codegen.
@@ -176,9 +187,17 @@ public:
   ///
   MachineOperandType getType() const { return (MachineOperandType)OpKind; }
 
-  unsigned char getTargetFlags() const { return TargetFlags; }
-  void setTargetFlags(unsigned char F) { TargetFlags = F; }
-  void addTargetFlag(unsigned char F) { TargetFlags |= F; }
+  unsigned char getTargetFlags() const {
+    return isReg() ? 0 : TargetFlags;
+  }
+  void setTargetFlags(unsigned char F) {
+    assert(!isReg() && "Register operands can't have target flags");
+    TargetFlags = F;
+  }
+  void addTargetFlag(unsigned char F) {
+    assert(!isReg() && "Register operands can't have target flags");
+    TargetFlags |= F;
+  }
 
 
   /// getParent - Return the instruction that this operand belongs to.
@@ -288,6 +307,11 @@ public:
     return IsEarlyClobber;
   }
 
+  bool isTied() const {
+    assert(isReg() && "Wrong MachineOperand accessor");
+    return IsTied;
+  }
+
   bool isDebug() const {
     assert(isReg() && "Wrong MachineOperand accessor");
     return IsDebug;
@@ -366,6 +390,11 @@ public:
     IsEarlyClobber = Val;
   }
 
+  void setIsTied(bool Val = true) {
+    assert(isReg() && "Wrong MachineOperand accessor");
+    IsTied = Val;
+  }
+
   void setIsDebug(bool Val = true) {
     assert(isReg() && IsDef && "Wrong MachineOperand accessor");
     IsDebug = Val;
@@ -421,7 +450,7 @@ public:
   int64_t getOffset() const {
     assert((isGlobal() || isSymbol() || isCPI() || isTargetIndex() ||
             isBlockAddress()) && "Wrong MachineOperand accessor");
-    return (int64_t(Contents.OffsetedInfo.OffsetHi) << 32) |
+    return int64_t(uint64_t(Contents.OffsetedInfo.OffsetHi) << 32) |
            SmallContents.OffsetLo;
   }
 
@@ -548,6 +577,7 @@ public:
     Op.IsUndef = isUndef;
     Op.IsInternalRead = isInternalRead;
     Op.IsEarlyClobber = isEarlyClobber;
+    Op.IsTied = false;
     Op.IsDebug = isDebug;
     Op.SmallContents.RegNo = Reg;
     Op.Contents.Reg.Prev = 0;

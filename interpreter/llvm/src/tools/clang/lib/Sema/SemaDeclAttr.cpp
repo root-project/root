@@ -2268,16 +2268,14 @@ static void handleObjCNSObject(Sema &S, Decl *D, const AttributeList &Attr) {
   }
   if (TypedefNameDecl *TD = dyn_cast<TypedefNameDecl>(D)) {
     QualType T = TD->getUnderlyingType();
-    if (!T->isPointerType() ||
-        !T->getAs<PointerType>()->getPointeeType()->isRecordType()) {
+    if (!T->isCARCBridgableType()) {
       S.Diag(TD->getLocation(), diag::err_nsobject_attribute);
       return;
     }
   }
   else if (ObjCPropertyDecl *PD = dyn_cast<ObjCPropertyDecl>(D)) {
     QualType T = PD->getType();
-    if (!T->isPointerType() ||
-        !T->getAs<PointerType>()->getPointeeType()->isRecordType()) {
+    if (!T->isCARCBridgableType()) {
       S.Diag(PD->getLocation(), diag::err_nsobject_attribute);
       return;
     }
@@ -3878,11 +3876,11 @@ static void handleNSReturnsRetainedAttr(Sema &S, Decl *D,
 
   if (ObjCMethodDecl *MD = dyn_cast<ObjCMethodDecl>(D))
     returnType = MD->getResultType();
-  else if (ObjCPropertyDecl *PD = dyn_cast<ObjCPropertyDecl>(D))
-    returnType = PD->getType();
   else if (S.getLangOpts().ObjCAutoRefCount && hasDeclarator(D) &&
            (Attr.getKind() == AttributeList::AT_NSReturnsRetained))
     return; // ignore: was handled as a type attribute
+  else if (ObjCPropertyDecl *PD = dyn_cast<ObjCPropertyDecl>(D))
+    returnType = PD->getType();
   else if (FunctionDecl *FD = dyn_cast<FunctionDecl>(D))
     returnType = FD->getResultType();
   else {

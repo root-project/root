@@ -133,13 +133,13 @@ private:
 public:
   AsmParser(SourceMgr &SM, MCContext &Ctx, MCStreamer &Out,
             const MCAsmInfo &MAI);
-  ~AsmParser();
+  virtual ~AsmParser();
 
   virtual bool Run(bool NoInitialTextSection, bool NoFinalize = false);
 
-  void AddDirectiveHandler(MCAsmParserExtension *Object,
-                           StringRef Directive,
-                           DirectiveHandler Handler) {
+  virtual void AddDirectiveHandler(MCAsmParserExtension *Object,
+                                   StringRef Directive,
+                                   DirectiveHandler Handler) {
     DirectiveMap[Directive] = std::make_pair(Object, Handler);
   }
 
@@ -166,7 +166,7 @@ public:
   virtual bool Error(SMLoc L, const Twine &Msg,
                      ArrayRef<SMRange> Ranges = ArrayRef<SMRange>());
 
-  const AsmToken &Lex();
+  virtual const AsmToken &Lex();
 
   bool ParseExpression(const MCExpr *&Res);
   virtual bool ParseExpression(const MCExpr *&Res, SMLoc &EndLoc);
@@ -207,7 +207,7 @@ private:
   /// subsequently.
   void JumpToLoc(SMLoc Loc);
 
-  void EatToEndOfStatement();
+  virtual void EatToEndOfStatement();
 
   bool ParseMacroArgument(MacroArgument &MA);
   bool ParseMacroArguments(const Macro *M, MacroArguments &A);
@@ -215,7 +215,7 @@ private:
   /// \brief Parse up to the end of statement and a return the contents from the
   /// current token until the end of the statement; the current token on exit
   /// will be either the EndOfStatement or EOF.
-  StringRef ParseStringToEndOfStatement();
+  virtual StringRef ParseStringToEndOfStatement();
 
   /// \brief Parse until the end of a statement or a comma is encountered,
   /// return the contents from the current token up to the end or comma.
@@ -230,7 +230,7 @@ private:
 
   /// ParseIdentifier - Parse an identifier or string (as a quoted identifier)
   /// and set \arg Res to the identifier contents.
-  bool ParseIdentifier(StringRef &Res);
+  virtual bool ParseIdentifier(StringRef &Res);
 
   // Directive Parsing.
 
@@ -1454,6 +1454,14 @@ void AsmParser::DiagHandler(const SMDiagnostic &Diag, void *Context) {
     NewDiag.print(0, OS);
 }
 
+// FIXME: This is mostly duplicated from the function in AsmLexer.cpp. The
+// difference being that that function accepts '@' as part of identifiers and
+// we can't do that. AsmLexer.cpp should probably be changed to handle
+// '@' as a special case when needed.
+static bool isIdentifierChar(char c) {
+  return isalnum(c) || c == '_' || c == '$' || c == '.';
+}
+
 bool AsmParser::expandMacro(raw_svector_ostream &OS, StringRef Body,
                             const MacroParameters &Parameters,
                             const MacroArguments &A,
@@ -1518,7 +1526,7 @@ bool AsmParser::expandMacro(raw_svector_ostream &OS, StringRef Body,
       Pos += 2;
     } else {
       unsigned I = Pos + 1;
-      while (isalnum(Body[I]) && I + 1 != End)
+      while (isIdentifierChar(Body[I]) && I + 1 != End)
         ++I;
 
       const char *Begin = Body.data() + Pos +1;
@@ -1558,8 +1566,6 @@ bool AsmParser::ParseMacroArgument(MacroArgument &MA) {
   unsigned ParenLevel = 0;
 
   for (;;) {
-    SMLoc LastTokenLoc;
-
     if (Lexer.is(AsmToken::Eof) || Lexer.is(AsmToken::Equal))
       return TokError("unexpected token in macro instantiation");
 
@@ -1581,7 +1587,7 @@ bool AsmParser::ParseMacroArgument(MacroArgument &MA) {
     Lex();
   }
   if (ParenLevel != 0)
-    return TokError("unbalanced parenthesises in macro argument");
+    return TokError("unbalanced parentheses in macro argument");
   return false;
 }
 
@@ -3073,14 +3079,14 @@ bool GenericAsmParser::ParseDirectiveMacro(StringRef Directive,
                                            SMLoc DirectiveLoc) {
   StringRef Name;
   if (getParser().ParseIdentifier(Name))
-    return TokError("expected identifier in directive");
+    return TokError("expected identifier in '.macro' directive");
 
   MacroParameters Parameters;
   if (getLexer().isNot(AsmToken::EndOfStatement)) {
-    for(;;) {
-      StringRef Parameter;
+    for (;;) {
+      MacroParameter Parameter;
       if (getParser().ParseIdentifier(Parameter))
-        return TokError("expected identifier in directive");
+        return TokError("expected identifier in '.macro' directive");
       Parameters.push_back(Parameter);
 
       if (getLexer().isNot(AsmToken::Comma))
@@ -3323,9 +3329,8 @@ bool AsmParser::ParseDirectiveIrp(SMLoc DirectiveLoc) {
   SmallString<256> Buf;
   raw_svector_ostream OS(Buf);
 
-  for (std::vector<MacroArgument>::iterator i = A.begin(), e = A.end(); i != e;
-       ++i) {
-    std::vector<MacroArgument> Args;
+  for (MacroArguments::iterator i = A.begin(), e = A.end(); i != e; ++i) {
+    MacroArguments Args;
     Args.push_back(*i);
 
     if (expandMacro(OS, M->Body, Parameters, Args, getTok().getLoc()))

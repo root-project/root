@@ -1374,3 +1374,19 @@ namespace ConditionalLValToRVal {
   constexpr A a(4);
   static_assert(f(a).v == 4, "");
 }
+
+namespace TLS {
+  __thread int n;
+  int m;
+
+  constexpr bool b = &n == &n;
+
+  constexpr int *p = &n; // expected-error{{constexpr variable 'p' must be initialized by a constant expression}}
+
+  constexpr int *f() { return &n; }
+  constexpr int *q = f(); // expected-error{{constexpr variable 'q' must be initialized by a constant expression}}
+  constexpr bool c = f() == f();
+
+  constexpr int *g() { return &m; }
+  constexpr int *r = g();
+}

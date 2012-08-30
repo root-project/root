@@ -3031,7 +3031,7 @@ ExprResult Sema::SubstInitializer(Expr *Init,
       isa<CXXTemporaryObjectExpr>(Construct))
     return SubstExpr(Init, TemplateArgs);
 
-  ASTOwningVector<Expr*> NewArgs(*this);
+  SmallVector<Expr*, 8> NewArgs;
   if (SubstExprs(Construct->getArgs(), Construct->getNumArgs(), true,
                  TemplateArgs, NewArgs))
     return ExprError();
@@ -3043,7 +3043,7 @@ ExprResult Sema::SubstInitializer(Expr *Init,
   // Build a ParenListExpr to represent anything else.
   // FIXME: Fake locations!
   SourceLocation Loc = PP.getLocForEndOfToken(Init->getLocStart());
-  return ActOnParenListExpr(Loc, Loc, move_arg(NewArgs));
+  return ActOnParenListExpr(Loc, Loc, NewArgs);
 }
 
 // TODO: this could be templated if the various decl types used the

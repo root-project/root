@@ -67,15 +67,26 @@ public:
   virtual StoreRef Bind(Store store, Loc loc, SVal val) = 0;
 
   virtual StoreRef BindDefault(Store store, const MemRegion *R, SVal V);
-  virtual StoreRef Remove(Store St, Loc L) = 0;
 
-  /// BindCompoundLiteral - Return the store that has the bindings currently
-  ///  in 'store' plus the bindings for the CompoundLiteral.  'R' is the region
-  ///  for the compound literal and 'BegInit' and 'EndInit' represent an
-  ///  array of initializer values.
-  virtual StoreRef BindCompoundLiteral(Store store,
-                                       const CompoundLiteralExpr *cl,
-                                       const LocationContext *LC, SVal v) = 0;
+  /// \brief Create a new store with the specified binding removed.
+  /// \param ST the original store, that is the basis for the new store.
+  /// \param L the location whose binding should be removed.
+  virtual StoreRef killBinding(Store ST, Loc L) = 0;
+
+  /// \brief Create a new store that binds a value to a compound literal.
+  ///
+  /// \param ST The original store whose bindings are the basis for the new
+  ///        store.
+  ///
+  /// \param CL The compound literal to bind (the binding key).
+  ///
+  /// \param LC The LocationContext for the binding.
+  ///
+  /// \param V The value to bind to the compound literal.
+  virtual StoreRef bindCompoundLiteral(Store ST,
+                                       const CompoundLiteralExpr *CL,
+                                       const LocationContext *LC,
+                                       SVal V) = 0;
 
   /// getInitialStore - Returns the initial "empty" store representing the
   ///  value bindings upon entry to an analyzed function.
@@ -141,10 +152,6 @@ public:
   virtual StoreRef removeDeadBindings(Store store, const StackFrameContext *LCtx,
                                       SymbolReaper& SymReaper) = 0;
 
-  virtual StoreRef BindDecl(Store store, const VarRegion *VR, SVal initVal) = 0;
-
-  virtual StoreRef BindDeclWithNoInit(Store store, const VarRegion *VR) = 0;
-  
   virtual bool includedInBindings(Store store,
                                   const MemRegion *region) const = 0;
   

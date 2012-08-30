@@ -683,7 +683,7 @@ void ARMBaseInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
   // Handle register classes that require multiple instructions.
   unsigned BeginIdx = 0;
   unsigned SubRegs = 0;
-  unsigned Spacing = 1;
+  int Spacing = 1;
 
   // Use VORRq when possible.
   if (ARM::QQPRRegClass.contains(DestReg, SrcReg))
@@ -705,27 +705,38 @@ void ARMBaseInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
   else if (ARM::DQuadSpcRegClass.contains(DestReg, SrcReg))
     Opc = ARM::VMOVD, BeginIdx = ARM::dsub_0, SubRegs = 4, Spacing = 2;
 
-  if (Opc) {
-    const TargetRegisterInfo *TRI = &getRegisterInfo();
-    MachineInstrBuilder Mov;
-    for (unsigned i = 0; i != SubRegs; ++i) {
-      unsigned Dst = TRI->getSubReg(DestReg, BeginIdx + i*Spacing);
-      unsigned Src = TRI->getSubReg(SrcReg,  BeginIdx + i*Spacing);
-      assert(Dst && Src && "Bad sub-register");
-      Mov = AddDefaultPred(BuildMI(MBB, I, I->getDebugLoc(), get(Opc), Dst)
-                             .addReg(Src));
-      // VORR takes two source operands.
-      if (Opc == ARM::VORRq)
-        Mov.addReg(Src);
-    }
-    // Add implicit super-register defs and kills to the last instruction.
-    Mov->addRegisterDefined(DestReg, TRI);
-    if (KillSrc)
-      Mov->addRegisterKilled(SrcReg, TRI);
-    return;
-  }
+  assert(Opc && "Impossible reg-to-reg copy");
 
-  llvm_unreachable("Impossible reg-to-reg copy");
+  const TargetRegisterInfo *TRI = &getRegisterInfo();
+  MachineInstrBuilder Mov;
+
+  // Copy register tuples backward when the first Dest reg overlaps with SrcReg.
+  if (TRI->regsOverlap(SrcReg, TRI->getSubReg(DestReg, BeginIdx))) {
+    BeginIdx = BeginIdx + ((SubRegs-1)*Spacing);
+    Spacing = -Spacing;
+  }
+#ifndef NDEBUG
+  SmallSet<unsigned, 4> DstRegs;
+#endif
+  for (unsigned i = 0; i != SubRegs; ++i) {
+    unsigned Dst = TRI->getSubReg(DestReg, BeginIdx + i*Spacing);
+    unsigned Src = TRI->getSubReg(SrcReg,  BeginIdx + i*Spacing);
+    assert(Dst && Src && "Bad sub-register");
+#ifndef NDEBUG
+    assert(!DstRegs.count(Src) && "destructive vector copy");
+    DstRegs.insert(Dst);
+#endif
+    Mov = BuildMI(MBB, I, I->getDebugLoc(), get(Opc), Dst)
+      .addReg(Src);
+    // VORR takes two source operands.
+    if (Opc == ARM::VORRq)
+      Mov.addReg(Src);
+    Mov = AddDefaultPred(Mov);
+  }
+  // Add implicit super-register defs and kills to the last instruction.
+  Mov->addRegisterDefined(DestReg, TRI);
+  if (KillSrc)
+    Mov->addRegisterKilled(SrcReg, TRI);
 }
 
 static const
@@ -3386,13 +3397,28 @@ ARMBaseInstrInfo::getExecutionDomain(const MachineInstr *MI) const {
   return std::make_pair(ExeGeneric, 0);
 }
 
+static unsigned getCorrespondingDRegAndLane(const TargetRegisterInfo *TRI,
+                                            unsigned SReg, unsigned &Lane) {
+  unsigned DReg = TRI->getMatchingSuperReg(SReg, ARM::ssub_0, &ARM::DPRRegClass);
+  Lane = 0;
+
+  if (DReg != ARM::NoRegister)
+   return DReg;
+
+  Lane = 1;
+  DReg = TRI->getMatchingSuperReg(SReg, ARM::ssub_1, &ARM::DPRRegClass);
+
+  assert(DReg && "S-register with no D super-register?");
+  return DReg;
+}
+
+
 void
 ARMBaseInstrInfo::setExecutionDomain(MachineInstr *MI, unsigned Domain) const {
   unsigned DstReg, SrcReg, DReg;
   unsigned Lane;
   MachineInstrBuilder MIB(MI);
   const TargetRegisterInfo *TRI = &getRegisterInfo();
-  bool isKill;
   switch (MI->getOpcode()) {
     default:
       llvm_unreachable("cannot handle opcode!");
@@ -3403,79 +3429,70 @@ ARMBaseInstrInfo::setExecutionDomain(MachineInstr *MI, unsigned Domain) const {
 
       // Zap the predicate operands.
       assert(!isPredicated(MI) && "Cannot predicate a VORRd");
-      MI->RemoveOperand(3);
-      MI->RemoveOperand(2);
 
-      // Change to a VORRd which requires two identical use operands.
+      // Source instruction is %DDst = VMOVD %DSrc, 14, %noreg (; implicits)
+      DstReg = MI->getOperand(0).getReg();
+      SrcReg = MI->getOperand(1).getReg();
+
+      for (unsigned i = MI->getDesc().getNumOperands(); i; --i)
+        MI->RemoveOperand(i-1);
+
+      // Change to a %DDst = VORRd %DSrc, %DSrc, 14, %noreg (; implicits)
       MI->setDesc(get(ARM::VORRd));
-
-      // Add the extra source operand and new predicates.
-      // This will go before any implicit ops.
-      AddDefaultPred(MachineInstrBuilder(MI).addOperand(MI->getOperand(1)));
+      AddDefaultPred(MIB.addReg(DstReg, RegState::Define)
+                        .addReg(SrcReg)
+                        .addReg(SrcReg));
       break;
     case ARM::VMOVRS:
       if (Domain != ExeNEON)
         break;
       assert(!isPredicated(MI) && "Cannot predicate a VGETLN");
 
+      // Source instruction is %RDst = VMOVRS %SSrc, 14, %noreg (; implicits)
       DstReg = MI->getOperand(0).getReg();
       SrcReg = MI->getOperand(1).getReg();
 
-      DReg = TRI->getMatchingSuperReg(SrcReg, ARM::ssub_0, &ARM::DPRRegClass);
-      Lane = 0;
-      if (DReg == ARM::NoRegister) {
-        DReg = TRI->getMatchingSuperReg(SrcReg, ARM::ssub_1, &ARM::DPRRegClass);
-        Lane = 1;
-        assert(DReg && "S-register with no D super-register?");
-      }
+      for (unsigned i = MI->getDesc().getNumOperands(); i; --i)
+        MI->RemoveOperand(i-1);
 
-      MI->RemoveOperand(3);
-      MI->RemoveOperand(2);
-      MI->RemoveOperand(1);
+      DReg = getCorrespondingDRegAndLane(TRI, SrcReg, Lane);
 
+      // Convert to %RDst = VGETLNi32 %DSrc, Lane, 14, %noreg (; imps)
+      // Note that DSrc has been widened and the other lane may be undef, which
+      // contaminates the entire register.
       MI->setDesc(get(ARM::VGETLNi32));
-      MIB.addReg(DReg);
-      MIB.addImm(Lane);
+      AddDefaultPred(MIB.addReg(DstReg, RegState::Define)
+                        .addReg(DReg, RegState::Undef)
+                        .addImm(Lane));
 
-      MIB->getOperand(1).setIsUndef();
+      // The old source should be an implicit use, otherwise we might think it
+      // was dead before here.
       MIB.addReg(SrcReg, RegState::Implicit);
-
-      AddDefaultPred(MIB);
       break;
     case ARM::VMOVSR:
       if (Domain != ExeNEON)
         break;
       assert(!isPredicated(MI) && "Cannot predicate a VSETLN");
 
+      // Source instruction is %SDst = VMOVSR %RSrc, 14, %noreg (; implicits)
       DstReg = MI->getOperand(0).getReg();
       SrcReg = MI->getOperand(1).getReg();
-      DReg = TRI->getMatchingSuperReg(DstReg, ARM::ssub_0, &ARM::DPRRegClass);
-      Lane = 0;
-      if (DReg == ARM::NoRegister) {
-        DReg = TRI->getMatchingSuperReg(DstReg, ARM::ssub_1, &ARM::DPRRegClass);
-        Lane = 1;
-        assert(DReg && "S-register with no D super-register?");
-      }
-      isKill = MI->getOperand(0).isKill();
 
-      MI->RemoveOperand(3);
-      MI->RemoveOperand(2);
-      MI->RemoveOperand(1);
-      MI->RemoveOperand(0);
+      for (unsigned i = MI->getDesc().getNumOperands(); i; --i)
+        MI->RemoveOperand(i-1);
 
+      DReg = getCorrespondingDRegAndLane(TRI, DstReg, Lane);
+
+      // Convert to %DDst = VSETLNi32 %DDst, %RSrc, Lane, 14, %noreg (; imps)
+      // Again DDst may be undefined at the beginning of this instruction.
       MI->setDesc(get(ARM::VSETLNi32));
-      MIB.addReg(DReg);
-      MIB.addReg(DReg);
-      MIB.addReg(SrcReg);
-      MIB.addImm(Lane);
-
-      MIB->getOperand(1).setIsUndef();
-
-      if (isKill)
-        MIB->addRegisterKilled(DstReg, TRI, true);
-      MIB->addRegisterDefined(DstReg, TRI);
-
-      AddDefaultPred(MIB);
+      AddDefaultPred(MIB.addReg(DReg, RegState::Define)
+                        .addReg(DReg, RegState::Undef)
+                        .addReg(SrcReg)
+                        .addImm(Lane));
+   
+      // The destination must be marked as set.
+      MIB.addReg(DstReg, RegState::Define | RegState::Implicit);
       break;
   }
 

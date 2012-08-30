@@ -90,9 +90,10 @@ def ARMWrapperPIC    : SDNode<"ARMISD::WrapperPIC",  SDTIntUnaryOp>;
 def ARMWrapperJT     : SDNode<"ARMISD::WrapperJT",   SDTIntBinOp>;
 
 def ARMcallseq_start : SDNode<"ISD::CALLSEQ_START", SDT_ARMCallSeqStart,
-                              [SDNPHasChain, SDNPOutGlue]>;
+                              [SDNPHasChain, SDNPSideEffect, SDNPOutGlue]>;
 def ARMcallseq_end   : SDNode<"ISD::CALLSEQ_END",   SDT_ARMCallSeqEnd,
-                              [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue]>;
+                              [SDNPHasChain, SDNPSideEffect,
+                               SDNPOptInGlue, SDNPOutGlue]>;
 def ARMcopystructbyval : SDNode<"ARMISD::COPY_STRUCT_BYVAL" ,
                                 SDT_ARMStructByVal,
                                 [SDNPHasChain, SDNPInGlue, SDNPOutGlue,
@@ -148,14 +149,16 @@ def ARMsube          : SDNode<"ARMISD::SUBE",  SDTBinaryArithWithFlagsInOut>;
 
 def ARMthread_pointer: SDNode<"ARMISD::THREAD_POINTER", SDT_ARMThreadPointer>;
 def ARMeh_sjlj_setjmp: SDNode<"ARMISD::EH_SJLJ_SETJMP",
-                               SDT_ARMEH_SJLJ_Setjmp, [SDNPHasChain]>;
+                               SDT_ARMEH_SJLJ_Setjmp,
+                               [SDNPHasChain, SDNPSideEffect]>;
 def ARMeh_sjlj_longjmp: SDNode<"ARMISD::EH_SJLJ_LONGJMP",
-                               SDT_ARMEH_SJLJ_Longjmp, [SDNPHasChain]>;
+                               SDT_ARMEH_SJLJ_Longjmp,
+                               [SDNPHasChain, SDNPSideEffect]>;
 
 def ARMMemBarrier     : SDNode<"ARMISD::MEMBARRIER", SDT_ARMMEMBARRIER,
-                               [SDNPHasChain]>;
+                               [SDNPHasChain, SDNPSideEffect]>;
 def ARMMemBarrierMCR  : SDNode<"ARMISD::MEMBARRIER_MCR", SDT_ARMMEMBARRIER,
-                               [SDNPHasChain]>;
+                               [SDNPHasChain, SDNPSideEffect]>;
 def ARMPreload        : SDNode<"ARMISD::PRELOAD", SDT_ARMPREFETCH,
                                [SDNPHasChain, SDNPMayLoad, SDNPMayStore]>;
 
@@ -275,7 +278,7 @@ def imm16_31 : ImmLeaf<i32, [{
 
 def so_imm_neg_asmoperand : AsmOperandClass { let Name = "ARMSOImmNeg"; }
 def so_imm_neg : Operand<i32>, PatLeaf<(imm), [{
-    int64_t Value = -(int)N->getZExtValue();
+    unsigned Value = -(unsigned)N->getZExtValue();
     return Value && ARM_AM::getSOImmVal(Value) != -1;
   }], imm_neg_XFORM> {
   let ParserMatchClass = so_imm_neg_asmoperand;
@@ -1791,12 +1794,15 @@ def ADR : AI1<{0,?,?,0}, (outs GPR:$Rd), (ins adrlabel:$label),
   let Inst{15-12} = Rd;
   let Inst{11-0} = label{11-0};
 }
+
+let hasSideEffects = 1 in {
 def LEApcrel : ARMPseudoInst<(outs GPR:$Rd), (ins i32imm:$label, pred:$p),
                     4, IIC_iALUi, []>;
 
 def LEApcrelJT : ARMPseudoInst<(outs GPR:$Rd),
                       (ins i32imm:$label, nohash_imm:$id, pred:$p),
                       4, IIC_iALUi, []>;
+}
 
 //===----------------------------------------------------------------------===//
 //  Control Flow Instructions.

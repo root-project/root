@@ -3701,8 +3701,12 @@ public:
     Features[CPU] = true;
   }
 
-  virtual void getArchDefines(const LangOptions &Opts,
-                              MacroBuilder &Builder) const {
+  virtual void getTargetDefines(const LangOptions &Opts,
+                                MacroBuilder &Builder) const {
+    DefineStd(Builder, "mips", Opts);
+    Builder.defineMacro("_mips");
+    Builder.defineMacro("__REGISTER_PREFIX__", "");
+
     switch (FloatABI) {
     case HardFloat:
       Builder.defineMacro("__mips_hard_float", Twine(1));
@@ -3736,10 +3740,11 @@ public:
     Builder.defineMacro("_MIPS_SZPTR", Twine(getPointerWidth(0)));
     Builder.defineMacro("_MIPS_SZINT", Twine(getIntWidth()));
     Builder.defineMacro("_MIPS_SZLONG", Twine(getLongWidth()));
+
+    Builder.defineMacro("_MIPS_ARCH", "\"" + CPU + "\"");
+    Builder.defineMacro("_MIPS_ARCH_" + StringRef(CPU).upper());
   }
 
-  virtual void getTargetDefines(const LangOptions &Opts,
-                                MacroBuilder &Builder) const = 0;
   virtual void getTargetBuiltins(const Builtin::Info *&Records,
                                  unsigned &NumRecords) const {
     Records = BuiltinInfo;
@@ -3859,9 +3864,9 @@ public:
     } else
       return false;
   }
-  virtual void getArchDefines(const LangOptions &Opts,
-                              MacroBuilder &Builder) const {
-    MipsTargetInfoBase::getArchDefines(Opts, Builder);
+  virtual void getTargetDefines(const LangOptions &Opts,
+                                MacroBuilder &Builder) const {
+    MipsTargetInfoBase::getTargetDefines(Opts, Builder);
 
     if (ABI == "o32") {
       Builder.defineMacro("__mips_o32");
@@ -3921,12 +3926,9 @@ public:
   }
   virtual void getTargetDefines(const LangOptions &Opts,
                                 MacroBuilder &Builder) const {
-    DefineStd(Builder, "mips", Opts);
-    Builder.defineMacro("_mips");
     DefineStd(Builder, "MIPSEB", Opts);
     Builder.defineMacro("_MIPSEB");
-    Builder.defineMacro("__REGISTER_PREFIX__", "");
-    getArchDefines(Opts, Builder);
+    Mips32TargetInfoBase::getTargetDefines(Opts, Builder);
   }
 };
 
@@ -3939,12 +3941,9 @@ public:
   }
   virtual void getTargetDefines(const LangOptions &Opts,
                                 MacroBuilder &Builder) const {
-    DefineStd(Builder, "mips", Opts);
-    Builder.defineMacro("_mips");
     DefineStd(Builder, "MIPSEL", Opts);
     Builder.defineMacro("_MIPSEL");
-    Builder.defineMacro("__REGISTER_PREFIX__", "");
-    getArchDefines(Opts, Builder);
+    Mips32TargetInfoBase::getTargetDefines(Opts, Builder);
   }
 };
 
@@ -3974,9 +3973,12 @@ public:
 
     return true;
   }
-  virtual void getArchDefines(const LangOptions &Opts,
-                              MacroBuilder &Builder) const {
-    MipsTargetInfoBase::getArchDefines(Opts, Builder);
+  virtual void getTargetDefines(const LangOptions &Opts,
+                                MacroBuilder &Builder) const {
+    MipsTargetInfoBase::getTargetDefines(Opts, Builder);
+
+    Builder.defineMacro("__mips64");
+    Builder.defineMacro("__mips64__");
 
     if (ABI == "n32") {
       Builder.defineMacro("__mips_n32");
@@ -4048,12 +4050,9 @@ public:
   }
   virtual void getTargetDefines(const LangOptions &Opts,
                                 MacroBuilder &Builder) const {
-    DefineStd(Builder, "mips", Opts);
-    Builder.defineMacro("_mips");
     DefineStd(Builder, "MIPSEB", Opts);
     Builder.defineMacro("_MIPSEB");
-    Builder.defineMacro("__REGISTER_PREFIX__", "");
-    getArchDefines(Opts, Builder);
+    Mips64TargetInfoBase::getTargetDefines(Opts, Builder);
   }
 };
 
@@ -4075,12 +4074,9 @@ public:
   }
   virtual void getTargetDefines(const LangOptions &Opts,
                                 MacroBuilder &Builder) const {
-    DefineStd(Builder, "mips", Opts);
-    Builder.defineMacro("_mips");
     DefineStd(Builder, "MIPSEL", Opts);
     Builder.defineMacro("_MIPSEL");
-    Builder.defineMacro("__REGISTER_PREFIX__", "");
-    getArchDefines(Opts, Builder);
+    Mips64TargetInfoBase::getTargetDefines(Opts, Builder);
   }
 };
 } // end anonymous namespace.

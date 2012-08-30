@@ -366,7 +366,7 @@ void StmtPrinter::VisitReturnStmt(ReturnStmt *Node) {
 }
 
 
-void StmtPrinter::VisitAsmStmt(AsmStmt *Node) {
+void StmtPrinter::VisitGCCAsmStmt(GCCAsmStmt *Node) {
   Indent() << "asm ";
 
   if (Node->isVolatile())
@@ -422,7 +422,7 @@ void StmtPrinter::VisitAsmStmt(AsmStmt *Node) {
     if (i != 0)
       OS << ", ";
 
-    VisitStringLiteral(Node->getClobber(i));
+    VisitStringLiteral(Node->getClobberStringLiteral(i));
   }
 
   OS << ");\n";

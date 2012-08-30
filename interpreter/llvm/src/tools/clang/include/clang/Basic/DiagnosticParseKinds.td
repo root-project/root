@@ -18,6 +18,9 @@ def w_asm_qualifier_ignored : Warning<"ignored %0 qualifier on asm">,
 def warn_file_asm_volatile : Warning<
   "meaningless 'volatile' on asm outside function">, CatInlineAsm;
 
+def warn_unsupported_msasm : Warning<
+  "MS-style inline assembly is not supported">, InGroup<Microsoft>;
+
 let CategoryName = "Parse Issue" in {
 
 def ext_empty_translation_unit : Extension<
@@ -40,7 +43,10 @@ def warn_extra_semi_after_mem_fn_def : Warning<
   "extra ';' after member function definition">,
   InGroup<ExtraSemi>, DefaultIgnore;
 
-def ext_duplicate_declspec : Extension<"duplicate '%0' declaration specifier">;
+def ext_duplicate_declspec : ExtWarn<"duplicate '%0' declaration specifier">,
+  InGroup<DuplicateDeclSpecifier>;
+def warn_duplicate_declspec : Warning<"duplicate '%0' declaration specifier">,
+  InGroup<DuplicateDeclSpecifier>;
 def ext_plain_complex : ExtWarn<
   "plain '_Complex' requires a type specifier; assuming '_Complex double'">;
 def ext_integer_complex : Extension<

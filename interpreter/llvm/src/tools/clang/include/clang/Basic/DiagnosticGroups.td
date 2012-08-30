@@ -35,6 +35,8 @@ def BoolConversion : DiagGroup<"bool-conversion">;
 def IntConversion : DiagGroup<"int-conversion">;
 def NonLiteralNullConversion : DiagGroup<"non-literal-null-conversion">;
 def NullConversion : DiagGroup<"null-conversion">;
+def ImplicitConversionFloatingPointToBool :
+  DiagGroup<"implicit-conversion-floating-point-to-bool">;
 def BuiltinRequiresHeader : DiagGroup<"builtin-requires-header">;
 def CXXCompat: DiagGroup<"c++-compat">;
 def CastAlign : DiagGroup<"cast-align">;
@@ -195,6 +197,7 @@ def StringPlusInt : DiagGroup<"string-plus-int">;
 def StrncatSize : DiagGroup<"strncat-size">;
 def TautologicalCompare : DiagGroup<"tautological-compare">;
 def HeaderHygiene : DiagGroup<"header-hygiene">;
+def DuplicateDeclSpecifier : DiagGroup<"duplicate-decl-specifier">;
 
 // Preprocessor warnings.
 def : DiagGroup<"builtin-macro-redefined">;

@@ -244,7 +244,7 @@ public:   // Made public for helper classes.
 
   RegionBindings removeBinding(RegionBindings B, BindingKey K);
   RegionBindings removeBinding(RegionBindings B, const MemRegion *R,
-                        BindingKey::Kind k);
+                               BindingKey::Kind k);
 
   RegionBindings removeBinding(RegionBindings B, const MemRegion *R) {
     return removeBinding(removeBinding(B, R, BindingKey::Direct), R,
@@ -266,14 +266,19 @@ public: // Part of public interface to class.
                       .getRootWithoutRetain(), *this);
   }
 
-  StoreRef BindCompoundLiteral(Store store, const CompoundLiteralExpr *CL,
+  /// \brief Create a new store that binds a value to a compound literal.
+  ///
+  /// \param ST The original store whose bindings are the basis for the new
+  ///        store.
+  ///
+  /// \param CL The compound literal to bind (the binding key).
+  ///
+  /// \param LC The LocationContext for the binding.
+  ///
+  /// \param V The value to bind to the compound literal.
+  StoreRef bindCompoundLiteral(Store ST,
+                               const CompoundLiteralExpr *CL,
                                const LocationContext *LC, SVal V);
-
-  StoreRef BindDecl(Store store, const VarRegion *VR, SVal InitVal);
-
-  StoreRef BindDeclWithNoInit(Store store, const VarRegion *) {
-    return StoreRef(store, *this);
-  }
 
   /// BindStruct - Bind a compound value to a structure.
   StoreRef BindStruct(Store store, const TypedValueRegion* R, SVal V);
@@ -287,7 +292,10 @@ public: // Part of public interface to class.
   /// as a Default binding.
   StoreRef BindAggregate(Store store, const TypedRegion *R, SVal DefaultVal);
 
-  StoreRef Remove(Store store, Loc LV);
+  /// \brief Create a new store with the specified binding removed.
+  /// \param ST the original store, that is the basis for the new store.
+  /// \param L the location whose binding should be removed.
+  StoreRef killBinding(Store ST, Loc L);
 
   void incrementReferenceCount(Store store) {
     GetRegionBindings(store).manualRetain();    
@@ -477,12 +485,8 @@ public:
   }
 
   bool AddToWorkList(const MemRegion *R, const ClusterBindings *C) {
-    if (C) {
-      if (Visited.count(C))
-        return false;
-      Visited.insert(C);
-    }
-
+    if (C && !Visited.insert(C))
+      return false;
     WL.push_back(R);
     return true;
   }
@@ -724,7 +728,7 @@ void invalidateRegionsWorker::VisitBaseRegion(const MemRegion *baseR) {
     // Invalidate the region by setting its default value to
     // conjured symbol. The type of the symbol is irrelavant.
     DefinedOrUnknownSVal V =
-      svalBuilder.getConjuredSymbolVal(baseR, Ex, LCtx, Ctx.IntTy, Count);
+      svalBuilder.conjureSymbolVal(baseR, Ex, LCtx, Ctx.IntTy, Count);
     B = RM.addBinding(B, baseR, BindingKey::Default, V);
     return;
   }
@@ -739,8 +743,8 @@ void invalidateRegionsWorker::VisitBaseRegion(const MemRegion *baseR) {
   if (T->isStructureOrClassType()) {
     // Invalidate the region by setting its default value to
     // conjured symbol. The type of the symbol is irrelavant.
-    DefinedOrUnknownSVal V =
-      svalBuilder.getConjuredSymbolVal(baseR, Ex, LCtx, Ctx.IntTy, Count);
+    DefinedOrUnknownSVal V = svalBuilder.conjureSymbolVal(baseR, Ex, LCtx,
+                                                          Ctx.IntTy, Count);
     B = RM.addBinding(B, baseR, BindingKey::Default, V);
     return;
   }
@@ -748,7 +752,7 @@ void invalidateRegionsWorker::VisitBaseRegion(const MemRegion *baseR) {
   if (const ArrayType *AT = Ctx.getAsArrayType(T)) {
       // Set the default value of the array to conjured symbol.
     DefinedOrUnknownSVal V =
-    svalBuilder.getConjuredSymbolVal(baseR, Ex, LCtx,
+    svalBuilder.conjureSymbolVal(baseR, Ex, LCtx,
                                      AT->getElementType(), Count);
     B = RM.addBinding(B, baseR, BindingKey::Default, V);
     return;
@@ -764,8 +768,8 @@ void invalidateRegionsWorker::VisitBaseRegion(const MemRegion *baseR) {
   }
   
 
-  DefinedOrUnknownSVal V = svalBuilder.getConjuredSymbolVal(baseR, Ex, LCtx,
-                                                            T,Count);
+  DefinedOrUnknownSVal V = svalBuilder.conjureSymbolVal(baseR, Ex, LCtx,
+                                                        T,Count);
   assert(SymbolManager::canSymbolicate(T) || V.isUnknown());
   B = RM.addBinding(B, baseR, BindingKey::Direct, V);
 }
@@ -779,10 +783,9 @@ RegionBindings RegionStoreManager::invalidateGlobalRegion(MemRegion::Kind K,
   // Bind the globals memory space to a new symbol that we will use to derive
   // the bindings for all globals.
   const GlobalsSpaceRegion *GS = MRMgr.getGlobalsRegion(K);
-  SVal V =
-      svalBuilder.getConjuredSymbolVal(/* SymbolTag = */ (void*) GS, Ex, LCtx,
-          /* symbol type, doesn't matter */ Ctx.IntTy,
-          Count);
+  SVal V = svalBuilder.conjureSymbolVal(/* SymbolTag = */ (void*) GS, Ex, LCtx,
+                                        /* type does not matter */ Ctx.IntTy,
+                                        Count);
 
   B = removeBinding(B, GS);
   B = addBinding(B, BindingKey::Make(GS, BindingKey::Default), V);
@@ -1540,14 +1543,14 @@ bool RegionStoreManager::includedInBindings(Store store,
 // Binding values to regions.
 //===----------------------------------------------------------------------===//
 
-StoreRef RegionStoreManager::Remove(Store store, Loc L) {
+StoreRef RegionStoreManager::killBinding(Store ST, Loc L) {
   if (isa<loc::MemRegionVal>(L))
     if (const MemRegion* R = cast<loc::MemRegionVal>(L).getRegion())
-      return StoreRef(removeBinding(GetRegionBindings(store),
+      return StoreRef(removeBinding(GetRegionBindings(ST),
                                     R).getRootWithoutRetain(),
                       *this);
 
-  return StoreRef(store, *this);
+  return StoreRef(ST, *this);
 }
 
 StoreRef RegionStoreManager::Bind(Store store, Loc L, SVal V) {
@@ -1560,6 +1563,8 @@ StoreRef RegionStoreManager::Bind(Store store, Loc L, SVal V) {
   // Check if the region is a struct region.
   if (const TypedValueRegion* TR = dyn_cast<TypedValueRegion>(R)) {
     QualType Ty = TR->getValueType();
+    if (Ty->isArrayType())
+      return BindArray(store, TR, V);
     if (Ty->isStructureOrClassType())
       return BindStruct(store, TR, V);
     if (Ty->isVectorType())
@@ -1589,26 +1594,12 @@ StoreRef RegionStoreManager::Bind(Store store, Loc L, SVal V) {
   return StoreRef(addBinding(B, Key, V).getRootWithoutRetain(), *this);
 }
 
-StoreRef RegionStoreManager::BindDecl(Store store, const VarRegion *VR,
-                                      SVal InitVal) {
-
-  QualType T = VR->getDecl()->getType();
-
-  if (T->isArrayType())
-    return BindArray(store, VR, InitVal);
-  if (T->isStructureOrClassType())
-    return BindStruct(store, VR, InitVal);
-
-  return Bind(store, svalBuilder.makeLoc(VR), InitVal);
-}
-
 // FIXME: this method should be merged into Bind().
-StoreRef RegionStoreManager::BindCompoundLiteral(Store store,
+StoreRef RegionStoreManager::bindCompoundLiteral(Store ST,
                                                  const CompoundLiteralExpr *CL,
                                                  const LocationContext *LC,
                                                  SVal V) {
-  return Bind(store, loc::MemRegionVal(MRMgr.getCompoundLiteralRegion(CL, LC)),
-              V);
+  return Bind(ST, loc::MemRegionVal(MRMgr.getCompoundLiteralRegion(CL, LC)), V);
 }
 
 StoreRef RegionStoreManager::setImplicitDefaultValue(Store store,
@@ -1864,7 +1855,7 @@ RegionBindings RegionStoreManager::removeBinding(RegionBindings B,
 
 RegionBindings RegionStoreManager::removeBinding(RegionBindings B,
                                                  const MemRegion *R,
-                                                BindingKey::Kind k){
+                                                 BindingKey::Kind k){
   return removeBinding(B, BindingKey::Make(R, k));
 }
 

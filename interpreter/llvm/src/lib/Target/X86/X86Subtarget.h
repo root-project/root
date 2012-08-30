@@ -205,7 +205,8 @@ public:
   bool hasAES() const { return HasAES; }
   bool hasPCLMUL() const { return HasPCLMUL; }
   bool hasFMA() const { return HasFMA; }
-  bool hasFMA4() const { return HasFMA4; }
+  // FIXME: Favor FMA when both are enabled. Is this the right thing to do?
+  bool hasFMA4() const { return HasFMA4 && !HasFMA; }
   bool hasXOP() const { return HasXOP; }
   bool hasMOVBE() const { return HasMOVBE; }
   bool hasRDRAND() const { return HasRDRAND; }

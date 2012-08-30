@@ -129,28 +129,16 @@ ProgramStateRef ProgramState::bindCompoundLiteral(const CompoundLiteralExpr *CL,
                                             const LocationContext *LC,
                                             SVal V) const {
   const StoreRef &newStore = 
-    getStateManager().StoreMgr->BindCompoundLiteral(getStore(), CL, LC, V);
+    getStateManager().StoreMgr->bindCompoundLiteral(getStore(), CL, LC, V);
   return makeWithStore(newStore);
 }
 
-ProgramStateRef ProgramState::bindDecl(const VarRegion* VR, SVal IVal) const {
-  const StoreRef &newStore =
-    getStateManager().StoreMgr->BindDecl(getStore(), VR, IVal);
-  return makeWithStore(newStore);
-}
-
-ProgramStateRef ProgramState::bindDeclWithNoInit(const VarRegion* VR) const {
-  const StoreRef &newStore =
-    getStateManager().StoreMgr->BindDeclWithNoInit(getStore(), VR);
-  return makeWithStore(newStore);
-}
-
-ProgramStateRef ProgramState::bindLoc(Loc LV, SVal V) const {
+ProgramStateRef ProgramState::bindLoc(Loc LV, SVal V, bool notifyChanges) const {
   ProgramStateManager &Mgr = getStateManager();
   ProgramStateRef newState = makeWithStore(Mgr.StoreMgr->Bind(getStore(), 
                                                              LV, V));
   const MemRegion *MR = LV.getAsRegion();
-  if (MR && Mgr.getOwningEngine())
+  if (MR && Mgr.getOwningEngine() && notifyChanges)
     return Mgr.getOwningEngine()->processRegionChange(newState, MR);
 
   return newState;
@@ -204,11 +192,12 @@ ProgramState::invalidateRegionsImpl(ArrayRef<const MemRegion *> Regions,
   return makeWithStore(newStore);
 }
 
-ProgramStateRef ProgramState::unbindLoc(Loc LV) const {
+ProgramStateRef ProgramState::killBinding(Loc LV) const {
   assert(!isa<loc::MemRegionVal>(LV) && "Use invalidateRegion instead.");
 
   Store OldStore = getStore();
-  const StoreRef &newStore = getStateManager().StoreMgr->Remove(OldStore, LV);
+  const StoreRef &newStore =
+    getStateManager().StoreMgr->killBinding(OldStore, LV);
 
   if (newStore.getStore() == OldStore)
     return this;

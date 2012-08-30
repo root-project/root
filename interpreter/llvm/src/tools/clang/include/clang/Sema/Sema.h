@@ -1924,6 +1924,30 @@ public:
                                    OverloadCandidateSet &CandidateSet,
                                    bool PartialOverloading = false);
 
+  // An enum used to represent the different possible results of building a
+  // range-based for loop.
+  enum ForRangeStatus {
+    FRS_Success,
+    FRS_NoViableFunction,
+    FRS_DiagnosticIssued
+  };
+
+  // An enum to represent whether something is dealing with a call to begin()
+  // or a call to end() in a range-based for loop.
+  enum BeginEndFunction {
+    BEF_begin,
+    BEF_end
+  };
+
+  ForRangeStatus BuildForRangeBeginEndCall(Scope *S, SourceLocation Loc,
+                                           SourceLocation RangeLoc,
+                                           VarDecl *Decl,
+                                           BeginEndFunction BEF,
+                                           const DeclarationNameInfo &NameInfo,
+                                           LookupResult &MemberLookup,
+                                           OverloadCandidateSet *CandidateSet,
+                                           Expr *Range, ExprResult *CallExpr);
+
   ExprResult BuildOverloadedCallExpr(Scope *S, Expr *Fn,
                                      UnresolvedLookupExpr *ULE,
                                      SourceLocation LParenLoc,
@@ -1931,6 +1955,12 @@ public:
                                      SourceLocation RParenLoc,
                                      Expr *ExecConfig,
                                      bool AllowTypoCorrection=true);
+
+  bool buildOverloadedCallSet(Scope *S, Expr *Fn, UnresolvedLookupExpr *ULE,
+                              Expr **Args, unsigned NumArgs,
+                              SourceLocation RParenLoc,
+                              OverloadCandidateSet *CandidateSet,
+                              ExprResult *Result);
 
   ExprResult CreateOverloadedUnaryOp(SourceLocation OpLoc,
                                      unsigned Opc,
@@ -2156,7 +2186,8 @@ public:
                              bool EnteringContext = false,
                              const ObjCObjectPointerType *OPT = 0);
 
-  void FindAssociatedClassesAndNamespaces(llvm::ArrayRef<Expr *> Args,
+  void FindAssociatedClassesAndNamespaces(SourceLocation InstantiationLoc,
+                                          llvm::ArrayRef<Expr *> Args,
                                    AssociatedNamespaceSet &AssociatedNamespaces,
                                    AssociatedClassSet &AssociatedClasses);
 
@@ -2407,7 +2438,7 @@ public:
     FullExprArg(const FullExprArg& Other) : E(Other.E) {}
 
     ExprResult release() {
-      return move(E);
+      return E;
     }
 
     Expr *get() const { return E; }
@@ -2512,13 +2543,15 @@ public:
 
   StmtResult ActOnCXXForRangeStmt(SourceLocation ForLoc, Stmt *LoopVar,
                                   SourceLocation ColonLoc, Expr *Collection,
-                                  SourceLocation RParenLoc);
+                                  SourceLocation RParenLoc,
+                                  bool ShouldTryDeref);
   StmtResult BuildCXXForRangeStmt(SourceLocation ForLoc,
                                   SourceLocation ColonLoc,
                                   Stmt *RangeDecl, Stmt *BeginEndDecl,
                                   Expr *Cond, Expr *Inc,
                                   Stmt *LoopVarDecl,
-                                  SourceLocation RParenLoc);
+                                  SourceLocation RParenLoc,
+                                  bool ShouldTryDeref);
   StmtResult FinishCXXForRangeStmt(Stmt *ForRange, Stmt *Body);
 
   StmtResult ActOnGotoStmt(SourceLocation GotoLoc,
@@ -2536,21 +2569,15 @@ public:
   StmtResult ActOnReturnStmt(SourceLocation ReturnLoc, Expr *RetValExp);
   StmtResult ActOnCapScopeReturnStmt(SourceLocation ReturnLoc, Expr *RetValExp);
 
-  StmtResult ActOnAsmStmt(SourceLocation AsmLoc,
-                          bool IsSimple, bool IsVolatile,
-                          unsigned NumOutputs, unsigned NumInputs,
-                          IdentifierInfo **Names,
-                          MultiExprArg Constraints,
-                          MultiExprArg Exprs,
-                          Expr *AsmString,
-                          MultiExprArg Clobbers,
-                          SourceLocation RParenLoc,
-                          bool MSAsm = false);
+  StmtResult ActOnGCCAsmStmt(SourceLocation AsmLoc, bool IsSimple,
+                             bool IsVolatile, unsigned NumOutputs,
+                             unsigned NumInputs, IdentifierInfo **Names,
+                             MultiExprArg Constraints, MultiExprArg Exprs,
+                             Expr *AsmString, MultiExprArg Clobbers,
+                             SourceLocation RParenLoc);
 
-  StmtResult ActOnMSAsmStmt(SourceLocation AsmLoc,
-                            SourceLocation LBraceLoc,
-                            ArrayRef<Token> AsmToks,
-                            SourceLocation EndLoc);
+  StmtResult ActOnMSAsmStmt(SourceLocation AsmLoc, SourceLocation LBraceLoc,
+                            ArrayRef<Token> AsmToks, SourceLocation EndLoc);
 
   VarDecl *BuildObjCExceptionDecl(TypeSourceInfo *TInfo, QualType ExceptionType,
                                   SourceLocation StartLoc,
@@ -3523,7 +3550,7 @@ public:
   bool CompleteConstructorCall(CXXConstructorDecl *Constructor,
                                MultiExprArg ArgsPtr,
                                SourceLocation Loc,
-                               ASTOwningVector<Expr*> &ConvertedArgs,
+                               SmallVectorImpl<Expr*> &ConvertedArgs,
                                bool AllowExplicit = false);
 
   ParsedType getDestructorName(SourceLocation TildeLoc,
@@ -4630,8 +4657,6 @@ public:
 
   /// \brief Parsed an elaborated-type-specifier that refers to a template-id,
   /// such as \c class T::template apply<U>.
-  ///
-  /// \param TUK
   TypeResult ActOnTagTemplateIdType(TagUseKind TUK,
                                     TypeSpecifierType TagSpec,
                                     SourceLocation TagLoc,

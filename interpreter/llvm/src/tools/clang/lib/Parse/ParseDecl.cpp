@@ -236,7 +236,7 @@ void Parser::ParseGNUAttributeArgs(IdentifierInfo *AttrName,
     break;
   }
 
-  ExprVector ArgExprs(Actions);
+  ExprVector ArgExprs;
 
   if (!BuiltinType &&
       (ParmLoc.isValid() ? Tok.is(tok::comma) : Tok.isNot(tok::r_paren))) {
@@ -279,7 +279,7 @@ void Parser::ParseGNUAttributeArgs(IdentifierInfo *AttrName,
   if (!ExpectAndConsume(tok::r_paren, diag::err_expected_rparen)) {
     AttributeList *attr =
       Attrs.addNew(AttrName, SourceRange(AttrNameLoc, RParen), 0, AttrNameLoc,
-                   ParmName, ParmLoc, ArgExprs.take(), ArgExprs.size(),
+                   ParmName, ParmLoc, ArgExprs.data(), ArgExprs.size(),
                    AttributeList::AS_GNU);
     if (BuiltinType && attr->getKind() == AttributeList::AT_IBOutletCollection)
       Diag(Tok, diag::err_iboutletcollection_builtintype);
@@ -851,10 +851,6 @@ void Parser::ParseLexedAttributes(ParsingClass &Class) {
     Actions.ActOnStartDelayedMemberDeclarations(getCurScope(),
                                                 Class.TagOrTemplate);
   if (!Class.LateParsedDeclarations.empty()) {
-    // Allow 'this' within late-parsed attributes.
-    Sema::CXXThisScopeRAII ThisScope(Actions, Class.TagOrTemplate,
-                                     /*TypeQuals=*/0);
-
     for (unsigned i = 0, ni = Class.LateParsedDeclarations.size(); i < ni; ++i){
       Class.LateParsedDeclarations[i]->ParseLexedAttributes();
     }
@@ -904,34 +900,43 @@ void Parser::ParseLexedAttribute(LateParsedAttribute &LA,
   ParsedAttributes Attrs(AttrFactory);
   SourceLocation endLoc;
 
-  if (LA.Decls.size() == 1) {
+  if (LA.Decls.size() > 0) {
     Decl *D = LA.Decls[0];
+    NamedDecl *ND  = dyn_cast<NamedDecl>(D);
+    RecordDecl *RD = dyn_cast_or_null<RecordDecl>(D->getDeclContext());
 
-    // If the Decl is templatized, add template parameters to scope.
-    bool HasTemplateScope = EnterScope && D->isTemplateDecl();
-    ParseScope TempScope(this, Scope::TemplateParamScope, HasTemplateScope);
-    if (HasTemplateScope)
-      Actions.ActOnReenterTemplateScope(Actions.CurScope, D);
+    // Allow 'this' within late-parsed attributes.
+    Sema::CXXThisScopeRAII ThisScope(Actions, RD,
+                                     /*TypeQuals=*/0,
+                                     ND && RD && ND->isCXXInstanceMember());
 
-    // If the Decl is on a function, add function parameters to the scope.
-    bool HasFunctionScope = EnterScope && D->isFunctionOrFunctionTemplate();
-    ParseScope FnScope(this, Scope::FnScope|Scope::DeclScope, HasFunctionScope);
-    if (HasFunctionScope)
-      Actions.ActOnReenterFunctionContext(Actions.CurScope, D);
+    if (LA.Decls.size() == 1) {
+      // If the Decl is templatized, add template parameters to scope.
+      bool HasTemplateScope = EnterScope && D->isTemplateDecl();
+      ParseScope TempScope(this, Scope::TemplateParamScope, HasTemplateScope);
+      if (HasTemplateScope)
+        Actions.ActOnReenterTemplateScope(Actions.CurScope, D);
 
-    ParseGNUAttributeArgs(&LA.AttrName, LA.AttrNameLoc, Attrs, &endLoc);
+      // If the Decl is on a function, add function parameters to the scope.
+      bool HasFunScope = EnterScope && D->isFunctionOrFunctionTemplate();
+      ParseScope FnScope(this, Scope::FnScope|Scope::DeclScope, HasFunScope);
+      if (HasFunScope)
+        Actions.ActOnReenterFunctionContext(Actions.CurScope, D);
 
-    if (HasFunctionScope) {
-      Actions.ActOnExitFunctionContext();
-      FnScope.Exit();  // Pop scope, and remove Decls from IdResolver
+      ParseGNUAttributeArgs(&LA.AttrName, LA.AttrNameLoc, Attrs, &endLoc);
+
+      if (HasFunScope) {
+        Actions.ActOnExitFunctionContext();
+        FnScope.Exit();  // Pop scope, and remove Decls from IdResolver
+      }
+      if (HasTemplateScope) {
+        TempScope.Exit();
+      }
+    } else {
+      // If there are multiple decls, then the decl cannot be within the
+      // function scope.
+      ParseGNUAttributeArgs(&LA.AttrName, LA.AttrNameLoc, Attrs, &endLoc);
     }
-    if (HasTemplateScope) {
-      TempScope.Exit();
-    }
-  } else if (LA.Decls.size() > 0) {
-    // If there are multiple decls, then the decl cannot be within the
-    // function scope.
-    ParseGNUAttributeArgs(&LA.AttrName, LA.AttrNameLoc, Attrs, &endLoc);
   } else {
     Diag(Tok, diag::warn_attribute_no_decl) << LA.AttrName.getName();
   }
@@ -998,7 +1003,7 @@ void Parser::ParseThreadSafetyAttribute(IdentifierInfo &AttrName,
   BalancedDelimiterTracker T(*this, tok::l_paren);
   T.consumeOpen();
 
-  ExprVector ArgExprs(Actions);
+  ExprVector ArgExprs;
   bool ArgExprsOk = true;
 
   // now parse the list of expressions
@@ -1018,7 +1023,7 @@ void Parser::ParseThreadSafetyAttribute(IdentifierInfo &AttrName,
   // Match the ')'.
   if (ArgExprsOk && !T.consumeClose()) {
     Attrs.addNew(&AttrName, AttrNameLoc, 0, AttrNameLoc, 0, SourceLocation(),
-                 ArgExprs.take(), ArgExprs.size(), AttributeList::AS_GNU);
+                 ArgExprs.data(), ArgExprs.size(), AttributeList::AS_GNU);
   }
   if (EndLoc)
     *EndLoc = T.getCloseLocation();
@@ -1587,9 +1592,7 @@ Decl *Parser::ParseDeclarationAfterDeclaratorAndAttributes(Declarator &D,
   case ParsedTemplateInfo::Template:
   case ParsedTemplateInfo::ExplicitSpecialization:
     ThisDecl = Actions.ActOnTemplateDeclarator(getCurScope(),
-                             MultiTemplateParamsArg(Actions,
-                                          TemplateInfo.TemplateParams->data(),
-                                          TemplateInfo.TemplateParams->size()),
+                                               *TemplateInfo.TemplateParams,
                                                D);
     break;
 
@@ -1660,7 +1663,7 @@ Decl *Parser::ParseDeclarationAfterDeclaratorAndAttributes(Declarator &D,
     BalancedDelimiterTracker T(*this, tok::l_paren);
     T.consumeOpen();
 
-    ExprVector Exprs(Actions);
+    ExprVector Exprs;
     CommaLocsTy CommaLocs;
 
     if (getLangOpts().CPlusPlus && D.getCXXScopeSpec().isSet()) {
@@ -1689,7 +1692,7 @@ Decl *Parser::ParseDeclarationAfterDeclaratorAndAttributes(Declarator &D,
 
       ExprResult Initializer = Actions.ActOnParenListExpr(T.getOpenLocation(),
                                                           T.getCloseLocation(),
-                                                          move_arg(Exprs));
+                                                          Exprs);
       Actions.AddInitializerToDecl(ThisDecl, Initializer.take(),
                                    /*DirectInit=*/true, TypeContainsAuto);
     }
@@ -2069,13 +2072,13 @@ void Parser::ParseAlignmentSpecifier(ParsedAttributes &Attrs,
     return;
   }
 
-  ExprVector ArgExprs(Actions);
+  ExprVector ArgExprs;
   ArgExprs.push_back(ArgExpr.release());
   // FIXME: This should not be GNU, but we since the attribute used is
   //        based on the spelling, and there is no true spelling for
   //        C++11 attributes, this isn't accepted.
   Attrs.addNew(PP.getIdentifierInfo("aligned"), KWLoc, 0, KWLoc,
-               0, T.getOpenLocation(), ArgExprs.take(), 1,
+               0, T.getOpenLocation(), ArgExprs.data(), 1,
                AttributeList::AS_GNU);
 }
 
@@ -4346,7 +4349,7 @@ void Parser::ParseDirectDeclarator(Declarator &D) {
     D.SetIdentifier(0, Tok.getLocation());
   } else {
     if (Tok.getKind() == tok::annot_pragma_parser_crash)
-      *(volatile int*) 0x11 = 0;
+      LLVM_BUILTIN_TRAP;
     if (D.getContext() == Declarator::MemberContext)
       Diag(Tok, diag::err_expected_member_name_or_semi)
         << D.getDeclSpec().getSourceRange();

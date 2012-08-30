@@ -502,7 +502,7 @@ ExprResult Sema::DefaultFunctionArrayLvalueConversion(Expr *E) {
   Res = DefaultLvalueConversion(Res.take());
   if (Res.isInvalid())
     return ExprError();
-  return move(Res);
+  return Res;
 }
 
 
@@ -1098,8 +1098,8 @@ Sema::ActOnGenericSelectionExpr(SourceLocation KeyLoc,
   unsigned NumAssocs = ArgTypes.size();
   assert(NumAssocs == ArgExprs.size());
 
-  ParsedType *ParsedTypes = ArgTypes.release();
-  Expr **Exprs = ArgExprs.release();
+  ParsedType *ParsedTypes = ArgTypes.data();
+  Expr **Exprs = ArgExprs.data();
 
   TypeSourceInfo **Types = new TypeSourceInfo*[NumAssocs];
   for (unsigned i = 0; i < NumAssocs; ++i) {
@@ -1185,8 +1185,9 @@ Sema::CreateGenericSelectionExpr(SourceLocation KeyLoc,
   if (IsResultDependent)
     return Owned(new (Context) GenericSelectionExpr(
                    Context, KeyLoc, ControllingExpr,
-                   Types, Exprs, NumAssocs, DefaultLoc,
-                   RParenLoc, ContainsUnexpandedParameterPack));
+                   llvm::makeArrayRef(Types, NumAssocs),
+                   llvm::makeArrayRef(Exprs, NumAssocs),
+                   DefaultLoc, RParenLoc, ContainsUnexpandedParameterPack));
 
   SmallVector<unsigned, 1> CompatIndices;
   unsigned DefaultIndex = -1U;
@@ -1240,8 +1241,9 @@ Sema::CreateGenericSelectionExpr(SourceLocation KeyLoc,
 
   return Owned(new (Context) GenericSelectionExpr(
                  Context, KeyLoc, ControllingExpr,
-                 Types, Exprs, NumAssocs, DefaultLoc,
-                 RParenLoc, ContainsUnexpandedParameterPack,
+                 llvm::makeArrayRef(Types, NumAssocs),
+                 llvm::makeArrayRef(Exprs, NumAssocs),
+                 DefaultLoc, RParenLoc, ContainsUnexpandedParameterPack,
                  ResultIndex));
 }
 
@@ -1428,11 +1430,9 @@ Sema::DecomposeUnqualifiedId(const UnqualifiedId &Id,
     Buffer.setLAngleLoc(Id.TemplateId->LAngleLoc);
     Buffer.setRAngleLoc(Id.TemplateId->RAngleLoc);
 
-    ASTTemplateArgsPtr TemplateArgsPtr(*this,
-                                       Id.TemplateId->getTemplateArgs(),
+    ASTTemplateArgsPtr TemplateArgsPtr(Id.TemplateId->getTemplateArgs(),
                                        Id.TemplateId->NumArgs);
     translateTemplateArguments(TemplateArgsPtr, Buffer);
-    TemplateArgsPtr.release();
 
     TemplateName TName = Id.TemplateId->Template.get();
     SourceLocation TNameLoc = Id.TemplateId->TemplateNameLoc;
@@ -1797,7 +1797,7 @@ ExprResult Sema::ActOnIdExpression(Scope *S,
         // lookup fails and no expression will be built to reference it.
         if (!E.isInvalid() && !E.get())
           return ExprError();
-        return move(E);
+        return E;
       }
     }
   }
@@ -3140,7 +3140,7 @@ Sema::ActOnUnaryExprOrTypeTraitExpr(SourceLocation OpLoc,
 
   Expr *ArgEx = (Expr *)TyOrEx;
   ExprResult Result = CreateUnaryExprOrTypeTraitExpr(ArgEx, OpLoc, ExprKind);
-  return move(Result);
+  return Result;
 }
 
 static QualType CheckRealImagOperand(Sema &S, ExprResult &V, SourceLocation Loc,
@@ -3167,7 +3167,7 @@ static QualType CheckRealImagOperand(Sema &S, ExprResult &V, SourceLocation Loc,
   ExprResult PR = S.CheckPlaceholderExpr(V.get());
   if (PR.isInvalid()) return QualType();
   if (PR.get() != V.get()) {
-    V = move(PR);
+    V = PR;
     return CheckRealImagOperand(S, V, Loc, IsReal);
   }
 
@@ -3442,8 +3442,7 @@ ExprResult Sema::BuildCXXDefaultArgExpr(SourceLocation CallLoc,
     Expr *ResultE = Result.takeAs<Expr>();
 
     InitializationSequence InitSeq(*this, Entity, Kind, &ResultE, 1);
-    Result = InitSeq.Perform(*this, Entity, Kind,
-                             MultiExprArg(*this, &ResultE, 1));
+    Result = InitSeq.Perform(*this, Entity, Kind, ResultE);
     if (Result.isInvalid())
       return ExprError();
 
@@ -3776,28 +3775,25 @@ ExprResult
 Sema::ActOnCallExpr(Scope *S, Expr *Fn, SourceLocation LParenLoc,
                     MultiExprArg ArgExprs, SourceLocation RParenLoc,
                     Expr *ExecConfig, bool IsExecConfig) {
-  unsigned NumArgs = ArgExprs.size();
-
   // Since this might be a postfix expression, get rid of ParenListExprs.
   ExprResult Result = MaybeConvertParenListExprToParenExpr(S, Fn);
   if (Result.isInvalid()) return ExprError();
   Fn = Result.take();
 
-  Expr **Args = ArgExprs.release();
-
   if (getLangOpts().CPlusPlus) {
     // If this is a pseudo-destructor expression, build the call immediately.
     if (isa<CXXPseudoDestructorExpr>(Fn)) {
-      if (NumArgs > 0) {
+      if (!ArgExprs.empty()) {
         // Pseudo-destructor calls should not have any arguments.
         Diag(Fn->getLocStart(), diag::err_pseudo_dtor_call_with_args)
           << FixItHint::CreateRemoval(
-                                    SourceRange(Args[0]->getLocStart(),
-                                                Args[NumArgs-1]->getLocEnd()));
+                                    SourceRange(ArgExprs[0]->getLocStart(),
+                                                ArgExprs.back()->getLocEnd()));
       }
 
-      return Owned(new (Context) CallExpr(Context, Fn, 0, 0, Context.VoidTy,
-                                          VK_RValue, RParenLoc));
+      return Owned(new (Context) CallExpr(Context, Fn, MultiExprArg(),
+                                          Context.VoidTy, VK_RValue,
+                                          RParenLoc));
     }
 
     // Determine whether this is a dependent call inside a C++ template,
@@ -3807,17 +3803,16 @@ Sema::ActOnCallExpr(Scope *S, Expr *Fn, SourceLocation LParenLoc,
     bool Dependent = false;
     if (Fn->isTypeDependent())
       Dependent = true;
-    else if (Expr::hasAnyTypeDependentArguments(
-        llvm::makeArrayRef(Args, NumArgs)))
+    else if (Expr::hasAnyTypeDependentArguments(ArgExprs))
       Dependent = true;
 
     if (Dependent) {
       if (ExecConfig) {
         return Owned(new (Context) CUDAKernelCallExpr(
-            Context, Fn, cast<CallExpr>(ExecConfig), Args, NumArgs,
+            Context, Fn, cast<CallExpr>(ExecConfig), ArgExprs,
             Context.DependentTy, VK_RValue, RParenLoc));
       } else {
-        return Owned(new (Context) CallExpr(Context, Fn, Args, NumArgs,
+        return Owned(new (Context) CallExpr(Context, Fn, ArgExprs,
                                             Context.DependentTy, VK_RValue,
                                             RParenLoc));
       }
@@ -3825,8 +3820,9 @@ Sema::ActOnCallExpr(Scope *S, Expr *Fn, SourceLocation LParenLoc,
 
     // Determine whether this is a call to an object (C++ [over.call.object]).
     if (Fn->getType()->isRecordType())
-      return Owned(BuildCallToObjectOfClassType(S, Fn, LParenLoc, Args, NumArgs,
-                                                RParenLoc));
+      return Owned(BuildCallToObjectOfClassType(S, Fn, LParenLoc,
+                                                ArgExprs.data(),
+                                                ArgExprs.size(), RParenLoc));
 
     if (Fn->getType() == Context.UnknownAnyTy) {
       ExprResult result = rebuildUnknownAnyFunction(*this, Fn);
@@ -3835,8 +3831,8 @@ Sema::ActOnCallExpr(Scope *S, Expr *Fn, SourceLocation LParenLoc,
     }
 
     if (Fn->getType() == Context.BoundMemberTy) {
-      return BuildCallToMemberFunction(S, Fn, LParenLoc, Args, NumArgs,
-                                       RParenLoc);
+      return BuildCallToMemberFunction(S, Fn, LParenLoc, ArgExprs.data(),
+                                       ArgExprs.size(), RParenLoc);
     }
   }
 
@@ -3849,11 +3845,11 @@ Sema::ActOnCallExpr(Scope *S, Expr *Fn, SourceLocation LParenLoc,
       OverloadExpr *ovl = find.Expression;
       if (isa<UnresolvedLookupExpr>(ovl)) {
         UnresolvedLookupExpr *ULE = cast<UnresolvedLookupExpr>(ovl);
-        return BuildOverloadedCallExpr(S, Fn, ULE, LParenLoc, Args, NumArgs,
-                                       RParenLoc, ExecConfig);
+        return BuildOverloadedCallExpr(S, Fn, ULE, LParenLoc, ArgExprs.data(),
+                                       ArgExprs.size(), RParenLoc, ExecConfig);
       } else {
-        return BuildCallToMemberFunction(S, Fn, LParenLoc, Args, NumArgs,
-                                         RParenLoc);
+        return BuildCallToMemberFunction(S, Fn, LParenLoc, ArgExprs.data(),
+                                         ArgExprs.size(), RParenLoc);
       }
     }
   }
@@ -3877,8 +3873,9 @@ Sema::ActOnCallExpr(Scope *S, Expr *Fn, SourceLocation LParenLoc,
   else if (isa<MemberExpr>(NakedFn))
     NDecl = cast<MemberExpr>(NakedFn)->getMemberDecl();
 
-  return BuildResolvedCallExpr(Fn, NDecl, LParenLoc, Args, NumArgs, RParenLoc,
-                               ExecConfig, IsExecConfig);
+  return BuildResolvedCallExpr(Fn, NDecl, LParenLoc, ArgExprs.data(),
+                               ArgExprs.size(), RParenLoc, ExecConfig,
+                               IsExecConfig);
 }
 
 ExprResult
@@ -3945,13 +3942,13 @@ Sema::BuildResolvedCallExpr(Expr *Fn, NamedDecl *NDecl,
   if (Config)
     TheCall = new (Context) CUDAKernelCallExpr(Context, Fn,
                                                cast<CallExpr>(Config),
-                                               Args, NumArgs,
+                                               llvm::makeArrayRef(Args,NumArgs),
                                                Context.BoolTy,
                                                VK_RValue,
                                                RParenLoc);
   else
     TheCall = new (Context) CallExpr(Context, Fn,
-                                     Args, NumArgs,
+                                     llvm::makeArrayRef(Args, NumArgs),
                                      Context.BoolTy,
                                      VK_RValue,
                                      RParenLoc);
@@ -4143,9 +4140,8 @@ Sema::BuildCompoundLiteralExpr(SourceLocation LParenLoc, TypeSourceInfo *TInfo,
                                            SourceRange(LParenLoc, RParenLoc),
                                            /*InitList=*/true);
   InitializationSequence InitSeq(*this, Entity, Kind, &LiteralExpr, 1);
-  ExprResult Result = InitSeq.Perform(*this, Entity, Kind,
-                                       MultiExprArg(*this, &LiteralExpr, 1),
-                                            &literalType);
+  ExprResult Result = InitSeq.Perform(*this, Entity, Kind, LiteralExpr,
+                                      &literalType);
   if (Result.isInvalid())
     return ExprError();
   LiteralExpr = Result.get();
@@ -4167,28 +4163,25 @@ Sema::BuildCompoundLiteralExpr(SourceLocation LParenLoc, TypeSourceInfo *TInfo,
 ExprResult
 Sema::ActOnInitList(SourceLocation LBraceLoc, MultiExprArg InitArgList,
                     SourceLocation RBraceLoc) {
-  unsigned NumInit = InitArgList.size();
-  Expr **InitList = InitArgList.release();
-
   // Immediately handle non-overload placeholders.  Overloads can be
   // resolved contextually, but everything else here can't.
-  for (unsigned I = 0; I != NumInit; ++I) {
-    if (InitList[I]->getType()->isNonOverloadPlaceholderType()) {
-      ExprResult result = CheckPlaceholderExpr(InitList[I]);
+  for (unsigned I = 0, E = InitArgList.size(); I != E; ++I) {
+    if (InitArgList[I]->getType()->isNonOverloadPlaceholderType()) {
+      ExprResult result = CheckPlaceholderExpr(InitArgList[I]);
 
       // Ignore failures; dropping the entire initializer list because
       // of one failure would be terrible for indexing/etc.
       if (result.isInvalid()) continue;
 
-      InitList[I] = result.take();
+      InitArgList[I] = result.take();
     }
   }
 
   // Semantic analysis for initializers is done by ActOnDeclarator() and
   // CheckInitializer() - it requires knowledge of the object being intialized.
 
-  InitListExpr *E = new (Context) InitListExpr(Context, LBraceLoc, InitList,
-                                               NumInit, RBraceLoc);
+  InitListExpr *E = new (Context) InitListExpr(Context, LBraceLoc, InitArgList,
+                                               RBraceLoc);
   E->setType(Context.VoidTy); // FIXME: just a place holder for now.
   return Owned(E);
 }
@@ -4575,8 +4568,7 @@ ExprResult Sema::BuildVectorLiteral(SourceLocation LParenLoc,
   // FIXME: This means that pretty-printing the final AST will produce curly
   // braces instead of the original commas.
   InitListExpr *initE = new (Context) InitListExpr(Context, LParenLoc,
-                                                   &initExprs[0],
-                                                   initExprs.size(), RParenLoc);
+                                                   initExprs, RParenLoc);
   initE->setType(Ty);
   return BuildCompoundLiteralExpr(LParenLoc, TInfo, RParenLoc, initE);
 }
@@ -4603,10 +4595,8 @@ Sema::MaybeConvertParenListExprToParenExpr(Scope *S, Expr *OrigExpr) {
 ExprResult Sema::ActOnParenListExpr(SourceLocation L,
                                     SourceLocation R,
                                     MultiExprArg Val) {
-  unsigned nexprs = Val.size();
-  Expr **exprs = reinterpret_cast<Expr**>(Val.release());
-  assert((exprs != 0) && "ActOnParenOrParenListExpr() missing expr list");
-  Expr *expr = new (Context) ParenListExpr(Context, L, exprs, nexprs, R);
+  assert(Val.data() != 0 && "ActOnParenOrParenListExpr() missing expr list");
+  Expr *expr = new (Context) ParenListExpr(Context, L, Val, R);
   return Owned(expr);
 }
 
@@ -4884,11 +4874,11 @@ QualType Sema::CheckConditionalOperands(ExprResult &Cond, ExprResult &LHS,
 
   ExprResult LHSResult = CheckPlaceholderExpr(LHS.get());
   if (!LHSResult.isUsable()) return QualType();
-  LHS = move(LHSResult);
+  LHS = LHSResult;
 
   ExprResult RHSResult = CheckPlaceholderExpr(RHS.get());
   if (!RHSResult.isUsable()) return QualType();
-  RHS = move(RHSResult);
+  RHS = RHSResult;
 
   // C++ is sufficiently different to merit its own checker.
   if (getLangOpts().CPlusPlus)
@@ -5811,8 +5801,7 @@ static void ConstructTransparentUnion(Sema &S, ASTContext &C,
   // of the transparent union.
   Expr *E = EResult.take();
   InitListExpr *Initializer = new (C) InitListExpr(C, SourceLocation(),
-                                                   &E, 1,
-                                                   SourceLocation());
+                                                   E, SourceLocation());
   Initializer->setType(UnionType);
   Initializer->setInitializedFieldInUnion(Field);
 
@@ -5910,7 +5899,7 @@ Sema::CheckSingleAssignmentConstraints(QualType LHSType, ExprResult &RHS,
           !CheckObjCARCUnavailableWeakConversion(LHSType,
                                                  RHS.get()->getType()))
         result = IncompatibleObjCWeakRef;
-      RHS = move(Res);
+      RHS = Res;
       return result;
     }
 
@@ -7419,12 +7408,12 @@ inline QualType Sema::CheckLogicalOperands( // C99 6.5.[13,14]
   ExprResult LHSRes = PerformContextuallyConvertToBool(LHS.get());
   if (LHSRes.isInvalid())
     return InvalidOperands(Loc, LHS, RHS);
-  LHS = move(LHSRes);
+  LHS = LHSRes;
 
   ExprResult RHSRes = PerformContextuallyConvertToBool(RHS.get());
   if (RHSRes.isInvalid())
     return InvalidOperands(Loc, LHS, RHS);
-  RHS = move(RHSRes);
+  RHS = RHSRes;
 
   // C++ [expr.log.and]p2
   // C++ [expr.log.or]p2
@@ -8216,8 +8205,7 @@ ExprResult Sema::CreateBuiltinBinOp(SourceLocation OpLoc,
     InitializedEntity Entity =
         InitializedEntity::InitializeTemporary(LHSExpr->getType());
     InitializationSequence InitSeq(*this, Entity, Kind, &RHSExpr, 1);
-    ExprResult Init = InitSeq.Perform(*this, Entity, Kind,
-                                      MultiExprArg(&RHSExpr, 1));
+    ExprResult Init = InitSeq.Perform(*this, Entity, Kind, RHSExpr);
     if (Init.isInvalid())
       return Init;
     RHSExpr = Init.take();
@@ -9147,8 +9135,7 @@ ExprResult Sema::BuildBuiltinOffsetOf(SourceLocation BuiltinLoc,
   }
   
   return Owned(OffsetOfExpr::Create(Context, Context.getSizeType(), BuiltinLoc, 
-                                    TInfo, Comps.data(), Comps.size(),
-                                    Exprs.data(), Exprs.size(), RParenLoc));  
+                                    TInfo, Comps, Exprs, RParenLoc));
 }
 
 ExprResult Sema::ActOnBuiltinOffsetOf(Scope *S,
@@ -10469,8 +10456,7 @@ static ExprResult captureInLambda(Sema &S, LambdaScopeInfo *LSI,
   InitializationSequence Init(S, Entities.back(), InitKind, &Ref, 1);
   ExprResult Result(true);
   if (!Init.Diagnose(S, Entities.back(), InitKind, &Ref, 1))
-    Result = Init.Perform(S, Entities.back(), InitKind, 
-                          MultiExprArg(S, &Ref, 1));
+    Result = Init.Perform(S, Entities.back(), InitKind, Ref);
 
   // If this initialization requires any cleanups (e.g., due to a
   // default argument to a copy constructor), note that for the
@@ -11205,7 +11191,9 @@ void Sema::DiagnoseAssignmentAsCondition(Expr *E) {
 
     IsOrAssign = Op->getOperator() == OO_PipeEqual;
     Loc = Op->getOperatorLoc();
-  } else {
+  } else if (PseudoObjectExpr *POE = dyn_cast<PseudoObjectExpr>(E))
+    return DiagnoseAssignmentAsCondition(POE->getSyntacticForm());
+  else {
     // Not an assignment.
     return;
   }

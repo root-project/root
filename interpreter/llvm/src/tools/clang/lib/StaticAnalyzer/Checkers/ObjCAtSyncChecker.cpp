@@ -18,7 +18,6 @@
 #include "clang/StaticAnalyzer/Core/CheckerManager.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CheckerContext.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugType.h"
-#include "clang/StaticAnalyzer/Checkers/DereferenceChecker.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ExprEngine.h"
 
 using namespace clang;
@@ -50,7 +49,7 @@ void ObjCAtSyncChecker::checkPreStmt(const ObjCAtSynchronizedStmt *S,
                                   "for @synchronized"));
       BugReport *report =
         new BugReport(*BT_undef, BT_undef->getDescription(), N);
-      bugreporter::addTrackNullOrUndefValueVisitor(N, Ex, report);
+      bugreporter::trackNullOrUndefValue(N, Ex, *report);
       C.EmitReport(report);
     }
     return;
@@ -73,7 +72,7 @@ void ObjCAtSyncChecker::checkPreStmt(const ObjCAtSynchronizedStmt *S,
                                    "(no synchronization will occur)"));
         BugReport *report =
           new BugReport(*BT_null, BT_null->getDescription(), N);
-        bugreporter::addTrackNullOrUndefValueVisitor(N, Ex, report);
+        bugreporter::trackNullOrUndefValue(N, Ex, *report);
 
         C.EmitReport(report);
         return;

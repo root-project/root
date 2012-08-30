@@ -135,7 +135,7 @@ DiagnosticBuilder Parser::Diag(const Token &Tok, unsigned DiagID) {
 /// given range.
 ///
 /// \param Loc The location where we'll emit the diagnostic.
-/// \param Loc The kind of diagnostic to emit.
+/// \param DK The kind of diagnostic to emit.
 /// \param ParenRange Source range enclosing code that should be parenthesized.
 void Parser::SuggestParentheses(SourceLocation Loc, unsigned DK,
                                 SourceRange ParenRange) {
@@ -693,7 +693,7 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
     // A function definition cannot start with any of these keywords.
     {
       SourceLocation DeclEnd;
-      StmtVector Stmts(Actions);
+      StmtVector Stmts;
       return ParseDeclaration(Stmts, Declarator::FileContext, DeclEnd, attrs);
     }
 
@@ -704,7 +704,7 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
       Diag(ConsumeToken(), diag::warn_static_inline_explicit_inst_ignored)
         << 0;
       SourceLocation DeclEnd;
-      StmtVector Stmts(Actions);
+      StmtVector Stmts;
       return ParseDeclaration(Stmts, Declarator::FileContext, DeclEnd, attrs);  
     }
     goto dont_know;
@@ -716,7 +716,7 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
       // Inline namespaces. Allowed as an extension even in C++03.
       if (NextKind == tok::kw_namespace) {
         SourceLocation DeclEnd;
-        StmtVector Stmts(Actions);
+        StmtVector Stmts;
         return ParseDeclaration(Stmts, Declarator::FileContext, DeclEnd, attrs);
       }
       
@@ -726,7 +726,7 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
         Diag(ConsumeToken(), diag::warn_static_inline_explicit_inst_ignored)
           << 1;
         SourceLocation DeclEnd;
-        StmtVector Stmts(Actions);
+        StmtVector Stmts;
         return ParseDeclaration(Stmts, Declarator::FileContext, DeclEnd, attrs);  
       }
     }
@@ -972,16 +972,14 @@ Decl *Parser::ParseFunctionDefinition(ParsingDeclarator &D,
   if (getLangOpts().DelayedTemplateParsing &&
       Tok.isNot(tok::equal) &&
       TemplateInfo.Kind == ParsedTemplateInfo::Template) {
-    MultiTemplateParamsArg TemplateParameterLists(Actions,
-                                         TemplateInfo.TemplateParams->data(),
-                                         TemplateInfo.TemplateParams->size());
+    MultiTemplateParamsArg TemplateParameterLists(*TemplateInfo.TemplateParams);
     
     ParseScope BodyScope(this, Scope::FnScope|Scope::DeclScope);
     Scope *ParentScope = getCurScope()->getParent();
 
     D.setFunctionDefinitionKind(FDK_Definition);
     Decl *DP = Actions.HandleDeclarator(ParentScope, D,
-                                        move(TemplateParameterLists));
+                                        TemplateParameterLists);
     D.complete(DP);
     D.getMutableDeclSpec().abort();
 
@@ -1009,13 +1007,12 @@ Decl *Parser::ParseFunctionDefinition(ParsingDeclarator &D,
            (Tok.is(tok::l_brace) || Tok.is(tok::kw_try) ||
             Tok.is(tok::colon)) && 
       Actions.CurContext->isTranslationUnit()) {
-    MultiTemplateParamsArg TemplateParameterLists(Actions, 0, 0);
     ParseScope BodyScope(this, Scope::FnScope|Scope::DeclScope);
     Scope *ParentScope = getCurScope()->getParent();
     
     D.setFunctionDefinitionKind(FDK_Definition);
     Decl *FuncDecl = Actions.HandleDeclarator(ParentScope, D,
-                                        move(TemplateParameterLists));
+                                              MultiTemplateParamsArg());
     D.complete(FuncDecl);
     D.getMutableDeclSpec().abort();
     if (FuncDecl) {
@@ -1033,10 +1030,7 @@ Decl *Parser::ParseFunctionDefinition(ParsingDeclarator &D,
   // specified Declarator for the function.
   Decl *Res = TemplateInfo.TemplateParams?
       Actions.ActOnStartOfFunctionTemplateDef(getCurScope(),
-                              MultiTemplateParamsArg(Actions,
-                                          TemplateInfo.TemplateParams->data(),
-                                         TemplateInfo.TemplateParams->size()),
-                                              D)
+                                              *TemplateInfo.TemplateParams, D)
     : Actions.ActOnStartOfFunctionDef(getCurScope(), D);
 
   // Break out of the ParsingDeclarator context before we parse the body.
@@ -1288,7 +1282,7 @@ Parser::ExprResult Parser::ParseSimpleAsm(SourceLocation *EndLoc) {
       *EndLoc = T.getCloseLocation();
   }
 
-  return move(Result);
+  return Result;
 }
 
 /// \brief Get the TemplateIdAnnotation from the token and put it in the
@@ -1514,8 +1508,7 @@ bool Parser::TryAnnotateTypeOrScopeToken(bool EnteringContext, bool NeedType) {
         return true;
       }
 
-      ASTTemplateArgsPtr TemplateArgsPtr(Actions,
-                                         TemplateId->getTemplateArgs(),
+      ASTTemplateArgsPtr TemplateArgsPtr(TemplateId->getTemplateArgs(),
                                          TemplateId->NumArgs);
 
       Ty = Actions.ActOnTypenameType(getCurScope(), TypenameLoc, SS,

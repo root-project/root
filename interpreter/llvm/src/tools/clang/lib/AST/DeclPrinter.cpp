@@ -220,6 +220,9 @@ void DeclPrinter::Print(AccessSpecifier AS) {
 //----------------------------------------------------------------------------
 
 void DeclPrinter::VisitDeclContext(DeclContext *DC, bool Indent) {
+  if (Policy.TerseOutput)
+    return;
+
   if (Indent)
     Indentation += Policy.Indentation;
 
@@ -550,7 +553,7 @@ void DeclPrinter::VisitFunctionDecl(FunctionDecl *D) {
     Out << " = 0";
   else if (D->isDeletedAsWritten())
     Out << " = delete";
-  else if (D->doesThisDeclarationHaveABody()) {
+  else if (D->doesThisDeclarationHaveABody() && !Policy.TerseOutput) {
     if (!D->hasPrototype() && D->getNumParams()) {
       // This is a K&R function definition, so we need to print the
       // parameters.

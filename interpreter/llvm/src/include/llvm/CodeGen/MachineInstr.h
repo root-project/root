@@ -782,6 +782,11 @@ public:
                         const TargetInstrInfo *TII,
                         const TargetRegisterInfo *TRI) const;
 
+  /// findTiedOperandIdx - Given the index of a tied register operand, find the
+  /// operand it is tied to. Defs are tied to uses and vice versa. Returns the
+  /// index of the tied operand which must exist.
+  unsigned findTiedOperandIdx(unsigned OpIdx) const;
+
   /// isRegTiedToUseOperand - Given the index of a register def operand,
   /// check if the register def is tied to a source operand, due to either
   /// two-address elimination or inline assembly constraints. Returns the
@@ -852,11 +857,11 @@ public:
   bool isSafeToReMat(const TargetInstrInfo *TII, AliasAnalysis *AA,
                      unsigned DstReg) const;
 
-  /// hasVolatileMemoryRef - Return true if this instruction may have a
-  /// volatile memory reference, or if the information describing the
-  /// memory reference is not available. Return false if it is known to
-  /// have no volatile memory references.
-  bool hasVolatileMemoryRef() const;
+  /// hasOrderedMemoryRef - Return true if this instruction may have an ordered
+  /// or volatile memory reference, or if the information describing the memory
+  /// reference is not available. Return false if it is known to have no
+  /// ordered or volatile memory references.
+  bool hasOrderedMemoryRef() const;
 
   /// isInvariantLoad - Return true if this instruction is loading from a
   /// location whose value is invariant across the function.  For example,
@@ -934,6 +939,13 @@ private:
   /// return the MachineRegisterInfo object for the current function, otherwise
   /// return null.
   MachineRegisterInfo *getRegInfo();
+
+  /// untieRegOperand - Break any tie involving OpIdx.
+  void untieRegOperand(unsigned OpIdx) {
+    const MachineOperand &MO = getOperand(OpIdx);
+    if (MO.isReg() && MO.isTied())
+      getOperand(findTiedOperandIdx(OpIdx)).setIsTied(false);
+  }
 
   /// addImplicitDefUseOperands - Add all implicit def and use operands to
   /// this instruction.

@@ -274,8 +274,9 @@ class Preprocessor : public RefCountedBase<Preprocessor> {
   };
   SmallVector<MacroExpandsInfo, 2> DelayedMacroExpandsCallbacks;
 
-  /// Macros - For each IdentifierInfo with 'HasMacro' set, we keep a mapping
-  /// to the actual definition of the macro.
+  /// Macros - For each IdentifierInfo that was associated with a macro, we
+  /// keep a mapping to the history of all macro definitions and #undefs in
+  /// the reverse order (the latest one is in the head of the list).
   llvm::DenseMap<IdentifierInfo*, MacroInfo*> Macros;
 
   /// \brief Macros that we want to warn because they are not used at the end
@@ -469,9 +470,13 @@ public:
   /// \brief Specify a macro for this identifier.
   void setMacroInfo(IdentifierInfo *II, MacroInfo *MI,
                     bool LoadedFromAST = false);
+  /// \brief Undefine a macro for this identifier.
+  void clearMacroInfo(IdentifierInfo *II);
 
-  /// macro_iterator/macro_begin/macro_end - This allows you to walk the current
-  /// state of the macro table.  This visits every currently-defined macro.
+  /// macro_iterator/macro_begin/macro_end - This allows you to walk the macro
+  /// history table. Currently defined macros have
+  /// IdentifierInfo::hasMacroDefinition() set and an empty
+  /// MacroInfo::getUndefLoc() at the head of the list.
   typedef llvm::DenseMap<IdentifierInfo*,
                          MacroInfo*>::const_iterator macro_iterator;
   macro_iterator macro_begin(bool IncludeExternalMacros = true) const;
@@ -937,7 +942,7 @@ public:
   /// \brief Returns true if the given MacroID location points at the last
   /// token of the macro expansion.
   ///
-  /// \param MacroBegin If non-null and function returns true, it is set to
+  /// \param MacroEnd If non-null and function returns true, it is set to
   /// end location of the macro.
   bool isAtEndOfMacroExpansion(SourceLocation loc,
                                SourceLocation *MacroEnd = 0) const {
@@ -1111,10 +1116,10 @@ public:
   /// from a macro as multiple tokens, which need to be glued together.  This
   /// occurs for code like:
   /// \code
-  ///    \#define FOO <a/b.h>
+  ///    \#define FOO <x/y.h>
   ///    \#include FOO
   /// \endcode
-  /// because in this case, "<a/b.h>" is returned as 7 tokens, not one.
+  /// because in this case, "<x/y.h>" is returned as 7 tokens, not one.
   ///
   /// This code concatenates and consumes tokens up to the '>' token.  It
   /// returns false if the > was found, otherwise it returns true if it finds

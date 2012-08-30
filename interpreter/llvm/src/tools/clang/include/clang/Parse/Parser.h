@@ -248,7 +248,7 @@ public:
   typedef clang::TypeResult        TypeResult;
 
   typedef Expr *ExprArg;
-  typedef ASTMultiPtr<Stmt*> MultiStmtArg;
+  typedef llvm::MutableArrayRef<Stmt*> MultiStmtArg;
   typedef Sema::FullExprArg FullExprArg;
 
   /// Adorns a ExprResult with Actions to make it an ExprResult
@@ -1411,8 +1411,16 @@ protected:
   //===--------------------------------------------------------------------===//
   // C99 6.8: Statements and Blocks.
 
+  /// A SmallVector of statements, with stack size 32 (as that is the only one
+  /// used.)
+  typedef SmallVector<Stmt*, 32> StmtVector;
+  /// A SmallVector of expressions, with stack size 12 (the maximum used.)
+  typedef SmallVector<Expr*, 12> ExprVector;
+  /// A SmallVector of types.
+  typedef SmallVector<ParsedType, 12> TypeVector;
+
   StmtResult ParseStatement(SourceLocation *TrailingElseLoc = 0) {
-    StmtVector Stmts(Actions);
+    StmtVector Stmts;
     return ParseStatementOrDeclaration(Stmts, true, TrailingElseLoc);
   }
   StmtResult ParseStatementOrDeclaration(StmtVector &Stmts,

@@ -617,10 +617,7 @@ unsigned ARMFastISel::ARMMaterializeGV(const GlobalValue *GV, EVT VT) {
   if (VT != MVT::i32) return 0;
 
   Reloc::Model RelocM = TM.getRelocationModel();
-
-  // TODO: Need more magic for ARM PIC.
-  if (!isThumb2 && (RelocM == Reloc::PIC_)) return 0;
-
+  bool IsIndirect = Subtarget->GVIsIndirectSymbol(GV, RelocM);
   unsigned DestReg = createResultReg(TLI.getRegClassFor(VT));
 
   // Use movw+movt when possible, it avoids constant pool entries.
@@ -668,17 +665,30 @@ unsigned ARMFastISel::ARMMaterializeGV(const GlobalValue *GV, EVT VT) {
         .addConstantPoolIndex(Idx);
       if (RelocM == Reloc::PIC_)
         MIB.addImm(Id);
+      AddOptionalDefs(MIB);
     } else {
       // The extra immediate is for addrmode2.
       MIB = BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DL, TII.get(ARM::LDRcp),
                     DestReg)
         .addConstantPoolIndex(Idx)
         .addImm(0);
+      AddOptionalDefs(MIB);
+
+      if (RelocM == Reloc::PIC_) {
+        unsigned Opc = IsIndirect ? ARM::PICLDR : ARM::PICADD;
+        unsigned NewDestReg = createResultReg(TLI.getRegClassFor(VT));
+
+        MachineInstrBuilder MIB = BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt,
+                                          DL, TII.get(Opc), NewDestReg)
+                                  .addReg(DestReg)
+                                  .addImm(Id);
+        AddOptionalDefs(MIB);
+        return NewDestReg;
+      }
     }
-    AddOptionalDefs(MIB);
   }
 
-  if (Subtarget->GVIsIndirectSymbol(GV, RelocM)) {
+  if (IsIndirect) {
     MachineInstrBuilder MIB;
     unsigned NewDestReg = createResultReg(TLI.getRegClassFor(VT));
     if (isThumb2)
@@ -2212,25 +2222,17 @@ bool ARMFastISel::ARMEmitLibcall(const Instruction *I, RTLIB::Libcall Call) {
   unsigned CallOpc = ARMSelectCallOp(EnableARMLongCalls);
   MachineInstrBuilder MIB = BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt,
                                     DL, TII.get(CallOpc));
-  if (isThumb2) {
-    // Explicitly adding the predicate here.
+  // BL / BLX don't take a predicate, but tBL / tBLX do.
+  if (isThumb2)
     AddDefaultPred(MIB);
-    if (EnableARMLongCalls)
-      MIB.addReg(CalleeReg);
-    else
-      MIB.addExternalSymbol(TLI.getLibcallName(Call));
-  } else {
-    if (EnableARMLongCalls)
-      MIB.addReg(CalleeReg);
-    else
-      MIB.addExternalSymbol(TLI.getLibcallName(Call));
+  if (EnableARMLongCalls)
+    MIB.addReg(CalleeReg);
+  else
+    MIB.addExternalSymbol(TLI.getLibcallName(Call));
 
-    // Explicitly adding the predicate here.
-    AddDefaultPred(MIB);
-  }
   // Add implicit physical register uses to the call.
   for (unsigned i = 0, e = RegArgs.size(); i != e; ++i)
-    MIB.addReg(RegArgs[i]);
+    MIB.addReg(RegArgs[i], RegState::Implicit);
 
   // Add a register mask with the call-preserved registers.
   // Proper defs for return values will be added by setPhysRegsDeadExcept().
@@ -2358,30 +2360,20 @@ bool ARMFastISel::SelectCall(const Instruction *I,
   unsigned CallOpc = ARMSelectCallOp(UseReg);
   MachineInstrBuilder MIB = BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt,
                                     DL, TII.get(CallOpc));
-  if(isThumb2) {
-    // Explicitly adding the predicate here.
-    AddDefaultPred(MIB);
-    if (UseReg)
-      MIB.addReg(CalleeReg);
-    else if (!IntrMemName)
-      MIB.addGlobalAddress(GV, 0, 0);
-    else
-      MIB.addExternalSymbol(IntrMemName, 0);
-  } else {
-    if (UseReg)
-      MIB.addReg(CalleeReg);
-    else if (!IntrMemName)
-      MIB.addGlobalAddress(GV, 0, 0);
-    else
-      MIB.addExternalSymbol(IntrMemName, 0);
 
-    // Explicitly adding the predicate here.
+  // ARM calls don't take a predicate, but tBL / tBLX do.
+  if(isThumb2)
     AddDefaultPred(MIB);
-  }
+  if (UseReg)
+    MIB.addReg(CalleeReg);
+  else if (!IntrMemName)
+    MIB.addGlobalAddress(GV, 0, 0);
+  else
+    MIB.addExternalSymbol(IntrMemName, 0);
 
   // Add implicit physical register uses to the call.
   for (unsigned i = 0, e = RegArgs.size(); i != e; ++i)
-    MIB.addReg(RegArgs[i]);
+    MIB.addReg(RegArgs[i], RegState::Implicit);
 
   // Add a register mask with the call-preserved registers.
   // Proper defs for return values will be added by setPhysRegsDeadExcept().

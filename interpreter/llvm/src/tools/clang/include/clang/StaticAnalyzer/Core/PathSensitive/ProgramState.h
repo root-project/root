@@ -7,7 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 //
-//  This file defines SymbolRef, ExprBindKey, and ProgramState*.
+// This file defines the state of the program along the analysisa path.
 //
 //===----------------------------------------------------------------------===//
 
@@ -16,6 +16,7 @@
 
 #include "clang/Basic/LLVM.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ConstraintManager.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/DynamicTypeInfo.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/Environment.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/Store.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/SValBuilder.h"
@@ -53,32 +54,6 @@ template <typename T> struct ProgramStateTrait {
   static inline void *MakeVoidPtr(data_type D) { return (void*) D; }
   static inline data_type MakeData(void *const* P) {
     return P ? (data_type) *P : (data_type) 0;
-  }
-};
-
-/// \class Stores the dynamic type information.
-/// Information about type of an object at runtime. This is used by dynamic
-/// dispatch implementation.
-class DynamicTypeInfo {
-  QualType T;
-  bool CanBeASubClass;
-
-public:
-  DynamicTypeInfo() : T(QualType()) {}
-  DynamicTypeInfo(QualType WithType, bool CanBeSub = true)
-    : T(WithType), CanBeASubClass(CanBeSub) {}
-
-  bool isValid() const { return !T.isNull(); }
-
-  QualType getType() const { return T; }
-  bool canBeASubClass() const { return CanBeASubClass; }
-  
-  void Profile(llvm::FoldingSetNodeID &ID) const {
-    T.Profile(ID);
-    ID.AddInteger((unsigned)CanBeASubClass);
-  }
-  bool operator==(const DynamicTypeInfo &X) const {
-    return T == X.T && CanBeASubClass == X.CanBeASubClass;
   }
 };
 
@@ -210,11 +185,13 @@ public:
   // Binding and retrieving values to/from the environment and symbolic store.
   //==---------------------------------------------------------------------==//
 
-  /// BindCompoundLiteral - Return the state that has the bindings currently
-  ///  in this state plus the bindings for the CompoundLiteral.
+  /// \brief Create a new state with the specified CompoundLiteral binding.
+  /// \param CL the compound literal expression (the binding key)
+  /// \param LC the LocationContext of the binding
+  /// \param V the value to bind.
   ProgramStateRef bindCompoundLiteral(const CompoundLiteralExpr *CL,
-                                     const LocationContext *LC,
-                                     SVal V) const;
+                                      const LocationContext *LC,
+                                      SVal V) const;
 
   /// Create a new state by binding the value 'V' to the statement 'S' in the
   /// state's environment.
@@ -226,18 +203,16 @@ public:
   ProgramStateRef bindExprAndLocation(const Stmt *S,
                                           const LocationContext *LCtx,
                                           SVal location, SVal V) const;
-  
-  ProgramStateRef bindDecl(const VarRegion *VR, SVal V) const;
 
-  ProgramStateRef bindDeclWithNoInit(const VarRegion *VR) const;
-
-  ProgramStateRef bindLoc(Loc location, SVal V) const;
+  ProgramStateRef bindLoc(Loc location,
+                          SVal V,
+                          bool notifyChanges = true) const;
 
   ProgramStateRef bindLoc(SVal location, SVal V) const;
 
   ProgramStateRef bindDefault(SVal loc, SVal V) const;
 
-  ProgramStateRef unbindLoc(Loc LV) const;
+  ProgramStateRef killBinding(Loc LV) const;
 
   /// invalidateRegions - Returns the state with bindings for the given regions
   ///  cleared from the store. The regions are provided as a continuous array
@@ -821,7 +796,7 @@ public:
   bool scan(const SymExpr *sym);
 };
 
-} // end GR namespace
+} // end ento namespace
 
 } // end clang namespace
 

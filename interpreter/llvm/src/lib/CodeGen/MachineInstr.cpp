@@ -111,6 +111,7 @@ void MachineOperand::setIsDef(bool Val) {
 /// the specified value.  If an operand is known to be an immediate already,
 /// the setImm method should be used.
 void MachineOperand::ChangeToImmediate(int64_t ImmVal) {
+  assert((!isReg() || !isTied()) && "Cannot change a tied operand into an imm");
   // If this operand is currently a register operand, and if this is in a
   // function, deregister the operand from the register's use/def list.
   if (isReg() && isOnRegUseList())
@@ -136,7 +137,8 @@ void MachineOperand::ChangeToRegister(unsigned Reg, bool isDef, bool isImp,
         RegInfo = &MF->getRegInfo();
   // If this operand is already a register operand, remove it from the
   // register's use/def lists.
-  if (RegInfo && isReg())
+  bool WasReg = isReg();
+  if (RegInfo && WasReg)
     RegInfo->removeRegOperandFromUseList(this);
 
   // Change this to a register and set the reg#.
@@ -153,6 +155,9 @@ void MachineOperand::ChangeToRegister(unsigned Reg, bool isDef, bool isImp,
   IsDebug = isDebug;
   // Ensure isOnRegUseList() returns false.
   Contents.Reg.Prev = 0;
+  // Preserve the tie bit when the operand was already a register.
+  if (!WasReg)
+    IsTied = false;
 
   // If this operand is embedded in a function, add the operand to the
   // register's use/def list.
@@ -208,8 +213,8 @@ bool MachineOperand::isIdenticalTo(const MachineOperand &Other) const {
 hash_code llvm::hash_value(const MachineOperand &MO) {
   switch (MO.getType()) {
   case MachineOperand::MO_Register:
-    return hash_combine(MO.getType(), MO.getTargetFlags(), MO.getReg(),
-                        MO.getSubReg(), MO.isDef());
+    // Register operands don't have target flags.
+    return hash_combine(MO.getType(), MO.getReg(), MO.getSubReg(), MO.isDef());
   case MachineOperand::MO_Immediate:
     return hash_combine(MO.getType(), MO.getTargetFlags(), MO.getImm());
   case MachineOperand::MO_CImmediate:
@@ -262,7 +267,7 @@ void MachineOperand::print(raw_ostream &OS, const TargetMachine *TM) const {
     OS << PrintReg(getReg(), TRI, getSubReg());
 
     if (isDef() || isKill() || isDead() || isImplicit() || isUndef() ||
-        isInternalRead() || isEarlyClobber()) {
+        isInternalRead() || isEarlyClobber() || isTied()) {
       OS << '<';
       bool NeedComma = false;
       if (isDef()) {
@@ -282,27 +287,30 @@ void MachineOperand::print(raw_ostream &OS, const TargetMachine *TM) const {
           NeedComma = true;
       }
 
-      if (isKill() || isDead() || (isUndef() && isUse()) || isInternalRead()) {
+      if (isKill()) {
         if (NeedComma) OS << ',';
-        NeedComma = false;
-        if (isKill()) {
-          OS << "kill";
-          NeedComma = true;
-        }
-        if (isDead()) {
-          OS << "dead";
-          NeedComma = true;
-        }
-        if (isUndef() && isUse()) {
-          if (NeedComma) OS << ',';
-          OS << "undef";
-          NeedComma = true;
-        }
-        if (isInternalRead()) {
-          if (NeedComma) OS << ',';
-          OS << "internal";
-          NeedComma = true;
-        }
+        OS << "kill";
+        NeedComma = true;
+      }
+      if (isDead()) {
+        if (NeedComma) OS << ',';
+        OS << "dead";
+        NeedComma = true;
+      }
+      if (isUndef() && isUse()) {
+        if (NeedComma) OS << ',';
+        OS << "undef";
+        NeedComma = true;
+      }
+      if (isInternalRead()) {
+        if (NeedComma) OS << ',';
+        OS << "internal";
+        NeedComma = true;
+      }
+      if (isTied()) {
+        if (NeedComma) OS << ',';
+        OS << "tied";
+        NeedComma = true;
       }
       OS << '>';
     }
@@ -708,9 +716,21 @@ void MachineInstr::addOperand(const MachineOperand &Op) {
   if (Operands[OpNo].isReg()) {
     // Ensure isOnRegUseList() returns false, regardless of Op's status.
     Operands[OpNo].Contents.Reg.Prev = 0;
+    // Ignore existing IsTied bit. This is not a property that can be copied.
+    Operands[OpNo].IsTied = false;
     // Add the new operand to RegInfo.
     if (RegInfo)
       RegInfo->addRegOperandToUseList(&Operands[OpNo]);
+    // Set the IsTied bit if MC indicates this use is tied to a def.
+    if (Operands[OpNo].isUse()) {
+      int DefIdx = MCID->getOperandConstraint(OpNo, MCOI::TIED_TO);
+      if (DefIdx != -1) {
+        MachineOperand &DefMO = getOperand(DefIdx);
+        assert(DefMO.isDef() && "Use tied to operand that isn't a def");
+        DefMO.IsTied = true;
+        Operands[OpNo].IsTied = true;
+      }
+    }
     // If the register operand is flagged as early, mark the operand as such.
     if (MCID->getOperandConstraint(OpNo, MCOI::EARLY_CLOBBER) != -1)
       Operands[OpNo].setIsEarlyClobber(true);
@@ -730,6 +750,7 @@ void MachineInstr::addOperand(const MachineOperand &Op) {
 ///
 void MachineInstr::RemoveOperand(unsigned OpNo) {
   assert(OpNo < Operands.size() && "Invalid operand number");
+  untieRegOperand(OpNo);
   MachineRegisterInfo *RegInfo = getRegInfo();
 
   // Special case removing the last one.
@@ -1114,6 +1135,36 @@ int MachineInstr::findFirstPredOperandIdx() const {
   return -1;
 }
 
+/// Given the index of a tied register operand, find the operand it is tied to.
+/// Defs are tied to uses and vice versa. Returns the index of the tied operand
+/// which must exist.
+unsigned MachineInstr::findTiedOperandIdx(unsigned OpIdx) const {
+  // It doesn't usually happen, but an instruction can have multiple pairs of
+  // tied operands.
+  SmallVector<unsigned, 4> Uses, Defs;
+  unsigned PairNo = ~0u;
+  for (unsigned i = 0, e = getNumOperands(); i != e; ++i) {
+    const MachineOperand &MO = getOperand(i);
+    if (!MO.isReg() || !MO.isTied())
+      continue;
+    if (MO.isUse()) {
+      if (i == OpIdx)
+        PairNo = Uses.size();
+      Uses.push_back(i);
+    } else {
+      if (i == OpIdx)
+        PairNo = Defs.size();
+      Defs.push_back(i);
+    }
+  }
+  // For each tied use there must be a tied def and vice versa.
+  assert(Uses.size() == Defs.size() && "Tied uses and defs don't match");
+  assert(PairNo < Uses.size() && "OpIdx must be a tied register operand");
+
+  // Find the matching operand.
+  return (getOperand(OpIdx).isDef() ? Uses : Defs)[PairNo];
+}
+
 /// isRegTiedToUseOperand - Given the index of a register def operand,
 /// check if the register def is tied to a source operand, due to either
 /// two-address elimination or inline assembly constraints. Returns the
@@ -1292,7 +1343,12 @@ bool MachineInstr::isSafeToMove(const TargetInstrInfo *TII,
                                 AliasAnalysis *AA,
                                 bool &SawStore) const {
   // Ignore stuff that we obviously can't move.
-  if (mayStore() || isCall()) {
+  //
+  // Treat volatile loads as stores. This is not strictly necessary for
+  // volatiles, but it is required for atomic loads. It is now allowed to move
+  // a load across an atomic load with Ordering > Monotonic.
+  if (mayStore() || isCall() ||
+      (mayLoad() && hasOrderedMemoryRef())) {
     SawStore = true;
     return false;
   }
@@ -1308,8 +1364,8 @@ bool MachineInstr::isSafeToMove(const TargetInstrInfo *TII,
   // load.
   if (mayLoad() && !isInvariantLoad(AA))
     // Otherwise, this is a real load.  If there is a store between the load and
-    // end of block, or if the load is volatile, we can't move it.
-    return !SawStore && !hasVolatileMemoryRef();
+    // end of block, we can't move it.
+    return !SawStore;
 
   return true;
 }
@@ -1340,11 +1396,11 @@ bool MachineInstr::isSafeToReMat(const TargetInstrInfo *TII,
   return true;
 }
 
-/// hasVolatileMemoryRef - Return true if this instruction may have a
-/// volatile memory reference, or if the information describing the
-/// memory reference is not available. Return false if it is known to
-/// have no volatile memory references.
-bool MachineInstr::hasVolatileMemoryRef() const {
+/// hasOrderedMemoryRef - Return true if this instruction may have an ordered
+/// or volatile memory reference, or if the information describing the memory
+/// reference is not available. Return false if it is known to have no ordered
+/// memory references.
+bool MachineInstr::hasOrderedMemoryRef() const {
   // An instruction known never to access memory won't have a volatile access.
   if (!mayStore() &&
       !mayLoad() &&
@@ -1357,9 +1413,9 @@ bool MachineInstr::hasVolatileMemoryRef() const {
   if (memoperands_empty())
     return true;
 
-  // Check the memory reference information for volatile references.
+  // Check the memory reference information for ordered references.
   for (mmo_iterator I = memoperands_begin(), E = memoperands_end(); I != E; ++I)
-    if ((*I)->isVolatile())
+    if (!(*I)->isUnordered())
       return true;
 
   return false;

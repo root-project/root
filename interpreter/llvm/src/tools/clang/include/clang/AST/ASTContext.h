@@ -1427,6 +1427,10 @@ public:
   /// characters. This method does not work on incomplete types.
   CharUnits getTypeAlignInChars(QualType T) const;
   CharUnits getTypeAlignInChars(const Type *T) const;
+  
+  // getTypeInfoDataSizeInChars - Return the size of a type, in chars. If the
+  // type is a record, its data size is returned.
+  std::pair<CharUnits, CharUnits> getTypeInfoDataSizeInChars(QualType T) const;
 
   std::pair<CharUnits, CharUnits> getTypeInfoInChars(const Type *T) const;
   std::pair<CharUnits, CharUnits> getTypeInfoInChars(QualType T) const;
@@ -1882,9 +1886,9 @@ public:
   /// \brief Add a deallocation callback that will be invoked when the 
   /// ASTContext is destroyed.
   ///
-  /// \brief Callback A callback function that will be invoked on destruction.
+  /// \param Callback A callback function that will be invoked on destruction.
   ///
-  /// \brief Data Pointer data that will be provided to the callback function
+  /// \param Data Pointer data that will be provided to the callback function
   /// when it is called.
   void AddDeallocation(void (*Callback)(void*), void *Data);
 

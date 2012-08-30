@@ -2904,7 +2904,11 @@ static void AddMacroResults(Preprocessor &PP, ResultBuilder &Results,
   for (Preprocessor::macro_iterator M = PP.macro_begin(), 
                                  MEnd = PP.macro_end();
        M != MEnd; ++M) {
-    Results.AddResult(Result(M->first, 
+    // FIXME: Eventually, we'd want to be able to look back to the macro
+    // definition that was actually active at the point of code completion (even
+    // if that macro has since been #undef'd).
+    if (M->first->hasMacroDefinition())
+      Results.AddResult(Result(M->first, 
                              getMacroUsagePriority(M->first->getName(),
                                                    PP.getLangOpts(),
                                                    TargetTypeIsPointer)));
@@ -4595,26 +4599,23 @@ static bool ObjCPropertyFlagConflicts(unsigned Attributes, unsigned NewFlag) {
   
   // Check for collisions with "readonly".
   if ((Attributes & ObjCDeclSpec::DQ_PR_readonly) &&
-      (Attributes & (ObjCDeclSpec::DQ_PR_readwrite |
-                     ObjCDeclSpec::DQ_PR_assign |
-                     ObjCDeclSpec::DQ_PR_unsafe_unretained |
-                     ObjCDeclSpec::DQ_PR_copy |
-                     ObjCDeclSpec::DQ_PR_retain |
-                     ObjCDeclSpec::DQ_PR_strong)))
+      (Attributes & ObjCDeclSpec::DQ_PR_readwrite))
     return true;
   
-  // Check for more than one of { assign, copy, retain, strong }.
+  // Check for more than one of { assign, copy, retain, strong, weak }.
   unsigned AssignCopyRetMask = Attributes & (ObjCDeclSpec::DQ_PR_assign |
                                          ObjCDeclSpec::DQ_PR_unsafe_unretained |
                                              ObjCDeclSpec::DQ_PR_copy |
-                                             ObjCDeclSpec::DQ_PR_retain|
-                                             ObjCDeclSpec::DQ_PR_strong);
+                                             ObjCDeclSpec::DQ_PR_retain |
+                                             ObjCDeclSpec::DQ_PR_strong |
+                                             ObjCDeclSpec::DQ_PR_weak);
   if (AssignCopyRetMask &&
       AssignCopyRetMask != ObjCDeclSpec::DQ_PR_assign &&
       AssignCopyRetMask != ObjCDeclSpec::DQ_PR_unsafe_unretained &&
       AssignCopyRetMask != ObjCDeclSpec::DQ_PR_copy &&
       AssignCopyRetMask != ObjCDeclSpec::DQ_PR_retain &&
-      AssignCopyRetMask != ObjCDeclSpec::DQ_PR_strong)
+      AssignCopyRetMask != ObjCDeclSpec::DQ_PR_strong &&
+      AssignCopyRetMask != ObjCDeclSpec::DQ_PR_weak)
     return true;
   
   return false;
@@ -4650,6 +4651,12 @@ void Sema::CodeCompleteObjCPropertyFlags(Scope *S, ObjCDeclSpec &ODS) {
     Results.AddResult(CodeCompletionResult("nonatomic"));
   if (!ObjCPropertyFlagConflicts(Attributes, ObjCDeclSpec::DQ_PR_atomic))
     Results.AddResult(CodeCompletionResult("atomic"));
+
+  // Only suggest "weak" if we're compiling for ARC-with-weak-references or GC.
+  if (getLangOpts().ObjCARCWeak || getLangOpts().getGC() != LangOptions::NonGC)
+    if (!ObjCPropertyFlagConflicts(Attributes, ObjCDeclSpec::DQ_PR_weak))
+      Results.AddResult(CodeCompletionResult("weak"));
+
   if (!ObjCPropertyFlagConflicts(Attributes, ObjCDeclSpec::DQ_PR_setter)) {
     CodeCompletionBuilder Setter(Results.getAllocator(),
                                  Results.getCodeCompletionTUInfo());
@@ -5041,7 +5048,7 @@ static ObjCInterfaceDecl *GetAssumedMessageSendExprType(Expr *E) {
 ///
 /// \param S The semantic analysis object.
 ///
-/// \param S NeedSuperKeyword Whether we need to prefix this completion with
+/// \param NeedSuperKeyword Whether we need to prefix this completion with
 /// the "super" keyword. Otherwise, we just need to provide the arguments.
 ///
 /// \param SelIdents The identifiers in the selector that have already been

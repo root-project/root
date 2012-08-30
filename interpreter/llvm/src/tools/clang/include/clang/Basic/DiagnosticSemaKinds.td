@@ -1216,8 +1216,15 @@ def note_uninit_reference_member : Note<
   "uninitialized reference member is here">;
 def warn_field_is_uninit : Warning<"field is uninitialized when used here">,
   InGroup<Uninitialized>;
+def warn_reference_field_is_uninit : Warning<
+  "reference is not yet bound to a value when used here">,
+  InGroup<Uninitialized>;
 def warn_uninit_self_reference_in_init : Warning<
   "variable %0 is uninitialized when used within its own initialization">,
+  InGroup<Uninitialized>;
+def warn_uninit_self_reference_in_reference_init : Warning<
+  "reference %0 is not yet bound to a value when used within its own"
+  " initialization">,
   InGroup<Uninitialized>;
 def warn_uninit_var : Warning<
   "variable %0 is uninitialized when %select{used here|captured by block}1">,
@@ -1408,7 +1415,15 @@ def err_for_range_member_begin_end_mismatch : Error<
   "range type %0 has '%select{begin|end}1' member but no '%select{end|begin}1' member">;
 def err_for_range_begin_end_types_differ : Error<
   "'begin' and 'end' must return the same type (got %0 and %1)">;
-def note_for_range_type : Note<"range has type %0">;
+def note_in_for_range: Note<
+  "when looking up '%select{begin|end}0' function for range expression "
+  "of type %1">;
+def err_for_range_invalid: Error<
+  "invalid range expression of type %0; no viable '%select{begin|end}1' "
+  "function available">;
+def err_for_range_dereference : Error<
+  "invalid range expression of type %0; did you mean to dereference it "
+  "with '*'?">;
 def note_for_range_begin_end : Note<
   "selected '%select{begin|end}0' %select{function|template }1%2 with iterator type %3">;
 
@@ -1915,6 +1930,9 @@ def warn_non_literal_null_pointer : Warning<
 def warn_impcast_null_pointer_to_integer : Warning<
     "implicit conversion of NULL constant to %0">,
     InGroup<NullConversion>;
+def warn_impcast_floating_point_to_bool : Warning<
+    "implicit conversion turns floating-point number into bool: %0 to %1">,
+    InGroup<ImplicitConversionFloatingPointToBool>;
 def warn_impcast_function_to_bool : Warning<
     "address of function %q0 will always evaluate to 'true'">,
     InGroup<BoolConversion>;
@@ -5058,9 +5076,6 @@ let CategoryName = "Inline Assembly Issue" in {
     "invalid use of a cast in a inline asm context requiring an l-value: "
     "accepted due to -fheinous-gnu-extensions, but clang may remove support "
     "for this in the future">;
-
-  def warn_unsupported_msasm : ExtWarn<
-    "MS-style inline assembly is not supported">, InGroup<Microsoft>;
 }
 
 let CategoryName = "Semantic Issue" in {

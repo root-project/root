@@ -951,8 +951,10 @@ bool Darwin::SupportsObjCGC() const {
   return !isTargetIPhoneOS();
 }
 
-bool Darwin::SupportsObjCARC() const {
-  return isTargetIPhoneOS() || !isMacosxVersionLT(10, 6);
+void Darwin::CheckObjCARC() const {
+  if (isTargetIPhoneOS() || !isMacosxVersionLT(10, 6))
+    return;
+  getDriver().Diag(diag::err_arc_unsupported_on_toolchain);
 }
 
 std::string
