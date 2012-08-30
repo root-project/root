@@ -1,8 +1,8 @@
 Index: tools/clang/include/clang/Parse/Parser.h
 ===================================================================
---- tools/clang/include/clang/Parse/Parser.h	(revision 160958)
+--- tools/clang/include/clang/Parse/Parser.h	(revision 162901)
 +++ tools/clang/include/clang/Parse/Parser.h	(working copy)
-@@ -277,7 +277,7 @@
+@@ -282,7 +282,7 @@
    /// the EOF was encountered.
    bool ParseTopLevelDecl(DeclGroupPtrTy &Result);
  
@@ -11,7 +11,7 @@ Index: tools/clang/include/clang/Parse/Parser.h
    //===--------------------------------------------------------------------===//
    // Low-Level token peeking and consumption methods.
    //
-@@ -676,7 +676,7 @@
+@@ -709,7 +709,7 @@
      return Diag(Tok, DiagID);
    }
  
