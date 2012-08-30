@@ -6065,12 +6065,12 @@ result "$enable_afdsmgrd$afdsmgrdapmonmsg"
 #
 ### echo %%% Cling - LLVM/clang based interpreter prototype
 #
-message "Checking whether to integrate experimental cling"
 hascling="undef"
 hasllvm="undef"
 llvmdir="/**/"
 clingextrares=""
 if test ! "x$enable_cling" = "xno"; then
+    message "Checking for llvm-config"
     if test "x$enable_builtin_llvm" = "x" || \
        test "x$enable_builtin_llvm" = "xno" ; then
 	
@@ -6079,6 +6079,7 @@ if test ! "x$enable_cling" = "xno"; then
             if test ! "x$LLVMDIR" = "x" ; then
                 llvmconfig="$LLVMDIR/bin"
             else
+                result "no"
                 clingextrares="(needs --with-llvm-config or \$LLVMDIR)"
             fi
         fi
@@ -6098,9 +6099,12 @@ if test ! "x$enable_cling" = "xno"; then
 fi
 if test "x$hascling" = "xundef"; then
     enable_cling="no"
+    message "Checking whether to integrate experimental cling"
     result "no $clingextrares"
 else
+    result "$llvmconfig" # have llvm
     enable_cling="yes"
+    message "Checking whether to integrate experimental cling"
     result "yes"
 fi
 
