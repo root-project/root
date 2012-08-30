@@ -6094,7 +6094,8 @@ if test ! "x$enable_cling" = "xno"; then
             if test -f $llvmconfig && test -x $llvmconfig; then
                 hascling="define"
                 hasllvm="define"
-                llvmdir='"'"`dirname llvmconfig`"'"'
+                llvmdir="`dirname $llvmconfig`"
+                llvmdir='"'"`dirname $llvmdir`"'"'
             fi
         fi
     else
