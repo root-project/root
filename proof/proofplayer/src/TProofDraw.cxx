@@ -866,6 +866,7 @@ void TProofDrawHist::Terminate(void)
          TList l;
          l.Add(fHistogram);
          h->Merge(&l);
+         l.Remove(fHistogram);
          fOutput->Remove(fHistogram);
          delete fHistogram;
       } else {
@@ -1307,6 +1308,7 @@ void TProofDrawProfile::Terminate(void)
          TList l;
          l.Add(fProfile);
          pf->Merge(&l);
+         l.Remove(fProfile);
          fOutput->Remove(fProfile);
          delete fProfile;
       } else {
@@ -1549,6 +1551,7 @@ void TProofDrawProfile2D::Terminate(void)
          TList l;
          l.Add(fProfile);
          pf->Merge(&l);
+         l.Remove(fProfile);
          fOutput->Remove(fProfile);
          delete fProfile;
       } else {
