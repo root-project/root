@@ -4134,7 +4134,9 @@ if test ! "x$enable_asimage" = "xno" ; then
     fi
     # If we didn't find the system libAfterImage, or the user didn't ask
     # for a system library, then see if we have various headers needed.
-    if test "x$enable_builtin_afterimage" = "xyes" ; then
+    # For Cocoa backend force libAfterImage builtin jpeg and png libs
+    # to avoid system versions based on X11. 
+    if test "x$enable_builtin_afterimage" = "xyes" && test ! "x$enable_cocoa" = "xyes"; then
        check_header "jpeglib.h" "" \
           $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
           ${finkdir:+$finkdir/include} \
