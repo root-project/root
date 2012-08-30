@@ -6103,6 +6103,8 @@ if test ! "x$enable_cling" = "xno"; then
     else
         hascling="define"
     fi
+else
+    enable_builtin_llvm="no"
 fi
 if test "x$hascling" = "xundef"; then
     enable_cling="no"
