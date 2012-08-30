@@ -399,7 +399,7 @@ namespace cling {
           // We want to call LifetimeHandler(DynamicExprInfo* ExprInfo,
           //                                 DeclContext DC,
           //                                 const char* type)
-          llvm::SmallVector<Expr*, 8> Inits;
+          llvm::SmallVector<Expr*, 4> Inits;
           // Add MyClass in LifetimeHandler unique(DynamicExprInfo* ExprInfo
           //                                       DC,
           //                                       "MyClass")
@@ -588,7 +588,7 @@ namespace cling {
     assert(SubTree && "No subtree specified!");
 
     //Build the arguments for the call
-    llvm::SmallVector<Expr*, 8> CallArgs;
+    llvm::SmallVector<Expr*, 2> CallArgs;
 
     // Build Arg0
     Expr* Arg0 = BuildDynamicExprInfo(SubTree, ValuePrinterReq);
@@ -653,7 +653,7 @@ namespace cling {
                                                 m_NoRange,
                                                 DeclarationName() );
 
-    llvm::SmallVector<Expr*, 8> Inits;
+    llvm::SmallVector<Expr*, 2> Inits;
     Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
     for (unsigned int i = 0; i < Addresses.size(); ++i) {
 
@@ -685,7 +685,7 @@ namespace cling {
     else
       VPReq = m_Sema->ActOnCXXBoolLiteral(m_NoSLoc, tok::kw_false).take();
 
-    llvm::SmallVector<Expr*, 8> CtorArgs;
+    llvm::SmallVector<Expr*, 4> CtorArgs;
     CtorArgs.push_back(ExprTemplate);
     CtorArgs.push_back(ExprAddresses);
     CtorArgs.push_back(VPReq);
@@ -762,7 +762,7 @@ namespace cling {
   CallExpr*
   EvaluateTSynthesizer::BuildEvalCallExpr(const QualType InstTy,
                                           Expr* SubTree,
-                                        llvm::SmallVector<Expr*, 8>& CallArgs) {
+                                        llvm::SmallVector<Expr*, 2>& CallArgs) {
     // Set up new context for the new FunctionDecl
     DeclContext* PrevContext = m_Sema->CurContext;
 

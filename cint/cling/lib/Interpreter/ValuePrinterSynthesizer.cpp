@@ -167,7 +167,7 @@ namespace cling {
     }
 
 
-    llvm::SmallVector<Expr*, 8> CallArgs;
+    llvm::SmallVector<Expr*, 4> CallArgs;
     CallArgs.push_back(RawOStreamTy);
     CallArgs.push_back(ExprTy);
     CallArgs.push_back(ASTContextTy);
@@ -226,7 +226,7 @@ namespace cling {
       E = m_Sema->BuildUnaryOp(S, NoSLoc, UO_AddrOf, E).take();
     }
 
-    llvm::SmallVector<Expr*, 8> CallArgs;
+    llvm::SmallVector<Expr*, 4> CallArgs;
     CallArgs.push_back(VoidEArg);
     CallArgs.push_back(VoidCArg);
     CallArgs.push_back(E);

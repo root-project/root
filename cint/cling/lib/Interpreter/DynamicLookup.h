@@ -276,7 +276,7 @@ namespace cling {
     ///
     clang::CallExpr* BuildEvalCallExpr(clang::QualType InstTy,
                                        clang::Expr* SubTree,
-                                  llvm::SmallVector<clang::Expr*, 8>& CallArgs);
+                                  llvm::SmallVector<clang::Expr*, 2>& CallArgs);
 
     ///\brief Builds the DynamicExprInfo class with proper info.
     ///
