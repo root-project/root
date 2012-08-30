@@ -2614,9 +2614,13 @@ if test "x$enable_builtin_freetype" = "x" || \
 
    checking_msg "freetype-config"
    if `$cwhich freetype-config > /dev/null 2>&1` && test "x$host" = "x" ; then
-      if test "x$macosx108" = "xyes" && file -h `$cwhich freetype-config` | grep 'xstub' > /dev/null 2>&1 ; then
+      if test "x$macosx108" = "xyes" && (file -h `$cwhich freetype-config` | grep 'xstub' > /dev/null 2>&1 || test "x$enable_cocoa" = "xyes"); then
          enable_builtin_freetype="yes"
-         result "XQuartz not installed"
+         if file -h `$cwhich freetype-config` | grep 'xstub' > /dev/null 2>&1 ; then
+            result "XQuartz not installed"
+         else
+            result "using builtin freetype"
+         fi
       else
          $cwhich freetype-config
 
