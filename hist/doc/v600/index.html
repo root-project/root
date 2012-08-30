@@ -18,6 +18,14 @@ plot a 1D histogram. 1D histograms plotted with one of these options is now draw
 with the default 1D plotting option. This is useful when the default option in the
 TBrowser is, for instance, COL. Before this change the 1D histogram appeared as blank.
 </li>
+<li>
+New plotting option <tt>"LEGO3"</tt>.cw
+ Like the option <tt>"LEGO1"</tt>, the option <tt>"LEGO3"</tt> 
+draws a lego plot using the hidden surface removal technique but doesn't draw
+the border lines of each individual lego-bar. This is very useful for histograms
+having many bins. With such histograms the option <tt>"LEGO1"</tt> gives a black
+image because of the border lines. This option also works with stacked legos.
+</li>
 </ul>
 
 
@@ -55,7 +63,7 @@ The following macro shows the problem:
 </li>
 </ul>
 
-<h3>TPaletteAxix</h3>
+<h3>TPaletteAxis</h3>
 <ul>
 <li>
 The histogram Z axis title is now painted along the palette axis.
