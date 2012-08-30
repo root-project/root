@@ -471,10 +471,9 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    , fMetaProcessor(0)
 {
    // Initialize the CINT+cling interpreter interface.
+   std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
    const char* interpArgs[]
-      = {"cling4root",
-         ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false).c_str(),
-         "-Xclang", "-fmodules"};
+      = {"cling4root", interpInclude.c_str(), "-Xclang", "-fmodules"};
 
    fInterpreter = new cling::Interpreter(sizeof(interpArgs) / sizeof(char*),
                                          interpArgs,
