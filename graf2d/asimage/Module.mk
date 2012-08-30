@@ -171,7 +171,7 @@ else
 			PNGINCDIR="--with-png-includes=$(ASPNGINCDIR)"; \
 		fi; \
 		if [ "$(BUILDCOCOA)" = "yes" ]; then \
-			JPEGINCDIR="--with-builtin-jpeg"; \
+			JPEGINCDIR="--disable-x --with-builtin-jpeg"; \
 			PNGINCDIR="--with-builtin-png"; \
 		fi; \
 		if [ "$(ASTIFFINCDIR)" = "--with-tiff=no" ]; then \
