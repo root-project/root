@@ -33,7 +33,6 @@ namespace clang {
   class Expr;
   class FunctionDecl;
   class NamedDecl;
-  class Parser;
   class QualType;
   class Type;
 }
@@ -52,6 +51,7 @@ namespace cling {
   class ExecutionContext;
   class IncrementalParser;
   class InterpreterCallbacks;
+  class LookupHelper;
   class Value;
 
   ///\brief Helper structure used to provide specific context of the evaluated
@@ -129,6 +129,10 @@ namespace cling {
     ///\brief Cling's worker class implementing the incremental compilation.
     ///
     llvm::OwningPtr<IncrementalParser> m_IncrParser;
+
+    ///\brief Cling's reflection information query.
+    ///
+    llvm::OwningPtr<LookupHelper> m_LookupHelper;
 
     ///\brief Counter used when we need unique names.
     ///
@@ -310,6 +314,9 @@ namespace cling {
 
     llvm::LLVMContext* getLLVMContext() { return m_LLVMContext.get(); }
 
+    LookupHelper* getLookupHelper() { return m_LookupHelper.get(); }
+
+
     ///\brief Shows the current version of the project.
     ///
     ///\returns The current svn revision (svn Id).
@@ -414,35 +421,6 @@ namespace cling {
     ///
     bool loadFile(const std::string& filename, bool allowSharedLib = true);
 
-    ///\brief Lookup a type by name, starting from the global
-    /// namespace.
-    ///
-    /// \param [in] typeName - The type to lookup.
-    ///
-    /// \retval retval - On a failed lookup retval.isNull() will be true.
-    ///
-    clang::QualType lookupType(const std::string& typeName);
-
-    ///\brief Lookup a class declaration by name, starting from the global
-    /// namespace, also handles struct, union, namespace, and enum.
-    ///
-    ///\param [in] className   - The name of the class, struct, union,
-    ///                          namespace, or enum to lookup.
-    ///\param [out] resultType - The type of the class, struct, union,
-    ///                          or enum to lookup; NULL otherwise.
-    ///\returns The found declaration or null.
-    ///
-    const clang::Decl* lookupScope(const std::string& className,
-                                   const clang::Type** resultType = 0);
-
-    const clang::FunctionDecl* lookupFunctionProto(const clang::Decl* scopeDecl,
-                                             const std::string& funcName,
-                                             const std::string& funcProto);
-
-    const clang::FunctionDecl* lookupFunctionArgs(const clang::Decl* scopeDecl,
-                                            const std::string& funcName,
-                                            const std::string& funcArgs);
-
     void enableDynamicLookup(bool value = true);
     bool isDynamicLookupEnabled() { return m_DynamicLookupEnabled; }
 
@@ -451,7 +429,6 @@ namespace cling {
 
     clang::CompilerInstance* getCI() const;
     llvm::ExecutionEngine* getExecutionEngine() const;
-    clang::Parser* getParser() const;
 
     llvm::Module* getModule() const;
 

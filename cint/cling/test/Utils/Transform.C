@@ -4,6 +4,7 @@
 // which is supposed to provide different transformation of AST nodes and types.
 
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/LookupHelper.h"
 #include "cling/Utils/AST.h"
 #include "clang/AST/Type.h"
 #include "llvm/ADT/SmallSet.h"
@@ -24,43 +25,45 @@ typedef C<A<B<const Double32_t, const Int_t> >, Double32_t > CTDConst;
 
 .rawInput 0
 
+cling::LookupHelper* lookup = gCling->getLookupHelper();
+
 const clang::ASTContext& Ctx = gCling->getCI()->getASTContext();
 llvm::SmallSet<const clang::Type*, 4> skip;
-skip.insert(gCling->lookupType("Double32_t").getTypePtr());
+skip.insert(lookup->tryGetType("Double32_t").getTypePtr());
 const clang::Type* t = 0;
 clang::QualType QT;
 using namespace cling::utils;
 
 // Test desugaring pointers types:
-QT = gCling->lookupType("Int_t*");
+QT = lookup->tryGetType("Int_t*");
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
 // CHECK:(const char * const) "int *"
 
-QT = gCling->lookupType("const IntPtr_t*");
+QT = lookup->tryGetType("const IntPtr_t*");
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
 // CHECK:(const char * const) "int *const *"
 
 
 // Test desugaring reference (both r- or l- value) types:
-QT = gCling->lookupType("const IntPtr_t&");
+QT = lookup->tryGetType("const IntPtr_t&");
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
 // CHECK:(const char * const) "int *const &"
 
-//TODO: QT = gCling->lookupType("IntPtr_t[32]");
+//TODO: QT = lookup->tryGetType("IntPtr_t[32]");
 
 
 //Desugar template parameters:
-gCling->lookupScope("A<B<Double32_t, Int_t*> >", &t);
+lookup->tryGetScope("A<B<Double32_t, Int_t*> >", &t);
 QT = clang::QualType(t, 0);
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
 // CHECK:(const char * const) "A<B<Double32_t, int *> >"
 
-gCling->lookupScope("CTD", &t);
+lookup->tryGetScope("CTD", &t);
 QT = clang::QualType(t, 0);
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
 // CHECK: (const char * const) "C<A<B<Double32_t, int> >, Double32_t>"
 
-gCling->lookupScope("CTDConst", &t);
+lookup->tryGetScope("CTDConst", &t);
 QT = clang::QualType(t, 0);
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
 // CHECK: (const char * const) "C<A<B<const Double32_t, const int> >, Double32_t>"

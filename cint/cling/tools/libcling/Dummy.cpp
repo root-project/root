@@ -2,9 +2,12 @@
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Callable.h"
 #include "cling/Interpreter/CValuePrinter.h"
+#include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/ValuePrinter.h"
 #include "cling/Interpreter/ValuePrinterInfo.h"
 #include "cling/UserInterface/UserInterface.h"
+
+#include "clang/AST/Type.h"
 
 #include "llvm/Support/raw_ostream.h"
 
@@ -19,5 +22,10 @@ void libcling__symbol_requester(const clang::FunctionDecl& Decl,
    cling_PrintValue(0, 0, 0);
    flushOStream(llvm::outs());
    Callable C(Decl,Interp);
+   LookupHelper h(0);
+   h.tryGetType("");
+   h.tryGetScope("");
+   h.tryGetFunctionProto(0, "", "");
+   h.tryGetFunctionArgs(0, "", "");
 }
 }
