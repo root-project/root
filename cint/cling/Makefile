@@ -91,8 +91,9 @@ cscope.files:
 	                    -or -name '*.td' \
 	                    -or -name '*.h' > cscope.files
 
-LastKnownGoodSVNFile := $(PROJ_SRC_ROOT)/tools/cling/LastKnownGoodLLVMSVNRevision.txt
 CurrentSVNRev := $(shell svn info $(PROJ_SRC_ROOT)/Makefile.common | grep -E '^Revision: ' | sed 's,^Revision: ,,')
+ifneq ($(CurrentSVNRev),)
+LastKnownGoodSVNFile := $(PROJ_SRC_ROOT)/tools/cling/LastKnownGoodLLVMSVNRevision.txt
 PreviousSVNRev := $(shell cat $(LastKnownGoodSVNFile))
 ifneq (skip,$(shell python -c 'if $(PreviousSVNRev) >= $(CurrentSVNRev): print "skip"'))
 # revisions are not the same, update the file.
@@ -102,7 +103,8 @@ $(LastKnownGoodSVNFile): ALWAYS
 	@echo $(CurrentSVNRev) > $@
 
 .PHONY: ALWAYS
-endif
+endif # ifneq (skip,...
+endif # ifneq ($(CurrentSVNRev),)
 
 .PHONY: test report clean cscope.files
 
