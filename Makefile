@@ -323,9 +323,6 @@ BOOTLIBS     := -lCore -lCint
 ifneq ($(ROOTDICTTYPE),cint)
 BOOTLIBS     += -lCintex -lReflex
 endif
-ifeq ($(BUILDCLING),yes)
-BOOTLIBS     += -lCling
-endif
 ROOTLIBS     := -lRIO -lHist -lGraf -lGraf3d -lGpad -lTree \
                 -lMatrix -lNet -lThread -lMathCore $(BOOTLIBS)
 RINTLIBS     := -lRint
@@ -335,9 +332,6 @@ NEWLIBS      := $(LPATH)/libNew.lib
 BOOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib
 ifneq ($(ROOTDICTTYPE),cint)
 BOOTLIBS     += $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
-endif
-ifeq ($(BUILDCLING),yes)
-BOOTLIBS     += $(LPATH)/libCling.lib
 endif
 ROOTLIBS     := $(LPATH)/libRIO.lib $(LPATH)/libHist.lib \
                 $(LPATH)/libGraf.lib $(LPATH)/libGraf3d.lib \
@@ -516,6 +510,11 @@ endif
 
 ##### libCore #####
 
+ifeq ($(BUILDCLING),yes)
+CORELIBEXTRA    = $(CLINGLIBEXTRA)
+STATICEXTRALIBS = $(CLINGLIBEXTRA)
+endif
+
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(ZIPL) \
                 $(SYSTEML) $(CLIBL) $(METAUTILSL) $(TEXTINPUTL)
 COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) \
@@ -545,9 +544,6 @@ ifeq ($(EXPLICITLINK),yes)
 MAINLIBS     := $(CORELIB) $(CINTLIB)
 ifneq ($(ROOTDICTTYPE),cint)
 MAINLIBS     += $(CINTEXLIB) $(REFLEXLIB)
-endif
-ifeq ($(BUILDCLING),yes)
-MAINLIBS     += $(CLINGLIB)
 endif
 else
 MAINLIBS      =
@@ -823,15 +819,15 @@ endif
 	   touch $@; \
 	fi)
 
-$(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(CLINGLIB) $(PCREDEP) $(CORELIBDEP)
+$(CORELIB): $(CLINGO) $(COREO) $(COREDO) $(CINTLIB) $(PCREDEP) $(CORELIBDEP)
 ifneq ($(ARCH),alphacxx6)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
-	   "$(CORELIBEXTRA) $(CLINGLIB) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
+	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(CLINGO) $(CLINGLIBEXTRA) $(COREO) $(COREDO)" \
+	   "$(CORELIBEXTRA) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
 else
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(CORELDFLAGS)" \
-	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
-	   "$(CORELIBEXTRA) $(CLINGLIB) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
+	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(CLINGO) $(CLINGLIBEXTRA) $(COREO) $(COREDO)" \
+	   "$(CORELIBEXTRA) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
 endif
 
 $(COREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(COREL)

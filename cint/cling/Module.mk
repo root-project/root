@@ -16,13 +16,10 @@ CLINGO       := $(call stripsrc,$(CLINGS:.cpp=.o))
 
 CLINGDEP     := $(CLINGO:.o=.d)
 
-CLINGLIB     := $(LPATH)/libCling.$(SOEXT)
-
 CLINGETC     := $(addprefix etc/cling/Interpreter/,RuntimeUniverse.h ValuePrinter.h ValuePrinterInfo.h) \
                 $(addprefix etc/cling/cint/,multimap multiset)
 
 # used in the main Makefile
-ALLLIBS      += $(CLINGLIB)
 ALLHDRS      += $(CLINGETC)
 
 # include all dependency files
@@ -33,7 +30,7 @@ INCLUDEFILES += $(CLINGDEP)
 # 2) rely on TCling to addIncludePath instead of using CLING_..._INCL below
 CLINGCXXFLAGS = $(shell $(LLVMCONFIG) --cxxflags) -I$(CLINGDIR)/include \
 	-fno-strict-aliasing
-CLINGLLVMLIBS = -L$(shell $(LLVMCONFIG) --libdir) \
+CLINGLIBEXTRA = -L$(shell $(LLVMCONFIG) --libdir) \
 	$(addprefix -lclang,\
 		Frontend Serialization Driver CodeGen Parse Sema Analysis Rewrite AST Lex Basic Edit) \
 	$(patsubst -lLLVM%Disassembler,,\
@@ -46,12 +43,7 @@ CLINGLLVMLIBS = -L$(shell $(LLVMCONFIG) --libdir) \
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-$(CLINGLIB):   $(CLINGO) $(LLVMDEP)
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"      \
-		"$(SOFLAGS)" libCling.$(SOEXT) $@ "$(CLINGO)" \
-		"$(CLINGLLVMLIBS) $(CLINGLIBEXTRA)"
-
-all-$(MODNAME): $(CLINGLIB)
+all-$(MODNAME):
 
 clean-$(MODNAME):
 		@rm -f $(CLINGO)
@@ -59,7 +51,7 @@ clean-$(MODNAME):
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(CLINGDEP) $(CLINGLIB) $(CLINGETC)
+		@rm -f $(CLINGDEP) $(CLINGETC)
 
 distclean::     distclean-$(MODNAME)
 
