@@ -1979,23 +1979,36 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* addr, Int_
    //
    //    WARNING about this new function
    //    ===============================
-   //    This function is designed to replace the function TTree::Branch above.
-   //    This function is far more powerful than the Branch function.
-   //    It supports the full C++, including STL and has the same behaviour
-   //    in split or non-split mode. classname does not have to derive from TObject.
-   //    The function is based on the new TStreamerInfo.
+   //
+   //    This function is designed to replace the internal
+   //    implementation of the old TTree::Branch (whose implementation
+   //    has been moved to BranchOld).
+   //
+   //    NOTE: The 'Bronch' method supports only one possible calls
+   //    signature (where the object type has to be specified
+   //    explicitly and the address must be the address of a pointer).
+   //    For more flexibility use 'Branch'.  Use Bronch only in (rare)
+   //    cases (likely to be legacy cases) where both the new and old
+   //    implementation of Branch needs to be used at the same time.
+   // 
+   //    This function is far more powerful than the old Branch
+   //    function.  It supports the full C++, including STL and has
+   //    the same behaviour in split or non-split mode. classname does
+   //    not have to derive from TObject.  The function is based on
+   //    the new TStreamerInfo.
    //
    //    Build a TBranchElement for an object of class classname.
    //
-   //    addr is the address of a pointer to an object of class classname.
-   //    The class dictionary must be available (ClassDef in class header).
+   //    addr is the address of a pointer to an object of class
+   //    classname.  The class dictionary must be available (ClassDef
+   //    in class header).
    //
    //    Note: See the comments in TBranchElement::SetAddress() for a more
    //          detailed discussion of the meaning of the addr parameter.
    //
-   //    This option requires access to the library where the corresponding class
-   //    is defined. Accessing one single data member in the object implies
-   //    reading the full object.
+   //    This option requires access to the library where the
+   //    corresponding class is defined. Accessing one single data
+   //    member in the object implies reading the full object.
    //
    //    By default the branch buffers are stored in the same file as the Tree.
    //    use TBranch::SetFile to specify a different file
