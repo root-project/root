@@ -38,7 +38,7 @@ namespace cling {
     ///
     /// \retval retval - On a failed lookup retval.isNull() will be true.
     ///
-    clang::QualType tryGetType(llvm::StringRef typeName);
+    clang::QualType findType(llvm::StringRef typeName);
 
     ///\brief Lookup a class declaration by name, starting from the global
     /// namespace, also handles struct, union, namespace, and enum.
@@ -49,15 +49,15 @@ namespace cling {
     ///                          or enum to lookup; NULL otherwise.
     ///\returns The found declaration or null.
     ///
-    const clang::Decl* tryGetScope(llvm::StringRef className,
+    const clang::Decl* findScope(llvm::StringRef className,
                                    const clang::Type** resultType = 0);
 
      
-    const clang::FunctionDecl* tryGetFunctionProto(const clang::Decl* scopeDecl,
+    const clang::FunctionDecl* findFunctionProto(const clang::Decl* scopeDecl,
                                                    llvm::StringRef funcName,
                                                    llvm::StringRef funcProto);
 
-    const clang::FunctionDecl* tryGetFunctionArgs(const clang::Decl* scopeDecl,
+    const clang::FunctionDecl* findFunctionArgs(const clang::Decl* scopeDecl,
                                                   llvm::StringRef funcName,
                                                   llvm::StringRef funcArgs);
 

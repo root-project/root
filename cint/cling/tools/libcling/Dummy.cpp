@@ -23,9 +23,9 @@ void libcling__symbol_requester(const clang::FunctionDecl& Decl,
    flushOStream(llvm::outs());
    Callable C(Decl,Interp);
    LookupHelper h(0);
-   h.tryGetType("");
-   h.tryGetScope("");
-   h.tryGetFunctionProto(0, "", "");
-   h.tryGetFunctionArgs(0, "", "");
+   h.findType("");
+   h.findScope("");
+   h.findFunctionProto(0, "", "");
+   h.findFunctionArgs(0, "", "");
 }
 }

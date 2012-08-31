@@ -29,41 +29,41 @@ cling::LookupHelper* lookup = gCling->getLookupHelper();
 
 const clang::ASTContext& Ctx = gCling->getCI()->getASTContext();
 llvm::SmallSet<const clang::Type*, 4> skip;
-skip.insert(lookup->tryGetType("Double32_t").getTypePtr());
+skip.insert(lookup->findType("Double32_t").getTypePtr());
 const clang::Type* t = 0;
 clang::QualType QT;
 using namespace cling::utils;
 
 // Test desugaring pointers types:
-QT = lookup->tryGetType("Int_t*");
+QT = lookup->findType("Int_t*");
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
 // CHECK:(const char * const) "int *"
 
-QT = lookup->tryGetType("const IntPtr_t*");
+QT = lookup->findType("const IntPtr_t*");
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
 // CHECK:(const char * const) "int *const *"
 
 
 // Test desugaring reference (both r- or l- value) types:
-QT = lookup->tryGetType("const IntPtr_t&");
+QT = lookup->findType("const IntPtr_t&");
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
 // CHECK:(const char * const) "int *const &"
 
-//TODO: QT = lookup->tryGetType("IntPtr_t[32]");
+//TODO: QT = lookup->findType("IntPtr_t[32]");
 
 
 //Desugar template parameters:
-lookup->tryGetScope("A<B<Double32_t, Int_t*> >", &t);
+lookup->findScope("A<B<Double32_t, Int_t*> >", &t);
 QT = clang::QualType(t, 0);
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
 // CHECK:(const char * const) "A<B<Double32_t, int *> >"
 
-lookup->tryGetScope("CTD", &t);
+lookup->findScope("CTD", &t);
 QT = clang::QualType(t, 0);
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
 // CHECK: (const char * const) "C<A<B<Double32_t, int> >, Double32_t>"
 
-lookup->tryGetScope("CTDConst", &t);
+lookup->findScope("CTDConst", &t);
 QT = clang::QualType(t, 0);
 Transform::GetPartiallyDesugaredType(Ctx, QT, skip).getAsString().c_str()
 // CHECK: (const char * const) "C<A<B<const Double32_t, const int> >, Double32_t>"
