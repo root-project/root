@@ -92,7 +92,7 @@ Double_t RooBernstein::evaluate() const
   } else if(degree == 1) {
 
     Double_t a0 = ((RooAbsReal *)iter.next())->getVal(); // c0
-    Double_t a1 = ((RooAbsReal *)iter.next())->getVal(); // c1 - c0
+    Double_t a1 = ((RooAbsReal *)iter.next())->getVal() - a0; // c1 - c0
     return a1 * x + a0;
 
   } else if(degree == 2) {
