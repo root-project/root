@@ -214,10 +214,8 @@ void UpdateWindow::Execute()const
    assert(fView.fContext != 0 && "Execute, view.fContext is null");
 
    if (QuartzPixmap *pixmap = fView.fBackBuffer) {
-      CGImageRef image = [pixmap createImageFromPixmap];//CGBitmapContextCreateImage(pixmap.fContext);
-      const CGRect imageRect = CGRectMake(0, 0, pixmap.fWidth, pixmap.fHeight);
-      CGContextDrawImage(fView.fContext, imageRect, image);
-      CGImageRelease(image);
+      Rectangle_t copyArea = {0, 0, pixmap.fWidth, pixmap.fHeight};
+      [fView copy : pixmap area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
    }
 }
 
@@ -514,6 +512,7 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
                CGContextFlush(prevContext);
             prevContext = currContext;
 
+
             const Quartz::CGStateGuard ctxGuard(currContext);
             
             //Either use shape combine mask, or clip mask.
@@ -529,16 +528,13 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
             } else if (view.fClipMaskIsValid)
                CGContextClipToMask(currContext, CGRectMake(0, 0, view.fClipMask.fWidth, view.fClipMask.fHeight), view.fClipMask.fImage);
             
+
             cmd->Execute();//This can throw, we should restore as much as we can here.
             
             if (view.fBackBuffer) {
                //Very "special" window.
-               CGImageRef image = [view.fBackBuffer createImageFromPixmap];//CGBitmapContextCreateImage(view.fBackBuffer.fContext);
-               if (image) {
-                  const CGRect imageRect = CGRectMake(0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight);
-                  CGContextDrawImage(view.fContext, imageRect, image);
-                  CGImageRelease(image);
-               }
+               Rectangle_t copyArea = {0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight};
+               [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
             }
             
             [view unlockFocus];

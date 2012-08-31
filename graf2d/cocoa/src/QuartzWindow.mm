@@ -862,6 +862,12 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
+- (void) setFDelayedTransient : (BOOL) d
+{
+   fDelayedTransient = d;
+}
+
+//______________________________________________________________________________
 - (QuartzImage *) fShapeCombineMask
 {
    return fShapeCombineMask;
@@ -878,12 +884,6 @@ void print_mask_info(ULong_t mask)
          //Check window's shadow???
       }
    }
-}
-
-//______________________________________________________________________________
-- (void) setFDelayedTransient : (BOOL) d
-{
-   fDelayedTransient = d;
 }
 
 ///////////////////////////////////////////////////////////
@@ -1540,12 +1540,19 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) copyImage : (QuartzImage *) srcImage area : (Rectangle_t) area withMask : (QuartzImage *) mask clipOrigin : (Point_t) clipXY toPoint : (Point_t) dstPoint
 {
+   //TODO: test and fix all possible cases with crop area and masks.
+
    //Check parameters.
    assert(srcImage != nil && "copyImage:area:withMask:clipOrigin:toPoint:, srcImage parameter is nil");
    assert(srcImage.fImage != nil && "copyImage:area:withMask:clipOrigin:toPoint:, srcImage.fImage is nil");
 
    //Check self.
    assert(self.fContext != 0 && "copyImage:area:withMask:clipOrigin:toPoint:, self.fContext is null");
+   
+   if (!X11::AdjustCropArea(srcImage, area)) {
+      NSLog(@"QuartzView: -copyImage:area:withMask:clipOrigin:toPoint:, srcRect and copyRect do not intersect");
+      return;
+   }
    
    //No RAII for subImage, since it can be really subimage or image itself and
    //in these cases there is no need to release image.
@@ -1591,6 +1598,8 @@ void print_mask_info(ULong_t mask)
 {
    //To copy one "window" to another "window", I have to ask source QuartzView to draw intself into
    //bitmap, and copy this bitmap into the destination view.
+   
+   //TODO: this code must be tested, with all possible cases.
 
    assert(srcView != nil && "copyView:area:toPoint:, srcView parameter is nil");
 
@@ -1634,36 +1643,55 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) copyPixmap : (QuartzPixmap *) srcPixmap area : (Rectangle_t) area withMask : (QuartzImage *) mask clipOrigin : (Point_t) clipXY toPoint : (Point_t) dstPoint
 {
-   //Check parameters.  
+   //Check parameters.
    assert(srcPixmap != nil && "copyPixmap:area:withMask:clipOrigin:toPoint:, srcPixmap parameter is nil");
-   
-   //More difficult case: pixmap already contains reflected image.
-   area.fY = X11::LocalYROOTToCocoa(srcPixmap, area.fY) - area.fHeight;
-   
+
    if (!X11::AdjustCropArea(srcPixmap, area)) {
       NSLog(@"QuartzView: -copyPixmap:area:withMask:clipOrigin:toPoint, no intersection between pixmap rectangle and cropArea");
       return;
    }
-
+   
    //Check self.
    assert(self.fContext != 0 && "copyPixmap:area:withMask:clipOrigin:toPoint:, self.fContext is null");
-   
-   const Util::CFScopeGuard<CGImageRef> imageFromPixmap([srcPixmap createImageFromPixmap : area]);
-   assert(imageFromPixmap.Get() != 0 && "copyPixmap:area:withMask:clipOrigin:toPoint:, createImageFromPixmap failed");
 
    //Save context state.
    const Quartz::CGStateGuard ctxGuard(self.fContext);
    
+   CGContextTranslateCTM(self.fContext, 0., self.frame.size.height);//???
+   CGContextScaleCTM(self.fContext, 1., -1.);
+
+   const Util::CFScopeGuard<CGImageRef> imageFromPixmap([srcPixmap createImageFromPixmap]);
+   assert(imageFromPixmap.Get() != 0 && "copyPixmap:area:withMask:clipOrigin:toPoint:, createImageFromPixmap failed");
+
+   CGImageRef subImage = 0;
+   bool needSubImage = false;
+   if (area.fX || area.fY || area.fWidth != srcPixmap.fWidth || area.fHeight != srcPixmap.fHeight) {
+      needSubImage = true;
+      const CGRect subImageRect = CGRectMake(area.fX, area.fY, area.fHeight, area.fWidth);
+      subImage = CGImageCreateWithImageInRect(imageFromPixmap.Get(), subImageRect);
+      if (!subImage) {
+         NSLog(@"QuartzView: -copyImage:area:withMask:clipOrigin:toPoint:, subimage creation failed");
+         return;
+      }
+   } else
+      subImage = imageFromPixmap.Get();
+   
    if (mask) {
+      //TODO: testtesttest!!!
       assert(mask.fImage != nil && "copyPixmap:area:withMask:clipOrigin:toPoint:, mask.fImage is nil");
       assert(CGImageIsMask(mask.fImage) == true && "copyPixmap:area:withMask:clipOrigin:toPoint:, mask.fImage is not a mask");
 
+      clipXY.fY = X11::LocalYROOTToCocoa(self, clipXY.fY + mask.fHeight);
       const CGRect clipRect = CGRectMake(clipXY.fX, clipXY.fY, mask.fWidth, mask.fHeight);
       CGContextClipToMask(self.fContext, clipRect, mask.fImage);
    }
    
+   dstPoint.fY = X11::LocalYCocoaToROOT(self, dstPoint.fY + area.fHeight);
    const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
    CGContextDrawImage(self.fContext, imageRect, imageFromPixmap.Get());
+   
+   if (needSubImage)
+      CGImageRelease(subImage);
 }
 
 
@@ -2163,12 +2191,8 @@ void print_mask_info(ULong_t mask)
 
          if (fBackBuffer) {
             //Very "special" window.
-            CGImageRef image = [fBackBuffer createImageFromPixmap];// CGBitmapContextCreateImage(fBackBuffer.fContext);
-            if (image) {
-               const CGRect imageRect = CGRectMake(0, 0, fBackBuffer.fWidth, fBackBuffer.fHeight);
-               CGContextDrawImage(fContext, imageRect, image);
-               CGImageRelease(image);
-            }
+            Rectangle_t copyArea = {0, 0, fBackBuffer.fWidth, fBackBuffer.fHeight};
+            [self copy : fBackBuffer area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
          }
      
          vx->CocoaDrawOFF();

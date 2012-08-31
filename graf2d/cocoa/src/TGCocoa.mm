@@ -32,7 +32,7 @@
 #include "CocoaUtils.h"
 #include "X11Events.h"
 #include "X11Buffer.h"
-#include "TGLFormat.h"
+//#include "TGLFormat.h"
 #include "TGClient.h"
 #include "TGWindow.h"
 #include "TSystem.h"
@@ -439,7 +439,7 @@ Int_t TGCocoa::InitWindow(ULong_t parentID)
    WindowAttributes_t attr = {};
 
    if (fPimpl->IsRootWindow(parentID)) {
-      X11::GetRootWindowAttributes(&attr);
+      ROOT::MacOSX::X11::GetRootWindowAttributes(&attr);   
    } else {
       [fPimpl->GetWindow(parentID) getAttributes : &attr];
    }
@@ -502,7 +502,7 @@ void TGCocoa::GetGeometry(Int_t windowID, Int_t & x, Int_t &y, UInt_t &w, UInt_t
       //Comment in TVirtualX suggests, that wid can be < 0.
       //This will be screen's geometry.
       WindowAttributes_t attr = {};
-      X11::GetRootWindowAttributes(&attr);
+      ROOT::MacOSX::X11::GetRootWindowAttributes(&attr);
       x = attr.fX;
       y = attr.fY;
       w = attr.fWidth;
@@ -601,11 +601,10 @@ void TGCocoa::UpdateWindow(Int_t /*mode*/)
       
       if (dstView.fContext) {
          //We can draw directly.
-         const Util::CFScopeGuard<CGImageRef> image([pixmap createImageFromPixmap]);
-         if (image.Get()) {
-            const CGRect imageRect = CGRectMake(0, 0, pixmap.fWidth, pixmap.fHeight);
-            CGContextDrawImage(dstView.fContext, imageRect, image.Get());
-         }
+         Rectangle_t copyArea = {};
+         copyArea.fWidth = pixmap.fWidth, copyArea.fHeight = pixmap.fHeight;
+         
+         [dstView copy : pixmap area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
       } else {
          //Have to wait.
          fPimpl->fX11CommandBuffer.AddUpdateWindow(dstView);
@@ -762,7 +761,7 @@ void TGCocoa::GetWindowAttributes(Window_t wid, WindowAttributes_t &attr)
 
    if (fPimpl->IsRootWindow(wid)) {
       //'root' window.
-      X11::GetRootWindowAttributes(&attr);
+      ROOT::MacOSX::X11::GetRootWindowAttributes(&attr);
    } else {
       [fPimpl->GetWindow(wid) getAttributes : &attr];
    }
@@ -837,7 +836,7 @@ void TGCocoa::ReparentChild(Window_t wid, Window_t pid, Int_t x, Int_t y)
       NSObject<X11Window> * const newParent = fPimpl->GetWindow(pid);
       assert(newParent.fIsPixmap == NO && "ReparentChild, pixmap can not be a new parent");
       [view setX : x Y : y];
-      [newParent addChild : view];
+      [newParent addChild : view];//It'll also update view's level, no need to call updateLevel.
       [view release];
    }
 }
@@ -1132,7 +1131,7 @@ void TGCocoa::GetWindowSize(Drawable_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_
    
    if (fPimpl->IsRootWindow(wid)) {
       WindowAttributes_t attr = {};
-      X11::GetRootWindowAttributes(&attr);
+      ROOT::MacOSX::X11::GetRootWindowAttributes(&attr);
       x = attr.fX;
       y = attr.fY;
       w = attr.fWidth;
@@ -1397,7 +1396,8 @@ void TGCocoa::DrawLineAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x1, In
    //Can be called directly of when flushing command buffer.
    assert(!fPimpl->IsRootWindow(wid) && "DrawLineAux, called for 'root' window");
    
-   CGContextRef ctx = fPimpl->GetDrawable(wid).fContext;
+   NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
+   CGContextRef ctx = drawable.fContext;
    assert(ctx != 0 && "DrawLineAux, ctx is null");
 
    const Quartz::CGStateGuard ctxGuard(ctx);//Will restore state back.
@@ -1410,8 +1410,17 @@ void TGCocoa::DrawLineAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x1, In
    //draw a line [0, 0, -> w, 0].
    //I use a small translation, after all, this is ONLY gui method and it
    //will not affect anything except GUI.
-   CGContextTranslateCTM(ctx, 0.f, 1.);
+
    CGContextSetAllowsAntialiasing(ctx, false);//Smoothed line is of wrong color and in a wrong position - this is bad for GUI.
+   
+   if (!drawable.fIsPixmap) {
+      CGContextTranslateCTM(ctx, 0.f, 1.);
+   } else {
+      //Pixmap uses native Cocoa's left-low-corner system.
+      //TODO: check the line on the edge.
+      y1 = Int_t(X11::LocalYROOTToCocoa(drawable, y1));
+      y2 = Int_t(X11::LocalYROOTToCocoa(drawable, y2));
+   }
 
    SetStrokeParametersFromX11Context(ctx, gcVals);
    CGContextBeginPath(ctx);
@@ -1523,11 +1532,19 @@ void TGCocoa::DrawRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x
    //Can be called directly or during flushing command buffer.
    assert(!fPimpl->IsRootWindow(wid) && "DrawRectangleAux, called for 'root' window");
 
-   //I can not draw a line at y == 0, shift the rectangle to 1 pixel (and reduce its height).
-   if (!y) {
-      y = 1;
-      if (h)
-         h -= 1;
+   NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
+
+   if (!drawable.fIsPixmap) {
+      //I can not draw a line at y == 0, shift the rectangle to 1 pixel (and reduce its height).
+      if (!y) {
+         y = 1;
+         if (h)
+            h -= 1;
+      }
+   } else {
+      //TODO: check the line on the edge.
+      //Pixmap has native Cocoa's low-left-corner system.
+      y = Int_t(X11::LocalYROOTToCocoa(drawable, y + h));
    }
 
    CGContextRef ctx = fPimpl->GetDrawable(wid).fContext;
@@ -1598,6 +1615,12 @@ void TGCocoa::FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
    CGContextRef ctx = drawable.fContext;
    CGSize patternPhase = {};
+   
+   if (drawable.fIsPixmap) {
+      //Pixmap has low-left-corner based system.
+      //TODO: check how pixmap works with pattern fill.
+      y = Int_t(X11::LocalYROOTToCocoa(drawable, y + h));
+   }
 
    const CGRect fillRect = CGRectMake(x, y, w, h);
 
@@ -1705,11 +1728,21 @@ void TGCocoa::FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point
       SetFillPattern(ctx, &patternContext);
    } else
       SetFilledAreaColorFromX11Context(ctx, gcVals);
-      
+   
+   //These +2 -2 shit is the result of ROOT's GUI producing strange coordinates out of ....
+   // - first noticed on checkmarks in a menu - they were all shifted.
+   
    CGContextBeginPath(ctx);
-   CGContextMoveToPoint(ctx, polygon[0].fX, polygon[0].fY - 2);
-   for (Int_t i = 1; i < nPoints; ++i)
-      CGContextAddLineToPoint(ctx, polygon[i].fX, polygon[i].fY - 2);
+   if (!drawable.fIsPixmap) {
+      CGContextMoveToPoint(ctx, polygon[0].fX, polygon[0].fY - 2);
+      for (Int_t i = 1; i < nPoints; ++i)
+         CGContextAddLineToPoint(ctx, polygon[i].fX, polygon[i].fY - 2);
+   } else {
+      CGContextMoveToPoint(ctx, polygon[0].fX, X11::LocalYROOTToCocoa(drawable, polygon[0].fY + 2));
+      for (Int_t i = 1; i < nPoints; ++i)
+         CGContextAddLineToPoint(ctx, polygon[i].fX, X11::LocalYROOTToCocoa(drawable, polygon[i].fY + 2));
+   }
+
    CGContextFillPath(ctx);
    
    CGContextSetAllowsAntialiasing(ctx, true);
@@ -1840,6 +1873,7 @@ void TGCocoa::CopyArea(Drawable_t src, Drawable_t dst, GContext_t gc, Int_t srcX
       }
    } else {
       if (fPimpl->GetDrawable(src).fIsPixmap) {
+         //Both are pixmaps, nothing is buffered for src (???).
          CopyAreaAux(src, dst, gcVals, srcX, srcY, width, height, dstX, dstY);
       } else {
          if (!IsCocoaDraw())
@@ -1853,7 +1887,7 @@ void TGCocoa::CopyArea(Drawable_t src, Drawable_t dst, GContext_t gc, Int_t srcX
 //______________________________________________________________________________
 void TGCocoa::DrawStringAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, Int_t y, const char *text, Int_t len)
 {
-   //Can be called by ROOT directly, or indirectly by AppKit.  
+   //Can be called by ROOT directly, or indirectly by AppKit.
    assert(!fPimpl->IsRootWindow(wid) && "DrawStringAux, called for the 'root' window");
 
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
@@ -1865,17 +1899,18 @@ void TGCocoa::DrawStringAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, I
    CGContextSetTextMatrix(ctx, CGAffineTransformIdentity);
    
    //View is flipped, I have to transform for text to work.
-   CGContextTranslateCTM(ctx, 0., drawable.fHeight);
-   CGContextScaleCTM(ctx, 1., -1.);   
+   if (!drawable.fIsPixmap) {
+      CGContextTranslateCTM(ctx, 0., drawable.fHeight);
+      CGContextScaleCTM(ctx, 1., -1.);
+   }
 
-   //Text must be antialiased.
+   //Text must be antialiased
    CGContextSetAllowsAntialiasing(ctx, true);
       
    assert(gcVals.fMask & kGCFont && "DrawString, font is not set in a context");
 
    if (len < 0)//Negative length can come from caller.
       len = std::strlen(text);
-   const std::string substr(text, len);
    //Text can be not black, for example, highlighted label.
    CGFloat textColor[4] = {0., 0., 0., 1.};//black by default.
    //I do not check the results here, it's ok to have a black text.
@@ -2064,27 +2099,29 @@ void TGCocoa::CopyPixmap(Int_t pixmapID, Int_t x, Int_t y)
 {
    assert(pixmapID > (Int_t)fPimpl->GetRootWindowID() && "CopyPixmap, pixmapID parameter is not a valid id");
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "CopyPixmap, fSelectedDrawable is not a valid window id");
-   assert(fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap == NO && "CopyPixmap, fSelectedDrawable is not a valid window");
    
    NSObject<X11Drawable> * const source = fPimpl->GetDrawable(pixmapID);
    assert([source isKindOfClass : [QuartzPixmap class]] && "CopyPixmap, source is not a pixmap");
+   QuartzPixmap * const pixmap = (QuartzPixmap *)source;
    
-   QuartzPixmap * const pixmap = (QuartzPixmap *)source;   
-   NSObject<X11Window> * const window = fPimpl->GetWindow(fSelectedDrawable);
-   if (window.fBackBuffer) {
-      const Util::CFScopeGuard<CGImageRef> image([pixmap createImageFromPixmap]);
-      if (image.Get()) {
-         CGContextRef dstCtx = window.fBackBuffer.fContext;
-         assert(dstCtx != 0 && "CopyPixmap, destination context is null");
+   NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(fSelectedDrawable);
+   NSObject<X11Drawable> * destination = nil;
 
-         const CGRect imageRect = CGRectMake(x, y, pixmap.fWidth, pixmap.fHeight);
-
-         CGContextDrawImage(dstCtx, imageRect, image.Get());
-         CGContextFlush(dstCtx);
-      }
+   if (drawable.fIsPixmap) {
+      destination = drawable;
    } else {
-      Warning("CopyPixmap", "Operation skipped, since destination window is not double buffered");
+      NSObject<X11Window> * const window = fPimpl->GetWindow(fSelectedDrawable);
+      if (window.fBackBuffer) {
+         destination = window.fBackBuffer;
+      } else {
+         Warning("CopyPixmap", "Operation skipped, since destination window is not double buffered");
+         return;
+      }
    }
+
+   Rectangle_t copyArea = {0, 0, pixmap.fWidth, pixmap.fHeight};
+   Point_t dstPoint = {x, y};
+   [destination copy : pixmap area : copyArea withMask : nil clipOrigin : Point_t() toPoint : dstPoint];
 }
 
 //______________________________________________________________________________
@@ -2870,7 +2907,7 @@ void TGCocoa::QueryPointer(Window_t winID, Window_t &rootWinID, Window_t &childW
 //OpenGL management.
 
 //______________________________________________________________________________
-Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &formatComponents)
+Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &/*formatComponents*/)
 {
    //ROOT never creates GL widgets with 'root' as a parent (so not top-level gl-windows).
    //If this change, assert must be deleted.
@@ -2882,7 +2919,7 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
    
 
    std::vector<NSOpenGLPixelFormatAttribute> attribs;
-   for (size_type i = 0, e = formatComponents.size(); i < e; ++i) {
+  /* for (size_type i = 0, e = formatComponents.size(); i < e; ++i) {
       const component_type &comp = formatComponents[i];
       
       if (comp.first == TGLFormat::kDoubleBuffer) {
@@ -2902,7 +2939,7 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
          attribs.push_back(NSOpenGLPFASamples);
          attribs.push_back(comp.second ? comp.second : 4);
       }
-   }
+   }*/
    
    attribs.push_back(NSOpenGLPFAAccelerated);//??? I think, TGLWidget always wants this.
    attribs.push_back(0);
@@ -3957,13 +3994,13 @@ void TGCocoa::GetRegionBox(Region_t /*reg*/, Rectangle_t * /*rect*/)
 }
 
 //______________________________________________________________________________
-X11::EventTranslator *TGCocoa::GetEventTranslator()const
+ROOT::MacOSX::X11::EventTranslator *TGCocoa::GetEventTranslator()const
 {
    return &fPimpl->fX11EventTranslator;
 }
 
 //______________________________________________________________________________
-X11::CommandBuffer *TGCocoa::GetCommandBuffer()const
+ROOT::MacOSX::X11::CommandBuffer *TGCocoa::GetCommandBuffer()const
 {
    return &fPimpl->fX11CommandBuffer;
 }

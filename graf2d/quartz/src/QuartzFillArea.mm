@@ -8,22 +8,25 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #include <algorithm>
 #include <cassert>
 #include <vector>
 
 #include "QuartzFillArea.h"
 #include "TColorGradient.h"
+#include "QuartzLine.h"
 #include "CocoaUtils.h"
+#include "TVirtualX.h"
 #include "RStipples.h"
 #include "TError.h"
 #include "TROOT.h"
 
-static Int_t gFillHollow;  // Flag if fill style is hollow
-static Int_t gFillPattern; // Fill pattern
 
 namespace ROOT {
 namespace Quartz {
+
+namespace Util = MacOSX::Util;
 
 namespace {
 
@@ -39,27 +42,143 @@ void InvertGradientPositions(std::vector<CGFloat> &positions)
       positions[i] = 1. - positions[i];
 }
 
+}//Unnamed namespace.
+
+//______________________________________________________________________________
+Bool_t SetFillColor(CGContextRef ctx, Color_t colorIndex)
+{
+   assert(ctx != 0 && "SetFillColor, ctx parameter is null");
+
+   const TColor * const color = gROOT->GetColor(colorIndex);
+   if (!color)
+      return kFALSE;
+
+   const CGFloat alpha = color->GetAlpha();
+
+   Float_t rgb[3] = {};
+   color->GetRGB(rgb[0], rgb[1], rgb[2]);
+   CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
+   
+   return kTRUE;
 }
 
+//______________________________________________________________________________
+void DrawPattern(void *data, CGContextRef ctx)
+{
+   assert(data != 0 && "DrawPattern, data parameter is null");
+   assert(ctx != 0 && "DrawPattern, ctx parameter is null");
+
+   //Draw a stencil pattern from gStipples
+   const unsigned stencilIndex = *static_cast<unsigned *>(data);
+
+   for (int i = 30, y = 0; i >= 0; i -= 2, ++y) {
+      int x = 0;
+      for (int j = 0; j < 8; ++j, ++x) {
+         if (gStipples[stencilIndex][i] & (1 << j))
+            CGContextFillRect(ctx, CGRectMake(x, y, 1, 1));
+      }
+      
+      for (int j = 0; j < 8; ++j, ++x) {
+         if (gStipples[stencilIndex][i + 1] & (1 << j))
+            CGContextFillRect(ctx, CGRectMake(x, y, 1, 1));
+      }
+   }
+}
+
+//______________________________________________________________________________
+bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex)
+{
+   assert(ctx != 0 && "SetFillPattern, ctx parameter is null");
+   assert(patternIndex != 0 && "SetFillPattern, patternIndex parameter is null");
+
+   const TColor *fillColor = gROOT->GetColor(gVirtualX->GetFillColor());
+   if (!fillColor)
+      return false;
+
+   CGFloat rgba[] = {fillColor->GetRed(), fillColor->GetGreen(), fillColor->GetBlue(), fillColor->GetAlpha()};
+
+   const Util::CFScopeGuard<CGColorSpaceRef> baseSpace(CGColorSpaceCreateDeviceRGB());
+   if (!baseSpace.Get())
+      return false;
+
+   const Util::CFScopeGuard<CGColorSpaceRef> patternSpace(CGColorSpaceCreatePattern (baseSpace.Get()));
+   if (!patternSpace.Get())
+      return false;
+
+   CGContextSetFillColorSpace(ctx, patternSpace.Get());
+
+   CGPatternCallbacks callbacks = {0, &DrawPattern, 0};
+   const Util::CFScopeGuard<CGPatternRef> pattern(CGPatternCreate((void*)patternIndex,
+                                                  CGRectMake(0, 0, 16, 16),
+                                                  CGAffineTransformIdentity, 16, 16,
+                                                  kCGPatternTilingConstantSpacing,
+                                                  false, &callbacks));
+
+   if (!pattern.Get())
+      return false;
+
+   CGContextSetFillPattern(ctx, pattern.Get(), rgba);
+
+   return true;
+}
+
+//______________________________________________________________________________
+bool SetFillAreaParameters(CGContextRef ctx, unsigned *patternIndex)
+{
+   assert(ctx != 0 && "SetFillAreaParameters, ctx parameter is null");
+   
+   const unsigned fillStyle = gVirtualX->GetFillStyle() / 1000;
+   
+   //2 is hollow, 1 is solid and 3 is a hatch, !solid and !hatch - this is from O.C.'s code.
+   if (fillStyle == 2 || (fillStyle != 1 && fillStyle != 3)) {
+      if (!SetLineColor(ctx, gVirtualX->GetFillColor())) {
+         ::Error("SetFillAreaParameters", "Line color for index %d was not found", int(gVirtualX->GetLineColor()));
+         return false;
+      }
+   } else if (fillStyle == 1) {
+      //Solid fill.
+      if (!SetFillColor(ctx, gVirtualX->GetFillColor())) {
+         ::Error("SetFillAreaParameters", "Fill color for index %d was not found", int(gVirtualX->GetFillColor()));
+         return false;
+      }
+   } else {
+      assert(patternIndex != 0 && "SetFillAreaParameters, pattern index in null");
+
+      *patternIndex = gVirtualX->GetFillStyle() % 1000;
+      //ROOT has 26 fixed patterns.
+      if (*patternIndex >= 26) {
+         ::Error("SetFillAreaParameters", "Pattern index must be < 26");
+         return false;
+      }
+
+      if (!SetFillPattern(ctx, patternIndex)) {
+         ::Error("SetFillAreaParameters", "SetFillPattern failed");
+         return false;
+      }
+   }
+
+   return true;
+}
    
 //______________________________________________________________________________
-void DrawBox(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2,
-             Int_t mode)
+void DrawBox(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2, bool hollow)
 {
    // Draw a box
             
-   if (x1 > x2) std::swap(x1, x2);
-   if (y1 > y2) std::swap(y1, y2);
-
-   if (mode) CGContextFillRect(ctx, CGRectMake(x1, y1, x2 - x1, y2 - y1));
-   else      CGContextStrokeRect(ctx, CGRectMake(x1, y1, x2 - x1, y2 - y1));
+   if (x1 > x2)
+      std::swap(x1, x2);
+   if (y1 > y2)
+      std::swap(y1, y2);
+   
+   if (hollow)
+      CGContextStrokeRect(ctx, CGRectMake(x1, y1, x2 - x1, y2 - y1));
+   else
+      CGContextFillRect(ctx, CGRectMake(x1, y1, x2 - x1, y2 - y1));
 }
 
 //______________________________________________________________________________
 void DrawBoxGradient(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2, const TColorGradient *extendedColor, Bool_t drawShadow)
 {
-   using ROOT::MacOSX::Util::CFScopeGuard;
-
    assert(ctx != nullptr && "DrawBoxGradient, ctx parameter is null");
    assert(extendedColor != nullptr && "DrawBoxGradient, extendedColor parameter is null");
    assert(extendedColor->GetNumberOfSteps() != 0 && "DrawBoxGradient, no colors in extendedColor");
@@ -91,36 +210,47 @@ void DrawBoxGradient(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2, c
    CGContextClip(ctx);
    
    //Create a gradient.
-   const CFScopeGuard<CGColorSpaceRef> baseSpace(CGColorSpaceCreateDeviceRGB());
+   const Util::CFScopeGuard<CGColorSpaceRef> baseSpace(CGColorSpaceCreateDeviceRGB());
    
    std::vector<CGFloat> positions(extendedColor->GetColorPositions(), extendedColor->GetColorPositions() + extendedColor->GetNumberOfSteps());
    InvertGradientPositions(positions);
 
-   const CFScopeGuard<CGGradientRef> gradient(CGGradientCreateWithColorComponents(baseSpace.Get(), extendedColor->GetColors(), &positions[0], extendedColor->GetNumberOfSteps()));
+   const Util::CFScopeGuard<CGGradientRef> gradient(CGGradientCreateWithColorComponents(baseSpace.Get(), extendedColor->GetColors(), &positions[0], extendedColor->GetNumberOfSteps()));
    CGContextDrawLinearGradient(ctx, gradient.Get(), startPoint, endPoint, 0);
 }
 
 //______________________________________________________________________________
-void DrawFillArea(CGContextRef ctx, Int_t n, TPoint * xy, Bool_t shadow)
+void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t shadow)
 {
    // Draw a filled area through all points.
    // n         : number of points
    // xy        : list of points
+
+   assert(ctx != 0 && "DrawFillArea, ctx parameter is null");
+   assert(xy != 0 && "DrawFillArea, xy parameter is null");
                   
-   CGContextBeginPath (ctx);
+   CGContextBeginPath(ctx);
       
-   CGContextMoveToPoint (ctx, xy[0].fX, xy[0].fY);
+   CGContextMoveToPoint(ctx, xy[0].fX, xy[0].fY);
    for (Int_t i = 1; i < n; ++i) 
-      CGContextAddLineToPoint (ctx, xy[i].fX, xy[i].fY);
+      CGContextAddLineToPoint(ctx, xy[i].fX, xy[i].fY);
 
    CGContextClosePath(ctx);
       
-   if (gFillHollow) 
+   const unsigned fillStyle = gVirtualX->GetFillStyle() / 1000;
+   
+   //2 is hollow, 1 is solid and 3 is a hatch, !solid and !hatch - this is from O.C.'s code.
+   if (fillStyle == 2 || (fillStyle != 1 && fillStyle != 3)) {
       CGContextStrokePath(ctx);
-   else {
+   } else if (fillStyle == 1) {
       if (shadow)
          CGContextSetShadow(ctx, shadowOffset, shadowBlur);
       
+      CGContextFillPath(ctx);
+   } else {
+      if (shadow)
+         CGContextSetShadow(ctx, shadowOffset, shadowBlur);
+
       CGContextFillPath(ctx);
    }
 }
@@ -194,101 +324,6 @@ void DrawFillAreaGradient(CGContextRef ctx, Int_t nPoints, const TPoint *xy, con
    const CFScopeGuard<CGGradientRef> gradient(CGGradientCreateWithColorComponents(baseSpace.Get(), extendedColor->GetColors(), &positions[0],
                                                                                   extendedColor->GetNumberOfSteps()));
    CGContextDrawLinearGradient(ctx, gradient.Get(), startPoint, endPoint, 0);
-}
-   
-//______________________________________________________________________________
-void SetFillStyle(CGContextRef ctx, Int_t style, 
-                  Float_t r, Float_t g, Float_t b, Float_t a)
-
-{
-   // Set fill area style.
-   //
-   // style - compound fill area interior style
-   //         style = 1000 * interiorstyle + styleindex
-      
-   Int_t fais = style/1000;
-   Int_t fasi = style%1000;   
-   
-   gFillHollow  = 0;
-   gFillPattern = 0;     
-
-   switch (fais) {
-      case 1:         // solid
-         break;
-            
-      case 2:         // pattern
-         gFillHollow = 1;
-         break;
-            
-      case 3:         // hatch
-         gFillHollow  = 0;
-         gFillPattern = fasi;
-         SetStencilPattern(ctx, r, g, b, a);
-         break;
-            
-      default:
-         gFillHollow = 1;
-         break;
-   }
-}
-
-   
-//______________________________________________________________________________
-void DrawStencil (void *sti, CGContextRef ctx)
-{
-   // Draw a stencil pattern from gStipples
-      
-   int i,j;
-      
-   int *st = static_cast<int *>(sti);
-      
-   int x , y=0; 
-   for (i=0; i<31; i=i+2) {
-      x = 0;
-      for (j=0; j<8; j++) {
-         if (gStipples[*st][i] & (1<<j)) 
-            CGContextFillRect(ctx, CGRectMake(x, y, 1, 1));
-         x++;
-      }
-      for (j=0; j<8; j++) {
-         if (gStipples[*st][i+1] & (1<<j)) 
-            CGContextFillRect(ctx, CGRectMake(x, y, 1, 1));
-         x++;
-      }
-      y++;
-   }
-}
-
-
-//______________________________________________________________________________
-void SetStencilPattern(CGContextRef ctx, 
-                       Float_t r, Float_t g, Float_t b, Float_t a)
-{
-   // Set the fill pattern
-      
-   CGPatternRef pattern;
-   CGColorSpaceRef baseSpace;
-   CGColorSpaceRef patternSpace;
-            
-   CGFloat RGB[4];
-   RGB[0] = r;
-   RGB[1] = g;
-   RGB[2] = b;
-   RGB[3] = a;
-   CGPatternCallbacks callbacks = {0, &DrawStencil, NULL};
-      
-   baseSpace    = CGColorSpaceCreateDeviceRGB ();
-   patternSpace = CGColorSpaceCreatePattern (baseSpace);
-   CGContextSetFillColorSpace (ctx, patternSpace);
-   CGColorSpaceRelease (patternSpace);
-   CGColorSpaceRelease (baseSpace);
-      
-   pattern = CGPatternCreate(&gFillPattern, CGRectMake(0, 0, 16, 16),
-                             CGAffineTransformIdentity, 16, 16,
-                             kCGPatternTilingConstantSpacing,
-                             false, &callbacks);
-   CGContextSetFillPattern (ctx, pattern, RGB);
-   CGPatternRelease (pattern);
 }
 
 }//namespace Quartz

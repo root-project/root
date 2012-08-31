@@ -47,6 +47,7 @@ std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t 
 
 }
 
+namespace X11 = ROOT::MacOSX::X11;
 namespace Util = ROOT::MacOSX::Util;
 namespace Quartz = ROOT::Quartz;
 
@@ -157,6 +158,11 @@ namespace Quartz = ROOT::Quartz;
 - (CGImageRef) createImageFromPixmap : (Rectangle_t) cropArea
 {
    //Crop area must be valid and adjusted by caller.
+   
+   //This function is incorrect in a general case, it does not care about
+   //cropArea.fX and cropArea.fY, very sloppy implementation.
+   //TODO: either fix it or remove completely.
+   
    assert(cropArea.fX >= 0 && "createImageFromPixmap:, cropArea.fX is negative");
    assert(cropArea.fY >= 0 && "createImageFromPixmap:, cropArea.fY is negative");
    assert(cropArea.fWidth <= fWidth && "createImageFromPixmap:, bad cropArea.fWidth");
@@ -253,10 +259,6 @@ namespace Quartz = ROOT::Quartz;
    //Save context state.
    const Quartz::CGStateGuard stateGuard(fContext);
 
-   CGContextTranslateCTM(fContext, 0., fHeight);
-   CGContextScaleCTM(fContext, 1., -1.);
-
-
    if (mask) {
       assert(mask.fImage != nil && "copyImage:area:withMask:clipOrigin:toPoint, mask is not nil, but mask.fImage is nil");
       assert(CGImageIsMask(mask.fImage) && "copyImage:area:withMask:clipOrigin:toPoint, mask.fImage is not a mask");
@@ -290,9 +292,6 @@ namespace Quartz = ROOT::Quartz;
       return;
 
    const Quartz::CGStateGuard stateGuard(fContext);
-
-   CGContextTranslateCTM(fContext, 0., fHeight);
-   CGContextScaleCTM(fContext, 1., -1.);
    
    if (mask) {
       assert(mask.fImage != nil && "copyPixmap:area:withMask:clipOrigin:toPoint, mask is not nil, but mask.fImage is nil");
@@ -331,7 +330,8 @@ namespace Quartz = ROOT::Quartz;
    assert(x < fWidth && "putPixel:X:Y:, x parameter is >= self.fWidth");
    assert(y < fHeight && "putPixel:X:Y:, y parameter is >= self.fHeight");
    
-   unsigned char *dst = fData + (fHeight - 1 - y) * fWidth * 4 + x * 4;
+   unsigned char *dst = fData + y * fWidth * 4 + x * 4;
+   
    dst[0] = rgb[0];
    dst[1] = rgb[1];
    dst[2] = rgb[2];
