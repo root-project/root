@@ -34,7 +34,7 @@ include/%.h:    $(ROOTXDIRI)/%.h
 
 ifeq ($(BUILDCOCOA),yes)
 $(ROOTX):       $(ROOTEXE)
-		ln -s `basename $(ROOTEXE)` $(ROOTX)
+		ln -sf `basename $(ROOTEXE)` $(ROOTX)
 else
 $(ROOTX):       $(ROOTXO) $(STRLCPYO)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTXO) $(STRLCPYO) $(XLIBS)
