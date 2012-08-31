@@ -96,7 +96,7 @@ ExecutionContext::~ExecutionContext()
 void unresolvedSymbol()
 {
   // throw exception?
-  llvm::errs() << "Calling unresolved symbol (maybe not added in libexports)!\n";
+  llvm::errs() << "ExecutionContext: calling unresolved symbol (should never happen)!\n";
 }
 
 void* ExecutionContext::HandleMissingFunction(const std::string& mangled_name)
