@@ -936,7 +936,8 @@ std::string NamedDecl::getQualifiedNameAsString(const PrintingPolicy &P) const {
 }
 
 bool NamedDecl::declarationReplaces(NamedDecl *OldD) const {
-  assert(getDeclName() == OldD->getDeclName() && "Declaration name mismatch");
+  assert((!getDeclName() || OldD->getDeclName() \
+          || getDeclName() == OldD->getDeclName()) && "Declaration name mismatch");
 
   // UsingDirectiveDecl's are not really NamedDecl's, and all have same name.
   // We want to keep it, unless it nominates same namespace.
