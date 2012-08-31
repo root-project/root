@@ -45,5 +45,4 @@ clang::QualType typedef_my_int = lookup->findType("my_int");
 typedef_my_int.getAsString().c_str()
 //CHECK: (const char * const) "my_int"
 
-delete lookup;
 .q
