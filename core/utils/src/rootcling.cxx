@@ -171,6 +171,7 @@
 #include "cintdictversion.h"
 #include "FastAllocString.h"
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Value.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
@@ -650,11 +651,12 @@ void R__GetNormalizedName(std::string &norm_name, const clang::QualType &type, c
 {
    static llvm::SmallSet<const clang::Type*, 4> typeToSkip;
    if (typeToSkip.empty()) {
-      clang::QualType toSkip = gInterp->lookupType("Double32_t");
+      cling::LookupHelper* lh = gInterp->getLookupHelper();
+      clang::QualType toSkip = lh->findType("Double32_t");
       if (!toSkip.isNull()) typeToSkip.insert(toSkip.getTypePtr());
-      toSkip = gInterp->lookupType("Float16_t");
+      toSkip = lh->findType("Float16_t");
       if (!toSkip.isNull()) typeToSkip.insert(toSkip.getTypePtr());
-      toSkip = gInterp->lookupType("string");
+      toSkip = lh->findType("string");
       if (!toSkip.isNull()) typeToSkip.insert(toSkip.getTypePtr());
    }
 
@@ -757,12 +759,12 @@ bool R__IsInt(const clang::FieldDecl *field)
 const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const clang::Type** resultType = 0) 
 {
    // Return the scope corresponding to 'name' or std::'name'
-
-   const clang::CXXRecordDecl *result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupScope(name,resultType));
+   cling::LookupHelper* lh = gInterp->getLookupHelper();
+   const clang::CXXRecordDecl *result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(lh->findScope(name,resultType));
    if (!result) {
       std::string std_name("std::");
       std_name += name;
-      result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(gInterp->lookupScope(std_name,resultType));
+      result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(lh->findScope(std_name,resultType));
    }
    return result;
 }
@@ -895,14 +897,15 @@ public:
 const clang::FunctionDecl *R__GetFuncWithProto(const clang::Decl* cinfo, 
                                                const char *method, const char *proto)
 {
-   return gInterp->lookupFunctionProto(cinfo, method, proto);
+   return gInterp->getLookupHelper()->findFunctionProto(cinfo, method, proto);
 }
 
 //______________________________________________________________________________
 const clang::CXXMethodDecl *R__GetMethodWithProto(const clang::Decl* cinfo, 
                                                   const char *method, const char *proto)
 {
-   const clang::FunctionDecl* funcD = gInterp->lookupFunctionProto(cinfo, method, proto);
+   const clang::FunctionDecl* funcD 
+      = gInterp->getLookupHelper()->findFunctionProto(cinfo, method, proto);
    if (funcD) {
       return llvm::dyn_cast<const clang::CXXMethodDecl>(funcD);
    }
@@ -913,7 +916,8 @@ const clang::CXXMethodDecl *R__GetMethodWithProto(const clang::Decl* cinfo,
 const clang::CXXMethodDecl *R__GetMethodWithProto__Old(const clang::CXXRecordDecl* cinfo, 
                                                 const char *method, const char *proto)
 {
-   const clang::FunctionDecl* funcD = gInterp->lookupFunctionProto(cinfo, method, proto);
+   const clang::FunctionDecl* funcD 
+      = gInterp->getLookupHelper()->findFunctionProto(cinfo, method, proto);
    if (funcD) {
       return llvm::dyn_cast<const clang::CXXMethodDecl>(funcD);
    }

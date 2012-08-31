@@ -29,6 +29,7 @@
 #include "Rtypes.h" // for gDebug
 #include "TClassEdit.h"
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/LookupHelper.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/PrettyPrinter.h"
@@ -53,14 +54,15 @@ void TClingTypeInfo::Init(const char *name)
       fprintf(stderr,
               "TClingTypeInfo::Init(name): looking up clang type: %s", name);
    }
-   clang::QualType QT = fInterp->lookupType(name);
+   cling::LookupHelper* lh = fInterp->getLookupHelper();
+   clang::QualType QT = lh->findType(name);
    if (QT.isNull()) {
       if (gDebug > 0) {
          fprintf(stderr,
                  "TClingTypeInfo::Init(name): clang type not found: %s", name);
       }
       std::string buf = TClassEdit::InsertStd(name);
-      QT = fInterp->lookupType(buf);
+      QT = lh->findType(buf);
       if (QT.isNull()) {
          if (gDebug > 0) {
             fprintf(stderr,

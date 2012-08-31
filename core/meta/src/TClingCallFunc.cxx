@@ -32,6 +32,7 @@
 #include "TError.h"
 
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Value.h"
 
 #include "clang/AST/ASTContext.h"
@@ -456,8 +457,8 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
    fMethod = new TClingMethodInfo(fInterp);
    fEEFunc = 0;
    fEEAddr = 0;
-   const clang::FunctionDecl *decl =
-      fInterp->lookupFunctionArgs(info->GetDecl(), method, params);
+   cling::LookupHelper* lh = fInterp->getLookupHelper();
+   const clang::FunctionDecl *decl = lh->findFunctionArgs(info->GetDecl(), method, params);
    if (!decl) {
       return;
    }
@@ -505,8 +506,8 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
    if (!info->IsValid()) {
       return;
    }
-   const clang::FunctionDecl *FD =
-      fInterp->lookupFunctionProto(info->GetDecl(), method, proto);
+   cling::LookupHelper* lh = fInterp->getLookupHelper();
+   const clang::FunctionDecl *FD = lh->findFunctionProto(info->GetDecl(), method, proto);
    if (!FD) {
       return;
    }
