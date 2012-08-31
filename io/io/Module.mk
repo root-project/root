@@ -67,4 +67,3 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(call stripsrc,$(IODIRS)/TStreamerInfoReadBuffer.o): CXXFLAGS += -DR__EXPLICIT_FUNCTION_INSTANTIATION

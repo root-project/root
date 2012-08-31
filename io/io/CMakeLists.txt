@@ -17,5 +17,3 @@ ROOT_LINKER_LIBRARY(${libname} *.cxx G__IO.cxx DEPENDENCIES Core Thread)
 ROOT_INSTALL_HEADERS()
 
 #--- Extra rules ----------------------------------------------------------
-set_source_files_properties( ${CMAKE_CURRENT_SOURCE_DIR}/src/TStreamerInfoReadBuffer.cxx 
-                             COMPILE_FLAGS -DR__EXPLICIT_FUNCTION_INSTANTIATION)

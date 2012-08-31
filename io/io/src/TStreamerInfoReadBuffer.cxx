@@ -1847,8 +1847,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const TVirtualArray &arr, Int_t firs
 #endif
 
 
-#ifdef R__EXPLICIT_FUNCTION_INSTANTIATION
-
 template Int_t TStreamerInfo::ReadBufferSkip<char**>(TBuffer &b, char** const &arr, Int_t i, Int_t kase,
                                        TStreamerElement *aElement, Int_t narr,
                                        Int_t eoffset);
@@ -1885,9 +1883,6 @@ template Int_t TStreamerInfo::ReadBuffer<TVirtualCollectionProxy>(TBuffer &b, co
                                                                   Int_t narr, Int_t eoffset, Int_t arrayMode);
 template Int_t TStreamerInfo::ReadBuffer<TVirtualArray>(TBuffer &b, const TVirtualArray &arr, Int_t first,
                                                         Int_t narr, Int_t eoffset, Int_t arrayMode);
-
-#endif
-
 
 //______________________________________________________________________________
 Int_t TStreamerInfo::ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont,
