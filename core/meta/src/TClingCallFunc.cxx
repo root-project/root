@@ -457,8 +457,8 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
    fMethod = new TClingMethodInfo(fInterp);
    fEEFunc = 0;
    fEEAddr = 0;
-   cling::LookupHelper* lh = fInterp->getLookupHelper();
-   const clang::FunctionDecl *decl = lh->findFunctionArgs(info->GetDecl(), method, params);
+   const cling::LookupHelper& lh = fInterp->getLookupHelper();
+   const clang::FunctionDecl *decl = lh.findFunctionArgs(info->GetDecl(), method, params);
    if (!decl) {
       return;
    }
@@ -506,8 +506,8 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
    if (!info->IsValid()) {
       return;
    }
-   cling::LookupHelper* lh = fInterp->getLookupHelper();
-   const clang::FunctionDecl *FD = lh->findFunctionProto(info->GetDecl(), method, proto);
+   const cling::LookupHelper& lh = fInterp->getLookupHelper();
+   const clang::FunctionDecl *FD = lh.findFunctionProto(info->GetDecl(), method, proto);
    if (!FD) {
       return;
    }

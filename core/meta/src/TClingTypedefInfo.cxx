@@ -42,7 +42,7 @@ TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
       Info("TClingTypedefInfo::TClingTypedefInfo(interp,name)",
            "looking up typedef: %s\n", name);
    }
-   fDecl = fInterp->getLookupHelper()->findScope(name);
+   fDecl = fInterp->getLookupHelper().findScope(name);
    if (fDecl && !llvm::isa<clang::TypedefDecl>(fDecl)) {
       // If what the lookup found is not a typedef, ignore it.
       fDecl = 0;
@@ -83,7 +83,7 @@ void TClingTypedefInfo::Init(const char *name)
    fIter = clang::DeclContext::decl_iterator();
    fIterStack.clear();
    // Ask the cling interpreter to lookup the name for us.
-   fDecl = fInterp->getLookupHelper()->findScope(name);
+   fDecl = fInterp->getLookupHelper().findScope(name);
    if (!fDecl) {
       if (gDebug > 0) {
          Info("TClingTypedefInfo::Init(name)",

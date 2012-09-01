@@ -67,15 +67,15 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
    if (gDebug > 0) {
       Info("TClingClassInfo(name)", "looking up class name: %s\n", name);
    }
-   cling::LookupHelper* lh = fInterp->getLookupHelper();
-   const clang::Decl *decl = lh->findScope(name);
+   const cling::LookupHelper& lh = fInterp->getLookupHelper();
+   const clang::Decl *decl = lh.findScope(name);
    if (!decl) {
       if (gDebug > 0) {
          Info("TClingClassInfo(name)", "cling class not found name: %s\n",
               name);
       }
       std::string buf = TClassEdit::InsertStd(name);
-      decl = lh->findScope(buf);
+      decl = lh.findScope(buf);
       if (!decl) {
          if (gDebug > 0) {
             Info("TClingClassInfo(name)", "cling class not found name: %s\n",
@@ -256,8 +256,8 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       TClingMethodInfo tmi(fInterp);
       return tmi;
    }
-   cling::LookupHelper* lh = fInterp->getLookupHelper();
-   const clang::FunctionDecl *FD = lh->findFunctionArgs(fDecl, fname, arg);
+   const cling::LookupHelper& lh = fInterp->getLookupHelper();
+   const clang::FunctionDecl *FD = lh.findFunctionArgs(fDecl, fname, arg);
    if (poffset) {
       *poffset = 0L;
    }
@@ -274,7 +274,7 @@ int TClingClassInfo::GetMethodNArg(const char *method, const char *proto) const
    }
    int clang_val = -1;
    const clang::FunctionDecl *decl =
-     fInterp->getLookupHelper()->findFunctionProto(fDecl, method, proto);
+     fInterp->getLookupHelper().findFunctionProto(fDecl, method, proto);
    if (decl) {
       unsigned num_params = decl->getNumParams();
       clang_val = static_cast<int>(num_params);
@@ -332,15 +332,15 @@ void TClingClassInfo::Init(const char *name)
    fIter = clang::DeclContext::decl_iterator();
    fDecl = 0;
    fIterStack.clear();
-   cling::LookupHelper* lh = fInterp->getLookupHelper();
-   const clang::Decl *decl = lh->findScope(name);
+   const cling::LookupHelper& lh = fInterp->getLookupHelper();
+   const clang::Decl *decl = lh.findScope(name);
    if (!decl) {
       if (gDebug > 0) {
          Info("TClingClassInfo::Init(name)", "cling class not found "
               "name: %s\n", name);
       }
       std::string buf = TClassEdit::InsertStd(name);
-      decl = lh->findScope(buf);
+      decl = lh.findScope(buf);
       if (!decl) {
          if (gDebug > 0) {
             Info("TClingClassInfo::Init(name)", "cling class not found "

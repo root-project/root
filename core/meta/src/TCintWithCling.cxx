@@ -907,9 +907,9 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
    Printf("Inspecting class %s\n", clname);
 
    const clang::ASTContext& astContext = fInterpreter->getCI()->getASTContext();
-   cling::LookupHelper* lh = fInterpreter->getLookupHelper();
+   const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    const clang::CXXRecordDecl* recordDecl 
-     = llvm::dyn_cast<const clang::CXXRecordDecl>(lh->findScope(clname));
+     = llvm::dyn_cast<const clang::CXXRecordDecl>(lh.findScope(clname));
    if (!recordDecl) {
       Error("InspectMembers", "Cannot find RecordDecl for class %s", clname);
       return;
