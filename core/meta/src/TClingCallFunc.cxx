@@ -293,146 +293,27 @@ void TClingCallFunc::SetArgArray(long *paramArr, int nparam)
    }
 }
 
-static int evaluateArgList(cling::Interpreter *interp,
-                           const std::string &ArgList,
-                           std::vector<cling::Value> &EvaluatedArgs)
+static void evaluateArgList(cling::Interpreter *interp,
+                            const std::string &ArgList,
+                            std::vector<cling::Value> &EvaluatedArgs)
 {
-   //
-   //  Our return value.
-   //
-   int return_code = 1;
-   //
-   //  Some utilities.
-   //
-   clang::CompilerInstance *CI = interp->getCI();
-   clang::Parser *P = interp->getParser();
-   clang::Preprocessor &PP = CI->getPreprocessor();
-   clang::ASTContext &Context = CI->getASTContext();
-   //
-   //  Tell the diagnostic engine to ignore all diagnostics.
-   //
-   bool OldSuppressAllDiagnostics =
-      PP.getDiagnostics().getSuppressAllDiagnostics();
-   PP.getDiagnostics().setSuppressAllDiagnostics(true);
-   //
-   //  Get ready for arg list parsing.
-   //
-   //std::vector<QualType> GivenArgTypes;
-   //std::vector<Expr*> GivenArgs;
-   //
-   //  Tell the parser to not attempt spelling correction.
-   //
-   bool OldSpellChecking = PP.getLangOpts().SpellChecking;
-   const_cast<clang::LangOptions &>(PP.getLangOpts()).SpellChecking = 0;
-   //
-   //  Tell the diagnostic consumer we are switching files.
-   //
-   clang::DiagnosticConsumer &DClient = CI->getDiagnosticClient();
-   DClient.BeginSourceFile(CI->getLangOpts(), &PP);
-   //
-   //  Create a fake file to parse the arguments.
-   //
-   llvm::MemoryBuffer *SB = llvm::MemoryBuffer::getMemBufferCopy(
-                               ArgList + "\n", "arg.list.file");
-   clang::FileID FID = CI->getSourceManager().createFileIDForMemBuffer(SB);
-   //
-   //  Turn on ignoring of the main file eof token.
-   //
-   //  Note: We need this because token readahead in the following
-   //        routine calls ends up parsing it multiple times.
-   //
-   bool ResetIncrementalProcessing = false;
-   if (!PP.isIncrementalProcessingEnabled()) {
-      ResetIncrementalProcessing = true;
-      PP.enableIncrementalProcessing();
-   }
-   //
-   //  Switch to the new file the way #include does.
-   //
-   //  Note: To switch back to the main file we must consume an eof token.
-   //
-   PP.EnterSourceFile(FID, 0, clang::SourceLocation());
-   PP.Lex(const_cast<clang::Token &>(P->getCurToken()));
-   //
-   //  Parse the arguments now.
-   //
-   {
-      clang::PrintingPolicy Policy(Context.getPrintingPolicy());
-      Policy.SuppressTagKeyword = true;
-      Policy.SuppressUnwrittenScope = true;
-      Policy.SuppressInitializers = true;
-      Policy.AnonymousTagLocations = false;
-      //std::string proto;
-      {
-         //bool first_time = true;
-         while (P->getCurToken().isNot(clang::tok::eof)) {
-            clang::ExprResult Res = P->ParseAssignmentExpression();
-            if (Res.isUsable()) {
-               clang::Expr *expr = Res.release();
-               //GivenArgs.push_back(expr);
-               //QualType QT = expr->getType().getCanonicalType();
-               //QualType NonRefQT(QT.getNonReferenceType());
-               //GivenArgTypes.push_back(NonRefQT);
-               //if (first_time) {
-               //  first_time = false;
-               //}
-               //else {
-               //  proto += ',';
-               //}
-               std::string empty;
-               llvm::raw_string_ostream tmp(empty);
-               expr->printPretty(tmp, /*PrinterHelper=*/0, Policy, 
-                                 /*Indentation=*/0);
-               //proto += tmp.str();
-               //fprintf(stderr, "%s\n", proto.c_str());
-               cling::Value val;
-               cling::Interpreter::CompilationResult cres =
-                  interp->evaluate(tmp.str(), &val);
-               if (cres != cling::Interpreter::kSuccess) {
-                  // Bad expression, all done.
-                  break;
-               }
-               EvaluatedArgs.push_back(val);
-            }
-            if (!P->getCurToken().is(clang::tok::comma)) {
-               break;
-            }
-            P->ConsumeToken();
-         }
+   clang::PrintingPolicy Policy(interp->getCI()->getSema().getPrintingPolicy());
+   llvm::SmallVector<clang::Expr*, 4> exprs;
+   interp->getLookupHelper().findArgList(ArgList, exprs);
+   for(llvm::SmallVector<clang::Expr*, 4>::const_iterator I = exprs.begin(),
+          E = exprs.end(); I != E; ++I) {
+      std::string empty;
+      llvm::raw_string_ostream tmp(empty);
+      (*I)->printPretty(tmp, /*PrinterHelper=*/0, Policy, /*Indentation=*/0);
+      cling::Value val;
+      cling::Interpreter::CompilationResult cres =
+         interp->evaluate(tmp.str(), &val);
+      if (cres != cling::Interpreter::kSuccess) {
+         // Bad expression, all done.
+         break;
       }
+      EvaluatedArgs.push_back(val);
    }
-   if (P->getCurToken().isNot(clang::tok::eof)) {
-      // We did not consume all of the arg list, bad parse.
-      goto evaluateArgListDone;
-   }
-   //
-   //  Success.
-   //
-   return_code = 0;
-   //
-   //  Cleanup after the arg list parse.
-   //
-   P->SkipUntil(clang::tok::eof, /*StopAtSemi*/false, /*DontConsume*/false,
-                /*StopAtCodeCompletion*/false);
-   DClient.EndSourceFile();
-   CI->getDiagnostics().Reset();
-evaluateArgListDone:
-   //
-   // Advance the parser to the end of the file, and pop the include stack.
-   //
-   // Note: Consuming the EOF token will pop the include stack.
-   //
-   P->SkipUntil(clang::tok::eof, /*StopAtSemi*/false, /*DontConsume*/false,
-                /*StopAtCodeCompletion*/false);
-   if (ResetIncrementalProcessing) {
-      PP.enableIncrementalProcessing(false);
-   }
-   DClient.EndSourceFile();
-   CI->getDiagnostics().Reset();
-   PP.getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
-   const_cast<clang::LangOptions &>(PP.getLangOpts()).SpellChecking =
-      OldSpellChecking;
-   return return_code;
 }
 
 void TClingCallFunc::SetArgs(const char *params)

@@ -1118,6 +1118,110 @@ namespace cling {
     return TheDecl;
   }
 
+  void LookupHelper::findArgList(llvm::StringRef argList,
+                                 llvm::SmallVector<Expr*, 4>& argExprs) const {
+    //
+    //  Some utilities.
+    //
+    // Use P for shortness
+    Parser& P = *m_Parser;
+    Sema& S = P.getActions();
+    Preprocessor &PP = S.getPreprocessor();
+    ASTContext &Context = S.getASTContext();
+    //
+    //  Tell the diagnostic engine to ignore all diagnostics.
+    //
+    bool OldSuppressAllDiagnostics =
+      PP.getDiagnostics().getSuppressAllDiagnostics();
+    PP.getDiagnostics().setSuppressAllDiagnostics(true);
+    //
+    //  Tell the parser to not attempt spelling correction.
+    //
+    bool OldSpellChecking = PP.getLangOpts().SpellChecking;
+    const_cast<LangOptions &>(PP.getLangOpts()).SpellChecking = 0;
+    //
+    //  Tell the diagnostic consumer we are switching files.
+    //
+    DiagnosticConsumer* DClient = S.getDiagnostics().getClient();
+    DClient->BeginSourceFile(PP.getLangOpts(), &PP);
+    //
+    //  Create a fake file to parse the arguments.
+    //
+    llvm::MemoryBuffer *SB 
+      = llvm::MemoryBuffer::getMemBufferCopy(argList.str()
+                                             + "\n", "arg.list.file");
+    FileID FID = S.getSourceManager().createFileIDForMemBuffer(SB);
+    //
+    //  Turn on ignoring of the main file eof token.
+    //
+    //  Note: We need this because token readahead in the following
+    //        routine calls ends up parsing it multiple times.
+    //
+    bool ResetIncrementalProcessing = false;
+    if (!PP.isIncrementalProcessingEnabled()) {
+      ResetIncrementalProcessing = true;
+      PP.enableIncrementalProcessing();
+    }
+    //
+    //  Switch to the new file the way #include does.
+    //
+    //  Note: To switch back to the main file we must consume an eof token.
+    //
+    PP.EnterSourceFile(FID, 0, SourceLocation());
+    PP.Lex(const_cast<Token &>(P.getCurToken()));
+    //
+    //  Setup to reset parser state on exit.
+    //
+    ParserStateRAII ResetParserState(S, &P, ResetIncrementalProcessing,
+                                     OldSuppressAllDiagnostics, 
+                                     OldSpellChecking);
+    //
+    //  Parse the arguments now.
+    //
+    {
+      PrintingPolicy Policy(Context.getPrintingPolicy());
+      Policy.SuppressTagKeyword = true;
+      Policy.SuppressUnwrittenScope = true;
+      Policy.SuppressInitializers = true;
+      Policy.AnonymousTagLocations = false;
+      {
+        bool hasUnusableResult = false;
+        while (P.getCurToken().isNot(tok::eof)) {
+          ExprResult Res = ParserExt::ParseAssignmentExpressionFwd(&P);
+          if (hasUnusableResult && Res.isUsable()) {
+            argExprs.push_back(Res.release());
+          }
+          else {
+            hasUnusableResult = true;
+            break;
+          }
+          if (!P.getCurToken().is(tok::comma)) {
+            break;
+          }
+          ParserExt::ConsumeTokenFwd(&P);
+        }
+        if (hasUnusableResult)
+          // if one of the arguments is not usable return empty.
+          argExprs.clear();
+      }
+    }
+    //
+    // Advance the parser to the end of the file, and pop the include stack.
+    //
+    // Note: Consuming the EOF token will pop the include stack.
+    //
+    ParserExt::SkipUntilFwd(&P, tok::eof, /*StopAtSemi*/false, 
+                            /*DontConsume*/false,
+                            /*StopAtCodeCompletion*/false);
+    if (ResetIncrementalProcessing) {
+      PP.enableIncrementalProcessing(false);
+    }
+    DClient->EndSourceFile();
+    S.getDiagnostics().Reset();
+    S.getDiagnostics().setSuppressAllDiagnostics(OldSuppressAllDiagnostics);
+    const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = OldSpellChecking;    
+  }
+
 
 
 } // end namespace cling

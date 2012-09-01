@@ -9,13 +9,19 @@
 
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/SmallVector.h"
 
 namespace clang {
   class Decl;
+  class Expr;
   class FunctionDecl;
   class Parser;
   class QualType;
   class Type;
+}
+
+namespace llvm {
+  template<typename T, unsigned N> class SmallVector;
 }
 
 namespace cling {
@@ -60,6 +66,16 @@ namespace cling {
     const clang::FunctionDecl* findFunctionArgs(const clang::Decl* scopeDecl,
                                                 llvm::StringRef funcName,
                                                 llvm::StringRef funcArgs) const;
+
+    ///\brief Lookup given argument list and return each argument as an
+    /// expression.
+    ///
+    ///\param[in] argList - The string representation of the argument list.
+    ///
+    ///\param[out] argExprs - The corresponding expressions to the argList.
+    ///
+    void findArgList(llvm::StringRef argList,
+                     llvm::SmallVector<clang::Expr*, 4>& argExprs) const;
 
   };
 
