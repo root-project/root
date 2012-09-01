@@ -23,25 +23,25 @@ typedef int my_int;
 .rawInput 0
 
 
-cling::LookupHelper* lookup = gCling->getLookupHelper();
+const cling::LookupHelper& lookup = gCling->getLookupHelper();
 
-clang::QualType cl_A = lookup->findType("A");
+clang::QualType cl_A = lookup.findType("A");
 cl_A.getAsString().c_str()
 //CHECK: (const char * const) "class A"
 
-clang::QualType cl_B_in_N = lookup->findType("N::B");
+clang::QualType cl_B_in_N = lookup.findType("N::B");
 cl_B_in_N.getAsString().c_str()
 //CHECK: (const char * const) "N::B"
 
-clang::QualType cl_C_in_M = lookup->findType("N::M::C");
+clang::QualType cl_C_in_M = lookup.findType("N::M::C");
 cl_C_in_M.getAsString().c_str()
 //CHECK: (const char * const) "N::M::C"
 
-clang::QualType builtin_int = lookup->findType("int");
+clang::QualType builtin_int = lookup.findType("int");
 builtin_int.getAsString().c_str()
 //CHECK: (const char * const) "int"
 
-clang::QualType typedef_my_int = lookup->findType("my_int");
+clang::QualType typedef_my_int = lookup.findType("my_int");
 typedef_my_int.getAsString().c_str()
 //CHECK: (const char * const) "my_int"
 

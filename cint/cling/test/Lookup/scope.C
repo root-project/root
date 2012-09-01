@@ -15,8 +15,8 @@ using namespace llvm;
 class A {};
 .rawInput 0
 
-cling::LookupHelper* lookup = gCling->getLookupHelper();
-const clang::Decl* cl_A = lookup->findScope("A");
+const cling::LookupHelper& lookup = gCling->getLookupHelper();
+const clang::Decl* cl_A = lookup.findScope("A");
 
 printf("cl_A: 0x%lx\n", (unsigned long) cl_A);
 //CHECK: cl_A: 0x{{[1-9a-f][0-9a-f]*$}}
@@ -30,7 +30,7 @@ class A {};
 .rawInput 0
 
 
-const clang::Decl* cl_A_in_N = lookup->findScope("N::A");
+const clang::Decl* cl_A_in_N = lookup.findScope("N::A");
 printf("cl_A_in_N: 0x%lx\n", (unsigned long) cl_A_in_N);
 //CHECK: cl_A_in_N: 0x{{[1-9a-f][0-9a-f]*$}}
 cast<clang::NamedDecl>(cl_A_in_N)->getQualifiedNameAsString().c_str()
@@ -47,7 +47,7 @@ class A {};
 }
 .rawInput 0
 
-const clang::Decl* cl_A_in_NMP = lookup->findScope("N::M::P::A");
+const clang::Decl* cl_A_in_NMP = lookup.findScope("N::M::P::A");
 cl_A_in_NMP
 //CHECK: (const clang::Decl *) 0x{{[1-9a-f][0-9a-f]*$}}
 cast<clang::NamedDecl>(cl_A_in_NMP)->getQualifiedNameAsString().c_str()
@@ -58,7 +58,7 @@ cast<clang::NamedDecl>(cl_A_in_NMP)->getQualifiedNameAsString().c_str()
 template <class T> class B { T b; };
 .rawInput 0
 
-const clang::Decl* cl_B_int = lookup->findScope("B<int>");
+const clang::Decl* cl_B_int = lookup.findScope("B<int>");
 printf("cl_B_int: 0x%lx\n", (unsigned long) cl_B_int);
 //CHECK-NEXT: cl_B_int: 0x{{[1-9a-f][0-9a-f]*$}}
 
@@ -75,7 +75,7 @@ template <typename T> struct W { T member; };
 .rawInput 0
 
 const clang::Type* resType = 0;
-lookup->findScope("W<Int_t>", &resType);
+lookup.findScope("W<Int_t>", &resType);
 //resType->dump(); 
 clang::QualType(resType,0).getAsString().c_str()
 //CHECK-NEXT: (const char * const) "W<Int_t>"

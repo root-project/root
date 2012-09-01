@@ -144,7 +144,7 @@ namespace cling {
     }
   };
 
-  QualType LookupHelper::findType(llvm::StringRef typeName) {
+  QualType LookupHelper::findType(llvm::StringRef typeName) const {
     //
     //  Our return value.
     //
@@ -226,7 +226,7 @@ namespace cling {
   }
 
   const Decl* LookupHelper::findScope(llvm::StringRef className,
-                                        const Type** resultType /* = 0 */) {
+                                      const Type** resultType /* = 0 */) const {
     //
     //  Our return value.
     //
@@ -467,8 +467,8 @@ namespace cling {
   }
 
   const FunctionDecl* LookupHelper::findFunctionProto(const Decl* scopeDecl,
-                                                        llvm::StringRef funcName, 
-                                                     llvm::StringRef funcProto) {
+                                                      llvm::StringRef funcName, 
+                                               llvm::StringRef funcProto) const {
     //
     //  Our return value.
     //
@@ -732,8 +732,8 @@ namespace cling {
   }
 
   const FunctionDecl* LookupHelper::findFunctionArgs(const Decl* scopeDecl,
-                                                       llvm::StringRef funcName, 
-                                                       llvm::StringRef funcArgs){
+                                                       llvm::StringRef funcName,
+                                                llvm::StringRef funcArgs) const {
     //
     //  Our return value.
     //

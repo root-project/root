@@ -314,7 +314,7 @@ namespace cling {
 
     llvm::LLVMContext* getLLVMContext() { return m_LLVMContext.get(); }
 
-    LookupHelper* getLookupHelper() { return m_LookupHelper.get(); }
+    const LookupHelper& getLookupHelper() const { return *m_LookupHelper; }
 
 
     ///\brief Shows the current version of the project.
