@@ -1127,13 +1127,12 @@ namespace cling {
     Parser& P = *m_Parser;
     Sema& S = P.getActions();
     Preprocessor &PP = S.getPreprocessor();
-    ASTContext &Context = S.getASTContext();
     //
     //  Tell the diagnostic engine to ignore all diagnostics.
     //
     bool OldSuppressAllDiagnostics =
       PP.getDiagnostics().getSuppressAllDiagnostics();
-    PP.getDiagnostics().setSuppressAllDiagnostics(true);
+    PP.getDiagnostics().setSuppressAllDiagnostics(false);
     //
     //  Tell the parser to not attempt spelling correction.
     //
@@ -1179,31 +1178,24 @@ namespace cling {
     //  Parse the arguments now.
     //
     {
-      PrintingPolicy Policy(Context.getPrintingPolicy());
-      Policy.SuppressTagKeyword = true;
-      Policy.SuppressUnwrittenScope = true;
-      Policy.SuppressInitializers = true;
-      Policy.AnonymousTagLocations = false;
-      {
-        bool hasUnusableResult = false;
-        while (P.getCurToken().isNot(tok::eof)) {
-          ExprResult Res = ParserExt::ParseAssignmentExpressionFwd(&P);
-          if (hasUnusableResult && Res.isUsable()) {
-            argExprs.push_back(Res.release());
-          }
-          else {
-            hasUnusableResult = true;
-            break;
-          }
-          if (!P.getCurToken().is(tok::comma)) {
-            break;
-          }
-          ParserExt::ConsumeTokenFwd(&P);
+      bool hasUnusableResult = false;
+      while (P.getCurToken().isNot(tok::eof)) {
+        ExprResult Res = ParserExt::ParseAssignmentExpressionFwd(&P);
+        if (Res.isUsable()) {
+          argExprs.push_back(Res.release());
         }
-        if (hasUnusableResult)
-          // if one of the arguments is not usable return empty.
-          argExprs.clear();
+        else {
+          hasUnusableResult = true;
+          break;
+        }
+        if (!P.getCurToken().is(tok::comma)) {
+          break;
+        }
+        ParserExt::ConsumeTokenFwd(&P);
       }
+      if (hasUnusableResult)
+        // if one of the arguments is not usable return empty.
+        argExprs.clear();
     }
     //
     // Advance the parser to the end of the file, and pop the include stack.

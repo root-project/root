@@ -298,6 +298,11 @@ static void evaluateArgList(cling::Interpreter *interp,
                             std::vector<cling::Value> &EvaluatedArgs)
 {
    clang::PrintingPolicy Policy(interp->getCI()->getSema().getPrintingPolicy());
+   Policy.SuppressTagKeyword = true;
+   Policy.SuppressUnwrittenScope = true;
+   Policy.SuppressInitializers = true;
+   Policy.AnonymousTagLocations = false;
+
    llvm::SmallVector<clang::Expr*, 4> exprs;
    interp->getLookupHelper().findArgList(ArgList, exprs);
    for(llvm::SmallVector<clang::Expr*, 4>::const_iterator I = exprs.begin(),
