@@ -1132,7 +1132,7 @@ namespace cling {
     //
     bool OldSuppressAllDiagnostics =
       PP.getDiagnostics().getSuppressAllDiagnostics();
-    PP.getDiagnostics().setSuppressAllDiagnostics(false);
+    PP.getDiagnostics().setSuppressAllDiagnostics(true);
     //
     //  Tell the parser to not attempt spelling correction.
     //
