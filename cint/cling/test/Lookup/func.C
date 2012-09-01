@@ -1,5 +1,5 @@
 // RUN: cat %s | %cling 2>&1 | FileCheck %s
-// Test Interpreter::lookupFunctionArgs()
+// Test lookupFunctionArgs()
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
