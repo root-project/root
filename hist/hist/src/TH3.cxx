@@ -1716,9 +1716,8 @@ TH1D *TH3::ProjectionX(const char *name, Int_t iymin, Int_t iymax, Int_t izmin, 
    //   if option "o" original axis range of the target axes will be
    //   kept, but only bins inside the selected range will be filled.
    //
-   //   NOTE that if a TH1D named "name" exists in the current directory or pad and having   
-   //   a compatible axis, the histogram is reset and filled again with the projected contents of the TH3.
-   //   In the case of axis incompatibility, an error is reported and a NULL pointer is returned.
+   //   NOTE that if a TH1D named "name" exists in the current directory or pad 
+   //   the histogram is reset and filled again with the projected contents of the TH3.
    //
    //  implemented using Project3D
 
@@ -1794,9 +1793,8 @@ TH1D *TH3::ProjectionY(const char *name, Int_t ixmin, Int_t ixmax, Int_t izmin, 
    //   if option "o" original axis range of the target axes will be
    //   kept, but only bins inside the selected range will be filled.
    //
-   //   NOTE that if a TH1D named "name" exists in the current directory or pad and having   
-   //   a compatible axis, the histogram is reset and filled again with the projected contents of the TH3.
-   //   In the case of axis incompatibility, an error is reported and a NULL pointer is returned.
+   //   NOTE that if a TH1D named "name" exists in the current directory or pad,    
+   //   the histogram is reset and filled again with the projected contents of the TH3.
    //
    //  implemented using Project3D
 
@@ -1873,9 +1871,8 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
    //   if option "o" original axis range of the target axes will be
    //   kept, but only bins inside the selected range will be filled.
    //
-   //   NOTE that if a TH1D named "name" exists in the current directory or pad and having   
-   //   a compatible axis, the histogram is reset and filled again with the projected contents of the TH3.
-   //   In the case of axis incompatibility, an error is reported and a NULL pointer is returned.
+   //   NOTE that if a TH1D named "name" exists in the current directory or pad,   
+   //   the histogram is reset and filled again with the projected contents of the TH3.
    //
    //  implemented using Project3D
 
@@ -1952,7 +1949,6 @@ TH1D *TH3::DoProject1D(const char* name, const char* title, TAxis* projX,
    Int_t nx = ixmax-ixmin+1;
 
    // Create the histogram, either reseting a preexisting one 
-   // in case they have a compatible axis
    TObject *h1obj = gROOT->FindObject(name);
    if (h1obj && h1obj->InheritsFrom(TH1::Class())) {
       if (h1obj->IsA() != TH1D::Class() ) { 
@@ -1960,21 +1956,22 @@ TH1D *TH3::DoProject1D(const char* name, const char* title, TAxis* projX,
          return 0; 
       }
       h1 = (TH1D*)h1obj;
-      // check histogram compatibility 
-      bool useAllBins = (nx == projX->GetNbins() );
-      if (useAllBins && CheckEqualAxes( projX, h1->GetXaxis() ) ) { 
-         // enable originalRange option in case a range is set in the outer axis
-         originalRange = kTRUE; 
-         h1->Reset();
-      }
-      else if ( !useAllBins &&  
-                CheckConsistentSubAxes(projX, ixmin, ixmax, h1->GetXaxis() ) ) { 
-         // reset also in case an histogram exists with compatible axis with the zoomed original axis
-         h1->Reset();   
-      }      
-      else {  
-         Error("DoProject1D","Histogram with name %s already exists and it is not compatible",name);
-         return 0; 
+      // reset histogram and re-set the axis in any case
+      h1->Reset();
+      const TArrayD *bins = projX->GetXbins();
+      if ( originalRange )
+      {
+         if (bins->fN == 0) {
+            h1->SetBins(projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
+         } else {
+            h1->SetBins(projX->GetNbins(),bins->fArray);
+         }
+      } else {
+         if (bins->fN == 0) {
+            h1->SetBins(nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
+         } else {
+            h1->SetBins(nx,&bins->fArray[ixmin-1]);
+         }
       }
    }
 
@@ -2149,7 +2146,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, TAxis* projX, TAxis
    Int_t ny = iymax-iymin+1;
 
    // Create the histogram, either reseting a preexisting one 
-   // if compatible or creating one from scratch.
+   //  or creating one from scratch.
    // Does an object with the same name exists?
    TObject *h2obj = gROOT->FindObject(name);
    if (h2obj && h2obj->InheritsFrom(TH1::Class())) {
@@ -2158,24 +2155,25 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, TAxis* projX, TAxis
          return 0; 
       }
       h2 = (TH2D*)h2obj;
-      // check histogram axis compatibility 
-      // note that the x axis of the projected histogram is  labeld  Y of the original
-      bool useAllBins = ((nx == projX->GetNbins() ) && (ny == projY->GetNbins() ) );
-      if (useAllBins && CheckEqualAxes(projY, h2->GetXaxis() ) && 
-           CheckEqualAxes(projX, h2->GetYaxis() )  ) { 
-         // enable originalRange option in case a range is set in the outer axis
-         originalRange = kTRUE; 
-         h2->Reset();
-      }
-      else if ( !useAllBins && 
-                CheckConsistentSubAxes(projY, iymin, iymax, h2->GetXaxis() ) && 
-                CheckConsistentSubAxes(projX, ixmin, ixmax, h2->GetYaxis() )  ) { 
-         // reset also in case an histogram exists with compatible axis with the zoomed original axis
-         h2->Reset();   
-      }      
-      else {  
-         Error("DoProject2D","Histogram with name %s already exists and it is not compatible",name);
-         return 0; 
+      // reset histogram and its axes
+      h2->Reset();
+      const TArrayD *xbins = projX->GetXbins();
+      const TArrayD *ybins = projY->GetXbins();
+      if ( originalRange ) {
+         h2->SetBins(projY->GetNbins(),projY->GetXmin(),projY->GetXmax()
+                     ,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
+         // set bins for mixed axis do not exists - need to set afterwards the variable bins
+         if (ybins->fN != 0) 
+            h2->GetXaxis()->Set(projY->GetNbins(),&ybins->fArray[iymin-1]);
+         if (xbins->fN != 0)
+            h2->GetYaxis()->Set(projX->GetNbins(),&xbins->fArray[ixmin-1]);
+      } else {
+         h2->SetBins(ny,projY->GetBinLowEdge(iymin),projY->GetBinUpEdge(iymax)
+                     ,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
+         if (ybins->fN != 0) 
+            h2->GetXaxis()->Set(ny,&ybins->fArray[iymin-1]);
+         if (xbins->fN != 0) 
+            h2->GetYaxis()->Set(nx,&xbins->fArray[ixmin-1]);
       }
    }
 
@@ -2425,9 +2423,8 @@ TH1 *TH3::Project3D(Option_t *option) const
    //  A different name can be generated by attaching a string to the option
    //  For example h->Project3D("name_xy") will generate an histogram with the name:  h3dname_name_xy. 
    //
-   //  NOTE 2: If an histogram of the same type already exists with compatible axes, 
+   //  NOTE 2: If an histogram of the same type already exists, 
    //  the histogram is reset and filled again with the projected contents of the TH3.
-   //  In the case of axes incompatibility, an error is reported and a NULL pointer is returned.
    //
    //  NOTE 3: The number of entries in the projected histogram is estimated from the number of 
    //  effective entries for all the cells included in the projection. 
@@ -2611,7 +2608,6 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, TAxis*
    TProfile2D *p2 = 0;
 
    // Create the histogram, either reseting a preexisting one 
-   // if compatible or creating one from scratch.
    // Does an object with the same name exists?
    TObject *p2obj = gROOT->FindObject(name);
    if (p2obj && p2obj->InheritsFrom(TH1::Class())) {
@@ -2620,27 +2616,25 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, TAxis*
          return 0; 
       }
       p2 = (TProfile2D*)p2obj;
-      // check histogram compatibility (not perfect for variable bins histograms)
-      // note that the x axis of the projected histogram is  labeld  Y of the original
-      bool useAllBins = ((nx == projX->GetNbins() ) && (ny == projY->GetNbins() ) );
-      if (useAllBins && CheckEqualAxes( projY, p2->GetXaxis() ) && 
-           CheckEqualAxes( projX, p2->GetYaxis() ) ) { 
-         // enable originalRange option in case a range is set in the outer axis
-         originalRange = kTRUE; 
-         p2->Reset();
-      }
-      else if ( !useAllBins && 
-                CheckConsistentSubAxes(projY, iymin, iymax, p2->GetXaxis() ) &&
-                CheckConsistentSubAxes(projX, ixmin, ixmax, p2->GetYaxis() ) ) { 
-         // reset also in case an histogram exists with compatible axis with the zoomed original axis
-         p2->Reset();   
-      }      
-      else {  
-         p2->Dump();
-         projY->Dump(); projX->Dump(); 
-         std::cout << ny << "  " << iymin << " , " << iymax << " nx " << nx << "  " << ixmin << " , " << ixmax << std::endl;
-         Error("DoProjectProfile2D","Profile2D with name %s already exists and it is not compatible",name);
-         return 0; 
+      // reset existing profile and re-set bins
+      p2->Reset();
+      const TArrayD *xbins = projX->GetXbins();
+      const TArrayD *ybins = projY->GetXbins();
+      if ( originalRange ) {
+         p2->SetBins(projY->GetNbins(),projY->GetXmin(),projY->GetXmax()
+                     ,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
+         // set bins for mixed axis do not exists - need to set afterwards the variable bins
+         if (ybins->fN != 0) 
+            p2->GetXaxis()->Set(projY->GetNbins(),&ybins->fArray[iymin-1]);
+         if (xbins->fN != 0)
+            p2->GetYaxis()->Set(projX->GetNbins(),&xbins->fArray[ixmin-1]);
+      } else {
+         p2->SetBins(ny,projY->GetBinLowEdge(iymin),projY->GetBinUpEdge(iymax)
+                     ,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
+         if (ybins->fN != 0) 
+            p2->GetXaxis()->Set(ny,&ybins->fArray[iymin-1]);
+         if (xbins->fN != 0) 
+            p2->GetYaxis()->Set(nx,&xbins->fArray[ixmin-1]);
       }
    }
 
