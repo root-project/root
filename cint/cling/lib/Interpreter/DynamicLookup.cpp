@@ -216,8 +216,8 @@ namespace cling {
     Name = &m_Context->Idents.get("LifetimeHandler");
     R.setLookupName(Name);
     m_Sema->LookupQualifiedName(R, NSD);
-    m_LifetimeHandler = R.getAsSingle<CXXRecordDecl>();
-    assert(m_LifetimeHandler && "LifetimeHandler could not be found.");
+    m_LifetimeHandlerDecl = R.getAsSingle<CXXRecordDecl>();
+    assert(m_LifetimeHandlerDecl && "LifetimeHandler could not be found.");
 
     // Find and set the source locations to valid ones.
     R.clear();
@@ -428,7 +428,7 @@ namespace cling {
         Inits.push_back(ConstructConstCharPtrExpr(Res.c_str()));
         
         // 2.3 Create a variable from LifetimeHandler.
-        QualType HandlerTy = m_Context->getTypeDeclType(m_LifetimeHandler);
+        QualType HandlerTy = m_Context->getTypeDeclType(m_LifetimeHandlerDecl);
         VarDecl* HandlerInstance = VarDecl::Create(*m_Context,
                                                    CuredDecl->getDeclContext(),
                                                    m_NoSLoc,
@@ -462,7 +462,7 @@ namespace cling {
         // 3.1 Find the declaration - LifetimeHandler::getMemory()
         CXXMethodDecl* getMemDecl
           = m_Interpreter->LookupDecl("getMemory",
-                                      m_LifetimeHandler).getAs<CXXMethodDecl>();
+                                   m_LifetimeHandlerDecl).getAs<CXXMethodDecl>();
         assert(getMemDecl && "LifetimeHandler::getMemory not found!");
         // 3.2 Build a DeclRefExpr, which holds the object
         DeclRefExpr* MemberExprBase

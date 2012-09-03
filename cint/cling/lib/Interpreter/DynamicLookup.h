@@ -167,7 +167,7 @@ namespace cling {
     clang::FunctionDecl* m_EvalDecl;
 
     /// \brief Stores helper structure dealing with static initializers
-    clang::CXXRecordDecl* m_LifetimeHandler;
+    clang::CXXRecordDecl* m_LifetimeHandlerDecl;
 
     /// \brief Sema's external source, which provides last resort lookup.
     llvm::OwningPtr<DynamicIDHandler> m_DynIDHandler;
