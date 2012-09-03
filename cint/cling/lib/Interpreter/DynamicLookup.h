@@ -253,6 +253,13 @@ namespace cling {
     }
 
   protected:
+    ///\brief On first use it finds commonly used declarations.
+    ///
+    /// For example: EvaluateT, clang::DeclContext and so on.
+    ///
+    void Initialize();
+
+
     /// @{
     /// @name Helpers, which simplify node replacement
 
