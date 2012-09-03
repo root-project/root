@@ -185,7 +185,8 @@ namespace cling {
 
   // Constructors
   EvaluateTSynthesizer::EvaluateTSynthesizer(Interpreter* interp, Sema* S)
-    : TransactionTransformer(S), m_EvalDecl(0), m_CurDeclContext(0), 
+    : TransactionTransformer(S), m_EvalDecl(0), m_LifetimeHandlerDecl(0),
+      m_LHgetMemoryDecl(0), m_DeclContextDecl(0), m_CurDeclContext(0), 
       m_Interpreter(interp), m_Context(&S->getASTContext()) 
   { }
 
@@ -211,13 +212,30 @@ namespace cling {
     m_EvalDecl = dyn_cast<FunctionDecl>(TplD->getTemplatedDecl());
     assert(m_EvalDecl && "The Eval function not found!");
 
-    // Find the LifetimeHandler
+    // Find the LifetimeHandler declaration
     R.clear();
     Name = &m_Context->Idents.get("LifetimeHandler");
     R.setLookupName(Name);
     m_Sema->LookupQualifiedName(R, NSD);
     m_LifetimeHandlerDecl = R.getAsSingle<CXXRecordDecl>();
     assert(m_LifetimeHandlerDecl && "LifetimeHandler could not be found.");
+
+    // Find the LifetimeHandler::getMemory declaration
+    R.clear();
+    Name = &m_Context->Idents.get("getMemory");
+    R.setLookupName(Name);
+    m_Sema->LookupQualifiedName(R, m_LifetimeHandlerDecl);
+    m_LHgetMemoryDecl = R.getAsSingle<CXXMethodDecl>();
+    assert(m_LHgetMemoryDecl && "LifetimeHandler could not be found.");
+
+    // Find the DeclContext declaration
+    R.clear();
+    Name = &m_Context->Idents.get("DeclContext");
+    R.setLookupName(Name);
+    NamespaceDecl* clangNSD = utils::Lookup::Namespace(m_Sema, "clang");
+    m_Sema->LookupQualifiedName(R, clangNSD);
+    m_DeclContextDecl = R.getAsSingle<CXXRecordDecl>();
+    assert(m_DeclContextDecl && "clang::DeclContext decl could not be found.");
 
     // Find and set the source locations to valid ones.
     R.clear();
@@ -410,12 +428,7 @@ namespace cling {
         // Build Arg0 DynamicExprInfo
         Inits.push_back(BuildDynamicExprInfo(E));
         // Build Arg1 DeclContext* DC
-        CXXRecordDecl* D = dyn_cast<CXXRecordDecl>(m_Interpreter->
-                                                   LookupDecl("clang").
-                                                   LookupDecl("DeclContext").
-                                                   getSingleDecl());
-        assert(D && "DeclContext declaration not found!");
-        QualType DCTy = m_Context->getTypeDeclType(D);
+        QualType DCTy = m_Context->getTypeDeclType(m_DeclContextDecl);
         Inits.push_back(ConstructCStyleCasePtrExpr(DCTy,
                                                    (uint64_t)m_CurDeclContext)
                         );
@@ -459,25 +472,20 @@ namespace cling {
                                  m_NoELoc)
                         );
         
-        // 3.1 Find the declaration - LifetimeHandler::getMemory()
-        CXXMethodDecl* getMemDecl
-          = m_Interpreter->LookupDecl("getMemory",
-                                   m_LifetimeHandlerDecl).getAs<CXXMethodDecl>();
-        assert(getMemDecl && "LifetimeHandler::getMemory not found!");
-        // 3.2 Build a DeclRefExpr, which holds the object
+        // 3.1 Build a DeclRefExpr, which holds the object
         DeclRefExpr* MemberExprBase
           = m_Sema->BuildDeclRefExpr(HandlerInstance,
                                      HandlerTy,
                                      VK_LValue,
                                      m_NoSLoc
                                      ).takeAs<DeclRefExpr>();
-        // 3.3 Create a MemberExpr to getMemory from its declaration.
+        // 3.2 Create a MemberExpr to getMemory from its declaration.
         CXXScopeSpec SS;
-        LookupResult MemberLookup(*m_Sema, getMemDecl->getDeclName(),
+        LookupResult MemberLookup(*m_Sema, m_LHgetMemoryDecl->getDeclName(),
                                   m_NoSLoc, Sema::LookupMemberName);
         // Add the declaration as if doesn't exist.
         // TODO: Check whether this is the most appropriate variant
-        MemberLookup.addDecl(getMemDecl, AS_public);
+        MemberLookup.addDecl(m_LHgetMemoryDecl, AS_public);
         MemberLookup.resolveKind();
         Expr* MemberExpr = m_Sema->BuildMemberReferenceExpr(MemberExprBase,
                                                             HandlerTy,
@@ -489,7 +497,7 @@ namespace cling {
                                                             MemberLookup,
                                                             /*TemplateArgs=*/0
                                                             ).take();
-        // 3.4 Build the actual call
+        // 3.3 Build the actual call
         Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
         Expr* theCall = m_Sema->ActOnCallExpr(S,
                                               MemberExpr,
@@ -598,12 +606,7 @@ namespace cling {
     CallArgs.push_back(Arg0);
 
     // Build Arg1
-    CXXRecordDecl* D = dyn_cast<CXXRecordDecl>(m_Interpreter->
-                                               LookupDecl("clang").
-                                               LookupDecl("DeclContext").
-                                               getSingleDecl());
-    assert(D && "DeclContext declaration not found!");
-    QualType DCTy = m_Context->getTypeDeclType(D);
+    QualType DCTy = m_Context->getTypeDeclType(m_DeclContextDecl);
     Expr* Arg1 = ConstructCStyleCasePtrExpr(DCTy, (uint64_t)m_CurDeclContext);
     CallArgs.push_back(Arg1);
 
