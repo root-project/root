@@ -232,7 +232,7 @@ namespace cling {
       return;
 
     // Find DynamicLookup specific builtins
-    if (m_NoRange.isInvalid() || !m_EvalDecl) {
+    if (!m_EvalDecl) {
       Initialize();
     }
 
