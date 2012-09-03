@@ -197,31 +197,30 @@ namespace cling {
     if (!getTransaction()->getCompilationOpts().DynamicScoping)
       return;
 
-    // include the DynamicLookup specific builtins
-    if (!m_EvalDecl) {
-      TemplateDecl* D
-        = cast_or_null<TemplateDecl>(m_Interpreter->LookupDecl("cling").
-                                     LookupDecl("runtime").
-                                     LookupDecl("internal").
-                                     LookupDecl("EvaluateT").
-                                     getSingleDecl());
-      assert(D && "Cannot find EvaluateT TemplateDecl!\n");
-
-      m_EvalDecl = dyn_cast<FunctionDecl>(D->getTemplatedDecl());
-      assert (m_EvalDecl && "The Eval function not found!");
-    }
-
-    if (m_NoRange.isInvalid()) {
+    // Find DynamicLookup specific builtins
+    if (m_NoRange.isInvalid() || !m_EvalDecl) {
 
       NamespaceDecl* NSD = utils::Lookup::Namespace(m_Sema, "cling");
       NSD = utils::Lookup::Namespace(m_Sema, "runtime", NSD);
       NSD = utils::Lookup::Namespace(m_Sema, "internal", NSD);
 
-      DeclarationName Name
-        = &m_Context->Idents.get(
-                           "InterpreterGeneratedCodeDiagnosticsMaybeIncorrect");
+      DeclarationName Name = &m_Context->Idents.get("EvaluateT");
+
       LookupResult R(*m_Sema, Name, SourceLocation(), Sema::LookupOrdinaryName,
                      Sema::ForRedeclaration);
+      m_Sema->LookupQualifiedName(R, NSD);
+      // We have specialized EvaluateT but we don't care because the templated 
+      // decl is needed.
+      TemplateDecl* TplD = dyn_cast_or_null<TemplateDecl>(*R.begin());
+      m_EvalDecl = dyn_cast<FunctionDecl>(TplD->getTemplatedDecl());
+      assert (m_EvalDecl && "The Eval function not found!");
+
+      // set the source range to an artificial location in the source.
+      Name
+        = &m_Context->Idents.get(
+                           "InterpreterGeneratedCodeDiagnosticsMaybeIncorrect");
+      R.clear();
+      R.setLookupName(Name);
 
       m_Sema->LookupQualifiedName(R, NSD);
       assert(!R.empty() && "Cannot find PrintValue(...)");
@@ -231,6 +230,7 @@ namespace cling {
       m_NoSLoc = m_NoRange.getBegin();
       m_NoELoc =  m_NoRange.getEnd();
     }
+
     for (Transaction::const_iterator I = getTransaction()->decls_begin(), 
            E = getTransaction()->decls_end(); I != E; ++I)
       for (DeclGroupRef::const_iterator J = (*I).begin(), 
