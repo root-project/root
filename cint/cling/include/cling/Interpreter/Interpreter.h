@@ -24,17 +24,11 @@ namespace llvm {
 }
 
 namespace clang {
-  class ASTConsumer;
   class ASTContext;
   class CompilerInstance;
-  class CompoundStmt;
   class Decl;
   class DeclContext;
-  class Expr;
-  class FunctionDecl;
   class NamedDecl;
-  class QualType;
-  class Type;
 }
 
 namespace cling {
@@ -58,7 +52,6 @@ namespace cling {
   /// incremental compilation.
   ///
   class Interpreter {
-
   public:
 
     ///\brief Describes the return result of the different routines that do the
