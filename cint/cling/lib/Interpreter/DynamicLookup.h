@@ -172,6 +172,9 @@ namespace cling {
     /// \brief Stores member function defined in the LifetimeHanlder.
     clang::CXXMethodDecl* m_LHgetMemoryDecl;
 
+    /// \brief Stores helper class used in EvaluateT call.
+    clang::CXXRecordDecl* m_DynamicExprInfoDecl;
+
     /// \brief Stores the clang::DeclContext declaration, used in as an parameter
     /// in EvaluateT call.
     clang::CXXRecordDecl* m_DeclContextDecl;

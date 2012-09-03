@@ -186,8 +186,8 @@ namespace cling {
   // Constructors
   EvaluateTSynthesizer::EvaluateTSynthesizer(Interpreter* interp, Sema* S)
     : TransactionTransformer(S), m_EvalDecl(0), m_LifetimeHandlerDecl(0),
-      m_LHgetMemoryDecl(0), m_DeclContextDecl(0), m_CurDeclContext(0), 
-      m_Interpreter(interp), m_Context(&S->getASTContext()) 
+      m_LHgetMemoryDecl(0), m_DynamicExprInfoDecl(0), m_DeclContextDecl(0), 
+      m_CurDeclContext(0), m_Interpreter(interp), m_Context(&S->getASTContext()) 
   { }
 
   // pin the vtable here.
@@ -226,7 +226,15 @@ namespace cling {
     R.setLookupName(Name);
     m_Sema->LookupQualifiedName(R, m_LifetimeHandlerDecl);
     m_LHgetMemoryDecl = R.getAsSingle<CXXMethodDecl>();
-    assert(m_LHgetMemoryDecl && "LifetimeHandler could not be found.");
+    assert(m_LHgetMemoryDecl && "LifetimeHandler::getMemory couldn't be found.");
+
+    // Find the DynamicExprInfo declaration
+    R.clear();
+    Name = &m_Context->Idents.get("DynamicExprInfo");
+    R.setLookupName(Name);
+    m_Sema->LookupQualifiedName(R, NSD);
+    m_DynamicExprInfoDecl = R.getAsSingle<CXXRecordDecl>();
+    assert(m_DynamicExprInfoDecl && "DynExprInfo could not be found.");
 
     // Find the DeclContext declaration
     R.clear();
@@ -622,14 +630,7 @@ namespace cling {
 
   Expr* EvaluateTSynthesizer::BuildDynamicExprInfo(Expr* SubTree,
                                                    bool ValuePrinterReq) {
-    // 1. Find the DynamicExprInfo class
-    CXXRecordDecl* ExprInfo
-      = cast_or_null<CXXRecordDecl>(m_Interpreter->LookupDecl("cling").
-                                    LookupDecl("DynamicExprInfo").
-                                    getSingleDecl());
-    assert(ExprInfo && "DynamicExprInfo declaration not found!");
-
-    // 2. Get the expression containing @-s and get the variable addresses
+    // 1. Get the expression containing @-s and get the variable addresses
     std::string Template;
     llvm::SmallVector<DeclRefExpr*, 4> Addresses;
     llvm::raw_string_ostream OS(Template);
@@ -648,10 +649,10 @@ namespace cling {
 
     OS.flush();
 
-    // 3. Build the template
+    // 2. Build the template
     Expr* ExprTemplate = ConstructConstCharPtrExpr(Template.c_str());
 
-    // 4. Build the array of addresses
+    // 3. Build the array of addresses
     QualType VarAddrTy = m_Sema->BuildArrayType(m_Context->VoidPtrTy,
                                                 ArrayType::Normal,
                                                 /*ArraySize*/0,
@@ -696,8 +697,8 @@ namespace cling {
     CtorArgs.push_back(ExprAddresses);
     CtorArgs.push_back(VPReq);
 
-    // 5. Call the constructor
-    QualType ExprInfoTy = m_Context->getTypeDeclType(ExprInfo);
+    // 4. Call the constructor
+    QualType ExprInfoTy = m_Context->getTypeDeclType(m_DynamicExprInfoDecl);
     ExprResult Initializer = m_Sema->ActOnParenListExpr(m_NoSLoc, m_NoELoc,
                                                         CtorArgs);
     Expr* Result = m_Sema->BuildCXXNew(m_NoSLoc,
