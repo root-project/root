@@ -136,21 +136,21 @@ return fitval;
 <programlisting language="c++"><emphasis role="italic"><code>// this function used fitf to fit a histogram</code></emphasis>
 void fitexample() {
 
-<emphasis role="italic"><code>  // open a file and get a histogram</code></emphasis>
-TFile *f = new TFile("hsimple.root");
-TH1F *hpx = (TH1F*)f-&gt;Get(*hpx);
+<emphasis role="italic"><code>   // open a file and get a histogram</code></emphasis>
+   TFile *f = new TFile("hsimple.root");
+   TH1F *hpx = (TH1F*)f-&gt;Get("hpx");
 
-<emphasis role="italic"><code>  // Create a TF1 object using the function defined above. The last three</code></emphasis>
-<emphasis role="italic"><code>  //  parameters specify the number of parameters for the function.</code></emphasis>
-TF1 *func = new TF1("fit",fitf,-3,3,3);
-<emphasis role="italic"><code>  // set the parameters to the mean and RMS of the histogram</code></emphasis>
-func-&gt;SetParameters(500,hpx-&gt;GetMean(),hpx-&gt;GetRMS());
+<emphasis role="italic"><code>   // Create a TF1 object using the function defined above. The last three</code></emphasis>
+<emphasis role="italic"><code>   //  parameters specify the number of parameters for the function.</code></emphasis>
+   TF1 *func = new TF1("fit",fitf,-3,3,3);
+<emphasis role="italic"><code>   // set the parameters to the mean and RMS of the histogram</code></emphasis>
+   func-&gt;SetParameters(500,hpx-&gt;GetMean(),hpx-&gt;GetRMS());
 
-<emphasis role="italic"><code>  // give the parameters meaningful names</code></emphasis>
-func-&gt;SetParNames ("Constant","Mean_value","Sigma");
+<emphasis role="italic"><code>   // give the parameters meaningful names</code></emphasis>
+   func-&gt;SetParNames ("Constant","Mean_value","Sigma");
 
-<emphasis role="italic"><code>  // call TH1::Fit with the name of the TF1 object </code></emphasis>
-hpx-&gt;Fit("fit");
+<emphasis role="italic"><code>   // call TH1::Fit with the name of the TF1 object </code></emphasis>
+   hpx-&gt;Fit("fit");
 }
 </programlisting>
 
