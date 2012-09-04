@@ -114,6 +114,7 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
             swrk.Form("%d workers", nwrks);
          }
          lite = kTRUE;
+         gEnv->SetValue("Proof.MaxOldSessions", 1);
          Printf("getProof: trying to open a PROOF-Lite session with %s", swrk.Data());
       } else {
          Printf("getProof: trying to open a session on the external cluster at '%s'", url);
@@ -325,6 +326,8 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
       fprintf(fcf,"xpd.multiuser 1\n");
       fprintf(fcf,"### Limit the number of query results kept in the master sandbox\n");
       fprintf(fcf,"xpd.putrc ProofServ.UserQuotas: maxquerykept=10\n");
+      fprintf(fcf,"### Limit the number of sessions kept in the sandbox\n");
+      fprintf(fcf,"xpd.putrc Proof.MaxOldSessions: 1\n");
       if (tutords) {
          fprintf(fcf,"### Use dataset directory under the tutorial dir\n");
          fprintf(fcf,"xpd.datasetsrc file url:%s opt:-Cq:Av:As:\n", datasetdir.Data());
