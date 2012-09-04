@@ -1,35 +1,31 @@
-#ifndef RootOCC_H
-#define RootOCC_H 1
+// @(#)geom/geocad:$Id$
+// Author: Cinzia Luzzi   5/5/2012
+
+/*************************************************************************
+ * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_RootOCC
+#define ROOT_RootOCC
+
 //Cascade
 #include <TopoDS_Shape.hxx>
-#include <TopoDS_Shell.hxx>
-#include <TopoDS_Face.hxx>
 #include <TopoDS_Wire.hxx>
+
 //Root
-#include <TGeoTrd1.h>
-#include <TGeoTrd2.h>
-#include <TGeoArb8.h>
-#include <TGeoPara.h>
-#include <TGeoTorus.h>
-#include <TGeoCone.h>
-#include <TGeoTube.h>
-#include <TGeoEltu.h>
-#include <TGeoSphere.h>
-#include <TGeoPcon.h>
-#include <TGeoPgon.h>
-#include <TGeoHype.h>
-#include <TGeoXtru.h>
-#include <TGeoCompositeShape.h>
-#include <TGeoPolygon.h>
-#include <TGeoMatrix.h>
-#include <gp_Pnt.hxx>
-
-
-#define END_OF_FACE -1
+#ifndef ROOT_TGeoXtru
+#include "TGeoXtru.h"
+#endif
+#ifndef ROOT_TGeoCompositeShape
+#include "TGeoCompositeShape.h"
+#endif
 
 #include <fstream>
 
-using namespace std;
 
 class RootOCC
 {

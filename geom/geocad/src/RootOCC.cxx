@@ -1,6 +1,13 @@
-#define HAVE_LIMITS_H
-#define HAVE_IOSTREAM 
-#define HAVE_IOMANIP
+// @(#)geom/geocad:$Id$
+// Author: Cinzia Luzzi   5/5/2012
+
+/*************************************************************************
+ * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
 // RootOCC Class                                                              //
@@ -42,6 +49,8 @@
 //Cascade
 
 #include <TopoDS.hxx>
+#include <TopoDS_Shell.hxx>
+#include <TopoDS_Face.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Solid.hxx>
 #include <gp_Pnt.hxx>
@@ -82,10 +91,26 @@
 #include <GProp_GProps.hxx>
 #include <TColgp_HArray1OfPnt.hxx>
 #include <ShapeFix_ShapeTolerance.hxx>
-//Root
-#include <TString.h>
-#include <TClass.h>
-#include <TGeoBoolNode.h>
+
+//ROOT
+#include "TString.h"
+#include "TClass.h"
+#include "TGeoBoolNode.h"
+#include "TGeoTrd1.h"
+#include "TGeoTrd2.h"
+#include "TGeoArb8.h"
+#include "TGeoPara.h"
+#include "TGeoTorus.h"
+#include "TGeoCone.h"
+#include "TGeoTube.h"
+#include "TGeoEltu.h"
+#include "TGeoSphere.h"
+#include "TGeoPcon.h"
+#include "TGeoPgon.h"
+#include "TGeoHype.h"
+#include "TGeoPolygon.h"
+#include "TGeoMatrix.h"
+
 
 RootOCC::RootOCC():fOccShape()
 {	

@@ -12,9 +12,15 @@
 #ifndef ROOT_OCCStep
 #define ROOT_OCCStep
 
+#ifndef ROOT_TGeoNode
 #include "TGeoNode.h"
+#endif
+#ifndef ROOT_TGeoMatrix
 #include "TGeoMatrix.h"
+#endif
+#ifndef ROOT_RootOCC
 #include "RootOCC.h"
+#endif
 
 #include <TDF_Label.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
