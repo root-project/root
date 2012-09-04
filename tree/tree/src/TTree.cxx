@@ -5425,7 +5425,9 @@ Long64_t TTree::LoadTree(Long64_t entry)
                continue;
             }
             TTree* friendTree = fe->GetTree();
-            if (friendTree->IsA() == TTree::Class()) {
+            if (friendTree == 0) {
+               // Somehow we failed to retrieve the friend TTree.
+            } else if (friendTree->IsA() == TTree::Class()) {
                // Friend is actually a tree.
                if (friendTree->LoadTreeFriend(entry, this) >= 0) {
                   friendHasEntry = kTRUE;
