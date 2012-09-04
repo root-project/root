@@ -621,6 +621,35 @@ Double_t TGraphErrors::GetErrorYlow(Int_t i) const
    return -1;
 }
 
+//______________________________________________________________________________
+Int_t TGraphErrors::Merge(TCollection* li)
+{
+   // Adds all graphs with errors from the collection to this graph.
+   // Returns the total number of poins in the result or -1 in case of an error.
+
+   TIter next(li);
+   while (TObject* o = next()) {
+      TGraph *g = dynamic_cast<TGraph*>(o);
+      if (!g) {
+         Error("Merge",
+               "Cannot merge - an object which doesn't inherit from TGraph found in the list");
+         return -1;
+      }
+      int n0 = GetN();
+      int n1 = n0+g->GetN();
+      Set(n1);
+      Double_t * x = g->GetX();
+      Double_t * y = g->GetY();
+      Double_t * ex = g->GetEX();
+      Double_t * ey = g->GetEY();
+      for (Int_t i = 0 ; i < g->GetN(); i++) {
+         SetPoint(n0+i, x[i], y[i]);
+         if (ex) fEX[n0+i] = ex[i];
+         if (ey) fEY[n0+i] = ey[i];
+      }
+   }
+   return GetN();
+}
 
 //______________________________________________________________________________
 void TGraphErrors::Print(Option_t *) const

@@ -71,7 +71,7 @@ public:
    Double_t       *GetEXhigh() const {return fEXhigh;}
    Double_t       *GetEYlow()  const {return fEYlow;}
    Double_t       *GetEYhigh() const {return fEYhigh;}
-
+   virtual Int_t   Merge(TCollection* list);
    virtual void    Print(Option_t *chopt="") const;
    virtual void    SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void    SetPointError(Double_t exl, Double_t exh, Double_t eyl, Double_t eyh); // *MENU*
