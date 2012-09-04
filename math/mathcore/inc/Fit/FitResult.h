@@ -101,7 +101,16 @@ public:
    /// minimizer type 
    const std::string & MinimizerType() const { return fMinimType; } 
 
-   /// True if fit successful, otherwise false.
+   /** 
+       True if fit successful, otherwise false.
+       A fit is considered successful if the minimizer succeded in finding the 
+       minimum. It could happen that subsequent operations like error analysis (e.g. Minos) 
+       failed. In that case the status can be still true if the original minimization algorithm 
+       succeeded in finding the minimum. 
+       One can query in that case the minimizer return status using Status(). 
+       It is responability to the Minimizer class to tag a found minimum as valid or not 
+       and to produce also a status code.
+   */
    bool IsValid() const { return fValid; }
 
    /// True if a fit result does not exist (even invalid) with parameter values 
