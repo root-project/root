@@ -214,7 +214,9 @@ void UpdateWindow::Execute()const
    assert(fView.fContext != 0 && "Execute, view.fContext is null");
 
    if (QuartzPixmap *pixmap = fView.fBackBuffer) {
-      Rectangle_t copyArea = {0, 0, pixmap.fWidth, pixmap.fHeight};
+      Rectangle_t copyArea = {};
+      copyArea.fWidth = UShort_t(pixmap.fWidth);
+      copyArea.fHeight = UShort_t(pixmap.fHeight);
       [fView copy : pixmap area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
    }
 }
@@ -533,7 +535,10 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
             
             if (view.fBackBuffer) {
                //Very "special" window.
-               Rectangle_t copyArea = {0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight};
+               Rectangle_t copyArea = {};
+               copyArea.fWidth = UShort_t(view.fBackBuffer.fWidth);
+               copyArea.fHeight = UShort_t(view.fBackBuffer.fHeight);
+
                [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
             }
             

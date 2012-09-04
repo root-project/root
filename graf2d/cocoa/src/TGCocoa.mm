@@ -2119,8 +2119,15 @@ void TGCocoa::CopyPixmap(Int_t pixmapID, Int_t x, Int_t y)
       }
    }
 
-   Rectangle_t copyArea = {0, 0, pixmap.fWidth, pixmap.fHeight};
-   Point_t dstPoint = {x, y};
+   //TODO ugly initialization with casts, fix by declaring my own Rectangle_t with correct types.
+   Rectangle_t copyArea = {};
+   copyArea.fWidth = UShort_t(pixmap.fWidth);
+   copyArea.fHeight = UShort_t(pixmap.fHeight);
+
+   Point_t dstPoint = {};
+   dstPoint.fX = Short_t(x);
+   dstPoint.fY = Short_t(y);
+
    [destination copy : pixmap area : copyArea withMask : nil clipOrigin : Point_t() toPoint : dstPoint];
 }
 

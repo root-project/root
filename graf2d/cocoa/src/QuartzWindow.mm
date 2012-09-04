@@ -2191,7 +2191,10 @@ void print_mask_info(ULong_t mask)
 
          if (fBackBuffer) {
             //Very "special" window.
-            Rectangle_t copyArea = {0, 0, fBackBuffer.fWidth, fBackBuffer.fHeight};
+            Rectangle_t copyArea = {};//TODO: why Rectangle_t uses UShort_t instead of unsigned??? Have to declare my own rect_t later:((
+            copyArea.fWidth = UShort_t(fBackBuffer.fWidth);
+            copyArea.fHeight = UShort_t(fBackBuffer.fHeight);
+
             [self copy : fBackBuffer area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
          }
      
