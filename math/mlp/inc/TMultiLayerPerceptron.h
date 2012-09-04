@@ -109,6 +109,7 @@ class TMultiLayerPerceptron : public TObject {
    inline Double_t GetEpsilon()  const { return fEpsilon; }
    inline Double_t GetDelta()    const { return fDelta; }
    inline Double_t GetEtaDecay() const { return fEtaDecay; }
+   TMultiLayerPerceptron::ELearningMethod GetLearningMethod() const { return fLearningMethod; }
    inline Double_t GetTau()      const { return fTau; }
    inline Int_t GetReset()       const { return fReset; }
    inline TString GetStructure() const { return fStructure; }
