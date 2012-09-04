@@ -5,9 +5,10 @@
 #  )
 
 add_cling_executable(cling
+  RequiredSymbols.cpp
   cling.cpp)
 
-target_link_libraries(
+target_link_libraries(cling
   clingUserInterface
   clingMetaProcessor
   clingInterpreter
