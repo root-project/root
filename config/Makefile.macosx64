@@ -137,6 +137,7 @@ MACOSX_SSL_DEPRECATED = yes
 endif
 ifeq ($(MACOSX_MINOR),8)
 MACOSX_SSL_DEPRECATED = yes
+MACOSX_ODBC_DEPRECATED = yes
 endif
 
 ifeq ($(CONFIGURE),yes)
