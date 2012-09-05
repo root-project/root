@@ -168,7 +168,9 @@ void MacOSXSystem::AddFileHandler(TFileHandler *fh)
 {
    //Can throw std::bad_alloc. I'm not allocating any resources here, so I'm not going to catch here.
    assert(fh != 0 && "AddFileHandler, fh parameter is null");
-   assert(fFileDescriptors.find(fh->GetFd()) == fFileDescriptors.end() && "AddFileHandler, file descriptor was registered already");
+   
+   if (fFileDescriptors.find(fh->GetFd()) != fFileDescriptors.end())
+      return;
 
    fFileDescriptors[fh->GetFd()] = fh->HasReadInterest() ? kDTRead : kDTWrite;
 }
@@ -180,7 +182,9 @@ void MacOSXSystem::RemoveFileHandler(TFileHandler *fh)
    assert(fh != 0 && "RemoveFileHandler, fh parameter is null");
    std::map<int, DescriptorType>::iterator fdIter = fFileDescriptors.find(fh->GetFd());
 
-   assert(fdIter != fFileDescriptors.end() && "RemoveFileHandler, file handler was not found");
+   if (fdIter == fFileDescriptors.end())
+      return;
+   
    fFileDescriptors.erase(fdIter);
 }
 
