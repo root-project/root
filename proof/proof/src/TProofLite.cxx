@@ -425,6 +425,7 @@ Int_t TProofLite::GetNumberOfWorkers(const char *url)
 
    TString nw;
    Int_t nWorkers = -1;
+   Bool_t urlSetting = kFALSE;
    if (url && strlen(url)) {
       nw = url;
       Int_t in = nw.Index("workers=");
@@ -437,10 +438,13 @@ Int_t TProofLite::GetNumberOfWorkers(const char *url)
                ::Warning("TProofLite::GetNumberOfWorkers",
                          "number of workers specified by 'workers='"
                          " is non-positive: using default");
+            } else {
+               urlSetting = kFALSE;
             }
          }
       }
-   } else if (fgProofEnvList) {
+   }
+   if (!urlSetting && fgProofEnvList) {
       // Check PROOF_NWORKERS
       TNamed *nm = (TNamed *) fgProofEnvList->FindObject("PROOF_NWORKERS");
       if (nm) {
