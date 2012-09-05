@@ -69,3 +69,6 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(ODBCO) $(ODBCDO): CXXFLAGS += $(ODBCINCDIR:%=-I%)
+ifeq ($(MACOSX_ODBC_DEPRECATED),yes)
+$(ODBCO) $(ODBCDO): CXXFLAGS += -Wno-deprecated-declarations
+endif
