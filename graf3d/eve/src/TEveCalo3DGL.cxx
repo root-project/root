@@ -89,11 +89,13 @@ void TEveCalo3DGL::RenderGridEndCap() const
    using namespace TMath;
 
    Float_t  rB = fM->GetBarrelRadius();
-   Double_t zE = fM->GetEndCapPos();
+   Double_t zEF = fM->GetForwardEndCapPos();
+   Double_t zEB = fM->GetBackwardEndCapPos();
 
    Float_t etaMin = fM->GetEtaMin();
    Float_t etaMax = fM->GetEtaMax();
-   Float_t trans  = fM->GetTransitionEta();
+   Float_t transF  = fM->GetTransitionEtaForward();
+   Float_t transB  = fM->GetTransitionEtaBackward();
    Float_t phiMin = fM->GetPhiMin();
    Float_t phiMax = fM->GetPhiMax();
 
@@ -109,11 +111,25 @@ void TEveCalo3DGL::RenderGridEndCap() const
    for (Int_t i=0; i<=nx; ++i)
    {
       eta = ax->GetBinUpEdge(i);
-      if (Abs(eta) >= trans && (eta > etaMin && eta < etaMax))
+      if (eta >= transF && (eta > etaMin && eta < etaMax))
       {
          theta = TEveCaloData::EtaToTheta(eta);
-         r = Abs(zE*Tan(theta));
-         z = Sign(zE, ax->GetBinLowEdge(i));
+         r = Abs(zEF*Tan(theta));
+         z = Sign(zEF, ax->GetBinLowEdge(i));
+         for (Int_t j=1; j<=ny; ++j)
+         {
+            phiL = ay->GetBinLowEdge(j);
+            phiU = ay->GetBinUpEdge(j);
+            if (TEveUtil::IsU1IntervalContainedByMinMax(phiMin, phiMax, phiL, phiU))
+            {
+               glVertex3f(r*Cos(phiL), r*Sin(phiL), z);
+               glVertex3f(r*Cos(phiU), r*Sin(phiU), z);
+            }
+         }
+      } else if (eta <= transB && (eta > etaMin && eta < etaMax)) {
+         theta = TEveCaloData::EtaToTheta(eta);
+         r = Abs(zEB*Tan(theta));
+         z = Sign(zEB, ax->GetBinLowEdge(i));
          for (Int_t j=1; j<=ny; ++j)
          {
             phiL = ay->GetBinLowEdge(j);
@@ -129,13 +145,13 @@ void TEveCalo3DGL::RenderGridEndCap() const
 
    Float_t r1, r2;
    // phi slices front
-   if (etaMax > trans)
+   if (etaMax > transF)
    {
-      r1 = zE*Tan(TEveCaloData::EtaToTheta(etaMax));
-      if (etaMin < trans)
+      r1 = zEF*Tan(TEveCaloData::EtaToTheta(etaMax));
+      if (etaMin < transF)
          r2 = rB;
       else
-         r2 = zE*Tan(TEveCaloData::EtaToTheta(etaMin));
+         r2 = zEF*Tan(TEveCaloData::EtaToTheta(etaMin));
 
       for (Int_t j=1; j<=ny; ++j)
       {
@@ -143,22 +159,22 @@ void TEveCalo3DGL::RenderGridEndCap() const
          phiU = ay->GetBinUpEdge(j);
          if (TEveUtil::IsU1IntervalContainedByMinMax(phiMin, phiMax, phiL, phiU))
          {
-            glVertex3f( r1*Cos(phiU), r1*Sin(phiU), zE);
-            glVertex3f( r2*Cos(phiU), r2*Sin(phiU), zE);
-            glVertex3f( r1*Cos(phiL), r1*Sin(phiL), zE);
-            glVertex3f( r2*Cos(phiL), r2*Sin(phiL), zE);
+            glVertex3f( r1*Cos(phiU), r1*Sin(phiU), zEF);
+            glVertex3f( r2*Cos(phiU), r2*Sin(phiU), zEF);
+            glVertex3f( r1*Cos(phiL), r1*Sin(phiL), zEF);
+            glVertex3f( r2*Cos(phiL), r2*Sin(phiL), zEF);
          }
       }
    }
 
    // phi slices back
-   if (etaMin < -trans)
+   if (etaMin < transB)
    {
-      r1 = zE*Tan(TEveCaloData::EtaToTheta(etaMin));
-      if (etaMax > -trans)
+      r1 = zEB*Tan(TEveCaloData::EtaToTheta(etaMin));
+      if (etaMax > transB)
          r2 = rB;
       else
-         r2 = zE*Tan(TEveCaloData::EtaToTheta(etaMax));
+         r2 = zEB*Tan(TEveCaloData::EtaToTheta(etaMax));
 
       r1 = Abs(r1);
       r2 = Abs(r2);
@@ -168,10 +184,10 @@ void TEveCalo3DGL::RenderGridEndCap() const
          phiU = ay->GetBinUpEdge(j);
          if (TEveUtil::IsU1IntervalContainedByMinMax(phiMin, phiMax, phiL, phiU))
          {
-            glVertex3f(r1*Cos(phiU), r1*Sin(phiU), -zE);
-            glVertex3f(r2*Cos(phiU), r2*Sin(phiU), -zE);
-            glVertex3f(r1*Cos(phiL), r1*Sin(phiL), -zE);
-            glVertex3f(r2*Cos(phiL), r2*Sin(phiL), -zE);
+            glVertex3f(r1*Cos(phiU), r1*Sin(phiU), zEB);
+            glVertex3f(r2*Cos(phiU), r2*Sin(phiU), zEB);
+            glVertex3f(r1*Cos(phiL), r1*Sin(phiL), zEB);
+            glVertex3f(r2*Cos(phiL), r2*Sin(phiL), zEB);
          }
       }
    }
@@ -186,7 +202,8 @@ void TEveCalo3DGL::RenderGridBarrel() const
 
    Float_t etaMin = fM->GetEtaMin();
    Float_t etaMax = fM->GetEtaMax();
-   Float_t trans  = fM->GetTransitionEta();
+   Float_t transF  = fM->GetTransitionEtaForward();
+   Float_t transB  = fM->GetTransitionEtaBackward();
    Float_t phiMin = fM->GetPhiMin();
    Float_t phiMax = fM->GetPhiMax();
 
@@ -202,7 +219,7 @@ void TEveCalo3DGL::RenderGridBarrel() const
    for(Int_t i=0; i<=nx; i++)
    {
       eta = ax->GetBinUpEdge(i);
-      if ((Abs(eta)<=trans) && (etaMin < eta && eta < etaMax))
+      if (eta<=transF && eta>=transB && (etaMin < eta && eta < etaMax))
       {
          theta = TEveCaloData::EtaToTheta(eta);
          z  = rB/Tan(theta);
@@ -222,16 +239,16 @@ void TEveCalo3DGL::RenderGridBarrel() const
    // phi slices
    Float_t zF, zB;
 
-   if (etaMin > -trans)
+   if (etaMin > transB)
       zB = rB/Tan(TEveCaloData::EtaToTheta(etaMin));
    else
-      zB = -fM->GetEndCapPos();
+      zB = fM->GetBackwardEndCapPos();
 
 
-   if (etaMax < trans)
+   if (etaMax < transF)
       zF =  rB/Tan(TEveCaloData::EtaToTheta(etaMax));
    else
-      zF = fM->GetEndCapPos();
+      zF = fM->GetForwardEndCapPos();
 
    for (Int_t j=1; j<=ny; j++)
    {
@@ -279,13 +296,14 @@ void TEveCalo3DGL::RenderGrid(TGLRnrCtx & rnrCtx) const
    Float_t etaMin = fM->GetEtaMin();
    Float_t etaMax = fM->GetEtaMax();
 
-   Float_t trans = fM->GetTransitionEta();
-   if (fM->GetRnrBarrelFrame() && (etaMin < trans && etaMax > -trans))
+   Float_t transF  = fM->GetTransitionEtaForward();
+   Float_t transB  = fM->GetTransitionEtaBackward();
+   if (fM->GetRnrBarrelFrame() && (etaMin < transF && etaMax > transB))
    {
       RenderGridBarrel();
    }
 
-   if (fM->GetRnrEndCapFrame() && (etaMax > trans || etaMin < -trans))
+   if (fM->GetRnrEndCapFrame() && (etaMax > transF || etaMin < transB))
    {
       RenderGridEndCap();
    }
@@ -452,7 +470,7 @@ void TEveCalo3DGL::RenderEndCapCell(const TEveCaloData::CellGeom_t &cellData, Fl
    using namespace TMath;
    Float_t z1, r1In, r1Out, z2, r2In, r2Out;
 
-   z1    = TMath::Sign(fM->fEndCapPos + offset, cellData.EtaMin());
+   z1    = (cellData.EtaMin()<0) ? fM->fEndCapPosB : fM->fEndCapPosF;
    z2    = z1 + TMath::Sign(towerH, cellData.EtaMin());
 
    r1In  = z1*Tan(cellData.ThetaMin());
@@ -559,8 +577,8 @@ void TEveCalo3DGL::DirectDraw(TGLRnrCtx &rnrCtx) const
 
       if (rnrCtx.SecSelection()) glLoadName(cellID);
 
-      if ((cellData.Eta() > 0 && cellData.Eta() < fM->GetTransitionEta()) ||
-          (cellData.Eta() < 0 && cellData.Eta() > -fM->GetTransitionEta())) 
+      if ((cellData.Eta() > 0 && cellData.Eta() < fM->GetTransitionEtaForward()) ||
+          (cellData.Eta() < 0 && cellData.Eta() > fM->GetTransitionEtaBackward()))
       {
          RenderBarrelCell(cellData, towerH, offset);
       }
@@ -596,7 +614,7 @@ void TEveCalo3DGL::DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* /*p
    TGLUtil::LineWidth(2);
    TGLUtil::LockColor();
 
-   if (!fM->fData->GetCellsHighlighted().empty()) 
+   if (!fM->fData->GetCellsHighlighted().empty())
    {
       glColor4ubv(rnrCtx.ColorSet().Selection(3).CArr());
       DrawSelectedCells(fM->fData->GetCellsHighlighted());
@@ -637,13 +655,13 @@ void TEveCalo3DGL::DrawSelectedCells(TEveCaloData::vCellId_t cells) const
          }
       }
 
-      if (fM->CellInEtaPhiRng(cellData)) 
+      if (fM->CellInEtaPhiRng(cellData))
       {
-         if (TMath::Abs(cellData.Eta()) < fM->GetTransitionEta())
+         if (cellData.Eta() < fM->GetTransitionEtaForward() && cellData.Eta() > fM->GetTransitionEtaBackward())
             RenderBarrelCell(cellData, towerH, offset);
          else
             RenderEndCapCell(cellData, towerH, offset);
-      }  
+      }
    }
 }
 

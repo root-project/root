@@ -55,7 +55,8 @@ TEveCaloViz::TEveCaloViz(TEveCaloData* data, const char* n, const char* t) :
    fAutoRange(kTRUE),
 
    fBarrelRadius(-1.f),
-   fEndCapPos(-1.f),
+   fEndCapPosF(-1.f),
+   fEndCapPosB(-1.f),
 
    fPlotEt(kTRUE),
 
@@ -181,20 +182,58 @@ void TEveCaloViz::SetPhiWithRng(Float_t phi, Float_t rng)
 //______________________________________________________________________________
 Float_t TEveCaloViz::GetTransitionTheta() const
 {
-   // Get transition angle between barrel and end-cap cells.
+   // Get transition angle between barrel and end-cap cells, assuming fEndCapPosF = -fEndCapPosB.
 
-   return TMath::ATan(fBarrelRadius/fEndCapPos);
+   return TMath::ATan(fBarrelRadius/fEndCapPosF);
 }
 
 //______________________________________________________________________________
 Float_t TEveCaloViz::GetTransitionEta() const
 {
-   // Get transition eta between barrel and end-cap cells.
+   // Get transition eta between barrel and end-cap cells, assuming fEndCapPosF = -fEndCapPosB.
 
    using namespace TMath;
    Float_t t = GetTransitionTheta()*0.5f;
    return -Log(Tan(t));
 }
+
+//______________________________________________________________________________
+Float_t TEveCaloViz::GetTransitionThetaForward() const
+{
+   // Get transition angle between barrel and forward end-cap cells.
+
+   return TMath::ATan(fBarrelRadius/fEndCapPosF);
+}
+
+//______________________________________________________________________________
+Float_t TEveCaloViz::GetTransitionEtaForward() const
+{
+   // Get transition eta between barrel and forward end-cap cells.
+
+   using namespace TMath;
+   Float_t t = GetTransitionThetaForward()*0.5f;
+   return -Log(Tan(t));
+}
+
+//______________________________________________________________________________
+Float_t TEveCaloViz::GetTransitionThetaBackward() const
+{
+   // Get transition angle between barrel and backward end-cap cells.
+
+   return TMath::ATan(fBarrelRadius/fEndCapPosB);
+}
+
+//______________________________________________________________________________
+Float_t TEveCaloViz::GetTransitionEtaBackward() const
+{
+   // Get transition eta between barrel and backward end-cap cells.
+
+   using namespace TMath;
+   Float_t t = GetTransitionThetaBackward()*0.5f;
+   //negative theta means negative eta
+   return Log(-Tan(t));
+}
+
 
 //______________________________________________________________________________
 void TEveCaloViz::SetData(TEveCaloData* data)
@@ -292,7 +331,8 @@ void TEveCaloViz::AssignCaloVizParameters(TEveCaloViz* m)
    fPhiOffset = m->fPhiOffset;
 
    fBarrelRadius = m->fBarrelRadius;
-   fEndCapPos    = m->fEndCapPos;
+   fEndCapPosF    = m->fEndCapPosF;
+   fEndCapPosB    = m->fEndCapPosB;
 
    if (m->fPalette)
    {
@@ -445,8 +485,8 @@ void TEveCalo3D::ComputeBBox()
    fBBox[1] =  fBarrelRadius + th;
    fBBox[2] =  fBBox[0];
    fBBox[3] =  fBBox[1];
-   fBBox[4] = -fEndCapPos - th;
-   fBBox[5] =  fEndCapPos + th;
+   fBBox[4] =  fEndCapPosB - th;
+   fBBox[5] =  fEndCapPosF + th;
 }
 
 
@@ -714,7 +754,6 @@ void TEveCalo2D::ComputeBBox()
    Float_t x, y, z;
    Float_t th = fMaxTowerH                                           ;
    Float_t r  = fBarrelRadius + th;
-   Float_t ze = fEndCapPos + th;
 
    x = r,  y = 0, z = 0;
    fManager->GetProjection()->ProjectPoint(x, y, z, fDepth);
@@ -723,10 +762,10 @@ void TEveCalo2D::ComputeBBox()
    fManager->GetProjection()->ProjectPoint(x, y, z, fDepth);
    BBoxCheckPoint(x, y, z);
 
-   x = 0, y = 0, z = ze;
+   x = 0, y = 0, z = fEndCapPosF + th;
    fManager->GetProjection()->ProjectPoint(x, y, z, fDepth);
    BBoxCheckPoint(x, y, z);
-   x = 0, y = 0, z = -ze;
+   x = 0, y = 0, z = fEndCapPosB - th;
    fManager->GetProjection()->ProjectPoint(x, y, z, fDepth);
    BBoxCheckPoint(x, y, z);
 

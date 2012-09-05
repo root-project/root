@@ -48,7 +48,8 @@ protected:
    Bool_t        fAutoRange;     // set eta phi limits on DataChanged()
 
    Float_t       fBarrelRadius;  // barrel raidus in cm
-   Float_t       fEndCapPos;     // end cap z coordinate in cm
+   Float_t       fEndCapPosF;     // forward end cap z coordinate in cm
+   Float_t       fEndCapPosB;     // backward end cap z coordinate in cm (should be < 0)
 
    Float_t       fPlotEt;        // plot E or Et.
 
@@ -79,7 +80,7 @@ public:
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
    virtual Float_t GetValToHeight() const;
    virtual void    CellSelectionChanged() {}
-   
+
    virtual void    SetScaleAbs(Bool_t x) { fScaleAbs = x; }
 
    TEveCaloData* GetData() const { return fData; }
@@ -97,8 +98,12 @@ public:
 
    Float_t GetBarrelRadius() const { return fBarrelRadius; }
    void    SetBarrelRadius(Float_t r) { fBarrelRadius = r; ResetBBox(); }
-   Float_t GetEndCapPos   () const { return fEndCapPos; }
-   void    SetEndCapPos   (Float_t z) { fEndCapPos = z; ResetBBox(); }
+   Float_t GetEndCapPos   () const { return fEndCapPosF; } // get end cap position, assuming fEndCapPosF = -fEndCapPosB
+   Float_t GetForwardEndCapPos   () const { return fEndCapPosF; }
+   Float_t GetBackwardEndCapPos   () const { return fEndCapPosB; }
+   void    SetEndCapPos   (Float_t z) { fEndCapPosF = z; fEndCapPosB = -z; ResetBBox(); }
+   void    SetForwardEndCapPos (Float_t z) { fEndCapPosF = z; ResetBBox(); }
+   void    SetBackwardEndCapPos(Float_t z) { fEndCapPosB = z; ResetBBox(); }
 
    Bool_t  GetPlotEt() const { return fPlotEt; }
    void    SetPlotEt(Bool_t x);
@@ -110,7 +115,11 @@ public:
    Float_t GetMaxValAbs() const    { return fMaxValAbs; }
 
    Float_t GetTransitionEta() const;
+   Float_t GetTransitionEtaForward() const;
+   Float_t GetTransitionEtaBackward() const;
    Float_t GetTransitionTheta() const;
+   Float_t GetTransitionThetaForward() const;
+   Float_t GetTransitionThetaBackward() const;
 
    TEveRGBAPalette* GetPalette() const { return fPalette; }
    void             SetPalette(TEveRGBAPalette* p);
