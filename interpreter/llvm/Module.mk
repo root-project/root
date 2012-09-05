@@ -29,13 +29,27 @@ LLVMLIB      := $(LLVMDIRI)/lib/libclang.a
 ifeq ($(strip $(LLVMCONFIG)),)
 LLVMCONFIG   := interpreter/llvm/inst/bin/llvm-config
 endif
+LLVMGOODS    := $(MODDIRS)/../../cling/LastKnownGoodLLVMSVNRevision.txt
+LLVMGOODO    := $(LLVMDIRO)/$(notdir $(LLVMGOODS))
 LLVMVERSION  := $(shell echo $(subst rc,,$(subst svn,,$(subst PACKAGE_VERSION=,,\
 	$(shell grep 'PACKAGE_VERSION=' $(LLVMDIRS)/configure)))))
 LLVMRES      := etc/cling/lib/clang/$(LLVMVERSION)/include/stddef.h
 LLVMDEP      := $(LLVMLIB) $(LLVMRES)
 
+ifeq ($(LLVMDEV),)
+LLVMOPTFLAGS := --enable-optimized --disable-assertions
+else
+LLVMOPTFLAGS := --disable-optimized
+endif
 ifneq ($(FORCELLVM),)
-FORCELLVMTARGET=FORCELLVMTARGET
+FORCELLVMTARGET := FORCELLVMTARGET
+endif
+ifneq ($(wildcard $(LLVMGOODO)),)
+# we have a previous build
+ifneq ($(shell cat $(LLVMGOODS)),$(shell cat $(LLVMGOODO)))
+# source and obj llvm-last-known-good differ, rebuild.
+FORCELLVMTARGET := FORCELLVMTARGET
+endif
 endif
 
 ##### local rules #####
@@ -49,19 +63,15 @@ $(LLVMRES): $(LLVMLIB)
 
 $(LLVMLIB): $(LLVMDIRO) $(FORCELLVMTARGET)
 		@(echo "*** Building $@..."; \
-		cd $(LLVMDIRO); \
-		$(MAKE) ENABLE_OPTIMIZED=1; \
-		@rm -rf $(LLVMDIRI)/lib/clang; \
-		$(MAKE) ENABLE_OPTIMIZED=1 install)
+		cd $(LLVMDIRO) && \
+		rm -rf $(LLVMDIRI)/lib/clang && \
+		$(MAKE) install)
+		@cp $(LLVMGOODS) $(LLVMGOODO)
 
 $(LLVMDIRO): $(LLVMDIRS)
 		$(MAKEDIR)
-		@(cd $(dir $@); \
-		mkdir $(notdir $@); \
-		echo "*** Configuring LLVM in $@..."; \
-		cd $(notdir $@); \
-		LLVMCC="$(CC)"; \
-		LLVMCXX="$(CXX)"; \
+		@(LLVMCC="$(CC)" && \
+		LLVMCXX="$(CXX)" && \
 		if [ $(ARCH) = "aix5" ]; then \
 			LLVM_CFLAGS="-DBOOL=int"; \
 		fi; \
@@ -102,9 +112,18 @@ $(LLVMDIRO): $(LLVMDIRS)
 			LLVMCXX="aCC"; \
 			LLVM_CFLAGS="+DD64 -Ae"; \
 		fi; \
-		GNUMAKE=$(MAKE) $(LLVMDIRS)/configure $$LLVM_HOST \
+		echo "*** Configuring LLVM in $@..."; \
+		cd $(dir $@) && \
+		mkdir -p $(notdir $@) && \
+		cd $(notdir $@) && \
+		GNUMAKE=$(MAKE) $(LLVMDIRS)/configure \
+		$$LLVM_HOST \
 		--prefix=$(ROOT_OBJDIR)/$(LLVMDIRI) \
-		--enable-targets=host CC=$$LLVMCC CXX=$$LLVMCXX CFLAGS="$$LLVM_CFLAGS" CXXFLAGS="$$LLVM_CFLAGS")
+		--disable-docs --disable-bindings \
+		$(LLVMOPTFLAGS) \
+		--enable-targets=host \
+		CC=$$LLVMCC CXX=$$LLVMCXX \
+		CFLAGS="$$LLVM_CFLAGS" CXXFLAGS="$$LLVM_CFLAGS" )
 
 all-$(MODNAME): $(LLVMLIB)
 
