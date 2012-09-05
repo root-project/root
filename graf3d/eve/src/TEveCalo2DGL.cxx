@@ -234,7 +234,12 @@ void TEveCalo2DGL::MakeRhoZCell(Float_t thetaMin, Float_t thetaMax,
    else
    {
       // endcap
-      Float_t r1 = fM->GetEndCapPos()/Abs(Cos(0.5f*(thetaMin+thetaMax))) + offset;
+      Float_t zE = fM->GetForwardEndCapPos();
+      // uses a different theta definition than GetTransitionThetaBackward(), so we need a conversion
+      Float_t transThetaB = TEveCaloData::EtaToTheta(fM->GetTransitionEtaBackward());
+      if (thetaMax >= transThetaB)
+         zE = Abs(fM->GetBackwardEndCapPos());
+      Float_t r1 = zE/Abs(Cos(0.5f*(thetaMin+thetaMax))) + offset;
       Float_t r2 = r1 + towerH;
 
       pnts[0] = r1*sin1; pnts[1] = r1*cos1;
@@ -269,7 +274,8 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
    Float_t *sliceValsLow = new Float_t[nSlices];
    Bool_t   isBarrel;
    Float_t  towerH;
-   Float_t transEta = fM->GetTransitionEta();
+   Float_t transEtaF = fM->GetTransitionEtaForward();
+   Float_t transEtaB = fM->GetTransitionEtaBackward();
 
    TAxis* axis = data->GetEtaBins();
    UInt_t nEta = axis->GetNbins();
@@ -301,12 +307,7 @@ void TEveCalo2DGL::DrawRhoZ(TGLRnrCtx & rnrCtx, TEveCalo2D::vBinCells_t& cellLis
                sliceValsLow[it->fSlice] += cellData.Value(fM->fPlotEt)*(*it).fFraction;
          }
 
-         isBarrel = true;
-         if ((etaMax > 0 && etaMax > transEta) ||
-             (etaMin < 0 && etaMin < -transEta))
-         {
-            isBarrel = false;
-         }
+         isBarrel = !(etaMax > 0 && etaMax > transEtaF) && !(etaMin < 0 && etaMin < transEtaB);
 
          // draw
          if (rnrCtx.SecSelection()) glLoadName(etaBin); // name-stack eta bin
@@ -354,6 +355,8 @@ void TEveCalo2DGL::DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
    TAxis* axis        = data->GetEtaBins();
    UInt_t nEtaBins    = axis->GetNbins();
    Int_t  nSlices     = data->GetNSlices();
+   Float_t transEtaF = fM->GetTransitionEtaForward();
+   Float_t transEtaB = fM->GetTransitionEtaBackward();
 
    Float_t *sliceValsUp     = new Float_t[nSlices];
    Float_t *sliceValsLow    = new Float_t[nSlices];
@@ -400,7 +403,9 @@ void TEveCalo2DGL::DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
                sliceValsLowRef[i->fSlice] += cellData.Value(fM->fPlotEt)*(*i).fFraction;
          }
 
-         isBarrel = TMath::Abs(axis->GetBinCenter(etaBin)) < fM->GetTransitionEta();
+         Float_t bincenterEta = axis->GetBinCenter(etaBin);
+         isBarrel = !(bincenterEta > 0 && bincenterEta > transEtaF) && !(bincenterEta < 0 && bincenterEta < transEtaB);
+
          for (Int_t s = 0; s < nSlices; ++s)
          {
             Float_t thetaMin = TEveCaloData::EtaToTheta(axis->GetBinUpEdge(etaBin));
