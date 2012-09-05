@@ -507,12 +507,15 @@ endif
 ifeq ($(XFTLIB),yes)
 STATICEXTRALIBS += -lXft
 endif
+ifeq ($(BUILDCOCOA),yes)
+STATICEXTRALIBS += -framework Cocoa
+endif
 
 ##### libCore #####
 
 ifeq ($(BUILDCLING),yes)
-CORELIBEXTRA    = $(CLINGLIBEXTRA)
-STATICEXTRALIBS = $(CLINGLIBEXTRA)
+CORELIBEXTRA    += $(CLINGLIBEXTRA)
+STATICEXTRALIBS += $(CLINGLIBEXTRA)
 endif
 
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(ZIPL) \
