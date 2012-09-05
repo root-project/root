@@ -488,7 +488,7 @@ void runProof(const char *what = "simple",
            aFeedback("fb=stats");
    Long64_t suf = 1;
    Int_t aSubMg = -1;
-   Bool_t fillList = kFALSE, useList = kFALSE, makePerfTree = kFALSE;
+   Bool_t useList = kFALSE, makePerfTree = kFALSE;
    while (args.Tokenize(tok, from, " ")) {
       // Debug controllers
       if (tok.BeginsWith("debug=")) {
@@ -564,7 +564,6 @@ void runProof(const char *what = "simple",
          useList = kTRUE;
       }
       if (tok.BeginsWith("fillList")) {
-         fillList = kTRUE;
          opt += "fillList";
       }
       // H1: change location of files?

@@ -10874,6 +10874,13 @@ Int_t TProof::VerifyDataSet(const char *uri, const char *optStr)
       return nmissingfiles;
    }
 
+   // Request for parallel verification: can only be done if we have workers
+   if (!IsParallel()) {
+      Error("VerifyDataSet", "PROOF is in sequential mode (no workers): cannot do parallel verification.");
+      Error("VerifyDataSet", "Either start PROOF with some workers or force sequential adding 'S' as option.");
+      return -1;
+   }
+
    // Do parallel verification
    return VerifyDataSetParallel(uri, optStr);
 }
