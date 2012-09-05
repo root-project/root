@@ -25,10 +25,10 @@ std::string PyROOT::TReturnTypeAdapter::Name( unsigned int mod ) const
 // get the name of the return type that is being adapted
    std::string name = fName;
 
-   if ( ! ( mod & ( ROOT::Reflex::QUALIFIED | ROOT::Reflex::Q ) ) )
+   if ( ! ( mod & Rflx::QUALIFIED ) )
       name = TClassEdit::CleanType( fName.c_str(), 1 );
 
-   if ( mod & ( ROOT::Reflex::FINAL | ROOT::Reflex::F ) )
+   if ( mod & Rflx::FINAL )
       name = Utility::ResolveTypedef( name );
 
    return name;
@@ -96,16 +96,26 @@ std::string PyROOT::TMemberAdapter::Name( unsigned int mod ) const
    if ( arg ) {
 
       std::string name = arg->GetTypeName();
-      if ( mod & ( ROOT::Reflex::QUALIFIED | ROOT::Reflex::Q ) )
+      if ( mod & Rflx::QUALIFIED )
          name = arg->GetFullTypeName();
 
-      if ( mod & ( ROOT::Reflex::FINAL | ROOT::Reflex::F ) )
+      if ( mod & Rflx::FINAL )
          name = Utility::ResolveTypedef( name );
 
       return name;
 
-   } else if ( mod & ( ROOT::Reflex::FINAL | ROOT::Reflex::F ) )
+   } else if ( mod & Rflx::FINAL )
       return Utility::ResolveTypedef( fMember->GetName() );
+
+// new with cling, TMethod names are fully scoped ...
+   TMethod* m = (TMethod*)*this;
+   if (m && m->GetClass()) {
+      std::string scoped_name = m->GetName();
+      std::string class_name = m->GetClass()->GetName();
+      std::string::size_type pos = scoped_name.find(class_name + "::");
+      if (pos == 0)      // only accept found at start
+         return scoped_name.substr(class_name.size() + 2 /* for :: */, std::string::npos);
+   }
 
    return fMember->GetName();
 }
@@ -229,14 +239,14 @@ PyROOT::TScopeAdapter::TScopeAdapter( const std::string& name ) :
 }
 
 PyROOT::TScopeAdapter::TScopeAdapter( const TMemberAdapter& mb ) :
-      fClass( mb.Name( ROOT::Reflex::SCOPED ).c_str() ),
-      fName( mb.Name( ROOT::Reflex::Q | ROOT::Reflex::S ) )
+      fClass( mb.Name( Rflx::SCOPED ).c_str() ),
+      fName( mb.Name( Rflx::QUALIFIED | Rflx::SCOPED ) )
 {
    /* empty */
 }
 
 //____________________________________________________________________________
-PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string & name, Bool_t quiet )
+PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string& name, Bool_t quiet )
 {
 // lookup a scope (class) by name
    Int_t oldEIL = gErrorIgnoreLevel;
@@ -256,22 +266,23 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
    // fundamental types have no class, and unknown classes have no property
       std::string name = fName;
 
-      if ( ! ( mod & ( ROOT::Reflex::QUALIFIED | ROOT::Reflex::Q ) ) )
+      if ( ! ( mod & Rflx::QUALIFIED ) )
          name = TClassEdit::CleanType( fName.c_str(), 1 );
 
-      if ( mod & ( ROOT::Reflex::FINAL | ROOT::Reflex::F ) )
+      if ( mod & Rflx::FINAL )
          name = Utility::ResolveTypedef( name );
 
       return name;
    }
 
-   if ( mod & ( ROOT::Reflex::FINAL | ROOT::Reflex::F ) ) {
+   if ( mod & Rflx::FINAL ) {
+   /* The following G__ClassInfo lookup is badly broken ...
       G__ClassInfo* clInfo = (G__ClassInfo*)fClass->GetClassInfo();
-      if ( mod & ( ROOT::Reflex::SCOPED | ROOT::Reflex::S ) )
-         return clInfo ? clInfo->Fullname() : fClass->GetName();
+      if ( mod & Rflx::SCOPED )
+         return (clInfo && clInfo->Fullname()) ? clInfo->Fullname() : fClass->GetName();
 
    // unscoped name ...
-      std::string actual = clInfo ? clInfo->Name() : fClass->GetName();
+      std::string actual = (clInfo && clInfo->Name()) ? clInfo->Name() : fClass->GetName();
 
    // in case of missing dictionaries, the scope won't have been stripped
       if ( ! ( clInfo && clInfo->IsValid() ) ) {
@@ -283,10 +294,15 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
       }
 
       return actual;
+   */
+      return fClass->GetName();
 
-   } else if ( ! ( mod & ( ROOT::Reflex::SCOPED | ROOT::Reflex::S ) ) ) {
+   } else if ( ! ( mod & Rflx::SCOPED ) ) {
+   /* The following G__ClassInfo lookup is badly broken ...
       G__ClassInfo* clInfo = (G__ClassInfo*)fClass->GetClassInfo();
-      return clInfo ? clInfo->Name() : fClass->GetName();
+      return (clInfo && clInfo->Name()) ? clInfo->Name() : fClass->GetName();
+   */
+      return fClass->GetName();
    }
 
    return fClass->GetName();
@@ -352,7 +368,7 @@ PyROOT::TScopeAdapter::operator Bool_t() const
 
    Int_t oldEIL = gErrorIgnoreLevel;
    gErrorIgnoreLevel = 3000;
-   Bool_t b = G__TypeInfo( Name( ROOT::Reflex::Q | ROOT::Reflex::S ).c_str() ).IsValid();
+   Bool_t b = G__TypeInfo( Name( Rflx::QUALIFIED | Rflx::SCOPED ).c_str() ).IsValid();
    gErrorIgnoreLevel = oldEIL;
    return b;
 }
@@ -361,7 +377,7 @@ PyROOT::TScopeAdapter::operator Bool_t() const
 Bool_t PyROOT::TScopeAdapter::IsComplete() const
 {
 // verify whether the dictionary of this class is fully available
-   return G__TypeInfo( Name( ROOT::Reflex::SCOPED ).c_str() ).IsLoaded();
+   return G__TypeInfo( Name( Rflx::SCOPED ).c_str() ).IsLoaded();
 }
 
 //____________________________________________________________________________
@@ -377,7 +393,7 @@ Bool_t PyROOT::TScopeAdapter::IsClass() const
 // no class can mean either is no class (i.e. builtin), or no dict but coming in
 // through PyCintex/Reflex ... as a workaround, use TDataTypes that has a full
 // enumeration of builtin types
-   return TDataType( Name( ROOT::Reflex::F | ROOT::Reflex::S ).c_str() ).GetType() == kOther_t;
+   return TDataType( Name( Rflx::FINAL | Rflx::SCOPED ).c_str() ).GetType() == kOther_t;
 }
 
 //____________________________________________________________________________
@@ -390,7 +406,7 @@ Bool_t PyROOT::TScopeAdapter::IsStruct() const
    }
 
 // same logic as for IsClass() above ...
-   return TDataType( Name( ROOT::Reflex::F | ROOT::Reflex::S ).c_str() ).GetType() == kOther_t;
+   return TDataType( Name( Rflx::FINAL | Rflx::SCOPED ).c_str() ).GetType() == kOther_t;
 }
 
 //____________________________________________________________________________

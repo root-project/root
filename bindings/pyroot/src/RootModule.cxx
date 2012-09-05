@@ -15,10 +15,6 @@
 #include "Utility.h"
 #include "Adapters.h"
 
-#ifdef PYROOT_USE_REFLEX
-#include "TRflxCallback.h"
-#endif
-
 // ROOT
 #include "TROOT.h"
 #include "TClass.h"
@@ -28,6 +24,8 @@
 
 // Standard
 #include <string>
+
+#include <iostream>
 
 
 //- data -----------------------------------------------------------------------
@@ -330,6 +328,14 @@ namespace {
 
       const char* clname = PyBytes_AS_STRING(pyname);
 
+   // make sure that ROOT.py is loaded and fully initialized by accessing on it
+      PyObject* mod = PyImport_ImportModule( (char*)"ROOT" );
+      if ( mod ) {
+         PyObject* dummy = PyObject_GetAttrString( mod, (char*)"kRed" );
+         Py_XDECREF( dummy );
+         Py_DECREF( mod );
+      }
+
    // TBuffer and its derived classes can't write themselves, but can be created
    // directly from the buffer, so handle them in a special case
       void* newObj = 0;
@@ -441,12 +447,6 @@ static PyMethodDef gPyROOTMethods[] = {
      METH_VARARGS, (char*) "Trap signals in safe mode to prevent interpreter abort" },
    { (char*) "SetOwnership", (PyCFunction)SetOwnership,
      METH_VARARGS, (char*) "Modify held C++ object ownership" },
-#ifdef PYROOT_USE_REFLEX
-   { (char*) "EnableReflex", (PyCFunction)PyROOT::TRflxCallback::Enable,
-     METH_NOARGS, (char*) "Enable PyReflex notification of new types from Reflex" },
-   { (char*) "DisableReflex", (PyCFunction)PyROOT::TRflxCallback::Disable,
-     METH_NOARGS, (char*) "Disable PyReflex notification of new types from Reflex" },
-#endif
    { NULL, NULL, 0, NULL }
 };
 
@@ -511,6 +511,23 @@ extern "C" void initlibPyROOT()
 #endif
    if ( ! gRootModule )
       PYROOT_INIT_ERROR;
+
+// initialize gROOT
+   if ( gROOT == 0 ) {
+      std::cout << "PyROOT: gROOT == NULL hack\n" << 
+                   "  --> now creating and loading important classes" << std::endl;
+      gROOT = ROOT::GetROOT();
+      gROOT->ProcessLine( "#include \"TROOT.h\"" );
+      gROOT->ProcessLine( "#include \"TString.h\"" );
+      gROOT->ProcessLine( "#include \"Rtypes.h\"" );
+      gROOT->ProcessLine( "#include \"TUnixSystem.h\"" );
+      gROOT->ProcessLine( "#include \"TPluginManager.h\"" );
+      gROOT->ProcessLine( "#include \"TStreamerInfo.h\"" );
+      gROOT->ProcessLine( "#include \"TMessageHandler.h\"" );
+      gROOT->ProcessLine( "#include \"TCintWithCling.h\"" );
+      gROOT->ProcessLine( "#include \"TPyROOTApplication.h\"" );
+      std::cout << "  --> gROOT created" << std::endl;
+   }
 
 // keep gRootModule, but do not increase its reference count even as it is borrowed,
 // or a self-referencing cycle would be created

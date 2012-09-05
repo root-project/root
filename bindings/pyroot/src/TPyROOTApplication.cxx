@@ -21,6 +21,8 @@
 // Standard
 #include <string.h>
 
+#include <iostream>
+
 
 //______________________________________________________________________________
 //                   Setup interactive application for python
@@ -58,6 +60,7 @@ PyROOT::TPyROOTApplication::TPyROOTApplication(
    if ( bLoadLibs )   // note that this section could be programmed in python
    {
    // follow TRint to minimize differences with CINT
+      std::cout << "loading libs" << std::endl;
       ProcessLine( "#include <iostream>", kTRUE );
       ProcessLine( "#include <_string>",  kTRUE ); // for std::string iostream.
       ProcessLine( "#include <vector>",   kTRUE ); // needed because they're used within the
@@ -120,7 +123,9 @@ Bool_t PyROOT::TPyROOTApplication::CreatePyROOTApplication( Bool_t bLoadLibs )
       argv[ 0 ] = (char*)"python";
 #endif
 
+      std::cout << "CREATING PyROOTApplication" << std::endl;
       gApplication = new TPyROOTApplication( "PyROOT", &argc, argv, bLoadLibs );
+      std::cout << "   -> application created" << std::endl;
       delete[] argv;     // TApplication ctor has copied argv, so done with it
 
       return kTRUE;

@@ -6,12 +6,7 @@
 // ROOT
 #include "DllImport.h"
 #include "TClassRef.h"
-
-// CINT
-namespace Cint {
-class G__CallFunc;
-}
-using namespace Cint;
+#include "TDictionary.h"
 
 // Standard
 #include <string>
@@ -20,22 +15,16 @@ using namespace Cint;
 
 namespace PyROOT {
 
-/** Executors of CINT calls and conversions back to python
-      @author  WLAV
-      @date    01/27/2005
-      @version 1.0
-*/
-
    class TExecutor {
    public:
       virtual ~TExecutor() {}
-      virtual PyObject* Execute( G__CallFunc*, void* ) = 0;
+      virtual PyObject* Execute( CallFunc_t*, void* ) = 0;
    };
 
 #define PYROOT_DECLARE_BASIC_EXECUTOR( name )                                 \
    class T##name##Executor : public TExecutor {                               \
    public:                                                                    \
-      virtual PyObject* Execute( G__CallFunc*, void* );                       \
+      virtual PyObject* Execute( CallFunc_t*, void* );                        \
    }
 
 // executors for built-ins
@@ -69,7 +58,7 @@ namespace PyROOT {
    class TRootObjectExecutor : public TExecutor {
    public:
       TRootObjectExecutor( const TClassRef& klass ) : fClass( klass ) {}
-      virtual PyObject* Execute( G__CallFunc*, void* );
+      virtual PyObject* Execute( CallFunc_t*, void* );
 
    protected:
       TClassRef fClass;
@@ -78,7 +67,7 @@ namespace PyROOT {
    class TRootObjectByValueExecutor : public TRootObjectExecutor {
    public:
       TRootObjectByValueExecutor( const TClassRef& klass ) : TRootObjectExecutor ( klass ) {}
-      virtual PyObject* Execute( G__CallFunc*, void* );
+      virtual PyObject* Execute( CallFunc_t*, void* );
    };
 
    PYROOT_DECLARE_BASIC_EXECUTOR( Constructor );
@@ -98,7 +87,7 @@ namespace PyROOT {
 #define PYROOT_DECLARE_BASIC_REFEXECUTOR( name )                              \
    class T##name##RefExecutor : public TRefExecutor {                         \
    public:                                                                    \
-      virtual PyObject* Execute( G__CallFunc*, void* );                       \
+      virtual PyObject* Execute( CallFunc_t*, void* );                        \
    }
 
    PYROOT_DECLARE_BASIC_REFEXECUTOR( Short );
@@ -115,7 +104,7 @@ namespace PyROOT {
    class TRootObjectRefExecutor : public TRefExecutor {
    public:
       TRootObjectRefExecutor( const TClassRef& klass ) : fClass( klass ) {}
-      virtual PyObject* Execute( G__CallFunc*, void* );
+      virtual PyObject* Execute( CallFunc_t*, void* );
 
    protected:
       TClassRef fClass;

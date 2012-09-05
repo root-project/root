@@ -22,6 +22,8 @@ namespace PyROOT {
 
 class TPyROOTApplication : public TApplication {
 public:
+   static void dummy() {}     // Cling doesn't see the first method ??
+
    static Bool_t CreatePyROOTApplication( Bool_t bLoadLibs = kTRUE );
 
    static Bool_t InitROOTGlobals();

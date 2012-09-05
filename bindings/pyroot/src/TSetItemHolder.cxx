@@ -19,7 +19,7 @@ Bool_t PyROOT::TSetItemHolder< T, M >::InitExecutor_( TExecutor*& executor )
    if ( ! dynamic_cast< TRefExecutor* >( executor ) ) {
       PyErr_Format( PyExc_NotImplementedError,
          "no __setitem__ handler for return type (%s)",
-         this->GetMethod().TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S ).c_str() );
+         this->GetMethod().TypeOf().ReturnType().Name( Rflx::QUALIFIED | Rflx::SCOPED ).c_str() );
       return kFALSE;
    }
 
@@ -89,6 +89,3 @@ PyObject* PyROOT::TSetItemHolder< T, M >::FilterArgs(
 
 //____________________________________________________________________________
 template class PyROOT::TSetItemHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >;
-#ifdef PYROOT_USE_REFLEX
-template class PyROOT::TSetItemHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >;
-#endif

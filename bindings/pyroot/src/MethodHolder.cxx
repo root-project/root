@@ -42,9 +42,8 @@ namespace {
       ~TempLevelGuard_t() { G__settemplevel( -1 ); }
    };
 
-   G__ClassInfo* GetGlobalNamespaceInfo() {
-      static G__ClassInfo gcl;
-      return &gcl;
+   ClassInfo_t* GetGlobalNamespaceInfo() {
+      return gInterpreter->ClassInfo_Factory();
    }
 
 } // unnamed namespace
@@ -72,7 +71,7 @@ template< class T, class M >
 inline void PyROOT::TMethodHolder< T, M >::Destroy_() const
 {
 // no deletion of fMethod (ROOT responsibility)
-   delete fMethodCall;
+   gInterpreter->CallFunc_Delete( fMethodCall );
 
 // destroy executor and argument converters
    delete fExecutor;
@@ -126,37 +125,6 @@ inline PyObject* PyROOT::TMethodHolder< T, M >::CallSafe( void* self )
 }
 
 //____________________________________________________________________________
-namespace PyROOT {
-
-#ifdef PYROOT_USE_REFLEX
-template<>
-Bool_t TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::InitCallFunc_()
-{
-// build buffers for argument dispatching
-   const size_t nArgs = fMethod.FunctionParameterSize();
-   fConverters.resize( nArgs );
-   fParameters.resize( nArgs );
-   fParamPtrs.resize( nArgs );
-
-// setup the dispatch cache
-   for ( size_t iarg = 0; iarg < nArgs; ++iarg ) {
-      std::string fullType =
-         fMethod.TypeOf().FunctionParameterAt( iarg ).Name( ROOT::Reflex::QUALIFIED | ROOT::Reflex::SCOPED );
-      fConverters[ iarg ] = CreateConverter( fullType );
-
-      if ( ! fConverters[ iarg ] ) {
-         PyErr_Format( PyExc_TypeError, "argument type %s not handled", fullType.c_str() );
-         return kFALSE;
-      }
-
-   }
-
-   return kTRUE;
-}
-#endif
-
-} // namespace PyROOT
-
 template< class T, class M >
 Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
 {
@@ -170,7 +138,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
    std::string callString = "";
    for ( size_t iarg = 0; iarg < nArgs; ++iarg ) {
       std::string fullType =
-         fMethod.TypeOf().FunctionParameterAt( iarg ).Name( ROOT::Reflex::QUALIFIED | ROOT::Reflex::SCOPED );
+         fMethod.TypeOf().FunctionParameterAt( iarg ).Name( Rflx::QUALIFIED | Rflx::SCOPED );
       fConverters[ iarg ] = CreateConverter( fullType );
 
       if ( ! fConverters[ iarg ] ) {
@@ -188,23 +156,26 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
 // setup call func
    assert( fMethodCall == 0 );
 
-   G__ClassInfo* gcl = (G__ClassInfo*)((TClass*)fClass.Id())->GetClassInfo();
+   ClassInfo_t* gcl = ((TClass*)fClass.Id())->GetClassInfo();
    if ( ! gcl )
       gcl = GetGlobalNamespaceInfo();
 
-   G__MethodInfo gmi = gcl->GetMethod(
-      (Bool_t)fMethod == true ? fMethod.Name().c_str() : fClass.Name().c_str(), callString.c_str(),
-      &fOffset, G__ClassInfo::ExactMatch );
+// (CLING) TODO: this is NOT equal to the original CINT functionality, since it takes
+// up a ConversionMatch, not an ExactMatch, but does that matter for Cling?
+   fMethodCall = gInterpreter->CallFunc_Factory();
+   gInterpreter->CallFunc_SetFuncProto(
+      fMethodCall,
+      gcl,
+      (Bool_t)fMethod == true ? fMethod.Name().c_str() : fClass.Name().c_str(),
+      callString.c_str(),
+      &fOffset );
+      //, G__ClassInfo::ExactMatch );
 
-   if ( ! gmi.IsValid() && (Bool_t)fMethod == true ) {
+   if ( ! gInterpreter->CallFunc_IsValid(fMethodCall) && (Bool_t)fMethod == true ) {
       PyErr_Format( PyExc_RuntimeError, "could not resolve %s::%s(%s)",
          fClass.Name().c_str(), fMethod.Name().c_str(), callString.c_str() );
       return kFALSE;
    }
-
-   fMethodCall = new G__CallFunc();
-   fMethodCall->Init();
-   fMethodCall->SetFunc( gmi );
 
    return kTRUE;
 }
@@ -215,8 +186,8 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitExecutor_( TExecutor*& executor )
 {
 // install executor conform to the return type
    executor = CreateExecutor( (Bool_t)fMethod == true ?
-      fMethod.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S | ROOT::Reflex::F )
-      : fClass.Name( ROOT::Reflex::S | ROOT::Reflex::F ) );
+      fMethod.TypeOf().ReturnType().Name( Rflx::QUALIFIED | Rflx::SCOPED | Rflx::FINAL )
+      : fClass.Name( Rflx::SCOPED | Rflx::FINAL ) );
    if ( ! executor )
       return kFALSE;
 
@@ -234,7 +205,7 @@ void PyROOT::TMethodHolder< T, M >::CreateSignature_()
    for ( size_t iarg = 0; iarg < nArgs; ++iarg ) {
       if ( ifirst ) fSignature += ", ";
 
-      fSignature += fMethod.TypeOf().FunctionParameterAt( iarg ).Name( ROOT::Reflex::QUALIFIED );
+      fSignature += fMethod.TypeOf().FunctionParameterAt( iarg ).Name( Rflx::QUALIFIED );
 
       const std::string& parname = fMethod.FunctionParameterNameAt( iarg );
       if ( ! parname.empty() ) {
@@ -357,21 +328,12 @@ PyObject* PyROOT::TMethodHolder< T, M >::GetPrototype()
 // construct python string from the method's prototype
    return PyROOT_PyUnicode_FromFormat( "%s%s %s::%s%s",
       ( fMethod.IsStatic() ? "static " : "" ),
-      fMethod.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S ).c_str(),
+      fMethod.TypeOf().ReturnType().Name( Rflx::QUALIFIED | Rflx::SCOPED ).c_str(),
       fMethod.DeclaringScope().Name().c_str(), fMethod.Name().c_str(),
       GetSignatureString().c_str() );
 }
 
 //____________________________________________________________________________
-namespace PyROOT {
-
-#ifdef PYROOT_USE_REFLEX
-template<>
-Int_t TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::GetPriority();
-#endif
-
-} // namespace PyROOT
-
 template< class T, class M >
 Int_t PyROOT::TMethodHolder< T, M >::GetPriority()
 {
@@ -391,13 +353,13 @@ Int_t PyROOT::TMethodHolder< T, M >::GetPriority()
          priority -= 10000;   // class is gibberish
       } else if ( (arg.IsClass() || arg.IsStruct()) && ! arg.IsComplete() ) {
       // class is known, but no dictionary available, 2 more cases: * and &
-         const std::string aname = arg.Name( ROOT::Reflex::Q );
+         const std::string aname = arg.Name( Rflx::QUALIFIED );
          if ( aname[ aname.size() - 1 ] == '&' )
             priority -= 3000;
          else
             priority -= 1000; // prefer pointer passing over reference
       } else {
-         const std::string aname = arg.Name( ROOT::Reflex::F | ROOT::Reflex::Q );
+         const std::string aname = arg.Name( Rflx::FINAL | Rflx::QUALIFIED );
          if ( aname == "void*" )
             priority -= 100;  // void* shouldn't be too greedy
          else if ( aname == "float" )
@@ -417,20 +379,6 @@ Int_t PyROOT::TMethodHolder< T, M >::GetPriority()
    return priority;
 }
 
-namespace PyROOT {
-
-#ifdef PYROOT_USE_REFLEX
-template<>
-Int_t TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::GetPriority()
-{
-// Scope, Type, what's in a name ...
-   return ((TMethodHolder< ROOT::Reflex::Type, ROOT::Reflex::Member >*)this)->
-      TMethodHolder< ROOT::Reflex::Type, ROOT::Reflex::Member >::GetPriority();
-}
-#endif
-
-} // endif
-
 //____________________________________________________________________________
 template< class T, class M >
 Int_t PyROOT::TMethodHolder< T, M >::GetMaxArgs()
@@ -446,7 +394,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::GetArgSpec( Int_t iarg )
    if ( iarg >= (int)fMethod.FunctionParameterSize() )
       return 0;
 
-   std::string argrep = fMethod.TypeOf().FunctionParameterAt( iarg ).Name( ROOT::Reflex::Q );
+   std::string argrep = fMethod.TypeOf().FunctionParameterAt( iarg ).Name( Rflx::QUALIFIED );
 
    const std::string& parname = fMethod.FunctionParameterNameAt( iarg );
    if ( ! parname.empty() ) {
@@ -488,7 +436,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::GetScope()
 {
 // Get or build the scope of this method.
    return MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >(
-      fMethod.DeclaringScope().Name( ROOT::Reflex::SCOPED | ROOT::Reflex::FINAL ) );
+      fMethod.DeclaringScope().Name( Rflx::SCOPED | Rflx::FINAL ) );
 }
 
 //____________________________________________________________________________
@@ -555,7 +503,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::SetMethodArgs( PyObject* args, Long_t user
 {
 // clean slate
    if ( fMethodCall )
-      fMethodCall->ResetArg();
+      gInterpreter->CallFunc_ResetArg( fMethodCall );
 
    int argc = PyTuple_GET_SIZE( args );
    int argMax = fConverters.size();
@@ -585,41 +533,6 @@ Bool_t PyROOT::TMethodHolder< T, M >::SetMethodArgs( PyObject* args, Long_t user
 }
 
 //____________________________________________________________________________
-namespace PyROOT {
-
-#ifdef PYROOT_USE_REFLEX
-template<>
-PyObject* TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::Execute( void* self )
-{
-// my first Reflex call ... this is all pretty wrong, but hey, it's a proto-prototype :)
-
-   if ( fMethod.IsConstructor() )
-      return (PyObject*)((ROOT::Reflex::Type)fClass).Construct( fMethod.TypeOf(), fParamPtrs ).Address();
-
-   Reflex::Object obj( fClass, (void*)((Long_t)self + fOffset) );
-   Reflex::Object result;
-   static Reflex::Type tVoid = Reflex::Type::ByName("void");
-   bool returnsVoid = (fMethod.TypeOf().ReturnType() == tVoid);
-   if ( !returnsVoid ) {
-      result = fMethod.TypeOf().ReturnType().Construct();
-   }
-   fMethod.Invoke( obj, &result, fParamPtrs );
-   if ( !returnsVoid ) {
-      TConverter* converter = CreateConverter( fMethod.TypeOf().ReturnType().Name(Reflex::S|Reflex::Q|Reflex::F) );
-      if ( converter ) {
-         PyObject* pyresult = converter->FromMemory( result.Address() );
-         delete converter;
-         return pyresult;
-      }
-   }
-
-   Py_INCREF( Py_None );
-   return Py_None;
-}
-#endif
-
-} // namespace PyROOT
-
 template< class T, class M >
 PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self )
 {
@@ -712,6 +625,3 @@ PyObject* PyROOT::TMethodHolder< T, M >::operator()(
 
 //____________________________________________________________________________
 template class PyROOT::TMethodHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >;
-#ifdef PYROOT_USE_REFLEX
-template class PyROOT::TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >;
-#endif

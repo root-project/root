@@ -40,6 +40,3 @@ PyObject* PyROOT::TClassMethodHolder< T, M >::operator()(
 
 //____________________________________________________________________________
 template class PyROOT::TClassMethodHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >;
-#ifdef PYROOT_USE_REFLEX
-template class PyROOT::TClassMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >;
-#endif

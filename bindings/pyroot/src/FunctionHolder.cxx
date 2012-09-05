@@ -22,19 +22,6 @@ namespace {
 
 
 //- constructor -----------------------------------------------------------------
-namespace PyROOT {
-
-#ifdef PYROOT_USE_REFLEX
-template<>
-TFunctionHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::TFunctionHolder(
-      const ROOT::Reflex::Member& function ) :
-   TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >( ROOT::Reflex::Scope(), function )
-{
-}
-#endif
-
-} // namespace PyROOT
-
 template< class T, class M >
 PyROOT::TFunctionHolder< T, M >::TFunctionHolder( const M& function ) :
       TMethodHolder< T, M >( GetGlobalNamespace().GetClass(), function )
@@ -105,6 +92,3 @@ PyObject* PyROOT::TFunctionHolder< T, M >::operator()(
 
 //____________________________________________________________________________
 template class PyROOT::TFunctionHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >;
-#ifdef PYROOT_USE_REFLEX
-template class PyROOT::TFunctionHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >;
-#endif

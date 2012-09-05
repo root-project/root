@@ -35,14 +35,6 @@
 // CINT
 #include "Api.h"
 
-// Reflex
-#ifdef PYROOT_USE_REFLEX
-#include "Reflex/Scope.h"
-#include "Reflex/Base.h"
-#include "Reflex/Member.h"
-#include "Reflex/Object.h"
-#endif
-
 // Standard
 #include <map>
 #include <set>
@@ -99,7 +91,7 @@ namespace {
       return pyclass;
    }
 
-// helper to split between CINT and Reflex
+// helper to split between CINT and Reflex (the latter is no longer used)
    Long_t GetDataMemberAddress( TClass* klass, TDataMember* mb )
    {
    // Get the address of a data member (CINT-style).
@@ -108,24 +100,18 @@ namespace {
       return dmi.Offset();
    }
 
-#ifdef PYROOT_USE_REFLEX
-   Long_t GetDataMemberAddress( const ROOT::Reflex::Scope&, const ROOT::Reflex::Member& mb )
-   {
-   // Get the address of a data member (Reflex-style).
-      return (Long_t)mb.Offset();
-   }
-#endif
-
 } // unnamed namespace
 
 
 //- helpers --------------------------------------------------------------------
 namespace {
 
-   inline void AddToGlobalScope( const char* label, TObject* obj, TClass* klass )
+   inline void AddToGlobalScope( const char* label, const char* hdr, TObject* obj, TClass* klass )
    {
    // Bind the given object with the given class in the global scope with the
    // given label for its reference.
+      TString s = TString::Format( "#include \"%s\"", hdr );
+      gROOT->ProcessLine( s.Data() );
       PyModule_AddObject( gRootModule, const_cast< char* >( label ),
          PyROOT::BindRootObject( obj, klass ) );
    }
@@ -212,9 +198,9 @@ void PyROOT::InitRoot()
    gROOT->GetListOfCleanups()->Add( &m );
 
 // bind ROOT globals that are needed in ROOT.py
-   AddToGlobalScope( "gROOT", gROOT, gROOT->IsA() );
-   AddToGlobalScope( "gSystem", gSystem, gSystem->IsA() );
-   AddToGlobalScope( "gInterpreter", gInterpreter, gInterpreter->IsA() );
+   AddToGlobalScope( "gROOT", "TROOT.h", gROOT, gROOT->IsA() );
+   AddToGlobalScope( "gSystem", "TSystem.h", gSystem, gSystem->IsA() );
+   AddToGlobalScope( "gInterpreter", "TInterpreter.h", gInterpreter, gInterpreter->IsA() );
 }
 
 //____________________________________________________________________________
@@ -260,7 +246,7 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
    // operator[]/() returning a reference type will be used for __setitem__
       if ( mtName == "__call__" || mtName == "__getitem__" ) {
          std::string cpd = Utility::Compound(
-            method.TypeOf().ReturnType().Name( ROOT::Reflex::Q | ROOT::Reflex::S | ROOT::Reflex::F ) );
+            method.TypeOf().ReturnType().Name( Rflx::QUALIFIED | Rflx::SCOPED | Rflx::FINAL ) );
          if ( ! cpd.empty() && cpd[ cpd.size() - 1 ] == '&' )
             setupSetItem = kTRUE;
       }
@@ -427,12 +413,6 @@ PyObject* PyROOT::BuildRootClassBases( const T& klass )
    return pybases;
 }
 
-#ifdef PYROOT_USE_REFLEX
-template PyObject* PyROOT::BuildRootClassBases< \
-   ROOT::Reflex::Scope, ROOT::Reflex::Base, ROOT::Reflex::Member >( const ROOT::Reflex::Scope& );
-#endif
-
-
 //____________________________________________________________________________
 PyObject* PyROOT::MakeRootClass( PyObject*, PyObject* args )
 {
@@ -594,7 +574,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
    }
 
 // use actual class name for binding
-   std::string actual = klass.Name( ROOT::Reflex::FINAL );
+   std::string actual = klass.Name( Rflx::FINAL );
 
 // first try to retrieve an existing class representation
    PyObject* pyactual = PyROOT_PyUnicode_FromString( actual.c_str() );
@@ -612,14 +592,14 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       if ( pybases != 0 ) {
       // create a fresh Python class, given bases, name, and empty dictionary
          pyclass = CreateNewROOTPythonClass(
-            klass.Name( ROOT::Reflex::FINAL | ROOT::Reflex::SCOPED ), pybases );
+            klass.Name( Rflx::FINAL | Rflx::SCOPED ), pybases );
          Py_DECREF( pybases );
       }
 
    // fill the dictionary, if successful
       if ( pyclass != 0 ) {
       // get the class anew, to cover the case where it was updated by the autoloading mechanism
-         klass = T::ByName( klass.Name( ROOT::Reflex::FINAL | ROOT::Reflex::SCOPED ) );
+         klass = T::ByName( klass.Name( Rflx::FINAL | Rflx::SCOPED ) );
          if ( BuildRootClassDict< T, B, M >( klass, pyclass ) != 0 ) {
          // something failed in building the dictionary
             Py_DECREF( pyclass );
@@ -649,11 +629,6 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
    return pyclass;
 }
 
-#ifdef PYROOT_USE_REFLEX
-template PyObject* PyROOT::MakeRootClassFromString< ROOT::Reflex::Scope,\
-   ROOT::Reflex::Base, ROOT::Reflex::Member >( const std::string&, PyObject* scope );
-#endif
-
 //____________________________________________________________________________
 PyObject* PyROOT::GetRootGlobal( PyObject*, PyObject* args )
 {
@@ -673,13 +648,14 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
    TGlobal* gb = (TGlobal*)gROOT->GetListOfGlobals( kFALSE )->FindObject( name.c_str() );
    if ( gb ) return BindRootGlobal( gb );
 
-   G__DataMemberInfo dt;
-   while ( dt.Next() ) {
-      if ( dt.IsValid() && dt.Name() == name ) {
-         TGlobal gbl = TGlobal( new G__DataMemberInfo( dt ) );
-         return BindRootGlobal( &gbl );
-      }
-   }
+// (CLING) TODO: look into Cling's interactive bits (if need be)
+//   G__DataMemberInfo dt;
+//   while ( dt.Next() ) {
+//      if ( dt.IsValid() && dt.Name() == name ) {
+//         TGlobal gbl = TGlobal( new G__DataMemberInfo( dt ) );
+//         return BindRootGlobal( &gbl );
+//      }
+//   }
 
 // still here ... try functions (sync has been fixed, so is okay)
    std::vector< PyCallable* > overloads;
@@ -745,7 +721,7 @@ inline static Long_t GetObjectOffset( TClass* clCurrent, TClass* clDesired, void
 
       G__ClassInfo* ciBase    = (G__ClassInfo*)clBase->GetClassInfo();
       G__ClassInfo* ciDerived = (G__ClassInfo*)clDerived->GetClassInfo();
-      if ( ciBase && ciDerived ) {
+      if ( 0 && ciBase && ciDerived ) { // for Cling: G__ClassInfo is incorrect
 #ifdef WIN32
       // Windows cannot cast-to-derived for virtual inheritance
       // with CINT's (or Reflex's) interfaces.
@@ -778,6 +754,9 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
       return 0;
    }
 
+// get actual class for recycling checking and/or downcasting
+   TClass* clActual = isRef ? 0 : klass->GetActualClass( address );
+
 // obtain pointer to TObject base class (if possible) for memory mgmt; this is
 // done before downcasting, as upcasting from the current class may be easier and
 // downcasting is unnecessary if the python side object gets recycled by the
@@ -787,18 +766,15 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
       object = (TObject*)((Long_t)address - GetObjectOffset( klass, TObject::Class(), address, false ) );
 
    // use the old reference if the object already exists
-      PyObject* oldPyObject = TMemoryRegulator::RetrieveObject( object );
+      PyObject* oldPyObject = TMemoryRegulator::RetrieveObject( object, clActual ? clActual : klass );
       if ( oldPyObject )
          return oldPyObject;
    }
                        
 // upgrade to real class for object returns
-   if ( ! isRef ) {
-      TClass* clActual = klass->GetActualClass( address );
-      if ( clActual ) {
-         address = (void*)((Long_t)address - GetObjectOffset( klass, clActual, address ) );
-         klass = clActual;
-      }
+   if ( clActual ) {
+      address = (void*)((Long_t)address - GetObjectOffset( klass, clActual, address ) );
+      klass = clActual;
    }
 
 // actual binding
@@ -818,7 +794,7 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
 PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
 {
 // gbl == 0 means global does not exist (rather than gbl is NULL pointer)
-   if ( ! gbl ) {
+   if ( ! gbl || strcmp(gbl->GetName(), "") == 0 ) {
       Py_INCREF( Py_None );
       return Py_None;
    }
@@ -837,6 +813,7 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
    }
 
    if ( gbl->GetAddress() &&       // check for enums (which are const, not properties)
+        (unsigned long)gbl->GetAddress() != (unsigned long)-1 && // Cling (??)
         ( G__TypeInfo( gbl->GetTypeName() ).Property() & G__BIT_ISENUM ) ) {
       return PyInt_FromLong( *((int*)gbl->GetAddress()) );
    }

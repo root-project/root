@@ -45,15 +45,6 @@ TConstructorHolder< TScopeAdapter, TMemberAdapter >::TConstructorHolder( const T
 {
 }
 
-#ifdef PYROOT_USE_REFLEX
-template<>
-TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::TConstructorHolder(
-      const ROOT::Reflex::Scope& klass ) :
-   TMethodHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >( klass, ROOT::Reflex::Member() )
-{
-}
-#endif
-
 } // namespace PyROOT
 
 //- public members -----------------------------------------------------------
@@ -67,60 +58,6 @@ PyObject* PyROOT::TConstructorHolder< T, M >::GetDocString()
 }
 
 //____________________________________________________________________________
-namespace PyROOT {
-
-#ifdef PYROOT_USE_REFLEX
-template<>
-PyObject* TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::operator()(
-      ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user )
-{
-// preliminary check in case keywords are accidently used (they are ignored otherwise)
-   if ( kwds != 0 && PyDict_Size( kwds ) ) {
-      PyErr_SetString( PyExc_TypeError, "keyword arguments are not yet supported" );
-      return 0;
-   }
-
-// setup as necessary
-   if ( ! this->Initialize() )
-      return 0;                              // important: 0, not Py_None
-
-// fetch self, verify, and put the arguments in usable order
-   if ( ! ( args = this->FilterArgs( self, args, kwds ) ) )
-      return 0;
-
-// translate the arguments
-   if ( ! this->SetMethodArgs( args, user ) ) {
-      Py_DECREF( args );
-      return 0;
-   }
-
-// perform the call, and set address if successful
-   Long_t address = (Long_t)this->Execute( 0 );
-   if ( address != 0 ) {
-      Py_INCREF( self );
-
-   // TODO: Fix ownership once ObjectProxy can deal with Reflex
-      self->Set( (void*)address );
-
-   // done with self
-      Py_DECREF( self );
-
-      Py_INCREF( Py_None );
-      return Py_None;                        // by definition
-   }
-
-   if ( ! PyErr_Occurred() )   // should be set, otherwise write a generic error msg
-      PyErr_SetString( PyExc_TypeError, const_cast< char* >(
-         ( this->GetClass().Name() + " constructor failed" ).c_str() ) );
-
-// do not throw an exception, '0' might trigger the overload handler to choose a
-// different constructor, which if all fails will throw an exception
-   return 0;
-}
-#endif
-
-} // namespace PyROOT
-
 template< class T, class M >
 PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
       ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user )
@@ -239,6 +176,3 @@ PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
 
 //____________________________________________________________________________
 template class PyROOT::TConstructorHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >;
-#ifdef PYROOT_USE_REFLEX
-template class PyROOT::TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >;
-#endif

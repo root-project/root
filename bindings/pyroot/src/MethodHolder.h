@@ -10,20 +10,8 @@
 
 // ROOT
 #include "TClassRef.h"
+#include "TDictionary.h"
 class TMethod;
-
-// Reflex
-#ifdef PYROOT_USE_REFLEX
-#include "Reflex/Scope.h"
-#include "Reflex/Member.h"
-#endif
-
-// CINT
-namespace Cint {
-   class G__CallFunc;
-   class G__ClassInfo;
-}
-using namespace Cint;
 
 // Standard
 #include <string>
@@ -93,7 +81,7 @@ namespace PyROOT {
    // representation
       M fMethod;
       T fClass;
-      G__CallFunc* fMethodCall;
+      CallFunc_t*  fMethodCall;
       TExecutor*   fExecutor;
 
       std::string fSignature;

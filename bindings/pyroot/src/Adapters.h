@@ -10,25 +10,17 @@ class TFunction;
 class TDataMember;
 class TMethodArg;
 
-#ifdef PYROOT_USE_REFLEX
-#include "Reflex/Kernel.h"
-#else
-namespace ROOT {
-   namespace Reflex {
+// old, compatibility
+namespace Rflx {
 
-   /** enum for printing names */
-      enum ENTITY_HANDLING {
-         FINAL     = (1<<0),
-         QUALIFIED = (1<<1),
-         SCOPED    = (1<<2),
-         F         = (1<<4),
-         Q         = (1<<5),
-         S         = (1<<6)
-      };
+/** enum for printing names */
+   enum ENTITY_HANDLING {
+      FINAL     = (1<<0),
+      QUALIFIED = (1<<1),
+      SCOPED    = (1<<2)
+   };
 
-   } // namespace Reflex
-} // namespace ROOT
-#endif
+} // namespace Rflx
 
 // Standard
 #include <string>

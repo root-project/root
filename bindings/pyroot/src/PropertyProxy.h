@@ -13,11 +13,6 @@
 class TDataMember;
 class TGlobal;
 
-// Reflex
-#ifdef PYROOT_USE_REFLEX
-#include "Reflex/Member.h"
-#endif
-
 // CINT
 #include "DataMbr.h"
 
@@ -39,9 +34,6 @@ namespace PyROOT {
    public:
       void Set( TDataMember* );
       void Set( TGlobal* );
-#ifdef PYROOT_USE_REFLEX
-      void Set( const ROOT::Reflex::Member& );
-#endif
 
       std::string GetName() { return fName; }
       Long_t GetAddress( ObjectProxy* pyobj /* owner */ );

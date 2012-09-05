@@ -224,7 +224,7 @@ Bool_t PyROOT::TMemoryRegulator::UnregisterObject( TObject* object )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::TMemoryRegulator::RetrieveObject( TObject* object )
+PyObject* PyROOT::TMemoryRegulator::RetrieveObject( TObject* object, TClass* klass )
 {
 // lookup <object>, return old proxy if tracked
    if ( ! object )
@@ -234,6 +234,10 @@ PyObject* PyROOT::TMemoryRegulator::RetrieveObject( TObject* object )
    if ( ppo != fgObjectTable->end() ) {
       PyObject* pyobj = PyWeakref_GetObject( ppo->second );
       Py_XINCREF( pyobj );
+      if ( pyobj && ((ObjectProxy*)pyobj)->ObjectIsA() != klass ) {
+          Py_DECREF( pyobj );
+          return 0;
+      }
       return pyobj;
    }
 

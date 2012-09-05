@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 11/10/10
+# Last: 09/05/12
 
 """PyROOT user module.
 
@@ -82,6 +82,9 @@ if needsGlobal:
    dlflags = sys.getdlopenflags()
    sys.setdlopenflags( 0x100 | 0x2 )    # RTLD_GLOBAL | RTLD_NOW
 
+#import ctypes
+#_libCling = ctypes.CDLL( 'libCling.so', 0x100 | 0x2 )  # force symbols for libCore.so
+#_libClang = ctypes.CDLL( 'libclang.so', 0x100 | 0x2 )  # id.
 import libPyROOT as _root
 
 # reset dl flags if needed
@@ -121,7 +124,8 @@ class _Configuration( object ):
 
    def __init__( self ):
       self.IgnoreCommandLineOptions = 0
-      self.StartGuiThread = 1
+      # TODO: re-enable the GUI thread
+      self.StartGuiThread = False
       self._gts = []
 
    def __setGTS( self, value ):
@@ -229,11 +233,13 @@ class _ExpandMacroFunction( object ):
          return 1
       return 0
 
-_root.gPad         = _ExpandMacroFunction( "TVirtualPad",  "Pad" )
-_root.gVirtualX    = _ExpandMacroFunction( "TVirtualX",    "Instance" )
-_root.gDirectory   = _ExpandMacroFunction( "TDirectory",   "CurrentDirectory" )
-_root.gFile        = _ExpandMacroFunction( "TFile",        "CurrentFile" )
-_root.gInterpreter = _ExpandMacroFunction( "TInterpreter", "Instance" )
+
+# TODO: get the right #includes for these expansions (or rely on C++ side?)
+#_root.gPad         = _ExpandMacroFunction( "TVirtualPad",  "Pad" )
+#_root.gVirtualX    = _ExpandMacroFunction( "TVirtualX",    "Instance" )
+#_root.gDirectory   = _ExpandMacroFunction( "TDirectory",   "CurrentDirectory" )
+#_root.gFile        = _ExpandMacroFunction( "TFile",        "CurrentFile" )
+#_root.gInterpreter = _ExpandMacroFunction( "TInterpreter", "Instance" )
 
 
 ### special case pythonization --------------------------------------------------
@@ -243,7 +249,10 @@ def _TTree__iter__( self ):
       yield self                   # TODO: not sure how to do this w/ C-API ...
       i += 1
 
-_root.MakeRootClass( "TTree" ).__iter__    = _TTree__iter__
+try:
+   _root.MakeRootClass( "TTree" ).__iter__    = _TTree__iter__
+except:
+   pass
 
 
 ### RINT command emulation ------------------------------------------------------
@@ -305,7 +314,8 @@ if not '__IPYTHON__' in __builtins__:
 ### call EndOfLineAction after each interactive command (to update display etc.)
 _orig_dhook = sys.displayhook
 def _displayhook( v ):
-   _root.gInterpreter.EndOfLineAction()
+   # (CLING) TODO: need equivalent?
+#   _root.gInterpreter.EndOfLineAction()
    return _orig_dhook( v )
 
 
@@ -433,6 +443,9 @@ class ModuleFacade( types.ModuleType ):
          return self.module.__all__
 
     # lookup into ROOT (which may cause python-side enum/class/global creation)
+      # (CLING) TODO: WTF?
+      if name == 'gRootDir':
+         return None
       attr = _root.LookupRootEntity( name )
 
     # the call above will raise AttributeError as necessary; so if we get here,
@@ -474,7 +487,7 @@ class ModuleFacade( types.ModuleType ):
          sys.argv = []
 
       appc = _root.MakeRootClass( 'PyROOT::TPyROOTApplication' )
-      if appc.CreatePyROOTApplication():
+      if appc.CreatePyROOTApplication(True): # for Cling: no default args
          appc.InitROOTGlobals()
          appc.InitCINTMessageCallback();
          appc.InitROOTMessageCallback();

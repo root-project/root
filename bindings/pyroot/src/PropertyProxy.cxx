@@ -34,7 +34,7 @@ namespace {
          return 0;
 
    // not-initialized or public data accesses through class (e.g. by help())
-      if ( ! address ) {
+      if ( ! address || (unsigned long)address == (unsigned long)-1 /* Cling */ ) {
          Py_INCREF( pyprop );
          return (PyObject*)pyprop;
       }
@@ -221,24 +221,6 @@ void PyROOT::PropertyProxy::Set( TGlobal* gbl )
    fOwnerTagnum = -1;
    fOwnerIsNamespace = 0;
 }
-
-//____________________________________________________________________________
-#ifdef PYROOT_USE_REFLEX
-void PyROOT::PropertyProxy::Set( const ROOT::Reflex::Member& mb )
-{
-// initialize from Reflex <mb> info
-   fOffset    = (Long_t)mb.Offset();
-   fProperty  = ( mb.IsStatic()         ? kIsStatic : 0 ) |
-                ( mb.TypeOf().IsEnum()  ? kIsEnum   : 0 ) |
-                ( mb.TypeOf().IsArray() ? kIsArray  : 0 );
-   fConverter = CreateConverter( mb.TypeOf().Name( ROOT::Reflex::SCOPED | ROOT::Reflex::FINAL ) );
-   fName      = mb.Name();
-
-// unknown owner (TODO: handle this case)
-   fOwnerTagnum = -1;
-   fOwnerIsNamespace = 0;
-}
-#endif
 
 //____________________________________________________________________________
 Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
