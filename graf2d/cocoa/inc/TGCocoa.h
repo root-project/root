@@ -287,6 +287,9 @@ public:
    virtual Window_t  CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &format);
    virtual Handle_t  CreateOpenGLContext(Window_t windowID, Handle_t sharedContext);
    virtual void      CreateOpenGLContext(Int_t wid);
+
+   //This is a temporary fix - to be removed when merged with mods from trunk.
+   using TVirtualX::MakeOpenGLContextCurrent;
    virtual Bool_t    MakeOpenGLContextCurrent(Handle_t ctx);
    virtual void      FlushOpenGLBuffer(Handle_t ctx);
 

@@ -18,13 +18,17 @@
 
 #include "TASPluginGS.h"
 #include "TSystem.h"
+#include "RConfigure.h"
 
-#ifndef WIN32
-#   include <X11/Xlib.h>
+#ifdef R__HAS_COCOA
+#   define X_DISPLAY_MISSING 1
 #   define popen_flags "r"
-#else
+#elif defined (WIN32)
 #   include "Windows4root.h"
 #   define popen_flags "rb"
+#else
+#   include <X11/Xlib.h>
+#   define popen_flags "r"
 #endif
 
 extern "C" {
@@ -37,7 +41,6 @@ extern "C" {
 #endif
 #   include <import.h>
 }
-
 
 ClassImp(TASPluginGS)
 

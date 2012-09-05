@@ -32,6 +32,11 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TMath.h"
+#include "RConfigure.h"
+
+#ifdef R__HAS_COCOA
+#   define X_DISPLAY_MISSING 1
+#endif
 
 #ifdef WIN32
 #include "Windows4root.h"
