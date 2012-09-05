@@ -1266,6 +1266,14 @@ void TGCocoa::ShapeCombineMask(Window_t windowID, Int_t /*x*/, Int_t /*y*/, Pixm
    assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "ShapeCombineMask, windowID parameter is a bad window id");
    assert([fPimpl->GetDrawable(pixmapID) isKindOfClass : [QuartzImage class]] && "ShapeCombineMask, pixmapID parameter must point to QuartzImage object");
    
+   //TODO: nonrectangular window can be only NSWindow object,
+   //not NSView (and mask is attached to a window).
+   //This means, if some nonrectangular window is created as a child
+   //first, and detached later (becoming top-level), the shape will be lost.
+   //Find a better way to fix it.
+   if (fPimpl->GetWindow(windowID).fContentView.fParentView)
+      return;
+   
    QuartzWindow * const qw = fPimpl->GetWindow(windowID).fQuartzWindow;
 
    QuartzImage * const image = (QuartzImage *)fPimpl->GetDrawable(pixmapID);
