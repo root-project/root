@@ -26,6 +26,8 @@ MACOSXVERS    = 10.$(MACOSX_MINOR)
 else
 MACOSXVERS    = $(MACOSX_DEPLOYMENT_TARGET)
 endif
+XCODE_PATH   := $(shell /usr/bin/xcode-select -print-path)
+OSXSDK       := $(XCODE_PATH)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$(MACOSXVERS).sdk
 
 # Compiler:
 # From "Apple clang version ... (based on LLVM 3.0svn)"
@@ -152,4 +154,7 @@ showld:
 
 showf77:
 	@echo "$(F77ORG)"
+
+showsdk:
+	@echo "$(OSXSDK)"
 endif

@@ -8608,7 +8608,9 @@ _ACEOF
     have_ttf=yes
   fi
   if test "$have_ttf" = yes; then
+      if test "x$ttf_includes" = "xno"; then
 	  AFTERIMAGE_LIBS="`freetype-config --libs` $AFTERIMAGE_LIBS"
+      fi
   fi
 fi;
 

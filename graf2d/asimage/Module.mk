@@ -95,6 +95,10 @@ ALLMAPS     += $(ASIMAGEMAP) $(ASIMAGEGUIMAP)
 # include all dependency files
 INCLUDEFILES += $(ASIMAGEDEP) $(ASIMAGEGUIDEP)
 
+ifneq ($(BUILDCOCOA),yes)
+ASNEEDX11LIBS = $(XLIBS)
+endif
+
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
@@ -166,6 +170,10 @@ else
 		if [ "$(ASPNGINCDIR)" != "" ]; then \
 			PNGINCDIR="--with-png-includes=$(ASPNGINCDIR)"; \
 		fi; \
+		if [ "$(BUILDCOCOA)" = "yes" ]; then \
+			JPEGINCDIR="--without-x --with-builtin-jpeg"; \
+			PNGINCDIR="--with-builtin-png"; \
+		fi; \
 		if [ "$(ASTIFFINCDIR)" = "--with-tiff=no" ]; then \
 			TIFFINCDIR="$(ASTIFFINCDIR)"; \
 		elif [ "$(ASTIFFINCDIR)" != "" ]; then \
@@ -213,7 +221,7 @@ $(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(ASTEPDEP) $(FREETYPEDEP) \
 		   "$(ASIMAGEO) $(ASIMAGEDO)" \
 		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) \
                     $(FREETYPELDFLAGS) $(FREETYPELIB) \
-		    $(ASEXTRALIBDIR) $(ASEXTRALIB) $(XLIBS)"
+		    $(ASEXTRALIBDIR) $(ASEXTRALIB) $(ASNEEDX11LIBS)"
 
 $(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
@@ -232,7 +240,7 @@ $(ASIMAGEGUILIB):  $(ASIMAGEGUIO) $(ASIMAGEGUIDO) $(ASTEPDEP) $(FREETYPEDEP) \
 		   "$(ASIMAGEGUIO) $(ASIMAGEGUIDO)" \
 		   "$(ASIMAGEGUILIBEXTRA) $(ASTEPLIB) \
                     $(FREETYPELDFLAGS) $(FREETYPELIB) \
-		    $(ASEXTRALIBDIR) $(ASEXTRALIB) $(XLIBS)"
+		    $(ASEXTRALIBDIR) $(ASEXTRALIB) $(ASNEEDX11LIBS)"
 
 $(ASIMAGEGUIDS): $(ASIMAGEGUIH) $(ASIMAGEGUIL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
