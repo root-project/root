@@ -31,7 +31,7 @@ ELSE(NOT ${svn_result} EQUAL 0)
 	STRING(REPLACE      "URL: " "" url "${url}")
 
 	#Point the url to the rigt location
-	STRING(REPLACE  "cint/cling/lib/UserInterface" "core/textinput/src/textinput" url "${url}")
+	STRING(REPLACE  "interpreter/cling/lib/UserInterface" "core/textinput/src/textinput" url "${url}")
 
 	#Checkout the source
 	EXECUTE_PROCESS(COMMAND ${Subversion_SVN_EXECUTABLE} co "${url}" "${CMAKE_CURRENT_LIST_DIR}/textinput" RESULT_VARIABLE scn_co_result)

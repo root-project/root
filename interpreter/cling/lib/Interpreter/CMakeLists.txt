@@ -22,6 +22,7 @@ set( LLVM_LINK_COMPONENTS
 add_cling_library(clingInterpreter
   ASTDumper.cpp
   ASTNodeEraser.cpp
+  Callable.cpp
   CIFactory.cpp
   DeclCollector.cpp
   DeclExtractor.cpp

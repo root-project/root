@@ -87,7 +87,7 @@ for d in $l ; do
 	    	        # extra="NOMAP=1 ALLLIBS=${prefix}/lib/root/libCint.so" 
 	cint/reflex)	set_lib_names    core  "" libroot-core-dev
 	    	        extra="REFLEXLIB=${prefix}/lib/root/libReflex.so" ;;   
-	cint/cling)     continue ;; 
+	interpreter/cling)     continue ;; 
 	cint/*)	        set_lib_names    core  "" root-system-bin	;;
 	geom/geom)	set_lib_names	 $base ""	;;
 	geom/*) 	set_plugin_names $base $sub	;;

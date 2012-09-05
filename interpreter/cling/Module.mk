@@ -4,7 +4,7 @@
 # Author: Axel Naumann, 2011-10-18
 
 MODNAME      := cling
-MODDIR       := $(ROOT_SRCDIR)/cint/$(MODNAME)
+MODDIR       := $(ROOT_SRCDIR)/interpreter/$(MODNAME)
 
 CLINGDIR     := $(MODDIR)
 

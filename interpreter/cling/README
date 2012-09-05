@@ -9,7 +9,7 @@
 
 --------------------------------------------------------------------------------
 
-1. I N S T A L A T I O N   I N S T R U C T I O N S
+1. I N S T A L L A T I O N   I N S T R U C T I O N S
 
 1.1 Dependencies
 
@@ -33,7 +33,7 @@ packages and subversion [4] to get the source code.
      svn co http://llvm.org/svn/llvm-project/llvm/trunk llvm
      cd llvm/tools
      svn co http://llvm.org/svn/llvm-project/cfe/trunk clang
-     svn co http://root.cern.ch/svn/root/trunk/cint/cling cling
+     svn co http://root.cern.ch/svn/root/trunk/interpreter/cling cling
      cd ..
 
    * Apply some patches

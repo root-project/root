@@ -24,7 +24,7 @@ CPPFLAGS += -I$(PROJ_SRC_DIR)/../../include -I$(PROJ_SRC_DIR)/../../../clang/inc
 include $(CLING_LEVEL)/Makefile
 
 $(PROJ_SRC_DIR)/textinput/Makefile.d:
-	svn co $(shell svn info $(PROJ_SRC_DIR) | grep ^URL: | sed 's,^URL: \(.*\)cint/cling/lib/UserInterface,\1/core/textinput/src/textinput,') $(PROJ_SRC_DIR)/textinput
+	svn co $(shell svn info $(PROJ_SRC_DIR) | grep ^URL: | sed 's,^URL: \(.*\)interpreter/cling/lib/UserInterface,\1/core/textinput/src/textinput,') $(PROJ_SRC_DIR)/textinput
 	touch $@
 
 # trigger checkput before building
