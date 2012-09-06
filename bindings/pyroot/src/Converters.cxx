@@ -159,7 +159,7 @@ PYROOT_IMPLEMENT_BASIC_CONVERTER( Long, Long_t, Long_t, PyLong_FromLong, PyLong_
 
 //____________________________________________________________________________
 Bool_t PyROOT::TLongRefConverter::SetArg(
-      PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, CallFunc_t* /* func */, Long_t )
 {
 // convert <pyobject> to C++ long&, set arg for call
    if ( ! TCustomInt_CheckExact( pyobject ) ) {
@@ -177,7 +177,7 @@ Bool_t PyROOT::TLongRefConverter::SetArg(
    PyErr_SetString( PyExc_TypeError, "NO REF SUPPORT IN CLING!" );
    return kFALSE;
 #else
-   para.fLong = 0; func = 0;
+   para.fLong = 0; /* func = 0; */
    return kFALSE; // there no longer is a PyIntObject in p3
 #endif
 }
@@ -186,7 +186,7 @@ PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( LongRef )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TConstLongRefConverter::SetArg(
-      PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, CallFunc_t* /* func */, Long_t )
 {
 // convert <pyobject> to C++ const long&, set arg for call using buffer
    para.fLong = fBuffer = PyLong_AsLong( pyobject );
@@ -376,7 +376,7 @@ PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( DoubleRef )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TConstDoubleRefConverter::SetArg(
-      PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t )
+      PyObject* pyobject, TParameter_t& para, CallFunc_t* /* func */, Long_t )
 {
 // convert <pyobject> to C++ const double&, set arg for call using buffer
    para.fDouble = fBuffer = PyFloat_AsDouble( pyobject );
