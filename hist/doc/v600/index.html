@@ -69,3 +69,11 @@ The following macro shows the problem:
 The histogram Z axis title is now painted along the palette axis.
 </li>
 </ul>
+
+<h3>TH2, TH3</h3>
+<ul>
+<li>
+Update Projection methods of both TH2 and TH3 to not return a null pointer when an histogram with the same name already existed and it was not compatible.
+Now just set the new correct binning on the previously existing histogram.   
+</li>
+</ul>
