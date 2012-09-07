@@ -2341,6 +2341,56 @@ fi
 
 ######################################################################
 #
+### echo %%% Cling - LLVM/clang based interpreter prototype
+#
+hascling="undef"
+hasllvm="undef"
+llvmdir="/**/"
+clingextrares=""
+if test ! "x$enable_cling" = "xno"; then
+    message "Checking for llvm-config"
+    if test "x$enable_builtin_llvm" = "x" || \
+       test "x$enable_builtin_llvm" = "xno" ; then
+	
+        # allow LLVMDIR instead of --with-llvm-config
+        if test "x$llvmconfig" = "x" ; then
+            if test ! "x$LLVMDIR" = "x" ; then
+                llvmconfig="$LLVMDIR/bin"
+            else
+                result "no"
+                clingextrares="(needs --with-llvm-config or \$LLVMDIR)"
+            fi
+        fi
+        if test ! "x$llvmconfig" = "x"; then
+            if test -d "$llvmconfig"; then
+                llvmconfig=$llvmconfig/llvm-config
+            fi
+            if test -f $llvmconfig && test -x $llvmconfig; then
+                hascling="define"
+                hasllvm="define"
+                llvmdir="`dirname $llvmconfig`"
+                llvmdir='"'"`dirname $llvmdir`"'"'
+            fi
+        fi
+    else
+        hascling="define"
+    fi
+else
+    enable_builtin_llvm="no"
+fi
+if test "x$hascling" = "xundef"; then
+    enable_cling="no"
+    message "Checking whether to integrate experimental cling"
+    result "no $clingextrares"
+else
+    result "$llvmconfig" # have llvm
+    enable_cling="yes"
+    message "Checking whether to integrate experimental cling"
+    result "yes"
+fi
+
+######################################################################
+#
 ### echo %%% Check if native MacOS X Cocoa/Quartz backend should be build
 #
 if test ! "x$platform" = "xmacosx"; then
@@ -4297,6 +4347,14 @@ check_explicit "$enable_ldap" "$enable_ldap_explicit" \
 # (See http://www.python.org)
 #
 if test ! "x$enable_python" = "xno" ; then
+    # PyROOT depends on cling
+    message "Checking for PyROOT prerequisites"
+    if test ! "x$enable_cling" = "xyes"; then
+        enable_python="no"
+        result "no (cling disabled)"
+    fi
+fi
+if test ! "x$enable_python" = "xno" ; then
     # Check for Python include and library
     mypython=`$cwhich python 2> /dev/null`
     if test ! "x$mypython" = "x" && test -x "$mypython" ; then
@@ -6066,56 +6124,6 @@ else
     enable_afdsmgrd="no"
 fi
 result "$enable_afdsmgrd$afdsmgrdapmonmsg"
-
-######################################################################
-#
-### echo %%% Cling - LLVM/clang based interpreter prototype
-#
-hascling="undef"
-hasllvm="undef"
-llvmdir="/**/"
-clingextrares=""
-if test ! "x$enable_cling" = "xno"; then
-    message "Checking for llvm-config"
-    if test "x$enable_builtin_llvm" = "x" || \
-       test "x$enable_builtin_llvm" = "xno" ; then
-	
-        # allow LLVMDIR instead of --with-llvm-config
-        if test "x$llvmconfig" = "x" ; then
-            if test ! "x$LLVMDIR" = "x" ; then
-                llvmconfig="$LLVMDIR/bin"
-            else
-                result "no"
-                clingextrares="(needs --with-llvm-config or \$LLVMDIR)"
-            fi
-        fi
-        if test ! "x$llvmconfig" = "x"; then
-            if test -d "$llvmconfig"; then
-                llvmconfig=$llvmconfig/llvm-config
-            fi
-            if test -f $llvmconfig && test -x $llvmconfig; then
-                hascling="define"
-                hasllvm="define"
-                llvmdir="`dirname $llvmconfig`"
-                llvmdir='"'"`dirname $llvmdir`"'"'
-            fi
-        fi
-    else
-        hascling="define"
-    fi
-else
-    enable_builtin_llvm="no"
-fi
-if test "x$hascling" = "xundef"; then
-    enable_cling="no"
-    message "Checking whether to integrate experimental cling"
-    result "no $clingextrares"
-else
-    result "$llvmconfig" # have llvm
-    enable_cling="yes"
-    message "Checking whether to integrate experimental cling"
-    result "yes"
-fi
 
 ######################################################################
 #
