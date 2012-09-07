@@ -264,6 +264,8 @@ Int_t TH3::Fill(Double_t x, Double_t y, Double_t z)
    //*-*-*-*-*-*-*-*-*-*-*Increment cell defined by x,y,z by 1 *-*-*-*-*
    //*-*                  ====================================
    //*-*
+   //*-* The function returns the corresponding global bin number which has its content 
+   //*-* incremented by 1
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    if (fBuffer) return BufferFill(x,y,z,1);
@@ -311,6 +313,8 @@ Int_t TH3::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
    //*-* via the function Sumw2, then the sum of the squares of weights is incremented
    //*-* by w^2 in the cell corresponding to x,y,z.
    //*-*
+   //*-* The function returns the corresponding global bin number which has its content 
+   //*-* incremented by w
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    if (fBuffer) return BufferFill(x,y,z,w);
@@ -354,7 +358,9 @@ Int_t TH3::Fill(const char *namex, const char *namey, const char *namez, Double_
    //
    // If the storage of the sum of squares of weights has been triggered,
    // via the function Sumw2, then the sum of the squares of weights is incremented
-   // by w^2 in the cell corresponding to x,y,z.
+   // by w^2 in the cell corresponding to x,y,z.   
+   // The function returns the corresponding global bin number which has its content 
+   // incremented by w
    //
    Int_t binx, biny, binz, bin;
    fEntries++;
@@ -394,6 +400,8 @@ Int_t TH3::Fill(const char *namex, Double_t y, const char *namez, Double_t w)
    // If the storage of the sum of squares of weights has been triggered,
    // via the function Sumw2, then the sum of the squares of weights is incremented
    // by w^2 in the cell corresponding to x,y,z.
+   // The function returns the corresponding global bin number which has its content 
+   // incremented by w
    //
    Int_t binx, biny, binz, bin;
    fEntries++;
@@ -434,6 +442,8 @@ Int_t TH3::Fill(const char *namex, const char *namey, Double_t z, Double_t w)
    // If the storage of the sum of squares of weights has been triggered,
    // via the function Sumw2, then the sum of the squares of weights is incremented
    // by w^2 in the cell corresponding to x,y,z.
+   // The function returns the corresponding global bin number which has its content 
+   // incremented by w
    //
    Int_t binx, biny, binz, bin;
    fEntries++;
@@ -474,6 +484,8 @@ Int_t TH3::Fill(Double_t x, const char *namey, const char *namez, Double_t w)
    // If the storage of the sum of squares of weights has been triggered,
    // via the function Sumw2, then the sum of the squares of weights is incremented
    // by w^2 in the cell corresponding to x,y,z.
+   // The function returns the corresponding global bin number which has its content 
+   // incremented by w
    //
    Int_t binx, biny, binz, bin;
    fEntries++;
@@ -514,6 +526,8 @@ Int_t TH3::Fill(Double_t x, const char *namey, Double_t z, Double_t w)
    // If the storage of the sum of squares of weights has been triggered,
    // via the function Sumw2, then the sum of the squares of weights is incremented
    // by w^2 in the cell corresponding to x,y,z.
+   // The function returns the corresponding global bin number which has its content 
+   // incremented by w
    //
    Int_t binx, biny, binz, bin;
    fEntries++;
@@ -555,6 +569,8 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
    // If the storage of the sum of squares of weights has been triggered,
    // via the function Sumw2, then the sum of the squares of weights is incremented
    // by w^2 in the cell corresponding to x,y,z.
+   // The function returns the corresponding global bin number which has its content 
+   // incremented by w
    //
    Int_t binx, biny, binz, bin;
    fEntries++;

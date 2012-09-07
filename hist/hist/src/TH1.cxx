@@ -3067,6 +3067,7 @@ Int_t TH1::Fill(Double_t x)
 //    via the function Sumw2, then the sum of the squares of weights is incremented
 //    by 1 in the bin corresponding to x.
 //
+//    The function returns the corresponding bin number which has its content incremented by 1
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    if (fBuffer) return BufferFill(x,1);
@@ -3100,6 +3101,7 @@ Int_t TH1::Fill(Double_t x, Double_t w)
 //    via the function Sumw2, then the sum of the squares of weights is incremented
 //    by w^2 in the bin corresponding to x.
 //
+//    The function returns the corresponding bin number which has its content incremented by w
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    if (fBuffer) return BufferFill(x,w);
@@ -3134,6 +3136,9 @@ Int_t TH1::Fill(const char *namex, Double_t w)
 // via the function Sumw2, then the sum of the squares of weights is incremented
 // by w^2 in the bin corresponding to x.
 //
+// The function returns the corresponding bin number which has its content 
+// incremented by w
+// -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Int_t bin;
    fEntries++;

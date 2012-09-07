@@ -275,6 +275,8 @@ Int_t TH2::Fill(Double_t x,Double_t y)
    //*-* via the function Sumw2, then the sum of the squares of weights is incremented
    //*-* by 1 in the cell corresponding to x,y.
    //*-*
+   //*-* The function returns the corresponding global bin number which has its content 
+   //*-* incremented by 1
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    if (fBuffer) return BufferFill(x,y,1);
@@ -318,6 +320,8 @@ Int_t TH2::Fill(Double_t x, Double_t y, Double_t w)
    //*-* via the function Sumw2, then the sum of the squares of weights is incremented
    //*-* by w^2 in the cell corresponding to x,y.
    //*-*
+   //*-* The function returns the corresponding global bin number which has its content 
+   //*-* incremented by w
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    if (fBuffer) return BufferFill(x,y,w);
@@ -361,6 +365,8 @@ Int_t TH2::Fill(const char *namex, const char *namey, Double_t w)
    // via the function Sumw2, then the sum of the squares of weights is incremented
    // by w^2 in the cell corresponding to x,y.
    //
+   // The function returns the corresponding global bin number which has its content 
+   // incremented by w
 
    Int_t binx, biny, bin;
    fEntries++;
@@ -399,6 +405,8 @@ Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
    // via the function Sumw2, then the sum of the squares of weights is incremented
    // by w^2 in the cell corresponding to x,y.
    //
+   // The function returns the corresponding global bin number which has its content 
+   // incremented by w
 
    Int_t binx, biny, bin;
    fEntries++;
@@ -438,6 +446,8 @@ Int_t TH2::Fill(Double_t x, const char *namey, Double_t w)
    // via the function Sumw2, then the sum of the squares of weights is incremented
    // by w^2 in the cell corresponding to x,y.
    //
+   // The function returns the corresponding global bin number which has its content 
+   // incremented by w
 
    Int_t binx, biny, bin;
    fEntries++;
