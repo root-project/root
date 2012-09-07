@@ -537,22 +537,23 @@ StmtResult Sema::ActOnMSAsmStmt(SourceLocation AsmLoc,
     Parser->ParseIdentifier(IDVal);
 
     // Canonicalize the opcode to lower case.
-    SmallString<128> Opcode;
+    SmallString<128> OpcodeStr;
     for (unsigned i = 0, e = IDVal.size(); i != e; ++i)
-      Opcode.push_back(tolower(IDVal[i]));
+      OpcodeStr.push_back(tolower(IDVal[i]));
 
     // Parse the operands.
     llvm::SMLoc IDLoc;
     SmallVector<llvm::MCParsedAsmOperand*, 8> Operands;
-    bool HadError = TargetParser->ParseInstruction(Opcode.str(), IDLoc,
+    bool HadError = TargetParser->ParseInstruction(OpcodeStr.str(), IDLoc,
                                                    Operands);
     // If we had an error parsing the operands, fail gracefully.
     if (HadError) { DEF_SIMPLE_MSASM; return Owned(NS); }
 
     // Match the MCInstr.
+    unsigned Kind;
     unsigned ErrorInfo;
     SmallVector<llvm::MCInst, 2> Instrs;
-    HadError = TargetParser->MatchInstruction(IDLoc, Operands, Instrs,
+    HadError = TargetParser->MatchInstruction(IDLoc, Kind, Operands, Instrs,
                                               ErrorInfo,
                                               /*matchingInlineAsm*/ true);
     // If we had an error parsing the operands, fail gracefully.
@@ -567,14 +568,31 @@ StmtResult Sema::ActOnMSAsmStmt(SourceLocation AsmLoc,
 
     // Build the list of clobbers, outputs and inputs.
     unsigned NumDefs = Desc.getNumDefs();
-    for (unsigned i = 0, e = Inst.getNumOperands(); i != e; ++i) {
-      const llvm::MCOperand &Op = Inst.getOperand(i);
+    for (unsigned i = 1, e = Operands.size(); i != e; ++i) {
+      unsigned NumMCOperands;
+      unsigned MCIdx = TargetParser->getMCInstOperandNum(Kind, Inst, Operands,
+                                                         i, NumMCOperands);
+      assert (NumMCOperands && "Expected at least 1 MCOperand!");
+      // If we have a one-to-many mapping, then search for the MCExpr.
+      if (NumMCOperands > 1) {
+        bool foundExpr = false;
+        for (unsigned j = MCIdx, e = MCIdx + NumMCOperands; j != e; ++j) {
+          if (Inst.getOperand(j).isExpr()) {
+            foundExpr = true;
+            MCIdx = j;
+            break;
+          }
+        }
+        assert (foundExpr && "Expected for find an expression!");
+      }
+
+      const llvm::MCOperand &Op = Inst.getOperand(MCIdx);
 
       // Immediate.
       if (Op.isImm() || Op.isFPImm())
         continue;
 
-      bool isDef = NumDefs && (i < NumDefs);
+      bool isDef = NumDefs && (MCIdx < NumDefs);
 
       // Register/Clobber.
       if (Op.isReg() && isDef) {
@@ -606,7 +624,8 @@ StmtResult Sema::ActOnMSAsmStmt(SourceLocation AsmLoc,
             ExprResult Result = ActOnIdExpression(getCurScope(), SS, Loc, Id,
                                                   false, false);
             if (!Result.isInvalid()) {
-              if (isDef) {
+              bool isMemDef = (i == 1) && Desc.mayStore();
+              if (isDef || isMemDef) {
                 Outputs.push_back(II);
                 OutputExprs.push_back(Result.take());
                 OutputConstraints.push_back("=r");

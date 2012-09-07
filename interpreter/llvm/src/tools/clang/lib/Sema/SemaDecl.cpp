@@ -350,8 +350,8 @@ ParsedType Sema::getTypeName(IdentifierInfo &II, SourceLocation NameLoc,
 /// isTagName() - This method is called *for error recovery purposes only*
 /// to determine if the specified name is a valid tag name ("struct foo").  If
 /// so, this returns the TST for the tag corresponding to it (TST_enum,
-/// TST_union, TST_struct, TST_class).  This is used to diagnose cases in C
-/// where the user forgot to specify the tag.
+/// TST_union, TST_struct, TST_interface, TST_class).  This is used to diagnose
+/// cases in C where the user forgot to specify the tag.
 DeclSpec::TST Sema::isTagName(IdentifierInfo &II, Scope *S) {
   // Do a tag name lookup in this scope.
   LookupResult R(*this, &II, SourceLocation(), LookupTagName);
@@ -361,6 +361,7 @@ DeclSpec::TST Sema::isTagName(IdentifierInfo &II, Scope *S) {
     if (const TagDecl *TD = R.getAsSingle<TagDecl>()) {
       switch (TD->getTagKind()) {
       case TTK_Struct: return DeclSpec::TST_struct;
+      case TTK_Interface: return DeclSpec::TST_interface;
       case TTK_Union:  return DeclSpec::TST_union;
       case TTK_Class:  return DeclSpec::TST_class;
       case TTK_Enum:   return DeclSpec::TST_enum;
@@ -536,6 +537,11 @@ static bool isTagTypeWithMissingTag(Sema &SemaRef, LookupResult &Result,
       case TTK_Struct:
         TagName = "struct";
         FixItTagName = "struct ";
+        break;
+
+      case TTK_Interface:
+        TagName = "__interface";
+        FixItTagName = "__interface ";
         break;
 
       case TTK_Union:
@@ -2604,6 +2610,7 @@ Decl *Sema::ParsedFreeStandingDeclSpec(Scope *S, AccessSpecifier AS,
   TagDecl *Tag = 0;
   if (DS.getTypeSpecType() == DeclSpec::TST_class ||
       DS.getTypeSpecType() == DeclSpec::TST_struct ||
+      DS.getTypeSpecType() == DeclSpec::TST_interface ||
       DS.getTypeSpecType() == DeclSpec::TST_union ||
       DS.getTypeSpecType() == DeclSpec::TST_enum) {
     TagD = DS.getRepAsDecl();
@@ -2642,7 +2649,8 @@ Decl *Sema::ParsedFreeStandingDeclSpec(Scope *S, AccessSpecifier AS,
       Diag(DS.getConstexprSpecLoc(), diag::err_constexpr_tag)
         << (DS.getTypeSpecType() == DeclSpec::TST_class ? 0 :
             DS.getTypeSpecType() == DeclSpec::TST_struct ? 1 :
-            DS.getTypeSpecType() == DeclSpec::TST_union ? 2 : 3);
+            DS.getTypeSpecType() == DeclSpec::TST_interface ? 2 :
+            DS.getTypeSpecType() == DeclSpec::TST_union ? 3 : 4);
     else
       Diag(DS.getConstexprSpecLoc(), diag::err_constexpr_no_declarators);
     // Don't emit warnings after this error.
@@ -2763,6 +2771,7 @@ Decl *Sema::ParsedFreeStandingDeclSpec(Scope *S, AccessSpecifier AS,
     DeclSpec::TST TypeSpecType = DS.getTypeSpecType();
     if (TypeSpecType == DeclSpec::TST_class ||
         TypeSpecType == DeclSpec::TST_struct ||
+        TypeSpecType == DeclSpec::TST_interface ||
         TypeSpecType == DeclSpec::TST_union ||
         TypeSpecType == DeclSpec::TST_enum) {
       AttributeList* attrs = DS.getAttributes().getList();
@@ -2772,7 +2781,8 @@ Decl *Sema::ParsedFreeStandingDeclSpec(Scope *S, AccessSpecifier AS,
         << attrs->getName()
         << (TypeSpecType == DeclSpec::TST_class ? 0 :
             TypeSpecType == DeclSpec::TST_struct ? 1 :
-            TypeSpecType == DeclSpec::TST_union ? 2 : 3);
+            TypeSpecType == DeclSpec::TST_union ? 2 :
+            TypeSpecType == DeclSpec::TST_interface ? 3 : 4);
         attrs = attrs->getNext();
       }
     }
@@ -5183,6 +5193,14 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
       //   A function can be defined in a friend declaration of a
       //   class . . . . Such a function is implicitly inline.
       NewFD->setImplicitlyInline();
+    }
+
+    // if this is a method defined in an __interface, set pure
+    // (isVirtual will already return true)
+    if (CXXRecordDecl *Parent = dyn_cast<CXXRecordDecl>(
+        NewFD->getDeclContext())) {
+      if (Parent->getTagKind() == TTK_Interface)
+        NewFD->setPure(true);
     }
 
     SetNestedNameSpecifier(NewFD, D);
@@ -8118,6 +8136,7 @@ TypedefDecl *Sema::ParseTypedefDecl(Scope *S, Declarator &D, QualType T,
   switch (D.getDeclSpec().getTypeSpecType()) {
   case TST_enum:
   case TST_struct:
+  case TST_interface:
   case TST_union:
   case TST_class: {
     TagDecl *tagFromDeclSpec = cast<TagDecl>(D.getDeclSpec().getRepAsDecl());
@@ -8193,6 +8212,29 @@ bool Sema::CheckEnumRedeclaration(SourceLocation EnumLoc, bool IsScoped,
   return false;
 }
 
+/// \brief Get diagnostic %select index for tag kind for
+/// redeclaration diagnostic message.
+/// WARNING: Indexes apply to particular diagnostics only!
+///
+/// \returns diagnostic %select index.
+static unsigned getRedeclDiagFromTagKind(TagTypeKind Tag) {
+  switch (Tag) {
+  case TTK_Struct: return 0;
+  case TTK_Interface: return 1;
+  case TTK_Class:  return 2;
+  default: llvm_unreachable("Invalid tag kind for redecl diagnostic!");
+  }
+}
+
+/// \brief Determine if tag kind is a class-key compatible with
+/// class for redeclaration (class, struct, or __interface).
+///
+/// \returns true iff the tag kind is compatible.
+static bool isClassCompatTagKind(TagTypeKind Tag)
+{
+  return Tag == TTK_Struct || Tag == TTK_Class || Tag == TTK_Interface;
+}
+
 /// \brief Determine whether a tag with a given kind is acceptable
 /// as a redeclaration of the given tag declaration.
 ///
@@ -8215,12 +8257,11 @@ bool Sema::isAcceptableTagRedeclaration(const TagDecl *Previous,
   //   struct class-key shall be used to refer to a class (clause 9)
   //   declared using the class or struct class-key.
   TagTypeKind OldTag = Previous->getTagKind();
-  if (!isDefinition || (NewTag != TTK_Class && NewTag != TTK_Struct))
+  if (!isDefinition || !isClassCompatTagKind(NewTag))
     if (OldTag == NewTag)
       return true;
 
-  if ((OldTag == TTK_Struct || OldTag == TTK_Class) &&
-      (NewTag == TTK_Struct || NewTag == TTK_Class)) {
+  if (isClassCompatTagKind(OldTag) && isClassCompatTagKind(NewTag)) {
     // Warn about the struct/class tag mismatch.
     bool isTemplate = false;
     if (const CXXRecordDecl *Record = dyn_cast<CXXRecordDecl>(Previous))
@@ -8230,7 +8271,8 @@ bool Sema::isAcceptableTagRedeclaration(const TagDecl *Previous,
       // In a template instantiation, do not offer fix-its for tag mismatches
       // since they usually mess up the template instead of fixing the problem.
       Diag(NewTagLoc, diag::warn_struct_class_tag_mismatch)
-        << (NewTag == TTK_Class) << isTemplate << &Name;
+        << getRedeclDiagFromTagKind(NewTag) << isTemplate << &Name
+        << getRedeclDiagFromTagKind(OldTag);
       return true;
     }
 
@@ -8249,13 +8291,13 @@ bool Sema::isAcceptableTagRedeclaration(const TagDecl *Previous,
           if (!previousMismatch) {
             previousMismatch = true;
             Diag(NewTagLoc, diag::warn_struct_class_previous_tag_mismatch)
-              << (NewTag == TTK_Class) << isTemplate << &Name;
+              << getRedeclDiagFromTagKind(NewTag) << isTemplate << &Name
+              << getRedeclDiagFromTagKind(I->getTagKind());
           }
           Diag(I->getInnerLocStart(), diag::note_struct_class_suggestion)
-            << (NewTag == TTK_Class)
+            << getRedeclDiagFromTagKind(NewTag)
             << FixItHint::CreateReplacement(I->getInnerLocStart(),
-                                            NewTag == TTK_Class?
-                                            "class" : "struct");
+                 TypeWithKeyword::getTagTypeKindName(NewTag));
         }
       }
       return true;
@@ -8271,16 +8313,16 @@ bool Sema::isAcceptableTagRedeclaration(const TagDecl *Previous,
     }
 
     Diag(NewTagLoc, diag::warn_struct_class_tag_mismatch)
-      << (NewTag == TTK_Class)
-      << isTemplate << &Name;
+      << getRedeclDiagFromTagKind(NewTag) << isTemplate << &Name
+      << getRedeclDiagFromTagKind(OldTag);
     Diag(Redecl->getLocation(), diag::note_previous_use);
 
     // If there is a previous defintion, suggest a fix-it.
     if (Previous->getDefinition()) {
         Diag(NewTagLoc, diag::note_struct_class_suggestion)
-          << (Redecl->getTagKind() == TTK_Class)
+          << getRedeclDiagFromTagKind(Redecl->getTagKind())
           << FixItHint::CreateReplacement(SourceRange(NewTagLoc),
-                        Redecl->getTagKind() == TTK_Class? "class" : "struct");
+               TypeWithKeyword::getTagTypeKindName(Redecl->getTagKind()));
     }
 
     return true;
@@ -9507,12 +9549,12 @@ bool Sema::CheckNontrivialField(FieldDecl *FD) {
   return false;
 }
 
-/// If the given constructor is user-provided, produce a diagnostic explaining
+/// If the given constructor is user-declared, produce a diagnostic explaining
 /// that it makes the class non-trivial.
-static bool DiagnoseNontrivialUserProvidedCtor(Sema &S, QualType QT,
+static bool diagnoseNonTrivialUserDeclaredCtor(Sema &S, QualType QT,
                                                CXXConstructorDecl *CD,
                                                Sema::CXXSpecialMember CSM) {
-  if (!CD->isUserProvided())
+  if (CD->isImplicit())
     return false;
 
   SourceLocation CtorLoc = CD->getLocation();
@@ -9535,17 +9577,17 @@ void Sema::DiagnoseNontrivial(const RecordType* T, CXXSpecialMember member) {
     if (RD->hasUserDeclaredConstructor()) {
       typedef CXXRecordDecl::ctor_iterator ctor_iter;
       for (ctor_iter CI = RD->ctor_begin(), CE = RD->ctor_end(); CI != CE; ++CI)
-        if (DiagnoseNontrivialUserProvidedCtor(*this, QT, *CI, member))
+        if (diagnoseNonTrivialUserDeclaredCtor(*this, QT, *CI, member))
           return;
 
-      // No user-provided constructors; look for constructor templates.
+      // No user-delcared constructors; look for constructor templates.
       typedef CXXRecordDecl::specific_decl_iterator<FunctionTemplateDecl>
           tmpl_iter;
       for (tmpl_iter TI(RD->decls_begin()), TE(RD->decls_end());
            TI != TE; ++TI) {
         CXXConstructorDecl *CD =
             dyn_cast<CXXConstructorDecl>(TI->getTemplatedDecl());
-        if (CD && DiagnoseNontrivialUserProvidedCtor(*this, QT, CD, member))
+        if (CD && diagnoseNonTrivialUserDeclaredCtor(*this, QT, CD, member))
           return;
       }
     }
@@ -10559,6 +10601,182 @@ static void CheckForUniqueEnumValues(Sema &S, Decl **Elements,
                                     Next->getName());
 }
 
+// Returns true when the enum initial expression does not trigger the
+// duplicate enum warning.  A few common cases are exempted as follows:
+// Element2 = Element1
+// Element2 = Element1 + 1
+// Element2 = Element1 - 1
+// Where Element2 and Element1 are from the same enum.
+static bool ValidDuplicateEnum(EnumConstantDecl *ECD, EnumDecl *Enum) {
+  Expr *InitExpr = ECD->getInitExpr();
+  if (!InitExpr)
+    return true;
+  InitExpr = InitExpr->IgnoreImpCasts();
+
+  if (BinaryOperator *BO = dyn_cast<BinaryOperator>(InitExpr)) {
+    if (!BO->isAdditiveOp())
+      return true;
+    IntegerLiteral *IL = dyn_cast<IntegerLiteral>(BO->getRHS());
+    if (!IL)
+      return true;
+    if (IL->getValue() != 1)
+      return true;
+
+    InitExpr = BO->getLHS();
+  }
+
+  // This checks if the elements are from the same enum.
+  DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(InitExpr);
+  if (!DRE)
+    return true;
+
+  EnumConstantDecl *EnumConstant = dyn_cast<EnumConstantDecl>(DRE->getDecl());
+  if (!EnumConstant)
+    return true;
+
+  if (cast<EnumDecl>(TagDecl::castFromDeclContext(ECD->getDeclContext())) !=
+      Enum)
+    return true;
+
+  return false;
+}
+
+struct DupKey {
+  int64_t val;
+  bool isTombstoneOrEmptyKey;
+  DupKey(int64_t val, bool isTombstoneOrEmptyKey)
+    : val(val), isTombstoneOrEmptyKey(isTombstoneOrEmptyKey) {}
+};
+
+static DupKey GetDupKey(const llvm::APSInt& Val) {
+  return DupKey(Val.isSigned() ? Val.getSExtValue() : Val.getZExtValue(),
+                false);
+}
+
+struct DenseMapInfoDupKey {
+  static DupKey getEmptyKey() { return DupKey(0, true); }
+  static DupKey getTombstoneKey() { return DupKey(1, true); }
+  static unsigned getHashValue(const DupKey Key) {
+    return (unsigned)(Key.val * 37);
+  }
+  static bool isEqual(const DupKey& LHS, const DupKey& RHS) {
+    return LHS.isTombstoneOrEmptyKey == RHS.isTombstoneOrEmptyKey &&
+           LHS.val == RHS.val;
+  }
+};
+
+// Emits a warning when an element is implicitly set a value that
+// a previous element has already been set to.
+static void CheckForDuplicateEnumValues(Sema &S, Decl **Elements,
+                                        unsigned NumElements, EnumDecl *Enum,
+                                        QualType EnumType) {
+  if (S.Diags.getDiagnosticLevel(diag::warn_duplicate_enum_values,
+                                 Enum->getLocation()) ==
+      DiagnosticsEngine::Ignored)
+    return;
+  // Avoid anonymous enums
+  if (!Enum->getIdentifier())
+    return;
+
+  // Only check for small enums.
+  if (Enum->getNumPositiveBits() > 63 || Enum->getNumNegativeBits() > 64)
+    return;
+
+  typedef llvm::SmallVector<EnumConstantDecl*, 3> ECDVector;
+  typedef llvm::SmallVector<ECDVector*, 3> DuplicatesVector;
+
+  typedef llvm::PointerUnion<EnumConstantDecl*, ECDVector*> DeclOrVector;
+  typedef llvm::DenseMap<DupKey, DeclOrVector, DenseMapInfoDupKey>
+          ValueToVectorMap;
+
+  DuplicatesVector DupVector;
+  ValueToVectorMap EnumMap;
+
+  // Populate the EnumMap with all values represented by enum constants without
+  // an initialier.
+  for (unsigned i = 0; i < NumElements; ++i) {
+    EnumConstantDecl *ECD = cast<EnumConstantDecl>(Elements[i]);
+
+    // Null EnumConstantDecl means a previous diagnostic has been emitted for
+    // this constant.  Skip this enum since it may be ill-formed.
+    if (!ECD) {
+      return;
+    }
+
+    if (ECD->getInitExpr())
+      continue;
+
+    DupKey Key = GetDupKey(ECD->getInitVal());
+    DeclOrVector &Entry = EnumMap[Key];
+
+    // First time encountering this value.
+    if (Entry.isNull())
+      Entry = ECD;
+  }
+
+  // Create vectors for any values that has duplicates.
+  for (unsigned i = 0; i < NumElements; ++i) {
+    EnumConstantDecl *ECD = cast<EnumConstantDecl>(Elements[i]);
+    if (!ValidDuplicateEnum(ECD, Enum))
+      continue;
+
+    DupKey Key = GetDupKey(ECD->getInitVal());
+
+    DeclOrVector& Entry = EnumMap[Key];
+    if (Entry.isNull())
+      continue;
+
+    if (EnumConstantDecl *D = Entry.dyn_cast<EnumConstantDecl*>()) {
+      // Ensure constants are different.
+      if (D == ECD)
+        continue;
+
+      // Create new vector and push values onto it.
+      ECDVector *Vec = new ECDVector();
+      Vec->push_back(D);
+      Vec->push_back(ECD);
+
+      // Update entry to point to the duplicates vector.
+      Entry = Vec;
+
+      // Store the vector somewhere we can consult later for quick emission of
+      // diagnostics.
+      DupVector.push_back(Vec);
+      continue;
+    }
+
+    ECDVector *Vec = Entry.get<ECDVector*>();
+    // Make sure constants are not added more than once.
+    if (*Vec->begin() == ECD)
+      continue;
+
+    Vec->push_back(ECD);
+  }
+
+  // Emit diagnostics.
+  for (DuplicatesVector::iterator DupVectorIter = DupVector.begin(),
+                                  DupVectorEnd = DupVector.end();
+       DupVectorIter != DupVectorEnd; ++DupVectorIter) {
+    ECDVector *Vec = *DupVectorIter;
+    assert(Vec->size() > 1 && "ECDVector should have at least 2 elements.");
+
+    // Emit warning for one enum constant.
+    ECDVector::iterator I = Vec->begin();
+    S.Diag((*I)->getLocation(), diag::warn_duplicate_enum_values)
+      << (*I)->getName() << (*I)->getInitVal().toString(10)
+      << (*I)->getSourceRange();
+    ++I;
+
+    // Emit one note for each of the remaining enum constants with
+    // the same value.
+    for (ECDVector::iterator E = Vec->end(); I != E; ++I)
+      S.Diag((*I)->getLocation(), diag::note_duplicate_element)
+        << (*I)->getName() << (*I)->getInitVal().toString(10)
+        << (*I)->getSourceRange();
+    delete Vec;
+  }
+}
+
 void Sema::ActOnEnumBody(SourceLocation EnumLoc, SourceLocation LBraceLoc,
                          SourceLocation RBraceLoc, Decl *EnumDeclX,
                          Decl **Elements, unsigned NumElements,
@@ -10783,6 +11001,7 @@ void Sema::ActOnEnumBody(SourceLocation EnumLoc, SourceLocation LBraceLoc,
     DeclsInPrototypeScope.push_back(Enum);
 
   CheckForUniqueEnumValues(*this, Elements, NumElements, Enum, EnumType);
+  CheckForDuplicateEnumValues(*this, Elements, NumElements, Enum, EnumType);
 }
 
 Decl *Sema::ActOnFileScopeAsmDecl(Expr *expr,

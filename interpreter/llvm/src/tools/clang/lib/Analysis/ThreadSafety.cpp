@@ -300,8 +300,9 @@ private:
     } else if (CXXMemberCallExpr *CMCE = dyn_cast<CXXMemberCallExpr>(Exp)) {
       // When calling a function with a lock_returned attribute, replace
       // the function call with the expression in lock_returned.
-      if (LockReturnedAttr* At =
-            CMCE->getMethodDecl()->getAttr<LockReturnedAttr>()) {
+      CXXMethodDecl* MD =
+        cast<CXXMethodDecl>(CMCE->getMethodDecl()->getMostRecentDecl());
+      if (LockReturnedAttr* At = MD->getAttr<LockReturnedAttr>()) {
         CallingContext LRCallCtx(CMCE->getMethodDecl());
         LRCallCtx.SelfArg = CMCE->getImplicitObjectArgument();
         LRCallCtx.SelfArrow =
@@ -330,8 +331,9 @@ private:
       NodeVec[Root].setSize(Sz + 1);
       return Sz + 1;
     } else if (CallExpr *CE = dyn_cast<CallExpr>(Exp)) {
-      if (LockReturnedAttr* At =
-            CE->getDirectCallee()->getAttr<LockReturnedAttr>()) {
+      FunctionDecl* FD =
+        cast<FunctionDecl>(CE->getDirectCallee()->getMostRecentDecl());
+      if (LockReturnedAttr* At = FD->getAttr<LockReturnedAttr>()) {
         CallingContext LRCallCtx(CE->getDirectCallee());
         LRCallCtx.NumArgs = CE->getNumArgs();
         LRCallCtx.FunArgs = CE->getArgs();
@@ -445,6 +447,12 @@ private:
   void buildSExprFromExpr(Expr *MutexExp, Expr *DeclExp, const NamedDecl *D) {
     CallingContext CallCtx(D);
 
+    // Ignore string literals
+    if (MutexExp && isa<StringLiteral>(MutexExp)) {
+      makeNop();
+      return;
+    }
+
     // If we are processing a raw attribute expression, with no substitutions.
     if (DeclExp == 0) {
       buildSExpr(MutexExp, 0);
@@ -504,6 +512,12 @@ public:
   /// Caller must call this by hand after construction to handle errors.
   bool isValid() const {
     return !NodeVec.empty();
+  }
+
+  bool shouldIgnore() const {
+    // Nop is a mutex that we have decided to deliberately ignore.
+    assert(NodeVec.size() > 0 && "Invalid Mutex");
+    return NodeVec[0].kind() == EOP_Nop;
   }
 
   /// Issue a warning about an invalid lock expression
@@ -1376,6 +1390,9 @@ void ThreadSafetyAnalyzer::addLock(FactSet &FSet, const SExpr &Mutex,
                                    const LockData &LDat) {
   // FIXME: deal with acquired before/after annotations.
   // FIXME: Don't always warn when we have support for reentrant locks.
+  if (Mutex.shouldIgnore())
+    return;
+
   if (FSet.findLock(FactMan, Mutex)) {
     Handler.handleDoubleLock(Mutex.toString(), LDat.AcquireLoc);
   } else {
@@ -1391,6 +1408,9 @@ void ThreadSafetyAnalyzer::removeLock(FactSet &FSet,
                                       const SExpr &Mutex,
                                       SourceLocation UnlockLoc,
                                       bool FullyRemove) {
+  if (Mutex.shouldIgnore())
+    return;
+
   const LockData *LDat = FSet.findLock(FactMan, Mutex);
   if (!LDat) {
     Handler.handleUnmatchedUnlock(Mutex.toString(), UnlockLoc);
@@ -1703,6 +1723,8 @@ void BuildLockset::warnIfMutexNotHeld(const NamedDecl *D, Expr *Exp,
   SExpr Mutex(MutexExp, Exp, D);
   if (!Mutex.isValid())
     SExpr::warnInvalidLock(Analyzer->Handler, MutexExp, Exp, D);
+  else if (Mutex.shouldIgnore())
+    return;  // A Nop is an invalid mutex that we've decided to ignore.
   else if (!locksetContainsAtLeast(Mutex, LK))
     Analyzer->Handler.handleMutexNotHeld(D, POK, Mutex.toString(), LK,
                                          Exp->getExprLoc());

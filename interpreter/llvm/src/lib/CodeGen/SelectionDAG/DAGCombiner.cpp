@@ -2496,8 +2496,18 @@ SDValue DAGCombiner::visitAND(SDNode *N) {
         // lanes of the constant together.
         EVT VT = Vector->getValueType(0);
         unsigned BitWidth = VT.getVectorElementType().getSizeInBits();
+
+        // If the splat value has been compressed to a bitlength lower
+        // than the size of the vector lane, we need to re-expand it to
+        // the lane size.
+        if (BitWidth > SplatBitSize)
+          for (SplatValue = SplatValue.zextOrTrunc(BitWidth);
+               SplatBitSize < BitWidth;
+               SplatBitSize = SplatBitSize * 2)
+            SplatValue |= SplatValue.shl(SplatBitSize);
+
         Constant = APInt::getAllOnesValue(BitWidth);
-        for (unsigned i = 0, n = VT.getVectorNumElements(); i < n; ++i)
+        for (unsigned i = 0, n = SplatBitSize/BitWidth; i < n; ++i)
           Constant &= SplatValue.lshr(i*BitWidth).zextOrTrunc(BitWidth);
       }
     }
@@ -5681,6 +5691,127 @@ SDValue DAGCombiner::visitFADD(SDNode *N) {
                        DAG.getNode(ISD::FADD, N->getDebugLoc(), VT,
                                    N0.getOperand(1), N1));
 
+  // In unsafe math mode, we can fold chains of FADD's of the same value
+  // into multiplications.  This transform is not safe in general because
+  // we are reducing the number of rounding steps.
+  if (DAG.getTarget().Options.UnsafeFPMath &&
+      TLI.isOperationLegalOrCustom(ISD::FMUL, VT) &&
+      !N0CFP && !N1CFP) {
+    if (N0.getOpcode() == ISD::FMUL) {
+      ConstantFPSDNode *CFP00 = dyn_cast<ConstantFPSDNode>(N0.getOperand(0));
+      ConstantFPSDNode *CFP01 = dyn_cast<ConstantFPSDNode>(N0.getOperand(1));
+
+      // (fadd (fmul c, x), x) -> (fmul c+1, x)
+      if (CFP00 && !CFP01 && N0.getOperand(1) == N1) {
+        SDValue NewCFP = DAG.getNode(ISD::FADD, N->getDebugLoc(), VT,
+                                     SDValue(CFP00, 0),
+                                     DAG.getConstantFP(1.0, VT));
+        return DAG.getNode(ISD::FMUL, N->getDebugLoc(), VT,
+                           N1, NewCFP);
+      }
+
+      // (fadd (fmul x, c), x) -> (fmul c+1, x)
+      if (CFP01 && !CFP00 && N0.getOperand(0) == N1) {
+        SDValue NewCFP = DAG.getNode(ISD::FADD, N->getDebugLoc(), VT,
+                                     SDValue(CFP01, 0),
+                                     DAG.getConstantFP(1.0, VT));
+        return DAG.getNode(ISD::FMUL, N->getDebugLoc(), VT,
+                           N1, NewCFP);
+      }
+
+      // (fadd (fadd x, x), x) -> (fmul 3.0, x)
+      if (!CFP00 && !CFP01 && N0.getOperand(0) == N0.getOperand(1) &&
+          N0.getOperand(0) == N1) {
+        return DAG.getNode(ISD::FMUL, N->getDebugLoc(), VT,
+                           N1, DAG.getConstantFP(3.0, VT));
+      }
+
+      // (fadd (fmul c, x), (fadd x, x)) -> (fmul c+2, x)
+      if (CFP00 && !CFP01 && N1.getOpcode() == ISD::FADD &&
+          N1.getOperand(0) == N1.getOperand(1) &&
+          N0.getOperand(1) == N1.getOperand(0)) {
+        SDValue NewCFP = DAG.getNode(ISD::FADD, N->getDebugLoc(), VT,
+                                     SDValue(CFP00, 0),
+                                     DAG.getConstantFP(2.0, VT));
+        return DAG.getNode(ISD::FMUL, N->getDebugLoc(), VT,
+                           N0.getOperand(1), NewCFP);
+      }
+
+      // (fadd (fmul x, c), (fadd x, x)) -> (fmul c+2, x)
+      if (CFP01 && !CFP00 && N1.getOpcode() == ISD::FADD &&
+          N1.getOperand(0) == N1.getOperand(1) &&
+          N0.getOperand(0) == N1.getOperand(0)) {
+        SDValue NewCFP = DAG.getNode(ISD::FADD, N->getDebugLoc(), VT,
+                                     SDValue(CFP01, 0),
+                                     DAG.getConstantFP(2.0, VT));
+        return DAG.getNode(ISD::FMUL, N->getDebugLoc(), VT,
+                           N0.getOperand(0), NewCFP);
+      }
+    }
+
+    if (N1.getOpcode() == ISD::FMUL) {
+      ConstantFPSDNode *CFP10 = dyn_cast<ConstantFPSDNode>(N1.getOperand(0));
+      ConstantFPSDNode *CFP11 = dyn_cast<ConstantFPSDNode>(N1.getOperand(1));
+
+      // (fadd x, (fmul c, x)) -> (fmul c+1, x)
+      if (CFP10 && !CFP11 && N1.getOperand(1) == N0) {
+        SDValue NewCFP = DAG.getNode(ISD::FADD, N->getDebugLoc(), VT,
+                                     SDValue(CFP10, 0),
+                                     DAG.getConstantFP(1.0, VT));
+        return DAG.getNode(ISD::FMUL, N->getDebugLoc(), VT,
+                           N0, NewCFP);
+      }
+
+      // (fadd x, (fmul x, c)) -> (fmul c+1, x)
+      if (CFP11 && !CFP10 && N1.getOperand(0) == N0) {
+        SDValue NewCFP = DAG.getNode(ISD::FADD, N->getDebugLoc(), VT,
+                                     SDValue(CFP11, 0),
+                                     DAG.getConstantFP(1.0, VT));
+        return DAG.getNode(ISD::FMUL, N->getDebugLoc(), VT,
+                           N0, NewCFP);
+      }
+
+      // (fadd x, (fadd x, x)) -> (fmul 3.0, x)
+      if (!CFP10 && !CFP11 && N1.getOperand(0) == N1.getOperand(1) &&
+          N1.getOperand(0) == N0) {
+        return DAG.getNode(ISD::FMUL, N->getDebugLoc(), VT,
+                           N0, DAG.getConstantFP(3.0, VT));
+      }
+
+      // (fadd (fadd x, x), (fmul c, x)) -> (fmul c+2, x)
+      if (CFP10 && !CFP11 && N1.getOpcode() == ISD::FADD &&
+          N1.getOperand(0) == N1.getOperand(1) &&
+          N0.getOperand(1) == N1.getOperand(0)) {
+        SDValue NewCFP = DAG.getNode(ISD::FADD, N->getDebugLoc(), VT,
+                                     SDValue(CFP10, 0),
+                                     DAG.getConstantFP(2.0, VT));
+        return DAG.getNode(ISD::FMUL, N->getDebugLoc(), VT,
+                           N0.getOperand(1), NewCFP);
+      }
+
+      // (fadd (fadd x, x), (fmul x, c)) -> (fmul c+2, x)
+      if (CFP11 && !CFP10 && N1.getOpcode() == ISD::FADD &&
+          N1.getOperand(0) == N1.getOperand(1) &&
+          N0.getOperand(0) == N1.getOperand(0)) {
+        SDValue NewCFP = DAG.getNode(ISD::FADD, N->getDebugLoc(), VT,
+                                     SDValue(CFP11, 0),
+                                     DAG.getConstantFP(2.0, VT));
+        return DAG.getNode(ISD::FMUL, N->getDebugLoc(), VT,
+                           N0.getOperand(0), NewCFP);
+      }
+    }
+
+    // (fadd (fadd x, x), (fadd x, x)) -> (fmul 4.0, x)
+    if (N0.getOpcode() == ISD::FADD && N1.getOpcode() == ISD::FADD &&
+        N0.getOperand(0) == N0.getOperand(1) &&
+        N1.getOperand(0) == N1.getOperand(1) &&
+        N0.getOperand(0) == N1.getOperand(0)) {
+      return DAG.getNode(ISD::FMUL, N->getDebugLoc(), VT,
+                         N0.getOperand(0),
+                         DAG.getConstantFP(4.0, VT));
+    }
+  }
+
   // FADD -> FMA combines:
   if ((DAG.getTarget().Options.AllowFPOpFusion == FPOpFusion::Fast ||
        DAG.getTarget().Options.UnsafeFPMath) &&
@@ -5692,8 +5823,8 @@ SDValue DAGCombiner::visitFADD(SDNode *N) {
       return DAG.getNode(ISD::FMA, N->getDebugLoc(), VT,
                          N0.getOperand(0), N0.getOperand(1), N1);
     }
-  
-    // fold (fadd x, (fmul y, z)) -> (fma x, y, z)
+
+    // fold (fadd x, (fmul y, z)) -> (fma y, z, x)
     // Note: Commutes FADD operands.
     if (N1.getOpcode() == ISD::FMUL && N1->hasOneUse()) {
       return DAG.getNode(ISD::FMA, N->getDebugLoc(), VT,
@@ -5867,6 +5998,7 @@ SDValue DAGCombiner::visitFMA(SDNode *N) {
   ConstantFPSDNode *N0CFP = dyn_cast<ConstantFPSDNode>(N0);
   ConstantFPSDNode *N1CFP = dyn_cast<ConstantFPSDNode>(N1);
   EVT VT = N->getValueType(0);
+  DebugLoc dl = N->getDebugLoc();
 
   if (N0CFP && N0CFP->isExactlyValue(1.0))
     return DAG.getNode(ISD::FADD, N->getDebugLoc(), VT, N1, N2);
@@ -5876,6 +6008,58 @@ SDValue DAGCombiner::visitFMA(SDNode *N) {
   // Canonicalize (fma c, x, y) -> (fma x, c, y)
   if (N0CFP && !N1CFP)
     return DAG.getNode(ISD::FMA, N->getDebugLoc(), VT, N1, N0, N2);
+
+  // (fma x, c1, (fmul x, c2)) -> (fmul x, c1+c2)
+  if (DAG.getTarget().Options.UnsafeFPMath && N1CFP &&
+      N2.getOpcode() == ISD::FMUL &&
+      N0 == N2.getOperand(0) &&
+      N2.getOperand(1).getOpcode() == ISD::ConstantFP) {
+    return DAG.getNode(ISD::FMUL, dl, VT, N0,
+                       DAG.getNode(ISD::FADD, dl, VT, N1, N2.getOperand(1)));
+  }
+
+
+  // (fma (fmul x, c1), c2, y) -> (fma x, c1*c2, y)
+  if (DAG.getTarget().Options.UnsafeFPMath &&
+      N0.getOpcode() == ISD::FMUL && N1CFP &&
+      N0.getOperand(1).getOpcode() == ISD::ConstantFP) {
+    return DAG.getNode(ISD::FMA, dl, VT,
+                       N0.getOperand(0),
+                       DAG.getNode(ISD::FMUL, dl, VT, N1, N0.getOperand(1)),
+                       N2);
+  }
+
+  // (fma x, 1, y) -> (fadd x, y)
+  // (fma x, -1, y) -> (fadd (fneg x), y)
+  if (N1CFP) {
+    if (N1CFP->isExactlyValue(1.0))
+      return DAG.getNode(ISD::FADD, dl, VT, N0, N2);
+
+    if (N1CFP->isExactlyValue(-1.0) &&
+        (!LegalOperations || TLI.isOperationLegal(ISD::FNEG, VT))) {
+      SDValue RHSNeg = DAG.getNode(ISD::FNEG, dl, VT, N0);
+      AddToWorkList(RHSNeg.getNode());
+      return DAG.getNode(ISD::FADD, dl, VT, N2, RHSNeg);
+    }
+  }
+
+  // (fma x, c, x) -> (fmul x, (c+1))
+  if (DAG.getTarget().Options.UnsafeFPMath && N1CFP && N0 == N2) {
+    return DAG.getNode(ISD::FMUL, dl, VT,
+                       N0,
+                       DAG.getNode(ISD::FADD, dl, VT,
+                                   N1, DAG.getConstantFP(1.0, VT)));
+  }
+
+  // (fma x, c, (fneg x)) -> (fmul x, (c-1))
+  if (DAG.getTarget().Options.UnsafeFPMath && N1CFP &&
+      N2.getOpcode() == ISD::FNEG && N2.getOperand(0) == N0) {
+    return DAG.getNode(ISD::FMUL, dl, VT,
+                       N0,
+                       DAG.getNode(ISD::FADD, dl, VT,
+                                   N1, DAG.getConstantFP(-1.0, VT)));
+  }
+
 
   return SDValue();
 }
@@ -6243,6 +6427,17 @@ SDValue DAGCombiner::visitFNEG(SDNode *N) {
       AddToWorkList(Int.getNode());
       return DAG.getNode(ISD::BITCAST, N->getDebugLoc(),
                          VT, Int);
+    }
+  }
+
+  // (fneg (fmul c, x)) -> (fmul -c, x)
+  if (N0.getOpcode() == ISD::FMUL) {
+    ConstantFPSDNode *CFP1 = dyn_cast<ConstantFPSDNode>(N0.getOperand(1));
+    if (CFP1) {
+      return DAG.getNode(ISD::FMUL, N->getDebugLoc(), VT,
+                         N0.getOperand(0),
+                         DAG.getNode(ISD::FNEG, N->getDebugLoc(), VT,
+                                     N0.getOperand(1)));
     }
   }
 

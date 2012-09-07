@@ -30,8 +30,8 @@ namespace comments {
 class CommandTraits;
 
 class Sema {
-  Sema(const Sema&);           // DO NOT IMPLEMENT
-  void operator=(const Sema&); // DO NOT IMPLEMENT
+  Sema(const Sema &) LLVM_DELETED_FUNCTION;
+  void operator=(const Sema &) LLVM_DELETED_FUNCTION;
 
   /// Allocator for AST nodes.
   llvm::BumpPtrAllocator &Allocator;
@@ -215,9 +215,6 @@ public:
 
   InlineCommandComment::RenderKind
   getInlineCommandRenderKind(StringRef Name) const;
-
-  bool isHTMLEndTagOptional(StringRef Name);
-  bool isHTMLEndTagForbidden(StringRef Name);
 };
 
 } // end namespace comments

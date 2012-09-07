@@ -1232,14 +1232,14 @@ Sema::SemaBuiltinAtomicOverloaded(ExprResult TheCallResult) {
       NewBuiltinDecl,
       /*enclosing*/ false,
       DRE->getLocation(),
-      NewBuiltinDecl->getType(),
+      Context.BuiltinFnTy,
       DRE->getValueKind());
 
   // Set the callee in the CallExpr.
-  // FIXME: This leaks the original parens and implicit casts.
-  ExprResult PromotedCall = UsualUnaryConversions(NewDRE);
-  if (PromotedCall.isInvalid())
-    return ExprError();
+  // FIXME: This loses syntactic information.
+  QualType CalleePtrTy = Context.getPointerType(NewBuiltinDecl->getType());
+  ExprResult PromotedCall = ImpCastExprToType(NewDRE, CalleePtrTy,
+                                              CK_BuiltinFnToFnPtr);
   TheCall->setCallee(PromotedCall.take());
 
   // Change the result type of the call to match the original value type. This
@@ -5252,6 +5252,12 @@ namespace {
       // Look inside nested blocks 
       if (block->getBlockDecl()->capturesVariable(Variable))
         Visit(block->getBlockDecl()->getBody());
+    }
+    
+    void VisitOpaqueValueExpr(OpaqueValueExpr *OVE) {
+      if (Capturer) return;
+      if (OVE->getSourceExpr())
+        Visit(OVE->getSourceExpr());
     }
   };
 }

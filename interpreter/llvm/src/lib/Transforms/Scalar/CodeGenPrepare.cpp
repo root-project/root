@@ -43,6 +43,7 @@
 #include "llvm/Transforms/Utils/AddrModeMatcher.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/BuildLibCalls.h"
+#include "llvm/Transforms/Utils/BypassSlowDivision.h"
 #include "llvm/Transforms/Utils/Local.h"
 using namespace llvm;
 using namespace llvm::PatternMatch;
@@ -148,7 +149,19 @@ bool CodeGenPrepare::runOnFunction(Function &F) {
   PFI = getAnalysisIfAvailable<ProfileInfo>();
   OptSize = F.hasFnAttr(Attribute::OptimizeForSize);
 
-  // First pass, eliminate blocks that contain only PHI nodes and an
+  /// This optimization identifies DIV instructions that can be
+  /// profitably bypassed and carried out with a shorter, faster divide.
+  if (TLI && TLI->isSlowDivBypassed()) {
+    const DenseMap<Type *, Type *> &BypassTypeMap = TLI->getBypassSlowDivTypes();
+
+    for (Function::iterator I = F.begin(); I != F.end(); I++) {
+      EverMadeChange |= bypassSlowDivision(F,
+                                           I,
+                                           BypassTypeMap);
+    }
+  }
+
+  // Eliminate blocks that contain only PHI nodes and an
   // unconditional branch.
   EverMadeChange |= EliminateMostlyEmptyBlocks(F);
 
@@ -1174,16 +1187,31 @@ static bool isFormingBranchFromSelectProfitable(SelectInst *SI) {
 }
 
 
+/// If we have a SelectInst that will likely profit from branch prediction,
+/// turn it into a branch.
 bool CodeGenPrepare::OptimizeSelectInst(SelectInst *SI) {
-  // If we have a SelectInst that will likely profit from branch prediction,
-  // turn it into a branch.
-  if (DisableSelectToBranch || OptSize || !TLI ||
-      !TLI->isPredictableSelectExpensive())
+  bool VectorCond = !SI->getCondition()->getType()->isIntegerTy(1);
+
+  // Can we convert the 'select' to CF ?
+  if (DisableSelectToBranch || OptSize || !TLI || VectorCond)
     return false;
 
-  if (!SI->getCondition()->getType()->isIntegerTy(1) ||
-      !isFormingBranchFromSelectProfitable(SI))
-    return false;
+  TargetLowering::SelectSupportKind SelectKind;
+  if (VectorCond)
+    SelectKind = TargetLowering::VectorMaskSelect;
+  else if (SI->getType()->isVectorTy())
+    SelectKind = TargetLowering::ScalarCondVectorVal;
+  else
+    SelectKind = TargetLowering::ScalarValSelect;
+
+  // Do we have efficient codegen support for this kind of 'selects' ?
+  if (TLI->isSelectSupported(SelectKind)) {
+    // We have efficient codegen support for the select instruction.
+    // Check if it is profitable to keep this 'select'.
+    if (!TLI->isPredictableSelectExpensive() ||
+        !isFormingBranchFromSelectProfitable(SI))
+      return false;
+  }
 
   ModifiedDT = true;
 

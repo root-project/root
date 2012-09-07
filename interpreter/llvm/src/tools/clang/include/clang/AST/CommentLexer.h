@@ -49,11 +49,6 @@ enum TokenKind {
 };
 } // end namespace tok
 
-class CommentOptions {
-public:
-  bool Markdown;
-};
-
 /// \brief Comment token.
 class Token {
   friend class Lexer;
@@ -209,8 +204,8 @@ public:
 /// \brief Comment lexer.
 class Lexer {
 private:
-  Lexer(const Lexer&);          // DO NOT IMPLEMENT
-  void operator=(const Lexer&); // DO NOT IMPLEMENT
+  Lexer(const Lexer &) LLVM_DELETED_FUNCTION;
+  void operator=(const Lexer &) LLVM_DELETED_FUNCTION;
 
   /// Allocator for strings that are semantic values of tokens and have to be
   /// computed (for example, resolved decimal character references).
@@ -221,7 +216,6 @@ private:
   const char *const BufferStart;
   const char *const BufferEnd;
   SourceLocation FileLoc;
-  CommentOptions CommOpts;
 
   const char *BufferPtr;
 
@@ -336,7 +330,7 @@ private:
 
 public:
   Lexer(llvm::BumpPtrAllocator &Allocator, const CommandTraits &Traits,
-        SourceLocation FileLoc, const CommentOptions &CommOpts,
+        SourceLocation FileLoc,
         const char *BufferStart, const char *BufferEnd);
 
   void lex(Token &T);

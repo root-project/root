@@ -37,6 +37,11 @@ class MipsAsmParser : public MCTargetAsmParser {
   bool ParseDirective(AsmToken DirectiveID);
 
   OperandMatchResultTy parseMemOperand(SmallVectorImpl<MCParsedAsmOperand*>&);
+
+  unsigned getMCInstOperandNum(unsigned Kind, MCInst &Inst,
+                    const SmallVectorImpl<MCParsedAsmOperand*> &Operands,
+                               unsigned OperandNum, unsigned &NumMCOperands);
+
 public:
   MipsAsmParser(MCSubtargetInfo &sti, MCAsmParser &parser)
     : MCTargetAsmParser() {
@@ -94,6 +99,18 @@ public:
     llvm_unreachable("unimplemented!");
   }
 };
+}
+
+unsigned MipsAsmParser::
+getMCInstOperandNum(unsigned Kind, MCInst &Inst,
+                    const SmallVectorImpl<MCParsedAsmOperand*> &Operands,
+                    unsigned OperandNum, unsigned &NumMCOperands) {
+  assert (0 && "getMCInstOperandNum() not supported by the Mips target.");
+  // The Mips backend doesn't currently include the matcher implementation, so
+  // the getMCInstOperandNumImpl() is undefined.  This is a temporary
+  // work around.
+  NumMCOperands = 0;
+  return 0;
 }
 
 bool MipsAsmParser::

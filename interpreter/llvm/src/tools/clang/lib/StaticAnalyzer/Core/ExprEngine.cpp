@@ -55,11 +55,11 @@ STATISTIC(NumTimesRetriedWithoutInlining,
 //===----------------------------------------------------------------------===//
 
 ExprEngine::ExprEngine(AnalysisManager &mgr, bool gcEnabled,
-                       SetOfConstDecls *VisitedCallees,
+                       SetOfConstDecls *VisitedCalleesIn,
                        FunctionSummariesTy *FS)
   : AMgr(mgr),
     AnalysisDeclContexts(mgr.getAnalysisDeclContextManager()),
-    Engine(*this, VisitedCallees, FS),
+    Engine(*this, FS),
     G(Engine.getGraph()),
     StateMgr(getContext(), mgr.getStoreManagerCreator(),
              mgr.getConstraintManagerCreator(), G.getAllocator(),
@@ -70,12 +70,13 @@ ExprEngine::ExprEngine(AnalysisManager &mgr, bool gcEnabled,
     currStmt(NULL), currStmtIdx(0), currBldrCtx(0),
     NSExceptionII(NULL), NSExceptionInstanceRaiseSelectors(NULL),
     RaiseSel(GetNullarySelector("raise", getContext())),
-    ObjCGCEnabled(gcEnabled), BR(mgr, *this) {
-  
-  if (mgr.shouldEagerlyTrimExplodedGraph()) {
-    // Enable eager node reclaimation when constructing the ExplodedGraph.  
-    G.enableNodeReclamation();
-  }
+    ObjCGCEnabled(gcEnabled), BR(mgr, *this),
+    VisitedCallees(VisitedCalleesIn)
+{
+    if (mgr.options.eagerlyTrimExplodedGraph) {
+      // Enable eager node reclaimation when constructing the ExplodedGraph.
+      G.enableNodeReclamation();
+    }
 }
 
 ExprEngine::~ExprEngine() {
@@ -228,7 +229,7 @@ static bool shouldRemoveDeadBindings(AnalysisManager &AMgr,
                                      const LocationContext *LC) {
   
   // Are we never purging state values?
-  if (AMgr.getPurgeMode() == PurgeNone)
+  if (AMgr.options.AnalysisPurgeOpt == PurgeNone)
     return false;
 
   // Is this the beginning of a basic block?
@@ -704,11 +705,11 @@ void ExprEngine::Visit(const Stmt *S, ExplodedNode *Pred,
 
       Bldr.takeNodes(Pred);
       
-      if (AMgr.shouldEagerlyAssume() &&
+      if (AMgr.options.eagerlyAssumeBinOpBifurcation &&
           (B->isRelationalOp() || B->isEqualityOp())) {
         ExplodedNodeSet Tmp;
         VisitBinaryOperator(cast<BinaryOperator>(S), Pred, Tmp);
-        evalEagerlyAssume(Dst, Tmp, cast<Expr>(S));
+        evalEagerlyAssumeBinOpBifurcation(Dst, Tmp, cast<Expr>(S));
       }
       else
         VisitBinaryOperator(cast<BinaryOperator>(S), Pred, Dst);
@@ -924,10 +925,10 @@ void ExprEngine::Visit(const Stmt *S, ExplodedNode *Pred,
     case Stmt::UnaryOperatorClass: {
       Bldr.takeNodes(Pred);
       const UnaryOperator *U = cast<UnaryOperator>(S);
-      if (AMgr.shouldEagerlyAssume() && (U->getOpcode() == UO_LNot)) {
+      if (AMgr.options.eagerlyAssumeBinOpBifurcation && (U->getOpcode() == UO_LNot)) {
         ExplodedNodeSet Tmp;
         VisitUnaryOperator(U, Pred, Tmp);
-        evalEagerlyAssume(Dst, Tmp, U);
+        evalEagerlyAssumeBinOpBifurcation(Dst, Tmp, U);
       }
       else
         VisitUnaryOperator(U, Pred, Dst);
@@ -1024,7 +1025,7 @@ void ExprEngine::processCFGBlockEntrance(const BlockEdge &L,
   // FIXME: Refactor this into a checker.
   ExplodedNode *pred = nodeBuilder.getContext().getPred();
   
-  if (nodeBuilder.getContext().blockCount() >= AMgr.getMaxVisit()) {
+  if (nodeBuilder.getContext().blockCount() >= AMgr.options.maxBlockVisitOnPath) {
     static SimpleProgramPointTag tag("ExprEngine : Block count exceeded");
     const ExplodedNode *Sink =
                    nodeBuilder.generateSink(pred->getState(), pred, &tag);
@@ -1042,7 +1043,8 @@ void ExprEngine::processCFGBlockEntrance(const BlockEdge &L,
       // no-inlining policy in the state and enqueuing the new work item on
       // the list. Replay should almost never fail. Use the stats to catch it
       // if it does.
-      if ((!AMgr.NoRetryExhausted && replayWithoutInlining(pred, CalleeLC)))
+      if ((!AMgr.options.NoRetryExhausted &&
+           replayWithoutInlining(pred, CalleeLC)))
         return;
       NumMaxBlockCountReachedInInlined++;
     } else
@@ -1735,15 +1737,17 @@ void ExprEngine::evalLocation(ExplodedNodeSet &Dst,
 }
 
 std::pair<const ProgramPointTag *, const ProgramPointTag*>
-ExprEngine::getEagerlyAssumeTags() {
+ExprEngine::geteagerlyAssumeBinOpBifurcationTags() {
   static SimpleProgramPointTag
-         EagerlyAssumeTrue("ExprEngine : Eagerly Assume True"),
-         EagerlyAssumeFalse("ExprEngine : Eagerly Assume False");
-  return std::make_pair(&EagerlyAssumeTrue, &EagerlyAssumeFalse);
+         eagerlyAssumeBinOpBifurcationTrue("ExprEngine : Eagerly Assume True"),
+         eagerlyAssumeBinOpBifurcationFalse("ExprEngine : Eagerly Assume False");
+  return std::make_pair(&eagerlyAssumeBinOpBifurcationTrue,
+                        &eagerlyAssumeBinOpBifurcationFalse);
 }
 
-void ExprEngine::evalEagerlyAssume(ExplodedNodeSet &Dst, ExplodedNodeSet &Src,
-                                   const Expr *Ex) {
+void ExprEngine::evalEagerlyAssumeBinOpBifurcation(ExplodedNodeSet &Dst,
+                                                   ExplodedNodeSet &Src,
+                                                   const Expr *Ex) {
   StmtNodeBuilder Bldr(Src, Dst, *currBldrCtx);
   
   for (ExplodedNodeSet::iterator I=Src.begin(), E=Src.end(); I!=E; ++I) {
@@ -1761,7 +1765,7 @@ void ExprEngine::evalEagerlyAssume(ExplodedNodeSet &Dst, ExplodedNodeSet &Src,
     nonloc::SymbolVal *SEV = dyn_cast<nonloc::SymbolVal>(&V);
     if (SEV && SEV->isExpression()) {
       const std::pair<const ProgramPointTag *, const ProgramPointTag*> &tags =
-        getEagerlyAssumeTags();
+        geteagerlyAssumeBinOpBifurcationTags();
 
       // First assume that the condition is true.
       if (ProgramStateRef StateTrue = state->assume(*SEV, true)) {

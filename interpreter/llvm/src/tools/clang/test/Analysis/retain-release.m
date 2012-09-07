@@ -828,8 +828,8 @@ int RDar6320065_test() {
 @end
 
 void test_RDar6859457(RDar6859457 *x, void *bytes, NSUInteger dataLength) {
-  [x NoCopyString]; // no-warning
-  [x noCopyString]; // no-warning
+  [x NoCopyString]; // expected-warning{{leak}}
+  [x noCopyString]; // expected-warning{{leak}}
   [NSData dataWithBytesNoCopy:bytes length:dataLength];  // no-warning
   [NSData dataWithBytesNoCopy:bytes length:dataLength freeWhenDone:1]; // no-warning
 }
@@ -1885,3 +1885,16 @@ void testCFConsumeAndStopTracking() {
   id unretained = @[]; // +0
   CFConsumeAndStopTracking((CFTypeRef)unretained, ^{}); // expected-warning {{Incorrect decrement of the reference count of an object that is not owned at this point by the caller}}
 }
+//===----------------------------------------------------------------------===//
+// Test 'pragma clang arc_cf_code_audited' support.
+//===----------------------------------------------------------------------===//
+
+typedef void *MyCFType;
+#pragma clang arc_cf_code_audited begin
+MyCFType CreateMyCFType();
+#pragma clang arc_cf_code_audited end 
+    
+void test_custom_cf() {
+  MyCFType x = CreateMyCFType(); // expected-warning {{leak of an object stored into 'x'}}
+}
+

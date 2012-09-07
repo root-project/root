@@ -3119,3 +3119,74 @@ void test() {
 
 } // end namespace ExistentialPatternMatching
 
+
+namespace StringIgnoreTest {
+
+class Foo {
+public:
+  Mutex mu_;
+  void lock()   EXCLUSIVE_LOCK_FUNCTION("");
+  void unlock() UNLOCK_FUNCTION("");
+  void goober() EXCLUSIVE_LOCKS_REQUIRED("");
+  void roober() SHARED_LOCKS_REQUIRED("");
+};
+
+
+class Bar : public Foo {
+public:
+  void bar(Foo* f) {
+    f->unlock();
+    f->goober();
+    f->roober();
+    f->lock();
+  };
+};
+
+} // end namespace StringIgnoreTest
+
+
+namespace LockReturnedScopeFix {
+
+class Base {
+protected:
+  struct Inner;
+  bool c;
+
+  const Mutex& getLock(const Inner* i);
+
+  void lockInner  (Inner* i) EXCLUSIVE_LOCK_FUNCTION(getLock(i));
+  void unlockInner(Inner* i) UNLOCK_FUNCTION(getLock(i));
+  void foo(Inner* i) EXCLUSIVE_LOCKS_REQUIRED(getLock(i));
+
+  void bar(Inner* i);
+};
+
+
+struct Base::Inner {
+  Mutex lock_;
+  void doSomething() EXCLUSIVE_LOCKS_REQUIRED(lock_);
+};
+
+
+const Mutex& Base::getLock(const Inner* i) LOCK_RETURNED(i->lock_) {
+  return i->lock_;
+}
+
+
+void Base::foo(Inner* i) {
+  i->doSomething();
+}
+
+void Base::bar(Inner* i) {
+  if (c) {
+    i->lock_.Lock();
+    unlockInner(i);
+  }
+  else {
+    lockInner(i);
+    i->lock_.Unlock();
+  }
+}
+
+} // end namespace LockReturnedScopeFix
+
