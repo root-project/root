@@ -107,7 +107,6 @@ public:
    virtual TArrayD *GetBinSumw2() {return &fBinSumw2;}
    virtual const TArrayD *GetBinSumw2() const {return &fBinSumw2;}
    Option_t        *GetErrorOption() const;
-   virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t GetYmin() const {return fYmin;}
    virtual Double_t GetYmax() const {return fYmax;}

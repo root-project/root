@@ -900,22 +900,6 @@ Option_t *TProfile::GetErrorOption() const
 }
 
 //______________________________________________________________________________
-char* TProfile::GetObjectInfo(Int_t px, Int_t py) const
-{
-   //   Redefines TObject::GetObjectInfo.
-   //   Displays the profile info (bin number, contents, eroor, entries per bin
-   //   corresponding to cursor position px,py
-   //
-   if (!gPad) return (char*)"";
-   static char info[200];
-   Double_t x  = gPad->PadtoX(gPad->AbsPixeltoX(px));
-   Double_t y  = gPad->PadtoY(gPad->AbsPixeltoY(py));
-   Int_t binx   = GetXaxis()->FindFixBin(x);
-   snprintf(info,200,"(x=%g, y=%g, binx=%d, binc=%g, bine=%g, binn=%d)", x, y, binx, GetBinContent(binx), GetBinError(binx), (Int_t)GetBinEntries(binx));
-   return info;
-}
-
-//______________________________________________________________________________
 void TProfile::GetStats(Double_t *stats) const
 {
    // fill the array stats from the contents of this profile
