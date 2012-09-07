@@ -24,15 +24,18 @@ void RooStats::HistFactory::Data::Print( std::ostream& stream ) {
 void RooStats::HistFactory::Data::writeToFile( std::string OutputFileName, std::string DirName ) {
 
   TH1* histData = GetHisto();
-  histData->Write();
-  
-  // Set the location of the data
-  // in the output measurement
-  
-  fInputFile = OutputFileName;
-  fHistoName = histData->GetName();
-  fHistoPath = DirName;
 
-  return;
+  if( histData != NULL) {
+
+    histData->Write();
+  
+    // Set the location of the data
+    // in the output measurement
+  
+    fInputFile = OutputFileName;
+    fHistoName = histData->GetName();
+    fHistoPath = DirName;
+
+  }
 
 }

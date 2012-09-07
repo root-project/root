@@ -188,10 +188,11 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
 
   // Get the Data Histogram:
 
-  fData.SetHisto( GetHistogram(fData.GetInputFile(), 
-			       fData.GetHistoPath(),
-			       fData.GetHistoName()) );
-    
+  if( fData.GetInputFile() != "" ) {
+    fData.SetHisto( GetHistogram(fData.GetInputFile(), 
+				 fData.GetHistoPath(),
+				 fData.GetHistoName()) );
+  }
 
   // Get the histograms for the samples:
   for( unsigned int sampItr = 0; sampItr < fSamples.size(); ++sampItr ) {
@@ -273,7 +274,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
 
   try {
   
-    if( fData.GetHisto() == NULL ) {
+    if( fData.GetHisto() == NULL && fData.GetInputFile() != "" ) {
       std::cout << "Error: Data Histogram for channel " << GetName() << " is NULL." << std::endl;
       throw hf_exc();
     }

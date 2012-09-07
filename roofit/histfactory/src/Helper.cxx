@@ -215,8 +215,12 @@ std::vector<EstimateSummary> GetChannelEstimateSummaries(Measurement& measuremen
   EstimateSummary data_es;
   data_es.name = "Data";
   data_es.channel = channel.GetName();
-  data_es.nominal = (TH1*) channel.GetData().GetHisto()->Clone();
-  channel_estimateSummary.push_back( data_es );
+  TH1* data_hist = (TH1*) channel.GetData().GetHisto();
+  if( data_hist != NULL ) {
+    //data_es.nominal = (TH1*) channel.GetData().GetHisto()->Clone();
+    data_es.nominal = data_hist;
+    channel_estimateSummary.push_back( data_es );
+  }
 
   // Add the samples
   for( unsigned int sampleItr = 0; sampleItr < channel.GetSamples().size(); ++sampleItr ) {
