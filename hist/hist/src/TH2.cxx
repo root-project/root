@@ -2000,20 +2000,22 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
          return 0;
       }
       h1 = (TProfile*)h1obj;
-      // check profile compatibility
-      bool useAllBins = ((lastOutBin - firstOutBin +1 ) == outAxis.GetNbins() );
-      if (useAllBins && CheckEqualAxes(&outAxis, h1->GetXaxis() ) ) { 
-         // enable originalRange option in case a range is set in the outer axis
-         originalRange = kTRUE;
-         h1->Reset();
-      }
-      else if (!useAllBins && CheckConsistentSubAxes(&outAxis, firstOutBin, lastOutBin, h1->GetXaxis() ) ) { 
-         // reset also in case a profile exists with compatible axis with the zoomed original axis
-         h1->Reset();
-      }
-      else {
-         Error("DoProfile","Profile with name %s already exists and it is not compatible",pname);
-         return 0;
+      // reset the existing histogram and set always the new binning for the axis
+      // This avoid problems when the histogram already exists and the histograms is rebinned or its range has changed
+      // (see https://savannah.cern.ch/bugs/?94101 or https://savannah.cern.ch/bugs/?95808 )
+      h1->Reset();
+      const TArrayD *xbins = outAxis.GetXbins();
+      if (xbins->fN == 0) {
+         if ( originalRange )
+            h1->SetBins(outAxis.GetNbins(),outAxis.GetXmin(),outAxis.GetXmax());
+         else
+            h1->SetBins(lastOutBin-firstOutBin+1,outAxis.GetBinLowEdge(firstOutBin),outAxis.GetBinUpEdge(lastOutBin));
+      } else {
+         // case variable bins
+         if (originalRange )
+            h1->SetBins(outAxis.GetNbins(),xbins->fArray);
+         else
+            h1->SetBins(lastOutBin-firstOutBin+1,&xbins->fArray[firstOutBin-1]);
       }
    }
 
@@ -2282,20 +2284,22 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
          return 0;
       }
       h1 = (TH1D*)h1obj;
-      // check axis compatibility - distinguish case when using all bins or a part of the axis 
-      bool useAllBins = ((lastOutBin - firstOutBin +1 ) == outAxis->GetNbins() );
-      if (useAllBins  && CheckEqualAxes(outAxis, h1->GetXaxis()) ) { 
-            // enable originalRange option in case a range is set in the outer axis
-            originalRange = kTRUE;
-            h1->Reset();
-      }
-      else if (!useAllBins && CheckConsistentSubAxes(outAxis, firstOutBin, lastOutBin, h1->GetXaxis() ) ) { 
-         // reset also in case an histogram exists with compatible axis with the zoomed original axis
-         h1->Reset();
-      }
-      else {
-         Error("DoProjection","Histogram with name %s already exists and it is not compatible",pname);
-         return 0;
+      // reset the existing histogram and set always the new binning for the axis
+      // This avoid problems when the histogram already exists and the histograms is rebinned or its range has changed
+      // (see https://savannah.cern.ch/bugs/?94101 or https://savannah.cern.ch/bugs/?95808 )
+      h1->Reset();
+      const TArrayD *xbins = outAxis->GetXbins();
+      if (xbins->fN == 0) {
+         if ( originalRange )
+            h1->SetBins(outAxis->GetNbins(),outAxis->GetXmin(),outAxis->GetXmax());
+         else
+            h1->SetBins(lastOutBin-firstOutBin+1,outAxis->GetBinLowEdge(firstOutBin),outAxis->GetBinUpEdge(lastOutBin));
+      } else {
+         // case variable bins
+         if (originalRange )
+            h1->SetBins(outAxis->GetNbins(),xbins->fArray);
+         else
+            h1->SetBins(lastOutBin-firstOutBin+1,&xbins->fArray[firstOutBin-1]);
       }
    }
 
@@ -2473,9 +2477,8 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    //   It is possible to apply several cuts:
    //      myhist->ProjectionX(" ",firstybin,lastybin,[cutg1,cutg2]");
    //
-   //   NOTE that if a TH1D named "name" exists in the current directory or pad and having
-   //   a compatible axis, the histogram is reset and filled again with the projected contents of the TH2.
-   //   In the case of axis incompatibility, an error is reported and a NULL pointer is returned.
+   //   NOTE that if a TH1D named "name" exists in the current directory or pad 
+   //   the histogram is reset and filled again with the projected contents of the TH2.
    //
    //   NOTE that the X axis attributes of the TH2 are copied to the X axis of the projection.
    //
