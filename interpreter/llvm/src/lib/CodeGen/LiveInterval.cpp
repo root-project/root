@@ -27,6 +27,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetRegisterInfo.h"
+#include "RegisterCoalescer.h"
 #include <algorithm>
 using namespace llvm;
 
@@ -140,6 +141,48 @@ bool LiveInterval::overlapsFrom(const LiveInterval& other,
   }
 
   return false;
+}
+
+bool LiveInterval::overlaps(const LiveInterval &Other,
+                            const CoalescerPair &CP,
+                            const SlotIndexes &Indexes) const {
+  assert(!empty() && "empty interval");
+  if (Other.empty())
+    return false;
+
+  // Use binary searches to find initial positions.
+  const_iterator I = find(Other.beginIndex());
+  const_iterator IE = end();
+  if (I == IE)
+    return false;
+  const_iterator J = Other.find(I->start);
+  const_iterator JE = Other.end();
+  if (J == JE)
+    return false;
+
+  for (;;) {
+    // J has just been advanced to satisfy:
+    assert(J->end >= I->start);
+    // Check for an overlap.
+    if (J->start < I->end) {
+      // I and J are overlapping. Find the later start.
+      SlotIndex Def = std::max(I->start, J->start);
+      // Allow the overlap if Def is a coalescable copy.
+      if (Def.isBlock() ||
+          !CP.isCoalescable(Indexes.getInstructionFromIndex(Def)))
+        return true;
+    }
+    // Advance the iterator that ends first to check for more overlaps.
+    if (J->end > I->end) {
+      std::swap(I, J);
+      std::swap(IE, JE);
+    }
+    // Advance J until J->end >= I->start.
+    do
+      if (++J == JE)
+        return false;
+    while (J->end < I->start);
+  }
 }
 
 /// overlaps - Return true if the live interval overlaps a range specified
@@ -705,9 +748,11 @@ raw_ostream& llvm::operator<<(raw_ostream& os, const LiveRange &LR) {
   return os << '[' << LR.start << ',' << LR.end << ':' << LR.valno->id << ")";
 }
 
+#ifndef NDEBUG
 void LiveRange::dump() const {
   dbgs() << *this << "\n";
 }
+#endif
 
 void LiveInterval::print(raw_ostream &OS) const {
   if (empty())
@@ -740,9 +785,11 @@ void LiveInterval::print(raw_ostream &OS) const {
   }
 }
 
+#ifndef NDEBUG
 void LiveInterval::dump() const {
   dbgs() << *this << "\n";
 }
+#endif
 
 #ifndef NDEBUG
 void LiveInterval::verify() const {

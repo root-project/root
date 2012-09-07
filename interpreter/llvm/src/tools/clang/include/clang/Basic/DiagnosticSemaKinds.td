@@ -1430,6 +1430,8 @@ def err_for_range_invalid: Error<
 def err_for_range_dereference : Error<
   "invalid range expression of type %0; did you mean to dereference it "
   "with '*'?">;
+def note_for_range_invalid_iterator : Note <
+  "in implicit call to 'operator%select{!=|*|++}0' for iterator of type %1">;
 def note_for_range_begin_end : Note<
   "selected '%select{begin|end}0' %select{function|template }1%2 with iterator type %3">;
 
@@ -5409,6 +5411,10 @@ def warn_scanf_nonzero_width : Warning<
   InGroup<Format>;
 def warn_printf_conversion_argument_type_mismatch : Warning<
   "format specifies type %0 but the argument has type %1">,
+  InGroup<Format>;
+def warn_format_argument_needs_cast : Warning<
+  "values of type '%0' should not be used as format arguments; add an explicit "
+  "cast to %1 instead">,
   InGroup<Format>;
 def warn_printf_positional_arg_exceeds_data_args : Warning <
   "data argument position '%0' exceeds the number of data arguments (%1)">,

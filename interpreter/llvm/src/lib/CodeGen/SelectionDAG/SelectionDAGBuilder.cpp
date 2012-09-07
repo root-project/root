@@ -19,6 +19,7 @@
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/ConstantFolding.h"
+#include "llvm/Analysis/ValueTracking.h"
 #include "llvm/Constants.h"
 #include "llvm/CallingConv.h"
 #include "llvm/DebugInfo.h"
@@ -5215,14 +5216,36 @@ SelectionDAGBuilder::visitIntrinsicCall(const CallInst &I, unsigned Intrinsic) {
                                         rw==1)); /* write */
     return 0;
   }
-
-  case Intrinsic::invariant_start:
   case Intrinsic::lifetime_start:
+  case Intrinsic::lifetime_end: {
+    // Stack coloring is not enabled in O0, discard region information.
+    if (TM.getOptLevel() == CodeGenOpt::None) {
+      if (Intrinsic == Intrinsic::lifetime_start)
+        setValue(&I, DAG.getUNDEF(TLI.getPointerTy()));
+      return 0;
+    }
+    SDValue Ops[2];
+    AllocaInst *LifetimeObject =dyn_cast_or_null<AllocaInst>(
+                                   GetUnderlyingObject(I.getArgOperand(1), TD));
+    // Could not find an Alloca.
+    if (!LifetimeObject)
+      return 0;
+
+    int FI = FuncInfo.StaticAllocaMap[LifetimeObject];
+    Ops[0] = getRoot();
+    Ops[1] = DAG.getFrameIndex(FI, TLI.getPointerTy(), true);
+    bool IsStart = (Intrinsic == Intrinsic::lifetime_start);
+    unsigned Opcode = (IsStart ? ISD::LIFETIME_START : ISD::LIFETIME_END);
+
+    Res = DAG.getNode(Opcode, dl, MVT::Other, Ops, 2);
+    DAG.setRoot(Res);
+    return 0;
+  }
+  case Intrinsic::invariant_start:
     // Discard region information.
     setValue(&I, DAG.getUNDEF(TLI.getPointerTy()));
     return 0;
   case Intrinsic::invariant_end:
-  case Intrinsic::lifetime_end:
     // Discard region information.
     return 0;
   case Intrinsic::donothing:
@@ -6078,12 +6101,14 @@ void SelectionDAGBuilder::visitInlineAsm(ImmutableCallSite CS) {
   const MDNode *SrcLoc = CS.getInstruction()->getMetadata("srcloc");
   AsmNodeOperands.push_back(DAG.getMDNode(SrcLoc));
 
-  // Remember the HasSideEffect and AlignStack bits as operand 3.
+  // Remember the HasSideEffect, AlignStack and AsmDialect bits as operand 3.
   unsigned ExtraInfo = 0;
   if (IA->hasSideEffects())
     ExtraInfo |= InlineAsm::Extra_HasSideEffects;
   if (IA->isAlignStack())
     ExtraInfo |= InlineAsm::Extra_IsAlignStack;
+  // Set the asm dialect.
+  ExtraInfo |= IA->getDialect() * InlineAsm::Extra_AsmDialect;
   AsmNodeOperands.push_back(DAG.getTargetConstant(ExtraInfo,
                                                   TLI.getPointerTy()));
 

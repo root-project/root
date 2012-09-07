@@ -783,7 +783,7 @@ RegionBindings RegionStoreManager::invalidateGlobalRegion(MemRegion::Kind K,
   // Bind the globals memory space to a new symbol that we will use to derive
   // the bindings for all globals.
   const GlobalsSpaceRegion *GS = MRMgr.getGlobalsRegion(K);
-  SVal V = svalBuilder.conjureSymbolVal(/* SymbolTag = */ (void*) GS, Ex, LCtx,
+  SVal V = svalBuilder.conjureSymbolVal(/* SymbolTag = */ (const void*) GS, Ex, LCtx,
                                         /* type does not matter */ Ctx.IntTy,
                                         Count);
 
@@ -1575,12 +1575,8 @@ StoreRef RegionStoreManager::Bind(Store store, Loc L, SVal V) {
     // Binding directly to a symbolic region should be treated as binding
     // to element 0.
     QualType T = SR->getSymbol()->getType(Ctx);
-
-    // FIXME: Is this the right way to handle symbols that are references?
-    if (const PointerType *PT = T->getAs<PointerType>())
-      T = PT->getPointeeType();
-    else
-      T = T->getAs<ReferenceType>()->getPointeeType();
+    if (T->isAnyPointerType() || T->isReferenceType())
+      T = T->getPointeeType();
 
     R = GetElementZeroRegion(SR, T);
   }
@@ -1743,26 +1739,6 @@ StoreRef RegionStoreManager::BindStruct(Store store, const TypedValueRegion* R,
 
   if (!RD->isCompleteDefinition())
     return StoreRef(store, *this);
-
-  // Handle Loc values by automatically dereferencing the location.
-  // This is necessary because we treat all struct values as regions even if
-  // they are rvalues; we may then be asked to bind one of these
-  // "rvalue regions" to an actual struct region.
-  // (This is necessary for many of the test cases in array-struct-region.cpp.)
-  //
-  // This also handles the case of a struct argument passed by value to an
-  // inlined function. In this case, the C++ standard says that the value
-  // is copy-constructed into the parameter variable. However, the copy-
-  // constructor is processed before we actually know if we're going to inline
-  // the function, and thus we don't actually have the parameter's region
-  // available. Instead, we use a temporary-object region, then copy the
-  // bindings over by value.
-  //
-  // FIXME: This will be a problem when we handle the destructors of
-  // temporaries; the inlined function will modify the parameter region,
-  // but the destructor will act on the temporary region.
-  if (const loc::MemRegionVal *MRV = dyn_cast<loc::MemRegionVal>(&V))
-    V = getBinding(store, *MRV);
 
   // Handle lazy compound values and symbolic values.
   if (isa<nonloc::LazyCompoundVal>(V) || isa<nonloc::SymbolVal>(V))

@@ -446,7 +446,7 @@ void ExprEngine::ProcessAutomaticObjDtor(const CFGAutomaticObjDtor Dtor,
   Loc dest = state->getLValue(varDecl, Pred->getLocationContext());
 
   VisitCXXDestructor(varType, cast<loc::MemRegionVal>(dest).getRegion(),
-                     Dtor.getTriggerStmt(), Pred, Dst);
+                     Dtor.getTriggerStmt(), /*IsBase=*/false, Pred, Dst);
 }
 
 void ExprEngine::ProcessBaseDtor(const CFGBaseDtor D,
@@ -464,7 +464,7 @@ void ExprEngine::ProcessBaseDtor(const CFGBaseDtor D,
   SVal BaseVal = getStoreManager().evalDerivedToBase(ThisVal, BaseTy);
 
   VisitCXXDestructor(BaseTy, cast<loc::MemRegionVal>(BaseVal).getRegion(),
-                     CurDtor->getBody(), Pred, Dst);
+                     CurDtor->getBody(), /*IsBase=*/true, Pred, Dst);
 }
 
 void ExprEngine::ProcessMemberDtor(const CFGMemberDtor D,
@@ -480,7 +480,7 @@ void ExprEngine::ProcessMemberDtor(const CFGMemberDtor D,
 
   VisitCXXDestructor(Member->getType(),
                      cast<loc::MemRegionVal>(FieldVal).getRegion(),
-                     CurDtor->getBody(), Pred, Dst);
+                     CurDtor->getBody(), /*IsBase=*/false, Pred, Dst);
 }
 
 void ExprEngine::ProcessTemporaryDtor(const CFGTemporaryDtor D,
@@ -1935,7 +1935,7 @@ struct DOTGraphTraits<ExplodedNode*> :
         if (StmtPoint *L = dyn_cast<StmtPoint>(&Loc)) {
           const Stmt *S = L->getStmt();
 
-          Out << S->getStmtClassName() << ' ' << (void*) S << ' ';
+          Out << S->getStmtClassName() << ' ' << (const void*) S << ' ';
           LangOptions LO; // FIXME.
           S->printPretty(Out, 0, PrintingPolicy(LO));
           printLocation(Out, S->getLocStart());
@@ -2041,8 +2041,8 @@ struct DOTGraphTraits<ExplodedNode*> :
     }
 
     ProgramStateRef state = N->getState();
-    Out << "\\|StateID: " << (void*) state.getPtr()
-        << " NodeID: " << (void*) N << "\\|";
+    Out << "\\|StateID: " << (const void*) state.getPtr()
+        << " NodeID: " << (const void*) N << "\\|";
     state->printDOT(Out);
 
     Out << "\\l";    

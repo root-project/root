@@ -61,7 +61,7 @@ static bool isCallbackArg(SVal V, QualType T) {
   // Check if a callback is passed inside a struct (for both, struct passed by
   // reference and by value). Dig just one level into the struct for now.
 
-  if (isa<PointerType>(T) || isa<ReferenceType>(T))
+  if (T->isAnyPointerType() || T->isReferenceType())
     T = T->getPointeeType();
 
   if (const RecordType *RT = T->getAsStructureType()) {
@@ -384,6 +384,25 @@ void CXXInstanceCall::getExtraInvalidatedRegions(RegionList &Regions) const {
     Regions.push_back(R);
 }
 
+SVal CXXInstanceCall::getCXXThisVal() const {
+  const Expr *Base = getCXXThisExpr();
+  // FIXME: This doesn't handle an overloaded ->* operator.
+  if (!Base)
+    return UnknownVal();
+
+  SVal ThisVal = getSVal(Base);
+
+  // FIXME: This is only necessary because we can call member functions on
+  // struct rvalues, which do not have regions we can use for a 'this' pointer.
+  // Ideally this should eventually be changed to an assert, i.e. all
+  // non-Unknown, non-null 'this' values should be loc::MemRegionVals.
+  if (isa<DefinedSVal>(ThisVal))
+    if (!ThisVal.getAsRegion() && !ThisVal.isConstant())
+      return UnknownVal();
+
+  return ThisVal;
+}
+
 
 RuntimeDefinition CXXInstanceCall::getRuntimeDefinition() const {
   // Do we have a decl at all?
@@ -408,13 +427,23 @@ RuntimeDefinition CXXInstanceCall::getRuntimeDefinition() const {
 
   // Is the type a C++ class? (This is mostly a defensive check.)
   QualType RegionType = DynType.getType()->getPointeeType();
+  assert(!RegionType.isNull() && "DynamicTypeInfo should always be a pointer.");
+
   const CXXRecordDecl *RD = RegionType->getAsCXXRecordDecl();
   if (!RD || !RD->hasDefinition())
     return RuntimeDefinition();
 
   // Find the decl for this method in that class.
   const CXXMethodDecl *Result = MD->getCorrespondingMethodInClass(RD, true);
-  assert(Result && "At the very least the static decl should show up.");
+  if (!Result) {
+    // We might not even get the original statically-resolved method due to
+    // some particularly nasty casting (e.g. casts to sister classes).
+    // However, we should at least be able to search up and down our own class
+    // hierarchy, and some real bugs have been caught by checking this.
+    assert(!MD->getParent()->isDerivedFrom(RD) && "Bad DynamicTypeInfo");
+    assert(!RD->isDerivedFrom(MD->getParent()) && "Couldn't find known method");
+    return RuntimeDefinition();
+  }
 
   // Does the decl that we found have an implementation?
   const FunctionDecl *Definition;
@@ -538,8 +567,17 @@ void CXXConstructorCall::getInitialStackFrameContents(
 
 SVal CXXDestructorCall::getCXXThisVal() const {
   if (Data)
-    return loc::MemRegionVal(static_cast<const MemRegion *>(Data));
+    return loc::MemRegionVal(DtorDataTy::getFromOpaqueValue(Data).getPointer());
   return UnknownVal();
+}
+
+RuntimeDefinition CXXDestructorCall::getRuntimeDefinition() const {
+  // Base destructors are always called non-virtually.
+  // Skip CXXInstanceCall's devirtualization logic in this case.
+  if (isBaseDestructor())
+    return AnyFunctionCall::getRuntimeDefinition();
+
+  return CXXInstanceCall::getRuntimeDefinition();
 }
 
 
@@ -871,5 +909,5 @@ CallEventManager::getCaller(const StackFrameContext *CalleeCtx,
     Trigger = Dtor->getBody();
 
   return getCXXDestructorCall(Dtor, Trigger, ThisVal.getAsRegion(),
-                              State, CallerCtx);
+                              isa<CFGBaseDtor>(E), State, CallerCtx);
 }

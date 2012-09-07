@@ -953,7 +953,7 @@ public:
       return;
     }
     Dec->printName(llvm::errs());
-    llvm::errs() << "." << i << " " << ((void*) Dec);
+    llvm::errs() << "." << i << " " << ((const void*) Dec);
   }
 
   /// Dumps an ASCII representation of the variable map to llvm::errs()
@@ -1531,6 +1531,9 @@ const CallExpr* ThreadSafetyAnalyzer::getTrylockCallExpr(const Stmt *Cond,
   }
   else if (const ImplicitCastExpr *CE = dyn_cast<ImplicitCastExpr>(Cond)) {
     return getTrylockCallExpr(CE->getSubExpr(), C, Negate);
+  }
+  else if (const ExprWithCleanups* EWC = dyn_cast<ExprWithCleanups>(Cond)) {
+    return getTrylockCallExpr(EWC->getSubExpr(), C, Negate);
   }
   else if (const DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(Cond)) {
     const Expr *E = LocalVarMap.lookupExpr(DRE->getDecl(), C);

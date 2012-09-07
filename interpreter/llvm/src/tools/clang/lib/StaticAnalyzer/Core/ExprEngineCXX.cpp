@@ -34,9 +34,10 @@ void ExprEngine::CreateCXXTemporaryObject(const MaterializeTemporaryExpr *ME,
   // the expression to the location of the object.
   SVal V = state->getSVal(tempExpr, LCtx);
 
-  // If the object is a record, the constructor will have already created
-  // a temporary object region. If it is not, we need to copy the value over.
-  if (!ME->getType()->isRecordType()) {
+  // If the value is already a CXXTempObjectRegion, it is fine as it is.
+  // Otherwise, create a new CXXTempObjectRegion, and copy the value into it.
+  const MemRegion *MR = V.getAsRegion();
+  if (!MR || !isa<CXXTempObjectRegion>(MR)) {
     const MemRegion *R =
       svalBuilder.getRegionManager().getCXXTempObjectRegion(ME, LCtx);
 
@@ -162,6 +163,7 @@ void ExprEngine::VisitCXXConstructExpr(const CXXConstructExpr *CE,
 void ExprEngine::VisitCXXDestructor(QualType ObjectType,
                                     const MemRegion *Dest,
                                     const Stmt *S,
+                                    bool IsBaseDtor,
                                     ExplodedNode *Pred, 
                                     ExplodedNodeSet &Dst) {
   const LocationContext *LCtx = Pred->getLocationContext();
@@ -182,7 +184,7 @@ void ExprEngine::VisitCXXDestructor(QualType ObjectType,
 
   CallEventManager &CEMgr = getStateManager().getCallEventManager();
   CallEventRef<CXXDestructorCall> Call =
-    CEMgr.getCXXDestructorCall(DtorDecl, S, Dest, State, LCtx);
+    CEMgr.getCXXDestructorCall(DtorDecl, S, Dest, IsBaseDtor, State, LCtx);
 
   PrettyStackTraceLoc CrashInfo(getContext().getSourceManager(),
                                 Call->getSourceRange().getBegin(),

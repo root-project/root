@@ -518,9 +518,9 @@ static bool isTagTypeWithMissingTag(Sema &SemaRef, LookupResult &Result,
                                     Scope *S, CXXScopeSpec &SS,
                                     IdentifierInfo *&Name,
                                     SourceLocation NameLoc) {
-  Result.clear(Sema::LookupTagName);
-  SemaRef.LookupParsedName(Result, S, &SS);
-  if (TagDecl *Tag = Result.getAsSingle<TagDecl>()) {
+  LookupResult R(SemaRef, Name, NameLoc, Sema::LookupTagName);
+  SemaRef.LookupParsedName(R, S, &SS);
+  if (TagDecl *Tag = R.getAsSingle<TagDecl>()) {
     const char *TagName = 0;
     const char *FixItTagName = 0;
     switch (Tag->getTagKind()) {
@@ -554,17 +554,17 @@ static bool isTagTypeWithMissingTag(Sema &SemaRef, LookupResult &Result,
       << Name << TagName << SemaRef.getLangOpts().CPlusPlus
       << FixItHint::CreateInsertion(NameLoc, FixItTagName);
 
-    LookupResult R(SemaRef, Name, NameLoc, Sema::LookupOrdinaryName);
-    if (SemaRef.LookupParsedName(R, S, &SS)) {
-      for (LookupResult::iterator I = R.begin(), IEnd = R.end();
-           I != IEnd; ++I)
-        SemaRef.Diag((*I)->getLocation(), diag::note_decl_hiding_tag_type)
-          << Name << TagName;
-    }
+    for (LookupResult::iterator I = Result.begin(), IEnd = Result.end();
+         I != IEnd; ++I)
+      SemaRef.Diag((*I)->getLocation(), diag::note_decl_hiding_tag_type)
+        << Name << TagName;
+
+    // Replace lookup results with just the tag decl.
+    Result.clear(Sema::LookupTagName);
+    SemaRef.LookupParsedName(Result, S, &SS);
     return true;
   }
 
-  Result.clear(Sema::LookupOrdinaryName);
   return false;
 }
 
@@ -862,14 +862,12 @@ Corrected:
     if ((NextToken.is(tok::identifier) ||
          (NextIsOp && FirstDecl->isFunctionOrFunctionTemplate())) &&
         isTagTypeWithMissingTag(*this, Result, S, SS, Name, NameLoc)) {
-      FirstDecl = (*Result.begin())->getUnderlyingDecl();
-      if (TypeDecl *Type = dyn_cast<TypeDecl>(FirstDecl)) {
-        DiagnoseUseOfDecl(Type, NameLoc);
-        QualType T = Context.getTypeDeclType(Type);
-        if (SS.isNotEmpty())
-          return buildNestedType(*this, SS, T, NameLoc);
-        return ParsedType::make(T);
-      }
+      TypeDecl *Type = Result.getAsSingle<TypeDecl>();
+      DiagnoseUseOfDecl(Type, NameLoc);
+      QualType T = Context.getTypeDeclType(Type);
+      if (SS.isNotEmpty())
+        return buildNestedType(*this, SS, T, NameLoc);
+      return ParsedType::make(T);
     }
   }
   
@@ -5565,6 +5563,9 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
       D.setRedeclaration(CheckFunctionDeclaration(S, NewFD, Previous,
                                                   isExplicitSpecialization));
     }
+    // Make graceful recovery from an invalid redeclaration.
+    else if (!Previous.empty())
+           D.setRedeclaration(true);
     assert((NewFD->isInvalidDecl() || !D.isRedeclaration() ||
             Previous.getResultKind() != LookupResult::FoundOverloaded) &&
            "previous declaration set still overloaded");
@@ -10181,7 +10182,7 @@ void Sema::ActOnFields(Scope* S,
                 //   class subobject has more than one final overrider the
                 //   program is ill-formed.
                 Diag(Record->getLocation(), diag::err_multiple_final_overriders)
-                  << (NamedDecl *)M->first << Record;
+                  << (const NamedDecl *)M->first << Record;
                 Diag(M->first->getLocation(), 
                      diag::note_overridden_virtual_function);
                 for (OverridingMethods::overriding_iterator 
@@ -10189,7 +10190,7 @@ void Sema::ActOnFields(Scope* S,
                        OMEnd = SO->second.end();
                      OM != OMEnd; ++OM)
                   Diag(OM->Method->getLocation(), diag::note_final_overrider)
-                    << (NamedDecl *)M->first << OM->Method->getParent();
+                    << (const NamedDecl *)M->first << OM->Method->getParent();
                 
                 Record->setInvalidDecl();
               }
@@ -11100,10 +11101,6 @@ Decl *Sema::getObjCDeclContext() const {
 }
 
 AvailabilityResult Sema::getCurContextAvailability() const {
-  const Decl *D = cast<Decl>(getCurLexicalContext());
-  // A category implicitly has the availability of the interface.
-  if (const ObjCCategoryDecl *CatD = dyn_cast<ObjCCategoryDecl>(D))
-    D = CatD->getClassInterface();
-  
+  const Decl *D = cast<Decl>(getCurObjCLexicalContext());
   return D->getAvailability();
 }

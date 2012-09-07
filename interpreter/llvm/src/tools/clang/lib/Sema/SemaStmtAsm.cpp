@@ -454,11 +454,11 @@ static std::string buildMSAsmString(Sema &SemaRef, ArrayRef<Token> AsmToks,
   return Res.str();
 }
 
-#define DEF_SIMPLE_MSASM                                                     \
+#define DEF_SIMPLE_MSASM(STR)                                                \
   MSAsmStmt *NS =                                                            \
     new (Context) MSAsmStmt(Context, AsmLoc, LBraceLoc, /*IsSimple*/ true,   \
                             /*IsVolatile*/ true, AsmToks, Inputs, Outputs,   \
-                            InputExprs, OutputExprs, AsmString, Constraints, \
+                            InputExprs, OutputExprs, STR, Constraints,       \
                             Clobbers, EndLoc);
 
 StmtResult Sema::ActOnMSAsmStmt(SourceLocation AsmLoc,
@@ -474,13 +474,12 @@ StmtResult Sema::ActOnMSAsmStmt(SourceLocation AsmLoc,
   SmallVector<IdentifierInfo*, 4> Outputs;
   SmallVector<Expr*, 4> InputExprs;
   SmallVector<Expr*, 4> OutputExprs;
+  SmallVector<std::string, 4> InputExprNames;
+  SmallVector<std::string, 4> OutputExprNames;
 
   // Empty asm statements don't need to instantiate the AsmParser, etc.
-  if (AsmToks.empty()) {
-    StringRef AsmString;
-    DEF_SIMPLE_MSASM;
-    return Owned(NS);
-  }
+  StringRef EmptyAsmStr;
+  if (AsmToks.empty()) { DEF_SIMPLE_MSASM(EmptyAsmStr); return Owned(NS); }
 
   std::vector<std::string> AsmStrings;
   std::vector<std::pair<unsigned,unsigned> > AsmTokRanges;
@@ -493,7 +492,7 @@ StmtResult Sema::ActOnMSAsmStmt(SourceLocation AsmLoc,
   bool IsSimple = isSimpleMSAsm(Pieces, Context.getTargetInfo());
 
   // AsmParser doesn't fully support these asm statements.
-  if (bailOnMSAsm(Pieces)) { DEF_SIMPLE_MSASM; return Owned(NS); }
+  if (bailOnMSAsm(Pieces)) { DEF_SIMPLE_MSASM(EmptyAsmStr); return Owned(NS); }
 
   // Initialize targets and assembly printers/parsers.
   llvm::InitializeAllTargetInfos();
@@ -547,7 +546,7 @@ StmtResult Sema::ActOnMSAsmStmt(SourceLocation AsmLoc,
     bool HadError = TargetParser->ParseInstruction(OpcodeStr.str(), IDLoc,
                                                    Operands);
     // If we had an error parsing the operands, fail gracefully.
-    if (HadError) { DEF_SIMPLE_MSASM; return Owned(NS); }
+    if (HadError) { DEF_SIMPLE_MSASM(EmptyAsmStr); return Owned(NS); }
 
     // Match the MCInstr.
     unsigned Kind;
@@ -557,7 +556,7 @@ StmtResult Sema::ActOnMSAsmStmt(SourceLocation AsmLoc,
                                               ErrorInfo,
                                               /*matchingInlineAsm*/ true);
     // If we had an error parsing the operands, fail gracefully.
-    if (HadError) { DEF_SIMPLE_MSASM; return Owned(NS); }
+    if (HadError) { DEF_SIMPLE_MSASM(EmptyAsmStr); return Owned(NS); }
 
     // Get the instruction descriptor.
     llvm::MCInst Inst = Instrs[0];
@@ -628,10 +627,12 @@ StmtResult Sema::ActOnMSAsmStmt(SourceLocation AsmLoc,
               if (isDef || isMemDef) {
                 Outputs.push_back(II);
                 OutputExprs.push_back(Result.take());
+                OutputExprNames.push_back(Name.str());
                 OutputConstraints.push_back("=r");
               } else {
                 Inputs.push_back(II);
                 InputExprs.push_back(Result.take());
+                InputExprNames.push_back(Name.str());
                 InputConstraints.push_back("r");
               }
             }
@@ -653,6 +654,27 @@ StmtResult Sema::ActOnMSAsmStmt(SourceLocation AsmLoc,
   for (std::vector<std::string>::iterator I = InputConstraints.begin(),
          E = InputConstraints.end(); I != E; ++I)
     Constraints.push_back(*I);
+
+  // Enumerate the AsmString expressions.
+  // FIXME: This isn't going to work if:
+  //  1. The symbol name and an opcode/reg share the same, or are a substring of
+  //     the, name.
+  //  2. The symbol name appears more then once in the asm string.
+  unsigned OpNum = 0;
+  for (unsigned i = 0, e = OutputExprNames.size(); i != e; ++i, ++OpNum) {
+    size_t found = AsmString.find(OutputExprNames[i]);
+    SmallString<32> Res;
+    llvm::raw_svector_ostream OS(Res);
+    OS << '$' << OpNum;
+    AsmString.replace(found, OutputExprNames[i].size(), OS.str());
+  }
+  for (unsigned i = 0, e = InputExprNames.size(); i != e; ++i, ++OpNum) {
+    size_t found = AsmString.find(InputExprNames[i]);
+    SmallString<32> Res;
+    llvm::raw_svector_ostream OS(Res);
+    OS << '$' << OpNum;
+    AsmString.replace(found, InputExprNames[i].size(), OS.str());
+  }
 
   MSAsmStmt *NS =
     new (Context) MSAsmStmt(Context, AsmLoc, LBraceLoc, IsSimple,
