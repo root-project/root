@@ -82,7 +82,7 @@ Bool_t SimpleInterval::IsInInterval(const RooArgSet &parameterPoint) const
    if (point == 0)
       return false;
 
-   if ( point->getVal() > fUpperLimit || point->getVal() < fUpperLimit)
+   if ( point->getVal() > fUpperLimit || point->getVal() < fLowerLimit)
       return false;
 
 
