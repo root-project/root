@@ -15,6 +15,8 @@
 #include <vector>
 #include <string>
 
+#include <Cocoa/Cocoa.h>
+
 #ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
 #endif
@@ -238,7 +240,37 @@ public:
    }
 private:
    void ClearCommands();
+   
+   //Clip related stuff.
+   ///////////////////////////
+   //Yet another rectangle :)
+   //Needed by clipping calculations.
+
+   struct WidgetRect {
+      int x1;
+      int y1;
+      int x2;
+      int y2;
+
+      WidgetRect()
+         : x1(0), y1(0), x2(0), y2(0)
+      {
+      }
+      
+      WidgetRect(int leftX, int bottomY, int rightX, int topY)
+         : x1(leftX), y1(bottomY), x2(rightX), y2(topY)
+      {
+      }
+   };
+   
    void ClipOverlaps(QuartzView *view);
+   void BuildClipRegion(const WidgetRect &rect);
+   
+   std::vector<WidgetRect> fRectsToClip;
+   std::vector<CGRect> fClippedRegion;
+   std::vector<int> fXBounds;
+   std::vector<int> fYBounds;
+   std::vector<bool> fGrid;
 };
 
 }//X11

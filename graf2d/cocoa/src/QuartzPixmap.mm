@@ -540,35 +540,6 @@ namespace Quartz = ROOT::Quartz;
 }
 
 //______________________________________________________________________________
-- (void) clearMask
-{
-   assert(fIsStippleMask == YES && "-clearMask, called for non-mask image");
-   
-   for (unsigned i = 0, e = fWidth * fHeight; i < e; ++i)
-      fImageData[i] = 0;//All pixels are ok.
-}
-
-//______________________________________________________________________________
-- (void) maskOutPixels : (NSRect) maskedArea
-{
-   assert(fIsStippleMask == YES && "-maskOutPixels, called for non-mask image");
-   assert(fImageData != 0 && "-maskOutPixels, image was not initialized");
-   
-   const int iStart = std::max(0, int(maskedArea.origin.x));
-   const int iEnd = std::min(int(fWidth), int(maskedArea.size.width) + iStart);
-   
-   //Note about j: as soon as QuartzView is flipped, orde of pixel lines is changed here.
-   const int jStart = int(fHeight) - std::min(int(fHeight), int(maskedArea.origin.y + maskedArea.size.height));
-   const int jEnd = std::min(int(fHeight), int(jStart + maskedArea.size.height));
-   
-   for (int j = jStart; j < jEnd; ++j) {
-      unsigned char *line = fImageData + j * fWidth;
-      for (int i = iStart; i < iEnd; ++i)
-         line[i] = 255;
-   }
-}
-
-//______________________________________________________________________________
 - (BOOL) isRectInside : (Rectangle_t) area
 {
    if (area.fX < 0 || (unsigned)area.fX >= fWidth)

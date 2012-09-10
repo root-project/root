@@ -76,9 +76,6 @@
 @property (nonatomic, readonly) BOOL fIsStippleMask;
 - (CGImageRef) fImage;
 
-- (void) clearMask;
-- (void) maskOutPixels : (NSRect) maskedArea;
-
 //X11Drawable protocol.
 @property (nonatomic, assign) unsigned fID;
 

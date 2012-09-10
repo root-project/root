@@ -129,12 +129,6 @@
 //Life-cycle.
 - (id) initWithFrame : (NSRect) frame windowAttributes : (const SetWindowAttributes_t *) attr;
 
-//Clip mask - to deal with overlaps.
-@property (nonatomic, assign) BOOL fClipMaskIsValid;
-- (BOOL) initClipMask;
-- (QuartzImage *) fClipMask;
-- (void) addOverlap : (NSRect)overlapRect;
-
 //X11Drawable protocol.
 
 @property (nonatomic, assign) unsigned fID;
@@ -278,10 +272,6 @@ NSPoint TranslateCoordinates(NSView<X11Window> *fromView, NSView<X11Window> *toV
 bool ViewIsTextViewFrame(NSView<X11Window> *view, bool checkParent);
 bool LockFocus(NSView<X11Window> *view);
 void UnlockFocus(NSView<X11Window> *view);//For symmetry only.
-
-//Find intersection of view and sibling, result is a rect in view's space.
-NSRect FindOverlapRect(const NSRect &viewRect, const NSRect &siblingViewRect);
-bool RectsOverlap(const NSRect &r1, const NSRect &r2);
 
 bool ScreenPointIsInView(NSView<X11Window> *view, Int_t x, Int_t y);
 QuartzWindow *FindWindowInPoint(Int_t x, Int_t y);
