@@ -1488,6 +1488,17 @@ If any of the flags --cintincdir, --datadir, --docdir, --etcdir, --iconpath
 ROOT will be compiled with static directory names, and you should not set
 the ROOTSYS environment variable.
 
+To reduce the output of configure by removing the trailing howto message, use:
+
+   --nohowto
+
+With the flog:
+
+  --fail-on-missing 
+
+Configure will fail if a component that has been explicitly enabled
+is missing some dependencies and can not be built.
+
 enable/disable options, prefix with either --enable- or --disable-
 
   afdsmgrd           Dataset manager for PROOF-based analysis facilities
