@@ -3207,7 +3207,7 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
    End_html */
 
    if (!gPad) return (char*)"";
-   static char info[100];
+   static char info[200];
    Double_t x  = gPad->PadtoX(gPad->AbsPixeltoX(px));
    Double_t y  = gPad->PadtoY(gPad->AbsPixeltoY(py));
    Double_t x1 = gPad->PadtoX(gPad->AbsPixeltoX(px+1));
@@ -3274,13 +3274,13 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
       else {
          Double_t integ = 0;
          for (Int_t bin=binmin;bin<=binx;bin++) {integ += fH->GetBinContent(bin);}
-         snprintf(info,100,"(x=%g, y=%g, binx=%d, binc=%g, Sum=%g)",x,y,binx,fH->GetBinContent(binx),integ);
+         snprintf(info,200,"(x=%g, y=%g, binx=%d, binc=%g, Sum=%g)",x,y,binx,fH->GetBinContent(binx),integ);
       }
    } else if (fH->GetDimension() == 2){
       if (fH->InheritsFrom(TH2Poly::Class())) {
          TH2Poly *th2 = (TH2Poly*)fH;
          biny = th2->FindBin(x,y);
-         snprintf(info,100,"%s (x=%g, y=%g, bin=%d, binc=%g)",th2->GetBinTitle(biny),x,y,biny,th2->GetBinContent(biny));
+         snprintf(info,200,"%s (x=%g, y=%g, bin=%d, binc=%g)",th2->GetBinTitle(biny),x,y,biny,th2->GetBinContent(biny));
       } 
       else if (fH->InheritsFrom(TProfile2D::Class())) {
          TProfile2D *tp = (TProfile2D*)fH;
@@ -3289,12 +3289,12 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
          snprintf(info,200,"(x=%g, y=%g, binx=%d, biny=%d, binc=%g, bine=%g, binn=%d)", x, y, binx, biny, fH->GetBinContent(bin), fH->GetBinError(bin), (Int_t) tp->GetBinEntries(bin));
       } else {
          biny = fYaxis->FindFixBin(y);
-         snprintf(info,100,"(x=%g, y=%g, binx=%d, biny=%d, binc=%g)",x,y,binx,biny,fH->GetCellContent(binx,biny));
+         snprintf(info,200,"(x=%g, y=%g, binx=%d, biny=%d, binc=%g)",x,y,binx,biny,fH->GetCellContent(binx,biny));
       }
    } else { 
       // 3d case: retrieving the x,y,z bin is not yet implemented 
       // print just the x,y info
-      snprintf(info,100,"(x=%g, y=%g)",x,y);
+      snprintf(info,200,"(x=%g, y=%g)",x,y);
    }
    return info;
 }
