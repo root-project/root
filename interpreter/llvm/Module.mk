@@ -57,6 +57,10 @@ endif
 
 # clang resource directory gets copied to lib/clang/
 # clang version extraction as in tools/clang/lib/Headers/Makefile
+ifeq ($(LLVMCONFIG),interpreter/llvm/inst/bin/llvm-config)
+$(LLVMCONFIG): $(LLVMLIB)
+endif
+
 $(LLVMRES): $(LLVMLIB)
 		mkdir -p $(dir $(LLVMRES))
 		cp $(LLVMDIRI)/lib/clang/$(LLVMVERSION)/include/* $(dir $(LLVMRES))
@@ -64,6 +68,7 @@ $(LLVMRES): $(LLVMLIB)
 $(LLVMLIB): $(LLVMDIRO) $(FORCELLVMTARGET)
 		@(echo "*** Building $@..."; \
 		cd $(LLVMDIRO) && \
+		$(MAKE) && \
 		rm -rf $(LLVMDIRI)/lib/clang && \
 		$(MAKE) install)
 		@cp $(LLVMGOODS) $(LLVMGOODO)
