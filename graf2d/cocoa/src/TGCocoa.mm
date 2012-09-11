@@ -460,8 +460,6 @@ Window_t TGCocoa::GetWindowID(Int_t windowID)
 void TGCocoa::SelectWindow(Int_t windowID)
 {
    //This function can be called from pad/canvas, both for window and for pixmap.
-   assert(windowID > (Int_t)fPimpl->GetRootWindowID() && "SelectWindow, windowID parameter is not a valid id");
-
    fSelectedDrawable = windowID;
 }
 
