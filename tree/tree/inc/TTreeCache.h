@@ -69,14 +69,21 @@ public:
    virtual void        AddBranch(const char *branch, Bool_t subbranches = kFALSE);
    virtual void        DropBranch(TBranch *b, Bool_t subbranches = kFALSE);
    virtual void        DropBranch(const char *branch, Bool_t subbranches = kFALSE);
+   virtual void        Disable() {fEnabled = kFALSE;}
+   virtual void        Enable() {fEnabled = kTRUE;}
    const TObjArray    *GetCachedBranches() const { return fBranches; }
    Double_t            GetEfficiency() const;
    Double_t            GetEfficiencyRel() const;
+   virtual Int_t       GetEntryMin() const {return fEntryMin;}
+   virtual Int_t       GetEntryMax() const {return fEntryMax;}
    static Int_t        GetLearnEntries();
+   TTree              *GetTree() const;
+   virtual Bool_t      IsEnabled() const {return fEnabled;}
+   virtual Bool_t      IsLearning() const {return fIsLearning;}
 
    virtual Bool_t      FillBuffer();
-   TTree              *GetTree() const;
-   virtual Bool_t      IsLearning() const {return fIsLearning;}
+   virtual void        LearnPrefill();
+
    virtual void        Print(Option_t *option="") const;
    virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
    virtual Int_t       ReadBufferNormal(char *buf, Long64_t pos, Int_t len); 
