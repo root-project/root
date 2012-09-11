@@ -1517,7 +1517,6 @@ Long64_t TChain::LoadTree(Long64_t entry)
          // TTreeCache.
          delete tpf;
          tpf = 0;
-         this->SetCacheSize(fCacheSize);
       }
    } else {
       this->SetCacheSize(fCacheSize);
@@ -2176,16 +2175,16 @@ void TChain::SetAutoDelete(Bool_t autodelete)
 
 void TChain::SetCacheSize(Long64_t cacheSize)
 {
-   TTree::SetCacheSize(cacheSize);
-   TFile* file = GetCurrentFile();
-   if (!file) {
-      return;
+   // Set the cache size of the underlying TTree,
+   // See TTree::SetCacheSize.
+
+   if (fTree) {
+      fTree->SetCacheSize(cacheSize);
+   } else {
+      // If we don't have a TTree yet, do not
+      // allocate the cache.
    }
-   TFileCacheRead* pf = file->GetCacheRead(this);
-   if (pf) {
-      file->SetCacheRead(0, this);
-      file->SetCacheRead(pf, fTree);
-   }
+   fCacheSize = cacheSize; // Record requested size.
 }
 
 //______________________________________________________________________________
