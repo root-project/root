@@ -161,12 +161,67 @@ void SetFilledAreaColorFromX11Context(CGContextRef ctx, const GCValues_t &gcVals
 }
 
 struct PatternContext {
-   Mask_t       fMask;
-   ULong_t      fForeground;
-   ULong_t      fBackground;
-   QuartzImage *fImage;
-   CGSize       fPhase;
+   Mask_t                 fMask;
+   Int_t                  fFillStyle;
+   ULong_t                fForeground;
+   ULong_t                fBackground;
+   NSObject<X11Drawable> *fImage;//Either stipple or tile image.
+   CGSize                 fPhase;
 };
+
+
+//______________________________________________________________________________
+bool HasFillTiledStyle(Mask_t mask, Int_t fillStyle)
+{
+   return (mask & kGCFillStyle) && (fillStyle == kFillTiled);
+}
+
+//______________________________________________________________________________
+bool HasFillTiledStyle(const GCValues_t &gcVals)
+{
+   return HasFillTiledStyle(gcVals.fMask, gcVals.fFillStyle);
+}
+
+//______________________________________________________________________________
+bool HasFillStippledStyle(Mask_t mask, Int_t fillStyle)
+{
+   return (mask & kGCFillStyle) && (fillStyle == kFillStippled);
+}
+
+//______________________________________________________________________________
+bool HasFillStippledStyle(const GCValues_t &gcVals)
+{
+   return HasFillStippledStyle(gcVals.fMask, gcVals.fFillStyle);
+}
+
+//______________________________________________________________________________
+bool HasFillOpaqueStippledStyle(Mask_t mask, Int_t fillStyle)
+{
+   return (mask & kGCFillStyle) && (fillStyle == kFillOpaqueStippled);
+}
+
+//______________________________________________________________________________
+bool HasFillOpaqueStippledStyle(const GCValues_t &gcVals)
+{
+   return HasFillOpaqueStippledStyle(gcVals.fMask, gcVals.fFillStyle);
+}
+
+//______________________________________________________________________________
+void DrawTile(NSObject<X11Drawable> *patternImage, CGContextRef ctx)
+{
+   assert(patternImage != nil && "DrawTile, patternImage parameter is nil");
+   assert(ctx != 0 && "DrawTile, ctx parameter is null");
+   
+   const CGRect patternRect = CGRectMake(0, 0, patternImage.fWidth, patternImage.fHeight);
+   if ([patternImage isKindOfClass : [QuartzImage class]]) {
+      CGContextDrawImage(ctx, patternRect, ((QuartzImage *)patternImage).fImage);
+   } else if ([patternImage isKindOfClass : [QuartzPixmap class]]){
+      const Util::CFScopeGuard<CGImageRef> imageFromPixmap([((QuartzPixmap *)patternImage) createImageFromPixmap]);
+      assert(imageFromPixmap.Get() != 0 && "DrawTile, createImageFromPixmap failed");
+      CGContextDrawImage(ctx, patternRect, imageFromPixmap.Get());
+   } else
+      assert(0 && "DrawTile, pattern is neither a QuartzImage, nor a QuartzPixmap");
+}
 
 //______________________________________________________________________________
 void DrawPattern(void *info, CGContextRef ctx)
@@ -179,28 +234,39 @@ void DrawPattern(void *info, CGContextRef ctx)
    assert(ctx != 0 && "DrawPattern, ctx parameter is null");
 
    const PatternContext * const patternContext = (PatternContext *)info;
-   assert(patternContext->fImage != nil && "DrawPatter, pattern image is nil");
+   const Mask_t mask = patternContext->fMask;
+   const Int_t fillStyle = patternContext->fFillStyle;
 
-   QuartzImage * const patternImage = patternContext->fImage;
+   NSObject<X11Drawable> * const patternImage = patternContext->fImage;
+   assert(patternImage != nil && "DrawPattern, pattern (stipple) image is nil");
    const CGRect patternRect = CGRectMake(0, 0, patternImage.fWidth, patternImage.fHeight);
 
-   if (patternImage.fIsStippleMask) {
-      if (patternContext->fMask & kGCBackground) {
-         CGFloat rgb[3] = {};
+   if (HasFillTiledStyle(mask, fillStyle)) {
+      DrawTile(patternImage, ctx);
+   } else if (HasFillStippledStyle(mask, fillStyle) || HasFillOpaqueStippledStyle(mask, fillStyle)) {
+      assert([patternImage isKindOfClass : [QuartzImage class]] && "DrawPattern, stipple must be a QuartzImage object");
+      QuartzImage * const image = (QuartzImage *)patternImage;
+      assert(image.fIsStippleMask == YES && "DrawPattern, image is not a stipple mask");
+
+      CGFloat rgb[3] = {};
+
+      if (HasFillOpaqueStippledStyle(mask,fillStyle)) {
+         //Fill background first.
+         assert((mask & kGCBackground) && "DrawPattern, fill style is FillOpaqueStippled, but background color is not set in a context");
          X11::PixelToRGB(patternContext->fBackground, rgb);
          CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], 1.);
          CGContextFillRect(ctx, patternRect);
       }
-      
-      if (patternContext->fMask & kGCForeground) {
-         CGFloat rgb[3] = {};
-         X11::PixelToRGB(patternContext->fForeground, rgb);
-         CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], 1.);
-         CGContextClipToMask(ctx, patternRect, patternImage.fImage);
-         CGContextFillRect(ctx, patternRect);
-      }
+
+      //Fill rectangle with foreground colour, using stipple mask.
+      assert((mask & kGCForeground) && "DrawPattern, foreground color is not set");
+      X11::PixelToRGB(patternContext->fForeground, rgb);
+      CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], 1.);
+      CGContextClipToMask(ctx, patternRect, image.fImage);
+      CGContextFillRect(ctx, patternRect);
    } else {
-      CGContextDrawImage(ctx, patternRect, patternImage.fImage);
+      //This can be a window background pixmap
+      DrawTile(patternImage, ctx);
    }
 }
 
@@ -1613,6 +1679,7 @@ void TGCocoa::DrawRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UIn
 void TGCocoa::FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    //Can be called directly or when flushing command buffer.
+  //Can be called directly or when flushing command buffer.
    if (!wid)//From TGX11.
       return;
 
@@ -1638,14 +1705,29 @@ void TGCocoa::FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x
    }
 
    const Quartz::CGStateGuard ctxGuard(ctx);//Will restore context state.
+   //TODO: At the moment I ignore: clip_mask, clip_x_origin, clip_y_origin, stipple and tile origins,
+   //check if any widget uses them.
 
-   if (gcVals.fMask & kGCStipple) {
-      assert(fPimpl->GetDrawable(gcVals.fStipple).fIsPixmap == YES && "FillRectangleAux, stipple is not a pixmap");
-      PatternContext patternContext = {gcVals.fMask, gcVals.fForeground, gcVals.fBackground, 
-                                       (QuartzImage *)fPimpl->GetDrawable(gcVals.fStipple), 
-                                       patternPhase};
+   if (HasFillStippledStyle(gcVals) || HasFillOpaqueStippledStyle(gcVals) ||  HasFillTiledStyle(gcVals)) {
+      PatternContext patternContext = {gcVals.fMask, gcVals.fFillStyle, 0, 0, nil, patternPhase};
+
+      if (HasFillStippledStyle(gcVals) || HasFillOpaqueStippledStyle(gcVals)) {
+         assert(gcVals.fStipple != kNone && "FillRectangleAux, fill_style is FillStippled/FillOpaqueStippled, but no stipple is set in a context");
+
+         patternContext.fForeground = gcVals.fForeground;
+         patternContext.fImage = fPimpl->GetDrawable(gcVals.fStipple);
+         
+         if (HasFillOpaqueStippledStyle(gcVals))
+            patternContext.fBackground = gcVals.fBackground;
+      } else {
+         assert(gcVals.fTile != kNone && "FillRectangleAux, fill_style is FillTiled, but not tile is set in a context");
+         
+         patternContext.fImage = fPimpl->GetDrawable(gcVals.fTile);
+      }
+
       SetFillPattern(ctx, &patternContext);
       CGContextFillRect(ctx, fillRect);
+      
       return;
    }
 
@@ -1726,15 +1808,30 @@ void TGCocoa::FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point
    
    CGContextSetAllowsAntialiasing(ctx, false);
 
-   if (gcVals.fMask & kGCStipple) {
-      assert(fPimpl->GetDrawable(gcVals.fStipple).fIsPixmap == YES && "FillRectangleAux, stipple is not a pixmap");
-      PatternContext patternContext = {gcVals.fMask, gcVals.fForeground, gcVals.fBackground, 
-                                       (QuartzImage *)fPimpl->GetDrawable(gcVals.fStipple), 
-                                       patternPhase};
+   //TODO: At the moment I ignore: clip_mask, clip_x_origin, clip_y_origin, stipple and tile origins,
+   //check if any widget uses them.
+
+   if (HasFillStippledStyle(gcVals) || HasFillOpaqueStippledStyle(gcVals) ||  HasFillTiledStyle(gcVals)) {
+      PatternContext patternContext = {gcVals.fMask, gcVals.fFillStyle, 0, 0, nil, patternPhase};
+
+      if (HasFillStippledStyle(gcVals) || HasFillOpaqueStippledStyle(gcVals)) {
+         assert(gcVals.fStipple != kNone && "FillRectangleAux, fill_style is FillStippled/FillOpaqueStippled, but no stipple is set in a context");
+
+         patternContext.fForeground = gcVals.fForeground;
+         patternContext.fImage = fPimpl->GetDrawable(gcVals.fStipple);
+         
+         if (HasFillOpaqueStippledStyle(gcVals))
+            patternContext.fBackground = gcVals.fBackground;
+      } else {
+         assert(gcVals.fTile != kNone && "FillRectangleAux, fill_style is FillTiled, but not tile is set in a context");
+         
+         patternContext.fImage = fPimpl->GetDrawable(gcVals.fTile);
+      }
+
       SetFillPattern(ctx, &patternContext);
    } else
       SetFilledAreaColorFromX11Context(ctx, gcVals);
-   
+
    //These +2 -2 shit is the result of ROOT's GUI producing strange coordinates out of ....
    // - first noticed on checkmarks in a menu - they were all shifted.
    
@@ -1750,7 +1847,6 @@ void TGCocoa::FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point
    }
 
    CGContextFillPath(ctx);
-   
    CGContextSetAllowsAntialiasing(ctx, true);
 }
 
@@ -2008,7 +2104,7 @@ void TGCocoa::ClearAreaAux(Window_t windowID, Int_t x, Int_t y, UInt_t w, UInt_t
 
       const Quartz::CGStateGuard ctxGuard(view.fContext);//Will restore context state.
 
-      PatternContext patternContext = {0, 0, 0, view.fBackgroundPixmap, patternPhase};
+      PatternContext patternContext = {Mask_t(), 0, 0, 0, view.fBackgroundPixmap, patternPhase};
       SetFillPattern(view.fContext, &patternContext);
       CGContextFillRect(view.fContext, fillRect);
    }
@@ -2751,30 +2847,16 @@ void TGCocoa::ChangeGC(GContext_t gc, GCValues_t *gval)
       x11Context.fCapStyle = gval->fCapStyle;
    if (mask & kGCJoinStyle)//nobody uses
       x11Context.fJoinStyle = gval->fJoinStyle;
-   //
-   
    if (mask & kGCFillRule)//nobody uses
       x11Context.fFillRule = gval->fFillRule;
    if (mask & kGCArcMode)//nobody uses
       x11Context.fArcMode = gval->fArcMode;
-
-   if (mask & kGCFillStyle) {
+   if (mask & kGCFillStyle)
       x11Context.fFillStyle = gval->fFillStyle;
-      x11Context.fMask &= ~kGCStipple;
-      x11Context.fMask &= ~kGCTile;
-   }
-   if (mask & kGCTile) {
+   if (mask & kGCTile)
       x11Context.fTile = gval->fTile;
-      x11Context.fMask &= ~kGCStipple;
-      x11Context.fMask &= ~kGCFillStyle;
-   }
-   if (mask & kGCStipple) {
+   if (mask & kGCStipple)
       x11Context.fStipple = gval->fStipple;
-      x11Context.fMask &= ~kGCFillStyle;
-      x11Context.fMask &= ~kGCTile;
-   }
-   
-   //
    if (mask & kGCTileStipXOrigin)
       x11Context.fTsXOrigin = gval->fTsXOrigin;
    if (mask & kGCTileStipYOrigin)
