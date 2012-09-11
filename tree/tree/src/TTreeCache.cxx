@@ -265,7 +265,8 @@ TTreeCache::TTreeCache() : TFileCacheRead(),
    fFillTimes(0),
    fFirstTime(kTRUE),
    fFirstEntry(-1),
-   fReadDirectionSet(kFALSE)
+   fReadDirectionSet(kFALSE),
+   fEnabled(kTRUE)
 {
    // Default Constructor.
 }
@@ -291,7 +292,8 @@ TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->Get
    fFillTimes(0),
    fFirstTime(kTRUE),                                                        
    fFirstEntry(-1),
-   fReadDirectionSet(kFALSE)
+   fReadDirectionSet(kFALSE),
+   fEnabled(kTRUE)
 {
    // Constructor.
 
@@ -904,7 +906,7 @@ void TTreeCache::Print(Option_t *option) const
 
    TString opt = option;
    opt.ToLower();
-   printf("******TreeCache statistics for file: %s ******\n",fFile ? fFile->GetName() : "no file set");
+   printf("******TreeCache statistics for tree: %s in file: %s ******\n",fTree ? fTree->GetName() : "no tree set",fFile ? fFile->GetName() : "no file set");
    if (fNbranches <= 0) return;
    printf("Number of branches in the cache ...: %d\n",fNbranches);
    printf("Cache Efficiency ..................: %f\n",GetEfficiency());
@@ -993,6 +995,8 @@ Int_t TTreeCache::ReadBuffer(char *buf, Long64_t pos, Int_t len)
    //     0 in case not in cache,
    //     1 in case read from cache.
    // This function overloads TFileCacheRead::ReadBuffer.
+
+   if (!fEnabled) return 0;
 
    if (fEnablePrefetching)
       return TTreeCache::ReadBufferPrefetch(buf, pos, len);
