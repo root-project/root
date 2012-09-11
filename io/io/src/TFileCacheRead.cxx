@@ -417,8 +417,8 @@ Int_t TFileCacheRead::ReadBufferExtPrefetch(char *buf, Long64_t pos, Int_t len, 
       if (buf && fPrefetch){
          //prefetch with the new method                  
          fPrefetch->ReadBuffer(buf, pos, len);
+         return 1;
       }
-      return 1;
    }
    else if (buf && fPrefetch){
       //try to preferch from the second block                                                                                                               
