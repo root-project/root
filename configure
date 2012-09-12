@@ -1231,6 +1231,7 @@ guess_architecture() {
         hurd*:*:*)             arch=hurddeb         ;;
         linux:ia64:*)          arch=linuxia64gcc    ;;
         linux:x86_64:*)        arch=linuxx8664gcc   ;;
+        linux:x32:*)           arch=linuxx32gcc     ;;
         linux:alpha:*)         arch=linuxalphagcc   ;;
         linux:arm*:*)          arch=linuxarm        ;;
         linux:hppa*:*)         arch=linux           ;;
@@ -1769,6 +1770,9 @@ linuxx8664*)
    logmsg "Will check 64bit libraries"
    checklinux64="yes"
    checklib64="yes" ;;
+linuxx32*)
+   logmsg "Will check x32 libraries in the future"
+   logmsg "For now expect proper libraries through configure flags" ;;
 hpuxia64acc)
    logmsg "Will check HP/UX 64bit libraries"
    checkhpux64="yes" ;;

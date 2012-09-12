@@ -158,6 +158,10 @@ else
 			ACC="$$ACC -m64"; \
 			MMX="--enable-mmx-optimization=no"; \
 		fi; \
+		if [ "$(ARCH)" = "linuxx32gcc" ]; then \
+			ACC="$$ACC -mx32"; \
+			MMX="--enable-mmx-optimization=no"; \
+		fi; \
 		if [ "$(ARCH)" = "linuxicc" ]; then \
 			ACC="$$ACC -m32"; \
 		fi; \

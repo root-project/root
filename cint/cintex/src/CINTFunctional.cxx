@@ -461,7 +461,7 @@ namespace ROOT { namespace Cintex {
    }
 
    //------ Function models-------------------------------------------------------------------
-#ifdef R__B64
+#if defined(R__B64) && !defined(__ILP32__)
 #define FUNCPATTERN 0xFAFAFAFAFAFAFAFAL
 #define DATAPATTERN 0xDADADADADADADADAL
 #else

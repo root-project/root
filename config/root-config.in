@@ -313,6 +313,12 @@ linuxx8664icc)
    auxcflags=
    auxlibs="-limf -lm -ldl"
    ;;
+linuxx32gcc)
+   # x32 ABI (64 bit mode with 32 bit pointers) Linux with gcc > 4.7
+   auxcflags="-mx32"
+   auxldflags="-mx32"
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
 linuxalphagcc)
    # Alpha Linux with gcc
    auxcflags=
