@@ -118,7 +118,7 @@ else
 		fi; \
 		if [ $(ARCH) = "linuxx8664gcc" ]; then \
 			LZMACC="$$LZMACC -m64"; \
-			LZMA_CFLAGS="-mx32"; \
+			LZMA_CFLAGS="-m64"; \
 		fi; \
 		if [ $(ARCH) = "linuxx32gcc" ]; then \
 			LZMACC="$$LZMACC -mx32"; \
