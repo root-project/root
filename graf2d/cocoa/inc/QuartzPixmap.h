@@ -71,6 +71,7 @@
 - (id) initMaskWithW : (unsigned) width H : (unsigned) height;
 - (id) initFromPixmap : (QuartzPixmap *) pixmap;
 - (id) initFromImage : (QuartzImage *) image;
+- (id) initFromImageFlipped : (QuartzImage *) image;
 
 - (void) dealloc;
 @property (nonatomic, readonly) BOOL fIsStippleMask;

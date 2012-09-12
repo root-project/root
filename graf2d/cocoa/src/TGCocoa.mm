@@ -1338,14 +1338,18 @@ void TGCocoa::ShapeCombineMask(Window_t windowID, Int_t /*x*/, Int_t /*y*/, Pixm
    if (fPimpl->GetWindow(windowID).fContentView.fParentView)
       return;
    
-   QuartzWindow * const qw = fPimpl->GetWindow(windowID).fQuartzWindow;
+   QuartzImage * const srcImage = (QuartzImage *)fPimpl->GetDrawable(pixmapID);
+   assert(srcImage.fIsStippleMask == YES && "ShapeCombineMask, source image is not a stipple mask");
 
-   QuartzImage * const image = (QuartzImage *)fPimpl->GetDrawable(pixmapID);
-   assert(image.fIsStippleMask == YES && "ShapeCombineMask, QuartzImage must be a stipple mask");
-
-   qw.fShapeCombineMask = image;   
-   [qw setOpaque : NO];
-   [qw setBackgroundColor : [NSColor clearColor]];
+   //TODO: there is some kind of problems with shape masks and
+   //flipped views, I have to do an image flip here - check this!
+   const Util::NSScopeGuard<QuartzImage> image([[QuartzImage alloc] initFromImageFlipped : srcImage]);
+   if (image.Get()) {
+      QuartzWindow * const qw = fPimpl->GetWindow(windowID).fQuartzWindow;
+      qw.fShapeCombineMask = image.Get();
+      [qw setOpaque : NO];
+      [qw setBackgroundColor : [NSColor clearColor]];
+   }
 }
 
 //"Window manager hints" set of functions.

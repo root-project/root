@@ -350,6 +350,9 @@ namespace Quartz = ROOT::Quartz;
 @synthesize fIsStippleMask;
 @synthesize fID;
 
+//TODO: all these "ctors" were added at different times, not from the beginnning.
+//Refactor them to reduce code duplication, where possible.
+
 //______________________________________________________________________________
 - (id) initWithW : (unsigned) width H : (unsigned) height data : (unsigned char *) data
 {
@@ -526,6 +529,91 @@ namespace Quartz = ROOT::Quartz;
    assert(image.fIsStippleMask == NO && "initFromImage:, image is a stipple mask, not implemented");
    
    return [self initWithW : image.fWidth H : image.fHeight data : image->fImageData];
+}
+
+//______________________________________________________________________________
+- (id) initFromImageFlipped : (QuartzImage *) image
+{
+   assert(image != nil && "initFromImageFlipped:, image parameter is nil");
+   assert(image.fWidth != 0 && "initFromImageFlipped:, image width is 0");
+   assert(image.fHeight != 0 && "initFromImageFlipped:, image height is 0");
+   
+   const unsigned bpp = image.fIsStippleMask ? 1 : 4;
+   
+   if (self = [super init]) {
+      const unsigned width = image.fWidth;
+      const unsigned height = image.fHeight;
+
+      Util::NSScopeGuard<QuartzImage> selfGuard(self);
+
+      unsigned char *dataCopy = 0;
+      try {
+         dataCopy = new unsigned char[width * height * bpp]();
+      } catch (const std::bad_alloc &) {
+         NSLog(@"QuartzImage: -initFromImageFlipped:, memory allocation failed");
+         return nil;
+      }
+
+      const unsigned lineSize = bpp * width;
+      for (unsigned i = 0; i < height; ++i) {
+         const unsigned char *sourceLine = image->fImageData + lineSize * (height - 1 - i);
+         unsigned char *dstLine = dataCopy + i * lineSize;
+         std::copy(sourceLine, sourceLine + lineSize, dstLine);
+      }
+      
+      Util::ScopedArray<unsigned char> arrayGuard(dataCopy);
+
+      const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer, 
+                                                               ROOT_QuartzImage_ReleaseBytePointer,
+                                                               ROOT_QuartzImage_GetBytesAtPosition, 0};
+   
+      if (bpp == 1) {
+         fIsStippleMask = YES;
+
+         const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(dataCopy, width * height, &providerCallbacks));
+         if (!provider.Get()) {
+            NSLog(@"QuartzImage: -initFromImageFlipped:, CGDataProviderCreateDirect failed");
+            return nil;
+         }
+
+         fImage = CGImageMaskCreate(width, height, 8, 8, width, provider.Get(), 0, false);//null -> decode, false -> shouldInterpolate.
+         if (!fImage) {
+            NSLog(@"QuartzImage: -initFromImageFlipped:, CGImageMaskCreate failed");
+            return nil;
+         }
+      } else {
+         fIsStippleMask = NO;
+      
+         const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(dataCopy, width * height * 4, &providerCallbacks));
+         if (!provider.Get()) {
+            NSLog(@"QuartzImage: -initFromImageFlipped:, CGDataProviderCreateDirect failed");
+            return nil;
+         }
+      
+         const Util::CFScopeGuard<CGColorSpaceRef> colorSpace(CGColorSpaceCreateDeviceRGB());
+         if (!colorSpace.Get()) {
+            NSLog(@"QuartzImage: -initFromImageFlipped:, CGColorSpaceCreateDeviceRGB failed");
+            return nil;
+         }
+
+         //8 bits per component, 32 bits per pixel, 4 bytes per pixel, kCGImageAlphaLast:
+         //all values hardcoded for TGCocoa::CreatePixmapFromData.
+         fImage = CGImageCreate(width, height, 8, 32, width * 4, colorSpace.Get(), kCGImageAlphaLast, provider.Get(), 0, false, kCGRenderingIntentDefault);
+         if (!fImage) {
+            NSLog(@"QuartzImage: -initFromImageFlipped:, CGImageCreate failed");
+            return nil;
+         }
+      }
+      
+      selfGuard.Release();
+      arrayGuard.Release();
+
+      fWidth = width;
+      fHeight = height;
+      fImageData = dataCopy;
+   }
+   
+   return self;
 }
 
 //______________________________________________________________________________

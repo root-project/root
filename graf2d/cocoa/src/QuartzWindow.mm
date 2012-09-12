@@ -2070,9 +2070,11 @@ void print_mask_info(ULong_t mask)
          QuartzWindow * const topLevelParent = self.fQuartzWindow;
          if (topLevelParent.fShapeCombineMask) {
             //Attach clip mask to the context.
-            const NSRect clipRect  = [self convertRect : [self visibleRect] toView : nil];
+            //TODO: this is correct only for contentView?
+            NSRect clipRect = [self visibleRect];
+            if (fParentView && fParentView != [[self window] contentView])
+               clipRect.origin = [self.fParentView convertPoint : clipRect.origin toView : [[self window] contentView]];
             clipImageGuard.Reset(CGImageCreateWithImageInRect(topLevelParent.fShapeCombineMask.fImage, clipRect));
-            //TODO: this geometry looks suspicious, check!
             CGContextClipToMask(fContext, CGRectMake(0, 0, clipRect.size.width, clipRect.size.height), clipImageGuard.Get());
          }
 
