@@ -53,9 +53,9 @@ shown in the following picture.</para>
 <imageobject>
 <imagedata fileref="pictures/0600010D.png" width="13.05pt" depth="11.15pt"/>
 </imageobject>
-</inlinemediaobject>=2&lt;superscript>31&lt;/superscript>. </para>
+</inlinemediaobject>=2<superscript>31</superscript>. </para>
 <para>This type of generator uses a state of only a 32 bit integer and it has a very short period,
-2&lt;superscript>31&lt;/superscript>,about 10&lt;superscript>9&lt;/superscript>, which can be
+2<superscript>31</superscript>,about 10<superscript>9</superscript>, which can be
 exhausted in just few seconds. The quality of this generator is therefore BAD and it is strongly
 recommended to NOT use for any statistical study. </para>
 </sect2>
