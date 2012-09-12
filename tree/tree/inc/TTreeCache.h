@@ -33,6 +33,9 @@ class TBranch;
 
 class TTreeCache : public TFileCacheRead {
 
+public:
+   enum EPrefillType { kNoPrefill, kAllBranches };
+
 protected:
    Long64_t        fEntryMin;    //! first entry in the cache
    Long64_t        fEntryMax;    //! last entry in the cache
@@ -55,6 +58,7 @@ protected:
    Long64_t        fFirstEntry;  //! save the value of the first entry
    Bool_t          fReadDirectionSet; //! read direction established
    Bool_t          fEnabled;     //! cache enabled for cached reading
+   EPrefillType    fPrefillType; // Whether a prefilling is enabled (and if applicable which type)
    static  Int_t   fgLearnEntries; // number of entries used for learning mode
 
 private:
@@ -62,42 +66,42 @@ private:
    TTreeCache& operator=(const TTreeCache &);
 
 public:
+
    TTreeCache();
    TTreeCache(TTree *tree, Int_t buffersize=0);
    virtual ~TTreeCache();
-   virtual void        AddBranch(TBranch *b, Bool_t subgbranches = kFALSE);
-   virtual void        AddBranch(const char *branch, Bool_t subbranches = kFALSE);
-   virtual void        DropBranch(TBranch *b, Bool_t subbranches = kFALSE);
-   virtual void        DropBranch(const char *branch, Bool_t subbranches = kFALSE);
-   virtual void        Disable() {fEnabled = kFALSE;}
-   virtual void        Enable() {fEnabled = kTRUE;}
-   const TObjArray    *GetCachedBranches() const { return fBranches; }
-   Double_t            GetEfficiency() const;
-   Double_t            GetEfficiencyRel() const;
-   virtual Int_t       GetEntryMin() const {return fEntryMin;}
-   virtual Int_t       GetEntryMax() const {return fEntryMax;}
-   static Int_t        GetLearnEntries();
-   TTree              *GetTree() const;
-   virtual Bool_t      IsEnabled() const {return fEnabled;}
-   virtual Bool_t      IsLearning() const {return fIsLearning;}
+   virtual void         AddBranch(TBranch *b, Bool_t subgbranches = kFALSE);
+   virtual void         AddBranch(const char *branch, Bool_t subbranches = kFALSE);
+   virtual void         DropBranch(TBranch *b, Bool_t subbranches = kFALSE);
+   virtual void         DropBranch(const char *branch, Bool_t subbranches = kFALSE);
+   virtual void         Disable() {fEnabled = kFALSE;}
+   virtual void         Enable() {fEnabled = kTRUE;}
+   const TObjArray     *GetCachedBranches() const { return fBranches; }
+   Double_t             GetEfficiency() const;
+   Double_t             GetEfficiencyRel() const;
+   virtual Int_t        GetEntryMin() const {return fEntryMin;}
+   virtual Int_t        GetEntryMax() const {return fEntryMax;}
+   static Int_t         GetLearnEntries();
+   virtual EPrefillType GetLearnPrefill() const {return fPrefillType;}
+   TTree               *GetTree() const;
+   virtual Bool_t       IsEnabled() const {return fEnabled;}
+   virtual Bool_t       IsLearning() const {return fIsLearning;}
 
-   virtual Bool_t      FillBuffer();
-   virtual void        LearnPrefill();
+   virtual Bool_t       FillBuffer();
+   virtual void         LearnPrefill();
 
-   virtual void        Print(Option_t *option="") const;
-   virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
-   virtual Int_t       ReadBufferNormal(char *buf, Long64_t pos, Int_t len); 
-   virtual Int_t       ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len);
-   virtual void        ResetCache();
-   virtual void        SetEntryRange(Long64_t emin,   Long64_t emax);
-   virtual void        SetFile(TFile *file, TFile::ECacheAction action=TFile::kDisconnect);
-   static void         SetLearnEntries(Int_t n = 10);
-   void                StartLearningPhase();
-   virtual void        StopLearningPhase();
-   virtual void        UpdateBranches(TTree *tree);
-   virtual Bool_t      IsEnabled() const {return fEnabled;}
-   virtual void        Enable() {fEnabled = kTRUE;}
-   virtual void        Disable() {fEnabled = kFALSE;}
+   virtual void         Print(Option_t *option="") const;
+   virtual Int_t        ReadBuffer(char *buf, Long64_t pos, Int_t len);
+   virtual Int_t        ReadBufferNormal(char *buf, Long64_t pos, Int_t len); 
+   virtual Int_t        ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len);
+   virtual void         ResetCache();
+   virtual void         SetEntryRange(Long64_t emin,   Long64_t emax);
+   virtual void         SetFile(TFile *file, TFile::ECacheAction action=TFile::kDisconnect);
+   virtual void         SetLearnPrefill(EPrefillType type = kNoPrefill);
+   static void          SetLearnEntries(Int_t n = 10);
+   void                 StartLearningPhase();
+   virtual void         StopLearningPhase();
+   virtual void         UpdateBranches(TTree *tree);
 
    ClassDef(TTreeCache,2)  //Specialization of TFileCacheRead for a TTree
 };

@@ -266,7 +266,8 @@ TTreeCache::TTreeCache() : TFileCacheRead(),
    fFirstTime(kTRUE),
    fFirstEntry(-1),
    fReadDirectionSet(kFALSE),
-   fEnabled(kTRUE)
+   fEnabled(kTRUE),
+   fPrefillType(TTreeCache::kNoPrefill)
 {
    // Default Constructor.
 }
@@ -293,7 +294,8 @@ TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->Get
    fFirstTime(kTRUE),                                                        
    fFirstEntry(-1),
    fReadDirectionSet(kFALSE),
-   fEnabled(kTRUE)
+   fEnabled(kTRUE),
+   fPrefillType(TTreeCache::kNoPrefill)
 {
    // Constructor.
 
@@ -325,6 +327,12 @@ void TTreeCache::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
 
    // Reject branch that are not from the cached tree.
    if (!b || fTree->GetTree() != b->GetTree()) return;
+
+   // Is this the first addition of a branch (and we are learning and we are in
+   // the expected TTree), then prefill the cache.  (We expect that in future
+   // release the Prefill-ing will be the default so we test for that inside the
+   // LearnPrefill call).
+   if (fNbranches == 0 && b->GetReadEntry() == fEntryMin) LearnPrefill();
 
    //Is branch already in the cache?
    Bool_t isNew = kTRUE;
@@ -1067,6 +1075,18 @@ void TTreeCache::SetLearnEntries(Int_t n)
 }
 
 //_____________________________________________________________________________
+void TTreeCache::SetLearnPrefill(TTreeCache::EPrefillType type /* = kNoPrefill */)
+{
+   // Set whether the learning period is started with a prefilling of the
+   // cache and which type of prefilling is used.
+   // The two value currently supported are:
+   //   TTreeCache::kNoPrefill    disable the prefilling
+   //   TTreeCache::kAllBranches  fill the cache with baskets from all branches.
+
+   fPrefillType = type;
+}
+
+//_____________________________________________________________________________
 void TTreeCache::StartLearningPhase()
 {
    // The name should be enough to explain the method.
@@ -1139,3 +1159,51 @@ void TTreeCache::UpdateBranches(TTree *tree)
       fNbranches++;
    }
 }
+
+//_____________________________________________________________________________
+void TTreeCache::LearnPrefill()
+{
+   // Perform an initial prefetch, attempting to read as much of the learning
+   // phase baskets for all branches at once
+
+   // This is meant for the learning phase
+   if (!fIsLearning) return;
+
+   // This should be called before reading entries, otherwise we'll
+   // always exit here, since TBranch adds itself before reading
+   if (fNbranches > 0) return;
+
+   // Is the LearnPrefill enabled (using an Int_t here to allow for future
+   // extension to alternative Prefilling).
+   if (fPrefillType == kNoPrefill) return;
+
+   // Force only the learn entries to be cached by temporarily setting min/max
+   // to the learning phase entry range
+   // But save all the old values, so we can restore everything to how it was
+   Long64_t eminOld = fEntryMin;
+   Long64_t emaxOld = fEntryMax;
+   Long64_t ecurrentOld = fEntryCurrent;
+   Long64_t enextOld = fEntryNext;
+
+   fEntryMin = fEntryCurrent;
+   fEntryMax = fEntryNext;
+
+   // Add all branches to be cached. This also sets fIsManual, stops learning,
+   // and makes fEntryNext = -1 (which forces a cache fill, which is good)
+   AddBranch("*");
+   fIsManual = kFALSE; // AddBranch sets fIsManual, so we reset it
+
+   // Now, fill the buffer with the learning phase entry range
+   FillBuffer();
+
+   // Leave everything the way we found it
+   fIsLearning = kTRUE;
+   DropBranch("*"); // This doesn't work unless we're already learning
+
+   // Restore entry values
+   fEntryMin = eminOld;
+   fEntryMax = emaxOld;
+   fEntryCurrent = ecurrentOld;
+   fEntryNext = enextOld;
+}
+
