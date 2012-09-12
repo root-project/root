@@ -1314,7 +1314,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                      if (oldformula && strcmp(schain,oldformula->GetTitle())) {
                         Int_t nprior = fNpar;
                         Analyze(oldformula->GetExpFormula(),err,fNpar);
-
+                        // if the oldformula was using a normalized function (gausn or landaun) set also in this one
+                        if (oldformula->IsNormalized()) SetBit(kNormalized);
                         if (err) return; // changes fNpar
                         fNpar = nprior;
                         find=1;
