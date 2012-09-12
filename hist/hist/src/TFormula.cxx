@@ -210,11 +210,23 @@ TFormula::TFormula(const char *name,const char *expression) :
       // special case for normalized gaus
       if (chaine.Contains("gausn")) {
          gausNorm = kTRUE;
+         TString tmp = chaine;         
+         tmp.Replace(tmp.Index("gausn",5),5,"");
+         if ( tmp.Contains("gaus") && !(tmp.Contains("gausn") ) )
+            Warning("TFormula","Cannot use both gaus and gausn - use gaus as gausn");
+         if ( tmp.Contains("landau") && !(tmp.Contains("landaun")) ) 
+            Warning("TFormula","Cannot use both gausn and landau - use landau as landaun");
          chaine.ReplaceAll("gausn","gaus");
       }
       // special case for normalized landau
       if (chaine.Contains("landaun")) {
          landauNorm = kTRUE;
+         TString tmp = chaine;         
+         tmp.Replace(tmp.Index("landaun",7),7,"");
+         if ( tmp.Contains("gaus") && !(tmp.Contains("gausn") ) )
+            Warning("TFormula","Cannot use both gaus and landaun - use gaus as gausn");
+         if ( tmp.Contains("landau") && !(tmp.Contains("landaun")) ) 
+            Warning("TFormula","Cannot use both landaun and landau - use landau as landaun");
          chaine.ReplaceAll("landaun","landau");
       }
       SetTitle(chaine.Data());
