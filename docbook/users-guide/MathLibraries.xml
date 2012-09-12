@@ -36,8 +36,28 @@ shown in the following picture.</para>
 <sect2>
 <title>TRandom</title>
 <para>Pseudo-random numbers are generated using a linear congruential random generator. The multipliers used are the same of the BSD <code>rand()</code> random generator. Its sequence is: </para>
-<para> <inlinemediaobject><imageobject><imagedata fileref="pictures/0600010A.png" width="104.9pt" depth="14.3pt"/></imageobject></inlinemediaobject> with <inlinemediaobject><imageobject><imagedata fileref="pictures/0600010B.png" width="9.95pt" depth="11.15pt"/></imageobject></inlinemediaobject><code>=1103515245</code>, <inlinemediaobject><imageobject><imagedata fileref="pictures/0600010C.png" width="9.3pt" depth="11.15pt"/></imageobject></inlinemediaobject>= 12345 and <inlinemediaobject><imageobject><imagedata fileref="pictures/0600010D.png" width="13.05pt" depth="11.15pt"/></imageobject></inlinemediaobject>=231. </para>
-<para>This type of generator uses a state of only a 32 bit integer and it has a very short period, 231,about 109, which can be exhausted in just few seconds. The quality of this generator is therefore BAD and it is strongly recommended to NOT use for any statistical study. </para>
+<para>
+<inlinemediaobject>
+<imageobject>
+<imagedata fileref="pictures/0600010A.png" width="104.9pt" depth="14.3pt"/>
+</imageobject>
+</inlinemediaobject> with <inlinemediaobject>
+<imageobject>
+<imagedata fileref="pictures/0600010B.png" width="9.95pt" depth="11.15pt"/>
+</imageobject>
+</inlinemediaobject><code>=1103515245</code>, <inlinemediaobject>
+<imageobject>
+<imagedata fileref="pictures/0600010C.png" width="9.3pt" depth="11.15pt"/>
+</imageobject>
+</inlinemediaobject>= 12345 and <inlinemediaobject>
+<imageobject>
+<imagedata fileref="pictures/0600010D.png" width="13.05pt" depth="11.15pt"/>
+</imageobject>
+</inlinemediaobject>=2&lt;superscript>31&lt;/superscript>. </para>
+<para>This type of generator uses a state of only a 32 bit integer and it has a very short period,
+2&lt;superscript>31&lt;/superscript>,about 10&lt;superscript>9&lt;/superscript>, which can be
+exhausted in just few seconds. The quality of this generator is therefore BAD and it is strongly
+recommended to NOT use for any statistical study. </para>
 </sect2>
 
 <sect2>
@@ -50,7 +70,7 @@ shown in the following picture.</para>
 
 <sect2>
 <title>TRandom2</title>
-<para>This generator is based on the maximally equidistributed combined Tausworthe generator by L'Ecuyer. It uses only 3 32-bits words for the state and it has a period of about 1026. It is fast and given its small states, it is recommended for applications, which require a very small random number size. For more information on the generator see the following article: </para>
+<para>This generator is based on the maximally equidistributed combined Tausworthe generator by L'Ecuyer. It uses only 3 32-bits words for the state and it has a period of about 10<superscript>26</superscript>. It is fast and given its small states, it is recommended for applications, which require a very small random number size. For more information on the generator see the following article: </para>
 <itemizedlist>
 <listitem><para>P. L’Ecuyer, “Maximally Equidistributed Combined Tausworthe Generators”, Mathematics of Computation, 65, 213 (1996), 203-213. </para></listitem>
 </itemizedlist>
