@@ -62,7 +62,7 @@ recommended to NOT use for any statistical study. </para>
 
 <sect2>
 <title>TRandom1</title>
-<para>This random number generator is based on the Ranlux engine, developed by M. Lüsher and implemented in Fortran by F. James. This engine has mathematically proven random proprieties and a long period of about 10171. Various luxury levels are provided <code>(1,2,3,4)</code> and can be specified by the user in the constructor. Higher the level, better random properties are obtained at a price of longer CPU time for generating a random number. The level 3 is the default, where any theoretical possible correlation has very small chance of being detected. This generator uses a state of 24 32-bits words. Its main disadvantage is that is much slower than the others (see timing table). For more information on the generator see the following article: </para>
+<para>This random number generator is based on the Ranlux engine, developed by M. Lüsher and implemented in Fortran by F. James. This engine has mathematically proven random proprieties and a long period of about 10<superscript>171</superscript>. Various luxury levels are provided <code>(1,2,3,4)</code> and can be specified by the user in the constructor. Higher the level, better random properties are obtained at a price of longer CPU time for generating a random number. The level 3 is the default, where any theoretical possible correlation has very small chance of being detected. This generator uses a state of 24 32-bits words. Its main disadvantage is that is much slower than the others (see timing table). For more information on the generator see the following article: </para>
 <itemizedlist>
 <listitem><para>F. James, “RANLUX: A Fortran implementation of the high quality pseudo-random number generator of Lüscher”, Computer Physics Communication, 79 (1994) 111. </para></listitem>
 </itemizedlist>
@@ -78,7 +78,7 @@ recommended to NOT use for any statistical study. </para>
 
 <sect2>
 <title>TRandom3</title>
-<para>This is based on the Mersenne and Twister pseudo-random number generator, developed in 1997 by Makoto Matsumoto and Takuji Nishimura.  The newer implementation is used, referred in the literature as MT19937. It is a very fast and very high quality generator with a very long period of 106000. The disadvantage of this generator is that it uses a state of 624 words. For more information on the generator see the following article: </para>
+<para>This is based on the Mersenne and Twister pseudo-random number generator, developed in 1997 by Makoto Matsumoto and Takuji Nishimura.  The newer implementation is used, referred in the literature as MT19937. It is a very fast and very high quality generator with a very long period of 10<superscript>6000</superscript>. The disadvantage of this generator is that it uses a state of 624 words. For more information on the generator see the following article: </para>
 <itemizedlist>
 <listitem><para>M. M. Matsumoto and T. Nishimura, “Mersenne twister: A 623-dimensionally equidistributed uniform pseudorandom number generator”, ACM Trans. on Modeling and Computer Simulations, 8, 1, (1998), 3-20.</para></listitem>
 </itemizedlist>
