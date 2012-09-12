@@ -688,6 +688,10 @@ N: Bartolomeu Rabacal
 E: brabacal@cern.ch
 D: Math libraries: GoFTest and TKDE classes 
 
+N: Nathalie Rauschmayr
+E: Nathalie.Rauschmayr@cern.ch
+D: port to x32 psABI and its validation
+
 N: Sven Ravndal
 E: Sven.Ravndal@dresdner-bank.com
 D: initial event generator interface
