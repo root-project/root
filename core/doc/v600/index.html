@@ -1,6 +1,26 @@
 <br/> 
 <hr/> 
 <a name="core"></a> 
+<h3>Platform Support</h3>
+
+<p>Temorarily for version 6.00/00, ROOT has a reduced set of supported platforms.
+Most notably Windows is not supported until at least 6.02.
+6.00/00 supports only</p>
+<ul>
+<li>Linux 32bit and 64 bit, i32 and x86-64 and x32 (see below). Likely also PPC but that is untested, please report.</li>
+<li>MacOS on Intel CPUs.</li>
+</ul>
+<p>More platforms are expected to be available later; the lack of support stems from cling not being ported to these platforms yet.</p>
+
+<p>Despite that, an additional platform as been added: the <a href="https://sites.google.com/site/x32abi/">x32 psAPI</a>, called linuxx32gcc.
+It is a regular x86-64 ABI but with shorter pointers (4 bytes instead of 8).
+This reduces the addressable memory per process to 4GB - but that is usally sufficient.
+The advantages are reduced memory consumption (due to the smaller pointers) and increased performance compared to 32bit applications due to the availability of the 64bit instructions.
+The clang developers mailing list archive <a href="http://clang-developers.42468.n3.nabble.com/Re-PATCH-add-x32-psABI-support-td4024297.html">contains a good comparison.</a></p>
+
+<p>To build and run binaries compiled in x32, toolchain support is needed. That is available in the in binutils (2.22), GCC (4.7), glibc (2.16), Linux kernel (3.4) and even GDB (7.5).
+These versions are not available in regular distributions yet (except for <a href="http://dev.gentoo.org/~vapier/x32/stage3-amd64-x32-20120605.tar.xz"> this beta Gentoo distro</a> built in x32); once they are, building and running x86-64 and x32 side-by-side will be possible.</p>
+
 <h3>Core Libraries</h3>
 
 <h4>rootcling</h4>
