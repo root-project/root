@@ -108,6 +108,10 @@ else
 			FREECC="$$FREECC -m64"; \
 			FREE_CFLAGS="-m64"; \
 		fi; \
+		if [ $(ARCH) = "linuxx32gcc" ]; then \
+			FREECC="$$FREECC -mx32"; \
+			FREE_CFLAGS="-mx32"; \
+		fi; \
 		if [ $(ARCH) = "linuxicc" ]; then \
 			FREECC="$$FREECC -m32"; \
 			FREE_CFLAGS="-m32"; \
