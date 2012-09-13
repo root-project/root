@@ -786,6 +786,34 @@ bool AdjustCropArea(QuartzImage *srcImage, Rectangle_t &cropArea)
 }
 
 //______________________________________________________________________________
+bool AdjustCropArea(QuartzImage *srcImage, NSRect &cropArea)
+{
+   assert(srcImage != nil && "AdjustCropArea, srcImage parameter is nil");
+   assert(srcImage.fImage != 0 && "AdjustCropArea, srcImage.fImage is null");
+   
+   Rectangle_t srcRect = {};
+   srcRect.fWidth = srcImage.fWidth;
+   srcRect.fHeight = srcImage.fHeight;
+   
+   Rectangle_t dstRect = {};
+   dstRect.fX = Short_t(cropArea.origin.x);
+   dstRect.fY = Short_t(cropArea.origin.y);
+   dstRect.fWidth = UShort_t(cropArea.size.width);
+   dstRect.fHeight = UShort_t(cropArea.size.height);
+   
+   if (AdjustCropArea(srcRect, dstRect)) {
+      cropArea.origin.x = dstRect.fX;
+      cropArea.origin.y = dstRect.fY;
+      cropArea.size.width = dstRect.fWidth;
+      cropArea.size.height = dstRect.fHeight;
+
+      return true;
+   }
+   
+   return false;
+}
+
+//______________________________________________________________________________
 bool AdjustCropArea(QuartzPixmap *srcPixmap, Rectangle_t &cropArea)
 {
    assert(srcPixmap != nil && "AdjustCropArea, srcPixmap parameter is nil");
