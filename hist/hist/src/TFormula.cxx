@@ -211,24 +211,31 @@ TFormula::TFormula(const char *name,const char *expression) :
       if (chaine.Contains("gausn")) {
          gausNorm = kTRUE;
          TString tmp = chaine;         
-         tmp.Replace(tmp.Index("gausn",5),5,"");
-         if ( tmp.Contains("gaus") && !(tmp.Contains("gausn") ) )
-            Warning("TFormula","Cannot use both gaus and gausn - use gaus as gausn");
-         if ( tmp.Contains("landau") && !(tmp.Contains("landaun")) ) 
-            Warning("TFormula","Cannot use both gausn and landau - use landau as landaun");
-         chaine.ReplaceAll("gausn","gaus");
+         tmp.ReplaceAll("gausn","");
+         tmp.ReplaceAll("landaun","");
+         if ( tmp.Contains("gaus")  )
+            Warning("TFormula","Cannot use both gaus and gausn - gaus will be treated as gausn");
+         if ( tmp.Contains("landau")  ) 
+            Warning("TFormula","Cannot use both gausn and landau - landau will be treated as landaun");
       }
       // special case for normalized landau
       if (chaine.Contains("landaun")) {
          landauNorm = kTRUE;
          TString tmp = chaine;         
-         tmp.Replace(tmp.Index("landaun",7),7,"");
-         if ( tmp.Contains("gaus") && !(tmp.Contains("gausn") ) )
-            Warning("TFormula","Cannot use both gaus and landaun - use gaus as gausn");
-         if ( tmp.Contains("landau") && !(tmp.Contains("landaun")) ) 
-            Warning("TFormula","Cannot use both landaun and landau - use landau as landaun");
-         chaine.ReplaceAll("landaun","landau");
+         tmp.ReplaceAll("landaun","");
+         tmp.ReplaceAll("gausn","");
+         if ( tmp.Contains("gaus")  ) {
+            Warning("TFormula","Cannot use both gaus and landaun - gaus will be treated as gausn");
+         }
+         if ( tmp.Contains("landau") ) 
+            Warning("TFormula","Cannot use both landau and landaun - landau will be treated as landaun");
       }
+      // need to to the replacement here for the error message before
+      if (gausNorm)
+         chaine.ReplaceAll("gausn","gaus");
+      if (landauNorm)
+         chaine.ReplaceAll("landaun","landau");
+
       SetTitle(chaine.Data());
    }
    delete [] expr;
