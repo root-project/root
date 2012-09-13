@@ -375,7 +375,8 @@ const CGFloat tapInterval = 0.15f;
 
    if (axis && pad->ObjectInPoint(scaledTapPt.x, scaledTapPt.y) == axis) {
       axis->UnZoom();
-      pad->InvalidateSelection(kTRUE);
+      pad->InvalidateSelection(kFALSE);//kTRUE);
+      [controller objectWasSelected : pad];
       [self setNeedsDisplay];
    } else {
       [controller handleDoubleTapOnPad : tapPt];
