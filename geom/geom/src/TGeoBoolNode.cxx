@@ -443,23 +443,18 @@ void TGeoUnion::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *
    origin[1] = 0.5*(ymin+ymax);
    dz = 0.5*(zmax-zmin);
    origin[2] = 0.5*(zmin+zmax);
-}   
+}
 
 //______________________________________________________________________________
 Bool_t TGeoUnion::Contains(Double_t *point) const
 {
 // Find if a union of two shapes contains a given point
    Double_t local[3];
-   TGeoBoolNode *node = (TGeoBoolNode*)this;
    fLeftMat->MasterToLocal(point, &local[0]);
    Bool_t inside = fLeft->Contains(&local[0]);
-   if (inside) {
-      node->SetSelected(1);
-      return kTRUE;
-   }   
+   if (inside) return kTRUE;
    fRightMat->MasterToLocal(point, &local[0]);
    inside = fRight->Contains(&local[0]);
-   if (inside) node->SetSelected(2);
    return inside;
 }
 
@@ -874,14 +869,11 @@ Bool_t TGeoSubtraction::Contains(Double_t *point) const
 {
 // Find if a subtraction of two shapes contains a given point
    Double_t local[3];
-   TGeoBoolNode *node = (TGeoBoolNode*)this;
    fLeftMat->MasterToLocal(point, &local[0]);
    Bool_t inside = fLeft->Contains(&local[0]);
-   if (inside) node->SetSelected(1);
-   else return kFALSE;
+   if (!inside) return kFALSE;
    fRightMat->MasterToLocal(point, &local[0]);
    inside = !fRight->Contains(&local[0]);
-   if (!inside) node->SetSelected(2);
    return inside;
 }
 
