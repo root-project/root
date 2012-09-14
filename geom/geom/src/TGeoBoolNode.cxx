@@ -450,7 +450,6 @@ Bool_t TGeoUnion::Contains(Double_t *point) const
 {
 // Find if a union of two shapes contains a given point
    Double_t local[3];
-   TGeoBoolNode *node = (TGeoBoolNode*)this;
    fLeftMat->MasterToLocal(point, &local[0]);
    Bool_t inside = fLeft->Contains(&local[0]);
    if (inside) return kTRUE;
@@ -870,7 +869,6 @@ Bool_t TGeoSubtraction::Contains(Double_t *point) const
 {
 // Find if a subtraction of two shapes contains a given point
    Double_t local[3];
-   TGeoBoolNode *node = (TGeoBoolNode*)this;
    fLeftMat->MasterToLocal(point, &local[0]);
    Bool_t inside = fLeft->Contains(&local[0]);
    if (!inside) return kFALSE;
