@@ -314,7 +314,7 @@ public:
    {
       if (p != fData)
          delete [] fData;
-      p = fData;
+      fData = p;
    }
    
    void Release()

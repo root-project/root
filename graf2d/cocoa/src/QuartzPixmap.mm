@@ -326,7 +326,7 @@ namespace Quartz = ROOT::Quartz;
 //______________________________________________________________________________
 - (void) putPixel : (const unsigned char *) rgb X : (unsigned) x Y : (unsigned) y
 {
-   assert(rgb != nil && "putPixel:X:Y:, rgb parameter is nil");
+   assert(rgb != 0 && "putPixel:X:Y:, rgb parameter is null");
    assert(x < fWidth && "putPixel:X:Y:, x parameter is >= self.fWidth");
    assert(y < fHeight && "putPixel:X:Y:, y parameter is >= self.fHeight");
    
