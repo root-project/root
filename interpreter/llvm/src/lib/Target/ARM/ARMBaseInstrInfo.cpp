@@ -2028,13 +2028,14 @@ optimizeCompareInstr(MachineInstr *CmpInstr, unsigned SrcReg, unsigned SrcReg2,
 
   // Masked compares sometimes use the same register as the corresponding 'and'.
   if (CmpMask != ~0) {
-    if (!isSuitableForMask(MI, SrcReg, CmpMask, false)) {
+    if (!isSuitableForMask(MI, SrcReg, CmpMask, false) || isPredicated(MI)) {
       MI = 0;
       for (MachineRegisterInfo::use_iterator UI = MRI->use_begin(SrcReg),
            UE = MRI->use_end(); UI != UE; ++UI) {
         if (UI->getParent() != CmpInstr->getParent()) continue;
         MachineInstr *PotentialAND = &*UI;
-        if (!isSuitableForMask(PotentialAND, SrcReg, CmpMask, true))
+        if (!isSuitableForMask(PotentialAND, SrcReg, CmpMask, true) ||
+            isPredicated(PotentialAND))
           continue;
         MI = PotentialAND;
         break;
@@ -2099,6 +2100,10 @@ optimizeCompareInstr(MachineInstr *CmpInstr, unsigned SrcReg, unsigned SrcReg2,
 
   // The single candidate is called MI.
   if (!MI) MI = Sub;
+
+  // We can't use a predicated instruction - it doesn't always write the flags.
+  if (isPredicated(MI))
+    return false;
 
   switch (MI->getOpcode()) {
   default: break;
@@ -2206,6 +2211,7 @@ optimizeCompareInstr(MachineInstr *CmpInstr, unsigned SrcReg, unsigned SrcReg2,
     // Toggle the optional operand to CPSR.
     MI->getOperand(5).setReg(ARM::CPSR);
     MI->getOperand(5).setIsDef(true);
+    assert(!isPredicated(MI) && "Can't use flags from predicated instruction");
     CmpInstr->eraseFromParent();
 
     // Modify the condition code of operands in OperandsToUpdate.
@@ -2336,6 +2342,37 @@ bool ARMBaseInstrInfo::FoldImmediate(MachineInstr *UseMI,
   return true;
 }
 
+// Return the number of 32-bit words loaded by LDM or stored by STM. If this
+// can't be easily determined return 0 (missing MachineMemOperand).
+//
+// FIXME: The current MachineInstr design does not support relying on machine
+// mem operands to determine the width of a memory access. Instead, we expect
+// the target to provide this information based on the instruction opcode and
+// operands. However, using MachineMemOperand is a the best solution now for
+// two reasons:
+//
+// 1) getNumMicroOps tries to infer LDM memory width from the total number of MI
+// operands. This is much more dangerous than using the MachineMemOperand
+// sizes because CodeGen passes can insert/remove optional machine operands. In
+// fact, it's totally incorrect for preRA passes and appears to be wrong for
+// postRA passes as well.
+//
+// 2) getNumLDMAddresses is only used by the scheduling machine model and any
+// machine model that calls this should handle the unknown (zero size) case.
+//
+// Long term, we should require a target hook that verifies MachineMemOperand
+// sizes during MC lowering. That target hook should be local to MC lowering
+// because we can't ensure that it is aware of other MI forms. Doing this will
+// ensure that MachineMemOperands are correctly propagated through all passes.
+unsigned ARMBaseInstrInfo::getNumLDMAddresses(const MachineInstr *MI) const {
+  unsigned Size = 0;
+  for (MachineInstr::mmo_iterator I = MI->memoperands_begin(),
+         E = MI->memoperands_end(); I != E; ++I) {
+    Size += (*I)->getSize();
+  }
+  return Size / 4;
+}
+
 unsigned
 ARMBaseInstrInfo::getNumMicroOps(const InstrItineraryData *ItinData,
                                  const MachineInstr *MI) const {
@@ -2424,7 +2461,7 @@ ARMBaseInstrInfo::getNumMicroOps(const InstrItineraryData *ItinData,
       if (NumRegs % 2)
         ++A8UOps;
       return A8UOps;
-    } else if (Subtarget.isCortexA9()) {
+    } else if (Subtarget.isLikeA9()) {
       int A9UOps = (NumRegs / 2);
       // If there are odd number of registers or if it's not 64-bit aligned,
       // then it takes an extra AGU (Address Generation Unit) cycle.
@@ -2457,7 +2494,7 @@ ARMBaseInstrInfo::getVLDMDefCycle(const InstrItineraryData *ItinData,
     DefCycle = RegNo / 2 + 1;
     if (RegNo % 2)
       ++DefCycle;
-  } else if (Subtarget.isCortexA9()) {
+  } else if (Subtarget.isLikeA9()) {
     DefCycle = RegNo;
     bool isSLoad = false;
 
@@ -2501,7 +2538,7 @@ ARMBaseInstrInfo::getLDMDefCycle(const InstrItineraryData *ItinData,
       DefCycle = 1;
     // Result latency is issue cycle + 2: E2.
     DefCycle += 2;
-  } else if (Subtarget.isCortexA9()) {
+  } else if (Subtarget.isLikeA9()) {
     DefCycle = (RegNo / 2);
     // If there are odd number of registers or if it's not 64-bit aligned,
     // then it takes an extra AGU (Address Generation Unit) cycle.
@@ -2532,7 +2569,7 @@ ARMBaseInstrInfo::getVSTMUseCycle(const InstrItineraryData *ItinData,
     UseCycle = RegNo / 2 + 1;
     if (RegNo % 2)
       ++UseCycle;
-  } else if (Subtarget.isCortexA9()) {
+  } else if (Subtarget.isLikeA9()) {
     UseCycle = RegNo;
     bool isSStore = false;
 
@@ -2573,7 +2610,7 @@ ARMBaseInstrInfo::getSTMUseCycle(const InstrItineraryData *ItinData,
       UseCycle = 2;
     // Read in E3.
     UseCycle += 2;
-  } else if (Subtarget.isCortexA9()) {
+  } else if (Subtarget.isLikeA9()) {
     UseCycle = (RegNo / 2);
     // If there are odd number of registers or if it's not 64-bit aligned,
     // then it takes an extra AGU (Address Generation Unit) cycle.
@@ -2758,7 +2795,7 @@ static int adjustDefLatency(const ARMSubtarget &Subtarget,
                             const MachineInstr *DefMI,
                             const MCInstrDesc *DefMCID, unsigned DefAlign) {
   int Adjust = 0;
-  if (Subtarget.isCortexA8() || Subtarget.isCortexA9()) {
+  if (Subtarget.isCortexA8() || Subtarget.isLikeA9()) {
     // FIXME: Shifter op hack: no shift (i.e. [r +/- r]) or [r + r << 2]
     // variants are one cycle cheaper.
     switch (DefMCID->getOpcode()) {
@@ -2785,7 +2822,7 @@ static int adjustDefLatency(const ARMSubtarget &Subtarget,
     }
   }
 
-  if (DefAlign < 8 && Subtarget.isCortexA9()) {
+  if (DefAlign < 8 && Subtarget.isLikeA9()) {
     switch (DefMCID->getOpcode()) {
     default: break;
     case ARM::VLD1q8:
@@ -2943,7 +2980,7 @@ ARMBaseInstrInfo::getOperandLatency(const InstrItineraryData *ItinData,
   if (Reg == ARM::CPSR) {
     if (DefMI->getOpcode() == ARM::FMSTAT) {
       // fpscr -> cpsr stalls over 20 cycles on A8 (and earlier?)
-      return Subtarget.isCortexA9() ? 1 : 20;
+      return Subtarget.isLikeA9() ? 1 : 20;
     }
 
     // CPSR set and branch can be paired in the same cycle.
@@ -3009,7 +3046,7 @@ ARMBaseInstrInfo::getOperandLatency(const InstrItineraryData *ItinData,
 
   if (!UseNode->isMachineOpcode()) {
     int Latency = ItinData->getOperandCycle(DefMCID.getSchedClass(), DefIdx);
-    if (Subtarget.isCortexA9())
+    if (Subtarget.isLikeA9())
       return Latency <= 2 ? 1 : Latency - 1;
     else
       return Latency <= 3 ? 1 : Latency - 2;
@@ -3026,7 +3063,7 @@ ARMBaseInstrInfo::getOperandLatency(const InstrItineraryData *ItinData,
                                   UseMCID, UseIdx, UseAlign);
 
   if (Latency > 1 &&
-      (Subtarget.isCortexA8() || Subtarget.isCortexA9())) {
+      (Subtarget.isCortexA8() || Subtarget.isLikeA9())) {
     // FIXME: Shifter op hack: no shift (i.e. [r +/- r]) or [r + r << 2]
     // variants are one cycle cheaper.
     switch (DefMCID.getOpcode()) {
@@ -3055,7 +3092,7 @@ ARMBaseInstrInfo::getOperandLatency(const InstrItineraryData *ItinData,
     }
   }
 
-  if (DefAlign < 8 && Subtarget.isCortexA9())
+  if (DefAlign < 8 && Subtarget.isLikeA9())
     switch (DefMCID.getOpcode()) {
     default: break;
     case ARM::VLD1q8:
@@ -3348,9 +3385,9 @@ ARMBaseInstrInfo::getExecutionDomain(const MachineInstr *MI) const {
   if (MI->getOpcode() == ARM::VMOVD && !isPredicated(MI))
     return std::make_pair(ExeVFP, (1<<ExeVFP) | (1<<ExeNEON));
 
-  // Cortex-A9 is particularly picky about mixing the two and wants these
+  // A9-like cores are particularly picky about mixing the two and want these
   // converted.
-  if (Subtarget.isCortexA9() && !isPredicated(MI) &&
+  if (Subtarget.isLikeA9() && !isPredicated(MI) &&
       (MI->getOpcode() == ARM::VMOVRS ||
        MI->getOpcode() == ARM::VMOVSR ||
        MI->getOpcode() == ARM::VMOVS))

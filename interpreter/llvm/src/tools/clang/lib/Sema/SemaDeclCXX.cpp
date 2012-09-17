@@ -1702,7 +1702,11 @@ Sema::ActOnCXXInClassMemberInitializer(Decl *D, SourceLocation InitLoc,
   }
 
   ExprResult Init = InitExpr;
-  if (!FD->getType()->isDependentType() && !InitExpr->isTypeDependent()) {
+  if (!FD->getType()->isDependentType() && !InitExpr->isTypeDependent() &&
+      !FD->getDeclContext()->isDependentContext()) {
+    // Note: We don't type-check when we're in a dependent context, because
+    // the initialization-substitution code does not properly handle direct
+    // list initialization. We have the same hackaround for ctor-initializers.
     if (isa<InitListExpr>(InitExpr) && isStdInitializerList(FD->getType(), 0)) {
       Diag(FD->getLocation(), diag::warn_dangling_std_initializer_list)
         << /*at end of ctor*/1 << InitExpr->getSourceRange();
@@ -3342,11 +3346,10 @@ void Sema::ActOnMemInitializers(Decl *ConstructorDecl,
     } else {
       assert(Init->isDelegatingInitializer());
       // This must be the only initializer
-      if (i != 0 || NumMemInits > 1) {
-        Diag(MemInits[0]->getSourceLocation(),
+      if (NumMemInits != 1) {
+        Diag(Init->getSourceLocation(),
              diag::err_delegating_initializer_alone)
-          << MemInits[0]->getSourceRange();
-        HadError = true;
+          << Init->getSourceRange() << MemInits[i ? 0 : 1]->getSourceRange();
         // We will treat this as being the only initializer.
       }
       SetDelegatingInitializer(Constructor, MemInits[i]);
@@ -4322,7 +4325,7 @@ bool SpecialMemberDeletionInfo::isAccessible(Subobject Subobj,
   /// If we're operating on a base class, the object type is the
   /// type of this special member.
   QualType objectTy;
-  AccessSpecifier access = target->getAccess();;
+  AccessSpecifier access = target->getAccess();
   if (CXXBaseSpecifier *base = Subobj.dyn_cast<CXXBaseSpecifier*>()) {
     objectTy = S.Context.getTypeDeclType(MD->getParent());
     access = CXXRecordDecl::MergeAccess(base->getAccessSpecifier(), access);

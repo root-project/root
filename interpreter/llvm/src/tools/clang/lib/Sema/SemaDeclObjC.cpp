@@ -282,24 +282,23 @@ void Sema::AddAnyMethodToGlobalPool(Decl *D) {
     AddFactoryMethodToGlobalPool(MDecl, true);
 }
 
-/// StrongPointerToObjCPointer - returns true when pointer to ObjC pointer
-/// is __strong, or when it is any other type. It returns false when
-/// pointer to ObjC pointer is not __strong.
+/// HasExplicitOwnershipAttr - returns true when pointer to ObjC pointer
+/// has explicit ownership attribute; false otherwise.
 static bool
-StrongPointerToObjCPointer(Sema &S, ParmVarDecl *Param) {
+HasExplicitOwnershipAttr(Sema &S, ParmVarDecl *Param) {
   QualType T = Param->getType();
-  if (!T->isObjCIndirectLifetimeType())
+  
+  if (const PointerType *PT = T->getAs<PointerType>()) {
+    T = PT->getPointeeType();
+  } else if (const ReferenceType *RT = T->getAs<ReferenceType>()) {
+    T = RT->getPointeeType();
+  } else {
     return true;
-  if (!T->isPointerType() && !T->isReferenceType())
-    return true;
-  T = T->isPointerType() 
-        ? T->getAs<PointerType>()->getPointeeType() 
-        : T->getAs<ReferenceType>()->getPointeeType();
-  if (T->isObjCLifetimeType()) {
-    Qualifiers::ObjCLifetime lifetime = T.getObjCLifetime();
-    return lifetime == Qualifiers::OCL_Strong;
   }
-  return true;
+  
+  // If we have a lifetime qualifier, but it's local, we must have 
+  // inferred it. So, it is implicit.
+  return !T.getLocalQualifiers().hasObjCLifetime();
 }
 
 /// ActOnStartOfObjCMethodDef - This routine sets up parameters; invisible
@@ -335,7 +334,7 @@ void Sema::ActOnStartOfObjCMethodDef(Scope *FnBodyScope, Decl *D) {
           Param->setInvalidDecl();
     if (!Param->isInvalidDecl() &&
         getLangOpts().ObjCAutoRefCount &&
-        !StrongPointerToObjCPointer(*this, Param))
+        !HasExplicitOwnershipAttr(*this, Param))
       Diag(Param->getLocation(), diag::warn_arc_strong_pointer_objc_pointer) <<
             Param->getType();
     
@@ -371,8 +370,10 @@ void Sema::ActOnStartOfObjCMethodDef(Scope *FnBodyScope, Decl *D) {
   // Warn on deprecated methods under -Wdeprecated-implementations,
   // and prepare for warning on missing super calls.
   if (ObjCInterfaceDecl *IC = MDecl->getClassInterface()) {
-    if (ObjCMethodDecl *IMD = 
-          IC->lookupMethod(MDecl->getSelector(), MDecl->isInstanceMethod()))
+    ObjCMethodDecl *IMD = 
+      IC->lookupMethod(MDecl->getSelector(), MDecl->isInstanceMethod());
+    
+    if (IMD)
       DiagnoseObjCImplementedDeprecations(*this, 
                                           dyn_cast<NamedDecl>(IMD), 
                                           MDecl->getLocation(), 0);
@@ -385,7 +386,13 @@ void Sema::ActOnStartOfObjCMethodDef(Scope *FnBodyScope, Decl *D) {
       getCurFunction()->ObjCShouldCallSuperDealloc = 
         !(Context.getLangOpts().ObjCAutoRefCount ||
           Context.getLangOpts().getGC() == LangOptions::GCOnly) &&
-        MDecl->getMethodFamily() == OMF_dealloc;
+          MDecl->getMethodFamily() == OMF_dealloc;
+      if (!getCurFunction()->ObjCShouldCallSuperDealloc) {
+        IMD = IC->getSuperClass()->lookupMethod(MDecl->getSelector(), 
+                                                MDecl->isInstanceMethod());
+        getCurFunction()->ObjCShouldCallSuperDealloc = 
+          (IMD && IMD->hasAttr<ObjCRequiresSuperAttr>());
+      }
       getCurFunction()->ObjCShouldCallSuperFinalize =
         Context.getLangOpts().getGC() != LangOptions::NonGC &&
         MDecl->getMethodFamily() == OMF_finalize;

@@ -381,7 +381,7 @@ void MCAsmLayout::LayoutFragment(MCFragment *F) {
   LastValidFragment[F->getParent()] = F;
 }
 
-/// WriteFragmentData - Write the \arg F data to the output file.
+/// WriteFragmentData - Write the \p F data to the output file.
 static void WriteFragmentData(const MCAssembler &Asm, const MCAsmLayout &Layout,
                               const MCFragment &F) {
   MCObjectWriter *OW = &Asm.getWriter();
@@ -830,7 +830,7 @@ raw_ostream &operator<<(raw_ostream &OS, const MCFixup &AF) {
 
 }
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
 void MCFragment::dump() {
   raw_ostream &OS = llvm::errs();
 

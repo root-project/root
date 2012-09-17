@@ -82,7 +82,7 @@ public:
   }
 
   bool empty() const { return Seqs.empty(); }
-  
+
   /// layout - Computes the final table layout.
   void layout() {
     assert(Entries == 0 && "Can only call layout() once");

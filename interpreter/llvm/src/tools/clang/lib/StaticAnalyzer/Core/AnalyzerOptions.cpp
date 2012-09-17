@@ -16,6 +16,7 @@
 #include "llvm/ADT/StringSwitch.h"
 
 using namespace clang;
+using namespace llvm;
 
 bool
 AnalyzerOptions::mayInlineCXXMemberFunction(CXXInlineableMemberKind K) const {
@@ -47,6 +48,66 @@ AnalyzerOptions::mayInlineCXXMemberFunction(CXXInlineableMemberKind K) const {
   return CXXMemberInliningMode >= K;
 }
 
+bool AnalyzerOptions::getBooleanOption(StringRef Name, bool DefaultVal) const {
+  // FIXME: We should emit a warning here if the value is something other than
+  // "true", "false", or the empty string (meaning the default value),
+  // but the AnalyzerOptions doesn't have access to a diagnostic engine.
+  return llvm::StringSwitch<bool>(Config.lookup(Name))
+    .Case("true", true)
+    .Case("false", false)
+    .Default(DefaultVal);
+}
+
 bool AnalyzerOptions::includeTemporaryDtorsInCFG() const {
-  return !Config.lookup("cfg-temporary-dtors").empty();
+  if (!IncludeTemporaryDtorsInCFG.hasValue())
+    const_cast<llvm::Optional<bool> &>(IncludeTemporaryDtorsInCFG) =
+      getBooleanOption("cfg-temporary-dtors", /*Default=*/false);
+  
+  return *IncludeTemporaryDtorsInCFG;
+}
+
+bool AnalyzerOptions::mayInlineCXXStandardLibrary() const {
+  if (!InlineCXXStandardLibrary.hasValue())
+    const_cast<llvm::Optional<bool> &>(InlineCXXStandardLibrary) =
+      getBooleanOption("c++-stdlib-inlining", /*Default=*/true);
+  
+  return *InlineCXXStandardLibrary;
+}
+
+bool AnalyzerOptions::mayInlineTemplateFunctions() const {
+  if (!InlineTemplateFunctions.hasValue())
+    const_cast<llvm::Optional<bool> &>(InlineTemplateFunctions) =
+      getBooleanOption("c++-template-inlining", /*Default=*/true);
+  
+  return *InlineTemplateFunctions;
+}
+
+bool AnalyzerOptions::mayInlineObjCMethod() const {
+  if (!ObjCInliningMode.hasValue())
+    const_cast<llvm::Optional<bool> &>(ObjCInliningMode) =
+      getBooleanOption("objc-inlining", /*Default=*/true);
+
+  return *ObjCInliningMode;
+}
+
+int AnalyzerOptions::getOptionAsInteger(StringRef Name, int DefaultVal) const {
+  std::string OptStr = Config.lookup(Name);
+  if (OptStr.empty())
+    return DefaultVal;
+
+  int Res = DefaultVal;
+  assert(StringRef(OptStr).getAsInteger(10, Res) == false &&
+         "analyzer-config option should be numeric.");
+
+  return Res;
+}
+
+unsigned AnalyzerOptions::getAlwaysInlineSize() const {
+  if (!AlwaysInlineSize.hasValue()) {
+    unsigned DefaultSize = 3;
+    const_cast<Optional<unsigned> &>(AlwaysInlineSize) =
+      getOptionAsInteger("ipa-always-inline-size", DefaultSize);
+  }
+
+  return AlwaysInlineSize.getValue();
 }

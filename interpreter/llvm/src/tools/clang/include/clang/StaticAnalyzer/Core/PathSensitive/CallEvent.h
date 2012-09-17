@@ -120,8 +120,7 @@ private:
   const LocationContext *LCtx;
   llvm::PointerUnion<const Expr *, const Decl *> Origin;
 
-  // DO NOT IMPLEMENT
-  CallEvent &operator=(const CallEvent &);
+  void operator=(const CallEvent &) LLVM_DELETED_FUNCTION;
 
 protected:
   // This is user data for subclasses.
@@ -292,6 +291,9 @@ public:
   /// \brief Returns true if this is a statement is a function or method call
   /// of some kind.
   static bool isCallStmt(const Stmt *S);
+
+  /// \brief Returns the result type of a function, method declaration.
+  static QualType getDeclaredResultType(const Decl *D);
 
   // Iterator access to formal parameters and their types.
 private:
@@ -549,6 +551,8 @@ public:
   }
 
   virtual const Expr *getCXXThisExpr() const;
+  
+  virtual RuntimeDefinition getRuntimeDefinition() const;
 
   virtual Kind getKind() const { return CE_CXXMember; }
 

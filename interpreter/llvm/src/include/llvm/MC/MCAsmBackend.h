@@ -99,7 +99,7 @@ public:
 
   /// @}
 
-  /// applyFixup - Apply the \arg Value for given \arg Fixup into the provided
+  /// applyFixup - Apply the \p Value for given \p Fixup into the provided
   /// data fragment, at the offset specified by the fixup and following the
   /// fixup kind as appropriate.
   virtual void applyFixup(const MCFixup &Fixup, char *Data, unsigned DataSize,
@@ -126,9 +126,9 @@ public:
   /// RelaxInstruction - Relax the instruction in the given fragment to the next
   /// wider instruction.
   ///
-  /// \param Inst - The instruction to relax, which may be the same as the
+  /// \param Inst The instruction to relax, which may be the same as the
   /// output.
-  /// \parm Res [output] - On return, the relaxed instruction.
+  /// \param [out] Res On return, the relaxed instruction.
   virtual void relaxInstruction(const MCInst &Inst, MCInst &Res) const = 0;
 
   /// @}

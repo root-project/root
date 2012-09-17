@@ -742,6 +742,11 @@ ExprResult Sema::SemaAtomicOpsOverloaded(ExprResult TheCallResult,
         << Ptr->getType() << Ptr->getSourceRange();
       return ExprError();
     }
+    if (AtomTy.isConstQualified()) {
+      Diag(DRE->getLocStart(), diag::err_atomic_op_needs_non_const_atomic)
+        << Ptr->getType() << Ptr->getSourceRange();
+      return ExprError();
+    }
     ValType = AtomTy->getAs<AtomicType>()->getValueType();
   }
 
@@ -1938,16 +1943,16 @@ public:
   void HandleIncompleteSpecifier(const char *startSpecifier,
                                  unsigned specifierLen);
 
+  void HandleInvalidLengthModifier(
+      const analyze_format_string::FormatSpecifier &FS,
+      const analyze_format_string::ConversionSpecifier &CS,
+      const char *startSpecifier, unsigned specifierLen, unsigned DiagID);
+
   void HandleNonStandardLengthModifier(
-      const analyze_format_string::LengthModifier &LM,
+      const analyze_format_string::FormatSpecifier &FS,
       const char *startSpecifier, unsigned specifierLen);
 
   void HandleNonStandardConversionSpecifier(
-      const analyze_format_string::ConversionSpecifier &CS,
-      const char *startSpecifier, unsigned specifierLen);
-
-  void HandleNonStandardConversionSpecification(
-      const analyze_format_string::LengthModifier &LM,
       const analyze_format_string::ConversionSpecifier &CS,
       const char *startSpecifier, unsigned specifierLen);
 
@@ -2028,35 +2033,95 @@ void CheckFormatHandler::HandleIncompleteSpecifier(const char *startSpecifier,
                        getSpecifierRange(startSpecifier, specifierLen));
 }
 
+void CheckFormatHandler::HandleInvalidLengthModifier(
+    const analyze_format_string::FormatSpecifier &FS,
+    const analyze_format_string::ConversionSpecifier &CS,
+    const char *startSpecifier, unsigned specifierLen, unsigned DiagID) {
+  using namespace analyze_format_string;
+
+  const LengthModifier &LM = FS.getLengthModifier();
+  CharSourceRange LMRange = getSpecifierRange(LM.getStart(), LM.getLength());
+
+  // See if we know how to fix this length modifier.
+  llvm::Optional<LengthModifier> FixedLM = FS.getCorrectedLengthModifier();
+  if (FixedLM) {
+    EmitFormatDiagnostic(S.PDiag(DiagID) << LM.toString() << CS.toString(),
+                         getLocationOfByte(LM.getStart()),
+                         /*IsStringLocation*/true,
+                         getSpecifierRange(startSpecifier, specifierLen));
+
+    S.Diag(getLocationOfByte(LM.getStart()), diag::note_format_fix_specifier)
+      << FixedLM->toString()
+      << FixItHint::CreateReplacement(LMRange, FixedLM->toString());
+
+  } else {
+    FixItHint Hint;
+    if (DiagID == diag::warn_format_nonsensical_length)
+      Hint = FixItHint::CreateRemoval(LMRange);
+
+    EmitFormatDiagnostic(S.PDiag(DiagID) << LM.toString() << CS.toString(),
+                         getLocationOfByte(LM.getStart()),
+                         /*IsStringLocation*/true,
+                         getSpecifierRange(startSpecifier, specifierLen),
+                         Hint);
+  }
+}
+
 void CheckFormatHandler::HandleNonStandardLengthModifier(
-    const analyze_format_string::LengthModifier &LM,
+    const analyze_format_string::FormatSpecifier &FS,
     const char *startSpecifier, unsigned specifierLen) {
-  EmitFormatDiagnostic(S.PDiag(diag::warn_format_non_standard) << LM.toString()
-                       << 0,
-                       getLocationOfByte(LM.getStart()),
-                       /*IsStringLocation*/true,
-                       getSpecifierRange(startSpecifier, specifierLen));
+  using namespace analyze_format_string;
+
+  const LengthModifier &LM = FS.getLengthModifier();
+  CharSourceRange LMRange = getSpecifierRange(LM.getStart(), LM.getLength());
+
+  // See if we know how to fix this length modifier.
+  llvm::Optional<LengthModifier> FixedLM = FS.getCorrectedLengthModifier();
+  if (FixedLM) {
+    EmitFormatDiagnostic(S.PDiag(diag::warn_format_non_standard)
+                           << LM.toString() << 0,
+                         getLocationOfByte(LM.getStart()),
+                         /*IsStringLocation*/true,
+                         getSpecifierRange(startSpecifier, specifierLen));
+
+    S.Diag(getLocationOfByte(LM.getStart()), diag::note_format_fix_specifier)
+      << FixedLM->toString()
+      << FixItHint::CreateReplacement(LMRange, FixedLM->toString());
+
+  } else {
+    EmitFormatDiagnostic(S.PDiag(diag::warn_format_non_standard)
+                           << LM.toString() << 0,
+                         getLocationOfByte(LM.getStart()),
+                         /*IsStringLocation*/true,
+                         getSpecifierRange(startSpecifier, specifierLen));
+  }
 }
 
 void CheckFormatHandler::HandleNonStandardConversionSpecifier(
     const analyze_format_string::ConversionSpecifier &CS,
     const char *startSpecifier, unsigned specifierLen) {
-  EmitFormatDiagnostic(S.PDiag(diag::warn_format_non_standard) << CS.toString()
-                       << 1,
-                       getLocationOfByte(CS.getStart()),
-                       /*IsStringLocation*/true,
-                       getSpecifierRange(startSpecifier, specifierLen));
-}
+  using namespace analyze_format_string;
 
-void CheckFormatHandler::HandleNonStandardConversionSpecification(
-    const analyze_format_string::LengthModifier &LM,
-    const analyze_format_string::ConversionSpecifier &CS,
-    const char *startSpecifier, unsigned specifierLen) {
-  EmitFormatDiagnostic(S.PDiag(diag::warn_format_non_standard_conversion_spec)
-                       << LM.toString() << CS.toString(),
-                       getLocationOfByte(LM.getStart()),
-                       /*IsStringLocation*/true,
-                       getSpecifierRange(startSpecifier, specifierLen));
+  // See if we know how to fix this conversion specifier.
+  llvm::Optional<ConversionSpecifier> FixedCS = CS.getStandardSpecifier();
+  if (FixedCS) {
+    EmitFormatDiagnostic(S.PDiag(diag::warn_format_non_standard)
+                          << CS.toString() << /*conversion specifier*/1,
+                         getLocationOfByte(CS.getStart()),
+                         /*IsStringLocation*/true,
+                         getSpecifierRange(startSpecifier, specifierLen));
+
+    CharSourceRange CSRange = getSpecifierRange(CS.getStart(), CS.getLength());
+    S.Diag(getLocationOfByte(CS.getStart()), diag::note_format_fix_specifier)
+      << FixedCS->toString()
+      << FixItHint::CreateReplacement(CSRange, FixedCS->toString());
+  } else {
+    EmitFormatDiagnostic(S.PDiag(diag::warn_format_non_standard)
+                          << CS.toString() << /*conversion specifier*/1,
+                         getLocationOfByte(CS.getStart()),
+                         /*IsStringLocation*/true,
+                         getSpecifierRange(startSpecifier, specifierLen));
+  }
 }
 
 void CheckFormatHandler::HandlePosition(const char *startPos,
@@ -2565,23 +2630,17 @@ CheckPrintfHandler::HandlePrintfSpecifier(const analyze_printf::PrintfSpecifier
             startSpecifier, specifierLen);
 
   // Check the length modifier is valid with the given conversion specifier.
-  const LengthModifier &LM = FS.getLengthModifier();
-  if (!FS.hasValidLengthModifier())
-    EmitFormatDiagnostic(S.PDiag(diag::warn_format_nonsensical_length)
-                           << LM.toString() << CS.toString(),
-                         getLocationOfByte(LM.getStart()),
-                         /*IsStringLocation*/true,
-                         getSpecifierRange(startSpecifier, specifierLen),
-                         FixItHint::CreateRemoval(
-                           getSpecifierRange(LM.getStart(),
-                                             LM.getLength())));
-  if (!FS.hasStandardLengthModifier())
-    HandleNonStandardLengthModifier(LM, startSpecifier, specifierLen);
+  if (!FS.hasValidLengthModifier(S.getASTContext().getTargetInfo()))
+    HandleInvalidLengthModifier(FS, CS, startSpecifier, specifierLen,
+                                diag::warn_format_nonsensical_length);
+  else if (!FS.hasStandardLengthModifier())
+    HandleNonStandardLengthModifier(FS, startSpecifier, specifierLen);
+  else if (!FS.hasStandardLengthConversionCombination())
+    HandleInvalidLengthModifier(FS, CS, startSpecifier, specifierLen,
+                                diag::warn_format_non_standard_conversion_spec);
+
   if (!FS.hasStandardConversionSpecifier(S.getLangOpts()))
     HandleNonStandardConversionSpecifier(CS, startSpecifier, specifierLen);
-  if (!FS.hasStandardLengthConversionCombination())
-    HandleNonStandardConversionSpecification(LM, CS, startSpecifier,
-                                             specifierLen);
 
   // The remaining checks depend on the data arguments.
   if (HasVAListArg)
@@ -2885,24 +2944,17 @@ bool CheckScanfHandler::HandleScanfSpecifier(
   }
   
   // Check the length modifier is valid with the given conversion specifier.
-  const LengthModifier &LM = FS.getLengthModifier();
-  if (!FS.hasValidLengthModifier()) {
-    const CharSourceRange &R = getSpecifierRange(LM.getStart(), LM.getLength());
-    EmitFormatDiagnostic(S.PDiag(diag::warn_format_nonsensical_length)
-                         << LM.toString() << CS.toString()
-                         << getSpecifierRange(startSpecifier, specifierLen),
-                         getLocationOfByte(LM.getStart()),
-                         /*IsStringLocation*/true, R,
-                         FixItHint::CreateRemoval(R));
-  }
+  if (!FS.hasValidLengthModifier(S.getASTContext().getTargetInfo()))
+    HandleInvalidLengthModifier(FS, CS, startSpecifier, specifierLen,
+                                diag::warn_format_nonsensical_length);
+  else if (!FS.hasStandardLengthModifier())
+    HandleNonStandardLengthModifier(FS, startSpecifier, specifierLen);
+  else if (!FS.hasStandardLengthConversionCombination())
+    HandleInvalidLengthModifier(FS, CS, startSpecifier, specifierLen,
+                                diag::warn_format_non_standard_conversion_spec);
 
-  if (!FS.hasStandardLengthModifier())
-    HandleNonStandardLengthModifier(LM, startSpecifier, specifierLen);
   if (!FS.hasStandardConversionSpecifier(S.getLangOpts()))
     HandleNonStandardConversionSpecifier(CS, startSpecifier, specifierLen);
-  if (!FS.hasStandardLengthConversionCombination())
-    HandleNonStandardConversionSpecification(LM, CS, startSpecifier,
-                                             specifierLen);
 
   // The remaining checks depend on the data arguments.
   if (HasVAListArg)
@@ -2990,7 +3042,8 @@ void Sema::CheckFormatString(const StringLiteral *FExpr,
                          inFunctionCall, CallType);
   
     if (!analyze_format_string::ParsePrintfString(H, Str, Str + StrLen,
-                                                  getLangOpts()))
+                                                  getLangOpts(),
+                                                  Context.getTargetInfo()))
       H.DoneProcessing();
   } else if (Type == FST_Scanf) {
     CheckScanfHandler H(*this, FExpr, OrigFormatExpr, firstDataArg, numDataArgs,
@@ -2998,7 +3051,8 @@ void Sema::CheckFormatString(const StringLiteral *FExpr,
                         inFunctionCall, CallType);
     
     if (!analyze_format_string::ParseScanfString(H, Str, Str + StrLen,
-                                                 getLangOpts()))
+                                                 getLangOpts(),
+                                                 Context.getTargetInfo()))
       H.DoneProcessing();
   } // TODO: handle other formats
 }
@@ -5250,7 +5304,8 @@ static bool considerVariable(VarDecl *var, Expr *ref, RetainCycleOwner &owner) {
     return false;
 
   owner.Variable = var;
-  owner.setLocsFrom(ref);
+  if (ref)
+    owner.setLocsFrom(ref);
   return true;
 }
 
@@ -5448,6 +5503,20 @@ void Sema::checkRetainCycles(Expr *receiver, Expr *argument) {
 
   if (Expr *capturer = findCapturingExpr(*this, argument, owner))
     diagnoseRetainCycle(*this, capturer, owner);
+}
+
+void Sema::checkRetainCycles(VarDecl *Var, Expr *Init) {
+  RetainCycleOwner Owner;
+  if (!considerVariable(Var, /*DeclRefExpr=*/0, Owner))
+    return;
+  
+  // Because we don't have an expression for the variable, we have to set the
+  // location explicitly here.
+  Owner.Loc = Var->getLocation();
+  Owner.Range = Var->getSourceRange();
+  
+  if (Expr *Capturer = findCapturingExpr(*this, Init, Owner))
+    diagnoseRetainCycle(*this, Capturer, Owner);
 }
 
 bool Sema::checkUnsafeAssigns(SourceLocation Loc,
@@ -6060,4 +6129,3 @@ void Sema::CheckArgumentWithTypeTag(const ArgumentWithTypeTagAttr *Attr,
         << ArgumentExpr->getSourceRange()
         << TypeTagExpr->getSourceRange();
 }
-

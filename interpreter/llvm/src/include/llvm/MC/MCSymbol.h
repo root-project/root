@@ -113,7 +113,7 @@ namespace llvm {
       return *Section;
     }
 
-    /// setSection - Mark the symbol as defined in the section \arg S.
+    /// setSection - Mark the symbol as defined in the section \p S.
     void setSection(const MCSection &S) { Section = &S; }
 
     /// setUndefined - Mark the symbol as undefined.
@@ -133,7 +133,7 @@ namespace llvm {
       return Value != 0;
     }
 
-    /// getValue() - Get the value for variable symbols.
+    /// getVariableValue() - Get the value for variable symbols.
     const MCExpr *getVariableValue() const {
       assert(isVariable() && "Invalid accessor!");
       IsUsed = true;
@@ -149,7 +149,7 @@ namespace llvm {
 
     /// @}
 
-    /// print - Print the value to the stream \arg OS.
+    /// print - Print the value to the stream \p OS.
     void print(raw_ostream &OS) const;
 
     /// dump - Print the value to stderr.

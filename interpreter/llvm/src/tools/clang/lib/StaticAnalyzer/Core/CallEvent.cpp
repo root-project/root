@@ -252,6 +252,16 @@ bool CallEvent::isCallStmt(const Stmt *S) {
                           || isa<CXXNewExpr>(S);
 }
 
+/// \brief Returns the result type, adjusted for references.
+QualType CallEvent::getDeclaredResultType(const Decl *D) {
+  assert(D);
+  if (const FunctionDecl* FD = dyn_cast<FunctionDecl>(D))
+    return FD->getResultType();
+  else if (const ObjCMethodDecl* MD = dyn_cast<ObjCMethodDecl>(D))
+    return MD->getResultType();
+  return QualType();
+}
+
 static void addParameterValuesToBindings(const StackFrameContext *CalleeCtx,
                                          CallEvent::BindingsTy &Bindings,
                                          SValBuilder &SVB,
@@ -440,8 +450,15 @@ RuntimeDefinition CXXInstanceCall::getRuntimeDefinition() const {
     // some particularly nasty casting (e.g. casts to sister classes).
     // However, we should at least be able to search up and down our own class
     // hierarchy, and some real bugs have been caught by checking this.
-    assert(!MD->getParent()->isDerivedFrom(RD) && "Bad DynamicTypeInfo");
     assert(!RD->isDerivedFrom(MD->getParent()) && "Couldn't find known method");
+    
+    // FIXME: This is checking that our DynamicTypeInfo is at least as good as
+    // the static type. However, because we currently don't update
+    // DynamicTypeInfo when an object is cast, we can't actually be sure the
+    // DynamicTypeInfo is up to date. This assert should be re-enabled once
+    // this is fixed. <rdar://problem/12287087>
+    //assert(!MD->getParent()->isDerivedFrom(RD) && "Bad DynamicTypeInfo");
+
     return RuntimeDefinition();
   }
 
@@ -494,6 +511,18 @@ void CXXInstanceCall::getInitialStackFrameContents(
 
 const Expr *CXXMemberCall::getCXXThisExpr() const {
   return getOriginExpr()->getImplicitObjectArgument();
+}
+
+RuntimeDefinition CXXMemberCall::getRuntimeDefinition() const {
+  // C++11 [expr.call]p1: ...If the selected function is non-virtual, or if the
+  // id-expression in the class member access expression is a qualified-id,
+  // that function is called. Otherwise, its final overrider in the dynamic type
+  // of the object expression is called.
+  if (const MemberExpr *ME = dyn_cast<MemberExpr>(getOriginExpr()->getCallee()))
+    if (ME->hasQualifier())
+      return AnyFunctionCall::getRuntimeDefinition();
+  
+  return CXXInstanceCall::getRuntimeDefinition();
 }
 
 

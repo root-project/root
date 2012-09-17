@@ -1264,7 +1264,7 @@ static bool ShouldDiagnoseUnusedDecl(const NamedDecl *D) {
     QualType Ty = VD->getType();
 
     // Only look at the outermost level of typedef.
-    if (const TypedefType *TT = dyn_cast<TypedefType>(Ty)) {
+    if (const TypedefType *TT = Ty->getAs<TypedefType>()) {
       if (TT->getDecl()->hasAttr<UnusedAttr>())
         return false;
     }
@@ -3523,7 +3523,8 @@ bool Sema::diagnoseQualifiedDeclaration(CXXScopeSpec &SS, DeclContext *DC,
   //   void X::f();
   // };
   if (Cur->Equals(DC)) {
-    Diag(Loc, diag::warn_member_extra_qualification)
+    Diag(Loc, LangOpts.MicrosoftExt? diag::warn_member_extra_qualification
+                                   : diag::err_member_extra_qualification)
       << Name << FixItHint::CreateRemoval(SS.getRange());
     SS.clear();
     return false;
@@ -6581,8 +6582,12 @@ void Sema::AddInitializerToDecl(Decl *RealDecl, Expr *Init,
   // Check any implicit conversions within the expression.
   CheckImplicitConversions(Init, VDecl->getLocation());
 
-  if (!VDecl->isInvalidDecl())
+  if (!VDecl->isInvalidDecl()) {
     checkUnsafeAssigns(VDecl->getLocation(), VDecl->getType(), Init);
+
+    if (VDecl->hasAttr<BlocksAttr>())
+      checkRetainCycles(VDecl, Init);
+  }
 
   Init = MaybeCreateExprWithCleanups(Init);
   // Attach the initializer to the decl.
@@ -7832,7 +7837,8 @@ Decl *Sema::ActOnFinishFunctionBody(Decl *dcl, Stmt *Body,
         computeNRVO(Body, getCurFunction());
     }
     if (getCurFunction()->ObjCShouldCallSuperDealloc) {
-      Diag(MD->getLocEnd(), diag::warn_objc_missing_super_dealloc);
+      Diag(MD->getLocEnd(), diag::warn_objc_missing_super_call)
+        << MD->getSelector().getAsString();
       getCurFunction()->ObjCShouldCallSuperDealloc = false;
     }
     if (getCurFunction()->ObjCShouldCallSuperFinalize) {
@@ -10115,42 +10121,6 @@ void Sema::ActOnFields(Scope* S,
           Convs->setAccess(I, (*I)->getAccess());
         
         if (!CXXRecord->isDependentType()) {
-          // Objective-C Automatic Reference Counting:
-          //   If a class has a non-static data member of Objective-C pointer
-          //   type (or array thereof), it is a non-POD type and its
-          //   default constructor (if any), copy constructor, copy assignment
-          //   operator, and destructor are non-trivial.
-          //
-          // This rule is also handled by CXXRecordDecl::completeDefinition(). 
-          // However, here we check whether this particular class is only 
-          // non-POD because of the presence of an Objective-C pointer member. 
-          // If so, objects of this type cannot be shared between code compiled 
-          // with ARC and code compiled with manual retain/release.
-          if (getLangOpts().ObjCAutoRefCount &&
-              CXXRecord->hasObjectMember() && 
-              CXXRecord->getLinkage() == ExternalLinkage) {
-            if (CXXRecord->isPOD()) {
-              Diag(CXXRecord->getLocation(), 
-                   diag::warn_arc_non_pod_class_with_object_member)
-               << CXXRecord;
-            } else {
-              // FIXME: Fix-Its would be nice here, but finding a good location
-              // for them is going to be tricky.
-              if (CXXRecord->hasTrivialCopyConstructor())
-                Diag(CXXRecord->getLocation(), 
-                     diag::warn_arc_trivial_member_function_with_object_member)
-                  << CXXRecord << 0;
-              if (CXXRecord->hasTrivialCopyAssignment())
-                Diag(CXXRecord->getLocation(), 
-                     diag::warn_arc_trivial_member_function_with_object_member)
-                << CXXRecord << 1;
-              if (CXXRecord->hasTrivialDestructor())
-                Diag(CXXRecord->getLocation(), 
-                     diag::warn_arc_trivial_member_function_with_object_member)
-                << CXXRecord << 2;
-            }
-          }
-          
           // Adjust user-defined destructor exception spec.
           if (getLangOpts().CPlusPlus0x &&
               CXXRecord->hasUserDeclaredDestructor())

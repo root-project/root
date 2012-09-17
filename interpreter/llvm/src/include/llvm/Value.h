@@ -16,6 +16,7 @@
 
 #include "llvm/Use.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/Compiler.h"
 
 namespace llvm {
 
@@ -80,8 +81,8 @@ private:
   friend class ValueHandleBase;
   ValueName *Name;
 
-  void operator=(const Value &);     // Do not implement
-  Value(const Value &);              // Do not implement
+  void operator=(const Value &) LLVM_DELETED_FUNCTION;
+  Value(const Value &) LLVM_DELETED_FUNCTION;
 
 protected:
   /// printCustom - Value subclasses can override this to implement custom
@@ -120,7 +121,7 @@ public:
   /// setName() - Change the name of the value, choosing a new unique name if
   /// the provided name is taken.
   ///
-  /// \arg Name - The new name; or "" if the value's name should be removed.
+  /// \param Name The new name; or "" if the value's name should be removed.
   void setName(const Twine &Name);
 
   

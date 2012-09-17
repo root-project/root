@@ -7,6 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/Comment.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclObjC.h"
@@ -37,11 +38,12 @@ void Comment::dump() const {
   // in CommentDumper.cpp, that object file would be removed by linker because
   // none of its functions are referenced by other object files, despite the
   // LLVM_ATTRIBUTE_USED.
-  dump(llvm::errs(), NULL);
+  dump(llvm::errs(), NULL, NULL);
 }
 
-void Comment::dump(SourceManager &SM) const {
-  dump(llvm::errs(), &SM);
+void Comment::dump(const ASTContext &Context) const {
+  dump(llvm::errs(), &Context.getCommentCommandTraits(),
+       &Context.getSourceManager());
 }
 
 namespace {
@@ -251,14 +253,6 @@ void DeclInfo::fill() {
     TypeLoc TL = TSI->getTypeLoc().getUnqualifiedLoc();
     while (true) {
       TL = TL.IgnoreParens();
-      // Look through typedefs.
-      if (TypedefTypeLoc *TypedefTL = dyn_cast<TypedefTypeLoc>(&TL)) {
-        TSI = TypedefTL->getTypedefNameDecl()->getTypeSourceInfo();
-        if (TSI)
-          break;
-        TL = TSI->getTypeLoc().getUnqualifiedLoc();
-        continue;
-      }
       // Look through qualified types.
       if (QualifiedTypeLoc *QualifiedTL = dyn_cast<QualifiedTypeLoc>(&TL)) {
         TL = QualifiedTL->getUnqualifiedLoc();

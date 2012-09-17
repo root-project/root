@@ -156,7 +156,7 @@ void LiveIntervals::printInstrs(raw_ostream &OS) const {
   MF->print(OS, Indexes);
 }
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
 void LiveIntervals::dumpInstrs() const {
   printInstrs(dbgs());
 }
@@ -442,7 +442,7 @@ void LiveIntervals::computeIntervals() {
 
     // Compute the number of register mask instructions in this block.
     std::pair<unsigned, unsigned> &RMB = RegMaskBlocks[MBB->getNumber()];
-    RMB.second = RegMaskSlots.size() - RMB.first;;
+    RMB.second = RegMaskSlots.size() - RMB.first;
   }
 
   // Create empty intervals for registers defined by implicit_def's (except
@@ -499,7 +499,7 @@ void LiveIntervals::computeRegMasks() {
           RegMaskBits.push_back(MO->getRegMask());
       }
     // Compute the number of register mask instructions in this block.
-    RMB.second = RegMaskSlots.size() - RMB.first;;
+    RMB.second = RegMaskSlots.size() - RMB.first;
   }
 }
 
@@ -1196,14 +1196,35 @@ private:
   // Return the last use of reg between NewIdx and OldIdx.
   SlotIndex findLastUseBefore(unsigned Reg, SlotIndex OldIdx) {
     SlotIndex LastUse = NewIdx;
-    for (MachineRegisterInfo::use_nodbg_iterator
-           UI = MRI.use_nodbg_begin(Reg),
-           UE = MRI.use_nodbg_end();
-         UI != UE; UI.skipInstruction()) {
-      const MachineInstr* MI = &*UI;
-      SlotIndex InstSlot = LIS.getSlotIndexes()->getInstructionIndex(MI);
-      if (InstSlot > LastUse && InstSlot < OldIdx)
-        LastUse = InstSlot;
+
+    if (TargetRegisterInfo::isVirtualRegister(Reg)) {
+      for (MachineRegisterInfo::use_nodbg_iterator
+             UI = MRI.use_nodbg_begin(Reg),
+             UE = MRI.use_nodbg_end();
+           UI != UE; UI.skipInstruction()) {
+        const MachineInstr* MI = &*UI;
+        SlotIndex InstSlot = LIS.getSlotIndexes()->getInstructionIndex(MI);
+        if (InstSlot > LastUse && InstSlot < OldIdx)
+          LastUse = InstSlot;
+      }
+    } else {
+      MachineInstr* MI = LIS.getSlotIndexes()->getInstructionFromIndex(NewIdx);
+      MachineBasicBlock::iterator MII(MI);
+      ++MII;
+      MachineBasicBlock* MBB = MI->getParent();
+      for (; MII != MBB->end() && LIS.getInstructionIndex(MII) < OldIdx; ++MII){
+        for (MachineInstr::mop_iterator MOI = MII->operands_begin(),
+                                        MOE = MII->operands_end();
+             MOI != MOE; ++MOI) {
+          const MachineOperand& mop = *MOI;
+          if (!mop.isReg() || mop.getReg() == 0 ||
+              TargetRegisterInfo::isVirtualRegister(mop.getReg()))
+            continue;
+
+          if (TRI.hasRegUnit(mop.getReg(), Reg))
+            LastUse = LIS.getInstructionIndex(MII);
+        }
+      }
     }
     return LastUse;
   }

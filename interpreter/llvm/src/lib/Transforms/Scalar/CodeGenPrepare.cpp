@@ -152,13 +152,9 @@ bool CodeGenPrepare::runOnFunction(Function &F) {
   /// This optimization identifies DIV instructions that can be
   /// profitably bypassed and carried out with a shorter, faster divide.
   if (TLI && TLI->isSlowDivBypassed()) {
-    const DenseMap<Type *, Type *> &BypassTypeMap = TLI->getBypassSlowDivTypes();
-
-    for (Function::iterator I = F.begin(); I != F.end(); I++) {
-      EverMadeChange |= bypassSlowDivision(F,
-                                           I,
-                                           BypassTypeMap);
-    }
+    const DenseMap<Type*, Type*> &BypassTypeMap = TLI->getBypassSlowDivTypes();
+    for (Function::iterator I = F.begin(); I != F.end(); I++)
+      EverMadeChange |= bypassSlowDivision(F, I, BypassTypeMap);
   }
 
   // Eliminate blocks that contain only PHI nodes and an
@@ -662,6 +658,7 @@ bool CodeGenPrepare::OptimizeCallInst(CallInst *CI) {
 /// DupRetToEnableTailCallOpts - Look for opportunities to duplicate return
 /// instructions to the predecessor to enable tail call optimizations. The
 /// case it is currently looking for is:
+/// @code
 /// bb0:
 ///   %tmp0 = tail call i32 @f0()
 ///   br label %return
@@ -674,9 +671,11 @@ bool CodeGenPrepare::OptimizeCallInst(CallInst *CI) {
 /// return:
 ///   %retval = phi i32 [ %tmp0, %bb0 ], [ %tmp1, %bb1 ], [ %tmp2, %bb2 ]
 ///   ret i32 %retval
+/// @endcode
 ///
 /// =>
 ///
+/// @code
 /// bb0:
 ///   %tmp0 = tail call i32 @f0()
 ///   ret i32 %tmp0
@@ -686,7 +685,7 @@ bool CodeGenPrepare::OptimizeCallInst(CallInst *CI) {
 /// bb2:
 ///   %tmp2 = tail call i32 @f2()
 ///   ret i32 %tmp2
-///
+/// @endcode
 bool CodeGenPrepare::DupRetToEnableTailCallOpts(ReturnInst *RI) {
   if (!TLI)
     return false;

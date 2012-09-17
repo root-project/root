@@ -68,8 +68,7 @@ ExprEngine::ExprEngine(AnalysisManager &mgr, bool gcEnabled,
     svalBuilder(StateMgr.getSValBuilder()),
     EntryNode(NULL),
     currStmt(NULL), currStmtIdx(0), currBldrCtx(0),
-    NSExceptionII(NULL), NSExceptionInstanceRaiseSelectors(NULL),
-    RaiseSel(GetNullarySelector("raise", getContext())),
+    ObjCNoRet(mgr.getASTContext()),
     ObjCGCEnabled(gcEnabled), BR(mgr, *this),
     VisitedCallees(VisitedCalleesIn)
 {
@@ -81,7 +80,6 @@ ExprEngine::ExprEngine(AnalysisManager &mgr, bool gcEnabled,
 
 ExprEngine::~ExprEngine() {
   BR.FlushReports();
-  delete [] NSExceptionInstanceRaiseSelectors;
 }
 
 //===----------------------------------------------------------------------===//
@@ -526,6 +524,7 @@ void ExprEngine::Visit(const Stmt *S, ExplodedNode *Pred,
     case Stmt::CXXNoexceptExprClass:
     case Stmt::PackExpansionExprClass:
     case Stmt::SubstNonTypeTemplateParmPackExprClass:
+    case Stmt::FunctionParmPackExprClass:
     case Stmt::SEHTryStmtClass:
     case Stmt::SEHExceptStmtClass:
     case Stmt::LambdaExprClass:

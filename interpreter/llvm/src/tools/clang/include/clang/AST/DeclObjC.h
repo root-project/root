@@ -33,8 +33,8 @@ class ObjCPropertyImplDecl;
 class CXXCtorInitializer;
 
 class ObjCListBase {
-  void operator=(const ObjCListBase &);     // DO NOT IMPLEMENT
-  ObjCListBase(const ObjCListBase&);        // DO NOT IMPLEMENT
+  ObjCListBase(const ObjCListBase &) LLVM_DELETED_FUNCTION;
+  void operator=(const ObjCListBase &) LLVM_DELETED_FUNCTION;
 protected:
   /// List is an array of pointers to objects that are not owned by this object.
   void **List;
@@ -363,7 +363,7 @@ public:
   }
 
   /// \brief Sets the method's parameters and selector source locations.
-  /// If the method is implicit (not coming from source) \arg SelLocs is
+  /// If the method is implicit (not coming from source) \p SelLocs is
   /// ignored.
   void setMethodParams(ASTContext &C,
                        ArrayRef<ParmVarDecl*> Params,

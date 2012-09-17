@@ -990,6 +990,10 @@ const MemRegion *MemRegion::getBaseRegion() const {
   return R;
 }
 
+bool MemRegion::isSubRegionOf(const MemRegion *R) const {
+  return false;
+}
+
 //===----------------------------------------------------------------------===//
 // View handling.
 //===----------------------------------------------------------------------===//

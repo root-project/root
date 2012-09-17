@@ -7214,7 +7214,10 @@ QualType Sema::CheckCompareOperands(ExprResult &LHS, ExprResult &RHS,
       (LHSType->isIntegerType() && RHSType->isAnyPointerType())) {
     unsigned DiagID = 0;
     bool isError = false;
-    if ((LHSIsNull && LHSType->isIntegerType()) ||
+    if (LangOpts.DebuggerSupport) {
+      // Under a debugger, allow the comparison of pointers to integers,
+      // since users tend to want to compare addresses.
+    } else if ((LHSIsNull && LHSType->isIntegerType()) ||
         (RHSIsNull && RHSType->isIntegerType())) {
       if (IsRelational && !getLangOpts().CPlusPlus)
         DiagID = diag::ext_typecheck_ordered_comparison_of_pointer_and_zero;
@@ -7695,10 +7698,18 @@ QualType Sema::CheckAssignmentOperands(Expr *LHSExpr, ExprResult &RHS,
     }
 
     if (ConvTy == Compatible) {
-      if (LHSType.getObjCLifetime() == Qualifiers::OCL_Strong)
-        checkRetainCycles(LHSExpr, RHS.get());
-      else if (getLangOpts().ObjCAutoRefCount)
+      if (LHSType.getObjCLifetime() == Qualifiers::OCL_Strong) {
+        // Warn about retain cycles where a block captures the LHS, but
+        // not if the LHS is a simple variable into which the block is
+        // being stored...unless that variable can be captured by reference!
+        const Expr *InnerLHS = LHSExpr->IgnoreParenCasts();
+        const DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(InnerLHS);
+        if (!DRE || DRE->getDecl()->hasAttr<BlocksAttr>())
+          checkRetainCycles(LHSExpr, RHS.get());
+
+      } else if (getLangOpts().ObjCAutoRefCount) {
         checkUnsafeExprAssigns(Loc, LHSExpr, RHS.get());
+      }
     }
   } else {
     // Compound assignment "x += y"

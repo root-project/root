@@ -495,7 +495,8 @@ def ptr_rc : PointerLikeRegClass<0>;
 
 /// unknown definition - Mark this operand as being of unknown type, causing
 /// it to be resolved by inference in the context it is used.
-def unknown;
+class unknown_class;
+def unknown : unknown_class;
 
 /// AsmOperandClass - Representation for the kinds of operands which the target
 /// specific parser can create and the assembly matcher may need to distinguish.
@@ -988,6 +989,9 @@ class Processor<string n, ProcessorItineraries pi, list<SubtargetFeature> f> {
 // ProcessorModel allows subtargets to specify the more general
 // SchedMachineModel instead if a ProcessorItinerary. Subtargets will
 // gradually move to this newer form.
+//
+// Although this class always passes NoItineraries to the Processor
+// class, the SchedMachineModel may still define valid Itineraries.
 class ProcessorModel<string n, SchedMachineModel m, list<SubtargetFeature> f>
   : Processor<n, NoItineraries, f> {
   let SchedModel = m;

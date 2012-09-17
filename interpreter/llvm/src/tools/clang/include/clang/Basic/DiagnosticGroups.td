@@ -266,13 +266,11 @@ def ImplicitAtomic : DiagGroup<"implicit-atomic-properties">;
 def CustomAtomic : DiagGroup<"custom-atomic-properties">;
 def AtomicProperties : DiagGroup<"atomic-properties",
                                  [ImplicitAtomic, CustomAtomic]>;
-def AutomaticReferenceCountingABI : DiagGroup<"arc-abi">;
 def ARCUnsafeRetainedAssign : DiagGroup<"arc-unsafe-retained-assign">;
 def ARCRetainCycles : DiagGroup<"arc-retain-cycles">;
 def ARCNonPodMemAccess : DiagGroup<"arc-non-pod-memaccess">;
 def AutomaticReferenceCounting : DiagGroup<"arc",
-                                           [AutomaticReferenceCountingABI,
-                                            ARCUnsafeRetainedAssign,
+                                           [ARCUnsafeRetainedAssign,
                                             ARCRetainCycles,
                                             ARCNonPodMemAccess]>;
 def Selector : DiagGroup<"selector">;
@@ -386,9 +384,12 @@ def Most : DiagGroup<"most", [
 
 // Thread Safety warnings 
 def ThreadSafetyAttributes : DiagGroup<"thread-safety-attributes">;
-def ThreadSafetyAnalysis : DiagGroup<"thread-safety-analysis">;
-def ThreadSafety : DiagGroup<"thread-safety", 
-                             [ThreadSafetyAttributes, ThreadSafetyAnalysis]>;
+def ThreadSafetyAnalysis   : DiagGroup<"thread-safety-analysis">;
+def ThreadSafetyPrecise    : DiagGroup<"thread-safety-precise">;
+def ThreadSafety : DiagGroup<"thread-safety",
+                             [ThreadSafetyAttributes, 
+                              ThreadSafetyAnalysis,
+                              ThreadSafetyPrecise]>;
 
 // Note that putting warnings in -Wall will not disable them by default. If a
 // warning should be active _only_ when -Wall is passed in, mark it as

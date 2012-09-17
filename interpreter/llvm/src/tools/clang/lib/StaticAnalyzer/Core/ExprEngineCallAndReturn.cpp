@@ -247,14 +247,48 @@ void ExprEngine::processCallExit(ExplodedNode *CEBNode) {
   }
 }
 
-static unsigned getNumberStackFrames(const LocationContext *LCtx) {
-  unsigned count = 0;
+void ExprEngine::examineStackFrames(const Decl *D, const LocationContext *LCtx,
+                               bool &IsRecursive, unsigned &StackDepth) {
+  IsRecursive = false;
+  StackDepth = 0;
+
   while (LCtx) {
-    if (isa<StackFrameContext>(LCtx))
-      ++count;
+    if (const StackFrameContext *SFC = dyn_cast<StackFrameContext>(LCtx)) {
+      const Decl *DI = SFC->getDecl();
+
+      // Mark recursive (and mutually recursive) functions and always count
+      // them when measuring the stack depth.
+      if (DI == D) {
+        IsRecursive = true;
+        ++StackDepth;
+        LCtx = LCtx->getParent();
+        continue;
+      }
+
+      // Do not count the small functions when determining the stack depth.
+      AnalysisDeclContext *CalleeADC = AMgr.getAnalysisDeclContext(DI);
+      const CFG *CalleeCFG = CalleeADC->getCFG();
+      if (CalleeCFG->getNumBlockIDs() > AMgr.options.getAlwaysInlineSize())
+        ++StackDepth;
+    }
     LCtx = LCtx->getParent();
   }
-  return count;  
+
+}
+
+static bool IsInStdNamespace(const FunctionDecl *FD) {
+  const DeclContext *DC = FD->getEnclosingNamespaceContext();
+  const NamespaceDecl *ND = dyn_cast<NamespaceDecl>(DC);
+  if (!ND)
+    return false;
+  
+  while (const DeclContext *Parent = ND->getParent()) {
+    if (!isa<NamespaceDecl>(Parent))
+      break;
+    ND = cast<NamespaceDecl>(Parent);
+  }
+
+  return ND->getName() == "std";
 }
 
 // Determine if we should inline the call.
@@ -267,8 +301,12 @@ bool ExprEngine::shouldInlineDecl(const Decl *D, ExplodedNode *Pred) {
   if (!CalleeCFG)
     return false;
 
-  if (getNumberStackFrames(Pred->getLocationContext())
-        == AMgr.options.InlineMaxStackDepth)
+  bool IsRecursive = false;
+  unsigned StackDepth = 0;
+  examineStackFrames(D, Pred->getLocationContext(), IsRecursive, StackDepth);
+  if ((StackDepth >= AMgr.options.InlineMaxStackDepth) &&
+       ((CalleeCFG->getNumBlockIDs() > AMgr.options.getAlwaysInlineSize())
+         || IsRecursive))
     return false;
 
   if (Engine.FunctionSummaries->hasReachedMaxBlockCount(D))
@@ -285,6 +323,21 @@ bool ExprEngine::shouldInlineDecl(const Decl *D, ExplodedNode *Pred) {
   else if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
     if (FD->isVariadic())
       return false;
+  }
+
+  if (getContext().getLangOpts().CPlusPlus) {
+    if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
+      // Conditionally allow the inlining of template functions.
+      if (!getAnalysisManager().options.mayInlineTemplateFunctions())
+        if (FD->getTemplatedKind() != FunctionDecl::TK_NonTemplate)
+          return false;
+
+      // Conditionally allow the inlining of C++ standard library functions.
+      if (!getAnalysisManager().options.mayInlineCXXStandardLibrary())
+        if (getContext().getSourceManager().isInSystemHeader(FD->getLocation()))
+          if (IsInStdNamespace(FD))
+            return false;
+    }
   }
 
   // It is possible that the live variables analysis cannot be
@@ -410,6 +463,8 @@ bool ExprEngine::inlineCall(const CallEvent &Call, const Decl *D,
     break;
   }
   case CE_ObjCMessage:
+    if (!Opts.mayInlineObjCMethod())
+      return false;
     if (!(getAnalysisManager().options.IPAMode == DynamicDispatch ||
           getAnalysisManager().options.IPAMode == DynamicDispatchBifurcate))
       return false;

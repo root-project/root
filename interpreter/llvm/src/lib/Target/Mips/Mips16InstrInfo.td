@@ -20,6 +20,13 @@ class FRRR16_ins<bits<2> _f, string asmstr,  InstrItinClass itin> :
          !strconcat(asmstr, "\t$rz, $rx, $ry"), [], itin>;
 
 //
+// I8_MOVR32 instruction format (used only by the MOVR32 instructio
+//
+class FI8_MOVR3216_ins<string asmstr, InstrItinClass itin>:
+       FI8_MOVR3216<(outs CPU16Regs:$rz), (ins CPURegs:$r32),
+       !strconcat(asmstr,  "\t$rz, $r32"), [], itin>;
+
+//
 // I8_MOV32R instruction format (used only by MOV32R instruction)
 //
 class FI8_MOV32R16_ins<string asmstr, InstrItinClass itin>:
@@ -204,7 +211,14 @@ def LwRxRyOffMemX16: FEXT_RRI16_mem_ins<0b10011, "lw", mem16, IIAlu>;
 // Purpose: Move
 // To move the contents of a GPR to a GPR.
 //
-def Mov32R16: FI8_MOV32R16_ins<"move", IIAlu>;
+def Move32R16: FI8_MOV32R16_ins<"move", IIAlu>;
+
+//
+// Format: MOVE ry, r32 MIPS16e
+//Purpose: Move
+// To move the contents of a GPR to a GPR.
+//
+def MoveR3216: FI8_MOVR3216_ins<"move", IIAlu>;
 
 //
 // Format: NEG rx, ry MIPS16e
@@ -389,16 +403,16 @@ class LoadM16_pat<PatFrag OpNode, Instruction I> :
 
 def: LoadM16_pat<sextloadi8, LbRxRyOffMemX16>;
 def: LoadM16_pat<zextloadi8, LbuRxRyOffMemX16>;
-def: LoadM16_pat<sextloadi16_a, LhRxRyOffMemX16>;
-def: LoadM16_pat<zextloadi16_a, LhuRxRyOffMemX16>;
-def: LoadM16_pat<load_a, LwRxRyOffMemX16>;
+def: LoadM16_pat<sextloadi16, LhRxRyOffMemX16>;
+def: LoadM16_pat<zextloadi16, LhuRxRyOffMemX16>;
+def: LoadM16_pat<load, LwRxRyOffMemX16>;
 
 class StoreM16_pat<PatFrag OpNode, Instruction I> :
   Mips16Pat<(OpNode CPU16Regs:$r, addr:$addr), (I CPU16Regs:$r, addr:$addr)>;
 
 def: StoreM16_pat<truncstorei8, SbRxRyOffMemX16>;
-def: StoreM16_pat<truncstorei16_a, ShRxRyOffMemX16>;
-def: StoreM16_pat<store_a, SwRxRyOffMemX16>;
+def: StoreM16_pat<truncstorei16, ShRxRyOffMemX16>;
+def: StoreM16_pat<store, SwRxRyOffMemX16>;
 
 
 // Jump and Link (Call)

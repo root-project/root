@@ -6368,7 +6368,7 @@ TreeTransform<Derived>::TransformCallExpr(CallExpr *E) {
   if (!getDerived().AlwaysRebuild() &&
       Callee.get() == E->getCallee() &&
       !ArgChanged)
-    return SemaRef.MaybeBindToTemporary(E);;
+    return SemaRef.MaybeBindToTemporary(E);
 
   // FIXME: Wrong source location information for the '('.
   SourceLocation FakeLParenLoc
@@ -8315,6 +8315,13 @@ template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformSubstNonTypeTemplateParmExpr(
                                           SubstNonTypeTemplateParmExpr *E) {
+  // Default behavior is to do nothing with this transformation.
+  return SemaRef.Owned(E);
+}
+
+template<typename Derived>
+ExprResult
+TreeTransform<Derived>::TransformFunctionParmPackExpr(FunctionParmPackExpr *E) {
   // Default behavior is to do nothing with this transformation.
   return SemaRef.Owned(E);
 }

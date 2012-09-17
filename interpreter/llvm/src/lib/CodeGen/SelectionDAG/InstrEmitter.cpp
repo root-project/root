@@ -314,8 +314,6 @@ InstrEmitter::AddRegisterOperand(MachineInstr *MI, SDValue Op,
     const TargetRegisterClass *DstRC = 0;
     if (IIOpNum < II->getNumOperands())
       DstRC = TRI->getAllocatableClass(TII->getRegClass(*II,IIOpNum,TRI,*MF));
-    assert((DstRC || (MI->isVariadic() && IIOpNum >= MCID.getNumOperands())) &&
-           "Don't have operand info for this instruction!");
     if (DstRC && !MRI->constrainRegClass(VReg, DstRC, MinRCSize)) {
       unsigned NewVReg = MRI->createVirtualRegister(DstRC);
       BuildMI(*MBB, InsertPos, Op.getNode()->getDebugLoc(),
@@ -412,6 +410,7 @@ void InstrEmitter::AddOperand(MachineInstr *MI, SDValue Op,
                                             ES->getTargetFlags()));
   } else if (BlockAddressSDNode *BA = dyn_cast<BlockAddressSDNode>(Op)) {
     MI->addOperand(MachineOperand::CreateBA(BA->getBlockAddress(),
+                                            BA->getOffset(),
                                             BA->getTargetFlags()));
   } else if (TargetIndexSDNode *TI = dyn_cast<TargetIndexSDNode>(Op)) {
     MI->addOperand(MachineOperand::CreateTargetIndex(TI->getIndex(),
