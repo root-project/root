@@ -673,26 +673,28 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
    double arglist[2];
    int ierr = 0; 
 
-   // if Minos is not run run it 
-   if (!fMinosRun) { 
-
-      // set error and print level 
+   // set error and print level, precision and stratgey if needed
+   if (fMinuit->fUp != ErrorDef() ) { 
       arglist[0] = ErrorDef(); 
       fMinuit->mnexcm("SET Err",arglist,1,ierr);
+   }
       
+   if (fMinuit->fISW[4] != (PrintLevel()-1) )  { 
       arglist[0] = PrintLevel()-1; 
       fMinuit->mnexcm("SET PRINT",arglist,1,ierr);
-
       // suppress warning in case Printlevel() == 0 
       if (PrintLevel() == 0)    fMinuit->mnexcm("SET NOW",arglist,0,ierr);
-
-      // set precision if needed
-      if (Precision() > 0)  { 
-         arglist[0] = Precision();
-         fMinuit->mnexcm("SET EPS",arglist,1,ierr);
-      }
-
    }
+   if (fMinuit->fIstrat != Strategy() ) { 
+      arglist[0] = Strategy(); 
+      fMinuit->mnexcm("SET STR",arglist,1,ierr);
+   }
+
+   if (Precision() > 0 &&  fMinuit->fEpsma2 != Precision() ) { 
+      arglist[0] = Precision();
+      fMinuit->mnexcm("SET EPS",arglist,1,ierr);
+   }
+   
 
    // syntax of MINOS is MINOS [maxcalls] [parno]
    // if parno = 0 all parameters are done 
