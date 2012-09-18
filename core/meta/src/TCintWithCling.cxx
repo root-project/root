@@ -574,6 +574,8 @@ TCintWithCling::~TCintWithCling()
    }
    delete fMapfile;
    delete fRootmapFiles;
+   delete fMetaProcessor;
+   delete fInterpreter;
    gCint = 0;
 #ifdef R__COMPLETE_MEM_TERMINATION
    G__scratch_all();
