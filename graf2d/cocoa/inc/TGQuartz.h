@@ -20,6 +20,9 @@
 #ifndef ROOT_TPoint
 #include "TPoint.h"
 #endif
+#ifndef ROOT_TTF
+#include "TTF.h"
+#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -27,7 +30,13 @@
 // MacOS X, using CoreGraphics (Quartz).                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
 class TGQuartz : public TGCocoa {
+private:
+   enum EAlign {kNone, kTLeft, kTCenter, kTRight, kMLeft,
+                kMCenter, kMRight, kBLeft, kBCenter, kBRight};
+
+   FT_Vector   fAlign; // alignment vector 
 public:
    TGQuartz();
    TGQuartz(const char *name, const char *title);
@@ -45,7 +54,9 @@ public:
    virtual void      DrawPolyLine(Int_t n, TPoint *xy);
    virtual void      DrawPolyMarker(Int_t n, TPoint *xy);
    virtual void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, 
-                              const char *text, ETextMode mode);
+                              const char *text, ETextMode mode);                              
+   virtual void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                              const wchar_t *text, ETextMode mode);
    
    //I have to override these setters, since they are alredy overriden
    //in TVirtualX (originally, they are declared in TAttXXX classes)
@@ -76,6 +87,12 @@ private:
    //Unfortunately, I have to convert from
    //top-left to bottom-left corner system.
    std::vector<TPoint> fConvertedPoints;
+
+   void AlignTTFString();
+   Bool_t IsTTFStringVisible(Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void RenderTTFString(Int_t x, Int_t y, ETextMode mode);
+   //I have to use void * instead of QuartzPixmap * because of CINT :(
+   void DrawFTGlyphIntoPixmap(void *pixmap, FT_Bitmap *source, ULong_t fore, ULong_t back, Int_t bx, Int_t by);
 
    void *GetSelectedDrawableChecked(const char *calledFrom) const;
 

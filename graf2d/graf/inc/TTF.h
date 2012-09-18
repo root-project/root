@@ -60,6 +60,7 @@ class TTF {
 
 friend class TGX11TTF;
 friend class TGWin32;
+friend class TGQuartz;
 
 private:
    enum { kTTMaxFonts = 32, kMaxGlyphs = 1024 };
