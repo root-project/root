@@ -318,6 +318,45 @@ namespace Quartz = ROOT::Quartz;
 }
 
 //______________________________________________________________________________
+- (unsigned char *) readColorBits : (Rectangle_t) area
+{
+
+   if (!X11::AdjustCropArea(self, area)) {
+      NSLog(@"QuartzPixmap: readColorBits:intoBuffer:, src and copy area do not intersect");
+      return 0;
+   }
+   
+   unsigned char *buffer = 0;
+
+   try {
+      buffer = new unsigned char[area.fWidth * area.fHeight * 4]();
+   } catch (const std::bad_alloc &) {
+      NSLog(@"QuartzImage: -readColorBits:, memory allocation failed");
+      return 0;
+   }
+
+   unsigned char *dstPixel = buffer;
+
+      //fImageData has 4 bytes per pixel.
+   const unsigned char *line = fData + area.fY * fWidth * 4;
+   const unsigned char *srcPixel = line + area.fX * 4;
+
+   for (Short_t i = 0; i < area.fHeight; ++i) {
+      for (Short_t j = 0; j < area.fWidth; ++j, srcPixel += 4, dstPixel += 4) {
+         dstPixel[0] = srcPixel[0];
+         dstPixel[1] = srcPixel[1];
+         dstPixel[2] = srcPixel[2];
+         dstPixel[3] = srcPixel[3];
+      }
+
+      line += fWidth * 4;
+      srcPixel = line + area.fX * 4;
+   }
+
+   return buffer;
+}
+
+//______________________________________________________________________________
 - (unsigned char *) fData
 {
    return fData;
@@ -326,6 +365,7 @@ namespace Quartz = ROOT::Quartz;
 //______________________________________________________________________________
 - (void) putPixel : (const unsigned char *) rgb X : (unsigned) x Y : (unsigned) y
 {
+   //Primitive version of XPutPixel.
    assert(rgb != 0 && "putPixel:X:Y:, rgb parameter is null");
    assert(x < fWidth && "putPixel:X:Y:, x parameter is >= self.fWidth");
    assert(y < fHeight && "putPixel:X:Y:, y parameter is >= self.fHeight");
@@ -336,6 +376,22 @@ namespace Quartz = ROOT::Quartz;
    dst[1] = rgb[1];
    dst[2] = rgb[2];
    dst[3] = 255;
+}
+
+//______________________________________________________________________________
+- (void) addPixel : (const unsigned char *) rgb
+{
+   //Primitive version of XAddPixel.
+   assert(rgb != 0 && "addPixel:, rgb parameter is null");
+   
+   for (unsigned i = 0; i < fHeight; ++i) {
+      for (unsigned j = 0; j < fWidth; ++j) {
+         fData[i * fWidth * 4 + j * 4] = rgb[0];
+         fData[i * fWidth * 4 + j * 4 + 1] = rgb[1];
+         fData[i * fWidth * 4 + j * 4 + 2] = rgb[2];
+         fData[i * fWidth * 4 + j * 4 + 3] = rgb[3];
+      }
+   }
 }
 
 @end
