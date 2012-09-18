@@ -69,7 +69,7 @@ SPLOTLIBDEPM           = $(MATRIXLIB) $(HISTLIB) $(TREELIB) $(TREEPLAYERLIB) \
 QUADPLIBDEPM           = $(MATRIXLIB)
 GLLIBDEPM              = $(G3DLIB) $(GUILIB) $(GRAFLIB) $(HISTLIB) $(GEDLIB) \
                          $(MATHCORELIB) $(TREELIB) $(TREEPLAYERLIB)
-COCOALIBDEPM           = $(GUILIB) $(QUARTZLIB)
+COCOALIBDEPM           = $(GUILIB) $(QUARTZLIB) $(GRAFLIB)
 HBOOKLIBDEPM           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                          $(TREEPLAYERLIB) $(IOLIB) $(MINICERNLIB)
 GEOMLIBDEPM            = $(IOLIB) $(THREADLIB) $(MATHCORELIB)
@@ -461,7 +461,7 @@ TABLELIBEXTRA           = -Llib -lTree -lGpad -lGraf3d -lGraf -lHist -lRIO \
                           -lMathCore
 GLLIBEXTRA              = -Llib -lGpad -lGraf3d -lGui -lGraf -lHist -lGed \
                           -lMathCore -lTree -lTreePlayer -lRIO
-COCOALIBEXTRA           = -Llib -lGui -lGQuartz
+COCOALIBEXTRA           = -Llib -lGui -lGraf -lGQuartz
 HBOOKLIBEXTRA           = -Llib -lHist -lMatrix -lTree -lGraf -lTreePlayer \
                           -lRIO -lminicern
 GEOMLIBEXTRA            = -Llib -lRIO -lThread -lMathCore
