@@ -209,7 +209,6 @@ Double_t TGeoEltu::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 Double_t TGeoEltu::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube and safe distance
-   Double_t snxt=TGeoShape::Big();
    Double_t safz=TMath::Abs(point[2])-fDz;
    Double_t a2=fRmin*fRmin;
    Double_t b2=fRmax*fRmax;
@@ -239,50 +238,47 @@ Double_t TGeoEltu::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
       if ((iact==1) && (step<*safe)) return TGeoShape::Big();
    }
    // compute vector distance
-   if ((safz>0) && (point[2]*dir[2]>=0)) return TGeoShape::Big();
+   Double_t zi, tau;
+   Double_t epsil = 10.*TGeoShape::Tolerance();
+   if (safz > -epsil) {
+      // point beyond the z limit (up or down)
+      // Check if direction is outgoing
+      if (point[2]*dir[2]>0) return TGeoShape::Big();
+      // Check if direction is perpendicular to Z axis
+      if (TGeoShape::IsSameWithinTolerance(dir[2],0)) return TGeoShape::Big();
+      // select +z or -z depending on the side of the point
+      zi = (point[2] > 0) ? fDz : -fDz;
+      // Distance to zi plane position
+      tau = (zi-point[2])/dir[2];
+      // Extrapolated coordinates at the z position of the end plane.
+      Double_t xz=point[0]+dir[0]*tau;
+      Double_t yz=point[1]+dir[1]*tau;
+      if ((xz*xz/a2+yz*yz/b2)<1) return tau;
+   }   
+       
 // Check if the bounding box is crossed within the requested distance
    Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
    if (sdist>=step) return TGeoShape::Big();
-   Double_t xi,yi,zi,ndotd;
-   if (!TGeoShape::IsSameWithinTolerance(dir[2],0)) {
-      Double_t u=dir[0]*dir[0]*b2+dir[1]*dir[1]*a2;
-      if (TGeoShape::IsSameWithinTolerance(u,0)) return TGeoShape::Big();
-      Double_t v=point[0]*dir[0]*b2+point[1]*dir[1]*a2;
-      Double_t w=point[0]*point[0]*b2+point[1]*point[1]*a2-a2*b2;
-      Double_t d=v*v-u*w;
-      if (d<0) return TGeoShape::Big();
-      Double_t dsq=TMath::Sqrt(d);
-      Double_t tau[2];
-      tau[0]=(-v+dsq)/u;
-      tau[1]=(-v-dsq)/u;
-      for (Int_t j=0; j<2; j++) {
-         if (tau[j]>=0) {
-            zi=point[2]+tau[j]*dir[2];
-            if ((TMath::Abs(zi)-fDz)<0) {
-               if (tau[j]<1.E-8) {
-                  xi=point[0]+tau[j]*dir[0];
-                  yi=point[1]+tau[j]*dir[1];
-                  // Dot product of un-normalized normal with direction
-                  ndotd = fRmax*fRmax*xi*dir[0]+fRmin*fRmin*yi*dir[1];
-                  if (ndotd>0) continue;
-               }   
-               snxt=TMath::Min(snxt,tau[j]);
-            }   
-         } 
-      }
-   }   
-   // do z
-   zi=TGeoShape::Big();
-   if (safz>0) {
-      if (TGeoShape::IsSameWithinTolerance(dir[2],0)) return TGeoShape::Big();
-      if (point[2]>0) zi=fDz;
-      if (point[2]<0) zi=-fDz;     
-      Double_t tauz=(zi-point[2])/dir[2];
-      Double_t xz=point[0]+dir[0]*tauz;
-      Double_t yz=point[1]+dir[1]*tauz;
-      if ((xz*xz/a2+yz*yz/b2)<=1) snxt=tauz;
-   }
-   return snxt;   
+   Double_t u=dir[0]*dir[0]*b2+dir[1]*dir[1]*a2;  // positive
+   if (TGeoShape::IsSameWithinTolerance(u,0)) return TGeoShape::Big();
+   Double_t v=point[0]*dir[0]*b2+point[1]*dir[1]*a2;
+   Double_t w=point[0]*point[0]*b2+point[1]*point[1]*a2-a2*b2;
+   Double_t d=v*v-u*w;
+   if (d<0) return TGeoShape::Big();
+   Double_t dsq=TMath::Sqrt(d);
+   // Biggest solution - if negative, or very close to boundary
+   // no crossing (just exiting, no re-entering possible)
+   tau = (-v+dsq)/u; 
+   if (tau < epsil) return TGeoShape::Big();
+   // only entering crossing must be considered (smallest)
+   tau = (-v-dsq)/u; 
+   zi=point[2]+tau*dir[2];
+   // If the crossing point is not in the Z range, there is no crossing
+   if ((TMath::Abs(zi)-fDz)>0) return TGeoShape::Big();
+   // crossing is backwards (point inside the ellipse) in Z range
+   if (tau < 0) return 0.;
+   // Point is outside and crossing the eliptical tube in Z range
+   return tau;
 }
 
 //_____________________________________________________________________________
