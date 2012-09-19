@@ -346,8 +346,8 @@ TObjArray *TPRegexp::MatchS(const TString &s, const TString &mods,
                             Int_t start, Int_t nMaxMatch)
 {
    // Returns a TObjArray of matched substrings as TObjString's.
-   // The TObjArray is owner of the objects. The first entry is the full
-   // matched pattern, followed by the subpatterns.
+   // The TObjArray is owner of the objects and must be deleted by the user.
+   // The first entry is the full matched pattern, followed by the subpatterns.
    // If a pattern was not matched, it will return an empty substring:
    //
    // TObjArray *subStrL = TPRegexp("(a|(z))(bc)").MatchS("abc");
