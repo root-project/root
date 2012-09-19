@@ -131,7 +131,22 @@ bool testChainByPointer() {
   return true;
 }
 
-
+bool testChainFriendRemove() {
+   TChain* c1 = new TChain("T");
+   c1->Add("Event.root");
+   TChain* c2 = new TChain("T2");
+   c2->Add("Event2.root/T");
+   
+   c1->AddFriend(c2);
+   c1->LoadTree(0);
+   
+   c1->RemoveFriend(c2);
+   delete c2;
+   
+   c1->SetBranchStatus("*",0);
+   delete c1;
+   return true;
+}
 
 int runChainFriend() {
   bool result = true;
@@ -140,6 +155,7 @@ int runChainFriend() {
   result &= testChainByName();
   result &= testChainByPointer();
   result &= testChainDifferent();
+  result &= testChainFriendRemove();
 
   exit(!result);
 }
