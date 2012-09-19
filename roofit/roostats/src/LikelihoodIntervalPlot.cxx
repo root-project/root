@@ -33,11 +33,14 @@ object.
 #include "TList.h"
 #include "TGraph.h"
 #include "TPad.h"
+#include "TCanvas.h"
+#include "Math/DistFunc.h"
 
 
 #include "RooRealVar.h"
 #include "RooPlot.h"
-//#include "RooProfileLL.h"
+#include "RooMsgService.h"
+#include "RooProfileLL.h"
 #include "TF1.h"
 
 /// ClassImp for building the THtml documentation of the class 
@@ -58,7 +61,7 @@ LikelihoodIntervalPlot::LikelihoodIntervalPlot()
   fColor = 0;
   fFillStyle = 4050; // half transparent
   fLineColor = 0;
-  fMaximum = 2.;
+  fMaximum = -1;
   fNPoints = 0;  // default depends if 1D or 2D 
   // default is variable range
   fXmin = 0;
@@ -66,6 +69,7 @@ LikelihoodIntervalPlot::LikelihoodIntervalPlot()
   fYmin = 0;
   fYmax = -1;
   fPrecision = -1; // use default 
+  fPlotObject = 0; 
 }
 
 //_______________________________________________________
@@ -75,10 +79,10 @@ LikelihoodIntervalPlot::LikelihoodIntervalPlot(LikelihoodInterval* theInterval)
   fInterval = theInterval;
   fParamsPlot = fInterval->GetParameters();
   fNdimPlot = fParamsPlot->getSize();
-  fColor = kBlue;
-  fLineColor = kGreen;
+  fColor = 0;
+  fLineColor = 0;
   fFillStyle = 4050; // half transparent
-  fMaximum = 2.;
+  fMaximum = -1;
   fNPoints = 0;  // default depends if 1D or 2D 
   // default is variable range
   fXmin = 0;
@@ -86,6 +90,7 @@ LikelihoodIntervalPlot::LikelihoodIntervalPlot(LikelihoodInterval* theInterval)
   fYmin = 0;
   fYmax = -1;
   fPrecision = -1; // use default 
+  fPlotObject = 0; 
 }
 
 //_______________________________________________________
@@ -117,48 +122,104 @@ void LikelihoodIntervalPlot::SetPlotParameters(const RooArgSet *params)
 //_____________________________________________________________________________
 void LikelihoodIntervalPlot::Draw(const Option_t *options) 
 {
-   // draw the Likelihood interval or contour plot
-   // For 1D problem draw the log profile likelihood function ratio and its interval 
-   // The curve is draws in a RooPLot by default (i.e as a RooCurve) 
+   // draw the log of the profiled likelihood function in 1D with the interval or 
+   // as a 2D plot with the contours.
+   // Higher dimensionals intervals cannot be drawn. One needs to call 
+   // SetPlotParameters to project interval in 1 or 2dim
+   //
+   // Options for drawing 1D interals
+   // 
+   // For 1D problem the log of the profiled likelihood function is drawn bby default in a RooPlot as a 
+   // RooCurve
    // The plotting range (default is the full parameter range) and the precision of the RooCurve
    // can be specified by using SetRange(x1,x2) and SetPrecision(eps). 
    // SetNPoints(npoints) can also be used  (default is npoints=100) 
-   // Optionally the function can be drawn as a TF1 (option="tf1") obtained by sampling the npoints
-   // For 2D case, a contour is drawn. The number of contour points is controlled by 
-   // SetNPoints(npoints) (default is npoints=40)
-   // In case of problems finding the contour with Minuit, the option "nominuit" can be used. 
-   // In this case the profile likelihood function is sampled in the npoints x npoints values and then 
-   // an approximate contour is obtained. 
+   // Optionally the function can be drawn as a TF1 (option="tf1") obtained by sampling the given npoints
+   // in the given range
+   //
+   // Options for drawing 2D intervals
+   //
+   // For 2D case, a contour and optionally the profiled likelihood function is drawn by sampling npoints in 
+   // the given range. A 2d histogram of nbinsX=nbinsY = sqrt(npoints) is used for sampling the profiled likelihood.
+   // The contour can be obtained by using Minuit or by the sampled histogram, 
+   // If using Minuit, the number of points specifies the number of contour points. If using an histogram the number of 
+   // points is approximatly the total number of bins of the histogram.
+   // Possible options: 
+   //  minuit/nominuit:     use minuit for computing the contour
+   //   hist/nohist   :     sample in an histogram the profiled likelihood   
+   //
+   // Note that one can have both a drawing of the sampled likelihood and of the contour using minuit. 
+   // The default options is "minuit nohist"
+   // The sampled histogram is drawn first by default using the option "colz" and then 8 probability contours at 
+   // these CL are drawn:  { 0.1,0.3,0.5,0.683,0.95,0.9973,0.9999366575,0.9999994267} re-drawing the histogram with the 
+   // option "cont3"
+   //
+   // The drawn object (RooPlot or sampled histogram) is saved in teh class and can be retrieved using GetPlottedObject()
+   // In this way the user can eventually customize further the plot. 
+   // Note that the class does not delete the plotted object. It needs, if needed, to be deleted by the user
+   
+   TIter it = fParamsPlot->createIterator();
+   // we need to check if parameters to plot is different than parameters of interval
+   RooArgSet* intervalParams = fInterval->GetParameters(); 
+   RooAbsArg * arg = 0;
+   RooArgSet extraParams;
+   while((arg=(RooAbsArg*)it.Next())) {
+      if (!intervalParams->contains(*arg) ) {
+         ccoutE(InputArguments) << "Parameter " << arg->GetName() << "is not in the list of LikelihoodInterval parameters " 
+                                << " - do not use for plotting " << std::endl;
+         fNdimPlot--;
+         extraParams.add(*arg);
+      }
+   }   
+   if (extraParams.getSize() > 0) 
+      fParamsPlot->remove(extraParams,true,true);
 
    if(fNdimPlot > 2){
-      std::cout << "LikelihoodIntervalPlot::Draw(" << GetName() 
+      ccoutE(InputArguments) << "LikelihoodIntervalPlot::Draw(" << GetName() 
                 << ") ERROR: contours for more than 2 dimensions not implemented!" << std::endl;
       return;
    }
-   
-   TIter it = fParamsPlot->createIterator();
-   RooRealVar *myparam = (RooRealVar*)it.Next();
-      
-   RooAbsReal* newProfile = fInterval->GetLikelihoodRatio(); 
+
+   // if the number of parameters to plot is less to the number of parameters of the LikelihoodInterval
+   // we need to re-do the profile likelihood function, otherwise those parameters will not be profiled
+   // when plotting
+   RooAbsReal* newProfile = 0;
+   RooAbsReal* oldProfile = fInterval->GetLikelihoodRatio();
+   if (fNdimPlot != intervalParams->getSize() ) {       
+      RooProfileLL * profilell = dynamic_cast<RooProfileLL*>(oldProfile);
+      if (!profilell) return; 
+      RooAbsReal & nll =  profilell->nll();
+      newProfile = nll.createProfile(*fParamsPlot);
+   }
+   else { 
+      newProfile = oldProfile;
+   }
+
+   it.Reset();
+   RooRealVar *myparam = (RooRealVar*) it.Next();
+
+   // do a dummy evaluation around minimum to be sure profilell has right minimum
+   if (fInterval->GetBestFitParameters() ) { 
+      *fParamsPlot = *fInterval->GetBestFitParameters();
+      newProfile->getVal();
+   }
 
    // analyze options 
    TString opt = options; 
    opt.ToLower(); 
-   // use RooPLot for drawing the 1D PL
-   // if option is TF1 use TF1 for drawing
-   bool useRooPlot = opt.Contains("rooplot") ||  ! (opt.Contains("tf1"));
-   opt.ReplaceAll("rooplot","");
-   opt.ReplaceAll("tf1","");
-   // use Minuit for drawing the contours of the PL 
-   bool useMinuit = !opt.Contains("nominuit");
-   opt.ReplaceAll("nominuit","");
-
-   RooPlot * frame = 0; 
 
    TString title = GetTitle(); 
    int nPoints = fNPoints; 
    
-   if(fNdimPlot == 1){
+   if(fNdimPlot == 1) {
+
+      // 1D drawing options
+      // use RooPLot for drawing the 1D PL
+      // if option is TF1 use TF1 for drawing
+      bool useRooPlot = opt.Contains("rooplot") ||  ! (opt.Contains("tf1"));
+      opt.ReplaceAll("rooplot","");
+      opt.ReplaceAll("tf1","");
+
 
      //      if (title.Length() == 0) 
      //         title = "- log profile likelihood ratio";
@@ -172,6 +233,11 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
       double x1 = myarg->getMin(); 
       double x2 = myarg->getMax();
 
+      // default color values
+      if (fColor == 0) fColor = kBlue; 
+      if (fLineColor == 0) fLineColor = kGreen; 
+
+      RooPlot * frame = 0; 
 
       // use TF1 for drawing the function
       if (!useRooPlot) { 
@@ -216,6 +282,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          f1->GetXaxis()->SetTitle(myarg->GetName());
          f1->GetYaxis()->SetTitle(Form("- log #lambda(%s)",myparam->GetName()));
          f1->Draw(opt);
+         fPlotObject = f1->GetHistogram();
 
       } 
       else { 
@@ -241,19 +308,19 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          // plot 
          RooCmdArg cmd; 
          if (fPrecision > 0) cmd = RooFit::Precision(fPrecision); 
-         newProfile->plotOn(frame,cmd); 
+         newProfile->plotOn(frame,cmd,RooFit::LineColor(fColor)); 
          
          frame->SetMaximum(fMaximum);
          frame->SetMinimum(0.);
 
          myarg->setBins(prevBins);
-
+         fPlotObject = frame;
       }
 
       
       //myarg->setVal(xcont_max);
       //const Double_t Yat_Xmax = newProfile->getVal();
-      Double_t Yat_Xmax = 0.5*TMath::ChisquareQuantile(fInterval->ConfidenceLevel(),1);
+      Double_t Yat_Xmax = 0.5*ROOT::Math::chisquared_quantile(fInterval->ConfidenceLevel(),1);
       
       TLine *Yline_cutoff = new TLine(x1,Yat_Xmax,x2,Yat_Xmax);
       TLine *Yline_min = new TLine(xcont_min,0.,xcont_min,Yat_Xmax);
@@ -280,11 +347,28 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
       return;
    }
+
+   // case of 2 dimensions
+
    else if(fNdimPlot == 2){
+
+      //2D drawing options
+
+      // use Minuit for drawing the contours of the PL (default case)
+      bool useMinuit = !opt.Contains("nominuit");
+      // plot histogram in 2D 
+      bool plotHist = !opt.Contains("nohist");
+      opt.ReplaceAll("nominuit","");
+      opt.ReplaceAll("nohist","");
+      if (opt.Contains("minuit") ) useMinuit= true; 
+      if (useMinuit) plotHist = false; // switch off hist by default in case of Minuit 
+      if (opt.Contains("hist") ) plotHist= true; 
+      opt.ReplaceAll("minuit","");
+      opt.ReplaceAll("hist","");
 
       RooRealVar *myparamY = (RooRealVar*)it.Next();
 
-      Double_t cont_level = TMath::ChisquareQuantile(fInterval->ConfidenceLevel(),fNdimPlot); // level for -2log LR
+      Double_t cont_level = ROOT::Math::chisquared_quantile(fInterval->ConfidenceLevel(),fNdimPlot); // level for -2log LR
       cont_level = cont_level/2; // since we are plotting -log LR
 
       RooArgList params(*newProfile->getVariables());
@@ -299,50 +383,146 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
       // do a profile evaluation to start from the best fit values of parameters 
       newProfile->getVal(); 
 
-      if (title.Length() == 0)
+      if (title.Length() == 0) 
          title = TString("Contour of ") + TString(myparamY->GetName() ) + TString(" vs ") + TString(myparam->GetName() ); 
+      // add also labels
+      title = TString::Format("%s;%s;%s",title.Data(),myparam->GetName(),myparamY->GetName());
 
       if (nPoints <=0) nPoints = 40; // default in 2D
 
-      if (!useMinuit) { 
+      double xmin = myparam->getMin(); double xmax =  myparam->getMax();
+      double ymin = myparamY->getMin(); double ymax =  myparamY->getMax();
+      if (fXmin < fXmax) { xmin = fXmin; xmax = fXmax; }  
+      if (fYmin < fYmax) { ymin = fYmin; ymax = fYmax; }  
+
+
+      if (!useMinuit || plotHist) { 
       
          // draw directly the TH2 from the profile LL
-         TH2F* hist2D = (TH2F*)newProfile->createHistogram("_hist2D",*myparam,RooFit::YVar(*myparamY),RooFit::Binning(nPoints),RooFit::Scaling(kFALSE));
-
+         TString histName = TString::Format("_hist2D__%s_%s",myparam->GetName(),myparamY->GetName() );
+         int nBins = int( sqrt(nPoints) + 0.5 );
+         TH2* hist2D = new TH2D(histName, title, nBins, xmin, xmax, nBins, ymin, ymax ); 
+         newProfile->fillHistogram(hist2D, RooArgList(*myparam,*myparamY), 1, 0, false, 0, false);
 
          hist2D->SetTitle(title);
          hist2D->SetStats(kFALSE);
 
-         hist2D->SetContour(1,&cont_level);
+         //neeed many color levels for drawing with option colz
+         if (plotHist) { 
 
-         hist2D->SetFillColor(fColor); 
-         hist2D->SetFillStyle(fFillStyle); 
+            const int nLevels = 51;
+            double contLevels[nLevels];
+            contLevels[0] = 0.01;
+            double maxVal = (fMaximum > 0) ? fMaximum : hist2D->GetMaximum(); 
+            for (int k = 1; k < nLevels; ++k) {
+               contLevels[k] = k*maxVal/double(nLevels-1);
+            }
+            hist2D->SetContour(nLevels,contLevels);
+            
+            if (fMaximum>0) hist2D->SetMaximum(fMaximum);
+            
+            hist2D->DrawClone("COLZ");
+         }
+
+         
+         //need now less contours for drawing with option cont
+            
+         const int nLevels = 8;
+         double contLevels[nLevels];
+         // last 3 are the 3,4,5 sigma levels 
+         double confLevels[nLevels] = { 0.1,0.3,0.5,0.683,0.95,0.9973,0.9999366575,0.9999994267}; 
+         for (int k = 0; k < nLevels; ++k) {
+            //contLevels[k] = 0.5*ROOT::Math::chisquared_quantile(1.-2.*ROOT::Math::normal_cdf_c(nSigmaLevels[k],1),2);
+            contLevels[k] = 0.5*ROOT::Math::chisquared_quantile(confLevels[k],2);
+         }
+         hist2D->SetContour(nLevels,contLevels);
          hist2D->SetLineColor(fLineColor);
+         
+         // defult options for drawing a second histogram 
+         TString tmpOpt = opt; 
+         tmpOpt.ReplaceAll("same","");
+         if (tmpOpt.Length() < 3) opt += "cont3";
+         // if histo is plotted draw on top
+         if (plotHist) opt += TString(" same");
+         hist2D->Draw(opt.Data());
+         gPad->Update();
 
-         TString tmpOpt(options);
+         // case of plotting contours without minuit
+         if (!useMinuit) { 
 
-         if(!tmpOpt.Contains("CONT")) tmpOpt.Append("CONT");
-         if(!tmpOpt.Contains("LIST")) tmpOpt.Append("LIST"); // if you want the contour TGraphs
+            // set levels of contours if make contours without minuit
+            TH2 * h = (TH2*) hist2D->Clone();
+            h->SetContour(1,&cont_level);
+            
+            TVirtualPad * currentPad = gPad; 
+            // o a temporary draw to get the contour graph
+            TCanvas * tmpCanvas = new TCanvas("tmpCanvas","tmpCanvas"); 
+            h->Draw("CONT LIST"); 
+            gPad->Update();
+            
+            // get graphs from the contours
+            TObjArray *contoursOrig = (TObjArray*) gROOT->GetListOfSpecials()->FindObject("contours"); 
+            // CLONE THE LIST IN CASE IT GETS DELETED
+            TObjArray *contours = 0; 
+            if (contoursOrig) contours = (TObjArray*) contoursOrig->Clone(); 
+            
+            delete tmpCanvas; 
+            delete h;
+            gPad = currentPad; 
+         
 
-         hist2D->Draw(tmpOpt.Data());
-         //    hist2D->Draw("cont2,list,same");
+            // in case of option CONT4 I need to re-mamke the Pad
+            if (tmpOpt.Contains("cont4")) { 
+               Double_t bm = gPad->GetBottomMargin();
+               Double_t lm = gPad->GetLeftMargin();
+               Double_t rm = gPad->GetRightMargin();
+               Double_t tm = gPad->GetTopMargin();
+               Double_t x1 = hist2D->GetXaxis()->GetXmin();
+               Double_t y1 = hist2D->GetYaxis()->GetXmin();
+               Double_t x2 = hist2D->GetXaxis()->GetXmax();
+               Double_t y2 = hist2D->GetYaxis()->GetXmax();
+               
+               TPad *null=new TPad("null","null",0,0,1,1);
+               null->SetFillStyle(0);
+               null->SetFrameFillStyle(0);
+               null->Draw();
+               null->cd();
+               null->Range(x1-(x2-x1)*(lm/(1-rm-lm)),
+                           y1-(y2-y1)*(bm/(1-tm-lm)),
+                           x2+(x2-x1)*(rm/(1-rm-lm)), 
+                           y2+(y2-y1)*(tm/(1-tm-lm)));
+               
+               gPad->Update();
+            }
+         
 
-         gPad->Update();  // needed for get list of specials 
+            if (contours) {
+               int ncontours = contours->GetSize();
+               for (int icont = 0; icont < ncontours; ++icont) {  
+                  TList *  contourList = (TList*)contours->At(icont); 
+                  if (contourList && contourList->GetSize() > 0) { 
+                     TIterator * itgr = contourList->MakeIterator();
+                     TGraph * gr = 0;
+                     while( (gr = dynamic_cast<TGraph*>(itgr->Next()) ) ){
+                        gr->SetLineColor(fColor);
+                        gr->SetLineStyle(kDashed);
+                        gr->SetLineWidth(3);
+                        gr->Draw("L");
+                     } 
+                     delete itgr;
+                  }
+               }
+            }
+            else {
+               ccoutE(InputArguments) << "LikelihoodIntervalPlot::Draw(" << GetName() 
+                                      << ") ERROR: no contours found in ListOfSpecial" << std::endl;
+            }
 
-         // get TGraphs and add them
-         //    gROOT->GetListOfSpecials()->Print();
-         TObjArray *contours = (TObjArray*) gROOT->GetListOfSpecials()->FindObject("contours"); 
-         if(contours){
-            TList *list = (TList*)contours->At(0); 
-            TGraph *gr1 = (TGraph*)list->First();
-            gr1->SetLineColor(kBlack);
-            gr1->SetLineStyle(kDashed);
-            gr1->Draw("same");
-         } else{
-            std::cout << "no countours found in ListOfSpecials" << std::endl;
+            fPlotObject = hist2D;
+
          }
       }
-      else { 
+      if (useMinuit) { 
 
          // find contours  using Minuit       
          TGraph * gr = new TGraph(nPoints+1); 
@@ -355,14 +535,9 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          }
          // add last point to same as first one to close the contour
          gr->SetPoint(ncp, gr->GetX()[0], gr->GetY()[0] );
-         opt.Append("LF");
+         opt.Append("L");
          // draw first a dummy 2d histogram gfor the axis 
-         if (!opt.Contains("same")) { 
-
-            double xmin = myparam->getMin(); double xmax =  myparam->getMax();
-            double ymin = myparamY->getMin(); double ymax =  myparamY->getMax();
-            if (fXmin < fXmax) { xmin = fXmin; xmax = fXmax; }  
-            if (fYmin < fYmax) { ymin = fYmin; ymax = fYmax; }  
+         if (!opt.Contains("same") && !plotHist) { 
 
             TH2F* hist2D = new TH2F("_hist2D",title, nPoints, xmin, xmax, nPoints, ymin, ymax );
             hist2D->GetXaxis()->SetTitle(myparam->GetName());
@@ -372,17 +547,37 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
             hist2D->SetMaximum(1);  // to avoid problem with subsequents draws
             hist2D->Draw("AXIS");
          }
-         gr->SetFillColor(fColor); 
-         //gr->SetFillStyle(fFillStyle); 
-         gr->SetLineColor(kBlack); 
+         gr->SetLineColor(fColor);
+         gr->SetLineWidth(3);
          if (opt.Contains("same"))  gr->SetFillStyle(fFillStyle); // put transparent
          gr->Draw(opt);
          TString name = TString("Graph_of_") + TString(fInterval->GetName());
          gr->SetName(name);
+
+         if (!fPlotObject) fPlotObject = gr; 
+         else if (fPlotObject->IsA() != TH2D::Class() ) fPlotObject = gr;  
          
       }
 
+      // draw also the minimum
+      const RooArgSet * bestFitParams = fInterval->GetBestFitParameters();
+      if (bestFitParams) { 
+         TGraph * gr0 = new TGraph(1);
+         double x0 = bestFitParams->getRealValue(myparam->GetName());
+         double y0 = bestFitParams->getRealValue(myparamY->GetName());
+         gr0->SetPoint(0,x0,y0);
+         gr0->SetMarkerStyle(33);
+         gr0->SetMarkerColor(fColor);
+         gr0->Draw("P");
+         delete bestFitParams;
+      }
+
+
+
    }
+
+   // need to delete if a new profileLL was made
+   if (newProfile != oldProfile) delete newProfile;
 
    return;
 }

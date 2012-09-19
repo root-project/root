@@ -37,6 +37,10 @@ namespace RooStats {
     // Destructor of SamplingDistribution
     virtual ~LikelihoodIntervalPlot();
 
+
+    // returned plotted object (RooPlot or histograms)
+    TObject * GetPlottedObject() const { return fPlotObject; }
+
     void SetLikelihoodInterval(LikelihoodInterval* theInterval);
     void SetPlotParameters(const RooArgSet *params) ;
 
@@ -67,9 +71,9 @@ namespace RooStats {
 
   private:
 
-    Int_t fColor;
-    Int_t fFillStyle;
-    Int_t fLineColor;
+    Int_t fColor;         // color for the contour (for 2D) or function (in 1D)
+    Int_t fFillStyle;     // fill style for contours
+    Int_t fLineColor;     // line color for the interval (1D) or for other contours (2D)
     Int_t fNdimPlot;
     Int_t fNPoints; // number of points used to scan the PL 
 
@@ -84,11 +88,12 @@ namespace RooStats {
     LikelihoodInterval *fInterval;
 
     RooArgSet *fParamsPlot;
+    TObject * fPlotObject;    // plotted object
 
 
   protected:
 
-    ClassDef(LikelihoodIntervalPlot,1)  // Class containing the results of the IntervalCalculator
+    ClassDef(LikelihoodIntervalPlot,2)  // Class containing the results of the IntervalCalculator
   };
 }
 
