@@ -807,7 +807,6 @@ bool TMinuitMinimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
       return false; 
    }
    int npfound = 0; 
-   npoints -= 1;   // remove always one point in TMinuit
    // parameter numbers in mncont start from zero
    fMinuit->mncont( ipar,jpar,npoints, x, y,npfound); 
    if (npfound<4) {
