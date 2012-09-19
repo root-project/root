@@ -63,9 +63,8 @@
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendDiagnostic.h"
-#include "clang/Frontend/HeaderSearchOptions.h"
+#include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
-#include "clang/Serialization/ASTReader.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Value.h"
@@ -593,8 +592,7 @@ void TCintWithCling::RegisterModule(const char* modulename, const char** headers
    // This function gets called by the static initialization of dictionary
    // libraries.
 
-   TString pcmFileName(modulename);
-   pcmFileName += "_dict.pcm";
+   TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
 
    // Assemble search path:
    
@@ -619,70 +617,19 @@ void TCintWithCling::RegisterModule(const char* modulename, const char** headers
 #endif // ROOTLIBDIR
    gSystem->ExpandPathName(searchPath);
 
-   Bool_t haveModule = kTRUE;
    if (!gSystem->FindFile(searchPath, pcmFileName)) {
-      Error("RegisterModule()", "Cannot find dictionary module %s_dict.pcm in %s",
-            modulename, searchPath.Data());
-      haveModule = kFALSE;
-   }
-
-   clang::CompilerInstance * CI = fInterpreter->getCI ();
-   clang::Preprocessor& PP = CI->getPreprocessor();
-   clang::ModuleMap& ModuleMap = PP.getHeaderSearchInfo().getModuleMap();
-
-   std::pair<clang::Module*, bool> modCreation;
-   if (haveModule) {
+      Error("RegisterModule()", "Cannot find dictionary module %s in %s",
+            pcmFileName.Data(), searchPath.Data());
+   } else {
       TCintWithCling::Info("RegisterModule", "Loading PCM %s", pcmFileName.Data());
-      TString modulename_dict = modulename;
-      modulename_dict += "_dict";
-
-      modCreation
-         = ModuleMap.findOrCreateModule(modulename_dict.Data(), 0 /*ActiveModule*/,
-                                        false /*Framework*/, false /*Explicit*/);
-      if (!modCreation.second) {
-         Error("RegisterModule()",
-               "Duplicate deficition of dictionary module %s in %s.",
-               /*"\nOriginal module was found in %s.", - if only we could...*/
-               pcmFileName.Data(), searchPath.Data());
-         // Go on, add new headers nonetheless.
-      }
+      clang::CompilerInstance* CI = fInterpreter->getCI();
+      ROOT::TMetaUtils::declareModuleMap(CI, pcmFileName, headers);
    }
 
-   clang::HeaderSearch& HdrSearch = PP.getHeaderSearchInfo();
    for (const char** hdr = headers; *hdr; ++hdr) {
-      if (haveModule) {
-         const clang::DirectoryLookup* CurDir;
-         const clang::FileEntry* hdrFileEntry
-            =  HdrSearch.LookupFile(*hdr, false /*isAngled*/, 0 /*FromDir*/,
-                                    CurDir, 0 /*CurFileEnt*/, 0 /*SearchPath*/,
-                                    0 /*RelativePath*/, 0 /*SuggestedModule*/);
-         if (!hdrFileEntry) {
-            Warning("RegisterModule()",
-                    "Cannot find header file %s included in dictionary module %s"
-                    " in include search path!",
-                    *hdr, modulename);
-            hdrFileEntry = PP.getFileManager().getFile(*hdr, /*OpenFile=*/false,
-                                                       /*CacheFailure=*/false);
-         } else {
-            // Tell HeaderSearch that the header's directory has a module.map
-            llvm::StringRef srHdrDir(hdrFileEntry->getName());
-            srHdrDir = llvm::sys::path::parent_path(srHdrDir);
-            const clang::DirectoryEntry* Dir
-               = PP.getFileManager().getDirectory(srHdrDir);
-            if (Dir) {
-#ifdef R__CINTWITHCLING_MODULES
-               HdrSearch.setDirectoryHasModuleMap(Dir);
-#endif
-            }
-         }
-
-#ifdef R__CINTWITHCLING_MODULES
-         ModuleMap.addHeader(modCreation.first, hdrFileEntry);
-#endif
-      }
       Info("RegisterModule()", "   #including %s...", *hdr);
       fInterpreter->parse(TString::Format("#include \"%s\"", *hdr).Data());
-   }   
+   }
 }
 
 //______________________________________________________________________________

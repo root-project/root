@@ -27,8 +27,14 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/NestedNameSpecifier.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Lex/HeaderSearch.h"
+#include "clang/Lex/ModuleMap.h"
+#include "clang/Lex/Preprocessor.h"
 
 #include "cling/Utils/AST.h"
+
+#include "llvm/Support/PathV2.h"
 
 //////////////////////////////////////////////////////////////////////////
 static
@@ -179,8 +185,8 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(const clang::ASTContext& 
    return instanceType;
 }
 
-#include <iostream>
 
+//////////////////////////////////////////////////////////////////////////
 void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
 {
    // Return (in the argument 'output') a mangled version of the C++ symbol/type (pass as 'input')
@@ -227,6 +233,8 @@ void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
    return;
 }
 
+
+//////////////////////////////////////////////////////////////////////////
 std::string ROOT::TMetaUtils::GetInterpreterExtraIncludePath(bool rootbuild)
 {
    // Return the -I needed to find RuntimeUniverse.h
@@ -246,6 +254,7 @@ std::string ROOT::TMetaUtils::GetInterpreterExtraIncludePath(bool rootbuild)
    return "-Ietc";
 }
 
+//////////////////////////////////////////////////////////////////////////
 std::string ROOT::TMetaUtils::GetLLVMResourceDir(bool rootbuild)
 {
    // Return the LLVM / clang resource directory
@@ -257,6 +266,7 @@ std::string ROOT::TMetaUtils::GetLLVMResourceDir(bool rootbuild)
 #endif
 }
 
+//////////////////////////////////////////////////////////////////////////
 std::string ROOT::TMetaUtils::GetROOTIncludeDir(bool rootbuild)
 {
    if (!rootbuild) {
@@ -275,4 +285,75 @@ std::string ROOT::TMetaUtils::GetROOTIncludeDir(bool rootbuild)
    }
    // else
    return "include";
+}
+
+//////////////////////////////////////////////////////////////////////////
+std::string ROOT::TMetaUtils::GetModuleFileName(const char* moduleName)
+{
+   // Return the dictionary file name for a module
+   std::string dictFileName(moduleName);
+   dictFileName += ".rdictpcm";
+   return dictFileName;
+}
+
+//////////////////////////////////////////////////////////////////////////
+clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
+                                                  const char* moduleFileName,
+                                                  const char* headers[])
+{
+   // Declare a virtual module.map to clang. Returns Module on success.
+   clang::Preprocessor& PP = CI->getPreprocessor();
+   clang::ModuleMap& ModuleMap = PP.getHeaderSearchInfo().getModuleMap();
+
+   llvm::StringRef moduleName = llvm::sys::path::filename(moduleFileName);
+   moduleName = llvm::sys::path::stem(moduleName);
+
+   std::pair<clang::Module*, bool> modCreation;
+   std::string moduleNameDict = moduleName;
+   moduleNameDict += "_dict";
+
+   modCreation
+      = ModuleMap.findOrCreateModule(moduleNameDict.c_str(), 0 /*ActiveModule*/,
+                                     false /*Framework*/, false /*Explicit*/);
+   if (!modCreation.second) {
+      std::cerr << "TMetaUtils::declareModuleMap: "
+         "Duplicate definition of dictionary module "
+                << moduleFileName << std::endl;
+            /*"\nOriginal module was found in %s.", - if only we could...*/
+      // Go on, add new headers nonetheless.
+   }
+
+   clang::HeaderSearch& HdrSearch = PP.getHeaderSearchInfo();
+   for (const char** hdr = headers; *hdr; ++hdr) {
+      const clang::DirectoryLookup* CurDir;
+      const clang::FileEntry* hdrFileEntry
+         =  HdrSearch.LookupFile(*hdr, false /*isAngled*/, 0 /*FromDir*/,
+                                 CurDir, 0 /*CurFileEnt*/, 0 /*SearchPath*/,
+                                 0 /*RelativePath*/, 0 /*SuggestedModule*/);
+      if (!hdrFileEntry) {
+         std::cerr << "TMetaUtils::declareModuleMap: "
+            "Cannot find header file " << *hdr
+                   << " included in dictionary module "
+                   << moduleName.data()
+                   << " in include search path!";
+         hdrFileEntry = PP.getFileManager().getFile(*hdr, /*OpenFile=*/false,
+                                                    /*CacheFailure=*/false);
+      } else {
+         // Tell HeaderSearch that the header's directory has a module.map
+         llvm::StringRef srHdrDir(hdrFileEntry->getName());
+         srHdrDir = llvm::sys::path::parent_path(srHdrDir);
+         const clang::DirectoryEntry* Dir
+            = PP.getFileManager().getDirectory(srHdrDir);
+         if (Dir) {
+#ifdef R__CINTWITHCLING_MODULES
+            HdrSearch.setDirectoryHasModuleMap(Dir);
+#endif
+         }
+      }
+
+#ifdef R__CINTWITHCLING_MODULES
+      ModuleMap.addHeader(modCreation.first, hdrFileEntry);
+#endif
+   } // for headers
+   return modCreation.first;
 }
