@@ -6362,7 +6362,6 @@ int main(int argc, char **argv)
    // Need to replace all the characters not allowed in a symbol ...
    std::string main_dictname_copy(main_dictname);
    TMetaUtils::GetCppName(main_dictname, main_dictname_copy.c_str());
-   std::cerr << "From --" << main_dictname_copy << "-- we got --" << main_dictname << "--\n";
 
    time_t t = time(0);
    (*dictSrcOut) << "//"  << std::endl
