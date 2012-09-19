@@ -69,7 +69,10 @@ END_HTML
 #include "RooProfileLL.h"
 
 #include <string>
-
+#include <algorithm>
+#include <functional>
+#include <ctype.h>   // need to use c version of toupper defined here
+#
 /*
 // for debugging
 #include "RooNLLVar.h"
@@ -258,9 +261,11 @@ bool LikelihoodInterval::CreateMinimizer() {
    fFunctor = std::auto_ptr<RooFunctor>(new RooFunctor(nll, RooArgSet(), params )); 
 
    std::string minimType =  ROOT::Math::MinimizerOptions::DefaultMinimizerType();
+   std::transform(minimType.begin(), minimType.end(), minimType.begin(), (int(*)(int)) tolower ); 
+   *minimType.begin() = toupper( *minimType.begin());
 
-   if (minimType != "Minuit" && minimType != "Minuit2") { 
-      ccoutE(InputArguments) << minimType << "is wrong type of minimizer for getting interval limits or contours - must use Minuit or Minuit2" << std::endl;
+   if (minimType != "Minuit" && minimType != "Minuit2") {
+      ccoutE(InputArguments) << minimType << " is wrong type of minimizer for getting interval limits or contours - must use Minuit or Minuit2" << std::endl;
       return false; 
    }
    // create minimizer class 
