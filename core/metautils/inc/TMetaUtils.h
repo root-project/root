@@ -33,6 +33,17 @@ namespace ROOT {
       
       // Return the ROOT include directory
       std::string GetROOTIncludeDir(bool rootbuild);
+
+      // Return (in the argument 'output') a mangled version of the C++ symbol/type (pass as 'input')
+      // that can be used in C++ as a variable name.
+      void GetCppName(std::string &output, const char *input);
+
+      // Return the type name normalized for ROOT,
+      // keeping only the ROOT opaque typedef (Double32_t, etc.) and
+      // adding default template argument for all types except the STL collections
+      // where we remove the default template argument if any.
+      void GetNormalizedName(std::string &norm_name, const clang::QualType &type, const clang::ASTContext &ctxt);
+
    }; // class TMetaUtils
 
 } // namespace ROOT

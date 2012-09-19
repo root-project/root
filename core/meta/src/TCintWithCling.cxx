@@ -2882,7 +2882,9 @@ void TCintWithCling::LoadText(const char* text) const
 const char* TCintWithCling::MapCppName(const char* name) const
 {
    // Interface to CINT function
-   return G__map_cpp_name(name);
+   static std::string buffer;
+   ROOT::TMetaUtils::GetCppName(buffer,name);
+   return buffer.c_str();
 }
 
 //______________________________________________________________________________

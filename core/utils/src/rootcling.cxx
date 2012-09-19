@@ -423,54 +423,6 @@ using namespace ROOT;
       }         
    }
 
-/**************************************************************************
-* R__map_cpp_name()
-**************************************************************************/
-char *R__map_cpp_name(const char *in)
-{
-   static G__FastAllocString *out_ptr = new G__FastAllocString(G__MAXNAME*6);
-   G__FastAllocString &out( *out_ptr );
-   unsigned int i=0,j=0,c;
-   while((c=in[i])) {
-      if (out.Capacity() < (j+3)) {
-         out.Resize(2*j);
-      }
-      switch(c) {
-         case '+': strcpy(out+j,"pL"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '-': strcpy(out+j,"mI"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '*': strcpy(out+j,"mU"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '/': strcpy(out+j,"dI"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '&': strcpy(out+j,"aN"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '%': strcpy(out+j,"pE"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '|': strcpy(out+j,"oR"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '^': strcpy(out+j,"hA"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '>': strcpy(out+j,"gR"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '<': strcpy(out+j,"lE"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '=': strcpy(out+j,"eQ"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '~': strcpy(out+j,"wA"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '.': strcpy(out+j,"dO"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '(': strcpy(out+j,"oP"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case ')': strcpy(out+j,"cP"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '[': strcpy(out+j,"oB"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case ']': strcpy(out+j,"cB"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '!': strcpy(out+j,"nO"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case ',': strcpy(out+j,"cO"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '$': strcpy(out+j,"dA"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case ' ': strcpy(out+j,"sP"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case ':': strcpy(out+j,"cL"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '"': strcpy(out+j,"dQ"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '@': strcpy(out+j,"aT"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '\'': strcpy(out+j,"sQ"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         case '\\': strcpy(out+j,"fI"); j+=2; break; // Okay: we resized the underlying buffer if needed
-         default: out[j++]=c; break;
-      }
-      ++i;
-   }
-   out[j]='\0';
-   return(out);
-}
-
-
 using namespace ROOT;
 
 const char *autoldtmpl = "G__auto%dLinkDef.h";
@@ -2528,7 +2480,8 @@ void WriteAuxFunctions(const RScanner::AnnotatedRecordDecl &cl)
    }
 
    string classname( GetLong64_Name(cl.GetNormalizedName()) );
-   string mappedname = R__map_cpp_name((char*)classname.c_str());
+   string mappedname; 
+   TMetaUtils::GetCppName(mappedname,classname.c_str());
 
    if ( ! TClassEdit::IsStdClass( classname.c_str() ) ) {
 
@@ -3373,7 +3326,8 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
 
    // coverity[fun_call_w_exception] - that's just fine.
    string classname = GetLong64_Name( cl_input.GetNormalizedName() );
-   string mappedname = R__map_cpp_name((char*)classname.c_str());
+   string mappedname;
+   TMetaUtils::GetCppName(mappedname,classname.c_str());
    string csymbol = classname;
    string args;
 
@@ -3716,7 +3670,8 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl)
 
    // coverity[fun_call_w_exception] - that's just fine.
    string classname = R__GetQualifiedName(*cl).c_str();
-   string mappedname = R__map_cpp_name((char*)classname.c_str());
+   string mappedname;
+   TMetaUtils::GetCppName(mappedname,classname.c_str());
 
    int nesting = 0;
    // We should probably unwind the namespace to properly nest it.
@@ -4605,7 +4560,8 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
    // Write interface function for STL members
 
    string a;
-   string clName(R__map_cpp_name(R__GetFileName(cl.GetRecordDecl()).str().c_str()));
+   string clName;
+   TMetaUtils::GetCppName(clName, R__GetFileName(cl.GetRecordDecl()).str().c_str());
    int version = GetClassVersion(cl.GetRecordDecl());
    if (version == 0) return;
    if (version < 0 && !(cl.RequestStreamerInfo()) ) return;
@@ -4729,7 +4685,8 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
    G__DataMemberInfo m(cl);
    char cdim[1024];
    string cvar;
-   string clName(R__map_cpp_name((char *)cl.Fullname()));
+   string clName;
+   TMetaUtils::GetCppName(clName,cl.Fullname());
    string fun;
    int version = GetClassVersion(cl);
    int clflag = 1;
@@ -4904,7 +4861,8 @@ void WriteShowMembers(const RScanner::AnnotatedRecordDecl &cl, bool outside = fa
    (*dictSrcOut) << "_______________________________________" << std::endl;
 
    string classname = GetLong64_Name( cl.GetNormalizedName() );
-   string mappedname = R__map_cpp_name((char*)classname.c_str());
+   string mappedname;
+   TMetaUtils::GetCppName(mappedname, classname.c_str());
 
    if (outside || clinfo.IsTmplt()) {
       (*dictSrcOut) << "namespace ROOT {" << std::endl
@@ -4937,7 +4895,8 @@ void WriteShowMembers(const RScanner::AnnotatedRecordDecl &cl, bool outside = fa
          WriteBodyShowMembers(clinfo, outside);
       } else {
          string clnameNoDefArg = GetLong64_Name( cl.GetNormalizedName() );
-         string mappednameNoDefArg = R__map_cpp_name((char*)clnameNoDefArg.c_str());
+         string mappednameNoDefArg;
+         TMetaUtils::GetCppName(mappednameNoDefArg, clnameNoDefArg.c_str());
 
          (*dictSrcOut) <<  "   ::ROOT::" << mappednameNoDefArg.c_str() << "_ShowMembers(this, R__insp);" << std::endl;
       }
@@ -6311,7 +6270,9 @@ int main(int argc, char **argv)
       main_dictname.erase(dh);
    }
    // Need to replace all the characters not allowed in a symbol ...
-   main_dictname = R__map_cpp_name((char*)main_dictname.c_str());
+   std::string main_dictname_copy(main_dictname);
+   TMetaUtils::GetCppName(main_dictname, main_dictname_copy.c_str());
+   std::cerr << "From --" << main_dictname_copy << "-- we got --" << main_dictname << "--\n";
 
    time_t t = time(0);
    (*dictSrcOut) << "//"  << std::endl
