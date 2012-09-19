@@ -209,13 +209,14 @@ public:
   static Bool_t releaseVars(RooAbsData*) ;
 
   enum StorageType { Tree, Vector} ;
-  static StorageType defaultStorageType ;
 
   static void setDefaultStorageType(StorageType s) ;
 
   static StorageType getDefaultStorageType();
 
 protected:
+
+  static StorageType defaultStorageType ;
 
   Double_t corrcov(RooRealVar &x,RooRealVar &y, const char* cutSpec, const char* cutRange, Bool_t corr) const  ;
   TMatrixDSym* corrcovMatrix(const RooArgList& vars, const char* cutSpec, const char* cutRange, Bool_t corr) const  ;
