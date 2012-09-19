@@ -1365,7 +1365,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D,
          }
       }
       
-      const BaseSelectionRule *selector;
+      const BaseSelectionRule *selector = 0;
       int fImplNo = 0;
       bool dontC, noName;
       const BaseSelectionRule *explicit_selector = 0;
