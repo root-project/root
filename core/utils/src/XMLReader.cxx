@@ -257,7 +257,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
       bool newattr = true;
       std::string attr_name;
       std::string attr_value;
-      char lastsymbol;
+      char lastsymbol = '\0';
       
       for (std::string::size_type i = 0, e = attrstr.length()-1; i < e; ++i) {
          char c = attrstr[i];
@@ -355,12 +355,12 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
    bool excl = false;
    std::string parent="";
    
-   BaseSelectionRule *bsr; // Pointer to the base class, in it is written information about the current sel. rule
-   BaseSelectionRule *bsrChild; // The same but keeps information for method or field children of a class
-   ClassSelectionRule *csr;
-   FunctionSelectionRule *fsr;
-   VariableSelectionRule *vsr;
-   EnumSelectionRule *esr;
+   BaseSelectionRule *bsr      = 0; // Pointer to the base class, in it is written information about the current sel. rule
+   BaseSelectionRule *bsrChild = 0; // The same but keeps information for method or field children of a class
+   ClassSelectionRule *csr     = 0;
+   FunctionSelectionRule *fsr  = 0;
+   VariableSelectionRule *vsr  = 0;
+   EnumSelectionRule *esr      = 0;
    
    while(file.good()){
       std::string tagStr;
