@@ -430,6 +430,7 @@ F77LDFLAGS   := $(LDFLAGS)
 endif
 
 ifeq ($(GCC_MAJOR),3)
+LDFLAGS      := $(filter-out -Wl,--no-undefined,$(LDFLAGS))
 ifneq ($(GCC_MINOR),0)
 ifeq ($(F77),g77)
 LIBFRTBEGIN  := $(shell $(F77) -print-file-name=libfrtbegin.a)
