@@ -134,6 +134,7 @@ public:
    virtual Long64_t  Process(TSelector* selector, Option_t* option = "", Long64_t nentries = kBigNumber, Long64_t firstentry = 0);
 #endif
    virtual void      RecursiveRemove(TObject *obj);
+   virtual void      RemoveFriend(TTree*);
    virtual void      Reset(Option_t *option="");
    virtual void      ResetAfterMerge(TFileMergeInfo *);
    virtual void      ResetBranchAddress(TBranch *);

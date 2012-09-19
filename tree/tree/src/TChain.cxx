@@ -2106,6 +2106,29 @@ void TChain::RecursiveRemove(TObject *obj)
 }
 
 //______________________________________________________________________________
+void TChain::RemoveFriend(TTree* oldFriend)
+{
+   // Remove a friend from the list of friends.
+   
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+
+   if (!fFriends) {
+      return;
+   }
+
+   TTree::RemoveFriend(oldFriend);
+
+   if (fProofChain)
+      // This updates the proxy chain when we will really use PROOF
+      ResetBit(kProofUptodate);
+   
+   // We need to invalidate the loading of the current tree because its list
+   // of real friends is now obsolete.  It is repairable only from LoadTree.
+   InvalidateCurrentTree();
+}
+
+//______________________________________________________________________________
 void TChain::Reset(Option_t*)
 {
    // Resets the state of this chain.
