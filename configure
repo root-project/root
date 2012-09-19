@@ -2356,6 +2356,35 @@ fi
 
 ######################################################################
 #
+### echo %%% Check for linker's support of --no-ctors-in-init-array
+#
+### This changes the sequence for static initialization to be right
+### to left.
+#
+logmsg "Derminining support for --no-ctors-in-init-array"
+cat <<EOF > conftest.mk
+include ${ac_srcdir}/config/Makefile.${arch}
+CC  = ${altcc}
+CXX = ${altcxx}
+LD  = ${altld}
+conftest: conftest.cxx
+	\$(CC) \$(LDFLAGS) -Wl,--no-ctors-in-init-array \$^ -o \$@
+
+conftest.cxx:
+	echo 'int main(int,char*[]){return 0;}' >> \$@
+EOF
+$gnumake -f conftest.mk >> $logfile 2>&1
+if test $? -eq 0 ; then
+    logmsg "  supported"
+    ctorsinitarray="yes"
+else
+    logmsg "  not supported"
+    ctorsinitarray="no"
+fi
+rm -f conftest.mk conftest conftest.cxx
+
+######################################################################
+#
 ### echo %%% Cling - LLVM/clang based interpreter prototype
 #
 hascling="undef"
@@ -6668,6 +6697,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@glitelib@|$glitelib|"                \
     -e "s|@glitelibdir@|$glitelibdir|"          \
     -e "s|@gaw_cppflags@|$gaw_cppflags|"        \
+    -e "s|@ctorsinitarray@|$ctorsinitarray|"    \
         < Makefile.tmp > Makefile.tmpp
 mv Makefile.tmpp Makefile.tmp
 
