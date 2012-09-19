@@ -27,14 +27,7 @@ namespace ROOT {
 
 
 void PrintContourPoint(const std::pair<double,double> & point)  { 
-#ifdef WARNINGMSG 
-#ifdef USE_ROOT_ERROR
-   std::string msg = "\tx = " + ROOT::Math::Util::ToString(point.first) + "\ty = " + ROOT::Math::Util::ToString(point.first);
-   MN_INFO_MSG2("MnContour",msg.c_str());
-#else
-   std::cout << " x  = " << point.first << "  y = " << point.second << std::endl;
-#endif
-#endif
+   std::cout << "\t x  = " << point.first << "  y = " << point.second << std::endl;
 }
 
 std::vector<std::pair<double,double> > MnContours::operator()(unsigned int px, unsigned int py, unsigned int npoints) const {
@@ -127,18 +120,22 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    result.push_back(std::pair<double,double>(eyx_up.UserState().Value(px), valy + ey.second));
 
    
+   MnUserParameterState upar = fMinimum.UserState();
    
    //   std::cout<<"MnContours: first 4 params finished."<<std::endl;
-#ifdef WARNINGMSG
-   MN_INFO_MSG("Minuit2::MnContour : List of  found points");
-   MN_INFO_VAL2("Minuit2::MnContour : parameter number x",px);
-   MN_INFO_VAL2("Minuit2::MnContour : parameter number y",py);
-#endif
+   int printLevel = MnPrint::Level();
 
-   for (unsigned int i = 0; i < 4; ++i)
-      PrintContourPoint(result[i] ); 
+   if (printLevel > 0 ) {
+      std::cout << "MnContour : List of found points " << std::endl;
+      std::cout << "\t Parameter x is " << upar.Name(px) << std::endl;
+      std::cout << "\t Parameter y is " << upar.Name(py) << std::endl;
+   }
+
+   if (printLevel > 0) { 
+      for (unsigned int i = 0; i < 4; ++i)
+         PrintContourPoint(result[i] ); 
+   }
  
-   MnUserParameterState upar = fMinimum.UserState();
    upar.Fix(px);
    upar.Fix(py);
    
@@ -203,13 +200,16 @@ L300:
       double aopt = opt.Value();
       if(idist2 == result.begin()) { 
          result.push_back(std::pair<double,double>(xmidcr+(aopt)*xdircr, ymidcr + (aopt)*ydircr));
-         PrintContourPoint( result.back() );
+         if (printLevel > 0) PrintContourPoint( result.back() );
       }
       else {
          result.insert(idist2, std::pair<double,double>(xmidcr+(aopt)*xdircr, ymidcr + (aopt)*ydircr));
-         PrintContourPoint( *idist2 );
+         if (printLevel > 0) PrintContourPoint( *idist2 );
       }
    }   
+   if (printLevel >0) 
+      std::cout << "MnContour: Number of contour points = " << result.size() << std::endl;
+
    return ContoursError(px, py, result, mex, mey, nfcn);
 }
 
