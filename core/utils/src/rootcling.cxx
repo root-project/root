@@ -661,6 +661,8 @@ void R__GetNormalizedName(std::string &norm_name, const clang::QualType &type, c
    }
 
    clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, typeToSkip); 
+   // Readd missing default template parameter.
+   normalizedType = ROOT::TMetaUtils::AddDefaultParameters(ctxt, normalizedType);
    
    std::string normalizedNameStep1;
    normalizedType.getAsStringInternal(normalizedNameStep1,ctxt.getPrintingPolicy());

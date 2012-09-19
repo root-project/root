@@ -12,20 +12,29 @@
 #ifndef ROOT_TMetaUtils
 #define ROOT_TMetaUtils
 
+namespace clang {
+   class ASTContext;
+   class QualType;
+}
+
 #include <string>
 
 namespace ROOT {
-class TMetaUtils {
-public:
-   // Return the -I needed to find RuntimeUniverse.h
-   static std::string GetInterpreterExtraIncludePath(bool rootbuild);
+   namespace TMetaUtils {
 
-   // Return the LLVM / clang resource directory
-   static std::string GetLLVMResourceDir(bool rootbuild);
+      // Add default template parameters.
+      clang::QualType AddDefaultParameters(const clang::ASTContext& Ctx, clang::QualType instanceType);
 
-   // Return the ROOT include directory
-   static std::string GetROOTIncludeDir(bool rootbuild);
-}; // class TMetaUtils
+      // Return the -I needed to find RuntimeUniverse.h
+      std::string GetInterpreterExtraIncludePath(bool rootbuild);
+
+      // Return the LLVM / clang resource directory
+      std::string GetLLVMResourceDir(bool rootbuild);
+      
+      // Return the ROOT include directory
+      std::string GetROOTIncludeDir(bool rootbuild);
+   }; // class TMetaUtils
+
 } // namespace ROOT
 
 #endif // ROOT_TMetaUtils
