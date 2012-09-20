@@ -5436,63 +5436,34 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
 
    std::string dictname = llvm::sys::path::stem(dictSrcFile);
 
-//    std::string dictNameStem(dictname);
-//    size_t posDotPcmFile = dictNameStem.find('.');
-//    if (posDotPcmFile != std::string::npos) {
-//       // remove extension.
-//       dictNameStem.erase(posDotPcmFile, dictNameStem.length() - posDotPcmFile);
-//    }
-//    std::string moduleMapName = std::string("lib/") + dictNameStem + "_dict.map";
-//    std::string fmodule_name = "-fmodule-name=";
-//    std::string outfile = "lib/";
-//    outfile += dictNameStem + "_dict.pcm";
-//    fmodule_name += dictNameStem + "_dict";
-
-//    /*
-// /home/axel/build/llvm/deb-inst/bin/clang -v -Xclang -emit-module -Xclang -fmodules -Xclang -fmodule-cache-path -Xclang lib -Xclang -fmodule-name=G__Eve1_dict -o lib/G__Eve1_dict.pcm -x c++ -c lib/G__Eve1_dict.map -I. -DROOT_Math_VectorUtil_Cint -DG__VECTOR_HAS_CLASS_ITERATOR -Iinclude -DG__NOCINTDLL -DTRUE=1 -DFALSE=0
-// clang version 3.2 (trunk 162896)
-// Target: x86_64-unknown-linux-gnu
-// Thread model: posix
-//  "/home/axel/build/llvm/deb-inst/bin/clang" -cc1 -triple x86_64-unknown-linux-gnu -emit-obj -mrelax-all -disable-free -main-file-name G__Eve1_dict.map -mrelocation-model static -mdisable-fp-elim -fmath-errno -masm-verbose -mconstructor-aliases -munwind-tables -target-cpu x86-64 -target-linker-version 2.22 -momit-leaf-frame-pointer -v -coverage-file /home/axel/build/root/trunk/extllvm/lib/G__Eve1_dict.pcm -resource-dir /home/axel/build/llvm/deb-inst/bin/../lib/clang/3.2 -D ROOT_Math_VectorUtil_Cint -D G__VECTOR_HAS_CLASS_ITERATOR -D G__NOCINTDLL -D TRUE=1 -D FALSE=0 -I . -I include -fmodule-cache-path /var/tmp/clang-module-cache -internal-isystem /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../../include/c++/4.6 -internal-isystem /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../../include/c++/4.6/x86_64-linux-gnu -internal-isystem /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../../include/c++/4.6/backward -internal-isystem /usr/local/include -internal-isystem /home/axel/build/llvm/deb-inst/bin/../lib/clang/3.2/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /include -internal-externc-isystem /usr/include -fdeprecated-macro -fdebug-compilation-dir /home/axel/build/root/trunk/extllvm -ferror-limit 19 -fmessage-length 157 -mstackrealign -fobjc-runtime=gcc -fcxx-exceptions -fexceptions -fdiagnostics-show-option -fcolor-diagnostics -emit-module -fmodules -fmodule-cache-path lib -fmodule-name=G__Eve1_dict -o lib/G__Eve1_dict.pcm -x c++ lib/G__Eve1_dict.map
-//     */
-
-//    std::vector<const char*> argv;
-//    //argv.push_back("-emit-obj");
-//    //argv.push_back("-main-file-name"); argv.push_back(moduleMapName.c_str() + 4);
-
-//    //#define XCLANG argv.push_back("-Xclang")
-// #define XCLANG 
-//    XCLANG; argv.push_back("-emit-module");
-//    XCLANG; argv.push_back("-fmodules");
-//    XCLANG; argv.push_back("-fmodule-cache-path"); XCLANG; argv.push_back("lib");
-//    XCLANG; argv.push_back(fmodule_name.c_str());
-//    argv.push_back("-o"); argv.push_back(outfile.c_str());
-//    argv.push_back("-x"); argv.push_back("c++");
-//    argv.push_back("-c");
-//    argv.push_back("-fsyntax-only");
-//    argv.push_back(moduleMapName.c_str());
-
    // Parse Arguments
    vector<std::string> headers;
+   std::vector<const char*> compI;
+   std::vector<const char*> compD;
+   std::vector<const char*> compU;
    for (size_t iPcmArg = 1 /*skip argv0*/, nPcmArg = args.size();
         iPcmArg < nPcmArg; ++iPcmArg) {
       ESourceFileKind sfk = GetSourceFileKind(args[iPcmArg].c_str());
       if (sfk == kSFKHeader || sfk == kSFKSource) {
          headers.push_back(args[iPcmArg]);
-      } else if (sfk == kSFKNotC) {
-         //        argv.push_back(args[iPcmArg].c_str());
+      } else if (sfk == kSFKNotC && args[iPcmArg][0] == '-') {
+         switch (args[iPcmArg][1]) {
+         case 'I':
+            if (args[iPcmArg] != "-I." &&  args[iPcmArg] != "-Iinclude") {
+               compI.push_back(args[iPcmArg].c_str() + 2);
+            }
+            break;
+         case 'D':
+            if (args[iPcmArg] != "-DTRUE=1" && args[iPcmArg] != "-DFALSE=0"
+                && args[iPcmArg] != "-DG__NOCINTDLL") {
+               // keep -DROOT_Math_VectorUtil_Cint -DG__VECTOR_HAS_CLASS_ITERATOR?
+               compD.push_back(args[iPcmArg].c_str() + 2);
+            }
+            break;
+         case 'U': compU.push_back(args[iPcmArg].c_str() + 2); break;
+         }
       }
    }
-
-   // // Generate module map
-   // {
-   //    std::ofstream moduleMap(moduleMapName.c_str());
-   //    moduleMap << "module " << dictNameStem << "_dict { " << std::endl;
-   //    for (size_t iH = 0, eH = headers.size(); iH < eH; ++iH) {
-   //       moduleMap << "header \"" << headers[iH] << "\"" << std::endl;
-   //    }
-   //    moduleMap << "}" << std::endl;
-   // }
 
    // Dictionary initialization code for loading the module
    (*dictSrcOut) << "namespace {\n"
@@ -5531,27 +5502,32 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
    }
    (*dictSrcOut) << 
       "      0 };\n"
-      "      TCintWithCling__RegisterModule(\"" << dictname << "\", headers);\n"
+      "      static const char* includePaths[] = {\n";
+   for (std::vector<const char*>::const_iterator
+           iI = compI.begin(), iE = compI.end(); iI != iE; ++iI) {
+      (*dictSrcOut) << "             \"" << *iI << "\"," << std::endl;
+   }
+   (*dictSrcOut) << 
+      "      0 };\n"
+      "      static const char* macroDefines[] = {\n";
+   for (std::vector<const char*>::const_iterator
+           iD = compD.begin(), iDE = compD.end(); iD != iDE; ++iD) {
+      (*dictSrcOut) << "             \"" << *iD << "\"," << std::endl;
+   }
+   (*dictSrcOut) << 
+      "      0 };\n"
+      "      static const char* macroUndefines[] = {\n";
+   for (std::vector<const char*>::const_iterator
+           iU = compU.begin(), iUE = compU.end(); iU != iUE; ++iU) {
+      (*dictSrcOut) << "             \"" << *iU << "\"," << std::endl;
+   }
+   (*dictSrcOut) << 
+      "      0 };\n"
+      "      TCintWithCling__RegisterModule(\"" << dictname << "\",\n"
+      "         headers, includePaths, macroDefines, macroUndefines);\n"
       "    }\n"
       "  } __TheInitializer;\n"
       "}" << std::endl;
-
-   // llvm::OwningPtr<clang::CompilerInstance>
-   //   CI(cling::CIFactory::createCI(0, argv.size(), &argv[0],
-   //                                 gResourceDir.c_str()));
-
-   // clang::GenerateModuleAction Act;
-   // // CI->ExecuteAction(Act);
-   // CI->getDiagnosticClient().BeginSourceFile(CI->getLangOpts(),
-   //                                           &CI->getPreprocessor());
-
-   // const clang::FrontendInputFile &CurrentInput =
-   //   CI->getFrontendOpts().Inputs[0];
-   // bool success = Act.BeginSourceFile(*CI, CurrentInput)
-   //   && Act.Execute();
-   // if (success) {
-   //   Act.EndSourceFile();
-   // }
 
    clang::CompilerInstance* CI = gInterp->getCI();
    std::string dictDir = "lib/";
@@ -5591,13 +5567,6 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
    // Free up some memory, in case the process is kept alive.
    Buffer.clear();
 
-   // clang::HeaderSearch& HS = CI->getPreprocessor().getHeaderSearchInfo();
-   // if (!HS.lookupModule(dictname, /*AllowSearch*/ false)) {
-   //    std::cerr << "Cannot write module " << moduleFile << std::endl;
-   //    return 1;
-   // }
-
-   //unlink(moduleMapName.c_str());
    return 0;
 }
 

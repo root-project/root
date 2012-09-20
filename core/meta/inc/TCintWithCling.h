@@ -41,7 +41,10 @@ struct G__dictposition;
 
 extern "C" {
    void TCintWithCling__RegisterModule(const char* modulename,
-                                       const char** headers);
+                                       const char** headers,
+                                       const char** includePaths,
+                                       const char** macroDefines,
+                                       const char** macroUndefines);
 }
 
 namespace Cint {
@@ -119,7 +122,11 @@ public: // Public Interface
    Long_t  ProcessLineAsynch(const char* line, EErrorCode* error = 0);
    Long_t  ProcessLineSynch(const char* line, EErrorCode* error = 0);
    void    PrintIntro();
-   void    RegisterModule(const char* modulename, const char** headers);
+   void    RegisterModule(const char* modulename,
+                          const char** headers,
+                          const char** includePaths,
+                          const char** macroDefines,
+                          const char** macroUndefines);
    void    SetGetline(const char * (*getlineFunc)(const char* prompt),
                       void (*histaddFunc)(const char* line));
    void    Reset();

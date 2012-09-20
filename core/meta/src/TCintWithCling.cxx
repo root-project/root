@@ -99,10 +99,19 @@ namespace {
    // long lived by definition because they get passed in
    // before initialization of TCintWithCling.
    struct ModuleHeaderInfo_t {
-      ModuleHeaderInfo_t(const char* moduleName, const char** headers):
-         fModuleName(moduleName), fHeaders(headers) {}
+      ModuleHeaderInfo_t(const char* moduleName,
+                         const char** headers,
+                         const char** includePaths,
+                         const char** macroDefines,
+                         const char** macroUndefines):
+         fModuleName(moduleName), fHeaders(headers),
+         fIncludePaths(includePaths), fMacroDefines(macroDefines),
+         fMacroUndefines(macroUndefines) {}
       const char* fModuleName; // module name
       const char** fHeaders; // 0-terminated array of header files
+      const char** fIncludePaths; // 0-terminated array of header files
+      const char** fMacroDefines; // 0-terminated array of header files
+      const char** fMacroUndefines; // 0-terminated array of header files
    };
 
    llvm::SmallVector<ModuleHeaderInfo_t, 10> gModuleHeaderInfoBuffer;
@@ -111,7 +120,10 @@ namespace {
 //______________________________________________________________________________
 extern "C"
 void TCintWithCling__RegisterModule(const char* modulename,
-                                    const char** headers)
+                                    const char** headers,
+                                    const char** includePaths,
+                                    const char** macroDefines,
+                                    const char** macroUndefines)
 {
    // Called by static dictionary initialization to register clang modules
    // for headers. Calls TCintWithCling::RegisterModule() unless gCling
@@ -119,9 +131,17 @@ void TCintWithCling__RegisterModule(const char* modulename,
    // the global gModuleHeaderInfoBuffer.
 
    if (gCint) {
-      ((TCintWithCling*)gCint)->RegisterModule(modulename, headers);
+      ((TCintWithCling*)gCint)->RegisterModule(modulename,
+                                               headers,
+                                               includePaths,
+                                               macroDefines,
+                                               macroUndefines);
    } else {
-      gModuleHeaderInfoBuffer.push_back(ModuleHeaderInfo_t(modulename, headers));
+      gModuleHeaderInfoBuffer.push_back(ModuleHeaderInfo_t(modulename,
+                                                           headers,
+                                                           includePaths,
+                                                           macroDefines,
+                                                           macroUndefines));
    }
 }
 
@@ -499,7 +519,10 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    for (size_t i = 0, e = gModuleHeaderInfoBuffer.size(); i < e ; ++i) {
       // process buffered module registrations
       ((TCintWithCling*)gCint)->RegisterModule(gModuleHeaderInfoBuffer[i].fModuleName,
-                                               gModuleHeaderInfoBuffer[i].fHeaders);
+                                               gModuleHeaderInfoBuffer[i].fHeaders,
+                                               gModuleHeaderInfoBuffer[i].fIncludePaths,
+                                               gModuleHeaderInfoBuffer[i].fMacroDefines,
+                                               gModuleHeaderInfoBuffer[i].fMacroUndefines);
    }
    gModuleHeaderInfoBuffer.clear();
 
@@ -583,7 +606,11 @@ TCintWithCling::~TCintWithCling()
 }
 
 //______________________________________________________________________________
-void TCintWithCling::RegisterModule(const char* modulename, const char** headers)
+void TCintWithCling::RegisterModule(const char* modulename,
+                                    const char** headers,
+                                    const char** includePaths,
+                                    const char** macroDefines,
+                                    const char** macroUndefines)
 {
    // Inject the module named "modulename" into cling; load all headers.
    // headers is a 0-terminated array of header files to #include after
@@ -594,8 +621,31 @@ void TCintWithCling::RegisterModule(const char* modulename, const char** headers
 
    TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
 
-   // Assemble search path:
-   
+   for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
+      TCintWithCling::AddIncludePath(*inclPath);
+   }
+   for (const char** macroD = macroDefines; *macroD; ++macroD) {
+      TString macroPP("#define ");
+      macroPP += *macroD;
+      // comes in as "A=B" from "-DA=B", need "#define A B":
+      Ssiz_t posAssign = macroPP.Index('=');
+      if (posAssign != kNPOS) {
+         macroPP[posAssign] = ' ';
+      }
+      fInterpreter->declare(macroPP.Data());
+   }
+   for (const char** macroU = macroUndefines; *macroU; ++macroU) {
+      TString macroPP("#undef ");
+      macroPP += *macroU;
+      // comes in as "A=B" from "-DA=B", need "#define A B":
+      Ssiz_t posAssign = macroPP.Index('=');
+      if (posAssign != kNPOS) {
+         macroPP[posAssign] = ' ';
+      }
+      fInterpreter->declare(macroPP.Data());
+   }
+
+   // Assemble search path:   
 #ifdef R__WIN32
    TString searchPath = "$(PATH);";
 #else
