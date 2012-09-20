@@ -60,6 +60,7 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
    dc->collectAllContexts(fContexts);
    fIter = dc->decls_begin();
    InternalNext();
+   fFirstTime = true;
 }
 
 const clang::FunctionDecl *TClingMethodInfo::GetMethodDecl() const
@@ -387,7 +388,7 @@ const char *TClingMethodInfo::Name() const
    buf.clear();
    clang::PrintingPolicy policy(fIter->getASTContext().getPrintingPolicy());
    llvm::dyn_cast<clang::NamedDecl>(*fIter)->
-   getNameForDiagnostic(buf, policy, /*Qualified=*/true);
+   getNameForDiagnostic(buf, policy, /*Qualified=*/false);
    return buf.c_str();
 }
 
