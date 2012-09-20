@@ -1941,7 +1941,7 @@ Bool_t TClass::CanSplit() const
 
 //   Uncommenting this would change the default bahavior and disallow the splitting by
 //   default.
-//   if (!GetCollectionProxy() && (GetStreamer()!=0 || (GetClassInfo() && gCint->ClassInfo_RootFlag(GetClassInfo()) & 1))) {
+//   if (!GetCollectionProxy() && (GetStreamer()!=0 || TestBit(TClass::kHasCustomStreamerMember))) {
 //      return kFALSE;
 //   }
 

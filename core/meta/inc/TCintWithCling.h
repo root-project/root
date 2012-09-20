@@ -248,7 +248,6 @@ public: // Public Interface
    virtual void*  ClassInfo_New(ClassInfo_t* info, int n, void* arena) const;
    virtual void*  ClassInfo_New(ClassInfo_t* info, void* arena) const;
    virtual Long_t ClassInfo_Property(ClassInfo_t* info) const;
-   virtual int    ClassInfo_RootFlag(ClassInfo_t* info) const;
    virtual int    ClassInfo_Size(ClassInfo_t* info) const;
    virtual Long_t ClassInfo_Tagnum(ClassInfo_t* info) const;
    virtual const char* ClassInfo_FileName(ClassInfo_t* info) const;

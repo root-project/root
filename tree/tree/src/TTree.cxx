@@ -2059,13 +2059,6 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    //a TBranchObject. We cannot assume that TClass::ReadBuffer is consistent
    //with the custom Streamer. The penalty is that one cannot process
    //this Tree without the class library containing the class.
-   //The following convention is used for the RootFlag
-   // #pragma link C++ class TExMap;     rootflag = 0
-   // #pragma link C++ class TList-;     rootflag = 1
-   // #pragma link C++ class TArray!;    rootflag = 2
-   // #pragma link C++ class TArrayC-!;  rootflag = 3
-   // #pragma link C++ class TBits+;     rootflag = 4
-   // #pragma link C++ class Txxxx+!;    rootflag = 6
 
    char* objptr = 0;
    if (!isptrptr) {
@@ -2089,12 +2082,12 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
          Error("Bronch", "TClonesArray with no dictionary defined in branch: %s", name);
          return 0;
       }
-      int rootflag = gCint->ClassInfo_RootFlag(classinfo);
+      bool hasCustomStreamer = clones->GetClass()->TestBit(TClass::kHasCustomStreamerMember);
       if (splitlevel > 0) {
-         if (rootflag & 1)
+         if (hasCustomStreamer)
             Warning("Bronch", "Using split mode on a class: %s with a custom Streamer", clones->GetClass()->GetName());
       } else {
-         if (rootflag & 1) clones->BypassStreamer(kFALSE);
+         if (hasCustomStreamer) clones->BypassStreamer(kFALSE);
          TBranchObject *branch = new TBranchObject(this,name,classname,addr,bufsize,0,isptrptr);
          fBranches.Add(branch);
          return branch;
@@ -2119,7 +2112,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
                Error("Bronch", "Container with no dictionary defined in branch: %s", name);
                return 0;
             }
-            if (gCint->ClassInfo_RootFlag(classinfo) & 1) {
+            if (inklass->TestBit(TClass::kHasCustomStreamerMember)) {
                Warning("Bronch", "Using split mode on a class: %s with a custom Streamer", inklass->GetName());
             }
          }
@@ -2148,7 +2141,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
       return 0;
    }
 
-   if (!cl->GetCollectionProxy() && (gCint->ClassInfo_RootFlag(cl->GetClassInfo()) & 1)) {
+   if (!cl->GetCollectionProxy() && cl->TestBit(TClass::kHasCustomStreamerMember)) {
       // Not an STL container and the linkdef file had a "-" after the class name.
       hasCustomStreamer = kTRUE;
    }

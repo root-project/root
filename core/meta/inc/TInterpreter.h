@@ -195,7 +195,6 @@ public:
    virtual void  *ClassInfo_New(ClassInfo_t * /* info */, int /* n */, void * /* arena */) const {return 0;}
    virtual void  *ClassInfo_New(ClassInfo_t * /* info */, void * /* arena */) const {return 0;}
    virtual Long_t ClassInfo_Property(ClassInfo_t * /* info */) const {return 0;}
-   virtual int    ClassInfo_RootFlag(ClassInfo_t * /* info */) const {return 0;}
    virtual int    ClassInfo_Size(ClassInfo_t * /* info */) const {return 0;}
    virtual Long_t ClassInfo_Tagnum(ClassInfo_t * /* info */) const {return 0;}
    virtual const char *ClassInfo_FileName(ClassInfo_t * /* info */) const {return 0;}

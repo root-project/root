@@ -3254,13 +3254,6 @@ Long_t TCintWithCling::ClassInfo_Property(ClassInfo_t* cinfo) const
 }
 
 //______________________________________________________________________________
-int TCintWithCling::ClassInfo_RootFlag(ClassInfo_t* cinfo) const
-{
-   TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   return TClinginfo->RootFlag();
-}
-
-//______________________________________________________________________________
 int TCintWithCling::ClassInfo_Size(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;

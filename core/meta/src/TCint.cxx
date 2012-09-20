@@ -2850,14 +2850,6 @@ Long_t  TCint::ClassInfo_Property(ClassInfo_t *cinfo) const
    return info->Property();
 }
 //______________________________________________________________________________
-int   TCint::ClassInfo_RootFlag(ClassInfo_t *cinfo) const
-{
-   // Interface to CINT function
-
-   G__ClassInfo *info = (G__ClassInfo*)cinfo;
-   return info->RootFlag();
-}
-//______________________________________________________________________________
 int   TCint::ClassInfo_Size(ClassInfo_t *cinfo) const
 {
    // Interface to CINT function
