@@ -61,7 +61,7 @@ TGLabel::TGLabel(const TGWindow *p, TGString *text, GContext_t norm,
    fMLeft = fMRight = fMTop = fMBottom = 0;
 
    if (!norm) {
-      norm = fgDefaultGC->GetGC();
+      norm = GetDefaultGC().GetGC();
    }
    fNormGC = norm;
 
@@ -102,7 +102,7 @@ TGLabel::TGLabel(const TGWindow *p, const char *text, GContext_t norm,
    fMLeft = fMRight = fMTop = fMBottom = 0;
 
    if (!norm) {
-      norm = fgDefaultGC->GetGC();
+      norm = GetDefaultGC().GetGC();
    }
    fNormGC = norm;
 
@@ -224,7 +224,7 @@ void TGLabel::DoRedraw()
       TGGC *gc = pool->FindGC(fNormGC);
 
       if (!gc) {
-         fNormGC = fgDefaultGC->GetGC();
+         fNormGC = GetDefaultGC().GetGC();
          gc = pool->FindGC(fNormGC);
       }
       if (!gc) return;
@@ -336,7 +336,7 @@ void TGLabel::SetTextFont(TGFont *font, Bool_t global)
    TGGC *gc = pool->FindGC(fNormGC);
 
    if (!global) {
-      if (gc == fgDefaultGC) { // create new GC
+      if (gc == &GetDefaultGC() ) { // create new GC
          gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy ctor.
       }
       fHasOwnFont = kTRUE;
@@ -362,7 +362,7 @@ void TGLabel::SetTextColor(Pixel_t color, Bool_t global)
    TGGC *gc = pool->FindGC(fNormGC);
 
    if (!global) {
-      if (gc == fgDefaultGC) {
+      if (gc == &GetDefaultGC() ) {
          gc = pool->GetGC((GCValues_t*)gc->GetAttributes(), kTRUE); // copy
       }
       fHasOwnFont = kTRUE;
