@@ -2027,6 +2027,9 @@ void TGCocoa::DrawStringAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, I
 
    //Do a simple text layout using CGGlyphs.
    std::vector<UniChar> unichars(text, text + len);
+   //TGText::ReTab inserts this non-graphical symbols (which leads to CoreText error).
+   unichars.erase(std::remove(unichars.begin(), unichars.end(), 16), unichars.end());
+   
    Quartz::DrawTextLineNoKerning(ctx, (CTFontRef)gcVals.fFont, unichars, x,  X11::LocalYROOTToCocoa(drawable, y));
 }
 
