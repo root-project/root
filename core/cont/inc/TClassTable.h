@@ -66,7 +66,10 @@ private:
 
 public:
    // bits that can be set in pragmabits
-   enum { kNoStreamer = 0x01, kNoInputOperator = 0x02, kAutoStreamer = 0x04 };
+   enum { 
+      kNoStreamer = 0x01, kNoInputOperator = 0x02, kAutoStreamer = 0x04, 
+      kHasVersion = 0x08, kHasCustomStreamerMember = 0x10 
+   };
 
    ~TClassTable();
 

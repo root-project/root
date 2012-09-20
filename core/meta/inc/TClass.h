@@ -80,7 +80,8 @@ public:
           kIsForeign   = BIT(18), kIsEmulation = BIT(19),
           kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
           kWarned      = BIT(21),
-          kHasNameMapNode = BIT(22)
+          kHasNameMapNode = BIT(22),
+          kHasCustomStreamerMember = BIT(23) // The class has a Streamer method and it is implemented by the user.
    };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
 
@@ -128,7 +129,7 @@ private:
    ClassStreamerFunc_t fStreamerFunc;   //Wrapper around this class custom Streamer member function.
    Int_t               fSizeof;         //Sizeof the class.
 
-   mutable Int_t      fCanSplit;        //!Indicates whether this class can be split or not.
+           Int_t      fCanSplit;        //!Indicates whether this class can be split or not.
    mutable Long_t     fProperty;        //!Property
    mutable Bool_t     fVersionUsed;     //!Indicates whether GetClassVersion has been called
 

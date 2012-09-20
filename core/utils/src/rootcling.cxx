@@ -3556,7 +3556,11 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
       (*dictSrcOut) << "&" << mappedname.c_str() << "_Dictionary, ";
    }
 
-   (*dictSrcOut) << "isa_proxy, " << cl_input.RootFlag() << "," << std::endl
+   Int_t rootflag = cl_input.RootFlag();
+   if (HasCustomStreamerMemberFunction(cl_input)) {
+      rootflag = rootflag | G__HASCUSTOM_STREAMERMEMBER;
+   }
+   (*dictSrcOut) << "isa_proxy, " << rootflag << "," << std::endl
                  << "                  sizeof(" << csymbol.c_str() << ") );" << std::endl;
    if (HasDefaultConstructor(cl,&args)) {
       (*dictSrcOut) << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << std::endl;

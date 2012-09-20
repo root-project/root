@@ -21,6 +21,7 @@
 #include "TError.h"
 #include "TVirtualMutex.h"
 #include "TInterpreter.h"
+#include "TClassTable.h"
 
 namespace ROOT {
 
@@ -68,7 +69,7 @@ namespace ROOT {
         fIsA(isa), fShowMembers(showmembers),
         fVersion(version),
         fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof),
+   fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof), fPragmaBits(pragmabits),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
    {
       // Constructor with version number.
@@ -88,7 +89,7 @@ namespace ROOT {
         fIsA(isa), fShowMembers(0),
         fVersion(version),
         fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof),
+        fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof), fPragmaBits(pragmabits),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
 
    {
@@ -110,7 +111,7 @@ namespace ROOT {
         fIsA(0), fShowMembers(0),
         fVersion(version),
         fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fStreamerFunc(0), fCollectionProxy(0), fSizeof(0),
+        fStreamerFunc(0), fCollectionProxy(0), fSizeof(0), fPragmaBits(pragmabits),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
 
    {
@@ -217,6 +218,9 @@ namespace ROOT {
                                           GetImplFileName(),
                                           GetDeclFileLine(),
                                           GetImplFileLine());
+         if (fPragmaBits & TClassTable::kHasCustomStreamerMember) {
+            fClass->SetBit(TClass::kHasCustomStreamerMember);
+         }
          fClass->SetNew(fNew);
          fClass->SetNewArray(fNewArray);
          fClass->SetDelete(fDelete);

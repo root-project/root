@@ -2669,7 +2669,11 @@ void WriteClassInit(G__ClassInfo &cl)
       (*dictSrcOut) << "&" << mappedname.c_str() << "_Dictionary, ";
    }
 
-   (*dictSrcOut) << "isa_proxy, " << cl.RootFlag() << "," << std::endl
+   Int_t rootflag = cl.RootFlag();
+   if (HasCustomStreamerMemberFunction(cl)) {
+      rootflag = rootflag | G__HASCUSTOM_STREAMERMEMBER;
+   }
+   (*dictSrcOut) << "isa_proxy, " << rootflag << "," << std::endl
                  << "                  sizeof(" << csymbol.c_str() << ") );" << std::endl;
    if (HasDefaultConstructor(cl,&args)) {
       (*dictSrcOut) << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << std::endl;

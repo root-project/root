@@ -61,6 +61,7 @@ namespace ROOT {
       ClassStreamerFunc_t         fStreamerFunc;
       TVirtualCollectionProxy    *fCollectionProxy;
       Int_t                       fSizeof;
+      Int_t                       fPragmaBits;
       TCollectionProxyInfo       *fCollectionProxyInfo;
       TCollectionProxyInfo       *fCollectionStreamerInfo;
       std::vector<ROOT::TSchemaHelper>  fReadRules;
