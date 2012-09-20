@@ -1,6 +1,6 @@
 // Usage:
 // root [0] .L stressThreadPool.C++
-// root [1] stressThreadPool(10)   10 = numThreads
+// root [1] stressThreadPool(10, true)   10 = numThreads
 
 // STD
 #include <iostream>
@@ -15,7 +15,7 @@
 //=============================================================================
 using namespace std;
 //=============================================================================
-const size_t g_sleeptime = 1; // in secs.
+const size_t g_sleeptime = 2; // in secs.
 const size_t g_multTasks = 50;
 //=============================================================================
 
