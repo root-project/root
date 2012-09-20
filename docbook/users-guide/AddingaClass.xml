@@ -451,7 +451,7 @@ cout &lt;&lt; "fX = " &lt;&lt; fX &lt;&lt; ", fY = " &lt;&lt; fY &lt;&lt; endl;
 <itemizedlist>
 <listitem><para><emphasis role="bold">+</emphasis> : in ROOT version 1 and 2 tells <code>rootcint</code> to generate a <code>Streamer</code> with extra byte count information. This adds an integer to each object in the output buffer, but it allows for powerful error correction in case a <code>Streamer</code> method is out of sync with data in the file. The <code>+</code> option is mutual exclusive with both the <code>-</code> and <code>!</code> options. </para></listitem>
 </itemizedlist>
-<para>IMPORTANT NOTE: In ROOT Version 3, a "+" after the class name tells <code>rootcint</code> to use the new I/O system. The byte count check is always added.</para>
+<para>IMPORTANT NOTE: In ROOT Version 3 and later, a "+" after the class name tells <code>rootcint</code> to use the new I/O system. The byte count check is always added.  The new I/O system has many advantages including support automatic schema evolution, full support for STL collections and better run-time performance.   We strongly recommend using it.</para>
 
 <programlisting language="c++">#pragma link C++ class SClass+; // add byte count
 </programlisting>
