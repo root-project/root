@@ -185,7 +185,13 @@ class ToyMCSampler: public TestStatSampler {
       virtual void SetPdf(RooAbsPdf& pdf) { fPdf = &pdf; ClearCache(); }
 
       // How to randomize the prior. Set to NULL to deactivate randomization.
-      virtual void SetPriorNuisance(RooAbsPdf* pdf) { fPriorNuisance = pdf; }
+      virtual void SetPriorNuisance(RooAbsPdf* pdf) { 
+         fPriorNuisance = pdf; 
+         if (fNuisanceParametersSampler) { 
+            delete fNuisanceParametersSampler; 
+            fNuisanceParametersSampler = NULL; 
+         }
+      }
       // specify the nuisance parameters (eg. the rest of the parameters)
       virtual void SetNuisanceParameters(const RooArgSet& np) { fNuisancePars = &np; }
       // specify the observables in the dataset (needed to evaluate the test statistic)
