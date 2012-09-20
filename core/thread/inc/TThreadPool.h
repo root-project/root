@@ -233,6 +233,7 @@ private:
          pThis->DbgLog(ss.str());
          sleep(1);
       }
+      return NULL;
    }
 
    static void* Executor(void *arg) {
