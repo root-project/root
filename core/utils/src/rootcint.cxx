@@ -4999,9 +4999,6 @@ int main(int argc, char **argv)
          if (cl.HasMethod("Streamer")) {
             if (!(cl.RootFlag() & G__NOINPUTOPERATOR)) {
                // We do not write out the input operator anymore, it is a template
-#if defined R__CONCRETE_INPUT_OPERATOR
-               WriteInputOperator(cl);
-#endif
             } else {
                int version = GetClassVersion(cl);
                if (version!=0) {

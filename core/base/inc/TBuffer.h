@@ -352,7 +352,6 @@ inline TBuffer &operator<<(TBuffer &buf, Double_t d) { buf.WriteDouble(d); retur
 inline TBuffer &operator<<(TBuffer &buf, const Char_t *c)  { buf.WriteCharP(c);  return buf; }
 inline TBuffer &operator<<(TBuffer &buf, const TString &s) { buf.WriteTString(s);return buf; }
 
-#if !defined(R__CONCRETE_INPUT_OPERATOR)
 #ifndef __CINT__
 
 #if defined(R__SOLARIS) && defined(R__GNU)
@@ -384,7 +383,6 @@ template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj)
 #else
 template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj);
 template <class Tmpl> TBuffer &operator<<(TBuffer &buf, Tmpl *&obj);
-#endif
 #endif
 
 #if defined(R__TEMPLATE_OVERLOAD_BUG)

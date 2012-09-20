@@ -304,7 +304,6 @@ static int ImplFileLine(); \
 static const char *ImplFileName();
 
 
-#if !defined(R__CONCRETE_INPUT_OPERATOR)
 #if !defined(R__ACCESS_IN_SYMBOL) || defined(__CINT__)
 
 #define ClassDef(name,id) \
@@ -325,22 +324,6 @@ static const char *ImplFileName();
 #define ClassDefNV(name,id) \
    _ClassDefNV_(name,id) \
    friend void ROOT__ShowMembersFunc(name*, TMemberInspector&); \
-   static int DeclFileLine() { return __LINE__; }
-
-#endif
-
-#else
-
-#define ClassDef(name,id) \
-   _ClassDef_(name,id) \
-   friend TBuffer &operator>>(TBuffer&, name *&); \
-   friend TBuffer &operator>>(TBuffer&, const name *&); \
-   static int DeclFileLine() { return __LINE__; }
-
-#define ClassDefNV(name,id) \
-   _ClassDefNV_(name,id) \
-   friend TBuffer &operator>>(TBuffer&, name *&); \
-   friend TBuffer &operator>>(TBuffer&, const name *&); \
    static int DeclFileLine() { return __LINE__; }
 
 #endif
