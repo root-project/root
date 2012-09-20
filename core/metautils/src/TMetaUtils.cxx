@@ -33,6 +33,7 @@
 #include "clang/Lex/Preprocessor.h"
 
 #include "cling/Utils/AST.h"
+#include "cling/Interpreter/LookupHelper.h"
 
 #include "llvm/Support/PathV2.h"
 
@@ -264,6 +265,64 @@ std::string ROOT::TMetaUtils::GetLLVMResourceDir(bool rootbuild)
    return GetInterpreterExtraIncludePath(rootbuild)
       .substr(2, std::string::npos) + "/cling";
 #endif
+}
+
+//////////////////////////////////////////////////////////////////////////
+static
+llvm::SmallSet<const clang::Type*, 4> &R__GetTypeToSkip()
+{
+   static llvm::SmallSet<const clang::Type*, 4> typeToSkip;
+   return typeToSkip;
+}
+
+//////////////////////////////////////////////////////////////////////////
+void ROOT::TMetaUtils::InitOpaqueTypedef(const cling::LookupHelper &lh)
+{   
+   // Those are fundamental type ... but nonetheless caching the clang::Type
+   // themselves might not work properly when we support multiple interpreter.
+
+   llvm::SmallSet<const clang::Type*, 4> & typeToSkip = R__GetTypeToSkip();
+   if (typeToSkip.empty()) {
+      clang::QualType toSkip = lh.findType("Double32_t");
+      if (!toSkip.isNull()) typeToSkip.insert(toSkip.getTypePtr());
+      toSkip = lh.findType("Float16_t");
+      if (!toSkip.isNull()) typeToSkip.insert(toSkip.getTypePtr());
+      toSkip = lh.findType("string");
+      if (!toSkip.isNull()) typeToSkip.insert(toSkip.getTypePtr());
+      toSkip = lh.findType("std::string");
+      if (!toSkip.isNull()) typeToSkip.insert(toSkip.getTypePtr());
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////
+void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::QualType &type, const clang::ASTContext &ctxt) 
+{
+   // Return the type name normalized for ROOT,
+   // keeping only the ROOT opaque typedef (Double32_t, etc.) and
+   // adding default template argument for all types except the STL collections
+   // where we remove the default template argument if any.
+   //
+   // This routine might actually belongs in the interpreter because
+   // cache the clang::Type might be intepreter specific.
+
+   clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, R__GetTypeToSkip(), true /* fully qualify */); 
+   // Readd missing default template parameter.
+   normalizedType = ROOT::TMetaUtils::AddDefaultParameters(ctxt, normalizedType);
+   
+   std::string normalizedNameStep1;
+   normalizedType.getAsStringInternal(normalizedNameStep1,ctxt.getPrintingPolicy());
+   
+   // Still remove the std:: and default template argument and insert the Long64_t
+   TClassEdit::TSplitType splitname(normalizedNameStep1.c_str(),(TClassEdit::EModType)(TClassEdit::kDropAllDefault |TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault));
+   splitname.ShortType(norm_name, TClassEdit::kDropAllDefault | TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
+
+   // And replace basic_string<char>.  NOTE: we should probably do this at the same time as the GetPartiallyDesugaredType ... but were do we stop ?
+   static const char* basic_string_s = "basic_string<char>";
+   static const unsigned int basic_string_len = strlen(basic_string_s);
+   int pos = 0;
+   while( (pos = norm_name.find( basic_string_s,pos) ) >=0 ) {
+      norm_name.replace(pos,basic_string_len, "string");
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////

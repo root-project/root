@@ -21,6 +21,8 @@ extern cling::Interpreter *gInterp;
 #include "TClassEdit.h"
 #include "TMetaUtils.h"
 
+using namespace ROOT;
+
 #include <iostream>
 #include <sstream> // class ostringstream
 
@@ -50,9 +52,7 @@ extern cling::Interpreter *gInterp;
 
 // #define SELECTION_DEBUG
 
-void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext);
 void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl);
-void R__GetNormalizedName(std::string &norm_name, const clang::QualType &type, const clang::ASTContext &ctxt);
 
 /* -------------------------------------------------------------------------- */
 using namespace clang;
@@ -77,7 +77,7 @@ RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type
    TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
    splitname1.ShortType( fRequestedName, TClassEdit::kDropAllDefault );
    
-   R__GetNormalizedName( fNormalizedName, clang::QualType(requestedType,0), decl->getASTContext());
+   TMetaUtils::GetNormalizedName( fNormalizedName, clang::QualType(requestedType,0), decl->getASTContext());
 
    std::string canonicalName;
    R__GetQualifiedName(canonicalName,*decl);
@@ -105,77 +105,8 @@ RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Reco
 
       fNormalizedName = fRequestedName;
    } else {
-      R__GetNormalizedName( fNormalizedName, decl->getASTContext().getTypeDeclType(decl), decl->getASTContext());
+      TMetaUtils::GetNormalizedName( fNormalizedName, decl->getASTContext().getTypeDeclType(decl), decl->getASTContext());
    }
-
-#if Replaced_by_TClassEdit
-   // The level counting code would be usefull if we want to introduce missing spaces ...
-   // int level = 0;
-   while (*current != '\0') {
-      switch (*current) {
-      case ' ':
-      case '\n':
-      case '\t':
-         // white spaces.
-       
-         // Skip consecutive spaces.
-         while ( isspace(*current)  && isspace(*(current+1)) ) {
-            ++current;
-         }
-         // Skip space before '<' and ','
-         if (*current == ' ' && ( *(current+1) == '<' || *(current+1) == ',')) {
-            ++current;
-         } 
-         else if (*current == ' ' && *(current+1) == '>') {
-            // Skip space before '>' ; note that we should not get here if the previous non-space symbol was also a >
-            ++current;
-         } else {
-            fRequestedName += *current;
-            ++current;
-         }
-         break;
-      case '<':
-         // // Increment the nesting level unless followed by another <
-         // if ( *(current+1) != '<' ) {
-         //    ++level;
-         // }
-         fRequestedName += *current;
-         ++current;
-         // Skip all spaces after the '<'
-         while ( isspace(*current) ) {
-            ++current;
-         }
-         break;
-      case ',':
-         // Skip all spaces after the ','
-         fRequestedName += *current;
-         ++current;
-         while ( isspace(*current) ) {
-            ++current;
-         }
-         break;
-      case '>':
-         // // Increment the nesting level unless followed by another >
-         // if ( *(current+1) != '>' ) {
-         //    ++level;
-         // }
-         fRequestedName += *current;
-         ++current;
-         while ( isspace(*current) && *(current+1)!='>' ) {
-            ++current;
-         }
-         // If we are followed by a '>', let copy the space.
-         if ( isspace(*current) && *(current+1) == '>' ) {
-            fRequestedName += *current;
-            ++current;
-         }
-         break;
-      default:
-         fRequestedName += *current;
-         ++current;
-      }
-   }
-#endif
 }
 
 //______________________________________________________________________________

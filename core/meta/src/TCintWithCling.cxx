@@ -528,6 +528,12 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
 
    fInterpreter->declare("namespace std {} using namespace std;");
 
+   // For the list to also include string, we have to include it now.
+   fInterpreter->declare("#include <string>");
+  
+   // We are now ready (enough is loaded) to init the list of opaque typedefs.
+   ROOT::TMetaUtils::InitOpaqueTypedef(fInterpreter->getLookupHelper());
+
    // Initialize the CINT interpreter interface.
    fMore      = 0;
    fPrompt[0] = 0;

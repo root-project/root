@@ -601,42 +601,6 @@ const char *R__GetComment(const clang::Decl &decl)
 cling::Interpreter *gInterp = 0;
 std::string gResourceDir;
 
-void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl);
-
-void R__GetNormalizedName(std::string &norm_name, const clang::QualType &type, const clang::ASTContext &ctxt) 
-{
-   static llvm::SmallSet<const clang::Type*, 4> typeToSkip;
-   if (typeToSkip.empty()) {
-      const cling::LookupHelper& lh = gInterp->getLookupHelper();
-      clang::QualType toSkip = lh.findType("Double32_t");
-      if (!toSkip.isNull()) typeToSkip.insert(toSkip.getTypePtr());
-      toSkip = lh.findType("Float16_t");
-      if (!toSkip.isNull()) typeToSkip.insert(toSkip.getTypePtr());
-      toSkip = lh.findType("string");
-      if (!toSkip.isNull()) typeToSkip.insert(toSkip.getTypePtr());
-   }
-
-   clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, typeToSkip); 
-   // Readd missing default template parameter.
-   normalizedType = ROOT::TMetaUtils::AddDefaultParameters(ctxt, normalizedType);
-   
-   std::string normalizedNameStep1;
-   normalizedType.getAsStringInternal(normalizedNameStep1,ctxt.getPrintingPolicy());
-   
-   // Still remove the std:: and default template argument and insert the Long64_t
-   TClassEdit::TSplitType splitname(normalizedNameStep1.c_str(),(TClassEdit::EModType)(TClassEdit::kDropAllDefault |TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault));
-   splitname.ShortType(norm_name, TClassEdit::kDropAllDefault | TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
-
-   // And replace basic_string<char>.  NOTE: we should probably do this at the same time as the GetPartiallyDesugaredType ... but were do we stop ?
-   static const char* basic_string_s = "basic_string<char>";
-   static const unsigned int basic_string_len = strlen(basic_string_s);
-   int pos = 0;
-   while( (pos = norm_name.find( basic_string_s,pos) ) >=0 ) {
-      norm_name.replace(pos,basic_string_len, "string");
-   }
-
-}
-
 void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext)
 {
    type.getAsStringInternal(qual_name,forcontext.getASTContext().getPrintingPolicy());
@@ -6026,6 +5990,12 @@ int main(int argc, char **argv)
 # endif
 #endif
    gInterp = &interp;
+
+   // For the list to also include string, we have to include it now.
+   interp.declare("#include <string>");
+  
+   // We are now ready (enough is loaded) to init the list of opaque typedefs.
+   ROOT::TMetaUtils::InitOpaqueTypedef(interp.getLookupHelper());
 
    // flags used only for the pragma parser:
    clingArgs.push_back("-D__CINT__");

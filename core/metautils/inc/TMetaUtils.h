@@ -24,6 +24,10 @@ namespace clang {
    class Module;
 }
 
+namespace cling {
+   class LookupHelper;
+}
+
 namespace ROOT {
    namespace TMetaUtils {
 
@@ -59,6 +63,9 @@ namespace ROOT {
       // adding default template argument for all types except the STL collections
       // where we remove the default template argument if any.
       void GetNormalizedName(std::string &norm_name, const clang::QualType &type, const clang::ASTContext &ctxt);
+
+      // Initialize the list of typedef to keep (i.e. make them opaque for normalization).
+      void InitOpaqueTypedef(const cling::LookupHelper &lookup);
 
    }; // class TMetaUtils
 
