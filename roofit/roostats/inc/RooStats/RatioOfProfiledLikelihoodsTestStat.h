@@ -100,80 +100,22 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
       if(fAltPOI) delete fAltPOI;
       if(fDetailedOutput) delete fDetailedOutput;
     }
+   
+   
+   // returns -logL(poi, conditional MLE of nuisance params)
+   // it does not subtract off the global MLE
+   // because  nuisance parameters of null and alternate may not
+   // be the same.
+   Double_t ProfiledLikelihood(RooAbsData& data, RooArgSet& poi, RooAbsPdf& pdf);
     
-    //__________________________________________
-    Double_t ProfiledLikelihood(RooAbsData& data, RooArgSet& poi, RooAbsPdf& pdf) {
-      // returns -logL(poi, conditonal MLE of nuisance params)
-      // it does not subtract off the global MLE
-      // because  nuisance parameters of null and alternate may not
-      // be the same.
-      RooAbsReal* nll = pdf.createNLL(data, RooFit::CloneData(kFALSE));      
-      RooAbsReal* profile = nll->createProfile(poi);
-      // make sure we set the variables attached to this nll
-      RooArgSet* attachedSet = nll->getVariables();
-      *attachedSet = poi;
-      // now evaluate profile to set nuisance to conditional MLE values
-      double nllVal =  profile->getVal();
-      // but we may want the nll value without subtracting off the MLE      
-      if(!fSubtractMLE) nllVal = nll->getVal();
-
-      delete attachedSet;
-      delete profile;
-      delete nll;
-      
-      return nllVal;
-    }
+    // evaluate the ratio of profile likelihood
+   virtual Double_t Evaluate(RooAbsData& data, RooArgSet& nullParamsOfInterest);
     
-    //__________________________________________
-    virtual Double_t Evaluate(RooAbsData& data, RooArgSet& nullParamsOfInterest) {
-       // evaluate the ratio of profile likelihood
-       
-
-       int type = (fSubtractMLE) ? 0 : 2; 
-       
-       // null
-       double nullNLL = fNullProfile.EvaluateProfileLikelihood(type, data, nullParamsOfInterest);
-       const RooArgSet *nullset = fNullProfile.GetDetailedOutput();
-      
-      // alt 
-       double altNLL = fAltProfile.EvaluateProfileLikelihood(type, data, *fAltPOI);
-       const RooArgSet *altset = fAltProfile.GetDetailedOutput();
-
-       if (fDetailedOutput != NULL) {
-	       delete fDetailedOutput;
-	       fDetailedOutput = NULL;
-       }
-       if (fDetailedOutputEnabled) {
-	       fDetailedOutput = new RooArgSet();
-	       RooRealVar* var(0);
-	       for(TIterator *it = nullset->createIterator();(var = dynamic_cast<RooRealVar*>(it->Next()));) {
-		       RooRealVar* cloneVar = new RooRealVar(TString::Format("nullprof_%s", var->GetName()),
-							TString::Format("%s for null", var->GetTitle()), var->getVal());
-		       fDetailedOutput->addOwned(*cloneVar);
-	       }
-	       for(TIterator *it = altset->createIterator();(var = dynamic_cast<RooRealVar*>(it->Next()));) {
-		       RooRealVar* cloneVar = new RooRealVar(TString::Format("altprof_%s", var->GetName()),
-							TString::Format("%s for null", var->GetTitle()), var->getVal());
-		       fDetailedOutput->addOwned(*cloneVar);
-	       }
-       }
-
-/*
-      // set variables back to where they were
-      nullParamsOfInterest = *saveNullPOI;
-      *allVars = *saveAll;
-      delete saveAll;
-      delete allVars;
-*/
-
-      return nullNLL -altNLL;
-    }
-    
-    virtual void EnableDetailedOutput( bool e=true ) { 
-	    fDetailedOutputEnabled = e; 
-	    fNullProfile.EnableDetailedOutput(fDetailedOutputEnabled);
-	    fAltProfile.EnableDetailedOutput(fDetailedOutputEnabled);
-    }
+   virtual void EnableDetailedOutput( bool e=true ) { 
+      fDetailedOutputEnabled = e; 
+      fNullProfile.EnableDetailedOutput(fDetailedOutputEnabled);
+      fAltProfile.EnableDetailedOutput(fDetailedOutputEnabled);
+   }
 
    static void SetAlwaysReuseNLL(Bool_t flag); 
 
@@ -198,7 +140,14 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
       fNullProfile.SetPrintLevel(printLevel);  
       fAltProfile.SetPrintLevel(printLevel);  
    }
-   
+  
+     // set the conditional observables which will be used when creating the NLL
+     // so the pdf's will not be normalized on the conditional observables when computing the NLL 
+     virtual void SetConditionalObservables(const RooArgSet& set) { 
+        fNullProfile.SetConditionalObservables(set);  
+        fAltProfile.SetConditionalObservables(set);  
+    }
+
      virtual const RooArgSet* GetDetailedOutput(void) const {
 	     // Returns detailed output. The value returned by this function is updated after each call to Evaluate().
 	     // The returned RooArgSet contains the following for the alternative and null hypotheses:
@@ -208,6 +157,8 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
 	     // </ul>
 	     return fDetailedOutput;
      }
+
+
     
 
    virtual const TString GetVarName() const { return "log(L(#mu_{1},#hat{#nu}_{1}) / L(#mu_{0},#hat{#nu}_{0}))"; }
@@ -217,6 +168,7 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
     void SetSubtractMLE(bool subtract){fSubtractMLE = subtract;}
     
   private:
+
     ProfileLikelihoodTestStat fNullProfile;
     ProfileLikelihoodTestStat fAltProfile;
 
@@ -229,7 +181,7 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
 
     
   protected:
-    ClassDef(RatioOfProfiledLikelihoodsTestStat,3)
+    ClassDef(RatioOfProfiledLikelihoodsTestStat,3)  // implements the ratio of profiled likelihood as test statistic
 };
 
 }

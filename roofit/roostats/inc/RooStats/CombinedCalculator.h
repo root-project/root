@@ -137,6 +137,7 @@ namespace RooStats {
          if (model.GetParametersOfInterest()) SetParameters(*model.GetParametersOfInterest()); 
          if (model.GetSnapshot()) SetNullParameters(*model.GetSnapshot());
          if (model.GetNuisanceParameters()) SetNuisanceParameters(*model.GetNuisanceParameters()); 
+         if (model.GetConditionalObservables()) SetConditionalObservables(*model.GetConditionalObservables()); 
       }
       
       virtual void SetNullModel( const ModelConfig &) {  // to be understood what to do 
@@ -161,6 +162,9 @@ namespace RooStats {
       // set parameter values for the alternate if using a common PDF
       virtual void SetAlternateParameters(const RooArgSet& set) {fAlternateParams.removeAll(); fAlternateParams.add(set);}
 
+      // set conditional observables needed for computing the NLL 
+      virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
+
          
    protected:
 
@@ -175,6 +179,7 @@ namespace RooStats {
       RooArgSet fNullParams; // RooArgSet specifying null parameters for hypothesis test
       RooArgSet fAlternateParams; // RooArgSet specifying alternate parameters for hypothesis test       // Is it used ????
       RooArgSet fNuisParams;// RooArgSet specifying  nuisance parameters for interval
+      RooArgSet fConditionalObs; // RooArgSet specifying the conditional observables
 
 
       ClassDef(CombinedCalculator,1) // A base class that is for tools that can be both HypoTestCalculators and IntervalCalculators

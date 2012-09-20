@@ -358,7 +358,8 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       *allVars = *fNullSnapshots[i];
       if( !fNullNLLs[i] ) {
          RooArgSet* allParams = fNullDensities[i]->getParameters(*data);
-         fNullNLLs[i] = fNullDensities[i]->createNLL(*data, RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams));
+         fNullNLLs[i] = fNullDensities[i]->createNLL(*data, RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams),
+                                                     RooFit::ConditionalObservables(fConditionalObs));
          delete allParams;
       }else{
          fNullNLLs[i]->setData( *data, kFALSE );
@@ -381,7 +382,8 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       if( fImportanceSnapshots[i] ) *allVars = *fImportanceSnapshots[i];
       if( !fImpNLLs[i] ) {
          RooArgSet* allParams = fImportanceDensities[i]->getParameters(*data);
-         fImpNLLs[i] = fImportanceDensities[i]->createNLL(*data, RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams));
+         fImpNLLs[i] = fImportanceDensities[i]->createNLL(*data, RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams), 
+                                                          RooFit::ConditionalObservables(fConditionalObs));
          delete allParams;
       }else{
          fImpNLLs[i]->setData( *data, kFALSE );

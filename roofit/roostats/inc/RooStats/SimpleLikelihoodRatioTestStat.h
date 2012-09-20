@@ -160,6 +160,11 @@ namespace RooStats {
          return ret;
       }
 
+
+      // set the conditional observables which will be used when creating the NLL
+      // so the pdf's will not be normalized on the conditional observables when computing the NLL 
+      virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
+
       //______________________________
       virtual Double_t Evaluate(RooAbsData& data, RooArgSet& nullPOI);
 
@@ -176,6 +181,7 @@ namespace RooStats {
       RooAbsPdf* fAltPdf;
       RooArgSet* fNullParameters;
       RooArgSet* fAltParameters;
+      RooArgSet fConditionalObs;
       bool fFirstEval;
       
       bool fDetailedOutputEnabled;
@@ -188,7 +194,7 @@ namespace RooStats {
 
 
    protected:
-   ClassDef(SimpleLikelihoodRatioTestStat,2)
+   ClassDef(SimpleLikelihoodRatioTestStat,3)
 };
 
 }

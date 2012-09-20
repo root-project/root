@@ -73,8 +73,12 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
       oocoutI((TObject*)0,InputArguments) << "Profiling conditional MLEs for Null." << endl;
       RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
       RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
+
+      RooArgSet conditionalObs;
+      if (fNullModel->GetConditionalObservables()) conditionalObs.add(*fNullModel->GetConditionalObservables());
       
-      RooAbsReal* nll = fNullModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams));
+      RooAbsReal* nll = fNullModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams), 
+                                                        RooFit::ConditionalObservables(conditionalObs));
       RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values
 
@@ -161,7 +165,12 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
       RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
       RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
-      RooAbsReal* nll = fAltModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams));
+      RooArgSet conditionalObs;
+      if (fAltModel->GetConditionalObservables()) conditionalObs.add(*fAltModel->GetConditionalObservables());
+            
+      RooAbsReal* nll = fAltModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams),
+                                                        RooFit::ConditionalObservables(conditionalObs));
+
       RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values
 

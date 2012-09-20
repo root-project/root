@@ -169,6 +169,12 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       void SetReuseNLL(bool r = true) { fReuseNLL = r; }
 
 
+     // set the conditional observables which will be used when creating the NLL
+     // so the pdf's will not be normalized on the conditional observables when computing the NLL 
+     // Since the class use a NLL we need to set the ocnditional onservables if they exist in the model
+     virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
+
+
       int CreateNImpDensitiesForOnePOI(
          RooAbsPdf& pdf, 
          const RooArgSet& allPOI,
@@ -196,6 +202,8 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       bool fGenerateFromNull;
       bool fApplyVeto;
 
+   RooArgSet fConditionalObs;  // set of conditional observables
+
       // support multiple null densities
       std::vector<RooAbsPdf*> fNullDensities;
       mutable std::vector<const RooArgSet*> fNullSnapshots;
@@ -213,7 +221,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
 
 
    protected:
-   ClassDef(ToyMCImportanceSampler,1) // An implementation of importance sampling
+   ClassDef(ToyMCImportanceSampler,2) // An implementation of importance sampling
 };
 }
 
