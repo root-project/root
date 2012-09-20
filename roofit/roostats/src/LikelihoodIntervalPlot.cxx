@@ -25,6 +25,7 @@ object.
 
 #include <algorithm>
 #include <iostream>
+#include <cmath>
 
 #include "TROOT.h"
 #include "TMath.h"
@@ -400,7 +401,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
       
          // draw directly the TH2 from the profile LL
          TString histName = TString::Format("_hist2D__%s_%s",myparam->GetName(),myparamY->GetName() );
-         int nBins = int( sqrt(nPoints) + 0.5 );
+         int nBins = int( std::sqrt(double(nPoints)) + 0.5 );
          TH2* hist2D = new TH2D(histName, title, nBins, xmin, xmax, nBins, ymin, ymax ); 
          newProfile->fillHistogram(hist2D, RooArgList(*myparam,*myparamY), 1, 0, false, 0, false);
 
