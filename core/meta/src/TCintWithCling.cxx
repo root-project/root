@@ -86,8 +86,6 @@
 #include <dlfcn.h>
 #endif // __APPLE__
 
-#define R__CINTWITHCLING_MODULES
-
 using namespace std;
 
 R__EXTERN int optind;
@@ -529,14 +527,6 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter);
 
    fInterpreter->declare("namespace std {} using namespace std;");
-   // to pull in gPluginManager
-#ifndef R__CINTWITHCLING_MODULES
-   fInterpreter->parse("#include \"TPluginManager.h\"");
-   fInterpreter->parse("#include \"TGenericClassInfo.h\"");
-   fInterpreter->parse("#include \"Rtypes.h\"");
-#else
-   // Already done through modules
-#endif // R__CINTWITHCLING_MODULES
 
    // Initialize the CINT interpreter interface.
    fMore      = 0;
