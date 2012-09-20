@@ -88,6 +88,10 @@ namespace RooStats {
       // Set only the Prior Pdf 
       virtual void SetPriorPdf(RooAbsPdf& pdf) { fPriorPdf = &pdf; }
 
+      // set the conditional observables which will be used when creating the NLL
+      // so the pdf's will not be normalized on the conditional observables when computing the NLL 
+      virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
+
       // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
       virtual void SetTestSize( Double_t size ) {
          fSize = size;
@@ -159,7 +163,8 @@ namespace RooStats {
       RooArgSet fPOI;                            // POI
       RooAbsPdf* fPriorPdf;                      // prior pdf (typically for the POI)
       RooAbsPdf* fNuisancePdf;                   // nuisance pdf (needed when using nuisance sampling technique)
-      RooArgSet fNuisanceParameters;          
+      RooArgSet fNuisanceParameters;             // nuisance parameters
+      RooArgSet fConditionalObs    ;             // conditional observables
 
       mutable RooAbsPdf* fProductPdf;              // internal pointer to model * prior
       mutable RooAbsReal* fLogLike;                // internal pointer to log likelihood function
@@ -184,7 +189,7 @@ namespace RooStats {
 
    protected:
 
-      ClassDef(BayesianCalculator,1)  // BayesianCalculator class
+      ClassDef(BayesianCalculator,2)  // BayesianCalculator class
 
    };
 }

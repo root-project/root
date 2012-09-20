@@ -146,6 +146,10 @@ namespace RooStats {
 	     return fDetailedOutput;
      }
          
+     // set the conditional observables which will be used when creating the NLL
+     // so the pdf's will not be normalized on the conditional observables when computing the NLL 
+     virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
+
      virtual void SetVarName(const char* name) { fVarName = name; }
      virtual const TString GetVarName() const {return fVarName;}
 
@@ -173,6 +177,7 @@ namespace RooStats {
       bool fDetailedOutputEnabled;
       bool fDetailedOutputWithErrorsAndPulls;
       RooArgSet* fDetailedOutput; //!
+      RooArgSet fConditionalObs;    // conditional observables 
       
       TString fVarName;
 

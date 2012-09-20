@@ -91,7 +91,7 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
     RooStats::RemoveConstantParameters(allParams);
 
     // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
-    RooAbsReal* nll = fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
+    RooAbsReal* nll = fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(fConditionalObs));
 
     //RooAbsReal* nll = fPdf->createNLL(data, RooFit::CloneData(false));
 
@@ -149,10 +149,15 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
   virtual void PValueIsRightTail(bool isright) {  fUpperLimit = isright; }
   virtual bool PValueIsRightTail(void) const { return fUpperLimit; }
 
+   // set the conditional observables which will be used when creating the NLL
+   // so the pdf's will not be normalized on the conditional observables when computing the NLL 
+   virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
+
 
    private:
       RooAbsPdf *fPdf;
       RooRealVar *fParameter;
+      RooArgSet fConditionalObs;
       bool fUpperLimit;
       TString fMinimizer;
       Int_t fStrategy;
@@ -161,7 +166,7 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
 
 
    protected:
-   ClassDef(MaxLikelihoodEstimateTestStat,1)
+   ClassDef(MaxLikelihoodEstimateTestStat,2)
 };
 
 }

@@ -114,10 +114,11 @@ AsymptoticCalculator::AsymptoticCalculator(
       allParams->snapshot(nominalParams);
    }
 
+
    // evaluate the unconditional nll for the full model on the  observed data 
    if (verbose >= 0)
       oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best unconditional NLL on observed data" << endl;
-   fNLLObs = EvaluateNLL( *nullPdf, *obsData);
+   fNLLObs = EvaluateNLL( *nullPdf, *obsData, GetNullModel()->GetConditionalObservables());
    // fill also snapshot of best poi
    poi->snapshot(fBestFitPoi);
    RooRealVar * muBest = dynamic_cast<RooRealVar*>(fBestFitPoi.first());
@@ -181,7 +182,7 @@ AsymptoticCalculator::AsymptoticCalculator(
       oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Find  best conditional NLL on ASIMOV data set for given alt POI ( " << 
          muAlt->GetName() << " ) = " << muAlt->getVal() << std::endl;
 
-   fNLLAsimov =  EvaluateNLL( *nullPdf, *fAsimovData, &poiAlt );
+   fNLLAsimov =  EvaluateNLL( *nullPdf, *fAsimovData, GetNullModel()->GetConditionalObservables(), &poiAlt );
    // for unconditional fit 
    //fNLLAsimov =  EvaluateNLL( *nullPdf, *fAsimovData);
    //poi->Print("v");
@@ -204,7 +205,7 @@ AsymptoticCalculator::AsymptoticCalculator(
 }
 
 //_________________________________________________________________
-Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   const RooArgSet *poiSet) {
+Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   const RooArgSet * condObs, const RooArgSet *poiSet) {
 
     int verbose = fgPrintLevel;
       
@@ -217,8 +218,11 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
     RooStats::RemoveConstantParameters(allParams);
     // add constraint terms for all non-constant parameters
 
+    RooArgSet conditionalObs;
+    if (condObs) conditionalObs.add(*condObs);
+
     // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
-    RooAbsReal* nll = pdf.createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
+    RooAbsReal* nll = pdf.createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(conditionalObs));
 
     RooArgSet* attachedSet = nll->getVariables();
 
@@ -420,7 +424,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    }
 
    // evaluate the conditional NLL on the observed data for the snapshot value
-   double condNLL = EvaluateNLL( *nullPdf, const_cast<RooAbsData&>(*GetData()), &poiTest);
+   double condNLL = EvaluateNLL( *nullPdf, const_cast<RooAbsData&>(*GetData()), GetNullModel()->GetConditionalObservables(), &poiTest);
 
    double qmu = 2.*(condNLL - fNLLObs); 
    
@@ -442,7 +446,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
                                            << std::endl;         
       
       
-      double nll = EvaluateNLL( *nullPdf, const_cast<RooAbsData&>(*GetData()));
+      double nll = EvaluateNLL( *nullPdf, const_cast<RooAbsData&>(*GetData()),GetNullModel()->GetConditionalObservables());
       
       if (nll < fNLLObs || (TMath::IsNaN(fNLLObs) && !TMath::IsNaN(nll) ) ) { 
          oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Found a better unconditional minimum "
@@ -504,7 +508,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
    if (verbose > 0) oocoutP((TObject*)0,Eval) << "AsymptoticCalculator::GetHypoTest -- Find  best conditional NLL on ASIMOV data set .... " << std::endl;
 
-   double condNLL_A = EvaluateNLL( *nullPdf, *fAsimovData, &poiTest);
+   double condNLL_A = EvaluateNLL( *nullPdf, *fAsimovData, GetNullModel()->GetConditionalObservables(), &poiTest);
 
 
    double qmu_A = 2.*(condNLL_A - fNLLAsimov  );
@@ -522,7 +526,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
                                            << std::endl;         
       
       
-      double nll = EvaluateNLL( *nullPdf, *fAsimovData );
+      double nll = EvaluateNLL( *nullPdf, *fAsimovData,  GetNullModel()->GetConditionalObservables() );
       
       if (nll < fNLLAsimov || (TMath::IsNaN(fNLLAsimov) && !TMath::IsNaN(nll) )) { 
          oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Found a better unconditional minimum for Asimov data set"
@@ -1101,14 +1105,15 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
       RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
       if (verbose < 2) RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
-
+      RooArgSet conditionalObs;
+      if (model.GetConditionalObservables()) conditionalObs.add(*model.GetConditionalObservables());
 
       std::string minimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
       std::string minimizerAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();
       model.GetPdf()->fitTo(realData, RooFit::Minimizer(minimizerType.c_str(),minimizerAlgo.c_str()), 
                  RooFit::Strategy(ROOT::Math::MinimizerOptions::DefaultStrategy()),
                  RooFit::PrintLevel(minimPrintLevel-1), RooFit::Hesse(false),
-                 RooFit::Constrain(constrainParams));
+                            RooFit::Constrain(constrainParams),RooFit::ConditionalObservables(conditionalObs));
       if (verbose>0) { std::cout << "fit time "; tw2.Print();}
       if (verbose > 1) { 
          // after the fit the nuisance parameters will have their best fit value

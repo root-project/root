@@ -40,7 +40,7 @@ Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, Roo
    Bool_t created = kFALSE ;
    if (!fNllNull) {
       RooArgSet* allParams = fNullPdf->getParameters(data);
-      fNllNull = fNullPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
+      fNllNull = fNullPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(fConditionalObs));
       delete allParams;
       created = kTRUE ;
    }
@@ -66,7 +66,7 @@ Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, Roo
    created = kFALSE ;
    if (!fNllAlt) {
       RooArgSet* allParams = fAltPdf->getParameters(data);
-      fNllAlt = fAltPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams));
+      fNllAlt = fAltPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(fConditionalObs));
       delete allParams;
       created = kTRUE ;
    }

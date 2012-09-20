@@ -121,10 +121,14 @@ void MCMCCalculator::SetModel(const ModelConfig & model) {
    fPriorPdf = model.GetPriorPdf();
    fPOI.removeAll();
    fNuisParams.removeAll();
+   fConditionalObs.removeAll();
    if (model.GetParametersOfInterest())
       fPOI.add(*model.GetParametersOfInterest());
    if (model.GetNuisanceParameters())
       fNuisParams.add(*model.GetNuisanceParameters());
+   if (model.GetConditionalObservables()) 
+      fConditionalObs.add( *(model.GetConditionalObservables() ) );
+
 }
 
 // Constructor for automatic configuration with basic settings.  Uses a
@@ -185,7 +189,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
    }
 
    RooArgSet* constrainedParams = prodPdf->getParameters(*fData);
-   RooAbsReal* nll = prodPdf->createNLL(*fData, Constrain(*constrainedParams));
+   RooAbsReal* nll = prodPdf->createNLL(*fData, Constrain(*constrainedParams),ConditionalObservables(fConditionalObs));
    delete constrainedParams;
 
    RooArgSet* params = nll->getParameters(*fData);
