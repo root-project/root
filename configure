@@ -4396,6 +4396,8 @@ if test ! "x$enable_python" = "xno" ; then
     if test ! "x$enable_cling" = "xyes"; then
         enable_python="no"
         result "no (cling disabled)"
+    else
+	result "yes"
     fi
 fi
 if test ! "x$enable_python" = "xno" ; then
@@ -4404,7 +4406,8 @@ if test ! "x$enable_python" = "xno" ; then
     if test ! "x$mypython" = "x" && test -x "$mypython" ; then
        pythonvers=`python -c 'import sys; sys.stdout.write(sys.version[:3])'`
        pythonsysincdir=`python -c 'import sys; sys.stdout.write(sys.prefix + "/include/python" + sys.version[:3])'`
-       pythonsyslibdir=`python -c 'import sys; sys.stdout.write(sys.prefix + "/lib/python" + sys.version[:3])'`
+       #pythonsyslibdir=`python -c 'import sys; sys.stdout.write(sys.prefix + "/lib/python" + sys.version[:3])'`
+       pythonsyslibdir=`python -c 'import sys; sys.stdout.write(sys.prefix + "/lib")'`
        pythonsyslibdir2=
        if test "x$platform" = "xmacosx"; then
           pythonsyslibdir2=`python -c 'import sys; sys.stdout.write(sys.prefix)'`
