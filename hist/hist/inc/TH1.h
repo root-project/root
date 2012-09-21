@@ -410,7 +410,6 @@ public:
    virtual void     AddBinContent(Int_t bin);
    virtual void     AddBinContent(Int_t bin, Double_t w);
    virtual void     Copy(TObject &hnew) const;
-   virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
 
@@ -452,7 +451,6 @@ public:
    virtual void     AddBinContent(Int_t bin);
    virtual void     AddBinContent(Int_t bin, Double_t w);
    virtual void     Copy(TObject &hnew) const;
-   virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
 
@@ -494,7 +492,6 @@ public:
    virtual void     AddBinContent(Int_t bin);
    virtual void     AddBinContent(Int_t bin, Double_t w);
    virtual void     Copy(TObject &hnew) const;
-   virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
 
@@ -538,7 +535,6 @@ public:
    virtual void     AddBinContent(Int_t bin, Double_t w)
                                  {fArray[bin] += Float_t (w);}
    virtual void     Copy(TObject &hnew) const;
-   virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
 
@@ -582,7 +578,6 @@ public:
    virtual void     AddBinContent(Int_t bin, Double_t w)
                                  {fArray[bin] += Double_t (w);}
    virtual void     Copy(TObject &hnew) const;
-   virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
 
