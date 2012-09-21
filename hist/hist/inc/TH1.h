@@ -244,8 +244,8 @@ public:
    virtual void     GetBinXYZ(Int_t binglobal, Int_t &binx, Int_t &biny, Int_t &binz) const;
    virtual Double_t GetBinCenter(Int_t bin) const {return fXaxis.GetBinCenter(bin);}
    virtual Double_t GetBinContent(Int_t bin) const;
-   virtual Double_t GetBinContent(Int_t binx, Int_t biny) const;
-   virtual Double_t GetBinContent(Int_t binx, Int_t biny, Int_t binz) const;
+   virtual Double_t GetBinContent(Int_t bin, Int_t) const { return GetBinContent(bin); }
+   virtual Double_t GetBinContent(Int_t bin, Int_t, Int_t) const { return GetBinContent(bin); }
    virtual Double_t GetBinError(Int_t bin) const;
    virtual Double_t GetBinError(Int_t binx, Int_t biny) const;
    virtual Double_t GetBinError(Int_t binx, Int_t biny, Int_t binz) const;
@@ -423,7 +423,7 @@ public:
    friend  TH1C     operator/(const TH1C &h1, const TH1C &h2);
 
 protected:
-   virtual Double_t RetrieveBinContent(Int_t bin) const { return fArray ? Double_t (fArray[bin]) : 0; }
+   virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Char_t (content); }
 };
 
@@ -464,7 +464,7 @@ public:
    friend  TH1S     operator/(const TH1S &h1, const TH1S &h2);
 
 protected:
-   virtual Double_t RetrieveBinContent(Int_t bin) const { return fArray ? Double_t (fArray[bin]) : 0; }
+   virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Short_t (content); } 
 };
 
@@ -505,7 +505,7 @@ public:
    friend  TH1I     operator/(const TH1I &h1, const TH1I &h2);
 
 protected:
-   virtual Double_t RetrieveBinContent(Int_t bin) const { return fArray ? Double_t (fArray[bin]) : 0; }
+   virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Int_t (content); }
 };
 
@@ -548,7 +548,7 @@ public:
    friend  TH1F     operator/(const TH1F &h1, const TH1F &h2);
 
 protected:
-   virtual Double_t RetrieveBinContent(Int_t bin) const { return fArray ? Double_t (fArray[bin]) : 0; }
+   virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Float_t (content); }
 };
 
@@ -591,7 +591,7 @@ public:
    friend  TH1D     operator/(const TH1D &h1, const TH1D &h2);
 
 protected:
-   virtual Double_t RetrieveBinContent(Int_t bin) const { return fArray ? Double_t (fArray[bin]) : 0; }
+   virtual Double_t RetrieveBinContent(Int_t bin) const { return fArray[bin]; }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = content; }
 };
 

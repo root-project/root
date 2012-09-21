@@ -4564,30 +4564,6 @@ Double_t TH1::GetBinContent(Int_t bin) const
 }
 
 //______________________________________________________________________________
-Double_t TH1::GetBinContent(Int_t binx, Int_t biny) const
-{
-   //   -*-*-*-*-*Return content of bin number binx, biny
-   //             =======================================
-   // NB: Function to be called for 2-D histograms only
-   // see convention for numbering bins in TH1::GetBin
-
-   Int_t bin = GetBin(binx,biny);
-   return GetBinContent(bin);
-}
-
-//______________________________________________________________________________
-Double_t TH1::GetBinContent(Int_t binx, Int_t biny, Int_t binz) const
-{
-   //   -*-*-*-*-*Return content of bin number binx,biny,binz
-   //             ===========================================
-   // NB: Function to be called for 3-D histograms only
-   // see convention for numbering bins in TH1::GetBin
-
-   Int_t bin = GetBin(binx,biny,binz);
-   return GetBinContent(bin);
-}
-
-//______________________________________________________________________________
 Double_t TH1::GetBinWithContent(Double_t c, Int_t &binx, Int_t firstx, Int_t lastx,Double_t maxdiff) const
 {
    // compute first binx in the range [firstx,lastx] for which

@@ -2893,18 +2893,6 @@ TH1 *TH2C::DrawCopy(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Double_t TH2C::GetBinContent(Int_t bin) const
-{
-   // Get bin content.
-
-   if (fBuffer) ((TH2C*)this)->BufferEmpty();
-   if (bin < 0) bin = 0;
-   if (bin >= fNcells) bin = fNcells-1;
-   if (!fArray) return 0;
-   return Double_t (fArray[bin]);
-}
-
-//______________________________________________________________________________
 void TH2C::Reset(Option_t *option)
 {
    //*-*-*-*-*-*-*-*Reset this histogram: contents, errors, etc*-*-*-*-*-*-*-*
@@ -3164,18 +3152,6 @@ TH1 *TH2S::DrawCopy(Option_t *option) const
    newth2->SetBit(kCanDelete);
    newth2->AppendPad(option);
    return newth2;
-}
-
-//______________________________________________________________________________
-Double_t TH2S::GetBinContent(Int_t bin) const
-{
-   // Get bin content.
-
-   if (fBuffer) ((TH2C*)this)->BufferEmpty();
-   if (bin < 0) bin = 0;
-   if (bin >= fNcells) bin = fNcells-1;
-   if (!fArray) return 0;
-   return Double_t (fArray[bin]);
 }
 
 //______________________________________________________________________________
@@ -3441,18 +3417,6 @@ TH1 *TH2I::DrawCopy(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Double_t TH2I::GetBinContent(Int_t bin) const
-{
-   // Get bin content.
-
-   if (fBuffer) ((TH2C*)this)->BufferEmpty();
-   if (bin < 0) bin = 0;
-   if (bin >= fNcells) bin = fNcells-1;
-   if (!fArray) return 0;
-   return Double_t (fArray[bin]);
-}
-
-//______________________________________________________________________________
 void TH2I::Reset(Option_t *option)
 {
    //*-*-*-*-*-*-*-*Reset this histogram: contents, errors, etc*-*-*-*-*-*-*-*
@@ -3675,18 +3639,6 @@ TH1 *TH2F::DrawCopy(Option_t *option) const
    newth2->SetBit(kCanDelete);
    newth2->AppendPad(option);
    return newth2;
-}
-
-//______________________________________________________________________________
-Double_t TH2F::GetBinContent(Int_t bin) const
-{
-   // Get bin content.
-
-   if (fBuffer) ((TH2C*)this)->BufferEmpty();
-   if (bin < 0) bin = 0;
-   if (bin >= fNcells) bin = fNcells-1;
-   if (!fArray) return 0;
-   return Double_t (fArray[bin]);
 }
 
 //______________________________________________________________________________
@@ -3959,18 +3911,6 @@ TH1 *TH2D::DrawCopy(Option_t *option) const
    newth2->SetBit(kCanDelete);
    newth2->AppendPad(option);
    return newth2;
-}
-
-//______________________________________________________________________________
-Double_t TH2D::GetBinContent(Int_t bin) const
-{
-   // Get bin content.
-
-   if (fBuffer) ((TH2C*)this)->BufferEmpty();
-   if (bin < 0) bin = 0;
-   if (bin >= fNcells) bin = fNcells-1;
-   if (!fArray) return 0;
-   return Double_t (fArray[bin]);
 }
 
 //______________________________________________________________________________

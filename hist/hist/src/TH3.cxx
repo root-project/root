@@ -3612,18 +3612,6 @@ TH1 *TH3C::DrawCopy(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Double_t TH3C::GetBinContent(Int_t bin) const
-{
-   // Get bin content.
-
-   if (fBuffer) ((TH3C*)this)->BufferEmpty();
-   if (bin < 0) bin = 0;
-   if (bin >= fNcells) bin = fNcells-1;
-   if (!fArray) return 0;
-   return Double_t (fArray[bin]);
-}
-
-//______________________________________________________________________________
 void TH3C::Reset(Option_t *option)
 {
    //*-*-*-*-*-*-*-*Reset this histogram: contents, errors, etc*-*-*-*-*-*-*-*
@@ -3895,18 +3883,6 @@ TH1 *TH3S::DrawCopy(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Double_t TH3S::GetBinContent(Int_t bin) const
-{
-   // Get bin content.
-
-   if (fBuffer) ((TH3S*)this)->BufferEmpty();
-   if (bin < 0) bin = 0;
-   if (bin >= fNcells) bin = fNcells-1;
-   if (!fArray) return 0;
-   return Double_t (fArray[bin]);
-}
-
-//______________________________________________________________________________
 void TH3S::Reset(Option_t *option)
 {
    //*-*-*-*-*-*-*-*Reset this histogram: contents, errors, etc*-*-*-*-*-*-*-*
@@ -4149,18 +4125,6 @@ TH1 *TH3I::DrawCopy(Option_t *option) const
 }
 
 //______________________________________________________________________________
-Double_t TH3I::GetBinContent(Int_t bin) const
-{
-   // Get bin content.
-
-   if (fBuffer) ((TH3I*)this)->BufferEmpty();
-   if (bin < 0) bin = 0;
-   if (bin >= fNcells) bin = fNcells-1;
-   if (!fArray) return 0;
-   return Double_t (fArray[bin]);
-}
-
-//______________________________________________________________________________
 void TH3I::Reset(Option_t *option)
 {
    //*-*-*-*-*-*-*-*Reset this histogram: contents, errors, etc*-*-*-*-*-*-*-*
@@ -4347,18 +4311,6 @@ TH1 *TH3F::DrawCopy(Option_t *option) const
    newth3->SetBit(kCanDelete);
    newth3->AppendPad(option);
    return newth3;
-}
-
-//______________________________________________________________________________
-Double_t TH3F::GetBinContent(Int_t bin) const
-{
-   // Get bin content.
-
-   if (fBuffer) ((TH3F*)this)->BufferEmpty();
-   if (bin < 0) bin = 0;
-   if (bin >= fNcells) bin = fNcells-1;
-   if (!fArray) return 0;
-   return Double_t (fArray[bin]);
 }
 
 //______________________________________________________________________________
@@ -4580,18 +4532,6 @@ TH1 *TH3D::DrawCopy(Option_t *option) const
    newth3->SetBit(kCanDelete);
    newth3->AppendPad(option);
    return newth3;
-}
-
-//______________________________________________________________________________
-Double_t TH3D::GetBinContent(Int_t bin) const
-{
-   // Get bin content.
-
-   if (fBuffer) ((TH3D*)this)->BufferEmpty();
-   if (bin < 0) bin = 0;
-   if (bin >= fNcells) bin = fNcells-1;
-   if (!fArray) return 0;
-   return Double_t (fArray[bin]);
 }
 
 //______________________________________________________________________________
