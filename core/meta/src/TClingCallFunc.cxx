@@ -315,8 +315,8 @@ static void evaluateArgList(cling::Interpreter *interp,
 
    llvm::SmallVector<clang::Expr*, 4> exprs;
    interp->getLookupHelper().findArgList(ArgList, exprs);
-   for(llvm::SmallVector<clang::Expr*, 4>::const_iterator I = exprs.begin(),
-          E = exprs.end(); I != E; ++I) {
+   for (llvm::SmallVector<clang::Expr*, 4>::const_iterator I = exprs.begin(),
+         E = exprs.end(); I != E; ++I) {
       std::string empty;
       llvm::raw_string_ostream tmp(empty);
       (*I)->printPretty(tmp, /*PrinterHelper=*/0, Policy, /*Indentation=*/0);
