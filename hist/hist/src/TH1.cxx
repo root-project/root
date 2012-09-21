@@ -8337,6 +8337,32 @@ void TH1::SetBinError(Int_t bin, Double_t error)
 }
 
 //______________________________________________________________________________
+void TH1::SetBinContent(Int_t bin, Double_t content)
+{
+   // Set bin content
+   // see convention for numbering bins in TH1::GetBin
+   // In case the bin number is greater than the number of bins and
+   // the timedisplay option is set or the kCanRebin bit is set,
+   // the number of bins is automatically doubled to accommodate the new bin
+
+   fEntries++;
+   fTsumw = 0;
+   if (bin < 0) return;
+   if (bin >= fNcells-1) {
+      if (fXaxis.GetTimeDisplay()) {
+         while (bin >=  fNcells-1)  LabelsInflate();
+      } else {
+         if (!TestBit(kCanRebin)) {
+            if (bin == fNcells-1) UpdateBinContent(bin, content);
+            return;
+         }
+         while (bin >= fNcells-1)  LabelsInflate();
+      }
+   }
+   UpdateBinContent(bin, content);
+}
+
+//______________________________________________________________________________
 void TH1::SetBinContent(Int_t binx, Int_t biny, Double_t content)
 {
    // see convention for numbering bins in TH1::GetBin
@@ -8398,13 +8424,6 @@ void TH1::SetCellError(Int_t binx, Int_t biny, Double_t error)
    if (!fSumw2.fN) Sumw2();
    Int_t bin = biny*(fXaxis.GetNbins()+2) + binx;
    fSumw2.fArray[bin] = error*error;
-}
-
-//______________________________________________________________________________
-void TH1::SetBinContent(Int_t, Double_t)
-{
-   // see convention for numbering bins in TH1::GetBin
-   AbstractMethod("SetBinContent");
 }
 
 //______________________________________________________________________________
@@ -8592,6 +8611,13 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
    return hout;
 }
 
+//______________________________________________________________________________
+void TH1::UpdateBinContent(Int_t, Double_t)
+{
+   // raw update of bin content on internal data structure
+   AbstractMethod("UpdateBinContent");
+}
+
 
 
 //______________________________________________________________________________
@@ -8732,32 +8758,6 @@ void TH1C::Reset(Option_t *option)
 
    TH1::Reset(option);
    TArrayC::Reset();
-}
-
-//______________________________________________________________________________
-void TH1C::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   // see convention for numbering bins in TH1::GetBin
-   // In case the bin number is greater than the number of bins and
-   // the timedisplay option is set or the kCanRebin bit is set,
-   // the number of bins is automatically doubled to accommodate the new bin
-
-   fEntries++;
-   fTsumw = 0;
-   if (bin < 0) return;
-   if (bin >= fNcells-1) {
-      if (fXaxis.GetTimeDisplay()) {
-         while (bin >=  fNcells-1)  LabelsInflate();
-      } else {
-         if (!TestBit(kCanRebin)) {
-            if (bin == fNcells-1) fArray[bin] = Char_t (content);
-            return;
-         }
-         while (bin >= fNcells-1)  LabelsInflate();
-      }
-   }
-   fArray[bin] = Char_t (content);
 }
 
 //______________________________________________________________________________
@@ -8978,32 +8978,6 @@ void TH1S::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TH1S::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   // see convention for numbering bins in TH1::GetBin
-   // In case the bin number is greater than the number of bins and
-   // the timedisplay option is set or the kCanRebin bit is set,
-   // the number of bins is automatically doubled to accommodate the new bin
-
-   fEntries++;
-   fTsumw = 0;
-   if (bin < 0) return;
-   if (bin >= fNcells-1) {
-      if (fXaxis.GetTimeDisplay()) {
-         while (bin >=  fNcells-1)  LabelsInflate();
-      } else {
-         if (!TestBit(kCanRebin)) {
-            if (bin == fNcells-1) fArray[bin] = Short_t (content);
-            return;
-         }
-         while (bin >= fNcells-1)  LabelsInflate();
-      }
-   }
-   fArray[bin] = Short_t (content);
-}
-
-//______________________________________________________________________________
 void TH1S::SetBinsLength(Int_t n)
 {
    // Set total number of bins including under/overflow
@@ -9022,7 +8996,6 @@ TH1S& TH1S::operator=(const TH1S &h1)
    if (this != &h1)  ((TH1S&)h1).Copy(*this);
    return *this;
 }
-
 
 //______________________________________________________________________________
 TH1S operator*(Double_t c1, const TH1S &h1)
@@ -9217,32 +9190,6 @@ void TH1I::Reset(Option_t *option)
 
    TH1::Reset(option);
    TArrayI::Reset();
-}
-
-//______________________________________________________________________________
-void TH1I::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   // see convention for numbering bins in TH1::GetBin
-   // In case the bin number is greater than the number of bins and
-   // the timedisplay option is set or the kCanRebin bit is set,
-   // the number of bins is automatically doubled to accommodate the new bin
-
-   fEntries++;
-   fTsumw = 0;
-   if (bin < 0) return;
-   if (bin >= fNcells-1) {
-      if (fXaxis.GetTimeDisplay()) {
-         while (bin >=  fNcells-1)  LabelsInflate();
-      } else {
-         if (!TestBit(kCanRebin)) {
-            if (bin == fNcells-1) fArray[bin] = Int_t (content);
-            return;
-         }
-         while (bin >= fNcells-1)  LabelsInflate();
-      }
-   }
-   fArray[bin] = Int_t (content);
 }
 
 //______________________________________________________________________________
@@ -9458,32 +9405,6 @@ void TH1F::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TH1F::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   // see convention for numbering bins in TH1::GetBin
-   // In case the bin number is greater than the number of bins and
-   // the timedisplay option is set or the kCanRebin bit is set,
-   // the number of bins is automatically doubled to accommodate the new bin
-
-   fEntries++;
-   fTsumw = 0;
-   if (bin < 0) return;
-   if (bin >= fNcells-1) {
-      if (fXaxis.GetTimeDisplay()) {
-         while (bin >=  fNcells-1)  LabelsInflate();
-      } else {
-         if (!TestBit(kCanRebin)) {
-            if (bin == fNcells-1) fArray[bin] = Float_t (content);
-            return;
-         }
-         while (bin >= fNcells-1)  LabelsInflate();
-      }
-   }
-   fArray[bin] = Float_t (content);
-}
-
-//______________________________________________________________________________
 void TH1F::SetBinsLength(Int_t n)
 {
    // Set total number of bins including under/overflow
@@ -9694,32 +9615,6 @@ void TH1D::Reset(Option_t *option)
 
    TH1::Reset(option);
    TArrayD::Reset();
-}
-
-//______________________________________________________________________________
-void TH1D::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   // see convention for numbering bins in TH1::GetBin
-   // In case the bin number is greater than the number of bins and
-   // the timedisplay option is set or the kCanRebin bit is set,
-   // the number of bins is automatically doubled to accommodate the new bin
-
-   fEntries++;
-   fTsumw = 0;
-   if (bin < 0) return;
-   if (bin >= fNcells-1) {
-      if (fXaxis.GetTimeDisplay()) {
-         while (bin >=  fNcells-1)  LabelsInflate();
-      } else {
-         if (!TestBit(kCanRebin)) {
-            if (bin == fNcells-1) fArray[bin] = content;
-            return;
-         }
-         while (bin >= fNcells-1)  LabelsInflate();
-      }
-   }
-   fArray[bin] = content;
 }
 
 //______________________________________________________________________________
