@@ -208,7 +208,6 @@ void TClassTable::Print(Option_t *option) const
    Printf("class                                 version  bits  initialized");
    Printf("================================================================");
    for (int i = 0; i < fgTally; i++) {
-      if (!fgTable[i]) continue;
       TClassRec *r = fgSortedTable[i];
       if (!r) break;
       n++;
@@ -471,7 +470,6 @@ void TClassTable::PrintTable()
    Printf("================================================================");
    int last = fgTally;
    for (int i = 0; i < last; i++) {
-      if (!fgTable[i]) continue;
       TClassRec *r = fgSortedTable[i];
       if (!r) break;
       n++;
