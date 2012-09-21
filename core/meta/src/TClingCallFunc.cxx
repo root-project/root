@@ -45,12 +45,6 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
 
-#define private public
-#define protected public
-#include "clang/Parse/Parser.h"
-#undef protected
-#undef private
-
 #include "llvm/ADT/APInt.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
@@ -297,7 +291,8 @@ static void evaluateArgList(cling::Interpreter *interp,
                             const std::string &ArgList,
                             std::vector<cling::Value> &EvaluatedArgs)
 {
-   clang::PrintingPolicy Policy(interp->getCI()->getSema().getPrintingPolicy());
+   clang::PrintingPolicy Policy(interp->getCI()->
+      getASTContext().getPrintingPolicy());
    Policy.SuppressTagKeyword = true;
    Policy.SuppressUnwrittenScope = true;
    Policy.SuppressInitializers = true;
