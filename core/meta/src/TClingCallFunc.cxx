@@ -63,9 +63,10 @@ void TClingCallFunc::Exec(void *address) const
       return;
    }
    const clang::Decl *D = fMethod->GetMethodDecl();
+   const clang::CXXMethodDecl *MD = llvm::dyn_cast<clang::CXXMethodDecl>(D);
    const clang::DeclContext *DC = D->getDeclContext();
-   if (DC->isTranslationUnit() || DC->isNamespace()) {
-      // Free function.
+   if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
+      // Free function or static member function.
       Invoke(fArgs);
    }
    else {
@@ -97,14 +98,17 @@ void TClingCallFunc::Exec(void *address) const
 
 long TClingCallFunc::ExecInt(void *address) const
 {
+   // Yes, the function name has Int in it, but it
+   // returns a long.  This is a matter of CINT history.
    if (!IsValid()) {
       return 0L;
    }
    llvm::GenericValue val;
    const clang::Decl *D = fMethod->GetMethodDecl();
+   const clang::CXXMethodDecl *MD = llvm::dyn_cast<clang::CXXMethodDecl>(D);
    const clang::DeclContext *DC = D->getDeclContext();
-   if (DC->isTranslationUnit() || DC->isNamespace()) {
-      // Free function.
+   if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
+      // Free function or static member function.
       val = Invoke(fArgs);
    }
    else {
@@ -145,9 +149,10 @@ long long TClingCallFunc::ExecInt64(void *address) const
    }
    llvm::GenericValue val;
    const clang::Decl *D = fMethod->GetMethodDecl();
+   const clang::CXXMethodDecl *MD = llvm::dyn_cast<clang::CXXMethodDecl>(D);
    const clang::DeclContext *DC = D->getDeclContext();
-   if (DC->isTranslationUnit() || DC->isNamespace()) {
-      // Free function.
+   if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
+      // Free function or static member function.
       val = Invoke(fArgs);
    }
    else {
@@ -185,9 +190,10 @@ double TClingCallFunc::ExecDouble(void *address) const
    }
    llvm::GenericValue val;
    const clang::Decl *D = fMethod->GetMethodDecl();
+   const clang::CXXMethodDecl *MD = llvm::dyn_cast<clang::CXXMethodDecl>(D);
    const clang::DeclContext *DC = D->getDeclContext();
-   if (DC->isTranslationUnit() || DC->isNamespace()) {
-      // Free function.
+   if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
+      // Free function or static member function.
       val = Invoke(fArgs);
    }
    else {
@@ -561,10 +567,12 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
 {
    fEEFunc = 0;
    fEEAddr = 0;
-   bool isMemberFunc = false;
+   bool isMemberFunc = true;
+   const clang::CXXMethodDecl *MD = llvm::dyn_cast<clang::CXXMethodDecl>(FD);
    const clang::DeclContext *DC = FD->getDeclContext();
-   if (!DC->isTranslationUnit() && !DC->isNamespace()) {
-      isMemberFunc = true;
+   if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
+      // Free function or static member function.
+      isMemberFunc = false;
    }
    //
    //  Mangle the function name, if necessary.
