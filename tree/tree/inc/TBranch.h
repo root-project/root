@@ -89,7 +89,7 @@ protected:
    TObjArray   fLeaves;          //-> List of leaves of this branch
    TObjArray   fBaskets;         //-> List of baskets of this branch
    Int_t      *fBasketBytes;     //[fMaxBaskets] Lenght of baskets on file
-   Long64_t   *fBasketEntry;     //[fMaxBaskets] Table of first entry in eack basket
+   Long64_t   *fBasketEntry;     //[fMaxBaskets] Table of first entry in each basket
    Long64_t   *fBasketSeek;      //[fMaxBaskets] Addresses of baskets on file
    TTree      *fTree;            //! Pointer to Tree header
    TBranch    *fMother;          //! Pointer to top-level parent branch in the tree.
