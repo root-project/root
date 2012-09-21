@@ -3635,7 +3635,7 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //     several empty bins (see also below). 
 //     In case of a weighted histogram, it is possible to perform a likelihood fit by using the 
 //     option "WL". Note a weighted histogram is an histogram which has been filled with weights and it   
-//     contains the sum of the weight square ( TH1::SUmw2() has been called). The bin error for a weighted
+//     contains the sum of the weight square ( TH1::Sumw2() has been called). The bin error for a weighted
 //     histogram is the square root of the sum of the weight square. 
 //
 //     Treatment of Empty Bins
@@ -8352,14 +8352,11 @@ void TH1::SetBinContent(Int_t bin, Double_t content)
    fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells-1) {
-      if (fXaxis.GetTimeDisplay()) {
+      if (fXaxis.GetTimeDisplay() || TestBit(kCanRebin) ) {
          while (bin >=  fNcells-1)  LabelsInflate();
       } else {
-         if (!TestBit(kCanRebin)) {
-            if (bin == fNcells-1) UpdateBinContent(bin, content);
-            return;
-         }
-         while (bin >= fNcells-1)  LabelsInflate();
+         if (bin == fNcells-1) UpdateBinContent(bin, content);
+         return;
       }
    }
    UpdateBinContent(bin, content);
