@@ -428,6 +428,7 @@ static llvm::Type *getLLVMTypeFromBuiltinKind(llvm::LLVMContext &Context,
       case clang::BuiltinType::BoundMember:
       case clang::BuiltinType::PseudoObject:
       case clang::BuiltinType::UnknownAny:
+      case clang::BuiltinType::BuiltinFn:
       case clang::BuiltinType::ARCUnbridgedCast:
       case clang::BuiltinType::Char16:
       case clang::BuiltinType::Char32:
