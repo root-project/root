@@ -3605,16 +3605,51 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //     where MyFittingFunction is of type:
 //     extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 //
+//     Chi2 Fits
+//     =======================
+//     By default a chi2 (least-square) fit is performed on the histogram. The so-called modified least-square method 
+//     is used where the residual for each bin is computed using as error the observed value (the bin error)
+// 
+//     Chi2 = Sum{ ( y(i) - f (x(i) | p )/ e(i) )^2 }
+//
+//     where y(i) is the bin content for each bin i, x(i) is the bin center and e(i) is the bin error (sqrt(y(i) for 
+//     an un-weighted histogram. Bins with zero errors are excluded from the fit. See also later the note on the treatment of empty bins.
+//     When using option "I" the residual is computed not using the function value at the bin center, f (x(i) | p), but the integral 
+//     of the function in the bin,   Integral{ f(x|p)dx } divided by the bin volume  
+//  
 //     Likelihood Fits
-//     =================
+//     =======================
 //     When using option "L" a likelihood fit is used instead of the default chi2 square fit.
-//     The likelihood is built assuming a Poisson probability density function for each bin.
+//     The likelihood is built assuming a Poisson probability density function for each bin. 
+//     The negative log-likelihood to be minimized is
+//      NLL = Sum{ log Poisson( y(i) |{ f(x(i) | p ) ) }
+//     The exact likelihood used is the Poisson likelihood described in this paper: 
+//     S. Baker and R. D. Cousins, “Clarification of the use of chi-square and likelihood functions in fits to histograms,”
+//     Nucl. Instrum. Meth. 221 (1984) 437.
 //     This method can then be used only when the bin content represents counts (i.e. errors are sqrt(N) ).
-//     The likelihood method has the advantage of treating correctly the empty bins and use them in the
-//     fit procedure.
-//     In the chi2 method the empty bins are skipped and not considered in the fit.
-//     The likelihood method, although a bit slower, it is the recommended method in case of low
-//     bin statistics, where the chi2 method may give incorrect results.
+//     The likelihood method has the advantage of treating correctly bins with low statistics. In case of high 
+//     statistics/bin the distribution of the bin content becomes a normal distribution and the likelihood and chi2 fit 
+//     give the same result. 
+//     The likelihood method, although a bit slower, it is therefore the recommended method in case of low
+//     bin statistics, where the chi2 method may give incorrect results, in particular when there are 
+//     several empty bins (see also below). 
+//     In case of a weighted histogram, it is possible to perform a likelihood fit by using the 
+//     option "WL". Note a weighted histogram is an histogram which has been filled with weights and it   
+//     contains the sum of the weight square ( TH1::SUmw2() has been called). The bin error for a weighted
+//     histogram is the square root of the sum of the weight square. 
+//
+//     Treatment of Empty Bins
+//     ========================
+//
+//     Empty bins, which have the content equal to zero AND error equal to zero, 
+//     are excluded by default from the chisquare fit, but they are considered in the likelihood fit. 
+//     since they affect the likelihood if the function value in these bins is not negligible. 
+//     When using option "WW" these bins will be considered in the chi2 fit with an error of 1. 
+//     Note that if the histogram is having bins with zero content and non zero-errors they are considered as
+//     any other bins in the fit. Instead bins with zero error and non-zero content are excluded in the chi2 fit. 
+//     A likelihood fit should also not be peformed on such an histogram, since we are assuming a wrong pdf for each bin. 
+//     In general, one should not fit an histogram with non-empty bins and zero errors, apart if all the bins have zero errors. 
+//     In this case one could use the option "w", which gives a weight=1 for each bin (unweighted least-square fit).    
 //
 //      Fitting a histogram of dimension N with a function of dimension N-1
 //      ===================================================================
