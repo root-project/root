@@ -62,8 +62,12 @@ protected:
    Int_t    Fill(Double_t); //MayNotUse
    Int_t    Fill(const char*, Double_t) { return Fill(0);}  //MayNotUse
 
-public:
+private:
+
    TH2(const TH2&);
+   TH2& operator=(const TH2&); // Not implemented
+
+public:
    virtual ~TH2();
    virtual Int_t    BufferEmpty(Int_t action=0);
    virtual void     Copy(TObject &hnew) const;

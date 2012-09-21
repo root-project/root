@@ -123,6 +123,7 @@ private:
    Int_t   AxisChoice(Option_t *axis) const;
    void    Build();
 
+   TH1(const TH1&);
    TH1& operator=(const TH1&); // Not implemented
 
 
@@ -171,8 +172,6 @@ public:
    };
 
 
-
-   TH1(const TH1&);
    virtual ~TH1();
 
    virtual Bool_t   Add(TF1 *h1, Double_t c1=1, Option_t *option="");
@@ -405,6 +404,7 @@ public:
    TH1C(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
    TH1C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
    TH1C(const TH1C &h1c);
+   TH1C& operator=(const TH1C &h1);
    virtual ~TH1C();
 
    virtual void     AddBinContent(Int_t bin);
@@ -413,7 +413,6 @@ public:
    virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
-           TH1C&    operator=(const TH1C &h1);
 
    ClassDef(TH1C,1)  //1-Dim histograms (one char per channel)
 
@@ -447,6 +446,7 @@ public:
    TH1S(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
    TH1S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
    TH1S(const TH1S &h1s);
+   TH1S& operator=(const TH1S &h1);
    virtual ~TH1S();
 
    virtual void     AddBinContent(Int_t bin);
@@ -455,7 +455,6 @@ public:
    virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
-           TH1S&    operator=(const TH1S &h1);
 
    ClassDef(TH1S,1)  //1-Dim histograms (one short per channel)
 
@@ -489,6 +488,7 @@ public:
    TH1I(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
    TH1I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
    TH1I(const TH1I &h1i);
+   TH1I& operator=(const TH1I &h1);
    virtual ~TH1I();
 
    virtual void     AddBinContent(Int_t bin);
@@ -497,7 +497,6 @@ public:
    virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
-           TH1I&    operator=(const TH1I &h1);
 
    ClassDef(TH1I,1)  //1-Dim histograms (one 32 bits integer per channel)
 
@@ -532,6 +531,7 @@ public:
    TH1F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
    TH1F(const TVectorF &v);
    TH1F(const TH1F &h1f);
+   TH1F& operator=(const TH1F &h1);
    virtual ~TH1F();
 
    virtual void     AddBinContent(Int_t bin) {++fArray[bin];}
@@ -541,7 +541,6 @@ public:
    virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
-           TH1F&    operator=(const TH1F &h1);
 
    ClassDef(TH1F,1)  //1-Dim histograms (one float per channel)
 
@@ -576,6 +575,7 @@ public:
    TH1D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
    TH1D(const TVectorD &v);
    TH1D(const TH1D &h1d);
+   TH1D& operator=(const TH1D &h1);
    virtual ~TH1D();
 
    virtual void     AddBinContent(Int_t bin) {++fArray[bin];}
@@ -585,7 +585,6 @@ public:
    virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
-           TH1D&    operator=(const TH1D &h1);
 
    ClassDef(TH1D,1)  //1-Dim histograms (one double per channel)
 
