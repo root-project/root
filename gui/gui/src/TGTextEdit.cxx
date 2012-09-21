@@ -42,6 +42,7 @@
 #include "TGScrollBar.h"
 #include "KeySymbols.h"
 #include "Riostream.h"
+#include "RConfigure.h"
 
 
 static const char *gFiletypes[] = { "All files",     "*",
@@ -1766,6 +1767,23 @@ void TGTextEdit::InsChar(char character)
                                Int_t(ToScrYCoord(fCurrent.fY+1) - fMaxDescent),
                                charstring, strlen(charstring));
    } else {
+#ifdef R__HAS_COCOA
+      //I would use const, but some members of TGTextLine are non-const.
+      if (TGTextLine *currentLine = fText->GetCurrentLine()) {
+         const ULong_t lineStart = ToObjXCoord(fVisible.fX, fCurrent.fY);
+         if (lineStart < currentLine->GetLineLength()) {
+            const char *textToRender = currentLine->GetText(lineStart, currentLine->GetLineLength() - lineStart);
+            //The next two lines can throw and textToRender will leak, but ROOT does not care about such things. :(
+            gVirtualX->ClearArea(fCanvas->GetId(), Int_t(ToScrXCoord(0, fCurrent.fY)),
+                                 Int_t(ToScrYCoord(fCurrent.fY)), UInt_t(ToScrXCoord(currentLine->GetLineLength(), fCurrent.fY)),
+                                 UInt_t(ToScrYCoord(fCurrent.fY+1)-ToScrYCoord(fCurrent.fY)));
+            gVirtualX->DrawString(fCanvas->GetId(), fNormGC(), Int_t(ToScrXCoord(0, fCurrent.fY)),
+                                  Int_t(ToScrYCoord(fCurrent.fY + 1) - fMaxDescent),
+                                  textToRender, -1);
+            delete [] textToRender;
+         }
+      }
+#else
       gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fNormGC(),
                           (Int_t)ToScrXCoord(fCurrent.fX, fCurrent.fY),
                           (Int_t)ToScrYCoord(fCurrent.fY), fCanvas->GetWidth(),
@@ -1783,6 +1801,7 @@ void TGTextEdit::InsChar(char character)
                             Int_t(ToScrYCoord(fCurrent.fY+1) - fMaxDescent),
                             charstring, strlen(charstring));
       fCursorState = 2;  // the ClearArea effectively turned off the cursor
+#endif
    }
    delete [] charstring;
    SetCurrent(pos);
@@ -1811,7 +1830,6 @@ void TGTextEdit::DelChar()
       if (!y) h = h << 1;
 
       pos.fX--;
-
       if (fText->GetChar(pos) == 16) {
          do {
             pos.fX++;
@@ -1857,18 +1875,22 @@ void TGTextEdit::DelChar()
             SetHsbPosition((ToScrXCoord(pos.fX, pos.fY)+fVisible.fX-fCanvas->GetWidth()/2)/fScrollVal.fX);
          }
 
+#ifdef R__HAS_COCOA
+         UpdateRegion(0, 0, fCanvas->GetWidth(), fCanvas->GetHeight());
+#else
          h = UInt_t(fCanvas->GetHeight() - ToScrYCoord(fCurrent.fY));
-
          gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fNormGC(), 0,
                              Int_t(pos2.fY), fWidth, h, 0, (Int_t)ToScrYCoord(fCurrent.fY));
          if (ToScrYCoord(pos.fY) < 0) {
             SetVsbPosition(fVisible.fY/fScrollVal.fY-1);
          }
          UpdateRegion(0, (Int_t)ToScrYCoord(pos.fY), fCanvas->GetWidth(), h);
+#endif
          SetSBRange(kVertical);
          SetSBRange(kHorizontal);
       }
    }
+
    SetCurrent(pos);
 }
 
@@ -1882,6 +1904,9 @@ void TGTextEdit::BreakLine()
    TGLongPosition pos;
    fText->BreakLine(fCurrent);
    if (ToScrYCoord(fCurrent.fY+2) <= (Int_t)fCanvas->GetHeight()) {
+#ifdef R__HAS_COCOA
+      UpdateRegion(0, (Int_t)ToScrYCoord(fCurrent.fY + 1), fCanvas->GetWidth(), fCanvas->GetHeight());
+#else
       gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fNormGC(), 0,
                           (Int_t)ToScrYCoord(fCurrent.fY+1), fCanvas->GetWidth(),
                           UInt_t(fCanvas->GetHeight()-(ToScrYCoord(fCurrent.fY+2)-
@@ -1889,7 +1914,7 @@ void TGTextEdit::BreakLine()
                           0, (Int_t)ToScrYCoord(fCurrent.fY+2));
       UpdateRegion(0, (Int_t)ToScrYCoord(fCurrent.fY), fCanvas->GetWidth(),
                   UInt_t(ToScrYCoord(fCurrent.fY+2) - ToScrYCoord(fCurrent.fY)));
-
+#endif
       if (fVisible.fX != 0) {
          SetHsbPosition(0);
       }
