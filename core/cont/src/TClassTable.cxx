@@ -469,12 +469,14 @@ void TClassTable::PrintTable()
    Printf("\nDefined classes");
    Printf("class                                 version  bits  initialized");
    Printf("================================================================");
-   for (int i = 0; i < fgTally; i++) {
+   int last = fgTally;
+   for (int i = 0; i < last; i++) {
       if (!fgTable[i]) continue;
       TClassRec *r = fgSortedTable[i];
       if (!r) break;
       n++;
-      if (TClass::GetClass(r->fName, kFALSE)) {
+      // Do not use TClass::GetClass to avoid any risk of autoloading.
+      if (gROOT->GetListOfClasses()->FindObject(r->fName)) {
          ninit++;
          Printf("%-35s %6d %7d       Yes", r->fName, r->fId, r->fBits);
       } else
