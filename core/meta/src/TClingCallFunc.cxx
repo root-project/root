@@ -268,7 +268,7 @@ void TClingCallFunc::ResetArg()
 void TClingCallFunc::SetArg(long param)
 {
    llvm::GenericValue gv;
-   gv.IntVal = llvm::APInt(sizeof(long) * 8, param);
+   gv.IntVal = llvm::APInt(sizeof(long) * CHAR_BIT, param);
    fArgs.push_back(gv);
 }
 
@@ -282,14 +282,14 @@ void TClingCallFunc::SetArg(double param)
 void TClingCallFunc::SetArg(long long param)
 {
    llvm::GenericValue gv;
-   gv.IntVal = llvm::APInt(sizeof(long long) * 8, param);
+   gv.IntVal = llvm::APInt(sizeof(long long) * CHAR_BIT, param);
    fArgs.push_back(gv);
 }
 
 void TClingCallFunc::SetArg(unsigned long long param)
 {
    llvm::GenericValue gv;
-   gv.IntVal = llvm::APInt(sizeof(unsigned long long) * 8, param);
+   gv.IntVal = llvm::APInt(sizeof(unsigned long long) * CHAR_BIT, param);
    fArgs.push_back(gv);
 }
 
@@ -297,7 +297,7 @@ void TClingCallFunc::SetArgArray(long *paramArr, int nparam)
 {
    for (int i = 0; i < nparam; ++i) {
       llvm::GenericValue gv;
-      gv.IntVal = llvm::APInt(sizeof(long) * 8, paramArr[i]);
+      gv.IntVal = llvm::APInt(sizeof(long) * CHAR_BIT, paramArr[i]);
       fArgs.push_back(gv);
    }
 }
