@@ -90,7 +90,10 @@ void TClingCallFunc::Exec(void *address) const
          }
       }
       std::vector<llvm::GenericValue> args;
-      args.push_back(llvm::PTOGV(address));
+      llvm::GenericValue this_ptr;
+      this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
+                                    reinterpret_cast<unsigned long>(address));
+      args.push_back(this_ptr);
       args.insert(args.end(), fArgs.begin(), fArgs.end());
       Invoke(args);
    }
@@ -133,8 +136,8 @@ long TClingCallFunc::ExecInt(void *address) const
       }
       std::vector<llvm::GenericValue> args;
       llvm::GenericValue this_ptr;
-      this_ptr.IntVal = llvm::APInt(sizeof(long) * CHAR_BIT,
-                                    reinterpret_cast<long>(address));
+      this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
+                                    reinterpret_cast<unsigned long>(address));
       args.push_back(this_ptr);
       args.insert(args.end(), fArgs.begin(), fArgs.end());
       val  = Invoke(args);
@@ -176,7 +179,10 @@ long long TClingCallFunc::ExecInt64(void *address) const
          }
       }
       std::vector<llvm::GenericValue> args;
-      args.push_back(llvm::PTOGV(address));
+      llvm::GenericValue this_ptr;
+      this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
+                                    reinterpret_cast<unsigned long>(address));
+      args.push_back(this_ptr);
       args.insert(args.end(), fArgs.begin(), fArgs.end());
       val = Invoke(args);
    }
@@ -217,7 +223,10 @@ double TClingCallFunc::ExecDouble(void *address) const
          }
       }
       std::vector<llvm::GenericValue> args;
-      args.push_back(llvm::PTOGV(address));
+      llvm::GenericValue this_ptr;
+      this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
+                                    reinterpret_cast<unsigned long>(address));
+      args.push_back(this_ptr);
       args.insert(args.end(), fArgs.begin(), fArgs.end());
       val = Invoke(args);
    }
@@ -696,6 +705,15 @@ llvm::GenericValue TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> 
          Args.push_back(ArgValues[I]);
       }
    }
-   return fInterp->getExecutionEngine()->runFunction(fEEFunc, Args);
+   llvm::GenericValue val;
+   val = fInterp->getExecutionEngine()->runFunction(fEEFunc, Args);
+   if (FT->getReturnType()->getTypeID() == llvm::Type::PointerTyID) {
+      //The cint interface requires pointers to be return as unsigned long.
+      llvm::GenericValue gv;
+      gv.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
+                              reinterpret_cast<unsigned long>(GVTOP(val)));
+      return gv;
+   }
+   return val;
 }
 
