@@ -391,6 +391,7 @@ public:
    ClassDef(TH1,7)  //1-Dim histogram base class
 
 protected: 
+   virtual Double_t RetrieveBinContent(Int_t bin) const;
    virtual void     UpdateBinContent(Int_t bin, Double_t content);
 };
 
@@ -410,9 +411,6 @@ public:
    virtual void     AddBinContent(Int_t bin, Double_t w);
    virtual void     Copy(TObject &hnew) const;
    virtual TH1     *DrawCopy(Option_t *option="") const;
-   virtual Double_t GetBinContent(Int_t bin) const;
-   virtual Double_t GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
-   virtual Double_t GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
            TH1C&    operator=(const TH1C &h1);
@@ -427,6 +425,7 @@ public:
    friend  TH1C     operator/(const TH1C &h1, const TH1C &h2);
 
 protected:
+   virtual Double_t RetrieveBinContent(Int_t bin) const { return fArray ? Double_t (fArray[bin]) : 0; }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Char_t (content); }
 };
 
@@ -454,9 +453,6 @@ public:
    virtual void     AddBinContent(Int_t bin, Double_t w);
    virtual void     Copy(TObject &hnew) const;
    virtual TH1     *DrawCopy(Option_t *option="") const;
-   virtual Double_t GetBinContent(Int_t bin) const;
-   virtual Double_t GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
-   virtual Double_t GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
            TH1S&    operator=(const TH1S &h1);
@@ -471,6 +467,7 @@ public:
    friend  TH1S     operator/(const TH1S &h1, const TH1S &h2);
 
 protected:
+   virtual Double_t RetrieveBinContent(Int_t bin) const { return fArray ? Double_t (fArray[bin]) : 0; }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Short_t (content); } 
 };
 
@@ -498,9 +495,6 @@ public:
    virtual void     AddBinContent(Int_t bin, Double_t w);
    virtual void     Copy(TObject &hnew) const;
    virtual TH1     *DrawCopy(Option_t *option="") const;
-   virtual Double_t GetBinContent(Int_t bin) const;
-   virtual Double_t GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
-   virtual Double_t GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
            TH1I&    operator=(const TH1I &h1);
@@ -515,6 +509,7 @@ public:
    friend  TH1I     operator/(const TH1I &h1, const TH1I &h2);
 
 protected:
+   virtual Double_t RetrieveBinContent(Int_t bin) const { return fArray ? Double_t (fArray[bin]) : 0; }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Int_t (content); }
 };
 
@@ -544,9 +539,6 @@ public:
                                  {fArray[bin] += Float_t (w);}
    virtual void     Copy(TObject &hnew) const;
    virtual TH1     *DrawCopy(Option_t *option="") const;
-   virtual Double_t GetBinContent(Int_t bin) const;
-   virtual Double_t GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
-   virtual Double_t GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
            TH1F&    operator=(const TH1F &h1);
@@ -561,6 +553,7 @@ public:
    friend  TH1F     operator/(const TH1F &h1, const TH1F &h2);
 
 protected:
+   virtual Double_t RetrieveBinContent(Int_t bin) const { return fArray ? Double_t (fArray[bin]) : 0; }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Float_t (content); }
 };
 
@@ -590,9 +583,6 @@ public:
                                  {fArray[bin] += Double_t (w);}
    virtual void     Copy(TObject &hnew) const;
    virtual TH1     *DrawCopy(Option_t *option="") const;
-   virtual Double_t GetBinContent(Int_t bin) const;
-   virtual Double_t GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
-   virtual Double_t GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
            TH1D&    operator=(const TH1D &h1);
@@ -607,6 +597,7 @@ public:
    friend  TH1D     operator/(const TH1D &h1, const TH1D &h2);
 
 protected:
+   virtual Double_t RetrieveBinContent(Int_t bin) const { return fArray ? Double_t (fArray[bin]) : 0; }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = content; }
 };
 
