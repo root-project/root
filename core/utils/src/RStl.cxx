@@ -18,8 +18,6 @@
 using namespace TClassEdit;
 #include <stdio.h>
 
-using namespace std;
-
 // From the not-existing yet rootcint.h
 void WriteClassInit(G__ClassInfo &cl);
 void WriteAuxFunctions(G__ClassInfo &cl);
@@ -44,7 +42,7 @@ ROOT::RStl& ROOT::RStl::Instance()
 
 }
 
-void ROOT::RStl::GenerateTClassFor(const string& stlclassname)
+void ROOT::RStl::GenerateTClassFor(const std::string& stlclassname)
 {
    // Force the generation of the TClass for the given class.
 
@@ -57,14 +55,14 @@ void ROOT::RStl::GenerateTClassFor(const string& stlclassname)
       return;
    }
 
-   string registername( TClassEdit::ShortType(cl.Name(),
-                                              TClassEdit::kDropStlDefault ) );
+   std::string registername( TClassEdit::ShortType(cl.Name(),
+                                                   TClassEdit::kDropStlDefault ) );
 
 //      fprintf(stderr,"registering %s as %s %s\n",
 //              stlclassname.c_str(), cl.Name(), registername.c_str());
 
    int nestedLoc=0;
-   vector<string> splitName;
+   std::vector<std::string> splitName;
    TClassEdit::GetSplit(registername.c_str(),splitName,nestedLoc);
 
    if ( TClassEdit::STLKind( splitName[0].c_str() ) == TClassEdit::kVector ) {
@@ -90,13 +88,13 @@ void ROOT::RStl::Print()
 {
    // Print the content of the object
    fprintf(stderr,"ROOT::RStl singleton\n");
-   set<string>::iterator iter;
+   std::set<std::string>::iterator iter;
    for(iter = fList.begin(); iter != fList.end(); ++iter) {
       fprintf(stderr, "need TClass for %s\n", (*iter).c_str());
    }
 }
 
-string ROOT::RStl::DropDefaultArg(const string &classname)
+std::string ROOT::RStl::DropDefaultArg(const std::string &classname)
 {
    // Remove the default argument from the stl container.
 
@@ -117,7 +115,7 @@ void ROOT::RStl::WriteClassInit(FILE* /*file*/)
    // and the auxiliary functions (new and delete wrappers) for
    // each of the STL containers that have been registered
 
-   set<string>::iterator iter;
+   std::set<std::string>::iterator iter;
    G__ClassInfo cl;
    for(iter = fList.begin(); iter != fList.end(); ++iter) {
       cl.Init( (*iter).c_str() );
@@ -132,16 +130,16 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl)
    // Write the free standing streamer function for the given
    // STL container class.
 
-   string streamerName = "stl_streamer_";
+   std::string streamerName = "stl_streamer_";
 
-   string shortTypeName = GetLong64_Name( TClassEdit::ShortType(stlcl.Name(),TClassEdit::kDropStlDefault) );
-   string noConstTypeName( TClassEdit::CleanType(shortTypeName.c_str(),2) );
+   std::string shortTypeName = GetLong64_Name( TClassEdit::ShortType(stlcl.Name(),TClassEdit::kDropStlDefault) );
+   std::string noConstTypeName( TClassEdit::CleanType(shortTypeName.c_str(),2) );
 
    streamerName += G__map_cpp_name((char *)shortTypeName.c_str());
-   string typedefName = G__map_cpp_name((char *)shortTypeName.c_str());
+   std::string typedefName = G__map_cpp_name((char *)shortTypeName.c_str());
 
    int nestedLoc=0;
-   vector<string> splitName;
+   std::vector<std::string> splitName;
    TClassEdit::GetSplit(shortTypeName.c_str(),splitName,nestedLoc);
 
    int stltype = TClassEdit::STLKind(splitName[0].c_str());
@@ -149,7 +147,7 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl)
    G__TypeInfo firstType(splitName[1].c_str());
    G__TypeInfo secondType;
    const char *tclFirst=0,*tclSecond=0;
-   string firstFullName, secondFullName;
+   std::string firstFullName, secondFullName;
 
    if (ElementStreamer(firstType,0,0)) {
       tclFirst = "R__tcl1";
@@ -287,7 +285,7 @@ void ROOT::RStl::WriteStreamer(FILE *file)
    // Write the free standing streamer function for the registereed
    // STL container classes
 
-   set<string>::iterator iter;
+   std::set<std::string>::iterator iter;
    G__ClassInfo cl;
    for(iter = fList.begin(); iter != fList.end(); ++iter) {
       cl.Init( (*iter).c_str() );
