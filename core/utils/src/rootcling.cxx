@@ -2594,7 +2594,7 @@ int ElementStreamer(G__TypeInfo &ti, const char *R__t,int rwmode,const char *tcl
    if (tcl == 0) {
       tcl = " internal error in rootcint ";
    }
-   //    if (strcmp(objType,"string")==0) RStl::Instance().GenerateTClassFor( "string"  );
+   //    if (strcmp(objType,"string")==0) RStl::Instance().GenerateTClassFor( "string", interp, normCtxt  );
    
    if (rwmode == 0) {  //Read mode
       
@@ -2761,7 +2761,7 @@ int ElementStreamer(const clang::NamedDecl &forcontext, const clang::QualType &q
    if (tcl == 0) {
       tcl = " internal error in rootcint ";
    }
-   //    if (strcmp(objType,"string")==0) RStl::Instance().GenerateTClassFor( "string"  );
+   //    if (strcmp(objType,"string")==0) RStl::Instance().GenerateTClassFor( "string", interp, normCtxt  );
 
    if (rwmode == 0) {  //Read mode
 
@@ -2889,7 +2889,7 @@ int ElementStreamer(const clang::NamedDecl &forcontext, const clang::QualType &q
 }
 
 //______________________________________________________________________________
-int STLContainerStreamer(const clang::FieldDecl &m, int rwmode)
+int STLContainerStreamer(const clang::FieldDecl &m, int rwmode, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    // Create Streamer code for an STL container. Returns 1 if data member
    // was an STL container and if Streamer code has been created, 0 otherwise.
@@ -2903,7 +2903,7 @@ int STLContainerStreamer(const clang::FieldDecl &m, int rwmode)
    if (stltype!=0) {
       //        fprintf(stderr,"Add %s (%d) which is also %s\n",
       //                m.Type()->Name(), stltype, m.Type()->TrueName() );
-      RStl::Instance().GenerateTClassFor(m.getType());
+      RStl::Instance().GenerateTClassFor(m.getType(),interp,normCtxt);
    }
    if (stltype<=0) return 0;
    if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
@@ -4054,7 +4054,7 @@ const char *GrabIndex(const clang::FieldDecl &member, int printError)
 }
 
 //______________________________________________________________________________
-void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl)
+void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
    if (clxx == 0) return;
@@ -4357,7 +4357,7 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl)
                   continue;
 
                // check if object is an STL container
-               if (STLContainerStreamer(**field_iter, i))
+               if (STLContainerStreamer(**field_iter, i, interp, normCtxt))
                   continue;
 
                // handle any other type of objects
@@ -4467,7 +4467,7 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl)
 }
 
 //______________________________________________________________________________
-void WriteAutoStreamer(const RScanner::AnnotatedRecordDecl &cl)
+void WriteAutoStreamer(const RScanner::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
 
    // Write Streamer() method suitable for automatic schema evolution.
@@ -4484,7 +4484,7 @@ void WriteAutoStreamer(const RScanner::AnnotatedRecordDecl &cl)
    {
       int k = IsSTLContainer(*iter);
       if (k!=0) {
-         RStl::Instance().GenerateTClassFor( iter->getType() );
+         RStl::Instance().GenerateTClassFor( iter->getType(), interp, normCtxt );
       }
    }
    
@@ -4527,7 +4527,7 @@ void WriteAutoStreamer(const RScanner::AnnotatedRecordDecl &cl)
 }
 
 //______________________________________________________________________________
-void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
+void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    // Write interface function for STL members
 
@@ -4563,7 +4563,7 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
          while( offset<=len && ( (baseAsWritten.data()+offset)[0] == ':' || isspace((baseAsWritten.data()+offset)[0]) ) ) {
             ++offset;
          }
-         RStl::Instance().GenerateTClassFor( baseAsWritten.str().c_str()+offset, iter->getType()->getAsCXXRecordDecl () );
+         RStl::Instance().GenerateTClassFor( baseAsWritten.str().c_str()+offset, iter->getType()->getAsCXXRecordDecl (), interp, normCtxt);
       }
    }
 
@@ -4589,7 +4589,7 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl)
       if (k!=0) {
          //          fprintf(stderr,"Add %s which is also",m.Type()->Name());
          //          fprintf(stderr," %s\n",R__TrueName(**field_iter) );
-         RStl::Instance().GenerateTClassFor(field_iter->getType());
+         RStl::Instance().GenerateTClassFor(field_iter->getType(), interp, normCtxt);
       }      
    }
 
@@ -4882,30 +4882,30 @@ void WriteShowMembers(const RScanner::AnnotatedRecordDecl &cl, bool outside = fa
 }
 
 //______________________________________________________________________________
-void WriteClassCode(const RScanner::AnnotatedRecordDecl &cl)
+void WriteClassCode(const RScanner::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    std::string fullname;
    R__GetQualifiedName(fullname,cl);
    if (TClassEdit::IsSTLCont(fullname.c_str()) ) {
       // coverity[fun_call_w_exception] - that's just fine.
-      RStl::Instance().GenerateTClassFor(cl.GetNormalizedName(), llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl()));
+      RStl::Instance().GenerateTClassFor(cl.GetNormalizedName(), llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl()), interp, normCtxt);
       return;
    }
 
    if (ClassInfo__HasMethod(cl,"Streamer")) {
-      if (cl.RootFlag()) WritePointersSTL(cl); // In particular this detect if the class has a version number.
+      if (cl.RootFlag()) WritePointersSTL(cl, interp, normCtxt); // In particular this detect if the class has a version number.
       if (!(cl.RequestNoStreamer())) {
          if ((cl.RequestStreamerInfo() /*G__AUTOSTREAMER*/)) {
-            WriteAutoStreamer(cl);
+            WriteAutoStreamer(cl, interp, normCtxt);
          } else {
-            WriteStreamer(cl);
+            WriteStreamer(cl, interp, normCtxt);
          }
       } else
          Info(0, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n",fullname.c_str());
    } else {
       Info(0, "Class %s: Streamer() not declared\n", fullname.c_str());
 
-      if (cl.RequestStreamerInfo()) WritePointersSTL(cl);
+      if (cl.RequestStreamerInfo()) WritePointersSTL(cl, interp, normCtxt);
    }
    if (ClassInfo__HasMethod(cl,"ShowMembers")) {
       WriteShowMembers(cl);
@@ -5995,7 +5995,7 @@ int main(int argc, char **argv)
    interp.declare("#include <string>");
   
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
-   ROOT::TMetaUtils::InitOpaqueTypedef(interp.getLookupHelper());
+   ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
 
    // flags used only for the pragma parser:
    clingArgs.push_back("-D__CINT__");
@@ -6446,7 +6446,7 @@ int main(int argc, char **argv)
 
    selectionRules.SearchNames(interp);
 
-   RScanner scan(selectionRules);
+   RScanner scan(selectionRules,interp,normCtxt);
    clang::CompilerInstance* CI = interp.getCI();
    scan.Scan(CI->getASTContext());
 
@@ -6587,7 +6587,7 @@ int main(int argc, char **argv)
             std::string qualname( CRD->getQualifiedNameAsString() );
             if (IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
                   // coverity[fun_call_w_exception] - that's just fine.
-               RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD );
+               RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
             } else {
                WriteClassInit(*iter);
             }               
@@ -6660,7 +6660,7 @@ int main(int argc, char **argv)
          if (!iter->GetRecordDecl()->isCompleteDefinition()) {
             continue;
          }
-         WriteClassCode(*iter);
+         WriteClassCode(*iter, interp, normCtxt);
       }
 
       //RStl::Instance().WriteStreamer(fp); //replaced by new Markus code

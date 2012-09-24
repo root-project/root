@@ -18,6 +18,8 @@
 using namespace TClassEdit;
 #include <stdio.h>
 
+using namespace std;
+
 // From the not-existing yet rootcint.h
 void WriteClassInit(G__ClassInfo &cl);
 void WriteAuxFunctions(G__ClassInfo &cl);

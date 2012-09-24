@@ -23,6 +23,13 @@ using namespace TClassEdit;
 
 #include "Scanner.h"
 
+#include "cling/Interpreter/Interpreter.h"
+
+#include "clang/Sema/Sema.h"
+#include "clang/Sema/Template.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/AST/DeclTemplate.h"
+
 // From the not-existing yet rootcint.h
 void WriteClassInit(const RScanner::AnnotatedRecordDecl &decl);
 void WriteAuxFunctions(const RScanner::AnnotatedRecordDecl &decl);
@@ -51,7 +58,7 @@ ROOT::RStl& ROOT::RStl::Instance()
 
 }
 
-void ROOT::RStl::GenerateTClassFor(const clang::QualType &type)
+void ROOT::RStl::GenerateTClassFor(const clang::QualType &type, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    // Force the generation of the TClass for the given class.
 
@@ -80,7 +87,7 @@ void ROOT::RStl::GenerateTClassFor(const clang::QualType &type)
       }
    }
    
-   fList.insert( RScanner::AnnotatedRecordDecl(++fgCount,type.getTypePtr(),stlclass,"",true,false,false,false,-1) );
+   fList.insert( RScanner::AnnotatedRecordDecl(++fgCount,type.getTypePtr(),stlclass,"",false /* for backward compatibility rather than 'true' .. neither really make a difference */,false,false,false,-1, interp, normCtxt) );
    
    for(unsigned int i=0; i <  templateCl->getTemplateArgs().size(); ++i) {
       const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(i) );
@@ -91,8 +98,13 @@ void ROOT::RStl::GenerateTClassFor(const clang::QualType &type)
             {
                const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
                if (clxx) {
+                  if (!clxx->isCompleteDefinition()) {
+                     clang::SourceLocation Loc = clxx->getLocation ();
+                     clang::Sema& S = interp.getCI()->getSema();
+                     /* bool result = */ S.RequireCompleteType( Loc,  arg.getAsType() , 0);
+                  }
                   // Do we need to strip the qualifier?
-                  GenerateTClassFor(arg.getAsType());
+                  GenerateTClassFor(arg.getAsType(),interp,normCtxt);
                }
             }
       }
@@ -101,7 +113,7 @@ void ROOT::RStl::GenerateTClassFor(const clang::QualType &type)
    //    fprintf(stderr,"ROOT::RStl registered %s as %s\n",stlclassname.c_str(),registername.c_str());
 }
 
-void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlclass)
+void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlclass, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    // Force the generation of the TClass for the given class.
 
@@ -127,7 +139,7 @@ void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRe
       }
    }
    
-   fList.insert( RScanner::AnnotatedRecordDecl(++fgCount,stlclass,requestedName,true,false,false,false,-1) );
+   fList.insert( RScanner::AnnotatedRecordDecl(++fgCount,stlclass,requestedName,true,false,false,false,-1, interp,normCtxt) );
    
    TClassEdit::TSplitType splitType( requestedName, (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd) );
    for(unsigned int i=0; i <  templateCl->getTemplateArgs().size(); ++i) {
@@ -139,10 +151,16 @@ void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRe
             {
                const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
                if (clxx) {
+                  if (!clxx->isCompleteDefinition()) {
+                     clang::SourceLocation Loc = clxx->getLocation ();
+                     clang::Sema& S = interp.getCI()->getSema();
+                     /* bool result = */ S.RequireCompleteType( Loc,  arg.getAsType() , 0);
+                     clxx = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();
+                  }
                   if (!splitType.fElements.empty()) {
-                     GenerateTClassFor( splitType.fElements[i+1].c_str(), clxx);
+                     GenerateTClassFor( splitType.fElements[i+1].c_str(), clxx, interp, normCtxt);
                   } else {
-                     GenerateTClassFor( "", clxx );
+                     GenerateTClassFor( "", clxx, interp, normCtxt );
                   }
                }
             }

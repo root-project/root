@@ -25,20 +25,18 @@
 #include <string>
 #include <set>
 
-namespace std {} using namespace std;
-
 namespace ROOT {
 
    class RStl {
    private:
-      set<string> fList;
+      std::set<std::string> fList;
 
    public:
       static RStl& Instance();
       ~RStl() {};
       
-      static string DropDefaultArg(const string &classname);
-      void GenerateTClassFor(const string& stlClassname);
+      static std::string DropDefaultArg(const std::string &classname);
+      void GenerateTClassFor(const std::string& stlClassname);
       void Print();
       void WriteClassInit(FILE *file);
       void WriteStreamer(FILE *file, G__ClassInfo &stlcl);

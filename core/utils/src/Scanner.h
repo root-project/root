@@ -30,6 +30,16 @@ namespace clang {
    class RecordDecl;
 }
 
+namespace cling {
+   class Interpreter;
+}
+
+namespace ROOT {
+   namespace TMetaUtils {
+      class TNormalizedCtxt;
+   }
+}
+
 class SelectionRules;
 
 /* -------------------------------------------------------------------------- */
@@ -62,6 +72,9 @@ private:
 
    clang::Decl * fLastDecl;
 
+   const cling::Interpreter                &fInterpreter;
+   const ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt;
+
 public:
    static const char* fgClangDeclKey; // property key used for CLang declaration objects
    static const char* fgClangFuncKey; // property key for function (demangled) names
@@ -91,8 +104,8 @@ public:
             fRuleIndex(index), fDecl(decl), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
             fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestedVersionNumber) 
             {}
-      AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber);
-      AnnotatedRecordDecl(long index, const clang::Type *requetedType, const clang::RecordDecl *decl, const char *requestedName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber);
+      AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber, const cling::Interpreter &interpret, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+      AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl, const char *requestedName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber, const cling::Interpreter &interpret, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
      ~AnnotatedRecordDecl() {
          // Nothing to do we do not own the pointer;
       }
@@ -206,7 +219,7 @@ private:
    unsigned int VarModifiers(clang::VarDecl* D) const;
 
 public:
-   RScanner (const SelectionRules &rules, unsigned int verbose = 0);
+   RScanner (const SelectionRules &rules, const cling::Interpreter &interpret, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, unsigned int verbose = 0);
    virtual ~ RScanner ();
 
 public:

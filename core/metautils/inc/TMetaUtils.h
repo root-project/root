@@ -22,17 +22,31 @@ namespace clang {
 namespace clang {
    class CompilerInstance;
    class Module;
+   class Type;
 }
 
 namespace cling {
+   class Interpreter;
    class LookupHelper;
 }
 
+#include "llvm/ADT/SmallSet.h"
+
 namespace ROOT {
    namespace TMetaUtils {
+      
+      class TNormalizedCtxt {
+         typedef llvm::SmallSet<const clang::Type*, 4> TypesCont_t; 
+      private:
+         TypesCont_t fTypeToSkip;
+      public:
+         TNormalizedCtxt(const cling::LookupHelper &lh);
+
+         const TypesCont_t &GetTypeToSkip() const { return fTypeToSkip; }
+      };
 
       // Add default template parameters.
-      clang::QualType AddDefaultParameters(const clang::ASTContext& Ctx, clang::QualType instanceType);
+      clang::QualType AddDefaultParameters(clang::QualType instanceType, const cling::Interpreter &interpret, const TNormalizedCtxt &normCtxt);
 
       // Return the ROOT include directory
       std::string GetROOTIncludeDir(bool rootbuild);
@@ -62,10 +76,7 @@ namespace ROOT {
       // keeping only the ROOT opaque typedef (Double32_t, etc.) and
       // adding default template argument for all types except the STL collections
       // where we remove the default template argument if any.
-      void GetNormalizedName(std::string &norm_name, const clang::QualType &type, const clang::ASTContext &ctxt);
-
-      // Initialize the list of typedef to keep (i.e. make them opaque for normalization).
-      void InitOpaqueTypedef(const cling::LookupHelper &lookup);
+      void GetNormalizedName(std::string &norm_name, const clang::QualType &type, const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt);
 
    }; // class TMetaUtils
 

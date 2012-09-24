@@ -31,6 +31,16 @@ namespace clang {
    class CXXRecordDecl;
 }
 
+namespace cling {
+   class Interpreter;
+}
+
+namespace ROOT {
+   namespace TMetaUtils {
+      class TNormalizedCtxt;
+   }
+}
+
 namespace ROOT {
 
    class RStl {
@@ -43,8 +53,8 @@ namespace ROOT {
       ~RStl() {};
       
       static std::string DropDefaultArg(const std::string &classname);
-      void GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlClass);
-      void GenerateTClassFor(const clang::QualType &type);
+      void GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlClass, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+      void GenerateTClassFor(const clang::QualType &type, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
       void Print();
       void WriteClassInit(FILE *file);
       void WriteStreamer(FILE *file,const clang::CXXRecordDecl *stlcl);
