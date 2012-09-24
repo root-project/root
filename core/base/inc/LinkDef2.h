@@ -12,6 +12,8 @@
 
 #ifdef __CLING__
 #include <string>
+#pragma link C++ class string::iterator;
+#pragma link C++ class string::const_iterator;
 #else
 #include "dll_stl/str.h" 	 
 #endif
