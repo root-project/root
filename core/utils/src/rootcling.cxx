@@ -503,29 +503,33 @@ bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name)
 
 llvm::StringRef R__GetFileName(const clang::Decl *decl)
 {
-   const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
-   if (clxx) {
-      switch(clxx->getTemplateSpecializationKind()) {
-         case clang::TSK_Undeclared:
-            // We want the default behavior
-            break;
-         case clang::TSK_ExplicitInstantiationDeclaration:
-         case clang::TSK_ExplicitInstantiationDefinition:
-         case clang::TSK_ImplicitInstantiation: {
-            // We want the location of the template declaration:
-            const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
-            if (tmplt_specialization) {
-               return R__GetFileName(const_cast< clang::ClassTemplateSpecializationDecl *>(tmplt_specialization)->getSpecializedTemplate());
-            }
-            break;
-         }
-         case clang::TSK_ExplicitSpecialization:
-            // We want the default behavior
-            break;
-         default:
-            break;
-      } 
-   }      
+   // It looks like the template specialization decl actually contains _less_ information
+   // on the location of the code than the decl (in case where there is forward declaration,
+   // that is what the specialization points to.
+   //
+   // const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
+   // if (clxx) {
+   //    switch(clxx->getTemplateSpecializationKind()) {
+   //       case clang::TSK_Undeclared:
+   //          // We want the default behavior
+   //          break;
+   //       case clang::TSK_ExplicitInstantiationDeclaration:
+   //       case clang::TSK_ExplicitInstantiationDefinition:
+   //       case clang::TSK_ImplicitInstantiation: {
+   //          // We want the location of the template declaration:
+   //          const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
+   //          if (tmplt_specialization) {
+   //             // return R__GetFileName(const_cast< clang::ClassTemplateSpecializationDecl *>(tmplt_specialization)->getSpecializedTemplate());
+   //          }
+   //          break;
+   //       }
+   //       case clang::TSK_ExplicitSpecialization:
+   //          // We want the default behavior
+   //          break;
+   //       default:
+   //          break;
+   //    } 
+   // }   
    clang::SourceLocation sourceLocation = decl->getLocation();
    clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
 
@@ -535,34 +539,38 @@ llvm::StringRef R__GetFileName(const clang::Decl *decl)
    }
    else {
       return "invalid";
-   }   
+   }
 }
 
 long R__GetLineNumber(const clang::Decl *decl)
 {
-   const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
-   if (clxx) {
-      switch(clxx->getTemplateSpecializationKind()) {
-         case clang::TSK_Undeclared:
-            // We want the default behavior
-            break;
-         case clang::TSK_ExplicitInstantiationDeclaration:
-         case clang::TSK_ExplicitInstantiationDefinition:
-         case clang::TSK_ImplicitInstantiation: {
-            // We want the location of the template declaration:
-            const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
-            if (tmplt_specialization) {
-               return R__GetLineNumber(const_cast< clang::ClassTemplateSpecializationDecl *>(tmplt_specialization)->getSpecializedTemplate());
-            }
-            break;
-         }
-         case clang::TSK_ExplicitSpecialization:
-            // We want the default behavior
-            break;
-         default:
-            break;
-      } 
-   }      
+   // It looks like the template specialization decl actually contains _less_ information
+   // on the location of the code than the decl (in case where there is forward declaration,
+   // that is what the specialization points to.
+   //
+   // const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
+   // if (clxx) {
+   //    switch(clxx->getTemplateSpecializationKind()) {
+   //       case clang::TSK_Undeclared:
+   //          // We want the default behavior
+   //          break;
+   //       case clang::TSK_ExplicitInstantiationDeclaration:
+   //       case clang::TSK_ExplicitInstantiationDefinition:
+   //       case clang::TSK_ImplicitInstantiation: {
+   //          // We want the location of the template declaration:
+   //          const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
+   //          if (tmplt_specialization) {
+   //             return R__GetLineNumber(const_cast< clang::ClassTemplateSpecializationDecl *>(tmplt_specialization)->getSpecializedTemplate());
+   //          }
+   //          break;
+   //       }
+   //       case clang::TSK_ExplicitSpecialization:
+   //          // We want the default behavior
+   //          break;
+   //       default:
+   //          break;
+   //    } 
+   // }      
    clang::SourceLocation sourceLocation = decl->getLocation();
    clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
 
