@@ -1014,6 +1014,7 @@ distclean:: clean
 	@rm -f bin/*.dll bin/*.exp bin/*.lib bin/*.pdb \
                lib/*.def lib/*.exp lib/*.lib lib/*.dll.a \
                lib/*.so.* *.def .def
+	@rm -f lib/*.pcm
 ifeq ($(PLATFORM),macosx)
 	@rm -f lib/*.dylib
 	@rm -f lib/*.so
