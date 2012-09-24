@@ -2167,6 +2167,7 @@ const char* TCint::GetSharedLibs()
       TRegexp sovers = "\\.[0-9]+\\.*[0-9]*\\.so";
       TRegexp dyvers = "\\.[0-9]+\\.*[0-9]*\\.dylib";
       TString fname = filename;
+      Ssiz_t idx;
 #endif
       if (!needToSkip &&
            (
@@ -2180,15 +2181,20 @@ const char* TCint::GetSharedLibs()
             (len>4 && (strcasecmp(end-4,".dll") == 0)) ||
             (len>6 && (strcasecmp(end-6,".dylib") == 0)))) {
 #if defined(R__MACOSX)
-         if ((len>5 && fname.Index(sovers) == kNPOS) &&
-             (len>8 && fname.Index(dyvers) == kNPOS)) {
-#endif               
-            if (!fSharedLibs.IsNull())
-               fSharedLibs.Append(" ");
-            fSharedLibs.Append(filename);
-#if defined(R__MACOSX)
+         if (len>5 && (idx = fname.Index(sovers)) != kNPOS) {
+            fname.Remove(idx);
+            fname += ".so";
+            filename = fname;
          }
-#endif
+         if (len>8 && (idx = fname.Index(dyvers)) != kNPOS) {
+            fname.Remove(idx);
+            fname += ".dylib";
+            filename = fname;
+         }
+#endif               
+         if (!fSharedLibs.IsNull())
+            fSharedLibs.Append(" ");
+         fSharedLibs.Append(filename);
       }
 
       cursor.Next();
