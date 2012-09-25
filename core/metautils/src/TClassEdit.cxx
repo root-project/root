@@ -198,9 +198,12 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    //   do the same for all inside
    for (int i=1;i<narg; i++) {
       if (strchr(fElements[i].c_str(),'<')==0) {
-         if (mode&kDropStd && strncmp( fElements[i].c_str(), "std::", 5) == 0) {
-            fElements[i].erase(0,5);
-         }         
+         if (mode&kDropStd) {
+            unsigned int offset = (0==strncmp("const ",fElements[i].c_str(),6)) ? 6 : 0;
+            if (strncmp( fElements[i].c_str() + offset, "std::", 5) == 0) {
+               fElements[i].erase(offset,5);
+            }
+         }
          continue;
       }
       bool hasconst = 0==strncmp("const ",fElements[i].c_str(),6);
