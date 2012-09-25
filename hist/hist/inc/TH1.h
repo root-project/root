@@ -331,8 +331,8 @@ public:
    virtual void     SetBarOffset(Float_t offset=0.25) {fBarOffset = Short_t(1000*offset);}
    virtual void     SetBarWidth(Float_t width=0.5) {fBarWidth = Short_t(1000*width);}
    virtual void     SetBinContent(Int_t bin, Double_t content);
-   virtual void     SetBinContent(Int_t binx, Int_t biny, Double_t content);
-   virtual void     SetBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t content);
+   virtual void     SetBinContent(Int_t bin, Int_t, Double_t content) { SetBinContent(bin, content); }
+   virtual void     SetBinContent(Int_t bin, Int_t, Int_t, Double_t content) { SetBinContent(bin, content); }
    virtual void     SetBinError(Int_t bin, Double_t error);
    virtual void     SetBinError(Int_t binx, Int_t biny, Double_t error);
    virtual void     SetBinError(Int_t binx, Int_t biny, Int_t binz, Double_t error);

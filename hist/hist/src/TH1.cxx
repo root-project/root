@@ -8345,27 +8345,6 @@ void TH1::SetBinContent(Int_t bin, Double_t content)
 }
 
 //______________________________________________________________________________
-void TH1::SetBinContent(Int_t binx, Int_t biny, Double_t content)
-{
-   // see convention for numbering bins in TH1::GetBin
-   if (binx <0 || binx>fXaxis.GetNbins()+1) return;
-   if (biny <0 || biny>fYaxis.GetNbins()+1) return;
-   Int_t bin = GetBin(binx,biny);
-   SetBinContent(bin,content);
-}
-
-//______________________________________________________________________________
-void TH1::SetBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t content)
-{
-   // see convention for numbering bins in TH1::GetBin
-   if (binx <0 || binx>fXaxis.GetNbins()+1) return;
-   if (biny <0 || biny>fYaxis.GetNbins()+1) return;
-   if (binz <0 || binz>fZaxis.GetNbins()+1) return;
-   Int_t bin = GetBin(binx,biny,binz);
-   SetBinContent(bin,content);
-}
-
-//______________________________________________________________________________
 void TH1::SetCellContent(Int_t binx, Int_t biny, Double_t content)
 {
    // Set cell content.
