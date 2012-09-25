@@ -319,27 +319,12 @@ TGCocoa::TGCocoa()
               fDrawMode(kCopy),
               fDirectDraw(false),
               fForegroundProcess(false),
-              fTargetString(31),//Gdk has hardcoded GDK_TARGET_STRING, which is 31.
-              fSelectionOwner(kNone),
               fSetIcon(true)
 {
    fPimpl.reset(new Details::CocoaPrivate);
 
-   //TODO: check docs about predefined atoms?
-   fAtomToName.resize(33);
-   
-   fAtomToName[3] = "XA_ATOM";
-   fNameToAtom["XA_ATOM"] = 4;
-   
-   fAtomToName[30] = "XA_STRING";
-   fNameToAtom["XA_STRING"] = 31;
-   
-   fAtomToName[32] = "XA_WINDOW";
-   fNameToAtom["XA_WINDOW"] = 33;
-   //
-
+   X11::InitWithPredefinedAtoms(fNameToAtom, fAtomToName);
    fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
-   fSelectionNotifyProperty = FindAtom("COCOA_SELECTION_NOTIFY", true);
 }
 
 //______________________________________________________________________________
@@ -350,27 +335,12 @@ TGCocoa::TGCocoa(const char *name, const char *title)
               fDrawMode(kCopy),
               fDirectDraw(false),
               fForegroundProcess(false),
-              fTargetString(31),//Gdk has hardcoded GDK_TARGET_STRING, which is 31.
-              fSelectionOwner(kNone),
               fSetIcon(true)
 {
    fPimpl.reset(new Details::CocoaPrivate);
    
-   //TODO: check docs about predefined atoms?
-   fAtomToName.resize(33);
-   
-   fAtomToName[3] = "XA_ATOM";
-   fNameToAtom["XA_ATOM"] = 4;
-
-   fAtomToName[30] = "XA_STRING";
-   fNameToAtom["XA_STRING"] = 31;
-
-   fAtomToName[32] = "XA_WINDOW";
-   fNameToAtom["XA_WINDOW"] = 33;
-   //
-   
+   X11::InitWithPredefinedAtoms(fNameToAtom, fAtomToName);
    fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
-   fSelectionNotifyProperty = FindAtom("COCOA_SELECTION_NOTIFY", true);
 }
 
 //______________________________________________________________________________
@@ -3359,11 +3329,7 @@ void TGCocoa::SetPrimarySelectionOwner(Window_t windowID)
    // That is the window in which, for example some text is selected.
    //End of comment.
    
-   //Cocoa does not have "selection owner". I'm trying to emulate
-   //what we have on Windows (since on X11 this is just one function call):
-   //- get paste buffer
-   //- clear contents
-   //- send fake message (as on X11).
+   //It's not clear, why SetPrimarySelectionOwner and SetSelectionOwner have different return types.
    
    if (!windowID)//From TGWin32.
       return;
@@ -3371,22 +3337,12 @@ void TGCocoa::SetPrimarySelectionOwner(Window_t windowID)
    //TODO: check, if this really happens and probably remove assert.
    assert(!fPimpl->IsRootWindow(windowID) && "SetPrimarySelectionOwner, windowID parameter is a 'root' window");
    assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "SetPrimarySelectionOwner, windowID parameter is not a valid window");
-   
-   //X11 - SelectionRequest and SelectionClear can be sent.
-   //GDK on Windows sends only SelectionRequest, so do I 
-   //(actually, we do not care about "other clients" - we do not have them).
 
-   fSelectionOwner = windowID;
+   const Atom_t primarySelectionAtom = FindAtom("XA_PRIMARY", false);
+   assert(primarySelectionAtom != kNone && "SetPrimarySelectionOwner, predefined XA_PRIMARY atom was not found");
 
-   Event_t selectionRequestEvent = {};
-   selectionRequestEvent.fType = kSelectionRequest;
-   selectionRequestEvent.fWindow = windowID;
-   selectionRequestEvent.fUser[0] = windowID;
-   selectionRequestEvent.fUser[1] = fClipboardAtom;
-   selectionRequestEvent.fUser[2] = fTargetString;
-   selectionRequestEvent.fUser[3] = fSelectionNotifyProperty;
-   
-   SendEvent(windowID, &selectionRequestEvent);
+   fSelectionOwners[primarySelectionAtom] = windowID;
+   //No events will be send - I do not have different clients, so nobody to send SelectionClear.
 }
 
 //______________________________________________________________________________
@@ -3396,18 +3352,16 @@ Bool_t TGCocoa::SetSelectionOwner(Window_t windowID, Atom_t &selection)
    // Changes the owner and last-change time for the specified selection.
    //End of comment.
    
-   //Send SelectionRequest message.
-   fSelectionOwner = windowID;
-
-   Event_t selectionRequestEvent = {};
-   selectionRequestEvent.fType = kSelectionRequest;
-   selectionRequestEvent.fWindow = windowID;
-   selectionRequestEvent.fUser[0] = windowID;
-   selectionRequestEvent.fUser[1] = fClipboardAtom;
-   selectionRequestEvent.fUser[2] = selection;
-   selectionRequestEvent.fUser[3] = fSelectionNotifyProperty;
+   //It's not clear, why SetPrimarySelectionOwner and SetSelectionOwner have different return types.
    
-   SendEvent(windowID, &selectionRequestEvent);
+   if (!windowID)
+      return kFALSE;
+      
+   assert(!fPimpl->IsRootWindow(windowID) && "SetSelectionOwner, windowID parameter is a 'root' window'");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "SetSelectionOwner, windowID parameter is not a valid window");
+   
+   fSelectionOwners[selection] = windowID;
+   //No messages, since I do not have different clients.
 
    return kTRUE;
 }
@@ -3419,12 +3373,14 @@ Window_t TGCocoa::GetPrimarySelectionOwner()
    // Returns the window id of the current owner of the primary selection.
    // That is the window in which, for example some text is selected.
    //End of comment.
+   const Atom_t primarySelectionAtom = FindAtom("XA_PRIMARY", false);
+   assert(primarySelectionAtom != kNone && "GetPrimarySelectionOwner, predefined XA_PRIMARY atom was not found");
 
-   return fSelectionOwner;
+   return fSelectionOwners[primarySelectionAtom];
 }
 
 //______________________________________________________________________________
-void TGCocoa::ConvertPrimarySelection(Window_t windowID, Atom_t clipboard, Time_t /*when*/)
+void TGCocoa::ConvertPrimarySelection(Window_t windowID, Atom_t clipboard, Time_t when)
 {
    //Comment from TVirtualX:
    // Causes a SelectionRequest event to be sent to the current primary
@@ -3443,10 +3399,13 @@ void TGCocoa::ConvertPrimarySelection(Window_t windowID, Atom_t clipboard, Time_
    assert(!fPimpl->IsRootWindow(windowID) && "ConvertPrimarySelection, windowID parameter is a 'root' window");
    assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "ConvertPrimarySelection, windowID parameter is not a valid window");
    
-   const Util::AutoreleasePool pool;
-   (void)clipboard;
+   Atom_t primarySelectionAtom = FindAtom("XA_PRIMARY", false);
+   assert(primarySelectionAtom != kNone && "ConvertPrimarySelection, XA_PRIMARY predefined atom not found");
+   
+   Atom_t stringAtom = FindAtom("XA_STRING", false);
+   assert(stringAtom != kNone && "ConvertPrimarySelection, XA_STRING predefined atom not found");
 
-   //Noop.
+   ConvertSelection(windowID, primarySelectionAtom, stringAtom, clipboard, when);
 }
 
 //______________________________________________________________________________
@@ -3455,13 +3414,28 @@ void TGCocoa::ConvertSelection(Window_t windowID, Atom_t &selection, Atom_t &tar
    // Requests that the specified selection be converted to the specified
    // target type.
    
+   // Requests that the specified selection be converted to the specified
+   // target type.
+   
+   if (!windowID)
+      return;
+      
+   assert(!fPimpl->IsRootWindow(windowID) && "ConvertSelection, windowID parameter is a 'root' window'");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "ConvertSelection, windowID parameter is not a valid window");
+
    Event_t newEvent = {};
-   newEvent.fType = kSelectionRequest;
+   selection_iterator selIter = fSelectionOwners.find(selection);
+
+   if (selIter != fSelectionOwners.end())
+      newEvent.fType = kSelectionRequest;
+   else
+      newEvent.fType = kSelectionNotify;
+
    newEvent.fWindow = windowID;
-   newEvent.fUser[0] = windowID;
+   newEvent.fUser[0] = windowID;//requestor
    newEvent.fUser[1] = selection;
    newEvent.fUser[2] = target;
-   newEvent.fUser[3] = property;// fSelectionNotifyProperty;
+   newEvent.fUser[3] = property;
    
    SendEvent(windowID, &newEvent);
 }

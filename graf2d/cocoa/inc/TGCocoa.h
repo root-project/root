@@ -22,6 +22,9 @@
 #ifndef ROOT_TVirtualX
 #include "TVirtualX.h"
 #endif
+#ifndef ROOT_X11Atoms
+#include "X11Atoms.h"
+#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -444,14 +447,11 @@ private:
    bool fForegroundProcess;
    std::vector<GCValues_t> fX11Contexts;   
    //
-   std::map<std::string, Atom_t> fNameToAtom;
+   ROOT::MacOSX::X11::name_to_atom_map fNameToAtom;
    std::vector<std::string> fAtomToName;
-   
-   Atom_t fSelectionNotifyProperty;
-   Atom_t fClipboardAtom;
-   Atom_t fTargetString;
-   
-   Window_t fSelectionOwner;
+
+   std::map<Atom_t, Window_t> fSelectionOwners;
+   typedef std::map<Atom_t, Window_t>::iterator selection_iterator;
    
    bool fSetIcon;
 
