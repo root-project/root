@@ -127,6 +127,9 @@ public:
    virtual TH3     *RebinZ(Int_t ngroup = 2, const char *newname = "");
    virtual TH3     *Rebin3D(Int_t nxgroup = 2, Int_t nygroup = 2, Int_t nzgroup = 2, const char *newname = "");
    virtual void     Reset(Option_t *option="");
+   virtual void      SetBinContent(Int_t bin, Double_t content);
+   virtual void      SetBinContent(Int_t bin, Int_t, Double_t content) { SetBinContent(bin, content); }
+   virtual void      SetBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t content) { SetBinContent(GetBin(binx, biny, binz), content); }
    virtual void     SetShowProjection(const char *option="xy",Int_t nbins=1);   // *MENU*
 
 protected:
@@ -162,9 +165,6 @@ public:
    virtual void      AddBinContent(Int_t bin, Double_t w);
    virtual void      Copy(TObject &hnew) const;
    virtual void      Reset(Option_t *option="");
-   virtual void      SetBinContent(Int_t bin, Double_t content);
-   virtual void      SetBinContent(Int_t bin, Int_t, Double_t content) {SetBinContent(bin,content);}
-   virtual void      SetBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t content) {SetBinContent(GetBin(binx,biny,binz),content);}
    virtual void      SetBinsLength(Int_t n=-1);
            TH3C&     operator=(const TH3C &h1);
    friend  TH3C      operator*(Float_t c1, TH3C &h1);
@@ -201,9 +201,6 @@ public:
    virtual void      AddBinContent(Int_t bin, Double_t w);
    virtual void      Copy(TObject &hnew) const;
    virtual void      Reset(Option_t *option="");
-   virtual void      SetBinContent(Int_t bin, Double_t content);
-   virtual void      SetBinContent(Int_t bin, Int_t, Double_t content) {SetBinContent(bin,content);}
-   virtual void      SetBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t content) {SetBinContent(GetBin(binx,biny,binz),content);}
    virtual void      SetBinsLength(Int_t n=-1);
            TH3S&     operator=(const TH3S &h1);
    friend  TH3S      operator*(Float_t c1, TH3S &h1);
@@ -240,9 +237,6 @@ public:
    virtual void      AddBinContent(Int_t bin, Double_t w);
    virtual void      Copy(TObject &hnew) const;
    virtual void      Reset(Option_t *option="");
-   virtual void      SetBinContent(Int_t bin, Double_t content);
-   virtual void      SetBinContent(Int_t bin, Int_t, Double_t content) {SetBinContent(bin,content);}
-   virtual void      SetBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t content) {SetBinContent(GetBin(binx,biny,binz),content);}
    virtual void      SetBinsLength(Int_t n=-1);
            TH3I&     operator=(const TH3I &h1);
    friend  TH3I      operator*(Float_t c1, TH3I &h1);
@@ -281,9 +275,6 @@ public:
                                  {fArray[bin] += Float_t (w);}
    virtual void      Copy(TObject &hnew) const;
    virtual void      Reset(Option_t *option="");
-   virtual void      SetBinContent(Int_t bin, Double_t content);
-   virtual void      SetBinContent(Int_t bin, Int_t, Double_t content) {SetBinContent(bin,content);}
-   virtual void      SetBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t content) {SetBinContent(GetBin(binx,biny,binz),content);}
    virtual void      SetBinsLength(Int_t n=-1);
            TH3F&     operator=(const TH3F &h1);
    friend  TH3F      operator*(Float_t c1, TH3F &h1);
@@ -321,9 +312,6 @@ public:
                                  {fArray[bin] += Double_t (w);}
    virtual void      Copy(TObject &hnew) const;
    virtual void      Reset(Option_t *option="");
-   virtual void      SetBinContent(Int_t bin, Double_t content);
-   virtual void      SetBinContent(Int_t bin, Int_t, Double_t content) {SetBinContent(bin,content);}
-   virtual void      SetBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t content) {SetBinContent(GetBin(binx,biny,binz),content);}
    virtual void      SetBinsLength(Int_t n=-1);
            TH3D&     operator=(const TH3D &h1);
    friend  TH3D      operator*(Float_t c1, TH3D &h1);

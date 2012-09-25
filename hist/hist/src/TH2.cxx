@@ -2564,6 +2564,17 @@ void TH2::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TH2::SetBinContent(Int_t bin, Double_t content)
+{
+   // Set bin content
+   fEntries++;
+   fTsumw = 0;
+   if (bin < 0) return;
+   if (bin >= fNcells) return;
+   UpdateBinContent(bin, content);
+}
+
+//______________________________________________________________________________
 void TH2::SetShowProjectionX(Int_t nbins)
 {
    // When the mouse is moved in a pad containing a 2-d view of this histogram
@@ -2888,17 +2899,6 @@ void TH2C::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TH2C::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   fEntries++;
-   fTsumw = 0;
-   if (bin < 0) return;
-   if (bin >= fNcells) return;
-   fArray[bin] = Char_t (content);
-}
-
-//______________________________________________________________________________
 void TH2C::SetBinsLength(Int_t n)
 {
    // Set total number of bins including under/overflow
@@ -3132,17 +3132,6 @@ void TH2S::Reset(Option_t *option)
 
    TH2::Reset(option);
    TArrayS::Reset();
-}
-
-//______________________________________________________________________________
-void TH2S::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   fEntries++;
-   fTsumw = 0;
-   if (bin < 0) return;
-   if (bin >= fNcells) return;
-   fArray[bin] = Short_t (content);
 }
 
 //______________________________________________________________________________
@@ -3382,17 +3371,6 @@ void TH2I::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TH2I::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   fEntries++;
-   fTsumw = 0;
-   if (bin < 0) return;
-   if (bin >= fNcells) return;
-   fArray[bin] = Int_t (content);
-}
-
-//______________________________________________________________________________
 void TH2I::SetBinsLength(Int_t n)
 {
    // Set total number of bins including under/overflow
@@ -3589,17 +3567,6 @@ void TH2F::Reset(Option_t *option)
 
    TH2::Reset(option);
    TArrayF::Reset();
-}
-
-//______________________________________________________________________________
-void TH2F::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   fEntries++;
-   fTsumw = 0;
-   if (bin < 0) return;
-   if (bin >= fNcells) return;
-   fArray[bin] = Float_t (content);
 }
 
 //______________________________________________________________________________
@@ -3846,17 +3813,6 @@ void TH2D::Reset(Option_t *option)
 
    TH2::Reset(option);
    TArrayD::Reset();
-}
-
-//______________________________________________________________________________
-void TH2D::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   fEntries++;
-   fTsumw = 0;
-   if (bin < 0) return;
-   if (bin >= fNcells) return;
-   fArray[bin] = Double_t (content);
 }
 
 //______________________________________________________________________________

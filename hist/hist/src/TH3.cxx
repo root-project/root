@@ -3450,10 +3450,6 @@ TH3 *TH3::Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newna
    return hnew;
 }
 
-
-
-
-
 //______________________________________________________________________________
 void TH3::Reset(Option_t *option)
 {
@@ -3471,6 +3467,17 @@ void TH3::Reset(Option_t *option)
    fTsumwz2 = 0;
    fTsumwxz = 0;
    fTsumwyz = 0;
+}
+
+//______________________________________________________________________________
+void TH3::SetBinContent(Int_t bin, Double_t content)
+{
+   // Set bin content
+   fEntries++;
+   fTsumw = 0;
+   if (bin < 0) return;
+   if (bin >= fNcells) return;
+   UpdateBinContent(bin, content);
 }
 
 //______________________________________________________________________________
@@ -3617,18 +3624,6 @@ void TH3C::SetBinsLength(Int_t n)
    fNcells = n;
    TArrayC::Set(n);
 }
-
-//______________________________________________________________________________
-void TH3C::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   fEntries++;
-   fTsumw = 0;
-   if (bin < 0) return;
-   if (bin >= fNcells) return;
-   fArray[bin] = Char_t (content);
-}
-
 
 //______________________________________________________________________________
 void TH3::SetShowProjection(const char *option,Int_t nbins)
@@ -3864,17 +3859,6 @@ void TH3S::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TH3S::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   fEntries++;
-   fTsumw = 0;
-   if (bin < 0) return;
-   if (bin >= fNcells) return;
-   fArray[bin] = Short_t (content);
-}
-
-//______________________________________________________________________________
 void TH3S::SetBinsLength(Int_t n)
 {
    // Set total number of bins including under/overflow
@@ -4091,17 +4075,6 @@ void TH3I::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TH3I::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   fEntries++;
-   fTsumw = 0;
-   if (bin < 0) return;
-   if (bin >= fNcells) return;
-   fArray[bin] = Int_t (content);
-}
-
-//______________________________________________________________________________
 void TH3I::SetBinsLength(Int_t n)
 {
    // Set total number of bins including under/overflow
@@ -4263,17 +4236,6 @@ void TH3F::Reset(Option_t *option)
    TH3::Reset(option);
    TArrayF::Reset();
    // should also reset statistics once statistics are implemented for TH3
-}
-
-//______________________________________________________________________________
-void TH3F::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   fEntries++;
-   fTsumw = 0;
-   if (bin < 0) return;
-   if (bin >= fNcells) return;
-   fArray[bin] = Float_t (content);
 }
 
 //______________________________________________________________________________
@@ -4470,18 +4432,6 @@ void TH3D::Reset(Option_t *option)
    TArrayD::Reset();
    // should also reset statistics once statistics are implemented for TH3
 }
-
-//______________________________________________________________________________
-void TH3D::SetBinContent(Int_t bin, Double_t content)
-{
-   // Set bin content
-   fEntries++;
-   fTsumw = 0;
-   if (bin < 0) return;
-   if (bin >= fNcells) return;
-   fArray[bin] = Double_t (content);
-}
-
 
 //______________________________________________________________________________
 void TH3D::SetBinsLength(Int_t n)
