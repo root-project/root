@@ -775,6 +775,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             if (strncmp(declfile,precstl,precstl_len) == 0) {
                fprintf(fp,"#include <%s>\n",declfile+precstl_len);
                listOfHeaders.Add(new TNamed(cl->GetName(),declfile+precstl_len));
+            } else if (strncmp(declfile,"/usr/include/",13) == 0) {
+               fprintf(fp,"#include <%s>\n",declfile+rootinclude_len);              
+               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+rootinclude_len));
+            } else if (strstr(declfile,"/include/c++/") != 0) {
+               fprintf(fp,"#include <%s>\n",declfile+rootinclude_len);              
+               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+rootinclude_len));
             } else if (strncmp(declfile,rootinclude,rootinclude_len) == 0) {
                fprintf(fp,"#include <%s>\n",declfile+rootinclude_len);              
                listOfHeaders.Add(new TNamed(cl->GetName(),declfile+rootinclude_len));
