@@ -505,6 +505,10 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    // Use explicit TCintWithCling::AddIncludePath() to avoid vtable: we're in the c'tor!
    TCintWithCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
 
+   // Don't check whether modules' files exist.
+   fInterpreter->getCI()->getPreprocessorOpts().DisablePCHValidation = true;
+
+   // Set the patch for searching for modules
 #ifndef ROOTINCDIR
    TString dictDir = getenv("ROOTSYS");
    dictDir += "/lib";

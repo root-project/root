@@ -378,7 +378,7 @@ std::string ROOT::TMetaUtils::GetModuleFileName(const char* moduleName)
 {
    // Return the dictionary file name for a module
    std::string dictFileName(moduleName);
-   dictFileName += ".rdictpcm";
+   dictFileName += "_rdict.pcm";
    return dictFileName;
 }
 
@@ -395,11 +395,10 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
    moduleName = llvm::sys::path::stem(moduleName);
 
    std::pair<clang::Module*, bool> modCreation;
-   std::string moduleNameDict = moduleName;
-   moduleNameDict += "_dict";
 
    modCreation
-      = ModuleMap.findOrCreateModule(moduleNameDict.c_str(), 0 /*ActiveModule*/,
+      = ModuleMap.findOrCreateModule(moduleName.str().c_str(),
+                                     0 /*ActiveModule*/,
                                      false /*Framework*/, false /*Explicit*/);
    if (!modCreation.second) {
       std::cerr << "TMetaUtils::declareModuleMap: "
