@@ -4668,10 +4668,10 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
    string clName;
    TMetaUtils::GetCppName(clName,cl.Fullname());
    string fun;
-   int version = GetClassVersion(cl);
-   int clflag = 1;
-   if (version == 0 || cl.RootFlag() == 0) clflag = 0;
-   if (version < 0 && !(cl.RootFlag() & G__USEBYTECOUNT) ) clflag = 0;
+   // int version = GetClassVersion(cl);
+   // int clflag = 1;
+   // if (version == 0 || cl.RootFlag() == 0) clflag = 0;
+   // if (version < 0 && !(cl.RootFlag() & G__USEBYTECOUNT) ) clflag = 0;
 
    while (m.Next()) {
 
