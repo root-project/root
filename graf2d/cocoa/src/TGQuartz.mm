@@ -319,6 +319,9 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/, co
 
    if (!text || !text[0])//Can this ever happen? TPad::PaintText does not check this.
       return;
+      
+   if (!GetTextSize())//Do not draw anything, or CoreText will create some small (but not of size 0 font).
+      return;
    
    NSObject<X11Drawable> * const drawable = (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawText");
    if (!drawable)
@@ -366,6 +369,9 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t angle, Float_t /*mgn*/, const 
       Error("DrawText", "wchar_t string to draw, but TTF initialization failed");
       return;
    }
+   
+   if (!GetTextSize())//Do not draw anything, or CoreText will create some small (but not of size 0 font).
+      return;
    
    (void)x;
    (void)y;
