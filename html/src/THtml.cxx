@@ -1626,7 +1626,9 @@ void THtml::CreateListOfClasses(const char* filter)
                continue;
             }
             // ignore STL
-            if (classPtr->GetDeclFileName() && !strncmp(classPtr->GetDeclFileName(), "prec_stl/", 9))
+            if (classPtr->GetDeclFileName() && (!strncmp(classPtr->GetDeclFileName(), "prec_stl/", 9) || 
+                                                strstr(classPtr->GetDeclFileName(), "include/c++/") || 
+                                                !strncmp(classPtr->GetDeclFileName(), "/usr/include",12)))
                continue;
             if (skipROOTClasses) {
                if (classPtr->GetSharedLibs() && classPtr->GetSharedLibs()[0]) {
@@ -1681,7 +1683,10 @@ void THtml::CreateListOfClasses(const char* filter)
                } // lib name known
                continue;
             } else {
-               if (matchesSelection && (!classPtr->GetDeclFileName() || !strstr(classPtr->GetDeclFileName(),"prec_stl/")))
+               if (matchesSelection && (!classPtr->GetDeclFileName() || 
+                                        !strstr(classPtr->GetDeclFileName(),"prec_stl/") || 
+                                        !strstr(classPtr->GetDeclFileName(), "include/c++/") || 
+                                        strncmp(classPtr->GetDeclFileName(), "/usr/include",12)))
                   classesDeclFileNotFound.AddLast(classPtr);
                continue;
             }
@@ -2055,7 +2060,7 @@ TClass *THtml::GetClass(const char *name1) const
    // TClassEdit checks are far too slow...
    /*
    if (cl && GetDeclFileName(cl) &&
-       strstr(GetDeclFileName(cl),"prec_stl/"))
+       (strstr(GetDeclFileName(cl),"prec_stl/") || !strstr(classPtr->GetDeclFileName(), "include/c++/") )
       cl = 0;
    */
    TString declFileName;
