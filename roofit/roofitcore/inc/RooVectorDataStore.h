@@ -129,12 +129,12 @@ public:
   class RealVector {
   public:
     RealVector(UInt_t initialCapacity=100) : 
-      _nativeReal(0), _real(0), _buf(0), _nativeBuf(0), _vec0(0), _tracker(0) { 
+      _nativeReal(0), _real(0), _buf(0), _nativeBuf(0), _vec0(0), _tracker(0), _nset(0) { 
       _vec.reserve(initialCapacity) ; 
     }
 
     RealVector(RooAbsReal* arg, UInt_t initialCapacity=100) : 
-      _nativeReal(arg), _real(0), _buf(0), _nativeBuf(0), _vec0(0), _tracker(0) { 
+      _nativeReal(arg), _real(0), _buf(0), _nativeBuf(0), _vec0(0), _tracker(0), _nset(0) { 
       _vec.reserve(initialCapacity) ; 
     }
 
@@ -162,6 +162,9 @@ public:
       _vec0 = _vec.size()>0 ? &_vec.front() : 0 ;
       return *this ;
     }
+
+    void setNset(RooArgSet* newNset) { _nset = newNset ; }
+    RooArgSet* nset() const { return _nset ; }
 
     void setBufArg(RooAbsReal* arg) { _nativeReal = arg ; }
     const RooAbsReal* bufArg() const { return _nativeReal ; }
@@ -196,7 +199,7 @@ public:
     } ;
 
     void write(Int_t i) {
-/*       std::cout << "write(" << this << ") [" << i << "] nativeReal = " << _nativeReal << " = " << _nativeReal->GetName() << " real = " << _real << " buf = " << _buf << " value = " << *_buf << " native getVal() = " << _nativeReal->getVal() << " getVal() = " << _real->getVal() << std::endl ; */
+/*        std::cout << "write(" << this << ") [" << i << "] nativeReal = " << _nativeReal << " = " << _nativeReal->GetName() << " real = " << _real << " buf = " << _buf << " value = " << *_buf << " native getVal() = " << _nativeReal->getVal() << " getVal() = " << _real->getVal() << std::endl ;  */
       _vec[i] = *_buf ;
     }
     
@@ -231,6 +234,7 @@ public:
     Double_t* _nativeBuf ; //!
     Double_t* _vec0 ; //!
     RooChangeTracker* _tracker ; //
+    RooArgSet* _nset ; //! 
     ClassDef(RealVector,1) // STL-vector-based Data Storage class
   } ;
   

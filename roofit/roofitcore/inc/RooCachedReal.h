@@ -19,7 +19,7 @@
 
 class RooCachedReal : public RooAbsCachedReal {
 public:
-  RooCachedReal() {
+  RooCachedReal() : _cacheSource(kFALSE) {
     // coverity[UNINIT_CTOR] 
   } 
   RooCachedReal(const char *name, const char *title, RooAbsReal& _func, const RooArgSet& cacheObs);
@@ -40,6 +40,9 @@ public:
     return _useCdfBoundaries ; 
   }
 
+  Bool_t cacheSource() const { return _cacheSource ; }
+  void setCacheSource(Bool_t flag) { _cacheSource = flag ; }
+
 protected:
 
   virtual const char* inputBaseName() const { 
@@ -56,15 +59,18 @@ protected:
 
   void operModeHook() ;
 
+  virtual FuncCacheElem* createCache(const RooArgSet* nset) const ;
+
   virtual const char* payloadUniqueSuffix() const { return func.arg().aggregateCacheUniqueSuffix() ; }
   
   RooRealProxy func ;           // Proxy to function being cached
   RooSetProxy  _cacheObs ;      // Variables to be cached
   Bool_t _useCdfBoundaries ;    // Are c.d.f boundary conditions used by the RooHistFuncs?
+  Bool_t _cacheSource ;         // Keep an attached clone of the source in the cache for fast operation
 
 private:
 
-  ClassDef(RooCachedReal,1) // P.d.f class that wraps another p.d.f and caches its output 
+  ClassDef(RooCachedReal,2) // P.d.f class that wraps another p.d.f and caches its output 
 
 };
  

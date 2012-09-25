@@ -36,7 +36,8 @@ ClassImp(RooCachedReal)
 RooCachedReal::RooCachedReal(const char *name, const char *title, RooAbsReal& _func) :
    RooAbsCachedReal(name,title), 
    func("func","func",this,_func),
-   _useCdfBoundaries(kFALSE)
+   _useCdfBoundaries(kFALSE),
+   _cacheSource(kFALSE)
  { 
    // Constructor taking name, title and function to be cached. To control
    // granularity of the binning of the cache histogram set the desired properties
@@ -54,7 +55,8 @@ RooCachedReal::RooCachedReal(const char *name, const char *title, RooAbsReal& _f
    RooAbsCachedReal(name,title), 
    func("func","func",this,_func),
    _cacheObs("cacheObs","cacheObs",this,kFALSE,kFALSE),
-   _useCdfBoundaries(kFALSE)
+   _useCdfBoundaries(kFALSE),
+   _cacheSource(kFALSE)
  { 
    // Constructor taking name, title and function to be cached and
    // fixed choice of variable to cache. To control granularity of the
@@ -82,7 +84,8 @@ RooCachedReal::RooCachedReal(const RooCachedReal& other, const char* name) :
    RooAbsCachedReal(other,name), 
    func("func",this,other.func),
    _cacheObs("cacheObs",this,other._cacheObs),
-   _useCdfBoundaries(other._useCdfBoundaries)
+   _useCdfBoundaries(other._useCdfBoundaries),
+   _cacheSource(other._cacheSource)
  { 
    // Copy constructor
  } 
@@ -96,6 +99,23 @@ RooCachedReal::~RooCachedReal()
 }
 
 
+//_____________________________________________________________________________
+RooAbsCachedReal::FuncCacheElem* RooCachedReal::createCache(const RooArgSet* nset) const
+{
+  // Interface function to create an internal cache object that represent
+  // each cached function configuration. This interface allows to create and
+  // return a class derived from RooAbsCachedReal::FuncCacheElem so that
+  // a derived class fillCacheObject implementation can utilize extra functionality
+  // defined in such a derived cache class
+  
+  FuncCacheElem* ret = RooAbsCachedReal::createCache(nset) ;
+  if (_cacheSource) {
+    ret->setCacheSource(kTRUE) ;
+  }
+  return ret ;
+}
+
+
 
 //_____________________________________________________________________________
 void RooCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const 
@@ -106,9 +126,26 @@ void RooCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) cons
     coutP(Eval) << "RooCachedReal::fillCacheObject(" << GetName() << ") filling multi-dimensional cache (" << cache.hist()->numEntries() << " points)" ;
   }
 
-  func.arg().fillDataHist(cache.hist(),0,1.0,kFALSE,kFALSE) ;
-  cache.func()->setCdfBoundaries(_useCdfBoundaries) ;
+  // Make deep clone of self and attach to dataset observables
+  if (!cache.sourceClone() && cache.cacheSource()) {
+    RooArgSet* cloneSet = (RooArgSet*) RooArgSet(func.arg()).snapshot(kTRUE) ;
+    cache.setSourceClone((RooAbsReal*)cloneSet->find(GetName())) ;
+    cache.sourceClone()->recursiveRedirectServers(*cache.hist()->get()) ;
+  }
 
+  // Iterator over all bins of RooDataHist and fill weights
+  for (Int_t i=0 ; i<cache.hist()->numEntries() ; i++) {    
+    const RooArgSet* obs = cache.hist()->get(i) ;
+    Double_t binVal = cache.sourceClone()->getVal(obs) ;
+    cache.hist()->set(binVal) ;
+  }
+
+  // Delete source clone if we don't cache it
+  if (!cache.cacheSource()) {
+    cache.setSourceClone(0) ;
+  }
+
+  cache.func()->setCdfBoundaries(_useCdfBoundaries) ;
   if (cache.hist()->get()->getSize()>1) {
     ccoutP(Eval) << endl ;
   }

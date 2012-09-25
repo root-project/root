@@ -93,6 +93,8 @@ public:
   Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
 
   RooArgSet* getConnectedParameters(const RooArgSet& observables) const ;
+
+  RooArgSet* findPdfNSet(RooAbsPdf& pdf) const ; 
   
 protected:
 
@@ -155,7 +157,6 @@ protected:
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
 	                               const RooArgSet *auxProto=0, Bool_t verbose= kFALSE) const ;
 
-  RooArgSet* findPdfNSet(RooAbsPdf& pdf) const ; 
 
   mutable RooAICRegistry _genCode ; //! Registry of composite direct generator codes
 

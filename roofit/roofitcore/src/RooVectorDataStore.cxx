@@ -35,6 +35,7 @@
 #include "RooFormulaVar.h"
 #include "RooRealVar.h"
 #include "RooCategory.h"
+#include "RooNameSet.h"
 #include "RooHistError.h"
 
 #include <iomanip>
@@ -1084,7 +1085,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   checkInit() ;
   
   list<RooArgSet*> vlist ;
-  RooArgSet cloneSet ;
+  RooArgList cloneSet ;
 
   while((var=(RooAbsArg*)vIter->Next())) {
 
@@ -1107,49 +1108,94 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
   RooAbsArg::setDirtyInhibit(kTRUE) ;
 
+  vector<RooArgSet*> nsetList ;
+
   // Now need to attach branch buffers of clones
   TIterator* it = cloneSet.createIterator() ;
+  RooArgSet *anset(0), *acset(0) ;
   while ((arg=(RooAbsArg*)it->Next())) {
     arg->attachToVStore(*newCache) ;
+    
+    RooArgSet* argObs = nset ? arg->getObservables(*nset) : arg->getVariables() ;
+
+    RooArgSet* normSet(0) ;
+    const char* catNset = arg->getStringAttribute("CATNormSet") ;
+    if (catNset) {
+//       cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a normalization set specification CATNormSet = " << catNset << endl ;
+      RooNameSet rns ;
+      rns.setNameList(catNset) ;
+      anset = rns.select(nset?*nset:RooArgSet()) ;
+      normSet = (RooArgSet*) anset->selectCommon(*argObs) ;
+      delete argObs ;
+      
+    }
+    const char* catCset = arg->getStringAttribute("CATCondSet") ;
+    if (catCset) {
+//       cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a conditional observable set specification CATCondSet = " << catCset << endl ;
+      RooNameSet rns ;
+      rns.setNameList(catCset) ;
+      acset = rns.select(nset?*nset:RooArgSet()) ;
+      
+      argObs->remove(*acset,kTRUE,kTRUE) ;
+      normSet = argObs ;
+    }
+
+    // now construct normalization set for component from cset/nset spec
+//     if (normSet) {
+//       cout << "RooVectorDaraStore::cacheArgs() component " << arg->GetName() << " has custom normalization set " << *normSet << endl ;
+//     }
+    nsetList.push_back(normSet) ;    
   }
   delete it ;
 
   // Fill values of of placeholder
   for (int i=0 ; i<numEntries() ; i++) {
     getNative(i) ;
-
+    
     cIter->Reset() ;
+    vector<RooArgSet*>::iterator niter = nsetList.begin() ;
     while((cloneArg=(RooAbsArg*)cIter->Next())) {
-      cloneArg->syncCache(nset) ;
-//       cout << "RVDS::cacheArgs writing #" << i << " " ; cloneArg->Print() ;
+      // WVE need to intervene here for condobs from ProdPdf
+      RooArgSet* argNset = *niter ;
+      cloneArg->syncCache(argNset?argNset:nset) ;
+//       if (i<10) {
+// 	cout << "RVDS::cacheArgs writing #" << i << " " ; cloneArg->Print() ;
+//       }
+      ++niter ;
     }
     newCache->fill() ;
   }
-  
   delete cIter ;
 
   RooAbsArg::setDirtyInhibit(kFALSE) ;
 
-  for (list<RooArgSet*>::iterator iter = vlist.begin() ; iter!=vlist.end() ; ++iter) {
-    delete *iter ;
-  }  
-  
+
   // Now need to attach branch buffers of original function objects 
   it = orderedArgs.createIterator() ;
   while ((arg=(RooAbsArg*)it->Next())) {
     arg->attachToVStore(*newCache) ;
-
+    
     // Activate change tracking mode, if requested
     if (!arg->getAttribute("ConstantExpression") && dynamic_cast<RooAbsReal*>(arg)) {
       RealVector* rv = newCache->addReal((RooAbsReal*)arg) ;      
       RooArgSet* deps = arg->getParameters(_vars) ;
       rv->setDependents(*deps) ;
+
+      // WV lookup normalization set and associate with RealVector
+      // find ordinal number of arg in original list 
+      Int_t idx = cloneSet.index(arg->GetName()) ;
+
       coutI(Optimization) << "RooVectorDataStore::cacheArg() element " << arg->GetName() << " has change tracking enabled on parameters " << *deps << endl ;
+      rv->setNset(nsetList[idx]) ;
       delete deps ;
     }
     
   }
   delete it ;
+
+  for (list<RooArgSet*>::iterator iter = vlist.begin() ; iter!=vlist.end() ; ++iter) {
+    delete *iter ;
+  }  
 
   _cache = newCache ;
   _cache->setDirtyProp(_doDirtyProp) ;
@@ -1203,8 +1249,7 @@ void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs, Int_t
     }
     for (int j=0 ; j<ntv ; j++) {
       tv[j]->_nativeReal->_valueDirty=kTRUE ;
-      tv[j]->_nativeReal->getValV(usedNset) ;
-      //       cout << "updating tracked cache slot " << i << " element " ; tv[j]->_nativeReal->Print() ;
+      tv[j]->_nativeReal->getValV(tv[j]->_nset ? tv[j]->_nset : usedNset) ;
       tv[j]->write(i) ;
     }
     if (zeroWeight) {

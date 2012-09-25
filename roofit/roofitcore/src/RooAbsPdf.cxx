@@ -486,6 +486,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
       RooCachedReal* cachedNorm = new RooCachedReal(name.c_str(),name.c_str(),*normInt,*normParams) ;     
       cachedNorm->setInterpolationOrder(_valueCacheIntOrder) ;
       cachedNorm->addOwnedComponents(*normInt) ;
+      cachedNorm->setCacheSource(kTRUE) ;
       _norm = cachedNorm ;
     } else {
       _norm = normInt ;
