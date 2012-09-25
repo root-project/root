@@ -215,17 +215,23 @@ void ModelConfig::DefineSetInWS(const char* name, const RooArgSet& set) {
    // helper functions to avoid code duplication
    if ( !GetWS() ) return;
 
-   if (  GetWS()->set(name) ) {
-      GetWS()->removeSet(name);
+   const RooArgSet * prevSet = GetWS()->set(name); 
+   if (  prevSet ) {
+      //be careful not to remove passed set in case it is the same updated
+      if (prevSet != &set) 
+         GetWS()->removeSet(name);
    }
    
+   // suppress warning when we re-define a previously defined set (when set == prevSet )
+   // and set is not removed in that case
    RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
+
 
    GetWS()->defineSet(name, set,true);
 
    RooMsgService::instance().setGlobalKillBelow(level) ;
-   
+  
 }
    
 void ModelConfig::ImportPdfInWS(const RooAbsPdf & pdf) { 
