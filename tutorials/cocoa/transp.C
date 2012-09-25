@@ -16,7 +16,7 @@ void transp()
    //and we can check its type:
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
       std::cout<<"You can see the transparency ONLY in a pdf or png output (\"File\"->\"Save As\" ->...)\n"
-                 "To have transparency in a canvas graphics, you need MacOSX version with cocoa enabled";
+                 "To have transparency in a canvas graphics, you need MacOSX version with cocoa enabled\n";
    }
 
    TH1F * hist = new TH1F("a", "b", 10, -2., 3.);

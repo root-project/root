@@ -6,7 +6,7 @@ void grad2()
    TCanvas *cnv = new TCanvas("cnv", "gradient_test", 100, 100, 800, 600);
    //After canvas was created, gVirtualX should be non-null.
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
-      std::cout<<"This macro works only on MacOS X with --enable-cocoa";
+      std::cout<<"This macro works only on MacOS X with --enable-cocoa\n";
       delete cnv;
       return;
    }
