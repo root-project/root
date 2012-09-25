@@ -139,6 +139,10 @@ int G__call_setup_funcs()
    // Call G__RegisterLibrary() again, after it got called already
    // in G__init_setup_funcs(), because G__scratchall might have been
    // called in between.
+   
+   // Register libCint itself.
+   G__RegisterLibrary( (void (*)()) G__call_setup_funcs);
+   
    // Do a separate loop so we don't re-load because of A->B->A
    // dependencies introduced by autoloading during dictionary
    // initialization
