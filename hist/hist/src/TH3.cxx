@@ -3597,21 +3597,6 @@ void TH3C::Copy(TObject &newth3) const
 }
 
 //______________________________________________________________________________
-TH1 *TH3C::DrawCopy(Option_t *option) const
-{
-   // Draw copy.
-
-   TString opt = option;
-   opt.ToLower();
-   if (gPad && !opt.Contains("same")) gPad->Clear();
-   TH3C *newth3 = (TH3C*)Clone();
-   newth3->SetDirectory(0);
-   newth3->SetBit(kCanDelete);
-   newth3->AppendPad(option);
-   return newth3;
-}
-
-//______________________________________________________________________________
 void TH3C::Reset(Option_t *option)
 {
    //*-*-*-*-*-*-*-*Reset this histogram: contents, errors, etc*-*-*-*-*-*-*-*
@@ -3868,21 +3853,6 @@ void TH3S::Copy(TObject &newth3) const
 }
 
 //______________________________________________________________________________
-TH1 *TH3S::DrawCopy(Option_t *option) const
-{
-   // Draw copy.
-
-   TString opt = option;
-   opt.ToLower();
-   if (gPad && !opt.Contains("same")) gPad->Clear();
-   TH3S *newth3 = (TH3S*)Clone();
-   newth3->SetDirectory(0);
-   newth3->SetBit(kCanDelete);
-   newth3->AppendPad(option);
-   return newth3;
-}
-
-//______________________________________________________________________________
 void TH3S::Reset(Option_t *option)
 {
    //*-*-*-*-*-*-*-*Reset this histogram: contents, errors, etc*-*-*-*-*-*-*-*
@@ -4110,21 +4080,6 @@ void TH3I::Copy(TObject &newth3) const
 }
 
 //______________________________________________________________________________
-TH1 *TH3I::DrawCopy(Option_t *option) const
-{
-   // Draw copy.
-
-   TString opt = option;
-   opt.ToLower();
-   if (gPad && !opt.Contains("same")) gPad->Clear();
-   TH3I *newth3 = (TH3I*)Clone();
-   newth3->SetDirectory(0);
-   newth3->SetBit(kCanDelete);
-   newth3->AppendPad(option);
-   return newth3;
-}
-
-//______________________________________________________________________________
 void TH3I::Reset(Option_t *option)
 {
    //*-*-*-*-*-*-*-*Reset this histogram: contents, errors, etc*-*-*-*-*-*-*-*
@@ -4298,20 +4253,6 @@ void TH3F::Copy(TObject &newth3) const
    TH3::Copy((TH3F&)newth3);
 }
 
-//______________________________________________________________________________
-TH1 *TH3F::DrawCopy(Option_t *option) const
-{
-   // Draw copy.
-
-   TString opt = option;
-   opt.ToLower();
-   if (gPad && !opt.Contains("same")) gPad->Clear();
-   TH3F *newth3 = (TH3F*)Clone();
-   newth3->SetDirectory(0);
-   newth3->SetBit(kCanDelete);
-   newth3->AppendPad(option);
-   return newth3;
-}
 
 //______________________________________________________________________________
 void TH3F::Reset(Option_t *option)
@@ -4517,21 +4458,6 @@ void TH3D::Copy(TObject &newth3) const
    //*-*          ===========================================
 
    TH3::Copy((TH3D&)newth3);
-}
-
-//______________________________________________________________________________
-TH1 *TH3D::DrawCopy(Option_t *option) const
-{
-   // Draw copy.
-
-   TString opt = option;
-   opt.ToLower();
-   if (gPad && !opt.Contains("same")) gPad->Clear();
-   TH3D *newth3 = (TH3D*)Clone();
-   newth3->SetDirectory(0);
-   newth3->SetBit(kCanDelete);
-   newth3->AppendPad(option);
-   return newth3;
 }
 
 //______________________________________________________________________________

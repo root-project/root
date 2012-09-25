@@ -642,21 +642,6 @@ Bool_t TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, 
 }
 
 //______________________________________________________________________________
-TH1 *TProfile::DrawCopy(Option_t *option) const
-{
-//*-*-*-*-*-*-*-*Draw a copy of this profile histogram*-*-*-*-*-*-*-*-*-*-*-*
-//*-*            =====================================
-   TString opt = option;
-   opt.ToLower();
-   if (gPad && !opt.Contains("same")) gPad->Clear();
-   TProfile *newpf = (TProfile*)Clone();
-   newpf->SetDirectory(0);
-   newpf->SetBit(kCanDelete);
-   newpf->AppendPad(option);
-   return newpf;
-}
-
-//______________________________________________________________________________
 Int_t TProfile::Fill(Double_t x, Double_t y)
 {
 //*-*-*-*-*-*-*-*-*-*-*Fill a Profile histogram (no weights)*-*-*-*-*-*-*-*

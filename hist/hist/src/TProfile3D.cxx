@@ -577,22 +577,6 @@ Bool_t TProfile3D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2
 }
 
 //______________________________________________________________________________
-TH1 *TProfile3D::DrawCopy(Option_t *option) const
-{
-//*-*-*-*-*-*-*-*Draw a copy of this profile3D histogram*-*-*-*-*-*-*-*-*-*-*
-//*-*            =======================================
-   TString opt = option;
-   opt.ToLower();
-   if (gPad && !opt.Contains("same")) gPad->Clear();
-   TProfile3D *newpf = new TProfile3D();
-   Copy(*newpf);
-   newpf->SetDirectory(0);
-   newpf->SetBit(kCanDelete);
-   newpf->AppendPad(option);
-   return newpf;
-}
-
-//______________________________________________________________________________
 Int_t TProfile3D::Fill(Double_t x, Double_t y, Double_t z, Double_t t)
 {
 //*-*-*-*-*-*-*-*-*-*-*Fill a Profile3D histogram (no weights)*-*-*-*-*-*-*-*

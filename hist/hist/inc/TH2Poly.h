@@ -83,7 +83,6 @@ public:
    virtual Bool_t Add(TF1 *h1, Double_t c1=1, Option_t *option="");
    void         ClearBinContents();                 // Clears the content of all bins
    void         ChangePartition(Int_t n, Int_t m);  // Sets the number of partition cells to another value
-   virtual TH1 *DrawCopy(Option_t *option="") const;
    Int_t        Fill(Double_t x,Double_t y);
    Int_t        Fill(Double_t x,Double_t y, Double_t w);
    Int_t        Fill(const char* name, Double_t w);

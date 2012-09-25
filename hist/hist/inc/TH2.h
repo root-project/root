@@ -148,7 +148,6 @@ public:
    virtual void     AddBinContent(Int_t bin);
    virtual void     AddBinContent(Int_t bin, Double_t w);
    virtual void     Copy(TObject &hnew) const;
-   virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinContent(Int_t bin, Double_t content);
    virtual void     SetBinContent(Int_t binx, Int_t biny, Double_t content) {SetBinContent(GetBin(binx,biny),content);}
@@ -191,7 +190,6 @@ public:
    virtual void     AddBinContent(Int_t bin);
    virtual void     AddBinContent(Int_t bin, Double_t w);
    virtual void     Copy(TObject &hnew) const;
-   virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinContent(Int_t bin, Double_t content);
    virtual void     SetBinContent(Int_t binx, Int_t biny, Double_t content) {SetBinContent(GetBin(binx,biny),content);}
@@ -234,7 +232,6 @@ public:
    virtual void     AddBinContent(Int_t bin);
    virtual void     AddBinContent(Int_t bin, Double_t w);
    virtual void     Copy(TObject &hnew) const;
-   virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinContent(Int_t bin, Double_t content);
    virtual void     SetBinContent(Int_t binx, Int_t biny, Double_t content) {SetBinContent(GetBin(binx,biny),content);}
@@ -279,7 +276,6 @@ public:
    virtual void     AddBinContent(Int_t bin, Double_t w)
                                  {fArray[bin] += Float_t (w);}
    virtual void     Copy(TObject &hnew) const;
-   virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinContent(Int_t bin, Double_t content);
    virtual void     SetBinContent(Int_t binx, Int_t biny, Double_t content) {SetBinContent(GetBin(binx,biny),content);}
@@ -324,7 +320,6 @@ public:
    virtual void     AddBinContent(Int_t bin, Double_t w)
                                  {fArray[bin] += Double_t (w);}
    virtual void     Copy(TObject &hnew) const;
-   virtual TH1     *DrawCopy(Option_t *option="") const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinContent(Int_t bin, Double_t content);
    virtual void     SetBinContent(Int_t binx, Int_t biny, Double_t content) {SetBinContent(GetBin(binx,biny),content);}
