@@ -5531,7 +5531,8 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
                              /*Extension=*/"", /*useTemporary=*/false,
                              /*CreateMissingDirectories*/false);
    // Emit the PCH file
-   Writer.WriteAST(CI->getSema(), 0, moduleFile, module, "" /*SysRoot*/);
+   CI->getFrontendOpts().RelocatablePCH = true;
+   Writer.WriteAST(CI->getSema(), 0, moduleFile, module, "/DUMMY_ROOTSYS/include/" /*SysRoot*/);
 
    // Write the generated bitstream to "Out".
    OS->write((char *)&Buffer.front(), Buffer.size());
