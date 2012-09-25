@@ -133,13 +133,14 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    
    // Treat the Scope.
    clang::NestedNameSpecifier* prefix = 0;
+   unsigned int prefix_qualifiers = instanceType.getLocalFastQualifiers();
    const clang::ElaboratedType* etype 
       = llvm::dyn_cast<clang::ElaboratedType>(instanceType.getTypePtr());
    if (etype) {
       // We have to also handle the prefix.
  
       prefix = AddDefaultParametersNNS(Ctx, etype->getQualifier(), interpreter, normCtxt);
-      instanceType = clang::QualType(etype->getNamedType().getTypePtr(),instanceType.getLocalFastQualifiers());
+      instanceType = clang::QualType(etype->getNamedType().getTypePtr(),0);
    }
 
    // In case of template specializations iterate over the arguments and 
@@ -149,7 +150,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       = llvm::dyn_cast<const clang::TemplateSpecializationType>(instanceType.getTypePtr());
 
    const clang::ClassTemplateSpecializationDecl* TSTdecl
-      = llvm::dyn_cast<const clang::ClassTemplateSpecializationDecl>(instanceType.getTypePtr()->getAsCXXRecordDecl());
+      = llvm::dyn_cast_or_null<const clang::ClassTemplateSpecializationDecl>(instanceType.getTypePtr()->getAsCXXRecordDecl());
 
    if (TST && TSTdecl) {
 
@@ -170,7 +171,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       for(clang::TemplateSpecializationType::iterator 
              I = TST->begin(), E = TST->end();
           Idecl != Edecl; 
-          ++I, ++Idecl, ++Param) {
+          I!=E ? ++I : 0, ++Idecl, ++Param) {
 
          if (I != E) {
             clang::QualType SubTy = I->getAsType();
@@ -181,7 +182,8 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
             }
             
             // Check if the type needs more desugaring and recurse.
-            if (llvm::isa<clang::TemplateSpecializationType>(SubTy)) {
+            if (llvm::isa<clang::TemplateSpecializationType>(SubTy)
+                || llvm::isa<clang::ElaboratedType>(SubTy) ) {
                mightHaveChanged = true;
                desArgs.push_back(clang::TemplateArgument(AddDefaultParameters(SubTy,
                                                                               interpreter,
@@ -197,7 +199,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
             clang::QualType SubTy = TSTdecl->getTemplateArgs().get(Idecl).getAsType();
 
             if (SubTy.isNull()) {
-               desArgs.push_back(*I);
+               desArgs.push_back(TSTdecl->getTemplateArgs().get(Idecl));
                continue;
             }
             
@@ -220,6 +222,10 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 #endif
             SubTy = AddDefaultParameters(SubTy,interpreter,normCtxt);
             desArgs.push_back(clang::TemplateArgument(SubTy));
+         } else {
+            // We are past the end of the list of specified arguements and we
+            // do not want to add the default, no need to continue.
+            break;
          }
       }
 
@@ -234,6 +240,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    
    if (prefix) {
       instanceType = Ctx.getElaboratedType(clang::ETK_None,prefix,instanceType);
+      instanceType.setLocalFastQualifiers(prefix_qualifiers);
    }
    return instanceType;
 }
@@ -340,8 +347,8 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    normalizedType.getAsStringInternal(normalizedNameStep1,ctxt.getPrintingPolicy());
    
    // Still remove the std:: and default template argument and insert the Long64_t
-   TClassEdit::TSplitType splitname(normalizedNameStep1.c_str(),(TClassEdit::EModType)(TClassEdit::kDropAllDefault |TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault));
-   splitname.ShortType(norm_name, TClassEdit::kDropAllDefault | TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
+   TClassEdit::TSplitType splitname(normalizedNameStep1.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault));
+   splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
 
    // And replace basic_string<char>.  NOTE: we should probably do this at the same time as the GetPartiallyDesugaredType ... but were do we stop ?
    static const char* basic_string_s = "basic_string<char>";
