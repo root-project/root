@@ -180,6 +180,7 @@
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/Pragma.h"
+#include "clang/Sema/Sema.h"
 #include "clang/Serialization/ASTWriter.h"
 #include "cling/Utils/AST.h"
 
@@ -582,31 +583,141 @@ long R__GetLineNumber(const clang::Decl *decl)
    }   
 }
 
-const char *R__GetComment(const clang::Decl &decl)
+// Returns the comment (// striped away), annotating declaration in a meaningful
+// for ROOT IO way.
+// Takes optional out parameter clang::SourceLocation returning the source 
+// location of the comment.
+//
+// CXXMethodDecls, FieldDecls and TagDecls are annotated.
+// CXXMethodDecls declarations and FieldDecls are annotated as follows:
+// Eg. void f(); // comment1
+//     int member; // comment2
+// Inline definitions of CXXMethodDecls - after the closing ) and before {. Eg:
+// void f() // comment3
+// {...}
+// TagDecls are annotated in the end of the ClassDef macro. Eg.
+// class MyClass {
+// ...
+// ClassDef(MyClass, 1) // comment4
+//
+llvm::StringRef R__GetComment(const clang::Decl &decl, clang::SourceLocation *loc = 0)
 {
    clang::SourceManager& sourceManager = decl.getASTContext().getSourceManager();
-   clang::SourceLocation sourceLocation = decl.getLocation();
+   clang::SourceLocation sourceLocation;
+   // Guess where the comment start.
+   // if (const clang::TagDecl *TD = llvm::dyn_cast<clang::TagDecl>(&decl)) {
+   //    if (TD->isThisDeclarationADefinition())
+   //       sourceLocation = TD->getBodyRBrace();
+   // }
+   //else 
+   if (const clang::FunctionDecl *FD = llvm::dyn_cast<clang::FunctionDecl>(&decl)) {
+      if (FD->isThisDeclarationADefinition()) {
+         // We have to consider the argument list, because the end of decl is end of its name
+         // Maybe this will be better when we have { in the arg list (eg. lambdas)
+         if (FD->getNumParams())
+            sourceLocation = FD->getParamDecl(FD->getNumParams() - 1)->getLocEnd();
+         else
+            sourceLocation = FD->getLocEnd();
 
-   // Guess where the comment start.   
-   const char *comment = sourceManager.getCharacterData(sourceLocation);
+         // Skip the last )
+         sourceLocation = sourceLocation.getLocWithOffset(1);
+
+         //sourceLocation = FD->getBodyLBrace();
+      }
+      else {
+         //SkipUntil(commentStart, ';');
+      }
+   }
+
+   if (sourceLocation.isInvalid())
+      sourceLocation = decl.getLocEnd();
+
+   // If the location is a macro get the expansion location.
+   sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
+
+   assert(sourceLocation.isValid() && "Invalid source location!");
+   const char *commentStart = sourceManager.getCharacterData(sourceLocation);
+
+   // The decl end of FieldDecl is the end of the type, sometimes excluding the declared name
+   if (llvm::isa<clang::FieldDecl>(&decl)) {
+      // Find the semicolon.
+      while(*commentStart != ';')
+         ++commentStart; 
+   }
+
    // Find the end of declaration:
-   while (comment[0]!=';' && comment[0]!='\n' && comment[0]!='\r') {
-      ++comment;
-   }
-   ++comment;
-   // Now skip the spaces and beginning of comments.
-   while ( (isspace(comment[0]) || comment[0]=='/') && comment[0]!='\n' && comment[0]!='\r') {
-      ++comment;
-   }
-   
-//   while (comment[0]!='\n' && comment[0]!='\r') {
-//      ++comment;
-//   }
+   // When there is definition Comments must be between ) { when there is definition. 
+   // Eg. void f() //comment 
+   //     {}
+   if (!decl.hasBody())
+      while (*commentStart !=';' && *commentStart != '\n' && *commentStart != '\r')
+         ++commentStart;
 
-   return comment;
+   // Eat up the last char of the declaration if wasn't newline or comment terminator
+   if (*commentStart != '\n' && *commentStart != '\r' && *commentStart != '{')
+      ++commentStart;
+
+   // Now skip the spaces and beginning of comments.
+   while ( (isspace(*commentStart) || *commentStart == '/') 
+           && *commentStart != '\n' && *commentStart != '\r') {
+      ++commentStart;
+   }
+
+   const char* commentEnd = commentStart;
+   while (*commentEnd != '\n' && *commentEnd != '\r' && *commentEnd != '{') {
+      ++commentEnd;
+   }
+
+   if (loc) {
+      // Find the true beginning of a comment.
+      unsigned offset = commentStart - sourceManager.getCharacterData(sourceLocation);
+      *loc = sourceLocation.getLocWithOffset(offset - 1);
+   }
+
+   return llvm::StringRef(commentStart, commentEnd - commentStart);
 }
 
 cling::Interpreter *gInterp = 0;
+
+// In order to store the meaningful for the IO comments we have to transform 
+// the comment into annotation of the given decl.
+void R__AnnotateDecl(clang::CXXRecordDecl &CXXRD) 
+{
+   using namespace clang;
+   SourceLocation commentSLoc;
+   llvm::StringRef comment;
+
+   ASTContext &C = CXXRD.getASTContext();
+   Sema& S = gInterp->getCI()->getSema();
+
+   SourceRange commentRange;
+
+   for(CXXRecordDecl::decl_iterator I = CXXRD.decls_begin(), 
+          E = CXXRD.decls_end(); I != E; ++I) {
+      if (!(*I)->isImplicit() && (isa<CXXMethodDecl>(*I) || isa<FieldDecl>(*I))) {
+         // For now we allow only a special macro (ClassDef) to have meaningful comments
+         SourceLocation maybeMacroLoc = (*I)->getLocation();
+         bool isClassDefMacro = maybeMacroLoc.isMacroID() && S.findMacroSpelling(maybeMacroLoc, "ClassDef");
+         if (isClassDefMacro) {
+            while (isa<NamedDecl>(*I) && cast<NamedDecl>(*I)->getName() != "DeclFileLine")
+               ++I;
+         }
+
+         comment = R__GetComment(**I, &commentSLoc);
+         if (comment.size()) {
+            // Keep info for the source range of the comment in case we want to issue
+            // nice warnings, eg. empty comment and so on.
+            commentRange = SourceRange(commentSLoc, commentSLoc.getLocWithOffset(comment.size()));
+            // The ClassDef annotation is for the class itself
+            if (isClassDefMacro)
+               CXXRD.addAttr(new (C) AnnotateAttr(commentRange, C, comment.str()));
+            else
+               (*I)->addAttr(new (C) AnnotateAttr(commentRange, C, comment.str()));
+         }
+      }
+   }
+}
+
 std::string gResourceDir;
 
 void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext)
@@ -2304,7 +2415,7 @@ int IsSTLContainer(const clang::CXXBaseSpecifier &base)
 //______________________________________________________________________________
 bool IsStreamableObject(const clang::FieldDecl &m)
 {
-   const char *comment = R__GetComment( m );
+   const char *comment = R__GetComment( m ).data();
 
    // Transient
    if (comment[0] == '!') return false;
@@ -3884,7 +3995,7 @@ const clang::FieldDecl *R__GetDataMemberFromAllParents(const clang::CXXRecordDec
 enum R__DataMemberInfo__ValidArrayIndex_error_code { VALID, NOT_INT, NOT_DEF, IS_PRIVATE, UNKNOWN };
 const char* R__DataMemberInfo__ValidArrayIndex(const clang::FieldDecl &m, int *errnum, char **errstr) 
 {
-   const char* title = R__GetComment( m );
+   const char* title = R__GetComment( m ).data();
    
    // Let's see if the user provided us with some information
    // with the format: //[dimension] this is the dim of the array
@@ -4184,7 +4295,7 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl, const cling::Interpr
           field_iter != end;
           ++field_iter)
       {
-         const char *comment = R__GetComment( **field_iter );
+         const char *comment = R__GetComment( **field_iter ).data();
 
          clang::QualType type = field_iter->getType();
          std::string type_name = type.getAsString(clxx->getASTContext().getPrintingPolicy());
@@ -6613,6 +6724,10 @@ int main(int argc, char **argv)
       end = scan.fSelectedClasses.end();
       for( ; iter != end; ++iter) 
       {
+         // Testing purpose only!
+         if (clang::CXXRecordDecl* CXXRD = llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl())))
+            R__AnnotateDecl(*CXXRD);
+         // end
          if (!iter->GetRecordDecl()->isCompleteDefinition()) {
             continue;
          }                       
