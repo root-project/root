@@ -346,8 +346,8 @@ void TFFTComplexReal::SetPointComplex(Int_t ipoint, TComplex &c)
       ((fftw_complex*)fIn)[ipoint][0] = c.Re();
       ((fftw_complex*)fIn)[ipoint][1] = c.Im();
    } else {
-      ((fftw_complex*)fOut)[2*(fN[0]/2)-ipoint][0] = c.Re();
-      ((fftw_complex*)fOut)[2*(fN[0]/2)-ipoint][1] = -c.Im();
+      ((fftw_complex*)fIn)[2*(fN[0]/2)-ipoint][0] = c.Re();
+      ((fftw_complex*)fIn)[2*(fN[0]/2)-ipoint][1] = -c.Im();
    }
 }
 
