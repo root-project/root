@@ -114,8 +114,9 @@ $(LLVMDEPO): $(LLVMDEPS)
 			LLVMCXX="aCC"; \
 			LLVM_CFLAGS="+DD64 -Ae"; \
 		fi; \
-		echo "*** Configuring LLVM in $@..."; \
-		cd $(dir $@) && \
+		echo "*** Configuring LLVM in $(dir $@) ..."; \
+		mkdir -p $(dir $@) && \
+		cd $(dir $@)  && \
 		GNUMAKE=$(MAKE) $(LLVMDIRS)/configure \
 		$$LLVM_HOST \
 		--prefix=$(ROOT_OBJDIR)/$(LLVMDIRI) \
