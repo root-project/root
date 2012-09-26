@@ -36,8 +36,11 @@ Int_t runPrefetchReading()
    TString library("atlasFlushed/atlasFlushed");
    gSystem->Load(library);
 
-   TFile *file = TFile::Open( filename );
-   if (!file || file->IsZombie()) return 1;
+   TFile *file = TFile::Open( filename, "TIMEOUT=30" );
+   if (!file || file->IsZombie()) {
+      Error("runPrefetchReading","Could not open the file %s within 30s",filename.Data());
+      return 1;
+   }
 
    // file->MakeProject("atlasFlushed","*","RECREATE+");
 
