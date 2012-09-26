@@ -301,7 +301,7 @@ bool ParentRendersToChild(NSView<X11Window> *child)
    assert(child != nil && "ParentRendersToChild, child parameter is nil");
 
    //Adovo poluchaetsia, tashhem-ta! ;)
-   return X11::ViewIsTextViewFrame(child, true) && !child.fContext && 
+   return (X11::ViewIsTextViewFrame(child, true) || X11::ViewIsHtmlViewFrame(child, true)) && !child.fContext &&
           child.fMapState == kIsViewable && child.fParentView.fContext &&
           !child.fIsOverlapped;
 }
@@ -1138,8 +1138,8 @@ void TGCocoa::TranslateCoordinates(Window_t srcWin, Window_t dstWin, Int_t srcX,
          //hitTest requires a point in a view's superview coordinate system.
          //Even contentView of QuartzWindow has a superview (NSThemeFrame),
          //so this should always work.
-         dstPoint = [[dstView superview] convertPoint : dstPoint fromView : dstView];
-         if (NSView<X11Window> * const view = (NSView<X11Window> *)[dstView hitTest : dstPoint]) {
+         const NSPoint pt = [[dstView superview] convertPoint : dstPoint fromView : dstView];
+         if (NSView<X11Window> * const view = (NSView<X11Window> *)[dstView hitTest : pt]) {
             if (view != dstView && view.fMapState == kIsViewable)
                child = view.fID;
          }

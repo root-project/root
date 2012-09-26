@@ -580,12 +580,15 @@ NSPoint GetCursorHotStop(NSImage *image, ECursor cursor)
    return CGPointMake(imageSize.width / 2, imageSize.height / 2);
 }
 
-//TGTextView is a very special window: it's a TGCompositeFrame,
+//TGTextView/TGHtml is a very special window: it's a TGCompositeFrame,
 //which has TGCompositeFrame inside (TGViewFrame). This TGViewFrame
 //delegates Expose events to its parent, and parent tries to draw
 //inside a TGViewFrame. This does not work with default 
 //QuartzView -drawRect/TGCocoa. So I need a trick to identify
 //this special window.
+
+//TODO: possibly regactor these functions in a more generic way - not
+//to have two separate versions for text and html.
 
 //______________________________________________________________________________
 bool ViewIsTextView(unsigned viewID)
@@ -626,12 +629,64 @@ bool ViewIsTextViewFrame(NSView<X11Window> *view, bool checkParent)
 }
 
 //______________________________________________________________________________
+bool ViewIsHtmlView(unsigned viewID)
+{
+   const TGWindow * const window = gClient->GetWindowById(viewID);
+   if (!window)
+      return false;   
+   return window->InheritsFrom("TGHtml");
+}
+
+//______________________________________________________________________________
+bool ViewIsHtmlView(NSView<X11Window> *view)
+{
+   assert(view != nil && "ViewIsHtmlView, view parameter is nil");
+
+   return ViewIsHtmlView(view.fID);
+}
+
+//______________________________________________________________________________
+bool ViewIsHtmlViewFrame(NSView<X11Window> *view, bool checkParent)
+{
+   //
+   assert(view != nil && "ViewIsHtmlViewFrame, view parameter is nil");
+   
+   const TGWindow * const window = gClient->GetWindowById(view.fID);
+   if (!window)
+      return false;
+   
+   if (!window->InheritsFrom("TGViewFrame"))
+      return false;
+   
+   if (!checkParent)
+      return true;
+   
+   if (!view.fParentView)
+      return false;
+   
+   return ViewIsHtmlView(view.fParentView);
+}
+
+//______________________________________________________________________________
 NSView<X11Window> *FrameForTextView(NSView<X11Window> *textView)
 {
    assert(textView != nil && "FrameForTextView, textView parameter is nil");
    
    for (NSView<X11Window> *child in [textView subviews]) {
       if (ViewIsTextViewFrame(child, false))
+         return child;
+   }
+   
+   return nil;
+}
+
+//______________________________________________________________________________
+NSView<X11Window> *FrameForHtmlView(NSView<X11Window> *htmlView)
+{
+   assert(htmlView != nil && "FrameForHtmlView, htmlView parameter is nil");
+   
+   for (NSView<X11Window> *child in [htmlView subviews]) {
+      if (ViewIsHtmlViewFrame(child, false))
          return child;
    }
    
@@ -2088,7 +2143,7 @@ void print_mask_info(ULong_t mask)
 
    if (fID) {
       if (TGWindow * const window = gClient->GetWindowById(fID)) {
-         if (ViewIsTextViewFrame(self, true))//It's never painted, parent renders child. true == check the parent also.
+         if (ViewIsTextViewFrame(self, true) ||ViewIsHtmlViewFrame(self, true))//It's never painted, parent renders child. true == check the parent also.
             return;
 
          NSGraphicsContext * const nsContext = [NSGraphicsContext currentContext];
@@ -2116,11 +2171,18 @@ void print_mask_info(ULong_t mask)
                if (viewFrame)
                   vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, [viewFrame visibleRect]);//Now we set fExposedRegion for TGView.
             }
+            
+            if (ViewIsHtmlView(self)) {
+               //TODO: remove code duplication here.
+               NSView<X11Window> *const viewFrame = FrameForHtmlView(self);
+               if (viewFrame)
+                  vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, [viewFrame visibleRect]);
+            }
 
             //Ask ROOT's widget/window to draw itself.
             gClient->NeedRedraw(window, kTRUE);
             
-            if (!fSnapshotDraw && !ViewIsTextView(self)) {
+            if (!fSnapshotDraw && !ViewIsTextView(self) && !ViewIsHtmlView(self)) {
                //If Cocoa repaints widget, cancel all ROOT's "outside of paint event"
                //rendering into this widget ... Except it's a text view :)
                gClient->CancelRedraw(window);
@@ -2223,7 +2285,7 @@ void print_mask_info(ULong_t mask)
    NSLog(@"event mask is:");
    print_mask_info(fEventMask);
    NSLog(@"grab mask is:");
-   print_mask_info(fGrabButtonEventMask);
+   print_mask_info(fPassiveGrabEventMask);
    NSLog(@"----------------End of view info------------------");
 }
 #endif

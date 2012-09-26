@@ -270,6 +270,7 @@ NSPoint TranslateFromScreen(NSPoint point, NSView<X11Window> *to);
 NSPoint TranslateCoordinates(NSView<X11Window> *fromView, NSView<X11Window> *toView, NSPoint sourcePoint);
 
 bool ViewIsTextViewFrame(NSView<X11Window> *view, bool checkParent);
+bool ViewIsHtmlViewFrame(NSView<X11Window> *view, bool checkParent);
 bool LockFocus(NSView<X11Window> *view);
 void UnlockFocus(NSView<X11Window> *view);//For symmetry only.
 
