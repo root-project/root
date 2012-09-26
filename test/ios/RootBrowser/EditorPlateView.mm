@@ -1,6 +1,7 @@
 #import <math.h>
 
 #import <QuartzCore/QuartzCore.h>
+#import <Availability.h>
 
 #import "EditorPlateView.h"
 #import "EditorView.h"
@@ -33,7 +34,13 @@
       editorLabel = [[UILabel alloc] initWithFrame : CGRectMake(frame.size.width / 2 - 60.f, 10.f, 120.f, 30.f)];
       editorLabel.backgroundColor = [UIColor clearColor];
       editorLabel.font = [UIFont systemFontOfSize : 14];
+
+#ifdef __IPHONE_6_0
+      editorLabel.textAlignment = NSTextAlignmentCenter;
+#else
       editorLabel.textAlignment = UITextAlignmentCenter;
+#endif
+      
       editorLabel.textColor = [UIColor whiteColor];
       [self addSubview : editorLabel];
       editorLabel.text = name;

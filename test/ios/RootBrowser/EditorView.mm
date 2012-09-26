@@ -1,6 +1,7 @@
 #import <math.h>
 
 #import <CoreGraphics/CGContext.h>
+#import <Availability.h>
 
 #import "ScrollViewWithPickers.h"
 #import "EditorPlateView.h"
@@ -91,7 +92,13 @@ enum {
       //It's completely transparent.
       const CGRect titleRect = CGRectMake(10.f, 10.f, 250.f, 35.f);
       editorTitle = [[UILabel alloc] initWithFrame : titleRect];
+      
+#ifdef __IPHONE_6_0
+      editorTitle.textAlignment = NSTextAlignmentCenter;
+#else
       editorTitle.textAlignment = UITextAlignmentCenter;
+#endif
+
       editorTitle.textColor = [UIColor blackColor];
       editorTitle.backgroundColor = [UIColor clearColor];
       [self addSubview : editorTitle];

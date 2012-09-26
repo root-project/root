@@ -1,3 +1,5 @@
+#import <Availability.h>
+
 #import "ROOTObjectController.h"
 #import "AxisFontInspector.h"
 
@@ -165,7 +167,13 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
    UILabel *label = [[UILabel alloc] initWithFrame : CGRectMake(0.f, 0.f, defaultCellW, defaultCellH)];
    label.text = fixedFontNames[row];
    label.font = [UIFont fontWithName : fixedFonts[row] size : 14.f];
+   
+#ifdef __IPHONE_6_0
+   label.textAlignment = NSTextAlignmentCenter;
+#else
    label.textAlignment = UITextAlignmentCenter;
+#endif
+
    label.backgroundColor = [UIColor colorWithPatternImage : [UIImage imageNamed : @"text_cell_bkn.png"]];
    
    return label;

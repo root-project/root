@@ -1,5 +1,6 @@
 #import <CoreGraphics/CGContext.h>
 #import <QuartzCore/QuartzCore.h>
+#import <Availability.h>
 
 #import "FileContentController.h"
 #import "ObjectShortcut.h"
@@ -123,7 +124,12 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
 
    CGContextSetRGBFillColor(ctx, 1.f, 1.f, 1.f, 1.f);
    const CGRect textRect = CGRectMake(0.f, [ObjectShortcut iconHeight], [ObjectShortcut iconWidth], [ObjectShortcut textHeight]);
+   
+#ifdef __IPHONE_6_0
+   [objectName drawInRect : textRect withFont : [UIFont systemFontOfSize : 16] lineBreakMode : NSLineBreakByWordWrapping alignment : NSTextAlignmentCenter];
+#else
    [objectName drawInRect : textRect withFont : [UIFont systemFontOfSize : 16] lineBreakMode : UILineBreakModeWordWrap alignment : UITextAlignmentCenter];
+#endif
 }
 
 //____________________________________________________________________________________________________

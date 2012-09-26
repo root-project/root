@@ -1,5 +1,6 @@
 #import <CoreGraphics/CGContext.h>
 #import <QuartzCore/QuartzCore.h>
+#import <Availability.h>
 
 #import "RootFileController.h"
 #import "FileShortcut.h"
@@ -71,7 +72,12 @@
    //Draw the file name.
    CGContextSetRGBFillColor(ctx, 1.f, 1.f, 1.f, 1.f);
    const CGRect textRect = CGRectMake(0.f, [FileShortcut iconHeight] - [FileShortcut textHeight], [FileShortcut iconWidth], [FileShortcut textHeight]);
+
+#ifdef __IPHONE_6_0
+   [fileName drawInRect : textRect withFont : [UIFont systemFontOfSize : 16] lineBreakMode : NSLineBreakByWordWrapping alignment : NSTextAlignmentCenter];
+#else
    [fileName drawInRect : textRect withFont : [UIFont systemFontOfSize : 16] lineBreakMode : UILineBreakModeWordWrap alignment : UITextAlignmentCenter];
+#endif
 }
 
 //____________________________________________________________________________________________________

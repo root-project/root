@@ -1,3 +1,5 @@
+#import <Availability.h>
+
 #import "ROOTObjectController.h"
 #import "H1ErrorsInspector.h"
 
@@ -113,7 +115,13 @@ RIB::EHistogramErrorOption histErrorTypes[] = {RIB::hetNoError, RIB::hetE, RIB::
    UILabel *label = [[UILabel alloc] initWithFrame : CGRectMake(0.f, 0.f, defaultCellW, defaultCellH)];
    label.text = errorTypesStrings[row];
    label.font = [UIFont fontWithName : @"TimesNewRomanPS-BoldMT" size : 14.f];
+
+#ifdef __IPHONE_6_0
+   label.textAlignment = NSTextAlignmentCenter;
+#else
    label.textAlignment = UITextAlignmentCenter;
+#endif
+
    label.backgroundColor = [UIColor colorWithPatternImage : [UIImage imageNamed : @"text_cell_bkn.png"]];
 
    return label;
