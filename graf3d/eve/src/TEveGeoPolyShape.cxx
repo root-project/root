@@ -72,9 +72,8 @@ TEveGeoPolyShape* TEveGeoPolyShape::Construct(TGeoCompositeShape *cshape, Int_t 
       TBuffer3D::IncCSLevel();
 
       // Paint the boolean node - will add more buffers to viewer
-      TGeoHMatrix xxx;
       TGeoMatrix *gst = TGeoShape::GetTransform();
-      TGeoShape::SetTransform(&xxx);
+      TGeoShape::SetTransform(TEveGeoShape::GetGeoHMatrixIdentity());
       if (paintComponents) cshape->GetBoolNode()->Paint("");
       TGeoShape::SetTransform(gst);
       // Close the composite shape

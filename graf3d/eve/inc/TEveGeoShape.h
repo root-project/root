@@ -15,6 +15,7 @@
 #include "TEveShape.h"
 
 class TGeoShape;
+class TGeoHMatrix;
 class TGeoCompositeShape;
 class TEveGeoShapeExtract;
 class TBuffer3D;
@@ -63,6 +64,7 @@ public:
    virtual TClass*      ProjectedClass(const TEveProjection* p) const;
 
    static TGeoManager*  GetGeoMangeur();
+   static TGeoHMatrix*  GetGeoHMatrixIdentity();
 
    ClassDef(TEveGeoShape, 2); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
 };
