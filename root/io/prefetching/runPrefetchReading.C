@@ -36,11 +36,13 @@ Int_t runPrefetchReading()
    TString library("atlasFlushed/atlasFlushed");
    gSystem->Load(library);
 
+   printf("Starting to open the file\n");
    TFile *file = TFile::Open( filename, "TIMEOUT=30" );
    if (!file || file->IsZombie()) {
       Error("runPrefetchReading","Could not open the file %s within 30s",filename.Data());
       return 1;
    }
+   printf("The file has been opened, setting up the TTree\n");
 
    // file->MakeProject("atlasFlushed","*","RECREATE+");
 
@@ -82,6 +84,7 @@ Int_t runPrefetchReading()
 //   T->GetBranch("m_vec")->GetEntry(1);
 //   T->GetBranch("m_vec")->GetEntry(2);
 //   return 0;
+   printf("Setup done. Starting to read the entries\n");
    TRandom r;
    for (Long64_t i=efirst;i<elast;i++) {
      //if (i%100 == 0 || i>2000) fprintf(stderr,"i.debug = %lld\n",i);
