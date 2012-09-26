@@ -1996,7 +1996,10 @@ void TGCocoa::DrawStringAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, I
    CGContextSetRGBFillColor(ctx, textColor[0], textColor[1], textColor[2], textColor[3]);
 
    //Do a simple text layout using CGGlyphs.
-   std::vector<UniChar> unichars(text, text + len);
+   //GUI uses non-ascii symbols, and does not care about signed/unsigned - just dump everything
+   //into a char and be happy. I'm not.
+   std::vector<UniChar> unichars((unsigned char *)text, (unsigned char *)text + len);
+
    //Replace remaining ^P symbols with whitespaces, I have not idea why
    //TGTextView replaces only part of them and not all of them (but I know the name for such a behavior - BUG).
    std::replace(unichars.begin(), unichars.end(), UniChar(16), UniChar(' '));
