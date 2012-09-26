@@ -587,7 +587,7 @@ NSPoint GetCursorHotStop(NSImage *image, ECursor cursor)
 //QuartzView -drawRect/TGCocoa. So I need a trick to identify
 //this special window.
 
-//TODO: possibly regactor these functions in a more generic way - not
+//TODO: possibly refactor these functions in a more generic way - not
 //to have two separate versions for text and html.
 
 //______________________________________________________________________________
