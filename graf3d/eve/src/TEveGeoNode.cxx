@@ -362,19 +362,14 @@ TEveGeoShapeExtract* TEveGeoNode::DumpShapeTree(TEveGeoNode*         geon,
             TEveGeoManagerHolder gmgr(tvolume->GetGeoManager(), fgCSGExportNSeg);
             gGeoManager->SetPaintVolume(tvolume);
 
-            Bool_t had_null_transform = kFALSE;
-            if (tshape->GetTransform() == 0) {
-               had_null_transform = kTRUE;
-               tshape->SetTransform(gGeoIdentity);
-            }
+            TGeoMatrix *gst = TGeoShape::GetTransform();
+            TGeoShape::SetTransform(TEveGeoShape::GetGeoHMatrixIdentity());
 
             scene_pad.BeginScene();
             dynamic_cast<TGeoCompositeShape*>(tshape)->PaintComposite();
             scene_pad.EndScene();
 
-            if (had_null_transform) {
-               tshape->SetTransform(0);
-            }
+            TGeoShape::SetTransform(gst);
          }
 
          pad.SetViewer3D(0);

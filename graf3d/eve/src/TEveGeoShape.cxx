@@ -55,6 +55,8 @@ namespace
       gGeoIdentity = old_id;
       return mgr;
    }
+
+  TGeoHMatrix localGeoHMatrixIdentity;
 }
 
 //==============================================================================
@@ -90,6 +92,17 @@ TGeoManager* TEveGeoShape::GetGeoMangeur()
    // passed into TEveGeoShapes.
 
    return fgGeoMangeur;
+}
+
+//______________________________________________________________________________
+TGeoHMatrix* TEveGeoShape::GetGeoHMatrixIdentity()
+{
+   // Return static identity matrix in homogeneous representation.
+   // This is needed because TGeoCompositeShape::PaintComposite()
+   // assumes TGeoShape::fgTransform is a TGeoHMatrix and we need to pass in
+   // an identity matrix when painting a composite shape.
+
+   return &localGeoHMatrixIdentity;
 }
 
 //______________________________________________________________________________
@@ -227,9 +240,8 @@ void TEveGeoShape::Paint(Option_t* /*option*/)
       TBuffer3D::IncCSLevel();
 
       // Paint the boolean node - will add more buffers to viewer
-      TGeoHMatrix xxx;
       TGeoMatrix *gst = TGeoShape::GetTransform();
-      TGeoShape::SetTransform(&xxx);
+      TGeoShape::SetTransform(TEveGeoShape::GetGeoHMatrixIdentity());
       if (paintComponents) fCompositeShape->GetBoolNode()->Paint("");
       TGeoShape::SetTransform(gst);
       // Close the composite shape
