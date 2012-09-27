@@ -68,6 +68,7 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(METAUTILSTO): CXXFLAGS += $(METAUTILSCXXFLAGS)
+$(METAUTILSO): CXXFLAGS += $(METAUTILSCXXFLAGS)
 ifeq ($(BUILDCLING),yes)
 $(METAUTILSTO): $(LLVMDEP)
 endif

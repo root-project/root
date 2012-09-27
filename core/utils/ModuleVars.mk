@@ -7,23 +7,21 @@ ifneq ($(HOST),)
 
 UTILSDIRS    := $(BUILDTOOLSDIR)/core/utils/src
 
-ROOTCINTS    := $(UTILSDIRS)/rootcint.cxx \
-                $(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/R*.cxx))
-ROOTCINTTMPO := $(ROOTCINTS:.cxx=_tmp.o)
-ROOTCINTTMPEXE := $(UTILSDIRS)/rootcint_tmp$(EXEEXT)
-ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
-
 ifeq ($(BUILDCLING),yes)
 ROOTCLINGS    := $(UTILSDIRS)/rootcling.cxx \
                  $(filter-out %RStl.cxx,$(filter-out %root%.cxx,$(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/*.cxx))))
 ROOTCLINGTMPS := $(ROOTCLINGS:.cxx=_tmp.cxx)
 ROOTCLINGTMPO := $(ROOTCLINGS:.cxx=_tmp.o)
 ROOTCLINGTMPEXE := $(UTILSDIRS)/rootcling_tmp$(EXEEXT)
-ifeq ($(ROOT_REVERT_TO_ROOTCINT),)
 ROOTCINTTMP  ?= $(ROOTCLINGTMPEXE) -$(ROOTDICTTYPE)
-else
+
+else 
+ROOTCINTS    := $(UTILSDIRS)/rootcint.cxx \
+                $(filter-out %_tmp.cxx,$(wildcard $(UTILSDIRS)/R*.cxx))
+ROOTCINTTMPO := $(ROOTCINTS:.cxx=_tmp.o)
+ROOTCINTTMPEXE := $(UTILSDIRS)/rootcint_tmp$(EXEEXT)
 ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
-endif
+
 endif
 
 ##### Dependencies for all dictionaries
@@ -49,6 +47,7 @@ UTILSDIRS    := $(UTILSDIR)/src
 UTILSDIRI    := $(UTILSDIR)/inc
 
 ##### rootcint #####%
+ifneq ($(BUILDCLING),yes)
 ROOTCINTS    := $(UTILSDIRS)/rootcint.cxx \
                 $(filter-out %RClStl.cxx %_tmp.cxx,$(wildcard $(UTILSDIRS)/R*.cxx))
 ROOTCINTO    := $(call stripsrc,$(ROOTCINTS:.cxx=.o))
@@ -58,6 +57,7 @@ ROOTCINTDEP  := $(ROOTCINTO:.o=.d) $(ROOTCINTTMPO:.o=.d)
 ROOTCINTTMPEXE := $(call stripsrc,$(UTILSDIRS)/rootcint_tmp$(EXEEXT))
 ROOTCINTEXE  := bin/rootcint$(EXEEXT)
 ROOTCINTTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
+endif # ifneq ($(BUILDCLING),yes)
 
 ##### rootcling #####
 ifeq ($(BUILDCLING),yes)
@@ -72,11 +72,7 @@ ROOTCLINGDEP := $(ROOTCLINGO:.o=.d) $(ROOTCLINGTMPO:.o=.d) $(ROOTCLINGUTILO:.o=.
 
 ROOTCLINGTMPEXE := $(call stripsrc,$(UTILSDIRS)/rootcling_tmp$(EXEEXT))
 ROOTCLINGEXE  := bin/rootcling$(EXEEXT)
-ifeq ($(ROOT_REVERT_TO_ROOTCINT),)
 ROOTCLINGTMP  ?= $(ROOTCLINGTMPEXE) -$(ROOTDICTTYPE)
-else
-ROOTCLINGTMP  ?= $(ROOTCINTTMPEXE) -$(ROOTDICTTYPE)
-endif
 endif # ifeq ($(BUILDCLING),yes)
 
 ##### Dependencies for all dictionaries
