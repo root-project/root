@@ -3206,9 +3206,6 @@ void TClass::ResetClassInfo(Long_t tagnum)
          fRealData->Delete();
       delete fRealData;  fRealData=0;
       
-      if (fStreamerInfo)
-         fStreamerInfo->Delete();
-      delete fStreamerInfo; fStreamerInfo=0;
    }
 }
 
