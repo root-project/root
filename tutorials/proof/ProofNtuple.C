@@ -233,7 +233,7 @@ void ProofNtuple::SlaveTerminate()
       TDirectory *savedir = gDirectory;
       if (fNtp->GetEntries() > 0) {
          fFile->cd();
-         fNtp->Write();
+         fNtp->Write(0, TObject::kOverwrite);
          if (fNtp2 && fNtp2->GetEntries() > 0) fNtp2->Write();
          fProofFile->Print();
          fOutput->Add(fProofFile);
