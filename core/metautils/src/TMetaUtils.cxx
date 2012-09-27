@@ -485,7 +485,6 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
    // If the location is a macro get the expansion location.
    sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
 
-   assert(sourceLocation.isValid() && "Invalid source location!");
    bool invalid;
    const char *commentStart = sourceManager.getCharacterData(sourceLocation, &invalid);
    if (invalid)
