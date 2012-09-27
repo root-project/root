@@ -912,6 +912,7 @@
 					../../../io/io/src/G__IO.o,
 				);
 				PRODUCT_NAME = RootBrowser;
+				VALID_ARCHS = armv7;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -938,6 +939,7 @@
 				);
 				PRODUCT_NAME = RootBrowser;
 				VALIDATE_PRODUCT = YES;
+				VALID_ARCHS = armv7;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

@@ -4,6 +4,8 @@
 #import <sys/sysctl.h>
 #import <sys/types.h>
 
+#include <Availability.h>
+
 #import "TApplication.h"
 
 #import "root_browserAppDelegate.h"
@@ -42,6 +44,10 @@ bool deviceIsiPad3 = false;
    
    navigationController.navigationBar.barStyle = UIBarStyleBlackTranslucent;
    navigationController.delegate = rootController;
+
+#ifdef __IPHONE_6_0
+   self.window.rootViewController = navigationController;
+#endif
    
    [self.window addSubview : navigationController.view];
    [self.window makeKeyAndVisible];
