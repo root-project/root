@@ -116,10 +116,6 @@ distclean::     distclean-$(MODNAME)
 $(call stripsrc,$(BASEDIRS)/TPRegexp.o): $(PCREDEP)
 $(call stripsrc,$(BASEDIRS)/TPRegexp.o): CXXFLAGS += $(PCREINC)
 
-ifeq ($(ARCH),alphacxx6)
-$(call stripsrc,$(BASEDIRS)/TRandom.o): OPT = $(NOOPT)
-endif
-
 ifeq ($(GCC_MAJOR),4)
 ifeq ($(GCC_MINOR),1)
 $(call stripsrc,$(BASEDIRS)/TString.o): CXXFLAGS += -Wno-strict-aliasing

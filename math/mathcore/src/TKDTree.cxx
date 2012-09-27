@@ -16,9 +16,7 @@
 #include <string.h>
 #include <limits>
 
-#ifndef R__ALPHA
 templateClassImp(TKDTree)
-#endif
 
 
 //////////////////////////////////////////////////////////////////////////

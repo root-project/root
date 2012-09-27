@@ -57,7 +57,7 @@
 #   endif
 #endif
 
-#if (defined(__alpha) && !defined(__linux)) || defined(_AIX) || \
+#if defined(_AIX) || \
     defined(__FreeBSD__) || defined(__Lynx__) || defined(__OpenBSD__) || \
     (defined(__APPLE__) && !defined(MAC_OS_X_VERSION_10_5))
 #define UTMP_NO_ADDR

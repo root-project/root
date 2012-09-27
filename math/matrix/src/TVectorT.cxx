@@ -40,9 +40,8 @@
 #include "TROOT.h"
 #include "Varargs.h"
 
-#ifndef R__ALPHA
 templateClassImp(TVectorT)
-#endif
+
 
 //______________________________________________________________________________
 template<class Element>

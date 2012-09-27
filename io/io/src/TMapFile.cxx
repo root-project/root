@@ -103,7 +103,7 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
-#if defined(R__HPUX) || (defined (R__ALPHA) && !defined(R__FBSD)) || \
+#if defined(R__HPUX) || \
     defined (R__SOLARIS) || defined(R__AIX) || defined(R__HIUX) || \
     __GLIBC_MINOR__ > 0
 union semun {

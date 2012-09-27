@@ -45,8 +45,8 @@
 #include <sys/types.h>
 #if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) || \
     defined(R__AIX) || defined(R__LINUX) || defined(R__SOLARIS) || \
-    defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__OBSD) || defined(R__MACOSX) || defined(R__HURD)
+    defined(R__HIUX) || defined(R__FBSD) || defined(R__OBSD) || \
+    defined(R__MACOSX) || defined(R__HURD)
 #define HAS_DIRENT
 #endif
 #ifdef HAS_DIRENT
@@ -57,10 +57,9 @@
 #if defined(ULTRIX) || defined(R__SUN)
 #   include <sgtty.h>
 #endif
-#if defined(R__AIX) || defined(R__LINUX) || defined(R__ALPHA) || \
-    defined(R__SGI) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__OBSD) || defined(R__LYNXOS) || defined(R__MACOSX) || \
-    defined(R__HURD)
+#if defined(R__AIX) || defined(R__LINUX) || defined(R__SGI) || \
+    defined(R__HIUX) || defined(R__FBSD) || defined(R__OBSD) || \
+    defined(R__LYNXOS) || defined(R__MACOSX) || defined(R__HURD)
 #   include <sys/ioctl.h>
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS)
@@ -71,12 +70,7 @@
 #      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
 #   endif
 #endif
-#if defined(R__ALPHA)
-#   include <sys/mount.h>
-#   ifndef R__TRUE64
-   extern "C" int statfs(const char *file, struct statfs *buffer);
-#   endif
-#elif defined(R__MACOSX)
+#if defined(R__MACOSX)
 #   include <mach-o/dyld.h>
 #   include <sys/mount.h>
    extern "C" int statfs(const char *file, struct statfs *buffer);
@@ -152,9 +146,6 @@
 #   define HASNOT_INETATON
 #   endif
 #endif
-#if defined(R__ALPHA) && !defined(R__GNU)
-#   define HASNOT_INETATON
-#endif
 #if defined(R__HIUX)
 #   define HASNOT_INETATON
 #endif
@@ -182,7 +173,7 @@
 #   endif
 #endif
 
-#if defined(R__ALPHA) || defined(R__AIX) || defined(R__FBSD) || \
+#if defined(R__AIX) || defined(R__FBSD) || \
     defined(R__OBSD) || defined(R__LYNXOS) || \
     (defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5))
 #   define UTMP_NO_ADDR
@@ -843,9 +834,7 @@ Int_t TUnixSystem::GetFPEMask()
    fenv_t oldenv;
    fegetenv(&oldenv);
    fesetenv(&oldenv);
-#ifdef __alpha__
-   ULong_t oldmask = ~oldenv;
-#elif __ia64__
+#if __ia64__
    Int_t oldmask = ~oldenv;
 #else
    Int_t oldmask = ~oldenv.__control_word;
@@ -938,7 +927,7 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 
    fenv_t cur;
    fegetenv(&cur);
-#if defined __ia64__ || defined __alpha__
+#if defined __ia64__
    cur &= ~newm;
 #else
    cur.__control_word &= ~newm;
@@ -1291,15 +1280,8 @@ Bool_t TUnixSystem::CheckDescriptors()
    TFileHandler *fh;
    Int_t  fddone = -1;
    Bool_t read   = kFALSE;
-#if defined(R__LINUX) && defined(__alpha__)
-   // TOrdCollectionIter it(...) causes segv ?!?!? Also TIter fails.
-   Int_t cursor = 0;
-   while (cursor < fFileHandler->GetSize()) {
-      fh = (TFileHandler*) fFileHandler->At(cursor++);
-#else
    TOrdCollectionIter it((TOrdCollection*)fFileHandler);
    while ((fh = (TFileHandler*) it.Next())) {
-#endif
       Int_t fd = fh->GetFd();
       if ((fd <= fMaxrfd && fReadready->IsSet(fd) && fddone == -1) ||
           (fddone == fd && read)) {
@@ -1773,14 +1755,14 @@ needshell:
    // read first argument
    patbuf0 = "";
    int cnt = 0;
-#if defined(R__ALPHA) || defined(R__AIX)
+#if defined(R__AIX)
 again:
 #endif
    for (ch = fgetc(pf); ch != EOF && ch != ' ' && ch != '\n'; ch = fgetc(pf)) {
       patbuf0.Append(ch);
       cnt++;
    }
-#if defined(R__ALPHA) || defined(R__AIX)
+#if defined(R__AIX)
    // Work around bug timing problem due to delay in forking a large program
    if (cnt == 0 && ch == EOF) goto again;
 #endif

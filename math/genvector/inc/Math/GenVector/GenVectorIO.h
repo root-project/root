@@ -19,13 +19,6 @@
 #ifndef ROOT_Math_GenVector_GenVectorIO 
 #define ROOT_Math_GenVector_GenVectorIO  1
 
-#if defined(__alpha) 
-#ifndef __USE_STD_IOSTREAM
-#define __USE_STD_IOSTREAM
-#endif
-#endif
-
-
 #include <cctype>
 #include <iostream>
 

@@ -233,17 +233,7 @@
 #if defined(__CYGWIN__) && defined(__GNUC__)
 #   define cygwingcc
 #endif
-#if defined(__alpha) && !defined(linux)
-#   ifdef _XOPEN_SOURCE
-#      if _XOPEN_SOURCE+0 > 0
-#         define R__TRUE64
-#      endif
-#   endif
-#include <sys/mount.h>
-#ifndef R__TRUE64
-extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
-#endif
-#elif defined(__APPLE__)
+#if defined(__APPLE__)
 #include <sys/mount.h>
 extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #elif defined(linux) || defined(__hpux) || defined(cygwingcc)
@@ -255,7 +245,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #include <sys/statfs.h>
 #endif
 
-#if defined(linux) || defined(__hpux) || defined(_AIX) || defined(__alpha) || \
+#if defined(linux) || defined(__hpux) || defined(_AIX) || \
     defined(__sun) || defined(__sgi) || defined(__FreeBSD__) || \
     defined(__APPLE__) || defined(cygwingcc) || defined(__OpenBSD__)
 #define HAVE_MMAP
@@ -304,14 +294,6 @@ static int fcntl_lockf(int fd, int op, off_t off)
 #include <sys/types.h>
 #include <signal.h>
 #define ROOT_SIGNAL_INCLUDED
-#endif
-
-#if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__) && \
-    !defined(__OpenBSD__)
-extern "C" int initgroups(const char *name, int basegid);
-#ifndef ROOT_SIGNAL_INCLUDED
-#include <signal.h>
-#endif
 #endif
 
 #if defined(__sgi) && !defined(__GNUG__) && (SGI_REL<62)

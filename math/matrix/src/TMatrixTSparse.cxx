@@ -74,9 +74,8 @@
 #include "TMatrixT.h"
 #include "TMath.h"
 
-#ifndef R__ALPHA
 templateClassImp(TMatrixTSparse)
-#endif
+
 
 //______________________________________________________________________________
 template<class Element>

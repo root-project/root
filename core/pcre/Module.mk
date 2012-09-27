@@ -88,9 +88,6 @@ else
 		if [ $(ARCH) = "aix5" ]; then \
 			PCRE_CFLAGS="-DBOOL=int"; \
 		fi; \
-		if [ $(ARCH) = "alphacxx6" ]; then \
-			PCRECC="cc"; \
-		fi; \
 		if [ $(ARCH) = "linux" ]; then \
 			PCRE_CFLAGS="-m32"; \
 		fi; \

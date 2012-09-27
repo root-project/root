@@ -72,41 +72,6 @@
 #   endif
 #endif
 
-#if defined(__alpha) && !defined(linux)
-#   include <standards.h>
-#   ifndef __USE_STD_IOSTREAM
-#   define __USE_STD_IOSTREAM
-#   endif
-#   define R__TMPLTSTREAM
-#   ifdef _XOPEN_SOURCE
-#      if _XOPEN_SOURCE+0 > 0
-#         define R__TRUE64
-#      endif
-#   endif
-#   define R__ALPHA
-#   define ANSICPP
-#   ifndef R__TRUE64
-#      define NEED_SNPRINTF
-#   endif
-#   ifndef __VMS
-#      define R__UNIX
-#      define R__B64
-#      define R__BYTESWAP
-#      if __DECCXX_VER >= 60060002
-#         define R__VECNEWDELETE /* supports overloading of new[] and delete[] */
-#         define R__PLACEMENTDELETE /* supports overloading placement delete */
-#         define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
-#         define R__THROWNEWDELETE  /* new/delete throw exceptions */
-#      endif
-#      if defined __GNUC__
-#         define R__NAMESPACE_TEMPLATE_IMP_BUG
-#         define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
-#      else
-#         define R__TEMPLATE_OVERLOAD_BUG
-#      endif
-#   endif
-#endif
-
 #if defined(__sun) && !(defined(linux) || defined(__FCC_VERSION))
 #   ifdef __SVR4
 #      define R__SOLARIS
@@ -206,14 +171,6 @@
 #endif
 
 #if defined(linux) && defined(__x86_64__)
-#   define R__LINUX
-#   define R__UNIX
-#   define R__BYTESWAP
-#   define R__B64
-#   define NEED_SIGJMP
-#endif
-
-#if defined(linux) && defined(__alpha__)
 #   define R__LINUX
 #   define R__UNIX
 #   define R__BYTESWAP

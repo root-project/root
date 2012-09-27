@@ -54,18 +54,7 @@
 extern "C" int ruserok(char *, int, char *, char *);
 #endif
 
-#if defined(__alpha) && !defined(linux)
-#   ifdef _XOPEN_SOURCE
-#      if _XOPEN_SOURCE+0 > 0
-#         define R__TRUE64
-#      endif
-#   endif
-#include <sys/mount.h>
-#ifndef R__TRUE64
-extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
-extern "C" int ruserok(const char *, int, const char *, const char *);
-#endif
-#elif defined(__APPLE__)
+#if defined(__APPLE__)
 #include <sys/mount.h>
 extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #elif defined(linux) || defined(__hpux)
@@ -188,11 +177,6 @@ static ERootdErrors gUsrPwdErr[4][4] = {
     kErrBadPwdFileHEquFailed}};
 
 //--- Machine specific routines ------------------------------------------------
-
-#if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__) && \
-    !defined(__OpenBSD__)
-extern "C" int initgroups(const char *name, int basegid);
-#endif
 
 #if defined(__sgi) && !defined(__GNUG__) && (SGI_REL<62)
 extern "C" {
@@ -3584,7 +3568,7 @@ int RpdCheckHostsEquiv(const char *host, const char *ruser,
 
    // Ok, now use ruserok to find out if {host,ruser,user}
    // is trusted
-#if defined(__sgi) || defined(_AIX) || defined(__alpha)
+#if defined(__sgi) || defined(_AIX)
    if (ruserok((char*)host,rootuser,(char*)ruser,(char*)user) == 0) {
 #else
    if (ruserok(host,rootuser,ruser,user) == 0) {

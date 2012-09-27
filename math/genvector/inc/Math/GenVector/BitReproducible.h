@@ -17,12 +17,6 @@
 #ifndef ROOT_Math_GenVector_BitReproducible 
 #define ROOT_Math_GenVector_BitReproducible  1
 
-#if defined(__alpha) 
-#ifndef __USE_STD_IOSTREAM
-#define __USE_STD_IOSTREAM
-#endif
-#endif
-
 #include <iostream>
 #include <string>
 #include <exception>

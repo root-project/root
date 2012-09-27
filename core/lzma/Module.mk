@@ -109,9 +109,6 @@ else
 		if [ "$(CC)" = "icc" ]; then \
 			LZMACC="icc -wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128"; \
 		fi; \
-		if [ $(ARCH) = "alphacxx6" ]; then \
-			LZMACC="cc"; \
-		fi; \
 		if [ $(ARCH) = "linux" ]; then \
 			LZMACC="$$LZMACC -m32"; \
 			LZMA_CFLAGS="-m32"; \

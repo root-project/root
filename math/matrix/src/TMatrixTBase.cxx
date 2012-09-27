@@ -211,9 +211,8 @@
 
 Int_t gMatrixCheck = 1;
 
-#ifndef R__ALPHA
 templateClassImp(TMatrixTBase)
-#endif
+
 
 //______________________________________________________________________________
 template<class Element>

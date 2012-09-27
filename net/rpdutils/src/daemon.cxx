@@ -208,13 +208,7 @@ out:
 #ifdef USE_SIGCHLD
       signal(SIGCLD, SigChild);
 #else
-#if defined(__alpha) && !defined(linux)
-      struct sigaction oldsigact, sigact;
-      sigact.sa_handler = SIG_IGN;
-      sigemptyset(&sigact.sa_mask);
-      sigact.sa_flags = SA_NOCLDWAIT;
-      sigaction(SIGCHLD, &sigact, &oldsigact);
-#elif defined(__sun)
+#if defined(__sun)
       sigignore(SIGCHLD);
 #else
       signal(SIGCLD, SIG_IGN);

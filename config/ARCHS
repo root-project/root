@@ -1,7 +1,5 @@
-aix5                 for AIX 5.x with xlC
-aixgcc               for AIX 5.x with gcc >= 3
-alphacxx6            for DEC Unix with cxx6
-alphagcc             for DEC Unix with gcc
+aix5                 for AIX >=5.x with xlC
+aixgcc               for AIX >=5.x with gcc >= 3
 freebsd4             for FreeBSD 4.x with gcc
 freebsd5             for FreeBSD 5.x and 6.x with gcc
 freebsd7             for FreeBSD 7.x with gcc
@@ -13,14 +11,13 @@ ios                  for Apple iOS on armv7 device
 iossim               for Apple iOS on i386 simulator
 linux                for i386 Linux with gcc >= 3
 linuxicc             for i386 Linux with Intel's icc
-linuxalphagcc        for Alpha Linux with gcc
 linuxarm             for ARM Linux with gcc
 linuxhppa            for HPPA Linux with gcc
 linuxia64ecc         for Itanium Linux with Intel icc
 linuxia64gcc         for Itanium Linux with gcc >= 3
 linuxmips            for MIPS Linux with gcc
 linuxppcgcc          for PPC Linux with gcc
-linuxppc64gcc        for PPC 64 Linux  with gcc >= 3
+linuxppc64gcc        for PPC 64 Linux with gcc >= 3
 linuxx8664gcc        for x86-64 Linux with gcc >= 3.x
 linuxx8664icc        for x86-64 Linux with Intel icc >=10.x
 linuxx32gcc          for x32 Linux ABI with gcc >= 4.7

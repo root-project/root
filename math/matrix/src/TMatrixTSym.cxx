@@ -29,9 +29,8 @@
 #include "TClass.h"
 #include "TMath.h"
 
-#ifndef R__ALPHA
 templateClassImp(TMatrixTSym)
-#endif
+
 
 //______________________________________________________________________________
 template<class Element>

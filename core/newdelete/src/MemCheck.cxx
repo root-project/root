@@ -487,8 +487,7 @@ static void *get_stack_pointer(int level)
    // For other compiler one will need to implement this again !
 
    void *p = 0;
-#if defined(R__GNU) && (defined(R__LINUX) || defined(R__HURD)) && \
-   !defined(__alpha__)
+#if defined(R__GNU) && (defined(R__LINUX) || defined(R__HURD))
    switch (level) {
    case 0:
       if (__builtin_frame_address(1))

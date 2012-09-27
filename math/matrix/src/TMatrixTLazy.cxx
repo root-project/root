@@ -26,13 +26,12 @@
 #include "TMatrixTLazy.h"
 #include "TMath.h"
 
-#ifndef R__ALPHA
 templateClassImp(TMatrixTLazy)
 templateClassImp(TMatrixTSymLazy)
 templateClassImp(THaarMatrixT)
 templateClassImp(THilbertMatrixT)
 templateClassImp(THilbertMatrixTSym)
-#endif
+
 
 //______________________________________________________________________________
 template<class Element>

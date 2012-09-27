@@ -184,24 +184,6 @@ LDFLAGS       = $(OPT) -L/usr/lib32 -Wl,-woff,134 -lgen
 SOFLAGS       = -shared
 endif
 
-ifeq ($(ARCH),alphagcc)
-# Alpha/OSF with gcc
-CXX           = g++
-CXXFLAGS      = $(OPT2) -Wall -fPIC
-LD            = g++
-LDFLAGS       = $(OPT2)
-SOFLAGS       = -Wl,-expect_unresolved,* -shared
-endif
-
-ifeq ($(ARCH),alphacxx6)
-# Alpha/OSF with cxx6
-CXX           = cxx
-CXXFLAGS      = $(OPT)
-LD            = cxx
-LDFLAGS       = $(OPT)
-SOFLAGS       = -shared -nocxxstd -Wl,-expect_unresolved,*,-msym
-endif
-
 ifeq ($(ARCH),linux)
 # Linux with egcs, gcc 2.9x, gcc 3.x
 CXX           = g++
@@ -279,15 +261,6 @@ CXX           = icc
 CXXFLAGS      = $(OPT) -fPIC -wd1476 -wd1572
 LD            = icpc
 LDFLAGS       = $(OPT)
-SOFLAGS       = -shared
-endif
-
-ifeq ($(ARCH),linuxalphagcc)
-# Alpha Linux with gcc
-CXX           = g++
-CXXFLAGS      = $(OPT2) -Wall -fPIC
-LD            = g++
-LDFLAGS       = $(OPT2)
 SOFLAGS       = -shared
 endif
 

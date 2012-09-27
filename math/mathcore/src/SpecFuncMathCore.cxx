@@ -8,7 +8,7 @@
  *                                                                    *
  **********************************************************************/
 
-#if defined(__sun) || defined(__sgi) || defined(_WIN32) || defined(_AIX) || defined(__alpha) 
+#if defined(__sun) || defined(__sgi) || defined(_WIN32) || defined(_AIX)
 #define NOT_HAVE_TGAMMA
 #endif
 
@@ -27,7 +27,7 @@
 #define USE_CEPHES
 
 // platforms not implemening C99
-// #if defined(__sun) || defined(__sgi) || defined(_WIN32) || defined(_AIX) || defined(__alpha) 
+// #if defined(__sun) || defined(__sgi) || defined(_WIN32) || defined(_AIX)
 // #define USE_CEPHES
 // #endif
 

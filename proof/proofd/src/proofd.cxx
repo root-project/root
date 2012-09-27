@@ -190,14 +190,6 @@
 #define ROOT_SIGNAL_INCLUDED
 #endif
 
-#if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__) && \
-    !defined(__OpenBSD__)
-extern "C" int initgroups(const char *name, int basegid);
-#ifndef ROOT_SIGNAL_INCLUDED
-#include <signal.h>
-#endif
-#endif
-
 #if defined(__sgi) && !defined(__GNUG__) && (SGI_REL<62)
 extern "C" {
    int seteuid(int euid);

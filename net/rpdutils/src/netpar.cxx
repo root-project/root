@@ -21,15 +21,8 @@
 #include "RConfig.h"
 
 // avoid warning due to wrong bzero prototype (used by FD_ZERO macro)
-#ifdef R__ALPHA
-#define _XOPEN_SOURCE_EXTENDED
-#endif
 #include <stdio.h>
 #include <string.h>
-#ifdef R__ALPHA
-#undef _XOPEN_SOURCE_EXTENDED
-#endif
-
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>

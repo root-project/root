@@ -180,33 +180,6 @@ LDFLAGS       = -O2
 SOFLAGS       =
 endif
 
-ifeq ($(ARCH),alphaegcs)
-# Alpha/OSF with egcs
-CXX           = g++
-CXXFLAGS      = -O2 -Wall -fPIC
-LD            = g++
-LDFLAGS       = -O2
-SOFLAGS       = -Wl,-expect_unresolved,* -shared
-endif
-
-ifeq ($(ARCH),alphakcc)
-# Alpha/OSF with kai compiler (not yet valid)
-CXX           = KCC --one_instantiation_per_object
-CXXFLAGS      = -O2 -fPIC
-LD            = KCC
-LDFLAGS       = -O2
-SOFLAGS       = -Wl,-expect_unresolved,* -shared
-endif
-
-ifeq ($(ARCH),alphacxx6)
-# Alpha/OSF with cxx6
-CXX           = cxx
-CXXFLAGS      = -O2
-LD            = cxx
-LDFLAGS       = -O2
-SOFLAGS       = -shared -nocxxstd -Wl,-expect_unresolved,*,-msym
-endif
-
 ifeq ($(ARCH),linuxrh51)
 # Linux with gcc 2.7.2.x
 CXX           = g++
@@ -367,15 +340,6 @@ ifeq ($(ARCH),linuxx8664icc)
 CXX           = icc
 CXXFLAGS      = -O2 -fPIC -Wshadow -wd1476 -wd1572
 LD            = icpc
-LDFLAGS       = -O2
-SOFLAGS       = -shared
-endif
-
-ifeq ($(ARCH),linuxalphaegcs)
-# Alpha Linux with egcs
-CXX           = g++
-CXXFLAGS      = -O2 -Wall -fPIC -Wshadow -Woverloaded-virtual
-LD            = g++
 LDFLAGS       = -O2
 SOFLAGS       = -shared
 endif

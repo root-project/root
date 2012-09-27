@@ -75,6 +75,3 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-ifeq ($(ARCH),alphacxx6)
-$(call stripsrc,$(POSTSCRIPTDIRS)/TPostScript.o): OPT = $(NOOPT)
-endif
