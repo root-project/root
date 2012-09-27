@@ -427,7 +427,10 @@ const char *TClingDataMemberInfo::Title() const
    if (!IsValid()) {
       return 0;
    }
-   // FIXME: Implement when rootcint makes this available!
+
+   if (clang::AnnotateAttr *A = GetDecl()->getAttr<clang::AnnotateAttr>())
+      return A->getAnnotation().data();
+
    return "";
 }
 

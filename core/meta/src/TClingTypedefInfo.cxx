@@ -300,9 +300,12 @@ const char *TClingTypedefInfo::Title() const
 {
    // Get the source code comment attached to the current typedef.
    if (!IsValid()) {
-      return "";
+      return 0;
    }
-   // FIXME: Implement when rootcling can provide it.
+
+   if (clang::AnnotateAttr *A = GetDecl()->getAttr<clang::AnnotateAttr>())
+      return A->getAnnotation().data();
+
    return "";
 }
 

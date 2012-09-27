@@ -821,8 +821,10 @@ const char *TClingClassInfo::Title() const
    if (!IsValid()) {
       return 0;
    }
-   // FIXME: Implement this when rootcling provides the info.
-   return 0;
+   if (clang::AnnotateAttr *A = GetDecl()->getAttr<clang::AnnotateAttr>())
+      return A->getAnnotation().data();
+
+   return "";
 }
 
 const char *TClingClassInfo::TmpltName() const

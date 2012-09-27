@@ -403,10 +403,13 @@ const char *TClingMethodInfo::TypeName() const
 
 const char *TClingMethodInfo::Title() const
 {
-   // FIXME: Implement this when we have comment parsing!
    if (!IsValid()) {
       return 0;
    }
+
+   if (clang::AnnotateAttr *A = GetMethodDecl()->getAttr<clang::AnnotateAttr>())
+      return A->getAnnotation().data();
+
    return "";
 }
 
