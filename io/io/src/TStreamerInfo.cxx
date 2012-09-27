@@ -1205,9 +1205,6 @@ void TStreamerInfo::BuildOld()
    TMemberStreamer* streamer = 0;
 
    Int_t sp = sizeof(void*);
-#if defined(R__SGI64)
-   sp = 8;
-#endif
 
    int nBaze = 0;
 

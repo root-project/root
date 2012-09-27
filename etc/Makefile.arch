@@ -148,42 +148,6 @@ LDFLAGS       = $(OPT)
 SOFLAGS       = -G
 endif
 
-ifeq ($(ARCH),sgicc)
-# SGI
-CXX           = CC -n32  -I/usr/include/CC.sgi
-CXXFLAGS      = $(OPT)
-LD            = CC -n32 -LANG:std  -I/usr/include/CC.sgi
-LDFLAGS       = $(OPT)
-SOFLAGS       = -shared
-endif
-
-ifeq ($(ARCH),sgicc64)
-# SGI
-CXX           = CC -64  -I/usr/include/CC.sgi
-CXXFLAGS      = $(OPT)
-LD            = CC -64 -LANG:std -I/usr/include/CC.sgi
-LDFLAGS       = $(OPT)
-SOFLAGS       = -shared
-endif
-
-ifeq ($(ARCH),sgigcc)
-# SGI 6.x with gcc
-CXX           = g++
-CXXFLAGS      = $(OPT) -Wall -fPIC
-LD            = g++
-LDFLAGS       = $(OPT) -Wl,-u,__builtin_new -Wl,-u,__builtin_delete -Wl,-u,__nw__FUiPv
-SOFLAGS       = -shared
-endif
-
-ifeq ($(ARCH),sgin32gcc)
-# SGI 6.x with gcc for n32 ABI
-CXX           = g++
-CXXFLAGS      = $(OPT) -Wall -fPIC
-LD            = g++
-LDFLAGS       = $(OPT) -L/usr/lib32 -Wl,-woff,134 -lgen
-SOFLAGS       = -shared
-endif
-
 ifeq ($(ARCH),linux)
 # Linux with egcs, gcc 2.9x, gcc 3.x
 CXX           = g++
@@ -261,15 +225,6 @@ CXX           = icc
 CXXFLAGS      = $(OPT) -fPIC -wd1476 -wd1572
 LD            = icpc
 LDFLAGS       = $(OPT)
-SOFLAGS       = -shared
-endif
-
-ifeq ($(ARCH),linuxmips)
-# GNU/Linux on mips (BE/LE, O32/N32/N64) with gcc
-CXX           = g++
-CXXFLAGS      = $(OPT2) -Wall -fPIC
-LD            = g++
-LDFLAGS       = $(OPT2)
 SOFLAGS       = -shared
 endif
 

@@ -136,9 +136,6 @@ else
 			ACFLAGS="$$ACFLAGS -KPIC -erroff=E_WHITE_SPACE_IN_DIRECTIVE"; \
 			MMX="--disable-mmx_optimization"; \
 		fi; \
-		if [ "$(ARCH)" = "sgicc64" ]; then \
-			ACC="$$ACC -mabi=64"; \
-		fi; \
 		if [ "$(ARCH)" = "hpuxia64acc" ]; then \
 			ACC="$$ACC +DD64 -Ae +W863"; \
 		fi; \

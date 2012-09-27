@@ -54,7 +54,7 @@
 #include <stdlib.h>
 #ifndef R__WIN32
 #include <unistd.h>
-#if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) || \
+#if defined(R__SUN) || defined(R__HPUX) || \
     defined(R__AIX) || defined(R__LINUX) || defined(R__SOLARIS) || \
     defined(R__HIUX) || defined(R__FBSD) || defined(R__MACOSX) || \
     defined(R__HURD) || defined(R__OBSD)

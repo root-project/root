@@ -139,10 +139,6 @@ else
 			FREECC="$$FREECC -m64"; \
 			FREE_CFLAGS="-m64"; \
 		fi; \
-		if [ $(ARCH) = "sgicc64" ]; then \
-			FREECC="cc"; \
-			FREE_CFLAGS="-64"; \
-		fi; \
 		if [ $(ARCH) = "linuxppc64gcc" ]; then \
 			FREECC="$$FREECC -m64"; \
 			FREE_CFLAGS="-m64"; \

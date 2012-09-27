@@ -96,9 +96,6 @@ $(UNRCFG):	$(UNURANETAG)
 		if [ "$(CC)" = "icc" ]; then \
 			ACC="icc"; \
 		fi; \
-		if [ "$(ARCH)" = "sgicc64" ]; then \
-			ACC="gcc -mabi=64"; \
-		fi; \
 		if [ "$(ARCH)" = "hpuxia64acc" ]; then \
 			ACC="cc +DD64 -Ae"; \
 		fi; \

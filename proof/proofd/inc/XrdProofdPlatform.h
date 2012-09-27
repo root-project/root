@@ -29,9 +29,7 @@
 
 // 32 or 64 bits
 #if ((defined(__hpux) && defined(__LP64__)) || \
-     (defined(__sgi) && (defined(__mips64) || defined(_ABI64))) || \
      (defined(linux) && (defined(__ia64__) || defined(__x86_64__))) || \
-     (defined(__linux) && defined(__mips__) && (_MIPS_SIM == _ABI64)) || \
      (defined(linux) && defined(__powerpc__) && defined(R__ppc64)) || \
      (defined(__APPLE__) && (defined(__ppc64__) || defined(__x86_64__))))
 #  define XPD__B64

@@ -671,9 +671,6 @@ static TStreamerInfo *R__GenerateTClassForPair(const std::string &fname, const s
       
       size = fel->GetSize();
       Int_t sp = sizeof(void *);
-#if defined(R__SGI64)
-      sp = 8;
-#endif
       //align the non-basic data types (required on alpha and IRIX!!)
       if (size%sp != 0) size = size - size%sp + sp;
    } else {

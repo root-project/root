@@ -151,10 +151,6 @@ else
 			LZMACC="$$LZMACC -m64"; \
 			LZMA_CFLAGS="-m64"; \
 		fi; \
-		if [ $(ARCH) = "sgicc64" ]; then \
-			LZMACC="cc"; \
-			LZMA_CFLAGS="-64"; \
-		fi; \
 		if [ $(ARCH) = "linuxppc64gcc" ]; then \
 			LZMACC="$$LZMACC -m64"; \
 			LZMA_CFLAGS="-m64"; \

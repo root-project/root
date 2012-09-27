@@ -1220,7 +1220,6 @@ guess_architecture() {
     logmsg "rele=$rele"
     case "$arch:$chip:$rele" in
         aix*)                  arch=aix5            ;;
-        osf1*:alpha:*)         arch=alphacxx6       ;;
         freebsd*:*:[789]*)     arch=freebsd7        ;;
         freebsd*:*:6*)         arch=freebsd5        ;;
         freebsd*:*:5*)         arch=freebsd5        ;;
@@ -1232,10 +1231,8 @@ guess_architecture() {
         linux:ia64:*)          arch=linuxia64gcc    ;;
         linux:x86_64:*)        arch=linuxx8664gcc   ;;
         linux:x32:*)           arch=linuxx32gcc     ;;
-        linux:alpha:*)         arch=linuxalphagcc   ;;
         linux:arm*:*)          arch=linuxarm        ;;
         linux:hppa*:*)         arch=linux           ;;
-        linux:mips:*)          arch=linuxmips       ;;
         linux:sparc*:*)        arch=linux           ;;
         linux:parisc*:*)       arch=linuxhppa       ;;
         linux:ppc64*:*)        arch=linuxppc64gcc   ;;
@@ -1246,7 +1243,6 @@ guess_architecture() {
         lynx:*:*)              arch=lynxos          ;;
         darwin:power*:*)       arch=macosx          ;;
         darwin:*86*:*)         arch=macosx          ;;
-        irix*:sgi*:*)          arch=sgicc           ;;
         sunos:sun*:6*)         arch=solarisCC5      ;;
         sunos:sun*:5*)         arch=solarisCC5      ;;
         sunos:sun*:4*)         arch=solaris         ;;
@@ -1760,10 +1756,7 @@ fi
 platform=`grep "^PLATFORM *=" ${ac_srcdir}/config/Makefile.$arch | awk '{ print $3 }'`
 
 case $arch in
-sgicc)
-   logmsg "Will check 32bit libraries"
-   checklib32="yes" ;;
-linuxppc64*|sgicc64)
+linuxppc64*)
    logmsg "Will ONLY check 64bit libraries"
    checkonlylib64="yes" ;;
 linuxx8664*)

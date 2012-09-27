@@ -2817,7 +2817,7 @@ void WriteNamespaceInit(G__ClassInfo &cl)
 
    (*dictSrcOut) << "   namespace ROOT {" << std::endl;
 
-#if !defined(R__SGI) && !defined(R__AIX)
+#if !defined(R__AIX)
    (*dictSrcOut) << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();" << std::endl;
 #endif
 
@@ -2828,7 +2828,7 @@ void WriteNamespaceInit(G__ClassInfo &cl)
 
                  << "      // Function generating the singleton type initializer" << std::endl
 
-#if !defined(R__SGI) && !defined(R__AIX)
+#if !defined(R__AIX)
                  << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl
                  << "      {" << std::endl
 #else

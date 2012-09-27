@@ -61,7 +61,7 @@
 #  include <sys/time.h>
 #endif /* WIN32 */
 
-#if defined(R__SGI) || defined(R__MACOSX)
+#if defined(R__MACOSX)
 extern "C" char *crypt(const char *, const char *);
 #endif
 
