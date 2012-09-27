@@ -28,6 +28,7 @@
 #include "Property.h"
 #include "TClingProperty.h"
 #include "TError.h"
+#include "TMetaUtils.h"
 #include "Rtypes.h" // for gDebug
 
 #include "cling/Interpreter/LookupHelper.h"
@@ -306,6 +307,7 @@ const char *TClingTypedefInfo::Title() const
    if (clang::AnnotateAttr *A = GetDecl()->getAttr<clang::AnnotateAttr>())
       return A->getAnnotation().data();
 
-   return "";
+   // Try to get the comment from the header file if present
+   return ROOT::TMetaUtils::GetComment(*GetDecl()).data();
 }
 

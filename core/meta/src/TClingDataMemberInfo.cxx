@@ -28,6 +28,7 @@
 #include "Property.h"
 #include "TClingProperty.h"
 #include "TClingTypeInfo.h"
+#include "TMetaUtils.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -431,7 +432,8 @@ const char *TClingDataMemberInfo::Title() const
    if (clang::AnnotateAttr *A = GetDecl()->getAttr<clang::AnnotateAttr>())
       return A->getAnnotation().data();
 
-   return "";
+   // Try to get the comment from the header file if present
+   return ROOT::TMetaUtils::GetComment(*GetDecl()).data();
 }
 
 const char *TClingDataMemberInfo::ValidArrayIndex() const

@@ -31,6 +31,7 @@
 #include "Property.h"
 #include "TClingProperty.h"
 #include "TClingTypeInfo.h"
+#include "TMetaUtils.h"
 
 #include "cling/Interpreter/Interpreter.h"
 
@@ -410,6 +411,7 @@ const char *TClingMethodInfo::Title() const
    if (clang::AnnotateAttr *A = GetMethodDecl()->getAttr<clang::AnnotateAttr>())
       return A->getAnnotation().data();
 
-   return "";
+   // Try to get the comment from the header file if present
+   return ROOT::TMetaUtils::GetComment(*GetMethodDecl()).data();
 }
 
