@@ -10,10 +10,37 @@
 #include "Rstrstream.h"
 #include <set>
 
+#ifndef R__HAS_CLING
 // CINT's API.
 #include "Api.h"
+#else
+#include "llvm/ADT/SmallSet.h"
+
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/Type.h"
+
+#include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/LookupHelper.h"
+#include "cling/Utils/AST.h"
+
+namespace {
+   static cling::Interpreter *gInterpreter = 0;
+   llvm::SmallSet<const clang::Type*, 4> gTypeToSkip;
+}
+
+#endif
 
 namespace std {} using namespace std;
+
+#ifndef R__HAS_CLING
+#else
+//______________________________________________________________________________
+void TClassEdit::Init(cling::Interpreter &interpreter)
+{
+   gInterpreter = &interpreter;
+}
+#endif
 
 //______________________________________________________________________________
 TClassEdit::TSplitType::TSplitType(const char *type2split, EModType mode) : fName(type2split), fNestedLocation(0)
@@ -221,19 +248,37 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
       std::string nonDefName = answ;
       // "superlong" because tLong might turn fName into an even longer name
       std::string nameSuperLong = fName;
+#ifndef R__HAS_CLING
       G__TypedefInfo td;
       td.Init(nameSuperLong.c_str());
       if (td.IsValid())
          nameSuperLong = td.TrueName();
+#else
+      const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
+      clang::QualType t = lh.findType(nameSuperLong);
+      if (!t.isNull()) {
+         t = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
+         t.getAsStringInternal(nameSuperLong,gInterpreter->getCI()->getASTContext().getPrintingPolicy());
+      }
+#endif
       while (++nargNonDefault < narg) {
          // If T<a> is a "typedef" (aka default template params)
          // to T<a,b> then we can strip the "b".
          const char* closeTemplate = " >";
          if (nonDefName[nonDefName.length() - 1] != '>')
             ++closeTemplate;
+#ifndef R__HAS_CLING
          td.Init((nonDefName + closeTemplate).c_str());
          if (td.IsValid() && nameSuperLong == td.TrueName())
             break;
+#else
+         t = lh.findType((nonDefName + closeTemplate).c_str());
+         if (!t.isNull()) {
+            t = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
+            if ( nameSuperLong == t.getAsString(gInterpreter->getCI()->getASTContext().getPrintingPolicy()) )
+               break;
+         }
+#endif
          if (nargNonDefault>1) nonDefName += ",";
          nonDefName += fElements[nargNonDefault];
       }
@@ -747,11 +792,19 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
                      tname += 5;
                      break;
                   } else {
+#ifndef R__HAS_CLING
                      G__ClassInfo info(base.c_str());
                      if (!info.IsLoaded()) {
                         // the nesting namespace is not declared
                         return tname;
                      }
+#else
+                     const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
+                     if (!lh.findScope(base.c_str(),0)) {                        
+                        // the nesting namespace is not declared
+                        return tname;
+                     }
+#endif
                   }
                }
             }
@@ -761,9 +814,20 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
       // We have a very simple type
 
       if (resolveAll || ShouldReplace(tname)) {
+#ifndef R__HAS_CLING
          G__TypedefInfo t;
          t.Init(tname);
          if (t.IsValid()) return t.TrueName();
+#else
+         const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
+         clang::QualType t = lh.findType(tname);
+         if (!t.isNull()) {
+            t = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
+            if (!t.isNull()) {
+               return t.getAsString(gInterpreter->getCI()->getASTContext().getPrintingPolicy());
+            }
+         }
+#endif
       }
       return tname;
    }

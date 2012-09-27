@@ -538,6 +538,8 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    //ROOT::TMetaUtils::TNormalizedContext fNormalizedCtxt(fInterpreter->getLookupHelper());
 
+   TClassEdit::Init(*fInterpreter);
+
    // Initialize the CINT interpreter interface.
    fMore      = 0;
    fPrompt[0] = 0;

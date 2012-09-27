@@ -14,6 +14,7 @@
 #define ROOT_TClassEdit
 
 #include "RConfig.h"
+#include "RConfigure.h"
 #include <string>
 #include <vector>
 
@@ -21,6 +22,12 @@
 namespace std {
    using ::string;
    using ::vector;
+}
+#endif
+
+#ifdef R__HAS_CLING
+namespace cling {
+   class Interpreter;
 }
 #endif
 
@@ -73,6 +80,10 @@ namespace TClassEdit {
       TSplitType(const TSplitType&); // intentionally not implemented
       TSplitType &operator=(const TSplitType &); // intentionally not implemented
    };
+
+#ifdef R__HAS_CLING
+   void        Init(cling::Interpreter &interp);
+#endif
 
    std::string CleanType (const char *typeDesc,int mode = 0,const char **tail=0);
    bool        IsDefAlloc(const char *alloc, const char *classname);
