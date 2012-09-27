@@ -583,100 +583,6 @@ long R__GetLineNumber(const clang::Decl *decl)
    }   
 }
 
-// Returns the comment (// striped away), annotating declaration in a meaningful
-// for ROOT IO way.
-// Takes optional out parameter clang::SourceLocation returning the source 
-// location of the comment.
-//
-// CXXMethodDecls, FieldDecls and TagDecls are annotated.
-// CXXMethodDecls declarations and FieldDecls are annotated as follows:
-// Eg. void f(); // comment1
-//     int member; // comment2
-// Inline definitions of CXXMethodDecls - after the closing ) and before {. Eg:
-// void f() // comment3
-// {...}
-// TagDecls are annotated in the end of the ClassDef macro. Eg.
-// class MyClass {
-// ...
-// ClassDef(MyClass, 1) // comment4
-//
-llvm::StringRef R__GetComment(const clang::Decl &decl, clang::SourceLocation *loc = 0)
-{
-   clang::SourceManager& sourceManager = decl.getASTContext().getSourceManager();
-   clang::SourceLocation sourceLocation;
-   // Guess where the comment start.
-   // if (const clang::TagDecl *TD = llvm::dyn_cast<clang::TagDecl>(&decl)) {
-   //    if (TD->isThisDeclarationADefinition())
-   //       sourceLocation = TD->getBodyRBrace();
-   // }
-   //else 
-   if (const clang::FunctionDecl *FD = llvm::dyn_cast<clang::FunctionDecl>(&decl)) {
-      if (FD->isThisDeclarationADefinition()) {
-         // We have to consider the argument list, because the end of decl is end of its name
-         // Maybe this will be better when we have { in the arg list (eg. lambdas)
-         if (FD->getNumParams())
-            sourceLocation = FD->getParamDecl(FD->getNumParams() - 1)->getLocEnd();
-         else
-            sourceLocation = FD->getLocEnd();
-
-         // Skip the last )
-         sourceLocation = sourceLocation.getLocWithOffset(1);
-
-         //sourceLocation = FD->getBodyLBrace();
-      }
-      else {
-         //SkipUntil(commentStart, ';');
-      }
-   }
-
-   if (sourceLocation.isInvalid())
-      sourceLocation = decl.getLocEnd();
-
-   // If the location is a macro get the expansion location.
-   sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
-
-   assert(sourceLocation.isValid() && "Invalid source location!");
-   const char *commentStart = sourceManager.getCharacterData(sourceLocation);
-
-   // The decl end of FieldDecl is the end of the type, sometimes excluding the declared name
-   if (llvm::isa<clang::FieldDecl>(&decl)) {
-      // Find the semicolon.
-      while(*commentStart != ';')
-         ++commentStart; 
-   }
-
-   // Find the end of declaration:
-   // When there is definition Comments must be between ) { when there is definition. 
-   // Eg. void f() //comment 
-   //     {}
-   if (!decl.hasBody())
-      while (*commentStart !=';' && *commentStart != '\n' && *commentStart != '\r')
-         ++commentStart;
-
-   // Eat up the last char of the declaration if wasn't newline or comment terminator
-   if (*commentStart != '\n' && *commentStart != '\r' && *commentStart != '{')
-      ++commentStart;
-
-   // Now skip the spaces and beginning of comments.
-   while ( (isspace(*commentStart) || *commentStart == '/') 
-           && *commentStart != '\n' && *commentStart != '\r') {
-      ++commentStart;
-   }
-
-   const char* commentEnd = commentStart;
-   while (*commentEnd != '\n' && *commentEnd != '\r' && *commentEnd != '{') {
-      ++commentEnd;
-   }
-
-   if (loc) {
-      // Find the true beginning of a comment.
-      unsigned offset = commentStart - sourceManager.getCharacterData(sourceLocation);
-      *loc = sourceLocation.getLocWithOffset(offset - 1);
-   }
-
-   return llvm::StringRef(commentStart, commentEnd - commentStart);
-}
-
 cling::Interpreter *gInterp = 0;
 
 // In order to store the meaningful for the IO comments we have to transform 
@@ -703,7 +609,7 @@ void R__AnnotateDecl(clang::CXXRecordDecl &CXXRD)
                ++I;
          }
 
-         comment = R__GetComment(**I, &commentSLoc);
+         comment = ROOT::TMetaUtils::GetComment(**I, &commentSLoc);
          if (comment.size()) {
             // Keep info for the source range of the comment in case we want to issue
             // nice warnings, eg. empty comment and so on.
@@ -2415,7 +2321,7 @@ int IsSTLContainer(const clang::CXXBaseSpecifier &base)
 //______________________________________________________________________________
 bool IsStreamableObject(const clang::FieldDecl &m)
 {
-   const char *comment = R__GetComment( m ).data();
+   const char *comment = ROOT::TMetaUtils::GetComment( m ).data();
 
    // Transient
    if (comment[0] == '!') return false;
@@ -3995,7 +3901,7 @@ const clang::FieldDecl *R__GetDataMemberFromAllParents(const clang::CXXRecordDec
 enum R__DataMemberInfo__ValidArrayIndex_error_code { VALID, NOT_INT, NOT_DEF, IS_PRIVATE, UNKNOWN };
 const char* R__DataMemberInfo__ValidArrayIndex(const clang::FieldDecl &m, int *errnum, char **errstr) 
 {
-   const char* title = R__GetComment( m ).data();
+   const char* title = ROOT::TMetaUtils::GetComment( m ).data();
    
    // Let's see if the user provided us with some information
    // with the format: //[dimension] this is the dim of the array
@@ -4295,7 +4201,7 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl, const cling::Interpr
           field_iter != end;
           ++field_iter)
       {
-         const char *comment = R__GetComment( **field_iter ).data();
+         const char *comment = ROOT::TMetaUtils::GetComment( **field_iter ).data();
 
          clang::QualType type = field_iter->getType();
          std::string type_name = type.getAsString(clxx->getASTContext().getPrintingPolicy());

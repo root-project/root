@@ -449,3 +449,83 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
    } // for headers
    return modCreation.first;
 }
+
+llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::SourceLocation *loc)
+{
+   clang::SourceManager& sourceManager = decl.getASTContext().getSourceManager();
+   clang::SourceLocation sourceLocation;
+   // Guess where the comment start.
+   // if (const clang::TagDecl *TD = llvm::dyn_cast<clang::TagDecl>(&decl)) {
+   //    if (TD->isThisDeclarationADefinition())
+   //       sourceLocation = TD->getBodyRBrace();
+   // }
+   //else 
+   if (const clang::FunctionDecl *FD = llvm::dyn_cast<clang::FunctionDecl>(&decl)) {
+      if (FD->isThisDeclarationADefinition()) {
+         // We have to consider the argument list, because the end of decl is end of its name
+         // Maybe this will be better when we have { in the arg list (eg. lambdas)
+         if (FD->getNumParams())
+            sourceLocation = FD->getParamDecl(FD->getNumParams() - 1)->getLocEnd();
+         else
+            sourceLocation = FD->getLocEnd();
+
+         // Skip the last )
+         sourceLocation = sourceLocation.getLocWithOffset(1);
+
+         //sourceLocation = FD->getBodyLBrace();
+      }
+      else {
+         //SkipUntil(commentStart, ';');
+      }
+   }
+
+   if (sourceLocation.isInvalid())
+      sourceLocation = decl.getLocEnd();
+
+   // If the location is a macro get the expansion location.
+   sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
+
+   assert(sourceLocation.isValid() && "Invalid source location!");
+   bool invalid;
+   const char *commentStart = sourceManager.getCharacterData(sourceLocation, &invalid);
+   if (invalid)
+      return "";
+
+   // The decl end of FieldDecl is the end of the type, sometimes excluding the declared name
+   if (llvm::isa<clang::FieldDecl>(&decl)) {
+      // Find the semicolon.
+      while(*commentStart != ';')
+         ++commentStart; 
+   }
+
+   // Find the end of declaration:
+   // When there is definition Comments must be between ) { when there is definition. 
+   // Eg. void f() //comment 
+   //     {}
+   if (!decl.hasBody())
+      while (*commentStart !=';' && *commentStart != '\n' && *commentStart != '\r')
+         ++commentStart;
+
+   // Eat up the last char of the declaration if wasn't newline or comment terminator
+   if (*commentStart != '\n' && *commentStart != '\r' && *commentStart != '{')
+      ++commentStart;
+
+   // Now skip the spaces and beginning of comments.
+   while ( (isspace(*commentStart) || *commentStart == '/') 
+           && *commentStart != '\n' && *commentStart != '\r') {
+      ++commentStart;
+   }
+
+   const char* commentEnd = commentStart;
+   while (*commentEnd != '\n' && *commentEnd != '\r' && *commentEnd != '{') {
+      ++commentEnd;
+   }
+
+   if (loc) {
+      // Find the true beginning of a comment.
+      unsigned offset = commentStart - sourceManager.getCharacterData(sourceLocation);
+      *loc = sourceLocation.getLocWithOffset(offset - 1);
+   }
+
+   return llvm::StringRef(commentStart, commentEnd - commentStart);
+}

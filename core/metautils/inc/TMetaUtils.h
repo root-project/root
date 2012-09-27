@@ -12,16 +12,18 @@
 #ifndef ROOT_TMetaUtils
 #define ROOT_TMetaUtils
 
-namespace clang {
-   class ASTContext;
-   class QualType;
-}
+#include "llvm/ADT/SmallSet.h"
+#include "llvm/ADT/StringRef.h"
 
 #include <string>
 
 namespace clang {
+   class ASTContext;
+   class Decl;
+   class QualType;
    class CompilerInstance;
    class Module;
+   class SourceLocation;
    class Type;
 }
 
@@ -30,7 +32,6 @@ namespace cling {
    class LookupHelper;
 }
 
-#include "llvm/ADT/SmallSet.h"
 
 namespace ROOT {
    namespace TMetaUtils {
@@ -78,7 +79,27 @@ namespace ROOT {
       // where we remove the default template argument if any.
       void GetNormalizedName(std::string &norm_name, const clang::QualType &type, const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt);
 
-   }; // class TMetaUtils
+      // Returns the comment (// striped away), annotating declaration in a meaningful
+      // for ROOT IO way.
+      // Takes optional out parameter clang::SourceLocation returning the source 
+      // location of the comment.
+      //
+      // CXXMethodDecls, FieldDecls and TagDecls are annotated.
+      // CXXMethodDecls declarations and FieldDecls are annotated as follows:
+      // Eg. void f(); // comment1
+      //     int member; // comment2
+      // Inline definitions of CXXMethodDecls - after the closing ) and before {. Eg:
+      // void f() // comment3
+      // {...}
+      // TagDecls are annotated in the end of the ClassDef macro. Eg.
+      // class MyClass {
+      // ...
+      // ClassDef(MyClass, 1) // comment4
+      //
+      llvm::StringRef GetComment(const clang::Decl &decl, clang::SourceLocation *loc = 0);
+
+   } // namespace TMetaUtils
+
 
 } // namespace ROOT
 
