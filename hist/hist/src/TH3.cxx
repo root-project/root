@@ -1741,22 +1741,13 @@ TH1D *TH3::ProjectionX(const char *name, Int_t iymin, Int_t iymax, Int_t izmin, 
    TString opt = option;
    opt.ToLower();
 
-   Int_t piymin = GetYaxis()->GetFirst();
-   Int_t piymax = GetYaxis()->GetLast();
-   Int_t pizmin = GetZaxis()->GetFirst();
-   Int_t pizmax = GetZaxis()->GetLast();   
+   Int_t iyminOld = GetYaxis()->GetFirst();
+   Int_t iymaxOld = GetYaxis()->GetLast();
+   Int_t izminOld = GetZaxis()->GetFirst();
+   Int_t izmaxOld = GetZaxis()->GetLast();   
 
    GetYaxis()->SetRange(iymin,iymax);
    GetZaxis()->SetRange(izmin,izmax);
-
-   // exclude underflow/overflow by forcing the axis range bit
-   // due to limitation of TAxis::SetRange cannot select only underflow or overflow cannot have underflow or overflow only   
-   if (iymin == 1 && iymax ==  GetNbinsY() ) GetYaxis()->SetBit(TAxis::kAxisRange); 
-   if (izmin == 1 && izmax ==  GetNbinsZ() ) GetZaxis()->SetBit(TAxis::kAxisRange); 
-   // I can use the useUF or useOF flag for exclude/include the underflow/overflow separtly
-   // (-1 in the imax is considered as an overflow)
-   Bool_t useUF = (iymin == 0 || izmin == 0); 
-   Bool_t useOF = ( (iymax < 0 ) || (iymax > GetNbinsY() ) || (izmax < 0) || (izmax > GetNbinsZ() ) ); 
 
    Bool_t computeErrors = GetSumw2N();
    if (opt.Contains("e") ) { 
@@ -1769,11 +1760,11 @@ TH1D *TH3::ProjectionX(const char *name, Int_t iymin, Int_t iymax, Int_t izmin, 
       opt.Remove(opt.First("o"),1);
    }
   
-   TH1D * h1 = DoProject1D(name, GetTitle(), this->GetXaxis(), computeErrors, originalRange, useUF, useOF);
+   TH1D * h1 = DoProject1D(name, GetTitle(), this->GetXaxis(), computeErrors, originalRange,true,true);
 
    // restore original range
-   GetYaxis()->SetRange(piymin,piymax);
-   GetZaxis()->SetRange(pizmin,pizmax);
+   if (GetYaxis()->TestBit(TAxis::kAxisRange)) GetYaxis()->SetRange(iyminOld,iymaxOld);
+   if (GetZaxis()->TestBit(TAxis::kAxisRange)) GetZaxis()->SetRange(izminOld,izmaxOld);
 
    // draw in current pad 
    if (h1 && opt.Contains("d")) {
@@ -1818,22 +1809,13 @@ TH1D *TH3::ProjectionY(const char *name, Int_t ixmin, Int_t ixmax, Int_t izmin, 
    TString opt = option;
    opt.ToLower();
 
-   Int_t pixmin = GetXaxis()->GetFirst();
-   Int_t pixmax = GetXaxis()->GetLast();
-   Int_t pizmin = GetZaxis()->GetFirst();
-   Int_t pizmax = GetZaxis()->GetLast();   
+   Int_t ixminOld = GetXaxis()->GetFirst();
+   Int_t ixmaxOld = GetXaxis()->GetLast();
+   Int_t izminOld = GetZaxis()->GetFirst();
+   Int_t izmaxOld = GetZaxis()->GetLast();   
 
    GetXaxis()->SetRange(ixmin,ixmax);
    GetZaxis()->SetRange(izmin,izmax);
-
-   // exclude underflow/overflow by forcing the axis range bit
-   // due to limitation of TAxis::SetRange cannot select only underflow or overflow cannot have underflow or overflow only   
-   if (ixmin == 1 && ixmax ==  GetNbinsX() ) GetXaxis()->SetBit(TAxis::kAxisRange); 
-   if (izmin == 1 && izmax ==  GetNbinsZ() ) GetZaxis()->SetBit(TAxis::kAxisRange); 
-   // I can use the useUF or useOF flag for exclude/include the underflow/overflow separtly
-   // (-1 in the imax is considered as an overflow)
-   Bool_t useUF = (ixmin == 0 || izmin == 0); 
-   Bool_t useOF = ( (ixmax < 0 ) || (ixmax > GetNbinsX() ) || (izmax < 0) || (izmax > GetNbinsZ() ) ); 
 
    Bool_t computeErrors = GetSumw2N();
    if (opt.Contains("e") ) { 
@@ -1846,11 +1828,11 @@ TH1D *TH3::ProjectionY(const char *name, Int_t ixmin, Int_t ixmax, Int_t izmin, 
       opt.Remove(opt.First("o"),1);
    }
   
-   TH1D * h1 = DoProject1D(name, GetTitle(), this->GetYaxis(), computeErrors, originalRange, useUF, useOF);
+   TH1D * h1 = DoProject1D(name, GetTitle(), this->GetYaxis(), computeErrors, originalRange, true, true);
 
    // restore axis range
-   GetXaxis()->SetRange(pixmin,pixmax);
-   GetZaxis()->SetRange(pizmin,pizmax);
+   if (GetXaxis()->TestBit(TAxis::kAxisRange)) GetXaxis()->SetRange(ixminOld,ixmaxOld);
+   if (GetZaxis()->TestBit(TAxis::kAxisRange)) GetZaxis()->SetRange(izminOld,izmaxOld);
 
    // draw in current pad 
    if (h1 && opt.Contains("d")) {
@@ -1896,22 +1878,13 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
    TString opt = option;
    opt.ToLower();
 
-   Int_t pixmin = GetXaxis()->GetFirst();
-   Int_t pixmax = GetXaxis()->GetLast();
-   Int_t piymin = GetYaxis()->GetFirst();
-   Int_t piymax = GetYaxis()->GetLast();  
+   Int_t ixminOld = GetXaxis()->GetFirst();
+   Int_t ixmaxOld = GetXaxis()->GetLast();
+   Int_t iyminOld = GetYaxis()->GetFirst();
+   Int_t iymaxOld = GetYaxis()->GetLast();  
 
    GetXaxis()->SetRange(ixmin,ixmax);
    GetYaxis()->SetRange(iymin,iymax);
-
-   // exclude underflow/overflow by forcing the axis range bit
-   // due to limitation of TAxis::SetRange cannot select only underflow or overflow cannot have underflow or overflow only   
-   if (ixmin == 1 && ixmax ==  GetNbinsX() ) GetXaxis()->SetBit(TAxis::kAxisRange); 
-   if (iymin == 1 && iymax ==  GetNbinsY() ) GetYaxis()->SetBit(TAxis::kAxisRange); 
-   // I can use the useUF or useOF flag for exclude/include the underflow/overflow separtly
-   // (-1 in the imax is considered as an overflow)
-   Bool_t useUF = (ixmin == 0 || iymin == 0); 
-   Bool_t useOF = ( (ixmax < 0 ) || (ixmax > GetNbinsX() ) || (iymax < 0) || (iymax > GetNbinsY() ) ); 
 
    Bool_t computeErrors = GetSumw2N();
    if (opt.Contains("e") ) { 
@@ -1924,11 +1897,11 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
       opt.Remove(opt.First("o"),1);
    }
 
-   TH1D * h1 =  DoProject1D(name, GetTitle(), this->GetZaxis(), computeErrors, originalRange, useUF, useOF);
+   TH1D * h1 =  DoProject1D(name, GetTitle(), this->GetZaxis(), computeErrors, originalRange, true, true);
 
    // restore the range
-   GetXaxis()->SetRange(pixmin,pixmax);
-   GetYaxis()->SetRange(piymin,piymax);
+   if (GetXaxis()->TestBit(TAxis::kAxisRange)) GetXaxis()->SetRange(ixminOld,ixmaxOld);
+   if (GetYaxis()->TestBit(TAxis::kAxisRange)) GetYaxis()->SetRange(iyminOld,iymaxOld);
 
    // draw in current pad 
    if (h1 && opt.Contains("d")) {
@@ -1949,8 +1922,8 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
 
 //______________________________________________________________________________
 TH1D *TH3::DoProject1D(const char* name, const char* title, TAxis* projX, 
-                    bool computeErrors, bool originalRange, 
-                    bool useUF, bool useOF) const
+                       bool computeErrors, bool originalRange, 
+                       bool useUF, bool useOF) const
 {
    // internal methdod performing the projection to 1D histogram
    // called from TH3::Project3D
@@ -1961,7 +1934,7 @@ TH1D *TH3::DoProject1D(const char* name, const char* title, TAxis* projX,
    // Get range to use as well as bin limits
    Int_t ixmin = projX->GetFirst();
    Int_t ixmax = projX->GetLast();
-   if (ixmin == 0 && ixmax == 0) { ixmin = 1; ixmax = projX->GetNbins(); }
+//   if (ixmin == 0 && ixmax == 0) { ixmin = 1; ixmax = projX->GetNbins(); }
    Int_t nx = ixmax-ixmin+1;
 
    // Create the histogram, either reseting a preexisting one 
@@ -2057,13 +2030,13 @@ TH1D *TH3::DoProject1D(const char* name, const char* title, TAxis* projX,
    Int_t out1min = out1->GetFirst(); 
    Int_t out1max = out1->GetLast(); 
    // GetFirst(), GetLast() can return (0,0) when the range bit is set artifically (see TAxis::SetRange)
-   if (out1min == 0 && out1max == 0) { out1min = 1; out1max = out1->GetNbins(); }
+ //if (out1min == 0 && out1max == 0) { out1min = 1; out1max = out1->GetNbins(); }
    // correct for underflow/overflows
    if (useUF && !out1->TestBit(TAxis::kAxisRange) )  out1min -= 1; 
    if (useOF && !out1->TestBit(TAxis::kAxisRange) )  out1max += 1; 
    Int_t out2min = out2->GetFirst(); 
    Int_t out2max = out2->GetLast(); 
-   if (out2min == 0 && out2max == 0) { out2min = 1; out2max = out2->GetNbins(); }
+//   if (out2min == 0 && out2max == 0) { out2min = 1; out2max = out2->GetNbins(); }
    if (useUF && !out2->TestBit(TAxis::kAxisRange) )  out2min -= 1; 
    if (useOF && !out2->TestBit(TAxis::kAxisRange) )  out2max += 1; 
 
@@ -2448,9 +2421,7 @@ TH1 *TH3::Project3D(Option_t *option) const
    //  NOTE 4: underflow/overflow are included by default in the projection 
    //  To exclude underflow and/or overflow (for both axis in case of a projection to a 1D histogram) use option "NUF" and/or "NOF"
    //  With SetRange() you can have all bins except underflow/overflow only if you set the axis bit range as 
-   //  following after having called SetRange: 
-   //    axis->SetRange(1, axis->GetNbins());
-   //    axis->SetBit(TAxis::kAxisRange);  
+   //  following after having called SetRange:  axis->SetRange(1, axis->GetNbins());
    //          
 
    TString opt = option; opt.ToLower();
