@@ -254,11 +254,13 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
       if (td.IsValid())
          nameSuperLong = td.TrueName();
 #else
-      const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
-      clang::QualType t = lh.findType(nameSuperLong);
-      if (!t.isNull()) {
-         t = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
-         t.getAsStringInternal(nameSuperLong,gInterpreter->getCI()->getASTContext().getPrintingPolicy());
+      if (gInterpreter) {
+         const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
+         clang::QualType t = lh.findType(nameSuperLong);
+         if (!t.isNull()) {
+            t = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
+            t.getAsStringInternal(nameSuperLong,gInterpreter->getCI()->getASTContext().getPrintingPolicy());
+         }
       }
 #endif
       while (++nargNonDefault < narg) {
@@ -272,11 +274,14 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
          if (td.IsValid() && nameSuperLong == td.TrueName())
             break;
 #else
-         t = lh.findType((nonDefName + closeTemplate).c_str());
-         if (!t.isNull()) {
-            t = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
-            if ( nameSuperLong == t.getAsString(gInterpreter->getCI()->getASTContext().getPrintingPolicy()) )
-               break;
+         if (gInterpreter) {
+            const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
+            clang::QualType t = lh.findType((nonDefName + closeTemplate).c_str());
+            if (!t.isNull()) {
+               t = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
+               if ( nameSuperLong == t.getAsString(gInterpreter->getCI()->getASTContext().getPrintingPolicy()) )
+                  break;
+            }
          }
 #endif
          if (nargNonDefault>1) nonDefName += ",";
@@ -799,10 +804,12 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
                         return tname;
                      }
 #else
-                     const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
-                     if (!lh.findScope(base.c_str(),0)) {                        
-                        // the nesting namespace is not declared
-                        return tname;
+                     if (gInterpreter) {
+                        const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
+                        if (!lh.findScope(base.c_str(),0)) {                        
+                           // the nesting namespace is not declared
+                           return tname;
+                        }
                      }
 #endif
                   }
@@ -819,12 +826,14 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
          t.Init(tname);
          if (t.IsValid()) return t.TrueName();
 #else
-         const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
-         clang::QualType t = lh.findType(tname);
-         if (!t.isNull()) {
-            t = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
+         if (gInterpreter) {
+            const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
+            clang::QualType t = lh.findType(tname);
             if (!t.isNull()) {
-               return t.getAsString(gInterpreter->getCI()->getASTContext().getPrintingPolicy());
+               t = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
+               if (!t.isNull()) {
+                  return t.getAsString(gInterpreter->getCI()->getASTContext().getPrintingPolicy());
+               }
             }
          }
 #endif
