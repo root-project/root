@@ -133,7 +133,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    
    // Treat the Scope.
    clang::NestedNameSpecifier* prefix = 0;
-   unsigned int prefix_qualifiers = instanceType.getLocalFastQualifiers();
+   clang::Qualifiers prefix_qualifiers = instanceType.getLocalQualifiers();
    const clang::ElaboratedType* etype 
       = llvm::dyn_cast<clang::ElaboratedType>(instanceType.getTypePtr());
    if (etype) {
@@ -240,7 +240,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    
    if (prefix) {
       instanceType = Ctx.getElaboratedType(clang::ETK_None,prefix,instanceType);
-      instanceType.setLocalFastQualifiers(prefix_qualifiers);
+      instanceType = Ctx.getQualifiedType(instanceType,prefix_qualifiers);
    }
    return instanceType;
 }
