@@ -6590,11 +6590,6 @@ int main(int argc, char **argv)
          WriteNamespaceInit(*ns_iter);         
       }
 
-      if (strstr(dictname,"rootcint_") != dictname) {
-         // Modules only for "regular" dictionaries, not for cintdlls
-         GenerateModule(dictname, pcmArgs);
-      }
-
       iter = scan.fSelectedClasses.begin();
       end = scan.fSelectedClasses.end();
       for( ; iter != end; ++iter) 
@@ -6608,6 +6603,9 @@ int main(int argc, char **argv)
             // For now delay those for later.
             continue;
          }
+
+         if (clang::CXXRecordDecl* CXXRD = llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl())))
+            R__AnnotateDecl(*CXXRD);
          const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
          if (CRD) {
             Info(0,"Generating code for class %s\n", iter->GetNormalizedName() );
@@ -6631,10 +6629,6 @@ int main(int argc, char **argv)
       end = scan.fSelectedClasses.end();
       for( ; iter != end; ++iter) 
       {
-         // Testing purpose only!
-         if (clang::CXXRecordDecl* CXXRD = llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl())))
-            R__AnnotateDecl(*CXXRD);
-         // end
          if (!iter->GetRecordDecl()->isCompleteDefinition()) {
             continue;
          }                       
@@ -6702,6 +6696,13 @@ int main(int argc, char **argv)
 
       if (!il) remove(autold);
       if (use_preprocessor) remove(bundlename.c_str());
+
+      // Now we have done all our looping and thus all the possible 
+      // annotation, let's write the pcms.
+      if (strstr(dictname,"rootcint_") != dictname) {
+         // Modules only for "regular" dictionaries, not for cintdlls
+         GenerateModule(dictname, pcmArgs);
+      }
 
    } // (stub-less calls)
 
