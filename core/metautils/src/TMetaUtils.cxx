@@ -41,8 +41,6 @@
 
 #include "cling/Interpreter/Interpreter.h"
 
-// #define R__CINTWITHCLING_MODULES 1
-
 // #define R__HAS_PATCH_TO_MAKE_EXPANSION_WORK_WITH_NON_CANONICAL_TYPE 1
 
 //////////////////////////////////////////////////////////////////////////
@@ -441,15 +439,11 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
          const clang::DirectoryEntry* Dir
             = PP.getFileManager().getDirectory(srHdrDir);
          if (Dir) {
-#ifdef R__CINTWITHCLING_MODULES
             HdrSearch.setDirectoryHasModuleMap(Dir);
-#endif
          }
       }
 
-#ifdef R__CINTWITHCLING_MODULES
       ModuleMap.addHeader(modCreation.first, hdrFileEntry);
-#endif
    } // for headers
    return modCreation.first;
 }
