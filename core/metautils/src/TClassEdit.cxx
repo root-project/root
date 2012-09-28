@@ -258,8 +258,9 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
          const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
          clang::QualType t = lh.findType(nameSuperLong);
          if (!t.isNull()) {
-            t = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
-            t.getAsStringInternal(nameSuperLong,gInterpreter->getCI()->getASTContext().getPrintingPolicy());
+            clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
+            if (!dest.isNull() && (dest != t)) 
+               dest.getAsStringInternal(nameSuperLong,gInterpreter->getCI()->getASTContext().getPrintingPolicy());
          }
       }
 #endif
@@ -278,8 +279,8 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
             const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
             clang::QualType t = lh.findType((nonDefName + closeTemplate).c_str());
             if (!t.isNull()) {
-               t = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
-               if ( nameSuperLong == t.getAsString(gInterpreter->getCI()->getASTContext().getPrintingPolicy()) )
+               clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
+               if ( !dest.isNull() && (dest!=t) && nameSuperLong == t.getAsString(gInterpreter->getCI()->getASTContext().getPrintingPolicy()) )
                   break;
             }
          }
@@ -753,10 +754,13 @@ namespace {
       // This helper function indicates whether we really want to replace
       // a type.
 
+      // In cling, looking up 'unsigned' by itself will point to a type
+      // 'unsigned int' ... so because of the simplistic parsing of ResolveTypedef
+      // this is cause 'unsigned int' (as input) to be replace with 'unsigned int int'
       const char *excludelist [] = {"Char_t","Short_t","Int_t","Long_t","Float_t",
                                     "Int_t","Double_t","Double32_t","Float16_t",
                                     "UChar_t","UShort_t","UInt_t","ULong_t","UInt_t",
-                                    "Long64_t","ULong64_t","Bool_t"};
+                                    "Long64_t","ULong64_t","Bool_t","unsigned"};
 
       for (unsigned int i=0; i < sizeof(excludelist)/sizeof(excludelist[0]); ++i) {
          if (strcmp(name,excludelist[i])==0) return false;
@@ -830,8 +834,8 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
             const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
             clang::QualType t = lh.findType(tname);
             if (!t.isNull()) {
-               t = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
-               if (!t.isNull()) {
+               clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
+               if (!dest.isNull() && dest != t ) {
                   return t.getAsString(gInterpreter->getCI()->getASTContext().getPrintingPolicy());
                }
             }
