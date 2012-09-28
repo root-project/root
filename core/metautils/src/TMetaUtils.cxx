@@ -176,13 +176,13 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
           I!=E ? ++I : 0, ++Idecl, ++Param) {
 
          if (I != E) {
-            clang::QualType SubTy = I->getAsType();
-         
-            if (SubTy.isNull()) {
+            if (I->getKind() != clang::TemplateArgument::Type) {
                desArgs.push_back(*I);
                continue;
             }
             
+            clang::QualType SubTy = I->getAsType();
+         
             // Check if the type needs more desugaring and recurse.
             if (llvm::isa<clang::TemplateSpecializationType>(SubTy)
                 || llvm::isa<clang::ElaboratedType>(SubTy) ) {
@@ -197,14 +197,15 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
          } else if (wantDefault) {
 
             mightHaveChanged = true;
-            
-            clang::QualType SubTy = TSTdecl->getTemplateArgs().get(Idecl).getAsType();
 
-            if (SubTy.isNull()) {
-               desArgs.push_back(TSTdecl->getTemplateArgs().get(Idecl));
+            const clang::TemplateArgument& templateArg
+               = TSTdecl->getTemplateArgs().get(Idecl);
+            if (templateArg.getKind() != clang::TemplateArgument::Type) {
+               desArgs.push_back(templateArg);
                continue;
             }
-            
+            clang::QualType SubTy = templateArg.getAsType();
+
 #ifdef R__HAS_PATCH_TO_MAKE_EXPANSION_WORK_WITH_NON_CANONICAL_TYPE
             clang::SourceLocation TemplateLoc = Template->getSourceRange ().getBegin(); //NOTE: not sure that this is the 'right' location.
             clang::SourceLocation RAngleLoc = TSTdecl->getSourceRange().getBegin(); // NOTE: most likely wrong, I think this is expecting the location of right angle
