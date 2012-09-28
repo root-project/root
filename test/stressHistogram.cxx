@@ -113,7 +113,7 @@ enum compareOptions {
 };
 
 int defaultEqualOptions = 0; //cmpOptPrint;
-//int defaultEqualOptions = cmpOptPrint;
+//int defaultEqualOptions = cmpOptDebug;
 
 const double defaultErrorLimit = 1.E-10;
 
@@ -9346,7 +9346,7 @@ int stressHistogram()
                                                     testLabelsInflateProf1D
    };
    struct TTestSuite labelTestSuite = { numberOfLabel, 
-                                        "Label tests for 1D and 2D Histograms ...........................",
+                                        "Label tests for 1D and 2D Histograms ............................",
                                         labelTestPointer };
 
    // Test 12
