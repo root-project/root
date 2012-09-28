@@ -37,6 +37,11 @@ namespace ROOT {
 
    namespace Fit { 
 
+// use a static variable to get default minimizer options for error def
+// to see if user has changed it later on. If it has not been changed we set 
+// for the likelihood method an error def of 0.5 
+// t.b.d : multiply likelihood by 2 so have same error def definition as chi2 
+      double gDefaultErrorDef = ROOT::Math::MinimizerOptions::DefaultErrorDef();
 
 
 Fitter::Fitter() : 
@@ -358,7 +363,7 @@ bool Fitter::DoLikelihoodFit(const BinData & data, bool extended) {
    }
 
    // logl fit (error should be 0.5) set if different than default values (of 1)
-   if (fConfig.MinimizerOptions().ErrorDef() == ROOT::Math::MinimizerOptions::DefaultErrorDef() ) { 
+   if (fConfig.MinimizerOptions().ErrorDef() == gDefaultErrorDef ) { 
       fConfig.MinimizerOptions().SetErrorDef(0.5);
    }
 
@@ -437,7 +442,7 @@ bool Fitter::DoLikelihoodFit(const UnBinData & data, bool extended) {
 #endif
 
    // logl fit (error should be 0.5) set if different than default values (of 1)
-   if (fConfig.MinimizerOptions().ErrorDef() == ROOT::Math::MinimizerOptions::DefaultErrorDef() ) {
+   if (fConfig.MinimizerOptions().ErrorDef() == gDefaultErrorDef ) {
       fConfig.MinimizerOptions().SetErrorDef(0.5);
    }
 
