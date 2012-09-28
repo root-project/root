@@ -520,9 +520,7 @@ void ASTDeclReader::VisitFunctionDecl(FunctionDecl *FD) {
   FD->IsConstexpr = Record[Idx++];
   FD->EndRangeLoc = ReadSourceLocation(Record, Idx);
 
-  FunctionDecl::TemplatedKind TmpltKind
-    = (FunctionDecl::TemplatedKind) Record[Idx++];
-  switch (TmpltKind) {
+  switch ((FunctionDecl::TemplatedKind)Record[Idx++]) {
   case FunctionDecl::TK_NonTemplate:
     mergeRedeclarable(FD, Redecl);      
     break;
@@ -627,9 +625,6 @@ void ASTDeclReader::VisitFunctionDecl(FunctionDecl *FD) {
   for (unsigned I = 0; I != NumParams; ++I)
     Params.push_back(ReadDeclAs<ParmVarDecl>(Record, Idx));
   FD->setParams(Reader.getContext(), Params);
-
-  if (TmpltKind != FunctionDecl::TK_NonTemplate)
-    Reader.DeclsInFlight.erase(FD);
 }
 
 void ASTDeclReader::VisitObjCMethodDecl(ObjCMethodDecl *MD) {
@@ -908,7 +903,6 @@ void ASTDeclReader::VisitVarDecl(VarDecl *VD) {
   // Only true variables (not parameters or implicit parameters) can be merged.
   if (VD->getKind() == Decl::Var)
     mergeRedeclarable(VD, Redecl);
-  else Reader.DeclsInFlight.erase(VD);
   
   if (uint64_t Val = Record[Idx++]) {
     VD->setInit(Reader.ReadExpr(F));
@@ -1316,10 +1310,12 @@ ASTDeclReader::VisitRedeclarableTemplateDecl(RedeclarableTemplateDecl *D) {
         D->setMemberSpecialization();
     }
   }
-     
+
   VisitTemplateDecl(D);
   D->IdentifierNamespace = Record[Idx++];
+
   mergeRedeclarable(D, Redecl);
+
   return Redecl;
 }
 
@@ -1404,9 +1400,10 @@ void ASTDeclReader::VisitClassTemplateSpecializationDecl(
     ClassTemplateDecl *CanonPattern = ReadDeclAs<ClassTemplateDecl>(Record,Idx);
     if (ClassTemplatePartialSpecializationDecl *Partial
                        = dyn_cast<ClassTemplatePartialSpecializationDecl>(D)) {
-      CanonPattern->getCommonPtr()->PartialSpecializations.InsertNode(Partial);
+      CanonPattern->getCommonPtr()->PartialSpecializations.GetOrInsertNode(
+                                                                       Partial);
     } else {
-      CanonPattern->getCommonPtr()->Specializations.InsertNode(D);
+      CanonPattern->getCommonPtr()->Specializations.GetOrInsertNode(D);
     }
   }
 }
@@ -1530,7 +1527,6 @@ ASTDeclReader::VisitDeclContext(DeclContext *DC) {
 template <typename T>
 ASTDeclReader::RedeclarableResult 
 ASTDeclReader::VisitRedeclarable(Redeclarable<T> *D) {
-  Reader.DeclsInFlight.insert(static_cast<T *>(D));
   DeclID FirstDeclID = ReadDeclID(Record, Idx);
   
   // 0 indicates that this declaration was the only declaration of its entity,
@@ -1561,7 +1557,6 @@ template<typename T>
 void ASTDeclReader::mergeRedeclarable(Redeclarable<T> *D, 
                                       RedeclarableResult &Redecl) {
   // If modules are not available, there is no reason to perform this merge.
-  Reader.DeclsInFlight.erase(static_cast<T*>(D));
   if (!Reader.getContext().getLangOpts().Modules)
     return;
   
@@ -1764,24 +1759,24 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
     return NamespaceX->isInline() == NamespaceY->isInline();
   }
 
+  if (isa<TemplateDecl>(X)) {
+    return true;
+  }
+      
   // FIXME: Many other cases to implement.
   return false;
 }
 
 ASTDeclReader::FindExistingResult::~FindExistingResult() {
-  if (!AddResult || Existing) {
+  if (!AddResult || Existing)
     return;
-  }
   
-  DeclContext *DC = New->getDeclContext()->getRedeclContext();
+  DeclContext *DC = New->getLexicalDeclContext();
   if (DC->isTranslationUnit() && Reader.SemaObj) {
     if (Reader.SemaObj->IdResolver.tryAddTopLevelDecl(New, New->getDeclName()))
       Reader.RedeclsAddedToAST.insert(New);
   } else if (DC->isNamespace()) {
-    DeclContext* oldCtx = New->getLexicalDeclContext();
-    New->setLexicalDeclContext(DC);
     DC->addDecl(New);
-    New->setLexicalDeclContext(oldCtx);
     Reader.RedeclsAddedToAST.insert(New);
   }
 }
@@ -1804,7 +1799,7 @@ ASTDeclReader::FindExistingResult ASTDeclReader::findExisting(NamedDecl *D) {
     for (IdentifierResolver::iterator I = IdResolver.begin(Name), 
                                    IEnd = IdResolver.end();
          I != IEnd; ++I) {
-      if (*I != D && isSameEntity(*I, D))
+      if (isSameEntity(*I, D))
         return FindExistingResult(Reader, D, *I);
     }
   }
@@ -1812,9 +1807,7 @@ ASTDeclReader::FindExistingResult ASTDeclReader::findExisting(NamedDecl *D) {
   if (DC->isNamespace()) {
     for (DeclContext::lookup_result R = DC->lookup(Name);
          R.first != R.second; ++R.first) {
-      if (*R.first != D
-          && !Reader.DeclsInFlight.count(*R.first)
-          && isSameEntity(*R.first, D))
+      if (isSameEntity(*R.first, D))
         return FindExistingResult(Reader, D, *R.first);
     }
   }
@@ -1825,41 +1818,22 @@ ASTDeclReader::FindExistingResult ASTDeclReader::findExisting(NamedDecl *D) {
 void ASTDeclReader::attachPreviousDecl(Decl *D, Decl *previous) {
   assert(D && previous);
   if (TagDecl *TD = dyn_cast<TagDecl>(D)) {
-    //TD->RedeclLink.setNext(cast<TagDecl>(previous));
-    TD->RedeclLink
-      = Redeclarable<TagDecl>::PreviousDeclLink(cast<TagDecl>(previous));    
+    TD->RedeclLink.setNext(cast<TagDecl>(previous));
   } else if (FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
-    //FD->RedeclLink.setNext(cast<FunctionDecl>(previous));
-    FD->RedeclLink
-      = Redeclarable<FunctionDecl>::PreviousDeclLink(cast<FunctionDecl>(previous));
+    FD->RedeclLink.setNext(cast<FunctionDecl>(previous));
   } else if (VarDecl *VD = dyn_cast<VarDecl>(D)) {
-    //VD->RedeclLink.setNext(cast<VarDecl>(previous));
-    VD->RedeclLink
-      = Redeclarable<VarDecl>::PreviousDeclLink(cast<VarDecl>(previous));
+    VD->RedeclLink.setNext(cast<VarDecl>(previous));
   } else if (TypedefNameDecl *TD = dyn_cast<TypedefNameDecl>(D)) {
-    //TD->RedeclLink.setNext(cast<TypedefNameDecl>(previous));
-    TD->RedeclLink
-      = Redeclarable<TypedefNameDecl>::PreviousDeclLink(cast<TypedefNameDecl>(previous));
+    TD->RedeclLink.setNext(cast<TypedefNameDecl>(previous));
   } else if (ObjCInterfaceDecl *ID = dyn_cast<ObjCInterfaceDecl>(D)) {
-    //ID->RedeclLink.setNext(cast<ObjCInterfaceDecl>(previous));
-    ID->RedeclLink
-      = Redeclarable<ObjCInterfaceDecl>::PreviousDeclLink(cast<ObjCInterfaceDecl>(previous));
+    ID->RedeclLink.setNext(cast<ObjCInterfaceDecl>(previous));
   } else if (ObjCProtocolDecl *PD = dyn_cast<ObjCProtocolDecl>(D)) {
-    //  PD->RedeclLink.setNext(cast<ObjCProtocolDecl>(previous));
-    PD->RedeclLink
-      = Redeclarable<ObjCProtocolDecl>::PreviousDeclLink(cast<ObjCProtocolDecl>(previous));
+    PD->RedeclLink.setNext(cast<ObjCProtocolDecl>(previous));
   } else if (NamespaceDecl *ND = dyn_cast<NamespaceDecl>(D)) {
-    // ND->RedeclLink.setNext(cast<NamespaceDecl>(previous));
-    ND->RedeclLink
-      = Redeclarable<NamespaceDecl>::PreviousDeclLink(cast<NamespaceDecl>(previous));
+    ND->RedeclLink.setNext(cast<NamespaceDecl>(previous));
   } else {
     RedeclarableTemplateDecl *TD = cast<RedeclarableTemplateDecl>(D);
-    RedeclarableTemplateDecl *PrevTD = cast<RedeclarableTemplateDecl>(previous);
-    TD->RedeclLink
-      = Redeclarable<RedeclarableTemplateDecl>::PreviousDeclLink(PrevTD);
-    // We should attach the templated decl as well:
-    attachPreviousDecl(TD->getTemplatedDecl(), PrevTD->getTemplatedDecl());
-    //TD->RedeclLink.setNext(cast<RedeclarableTemplateDecl>(previous));
+    TD->RedeclLink.setNext(cast<RedeclarableTemplateDecl>(previous));
   }
 }
 
@@ -1892,11 +1866,9 @@ void ASTDeclReader::attachLatestDecl(Decl *D, Decl *Latest) {
                                                    cast<NamespaceDecl>(Latest));
   } else {
     RedeclarableTemplateDecl *TD = cast<RedeclarableTemplateDecl>(D);
-    RedeclarableTemplateDecl *LatestTD = cast<RedeclarableTemplateDecl>(Latest);
     TD->RedeclLink
-      = Redeclarable<RedeclarableTemplateDecl>::LatestDeclLink(LatestTD);
-    // We should attach the templated decl as well:
-    attachLatestDecl(TD->getTemplatedDecl(), LatestTD->getTemplatedDecl());
+      = Redeclarable<RedeclarableTemplateDecl>::LatestDeclLink(
+                                        cast<RedeclarableTemplateDecl>(Latest));
   }
 }
 

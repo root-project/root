@@ -4932,12 +4932,9 @@ namespace {
         if (!ND)
           continue;
 
-        if (This->Reader.DeclsInFlight.count(ND))
-          continue;
-
         if (ND->getDeclName() != This->Name) {
-          assert(!This->Name.getCXXNameType().isNull() && 
-                 "Name mismatch without a type");
+          // We might be currently building this decl and have not yet read its
+          // name. This is likely not what we need.
           continue;
         }
       
@@ -6477,9 +6474,6 @@ ASTReader::ASTReader(Preprocessor &PP, ASTContext &Context,
 }
 
 ASTReader::~ASTReader() {
-  assert(DeclsInFlight.empty() && "DeclsInFlight not empty!");
-  assert(RedeclsAddedToAST.empty() && "RedeclsAddedToAST not empty!");
-
   for (DeclContextVisibleUpdatesPending::iterator
            I = PendingVisibleUpdates.begin(),
            E = PendingVisibleUpdates.end();
@@ -6489,4 +6483,5 @@ ASTReader::~ASTReader() {
          J != F; ++J)
       delete J->first;
   }
+  assert(RedeclsAddedToAST.empty() && "RedeclsAddedToAST not empty!");
 }
