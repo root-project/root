@@ -417,13 +417,6 @@ void THnBase::GetRandom(Double_t *rand, Bool_t subBinRandom /* = kTRUE */)
 Bool_t THnBase::IsInRange(Int_t *coord) const
 {
    // Check whether bin coord is in range, as defined by TAxis::SetRange().
-   // Currently, TAxis::SetRange() does not allow to select all but over- and
-   // underflow bins (it instead resets the axis to "no range selected").
-   // Instead, simply call
-   //    TAxis* axis12 = hsparse.GetAxis(12);
-   //    axis12->SetRange(1, axis12->GetNbins());
-   //    axis12->SetBit(TAxis::kAxisRange);
-   // to deselect the under- and overflow bins in the 12th dimension.
 
    Int_t min = 0;
    Int_t max = 0;
@@ -432,13 +425,6 @@ Bool_t THnBase::IsInRange(Int_t *coord) const
       if (!axis->TestBit(TAxis::kAxisRange)) continue;
       min = axis->GetFirst();
       max = axis->GetLast();
-      if (min == 0 && max == 0) {
-         // special case where TAxis::SetBit(kAxisRange) and
-         // over- and underflow bins are de-selected.
-         // first and last are == 0 due to axis12->SetRange(1, axis12->GetNbins());
-         min = 1;
-         max = axis->GetNbins();
-      }
       if (coord[i] < min || coord[i] > max)
          return kFALSE;
    }
