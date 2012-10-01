@@ -41,11 +41,9 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
 
-#include <string>
-
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
       TClingClassInfo *ci)
-   : fInterp(interp), fClassInfo(0), fFirstTime(true)
+   : fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle("")
 {
    if (!ci || !ci->IsValid()) {
       fClassInfo = new TClingClassInfo(fInterp);
@@ -423,17 +421,23 @@ const char *TClingDataMemberInfo::Name() const
    return 0;
 }
 
-const char *TClingDataMemberInfo::Title() const
+const char *TClingDataMemberInfo::Title()
 {
    if (!IsValid()) {
       return 0;
    }
 
-   if (clang::AnnotateAttr *A = GetDecl()->getAttr<clang::AnnotateAttr>())
-      return A->getAnnotation().data();
+   if (fTitle.size())
+      return fTitle.c_str();
 
-   // Try to get the comment from the header file if present
-   return ROOT::TMetaUtils::GetComment(*GetDecl()).data();
+   // Try to get the comment either from the annotation or the header file if present
+   if (clang::AnnotateAttr *A = GetDecl()->getAttr<clang::AnnotateAttr>())
+      fTitle = A->getAnnotation().str();
+   else
+      // Try to get the comment from the header file if present
+      fTitle = ROOT::TMetaUtils::GetComment(*GetDecl()).str();
+
+   return fTitle.c_str();
 }
 
 const char *TClingDataMemberInfo::ValidArrayIndex() const

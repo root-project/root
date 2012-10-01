@@ -49,8 +49,11 @@ private:
    bool                                         fFirstTime; // Flag for first time incrementing iterator, cint semantics are weird.
    unsigned int                                 fContextIdx; // Index in fContexts of DeclContext we are iterating over.
    clang::DeclContext::decl_iterator            fIter; // Our iterator.
+   std::string                                  fTitle; // The meta info for the method.
+
 public:
-   explicit TClingMethodInfo(cling::Interpreter *interp) : fInterp(interp), fFirstTime(true), fContextIdx(0U) {}
+   explicit TClingMethodInfo(cling::Interpreter *interp) 
+      : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle("") {}
 
    TClingMethodInfo(cling::Interpreter *, TClingClassInfo *);
 
@@ -69,7 +72,7 @@ public:
    const char                                  *GetPrototype() const;
    const char                                  *Name() const;
    const char                                  *TypeName() const;
-   const char                                  *Title() const;
+   const char                                  *Title();
 };
 
 #endif // ROOT_TClingMethodInfo

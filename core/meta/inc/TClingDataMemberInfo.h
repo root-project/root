@@ -35,6 +35,7 @@
 #include "clang/Frontend/CompilerInstance.h"
 
 #include <vector>
+#include <string>
 
 namespace clang {
 class Decl;
@@ -51,6 +52,7 @@ private:
    bool                   fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
    clang::DeclContext::decl_iterator fIter; // Current decl.
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested transparent scopes.
+   std::string            fTitle; // The meta info for the member.
 
 public:
 
@@ -104,7 +106,7 @@ public:
    const char        *TypeName() const;
    const char        *TypeTrueName() const;
    const char        *Name() const;
-   const char        *Title() const;
+   const char        *Title();
    const char        *ValidArrayIndex() const;
 
 };

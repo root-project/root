@@ -36,7 +36,7 @@
 //______________________________________________________________________________
 TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
                                      const char *name)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fTitle("")
 {
    // Lookup named typedef and initialize the iterator to point to it.
    if (gDebug > 0) {
@@ -297,17 +297,22 @@ const char *TClingTypedefInfo::Name() const
 }
 
 //______________________________________________________________________________
-const char *TClingTypedefInfo::Title() const
+const char *TClingTypedefInfo::Title()
 {
-   // Get the source code comment attached to the current typedef.
    if (!IsValid()) {
       return 0;
    }
 
-   if (clang::AnnotateAttr *A = GetDecl()->getAttr<clang::AnnotateAttr>())
-      return A->getAnnotation().data();
+   if (fTitle.size())
+      return fTitle.c_str();
 
-   // Try to get the comment from the header file if present
-   return ROOT::TMetaUtils::GetComment(*GetDecl()).data();
+   // Try to get the comment either from the annotation or the header file if present
+   if (clang::AnnotateAttr *A = GetDecl()->getAttr<clang::AnnotateAttr>())
+      fTitle = A->getAnnotation().str();
+   else
+      // Try to get the comment from the header file if present
+      fTitle = ROOT::TMetaUtils::GetComment(*GetDecl()).str();
+
+   return fTitle.c_str();
 }
 

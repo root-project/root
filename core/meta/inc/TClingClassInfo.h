@@ -30,6 +30,7 @@
 #include "clang/AST/DeclBase.h"
 
 #include <vector>
+#include <string>
 
 namespace cling {
 class Interpreter;
@@ -49,7 +50,7 @@ private:
    clang::DeclContext::decl_iterator fIter; // Current decl in scope.
    clang::Decl          *fDecl; // Current decl, we do *not* own.
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
-
+   std::string           fTitle; // The meta info for the class.
 public: // Types
 
    enum MatchMode {
@@ -101,7 +102,7 @@ public:
    const char          *FileName() const;
    const char          *FullName() const;
    const char          *Name() const;
-   const char          *Title() const;
+   const char          *Title();
    const char          *TmpltName() const;
 
 };

@@ -51,7 +51,7 @@
 
 TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
                                    TClingClassInfo *ci)
-   : fInterp(interp), fFirstTime(true), fContextIdx(0U)
+   : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle("")
 {
    if (!ci || !ci->IsValid()) {
       return;
@@ -402,16 +402,22 @@ const char *TClingMethodInfo::TypeName() const
    return Type()->Name();
 }
 
-const char *TClingMethodInfo::Title() const
+const char *TClingMethodInfo::Title()
 {
    if (!IsValid()) {
       return 0;
    }
 
-   if (clang::AnnotateAttr *A = GetMethodDecl()->getAttr<clang::AnnotateAttr>())
-      return A->getAnnotation().data();
+   if (fTitle.size())
+      return fTitle.c_str();
 
-   // Try to get the comment from the header file if present
-   return ROOT::TMetaUtils::GetComment(*GetMethodDecl()).data();
+   // Try to get the comment either from the annotation or the header file if present
+   if (clang::AnnotateAttr *A = GetMethodDecl()->getAttr<clang::AnnotateAttr>())
+      fTitle = A->getAnnotation().str();
+   else
+      // Try to get the comment from the header file if present
+      fTitle = ROOT::TMetaUtils::GetComment(*GetMethodDecl()).str();
+
+   return fTitle.c_str();
 }
 

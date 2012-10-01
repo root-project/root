@@ -63,7 +63,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fTitle("")
 {
    if (gDebug > 0) {
       Info("TClingClassInfo(name)", "looking up class name: %s\n", name);
@@ -111,7 +111,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
                                  const clang::Decl *decl)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fTitle("")
 {
    if (decl) {
       // Position our iterator on the given decl.
@@ -817,17 +817,23 @@ const char *TClingClassInfo::Name() const
    return buf.c_str();
 }
 
-const char *TClingClassInfo::Title() const
+const char *TClingClassInfo::Title()
 {
    if (!IsValid()) {
       return 0;
    }
 
-   if (clang::AnnotateAttr *A = GetDecl()->getAttr<clang::AnnotateAttr>())
-      return A->getAnnotation().data();
+   if (fTitle.size())
+      return fTitle.c_str();
 
-   // Try to get the comment from the header file if present
-   return ROOT::TMetaUtils::GetComment(*GetDecl()).data();
+   // Try to get the comment either from the annotation or the header file if present
+   if (clang::AnnotateAttr *A = GetDecl()->getAttr<clang::AnnotateAttr>())
+      fTitle = A->getAnnotation().str();
+   else
+      // Try to get the comment from the header file if present
+      fTitle = ROOT::TMetaUtils::GetComment(*GetDecl()).str();
+
+   return fTitle.c_str();
 }
 
 const char *TClingClassInfo::TmpltName() const

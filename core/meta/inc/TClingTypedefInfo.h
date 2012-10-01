@@ -30,7 +30,9 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/Frontend/CompilerInstance.h"
+
 #include <vector>
+#include <string>
 
 class TClingTypedefInfo {
 
@@ -40,13 +42,14 @@ private:
    bool                 fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
    bool                 fDescend; // Flag for signaling the need to descend on this advancement.
    clang::DeclContext::decl_iterator fIter; // Current decl in scope.
-   const clang::Decl   *fDecl; // Current decl.
+   const clang::Decl    *fDecl; // Current decl.
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
+   std::string          fTitle; // The meta info for the typedef.
 
 public:
 
    explicit TClingTypedefInfo(cling::Interpreter *interp)
-         : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0)
+      : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fTitle("")
    {
       const clang::TranslationUnitDecl *TU = fInterp->getCI()->getASTContext().getTranslationUnitDecl();
       const clang::DeclContext *DC = llvm::cast<clang::DeclContext>(TU);
@@ -65,7 +68,7 @@ public:
    int                  Size() const;
    const char          *TrueName() const;
    const char          *Name() const;
-   const char          *Title() const;
+   const char          *Title();
 
 };
 
