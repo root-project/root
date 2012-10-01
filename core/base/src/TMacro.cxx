@@ -244,8 +244,9 @@ Long_t TMacro::Exec(const char *params, Int_t* error)
    //the current implementation uses a file in the current directory.
    //should be replaced by a direct execution from memory by CINT
    TString fname = GetName();
-   fname += ".Cexec";
-   SaveSource(fname);
+   fname += ".C";
+   FILE *fp = gSystem->TempFileName(fname);
+   SaveSource(fp);
    //disable a possible call to gROOT->Reset from the executed script
    gROOT->SetExecutingMacro(kTRUE);
    //execute script in /tmp
@@ -341,6 +342,20 @@ void TMacro::SaveSource(const char *filename)
       out<<obj->GetName()<<std::endl;
    }
    out.close();
+}
+
+//______________________________________________________________________________
+void TMacro::SaveSource(FILE *fp)
+{
+   // Save macro source in file pointer fp.
+
+   if (!fLines) {fclose(fp); return;}
+   TIter next(fLines);
+   TObjString *obj;
+   while ((obj = (TObjString*) next())) {
+      fprintf(fp, "%s\n", obj->GetName());
+   }
+   fclose(fp);
 }
 
 //______________________________________________________________________________

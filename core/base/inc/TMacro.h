@@ -35,6 +35,8 @@ class TMacro : public TNamed {
 protected:
    TList         *fLines;      //collection of lines
    TString        fParams;     //default string of macro parameters
+   
+   void           SaveSource(FILE *fp);
 
 public:
    TMacro();
