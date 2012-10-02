@@ -60,10 +60,10 @@ class TEnv;
 namespace cling {
 class Interpreter;
 class MetaProcessor;
+class Transaction;
 }
 
 class TCintWithCling : public TInterpreter {
-
 private: // Static Data Members
 
    static void* fgSetOfSpecials; // set of TObjects used in CINT variables

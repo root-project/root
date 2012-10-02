@@ -66,7 +66,9 @@
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/LookupHelper.h"
+#include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "llvm/Support/DynamicLibrary.h"
@@ -142,8 +144,6 @@ void TCintWithCling__RegisterModule(const char* modulename,
                                                            macroUndefines));
    }
 }
-
-
 
 //______________________________________________________________________________
 //
@@ -477,6 +477,73 @@ void* TCintWithCling::fgSetOfSpecials = 0;
 //
 //
 
+// The callbacks are used to update the list of globals in ROOT.
+//
+class TClingCallbacks : public cling::InterpreterCallbacks {
+private:
+   const clang::Decl *fLastDeclSeen;
+public:
+   TClingCallbacks(cling::Interpreter* interp, bool isEnabled = false) 
+      : InterpreterCallbacks(interp, isEnabled), fLastDeclSeen(0) { }
+
+   // The callback is used to update the list of globals in ROOT.
+   //
+   virtual void TransactionCommitted(const cling::Transaction &T) {
+      if (!T.size())
+         return;
+
+      using namespace clang;
+      using namespace cling;
+      if (!fLastDeclSeen) {
+         const ASTContext &C = m_Interpreter->getCI()->getASTContext();
+         fLastDeclSeen = *C.getTranslationUnitDecl()->decls_begin();
+      }
+
+      TClingDataMemberInfo *globalMemInfo = 0;
+      TClingClassInfo *classInfo =0;
+      Decl *classInfoDecl = 0;
+      while(fLastDeclSeen->getNextDeclInContext()) {
+         fLastDeclSeen = fLastDeclSeen->getNextDeclInContext();
+         if (!isa<VarDecl>(fLastDeclSeen))
+            continue;
+         // FIXME: How does ROOT understand globals?
+         //assert(!cast<VarDecl>(fLastDeclSeen)->hasGlobalStorage() && "Not a global!?");
+
+         // FIXME: Here we have to pass in the actual type/decl of the global
+         // so that we don't break the meta info stream.
+         //classInfoDecl = fPreviousGlobalVD->getType()->getAs<clang::Decl>();
+         classInfo = new TClingClassInfo(m_Interpreter, classInfoDecl);
+         globalMemInfo = new TClingDataMemberInfo(m_Interpreter, classInfo);
+         gROOT->GetListOfGlobals()->Add(new TGlobal(globalMemInfo));         
+      }
+   }
+
+   // The callback is used to update the list of globals in ROOT.
+   //
+   virtual void TransactionUnloaded(const cling::Transaction &T) {
+      if (!T.size())
+         return;
+
+      using namespace clang;
+      using namespace cling;
+      TGlobal *global = 0;
+      const char* name = 0;
+      TCollection* globals = gROOT->GetListOfGlobals();
+      for(Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
+          I != E; ++I) {
+         if (const VarDecl* VD = dyn_cast<VarDecl>(I->getSingleDecl())) {
+            name = VD->getNameAsString().c_str();
+            global = (TGlobal*)globals->FindObject(name);
+            if (global) {
+               globals->Remove(global);
+               if (!globals->IsOwner())
+                  delete global;
+            }
+         }
+      }
+   }
+};
+
 ClassImp(TCintWithCling)
 
 //______________________________________________________________________________
@@ -497,6 +564,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
                                          interpArgs,
                                          ROOT::TMetaUtils::GetLLVMResourceDir(false).c_str());
    fInterpreter->installLazyFunctionCreator(autoloadCallback);
+   fInterpreter->setCallbacks(new TClingCallbacks(fInterpreter, /*isEnabled*/true));
 
    // Add the current path to the include path
    TCintWithCling::AddIncludePath(".");
