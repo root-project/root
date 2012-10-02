@@ -98,6 +98,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <errno.h>
+#include <sys/resource.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <sys/time.h>

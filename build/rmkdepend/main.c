@@ -60,7 +60,7 @@ extern int fchmod(int, int);
 #  endif
 # elif defined(__CYGWIN__)
 extern int fchmod(int, mode_t);
-#else
+# elif !defined(__GLIBC__) || __GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 16)
 extern int fchmod(int, int);
 # endif
 #endif

@@ -58,7 +58,7 @@ in this Software without prior written authorization from the X Consortium.
 #if !defined(MAC_OS_X_VERSION_10_4)
 extern int fchmod();
 #endif
-#else
+#elif !defined(__GLIBC__) || __GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 16)
 extern int fchmod();
 #endif
 #endif
