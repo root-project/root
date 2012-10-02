@@ -94,12 +94,15 @@ void FitConfig::SetFromFitResult(const FitResult &result) {
       if (result.IsParameterFixed(i) )
          fSettings[i].Set(result.ParName(i), result.Value(i) ); 
       else { 
-         if (result.IsParameterBound(i) && !fSettings[i].IsBound() ) {
-            // bound on parameters will be lost- must be done by hand by user 
-            std::string msg = "Bound on parameter " + result.ParName(i) + " is lost; it must be set again by the user";
-            MATH_WARN_MSG("FitConfig::SetFromResult",msg.c_str() );
-         }
          fSettings[i].Set( result.ParName(i), result.Value(i), result.Error(i) ); 
+         // check if parameter is bound
+         double lower = 0; 
+         double upper = 0;
+         if (result.ParameterBounds(i,lower,upper) ) {
+            if (lower == -std::numeric_limits<double>::infinity()) fSettings[i].SetUpperLimit(upper);
+            else if (upper ==  std::numeric_limits<double>::infinity()) fSettings[i].SetLowerLimit(lower);
+            else fSettings[i].SetLimits(lower,upper);
+         }
 
          // query if parameter needs to run Minos
          if (result.HasMinosError(i) ) {

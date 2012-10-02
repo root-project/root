@@ -85,9 +85,13 @@ FitResult::FitResult(const FitConfig & fconfig) :
       fParams[i]   =  par.Value();
       fErrors[i]   =  par.StepSize();
       fParNames[i] =  par.Name();
-      if (par.IsFixed() ) fFixedParams.push_back(i); 
+      if (par.IsFixed() ) fFixedParams[i] = true;  
       else fNFree++;
-      if (par.IsBound() ) fBoundParams.push_back(i); 
+      if (par.IsBound() ) { 
+         double lower = (par.HasLowerLimit()) ? par.LowerLimit() : - std::numeric_limits<double>::infinity() ;
+         double upper = (par.HasUpperLimit()) ? par.UpperLimit() :   std::numeric_limits<double>::infinity() ;
+         fParamBounds.push_back(std::make_pair(lower,upper));
+      }
    }
 
 } 
@@ -156,8 +160,13 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
    // check for fixed or limited parameters
    for (unsigned int ipar = 0; ipar < npar; ++ipar) { 
       const ParameterSettings & par = fconfig.ParSettings(ipar); 
-      if (par.IsFixed() ) fFixedParams.push_back(ipar); 
-      if (par.IsBound() ) fBoundParams.push_back(ipar); 
+      if (par.IsFixed() ) fFixedParams[ipar] = true;  
+      else fNFree++;
+      if (par.IsBound() ) { 
+         double lower = (par.HasLowerLimit()) ? par.LowerLimit() : - std::numeric_limits<double>::infinity() ;
+         double upper = (par.HasUpperLimit()) ? par.UpperLimit() :   std::numeric_limits<double>::infinity() ;
+         fParamBounds.push_back(std::make_pair(lower,upper));
+      }
    } 
 
    // if flag is binned compute a chi2 when a chi2 function is given 
@@ -386,14 +395,23 @@ int FitResult::Index(const std::string & name) const {
 } 
 
 bool FitResult::IsParameterBound(unsigned int ipar) const { 
-   for (unsigned int i = 0; i < fBoundParams.size() ; ++i) 
-      if ( fBoundParams[i] == ipar) return true; 
-   return false; 
+   return fBoundParams.find(ipar) != fBoundParams.end();
 }
 
 bool FitResult::IsParameterFixed(unsigned int ipar) const { 
-   for (unsigned int i = 0; i < fFixedParams.size() ; ++i) 
-      if ( fFixedParams[i] == ipar) return true; 
+   return fFixedParams.find(ipar) != fFixedParams.end();
+}
+
+bool FitResult::ParameterBounds(unsigned int ipar, double & lower, double & upper) const { 
+   std::map<unsigned int, unsigned int>::const_iterator itr =  fBoundParams.find(ipar);
+   if (itr ==  fBoundParams.end() ) { 
+      lower =  -std::numeric_limits<Double_t>::infinity(); 
+      upper =  std::numeric_limits<Double_t>::infinity(); 
+      return false; 
+   }
+   assert(itr->second < fParamBounds.size() );
+   lower = fParamBounds[itr->second].first;
+   upper = fParamBounds[itr->second].second;
    return false; 
 }
 
