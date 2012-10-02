@@ -7361,15 +7361,22 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       //get 3*3 under/overflows for 2d hist
       Double_t unov[9];
 
-      unov[0] = h2->Integral(0,h2->GetXaxis()->GetFirst()-1,h2->GetYaxis()->GetLast()+1,h2->GetYaxis()->GetNbins()+1);
-      unov[1] = h2->Integral(h2->GetXaxis()->GetFirst(),h2->GetXaxis()->GetLast(),h2->GetYaxis()->GetLast()+1,h2->GetYaxis()->GetNbins()+1);
-      unov[2] = h2->Integral(h2->GetXaxis()->GetLast()+1,h2->GetXaxis()->GetNbins()+1,h2->GetYaxis()->GetLast()+1,h2->GetYaxis()->GetNbins()+1);
-      unov[3] = h2->Integral(0,h2->GetXaxis()->GetFirst()-1,h2->GetYaxis()->GetFirst(),h2->GetYaxis()->GetLast());
-      unov[4] = h2->Integral(h2->GetXaxis()->GetFirst(),h2->GetXaxis()->GetLast(),h2->GetYaxis()->GetFirst(),h2->GetYaxis()->GetLast());
-      unov[5] = h2->Integral(h2->GetXaxis()->GetLast()+1,h2->GetXaxis()->GetNbins()+1,h2->GetYaxis()->GetFirst(),h2->GetYaxis()->GetLast());
-      unov[6] = h2->Integral(0,h2->GetXaxis()->GetFirst()-1,0,h2->GetYaxis()->GetFirst()-1);
-      unov[7] = h2->Integral(h2->GetXaxis()->GetFirst(),h2->GetXaxis()->GetLast(),0,h2->GetYaxis()->GetFirst()-1);
-      unov[8] = h2->Integral(h2->GetXaxis()->GetLast()+1,h2->GetXaxis()->GetNbins()+1,0,h2->GetYaxis()->GetFirst()-1);
+      Int_t cellsX = h2->GetXaxis()->GetNbins() + 1;
+      Int_t cellsY = h2->GetYaxis()->GetNbins() + 1;
+      Int_t firstX = std::max(1, h2->GetXaxis()->GetFirst());
+      Int_t firstY = std::max(1, h2->GetYaxis()->GetFirst());
+      Int_t lastX  = std::min(h2->GetXaxis()->GetLast(), h2->GetXaxis()->GetNbins());
+      Int_t lastY  = std::min(h2->GetYaxis()->GetLast(), h2->GetYaxis()->GetNbins());
+
+      unov[0] = h2->Integral(      0, firstX-1, lastY+1, cellsY  );
+      unov[1] = h2->Integral(firstX , lastX   , lastY+1, cellsY  );
+      unov[2] = h2->Integral(lastX+1, cellsX  , lastY+1, cellsY  );
+      unov[3] = h2->Integral(      0, firstX-1, firstY , lastY   );
+      unov[4] = h2->Integral(firstX , lastX   , firstY , lastY   );
+      unov[5] = h2->Integral(lastX+1, cellsX  , firstY , lastY   );
+      unov[6] = h2->Integral(      0, firstX-1,       0, firstY-1);
+      unov[7] = h2->Integral(firstX, lastX,           0, firstY-1);
+      unov[8] = h2->Integral(lastX+1, cellsX  ,       0, firstY-1);
 
       snprintf(t, 100," %7d|%7d|%7d\n", (Int_t)unov[0], (Int_t)unov[1], (Int_t)unov[2]);
       stats->AddText(t);
