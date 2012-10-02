@@ -317,17 +317,23 @@ UInt_t TRandom::Integer(UInt_t imax)
 }
 
 //______________________________________________________________________________
-Double_t TRandom::Landau(Double_t mpv, Double_t sigma)
+Double_t TRandom::Landau(Double_t mu, Double_t sigma)
 {
    // Generate a random number following a Landau distribution
-   // with mpv(most probable value) and sigma.
-   // Use function landau_quantile(x,sigma) which provides 
+   // with location parameter mu and scale parameter sigma:
+   //      Landau( (x-mu)/sigma )
+   // Note that mu is not the mpv(most probable value) of the Landa distribution 
+   // and sigma is not the standard deviation of the distribution which is not defined. 
+   // For mu  =0 and sigma=1, the mpv = -0.22278
+   //
+   // The Landau random number generation is implemented using the 
+   // function landau_quantile(x,sigma), which provides 
    // the inverse of the landau cumulative distribution.
    // landau_quantile has been converted from CERNLIB ranlan(G110).
 
    if (sigma <= 0) return 0;
    Double_t x = Rndm(); 
-   Double_t res = mpv + ROOT::Math::landau_quantile(x, sigma);
+   Double_t res = mu + ROOT::Math::landau_quantile(x, sigma);
    return res;
 }
 
