@@ -1963,9 +1963,8 @@ Bool_t TWinNTSystem::ChangeDirectory(const char *path)
    // Change directory.
 
    Bool_t ret = (Bool_t) (::chdir(path) == 0);
-   if (fWdpath != "") {
+   if (fWdpath != "")
       fWdpath = "";   // invalidate path cache
-   }
    return ret;
 }
 
@@ -2127,9 +2126,9 @@ const char *TWinNTSystem::WorkingDirectory(char driveletter)
    char *wdpath = 0;
    char drive = driveletter ? toupper( driveletter ) - 'A' + 1 : 0;
 
-   if (fWdpath != "" ) {
-      return fWdpath;
-   }
+   // don't use cache as user can call chdir() directly somewhere else
+   //if (fWdpath != "" )
+   //   return fWdpath;
 
    if (!(wdpath = ::_getdcwd( (int)drive, wdpath, kMAXPATHLEN))) {
       free(wdpath);

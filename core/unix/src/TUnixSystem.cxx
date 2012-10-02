@@ -1382,8 +1382,9 @@ const char *TUnixSystem::WorkingDirectory()
 {
    // Return working directory.
 
-   if (fWdpath != "")
-      return fWdpath.Data();
+   // don't use cache as user can call chdir() directly somewhere else
+   //if (fWdpath != "")
+   //   return fWdpath.Data();
 
    R__LOCKGUARD2(gSystemMutex);
 
