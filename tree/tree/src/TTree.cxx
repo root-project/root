@@ -106,7 +106,11 @@
 //          Or
 //             MyDataClass* p_object = new MyDataClass;
 //             tree->Branch(branchname, &p_object);
-//
+//       Whether the pointer is set to zero or not, the ownership of the object
+//       is not taken over by the TTree.  I.e. eventhough an object will be allocated
+//       by TTree::Branch if the pointer p_object is zero, the object will <b>not</b>
+//       be deleted when the TTree is deleted.
+// 
 //  ==> Case C
 //      ======
 //     MyClass object;
@@ -4778,6 +4782,10 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    //  additional advantage that functions like TTree::Draw (internally calling
    //  TTree::GetEntry) will be functional even when the classes in the file are
    //  not available.
+   //
+   //  Note: See the comments in TBranchElement::SetAddress() for the 
+   //    object ownership policy of the underlying (user) data.
+
 
    // We already have been visited while recursively looking
    // through the friends tree, let return
@@ -7002,7 +7010,7 @@ Int_t TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr)
    // See TTree::CheckBranchAddressType for the semantic of the return value.
    //
    // Note: See the comments in TBranchElement::SetAddress() for the
-   //       meaning of the addr parameter.
+   //       meaning of the addr parameter and the object ownership policy.
    //
 
    TBranch* branch = GetBranch(bname);
@@ -7020,7 +7028,7 @@ Int_t TTree::SetBranchAddress(const char* bname, void* addr, TClass* ptrClass, E
    // See TTree::CheckBranchAddressType for the semantic of the return value.
    //
    // Note: See the comments in TBranchElement::SetAddress() for the
-   //       meaning of the addr parameter.
+   //       meaning of the addr parameter and the object ownership policy.
    //
 
    return SetBranchAddress(bname, addr, 0, ptrClass, datatype, isptr);
@@ -7033,7 +7041,7 @@ Int_t TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr, TCla
    // See TTree::CheckBranchAddressType for the semantic of the return value.
    //
    // Note: See the comments in TBranchElement::SetAddress() for the
-   //       meaning of the addr parameter.
+   //       meaning of the addr parameter and the object ownership policy.
    //
 
    TBranch* branch = GetBranch(bname);
@@ -7057,7 +7065,7 @@ Int_t TTree::SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr)
    // See TTree::CheckBranchAddressType for the semantic of the return value.
    //
    // Note: See the comments in TBranchElement::SetAddress() for the
-   //       meaning of the addr parameter.
+   //       meaning of the addr parameter and the object ownership policy.
    //
 
    if (ptr) {
