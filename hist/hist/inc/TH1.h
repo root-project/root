@@ -279,6 +279,7 @@ public:
    virtual Int_t    GetNbinsX() const {return fXaxis.GetNbins();}
    virtual Int_t    GetNbinsY() const {return fYaxis.GetNbins();}
    virtual Int_t    GetNbinsZ() const {return fZaxis.GetNbins();}
+   virtual Int_t    GetNcells() const {return fNcells; }
    virtual Double_t GetNormFactor() const {return fNormFactor;}
    virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
    Option_t        *GetOption() const {return fOption.Data();}

@@ -661,10 +661,9 @@ void FillData(SparseData & dv, const TH1 * h1, TF1 * /*func*/)
    const int dim = h1->GetDimension();
    std::vector<double> min(dim);
    std::vector<double> max(dim);
-   
-   const TArray *array(dynamic_cast<const TArray*>(h1));
-   assert(array && "THIS SHOULD NOT HAPPEN!");
-   for ( int i = 0; i < array->GetSize(); ++i ) {
+
+   int ncells = h1->GetNcells(); 
+   for ( int i = 0; i < ncells; ++i ) {
 //       printf("i: %d; OF: %d; UF: %d; C: %f\n"
 //              , i
 //              , h1->IsBinOverflow(i) , h1->IsBinUnderflow(i)
