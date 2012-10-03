@@ -53,6 +53,7 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
               decls_begin();
       // Move to first global variable.
       InternalNext();
+      fFirstTime = true;
       return;
    }
    fClassInfo = new TClingClassInfo(*ci);
@@ -60,6 +61,7 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
       fIter = llvm::cast<clang::DeclContext>(ci->GetDecl())->decls_begin();
       // Move to first data member.
       InternalNext();
+      fFirstTime = true;
    }
 }
 
