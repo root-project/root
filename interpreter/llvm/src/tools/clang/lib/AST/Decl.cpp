@@ -126,12 +126,12 @@ static LinkageInfo getLVForTemplateArgumentList(const TemplateArgument *Args,
       break;
 
     case TemplateArgument::Declaration:
-      // The decl can validly be null as the representation of nullptr
-      // arguments, valid only in C++0x.
-      if (Decl *D = Args[I].getAsDecl()) {
-        if (NamedDecl *ND = dyn_cast<NamedDecl>(D))
-          LV.mergeWithMin(getLVForDecl(ND, OnlyTemplate));
-      }
+      if (NamedDecl *ND = dyn_cast<NamedDecl>(Args[I].getAsDecl()))
+        LV.mergeWithMin(getLVForDecl(ND, OnlyTemplate));
+      break;
+
+    case TemplateArgument::NullPtr:
+      LV.mergeWithMin(getLVForType(Args[I].getNullPtrType()));
       break;
 
     case TemplateArgument::Template:
@@ -936,8 +936,7 @@ std::string NamedDecl::getQualifiedNameAsString(const PrintingPolicy &P) const {
 }
 
 bool NamedDecl::declarationReplaces(NamedDecl *OldD) const {
-  assert((!getDeclName() || OldD->getDeclName() \
-          || getDeclName() == OldD->getDeclName()) && "Declaration name mismatch");
+  assert(getDeclName() == OldD->getDeclName() && "Declaration name mismatch");
 
   // UsingDirectiveDecl's are not really NamedDecl's, and all have same name.
   // We want to keep it, unless it nominates same namespace.

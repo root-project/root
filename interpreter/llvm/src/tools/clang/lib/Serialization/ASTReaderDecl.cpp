@@ -37,7 +37,6 @@ namespace clang {
   class ASTDeclReader : public DeclVisitor<ASTDeclReader, void> {
     ASTReader &Reader;
     ModuleFile &F;
-    llvm::BitstreamCursor &Cursor;
     const DeclID ThisDeclID;
     const unsigned RawLocation;
     typedef ASTReader::RecordData RecordData;
@@ -194,10 +193,10 @@ namespace clang {
     
   public:
     ASTDeclReader(ASTReader &Reader, ModuleFile &F,
-                  llvm::BitstreamCursor &Cursor, DeclID thisDeclID,
+                  DeclID thisDeclID,
                   unsigned RawLocation,
                   const RecordData &Record, unsigned &Idx)
-      : Reader(Reader), F(F), Cursor(Cursor), ThisDeclID(thisDeclID),
+      : Reader(Reader), F(F), ThisDeclID(thisDeclID),
         RawLocation(RawLocation), Record(Record), Idx(Idx),
         TypeIDForTypeDecl(0) { }
 
@@ -899,7 +898,8 @@ void ASTDeclReader::VisitVarDecl(VarDecl *VD) {
   VD->VarDeclBits.NRVOVariable = Record[Idx++];
   VD->VarDeclBits.CXXForRangeDecl = Record[Idx++];
   VD->VarDeclBits.ARCPseudoStrong = Record[Idx++];
-
+  VD->VarDeclBits.IsConstexpr = Record[Idx++];
+  
   // Only true variables (not parameters or implicit parameters) can be merged.
   if (VD->getKind() == Decl::Var)
     mergeRedeclarable(VD, Redecl);
@@ -1137,6 +1137,7 @@ void ASTDeclReader::ReadCXXDefinitionData(
     Lambda.Captures 
       = (Capture*)Reader.Context.Allocate(sizeof(Capture)*Lambda.NumCaptures);
     Capture *ToCapture = Lambda.Captures;
+    Lambda.MethodTyInfo = GetTypeSourceInfo(Record, Idx);
     for (unsigned I = 0, N = Lambda.NumCaptures; I != N; ++I) {
       SourceLocation Loc = ReadSourceLocation(Record, Idx);
       bool IsImplicit = Record[Idx++];
@@ -1157,7 +1158,8 @@ void ASTDeclReader::VisitCXXRecordDecl(CXXRecordDecl *D) {
     // allocate the appropriate DefinitionData structure.
     bool IsLambda = Record[Idx++];
     if (IsLambda)
-      D->DefinitionData = new (C) CXXRecordDecl::LambdaDefinitionData(D, false);
+      D->DefinitionData = new (C) CXXRecordDecl::LambdaDefinitionData(D, 0,
+                                                                      false);
     else
       D->DefinitionData = new (C) struct CXXRecordDecl::DefinitionData(D);
     
@@ -1244,6 +1246,7 @@ void ASTDeclReader::VisitImportDecl(ImportDecl *D) {
   SourceLocation *StoredLocs = reinterpret_cast<SourceLocation *>(D + 1);
   for (unsigned I = 0, N = Record.back(); I != N; ++I)
     StoredLocs[I] = ReadSourceLocation(Record, Idx);
+  ++Idx; // The number of stored source locations.
 }
 
 void ASTDeclReader::VisitAccessSpecDecl(AccessSpecDecl *D) {
@@ -1395,15 +1398,17 @@ void ASTDeclReader::VisitClassTemplateSpecializationDecl(
                                                      TemplArgs.size());
   D->PointOfInstantiation = ReadSourceLocation(Record, Idx);
   D->SpecializationKind = (TemplateSpecializationKind)Record[Idx++];
-  
-  if (D->isCanonicalDecl()) { // It's kept in the folding set.
+
+  bool writtenAsCanonicalDecl = Record[Idx++];
+  if (writtenAsCanonicalDecl) {
     ClassTemplateDecl *CanonPattern = ReadDeclAs<ClassTemplateDecl>(Record,Idx);
-    if (ClassTemplatePartialSpecializationDecl *Partial
-                       = dyn_cast<ClassTemplatePartialSpecializationDecl>(D)) {
-      CanonPattern->getCommonPtr()->PartialSpecializations.GetOrInsertNode(
-                                                                       Partial);
-    } else {
-      CanonPattern->getCommonPtr()->Specializations.GetOrInsertNode(D);
+    if (D->isCanonicalDecl()) { // It's kept in the folding set.
+      if (ClassTemplatePartialSpecializationDecl *Partial
+                        = dyn_cast<ClassTemplatePartialSpecializationDecl>(D)) {
+  CanonPattern->getCommonPtr()->PartialSpecializations.GetOrInsertNode(Partial);
+      } else {
+        CanonPattern->getCommonPtr()->Specializations.GetOrInsertNode(D);
+      }
     }
   }
 }
@@ -1759,10 +1764,10 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
     return NamespaceX->isInline() == NamespaceY->isInline();
   }
 
-  if (isa<TemplateDecl>(X)) {
+  // Identical template names and kinds match.
+  if (isa<TemplateDecl>(X))
     return true;
-  }
-      
+
   // FIXME: Many other cases to implement.
   return false;
 }
@@ -1919,7 +1924,7 @@ Decl *ASTReader::ReadDeclRecord(DeclID ID) {
   RecordData Record;
   unsigned Code = DeclsCursor.ReadCode();
   unsigned Idx = 0;
-  ASTDeclReader Reader(*this, *Loc.F, DeclsCursor, ID, RawLocation, Record,Idx);
+  ASTDeclReader Reader(*this, *Loc.F, ID, RawLocation, Record,Idx);
 
   Decl *D = 0;
   switch ((DeclCode)DeclsCursor.ReadRecord(Code, Record)) {
@@ -2134,6 +2139,9 @@ Decl *ASTReader::ReadDeclRecord(DeclID ID) {
       }
       PendingVisibleUpdates.erase(I);
     }
+
+    if (!DC->hasExternalVisibleStorage() && DC->hasExternalLexicalStorage())
+      DC->setMustBuildLookupTable();
   }
   assert(Idx == Record.size());
 
@@ -2149,8 +2157,7 @@ Decl *ASTReader::ReadDeclRecord(DeclID ID) {
   // AST consumer might need to know about, queue it.
   // We don't pass it to the consumer immediately because we may be in recursive
   // loading, and some declarations may still be initializing.
-  bool HaveModules = getContext().getLangOpts().Modules;
-  if (HaveModules) {
+  if (getContext().getLangOpts().Modules) {
     if (RedeclsAddedToAST.count(D)) {
       RedeclsAddedToAST.erase(D);
       if (isConsumerInterestedIn(D))
@@ -2183,7 +2190,7 @@ void ASTReader::loadDeclUpdateRecords(serialization::DeclID ID, Decl *D) {
       assert(RecCode == DECL_UPDATES && "Expected DECL_UPDATES record!");
       
       unsigned Idx = 0;
-      ASTDeclReader Reader(*this, *F, Cursor, ID, 0, Record, Idx);
+      ASTDeclReader Reader(*this, *F, ID, 0, Record, Idx);
       Reader.UpdateDecl(D, *F, Record);
     }
   }
