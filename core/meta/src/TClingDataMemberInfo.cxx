@@ -41,6 +41,8 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
 
+using namespace clang;
+
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
       TClingClassInfo *ci)
    : fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle("")
@@ -427,11 +429,12 @@ const char *TClingDataMemberInfo::Title()
       return 0;
    }
 
-   if (fTitle.size())
-      return fTitle.c_str();
+   //NOTE: We can't use it as a cache due to the "thoughtful" self iterator
+   //if (fTitle.size())
+   //   return fTitle.c_str();
 
    // Try to get the comment either from the annotation or the header file if present
-   if (clang::AnnotateAttr *A = GetDecl()->getAttr<clang::AnnotateAttr>())
+   if (AnnotateAttr *A = GetDecl()->getAttr<AnnotateAttr>())
       fTitle = A->getAnnotation().str();
    else
       // Try to get the comment from the header file if present

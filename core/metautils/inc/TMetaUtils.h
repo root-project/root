@@ -12,6 +12,8 @@
 #ifndef ROOT_TMetaUtils
 #define ROOT_TMetaUtils
 
+#include "clang/AST/Decl.h"
+
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/StringRef.h"
 
@@ -97,6 +99,37 @@ namespace ROOT {
       // ClassDef(MyClass, 1) // comment4
       //
       llvm::StringRef GetComment(const clang::Decl &decl, clang::SourceLocation *loc = 0);
+
+      // Scans the redeclaration chain for a definition of the redeclarable which
+      // is annotated.
+      //
+      // returns 0 if no annotation was found.
+      //
+      template<typename T> 
+      const T* GetAnnotatedRedeclarable(const T* Redecl) {
+         if (!Redecl)
+            return 0;
+
+         Redecl = Redecl->getMostRecentDecl();
+         while (Redecl && !(Redecl->hasAttrs() && Redecl->isThisDeclarationADefinition()))
+            Redecl = Redecl->getPreviousDecl();
+
+         return Redecl;
+      }
+
+      // Specialize the template for typedefs, because they don't contain 
+      // isThisDeclarationADefinition method. (Use inline to avoid violating ODR)
+      template<> inline 
+      const clang::TypedefNameDecl* GetAnnotatedRedeclarable(const clang::TypedefNameDecl* TND) {
+         if (!TND)
+            return 0;
+
+         TND = TND->getMostRecentDecl();
+         while (TND && !(TND->hasAttrs()))
+            TND = TND->getPreviousDecl();
+
+         return TND;
+      }
 
    } // namespace TMetaUtils
 

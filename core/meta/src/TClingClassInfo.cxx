@@ -51,6 +51,8 @@
 #include <sstream>
 #include <string>
 
+using namespace clang;
+
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0)
 {
@@ -823,12 +825,19 @@ const char *TClingClassInfo::Title()
       return 0;
    }
 
-   if (fTitle.size())
-      return fTitle.c_str();
+   //NOTE: We can't use it as a cache due to the "thoughtful" self iterator
+   //if (fTitle.size())
+   //   return fTitle.c_str();
 
    // Try to get the comment either from the annotation or the header file if present
-   if (clang::AnnotateAttr *A = GetDecl()->getAttr<clang::AnnotateAttr>())
-      fTitle = A->getAnnotation().str();
+
+   // Iterate over the redeclarations, we can have muliple definitions in the 
+   // redecl chain (came from merging of pcms).
+   if (const TagDecl *TD = llvm::dyn_cast<TagDecl>(GetDecl())) {
+      if ( (TD = ROOT::TMetaUtils::GetAnnotatedRedeclarable(TD)) ) 
+         if (AnnotateAttr *A = TD->getAttr<AnnotateAttr>())
+            fTitle = A->getAnnotation().str();
+   }
    else
       // Try to get the comment from the header file if present
       fTitle = ROOT::TMetaUtils::GetComment(*GetDecl()).str();

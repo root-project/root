@@ -49,6 +49,8 @@
 
 #include <string>
 
+using namespace clang;
+
 TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
                                    TClingClassInfo *ci)
    : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle("")
@@ -408,12 +410,19 @@ const char *TClingMethodInfo::Title()
       return 0;
    }
 
-   if (fTitle.size())
-      return fTitle.c_str();
+   //NOTE: We can't use it as a cache due to the "thoughtful" self iterator
+   //if (fTitle.size())
+   //   return fTitle.c_str();
 
    // Try to get the comment either from the annotation or the header file if present
-   if (clang::AnnotateAttr *A = GetMethodDecl()->getAttr<clang::AnnotateAttr>())
-      fTitle = A->getAnnotation().str();
+
+   // Iterate over the redeclarations, we can have muliple definitions in the 
+   // redecl chain (came from merging of pcms).
+   if (const FunctionDecl *FD = llvm::dyn_cast<FunctionDecl>(GetMethodDecl())) {
+      if ( (FD = ROOT::TMetaUtils::GetAnnotatedRedeclarable(FD)) )
+         if (AnnotateAttr *A = FD->getAttr<AnnotateAttr>())
+            fTitle = A->getAnnotation().str();
+   }
    else
       // Try to get the comment from the header file if present
       fTitle = ROOT::TMetaUtils::GetComment(*GetMethodDecl()).str();
