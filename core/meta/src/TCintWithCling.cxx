@@ -1663,13 +1663,42 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
          return kTRUE;
       }
    }
+
+   // Setting up iterator part of TClingTypedefInfo is too slow.
+   // Copy the lookup code instead:
+   /*
    TClingTypedefInfo t(fInterpreter, name);
    if (t.IsValid() && !(t.Property() & G__BIT_ISFUNDAMENTAL)) {
       delete[] classname;
       return kTRUE;
    }
+   */
+
+   const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
+   const clang::Decl *decl = lh.findScope(name);
+   if (!decl) {
+      if (gDebug > 0) {
+         Info("TClingClassInfo(name)", "cling class not found name: %s\n",
+              name);
+      }
+      std::string buf = TClassEdit::InsertStd(name);
+      decl = lh.findScope(buf);
+      if (!decl) {
+         if (gDebug > 0) {
+            Info("TClingClassInfo(name)", "cling class not found name: %s\n",
+                 buf.c_str());
+         }
+      }
+      else {
+         if (gDebug > 0) {
+            Info("TClingClassInfo(name)", "found cling class name: %s  "
+                 "decl: 0x%lx\n", buf.c_str(), (long) decl);
+         }
+      }
+   }
+
    delete[] classname;
-   return kFALSE;
+   return (decl);
 }
 
 //______________________________________________________________________________
