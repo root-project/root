@@ -67,6 +67,7 @@
 #pragma link C++ class TBranchSTL+;
 #pragma link C++ class TIndArray+;
 
+#pragma link C++ enum TTree::ESetBranchAddressStatus;
 
 #pragma link C++ function operator+(const TCut&, const char*);
 #pragma link C++ function operator+(const char*, const TCut&);

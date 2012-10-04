@@ -2288,6 +2288,9 @@ Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
             }
          }
          branch->SetAddress(add);
+      } else {
+         Error("SetBranchAddress", "unknown branch -> %s", bname);
+         return kMissingBranch;
       }
    } else {
       if (ptr) {
