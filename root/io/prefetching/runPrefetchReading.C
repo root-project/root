@@ -31,6 +31,7 @@ Int_t runPrefetchReading()
       filename.Prepend("http://root.cern.ch/files/");
       //filename.Prepend("root://cache01.usatlas.bnl.gov//data/test1/");
       //filename.Prepend("http://www-root.fnal.gov/files/");
+      //filename.Prepend("http://oink.fnal.gov/distro/roottest/");
    }
    
    TString library("atlasFlushed/atlasFlushed");
