@@ -600,7 +600,8 @@ void R__AnnotateDecl(clang::CXXRecordDecl &CXXRD)
 
    for(CXXRecordDecl::decl_iterator I = CXXRD.decls_begin(), 
           E = CXXRD.decls_end(); I != E; ++I) {
-      if (!(*I)->isImplicit() && (isa<CXXMethodDecl>(*I) || isa<FieldDecl>(*I))) {
+      if (!(*I)->isImplicit() 
+          && (isa<CXXMethodDecl>(*I) || isa<FieldDecl>(*I) || isa<VarDecl>(*I))) {
          // For now we allow only a special macro (ClassDef) to have meaningful comments
          SourceLocation maybeMacroLoc = (*I)->getLocation();
          bool isClassDefMacro = maybeMacroLoc.isMacroID() && S.findMacroSpelling(maybeMacroLoc, "ClassDef");
