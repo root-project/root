@@ -3021,6 +3021,10 @@ void TBranchElement::InitializeOffsets()
             // Compensate for the i/o routines adding our local offset later.
             if (subBranch->fObject == 0 && localOffset == TStreamerInfo::kMissing) {
                subBranch->SetOffset(TStreamerInfo::kMissing);
+               // We stil need to set fBranchOffset in the case of a missing 
+               // element so that SetAddress is (as expected) not called 
+               // recursively in this case.
+               fBranchOffset[subBranchIdx] = TStreamerInfo::kMissing;
             } else {
                if (isBaseSubBranch) {
                   // The value of 'offset' for a base class does not include its
