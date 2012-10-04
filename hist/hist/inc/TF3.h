@@ -86,6 +86,7 @@ public:
    virtual Double_t GetMaximumXYZ(Double_t &x, Double_t &y, Double_t &z);
           Int_t     GetNpz() const {return fNpz;}
    virtual void     GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom);
+   using TF1::GetRange; 
    virtual void     GetRange(Double_t &xmin, Double_t &xmax) const;
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const ;
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const;
