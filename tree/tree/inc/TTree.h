@@ -203,6 +203,8 @@ protected:
       kSetBranchStatus   = BIT(12)
    };
    
+public:
+   // SetBranchAddress return values
    enum ESetBranchAddressStatus {
       kMissingBranch = -5,
       kInternalError = -4,
@@ -217,7 +219,6 @@ protected:
       kNoCheck = 5
    };
 
-public:
    // TTree status bits
    enum {
       kForceRead   = BIT(11),
