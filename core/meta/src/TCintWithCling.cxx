@@ -1408,34 +1408,7 @@ void TCintWithCling::SaveGlobalsContext()
 //______________________________________________________________________________
 void TCintWithCling::UpdateListOfGlobals()
 {
-   // Update the list of pointers to global variables. This function
-   // is called by TROOT::GetListOfGlobals().
-   if (!gROOT->fGlobals) {
-      // No globals registered yet, trigger it:
-      gROOT->GetListOfGlobals();
-      // It already called us again.
-      return;
-   }
-   if (fGlobalsListSerial == G__DataMemberInfo::SerialNumber()) {
-      return;
-   }
-   fGlobalsListSerial = G__DataMemberInfo::SerialNumber();
-   R__LOCKGUARD2(gCINTMutex);
-   TClingDataMemberInfo* t = (TClingDataMemberInfo*) DataMemberInfo_Factory();
-   // Loop over all global vars known to cint.
-   while (t->Next()) {
-      if (t->IsValid() && t->Name()) {
-         // Remove any old version in the list.
-         {
-            TGlobal* g = (TGlobal*) gROOT->fGlobals->FindObject(t->Name());
-            if (g) {
-               gROOT->fGlobals->Remove(g);
-               delete g;
-            }
-         }
-         gROOT->fGlobals->Add(new TGlobal((DataMemberInfo_t*) new TClingDataMemberInfo(*t)));
-      }
-   }
+ // No op: see TClingCallbacks (used to update the list of globals)
 }
 
 //______________________________________________________________________________
