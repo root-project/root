@@ -55,7 +55,7 @@ $(COCOALIB):    $(COCOAO) $(COCOAOBJCPPO) $(COCOADO) $(FREETYPEDEP) $(ORDER_) $(
 $(COCOADS):     $(COCOAH1) $(COCOAL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(COCOAH1) $(COCOAL)
+		$(ROOTCINTTMP) -f $@ -c $(FREETYPEINC) $(COCOAH1) $(COCOAL)
 
 $(COCOAMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(COCOAL)
 		$(RLIBMAP) -o $@ -l $(COCOALIB) \
