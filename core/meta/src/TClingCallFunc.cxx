@@ -50,6 +50,7 @@
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/LLVMContext.h"
 #include "llvm/DerivedTypes.h"
 #include "llvm/Function.h"
 #include "llvm/Type.h"
@@ -414,11 +415,15 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
    }
 }
 
-static llvm::Type *getLLVMTypeFromBuiltinKind(llvm::LLVMContext &Context,
-      clang::BuiltinType::Kind BuiltinKind)
+static llvm::Type *getLLVMTypeFromBuiltin(llvm::LLVMContext &Context,
+                                          clang::ASTContext &ASTCtx,
+                                          const clang::BuiltinType* PBT)
 {
    llvm::Type *TY = 0;
-   switch (BuiltinKind) {
+   if (PBT->isInteger()) {
+      uint64_t BTBits = ASTCtx.getTypeInfo(PBT).first;
+      TY = llvm::IntegerType::get(Context, BTBits);
+   } else switch (PBT->getKind()) {
       case clang::BuiltinType::Half:
       case clang::BuiltinType::ObjCId:
       case clang::BuiltinType::ObjCClass:
@@ -430,76 +435,11 @@ static llvm::Type *getLLVMTypeFromBuiltinKind(llvm::LLVMContext &Context,
       case clang::BuiltinType::UnknownAny:
       case clang::BuiltinType::BuiltinFn:
       case clang::BuiltinType::ARCUnbridgedCast:
-      case clang::BuiltinType::Char16:
-      case clang::BuiltinType::Char32:
-         // We do not use these, make gcc be quiet.
+         Error("TClingCallFunc::getLLVMTypeFromBuiltin()",
+               "Not implemented (kind %d)!", (int) PBT->getKind());
          break;
       case clang::BuiltinType::Void:
          TY = llvm::Type::getVoidTy(Context);
-         break;
-      case clang::BuiltinType::Bool:
-         TY = llvm::IntegerType::get(Context, sizeof(bool) * CHAR_BIT);
-         break;
-      case clang::BuiltinType::Char_U:
-         TY = llvm::IntegerType::get(Context, sizeof(unsigned char) * CHAR_BIT);
-         break;
-      case clang::BuiltinType::UChar:
-         TY = llvm::IntegerType::get(Context, sizeof(unsigned char) * CHAR_BIT);
-         break;
-      case clang::BuiltinType::WChar_U:
-         TY = llvm::IntegerType::get(Context, sizeof(unsigned wchar_t) *
-                                     CHAR_BIT);
-         break;
-#if 0
-      case clang::BuiltinType::Char16:
-         TY = llvm::IntegerType::get(Context, sizeof(char16_t) * CHAR_BIT);
-         break;
-      case clang::BuiltinType::Char32:
-         TY = llvm::IntegerType::get(Context, sizeof(char32_t) * CHAR_BIT);
-         break;
-#endif // 0
-      case clang::BuiltinType::UShort:
-         TY = llvm::IntegerType::get(Context, sizeof(unsigned short) *
-                                     CHAR_BIT);
-         break;
-      case clang::BuiltinType::UInt:
-         TY = llvm::IntegerType::get(Context, sizeof(unsigned int) * CHAR_BIT);
-         break;
-      case clang::BuiltinType::ULong:
-         TY = llvm::IntegerType::get(Context, sizeof(unsigned long) * CHAR_BIT);
-         break;
-      case clang::BuiltinType::ULongLong:
-         TY = llvm::IntegerType::get(Context, sizeof(unsigned long long) *
-                                     CHAR_BIT);
-         break;
-      case clang::BuiltinType::UInt128:
-         TY = llvm::IntegerType::get(Context, sizeof(__uint128_t) * CHAR_BIT);
-         break;
-      case clang::BuiltinType::Char_S:
-         TY = llvm::IntegerType::get(Context, sizeof(signed char) * CHAR_BIT);
-         break;
-      case clang::BuiltinType::SChar:
-         TY = llvm::IntegerType::get(Context, sizeof(signed char) * CHAR_BIT);
-         break;
-      case clang::BuiltinType::WChar_S:
-         TY = llvm::IntegerType::get(Context, sizeof(signed wchar_t) *
-                                     CHAR_BIT);
-         break;
-      case clang::BuiltinType::Short:
-         TY = llvm::IntegerType::get(Context, sizeof(signed short) * CHAR_BIT);
-         break;
-      case clang::BuiltinType::Int:
-         TY = llvm::IntegerType::get(Context, sizeof(signed int) * CHAR_BIT);
-         break;
-      case clang::BuiltinType::Long:
-         TY = llvm::IntegerType::get(Context, sizeof(signed long) * CHAR_BIT);
-         break;
-      case clang::BuiltinType::LongLong:
-         TY = llvm::IntegerType::get(Context, sizeof(signed long long) *
-                                     CHAR_BIT);
-         break;
-      case clang::BuiltinType::Int128:
-         TY = llvm::IntegerType::get(Context, sizeof(__int128_t) * CHAR_BIT);
          break;
       case clang::BuiltinType::Float:
          TY = llvm::Type::getFloatTy(Context);
@@ -511,14 +451,20 @@ static llvm::Type *getLLVMTypeFromBuiltinKind(llvm::LLVMContext &Context,
          TY = llvm::Type::getFP128Ty(Context);
          break;
       case clang::BuiltinType::NullPtr:
-         TY = llvm::PointerType::getUnqual(llvm::IntegerType::get(Context,
-                                           CHAR_BIT));
+         TY = llvm::IntegerType::get(Context, CHAR_BIT);
          break;
+      default:
+         // everything else should be ints - what are we missing?
+         Error("TClingCallFunc::getLLVMTypeFromBuiltin()",
+               "Logic error (missing kind %d)!", (int)PBT->getKind());
+         break;         
    }
    return TY;
 }
 
-static llvm::Type *getLLVMType(llvm::LLVMContext &Context, clang::QualType QT)
+static llvm::Type *getLLVMType(llvm::LLVMContext &Context,
+                               clang::ASTContext &ASTCtx,
+                               clang::QualType QT)
 {
    llvm::Type *TY = 0;
    QT = QT.getCanonicalType();
@@ -538,8 +484,7 @@ static llvm::Type *getLLVMType(llvm::LLVMContext &Context, clang::QualType QT)
          }
          else {
             // We have pointer to clang builtin type, preserve that.
-            clang::BuiltinType::Kind kind = PBT->getKind();
-            llvm::Type *llvm_pt = getLLVMTypeFromBuiltinKind(Context, kind);
+            llvm::Type *llvm_pt = getLLVMTypeFromBuiltin(Context, ASTCtx, PBT);
             TY = llvm::PointerType::getUnqual(llvm_pt);
          }
       }
@@ -550,21 +495,18 @@ static llvm::Type *getLLVMType(llvm::LLVMContext &Context, clang::QualType QT)
       }
    }
    else if (QT->isRealFloatingType()) {
-      clang::BuiltinType::Kind kind = BT->getKind();
-      TY = getLLVMTypeFromBuiltinKind(Context, kind);
+      TY = getLLVMTypeFromBuiltin(Context, ASTCtx, BT);
    }
    else if (QT->isIntegralOrEnumerationType()) {
       if (BT) {
-         clang::BuiltinType::Kind kind = BT->getKind();
-         TY = getLLVMTypeFromBuiltinKind(Context, kind);
+         TY = getLLVMTypeFromBuiltin(Context, ASTCtx, BT);
       }
       else {
          const clang::EnumType *ET = QT->getAs<clang::EnumType>();
          clang::QualType IT = ET->getDecl()->getIntegerType();
          IT = IT.getCanonicalType();
          const clang::BuiltinType *IBT = llvm::dyn_cast<clang::BuiltinType>(IT);
-         clang::BuiltinType::Kind kind = IBT->getKind();
-         TY = getLLVMTypeFromBuiltinKind(Context, kind);
+         TY = getLLVMTypeFromBuiltin(Context, ASTCtx, IBT);
       }
    }
    else if (QT->isVoidType()) {
@@ -590,8 +532,8 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
    const char *FuncName = 0;
    std::string MangledName;
    llvm::raw_string_ostream OS(MangledName);
-   llvm::OwningPtr<clang::MangleContext> Mangle(fInterp->getCI()->
-         getASTContext().createMangleContext());
+   clang::ASTContext& ASTCtx = fInterp->getCI()->getASTContext();
+   llvm::OwningPtr<clang::MangleContext> Mangle(ASTCtx.createMangleContext());
    if (!Mangle->shouldMangleDeclName(FD)) {
       clang::IdentifierInfo *II = FD->getIdentifier();
       FuncName = II->getNameStart();
@@ -650,7 +592,7 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
          for (unsigned I = 0U; I < NumParams; ++I) {
             const clang::ParmVarDecl *PVD = FD->getParamDecl(I);
             clang::QualType QT = PVD->getType();
-            Params.push_back(getLLVMType(Context, QT));
+            Params.push_back(getLLVMType(Context, ASTCtx, QT));
          }
          llvm::Type *ReturnType = 0;
          if (llvm::isa<clang::CXXConstructorDecl>(FD)) {
@@ -659,7 +601,7 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
                                                 CHAR_BIT);
          }
          else {
-            ReturnType = getLLVMType(Context, FD->getResultType());
+            ReturnType = getLLVMType(Context, ASTCtx, FD->getResultType());
          }
          // Create the llvm function type.
          llvm::FunctionType *FT = llvm::FunctionType::get(ReturnType, Params,
