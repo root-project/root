@@ -47,18 +47,24 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
       TClingClassInfo *ci)
    : fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle("")
 {
-   if (!ci || !ci->IsValid()) {
-      fClassInfo = new TClingClassInfo(fInterp);
-      fIter = fInterp->getCI()->getASTContext().getTranslationUnitDecl()->
-              decls_begin();
-      // Move to first global variable.
-      InternalNext();
-      fFirstTime = true;
-      return;
-   }
+   assert(ci && "create TClingDataMemberInfo with null class ptr");
+   // if (!ci || !ci->IsValid()) {
+   //    fClassInfo = new TClingClassInfo(fInterp);
+   //    fIter = fInterp->getCI()->getASTContext().getTranslationUnitDecl()->
+   //            decls_begin();
+   //    // Move to first global variable.
+   //    InternalNext();
+   //    fFirstTime = true;
+   //    return;
+   // }
    fClassInfo = new TClingClassInfo(*ci);
    if (ci->IsValid()) {
-      fIter = llvm::cast<clang::DeclContext>(ci->GetDecl())->decls_begin();
+      const Decl *D = ci->GetDecl();
+      fIter = llvm::cast<clang::DeclContext>(D)->decls_begin();
+      const TagDecl *TD = ROOT::TMetaUtils::GetAnnotatedRedeclarable(llvm::dyn_cast<TagDecl>(D));
+      if (TD)
+         fIter = TD->decls_begin();
+      
       // Move to first data member.
       InternalNext();
       fFirstTime = true;
