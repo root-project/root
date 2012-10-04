@@ -36,6 +36,9 @@
 #include "Math/AdaptiveIntegratorMultiDim.h"
 #include "Math/RichardsonDerivator.h"
 #include "Math/Functor.h"
+#include "Math/Minimizer.h"
+#include "Math/MinimizerOptions.h"
+#include "Math/Factory.h"
 #include "Fit/FitResult.h"
 
 //#include <iostream>
@@ -63,8 +66,19 @@ class GInverseFunc {
    const TF1* fFunction;
 public:
    GInverseFunc(const TF1* function):fFunction(function) {}
+
    double operator()(double x) const {
       return - fFunction->Eval(x);
+   }
+};
+// class wrapping evaluation of -TF1(x) for multi-dimension
+class GInverseFuncNdim {
+   TF1* fFunction;
+public:
+   GInverseFuncNdim(TF1* function):fFunction(function) {}
+
+   double operator()(const double* x) const {
+      return - fFunction->EvalPar(x, (Double_t*)0);
    }
 };
 
@@ -1721,6 +1735,96 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
    return x;
 }
 
+//______________________________________________________________________________
+Double_t TF1::GetMinMaxNDim(Double_t * x , bool findmax, Double_t epsilon, Int_t maxiter  ) const
+{
+   // find the minimum of a function of whatever dimension. 
+   // While GetMinimum works only for 1D function , GetMinimumNDim works for all dimensions
+   // since it uses the minimizer interface
+   // vector x at beginning will contained the initial point, on exit will contain the result
+   
+   R__ASSERT(x != 0);
+
+   int ndim = GetNdim(); 
+   if (ndim == 0) {
+      Error("GetMinimumNDim","Function of dimension 0 - return Eval(x)");
+      return (const_cast<TF1&>(*this))(x);
+   } 
+
+   // create minimizer class 
+   const char * minimName = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+   const char * minimAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
+   ROOT::Math::Minimizer * min = ROOT::Math::Factory::CreateMinimizer(minimName, minimAlgo); 
+
+   if (min == 0) { 
+      Error("GetMinimumNDim","Error creating minimizer %s",minimName);
+      return 0; 
+   }
+
+   // minimizer will be set using default values 
+   if (epsilon > 0) min->SetTolerance(epsilon);
+   if (maxiter > 0) min->SetMaxFunctionCalls(maxiter); 
+
+   // create wrapper class from TF1 (cannot use Functor, t.b.i.)
+   ROOT::Math::WrappedMultiFunction<TF1&> objFunc(const_cast<TF1&>(*this),ndim); 
+   // create -f(x) when searching for the maximum
+   GInverseFuncNdim invFunc(const_cast<TF1*>(this)); 
+   ROOT::Math::WrappedMultiFunction<GInverseFuncNdim&> objFuncInv(invFunc,ndim); 
+   if (!findmax) 
+      min->SetFunction(objFunc);
+   else 
+      min->SetFunction(objFuncInv);
+
+   std::vector<double> rmin(ndim);  
+   std::vector<double> rmax(ndim);  
+   GetRange(&rmin[0],&rmax[0]);
+   for (int i = 0; i < ndim; ++i) { 
+      const char * xname =  0; 
+      double stepSize = 0.1; 
+      // use range for step size or give some value depending on x if range is not defined
+      if (rmax[i] > rmin[i])  
+         stepSize = (rmax[i] - rmin[i])/100; 
+      else if (std::abs(x[i]) > 1.) 
+         stepSize = 0.1*x[i]; 
+
+      // set variable names 
+      if (ndim <= 3) { 
+         if (i == 0) { 
+            xname = "x";
+         }
+         else if (i == 1) { 
+            xname = "y";
+         }
+         else { 
+            xname = "z";
+         }
+      } 
+      else {
+         xname = TString::Format("x_%d",i);
+         // arbitrary step sie (should be computed from range)
+      }
+
+      if (rmin[i] < rmax[i] ) {
+         //Info("GetMinMax","setting limits on %s - [ %f , %f ]",xname,rmin[i],rmax[i]);
+         min->SetLimitedVariable(i,xname,x[i], stepSize, rmin[i], rmax[i]); 
+      }
+      else {
+         min->SetVariable(i,xname,x[i], stepSize); 
+      }
+   }
+      
+   bool ret = min->Minimize(); 
+   if (!ret) { 
+      Error("GetMinimumNDim","Error minimizing function %s",GetName() );
+   }
+   if (min->X() ) std::copy (min->X(), min->X()+ndim, x); 
+   double fmin = min->MinValue(); 
+   delete min; 
+   // need to revert sign in case looging for maximum
+   return (findmax) ? -fmin : fmin;
+
+}
+
 
 //______________________________________________________________________________
 Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t maxiter, Bool_t logx) const
@@ -2169,6 +2273,31 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
       x = fAlpha[bin] + xx;
    } while(x<xmin || x>xmax);
    return x;
+}
+
+//______________________________________________________________________________
+void TF1::GetRange(Double_t *rmin, Double_t *rmax) const
+{
+   // Return range of a generic N-D function.
+   int ndim = GetNdim(); 
+   
+   double xmin = 0, ymin = 0, zmin = 0, xmax = 0, ymax = 0, zmax = 0; 
+   GetRange(xmin, ymin, zmin, xmax, ymax, zmax); 
+   for (int i = 0; i < ndim; ++i) {
+      if (i == 0) { 
+         rmin[0] = xmin; rmax[0] = xmax; 
+      }
+      else if (i == 1) { 
+         rmin[1] = ymin; rmax[1] = ymax; 
+      }
+      else if (i == 2) { 
+         rmin[2] = zmin; rmax[2] = zmax; 
+      }
+      else {
+         rmin[i] = 0; 
+         rmax[i] = 0; 
+      }
+   }
 }
 
 

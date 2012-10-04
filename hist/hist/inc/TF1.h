@@ -85,6 +85,9 @@ protected:
    void CreateFromFunctor(const char *name, Int_t npar);
    void CreateFromCintClass(const char *name, void * ptr, Double_t xmin, Double_t xmax, Int_t npar, const char * cname, const char * fname);
 
+   virtual Double_t GetMinMaxNDim(Double_t * x , Bool_t findmax, Double_t epsilon = 0, Int_t maxiter = 0) const;
+   virtual void GetRange(Double_t * xmin, Double_t * xmax) const; 
+
 public:
     // TF1 status bits
     enum {

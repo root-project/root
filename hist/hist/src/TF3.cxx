@@ -278,96 +278,107 @@ void TF3::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TF3::GetMinimumXYZ(Double_t &x, Double_t &y, Double_t &z)
+Double_t TF3::FindMinMax(Double_t *x, Bool_t findmax) const
 {
-// Return the X, Y and Z values corresponding to the minimum value of the function
-// on its range. To find the minimum on a subrange, use the SetRange() function first.
+// return minimum/maximum value of the function
+// To find the minimum on a range, first set this range via the SetRange function
+// If a vector x of coordinate is passed it will be used as starting point for the minimum. 
+// In addition on exit x will contain the coordinate values at the minimuma
+// If x is NULL or x is inifinity or NaN, first, a grid search is performed to find the initial estimate of the 
+// minimum location. The range of the function is divided into fNpx and fNpy
+// sub-ranges. If the function is "good" (or "bad"), these values can be changed
+// by SetNpx and SetNpy functions
+// Then, a minimization is used with starting values found by the grid search
+// The minimizer algorithm used (by default Minuit) can be changed by callinga
+//  ROOT::Math::Minimizer::SetDefaultMinimizerType("..")
+// Other option for the minimizer can be set using the static method of the MinimizerOptions class
+
+   //First do a grid search with step size fNpx and fNpy
+
+   Double_t xx[3]; 
+   Double_t rsign = (findmax) ? -1. : 1.;
+   TF3 & function = const_cast<TF3&>(*this); // needed since EvalPar is not const
+   Double_t xxmin = 0, yymin = 0, zzmin = 0, ttmin = 0; 
+   if (x == NULL || ( (x!= NULL) && ( !TMath::Finite(x[0]) || !TMath::Finite(x[1]) || !TMath::Finite(x[2]) ) ) ){ 
+      Double_t dx = (fXmax - fXmin)/fNpx;
+      Double_t dy = (fYmax - fYmin)/fNpy;
+      Double_t dz = (fZmax - fZmin)/fNpz;
+      xxmin = fXmin;
+      yymin = fYmin;
+      zzmin = fZmin; 
+      ttmin = rsign * TMath::Infinity(); 
+      for (Int_t i=0; i<fNpx; i++){
+         xx[0]=fXmin + (i+0.5)*dx;
+         for (Int_t j=0; j<fNpy; j++){
+            xx[1]=fYmin+(j+0.5)*dy;
+            for (Int_t k=0; k<fNpz; k++){
+               xx[2] = fZmin+(k+0.5)*dz;
+               Double_t tt = function(xx); 
+               if (rsign*tt < rsign*ttmin) {xxmin = xx[0], yymin = xx[1]; zzmin = xx[2]; ttmin=tt;}
+            }
+         }
+      }
+      
+      xxmin = TMath::Min(fXmax, xxmin);
+      yymin = TMath::Min(fYmax, yymin);
+      zzmin = TMath::Min(fZmax, zzmin);
+   }
+   else {
+      xxmin = x[0]; 
+      yymin = x[1];
+      zzmin = x[2];
+      zzmin = function(xx);
+   }
+   xx[0] = xxmin; 
+   xx[1] = yymin; 
+   xx[2] = zzmin; 
+      
+   double fmin = GetMinMaxNDim(xx,findmax);
+   if (rsign*fmin < rsign*zzmin) { 
+      if (x) {x[0] = xx[0]; x[1] = xx[1]; x[2] = xx[2];}
+      return fmin;
+   }
+   // here if minimization failed
+   if (x) { x[0] = xxmin; x[1] = yymin; x[2] = zzmin; }
+   return ttmin;
+}
+
+//______________________________________________________________________________
+Double_t TF3::GetMinimumXYZ(Double_t &x, Double_t &y, Double_t &z)
+{
+// Compute the X, Y and Z values corresponding to the minimum value of the function
+// on its range. Return the function value at the minimum
+// To find the minimum on a subrange, use the SetRange() function first.
 // Method:
 //   First, a grid search is performed to find the initial estimate of the 
 //   minimum location. The range of the function is divided 
 //   into fNpx,fNpy and fNpz sub-ranges. If the function is "good" (or "bad"), 
 //   these values can be changed by SetNpx(), SetNpy() and SetNpz() functions.
 //   Then, Minuit minimization is used with starting values found by the grid search
+//
+//   Note that this method will always do first a grid search in contrast to GetMinimum
 
+   double xx[3] = { 0,0,0 };
+   xx[0] = TMath::QuietNaN();  // to force to do grid search in TF3::FindMinMax
+   double fmin = FindMinMax(xx, false);
+   x = xx[0]; y = xx[1]; z = xx[2];
+   return fmin;
 
-   //First do a grid search with step size fNpx adn fNpy
-   Double_t xx, yy, zz, tt;
-   Double_t dx = (fXmax - fXmin)/fNpx;
-   Double_t dy = (fYmax - fYmin)/fNpy;
-   Double_t dz = (fZmax - fZmin)/fNpz;
+}
 
-   Double_t xxmin = fXmin;
-   Double_t yymin = fYmin;
-   Double_t zzmin = fZmin;
-   Double_t ttmin = Eval(xxmin, yymin, zzmin+dz);
-   for (Int_t i=0; i<fNpx; i++){
-      xx=fXmin + (i+0.5)*dx;
-      for (Int_t j=0; j<fNpy; j++){
-         yy=fYmin+(j+0.5)*dy;
-         for (Int_t k=0; k<fNpz; k++){
-            zz = fZmin+(k+0.5)*dz;
-            tt = Eval(xx, yy, zz);
-            if (tt<ttmin) {xxmin = xx, yymin = yy; zzmin = zz; ttmin=tt;}
-         }
-      }
-   }
+//______________________________________________________________________________
+Double_t TF3::GetMaximumXYZ(Double_t &x, Double_t &y, Double_t &z)
+{
+// Compute the X, Y and Z values corresponding to the maximum value of the function
+// on its range. Return the function value at the maximum
+// See TF3::GetMinimumXYZ
 
-   x = TMath::Min(fXmax, xxmin);
-   y = TMath::Min(fYmax, yymin);
-   z = TMath::Min(fZmax, zzmin);
+   double xx[3] = { 0,0,0 };
+   xx[0] = TMath::QuietNaN();  // to force to do grid search in TF3::FindMinMax
+   double fmax = FindMinMax(xx, true);
+   x = xx[0]; y = xx[1]; z = xx[2];
+   return fmax;
 
-   //go to minuit for the final minimization
-   char f[]="TFitter";
-
-   Int_t strdiff = 0;
-   if (TVirtualFitter::GetFitter()){
-      //If the fitter is already set and it's not minuit, delete it and 
-      //create a minuit fitter
-      strdiff = strcmp(TVirtualFitter::GetFitter()->IsA()->GetName(), f);
-      if (strdiff!=0) 
-         delete TVirtualFitter::GetFitter();
-   }
-
-   TVirtualFitter *minuit = TVirtualFitter::Fitter(this, 3);
-   if (!minuit) { 
-      Error("GetMinimumXYZ", "Cannot create fitter");
-      return;
-   }
-   minuit->Clear();
-   minuit->SetFitMethod("F3Minimizer");
-   Double_t arglist[10];
-   arglist[0]=-1;
-   minuit->ExecuteCommand("SET PRINT", arglist, 1);
-
-   minuit->SetParameter(0, "x", x, 0.1, 0, 0);
-   minuit->SetParameter(1, "y", y, 0.1, 0, 0);
-   minuit->SetParameter(2, "z", z, 0.1, 0, 0);
-   arglist[0] = 5;
-   arglist[1] = 1e-5;
-   // minuit->ExecuteCommand("CALL FCN", arglist, 1);
-
-   Int_t fitResult = minuit->ExecuteCommand("MIGRAD", arglist, 0);
-   if (fitResult!=0){
-      //migrad might have not converged
-      Warning("GetMinimumXYZ", "Abnormal termination of minimization");
-   }
-   Double_t xtemp = minuit->GetParameter(0);
-   Double_t ytemp = minuit->GetParameter(1);
-   Double_t ztemp = minuit->GetParameter(2);
-   if (xtemp>fXmax || xtemp<fXmin || ytemp>fYmax || ytemp<fYmin || ztemp>fZmax || ztemp<fZmin){
-      //converged to something outside limits, redo with bounds 
-      minuit->SetParameter(0, "x", x, 0.1, fXmin, fXmax);
-      minuit->SetParameter(1, "y", y, 0.1, fYmin, fYmax);
-      minuit->SetParameter(2, "z", z, 0.1, fZmin, fZmax);
-      fitResult = minuit->ExecuteCommand("MIGRAD", arglist, 0);
-      if (fitResult!=0){
-         //migrad might have not converged
-         Warning("GetMinimumXYZ", "Abnormal termination of minimization");
-      }
-   }
-   x = minuit->GetParameter(0);
-   y = minuit->GetParameter(1);
-   z = minuit->GetParameter(2);
 }
 
 //______________________________________________________________________________

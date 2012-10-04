@@ -397,87 +397,131 @@ Double_t TF2::GetContourLevel(Int_t level) const
 }
 
 //______________________________________________________________________________
-void TF2::GetMinimumXY(Double_t &x, Double_t &y)
+Double_t TF2::FindMinMax(Double_t *x, Bool_t findmax) const
 {
-// return the X and Y values corresponding to the minimum value of the function
+// return minimum/maximum value of the function
+// To find the minimum on a range, first set this range via the SetRange function
+// If a vector x of coordinate is passed it will be used as starting point for the minimum. 
+// In addition on exit x will contain the coordinate values at the minimuma
+// If x is NULL or x is inifinity or NaN, first, a grid search is performed to find the initial estimate of the 
+// minimum location. The range of the function is divided into fNpx and fNpy
+// sub-ranges. If the function is "good" (or "bad"), these values can be changed
+// by SetNpx and SetNpy functions
+// Then, a minimization is used with starting values found by the grid search
+// The minimizer algorithm used (by default Minuit) can be changed by callinga
+//  ROOT::Math::Minimizer::SetDefaultMinimizerType("..")
+// Other option for the minimizer can be set using the static method of the MinimizerOptions class
+
+   //First do a grid search with step size fNpx and fNpy
+
+   Double_t xx[2]; 
+   Double_t rsign = (findmax) ? -1. : 1.;
+   TF2 & function = const_cast<TF2&>(*this); // needed since EvalPar is not const
+   Double_t xxmin = 0, yymin = 0, zzmin = 0; 
+   if (x == NULL || ( (x!= NULL) && ( !TMath::Finite(x[0]) || !TMath::Finite(x[1]) ) ) ){ 
+      Double_t dx = (fXmax - fXmin)/fNpx;
+      Double_t dy = (fYmax - fYmin)/fNpy;
+      xxmin = fXmin;
+      yymin = fYmin;
+      zzmin = rsign * TMath::Infinity();
+      for (Int_t i=0; i<fNpx; i++){
+         xx[0]=fXmin + (i+0.5)*dx;
+         for (Int_t j=0; j<fNpy; j++){
+            xx[1]=fYmin+(j+0.5)*dy;
+            Double_t zz = function(xx);
+            if (rsign*zz < rsign*zzmin) {xxmin = xx[0], yymin = xx[1]; zzmin = zz;}
+         }
+      }
+      
+      xxmin = TMath::Min(fXmax, xxmin);
+      yymin = TMath::Min(fYmax, yymin);
+   }
+   else {
+      xxmin = x[0]; 
+      yymin = x[1];
+      zzmin = function(xx);
+   }
+   xx[0] = xxmin; 
+   xx[1] = yymin; 
+      
+   double fmin = GetMinMaxNDim(xx,findmax);
+   if (rsign*fmin < rsign*zzmin) { 
+      if (x) {x[0] = xx[0]; x[1] = xx[1]; }
+      return fmin;
+   }
+   // here if minimization failed
+   if (x) { x[0] = xxmin; x[1] = yymin; }
+   return zzmin;
+}
+
+//______________________________________________________________________________
+Double_t TF2::GetMinimumXY(Double_t &x, Double_t &y) const
+{
+// Compute the X and Y values corresponding to the minimum value of the function
+// Return the minimum value of the function
 // To find the minimum on a range, first set this range via the SetRange function
 // Method:
 //   First, a grid search is performed to find the initial estimate of the 
 //   minimum location. The range of the function is divided into fNpx and fNpy
 //   sub-ranges. If the function is "good" (or "bad"), these values can be changed
 //   by SetNpx and SetNpy functions
-//   Then, Minuit minimization is used with starting values found by the grid search
+//   Then, a minimization is used with starting values found by the grid search
+//   The minimizer algorithm used (by default Minuit) can be changed by callinga
+//   ROOT::Math::Minimizer::SetDefaultMinimizerType("..")
+//   Other option for the minimizer can be set using the static method of the MinimizerOptions class
+//
+//   Note that this method will always do first a grid search in contrast to GetMinimum
 
-   //First do a grid search with step size fNpx and fNpy
-   Double_t xx, yy, zz;
-   Double_t dx = (fXmax - fXmin)/fNpx;
-   Double_t dy = (fYmax - fYmin)/fNpy;
-   Double_t xxmin = fXmin;
-   Double_t yymin = fYmin;
-   Double_t zzmin = Eval(xxmin, yymin+dy);
-   for (Int_t i=0; i<fNpx; i++){
-      xx=fXmin + (i+0.5)*dx;
-      for (Int_t j=0; j<fNpy; j++){
-         yy=fYmin+(j+0.5)*dy;
-         zz = Eval(xx, yy);
-         if (zz<zzmin) {xxmin = xx, yymin = yy; zzmin = zz;}
-      }
-   }
-
-   x = TMath::Min(fXmax, xxmin);
-   y = TMath::Min(fYmax, yymin);
-
-   //go to minuit for the final minimization
-   char f[]="TFitter";
-
-   Int_t strdiff = 0;
-   if (TVirtualFitter::GetFitter()){
-      //If the fitter is already set and it's not minuit, delete it and 
-      //create a minuit fitter
-      strdiff = strcmp(TVirtualFitter::GetFitter()->IsA()->GetName(), f);
-      if (strdiff!=0) 
-         delete TVirtualFitter::GetFitter();
-   }
-
-   TVirtualFitter *minuit = TVirtualFitter::Fitter(this, 2);
-   if (!minuit) { 
-      Error("GetMinimumXY", "Cannot create fitter");
-      return;
-   }
-   minuit->Clear();
-   minuit->SetFitMethod("F2Minimizer");
-   Double_t arglist[10];
-   arglist[0]=-1;
-   minuit->ExecuteCommand("SET PRINT", arglist, 1);
-
-   minuit->SetParameter(0, "x", x, 0.1, 0, 0);
-   minuit->SetParameter(1, "y", y, 0.1, 0, 0);
-   arglist[0] = 5;
-   arglist[1] = 1e-5;
-   // minuit->ExecuteCommand("CALL FCN", arglist, 1);
-
-   Int_t fitResult = minuit->ExecuteCommand("MIGRAD", arglist, 0);
-   if (fitResult!=0){
-      //migrad might have not converged
-      Warning("GetMinimumXY", "Abnormal termination of minimization");
-   }
-   Double_t xtemp=minuit->GetParameter(0);
-   Double_t ytemp=minuit->GetParameter(1);
-   if (xtemp>fXmax || xtemp<fXmin || ytemp>fYmax || ytemp<fYmin){
-      //converged to something outside limits, redo with bounds 
-
-      minuit->SetParameter(0, "x", x, 0.1, fXmin, fXmax);
-      minuit->SetParameter(1, "y", y, 0.1, fYmin, fYmax);
-      fitResult = minuit->ExecuteCommand("MIGRAD", arglist, 0);
-      if (fitResult!=0){
-         //migrad might have not converged
-         Warning("GetMinimumXY", "Abnormal termination of minimization");
-      }
-   }
-   x = minuit->GetParameter(0);
-   y = minuit->GetParameter(1);
-
+   double xx[2] = { 0,0 };
+   xx[0] = TMath::QuietNaN();  // to force to do grid search in TF2::FindMinMax
+   double fmin = FindMinMax(xx, false);
+   x = xx[0]; y = xx[1];
+   return fmin;
 }
+
+//______________________________________________________________________________
+Double_t TF2::GetMaximumXY(Double_t &x, Double_t &y) const
+{
+// Compute the X and Y values corresponding to the maximum value of the function
+// Return the maximum value of the function
+//  See TF2::GetMinimumXY
+
+   double xx[2] = { 0,0 };
+   xx[0] = TMath::QuietNaN();  // to force to do grid search in TF2::FindMinMax
+   double fmax = FindMinMax(xx, true);
+   x = xx[0]; y = xx[1];
+   return fmax;
+}
+
+
+//______________________________________________________________________________
+Double_t TF2::GetMinimum(Double_t *x) const
+{
+// return minimum/maximum value of the function
+// To find the minimum on a range, first set this range via the SetRange function
+// If a vector x of coordinate is passed it will be used as starting point for the minimum. 
+// In addition on exit x will contain the coordinate values at the minimuma
+// If x is NULL or x is inifinity or NaN, first, a grid search is performed to find the initial estimate of the 
+// minimum location. The range of the function is divided into fNpx and fNpy
+// sub-ranges. If the function is "good" (or "bad"), these values can be changed
+// by SetNpx and SetNpy functions
+// Then, a minimization is used with starting values found by the grid search
+// The minimizer algorithm used (by default Minuit) can be changed by callinga
+//  ROOT::Math::Minimizer::SetDefaultMinimizerType("..")
+// Other option for the minimizer can be set using the static method of the MinimizerOptions class
+
+   return FindMinMax(x, false); 
+}
+
+//______________________________________________________________________________
+Double_t TF2::GetMaximum(Double_t *x) const
+{
+// return maximum value of the function
+// See TF2::GetMinimum
+
+   return FindMinMax(x, true); 
+}
+
 
 //______________________________________________________________________________
 char *TF2::GetObjectInfo(Int_t px, Int_t py) const
