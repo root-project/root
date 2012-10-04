@@ -268,7 +268,7 @@ static int G__ManualTree2_119_0_216(G__value* result7, G__CONST char* funcname, 
    case 2:
       break;
    }
-   ((TTree*)(G__getstructoffset()))->SetBranchAddress((const char*)G__int(libp->para[0]),(void*)G__int(libp->para[1]),branchPtr,ptrClass,datatype,gInterpreter->TypeInfo_RefType(ti)==G__PARAP2P);
+   G__letint(result7,105,((TTree*)(G__getstructoffset()))->SetBranchAddress((const char*)G__int(libp->para[0]),(void*)G__int(libp->para[1]),branchPtr,ptrClass,datatype,gInterpreter->TypeInfo_RefType(ti)==G__PARAP2P));
 
    gInterpreter->TypeInfo_Delete( ti );
    return(1 || funcname || hash || result7 || libp) ;
