@@ -220,7 +220,7 @@ TEntryList::TEntryList(const char *name, const char *title, const TTree *tree):T
    fN = 0;
    fNBlocks = 0;
    fTreeNumber = -1;
-   SetTree(tree);
+   TEntryList::SetTree(tree);
    fReapply = kFALSE;
 
    fDirectory  = gDirectory;
@@ -1197,6 +1197,8 @@ void TEntryList::SetTree(const TTree *tree)
    //where the filename is taken "as is".
 
    if (!tree) return;
+   if (!tree->GetTree()) return;
+
    TString treename = tree->GetTree()->GetName();
    TString filename;
    if (tree->GetTree()->GetCurrentFile()){
