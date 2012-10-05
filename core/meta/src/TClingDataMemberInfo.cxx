@@ -47,19 +47,14 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
                                            TClingClassInfo *ci)
    : fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), fSingleDecl(0)
 {
-   assert(ci && "create TClingDataMemberInfo with null class ptr");
-   // if (!ci || !ci->IsValid()) {
-   //    fClassInfo = new TClingClassInfo(fInterp);
-   //    fIter = fInterp->getCI()->getASTContext().getTranslationUnitDecl()->
-   //            decls_begin();
-   //    // Move to first global variable.
-   //    InternalNext();
-   //    fFirstTime = true;
-   //    return;
-   // }
-   fClassInfo = new TClingClassInfo(*ci);
-   if (ci->IsValid()) {
-      const Decl *D = ci->GetDecl();
+   if (!ci) {
+      // We are meant to iterate over the global namespace (well at least CINT did).
+      fClassInfo = new TClingClassInfo(interp);      
+   } else {
+      fClassInfo = new TClingClassInfo(*ci);
+   }
+   if (fClassInfo->IsValid()) {
+      const Decl *D = fClassInfo->GetDecl();
       fIter = llvm::cast<clang::DeclContext>(D)->decls_begin();
       const TagDecl *TD = ROOT::TMetaUtils::GetAnnotatedRedeclarable(llvm::dyn_cast<TagDecl>(D));
       if (TD)
