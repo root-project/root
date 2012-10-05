@@ -444,7 +444,7 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
             HdrSearch.setDirectoryHasModuleMap(Dir);
          }
 #else
-         std::cout << "Loading from header file..." << std::endl;
+         std::cerr << "   Modules disabled; parsing header files instead." << std::endl;
 #endif
       }
 
