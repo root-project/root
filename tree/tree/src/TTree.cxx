@@ -2655,6 +2655,16 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
                TDataType::GetTypeName(datatype), datatype, TDataType::GetTypeName(expectedType), expectedType, branch->GetName());
          return kMismatch;
       }
+   } else if ((expectedClass && (datatype != kOther_t && datatype != kNoType_t)) || 
+              (ptrClass && (expectedType != kOther_t && expectedType != kNoType_t)) ) {
+      if (expectedClass) {
+         Error("SetBranchAddress", "The pointer type given \"%s\" (%d) does not correspond to the type needed \"%s\" by the branch: %s", 
+               TDataType::GetTypeName(datatype), datatype, expectedClass->GetName(), branch->GetName());
+      } else {
+         Error("SetBranchAddress", "The pointer type given \"%s\" does not correspond to the type needed \"%s\" (%d) by the branch: %s", 
+               ptrClass->GetName(), TDataType::GetTypeName(expectedType), expectedType, branch->GetName());
+      }
+      return kMismatch;      
    }
    if (expectedClass && expectedClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(expectedClass->GetCollectionProxy())) {
       Error("SetBranchAddress", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
