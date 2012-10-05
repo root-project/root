@@ -130,6 +130,7 @@ public:
       fSilent(!needDbg) {
       fThreadNeeded = new TCondition(&fMutex);
       fThreadAvailable = new TCondition(&fMutex);
+      fAllTasksDone = new TCondition(&fMutexAllTasksDone);
 
       for (size_t i = 0; i < threadsCount; ++i) {
          TThread *pThread = new TThread(&TThreadPool::Executor, this);
@@ -157,6 +158,7 @@ public:
 
       delete fThreadNeeded;
       delete fThreadAvailable;
+      delete fAllTasksDone;
    }
 
    void AddThread() {
@@ -209,6 +211,13 @@ public:
       fThreadJoinHelper->Join();
    }
 
+   void Drain() {
+      // This method stops the calling thread until the task queue is empty
+
+      TLockGuard lock(&fMutexAllTasksDone);
+      fAllTasksDone->Wait();
+   }
+
    size_t TasksCount() const {
       return fTasksCount;
    }
@@ -223,8 +232,11 @@ public:
 
 private:
    static void* Monitor(void *arg) {
+      if (NULL == arg)
+         return NULL;
+
       TThreadPool *pThis = reinterpret_cast<TThreadPool*>(arg);
-      while (true) {
+      while (true && !pThis->fStopped) {
          std::stringstream ss;
          ss
                << ">>>> Check for tasks."
@@ -249,6 +261,11 @@ private:
             if (pThis->fTasks.empty() && !pThis->fStopped) {
                pThis->DbgLog("waiting for a task");
 
+               {
+                  TLockGuard l(&pThis->fMutexAllTasksDone);
+                  pThis->fAllTasksDone->Broadcast();
+               }
+
                // No tasks, we wait for a task to come
                pThis->fThreadNeeded->Wait();
 
@@ -262,6 +279,9 @@ private:
                   pThis->fTasks.pop();
 
                   pThis->DbgLog("get the task");
+               } else {
+                  TLockGuard l(&pThis->fMutexAllTasksDone);
+                  pThis->fAllTasksDone->Broadcast();
                }
                pThis->DbgLog("done Check <<<<");
             }
@@ -319,6 +339,8 @@ private:
    TMutex          fMutex;
    TCondition     *fThreadNeeded;
    TCondition     *fThreadAvailable;
+   TMutex         fMutexAllTasksDone;
+   TCondition     *fAllTasksDone;
    threads_array_t fThreads;
    TThread        *fThreadJoinHelper;
    TThread        *fThreadMonitor;

@@ -1,6 +1,8 @@
 // Usage:
 // root [0] .L stressThreadPool.C++
-// root [1] stressThreadPool(10, true)   10 = numThreads
+// root [1] stressThreadPool(5, true)
+// where 5 is a number of Threads in the pool
+// there will be then nThreads * 10 tasks pushed to the test 
 
 // STD
 #include <iostream>
@@ -16,7 +18,7 @@
 using namespace std;
 //=============================================================================
 const size_t g_sleeptime = 2; // in secs.
-const size_t g_multTasks = 50;
+const size_t g_multTasks = 10;
 //=============================================================================
 
 enum EProc {start, clean};
@@ -50,6 +52,11 @@ void stressThreadPool(size_t _numThreads, bool _needDbg = false)
    for (size_t i = 0; i < numTasks; ++i) {
       threadPool.PushTask(tasksList[i], start);
    }
+
+   cout << "\n Drain the tasks queue" << endl;
+   threadPool.Drain();
+
+   cout << "\n Stopping..." << endl;
    threadPool.Stop(true);
 
    //    ostream_iterator<TTestTask> out_it( cout, "\n" );
@@ -75,14 +82,14 @@ void stressThreadPool(size_t _numThreads, bool _needDbg = false)
 
    counter_t::const_iterator iter = counter.begin();
    counter_t::const_iterator iter_end = counter.end();
-   bool testOK=true;
+   bool testOK = true;
    for (; iter != iter_end; ++iter) {
       cout << "Thread " << iter->first << " was used " << iter->second << " times\n";
       // each thread suppose to be used equal amount of time,
       // exactly (g_numTasks/g_numThreads) times
-      if (iter->second != g_multTasks) 
+      if (iter->second != g_multTasks)
          testOK = false;
    }
 
-   cout << "ThreadPool: simple test - "<< (testOK? "OK": "Failed") << endl;
+   cout << "ThreadPool: the simple test status: " << (testOK ? "OK" : "Failed") << endl;
 }
