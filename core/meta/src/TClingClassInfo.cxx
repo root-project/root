@@ -100,13 +100,13 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
    }
    if (decl) {
       // Position our iterator on the found decl.
-      /*AdvanceToDecl(decl);*/
-      fFirstTime = false;
+      AdvanceToDecl(decl);
+      //fFirstTime = false;
       //fDescend = false;
-      fIter = clang::DeclContext::decl_iterator();
+      //fIter = clang::DeclContext::decl_iterator();
       //fTemplateDecl = 0;
       //fSpecIter = clang::ClassTemplateDecl::spec_iterator(0);
-      fDecl = const_cast<clang::Decl*>(decl);
+      //fDecl = const_cast<clang::Decl*>(decl);
       //fIterStack.clear();
    }
 }
