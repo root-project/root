@@ -434,6 +434,7 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
          hdrFileEntry = PP.getFileManager().getFile(*hdr, /*OpenFile=*/false,
                                                     /*CacheFailure=*/false);
       } else {
+#if 0
          // Tell HeaderSearch that the header's directory has a module.map
          llvm::StringRef srHdrDir(hdrFileEntry->getName());
          srHdrDir = llvm::sys::path::parent_path(srHdrDir);
@@ -442,6 +443,9 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
          if (Dir) {
             HdrSearch.setDirectoryHasModuleMap(Dir);
          }
+#else
+         std::cout << "Loading from header file..." << std::endl;
+#endif
       }
 
       ModuleMap.addHeader(modCreation.first, hdrFileEntry);
