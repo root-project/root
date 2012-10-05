@@ -122,6 +122,7 @@ int TClingTypedefInfo::AdvanceToDecl(const clang::Decl *target_decl)
    fIterStack.clear();
    while (InternalNext()) {
       if (fDecl == target_decl) {
+         fFirstTime = true;
          return 1;
       }
    }
