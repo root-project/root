@@ -69,7 +69,7 @@
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Transaction.h"
-#include "cling/Interpreter/Value.h"
+#include "cling/Interpreter/StoredValueRef.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/raw_ostream.h"
@@ -556,6 +556,8 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    , fMetaProcessor(0)
 {
    // Initialize the CINT+cling interpreter interface.
+
+   fTemporaries = new std::vector<cling::StoredValueRef>();
    std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
    const char* interpArgs[]
       = {"cling4root", interpInclude.c_str(), "-Xclang", "-fmodules"};
@@ -667,6 +669,7 @@ TCintWithCling::~TCintWithCling()
    delete fMapfile;
    delete fRootmapFiles;
    delete fMetaProcessor;
+   delete fTemporaries;
    delete fInterpreter;
    gCint = 0;
 #ifdef R__COMPLETE_MEM_TERMINATION
@@ -885,7 +888,7 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    // not a complete statement.
    int indent = 0;
    // This will hold the resulting value of the evaluation the given line.
-   cling::Value result;
+   cling::StoredValueRef result;
    if (!strncmp(sLine.Data(), ".L", 2) || !strncmp(sLine.Data(), ".x", 2) ||
        !strncmp(sLine.Data(), ".X", 2)) {
       // If there was a trailing "+", then CINT compiled the code above,
@@ -905,6 +908,8 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    else {
       indent = fMetaProcessor->process(sLine, &result);
    }
+   if (result.isValid() && result.needsManagedAllocation())
+      fTemporaries->push_back(result);
    if ((sLine[0] == '#') || (sLine[0] == '.')) {
       // Let CINT see preprocessor and meta commands, but only
       // after cling has seen them first, otherwise any dictionary
@@ -922,10 +927,8 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       /// fMetaProcessor->abortEvaluation();
       return 0;
    }
-   Bool_t resultHasValue = result.hasValue(
-      fInterpreter->getCI()->getASTContext());
-   if (resultHasValue) {
-      return result.simplisticCastAs<long>();
+   if (result.hasValue()) {
+      return result.get().simplisticCastAs<long>();
    }
    return 0;
 }

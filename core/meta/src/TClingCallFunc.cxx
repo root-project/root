@@ -33,7 +33,7 @@
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
-#include "cling/Interpreter/Value.h"
+#include "cling/Interpreter/StoredValueRef.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -305,7 +305,7 @@ void TClingCallFunc::SetArgArray(long *paramArr, int nparam)
 
 static void evaluateArgList(cling::Interpreter *interp,
                             const std::string &ArgList,
-                            std::vector<cling::Value> &EvaluatedArgs)
+                            std::vector<cling::StoredValueRef> &EvaluatedArgs)
 {
    clang::PrintingPolicy Policy(interp->getCI()->
       getASTContext().getPrintingPolicy());
@@ -321,7 +321,7 @@ static void evaluateArgList(cling::Interpreter *interp,
       std::string empty;
       llvm::raw_string_ostream tmp(empty);
       (*I)->printPretty(tmp, /*PrinterHelper=*/0, Policy, /*Indentation=*/0);
-      cling::Value val;
+      cling::StoredValueRef val;
       cling::Interpreter::CompilationResult cres =
          interp->evaluate(tmp.str(), &val);
       if (cres != cling::Interpreter::kSuccess) {
@@ -334,11 +334,10 @@ static void evaluateArgList(cling::Interpreter *interp,
 
 void TClingCallFunc::SetArgs(const char *params)
 {
-   std::vector<cling::Value> Args;
-   evaluateArgList(fInterp, params, Args);
+   evaluateArgList(fInterp, params, fArgVals);
    clang::ASTContext &Context = fInterp->getCI()->getASTContext();
-   for (unsigned I = 0U, E = Args.size(); I < E; ++I) {
-      cling::Value val = Args[I];
+   for (unsigned I = 0U, E = fArgVals.size(); I < E; ++I) {
+      const cling::Value& val = fArgVals[I].get();
       if (!val.type->isIntegralType(Context) &&
             !val.type->isRealFloatingType() && !val.type->isPointerType()) {
          // Invalid argument type.
@@ -366,11 +365,10 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
    }
    // FIXME: We should eliminate the double parse here!
    fArgs.clear();
-   std::vector<cling::Value> Args;
-   evaluateArgList(fInterp, params, Args);
+   evaluateArgList(fInterp, params, fArgVals);
    clang::ASTContext &Context = fInterp->getCI()->getASTContext();
-   for (unsigned I = 0U, E = Args.size(); I < E; ++I) {
-      cling::Value val = Args[I];
+   for (unsigned I = 0U, E = fArgVals.size(); I < E; ++I) {
+      const cling::Value& val = fArgVals[I].get();
       if (!val.type->isIntegralType(Context) &&
             !val.type->isRealFloatingType() && !val.type->isPointerType()) {
          // Invalid argument type, cint skips it, strange.

@@ -34,7 +34,7 @@
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
-#include "cling/Interpreter/Value.h"
+#include "cling/Interpreter/StoredValueRef.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -100,13 +100,13 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
    }
    if (decl) {
       // Position our iterator on the found decl.
-      AdvanceToDecl(decl);
-      //fFirstTime = true;
+      /*AdvanceToDecl(decl);*/
+      fFirstTime = false;
       //fDescend = false;
-      //fIter = clang::DeclContext::decl_iterator();
+      fIter = clang::DeclContext::decl_iterator();
       //fTemplateDecl = 0;
       //fSpecIter = clang::ClassTemplateDecl::spec_iterator(0);
-      //fDecl = const_cast<clang::Decl*>(decl);
+      fDecl = const_cast<clang::Decl*>(decl);
       //fIterStack.clear();
    }
 }
@@ -195,9 +195,8 @@ void TClingClassInfo::Delete(void *arena) const
    std::ostringstream os;
    os << "delete (" << Name() << "*)"
       << reinterpret_cast<unsigned long>(arena) << ";";
-   cling::Value val;
    cling::Interpreter::CompilationResult err =
-      fInterp->evaluate(os.str(), &val);
+      fInterp->evaluate(os.str());
    if (err != cling::Interpreter::kSuccess) {
       return;
    }
@@ -221,9 +220,8 @@ void TClingClassInfo::DeleteArray(void *arena, bool dtorOnly) const
       std::ostringstream os;
       os << "delete[] (" << Name() << "*)"
          << reinterpret_cast<unsigned long>(arena) << ";";
-      cling::Value val;
       cling::Interpreter::CompilationResult err =
-         fInterp->evaluate(os.str(), &val);
+         fInterp->evaluate(os.str());
       if (err != cling::Interpreter::kSuccess) {
          return;
       }
@@ -242,9 +240,8 @@ void TClingClassInfo::Destruct(void *arena) const
    std::ostringstream os;
    os << "((" << name << "*)" << reinterpret_cast<unsigned long>(arena)
       << ")->" << name << "::~" << name << "();";
-   cling::Value val;
    cling::Interpreter::CompilationResult err =
-      fInterp->evaluate(os.str(), &val);
+      fInterp->evaluate(os.str());
    if (err != cling::Interpreter::kSuccess) {
       return;
    }
@@ -625,13 +622,15 @@ void *TClingClassInfo::New() const
    }
    std::ostringstream os;
    os << "new " << Name() << ";";
-   cling::Value val;
+   cling::StoredValueRef val;
    cling::Interpreter::CompilationResult err =
       fInterp->evaluate(os.str(), &val);
    if (err != cling::Interpreter::kSuccess) {
       return 0;
    }
-   return llvm::GVTOP(val.value);
+   // The ref-counted pointer will get destructed by StoredValueRef,
+   // but not the allocation! I.e. the following is fine:
+   return llvm::GVTOP(val.get().value);
 }
 
 void *TClingClassInfo::New(int n) const
@@ -644,13 +643,15 @@ void *TClingClassInfo::New(int n) const
    }
    std::ostringstream os;
    os << "new " << Name() << "[" << n << "];";
-   cling::Value val;
+   cling::StoredValueRef val;
    cling::Interpreter::CompilationResult err =
       fInterp->evaluate(os.str(), &val);
    if (err != cling::Interpreter::kSuccess) {
       return 0;
    }
-   return llvm::GVTOP(val.value);
+   // The ref-counted pointer will get destructed by StoredValueRef,
+   // but not the allocation! I.e. the following is fine:
+   return llvm::GVTOP(val.get().value);
 }
 
 void *TClingClassInfo::New(int n, void *arena) const
@@ -665,14 +666,15 @@ void *TClingClassInfo::New(int n, void *arena) const
    std::ostringstream os;
    os << "new ((void*)" << reinterpret_cast<unsigned long>(arena) << ") "
       << Name() << "[" << n << "];";
-   cling::Value val;
+   cling::StoredValueRef val;
    cling::Interpreter::CompilationResult err =
       fInterp->evaluate(os.str(), &val);
    if (err != cling::Interpreter::kSuccess) {
       return 0;
    }
-   return llvm::GVTOP(val.value);
-   return 0;
+   // The ref-counted pointer will get destructed by StoredValueRef,
+   // but not the allocation! I.e. the following is fine:
+   return llvm::GVTOP(val.get().value);
 }
 
 void *TClingClassInfo::New(void *arena) const
@@ -686,13 +688,15 @@ void *TClingClassInfo::New(void *arena) const
    std::ostringstream os;
    os << "new ((void*)" << reinterpret_cast<unsigned long>(arena) << ") "
       << Name() << ";";
-   cling::Value val;
+   cling::StoredValueRef val;
    cling::Interpreter::CompilationResult err =
       fInterp->evaluate(os.str(), &val);
    if (err != cling::Interpreter::kSuccess) {
       return 0;
    }
-   return llvm::GVTOP(val.value);
+   // The ref-counted pointer will get destructed by StoredValueRef,
+   // but not the allocation! I.e. the following is fine:
+   return llvm::GVTOP(val.get().value);
 }
 
 long TClingClassInfo::Property() const

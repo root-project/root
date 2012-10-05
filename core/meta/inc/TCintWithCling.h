@@ -61,6 +61,7 @@ namespace cling {
 class Interpreter;
 class MetaProcessor;
 class Transaction;
+class StoredValueRef;
 }
 
 class TCintWithCling : public TInterpreter {
@@ -85,6 +86,7 @@ private: // Data Members
    Bool_t fLockProcessLine;  // True if ProcessLine should lock gCINTMutex.
    cling::Interpreter* fInterpreter; // The interpreter.
    cling::MetaProcessor* fMetaProcessor; // The metaprocessor.
+   std::vector<cling::StoredValueRef>* fTemporaries; // Stack of temporaries
 
 public: // Public Interface
 
