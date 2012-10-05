@@ -592,6 +592,16 @@ void TGraph2D::Build(Int_t n)
 
 
 //______________________________________________________________________________
+void TGraph2D::Browse(TBrowser *b)
+{
+   // Browse
+
+   Draw("p0");
+   gPad->Update();
+}
+
+
+//______________________________________________________________________________
 void TGraph2D::Clear(Option_t * /*option = "" */)
 {
    // Free all memory allocated by this object.
