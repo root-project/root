@@ -38,6 +38,8 @@ PyObject* PyROOT::PyStrings::gEnd = 0;
 PyObject* PyROOT::PyStrings::gFirst = 0;
 PyObject* PyROOT::PyStrings::gSecond = 0;
 PyObject* PyROOT::PyStrings::gSize = 0;
+PyObject* PyROOT::PyStrings::gGetSize = 0;
+PyObject* PyROOT::PyStrings::ggetSize = 0;
 PyObject* PyROOT::PyStrings::gTemplate = 0;
 PyObject* PyROOT::PyStrings::gVectorAt = 0;
 
@@ -90,6 +92,8 @@ Bool_t PyROOT::CreatePyStrings() {
    PYROOT_INITIALIZE_STRING( gFirst, first );
    PYROOT_INITIALIZE_STRING( gSecond, second );
    PYROOT_INITIALIZE_STRING( gSize, size );
+   PYROOT_INITIALIZE_STRING( gGetSize, GetSize );
+   PYROOT_INITIALIZE_STRING( ggetSize, getSize );
    PYROOT_INITIALIZE_STRING( gTemplate, Template );
    PYROOT_INITIALIZE_STRING( gVectorAt, _vector__at );
 
@@ -138,6 +142,8 @@ PyObject* PyROOT::DestroyPyStrings() {
    Py_DECREF( PyStrings::gFirst ); PyStrings::gFirst = 0;
    Py_DECREF( PyStrings::gSecond ); PyStrings::gSecond = 0;
    Py_DECREF( PyStrings::gSize ); PyStrings::gSize = 0;
+   Py_DECREF( PyStrings::gGetSize ); PyStrings::gGetSize = 0;
+   Py_DECREF( PyStrings::ggetSize ); PyStrings::ggetSize = 0;
    Py_DECREF( PyStrings::gTemplate ); PyStrings::gTemplate = 0;
    Py_DECREF( PyStrings::gVectorAt ); PyStrings::gVectorAt = 0;
 

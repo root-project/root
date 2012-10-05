@@ -45,6 +45,8 @@ namespace PyROOT {
       R__EXTERN PyObject* gFirst;
       R__EXTERN PyObject* gSecond;
       R__EXTERN PyObject* gSize;
+      R__EXTERN PyObject* gGetSize;
+      R__EXTERN PyObject* ggetSize;
       R__EXTERN PyObject* gTemplate;
       R__EXTERN PyObject* gVectorAt;
 
