@@ -77,3 +77,6 @@ $(call stripsrc,$(patsubst %.cxx,%.o,$(wildcard $(MODDIRS)/TCling*.cxx))): \
    $(LLVMDEP)
 $(call stripsrc,$(patsubst %.cxx,%.o,$(wildcard $(MODDIRS)/TCling*.cxx))): \
    CXXFLAGS += $(METACLINGCXXFLAGS)
+$(call stripsrc,$(MODDIRS)/TClingCallbacks.o): \
+   CXXFLAGS += $(METACLINGCXXFLAGS) -fno-rtti
+
