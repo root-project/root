@@ -92,7 +92,7 @@ public:
 
    TGraph2D& operator=(const TGraph2D &);
 
-   virtual void          Browse(TBrowser *b);
+   virtual void          Browse(TBrowser *);
    virtual void          Clear(Option_t *option="");
    virtual void          DirectoryAutoAdd(TDirectory *);
    Int_t                 DistancetoPrimitive(Int_t px, Int_t py);

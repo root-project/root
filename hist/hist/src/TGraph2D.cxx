@@ -592,7 +592,7 @@ void TGraph2D::Build(Int_t n)
 
 
 //______________________________________________________________________________
-void TGraph2D::Browse(TBrowser *b)
+void TGraph2D::Browse(TBrowser *)
 {
    // Browse
 
