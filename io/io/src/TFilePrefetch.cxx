@@ -426,6 +426,7 @@ char* TFilePrefetch::GetBlockFromCache(const char* path, Int_t length)
       gPerfStats->FileReadEvent(fFile, length, start);
    }
 
+   file->Close();
    delete file;
    return buffer;
 }
@@ -472,7 +473,8 @@ void TFilePrefetch::SaveBlockInCache(TFPBlock* block)
    }
 
    if (file) {
-      // coverity[unchecked_value] We do not print error message, have not error return code and close the file anyway, not need to check the return value.
+      // coverity[unchecked_value] We do not print error message, have not error
+      // return code and close the file anyway, not need to check the return value.
       file->WriteBuffer(block->GetBuffer(), block->GetFullSize());
       file->Close();
       delete file;
