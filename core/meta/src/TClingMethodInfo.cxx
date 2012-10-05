@@ -117,6 +117,7 @@ void TClingMethodInfo::Init(const clang::FunctionDecl *decl)
    fIter = DC->decls_begin();
    while (InternalNext()) {
       if (*fIter == decl) {
+         fFirstTime = true;
          break;
       }
    }
