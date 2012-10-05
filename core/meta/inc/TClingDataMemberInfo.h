@@ -39,6 +39,7 @@
 
 namespace clang {
 class Decl;
+class ValueDecl;
 }
 
 class TClingClassInfo;
@@ -53,13 +54,13 @@ private:
    clang::DeclContext::decl_iterator fIter; // Current decl.
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested transparent scopes.
    std::string            fTitle; // The meta info for the member.
-
+   const clang::ValueDecl *fSingleDecl; // The single member
 public:
 
    ~TClingDataMemberInfo() { delete fClassInfo; }
 
    explicit TClingDataMemberInfo(cling::Interpreter *interp)
-         : fInterp(interp), fClassInfo(0), fFirstTime(true)
+      : fInterp(interp), fClassInfo(0), fFirstTime(true), fSingleDecl(0)
    {
       fClassInfo = new TClingClassInfo(fInterp);
       fIter = fInterp->getCI()->getASTContext().getTranslationUnitDecl()->decls_begin();
@@ -68,6 +69,10 @@ public:
    }
 
    TClingDataMemberInfo(cling::Interpreter *, TClingClassInfo *);
+
+   // Takes concrete decl and disables the iterator. 
+   // ValueDecl is the common base between enum constant, var decl and field decl
+   TClingDataMemberInfo(cling::Interpreter *, const clang::ValueDecl *);
 
    TClingDataMemberInfo(const TClingDataMemberInfo &rhs)
    {

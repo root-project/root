@@ -481,7 +481,7 @@ void* TCintWithCling::fgSetOfSpecials = 0;
 //
 class TClingCallbacks : public cling::InterpreterCallbacks {
 private:
-   const clang::Decl *fLastDeclSeen;
+   clang::Decl *fLastDeclSeen;
 public:
    TClingCallbacks(cling::Interpreter* interp, bool isEnabled = false) 
       : InterpreterCallbacks(interp, isEnabled), fLastDeclSeen(0) { }
@@ -500,21 +500,21 @@ public:
       }
 
       TClingDataMemberInfo *globalMemInfo = 0;
-      TClingClassInfo *classInfo =0;
-      Decl *classInfoDecl = 0;
       while(fLastDeclSeen->getNextDeclInContext()) {
          fLastDeclSeen = fLastDeclSeen->getNextDeclInContext();
-         if (!isa<VarDecl>(fLastDeclSeen))
-            continue;
-         // FIXME: How does ROOT understand globals?
-         //assert(!cast<VarDecl>(fLastDeclSeen)->hasGlobalStorage() && "Not a global!?");
+         if (ValueDecl *ValD = dyn_cast<ValueDecl>(fLastDeclSeen)) {
+            if (!isa<TranslationUnitDecl>(ValD->getDeclContext()))
+                continue;
 
-         // FIXME: Here we have to pass in the actual type/decl of the global
-         // so that we don't break the meta info stream.
-         //classInfoDecl = fPreviousGlobalVD->getType()->getAs<clang::Decl>();
-         classInfo = new TClingClassInfo(m_Interpreter, classInfoDecl);
-         globalMemInfo = new TClingDataMemberInfo(m_Interpreter, classInfo);
-         gROOT->GetListOfGlobals()->Add(new TGlobal(globalMemInfo));         
+            if (!(isa<EnumConstantDecl>(ValD) || 
+                  isa<VarDecl>(ValD) || isa<FieldDecl>(ValD)))
+               continue;
+
+            // FIXME: How does ROOT understand globals?
+            //assert(!cast<VarDecl>(fLastDeclSeen)->hasGlobalStorage() && "Not a global!?");
+            globalMemInfo = new TClingDataMemberInfo(m_Interpreter, ValD);
+            gROOT->GetListOfGlobals()->Add(new TGlobal(globalMemInfo));
+         }
       }
    }
 

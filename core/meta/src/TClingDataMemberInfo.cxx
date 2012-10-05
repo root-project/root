@@ -44,8 +44,8 @@
 using namespace clang;
 
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
-      TClingClassInfo *ci)
-   : fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle("")
+                                           TClingClassInfo *ci)
+   : fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), fSingleDecl(0)
 {
    assert(ci && "create TClingDataMemberInfo with null class ptr");
    // if (!ci || !ci->IsValid()) {
@@ -70,6 +70,18 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
       fFirstTime = true;
    }
 }
+TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
+                                           const clang::ValueDecl *ValD)
+   : fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), 
+     fSingleDecl(ValD) {
+   using namespace llvm;
+   assert(isa<TranslationUnitDecl>(ValD->getDeclContext()) && "Not TU?");
+   assert((isa<VarDecl>(ValD) || 
+           isa<FieldDecl>(ValD) || 
+           isa<EnumConstantDecl>(ValD)) &&
+          "The decl should be either VarDecl or FieldDecl or EnumConstDecl");
+}
+
 
 int TClingDataMemberInfo::ArrayDim() const
 {
@@ -187,6 +199,8 @@ int TClingDataMemberInfo::MaxIndex(int dim) const
 
 int TClingDataMemberInfo::InternalNext()
 {
+   assert(!fSingleDecl && "This is not an iterator!");
+
    // Move to next acceptable data member.
    while (*fIter) {
       // Move to next decl in context.
