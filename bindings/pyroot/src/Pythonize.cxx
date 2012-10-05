@@ -1976,6 +1976,13 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( HasAttrDirect( pyclass, PyStrings::gSize ) )
       Utility::AddToClass( pyclass, "__len__", "size" );
 
+// like-wise, some typical container sizings
+   if ( HasAttrDirect( pyclass, PyStrings::gGetSize ) )
+      Utility::AddToClass( pyclass, "__len__", "GetSize" );
+
+   if ( HasAttrDirect( pyclass, PyStrings::ggetSize ) )
+      Utility::AddToClass( pyclass, "__len__", "getSize" );
+
    if ( HasAttrDirect( pyclass, PyStrings::gBegin ) && HasAttrDirect( pyclass, PyStrings::gEnd ) ) {
    // some classes may not have dicts for their iterators, making begin/end useless
       PyObject* pyfullname = PyObject_GetAttr( pyclass, PyStrings::gName );
@@ -2057,7 +2064,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
       Utility::AddToClass( pyclass, "count", (PyCFunction) TCollectionCount, METH_O );
 
-      Utility::AddToClass( pyclass, "__len__",  "GetSize" );
       ((PyTypeObject*)pyclass)->tp_iter = (getiterfunc)TCollectionIter;
       Utility::AddToClass( pyclass, "__iter__",  (PyCFunction)TCollectionIter, METH_NOARGS );
 
