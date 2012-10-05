@@ -1724,8 +1724,9 @@ TH1D *TH3::ProjectionX(const char *name, Int_t iymin, Int_t iymax, Int_t izmin, 
    //   The projection is always of the type TH1D.
    //   The projection is made from the cells along the X axis
    //   ranging from iymin to iymax and izmin to izmax included.
-   //   By default, underflow and overflows are included
-   //   By Setting iymin=1 and iymax=NbinsY the underflow and/or overflow will be excluded
+   //   By default, underflow and overflows are included in both the Y and Z axis. 
+   //   By Setting iymin=1 and iymax=NbinsY the underflow and/or overflow in Y will be excluded
+   //   By setting izmin=1 and izmax=NbinsZ the underflow and/or overflow in Z will be excluded
    //
    //   if option "e" is specified, the errors are computed.
    //   if option "d" is specified, the projection is drawn in the current pad.
@@ -1792,8 +1793,9 @@ TH1D *TH3::ProjectionY(const char *name, Int_t ixmin, Int_t ixmax, Int_t izmin, 
    //   The projection is always of the type TH1D.
    //   The projection is made from the cells along the Y axis
    //   ranging from ixmin to ixmax and izmin to izmax included.
-   //   By default, underflow and overflow are included. 
-   //   By Setting ixmin=1 and ixmax=NbinsX the underflow and/or overflow will be excluded
+   //   By default, underflow and overflow are included in both the X and Z axis. 
+   //   By setting ixmin=1 and ixmax=NbinsX the underflow and/or overflow in X will be excluded
+   //   By setting izmin=1 and izmax=NbinsZ the underflow and/or overflow in Z will be excluded
    //
    //   if option "e" is specified, the errors are computed.
    //   if option "d" is specified, the projection is drawn in the current pad.
@@ -1858,10 +1860,11 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
    //*-*      ====================================================
    //
    //   The projection is always of the type TH1D.
-   //   The projection is made from the cells along the X axis
+   //   The projection is made from the cells along the Z axis
    //   ranging from ixmin to ixmax and iymin to iymax included.
    //   By default, bins 1 to nx and 1 to ny  are included
-   //   By setting ixmin=1 and/or ixmax=NbinsX the underflow and/or overflow in X will be excluded
+   //   By default, underflow and overflow are included in both the X and Y axis. 
+   //   By Setting ixmin=1 and ixmax=NbinsX the underflow and/or overflow in X will be excluded
    //   By setting iymin=1 and/or iymax=NbinsY the underflow and/or overflow in Y will be excluded
    //
    //   if option "e" is specified, the errors are computed.
