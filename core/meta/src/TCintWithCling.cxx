@@ -927,7 +927,8 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       /// fMetaProcessor->abortEvaluation();
       return 0;
    }
-   if (result.hasValue()) {
+   if (result.isValid()
+       && !result.get().isVoid(fInterpreter->getCI()->getASTContext())) {
       return result.get().simplisticCastAs<long>();
    }
    return 0;
