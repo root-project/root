@@ -7032,6 +7032,7 @@ Int_t TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr)
 
    TBranch* branch = GetBranch(bname);
    if (!branch) {
+      if (ptr) *ptr = 0;
       Error("SetBranchAddress", "unknown branch -> %s", bname);
       return kMissingBranch;
    }
@@ -7063,14 +7064,13 @@ Int_t TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr, TCla
 
    TBranch* branch = GetBranch(bname);
    if (!branch) {
+      if (ptr) *ptr = 0;
       Error("SetBranchAddress", "unknown branch -> %s", bname);
       return kMissingBranch;
    }
-   if (ptr) {
-      *ptr = branch;
-   }
 
    Int_t res = CheckBranchAddressType(branch, ptrClass, datatype, isptr);
+   // This will set the value of *ptr to branch.
    SetBranchAddressImp(branch,addr,ptr);
    return res;
 }
