@@ -2655,8 +2655,9 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
                TDataType::GetTypeName(datatype), datatype, TDataType::GetTypeName(expectedType), expectedType, branch->GetName());
          return kMismatch;
       }
-   } else if ((expectedClass && (datatype != kOther_t && datatype != kNoType_t)) || 
-              (ptrClass && (expectedType != kOther_t && expectedType != kNoType_t)) ) {
+   } else if ((expectedClass && (datatype != kOther_t && datatype != kNoType_t && datatype != kInt_t)) || 
+              (ptrClass && (expectedType != kOther_t && expectedType != kNoType_t && datatype != kInt_t)) ) {
+      // Sometime a null pointer can look an int, avoid complaining in that case.
       if (expectedClass) {
          Error("SetBranchAddress", "The pointer type given \"%s\" (%d) does not correspond to the type needed \"%s\" by the branch: %s", 
                TDataType::GetTypeName(datatype), datatype, expectedClass->GetName(), branch->GetName());
