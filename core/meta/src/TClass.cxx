@@ -2544,7 +2544,10 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
          if (objType) {
             const char *typdfName = objType->GetTypeName();
             if (typdfName && strcmp(typdfName, name)) {
-               cl = TClass::GetClass(typdfName, load);
+               TString alternateName(typdfName);
+               // TClass::GetClass might get call GetTypeName and thus
+               // re-use the static storage use by GetTypeName!
+               cl = TClass::GetClass(alternateName, load);
                return cl;
             }
          }
