@@ -141,9 +141,21 @@ public:
    virtual void      ResetBranchAddresses();
    virtual Long64_t  Scan(const char *varexp="", const char *selection="", Option_t *option="", Long64_t nentries=1000000000, Long64_t firstentry=0); // *MENU*
    virtual void      SetAutoDelete(Bool_t autodel=kTRUE);
+#if !defined(__CINT__)
    virtual Int_t     SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
+#endif
    virtual Int_t     SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
    virtual Int_t     SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
+   template <class T> Int_t SetBranchAddress(const char *bname, T **add, TBranch **ptr = 0) {
+     return TTree::SetBranchAddress<T>(bname, add, ptr);
+   }
+#ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
+   // This can only be used when the template overload resolution can distringuish between
+   // T* and T**
+   template <class T> Int_t SetBranchAddress(const char *bname, T *add, TBranch **ptr = 0) {
+     return TTree::SetBranchAddress<T>(bname, add, ptr);
+   }
+#endif
 
    virtual void      SetBranchStatus(const char *bname, Bool_t status=1, UInt_t *found=0);
    virtual void      SetCacheSize(Long64_t cacheSize);
