@@ -41,7 +41,7 @@ ALL should FAIL ...
 Error in <TTree::SetBranchAddress>: unknown branch -> fake_px
 nonexistent branch ... -5
 Error in <TTree::SetBranchAddress>: unknown branch -> fake_px
-p unchanged
+p set to zero
 nonexistent branch ... -5
 Error in <TTree::SetBranchAddress>: unknown branch -> fake_px
 nonexistent branch ... -5
