@@ -101,7 +101,7 @@ public:
 
    virtual void     DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl=-1) const;
 
-   virtual Bool_t IgnoreSizeForOfInterest() const { return fgIgnoreSizeForCameraInterest; }
+   virtual Bool_t IgnoreSizeForOfInterest() const;
 
    // Override in sub-classes that do direct object rendering (e.g. TGLObject).
    virtual Bool_t KeepDuringSmartRefresh() const { return kFALSE; }
