@@ -158,4 +158,15 @@ void execCheckErrors(bool what = 0)
   r = tree->SetBranchAddress("str", &pxp);
   std::cout << "Float ... "  << r << std::endl;
   
+   
+  TChain *ch = new TChain("MonoData");
+  ch->Add("memleak.root");
+  ch->LoadTree(0);
+  r = ch->SetBranchAddress("mono", &sp, &p);
+  std::cout << "From chain, TString ... "  << r << std::endl;
+
+  TTree *treech = ch;
+  r = treech->SetBranchAddress("mono", &sp, &p);
+  std::cout << "From tree, TString ... "  << r << std::endl;
+   
 }

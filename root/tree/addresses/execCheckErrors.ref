@@ -58,3 +58,9 @@ Error in <TTree::SetBranchAddress>: The pointer type given "Float_t" (5) does no
 Float ... -2
 Error in <TTree::SetBranchAddress>: The pointer type given "Float_t" (5) does not correspond to the type needed "TString" by the branch: str
 Float ... -2
+Warning in <TClass::TClass>: no dictionary for class TMyData is available
+Warning in <TClass::TClass>: no dictionary for class TMyPar is available
+Error in <TChain::SetBranchAddress>: The pointer type given (TString) does not correspond to the class needed (TMyData) by the branch: mono
+From chain, TString ... -1
+Error in <TChain::SetBranchAddress>: The pointer type given (TString) does not correspond to the class needed (TMyData) by the branch: mono
+From tree, TString ... -1
