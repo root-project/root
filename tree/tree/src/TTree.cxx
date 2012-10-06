@@ -2669,8 +2669,35 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
          Error("SetBranchAddress", "The pointer type given \"%s\" (%d) does not correspond to the type needed \"%s\" by the branch: %s", 
                TDataType::GetTypeName(datatype), datatype, expectedClass->GetName(), branch->GetName());
       } else {
-         Error("SetBranchAddress", "The pointer type given \"%s\" does not correspond to the type needed \"%s\" (%d) by the branch: %s", 
-               ptrClass->GetName(), TDataType::GetTypeName(expectedType), expectedType, branch->GetName());
+         // In this case, it is okay if the first data member is of the right type (to support the case where we are being passed
+         // a struct).
+         bool good = false;
+         if (ptrClass->IsLoaded()) {
+            TIter next(ptrClass->GetListOfRealData());
+            TRealData *rdm;
+            while ((rdm = (TRealData*)next())) {
+               if (rdm->GetThisOffset() == 0) {
+                  break;
+               }
+            }
+         } else {
+            TIter next(ptrClass->GetListOfDataMembers());
+            TDataMember *dm;
+            while ((dm = (TDataMember*)next())) {
+               if (dm->GetOffset() == 0) {
+                  TDataType *dmtype = dm->GetDataType();
+                  if (dmtype) {
+                     EDataType etype = (EDataType)dmtype->GetType();
+                     good = (etype == expectedType);
+                  }
+                  break;
+               }
+            }
+         }
+         if (!good) {
+            Error("SetBranchAddress", "The pointer type given \"%s\" does not correspond to the type needed \"%s\" (%d) by the branch: %s", 
+                  ptrClass->GetName(), TDataType::GetTypeName(expectedType), expectedType, branch->GetName());
+         }
       }
       return kMismatch;      
    }
