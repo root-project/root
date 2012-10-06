@@ -68,10 +68,11 @@ TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalSha
    fFirstPSRef   (0),
    fID           (id),
    fTransform    (transform),
+   fManip        (kManipAll),
    fSelected     (0),
    fInvertedWind (invertedWind),
    fModified     (kFALSE),
-   fManip        (kManipAll)
+   fIsScaleForRnr(kFALSE)
 {
    // Construct a physical shape using arguments:
    //    ID             - unique drawable id.
@@ -96,10 +97,11 @@ TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalSha
    fFirstPSRef   (0),
    fID           (id),
    fTransform    (transform),
+   fManip        (kManipAll),
    fSelected     (0),
    fInvertedWind (invertedWind),
    fModified     (kFALSE),
-   fManip        (kManipAll)
+   fIsScaleForRnr(kFALSE)
 {
    // Construct a physical shape using arguments:
    //    id             - unique drawable id.
@@ -196,6 +198,8 @@ void TGLPhysicalShape::UpdateBoundingBox()
 
    fBoundingBox.Set(fLogicalShape->BoundingBox());
    fBoundingBox.Transform(fTransform);
+
+   fIsScaleForRnr = fTransform.IsScalingForRender();
 
    if (fLogicalShape->GetScene())
       fLogicalShape->GetScene()->InvalidateBoundingBox();
@@ -364,7 +368,8 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
 
    glPushMatrix();
    glMultMatrixd(fTransform.CArr());
-   if (fInvertedWind) glFrontFace(GL_CW);
+   if (fIsScaleForRnr) glEnable(GL_NORMALIZE);
+   if (fInvertedWind)  glFrontFace(GL_CW);
    if (rnrCtx.Highlight())
    {
       glPushAttrib(GL_LIGHTING_BIT | GL_DEPTH_BUFFER_BIT);
@@ -404,7 +409,8 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
       if (rnrCtx.IsDrawPassOutlineLine())
          TGLUtil::UnlockColor();
    }
-   if (fInvertedWind) glFrontFace(GL_CCW);
+   if (fInvertedWind)  glFrontFace(GL_CCW);
+   if (fIsScaleForRnr) glDisable(GL_NORMALIZE);
    glPopMatrix();
 }
 

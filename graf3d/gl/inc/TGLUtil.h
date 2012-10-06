@@ -666,6 +666,7 @@ public:
    // Accesors
    TGLVector3  GetTranslation() const;
    TGLVector3  GetScale() const;
+   Bool_t      IsScalingForRender() const;
 
    void SetBaseVec(Int_t b, Double_t x, Double_t y, Double_t z);
    void SetBaseVec(Int_t b, const TGLVector3& v);

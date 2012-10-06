@@ -60,6 +60,8 @@ protected:
 
    void PurgeDLRange(UInt_t base, Int_t size) const;
 
+   static  Bool_t     fgIgnoreSizeForCameraInterest;
+
 public:
    TGLLogicalShape();
    TGLLogicalShape(TObject* obj);
@@ -99,7 +101,7 @@ public:
 
    virtual void     DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl=-1) const;
 
-   virtual Bool_t IgnoreSizeForOfInterest() const { return kFALSE; }
+   virtual Bool_t IgnoreSizeForOfInterest() const { return fgIgnoreSizeForCameraInterest; }
 
    // Override in sub-classes that do direct object rendering (e.g. TGLObject).
    virtual Bool_t KeepDuringSmartRefresh() const { return kFALSE; }
@@ -109,6 +111,9 @@ public:
    virtual void   ProcessSelection(TGLRnrCtx& rnrCtx, TGLSelectRecord& rec);
 
    void InvokeContextMenu(TContextMenu & menu, UInt_t x, UInt_t y) const;
+
+   static Bool_t GetIgnoreSizeForCameraInterest();
+   static void   SetIgnoreSizeForCameraInterest(Bool_t isfci);
 
    ClassDef(TGLLogicalShape,0) // a logical (non-placed, local frame) drawable object
 };

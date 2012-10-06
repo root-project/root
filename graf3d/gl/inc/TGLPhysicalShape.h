@@ -64,10 +64,11 @@ private:
    TGLMatrix               fTransform;    //! transform (placement) of physical instance
    TGLBoundingBox          fBoundingBox;  //! bounding box of the physical (transformed)
    Float_t                 fColor[17];    //! GL color array
+   EManip                  fManip;        //! permitted manipulation bitflags - see EManip
    UChar_t                 fSelected;     //! selected state
    Bool_t                  fInvertedWind; //! face winding TODO: can get directly from fTransform?
    Bool_t                  fModified;     //! has been modified - retain across scene rebuilds
-   EManip                  fManip;        //! permitted manipulation bitflags - see EManip
+   Bool_t                  fIsScaleForRnr;//! cache 
 
    // Methods
    void            UpdateBoundingBox();
