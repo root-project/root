@@ -443,8 +443,6 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
          if (Dir) {
             HdrSearch.setDirectoryHasModuleMap(Dir);
          }
-#else
-         std::cerr << "   Modules disabled; parsing header files instead." << std::endl;
 #endif
       }
 
