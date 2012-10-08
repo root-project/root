@@ -58,6 +58,9 @@
 #include <string>
 #include <vector>
 
+// This ought to be declared by the implementer .. oh well...
+extern void unresolvedSymbol();
+
 void TClingCallFunc::Exec(void *address) const
 {
    if (!IsValid()) {
@@ -569,15 +572,15 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
    else {
       // Execution engine does not have it, check
       // the loaded shareable libraries.
+      // NOTE: This issues a spurious error message if we look for an
+      // unimplemented (but declared) function.
       void *FP = EE->getPointerToNamedFunction(FuncName,
                  /*AbortOnFailure=*/false);
-      //if (FP == unresolvedSymbol) {
-      //   // The ExecutionContext will refuse to do anything after this,
-      //   // so we must force it back to normal.
-      //   fInterp->resetUnresolved();
-      //}
-      //else 
-      if (FP) {
+      if (FP == unresolvedSymbol) {
+         // We failed to find an implementation for the function, the 
+         // interface requires the 'address' to be zero.
+         fEEAddr = 0;
+      } else if (FP) {
          // Create a llvm function we can use to call it with later.
          llvm::LLVMContext &Context = *fInterp->getLLVMContext();
          unsigned NumParams = FD->getNumParams();
