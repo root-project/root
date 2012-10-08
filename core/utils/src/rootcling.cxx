@@ -5524,7 +5524,25 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
       "}" << std::endl;
 
    clang::CompilerInstance* CI = gInterp->getCI();
+
+// Note: need to resolve _where_ to create the pcm
    std::string dictDir = "lib/";
+#ifdef WIN32
+   struct _stati64 finfo;
+   
+   if (_stati64(dictDir.c_str(), &finfo) < 0 ||
+       !(finfo.st_mode & S_IFDIR)) {
+      dictDir = "./";
+   }
+#else
+   struct stat finfo;
+   if (stat(dictDir.c_str(), &finfo) < 0 ||
+       !S_ISDIR(finfo.st_mode)) {
+      dictDir = "./";
+   }
+   
+#endif
+   
    CI->getPreprocessor().getHeaderSearchInfo().setModuleCachePath(dictDir.c_str());
    std::string moduleFile = dictDir + ROOT::TMetaUtils::GetModuleFileName(dictname.c_str());
    clang::Module* module = 0;
