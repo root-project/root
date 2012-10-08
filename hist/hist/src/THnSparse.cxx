@@ -481,6 +481,11 @@ void THnSparseArrayChunk::Sumw2()
    // Turn on support of errors
    if (!fSumw2)
       fSumw2 = new TArrayD(fContent->GetSize());
+   // fill the structure with the current content 
+   for (Int_t bin=0; bin < fContent->GetSize(); bin++) {
+      fSumw2->fArray[bin] = fContent->GetAt(bin); 
+   }
+
 }
 
 

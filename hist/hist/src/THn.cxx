@@ -202,6 +202,11 @@ void THn::Sumw2() {
    if (!GetCalculateErrors()) {
       fTsumw2 = 0.;
    }
+   // fill sumw2 array with current content
+   TNDArray & content = GetArray(); 
+   Long64_t nbins = GetNbins(); 
+   for (Long64_t ibin = 0; ibin < nbins; ++ibin)
+      fSumw2.At(ibin) = content.AtAsDouble(ibin);
 }
 
  

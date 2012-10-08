@@ -379,7 +379,7 @@ Int_t TH3::Fill(const char *namex, const char *namey, const char *namez, Double_
    Double_t x = fXaxis.GetBinCenter(binx);
    Double_t y = fYaxis.GetBinCenter(biny);
    Double_t z = fZaxis.GetBinCenter(binz);
-   Double_t v = w; //(w > 0 ? w : -w);
+   Double_t v = w; 
    fTsumw   += v;
    fTsumw2  += v*v;
    fTsumwx  += v*x;
@@ -422,7 +422,7 @@ Int_t TH3::Fill(const char *namex, Double_t y, const char *namez, Double_t w)
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
    Double_t x = fXaxis.GetBinCenter(binx);
    Double_t z = fZaxis.GetBinCenter(binz);
-   Double_t v = w; //(w > 0 ? w : -w);
+   Double_t v = w; 
    fTsumw   += v;
    fTsumw2  += v*v;
    fTsumwx  += v*x;
@@ -465,7 +465,7 @@ Int_t TH3::Fill(const char *namex, const char *namey, Double_t z, Double_t w)
    }
    Double_t x = fXaxis.GetBinCenter(binx);
    Double_t y = fYaxis.GetBinCenter(biny);
-   Double_t v = w; // (w > 0 ? w : -w);
+   Double_t v = w; 
    fTsumw   += v;
    fTsumw2  += v*v;
    fTsumwx  += v*x;
@@ -508,7 +508,7 @@ Int_t TH3::Fill(Double_t x, const char *namey, const char *namez, Double_t w)
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
    Double_t y = fYaxis.GetBinCenter(biny);
    Double_t z = fZaxis.GetBinCenter(binz);
-   Double_t v = w; //(w > 0 ? w : -w);
+   Double_t v = w; 
    fTsumw   += v;
    fTsumw2  += v*v;
    fTsumwx  += v*x;
@@ -552,7 +552,7 @@ Int_t TH3::Fill(Double_t x, const char *namey, Double_t z, Double_t w)
       if (!fgStatOverflows) return -1;
    }
    Double_t y = fYaxis.GetBinCenter(biny);
-   Double_t v = w; // (w > 0 ? w : -w);
+   Double_t v = w; 
    fTsumw   += v;
    fTsumw2  += v*v;
    fTsumwx  += v*x;
@@ -596,7 +596,7 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
    }
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
    Double_t z = fZaxis.GetBinCenter(binz);
-   Double_t v = w; //(w > 0 ? w : -w);
+   Double_t v = w; 
    fTsumw   += v;
    fTsumw2  += v*v;
    fTsumwx  += v*x;
