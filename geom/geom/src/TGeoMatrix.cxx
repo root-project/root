@@ -1901,13 +1901,13 @@ void TGeoGenTrans::Clear(Option_t *)
 void TGeoGenTrans::SetScale(Double_t sx, Double_t sy, Double_t sz)
 {
 // set the scale
-   fScale[0] = sx;
-   fScale[1] = sy;
-   fScale[2] = sz;
-   if (!(Normalize())) {
+   if (sx<1.E-5 || sy<1.E-5 || sz<1.E-5) {
       Error("ctor", "Invalid scale");
       return;
    }
+   fScale[0] = sx;
+   fScale[1] = sy;
+   fScale[2] = sz;
 }
 
 //_____________________________________________________________________________
