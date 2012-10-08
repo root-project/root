@@ -649,8 +649,9 @@ Int_t TProfile3D::Fill(Double_t x, Double_t y, Double_t z, Double_t t, Double_t 
    bin  = GetBin(binx,biny,binz);
    AddBinContent(bin, u*t);
    fSumw2.fArray[bin] += u*t*t;
-   fBinEntries.fArray[bin] += u;
+   if (!fBinSumw2.fN && u != 1.)  Sumw2();  // must be called before accumulating the entries 
    if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += u*u;
+   fBinEntries.fArray[bin] += u;
    if (binx == 0 || binx > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }

@@ -714,13 +714,14 @@ Int_t TProfile::Fill(Double_t x, Double_t y, Double_t w)
       if (y <fYmin || y> fYmax || TMath::IsNaN(y) ) return -1;
    }
 
-   Double_t u= w; // (w > 0 ? w : -w);
+   Double_t u= w; 
    fEntries++;
    bin =fXaxis.FindBin(x);
    AddBinContent(bin, u*y);
    fSumw2.fArray[bin] += u*y*y;
-   fBinEntries.fArray[bin] += u;
+   if (!fBinSumw2.fN && u != 1.)  Sumw2();  // must be called before accumulating the entries 
    if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += u*u;
+   fBinEntries.fArray[bin] += u;
    if (bin == 0 || bin > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
@@ -749,8 +750,9 @@ Int_t TProfile::Fill(const char *namex, Double_t y, Double_t w)
    bin =fXaxis.FindBin(namex);
    AddBinContent(bin, u*y);
    fSumw2.fArray[bin] += u*y*y;
-   fBinEntries.fArray[bin] += u;
+   if (!fBinSumw2.fN && u != 1.)  Sumw2();  // must be called before accumulating the entries 
    if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += u*u;
+   fBinEntries.fArray[bin] += u;
    if (bin == 0 || bin > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
@@ -782,8 +784,9 @@ void TProfile::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const D
       bin =fXaxis.FindBin(x[i]);
       AddBinContent(bin, u*y[i]);
       fSumw2.fArray[bin] += u*y[i]*y[i];
-      fBinEntries.fArray[bin] += u;
+      if (!fBinSumw2.fN && u != 1.)  Sumw2();  // must be called before accumulating the entries 
       if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += u*u;
+      fBinEntries.fArray[bin] += u;
       if (bin == 0 || bin > fXaxis.GetNbins()) {
          if (!fgStatOverflows) continue;
       }

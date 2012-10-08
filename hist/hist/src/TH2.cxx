@@ -316,9 +316,9 @@ Int_t TH2::Fill(Double_t x, Double_t y, Double_t w)
    //*-* if x or/and y is greater than the upper edge of corresponding axis last bin,
    //*-*   the Overflow cell is incremented.
    //*-*
-   //*-* If the storage of the sum of squares of weights has been triggered,
-   //*-* via the function Sumw2, then the sum of the squares of weights is incremented
-   //*-* by w^2 in the cell corresponding to x,y.
+   //*-*  If the weight is not equal to 1, the storage of the sum of squares of 
+   //*-*   weights is automatically triggered and the sum of the squares of weights is incremented
+   //*-*   by w^2 in the bin corresponding to x,y
    //*-*
    //*-* The function returns the corresponding global bin number which has its content 
    //*-* incremented by w
@@ -332,15 +332,16 @@ Int_t TH2::Fill(Double_t x, Double_t y, Double_t w)
    biny = fYaxis.FindBin(y);
    if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   AddBinContent(bin,w);
+   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
-   Double_t z= w;  //  (w > 0 ? w : -w);
+   Double_t z= w;  
    fTsumw   += z;
    fTsumw2  += z*z;
    fTsumwx  += z*x;
@@ -361,9 +362,9 @@ Int_t TH2::Fill(const char *namex, const char *namey, Double_t w)
    // if x or/and y is greater than the upper edge of corresponding axis last bin,
    //   the Overflow cell is incremented.
    //
-   // If the storage of the sum of squares of weights has been triggered,
-   // via the function Sumw2, then the sum of the squares of weights is incremented
-   // by w^2 in the cell corresponding to x,y.
+   // If the weight is not equal to 1, the storage of the sum of squares of 
+   //  weights is automatically triggered and the sum of the squares of weights is incremented
+   //  by w^2 in the bin corresponding to namex,namey 
    //
    // The function returns the corresponding global bin number which has its content 
    // incremented by w
@@ -374,13 +375,14 @@ Int_t TH2::Fill(const char *namex, const char *namey, Double_t w)
    biny = fYaxis.FindBin(namey);
    if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   AddBinContent(bin,w);
+   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    Double_t x = fXaxis.GetBinCenter(binx);
    Double_t y = fYaxis.GetBinCenter(biny);
-   Double_t z= w; //(w > 0 ? w : -w);
+   Double_t z= w; 
    fTsumw   += z;
    fTsumw2  += z*z;
    fTsumwx  += z*x;
@@ -401,9 +403,9 @@ Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
    // if x or/and y is greater than the upper edge of corresponding axis last bin,
    //   the Overflow cell is incremented.
    //
-   // If the storage of the sum of squares of weights has been triggered,
-   // via the function Sumw2, then the sum of the squares of weights is incremented
-   // by w^2 in the cell corresponding to x,y.
+   // If the weight is not equal to 1, the storage of the sum of squares of 
+   //  weights is automatically triggered and the sum of the squares of weights is incremented
+   //  by w^2 in the bin corresponding to namex,y
    //
    // The function returns the corresponding global bin number which has its content 
    // incremented by w
@@ -414,8 +416,9 @@ Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
    biny = fYaxis.FindBin(y);
    if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   AddBinContent(bin,w);
+   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
@@ -442,9 +445,9 @@ Int_t TH2::Fill(Double_t x, const char *namey, Double_t w)
    // if x or/and y is greater than the upper edge of corresponding axis last bin,
    //   the Overflow cell is incremented.
    //
-   // If the storage of the sum of squares of weights has been triggered,
-   // via the function Sumw2, then the sum of the squares of weights is incremented
-   // by w^2 in the cell corresponding to x,y.
+   // If the weight is not equal to 1, the storage of the sum of squares of 
+   //  weights is automatically triggered and the sum of the squares of weights is incremented
+   //  by w^2 in the bin corresponding to x,y. 
    //
    // The function returns the corresponding global bin number which has its content 
    // incremented by w
@@ -455,8 +458,9 @@ Int_t TH2::Fill(Double_t x, const char *namey, Double_t w)
    biny = fYaxis.FindBin(namey);
    if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   AddBinContent(bin,w);
+   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
@@ -485,10 +489,10 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
    //*-* w:       array of weights
    //*-* stride:  step size through arrays x, y and w
    //*-*
-   //*-* If the storage of the sum of squares of weights has been triggered,
-   //*-* via the function Sumw2, then the sum of the squares of weights is incremented
-   //*-* by w[i]^2 in the cell corresponding to x[i],y[i].
-   //*-* if w is NULL each entry is assumed a weight=1
+   //*-*  If the weight is not equal to 1, the storage of the sum of squares of 
+   //*-*   weights is automatically triggered and the sum of the squares of weights is incremented
+   //*-*   by w[i]^2 in the bin corresponding to x[i],y[i].
+   //*-*  If w is NULL each entry is assumed a weight=1
    //*-*
    //*-* NB: function only valid for a TH2x object
    //*-*
@@ -503,8 +507,9 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
       if (binx <0 || biny <0) continue;
       bin  = biny*(fXaxis.GetNbins()+2) + binx;
       if (w) ww = w[i];
-      AddBinContent(bin,ww);
+      if (!fSumw2.fN && ww != 1.0)  Sumw2(); 
       if (fSumw2.fN) fSumw2.fArray[bin] += ww*ww;
+      AddBinContent(bin,ww);
       if (binx == 0 || binx > fXaxis.GetNbins()) {
          if (!fgStatOverflows) continue;
       }
@@ -580,7 +585,7 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
       biny++;
       x    = fXaxis.GetBinCenter(binx);
       y    = fYaxis.GetBinCenter(biny);
-      Fill(x,y, 1.);
+      Fill(x,y);
    }
    delete [] integral;
 }
@@ -614,7 +619,7 @@ void TH2::FillRandom(TH1 *h, Int_t ntimes)
    TH2 *h2 = (TH2*)h;
    for (loop=0;loop<ntimes;loop++) {
       h2->GetRandom2(x,y);
-      Fill(x,y,1.);
+      Fill(x,y);
    }
 }
 

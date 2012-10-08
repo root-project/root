@@ -748,7 +748,7 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
       if (z <fZmin || z> fZmax || TMath::IsNaN(z)) return -1;
    }
 
-   Double_t u= w; //(w > 0 ? w : -w);
+   Double_t u= w; 
    fEntries++;
    binx =fXaxis.FindBin(x);
    biny =fYaxis.FindBin(y);
@@ -756,8 +756,9 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
    AddBinContent(bin, u*z);
    fSumw2.fArray[bin] += u*z*z;
-   fBinEntries.fArray[bin] += u;
+   if (!fBinSumw2.fN && u != 1.)  Sumw2();  // must be called before accumulating the entries 
    if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += u*u;
+   fBinEntries.fArray[bin] += u;
    if (binx == 0 || binx > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }

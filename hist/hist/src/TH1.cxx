@@ -3103,9 +3103,9 @@ Int_t TH1::Fill(Double_t x, Double_t w)
 //    if x is less than the low-edge of the first bin, the Underflow bin is incremented
 //    if x is greater than the upper edge of last bin, the Overflow bin is incremented
 //
-//    If the storage of the sum of squares of weights has been triggered,
-//    via the function Sumw2, then the sum of the squares of weights is incremented
-//    by w^2 in the bin corresponding to x.
+//    If the weight is not equal to 1, the storage of the sum of squares of 
+//    weights is automatically triggered and the sum of the squares of weights is incremented
+//    by w^2 in the bin corresponding to x. 
 //
 //    The function returns the corresponding bin number which has its content incremented by w
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -3116,12 +3116,12 @@ Int_t TH1::Fill(Double_t x, Double_t w)
    fEntries++;
    bin =fXaxis.FindBin(x);
    if (bin <0) return -1;
+   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (fSumw2.fN)  fSumw2.fArray[bin] += w*w;
    AddBinContent(bin, w);
-   if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    if (bin == 0 || bin > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
-   //Double_t z= (w > 0 ? w : -w);
    Double_t z= w;
    fTsumw   += z;
    fTsumw2  += z*z;
@@ -3138,9 +3138,9 @@ Int_t TH1::Fill(const char *namex, Double_t w)
 // if x is less than the low-edge of the first bin, the Underflow bin is incremented
 // if x is greater than the upper edge of last bin, the Overflow bin is incremented
 //
-// If the storage of the sum of squares of weights has been triggered,
-// via the function Sumw2, then the sum of the squares of weights is incremented
-// by w^2 in the bin corresponding to x.
+// If the weight is not equal to 1, the storage of the sum of squares of 
+// weights is automatically triggered and the sum of the squares of weights is incremented
+// by w^2 in the bin corresponding to x. 
 //
 // The function returns the corresponding bin number which has its content 
 // incremented by w
@@ -3150,10 +3150,10 @@ Int_t TH1::Fill(const char *namex, Double_t w)
    fEntries++;
    bin =fXaxis.FindBin(namex);
    if (bin <0) return -1;
-   AddBinContent(bin, w);
+   if (!fSumw2.fN && w != 1.0)  Sumw2(); 
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   AddBinContent(bin, w);
    if (bin == 0 || bin > fXaxis.GetNbins()) return -1;
-   //Double_t z= (w > 0 ? w : -w);
    Double_t z= w;
    fTsumw   += z;
    fTsumw2  += z*z;
@@ -3177,9 +3177,9 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
 //    w:       array of weighs
 //    stride:  step size through arrays x and w
 //
-//    If the storage of the sum of squares of weights has been triggered,
-//    via the function Sumw2, then the sum of the squares of weights is incremented
-//    by w[i]^2 in the bin corresponding to x[i].
+//    If the weight is not equal to 1, the storage of the sum of squares of 
+//    weights is automatically triggered and the sum of the squares of weights is incremented
+//    by w^2 in the bin corresponding to x. 
 //    if w is NULL each entry is assumed a weight=1
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -3202,12 +3202,12 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
       bin =fXaxis.FindBin(x[i]);
       if (bin <0) continue;
       if (w) ww = w[i];
-      AddBinContent(bin, ww);
+      if (!fSumw2.fN && ww != 1.0)  Sumw2(); 
       if (fSumw2.fN) fSumw2.fArray[bin] += ww*ww;
+      AddBinContent(bin, ww);
       if (bin == 0 || bin > nbins) {
          if (!fgStatOverflows) continue;
       }
-      //Double_t z= (ww > 0 ? ww : -ww);
       Double_t z= ww;
       fTsumw   += z;
       fTsumw2  += z*z;
@@ -3268,7 +3268,7 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
       //x    = fXaxis.GetBinCenter(binx); //this is not OK when SetBuffer is used
       x    = fXaxis.GetBinLowEdge(ibin+first)
              +fXaxis.GetBinWidth(ibin+first)*(r1-integral[ibin])/(integral[ibin+1] - integral[ibin]);
-      Fill(x, 1.);
+      Fill(x);
    }
    delete [] integral;
 }

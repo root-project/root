@@ -318,9 +318,7 @@ void THnBase::Add(const TH1* hist, Double_t c /*=1.*/)
 {
    // Fill the THnBase with the bins of hist that have content
    // or error != 0.
-   Long64_t nbins = hist->GetNbinsX() + 2;
-   if (hist->GetDimension() >= 2) nbins *= hist->GetNbinsY() + 2;
-   if (hist->GetDimension() >= 3) nbins *= hist->GetNbinsZ() + 2;
+   Long64_t nbins = hist->GetNcells();
    int x[3] = {0,0,0};
    for (int i = 0; i < nbins; ++i) {
       double value = hist->GetBinContent(i);

@@ -277,8 +277,8 @@ Int_t TH3::Fill(Double_t x, Double_t y, Double_t z)
    binz = fZaxis.FindBin(z);
    if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
-   AddBinContent(bin);
    if (fSumw2.fN) ++fSumw2.fArray[bin];
+   AddBinContent(bin);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
@@ -309,9 +309,9 @@ Int_t TH3::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
    //*-*-*-*-*-*-*-*-*-*-*Increment cell defined by x,y,z by a weight w*-*-*-*-*
    //*-*                  =============================================
    //*-*
-   //*-* If the storage of the sum of squares of weights has been triggered,
-   //*-* via the function Sumw2, then the sum of the squares of weights is incremented
-   //*-* by w^2 in the cell corresponding to x,y,z.
+   //*-* If the weight is not equal to 1, the storage of the sum of squares of 
+   //*-*  weights is automatically triggered and the sum of the squares of weights is incremented
+   //*-*  by w^2 in the cell corresponding to x,y,z. 
    //*-*
    //*-* The function returns the corresponding global bin number which has its content 
    //*-* incremented by w
@@ -326,8 +326,9 @@ Int_t TH3::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
    binz = fZaxis.FindBin(z);
    if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
-   AddBinContent(bin,w);
+   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
@@ -356,9 +357,9 @@ Int_t TH3::Fill(const char *namex, const char *namey, const char *namez, Double_
 {
    // Increment cell defined by namex,namey,namez by a weight w
    //
-   // If the storage of the sum of squares of weights has been triggered,
-   // via the function Sumw2, then the sum of the squares of weights is incremented
-   // by w^2 in the cell corresponding to x,y,z.   
+   // If the weight is not equal to 1, the storage of the sum of squares of 
+   //  weights is automatically triggered and the sum of the squares of weights is incremented
+   //  by w^2 in the corresponding cell. 
    // The function returns the corresponding global bin number which has its content 
    // incremented by w
    //
@@ -369,8 +370,9 @@ Int_t TH3::Fill(const char *namex, const char *namey, const char *namez, Double_
    binz = fZaxis.FindBin(namez);
    if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
-   AddBinContent(bin,w);
+   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
@@ -397,9 +399,9 @@ Int_t TH3::Fill(const char *namex, Double_t y, const char *namez, Double_t w)
 {
    // Increment cell defined by namex,y,namez by a weight w
    //
-   // If the storage of the sum of squares of weights has been triggered,
-   // via the function Sumw2, then the sum of the squares of weights is incremented
-   // by w^2 in the cell corresponding to x,y,z.
+   // If the weight is not equal to 1, the storage of the sum of squares of 
+   //  weights is automatically triggered and the sum of the squares of weights is incremented
+   //  by w^2 in the corresponding cell. 
    // The function returns the corresponding global bin number which has its content 
    // incremented by w
    //
@@ -410,8 +412,9 @@ Int_t TH3::Fill(const char *namex, Double_t y, const char *namez, Double_t w)
    binz = fZaxis.FindBin(namez);
    if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
-   AddBinContent(bin,w);
+   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
@@ -439,9 +442,9 @@ Int_t TH3::Fill(const char *namex, const char *namey, Double_t z, Double_t w)
 {
    // Increment cell defined by namex,namey,z by a weight w
    //
-   // If the storage of the sum of squares of weights has been triggered,
-   // via the function Sumw2, then the sum of the squares of weights is incremented
-   // by w^2 in the cell corresponding to x,y,z.
+   // If the weight is not equal to 1, the storage of the sum of squares of 
+   //  weights is automatically triggered and the sum of the squares of weights is incremented
+   //  by w^2 in the corresponding cell. 
    // The function returns the corresponding global bin number which has its content 
    // incremented by w
    //
@@ -452,8 +455,9 @@ Int_t TH3::Fill(const char *namex, const char *namey, Double_t z, Double_t w)
    binz = fZaxis.FindBin(z);
    if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
-   AddBinContent(bin,w);
+   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    if (binz == 0 || binz > fZaxis.GetNbins()) {
@@ -481,9 +485,9 @@ Int_t TH3::Fill(Double_t x, const char *namey, const char *namez, Double_t w)
 {
    // Increment cell defined by x,namey,namezz by a weight w
    //
-   // If the storage of the sum of squares of weights has been triggered,
-   // via the function Sumw2, then the sum of the squares of weights is incremented
-   // by w^2 in the cell corresponding to x,y,z.
+   // If the weight is not equal to 1, the storage of the sum of squares of 
+   //  weights is automatically triggered and the sum of the squares of weights is incremented
+   //  by w^2 in the corresponding cell. 
    // The function returns the corresponding global bin number which has its content 
    // incremented by w
    //
@@ -494,8 +498,9 @@ Int_t TH3::Fill(Double_t x, const char *namey, const char *namez, Double_t w)
    binz = fZaxis.FindBin(namez);
    if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
-   AddBinContent(bin,w);
+   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
@@ -523,9 +528,9 @@ Int_t TH3::Fill(Double_t x, const char *namey, Double_t z, Double_t w)
 {
    // Increment cell defined by x,namey,z by a weight w
    //
-   // If the storage of the sum of squares of weights has been triggered,
-   // via the function Sumw2, then the sum of the squares of weights is incremented
-   // by w^2 in the cell corresponding to x,y,z.
+   // If the weight is not equal to 1, the storage of the sum of squares of 
+   //  weights is automatically triggered and the sum of the squares of weights is incremented
+   //  by w^2 in the corresponding cell. 
    // The function returns the corresponding global bin number which has its content 
    // incremented by w
    //
@@ -536,8 +541,9 @@ Int_t TH3::Fill(Double_t x, const char *namey, Double_t z, Double_t w)
    binz = fZaxis.FindBin(z);
    if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
-   AddBinContent(bin,w);
+   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
@@ -566,9 +572,9 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
 {
    // Increment cell defined by x,y,namez by a weight w
    //
-   // If the storage of the sum of squares of weights has been triggered,
-   // via the function Sumw2, then the sum of the squares of weights is incremented
-   // by w^2 in the cell corresponding to x,y,z.
+   // If the weight is not equal to 1, the storage of the sum of squares of 
+   //  weights is automatically triggered and the sum of the squares of weights is incremented
+   //  by w^2 in the corresponding cell. 
    // The function returns the corresponding global bin number which has its content 
    // incremented by w
    //
@@ -579,8 +585,9 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
    binz = fZaxis.FindBin(namez);
    if (binx <0 || biny <0 || binz<0) return -1;
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
-   AddBinContent(bin,w);
+   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
       if (!fgStatOverflows) return -1;
    }
@@ -706,7 +713,7 @@ void TH3::FillRandom(TH1 *h, Int_t ntimes)
    Double_t x,y,z;
    for (loop=0;loop<ntimes;loop++) {
       h3->GetRandom3(x,y,z);
-      Fill(x,y,z,1.);
+      Fill(x,y,z);
    }
 }
 
