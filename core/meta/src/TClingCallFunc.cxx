@@ -130,7 +130,20 @@ long TClingCallFunc::ExecInt(void *address) const
          }
          const clang::ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
          int64_t size = Layout.getSize().getQuantity();
-         address = malloc(size);
+         address = malloc(size); // this is bad, we really need to call the class' own operator new but oh well
+
+         std::vector<llvm::GenericValue> args;
+         llvm::GenericValue this_ptr;
+         this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
+                                       reinterpret_cast<unsigned long>(address));
+         args.push_back(this_ptr);
+         args.insert(args.end(), fArgs.begin(), fArgs.end());
+         val  = Invoke(args);
+         
+         // We don't really mean to call the constructor and return its (lack of)
+         // return value, we meant to execute and return 'new TypeOf(...)' and
+         // return the allocated address, so here you go:
+         return (long)(address);
       }
       else {
          if (!address) {
