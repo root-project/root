@@ -512,7 +512,7 @@ public:
 
             // FIXME: How does ROOT understand globals?
             //assert(!cast<VarDecl>(fLastDeclSeen)->hasGlobalStorage() && "Not a global!?");
-            globalMemInfo = new TClingDataMemberInfo(m_Interpreter, ValD);
+            globalMemInfo = new TClingDataMemberInfo(ValD);
             gROOT->GetListOfGlobals()->Add(new TGlobal(globalMemInfo));
          }
       }
