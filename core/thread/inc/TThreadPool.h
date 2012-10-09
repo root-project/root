@@ -261,7 +261,7 @@ private:
             if (pThis->fTasks.empty() && !pThis->fStopped) {
                pThis->DbgLog("waiting for a task");
 
-               {
+               if(pThis->fThreads.size() == pThis->fIdleThreads) {
                   TLockGuard l(&pThis->fMutexAllTasksDone);
                   pThis->fAllTasksDone->Broadcast();
                }
@@ -279,7 +279,7 @@ private:
                   pThis->fTasks.pop();
 
                   pThis->DbgLog("get the task");
-               } else {
+               } else if(pThis->fThreads.size() == pThis->fIdleThreads) {
                   TLockGuard l(&pThis->fMutexAllTasksDone);
                   pThis->fAllTasksDone->Broadcast();
                }
