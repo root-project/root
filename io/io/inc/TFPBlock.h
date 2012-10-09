@@ -33,7 +33,7 @@ class TFPBlock : public TObject{
 private:
    char     *fBuffer;       // content of the block
    Int_t     fNblock;       // number of segment in the block
-   Int_t     fFullSize;     // total size of segments that make up the block
+   Long64_t  fFullSize;     // total size of segments that make up the block
    Int_t    *fLen;          // array of lengths of each segment
    Long64_t *fPos;          // array of positions of each segment
    Long64_t *fRelOffset;    // relative offset of piece in the buffer
@@ -42,6 +42,7 @@ private:
    TFPBlock &operator=(const TFPBlock&); // Not implemented.
 
 public:
+   
    TFPBlock(Long64_t*, Int_t*, Int_t);
    virtual ~TFPBlock();
 
@@ -50,7 +51,7 @@ public:
 
    Long64_t *GetPos() const;
    Int_t    *GetLen() const;
-   Int_t     GetFullSize() const;
+   Long64_t  GetFullSize() const;
    Int_t     GetNoElem() const;
    char     *GetBuffer() const;
    char     *GetPtrToPiece(Int_t index) const;
@@ -79,7 +80,7 @@ inline Int_t* TFPBlock::GetLen() const
 }
 
 //__________________________________________________________________
-inline Int_t TFPBlock::GetFullSize() const
+inline Long64_t TFPBlock::GetFullSize() const
 {
    // Return size of the block.
 

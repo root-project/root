@@ -78,8 +78,11 @@ void TFPBlock::SetPos(Int_t idx, Long64_t value)
 void TFPBlock::SetBuffer(char* buf)
 {
    // Set block buffer.
-
+   if ( fBuffer ) {
+     free(fBuffer);
+   }
    fBuffer = buf;
+
 }
 
 //__________________________________________________________________
@@ -104,6 +107,6 @@ void TFPBlock::ReallocBlock(Long64_t* offset, Int_t* length, Int_t nb)
 
    if (newSize > fFullSize) {
      fBuffer = (char*) realloc(fBuffer, newSize);
+   }
      fFullSize = newSize;
-   }   
 }
