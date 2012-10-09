@@ -291,11 +291,37 @@ static bool CXXRecordDecl__FindOrdinaryMember(const clang::CXXBaseSpecifier *Spe
                                               )
 {
    clang::RecordDecl *BaseRecord = Specifier->getType()->getAs<clang::RecordType>()->getDecl();
+
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(BaseRecord);
    if (clxx == 0) return false;
    
-   return 0 != R__GetDataMemberFromAll(*clxx,(const char*)Name);
+   const clang::FieldDecl *found = R__GetDataMemberFromAll(*clxx,(const char*)Name);
+   if (found) {
+      // Humm, this is somewhat bad (well really bad), oh well.
+      // Let's hope Paths never things its own those (it should not as far as I can tell).
+      Path.Decls.first  = (clang::NamedDecl**)found;
+      Path.Decls.second = 0;
+      return true;
+   }
+//   
+// This is inspired from CXXInheritance.cpp:
+/*   
+       RecordDecl *BaseRecord =
+         Specifier->getType()->castAs<RecordType>()->getDecl();
+    
+   const unsigned IDNS = clang::Decl::IDNS_Ordinary | clang::Decl::IDNS_Tag | clang::Decl::IDNS_Member;
+   clang::DeclarationName N = clang::DeclarationName::getFromOpaquePtr(Name);
+   for (Path.Decls = BaseRecord->lookup(N);
+        Path.Decls.first != Path.Decls.second;
+        ++Path.Decls.first) {
+      if ((*Path.Decls.first)->isInIdentifierNamespace(IDNS))
+         return true;
+   }
+*/   
+   return false;
+    
 }
+#include <stdio.h>
 
 //////////////////////////////////////////////////////////////////////////
 static const clang::FieldDecl *R__GetDataMemberFromAllParents(const clang::CXXRecordDecl &cl, const char *what)
@@ -304,9 +330,17 @@ static const clang::FieldDecl *R__GetDataMemberFromAllParents(const clang::CXXRe
    
    clang::CXXBasePaths Paths;
    Paths.setOrigin(const_cast<clang::CXXRecordDecl*>(&cl));
-   cl.lookupInBases(&CXXRecordDecl__FindOrdinaryMember,
-                    (void*) what,
-                    Paths);
+   if (cl.lookupInBases(&CXXRecordDecl__FindOrdinaryMember,
+                        (void*) what,
+                        Paths) )
+   {
+      clang::CXXBasePaths::paths_iterator iter = Paths.begin();
+      if (iter != Paths.end()) {
+         // See CXXRecordDecl__FindOrdinaryMember, this is, well, awkward.
+         const clang::FieldDecl *found = (clang::FieldDecl *)iter->Decls.first;
+         return found;
+      }
+   }
    return 0;
 }
 
@@ -344,13 +378,13 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Field
    
    if (errnum) *errnum = VALID;
    
-   size_t rightbrancket = title.find(']');
+   size_t rightbracket = title.find(']');
    if ((title[0] != '[') ||
-       (rightbrancket == llvm::StringRef::npos)) return 0;
+       (rightbracket == llvm::StringRef::npos)) return 0;
    
    std::string working;
    static std::string indexvar;
-   indexvar = title.substr(1,rightbrancket-1).str();
+   indexvar = title.substr(1,rightbracket-1).str();
    
    // now we should have indexvar=dimension
    // Let's see if this is legal.
