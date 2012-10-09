@@ -34,6 +34,7 @@
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TClassTable.h"
+#include "TClingCallbacks.h"
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TMemberInspector.h"
@@ -56,6 +57,7 @@
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclarationName.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/SourceLocation.h"
@@ -65,12 +67,14 @@
 #include "clang/Frontend/FrontendDiagnostic.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Sema/Sema.h"
+
 #include "cling/Interpreter/Interpreter.h"
-#include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/LookupHelper.h"
-#include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/StoredValueRef.h"
+#include "cling/Interpreter/Transaction.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
+
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -89,6 +93,7 @@
 #endif // __APPLE__
 
 using namespace std;
+using namespace clang;
 
 R__EXTERN int optind;
 
@@ -145,6 +150,63 @@ void TCintWithCling__RegisterModule(const char* modulename,
    }
 }
 
+// The functions are used to bridge cling/clang/llvm compiled with no-rtti and
+// ROOT (which uses rtti)
+
+extern "C" 
+void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
+   TClingDataMemberInfo *globalMemInfo = 0;
+   for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
+       I != E; ++I)
+      for (DeclGroupRef::const_iterator
+              DI = I->begin(), DE = I->end(); DI != DE; ++DI) {
+
+         if (const ValueDecl *ValD = dyn_cast<ValueDecl>(*DI)) {
+            if (!isa<TranslationUnitDecl>(ValD->getDeclContext()))
+               continue;
+
+            if (!(isa<EnumConstantDecl>(ValD) || 
+                  isa<VarDecl>(ValD) || isa<FieldDecl>(ValD)))
+               continue;
+
+            // FIXME: How does ROOT understand globals?
+            //assert(!cast<VarDecl>(fLastDeclSeen)->hasGlobalStorage() && "Not a global!?");
+            globalMemInfo = new TClingDataMemberInfo(ValD);
+            gROOT->GetListOfGlobals()->Add(new TGlobal(globalMemInfo));
+         }
+      }
+}
+
+extern "C" 
+void TCintWithCling__UpdateListsOnUnloaded(const cling::Transaction &T) {
+   TGlobal *global = 0;
+   const char* name = 0;
+   TCollection* globals = gROOT->GetListOfGlobals();
+   for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
+       I != E; ++I)
+      for (DeclGroupRef::const_iterator
+              DI = I->begin(), DE = I->end(); DI != DE; ++DI) {
+
+         if (const VarDecl* VD = dyn_cast<VarDecl>(I->getSingleDecl())) {
+            name = VD->getNameAsString().c_str();
+            global = (TGlobal*)globals->FindObject(name);
+            if (global) {
+               globals->Remove(global);
+               if (!globals->IsOwner())
+                  delete global;
+            }
+         }
+      }
+}
+
+extern "C"  
+TObject* TCintWithCling__GetObjectAddress(const char *Name, void *&LookupCtx) {
+   return gROOT->FindSpecialObject(Name, LookupCtx);
+}
+
+extern "C" const Decl* TCintWithCling__GetObjectDecl(TObject *obj) {
+   return ((TClingClassInfo*)obj->IsA()->GetClassInfo())->GetDecl();
+}
 //______________________________________________________________________________
 //
 //
@@ -477,73 +539,6 @@ void* TCintWithCling::fgSetOfSpecials = 0;
 //
 //
 
-// The callbacks are used to update the list of globals in ROOT.
-//
-class TClingCallbacks : public cling::InterpreterCallbacks {
-private:
-   clang::Decl *fLastDeclSeen;
-public:
-   TClingCallbacks(cling::Interpreter* interp, bool isEnabled = false) 
-      : InterpreterCallbacks(interp, isEnabled), fLastDeclSeen(0) { }
-
-   // The callback is used to update the list of globals in ROOT.
-   //
-   virtual void TransactionCommitted(const cling::Transaction &T) {
-      if (!T.size())
-         return;
-
-      using namespace clang;
-      using namespace cling;
-      if (!fLastDeclSeen) {
-         const ASTContext &C = m_Interpreter->getCI()->getASTContext();
-         fLastDeclSeen = *C.getTranslationUnitDecl()->decls_begin();
-      }
-
-      TClingDataMemberInfo *globalMemInfo = 0;
-      while(fLastDeclSeen->getNextDeclInContext()) {
-         fLastDeclSeen = fLastDeclSeen->getNextDeclInContext();
-         if (ValueDecl *ValD = dyn_cast<ValueDecl>(fLastDeclSeen)) {
-            if (!isa<TranslationUnitDecl>(ValD->getDeclContext()))
-                continue;
-
-            if (!(isa<EnumConstantDecl>(ValD) || 
-                  isa<VarDecl>(ValD) || isa<FieldDecl>(ValD)))
-               continue;
-
-            // FIXME: How does ROOT understand globals?
-            //assert(!cast<VarDecl>(fLastDeclSeen)->hasGlobalStorage() && "Not a global!?");
-            globalMemInfo = new TClingDataMemberInfo(ValD);
-            gROOT->GetListOfGlobals()->Add(new TGlobal(globalMemInfo));
-         }
-      }
-   }
-
-   // The callback is used to update the list of globals in ROOT.
-   //
-   virtual void TransactionUnloaded(const cling::Transaction &T) {
-      if (!T.size())
-         return;
-
-      using namespace clang;
-      using namespace cling;
-      TGlobal *global = 0;
-      const char* name = 0;
-      TCollection* globals = gROOT->GetListOfGlobals();
-      for(Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
-          I != E; ++I) {
-         if (const VarDecl* VD = dyn_cast<VarDecl>(I->getSingleDecl())) {
-            name = VD->getNameAsString().c_str();
-            global = (TGlobal*)globals->FindObject(name);
-            if (global) {
-               globals->Remove(global);
-               if (!globals->IsOwner())
-                  delete global;
-            }
-         }
-      }
-   }
-};
-
 ClassImp(TCintWithCling)
 
 //______________________________________________________________________________
@@ -554,6 +549,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    , fGlobalsListSerial(-1)
    , fInterpreter(0)
    , fMetaProcessor(0)
+   //   , fDeMux(0)
 {
    // Initialize the CINT+cling interpreter interface.
 
@@ -566,7 +562,6 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
                                          interpArgs,
                                          ROOT::TMetaUtils::GetLLVMResourceDir(false).c_str());
    fInterpreter->installLazyFunctionCreator(autoloadCallback);
-   fInterpreter->setCallbacks(new TClingCallbacks(fInterpreter, /*isEnabled*/true));
 
    // Add the current path to the include path
    TCintWithCling::AddIncludePath(".");
@@ -655,6 +650,9 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
       ProcessLineCintOnly("#include <RtypesCint.h>");
       delete[] whichTypesCint;
    }
+
+   // Attach cling callbacks
+   fInterpreter->setCallbacks(new TClingCallbacks(fInterpreter, /*isEnabled*/true));
 }
 
 //______________________________________________________________________________
@@ -671,6 +669,7 @@ TCintWithCling::~TCintWithCling()
    delete fMetaProcessor;
    delete fTemporaries;
    delete fInterpreter;
+   //   delete fDeMux;
    gCint = 0;
 #ifdef R__COMPLETE_MEM_TERMINATION
    G__scratch_all();
@@ -691,6 +690,18 @@ void TCintWithCling::RegisterModule(const char* modulename,
    // entries (or %PATH% on Windows).
    // This function gets called by the static initialization of dictionary
    // libraries.
+
+
+   // // The module reader is implemented as ExternalSemaSource and gets attached.
+   // // However we rely on our custom ExternalSemaSource (on the cling side) which
+   // // notifies us on failed lookup. Before we do anything we first need to add
+   // // mux (actually demultiplexer) so that the events get dispatched to the two
+   // // sources.
+
+   // clang::Sema &S = fInterpreter->getSema();
+   // llvm::SmallVector<ExternalSemaSource*, 2> sources;
+   // if (S.ExternalSource)
+   //    sources.push_back(llvm::cast<clang::ExternalSemaSource>(S.ExternalSource));
 
    TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
 
@@ -739,6 +750,18 @@ void TCintWithCling::RegisterModule(const char* modulename,
 # endif
 #endif // ROOTLIBDIR
    gSystem->ExpandPathName(searchPath);
+
+   // if (sources.size()) {
+   //    // Before loading the first PCM parse dummy file, which will trigger 
+   //    // creation of the ASTReader.
+   //    assert(S.ExternalSource && "Decl reader not attached!");
+   //    if (sources.front() != S.ExternalSource) {
+   //       sources.push_back(llvm::cast<clang::ExternalSemaSource>(S.ExternalSource));
+   //       fDeMux = new cling::MultiplexExternalSemaSource(llvm::makeArrayRef(sources));
+   //       S.ExternalSource = fDeMux;
+   //    }
+   // }
+
 
    if (!gSystem->FindFile(searchPath, pcmFileName)) {
       Error("RegisterModule()", "Cannot find dictionary module %s in %s",

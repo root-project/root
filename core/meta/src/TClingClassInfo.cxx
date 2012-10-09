@@ -861,4 +861,3 @@ const char *TClingClassInfo::TmpltName() const
    buf = llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameAsString();
    return buf.c_str();
 }
-

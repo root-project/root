@@ -40,11 +40,22 @@ struct G__dictposition;
 #endif // WIN32
 
 extern "C" {
+   namespace clang {
+      class Decl;
+   }
+   namespace cling {
+      class Transaction;
+   }
    void TCintWithCling__RegisterModule(const char* modulename,
                                        const char** headers,
                                        const char** includePaths,
                                        const char** macroDefines,
                                        const char** macroUndefines);
+   void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction&);
+   void TCintWithCling__UpdateListsOnUnloaded(const cling::Transaction&);
+   TObject* TCintWithCling__GetObjectAddress(const char *Name, void *&LookupCtx);
+   const clang::Decl* TCintWithCling__GetObjectDecl(TObject *obj);
+
 }
 
 namespace Cint {
@@ -60,7 +71,6 @@ class TEnv;
 namespace cling {
 class Interpreter;
 class MetaProcessor;
-class Transaction;
 class StoredValueRef;
 }
 
