@@ -51,7 +51,7 @@ namespace ROOT {
       // Add default template parameters.
       clang::QualType AddDefaultParameters(clang::QualType instanceType, const cling::Interpreter &interpret, const TNormalizedCtxt &normCtxt);
 
-      // Get the arrau
+      // Get the array index information for a data member.
       enum DataMemberInfo__ValidArrayIndex_error_code { VALID, NOT_INT, NOT_DEF, IS_PRIVATE, UNKNOWN };
       const char* DataMemberInfo__ValidArrayIndex(const clang::FieldDecl &m, int *errnum = 0, const char **errstr = 0);
 

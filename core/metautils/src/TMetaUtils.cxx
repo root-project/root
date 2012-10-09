@@ -28,6 +28,7 @@
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/NestedNameSpecifier.h"
 #include "clang/AST/CXXInheritance.h"
+#include "clang/AST/Attr.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/ModuleMap.h"
@@ -325,8 +326,15 @@ static const clang::FieldDecl *R__GetDataMemberFromAllParents(const clang::CXXRe
 //   string containing the part of the index with is invalid.
 const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::FieldDecl &m, int *errnum, const char **errstr) 
 {
-   const char* title = ROOT::TMetaUtils::GetComment( m ).data();
+   llvm::StringRef title = 0;
    
+   // Try to get the comment either from the annotation or the header file if present
+   if (clang::AnnotateAttr *A = m.getAttr<clang::AnnotateAttr>())
+      title = A->getAnnotation();
+   else
+      // Try to get the comment from the header file if present
+      title = ROOT::TMetaUtils::GetComment( m );
+
    // Let's see if the user provided us with some information
    // with the format: //[dimension] this is the dim of the array
    // dimension can be an arithmetical expression containing, literal integer,
@@ -336,11 +344,11 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Field
    
    if (errnum) *errnum = VALID;
    
-   if ((strncmp(title, "[", 1)!=0) ||
-       (strstr(title,"]")     ==0)  ) return 0;
+   if ((title[0] != '[') ||
+       (title.find(']') == llvm::StringRef::npos)) return 0;
    
    std::string working;
-   static std::string indexvar(title + 1);
+   static std::string indexvar(title.substr(1).str());
    strstr(const_cast<char*>(indexvar.c_str()),"]")[0] = '\0';
    
    // now we should have indexvar=dimension
