@@ -326,7 +326,7 @@ static const clang::FieldDecl *R__GetDataMemberFromAllParents(const clang::CXXRe
 //   string containing the part of the index with is invalid.
 const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::FieldDecl &m, int *errnum, const char **errstr) 
 {
-   llvm::StringRef title = 0;
+   llvm::StringRef title;
    
    // Try to get the comment either from the annotation or the header file if present
    if (clang::AnnotateAttr *A = m.getAttr<clang::AnnotateAttr>())
@@ -348,7 +348,8 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Field
        (title.find(']') == llvm::StringRef::npos)) return 0;
    
    std::string working;
-   static std::string indexvar(title.substr(1).str());
+   static std::string indexvar;
+   indexvar = title.substr(1).str();
    strstr(const_cast<char*>(indexvar.c_str()),"]")[0] = '\0';
    
    // now we should have indexvar=dimension
