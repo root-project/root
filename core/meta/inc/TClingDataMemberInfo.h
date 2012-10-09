@@ -99,8 +99,8 @@ public:
 
    int                ArrayDim() const;
    TClingClassInfo   *GetClassInfo() const { return fClassInfo; }
-   clang::Decl       *GetDecl() const { return *fIter; }
-   bool               IsValid() const { return *fIter; }
+   const clang::Decl *GetDecl() const { return fSingleDecl ? fSingleDecl : *fIter; }
+   bool               IsValid() const { return GetDecl(); }
    int                MaxIndex(int dim) const;
    int                InternalNext();
    bool               Next() { return InternalNext(); }
