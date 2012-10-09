@@ -648,6 +648,13 @@ Bool_t TTreeCache::FillBuffer()
    if (fEntryMax <= 0) fEntryMax = tree->GetEntries();
    if (fEntryNext > fEntryMax) fEntryNext = fEntryMax;
 
+   if ( fEnablePrefetching ) {
+      if ( entry == fEntryMax ) {
+         // We are at the end, no need to do anything else
+         return kFALSE;
+      }
+   }
+
    // Check if owner has a TEventList set. If yes we optimize for this
    // Special case reading only the baskets containing entries in the
    // list.
