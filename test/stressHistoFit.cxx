@@ -672,14 +672,14 @@ int test1DObjects(vector< vector<algoType> >& listH,
       if ( h1 ) delete h1;
       h1 = new TH1D("histogram1D","h1-title",nbinsX,minX,maxX);
       for ( int i = 0; i <= h1->GetNbinsX() + 1; ++i )
-         h1->Fill( h1->GetBinCenter(i), rndm.Poisson( func->Eval( h1->GetBinCenter(i) ) ) );
+         h1->SetBinContent( i, rndm.Poisson( func->Eval( h1->GetBinCenter(i) ) ) );
 
       double v[nbinsX + 1];
       FillVariableRange(v, nbinsX, minX, maxX);
       if ( h2 ) delete h2;
       h2 = new TH1D("histogram1D_Variable","h2-title",nbinsX, v);
       for ( int i = 0; i <= h2->GetNbinsX() + 1; ++i )
-         h2->Fill( h2->GetBinCenter(i), rndm.Poisson( func->Eval( h2->GetBinCenter(i) ) ) );
+         h2->SetBinContent( i, rndm.Poisson( func->Eval( h2->GetBinCenter(i) ) ) );
 
       delete c0; c0 = new TCanvas("c0-1D", "Histogram1D Variable");
       if ( __DRAW__ ) h2->Draw();
@@ -774,7 +774,7 @@ int test2DObjects(vector< vector<algoType> >& listH,
             double xc = h1->GetXaxis()->GetBinCenter(i);
             double yc = h1->GetYaxis()->GetBinCenter(j);
             double content = rndm.Poisson( func->Eval( xc, yc ) );
-            h1->Fill( xc, yc, content );
+            h1->SetBinContent( i, j, content );
             ge1->SetPoint(counter, xc, yc, content);
             ge1->SetPointError(counter, 
                                h1->GetXaxis()->GetBinWidth(i) / 2,
@@ -795,7 +795,7 @@ int test2DObjects(vector< vector<algoType> >& listH,
             double xc = h2->GetXaxis()->GetBinCenter(i);
             double yc = h2->GetYaxis()->GetBinCenter(j);
             double content = rndm.Poisson( func->Eval( xc, yc ) );
-            h2->Fill( xc, yc, content );
+            h2->SetBinContent( i, j, content );
          }
 
       if ( c0 ) delete c0;
