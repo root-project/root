@@ -29,6 +29,7 @@
 #include "TClingProperty.h"
 #include "TClingTypeInfo.h"
 #include "TMetaUtils.h"
+#include "TClassEdit.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -400,7 +401,7 @@ const char *TClingDataMemberInfo::TypeName() const
    clang::PrintingPolicy policy(fIter->getASTContext().getPrintingPolicy());
    policy.AnonymousTagLocations = false;
    if (const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(*fIter)) {
-      buf = vd->getType().getAsString(policy);
+      buf = TClassEdit::CleanType(vd->getType().getAsString(policy).c_str(),0,0);
       return buf.c_str();
    }
    return 0;
@@ -417,7 +418,7 @@ const char *TClingDataMemberInfo::TypeTrueName() const
    clang::PrintingPolicy policy(fIter->getASTContext().getPrintingPolicy());
    policy.AnonymousTagLocations = false;
    if (const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(*fIter)) {
-      buf = vd->getType().getCanonicalType().getAsString(policy);
+      buf = TClassEdit::CleanType(vd->getType().getCanonicalType().getAsString(policy).c_str(),0,0);
       return buf.c_str();
    }
    return 0;
