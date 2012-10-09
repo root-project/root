@@ -65,6 +65,8 @@
 
 ClassImp(TGLLogicalShape);
 
+Bool_t TGLLogicalShape::fgIgnoreSizeForCameraInterest = kFALSE;
+
 //______________________________________________________________________________
 TGLLogicalShape::TGLLogicalShape() :
    fRef           (0),
@@ -454,4 +456,33 @@ void TGLLogicalShape::InvokeContextMenu(TContextMenu& menu, UInt_t x, UInt_t y) 
    if (fExternalObj) {
       menu.Popup(x, y, fExternalObj);
    }
+}
+
+//______________________________________________________________________________
+Bool_t TGLLogicalShape::IgnoreSizeForOfInterest() const
+{
+   // Return true if size of this shape should be ignored when determining if
+   // the object should be drawn. In this base-class we simply return state of
+   // static flag fgIgnoreSizeForCameraInterest.
+   //
+   // Several sub-classes override this virtual function.
+
+   return fgIgnoreSizeForCameraInterest;
+}
+
+//______________________________________________________________________________
+Bool_t TGLLogicalShape::GetIgnoreSizeForCameraInterest()
+{
+   // Get state of static fgIgnoreSizeForCameraInterest flag.
+   // When this is true all objects, also very small, will be drawn by GL.
+
+   return fgIgnoreSizeForCameraInterest;
+}
+
+//______________________________________________________________________________
+void TGLLogicalShape::SetIgnoreSizeForCameraInterest(Bool_t isfci)
+{
+   // Set state of static fgIgnoreSizeForCameraInterest flag.
+
+   fgIgnoreSizeForCameraInterest = isfci;
 }

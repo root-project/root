@@ -1086,6 +1086,21 @@ TGLVector3 TGLMatrix::GetScale() const
 }
 
 //______________________________________________________________________________
+Bool_t TGLMatrix::IsScalingForRender() const
+{
+   // Return true if matrix is to be considered a scaling matrix
+   // for rendering.
+   Double_t ss;
+   ss = fVals[0]*fVals[0] + fVals[1]*fVals[1] + fVals[2]*fVals[2];
+   if (ss < 0.8 || ss > 1.2) return kTRUE;
+   ss = fVals[4]*fVals[4] + fVals[5]*fVals[5] + fVals[6]*fVals[6];
+   if (ss < 0.8 || ss > 1.2) return kTRUE;
+   ss = fVals[8]*fVals[8] + fVals[9]*fVals[9] + fVals[10]*fVals[10];
+   if (ss < 0.8 || ss > 1.2) return kTRUE;
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 void TGLMatrix::Dump() const
 {
    // Output 16 matrix components to std::cout
