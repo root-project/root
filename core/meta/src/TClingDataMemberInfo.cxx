@@ -336,8 +336,9 @@ long TClingDataMemberInfo::Property() const
    if (qt.isConstQualified()) {
       property |= G__BIT_ISCONSTANT;
    }
-   const clang::DeclContext *dc = GetDecl()->getDeclContext();
-   if (const clang::TagDecl *td = llvm::dyn_cast<clang::TagDecl>(dc)) {
+   const clang::TagType *tt = qt->getAs<clang::TagType>();
+   if (tt) {
+      const clang::TagDecl *td = tt->getDecl();
       if (td->isClass()) {
          property |= G__BIT_ISCLASS;
       }
@@ -351,9 +352,10 @@ long TClingDataMemberInfo::Property() const
          property |= G__BIT_ISENUM;
       }
    }
-   if (dc->isNamespace() && !dc->isTranslationUnit()) {
-      property |= G__BIT_ISNAMESPACE;
-   }
+// We can't be a namespace, can we?
+//   if (dc->isNamespace() && !dc->isTranslationUnit()) {
+//      property |= G__BIT_ISNAMESPACE;
+//   }
    return property;
 }
 
