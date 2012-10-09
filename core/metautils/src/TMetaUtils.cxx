@@ -344,13 +344,13 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Field
    
    if (errnum) *errnum = VALID;
    
+   size_t rightbrancket = title.find(']');
    if ((title[0] != '[') ||
-       (title.find(']') == llvm::StringRef::npos)) return 0;
+       (rightbrancket == llvm::StringRef::npos)) return 0;
    
    std::string working;
    static std::string indexvar;
-   indexvar = title.substr(1).str();
-   strstr(const_cast<char*>(indexvar.c_str()),"]")[0] = '\0';
+   indexvar = title.substr(1,rightbrancket-1).str();
    
    // now we should have indexvar=dimension
    // Let's see if this is legal.
