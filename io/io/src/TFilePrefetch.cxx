@@ -84,7 +84,7 @@ void TFilePrefetch::ReadAsync(TFPBlock* block, Bool_t &inCache)
    char* path = 0;
 
    if (CheckBlockInCache(path, block)){
-      block->SetBuffer(GetBlockFromCache(path, block->GetFullSize()));
+      block->SetBuffer(GetBlockFromCache(path, block->GetDataSize()));
       inCache = kTRUE;
    }
    else{
@@ -412,7 +412,7 @@ char* TFilePrefetch::GetBlockFromCache(const char* path, Int_t length)
    Double_t start = 0;
    if (gPerfStats != 0) start = TTimeStamp();
 
-   buffer = (char*) calloc(length+1, sizeof(char));
+   buffer = (char*) calloc(length, sizeof(char));
    file->ReadBuffer(buffer, 0, length);
 
    fFile->fBytesRead  += length;
@@ -475,7 +475,7 @@ void TFilePrefetch::SaveBlockInCache(TFPBlock* block)
    if (file) {
       // coverity[unchecked_value] We do not print error message, have no error
       // return code and close the file anyway, no need to check the return value.
-      file->WriteBuffer(block->GetBuffer(), block->GetFullSize());
+      file->WriteBuffer(block->GetBuffer(), block->GetDataSize());
       file->Close();
       delete file;
    }
