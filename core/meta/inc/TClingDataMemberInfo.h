@@ -81,6 +81,7 @@ public:
       fFirstTime = rhs.fFirstTime;
       fIter = rhs.fIter;
       fIterStack = rhs.fIterStack;
+      fSingleDecl = rhs.fSingleDecl;
    }
 
    TClingDataMemberInfo &operator=(const TClingDataMemberInfo &rhs)
