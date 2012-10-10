@@ -375,86 +375,8 @@ void TClingClassInfo::Init(const char *name)
 
 void TClingClassInfo::Init(int tagnum)
 {
+   Warning("TCintWithCling::Init(tagnum)","Not yet implemented\n");
    return;
-#if 0
-   if (gDebug > 0) {
-      Info("TClingClassInfo::Init(tagnum)", "looking up tagnum: %d\n", tagnum);
-   }
-   if (!gAllowCint) {
-      delete fClassInfo;
-      fClassInfo = new G__ClassInfo;
-      fDecl = 0;
-      return;
-   }
-   fFirstTime = true;
-   fDescend = false;
-   fIter = clang::DeclContext::decl_iterator();
-   fDecl = 0;
-   fIterStack.clear();
-   fClassInfo->Init(tagnum);
-   if (!fClassInfo->IsValid()) {
-      if (gDebug > 0) {
-         fprintf(stderr, "TClingClassInfo::Init(tagnum): could not find cint "
-                 "class for tagnum: %d\n", tagnum);
-      }
-      return;
-   }
-   if (gAllowClang) {
-      const char *name = fClassInfo->Fullname();
-      if (gDebug > 0) {
-         fprintf(stderr, "TClingClassInfo::Init(tagnum): found cint class "
-                 "name: %s  tagnum: %d\n", name, tagnum);
-      }
-      if (!name || (name[0] == '\0')) {
-         // No name, or name is blank, could be anonymous
-         // class/struct/union or enum.  Cint does not give
-         // us enough information to find the same decl in clang.
-         return;
-      }
-      const clang::Decl *decl = fInterp->lookupScope(name);
-      if (!decl) {
-         if (gDebug > 0) {
-            fprintf(stderr,
-                    "TClingClassInfo::Init(tagnum): cling class not found "
-                    "name: %s  tagnum: %d\n", name, tagnum);
-         }
-         std::string buf = TClassEdit::InsertStd(name);
-         decl = const_cast<clang::Decl *>(fInterp->lookupScope(buf));
-         if (!decl) {
-            if (gDebug > 0) {
-               fprintf(stderr,
-                       "TClingClassInfo::Init(tagnum): cling class not found "
-                       "name: %s  tagnum: %d\n", buf.c_str(), tagnum);
-            }
-         }
-         else {
-            if (gDebug > 0) {
-               fprintf(stderr, "TClingClassInfo::Init(tagnum): "
-                       "found cling class name: %s  decl: 0x%lx\n",
-                       buf.c_str(), (long) decl);
-            }
-         }
-      }
-      else {
-         if (gDebug > 0) {
-            fprintf(stderr, "TClingClassInfo::Init(tagnum): found cling class "
-                    "name: %s  decl: 0x%lx\n", name, (long) decl);
-         }
-      }
-      if (decl) {
-         // Position our iterator on the given decl.
-         AdvanceToDecl(decl);
-         //fFirstTime = true;
-         //fDescend = false;
-         //fIter = clang::DeclContext::decl_iterator();
-         //fTemplateDecl = 0;
-         //fSpecIter = clang::ClassTemplateDecl::spec_iterator(0);
-         //fDecl = const_cast<clang::Decl*>(decl);
-         //fIterStack.clear();
-      }
-   }
-#endif // 0
-   //--
 }
 
 bool TClingClassInfo::IsBase(const char *name) const
