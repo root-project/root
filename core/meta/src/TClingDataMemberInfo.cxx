@@ -400,10 +400,20 @@ const char *TClingDataMemberInfo::TypeName() const
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
-   clang::PrintingPolicy policy(GetDecl()->getASTContext().getPrintingPolicy());
-   policy.AnonymousTagLocations = false;
    if (const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl())) {
-      buf = TClassEdit::CleanType(vd->getType().getAsString(policy).c_str(),0,0);
+      const clang::ASTContext &Ctxt = GetDecl()->getASTContext();
+
+      clang::QualType vdType = vd->getType();
+      // In CINT's version, the type name returns did *not* include any array
+      // information, ROOT's existing code depends on it.
+      while (vdType->isArrayType()) {
+         vdType = GetDecl()->getASTContext().getQualifiedType(vdType->getBaseElementTypeUnsafe(),vdType.getQualifiers());
+      }
+
+      clang::PrintingPolicy policy(Ctxt.getPrintingPolicy());
+      policy.AnonymousTagLocations = false;
+
+      buf = TClassEdit::CleanType(vdType.getAsString(policy).c_str(),0,0);
       return buf.c_str();
    }
    return 0;
@@ -421,6 +431,16 @@ const char *TClingDataMemberInfo::TypeTrueName(const ROOT::TMetaUtils::TNormaliz
    policy.AnonymousTagLocations = false;
    if (const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl())) {
       ROOT::TMetaUtils::GetNormalizedName(buf, vd->getType(), *fInterp, normCtxt);
+
+      // In CINT's version, the type name returns did *not* include any array
+      // information, ROOT's existing code depends on it.
+      // This might become part of the implementation of GetNormalizedName.
+      while (buf.length() && buf[buf.length()-1] == ']') {
+         size_t last = buf.rfind('['); // if this is not the bracket we are looking, the type is malformed.
+         if (last != std::string::npos) {
+            buf.erase(last);
+         }
+      }
       return buf.c_str();
    }
    return 0;
