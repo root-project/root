@@ -75,7 +75,7 @@ public:
    void                 Delete(void *arena) const;
    void                 DeleteArray(void *arena, bool dtorOnly) const;
    void                 Destruct(void *arena) const;
-   TClingMethodInfo     GetMethod(const char *fname, const char *arg,
+   TClingMethodInfo     GetMethod(const char *fname, const char *proto,
                                   long *poffset, MatchMode mode = ConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;
    int                  GetMethodNArg(const char *method, const char *proto) const;
