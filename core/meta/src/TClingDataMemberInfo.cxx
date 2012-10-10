@@ -46,7 +46,7 @@ using namespace clang;
 
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
                                            TClingClassInfo *ci)
-   : fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), fSingleDecl(0)
+: fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), fSingleDecl(0)
 {
    if (!ci) {
       // We are meant to iterate over the global namespace (well at least CINT did).
@@ -66,9 +66,10 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
       fFirstTime = true;
    }
 }
-TClingDataMemberInfo::TClingDataMemberInfo(const clang::ValueDecl *ValD)
-   : fInterp(0), fClassInfo(0), fFirstTime(true), fTitle(""), 
-     fSingleDecl(ValD) {
+
+TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp, const clang::ValueDecl *ValD)
+: fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), 
+fSingleDecl(ValD) {
    using namespace llvm;
    assert(isa<TranslationUnitDecl>(ValD->getDeclContext()) && "Not TU?");
    assert((isa<VarDecl>(ValD) || 
@@ -76,7 +77,6 @@ TClingDataMemberInfo::TClingDataMemberInfo(const clang::ValueDecl *ValD)
            isa<EnumConstantDecl>(ValD)) &&
           "The decl should be either VarDecl or FieldDecl or EnumConstDecl");
 }
-
 
 int TClingDataMemberInfo::ArrayDim() const
 {
@@ -86,10 +86,10 @@ int TClingDataMemberInfo::ArrayDim() const
    // Sanity check the current data member.
    clang::Decl::Kind DK = GetDecl()->getKind();
    if (
-      (DK != clang::Decl::Field) &&
-      (DK != clang::Decl::Var) &&
-      (DK != clang::Decl::EnumConstant)
-   ) {
+       (DK != clang::Decl::Field) &&
+       (DK != clang::Decl::Var) &&
+       (DK != clang::Decl::EnumConstant)
+       ) {
       // Error, was not a data member, variable, or enumerator.
       return -1;
    }
@@ -133,10 +133,10 @@ int TClingDataMemberInfo::MaxIndex(int dim) const
    // Sanity check the current data member.
    clang::Decl::Kind DK = GetDecl()->getKind();
    if (
-      (DK != clang::Decl::Field) &&
-      (DK != clang::Decl::Var) &&
-      (DK != clang::Decl::EnumConstant)
-   ) {
+       (DK != clang::Decl::Field) &&
+       (DK != clang::Decl::Var) &&
+       (DK != clang::Decl::EnumConstant)
+       ) {
       // Error, was not a data member, variable, or enumerator.
       return -1;
    }
@@ -159,8 +159,8 @@ int TClingDataMemberInfo::MaxIndex(int dim) const
       if (QT->isArrayType()) {
          if (cnt == 0) {
             if (const clang::ConstantArrayType *CAT =
-                     llvm::dyn_cast<clang::ConstantArrayType>(QT)
-               ) {
+                llvm::dyn_cast<clang::ConstantArrayType>(QT)
+                ) {
                max = static_cast<int>(CAT->getSize().getZExtValue());
             }
             else if (llvm::dyn_cast<clang::IncompleteArrayType>(QT)) {
@@ -195,7 +195,7 @@ int TClingDataMemberInfo::MaxIndex(int dim) const
 int TClingDataMemberInfo::InternalNext()
 {
    assert(!fSingleDecl && "This is not an iterator!");
-
+   
    // Move to next acceptable data member.
    while (*fIter) {
       // Move to next decl in context.
@@ -227,7 +227,7 @@ int TClingDataMemberInfo::InternalNext()
          continue;
       }
       if ((DK == clang::Decl::Field) || (DK == clang::Decl::EnumConstant) ||
-            (DK == clang::Decl::Var)) {
+          (DK == clang::Decl::Var)) {
          // Stop on class data members, enumerator values,
          // and namespace variable members.
          return 1;
@@ -244,10 +244,10 @@ long TClingDataMemberInfo::Offset() const
    // Sanity check the current data member.
    clang::Decl::Kind DK = GetDecl()->getKind();
    if (
-      (DK != clang::Decl::Field) &&
-      (DK != clang::Decl::Var) &&
-      (DK != clang::Decl::EnumConstant)
-   ) {
+       (DK != clang::Decl::Field) &&
+       (DK != clang::Decl::Var) &&
+       (DK != clang::Decl::EnumConstant)
+       ) {
       // Error, was not a data member, variable, or enumerator.
       return -1L;
    }
@@ -352,10 +352,10 @@ long TClingDataMemberInfo::Property() const
          property |= G__BIT_ISENUM;
       }
    }
-// We can't be a namespace, can we?
-//   if (dc->isNamespace() && !dc->isTranslationUnit()) {
-//      property |= G__BIT_ISNAMESPACE;
-//   }
+   // We can't be a namespace, can we?
+   //   if (dc->isNamespace() && !dc->isTranslationUnit()) {
+   //      property |= G__BIT_ISNAMESPACE;
+   //   }
    return property;
 }
 
@@ -377,7 +377,7 @@ int TClingDataMemberInfo::TypeSize() const
    // Sanity check the current data member.
    clang::Decl::Kind dk = GetDecl()->getKind();
    if ((dk != clang::Decl::Field) && (dk != clang::Decl::Var) &&
-         (dk != clang::Decl::EnumConstant)) {
+       (dk != clang::Decl::EnumConstant)) {
       // Error, was not a data member, variable, or enumerator.
       return -1;
    }
@@ -409,7 +409,7 @@ const char *TClingDataMemberInfo::TypeName() const
    return 0;
 }
 
-const char *TClingDataMemberInfo::TypeTrueName() const
+const char *TClingDataMemberInfo::TypeTrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    if (!IsValid()) {
       return 0;
@@ -420,7 +420,7 @@ const char *TClingDataMemberInfo::TypeTrueName() const
    clang::PrintingPolicy policy(GetDecl()->getASTContext().getPrintingPolicy());
    policy.AnonymousTagLocations = false;
    if (const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl())) {
-      buf = TClassEdit::CleanType(vd->getType().getCanonicalType().getAsString(policy).c_str(),0,0);
+      ROOT::TMetaUtils::GetNormalizedName(buf, vd->getType(), *fInterp, normCtxt);
       return buf.c_str();
    }
    return 0;
@@ -447,18 +447,18 @@ const char *TClingDataMemberInfo::Title()
    if (!IsValid()) {
       return 0;
    }
-
+   
    //NOTE: We can't use it as a cache due to the "thoughtful" self iterator
    //if (fTitle.size())
    //   return fTitle.c_str();
-
+   
    // Try to get the comment either from the annotation or the header file if present
    if (AnnotateAttr *A = GetDecl()->getAttr<AnnotateAttr>())
       fTitle = A->getAnnotation().str();
    else
       // Try to get the comment from the header file if present
       fTitle = ROOT::TMetaUtils::GetComment(*GetDecl()).str();
-
+   
    return fTitle.c_str();
 }
 

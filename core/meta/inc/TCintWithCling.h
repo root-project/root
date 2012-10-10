@@ -74,6 +74,12 @@ class MetaProcessor;
 class StoredValueRef;
 }
 
+namespace ROOT {
+   namespace TMetaUtils {
+      class TNormalizedCtxt;
+   }
+}
+
 class TCintWithCling : public TInterpreter {
 private: // Static Data Members
 
@@ -96,12 +102,15 @@ private: // Data Members
    Bool_t fLockProcessLine;  // True if ProcessLine should lock gCINTMutex.
    cling::Interpreter* fInterpreter; // The interpreter.
    cling::MetaProcessor* fMetaProcessor; // The metaprocessor.
-   std::vector<cling::StoredValueRef>* fTemporaries; // Stack of temporaries
+   std::vector<cling::StoredValueRef> *fTemporaries; // Stack of temporaries
+   ROOT::TMetaUtils::TNormalizedCtxt  *fNormalizedCtxt; // Which typedef to avoid striping.
 
 public: // Public Interface
 
    virtual ~TCintWithCling();
    TCintWithCling(const char* name, const char* title);
+
+   cling::Interpreter *GetInterpreter() { return fInterpreter; }
 
    void    AddIncludePath(const char* path);
    Int_t   AutoLoad(const char* classname);

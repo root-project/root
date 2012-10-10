@@ -171,7 +171,7 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
 
             // FIXME: How does ROOT understand globals?
             //assert(!cast<VarDecl>(fLastDeclSeen)->hasGlobalStorage() && "Not a global!?");
-            globalMemInfo = new TClingDataMemberInfo(ValD);
+            globalMemInfo = new TClingDataMemberInfo(((TCintWithCling*)gCint)->GetInterpreter(), ValD);
             gROOT->GetListOfGlobals()->Add(new TGlobal(globalMemInfo));
          }
       }
@@ -549,6 +549,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    , fGlobalsListSerial(-1)
    , fInterpreter(0)
    , fMetaProcessor(0)
+   , fNormalizedCtxt(0)
    //   , fDeMux(0)
 {
    // Initialize the CINT+cling interpreter interface.
@@ -601,7 +602,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    //fInterpreter->declare("#include <string>");
   
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
-   //ROOT::TMetaUtils::TNormalizedContext fNormalizedCtxt(fInterpreter->getLookupHelper());
+   fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
 
    TClassEdit::Init(*fInterpreter);
 
@@ -668,6 +669,7 @@ TCintWithCling::~TCintWithCling()
    delete fRootmapFiles;
    delete fMetaProcessor;
    delete fTemporaries;
+   delete fNormalizedCtxt;
    delete fInterpreter;
    //   delete fDeMux;
    gCint = 0;
@@ -3579,7 +3581,7 @@ const char* TCintWithCling::DataMemberInfo_TypeName(DataMemberInfo_t* dminfo) co
 const char* TCintWithCling::DataMemberInfo_TypeTrueName(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
-   return TClinginfo->TypeTrueName();
+   return TClinginfo->TypeTrueName(*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
