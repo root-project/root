@@ -88,7 +88,6 @@ public:
    bool                 IsLoaded() const;
    bool                 IsValid() const;
    bool                 IsValidMethod(const char *method, const char *proto, long *offset) const;
-   int                  AdvanceToDecl(const clang::Decl *);
    int                  InternalNext();
    int                  Next();
    void                *New() const;

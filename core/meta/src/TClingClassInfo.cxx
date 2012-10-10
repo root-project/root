@@ -335,17 +335,7 @@ void TClingClassInfo::Init(const char *name)
               "name: %s  decl: 0x%lx\n", name, (long) decl);
       }
    }
-   if (decl) {
-      // Position our iterator on the given decl.
-      AdvanceToDecl(decl);
-      //fFirstTime = true;
-      //fDescend = false;
-      //fIter = clang::DeclContext::decl_iterator();
-      //fTemplateDecl = 0;
-      //fSpecIter = clang::ClassTemplateDecl::spec_iterator(0);
-      //fDecl = const_cast<clang::Decl*>(decl);
-      //fIterStack.clear();
-   }
+   fDecl = decl;
 }
 
 void TClingClassInfo::Init(int tagnum)
@@ -414,28 +404,11 @@ bool TClingClassInfo::IsValidMethod(const char *method, const char *proto,
    return (decl != 0);
 }
 
-int TClingClassInfo::AdvanceToDecl(const clang::Decl *target_decl)
-{
-   const clang::TranslationUnitDecl *TU = target_decl->getTranslationUnitDecl();
-   const clang::DeclContext *DC = llvm::cast<clang::DeclContext>(TU);
-   fFirstTime = true;
-   fDescend = false;
-   fIter = DC->decls_begin();
-   fDecl = 0;
-   fIterStack.clear();
-   while (InternalNext()) {
-      if (fDecl == target_decl) {
-         return 1;
-      }
-   }
-   return 0;
-}
-
 int TClingClassInfo::InternalNext()
 {
    if (!*fIter) {
       // Iterator is already invalid.
-      if (fFirstTime) {
+      if (fFirstTime && fDecl) {
          Error("TClingClassInfo::InternalNext","Next called but iteration not prepared for %s!",FullName());
       }
       return 0;
