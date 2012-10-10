@@ -693,18 +693,6 @@ void TCintWithCling::RegisterModule(const char* modulename,
    // This function gets called by the static initialization of dictionary
    // libraries.
 
-
-   // // The module reader is implemented as ExternalSemaSource and gets attached.
-   // // However we rely on our custom ExternalSemaSource (on the cling side) which
-   // // notifies us on failed lookup. Before we do anything we first need to add
-   // // mux (actually demultiplexer) so that the events get dispatched to the two
-   // // sources.
-
-   // clang::Sema &S = fInterpreter->getSema();
-   // llvm::SmallVector<ExternalSemaSource*, 2> sources;
-   // if (S.ExternalSource)
-   //    sources.push_back(llvm::cast<clang::ExternalSemaSource>(S.ExternalSource));
-
    TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
 
    for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
@@ -752,18 +740,6 @@ void TCintWithCling::RegisterModule(const char* modulename,
 # endif
 #endif // ROOTLIBDIR
    gSystem->ExpandPathName(searchPath);
-
-   // if (sources.size()) {
-   //    // Before loading the first PCM parse dummy file, which will trigger 
-   //    // creation of the ASTReader.
-   //    assert(S.ExternalSource && "Decl reader not attached!");
-   //    if (sources.front() != S.ExternalSource) {
-   //       sources.push_back(llvm::cast<clang::ExternalSemaSource>(S.ExternalSource));
-   //       fDeMux = new cling::MultiplexExternalSemaSource(llvm::makeArrayRef(sources));
-   //       S.ExternalSource = fDeMux;
-   //    }
-   // }
-
 
    if (!gSystem->FindFile(searchPath, pcmFileName)) {
       Error("RegisterModule()", "Cannot find dictionary module %s in %s",
