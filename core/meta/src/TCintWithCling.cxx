@@ -1143,9 +1143,9 @@ void TCintWithCling::ClearFileBusy()
 //______________________________________________________________________________
 void TCintWithCling::ClearStack()
 {
-   // Delete existing temporary values
-   R__LOCKGUARD(gCINTMutex);
-   G__clearstack();
+   // Delete existing temporary values.
+
+   // No-op for cling due to StoredValueRef.
 }
 
 //______________________________________________________________________________
@@ -3013,8 +3013,8 @@ void TCintWithCling::SetRTLD_LAZY() const
 //______________________________________________________________________________
 void TCintWithCling::SetTempLevel(int val) const
 {
-   // Interface to CINT function
-   G__settemplevel(val);
+   // Create / close a scope for temporaries. No-op for cling; use
+   // StoredValueRef instead.
 }
 
 //______________________________________________________________________________
