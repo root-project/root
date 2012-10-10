@@ -98,38 +98,13 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
               "decl: 0x%lx\n", name, (long) decl);
       }
    }
-   if (decl) {
-      // Position our iterator on the found decl.
-      AdvanceToDecl(decl);
-      //fFirstTime = false;
-      //fDescend = false;
-      //fIter = clang::DeclContext::decl_iterator();
-      //fTemplateDecl = 0;
-      //fSpecIter = clang::ClassTemplateDecl::spec_iterator(0);
-      //fDecl = const_cast<clang::Decl*>(decl);
-      //fIterStack.clear();
-   }
+   fDecl = decl;
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
                                  const clang::Decl *decl)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fTitle("")
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(decl), fTitle("")
 {
-   if (decl) {
-      // Position our iterator on the given decl.
-      AdvanceToDecl(decl);
-      //fFirstTime = true;
-      //fDescend = false;
-      //fIter = clang::DeclContext::decl_iterator();
-      //fTemplateDecl = 0;
-      //fSpecIter = clang::ClassTemplateDecl::spec_iterator(0);
-      //fDecl = const_cast<clang::Decl*>(decl);
-      //fIterStack.clear();
-   }
-   else {
-      // FIXME: Maybe initialize iterator to global namespace?
-      fDecl = 0;
-   }
 }
 
 long TClingClassInfo::ClassProperty() const
@@ -302,7 +277,7 @@ bool TClingClassInfo::HasMethod(const char *name) const
    std::string given_name(name);
    if (!llvm::isa<clang::EnumDecl>(fDecl)) {
       // We are a class, struct, union, namespace, or translation unit.
-      clang::DeclContext *DC = llvm::cast<clang::DeclContext>(fDecl);
+      clang::DeclContext *DC = const_cast<clang::DeclContext*>(llvm::cast<clang::DeclContext>(fDecl));
       llvm::SmallVector<clang::DeclContext *, 2> fContexts;
       DC->collectAllContexts(fContexts);
       for (unsigned I = 0; !found && (I < fContexts.size()); ++I) {
@@ -460,6 +435,9 @@ int TClingClassInfo::InternalNext()
 {
    if (!*fIter) {
       // Iterator is already invalid.
+      if (fFirstTime) {
+         Error("TClingClassInfo::InternalNext","Next called but iteration not prepared for %s!",FullName());
+      }
       return 0;
    }
    while (true) {

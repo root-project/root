@@ -48,7 +48,7 @@ private:
    bool                  fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
    bool                  fDescend; // Flag for signaling the need to descend on this advancement.
    clang::DeclContext::decl_iterator fIter; // Current decl in scope.
-   clang::Decl          *fDecl; // Current decl, we do *not* own.
+   const clang::Decl    *fDecl; // Current decl, we do *not* own.
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
    std::string           fTitle; // The meta info for the class.
 public: // Types
