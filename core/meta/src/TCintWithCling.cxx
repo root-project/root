@@ -584,6 +584,23 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    clang::HeaderSearch& HS = fInterpreter->getCI()->getPreprocessor().getHeaderSearchInfo();
    HS.setModuleCachePath(dictDir.Data());
 
+   fMetaProcessor = new cling::MetaProcessor(*fInterpreter);
+
+   fInterpreter->declare("namespace std {} using namespace std;");
+
+   // For the list to also include string, we have to include it now.
+   fInterpreter->declare("#include \"Rtypes.h\"\n#include <string>");
+   
+   // During the loading of the first modules, RegisterModule which can calls Info
+   // which needs the TClass for TCintWithCling, which in turns need the 'dictionary'
+   // information to be loaded:
+   fInterpreter->declare("#include \"TCintWithCling.h\"");
+  
+   // We are now ready (enough is loaded) to init the list of opaque typedefs.
+   fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
+
+   TClassEdit::Init(*fInterpreter);
+
    for (size_t i = 0, e = gModuleHeaderInfoBuffer.size(); i < e ; ++i) {
       // process buffered module registrations
       ((TCintWithCling*)gCint)->RegisterModule(gModuleHeaderInfoBuffer[i].fModuleName,
@@ -593,19 +610,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
                                                gModuleHeaderInfoBuffer[i].fMacroUndefines);
    }
    gModuleHeaderInfoBuffer.clear();
-
-   fMetaProcessor = new cling::MetaProcessor(*fInterpreter);
-
-   fInterpreter->declare("namespace std {} using namespace std;");
-
-   // For the list to also include string, we have to include it now.
-   fInterpreter->declare("#include \"Rtypes.h\"\n#include <string>");
-  
-   // We are now ready (enough is loaded) to init the list of opaque typedefs.
-   fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
-
-   TClassEdit::Init(*fInterpreter);
-
+   
    // Initialize the CINT interpreter interface.
    fMore      = 0;
    fPrompt[0] = 0;
