@@ -505,10 +505,16 @@ bool TClingClassInfo::IsValid() const
 bool TClingClassInfo::IsValidMethod(const char *method, const char *proto,
                                     long *offset) const
 {
+   // Check if the method with the given prototype exist.
    if (!IsValid()) {
       return false;
    }
-   return GetMethod(method, proto, offset).IsValid();
+   if (offset) {
+      *offset = 0L; // humm suspicious.
+   }
+   const clang::FunctionDecl *decl =
+      fInterp->getLookupHelper().findFunctionProto(fDecl, method, proto);
+   return (decl != 0);
 }
 
 int TClingClassInfo::AdvanceToDecl(const clang::Decl *target_decl)
