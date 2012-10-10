@@ -249,7 +249,7 @@ void TClingClassInfo::Destruct(void *arena) const
 }
 
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
-      const char *arg, long *poffset, MatchMode mode /*= ConversionMatch*/,
+      const char *proto, long *poffset, MatchMode mode /*= ConversionMatch*/,
       InheritanceMode imode /*= WithInheritance*/) const
 {
    if (!IsValid()) {
@@ -257,7 +257,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       return tmi;
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
-   const clang::FunctionDecl *FD = lh.findFunctionArgs(fDecl, fname, arg);
+   const clang::FunctionDecl *FD = lh.findFunctionProto(fDecl, fname, proto);
    if (poffset) {
       *poffset = 0L;
    }
