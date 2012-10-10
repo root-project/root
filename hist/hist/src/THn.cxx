@@ -210,15 +210,16 @@ void THn::AllocCoordBuf() const
 {
    // Create the coordinate buffer. Outlined to hide allocation
    // from inlined functions.
-   fCoordBuf = new Int_t[fNdimensions];
+   fCoordBuf = new Int_t[fNdimensions]();
 }
 
 //______________________________________________________________________________
 void THn::InitStorage(Int_t* nbins, Int_t /*chunkSize*/)
 {
    // Initialize the storage of a histogram created via Init()
-   fCoordBuf = new Int_t[fNdimensions];
+   fCoordBuf = new Int_t[fNdimensions]();
    GetArray().Init(fNdimensions, nbins, true /*addOverflow*/);
+   fSumw2.Init(fNdimensions, nbins, true /*addOverflow*/);
 }
 
 //______________________________________________________________________________
