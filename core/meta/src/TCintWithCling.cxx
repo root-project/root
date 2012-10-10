@@ -599,7 +599,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    fInterpreter->declare("namespace std {} using namespace std;");
 
    // For the list to also include string, we have to include it now.
-   //fInterpreter->declare("#include <string>");
+   fInterpreter->declare("#include \"Rtypes.h\"\n#include <string>");
   
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
