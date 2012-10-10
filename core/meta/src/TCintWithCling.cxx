@@ -653,7 +653,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    }
 
    // Attach cling callbacks
-   fInterpreter->setCallbacks(new TClingCallbacks(fInterpreter, /*isEnabled*/true));
+   fInterpreter->setCallbacks(new TClingCallbacks(fInterpreter));
 }
 
 //______________________________________________________________________________

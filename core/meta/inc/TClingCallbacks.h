@@ -30,7 +30,7 @@ private:
    void *fLastLookupCtx;
    clang::NamespaceDecl *fROOTSpecialNamespace;
 public:
-   TClingCallbacks(cling::Interpreter* interp, bool isEnabled = false);
+   TClingCallbacks(cling::Interpreter* interp);
 
    ~TClingCallbacks();
 

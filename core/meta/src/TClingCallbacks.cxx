@@ -35,9 +35,8 @@ extern "C" {
    Decl* TCintWithCling__GetObjectDecl(TObject *obj);
 }
 
-TClingCallbacks::TClingCallbacks(cling::Interpreter* interp, bool isEnabled) 
-   : InterpreterCallbacks(interp, isEnabled), fLastLookupCtx(0), 
-     fROOTSpecialNamespace(0) {
+TClingCallbacks::TClingCallbacks(cling::Interpreter* interp) 
+   : InterpreterCallbacks(interp), fLastLookupCtx(0), fROOTSpecialNamespace(0) {
    const Decl* D = 0;
    m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &D);
    fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(const_cast<Decl*>(D));
