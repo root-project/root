@@ -44,13 +44,14 @@ private:
   llvm::SmallVector<ExternalSemaSource*, 2> Sources; // doesn't own them.
 
 public:
-
+  
   ///\brief Constructs a new multiplexing external sema source and appends the
   /// given element to it.
   ///
-  ///\param[in] source - A non-null ExternalSemaSource.
+  ///\param[in] s1 - A non-null (old) ExternalSemaSource.
+  ///\param[in] s2 - A non-null (new) ExternalSemaSource.
   ///
-  MultiplexExternalSemaSource(ExternalSemaSource &source);
+  MultiplexExternalSemaSource(ExternalSemaSource& s1, ExternalSemaSource& s2);
 
   ~MultiplexExternalSemaSource();
 

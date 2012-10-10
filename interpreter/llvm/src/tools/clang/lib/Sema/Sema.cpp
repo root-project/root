@@ -241,7 +241,7 @@ void Sema::addExternalSource(ExternalSemaSource *E) {
   if (isMultiplexExternalSource)
     ((MultiplexExternalSemaSource*) ExternalSource)->addSource(*E);
   else {
-    ExternalSource = new MultiplexExternalSemaSource(*E);
+    ExternalSource = new MultiplexExternalSemaSource(*ExternalSource, *E);
     isMultiplexExternalSource = true;
   }
 }

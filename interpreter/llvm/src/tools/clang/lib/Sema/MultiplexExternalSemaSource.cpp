@@ -20,9 +20,10 @@ using namespace clang;
 ///
 ///\param[in] source - An ExternalSemaSource.
 ///
-MultiplexExternalSemaSource::MultiplexExternalSemaSource(
-                                                   ExternalSemaSource &source) {
-  Sources.push_back(&source);
+MultiplexExternalSemaSource::MultiplexExternalSemaSource(ExternalSemaSource &s1,
+                                                         ExternalSemaSource &s2){
+  Sources.push_back(&s1);
+  Sources.push_back(&s2);
 }
 
 // pin the vtable here.
@@ -60,7 +61,7 @@ void MultiplexExternalSemaSource::ReadKnownNamespaces(
 bool MultiplexExternalSemaSource::LookupUnqualified(LookupResult &R, Scope *S){ 
   for(size_t i = 0; i < Sources.size(); ++i)
     Sources[i]->LookupUnqualified(R, S);
-    
+  
   return !R.empty();
 }
 
