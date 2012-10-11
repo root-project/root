@@ -172,6 +172,9 @@ public:
 
   void Browse(TBrowser *b) ;
 
+  static Bool_t addDirectoryStatus() ;
+  static Bool_t setAddDirectoryStatus(Bool_t flag) ;
+
 protected:
 
   RooPlot(const RooPlot& other); // cannot be copied
@@ -213,6 +216,8 @@ protected:
   Double_t _defYmax ;        // Default maximum for Yaxis (as calculated from contents)
 
   TDirectory* _dir ;         //! non-persistent
+
+  static Bool_t _addDirStatus ; // static flag controlling AutoDirectoryAdd feature
 
   ClassDef(RooPlot,2)        // Plot frame and container for graphics objects
 };

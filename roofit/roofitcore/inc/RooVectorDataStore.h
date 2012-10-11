@@ -199,7 +199,7 @@ public:
     } ;
 
     void write(Int_t i) {
-/*        std::cout << "write(" << this << ") [" << i << "] nativeReal = " << _nativeReal << " = " << _nativeReal->GetName() << " real = " << _real << " buf = " << _buf << " value = " << *_buf << " native getVal() = " << _nativeReal->getVal() << " getVal() = " << _real->getVal() << std::endl ;  */
+/*         std::cout << "write(" << this << ") [" << i << "] nativeReal = " << _nativeReal << " = " << _nativeReal->GetName() << " real = " << _real << " buf = " << _buf << " value = " << *_buf << " native getVal() = " << _nativeReal->getVal() << " getVal() = " << _real->getVal() << std::endl ;  */
       _vec[i] = *_buf ;
     }
     

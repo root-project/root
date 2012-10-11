@@ -1156,7 +1156,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	m.hesse() ;
       }
       
-      if (doSumW2==1) {
+      if (doSumW2==1 && m.getNPar()>0) {
 	
 	// Make list of RooNLLVar components of FCN
 	list<RooNLLVar*> nllComponents ;
@@ -1302,7 +1302,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	m.hesse() ;
       }
       
-      if (doSumW2==1) {
+      if (doSumW2==1 && m.getNPar()>0) {
 	
 	// Make list of RooNLLVar components of FCN
 	list<RooNLLVar*> nllComponents ;

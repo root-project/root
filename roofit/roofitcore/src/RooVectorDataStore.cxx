@@ -1151,17 +1151,15 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   // Fill values of of placeholder
   for (int i=0 ; i<numEntries() ; i++) {
     getNative(i) ;
-    
-    cIter->Reset() ;
-    vector<RooArgSet*>::iterator niter = nsetList.begin() ;
-    while((cloneArg=(RooAbsArg*)cIter->Next())) {
-      // WVE need to intervene here for condobs from ProdPdf
-      RooArgSet* argNset = *niter ;
-      cloneArg->syncCache(argNset?argNset:nset) ;
-//       if (i<10) {
-// 	cout << "RVDS::cacheArgs writing #" << i << " " ; cloneArg->Print() ;
-//       }
-      ++niter ;
+    if (weight()!=0) {    
+      cIter->Reset() ;
+      vector<RooArgSet*>::iterator niter = nsetList.begin() ;
+      while((cloneArg=(RooAbsArg*)cIter->Next())) {
+	// WVE need to intervene here for condobs from ProdPdf
+	RooArgSet* argNset = *niter ;
+	cloneArg->syncCache(argNset?argNset:nset) ;
+	++niter ;
+      }
     }
     newCache->fill() ;
   }
@@ -1243,18 +1241,25 @@ void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs, Int_t
   for (int i=firstEvent ; i<lastEvent ; i+=stepSize) {
     get(i) ;    
     Bool_t zeroWeight = (weight()==0) ;
-    if (zeroWeight) {
-//       cout << "update - slot " << i << " has zero weight, ignoring event errors" << endl ;
-      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::Ignore) ;
+    if (!zeroWeight) {
+      for (int j=0 ; j<ntv ; j++) {
+	tv[j]->_nativeReal->_valueDirty=kTRUE ;
+	tv[j]->_nativeReal->getValV(tv[j]->_nset ? tv[j]->_nset : usedNset) ;
+	tv[j]->write(i) ;
+      }
     }
-    for (int j=0 ; j<ntv ; j++) {
-      tv[j]->_nativeReal->_valueDirty=kTRUE ;
-      tv[j]->_nativeReal->getValV(tv[j]->_nset ? tv[j]->_nset : usedNset) ;
-      tv[j]->write(i) ;
-    }
-    if (zeroWeight) {
-      RooAbsReal::setEvalErrorLoggingMode(origMode) ;
-    }
+//     if (zeroWeight) {
+// //       cout << "update - slot " << i << " has zero weight, ignoring event errors" << endl ;
+//       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::Ignore) ;
+//     }
+//     for (int j=0 ; j<ntv ; j++) {
+//       tv[j]->_nativeReal->_valueDirty=kTRUE ;
+//       tv[j]->_nativeReal->getValV(tv[j]->_nset ? tv[j]->_nset : usedNset) ;
+//       tv[j]->write(i) ;
+//     }
+//     if (zeroWeight) {
+//       RooAbsReal::setEvalErrorLoggingMode(origMode) ;
+//     }
   }  
   
 //   cout << "recalculate: end of updating" << endl ;
@@ -1461,9 +1466,16 @@ void RooVectorDataStore::RealFullVector::Streamer(TBuffer &R__b)
    // Stream an object of class RooVectorDataStore::RealFullVector.
 
    if (R__b.IsReading()) {
-      R__b.ReadClassBuffer(RooVectorDataStore::RealFullVector::Class(),this);
+     R__b.ReadClassBuffer(RooVectorDataStore::RealFullVector::Class(),this);
+
+     // WVE - It seems that ROOT persistence turns null pointers to vectors into pointers to null-sized vectors 
+     //       Intervene here to remove those null-sized vectors and replace with null pointers to not break
+     //       assumptions made elsewhere in this class
+     if (_vecE  && _vecE->size()==0) { delete _vecE   ; _vecE = 0 ; }
+     if (_vecEL && _vecEL->size()==0) { delete _vecEL ; _vecEL = 0 ; }
+     if (_vecEH && _vecEH->size()==0) { delete _vecEH ; _vecEH = 0 ; }
    } else {
-      R__b.WriteClassBuffer(RooVectorDataStore::RealFullVector::Class(),this);
+     R__b.WriteClassBuffer(RooVectorDataStore::RealFullVector::Class(),this);
    }
 }
 
