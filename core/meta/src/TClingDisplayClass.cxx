@@ -1,5 +1,6 @@
 #include <cassert>
 #include <string>
+#include <set>
 
 //CLANG
 #include "clang/Frontend/CompilerInstance.h"
@@ -44,16 +45,16 @@ void AppendLocation(const clang::CompilerInstance *compiler, const clang::CXXRec
       clang::PresumedLoc loc(sourceManager.getPresumedLoc(classDecl->getLocation()));
       if (loc.isValid()) {
          if (!verbose)
-            formatted = TString::Format("%-25s%5d", gSystem->BaseName(loc.getFilename()), int(loc.getLine()));
+            formatted.Form("%-25s%5d", gSystem->BaseName(loc.getFilename()), int(loc.getLine()));
          else
-            formatted = TString::Format("FILE: %s LINE: %d\n", gSystem->BaseName(loc.getFilename()), int(loc.getLine()));
+            formatted.Form("FILE: %s LINE: %d\n", gSystem->BaseName(loc.getFilename()), int(loc.getLine()));
       }
    }
 
    //No source manager or location is invalid(?)
    if (!formatted.Length()) {
       if (!verbose)
-         formatted = TString::Format("%-30s", " ");
+         formatted.Form("%-30s", " ");
    }
 
    if (formatted.Length())
@@ -176,6 +177,8 @@ private:
    FILEPrintHelper fOut;
    const cling::Interpreter *fInterpreter;
    bool fVerbose;
+
+   mutable std::set<const clang::Decl *> fSeenDecls;
 };
 
 //______________________________________________________________________________
@@ -200,6 +203,8 @@ void ClassPrinter::DisplayAllClasses()const
    const clang::TranslationUnitDecl * const tuDecl = compiler->getASTContext().getTranslationUnitDecl();
    assert(tuDecl != 0 && "DisplayAllClasses, translation unit is empty");
 
+   fSeenDecls.clear();
+
    for (decl_iterator decl = tuDecl->decls_begin(); decl != tuDecl->decls_end(); ++decl)
       ProcessDecl(decl);
 }
@@ -209,6 +214,8 @@ void ClassPrinter::DisplayClass(const std::string &className)const
 {
    //Just in case asserts were deleted from ctor:
    assert(fInterpreter != 0 && "DisplayClass, fCompiler is null");
+
+   fSeenDecls.clear();
 
    const cling::LookupHelper &lookupHelper = fInterpreter->getLookupHelper();
    if (const clang::Decl *const decl = lookupHelper.findScope(className)) {
@@ -352,6 +359,11 @@ void ClassPrinter::DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const
 
    classDecl = classDecl->getDefinition();
    assert(classDecl != 0 && "DisplayClassDecl, invalid decl - no definition");
+
+   if (fSeenDecls.find(classDecl) != fSeenDecls.end())
+      return;
+   else
+      fSeenDecls.insert(classDecl);
 
    if (!fVerbose) {
       //Print: source file, line number, class-keyword, qualifies class name, base classes.
