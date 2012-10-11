@@ -205,7 +205,10 @@ int TClingDataMemberInfo::InternalNext()
       }
       else if (increment) {
          ++fIter;
+      } else {
+         increment = true;
       }
+
       // Handle reaching end of current decl context.
       if (!*fIter && fIterStack.size()) {
          // End of current decl context, and we have more to go.
@@ -224,7 +227,7 @@ int TClingDataMemberInfo::InternalNext()
          // Note: For C++11 we will have to check for a transparent context.
          fIterStack.push_back(fIter);
          fIter = llvm::dyn_cast<clang::DeclContext>(*fIter)->decls_begin();
-         increment = false; // avoid the incrementation
+         increment = false; // avoid the next incrementation
          continue;
       }
       if ((DK == clang::Decl::Field) || (DK == clang::Decl::EnumConstant) ||
