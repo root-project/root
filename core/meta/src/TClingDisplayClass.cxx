@@ -424,6 +424,9 @@ void ClassPrinter::DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const
       fOut.Print(classInfo.c_str());
       fOut.Print("\n");
 
+      if (classDecl->bases_begin() != classDecl->bases_end())
+         fOut.Print("Base classes: --------------------------------------------------------\n");
+
       DisplayBasesAsTree(classDecl, kBaseTreeShift);
       //now list all members.
    }
@@ -468,9 +471,6 @@ void ClassPrinter::DisplayBasesAsTree(const clang::CXXRecordDecl *classDecl, uns
 
    assert(fInterpreter != 0 && "DisplayBasesAsTree, fInterpreter is null");
    assert(fVerbose == true && "DisplayBasesAsTree, call in a simplified output");
-
-   if (classDecl->bases_begin() != classDecl->bases_end())
-      fOut.Print("Base classes: --------------------------------------------------------\n");
 
    std::string textLine;
    for (base_decl_iterator baseIt = classDecl->bases_begin(); baseIt != classDecl->bases_end(); ++baseIt) {
