@@ -47,7 +47,7 @@ void AppendLocation(const clang::CompilerInstance *compiler, const clang::CXXRec
          if (!verbose)
             formatted.Form("%-25s%5d", gSystem->BaseName(loc.getFilename()), int(loc.getLine()));
          else
-            formatted.Form("FILE: %s LINE: %d\n", gSystem->BaseName(loc.getFilename()), int(loc.getLine()));
+            formatted.Form("FILE: %s LINE: %d", gSystem->BaseName(loc.getFilename()), int(loc.getLine()));
       }
    }
 
@@ -113,7 +113,29 @@ void AppendClassSize(const clang::CompilerInstance *compiler, const clang::Recor
 
    const clang::ASTRecordLayout &layout = compiler->getASTContext().getASTRecordLayout(decl);
 
-   TString formatted(TString::Format("size=0x%x", int(layout.getSize().getQuantity())));
+   TString formatted(TString::Format("SIZE: %d", int(layout.getSize().getQuantity())));
+   textLine += formatted.Data();
+}
+
+//______________________________________________________________________________
+void AppendBaseClassOffset(const clang::CompilerInstance *compiler,
+                           const clang::CXXRecordDecl *completeClass,
+                           const clang::CXXRecordDecl *baseClass,
+                           bool isVirtual,
+                           std::string &textLine)
+{
+   assert(compiler != 0 && "AppendBaseClassOffset, 'compiler' parameter is null");
+   assert(completeClass != 0 && "AppendBaseClassOffset, 'completeClass' parameter is null");
+   assert(baseClass != 0 && "AppendBaseClassOffset, 'baseClass' parameter is null");
+
+   const clang::ASTRecordLayout &layout = compiler->getASTContext().getASTRecordLayout(completeClass);
+
+   TString formatted;
+   if (isVirtual)//format is from G__display_classinheritance.
+      formatted.Form("0x%-8x", int(layout.getVBaseClassOffset(baseClass).getQuantity()));
+   else
+      formatted.Form("0x%-8x", int(layout.getBaseClassOffset(baseClass).getQuantity()));
+
    textLine += formatted.Data();
 }
 
@@ -151,6 +173,10 @@ void FILEPrintHelper::Print(const char *msg)const
 //
 
 class ClassPrinter {
+private:
+   enum {
+      kBaseTreeShift = 3
+   };
 public:
    ClassPrinter(FILE * out, const class cling::Interpreter *interpreter);
 
@@ -172,6 +198,8 @@ private:
    void ProcessClassDecl(decl_iterator decl)const;
 
    void DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const;
+   void DisplayBasesAsList(const clang::CXXRecordDecl *classDecl)const;
+   void DisplayBasesAsTree(const clang::CXXRecordDecl *classDecl, unsigned nSpaces)const;
    void DisplayBases(const clang::CXXRecordDecl *classDecl)const;
 
    FILEPrintHelper fOut;
@@ -378,7 +406,7 @@ void ClassPrinter::DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const
       //
       fOut.Print(classInfo.c_str());
 
-      DisplayBases(classDecl);
+      DisplayBasesAsList(classDecl);
 
       fOut.Print("\n");
    } else {
@@ -396,42 +424,78 @@ void ClassPrinter::DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const
       fOut.Print(classInfo.c_str());
       fOut.Print("\n");
 
-      DisplayBases(classDecl);
+      DisplayBasesAsTree(classDecl, kBaseTreeShift);
       //now list all members.
    }
 }
 
 //______________________________________________________________________________
-void ClassPrinter::DisplayBases(const clang::CXXRecordDecl *classDecl)const
+void ClassPrinter::DisplayBasesAsList(const clang::CXXRecordDecl *classDecl)const
 {
-   assert(fInterpreter != 0 && "DisplayBases, fInterpreter is null");
-   assert(classDecl != 0 && "DisplayBases, 'classDecl' parameter is 0");
-   assert(classDecl->hasDefinition() == true && "DisplayBases, 'classDecl' parameter points to an invalid declaration");
+   assert(fInterpreter != 0 && "DisplayBasesAsList, fInterpreter is null");
+   assert(classDecl != 0 && "DisplayBasesAsList, 'classDecl' parameter is 0");
+   assert(classDecl->hasDefinition() == true && "DisplayBasesAsList, 'classDecl' parameter points to an invalid declaration");
+   assert(fVerbose == false && "DisplayBasesAsList, called in a verbose output");
 
-   if (!fVerbose) {
-      //we print a list of base classes as one line, with access specifiers and 'virtual' if needed.
-      std::string bases(": ");
-      for (base_decl_iterator baseIt = classDecl->bases_begin(); baseIt != classDecl->bases_end(); ++baseIt) {
-         if (baseIt != classDecl->bases_begin())
-            bases += ", ";
+   //we print a list of base classes as one line, with access specifiers and 'virtual' if needed.
+   std::string bases(": ");
+   for (base_decl_iterator baseIt = classDecl->bases_begin(); baseIt != classDecl->bases_end(); ++baseIt) {
+      if (baseIt != classDecl->bases_begin())
+         bases += ", ";
 
-         const clang::RecordType * const type = baseIt->getType()->getAs<clang::RecordType>();
-         if (type) {
-            const clang::CXXRecordDecl * const baseDecl = llvm::cast<clang::CXXRecordDecl>(type->getDecl()->getDefinition());
-            if (baseDecl) {
-               AppendBaseClassSpecifiers(baseIt, bases);
-               bases += ' ';
-               AppendClassName(baseDecl, bases);
-            } else
-               return;
+      const clang::RecordType * const type = baseIt->getType()->getAs<clang::RecordType>();
+      if (type) {
+         const clang::CXXRecordDecl * const baseDecl = llvm::cast<clang::CXXRecordDecl>(type->getDecl()->getDefinition());
+         if (baseDecl) {
+            AppendBaseClassSpecifiers(baseIt, bases);
+            bases += ' ';
+            AppendClassName(baseDecl, bases);
          } else
             return;
+      } else
+         return;
+   }
+
+   if (bases.length() > 2) //initial ": "
+      fOut.Print(bases.c_str());
+}
+
+//______________________________________________________________________________
+void ClassPrinter::DisplayBasesAsTree(const clang::CXXRecordDecl *classDecl, unsigned nSpaces)const
+{
+   assert(classDecl != 0 && "DisplayBasesAsTree, 'classDecl' parameter is null");
+   assert(classDecl->hasDefinition() == true && "DisplayBasesAsTree, 'classDecl' parameter points to an invalid declaration");
+
+   assert(fInterpreter != 0 && "DisplayBasesAsTree, fInterpreter is null");
+   assert(fVerbose == true && "DisplayBasesAsTree, call in a simplified output");
+
+   if (classDecl->bases_begin() != classDecl->bases_end())
+      fOut.Print("Base classes: --------------------------------------------------------\n");
+
+   std::string textLine;
+   for (base_decl_iterator baseIt = classDecl->bases_begin(); baseIt != classDecl->bases_end(); ++baseIt) {
+      textLine.assign(nSpaces, ' ');
+      const clang::RecordType * const type = baseIt->getType()->getAs<clang::RecordType>();
+      if (type) {
+         const clang::CXXRecordDecl * const baseDecl = llvm::cast<clang::CXXRecordDecl>(type->getDecl()->getDefinition());
+         if (baseDecl) {
+            AppendBaseClassOffset(fInterpreter->getCI(), classDecl, baseDecl, baseIt->isVirtual(), textLine);
+            textLine += ' ';
+            AppendBaseClassSpecifiers(baseIt, textLine);
+            textLine += ' ';
+            AppendClassName(baseDecl, textLine);
+            textLine += '\n';
+
+            fOut.Print(textLine.c_str());
+
+            DisplayBasesAsTree(baseDecl, nSpaces + kBaseTreeShift);
+
+            continue;
+         }
       }
 
-      if (bases.length() > 2) //initial ": "
-         fOut.Print(bases.c_str());
-   } else {
-
+      textLine += "<no type info for a base found>\n";
+      fOut.Print(textLine.c_str());
    }
 }
 
