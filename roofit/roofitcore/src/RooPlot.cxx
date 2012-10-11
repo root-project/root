@@ -523,7 +523,7 @@ void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label)
 
 
 //_____________________________________________________________________________
-void RooPlot::Draw(Option_t *options)
+void RooPlot::Draw(Option_t *)
 {
   // Draw this plot and all of the elements it contains. The specified options
   // only apply to the drawing of our frame. The options specified in our add...()

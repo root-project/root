@@ -1225,7 +1225,7 @@ void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs, Int_t
 
   // Refill caches of elements that require recalculation
 //   cout << "recalc error count before update = " << RooAbsReal::numEvalErrors() << endl ;
-  RooAbsReal::ErrorLoggingMode origMode = RooAbsReal::evalErrorLoggingMode() ;
+  //RooAbsReal::ErrorLoggingMode origMode = RooAbsReal::evalErrorLoggingMode() ;
   RooArgSet* ownedNset = 0 ;
   RooArgSet* usedNset = 0 ;
   if (projectedArgs && projectedArgs->getSize()>0) {
