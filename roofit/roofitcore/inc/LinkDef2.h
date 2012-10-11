@@ -71,6 +71,5 @@
 #pragma link C++ class RooQuasiRandomGenerator+ ;
 #pragma link C++ class RooRandom+ ;
 #pragma link off class RooErrorHandler+ ;
-#pragma link off class RooNag+ ;
 #endif 
  

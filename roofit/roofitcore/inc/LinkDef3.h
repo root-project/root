@@ -133,6 +133,5 @@
 #pragma link C++ options=nomap class std::map<string,TH1*>+ ;
 #pragma link C++ namespace RooCintUtils+ ;
 #pragma link off class RooErrorHandler+ ;
-#pragma link off class RooNag+ ;
 #endif 
  
