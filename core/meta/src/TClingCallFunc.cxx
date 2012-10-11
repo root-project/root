@@ -646,41 +646,134 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
    }
 }
 
-llvm::GenericValue TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues) const
+llvm::GenericValue
+TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues) const
 {
    // FIXME: We need to think about thunks for the this pointer adjustment,
-   //        and the return pointer adjustment.
+   //        and the return pointer adjustment for covariant return types.
    //if (!IsValid()) {
    //   return;
    //}
-   std::vector<llvm::GenericValue> Args;
-   llvm::FunctionType *FT = fEEFunc->getFunctionType();
-   if (FT->getNumParams() > ArgValues.size()) {
-      Error("TClingCallFunc::Invoke()", "Insufficient number of parameters supplied (need %d, have %d)",
-            (int)FT->getNumParams(), (int)ArgValues.size());
+   unsigned long num_given_args = static_cast<unsigned long>(ArgValues.size());
+   const clang::FunctionDecl *fd = fMethod->GetMethodDecl();
+   const clang::CXXMethodDecl *md = llvm::dyn_cast<clang::CXXMethodDecl>(fd);
+   const clang::DeclContext *dc = fd->getDeclContext();
+   bool isMemberFunction = true;
+   if (dc->isTranslationUnit() || dc->isNamespace() || (md && md->isStatic())) {
+      isMemberFunction = false;
    }
-   for (unsigned I = 0U, E = FT->getNumParams(); I < E; ++I) {
-      llvm::Type *TY = FT->getParamType(I);
-      if (TY->getTypeID() == llvm::Type::PointerTyID) {
-         // The cint interface passes these as integers, and we must
-         // convert them to pointers because GenericValue stores
-         // integer and pointer values in different data members.
-         Args.push_back(llvm::PTOGV(reinterpret_cast<void *>(
-                                       ArgValues[I].IntVal.getSExtValue())));
+   unsigned num_params = fd->getNumParams();
+   unsigned min_args = fd->getMinRequiredArguments();
+   if (isMemberFunction) {
+      // Adjust for the hidden this pointer first argument.
+      ++num_params;
+      ++min_args;
+   }
+   if (num_given_args < min_args) {
+      // Not all required arguments given.
+      Error("TClingCallFunc::Invoke()",
+            "Not enough function arguments given (min: %u max:%u, given: %lu)",
+            min_args, num_params, num_given_args);
+      llvm::GenericValue bad_val;
+      return bad_val;
+   }
+   else if (num_given_args > num_params) {
+      Error("TClingCallFunc::Invoke()",
+            "Too many function arguments given (min: %u max: %u, given: %lu)",
+            min_args, num_params, num_given_args);
+      llvm::GenericValue bad_val;
+      return bad_val;
+   }
+   // We need a printing policy for handling default arguments.
+   clang::ASTContext &context = fd->getASTContext();
+   clang::PrintingPolicy policy(context.getPrintingPolicy());
+   policy.SuppressTagKeyword = true;
+   policy.SuppressUnwrittenScope = true;
+   policy.SuppressInitializers = false;
+   policy.AnonymousTagLocations = false;
+   // This will be the arguments actually passed to the JIT function.
+   std::vector<llvm::GenericValue> Args;
+   // We are going to loop over the JIT function args.
+   llvm::FunctionType *ft = fEEFunc->getFunctionType();
+   for (unsigned i = 0U, e = ft->getNumParams(); i < e; ++i) {
+      if (i < num_given_args) {
+         // We have a user-provided argument value.
+         //
+         //  FIXME: We must convert the passed args, which are using
+         //         the types required by the CINT interface, to the
+         //         types the JIT expects.  This used to be done by
+         //         the function wrappers in the CINT dictionary.
+         //
+         llvm::Type *ty = ft->getParamType(i);
+         if (ty->getTypeID() == llvm::Type::PointerTyID) {
+            // The cint interface passes these as integers, and we must
+            // convert them to pointers because GenericValue stores
+            // integer and pointer values in different data members.
+            Args.push_back(llvm::PTOGV(reinterpret_cast<void *>(
+                                          ArgValues[i].IntVal.getSExtValue())));
+         }
+         else {
+            // FIXME: This is too naive, we may need to do some downcasting
+            //        here if the actual type to pass to the JIT function
+            //        is bool, char, short, int, enum, or float.
+            Args.push_back(ArgValues[i]);
+         }
       }
       else {
-         Args.push_back(ArgValues[I]);
+         // Use the default value from the decl.
+         const clang::ParmVarDecl* pvd = 0;
+         if (!isMemberFunction) {
+            pvd = fd->getParamDecl(i);
+         }
+         else {
+            // Compensate for the undeclared added this pointer value.
+            pvd = fd->getParamDecl(i-1);
+         }
+         //assert(pvd->hasDefaultArg() && "No default for argument!");
+         const clang::Expr* expr = pvd->getDefaultArg();
+         static std::string buf;
+         buf.clear();
+         llvm::raw_string_ostream out(buf);
+         expr->printPretty(out, /*Helper=*/0, policy, /*Indentation=*/0);
+         cling::StoredValueRef valref;
+         cling::Interpreter::CompilationResult cr =
+            fInterp->evaluate(out.str(), &valref);
+         if (cr == cling::Interpreter::kSuccess) {
+            const cling::Value& val = valref.get();
+            if (!val.type->isIntegralType(context) &&
+                  !val.type->isRealFloatingType() &&
+                  !val.type->isPointerType()) {
+               // Invalid argument type.
+               Error("TClingCallFunc::Invoke",
+                     "Default for argument %u: %s", i, out.str().c_str());
+               Error("TClingCallFunc::Invoke",
+                     "is not of integral, floating, or pointer type!");
+               llvm::GenericValue bad_val;
+               return bad_val;
+            }
+            // FIXME: This is too naive, we may need to do some conversions.
+            Args.push_back(val.value);
+         }
+         else {
+            Error("TClingCallFunc::Invoke",
+                  "Could not evaluate default for argument %u: %s",
+                  i, out.str().c_str());
+            llvm::GenericValue bad_val;
+            return bad_val;
+         }
       }
    }
-   llvm::GenericValue val;
-   val = fInterp->getExecutionEngine()->runFunction(fEEFunc, Args);
-   if (FT->getReturnType()->getTypeID() == llvm::Type::PointerTyID) {
-      //The cint interface requires pointers to be return as unsigned long.
-      llvm::GenericValue gv;
-      gv.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
-                              reinterpret_cast<unsigned long>(GVTOP(val)));
-      return gv;
+   llvm::GenericValue return_val;
+   return_val = fInterp->getExecutionEngine()->runFunction(fEEFunc, Args);
+   if (ft->getReturnType()->getTypeID() == llvm::Type::PointerTyID) {
+      // Note: The cint interface requires pointers to be
+      //       returned as unsigned long.
+      llvm::GenericValue converted_return_val;
+      converted_return_val.IntVal =
+         llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
+            reinterpret_cast<unsigned long>(GVTOP(return_val)));
+      return converted_return_val;
    }
-   return val;
+   return return_val;
 }
 
