@@ -717,13 +717,19 @@ const char *TClingClassInfo::Title()
    // Iterate over the redeclarations, we can have muliple definitions in the 
    // redecl chain (came from merging of pcms).
    if (const TagDecl *TD = llvm::dyn_cast<TagDecl>(GetDecl())) {
-      if ( (TD = ROOT::TMetaUtils::GetAnnotatedRedeclarable(TD)) ) 
-         if (AnnotateAttr *A = TD->getAttr<AnnotateAttr>())
+      if ( (TD = ROOT::TMetaUtils::GetAnnotatedRedeclarable(TD)) ) {
+         if (AnnotateAttr *A = TD->getAttr<AnnotateAttr>()) {
             fTitle = A->getAnnotation().str();
+            return fTitle.c_str();
+         }
+      }
    }
-   else
-      // Try to get the comment from the header file if present
-      fTitle = ROOT::TMetaUtils::GetComment(*GetDecl()).str();
+
+   // Try to get the comment from the header file if present
+   const clang::CXXRecordDecl *CRD =
+      llvm::dyn_cast<clang::CXXRecordDecl>(GetDecl());
+   if (CRD) 
+      fTitle = ROOT::TMetaUtils::GetClassComment(*CRD,0,*fInterp).str();
 
    return fTitle.c_str();
 }

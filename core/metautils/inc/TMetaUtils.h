@@ -104,6 +104,13 @@ namespace ROOT {
       //
       llvm::StringRef GetComment(const clang::Decl &decl, clang::SourceLocation *loc = 0);
 
+      // Return the class comment:
+      // class MyClass {
+      // ...
+      // ClassDef(MyClass, 1) // class comment
+      //
+      llvm::StringRef GetClassComment(const clang::CXXRecordDecl &decl, clang::SourceLocation *loc, const cling::Interpreter &interpreter);
+      
       // Scans the redeclaration chain for a definition of the redeclarable which
       // is annotated.
       //

@@ -782,3 +782,34 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
    return llvm::StringRef(commentStart, commentEnd - commentStart);
 }
 
+llvm::StringRef ROOT::TMetaUtils::GetClassComment(const clang::CXXRecordDecl &decl, clang::SourceLocation *loc, const cling::Interpreter &interpreter)
+{
+   // Find the class comment (after the ClassDef).
+
+   using namespace clang;
+   SourceLocation commentSLoc;
+   llvm::StringRef comment;
+   
+   Sema& sema = interpreter.getCI()->getSema();
+
+   for(CXXRecordDecl::decl_iterator I = decl.decls_begin(), 
+       E = decl.decls_end(); I != E; ++I) {
+      if (!(*I)->isImplicit() 
+          && (isa<CXXMethodDecl>(*I) || isa<FieldDecl>(*I) || isa<VarDecl>(*I))) {
+         // For now we allow only a special macro (ClassDef) to have meaningful comments
+         SourceLocation maybeMacroLoc = (*I)->getLocation();
+         bool isClassDefMacro = maybeMacroLoc.isMacroID() && sema.findMacroSpelling(maybeMacroLoc, "ClassDef");
+         if (isClassDefMacro) {
+            while (isa<NamedDecl>(*I) && cast<NamedDecl>(*I)->getName() != "DeclFileLine")
+               ++I;
+            comment = ROOT::TMetaUtils::GetComment(**I, &commentSLoc);
+            if (comment.size()) {
+               if (loc) 
+                  *loc = commentSLoc;
+               return comment;
+            }
+         }
+      }
+   }
+   return llvm::StringRef();
+}
