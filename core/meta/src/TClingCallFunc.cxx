@@ -651,6 +651,10 @@ llvm::GenericValue TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> 
    //}
    std::vector<llvm::GenericValue> Args;
    llvm::FunctionType *FT = fEEFunc->getFunctionType();
+   if (FT->getNumParams() > ArgValues.size()) {
+      Error("TClingCallFunc::Invoke()", "Insufficient number of parameters supplied (need %d, have %d)",
+            (int)FT->getNumParams(), (int)ArgValues.size());
+   }
    for (unsigned I = 0U, E = FT->getNumParams(); I < E; ++I) {
       llvm::Type *TY = FT->getParamType(I);
       if (TY->getTypeID() == llvm::Type::PointerTyID) {
