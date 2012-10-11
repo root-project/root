@@ -196,13 +196,14 @@ int TClingDataMemberInfo::InternalNext()
 {
    assert(!fSingleDecl && "This is not an iterator!");
    
+   bool increment = true;
    // Move to next acceptable data member.
    while (*fIter) {
       // Move to next decl in context.
       if (fFirstTime) {
          fFirstTime = false;
       }
-      else {
+      else if (increment) {
          ++fIter;
       }
       // Handle reaching end of current decl context.
@@ -210,7 +211,6 @@ int TClingDataMemberInfo::InternalNext()
          // End of current decl context, and we have more to go.
          fIter = fIterStack.back();
          fIterStack.pop_back();
-         ++fIter;
          continue;
       }
       // Handle final termination.
@@ -224,6 +224,7 @@ int TClingDataMemberInfo::InternalNext()
          // Note: For C++11 we will have to check for a transparent context.
          fIterStack.push_back(fIter);
          fIter = llvm::dyn_cast<clang::DeclContext>(*fIter)->decls_begin();
+         increment = false; // avoid the incrementation
          continue;
       }
       if ((DK == clang::Decl::Field) || (DK == clang::Decl::EnumConstant) ||
