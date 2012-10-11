@@ -26,6 +26,7 @@
 #include "TClingMethodInfo.h"
 #include "TClingTypedefInfo.h"
 #include "TClingTypeInfo.h"
+#include "TClingDisplayClass.h"
 
 #include "TROOT.h"
 #include "TApplication.h"
@@ -2891,6 +2892,15 @@ const char* TCintWithCling::GetSTLIncludePath() const
 int TCintWithCling::DisplayClass(FILE* fout, char* name, int base, int start) const
 {
    // Interface to CINT function
+   if (!name || !name[0]) {
+      //That's how G__display_class works: if name is "", when,
+      //if base != 0 we have a verbose output for every class,
+      //otherwise it's a short info for all classes. Start
+      //parameter is ignored in cling version (TODO?)
+      TClingDisplayClass::DisplayAllClasses(fout, fInterpreter, base);
+   } else
+      TClingDisplayClass::DisplayClass(fout, fInterpreter, name, true);//for the single class, info is always verbose.
+
    return G__display_class(fout, name, base, start);
 }
 
