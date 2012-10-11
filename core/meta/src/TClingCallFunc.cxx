@@ -350,11 +350,10 @@ static void evaluateArgList(cling::Interpreter *interp,
 
 void TClingCallFunc::SetArgs(const char *params)
 {
-   std::vector<cling::StoredValueRef> argVals; // Arguments' storage.
-   evaluateArgList(fInterp, params, argVals);
+   evaluateArgList(fInterp, params, fArgVals);
    clang::ASTContext &Context = fInterp->getCI()->getASTContext();
-   for (unsigned I = 0U, E = argVals.size(); I < E; ++I) {
-      const cling::Value& val = argVals[I].get();
+   for (unsigned I = 0U, E = fArgVals.size(); I < E; ++I) {
+      const cling::Value& val = fArgVals[I].get();
       if (!val.type->isIntegralType(Context) &&
             !val.type->isRealFloatingType() && !val.type->isPointerType()) {
          // Invalid argument type.
@@ -382,11 +381,10 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
    }
    // FIXME: We should eliminate the double parse here!
    fArgs.clear();
-   std::vector<cling::StoredValueRef> argVals;
-   evaluateArgList(fInterp, params, argVals);
+   evaluateArgList(fInterp, params, fArgVals);
    clang::ASTContext &Context = fInterp->getCI()->getASTContext();
-   for (unsigned I = 0U, E = argVals.size(); I < E; ++I) {
-      const cling::Value& val = argVals[I].get();
+   for (unsigned I = 0U, E = fArgVals.size(); I < E; ++I) {
+      const cling::Value& val = fArgVals[I].get();
       if (!val.type->isIntegralType(Context) &&
             !val.type->isRealFloatingType() && !val.type->isPointerType()) {
          // Invalid argument type, cint skips it, strange.

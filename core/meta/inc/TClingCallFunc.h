@@ -53,6 +53,7 @@ private:
    llvm::Function                   *fEEFunc; // Execution Engine function for current method, we do *not* own.
    void                             *fEEAddr; // Pointer to actual compiled code, we do *not* own.
    std::vector<llvm::GenericValue>   fArgs; // Arguments to pass to function.
+   std::vector<cling::StoredValueRef> fArgVals; // Arguments' storage.
 
 public:
 
