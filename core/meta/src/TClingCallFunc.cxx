@@ -261,6 +261,7 @@ void TClingCallFunc::Init()
    fMethod = 0;
    fEEFunc = 0;
    fEEAddr = 0;
+   fArgVals.clear();
    fArgs.clear();
 }
 
@@ -279,6 +280,7 @@ bool TClingCallFunc::IsValid() const
 
 void TClingCallFunc::ResetArg()
 {
+   fArgVals.clear();
    fArgs.clear();
 }
 
@@ -357,6 +359,9 @@ void TClingCallFunc::SetArgs(const char *params)
       if (!val.type->isIntegralType(Context) &&
             !val.type->isRealFloatingType() && !val.type->isPointerType()) {
          // Invalid argument type.
+         Error("TClingCallFunc::SetArgs", "Given arguments: %s", params);
+         Error("TClingCallFunc::SetArgs", "Argument number %u is not of "
+               "integral, floating, or pointer type!", I);
          break;
       }
       fArgs.push_back(val.value);
@@ -380,6 +385,7 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
       offset = 0L;
    }
    // FIXME: We should eliminate the double parse here!
+   fArgVals.clear();
    fArgs.clear();
    evaluateArgList(fInterp, params, fArgVals);
    clang::ASTContext &Context = fInterp->getCI()->getASTContext();
