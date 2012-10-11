@@ -48,12 +48,26 @@ class TClingCallFunc {
 
 private:
 
-   cling::Interpreter               *fInterp; // Cling interpreter, we do *not* own.
-   TClingMethodInfo                 *fMethod; // Current method, we own.
-   llvm::Function                   *fEEFunc; // Execution Engine function for current method, we do *not* own.
-   void                             *fEEAddr; // Pointer to actual compiled code, we do *not* own.
-   std::vector<llvm::GenericValue>   fArgs; // Arguments to pass to function.
-   std::vector<cling::StoredValueRef> fArgVals; // Arguments' storage.
+   cling::Interpreter                *fInterp;  // Cling interpreter, we do *not* own.
+   TClingMethodInfo                  *fMethod;  // Current method, we own.
+   llvm::Function                    *fEEFunc;  // Execution Engine function for current method, we do *not* own.
+   void                              *fEEAddr;  // Pointer to actual compiled code, we do *not* own.
+   std::vector<cling::StoredValueRef> fArgVals; // Argument values parsed and evaluated from a text string.
+                                                // We must keep this around because it is the owner of
+                                                // any storage created by constructor calls in the evaluated
+                                                // text string.  For example, if "2,TNamed(),3.0" is passed,
+                                                // the second argument is a reference to a constructed
+                                                // object of type TNamed (in the compiler this would be
+                                                // a temporary, but cling makes it the return value of a
+                                                // wrapper function call, so we must store it).  All of the
+                                                // value parts stored here are copied immediately into fArgs,
+                                                // but fArgs does not become the owner. 
+   std::vector<llvm::GenericValue>    fArgs;    // Arguments to pass to the JIT when calling the function.
+                                                // Some arguments may be set by value with one of the SetArg()
+                                                // overloads, and some may be set by evaluating a text string
+                                                // with SetArgs() or SetFunc() (in which case the value
+                                                // stored here is a copy of the value stored in fArgVals).
+                                                // We do *not* own the data stored here.
 
 public:
 
