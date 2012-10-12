@@ -229,7 +229,7 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
    fRetType  = kNone;
 
    ClassInfo_t *scope = 0;
-   ClassInfo_t *global = gCint->ClassInfo_Factory();
+   ClassInfo_t *global = gCint->ClassInfo_Factory(); // Note: Unused variable???
    if (cl) scope = (ClassInfo_t*)cl->GetClassInfo();
    else    scope = (ClassInfo_t*)cinfo;
   
