@@ -92,6 +92,14 @@ TClingBaseClassInfo& TClingBaseClassInfo::operator=(
    return *this;
 }
 
+TClingClassInfo *TClingBaseClassInfo::GetBase() const
+{
+   if (!IsValid()) {
+      return 0;
+   }
+   return fBaseInfo;
+}
+
 bool TClingBaseClassInfo::IsValid() const
 {
    return

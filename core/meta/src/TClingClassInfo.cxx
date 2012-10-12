@@ -25,6 +25,7 @@
 #include "TClingClassInfo.h"
 
 #include "TClassEdit.h"
+#include "TClingBaseClassInfo.h"
 #include "TClingMethodInfo.h"
 #include "Property.h"
 #include "TClingProperty.h"
@@ -238,7 +239,27 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const clang::FunctionDecl *FD = lh.findFunctionProto(fDecl, fname, proto);
    if (poffset) {
-      *poffset = 0L;
+     *poffset = 0L;
+     if (const clang::CXXMethodDecl *MD =
+           llvm::dyn_cast<clang::CXXMethodDecl>(FD)) {
+        const clang::CXXRecordDecl *definer = MD->getParent();
+        const clang::CXXRecordDecl *accessor =
+           llvm::cast<clang::CXXRecordDecl>(fDecl);
+        if (definer != accessor) {
+           // This function may not be accessible using a pointer
+           // to the declaring class, get the adjustment necessary
+           // to convert that to a pointer to the defining class.
+           TClingBaseClassInfo bi(fInterp, const_cast<TClingClassInfo*>(this));
+           while (bi.Next()) {
+              TClingClassInfo *bci = bi.GetBase();
+              if (bci->GetDecl() == definer) {
+                 // We have found the right base class, now get the
+                 // necessary adjustment.
+                 *poffset = bi.Offset();
+              }
+           }
+        }
+     }
    }
    TClingMethodInfo tmi(fInterp);
    tmi.Init(FD);

@@ -456,6 +456,9 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
    fMethod = new TClingMethodInfo(fInterp);
    fEEFunc = 0;
    fEEAddr = 0;
+   if (offset) {
+      *offset = 0L;
+   }
    if (!info->IsValid()) {
       return;
    }
@@ -471,7 +474,8 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
    fMethod->Init(decl);
    Init(decl);
    if (offset) {
-      offset = 0L;
+      // FIXME: set this to the correct offset!
+      *offset = 0L;
    }
    // FIXME: We should eliminate the double parse here!
    fArgVals.clear();
@@ -509,6 +513,9 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
    fMethod = new TClingMethodInfo(fInterp);
    fEEFunc = 0;
    fEEAddr = 0;
+   if (offset) {
+      *offset = 0L;
+   }
    if (!info->IsValid()) {
       return;
    }
@@ -520,7 +527,8 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
    fMethod->Init(FD);
    Init(FD);
    if (offset) {
-      offset = 0L;
+      // FIXME: set this to the correct offset!
+      *offset = 0L;
    }
 }
 

@@ -61,6 +61,7 @@ public:
    TClingBaseClassInfo(const TClingBaseClassInfo&);
    TClingBaseClassInfo& operator=(const TClingBaseClassInfo&);
 
+   TClingClassInfo *GetBase() const;
    int           InternalNext(int onlyDirect);
    bool          IsValid() const;
    int           Next();
