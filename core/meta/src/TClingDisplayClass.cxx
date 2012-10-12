@@ -190,12 +190,12 @@ private:
    //I have separate function for the case I want to treat them in different ways.
    //Can be only one processDecl actually.
 
-   void ProcessDecl(decl_iterator decl, bool traverseClassScopes)const;
+   void ProcessDecl(decl_iterator decl)const;
    void ProcessBlockDecl(decl_iterator decl)const;
    void ProcessFunctionDecl(decl_iterator decl)const;
    void ProcessNamespaceDecl(decl_iterator decl)const;
    void ProcessLinkageSpecDecl(decl_iterator decl)const;
-   void ProcessClassDecl(decl_iterator decl, bool traverseClassScopes)const;
+   void ProcessClassDecl(decl_iterator decl)const;
 
    void DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const;
    void DisplayBasesAsList(const clang::CXXRecordDecl *classDecl)const;
@@ -234,7 +234,7 @@ void ClassPrinter::DisplayAllClasses()const
    fSeenDecls.clear();
 
    for (decl_iterator decl = tuDecl->decls_begin(); decl != tuDecl->decls_end(); ++decl)
-      ProcessDecl(decl, true);//true == traverse nested class scopes.
+      ProcessDecl(decl);
 }
 
 //______________________________________________________________________________
@@ -267,7 +267,7 @@ void ClassPrinter::SetVerbose(bool verbose)
 }
 
 //______________________________________________________________________________
-void ClassPrinter::ProcessDecl(decl_iterator decl, bool traverseClassScopes)const
+void ClassPrinter::ProcessDecl(decl_iterator decl)const
 {
    //Just in case asserts were deleted from ctor:
    assert(fInterpreter != 0 && "ProcessDecl, fInterpreter is null");
@@ -293,7 +293,7 @@ void ClassPrinter::ProcessDecl(decl_iterator decl, bool traverseClassScopes)cons
    case clang::Decl::CXXRecord:
    case clang::Decl::ClassTemplateSpecialization:
    case clang::Decl::ClassTemplatePartialSpecialization:
-      ProcessClassDecl(decl, traverseClassScopes);
+      ProcessClassDecl(decl);
       break;
    default:
       if (llvm::dyn_cast<clang::FunctionDecl>(*decl))
@@ -316,7 +316,7 @@ void ClassPrinter::ProcessBlockDecl(decl_iterator decl)const
    assert(blockDecl != 0 && "ProcessBlockDecl, internal error - decl is not a BlockDecl");
 
    for (decl_iterator it = blockDecl->decls_begin(); it != blockDecl->decls_end(); ++it)
-      ProcessDecl(it, true);
+      ProcessDecl(it);
 }
 
 //______________________________________________________________________________
@@ -331,7 +331,7 @@ void ClassPrinter::ProcessFunctionDecl(decl_iterator decl)const
    assert(functionDecl != 0 && "ProcessFunctionDecl, internal error - decl is not a FunctionDecl");
 
    for (decl_iterator it = functionDecl->decls_begin(); it != functionDecl->decls_end(); ++it)
-      ProcessDecl(it, true);
+      ProcessDecl(it);
 }
 
 //______________________________________________________________________________
@@ -347,7 +347,7 @@ void ClassPrinter::ProcessNamespaceDecl(decl_iterator decl)const
    assert(namespaceDecl != 0 && "ProcessNamespaceDecl, 'decl' parameter is not a NamespaceDecl");
 
    for (decl_iterator it = namespaceDecl->decls_begin(); it != namespaceDecl->decls_end(); ++it)
-      ProcessDecl(it, true);
+      ProcessDecl(it);
 }
 
 //______________________________________________________________________________
@@ -361,11 +361,11 @@ void ClassPrinter::ProcessLinkageSpecDecl(decl_iterator decl)const
    assert(linkageSpec != 0 && "ProcessLinkageSpecDecl, internal error - decl is not a LinkageSpecDecl");
 
    for (decl_iterator it = linkageSpec->decls_begin(); it != linkageSpec->decls_end(); ++it)
-      ProcessDecl(it, true);
+      ProcessDecl(it);
 }
 
 //______________________________________________________________________________
-void ClassPrinter::ProcessClassDecl(decl_iterator decl, bool traverseClassScopes)const
+void ClassPrinter::ProcessClassDecl(decl_iterator decl)const
 {
    assert(fInterpreter != 0 && "ProcessClassDecl, fInterpreter is null");
    assert(*decl != 0 && "ProcessClassDecl, 'decl' parameter is not a valid iterator");
@@ -378,11 +378,9 @@ void ClassPrinter::ProcessClassDecl(decl_iterator decl, bool traverseClassScopes
 
    DisplayClassDecl(classDecl);
 
-   if (traverseClassScopes) {
-      //Now we have to check nested scopes for class declarations.
-      for (decl_iterator decl = classDecl->decls_begin(); decl != classDecl->decls_end(); ++decl)
-         ProcessDecl(decl, true);//whoooaa
-   }
+   //Now we have to check nested scopes for class declarations.
+   for (decl_iterator decl = classDecl->decls_begin(); decl != classDecl->decls_end(); ++decl)
+      ProcessDecl(decl);
 }
 
 //______________________________________________________________________________
