@@ -423,7 +423,7 @@ void TClingCallFunc::EvaluateArgList(const std::string &ArgList)
    fInterp->getLookupHelper().findArgList(ArgList, exprs);
    for (llvm::SmallVector<clang::Expr*, 4>::const_iterator I = exprs.begin(),
          E = exprs.end(); I != E; ++I) {
-      cling::StoredValueRef val = EvaluateExpression(*E);
+      cling::StoredValueRef val = EvaluateExpression(*I);
       if (!val.isValid()) {
          // Bad expression, all done.
          break;
@@ -699,6 +699,8 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
          // interface requires the 'address' to be zero.
          fEEAddr = 0;
       } else if (FP) {
+         fEEAddr = FP;
+
          // Create a llvm function we can use to call it with later.
          llvm::LLVMContext &Context = *fInterp->getLLVMContext();
          unsigned NumParams = FD->getNumParams();
@@ -711,7 +713,12 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
          for (unsigned I = 0U; I < NumParams; ++I) {
             const clang::ParmVarDecl *PVD = FD->getParamDecl(I);
             clang::QualType QT = PVD->getType();
-            Params.push_back(getLLVMType(Context, ASTCtx, QT));
+            llvm::Type *argtype = getLLVMType(Context, ASTCtx, QT);
+            if (argtype == 0) {
+               // We are not in good shape, quit while we are still alive.
+               return;
+            }
+            Params.push_back(argtype);
          }
          llvm::Type *ReturnType = 0;
          if (llvm::isa<clang::CXXConstructorDecl>(FD)) {
@@ -723,6 +730,7 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
             ReturnType = getLLVMType(Context, ASTCtx, FD->getResultType());
          }
          if (ReturnType) {
+            
             // Create the llvm function type.
             llvm::FunctionType *FT = llvm::FunctionType::get(ReturnType, Params,
                                      /*isVarArg=*/false);
@@ -742,7 +750,6 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
             // Set our state.
             fEEFunc = F;
          }
-         fEEAddr = FP;
       }
    }
 }
