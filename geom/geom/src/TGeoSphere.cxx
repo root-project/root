@@ -78,14 +78,18 @@ TGeoSphere::TGeoSphere(const char *name, Double_t rmin, Double_t rmax, Double_t 
 }
 
 //_____________________________________________________________________________
-TGeoSphere::TGeoSphere(Double_t *param, Int_t /*nparam*/)
+TGeoSphere::TGeoSphere(Double_t *param, Int_t nparam)
            :TGeoBBox(0, 0, 0)
 {
 // Default constructor specifying minimum and maximum radius
 // param[0] = Rmin
 // param[1] = Rmax
+// param[2] = theta1
+// param[3] = theta2
+// param[4] = phi1
+// param[5] = phi2
    SetShapeBit(TGeoShape::kGeoSph);
-   SetDimensions(param);
+   SetDimensions(param, nparam);
    ComputeBBox();
    SetNumberOfDivisions(20);
 }
@@ -1493,7 +1497,7 @@ void TGeoSphere::SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
 }   
 
 //_____________________________________________________________________________
-void TGeoSphere::SetDimensions(Double_t *param)
+void TGeoSphere::SetDimensions(Double_t *param, Int_t nparam)
 {
 // Set dimensions of the spherical segment starting from a list of parameters.
    Double_t rmin = param[0];
@@ -1502,11 +1506,19 @@ void TGeoSphere::SetDimensions(Double_t *param)
    Double_t theta2 = 180.;
    Double_t phi1 = 0;
    Double_t phi2 = 360.;
-//   if (nparam > 2) theta1 = param[2];
-//   if (nparam > 3) theta2 = param[3];
-//   if (nparam > 4) phi1   = param[4];
-//   if (nparam > 5) phi2   = param[5];
+   if (nparam > 2) theta1 = param[2];
+   if (nparam > 3) theta2 = param[3];
+   if (nparam > 4) phi1   = param[4];
+   if (nparam > 5) phi2   = param[5];
    SetSphDimensions(rmin, rmax, theta1, theta2, phi1, phi2);
+}   
+
+//_____________________________________________________________________________
+void TGeoSphere::SetDimensions(Double_t *param)
+{
+// Set dimensions of the spherical segment starting from a list of parameters.
+// Only takes rmin and rmax
+   SetDimensions(param,2);
 }   
 
 //_____________________________________________________________________________

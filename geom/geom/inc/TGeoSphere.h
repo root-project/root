@@ -91,6 +91,7 @@ public:
                                        Double_t theta2, Double_t phi1, Double_t phi2);
    virtual void          SetNumberOfDivisions(Int_t p);
    virtual void          SetDimensions(Double_t *param);
+   void                  SetDimensions(Double_t *param, Int_t nparam);
    virtual void          SetPoints(Double_t *points) const;
    virtual void          SetPoints(Float_t *points) const;
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
