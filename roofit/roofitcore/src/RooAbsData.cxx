@@ -42,6 +42,7 @@
 #include "RooAbsDataStore.h"
 #include "RooVectorDataStore.h"
 #include "RooTreeDataStore.h"
+#include "RooDataHist.h"
 #include "RooCompositeDataStore.h"
 #include "RooCategory.h"
 
@@ -1607,7 +1608,7 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
   // variable exists (can happen with composite datastores)
   Bool_t addWV(kFALSE) ;
   RooRealVar newweight("weight","weight",-1e9,1e9) ;
-  if (isWeighted()) {
+  if (isWeighted() && !IsA()->InheritsFrom(RooDataHist::Class())) {
     subsetVars.add(newweight) ;
     addWV = kTRUE ;
   }
