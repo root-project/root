@@ -62,8 +62,8 @@
 extern void unresolvedSymbol();
 
 namespace {
-   llvm::GenericValue convertIntegralToArg(const llvm::GenericValue& GV,
-                                         const llvm::Type* targetType) {
+   static llvm::GenericValue convertIntegralToArg(const llvm::GenericValue& GV,
+                                                  const llvm::Type* targetType) {
       // Do "extended" integral conversion, at least as CINT's dictionaries
       // would have done it: everything is a long, then gets cast to whatever
       // type is expected. "Whatever type" is an llvm type here, thus we do
@@ -122,7 +122,40 @@ namespace {
       }
       return GV;
    }
+} // unnamed namespace
+
+
+std::string TClingCallFunc::ExprToString(const clang::Expr* expr) const
+{
+   // Get a string representation of an expression
+
+   clang::PrintingPolicy policy(fInterp->getCI()->
+                                getASTContext().getPrintingPolicy());
+   policy.SuppressTagKeyword = true;
+   policy.SuppressUnwrittenScope = false;
+   policy.SuppressInitializers = false;
+   policy.AnonymousTagLocations = false;
+
+   std::string buf;
+   llvm::raw_string_ostream out(buf);
+   expr->printPretty(out, /*Helper=*/0, policy, /*Indentation=*/0);
+   out << ';'; // no value printing
+   out.flush();
+   return buf;
 }
+
+cling::StoredValueRef
+TClingCallFunc::EvaluateExpression(const clang::Expr* expr) const
+{
+   // Evaluate an Expr* and return its cling::StoredValueRef
+   cling::StoredValueRef valref;
+   cling::Interpreter::CompilationResult cr 
+      = fInterp->evaluate(ExprToString(expr), &valref);
+   if (cr == cling::Interpreter::kSuccess)
+      return valref;
+   return cling::StoredValueRef();
+}
+
 
 void TClingCallFunc::Exec(void *address) const
 {
@@ -384,38 +417,24 @@ void TClingCallFunc::SetArgArray(long *paramArr, int nparam)
    }
 }
 
-static void evaluateArgList(cling::Interpreter *interp,
-                            const std::string &ArgList,
-                            std::vector<cling::StoredValueRef> &EvaluatedArgs)
+void TClingCallFunc::EvaluateArgList(const std::string &ArgList)
 {
-   clang::PrintingPolicy Policy(interp->getCI()->
-      getASTContext().getPrintingPolicy());
-   Policy.SuppressTagKeyword = true;
-   Policy.SuppressUnwrittenScope = true;
-   Policy.SuppressInitializers = true;
-   Policy.AnonymousTagLocations = false;
-
    llvm::SmallVector<clang::Expr*, 4> exprs;
-   interp->getLookupHelper().findArgList(ArgList, exprs);
+   fInterp->getLookupHelper().findArgList(ArgList, exprs);
    for (llvm::SmallVector<clang::Expr*, 4>::const_iterator I = exprs.begin(),
          E = exprs.end(); I != E; ++I) {
-      std::string empty;
-      llvm::raw_string_ostream tmp(empty);
-      (*I)->printPretty(tmp, /*PrinterHelper=*/0, Policy, /*Indentation=*/0);
-      cling::StoredValueRef val;
-      cling::Interpreter::CompilationResult cres =
-         interp->evaluate(tmp.str(), &val);
-      if (cres != cling::Interpreter::kSuccess) {
+      cling::StoredValueRef val = EvaluateExpression(*E);
+      if (!val.isValid()) {
          // Bad expression, all done.
          break;
       }
-      EvaluatedArgs.push_back(val);
+      fArgVals.push_back(val);
    }
 }
 
 void TClingCallFunc::SetArgs(const char *params)
 {
-   evaluateArgList(fInterp, params, fArgVals);
+   EvaluateArgList(params);
    clang::ASTContext &Context = fInterp->getCI()->getASTContext();
    for (unsigned I = 0U, E = fArgVals.size(); I < E; ++I) {
       const cling::Value& val = fArgVals[I].get();
@@ -450,7 +469,7 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
    // FIXME: We should eliminate the double parse here!
    fArgVals.clear();
    fArgs.clear();
-   evaluateArgList(fInterp, params, fArgVals);
+   EvaluateArgList(params);
    clang::ASTContext &Context = fInterp->getCI()->getASTContext();
    for (unsigned I = 0U, E = fArgVals.size(); I < E; ++I) {
       const cling::Value& val = fArgVals[I].get();
@@ -747,18 +766,13 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues) const
       llvm::GenericValue bad_val;
       return bad_val;
    }
-   // We need a printing policy for handling default arguments.
-   clang::ASTContext &context = fd->getASTContext();
-   clang::PrintingPolicy policy(context.getPrintingPolicy());
-   policy.SuppressTagKeyword = true;
-   policy.SuppressUnwrittenScope = true;
-   policy.SuppressInitializers = false;
-   policy.AnonymousTagLocations = false;
+
    // This will be the arguments actually passed to the JIT function.
    std::vector<llvm::GenericValue> Args;
    std::vector<cling::StoredValueRef> ArgsStorage;
    // We are going to loop over the JIT function args.
    llvm::FunctionType *ft = fEEFunc->getFunctionType();
+   clang::ASTContext& context = fd->getASTContext();
    for (unsigned i = 0U, e = ft->getNumParams(); i < e; ++i) {
       if (i < num_given_args) {
          // We have a user-provided argument value.
@@ -777,14 +791,8 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues) const
          }
          //assert(pvd->hasDefaultArg() && "No default for argument!");
          const clang::Expr* expr = pvd->getDefaultArg();
-         static std::string buf;
-         buf.clear();
-         llvm::raw_string_ostream out(buf);
-         expr->printPretty(out, /*Helper=*/0, policy, /*Indentation=*/0);
-         cling::StoredValueRef valref;
-         cling::Interpreter::CompilationResult cr =
-            fInterp->evaluate(out.str(), &valref);
-         if (cr == cling::Interpreter::kSuccess) {
+         cling::StoredValueRef valref = EvaluateExpression(expr);
+         if (valref.isValid()) {
             ArgsStorage.push_back(valref);
             const cling::Value& val = valref.get();
             if (!val.type->isIntegralType(context) &&
@@ -792,7 +800,7 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues) const
                   !val.type->isPointerType()) {
                // Invalid argument type.
                Error("TClingCallFunc::Invoke",
-                     "Default for argument %u: %s", i, out.str().c_str());
+                     "Default for argument %u: %s", i, ExprToString(expr).c_str());
                Error("TClingCallFunc::Invoke",
                      "is not of integral, floating, or pointer type!");
                llvm::GenericValue bad_val;
@@ -804,7 +812,7 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues) const
          else {
             Error("TClingCallFunc::Invoke",
                   "Could not evaluate default for argument %u: %s",
-                  i, out.str().c_str());
+                  i, ExprToString(expr).c_str());
             llvm::GenericValue bad_val;
             return bad_val;
          }

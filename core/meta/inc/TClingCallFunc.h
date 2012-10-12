@@ -69,6 +69,11 @@ private:
                                                 // stored here is a copy of the value stored in fArgVals).
                                                 // We do *not* own the data stored here.
 
+
+   std::string ExprToString(const clang::Expr* expr) const;
+   void EvaluateArgList(const std::string &ArgList);
+   cling::StoredValueRef EvaluateExpression(const clang::Expr* expr) const;
+
 public:
 
    ~TClingCallFunc() { delete fMethod; }
