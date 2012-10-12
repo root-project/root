@@ -902,8 +902,8 @@ void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, 
    node->SetMotherVolume(this);
    fNodes->Add(node);
    TString name = TString::Format("%s_%d", vol->GetName(), copy_no);
-   if (fNodes->FindObject(name))
-      Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name.Data());
+//   if (fNodes->FindObject(name))
+//      Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name.Data());
    node->SetName(name);
    node->SetNumber(copy_no);
 }
