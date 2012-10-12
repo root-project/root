@@ -17,6 +17,7 @@
 //=============================================================================
 using namespace std;
 //=============================================================================
+// Don't set it less than 1, otherwise autotest won't be able to detect whether tests were successful or not
 const size_t g_sleeptime = 2; // in secs.
 const size_t g_multTasks = 10;
 //=============================================================================

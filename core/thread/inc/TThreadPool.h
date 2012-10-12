@@ -256,7 +256,6 @@ private:
 
          // There is a task, let's take it
          {
-            TLockGuard lock(&pThis->fMutex);
             // Find a task to perform
             if (pThis->fTasks.empty() && !pThis->fStopped) {
                pThis->DbgLog("waiting for a task");
@@ -267,12 +266,14 @@ private:
                }
 
                // No tasks, we wait for a task to come
+               TLockGuard lock(&pThis->fMutex);
                pThis->fThreadNeeded->Wait();
 
                pThis->DbgLog("done waiting for tasks");
             }
 
             {
+               TLockGuard lock(&pThis->fMutex);
                if (!pThis->fTasks.empty()) {
                   --pThis->fIdleThreads;
                   task = pThis->fTasks.front();
