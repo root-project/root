@@ -714,24 +714,26 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
          else {
             ReturnType = getLLVMType(Context, ASTCtx, FD->getResultType());
          }
-         // Create the llvm function type.
-         llvm::FunctionType *FT = llvm::FunctionType::get(ReturnType, Params,
-                                  /*isVarArg=*/false);
-         // Create the ExecutionEngine function.
-         // Note: We use weak linkage here so lookup failure does not abort.
-         llvm::Function *F = llvm::Function::Create(FT,
-                             llvm::GlobalValue::ExternalWeakLinkage,
-                             FuncName, fInterp->getModule());
-         // FIXME: This probably does not work for Windows!
-         // See ASTContext::getFunctionType() for proper way to set it.
-         // Actually this probably is not needed.
-         F->setCallingConv(llvm::CallingConv::C);
-         // Map the created ExecutionEngine function to the
-         // address found in the shareable library, so the next
-         // time we do a lookup it will be found.
-         EE->addGlobalMapping(F, FP);
-         // Set our state.
-         fEEFunc = F;
+         if (ReturnType) {
+            // Create the llvm function type.
+            llvm::FunctionType *FT = llvm::FunctionType::get(ReturnType, Params,
+                                     /*isVarArg=*/false);
+            // Create the ExecutionEngine function.
+            // Note: We use weak linkage here so lookup failure does not abort.
+            llvm::Function *F = llvm::Function::Create(FT,
+                                llvm::GlobalValue::ExternalWeakLinkage,
+                                FuncName, fInterp->getModule());
+            // FIXME: This probably does not work for Windows!
+            // See ASTContext::getFunctionType() for proper way to set it.
+            // Actually this probably is not needed.
+            F->setCallingConv(llvm::CallingConv::C);
+            // Map the created ExecutionEngine function to the
+            // address found in the shareable library, so the next
+            // time we do a lookup it will be found.
+            EE->addGlobalMapping(F, FP);
+            // Set our state.
+            fEEFunc = F;
+         }
          fEEAddr = FP;
       }
    }
