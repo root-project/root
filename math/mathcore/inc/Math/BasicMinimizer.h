@@ -159,9 +159,7 @@ public:
    const ROOT::Math::IMultiGenFunction * ObjFunction() const { return fObjFunc; }
 
    /// return pointer to used gradient object function  (NULL if gradient is not supported) 
-   const ROOT::Math::IMultiGradFunction * GradObjFunction() const { 
-      return  dynamic_cast<const ROOT::Math::IMultiGradFunction *>(fObjFunc);
-   }
+   const ROOT::Math::IMultiGradFunction * GradObjFunction() const;
 
    /// return transformation function (NULL if not having a transformation) 
    const ROOT::Math::MinimTransformFunction * TransformFunction() const;
