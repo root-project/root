@@ -61,6 +61,69 @@
 // This ought to be declared by the implementer .. oh well...
 extern void unresolvedSymbol();
 
+namespace {
+   llvm::GenericValue convertIntegralToArg(const llvm::GenericValue& GV,
+                                         const llvm::Type* targetType) {
+      // Do "extended" integral conversion, at least as CINT's dictionaries
+      // would have done it: everything is a long, then gets cast to whatever
+      // type is expected. "Whatever type" is an llvm type here, thus we do
+      // integral conversion, integral to ptr, integral to floating point.
+
+      // SetArg() takes a long (i.e. signed) or a longlong or a ulonglong:
+      const llvm::APInt& GVI = GV.IntVal;
+      const unsigned nSourceBits = GVI.getBitWidth();
+      bool sourceIsSigned = true;
+      if (nSourceBits > sizeof(long) * CHAR_BIT) {
+         // SetArg() does not have an interface for setting a ulong,
+         // so only check for [u]longlong
+         sourceIsSigned = GVI.isSignedIntN(nSourceBits);
+      }
+      switch (targetType->getTypeID()) {
+      case llvm::Type::IntegerTyID:
+         {
+            llvm::GenericValue ret;
+            const unsigned nTargetBits = targetType->getIntegerBitWidth();
+            ret.IntVal = (sourceIsSigned) ?
+               GVI.sextOrTrunc(nTargetBits) : GVI.zextOrTrunc(nTargetBits);
+            return ret;
+         }
+         break;
+
+      case llvm::Type::FloatTyID:
+         {
+            llvm::GenericValue ret;
+            ret.FloatVal = (sourceIsSigned) ?
+               (float)GVI.getSExtValue() : (float)GVI.getZExtValue();
+            return ret;
+         }
+         break;
+
+      case llvm::Type::DoubleTyID:
+         {
+            llvm::GenericValue ret;
+            ret.DoubleVal = (sourceIsSigned) ?
+               (double)GVI.getSExtValue() : (double)GVI.getZExtValue();
+            return ret;
+         }
+         break;
+
+      case llvm::Type::PointerTyID:
+         {
+            void* Ptr = (sourceIsSigned) ?
+               (void*)GVI.getSExtValue() : (void*)GVI.getZExtValue();
+            return llvm::PTOGV(Ptr);
+         }
+         break;
+
+      default:
+         Error("integralXConvertGV()",
+               "Cannot convert to parameter with TypeID %d",
+               targetType->getTypeID());
+      }
+      return GV;
+   }
+}
+
 void TClingCallFunc::Exec(void *address) const
 {
    if (!IsValid()) {
@@ -699,26 +762,8 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues) const
    for (unsigned i = 0U, e = ft->getNumParams(); i < e; ++i) {
       if (i < num_given_args) {
          // We have a user-provided argument value.
-         //
-         //  FIXME: We must convert the passed args, which are using
-         //         the types required by the CINT interface, to the
-         //         types the JIT expects.  This used to be done by
-         //         the function wrappers in the CINT dictionary.
-         //
-         llvm::Type *ty = ft->getParamType(i);
-         if (ty->getTypeID() == llvm::Type::PointerTyID) {
-            // The cint interface passes these as integers, and we must
-            // convert them to pointers because GenericValue stores
-            // integer and pointer values in different data members.
-            Args.push_back(llvm::PTOGV(reinterpret_cast<void *>(
-                                          ArgValues[i].IntVal.getSExtValue())));
-         }
-         else {
-            // FIXME: This is too naive, we may need to do some downcasting
-            //        here if the actual type to pass to the JIT function
-            //        is bool, char, short, int, enum, or float.
-            Args.push_back(ArgValues[i]);
-         }
+         const llvm::Type *ty = ft->getParamType(i);
+         Args.push_back(convertIntegralToArg(ArgValues[i], ty));
       }
       else {
          // Use the default value from the decl.
@@ -753,8 +798,8 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues) const
                llvm::GenericValue bad_val;
                return bad_val;
             }
-            // FIXME: This is too naive, we may need to do some conversions.
-            Args.push_back(val.value);
+            const llvm::Type *ty = ft->getParamType(i);
+            Args.push_back(convertIntegralToArg(val.value, ty));
          }
          else {
             Error("TClingCallFunc::Invoke",
