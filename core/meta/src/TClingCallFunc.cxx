@@ -797,7 +797,7 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues) const
             const cling::Value& val = valref.get();
             if (!val.type->isIntegralType(context) &&
                   !val.type->isRealFloatingType() &&
-                  !val.type->isPointerType()) {
+                  !val.type->canDecayToPointerType()) {
                // Invalid argument type.
                Error("TClingCallFunc::Invoke",
                      "Default for argument %u: %s", i, ExprToString(expr).c_str());
