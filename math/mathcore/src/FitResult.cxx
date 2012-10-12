@@ -90,6 +90,7 @@ FitResult::FitResult(const FitConfig & fconfig) :
       if (par.IsBound() ) { 
          double lower = (par.HasLowerLimit()) ? par.LowerLimit() : - std::numeric_limits<double>::infinity() ;
          double upper = (par.HasUpperLimit()) ? par.UpperLimit() :   std::numeric_limits<double>::infinity() ;
+         fBoundParams[i] = fParamBounds.size();
          fParamBounds.push_back(std::make_pair(lower,upper));
       }
    }
@@ -165,6 +166,7 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
       if (par.IsBound() ) { 
          double lower = (par.HasLowerLimit()) ? par.LowerLimit() : - std::numeric_limits<double>::infinity() ;
          double upper = (par.HasUpperLimit()) ? par.UpperLimit() :   std::numeric_limits<double>::infinity() ;
+         fBoundParams[ipar] = fParamBounds.size();
          fParamBounds.push_back(std::make_pair(lower,upper));
       }
    } 
@@ -256,6 +258,7 @@ FitResult & FitResult::operator = (const FitResult &rhs) {
 
    fFixedParams = rhs.fFixedParams;
    fBoundParams = rhs.fBoundParams;
+   fParamBounds = rhs.fParamBounds;
    fParams = rhs.fParams; 
    fErrors = rhs.fErrors; 
    fCovMatrix = rhs.fCovMatrix; 
@@ -454,7 +457,7 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
       os << std::left << std::setw(nw) <<  "Chi2"         << " = " << std::right << std::setw(nn) << fChi2 << std::endl;
    os << std::left << std::setw(nw) << "NDf"              << " = " << std::right << std::setw(nn) << fNdf << std::endl; 
    if (fMinimType.find("Linear") == std::string::npos) {  // no need to print this for linear fits
-      os << std::left << std::setw(nw) << "Edm"    << " = " << std::right << std::setw(nn) << fEdm << std::endl; 
+      if (fEdm >=0) os << std::left << std::setw(nw) << "Edm"    << " = " << std::right << std::setw(nn) << fEdm << std::endl; 
       os << std::left << std::setw(nw) << "NCalls" << " = " << std::right << std::setw(nn) << fNCalls << std::endl; 
    }
    for (unsigned int i = 0; i < npar; ++i) { 

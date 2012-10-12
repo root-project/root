@@ -36,31 +36,32 @@ MinimTransformFunction::MinimTransformFunction ( const IMultiGradFunction * f, c
    fIndex.reserve(ntot); 
    for (unsigned int i = 0; i < ntot; ++i ) { 
       if (types[i] ==  kFix ) 
-         fVariables.push_back( MinimizerVariable( values[i]) );           
+         fVariables.push_back( MinimTransformVariable( values[i]) );           
       else { 
          fIndex.push_back(i); 
 
          if ( types[i] ==  kDefault)
-            fVariables.push_back( MinimizerVariable() );
+            fVariables.push_back( MinimTransformVariable() );
          else { 
             std::map<unsigned int, std::pair<double,double> >::const_iterator itr = bounds.find(i); 
             assert ( itr != bounds.end() );
             double low = itr->second.first; 
             double up = itr->second.second;
             if (types[i] ==  kBounds )   
-               fVariables.push_back( MinimizerVariable( low, up, new SinVariableTransformation()));
+               fVariables.push_back( MinimTransformVariable( low, up, new SinVariableTransformation()));
             else if (types[i] ==  kLowBound)  
-               fVariables.push_back( MinimizerVariable( low, new SqrtLowVariableTransformation()));
+               fVariables.push_back( MinimTransformVariable( low, new SqrtLowVariableTransformation()));
             else if (types[i] ==  kUpBound)
-               fVariables.push_back( MinimizerVariable( up, new SqrtUpVariableTransformation()));
+               fVariables.push_back( MinimTransformVariable( up, new SqrtUpVariableTransformation()));
          }
       }
    }
 }
 
-const double * MinimTransformFunction::Transformation( const double * x) const { 
+
+void MinimTransformFunction::Transformation( const double * x, double * xext) const { 
    // transform from internal to external 
-   // result is cached inside the class
+
    unsigned int nfree = fIndex.size(); 
 
 //       std::cout << "Transform:  internal "; 
@@ -69,25 +70,24 @@ const double * MinimTransformFunction::Transformation( const double * x) const {
 
    for (unsigned int i = 0; i < nfree; ++i ) { 
       unsigned int extIndex = fIndex[i]; 
-      const MinimizerVariable & var = fVariables[ extIndex ]; 
+      const MinimTransformVariable & var = fVariables[ extIndex ]; 
       if (var.IsLimited() )  
-         fX[ extIndex ] = var.InternalToExternal( x[i] ); 
+         xext[ extIndex ] = var.InternalToExternal( x[i] ); 
       else
-         fX[ extIndex ] = x[i]; 
+         xext[ extIndex ] = x[i]; 
    }
 
 //       std::cout << "Transform:  external "; 
 //       for (int i = 0; i < fX.size(); ++i) std::cout << fX[i] << "  "; 
 //       std::cout << "\n";
 
-   return &fX.front(); 
 }
 
 void  MinimTransformFunction::InvTransformation(const double * xExt,  double * xInt) const { 
    // inverse function transformation (external -> internal)
    for (unsigned int i = 0; i < NDim(); ++i ) { 
       unsigned int extIndex = fIndex[i]; 
-      const MinimizerVariable & var = fVariables[ extIndex ];          
+      const MinimTransformVariable & var = fVariables[ extIndex ];          
       assert ( !var.IsFixed() );
       if (var.IsLimited() )  
          xInt[ i ] = var.ExternalToInternal( xExt[extIndex] ); 
@@ -100,7 +100,7 @@ void  MinimTransformFunction::InvStepTransformation(const double * x, const doub
    // inverse function transformation for steps (external -> internal)
    for (unsigned int i = 0; i < NDim(); ++i ) { 
       unsigned int extIndex = fIndex[i]; 
-      const MinimizerVariable & var = fVariables[ extIndex ];          
+      const MinimTransformVariable & var = fVariables[ extIndex ];          
       assert ( !var.IsFixed() );
       if (var.IsLimited() )  {
          // bound variables 
@@ -122,7 +122,7 @@ void  MinimTransformFunction::GradientTransformation(const double * x, const dou
    unsigned int nfree = fIndex.size(); 
    for (unsigned int i = 0; i < nfree; ++i ) { 
       unsigned int extIndex = fIndex[i]; 
-      const MinimizerVariable & var = fVariables[ extIndex ];
+      const MinimTransformVariable & var = fVariables[ extIndex ];
       assert (!var.IsFixed() );
       if (var.IsLimited() )  
          gInt[i] = gExt[ extIndex ] * var.DerivativeIntToExt( x[i] ); 
@@ -140,13 +140,13 @@ void  MinimTransformFunction::MatrixTransformation(const double * x, const doubl
    unsigned int ntot = NTot(); 
    for (unsigned int i = 0; i < nfree; ++i ) { 
       unsigned int iext = fIndex[i]; 
-      const MinimizerVariable & ivar = fVariables[ iext ];
+      const MinimTransformVariable & ivar = fVariables[ iext ];
       assert (!ivar.IsFixed()); 
       double ddi = ( ivar.IsLimited() ) ? ivar.DerivativeIntToExt( x[i] ) : 1.0; 
       // loop on j  variables  for not fixed i variables (forget that matrix is symmetric) - could be optimized 
       for (unsigned int j = 0; j < nfree; ++j ) { 
          unsigned int jext = fIndex[j]; 
-         const MinimizerVariable & jvar = fVariables[ jext ];
+         const MinimTransformVariable & jvar = fVariables[ jext ];
          double ddj = ( jvar.IsLimited() ) ? jvar.DerivativeIntToExt( x[j] ) : 1.0; 
          assert (!jvar.IsFixed() );
          covExt[ iext * ntot + jext] =  ddi * ddj * covInt[ i * nfree + j];

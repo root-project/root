@@ -22,7 +22,6 @@ namespace ROOT {
 
    namespace Math { 
 
-
       /**
          Enumeration describing the status of the variable
          The enumeration are used in the minimizer classes to categorize the variables
@@ -35,63 +34,67 @@ namespace ROOT {
          kUpBound     // variable has an upper bounds
       };
 
-/** 
-   MinimizerVariable class to perform a transformations on the 
-   variables to deal with fixed or limited variables
 
+
+/** 
+   MinimTransformVariable class 
+   Contains meta information of the variables such as bounds, fix flags and
+   deals with transformation of the variable
+   The class does not contain the values and the step size (error) of the variable
+   This is an internal class used by the MinimTransformFunction class
 
    @ingroup MultiMin
 */ 
 
 
-class MinimizerVariable { 
+class MinimTransformVariable { 
 
 public: 
 
    /** 
      Default Constructor for  an unlimited variable
    */ 
-   MinimizerVariable () : 
+   MinimTransformVariable () : 
       fFix(false), fLowBound(false), fUpBound(false), fBounds(false), 
       fTransform(0), fLower(1), fUpper(0)
    {}
 
    // constructor for fixed variable
-   MinimizerVariable (double value) : 
+   MinimTransformVariable (double value) : 
       fFix(true), fLowBound(false), fUpBound(false), fBounds(false), 
       fTransform(0), fLower(value), fUpper(value) 
    {}
 
    // constructor for double bound variable
-   MinimizerVariable (double lower, double upper, SinVariableTransformation * trafo) : 
+   MinimTransformVariable (double lower, double upper, SinVariableTransformation * trafo) : 
       fFix(false), fLowBound(false), fUpBound(false), fBounds(true),      
       fTransform(trafo),
       fLower(lower), fUpper(upper)
    {   }
 
    // constructor for lower bound variable
-   MinimizerVariable (double lower, SqrtLowVariableTransformation * trafo) : 
+   MinimTransformVariable (double lower, SqrtLowVariableTransformation * trafo) : 
       fFix(false), fLowBound(true), fUpBound(false), fBounds(false), 
       fTransform(trafo), fLower(lower), fUpper(lower) 
    {}
 
    // constructor for upper bound variable
-   MinimizerVariable (double upper, SqrtUpVariableTransformation * trafo) : 
+   MinimTransformVariable (double upper, SqrtUpVariableTransformation * trafo) : 
       fFix(false), fLowBound(true), fUpBound(false), fBounds(false), 
       fTransform(trafo), fLower(upper), fUpper(upper) 
    {}
 
    // copy constructor 
-   MinimizerVariable (const MinimizerVariable & rhs) : 
+   MinimTransformVariable (const MinimTransformVariable & rhs) : 
       fFix(rhs.fFix), fLowBound(rhs.fLowBound), fUpBound(rhs.fUpBound), fBounds(rhs.fBounds), 
       fLower(rhs.fLower), fUpper(rhs.fUpper)
    {
       // swap auto_ptr
-      fTransform.reset( const_cast<MinimizerVariable &>( rhs).fTransform.release() ) ;      
+      fTransform.reset( const_cast<MinimTransformVariable &>( rhs).fTransform.release() ) ;      
    }
 
    // assignment 
-   MinimizerVariable & operator= (const MinimizerVariable & rhs) {
+   MinimTransformVariable & operator= (const MinimTransformVariable & rhs) {
       if (&rhs == this) return *this; 
       fFix = rhs.fFix;
       fLowBound = rhs.fLowBound;  
@@ -100,7 +103,7 @@ public:
       fLower = rhs.fLower;  fUpper = rhs.fUpper;
 
       // swap auto_ptr
-      fTransform.reset( const_cast<MinimizerVariable &>( rhs).fTransform.release() ) ;     
+      fTransform.reset( const_cast<MinimTransformVariable &>( rhs).fTransform.release() ) ;     
       return *this;
    }
    
@@ -121,17 +124,17 @@ public:
 
    // internal to external transformation 
    double InternalToExternal( double x) const { 
-      return fTransform->Int2ext(x, fLower, fUpper); 
+      return (fTransform.get() ) ? fTransform->Int2ext(x, fLower, fUpper) : x;  
    }
 
    // derivative of the internal to external transformation ( d Int2Ext / d int )
    double DerivativeIntToExt ( double x) const { 
-      return fTransform->DInt2Ext( x, fLower, fUpper); 
+      return (fTransform.get() ) ? fTransform->DInt2Ext( x, fLower, fUpper) : 1.0; 
    }
 
    // etxernal to internal transformation
    double ExternalToInternal(double x) const { 
-      return fTransform->Ext2int(x, fLower, fUpper);       
+      return (fTransform.get() ) ? fTransform->Ext2int(x, fLower, fUpper) : x; 
    }
 
 private: 
@@ -151,6 +154,6 @@ private:
 } // end namespace ROOT
 
 
-#endif /* ROOT_Math_MinimizerVariable */
+#endif /* ROOT_Math_MinimTransformVariable */
 
 

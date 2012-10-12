@@ -15,6 +15,8 @@
 #include "Math/IFunction.h"
 #include "Math/IOptions.h"
 
+#include "Fit/ParameterSettings.h"
+
 #include "Minuit2/FCNAdapter.h"
 #include "Minuit2/FumiliFCNAdapter.h"
 #include "Minuit2/FCNGradAdapter.h"
@@ -263,7 +265,77 @@ bool Minuit2Minimizer::SetVariableValues(const double * x)  {
    return true; 
 }
 
+bool Minuit2Minimizer::SetVariableStepSize(unsigned int ivar, double step) { 
+   // set the step-size of an existing variable
+   // parameter must exist or return false
+   if (ivar >= fState.MinuitParameters().size() ) return false; 
+   fState.SetError(ivar, step);
+   return true; 
+}
 
+bool Minuit2Minimizer::SetVariableLowerLimit(unsigned int ivar, double lower) { 
+   // set the limits of an existing variable
+   // parameter must exist or return false
+   if (ivar >= fState.MinuitParameters().size() ) return false; 
+   fState.SetLowerLimit(ivar, lower);
+   return true; 
+}
+bool Minuit2Minimizer::SetVariableUpperLimit(unsigned int ivar, double upper ) { 
+   // set the limits of an existing variable
+   // parameter must exist or return false
+   if (ivar >= fState.MinuitParameters().size() ) return false; 
+   fState.SetUpperLimit(ivar, upper);
+   return true; 
+}
+
+bool Minuit2Minimizer::SetVariableLimits(unsigned int ivar, double lower, double upper) { 
+   // set the limits of an existing variable
+   // parameter must exist or return false
+   if (ivar >= fState.MinuitParameters().size() ) return false; 
+   fState.SetLimits(ivar, lower,upper);
+   return true; 
+}
+
+bool Minuit2Minimizer::FixVariable(unsigned int ivar) { 
+   // Fix an existing variable
+   if (ivar >= fState.MinuitParameters().size() ) return false; 
+   fState.Fix(ivar);
+   return true; 
+}
+
+bool Minuit2Minimizer::ReleaseVariable(unsigned int ivar) { 
+   // Release an existing variable
+   if (ivar >= fState.MinuitParameters().size() ) return false; 
+   fState.Release(ivar);
+   return true; 
+}
+
+bool Minuit2Minimizer::IsFixedVariable(unsigned int ivar) const { 
+   // query if variable is fixed
+   if (ivar >= fState.MinuitParameters().size() ) {
+      MN_ERROR_MSG2("Minuit2Minimizer","wrong variable index");  
+      return false; 
+   }
+   return (fState.Parameter(ivar).IsFixed() || fState.Parameter(ivar).IsConst() );
+} 
+
+bool Minuit2Minimizer::GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings & varObj) const { 
+   // retrieve variable settings (all set info on the variable)
+   if (ivar >= fState.MinuitParameters().size() ) {
+      MN_ERROR_MSG2("Minuit2Minimizer","wrong variable index");  
+      return false; 
+   }
+   const MinuitParameter & par = fState.Parameter(ivar); 
+   varObj.Set( par.Name(), par.Value(), par.Error() );
+   if (par.HasLowerLimit() ) varObj.SetLowerLimit(par.LowerLimit() );
+   else if (par.HasUpperLimit() ) varObj.SetUpperLimit(par.UpperLimit() );
+   else if (par.HasLimits() ) varObj.SetLimits(par.LowerLimit(), par.UpperLimit() );
+   if (par.IsConst() || par.IsFixed() ) varObj.Fix(); 
+   return true; 
+}
+
+
+   
 void Minuit2Minimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) { 
    // set function to be minimized
    if (fMinuitFCN) delete fMinuitFCN;

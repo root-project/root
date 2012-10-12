@@ -29,8 +29,8 @@
 
 
 
-#ifndef ROOT_Math_Minimizer
-#include "Math/Minimizer.h"
+#ifndef ROOT_Math_BasicMinimizer
+#include "Math/BasicMinimizer.h"
 #endif
 
 
@@ -48,12 +48,6 @@
 #include "Math/GSLSimAnnealing.h"
 #endif
 
-#ifndef ROOT_Math_MinimizerVariable
-#include "Math/MinimizerVariable.h"
-#endif
-
-#include <vector>
-#include <map>
 
 
 
@@ -61,7 +55,6 @@ namespace ROOT {
 
    namespace Math { 
 
-      class  MinimTransformFunction;
 
 
 //_____________________________________________________________________________________
@@ -75,7 +68,7 @@ namespace ROOT {
 
    @ingroup MultiMin
 */ 
-class GSLSimAnMinimizer : public  ROOT::Math::Minimizer {
+class GSLSimAnMinimizer : public  ROOT::Math::BasicMinimizer {
 
 public: 
 
@@ -87,7 +80,7 @@ public:
    /** 
       Destructor (no operations)
    */ 
-   ~GSLSimAnMinimizer ();  
+   virtual ~GSLSimAnMinimizer ();  
 
 private:
    // usually copying is non trivial, so we make this unaccessible
@@ -95,7 +88,7 @@ private:
    /** 
       Copy constructor
    */ 
-   GSLSimAnMinimizer(const GSLSimAnMinimizer &) : ROOT::Math::Minimizer() {} 
+   GSLSimAnMinimizer(const GSLSimAnMinimizer &) : ROOT::Math::BasicMinimizer() {} 
 
    /** 
       Assignment operator
@@ -107,92 +100,21 @@ private:
 
 public: 
 
-   /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func); 
-
-   /// set gradient the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func); 
-
-   /// set free variable 
-   virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step); 
-
-   /// set fixed variable (override if minimizer supports them )
-   virtual bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */);  
-
-   /// set lower limit variable  (override if minimizer supports them )
-   virtual bool SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower );
-   /// set upper limit variable (override if minimizer supports them )
-   virtual bool SetUpperLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double upper ); 
-   /// set upper/lower limited variable (override if minimizer supports them )
-   virtual bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double /* lower */, double /* upper */); 
-
-   /// set the value of an existing variable 
-   virtual bool SetVariableValue(unsigned int ivar, double val );
-   /// set the values of all existing variables (array must be dimensioned to the size of the existing parameters)
-   virtual bool SetVariableValues(const double * x);
-
 
    /// method to perform the minimization
    virtual  bool Minimize(); 
 
-   /// return minimum function value
-   virtual double MinValue() const { return fMinVal; } 
-
-   /// return expected distance reached from the minimum
-   virtual double Edm() const { return 0; } // not impl. }
-
-   /// return  pointer to X values at the minimum 
-   virtual const double *  X() const { return &fValues.front(); } 
-
-   /// return pointer to gradient values at the minimum 
-   virtual const double *  MinGradient() const { return 0; } // not impl.  
-
-   /// number of function calls to reach the minimum 
-   virtual unsigned int NCalls() const { return 0; } // not yet ipl.  
-
-   /// this is <= Function().NDim() which is the total 
-   /// number of variables (free+ constrained ones) 
-   virtual unsigned int NDim() const { return fDim; }   
-
-   /// number of free variables (real dimension of the problem) 
-   /// this is <= Function().NDim() which is the total 
-   virtual unsigned int NFree() const { return fDim; }  
-
-   /// minimizer provides error and error matrix
-   virtual bool ProvidesError() const { return false; } 
-
-   /// return errors at the minimum 
-   virtual const double * Errors() const { return 0; }
-
-   /** return covariance matrices elements 
-       if the variable is fixed the matrix is zero
-       The ordering of the variables is the same as in errors
-   */ 
-   virtual double CovMatrix(unsigned int , unsigned int ) const { return 0; }
-
-
-   /// return reference to the objective function
-   ///virtual const ROOT::Math::IGenFunction & Function() const; 
+   //number of calls 
+   unsigned int NCalls() const; 
 
 
 protected: 
 
 private: 
    
-   unsigned int fDim;     // dimension of the function to be minimized 
-   bool fOwnFunc;        // flag to indicate if objective function is managed 
 
    ROOT::Math::GSLSimAnnealing  fSolver; 
-   const ROOT::Math::IMultiGenFunction * fObjFunc; 
    
-   double fMinVal;                    // minimum values 
-
-   mutable std::vector<double> fValues;
-
-   std::vector<double> fSteps;
-   std::vector<std::string> fNames;
-   std::vector<ROOT::Math::EMinimVariableType> fVarTypes;  // vector specifyng the type of variables
-   std::map< unsigned int, std::pair<double, double> > fBounds; // map specifying the bound using as key the parameter index
 
 }; 
 

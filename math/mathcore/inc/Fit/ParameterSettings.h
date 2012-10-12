@@ -123,7 +123,7 @@ public:
    /// check if parameter has upper limit
    bool HasUpperLimit() const {return fHasUpperLimit; }
    /// check if is bound
-   bool IsBound() const { return fHasLowerLimit || fHasUpperLimit;  } 
+   bool IsBound() const {   return fHasLowerLimit || fHasUpperLimit;  } 
    /// check if is double bound (upper AND lower limit) 
    bool IsDoubleBound() const { return fHasLowerLimit && fHasUpperLimit;  } 
    /// return name 
@@ -143,8 +143,9 @@ public:
    /// set the step size 
    void SetStepSize(double err) {fStepSize = err;}
    /// set a double side limit, 
-   /// if low == up the parameter is fixedm if low > up the limits are removed
+   /// if low == up the parameter is fixed  if low > up the limits are removed
    void SetLimits(double low, double up) {
+      
       if ( low > up ) { 
          RemoveLimits(); 
          return; 

@@ -117,11 +117,27 @@ public:
    virtual bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */);  
    /// set variable
    virtual bool SetVariableValue(unsigned int ivar, double val);
+   // set variable values
    virtual bool SetVariableValues(const double * val);
-
+   /// set the step size of an already existing variable
+   virtual bool SetVariableStepSize(unsigned int ivar, double step );
+   /// set the lower-limit of an already existing variable 
+   virtual bool SetVariableLowerLimit(unsigned int ivar, double lower);
+   /// set the upper-limit of an already existing variable 
+   virtual bool SetVariableUpperLimit(unsigned int ivar, double upper);
+   /// set the limits of an already existing variable 
+   virtual bool SetVariableLimits(unsigned int ivar, double lower, double upper); 
+   /// fix an existing variable
+   virtual bool FixVariable(unsigned int ivar);
+   /// release an existing variable
+   virtual bool ReleaseVariable(unsigned int ivar);
+   /// query if an existing variable is fixed (i.e. considered constant in the minimization)
+   /// note that by default all variables are not fixed 
+   virtual bool IsFixedVariable(unsigned int ivar)  const;
+   /// get variable settings in a variable object (like ROOT::Fit::ParamsSettings)
+   virtual bool GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings & varObj) const;
    /// get name of variables (override if minimizer support storing of variable names)
    virtual std::string VariableName(unsigned int ivar) const;
-
    /// get index of variable given a variable given a name
    /// return -1 if variable is not found
    virtual int VariableIndex(const std::string & name) const;

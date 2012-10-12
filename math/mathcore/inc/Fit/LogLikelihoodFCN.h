@@ -129,10 +129,12 @@ public:
 
    // Use sum of the weight squared in evaluating the likelihood 
    // (this is needed for calculating the errors)
-   void UseSumOfWeightSquare() { 
+   void UseSumOfWeightSquare(bool on = true) { 
       if (fWeight == 0) return; // do nothing if it was not weighted 
-      fWeight = 2;
+      if (on) fWeight = 2;
+      else fWeight = 1;
    }
+
    
 
 protected: 

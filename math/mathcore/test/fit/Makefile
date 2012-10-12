@@ -44,8 +44,8 @@ TESTMINIMOBJ      = testMinim.$(ObjSuf)
 TESTMINIMSRC      = testMinim.$(SrcSuf)
 TESTMINIM         = testMinim$(ExeSuf)
 
-ifeq ($(shell $(ROOTCONFIG) --has-mathmore),yes)
-ifeq ($(shell $(ROOTCONFIG) --has-roofit),yes)
+ifeq ($(shell $(RC) --has-mathmore),yes)
+ifeq ($(shell $(RC) --has-roofit),yes)
 
 TESTPERFOBJ      = testFitPerf.$(ObjSuf)
 TESTPERFSRC      = testFitPerf.$(SrcSuf)

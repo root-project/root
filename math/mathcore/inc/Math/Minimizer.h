@@ -30,6 +30,10 @@
 
 
 namespace ROOT { 
+
+   namespace Fit { 
+      class ParameterSettings;
+   }
    
 
    namespace Math { 
@@ -151,35 +155,56 @@ public:
       }
       return ivar; 
    }
-   /// set free variable 
+   /// set a new free variable 
    virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step) = 0; 
-   /// set lower limit variable  (override if minimizer supports them )
+   /// set a new lower limit variable  (override if minimizer supports them )
    virtual bool SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower ) { 
       return SetLimitedVariable(ivar, name, val, step, lower, std::numeric_limits<double>::infinity() );  
    } 
-   /// set upper limit variable (override if minimizer supports them )
+   /// set a new upper limit variable (override if minimizer supports them )
    virtual bool SetUpperLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double upper ) { 
       return SetLimitedVariable(ivar, name, val, step, - std::numeric_limits<double>::infinity(), upper );  
    } 
-   /// set upper/lower limited variable (override if minimizer supports them )
-   virtual bool SetLimitedVariable(unsigned int /* ivar */ , const std::string & /* name */ , double /*val */ , double /* step  */, double /* lower */, double /* upper */) { 
-      return false;  
+   /// set a new upper/lower limited variable (override if minimizer supports them ) otherwise as default set an unlimited variable
+   virtual bool SetLimitedVariable(unsigned int ivar  , const std::string & name  , double val  , double  step , 
+                                   double /* lower */, double /* upper */) { 
+      return SetVariable(ivar, name, val, step);
    }
-   /// set fixed variable (override if minimizer supports them )
+   /// set a new fixed variable (override if minimizer supports them )
    virtual bool SetFixedVariable(unsigned int /* ivar */ , const std::string & /* name */ , double /* val */ ) { 
       return false; 
    }
-   /// set the value of an existing variable 
+   /// set the value of an already existing variable 
    virtual bool SetVariableValue(unsigned int , double ) { return false;  }
    /// set the values of all existing variables (array must be dimensioned to the size of the existing parameters)
    virtual bool SetVariableValues(const double * x) { 
       bool ret = true; 
       unsigned int i = 0;
       while ( i <= NDim() && ret) { 
-         SetVariableValue(i,x[i] ); i++; 
+         ret &= SetVariableValue(i,x[i] ); i++; 
       }
       return ret; 
    }
+   /// set the step size of an already existing variable
+   virtual bool SetVariableStepSize(unsigned int , double ) { return false;  }
+   /// set the lower-limit of an already existing variable 
+   virtual bool SetVariableLowerLimit(unsigned int , double ) { return false;  }
+   /// set the upper-limit of an already existing variable 
+   virtual bool SetVariableUpperLimit(unsigned int , double ) { return false;  }
+   /// set the limits of an already existing variable 
+   virtual bool SetVariableLimits(unsigned int ivar, double lower, double upper) { 
+      return SetVariableLowerLimit(ivar,lower) && SetVariableUpperLimit(ivar,upper);
+   }
+   /// fix an existing variable
+   virtual bool FixVariable(unsigned int) { return false; }
+   /// release an existing variable
+   virtual bool ReleaseVariable(unsigned int) { return false; }
+   /// query if an existing variable is fixed (i.e. considered constant in the minimization)
+   /// note that by default all variables are not fixed 
+   virtual bool IsFixedVariable(unsigned int) const { return false; }
+   /// get variable settings in a variable object (like ROOT::Fit::ParamsSettings)
+   virtual bool GetVariableSettings(unsigned int, ROOT::Fit::ParameterSettings & ) const {return false; }
+
 
    /// method to perform the minimization
    virtual  bool Minimize() = 0; 
@@ -187,17 +212,20 @@ public:
    /// return minimum function value
    virtual double MinValue() const = 0; 
 
-   /// return expected distance reached from the minimum
-   virtual double Edm() const = 0; 
-
    /// return  pointer to X values at the minimum 
    virtual const double *  X() const = 0; 
 
+   /// return expected distance reached from the minimum (re-implement if minimizer provides it
+   virtual double Edm() const { return -1; } 
+
    /// return pointer to gradient values at the minimum 
-   virtual const double *  MinGradient() const = 0;  
+   virtual const double *  MinGradient() const { return NULL; }
 
    /// number of function calls to reach the minimum 
-   virtual unsigned int NCalls() const = 0;    
+   virtual unsigned int NCalls() const { return 0; }
+
+   /// number of iterations to reach the minimum 
+   virtual unsigned int NIterations() const { return NCalls(); }    
 
    /// this is <= Function().NDim() which is the total 
    /// number of variables (free+ constrained ones) 
@@ -205,19 +233,20 @@ public:
 
    /// number of free variables (real dimension of the problem) 
    /// this is <= Function().NDim() which is the total 
-   virtual unsigned int NFree() const = 0;  
+   /// (re-implement if minimizer supports bounded parameters)
+   virtual unsigned int NFree() const { return NDim(); }
 
    /// minimizer provides error and error matrix
-   virtual bool ProvidesError() const = 0; 
+   virtual bool ProvidesError() const { return false; }
 
    /// return errors at the minimum 
-   virtual const double * Errors() const = 0;
+   virtual const double * Errors() const { return NULL; }
 
    /** return covariance matrices elements 
        if the variable is fixed the matrix is zero
-       The ordering of the variables is the same as in errors
+       The ordering of the variables is the same as in errors      
    */ 
-   virtual double CovMatrix(unsigned int i, unsigned int j) const = 0;  
+   virtual double CovMatrix(unsigned int /* i */ , unsigned int /*j */) const { return 0; }
 
    /** 
        Fill the passed array with the  covariance matrix elements 
