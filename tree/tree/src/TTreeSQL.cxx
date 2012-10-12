@@ -156,7 +156,7 @@ TBranch * TTreeSQL::Branch(const char *name, void *address,
    for (int i=0;i<nb;i++) {
       branch = (TBranch*)fBranches.UncheckedAt(i);
       brName = branch->GetName();
-      if (brName.Index(name) == 0) {
+      if (brName.CompareTo(name) == 0) {
          // Now if the branch exists in db, root gives a warning and exit
          // Dealing with duplicate branch has been done, but not tested yet.
          // So if you want to allow duplicate branch, just comment Fatal() line and uncomment commented
