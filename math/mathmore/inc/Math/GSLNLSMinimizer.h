@@ -29,8 +29,8 @@
 
 
 
-#ifndef ROOT_Math_Minimizer
-#include "Math/Minimizer.h"
+#ifndef ROOT_Math_BasicMinimizer
+#include "Math/BasicMinimizer.h"
 #endif
 
 
@@ -46,8 +46,8 @@
 #include "Math/FitMethodFunction.h"
 #endif
 
-#ifndef ROOT_Math_MinimizerVariable
-#include "Math/MinimizerVariable.h"
+#ifndef ROOT_Math_MinimTransformVariable
+#include "Math/MinimTransformVariable.h"
 #endif
 
 
@@ -159,7 +159,7 @@ private:
 
    @ingroup MultiMin
 */ 
-class GSLNLSMinimizer : public  ROOT::Math::Minimizer {
+class GSLNLSMinimizer : public  ROOT::Math::BasicMinimizer {
 
 public: 
 
@@ -179,7 +179,7 @@ private:
    /** 
       Copy constructor
    */ 
-   GSLNLSMinimizer(const GSLNLSMinimizer &) : ROOT::Math::Minimizer() {} 
+   GSLNLSMinimizer(const GSLNLSMinimizer &) : ROOT::Math::BasicMinimizer() {} 
 
    /** 
       Assignment operator
@@ -197,48 +197,24 @@ public:
    /// set gradient the function to minimize
    virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func); 
 
-   /// set free variable 
-   virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step); 
-
-   /// set lower limited variable 
-   virtual bool SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower );
-   /// set upper limited variable
-   virtual bool SetUpperLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double upper ); 
-   /// set upper/lower limited variable 
-   virtual bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double lower , double upper ); 
-   /// set fixed variable
-   virtual bool SetFixedVariable(unsigned int ivar , const std::string & name , double val );  
-
-   /// set the value of an existing variable 
-   virtual bool SetVariableValue(unsigned int ivar, double val );
-   /// set the values of all existing variables (array must be dimensioned to the size of existing parameters)
-   virtual bool SetVariableValues(const double * x);
-
+ 
    /// method to perform the minimization
    virtual  bool Minimize(); 
 
-   /// return minimum function value
-   virtual double MinValue() const { return fMinVal; } 
 
    /// return expected distance reached from the minimum
    virtual double Edm() const { return fEdm; } // not impl. }
 
-   /// return  pointer to X values at the minimum 
-   virtual const double *  X() const { return &fValues.front(); } 
 
    /// return pointer to gradient values at the minimum 
    virtual const double *  MinGradient() const; 
 
    /// number of function calls to reach the minimum 
-   virtual unsigned int NCalls() const { return (fObjFunc) ? fObjFunc->NCalls() : 0; } 
-
-   /// this is <= Function().NDim() which is the total 
-   /// number of variables (free+ constrained ones) 
-   virtual unsigned int NDim() const { return fDim; }   
+   virtual unsigned int NCalls() const { return (fChi2Func) ? fChi2Func->NCalls() : 0; } 
 
    /// number of free variables (real dimension of the problem) 
    /// this is <= Function().NDim() which is the total 
-   virtual unsigned int NFree() const { return fNFree; }  
+//   virtual unsigned int NFree() const { return fNFree; }  
 
    /// minimizer provides error and error matrix
    virtual bool ProvidesError() const { return true; } 
@@ -262,29 +238,22 @@ public:
 
 protected: 
 
+
 private: 
    
 
-   unsigned int fDim;        // dimension of the function to be minimized 
    unsigned int fNFree;      // dimension of the internal function to be minimized 
    unsigned int fSize;        // number of fit points (residuals)
  
 
    ROOT::Math::GSLMultiFit * fGSLMultiFit;        // pointer to GSL multi fit solver 
-   const ROOT::Math::FitMethodFunction * fObjFunc;      // pointer to Least square function
+   const ROOT::Math::FitMethodFunction * fChi2Func;      // pointer to Least square function
    
-   double fMinVal;                                // minimum function value
    double fEdm;                                   // edm value
    double fLSTolerance;                           // Line Search Tolerance
-   std::vector<double> fValues;           
    std::vector<double> fErrors;
    std::vector<double> fCovMatrix;              //  cov matrix (stored as cov[ i * dim + j] 
-   std::vector<double> fSteps;
-   std::vector<std::string> fNames;
    std::vector<LSResidualFunc> fResiduals;   //! transient Vector of the residual functions
-
-   std::vector<ROOT::Math::EMinimVariableType> fVarTypes;  // vector specifyng the type of variables
-   std::map< unsigned int, std::pair<double, double> > fBounds; // map specifying the bound using as key the parameter index
 
 
 }; 

@@ -105,6 +105,25 @@ public:
 
    /// set the value of an existing variable 
    virtual bool SetVariableValue(unsigned int , double );
+
+   /// set the step size of an existing variable
+   virtual bool SetVariableStepSize(unsigned int , double );
+   /// set the lower-limit of an existing variable 
+   virtual bool SetVariableLowerLimit(unsigned int , double );
+   /// set the upper-limit of an existing variable 
+   virtual bool SetVariableUpperLimit(unsigned int , double );
+   /// set the limits of an existing variable 
+   virtual bool SetVariableLimits(unsigned int ivar, double lower, double upper);
+   /// fix an existing variable
+   virtual bool FixVariable(unsigned int);
+   /// release an existing variable
+   virtual bool ReleaseVariable(unsigned int);
+   /// query if an existing variable is fixed (i.e. considered constant in the minimization)
+   /// note that by default all variables are not fixed 
+   virtual bool IsFixedVariable(unsigned int) const;
+   /// get variable settings in a variable object (like ROOT::Fit::ParamsSettings)
+   virtual bool GetVariableSettings(unsigned int, ROOT::Fit::ParameterSettings & ) const;
+
  
    /// method to perform the minimization
    virtual  bool Minimize(); 
@@ -234,14 +253,20 @@ protected:
    /// retrieve error matrix from TMinuit
    void RetrieveErrorMatrix(); 
 
+   /// check TMinuit instance
+   bool CheckMinuitInstance() const; 
+
+   ///check parameter
+   bool CheckVarIndex(unsigned int ivar) const; 
+
 private: 
 
    bool fUsed;
    bool fMinosRun; 
    unsigned int fDim; 
-   std::vector<double> fParams;
-   std::vector<double> fErrors;
-   std::vector<double> fCovar; 
+   std::vector<double> fParams;   // vector of output values
+   std::vector<double> fErrors;   // vector of output errors
+   std::vector<double> fCovar;    // vector storing the covariance matrix
 
    ROOT::Minuit::EMinimizerType fType; 
    TMinuit * fMinuit; 
