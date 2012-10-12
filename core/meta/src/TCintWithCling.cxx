@@ -1926,7 +1926,7 @@ const char* TCintWithCling::GetInterpreterTypeName(const char* name, Bool_t full
       return 0;
    }
    if (full) {
-      return cl.FullName();
+      return cl.FullName(*fNormalizedCtxt);
    }
    // Well well well, for backward compatibility we need to act a bit too
    // much like CINT.
@@ -3381,7 +3381,7 @@ const char* TCintWithCling::ClassInfo_FileName(ClassInfo_t* cinfo) const
 const char* TCintWithCling::ClassInfo_FullName(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   return TClinginfo->FullName();
+   return TClinginfo->FullName(*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
@@ -3464,7 +3464,7 @@ Long_t TCintWithCling::BaseClassInfo_Tagnum(BaseClassInfo_t* bcinfo) const
 const char* TCintWithCling::BaseClassInfo_FullName(BaseClassInfo_t* bcinfo) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
-   return TClinginfo->FullName();
+   return TClinginfo->FullName(*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________

@@ -54,7 +54,7 @@
 using namespace clang;
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0)
 {
    clang::TranslationUnitDecl *TU =
       interp->getCI()->getASTContext().getTranslationUnitDecl();
@@ -62,6 +62,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
    InternalNext();
    fFirstTime = true;
    fDecl = 0;
+   fType = 0;
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
@@ -71,14 +72,15 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
       Info("TClingClassInfo(name)", "looking up class name: %s\n", name);
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
-   const clang::Decl *decl = lh.findScope(name);
+   const clang::Type *type = 0;
+   const clang::Decl *decl = lh.findScope(name,&type);
    if (!decl) {
       if (gDebug > 0) {
          Info("TClingClassInfo(name)", "cling class not found name: %s\n",
               name);
       }
       std::string buf = TClassEdit::InsertStd(name);
-      decl = lh.findScope(buf);
+      decl = lh.findScope(buf,&type);
       if (!decl) {
          if (gDebug > 0) {
             Info("TClingClassInfo(name)", "cling class not found name: %s\n",
@@ -99,12 +101,14 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
       }
    }
    fDecl = decl;
+   if (type) fType = type->getAs<clang::RecordType>(); // NOTE: getAs removes some typedefs.
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
-                                 const clang::Decl *decl)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(decl), fTitle("")
+                                 const clang::RecordType &type)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(&type), fTitle("")
 {
+   fDecl = fType->getDecl();
 }
 
 long TClingClassInfo::ClassProperty() const
@@ -306,6 +310,7 @@ void TClingClassInfo::Init(const char *name)
    fDescend = false;
    fIter = clang::DeclContext::decl_iterator();
    fDecl = 0;
+   fType = 0;
    fIterStack.clear();
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const clang::Decl *decl = lh.findScope(name);
@@ -336,6 +341,10 @@ void TClingClassInfo::Init(const char *name)
       }
    }
    fDecl = decl;
+   if (decl) {
+      const clang::RecordDecl *rdecl = llvm::dyn_cast<clang::RecordDecl>(decl);
+      if (rdecl) fType = rdecl->getASTContext().getRecordType(rdecl)->getAs<clang::RecordType>();
+   } 
 }
 
 void TClingClassInfo::Init(int tagnum)
@@ -409,7 +418,10 @@ int TClingClassInfo::InternalNext()
    if (!*fIter) {
       // Iterator is already invalid.
       if (fFirstTime && fDecl) {
-         Error("TClingClassInfo::InternalNext","Next called but iteration not prepared for %s!",FullName());
+         std::string buf;
+         clang::PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
+         llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameForDiagnostic(buf, Policy, /*Qualified=*/false);         
+         Error("TClingClassInfo::InternalNext","Next called but iteration not prepared for %s!",buf.c_str());
       }
       return 0;
    }
@@ -450,6 +462,7 @@ int TClingClassInfo::InternalNext()
          if (!*fIter) {
             // We have reached the end of the translation unit, all done.
             fDecl = 0;
+            fType = 0;
             return 0;
          }
       }
@@ -482,6 +495,11 @@ int TClingClassInfo::InternalNext()
          }
          // Iterator is now valid.
          fDecl = *fIter;
+         fType = 0;
+         if (fDecl) {
+            const clang::RecordDecl *rdecl = llvm::dyn_cast<clang::RecordDecl>(fDecl);
+            if (rdecl) fType = rdecl->getASTContext().getRecordType(rdecl)->getAs<clang::RecordType>();
+         }
          return 1;
       }
    }
@@ -674,22 +692,30 @@ const char *TClingClassInfo::FileName() const
    return 0;
 }
 
-const char *TClingClassInfo::FullName() const
+const char *TClingClassInfo::FullName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
+   // Return QualifiedName.
+   
    if (!IsValid()) {
       return 0;
    }
    // Note: This *must* be static because we are returning a pointer inside it!
    static std::string buf;
    buf.clear();
-   clang::PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
-   llvm::dyn_cast<clang::NamedDecl>(fDecl)->
-   getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+   if (fType) {
+      clang::QualType type(fType,0);
+      ROOT::TMetaUtils::GetNormalizedName(buf, type, *fInterp, normCtxt);
+   } else {
+      clang::PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
+      llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+   }
    return buf.c_str();
 }
 
 const char *TClingClassInfo::Name() const
 {
+   // Return unqualified name.
+
    if (!IsValid()) {
       return 0;
    }
@@ -697,8 +723,7 @@ const char *TClingClassInfo::Name() const
    static std::string buf;
    buf.clear();
    clang::PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
-   llvm::dyn_cast<clang::NamedDecl>(fDecl)->
-   getNameForDiagnostic(buf, Policy, /*Qualified=*/false);
+   llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameForDiagnostic(buf, Policy, /*Qualified=*/false);
    return buf.c_str();
 }
 

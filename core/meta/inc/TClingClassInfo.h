@@ -40,6 +40,12 @@ namespace clang {
 class Decl;
 }
 
+namespace ROOT {
+   namespace TMetaUtils {
+      class TNormalizedCtxt;
+   }
+}
+
 class TClingClassInfo {
 
 private:
@@ -48,9 +54,10 @@ private:
    bool                  fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
    bool                  fDescend; // Flag for signaling the need to descend on this advancement.
    clang::DeclContext::decl_iterator fIter; // Current decl in scope.
-   const clang::Decl    *fDecl; // Current decl, we do *not* own.
+   const clang::Decl       *fDecl; // Current decl, we do *not* own.
+   const clang::RecordType *fType; // Type representing the decl (conserves typedefs like Double32_t). (we do *not* own)
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
-   std::string           fTitle; // The meta info for the class.
+   std::string              fTitle; // The meta info for the class.
 public: // Types
 
    enum MatchMode {
@@ -68,7 +75,7 @@ public:
    explicit TClingClassInfo(); // NOT IMPLEMENTED
    explicit TClingClassInfo(cling::Interpreter *);
    explicit TClingClassInfo(cling::Interpreter *, const char *);
-   explicit TClingClassInfo(cling::Interpreter *, const clang::Decl *);
+   explicit TClingClassInfo(cling::Interpreter *, const clang::RecordType &);
 
    const clang::Decl   *GetDecl() const { return fDecl; }
    long                 ClassProperty() const;
@@ -99,7 +106,7 @@ public:
    int                  Size() const;
    long                 Tagnum() const;
    const char          *FileName() const;
-   const char          *FullName() const;
+   const char          *FullName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const char          *Name() const;
    const char          *Title();
    const char          *TmpltName() const;
