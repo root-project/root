@@ -342,6 +342,10 @@ void BasicMinimizer::PrintResult() const {
       std::cout << fNames[i] << "\t  = " << fValues[i] << std::endl; 
 }
 
+const ROOT::Math::IMultiGradFunction * BasicMinimizer::GradObjFunction() const { 
+      return  dynamic_cast<const ROOT::Math::IMultiGradFunction *>(fObjFunc);
+}
+
 const MinimTransformFunction * BasicMinimizer::TransformFunction() const { 
    return dynamic_cast<const MinimTransformFunction *>(fObjFunc);
 }
