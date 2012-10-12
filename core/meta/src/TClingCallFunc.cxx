@@ -613,6 +613,8 @@ static llvm::Type *getLLVMType(llvm::LLVMContext &Context,
    }
    else if (QT->isVoidType()) {
       TY = llvm::Type::getVoidTy(Context);
+   } else {
+      Error("getLLVMType()", "Cannot handle type ID %d", QT->getTypeClass());
    }
    return TY;
 }
