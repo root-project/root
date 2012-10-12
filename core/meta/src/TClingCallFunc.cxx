@@ -693,6 +693,7 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues) const
    policy.AnonymousTagLocations = false;
    // This will be the arguments actually passed to the JIT function.
    std::vector<llvm::GenericValue> Args;
+   std::vector<cling::StoredValueRef> ArgsStorage;
    // We are going to loop over the JIT function args.
    llvm::FunctionType *ft = fEEFunc->getFunctionType();
    for (unsigned i = 0U, e = ft->getNumParams(); i < e; ++i) {
@@ -739,6 +740,7 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues) const
          cling::Interpreter::CompilationResult cr =
             fInterp->evaluate(out.str(), &valref);
          if (cr == cling::Interpreter::kSuccess) {
+            ArgsStorage.push_back(valref);
             const cling::Value& val = valref.get();
             if (!val.type->isIntegralType(context) &&
                   !val.type->isRealFloatingType() &&
