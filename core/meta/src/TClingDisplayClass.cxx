@@ -75,15 +75,40 @@ void AppendClassName(const clang::CXXRecordDecl *classDecl, std::string &name)
 {
    assert(classDecl != 0 && "AppendClassName, 'classDecl' parameter is null");
 
-   if (const clang::NamedDecl * const namedClassDecl = llvm::dyn_cast<clang::NamedDecl>(classDecl)) {
-      const clang::LangOptions langOpts;
-      const clang::PrintingPolicy printingPolicy(langOpts);
-      std::string tmp;
-      //Name for diagnostic will include template arguments if any.
-      namedClassDecl->getNameForDiagnostic(tmp, printingPolicy, true);//true == qualified name.
-      name += tmp;
-   } else
-      name += "<unknown class>";
+   const clang::LangOptions langOpts;
+   const clang::PrintingPolicy printingPolicy(langOpts);
+   std::string tmp;
+   //Name for diagnostic will include template arguments if any.
+   classDecl->getNameForDiagnostic(tmp, printingPolicy, true);//true == qualified name.
+   name += tmp;
+}
+
+//______________________________________________________________________________
+void AppendMemberFunctionName(const clang::CXXMethodDecl *methodDecl, unsigned indent, std::string &name)
+{
+   assert(methodDecl != 0 && "AppendClassName, 'classDecl' parameter is null");
+
+   switch (methodDecl->getAccess()) {
+   case clang::AS_private:
+      name += "private: ";
+      break;
+   case clang::AS_protected:
+      name += "protected: ";
+      break;
+   case clang::AS_public:
+   case clang::AS_none://I do not thing it's possible.
+      name += "public: ";
+   }
+
+   if (methodDecl->getKind() == clang::Decl::CXXConstructor) {
+      //TODO: none of functions I've tried prints a ctor.
+   } else {
+      if (methodDecl->isStatic())
+         name += "static ";
+
+      llvm::raw_string_ostream out(name);
+      methodDecl->print(out, indent, true);
+   }
 }
 
 //______________________________________________________________________________
@@ -200,7 +225,7 @@ private:
    void DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const;
    void DisplayBasesAsList(const clang::CXXRecordDecl *classDecl)const;
    void DisplayBasesAsTree(const clang::CXXRecordDecl *classDecl, unsigned nSpaces)const;
-   void DisplayBases(const clang::CXXRecordDecl *classDecl)const;
+   void DisplayMembers(const clang::CXXRecordDecl *classDecl)const;
 
    FILEPrintHelper fOut;
    const cling::Interpreter *fInterpreter;
@@ -433,6 +458,7 @@ void ClassPrinter::DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const
 
       DisplayBasesAsTree(classDecl, 0);
       //now list all members.
+      DisplayMembers(classDecl);
    }
 }
 
@@ -500,6 +526,39 @@ void ClassPrinter::DisplayBasesAsTree(const clang::CXXRecordDecl *classDecl, uns
 
       textLine += "<no type info for a base found>\n";
       fOut.Print(textLine.c_str());
+   }
+}
+
+//______________________________________________________________________________
+void ClassPrinter::DisplayMembers(const clang::CXXRecordDecl *classDecl)const
+{
+   assert(classDecl != 0 && "DisplayMembers, 'classDecl' parameter is null");
+
+   typedef clang::CXXRecordDecl::method_iterator method_iterator;
+   typedef clang::CXXRecordDecl::ctor_iterator ctor_iterator;
+
+   std::string textLine;
+
+   if (classDecl->ctor_begin() != classDecl->ctor_end())
+      fOut.Print("List of ctors: ---------------------------------------------------\n");
+
+   for (ctor_iterator ctor = classDecl->ctor_begin(); ctor != classDecl->ctor_end(); ++ctor) {
+      textLine.assign(kBaseTreeShift, ' ');
+      AppendMemberFunctionName(*ctor, 0, textLine);
+      fOut.Print(textLine.c_str());
+      fOut.Print("\n");
+   }
+
+   if (classDecl->method_begin() != classDecl->method_end())
+      fOut.Print("List of member functions: ----------------------------------------\n");
+
+   for (method_iterator method = classDecl->method_begin(); method != classDecl->method_end(); ++method) {
+      if (method->getKind() == clang::Decl::CXXConstructor)
+         continue;
+      textLine.assign(kBaseTreeShift, ' ');
+      AppendMemberFunctionName(*method, 0, textLine);
+      fOut.Print(textLine.c_str());
+      fOut.Print("\n");
    }
 }
 
