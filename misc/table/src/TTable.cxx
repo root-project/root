@@ -145,6 +145,7 @@
 #include "TClass.h"
 #include "TBrowser.h"
 #include "TString.h"
+#include "TInterpreter.h"
 #include "Api.h"
 #include "TDataSetIter.h"
 #include "TTable.h"
@@ -780,14 +781,9 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
  //
  //  Load file
    Double_t rmin[3],rmax[3];
-   switch(G__loadfile((Char_t *)exprFileName)) {
-      case G__LOADFILE_SUCCESS:
-      case G__LOADFILE_DUPLICATE:
-         break;
-      default:
-         Error("EntryLoop","Error: loading file %s",exprFileName);
-         G__unloadfile((Char_t *)exprFileName);
-         return kFALSE; // can not load file
+   if (gInterpreter->LoadFile((Char_t *)exprFileName) < 0) {
+      Error("EntryLoop","Error: loading file %s",exprFileName);
+      return kFALSE; // can not load file
    }
 
    // Float_t  Selection(Float_t *results[], void *address[], int& i$, int n$)
@@ -837,7 +833,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
 #ifdef BYTECODE
 #  define CALLMETHOD callfunc.Exec(0);
 #else
-#  define CALLMETHOD G__calc(buf);
+#  define CALLMETHOD gInterpreter->ProcessLineFast(buf);
 #endif
 
 #define TAKEACTION_BEGIN                                                                    \
@@ -1026,7 +1022,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
             break;
       };
    }
-   G__unloadfile((Char_t *)exprFileName);
+   gInterpreter->UnloadFile((Char_t *)exprFileName);
    delete [] addressArray;
    return kTRUE;
 }
