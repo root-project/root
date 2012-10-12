@@ -833,6 +833,11 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
    ClassInfo_t *globals = gInterpreter->ClassInfo_Factory();
    CallFunc_t *callfunc = gInterpreter->CallFunc_Factory();
    gInterpreter->CallFunc_SetFunc(callfunc,globals,funcName,argtypes,&offset);
+
+   gInterpreter->CallFunc_SetArg(callfunc,(Long_t)(&results[0]));   // give 'Float_t *results[5]'     as 1st argument
+   gInterpreter->CallFunc_SetArg(callfunc,(Long_t)(addressArray));  // give 'void    *addressArray[]' as 2nd argument
+   gInterpreter->CallFunc_SetArg(callfunc,(Long_t)(&i));            // give 'int& i$'                 as 3nd argument
+   gInterpreter->CallFunc_SetArg(callfunc,(Long_t)(&nRows));        // give 'int& n$= nRows           as 4th argument
 #else
    char buf[200];
    sprintf(buf,"%s((Float_t*)(%ld),(void**)(%ld),*(int*)(%ld),*(int*)(%ld))"
