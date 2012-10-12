@@ -279,6 +279,10 @@ const char *TClingTypedefInfo::TrueName() const
    static std::string truename;
    truename.clear();
    const clang::TypedefDecl *td = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
+   clang::QualType underlyingType = td->getUnderlyingType();
+   if (underlyingType->isBooleanType()) {
+      return "bool";
+   }
    truename = td->getUnderlyingType().getAsString();
    return truename.c_str();
 }
@@ -314,14 +318,16 @@ const char *TClingTypedefInfo::Title()
    // Iterate over the redeclarations, we can have muliple definitions in the 
    // redecl chain (came from merging of pcms).
    if (const TypedefNameDecl *TND = llvm::dyn_cast<TypedefNameDecl>(GetDecl())) {
-      if ( (TND = ROOT::TMetaUtils::GetAnnotatedRedeclarable(TND)) )
-         if (AnnotateAttr *A = TND->getAttr<AnnotateAttr>())
+      if ( (TND = ROOT::TMetaUtils::GetAnnotatedRedeclarable(TND)) ) {
+         if (AnnotateAttr *A = TND->getAttr<AnnotateAttr>()) {
             fTitle = A->getAnnotation().str();
+            return fTitle.c_str();
+         }
+      }
    }
-   else
-      // Try to get the comment from the header file if present
-      fTitle = ROOT::TMetaUtils::GetComment(*GetDecl()).str();
 
+   // Try to get the comment from the header file if present
+   fTitle = ROOT::TMetaUtils::GetComment(*GetDecl()).str();
    return fTitle.c_str();
 }
 
