@@ -9,6 +9,7 @@ set(MATHCORE_HEADERS TRandom.h
   TRandom1.h TRandom2.h TRandom3.h TVirtualFitter.h TKDTree.h TKDTreeBinning.h TStatistic.h 
   Math/IParamFunction.h Math/IFunction.h Math/ParamFunctor.h Math/Functor.h 
   Math/Minimizer.h Math/MinimizerOptions.h Math/IntegratorOptions.h Math/IOptions.h 
+  Math/BasicMinimizer.h Math/MinimTransformFunction.h Math/MinimTransformVariable.h   
   Math/Integrator.h Math/VirtualIntegrator.h Math/AllIntegrationTypes.h Math/AdaptiveIntegratorMultiDim.h 
   Math/IntegratorMultiDim.h Math/Factory.h Math/FitMethodFunction.h Math/GaussIntegrator.h 
   Math/GaussLegendreIntegrator.h Math/RootFinder.h Math/IRootFinderMethod.h Math/RichardsonDerivator.h 
