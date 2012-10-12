@@ -456,7 +456,14 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
    fMethod = new TClingMethodInfo(fInterp);
    fEEFunc = 0;
    fEEAddr = 0;
+   if (!info->IsValid()) {
+      return;
+   }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
+   if (strcmp(params,")")==0) {
+      // CINT accepted ) as meaning no parameter.
+      params = "";
+   }
    const clang::FunctionDecl *decl = lh.findFunctionArgs(info->GetDecl(), method, params);
    if (!decl) {
       return;
