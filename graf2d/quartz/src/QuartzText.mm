@@ -28,10 +28,12 @@ namespace Quartz {
 namespace {
 
 //______________________________________________________________________________
-void GetTextColorForIndex(Color_t colorIndex, Float_t &r, Float_t &g, Float_t &b)
+void GetTextColorForIndex(Color_t colorIndex, Float_t &r, Float_t &g, Float_t &b, Float_t &a)
 {
-   if (const TColor * const color = gROOT->GetColor(colorIndex))
+   if (const TColor * const color = gROOT->GetColor(colorIndex)) {
       color->GetRGB(r, g, b);
+      a = color->GetAlpha();
+   }
 }
 
 }
@@ -69,8 +71,8 @@ TextLine::TextLine(const char *textLine, CTFontRef font, Color_t color)
       throw std::runtime_error("TextLine: color space");
 
    Float_t rgba[] = {0.f, 0.f, 0.f, 1.f};
-   GetTextColorForIndex(color, rgba[0], rgba[1], rgba[2]);
-   const CGFloat cgRgba[] = {rgba[0], rgba[1], rgba[2], 1.};
+   GetTextColorForIndex(color, rgba[0], rgba[1], rgba[2], rgba[3]);
+   const CGFloat cgRgba[] = {rgba[0], rgba[1], rgba[2], rgba[3]};
 
    const CFScopeGuard<CGColorRef> textColor(CGColorCreate(rgbColorSpace.Get(), cgRgba));
    //Not clear from docs, if textColor.Get() can be 0.
@@ -114,8 +116,8 @@ TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font, Color_t
       throw std::runtime_error("TextLine: color space");
 
    Float_t rgba[] = {0.f, 0.f, 0.f, 1.f};
-   GetTextColorForIndex(color, rgba[0], rgba[1], rgba[2]);
-   const CGFloat cgRgba[] = {rgba[0], rgba[1], rgba[2], 1.};
+   GetTextColorForIndex(color, rgba[0], rgba[1], rgba[2], rgba[3]);
+   const CGFloat cgRgba[] = {rgba[0], rgba[1], rgba[2], rgba[3]};
 
    const CFScopeGuard<CGColorRef> textColor(CGColorCreate(rgbColorSpace.Get(), cgRgba));
    //Not clear from docs, if textColor.Get() can be 0.
