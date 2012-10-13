@@ -257,35 +257,35 @@ private:
          // There is a task, let's take it
          {
             // Find a task to perform
+            TLockGuard lock(&pThis->fMutex);
             if (pThis->fTasks.empty() && !pThis->fStopped) {
                pThis->DbgLog("waiting for a task");
 
-               if(pThis->fThreads.size() == pThis->fIdleThreads) {
+               if (pThis->fThreads.size() == pThis->fIdleThreads) {
                   TLockGuard l(&pThis->fMutexAllTasksDone);
                   pThis->fAllTasksDone->Broadcast();
                }
 
                // No tasks, we wait for a task to come
-               TLockGuard lock(&pThis->fMutex);
                pThis->fThreadNeeded->Wait();
 
                pThis->DbgLog("done waiting for tasks");
             }
+         }
 
-            {
-               TLockGuard lock(&pThis->fMutex);
-               if (!pThis->fTasks.empty()) {
-                  --pThis->fIdleThreads;
-                  task = pThis->fTasks.front();
-                  pThis->fTasks.pop();
+         {
+            TLockGuard lock(&pThis->fMutex);
+            if (!pThis->fTasks.empty()) {
+               --pThis->fIdleThreads;
+               task = pThis->fTasks.front();
+               pThis->fTasks.pop();
 
-                  pThis->DbgLog("get the task");
-               } else if(pThis->fThreads.size() == pThis->fIdleThreads) {
-                  TLockGuard l(&pThis->fMutexAllTasksDone);
-                  pThis->fAllTasksDone->Broadcast();
-               }
-               pThis->DbgLog("done Check <<<<");
+               pThis->DbgLog("get the task");
+            } else if (pThis->fThreads.size() == pThis->fIdleThreads) {
+               TLockGuard l(&pThis->fMutexAllTasksDone);
+               pThis->fAllTasksDone->Broadcast();
             }
+            pThis->DbgLog("done Check <<<<");
          }
 
          // Execute the task
