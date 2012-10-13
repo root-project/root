@@ -1892,7 +1892,7 @@ namespace RootCsg {
       PLIST& polyList = Polys();
       UInt_t i;
       for (i=0;i < polyList.size(); i++) {
-         TGBinder binder(fMesh,i);
+         TGBinder binder(*this, i);
          polyList[i].SetPlane(compute_plane(binder));
       }
    }
