@@ -143,7 +143,9 @@ public:
    TEveBrowser(UInt_t w, UInt_t h);
    virtual ~TEveBrowser() {}
 
-   void ReallyDelete();
+   virtual void ReallyDelete();
+   virtual void CloseTab(Int_t id);
+   virtual void CloseWindow();
 
    void InitPlugins(Option_t *opt="FI");
 
@@ -157,6 +159,8 @@ public:
    TGHorizontalFrame* GetTopMenuFrame() const { return fTopMenuFrame; }
 
    void HideBottomTab();
+
+   void SanitizeTabCounts();
 
    ClassDef(TEveBrowser, 0); // Specialization of TRootBrowser for Eve.
 };

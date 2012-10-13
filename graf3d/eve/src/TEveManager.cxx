@@ -133,7 +133,6 @@ TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window, Option_t* opt) :
 
    // Build GUI
    fBrowser   = new TEveBrowser(w, h);
-   fBrowser->Connect("CloseWindow()", "TEveManager", this, "CloseEveWindow()");
 
    // ListTreeEditor
    fBrowser->StartEmbedding(0);
@@ -223,6 +222,7 @@ TEveManager::~TEveManager()
    fHighlight->DecDenyDestroy();
    fSelection->DecDenyDestroy();
 
+   gROOT->GetListOfBrowsables()->Remove(fMacroFolder);
    delete fMacroFolder;
    
    delete fGeometryAliases;
@@ -233,9 +233,8 @@ TEveManager::~TEveManager()
 
    fLTEFrame->DeleteWindow();
 
-   fBrowser->Disconnect("CloseWindow()", this, "CloseEveWindow()");
-   fBrowser->GetMainFrame()->DontCallClose();
-   fBrowser->GetMainFrame()->CloseWindow();
+   fBrowser->DontCallClose();
+   fBrowser->TRootBrowser::CloseWindow();
 }
 
 //______________________________________________________________________________
@@ -322,6 +321,7 @@ TEveViewer* TEveManager::SpawnNewViewer(const char* name, const char* title,
          // in TEveWindowManager.
          // Also to store closed windows.
          slot = TEveWindow::CreateWindowInTab(fBrowser->GetTabRight());
+         fBrowser->SanitizeTabCounts();
       }
    }
    else
@@ -917,7 +917,7 @@ void TEveManager::ClearROOTClassSaved()
 //______________________________________________________________________________
 void TEveManager::CloseEveWindow()
 {
-   // Close button haas been clicked on EVE main window (browser).
+   // Close button has been clicked on EVE main window (browser).
    // Cleanup and terminate application.
 
    TGMainFrame *mf = (TGMainFrame*) gTQSender;

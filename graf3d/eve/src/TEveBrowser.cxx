@@ -531,7 +531,7 @@ namespace
 {
 enum EEveMenu_e {
    kNewMainFrameSlot, kNewTabSlot,
-   kNewViewer,  kNewScene,  kNewProjector,
+   kNewViewer,  kNewScene,
    kNewBrowser, kNewCanvas, kNewCanvasExt, kNewTextEditor, kNewHtmlBrowser,
    kSel_PS_Ignore, kSel_PS_Element, kSel_PS_Projectable, kSel_PS_Compound,
    kSel_PS_PableCompound, kSel_PS_Master, kSel_PS_END,
@@ -561,7 +561,6 @@ TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
    fEvePopup->AddSeparator();
    fEvePopup->AddEntry("New &Viewer",         kNewViewer);
    fEvePopup->AddEntry("New &Scene",          kNewScene);
-   fEvePopup->AddEntry("New &Projector",      kNewProjector);
    fEvePopup->AddSeparator();
    fEvePopup->AddEntry("New &Browser",        kNewBrowser);
    fEvePopup->AddEntry("New &Canvas",         kNewCanvas);
@@ -617,6 +616,9 @@ TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
    fPreMenuFrame->ChangeOptions(fPreMenuFrame->GetOptions() | kRaisedFrame);
    fTopMenuFrame->Layout();
    fTopMenuFrame->MapSubwindows();
+
+   // Rename "Close Window" to "Close Eve"
+   fMenuFile->GetEntry(kCloseWindow)->GetLabel()->SetString("Close Eve");
 }
 
 /******************************************************************************/
@@ -644,12 +646,6 @@ void TEveBrowser::EveMenu(Int_t id)
       }
       case kNewScene: {
          gEve->SpawnNewScene("Scena Mica");
-         break;
-      }
-      case kNewProjector: {
-         TEveElement* pr = (TEveElement*) (gROOT->GetClass("TEveProjectionManager")->New());
-         pr->SetElementNameTitle("Projector", "User-created projector.");
-         gEve->AddToListTree(pr, kTRUE);
          break;
       }
       case kNewBrowser: {
@@ -778,19 +774,67 @@ TGFileBrowser* TEveBrowser::MakeFileBrowser()
    fb->SetBrowser(tb);
    fb->SetNewBrowser(this);
    gROOT->GetListOfBrowsers()->Remove(tb);
+   // This guy is never used and stays in list-of-cleanups after destruction.
+   // So let's just delete it now.
+   delete tb->GetContextMenu();
    return fb;
 }
 
 //______________________________________________________________________________
 void TEveBrowser::ReallyDelete()
 {
-   // Really delete the browser and the this GUI.
+   // Override from TRootBrowser. We need to be more brutal as fBrowser is
+   // not set in Eve case.
 
-   delete this;    // will in turn delete this object
+   delete this;
 }
 
+//______________________________________________________________________________
+void TEveBrowser::CloseTab(Int_t id)
+{
+   // Virtual from TRootBrowser. Need to intercept closing of Eve tabs.
+
+   // Check if this is an Eve window and destroy accordingly.
+   TGCompositeFrame *pcf = fTabRight->GetTabContainer(id);
+   TGFrameElement   *fe  = (TGFrameElement *) pcf->GetList()->First();
+   if (fe)
+   {
+      TEveCompositeFrame *ecf = dynamic_cast<TEveCompositeFrame*>(fe->fFrame);
+      if (ecf)
+      {
+         ecf->GetEveWindow()->DestroyWindowAndSlot();
+         return;
+      }
+   }
+
+   // Fallback to standard tab destruction
+   TRootBrowser::CloseTab(id);
+}
+
+//______________________________________________________________________________
+void TEveBrowser::CloseWindow()
+{
+   // Virtual from TGMainFrame. Calls TEveManager::Terminate().
+
+   TEveManager::Terminate();
+}
+
+//______________________________________________________________________________
 void TEveBrowser::HideBottomTab()
 {
+   // Hide the bottom tab (usually holding command-line widget).
+
    fV2->HideFrame(fHSplitter);
    fV2->HideFrame(fH2);
+}
+
+//______________________________________________________________________________
+void TEveBrowser::SanitizeTabCounts()
+{
+   // TRootBrowser keeps (somewhat unnecessarily) counters for number ob tabs
+   // on each position. Eve bastardizes the right tab so we have to fix the counters
+   // when a new window is added ... it doesn't seem to be needed when it is removed.
+
+   fNbTab[TRootBrowser::kRight] = fTabRight->GetNumberOfTabs();
+   fCrTab[TRootBrowser::kRight] = fTabRight->GetNumberOfTabs() - 1;
 }
