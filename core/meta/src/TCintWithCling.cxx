@@ -181,7 +181,6 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
 extern "C" 
 void TCintWithCling__UpdateListsOnUnloaded(const cling::Transaction &T) {
    TGlobal *global = 0;
-   const char* name = 0;
    TCollection* globals = gROOT->GetListOfGlobals();
    for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
        I != E; ++I)
@@ -189,8 +188,7 @@ void TCintWithCling__UpdateListsOnUnloaded(const cling::Transaction &T) {
               DI = I->begin(), DE = I->end(); DI != DE; ++DI) {
 
          if (const VarDecl* VD = dyn_cast<VarDecl>(*DI)) {
-            name = VD->getNameAsString().c_str();
-            global = (TGlobal*)globals->FindObject(name);
+            global = (TGlobal*)globals->FindObject(VD->getNameAsString().c_str());
             if (global) {
                globals->Remove(global);
                if (!globals->IsOwner())
