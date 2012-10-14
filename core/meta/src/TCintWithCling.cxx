@@ -188,7 +188,7 @@ void TCintWithCling__UpdateListsOnUnloaded(const cling::Transaction &T) {
       for (DeclGroupRef::const_iterator
               DI = I->begin(), DE = I->end(); DI != DE; ++DI) {
 
-         if (const VarDecl* VD = dyn_cast<VarDecl>(I->getSingleDecl())) {
+         if (const VarDecl* VD = dyn_cast<VarDecl>(*DI)) {
             name = VD->getNameAsString().c_str();
             global = (TGlobal*)globals->FindObject(name);
             if (global) {
