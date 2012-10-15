@@ -181,6 +181,7 @@ $(CINTDLLDIRDLLS)/%.dll: $(CINTDLLDIRL)/G__c_%.o
 	$(CINTDLLSOEXTCMD)
 
 core/metautils/src/stlLoader_%.cc: $(ROOT_SRCDIR)/core/metautils/src/stlLoader.cc
+	$(MAKEDIR)
 	cp -f $< $@
 
 core/metautils/src/stlLoader_%.o: core/metautils/src/stlLoader_%.cc
