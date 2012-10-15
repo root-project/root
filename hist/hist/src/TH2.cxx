@@ -25,6 +25,7 @@
 #include "TObjString.h"
 #include "TVirtualHistPainter.h"
 
+
 ClassImp(TH2)
 
 //______________________________________________________________________________
@@ -2197,7 +2198,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
    //
    //   if option "d" is specified, the profile is drawn in the current pad.
    //
-   //   if option "o" original axis range of the taget axes will be
+   //   if option "o" , the original axis range of the target axis will be
    //   kept, but only bins inside the selected range will be filled.
    //
    //   The option can also be used to specify the projected profile error type.
@@ -2550,6 +2551,95 @@ void TH2::PutStats(Double_t *stats)
    fTsumwy  = stats[4];
    fTsumwy2 = stats[5];
    fTsumwxy = stats[6];
+}
+
+//______________________________________________________________________________
+TH1D* TH2::QuantilesX( Double_t prob, const char * name) const { 
+   // Compute the X distribution of quantiles in the other variable Y
+   // name is the name of the returned histogram
+   // prob is the probability content for the quantile (0.5 is the defult for the median)
+   // An approximate error for the quantile is computed assuming that the distribution in 
+   // the other variable is normal. 
+   return DoQuantiles(true, name, prob); 
+}
+
+//______________________________________________________________________________
+TH1D* TH2::QuantilesY( Double_t prob, const char * name) const { 
+   // Compute the Y distribution of quantiles in the other variable X
+   // name is the name of the returned histogram
+   // prob is the probability content for the quantile (0.5 is the defult for the median)
+   // An approximate error for the quantile is computed assuming that the distribution in 
+   // the other variable is normal. 
+   return DoQuantiles(false, name, prob); 
+}
+//______________________________________________________________________________
+TH1D* TH2::DoQuantiles(bool onX, const char * name, Double_t prob) const { 
+   // impelmentation of quantiles for x or y 
+   TAxis *outAxis = 0;
+   TAxis *inAxis = 0;
+   if ( onX )   {
+      outAxis = GetXaxis();
+      inAxis = GetYaxis();
+   }  else {
+      outAxis = GetYaxis();
+      inAxis = GetXaxis();
+   }
+
+   // build first name of returned histogram 
+   TString qname = name; 
+   if (qname.IsNull() || qname == "_qx" || qname == "_qy") {
+      const char * qtype = (onX) ? "qx" : "qy";
+      qname = TString::Format("%s_%s_%3.2f",GetName(),qtype, prob);
+   }
+   // check if the histogram is already existing
+   TH1D *h1=0;
+   //check if histogram with identical name exist
+   TObject *h1obj = gROOT->FindObject(qname);
+   if (h1obj) { 
+      h1 = dynamic_cast<TH1D*>(h1obj);
+      if (!h1) {
+         Error("DoQuantiles","Histogram with name %s must be a TH1D and is a %s",qname.Data(),h1obj->ClassName());
+         return 0;
+      }
+   }
+   if (h1) {
+      h1->Reset();
+   } else { 
+      // create the histogram
+      h1 = new TH1D(qname, GetTitle(), 1, 0, 1);
+   }
+   // set the bin content
+   Int_t firstOutBin = outAxis->GetFirst();
+   Int_t lastOutBin = outAxis->GetLast();
+   const TArrayD *xbins = outAxis->GetXbins();
+   if (xbins->fN == 0) 
+      h1->SetBins(lastOutBin-firstOutBin+1,outAxis->GetBinLowEdge(firstOutBin),outAxis->GetBinUpEdge(lastOutBin));
+   else
+      h1->SetBins(lastOutBin-firstOutBin+1,&xbins->fArray[firstOutBin-1]);
+
+   // set the bin content of the histogram
+  Double_t pp[1];
+  pp[0] = prob;
+
+  TH1D * slice = 0;
+  for (int ibin = inAxis->GetFirst() ; ibin <= inAxis->GetLast() ; ++ibin) {
+    Double_t qq[1];
+    // do a projection on the opposite axis
+    slice = DoProjection(!onX, "tmp",ibin,ibin,"");
+    if (!slice) break; 
+    if (slice->GetSum() == 0) continue;
+    slice->GetQuantiles(1,qq,pp);
+    h1->SetBinContent(ibin,qq[0]);
+    // compute error using normal approximation
+    // quantile error  ~  sqrt (q*(1-q)/ *( n * f(xq) ) from Kendall
+    // where f(xq) is the p.d.f value at the quantile xqp
+    Double_t n = slice->GetEffectiveEntries();
+    Double_t f = TMath::Gaus(qq[0], slice->GetRMS(), kTRUE); 
+    Double_t error = TMath::Sqrt( prob*(1.-prob)/ ( n * f) );
+    h1->SetBinError(ibin, error);
+  }
+  if (slice) delete slice; 
+  return h1;
 }
 
 //______________________________________________________________________________

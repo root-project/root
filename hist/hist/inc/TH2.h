@@ -56,6 +56,7 @@ protected:
    virtual Int_t     BufferFill(Double_t x, Double_t y, Double_t w);
    virtual TH1D     *DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const;
    virtual TProfile *DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const;
+   virtual TH1D     *DoQuantiles(bool onX, const char *name, Double_t prob) const;
    virtual void      DoFitSlices(bool onX, TF1 *f1, Int_t firstbin, Int_t lastbin, Int_t cut, Option_t *option, TObjArray* arr);
 
    Int_t    BufferFill(Double_t, Double_t) {return -2;} //may not use
@@ -116,6 +117,8 @@ public:
          TH1D      *ProjectionX(const char *name="_px", Int_t firstybin=0, Int_t lastybin=-1, Option_t *option="") const; // *MENU*
          TH1D      *ProjectionY(const char *name="_py", Int_t firstxbin=0, Int_t lastxbin=-1, Option_t *option="") const; // *MENU*
    virtual void     PutStats(Double_t *stats);
+   TH1D            *QuantilesX(Double_t prob = 0.5, const char * name = "_qx" ) const;
+   TH1D            *QuantilesY(Double_t prob = 0.5, const char * name = "_qy" ) const;
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinContent(Int_t bin, Double_t content);
    virtual void     SetBinContent(Int_t binx, Int_t biny, Double_t content) { SetBinContent(GetBin(binx, biny), content); }
