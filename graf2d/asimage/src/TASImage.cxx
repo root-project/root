@@ -4489,6 +4489,7 @@ void TASImage::DrawDashZTLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
       x0 = x;
       y0 = y;
       iDash = 0;
+      xend = x + q;
 
       if (q > 0) {
          while ((x < xend) && (y < yend)) {
