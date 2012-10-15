@@ -1767,8 +1767,12 @@ TH1D *TH3::ProjectionX(const char *name, Int_t iymin, Int_t iymax, Int_t izmin, 
       originalRange = kTRUE; 
       opt.Remove(opt.First("o"),1);
    }
-  
-   TH1D * h1 = DoProject1D(name, GetTitle(), this->GetXaxis(), computeErrors, originalRange,true,true);
+
+   // in case of default name append the parent name  
+   TString hname = name; 
+   if (hname == "_px") hname = TString::Format("%s%s", GetName(), name);
+    
+   TH1D * h1 = DoProject1D(hname, GetTitle(), this->GetXaxis(), computeErrors, originalRange,true,true);
 
    // restore original range
    if (GetYaxis()->TestBit(TAxis::kAxisRange)) GetYaxis()->SetRange(iyminOld,iymaxOld);
@@ -1836,8 +1840,12 @@ TH1D *TH3::ProjectionY(const char *name, Int_t ixmin, Int_t ixmax, Int_t izmin, 
       originalRange = kTRUE; 
       opt.Remove(opt.First("o"),1);
    }
+
+   // in case of default name append the parent name  
+   TString hname = name; 
+   if (hname == "_py") hname = TString::Format("%s%s", GetName(), name);
   
-   TH1D * h1 = DoProject1D(name, GetTitle(), this->GetYaxis(), computeErrors, originalRange, true, true);
+   TH1D * h1 = DoProject1D(hname, GetTitle(), this->GetYaxis(), computeErrors, originalRange, true, true);
 
    // restore axis range
    if (GetXaxis()->TestBit(TAxis::kAxisRange)) GetXaxis()->SetRange(ixminOld,ixmaxOld);
@@ -1907,7 +1915,11 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
       opt.Remove(opt.First("o"),1);
    }
 
-   TH1D * h1 =  DoProject1D(name, GetTitle(), this->GetZaxis(), computeErrors, originalRange, true, true);
+   // in case of default name append the parent name  
+   TString hname = name; 
+   if (hname == "_pz") hname = TString::Format("%s%s", GetName(), name);
+
+   TH1D * h1 =  DoProject1D(hname, GetTitle(), this->GetZaxis(), computeErrors, originalRange, true, true);
 
    // restore the range
    if (GetXaxis()->TestBit(TAxis::kAxisRange)) GetXaxis()->SetRange(ixminOld,ixmaxOld);
