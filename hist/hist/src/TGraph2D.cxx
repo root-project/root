@@ -309,6 +309,7 @@ TGraph2D::TGraph2D(TH2 *h2)
    // Graph2D constructor with a TH2 (h2) as input.
    // Only the h2's bins within the X and Y axis ranges are used.
    // Empty bins, recognized when both content and errors are zero, are excluded.
+
    Build(h2->GetNbinsX()*h2->GetNbinsY());
 
    TString gname = "Graph2D_from_" + TString(h2->GetName());
@@ -394,15 +395,15 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
    // filename is assumed to contain at least three columns of numbers.
    // For files separated by a specific delimiter different from ' ' and '\t' (e.g. ';' in csv files)
    // you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
-   // e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';') 
-   // used once (e.g. "1;1") or in a combined way (" 1;,;;  1"). 
+   // e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';')
+   // used once (e.g. "1;1") or in a combined way (" 1;,;;  1").
    // Note in that case, the instanciation is about 2 times slower.
 
    Double_t x, y, z;
    TString fname = filename;
    gSystem->ExpandPathName(fname);
 
-   ifstream infile(fname.Data());
+   std::ifstream infile(fname.Data());
    if (!infile.good()) {
       MakeZombie();
       Error("TGraph2D", "Cannot open file: %s, TGraph2D is Zombie", filename);
@@ -466,7 +467,7 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
 
       // Looping
       while (std::getline(infile, line, '\n')) {
-         if (line[line.size() - 1] == char(13)) {  // removing DOS CR character 
+         if (line[line.size() - 1] == char(13)) {  // removing DOS CR character
             line.erase(line.end() - 1, line.end()) ;
          }
          if (line != "") {
@@ -588,6 +589,16 @@ void TGraph2D::Build(Int_t n)
          fDirectory->Append(this, kTRUE);
       }
    }
+}
+
+
+//______________________________________________________________________________
+void TGraph2D::Browse(TBrowser *)
+{
+   // Browse
+
+   Draw("p0");
+   gPad->Update();
 }
 
 
@@ -891,6 +902,7 @@ void TGraph2D::FitPanel()
    // Display a GUI panel with all graph fit options.
    //
    //   See class TFitEditor for example
+
    if (!gPad)
       gROOT->MakeDefCanvas();
 
@@ -915,8 +927,7 @@ TAxis *TGraph2D::GetXaxis() const
 {
    // Get x axis of the graph.
 
-   //if (!gPad) return 0;
-   TH1 *h = ((TGraph2D*)this)->GetHistogram();
+   TH1 *h = ((TGraph2D*)this)->GetHistogram("empty");
    if (!h) return 0;
    return h->GetXaxis();
 }
@@ -927,8 +938,7 @@ TAxis *TGraph2D::GetYaxis() const
 {
    // Get y axis of the graph.
 
-   //if (!gPad) return 0;
-   TH1 *h = ((TGraph2D*)this)->GetHistogram();
+   TH1 *h = ((TGraph2D*)this)->GetHistogram("empty");
    if (!h) return 0;
    return h->GetYaxis();
 }
@@ -939,8 +949,7 @@ TAxis *TGraph2D::GetZaxis() const
 {
    // Get z axis of the graph.
 
-   //if (!gPad) return 0;
-   TH1 *h = ((TGraph2D*)this)->GetHistogram();
+   TH1 *h = ((TGraph2D*)this)->GetHistogram("empty");
    if (!h) return 0;
    return h->GetZaxis();
 }
@@ -1362,24 +1371,24 @@ Int_t TGraph2D::RemovePoint(Int_t ipoint)
 
 
 //______________________________________________________________________________
-void TGraph2D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Saves primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out << "   " << endl;
+   out << "   " << std::endl;
    if (gROOT->ClassSaved(TGraph2D::Class())) {
       out << "   ";
    } else {
       out << "   TGraph2D *";
    }
 
-   out << "graph2d = new TGraph2D(" << fNpoints << ");" << endl;
-   out << "   graph2d->SetName(" << quote << GetName() << quote << ");" << endl;
-   out << "   graph2d->SetTitle(" << quote << GetTitle() << quote << ");" << endl;
+   out << "graph2d = new TGraph2D(" << fNpoints << ");" << std::endl;
+   out << "   graph2d->SetName(" << quote << GetName() << quote << ");" << std::endl;
+   out << "   graph2d->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
 
    if (fDirectory == 0) {
-      out << "   " << GetName() << "->SetDirectory(0);" << endl;
+      out << "   " << GetName() << "->SetDirectory(0);" << std::endl;
    }
 
    SaveFillAttributes(out, "graph2d", 0, 1001);
@@ -1387,7 +1396,7 @@ void TGraph2D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    SaveMarkerAttributes(out, "graph2d", 1, 1, 1);
 
    for (Int_t i = 0; i < fNpoints; i++) {
-      out << "   graph2d->SetPoint(" << i << "," << fX[i] << "," << fY[i] << "," << fZ[i] << ");" << endl;
+      out << "   graph2d->SetPoint(" << i << "," << fX[i] << "," << fY[i] << "," << fZ[i] << ");" << std::endl;
    }
 
    // save list of functions
@@ -1395,13 +1404,13 @@ void TGraph2D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    TObject *obj;
    while ((obj = next())) {
       obj->SavePrimitive(out, "nodraw");
-      out << "   graph2d->GetListOfFunctions()->Add(" << obj->GetName() << ");" << endl;
+      out << "   graph2d->GetListOfFunctions()->Add(" << obj->GetName() << ");" << std::endl;
       if (obj->InheritsFrom("TPaveStats")) {
-         out << "   ptstats->SetParent(graph2d->GetListOfFunctions());" << endl;
+         out << "   ptstats->SetParent(graph2d->GetListOfFunctions());" << std::endl;
       }
    }
 
-   out << "   graph2d->Draw(" << quote << option << quote << ");" << endl;
+   out << "   graph2d->Draw(" << quote << option << quote << ");" << std::endl;
 }
 
 
@@ -1441,13 +1450,13 @@ void TGraph2D::SetHistogram(TH2 *h)
    // Sets the histogram to be filled.
    // If the 2D graph needs to be save in a TFile the folllowing set should be
    // followed to read it back:
-   // 1) Create TGraph2D 
-   // 2) Call g->SetHistogram(h), and do whatever you need to do 
-   // 3) Save g and h to the TFile, exit 
-   // 4) Open the TFile, retrieve g and h 
-   // 5) Call h->SetDirectory(0) 
-   // 6) Call g->SetHistogram(h) again 
-   // 7) Carry on as normal 
+   // 1) Create TGraph2D
+   // 2) Call g->SetHistogram(h), and do whatever you need to do
+   // 3) Save g and h to the TFile, exit
+   // 4) Open the TFile, retrieve g and h
+   // 5) Call h->SetDirectory(0)
+   // 6) Call g->SetHistogram(h) again
+   // 7) Carry on as normal
 
    fUserHisto = kTRUE;
    fHistogram = (TH2D*)h;
