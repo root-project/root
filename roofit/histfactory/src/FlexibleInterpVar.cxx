@@ -21,6 +21,7 @@ END_HTML
 #include "RooFit.h"
 
 #include "Riostream.h"
+#include "Riostream.h"
 #include <math.h>
 #include "TMath.h"
 
@@ -31,8 +32,6 @@ END_HTML
 #include "TMath.h"
 
 #include "RooStats/HistFactory/FlexibleInterpVar.h"
-
-using namespace std;
 
 ClassImp(RooStats::HistFactory::FlexibleInterpVar)
 
@@ -46,6 +45,7 @@ FlexibleInterpVar::FlexibleInterpVar()
   _paramIter = _paramList.createIterator() ;
   _nominal = 0;
   _interpBoundary=1.;
+  _logInit = kFALSE ;
 }
 
 
@@ -57,9 +57,8 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
   _paramList("paramList","List of paramficients",this),
   _nominal(nominal), _low(low), _high(high), _interpBoundary(1.)
 {
-
+  _logInit = kFALSE ;
   _paramIter = _paramList.createIterator() ;
-
 
   TIterator* paramIter = paramList.createIterator() ;
   RooAbsArg* param ;
@@ -86,6 +85,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
   _nominal(nominal), _low(low), _high(high), _interpCode(code), _interpBoundary(1.)
 {
 
+  _logInit = kFALSE ;
   _paramIter = _paramList.createIterator() ;
 
 
@@ -110,6 +110,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title) :
 {
   // Constructor of flat polynomial function
 
+  _logInit = kFALSE ;
   _paramIter = _paramList.createIterator() ;
 }
 
@@ -121,6 +122,7 @@ FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char*
   
 {
   // Copy constructor
+  _logInit = kFALSE ;
   _paramIter = _paramList.createIterator() ;
   
 }
@@ -218,6 +220,7 @@ Double_t FlexibleInterpVar::evaluate() const
       }
 	
     } else if(_interpCode.at(i)==4){ // Aaron Armbruster - exponential extrapolation, polynomial interpolation
+
       double boundary = _interpBoundary;
       // piece-wise log + parabolic
       if(param->getVal()>=boundary)
@@ -229,30 +232,37 @@ Double_t FlexibleInterpVar::evaluate() const
 	double x0 = boundary;
 	double x  = param->getVal();
 
-// 	double pow_up       = pow(_high.at(i)/_nominal, x0);
-// 	double pow_down     = pow(_low.at(i)/_nominal,  x0);
-// 	double pow_up_log   = pow_up*TMath::Log(_high.at(i));
-// 	double pow_down_log =-pow_down*TMath::Log(_low.at(i));
-// 	double pow_up_log2  = pow_up_log*TMath::Log(_high.at(i));
-// 	double pow_down_log2=-pow_down*TMath::Log(_low.at(i));
+	// Initialize logs lookup table if needed
+	if (!_logInit) {
 
+	  _logInit=kTRUE ;
 
-//fcns+der are eq at bd
-// 	  double a =  1./(4*pow(x0, 1))*(3*A0 - x0*S1);
-// 	double b =  1./(4*pow(x0, 2))*(4*S0 - x0*A1 - 8);
-// 	double c = -1./(4*pow(x0, 3))*(  A0 - x0*S1);
-// 	double d = -1./(4*pow(x0, 4))*(2*S0 - x0*A1 - 4);
-// 	total *= 1 + a*x + b*pow(x, 2) + c*pow(x, 3) + d*pow(x, 4);
+	  _logHi.resize(_high.size()) ;
+	  for (unsigned int j=0 ; j<_high.size() ; j++) {
+	    _logHi[j] = TMath::Log(_high.at(j)) ; 
+	  }
+	  _logLo.resize(_low.size()) ;
+	  for (unsigned int j=0 ; j<_low.size() ; j++) {
+	    _logLo[j] = TMath::Log(_low.at(j)) ; 
+	  }
+	  
+	  _powHi.resize(_high.size()) ;
+	  for (unsigned int j=0 ; j<_high.size() ; j++) {
+	    _powHi[j] = pow(_high.at(j)/_nominal, x0);
+	  }
+	  _powLo.resize(_low.size()) ;
+	  for (unsigned int j=0 ; j<_low.size() ; j++) {
+	    _powLo[j] = pow(_low.at(j)/_nominal,  x0);
+	  }
+	 
+	}
 
-
-//fcns+der+2nd_der are eq at bd
-
-	double pow_up       = pow(_high.at(i)/_nominal, x0);
-	double pow_down     = pow(_low.at(i)/_nominal,  x0);
-	double pow_up_log   = pow_up*TMath::Log(_high.at(i));
-	double pow_down_log = -pow_down*TMath::Log(_low.at(i));
-	double pow_up_log2  = pow_up_log*TMath::Log(_high.at(i));
-	double pow_down_log2= pow_down_log*TMath::Log(_low.at(i));
+	double pow_up       = _powHi[i] ; 
+	double pow_down     = _powLo[i] ;
+	double pow_up_log   = pow_up*_logHi.at(i) ;
+	double pow_down_log = -pow_down*_logLo.at(i) ;
+	double pow_up_log2  = pow_up_log*_logHi.at(i) ;
+	double pow_down_log2= pow_down_log*_logLo.at(i) ;
 
 	double S0 = (pow_up+pow_down)/2;
 	double A0 = (pow_up-pow_down)/2;
@@ -262,14 +272,28 @@ Double_t FlexibleInterpVar::evaluate() const
 	double A2 = (pow_up_log2-pow_down_log2)/2;
 
 //fcns+der+2nd_der are eq at bd
-	double a = 1./(8*pow(x0, 1))*(      15*A0 -  7*x0*S1 + x0*x0*A2);
-	double b = 1./(8*pow(x0, 2))*(-24 + 24*S0 -  9*x0*A1 + x0*x0*S2);
-	double c = 1./(4*pow(x0, 3))*(    -  5*A0 +  5*x0*S1 - x0*x0*A2);
-	double d = 1./(4*pow(x0, 4))*( 12 - 12*S0 +  7*x0*A1 - x0*x0*S2);
-	double e = 1./(8*pow(x0, 5))*(    +  3*A0 -  3*x0*S1 + x0*x0*A2);
-	double f = 1./(8*pow(x0, 6))*( -8 +  8*S0 -  5*x0*A1 + x0*x0*S2);
 
-	total *= 1 + a*x + b*pow(x, 2) + c*pow(x, 3) + d*pow(x, 4) + e*pow(x, 5) + f*pow(x, 6);
+	double px01 = x0 ;
+	double px02 = px01*x0 ;
+	double px03 = px02*x0 ;
+	double px04 = px03*x0 ;
+	double px05 = px04*x0 ;
+	double px06 = px05*x0 ;
+
+	double a = 1./(8*px01)*(      15*A0 -  7*x0*S1 + px02*A2);
+	double b = 1./(8*px02)*(-24 + 24*S0 -  9*x0*A1 + px02*S2);
+	double c = 1./(4*px03)*(    -  5*A0 +  5*x0*S1 - px02*A2);
+	double d = 1./(4*px04)*( 12 - 12*S0 +  7*x0*A1 - px02*S2);
+	double e = 1./(8*px05)*(    +  3*A0 -  3*x0*S1 + px02*A2);
+	double f = 1./(8*px06)*( -8 +  8*S0  -  5*x0*A1 + px02*S2);
+
+	double px2 = pow(x,2) ;
+	double px3 = px2*x ;
+	double px4 = px3*x ;
+	double px5 = px4*x ;
+	double px6 = px5*x ;
+
+	total *= 1 + a*x + b*px2 + c*px3 + d*px4 + e*px5 + f*px6 ;
       }
       else if (param->getVal()<=-boundary)
       {
