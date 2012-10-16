@@ -21,8 +21,8 @@
 #include "TGLIncludes.h"
 #include "TGLWSIncludes.h"
 #include "TGLUtil.h"
-
 #include "TGLEventHandler.h"
+//#include "RConfigure.h"
 
 /******************************************************************************/
 // TGLWidget
@@ -108,6 +108,8 @@ TGLWidget* TGLWidget::Create(const TGLFormat &format,
 
 #ifdef WIN32
    glw->fWindowIndex = (Int_t) innerData.second;
+#elif defined(R__HAS_COCOA)
+   glw->fWindowIndex = wid;
 #else
    glw->fWindowIndex = gVirtualX->AddWindow(wid, width, height);
    glw->fInnerData   = innerData;
@@ -159,7 +161,9 @@ TGLWidget::~TGLWidget()
    //Destructor. Deletes window ???? and XVisualInfo
 
 #ifndef WIN32
+#ifndef R__HAS_COCOA
    XFree(fInnerData.second);//free XVisualInfo
+#endif
 #endif
    if (fValidContexts.size() > 1u) {
       Warning("~TGLWidget", "There are some gl-contexts connected to this gl device"
@@ -377,9 +381,47 @@ void TGLWidget::SetFormat()
       throw std::runtime_error("ChoosePixelFormat failed");
    }
 }
+//==============================================================================
+#elif defined(R__HAS_COCOA) //MacOSX with Cocoa enabled.
+//==============================================================================
+
+//______________________________________________________________________________
+Window_t TGLWidget::CreateWindow(const TGWindow* parent, const TGLFormat &format,
+                                 UInt_t width, UInt_t height,
+                                 std::pair<void *, void *>& /*internalData*/)
+{
+   // CreateWidget - MacOSX/Cocoa version.
+   // Static function called prior to construction.
+
+   typedef std::pair<UInt_t, Int_t> component_type;
+   
+   std::vector<component_type>formatComponents;
+
+   if (format.HasDepth())
+      formatComponents.push_back(component_type(TGLFormat::kDepth, format.GetDepthSize()));
+   if (format.HasStencil())
+      formatComponents.push_back(component_type(TGLFormat::kStencil, format.GetStencilSize()));
+   if (format.HasAccumBuffer())
+      formatComponents.push_back(component_type(TGLFormat::kAccum, format.GetAccumSize()));
+   if (format.IsDoubleBuffered())
+      formatComponents.push_back(component_type(TGLFormat::kDoubleBuffer, 0));
+   if (format.IsStereo())
+      formatComponents.push_back(component_type(TGLFormat::kStereo, 0));
+   if (format.HasMultiSampling())
+      formatComponents.push_back(component_type(TGLFormat::kMultiSample, format.GetSamples()));
+
+   return gVirtualX->CreateOpenGLWindow(parent->GetId(), width, height, formatComponents);
+}
+
+//______________________________________________________________________________
+void TGLWidget::SetFormat()
+{
+   // Set pixel format.
+   // Empty version for X11.
+}
 
 //==============================================================================
-#else // Non WIN32
+#else // X11
 //==============================================================================
 
 namespace

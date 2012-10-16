@@ -18,9 +18,11 @@
 
 #include <Cocoa/Cocoa.h>
 
+#include "ROOTOpenGLView.h"
 #include "CocoaPrivate.h"
 #include "QuartzWindow.h"
 #include "QuartzPixmap.h"
+#include "QuartzUtils.h"
 #include "X11Drawable.h"
 #include "X11Buffer.h"
 #include "TGWindow.h"
@@ -73,7 +75,7 @@ DrawLine::DrawLine(Drawable_t wid, const GCValues_t &gc, const Point_t &p1, cons
 //______________________________________________________________________________
 void DrawLine::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->DrawLineAux(fID, fGC, fP1.fX, fP1.fY, fP2.fX, fP2.fY);
 }
@@ -91,7 +93,7 @@ DrawSegments::DrawSegments(Drawable_t wid, const GCValues_t &gc, const Segment_t
 //______________________________________________________________________________
 void DrawSegments::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->DrawSegmentsAux(fID, fGC, &fSegments[0], (Int_t)fSegments.size());
 }
@@ -106,7 +108,7 @@ ClearArea::ClearArea(Window_t wid, const Rectangle_t &area)
 //______________________________________________________________________________
 void ClearArea::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->ClearAreaAux(fID, fArea.fX, fArea.fY, fArea.fWidth, fArea.fHeight);   
 }
@@ -129,7 +131,7 @@ bool CopyArea::HasOperand(Drawable_t drawable)const
 //______________________________________________________________________________
 void CopyArea::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->CopyAreaAux(fSrc, fID, fGC, fArea.fX, fArea.fY, fArea.fWidth, fArea.fHeight, fDstPoint.fX, fDstPoint.fY);
 }
@@ -145,7 +147,7 @@ DrawString::DrawString(Drawable_t wid, const GCValues_t &gc, const Point_t &poin
 //______________________________________________________________________________
 void DrawString::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->DrawStringAux(fID, fGC, fPoint.fX, fPoint.fY, fText.c_str(), fText.length());
 }
@@ -160,7 +162,7 @@ FillRectangle::FillRectangle(Drawable_t wid, const GCValues_t &gc, const Rectang
 //______________________________________________________________________________
 void FillRectangle::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->FillRectangleAux(fID, fGC, fRectangle.fX, fRectangle.fY, fRectangle.fWidth, fRectangle.fHeight);
 }
@@ -178,7 +180,7 @@ FillPolygon::FillPolygon(Drawable_t wid, const GCValues_t &gc, const Point_t *po
 //______________________________________________________________________________   
 void FillPolygon::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->FillPolygonAux(fID, fGC, &fPolygon[0], (Int_t)fPolygon.size());
 }
@@ -193,7 +195,7 @@ DrawRectangle::DrawRectangle(Drawable_t wid, const GCValues_t &gc, const Rectang
 //______________________________________________________________________________
 void DrawRectangle::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->DrawRectangleAux(fID, fGC, fRectangle.fX, fRectangle.fY, fRectangle.fWidth, fRectangle.fHeight);
 }
@@ -212,10 +214,10 @@ void UpdateWindow::Execute()const
    assert(fView.fContext != 0 && "Execute, view.fContext is null");
 
    if (QuartzPixmap *pixmap = fView.fBackBuffer) {
-      CGImageRef image = [pixmap createImageFromPixmap];//CGBitmapContextCreateImage(pixmap.fContext);
-      const CGRect imageRect = CGRectMake(0, 0, pixmap.fWidth, pixmap.fHeight);
-      CGContextDrawImage(fView.fContext, imageRect, image);
-      CGImageRelease(image);
+      Rectangle_t copyArea = {};
+      copyArea.fWidth = UShort_t(pixmap.fWidth);
+      copyArea.fHeight = UShort_t(pixmap.fHeight);
+      [fView copy : pixmap area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
    }
 }
 
@@ -228,7 +230,7 @@ DeletePixmap::DeletePixmap(Pixmap_t pixmap)
 //______________________________________________________________________________
 void DeletePixmap::Execute()const
 {
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
    vx->DeletePixmapAux(fID);
 }
@@ -410,51 +412,13 @@ void CommandBuffer::AddDeletePixmap(Pixmap_t pixmapID)
    }
 }
 
-namespace {
-
-//______________________________________________________________________________
-void RepaintTree(QuartzView *view)
-{
-   //Can be only QuartzView, ROOTOpenGLView should never have children views.
-   assert(view != nil && "RepaintTree, view parameter is nil");
-   
-   TGCocoa *vx = (TGCocoa *)gVirtualX;
-   vx->CocoaDrawON();
-   
-   for (NSView<X11Window> *child in [view subviews]) {
-      if ([child isKindOfClass : [QuartzView class]]) {
-         QuartzView *qv = (QuartzView *)child;
-         if ([qv lockFocusIfCanDraw]) {
-            NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
-            assert(nsContext != nil && "RepaintTree, nsContext is nil");
-            CGContextRef cgContext = (CGContextRef)[nsContext graphicsPort];
-            assert(cgContext != 0 && "RepaintTree, cgContext is null");//remove this assert?
-
-            CGContextRef oldCtx = qv.fContext;
-            qv.fContext = cgContext;
-            
-            TGWindow *window = gClient->GetWindowById(qv.fID);
-            assert(window != 0 && "RepaintTree, window was not found");
-            
-            gClient->NeedRedraw(window, kTRUE);
-            qv.fContext = oldCtx;
-            
-            [qv unlockFocus];
-            if ([[qv subviews] count])
-               RepaintTree(qv);
-         }
-      }
-   }
-   
-   vx->CocoaDrawOFF();
-}
-
-}
-
 //______________________________________________________________________________
 void CommandBuffer::Flush(Details::CocoaPrivate *impl)
 {
    assert(impl != 0 && "Flush, impl parameter is null");
+
+   //Basic es-guarantee: state is unknown, but valid, no
+   //resource leaks, no locked focus.
 
    //All magic is here.
    CGContextRef prevContext = 0;
@@ -468,111 +432,67 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
       
       NSObject<X11Drawable> *drawable = impl->GetDrawable(cmd->fID);
       if (drawable.fIsPixmap) {
-         cmd->Execute();
+         cmd->Execute();//Can throw, ok.
          continue;
       }
       
       QuartzView *view = (QuartzView *)impl->GetWindow(cmd->fID).fContentView;
       
       if (prevView != view)
-         ClipOverlaps(view);
-      
-      if (prevView && prevView != view && [[prevView subviews] count])
-         RepaintTree(prevView);
+         ClipOverlaps(view);//Can throw, ok.
       
       prevView = view;
       
-      if ([view lockFocusIfCanDraw]) {
-         NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
-         assert(nsContext != nil && "Flush, currentContext is nil");
-         currContext = (CGContextRef)[nsContext graphicsPort];
-         assert(currContext != 0 && "Flush, graphicsPort is null");//remove this assert?
-         
-         view.fContext = currContext;
-         if (prevContext && prevContext != currContext)
-            CGContextFlush(prevContext);
-         prevContext = currContext;
-         
-         //Context can be modified by a clip mask.
-         const Quartz::CGStateGuard ctxGuard(currContext);
-         if (view.fClipMaskIsValid)
-            CGContextClipToMask(currContext, CGRectMake(0, 0, view.fClipMask.fWidth, view.fClipMask.fHeight), view.fClipMask.fImage);
-         
-         cmd->Execute();
-         if (view.fBackBuffer) {
-            //Very "special" window.
-            CGImageRef image = [view.fBackBuffer createImageFromPixmap];//CGBitmapContextCreateImage(view.fBackBuffer.fContext);
-            if (image) {
-               const CGRect imageRect = CGRectMake(0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight);
-               CGContextDrawImage(view.fContext, imageRect, image);
-               CGImageRelease(image);
+      try {
+         if ([view lockFocusIfCanDraw]) {
+            NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
+            assert(nsContext != nil && "Flush, currentContext is nil");
+            currContext = (CGContextRef)[nsContext graphicsPort];
+            assert(currContext != 0 && "Flush, graphicsPort is null");//remove this assert?
+            
+            view.fContext = currContext;
+            if (prevContext && prevContext != currContext)
+               CGContextFlush(prevContext);
+            prevContext = currContext;
+
+            const Quartz::CGStateGuard ctxGuard(currContext);
+            
+            //Clip regions first.
+            if (fClippedRegion.size())
+               CGContextClipToRects(currContext, &fClippedRegion[0], fClippedRegion.size());
+   
+            //Now add also shape combine mask.
+            if (view.fQuartzWindow.fShapeCombineMask)
+               ClipToShapeMask(view, currContext);
+
+            cmd->Execute();//This can throw, we should restore as much as we can here.
+            
+            if (view.fBackBuffer) {
+               //Very "special" window.
+               Rectangle_t copyArea = {};
+               copyArea.fWidth = UShort_t(view.fBackBuffer.fWidth);
+               copyArea.fHeight = UShort_t(view.fBackBuffer.fHeight);
+               [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
             }
-         }
-         
+            
+            [view unlockFocus];
+            
+            view.fContext = 0;
+         }      
+      } catch (const std::exception &) {
+         //Focus was locked, roll-back:
          [view unlockFocus];
-         
+         //View's context was modified, roll-back:
          view.fContext = 0;
+         //Re-throw, something really bad happened (std::bad_alloc).
+         throw;
       }
    }
-   
-   if (prevView && [[prevView subviews] count])
-      RepaintTree(prevView);
-   
+
    if (currContext)
       CGContextFlush(currContext);
 
    ClearCommands();
-}
-
-//______________________________________________________________________________
-void CommandBuffer::ClipOverlaps(QuartzView *view)
-{
-   typedef std::vector<QuartzView *>::reverse_iterator reverse_iterator;
-
-   assert(view != nil && "ClipOverlaps, view parameter is nil");
-
-   fViewBranch.clear();
-   fViewBranch.reserve(view.fLevel + 1);
-   
-   for (QuartzView *v = view; v; v = v.fParentView)
-      fViewBranch.push_back(v);
-   
-   if (fViewBranch.size())
-      fViewBranch.pop_back();//we do not need content view, it does not have any sibling.
-
-   NSRect frame1 = {};
-   NSRect frame2 = view.frame;
-   
-   //[view clearClipMask];
-   view.fClipMaskIsValid = NO;
-   
-   for (reverse_iterator it = fViewBranch.rbegin(), eIt = fViewBranch.rend(); it != eIt; ++it) {
-      QuartzView *ancestorView = *it;//Actually, it's either one of ancestors, or a view itself.
-      bool doCheck = false;
-      for (QuartzView *sibling in [ancestorView.fParentView subviews]) {
-         if (ancestorView == sibling) {
-            doCheck = true;//all views after this must be checked.
-            continue;
-         } else if (!doCheck || sibling.fMapState != kIsViewable) {
-            continue;
-         }
-         
-         //Real check is here.
-         frame1 = sibling.frame;
-         frame2.origin = [view.fParentView convertPoint : view.frame.origin toView : ancestorView.fParentView];
-         
-         //Check if two rects intersect.
-         if (RectsOverlap(frame2, frame1)) {
-            if (!view.fClipMaskIsValid) {
-               if (![view initClipMask])//initClipMask will issue an error message.
-                  return;//Forget about clipping at all.
-               view.fClipMaskIsValid = YES;
-            }
-            //Update view's clip mask - mask out hidden pixels.
-            [view addOverlap : FindOverlapRect(frame2, frame1)];
-         }
-      }
-   }
 }
 
 //______________________________________________________________________________
@@ -604,6 +524,288 @@ void CommandBuffer::ClearCommands()
       delete fCommands[i];
 
    fCommands.clear();
+}
+
+//Clipping machinery.
+
+namespace {
+
+//________________________________________________________________________________________
+bool RectsOverlap(const NSRect &r1, const NSRect &r2)
+{
+   if (r2.origin.x >= r1.origin.x + r1.size.width)
+      return false;
+   if (r2.origin.x + r2.size.width <= r1.origin.x)
+      return false;
+   if (r2.origin.y >= r1.origin.y + r1.size.height)
+      return false;
+   if (r2.origin.y + r2.size.height <= r1.origin.y)
+      return false;
+   
+   return true;
+}
+
+}
+
+//______________________________________________________________________________
+void CommandBuffer::ClipOverlaps(QuartzView *view)
+{
+   //QuartzViews do not have backing store.
+   //But ROOT calls gClient->NeedRedraw ignoring
+   //children or overlapping siblings. This leads
+   //to obvious problems, for example, parent
+   //erasing every child inside while repainting itself.
+   //To fix this and emulate window with backing store
+   //without real backing store, I'm calculating the
+   //area of a view this is visible and not overlapped.
+   
+   //Who can overlap our view?
+   //1. Its own siblings and, probably, siblings of its ancestors.
+   //2. Children views.
+
+   assert(view != nil && "ClipOverlaps, view parameter is nil");
+
+   typedef std::vector<QuartzView *>::reverse_iterator reverse_iterator;
+   typedef std::vector<CGRect>::iterator rect_iterator;
+
+   fRectsToClip.clear();
+   fClippedRegion.clear();
+
+   //Check siblings and ancestors' siblings:
+
+   //1. Remember the whole branch starting from our view
+   //up to a top-level window.
+   fViewBranch.clear();
+   for (QuartzView *v = view; v; v = v.fParentView)
+      fViewBranch.push_back(v);
+
+   //We do not need content view, since it does not have any siblings.
+   if (fViewBranch.size())
+      fViewBranch.pop_back();
+
+   //For every fViewBranch[i] in our branch, we're looking for overlapping siblings.
+   //Calculations are in view.fParentView's coordinate system.
+   
+   WidgetRect clipRect;
+   NSRect frame1 = {};
+
+   const NSRect frame2 = view.frame;
+
+   for (reverse_iterator it = fViewBranch.rbegin(), eIt = fViewBranch.rend(); it != eIt; ++it) {
+      QuartzView *ancestorView = *it;//This is either one of ancestors, or a view itself.
+      bool doCheck = false;
+      for (QuartzView *sibling in [ancestorView.fParentView subviews]) {
+         if (ancestorView == sibling) {
+            //View has its children in an array, and for every subviews[i] in this array,
+            //only views with index > i can overlap subviews[i].
+            doCheck = true;//all views after this must be checked.
+            continue;
+         } else if (!doCheck || sibling.fMapState != kIsViewable) {
+            continue;
+         }
+         
+         frame1 = sibling.frame;
+         
+         if (!frame1.size.width || !frame1.size.height)
+            continue;
+
+         frame1.origin = [sibling.fParentView convertPoint : frame1.origin toView : view.fParentView];
+
+         //Check if two rects intersect.
+         if (RectsOverlap(frame2, frame1)) {
+            //Substruct frame1 from our view's rect.
+            clipRect.x1 = frame1.origin.x;
+            clipRect.x2 = clipRect.x1 + frame1.size.width;
+            clipRect.y1 = frame1.origin.y;
+            clipRect.y2 = clipRect.y1 + frame1.size.height;
+            fRectsToClip.push_back(clipRect);
+         }
+      }
+   }
+   
+   //Substruct children.
+   
+   for (QuartzView *child in [view subviews]) {
+      if (child.fMapState != kIsViewable)
+         continue;
+      
+      frame1 = child.frame;
+
+      if (!frame1.size.width || !frame1.size.height)
+         continue;
+
+      if (view.fParentView)//view can also be a content view.
+         frame1.origin = [view convertPoint : frame1.origin toView : view.fParentView];
+      
+      if (RectsOverlap(frame2, frame1)) {
+         clipRect.x1 = frame1.origin.x;
+         clipRect.x2 = clipRect.x1 + frame1.size.width;
+         clipRect.y1 = frame1.origin.y;
+         clipRect.y2 = clipRect.y1 + frame1.size.height;
+         fRectsToClip.push_back(clipRect);
+      }
+   }
+   
+   if (fRectsToClip.size()) {
+      //Now, if we have any rectanges to substruct them from our view's frame,
+      //we are building a set of rectangles, which represents visible part of view.
+   
+      WidgetRect rect(frame2.origin.x, frame2.origin.y, frame2.origin.x + frame2.size.width, frame2.origin.y + frame2.size.height);
+
+      BuildClipRegion(rect);
+      
+      if (view.fParentView) {
+         //To able to use this set of rectangles with CGContextClipToRects,
+         //convert them (if needed) into view's own coordinate system.
+         for (rect_iterator recIt = fClippedRegion.begin(), eIt = fClippedRegion.end(); recIt != eIt; ++recIt) {
+            if (!recIt->size.width && !recIt->size.height) {//This is a special 'empty' rectangle, which means our
+               assert(fClippedRegion.size() == 1 && "ClipOverlaps, internal logic error");
+               break;                                       //view is completely hidden.
+            }
+            recIt->origin = [view.fParentView convertPoint : recIt->origin toView : view];
+         }
+      }
+   }
+}
+
+namespace {
+
+typedef std::vector<int>::iterator int_iterator;
+
+//_____________________________________________________________________________________________________
+int_iterator BinarySearchLeft(int_iterator first, int_iterator last, int value)
+{
+   if (first == last)
+      return last;
+
+   const int_iterator it = std::lower_bound(first, last, value);
+   assert(it != last && (it == first || *it == value) && "internal logic error");
+
+   //If value < *first, return last (not found).
+   return it == first && *it != value ? last : it;
+}
+
+//_____________________________________________________________________________________________________
+int_iterator BinarySearchRight(int_iterator first, int_iterator last, int value)
+{
+   if (first == last)
+      return last;
+
+   const int_iterator it = std::lower_bound(first, last, value);
+   assert((it == last || *it == value) && "internal logic error");
+
+   return it;
+}
+
+}//unnamed namespace.
+
+//_____________________________________________________________________________________________________
+void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
+{
+   //Input requirements:
+   // 1) all rects are valid (non-empty and x1 < x2, y1 < y2);
+   // 2) all rects intersect with widget's rect.
+   //I do not check these conditions here, this is done when filling rectsToClip.
+   
+   //I did not find any reasonable algorithm (have to search better?),
+   //code in gdk and pixman has to many dependencies and is lib-specific +
+   //they require input to be quite special:
+   // a) no overlaps (in my case I have overlaps)
+   // b) sorted in a special way.
+   //To convert my input into such a format
+   //means to implement everything myself (for example, to work out overlaps).
+
+   //Also, my case is more simple: gdk and pixman substract region (== set of rectangles)
+   //from another region, I have to substract region from _one_ rectangle.
+
+   //This is quite straightforward implementation - I'm calculation rectangles, which are part of
+   //a widget's rect, not hidden by any of fRectsToClip.
+   //TODO: find a better algorithm.
+   typedef std::vector<WidgetRect>::const_iterator rect_const_iterator;
+   typedef std::vector<bool>::size_type size_type;
+
+   assert(fRectsToClip.size() != 0 && "BuildClipRegion, nothing to clip");
+
+   fClippedRegion.clear();
+   fXBounds.clear();
+   fYBounds.clear();
+
+   //[First, we "cut" the original rect into stripes.
+   for (rect_const_iterator recIt = fRectsToClip.begin(), endIt = fRectsToClip.end(); recIt != endIt; ++recIt) {
+      if (recIt->x1 <= rect.x1 && recIt->x2 >= rect.x2 && recIt->y1 <= rect.y1 && recIt->y2 >= rect.y2) {
+         //this rect completely overlaps our view, not need to calculate anything at all.
+         fClippedRegion.push_back(CGRectMake(0., 0., 0., 0.));
+         return;
+      }
+   
+      if (recIt->x1 > rect.x1)//recIt->x1 is always < rect.x2 (input validation).
+         fXBounds.push_back(recIt->x1);
+
+      if (recIt->x2 < rect.x2)//recIt->x2 is always > rect.x1 (input validation).
+         fXBounds.push_back(recIt->x2);
+
+      if (recIt->y1 > rect.y1)
+         fYBounds.push_back(recIt->y1);
+
+      if (recIt->y2 < rect.y2)
+         fYBounds.push_back(recIt->y2);
+   }
+
+   std::sort(fXBounds.begin(), fXBounds.end());
+   std::sort(fYBounds.begin(), fYBounds.end());
+
+   //We do not need duplicates.
+   const int_iterator xBoundsEnd = std::unique(fXBounds.begin(), fXBounds.end());
+   const int_iterator yBoundsEnd = std::unique(fYBounds.begin(), fYBounds.end());
+   //Rectangle is now "cut into pieces"].
+
+   const size_type nXBands = size_type(xBoundsEnd - fXBounds.begin()) + 1;
+   const size_type nYBands = size_type(yBoundsEnd - fYBounds.begin()) + 1;
+
+   fGrid.assign(nXBands * nYBands, false);
+
+   //Mark the overlapped parts.
+   for (rect_const_iterator recIt = fRectsToClip.begin(), endIt = fRectsToClip.end(); recIt != endIt; ++recIt) {
+      const int_iterator left = BinarySearchLeft(fXBounds.begin(), xBoundsEnd, recIt->x1);
+      const size_type firstXBand = left == xBoundsEnd ? 0 : left - fXBounds.begin() + 1;
+      
+      const int_iterator right = BinarySearchRight(fXBounds.begin(), xBoundsEnd, recIt->x2);
+      const size_type lastXBand = right - fXBounds.begin() + 1;
+      
+      const int_iterator bottom = BinarySearchLeft(fYBounds.begin(), yBoundsEnd, recIt->y1);
+      const size_type firstYBand = bottom == yBoundsEnd ? 0 : bottom - fYBounds.begin() + 1;
+
+      const int_iterator top = BinarySearchRight(fYBounds.begin(), yBoundsEnd, recIt->y2);
+      const size_type lastYBand = top - fYBounds.begin() + 1;
+
+      for (size_type i = firstYBand; i < lastYBand; ++i) {
+         const size_type baseIndex = i * nXBands;
+         for (size_type j = firstXBand; j < lastXBand; ++j)
+            fGrid[baseIndex + j] = true;
+      }
+   }
+   
+   //I do not merge rectangles.
+   //Search for non-overlapped parts and create rectangles for them.
+   CGRect newRect = {};
+
+   for (size_type i = 0; i < nYBands; ++i) {
+      const size_type baseIndex = i * nXBands;
+      for (size_type j = 0; j < nXBands; ++j) {
+         if (!fGrid[baseIndex + j]) {
+            newRect.origin.x = j ? fXBounds[j - 1] : rect.x1;
+            newRect.origin.y = i ? fYBounds[i - 1] : rect.y1;
+            
+            newRect.size.width = (j == nXBands - 1 ? rect.x2 : fXBounds[j]) - newRect.origin.x;
+            newRect.size.height = (i == nYBands - 1 ? rect.y2 : fYBounds[i]) - newRect.origin.y;
+
+            fClippedRegion.push_back(newRect);
+         }
+      }
+   }
+   
+   if (!fClippedRegion.size())//Completely hidden
+      fClippedRegion.push_back(CGRectMake(0., 0., 0., 0.));
 }
 
 }//X11

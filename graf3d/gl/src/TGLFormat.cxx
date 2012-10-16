@@ -20,6 +20,7 @@
 #include "TEnv.h"
 #include "TError.h"
 #include "TVirtualX.h"
+//#include "RConfigure.h"
 
 //______________________________________________________________________________
 //
@@ -247,7 +248,7 @@ void TGLFormat::InitAvailableSamples()
 #ifdef WIN32
 
    // Missing implementation.
-
+#elif defined(R__HAS_COCOA)
 #else
    if (GLXEW_ARB_multisample)
    {

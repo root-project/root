@@ -83,6 +83,7 @@
 @property (nonatomic, assign) int           fBitGravity;
 @property (nonatomic, assign) int           fWinGravity;
 @property (nonatomic, assign) unsigned long fBackgroundPixel;//Used by TGCocoa::ClearArea.
+@property (nonatomic, retain) QuartzImage  *fBackgroundPixmap;//Hmm, image, pixmap ...
 @property (nonatomic, readonly) int         fMapState;
 
 //End of SetWindowAttributes_t/WindowAttributes_t
@@ -90,10 +91,9 @@
 
 
 //"Back buffer" is a bitmap, used by canvas window (only).
-@property (nonatomic, assign) QuartzPixmap *fBackBuffer;
+@property (nonatomic, retain) QuartzPixmap *fBackBuffer;
 //Parent view can be only QuartzView.
 @property (nonatomic, assign) QuartzView *fParentView;
-@property (nonatomic, assign) unsigned    fLevel;//Window's "level" in a hierarchy.
 //Window has a content view, self is a content view for a view.
 //I NSView is a parent for QuartzView and ROOTOpenGLView.
 @property (nonatomic, readonly) NSView<X11Window> *fContentView;
@@ -103,10 +103,20 @@
 //ROOT's GUI does not use several passive button
 //grabs on the same window, so no containers,
 //just one grab.
-@property (nonatomic, assign) int      fGrabButton;
-@property (nonatomic, assign) unsigned fGrabButtonEventMask;
-@property (nonatomic, assign) unsigned fGrabKeyModifiers;
-@property (nonatomic, assign) BOOL     fOwnerEvents;
+@property (nonatomic, assign) int      fPassiveGrabButton;
+@property (nonatomic, assign) unsigned fPassiveGrabEventMask;
+@property (nonatomic, assign) unsigned fPassiveGrabKeyModifiers;
+
+@property (nonatomic, assign) unsigned fActiveGrabEventMask;
+
+@property (nonatomic, assign) BOOL     fPassiveGrabOwnerEvents;
+
+- (void) activatePassiveGrab;
+- (void) activateImplicitGrab;
+- (void) activateGrab : (unsigned) eventMask ownerEvents : (BOOL) ownerEvents;
+- (void) cancelGrab;
+
+- (BOOL) acceptsCrossingEvents : (unsigned) eventMask;
 
 //Nested views ("windows").
 //Child can be any view, inherited
@@ -127,7 +137,6 @@
 
 - (BOOL) fIsOverlapped;
 - (void) setOverlapped : (BOOL) overlap;
-- (void) updateLevel : (unsigned) newLevel;
 - (void) configureNotifyTree;
 
 - (void) addPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers;
@@ -137,6 +146,16 @@
 
 //Cursors.
 @property (nonatomic, assign) ECursor fCurrentCursor;
+
+@property (nonatomic, assign) BOOL fIsDNDAware;
+
+//"Properties" (X11 properties)
+- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize 
+         forType : (Atom_t) dataType format : (unsigned) format;
+- (BOOL) hasProperty : (const char *) propName;
+- (unsigned char *) getProperty : (const char *) propName returnType : (Atom_t *) type 
+   returnFormat : (unsigned *) format nElements : (unsigned *) nElements;
+- (void) removeProperty : (const char *) propName;
 
 @end
 

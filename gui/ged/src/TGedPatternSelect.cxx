@@ -40,6 +40,7 @@
 
 #include "TGResourcePool.h"
 #include "TGedPatternSelect.h"
+#include "RConfigure.h"
 #include "TGToolTip.h"
 #include "TGButton.h"
 #include "Riostream.h"
@@ -464,6 +465,9 @@ Bool_t TGedSelect::HandleButton(Event_t *event)
          if (fPopup) {
             gVirtualX->TranslateCoordinates(fId, gClient->GetDefaultRoot()->GetId(),
                                             0, fHeight, ax, ay, wdummy);
+#ifdef R__HAS_COCOA
+            gVirtualX->SetWMTransientHint(fPopup->GetId(), GetId());
+#endif
             fPopup->PlacePopup(ax, ay, fPopup->GetDefaultWidth(),
                                fPopup->GetDefaultHeight());
          }
@@ -641,11 +645,11 @@ void TGedPatternSelect::SetPattern(Style_t pattern, Bool_t emit)
 }
 
 //______________________________________________________________________________
-void TGedPatternSelect::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TGedPatternSelect::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save the pattern select widget as a C++ statement(s) on output stream out
 
    out <<"   TGedPatternSelect *";
    out << GetName() << " = new TGedPatternSelect(" << fParent->GetName()
-       << "," << fPattern << "," << WidgetId() << ");" << endl;
+       << "," << fPattern << "," << WidgetId() << ");" << std::endl;
 }

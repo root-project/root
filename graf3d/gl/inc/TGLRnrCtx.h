@@ -264,7 +264,7 @@ public:
    void  RegisterFontNoScale(Int_t size, const char* name, Int_t mode, TGLFont& out);
    void  ReleaseFont(TGLFont& font);
 
-   GLUquadric* GetGluQuadric() { return fQuadric; }
+   GLUquadric* GetGluQuadric();
 
    // Picture grabbing
    void     SetGrabImage(Bool_t gi) { fGrabImage = gi;   }

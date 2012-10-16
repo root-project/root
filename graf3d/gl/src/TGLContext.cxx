@@ -21,6 +21,7 @@
 #include "TROOT.h"
 
 #include "TGLContextPrivate.h"
+//#include "RConfigure.h"
 #include "TGLIncludes.h"
 #include "TGLContext.h"
 #include "TGLWidget.h"
@@ -224,8 +225,83 @@ void TGLContext::Release()
    fValid = kFALSE;
 }
 
+#elif defined(R__HAS_COCOA)
+
+//______________________________________________________________________________
+void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
+{
+   //This function is public only for calls via gROOT and called from ctor.
+   if (!fFromCtor) {
+      Error("TGLContext::SetContext", "SetContext must be called only from ctor");
+      return;
+   }
+
+   std::auto_ptr<TGLContextPrivate> safe_ptr(fPimpl = new TGLContextPrivate);
+
+   fPimpl->fGLContext = gVirtualX->CreateOpenGLContext(widget->GetId(), shareList ? shareList->fPimpl->fGLContext : 0);
+   fPimpl->fWindowID = widget->GetId();
+
+   fValid = kTRUE;
+   fDevice->AddContext(this);
+   TGLContextPrivate::RegisterContext(this);
+
+   safe_ptr.release();
+}
+
+//______________________________________________________________________________
+Bool_t TGLContext::MakeCurrent()
+{
+   //If context is valid (TGLPaintDevice, for which context was created still exists),
+   //make it current.
+
+   if (!fValid) {
+      Error("TGLContext::MakeCurrent", "This context is invalid.");
+      return kFALSE;
+   }
+
+   const Bool_t rez = gVirtualX->MakeOpenGLContextCurrent(fPimpl->fGLContext, fPimpl->fWindowID);
+   if (rez) {
+      if (!fgGlewInitDone)
+         GlewInit();
+      fIdentity->DeleteGLResources();
+      
+   }
+
+   return rez;
+}
+
+//______________________________________________________________________________
+Bool_t TGLContext::ClearCurrent()
+{
+   //Reset current context.
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+void TGLContext::SwapBuffers()
+{
+   //If context is valid (TGLPaintDevice, for which context was created still exists),
+   //swap buffers (in case of P-buffer call glFinish()).
+   if (!fValid) {
+      Error("TGLContext::SwapBuffers", "This context is invalid.");
+      return;
+   }
+
+   gVirtualX->FlushOpenGLBuffer(fPimpl->fGLContext);  
+}
+
+//______________________________________________________________________________
+void TGLContext::Release()
+{
+   //Make the context invalid and free resources.
+
+   TGLContextPrivate::RemoveContext(this);
+   gVirtualX->DeleteOpenGLContext(fPimpl->fGLContext);
+   fValid = kFALSE;
+}
+
 //==============================================================================
-#else // Non WIN32
+#else // X11
 //==============================================================================
 
 //______________________________________________________________________________

@@ -270,19 +270,11 @@ void TGView::DoRedraw()
 
    DrawBorder();
 
-#ifdef R__HAS_COCOA
-   //It can happen, that TGView::DoRedraw is called outside
-   //of QuartzView's drawRect (drawRect also sets fExposedRegion).
-   //In this case, TGView's content will be lost.
-   //TODO: This is non-optimal solution.
-   DrawRegion(0, 0, GetWidth(), GetHeight());
-#else
    if (!fExposedRegion.IsEmpty()) {
       DrawRegion(fExposedRegion.fX, fExposedRegion.fY, 
                  fExposedRegion.fW, fExposedRegion.fH);
       fExposedRegion.Empty();
    }
-#endif
 }
 
 //______________________________________________________________________________

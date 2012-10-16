@@ -50,6 +50,7 @@
 #include "TGColorSelect.h"
 #include "TGColorDialog.h"
 #include "TGResourcePool.h"
+#include "RConfigure.h"
 #include "TG3DLine.h"
 #include "TColor.h"
 #include "Riostream.h"
@@ -453,6 +454,9 @@ Bool_t TGColorSelect::HandleButton(Event_t *event)
          gVirtualX->TranslateCoordinates(fId, gClient->GetDefaultRoot()->GetId(),
                                          0, fHeight, ax, ay, wdummy);
 
+#ifdef R__HAS_COCOA
+         gVirtualX->SetWMTransientHint(fColorPopup->GetId(), GetId());
+#endif
          fColorPopup->PlacePopup(ax, ay, fColorPopup->GetDefaultWidth(),
                                          fColorPopup->GetDefaultHeight());
          fColorPopup = 0;
@@ -589,7 +593,7 @@ void TGColorSelect::SetColor(ULong_t color, Bool_t emit)
 }
 
 //______________________________________________________________________________
-void TGColorSelect::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGColorSelect::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
     // Save a color select widget as a C++ statement(s) on output stream out
 
@@ -601,22 +605,22 @@ void TGColorSelect::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    const char *colorname = TColor::PixelAsHexString(color);
    gClient->GetColorByName(colorname, color);
 
-   out << endl << "   // color select widget" << endl;
-   out << "   ULong_t " << cvar.Data() << ";" << endl;
+   out << std::endl << "   // color select widget" << std::endl;
+   out << "   ULong_t " << cvar.Data() << ";" << std::endl;
    out << "   gClient->GetColorByName(" << quote << colorname << quote
-       << ", " << cvar.Data() << ");" << endl;
+       << ", " << cvar.Data() << ");" << std::endl;
 
    out <<"   TGColorSelect *";
    out << GetName() << " = new TGColorSelect(" << fParent->GetName()
-       << ", " << cvar.Data() << ", " << WidgetId() << ");" << endl;
+       << ", " << cvar.Data() << ", " << WidgetId() << ");" << std::endl;
    nn++;
 
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    if (!IsEnabled()) {
-      out << "   " << GetName() << "->Disable();" << endl;
+      out << "   " << GetName() << "->Disable();" << std::endl;
    }
-   out << endl;
+   out << std::endl;
 }
 

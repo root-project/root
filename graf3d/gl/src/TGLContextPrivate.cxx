@@ -3,6 +3,13 @@
 
 #include "TGLContextPrivate.h"
 
+#ifdef R__HAS_COCOA
+#include <cassert>
+
+#include "TVirtualX.h"
+#include "TError.h"
+#endif
+
 //______________________________________________________________________________
 void TGLContextPrivate::RegisterContext(TGLContext *ctx)
 {
@@ -33,6 +40,23 @@ TGLContext *TGLContextPrivate::GetCurrentContext()
    if (it != fgContexts.end())
       return it->second;
 
+   return 0;
+}
+
+#elif defined(R__HAS_COCOA)
+
+std::map<Handle_t, TGLContext *> TGLContextPrivate::fgContexts;
+
+//______________________________________________________________________________
+TGLContext *TGLContextPrivate::GetCurrentContext()
+{
+   const Handle_t ctxID = gVirtualX->GetCurrentOpenGLContext();
+   if (ctxID) {
+      assert(fgContexts.find(ctxID) != fgContexts.end() && "GetCurrentContext, context id is unknown");
+      return fgContexts[ctxID];
+   }
+   
+   //Else part - error message was issued already by TGCocoa.
    return 0;
 }
 

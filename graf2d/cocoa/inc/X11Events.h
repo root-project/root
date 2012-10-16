@@ -12,7 +12,7 @@
 #ifndef ROOT_X11Events
 #define ROOT_X11Events
 
-#include <vector>
+#include <deque>
 
 #ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
@@ -27,6 +27,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+class TGCocoa;
+
 @protocol X11Window;
 
 @class QuartzWindow;
@@ -37,13 +39,6 @@ namespace ROOT {
 namespace MacOSX {
 namespace X11 {//X11 emulation for Cocoa.
 
-enum Ancestry {
-   kAView1IsParent,
-   kAView2IsParent,
-   kAHaveNonRootAncestor,
-   kAAncestorIsRoot
-};
-
 enum PointerGrab {
    kPGNoGrab,
    kPGImplicitGrab,
@@ -51,8 +46,10 @@ enum PointerGrab {
    kPGPassiveGrab
 };
 
-class EventTranslator {
+typedef std::deque<Event_t> EventQueue_t;
 
+class EventTranslator {
+   friend class ::TGCocoa;
 public:
    EventTranslator();
 
@@ -60,8 +57,8 @@ public:
    void GenerateDestroyNotify(unsigned winID);
    void GenerateExposeEvent(NSView<X11Window> *view, const NSRect &exposedRect);
 
-   void GenerateCrossingEvent(NSView<X11Window> *viewUnderPointer, NSEvent *theEvent);
-   void GeneratePointerMotionEvent(NSView<X11Window> *eventView, NSEvent *theEvent);
+   void GenerateCrossingEvent(NSEvent *theEvent);
+   void GeneratePointerMotionEvent(NSEvent *theEvent);
    
    //TODO: instead of passing EMouseButton, use info from NSEvent???
    void GenerateButtonPressEvent(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
@@ -89,18 +86,17 @@ public:
 private:
 
    //Used both by grab and non-grab case.
-   void GenerateCrossingEvent(NSView<X11Window> *viewUnderPointer, NSEvent *theEvent, EXMagic detail);
-   void GenerateCrossingEventActiveGrab(NSView<X11Window> *eventView, NSEvent *theEvent);
+   void GenerateCrossingEventNoGrab(NSEvent *theEvent);
+   void GenerateCrossingEventActiveGrab(NSEvent *theEvent);
 
-   void GeneratePointerMotionEventNoGrab(NSView<X11Window> *view, NSEvent *theEvent);
-   void GeneratePointerMotionEventActiveGrab(NSView<X11Window> *eventView, NSEvent *theEvent);
+   void GeneratePointerMotionEventNoGrab(NSEvent *theEvent);
+   void GeneratePointerMotionEventActiveGrab(NSEvent *theEvent);
 
    void GenerateButtonPressEventNoGrab(NSView<X11Window> *view, NSEvent *theEvent, EMouseButton btn);
    void GenerateButtonPressEventActiveGrab(NSView<X11Window> *view, NSEvent *theEvent, EMouseButton btn);
 
    void GenerateButtonReleaseEventNoGrab(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
    void GenerateButtonReleaseEventActiveGrab(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
-   bool CancelImplicitOrPassiveGrab();
    
    void GenerateKeyPressEventNoGrab(NSEvent *theEvent);
    void GenerateKeyReleaseEventNoGrab(NSEvent *theEvent);
@@ -108,19 +104,12 @@ private:
    void GenerateKeyEventActiveGrab(NSEvent *theEvent);//Both press/release events.
    void GenerateKeyEventForView(NSView<X11Window> *view, NSEvent *theEvent);//Both press/release events.
 
-   void FindButtonGrabView(NSView<X11Window> *fromView, NSEvent *theEvent, EMouseButton btn);
+   void FindButtonGrab(NSView<X11Window> *fromView, NSEvent *theEvent, EMouseButton btn);
    void FindKeyGrabView(NSView<X11Window> *fromView, NSEvent *theEvent);
-   NSView<X11Window> *FindViewUnderPointer();
-   
-   Ancestry FindRelation(NSView<X11Window> *view1, NSView<X11Window> *view2, NSView<X11Window> **lca);
-   void SortTopLevelWindows();
-   QuartzWindow *FindTopLevelWindowForMouseEvent();
 
    NSView<X11Window> *fViewUnderPointer;
-   std::vector<NSView<X11Window> *> fBranch1;
-   std::vector<NSView<X11Window> *> fBranch2;
    
-   PointerGrab fPointerGrab;
+   PointerGrab fPointerGrabType;
    unsigned fGrabEventMask;
    bool fOwnerEvents;
 
@@ -128,13 +117,16 @@ private:
    NSView<X11Window> *fButtonGrabView;
    NSView<X11Window> *fKeyGrabView;
    NSView<X11Window> *fFocusView;
-   
-   std::vector<QuartzWindow *> fWindowStack;
+   EMouseButton fImplicitGrabButton;
+
+   EventQueue_t fEventQueue;
 };
 
 void MapUnicharToKeySym(unichar key, char *buf, Int_t len, UInt_t &rootKeySym);
 Int_t MapKeySymToKeyCode(Int_t keySym);
 NSUInteger GetCocoaKeyModifiersFromROOTKeyModifiers(UInt_t rootKeyModifiers);
+
+UInt_t GetModifiers();//Mouse buttons + keyboard modifiers.
 
 }//X11
 }//MacOSX

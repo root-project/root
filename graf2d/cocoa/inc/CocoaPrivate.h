@@ -38,7 +38,11 @@
 @protocol X11Drawable;
 @protocol X11Window;
 
+@class ROOTApplicationDelegate;
+@class NSOpenGLContext;
 @class NSObject;
+
+@class QuartzWindow;
 
 class TGQuartz;
 class TGCocoa;
@@ -63,46 +67,59 @@ public:
 private:
    CocoaPrivate();
    
-   int GetRootWindowID()const;
-   bool IsRootWindow(int wid)const;
+   Window_t GetRootWindowID()const;
+   bool IsRootWindow(Window_t windowID)const;
    
    CocoaPrivate(const CocoaPrivate &rhs);
    CocoaPrivate &operator = (const CocoaPrivate &rhs);
 
-   unsigned               RegisterDrawable(NSObject *nsObj);
-   NSObject<X11Drawable> *GetDrawable(unsigned drawableD)const;
-   NSObject<X11Window>   *GetWindow(unsigned windowID)const;
-   void                   DeleteDrawable(unsigned drawableID);
+   Drawable_t             RegisterDrawable(NSObject *nsObj);
+   NSObject<X11Drawable> *GetDrawable(Drawable_t drawableD)const;
+   NSObject<X11Window>   *GetWindow(Window_t windowID)const;
+   void                   DeleteDrawable(Drawable_t drawableID);
    
-   ULong_t                RegisterGLContextForView(unsigned viewID);
-   NSObject<X11Window>   *GetWindowForGLContext(Handle_t glContextID);
+   Handle_t               RegisterGLContext(NSOpenGLContext *glContext);
+   void                   DeleteGLContext(Handle_t contextID);
+   NSOpenGLContext       *GetGLContextForHandle(Handle_t contextID);
+   Handle_t               GetHandleForGLContext(NSOpenGLContext *glContext);
+   
+   void                   SetFakeGLWindow(QuartzWindow *fakeWin);
+   QuartzWindow          *GetFakeGLWindow();
    
    //This function resets strong reference, if you still want NSObject for drawableID to live,
    //you have to retain the pointer (probably) and also drawableID will become id for nsObj (replacement).
-   void               ReplaceDrawable(unsigned drawableID, NSObject *nsObj);
+   void                   ReplaceDrawable(Drawable_t drawableID, NSObject *nsObj);
 
    //Color "parser": either parse string like "#ddeeaa", or
    //search rgb.txt like table for named color.
-   X11::ColorParser                            fX11ColorParser;
+   X11::ColorParser      fX11ColorParser;
    //Event translator, converts Cocoa events into X11 events
    //and generates X11 events.
-   X11::EventTranslator                        fX11EventTranslator;
+   X11::EventTranslator  fX11EventTranslator;
    //Command buffer - for "buffered" drawing commands.
-   X11::CommandBuffer                          fX11CommandBuffer;
+   X11::CommandBuffer    fX11CommandBuffer;
    //Font manager - cache CTFontRef for GUI.
-   FontCache                                   fFontManager;
+   FontCache             fFontManager;
 
    //Id for the new registered drawable.
-   unsigned                                    fCurrentDrawableID;
-   //Cache of ids.
-   std::vector<unsigned>                       fFreeDrawableIDs;
+   Drawable_t            fCurrentDrawableID;
+   //"Cache" of ids.
+   std::vector<Drawable_t> fFreeDrawableIDs;
    //Cocoa objects (views, windows, "pixmaps").
    std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> > > fDrawables;
    typedef std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> > >::iterator drawable_iterator;
    typedef std::map<unsigned, Util::NSStrongReference<NSObject<X11Drawable> > >::const_iterator const_drawable_iterator;
    
-   std::map<ULong_t, unsigned> fGLContextMap;
-   ULong_t fFreeGLContextID;
+   typedef std::map<Handle_t, Util::NSStrongReference<NSOpenGLContext> > handle2ctx_map;
+   typedef std::map<NSOpenGLContext *, Handle_t> ctx2handle_map;
+   
+   handle2ctx_map fHandleToGLContext;
+   ctx2handle_map fGLContextToHandle;
+
+   Handle_t fFreeGLContextID;
+   Util::NSStrongReference<QuartzWindow> fFakeGLWindow;
+   
+   Util::NSScopeGuard<ROOTApplicationDelegate> fApplicationDelegate;
 };
 
 }//Details

@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #ifndef ROOT_QuartzWindow
 #define ROOT_QuartzWindow
 
@@ -24,24 +23,36 @@
 //                                            //
 ////////////////////////////////////////////////
 
+@class QuartzImage;
+
 @interface QuartzWindow : NSWindow<X11Window, NSWindowDelegate>
+
+//In Obj-C you do not have to declared everything in an interface declaration.
+//I do declare all methods here, just for clarity.
 
 //Life-cycle: "ctor".
 - (id) initWithContentRect : (NSRect) contentRect styleMask : (NSUInteger) windowStyle 
        backing : (NSBackingStoreType) bufferingType defer : (BOOL) deferCreation
        windowAttributes : (const SetWindowAttributes_t *) attr;
 
+- (void) dealloc;
+
+//Many properties in QuartzWindow just forwards to fContentView.
+- (void) forwardInvocation : (NSInvocation *) anInvocation;
+- (NSMethodSignature*) methodSignatureForSelector : (SEL) selector;
+
 //This is to emulate "transient" window/main window relationship:
 @property (nonatomic, assign) QuartzWindow *fMainWindow;
 - (void) addTransientWindow : (QuartzWindow *) window;
-//1. X11Drawable protocol.
 
-@property (nonatomic, assign) unsigned fID;
+//Shape mask - non-rectangular window.
+@property (nonatomic, assign) QuartzImage *fShapeCombineMask;
+//@property (nonatomic, assign) NSPoint fShapeMaskShift;
+
+//1. X11Drawable protocol.
 
 - (BOOL) fIsPixmap;
 - (BOOL) fIsOpenGLWidget;
-
-@property (nonatomic, readonly) CGContextRef  fContext;
 
 //Geometry.
 - (int) fX;
@@ -66,27 +77,15 @@
 /////////////////////////////////////////////////////////////////
 //SetWindowAttributes_t/WindowAttributes_t
 
-@property (nonatomic, assign) long          fEventMask;
-@property (nonatomic, assign) int           fClass;
-@property (nonatomic, assign) int           fDepth;
-@property (nonatomic, assign) int           fBitGravity;
-@property (nonatomic, assign) int           fWinGravity;
-@property (nonatomic, assign) unsigned long fBackgroundPixel;
 @property (nonatomic, readonly) int         fMapState;
 
 //End of SetWindowAttributes_t/WindowAttributes_t
 /////////////////////////////////////////////////////////////////
 
 //"Back buffer" is a bitmap, attached to a window by TCanvas.
-@property (nonatomic, assign) QuartzPixmap          *fBackBuffer;
 @property (nonatomic, assign) QuartzView            *fParentView;
 @property (nonatomic, readonly) NSView<X11Window>   *fContentView;
 @property (nonatomic, readonly) QuartzWindow        *fQuartzWindow;
-
-@property (nonatomic, assign) int      fGrabButton;
-@property (nonatomic, assign) unsigned fGrabButtonEventMask;
-@property (nonatomic, assign) unsigned fGrabKeyModifiers;
-@property (nonatomic, assign) BOOL     fOwnerEvents;
 
 //Children subviews.
 - (void) addChild : (NSView<X11Window> *) child;
@@ -100,9 +99,6 @@
 - (void) mapWindow;
 - (void) mapSubwindows;
 - (void) unmapWindow;
-
-//Cursors.
-@property (nonatomic, assign) ECursor fCurrentCursor;
 
 @end
 
@@ -132,12 +128,6 @@
 
 //Life-cycle.
 - (id) initWithFrame : (NSRect) frame windowAttributes : (const SetWindowAttributes_t *) attr;
-
-//Clip mask - to deal with overlaps.
-@property (nonatomic, assign) BOOL fClipMaskIsValid;
-- (BOOL) initClipMask;
-- (QuartzImage *) fClipMask;
-- (void) addOverlap : (NSRect)overlapRect;
 
 //X11Drawable protocol.
 
@@ -172,22 +162,34 @@
 @property (nonatomic, assign) int           fBitGravity;
 @property (nonatomic, assign) int           fWinGravity;
 @property (nonatomic, assign) unsigned long fBackgroundPixel;
+@property (nonatomic, retain) QuartzImage  *fBackgroundPixmap;//Hmm, image, pixmap ...
 @property (nonatomic, readonly) int         fMapState;
 
 //End of SetWindowAttributes_t/WindowAttributes_t
 /////////////////////////////////////////////////////////////////
 
 
-@property (nonatomic, assign) QuartzPixmap        *fBackBuffer;
+@property (nonatomic, retain) QuartzPixmap        *fBackBuffer;
 @property (nonatomic, assign) QuartzView          *fParentView;
-@property (nonatomic, assign) unsigned             fLevel;
 @property (nonatomic, readonly) NSView<X11Window> *fContentView;
 @property (nonatomic, readonly) QuartzWindow      *fQuartzWindow;
 
-@property (nonatomic, assign) int      fGrabButton;
-@property (nonatomic, assign) unsigned fGrabButtonEventMask;
-@property (nonatomic, assign) unsigned fGrabKeyModifiers;
-@property (nonatomic, assign) BOOL     fOwnerEvents;
+//
+
+@property (nonatomic, assign) int      fPassiveGrabButton;
+@property (nonatomic, assign) unsigned fPassiveGrabEventMask;
+@property (nonatomic, assign) unsigned fPassiveGrabKeyModifiers;
+
+@property (nonatomic, assign) BOOL     fPassiveGrabOwnerEvents;
+
+- (void) activatePassiveGrab;
+- (void) activateImplicitGrab;
+- (void) activateGrab : (unsigned) eventMask ownerEvents : (BOOL) ownerEvents;
+- (void) cancelGrab;
+
+- (BOOL) acceptsCrossingEvents : (unsigned) eventMask;
+
+//
 
 //Children subviews.
 - (void) addChild : (NSView<X11Window> *)child;
@@ -209,7 +211,6 @@
 
 - (BOOL) fIsOverlapped;
 - (void) setOverlapped : (BOOL) overlap;
-- (void) updateLevel : (unsigned) newLevel;
 - (void) configureNotifyTree;
 
 //Additional methods and properties.
@@ -225,6 +226,20 @@
 
 //Cursors.
 @property (nonatomic, assign) ECursor fCurrentCursor;
+
+//X11 "properties".
+- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize 
+         forType : (Atom_t) dataType format : (unsigned) format;
+- (BOOL) hasProperty : (const char *) propName;
+- (unsigned char *) getProperty : (const char *) propName returnType : (Atom_t *) type 
+   returnFormat : (unsigned *) format nElements : (unsigned *) nElements;
+- (void) removeProperty : (const char *) propName;
+
+//DND
+@property (nonatomic, assign) BOOL fIsDNDAware;
+
+- (NSDragOperation) draggingEntered : (id<NSDraggingInfo>) sender;
+- (BOOL) performDragOperation : (id<NSDraggingInfo>) sender;
 
 @end
 
@@ -255,12 +270,28 @@ NSPoint TranslateFromScreen(NSPoint point, NSView<X11Window> *to);
 NSPoint TranslateCoordinates(NSView<X11Window> *fromView, NSView<X11Window> *toView, NSPoint sourcePoint);
 
 bool ViewIsTextViewFrame(NSView<X11Window> *view, bool checkParent);
+bool ViewIsHtmlViewFrame(NSView<X11Window> *view, bool checkParent);
 bool LockFocus(NSView<X11Window> *view);
 void UnlockFocus(NSView<X11Window> *view);//For symmetry only.
 
-//Find intersection of view and sibling, result is a rect in view's space.
-NSRect FindOverlapRect(const NSRect &viewRect, const NSRect &siblingViewRect);
-bool RectsOverlap(const NSRect &r1, const NSRect &r2);
+bool ScreenPointIsInView(NSView<X11Window> *view, Int_t x, Int_t y);
+QuartzWindow *FindWindowInPoint(Int_t x, Int_t y);
+NSView<X11Window> *FindDNDAwareViewInPoint(NSView *parentView, Window_t dragWinID, Window_t inputWinID, Int_t x, Int_t y, Int_t maxDepth);
+
+//Pointer == cursor in X11's terms.
+
+//These two functions use "mouse location outside of event stream" - simply
+//asks for the current cursor location
+//("regardless of the current event being handled or of any events pending").
+QuartzWindow *FindWindowUnderPointer();
+NSView<X11Window> *FindViewUnderPointer();
+
+//These two functions use coordinates from the event to find a window/view.
+QuartzWindow *FindWindowForPointerEvent(NSEvent *pointerEvent);
+NSView<X11Window> *FindViewForPointerEvent(NSEvent *pointerEvent);
+
+//Add shape mask to context.
+void ClipToShapeMask(NSView<X11Window> *view, CGContextRef ctx);
 
 }//X11
 }//MacOSX

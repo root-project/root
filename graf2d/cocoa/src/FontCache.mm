@@ -453,12 +453,13 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize)
    
    if (it == fFonts[11].end()) {
       //This GetValue + Which I took from Olivier's code.
-      const char *fontDirectoryPath = gEnv->GetValue("Root.TTFontPath","$(ROOTSYS)/fonts");//This one I do not own.
-      char *fontFileName = gSystem->Which(fontDirectoryPath, "symbol.ttf", kReadPermission);//This must be deleted.
+      const char * const fontDirectoryPath = gEnv->GetValue("Root.TTFontPath","$(ROOTSYS)/fonts");//This one I do not own.
+      char * const fontFileName = gSystem->Which(fontDirectoryPath, "symbol.ttf", kReadPermission);//This must be deleted.
+      
+      const Util::ScopedArray<char> arrayGuard(fontFileName);
 
       if (!fontFileName || fontFileName[0] == 0) {
          ::Error("FontCache::SelectSymbolFont", "sumbol.ttf file not found");
-         delete [] fontFileName;
          return 0;
       }
 
@@ -466,14 +467,12 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize)
          const Util::CFScopeGuard<CFStringRef> path(CFStringCreateWithCString(kCFAllocatorDefault, fontFileName, kCFURLPOSIXPathStyle));
          if (!path.Get()) {
             ::Error("FontCache::SelectSymbolFont", "CFStringCreateWithCString failed");
-            delete [] fontFileName;
             return 0;
          }
          
          const Util::CFScopeGuard<CFArrayRef> arr(CTFontManagerCreateFontDescriptorsFromURL(CFURLCreateWithFileSystemPath(kCFAllocatorDefault, path.Get(), kCFURLPOSIXPathStyle, false)));
          if (!arr.Get()) {
             ::Error("FontCache::SelectSymbolFont", "CTFontManagerCreateFontDescriptorsFromURL failed");
-            delete [] fontFileName;
             return 0;
          }
 
@@ -481,11 +480,8 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize)
          const CTFontGuard_t font(CTFontCreateWithFontDescriptor(fontDesc, fixedSize, 0), false);
          if (!font.Get()) {
             ::Error("FontCache::SelectSymbolFont", "CTFontCreateWithFontDescriptor failed");
-            delete [] fontFileName;
             return 0;
          }
-
-         delete [] fontFileName;
 
          fFonts[11][fixedSize] = font;//This can throw.
          return fSelectedFont = font.Get();

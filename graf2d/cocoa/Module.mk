@@ -44,17 +44,18 @@ INCLUDEFILES += $(COCOADEP)
 include/%.h:    $(COCOADIRI)/%.h
 		cp $< $@
 
-$(COCOALIB):    $(COCOAO) $(COCOAOBJCPPO) $(COCOADO) $(ORDER_) $(MAINLIBS) \
+$(COCOALIB):    $(COCOAO) $(COCOAOBJCPPO) $(COCOADO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) \
                 $(COCOALIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libGCocoa.$(SOEXT) $@ \
 		   "$(COCOAO) $(COCOAOBJCPPO) $(COCOADO)" \
-		   "$(COCOALIBEXTRA) -framework Cocoa -framework OpenGL"
+         "$(FREETYPELDFLAGS) $(FREETYPELIB) \
+		    $(COCOALIBEXTRA) -framework Cocoa -framework OpenGL"
 
 $(COCOADS):     $(COCOAH1) $(COCOAL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(COCOAH1) $(COCOAL)
+		$(ROOTCINTTMP) -f $@ -c $(FREETYPEINC) $(COCOAH1) $(COCOAL)
 
 $(COCOAMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(COCOAL)
 		$(RLIBMAP) -o $@ -l $(COCOALIB) \
@@ -71,3 +72,5 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(COCOADEP) $(COCOADS) $(COCOADH) $(COCOALIB) $(COCOAMAP)
 
 distclean::     distclean-$(MODNAME)
+
+$(COCOAOBJCPPO) $(COCOADO) $(COCOAO): CXXFLAGS += $(FREETYPEINC)

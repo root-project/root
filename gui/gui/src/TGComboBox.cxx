@@ -47,6 +47,7 @@
 #include "Riostream.h"
 #include "TGTextEntry.h"
 #include "KeySymbols.h"
+#include "RConfigure.h"
 
 
 ClassImp(TGComboBoxPopup)
@@ -479,8 +480,18 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
                                          0, fHeight, ax, ay, wdummy);
          // Drop down listbox of combo box should react to pointer motion...
          fListBox->GetContainer()->AddInput(kPointerMotionMask);
+#ifdef R__HAS_COCOA
+         gVirtualX->SetWMTransientHint(fComboFrame->GetId(), GetId());
+#endif
          fComboFrame->PlacePopup(ax, ay, fWidth-2, fComboFrame->GetDefaultHeight());
          fDDButton->SetState(kButtonUp);
+#ifdef R__HAS_COCOA
+         //tp: I need this modification - "button" is not repainted correctly
+         //with Cocoa, when combobox is closed (reason is quite complex), happens
+         //when item is wider than combobox.
+         //TODO: find another way :)
+         fClient->NeedRedraw(fDDButton);
+#endif
       } else if (fTextEntry) {
          return fTextEntry->HandleButton(event);
       }
@@ -672,13 +683,13 @@ void TGComboBox::RemoveAll()
 }
 
 //______________________________________________________________________________
-void TGComboBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGComboBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a combo box widget as a C++ statement(s) on output stream out.
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
-   out << endl << "   // combo box" << endl;
+   out << std::endl << "   // combo box" << std::endl;
    out << "   TGComboBox *";
 
    if (!fTextEntry) {
@@ -690,15 +701,15 @@ void TGComboBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    if (fBackground == GetWhitePixel()) {
       if (GetOptions() == (kHorizontalFrame | kSunkenFrame | kDoubleBorder)) {
-         out <<");" << endl;
+         out <<");" << std::endl;
       } else {
-         out << "," << GetOptionString() << ");" << endl;
+         out << "," << GetOptionString() << ");" << std::endl;
       }
    } else {
-      out << "," << GetOptionString() << ",ucolor);" << endl;
+      out << "," << GetOptionString() << ",ucolor);" << std::endl;
    }
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    TGTextLBEntry *b;
    TGFrameElement *el;
@@ -710,12 +721,12 @@ void TGComboBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       b = (TGTextLBEntry *) el->fFrame;
       out << "   " << GetName() << "->AddEntry(";
       b->SavePrimitive(out, option);
-      out <<  ");" << endl;
+      out <<  ");" << std::endl;
    }
 
    out << "   " << GetName() << "->Resize(" << GetWidth()  << ","
-       << GetHeight() << ");" << endl;
-   out << "   " << GetName() << "->Select(" << GetSelected() << ");" << endl;
+       << GetHeight() << ");" << std::endl;
+   out << "   " << GetName() << "->Select(" << GetSelected() << ");" << std::endl;
 }
 
 //______________________________________________________________________________
@@ -740,20 +751,20 @@ TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
 }
 
 //______________________________________________________________________________
-void TGLineStyleComboBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGLineStyleComboBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a line style combo box widget as a C++ statement(s).
 
-   out << endl << "   // line style combo box" << endl;
+   out << std::endl << "   // line style combo box" << std::endl;
    out << "   TGLineStyleComboBox *";
 
    out << GetName() << " = new TGLineStyleComboBox(" << fParent->GetName()
-       << "," << fWidgetId << ");" << endl;
+       << "," << fWidgetId << ");" << std::endl;
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
    out << "   " << GetName() << "->Resize(" << GetWidth()  << ","
-       << GetHeight() << ");" << endl;
-   out << "   " << GetName() << "->Select(" << GetSelected() << ");" << endl;
+       << GetHeight() << ");" << std::endl;
+   out << "   " << GetName() << "->Select(" << GetSelected() << ");" << std::endl;
 }
 
 //______________________________________________________________________________
@@ -782,20 +793,20 @@ TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
 }
 
 //______________________________________________________________________________
-void TGLineWidthComboBox::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGLineWidthComboBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a line width combo box widget as a C++ statement(s).
 
-   out << endl << "   // line width combo box" << endl;
+   out << std::endl << "   // line width combo box" << std::endl;
    out << "   TGLineWidthComboBox *";
 
    out << GetName() << " = new TGLineWidthComboBox(" << fParent->GetName()
-       << "," << fWidgetId << ");" << endl;
+       << "," << fWidgetId << ");" << std::endl;
    if (option && strstr(option, "keep_names"))
-      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << endl;
+      out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
    out << "   " << GetName() << "->Resize(" << GetWidth()  << ","
-       << GetHeight() << ");" << endl;
-   out << "   " << GetName() << "->Select(" << GetSelected() << ");" << endl;
+       << GetHeight() << ");" << std::endl;
+   out << "   " << GetName() << "->Select(" << GetSelected() << ");" << std::endl;
 }
 
 static const char *gFonts[][2] = {    //   unix name,     name

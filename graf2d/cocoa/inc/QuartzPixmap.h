@@ -48,8 +48,15 @@
 - (void) copy : (NSObject<X11Drawable> *) src area : (Rectangle_t) area withMask : (QuartzImage *) mask 
          clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint;
 
+- (unsigned char *) readColorBits : (Rectangle_t) area;
+
 //
 - (unsigned char *) fData;
+
+//XPutPixel.
+- (void) putPixel : (const unsigned char *) data X : (unsigned) x Y : (unsigned) y;
+//XAddPixel.
+- (void) addPixel : (const unsigned char *) rgb;
 
 @end
 
@@ -67,13 +74,13 @@
 - (id) initWithW : (unsigned) width H : (unsigned) height data : (unsigned char *) data;
 - (id) initMaskWithW : (unsigned) width H : (unsigned) height bitmapMask : (unsigned char *) mask;
 - (id) initMaskWithW : (unsigned) width H : (unsigned) height;
+- (id) initFromPixmap : (QuartzPixmap *) pixmap;
+- (id) initFromImage : (QuartzImage *) image;
+- (id) initFromImageFlipped : (QuartzImage *) image;
 
 - (void) dealloc;
 @property (nonatomic, readonly) BOOL fIsStippleMask;
 - (CGImageRef) fImage;
-
-- (void) clearMask;
-- (void) maskOutPixels : (NSRect) maskedArea;
 
 //X11Drawable protocol.
 @property (nonatomic, assign) unsigned fID;
@@ -97,6 +104,7 @@ CGImageRef CreateSubImage(QuartzImage *image, const Rectangle_t &area);
 //
 bool AdjustCropArea(const Rectangle_t &srcRect, Rectangle_t &cropArea);
 bool AdjustCropArea(QuartzImage *srcImage, Rectangle_t &cropArea);
+bool AdjustCropArea(QuartzImage *srcImage, NSRect &cropArea);
 bool AdjustCropArea(QuartzPixmap *srcImage, Rectangle_t &cropArea);
 
 //Aux. function for TGCocoa.
