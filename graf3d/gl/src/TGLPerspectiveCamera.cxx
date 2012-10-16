@@ -22,11 +22,6 @@
 //                                                                      //
 // Perspective projection camera - with characteristic foreshortening.  //
 //                                                                      //
-// TODO: Currently constrains YOZ plane to be floor - this is never     //
-// 'tipped'. While useful we really need to extend so can:              //
-// i) Pick any one of the three natural planes of the world to be floor.//
-// ii) Can use a free arcball style camera with no contraint - integrate//
-// TArcBall.                                                            //
 //////////////////////////////////////////////////////////////////////////
 
 ClassImp(TGLPerspectiveCamera)

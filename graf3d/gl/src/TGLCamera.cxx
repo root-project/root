@@ -937,9 +937,8 @@ Bool_t TGLCamera::RotateRad(Double_t hRotate, Double_t vRotate)
       TGLVector3 up   = fCamTrans.GetBaseVec(3);
       TGLVector3 pos  = fCamTrans.GetTranslation();
 
-      TGLVector3 deltaT = pos - (pos*lft)*lft;
-      Double_t   deltaF = deltaT * fwd;
-      Double_t   deltaU = deltaT * up;
+      Double_t deltaF = pos * fwd;
+      Double_t deltaU = pos * up;
 
       // up vector lock
       TGLVector3 zdir = fCamBase.GetBaseVec(3);
@@ -994,10 +993,9 @@ Bool_t TGLCamera::RotateArcBallRad(Double_t hRotate, Double_t vRotate)
    TGLVector3 up   = fCamTrans.GetBaseVec(3);
    TGLVector3 pos  = fCamTrans.GetTranslation();
 
-   TGLVector3 deltaT = pos - (pos*lft)*lft;
-   Double_t   deltaF = deltaT * fwd;
-   Double_t   deltaL = deltaT * lft;
-   Double_t   deltaU = deltaT * up;
+   Double_t deltaF = pos * fwd;
+   Double_t deltaL = pos * lft;
+   Double_t deltaU = pos * up;
 
    fCamTrans.MoveLF(1, -deltaF);
    fCamTrans.MoveLF(2, -deltaL);
