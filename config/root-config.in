@@ -78,7 +78,7 @@ else
    newlib="-lNew"
    rootglibs="-lGui"
    rootevelibs="-lEve -lEG -lTreePlayer -lGeom -lGed -lRGL"
-   rootlibs="-lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad \
+   rootlibs="-lCore -lGlobals -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad \
              -lTree -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread"
    if test "$dicttype" = "reflex" || test "$dicttype" = "gccxml"; then
        rootlibs="$rootlibs -lReflex"

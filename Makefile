@@ -72,8 +72,8 @@ include $(MAKEFILEDEP)
 MODULES       = build cint/cint core/metautils core/pcre core/clib core/utils \
                 core/textinput core/base core/cont core/meta core/thread \
                 io/io math/mathcore net/net core/zip core/lzma math/matrix \
-                core/newdelete hist/hist tree/tree graf2d/freetype \
-                graf2d/graf graf2d/gpad graf3d/g3d \
+                core/globals core/newdelete hist/hist tree/tree \
+                graf2d/freetype graf2d/graf graf2d/gpad graf3d/g3d \
                 gui/gui math/minuit hist/histpainter tree/treeplayer \
                 gui/ged tree/treeviewer math/physics graf2d/postscript \
                 core/rint html montecarlo/eg \
@@ -319,7 +319,7 @@ ifneq ($(PLATFORM),win32)
 RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
 NEWLIBS      := -lNew
-BOOTLIBS     := -lCore -lCint
+BOOTLIBS     := -lCore -lGlobals -lCint
 ifneq ($(ROOTDICTTYPE),cint)
 BOOTLIBS     += -lCintex -lReflex
 endif
@@ -329,7 +329,7 @@ RINTLIBS     := -lRint
 else
 CINTLIBS     := $(LPATH)/libCint.lib
 NEWLIBS      := $(LPATH)/libNew.lib
-BOOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib
+BOOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libGlobals.lib $(LPATH)/libCint.lib
 ifneq ($(ROOTDICTTYPE),cint)
 BOOTLIBS     += $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
 endif
@@ -347,7 +347,7 @@ ROOTA        := bin/roota
 PROOFSERVA   := bin/proofserva
 
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
-BOOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB)
+BOOTLIBSDEP   = $(ORDER_) $(CORELIB) $(GLOBALSLIB) $(CINTLIB)
 ifneq ($(ROOTDICTTYPE),cint)
 BOOTLIBSDEP  += $(CINTEXLIB) $(REFLEXLIB)
 endif
@@ -821,7 +821,8 @@ endif
 
 $(CORELIB): $(CLINGO) $(COREO) $(COREDO) $(CINTLIB) $(PCREDEP) $(CORELIBDEP)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREDO) $(COREO) $(CLINGO) $(CLINGLIBEXTRA) " \
+	   "$(SOFLAGS)" libCore.$(SOEXT) $@ \
+	   "$(COREDO) $(COREO) $(CLINGO) $(CLINGLIBEXTRA)" \
 	   "$(CORELIBEXTRA) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
 
 $(COREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(COREL)

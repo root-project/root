@@ -210,7 +210,7 @@ namespace ROOT {
    }
 }
 
-TROOT *gROOT = ROOT::GetROOT();     // The ROOT of EVERYTHING
+TROOT *gROOT = 0;     // The ROOT of EVERYTHING initialized in libGlobals
 
 // Global debug flag (set to > 0 to get debug output).
 // Can be set either via the interpreter (gDebug is exported to CINT),
