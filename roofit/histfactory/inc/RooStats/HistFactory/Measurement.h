@@ -33,8 +33,10 @@ public:
   void SetOutputFilePrefix( const std::string& prefix ) { fOutputFilePrefix = prefix; }
   std::string GetOutputFilePrefix() { return fOutputFilePrefix; }
 
-  void SetPOI( const std::string& POI ) { fPOI = POI; }
-  std::string GetPOI() { return fPOI; }
+  void SetPOI( const std::string& POI ) { fPOI.insert( fPOI.begin(), POI ); }
+  void AddPOI( const std::string& POI ) { fPOI.push_back(POI); }
+  std::string GetPOI(unsigned int i=0) { return fPOI.at(i); }
+  std::vector<std::string>& GetPOIList() { return fPOI; }
 
 
   // Add a parameter to be set as constant
@@ -110,7 +112,7 @@ private:
 
   // Configurables of this measurement
   std::string fOutputFilePrefix;
-  std::string fPOI;
+  std::vector<std::string> fPOI;
   double fLumi;
   double fLumiRelErr;
   int fBinLow;

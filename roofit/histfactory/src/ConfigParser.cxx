@@ -333,7 +333,8 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode
 		  << " has no text." << std::endl;
 	throw hf_exc();
       }
-      measurement.SetPOI( child->GetText() );
+      //poi// measurement.SetPOI( child->GetText() );
+      measurement.AddPOI( child->GetText() );
     }
 
     else if( child->GetNodeName() == TString( "ParamSetting" ) ) {

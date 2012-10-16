@@ -50,14 +50,21 @@ namespace HistFactory{
     RooWorkspace* MakeSingleChannelModel( Measurement& measurement, Channel& channel );
     static RooWorkspace* MakeCombinedModel( Measurement& measurement );
     
-    void SetFunctionsToPreprocess(std::vector<std::string> lines){ fPreprocessFunctions = lines;}
+    void SetFunctionsToPreprocess(std::vector<std::string> lines){ fPreprocessFunctions = lines; }
     
+    //ES//
+    /*
     void AddEfficiencyTerms(RooWorkspace* proto, std::string prefix, std::string interpName,
 			    std::map<std::string,std::pair<double,double> > systMap,
 			    std::vector<std::string>& likelihoodTermNames, std::vector<std::string>& totSystTermNames);
-    
-    std::string AddNormFactor(RooWorkspace *, std::string & , std::string & , EstimateSummary & , bool );
-    
+    */			    
+    void AddEfficiencyTerms(RooWorkspace* proto, std::string prefix, std::string interpName,
+			    std::vector<OverallSys>& systList, 			 
+			    std::vector<std::string>& likelihoodTermNames, std::vector<std::string>& totSystTermNames);
+
+    //ES// std::string AddNormFactor(RooWorkspace *, std::string & , std::string & , EstimateSummary & , bool );
+    std::string AddNormFactor(RooWorkspace* proto, std::string& channel, std::string& sigmaEpsilon, Sample& sample, bool doRatio);
+
     void AddMultiVarGaussConstraint(RooWorkspace* proto, std::string prefix,int lowBin, int highBin, std::vector<std::string>& likelihoodTermNames);
     
     void AddPoissonTerms(RooWorkspace* proto, std::string prefix, std::string obsPrefix, std::string expPrefix, int lowBin, int highBin,
@@ -77,13 +84,17 @@ namespace HistFactory{
     //void FormatFrameForLikelihood(RooPlot* frame, std::string XTitle=std::string("#sigma / #sigma_{SM}"), std::string YTitle=std::string("-log likelihood"));
     
     
-    void LinInterpWithConstraint(RooWorkspace* proto, TH1* nominal, std::vector<TH1*> lowHist, std::vector<TH1*> highHist,
-				 std::vector<std::string> sourceName, std::string prefix, std::string productPrefix, std::string systTerm,
-				 int lowBin, int highBin, std::vector<std::string>& likelihoodTermNames);
+    //ES// void LinInterpWithConstraint(RooWorkspace* proto, TH1* nominal, std::vector<TH1*> lowHist, std::vector<TH1*> highHist,
+    //ES// 				 std::vector<std::string> sourceName, std::string prefix, std::string productPrefix, std::string systTerm,
+    //ES// 				 int lowBin, int highBin, std::vector<std::string>& likelihoodTermNames);
+    void LinInterpWithConstraint(RooWorkspace* proto, TH1* nominal, std::vector<HistoSys>,  std::string prefix, std::string productPrefix, std::string systTerm,
+     				 int lowBin, int highBin, std::vector<std::string>& likelihoodTermNames);
     
     TDirectory* Makedirs( TDirectory* file, std::vector<std::string> names );
     
-    RooWorkspace* MakeSingleChannelModel(std::vector<RooStats::HistFactory::EstimateSummary> summary, std::vector<std::string> systToFix, bool doRatio=false);
+    //ES// RooWorkspace* MakeSingleChannelModel(std::vector<RooStats::HistFactory::EstimateSummary> summary, std::vector<std::string> systToFix, bool doRatio=false);
+    // GHL: Renaming to "MakeSingleChannelWorkspace"
+    RooWorkspace* MakeSingleChannelWorkspace(Measurement& measurement, Channel& channel);
     
     void  MakeTotalExpected(RooWorkspace* proto, std::string totName, std::string /**/, std::string /**/,
 			    int lowBin, int highBin, std::vector<std::string>& syst_x_expectedPrefixNames,
