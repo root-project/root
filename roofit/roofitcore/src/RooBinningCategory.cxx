@@ -43,13 +43,13 @@ ClassImp(RooBinningCategory)
 
 //_____________________________________________________________________________
 RooBinningCategory::RooBinningCategory(const char *name, const char *title, RooAbsRealLValue& inputVar, 
-					   const char* binningName) :
+					   const char* binningName, const char* catTypeName) :
   RooAbsCategory(name, title), _inputVar("inputVar","Input category",this,inputVar), _bname(binningName)
 {
   // Constructor with input function to be mapped and name and index of default
   // output state of unmapped values
 
-  initialize() ;
+  initialize(catTypeName) ;
 
 }
 
@@ -74,14 +74,15 @@ RooBinningCategory::~RooBinningCategory()
 
 
 //_____________________________________________________________________________
-void RooBinningCategory::initialize() 
+void RooBinningCategory::initialize(const char* catTypeName)
 {
   // Iterator over all bins in input variable and define corresponding state labels
 
   Int_t nbins = ((RooAbsRealLValue&)_inputVar.arg()).getBinning(_bname.Length()>0?_bname.Data():0).numBins() ;
   for (Int_t i=0 ; i<nbins ; i++) {
-    string name = (_bname.Length()>0) ? Form("%s_%s_bin%d",_inputVar.arg().GetName(),_bname.Data(),i) 
-	                              : Form("%s_bin%d",_inputVar.arg().GetName(),i) ;
+    string name = catTypeName!=0 ? Form("%s%d",catTypeName,i)
+            : (_bname.Length()>0 ? Form("%s_%s_bin%d",_inputVar.arg().GetName(),_bname.Data(),i) 
+            : Form("%s_bin%d",_inputVar.arg().GetName(),i)) ;
     defineType(name.c_str(),i) ;
   }
 }
