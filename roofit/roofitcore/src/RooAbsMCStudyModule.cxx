@@ -34,6 +34,8 @@
 #include "RooFit.h"
 #include "RooAbsMCStudyModule.h"
 
+using namespace std;
+
 ClassImp(RooAbsMCStudyModule)
   ;
 

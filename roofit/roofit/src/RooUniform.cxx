@@ -33,6 +33,8 @@
 #include "RooMath.h"
 #include "RooArgSet.h"
 
+using namespace std;
+
 ClassImp(RooUniform)
 
 

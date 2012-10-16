@@ -20,7 +20,6 @@
 #include "RooErrorHandler.h"
 #include <map>
 #include <iostream>
-using namespace std ;
 
 class RooArgList ;
 
@@ -104,12 +103,12 @@ public:
 
   RooAbsArg& operator[](const char* name) const ;   
 
-  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) {
+  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) {
     // I/O streaming interface (machine readable)
     return readFromStream(is, compact, 0, 0, verbose) ;
   }
-  Bool_t readFromStream(istream& is, Bool_t compact, const char* flagReadAtt, const char* section, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact, const char* section=0) const;  
+  Bool_t readFromStream(std::istream& is, Bool_t compact, const char* flagReadAtt, const char* section, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(std::ostream& os, Bool_t compact, const char* section=0) const;  
   void writeToFile(const char* fileName) const ;
   Bool_t readFromFile(const char* fileName, const char* flagReadAtt=0, const char* section=0, Bool_t verbose=kFALSE) ;
 

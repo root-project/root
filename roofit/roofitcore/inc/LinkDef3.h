@@ -2,9 +2,9 @@
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
-#pragma link C++ class RooCacheManager<vector<double> >+ ;
-#pragma link C++ class list<RooAbsData*>+ ;
-#pragma link C++ class map<string,RooAbsData*>+ ;
+#pragma link C++ class RooCacheManager<std::vector<double> >+ ;
+#pragma link C++ class std::list<RooAbsData*>+ ;
+#pragma link C++ class std::map<string,RooAbsData*>+ ;
 #pragma link C++ class RooCacheManager<RooAbsCacheElement>+ ;
 #pragma link C++ class RooRandomizeParamMCSModule+ ;
 #pragma link C++ class RooRangeBinning+ ;
@@ -48,8 +48,8 @@
 #pragma link C++ class RooWorkspace- ;
 #pragma link C++ class RooWorkspace::CodeRepo- ;
 #pragma link C++ class RooWorkspace::WSDir+ ;
-#pragma link C++ class list<TObject*>+ ;
-#pragma link C++ class list<RooAbsData*>+ ;
+#pragma link C++ class std::list<TObject*>+ ;
+#pragma link C++ class std::list<RooAbsData*>+ ;
 #pragma link C++ class RooProfileLL+ ;
 #pragma link C++ class RooAbsCachedPdf+ ;
 #pragma link C++ class RooAbsSelfCachedPdf+ ;
@@ -114,7 +114,7 @@
 #pragma link C++ class RooVectorDataStore::RealFullVector- ;
 #pragma link C++ class RooVectorDataStore::CatVector- ;
 #pragma link C++ class std::pair<std::string,RooAbsData*>+ ;
-#pragma link C++ class pair<int,RooLinkedListElem*>+ ;
+#pragma link C++ class std::pair<int,RooLinkedListElem*>+ ;
 #pragma link C++ class RooUnitTest+ ;
 #ifndef __ROOFIT_NOROOMINIMIZER
 #pragma link C++ class RooMinimizer+ ;
@@ -126,13 +126,12 @@
 #pragma link C++ class RooAbsStudy+ ;
 #pragma link C++ class RooGenFitStudy+ ;
 #pragma link C++ class RooProofDriverSelector+ ;
-#pragma link C++ class list<RooAbsStudy*>+ ;
-#pragma link C++ class map<string,RooDataSet*>+ ;
-#pragma link C++ class map<string,RooDataHist*>+ ;
+#pragma link C++ class std::list<RooAbsStudy*>+ ;
+#pragma link C++ class std::map<string,RooDataSet*>+ ;
+#pragma link C++ class std::map<string,RooDataHist*>+ ;
 // The nomap options excludes the class from the roomap file
-#pragma link C++ options=nomap class map<string,TH1*>+ ;
+#pragma link C++ options=nomap class std::map<string,TH1*>+ ;
 #pragma link C++ namespace RooCintUtils+ ;
 #pragma link off class RooErrorHandler+ ;
-#pragma link off class RooNag+ ;
 #endif 
  

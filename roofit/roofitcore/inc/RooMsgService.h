@@ -136,7 +136,7 @@ public:
     Color_t color ;
     Bool_t prefix ;
     
-    ostream* os ;
+    std::ostream* os ;
 
   } ;
 
@@ -163,8 +163,8 @@ public:
   void showPid(Bool_t flag) { _showPid = flag ; }
 
   // Back end -- Send message or check if particular logging configuration is active
-  ostream& log(const RooAbsArg* self, RooFit::MsgLevel level, RooFit::MsgTopic facility, Bool_t forceSkipPrefix=kFALSE) ;
-  ostream& log(const TObject* self, RooFit::MsgLevel level, RooFit::MsgTopic facility, Bool_t forceSkipPrefix=kFALSE) ;
+  std::ostream& log(const RooAbsArg* self, RooFit::MsgLevel level, RooFit::MsgTopic facility, Bool_t forceSkipPrefix=kFALSE) ;
+  std::ostream& log(const TObject* self, RooFit::MsgLevel level, RooFit::MsgTopic facility, Bool_t forceSkipPrefix=kFALSE) ;
   Bool_t isActive(const RooAbsArg* self, RooFit::MsgTopic facility, RooFit::MsgLevel level) ;
   Bool_t isActive(const TObject* self, RooFit::MsgTopic facility, RooFit::MsgLevel level) ;
 

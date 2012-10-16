@@ -26,6 +26,8 @@
 #include "RooMapCatEntry.h"
 #include "TString.h"
 
+using namespace std;
+
 ClassImp(RooMapCatEntry)
 ;
 

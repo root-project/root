@@ -38,6 +38,8 @@
 
 #include "RooMinimizer.h"
 
+using namespace std;
+
 RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer* context,
 			   bool verbose) :
   _funct(funct), _context(context),
@@ -79,6 +81,8 @@ RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer* context,
   delete pIter;
 
   _nDim = _floatParamList->getSize();
+
+  updateFloatVec() ;
   
   // Save snapshot of initial lists
   _initFloatParamList = (RooArgList*) _floatParamList->snapshot(kFALSE) ;
@@ -329,6 +333,8 @@ Bool_t RooMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings>& p
 
   }
 
+  updateFloatVec() ;
+
   return 0 ;  
 
 }
@@ -442,7 +448,9 @@ void RooMinimizerFcn::ApplyCovarianceMatrix(TMatrixDSym& V)
 
 Bool_t RooMinimizerFcn::SetPdfParamVal(const Int_t &index, const Double_t &value) const
 {
-  RooRealVar* par = (RooRealVar*)_floatParamList->at(index);
+  //RooRealVar* par = (RooRealVar*)_floatParamList->at(index);
+  RooRealVar* par = (RooRealVar*)_floatParamVec[index] ;
+
   if (par->getVal()!=value) {
     if (_verbose) cout << par->GetName() << "=" << value << ", " ;
     
@@ -452,6 +460,22 @@ Bool_t RooMinimizerFcn::SetPdfParamVal(const Int_t &index, const Double_t &value
 
   return kFALSE;
 }
+
+
+
+//_____________________________________________________________________________
+void RooMinimizerFcn::updateFloatVec() 
+{
+  _floatParamVec.clear() ;
+  RooFIter iter = _floatParamList->fwdIterator() ;
+  RooAbsArg* arg ;
+  _floatParamVec = std::vector<RooAbsArg*>(_floatParamList->getSize()) ;
+  Int_t i(0) ;
+  while((arg=iter.next())) {
+    _floatParamVec[i++] = arg ;
+  }
+}
+
 
 
 double RooMinimizerFcn::DoEval(const double *x) const 

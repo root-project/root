@@ -55,12 +55,12 @@ public:
   static RooFitResult* lastMinuitFit(const RooArgList& varList=RooArgList()) ;
 
   // Printing interface (human readable)
-  virtual void printValue(ostream& os) const ;
-  virtual void printName(ostream& os) const ;
-  virtual void printTitle(ostream& os) const ;
-  virtual void printClassName(ostream& os) const ;
-  virtual void printArgs(ostream& os) const ;
-  void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  virtual void printValue(std::ostream& os) const ;
+  virtual void printName(std::ostream& os) const ;
+  virtual void printTitle(std::ostream& os) const ;
+  virtual void printClassName(std::ostream& os) const ;
+  virtual void printArgs(std::ostream& os) const ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
   inline virtual void Print(Option_t *options= 0) const {
     // Printing interface
@@ -79,8 +79,8 @@ public:
   }
 
   inline UInt_t numStatusHistory() const { return _statusHistory.size() ; }
-  Int_t statusCodeHistory(UInt_t icycle) ;
-  const char* statusLabelHistory(UInt_t icycle) ;
+  Int_t statusCodeHistory(UInt_t icycle) const ;
+  const char* statusLabelHistory(UInt_t icycle) const ;
 
   inline Int_t covQual() const { 
     // Return MINUIT quality code of covariance matrix
@@ -159,7 +159,6 @@ protected:
   
   friend class RooMinuit ;
   friend class RooMinimizer ;
-  friend class RooNag ;
   void setCovarianceMatrix(TMatrixDSym& V) ; 
   void setConstParList(const RooArgList& list) ;
   void setInitParList(const RooArgList& list) ;

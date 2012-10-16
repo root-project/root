@@ -29,6 +29,8 @@
 #include "RooLinTransBinning.h"
 #include "RooLinTransBinning.h"
 
+using namespace std;
+
 ClassImp(RooLinTransBinning) 
 ;
 

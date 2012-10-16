@@ -40,6 +40,8 @@
 #include "TNamed.h"
 #include "TClass.h"
 
+using namespace std;
+
 ClassImp(RooPrintable)
 ;
 

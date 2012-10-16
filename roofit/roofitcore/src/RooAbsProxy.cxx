@@ -34,6 +34,8 @@
 //
 
 
+using namespace std;
+
 ClassImp(RooAbsProxy)
 ;
 

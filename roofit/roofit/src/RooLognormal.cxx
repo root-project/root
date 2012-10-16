@@ -41,6 +41,8 @@
 #include <Math/PdfFuncMathCore.h>
 #include <Math/ProbFuncMathCore.h>
 
+using namespace std;
+
 ClassImp(RooLognormal)
 
 

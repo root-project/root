@@ -123,13 +123,7 @@ class RooCFunction1Ref : public TObject {
     return fmap().lookupArgName(_ptr,iarg) ;    
   }
 
-  static RooCFunction1Map<VO,VI>& fmap() {
-    // Return reference to function pointer-to-name mapping service
-    if (!_fmap) {
-      _fmap = new RooCFunction1Map<VO,VI> ;
-    }
-    return *_fmap ;
-  }
+ static RooCFunction1Map<VO,VI>& fmap();
 
  private:
 
@@ -175,7 +169,7 @@ void RooCFunction1Ref<VO,VI>::Streamer(TBuffer &R__b)
 
      if (tmpName=="UNKNOWN" && R__v>0) {
 
-       coutW(ObjectHandling) << "WARNING: Objected embeds function pointer to unknown function, object will not be functional" << endl ;
+       coutW(ObjectHandling) << "WARNING: Objected embeds function pointer to unknown function, object will not be functional" << std::endl ;
        _ptr = dummyFunction ;
 
      } else {
@@ -185,7 +179,7 @@ void RooCFunction1Ref<VO,VI>::Streamer(TBuffer &R__b)
 
        if (_ptr==0) {
 	 coutW(ObjectHandling) << "ERROR: Objected embeds pointer to function named " << tmpName 
-			       << " but no such function is registered, object will not be functional" << endl ;
+			       << " but no such function is registered, object will not be functional" << std::endl ;
        }
      }
 
@@ -207,7 +201,7 @@ void RooCFunction1Ref<VO,VI>::Streamer(TBuffer &R__b)
         } temp;
         temp._funcptr = _ptr;
         coutW(ObjectHandling) << "WARNING: Cannot persist unknown function pointer " << Form("%p",temp._ptr) 
-                              << " written object will not be functional when read back" <<  endl ;
+                              << " written object will not be functional when read back" <<  std::endl ;
        tmpName="UNKNOWN" ;
      } 
      
@@ -232,7 +226,7 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooCFunction1Binding(*this,newname); }
   inline virtual ~RooCFunction1Binding() { }
 
-  void printArgs(ostream& os) const {
+  void printArgs(std::ostream& os) const {
     // Print object arguments and name/address of function pointer
     os << "[ function=" << func.name() << " " ;    
     for (Int_t i=0 ; i<numProxies() ; i++) {
@@ -296,7 +290,7 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooCFunction1PdfBinding(*this,newname); }
   inline virtual ~RooCFunction1PdfBinding() { }
 
-  void printArgs(ostream& os) const {
+  void printArgs(std::ostream& os) const {
     // Print object arguments and name/address of function pointer
     os << "[ function=" << func.name() << " " ;    
     for (Int_t i=0 ; i<numProxies() ; i++) {

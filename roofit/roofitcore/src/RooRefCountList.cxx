@@ -32,6 +32,8 @@
 #include "Riostream.h"
 #include <stdlib.h>
 
+using namespace std;
+
 ClassImp(RooRefCountList)
   ;
 

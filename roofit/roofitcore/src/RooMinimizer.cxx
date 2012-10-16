@@ -77,6 +77,8 @@
 char* operator+( streampos&, char* );
 #endif
 
+using namespace std;
+
 ClassImp(RooMinimizer)
 ;
 

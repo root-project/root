@@ -35,6 +35,8 @@
 #include "RooArgSet.h"
 #include <string>
 
+using namespace std;
+
 ClassImp(RooCmdArg)
   ;
 

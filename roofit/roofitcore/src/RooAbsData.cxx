@@ -42,6 +42,7 @@
 #include "RooAbsDataStore.h"
 #include "RooVectorDataStore.h"
 #include "RooTreeDataStore.h"
+#include "RooDataHist.h"
 #include "RooCompositeDataStore.h"
 #include "RooCategory.h"
 
@@ -58,6 +59,8 @@
 #include "TH3.h"
 
 
+using namespace std;
+
 ClassImp(RooAbsData)
 ;
 
@@ -70,6 +73,13 @@ RooAbsData::StorageType RooAbsData::defaultStorageType=RooAbsData::Vector ;
 void RooAbsData::setDefaultStorageType(RooAbsData::StorageType s) 
 {
   defaultStorageType = s ;
+}
+
+
+//_____________________________________________________________________________
+RooAbsData::StorageType RooAbsData::getDefaultStorageType( ) 
+{
+  return defaultStorageType;
 }
 
 
@@ -1440,8 +1450,9 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
     if (strchr(cutRange,',')==0) {
       cutVec.push_back(cutRange) ;
     } else {
-      char* buf = new char[strlen(cutRange)+1] ;
-      strlcpy(buf,cutRange,strlen(cutRange)+1) ;
+      const size_t bufSize = strlen(cutRange)+1;
+      char* buf = new char[bufSize] ;
+      strlcpy(buf,cutRange,bufSize) ;
       const char* oneRange = strtok(buf,",") ;
       while(oneRange) {
 	cutVec.push_back(oneRange) ;
@@ -1597,7 +1608,7 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
   // variable exists (can happen with composite datastores)
   Bool_t addWV(kFALSE) ;
   RooRealVar newweight("weight","weight",-1e9,1e9) ;
-  if (isWeighted()) {
+  if (isWeighted() && !IsA()->InheritsFrom(RooDataHist::Class())) {
     subsetVars.add(newweight) ;
     addWV = kTRUE ;
   }

@@ -33,6 +33,8 @@
 #include "RooStats/TestStatistic.h"
 #include "RooWorkspace.h"
 
+using namespace std ;
+
 namespace RooStats {
 
 class SimpleLikelihoodRatioTestStat : public TestStatistic {

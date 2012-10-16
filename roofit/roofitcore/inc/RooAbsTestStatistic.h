@@ -59,7 +59,7 @@ public:
 
 protected:
 
-  virtual void printCompactTreeHook(ostream& os, const char* indent="") ;
+  virtual void printCompactTreeHook(std::ostream& os, const char* indent="") ;
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
   virtual Double_t evaluate() const ;

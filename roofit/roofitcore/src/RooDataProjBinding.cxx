@@ -44,6 +44,8 @@
 
 
 
+using namespace std;
+
 ClassImp(RooDataProjBinding)
 ;
 

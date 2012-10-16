@@ -27,6 +27,8 @@
 
 #include "TMath.h"
 
+using namespace std;
+
 ClassImp(Roo1DMomentMorphFunction) 
 
 

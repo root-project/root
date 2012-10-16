@@ -40,6 +40,8 @@
 #include "RooRealVar.h"
 
 
+using namespace std;
+
 ClassImp(RooNLLVar)
 ;
 
@@ -208,7 +210,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     if (_weightSq) eventWeight *= eventWeight ;
 
     Double_t term = eventWeight * pdfClone->getLogVal(_normSet);
-    //cout << "term = " << term << endl ;
+//     cout << "term[" << i << "] = " << term << endl ;
     sumWeight += eventWeight ;
 
     result-= term;

@@ -119,11 +119,11 @@ public:
   std::string contentsString() const ;
 
 
-  virtual void printName(ostream& os) const ;
-  virtual void printTitle(ostream& os) const ;
-  virtual void printClassName(ostream& os) const ;
-  virtual void printValue(ostream& os) const ;
-  virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  virtual void printName(std::ostream& os) const ;
+  virtual void printTitle(std::ostream& os) const ;
+  virtual void printClassName(std::ostream& os) const ;
+  virtual void printValue(std::ostream& os) const ;
+  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
 
@@ -132,7 +132,7 @@ public:
 		  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),	
 		  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),	
 		  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;
-  void printLatex(ostream& ofs, Int_t ncol, const char* option="NEYU", Int_t sigDigit=1, 
+  void printLatex(std::ostream& ofs, Int_t ncol, const char* option="NEYU", Int_t sigDigit=1, 
                   const RooLinkedList& siblingLists=RooLinkedList(), const RooCmdArg* formatCmd=0) const ;
 
   void setName(const char *name) {

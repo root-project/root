@@ -39,6 +39,8 @@
 
 
 
+using namespace std;
+
 ClassImp(RooSegmentedIntegrator2D)
 ;
 

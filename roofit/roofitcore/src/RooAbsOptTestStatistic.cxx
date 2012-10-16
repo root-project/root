@@ -61,6 +61,8 @@
 #include "RooTrace.h"
 #include "RooVectorDataStore.h" 
 
+using namespace std;
+
 ClassImp(RooAbsOptTestStatistic)
 ;
 
@@ -639,6 +641,22 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
 	      RooAbsArg* parg ;
 	      while ((parg=piter.next())) {
 		parg->setAttribute("CacheAndTrack") ;
+		RooArgSet* pdf_nset = prod->findPdfNSet((RooAbsPdf&)(*parg)) ;
+		
+		if (pdf_nset) {
+		  // Check if conditional normalization is specified		  
+		  if (string("nset")==pdf_nset->GetName() && pdf_nset->getSize()>0) {
+		    RooNameSet n(*pdf_nset) ;
+		    parg->setStringAttribute("CATNormSet",n.content()) ;
+		  }
+		  if (string("cset")==pdf_nset->GetName()) {
+		    RooNameSet c(*pdf_nset) ;
+		    parg->setStringAttribute("CATCondSet",c.content()) ;
+		  }
+		} else {
+		  coutW(Optimization) << "RooAbsOptTestStatistic::optimizeConstantTerms(" << GetName() << ") WARNING RooProdPdf::" << prod->GetName() 
+				      << " does not specify a normalization set for component " << parg->GetName() << endl ;
+		}
 		trackNodes.add(*aarg) ;
 	      }
 	    } else {

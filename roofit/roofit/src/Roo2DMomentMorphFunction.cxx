@@ -65,6 +65,8 @@
 */
 
 
+using namespace std;
+
 ClassImp(Roo2DMomentMorphFunction) 
 
 

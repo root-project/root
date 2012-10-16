@@ -26,6 +26,8 @@
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 
+using namespace std;
+
 ClassImp(RooChiSquarePdf)
 ;
 

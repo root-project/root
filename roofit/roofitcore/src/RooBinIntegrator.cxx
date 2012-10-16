@@ -40,6 +40,8 @@
 
 
 
+using namespace std;
+
 ClassImp(RooBinIntegrator)
 ;
 

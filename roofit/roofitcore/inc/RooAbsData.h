@@ -158,10 +158,10 @@ public:
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  virtual void printName(ostream& os) const ;
-  virtual void printTitle(ostream& os) const ;
-  virtual void printClassName(ostream& os) const ;
-  void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  virtual void printName(std::ostream& os) const ;
+  virtual void printTitle(std::ostream& os) const ;
+  virtual void printClassName(std::ostream& os) const ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
 
@@ -209,12 +209,14 @@ public:
   static Bool_t releaseVars(RooAbsData*) ;
 
   enum StorageType { Tree, Vector} ;
-  static StorageType defaultStorageType ;
 
   static void setDefaultStorageType(StorageType s) ;
 
+  static StorageType getDefaultStorageType();
 
 protected:
+
+  static StorageType defaultStorageType ;
 
   Double_t corrcov(RooRealVar &x,RooRealVar &y, const char* cutSpec, const char* cutRange, Bool_t corr) const  ;
   TMatrixDSym* corrcovMatrix(const RooArgList& vars, const char* cutSpec, const char* cutRange, Bool_t corr) const  ;

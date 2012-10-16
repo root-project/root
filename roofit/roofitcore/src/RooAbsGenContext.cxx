@@ -41,6 +41,8 @@
 #include "Riostream.h"
 
 
+using namespace std;
+
 ClassImp(RooAbsGenContext)
 ;
 
@@ -236,7 +238,7 @@ RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t
     }
 
     // delegate the generation of the rest of this event to our subclass implementation
-    generateEvent(*_theEvent, nEvents - _genData->numEntries());
+    generateEvent(*_theEvent, (Int_t)(nEvents - _genData->numEntries()));
 
 
     // WVE add check that event is in normRange

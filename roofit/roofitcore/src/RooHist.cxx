@@ -38,6 +38,8 @@
 #include <iomanip>
 #include <math.h>
 
+using namespace std;
+
 ClassImp(RooHist)
   ;
 

@@ -36,6 +36,8 @@
 #include "RooDataSet.h"
 #include "RooRandom.h"
 
+using namespace std;
+
 ClassImp(RooBinnedGenContext)
 ;
   

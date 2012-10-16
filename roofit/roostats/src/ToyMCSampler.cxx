@@ -35,7 +35,7 @@
 
 
 using namespace RooFit;
-
+using namespace std ;
 
 ClassImp(RooStats::ToyMCSampler)
 

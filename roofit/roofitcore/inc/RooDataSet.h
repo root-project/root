@@ -121,9 +121,9 @@ public:
   TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, Int_t nx, Int_t ny,
                         const char* cuts="", const char *name="hist") const;
 
-  void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
-  virtual void printArgs(ostream& os) const ;
-  virtual void printValue(ostream& os) const ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  virtual void printArgs(std::ostream& os) const ;
+  virtual void printValue(std::ostream& os) const ;
 
   void SetName(const char *name) ;
   void SetNameTitle(const char *name, const char* title) ;

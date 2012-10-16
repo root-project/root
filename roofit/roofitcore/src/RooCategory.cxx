@@ -37,6 +37,8 @@
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
 
+using namespace std;
+
 ClassImp(RooCategory) 
 ;
 
@@ -234,8 +236,9 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
   }
 
   // Parse list of state names, verify that each is valid and add them to the list
-  char* buf = new char[strlen(stateNameList)+1] ;
-  strlcpy(buf,stateNameList,strlen(stateNameList)+1) ;
+  const size_t bufSize = strlen(stateNameList)+1;
+  char* buf = new char[bufSize] ;
+  strlcpy(buf,stateNameList,bufSize) ;
   char* token = strtok(buf,",") ;
   while(token) {
     const RooCatType* state = lookupType(token,kFALSE) ;

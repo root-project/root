@@ -43,7 +43,7 @@ public:
   // Handle projection of projection explicitly
   virtual RooAbsPdf* createProjection(const RooArgSet& iset) ;  
 
-  void printMetaArgs(ostream& os) const ;
+  void printMetaArgs(std::ostream& os) const ;
 
 
 protected:

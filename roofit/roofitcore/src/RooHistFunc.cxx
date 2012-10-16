@@ -34,6 +34,8 @@
 
 
 
+using namespace std;
+
 ClassImp(RooHistFunc)
 ;
 
@@ -245,7 +247,6 @@ Double_t RooHistFunc::analyticalIntegral(Int_t code, const char* /*rangeName*/) 
   }
 
   // Partial integration scenario, retrieve set of variables, calculate partial sum
-
   RooArgSet intSet ;
   TIterator* iter = _depList.createIterator() ;
   RooAbsArg* arg ;
@@ -272,7 +273,7 @@ list<Double_t>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xl
   // with the vertical lines that occur in a non-interpolated histogram
 
   // No hints are required when interpolation is used
-  if (_intOrder>0) {
+  if (_intOrder>1) {
     return 0 ;
   }
 
@@ -315,7 +316,7 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
   // with the vertical lines that occur in a non-interpolated histogram
 
   // No hints are required when interpolation is used
-  if (_intOrder>0) {
+  if (_intOrder>1) {
     return 0 ;
   }
 

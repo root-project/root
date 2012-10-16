@@ -37,6 +37,8 @@
 #include "RooUnblindOffset.h"
 
 
+using namespace std;
+
 ClassImp(RooUnblindOffset)
 ;
 

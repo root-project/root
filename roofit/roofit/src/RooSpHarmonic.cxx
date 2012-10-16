@@ -51,6 +51,8 @@
 #include "Math/SpecFunc.h"
 #include "TMath.h"
 
+using namespace std;
+
 ClassImp(RooSpHarmonic)
 ;
 

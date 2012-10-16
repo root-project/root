@@ -49,8 +49,8 @@ public:
   virtual Bool_t setLabel(const char* label, Bool_t printError=kTRUE) ;
   
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
 
   // We implement a fundamental type of AbsArg that can be stored in a dataset
   inline virtual Bool_t isFundamental() const { 

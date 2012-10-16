@@ -22,6 +22,9 @@
 
 
 ClassImp(RooStats::ToyMCStudy)
+  ;
+
+using namespace std ;
 
 namespace RooStats {
 

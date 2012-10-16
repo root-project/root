@@ -93,7 +93,7 @@ protected:
   void backProp() ;
 
   inline Int_t getNPar() const { return _nPar ; }
-  inline ofstream* logfile() const { return _logfile ; }
+  inline std::ofstream* logfile() const { return _logfile ; }
   inline Double_t& maxFCN() { return _maxFCN ; }
 
   Double_t getPdfParamVal(Int_t index) ;
@@ -129,7 +129,7 @@ private:
   RooAbsReal* _func ;
 
   Double_t    _maxFCN ;  
-  ofstream*   _logfile ;
+  std::ofstream*   _logfile ;
   Bool_t      _verbose ;
   TStopwatch  _timer ;
   TStopwatch  _cumulTimer ;

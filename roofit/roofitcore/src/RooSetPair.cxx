@@ -27,6 +27,8 @@
 #include "RooSetPair.h"
 
 
+using namespace std;
+
 ClassImp(RooSetPair) 
 ;
 

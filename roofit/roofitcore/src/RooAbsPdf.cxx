@@ -154,6 +154,8 @@
 #include "RooRealIntegral.h"
 #include <string>
 
+using namespace std;
+
 ClassImp(RooAbsPdf) 
 ;
 ClassImp(RooAbsPdf::GenSpec)
@@ -289,7 +291,7 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
       _value = 0 ;
     } else {
       _value = rawVal / normVal ;
-//       cout << "RooAbsPdf::getValV(" << GetName() << ") writing _value = " << _value << endl ;
+//       cout << "RooAbsPdf::getValV(" << GetName() << ") writing _value = " << rawVal << "/" << normVal << " = " << _value << endl ;
     }
 
     clearValueAndShapeDirty() ; //setValueDirty(kFALSE) ;
@@ -484,6 +486,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
       RooCachedReal* cachedNorm = new RooCachedReal(name.c_str(),name.c_str(),*normInt,*normParams) ;     
       cachedNorm->setInterpolationOrder(_valueCacheIntOrder) ;
       cachedNorm->addOwnedComponents(*normInt) ;
+      cachedNorm->setCacheSource(kTRUE) ;
       _norm = cachedNorm ;
     } else {
       _norm = normInt ;
@@ -624,6 +627,13 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
 
     return log((double)0);
   }
+
+  if (TMath::IsNaN(prob)) {
+    logEvalError("getLogVal() top-level p.d.f evaluates to NaN") ;
+
+    return log((double)0);
+    
+  }
   return log(prob);
 }
 
@@ -651,6 +661,18 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
     coutE(InputArguments) << fName << ": calculated negative expected events: " << expected
          << endl;
     return 0;
+  }
+
+
+  // Explicitly handle case Nobs=Nexp=0
+  if (fabs(expected)<1e-10 && fabs(observed)<1e-10) {
+    return 0 ;
+  }
+
+  // Check for errors in Nexpected
+  if (expected<0 || TMath::IsNaN(expected)) {
+    logEvalError("extendedTerm #expected events is <0 or NaN") ;
+    return 0 ;
   }
 
   // calculate and return the negative log-likelihood of the Poisson
@@ -728,6 +750,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 
   pc.defineString("rangeName","RangeWithName",0,"",kTRUE) ;
   pc.defineString("addCoefRange","SumCoefRange",0,"") ;
+  pc.defineString("globstag","GlobalObservablesTag",0,"") ;
   pc.defineDouble("rangeLo","Range",0,-999.) ;
   pc.defineDouble("rangeHi","Range",1,-999.) ;
   pc.defineInt("splitRange","SplitRange",0,0) ;
@@ -743,8 +766,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
   pc.defineMutex("Range","RangeWithName") ;
   pc.defineMutex("Constrain","Constrained") ;
-  
-  
+  pc.defineMutex("GlobalObservables","GlobalObservablesTag") ;
+    
   // Process and check varargs 
   pc.process(cmdList) ;
   if (!pc.ok(kTRUE)) {
@@ -754,6 +777,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   // Decode command line arguments
   const char* rangeName = pc.getString("rangeName",0,kTRUE) ;
   const char* addCoefRangeName = pc.getString("addCoefRange",0,kTRUE) ;
+  const char* globsTag = pc.getString("globstag",0,kTRUE) ;
   Int_t ext      = pc.getInt("ext") ;
   Int_t numcpu   = pc.getInt("numcpu") ;
   Int_t splitr   = pc.getInt("splitRange") ;
@@ -767,6 +791,13 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   }
   RooArgSet* cPars = pc.getSet("cPars") ;
   RooArgSet* glObs = pc.getSet("glObs") ;
+  if (pc.hasProcessed("GlobalObservablesTag")) {
+    if (glObs) delete glObs ;
+    RooArgSet* allVars = getVariables() ;
+    glObs = (RooArgSet*) allVars->selectByAttrib(globsTag,kTRUE) ;
+    cout << "WVE debug globs from tag " << globsTag << " = " << *glObs << endl ;
+    delete allVars ;
+  }
   Bool_t doStripDisconnected=kFALSE ;
 
   // If no explicit list of parameters to be constrained is specified apply default algorithm
@@ -821,9 +852,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   } else {
     // Composite case: multiple ranges
     RooArgList nllList ;
-    Int_t ssize = strlen(rangeName)+1 ;
-    char* buf = new char[ssize] ;
-    strlcpy(buf,rangeName,ssize) ;
+    const size_t bufSize = strlen(rangeName)+1;
+    char* buf = new char[bufSize] ;
+    strlcpy(buf,rangeName,bufSize) ;
     char* token = strtok(buf,",") ;
     while(token) {
       RooAbsReal* nllComp = new RooNLLVar(Form("%s_%s",baseName.c_str(),token),"-log(likelihood)",*this,data,projDeps,ext,token,addCoefRangeName,numcpu,kFALSE,verbose,splitr,cloneData) ;
@@ -977,7 +1008,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
 
   RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,CloneData,GlobalObservables") ;
+  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,CloneData,GlobalObservables,GlobalObservablesTag") ;
 
   pc.defineString("fitOpt","FitOptions",0,"") ;
   pc.defineInt("optConst","Optimize",0,2) ;
@@ -1125,7 +1156,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	m.hesse() ;
       }
       
-      if (doSumW2==1) {
+      if (doSumW2==1 && m.getNPar()>0) {
 	
 	// Make list of RooNLLVar components of FCN
 	list<RooNLLVar*> nllComponents ;
@@ -1271,7 +1302,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	m.hesse() ;
       }
       
-      if (doSumW2==1) {
+      if (doSumW2==1 && m.getNPar()>0) {
 	
 	// Make list of RooNLLVar components of FCN
 	list<RooNLLVar*> nllComponents ;
@@ -1797,7 +1828,7 @@ RooDataSet *RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) const
 
   //Int_t nEvt = spec._extended ? RooRandom::randomGenerator()->Poisson(spec._nGen) : spec._nGen ;
   //Int_t nEvt = spec._extended ? RooRandom::randomGenerator()->Poisson(spec._nGen==0?expectedEvents(spec._whatVars):spec._nGen) : spec._nGen ;
-  Int_t nEvt = spec._nGen==0? Int_t(expectedEvents(spec._whatVars)+0.5) : spec._nGen ;
+  Int_t nEvt = spec._nGen == 0 ? RooRandom::randomGenerator()->Poisson(expectedEvents(spec._whatVars)) : spec._nGen;
   
   
   RooDataSet* ret = generate(*spec._genContext,spec._whatVars,spec._protoData, nEvt,kFALSE,spec._randProto,spec._resampleProto,

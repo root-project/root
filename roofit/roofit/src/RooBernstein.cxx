@@ -32,6 +32,8 @@
 #include "RooRealVar.h"
 #include "RooArgList.h"
 
+using namespace std;
+
 ClassImp(RooBernstein)
 ;
 
@@ -78,18 +80,45 @@ RooBernstein::RooBernstein(const RooBernstein& other, const char* name) :
 Double_t RooBernstein::evaluate() const 
 {
 
-  Double_t xmin = _x.min(); Double_t xmax = _x.max();
-  Int_t degree= _coefList.getSize()-1; // n+1 polys of degree n
+  Double_t xmin = _x.min();
+  Double_t x = (_x - xmin) / (_x.max() - xmin); // rescale to [0,1]
+  Int_t degree = _coefList.getSize() - 1; // n+1 polys of degree n
+  RooFIter iter = _coefList.fwdIterator();
 
-  Double_t temp=0, tempx=0;
-  RooFIter iter = _coefList.fwdIterator() ;
-  for (int i=0; i<=degree; ++i){
-    tempx = (_x-xmin)/(xmax-xmin); // rescale to [0,1]
-    temp += ((RooAbsReal*)iter.next())->getVal() *
-      TMath::Binomial(degree, i) * pow(tempx,i) * pow(1-tempx,degree-i);
+  if(degree == 0) {
+
+    return ((RooAbsReal *)iter.next())->getVal();
+
+  } else if(degree == 1) {
+
+    Double_t a0 = ((RooAbsReal *)iter.next())->getVal(); // c0
+    Double_t a1 = ((RooAbsReal *)iter.next())->getVal() - a0; // c1 - c0
+    return a1 * x + a0;
+
+  } else if(degree == 2) {
+
+    Double_t a0 = ((RooAbsReal *)iter.next())->getVal(); // c0
+    Double_t a1 = 2 * (((RooAbsReal *)iter.next())->getVal() - a0); // 2 * (c1 - c0)
+    Double_t a2 = ((RooAbsReal *)iter.next())->getVal() - a1 - a0; // c0 - 2 * c1 + c2
+    return (a2 * x + a1) * x + a0;
+
+  } else if(degree > 2) {
+
+    Double_t t = x;
+    Double_t s = 1 - x;
+
+    Double_t result = ((RooAbsReal *)iter.next())->getVal() * s;    
+    for(Int_t i = 1; i < degree; i++) {
+      result = (result + t * TMath::Binomial(degree, i) * ((RooAbsReal *)iter.next())->getVal()) * s;
+      t *= x;
+    }
+    result += t * ((RooAbsReal *)iter.next())->getVal(); 
+
+    return result;
   }
-  return temp;
 
+  // in case list of arguments passed is empty
+  return TMath::SignalingNaN();
 }
 
 

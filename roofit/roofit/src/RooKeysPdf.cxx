@@ -26,6 +26,8 @@
 #include "RooRandom.h"
 #include "RooDataSet.h"
 
+using namespace std;
+
 ClassImp(RooKeysPdf)
 
 
@@ -75,7 +77,7 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
 {
   // cache stuff about x
   snprintf(_varName, 128,"%s", x.GetName());
-  RooRealVar real= (RooRealVar&)(_x.arg());
+  RooAbsRealLValue& real= (RooAbsRealLValue&)(_x.arg());
   _lo = real.getMin();
   _hi = real.getMax();
   _binWidth = (_hi-_lo)/(_nPoints-1);
@@ -101,12 +103,12 @@ RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
   _binWidth = other._binWidth;
 
   // copy over data and weights... not necessary, commented out for speed
-//    _dataPts = new Double_t[_nEvents];
-//    _weights = new Double_t[_nEvents];  
-//    for (Int_t i= 0; i<_nEvents; i++) {
-//      _dataPts[i]= other._dataPts[i];
-//      _weights[i]= other._weights[i];
-//    }
+//   _dataPts = new Double_t[_nEvents];
+//   _weights = new Double_t[_nEvents];  
+//   for (Int_t i= 0; i<_nEvents; i++) {
+//     _dataPts[i]= other._dataPts[i];
+//     _weights[i]= other._weights[i];
+//   }
 
   // copy over the lookup table
   for (Int_t i= 0; i<_nPoints+1; i++)
@@ -190,6 +192,15 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
 }
 
 
+void RooKeysPdf::dump()
+{
+  Double_t sum(0) ;
+  for (int i=0 ; i<1000 ; i ++) {
+    cout << "val[" << i << "] = " << _lookupTable[i] << endl ;
+    sum += _lookupTable[i] ;
+  }
+  cout << "sum = " << sum << endl ;
+}
 
 //_____________________________________________________________________________
 Double_t RooKeysPdf::evaluate() const {
@@ -262,3 +273,30 @@ Double_t RooKeysPdf::g(Double_t x,Double_t sigmav) const {
   static const Double_t sqrt2pi(sqrt(2*TMath::Pi()));  
   return y/(sigmav*sqrt2pi*_nEvents);
 }
+
+
+
+//_____________________________________________________________________________
+Int_t RooKeysPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
+{
+  if (matchArgs(allVars,analVars,_x)) return 1 ;
+  return 0 ;
+}
+
+
+
+//_____________________________________________________________________________
+Double_t RooKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const 
+{
+  assert(code==1) ;
+
+  Double_t sum(0) ;
+  for (int i=0 ; i<_nPoints ; i++) {
+    sum += _lookupTable[i] ;
+  }
+  return sum ;
+}
+
+
+
+

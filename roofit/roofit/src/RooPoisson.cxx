@@ -24,6 +24,8 @@
 #include "TMath.h"
 #include "Math/ProbFuncMathCore.h"
 
+using namespace std;
+
 ClassImp(RooPoisson) 
 
 

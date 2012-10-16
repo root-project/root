@@ -232,8 +232,8 @@ public:
   }
 
   // Printing interface (human readable)
-  virtual void printValue(ostream& os) const ;
-  virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  virtual void printValue(std::ostream& os) const ;
+  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
   static void verboseEval(Int_t stat) ;
   static int verboseEval() ;

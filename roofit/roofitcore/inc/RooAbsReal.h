@@ -49,7 +49,6 @@ class TH3F;
 #include <list>
 #include <string>
 #include <iostream>
-using namespace std ;
 
 class RooAbsReal : public RooAbsArg {
 public:
@@ -63,7 +62,7 @@ public:
 
   // Return value and unit accessors
   inline Double_t getVal(const RooArgSet* set=0) const { 
-/*    if (_fast && !_inhibitDirty) cout << "RooAbsReal::getVal(" << GetName() << ") CLEAN value = " << _value << endl ;  */
+/*     if (_fast && !_inhibitDirty && std::string("RooHistFunc")==IsA()->GetName()) std::cout << "RooAbsReal::getVal(" << GetName() << ") CLEAN value = " << _value << std::endl ;  */
 #ifndef _WIN32
     return (_fast && !_inhibitDirty) ? _value : getValV(set) ; 
 #else
@@ -236,12 +235,12 @@ public:
 			    Bool_t correctForBinVolume=kFALSE, Bool_t showProgress=kFALSE) const ;
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printValue(ostream& os) const ;
-  virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  virtual void printValue(std::ostream& os) const ;
+  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
   static void setCacheCheck(Bool_t flag) ;
 
@@ -261,7 +260,7 @@ public:
   static void setEvalErrorLoggingMode(ErrorLoggingMode m) ;
   void logEvalError(const char* message, const char* serverValueString=0) const ;
   static void logEvalError(const RooAbsReal* originator, const char* origName, const char* message, const char* serverValueString=0) ;
-  static void printEvalErrors(ostream&os=std::cout, Int_t maxPerNode=10000000) ;
+  static void printEvalErrors(std::ostream&os=std::cout, Int_t maxPerNode=10000000) ;
   static Int_t numEvalErrors() ;
   static Int_t numEvalErrorItems() ;
 
@@ -375,6 +374,7 @@ protected:
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;
   virtual void fillTreeBranch(TTree& t) ;
 
+  friend class RooRealBinding ;
   Double_t _plotMin ;       // Minimum of plot range
   Double_t _plotMax ;       // Maximum of plot range
   Int_t    _plotBins ;      // Number of plot bins

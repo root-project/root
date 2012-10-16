@@ -23,6 +23,8 @@
 
 #include "TMath.h"
 
+using namespace std;
+
 ClassImp(RooMomentMorph) 
 
 

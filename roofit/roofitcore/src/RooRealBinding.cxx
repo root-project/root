@@ -37,13 +37,15 @@
 
 
 
+using namespace std;
+
 ClassImp(RooRealBinding)
 ;
 
 
 //_____________________________________________________________________________
 RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset, Bool_t clipInvalid, const TNamed* rangeName) :
-  RooAbsFunc(vars.getSize()), _func(&func), _vars(0), _nset(nset), _clipInvalid(clipInvalid), _xsave(0), _rangeName(rangeName)
+  RooAbsFunc(vars.getSize()), _func(&func), _vars(0), _nset(nset), _clipInvalid(clipInvalid), _xsave(0), _rangeName(rangeName), _funcSave(0)
 {
   // Construct a lightweight function binding of RooAbsReal func to
   // variables 'vars'.  Use the provided nset as normalization set to
@@ -80,7 +82,7 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
 //_____________________________________________________________________________
 RooRealBinding::RooRealBinding(const RooRealBinding& other, const RooArgSet* nset) :
   RooAbsFunc(other), _func(other._func), _nset(nset?nset:other._nset), _xvecValid(other._xvecValid),
-  _clipInvalid(other._clipInvalid), _xsave(0), _rangeName(other._rangeName)
+  _clipInvalid(other._clipInvalid), _xsave(0), _rangeName(other._rangeName), _funcSave(other._funcSave)
 {
   // Construct a lightweight function binding of RooAbsReal func to
   // variables 'vars'.  Use the provided nset as normalization set to
@@ -118,12 +120,31 @@ void RooRealBinding::saveXVec() const
 
   if (!_xsave) {
     _xsave = new Double_t[getDimension()] ;    
-    for (UInt_t i=0 ; i<getDimension() ; i++) {
-      _xsave[i] = _vars[i]->getVal() ;
+    RooArgSet* comps = _func->getComponents() ;
+    RooFIter iter = comps->fwdIterator() ;
+    RooAbsArg* arg ;
+    while ((arg=iter.next())) {
+      if (dynamic_cast<RooAbsReal*>(arg)) {
+	_compList.push_back((RooAbsReal*)(arg)) ;
+	_compSave.push_back(0) ;
+      }
     }
+    delete comps ;
   }
-}
+  _funcSave = _func->_value ;
 
+  // Save components
+  list<RooAbsReal*>::iterator ci = _compList.begin() ;
+  list<Double_t>::iterator si = _compSave.begin() ;
+  while(ci!=_compList.end()) {
+    *si = (*ci)->_value ;
+    si++ ; ci++ ;
+  }
+  
+  for (UInt_t i=0 ; i<getDimension() ; i++) {
+    _xsave[i] = _vars[i]->getVal() ;
+  } 
+}
 
 //_____________________________________________________________________________
 void RooRealBinding::restoreXVec() const
@@ -134,6 +155,16 @@ void RooRealBinding::restoreXVec() const
   if (!_xsave) {
     return ;
   }
+  _func->_value = _funcSave ;
+
+  // Restore components
+  list<RooAbsReal*>::iterator ci = _compList.begin() ;
+  list<Double_t>::iterator si = _compSave.begin() ;
+  while (ci!=_compList.end()) {
+    (*ci)->_value = *si ;
+    ci++ ; si++ ;
+  }
+
   for (UInt_t i=0 ; i<getDimension() ; i++) {
    _vars[i]->setVal(_xsave[i]) ;
   }

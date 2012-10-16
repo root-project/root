@@ -36,6 +36,8 @@
 
 
 
+using namespace std;
+
 ClassImp(RooHistPdf)
 ;
 

@@ -39,7 +39,25 @@ templateClassImp(RooCFunction1Ref)
 template<> RooCFunction1Map<double,double>* RooCFunction1Ref<double,double>::_fmap = 0 ;
 template<> RooCFunction1Map<double,int>* RooCFunction1Ref<double,int>::_fmap = 0 ;
 
+template<>
+RooCFunction1Map<double,double>& RooCFunction1Ref<double,double>::fmap()
+ {
+    // Return reference to function pointer-to-name mapping service
+    if (!_fmap) {
+      _fmap = new RooCFunction1Map<double,double> ;
+    }
+    return *_fmap ;
+  }
 
+template<>
+RooCFunction1Map<double,int>& RooCFunction1Ref<double,int>::fmap()
+ {
+    // Return reference to function pointer-to-name mapping service
+    if (!_fmap) {
+      _fmap = new RooCFunction1Map<double,int> ;
+    }
+    return *_fmap ;
+ }
 
 namespace RooFit {
 

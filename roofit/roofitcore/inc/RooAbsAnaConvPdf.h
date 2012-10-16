@@ -44,7 +44,7 @@ public:
   virtual ~RooAbsAnaConvPdf();
 
   Int_t declareBasis(const char* expression, const RooArgList& params) ;
-  virtual void printMultiline(ostream& stream, Int_t contents, Bool_t verbose=kFALSE, TString indent= "") const ;
+  virtual void printMultiline(std::ostream& stream, Int_t contents, Bool_t verbose=kFALSE, TString indent= "") const ;
 
   // Coefficient normalization access
   inline Double_t getCoefNorm(Int_t coefIdx, const RooArgSet& nset, const char* rangeName) const { 

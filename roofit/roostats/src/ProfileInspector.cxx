@@ -34,6 +34,7 @@ Utility class to plot conditional MLE of nuisance parameters vs. Parameters of I
 ClassImp(RooStats::ProfileInspector);
 
 using namespace RooStats;
+using namespace std ;
 
 //_______________________________________________________
 ProfileInspector::ProfileInspector()

@@ -26,6 +26,8 @@
 #include "RooTObjWrap.h"
 #include "RooTObjWrap.h"
 
+using namespace std;
+
 ClassImp(RooTObjWrap)
 ;
 

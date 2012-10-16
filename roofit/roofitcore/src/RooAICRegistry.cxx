@@ -33,6 +33,8 @@
 #include "Riostream.h"
 
 
+using namespace std;
+
 ClassImp(RooAICRegistry)
 ;
 

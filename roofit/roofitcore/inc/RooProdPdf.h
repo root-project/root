@@ -81,7 +81,7 @@ public:
   virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
   Bool_t isBinnedDistribution(const RooArgSet& obs) const  ;
 
-  void printMetaArgs(ostream& os) const ;
+  void printMetaArgs(std::ostream& os) const ;
 
   virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
   void fixRefRange(const char* rangeName) ;
@@ -93,6 +93,8 @@ public:
   Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
 
   RooArgSet* getConnectedParameters(const RooArgSet& observables) const ;
+
+  RooArgSet* findPdfNSet(RooAbsPdf& pdf) const ; 
   
 protected:
 
@@ -155,7 +157,6 @@ protected:
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
 	                               const RooArgSet *auxProto=0, Bool_t verbose= kFALSE) const ;
 
-  RooArgSet* findPdfNSet(RooAbsPdf& pdf) const ; 
 
   mutable RooAICRegistry _genCode ; //! Registry of composite direct generator codes
 

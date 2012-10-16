@@ -43,7 +43,7 @@ public:
   RooFunctorBinding(const RooFunctorBinding& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooFunctorBinding(*this,newname); }
   inline virtual ~RooFunctorBinding() { delete[] x ; }
-  void printArgs(ostream& os) const ;
+  void printArgs(std::ostream& os) const ;
 
 protected:
 
@@ -70,7 +70,7 @@ public:
   RooFunctorPdfBinding(const RooFunctorPdfBinding& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooFunctorPdfBinding(*this,newname); }
   inline virtual ~RooFunctorPdfBinding() { delete[] x ; }
-  void printArgs(ostream& os) const ;
+  void printArgs(std::ostream& os) const ;
 
 protected:
 

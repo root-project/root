@@ -27,6 +27,8 @@
 #include "RooIntegratorBinding.h"
 #include "RooIntegratorBinding.h"
 
+using namespace std;
+
 ClassImp(RooIntegratorBinding)
 ;
 

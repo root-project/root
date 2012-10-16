@@ -36,6 +36,8 @@
 #include "TDecompChol.h"
 #include "RooFitResult.h"
 
+using namespace std;
+
 ClassImp(RooMultiVarGaussian)
   ;
 

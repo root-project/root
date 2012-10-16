@@ -30,6 +30,8 @@
 #include "RooRealVar.h"
 #include "RooRandom.h"
 
+using namespace std;
+
 ClassImp(RooDecay) 
 ;
 

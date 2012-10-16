@@ -449,8 +449,9 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
   vector<bool> isCat ;
 
   if (realArgNames && *realArgNames) {
-    char* buf = new char[strlen(realArgNames)+1] ;
-    strlcpy(buf,realArgNames,strlen(realArgNames)+1) ;
+    const size_t bufSize = strlen(realArgNames)+1;
+    char* buf = new char[bufSize] ;
+    strlcpy(buf,realArgNames,bufSize) ;
     char* token = strtok(buf,",") ;
     while(token) {
       alist.push_back(token) ;
@@ -460,8 +461,9 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
     delete[] buf ;
   }
   if (catArgNames && *catArgNames) {
-    char* buf = new char[strlen(catArgNames)+1] ;
-    strlcpy(buf,catArgNames,strlen(catArgNames)+1) ;
+    const size_t bufSize = strlen(catArgNames)+1;
+    char* buf = new char[bufSize] ;
+    strlcpy(buf,catArgNames,bufSize) ;
     char* token = strtok(buf,",") ;
     while(token) {
       alist.push_back(token) ;
@@ -647,8 +649,9 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
     // Parse analytical integration expression if provided
     // Expected form is observable:expression,observable,observable:expression;[...]
     if (intExpression && *intExpression) {
-      char* buf = new char[strlen(intExpression)+1] ;
-      strlcpy(buf,intExpression,strlen(intExpression)+1) ;
+      const size_t bufSize = strlen(intExpression)+1;
+      char* buf = new char[bufSize] ;
+      strlcpy(buf,intExpression,bufSize) ;
       char* ptr = strtok(buf,":") ;
       while(ptr) {
 	intObs.push_back(ptr) ;

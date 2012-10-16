@@ -36,16 +36,17 @@ public:
   Bool_t operator==(const RooNameSet& other) ;  
   RooNameSet& operator=(const RooNameSet&) ;
 
-  virtual void printName(ostream& os) const ;
-  virtual void printTitle(ostream& os) const ;
-  virtual void printClassName(ostream& os) const ;
-  virtual void printValue(ostream& os) const ;
+  virtual void printName(std::ostream& os) const ;
+  virtual void printTitle(std::ostream& os) const ;
+  virtual void printClassName(std::ostream& os) const ;
+  virtual void printValue(std::ostream& os) const ;
 
   inline virtual void Print(Option_t *options= 0) const {
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
   void setNameList(const char* givenList) ;
+  const char* content() const { return _nameList ; }
 
   Int_t _len ;
   char* _nameList ; //[_len]

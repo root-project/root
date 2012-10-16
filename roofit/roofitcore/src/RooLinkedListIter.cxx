@@ -26,6 +26,8 @@
 #include "RooLinkedListIter.h"
 #include "RooLinkedListIter.h"
 
+using namespace std;
+
 ClassImp(RooLinkedListIter)
 
 ;

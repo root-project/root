@@ -18,7 +18,6 @@
 
 #include "Rtypes.h"
 
-#include "Riostream.h"
 #include "RooMsgService.h"
 #include "RooNormSetCache.h"
 #include "RooAbsReal.h"
@@ -94,12 +93,12 @@ public:
 
   void wireCache() {
     if (_size==0) {
-      oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") no cached elements!" << endl ;
+      oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") no cached elements!" << std::endl ;
     } else if (_size==1) {
-      oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") now wiring cache" << endl ;
+      oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") now wiring cache" << std::endl ;
       _wired=kTRUE ;
     } else if (_size>1) {
-      oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") cache cannot be wired because it contains more than one element" << endl ; 
+      oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") cache cannot be wired because it contains more than one element" << std::endl ; 
     }
   }
  
@@ -168,7 +167,7 @@ RooCacheManager<T>::RooCacheManager(const RooCacheManager& other, RooAbsArg* own
   _wired = kFALSE ;
   _lastIndex = -1 ;
 
-//   cout << "RooCacheManager:cctor(" << this << ")" << endl ;
+//   std::cout << "RooCacheManager:cctor(" << this << ")" << std::endl ;
 
   Int_t i ;
   for (i=0 ; i<other._size ; i++) {    
@@ -317,7 +316,7 @@ T* RooCacheManager<T>::getObjByIndex(Int_t index) const
 
   if (index<0||index>=_size) {
     oocoutE(_owner,ObjectHandling) << "RooCacheManager::getNormListByIndex: ERROR index (" 
-				   << index << ") out of range [0," << _size-1 << "]" << endl ;
+				   << index << ") out of range [0," << _size-1 << "]" << std::endl ;
     return 0 ;
   }
   return _object[index] ;
@@ -330,7 +329,7 @@ const RooNameSet* RooCacheManager<T>::nameSet1ByIndex(Int_t index) const
 
   if (index<0||index>=_size) {
     oocoutE(_owner,ObjectHandling) << "RooCacheManager::getNormListByIndex: ERROR index (" 
-				   << index << ") out of range [0," << _size-1 << "]" << endl ;
+				   << index << ") out of range [0," << _size-1 << "]" << std::endl ;
     return 0 ;
   }
   return &_nsetCache[index].nameSet1() ;
@@ -343,7 +342,7 @@ const RooNameSet* RooCacheManager<T>::nameSet2ByIndex(Int_t index) const
 
   if (index<0||index>=_size) {
     oocoutE(_owner,ObjectHandling) << "RooCacheManager::getNormListByIndex: ERROR index (" 
-				   << index << ") out of range [0," << _size-1 << "]" << endl ;
+				   << index << ") out of range [0," << _size-1 << "]" << std::endl ;
     return 0 ;
   }
   return &_nsetCache[index].nameSet2() ;

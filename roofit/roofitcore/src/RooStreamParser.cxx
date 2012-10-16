@@ -50,6 +50,8 @@
 #include "RooNumber.h"
 
 
+using namespace std;
+
 ClassImp(RooStreamParser)
 
 
@@ -128,6 +130,7 @@ TString RooStreamParser::readToken()
   // Smart tokenizer. Absorb white space and token must be either punctuation or alphanum
   Bool_t first(kTRUE), quotedString(kFALSE), lineCont(kFALSE) ;
   char buffer[10240], c(0), cnext, cprev=' ' ;
+  Bool_t haveINF(kFALSE) ;
   Int_t bufptr(0) ;
 
   // Check for end of file 
@@ -156,7 +159,8 @@ TString RooStreamParser::readToken()
 
     // Read next char
     _is->get(c) ;
-    
+
+
 
     // Terminate at EOF, EOL or trouble
     if (_is->eof() || _is->fail() || c=='\n') break ;
@@ -174,8 +178,22 @@ TString RooStreamParser::readToken()
     // If '-' or '/' see what the next character is
     if (c == '.' || c=='-' || c=='+' || c=='/' || c=='\\') {
       _is->get(cnext) ;
+
+
+      if (cnext=='I' || cnext=='i') {
+	char tmp1,tmp2 ;
+	_is->get(tmp1) ;
+	_is->get(tmp2) ;
+	_is->putback(tmp2) ;
+	_is->putback(tmp1) ;
+	haveINF = ((cnext=='I' && tmp1 == 'N' && tmp2 == 'F') || (cnext=='i' && tmp1 == 'n' && tmp2 == 'f')) ;
+      } else {
+	haveINF = kFALSE ;
+      }
+
       _is->putback(cnext) ;
     }
+
 
     // Check for line continuation marker
     if (c=='\\' && cnext=='\\') {
@@ -206,7 +224,8 @@ TString RooStreamParser::readToken()
     if (!quotedString) {
       // Decide if next char is punctuation (exempt - and . that are part of floating point numbers, or +/- preceeding INF)
       if (isPunctChar(c) && !(c=='.' && (isdigit(cnext)||isdigit(cprev))) 
-	  && !((c=='-'||c=='+') && (isdigit(cnext)||cnext=='.'||cnext=='i'||cnext=='I'))) {
+	  && (!first || !((c=='-'||c=='+') && (isdigit(cnext)||cnext=='.'||haveINF)))) {
+
 	if (first) {
 	  // Make this a one-char punctuation token
 	  buffer[bufptr++]=c ;
