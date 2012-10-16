@@ -13,6 +13,6 @@
 
 class TInitGlobals {
 public:
-   TInitGlobals() { gROOT = ROOT::GetROOT(); }   // The ROOT of EVERYTHING
+   TInitGlobals() { /*gROOT = ROOT::GetROOT();*/ }   // The ROOT of EVERYTHING
 };
 static TInitGlobals gInitGlobals;
