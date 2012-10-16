@@ -32,6 +32,8 @@ namespace RooStats {
       // Initialze based on an already-created HistFactory Model
       HistFactoryNavigation(ModelConfig* mc);
 
+      virtual ~HistFactoryNavigation() {} 
+
       // Get the RooAbsReal function for a given sample in a given channel
       RooAbsReal* SampleFunction(const std::string& channel, const std::string& sample);
 
