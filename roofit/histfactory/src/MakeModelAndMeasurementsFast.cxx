@@ -389,7 +389,8 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName, 
     if( outFile != NULL ) {
 
       //
-      // assuming there is only on poi
+      // We only print info for the FIRST POI,
+      // but the rest are still saved in the ModelConfig
       // 
 
       RooRealVar* poi = 0; // (RooRealVar*) POIs->first();

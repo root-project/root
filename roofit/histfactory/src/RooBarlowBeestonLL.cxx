@@ -572,24 +572,37 @@ Double_t RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
       double nData = bin_cache.nData;
       double m_val = pois_mean->getVal();
 
-      double A = nu_b_stat*nu_b_stat + tau_val*nu_b_stat;
-      double B = nu_b*tau_val + nu_b*nu_b_stat - nData*nu_b_stat - m_val*nu_b_stat;
-      double C = -1*m_val*nu_b;
+      // Initialize the minimized value of gamma
+      double gamma_hat_hat = 1.0;
 
-      double discrim = B*B-4*A*C;
-
-      if( discrim < 0 ) {
-	std::cout << "Warning: Discriminant (B*B - 4AC) < 0" << std::endl;
-	std::cout << "Warning: Taking B*B - 4*A*C == 0Discriminant (B*B - 4AC) < 0" << std::endl;
-	discrim=0;
-	//throw runtime_error("BarlowBeestonLL::evaluate() : B*B - 4AC < 0");
+      // Check that the quadratic term is > 0
+      if(nu_b_stat > 0.00000001) {
+	
+	double A = nu_b_stat*nu_b_stat + tau_val*nu_b_stat;
+	double B = nu_b*tau_val + nu_b*nu_b_stat - nData*nu_b_stat - m_val*nu_b_stat;
+	double C = -1*m_val*nu_b;
+	
+	double discrim = B*B-4*A*C;
+	
+	if( discrim < 0 ) {
+	  std::cout << "Warning: Discriminant (B*B - 4AC) < 0" << std::endl;
+	  std::cout << "Warning: Taking B*B - 4*A*C == 0" << std::endl;
+	  discrim=0;
+	  //throw runtime_error("BarlowBeestonLL::evaluate() : B*B - 4AC < 0");
+	}
+	if( A <= 0 ) {
+	  std::cout << "Warning: A <= 0" << std::endl;
+	  throw runtime_error("BarlowBeestonLL::evaluate() : A < 0");
+	}
+	
+	gamma_hat_hat = ( -1*B + TMath::Sqrt(discrim) ) / (2*A);
       }
-      if( A <= 0 ) {
-	std::cout << "Warning: A <= 0" << std::endl;
-	throw runtime_error("BarlowBeestonLL::evaluate() : A < 0");
-      }
 
-      double gamma_hat_hat = ( -1*B + TMath::Sqrt(discrim) ) / (2*A);
+      // If the quadratic term is 0, we simply
+      // use a linear equation
+      else {
+	gamma_hat_hat = m_val/tau_val;
+      }
 
       // Check for NAN
       if( TMath::IsNaN(gamma_hat_hat) ) { 

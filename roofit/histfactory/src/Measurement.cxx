@@ -15,7 +15,7 @@ ClassImp(RooStats::HistFactory::Measurement) ;
 
 
 RooStats::HistFactory::Measurement::Measurement() :
-  fPOI( "" ), fLumi( 1.0 ), fLumiRelErr( .10 ), 
+  fPOI(), fLumi( 1.0 ), fLumiRelErr( .10 ), 
   fBinLow( 0 ), fBinHigh( 1 ), fExportOnly( false )  { ; }
 
 /*
@@ -28,7 +28,7 @@ RooStats::HistFactory::Measurement::Measurement(const Measurement& other) :
 
 RooStats::HistFactory::Measurement::Measurement(const char* Name, const char* Title) :
   TNamed( Name, Title ),
-  fPOI( "" ), fLumi( 1.0 ), fLumiRelErr( .10 ), 
+  fPOI(), fLumi( 1.0 ), fLumiRelErr( .10 ), 
   fBinLow( 0 ), fBinHigh( 1 ), fExportOnly( false )  { ; }
 
 
@@ -153,11 +153,14 @@ RooStats::HistFactory::Channel& RooStats::HistFactory::Measurement::GetChannel( 
 */
 
 void RooStats::HistFactory::Measurement::PrintTree( std::ostream& stream ) {
-
+  
   stream << "Measurement Name: " << GetName()
 	 << "\t OutputFilePrefix: " << fOutputFilePrefix
-	 << "\t POI: " << fPOI
-	 << "\t Lumi: " << fLumi
+	 << "\t POI: ";
+  for(unsigned int i = 0; i < fPOI.size(); ++i) {
+    stream << fPOI.at(i);
+  }
+  stream << "\t Lumi: " << fLumi
 	 << "\t LumiRelErr: " << fLumiRelErr
 	 << "\t BinLow: " << fBinLow
 	 << "\t BinHigh: " << fBinHigh
@@ -287,7 +290,11 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
 
 
   // Set the POI
-  xml << "    <POI>" << fPOI << "</POI>  " << std::endl;
+  xml << "    <POI>" ;
+  for(unsigned int i = 0; i < fPOI.size(); ++i) {
+    xml << fPOI.at(i) << " ";
+  } 
+  xml << "</POI>  " << std::endl;
   
   // Set the Constant Parameters
   xml << "    <ParamSetting Const=\"True\">";
