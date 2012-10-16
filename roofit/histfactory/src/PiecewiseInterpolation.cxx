@@ -237,7 +237,7 @@ Double_t PiecewiseInterpolation::evaluate() const
 	//double e = 0;
 	double f = 3*A/(8*x0*x0*x0*x0*x0);
 
-	double val = nominal + a*x + b*pow(x, 2) + 0/*c*pow(x, 3)*/ + d*pow(x, 4) + 0/*e*pow(x, 5)*/ + f*pow(x, 6);
+	double val = nominal + a*x + b*x*x + 0/*c*pow(x, 3)*/ + d*x*x*x*x + 0/*e*pow(x, 5)*/ + f*x*x*x*x*x*x;
 	if (val < 0) val = 0;
 	//cout << "Using interp code 4, val = " << val << endl;
 	sum += val-nominal;
