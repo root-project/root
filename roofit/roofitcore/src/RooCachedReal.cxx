@@ -128,8 +128,8 @@ void RooCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) cons
 
   // Make deep clone of self and attach to dataset observables
   if (!cache.sourceClone() && !cache.cacheSource()) {
-    RooArgSet* cloneSet = (RooArgSet*) RooArgSet(func.arg()).snapshot(kTRUE) ;
-    cache.setSourceClone((RooAbsReal*)cloneSet->find(func.arg().GetName())) ;
+    RooAbsArg* sourceClone = func.arg().cloneTree() ;
+    cache.setSourceClone((RooAbsReal*)sourceClone) ;
     cache.sourceClone()->recursiveRedirectServers(*cache.hist()->get()) ;
   }
 
