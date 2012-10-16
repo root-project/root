@@ -471,7 +471,7 @@ void TGLClipSet::InvalidateCurrentClip()
 }
 
 //______________________________________________________________________________
-void TGLClipSet::GetClipState(EClipType type, Double_t data[6]) const
+void TGLClipSet::GetClipState(TGLClip::EType type, Double_t data[6]) const
 {
    // Get state of clip object 'type' into data vector:
    //
@@ -481,10 +481,10 @@ void TGLClipSet::GetClipState(EClipType type, Double_t data[6]) const
 
    switch (type)
    {
-      case kClipNone:
+      case TGLClip::kClipNone:
          break;
 
-      case kClipPlane:
+      case TGLClip::kClipPlane:
       {
          if (!fClipPlane->IsValid())
             fClipPlane->Setup(fLastBBox);
@@ -496,7 +496,7 @@ void TGLClipSet::GetClipState(EClipType type, Double_t data[6]) const
          data[3] = planes[0].D();
          break;
       }
-      case kClipBox:
+      case TGLClip::kClipBox:
       {
          if (!fClipBox->IsValid())
             fClipBox->Setup(fLastBBox);
@@ -517,7 +517,7 @@ void TGLClipSet::GetClipState(EClipType type, Double_t data[6]) const
 }
 
 //______________________________________________________________________________
-void TGLClipSet::SetClipState(EClipType type, const Double_t data[6])
+void TGLClipSet::SetClipState(TGLClip::EType type, const Double_t data[6])
 {
    // Set state of clip object 'type' into data vector:
    //
@@ -527,15 +527,15 @@ void TGLClipSet::SetClipState(EClipType type, const Double_t data[6])
    // kBoxPlane               6 components - Box Center X/Y/Z - Box Extents X/Y/Z
 
    switch (type) {
-      case kClipNone: {
+      case TGLClip::kClipNone: {
          break;
       }
-      case kClipPlane: {
+      case TGLClip::kClipPlane: {
          TGLPlane newPlane(-data[0], -data[1], -data[2], -data[3]);
          fClipPlane->Set(newPlane);
          break;
       }
-      case kClipBox: {
+      case TGLClip::kClipBox: {
          //TODO: Pull these inside TGLPhysicalShape
          // Update clip box center
          const TGLBoundingBox & currentBox = fClipBox->BoundingBox();
@@ -557,41 +557,41 @@ void TGLClipSet::SetClipState(EClipType type, const Double_t data[6])
 }
 
 //______________________________________________________________________________
-EClipType TGLClipSet::GetClipType() const
+TGLClip::EType TGLClipSet::GetClipType() const
 {
    // Get current type active in viewer - returns one of kClipNone
    // kClipPlane or kClipBox.
 
-   EClipType type;
+  TGLClip::EType type;
    if (fCurrentClip == 0) {
-      type = kClipNone;
+      type = TGLClip::kClipNone;
    } else if (fCurrentClip == fClipPlane) {
-      type = kClipPlane;
+      type = TGLClip::kClipPlane;
    } else if (fCurrentClip == fClipBox) {
-      type = kClipBox;
+      type = TGLClip::kClipBox;
    } else {
       Error("TGLClipSet::GetClipType" , "Unknown clip type");
-      type = kClipNone;
+      type = TGLClip::kClipNone;
    }
    return type;
 }
 
 //______________________________________________________________________________
-void TGLClipSet::SetClipType(EClipType type)
+void TGLClipSet::SetClipType(TGLClip::EType type)
 {
    // Set current clip active in viewer - 'type' is one of kClipNone
    // kClipPlane or kClipBox.
 
    switch (type) {
-      case kClipNone: {
+      case TGLClip::kClipNone: {
          fCurrentClip = 0;
          break;
       }
-      case kClipPlane: {
+      case TGLClip::kClipPlane: {
          fCurrentClip = fClipPlane;
          break;
       }
-      case kClipBox: {
+      case TGLClip::kClipBox: {
          fCurrentClip = fClipBox;
          break;
       }

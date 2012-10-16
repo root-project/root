@@ -304,20 +304,27 @@ Int_t TGLRect::Diagonal() const
 }
 
 //______________________________________________________________________________
-EOverlap TGLRect::Overlap(const TGLRect & other) const
+Rgl::EOverlap TGLRect::Overlap(const TGLRect & other) const
 {
    // Return overlap result (kInside, kOutside, kPartial) of this
    // rect with 'other'
-   if ((fX <= other.fX) && (fX + fWidth >= other.fX + other.fWidth) &&
-       (fY <= other.fY) && (fY +fHeight >= other.fY + other.fHeight)) {
+
+   using namespace Rgl;
+
+   if ((fX <= other.fX) && (fX + fWidth  >= other.fX + other.fWidth) &&
+       (fY <= other.fY) && (fY + fHeight >= other.fY + other.fHeight))
+   {
       return kInside;
    }
-   else if ((fX >= other.fX + static_cast<Int_t>(other.fWidth)) ||
-            (fX + static_cast<Int_t>(fWidth) <= other.fX) ||
+   else if ((fX >= other.fX + static_cast<Int_t>(other.fWidth))  ||
+            (fX + static_cast<Int_t>(fWidth) <= other.fX)        ||
             (fY >= other.fY + static_cast<Int_t>(other.fHeight)) ||
-            (fY + static_cast<Int_t>(fHeight) <= other.fY)) {
+            (fY + static_cast<Int_t>(fHeight) <= other.fY))
+   {
       return kOutside;
-   } else {
+   }
+   else
+   {
       return kPartial;
    }
 }

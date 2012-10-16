@@ -180,8 +180,8 @@ public:
 
    // Overlap / projection / intersection tests
    // Viewport is GL coorinate system - origin bottom/left
-   EOverlap   FrustumOverlap (const TGLBoundingBox & box) const; // box/frustum overlap test
-   EOverlap   ViewportOverlap(const TGLBoundingBox & box) const; // box/viewport overlap test
+   Rgl::EOverlap FrustumOverlap (const TGLBoundingBox & box) const; // box/frustum overlap test
+   Rgl::EOverlap ViewportOverlap(const TGLBoundingBox & box) const; // box/viewport overlap test
    TGLRect    ViewportRect   (const TGLBoundingBox & box, TGLBoundingBox::EFace face) const;
    TGLRect    ViewportRect   (const TGLBoundingBox & box, const TGLBoundingBox::EFace * face = 0) const;
    TGLVertex3 WorldToViewport(const TGLVertex3 & worldVertex, TGLMatrix* modviewMat=0) const;

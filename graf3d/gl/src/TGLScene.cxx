@@ -463,7 +463,7 @@ void TGLScene::UpdateSceneInfo(TGLRnrCtx& rnrCtx)
          std::vector<TGLPlane>::iterator pi = sinfo->ClipPlanes().begin();
          while (pi != sinfo->ClipPlanes().end())
          {
-            if (drawShape->BoundingBox().Overlap(*pi) == kOutside)
+            if (drawShape->BoundingBox().Overlap(*pi) == Rgl::kOutside)
             {
                drawNeeded = kFALSE;
                break;
@@ -478,10 +478,10 @@ void TGLScene::UpdateSceneInfo(TGLRnrCtx& rnrCtx)
          size_t cnt = 0;
          while (pi != sinfo->ClipPlanes().end())
          {
-            EOverlap ovlp = drawShape->BoundingBox().Overlap(*pi);
-            if (ovlp == kOutside)
+            Rgl::EOverlap ovlp = drawShape->BoundingBox().Overlap(*pi);
+            if (ovlp == Rgl::kOutside)
                break;
-            else if (ovlp == kInside)
+            else if (ovlp == Rgl::kInside)
                ++cnt;
             ++pi;
          }
@@ -496,7 +496,7 @@ void TGLScene::UpdateSceneInfo(TGLRnrCtx& rnrCtx)
          std::vector<TGLPlane>::iterator pi = sinfo->FrustumPlanes().begin();
          while (pi != sinfo->FrustumPlanes().end())
          {
-            if (drawShape->BoundingBox().Overlap(*pi) == kOutside)
+            if (drawShape->BoundingBox().Overlap(*pi) == Rgl::kOutside)
             {
                drawNeeded = kFALSE;
                break;
@@ -1537,7 +1537,7 @@ Bool_t TGLScene::IsOutside(const TGLBoundingBox & box,
    // Check if box is outside of all planes.
 
    for (TGLPlaneSet_ci p=planes.begin(); p!=planes.end(); ++p)
-      if (box.Overlap(*p) == kOutside)
+      if (box.Overlap(*p) == Rgl::kOutside)
          return kTRUE;
    return kFALSE;
 }

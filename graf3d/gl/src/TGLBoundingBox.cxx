@@ -430,9 +430,11 @@ TGLPlane TGLBoundingBox::GetNearPlane() const
 }
 
 //______________________________________________________________________________
-EOverlap TGLBoundingBox::Overlap(const TGLPlane & plane) const
+Rgl::EOverlap TGLBoundingBox::Overlap(const TGLPlane & plane) const
 {
    // Find overlap (Inside, Outside, Partial) of plane c.f. bounding box.
+
+   using namespace Rgl;
 
    // First : cheap square approxiamtion test. If distance of our
    // center to plane > our half extent length we are outside plane
@@ -458,9 +460,11 @@ EOverlap TGLBoundingBox::Overlap(const TGLPlane & plane) const
 }
 
 //______________________________________________________________________________
-EOverlap TGLBoundingBox::Overlap(const TGLBoundingBox & other) const
+Rgl::EOverlap TGLBoundingBox::Overlap(const TGLBoundingBox & other) const
 {
    // Find overlap (Inside, Outside, Partial) of other bounding box c.f. us.
+
+   using namespace Rgl;
 
    // Simplify code with refs
    const TGLBoundingBox & a = *this;

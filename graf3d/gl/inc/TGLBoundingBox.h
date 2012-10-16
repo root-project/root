@@ -124,8 +124,8 @@ public:
    TGLPlane     GetNearPlane() const;
 
    // Overlap testing
-   EOverlap Overlap(const TGLPlane & plane) const;
-   EOverlap Overlap(const TGLBoundingBox & box) const;
+   Rgl::EOverlap Overlap(const TGLPlane & plane) const;
+   Rgl::EOverlap Overlap(const TGLBoundingBox & box) const;
 
    void Draw(Bool_t solid = kFALSE) const;
    void Dump() const;

@@ -19,15 +19,16 @@
 #include "TGLUtil.h"
 #endif
 
+#include "TGLClip.h"
+
 class TGButton;
 class TGCheckButton;
 class TGNumberEntry;
 class TGButtonGroup;
-class TGLClipSet;
 
 
-class TGLClipSetSubEditor : public TGVerticalFrame {
-
+class TGLClipSetSubEditor : public TGVerticalFrame
+{
 private:
    TGLClipSetSubEditor(const TGLClipSetSubEditor&);            // Not implemented
    TGLClipSetSubEditor& operator=(const TGLClipSetSubEditor&); // Not implemented
@@ -35,7 +36,7 @@ private:
 protected:
    TGLClipSet       *fM;
 
-   EClipType         fCurrentClip;
+   TGLClip::EType    fCurrentClip;
    TGButtonGroup    *fTypeButtons;
 
    TGCompositeFrame *fPlanePropFrame;
