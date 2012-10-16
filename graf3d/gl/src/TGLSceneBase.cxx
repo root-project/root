@@ -222,12 +222,12 @@ void TGLSceneBase::UpdateSceneInfo(TGLRnrCtx& ctx)
          // !!! transform plane
          switch (BoundingBox().Overlap(p))
          {
-            case kInside:  // Whole scene passes ... no need to store it.
+            case Rgl::kInside:  // Whole scene passes ... no need to store it.
                break;
-            case kPartial:
+            case Rgl::kPartial:
                sinfo->FrustumPlanes().push_back(p);
                break;
-            case kOutside:
+            case Rgl::kOutside:
                sinfo->InFrustum(kFALSE);
                break;
          }
@@ -251,12 +251,12 @@ void TGLSceneBase::UpdateSceneInfo(TGLRnrCtx& ctx)
          // !!! transform plane
          switch (BoundingBox().Overlap(*it))
          {
-            case kInside:  // Whole scene passes ... no need to store it.
+            case Rgl::kInside:  // Whole scene passes ... no need to store it.
                break;
-            case kPartial:
+            case Rgl::kPartial:
                sinfo->ClipPlanes().push_back(*it);
                break;
-            case kOutside: // Depends on mode
+            case Rgl::kOutside: // Depends on mode
                if (sinfo->ClipMode() == TGLSceneInfo::kClipOutside)
                {
                   // Scene is outside of whole clip object - nothing visible.

@@ -31,8 +31,16 @@ class TGLManipSet;
 class TGLClip : public TGLPhysicalShape
 {
 public:
-   enum EMode { kOutside, // Clip away what's outside
-                kInside   // Clip away what's inside
+   enum EMode
+   {
+      kOutside, // Clip away what's outside
+      kInside   // Clip away what's inside
+   };
+   enum EType
+   {
+      kClipNone = 0,
+      kClipPlane,
+      kClipBox
    };
 
 protected:
@@ -170,11 +178,11 @@ public:
    void  InvalidateClips();
    void  InvalidateCurrentClip();
 
-   void  GetClipState(EClipType type, Double_t data[6]) const;
-   void  SetClipState(EClipType type, const Double_t data[6]);
+   void  GetClipState(TGLClip::EType type, Double_t data[6]) const;
+   void  SetClipState(TGLClip::EType type, const Double_t data[6]);
 
-   EClipType GetClipType() const;
-   void      SetClipType(EClipType type);
+   TGLClip::EType GetClipType() const;
+   void           SetClipType(TGLClip::EType type);
 
    // Clip control flags
    Bool_t GetAutoUpdate()     const { return fAutoUpdate; }

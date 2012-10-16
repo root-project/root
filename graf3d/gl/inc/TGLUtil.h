@@ -19,6 +19,10 @@
 #include "TError.h"
 #endif
 
+#include <vector>
+#include <cmath>
+#include <cassert>
+
 class TString;
 class TGLBoundingBox;
 class TGLCamera;
@@ -28,48 +32,26 @@ class TAttLine;
 
 class GLUtesselator;
 
-#include <vector>
-#include <cmath>
-#include <cassert>
-
-// TODO:Find a better place for these enums - TGLEnum.h?
-// Whole GL viewer should be moved into own namespace
-// probably
-enum EPosition
+namespace Rgl
 {
-   kInFront = 0,
-   kBehind
-};
+   enum EOverlap
+   {
+      kInside = 0,
+      kPartial,
+      kOutside
+   };
+}
 
-enum EOverlap
+enum EGLCoordType
 {
-   kInside = 0,
-   kPartial,
-   kOutside
-};
-
-enum EClipType
-{
-   kClipNone = 0,
-   kClipPlane,
-   kClipBox
-};
-
-enum EManipType
-{
-   kManipTrans = 0,
-   kManipScale,
-   kManipRotate
-};
-
-enum EGLCoordType {
    kGLCartesian,
    kGLPolar,
    kGLCylindrical,
    kGLSpherical
 };
 
-enum EGLPlotType {
+enum EGLPlotType
+{
    kGLLegoPlot,
    kGLSurfacePlot,
    kGLBoxPlot,
@@ -485,7 +467,7 @@ public:
    Int_t Longest() const;
 
    Double_t Aspect() const;
-   EOverlap Overlap(const TGLRect & other) const;
+   Rgl::EOverlap Overlap(const TGLRect & other) const;
 
    ClassDef(TGLRect,0); // GL rect helper/wrapper class
 };

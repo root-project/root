@@ -368,7 +368,7 @@ void TGLViewerBase::PreRender()
    {
       TGLSceneInfo         * sinfo = *i;
       const TGLBoundingBox & bbox  = sinfo->GetTransformedBBox();
-      Bool_t visp = (!bbox.IsEmpty() && fCamera->FrustumOverlap(bbox) != kOutside);
+      Bool_t visp = (!bbox.IsEmpty() && fCamera->FrustumOverlap(bbox) != Rgl::kOutside);
       sinfo->ViewCheck(visp);
       if (visp) {
          fRnrCtx->SetSceneInfo(sinfo);

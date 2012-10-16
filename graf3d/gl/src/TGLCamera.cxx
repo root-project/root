@@ -263,11 +263,12 @@ TGLVertex3 TGLCamera::FrustumCenter() const
 }
 
 //______________________________________________________________________________
-EOverlap TGLCamera::FrustumOverlap(const TGLBoundingBox & box) const
+Rgl::EOverlap TGLCamera::FrustumOverlap(const TGLBoundingBox & box) const
 {
    // Calcaulte overlap (kInside, kOutside, kPartial) of box with camera
    // frustum
    // Camera must have valid frustum cache - call Apply() after last modifcation, before using
+
    if (fCacheDirty) {
       Error("TGLCamera::FrustumOverlap()", "cache dirty - must call Apply()");
    }
@@ -279,8 +280,9 @@ EOverlap TGLCamera::FrustumOverlap(const TGLBoundingBox & box) const
    // TODO: Improve this - have a reliable test (seperating axes).
 
    Int_t planesInside = 0; // Assume outside to start
-   for (Int_t planeIndex = 0; planeIndex < kPlanesPerFrustum; ++planeIndex) {
-      EOverlap planeOverlap = box.Overlap(fFrustumPlanes[planeIndex]);
+   for (Int_t planeIndex = 0; planeIndex < kPlanesPerFrustum; ++planeIndex)
+   {
+      Rgl::EOverlap planeOverlap = box.Overlap(fFrustumPlanes[planeIndex]);
 
       // Special case - any object which comes through the near clipping
       // plane is completely removed - disabled at present
@@ -290,22 +292,22 @@ EOverlap TGLCamera::FrustumOverlap(const TGLBoundingBox & box) const
          return kOutside;
       }*/
       // Once we find a single plane which shape is outside, we are outside the frustum
-      if ( planeOverlap == kOutside ) {
-         return kOutside;
-      } else if ( planeOverlap == kInside ) {
+      if (planeOverlap == Rgl::kOutside) {
+         return Rgl::kOutside;
+      } else if (planeOverlap == Rgl::kInside) {
          planesInside++;
       }
    }
    // Completely inside frustum
-   if ( planesInside == kPlanesPerFrustum ) {
-      return kInside;
+   if (planesInside == kPlanesPerFrustum) {
+      return Rgl::kInside;
    } else {
-      return kPartial;
+      return Rgl::kPartial;
    }
 }
 
 //______________________________________________________________________________
-EOverlap TGLCamera::ViewportOverlap(const TGLBoundingBox & box) const
+Rgl::EOverlap TGLCamera::ViewportOverlap(const TGLBoundingBox & box) const
 {
    // Calculate overlap (kInside, kOutside, kPartial) of box projection onto viewport
    // (as rect) against the viewport rect.
@@ -582,23 +584,30 @@ Bool_t TGLCamera::OfInterest(const TGLBoundingBox & box, Bool_t ignoreSize) cons
    // thus fires an internal rebuild to fill scene properly and
    // finally setup camera properly.
 
-   if (fInterestBox.IsEmpty()) {
-      if (box.Diagonal() >= fLargestSeen * 0.001) {
+   if (fInterestBox.IsEmpty())
+   {
+      if (box.Diagonal() >= fLargestSeen * 0.001)
+      {
          if (box.Diagonal() > fLargestSeen) {
             fLargestSeen = box.Diagonal();
          }
          interest = kTRUE;
       }
-   } else {
+   }
+   else
+   {
       // Objects are of interest if the have length ratio c.f. the
       // current interest box, and they at least partially overlap it.
       // Some objects have zero volume BBs - e.g. single points - skip
       // the test for these as there is no way to threshold on 0.
-      if (box.IsEmpty()) {
+      if (box.IsEmpty())
+      {
          interest = kTRUE;
-      } else {
+      }
+      else
+      {
          if (ignoreSize || box.Diagonal() / fInterestBox.Diagonal() > 0.0001)
-            interest = fInterestBox.Overlap(box) != kOutside;
+            interest = fInterestBox.Overlap(box) != Rgl::kOutside;
       }
    }
 
@@ -620,7 +629,7 @@ Bool_t TGLCamera::UpdateInterest(Bool_t force)
    // sizable amount).
    //
    // If the interest box is updated we return kTRUE - kFALSE otherwise.
-   //
+
    Bool_t exposedUpdate = kFALSE;
 
    // Construct a new interest box using the current frustum box as a basis
@@ -648,12 +657,13 @@ Bool_t TGLCamera::UpdateInterest(Bool_t force)
    // ii) The current frustum is not inside existing interest
    // iii) Force case (debugging)
    if (volRatio > 8.0 || volRatio < 0.125 || fInterestBox.IsEmpty() ||
-       fInterestBox.Overlap(frustumBox) != kInside || force) {
+       fInterestBox.Overlap(frustumBox) != Rgl::kInside || force)
+   {
       fPreviousInterestBox = fInterestBox;
       fInterestBox = newInterestBox;
 
       // Frustum should be fully contained now
-      if (fInterestBox.Overlap(frustumBox) != kInside) {
+      if (fInterestBox.Overlap(frustumBox) != Rgl::kInside) {
          Error("TGLCamera::UpdateInterest", "update interest box does not contain frustum");
       }
 
@@ -927,9 +937,8 @@ Bool_t TGLCamera::RotateRad(Double_t hRotate, Double_t vRotate)
       TGLVector3 up   = fCamTrans.GetBaseVec(3);
       TGLVector3 pos  = fCamTrans.GetTranslation();
 
-      TGLVector3 deltaT = pos - (pos*lft)*lft;
-      Double_t   deltaF = deltaT * fwd;
-      Double_t   deltaU = deltaT * up;
+      Double_t deltaF = pos * fwd;
+      Double_t deltaU = pos * up;
 
       // up vector lock
       TGLVector3 zdir = fCamBase.GetBaseVec(3);
@@ -984,10 +993,9 @@ Bool_t TGLCamera::RotateArcBallRad(Double_t hRotate, Double_t vRotate)
    TGLVector3 up   = fCamTrans.GetBaseVec(3);
    TGLVector3 pos  = fCamTrans.GetTranslation();
 
-   TGLVector3 deltaT = pos - (pos*lft)*lft;
-   Double_t   deltaF = deltaT * fwd;
-   Double_t   deltaL = deltaT * lft;
-   Double_t   deltaU = deltaT * up;
+   Double_t deltaF = pos * fwd;
+   Double_t deltaL = pos * lft;
+   Double_t deltaU = pos * up;
 
    fCamTrans.MoveLF(1, -deltaF);
    fCamTrans.MoveLF(2, -deltaL);

@@ -31,7 +31,7 @@ ClassImp(TGLClipSetSubEditor);
 TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
    TGVerticalFrame(p),
    fM(0),
-   fCurrentClip(kClipNone),
+   fCurrentClip(TGLClip::kClipNone),
    fTypeButtons(0),
    fPlanePropFrame(0),
    fPlaneProp(),
@@ -124,7 +124,7 @@ void TGLClipSetSubEditor::SetModel(TGLClipSet* m)
       btn->SetDown();
       fTypeButtons->SetButton(fCurrentClip+1);
    }
-   Bool_t active = (fCurrentClip != kClipNone);
+   Bool_t active = (fCurrentClip != TGLClip::kClipNone);
    fClipInside->SetEnabled(active);
    fAutoUpdate->SetEnabled(active);
    fClipEdit  ->SetEnabled(active);
@@ -135,12 +135,12 @@ void TGLClipSetSubEditor::SetModel(TGLClipSet* m)
       fClipInside->SetDown(fM->GetCurrentClip()->GetMode() == TGLClip::kInside);
       fAutoUpdate->SetDown(fM->GetAutoUpdate());
 
-      if (fCurrentClip == kClipPlane) {
+      if (fCurrentClip == TGLClip::kClipPlane) {
          HideFrame(fBoxPropFrame);
          ShowFrame(fPlanePropFrame);
          for (Int_t i = 0; i < 4; ++i)
             fPlaneProp[i]->SetNumber(clip[i]);
-      } else if (fCurrentClip == kClipBox) {
+      } else if (fCurrentClip == TGLClip::kClipBox) {
          HideFrame(fPlanePropFrame);
          ShowFrame(fBoxPropFrame);
          for (Int_t i = 0; i < 6; ++i)
@@ -182,9 +182,9 @@ void TGLClipSetSubEditor::ClipTypeChanged(Int_t id)
 
    switch (id)
    {
-      case 2:  fCurrentClip = kClipPlane; break;
-      case 3:  fCurrentClip = kClipBox;   break;
-      default: fCurrentClip = kClipNone;  break;
+      case 2:  fCurrentClip = TGLClip::kClipPlane; break;
+      case 3:  fCurrentClip = TGLClip::kClipBox;   break;
+      default: fCurrentClip = TGLClip::kClipNone;  break;
    }
    fM->SetClipType(fCurrentClip);
    SetModel(fM);
@@ -200,10 +200,10 @@ void TGLClipSetSubEditor::UpdateViewerClip()
 
    Double_t data[6] = {0.};
    // Fetch GUI state for clip if 'type' into 'data' vector
-   if (fCurrentClip == kClipPlane)
+   if (fCurrentClip == TGLClip::kClipPlane)
       for (Int_t i = 0; i < 4; ++i)
          data[i] = fPlaneProp[i]->GetNumber();
-   else if (fCurrentClip == kClipBox)
+   else if (fCurrentClip == TGLClip::kClipBox)
       for (Int_t i = 0; i < 6; ++i)
          data[i] = fBoxProp[i]->GetNumber();
 
@@ -212,7 +212,7 @@ void TGLClipSetSubEditor::UpdateViewerClip()
    fM->SetClipState(fCurrentClip, data);
    fM->SetShowManip(fClipEdit->IsDown());
    fM->SetShowClip (fClipShow->IsDown());
-   if (fCurrentClip != kClipNone)
+   if (fCurrentClip != TGLClip::kClipNone)
       fM->GetCurrentClip()->SetMode(fClipInside->IsDown() ? TGLClip::kInside : TGLClip::kOutside);
    fM->SetAutoUpdate(fAutoUpdate->IsDown());
 
@@ -224,11 +224,11 @@ void TGLClipSetSubEditor::ResetViewerClip()
 {
    // Reset transformation of the current clip.
 
-   if (fCurrentClip != kClipNone) {
-      if (fM->GetClipType() == kClipPlane) {
+   if (fCurrentClip != TGLClip::kClipNone) {
+      if (fM->GetClipType() == TGLClip::kClipPlane) {
          TGLPlane plane(0.0, -1.0, 0.0, 0.0);
          dynamic_cast<TGLClipPlane*>(fM->GetCurrentClip())->Set(plane);
-      } else if (fM->GetClipType() == kClipBox) {
+      } else if (fM->GetClipType() == TGLClip::kClipBox) {
          fM->GetCurrentClip()->SetTransform(TGLMatrix());
       }
       Changed();
