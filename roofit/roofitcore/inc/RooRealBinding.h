@@ -17,6 +17,7 @@
 #define ROO_REAL_BINDING
 
 #include "RooAbsFunc.h"
+#include <list>
 
 class RooAbsRealLValue;
 class RooAbsReal;
@@ -50,7 +51,11 @@ protected:
   Bool_t _clipInvalid ;
   mutable Double_t* _xsave ;
   const TNamed* _rangeName ; //!
-
+  
+  mutable std::list<RooAbsReal*> _compList ; //!
+  mutable std::list<Double_t>    _compSave ; //!
+  mutable Double_t _funcSave ; //!
+  
   ClassDef(RooRealBinding,0) // Function binding to RooAbsReal object
 };
 

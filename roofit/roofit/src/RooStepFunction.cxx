@@ -51,6 +51,7 @@ RooStepFunction::RooStepFunction()
 {
   // Constructor
   _coefIter = _coefList.createIterator() ;
+  _boundIter = _boundaryList.createIterator() ;
   _interpolate = kFALSE ;
 }
 				 
@@ -80,6 +81,7 @@ RooStepFunction::RooStepFunction(const char* name, const char* title,
   }
   delete coefIter ;
 
+  _boundIter = _boundaryList.createIterator() ;
   TIterator* boundaryIter = boundaryList.createIterator() ;
   RooAbsArg* boundary ;
   while((boundary = (RooAbsArg*)boundaryIter->Next())) {

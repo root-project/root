@@ -291,7 +291,7 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
       _value = 0 ;
     } else {
       _value = rawVal / normVal ;
-//       cout << "RooAbsPdf::getValV(" << GetName() << ") writing _value = " << _value << endl ;
+//       cout << "RooAbsPdf::getValV(" << GetName() << ") writing _value = " << rawVal << "/" << normVal << " = " << _value << endl ;
     }
 
     clearValueAndShapeDirty() ; //setValueDirty(kFALSE) ;
@@ -486,6 +486,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
       RooCachedReal* cachedNorm = new RooCachedReal(name.c_str(),name.c_str(),*normInt,*normParams) ;     
       cachedNorm->setInterpolationOrder(_valueCacheIntOrder) ;
       cachedNorm->addOwnedComponents(*normInt) ;
+      cachedNorm->setCacheSource(kTRUE) ;
       _norm = cachedNorm ;
     } else {
       _norm = normInt ;
@@ -1155,7 +1156,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	m.hesse() ;
       }
       
-      if (doSumW2==1) {
+      if (doSumW2==1 && m.getNPar()>0) {
 	
 	// Make list of RooNLLVar components of FCN
 	list<RooNLLVar*> nllComponents ;
@@ -1301,7 +1302,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	m.hesse() ;
       }
       
-      if (doSumW2==1) {
+      if (doSumW2==1 && m.getNPar()>0) {
 	
 	// Make list of RooNLLVar components of FCN
 	list<RooNLLVar*> nllComponents ;

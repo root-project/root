@@ -46,6 +46,7 @@ public:
   }
 
   void setNameList(const char* givenList) ;
+  const char* content() const { return _nameList ; }
 
   Int_t _len ;
   char* _nameList ; //[_len]

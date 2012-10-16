@@ -227,7 +227,7 @@ void RooLinearVar::writeToStream(ostream& os, Bool_t compact) const
   }
 
   // If binning is not found return default binning, if creation is not requested
-  if (!createOnTheFly) {
+  if (!_var.arg().hasRange(name) && !createOnTheFly) {
     return _binning ;
   }
 

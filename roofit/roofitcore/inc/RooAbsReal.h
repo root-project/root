@@ -62,7 +62,7 @@ public:
 
   // Return value and unit accessors
   inline Double_t getVal(const RooArgSet* set=0) const { 
-/*    if (_fast && !_inhibitDirty) std::cout << "RooAbsReal::getVal(" << GetName() << ") CLEAN value = " << _value << std::endl ;  */
+/*     if (_fast && !_inhibitDirty && std::string("RooHistFunc")==IsA()->GetName()) std::cout << "RooAbsReal::getVal(" << GetName() << ") CLEAN value = " << _value << std::endl ;  */
 #ifndef _WIN32
     return (_fast && !_inhibitDirty) ? _value : getValV(set) ; 
 #else
@@ -374,6 +374,7 @@ protected:
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;
   virtual void fillTreeBranch(TTree& t) ;
 
+  friend class RooRealBinding ;
   Double_t _plotMin ;       // Minimum of plot range
   Double_t _plotMax ;       // Maximum of plot range
   Int_t    _plotBins ;      // Number of plot bins

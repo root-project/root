@@ -44,6 +44,7 @@
 #include "RooMsgService.h"
 #include "RooConstVar.h"
 #include "RooResolutionModel.h"
+#include "RooPlot.h"
 #include "TInterpreter.h"
 #include "TClassTable.h"
 #include "TBaseClass.h"
@@ -1774,6 +1775,7 @@ Bool_t RooWorkspace::import(TObject& object, Bool_t replaceExisting)
   // Grab the current state of the directory Auto-Add
   ROOT::DirAutoAdd_t func = object.IsA()->GetDirectoryAutoAdd();
   object.IsA()->SetDirectoryAutoAdd(0);
+  Bool_t tmp = RooPlot::setAddDirectoryStatus(kFALSE) ;
 
   if (oldObj) {
     _genObjects.Replace(oldObj,object.Clone()) ;
@@ -1784,6 +1786,7 @@ Bool_t RooWorkspace::import(TObject& object, Bool_t replaceExisting)
 
   // Reset the state of the directory Auto-Add
   object.IsA()->SetDirectoryAutoAdd(func);
+  RooPlot::setAddDirectoryStatus(tmp) ;
 
   return kFALSE ;
 }

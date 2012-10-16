@@ -116,7 +116,7 @@ RooCmdArg Import(const char* state, TH1& histo) ;
 RooCmdArg Import(const std::map<std::string,TH1*>&) ;
 RooCmdArg Import(const char* state, RooDataHist& dhist) ;
 RooCmdArg Import(const std::map<std::string,RooDataHist*>&) ;
-RooCmdArg Import(TH1& histo, Bool_t importDensity=kTRUE) ;
+RooCmdArg Import(TH1& histo, Bool_t importDensity=kFALSE) ;
 
 // RooDataSet::ctor arguments
 RooCmdArg WeightVar(const char* name) ;

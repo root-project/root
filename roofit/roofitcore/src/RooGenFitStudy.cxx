@@ -172,13 +172,14 @@ Bool_t RooGenFitStudy::initialize()
   _ngenVar = new RooRealVar("ngen","number of generated events",0) ;
   
   _params = _fitPdf->getParameters(_genObs) ;
+  RooArgSet modelParams(*_params) ;
   _initParams = (RooArgSet*) _params->snapshot() ;
   _params->add(*_nllVar) ;
   _params->add(*_ngenVar) ;
 
   _genSpec = _genPdf->prepareMultiGen(_genObs,(RooCmdArg&)*_genOpts.At(0),(RooCmdArg&)*_genOpts.At(1),(RooCmdArg&)*_genOpts.At(2)) ;
 
-  registerSummaryOutput(*_params) ;
+  registerSummaryOutput(*_params,modelParams) ;
   return kFALSE ;
 } 
 
