@@ -489,7 +489,7 @@ double RooMinimizerFcn::DoEval(const double *x) const
 
   // Calculate the function for these parameters
   double fvalue = _funct->getVal();
-  if (RooAbsPdf::evalError() || RooAbsReal::numEvalErrors()>0) {
+  if (RooAbsPdf::evalError() || RooAbsReal::numEvalErrors()>0 || fvalue>1e30) {
 
     if (_printEvalErrors>=0) {
 
@@ -517,7 +517,7 @@ double RooMinimizerFcn::DoEval(const double *x) const
     } 
 
     if (_doEvalErrorWall) {
-      fvalue = _maxFCN ;
+      fvalue = _maxFCN+1 ;
     }
 
     RooAbsPdf::clearEvalError() ;

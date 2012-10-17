@@ -50,6 +50,7 @@ using namespace std;
 ClassImp(RooRealSumPdf)
 ;
 
+Bool_t RooRealSumPdf::_doFloorGlobal = kFALSE ; 
 
 //_____________________________________________________________________________
 RooRealSumPdf::RooRealSumPdf() 
@@ -59,6 +60,7 @@ RooRealSumPdf::RooRealSumPdf()
   _funcIter  = _funcList.createIterator() ;
   _coefIter  = _coefList.createIterator() ;
   _extended = kFALSE ;
+  _doFloor = kFALSE ;
 }
 
 
@@ -70,7 +72,8 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title) :
   _haveLastCoef(kFALSE),
   _funcList("!funcList","List of functions",this),
   _coefList("!coefList","List of coefficients",this),
-  _extended(kFALSE)
+  _extended(kFALSE),
+  _doFloor(kFALSE)
 {
   // Constructor with name and title
   _funcIter   = _funcList.createIterator() ;
@@ -87,7 +90,8 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
   _haveLastCoef(kFALSE),
   _funcList("!funcList","List of functions",this),
   _coefList("!coefList","List of coefficients",this),
-  _extended(kFALSE)
+  _extended(kFALSE),
+  _doFloor(kFALSE)
 {
   // Construct p.d.f consisting of coef1*func1 + (1-coef1)*func2
   // The input coefficients and functions are allowed to be negative
@@ -111,7 +115,8 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
   _haveLastCoef(kFALSE),
   _funcList("!funcList","List of functions",this),
   _coefList("!coefList","List of coefficients",this),
-  _extended(extended)
+  _extended(extended),
+  _doFloor(kFALSE)
 { 
   // Constructor p.d.f implementing sum_i [ coef_i * func_i ], if N_coef==N_func
   // or sum_i [ coef_i * func_i ] + (1 - sum_i [ coef_i ] )* func_N if Ncoef==N_func-1
@@ -174,7 +179,8 @@ RooRealSumPdf::RooRealSumPdf(const RooRealSumPdf& other, const char* name) :
   _haveLastCoef(other._haveLastCoef),
   _funcList("!funcList",this,other._funcList),
   _coefList("!coefList",this,other._coefList),
-  _extended(other._extended)
+  _extended(other._extended),
+  _doFloor(other._doFloor)
 {
   // Copy constructor
 
@@ -247,6 +253,11 @@ Double_t RooRealSumPdf::evaluate() const
 		  << " WARNING: sum of FUNC coefficients not in range [0-1], value=" 
 		  << 1-lastCoef << endl ;
     } 
+  }
+
+  // Introduce floor if so requested
+  if (value<0 && (_doFloor || _doFloorGlobal)) {
+    value = 0 ;
   }
 
   return value ;

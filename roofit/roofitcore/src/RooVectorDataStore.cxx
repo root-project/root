@@ -727,6 +727,20 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
 
   Bool_t isTDS = dynamic_cast<const RooTreeDataStore*>(ads) ;
   Bool_t isVDS = dynamic_cast<const RooVectorDataStore*>(ads) ;
+
+  // Check if weight is being renamed - if so set flag to enable special handling in copy loop
+  Bool_t weightRename(kFALSE) ;
+  if (_wgtVar && isVDS && ((RooVectorDataStore*)(ads))->_wgtVar) {
+    if (string(_wgtVar->GetName())!=((RooVectorDataStore*)(ads))->_wgtVar->GetName()) {
+      weightRename=kTRUE ;
+    }
+  }
+  if (_wgtVar && isTDS && ((RooTreeDataStore*)(ads))->_wgtVar) {
+    if (string(_wgtVar->GetName())!=((RooTreeDataStore*)(ads))->_wgtVar->GetName()) {
+      weightRename=kTRUE ;
+    }
+  }
+
   for(Int_t i=nStart; i < nevent ; ++i) {
     ads->get(i) ;
     
@@ -738,8 +752,14 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
 
     if (isTDS) {
       _varsww.assignValueOnly(((RooTreeDataStore*)ads)->_varsww) ;
+      if (weightRename) {
+	_wgtVar->setVal(((RooTreeDataStore*)ads)->_wgtVar->getVal()) ;
+      }
     } else if (isVDS) {
       _varsww.assignValueOnly(((RooVectorDataStore*)ads)->_varsww) ;
+      if (weightRename) {
+	_wgtVar->setVal(((RooVectorDataStore*)ads)->_wgtVar->getVal()) ;
+      }
     } else {
       _varsww.assignValueOnly(*ads->get()) ;
     }
