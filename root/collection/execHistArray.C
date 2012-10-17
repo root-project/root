@@ -43,7 +43,7 @@ void write(const char *filename = "HistArray.root")
    tl->Adopt(5, al);
    f->WriteObjectAny(tl, "TArrayL", "tl");
 
-   Long64_t al64[3] = { 1e16LL, 7e15LL, 2e17LL };
+   Long64_t al64[3] = { 4e6LL, 7e5LL, 8e7LL };
    TArrayL64* tl64 = new TArrayL64(3, al64);
    f->WriteObjectAny(tl64, "TArrayL64", "tl64");
 
@@ -134,9 +134,9 @@ void read(const char *filename = "HistArray.root")
    TArrayL64* tl64; f->GetObject("tl64", tl64);
    assert(tl64 != NULL); assert(std::strcmp(tl64->IsA()->GetName(), "TArrayL64") == 0);
    assert(tl64->GetSize() == 3);
-   assert((*tl64)[0] == 1e16LL);
-   assert((*tl64)[1] == 7e15LL);
-   assert((*tl64)[2] == 2e17LL);
+   assert((*tl64)[0] == 4e6LL);
+   assert((*tl64)[1] == 7e5LL);
+   assert((*tl64)[2] == 8e7LL);
 
    // Checking copy constructor
    TArrayF* tf    ; f->GetObject("tf"    , tf    );
