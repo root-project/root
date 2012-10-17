@@ -28,8 +28,9 @@ class TVector3 : public TObject {
 
 public:
 
+   TVector3();
 
-   TVector3(Double_t x = 0.0, Double_t y = 0.0, Double_t z = 0.0);
+   TVector3(Double_t x, Double_t y, Double_t z);
    // The constructor.
 
    TVector3(const Double_t *);

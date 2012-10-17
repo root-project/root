@@ -243,6 +243,9 @@ v *= l;&nbsp; // Attention v = l*v</TT>
 
 ClassImp(TLorentzVector)
 
+TLorentzVector::TLorentzVector()
+               : fP(), fE(0.0) {}
+
 TLorentzVector::TLorentzVector(Double_t x, Double_t y, Double_t z, Double_t t)
                : fP(x,y,z), fE(t) {}
 

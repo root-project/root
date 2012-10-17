@@ -47,8 +47,9 @@ public:
    enum { kX=0, kY=1, kZ=2, kT=3, kNUM_COORDINATES=4, kSIZE=kNUM_COORDINATES };
    // Safe indexing of the coordinates when using with matrices, arrays, etc.
 
-   TLorentzVector(Double_t x = 0.0, Double_t y = 0.0,
-                 Double_t z = 0.0, Double_t t = 0.0);
+   TLorentzVector();
+
+   TLorentzVector(Double_t x, Double_t y, Double_t z, Double_t t);
    // Constructor giving the components x, y, z, t.
 
    TLorentzVector(const Double_t * carray);
