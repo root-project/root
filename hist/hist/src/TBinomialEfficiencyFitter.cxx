@@ -233,16 +233,10 @@ TFitResultPtr TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
 
    std::vector<ROOT::Fit::ParameterSettings> & parameters = fFitter->Config().ParamsSettings();
    parameters.reserve(npar);
-   Int_t nfixed = 0;
-   Double_t al,bl,we,arglist[100];
    for (i = 0; i < npar; i++) {
-      if (al*bl != 0 && al >= bl) {
-         al = bl = 0;
-         arglist[nfixed] = i+1;
-         nfixed++;
-      }
+
       // assign an ARBITRARY starting error to ensure the parameter won't be fixed!
-      we = f1->GetParError(i);
+      Double_t we = f1->GetParError(i);
       if (we <= 0) we = 0.3*TMath::Abs(f1->GetParameter(i));
       if (we == 0) we = 0.01;
 
