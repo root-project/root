@@ -638,6 +638,10 @@ N: Suzanne Panacek
 E: spanacek@fnal.gov
 D: editor of the User's Guide
 
+N: Iulia Pasov
+E: iulia.pasov@gmail.com
+D: prototyping JavaScript graphics with d3.js
+
 N: Marc Paterno
 E: paterno@fnal.gov
 D: implement utility functions used by TGraphAsymmErrors::BayesDivide
