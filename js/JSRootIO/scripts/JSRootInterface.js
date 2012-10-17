@@ -5,14 +5,16 @@
 
 // global variables
 // source_dir is the variable defining where to take the scripts and the list tree icons
-// To use the local ones (e.g. when checking out the files in a web server), just let it 
+// To use the local ones (e.g. when checking out the files in a web server), just let it
 // empty: var source_dir = "";
 var source_dir = "http://root.cern.ch/js/";
 var gFile;
 var obj_list = new Array();
 var obj_index = 0;
 var last_index = 0;
-var chart_list = new Array();
+var function_list = new Array();
+var func_list = new Array();
+var frame_id = 0;
 
 function addCollapsible(element) {
    $(element)
@@ -63,7 +65,7 @@ function loadScript(url, callback) {
          callback();
       };
    }
-   var rnd = Math.floor(Math.random()*80000); 
+   var rnd = Math.floor(Math.random()*80000);
    script.src = url;//+ "?r=" + rnd;
    document.getElementsByTagName("head")[0].appendChild(script);
 };
@@ -121,10 +123,12 @@ function showDirectory(dir_name, cycle, dir_id) {
    gFile.ReadDirectory(dir_name, cycle, dir_id);
 };
 
-function displayObject(obj, cycle, idx, pad) {
+function displayObject(obj, cycle, idx) {
    if (!obj['_typename'].match(/\bTH1/) &&
        !obj['_typename'].match(/\bTH2/) &&
        obj['_typename'] != 'JSROOTIO.TGraph' &&
+       obj['_typename'] != 'JSROOTIO.TCanvas' &&
+       obj['_typename'] != 'JSROOTIO.TF1' &&
        obj['_typename'] != 'JSROOTIO.TProfile') {
       return;
    }
@@ -132,7 +136,7 @@ function displayObject(obj, cycle, idx, pad) {
    var entryInfo = "<h5 id=\""+uid+"\"><a> " + obj['fName'] + ";" + cycle + "</a>&nbsp; </h5>\n";
    entryInfo += "<div id='histogram" + idx + "'>\n";
    $("#report").append(entryInfo);
-   JSROOTPainter.displayObject(obj, idx, pad);
+   JSROOTPainter.drawObject(obj, idx);
    addCollapsible('#'+uid);
 };
 
@@ -143,12 +147,12 @@ function AssertPrerequisites(andThen) {
       loadScript('http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js', function() {
       loadScript(source_dir+'scripts/dtree.js', function() {
       loadScript(source_dir+'scripts/rawinflate.js', function() {
-      loadScript('http://code.highcharts.com/highcharts.js', function() {
-      loadScript('http://code.highcharts.com/modules/exporting.js', function() {
-      loadScript(source_dir+'scripts/JSRootPainter.js', function() {
+      loadScript(source_dir+'scripts/JSRootCore.js', function() {
+      loadScript('http://d3js.org/d3.v2.min.js', function() {
+      loadScript(source_dir+'scripts/JSRootD3Painter.js', function() { 
       loadScript(source_dir+'scripts/JSRootIOEvolution.js', function() {
-         if (andThen) { 
-            andThen(); 
+         if (andThen) {
+            andThen();
          }
          else {
             $("#status").html("<br/>JSROOTIO.RootFile.js version: " + JSROOTIO.version + "<br/>");
@@ -202,15 +206,10 @@ function ReadFile() {
 
 function ResetUI() {
    obj_list.splice(0, obj_list.length);
+   func_list.splice(0, func_list.length);
    obj_index = 0;
    last_index = 0;
-   while (chart_list.length > 0) {
-      var chart = chart_list.pop();
-      if (chart.destroy && typeof(chart.destroy) === "function")
-         chart.destroy();
-      delete chart;
-      chart = null;
-   }
+   frame_id = 0;
    if (gFile) {
       gFile.Delete();
       delete gFile;
@@ -222,6 +221,7 @@ function ResetUI() {
    //window.location.reload(true);
    $("#status").html("<br/>JSROOTIO.RootFile.js version: " + JSROOTIO.version + "<br/>");
    $('#report').get(0).innerHTML = '';
+   $(window).unbind('resize');
 };
 
 function BuildSimpleGUI() {

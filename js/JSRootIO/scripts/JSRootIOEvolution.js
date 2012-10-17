@@ -8,7 +8,7 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
     kChar = 1, kShort = 2, kInt = 3, kLong = 4, kFloat = 5,
     kDouble = 8, kDouble32 = 9, kLegacyChar = 10, kUChar = 11, kUShort = 12,
     kUInt = 13, kULong = 14, kBits = 15, kLong64 = 16, kULong64 = 17, kBool = 18,
-    kFloat16 = 19, 
+    kFloat16 = 19,
     kObject = 61, kAny = 62, kObjectp = 63, kObjectP = 64, kTString = 65,
     kTObject = 66, kTNamed = 67, kAnyp = 68, kAnyP = 69, kAnyPnoVT = 70,
     kSTLp = 71,
@@ -16,12 +16,6 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
     kConv = 200, kConvL = 220, kConvP = 240,
     kSTL = 300, kSTLstring = 365,
     kStreamer = 500, kStreamLoop = 501;
-
-
-String.prototype.endsWith = function(str, ignoreCase) {
-   return (ignoreCase ? this.toUpperCase() : this).slice(-str.length)
-       == (ignoreCase ? str.toUpperCase() : str);
-};
 
 (function(){
 
@@ -341,11 +335,18 @@ String.prototype.endsWith = function(str, ignoreCase) {
             o = JSROOTIO.GetStreamer(class_name).Stream(obj, str, o);
          }
          obj['_typename'] = 'JSROOTIO.' + class_name;
+         JSROOTCore.addMethods(obj);
+         if (clRef['tag'])
+            gFile.MapObject(obj, clRef['tag']);
       }
       else if (clRef['name'] === 0 && clRef['tag'] != 0) {
-         // skip pointer...
-         var wtf = o;
-         //o += 4;
+         // already seen (and read) object...
+         var ro = gFile.GetMappedObject(clRef['tag']+4);
+         if (ro) {
+            obj = JSROOTCore.clone(ro);
+            class_name = obj['_typename'];
+            class_name = class_name.replace('JSROOTIO.', '');
+         }
       }
       else {
          o += 2; // skip version
@@ -392,7 +393,8 @@ String.prototype.endsWith = function(str, ignoreCase) {
             if (nbig > 0) {
                var readOption = JSROOTIO.ReadString(str, o, nbig);
                // add the drawing option somewhere...
-               obj['obj']['_options'] = readOption['str'];
+               //obj['obj']['_options'] = readOption['str'];
+               obj['obj']['fOption'] = readOption['str'];
                o += nbig;
             }
          }
@@ -464,6 +466,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
             if (JSROOTIO.GetStreamer(classv))
                o = JSROOTIO.GetStreamer(classv).Stream(obj, str, o);
             list['array'][i] = obj;
+            JSROOTCore.addMethods(obj);
          }
       }
       list['off'] = o;
@@ -528,6 +531,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
       if (JSROOTIO.GetStreamer('TPad')) {
          o = JSROOTIO.GetStreamer('TPad').Stream(obj, str, o);
       }
+      gFile.ClearObjectMap();
       return obj;
    };
 
@@ -566,22 +570,6 @@ String.prototype.endsWith = function(str, ignoreCase) {
       return gFile.fStreamers[clname];
    };
 
-   JSROOTIO.DisplayPrimitives = function(primitives, obj_name, cycle, pad) {
-      for (var i=0; i<primitives.length; ++i) {
-         var classname = primitives[i]['_typename'];
-         if (classname.match(/\bTH1/) || classname.match(/\bTH2/) ||
-             classname == 'JSROOTIO.TGraph') {
-            displayObject(primitives[i], cycle, obj_index, pad);
-            obj_list.push(obj_name+cycle);
-            obj_index++;
-         }
-         if (primitives[i]['fPrimitives']) {
-            JSROOTIO.DisplayPrimitives(primitives[i]['fPrimitives'], obj_name, cycle, primitives[i]);
-         }
-      }
-      delete primitives['paves_text'];
-   };
-
    JSROOTIO.Print = function(str, what) {
       what = typeof(what) === 'undefined' ? 'info' : what;
       if ( (window['console'] !== undefined) ) {
@@ -618,7 +606,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
 
       JSROOTIO.TStreamer.prototype.ReadBasicType = function(str, o, obj, prop) {
 
-         // read basic types (known from the streamer info) 
+         // read basic types (known from the streamer info)
          switch (this[prop]['type']) {
             case kBase:
                break;
@@ -888,21 +876,12 @@ String.prototype.endsWith = function(str, ignoreCase) {
                   if (JSROOTIO.GetStreamer(prop))
                      o = JSROOTIO.GetStreamer(prop).Stream(obj, str, o);
                }
-               if (clname.indexOf("TH2") == 0) {
-                  obj['GetBin'] = function(x, y) {
-                     var nx = this['fXaxis']['fNbins']+2;
-                     return (x + nx * y);
-                  }
-                  obj['GetBinContent'] = function(x, y) {
-                     return this['fArray'][this.GetBin(x, y)];
-                  }
-               }
             }
          }
          // then class members
          for (prop in this) {
             if (!this[prop] || typeof(this[prop]) === "function" ||
-                typeof(this[prop]['typename']) === "undefined" || 
+                typeof(this[prop]['typename']) === "undefined" ||
                 this[prop]['typename'] === "BASE")
                continue;
             var prop_name = prop;
@@ -1010,6 +989,11 @@ String.prototype.endsWith = function(str, ignoreCase) {
                   o = this.ReadBasicType(str, o, obj, prop);
                   break;
             }
+         }
+         if (obj['fBits'] && typeof(obj['fBits']) != "undefined") {
+            obj['TestBit'] = function (f) {
+               return ((obj['fBits'] & f) != 0);
+            };
          }
          return o;
       };
@@ -1509,11 +1493,9 @@ String.prototype.endsWith = function(str, ignoreCase) {
                      if (key['className'] != "" && key['name'] != "") {
                         key['offset'] = offset;
                      }
-                     _dir.fKeys[_dir.fKeyIndex] = key;
-                     _dir.fKeyIndex++;
+                     _dir.fKeys.push(key);
                   }
-                  _dir.fFile.fDirectories[_dir.fFile.fDirIndex] = _dir;
-                  _dir.fFile.fDirIndex++;
+                  _dir.fFile.fDirectories.push(_dir);
                   displayDirectory(_dir, cycle, dir_id);
                   delete buffer;
                   buffer = null;
@@ -1544,10 +1526,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
          if (versiondir > 2) o += 18; // skip fUUID.ReadBuffer(buffer);
          if (this.fSeekKeys) this.ReadKeys(cycle, dir_id);
       };
-
       this.fKeys = new Array();
-      this.fKeyIndex = 0;
-
       return this;
    };
 
@@ -1685,6 +1664,12 @@ String.prototype.endsWith = function(str, ignoreCase) {
 (function(){
 
    var version = "1.6 2012/02/24";
+
+   if (typeof JSROOTCore != "object") {
+      var e1 = new Error("This extension requires JSROOTCore.js");
+      e1.source = "JSROOTIO.RootFile.js";
+      throw e1;
+   }
 
    if (typeof JSROOTIO != "object") {
       var e1 = new Error("This extension requires JSROOTIO.core.js");
@@ -2003,12 +1988,12 @@ String.prototype.endsWith = function(str, ignoreCase) {
       JSROOTIO.RootFile.prototype.GetKey = function(keyname, cycle) {
          // retrieve a key by its name and cycle in the list of keys
          var i, j;
-         for (i=0; i<this.fKeyIndex; ++i) {
+         for (i=0; i<this.fKeys.length; ++i) {
             if (this.fKeys[i]['name'] == keyname && this.fKeys[i]['cycle'] == cycle)
                return this.fKeys[i];
          }
-         for (j=0; j<this.fDirIndex; ++j) {
-            for (i=0; i<this.fDirectories[j].fKeyIndex; ++i) {
+         for (j=0; j<this.fDirectories.length;++j) {
+            for (i=0; i<this.fDirectories[j].fKeys.length; ++i) {
                if (this.fDirectories[j].fKeys[i]['name'] == keyname &&
                    this.fDirectories[j].fKeys[i]['cycle'] == cycle)
                   return this.fDirectories[j].fKeys[i];
@@ -2058,16 +2043,25 @@ String.prototype.endsWith = function(str, ignoreCase) {
                if (key['className'] == 'TCanvas') {
                   var canvas = JSROOTIO.ReadTCanvas(objbuf['unzipdata'], 0);
                   if (canvas && canvas['fPrimitives']) {
-                     JSROOTIO.DisplayPrimitives(canvas['fPrimitives'], obj_name, cycle, canvas);
+                     if(canvas['fName'] == "") canvas['fName'] = obj_name;
+                     displayObject(canvas, cycle, obj_index);
+                     obj_list.push(obj_name+cycle);
+                     obj_index++;
                   }
                }
                else if (JSROOTIO.GetStreamer(key['className'])) {
                   var obj = {};
                   obj['_typename'] = 'JSROOTIO.' + key['className'];
                   JSROOTIO.GetStreamer(key['className']).Stream(obj, objbuf['unzipdata'], 0);
-                  displayObject(obj, cycle, obj_index);
-                  obj_list.push(obj_name+cycle);
-                  obj_index++;
+                  if (key['className'] == 'TFormula') {
+                     JSROOTCore.addFormula(obj);
+                  }
+                  else {
+                     JSROOTCore.addMethods(obj);
+                     displayObject(obj, cycle, obj_index);
+                     obj_list.push(obj_name+cycle);
+                     obj_index++;
+                  }
                }
                delete objbuf['unzipdata'];
                objbuf['unzipdata'] = null;
@@ -2084,14 +2078,18 @@ String.prototype.endsWith = function(str, ignoreCase) {
             var key = file.ReadKey(buffer, 0);
             this.fTagOffset = key.keyLen;
             if (key == 0) return;
-            file.fKeys[file.fKeyIndex] = key;
-            file.fKeyIndex++;
+            file.fKeys.push(key);
             var callback2 = function(file, objbuf) {
                if (objbuf && objbuf['unzipdata']) {
                   file.fStreamerInfo.ExtractStreamerInfo(objbuf['unzipdata']);
                   //JSROOTIO.GenerateStreamers(file);
                   delete objbuf['unzipdata'];
                   objbuf['unzipdata'] = null;
+               }
+               for (i=0;i<file.fKeys.length;++i) {
+                  if (file.fKeys[i]['className'] == 'TFormula') {
+                     file.ReadObject(file.fKeys[i]['name'], file.fKeys[i]['cycle']);
+                  }
                }
             };
             file.ReadObjBuffer(key, callback2);
@@ -2207,8 +2205,7 @@ String.prototype.endsWith = function(str, ignoreCase) {
                            if (key['className'] != "" && key['name'] != "") {
                               key['offset'] = offset;
                            }
-                           file.fKeys[file.fKeyIndex] = key;
-                           file.fKeyIndex++;
+                           file.fKeys.push(key);
                         }
                         file.ReadStreamerInfo();
                         delete buffer;
@@ -2256,32 +2253,47 @@ String.prototype.endsWith = function(str, ignoreCase) {
       JSROOTIO.RootFile.prototype.Delete = function() {
          if (this.fDirectories) this.fDirectories.splice(0, this.fDirectories.length);
          this.fDirectories = null;
-         this.fDirIndex = 0;
          if (this.fKeys) this.fKeys.splice(0, this.fKeys.length);
          this.fKeys = null;
-         this.fKeyIndex = 0;
          if (this.fStreamers) this.fStreamers.splice(0, this.fStreamers.length);
          this.fStreamers = null;
          this.fSeekInfo = 0;
          this.fNbytesInfo = 0;
          this.fTagOffset = 0;
          this.fStreamerInfo = null;
+         if (this.fObjectMap) this.fObjectMap.splice(0, this.fObjectMap.length);
+         this.fObjectMap = null;
+      };
+
+      JSROOTIO.RootFile.prototype.GetMappedObject = function(tag) {
+         // find the tag 'clTag' in the list and return the class name
+         tag |= 0x01;
+         for (var i=0; i<this['fObjectMap'].length; ++i) {
+            if (this['fObjectMap'][i]['tag'] == tag)
+               return this['fObjectMap'][i]['obj'];
+         }
+         return null;
+      };
+
+      JSROOTIO.RootFile.prototype.MapObject = function(obj, tag) {
+         this['fObjectMap'].push({tag: tag, obj: obj});
+      };
+
+      JSROOTIO.RootFile.prototype.ClearObjectMap = function() {
+         if (this.fObjectMap) this.fObjectMap.splice(0, this.fObjectMap.length);
       };
 
       this.fDirectories = new Array();
-      this.fDirIndex = 0;
       this.fKeys = new Array();
-      this.fKeyIndex = 0;
       this.fSeekInfo = 0;
       this.fNbytesInfo = 0;
       this.fTagOffset = 0;
-
       this.fStreamers = 0;
       this.fStreamerInfo = new JSROOTIO.StreamerInfo();
       this.fEND = this.GetSize(this.fURL);
-
       this.ReadKeys();
       this.fStreamers = new Array();
+      this.fObjectMap = new Array();
       //this.ReadStreamerInfo();
 
       return this;
