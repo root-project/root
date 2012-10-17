@@ -89,7 +89,7 @@ RooAddPdf::RooAddPdf() :
   _pdfIter   = _pdfList.createIterator() ;
   _coefIter  = _coefList.createIterator() ;
 
-  _coefCache = new Double_t[10] ;
+  _coefCache = new Double_t[100] ;
   _coefErrCount = _errorCount ;
 }
 
@@ -114,7 +114,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
   _pdfIter   = _pdfList.createIterator() ;
   _coefIter  = _coefList.createIterator() ;
 
-  _coefCache = new Double_t[10] ;
+  _coefCache = new Double_t[100] ;
   _coefErrCount = _errorCount ;
 
 }
