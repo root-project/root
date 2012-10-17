@@ -164,17 +164,25 @@ void TCintWithCling__RegisterModule(const char* modulename,
 
 extern "C" 
 void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
-   TClingDataMemberInfo *globalMemInfo = 0;
    TCollection *listOfSmth = 0;
+   cling::Interpreter* interp = ((TCintWithCling*)gCint)->GetInterpreter();
    for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
        I != E; ++I)
-      for (DeclGroupRef::const_iterator
-              DI = I->begin(), DE = I->end(); DI != DE; ++DI) {
-
-         if (const ValueDecl *ValD = dyn_cast<ValueDecl>(*DI)) {
-            if (!isa<TranslationUnitDecl>(ValD->getDeclContext()))
+      for (DeclGroupRef::const_iterator DI = I->begin(), DE = I->end(); 
+           DI != DE; ++DI) {
+         // We care about declarations on the global scope.
+         if (!isa<TranslationUnitDecl>((*DI)->getDeclContext()))
                continue;
 
+         if (const TypedefDecl* TdefD = dyn_cast<TypedefDecl>(*DI)) {
+            listOfSmth = gROOT->GetListOfTypes();
+            if (!listOfSmth->FindObject(TdefD->getNameAsString().c_str())) {
+               listOfSmth->Add(new TDataType(new TClingTypedefInfo(interp, TdefD)));
+            }
+         }
+         else if (const ValueDecl *ValD = dyn_cast<ValueDecl>(*DI)) {
+            // ROOT says that global is enum/var/field declared on the global
+            // scope.
             if (!(isa<EnumConstantDecl>(ValD) || 
                   isa<VarDecl>(ValD) || isa<FieldDecl>(ValD)))
                continue;
@@ -182,8 +190,7 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
             // FIXME: Review needed: How does ROOT understand globals?
             listOfSmth = gROOT->GetListOfGlobals();
             if (!listOfSmth->FindObject(ValD->getNameAsString().c_str())) {  
-               globalMemInfo = new TClingDataMemberInfo(((TCintWithCling*)gCint)->GetInterpreter(), ValD);
-               gROOT->GetListOfGlobals()->Add(new TGlobal(globalMemInfo));
+               listOfSmth->Add(new TGlobal(new TClingDataMemberInfo(interp, ValD)));
             }
          }
       }

@@ -58,6 +58,8 @@ public:
 
    explicit TClingTypedefInfo(cling::Interpreter *, const char *);
 
+   explicit TClingTypedefInfo(cling::Interpreter *, const clang::TypedefDecl *);
+
    const clang::Decl   *GetDecl() const;
    void                 Init(const char *name);
    bool                 IsValid() const;

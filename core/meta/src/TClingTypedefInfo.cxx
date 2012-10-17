@@ -66,6 +66,33 @@ TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
    }
 }
 
+TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
+                                     const clang::TypedefDecl *TdefD)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(TdefD), 
+     fTitle("")
+{
+   // Lookup named typedef and initialize the iterator to point to it.
+   if (gDebug > 0) {
+      Info("TClingTypedefInfo::TClingTypedefInfo(interp,name)",
+           "looking up typedef: %s\n", TdefD->getNameAsString().c_str());
+   }
+   if (fDecl) {
+      if (gDebug > 0) {
+         Info("TClingTypedefInfo::TClingTypedefInfo(interp,name)",
+              "found typedef name: %s  decl: 0x%lx\n", 
+              TdefD->getNameAsString().c_str(), (long) fDecl);
+      }
+      // Initialize iterator to point at found typedef.
+      AdvanceToDecl(fDecl);
+   }
+   else {
+      if (gDebug > 0) {
+         Info("TClingTypedefInfo::TClingTypedefInfo(interp,name)",
+              "typedef not found name: %s\n", TdefD->getNameAsString().c_str());
+      }
+   }
+}
+
 //______________________________________________________________________________
 const clang::Decl *TClingTypedefInfo::GetDecl() const
 {
