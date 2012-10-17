@@ -2757,7 +2757,7 @@ if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
         /usr/include/Mesa /usr/local/include/Mesa /usr/Mesa/include \
         /usr/local/Mesa/include /usr/Mesa /usr/local/Mesa /opt/Mesa \
         /opt/Mesa/include /opt/graphics/OpenGL/include"
-    check_header "GL/gl.h" "$openglincdir" $openglincdirs
+    check_header "GL/gl.h gl.h" "$openglincdir" $openglincdirs
     openglinc=$found_hdr
     openglincdir=$found_dir
 
