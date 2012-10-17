@@ -46,6 +46,7 @@ FlexibleInterpVar::FlexibleInterpVar()
   _paramIter = _paramList.createIterator() ;
   _nominal = 0;
   _interpBoundary=1.;
+  _logInit = kFALSE ;
 }
 
 
@@ -58,6 +59,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
   _nominal(nominal), _low(low), _high(high), _interpBoundary(1.)
 {
 
+  _logInit = kFALSE ;
   _paramIter = _paramList.createIterator() ;
 
 
@@ -86,6 +88,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
   _nominal(nominal), _low(low), _high(high), _interpCode(code), _interpBoundary(1.)
 {
 
+  _logInit = kFALSE ;
   _paramIter = _paramList.createIterator() ;
 
 
@@ -109,7 +112,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title) :
   _paramList("paramList","List of coefficients",this)
 {
   // Constructor of flat polynomial function
-
+  _logInit = kFALSE ;
   _paramIter = _paramList.createIterator() ;
 }
 
@@ -121,6 +124,7 @@ FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char*
   
 {
   // Copy constructor
+  _logInit = kFALSE ;
   _paramIter = _paramList.createIterator() ;
   
 }
@@ -237,6 +241,30 @@ Double_t FlexibleInterpVar::evaluate() const
 	double x0 = boundary;
 	double x  = param->getVal();
 
+	if (!_logInit) {
+	  
+	  _logInit=kTRUE ;
+	  
+	  _logHi.resize(_high.size()) ;
+	  for (unsigned int j=0 ; j<_high.size() ; j++) {
+	    _logHi[j] = TMath::Log(_high.at(j)) ; 
+	  }
+	  _logLo.resize(_low.size()) ;
+	  for (unsigned int j=0 ; j<_low.size() ; j++) {
+	    _logLo[j] = TMath::Log(_low.at(j)) ; 
+	  }
+	  
+	  _powHi.resize(_high.size()) ;
+	  for (unsigned int j=0 ; j<_high.size() ; j++) {
+	    _powHi[j] = pow(_high.at(j)/_nominal, x0);
+	  }
+	  _powLo.resize(_low.size()) ;
+	  for (unsigned int j=0 ; j<_low.size() ; j++) {
+	    _powLo[j] = pow(_low.at(j)/_nominal,  x0);
+	  }
+	  
+	}
+
 // 	double pow_up       = pow(_high.at(i)/_nominal, x0);
 // 	double pow_down     = pow(_low.at(i)/_nominal,  x0);
 // 	double pow_up_log   = pow_up*TMath::Log(_high.at(i));
@@ -259,12 +287,12 @@ Double_t FlexibleInterpVar::evaluate() const
 	// if( _high.at(i) == 0 ) _high.at(i) = 0.0001;
 
 	// GHL: Swagato's suggestions
-	double pow_up       = pow(_high.at(i)/_nominal, x0);
-	double pow_down     = pow(_low.at(i)/_nominal,  x0);
-	double pow_up_log   = _high.at(i) <= 0.0 ? 0.0 : pow_up*TMath::Log(_high.at(i));
-	double pow_down_log = _low.at(i) <= 0.0 ? 0.0 : -pow_down*TMath::Log(_low.at(i));
-	double pow_up_log2  = _high.at(i) <= 0.0 ? 0.0 : pow_up_log*TMath::Log(_high.at(i));
-	double pow_down_log2= _low.at(i) <= 0.0 ? 0.0 : pow_down_log*TMath::Log(_low.at(i));
+	double pow_up       = _powHi.at(i) ;
+	double pow_down     = _powLo.at(i) ;
+	double pow_up_log   = _high.at(i) <= 0.0 ? 0.0 : pow_up*_logHi.at(i) ;
+	double pow_down_log = _low.at(i) <= 0.0 ? 0.0 : -pow_down*_logLo.at(i) ;
+	double pow_up_log2  = _high.at(i) <= 0.0 ? 0.0 : pow_up_log*_logHi.at(i) ;
+	double pow_down_log2= _low.at(i) <= 0.0 ? 0.0 : pow_down_log*_logLo.at(i) ;
 	/*
 	double pow_up       = pow(_high.at(i)/_nominal, x0);
 	double pow_down     = pow(_low.at(i)/_nominal,  x0);
@@ -288,7 +316,9 @@ Double_t FlexibleInterpVar::evaluate() const
 	double e = 1./(8*pow(x0, 5))*(    +  3*A0 -  3*x0*S1 + x0*x0*A2);
 	double f = 1./(8*pow(x0, 6))*( -8 +  8*S0 -  5*x0*A1 + x0*x0*S2);
 
-	total *= 1 + a*x + b*pow(x, 2) + c*pow(x, 3) + d*pow(x, 4) + e*pow(x, 5) + f*pow(x, 6);
+	double xx = x*x ;
+	double xxx = xx*x ;
+	total *= 1 + a*x + b*xx + c*xxx + d*xx*xx + e*xxx*xx + f*xxx*xxx;
       }
       else if (param->getVal()<=-boundary)
       {
