@@ -61,6 +61,10 @@
 #include "TVectorDfwd.h"
 #endif
 
+#ifndef ROOT_TFitResultPtr
+#include "TFitResultPtr.h"
+#endif
+
 #include <float.h>
 
 class TF1;
@@ -72,7 +76,6 @@ class TCollection;
 class TVirtualFFT;
 class TVirtualHistPainter;
 
-#include "TFitResultPtr.h"
 
 class TH1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 

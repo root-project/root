@@ -141,11 +141,13 @@
 #include "TMath.h"
 #include "TClass.h"
 
+#include "Fit/Fitter.h"
+#include "TFitResult.h"
+#include "Math/Functor.h"
 #include "TFractionFitter.h"
 
-TVirtualFitter *fractionFitter=0;
-
 ClassImp(TFractionFitter)
+
 
 //______________________________________________________________________________
 TFractionFitter::TFractionFitter() :
@@ -158,7 +160,7 @@ TFractionFitter::TFractionFitter() :
 {
    // TFractionFitter default constructor.
 
-   fractionFitter = 0;
+   fFractionFitter = 0;
    fIntegralMCs   = 0;
    fFractions     = 0;
 
@@ -211,38 +213,40 @@ TFractionFitter::TFractionFitter(TH1* data, TObjArray  *MCs, Option_t *option) :
    CheckConsistency();
    fWeights.Expand(fNpar);
 
-   fractionFitter = TVirtualFitter::Fitter(this, fNpar);
-   fractionFitter->Clear();
-   fractionFitter->SetObjectFit(this);
-   fractionFitter->SetFCN(TFractionFitFCN);
+   fFractionFitter = new ROOT::Fit::Fitter(); 
 
    // set print level 
    TString opt(option);
    opt.ToUpper();
-   double plist[1];
    if (opt.Contains("Q") ) { 
-      plist[0] = -1;
-      fractionFitter->ExecuteCommand("SET PRINT",plist,1);
-      fractionFitter->ExecuteCommand("SET NOW",plist,0);
+      fFractionFitter->Config().MinimizerOptions().SetPrintLevel(0);
    }
    else if (opt.Contains("V") ) { 
-      plist[0] =  1;
-      fractionFitter->ExecuteCommand("SET PRINT",plist,1);
+      fFractionFitter->Config().MinimizerOptions().SetPrintLevel(2);
    }
+   else 
+      fFractionFitter->Config().MinimizerOptions().SetPrintLevel(1);
 
    Double_t defaultFraction = 1.0/((Double_t)fNpar);
    Double_t defaultStep = 0.01;
+   // set the parameters 
+   std::vector<ROOT::Fit::ParameterSettings> & parameters = fFractionFitter->Config().ParamsSettings();
+   parameters.reserve(fNpar);
    for (par = 0; par < fNpar; ++par) {
       TString name("frac"); name += par;
-      fractionFitter->SetParameter(par, name.Data(), defaultFraction, defaultStep, 0, 0);
+      parameters.push_back(ROOT::Fit::ParameterSettings(name.Data(), defaultFraction, defaultStep) );
    }
+
+   if (fFractionFitter->Config().MinimizerOptions().ErrorDef() == 1.0 )  
+      fFractionFitter->Config().MinimizerOptions().SetErrorDef(0.5);
+
 }
 
 //______________________________________________________________________________
 TFractionFitter::~TFractionFitter() {
   // TFractionFitter default destructor
 
-   delete fractionFitter;
+   if (fFractionFitter) delete fFractionFitter;
    delete[] fIntegralMCs;
    delete[] fFractions;
 }
@@ -298,11 +302,11 @@ void TFractionFitter::SetWeight(Int_t parm, TH1* weight) {
 }
 
 //______________________________________________________________________________
-TVirtualFitter* TFractionFitter::GetFitter() const {
-   // Give direct access to the underlying minimisation class. This can be
+ROOT::Fit::Fitter* TFractionFitter::GetFitter() const {
+   // Give direct access to the underlying fitter class. This can be
    // used e.g. to modify parameter values or step sizes.
 
-   return fractionFitter;
+   return fFractionFitter;
 }
 
 //______________________________________________________________________________
@@ -450,11 +454,8 @@ void TFractionFitter::Constrain(Int_t parm, Double_t low, Double_t high) {
    // Use UnConstrain() to remove this constraint.
 
    CheckParNo(parm);
-   Double_t plist[3];
-   plist[0] = (Double_t) parm;
-   plist[1] = low;
-   plist[2] = high;
-   fractionFitter->ExecuteCommand("SET LIMIT", plist, 3);
+   assert( parm >= 0 && parm <    (int) fFractionFitter->Config().ParamsSettings().size() );
+   fFractionFitter->Config().ParSettings(parm).SetLimits(low,high);
 }
 
 //______________________________________________________________________________
@@ -462,11 +463,7 @@ void TFractionFitter::UnConstrain(Int_t parm) {
    // Remove the constraints on the possible values of parameter <parm>.
 
    CheckParNo(parm);
-   Double_t plist[3];
-   plist[0] = (Double_t) parm;
-   plist[1] = 0;
-   plist[2] = 0;
-   fractionFitter->ExecuteCommand("SET LIMIT", plist, 3);
+   fFractionFitter->Config().ParSettings(parm).RemoveLimits();
 }
 
 //______________________________________________________________________________
@@ -536,14 +533,10 @@ void TFractionFitter::CheckConsistency() {
 }
 
 //______________________________________________________________________________
-Int_t TFractionFitter::Fit() {
+TFitResultPtr TFractionFitter::Fit() {
    // Perform the fit with the default UP value.
    // The value returned is the minimisation status.
 
-   Double_t plist[1];
-   plist[0] = 0.5;
-   // set the UP value to 0.5
-   fractionFitter->ExecuteCommand("SET ERRDEF",plist,1);
 
    // remove any existing output histogram
    if (fPlot) {
@@ -551,16 +544,23 @@ Int_t TFractionFitter::Fit() {
    }
 
    // Make sure the correct likelihood computation is used
-   fractionFitter->SetObjectFit(this);
+   ROOT::Math::Functor fcnFunction(this, &TFractionFitter::EvaluateFCN, fNpar);
+   fFractionFitter->SetFCN(static_cast<ROOT::Math::IMultiGenFunction&>(fcnFunction));
 
    // fit
-   Int_t status = fractionFitter->ExecuteCommand("MINIMIZE",0,0);
-   if (status == 0) fFitDone = kTRUE;
+   Bool_t status = fFractionFitter->FitFCN();
+   if (!status)   Warning("Fit","Abnormal termination of minimization.");
+
+   fFitDone = kTRUE;
 
    // determine goodness of fit
    ComputeChisquareLambda();
 
-   return status;
+   // create a new result class
+   TFitResult* fr = new TFitResult(fFractionFitter->Result());
+   TString name = TString::Format("TFractionFitter_result_of_%s",fData->GetName() );
+   fr->SetName(name); fr->SetTitle(name);
+   return TFitResultPtr(fr);
 }
 
 //______________________________________________________________________________
@@ -572,15 +572,12 @@ void TFractionFitter::ErrorAnalysis(Double_t UP) {
       return;
    }
 
-   // Make sure the correct likelihood computation is used
-   fractionFitter->SetObjectFit(this);
 
-   Double_t plist[1];
-   plist[0] = UP > 0 ? UP : 0.5;
-   fractionFitter->ExecuteCommand("SET ERRDEF",plist,1);
-   Int_t status = fractionFitter->ExecuteCommand("MINOS",0,0);
-   if (status != 0) {
-       Error("ErrorAnalysis","Error return from MINOS: %d",status);
+   Double_t up = UP > 0 ? UP : 0.5;
+   fFractionFitter->Config().MinimizerOptions().SetErrorDef(up);
+   Bool_t status = fFractionFitter->CalculateMinosErrors();
+   if (!status) {
+      Error("ErrorAnalysis","Error return from MINOS: %d",fFractionFitter->Result().Status());
    }
 }
 
@@ -594,10 +591,8 @@ void TFractionFitter::GetResult(Int_t parm, Double_t& value, Double_t& error) co
       Error("GetResult","Fit not yet performed");
       return;
    }
-   char parname[100];
-   Double_t vlow, vhigh;
-
-   fractionFitter->GetParameter(parm, parname, value, error, vlow, vhigh);
+   value = fFractionFitter->Result().Parameter(parm);
+   error = fFractionFitter->Result().Error(parm);
 }
 
 //______________________________________________________________________________
@@ -613,9 +608,10 @@ TH1* TFractionFitter::GetPlot() {
       return 0;
    }
    if (! fPlot) {
-      Double_t plist[1];
-      plist[0] = 3;
-      fractionFitter->ExecuteCommand("CALL FCN", plist, 1);
+      Double_t f = 0;
+      const Double_t * par = fFractionFitter->Result().GetParams();
+      assert(par);
+      ComputeFCN(f, par, 3);
    }
    return fPlot;
 }
@@ -647,8 +643,7 @@ void TFractionFitter::GetRanges(Int_t& minX, Int_t& maxX, Int_t& minY, Int_t& ma
 }
 
 //______________________________________________________________________________
-void TFractionFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /*gin*/,
-                                 Double_t& f, Double_t* xx, Int_t flag)
+void TFractionFitter::ComputeFCN(Double_t& f, const Double_t* xx, Int_t flag)
 {
    // Used internally to compute the likelihood value.
 
@@ -837,20 +832,20 @@ void TFractionFitter::FindPrediction(int bin, Double_t *fractions, Double_t &ti,
    return;
 }
 
-
+#ifdef OLD
 //______________________________________________________________________________
 void TFractionFitFCN(Int_t& npar, Double_t* gin, Double_t& f, Double_t* par, Int_t flag) {
    // Function called by the minimisation package. The actual functionality is passed
    // on to the TFractionFitter::ComputeFCN member function.
 
-   TFractionFitter* fitter = dynamic_cast<TFractionFitter*>(fractionFitter->GetObjectFit());
+   TFractionFitter* fitter = dynamic_cast<TFractionFitter*>(fFractionFitter->GetObjectFit());
    if (!fitter) {
       Error("TFractionFitFCN","Invalid fit object encountered!");
       return;
    }
    fitter->ComputeFCN(npar, gin, f, par, flag);
 }
-
+#endif
 
 //______________________________________________________________________________
 Double_t TFractionFitter::GetChisquare() const

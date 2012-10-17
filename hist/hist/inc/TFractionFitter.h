@@ -7,12 +7,24 @@
 #ifndef ROOT_TVirtualFitter
 # include "TVirtualFitter.h"
 #endif
+
 #ifndef ROOT_TObjArray
 # include "TObjArray.h"
 #endif
+
+#ifndef ROOT_TFitResultPtr
+#include "TFitResultPtr.h"
+#endif
+
 #include <vector>
 
 class TH1;
+
+namespace ROOT { 
+   namespace Fit  { 
+      class Fitter;
+   }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // TFractionFitter
@@ -28,7 +40,8 @@ public:
    TFractionFitter(TH1* data, TObjArray *MCs, Option_t *option="");
    virtual ~TFractionFitter();
 
-   TVirtualFitter* GetFitter() const;
+   //TVirtualFitter* GetFitter() const;
+   ROOT::Fit::Fitter* GetFitter() const;
    void ErrorAnalysis(Double_t UP);
    void SetRangeX(Int_t low, Int_t high);
    void ReleaseRangeX();
@@ -43,13 +56,13 @@ public:
    void SetData(TH1 *data);
    void SetMC(Int_t parm, TH1 *MC);
    void SetWeight(Int_t parm, TH1* weight);
-   Int_t Fit();
+   TFitResultPtr Fit();
 
    void GetResult(Int_t parm, Double_t& value, Double_t& error) const;
    TH1* GetPlot();
 
    // This global function needs access to computeFCN()
-   friend void TFractionFitFCN(Int_t& npar, Double_t* gin, Double_t& f, Double_t* par, Int_t flag);
+   //friend void TFractionFitFCN(Int_t& npar, Double_t* gin, Double_t& f, Double_t* par, Int_t flag);
 
    // Goodness of fit
    Double_t GetChisquare() const;
@@ -59,11 +72,18 @@ public:
    // MC predictions (smeared templates)
    TH1* GetMCPrediction(Int_t parm) const;
 
+   // FCN evaluation
+   Double_t EvaluateFCN(const Double_t * par) { 
+      Double_t f = 0; 
+      ComputeFCN(f, par, 0); 
+      return f; 
+   }
+
 private:
    void CheckParNo(Int_t parm) const;
    void CheckConsistency();
    void FindPrediction(int bin, double* fractions, double& Ti, int& k0, double& Aki) const;
-   void ComputeFCN(Int_t& npar, Double_t* gin, Double_t& f, Double_t* par, Int_t flag);
+   void ComputeFCN(Double_t& f, const Double_t* par, Int_t flag);
    void GetRanges(Int_t& minX, Int_t& maxX, Int_t& minY, Int_t& maxY,
                   Int_t& minZ, Int_t& maxZ) const;
    void ComputeChisquareLambda();
@@ -93,10 +113,11 @@ protected:
    Double_t* fIntegralMCs;        // same for template histograms (weights not taken into account)
    Double_t* fFractions;          // template fractions scaled to the "data" histogram statistics
    TH1*      fPlot;               // pointer to histogram containing summed template predictions
+   ROOT::Fit::Fitter *fFractionFitter;  // pointer to Fitter class
 
    Int_t     fNpar;               // number of fit parameters
 
-   ClassDef(TFractionFitter, 0)   // Fits MC fractions to data histogram
+   ClassDef(TFractionFitter, 1)   // Fits MC fractions to data histogram
 };
 
 //

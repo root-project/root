@@ -24,11 +24,24 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TObject
 #include "TObject.h"
+#endif
+
+#ifndef ROOT_TFitResultPtr
+#include "TFitResultPtr.h"
+#endif
+
+
 
 class TH1;
 class TF1;
-class TVirtualFitter;
+
+namespace ROOT { 
+   namespace Fit { 
+      class Fitter;
+   }
+}
 
 class TBinomialEfficiencyFitter: public TObject {
 
@@ -40,8 +53,12 @@ protected:
    Bool_t           fFitDone;        //Set to kTRUE when the fit has been done
    Bool_t           fAverage;        //True if the fit function must be averaged over the bin
    Bool_t           fRange;          //True if the fit range must be taken from the function range
-   static TVirtualFitter  *fgFitter; //pointer to the real fitter
-  
+   ROOT::Fit::Fitter *fFitter;       //pointer to the real fitter
+
+private: 
+
+   void   ComputeFCN(Double_t& f, const Double_t* par);
+
 public:
    TBinomialEfficiencyFitter();
    TBinomialEfficiencyFitter(const TH1 *numerator, const TH1 *denominator);
@@ -49,14 +66,18 @@ public:
 
    void   Set(const TH1 *numerator, const TH1 *denominator);
    void   SetPrecision(Double_t epsilon);
-   Int_t  Fit(TF1 *f1, Option_t* option = "");
-   static TVirtualFitter* GetFitter();
-   void   ComputeFCN(Int_t& npar, Double_t* /* gin */, Double_t& f, Double_t* par, Int_t flag);
+   TFitResultPtr  Fit(TF1 *f1, Option_t* option = "");
+   ROOT::Fit::Fitter * GetFitter();
+   Double_t  EvaluateFCN(const Double_t * par) { 
+      Double_t f = 0; 
+      ComputeFCN(f, par); 
+      return f; 
+   }
 
    ClassDef(TBinomialEfficiencyFitter, 1) //Binomial Fitter for the division of two histograms
 
+
 };
 
-void BinomialEfficiencyFitterFCN(Int_t& npar, Double_t* gin, Double_t& f, Double_t* par, Int_t flag);
 
 #endif

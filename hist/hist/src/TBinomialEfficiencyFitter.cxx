@@ -79,12 +79,12 @@
 #include "TF1.h"
 #include "TF2.h"
 #include "TF3.h"
-#include "TVirtualFitter.h"
-#include "TEnv.h"
+#include "Fit/Fitter.h"
+#include "TFitResult.h"
+#include "Math/Functor.h"
 
 #include <limits>
 
-TVirtualFitter *TBinomialEfficiencyFitter::fgFitter = 0;
 
 const Double_t kDefaultEpsilon = 1E-12;
 
@@ -102,6 +102,7 @@ TBinomialEfficiencyFitter::TBinomialEfficiencyFitter() {
    fAverage     = kFALSE;
    fRange       = kFALSE;
    fEpsilon     = kDefaultEpsilon;
+   fFitter      = 0;
 }
 
 //______________________________________________________________________________
@@ -116,6 +117,7 @@ TBinomialEfficiencyFitter::TBinomialEfficiencyFitter(const TH1 *numerator, const
 
    fEpsilon  = kDefaultEpsilon;
    fFunction = 0;
+   fFitter   = 0;
    Set(numerator,denominator);
 }
 
@@ -123,7 +125,8 @@ TBinomialEfficiencyFitter::TBinomialEfficiencyFitter(const TH1 *numerator, const
 TBinomialEfficiencyFitter::~TBinomialEfficiencyFitter() {
    // destructor
    
-   delete fgFitter; fgFitter = 0;
+   if (fFitter) delete fFitter; 
+   fFitter = 0;
 }
 
 //______________________________________________________________________________
@@ -147,17 +150,19 @@ void TBinomialEfficiencyFitter::SetPrecision(Double_t epsilon)
 }
 
 //______________________________________________________________________________
-TVirtualFitter* TBinomialEfficiencyFitter::GetFitter()
+ROOT::Fit::Fitter* TBinomialEfficiencyFitter::GetFitter()
 {
-   // static: Provide access to the underlying fitter object.
+   // Provide access to the underlying fitter object.
    // This may be useful e.g. for the retrieval of additional information (such
    // as the output covariance matrix of the fit).
 
-   return fgFitter;
+   if (!fFitter)  fFitter = new ROOT::Fit::Fitter();
+   return fFitter;
+   
 }
 
 //______________________________________________________________________________
-Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option) 
+TFitResultPtr TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option) 
 {
    // Carry out the fit of the given function to the given histograms.
    //
@@ -166,6 +171,9 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
    //
    // If option "R" is used, the fit range will be taken from the fit
    // function (the default is to use the entire histogram).
+   //
+   // If option "S" a TFitResult object is returned and it can be used to obtain
+   //  additional fit information, like covariance or correlation matrix. 
    //
    // Note that all parameter values, limits, and step sizes are copied
    // from the input fit function f1 (so they should be set before calling
@@ -186,6 +194,8 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
    fAverage  = opt.Contains("I");
    fRange    = opt.Contains("R");
    Bool_t verbose    = opt.Contains("V");
+   Bool_t quiet      = opt.Contains("Q");
+   Bool_t saveResult  = opt.Contains("S");
    if (!f1) return -1;
    fFunction = (TF1*)f1;
    Int_t i, npar;
@@ -216,27 +226,16 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
 
    // initialize the fitter
 
-   Int_t maxpar = npar;
-   if (!fgFitter) {
-      TPluginHandler *h;
-      TString fitterName = TVirtualFitter::GetDefaultFitter(); 
-      if (fitterName == "") 
-         fitterName = gEnv->GetValue("Root.Fitter","Minuit");
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFitter", fitterName ))) {
-         if (h->LoadPlugin() == -1)
-            return 0;
-         fgFitter = (TVirtualFitter*) h->ExecPlugin(1, maxpar);
-      }
-      if (!fgFitter) printf("ERROR fgFitter is NULL\n");
+   if (!fFitter) {
+      fFitter = new ROOT::Fit::Fitter();
    }
 
-   fgFitter->SetObjectFit(this);
-   fgFitter->Clear();
-   fgFitter->SetFCN(BinomialEfficiencyFitterFCN);
+
+   std::vector<ROOT::Fit::ParameterSettings> & parameters = fFitter->Config().ParamsSettings();
+   parameters.reserve(npar);
    Int_t nfixed = 0;
    Double_t al,bl,we,arglist[100];
    for (i = 0; i < npar; i++) {
-      f1->GetParLimits(i,al,bl);
       if (al*bl != 0 && al >= bl) {
          al = bl = 0;
          arglist[nfixed] = i+1;
@@ -246,47 +245,78 @@ Int_t TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
       we = f1->GetParError(i);
       if (we <= 0) we = 0.3*TMath::Abs(f1->GetParameter(i));
       if (we == 0) we = 0.01;
-      fgFitter->SetParameter(i, f1->GetParName(i),
-                                f1->GetParameter(i),
-                                we, al,bl);
-   }
-   if (nfixed > 0) fgFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
 
-   Double_t plist[2];
-   plist[0] = 0.5;
-   fgFitter->ExecuteCommand("SET ERRDEF",plist,1);
+      parameters.push_back(ROOT::Fit::ParameterSettings(f1->GetParName(i), f1->GetParameter(i), we) );
+
+      Double_t plow, pup; 
+      f1->GetParLimits(i,plow,pup);
+      if (plow*pup != 0 && plow >= pup) { // this is a limitation - cannot fix a parameter to zero value
+         parameters.back().Fix();
+      }
+      else if (plow < pup ) { 
+         parameters.back().SetLimits(plow,pup);
+      }
+   }
+
+   // fcn must be set after setting the parameters 
+   ROOT::Math::Functor fcnFunction(this, &TBinomialEfficiencyFitter::EvaluateFCN, npar);
+   fFitter->SetFCN(static_cast<ROOT::Math::IMultiGenFunction&>(fcnFunction));
+
+
+   // in case default value of 1.0 is used 
+   if (fFitter->Config().MinimizerOptions().ErrorDef() == 1.0 ) { 
+      fFitter->Config().MinimizerOptions().SetErrorDef(0.5);
+   }
 
    if (verbose)   { 
-      plist[0] = 3;
-      fgFitter->ExecuteCommand("SET PRINT",plist,1);
+      fFitter->Config().MinimizerOptions().SetPrintLevel(3);
    }
+   else if (quiet) {
+      fFitter->Config().MinimizerOptions().SetPrintLevel(0);
+   }
+   
+      
 
    // perform the actual fit
 
    fFitDone = kTRUE;
-   plist[0] = TVirtualFitter::GetMaxIterations();
-   plist[1] = TVirtualFitter::GetPrecision();
-   Int_t result = fgFitter->ExecuteCommand("MINIMIZE",plist,2);
+   Bool_t status = fFitter->FitFCN();
+   if ( !status && !quiet)
+      Warning("Fit","Abnormal termination of minimization.");
+
    
    //Store fit results in fitFunction
-   char parName[50];
-   Double_t par;
-   Double_t eplus,eminus,eparab,globcc,werr;
-   for (i = 0; i < npar; ++i) {
-      fgFitter->GetParameter(i,parName, par,we,al,bl);
-      fgFitter->GetErrors(i,eplus,eminus,eparab,globcc);
-      if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
-      else                         werr = we;
-      f1->SetParameter(i,par);
-      f1->SetParError(i,werr);
+   const ROOT::Fit::FitResult & fitResult = fFitter->Result(); 
+   if (!fitResult.IsEmpty() ) { 
+      // set in f1 the result of the fit      
+      f1->SetNDF(fitResult.Ndf() );
+
+      //f1->SetNumberFitPoints(...);  // this is set in ComputeFCN
+
+      f1->SetParameters( &(fitResult.Parameters().front()) ); 
+      if ( int( fitResult.Errors().size()) >= f1->GetNpar() ) 
+         f1->SetParErrors( &(fitResult.Errors().front()) ); 
+
+      f1->SetChisquare(2.*fitResult.MinFcnValue());    // store goodness of fit (Baker&Cousins)
+      f1->SetNDF(f1->GetNumberFitPoints()- fitResult.NFreeParameters());
+      Info("result"," chi2 %f ndf %d ",2.*fitResult.MinFcnValue(), fitResult.Ndf() );
+
    }
-   f1->SetNDF(f1->GetNumberFitPoints()-npar+nfixed);
-   return result;
+   // create a new result class if needed 
+   if (saveResult) { 
+      TFitResult* fr = new TFitResult(fitResult);
+      TString name = TString::Format("TBinomialEfficiencyFitter_result_of_%s",f1->GetName() );
+      fr->SetName(name); fr->SetTitle(name);
+      return TFitResultPtr(fr);
+   }
+   else { 
+      return TFitResultPtr(fitResult.Status() );
+   }
+
 }
 
 //______________________________________________________________________________
-void TBinomialEfficiencyFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /* gin */,
-                                           Double_t& f, Double_t* par, Int_t /*flag*/)
+void TBinomialEfficiencyFitter::ComputeFCN(Double_t& f, const Double_t* par)
 {
    // Compute the likelihood.
 
@@ -419,20 +449,5 @@ void TBinomialEfficiencyFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /* gin */,
    }
 
    fFunction->SetNumberFitPoints(npoints);
-   fFunction->SetChisquare(2.*f);    // store goodness of fit (Baker&Cousins)
 }
 
-//______________________________________________________________________________
-void BinomialEfficiencyFitterFCN(Int_t& npar, Double_t* gin, Double_t& f, 
-                                 Double_t* par, Int_t flag)
-{
-   // Function called by the minimisation package. The actual functionality is 
-   // passed on to the TBinomialEfficiencyFitter::ComputeFCN() member function.
-
-   TBinomialEfficiencyFitter* fitter = dynamic_cast<TBinomialEfficiencyFitter*>(TBinomialEfficiencyFitter::GetFitter()->GetObjectFit());
-   if (!fitter) {
-      Error("binomialFCN","Invalid fit object encountered!");
-      return;
-   }
-   fitter->ComputeFCN(npar, gin, f, par, flag);
-}
