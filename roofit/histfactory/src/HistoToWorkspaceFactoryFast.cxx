@@ -2036,7 +2036,7 @@ namespace HistFactory{
     cout << "\n\n----------------\n Importing combined model" << endl;
     combined->import(*simPdf,RecycleConflictNodes());
     //combined->import(*simPdf, RenameVariable("SigXsecOverSM","SigXsecOverSM_comb"));
-    cout << "check pointer " << simPdf << endl;
+    // cout << "check pointer " << simPdf << endl;
     //    cout << "check val " << simPdf->getVal() << endl;
 
 

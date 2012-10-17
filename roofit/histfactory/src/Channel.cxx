@@ -304,6 +304,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
 	if(NegativeBinNumber.size()>0) {
 	  std::cout << "WARNING: Nominal Histogram " << histNominal->GetName() << " for Sample = " << sample.GetName()
 		    << " in Channel = " << GetName() << " has negative entries in bin numbers = ";
+
 	  for(unsigned int ibin=0; ibin<NegativeBinNumber.size(); ++ibin) {
 	    if(ibin>0) std::cout << " , " ;
 	    std::cout << NegativeBinNumber[ibin] << " : " << NegativeBinContent[ibin] ;
