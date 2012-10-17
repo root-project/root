@@ -168,6 +168,9 @@ theta plane) to the (x,y,z) frame.
 ClassImp(TVector3)
 
 //______________________________________________________________________________
+TVector3::TVector3()
+: fX(0.0), fY(0.0), fZ(0.0) {}
+
 TVector3::TVector3(const TVector3 & p) : TObject(p),
   fX(p.fX), fY(p.fY), fZ(p.fZ) {}
 
