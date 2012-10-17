@@ -165,6 +165,7 @@ void TCintWithCling__RegisterModule(const char* modulename,
 extern "C" 
 void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
    TClingDataMemberInfo *globalMemInfo = 0;
+   TCollection *listOfSmth = 0;
    for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
        I != E; ++I)
       for (DeclGroupRef::const_iterator
@@ -178,10 +179,12 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
                   isa<VarDecl>(ValD) || isa<FieldDecl>(ValD)))
                continue;
 
-            // FIXME: How does ROOT understand globals?
-            //assert(!cast<VarDecl>(fLastDeclSeen)->hasGlobalStorage() && "Not a global!?");
-            globalMemInfo = new TClingDataMemberInfo(((TCintWithCling*)gCint)->GetInterpreter(), ValD);
-            gROOT->GetListOfGlobals()->Add(new TGlobal(globalMemInfo));
+            // FIXME: Review needed: How does ROOT understand globals?
+            listOfSmth = gROOT->GetListOfGlobals();
+            if (!listOfSmth->FindObject(ValD->getNameAsString().c_str())) {  
+               globalMemInfo = new TClingDataMemberInfo(((TCintWithCling*)gCint)->GetInterpreter(), ValD);
+               gROOT->GetListOfGlobals()->Add(new TGlobal(globalMemInfo));
+            }
          }
       }
 }
