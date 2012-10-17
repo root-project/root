@@ -309,32 +309,55 @@ Int_t TFilePrefetch::ThreadStart()
    return rc;
 }
 
+
 //____________________________________________________________________________________________
 TThread::VoidRtnFunc_t TFilePrefetch::ThreadProc(void* arg)
 {
    // Execution loop of the consumer thread.
-
+  
+   int val = 0;
    TFilePrefetch* pClass = (TFilePrefetch*) arg;
-   TMutex *mutex = pClass->fCondNextFile->GetMutex();
+   TMutex *mutexNextFile = pClass->fCondNextFile->GetMutex();
+   TMutex *mutexPendingList = pClass->fMutexPendingList;
+  
+   while ( pClass->fNewBlockAdded->TimedWaitRelative(50) != 0 ) {
+      // Deal with the situation in which the signal was already sent
+      // before entering the wait logic
+      mutexPendingList->Lock();
+      val = pClass->fPendingBlocks->GetSize();
+      mutexPendingList->UnLock();
 
-   pClass->fNewBlockAdded->Wait();
-
-   while( pClass->fSemMasterWorker->TryWait() != 0 ) {
-
-      pClass->ReadListOfBlocks();
-
-      //need to signal TChain that we finished work
-      //in the previous file, before we move on
-      mutex->Lock();
-      pClass->fCondNextFile->Signal();
-      mutex->UnLock();
-
-      pClass->fNewBlockAdded->Wait();
+      if ( val ) {
+         break;
+      }
    }
 
-   pClass->fSemWorkerMaster->Post();       
+   while( pClass->fSemMasterWorker->TryWait() != 0 ) {
+      pClass->ReadListOfBlocks();
+
+     // Need to signal TChain that we finished work
+     // in the previous file, before we move on
+     mutexNextFile->Lock();
+     pClass->fCondNextFile->Signal();
+     mutexNextFile->UnLock();
+
+     while ( pClass->fNewBlockAdded->TimedWaitRelative(50) != 0 ) {
+        // Deal with the situation in which the signal was already sent
+        // before entering the wait logic
+        mutexPendingList->Lock();
+        val = pClass->fPendingBlocks->GetSize();
+        mutexPendingList->UnLock();
+        if ( val ) {
+           break;
+       }
+     }
+   }
+
+   pClass->fSemWorkerMaster->Post();
    return (TThread::VoidRtnFunc_t) 1;
 }
+
+
 
 //############################# CACHING PART ###################################
 
