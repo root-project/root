@@ -44,16 +44,24 @@ public:
   void ActivateStatError( std::string HistoName, std::string InputFile, std::string HistoPath="" );
 
   void AddOverallSys( std::string Name, Double_t Low, Double_t High );
+  void AddOverallSys( const OverallSys& Sys );
+
   void AddNormFactor( std::string Name, Double_t Val, Double_t Low, Double_t High, bool Const=false );
+  void AddNormFactor( const NormFactor& Factor );
 
   void AddHistoSys(    std::string Name, std::string HistoNameLow,  std::string HistoFileLow,  std::string HistoPathLow,
 		                         std::string HistoNameHigh, std::string HistoFileHigh, std::string HistoPathHigh );
+  void AddHistoSys( const HistoSys& Sys );
+
   void AddHistoFactor( std::string Name, std::string HistoNameLow,  std::string HistoFileLow,  std::string HistoPathLow,  
-		                         std::string HistoNameHigh, std::string HistoFileHigh, std::string HistoPathHigh );
+		       std::string HistoNameHigh, std::string HistoFileHigh, std::string HistoPathHigh );
+  void AddHistoFactor( const HistoFactor& Factor );
 
   void AddShapeFactor( std::string Name );
-  void AddShapeSys(    std::string Name, Constraint::Type ConstraintType, std::string HistoName, std::string HistoFile, std::string HistoPath="" );
+  void AddShapeFactor( const ShapeFactor& Factor );
 
+  void AddShapeSys(    std::string Name, Constraint::Type ConstraintType, std::string HistoName, std::string HistoFile, std::string HistoPath="" );
+  void AddShapeSys( const ShapeSys& Sys );
 
   void SetNormalizeByTheory( bool norm ) { fNormalizeByTheory = norm; }
   bool GetNormalizeByTheory() { return fNormalizeByTheory; }

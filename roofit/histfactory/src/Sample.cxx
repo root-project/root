@@ -228,6 +228,10 @@ void RooStats::HistFactory::Sample::AddOverallSys( std::string SysName, Double_t
 
 }
 
+void RooStats::HistFactory::Sample::AddOverallSys( const OverallSys& Sys ) {
+  fOverallSysList.push_back(Sys);
+}
+
 void RooStats::HistFactory::Sample::AddNormFactor( std::string SysName, Double_t SysVal, Double_t SysLow, Double_t SysHigh, bool SysConst ) {
 
   RooStats::HistFactory::NormFactor norm;
@@ -242,8 +246,13 @@ void RooStats::HistFactory::Sample::AddNormFactor( std::string SysName, Double_t
 
 }
 
+void RooStats::HistFactory::Sample::AddNormFactor( const NormFactor& Factor ) {
+  fNormFactorList.push_back( Factor );
+}
 
-void RooStats::HistFactory::Sample::AddHistoSys( std::string SysName, std::string SysHistoNameLow,  std::string SysHistoFileLow,  std::string SysHistoPathLow,
+
+void RooStats::HistFactory::Sample::AddHistoSys( std::string SysName, 
+std::string SysHistoNameLow,  std::string SysHistoFileLow,  std::string SysHistoPathLow,
 						 std::string SysHistoNameHigh, std::string SysHistoFileHigh, std::string SysHistoPathHigh ) {
 
   RooStats::HistFactory::HistoSys sys;
@@ -261,11 +270,13 @@ void RooStats::HistFactory::Sample::AddHistoSys( std::string SysName, std::strin
 
 }
 
+void RooStats::HistFactory::Sample::AddHistoSys( const HistoSys& Sys ) {
+  fHistoSysList.push_back( Sys );
+}
+
 
 void RooStats::HistFactory::Sample::AddHistoFactor( std::string SysName, std::string SysHistoNameLow,  std::string SysHistoFileLow,  std::string SysHistoPathLow,  
 						    std::string SysHistoNameHigh, std::string SysHistoFileHigh, std::string SysHistoPathHigh ) {
-
-
 
   RooStats::HistFactory::HistoFactor factor;
   factor.SetName( SysName );
@@ -282,6 +293,9 @@ void RooStats::HistFactory::Sample::AddHistoFactor( std::string SysName, std::st
 
 }
 
+void RooStats::HistFactory::Sample::AddHistoFactor( const HistoFactor& Factor ) {
+  fHistoFactorList.push_back(Factor);
+}
 
 
 void RooStats::HistFactory::Sample::AddShapeFactor( std::string SysName ) {
@@ -291,6 +305,12 @@ void RooStats::HistFactory::Sample::AddShapeFactor( std::string SysName ) {
   fShapeFactorList.push_back( factor );
 
 }
+
+
+void RooStats::HistFactory::Sample::AddShapeFactor( const ShapeFactor& Factor ) {
+  fShapeFactorList.push_back(Factor);
+}
+
 
 void RooStats::HistFactory::Sample::AddShapeSys( std::string SysName, Constraint::Type SysConstraintType, std::string SysHistoName, std::string SysHistoFile, std::string SysHistoPath ) {
 
@@ -304,4 +324,8 @@ void RooStats::HistFactory::Sample::AddShapeSys( std::string SysName, Constraint
 
   fShapeSysList.push_back( sys );
 
+}
+
+void RooStats::HistFactory::Sample::AddShapeSys( const ShapeSys& Sys ) {
+  fShapeSysList.push_back(Sys);
 }
