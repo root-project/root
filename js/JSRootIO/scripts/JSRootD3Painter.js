@@ -1650,7 +1650,7 @@ function format_id(id) {
                .style("stroke", root_colors[graph['fMarkerColor']])
                .attr("d", marker)
                .append("svg:title")
-               .text(function(d) { return "x = " + d.x.toPrecision(5) + " y = " + d.y.toPrecision(5); });
+               .text(function(d) { return "x = " + d.x.toPrecision(5) + " \ny = " + d.y.toPrecision(5); });
          }
       };
       graph['redraw'] = do_redraw;
@@ -2022,7 +2022,7 @@ function format_id(id) {
             });
          g.selectAll("rect")
             .append("svg:title")
-            .text(function(d) { return "x = " + d.x.toPrecision(5) + "; y = " + d.y.toPrecision(5) + "; entries = " + d.z; });
+            .text(function(d) { return "x = " + d.x.toPrecision(5) + " \ny = " + d.y.toPrecision(5) + " \nentries = " + d.z; });
       };
       histo['redraw'] = do_redraw;
 
