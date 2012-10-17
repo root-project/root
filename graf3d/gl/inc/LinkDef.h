@@ -8,6 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "RConfigure.h"
+
 #ifdef __CINT__
 
 #pragma link off all globals;
@@ -136,7 +138,7 @@
 #pragma link C++ class TGLTH3Composition;
 #pragma link C++ class TGLTH3CompositionPainter;
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(R__HAS_COCOA)
 #pragma link C++ class TX11GLManager;
 #endif
 

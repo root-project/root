@@ -32,7 +32,7 @@
 #include "CocoaUtils.h"
 #include "X11Events.h"
 #include "X11Buffer.h"
-//#include "TGLFormat.h"
+#include "TGLFormat.h"
 #include "TGClient.h"
 #include "TGWindow.h"
 #include "TSystem.h"
@@ -2983,7 +2983,7 @@ void TGCocoa::QueryPointer(Window_t winID, Window_t &rootWinID, Window_t &childW
 //OpenGL management.
 
 //______________________________________________________________________________
-Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > & /*formatComponents*/)
+Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &formatComponents)
 {
    //ROOT never creates GL widgets with 'root' as a parent (so not top-level gl-windows).
    //If this change, assert must be deleted.
@@ -2995,7 +2995,6 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
    
 
    std::vector<NSOpenGLPixelFormatAttribute> attribs;
-   /*
    for (size_type i = 0, e = formatComponents.size(); i < e; ++i) {
       const component_type &comp = formatComponents[i];
       
@@ -3017,7 +3016,6 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
          attribs.push_back(comp.second ? comp.second : 4);
       }
    }
-   */
    
    attribs.push_back(NSOpenGLPFAAccelerated);//??? I think, TGLWidget always wants this.
    attribs.push_back(0);

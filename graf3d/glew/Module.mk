@@ -28,9 +28,6 @@ ALLLIBS     += $(GLEWLIB)
 # include all dependency files
 INCLUDEFILES += $(GLEWDEP)
 
-ifeq ($(ARCH),win32)
-GLLIBS       := opengl32.lib glu32.lib
-endif
 ifeq ($(MACOSX_MINOR),3)
 GLEWLIBEXTRA += -lz
 endif
@@ -49,7 +46,7 @@ $(GLEWLIB):     $(GLEWO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) $(GLEWLIBDEP)
 		   "$(SOFLAGS)" libGLEW.$(SOEXT) $@ \
 		   "$(GLEWO)" \
 		   "$(FREETYPELDFLAGS) $(FREETYPELIB) \
-		    $(GLEWLIBEXTRA) $(XLIBS) $(GLLIBS)"
+		    $(GLEWLIBEXTRA) $(GLLIBS)"
 
 all-$(MODNAME): $(GLEWLIB)
 

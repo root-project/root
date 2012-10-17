@@ -30,10 +30,11 @@
 */
 
 /* ROOT additions begin */
+#include "RConfigure.h"
 
 #define GLEW_BUILD
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(R__HAS_COCOA)
 #  define GLEW_APPLE_GLX
 #endif
 
