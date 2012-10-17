@@ -37,8 +37,6 @@
 #include "RooIntegrator1D.h"
 #include "RooAbsFunc.h"
 
-using namespace std;
-
 ClassImp(RooDstD0BG) 
 
 static const char rcsid[] =

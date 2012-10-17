@@ -77,7 +77,6 @@ END_HTML
 
 ClassImp(RooStats::BernsteinCorrection) ;
 
-using namespace std ;
 using namespace RooFit;
 using namespace RooStats;
 

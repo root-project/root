@@ -68,8 +68,6 @@
 #include "RooMsgService.h"
 #include "RooSentinel.h"
 
-using namespace std;
-
 ClassImp(RooResolutionModel) 
 ;
 

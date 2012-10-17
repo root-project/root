@@ -61,8 +61,6 @@
 
 
 
-using namespace std;
-
 ClassImp(RooAddModel)
 ;
 

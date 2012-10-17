@@ -57,7 +57,7 @@ RooAddition::RooAddition()
 
 
 //_____________________________________________________________________________
-RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet, Bool_t takeOwnership) 
+RooAddition::RooAddition(const char* name, const char* title, const RooArgSet& sumSet, Bool_t takeOwnership) 
   : RooAbsReal(name, title)
   , _set("!set","set of components",this)
   , _setIter( _set.createIterator() ) // yes, _setIter is defined _after_ _set ;-)

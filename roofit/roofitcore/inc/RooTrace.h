@@ -32,7 +32,7 @@ public:
   static void verbose(Bool_t flag) ;
 
   static void dump() ;
-  static void dump(std::ostream& os, Bool_t sinceMarked=kFALSE) ;
+  static void dump(ostream& os, Bool_t sinceMarked=kFALSE) ;
   static void mark() ;
   
   static void callgrind_zero() ;

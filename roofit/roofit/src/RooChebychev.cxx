@@ -31,8 +31,6 @@
 #include "RooRealVar.h"
 #include "RooArgList.h"
 
-using namespace std;
-
 ClassImp(RooChebychev)
 ;
 

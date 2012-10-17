@@ -42,8 +42,6 @@
 #include "RooRandom.h"
 #include "RooMsgService.h"
 
-using namespace std;
-
 ClassImp(RooAbsCategoryLValue) 
 ;
 

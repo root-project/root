@@ -182,7 +182,7 @@ void RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::Streamer(TBuffer &R__b)
 
      if (tmpName=="UNKNOWN" && R__v>0) {
 
-       coutW(ObjectHandling) << "WARNING: Objected embeds function pointer to unknown function, object will not be functional" << std::endl ;
+       coutW(ObjectHandling) << "WARNING: Objected embeds function pointer to unknown function, object will not be functional" << endl ;
        _ptr = dummyFunction ;
 
      } else {
@@ -192,7 +192,7 @@ void RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::Streamer(TBuffer &R__b)
 
        if (_ptr==0) {
 	 coutW(ObjectHandling) << "ERROR: Objected embeds pointer to function named " << tmpName
-			       << " but no such function is registered, object will not be functional" << std::endl ;
+			       << " but no such function is registered, object will not be functional" << endl ;
        }
      }
 
@@ -208,7 +208,7 @@ void RooCFunction4Ref<VO,VI1,VI2,VI3,VI4>::Streamer(TBuffer &R__b)
      TString tmpName = fmap().lookupName(_ptr) ;
      if (tmpName.Length()==0) {
        coutW(ObjectHandling) << "WARNING: Cannot persist unknown function pointer " << Form("0x%lx",(ULong_t)_ptr)
-			     << " written object will not be functional when read back" <<  std::endl ;
+			     << " written object will not be functional when read back" <<  endl ;
        tmpName="UNKNOWN" ;
      }
 
@@ -233,7 +233,7 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooCFunction4Binding(*this,newname); }
   inline virtual ~RooCFunction4Binding() { }
 
-  void printArgs(std::ostream& os) const {
+  void printArgs(ostream& os) const {
     // Print object arguments and name/address of function pointer
     os << "[ function=" << func.name() << " " ;
     for (Int_t i=0 ; i<numProxies() ; i++) {
@@ -306,7 +306,7 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooCFunction4PdfBinding(*this,newname); }
   inline virtual ~RooCFunction4PdfBinding() { }
 
-  void printArgs(std::ostream& os) const {
+  void printArgs(ostream& os) const {
     // Print object arguments and name/address of function pointer
     os << "[ function=" << func.name() << " " ;
     for (Int_t i=0 ; i<numProxies() ; i++) {

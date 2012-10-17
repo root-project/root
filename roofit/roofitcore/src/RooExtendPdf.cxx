@@ -49,8 +49,6 @@
 
 
 
-using namespace std;
-
 ClassImp(RooExtendPdf)
 ;
 

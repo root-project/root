@@ -37,8 +37,6 @@
 
 
 
-using namespace std;
-
 ClassImp(RooProdGenContext)
 ;
   

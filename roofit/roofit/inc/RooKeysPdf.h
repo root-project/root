@@ -35,20 +35,15 @@ public:
   RooKeysPdf(const RooKeysPdf& other, const char* name=0);
   virtual TObject* clone(const char* newname) const {return new RooKeysPdf(*this,newname); }
   virtual ~RooKeysPdf();
-
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
   
   void LoadDataSet( RooDataSet& data);
-
-  void dump() ;
 
 protected:
   
   RooRealProxy _x ;
   Double_t evaluate() const;
 
-public:
+private:
   
   Double_t evaluateFull(Double_t x) const;
 

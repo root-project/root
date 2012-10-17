@@ -115,12 +115,12 @@ public:
   void remove(const char* name=0, Bool_t deleteToo=kTRUE) ;
 
   // ascii printing
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printArgs(std::ostream& os) const ;
-  virtual void printValue(std::ostream& os) const ;
-  virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  virtual void printName(ostream& os) const ;
+  virtual void printTitle(ostream& os) const ;
+  virtual void printClassName(ostream& os) const ;
+  virtual void printArgs(ostream& os) const ;
+  virtual void printValue(ostream& os) const ;
+  virtual void printMultiline(ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
 
@@ -172,9 +172,6 @@ public:
 
   void Browse(TBrowser *b) ;
 
-  static Bool_t addDirectoryStatus() ;
-  static Bool_t setAddDirectoryStatus(Bool_t flag) ;
-
 protected:
 
   RooPlot(const RooPlot& other); // cannot be copied
@@ -216,8 +213,6 @@ protected:
   Double_t _defYmax ;        // Default maximum for Yaxis (as calculated from contents)
 
   TDirectory* _dir ;         //! non-persistent
-
-  static Bool_t _addDirStatus ; // static flag controlling AutoDirectoryAdd feature
 
   ClassDef(RooPlot,2)        // Plot frame and container for graphics objects
 };

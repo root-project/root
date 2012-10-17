@@ -55,15 +55,15 @@ public:
   public:
     TMatrixD    S22bar ;
     Double_t    S22det ;
-    std::vector<int> pmap ;
+    vector<int> pmap ;
     Int_t       nint ;
   } ;
 
   class GenData {
   public:
     TMatrixD    UT ;
-    std::vector<int> omap ;
-    std::vector<int> pmap ;
+    vector<int> omap ;
+    vector<int> pmap ;
     TVectorD    mu1 ;
     TVectorD    mu2 ;
     TMatrixD    S12S22I ;
@@ -83,11 +83,11 @@ public:
     Int_t b3 ;
   } ;
 
-  static void blockDecompose(const TMatrixD& input, const std::vector<int>& map1, const std::vector<int>& map2, TMatrixDSym& S11, TMatrixD& S12, TMatrixD& S21, TMatrixDSym& S22) ;
+  static void blockDecompose(const TMatrixD& input, const vector<int>& map1, const vector<int>& map2, TMatrixDSym& S11, TMatrixD& S12, TMatrixD& S21, TMatrixDSym& S22) ;
 
 protected:
   
-  void decodeCode(Int_t code, std::vector<int>& map1, std::vector<int>& map2) const;
+  void decodeCode(Int_t code, vector<int>& map1, vector<int>& map2) const;
   AnaIntData& anaIntData(Int_t code) const ;
   GenData& genData(Int_t code) const ;
 

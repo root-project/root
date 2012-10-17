@@ -181,10 +181,6 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
   // meta object that tracks changes in declared parameters of p.d.f
   // through actualParameters() 
 
-  // Disable source caching by default
-  _cacheSource = kFALSE ;
-  _sourceClone = 0 ;
-
   RooArgSet* nset2 = self.actualObservables(nset?*nset:RooArgSet()) ;
 
   RooArgSet orderedObs ;
@@ -220,7 +216,6 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
   // makes the correct decisions
   _func->addServerList(*params) ;
 
-
   delete observables ;
   delete params ;
   delete nset2 ;
@@ -228,19 +223,7 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
 }
 
 
-//_____________________________________________________________________________
-RooAbsCachedReal::FuncCacheElem::~FuncCacheElem()
-{
-  if (_sourceClone) { delete _sourceClone ; }
-  delete _paramTracker ;
-  delete _func ;
-  delete _hist ;
-}
 
-
-
-
-//_____________________________________________________________________________
 TString RooAbsCachedReal::cacheNameSuffix(const RooArgSet& nset) const 
 {
   // Construct unique suffix name for cache p.d.f object 

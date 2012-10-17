@@ -37,8 +37,6 @@ END_HTML
 
 #include <vector>
 #include <sstream>
-#include <iostream>
-#include <list>
 
 #include "RooStats/TestStatSampler.h"
 #include "RooStats/SamplingDistribution.h"
@@ -159,7 +157,7 @@ class ToyMCSampler: public TestStatSampler {
       // generates toy data
       //   without weight
       virtual RooAbsData* GenerateToyData(RooArgSet& paramPoint) const {
-         if(fExpectedNuisancePar) oocoutE((TObject*)NULL,InputArguments) << "ToyMCSampler: using expected nuisance parameters but ignoring weight. Use GetSamplingDistribution(paramPoint, weight) instead." << std::endl;
+         if(fExpectedNuisancePar) oocoutE((TObject*)NULL,InputArguments) << "ToyMCSampler: using expected nuisance parameters but ignoring weight. Use GetSamplingDistribution(paramPoint, weight) instead." << endl;
          double weight;
          return GenerateToyData(paramPoint, weight);
       }
@@ -256,7 +254,7 @@ class ToyMCSampler: public TestStatSampler {
 
       // Set the name of the sampling distribution used for plotting
       void SetSamplingDistName(const char* name) { if(name) fSamplingDistName = name; }
-      std::string GetSamplingDistName(void) { return fSamplingDistName; }
+      string GetSamplingDistName(void) { return fSamplingDistName; }
 
       // This option forces a maximum number of total toys.
       void SetMaxToys(Double_t t) { fMaxToys = t; }
@@ -279,7 +277,7 @@ class ToyMCSampler: public TestStatSampler {
 
       // for importance sampling, specifies the pdf to sample from
       void SetImportanceDensity(RooAbsPdf *p) {
-         if(p) oocoutW((TObject*)NULL,InputArguments) << "ToyMCSampler Importance Sampling: This is in beta." << std::endl;
+         if(p) oocoutW((TObject*)NULL,InputArguments) << "ToyMCSampler Importance Sampling: This is in beta." << endl;
          fImportanceDensity = p;
       }
       // for importance sampling, a snapshot of the parameters used in importance density
@@ -300,7 +298,7 @@ class ToyMCSampler: public TestStatSampler {
 
       TestStatistic *fTestStat; // test statistic that is being sampled
       RooAbsPdf *fPdf; // model
-      std::string fSamplingDistName; // name of the model
+      string fSamplingDistName; // name of the model
       RooAbsPdf *fPriorNuisance; // prior pdf for nuisance parameters
       RooArgSet *fNullPOI; // parameters of interest
       const RooArgSet *fNuisancePars;
@@ -336,9 +334,9 @@ class ToyMCSampler: public TestStatSampler {
 
       // objects below cache information and are mutable and non-persistent
       mutable RooArgSet* _allVars ; //! 
-      mutable std::list<RooAbsPdf*> _pdfList ; //!
-      mutable std::list<RooArgSet*> _obsList ; //!
-      mutable std::list<RooAbsPdf::GenSpec*> _gsList ; //!      
+      mutable list<RooAbsPdf*> _pdfList ; //!
+      mutable list<RooArgSet*> _obsList ; //!
+      mutable list<RooAbsPdf::GenSpec*> _gsList ; //!      
       mutable RooAbsPdf::GenSpec* _gs1 ; //! GenSpec #1 
       mutable RooAbsPdf::GenSpec* _gs2 ; //! GenSpec #2
       mutable RooAbsPdf::GenSpec* _gs3 ; //! GenSpec #3

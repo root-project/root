@@ -32,8 +32,6 @@
 #include "RooArgSet.h"
 #include "RooCategoryProxy.h"
 
-using namespace std;
-
 ClassImp(RooCategoryProxy)
 ;
 

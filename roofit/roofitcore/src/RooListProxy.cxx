@@ -35,8 +35,6 @@
 #include "RooArgList.h"
 #include "RooAbsArg.h"
 
-using namespace std;
-
 ClassImp(RooListProxy)
 ;
 
@@ -93,7 +91,7 @@ Bool_t RooListProxy::add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeS
   // of inserted object to list owner
 
   Bool_t ret=RooArgList::add(var,silent) ;
-  if (ret && _owner) {
+  if (ret) {
     _owner->addServer((RooAbsArg&)var,valueServer,shapeServer) ;
   }
   return ret ;  

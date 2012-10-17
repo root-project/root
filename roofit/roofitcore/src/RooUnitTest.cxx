@@ -51,7 +51,6 @@
 ClassImp(RooUnitTest)
 ;
 
-using namespace std; 
 
 TDirectory* RooUnitTest::gMemDir = 0 ;
 
@@ -146,7 +145,7 @@ RooWorkspace* RooUnitTest::getWS(const char* refName)
 {
   RooWorkspace* ws = dynamic_cast<RooWorkspace*>(_refFile->Get(refName)) ;
   if (!ws) {
-    cout << "RooUnitTest ERROR: cannot retrieve RooWorkspace " << refName 
+    cout << "stressRooFit ERROR: cannot retrieve RooWorkspace " << refName 
 	 << " from reference file, skipping " << endl ;
     return 0 ;
   }
@@ -215,7 +214,7 @@ Bool_t RooUnitTest::runCompTests()
       // Retrieve benchmark
       RooPlot* bmark = dynamic_cast<RooPlot*>(_refFile->Get(iter->second.c_str())) ;
       if (!bmark) {
-	cout << "RooUnitTest ERROR: cannot retrieve RooPlot " << iter->second << " from reference file, skipping " << endl ;
+	cout << "stressRooFit ERROR: cannot retrieve RooPlot " << iter->second << " from reference file, skipping " << endl ;
 	ret = kFALSE ;
 	++iter ;
 	continue ;
@@ -239,7 +238,7 @@ Bool_t RooUnitTest::runCompTests()
 	TObject* objRef = bmark->findObject(obj->GetName()) ;
 	
 	if (!objRef) {
-	  cout << "RooUnitTest ERROR: cannot retrieve object " << obj->GetName() << " from reference  RooPlot " << iter->second << ", skipping" << endl ;
+	  cout << "stressRooFit ERROR: cannot retrieve object " << obj->GetName() << " from reference  RooPlot " << iter->second << ", skipping" << endl ;
 	  ret = kFALSE ;
 	  break ;
 	}
@@ -249,7 +248,7 @@ Bool_t RooUnitTest::runCompTests()
 	  RooHist* testHist = static_cast<RooHist*>(obj) ;
 	  RooHist* refHist = static_cast<RooHist*>(objRef) ;
 	  if (!testHist->isIdentical(*refHist,htol())) {
-	    cout << "RooUnitTest ERROR: comparison of object " << obj->IsA()->GetName() << "::" << obj->GetName() 
+	    cout << "stressRooFit ERROR: comparison of object " << obj->IsA()->GetName() << "::" << obj->GetName() 
 		 <<   " fails comparison with counterpart in reference RooPlot " << bmark->GetName() << endl ;
 	    
 	    if (compPlot) {
@@ -271,7 +270,7 @@ Bool_t RooUnitTest::runCompTests()
 	  RooCurve* testCurve = static_cast<RooCurve*>(obj) ;
 	  RooCurve* refCurve = static_cast<RooCurve*>(objRef) ;
 	  if (!testCurve->isIdentical(*refCurve,ctol())) {
-	    cout << "RooUnitTest ERROR: comparison of object " << obj->IsA()->GetName() << "::" << obj->GetName() 
+	    cout << "stressRooFit ERROR: comparison of object " << obj->IsA()->GetName() << "::" << obj->GetName() 
 		 <<   " fails comparison with counterpart in reference RooPlot " << bmark->GetName() << endl ;
 
 	    if (compPlot) {
@@ -295,8 +294,8 @@ Bool_t RooUnitTest::runCompTests()
       }
 
       if (anyFail && compPlot) {
-	cout << "RooUnitTest INFO: writing comparison plot " << compPlot->GetName() << " of failed test to RooUnitTest_DEBUG.root" << endl ;
-	TFile fdbg("RooUnitTest_DEBUG.root","UPDATE") ;
+	cout << "stressRooFit INFO: writing comparison plot " << compPlot->GetName() << " of failed test to stressRooFit_DEBUG.root" << endl ;
+	TFile fdbg("stressRooFit_DEBUG.root","UPDATE") ;
 	compPlot->Write() ;
 	fdbg.Close() ;
       } else {
@@ -310,7 +309,7 @@ Bool_t RooUnitTest::runCompTests()
 
       // Writing mode
 
-      cout <<"RooUnitTest: Writing reference RooPlot " << iter->first << " as benchmark " << iter->second << endl ;
+      cout <<"stressRooFit: Writing reference RooPlot " << iter->first << " as benchmark " << iter->second << endl ;
       _refFile->cd() ;
       iter->first->Write(iter->second.c_str()) ;
       gMemDir->cd() ;
@@ -330,7 +329,7 @@ Bool_t RooUnitTest::runCompTests()
      // Retrieve benchmark
       RooFitResult* bmark = dynamic_cast<RooFitResult*>(_refFile->Get(iter2->second.c_str())) ;
       if (!bmark) {
-	cout << "RooUnitTest ERROR: cannot retrieve RooFitResult " << iter2->second << " from reference file, skipping " << endl ;
+	cout << "stressRooFit ERROR: cannot retrieve RooFitResult " << iter2->second << " from reference file, skipping " << endl ;
 	++iter2 ;
 	ret = kFALSE ;
 	continue ;
@@ -341,7 +340,7 @@ Bool_t RooUnitTest::runCompTests()
       }
 
       if (!iter2->first->isIdentical(*bmark,fptol(),fctol())) {
-	cout << "RooUnitTest ERROR: comparison of object " << iter2->first->IsA()->GetName() << "::" << iter2->first->GetName() 
+	cout << "stressRooFit ERROR: comparison of object " << iter2->first->IsA()->GetName() << "::" << iter2->first->GetName() 
 	     <<   " fails comparison with counterpart in reference RooFitResult " << bmark->GetName() << endl ;
 	ret = kFALSE ;
       }
@@ -354,7 +353,7 @@ Bool_t RooUnitTest::runCompTests()
 
       // Writing mode
       
-      cout <<"RooUnitTest: Writing reference RooFitResult " << iter2->first << " as benchmark " << iter2->second << endl ;
+      cout <<"stressRooFit: Writing reference RooFitResult " << iter2->first << " as benchmark " << iter2->second << endl ;
       _refFile->cd() ;
       iter2->first->Write(iter2->second.c_str()) ;
       gMemDir->cd() ;
@@ -373,7 +372,7 @@ Bool_t RooUnitTest::runCompTests()
      // Retrieve benchmark
       RooDouble* ref = dynamic_cast<RooDouble*>(_refFile->Get(iter3->second.c_str())) ;
       if (!ref) {
-	cout << "RooUnitTest ERROR: cannot retrieve RooDouble " << iter3->second << " from reference file, skipping " << endl ;
+	cout << "stressRooFit ERROR: cannot retrieve RooDouble " << iter3->second << " from reference file, skipping " << endl ;
 	++iter3 ;
 	ret = kFALSE ;
 	continue ;
@@ -384,7 +383,7 @@ Bool_t RooUnitTest::runCompTests()
       }
 
       if (fabs(iter3->first - (Double_t)(*ref))>vtol() ) {
-	cout << "RooUnitTest ERROR: comparison of value " << iter3->first <<   " fails comparison with reference " << ref->GetName() << endl ;
+	cout << "stressRooFit ERROR: comparison of value " << iter3->first <<   " fails comparison with reference " << ref->GetName() << endl ;
 	ret = kFALSE ;
       }
      
@@ -393,7 +392,7 @@ Bool_t RooUnitTest::runCompTests()
 
       // Writing mode
       
-      cout <<"RooUnitTest: Writing reference Double_t " << iter3->first << " as benchmark " << iter3->second << endl ;
+      cout <<"stressRooFit: Writing reference Double_t " << iter3->first << " as benchmark " << iter3->second << endl ;
       _refFile->cd() ;
       RooDouble* rd = new RooDouble(iter3->first) ;
       rd->Write(iter3->second.c_str()) ;
@@ -414,7 +413,7 @@ Bool_t RooUnitTest::runCompTests()
      // Retrieve benchmark
       RooTable* bmark = dynamic_cast<RooTable*>(_refFile->Get(iter4->second.c_str())) ;
       if (!bmark) {
-	cout << "RooUnitTest ERROR: cannot retrieve RooTable " << iter4->second << " from reference file, skipping " << endl ;
+	cout << "stressRooFit ERROR: cannot retrieve RooTable " << iter4->second << " from reference file, skipping " << endl ;
 	++iter4 ;
 	ret = kFALSE ;
 	continue ;
@@ -425,7 +424,7 @@ Bool_t RooUnitTest::runCompTests()
       }
 
       if (!iter4->first->isIdentical(*bmark)) {
-	cout << "RooUnitTest ERROR: comparison of object " << iter4->first->IsA()->GetName() << "::" << iter4->first->GetName() 
+	cout << "stressRooFit ERROR: comparison of object " << iter4->first->IsA()->GetName() << "::" << iter4->first->GetName() 
 	     <<   " fails comparison with counterpart in reference RooTable " << bmark->GetName() << endl ;
 	ret = kFALSE ;
       }
@@ -438,7 +437,7 @@ Bool_t RooUnitTest::runCompTests()
 
       // Writing mode
       
-      cout <<"RooUnitTest: Writing reference RooTable " << iter4->first << " as benchmark " << iter4->second << endl ;
+      cout <<"stressRooFit: Writing reference RooTable " << iter4->first << " as benchmark " << iter4->second << endl ;
       _refFile->cd() ;
       iter4->first->Write(iter4->second.c_str()) ;
       gMemDir->cd() ;
@@ -455,7 +454,7 @@ Bool_t RooUnitTest::runCompTests()
 
       // Writing mode
       
-      cout <<"RooUnitTest: Writing reference RooWorkspace " << iter5->first << " as benchmark " << iter5->second << endl ;
+      cout <<"stressRooFit: Writing reference RooWorkspace " << iter5->first << " as benchmark " << iter5->second << endl ;
       _refFile->cd() ;
       iter5->first->Write(iter5->second.c_str()) ;
       gMemDir->cd() ;
@@ -475,7 +474,7 @@ Bool_t RooUnitTest::runCompTests()
      // Retrieve benchmark
       TH1* bmark = dynamic_cast<TH1*>(_refFile->Get(iter6->second.c_str())) ;
       if (!bmark) {
-	cout << "RooUnitTest ERROR: cannot retrieve TH1 " << iter6->second << " from reference file, skipping " << endl ;
+	cout << "stressRooFit ERROR: cannot retrieve TH1 " << iter6->second << " from reference file, skipping " << endl ;
 	++iter6 ;
 	ret = kFALSE ;
 	continue ;
@@ -487,14 +486,14 @@ Bool_t RooUnitTest::runCompTests()
 
       if (!areTHidentical(iter6->first,bmark)) {
 	// coverity[NULL_RETURNS]
-	cout << "RooUnitTest ERROR: comparison of object " << iter6->first->IsA()->GetName() << "::" << iter6->first->GetName() 
+	cout << "stressRooFit ERROR: comparison of object " << iter6->first->IsA()->GetName() << "::" << iter6->first->GetName() 
 	     <<   " fails comparison with counterpart in reference TH1 " << bmark->GetName() << endl ;
 
 
       if (_debug) {
-	cout << "RooUnitTest INFO: writing THx " << iter6->first->GetName() << " and " << bmark->GetName()  
-	     << " of failed test to RooUnitTest_DEBUG.root" << endl ;
-	TFile fdbg("RooUnitTest_DEBUG.root","UPDATE") ;
+	cout << "stressRooFit INFO: writing THx " << iter6->first->GetName() << " and " << bmark->GetName()  
+	     << " of failed test to stressRooFit_DEBUG.root" << endl ;
+	TFile fdbg("stressRooFit_DEBUG.root","UPDATE") ;
 	iter6->first->SetName(Form("%s_test",iter6->first->GetName())) ;
 	iter6->first->Write() ;
 	bmark->SetName(Form("%s_ref",bmark->GetName())) ;
@@ -513,7 +512,7 @@ Bool_t RooUnitTest::runCompTests()
 
       // Writing mode
       
-      cout <<"RooUnitTest: Writing reference TH1 " << iter6->first << " as benchmark " << iter6->second << endl ;
+      cout <<"stressRooFit: Writing reference TH1 " << iter6->first << " as benchmark " << iter6->second << endl ;
       _refFile->cd() ;
       iter6->first->Write(iter6->second.c_str()) ;
       gMemDir->cd() ;
@@ -580,7 +579,7 @@ Bool_t RooUnitTest::runTest()
   }
 
   if (RooMsgService::instance().errorCount()>0) {
-    cout << "RooUnitTest: ERROR messages were logged, failing test" << endl ;
+    cout << "RooFitUnitTest: ERROR messages were logged, failing test" << endl ;
     return kFALSE ;
   }
 

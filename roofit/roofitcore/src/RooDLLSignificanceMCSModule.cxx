@@ -42,8 +42,6 @@
 
 
 
-using namespace std;
-
 ClassImp(RooDLLSignificanceMCSModule)
   ;
 

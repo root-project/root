@@ -95,8 +95,6 @@ static char *strtok_r(char *s1, const char *s2, char **lasts)
 
 #include "TSystem.h"
 
-using namespace std;
-
 ClassImp(RooProdPdf)
 ;
 

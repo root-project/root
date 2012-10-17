@@ -149,8 +149,6 @@ static char *strtok_r(char *s1, const char *s2, char **lasts)
 #endif
 
 
-using namespace std;
-
 ClassImp(RooCustomizer) 
 ;
 

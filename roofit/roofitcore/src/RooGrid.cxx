@@ -38,8 +38,6 @@
 #include "Riostream.h"
 #include <iomanip>
 
-using namespace std;
-
 ClassImp(RooGrid)
 ;
 

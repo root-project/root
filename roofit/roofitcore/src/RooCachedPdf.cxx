@@ -26,8 +26,6 @@
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
 
-using namespace std;
-
 ClassImp(RooCachedPdf) 
   ;
 

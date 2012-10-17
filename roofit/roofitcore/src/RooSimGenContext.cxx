@@ -40,8 +40,6 @@ using namespace RooFit ;
 
 #include <string>
 
-using namespace std;
-
 ClassImp(RooSimGenContext)
 ;
   

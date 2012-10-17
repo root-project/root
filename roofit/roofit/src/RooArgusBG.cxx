@@ -33,8 +33,6 @@
 #include "RooMath.h"
 #include "TMath.h"
 
-using namespace std;
-
 ClassImp(RooArgusBG)
 
 

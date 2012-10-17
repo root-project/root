@@ -30,6 +30,7 @@ class RooRealVar;
 class RooArgList;
 class RooArgSet;
 
+using namespace std;
 
 #ifndef __CINT__
 class VecVecDouble : public std::vector<std::vector<Double_t> >  { } ;
@@ -82,12 +83,12 @@ public:
     Bool_t netFluxZ;
     Double_t nEventsBW;
     Double_t nEventsBMSW;
-    std::vector<Double_t> xVarLo, xVarHi;
-    std::vector<Double_t> xVarLoM3s, xVarLoP3s, xVarHiM3s, xVarHiP3s;
-    std::map<Int_t,Bool_t> bpsIdcs;
-    std::vector<Int_t> sIdcs;	
-    std::vector<Int_t> bIdcs;
-    std::vector<Int_t> bmsIdcs;
+    vector<Double_t> xVarLo, xVarHi;
+    vector<Double_t> xVarLoM3s, xVarLoP3s, xVarHiM3s, xVarHiP3s;
+    map<Int_t,Bool_t> bpsIdcs;
+    vector<Int_t> sIdcs;	
+    vector<Int_t> bIdcs;
+    vector<Int_t> bmsIdcs;
   } ;
 
 protected:
@@ -108,8 +109,8 @@ protected:
   void     calculatePreNorm(BoxInfo* bi) const;
   void     sortDataIndices(BoxInfo* bi=0) const;
   void     calculateBandWidth() const;
-  Double_t gauss(std::vector<Double_t>& x, std::vector<std::vector<Double_t> >& weights) const;
-  void     loopRange(std::vector<Double_t>& x, std::map<Int_t,Bool_t>& ibMap) const;
+  Double_t gauss(vector<Double_t>& x, vector<vector<Double_t> >& weights) const;
+  void     loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) const;
   void     boxInfoInit(BoxInfo* bi, const char* rangeName, Int_t code) const;
 
   RooDataSet& _data;
@@ -132,43 +133,43 @@ protected:
   
   // cached info on variable
 
-  mutable std::vector<std::vector<Double_t> > _dataPts;
-  mutable std::vector<TVectorD> _dataPtsR;
-  mutable std::vector<std::vector<Double_t> > _weights0;
-  mutable std::vector<std::vector<Double_t> > _weights1;
-  mutable std::vector<std::vector<Double_t> >* _weights; //!
+  mutable vector<vector<Double_t> > _dataPts;
+  mutable vector<TVectorD> _dataPtsR;
+  mutable vector<vector<Double_t> > _weights0;
+  mutable vector<vector<Double_t> > _weights1;
+  mutable vector<vector<Double_t> >* _weights; //!
 
 #ifndef __CINT__
-  mutable std::vector<iiVec> _sortIdcs;
-  mutable std::vector<itVec> _sortTVIdcs;
+  mutable vector<iiVec> _sortIdcs;
+  mutable vector<itVec> _sortTVIdcs;
 #endif
 
-  mutable std::vector<std::string> _varName;
-  mutable std::vector<Double_t> _rho;
+  mutable vector<string> _varName;
+  mutable vector<Double_t> _rho;
   mutable RooArgSet _dataVars;
-  mutable std::vector<Double_t> _x;
-  mutable std::vector<Double_t> _x0, _x1, _x2;
-  mutable std::vector<Double_t> _mean, _sigma;
-  mutable std::vector<Double_t> _xDatLo, _xDatHi;
-  mutable std::vector<Double_t> _xDatLo3s, _xDatHi3s;
+  mutable vector<Double_t> _x;
+  mutable vector<Double_t> _x0, _x1, _x2;
+  mutable vector<Double_t> _mean, _sigma;
+  mutable vector<Double_t> _xDatLo, _xDatHi;
+  mutable vector<Double_t> _xDatLo3s, _xDatHi3s;
 
   mutable Bool_t _netFluxZ;
   mutable Double_t _nEventsBW;
   mutable Double_t _nEventsBMSW;
-  mutable std::vector<Double_t> _xVarLo, _xVarHi;
-  mutable std::vector<Double_t> _xVarLoM3s, _xVarLoP3s, _xVarHiM3s, _xVarHiP3s;
-  mutable std::map<Int_t,Bool_t> _bpsIdcs;
-  mutable std::vector<Int_t>	_sIdcs;	
-  mutable std::vector<Int_t> _bIdcs;
-  mutable std::vector<Int_t> _bmsIdcs;
+  mutable vector<Double_t> _xVarLo, _xVarHi;
+  mutable vector<Double_t> _xVarLoM3s, _xVarLoP3s, _xVarHiM3s, _xVarHiP3s;
+  mutable map<Int_t,Bool_t> _bpsIdcs;
+  mutable vector<Int_t>	_sIdcs;	
+  mutable vector<Int_t> _bIdcs;
+  mutable vector<Int_t> _bmsIdcs;
 
-  mutable std::map<std::pair<std::string,int>,BoxInfo*> _rangeBoxInfo ;
+  mutable map<pair<string,int>,BoxInfo*> _rangeBoxInfo ;
   mutable BoxInfo _fullBoxInfo ;
 
-  mutable std::vector<Int_t> _idx;
+  mutable vector<Int_t> _idx;
   mutable Double_t _minWeight;
   mutable Double_t _maxWeight;
-  mutable std::map<Int_t,Double_t> _wMap;
+  mutable map<Int_t,Double_t> _wMap;
 
   mutable TMatrixDSym* _covMat; 
   mutable TMatrixDSym* _corrMat; 

@@ -68,7 +68,7 @@ protected:
   void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
-  virtual void printCompactTreeHook(std::ostream& os, const char* indent="") ;
+  virtual void printCompactTreeHook(ostream& os, const char* indent="") ;
   virtual RooArgSet requiredExtraObservables() const { return RooArgSet() ; }
   void optimizeCaching() ;
   void optimizeConstantTerms(Bool_t,Bool_t=kTRUE) ;

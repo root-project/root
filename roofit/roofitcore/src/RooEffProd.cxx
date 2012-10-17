@@ -28,8 +28,6 @@
 #include "RooNameReg.h"
 #include "RooRealVar.h"
 
-using namespace std;
-
 ClassImp(RooEffProd)
   ;
 

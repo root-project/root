@@ -33,8 +33,6 @@
 #include "RooRandom.h"
 #include "RooMath.h"
 
-using namespace std;
-
 ClassImp(RooGaussian)
 
 
@@ -66,9 +64,7 @@ Double_t RooGaussian::evaluate() const
   Double_t arg= x - mean;  
   Double_t sig = sigma ;
   Double_t ret =exp(-0.5*arg*arg/(sig*sig)) ;
-//   if (gDebug>2) {
-//     cout << "gauss(" << GetName() << ") x = " << x << " mean = " << mean << " sigma = " << sigma << " ret = " << ret << endl ;
-//   }
+//   cout << "gauss(" << GetName() << ") x = " << x << " mean = " << mean << " sigma = " << sigma << " ret = " << ret << endl ;
   return ret ;
 }
 
@@ -95,9 +91,7 @@ Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) cons
   Double_t ret = 0;
   if(code==1){  
     ret = rootPiBy2*sigma*(RooMath::erf((x.max(rangeName)-mean)/xscale)-RooMath::erf((x.min(rangeName)-mean)/xscale));
-//     if (gDebug>2) {
-//       cout << "Int_gauss_dx(mean=" << mean << ",sigma=" << sigma << ", xmin=" << x.min(rangeName) << ", xmax=" << x.max(rangeName) << ")=" << ret << endl ;
-//     }
+//     cout << "Int_gauss_dx(mean=" << mean << ",sigma=" << sigma << ", xmin=" << x.min(rangeName) << ", xmax=" << x.max(rangeName) << ")=" << ret << endl ;
   } else if(code==2) {
     ret = rootPiBy2*sigma*(RooMath::erf((mean.max(rangeName)-x)/xscale)-RooMath::erf((mean.min(rangeName)-x)/xscale));
   } else{

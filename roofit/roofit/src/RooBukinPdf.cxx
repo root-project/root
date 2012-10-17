@@ -46,8 +46,6 @@
 #include "RooRealVar.h"
 #include "TMath.h"
 
-using namespace std;
-
 ClassImp(RooBukinPdf)
 
 

@@ -35,8 +35,6 @@
 #include "RooRealVar.h"
 // #include "RooFitTools/RooRandom.h"
 
-using namespace std;
-
 ClassImp(RooBreitWigner)
 
 

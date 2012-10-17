@@ -37,8 +37,6 @@
 #include "RooMsgService.h"
 #include "TList.h"
 
-using namespace std;
-
 ClassImp(RooBinning)
 ;
 

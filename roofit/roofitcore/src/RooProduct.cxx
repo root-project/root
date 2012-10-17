@@ -85,7 +85,7 @@ RooProduct::~RooProduct()
 
 
 //_____________________________________________________________________________
-RooProduct::RooProduct(const char* name, const char* title, const RooArgList& prodSet) :
+RooProduct::RooProduct(const char* name, const char* title, const RooArgSet& prodSet) :
   RooAbsReal(name, title),
   _compRSet("!compRSet","Set of real product components",this),
   _compCSet("!compCSet","Set of category product components",this),

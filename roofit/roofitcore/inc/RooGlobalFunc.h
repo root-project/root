@@ -116,7 +116,7 @@ RooCmdArg Import(const char* state, TH1& histo) ;
 RooCmdArg Import(const std::map<std::string,TH1*>&) ;
 RooCmdArg Import(const char* state, RooDataHist& dhist) ;
 RooCmdArg Import(const std::map<std::string,RooDataHist*>&) ;
-RooCmdArg Import(TH1& histo, Bool_t importDensity=kFALSE) ;
+RooCmdArg Import(TH1& histo, Bool_t importDensity=kTRUE) ;
 
 // RooDataSet::ctor arguments
 RooCmdArg WeightVar(const char* name) ;
@@ -183,7 +183,6 @@ RooCmdArg SplitRange(Bool_t flag=kTRUE) ;
 RooCmdArg SumCoefRange(const char* rangeName) ;
 RooCmdArg Constrain(const RooArgSet& params) ;
 RooCmdArg GlobalObservables(const RooArgSet& globs) ;
-RooCmdArg GlobalObservablesTag(const char* tagName) ;
 RooCmdArg Constrained() ;
 RooCmdArg ExternalConstraints(const RooArgSet& constraintPdfs) ;
 RooCmdArg PrintEvalErrors(Int_t numErrors) ;
@@ -255,7 +254,7 @@ RooCmdArg ObjectName(const char* name) ;
 RooCmdArg ClassName(const char* name) ;
 RooCmdArg BaseClassName(const char* name) ;
 RooCmdArg TagName(const char* name) ;
-RooCmdArg OutputStream(std::ostream& os) ;
+RooCmdArg OutputStream(ostream& os) ;
 RooCmdArg Prefix(Bool_t flag) ;
 RooCmdArg Color(Color_t color) ;
 

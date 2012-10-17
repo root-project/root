@@ -17,7 +17,7 @@
 #define ROO_PRODUCT
 
 #include "RooAbsReal.h"
-#include "RooListProxy.h"
+#include "RooSetProxy.h"
 #include "RooCacheManager.h"
 #include "RooObjCacheManager.h"
 
@@ -33,7 +33,7 @@ class RooProduct : public RooAbsReal {
 public:
 
   RooProduct() ;
-  RooProduct(const char *name, const char *title, const RooArgList& _prodSet) ;
+  RooProduct(const char *name, const char *title, const RooArgSet& _prodSet) ;
 
   RooProduct(const RooProduct& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooProduct(*this, newname); }
@@ -50,7 +50,7 @@ public:
 
   class ProdMap ;
 
-  void printMetaArgs(std::ostream& os) const ;
+  void printMetaArgs(ostream& os) const ;
 
   virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
@@ -58,8 +58,8 @@ public:
 
 protected:
 
-  RooListProxy _compRSet ;
-  RooListProxy _compCSet ;
+  RooSetProxy _compRSet ;
+  RooSetProxy _compCSet ;
   TIterator* _compRIter ;  //! do not persist
   TIterator* _compCIter ;  //! do not persist
 
@@ -83,7 +83,7 @@ protected:
 
 
 
-  ClassDef(RooProduct,2) // Product of RooAbsReal and/or RooAbsCategory terms
+  ClassDef(RooProduct,1) // Product of RooAbsReal and/or RooAbsCategory terms
 };
 
 #endif

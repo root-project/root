@@ -48,7 +48,7 @@ public:
     // Return normalization set to be used for evaluation of contents
     return _nset ; 
   }
-  virtual void print(std::ostream& os, Bool_t addContents=kFALSE) const ;
+  virtual void print(ostream& os, Bool_t addContents=kFALSE) const ;
 
 protected:
 

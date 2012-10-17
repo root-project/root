@@ -29,8 +29,6 @@
 #include "RooNumIntConfig.h"
 #include "RooRealVar.h"
 
-using namespace std;
-
 ClassImp(RooJeffreysPrior)
 ;
 

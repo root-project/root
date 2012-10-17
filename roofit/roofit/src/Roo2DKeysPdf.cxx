@@ -37,8 +37,6 @@
 
 //#include <math.h>
 
-using namespace std;
-
 ClassImp(Roo2DKeysPdf)
 
 

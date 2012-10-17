@@ -41,8 +41,6 @@
 #include "RooChi2Var.h"
 #include "RooMsgService.h"
 
-using namespace std;
-
 ClassImp(RooConstraintSum)
 ;
 

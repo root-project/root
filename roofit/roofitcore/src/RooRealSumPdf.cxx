@@ -45,8 +45,6 @@
 #include <memory>
 #include <algorithm>
 
-using namespace std;
-
 ClassImp(RooRealSumPdf)
 ;
 
@@ -224,7 +222,7 @@ Double_t RooRealSumPdf::evaluate() const
     func = (RooAbsReal*)funcIter.next() ;
     Double_t coefVal = coef->getVal() ;
     if (coefVal) {
-      cxcoutD(Eval) << "RooRealSumPdf::eval(" << GetName() << ") coefVal = " << coefVal << " funcVal = " << func->IsA()->GetName() << "::" << func->GetName() << " = " << func->getVal() << endl ;
+      cxcoutD(Eval) << "RooRealSumPdf::eval(" << GetName() << ") coefVal = " << coefVal << " funcVal = " << func->getVal() << endl ;
       if (func->isSelectedComp()) {
 	value += func->getVal()*coefVal ;
       }

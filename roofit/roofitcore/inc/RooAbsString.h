@@ -37,11 +37,11 @@ public:
   virtual Bool_t operator==(const RooAbsArg& other) ;
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printValue(std::ostream& os) const ;
+  virtual void printValue(ostream& os) const ;
 
 
   RooAbsArg *createFundamental(const char* newname=0) const;

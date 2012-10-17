@@ -55,7 +55,7 @@ public:
   void setBufferStrategy(BufStrat bs) ;
   void setBufferFraction(Double_t frac) ;
 
-  void printMetaArgs(std::ostream& os) const ;
+  void printMetaArgs(ostream& os) const ;
 
   // Propagate maximum value estimate of pdf1 as convolution can only result in lower max values
   virtual Int_t getMaxVal(const RooArgSet& vars) const { return _pdf1.arg().getMaxVal(vars) ; }

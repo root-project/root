@@ -43,8 +43,6 @@
 #include "RooErrorHandler.h"
 #include "RooProduct.h"
 
-using namespace std;
-
 ClassImp(RooGenProdProj)
 ;
 

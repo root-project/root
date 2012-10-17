@@ -47,7 +47,7 @@ public:
   virtual Double_t averageBinWidth() const { return _binw ; }
   virtual Double_t* array() const ;
 
-  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printMultiline(ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
   virtual void insertHook(RooAbsRealLValue&) const  ;
   virtual void removeHook(RooAbsRealLValue&) const  ;

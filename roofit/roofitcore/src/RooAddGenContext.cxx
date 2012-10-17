@@ -40,8 +40,6 @@
 #include "RooRandom.h"
 #include "RooAddModel.h"
 
-using namespace std;
-
 ClassImp(RooAddGenContext)
 ;
   

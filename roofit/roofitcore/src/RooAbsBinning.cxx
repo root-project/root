@@ -31,8 +31,6 @@
 
 #include "Riostream.h"
 
-using namespace std;
-
 ClassImp(RooAbsBinning)
 ;
 

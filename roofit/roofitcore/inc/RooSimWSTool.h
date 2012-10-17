@@ -140,7 +140,7 @@ protected:
 		 const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
 
   std::list<std::string>                                             _miStateNameList ;
-  std::map<std::string, std::pair<std::list<std::string>,std::string> > _paramSplitMap  ; //<paramName,<std::list<splitCatSet>,remainderStateName>>
+  std::map<std::string, std::pair<std::list<std::string>,std::string> > _paramSplitMap  ; //<paramName,<list<splitCatSet>,remainderStateName>>
   ClassDef(SplitRule,0) // Split rule specification for prototype p.d.f
  } ;
 
@@ -155,7 +155,7 @@ protected:
   friend class RooSimWSTool ;
   friend class RooSimWSTool::ObjBuildConfig ;
   std::list<const RooCatType*>                            _miStateList ; 
-  std::map<RooAbsArg*, std::pair<RooArgSet,std::string> > _paramSplitMap  ; //<paramName,<std::list<splitCatSet>,remainderStateName>>
+  std::map<RooAbsArg*, std::pair<RooArgSet,std::string> > _paramSplitMap  ; //<paramName,<list<splitCatSet>,remainderStateName>>
   ClassDef(ObjSplitRule,0) // Validated RooSimWSTool split rule
  } ;
 

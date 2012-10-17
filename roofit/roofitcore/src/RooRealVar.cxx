@@ -45,8 +45,6 @@
 #include "RooVectorDataStore.h"
 
 
-using namespace std;
-
 ClassImp(RooRealVar)
 ;
 

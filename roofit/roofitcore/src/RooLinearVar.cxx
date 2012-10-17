@@ -57,8 +57,6 @@
 
 
 
-using namespace std;
-
 ClassImp(RooLinearVar)
 
 
@@ -227,7 +225,7 @@ void RooLinearVar::writeToStream(ostream& os, Bool_t compact) const
   }
 
   // If binning is not found return default binning, if creation is not requested
-  if (!_var.arg().hasRange(name) && !createOnTheFly) {
+  if (!createOnTheFly) {
     return _binning ;
   }
 

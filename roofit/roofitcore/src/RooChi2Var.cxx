@@ -42,8 +42,6 @@
 #include "RooAbsDataStore.h"
 
 
-using namespace std;
-
 ClassImp(RooChi2Var)
 ;
 

@@ -21,7 +21,7 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooTFnPdfBinding(*this,newname); }
   inline virtual ~RooTFnPdfBinding() { }
 
-  void printArgs(std::ostream& os) const ;
+  void printArgs(ostream& os) const ;
 
 protected:
 

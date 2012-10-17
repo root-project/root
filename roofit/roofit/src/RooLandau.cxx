@@ -28,8 +28,6 @@
 #include "RooLandau.h"
 #include "RooRandom.h"
 
-using namespace std;
-
 ClassImp(RooLandau)
 
 

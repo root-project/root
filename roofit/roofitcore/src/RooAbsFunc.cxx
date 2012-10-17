@@ -32,8 +32,6 @@
 #include "RooAbsFunc.h"
 #include "RooAbsFunc.h"
 
-using namespace std;
-
 ClassImp(RooAbsFunc)
 ;
 

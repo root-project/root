@@ -32,8 +32,6 @@
 #include "Riostream.h"
 #include "RooMsgService.h"
 
-using namespace std;
-
 ClassImp(RooBrentRootFinder)
 ;
 

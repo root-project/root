@@ -40,8 +40,6 @@
 #include "RooAbsCategory.h"
 #include "RooMsgService.h"
 
-using namespace std;
-
 ClassImp(RooMultiCategory)
 ;
 

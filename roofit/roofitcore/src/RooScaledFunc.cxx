@@ -28,8 +28,6 @@
 #include "RooScaledFunc.h"
 #include "RooScaledFunc.h"
 
-using namespace std;
-
 ClassImp(RooScaledFunc)
 ;
 

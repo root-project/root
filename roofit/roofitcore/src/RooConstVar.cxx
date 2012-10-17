@@ -27,8 +27,6 @@
 #include "Riostream.h"
 #include "RooConstVar.h"
 
-using namespace std;
-
 ClassImp(RooConstVar)
   ;
 

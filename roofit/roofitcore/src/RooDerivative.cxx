@@ -43,8 +43,6 @@
 #include "Math/WrappedFunction.h"
 #include "Math/RichardsonDerivator.h"
 
-using namespace std;
-
 ClassImp(RooDerivative)
 ;
 

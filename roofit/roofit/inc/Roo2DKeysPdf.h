@@ -65,7 +65,7 @@ public:
   Double_t getSigma(const char * axis) const;
 
 // print content and basic information about the data
-  void     PrintInfo(std::ostream &) const;
+  void     PrintInfo(ostream &) const;
 
 // save PDF to a file as a TH2F *, TTree * or both
 // this is so that you only need to compute the PDF once and 

@@ -44,7 +44,6 @@
 #include "RooMsgService.h"
 #include "RooConstVar.h"
 #include "RooResolutionModel.h"
-#include "RooPlot.h"
 #include "TInterpreter.h"
 #include "TClassTable.h"
 #include "TBaseClass.h"
@@ -783,8 +782,8 @@ Bool_t RooWorkspace::defineSet(const char* name, const RooArgSet& aset, Bool_t i
       if (importMissing) {
 	import(*sarg) ;
       } else {
-	coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR set constituent \"" << sarg->GetName() 
-			      << "\" is not in workspace and importMissing option is disabled" << endl ;
+	coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR set constituent " << sarg->GetName() 
+			      << " is not in workspace and importMissing option is disabled" << endl ;
 	return kTRUE ;
       }
     }
@@ -817,14 +816,14 @@ Bool_t RooWorkspace::defineSet(const char* name, const char* contentList)
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  char buf[10240] ;
-  strlcpy(buf,contentList,10240) ;
+  char buf[1024] ;
+  strlcpy(buf,contentList,1024) ;
   char* token = strtok(buf,",") ;
   while(token) {
     // If missing, either import or report error
     if (!arg(token)) {
-      coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent \"" << token
-			    << "\" is not in workspace" << endl ;
+      coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent " << token
+			    << " is not in workspace" << endl ;
       return kTRUE ;
     }
     wsargs.add(*arg(token)) ;    
@@ -856,8 +855,8 @@ Bool_t RooWorkspace::extendSet(const char* name, const char* newContents)
   while(token) {
     // If missing, either import or report error
     if (!arg(token)) {
-      coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent \"" << token
-			    << "\" is not in workspace" << endl ;
+      coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent " << token
+			    << " is not in workspace" << endl ;
       return kTRUE ;
     }
     wsargs.add(*arg(token)) ;    
@@ -1222,7 +1221,7 @@ RooArgSet RooWorkspace::argSet(const char* nameList) const
     if (oneArg) {
       ret.add(*oneArg) ;
     } else {
-      coutE(InputArguments) << " RooWorkspace::argSet(" << GetName() << ") no RooAbsArg named \"" << token << "\" in workspace" << endl ;
+      coutE(InputArguments) << " RooWorkspace::argSet(" << GetName() << ") no RooAbsArg named " << token << " in workspace" << endl ;
     }
     token = strtok(0,",") ; 
   }
@@ -1771,23 +1770,14 @@ Bool_t RooWorkspace::import(TObject& object, Bool_t replaceExisting)
 			  << object.GetName() << " is already in workspace and replaceExisting flag is set to false" << endl ;
     return kTRUE ;
   }  
-
-  // Grab the current state of the directory Auto-Add
-  ROOT::DirAutoAdd_t func = object.IsA()->GetDirectoryAutoAdd();
-  object.IsA()->SetDirectoryAutoAdd(0);
-  Bool_t tmp = RooPlot::setAddDirectoryStatus(kFALSE) ;
-
+  TH1::AddDirectory(kFALSE) ;
   if (oldObj) {
     _genObjects.Replace(oldObj,object.Clone()) ;
     delete oldObj ;
   } else {
     _genObjects.Add(object.Clone()) ;
   }
-
-  // Reset the state of the directory Auto-Add
-  object.IsA()->SetDirectoryAutoAdd(func);
-  RooPlot::setAddDirectoryStatus(tmp) ;
-
+  TH1::AddDirectory(kTRUE) ;
   return kFALSE ;
 }
 

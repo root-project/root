@@ -34,7 +34,7 @@ public:
   virtual ~RooConstVar();
 
   virtual Double_t getValV(const RooArgSet* set=0) const ;
-  void writeToStream(std::ostream& os, Bool_t compact) const ;
+  void writeToStream(ostream& os, Bool_t compact) const ;
 
   virtual Bool_t isDerived() const { 
     // Does value or shape of this arg depend on any other arg?

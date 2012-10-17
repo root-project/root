@@ -27,7 +27,7 @@ class RooAddition : public RooAbsReal {
 public:
 
   RooAddition() ;
-  RooAddition(const char *name, const char *title, const RooArgList& sumSet, Bool_t takeOwnerShip=kFALSE) ;
+  RooAddition(const char *name, const char *title, const RooArgSet& sumSet, Bool_t takeOwnerShip=kFALSE) ;
   RooAddition(const char *name, const char *title, const RooArgList& sumSet1, const RooArgList& sumSet2, Bool_t takeOwnerShip=kFALSE) ;
   virtual ~RooAddition() ;
 
@@ -36,7 +36,7 @@ public:
 
   virtual Double_t defaultErrorLevel() const ;
 
-  void printMetaArgs(std::ostream& os) const ;
+  void printMetaArgs(ostream& os) const ;
 
   const RooArgList& list1() const { return _set ; }
   const RooArgList& list() const { return _set ; }

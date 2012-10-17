@@ -35,8 +35,6 @@
 
 
 
-using namespace std;
-
 ClassImp(RooTFoamBinding)
 ;
 

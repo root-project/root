@@ -70,8 +70,6 @@
 #include <algorithm>
 
 
-using namespace std;
-
 ClassImp(RooAddPdf)
 ;
 
@@ -832,7 +830,7 @@ Double_t RooAddPdf::evaluate() const
       Double_t pdfVal = pdf->getVal(nset) ;
       if (pdf->isSelectedComp()) {
 	value += pdfVal*_coefCache[i] ;
-// 	cout << "RooAddPdf::EVALUATE(" << GetName() << ") adding pdf " << pdf->GetName() << " value = " << pdfVal << " coef = " << _coefCache[i] << endl ;
+	//  	cout << "RooAddPdf::EVALUATE(" << GetName() << ") adding pdf " << pdf->GetName() << " value = " << pdfVal << " coef = " << _coefCache[i] << endl ;
       }
       i++ ;
     }

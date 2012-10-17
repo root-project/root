@@ -59,7 +59,7 @@ protected:
   class FuncCacheElem : public RooAbsCacheElement {
   public:
     FuncCacheElem(const RooAbsCachedReal& self, const RooArgSet* nset) ;
-    virtual ~FuncCacheElem() ;
+    virtual ~FuncCacheElem() {} ;
 
     // Cache management functions
     virtual RooArgList containedArgs(Action) ;
@@ -69,19 +69,11 @@ protected:
     RooDataHist* hist() { return _hist ; }
     RooChangeTracker* paramTracker() { return _paramTracker ; }
 
-    RooAbsReal* sourceClone() { return _sourceClone ; } 
-    void setSourceClone(RooAbsReal* newSource) { delete _sourceClone ; _sourceClone = newSource ; }
-
-    Bool_t cacheSource() { return _cacheSource ; }
-    void setCacheSource(Bool_t flag) { _cacheSource = flag ; }
-
   private:
     // Payload
-    RooHistFunc*      _func ;
+    RooHistFunc*  _func ;
     RooChangeTracker* _paramTracker ;
-    RooDataHist*      _hist ;
-    RooAbsReal*       _sourceClone ;
-    Bool_t            _cacheSource ;
+    RooDataHist* _hist ;
   } ;
 
   FuncCacheElem* getCache(const RooArgSet* nset) const ;

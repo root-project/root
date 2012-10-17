@@ -28,8 +28,6 @@
 #include "RooLinkedListElem.h"
 
 
-using namespace std;
-
 ClassImp(RooLinkedListElem) 
 ;
 

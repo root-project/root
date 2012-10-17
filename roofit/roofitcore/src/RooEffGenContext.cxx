@@ -31,8 +31,6 @@
 #include "RooAbsPdf.h"
 #include "RooRandom.h"
 
-using namespace std;
-
 ClassImp(RooEffGenContext);
 
 //_____________________________________________________________________________
@@ -90,7 +88,7 @@ void RooEffGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
       double val = _eff->getVal();
       if (val > _maxEff && !_eff->getMaxVal(*_vars)) {
          coutE(Generation) << ClassName() << "::" << GetName() 
-              << ":generateEvent: value of efficiency is larger than assumed maximum of 1."  << std::endl;
+              << ":generateEvent: value of efficiency is larger than assumed maximum of 1."  << endl;
          continue;
       }
       if (val > RooRandom::uniform() * _maxEff) {

@@ -88,8 +88,6 @@
 #include "RooDataHist.h"
 #include "TH1.h"
 
-using namespace std;
-
 ClassImp(RooIntegralMorph) 
 
 

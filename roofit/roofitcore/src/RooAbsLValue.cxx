@@ -30,8 +30,6 @@
 #include "RooAbsLValue.h"
 #include "RooAbsLValue.h"
 
-using namespace std;
-
 ClassImp(RooAbsLValue)
 ;
 

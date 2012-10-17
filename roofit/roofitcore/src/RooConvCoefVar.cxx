@@ -31,8 +31,6 @@
 #include "RooAbsAnaConvPdf.h"
 #include "RooConvCoefVar.h"
 
-using namespace std;
-
 ClassImp(RooConvCoefVar)
 ;
 

@@ -85,12 +85,12 @@ public:
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printArgs(std::ostream& os) const ;
-  virtual void printValue(std::ostream& os) const ;
-  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose, TString indent) const ;
+  virtual void printName(ostream& os) const ;
+  virtual void printTitle(ostream& os) const ;
+  virtual void printClassName(ostream& os) const ;
+  virtual void printArgs(ostream& os) const ;
+  virtual void printValue(ostream& os) const ;
+  void printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const ;
 
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
    

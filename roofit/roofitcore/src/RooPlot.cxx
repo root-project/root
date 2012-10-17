@@ -69,15 +69,8 @@
 #include <string.h>
 #include <assert.h>
 
-using namespace std;
-
 ClassImp(RooPlot)
 ;
-
-Bool_t RooPlot::_addDirStatus = kTRUE ;
-
-Bool_t RooPlot::addDirectoryStatus() { return _addDirStatus ; }
-Bool_t RooPlot::setAddDirectoryStatus(Bool_t flag) { Bool_t ret = flag ; _addDirStatus = flag ; return ret ; }
 
 
 //_____________________________________________________________________________
@@ -88,7 +81,7 @@ RooPlot::RooPlot() : _hist(0), _plotVarClone(0), _plotVarSet(0), _normVars(0), _
 
   _iterator= _items.MakeIterator() ;
 
-  if (gDirectory && addDirectoryStatus()) {
+  if (gDirectory) {
     _dir = gDirectory ;
     gDirectory->Append(this) ;
   }
@@ -102,11 +95,9 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
 {
   // Constructor of RooPlot with range [xmin,xmax]
 
-  Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
-  TH1::AddDirectory(histAddDirStatus) ;
-
+  TH1::AddDirectory(kTRUE) ;
 
   // Create an empty frame with the specified x-axis limits.
   initialize();
@@ -122,10 +113,9 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
 {
   // Construct of a two-dimensioanl RooPlot with ranges [xmin,xmax] x [ymin,ymax]
 
-  Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
-  TH1::AddDirectory(histAddDirStatus) ;
+  TH1::AddDirectory(kFALSE) ;
 
   SetMinimum(ymin);
   SetMaximum(ymax);
@@ -141,10 +131,9 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
   // Construct a two-dimensional RooPlot with ranges and properties taken
   // from variables var1 and var2
 
-  Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,var1.getMin(),var1.getMax()) ;
-  TH1::AddDirectory(histAddDirStatus) ;
+  TH1::AddDirectory(kTRUE) ;
 
   if(!var1.hasMin() || !var1.hasMax()) {
     coutE(InputArguments) << "RooPlot::RooPlot: cannot create plot for variable without finite limits: "
@@ -174,10 +163,9 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
   // from variables var1 and var2 but with an overriding range definition
   // of [xmin,xmax] x [ymin,ymax]
 
-  Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
-  TH1::AddDirectory(histAddDirStatus) ;
+  TH1::AddDirectory(kTRUE) ;
 
   SetMinimum(ymin);
   SetMaximum(ymax);
@@ -195,10 +183,9 @@ RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &va
   // Create an 1-dimensional with all properties taken from 'var', but
   // with an explicit range [xmin,xmax] and a default binning of 'nbins'
 
-  Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(name,title,nbins,xmin,xmax) ;
-  TH1::AddDirectory(histAddDirStatus) ;
+  TH1::AddDirectory(kTRUE) ;
 
   // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
   _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
@@ -221,10 +208,9 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_
   // Create an 1-dimensional with all properties taken from 'var', but
   // with an explicit range [xmin,xmax] and a default binning of 'nbins'
 
-  Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
   _hist = new TH1D(histName(),"RooPlot",nbins,xmin,xmax) ;
-  TH1::AddDirectory(histAddDirStatus) ;
+  TH1::AddDirectory(kTRUE) ;
 
   // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
   _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
@@ -262,7 +248,7 @@ void RooPlot::initialize()
 
   SetName(histName()) ;
 
-  if (gDirectory && addDirectoryStatus()) {
+  if (gDirectory) {
     _dir = gDirectory ;
     gDirectory->Append(this) ;
   }
@@ -509,8 +495,6 @@ void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label)
   if(GetMaximum() < ymax) {
     _defYmax = ymax ;
     SetMaximum(ymax);
-    // if we don't do this - Unzoom on y-axis will reset upper bound to 1 
-    _hist->SetBinContent(1,ymax) ; 
   }
   if(GetMinimum() > ymin) {
     _defYmin = ymin ;
@@ -523,16 +507,13 @@ void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label)
 
 
 //_____________________________________________________________________________
-void RooPlot::Draw(Option_t *)
+void RooPlot::Draw(Option_t *options)
 {
   // Draw this plot and all of the elements it contains. The specified options
   // only apply to the drawing of our frame. The options specified in our add...()
   // methods will be used to draw each object we contain.
 
-  // This draw options prevents the histogram with one dummy entry 
-  // to be drawn 
-  _hist->Draw("FUNC");
-
+  _hist->Draw(options);
   _iterator->Reset();
   TObject *obj = 0;
   while((obj= _iterator->Next())) {

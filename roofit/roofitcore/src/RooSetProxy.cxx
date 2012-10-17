@@ -38,8 +38,6 @@
 #include "RooArgSet.h"
 #include "RooAbsArg.h"
 
-using namespace std;
-
 ClassImp(RooSetProxy)
 ;
 

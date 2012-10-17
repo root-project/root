@@ -66,12 +66,12 @@ protected:
   Bool_t _debug ;
   Bool_t _write ;
   Int_t _verb ;
-   std::list<std::pair<RooPlot*, std::string> > _regPlots ;
-   std::list<std::pair<RooFitResult*, std::string> > _regResults ;
-   std::list<std::pair<Double_t, std::string> > _regValues ;
-   std::list<std::pair<RooTable*,std::string> > _regTables ;
-   std::list<std::pair<RooWorkspace*,std::string> > _regWS ;
-   std::list<std::pair<TH1*,std::string> > _regTH ;
+  std::list<std::pair<RooPlot*, string> > _regPlots ;
+  std::list<std::pair<RooFitResult*, string> > _regResults ;
+  std::list<std::pair<Double_t, string> > _regValues ;
+  std::list<std::pair<RooTable*,string> > _regTables ;
+  std::list<std::pair<RooWorkspace*,string> > _regWS ;
+  std::list<std::pair<TH1*,string> > _regTH ;
 
   ClassDef(RooUnitTest,0) ; // Abstract base class for RooFit/RooStats unit regression tests
 } ;

@@ -39,8 +39,6 @@
 #include "RooComplex.h"
 #include "RooMath.h"
 
-using namespace std;
-
 ClassImp(RooVoigtian)
 
 

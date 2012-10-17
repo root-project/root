@@ -22,8 +22,8 @@
 class RooStreamParser {
 public:
   // Constructors, assignment etc.
-  RooStreamParser(std::istream& is) ;
-  RooStreamParser(std::istream& is, const TString& errPrefix) ;
+  RooStreamParser(istream& is) ;
+  RooStreamParser(istream& is, const TString& errPrefix) ;
   virtual ~RooStreamParser();
 
   TString readToken() ;
@@ -49,14 +49,14 @@ public:
   
 protected:
 
-  std::istream* _is ;
+  istream* _is ;
   Bool_t _atEOL ;
   Bool_t _atEOF ;
   TString _prefix ;
   TString _punct ;
 
   
-  ClassDef(RooStreamParser,0) // Utility class that parses std::iostream data into tokens
+  ClassDef(RooStreamParser,0) // Utility class that parses iostream data into tokens
 };
 
 #endif

@@ -39,8 +39,6 @@
 #include "RooAbsCategoryLValue.h"
 #include "RooMultiCatIter.h"
 
-using namespace std;
-
 ClassImp(RooMultiCatIter)
 ;
 

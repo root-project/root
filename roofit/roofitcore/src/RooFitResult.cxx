@@ -56,8 +56,6 @@
 
 
 
-using namespace std;
-
 ClassImp(RooFitResult) 
 ;
 
@@ -188,7 +186,7 @@ void RooFitResult::setFinalParList(const RooArgList& list)
 
 
 //_____________________________________________________________________________
-Int_t RooFitResult::statusCodeHistory(UInt_t icycle) const
+Int_t RooFitResult::statusCodeHistory(UInt_t icycle) 
 { 
   if (icycle>=_statusHistory.size()) {
     coutE(InputArguments) << "RooFitResult::statusCodeHistory(" << GetName() 
@@ -201,7 +199,7 @@ Int_t RooFitResult::statusCodeHistory(UInt_t icycle) const
 
 
 //_____________________________________________________________________________
-const char* RooFitResult::statusLabelHistory(UInt_t icycle) const 
+const char* RooFitResult::statusLabelHistory(UInt_t icycle) 
 { 
   if (icycle>=_statusHistory.size()) {
     coutE(InputArguments) << "RooFitResult::statusLabelHistory(" << GetName() 

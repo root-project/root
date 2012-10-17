@@ -26,8 +26,6 @@
 #include "RooDouble.h"
 #include <string>
 
-using namespace std;
-
 ClassImp(RooDouble)
 ;
 

@@ -43,7 +43,6 @@ objects.
 ClassImp(RooStats::SamplingDistPlot);
 
 using namespace RooStats;
-using namespace std ;
 
 //_______________________________________________________
 SamplingDistPlot::SamplingDistPlot(Int_t nbins) :

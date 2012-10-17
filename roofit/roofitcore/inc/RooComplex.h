@@ -98,6 +98,6 @@ private:
 };
 
 // output formatting
-std::ostream& operator<<(std::ostream& os, const RooComplex& z);
+ostream& operator<<(ostream& os, const RooComplex& z);
 
 #endif

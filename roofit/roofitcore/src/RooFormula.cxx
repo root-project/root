@@ -41,8 +41,6 @@
 #include "RooArgList.h"
 #include "RooMsgService.h"
 
-using namespace std;
-
 ClassImp(RooFormula)
 
 

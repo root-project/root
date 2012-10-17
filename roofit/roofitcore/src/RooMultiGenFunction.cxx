@@ -36,8 +36,6 @@
 
 
 
-using namespace std;
-
 ClassImp(RooMultiGenFunction)
 ;
 

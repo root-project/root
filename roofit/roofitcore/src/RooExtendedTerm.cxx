@@ -26,8 +26,6 @@
 #include "RooFit.h"
 #include "RooExtendedTerm.h"
 
-using namespace std;
-
 ClassImp(RooExtendedTerm)
 ;
 

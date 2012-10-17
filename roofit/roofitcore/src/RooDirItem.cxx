@@ -33,8 +33,6 @@
 #include "TString.h"
 #include "RooDirItem.h"
 
-using namespace std;
-
 ClassImp(RooDirItem) ;
 
 

@@ -37,7 +37,6 @@
 #include "RooRealVar.h"
 #include "RooNameReg.h"
 
-using namespace std;
 
  ClassImp(RooProjectedPdf) 
    ;

@@ -38,8 +38,6 @@
 
 
 
-using namespace std;
-
 ClassImp(RooErrorVar)
 ;
 

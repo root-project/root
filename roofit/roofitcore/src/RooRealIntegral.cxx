@@ -50,8 +50,6 @@
 #include "RooConstVar.h"
 #include "RooDouble.h"
 
-using namespace std;
-
 ClassImp(RooRealIntegral) 
 ;
 

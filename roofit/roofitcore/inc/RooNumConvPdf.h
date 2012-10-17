@@ -53,7 +53,7 @@ public:
   RooAbsReal&  pdf() const { return const_cast<RooAbsReal&>(_origPdf.arg()) ; }
   RooAbsReal&  model() const { return const_cast<RooAbsReal&>(_origModel.arg()) ; }
 
-  void printMetaArgs(std::ostream& os) const ;
+  void printMetaArgs(ostream& os) const ;
 
 protected:
 

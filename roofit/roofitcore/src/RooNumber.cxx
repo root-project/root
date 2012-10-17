@@ -24,8 +24,6 @@
 #include "RooFit.h"
 #include "RooNumber.h"
 
-using namespace std;
-
 ClassImp(RooNumber)
 ;
 

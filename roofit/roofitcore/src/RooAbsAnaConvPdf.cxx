@@ -70,8 +70,6 @@
 #include "RooConvCoefVar.h"
 #include "RooNameReg.h"
 
-using namespace std;
-
 ClassImp(RooAbsAnaConvPdf) 
 ;
 

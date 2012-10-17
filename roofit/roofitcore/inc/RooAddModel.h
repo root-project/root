@@ -81,7 +81,7 @@ public:
   void fixCoefRange(const char* rangeName) ;
   virtual void resetErrorCounters(Int_t resetValue=10) ;
 
-  void printMetaArgs(std::ostream& os) const ;
+  void printMetaArgs(ostream& os) const ;
 
 protected:
 

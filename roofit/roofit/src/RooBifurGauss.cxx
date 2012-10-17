@@ -32,8 +32,6 @@
 #include "RooAbsReal.h"
 #include "RooMath.h"
 
-using namespace std;
-
 ClassImp(RooBifurGauss)
 
 static const char rcsid[] =

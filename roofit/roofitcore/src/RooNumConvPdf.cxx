@@ -79,8 +79,6 @@
 
 
 
-using namespace std;
-
 ClassImp(RooNumConvPdf)
 ;
 

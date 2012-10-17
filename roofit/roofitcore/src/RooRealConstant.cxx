@@ -39,8 +39,6 @@
 #include "RooArgList.h"
 #include "RooSentinel.h"
 
-using namespace std;
-
 ClassImp(RooRealConstant)
 ;
 

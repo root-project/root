@@ -30,8 +30,6 @@
 
 
 
-using namespace std;
-
 ClassImp(RooTable)
 
 

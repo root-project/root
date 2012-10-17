@@ -45,7 +45,7 @@ public:
   const RooArgSet& getConfigSection(const char* name) const ;
   RooArgSet& getConfigSection(const char* name) ;
 
-  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose, TString indent= "") const;
+  void printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent= "") const;
 
   inline virtual void Print(Option_t *options= 0) const {
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));

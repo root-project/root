@@ -35,8 +35,6 @@
 #include "RooThreshEntry.h"
 #include "RooMsgService.h"
 
-using namespace std;
-
 ClassImp(RooThresholdCategory)
 
 
