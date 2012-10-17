@@ -40,17 +40,13 @@ End_Html */
 #include "THLimitsFinder.h"
 #include "TColor.h"
 
-#ifdef R__SUNCCBUG
-const Double_t kRad = 1.74532925199432955e-02;
-#else
-const Double_t kRad = TMath::ATan(1)*Double_t(4)/Double_t(180);
-#endif
+const Double_t kRad  = TMath::ATan(1)*Double_t(4)/Double_t(180);
 const Double_t kFdel = 0.;
-const Double_t kDel = 0.0001;
-const Int_t kNiso = 4;
+const Double_t kDel  = 0.0001;
+const Int_t kNiso  = 4;
 const Int_t kNmaxp = kNiso*13;
 const Int_t kNmaxt = kNiso*12;
-const Int_t kLmax = 12;
+const Int_t kLmax  = 12;
 const Int_t kF3FillColor1 = 201;
 const Int_t kF3FillColor2 = 202;
 const Int_t kF3LineColor  = 203;

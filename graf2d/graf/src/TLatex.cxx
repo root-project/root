@@ -17,12 +17,8 @@
 #include "TVirtualPad.h"
 #include "TVirtualPS.h"
 
-#ifdef R__SUNCCBUG
-const Double_t kPI = 3.14159265358979323846;
-#else
 const Double_t kPI = TMath::Pi();
-#endif
-const Int_t kLatex      = BIT(10);
+const Int_t kLatex = BIT(10);
 
 ClassImp(TLatex)
 
