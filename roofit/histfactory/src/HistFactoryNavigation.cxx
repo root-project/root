@@ -459,6 +459,205 @@ namespace RooStats {
     }
 
 
+    RooAbsReal* HistFactoryNavigation::findChild(const std::string& name, RooAbsReal* parent) {
+      
+      RooAbsReal* term=NULL;
+
+      // Some RooFit boilerplate...
+      RooArgSet* components = parent->getComponents();
+      TIterator* argItr = components->createIterator();
+      RooAbsArg* arg = NULL;
+      while( (arg=(RooAbsArg*)argItr->Next()) ) {
+	std::string ArgName = arg->GetName();
+	if( ArgName == name ) {
+	  term = dynamic_cast<RooAbsReal*>(arg);
+	  break;
+	}
+      }
+      delete components;
+
+      return term;
+
+    }
+
+
+    RooAbsReal* HistFactoryNavigation::GetConstraintTerm(const std::string& parameter) {
+     
+      std::string ConstraintTermName = parameter + "Constraint";
+
+      // The "gamma"'s use a different constraint term name
+      if( parameter.find("gamma_stat_") != std::string::npos ) { 
+	ConstraintTermName = parameter + "_constraint";
+      }
+      // RooAbsReal* term = NULL;
+      // RooAbsReal* term = dynamic_cast<RooAbsReal*>(fModel->findServer(ConstraintTermName.c_str()));
+
+      RooAbsReal* term = findChild(ConstraintTermName, fModel);
+
+      if( term==NULL ) {
+	std::cout << "Error: Couldn't Find constraint term for parameter: " << parameter
+		  << " (Looked for '" << ConstraintTermName << "')" << std::endl;
+	return NULL;
+      }
+
+      return term;
+
+      /*
+      // Get the set of all variables
+      RooArgSet all_vars = wspace->allVars();
+
+      // Loop over all variables (boilerplate...)
+      TIterator* iter = all_vars.createIterator() ;
+      RooAbsArg* arg ;
+      while((arg=(RooAbsArg*)iter->Next())) {
+
+	// Get the variable, ensuring that it's valid
+	RooRealVar* var = dynamic_cast<RooRealVar*>(arg) ;
+	if( !var ) {
+	  std::cout << "Error: Failed to obtain pointer to variable: " << arg->GetName() << std::endl;
+	  throw runtime_error("fixStatError");
+	}
+
+	std::string VarName = var->GetName();
+
+	if( VarName == "" ) {
+	  std::cout << "Error: Invalid variable name encountered" << std::endl;
+	  throw runtime_error("fixStatError");
+	}
+
+	// Skip if it's not a "gamma_stat_* variable"
+	if( string(VarName).find("gamma_stat_")==string::npos ) continue;
+
+	// Skip if it's not "nominal" parameter
+	if( string(VarName).find("nom_")!=string::npos ) continue;
+    
+
+
+	// Get the constraint and check its type:
+	RooAbsReal* constraint = (RooAbsReal*) wspace->obj( (VarName+"_constraint").c_str() );
+	std::string ConstraintType = constraint->IsA()->GetName();
+
+	double sigma = 0.0;
+
+	if( ConstraintType == "" ) {
+	  std::cout << "Error: Strange constraint type for Stat Uncertainties" << std::endl;
+	  throw runtime_error("fixStatError");
+	}
+	else if( ConstraintType == "RooGaussian" ){
+	  RooAbsReal* sigmaVar = (RooAbsReal*) wspace->obj( (VarName+"_sigma").c_str() );
+	  sigma = sigmaVar->getVal();
+	}
+	else if( ConstraintType == "RooPoisson" ){
+	  RooAbsReal* nom_gamma = (RooAbsReal*) wspace->obj( ("nom_" + VarName).c_str() );
+	  double nom_gamma_val = nom_gamma->getVal();
+	  sigma = 1.0 / TMath::Sqrt( nom_gamma_val );
+	} 
+	else {
+	  std::cout << "Error: Strange constraint type for Stat Uncertainties: " << ConstraintType << std::endl;
+	  throw runtime_error("fixStatError");
+	}
+
+	std::cout << "Encountered a statistical uncertainty variable: " << VarName
+		  << " Error is: " << sigma;
+
+	// Now, fix the parameter if it
+	// is less than some value
+	if( sigma < error_min ) {
+	  if( var->isConstant() ) std::cout << ". Keepting this variable Constant";
+	  else std::cout << ". Setting this variable Constant";
+
+	  var->setConstant(true);
+	}
+	else {
+	  if( var->isConstant() ) std::cout << ". Setting this variable NOT Constant";
+	  else std::cout << ". Keepting this variable NOT Constant";
+
+	  var->setConstant(false);
+	}
+
+	std::cout << std::endl;
+
+      }
+
+      // Done :)
+      return;
+
+*/
+
+    }
+
+
+    double HistFactoryNavigation::GetConstraintUncertainty(const std::string& parameter) {
+      
+      RooAbsReal* constraintTerm = GetConstraintTerm(parameter);
+      if( constraintTerm==NULL ) {
+	std::cout << "Error: Cannot get uncertainty because parameter: " << parameter
+		  << " has no constraint term" << std::endl;
+	throw hf_exc();
+      }
+
+      // Get the type of constraint
+      std::string ConstraintType = constraintTerm->IsA()->GetName();
+
+      // Find its value
+      double sigma = 0.0;
+
+      if( ConstraintType == "" ) {
+	std::cout << "Error: Constraint type is an empty string."  
+		  << " This simply should not be." << std::endl;
+	throw hf_exc();
+      }
+      else if( ConstraintType == "RooGaussian" ){
+	
+	// Gaussian errors are the 'sigma' in the constraint term
+
+	// Get the name of the 'sigma' for the gaussian
+	// (I don't know of a way of doing RooGaussian::GetSigma() )
+	// For alpha's, the sigma points to a global RooConstVar
+	// with the name "1"
+	// For gamma_stat_*, the sigma is named *_sigma
+	std::string sigmaName = "";
+	if( parameter.find("alpha_")!=std::string::npos ) {
+	  sigmaName = "1";;
+	}
+	else if( parameter.find("gamma_stat_")!=std::string::npos ) {
+	  sigmaName = parameter + "_sigma";
+	}
+
+	// Get the sigma and its value
+	//RooAbsReal* sigmaVar = findChild(sigmaName, constraintTerm);
+	RooAbsReal* sigmaVar = dynamic_cast<RooAbsReal*>(constraintTerm->findServer(sigmaName.c_str()));
+	if( sigmaVar==NULL ) {
+	  std::cout << "Error: Failed to find the 'sigma' node: " << sigmaName
+		    << " in the RooGaussian: " << constraintTerm->GetName() << std::endl;
+	  throw hf_exc();
+	}
+	// If we find the uncertainty:
+	sigma = sigmaVar->getVal();
+      }
+      else if( ConstraintType == "RooPoisson" ){
+	// Poisson errors are given by inverting: tau = 1 / (sigma*sigma)
+	std::string tauName = "nom_" + parameter;
+	RooAbsReal* tauVar = dynamic_cast<RooAbsReal*>( constraintTerm->findServer(tauName.c_str()) );
+	if( tauVar==NULL ) {
+	  std::cout << "Error: Failed to find the nominal 'tau' node: " << tauName
+		    << " for the RooPoisson: " << constraintTerm->GetName() << std::endl;
+	  throw hf_exc();
+	}
+	double tau_val = tauVar->getVal();
+	sigma = 1.0 / TMath::Sqrt( tau_val );
+      } 
+      else {
+	std::cout << "Error: Encountered unknown constraint type for Stat Uncertainties: " 
+		  << ConstraintType << std::endl;
+	throw hf_exc();
+      }
+
+      return sigma;
+
+    }
+
+
     TH1* HistFactoryNavigation::MakeHistFromRooFunction( RooAbsReal* func, RooArgList vars, std::string name ) {
 
       // Turn a RooAbsReal* into a TH1* based 
@@ -510,6 +709,7 @@ namespace RooStats {
       const RooArgSet* observables = mc->GetObservables();
       _GetNodes(modelPdf, observables);
     }
+
 
   } // namespace HistFactory
 } // namespace RooStats

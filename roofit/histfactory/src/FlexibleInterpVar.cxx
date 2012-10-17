@@ -146,6 +146,8 @@ void FlexibleInterpVar::setInterpCode(RooAbsReal& param, int code){
 			    << " is now " << code << endl ;
     _interpCode.at(index) = code;
   }
+  // GHL: Adding suggestion by Swagato:
+  setValueDirty();
 }
 
 //_____________________________________________________________________________
@@ -154,6 +156,9 @@ void FlexibleInterpVar::setAllInterpCodes(int code){
   for(unsigned int i=0; i<_interpCode.size(); ++i){
     _interpCode.at(i) = code;
   }
+  // GHL: Adding suggestion by Swagato:
+  setValueDirty();
+
 }
 
 //_____________________________________________________________________________
@@ -161,6 +166,9 @@ void FlexibleInterpVar::printAllInterpCodes(){
 
   for(unsigned int i=0; i<_interpCode.size(); ++i){
     coutI(InputArguments) <<"interp code for " << _paramList.at(i)->GetName() << " = " << _interpCode.at(i) <<endl;
+    // GHL: Adding suggestion by Swagato:
+    if( _low.at(i) <= 0.001 ) coutE(InputArguments) << GetName() << ", " << _paramList.at(i)->GetName() << ": low value = " << _low.at(i) << endl;
+    if( _high.at(i) <= 0.001 ) coutE(InputArguments) << GetName() << ", " << _paramList.at(i)->GetName() << ": high value = " << _high.at(i) << endl;
   }
 
 }
@@ -244,16 +252,27 @@ Double_t FlexibleInterpVar::evaluate() const
 // 	double d = -1./(4*pow(x0, 4))*(2*S0 - x0*A1 - 4);
 // 	total *= 1 + a*x + b*pow(x, 2) + c*pow(x, 3) + d*pow(x, 4);
 
-
 //fcns+der+2nd_der are eq at bd
 
+	// GHL: Swagato's suggestions
+	// if( _low.at(i) == 0 ) _low.at(i) = 0.0001;
+	// if( _high.at(i) == 0 ) _high.at(i) = 0.0001;
+
+	// GHL: Swagato's suggestions
+	double pow_up       = pow(_high.at(i)/_nominal, x0);
+	double pow_down     = pow(_low.at(i)/_nominal,  x0);
+	double pow_up_log   = _high.at(i) <= 0.0 ? 0.0 : pow_up*TMath::Log(_high.at(i));
+	double pow_down_log = _low.at(i) <= 0.0 ? 0.0 : -pow_down*TMath::Log(_low.at(i));
+	double pow_up_log2  = _high.at(i) <= 0.0 ? 0.0 : pow_up_log*TMath::Log(_high.at(i));
+	double pow_down_log2= _low.at(i) <= 0.0 ? 0.0 : pow_down_log*TMath::Log(_low.at(i));
+	/*
 	double pow_up       = pow(_high.at(i)/_nominal, x0);
 	double pow_down     = pow(_low.at(i)/_nominal,  x0);
 	double pow_up_log   = pow_up*TMath::Log(_high.at(i));
 	double pow_down_log = -pow_down*TMath::Log(_low.at(i));
 	double pow_up_log2  = pow_up_log*TMath::Log(_high.at(i));
 	double pow_down_log2= pow_down_log*TMath::Log(_low.at(i));
-
+	*/
 	double S0 = (pow_up+pow_down)/2;
 	double A0 = (pow_up-pow_down)/2;
 	double S1 = (pow_up_log+pow_down_log)/2;

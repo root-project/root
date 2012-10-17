@@ -288,6 +288,29 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
       if( sample.GetHisto() == NULL ) {
 	std::cout << "Error: Nominal Histogram for sample " << sample.GetName() << " is NULL." << std::endl;
 	throw hf_exc();
+      } 
+      else {
+
+	// Check if any bins are negative
+	std::vector<int> NegativeBinNumber;
+	std::vector<double> NegativeBinContent;
+	TH1* histNominal = sample.GetHisto();
+	for(int ibin=1; ibin<=histNominal->GetNbinsX(); ++ibin) {
+	  if(histNominal->GetBinContent(ibin) < 0) {
+	    NegativeBinNumber.push_back(ibin);
+	    NegativeBinContent.push_back(histNominal->GetBinContent(ibin));
+	  }
+	}
+	if(NegativeBinNumber.size()>0) {
+	  std::cout << "WARNING: Nominal Histogram " << histNominal->GetName() << " for Sample = " << sample.GetName()
+		    << " in Channel = " << GetName() << " has negative entries in bin numbers = ";
+	  for(unsigned int ibin=0; ibin<NegativeBinNumber.size(); ++ibin) {
+	    if(ibin>0) std::cout << " , " ;
+	    std::cout << NegativeBinNumber[ibin] << " : " << NegativeBinContent[ibin] ;
+	  }
+	  std::cout << std::endl;
+	}
+	
       }
 
       // Get the StatError Histogram (if necessary)
