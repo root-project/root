@@ -67,7 +67,8 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fTitle("")
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0),
+     fTitle("")
 {
    if (gDebug > 0) {
       Info("TClingClassInfo(name)", "looking up class name: %s\n", name);
@@ -102,7 +103,8 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
       }
    }
    fDecl = decl;
-   if (type) fType = type->getAs<clang::RecordType>(); // NOTE: getAs removes some typedefs.
+   if (type) 
+      fType = type->getAs<clang::RecordType>(); // NOTE: getAs removes some typedefs.
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
