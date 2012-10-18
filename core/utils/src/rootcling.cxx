@@ -4417,18 +4417,6 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl, const cling::Inte
 //______________________________________________________________________________
 void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 {
-   //#define R__SHOWMEMBERS_IN_TCLING
-#ifdef R__SHOWMEMBERS_IN_TCLING
-   std::string getClass;
-   if (cl.HasMethod("IsA") && !outside) {
-      getClass = csymbol + "::IsA()";
-   } else {
-      getClass = "::ROOT::GenerateInitInstanceLocal((const ";
-      getClass += csymbol + "*)0x0)->GetClass()";
-   }
-   (*dictSrcOut) << "      ((TCintWithCling*)gInterpreter)->InspectMembers(R__insp, obj, "
-      << getClass << ");" << std::endl;
-#else
    string csymbol = cl.Fullname();
    if ( ! TClassEdit::IsStdClass( csymbol.c_str() ) ) {
 
@@ -4438,6 +4426,23 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
       csymbol.insert(0,"::");
    }
 
+   // #define R__SHOWMEMBERS_IN_TCLING
+#ifdef R__SHOWMEMBERS_IN_TCLING
+   std::string getClass;
+   if (cl.HasMethod("IsA") && !outside) {
+      getClass = csymbol + "::IsA()";
+   } else {
+      getClass = "::ROOT::GenerateInitInstanceLocal((const ";
+      getClass += csymbol + "*)0x0)->GetClass()";
+   }
+   if (outside) {
+      (*dictSrcOut) << "   ((TCintWithCling*)gInterpreter)->InspectMembers(R__insp, obj, "
+                    << getClass << ");" << std::endl;
+   } else {
+      (*dictSrcOut) << "   ((TCintWithCling*)gInterpreter)->InspectMembers(R__insp, this, "
+                    << getClass << ");" << std::endl;
+   }
+#else
    const char *prefix = "";
 
    (*dictSrcOut) << "      // Inspect the data members of an object of class " << cl.Fullname() << "." << std::endl;
