@@ -1006,7 +1006,7 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
    }
    
    const char* clname = cl->GetName();
-   Printf("Inspecting class %s\n", clname);
+   // Printf("Inspecting class %s\n", clname);
 
    const clang::ASTContext& astContext = fInterpreter->getCI()->getASTContext();
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
