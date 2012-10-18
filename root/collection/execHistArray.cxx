@@ -1,7 +1,11 @@
 // This test checks the I/O backward compatibility of classes TArray(C|S|I|L|L64|F|D)
 //    after the introduction of the template class TArrayT
 #include <cassert>
+#include <cmath>
+#include <limits>
+#include <cstring>
 #include "Riostream.h"
+#include "TClass.h"
 #include "TFile.h"
 #include "TH1F.h"
 #include "TH1C.h"
@@ -39,11 +43,11 @@ void write(const char *filename = "HistArray.root")
    f->WriteObjectAny(ti, "TArrayI", "ti");
 
    TArrayL* tl = new TArrayL(10);
-   Long_t al[5] = { 1e4L, 1e5L, 1e6L, 2e7L, 3e8L };
+   Long_t al[5] = { 1000L, 10000L, 100000L, 1000000L, 2000000L };
    tl->Adopt(5, al);
    f->WriteObjectAny(tl, "TArrayL", "tl");
 
-   Long64_t al64[3] = { 4e6LL, 7e5LL, 8e7LL };
+   Long64_t al64[3] = { 4000000L, 7000000L, 8000000L };
    TArrayL64* tl64 = new TArrayL64(3, al64);
    f->WriteObjectAny(tl64, "TArrayL64", "tl64");
 
@@ -124,19 +128,19 @@ void read(const char *filename = "HistArray.root")
    TArrayL* tl; f->GetObject("tl", tl);
    assert(tl != NULL); assert(std::strcmp(tl->IsA()->GetName(), "TArrayL") == 0);
    assert(tl->GetSize() == 5);
-   assert((*tl)[0] == 1e4L);  
-   assert((*tl)[1] == 1e5L);  
-   assert((*tl)[2] == 1e6L);  
-   assert((*tl)[3] == 2e7L);  
-   assert((*tl)[4] == 3e8L);  
+   assert((*tl)[0] == 1000L);  
+   assert((*tl)[1] == 10000L);  
+   assert((*tl)[2] == 100000L);  
+   assert((*tl)[3] == 1000000L);  
+   assert((*tl)[4] == 2000000L);  
 
    // Checking raw array constructor (and associated Set function)
    TArrayL64* tl64; f->GetObject("tl64", tl64);
    assert(tl64 != NULL); assert(std::strcmp(tl64->IsA()->GetName(), "TArrayL64") == 0);
    assert(tl64->GetSize() == 3);
-   assert((*tl64)[0] == 4e6LL);
-   assert((*tl64)[1] == 7e5LL);
-   assert((*tl64)[2] == 8e7LL);
+   assert((*tl64)[0] == 4000000L);
+   assert((*tl64)[1] == 7000000L);
+   assert((*tl64)[2] == 8000000L);
 
    // Checking copy constructor
    TArrayF* tf    ; f->GetObject("tf"    , tf    );
@@ -144,15 +148,15 @@ void read(const char *filename = "HistArray.root")
    assert(tf     != NULL); assert(std::strcmp(tf->IsA()->GetName()    , "TArrayF") == 0);
    assert(tfcopy != NULL); assert(std::strcmp(tfcopy->IsA()->GetName(), "TArrayF") == 0);
    assert(tf->GetSize() == tfcopy->GetSize());
-   assert(std::abs((tf->GetSum() - tfcopy->GetSum()) / tf->GetSum()) < 1e-6f);
+   assert(std::abs(tf->GetSum() - tfcopy->GetSum()) < std::numeric_limits<Float_t>::epsilon());
    for(Int_t i = 0; i < tf->GetSize(); ++i)
-      assert(std::abs((tf->At(i) - tfcopy->At(i)) / tf->At(i)) < 1e-6f);
+      assert(std::abs(tf->At(i) - tfcopy->At(i)) < std::numeric_limits<Float_t>::epsilon());
 
    // Checking AddAt function
    TArrayD* td; f->GetObject("td", td);
    assert(td != NULL); assert(std::strcmp(td->IsA()->GetName(), "TArrayD") == 0);
    assert(td->GetSize() == 1);
-   assert(std::abs(td->At(0) - 123.562798) / 123.562798 < 1e-10); 
+   assert(std::abs(td->At(0) - 123.562798) < std::numeric_limits<Double_t>::epsilon()); 
 
 
 
@@ -167,14 +171,14 @@ void read(const char *filename = "HistArray.root")
 
    TH1F* hf; f->GetObject("hf", hf);
    assert(hf != NULL); assert(std::strcmp(hf->IsA()->GetName(), "TH1F") == 0);
-   assert(std::abs((hf->GetBinContent(9) - 5.62f) / 5.62f) < 1e-6f);
-   assert(std::abs((hf->GetBinContent(10) + 0.35f) / 0.35f) < 1e-6f);
-   for(Int_t i = 0; i < 9; ++i) assert(hf->GetBinContent(i) == 0.0f);
+   assert(std::abs(hf->GetBinContent(9)  - 5.62f) < std::numeric_limits<Float_t>::epsilon());
+   assert(std::abs(hf->GetBinContent(10) + 0.35f) < std::numeric_limits<Float_t>::epsilon());
+   for(Int_t i = 0; i < 9; ++i) assert(hf->GetBinContent(i) < std::numeric_limits<Float_t>::epsilon());
 
    TH2D* hd; f->GetObject("hd", hd);
    assert(hd != NULL); assert(std::strcmp(hd->IsA()->GetName(), "TH2D") == 0);
-   assert(hd->GetBinContent(300) == 1e9);
-   assert(hd->GetAt(300) == 1e9);
+   assert(std::abs(hd->GetBinContent(300) - 1e9) < std::numeric_limits<Double_t>::epsilon());
+   assert(std::abs(hd->GetAt(300) - 1e9) < std::numeric_limits<Double_t>::epsilon());
 
    TH3S* hs; f->GetObject("hs", hs);
    assert(hs != NULL); assert(std::strcmp(hs->IsA()->GetName(), "TH3S") == 0);
@@ -191,7 +195,7 @@ void read(const char *filename = "HistArray.root")
 
 int execHistArray(const char* filename = "HistArray.root")
 {
-   read();
+   read(filename);
    return 0;
 }
 
