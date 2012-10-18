@@ -4426,7 +4426,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
       csymbol.insert(0,"::");
    }
 
-   // #define R__SHOWMEMBERS_IN_TCLING
+#define R__SHOWMEMBERS_IN_TCLING
 #ifdef R__SHOWMEMBERS_IN_TCLING
    std::string getClass;
    if (cl.HasMethod("IsA") && !outside) {
