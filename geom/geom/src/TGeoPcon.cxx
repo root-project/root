@@ -397,7 +397,7 @@ Double_t TGeoPcon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    Double_t sstep = 1E-6;
    Double_t point_new[3];
    // determine which z segment contains the point
-   Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
+   Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]+TMath::Sign(1.E-10,dir[2]));
    if (ipl<0) ipl=0;
    if (ipl==(fNz-1)) ipl--;
    Double_t dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
