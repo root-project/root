@@ -434,7 +434,6 @@ const char *autoldtmpl = "G__auto%dLinkDef.h";
 char autold[64];
 
 std::ostream* dictSrcOut=&std::cout;
-G__ShadowMaker *shadowMaker=0;
 
 bool gNeedCollectionProxy = false;
 
@@ -1756,24 +1755,6 @@ int GetClassVersion(const clang::RecordDecl *cl)
       }
    }
    return 0;   
-}
-
-string GetNonConstMemberName(G__DataMemberInfo &m, const string &prefix = "")
-{
-   // Return the name of the data member so that it can be used
-   // by non-const operation (so it includes a const_cast if necessary).
-   
-   if (m.Property() & (G__BIT_ISCONSTANT|G__BIT_ISPCONSTANT)) {
-      string ret = "const_cast< ";
-      ret += G__ShadowMaker::GetNonConstTypeName(m);
-      ret += " &>( ";
-      ret += prefix;
-      ret += m.Name();
-      ret += " )";
-      return ret;
-   } else {
-      return prefix+m.Name();
-   }
 }
 
 //______________________________________________________________________________
@@ -3440,21 +3421,6 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
    if (!clinfo.IsValid() && cl_input.GetRequestedName()[0] ) {
       clinfo.Init(  R__GetQualifiedName(cl_input).c_str() );
    }
-   if (NeedShadowClass(clinfo)) {
-      (*dictSrcOut) << "      // Make sure the shadow class has the right sizeof" << std::endl;
-      if (G__ShadowMaker::IsStdPair(clinfo)) {
-         // Some compilers don't recognize ::pair even after a 'using namespace std;'
-         // and there is no risk of confusion since it is a template.
-         //fprintf(fp, "      R__ASSERT(sizeof(%s)", classname.c_str() );
-      } else {
-         std::string clfullname;
-         shadowMaker->GetFullShadowName(clinfo, clfullname);
-         (*dictSrcOut) << "      R__ASSERT(sizeof(" << csymbol.c_str() << ")"
-         << " == sizeof(" << clfullname.c_str() << "));" << std::endl;
-      }
-   }
-
-
 
    (*dictSrcOut) << "      " << csymbol.c_str() << " *ptr = 0;" << std::endl;
 
@@ -6186,13 +6152,8 @@ int main(int argc, char **argv)
       const char* shadowNSName="ROOT";
       if (dict_type != kDictTypeCint)
          shadowNSName = "ROOT::Reflex";
-      G__ShadowMaker myShadowMaker((*dictSrcOut), shadowNSName, NeedShadowClass,
-                                   dict_type==kDictTypeCint ? NeedTypedefShadowClass : 0);
-      shadowMaker = &myShadowMaker;
 
       G__ShadowMaker::VetoShadow(false);
-      // coverity[fun_call_w_exception] - that's just fine.
-      shadowMaker->WriteAllShadowClasses();
 
       //
       // Loop over all classes and create Streamer() & Showmembers() methods
@@ -6279,15 +6240,6 @@ int main(int argc, char **argv)
             continue;
          }
          G__ClassInfo clinfo( iter->GetRequestedName()[0] ? iter->GetRequestedName() : iter->GetNormalizedName() );
-         // fprintf(stderr,"rootcling: Writing TClass wrapper for class %s needShadowClass=%d\n",R__GetQualifiedName(*iter).c_str(),NeedShadowClass(clinfo));
-         if (NeedShadowClass(clinfo)) {
-            (*dictSrcOut) << "namespace ROOT {" << std::endl
-            << "   namespace Shadow {" << std::endl;
-            // coverity[fun_call_w_exception] - that's just fine.
-            shadowMaker->WriteShadowClass(clinfo);
-            (*dictSrcOut) << "   } // Of namespace ROOT::Shadow" << std::endl
-            << "} // Of namespace ROOT" << std::endl << std::endl;
-         }
          if (G__ShadowMaker::IsSTLCont(clinfo.Name()) == 0 ) {
             WriteClassInit(*iter);
          }
