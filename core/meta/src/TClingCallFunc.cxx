@@ -150,7 +150,7 @@ TClingCallFunc::EvaluateExpression(const clang::Expr* expr) const
    // Evaluate an Expr* and return its cling::StoredValueRef
    cling::StoredValueRef valref;
    cling::Interpreter::CompilationResult cr 
-      = fInterp->evaluate(ExprToString(expr), &valref);
+      = fInterp->evaluate(ExprToString(expr), valref);
    if (cr == cling::Interpreter::kSuccess)
       return valref;
    return cling::StoredValueRef();

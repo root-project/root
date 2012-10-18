@@ -178,7 +178,7 @@ void TClingClassInfo::Delete(void *arena) const
    os << "delete (" << Name() << "*)"
       << reinterpret_cast<unsigned long>(arena) << ";";
    cling::Interpreter::CompilationResult err =
-      fInterp->evaluate(os.str());
+      fInterp->execute(os.str());
    if (err != cling::Interpreter::kSuccess) {
       return;
    }
@@ -203,7 +203,7 @@ void TClingClassInfo::DeleteArray(void *arena, bool dtorOnly) const
       os << "delete[] (" << Name() << "*)"
          << reinterpret_cast<unsigned long>(arena) << ";";
       cling::Interpreter::CompilationResult err =
-         fInterp->evaluate(os.str());
+         fInterp->execute(os.str());
       if (err != cling::Interpreter::kSuccess) {
          return;
       }
@@ -223,7 +223,7 @@ void TClingClassInfo::Destruct(void *arena) const
    os << "((" << name << "*)" << reinterpret_cast<unsigned long>(arena)
       << ")->" << name << "::~" << name << "();";
    cling::Interpreter::CompilationResult err =
-      fInterp->evaluate(os.str());
+      fInterp->execute(os.str());
    if (err != cling::Interpreter::kSuccess) {
       return;
    }
@@ -544,7 +544,7 @@ void *TClingClassInfo::New() const
    os << "new " << Name() << ";";
    cling::StoredValueRef val;
    cling::Interpreter::CompilationResult err =
-      fInterp->evaluate(os.str(), &val);
+      fInterp->evaluate(os.str(), val);
    if (err != cling::Interpreter::kSuccess) {
       return 0;
    }
@@ -565,7 +565,7 @@ void *TClingClassInfo::New(int n) const
    os << "new " << Name() << "[" << n << "];";
    cling::StoredValueRef val;
    cling::Interpreter::CompilationResult err =
-      fInterp->evaluate(os.str(), &val);
+      fInterp->evaluate(os.str(), val);
    if (err != cling::Interpreter::kSuccess) {
       return 0;
    }
@@ -588,7 +588,7 @@ void *TClingClassInfo::New(int n, void *arena) const
       << Name() << "[" << n << "];";
    cling::StoredValueRef val;
    cling::Interpreter::CompilationResult err =
-      fInterp->evaluate(os.str(), &val);
+      fInterp->evaluate(os.str(), val);
    if (err != cling::Interpreter::kSuccess) {
       return 0;
    }
@@ -610,7 +610,7 @@ void *TClingClassInfo::New(void *arena) const
       << Name() << ";";
    cling::StoredValueRef val;
    cling::Interpreter::CompilationResult err =
-      fInterp->evaluate(os.str(), &val);
+      fInterp->evaluate(os.str(), val);
    if (err != cling::Interpreter::kSuccess) {
       return 0;
    }
