@@ -1102,7 +1102,10 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
       fieldName += arraySize;
       
       // get member offset
-      ptrdiff_t fieldOffset = recLayout.getFieldOffset(iNField);
+      // NOTE currently we do not support bitfield and do not support
+      // member that are not aligned on 'bit' boundaries.
+      clang::CharUnits offset(astContext.toCharUnitsFromBits(recLayout.getFieldOffset(iNField)));
+      ptrdiff_t fieldOffset = offset.getQuantity();
 
       // R__insp.Inspect(R__cl, R__insp.GetParent(), "fBits[2]", fBits);
       // R__insp.Inspect(R__cl, R__insp.GetParent(), "fName", &fName);
