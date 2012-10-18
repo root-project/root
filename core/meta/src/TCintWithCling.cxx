@@ -1123,7 +1123,10 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
             std::string sFieldRecName;
             fieldRecDecl->getNameForDiagnostic(sFieldRecName,
                                                printPol, true /*fqi*/);
-            bool transient = false;
+            llvm::StringRef comment = ROOT::TMetaUtils::GetComment(*recordDecl, 0);
+            // NOTE, we have to change this to support selection XML!
+            bool transient = !comment.empty() && comment[0] == '!';
+            
             insp.InspectMember(sFieldRecName.c_str(), cobj + fieldOffset,
                                (fieldName + '.').c_str(), transient);
          }
