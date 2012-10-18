@@ -61,7 +61,17 @@ namespace RooStats {
     set->remove(constSet);
   }
 
-   inline bool SetAllConstant(const RooAbsCollection &coll, bool constant = true) {
+  inline void RemoveConstantParameters(RooArgList& set){
+    RooArgSet constSet;
+    RooLinkedListIter it = set.iterator();
+    RooRealVar *myarg; 
+    while ((myarg = (RooRealVar *)it.Next())) { 
+      if(myarg->isConstant()) constSet.add(*myarg);
+    }
+    set.remove(constSet);
+  }
+
+  inline bool SetAllConstant(const RooAbsCollection &coll, bool constant = true) {
        // utility function to set all variable constant in a collection
        // (from G. Petrucciani)
        bool changed = false;

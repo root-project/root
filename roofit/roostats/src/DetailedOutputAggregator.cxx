@@ -32,6 +32,8 @@ namespace RooStats {
    RooArgSet * DetailedOutputAggregator::GetAsArgSet(RooFitResult *result, TString prefix, bool withErrorsAndPulls) {
       // static function to translate the given fit result to a RooArgSet in a generic way.
       // Prefix is prepended to all variable names.
+      // LM: caller is responsible to delete the returned list and eventually also the content of the list
+      //    Note that the returned list is not owning the returned content
       RooArgSet *detailedOutput = new RooArgSet;
       const RooArgList &detOut = result->floatParsFinal();
       const RooArgList &truthSet = result->floatParsInit();
@@ -41,7 +43,7 @@ namespace RooStats {
          clone->SetTitle( TString().Append(prefix).Append(v->GetTitle()) );
          RooRealVar* var = dynamic_cast<RooRealVar*>(v);
          if (var) clone->setAttribute("StoreError");
-         detailedOutput->addOwned(*clone);
+         detailedOutput->add(*clone);
          
          if( withErrorsAndPulls && var ) {
             clone->setAttribute("StoreAsymError");
@@ -51,16 +53,16 @@ namespace RooStats {
             RooRealVar* truth = dynamic_cast<RooRealVar*>(truthSet.find(var->GetName()));
             RooPullVar pulltemp("temppull", "temppull", *var, *truth);
             RooRealVar* pull = new RooRealVar(pullname, pullname, pulltemp.getVal());
-            detailedOutput->addOwned(*pull);
+            detailedOutput->add(*pull);
          }
       }
       delete it;
 
       // monitor a few more variables
-      detailedOutput->addOwned( *new RooRealVar(TString().Append(prefix).Append("minNLL"), TString().Append(prefix).Append("minNLL"), result->minNll() ) );
-      detailedOutput->addOwned( *new RooRealVar(TString().Append(prefix).Append("fitStatus"), TString().Append(prefix).Append("fitStatus"), result->status() ) );
-      detailedOutput->addOwned( *new RooRealVar(TString().Append(prefix).Append("covQual"), TString().Append(prefix).Append("covQual"), result->covQual() ) );
-      detailedOutput->addOwned( *new RooRealVar(TString().Append(prefix).Append("numInvalidNLLEval"), TString().Append(prefix).Append("numInvalidNLLEval"), result->numInvalidNLL() ) );
+      detailedOutput->add( *new RooRealVar(TString().Append(prefix).Append("minNLL"), TString().Append(prefix).Append("minNLL"), result->minNll() ) );
+      detailedOutput->add( *new RooRealVar(TString().Append(prefix).Append("fitStatus"), TString().Append(prefix).Append("fitStatus"), result->status() ) );
+      detailedOutput->add( *new RooRealVar(TString().Append(prefix).Append("covQual"), TString().Append(prefix).Append("covQual"), result->covQual() ) );
+      detailedOutput->add( *new RooRealVar(TString().Append(prefix).Append("numInvalidNLLEval"), TString().Append(prefix).Append("numInvalidNLLEval"), result->numInvalidNLL() ) );
       return detailedOutput;
    }
 

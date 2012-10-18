@@ -324,11 +324,15 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
 
    // Use Wilks' theorem to translate -2 log lambda into a signifcance/p-value
    Double_t deltaNLL = std::max( NLLatCondMLE-NLLatMLE, 0.);
+   
+   // get number of free parameter of interest
+   RemoveConstantParameters(poiList);
+   int ndf = poiList.getSize();
+
+   Double_t pvalue = ROOT::Math::chisquared_cdf_c( 2* deltaNLL, ndf);
 
    TString name = TString("ProfileLRHypoTestResult_");// + TString(GetName() ); 
-   HypoTestResult* htr = 
-      new HypoTestResult(name, SignificanceToPValue(sqrt( 2*deltaNLL)), 0 );
-
+   HypoTestResult* htr = new HypoTestResult(name, pvalue, 0 );
 
    // restore previous value of poi
    for (unsigned int i = 0; i < oldValues.size(); ++i) { 

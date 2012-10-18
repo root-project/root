@@ -248,7 +248,8 @@ RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, const RooA
    DetailedOutputAggregator detOutAgg;
    const RooArgList* allTS = EvaluateAllTestStatistics(data, poi, detOutAgg);
    if (!allTS) return 0;
-   return dynamic_cast<RooArgList*>(allTS->snapshot());
+   // no need to delete allTS, it is deleted in destructor of detOutAgg
+   return  dynamic_cast<RooArgList*>(allTS->snapshot());
 }
 
 
