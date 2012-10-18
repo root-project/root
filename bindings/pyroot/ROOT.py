@@ -291,7 +291,7 @@ TPad or TPad.cd, etc.
       value.msg == "can't assign to function call":
          sys.stdout.write( """Are you trying to assign a value to a reference return, for example to the
 result of a call to "double& SMatrix<>::operator()(int,int)"? If so, then
-please use operator[] instead, as in e.g. "mymatrix[i,j] = somevalue".
+please use operator[] instead, as in e.g. "mymatrix[i][j] = somevalue".
 """ )
 
  # normal exception processing
