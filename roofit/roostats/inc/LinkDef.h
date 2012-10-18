@@ -119,6 +119,7 @@
 #pragma link C++ function RooStats::PValueToSignificance(Double_t);
 #pragma link C++ function RooStats::SignificanceToPValue(Double_t);
 #pragma link C++ function RooStats::RemoveConstantParameters(RooArgSet* set);
+#pragma link C++ function RooStats::RemoveConstantParameters(RooArgList& set);
 #pragma link C++ function RooStats::SetParameters(const RooArgSet* , RooArgSet* );
 #pragma link C++ function RooStats::SetAllConstant(const RooAbsCollection & , bool );
 #pragma link C++ function RooStats::MakeNuisancePdf(RooAbsPdf & , const RooArgSet &, const char * );

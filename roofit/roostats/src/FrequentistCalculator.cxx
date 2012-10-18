@@ -85,7 +85,9 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
       // Hack to extract a RooFitResult
       if (fStoreFitInfo) {
          RooFitResult *result = profile->minuit()->save();
-         fFitInfo->addOwned(*DetailedOutputAggregator::GetAsArgSet(result, "fitNull_"));
+         RooArgSet * detOutput = DetailedOutputAggregator::GetAsArgSet(result, "fitNull_");
+         fFitInfo->addOwned(*detOutput);
+         delete detOutput; 
          delete result;
       }
    
@@ -177,7 +179,9 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
       // Hack to extract a RooFitResult
       if (fStoreFitInfo) {
          RooFitResult *result = profile->minuit()->save();
-         fFitInfo->addOwned(*DetailedOutputAggregator::GetAsArgSet(result, "fitAlt_"));
+         RooArgSet * detOutput =  DetailedOutputAggregator::GetAsArgSet(result, "fitAlt_");
+         fFitInfo->addOwned(*detOutput);
+         delete detOutput;
          delete result;
       }
    
