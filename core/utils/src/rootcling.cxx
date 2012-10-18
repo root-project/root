@@ -2223,6 +2223,17 @@ bool IsTemplateDouble32(const RScanner::AnnotatedRecordDecl &cl)
 #endif
 }
 
+//______________________________________________________________________________
+int IsSTLContainer(const RScanner::AnnotatedRecordDecl &annotated)
+{
+   // Is this an STL container.
+   
+   const char *name = annotated.GetRequestedName()[0] ? annotated.GetRequestedName() : annotated.GetNormalizedName();
+   
+   int k = TClassEdit::IsSTLCont(name,1);
+   
+   return k;   
+}
 
 //______________________________________________________________________________
 int IsSTLContainer(G__DataMemberInfo &m)
@@ -5794,7 +5805,6 @@ int main(int argc, char **argv)
       argvv[argcc++] = autold;
    }
 
-   G__ShadowMaker::VetoShadow(); // we create them ourselves
    G__setothermain(2);
    G__set_ioctortype_handler( (int (*)(const char*))AddConstructorType );
    G__set_beforeparse_hook( BeforeParseInit );
@@ -6153,8 +6163,6 @@ int main(int argc, char **argv)
       if (dict_type != kDictTypeCint)
          shadowNSName = "ROOT::Reflex";
 
-      G__ShadowMaker::VetoShadow(false);
-
       //
       // Loop over all classes and create Streamer() & Showmembers() methods
       //
@@ -6239,8 +6247,7 @@ int main(int argc, char **argv)
          if (!iter->RequestOnlyTClass()) {
             continue;
          }
-         G__ClassInfo clinfo( iter->GetRequestedName()[0] ? iter->GetRequestedName() : iter->GetNormalizedName() );
-         if (G__ShadowMaker::IsSTLCont(clinfo.Name()) == 0 ) {
+         if (!IsSTLContainer(*iter)) {
             WriteClassInit(*iter);
          }
       }
