@@ -1,4 +1,4 @@
-// JSROOTMixedPainter.js
+// JSROOTD3Painter.js
 //
 // core methods for Javascript ROOT Graphics, using d3.js.
 //
@@ -1420,6 +1420,7 @@ function format_id(id) {
             .call(y_axis);
 
          var font_size = Math.round(0.050 * h);
+
          if (!pad || typeof(pad) == 'undefined') {
             vis.append("text")
                .attr("class", "title")
@@ -1430,6 +1431,7 @@ function format_id(id) {
                .attr("font-size", font_size)
                .text(func['fTitle']);
          }
+
          xax.selectAll("text").attr("font-size", label_font_size);
          yax.selectAll("text").attr("font-size", label_font_size);
 
@@ -3088,6 +3090,6 @@ function format_id(id) {
 })();
 
 
-// JSROOTMixedPainter.js ends
+// JSROOTD3Painter.js ends
 
 
