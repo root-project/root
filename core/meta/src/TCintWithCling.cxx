@@ -1154,8 +1154,15 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
          continue;
       }
       int64_t baseOffset = recLayout.getBaseClassOffset(baseDecl).getQuantity();      
-      baseCl->CallShowMembers(cobj + baseOffset,
-                              insp, -1 /*don't know whether TObject*/);
+      if (baseCl->IsLoaded()) {
+         // For loaded class, CallShowMember will (especially for TObject)
+         // call the virtual ShowMember rather than the class specific version
+         // resulting in an infinite recursion.
+         InspectMembers(insp, cobj + baseOffset, baseCl);
+      } else {
+         baseCl->CallShowMembers(cobj + baseOffset,
+                                 insp, 0);
+      }
    } // loop over bases
 }
 
