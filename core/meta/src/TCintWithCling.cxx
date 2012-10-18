@@ -1047,7 +1047,9 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
       }
       
       const clang::Type* memNonPtrType = memType;
+      Bool_t ispointer = false;
       if (memNonPtrType->isPointerType()) {
+         ispointer = true;
          clang::QualType ptrQT
             = memNonPtrType->getAs<clang::PointerType>()->getPointeeType();
          ptrQT = ptrQT.getDesugaredType(astContext);
@@ -1113,16 +1115,18 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
       // R__insp.Inspect(R__cl, R__insp.GetParent(), "*fClass", &fClass);
       insp.Inspect(cl, insp.GetParent(), fieldName.c_str(), cobj + fieldOffset);
 
-      const clang::CXXRecordDecl* fieldRecDecl = memNonPtrType->getAsCXXRecordDecl();
-      if (fieldRecDecl) {
-         // nested objects get an extra call to InspectMember
-         // R__insp.InspectMember("FileStat_t", (void*)&fFileStat, "fFileStat.", false);
-         std::string sFieldRecName;
-         fieldRecDecl->getNameForDiagnostic(sFieldRecName,
-                                            printPol, true /*fqi*/);
-         bool transient = false;
-         insp.InspectMember(sFieldRecName.c_str(), cobj + fieldOffset,
-                            (fieldName + '.').c_str(), transient);
+      if (!ispointer) {
+         const clang::CXXRecordDecl* fieldRecDecl = memNonPtrType->getAsCXXRecordDecl();
+         if (fieldRecDecl) {
+            // nested objects get an extra call to InspectMember
+            // R__insp.InspectMember("FileStat_t", (void*)&fFileStat, "fFileStat.", false);
+            std::string sFieldRecName;
+            fieldRecDecl->getNameForDiagnostic(sFieldRecName,
+                                               printPol, true /*fqi*/);
+            bool transient = false;
+            insp.InspectMember(sFieldRecName.c_str(), cobj + fieldOffset,
+                               (fieldName + '.').c_str(), transient);
+         }
       }
    } // loop over fields
    
