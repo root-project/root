@@ -1020,6 +1020,10 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
    const clang::ASTRecordLayout& recLayout
       = astContext.getASTRecordLayout(recordDecl);
 
+   if (cl->Size() != recLayout.getSize().getQuantity()) {
+      Error("InspectMembers","TClass and cling disagree on the size of the class %s, respectively %d %ld\n",
+            cl->GetName(),cl->Size(),recLayout.getSize().getQuantity());
+   }
    unsigned iNField = 0;
    // iterate over fields
    // FieldDecls are non-static, else it would be a VarDecl.
