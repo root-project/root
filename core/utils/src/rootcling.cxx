@@ -460,6 +460,15 @@ void AddConstructorType(const char *arg)
    if (arg) gIoConstructorTypes.push_back(RConstructorType(arg));
 }
 
+const clang::DeclContext *R__GetEnclosingSpace(const clang::RecordDecl &cl)
+{
+   const clang::DeclContext *ctxt = cl.getDeclContext();
+   while(ctxt && !ctxt->isNamespace()) {
+      ctxt = ctxt->getParent();
+   }
+   return ctxt;
+}
+
 bool ClassInfo__HasMethod(const clang::RecordDecl *cl, const char* name) 
 {
    const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
@@ -958,7 +967,6 @@ inline bool R__IsTemplate(const clang::Decl &cl)
 {
    return (cl.getKind() == clang::Decl::ClassTemplatePartialSpecialization
            || cl.getKind() == clang::Decl::ClassTemplateSpecialization);
-   // return cl->getTemplateSpecializationKind() != clang::TSK_Undeclared;
 }
 
 //inline bool R__IsTemplate(const clang::CXXRecordDecl *cl)
@@ -2007,7 +2015,7 @@ bool IsTemplateFloat16(const RScanner::AnnotatedRecordDecl &cl)
 
 #if KEEP_UNTIL_WE_RESOLVE_THE_TYPEDEF_AND_TEMPLATE_ISSUE
    // Return true if any of the argument is or contains a Float16.
-   if (!clinfo.IsTmplt()) return false;
+   if (!R__IsTemplate(*cl)) return false;
    
    static G__TypeInfo ti;
    char *current, *next;
@@ -2872,7 +2880,7 @@ int WriteNamespaceHeader(std::ostream &out, const clang::DeclContext *ctxt)
          out << "   ";
       }
       const clang::NamespaceDecl *ns = llvm::dyn_cast<clang::NamespaceDecl>(ctxt);
-      out << "      namespace " << ns->getNameAsString() << " {" << std::endl;
+      out << "namespace " << ns->getNameAsString() << " {" << std::endl;
       closing_brackets++;
    }
    
@@ -2882,10 +2890,7 @@ int WriteNamespaceHeader(std::ostream &out, const clang::DeclContext *ctxt)
 //______________________________________________________________________________
 int WriteNamespaceHeader(std::ostream &out, const clang::RecordDecl &cl)
 {
-   const clang::DeclContext *ctxt = cl.getDeclContext();
-   while(ctxt && !ctxt->isNamespace()) {
-      ctxt = ctxt->getParent();
-   }
+   const clang::DeclContext *ctxt = R__GetEnclosingSpace(cl);
    return WriteNamespaceHeader(out,ctxt);
 }
 
@@ -4052,10 +4057,12 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl, const cling::Inte
 }
 
 //______________________________________________________________________________
-void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
+void WriteBodyShowMembers(const RScanner::AnnotatedRecordDecl &cl, bool outside)
 {
-   string csymbol = cl.Fullname();
-   if ( ! TClassEdit::IsStdClass( csymbol.c_str() ) ) {
+   string csymbol;
+   R__GetQualifiedName(csymbol,*cl);
+
+   if ( ! IsStdClass(*cl) ) {
 
       // Prefix the full class name with '::' except for the STL
       // containers and std::string.  This is to request the
@@ -4064,7 +4071,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
    }
 
    std::string getClass;
-   if (cl.HasMethod("IsA") && !outside) {
+   if (ClassInfo__HasMethod(cl,"IsA") && !outside) {
       getClass = csymbol + "::IsA()";
    } else {
       getClass = "::ROOT::GenerateInitInstanceLocal((const ";
@@ -4082,11 +4089,6 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 //______________________________________________________________________________
 void WriteShowMembers(const RScanner::AnnotatedRecordDecl &cl, bool outside = false)
 {
-   G__ClassInfo clinfo(cl.GetRequestedName()[0] ? cl.GetRequestedName() : cl.GetNormalizedName());
-   if (!clinfo.IsValid() && cl.GetRequestedName()[0] ) {
-      clinfo.Init(  R__GetQualifiedName(cl).c_str() );
-   }
-
    const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
 
    (*dictSrcOut) << "//_______________________________________";
@@ -4096,23 +4098,28 @@ void WriteShowMembers(const RScanner::AnnotatedRecordDecl &cl, bool outside = fa
    string mappedname;
    TMetaUtils::GetCppName(mappedname, classname.c_str());
 
-   if (outside || clinfo.IsTmplt()) {
+   if (outside || R__IsTemplate(*cl)) {
       (*dictSrcOut) << "namespace ROOT {" << std::endl
 
                     << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp)"
                     << std::endl << "   {" << std::endl;
-      WriteBodyShowMembers(clinfo, outside || clinfo.IsTmplt());
+      WriteBodyShowMembers(cl, outside || R__IsTemplate(*cl));
       (*dictSrcOut) << "   }" << std::endl << std::endl;
       (*dictSrcOut) << "}" << std::endl << std::endl;
    }
 
    if (!outside) {
-      G__ClassInfo ns = clinfo.EnclosingSpace();
-      string clsname = clinfo.Fullname();
+      string clsname;
+      R__GetQualifiedName(clsname,*cl);
+      
+      const clang::DeclContext *ctxt = R__GetEnclosingSpace(*cl);
       string nsname;
-      if (ns.IsValid()) {
-         nsname = ns.Fullname();
-         clsname.erase (0, nsname.size() + 2);
+      if (ctxt) {
+         const clang::NamedDecl *ns = llvm::dyn_cast<clang::NamedDecl>(ctxt);
+         if (ns) {
+            R__GetQualifiedName(nsname,*ns);
+            clsname.erase (0, nsname.size() + 2);
+         }
       }
       bool add_template_keyword = NeedTemplateKeyword(cxxdecl);
       int enclSpaceNesting = 0;
@@ -4122,8 +4129,8 @@ void WriteShowMembers(const RScanner::AnnotatedRecordDecl &cl, bool outside = fa
       if (add_template_keyword) (*dictSrcOut) << "template <> ";
       (*dictSrcOut) << "void " << clsname << "::ShowMembers(TMemberInspector &R__insp)"
                     << std::endl << "{" << std::endl;
-      if (!clinfo.IsTmplt()) {
-         WriteBodyShowMembers(clinfo, outside);
+      if (!R__IsTemplate(*cl)) {
+         WriteBodyShowMembers(cl, outside);
       } else {
          string clnameNoDefArg = GetLong64_Name( cl.GetNormalizedName() );
          string mappednameNoDefArg;
