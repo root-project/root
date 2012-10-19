@@ -1619,20 +1619,6 @@ bool HasResetAfterMerge(const clang::CXXRecordDecl *cl)
 }
 
 //______________________________________________________________________________
-int GetClassVersion(G__ClassInfo &cl)
-{
-   // Return the version number of the class or -1
-   // if the function Class_Version does not exist.
-
-   if (!cl.HasMethod("Class_Version")) return -1;
-
-   const char *function = "::Class_Version()";
-   string funcname = GetLong64_Name( cl.Fullname() ) + function;
-   int version = (int)G__int(G__calc(funcname.c_str()));
-   return version;
-}
-
-//______________________________________________________________________________
 int GetClassVersion(const clang::RecordDecl *cl)
 {
    // Return the version number of the class or -1
@@ -2380,33 +2366,6 @@ void WriteAuxFunctions(const RScanner::AnnotatedRecordDecl &cl)
       << "   }" << std::endl;
    }
    (*dictSrcOut) << "} // end of namespace ROOT for class " << classname.c_str() << std::endl << std::endl;
-}
-
-//______________________________________________________________________________
-void WriteStringOperators(FILE *fd)
-{
-   // Write static ANSI C++ string to TBuffer operators.
-
-   fprintf(fd, "//_______________________________________");
-   fprintf(fd, "_______________________________________\n");
-   fprintf(fd, "static TBuffer &operator>>(TBuffer &b, string &s)\n{\n");
-   fprintf(fd, "   // Reading string object.\n\n");
-   fprintf(fd, "   R__ASSERT(b.IsReading());\n");
-   fprintf(fd, "   char ch;\n");
-   fprintf(fd, "   do {\n");
-   fprintf(fd, "      b >> ch;\n");
-   fprintf(fd, "      if (ch) s.append(1, ch);\n");
-   fprintf(fd, "   } while (ch != 0);\n");
-   fprintf(fd, "   return b;\n");
-   fprintf(fd, "}\n");
-   fprintf(fd, "//_______________________________________");
-   fprintf(fd, "_______________________________________\n");
-   fprintf(fd, "static TBuffer &operator<<(TBuffer &b, string s)\n{\n");
-   fprintf(fd, "   // Writing string object.\n\n");
-   fprintf(fd, "   R__ASSERT(b.IsWriting());\n");
-   fprintf(fd, "   b.WriteString(s.c_str());\n");
-   fprintf(fd, "   return b;\n");
-   fprintf(fd, "}\n");
 }
 
 //______________________________________________________________________________
@@ -3701,17 +3660,12 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl, const cling::Interpr
          if (strstr(type_name.c_str(),"Double32_t")) isDouble32=1;
 
          // No need to test for static, there are not in this list.
-         //   !(m.Property() & G__BIT_ISSTATIC)
-         // No need to test for CINT artifiical members:
-         //   strcmp(m.Name(), "G__virtualinfo")
          if (strncmp(comment, "!", 1)) {
 
             // fundamental type: short, int, long, etc....
             if (underling_type->isFundamentalType() || underling_type->isEnumeralType()) {
                if (type.getTypePtr()->isConstantArrayType() &&
                    type.getTypePtr()->getArrayElementTypeNoTypeQual()->isPointerType() ) 
-//               if (m.Property() & G__BIT_ISARRAY &&
-//                   m.Property() & G__BIT_ISPOINTER) 
                {
                   const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(type.getTypePtr());
                   int s = R__GetFullArrayLength(arrayType);
