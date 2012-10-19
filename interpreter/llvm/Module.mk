@@ -8,14 +8,20 @@ MODDIR       := $(ROOT_SRCDIR)/interpreter/$(MODNAME)
 LLVMDIRO     := $(call stripsrc,$(MODDIR)/obj)
 LLVMDIRI     := $(call stripsrc,$(MODDIR)/inst)
 
-ifneq ($(BUILTINLLVM), yes)
+ifneq ($(BUILTINLLVM),yes)
 
 LLVMDEP      :=
 
 .PHONY:         distclean-$(MODNAME)
+
 distclean-$(MODNAME):
 		@rm -rf $(LLVMDIRO) $(LLVMDIRI)
-distclean::     distclean-$(MODNAME)
+
+# Don't clean LLVM when doing standard "make distclean" as it is mostly not
+# needed. To explicitly clean LLVM do either: "make maintainer-clean" or
+# "make distclean-llvm".
+#distclean::     distclean-$(MODNAME)
+maintainer-clean:: distclean-$(MODNAME)
 
 else
 
@@ -139,6 +145,10 @@ clean::         clean-$(MODNAME)
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -rf $(LLVMDIRO) $(LLVMDIRI)
 
-distclean::     distclean-$(MODNAME)
+# Don't clean LLVM when doing standard "make distclean" as it is mostly not
+# needed. To explicitly clean LLVM do either: "make maintainer-clean" or
+# "make distclean-llvm".
+#distclean::     distclean-$(MODNAME)
+maintainer-clean:: distclean-$(MODNAME)
 
 endif
