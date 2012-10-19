@@ -3535,9 +3535,7 @@ bool Sema::CheckTemplateArgument(TemplateTypeParmDecl *Param,
   QualType Arg = ArgInfo->getType();
   SourceRange SR = ArgInfo->getTypeLoc().getSourceRange();
 
-  if (1) {
-    // our special case, no error (okay that's bad but we currently have a problem with canonical type.
-  } else if (Arg->isVariablyModifiedType()) {
+  if (Arg->isVariablyModifiedType()) {
     return Diag(SR.getBegin(), diag::err_variably_modified_template_arg) << Arg;
   } else if (Context.hasSameUnqualifiedType(Arg, Context.OverloadTy)) {
     return Diag(SR.getBegin(), diag::err_template_arg_overload_type) << SR;
