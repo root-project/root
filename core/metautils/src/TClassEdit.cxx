@@ -790,6 +790,8 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
          int slen = strlen(tname);
          for(int k=0;k<slen;++k) {
             if (tname[k]==':') {
+               // NOTE: there is a missing increment of k, which means that 
+               // this next steps prevents to look at typedef define in a scope.
                if (k+1>=slen || tname[k+1]!=':') {
                   // we expected another ':'
                   return tname;
