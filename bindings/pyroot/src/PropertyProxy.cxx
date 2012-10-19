@@ -34,7 +34,7 @@ namespace {
          return 0;
 
    // not-initialized or public data accesses through class (e.g. by help())
-      if ( ! address || (unsigned long)address == (unsigned long)-1 /* Cling */ ) {
+      if ( ! address || address == -1 /* Cling error */ ) {
          Py_INCREF( pyprop );
          return (PyObject*)pyprop;
       }
@@ -79,7 +79,7 @@ namespace {
       }
 
       Long_t address = pyprop->GetAddress( pyobj );
-      if ( ! address || PyErr_Occurred() )
+      if ( ! address || address == -1 /* Cling error */ || PyErr_Occurred() )
          return errret;
 
    // for fixed size arrays

@@ -106,12 +106,13 @@ namespace {
 //- helpers --------------------------------------------------------------------
 namespace {
 
-   inline void AddToGlobalScope( const char* label, const char* hdr, TObject* obj, TClass* klass )
+   inline void AddToGlobalScope( const char* label, const char* /* hdr */, TObject* obj, TClass* klass )
    {
    // Bind the given object with the given class in the global scope with the
    // given label for its reference.
-      TString s = TString::Format( "#include \"%s\"", hdr );
-      gROOT->ProcessLine( s.Data() );
+      // Cling temporary (seems to be no longer needed):
+      //TString s = TString::Format( "#include \"%s\"", hdr );
+      //gROOT->ProcessLine( s.Data() );
       PyModule_AddObject( gRootModule, const_cast< char* >( label ),
          PyROOT::BindRootObject( obj, klass ) );
    }
@@ -644,18 +645,22 @@ PyObject* PyROOT::GetRootGlobal( PyObject*, PyObject* args )
 //____________________________________________________________________________
 PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
 {
-// try named global variable/enum (first ROOT, then CINT: sync is too slow)
+// try named global variable/enum (first ROOT, then Cling: sync is too slow)
    TGlobal* gb = (TGlobal*)gROOT->GetListOfGlobals( kFALSE )->FindObject( name.c_str() );
-   if ( gb ) return BindRootGlobal( gb );
+   if ( gb && gb->GetAddress() != (void*)-1 ) {
+      return BindRootGlobal( gb );
+   }
 
-// (CLING) TODO: look into Cling's interactive bits (if need be)
-//   G__DataMemberInfo dt;
-//   while ( dt.Next() ) {
-//      if ( dt.IsValid() && dt.Name() == name ) {
-//         TGlobal gbl = TGlobal( new G__DataMemberInfo( dt ) );
-//         return BindRootGlobal( &gbl );
-//      }
-//   }
+// (CLING) TODO: look into Cling's interactive bits (the following code does
+// not work):
+   ClassInfo_t* gbl = gInterpreter->ClassInfo_Factory();
+   DataMemberInfo_t* dt = gInterpreter->DataMemberInfo_Factory( gbl );
+   while ( gInterpreter->DataMemberInfo_Next( dt ) ) {
+      if ( gInterpreter->DataMemberInfo_IsValid( dt ) && gInterpreter->DataMemberInfo_Name( dt ) == name ) {
+         TGlobal g = TGlobal( dt );
+         return BindRootGlobal( &g );
+      }
+   }
 
 // still here ... try functions (sync has been fixed, so is okay)
    std::vector< PyCallable* > overloads;
@@ -797,6 +802,12 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
    if ( ! gbl || strcmp(gbl->GetName(), "") == 0 ) {
       Py_INCREF( Py_None );
       return Py_None;
+   }
+
+// for Cling, where apparently the address isn't filled yet
+   if ( gbl->GetAddress() == (void*)-1 ) {
+       PyErr_SetString( PyExc_RuntimeError, "GLOBAL ADDRESS NOT YET IMPLEMENTED IN CLING" );
+       return NULL;
    }
 
 // determine type and cast as appropriate
