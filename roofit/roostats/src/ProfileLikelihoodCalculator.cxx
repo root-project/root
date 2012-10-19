@@ -330,9 +330,6 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    int ndf = poiList.getSize();
 
    Double_t pvalue = ROOT::Math::chisquared_cdf_c( 2* deltaNLL, ndf);
-   
-   // in case of one dimenension (1 poi) do the one-sided p-value (need to divide by 2)
-   if (ndf == 1) pvalue = 0.5 * pvalue; 
 
    TString name = TString("ProfileLRHypoTestResult_");// + TString(GetName() ); 
    HypoTestResult* htr = new HypoTestResult(name, pvalue, 0 );
