@@ -119,8 +119,8 @@ namespace RooFit {
 
   
   // RooDataSet::ctor arguments
-  RooCmdArg WeightVar(const char* name)                 { return RooCmdArg("WeightVarName",0,0,0,0,name,0,0,0) ; }
-  RooCmdArg WeightVar(const RooRealVar& arg)            { return RooCmdArg("WeightVar",0,0,0,0,0,0,&arg,0) ; }
+  RooCmdArg WeightVar(const char* name, Bool_t reinterpretAsWeight) { return RooCmdArg("WeightVarName",reinterpretAsWeight,0,0,0,name,0,0,0) ; }
+  RooCmdArg WeightVar(const RooRealVar& arg, Bool_t reinterpretAsWeight)  { return RooCmdArg("WeightVar",reinterpretAsWeight,0,0,0,0,0,&arg,0) ; }
   RooCmdArg Link(const char* state, RooAbsData& data)   { return RooCmdArg("LinkDataSlice",0,0,0,0,state,0,&data,0) ;} 
   RooCmdArg Import(const char* state, RooDataSet& data) { return RooCmdArg("ImportDataSlice",0,0,0,0,state,0,&data,0) ; }
   RooCmdArg Import(RooDataSet& data)                    { return RooCmdArg("ImportData",0,0,0,0,0,0,&data,0) ; }

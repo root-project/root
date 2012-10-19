@@ -247,9 +247,11 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
   pc.defineObject("cutVar","CutVar",0) ;
   pc.defineString("cutRange","CutRange",0,"") ;
   pc.defineString("wgtVarName","WeightVarName",0,"") ;
+  pc.defineInt("newWeight1","WeightVarName",0,0) ;
   pc.defineString("fname","ImportFromFile",0,"") ;
   pc.defineString("tname","ImportFromFile",1,"") ;
   pc.defineObject("wgtVar","WeightVar",0) ;
+  pc.defineInt("newWeight2","WeightVar",0,0) ;
   pc.defineObject("dummy1","ImportDataSliceMany",0) ;
   pc.defineObject("dummy2","LinkDataSliceMany",0) ;
   pc.defineSet("errorSet","StoreError",0) ;
@@ -293,7 +295,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
   const char* fname = pc.getString("fname") ;
   const char* tname = pc.getString("tname") ;
   Int_t ownLinked = pc.getInt("ownLinked") ;
-
+  Int_t newWeight = pc.getInt("newWeight1") + pc.getInt("newWeight2") ;
 
   // Case 1 --- Link multiple dataset as slices
   if (lnkSliceNames) {
@@ -356,7 +358,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     }
     
     // Clone weight variable of imported dataset if we are not weighted
-    if (!wgtVar && impData && impData->_wgtVar) {
+    if (!wgtVar && !wgtVarName && impData && impData->_wgtVar) {
       _wgtVar = (RooRealVar*) impData->_wgtVar->createFundamental() ;
       _vars.addOwned(*_wgtVar) ;
       wgtVarName = _wgtVar->GetName() ;
@@ -370,6 +372,12 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
       tstore = new RooTreeDataStore(name,title,_vars,wgtVarName) ;
       _dstore = tstore ;
     } else if (defaultStorageType==Vector) {
+      if (wgtVarName && newWeight) {
+	RooAbsArg* wgttmp = _vars.find(wgtVarName) ;
+	if (wgttmp) {
+	  wgttmp->setAttribute("NewWeight") ;
+	}
+      }
       vstore = new RooVectorDataStore(name,title,_vars,wgtVarName) ;
       _dstore = vstore ;
     } else {
@@ -427,6 +435,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     if (wgtVarName && *wgtVarName) {
       // Use the supplied weight column
       initialize(wgtVarName) ;    
+
     } else {
       if (impData && impData->_wgtVar && vars.find(impData->_wgtVar->GetName())) {
 

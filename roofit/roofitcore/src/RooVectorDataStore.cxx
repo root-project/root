@@ -730,13 +730,15 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
 
   // Check if weight is being renamed - if so set flag to enable special handling in copy loop
   Bool_t weightRename(kFALSE) ;
+  Bool_t newWeightVar = _wgtVar->getAttribute("NewWeight") ;
+
   if (_wgtVar && isVDS && ((RooVectorDataStore*)(ads))->_wgtVar) {
-    if (string(_wgtVar->GetName())!=((RooVectorDataStore*)(ads))->_wgtVar->GetName()) {
+    if (string(_wgtVar->GetName())!=((RooVectorDataStore*)(ads))->_wgtVar->GetName() && !newWeightVar) {
       weightRename=kTRUE ;
     }
   }
   if (_wgtVar && isTDS && ((RooTreeDataStore*)(ads))->_wgtVar) {
-    if (string(_wgtVar->GetName())!=((RooTreeDataStore*)(ads))->_wgtVar->GetName()) {
+    if (string(_wgtVar->GetName())!=((RooTreeDataStore*)(ads))->_wgtVar->GetName() && !newWeightVar) {
       weightRename=kTRUE ;
     }
   }
