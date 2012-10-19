@@ -109,7 +109,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
    // In case of Int_t* we need to strip the pointer first, desugar and attach
    // the pointer once again.
-   if (instanceType->isPointerType()) {
+   if (llvm::isa<clang::PointerType>(instanceType.getTypePtr())) {
       // Get the qualifiers.
       clang::Qualifiers quals = instanceType.getQualifiers();      
       instanceType = AddDefaultParameters(instanceType->getPointeeType(), interpreter, normCtxt);
@@ -120,7 +120,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
    // In case of Int_t& we need to strip the pointer first, desugar and attach
    // the pointer once again.
-   if (instanceType->isReferenceType()) {
+   if (llvm::isa<clang::ReferenceType>(instanceType.getTypePtr())) {
       // Get the qualifiers.
       bool isLValueRefTy = llvm::isa<clang::LValueReferenceType>(instanceType.getTypePtr());
       clang::Qualifiers quals = instanceType.getQualifiers();
