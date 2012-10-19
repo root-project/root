@@ -32,8 +32,13 @@ INCLUDEFILES += $(ROOTXDEP)
 include/%.h:    $(ROOTXDIRI)/%.h
 		cp $< $@
 
+ifeq ($(BUILDCOCOA),yes)
+$(ROOTX):       $(ROOTEXE)
+		ln -sf `basename $(ROOTEXE)` $(ROOTX)
+else
 $(ROOTX):       $(ROOTXO) $(STRLCPYO)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTXO) $(STRLCPYO) $(XLIBS)
+endif
 
 all-$(MODNAME): $(ROOTX)
 

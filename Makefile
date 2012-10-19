@@ -110,6 +110,7 @@ ifeq ($(BUILDCOCOA),yes)
 MODULES      += graf2d/quartz
 MODULES      += graf2d/cocoa
 MODULES      += core/macosx
+MODULES      += rootx
 SYSTEML      += $(MACOSXL)
 SYSTEMO      += $(MACOSXO)
 SYSTEMDO     += $(MACOSXDO)
