@@ -28,8 +28,10 @@
 #include "TClingProperty.h"
 #include "Rtypes.h" // for gDebug
 #include "TClassEdit.h"
+#include "TMetaUtils.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
+#include "cling/Utils/AST.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/PrettyPrinter.h"
@@ -254,7 +256,7 @@ const char *TClingTypeInfo::StemName() const
 }
 
 //______________________________________________________________________________
-const char *TClingTypeInfo::TrueName() const
+const char *TClingTypeInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    if (!IsValid()) {
       return 0;
@@ -262,9 +264,14 @@ const char *TClingTypeInfo::TrueName() const
    // Note: This *must* be static because we are returning a pointer inside it.
    static std::string buf;
    buf.clear();
-   clang::PrintingPolicy Policy(fInterp->getCI()->getASTContext().
-                                getPrintingPolicy());
-   fQualType.getCanonicalType().getAsStringInternal(buf, Policy);
+   
+   const clang::ASTContext &ctxt = fInterp->getCI()->getASTContext();
+   clang::PrintingPolicy Policy(ctxt.getPrintingPolicy());
+   
+   clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, fQualType, normCtxt.GetTypeToSkip(), true /* fully qualify */); 
+   normalizedType = ROOT::TMetaUtils::AddDefaultParameters(normalizedType, *fInterp, normCtxt);
+   normalizedType.getAsStringInternal(buf,Policy);
+
    return buf.c_str();
 }
 

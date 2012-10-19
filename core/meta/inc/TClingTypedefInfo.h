@@ -34,6 +34,12 @@
 #include <vector>
 #include <string>
 
+namespace ROOT {
+   namespace TMetaUtils {
+      class TNormalizedCtxt;
+   }
+}
+
 class TClingTypedefInfo {
 
 private:
@@ -68,7 +74,7 @@ public:
    int                  Next();
    long                 Property() const;
    int                  Size() const;
-   const char          *TrueName() const;
+   const char          *TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const char          *Name() const;
    const char          *Title();
 

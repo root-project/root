@@ -32,6 +32,7 @@
 #include "Rtypes.h" // for gDebug
 
 #include "cling/Interpreter/LookupHelper.h"
+#include "cling/Utils/AST.h"
 
 using namespace clang;
 
@@ -296,7 +297,7 @@ int TClingTypedefInfo::Size() const
 }
 
 //______________________________________________________________________________
-const char *TClingTypedefInfo::TrueName() const
+const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    // Get the name of the underlying type of the current typedef.
    if (!IsValid()) {
@@ -310,7 +311,14 @@ const char *TClingTypedefInfo::TrueName() const
    if (underlyingType->isBooleanType()) {
       return "bool";
    }
-   truename = td->getUnderlyingType().getAsString();
+   const clang::ASTContext &ctxt = fDecl->getASTContext();
+   clang::QualType normalizedType = ctxt.getTypedefType(td);
+   
+   clang::PrintingPolicy Policy(ctxt.getPrintingPolicy());
+   normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, normalizedType, normCtxt.GetTypeToSkip(), true /* fully qualify */); 
+   normalizedType = ROOT::TMetaUtils::AddDefaultParameters(normalizedType, *fInterp, normCtxt);
+   normalizedType.getAsStringInternal(truename,Policy);
+   
    return truename.c_str();
 }
 
@@ -325,8 +333,7 @@ const char *TClingTypedefInfo::Name() const
    static std::string fullname;
    fullname.clear();
    clang::PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
-   llvm::dyn_cast<clang::NamedDecl>(fDecl)->
-   getNameForDiagnostic(fullname, Policy, /*Qualified=*/true);
+   llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameForDiagnostic(fullname, Policy, /*Qualified=*/true);
    return fullname.c_str();
 }
 

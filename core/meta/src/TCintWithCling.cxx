@@ -2048,7 +2048,7 @@ void TCintWithCling::Execute(TObject* obj, TClass* cl, TMethod* method,
          if (i) {
             complete += ',';
          }
-         if (strstr(type.TrueName(), "char")) {
+         if (strstr(type.TrueName(*fNormalizedCtxt), "char")) {
             TString chpar('\"');
             chpar += (nxtpar->String()).ReplaceAll("\"", "\\\"");
             // At this point we have to check if string contains \\"
@@ -3893,7 +3893,7 @@ int TCintWithCling::TypeInfo_Size(TypeInfo_t* tinfo) const
 const char* TCintWithCling::TypeInfo_TrueName(TypeInfo_t* tinfo) const
 {
    TClingTypeInfo* TClinginfo = (TClingTypeInfo*) tinfo;
-   return TClinginfo->TrueName();
+   return TClinginfo->TrueName(*fNormalizedCtxt);
 }
 
 
@@ -3953,7 +3953,7 @@ int TCintWithCling::TypedefInfo_Size(TypedefInfo_t* tinfo) const
 const char* TCintWithCling::TypedefInfo_TrueName(TypedefInfo_t* tinfo) const
 {
    TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
-   return TClinginfo->TrueName();
+   return TClinginfo->TrueName(*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
