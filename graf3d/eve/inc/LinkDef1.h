@@ -164,6 +164,7 @@
 #pragma link C++ class TEveListTreeItem+;
 #pragma link C++ class TEveGListTreeEditorFrame+;
 #pragma link C++ class TEveBrowser+;
+#pragma link C++ class TEveContextMenu+;
 #pragma link C++ class TEveCompositeFrame+;
 #pragma link C++ class TEveCompositeFrameInMainFrame+;
 #pragma link C++ class TEveCompositeFrameInPack+;

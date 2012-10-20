@@ -15,13 +15,12 @@
 #include "TEveSelection.h"
 
 #include "THashList.h"
-#include "TContextMenu.h"
 
 #include "TGButton.h"
-#include "TContextMenu.h"
 #include "TGMenu.h"
 #include "TGPack.h"
 #include "TGTab.h"
+#include "TRootContextMenu.h"
 
 #include <cassert>
 
@@ -65,7 +64,7 @@
 
 ClassImp(TEveCompositeFrame);
 
-TContextMenu* TEveCompositeFrame::fgCtxMenu = 0;
+TEveContextMenu* TEveCompositeFrame::fgCtxMenu = 0;
 
 const TString TEveCompositeFrame::fgkEmptyFrameName("<relinquished>");
 TList*        TEveCompositeFrame::fgFrameList = new THashList;
@@ -337,18 +336,10 @@ void TEveCompositeFrame::ActionPressed()
    // This opens context menu of the eve-window.
 
    if (fgCtxMenu == 0) {
-      fgCtxMenu = new TContextMenu("", "");
+      fgCtxMenu = new TEveContextMenu("", "");
    }
 
-   Int_t    x, y;
-   UInt_t   w, h;
-   Window_t childdum;
-   gVirtualX->GetWindowSize(fIconBar->GetId(), x, y, w, h);
-   gVirtualX->TranslateCoordinates(fIconBar->GetId(),
-                                   gClient->GetDefaultRoot()->GetId(),
-                                   0, 0, x, y, childdum);
-
-   fgCtxMenu->Popup(x - 2, y + h - 2, fEveWindow);
+   fgCtxMenu->SetupAndPopup(fIconBar, fEveWindow);
 }
 
 //______________________________________________________________________________
@@ -1527,4 +1518,52 @@ TEveWindowSlot* TEveWindowTab::NewSlot()
    // Create new frame-slot - a new tab.
 
    return TEveWindow::CreateWindowInTab(fTab, this);
+}
+
+
+//==============================================================================
+//==============================================================================
+// Helper classes
+//==============================================================================
+//==============================================================================
+
+
+//==============================================================================
+// TEveContextMenu
+//==============================================================================
+
+//______________________________________________________________________________
+//
+// Specialization of TContext menu.
+// Provide a window manager hint that ensures proper placement of popup on Cocoa.
+
+ClassImp(TEveContextMenu);
+
+//______________________________________________________________________________
+TEveContextMenu::TEveContextMenu(const char *name, const char *title) :
+  TContextMenu(name, title)
+{
+   // Constructor.
+}
+
+//______________________________________________________________________________
+void TEveContextMenu::SetupAndPopup(TGWindow* button, TObject* obj)
+{
+   // Position the popup below given button and show context menu for object obj.
+
+   Int_t    x, y;
+   UInt_t   w, h;
+   Window_t childdum;
+   gVirtualX->GetWindowSize(button->GetId(), x, y, w, h);
+   gVirtualX->TranslateCoordinates(button->GetId(),
+                                   gClient->GetDefaultRoot()->GetId(),
+                                   0, 0, x, y, childdum);
+
+   TRootContextMenu *rcm = dynamic_cast<TRootContextMenu*>(fContextMenuImp);
+   if (rcm != 0)
+   {
+      gVirtualX->SetWMTransientHint (rcm->GetId(), button->GetId());
+   }
+
+   Popup(x - 2, y + h - 2, obj);
 }

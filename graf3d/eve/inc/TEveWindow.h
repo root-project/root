@@ -15,6 +15,7 @@
 #include "TEveElement.h"
 
 #include "TGFrame.h"
+#include "TContextMenu.h"
 
 class TEveWindow;
 class TEveWindowSlot;
@@ -22,8 +23,7 @@ class TEveWindowFrame;
 class TEveWindowMainFrame;
 class TEveWindowPack;
 class TEveWindowTab;
-
-class TContextMenu;
+class TEveContextMenu;
 
 class TGButton;
 class TGSplitButton;
@@ -67,10 +67,10 @@ protected:
 
    Bool_t             fShowInSync;
 
-   static TContextMenu *fgCtxMenu;
-   static const TString fgkEmptyFrameName;
+   static TEveContextMenu *fgCtxMenu;
+   static const TString    fgkEmptyFrameName;
 
-   static TList        *fgFrameList;
+   static TList           *fgFrameList;
 
 public:
    TEveCompositeFrame(TGCompositeFrame* gui_parent, TEveWindow* eve_parent);
@@ -413,6 +413,28 @@ public:
    TGTab* GetTab() const { return fTab; }
 
    ClassDef(TEveWindowTab, 0); // Eve-window containing a TGTab.
+};
+
+
+//==============================================================================
+//==============================================================================
+// Helper classes
+//==============================================================================
+//==============================================================================
+
+
+//==============================================================================
+// TEveContextMenu
+//==============================================================================
+
+class TEveContextMenu : public TContextMenu
+{
+public:
+   TEveContextMenu(const char *name, const char *title = "Eve context menu");
+
+   void SetupAndPopup(TGWindow* button, TObject* obj);
+
+   ClassDef(TEveContextMenu, 0) // Specialization of TContextMenu for Eve.
 };
 
 #endif
