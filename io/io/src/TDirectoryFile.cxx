@@ -1124,8 +1124,12 @@ TDirectory *TDirectoryFile::mkdir(const char *name, const char *title)
       char *workname = new char[size+1];
       strncpy(workname, name, size);
       workname[size] = 0;
-      TDirectoryFile *tmpdir = (TDirectoryFile*)mkdir(workname,title);
-      if (!tmpdir) return 0;
+      TDirectoryFile *tmpdir;
+      GetObject(workname,tmpdir);
+      if (!tmpdir) {
+         tmpdir = (TDirectoryFile*)mkdir(workname,title);
+         if (!tmpdir) return 0;
+      }
       if (!newdir) newdir = tmpdir;
       tmpdir->mkdir(slash+1);
       delete[] workname;
