@@ -372,7 +372,7 @@ void TClingClassInfo::Init(const char *name)
 
 void TClingClassInfo::Init(int tagnum)
 {
-   Warning("TCintWithCling::Init(tagnum)","Not yet implemented\n");
+   Warning("TClingClassInfo::Init(tagnum)","Not yet implemented\n");
    return;
 }
 
