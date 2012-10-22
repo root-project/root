@@ -5,7 +5,7 @@
 
 // The "source_dir" variable is defined in JSRootInterface.js
 
-var d, key_tree, x_scale, y_scale;
+var d_tree, key_tree;
 
 var kWhite = 0, kBlack = 1, kGray = 920, kRed = 632, kGreen = 416, kBlue = 600,
     kYellow = 400, kMagenta = 616, kCyan = 432, kOrange = 800, kSpring = 820,
@@ -3032,10 +3032,10 @@ function format_id(id) {
    JSROOTPainter.displayStreamerInfos = function(streamerInfo, container) {
 
       delete d;
-      var content = "<p><a href='javascript: d.openAll();'>open all</a> | <a href='javascript: d.closeAll();'>close all</a></p>";
-      d = new dTree('d');
-      d.config.useCookies = false;
-      d.add(0, -1, 'Streamer Infos');
+      var content = "<p><a href='javascript: d_tree.openAll();'>open all</a> | <a href='javascript: d_tree.closeAll();'>close all</a></p>";
+      d_tree = new dTree('d_tree');
+      d_tree.config.useCookies = false;
+      d_tree.add(0, -1, 'Streamer Infos');
 
       var k = 1;
       var pid = 0;
@@ -3043,39 +3043,39 @@ function format_id(id) {
       var key;
       for (key in streamerInfo) {
          var entry = streamerInfo[key]['name'];
-         d.add(k, 0, entry); k++;
+         d_tree.add(k, 0, entry); k++;
       }
       var j=0;
       for (key in streamerInfo) {
          if (typeof(streamerInfo[key]['checksum']) != 'undefined')
-            d.add(k, j+1, 'Checksum: ' + streamerInfo[key]['checksum']); ++k;
+            d_tree.add(k, j+1, 'Checksum: ' + streamerInfo[key]['checksum']); ++k;
          if (typeof(streamerInfo[key]['classversion']) != 'undefined')
-            d.add(k, j+1, 'Class Version: ' + streamerInfo[key]['classversion']); ++k;
+            d_tree.add(k, j+1, 'Class Version: ' + streamerInfo[key]['classversion']); ++k;
          if (typeof(streamerInfo[key]['title']) != 'undefined')
-            d.add(k, j+1, 'Title: ' + streamerInfo[key]['title']); ++k;
+            d_tree.add(k, j+1, 'Title: ' + streamerInfo[key]['title']); ++k;
          if (typeof(streamerInfo[key]['elements']) != 'undefined') {
-            d.add(k, j+1, 'Elements'); pid=k; ++k;
+            d_tree.add(k, j+1, 'Elements'); pid=k; ++k;
             for (var l=0; l<streamerInfo[key]['elements']['array'].length; ++l) {
                if (typeof(streamerInfo[key]['elements']['array'][l]['element']) != 'undefined') {
-                  d.add(k, pid, streamerInfo[key]['elements']['array'][l]['element']['name']); cid=k; ++k;
-                  d.add(k, cid, streamerInfo[key]['elements']['array'][l]['element']['title']); ++k;
-                  d.add(k, cid, streamerInfo[key]['elements']['array'][l]['element']['typename']); ++k;
+                  d_tree.add(k, pid, streamerInfo[key]['elements']['array'][l]['element']['name']); cid=k; ++k;
+                  d_tree.add(k, cid, streamerInfo[key]['elements']['array'][l]['element']['title']); ++k;
+                  d_tree.add(k, cid, streamerInfo[key]['elements']['array'][l]['element']['typename']); ++k;
                }
                else if (typeof(streamerInfo[key]['elements']['array'][l]['name']) != 'undefined') {
-                  d.add(k, pid, streamerInfo[key]['elements']['array'][l]['name']); cid=k; ++k;
-                  d.add(k, cid, streamerInfo[key]['elements']['array'][l]['title']); ++k;
-                  d.add(k, cid, streamerInfo[key]['elements']['array'][l]['typename']); ++k;
+                  d_tree.add(k, pid, streamerInfo[key]['elements']['array'][l]['name']); cid=k; ++k;
+                  d_tree.add(k, cid, streamerInfo[key]['elements']['array'][l]['title']); ++k;
+                  d_tree.add(k, cid, streamerInfo[key]['elements']['array'][l]['typename']); ++k;
                }
             }
          }
          else if (typeof(streamerInfo[key]['array']) != 'undefined') {
             for (var l=0; l<streamerInfo[key]['array'].length; ++l) {
-               d.add(k, j+1, streamerInfo[key]['array'][l]['str']); ++k;
+               d_tree.add(k, j+1, streamerInfo[key]['array'][l]['str']); ++k;
             }
          }
          ++j;
       }
-      content += d;
+      content += d_tree;
       $(container).html(content);
    };
 
