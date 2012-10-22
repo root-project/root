@@ -1051,7 +1051,8 @@ function format_id(id) {
             .tickSize(-xDivLength, -xDivLength/2, -xDivLength/4)
             .tickFormat(function(d,i) {
                if (histo['fXaxis']['fTimeDisplay']) return dfx;
-               return d;
+               var val = parseFloat(d.toPrecision(12));
+               return val;
             })
             .ticks(n1ax);
       }
@@ -1114,7 +1115,8 @@ function format_id(id) {
             .tickSize(-yDivLength, -yDivLength/2, -yDivLength/4)
             .tickFormat(function(d,i) {
                if (histo['fYaxis']['fTimeDisplay']) return dfy;
-               return d;
+               var val = parseFloat(d.toPrecision(12));
+               return val;
             })
             .ticks(n1ay);
       }
