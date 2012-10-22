@@ -11,6 +11,8 @@
 //
 //===----------------------------------------------------------------------===//
 #include "clang/Sema/MultiplexExternalSemaSource.h"
+
+#include "clang/AST/DeclContextInternals.h"
 #include "clang/Sema/Lookup.h"
 
 using namespace clang;
@@ -21,7 +23,7 @@ using namespace clang;
 ///\param[in] source - An ExternalSemaSource.
 ///
 MultiplexExternalSemaSource::MultiplexExternalSemaSource(ExternalSemaSource &s1,
-                                                         ExternalSemaSource &s2){
+                                                        ExternalSemaSource &s2){
   Sources.push_back(&s1);
   Sources.push_back(&s2);
 }
@@ -36,6 +38,148 @@ MultiplexExternalSemaSource::~MultiplexExternalSemaSource() {}
 void MultiplexExternalSemaSource::addSource(ExternalSemaSource &source) {
   Sources.push_back(&source);
 }
+
+//===----------------------------------------------------------------------===//
+// ExternalASTSource.
+//===----------------------------------------------------------------------===//
+
+Decl *MultiplexExternalSemaSource::GetExternalDecl(uint32_t ID) {
+  for(size_t i = 0; i < Sources.size(); ++i)
+    if (Decl *Result = Sources[i]->GetExternalDecl(ID))
+      return Result;
+  return 0;
+}
+
+Selector MultiplexExternalSemaSource::GetExternalSelector(uint32_t ID) {
+  Selector Sel;
+  for(size_t i = 0; i < Sources.size(); ++i) {
+    Sel = Sources[i]->GetExternalSelector(ID);
+    if (!Sel.isNull())
+      return Sel;
+  }
+  return Sel;
+}
+
+uint32_t MultiplexExternalSemaSource::GetNumExternalSelectors() {
+  uint32_t total = 0;
+  for(size_t i = 0; i < Sources.size(); ++i)
+    total += Sources[i]->GetNumExternalSelectors();
+  return total;
+}
+
+Stmt *MultiplexExternalSemaSource::GetExternalDeclStmt(uint64_t Offset) {
+  for(size_t i = 0; i < Sources.size(); ++i)
+    if (Stmt *Result = Sources[i]->GetExternalDeclStmt(Offset))
+      return Result;
+  return 0;
+}
+
+CXXBaseSpecifier *MultiplexExternalSemaSource::GetExternalCXXBaseSpecifiers(
+                                                               uint64_t Offset){
+  for(size_t i = 0; i < Sources.size(); ++i)
+    if (CXXBaseSpecifier *R = Sources[i]->GetExternalCXXBaseSpecifiers(Offset))
+      return R;
+  return 0; 
+}
+
+DeclContextLookupResult MultiplexExternalSemaSource::
+FindExternalVisibleDeclsByName(const DeclContext *DC, DeclarationName Name) {
+  StoredDeclsList DeclsFound;
+  DeclContextLookupResult lookup;
+  for(size_t i = 0; i < Sources.size(); ++i) {
+    lookup = Sources[i]->FindExternalVisibleDeclsByName(DC, Name);
+    while(lookup.first != lookup.second) {
+      if (!DeclsFound.HandleRedeclaration(*lookup.first))
+        DeclsFound.AddSubsequentDecl(*lookup.first);
+      lookup.first++;
+    }
+  }
+  return DeclsFound.getLookupResult(); 
+}
+
+void MultiplexExternalSemaSource::completeVisibleDeclsMap(const DeclContext *DC){
+  for(size_t i = 0; i < Sources.size(); ++i)
+    Sources[i]->completeVisibleDeclsMap(DC);
+}
+
+ExternalLoadResult MultiplexExternalSemaSource::
+FindExternalLexicalDecls(const DeclContext *DC,
+                         bool (*isKindWeWant)(Decl::Kind),
+                         SmallVectorImpl<Decl*> &Result) {
+  for(size_t i = 0; i < Sources.size(); ++i)
+    // FIXME: The semantics of the return result is unclear to me...
+    Sources[i]->FindExternalLexicalDecls(DC, isKindWeWant, Result);
+
+  return ELR_Success;
+}
+
+void MultiplexExternalSemaSource::FindFileRegionDecls(FileID File, 
+                                                      unsigned Offset,
+                                                      unsigned Length,
+                                                SmallVectorImpl<Decl *> &Decls){
+  for(size_t i = 0; i < Sources.size(); ++i)
+    Sources[i]->FindFileRegionDecls(File, Offset, Length, Decls);
+}
+
+void MultiplexExternalSemaSource::CompleteType(TagDecl *Tag) {
+  for(size_t i = 0; i < Sources.size(); ++i)
+    Sources[i]->CompleteType(Tag);
+}
+
+void MultiplexExternalSemaSource::CompleteType(ObjCInterfaceDecl *Class) {
+  for(size_t i = 0; i < Sources.size(); ++i)
+    Sources[i]->CompleteType(Class);
+}
+
+void MultiplexExternalSemaSource::ReadComments() {
+  for(size_t i = 0; i < Sources.size(); ++i)
+    Sources[i]->ReadComments();
+}
+
+void MultiplexExternalSemaSource::StartedDeserializing() {
+  for(size_t i = 0; i < Sources.size(); ++i)
+    Sources[i]->StartedDeserializing();
+}
+
+void MultiplexExternalSemaSource::FinishedDeserializing() {
+  for(size_t i = 0; i < Sources.size(); ++i)
+    Sources[i]->FinishedDeserializing();
+}
+
+void MultiplexExternalSemaSource::StartTranslationUnit(ASTConsumer *Consumer) {
+  for(size_t i = 0; i < Sources.size(); ++i)
+    Sources[i]->StartTranslationUnit(Consumer);
+}
+
+void MultiplexExternalSemaSource::PrintStats() {
+  for(size_t i = 0; i < Sources.size(); ++i)
+    Sources[i]->PrintStats();
+}
+
+bool MultiplexExternalSemaSource::layoutRecordType(const RecordDecl *Record,
+                                                   uint64_t &Size, 
+                                                   uint64_t &Alignment,
+                      llvm::DenseMap<const FieldDecl *, uint64_t> &FieldOffsets,
+                  llvm::DenseMap<const CXXRecordDecl *, CharUnits> &BaseOffsets,
+          llvm::DenseMap<const CXXRecordDecl *, CharUnits> &VirtualBaseOffsets){
+  for(size_t i = 0; i < Sources.size(); ++i)
+    if (Sources[i]->layoutRecordType(Record, Size, Alignment, FieldOffsets, 
+                                     BaseOffsets, VirtualBaseOffsets))
+      return true;
+  return false;
+}
+
+void MultiplexExternalSemaSource::
+getMemoryBufferSizes(MemoryBufferSizes &sizes) const {
+  for(size_t i = 0; i < Sources.size(); ++i)
+    Sources[i]->getMemoryBufferSizes(sizes);
+
+}
+
+//===----------------------------------------------------------------------===//
+// ExternalSemaSource.
+//===----------------------------------------------------------------------===//
+
 
 void MultiplexExternalSemaSource::InitializeSema(Sema &S) {
   for(size_t i = 0; i < Sources.size(); ++i)

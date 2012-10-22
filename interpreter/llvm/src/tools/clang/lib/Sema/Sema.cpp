@@ -192,7 +192,7 @@ Sema::~Sema() {
     ExternalSema->ForgetSema();
 
   // If Sema's ExternalSource is the multiplexer - we own it.
-  if (ExternalSource && isMultiplexExternalSource)
+  if (isMultiplexExternalSource)
     delete ExternalSource;
 }
 
@@ -239,7 +239,7 @@ void Sema::addExternalSource(ExternalSemaSource *E) {
   }
 
   if (isMultiplexExternalSource)
-    ((MultiplexExternalSemaSource*) ExternalSource)->addSource(*E);
+    static_cast<MultiplexExternalSemaSource*>(ExternalSource)->addSource(*E);
   else {
     ExternalSource = new MultiplexExternalSemaSource(*ExternalSource, *E);
     isMultiplexExternalSource = true;

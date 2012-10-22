@@ -61,6 +61,184 @@ public:
   ///
   void addSource(ExternalSemaSource &source);
 
+  //===--------------------------------------------------------------------===//
+  // ExternalASTSource.
+  //===--------------------------------------------------------------------===//
+
+  /// \brief Resolve a declaration ID into a declaration, potentially
+  /// building a new declaration.
+  ///
+  /// This method only needs to be implemented if the AST source ever
+  /// passes back decl sets as VisibleDeclaration objects.
+  ///
+  /// The default implementation of this method is a no-op.
+  virtual Decl *GetExternalDecl(uint32_t ID);
+
+  /// \brief Resolve a selector ID into a selector.
+  ///
+  /// This operation only needs to be implemented if the AST source
+  /// returns non-zero for GetNumKnownSelectors().
+  ///
+  /// The default implementation of this method is a no-op.
+  virtual Selector GetExternalSelector(uint32_t ID);
+
+  /// \brief Returns the number of selectors known to the external AST
+  /// source.
+  ///
+  /// The default implementation of this method is a no-op.
+  virtual uint32_t GetNumExternalSelectors();
+
+  /// \brief Resolve the offset of a statement in the decl stream into
+  /// a statement.
+  ///
+  /// This operation is meant to be used via a LazyOffsetPtr.  It only
+  /// needs to be implemented if the AST source uses methods like
+  /// FunctionDecl::setLazyBody when building decls.
+  ///
+  /// The default implementation of this method is a no-op.
+  virtual Stmt *GetExternalDeclStmt(uint64_t Offset);
+
+  /// \brief Resolve the offset of a set of C++ base specifiers in the decl
+  /// stream into an array of specifiers.
+  ///
+  /// The default implementation of this method is a no-op.
+  virtual CXXBaseSpecifier *GetExternalCXXBaseSpecifiers(uint64_t Offset);
+
+  /// \brief Finds all declarations with the given name in the
+  /// given context.
+  ///
+  /// Generally the final step of this method is either to call
+  /// SetExternalVisibleDeclsForName or to recursively call lookup on
+  /// the DeclContext after calling SetExternalVisibleDecls.
+  ///
+  /// The default implementation of this method is a no-op.
+  virtual DeclContextLookupResult
+  FindExternalVisibleDeclsByName(const DeclContext *DC, DeclarationName Name);
+
+  /// \brief Ensures that the table of all visible declarations inside this
+  /// context is up to date.
+  ///
+  /// The default implementation of this functino is a no-op.
+  virtual void completeVisibleDeclsMap(const DeclContext *DC);
+
+  /// \brief Finds all declarations lexically contained within the given
+  /// DeclContext, after applying an optional filter predicate.
+  ///
+  /// \param isKindWeWant a predicate function that returns true if the passed
+  /// declaration kind is one we are looking for. If NULL, all declarations
+  /// are returned.
+  ///
+  /// \return an indication of whether the load succeeded or failed.
+  ///
+  /// The default implementation of this method is a no-op.
+  virtual ExternalLoadResult FindExternalLexicalDecls(const DeclContext *DC,
+                                        bool (*isKindWeWant)(Decl::Kind),
+                                        SmallVectorImpl<Decl*> &Result);
+
+  /// \brief Finds all declarations lexically contained within the given
+  /// DeclContext.
+  ///
+  /// \return true if an error occurred
+  ExternalLoadResult FindExternalLexicalDecls(const DeclContext *DC,
+                                SmallVectorImpl<Decl*> &Result) {
+    return FindExternalLexicalDecls(DC, 0, Result);
+  }
+
+  template <typename DeclTy>
+  ExternalLoadResult FindExternalLexicalDeclsBy(const DeclContext *DC,
+                                  SmallVectorImpl<Decl*> &Result) {
+    return FindExternalLexicalDecls(DC, DeclTy::classofKind, Result);
+  }
+
+  /// \brief Get the decls that are contained in a file in the Offset/Length
+  /// range. \p Length can be 0 to indicate a point at \p Offset instead of
+  /// a range. 
+  virtual void FindFileRegionDecls(FileID File, unsigned Offset,unsigned Length,
+                                   SmallVectorImpl<Decl *> &Decls);
+
+  /// \brief Gives the external AST source an opportunity to complete
+  /// an incomplete type.
+  virtual void CompleteType(TagDecl *Tag);
+
+  /// \brief Gives the external AST source an opportunity to complete an
+  /// incomplete Objective-C class.
+  ///
+  /// This routine will only be invoked if the "externally completed" bit is
+  /// set on the ObjCInterfaceDecl via the function 
+  /// \c ObjCInterfaceDecl::setExternallyCompleted().
+  virtual void CompleteType(ObjCInterfaceDecl *Class);
+
+  /// \brief Loads comment ranges.
+  virtual void ReadComments();
+
+  /// \brief Notify ExternalASTSource that we started deserialization of
+  /// a decl or type so until FinishedDeserializing is called there may be
+  /// decls that are initializing. Must be paired with FinishedDeserializing.
+  ///
+  /// The default implementation of this method is a no-op.
+  virtual void StartedDeserializing();
+
+  /// \brief Notify ExternalASTSource that we finished the deserialization of
+  /// a decl or type. Must be paired with StartedDeserializing.
+  ///
+  /// The default implementation of this method is a no-op.
+  virtual void FinishedDeserializing();
+
+  /// \brief Function that will be invoked when we begin parsing a new
+  /// translation unit involving this external AST source.
+  ///
+  /// The default implementation of this method is a no-op.
+  virtual void StartTranslationUnit(ASTConsumer *Consumer);
+
+  /// \brief Print any statistics that have been gathered regarding
+  /// the external AST source.
+  ///
+  /// The default implementation of this method is a no-op.
+  virtual void PrintStats();
+  
+  
+  /// \brief Perform layout on the given record.
+  ///
+  /// This routine allows the external AST source to provide an specific 
+  /// layout for a record, overriding the layout that would normally be
+  /// constructed. It is intended for clients who receive specific layout
+  /// details rather than source code (such as LLDB). The client is expected
+  /// to fill in the field offsets, base offsets, virtual base offsets, and
+  /// complete object size.
+  ///
+  /// \param Record The record whose layout is being requested.
+  ///
+  /// \param Size The final size of the record, in bits.
+  ///
+  /// \param Alignment The final alignment of the record, in bits.
+  ///
+  /// \param FieldOffsets The offset of each of the fields within the record,
+  /// expressed in bits. All of the fields must be provided with offsets.
+  ///
+  /// \param BaseOffsets The offset of each of the direct, non-virtual base
+  /// classes. If any bases are not given offsets, the bases will be laid 
+  /// out according to the ABI.
+  ///
+  /// \param VirtualBaseOffsets The offset of each of the virtual base classes
+  /// (either direct or not). If any bases are not given offsets, the bases will 
+  /// be laid out according to the ABI.
+  /// 
+  /// \returns true if the record layout was provided, false otherwise.
+  virtual bool 
+  layoutRecordType(const RecordDecl *Record,
+                   uint64_t &Size, uint64_t &Alignment,
+                   llvm::DenseMap<const FieldDecl *, uint64_t> &FieldOffsets,
+                 llvm::DenseMap<const CXXRecordDecl *, CharUnits> &BaseOffsets,
+          llvm::DenseMap<const CXXRecordDecl *, CharUnits> &VirtualBaseOffsets);
+
+  /// Return the amount of memory used by memory buffers, breaking down
+  /// by heap-backed versus mmap'ed memory.
+  virtual void getMemoryBufferSizes(MemoryBufferSizes &sizes) const;
+
+  //===--------------------------------------------------------------------===//
+  // ExternalSemaSource.
+  //===--------------------------------------------------------------------===//
+
   /// \brief Initialize the semantic source with the Sema instance
   /// being used to perform semantic analysis on the abstract syntax
   /// tree.
@@ -94,7 +272,7 @@ public:
   /// given vector of tentative definitions. Note that this routine may be
   /// invoked multiple times; the external source should take care not to
   /// introduce the same declarations repeatedly.
-  virtual void ReadTentativeDefinitions(SmallVectorImpl<VarDecl*> &TentativeDefs);
+  virtual void ReadTentativeDefinitions(SmallVectorImpl<VarDecl*> &Defs);
   
   /// \brief Read the set of unused file-scope declarations known to the
   /// external Sema source.
@@ -104,7 +282,7 @@ public:
   /// invoked multiple times; the external source should take care not to
   /// introduce the same declarations repeatedly.
   virtual void ReadUnusedFileScopedDecls(
-                                  SmallVectorImpl<const DeclaratorDecl*> &Decls);
+                                 SmallVectorImpl<const DeclaratorDecl*> &Decls);
   
   /// \brief Read the set of delegating constructors known to the
   /// external Sema source.
@@ -114,7 +292,7 @@ public:
   /// invoked multiple times; the external source should take care not to
   /// introduce the same declarations repeatedly.
   virtual void ReadDelegatingConstructors(
-                                    SmallVectorImpl<CXXConstructorDecl*> &Decls);
+                                   SmallVectorImpl<CXXConstructorDecl*> &Decls);
 
   /// \brief Read the set of ext_vector type declarations known to the
   /// external Sema source.
@@ -140,7 +318,7 @@ public:
   /// declarations to the given vector of declarations. Note that this routine 
   /// may be invoked multiple times; the external source should take care not 
   /// to introduce the same declarations repeatedly.
-  virtual void ReadLocallyScopedExternalDecls(SmallVectorImpl<NamedDecl*> &Decls);
+  virtual void ReadLocallyScopedExternalDecls(SmallVectorImpl<NamedDecl*>&Decls);
 
   /// \brief Read the set of referenced selectors known to the
   /// external Sema source.
@@ -150,7 +328,7 @@ public:
   /// may be invoked multiple times; the external source should take care not 
   /// to introduce the same selectors repeatedly.
   virtual void ReadReferencedSelectors(SmallVectorImpl<std::pair<Selector, 
-                                                        SourceLocation> > &Sels);
+                                                       SourceLocation> > &Sels);
 
   /// \brief Read the set of weak, undeclared identifiers known to the
   /// external Sema source.
@@ -160,7 +338,7 @@ public:
   /// the external source should take care not to introduce the same identifiers
   /// repeatedly.
   virtual void ReadWeakUndeclaredIdentifiers(
-                     SmallVectorImpl<std::pair<IdentifierInfo*, WeakInfo> > &WI);
+                    SmallVectorImpl<std::pair<IdentifierInfo*, WeakInfo> > &WI);
 
   /// \brief Read the set of used vtables known to the external Sema source.
   ///
@@ -177,7 +355,7 @@ public:
   /// external source should take care not to introduce the same instantiations
   /// repeatedly.
   virtual void ReadPendingInstantiations(
-               SmallVectorImpl<std::pair<ValueDecl*, SourceLocation> >& Pending);
+              SmallVectorImpl<std::pair<ValueDecl*, SourceLocation> >& Pending);
 
   // isa/cast/dyn_cast support
   static bool classof(const MultiplexExternalSemaSource*) { return true; }
