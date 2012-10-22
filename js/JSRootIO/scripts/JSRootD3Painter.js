@@ -450,9 +450,9 @@ function format_id(id) {
       'bold oblique Courier New', 'Symbol', 'Times New Roman',
       'Wingdings', 'Symbol');
 
-   var root_line_styles = new Array("", "", "12, 12", "4, 8", "12, 16, 4, 16",
-         "20, 12, 4, 12", "20, 12, 4, 12, 4, 12, 4, 12", "20, 20",
-         "20, 12, 4, 12, 4, 12", "80, 20", "80, 40, 4, 40", "2, 4");
+   var root_line_styles = new Array("", "", "3, 3", "1, 2", "3, 4, 1, 4",
+         "5, 3, 1, 3", "5, 3, 1, 3, 1, 3, 1, 3", "5, 5",
+         "5, 3, 1, 3, 1, 3", "20, 5", "20, 10, 1, 10", "1, 1");
 
    JSROOTPainter = {};
 
