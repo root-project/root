@@ -242,34 +242,29 @@ int TClingDataMemberInfo::InternalNext()
 
 long TClingDataMemberInfo::Offset() const
 {
+   using namespace clang;
+
    if (!IsValid()) {
       return -1L;
    }
    // Sanity check the current data member.
-   clang::Decl::Kind DK = GetDecl()->getKind();
-   if (
-       (DK != clang::Decl::Field) &&
-       (DK != clang::Decl::Var) &&
-       (DK != clang::Decl::EnumConstant)
-       ) {
+   const Decl *D = GetDecl();
+   if (!isa<FieldDecl>(D) && !isa<VarDecl>(D) && !isa<EnumConstantDecl>(D))
       // Error, was not a data member, variable, or enumerator.
       return -1L;
-   }
-   if (DK == clang::Decl::Field) {
+   
+   
+
+   if (const FieldDecl *FldD = dyn_cast<FieldDecl>(D)) {
       // The current member is a non-static data member.
-      const clang::FieldDecl *FD = llvm::dyn_cast<clang::FieldDecl>(GetDecl());
-      clang::ASTContext &Context = FD->getASTContext();
-      const clang::RecordDecl *RD = FD->getParent();
+      clang::ASTContext &Context = FldD->getASTContext();
+      const clang::RecordDecl *RD = FldD->getParent();
       const clang::ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
-      uint64_t bits = Layout.getFieldOffset(FD->getFieldIndex());
+      uint64_t bits = Layout.getFieldOffset(FldD->getFieldIndex());
       int64_t offset = Context.toCharUnitsFromBits(bits).getQuantity();
       return static_cast<long>(offset);
-   }
-   // The current member is static data member, enumerator constant,
-   // or a global variable.
-   // FIXME: We are supposed to return the address of the storage
-   //        for the member here, only the interpreter knows that.
-   return -1L;
+   } else 
+      return fInterpreter->getAddressOfGlobal(cast<NamedDecl>(D));
 }
 
 long TClingDataMemberInfo::Property() const
