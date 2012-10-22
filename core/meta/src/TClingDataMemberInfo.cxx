@@ -264,7 +264,7 @@ long TClingDataMemberInfo::Offset() const
       int64_t offset = Context.toCharUnitsFromBits(bits).getQuantity();
       return static_cast<long>(offset);
    } else 
-      return fInterpreter->getAddressOfGlobal(cast<NamedDecl>(D));
+      return reinterpret_cast<long>(fInterp->getAddressOfGlobal(cast<NamedDecl>(D)));
 }
 
 long TClingDataMemberInfo::Property() const
