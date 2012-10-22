@@ -1430,6 +1430,16 @@ function format_id(id) {
                .attr("font-family", "Arial")
                .attr("font-size", font_size)
                .text(func['fTitle']);
+/*
+            // foreign html objects don't work on IE, and not properly on FF... :-(
+            vis.append("foreignObject")
+               .attr("y", 0.05 * vis.attr("height"))
+               .attr("width", vis.attr("width"))
+               .attr("height", 100)
+            .append("xhtml:body")
+               .style("font", "14px 'Helvetica'")
+               .html("<h3><center>An HTML Foreign Object in SVG <font face='Symbol' color='green'>abCDEFG!</font></center></h3>");
+*/
          }
 
          xax.selectAll("text").attr("font-size", label_font_size);
