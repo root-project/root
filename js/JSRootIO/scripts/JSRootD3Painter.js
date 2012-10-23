@@ -2187,7 +2187,7 @@ function format_id(id) {
 
    JSROOTPainter.drawObject = function(obj, idx) {
       var i, svg = null;
-      function draw() {
+      function draw(init) {
 
          var render_to = '#histogram' + idx;
          $(render_to).empty();
@@ -2197,9 +2197,10 @@ function format_id(id) {
          }
          if (obj['_typename'].match(/\bTCanvas/)) {
             svg = JSROOTPainter.drawCanvas(obj, idx);
+            if (init == true)
+               window.setTimeout(function() { $(render_to)[0].scrollIntoView(); }, 50);
             return;
          }
-
          svg = JSROOTPainter.createCanvas($(render_to), idx);
          if (svg == null) return false;
          if (obj['_typename'].match(/\bTH1/)) {
@@ -2220,6 +2221,8 @@ function format_id(id) {
          else if (obj['_typename'] == 'JSROOTIO.TMultiGraph') {
             JSROOTPainter.drawMultiGraph(svg, null, obj, null);
          }
+         if (init == true)
+            window.setTimeout(function() { $(render_to)[0].scrollIntoView(); }, 50);
       };
       //A better idom for binding with resize is to debounce
       var debounce = function(fn, timeout) {
@@ -2231,10 +2234,9 @@ function format_id(id) {
             timeoutID = window.setTimeout(fn, timeout);
          }
       };
-      var debounced_draw = debounce(function() { draw(); }, 125);
-      var initial_draw = debounce(function() { draw(); }, 25);
+      var debounced_draw = debounce(function() { draw(false); }, 100);
       $(window).resize(debounced_draw);
-      initial_draw();
+      draw(true);
    };
 
    JSROOTPainter.drawPad = function(vis, pad) {

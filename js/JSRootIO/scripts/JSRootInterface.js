@@ -25,7 +25,7 @@ function addCollapsible(element) {
           $(this)
              .toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
              .find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s").end()
-             .next().toggleClass("ui-accordion-content-active").slideToggle();
+             .next().toggleClass("ui-accordion-content-active").slideToggle(0);
           return false;
        })
        .next()
@@ -34,7 +34,7 @@ function addCollapsible(element) {
    $(element)
       .toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
       .find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s").end()
-      .next().toggleClass("ui-accordion-content-active").slideToggle();
+      .next().toggleClass("ui-accordion-content-active").slideToggle(0);
 
 };
 
@@ -43,8 +43,9 @@ function showElement(element) {
       $(element)
          .toggleClass("ui-accordion-header-active ui-state-active ui-state-default ui-corner-bottom")
          .find("> .ui-icon").toggleClass("ui-icon-triangle-1-e ui-icon-triangle-1-s").end()
-         .next().toggleClass("ui-accordion-content-active").slideDown("slow");
+         .next().toggleClass("ui-accordion-content-active").slideDown(0);
    }
+   $(element)[0].scrollIntoView();
 }
 
 function loadScript(url, callback) {
