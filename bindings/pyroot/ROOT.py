@@ -82,9 +82,10 @@ if needsGlobal:
    dlflags = sys.getdlopenflags()
    sys.setdlopenflags( 0x100 | 0x2 )    # RTLD_GLOBAL | RTLD_NOW
 
-#import ctypes
-#_libCling = ctypes.CDLL( 'libCling.so', 0x100 | 0x2 )  # force symbols for libCore.so
-#_libClang = ctypes.CDLL( 'libclang.so', 0x100 | 0x2 )  # id.
+import ctypes
+#_libCling = ctypes.CDLL( 'libCling.so', ctypes.RTLD_GLOBAL | 0x2 )  # force symbols for libCore.so
+#_libClang = ctypes.CDLL( 'libclang.so', ctypes.RTLD_GLOBAL | 0x2 )  # id.
+#_libCore = ctypes.CDLL( 'libCore.so', ctypes.RTLD_GLOBAL | 0x2 )  # id.
 import libPyROOT as _root
 
 # reset dl flags if needed

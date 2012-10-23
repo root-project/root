@@ -93,54 +93,6 @@ PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
 
 // perform the call (fails for loaded macro's)
    Long_t address = (Long_t)this->Execute( klass );
-   if ( ! address && ( ! PyErr_Occurred() /* exception thrown */ ) ) {
-   // the ctor call fails for interpreted classes, can deal with limited info, or
-   // otherwise only deal with default ctor
-
-      if ( klass->GetClassInfo() != 0 ) {
-         Long_t tagnum = ((G__ClassInfo*)klass->GetClassInfo())->Tagnum();
-
-      // data storage for an object of this class
-         address = (Long_t)new char[ klass->Size() ];
-
-      // set new globals, while saving current globals
-         G__StoreEnv env;
-         G__stubstoreenv( &env, (void*)address, tagnum );
-
-      // build parsable line (gamble that the args look ok when stringyfied, which
-      // works surprisingly well, as CINT appears to be clairvoyant)
-         char temp[ G__ONELINE ];
-         PyObject* str = 0;
-         std::string fmt = "";
-         if ( PyTuple_GET_SIZE( args ) == 1 ) {
-            str = PyObject_Str( PyTuple_GET_ITEM( args, 0 ) );
-            fmt = "{%s::%s(%s)}";
-         } else {
-            str = PyObject_Str( args );
-            fmt = "{%s::%s%s}";
-         }
-
-         snprintf( temp, G__ONELINE, fmt.c_str(),
-            klass->GetName(), klass->GetName(), PyROOT_PyUnicode_AsString( str ) );
-         Py_DECREF( str );
-
-      // execute contructor
-         int known = 0;
-         G__getfunction( temp, &known, G__CALLCONSTRUCTOR );
-
-      // restore original globals
-         G__stubrestoreenv( &env );
-
-      // in case of failure, the error message will look really, really funky ...
-
-      // CAUTION: creating an interpreted class doesn't work if it has STL type data
-      // members that are initialized or otherwise touched in the ctor!
-
-      } else if ( PyTuple_GET_SIZE( args ) == 0 ) {
-      // unknown class, but can still create placeholder if size is known
-         address = (Long_t)klass->New();
-      }
-   }
 
 // done with filtered args
    Py_DECREF( args );

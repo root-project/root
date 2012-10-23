@@ -806,8 +806,8 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
 
 // for Cling, where apparently the address isn't filled yet
    if ( gbl->GetAddress() == (void*)-1 ) {
-       PyErr_SetString( PyExc_RuntimeError, "GLOBAL ADDRESS NOT YET IMPLEMENTED IN CLING" );
-       return NULL;
+      PyErr_SetString( PyExc_RuntimeError, "GLOBAL ADDRESS NOT YET IMPLEMENTED IN CLING" );
+      return NULL;
    }
 
 // determine type and cast as appropriate
