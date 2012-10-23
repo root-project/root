@@ -268,6 +268,9 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
          ClassSelectionRule csr(fCount++), csr2(fCount++);
          csr.SetAttributeValue("pattern","*");
          csr2.SetAttributeValue("pattern","*::*");
+         if (identifier.length() && identifier[0]=='"' && identifier[identifier.length()-1]=='"') {
+            identifier = identifier.substr(1,identifier.length()-2);
+         }
          csr.SetAttributeValue("file_name",identifier);
          csr2.SetAttributeValue("file_name",identifier);
          if (linkOn) {

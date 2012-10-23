@@ -23,6 +23,46 @@
 #include <string.h>
 #include "clang/AST/DeclCXX.h"
 
+#ifdef _WIN32
+#include "process.h"
+#endif
+#include <sys/stat.h>
+
+
+/******************************************************************
+ * R__matchfilename(srcfilename,filename)
+ ******************************************************************/
+static bool R__match_filename(const char *srcname,const char *filename)
+{
+   if (srcname==0) {
+      return false;
+   }
+   if((strcmp(srcname,filename)==0)) {
+      return true;
+   }
+   
+#ifdef G__WIN32
+   G__FastAllocString i1name(_MAX_PATH);
+   G__FastAllocString fullfile(_MAX_PATH);
+   _fullpath( i1name, srcname, _MAX_PATH );
+   _fullpath( fullfile, filename, _MAX_PATH );
+   if((stricmp(i1name, fullfile)==0)) return 1;
+#else
+   struct stat statBufItem;
+   struct stat statBuf;
+   if (   ( 0 == stat( filename, & statBufItem ) )
+       && ( 0 == stat( srcname, & statBuf ) )
+       && ( statBufItem.st_dev == statBuf.st_dev )     // Files on same device
+       && ( statBufItem.st_ino == statBuf.st_ino )     // Files on same inode (but this is not unique on AFS so we need the next 2 test
+       && ( statBufItem.st_size == statBuf.st_size )   // Files of same size
+       && ( statBufItem.st_mtime == statBuf.st_mtime ) // Files modified at the same time
+       ) {
+      return true;
+   }
+#endif
+   return false;
+}
+
 const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const clang::Type** resultType = 0);
 
 BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue)
@@ -210,7 +250,8 @@ bool BaseSelectionRule::IsSelected (const clang::NamedDecl *decl, const std::str
    if (file_name.empty()) has_file_rule = false;
    else {
       has_file_rule = (has_file_name_attribute && 
-                       (file_name_value==file_name)) ||
+                       //FIXME It would be much better to cache the rule stat result and compare to the clang::FileEntry
+                       (R__match_filename(file_name_value.c_str(),file_name.c_str()))) ||
       (has_file_pattern_attribute && 
        CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef));
    }
