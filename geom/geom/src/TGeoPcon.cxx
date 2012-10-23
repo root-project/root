@@ -66,7 +66,15 @@ TGeoPcon::TGeoPcon()
           fDphi(0.),
           fRmin(NULL),
           fRmax(NULL),
-          fZ(NULL)
+          fZ(NULL),
+          fFullPhi(kFALSE),
+          fC1(0.),
+          fS1(0.),
+          fC2(0.),
+          fS2(0.),
+          fCm(0.),
+          fSm(0.),
+          fCdphi(0.)
 {
 // dummy ctor
    SetShapeBit(TGeoShape::kGeoPcon);
@@ -80,17 +88,36 @@ TGeoPcon::TGeoPcon(Double_t phi, Double_t dphi, Int_t nz)
           fDphi(dphi),
           fRmin(NULL),
           fRmax(NULL),
-          fZ(NULL)
+          fZ(NULL),
+          fFullPhi(kFALSE),
+          fC1(0.),
+          fS1(0.),
+          fC2(0.),
+          fS2(0.),
+          fCm(0.),
+          fSm(0.),
+          fCdphi(0.)
 {
 // Default constructor
    SetShapeBit(TGeoShape::kGeoPcon);
-   if (fPhi1<0) fPhi1+=360.;
+   while (fPhi1<0) fPhi1+=360.;
    fRmin = new Double_t [nz];
    fRmax = new Double_t [nz];
    fZ    = new Double_t [nz];
    memset(fRmin, 0, nz*sizeof(Double_t));
    memset(fRmax, 0, nz*sizeof(Double_t));
    memset(fZ, 0, nz*sizeof(Double_t));
+   if (TGeoShape::IsSameWithinTolerance(fDphi,360)) fFullPhi = kTRUE;
+   Double_t phi1 = fPhi1;
+   Double_t phi2 = phi1+fDphi;
+   Double_t phim = 0.5*(phi1+phi2);
+   fC1 = TMath::Cos(phi1*TMath::DegToRad());
+   fS1 = TMath::Sin(phi1*TMath::DegToRad());
+   fC2 = TMath::Cos(phi2*TMath::DegToRad());
+   fS2 = TMath::Sin(phi2*TMath::DegToRad());
+   fCm = TMath::Cos(phim*TMath::DegToRad());
+   fSm = TMath::Sin(phim*TMath::DegToRad());
+   fCdphi = TMath::Cos(0.5*fDphi*TMath::DegToRad());
 }
 
 //_____________________________________________________________________________
@@ -101,17 +128,36 @@ TGeoPcon::TGeoPcon(const char *name, Double_t phi, Double_t dphi, Int_t nz)
           fDphi(dphi),
           fRmin(NULL),
           fRmax(NULL),
-          fZ(NULL)         
+          fZ(NULL),        
+          fFullPhi(kFALSE),
+          fC1(0.),
+          fS1(0.),
+          fC2(0.),
+          fS2(0.),
+          fCm(0.),
+          fSm(0.),
+          fCdphi(0.)
 {
 // Default constructor
    SetShapeBit(TGeoShape::kGeoPcon);
-   if (fPhi1<0) fPhi1+=360.;
+   while (fPhi1<0) fPhi1+=360.;
    fRmin = new Double_t [nz];
    fRmax = new Double_t [nz];
    fZ    = new Double_t [nz];
    memset(fRmin, 0, nz*sizeof(Double_t));
    memset(fRmax, 0, nz*sizeof(Double_t));
    memset(fZ, 0, nz*sizeof(Double_t));
+   if (TGeoShape::IsSameWithinTolerance(fDphi,360)) fFullPhi = kTRUE;
+   Double_t phi1 = fPhi1;
+   Double_t phi2 = phi1+fDphi;
+   Double_t phim = 0.5*(phi1+phi2);
+   fC1 = TMath::Cos(phi1*TMath::DegToRad());
+   fS1 = TMath::Sin(phi1*TMath::DegToRad());
+   fC2 = TMath::Cos(phi2*TMath::DegToRad());
+   fS2 = TMath::Sin(phi2*TMath::DegToRad());
+   fCm = TMath::Cos(phim*TMath::DegToRad());
+   fSm = TMath::Sin(phim*TMath::DegToRad());
+   fCdphi = TMath::Cos(0.5*fDphi*TMath::DegToRad());
 }
 
 //_____________________________________________________________________________
@@ -122,7 +168,15 @@ TGeoPcon::TGeoPcon(Double_t *param)
           fDphi(0.),
           fRmin(0),
           fRmax(0),
-          fZ(0)
+          fZ(0),
+          fFullPhi(kFALSE),
+          fC1(0.),
+          fS1(0.),
+          fC2(0.),
+          fS2(0.),
+          fCm(0.),
+          fSm(0.),
+          fCdphi(0.)
 {
 // Default constructor in GEANT3 style
 // param[0] = phi1
@@ -146,7 +200,15 @@ TGeoPcon::TGeoPcon(const TGeoPcon& pc) :
   fDphi(0.),
   fRmin(0),
   fRmax(0),
-  fZ(0)
+  fZ(0),
+  fFullPhi(kFALSE),
+  fC1(0.),
+  fS1(0.),
+  fC2(0.),
+  fS2(0.),
+  fCm(0.),
+  fSm(0.),
+  fCdphi(0.)
 { 
    //copy constructor
 }
@@ -163,6 +225,14 @@ TGeoPcon& TGeoPcon::operator=(const TGeoPcon& pc)
       fRmin=0;
       fRmax=0;
       fZ=0;
+      fFullPhi=kFALSE;
+      fC1=0;
+      fS1=0;
+      fC2=0;
+      fS2=0;
+      fCm=0;
+      fSm=0;
+      fCdphi=0;
    } 
    return *this;
 }
@@ -222,35 +292,33 @@ void TGeoPcon::ComputeBBox()
    Double_t rmin, rmax;
    rmin = fRmin[TMath::LocMin(fNz, fRmin)];
    rmax = fRmax[TMath::LocMax(fNz, fRmax)];
-   Double_t phi1 = fPhi1;
-   Double_t phi2 = phi1 + fDphi;
    
    Double_t xc[4];
    Double_t yc[4];
-   xc[0] = rmax*TMath::Cos(phi1*TMath::DegToRad());
-   yc[0] = rmax*TMath::Sin(phi1*TMath::DegToRad());
-   xc[1] = rmax*TMath::Cos(phi2*TMath::DegToRad());
-   yc[1] = rmax*TMath::Sin(phi2*TMath::DegToRad());
-   xc[2] = rmin*TMath::Cos(phi1*TMath::DegToRad());
-   yc[2] = rmin*TMath::Sin(phi1*TMath::DegToRad());
-   xc[3] = rmin*TMath::Cos(phi2*TMath::DegToRad());
-   yc[3] = rmin*TMath::Sin(phi2*TMath::DegToRad());
+   xc[0] = rmax*fC1;
+   yc[0] = rmax*fS1;
+   xc[1] = rmax*fC2;
+   yc[1] = rmax*fS2;
+   xc[2] = rmin*fC1;
+   yc[2] = rmin*fS1;
+   xc[3] = rmin*fC2;
+   yc[3] = rmin*fS2;
 
    Double_t xmin = xc[TMath::LocMin(4, &xc[0])];
    Double_t xmax = xc[TMath::LocMax(4, &xc[0])]; 
    Double_t ymin = yc[TMath::LocMin(4, &yc[0])]; 
    Double_t ymax = yc[TMath::LocMax(4, &yc[0])];
 
-   Double_t ddp = -phi1;
+   Double_t ddp = -fPhi1;
    if (ddp<0) ddp+= 360;
    if (ddp<=fDphi) xmax = rmax;
-   ddp = 90-phi1;
+   ddp = 90-fPhi1;
    if (ddp<0) ddp+= 360;
    if (ddp<=fDphi) ymax = rmax;
-   ddp = 180-phi1;
+   ddp = 180-fPhi1;
    if (ddp<0) ddp+= 360;
    if (ddp<=fDphi) xmin = -rmax;
-   ddp = 270-phi1;
+   ddp = 270-fPhi1;
    if (ddp<0) ddp+= 360;
    if (ddp<=fDphi) ymin = -rmax;
    fOrigin[0] = (xmax+xmin)/2;
@@ -270,8 +338,7 @@ void TGeoPcon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    Double_t r;
    Double_t ptnew[3];
    Double_t dz, rmin1, rmax1, rmin2, rmax2;
-   Bool_t is_tube, is_seg;
-   Double_t phi1=0, phi2=0, c1=0, s1=0, c2=0, s2=0;
+   Bool_t is_tube;
    Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
    if (ipl==(fNz-1) || ipl<0) {
       // point outside Z range
@@ -314,19 +381,9 @@ void TGeoPcon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    rmin2 = fRmin[ipl+1];
    rmax2 = fRmax[ipl+1];
    is_tube = (TGeoShape::IsSameWithinTolerance(rmin1,rmin2) && TGeoShape::IsSameWithinTolerance(rmax1,rmax2))?kTRUE:kFALSE;
-   is_seg  = (fDphi<360)?kTRUE:kFALSE;
-   if (is_seg) {
-      phi1 = fPhi1;
-      if (phi1<0) phi1+=360;
-      phi2 = phi1 + fDphi;
-      phi1 *= TMath::DegToRad();
-      phi2 *= TMath::DegToRad();
-      c1 = TMath::Cos(phi1);
-      s1 = TMath::Sin(phi1);
-      c2 = TMath::Cos(phi2);
-      s2 = TMath::Sin(phi2);
-      if (is_tube) TGeoTubeSeg::ComputeNormalS(ptnew,dir,norm,rmin1,rmax1,dz,c1,s1,c2,s2);
-      else         TGeoConeSeg::ComputeNormalS(ptnew,dir,norm,dz,rmin1,rmax1,rmin2,rmax2,c1,s1,c2,s2);
+   if (!fFullPhi) {
+      if (is_tube) TGeoTubeSeg::ComputeNormalS(ptnew,dir,norm,rmin1,rmax1,dz,fC1,fS1,fC2,fS2);
+      else         TGeoConeSeg::ComputeNormalS(ptnew,dir,norm,dz,rmin1,rmax1,rmin2,rmax2,fC1,fS1,fC2,fS2);
    } else {
       if (is_tube) TGeoTube::ComputeNormalS(ptnew,dir,norm,rmin1,rmax1,dz);
       else         TGeoCone::ComputeNormalS(ptnew,dir,norm,dz,rmin1,rmax1,rmin2,rmax2);
@@ -420,36 +477,23 @@ Double_t TGeoPcon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
    if (!TGeoShape::IsSameWithinTolerance(fRmin[ipl],fRmin[ipl+1])) intub=kFALSE;
    else if (!TGeoShape::IsSameWithinTolerance(fRmax[ipl],fRmax[ipl+1])) intub=kFALSE;
    // determine phi segmentation
-   Bool_t inphi=kTRUE;
-   if (TGeoShape::IsSameWithinTolerance(fDphi,360)) inphi=kFALSE;     
    memcpy(point_new, point, 2*sizeof(Double_t));
    // new point in reference system of the current segment
    point_new[2] = point[2]-0.5*(fZ[ipl]+fZ[ipl+1]);
    
-   Double_t phi1 = fPhi1;
-   if (phi1<0) phi1+=360.;
-   Double_t phi2 = phi1+fDphi;
-   Double_t phim = 0.5*(phi1+phi2);
-   Double_t c1 = TMath::Cos(phi1*TMath::DegToRad());
-   Double_t s1 = TMath::Sin(phi1*TMath::DegToRad());
-   Double_t c2 = TMath::Cos(phi2*TMath::DegToRad());
-   Double_t s2 = TMath::Sin(phi2*TMath::DegToRad());
-   Double_t cm = TMath::Cos(phim*TMath::DegToRad());
-   Double_t sm = TMath::Sin(phim*TMath::DegToRad());
-   Double_t cdfi = TMath::Cos(0.5*fDphi*TMath::DegToRad());
    if (special_case) {
-      if (inphi) snxt = TGeoTubeSeg::DistFromInsideS(point_new, dir, 
+      if (!fFullPhi) snxt = TGeoTubeSeg::DistFromInsideS(point_new, dir, 
                TMath::Min(fRmin[ipl],fRmin[ipl+1]), TMath::Max(fRmax[ipl],fRmax[ipl+1]),
-               dz, c1,s1,c2,s2,cm,sm,cdfi);
+               dz, fC1,fS1,fC2,fS2,fCm,fSm,fCdphi);
       else       snxt = TGeoTube::DistFromInsideS(point_new, dir, 
                TMath::Min(fRmin[ipl],fRmin[ipl+1]), TMath::Max(fRmax[ipl],fRmax[ipl+1]),dz);
       return snxt;
    }   
    if (intub) {
-      if (inphi) snxt=TGeoTubeSeg::DistFromInsideS(point_new, dir, fRmin[ipl], fRmax[ipl],dz, c1,s1,c2,s2,cm,sm,cdfi); 
+      if (!fFullPhi) snxt=TGeoTubeSeg::DistFromInsideS(point_new, dir, fRmin[ipl], fRmax[ipl],dz, fC1,fS1,fC2,fS2,fCm,fSm,fCdphi); 
       else snxt=TGeoTube::DistFromInsideS(point_new, dir, fRmin[ipl], fRmax[ipl],dz);
    } else {
-      if (inphi) snxt=TGeoConeSeg::DistFromInsideS(point_new,dir,dz,fRmin[ipl],fRmax[ipl],fRmin[ipl+1],fRmax[ipl+1],c1,s1,c2,s2,cm,sm,cdfi);
+      if (!fFullPhi) snxt=TGeoConeSeg::DistFromInsideS(point_new,dir,dz,fRmin[ipl],fRmax[ipl],fRmin[ipl+1],fRmax[ipl+1],fC1,fS1,fC2,fS2,fCm,fSm,fCdphi);
       else snxt=TGeoCone::DistFromInsideS(point_new,dir,dz,fRmin[ipl],fRmax[ipl],fRmin[ipl+1], fRmax[ipl+1]);
    }                              
 
@@ -461,8 +505,7 @@ Double_t TGeoPcon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 }
 
 //_____________________________________________________________________________
-Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_t c1, Double_t s1, 
-                              Double_t c2, Double_t s2, Double_t cfio, Double_t sfio, Double_t cdfi) const
+Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz) const
 {
 // compute distance to a pcon Z slice. Segment iz must be valid
    Double_t zmin=fZ[iz];
@@ -472,7 +515,7 @@ Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_
       Int_t istep=(dir[2]>0)?1:-1;
       iz+=istep;
       if (iz<0 || iz>(fNz-2)) return TGeoShape::Big();
-      return DistToSegZ(point,dir,iz,c1,s1,c2,s2,cfio,sfio,cdfi);
+      return DistToSegZ(point,dir,iz);
    }
    Double_t dz=0.5*(zmax-zmin);
    Double_t local[3];
@@ -483,14 +526,13 @@ Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_
    Double_t rmax1=fRmax[iz];
    Double_t rmin2=fRmin[iz+1];
    Double_t rmax2=fRmax[iz+1];
-   Bool_t is_seg=(TGeoShape::IsSameWithinTolerance(fDphi,360))?kFALSE:kTRUE;
 
    if (TGeoShape::IsSameWithinTolerance(rmin1,rmin2) && TGeoShape::IsSameWithinTolerance(rmax1,rmax2)) {
-      if (!is_seg) snxt=TGeoTube::DistFromOutsideS(local, dir, rmin1, rmax1, dz);
-      else snxt=TGeoTubeSeg::DistFromOutsideS(local,dir,rmin1,rmax1,dz,c1,s1,c2,s2,cfio,sfio,cdfi);
+      if (fFullPhi) snxt=TGeoTube::DistFromOutsideS(local, dir, rmin1, rmax1, dz);
+      else snxt=TGeoTubeSeg::DistFromOutsideS(local,dir,rmin1,rmax1,dz,fC1,fS1,fC2,fS2,fCm,fSm,fCdphi);
    } else {  
-      if (!is_seg) snxt=TGeoCone::DistFromOutsideS(local,dir,dz,rmin1, rmax1,rmin2,rmax2);
-      else snxt=TGeoConeSeg::DistFromOutsideS(local,dir,dz,rmin1,rmax1,rmin2,rmax2,c1,s1,c2,s2,cfio,sfio,cdfi);
+      if (fFullPhi) snxt=TGeoCone::DistFromOutsideS(local,dir,dz,rmin1, rmax1,rmin2,rmax2);
+      else snxt=TGeoConeSeg::DistFromOutsideS(local,dir,dz,rmin1,rmax1,rmin2,rmax2,fC1,fS1,fC2,fS2,fCm,fSm,fCdphi);
    }
    if (snxt<1E20) return snxt;
    // check next segment
@@ -498,7 +540,7 @@ Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_
    Int_t istep=(dir[2]>0)?1:-1;
    iz+=istep;
    if (iz<0 || iz>(fNz-2)) return TGeoShape::Big();
-   return DistToSegZ(point,dir,iz,c1,s1,c2,s2,cfio,sfio,cdfi);
+   return DistToSegZ(point,dir,iz);
 }      
 
 //_____________________________________________________________________________
@@ -534,29 +576,13 @@ Double_t TGeoPcon::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
    } else if (ifirst>=(fNz-1)) ifirst=fNz-2;
    // find if point is in the phi gap
    Double_t phi=0;
-   Double_t phi1=0;
-   Double_t phi2=0;
-   Double_t c1=0., s1=0., c2=0., s2=0., cfio=0., sfio=0., cdfi=0.;
-   Bool_t inphi = (fDphi<360)?kTRUE:kFALSE;
-   if (inphi) {
-      phi1=fPhi1;
-      if (phi1<0) phi1+=360;
-      phi2=(phi1+fDphi)*TMath::DegToRad();
-      phi1=phi1*TMath::DegToRad();
+   if (!fFullPhi) {
       phi=TMath::ATan2(point[1], point[0]);
       if (phi<0) phi+=2.*TMath::Pi();
-      c1=TMath::Cos(phi1);
-      s1=TMath::Sin(phi1);
-      c2=TMath::Cos(phi2);
-      s2=TMath::Sin(phi2);
-      Double_t fio=0.5*(phi1+phi2);
-      cfio=TMath::Cos(fio);
-      sfio=TMath::Sin(fio);
-      cdfi=TMath::Cos(0.5*(phi2-phi1));
    } 
 
    // compute distance to boundary
-   return DistToSegZ(point,dir,ifirst, c1,s1,c2,s2,cfio,sfio,cdfi);
+   return DistToSegZ(point,dir,ifirst);
 }
 
 //_____________________________________________________________________________
@@ -1017,8 +1043,7 @@ Double_t TGeoPcon::SafetyToSegment(Double_t *point, Int_t ipl, Bool_t in, Double
    Double_t rmin2 = fRmin[ipl+1];
    Double_t rmax2 = fRmax[ipl+1];
    Bool_t   is_tube = (TGeoShape::IsSameWithinTolerance(rmin1,rmin2) && TGeoShape::IsSameWithinTolerance(rmax1,rmax2))?kTRUE:kFALSE;
-   Bool_t   is_seg  = (fDphi<360)?kTRUE:kFALSE;
-   if (is_seg) {
+   if (!fFullPhi) {
       if (is_tube) safe = TGeoTubeSeg::SafetyS(ptnew,in,rmin1,rmax1, dz,fPhi1,fPhi1+fDphi,0);
       else         safe = TGeoConeSeg::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,fPhi1,fPhi1+fDphi,0);
    } else {
@@ -1065,7 +1090,7 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
       safmin = SafetyToSegment(point, ipl);
       if (safmin>1E10) {
          //  something went wrong - point is not inside current segment
-         return TGeoShape::Big();
+         return 0.;
       }
       if (safmin<1E-6) return TMath::Abs(safmin); // point on radius-changing plane
       // check increasing iplanes
@@ -1143,6 +1168,7 @@ void TGeoPcon::SetDimensions(Double_t *param)
 {
 // Set polycone dimensions starting from an array.
    fPhi1    = param[0];
+   while (fPhi1<0) fPhi1 += 360.;
    fDphi    = param[1];
    fNz      = (Int_t)param[2];
    if (fNz<2) {
@@ -1158,6 +1184,18 @@ void TGeoPcon::SetDimensions(Double_t *param)
    memset(fRmin, 0, fNz*sizeof(Double_t));
    memset(fRmax, 0, fNz*sizeof(Double_t));
    memset(fZ, 0, fNz*sizeof(Double_t));
+   if (TGeoShape::IsSameWithinTolerance(fDphi,360)) fFullPhi = kTRUE;
+   Double_t phi1 = fPhi1;
+   Double_t phi2 = phi1+fDphi;
+   Double_t phim = 0.5*(phi1+phi2);
+   fC1 = TMath::Cos(phi1*TMath::DegToRad());
+   fS1 = TMath::Sin(phi1*TMath::DegToRad());
+   fC2 = TMath::Cos(phi2*TMath::DegToRad());
+   fS2 = TMath::Sin(phi2*TMath::DegToRad());
+   fCm = TMath::Cos(phim*TMath::DegToRad());
+   fSm = TMath::Sin(phim*TMath::DegToRad());
+   fCdphi = TMath::Cos(0.5*fDphi*TMath::DegToRad());
+
    for (Int_t i=0; i<fNz; i++) 
       DefineSection(i, param[3+3*i], param[4+3*i], param[5+3*i]);
 }   
@@ -1288,4 +1326,27 @@ const TBuffer3D & TGeoPcon::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    }
       
    return buffer;
+}
+
+//_____________________________________________________________________________
+void TGeoPcon::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TGeoPcon.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(TGeoPcon::Class(),this);
+      if (TGeoShape::IsSameWithinTolerance(fDphi,360)) fFullPhi = kTRUE;
+      Double_t phi1 = fPhi1;
+      Double_t phi2 = phi1+fDphi;
+      Double_t phim = 0.5*(phi1+phi2);
+      fC1 = TMath::Cos(phi1*TMath::DegToRad());
+      fS1 = TMath::Sin(phi1*TMath::DegToRad());
+      fC2 = TMath::Cos(phi2*TMath::DegToRad());
+      fS2 = TMath::Sin(phi2*TMath::DegToRad());
+      fCm = TMath::Cos(phim*TMath::DegToRad());
+      fSm = TMath::Sin(phim*TMath::DegToRad());
+      fCdphi = TMath::Cos(0.5*fDphi*TMath::DegToRad());
+   } else {
+      R__b.WriteClassBuffer(TGeoPcon::Class(),this);
+   }
 }

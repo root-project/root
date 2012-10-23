@@ -32,12 +32,20 @@ class TGeoPcon : public TGeoBBox
 {
 protected:
    // data members
-   Int_t                 fNz;    // number of z planes (at least two)
-   Double_t              fPhi1;  // lower phi limit 
-   Double_t              fDphi;  // phi range
-   Double_t             *fRmin;  //[fNz] pointer to array of inner radii 
-   Double_t             *fRmax;  //[fNz] pointer to array of outer radii 
-   Double_t             *fZ;     //[fNz] pointer to array of Z planes positions 
+   Int_t                 fNz;      // number of z planes (at least two)
+   Double_t              fPhi1;    // lower phi limit (converted to [0,2*pi)
+   Double_t              fDphi;    // phi range
+   Double_t             *fRmin;    //[fNz] pointer to array of inner radii 
+   Double_t             *fRmax;    //[fNz] pointer to array of outer radii 
+   Double_t             *fZ;       //[fNz] pointer to array of Z planes positions 
+   Bool_t                fFullPhi; //! Full phi range flag
+   Double_t              fC1;      //! Cosine of phi1
+   Double_t              fS1;      //! Sine of phi1
+   Double_t              fC2;      //! Cosine of phi1+dphi
+   Double_t              fS2;      //! Sine of phi1+dphi
+   Double_t              fCm;      //! Cosine of (phi1+phi2)/2
+   Double_t              fSm;      //! Sine of (phi1+phi2)/2
+   Double_t              fCdphi;   //! Cosine of dphi
    
    // methods
    TGeoPcon(const TGeoPcon&); 
@@ -61,8 +69,7 @@ public:
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   Double_t              DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_t c1, Double_t s1,
-                                    Double_t c2, Double_t s2, Double_t cfio, Double_t sfio, Double_t cdfi) const;
+   Double_t              DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);

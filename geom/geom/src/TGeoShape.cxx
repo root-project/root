@@ -473,6 +473,27 @@ Double_t TGeoShape::SafetyPhi(Double_t *point, Bool_t in, Double_t phi1, Double_
 }        
 
 //_____________________________________________________________________________
+Double_t TGeoShape::SafetySeg(Double_t r, Double_t z, Double_t r1, Double_t z1, Double_t r2, Double_t z2, Bool_t outer)
+{
+// Compute distance from point of coordinates (r,z) to segment (r1,z1):(r2,z2)
+   Double_t crossp = (z2-z1)*(r-r1)-(z-z1)*(r2-r1);
+   crossp *= (outer) ? 1. : -1.;
+   // Positive crossp means point on the requested side of the (1,2) segment
+   if (crossp < 0) return TGeoShape::Big();
+   // Compute (1,P) dot (1,2)
+   Double_t cosa = (z-z1)*(z2-z1)+(r-r1)*(r2-r1);
+   // Negative cosa means point (1) is closest
+   if (cosa<1.E-10) return TMath::Sqrt((r-r1)*(r-r1)+(z-z1)*(z-z1));
+   // Compute (2,P) dot (1,2)
+   Double_t cosb = (z-z2)*(z2-z1)+(r-r2)*(r2-r1);
+   // Positive cosb means point (2) is closest
+   if (cosb>0) return TMath::Sqrt((r-r2)*(r-r2)+(z-z2)*(z-z2));
+   // The closest point is between (1) and (2)
+   Double_t d12sq = (r1-r2)*(r1-r2)+(z1-z2)*(z1-z2);
+   return TMath::Sqrt((r-r1)*(r-r1)+(z-z1)*(z-z1)-cosa*cosa/d12sq);
+}
+
+//_____________________________________________________________________________
 void TGeoShape::SetShapeBit(UInt_t f, Bool_t set)
 {
 // Equivalent of TObject::SetBit.
