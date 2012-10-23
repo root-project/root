@@ -1,3 +1,5 @@
+#undef NDEBUG
+
 #include <cassert>
 #include <string>
 #include <set>
@@ -13,6 +15,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/Type.h"
 
 //CLING
 #include "cling/Interpreter/LookupHelper.h"
@@ -84,11 +87,11 @@ void AppendClassName(const clang::CXXRecordDecl *classDecl, std::string &name)
 }
 
 //______________________________________________________________________________
-void AppendMemberFunctionName(const clang::CXXMethodDecl *methodDecl, unsigned indent, std::string &name)
+void AppendMemberAccessSpecifier(const clang::Decl *memberDecl, std::string &name)
 {
-   assert(methodDecl != 0 && "AppendClassName, 'classDecl' parameter is null");
-
-   switch (methodDecl->getAccess()) {
+   assert(memberDecl != 0 && "AppendMemberAccessSpecifier, 'memberDecl' parameter is 0");
+   
+   switch (memberDecl->getAccess()) {
    case clang::AS_private:
       name += "private: ";
       break;
@@ -96,19 +99,65 @@ void AppendMemberFunctionName(const clang::CXXMethodDecl *methodDecl, unsigned i
       name += "protected: ";
       break;
    case clang::AS_public:
-   case clang::AS_none://I do not thing it's possible.
+   case clang::AS_none://Public or private?
       name += "public: ";
+   }   
+}
+
+//______________________________________________________________________________
+void AppendConstructorSignature(const clang::CXXConstructorDecl *ctorDecl, std::string &name)
+{
+   assert(ctorDecl != 0 && "AppendMemberFunctionName, 'ctorDecl' parameter is null");
+
+   const clang::QualType type = ctorDecl->getType();
+   assert(llvm::isa<clang::FunctionType>(type) == true && "ctorDecl->getType is not a FunctionType");
+
+   const clang::FunctionType *aft = type->getAs<clang::FunctionType>();
+   const clang::FunctionProtoType *ft = ctorDecl->hasWrittenPrototype() ? llvm::dyn_cast<clang::FunctionProtoType>(aft) : 0;
+
+   if (ctorDecl->isExplicit())
+      name += "explicit ";
+
+   name += ctorDecl->getNameInfo().getAsString();
+   name += "(";
+   
+   if (ft) {
+      llvm::raw_string_ostream stream(name);
+      
+      for (unsigned i = 0, e = ctorDecl->getNumParams(); i != e; ++i) {
+         if (i)
+            stream << ", ";
+         ctorDecl->getParamDecl(i)->print(stream, 0, false);//or true?
+      }
+
+      if (ft->isVariadic()) {
+         if (ctorDecl->getNumParams())
+            stream << ", ";
+         stream << "...";
+      }
+   } else if (ctorDecl->doesThisDeclarationHaveABody() && !ctorDecl->hasPrototype()) {
+      for (unsigned i = 0, e = ctorDecl->getNumParams(); i != e; ++i) {
+         if (i)
+            name += ", ";
+         name += ctorDecl->getParamDecl(i)->getNameAsString();
+      }
    }
 
-   if (methodDecl->getKind() == clang::Decl::CXXConstructor) {
-      //TODO: none of functions I've tried prints a ctor.
-   } else {
-      if (methodDecl->isStatic())
-         name += "static ";
+   name += ")";
+}
 
-      llvm::raw_string_ostream out(name);
-      methodDecl->print(out, indent, true);
-   }
+//______________________________________________________________________________
+void AppendMemberFunctionName(const clang::CXXMethodDecl *methodDecl, std::string &name)
+{
+   assert(methodDecl != 0 && "AppendMemberFunctionName, 'methodDecl' parameter is null");
+   assert(methodDecl->getKind() != clang::Decl::CXXConstructor && "AppendMemberFunctionName, 'methodDecl' parameter is a ctor declaration");
+
+
+   if (methodDecl->isStatic())
+      name += "static ";
+
+   llvm::raw_string_ostream out(name);
+   methodDecl->print(out, 0, true);
 }
 
 //______________________________________________________________________________
@@ -442,7 +491,9 @@ void ClassPrinter::DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const
       fOut.Print("===========================================================================\n");//Hehe, this line was stolen from CINT.
 
       std::string classInfo;
+      AppendClassKeyword(classDecl, classInfo);
       AppendClassName(classDecl, classInfo);
+
       fOut.Print(classInfo.c_str());
       fOut.Print("\n");
 
@@ -544,7 +595,8 @@ void ClassPrinter::DisplayMembers(const clang::CXXRecordDecl *classDecl)const
 
    for (ctor_iterator ctor = classDecl->ctor_begin(); ctor != classDecl->ctor_end(); ++ctor) {
       textLine.assign(kBaseTreeShift, ' ');
-      AppendMemberFunctionName(*ctor, 0, textLine);
+      AppendMemberAccessSpecifier(*ctor, textLine);
+      AppendConstructorSignature(llvm::dyn_cast<clang::CXXConstructorDecl>(*ctor), textLine);
       fOut.Print(textLine.c_str());
       fOut.Print("\n");
    }
@@ -556,7 +608,7 @@ void ClassPrinter::DisplayMembers(const clang::CXXRecordDecl *classDecl)const
       if (method->getKind() == clang::Decl::CXXConstructor)
          continue;
       textLine.assign(kBaseTreeShift, ' ');
-      AppendMemberFunctionName(*method, 0, textLine);
+      AppendMemberFunctionName(*method, textLine);
       fOut.Print(textLine.c_str());
       fOut.Print("\n");
    }
