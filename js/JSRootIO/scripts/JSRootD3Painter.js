@@ -752,11 +752,10 @@ function format_id(id) {
          var e = this, origin = d3.mouse(e),
              rect = vis.append("rect").attr("class", "zoom").attr("id", "zoom_rect");
          d3.select("body").classed("noselect", true);
+         d3.select("body").style("-webkit-user-select", "none");
          origin[0] = Math.max(0, Math.min(width, origin[0]));
          origin[1] = Math.max(0, Math.min(height, origin[1]));
          vis.on("dblclick", function() {
-         //d3.select(window)
-         //  .on("dblclick", function() {
             var xmin = vis['objects'][0]['x_min'],
                 xmax = vis['objects'][0]['x_max'],
                 ymin = vis['objects'][0]['y_min'],
@@ -784,12 +783,6 @@ function format_id(id) {
                m[0] = Math.max(0, Math.min(width, m[0]));
                m[1] = Math.max(0, Math.min(height, m[1]));
                if (m[0] !== origin[0] && m[1] !== origin[1]) {
-                  /* for (var i=0;i<vis['objects'].length;++i) {
-                     zoom.x(vis['objects'][i].x.domain([origin[0], m[0]]
-                              .map(vis['objects'][i].x.invert).sort(d3.ascending)))
-                         .y(vis['objects'][i].y.domain([origin[1], m[1]]
-                              .map(vis['objects'][i].y.invert).sort(d3.ascending)));
-                  } */
                   var xmin = Math.min(vis['objects'][0].x.invert(origin[0]),
                                       vis['objects'][0].x.invert(m[0])),
                       xmax = Math.max(vis['objects'][0].x.invert(origin[0]),
@@ -805,6 +798,7 @@ function format_id(id) {
                }
                rect.remove();
                refresh();
+               d3.select("body").style("-webkit-user-select", "auto");
             }, true);
          d3.event.stopPropagation();
       });
