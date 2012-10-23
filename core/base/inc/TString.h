@@ -196,7 +196,7 @@ private:
 
 protected:
 #ifndef __CINT__
-   Rep_t          fRep;           // String data
+   Rep_t          fRep;           //! String data
 #endif
 
    // Special concatenation constructor
