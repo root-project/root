@@ -942,10 +942,15 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       TString fname = gSystem->SplitAclicMode(sLine.Data() + 3,
          aclicMode, arguments, io);
       if (aclicMode.Length()) {
-         // There was a "+" at the end, strip it now.
-         mod_line = mod_line(0, 2) + " " + fname;
+         // avoid double loading.
+         if (strncmp(sLine.Data(), ".L", 2) != 0) {
+            // if execution was requested.
+            mod_line = fname + arguments;
+            indent = fMetaProcessor->process(mod_line, &result);
+         }
+      } else {
+         indent = fMetaProcessor->process(mod_line, &result);
       }
-      indent = fMetaProcessor->process(mod_line, &result);
    }
    else {
       indent = fMetaProcessor->process(sLine, &result);
