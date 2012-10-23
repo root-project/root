@@ -29,6 +29,7 @@ class TClingCallbacks : public cling::InterpreterCallbacks {
 private:
    void *fLastLookupCtx;
    clang::NamespaceDecl *fROOTSpecialNamespace;
+   bool fFirstRun;
 public:
    TClingCallbacks(cling::Interpreter* interp);
 

@@ -36,7 +36,8 @@ extern "C" {
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp) 
-   : InterpreterCallbacks(interp), fLastLookupCtx(0), fROOTSpecialNamespace(0) {
+   : InterpreterCallbacks(interp), fLastLookupCtx(0), fROOTSpecialNamespace(0),
+     fFirstRun(true) {
    const Decl* D = 0;
    m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &D);
    fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(const_cast<Decl*>(D));
@@ -116,6 +117,17 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 void TClingCallbacks::TransactionCommitted(const Transaction &T) {
    if (!T.size())
       return;
+   if (fFirstRun) {
+      // Before setting up the callbacks register what cling have seen during init.
+      const cling::Transaction* T = m_Interpreter->getFirstTransaction();
+      while (T) {
+         if (T->getState() == cling::Transaction::kCommitted)
+            TCintWithCling__UpdateListsOnUnloaded(*T);
+         T = T->getNext();
+      }
+
+      fFirstRun = false;
+   }
 
    TCintWithCling__UpdateListsOnCommitted(T);
 }
