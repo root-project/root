@@ -71,7 +71,8 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp, const cla
 : fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), 
 fSingleDecl(ValD) {
    using namespace llvm;
-   assert(isa<TranslationUnitDecl>(ValD->getDeclContext()) && "Not TU?");
+   assert((isa<TranslationUnitDecl>(ValD->getDeclContext()) || 
+           isa<EnumConstantDecl>(ValD)) && "Not TU?");
    assert((isa<VarDecl>(ValD) || 
            isa<FieldDecl>(ValD) || 
            isa<EnumConstantDecl>(ValD)) &&
