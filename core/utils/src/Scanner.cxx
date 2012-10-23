@@ -67,7 +67,24 @@ std::map <clang::Decl*, std::string> RScanner::fgAnonymousClassMap;
 std::map <clang::Decl*, std::string> RScanner::fgAnonymousEnumMap;
 
 //______________________________________________________________________________
-RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestVersionNumber, const cling::Interpreter &interpreter, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) : 
+RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, 
+                                                   bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber,
+                                                   const cling::Interpreter &interpreter, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) :
+   fRuleIndex(index), fDecl(decl), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
+   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestedVersionNumber) 
+{
+   // There is no requested type name.
+   // Still let's normalized the actual name.
+   
+   TMetaUtils::GetNormalizedName(fNormalizedName, decl->getASTContext().getTypeDeclType(decl),interpreter,normCtxt);
+
+}
+
+
+//______________________________________________________________________________
+RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl, const char *requestName, 
+                                                   bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestVersionNumber, 
+                                                   const cling::Interpreter &interpreter, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) : 
    fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
    fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber) 
 {
@@ -86,7 +103,9 @@ RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type
 }
 
 //______________________________________________________________________________
-RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestVersionNumber, const cling::Interpreter &interpreter, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) : 
+RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, 
+                                                   bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestVersionNumber, 
+                                                   const cling::Interpreter &interpreter, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) : 
    fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
    fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber) 
 {
@@ -767,8 +786,8 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
       } else {
          fSelectedClasses.push_back(AnnotatedRecordDecl(selected->GetIndex(),D,
                                                         selected->RequestStreamerInfo(),selected->RequestNoStreamer(),
-                                                        selected->RequestNoInputOperator(),selected->RequestOnlyTClass(),selected->RequestedVersionNumber()
-                                                        ));
+                                                        selected->RequestNoInputOperator(),selected->RequestOnlyTClass(),selected->RequestedVersionNumber(),
+                                                        fInterpreter,fNormCtxt));
       }         
       ret = true;
    }
