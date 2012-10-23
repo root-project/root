@@ -180,18 +180,32 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
                listOfSmth->Add(new TDataType(new TClingTypedefInfo(interp, TdefD)));
             }
          }
-         else if (const ValueDecl *ValD = dyn_cast<ValueDecl>(*DI)) {
+         else if (const NamedDecl *ND = dyn_cast<NamedDecl>(*DI)) {
             // ROOT says that global is enum/var/field declared on the global
             // scope.
-            if (!(isa<EnumConstantDecl>(ValD) || 
-                  isa<VarDecl>(ValD) || isa<FieldDecl>(ValD)))
+
+            listOfSmth = gROOT->GetListOfGlobals();
+
+            if (!(isa<EnumDecl>(ND) || 
+                  isa<VarDecl>(ND) || isa<FieldDecl>(ND)))
+               continue;
+
+            // Skip if already in the list.
+            if (listOfSmth->FindObject(ND->getNameAsString().c_str()))
                continue;
 
             // FIXME: Review needed: How does ROOT understand globals?
-            listOfSmth = gROOT->GetListOfGlobals();
-            if (!listOfSmth->FindObject(ValD->getNameAsString().c_str())) {  
-               listOfSmth->Add(new TGlobal(new TClingDataMemberInfo(interp, ValD)));
+            if (EnumDecl *ED = dyn_cast<EnumDecl>(*DI)) {
+               for(EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
+                      EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
+                  if (!listOfSmth->FindObject((*EDI)->getNameAsString().c_str())) {  
+                     listOfSmth->Add(new TGlobal(new TClingDataMemberInfo(interp, *EDI)));
+                  }
+               }
             }
+            else
+               listOfSmth->Add(new TGlobal(new TClingDataMemberInfo(interp, 
+                                                                    cast<ValueDecl>(ND))));
          }
       }
 }
@@ -567,7 +581,6 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    , fInterpreter(0)
    , fMetaProcessor(0)
    , fNormalizedCtxt(0)
-   //   , fDeMux(0)
 {
    // Initialize the CINT+cling interpreter interface.
 
@@ -607,7 +620,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
 
    // For the list to also include string, we have to include it now.
    fInterpreter->declare("#include \"Rtypes.h\"\n#include <string>");
-   
+
    // During the loading of the first modules, RegisterModule which can calls Info
    // which needs the TClass for TCintWithCling, which in turns need the 'dictionary'
    // information to be loaded:
@@ -1517,36 +1530,7 @@ void TCintWithCling::UpdateListOfGlobalFunctions()
 //______________________________________________________________________________
 void TCintWithCling::UpdateListOfTypes()
 {
-   // Update the list of pointers to Datatype (typedef) definitions. This
-   // function is called by TROOT::GetListOfTypes().
-   R__LOCKGUARD2(gCINTMutex);
-   //////// Remember the index of the last type that we looked at,
-   //////// so that we don't keep reprocessing the same types.
-   //////static int last_typenum = -1;
-   //////// Also remember the count from the last time the dictionary
-   //////// was rewound.  If it's been rewound since the last time we've
-   //////// been called, then we recan everything.
-   //////static int last_scratch_count = 0;
-   //////int this_scratch_count = G__scratch_upto(0);
-   //////if (this_scratch_count != last_scratch_count) {
-   //////   last_scratch_count = this_scratch_count;
-   //////   last_typenum = -1;
-   //////}
-   //////// Scan from where we left off last time.
-   TClingTypedefInfo* t = (TClingTypedefInfo*) TypedefInfo_Factory();
-   while (t->Next()) {
-      const char* name = t->Name();
-      if (gROOT && gROOT->fTypes && t->IsValid() && name) {
-         TDataType* d = (TDataType*) gROOT->fTypes->FindObject(name);
-         // only add new types, don't delete old ones with the same name
-         // (as is done in UpdateListOfGlobals()),
-         // this 'feature' is being used in TROOT::GetType().
-         if (!d) {
-            gROOT->fTypes->Add(new TDataType(new TClingTypedefInfo(*t)));
-         }
-         //////last_typenum = t->Typenum();
-      }
-   }
+ // No op: see TClingCallbacks (used to update the list of types)
 }
 
 //______________________________________________________________________________
