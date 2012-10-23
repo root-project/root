@@ -5263,16 +5263,21 @@ int main(int argc, char **argv)
    interp.declare("namespace std {} using namespace std;");
 #ifdef ROOTBUILD
    interp.declare("#include \"include/Rtypes.h\"");
+   interp.declare("#include \"include/TClingRuntime.h\"");
 #else
 # ifndef ROOTINCDIR
    interp.declare("#include \"Rtypes.h\"");
+   interp.declare("#include \"TClingRuntime.h\"");
 # else
    interp.declare("#include \"" ROOTINCDIR "/Rtypes.h\"");
+   interp.declare("#include \"" ROOTINCDIR "/TClingRuntime.h\"");
 # endif
 #endif
    gInterp = &interp;
 
-   // For the list to also include string, we have to include it now.
+   
+
+   // For the list of 'opaque' typedef to also include string, we have to include it now.
    interp.declare("#include <string>");
   
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
