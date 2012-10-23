@@ -5264,13 +5264,16 @@ int main(int argc, char **argv)
 #ifdef ROOTBUILD
    interp.declare("#include \"include/Rtypes.h\"");
    interp.declare("#include \"include/TClingRuntime.h\"");
+   interp.declare("#include \"include/TObject.h\"");
 #else
 # ifndef ROOTINCDIR
    interp.declare("#include \"Rtypes.h\"");
    interp.declare("#include \"TClingRuntime.h\"");
+   interp.declare("#include \"TObject.h\"");
 # else
    interp.declare("#include \"" ROOTINCDIR "/Rtypes.h\"");
    interp.declare("#include \"" ROOTINCDIR "/TClingRuntime.h\"");
+   interp.declare("#include \"" ROOTINCDIR "/TObject.h\"");
 # endif
 #endif
    gInterp = &interp;
