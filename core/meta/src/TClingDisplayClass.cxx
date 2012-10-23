@@ -34,13 +34,14 @@ namespace {
 typedef clang::DeclContext::decl_iterator decl_iterator;
 typedef clang::CXXRecordDecl::base_class_const_iterator base_decl_iterator;
 
+
 //______________________________________________________________________________
-void AppendLocation(const clang::CompilerInstance *compiler, const clang::CXXRecordDecl *classDecl, std::string &textLine, bool verbose)
+void AppendClassDeclLocation(const clang::CompilerInstance *compiler, const clang::CXXRecordDecl *classDecl, std::string &textLine, bool verbose)
 {
    //Location has a fixed format - from G__display_class.
 
-   assert(compiler != 0 && "AppendLocation, 'compiler' parameter is null");
-   assert(classDecl != 0 && "AppendLocation, 'classDecl' parameter is null");
+   assert(compiler != 0 && "AppendClassDeclLocation, 'compiler' parameter is null");
+   assert(classDecl != 0 && "AppendClassDeclLocation, 'classDecl' parameter is null");
 
    TString formatted("");
    if (compiler->hasSourceManager()) {
@@ -59,6 +60,30 @@ void AppendLocation(const clang::CompilerInstance *compiler, const clang::CXXRec
       if (!verbose)
          formatted.Form("%-30s", " ");
    }
+
+   if (formatted.Length())
+      textLine += formatted.Data();
+}
+
+//______________________________________________________________________________
+void AppendMemberLocation(const clang::CompilerInstance *compiler, const clang::Decl *decl, std::string &textLine)
+{
+   //Location has a fixed format - from G__display_class.
+
+   assert(compiler != 0 && "AppendMemberLocation, 'compiler' parameter is null");
+   assert(decl != 0 && "AppendMemberLocation, 'decl' parameter is null");
+
+   TString formatted("");
+   if (compiler->hasSourceManager()) {
+      const clang::SourceManager &sourceManager = compiler->getSourceManager();
+      clang::PresumedLoc loc(sourceManager.getPresumedLoc(decl->getLocation()));
+      if (loc.isValid())
+         formatted.Form("%-15s%5d", gSystem->BaseName(loc.getFilename()), int(loc.getLine()));
+   }
+
+   //No source manager or location is invalid(?)
+   if (!formatted.Length())
+      formatted.Form("%-20s", " ");
 
    if (formatted.Length())
       textLine += formatted.Data();
@@ -475,7 +500,7 @@ void ClassPrinter::DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const
       //Print: source file, line number, class-keyword, qualifies class name, base classes.
       std::string classInfo;
 
-      AppendLocation(fInterpreter->getCI(), classDecl, classInfo, false);
+      AppendClassDeclLocation(fInterpreter->getCI(), classDecl, classInfo, false);
       classInfo += ' ';
       AppendClassKeyword(classDecl, classInfo);
       classInfo += ' ';
@@ -500,7 +525,7 @@ void ClassPrinter::DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const
       classInfo.clear();
       AppendClassSize(fInterpreter->getCI(), classDecl, classInfo);
       classInfo += ' ';
-      AppendLocation(fInterpreter->getCI(), classDecl, classInfo, true);
+      AppendClassDeclLocation(fInterpreter->getCI(), classDecl, classInfo, true);
       fOut.Print(classInfo.c_str());
       fOut.Print("\n");
 
@@ -594,7 +619,9 @@ void ClassPrinter::DisplayMembers(const clang::CXXRecordDecl *classDecl)const
       fOut.Print("List of ctors: ---------------------------------------------------\n");
 
    for (ctor_iterator ctor = classDecl->ctor_begin(); ctor != classDecl->ctor_end(); ++ctor) {
-      textLine.assign(kBaseTreeShift, ' ');
+      textLine.clear();
+      AppendMemberLocation(fInterpreter->getCI(), *ctor, textLine);
+      textLine += ' ';
       AppendMemberAccessSpecifier(*ctor, textLine);
       AppendConstructorSignature(llvm::dyn_cast<clang::CXXConstructorDecl>(*ctor), textLine);
       fOut.Print(textLine.c_str());
@@ -607,7 +634,9 @@ void ClassPrinter::DisplayMembers(const clang::CXXRecordDecl *classDecl)const
    for (method_iterator method = classDecl->method_begin(); method != classDecl->method_end(); ++method) {
       if (method->getKind() == clang::Decl::CXXConstructor)
          continue;
-      textLine.assign(kBaseTreeShift, ' ');
+      textLine.clear();
+      AppendMemberLocation(fInterpreter->getCI(), *method, textLine);
+      textLine += ' ';
       AppendMemberFunctionName(*method, textLine);
       fOut.Print(textLine.c_str());
       fOut.Print("\n");
