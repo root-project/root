@@ -281,6 +281,8 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
             csr.SetSelected(BaseSelectionRule::kNo);
             csr2.SetSelected(BaseSelectionRule::kNo);
          }
+         csr.SetRequestStreamerInfo(true);
+         csr2.SetRequestStreamerInfo(true);
          fSelectionRules->AddClassSelectionRule(csr);
          fSelectionRules->AddClassSelectionRule(csr2);
          
