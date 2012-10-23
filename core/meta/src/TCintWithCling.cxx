@@ -916,14 +916,16 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    if (!strncmp(sLine.Data(), ".L", 2) || !strncmp(sLine.Data(), ".x", 2) ||
        !strncmp(sLine.Data(), ".X", 2)) {
       TString mod_line(sLine);
+      TString aclicMode;
+      TString arguments;
+      TString io;
+      TString fname = gSystem->SplitAclicMode(sLine.Data() + 3,
+                                              aclicMode, arguments, io);
       if ((mod_line[1] == 'x') || (mod_line[1] == 'X')) {
          // Let CINT load the file, but have only cling execute it.
          mod_line[1] = 'L';
       }
-      Ssiz_t paren_pos = mod_line.Last('(');
-      if ((paren_pos != kNPOS) && mod_line.EndsWith(")")) {
-         mod_line.Remove(paren_pos, mod_line.Length() - paren_pos);
-      }
+      mod_line = ".L " + fname;
       ret = ProcessLineCintOnly(mod_line, error);
    }
    // A non-zero returned value means the given line was
@@ -942,10 +944,12 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       TString fname = gSystem->SplitAclicMode(sLine.Data() + 3,
          aclicMode, arguments, io);
       if (aclicMode.Length()) {
-         // avoid double loading.
+         aclicMode.Append("kf");
+         gSystem->CompileMacro(fname,aclicMode);
+
          if (strncmp(sLine.Data(), ".L", 2) != 0) {
             // if execution was requested.
-            mod_line = fname + arguments;
+            mod_line = fname + arguments + io;
             indent = fMetaProcessor->process(mod_line, &result);
          }
       } else {
