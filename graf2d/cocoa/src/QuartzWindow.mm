@@ -275,8 +275,6 @@ QuartzWindow *FindWindowInPoint(Int_t x, Int_t y)
       if (![window isKindOfClass : [QuartzWindow class]])
          continue;
       QuartzWindow * const qw = (QuartzWindow *)window;
-      if (qw.fIsDeleted)//TGCocoa::DestroyWindow was called, but window is still on screen.
-         continue;
       //Check if point is inside.
       if (ScreenPointIsInView(qw.fContentView, x, y))
          return qw;
@@ -323,10 +321,6 @@ NSView<X11Window> *FindDNDAwareViewInPoint(NSView *parentView, Window_t dragWinI
          if (![window isKindOfClass : [QuartzWindow class]])
             continue;
          QuartzWindow * const qw = (QuartzWindow *)window;
-         
-         if (qw.fIsDeleted)//TGCocoa::DestroyWindow was called, but window is still on screen.
-            continue;
-         
          if (qw.fMapState != kIsViewable)
             continue;
 
@@ -364,9 +358,6 @@ QuartzWindow *FindWindowUnderPointer()
          continue;
 
       QuartzWindow * const qWindow = (QuartzWindow *)nsWindow;
-      
-      if (qWindow.fIsDeleted)//window is on screen even after TGCocoa::DestroyWindow was called.
-         continue;
       
       if (qWindow.fMapState != kIsViewable)//Can it be false and still in this array???
          continue;
@@ -410,9 +401,6 @@ QuartzWindow *FindWindowForPointerEvent(NSEvent *pointerEvent)
          continue;
 
       QuartzWindow * const qWindow = (QuartzWindow *)nsWindow;
-      
-      if (qWindow.fIsDeleted)//TGCocoa::DestroyWindow was called, but window is still on screen.
-         continue;
       
       if (qWindow.fMapState != kIsViewable)//Can it be false and still in this array???
          continue;
@@ -860,7 +848,6 @@ void print_mask_info(ULong_t mask)
    QuartzView *fContentView;
    BOOL fDelayedTransient;
    QuartzImage *fShapeCombineMask;
-   BOOL fIsDeleted;
 }
 
 @synthesize fMainWindow;
@@ -893,8 +880,6 @@ void print_mask_info(ULong_t mask)
       
       if (attr)
          X11::SetWindowAttributes(attr, self);
-      
-      fIsDeleted = NO;
    }
    
    return self;
@@ -905,18 +890,6 @@ void print_mask_info(ULong_t mask)
 {
    [fShapeCombineMask release];
    [super dealloc];
-}
-
-//______________________________________________________________________________
-- (BOOL) fIsDeleted
-{
-   return fIsDeleted;
-}
-
-//______________________________________________________________________________
-- (void) setFIsDeleted : (BOOL) deleted
-{
-   fIsDeleted = deleted;
 }
 
 //I want to forward a lot of property setters/getters to content view.
