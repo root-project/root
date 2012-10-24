@@ -37,6 +37,14 @@
 
 - (void) dealloc;
 
+//When TGCocoa::DestroyWindow is called, it's possible
+//due to some internal Cocoa's logic, that retainCount is > 1
+//and window is not deleted at this moment, but a bit later.
+//Before this "a bit later" something bad can happen with
+//window - if content view is used, for example.
+- (BOOL) fIsDeleted;
+- (void) setFIsDeleted : (BOOL) deleted;
+
 //Many properties in QuartzWindow just forwards to fContentView.
 - (void) forwardInvocation : (NSInvocation *) anInvocation;
 - (NSMethodSignature*) methodSignatureForSelector : (SEL) selector;
