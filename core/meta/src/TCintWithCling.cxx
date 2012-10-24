@@ -168,7 +168,7 @@ class TypedefVisitor : public RecursiveASTVisitor<TypedefVisitor> {
 private:
    llvm::SmallVector<TypedefDecl*,128> &fTypedefs;
 public:
-   TypedefVisitor(llvm::SmallVector<TypedefDecl*,128> & defs) : fTypedefs(defs)
+   TypedefVisitor(llvm::SmallVector<TypedefDecl*,128> &defs) : fTypedefs(defs)
    {}
 
    bool VisitTypedefDecl(TypedefDecl *TdefD) {
