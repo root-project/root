@@ -930,12 +930,15 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       TString io;
       TString fname = gSystem->SplitAclicMode(sLine.Data() + 3,
                                               aclicMode, arguments, io);
-      if ((mod_line[1] == 'x') || (mod_line[1] == 'X')) {
-         // Let CINT load the file, but have only cling execute it.
-         mod_line[1] = 'L';
+      if (!aclicMode.Length()) {
+         // ACLiC is fully delegated to ROOT or Cling
+         if ((mod_line[1] == 'x') || (mod_line[1] == 'X')) {
+            // Let CINT load the file, but have only cling execute it.
+            mod_line[1] = 'L';
+         }
+         mod_line = ".L " + fname;
+         ret = ProcessLineCintOnly(mod_line, error);
       }
-      mod_line = ".L " + fname;
-      ret = ProcessLineCintOnly(mod_line, error);
    }
    // A non-zero returned value means the given line was
    // not a complete statement.
@@ -953,12 +956,28 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       TString fname = gSystem->SplitAclicMode(sLine.Data() + 3,
          aclicMode, arguments, io);
       if (aclicMode.Length()) {
-         aclicMode.Append("kf");
+         // Remove the leading '+'
+         R__ASSERT(aclicMode[0]=='+' && "ACLiC mode must start with a +");
+         aclicMode[0]='k';    // We always want to keep the .so around.
+         if (aclicMode[1]=='+') {
+            // We have a 2nd +
+            aclicMode[1]='f'; // We want to force the recompilation.
+         }
          gSystem->CompileMacro(fname,aclicMode);
 
          if (strncmp(sLine.Data(), ".L", 2) != 0) {
             // if execution was requested.
-            mod_line = fname + arguments + io;
+            
+            if (arguments.Length()==0) {
+               arguments = "()";
+            }
+            // We need to remove the extension.
+            Ssiz_t ext = fname.Last('.');
+            if (ext != kNPOS) {
+               fname.Remove(ext);
+            }
+            const char *function = gSystem->BaseName(fname);
+            mod_line = function + arguments + io;
             indent = fMetaProcessor->process(mod_line, &result);
          }
       } else {
