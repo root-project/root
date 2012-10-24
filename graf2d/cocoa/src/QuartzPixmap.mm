@@ -57,6 +57,8 @@ namespace Quartz = ROOT::Quartz;
    unsigned       fHeight;
    unsigned char *fData;
    CGContextRef   fContext;
+   
+   unsigned       fScaleFactor;
 }
 
 @synthesize fID;
@@ -96,11 +98,16 @@ namespace Quartz = ROOT::Quartz;
    assert(width > 0 && "resizeW:H:, Pixmap width must be positive");
    assert(height > 0 && "resizeW:H:, Pixmap height must be positive");
 
+   fScaleFactor = unsigned([[NSScreen mainScreen] backingScaleFactor] + 0.5);
+   
    //Part, which does not change anything in a state:
    unsigned char *memory = 0;
    
+   const unsigned scaledW = width * fScaleFactor;
+   const unsigned scaledH = height * fScaleFactor;
+   
    try {
-      memory = new unsigned char[width * height * 4]();//[0]
+      memory = new unsigned char[scaledW * scaledH * 4]();//[0]
    } catch (const std::bad_alloc &) {
       NSLog(@"QuartzPixmap: -resizeW:H:, memory allocation failed");
       return NO;
@@ -114,11 +121,16 @@ namespace Quartz = ROOT::Quartz;
       return NO;
    }
 
-   Util::CFScopeGuard<CGContextRef> ctx(CGBitmapContextCreateWithData(memory, width, height, 8, width * 4, colorSpace.Get(), kCGImageAlphaPremultipliedLast, NULL, 0));
+   Util::CFScopeGuard<CGContextRef> ctx(CGBitmapContextCreateWithData(memory, scaledW, scaledH, 8, scaledW * 4, colorSpace.Get(), kCGImageAlphaPremultipliedLast, NULL, 0));
    if (!ctx.Get()) {
       NSLog(@"QuartzPixmap: -resizeW:H:, CGBitmapContextCreateWithData failed");
       return NO;
    }
+   
+   //Now, apply scaling.
+   
+   if (fScaleFactor > 1)
+      CGContextScaleCTM(ctx.Get(), fScaleFactor, fScaleFactor);
 
    //All initializations are OK, now change the state:
    if (fContext) {
@@ -173,8 +185,11 @@ namespace Quartz = ROOT::Quartz;
                                                             ROOT_QuartzImage_ReleaseBytePointer, 
                                                             ROOT_QuartzImage_GetBytesAtPosition, 0};
 
+   const unsigned scaledW = fWidth * fScaleFactor;
+   const unsigned scaledH = fHeight * fScaleFactor;
    
-   const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(fData, fWidth * fHeight * 4, &providerCallbacks));
+   
+   const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(fData, scaledW * scaledH * 4, &providerCallbacks));
    if (!provider.Get()) {
       NSLog(@"QuartzPixmap: -pixmapToImage, CGDataProviderCreateDirect failed");
       return 0;
@@ -189,7 +204,7 @@ namespace Quartz = ROOT::Quartz;
       
    //8 bits per component, 32 bits per pixel, 4 bytes per pixel, kCGImageAlphaLast:
    //all values hardcoded for TGCocoa.
-   CGImageRef image = CGImageCreate(cropArea.fWidth, cropArea.fHeight, 8, 32, fWidth * 4, colorSpace.Get(), kCGImageAlphaPremultipliedLast, provider.Get(), 0, false, kCGRenderingIntentDefault);
+   CGImageRef image = CGImageCreate(cropArea.fWidth * fScaleFactor, cropArea.fHeight * fScaleFactor, 8, 32, fWidth * 4 * fScaleFactor, colorSpace.Get(), kCGImageAlphaPremultipliedLast, provider.Get(), 0, false, kCGRenderingIntentDefault);
 
    return image;
 }
@@ -325,6 +340,9 @@ namespace Quartz = ROOT::Quartz;
       NSLog(@"QuartzPixmap: readColorBits:intoBuffer:, src and copy area do not intersect");
       return 0;
    }
+   
+   if (fScaleFactor > 1)
+      NSLog(@"QuartzPixmap: readColorBits:, called for scaled pixmap!");
    
    unsigned char *buffer = 0;
 
