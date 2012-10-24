@@ -189,6 +189,14 @@ void TVirtualX::CopyPixmap(Int_t /*wid*/, Int_t /*xpos*/, Int_t /*ypos*/)
 }
 
 //______________________________________________________________________________
+Double_t TVirtualX::GetOpenGLScalingFactor()
+{
+   //On a HiDPI resolution it can be > 1., this means glViewport should use
+   //scaled width and height.
+   return 1.;
+}
+
+//______________________________________________________________________________
 void TVirtualX::CreateOpenGLContext(Int_t /*wid*/)
 {
    // Creates OpenGL context for window "wid"

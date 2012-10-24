@@ -92,6 +92,7 @@ public:
    virtual void      DeleteOpenGLContext(Int_t wid=0);
    
    //---- OpenGL related stuff, required only with R__HAS_COCOA ----
+   virtual Double_t  GetOpenGLScalingFactor();
    virtual Window_t  CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &format);
    virtual Handle_t  CreateOpenGLContext(Window_t windowID, Handle_t sharedContext);
    virtual Bool_t    MakeOpenGLContextCurrent(Handle_t ctx, Window_t windowID);
