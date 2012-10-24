@@ -1472,13 +1472,13 @@ function doubleTap(elem, speed, distance) {
 
          /* X-axis */
          var x_axis = d3.svg.axis()
-             .scale(x)
-             .orient("bottom")
-             .tickPadding(5)
-             .tickSubdivide(5)
-             .tickSize(-0.03 * h, -0.03 * h / 2, null)
-             .tickFormat(function(d,i) { return d; })
-             .ticks(10);
+            .scale(x)
+            .orient("bottom")
+            .tickPadding(5)
+            .tickSubdivide(5)
+            .tickSize(-0.03 * h, -0.03 * h / 2, null)
+            .tickFormat(function(d,i) { return parseFloat(d.toPrecision(12)); })
+            .ticks(10);
 
          /* Y-axis minor ticks */
          var y_axis = d3.svg.axis()
@@ -1487,7 +1487,7 @@ function doubleTap(elem, speed, distance) {
             .tickPadding(5)
             .tickSubdivide(5)
             .tickSize(-0.03 * w, -0.03 * w / 2, null)
-            .tickFormat(function(d,i) { return d; })
+            .tickFormat(function(d,i) { return parseFloat(d.toPrecision(12)); })
             .ticks(10);
 
          var xax = frame.append("svg:g")
