@@ -122,7 +122,7 @@ void TClingCallbacks::TransactionCommitted(const Transaction &T) {
       const cling::Transaction* T = m_Interpreter->getFirstTransaction();
       while (T) {
          if (T->getState() == cling::Transaction::kCommitted)
-            TCintWithCling__UpdateListsOnUnloaded(*T);
+            TCintWithCling__UpdateListsOnCommitted(*T);
          T = T->getNext();
       }
 
