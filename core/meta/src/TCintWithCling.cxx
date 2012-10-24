@@ -344,39 +344,6 @@ extern "C" void* TCint_FindSpecialObject(char* c, G__ClassInfo* ci, void** p1, v
 //
 //
 
-#if 0
-//______________________________________________________________________________
-static void collect_comment(Preprocessor& PP, ExpectedData& ED)
-{
-   // Create a raw lexer to pull all the comments out of the main file.
-   // We don't want to look in #include'd headers for expected-error strings.
-   SourceManager& SM = PP.getSourceManager();
-   FileID FID = SM.getMainFileID();
-   if (SM.getMainFileID().isInvalid()) {
-      return;
-   }
-   // Create a lexer to lex all the tokens of the main file in raw mode.
-   const llvm::MemoryBuffer* FromFile = SM.getBuffer(FID);
-   Lexer RawLex(FID, FromFile, SM, PP.getLangOptions());
-   // Return comments as tokens, this is how we find expected diagnostics.
-   RawLex.SetCommentRetentionState(true);
-   Token Tok;
-   Tok.setKind(tok::comment);
-   while (Tok.isNot(tok::eof)) {
-      RawLex.Lex(Tok);
-      if (!Tok.is(tok::comment)) {
-         continue;
-      }
-      std::string Comment = PP.getSpelling(Tok);
-      if (Comment.empty()) {
-         continue;
-      }
-      // Find all expected errors/warnings/notes.
-      ParseDirective(&Comment[0], Comment.size(), ED, PP, Tok.getLocation());
-   };
-}
-#endif // 0
-
 //______________________________________________________________________________
 //
 //
