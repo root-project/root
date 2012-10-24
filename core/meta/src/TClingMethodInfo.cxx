@@ -130,7 +130,7 @@ void TClingMethodInfo::Init(const clang::FunctionDecl *decl)
    DC->collectAllContexts(fContexts);
    fIter = DC->decls_begin();
    while (InternalNext()) {
-      if (*fIter == decl) {
+      if (*fIter == decl || *fIter == decl->getCanonicalDecl()) {
          fFirstTime = true;
          break;
       }
