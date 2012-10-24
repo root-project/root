@@ -50,10 +50,15 @@ private:
    unsigned int                                 fContextIdx; // Index in fContexts of DeclContext we are iterating over.
    clang::DeclContext::decl_iterator            fIter; // Our iterator.
    std::string                                  fTitle; // The meta info for the method.
+   const clang::FunctionDecl                   *fSingleDecl; // The single member
 
 public:
    explicit TClingMethodInfo(cling::Interpreter *interp) 
-      : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle("") {}
+      : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""), 
+        fSingleDecl(0) {}
+
+   // Takes concrete decl and disables the iterator. 
+   TClingMethodInfo(cling::Interpreter *, const clang::FunctionDecl *);
 
    TClingMethodInfo(cling::Interpreter *, TClingClassInfo *);
 

@@ -185,6 +185,15 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
        I != E; ++I)
       for (DeclGroupRef::const_iterator DI = I->begin(), DE = I->end(); 
            DI != DE; ++DI) {
+         if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(*DI)) {
+            listOfSmth = gROOT->GetListOfGlobalFunctions();
+            if (!isa<TranslationUnitDecl>(FD->getDeclContext()))
+               continue;
+            if (!listOfSmth->FindObject(FD->getNameAsString().c_str())) {  
+               listOfSmth->Add(new TFunction(new TClingMethodInfo(interp, FD)));
+            }            
+         }
+
          if (isa<DeclContext>(*DI) && !isa<EnumDecl>(*DI)) {
             // We have to find all the typedefs contained in that decl context
             // and add it to the list of types.
@@ -1485,50 +1494,7 @@ void TCintWithCling::UpdateListOfGlobals()
 //______________________________________________________________________________
 void TCintWithCling::UpdateListOfGlobalFunctions()
 {
-   // Update the list of pointers to global functions. This function
-   // is called by TROOT::GetListOfGlobalFunctions().
-   if (!gROOT->fGlobalFunctions) {
-      // No global functions registered yet, trigger it:
-      gROOT->GetListOfGlobalFunctions();
-      // We were already called by TROOT::GetListOfGlobalFunctions()
-      return;
-   }
-   R__LOCKGUARD2(gCINTMutex);
-   TClingMethodInfo t(fInterpreter);
-   while (t.Next()) {
-      // if name cannot be obtained no use to put in list
-      if (t.IsValid() && t.Name()) {
-         Bool_t needToAdd = kTRUE;
-         // first remove if already in list
-         TList* listFuncs = ((THashTable*)(gROOT->fGlobalFunctions))->
-            GetListForObject(t.Name());
-         if (listFuncs && t.InterfaceMethod()) {
-            Long_t prop = -1;
-            TIter iFunc(listFuncs);
-            Bool_t foundStart = kFALSE;
-            TFunction* f = 0;
-            while (needToAdd && (f = (TFunction*)iFunc())) {
-               if (strcmp(f->GetName(), t.Name())) {
-                  if (foundStart) {
-                     break;
-                  }
-                  continue;
-               }
-               foundStart = kTRUE;
-               if (f->InterfaceMethod()) {
-                  if (prop == -1) {
-                     prop = t.Property();
-                  }
-                  needToAdd = !(prop & G__BIT_ISCOMPILED) &&
-                     (t.GetMangledName() != f->GetMangledName());
-               }
-            }
-         }
-         if (needToAdd) {
-            gROOT->fGlobalFunctions->Add(new TFunction(new TClingMethodInfo(t)));
-         }
-      }
-   }
+ // No op: see TClingCallbacks (used to update the list of global functions)
 }
 
 //______________________________________________________________________________

@@ -53,7 +53,8 @@ using namespace clang;
 
 TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
                                    TClingClassInfo *ci)
-   : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle("")
+   : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""), 
+     fSingleDecl(0)
 {
    if (!ci || !ci->IsValid()) {
       return;
@@ -66,8 +67,20 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
    fFirstTime = true;
 }
 
+TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
+                                   const clang::FunctionDecl *FD) 
+   : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""), 
+     fSingleDecl(FD)
+{
+
+}
+
+
 const clang::FunctionDecl *TClingMethodInfo::GetMethodDecl() const
 {
+   if (fSingleDecl)
+      return fSingleDecl;
+
    if (!IsValid()) {
       return 0;
    }
@@ -164,6 +177,9 @@ int TClingMethodInfo::NDefaultArg() const
 
 int TClingMethodInfo::InternalNext()
 {
+
+   assert(!fSingleDecl && "This is not an iterator!");
+
    if (!*fIter) {
       // Iterator is already invalid.
       return 0;
