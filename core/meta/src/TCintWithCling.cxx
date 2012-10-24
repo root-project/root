@@ -76,6 +76,7 @@
 #include "cling/Interpreter/StoredValueRef.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
+#include "cling/Utils/AST.h"
 
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/raw_ostream.h"
@@ -189,6 +190,10 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
             listOfSmth = gROOT->GetListOfGlobalFunctions();
             if (!isa<TranslationUnitDecl>(FD->getDeclContext()))
                continue;
+            if(FD->isOverloadedOperator() 
+               || cling::utils::Analyze::IsWrapper(FD))
+               continue;
+
             if (!listOfSmth->FindObject(FD->getNameAsString().c_str())) {  
                listOfSmth->Add(new TFunction(new TClingMethodInfo(interp, FD)));
             }            
