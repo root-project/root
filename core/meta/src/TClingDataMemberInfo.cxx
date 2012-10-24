@@ -248,13 +248,8 @@ long TClingDataMemberInfo::Offset() const
    if (!IsValid()) {
       return -1L;
    }
-   // Sanity check the current data member.
+
    const Decl *D = GetDecl();
-   if (!isa<FieldDecl>(D) && !isa<VarDecl>(D) && !isa<EnumConstantDecl>(D))
-      // Error, was not a data member, variable, or enumerator.
-      return -1L;
-   
-   
 
    if (const FieldDecl *FldD = dyn_cast<FieldDecl>(D)) {
       // The current member is a non-static data member.
@@ -264,8 +259,18 @@ long TClingDataMemberInfo::Offset() const
       uint64_t bits = Layout.getFieldOffset(FldD->getFieldIndex());
       int64_t offset = Context.toCharUnitsFromBits(bits).getQuantity();
       return static_cast<long>(offset);
-   } else 
-      return reinterpret_cast<long>(fInterp->getAddressOfGlobal(cast<NamedDecl>(D)));
+   } 
+   // FIXME: We have to explicitly check for not enum constant because the 
+   // implementation of getAddressOfGlobal relies on mangling the name and in 
+   // clang there is misbehaviour in MangleContext::shouldMangleDeclName.
+   else if (const VarDecl *VD = dyn_cast<VarDecl>(D))
+      return reinterpret_cast<long>(fInterp->getAddressOfGlobal(VD));
+   // enum constants are esentially numbers and don't get addresses. However
+   // ROOT expects the address to the enum constant initalizer to be returned.
+   else if (const EnumConstantDecl *ECD = dyn_cast<EnumConstantDecl>(D))
+      return reinterpret_cast<long>(ECD->getInitVal().getRawData());
+   
+   return -1L;
 }
 
 long TClingDataMemberInfo::Property() const
