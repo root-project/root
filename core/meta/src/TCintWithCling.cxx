@@ -170,10 +170,6 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
        I != E; ++I)
       for (DeclGroupRef::const_iterator DI = I->begin(), DE = I->end(); 
            DI != DE; ++DI) {
-         // We care about declarations on the global scope.
-         if (!isa<TranslationUnitDecl>((*DI)->getDeclContext()))
-               continue;
-
          if (const TypedefDecl* TdefD = dyn_cast<TypedefDecl>(*DI)) {
             listOfSmth = gROOT->GetListOfTypes();
             if (!listOfSmth->FindObject(TdefD->getNameAsString().c_str())) {
@@ -181,6 +177,10 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
             }
          }
          else if (const NamedDecl *ND = dyn_cast<NamedDecl>(*DI)) {
+            // We care about declarations on the global scope.
+            if (!isa<TranslationUnitDecl>(ND->getDeclContext()))
+               continue;
+
             // ROOT says that global is enum/var/field declared on the global
             // scope.
 
