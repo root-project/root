@@ -105,8 +105,6 @@ const char* measurementNames[kNumMeasurements] = {
    "cpu time (s)"
 };
 
-PTData* branchdata = 0;
-
 //______________________________________________________________________________
 void InvokeChild(char** argv, const TString& roottestHome){
    // We are the fork's child. Convert ourselves into root.exe (or whatever else was argv[2])
@@ -200,14 +198,10 @@ TTree* GetTree(TString& fileName, TString& testName, int argc, char** argv, cons
 }
 
 //______________________________________________________________________________
-void FillData(const PTMeasurement& results, TTree* tree, PTData& newdata) {
-   PTData emptydata;
-   PTData* prevdata = &emptydata;
-   if (tree->GetEntries()) {
-      // Whether the previous is outlier or not, it contains the relevant
-      // average / variance etc data.
-      prevdata = branchdata;
-   }
+void FillData(const PTMeasurement& results, TTree* tree, PTData& prevdata, PTData& newdata) {
+
+   // Whether the previous is outlier or not, it contains the relevant
+   // average / variance etc data.
 
    time_t rawtime;
    time(&rawtime);
@@ -220,10 +214,10 @@ void FillData(const PTMeasurement& results, TTree* tree, PTData& newdata) {
       results.utime + results.stime // in seconds
    };
 
-   newdata.statEntries = prevdata->statEntries + 1;
-   newdata.historyThinningCounter = prevdata->historyThinningCounter + 1;
+   newdata.statEntries = prevdata.statEntries + 1;
+   newdata.historyThinningCounter = prevdata.historyThinningCounter + 1;
    for (int i = 0; i < kNumMeasurements; ++i) {
-      newdata.pval[i]->Set(resdata[i], *prevdata->pval[i], newdata.statEntries);
+      newdata.pval[i]->Set(resdata[i], *prevdata.pval[i], newdata.statEntries);
    }
    newdata.svn = gROOT->GetSvnRevision();
    newdata.outlier = 0;
@@ -264,16 +258,15 @@ void FillGraphEntry(int i, PTGraph& graph, const PTVal& val,
 }
 
 //______________________________________________________________________________
-PTGraphColl* CreateOldGraphs(TTree* tree) {
+PTGraphColl* CreateOldGraphs(TTree* tree, PTData &olddata) {
    // Allocate the graphs, fill old data
-
-   // Always do, we assume it's set later on
-   branchdata = new PTData();
-   tree->SetBranchAddress("event", &branchdata);
 
    Long64_t entries = tree->GetEntries();
    PTGraphColl* graphs = new PTGraphColl(entries + 1);
    if (!entries) return graphs;
+
+   PTData *branchdata = &olddata;
+   tree->SetBranchAddress("event", &branchdata);
 
    for (Long64_t entry = 0; entry < entries; ++entry) {
       tree->GetEntry(entry);
@@ -283,6 +276,7 @@ PTGraphColl* CreateOldGraphs(TTree* tree) {
                         branchdata->svn, branchdata->outlier);
       }
    }
+   tree->ResetBranchAddresses();
    return graphs;
 }
 
@@ -316,23 +310,18 @@ void UpdateGraphs(PTGraphColl* graphs, const PTData& newdata) {
 }
 
 //______________________________________________________________________________
-void RevertOutlierStat(TTree* tree, PTData& newdata) {
+void RevertOutlierStat(TTree* tree, const PTData& prevdata, PTData& newdata) {
    // The new measurement is an outlier; update its integrated statistics data
    // to not take the current measurement into account.
 
-   PTData emptydata;
-   PTData* prevdata = &emptydata;
-   if (tree->GetEntries()) {
-      // Whether the previous is outlier or not, it contains the relevant
-      // average / variance etc data.
-      prevdata = branchdata;
-   }
+   // Whether the previous is outlier or not, it contains the relevant
+   // average / variance etc data.
 
    --newdata.statEntries;
 
    for (int i = 0; i < kNumMeasurements; ++i) {
       PTVal* nval = newdata.pval[i];
-      PTVal* pval = prevdata->pval[i];
+      const PTVal* pval = prevdata.pval[i];
       nval->fMean = pval->fMean;
       nval->fVar = pval->fVar;
       nval->fSumVal2 = pval->fSumVal2;
@@ -356,8 +345,8 @@ void ReportFailures(const PTData& newdata, const TString& testName,
 
 //______________________________________________________________________________
 void UpdateTree(TTree* tree, const PTData& newdata) {
-   PTData* data = branchdata;
-   *data = newdata;
+   const PTData *localptr = &newdata;
+   tree->SetBranchAddress("event",&localptr);
    tree->Fill();
    tree->Write(0, TObject::kWriteDelete);
    TFile* file = tree->GetCurrentFile();
@@ -373,7 +362,8 @@ void DeleteOldEntries(TTree *&tree, unsigned int historyThinningCounter, const T
    static const int ExpTime=200; // 2*ExpTime values (not including outliers) stored in tree int status;
    if (historyThinningCounter % ExpTime != 0) return;
 
-   PTData *data = branchdata;
+   PTData *data = 0;
+   tree->SetBranchAddress("event",&data);
    TString tmpFileName(fileName);
    tmpFileName.ReplaceAll(".root", "_tmp.root");
    TFile::Open(tmpFileName, "RECREATE");
@@ -402,6 +392,7 @@ void DeleteOldEntries(TTree *&tree, unsigned int historyThinningCounter, const T
    gSystem->Unlink(fileName);
    gSystem->Rename(tmpFileName, fileName);
    tree = newT;
+   tree->ResetBranchAddresses();
 }
 
 //______________________________________________________________________________
@@ -514,9 +505,10 @@ int main(int argc, char** argv)
       TString test;
       TString file;
       TTree* tree = GetTree(file, test, argc, argv, cwd, roottestHome);
-      PTGraphColl* graphs = CreateOldGraphs(tree);
+      PTData olddata;
+      PTGraphColl* graphs = CreateOldGraphs(tree,olddata);
       PTData newdata;
-      FillData(results, tree, newdata);
+      FillData(results, tree, olddata, newdata);
       CheckPerformance(newdata);
 
       UpdateGraphs(graphs, newdata);
@@ -525,7 +517,7 @@ int main(int argc, char** argv)
 
       if (newdata.outlier) {
          ReportFailures(newdata, test, file);
-         RevertOutlierStat(tree, newdata);
+         RevertOutlierStat(tree, olddata, newdata);
       }
 
       DeleteOldEntries(tree, newdata.historyThinningCounter, file);
