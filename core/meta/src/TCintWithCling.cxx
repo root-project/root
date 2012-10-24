@@ -60,6 +60,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/RecordLayout.h"
+#include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
@@ -162,6 +163,20 @@ void TCintWithCling__RegisterModule(const char* modulename,
 // The functions are used to bridge cling/clang/llvm compiled with no-rtti and
 // ROOT (which uses rtti)
 
+// Class extracting recursively every typedef defined somewhere.
+class TypedefVisitor : public RecursiveASTVisitor<TypedefVisitor> {
+private:
+   llvm::SmallVector<TypedefDecl*,128> &fTypedefs;
+public:
+   TypedefVisitor(llvm::SmallVector<TypedefDecl*,128> & defs) : fTypedefs(defs)
+   {}
+
+   bool VisitTypedefDecl(TypedefDecl *TdefD) {
+      fTypedefs.push_back(TdefD);
+      return true; // returning false will abort the in-depth traversal.
+   }
+};
+
 extern "C" 
 void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
    TCollection *listOfSmth = 0;
@@ -170,7 +185,20 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
        I != E; ++I)
       for (DeclGroupRef::const_iterator DI = I->begin(), DE = I->end(); 
            DI != DE; ++DI) {
-         if (const TypedefDecl* TdefD = dyn_cast<TypedefDecl>(*DI)) {
+         if (isa<DeclContext>(*DI) && !isa<EnumDecl>(*DI)) {
+            // We have to find all the typedefs contained in that decl context
+            // and add it to the list of types.
+            listOfSmth = gROOT->GetListOfTypes();
+            llvm::SmallVector<TypedefDecl*, 128> Defs;
+            TypedefVisitor V(Defs);
+            V.TraverseDecl(*DI);
+            for (size_t i = 0; i < Defs.size(); ++i)
+            if (!listOfSmth->FindObject(Defs[i]->getNameAsString().c_str())) {
+               listOfSmth->Add(new TDataType(new TClingTypedefInfo(interp, Defs[i])));
+            }
+
+         }
+         else if (const TypedefDecl* TdefD = dyn_cast<TypedefDecl>(*DI)) {
             listOfSmth = gROOT->GetListOfTypes();
             if (!listOfSmth->FindObject(TdefD->getNameAsString().c_str())) {
                listOfSmth->Add(new TDataType(new TClingTypedefInfo(interp, TdefD)));
