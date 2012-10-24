@@ -78,12 +78,13 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
 
 const clang::FunctionDecl *TClingMethodInfo::GetMethodDecl() const
 {
-   if (fSingleDecl)
-      return fSingleDecl;
-
    if (!IsValid()) {
       return 0;
    }
+
+   if (fSingleDecl)
+      return fSingleDecl;
+
    return llvm::dyn_cast<clang::FunctionDecl>(*fIter);
 }
 
@@ -148,7 +149,7 @@ void *TClingMethodInfo::InterfaceMethod() const
 
 bool TClingMethodInfo::IsValid() const
 {
-   return *fIter;
+   return fSingleDecl ? fSingleDecl : *fIter;
 }
 
 int TClingMethodInfo::NArg() const
@@ -156,7 +157,7 @@ int TClingMethodInfo::NArg() const
    if (!IsValid()) {
       return -1;
    }
-   const clang::FunctionDecl *fd = llvm::cast<clang::FunctionDecl>(*fIter);
+   const clang::FunctionDecl *fd = GetMethodDecl();
    unsigned num_params = fd->getNumParams();
    // Truncate cast to fit cint interface.
    return static_cast<int>(num_params);
@@ -167,7 +168,7 @@ int TClingMethodInfo::NDefaultArg() const
    if (!IsValid()) {
       return -1;
    }
-   const clang::FunctionDecl *fd = llvm::cast<clang::FunctionDecl>(*fIter);
+   const clang::FunctionDecl *fd = GetMethodDecl();
    unsigned num_params = fd->getNumParams();
    unsigned min_args = fd->getMinRequiredArguments();
    unsigned defaulted_params = num_params - min_args;
@@ -180,7 +181,7 @@ int TClingMethodInfo::InternalNext()
 
    assert(!fSingleDecl && "This is not an iterator!");
 
-   if (!*fIter) {
+   if (!GetMethodDecl()) {
       // Iterator is already invalid.
       return 0;
    }
@@ -227,8 +228,7 @@ long TClingMethodInfo::Property() const
    }
    long property = 0L;
    property |= G__BIT_ISCOMPILED;
-   const clang::FunctionDecl *fd =
-      llvm::dyn_cast<clang::FunctionDecl>(*fIter);
+   const clang::FunctionDecl *fd = GetMethodDecl();
    switch (fd->getAccess()) {
       case clang::AS_public:
          property |= G__BIT_ISPUBLIC;
@@ -314,8 +314,7 @@ TClingTypeInfo *TClingMethodInfo::Type() const
    if (!IsValid()) {
       return &ti;
    }
-   clang::QualType qt = llvm::cast<clang::FunctionDecl>(*fIter)->
-                        getResultType();
+   clang::QualType qt = GetMethodDecl()->getResultType();
    ti.Init(qt);
    return &ti;
 }
@@ -329,9 +328,9 @@ const char *TClingMethodInfo::GetMangledName() const
    static std::string mangled_name;
    mangled_name.clear();
    llvm::raw_string_ostream os(mangled_name);
-   llvm::OwningPtr<clang::MangleContext> mangle(fIter->getASTContext().
+   llvm::OwningPtr<clang::MangleContext> mangle(GetMethodDecl()->getASTContext().
          createMangleContext());
-   const clang::NamedDecl *nd = llvm::dyn_cast<clang::NamedDecl>(*fIter);
+   const clang::NamedDecl *nd = GetMethodDecl();
    if (!nd) {
       return 0;
    }
@@ -373,8 +372,8 @@ const char *TClingMethodInfo::GetPrototype() const
    buf += Type()->Name();
    buf += ' ';
    std::string name;
-   clang::PrintingPolicy policy(fIter->getASTContext().getPrintingPolicy());
-   const clang::NamedDecl *nd = llvm::cast<clang::NamedDecl>(*fIter);
+   clang::PrintingPolicy policy(GetMethodDecl()->getASTContext().getPrintingPolicy());
+   const clang::NamedDecl *nd = GetMethodDecl();
    nd->getNameForDiagnostic(name, policy, /*Qualified=*/true);
    buf += name;
    buf += '(';
@@ -406,9 +405,8 @@ const char *TClingMethodInfo::Name() const
    }
    static std::string buf;
    buf.clear();
-   clang::PrintingPolicy policy(fIter->getASTContext().getPrintingPolicy());
-   llvm::dyn_cast<clang::NamedDecl>(*fIter)->
-   getNameForDiagnostic(buf, policy, /*Qualified=*/false);
+   clang::PrintingPolicy policy(GetMethodDecl()->getASTContext().getPrintingPolicy());
+   GetMethodDecl()->getNameForDiagnostic(buf, policy, /*Qualified=*/false);
    return buf.c_str();
 }
 
