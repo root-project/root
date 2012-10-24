@@ -106,11 +106,6 @@ input.tb {
    background-color: #ffffff;
 }
 
-/*
- * Correct overflow not hidden in IE9
- */
-svg:not(:root) { overflow: hidden; }
-
 /*--------------------------------------------------|
 | dTree 2.05 | www.destroydrop.com/javascript/tree/ |
 |---------------------------------------------------|

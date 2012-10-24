@@ -414,6 +414,68 @@ function format_id(id) {
    return g_id;
 };
 
+/*
+    Polyfill for touch dblclick
+    http://mckamey.mit-license.org
+*/
+function doubleTap(elem, speed, distance) {
+   if (!('ontouchstart' in elem)) {
+      // non-touch has native dblclick and no need for polyfill
+      return;
+   }
+   // default dblclick speed to half sec
+   speed = Math.abs(+speed) || 500;//ms
+   // default dblclick distance to within 40x40 area
+   distance = Math.abs(+distance) || 40;//px
+
+   var taps, x, y;
+   var reset = function() {
+      // reset state
+      taps = 0;
+      x = NaN;
+      y = NaN;
+   };
+   reset();
+
+   elem.addEventListener('touchstart', function(e) {
+      var touch = e.changedTouches[0] || {}, oldX = x, oldY = y;
+
+      taps++;
+      x = +touch.pageX || +touch.clientX || +touch.screenX;
+      y = +touch.pageY || +touch.clientY || +touch.screenY;
+
+      // NaN will always be false
+      if (Math.abs(oldX-x) < distance && Math.abs(oldY-y) < distance) {
+         // fire dblclick event
+         var e2 = document.createEvent('MouseEvents');
+         if (e2.initMouseEvent) {
+             e2.initMouseEvent(
+                 'dblclick',
+                 true,                   // dblclick bubbles
+                 true,                   // dblclick cancelable
+                 e.view,                 // copy view
+                 taps,                   // click count
+                 touch.screenX,          // copy coordinates
+                 touch.screenY,
+                 touch.clientX,
+                 touch.clientY,
+                 e.ctrlKey,              // copy key modifiers
+                 e.altKey,
+                 e.shiftKey,
+                 e.metaKey,
+                 e.button,               // copy button 0: left, 1: middle, 2: right
+                 touch.target);          // copy target
+         }
+         elem.dispatchEvent(e2);
+      }
+      setTimeout(reset, speed);
+   }, false);
+
+   elem.addEventListener('touchmove', function(e) {
+      reset();
+   }, false);
+};
+
 (function(){
 
    if (typeof JSROOTPainter == 'object'){
@@ -723,10 +785,13 @@ function format_id(id) {
 
    JSROOTPainter.addInteraction = function(vis, obj) {
       var width = vis.attr("width"), height = vis.attr("height");
+      var e, origin, rect;
+      doubleTap(vis[0][0]);
 
       if (typeof(vis['objects']) === 'undefined')
          vis['objects'] = new Array();
       vis['objects'].push(obj);
+
       function refresh() {
          if (vis.x_axis && vis.y_axis) {
             vis.select(".xaxis").call(vis.x_axis);
@@ -747,61 +812,82 @@ function format_id(id) {
          }
       };
       var zoom = d3.behavior.zoom().x(obj.x).y(obj.y).on("zoom", refresh());
-      vis.on("mousedown", function() {
+      vis.on("touchstart", startRectSel);
+      vis.on("mousedown", startRectSel);
+
+      function startRectSel() {
+         d3.event.preventDefault();
          vis.select("#zoom_rect").remove();
-         var e = this, origin = d3.mouse(e),
-             rect = vis.append("rect").attr("class", "zoom").attr("id", "zoom_rect");
+         e = this;
+         var t = d3.event.changedTouches;
+         origin = t ? d3.touches(e, t)[0] : d3.mouse(e);
+         rect = vis.append("rect").attr("class", "zoom").attr("id", "zoom_rect");
          d3.select("body").classed("noselect", true);
          d3.select("body").style("-webkit-user-select", "none");
          origin[0] = Math.max(0, Math.min(width, origin[0]));
          origin[1] = Math.max(0, Math.min(height, origin[1]));
-         vis.on("dblclick", function() {
-            var xmin = vis['objects'][0]['x_min'],
-                xmax = vis['objects'][0]['x_max'],
-                ymin = vis['objects'][0]['y_min'],
-                ymax = vis['objects'][0]['y_max'];
+         vis.on("dblclick", unZoom);
+         d3.select(window)
+            .on("mousemove.zoomRect", moveRectSel)
+            .on("mouseup.zoomRect", endRectSel, true);
+         d3.select(window)
+            .on("touchmove.zoomRect", moveRectSel)
+            .on("touchend.zoomRect", endRectSel, true);
+         d3.event.stopPropagation();
+      };
+
+      function unZoom() {
+         d3.event.preventDefault();
+         var xmin = vis['objects'][0]['x_min'],
+             xmax = vis['objects'][0]['x_max'],
+             ymin = vis['objects'][0]['y_min'],
+             ymax = vis['objects'][0]['y_max'];
+         for (var i=0;i<vis['objects'].length;++i) {
+            zoom.x(vis['objects'][i].x.domain([xmin, xmax]))
+                .y(vis['objects'][i].y.domain([ymin, ymax]));
+         }
+         refresh();
+      };
+
+      function moveRectSel() {
+         d3.event.preventDefault();
+         var t = d3.event.changedTouches;
+         var m = t ? d3.touches(e, t)[0] : d3.mouse(e);
+         m[0] = Math.max(0, Math.min(width, m[0]));
+         m[1] = Math.max(0, Math.min(height, m[1]));
+         rect.attr("x", Math.min(origin[0], m[0]))
+             .attr("y", Math.min(origin[1], m[1]))
+             .attr("width", Math.abs(m[0] - origin[0]))
+             .attr("height", Math.abs(m[1] - origin[1]));
+      };
+
+      function endRectSel() {
+         d3.event.preventDefault();
+         d3.select(window).on("touchmove.zoomRect", null).on("touchend.zoomRect", null);
+         d3.select(window).on("mousemove.zoomRect", null).on("mouseup.zoomRect", null);
+         d3.select("body").classed("noselect", false);
+         var t = d3.event.changedTouches;
+         var m = t ? d3.touches(e, t)[0] : d3.mouse(e);
+         m[0] = Math.max(0, Math.min(width, m[0]));
+         m[1] = Math.max(0, Math.min(height, m[1]));
+         if (Math.abs(m[0] - origin[0]) > 10 && Math.abs(m[1] - origin[1]) > 10) {
+            var xmin = Math.min(vis['objects'][0].x.invert(origin[0]),
+                                vis['objects'][0].x.invert(m[0])),
+                xmax = Math.max(vis['objects'][0].x.invert(origin[0]),
+                                vis['objects'][0].x.invert(m[0])),
+                ymin = Math.min(vis['objects'][0].y.invert(origin[1]),
+                                vis['objects'][0].y.invert(m[1])),
+                ymax = Math.max(vis['objects'][0].y.invert(origin[1]),
+                                vis['objects'][0].y.invert(m[1]));
             for (var i=0;i<vis['objects'].length;++i) {
                zoom.x(vis['objects'][i].x.domain([xmin, xmax]))
                    .y(vis['objects'][i].y.domain([ymin, ymax]));
             }
-            refresh();
-           });
-         d3.select(window)
-           .on("mousemove.zoomRect", function() {
-               var m = d3.mouse(e);
-               m[0] = Math.max(0, Math.min(width, m[0]));
-               m[1] = Math.max(0, Math.min(height, m[1]));
-               rect.attr("x", Math.min(origin[0], m[0]))
-                   .attr("y", Math.min(origin[1], m[1]))
-                   .attr("width", Math.abs(m[0] - origin[0]))
-                   .attr("height", Math.abs(m[1] - origin[1]));
-            })
-            .on("mouseup.zoomRect", function() {
-               d3.select(window).on("mousemove.zoomRect", null).on("mouseup.zoomRect", null);
-               d3.select("body").classed("noselect", false);
-               var m = d3.mouse(e);
-               m[0] = Math.max(0, Math.min(width, m[0]));
-               m[1] = Math.max(0, Math.min(height, m[1]));
-               if (m[0] !== origin[0] && m[1] !== origin[1]) {
-                  var xmin = Math.min(vis['objects'][0].x.invert(origin[0]),
-                                      vis['objects'][0].x.invert(m[0])),
-                      xmax = Math.max(vis['objects'][0].x.invert(origin[0]),
-                                      vis['objects'][0].x.invert(m[0])),
-                      ymin = Math.min(vis['objects'][0].y.invert(origin[1]),
-                                      vis['objects'][0].y.invert(m[1])),
-                      ymax = Math.max(vis['objects'][0].y.invert(origin[1]),
-                                      vis['objects'][0].y.invert(m[1]));
-                  for (var i=0;i<vis['objects'].length;++i) {
-                     zoom.x(vis['objects'][i].x.domain([xmin, xmax]))
-                         .y(vis['objects'][i].y.domain([ymin, ymax]));
-                  }
-               }
-               rect.remove();
-               refresh();
-               d3.select("body").style("-webkit-user-select", "auto");
-            }, true);
-         d3.event.stopPropagation();
-      });
+         }
+         rect.remove();
+         refresh();
+         d3.select("body").style("-webkit-user-select", "auto");
+      };
    };
 
    JSROOTPainter.createCanvas = function(element, idx) {
@@ -3090,6 +3176,8 @@ function format_id(id) {
       +"  stroke: steelblue;\n"
       +"  fill-opacity: 0.1;\n"
       +"}\n"
+      /* Correct overflow not hidden in IE9 */
+      +"svg:not(:root) { overflow: hidden; }\n"
       +"</style>\n";
    $(style).prependTo("body");
 
