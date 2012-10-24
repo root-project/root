@@ -181,7 +181,7 @@ int TClingMethodInfo::InternalNext()
 
    assert(!fSingleDecl && "This is not an iterator!");
 
-   if (!GetMethodDecl()) {
+   if (!*fIter) {
       // Iterator is already invalid.
       return 0;
    }
