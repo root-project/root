@@ -42,10 +42,12 @@ namespace ROOT {
          typedef llvm::SmallSet<const clang::Type*, 4> TypesCont_t; 
       private:
          TypesCont_t fTypeToSkip;
+         TypesCont_t fTypeWithAlternative;
       public:
          TNormalizedCtxt(const cling::LookupHelper &lh);
 
          const TypesCont_t &GetTypeToSkip() const { return fTypeToSkip; }
+         const TypesCont_t &GetTypeWithAlternative() const { return fTypeWithAlternative; }
       };
 
       // Add default template parameters.

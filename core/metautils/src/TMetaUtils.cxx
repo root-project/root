@@ -48,19 +48,29 @@
 //////////////////////////////////////////////////////////////////////////
 ROOT::TMetaUtils::TNormalizedCtxt::TNormalizedCtxt(const cling::LookupHelper &lh)
 {   
-   // Initialize the list of typedef to keep (i.e. make them opaque for normalization).
+   // Initialize the list of typedef to keep (i.e. make them opaque for normalization)
+   // and the list of typedef whose semantic is different from their underlying type
+   // (Double32_t and Float16_t).
    // This might be specific to an interpreter.
 
-   if (fTypeToSkip.empty()) {
-      clang::QualType toSkip = lh.findType("Double32_t");
-      if (!toSkip.isNull()) fTypeToSkip.insert(toSkip.getTypePtr());
-      toSkip = lh.findType("Float16_t");
-      if (!toSkip.isNull()) fTypeToSkip.insert(toSkip.getTypePtr());
-      toSkip = lh.findType("string");
-      if (!toSkip.isNull()) fTypeToSkip.insert(toSkip.getTypePtr());
-      toSkip = lh.findType("std::string");
-      if (!toSkip.isNull()) fTypeToSkip.insert(toSkip.getTypePtr());
+   clang::QualType toSkip = lh.findType("Double32_t");
+   if (!toSkip.isNull()) {
+      fTypeToSkip.insert(toSkip.getTypePtr());
+      fTypeWithAlternative.insert(toSkip.getTypePtr());
    }
+   toSkip = lh.findType("Float16_t");
+   if (!toSkip.isNull()) {
+      fTypeToSkip.insert(toSkip.getTypePtr());
+      fTypeWithAlternative.insert(toSkip.getTypePtr());
+   }
+   toSkip = lh.findType("Long64_t");
+   if (!toSkip.isNull()) fTypeToSkip.insert(toSkip.getTypePtr());
+   toSkip = lh.findType("ULong64_t");
+   if (!toSkip.isNull()) fTypeToSkip.insert(toSkip.getTypePtr());
+   toSkip = lh.findType("string");
+   if (!toSkip.isNull()) fTypeToSkip.insert(toSkip.getTypePtr());
+   toSkip = lh.findType("std::string");
+   if (!toSkip.isNull()) fTypeToSkip.insert(toSkip.getTypePtr());
 }
 
 //////////////////////////////////////////////////////////////////////////
