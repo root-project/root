@@ -760,66 +760,6 @@ size_t R__GetFullArrayLength(const clang::ConstantArrayType *arrayType)
    return len.getLimitedValue();
 }
 
-#if 0 
-const clang::CXXRecordDecl *R__SlowRawTypeSearch(const char *input_name, const clang::DeclContext *ctxt = 0) 
-{
-   // Strip leading 'const' and '*' and '&'
-
-   if (strncmp("const ",input_name,6)==0) {
-      input_name += 6;
-   }
-   bool done = false;
-   std::string name(input_name);
-   while (!done) {
-      done = true;
-      if (6<name.length() && strncmp(" const",&(name.c_str()[name.length()-6]),6)==0 ) {
-         name.erase(name.length()-6);
-         done = false;
-      }
-      while(name.length() && name[name.length()-1] == '*' ) {
-         name.erase(name.length()-1);
-         done = false;
-      }
-      while(name.length() && name[name.length()-1] == '&' ) {
-         name.erase(name.length()-1);
-         done = false;
-      }
-      while (6<name.length() && strncmp("*const",&(name.c_str()[name.length()-6]),6)==0 ) {
-         name.erase(name.length()-6);
-         done = false;
-      }
-      while (6<name.length() && strncmp("&const",&(name.c_str()[name.length()-6]),6)==0 ) {
-         name.erase(name.length()-6);
-         done = false;
-      }
-   }
-   // const clang::NamedDecl *result = R__SlowSearch(name.c_str(),0);
-   // if (!result) return 0;
-   // const clang::TypedefDecl *typedef_result = llvm::dyn_cast<clang::TypedefDecl>(result);
-   // if (typedef_result) {
-   //    result = R__GetUnderlyingRecordDecl(typedef_result->getUnderlyingType());
-   // }
-
-   const clang::QualType qType = gInterp->lookupType(name.c_str());
-   if (qType.isNull()) {
-      return 0;
-   }
-   const clang::NamedDecl *result = R__GetUnderlyingRecordDecl(qType);
-   if (result) {
-      // Try to find a complete definition if any.
-      const clang::TagDecl *tagdecl = llvm::dyn_cast<clang::TagDecl>(result);
-      while(tagdecl && !tagdecl->isCompleteDefinition()) {
-         tagdecl = tagdecl->getPreviousDecl();
-      }
-      if (tagdecl) {
-         result = tagdecl;
-      }
-      return llvm::dyn_cast<clang::CXXRecordDecl>(result);
-   } else {
-      return 0;
-   }
-}
-#endif
 
 class FDVisitor : public clang::RecursiveASTVisitor<FDVisitor> {
 private:
@@ -848,29 +788,6 @@ const clang::CXXMethodDecl *R__GetMethodWithProto(const clang::Decl* cinfo,
       = gInterp->getLookupHelper().findFunctionProto(cinfo, method, proto);
    if (funcD) {
       return llvm::dyn_cast<const clang::CXXMethodDecl>(funcD);
-   }
-   return 0;
-}
-
-//______________________________________________________________________________
-const clang::CXXMethodDecl *R__GetMethodWithProto__Old(const clang::CXXRecordDecl* cinfo, 
-                                                const char *method, const char *proto)
-{
-   const clang::FunctionDecl* funcD 
-      = gInterp->getLookupHelper().findFunctionProto(cinfo, method, proto);
-   if (funcD) {
-      return llvm::dyn_cast<const clang::CXXMethodDecl>(funcD);
-   }
-   // Currently lookupFunctionProto does not look in base classes, so let's recurse
-   // ourselves ...
-   // NOTE: this is apriori bad for performance (extraneous parsing)
-   for(clang::CXXRecordDecl::base_class_const_iterator iter = cinfo->bases_begin(), end = cinfo->bases_end();
-       iter != end;
-       ++iter)
-   {
-      if (const clang::CXXMethodDecl *res = R__GetMethodWithProto((iter->getType()->getAsCXXRecordDecl ()),method,proto)) {
-         return res;
-      }
    }
    return 0;
 }
@@ -1946,200 +1863,75 @@ bool HasCustomStreamerMemberFunction(const RScanner::AnnotatedRecordDecl &cl)
 }
 
 
-bool StringBasedIsTemplateFloat16Double32(const char *which, const char *classname)
+//______________________________________________________________________________
+bool hasOpaqueTypedef(clang::QualType instanceType, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
-   G__FastAllocString arg( classname );
-   char *current, *next;
+   // Return true if the type is a Double32_t or Float16_t or
+   // is a instance template that depends on Double32_t or Float16_t.
+  
+   while (llvm::isa<clang::PointerType>(instanceType.getTypePtr())
+       || llvm::isa<clang::ReferenceType>(instanceType.getTypePtr()))
+   {
+      instanceType = instanceType->getPointeeType();
+   }
    
-   // arg is now is the name of class template instantiation.
-   // We first need to find the start of the list of its template arguments
-   // then we have a comma separated list of type names.  We want to return
-   // the 'count+1'-th element in the list.
-   int len = strlen(arg);
-   int nesting = 0;
-   current = 0;
-   next = &(arg[0]);
-   for (int c = 0; c<len; c++) {
-      switch (arg[c]) {
-      case '<':
-         if (nesting==0) {
-            arg[c]=0;
-            current = next;
-            next = &(arg[c+1]);
-         }
-         nesting++;
-         break;
-      case '>':
-         nesting--;
-         if (nesting==0) {
-            arg[c]=0;
-            current = next;
-            next = &(arg[c+1]);
-            if (current) {
-               if (strcmp(current,which)==0) return true;
-               //G__ClassInfo subcl(current);
-               if (StringBasedIsTemplateFloat16Double32(which,current)) return true;
-            }
-         }
-         break;
-      case ',':
-         if (nesting==1) {
-            arg[c]=0;
-            current = next;
-            next = &(arg[c+1]);
-            if (current) {
-               if (strcmp(current,which)==0) return true;
-               //G__ClassInfo subcl(current);
-               if (StringBasedIsTemplateFloat16Double32(which,current)) return true;
-            }
-         }
-         break;
-      }
+   const clang::ElaboratedType* etype 
+      = llvm::dyn_cast<clang::ElaboratedType>(instanceType.getTypePtr());
+   if (etype) {
+      instanceType = clang::QualType(etype->getNamedType().getTypePtr(),0);
    }
 
-   return false;
+   // There is no typedef to worried about, except for the opaque ones.
+   
+   // Technically we should probably used our own list with just
+   // Double32_t and Float16_t
+   if (normCtxt.GetTypeWithAlternative().count(instanceType.getTypePtr())) {
+      return true;
+   }
 
+   
+   bool result = false;
+   const clang::CXXRecordDecl* clxx = instanceType->getAsCXXRecordDecl();
+   if (clxx && clxx->getTemplateSpecializationKind() != clang::TSK_Undeclared) {
+      // do the template thing.
+      const clang::TemplateSpecializationType* TST 
+      = llvm::dyn_cast<const clang::TemplateSpecializationType>(instanceType.getTypePtr());
+      if (TST==0) {
+//         std::string type_name;
+//         type_name =  R__GetQualifiedName( instanceType, *clxx ); 
+//         fprintf(stderr,"ERROR: Could not findS TST for %s\n",type_name.c_str());
+         return false;
+      }
+      for(clang::TemplateSpecializationType::iterator 
+          I = TST->begin(), E = TST->end();
+          I!=E; ++I)
+      {
+         if (I->getKind() == clang::TemplateArgument::Type) {
+//            std::string arg;
+//            arg = R__GetQualifiedName( I->getAsType(), *clxx ); 
+//            fprintf(stderr,"DEBUG: looking at %s\n", arg.c_str());
+            result |= hasOpaqueTypedef(I->getAsType(), normCtxt);
+         }
+      }
+   }
+   return result;   
 }
 
 //______________________________________________________________________________
-bool IsTemplateFloat16(const RScanner::AnnotatedRecordDecl &cl)
-{
-   const clang::CXXRecordDecl* clxx =  llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
-   if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
-
-   // I would prefer to use the parser version:
-       // const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
-   // but unfortunately, it is useless here since the typedef have already
-   // been resolved here.
-   return StringBasedIsTemplateFloat16Double32("Float16_t",cl.GetNormalizedName());
-
-#if KEEP_UNTIL_WE_RESOLVE_THE_TYPEDEF_AND_TEMPLATE_ISSUE
-   // Return true if any of the argument is or contains a Float16.
-   if (!R__IsTemplate(*cl)) return false;
-   
-   static G__TypeInfo ti;
-   char *current, *next;
-   G__FastAllocString arg( clinfo.Name() );
-
-   // arg is now is the name of class template instantiation.
-   // We first need to find the start of the list of its template arguments
-   // then we have a comma separated list of type names.  We want to return
-   // the 'count+1'-th element in the list.
-   int len = strlen(arg);
-   int nesting = 0;
-   current = 0;
-   next = &(arg[0]);
-   for (int c = 0; c<len; c++) {
-      switch (arg[c]) {
-      case '<':
-         if (nesting==0) {
-            arg[c]=0;
-            current = next;
-            next = &(arg[c+1]);
-         }
-         nesting++;
-         break;
-      case '>':
-         nesting--;
-         if (nesting==0) {
-            arg[c]=0;
-            current = next;
-            next = &(arg[c+1]);
-            if (current) {
-               if (strcmp(current,"Float16_t")==0) return true;
-               G__ClassInfo subcl(current);
-               if (IsTemplateFloat16(cl,subcl)) return true;
-            }
-         }
-         break;
-      case ',':
-         if (nesting==1) {
-            arg[c]=0;
-            current = next;
-            next = &(arg[c+1]);
-            if (current) {
-               if (strcmp(current,"Float16_t")==0) return true;
-               G__ClassInfo subcl(current);
-               if (IsTemplateFloat16(cl,subcl)) return true;
-            }
-         }
-         break;
-      }
-   }
-
-   return false;
-#endif
-}
-
-//______________________________________________________________________________
-bool IsTemplateDouble32(const RScanner::AnnotatedRecordDecl &cl)
+bool hasOpaqueTypedef(const RScanner::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    // Return true if any of the argument is or contains a double32.
 
    const clang::CXXRecordDecl* clxx =  llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
    if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
 
-   // I would prefer to use the parser version:
-   //    const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
-   // but unfortunately, it is useless here since the typedef have already
-   // been resolved here.
-   return StringBasedIsTemplateFloat16Double32("Double32_t",cl.GetNormalizedName());
-
-#if KEEP_UNTIL_WE_RESOLVE_THE_TYPEDEF_AND_TEMPLATE_ISSUE
-   if (!cl.IsTmplt()) return false;
-
-   static G__TypeInfo ti;
-   char *current, *next;
-   G__FastAllocString arg( cl.Name() );
-
-   // arg is now is the name of class template instantiation.
-   // We first need to find the start of the list of its template arguments
-   // then we have a comma separated list of type names.  We want to return
-   // the 'count+1'-th element in the list.
-   int len = strlen(arg);
-   int nesting = 0;
-   current = 0;
-   next = &(arg[0]);
-   for (int c = 0; c<len; c++) {
-      switch (arg[c]) {
-      case '<':
-         if (nesting==0) {
-            arg[c]=0;
-            current = next;
-            next = &(arg[c+1]);
-         }
-         nesting++;
-         break;
-      case '>':
-         nesting--;
-         if (nesting==0) {
-            arg[c]=0;
-            current = next;
-            next = &(arg[c+1]);
-            if (current) {
-               if (strcmp(current,"Double32_t")==0) return true;
-               G__ClassInfo subcl(current);
-               if (IsTemplateDouble32(subcl)) return true;
-            }
-         }
-         break;
-      case ',':
-         if (nesting==1) {
-            arg[c]=0;
-            current = next;
-            next = &(arg[c+1]);
-            if (current) {
-               if (strcmp(current,"Double32_t")==0) return true;
-               G__ClassInfo subcl(current);
-               if (IsTemplateDouble32(subcl)) return true;
-            }
-         }
-         break;
-      }
+   clang::QualType instanceType = interp.getLookupHelper().findType(cl.GetNormalizedName());
+   if (instanceType.isNull()) {
+      Error(0,"Could not find the clang::Type for %s\n",cl.GetNormalizedName());
+      return false;
+   } else {
+      return hasOpaqueTypedef(instanceType, normCtxt);
    }
-
-   return false;
-#endif
 }
 
 //______________________________________________________________________________
@@ -2152,22 +1944,6 @@ int IsSTLContainer(const RScanner::AnnotatedRecordDecl &annotated)
    int k = TClassEdit::IsSTLCont(name,1);
    
    return k;   
-}
-
-//______________________________________________________________________________
-int IsSTLContainer(G__DataMemberInfo &m)
-{
-   // Is this an STL container?
-
-   const char *s = m.Type()->TrueName();
-   if (!s) return kNotSTL;
-
-   string type(s);
-   int k = TClassEdit::IsSTLCont(type.c_str(),1);
-
-   //    if (k) printf(" %s==%d\n",type.c_str(),k);
-
-   return k;
 }
 
 //______________________________________________________________________________
@@ -2185,20 +1961,6 @@ int IsSTLContainer(const clang::FieldDecl &m)
    return k;
 }
 
-
-//______________________________________________________________________________
-int IsSTLContainer(G__BaseClassInfo &m)
-{
-   // Is this an STL container?
-
-   const char *s = m.Name();
-   if (!s) return kNotSTL;
-
-   string type(s);
-   int k = TClassEdit::IsSTLCont(type.c_str(),1);
-   //   if (k) printf(" %s==%d\n",type.c_str(),k);
-   return k;
-}
 
 //______________________________________________________________________________
 int IsSTLContainer(const clang::CXXBaseSpecifier &base)
@@ -2967,7 +2729,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl)
    }
 }
 //______________________________________________________________________________
-void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
+void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    // Write the code to initialize the class name and the initialization object.
 
@@ -3134,22 +2896,17 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
    } else { // if (cl_input.RequestStreamerInfo()) {
 
       // Need to find out if the operator>> is actually defined for this class.
-      G__ClassInfo gcl;
-      long offset;
-      const char *versionFunc = "GetClassVersion";
-      int ncha = strlen(classname.c_str())+strlen(versionFunc)+5;
-      char *funcname= new char[ncha];
-      snprintf(funcname,ncha,"%s<%s >",versionFunc,classname.c_str());
-      ncha = strlen(classname.c_str())+ 10 ;
-      char *proto = new char[ncha];
-      snprintf(proto,ncha,"%s*",classname.c_str());
-      G__MethodInfo methodinfo = gcl.GetMethod(versionFunc,proto,&offset);
-      delete [] funcname;
-      delete [] proto;
+      static const char *versionFunc = "GetClassVersion";
+//      int ncha = strlen(classname.c_str())+strlen(versionFunc)+5;
+//      char *funcname= new char[ncha];
+//      snprintf(funcname,ncha,"%s<%s >",versionFunc,classname.c_str());
+      std::string proto = classname + "*";
+      const clang::Decl* ctxt = llvm::dyn_cast<clang::Decl>((*cl_input).getDeclContext());
+      const clang::FunctionDecl *methodinfo = R__GetFuncWithProto(ctxt, versionFunc, proto.c_str());
+//      delete [] funcname;
 
-      if (methodinfo.IsValid() &&
-          //          methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][0] == cl.Tagnum() &&
-          strstr(methodinfo.FileName(),"Rtypes.h") == 0) {
+      if (methodinfo &&
+          R__GetFileName(methodinfo).find("Rtypes.h") == llvm::StringRef::npos) {
 
          // GetClassVersion was defined in the header file.
          //fprintf(fp, "GetClassVersion((%s *)0x0), ",classname.c_str());
@@ -3271,7 +3028,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input)
    (*dictSrcOut) << "      return &instance;"  << std::endl
    << "   }" << std::endl;
 
-   if (!stl && !bset && !IsTemplateDouble32(cl_input) && !IsTemplateFloat16(cl_input)) {
+   if (!stl && !bset && !hasOpaqueTypedef(cl_input, interp, normCtxt)) {
       // The GenerateInitInstance for STL are not unique and should not be externally accessible
       (*dictSrcOut) << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol.c_str() << "*)" << std::endl
       << "   {\n      return GenerateInitInstanceLocal((" <<  csymbol.c_str() << "*)0);\n   }"
@@ -3356,30 +3113,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl)
    if (Namespace__HasMethod(cl,"Class_Version")) {
       (*dictSrcOut) << "::" << classname.c_str() << "::Class_Version(), ";
    } else {
-#if defined(NEED_FUNC_LOOKUP)
-      // Need to find out if the operator>> is actually defined for this class.
-      G__ClassInfo gcl;
-      long offset;
-      const char *versionFunc = "GetClassVersion";
-      int ncha = strlen(classname.c_str())+strlen(versionFunc)+5;
-      char *funcname= new char[ncha];
-      snprintf(funcname,ncha,"%s<%s >",versionFunc,classname.c_str());
-      ncha = strlen(classname.c_str())+ 10 ;
-      char *proto = new char[ncha];
-      snprintf(proto,ncha,"%s*",classname.c_str());
-      G__MethodInfo methodinfo = gcl.GetMethod(versionFunc,proto,&offset);
-      delete [] funcname;
-      delete [] proto;
-
-      if (methodinfo.IsValid() &&
-          strstr(methodinfo.FileName(),"Rtypes.h") == 0) {
-         (*dictSrcOut) << "GetClassVersion< " << classname.c_str() << " >(), ";
-      } else {
-         (*dictSrcOut) << "0 /*version*/, ";
-      }
-#else
       (*dictSrcOut) << "0 /*version*/, ";
-#endif
    }
 
    std::string filename = R__GetFileName(cl);
@@ -3496,16 +3230,16 @@ const char *GrabIndex(const clang::FieldDecl &member, int printError)
    if (index==0 && printError) {
       const char *errorstring;
       switch (error) {
-      case G__DataMemberInfo::NOT_INT:
+      case TMetaUtils::NOT_INT:
          errorstring = "is not an integer";
          break;
-      case G__DataMemberInfo::NOT_DEF:
+      case TMetaUtils::NOT_DEF:
          errorstring = "has not been defined before the array";
          break;
-      case G__DataMemberInfo::IS_PRIVATE:
+      case TMetaUtils::IS_PRIVATE:
          errorstring = "is a private member of a parent class";
          break;
-      case G__DataMemberInfo::UNKNOWN:
+      case TMetaUtils::UNKNOWN:
          errorstring = "is not known";
          break;
       default:
@@ -5865,7 +5599,7 @@ int main(int argc, char **argv)
                   // coverity[fun_call_w_exception] - that's just fine.
                RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
             } else {
-               WriteClassInit(*iter);
+               WriteClassInit(*iter, interp, normCtxt);
             }               
          }
       }
@@ -5915,7 +5649,7 @@ int main(int argc, char **argv)
             continue;
          }
          if (!IsSTLContainer(*iter)) {
-            WriteClassInit(*iter);
+            WriteClassInit(*iter, interp, normCtxt);
          }
       }
       // Loop to write all the ClassCode
@@ -5931,7 +5665,7 @@ int main(int argc, char **argv)
 
       //RStl::Instance().WriteStreamer(fp); //replaced by new Markus code
       // coverity[fun_call_w_exception] - that's just fine.
-      RStl::Instance().WriteClassInit(0);
+      RStl::Instance().WriteClassInit(0, interp, normCtxt);
 
       fclose(fpld);
 
@@ -6038,12 +5772,13 @@ int main(int argc, char **argv)
          // Add explicit delimiter
          outputfile << "# Now the list of classes\n";
 // SELECTION LOOP
-         G__ClassInfo clFile;
-         clFile.Init();
-         while (clFile.Next()) {
-            if (clFile.Linkage() == G__CPPLINK && !(clFile.Property() & G__BIT_ISNAMESPACE) ) {
-               outputfile << clFile.Fullname() << endl;
-            }
+         iter = scan.fSelectedClasses.begin();
+         end = scan.fSelectedClasses.end();
+         for( ; iter != end; ++iter) 
+         {
+            // Shouldn't it be GetLong64_Name( cl_input.GetNormalizedName() )
+            // or maybe we should be normalizing to turn directly all long long into Long64_t
+            outputfile << iter->GetNormalizedName() << endl;            
          }
       }
    }

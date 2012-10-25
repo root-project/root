@@ -31,7 +31,7 @@ using namespace TClassEdit;
 #include "clang/AST/DeclTemplate.h"
 
 // From the not-existing yet rootcint.h
-void WriteClassInit(const RScanner::AnnotatedRecordDecl &decl);
+void WriteClassInit(const RScanner::AnnotatedRecordDecl &decl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
 void WriteAuxFunctions(const RScanner::AnnotatedRecordDecl &decl);
 std::string R__GetQualifiedName(const clang::NamedDecl &cl);
 
@@ -195,7 +195,7 @@ std::string ROOT::RStl::DropDefaultArg(const std::string &classname)
 
 }
 
-void ROOT::RStl::WriteClassInit(FILE* /*file*/)
+void ROOT::RStl::WriteClassInit(FILE* /*file*/, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    // This function writes the TGeneraticClassInfo initialiser
    // and the auxiliary functions (new and delete wrappers) for
@@ -211,7 +211,7 @@ void ROOT::RStl::WriteClassInit(FILE* /*file*/)
       // std::string fullname = R__GetQualifiedName(*iter->GetRecordDecl());      
       // fprintf(stderr,"RStl is generating TClass for %ld %s %s %s\n",iter->GetRuleIndex(),iter->GetRequestedName(),iter->GetNormalizedName(),fullname.c_str());
 
-      ::WriteClassInit( *iter );
+      ::WriteClassInit( *iter, interp, normCtxt );
       ::WriteAuxFunctions( *iter );
    }
 }
