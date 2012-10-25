@@ -522,7 +522,7 @@ void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
    unsigned int i=0,j=0,c;
    while((c=in[i])) {
       if (out.capacity() < (j+3)) {
-         out.resize(2*j);
+         out.resize(2*j+3);
       }
       switch(c) {
          case '+': strcpy(const_cast<char*>(out.data())+j,"pL"); j+=2; break; // Okay: we resized the underlying buffer if needed
