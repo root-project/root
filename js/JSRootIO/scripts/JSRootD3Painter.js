@@ -1713,6 +1713,8 @@ function doubleTap(elem, speed, distance) {
             var filled = info_marker['toFill'];
             var toRotate = info_marker['toRotate'];
             var markerSize = graph['fMarkerSize'];
+            var markerScale = 65;
+            if (graph['fMarkerStyle'] == 1) markerScale = 1;
 
             switch (shape) {
                case 6:
@@ -1733,7 +1735,7 @@ function doubleTap(elem, speed, distance) {
                default:
                   var marker = d3.svg.symbol()
                               .type(d3.svg.symbolTypes[shape])
-                              .size(markerSize * 65);
+                              .size(markerSize * markerScale);
                   break;
             }
             g.selectAll("markers")
@@ -2142,10 +2144,7 @@ function doubleTap(elem, speed, distance) {
 
    JSROOTPainter.drawLegend = function(vis, pad, pave) {
       var x=0, y=0, w=0, h=0;
-      if ( ( pave['fX1NDC'] < 1e-300 && pave['fX2NDC'] < 1e-300 &&
-             pave['fY1NDC'] < 1e-300 && pave['fY2NDC'] < 1e-300 ) ||
-           ( pave['fX1NDC'] > 1e32 || pave['fX2NDC'] > 1e32 ||
-             pave['fY1NDC'] > 1e32 || pave['fY2NDC'] > 1e32 ) ){
+      if (pave['fInit'] == 0) {
           x = pave['fX1'] * vis.attr("width")
           y = vis.attr("height") - pave['fY1'] * vis.attr("height");
           w = (pave['fX2'] - pave['fX1']) * vis.attr("width");
@@ -2259,6 +2258,8 @@ function doubleTap(elem, speed, distance) {
             var filled = info_marker['toFill'];
             var toRotate = info_marker['toRotate'];
             var markerSize = leg['fMarkerSize'];
+            var markerScale = 65;
+            if (leg['fMarkerStyle'] == 1) markerScale = 1;
 
             switch (shape) {
                case 6:
@@ -2279,7 +2280,7 @@ function doubleTap(elem, speed, distance) {
                default:
                   var marker = d3.svg.symbol()
                               .type(d3.svg.symbolTypes[shape])
-                              .size(markerSize * 65);
+                              .size(markerSize * markerScale);
                   break;
             }
             p.append("svg:path")
