@@ -693,10 +693,10 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
 
       // Avoid spurious error message if we look for an
       // unimplemented (but declared) function.
-      fInterp->enableLazyFunctionCreator(false);
+      fInterp->suppressLazyFunctionCreatorDiags(true);
       void *FP = EE->getPointerToNamedFunction(FuncName,
                  /*AbortOnFailure=*/false);
-      fInterp->enableLazyFunctionCreator();
+      fInterp->suppressLazyFunctionCreatorDiags(false);
       if (FP == unresolvedSymbol) {
          // We failed to find an implementation for the function, the 
          // interface requires the 'address' to be zero.
