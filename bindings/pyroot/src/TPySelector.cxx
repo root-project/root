@@ -72,7 +72,16 @@ void TPySelector::SetupPySelf()
    if ( fPySelf && fPySelf != Py_None )
       return;                      // already created ...
 
-   TString impst = TString::Format( "import %s", GetOption() );
+// split option as needed for the module part and the (optional) user part
+   std::string opt = GetOption();
+   std::string::size_type pos = opt.find( '#' );
+   std::string module = opt.substr( 0, pos );
+   std::string user = (pos == std::string::npos) ? "" : opt.substr( pos+1, std::string::npos );
+
+   TString impst = TString::Format( "import %s", module.c_str() );
+
+// reset user option
+   SetOption( user.c_str() );
 
 // use TPython to ensure that the interpreter is initialized
    if ( ! TPython::Exec( (const char*)impst ) ) {
@@ -86,7 +95,7 @@ void TPySelector::SetupPySelf()
       const_cast< char* >( "TPySelector" ) );
 
 // get handle to the module
-   PyObject* pymod = PyImport_AddModule( const_cast< char* >( GetOption() ) );
+   PyObject* pymod = PyImport_AddModule( const_cast< char* >( module.c_str() ) );
 
 // get the module dictionary to loop over
    PyObject* dict = PyModule_GetDict( pymod );
