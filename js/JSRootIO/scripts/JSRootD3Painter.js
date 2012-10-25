@@ -1475,7 +1475,7 @@ function doubleTap(elem, speed, distance) {
             .scale(x)
             .orient("bottom")
             .tickPadding(5)
-            .tickSubdivide(5)
+            .tickSubdivide(4)
             .tickSize(-0.03 * h, -0.03 * h / 2, null)
             .tickFormat(function(d,i) { return parseFloat(d.toPrecision(12)); })
             .ticks(10);
@@ -1485,10 +1485,10 @@ function doubleTap(elem, speed, distance) {
             .scale(y)
             .orient("left")
             .tickPadding(5)
-            .tickSubdivide(5)
+            .tickSubdivide(4)
             .tickSize(-0.03 * w, -0.03 * w / 2, null)
             .tickFormat(function(d,i) { return parseFloat(d.toPrecision(12)); })
-            .ticks(10);
+            .ticks(8);
 
          var xax = frame.append("svg:g")
             .attr("class", "xaxis")
@@ -2141,10 +2141,22 @@ function doubleTap(elem, speed, distance) {
    };
 
    JSROOTPainter.drawLegend = function(vis, pad, pave) {
-      var x = pave['fX1NDC'] * vis.attr("width")
-      var y = vis.attr("height") - pave['fY1NDC'] * vis.attr("height");
-      var w = (pave['fX2NDC'] - pave['fX1NDC']) * vis.attr("width");
-      var h = (pave['fY2NDC'] - pave['fY1NDC']) * vis.attr("height");
+      var x=0, y=0, w=0, h=0;
+      if ( ( pave['fX1NDC'] < 1e-300 && pave['fX2NDC'] < 1e-300 &&
+             pave['fY1NDC'] < 1e-300 && pave['fY2NDC'] < 1e-300 ) ||
+           ( pave['fX1NDC'] > 1e32 || pave['fX2NDC'] > 1e32 ||
+             pave['fY1NDC'] > 1e32 || pave['fY2NDC'] > 1e32 ) ){
+          x = pave['fX1'] * vis.attr("width")
+          y = vis.attr("height") - pave['fY1'] * vis.attr("height");
+          w = (pave['fX2'] - pave['fX1']) * vis.attr("width");
+          h = (pave['fY2'] - pave['fY1']) * vis.attr("height");
+      }
+      else {
+          x = pave['fX1NDC'] * vis.attr("width")
+          y = vis.attr("height") - pave['fY1NDC'] * vis.attr("height");
+          w = (pave['fX2NDC'] - pave['fX1NDC']) * vis.attr("width");
+          h = (pave['fY2NDC'] - pave['fY1NDC']) * vis.attr("height");
+      }
       y -= h;
       var fillcolor = root_colors[pave['fFillColor']];
       var lcolor = root_colors[pave['fLineColor']];
@@ -2169,18 +2181,28 @@ function doubleTap(elem, speed, distance) {
 
       var tcolor = root_colors[pave['fTextColor']];
       var tpos_x = pave['fMargin'] * w;
-      var line_length = (0.8 * pave['fMargin']) * w;
-      var pos_x = (tpos_x - line_length) / 2;
       var nlines = pave['fPrimitives'].length;
       var font_size = Math.round(h / (nlines * 1.5));
       //var font_size = Math.round(pave['fTextSize'] * vis.height());
       var fontDetails = getFontDetails(root_fonts[Math.floor(pave['fTextFont']/10)]);
 
+      var max_len = 0, mul = 1.4;
+      for (var j=0; j<nlines; ++j) {
+         line = this.translateLaTeX(pave['fPrimitives'][j]['fLabel']);
+         lw = tpos_x + stringWidth(vis, line, fontDetails['name'], fontDetails['weight'],
+                                   font_size, fontDetails['style']);
+         if (lw > max_len) max_len = lw;
+      }
+      if (max_len > w) {
+         font_size *= 0.85 * (w / max_len);
+         mul *= 0.95 * (max_len / w);
+      }
+
       for (var i=0; i<nlines; ++i) {
          var leg = pave['fPrimitives'][i];
          var string = leg['fLabel'];
-         var pos_y = ((i+1) * (font_size * 1.4)) - (font_size/3);
-         var tpos_y = (i+1) * (font_size * 1.4);
+         var pos_y = ((i+1) * (font_size * mul)) - (font_size/3);
+         var tpos_y = (i+1) * (font_size * mul);
          var line_color = root_colors[leg['fLineColor']];
          var line_style = leg['fLineStyle'];
          var line_width = leg['fLineWidth'];
@@ -2204,6 +2226,8 @@ function doubleTap(elem, speed, distance) {
          // Draw line
          if (opt.indexOf('l') != -1 || opt.indexOf('f') != -1) {
             // line total length (in x) is margin*0.8
+            var line_length = (0.8 * pave['fMargin']) * w;
+            var pos_x = (tpos_x - line_length) / 2;
             p.append("svg:line")
                .attr("x1", pos_x)
                .attr("y1", pos_y)
@@ -2219,6 +2243,50 @@ function doubleTap(elem, speed, distance) {
          }
          // Draw Polymarker
          if (opt.indexOf('p') != -1) {
+
+            var line_length = (0.8 * pave['fMargin']) * w;
+            var pos_x = tpos_x / 2;
+
+            var filled = false;
+            if ((leg['fMarkerStyle'] == 8) ||
+                (leg['fMarkerStyle'] > 19 && leg['fMarkerStyle'] < 24) ||
+                (leg['fMarkerStyle'] == 29))
+               filled = true;
+
+            var info_marker = getRootMarker(root_markers, leg['fMarkerStyle']);
+
+            var shape = info_marker['shape'];
+            var filled = info_marker['toFill'];
+            var toRotate = info_marker['toRotate'];
+            var markerSize = leg['fMarkerSize'];
+
+            switch (shape) {
+               case 6:
+                  var marker = "M " + (-4 * markerSize) + " " + (-1 * markerSize)
+                              + " L " + 4 * markerSize + " " + (-1 * markerSize)
+                              + " L " + (-2.4 * markerSize) + " " + 4 * markerSize
+                              + " L 0 " + (-4 * markerSize) + " L " + 2.8 * markerSize
+                              + " " + 4 * markerSize + " z";
+                  break;
+               case 7:
+                  var marker = "M " + (- 4 * markerSize) + " " + (-4 * markerSize)
+                              + " L " + 4 * markerSize + " " + 4 * markerSize + " M 0 "
+                              + (-4 * markerSize) + " 0 " + 4 * markerSize + " M "
+                              + 4 * markerSize + " " + (-4 * markerSize) + " L "
+                              + (-4 * markerSize) + " " + 4 * markerSize + " M "
+                              + (-4 * markerSize) + " 0 L " + 4 * markerSize + " 0";
+                  break;
+               default:
+                  var marker = d3.svg.symbol()
+                              .type(d3.svg.symbolTypes[shape])
+                              .size(markerSize * 65);
+                  break;
+            }
+            p.append("svg:path")
+               .attr("transform", function(d) { return "translate(" + pos_x + "," + pos_y + ")"; })
+               .style("fill", filled ? root_colors[leg['fMarkerColor']] : "none")
+               .style("stroke", root_colors[leg['fMarkerColor']])
+               .attr("d", marker);
          }
       }
       if (lwidth && lwidth > 1) {
@@ -2369,7 +2437,7 @@ function doubleTap(elem, speed, distance) {
             .scale(x)
             .orient("bottom")
             .tickPadding(5)
-            .tickSubdivide(5)
+            .tickSubdivide(3)
             .tickSize(-0.03 * h, -0.03 * h / 2, null)
             .tickFormat(function(d,i) { return parseFloat(d.toPrecision(12)); })
             .ticks(10);
@@ -2379,10 +2447,10 @@ function doubleTap(elem, speed, distance) {
             .scale(y)
             .orient("left")
             .tickPadding(5)
-            .tickSubdivide(5)
+            .tickSubdivide(3)
             .tickSize(-0.03 * w, -0.03 * w / 2, null)
             .tickFormat(function(d,i) { return parseFloat(d.toPrecision(12)); })
-            .ticks(10);
+            .ticks(8);
 
          var xax = frame.append("svg:g")
             .attr("class", "xaxis")
