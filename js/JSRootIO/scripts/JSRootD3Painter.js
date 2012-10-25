@@ -1577,14 +1577,18 @@ function doubleTap(elem, speed, distance) {
          gridx = pad['fGridx'];
          gridy = pad['fGridy'];
       }
-      // check for axis scale format, and convert if required
       var xaxis_type = logx ? 'logarithmic' : 'linear';
-      if (graph['fHistogram']['fXaxis']['fTimeDisplay']) {
-         xaxis_type = 'datetime';
+      if (graph['_typename'] == 'JSROOTIO.TGraph') {
+         // check for axis scale format, and convert if required
+         if (graph['fHistogram']['fXaxis']['fTimeDisplay']) {
+            xaxis_type = 'datetime';
+         }
+         var yaxis_type = logy ? 'logarithmic' : 'linear';
+         if (graph['fHistogram']['fYaxis']['fTimeDisplay']) {
+            yaxis_type = 'datetime';
+         }
       }
-      var yaxis_type = logy ? 'logarithmic' : 'linear';
-      if (graph['fHistogram']['fYaxis']['fTimeDisplay']) {
-         yaxis_type = 'datetime';
+      else if (graph['_typename'] == 'JSROOTIO.TGraphErrors') {
       }
       var seriesType = 'line';
       var showMarker = true;
@@ -1752,7 +1756,8 @@ function doubleTap(elem, speed, distance) {
          this.drawTitle(vis, graph['fHistogram'], pad);
       }
       this.addInteraction(frame, graph);
-      this.drawFunctions(vis, graph['fHistogram'], pad, ret);
+      if ('fHistogram' in graph && graph['fHistogram'])
+         this.drawFunctions(vis, graph['fHistogram'], pad, ret);
    };
 
    JSROOTPainter.drawGrid = function(vis, histo, pad, x, y) {
@@ -2236,23 +2241,92 @@ function doubleTap(elem, speed, distance) {
    };
 
    JSROOTPainter.drawMultiGraph = function(vis, pad, mgraph, hframe) {
+      var i, maximum, minimum, rwxmin=0, rwxmax=0, rwymin=0, rwymax=0, uxmin=0, uxmax=0, dx, dy;
+      var npt = 100;
       var histo = mgraph['fHistogram'];
       var graphs = mgraph['fGraphs'];
       var scalex = 1, scaley = 1;
       var logx = false, logy = false, logz = false, gridx = false, gridy = false;
       var draw_all = true;
       if (pad && typeof(pad) != 'undefined') {
+         rwxmin = pad.fUxmin;
+         rwxmax = pad.fUxmax;
+         rwymin = pad.fUymin;
+         rwymax = pad.fUymax;
          logx = pad['fLogx']; logy = pad['fLogy']; logz = pad['fLogz'];
          gridx = pad['fGridx']; gridy = pad['fGridy'];
       }
-      // check for axis scale format, and convert if required
-      var xaxis_type = logx ? 'logarithmic' : 'linear';
-      if (histo['fXaxis']['fTimeDisplay']) {
-         xaxis_type = 'datetime';
+      if ('fHistogram' in mgraph && mgraph['fHistogram']) {
+         minimum = mgraph['fHistogram']['fYaxis']['fXmin'];
+         maximum = mgraph['fHistogram']['fYaxis']['fXmax'];
+         if (pad && typeof(pad) != 'undefined') {
+            uxmin   = this.padtoX(pad, rwxmin);
+            uxmax   = this.padtoX(pad, rwxmax);
+         }
+      } else {
+         var g = graphs[0];
+         if (g) {
+            var r = g.computeRange();
+            rwxmin = r['xmin']; rwymin = r['ymin']; 
+            rwxmax = r['xmax']; rwymax = r['ymax'];
+         }
+         for (i=1; i<graphs.length; ++i) {
+            var rx1,ry1,rx2,ry2;
+            g = graphs[i];
+            var r = g.computeRange();
+            rx1 = r['xmin']; ry1 = r['ymin']; 
+            rx2 = r['xmax']; ry2 = r['ymax'];
+            if (rx1 < rwxmin) rwxmin = rx1;
+            if (ry1 < rwymin) rwymin = ry1;
+            if (rx2 > rwxmax) rwxmax = rx2;
+            if (ry2 > rwymax) rwymax = ry2;
+            if (g['fNpoints'] > npt) npt = g['fNpoints'];
+         }
+         if (rwxmin == rwxmax) rwxmax += 1.;
+         if (rwymin == rwymax) rwymax += 1.;
+         dx = 0.05*(rwxmax-rwxmin);
+         dy = 0.05*(rwymax-rwymin);
+         uxmin = rwxmin - dx;
+         uxmax = rwxmax + dx;
+         if (logy) {
+            if (rwymin <= 0) rwymin = 0.001*rwymax;
+            minimum = rwymin/(1+0.5*JSROOTMath.log10(rwymax/rwymin));
+            maximum = rwymax*(1+0.2*JSROOTMath.log10(rwymax/rwymin));
+         } else {
+            minimum  = rwymin - dy;
+            maximum  = rwymax + dy;
+         }
+         if (minimum < 0 && rwymin >= 0) minimum = 0;
+         if (maximum > 0 && rwymax <= 0) maximum = 0;
       }
-      var yaxis_type = logy ? 'logarithmic' : 'linear';
-      if (histo['fYaxis']['fTimeDisplay']) {
-         yaxis_type = 'datetime';
+      if (mgraph['fMinimum'] != -1111) rwymin = minimum = mgraph['fMinimum'];
+      if (mgraph['fMaximum'] != -1111) rwymax = maximum = mgraph['fMaximum'];
+      if (uxmin < 0 && rwxmin >= 0) {
+         if (logx) uxmin = 0.9*rwxmin;
+         //else                 uxmin = 0;
+      }
+      if (uxmax > 0 && rwxmax <= 0) {
+         if (logx) uxmax = 1.1*rwxmax;
+         //else                 uxmax = 0;
+      }
+      if (minimum < 0 && rwymin >= 0) {
+         if(logy) minimum = 0.9*rwymin;
+         //else                minimum = 0;
+      }
+      if (maximum > 0 && rwymax <= 0) {
+         if(logy) maximum = 1.1*rwymax;
+         //else                maximum = 0;
+      }
+      if (minimum <= 0 && logy) minimum = 0.001*maximum;
+      if (uxmin <= 0 && logx) {
+         if (uxmax > 1000) uxmin = 1;
+         else              uxmin = 0.001*uxmax;
+      }
+      rwymin = minimum;
+      rwymax = maximum;
+      if ('fHistogram' in mgraph && mgraph['fHistogram']) {
+         mgraph['fHistogram']['fYaxis']['fXmin'] = rwymin;
+         mgraph['fHistogram']['fYaxis']['fXmax'] = rwymax;
       }
       var frame;
       if (hframe) frame = hframe['frame'];
@@ -2260,11 +2334,102 @@ function doubleTap(elem, speed, distance) {
          hframe = this.createFrame(vis, pad, histo, null);
          frame = hframe['frame'];
       }
-      this.drawHistogram1D(vis, pad, histo, hframe);
-      hframe['xmin'] = histo['fXaxis']['fXmin'];
-      hframe['xmax'] = histo['fXaxis']['fXmax'];
-      hframe['ymin'] = histo['fYaxis']['fXmin'];
-      hframe['ymax'] = histo['fYaxis']['fXmax'];
+      // Create a temporary histogram to draw the axis
+      if ('fHistogram' in mgraph && mgraph['fHistogram']) {
+         this.drawHistogram1D(vis, pad, histo, hframe);
+         hframe['xmin'] = histo['fXaxis']['fXmin'];
+         hframe['xmax'] = histo['fXaxis']['fXmax'];
+         hframe['ymin'] = histo['fYaxis']['fXmin'];
+         hframe['ymax'] = histo['fYaxis']['fXmax'];
+      }
+      else {
+         // the graph is created with at least as many channels as there are points
+         // to permit zooming on the full range
+         var w = vis.attr("width"), h = vis.attr("height");
+         var label_font_size = Math.round(0.035 * h);
+         w = frame.attr("width"); h = frame.attr("height");
+         rwxmin = uxmin;
+         rwxmax = uxmax;
+         hframe['xmin'] = rwxmin;
+         hframe['xmax'] = rwxmax;
+         hframe['ymin'] = rwymin;
+         hframe['ymax'] = rwymax;
+
+         if (logx)
+            var x = d3.scale.log().domain([rwxmin, rwxmax]).range([0, w]);
+         else
+            var x = d3.scale.linear().domain([rwxmin, rwxmax]).range([0, w]);
+         if (logy)
+            var y = d3.scale.log().domain([rwymin, rwymax]).range([h, 0]);
+         else
+            var y = d3.scale.linear().domain([rwymin, rwymax]).range([h, 0]);
+
+         /* X-axis */
+         var x_axis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom")
+            .tickPadding(5)
+            .tickSubdivide(5)
+            .tickSize(-0.03 * h, -0.03 * h / 2, null)
+            .tickFormat(function(d,i) { return parseFloat(d.toPrecision(12)); })
+            .ticks(10);
+
+         /* Y-axis minor ticks */
+         var y_axis = d3.svg.axis()
+            .scale(y)
+            .orient("left")
+            .tickPadding(5)
+            .tickSubdivide(5)
+            .tickSize(-0.03 * w, -0.03 * w / 2, null)
+            .tickFormat(function(d,i) { return parseFloat(d.toPrecision(12)); })
+            .ticks(10);
+
+         var xax = frame.append("svg:g")
+            .attr("class", "xaxis")
+            .attr("transform", "translate(0," + h + ")")
+            .call(x_axis);
+
+         var yax = frame.append("svg:g")
+            .attr("class", "yaxis")
+            .call(y_axis);
+
+         var font_size = Math.round(0.050 * vis.attr("height"));
+         vis.append("text")
+            .attr("class", "title")
+            .attr("text-anchor", "middle")
+            .attr("x", vis.attr("width")/2)
+            .attr("y", 0.07 * vis.attr("height"))
+            .attr("font-family", "Arial")
+            .attr("font-size", font_size)
+            .text(mgraph['fTitle']);
+
+         xax.selectAll("text").attr("font-size", label_font_size);
+         yax.selectAll("text").attr("font-size", label_font_size);
+
+         frame['x_axis']  = x_axis;
+         frame['y_axis']  = y_axis;
+         frame['x_fsize'] = label_font_size;
+         frame['y_fsize'] = label_font_size;
+         frame['x_font']  = {'weight' : "",'style' : "", 'name' : "arial" };
+         frame['y_font']  = {'weight' : "",'style' : "", 'name' : "arial" };
+
+         var histo = new Object();
+         histo['fXaxis'] = new Object();
+         histo['fYaxis'] = new Object();
+         histo['x'] = x;
+         histo['y'] = y;
+         histo['x_min'] = rwxmin;
+         histo['x_max'] = rwxmax;
+         histo['y_min'] = rwymin;
+         histo['y_max'] = rwymax;
+         histo['fLineWidth'] = 1;
+         histo['fXaxis']['fNdivisions'] = 510;
+         histo['fYaxis']['fNdivisions'] = 510;
+         histo['redraw'] = function() {
+            JSROOTPainter.drawGrid(frame, histo, pad, x, y);
+         };
+         this.addInteraction(frame, histo);
+      }
       for (var i=0; i<graphs.length; ++i) {
          graphs[i]['fName'] += i;
          this.drawGraph(vis, pad, graphs[i], hframe);
