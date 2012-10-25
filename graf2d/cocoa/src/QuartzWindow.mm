@@ -115,6 +115,38 @@ void GetRootWindowAttributes(WindowAttributes_t *attr)
 //TODO: check how TGX11 extracts/changes window attributes.
 
 //______________________________________________________________________________
+NSPoint ConvertPointFromBaseToScreen(NSWindow *window, NSPoint windowPoint)
+{
+   assert(window != nil && "ConvertPointFromBaseToScreen, window parameter is nil");
+   
+   //I have no idea why apple deprecated function for a point conversion and requires rect conversion,
+   //point conversion seems to produce wrong results with HiDPI.
+   
+   NSRect tmpRect = {};
+   tmpRect.origin = windowPoint;
+   tmpRect.size = CGSizeMake(1., 1.);//This is strange size :) But if they require rect, 0,0 - will not work?
+   tmpRect = [window convertRectToScreen : tmpRect];
+   
+   return tmpRect.origin;
+}
+
+//______________________________________________________________________________
+NSPoint ConvertPointFromScreenToBase(NSPoint screenPoint, NSWindow *window)
+{
+   assert(window != nil && "ConvertPointFromScreenToBase, window parameter is nil");
+
+   //I have no idea why apple deprecated function for a point conversion and requires rect conversion,
+   //point conversion seems to produce wrong results with HiDPI.
+
+   NSRect tmpRect = {};
+   tmpRect.origin = screenPoint;
+   tmpRect.size = CGSizeMake(1., 1.);
+   tmpRect = [window convertRectFromScreen : tmpRect];
+   
+   return tmpRect.origin;
+}
+
+//______________________________________________________________________________
 int GlobalYCocoaToROOT(CGFloat yCocoa)
 {
    NSArray * const screens = [NSScreen screens];
@@ -171,12 +203,11 @@ NSPoint TranslateToScreen(NSView<X11Window> *from, NSPoint point)
 {
    assert(from != nil && "TranslateToScreen, 'from' parameter is nil");
    
-   //TODO: I do not know, if I can use convertToBacking ..... - have to check this.
-   NSPoint winPoint = [from convertPoint : point toView : nil];
-   NSPoint screenPoint = [[from window] convertBaseToScreen : winPoint];; 
-   //TODO: This is Cocoa's coordinates, but for ROOT I have to convert.
-   screenPoint.y = GlobalYCocoaToROOT(screenPoint.y);
+   const NSPoint winPoint = [from convertPoint : point toView : nil];
 
+   NSPoint screenPoint = ConvertPointFromBaseToScreen([from window], winPoint);
+   screenPoint.y = GlobalYCocoaToROOT(screenPoint.y);
+   
    return screenPoint;
 }
 
@@ -186,10 +217,9 @@ NSPoint TranslateFromScreen(NSPoint point, NSView<X11Window> *to)
    assert(to != nil && "TranslateFromScreen, 'to' parameter is nil");
    
    point.y = GlobalYROOTToCocoa(point.y);
+   point = ConvertPointFromScreenToBase(point, [to window]);
 
-   //May be I can use convertBackingTo .... have to check this.
-   const NSPoint winPoint = [[to window] convertScreenToBase : point];
-   return [to convertPoint : winPoint fromView : nil];
+   return [to convertPoint : point fromView : nil];
 }
 
 //______________________________________________________________________________
@@ -207,9 +237,11 @@ NSPoint TranslateCoordinates(NSView<X11Window> *from, NSView<X11Window> *to, NSP
       //what is 'pixel aligned backing store coordinates' and
       //if they are the same as screen coordinates.
       
+      //Many thanks to Apple for deprecated functions!!!
+      
       const NSPoint win1Point = [from convertPoint : sourcePoint toView : nil];
-      const NSPoint screenPoint = [[from window] convertBaseToScreen : win1Point];
-      const NSPoint win2Point = [[to window] convertScreenToBase : screenPoint];
+      const NSPoint screenPoint = ConvertPointFromBaseToScreen([from window], win1Point);
+      const NSPoint win2Point = ConvertPointFromScreenToBase(screenPoint, [to window]);
 
       return [to convertPoint : win2Point fromView : nil];
    }
@@ -243,6 +275,8 @@ QuartzWindow *FindWindowInPoint(Int_t x, Int_t y)
       if (![window isKindOfClass : [QuartzWindow class]])
          continue;
       QuartzWindow * const qw = (QuartzWindow *)window;
+      if (qw.fIsDeleted)//Because of reference counting this can happen.
+         continue;
       //Check if point is inside.
       if (ScreenPointIsInView(qw.fContentView, x, y))
          return qw;
@@ -289,6 +323,10 @@ NSView<X11Window> *FindDNDAwareViewInPoint(NSView *parentView, Window_t dragWinI
          if (![window isKindOfClass : [QuartzWindow class]])
             continue;
          QuartzWindow * const qw = (QuartzWindow *)window;
+         
+         if (qw.fIsDeleted)//Because of reference counting this can happen.
+            continue;
+         
          if (qw.fMapState != kIsViewable)
             continue;
 
@@ -326,6 +364,10 @@ QuartzWindow *FindWindowUnderPointer()
          continue;
 
       QuartzWindow * const qWindow = (QuartzWindow *)nsWindow;
+
+      if (qWindow.fIsDeleted)//Because of reference counting this can happen.
+         continue;
+      
       if (qWindow.fMapState != kIsViewable)//Can it be false and still in this array???
          continue;
       
@@ -368,16 +410,25 @@ QuartzWindow *FindWindowForPointerEvent(NSEvent *pointerEvent)
          continue;
 
       QuartzWindow * const qWindow = (QuartzWindow *)nsWindow;
+      
+      if (qWindow.fIsDeleted)//Because of reference counting this can happen.
+         continue;
+      
       if (qWindow.fMapState != kIsViewable)//Can it be false and still in this array???
          continue;
 
       NSPoint mousePosition = [pointerEvent locationInWindow];
       //The event has a window, so position is in this window's coordinate system,
       //convert it into screen point first.
-      if ([pointerEvent window])
-         mousePosition = [[pointerEvent window] convertBaseToScreen : mousePosition];
+      if ([pointerEvent window]) {
+         //convertBaseToScreen is deprecated.
+         //mousePosition = [[pointerEvent window] convertBaseToScreen : mousePosition];
+         mousePosition = ConvertPointFromBaseToScreen([pointerEvent window], mousePosition);
+      }
       
-      mousePosition = [qWindow convertScreenToBase : mousePosition];
+      //convertScreenToBase is deprecated.
+      //mousePosition = [qWindow convertScreenToBase : mousePosition];
+      mousePosition = ConvertPointFromScreenToBase(mousePosition, qWindow);
 
       const NSSize windowSize = qWindow.frame.size;
       if (mousePosition.x >= 0 && mousePosition.x <= windowSize.width && mousePosition.y >= 0 && mousePosition.y <= windowSize.height)
@@ -400,9 +451,12 @@ NSView<X11Window> *FindViewForPointerEvent(NSEvent *pointerEvent)
    if (QuartzWindow *topLevel = FindWindowForPointerEvent(pointerEvent)) {
       NSPoint mousePosition = [pointerEvent locationInWindow];
       if ([pointerEvent window])
-         mousePosition = [[pointerEvent window] convertBaseToScreen : mousePosition];
+         mousePosition = ConvertPointFromBaseToScreen([pointerEvent window], mousePosition);
       
-      mousePosition = [topLevel convertScreenToBase : mousePosition];
+      //convertScreenToBase is deprecated.
+      //mousePosition = [topLevel convertScreenToBase : mousePosition];
+      mousePosition = ConvertPointFromScreenToBase(mousePosition, topLevel);
+      
       return (NSView<X11Window> *)[[topLevel contentView] hitTest : mousePosition];
    }
 
@@ -806,6 +860,7 @@ void print_mask_info(ULong_t mask)
    QuartzView *fContentView;
    BOOL fDelayedTransient;
    QuartzImage *fShapeCombineMask;
+   BOOL fIsDeleted;
 }
 
 @synthesize fMainWindow;
@@ -838,6 +893,8 @@ void print_mask_info(ULong_t mask)
       
       if (attr)
          X11::SetWindowAttributes(attr, self);
+      
+      fIsDeleted = NO;
    }
    
    return self;
@@ -848,6 +905,18 @@ void print_mask_info(ULong_t mask)
 {
    [fShapeCombineMask release];
    [super dealloc];
+}
+
+//______________________________________________________________________________
+- (BOOL) fIsDeleted
+{
+   return fIsDeleted;
+}
+
+//______________________________________________________________________________
+- (void) setFIsDeleted : (BOOL) deleted
+{
+   fIsDeleted = deleted;
 }
 
 //I want to forward a lot of property setters/getters to content view.
@@ -1111,6 +1180,8 @@ void print_mask_info(ULong_t mask)
 - (void) mapRaised
 {
    assert(fContentView && "mapRaised, content view is nil");
+   
+   const Util::AutoreleasePool pool;
 
    [self makeKeyAndOrderFront : self];
    [fContentView setHidden : NO];
@@ -1127,6 +1198,7 @@ void print_mask_info(ULong_t mask)
 {
    assert(fContentView != nil && "mapWindow, content view is nil");
 
+   const Util::AutoreleasePool pool;
 //   [self orderFront : self];
    [self makeKeyAndOrderFront : self];
    [fContentView setHidden : NO];
@@ -1142,6 +1214,8 @@ void print_mask_info(ULong_t mask)
 - (void) mapSubwindows
 {
    assert(fContentView != nil && "mapSubwindows, content view is nil");
+
+   const Util::AutoreleasePool pool;
 
    [fContentView mapSubwindows];
    [fContentView configureNotifyTree];
@@ -1178,8 +1252,10 @@ void print_mask_info(ULong_t mask)
          
       if (windowPoint.y <= 4 || windowPoint.y >= self.fHeight - 4)
          generateFakeRelease = true;
-         
-      const NSPoint viewPoint =  [fContentView convertPointFromBase : windowPoint];
+      
+      //convertPointFromBase is deprectated.
+      //const NSPoint viewPoint =  [fContentView convertPointFromBase : windowPoint];
+      const NSPoint viewPoint =  [fContentView convertPoint : windowPoint fromView : nil];
 
       if (viewPoint.y <= 0 && windowPoint.y >= 0)
          generateFakeRelease = true;
@@ -2715,7 +2791,10 @@ void print_mask_info(ULong_t mask)
       event2.fUser[0] = long(fID);
       event2.fUser[2] = 0;//Here I have to pack x and y for drop coordinates, shifting by 16 bits.
       NSPoint dropPoint = [sender draggingLocation];
-      dropPoint = [self convertPointFromBase : dropPoint];
+      //convertPointFromBase is deprecated.
+      //dropPoint = [self convertPointFromBase : dropPoint];
+      dropPoint = [self convertPoint : dropPoint fromView : nil];
+      //
       dropPoint = X11::TranslateToScreen(self, dropPoint);
       event2.fUser[2] = UShort_t(dropPoint.y) | (UShort_t(dropPoint.x) << 16);
       

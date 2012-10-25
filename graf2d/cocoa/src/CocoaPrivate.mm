@@ -142,8 +142,9 @@ void CocoaPrivate::DeleteDrawable(Drawable_t drawableID)
       ((QuartzView *)base).fParentView = nil;
    } else if ([base isKindOfClass : [QuartzWindow class]]) {
       QuartzWindow *qw = (QuartzWindow *)base;
-      [qw.fContentView removeFromSuperview];
+
       qw.fContentView.fParentView = nil;
+      [qw.fContentView removeFromSuperview];
       qw.contentView = nil;
 
       //Remove transient windows?

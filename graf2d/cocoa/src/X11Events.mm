@@ -346,19 +346,19 @@ void ConvertEventLocationToROOTXY(NSEvent *cocoaEvent, NSView<X11Window> *eventV
    //TODO: can [event window] be nil? (this can probably happen with mouse grabs).
    if (![cocoaEvent window])
       NSLog(@"Error in ConvertEventLocationToROOTXY, window property of event is nil, can not convert coordinates correctly");
-   
-   const NSPoint screenPoint = [[cocoaEvent window] convertBaseToScreen : [cocoaEvent locationInWindow]];
-   NSPoint viewPoint = [[eventView window] convertScreenToBase : screenPoint];
-   viewPoint = [eventView convertPointFromBase : viewPoint];
+
+   //Due to some reason, Apple has deprectated point conversion and requires to convert ... a rect.
+   //Even more, on HiDPI point conversion produces wrong results and rect conversion works.
+
+   const NSPoint screenPoint = ConvertPointFromBaseToScreen([cocoaEvent window], [cocoaEvent locationInWindow]);
+   const NSPoint winPoint = ConvertPointFromScreenToBase(screenPoint, [eventView window]);
+   const NSPoint viewPoint = [eventView convertPoint : winPoint fromView : nil];
 
    rootEvent->fX = viewPoint.x;
    rootEvent->fY = viewPoint.y;
 
-   WindowAttributes_t attr = {};
-   GetRootWindowAttributes(&attr);
-   
    rootEvent->fXRoot = screenPoint.x;
-   rootEvent->fYRoot = attr.fHeight - screenPoint.y;
+   rootEvent->fYRoot = GlobalYCocoaToROOT(screenPoint.y);
 }
 
 //______________________________________________________________________________
@@ -728,7 +728,10 @@ void SendKeyPressEvent(EventQueue_t &queue, NSView<X11Window> *view, NSView<X11W
 
    keyPressEvent.fCode = [characters characterAtIndex : 0];
    
-   const NSPoint viewPoint = [view convertPointFromBase : windowPoint];
+   //convertPointFromBase is deprecated.
+   //const NSPoint viewPoint = [view convertPointFromBase : windowPoint];
+   const NSPoint viewPoint = [view convertPoint : windowPoint fromView : nil];
+   
    //Coords.
    keyPressEvent.fX = viewPoint.x;
    keyPressEvent.fY = viewPoint.y;
@@ -1325,7 +1328,10 @@ void EventTranslator::CancelPointerGrab()
 
       Detail::GenerateCrossingEvents(fEventQueue, fButtonGrabView, candidateView, event.Get(), kNotifyUngrab);
    } else if (fButtonGrabView) {
-      const NSPoint location = [[fButtonGrabView window] convertScreenToBase : [NSEvent mouseLocation]];
+      //convertScreenToBase is deprecated.
+      //const NSPoint location = [[fButtonGrabView window] convertScreenToBase : [NSEvent mouseLocation]];
+      const NSPoint location = ConvertPointFromScreenToBase([NSEvent mouseLocation], [fButtonGrabView window]);
+      
       const Util::NSScopeGuard<FakeCrossingEvent> event([[FakeCrossingEvent alloc] initWithWindow : [fButtonGrabView window] location : location ]);
       if (!event.Get()) {
          //Hehe, if this happend, is it still possible to log????

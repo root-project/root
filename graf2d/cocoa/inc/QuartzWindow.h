@@ -37,6 +37,14 @@
 
 - (void) dealloc;
 
+//With reference counting and autorelease pools, it's possible that
+//TGCocoa::DestroyWindow was called and window was correctly deleted,
+//but it's still on screen and if used in some functions (like FindWindowForPointerEvent)
+//and this ends in a segmentation fault.
+//fIsDeleted property is here to solve this problem.
+- (BOOL) fIsDeleted;
+- (void) setFIsDeleted : (BOOL) deleted;
+
 //Many properties in QuartzWindow just forwards to fContentView.
 - (void) forwardInvocation : (NSInvocation *) anInvocation;
 - (NSMethodSignature*) methodSignatureForSelector : (SEL) selector;
@@ -258,6 +266,12 @@ void GetRootWindowAttributes(WindowAttributes_t *attr);
 void GetWindowAttributes(NSObject<X11Window> *window, WindowAttributes_t *dst);
 
 //Coordinate conversion.
+
+//This two functions operate with Cocoa's coordinate system (so, 'to screen' will return Cocoa's
+//point, and 'from screen' expects Cocoa's point (not ROOT)).
+NSPoint ConvertPointFromBaseToScreen(NSWindow *window, NSPoint windowPoint);
+NSPoint ConvertPointFromScreenToBase(NSPoint screenPoint, NSWindow *window);
+
 int GlobalYCocoaToROOT(CGFloat yCocoa);
 int GlobalYROOTToCocoa(CGFloat yROOT);
 

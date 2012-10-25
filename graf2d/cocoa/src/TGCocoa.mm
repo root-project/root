@@ -2983,6 +2983,17 @@ void TGCocoa::QueryPointer(Window_t winID, Window_t &rootWinID, Window_t &childW
 //OpenGL management.
 
 //______________________________________________________________________________
+Double_t TGCocoa::GetOpenGLScalingFactor()
+{
+   //Scaling factor to let our OpenGL code know, that we probably
+   //work on a retina display.
+   
+   //return [[NSScreen mainScreen] backingScaleFactor];
+   
+   return 1.;
+}
+
+//______________________________________________________________________________
 Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &formatComponents)
 {
    //ROOT never creates GL widgets with 'root' as a parent (so not top-level gl-windows).

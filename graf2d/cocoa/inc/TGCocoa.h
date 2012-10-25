@@ -301,6 +301,7 @@ public:
 
    /////////////////////////////
    //OpenGL.
+   virtual Double_t  GetOpenGLScalingFactor();
    virtual Window_t  CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &format);
    virtual Handle_t  CreateOpenGLContext(Window_t windowID, Handle_t sharedContext);
    virtual void      CreateOpenGLContext(Int_t wid);
