@@ -37,6 +37,14 @@
 
 - (void) dealloc;
 
+//With reference counting and autorelease pools, it's possible that
+//TGCocoa::DestroyWindow was called and window was correctly deleted,
+//but it's still on screen and if used in some functions (like FindWindowForPointerEvent)
+//and this ends in a segmentation fault.
+//fIsDeleted property is here to solve this problem.
+- (BOOL) fIsDeleted;
+- (void) setFIsDeleted : (BOOL) deleted;
+
 //Many properties in QuartzWindow just forwards to fContentView.
 - (void) forwardInvocation : (NSInvocation *) anInvocation;
 - (NSMethodSignature*) methodSignatureForSelector : (SEL) selector;
