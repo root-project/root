@@ -64,16 +64,21 @@ ifeq ($(FAIL)$(PLATFORM),win32)
 RUN_PREFETCH=no
 endif
 ifneq ($(PLATFORM),win32)
+ifneq ($(PLATFORM),macos)
 HAS_LDD:=$(shell which ldd 2>/dev/null)
+endif
 endif
 
 ifneq ($(HAS_LDD),)
 # Disable for pthread version older than 2.3.5 (we know ROOT thread do not work well with pthread 2.3.4)
-pthreadCheck=$(shell ls `ldd $(ROOTSYS)/lib/libThread.so | grep libpthread.so | cut -d'>' -f2 | cut -d' ' -f2 | cut -d'.' -f1`-* 2>&1 | sed -e 's/.*\([0-9]\).\([0-9]\).\([0-9]\).*/\1 \\\* 10000 + 100 \\\* \2 + \3 \\\< 20305/' | xargs expr )
+pthreadCheck:=$(shell ldd $(ROOTSYS)/lib/libThread.so | grep libpthread.so | cut -d'>' -f2 | cut -d' ' -f2 | cut -d'.' -f1 2>&1 )
+ifneq ($(pthreadCheck),)
+pthreadCheck:=$(shell ls $(pthreadCheck)-* | sed -e 's/.*\([0-9]\).\([0-9]\).\([0-9]\).*/\1 \\\* 10000 + 100 \\\* \2 + \3 \\\< 20305/' | xargs expr )
 ifeq ($(pthreadCheck),1)
 RUN_PREFETCH=no
 endif
-endif
+endif #pthreadCheck not empty
+endif #has ldd
 
 PrefetchReading.clog: atlasFlushed/atlasFlushed.$(DllSuf)
 
