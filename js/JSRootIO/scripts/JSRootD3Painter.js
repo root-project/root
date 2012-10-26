@@ -1715,56 +1715,6 @@ function doubleTap(elem, speed, distance) {
                .style("stroke-width", ff)
                .style("fill", "none");
          }
-         if (showMarker) {
-            var filled = false;
-            if ((graph['fMarkerStyle'] == 8) ||
-                (graph['fMarkerStyle'] > 19 && graph['fMarkerStyle'] < 24) ||
-                (graph['fMarkerStyle'] == 29))
-               filled = true;
-
-            var info_marker = getRootMarker(root_markers, graph['fMarkerStyle']);
-
-            var shape = info_marker['shape'];
-            var filled = info_marker['toFill'];
-            var toRotate = info_marker['toRotate'];
-            var markerSize = graph['fMarkerSize'];
-            var markerScale = 65;
-            if (graph['fMarkerStyle'] == 1) markerScale = 1;
-
-            switch (shape) {
-               case 6:
-                  var marker = "M " + (-4 * markerSize) + " " + (-1 * markerSize)
-                              + " L " + 4 * markerSize + " " + (-1 * markerSize)
-                              + " L " + (-2.4 * markerSize) + " " + 4 * markerSize
-                              + " L 0 " + (-4 * markerSize) + " L " + 2.8 * markerSize
-                              + " " + 4 * markerSize + " z";
-                  break;
-               case 7:
-                  var marker = "M " + (- 4 * markerSize) + " " + (-4 * markerSize)
-                              + " L " + 4 * markerSize + " " + 4 * markerSize + " M 0 "
-                              + (-4 * markerSize) + " 0 " + 4 * markerSize + " M "
-                              + 4 * markerSize + " " + (-4 * markerSize) + " L "
-                              + (-4 * markerSize) + " " + 4 * markerSize + " M "
-                              + (-4 * markerSize) + " 0 L " + 4 * markerSize + " 0";
-                  break;
-               default:
-                  var marker = d3.svg.symbol()
-                              .type(d3.svg.symbolTypes[shape])
-                              .size(markerSize * markerScale);
-                  break;
-            }
-            g.selectAll("markers")
-               .data(bins)
-               .enter()
-               .append("svg:path")
-               .attr("class", "marker")
-               .attr("transform", function(d) {return "translate(" + graph.x(d.x) + "," + graph.y(d.y) + ")"})
-               .style("fill", filled ? root_colors[graph['fMarkerColor']] : "none")
-               .style("stroke", root_colors[graph['fMarkerColor']])
-               .attr("d", marker)
-               .append("svg:title")
-               .text(function(d) { return "x = " + d.x.toPrecision(5) + " \ny = " + d.y.toPrecision(5); });
-         }
          if (graph['_typename'] == 'JSROOTIO.TGraphErrors' && draw_errors) {
 
             /* Add x-error indicators */
@@ -1831,6 +1781,56 @@ function doubleTap(elem, speed, distance) {
                .attr("y2", function(d) { return graph.y(d.y+d.yerr) })
                .style("stroke", root_colors[graph['fLineColor']])
                .style("stroke-width", graph['fLineWidth']);
+         }
+         if (showMarker) {
+            var filled = false;
+            if ((graph['fMarkerStyle'] == 8) ||
+                (graph['fMarkerStyle'] > 19 && graph['fMarkerStyle'] < 24) ||
+                (graph['fMarkerStyle'] == 29))
+               filled = true;
+
+            var info_marker = getRootMarker(root_markers, graph['fMarkerStyle']);
+
+            var shape = info_marker['shape'];
+            var filled = info_marker['toFill'];
+            var toRotate = info_marker['toRotate'];
+            var markerSize = graph['fMarkerSize'];
+            var markerScale = 65;
+            if (graph['fMarkerStyle'] == 1) markerScale = 1;
+
+            switch (shape) {
+               case 6:
+                  var marker = "M " + (-4 * markerSize) + " " + (-1 * markerSize)
+                              + " L " + 4 * markerSize + " " + (-1 * markerSize)
+                              + " L " + (-2.4 * markerSize) + " " + 4 * markerSize
+                              + " L 0 " + (-4 * markerSize) + " L " + 2.8 * markerSize
+                              + " " + 4 * markerSize + " z";
+                  break;
+               case 7:
+                  var marker = "M " + (- 4 * markerSize) + " " + (-4 * markerSize)
+                              + " L " + 4 * markerSize + " " + 4 * markerSize + " M 0 "
+                              + (-4 * markerSize) + " 0 " + 4 * markerSize + " M "
+                              + 4 * markerSize + " " + (-4 * markerSize) + " L "
+                              + (-4 * markerSize) + " " + 4 * markerSize + " M "
+                              + (-4 * markerSize) + " 0 L " + 4 * markerSize + " 0";
+                  break;
+               default:
+                  var marker = d3.svg.symbol()
+                              .type(d3.svg.symbolTypes[shape])
+                              .size(markerSize * markerScale);
+                  break;
+            }
+            g.selectAll("markers")
+               .data(bins)
+               .enter()
+               .append("svg:path")
+               .attr("class", "marker")
+               .attr("transform", function(d) {return "translate(" + graph.x(d.x) + "," + graph.y(d.y) + ")"})
+               .style("fill", filled ? root_colors[graph['fMarkerColor']] : "none")
+               .style("stroke", root_colors[graph['fMarkerColor']])
+               .attr("d", marker)
+               .append("svg:title")
+               .text(function(d) { return "x = " + d.x.toPrecision(5) + " \ny = " + d.y.toPrecision(5); });
          }
       };
       graph['redraw'] = do_redraw;
