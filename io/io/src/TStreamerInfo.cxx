@@ -357,7 +357,10 @@ void TStreamerInfo::Build()
             dtype = kCharStar;
             dsize = sizeof(char*);
          }
-         if (dmIsPtr && (dtype != kCharStar)) {
+         if (dtype == kOther_t || dtype == kNoType_t) {
+            Error("Build", "%s, unknown type: %s %s\n", GetName(), dmFull, dmName);
+            continue;            
+         } else if (dmIsPtr && (dtype != kCharStar)) {
             if (dmCounter) {
                // data member is pointer to an array of basic types
                element = new TStreamerBasicPointer(dmName, dmTitle, offset, dtype, dm->GetArrayIndex(), dmCounter->GetClass()->GetName(), dmCounter->GetClass()->GetClassVersion(), dmFull);
