@@ -287,7 +287,6 @@ landaun = function(f, x, i) {
             var i, _function = obj['fTitle'];
             _function = _function.replace('TMath::Exp(', 'Math.exp(');
             _function = _function.replace('TMath::Abs(', 'Math.abs(');
-            _function = _function.replace('sin(', 'Math.sin(');
             _function = _function.replace('gaus(', 'gaus(this, ' + x + ', ');
             _function = _function.replace('gausn(', 'gausn(this, ' + x + ', ');
             _function = _function.replace('expo(', 'expo(this, ' + x + ', ');
@@ -307,6 +306,9 @@ landaun = function(f, x, i) {
             }
             // use regex to replace ONLY the x variable (i.e. not 'x' in Math.exp...)
             _function = _function.replace(/\b(x)\b/gi, x)
+            _function = _function.replace(/\b(sin)\b/gi, 'Math.sin')
+            _function = _function.replace(/\b(cos)\b/gi, 'Math.cos')
+            _function = _function.replace(/\b(tan)\b/gi, 'Math.tan')
             var ret = eval(_function);
             return ret;
          };
