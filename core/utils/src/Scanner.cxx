@@ -1040,15 +1040,7 @@ bool RScanner::GetDeclName(clang::Decl* D, std::string& name) const
    clang::NamedDecl* N = dyn_cast<clang::NamedDecl> (D);
    
    if (N) {
-      if (N->getIdentifier()) {
-         name = N->getNameAsString();
-      }
-      //else if (N->isCXXClassMember()) { // CXXConstructor, CXXDestructor, operators
-      else {
-         name =  N->getNameAsString();
-      }
-      //else 
-      //   name = "strange";
+      name = N->getNameAsString();
       return true;
    }
    else {
