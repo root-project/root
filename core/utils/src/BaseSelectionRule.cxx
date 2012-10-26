@@ -251,9 +251,10 @@ bool BaseSelectionRule::IsSelected (const clang::NamedDecl *decl, const std::str
    else {
       has_file_rule = (has_file_name_attribute && 
                        //FIXME It would be much better to cache the rule stat result and compare to the clang::FileEntry
-                       (R__match_filename(file_name_value.c_str(),file_name.c_str()))) ||
-      (has_file_pattern_attribute && 
-       CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef));
+                       (R__match_filename(file_name_value.c_str(),file_name.c_str()))) 
+         ||
+         (has_file_pattern_attribute && 
+          CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef));
    }
    
    
