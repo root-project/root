@@ -3388,8 +3388,7 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl, const cling::Interpr
          // we skip:
          //  - static members
          //  - members with an ! as first character in the title (comment) field
-         //  - the member G__virtualinfo inserted by the CINT RTTI system
-
+ 
          //special case for Float16_t
          int isFloat16=0;
          if (strstr(type_name.c_str(),"Float16_t")) isFloat16=1;
