@@ -5372,8 +5372,8 @@ int main(int argc, char **argv)
    //---------------------------------------------------------------------------
 
    string linkdefFilename;
-   if (il) {
-      linkdefFilename = argv[il];
+   if (!il) {
+      linkdefFilename = autold;
    } else {
       bool found = Which(argv[il], linkdefFilename);
       if (!found) {
