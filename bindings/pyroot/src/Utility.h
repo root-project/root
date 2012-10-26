@@ -112,6 +112,8 @@ namespace PyROOT {
       const std::string ClassName( PyObject* pyobj );
       const std::string ResolveTypedef( const std::string& name );
 
+      Long_t GetObjectOffset( TClass* clCurrent, TClass* clDesired, void* address, Bool_t downcast = true );
+
    // CINT integration
       void ErrMsgCallback( char* msg );
       void ErrMsgHandler( int level, Bool_t abort, const char* location, const char* msg );

@@ -600,13 +600,13 @@ PyObject* PyROOT::TMethodHolder< T, M >::operator()(
    }
 
 // get its class
-   TClass* klass = self->ObjectIsA();
-   if ( klass ) {             // TODO: check should not be needed; only for Reflex, which'll fail
+   TClass* derived = self->ObjectIsA();
+   if ( derived ) {
    // reset this method's offset for the object as appropriate
-      int objTag  = (G__ClassInfo*)klass->GetClassInfo()  ? ((G__ClassInfo*)klass->GetClassInfo())->Tagnum()  : -1;   // derived
-      G__ClassInfo* cli = (G__ClassInfo*)((TClass*)fClass.Id())->GetClassInfo();
-      int methTag = cli ? cli->Tagnum() : -1;                                         // base
-      fOffset = objTag == methTag ? 0 : G__isanybase( methTag, objTag, (Long_t)object );
+      TClass* base = (TClass*)fClass.Id();
+      if ( derived != base )
+          fOffset = Utility::GetObjectOffset( derived, base, object, false /* upcast */ );
+      else fOffset = 0;
    }
 
 // actual call; recycle self instead of returning new object for same address objects
@@ -614,7 +614,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::operator()(
    if ( pyobj != (ObjectProxy*)TPyExceptionMagic &&
         ObjectProxy_Check( pyobj ) &&
         pyobj->GetObject() == object &&
-        klass && pyobj->ObjectIsA() == klass ) {
+        derived && pyobj->ObjectIsA() == derived ) {
       Py_INCREF( (PyObject*)self );
       Py_DECREF( pyobj );
       return (PyObject*)self;

@@ -695,6 +695,22 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& typeName )
    return ti.TrueName();
 }
 
+//____________________________________________________________________________
+Long_t PyROOT::Utility::GetObjectOffset( TClass* clCurrent, TClass* clDesired, void* address, Bool_t downcast ) {
+// root/meta base class offset fails in the case of virtual inheritance
+   Long_t offset = 0;
+
+   if ( clDesired && clCurrent != clDesired ) {
+      TClass* clBase    = downcast ? clCurrent : clDesired;
+      TClass* clDerived = downcast ? clDesired : clCurrent;
+      offset = clDerived->GetBaseClassOffset( clBase );
+   }
+
+   if ( offset < 0 ) // error return of GetBaseClassOffset
+      return 0;
+
+   return offset;
+}
 
 //____________________________________________________________________________
 void PyROOT::Utility::ErrMsgCallback( char* msg )
