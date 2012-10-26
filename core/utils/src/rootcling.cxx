@@ -429,9 +429,6 @@ using namespace ROOT;
 
 using namespace ROOT;
 
-const char *autoldtmpl = "G__auto%dLinkDef.h";
-char autold[64];
-
 std::ostream* dictSrcOut=&std::cout;
 
 bool gNeedCollectionProxy = false;
@@ -3933,18 +3930,12 @@ void WriteClassCode(const RScanner::AnnotatedRecordDecl &cl, const cling::Interp
 }
 
 //______________________________________________________________________________
-void GenerateLinkdef(int *argc, char **argv, int iv)
+void GenerateLinkdef(int *argc, char **argv, int iv, std::string &code_for_parser)
 {
-   FILE *fl = fopen(autold, "w");
-   if (fl==0) {
-      Error(0, "Could not write the automatically generated Linkdef: %s\n", autold);
-      exit(1);
-   }
-
-   fprintf(fl, "#ifdef __CINT__\n\n");
-   fprintf(fl, "#pragma link off all globals;\n");
-   fprintf(fl, "#pragma link off all classes;\n");
-   fprintf(fl, "#pragma link off all functions;\n\n");
+   code_for_parser += "#ifdef __CINT__\n\n";
+   code_for_parser += "#pragma link off all globals;\n";
+   code_for_parser += "#pragma link off all classes;\n";
+   code_for_parser += "#pragma link off all functions;\n\n";
 
    for (int i = iv; i < *argc; i++) {
       char *s, trail[3];
@@ -3983,15 +3974,15 @@ void GenerateLinkdef(int *argc, char **argv, int iv)
       else
          cls = argv[i];
       if ((s = strrchr(cls, '.'))) *s = '\0';
+      code_for_parser += "#pragma link C++ class ";
+      code_for_parser += cls;
       if (nostr || noinp || bcnt)
-         fprintf(fl, "#pragma link C++ class %s%s;\n", cls, trail);
-      else
-         fprintf(fl, "#pragma link C++ class %s;\n", cls);
+         code_for_parser += trail;
+      code_for_parser += ";\n";
       if (s) *s = '.';
    }
 
-   fprintf(fl, "\n#endif\n");
-   fclose(fl);
+   code_for_parser += "\n#endif\n";
 }
 
 //______________________________________________________________________________
@@ -4319,7 +4310,6 @@ void CleanupOnExit(int code)
 
    if (!bundlename.empty()) unlink(bundlename.c_str());
    if (!tname.empty()) unlink(tname.c_str());
-   if (autold[0]) unlink(autold);
    if (code) {
       if (!dictsrc.empty()) {
          unlink(dictsrc.c_str());
@@ -4615,9 +4605,6 @@ int main(int argc, char **argv)
       else if (!strcmp(env_dict_type, "gccxml"))
          dict_type=kDictTypeGCCXML;
    }
-
-   // coverity[secure_coding] - pid can have up to 47 digits!
-   snprintf(autold,64, autoldtmpl, getpid());
 
    ic = 1;
    if (!strcmp(argv[ic], "-v")) {
@@ -5213,7 +5200,7 @@ int main(int argc, char **argv)
          argvv[argcc] = StrDup(iHdr->c_str());
          ++argcc;
       }
-      GenerateLinkdef(&argcc, argvv, iv);
+      GenerateLinkdef(&argcc, argvv, iv, interpPragmaSource);
       for (int iarg = argcc - includedFilesForBundle.size();
            iarg < argcc; ++iarg)
          delete [] argvv[iarg];
@@ -5222,7 +5209,6 @@ int main(int argc, char **argv)
          ++argcc;
       argvv[argcc - 1] = bundleAutoLinkdef;
 
-      argvv[argcc++] = autold;
    }
 
    G__setothermain(2);
@@ -5389,7 +5375,7 @@ int main(int argc, char **argv)
 
    string linkdefFilename;
    if (!il) {
-      linkdefFilename = autold;
+      linkdefFilename = "in memory";
    } else {
       bool found = Which(argv[il], linkdefFilename);
       if (!found) {
@@ -5403,6 +5389,22 @@ int main(int argc, char **argv)
 
    if (requestAllSymbols) {
       selectionRules.SetDeep(true);
+   } else if (!il) {
+      // There is no linkdef file, we added the 'default' #pragma to 
+      // interpPragmaSource.
+
+      LinkdefReader ldefr;
+      clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap 
+      if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
+                       gResourceDir.c_str())) {
+         Error(0,"Parsing #pragma failed %s",linkdefFilename.c_str());
+      }
+      else {
+         Info(0,"#pragma successfully parsed.\n");
+      }
+
+      ldefr.LoadIncludes(interp);
+
    } else if (R__IsSelectionXml(linkdefFilename.c_str())) {
 
       selectionRules.SetSelectionFileType(SelectionRules::kSelectionXMLFile);
@@ -5524,23 +5526,16 @@ int main(int argc, char **argv)
       // We will loop over all the classes several times.
       // In order we will call
       //
-      //     WriteShadowClass
       //     WriteClassInit (code to create the TGenericClassInfo)
       //     check for constructor and operator input
       //     WriteClassFunctions (declared in ClassDef)
       //     WriteClassCode (Streamer,ShowMembers,Auxiliary functions)
       //
 
-      //
-      // Loop over all classes and write the Shadow class if needed
-      //
       // Open LinkDef file for reading, so that we can process classes
       // in order of appearence in this file (STK)
-      FILE *fpld = 0;
-      if (!il) {
-         // Open auto-generated file
-         fpld = fopen(autold, "r");
-      } else {
+      if (il) {
+         FILE *fpld = 0;
          // Open file specified on command line
          string filename;
          bool found = Which(argv[il], filename);
@@ -5550,32 +5545,32 @@ int main(int argc, char **argv)
             return 1;
          }
          fpld = fopen(filename.c_str(), "r");
-      }
-      if (!fpld) {
-         Error(0, "%s: cannot open file %s\n", argv[0], il ? argv[il] : autold);
-         CleanupOnExit(1);
-         return 1;
-      }
-
-      // Read LinkDef file and process the #pragma link C++ ioctortype
-      char consline[256];
-      while (fgets(consline, 256, fpld)) {
-         static const char* ioctorTokens[] = {"pragma", "link", "C++", "ioctortype", 0};
-         size_t tokpos = 0;
-         bool constype = ParsePragmaLine(consline, ioctorTokens, &tokpos);
-
-         if (constype) {
-            char *request = strtok(consline + tokpos, "-!+;");
-            // just in case remove trailing space and tab
-            while (*request == ' ') request++;
-            int len = strlen(request)-1;
-            while (request[len]==' ' || request[len]=='\t') request[len--] = '\0';
-            request = Compress(request); //no space between tmpl arguments allowed
-            AddConstructorType(request);
-
+         if (!fpld) {
+            Error(0, "%s: cannot open file %s\n", argv[0], argv[il]);
+            CleanupOnExit(1);
+            return 1;
          }
+
+         // Read LinkDef file and process the #pragma link C++ ioctortype
+         char consline[256];
+         while (fgets(consline, 256, fpld)) {
+            static const char* ioctorTokens[] = {"pragma", "link", "C++", "ioctortype", 0};
+            size_t tokpos = 0;
+            bool constype = ParsePragmaLine(consline, ioctorTokens, &tokpos);
+
+            if (constype) {
+               char *request = strtok(consline + tokpos, "-!+;");
+               // just in case remove trailing space and tab
+               while (*request == ' ') request++;
+               int len = strlen(request)-1;
+               while (request[len]==' ' || request[len]=='\t') request[len--] = '\0';
+               request = Compress(request); //no space between tmpl arguments allowed
+               AddConstructorType(request);
+               
+            }
+         }
+         fclose(fpld);
       }
-      rewind(fpld);
       AddConstructorType("TRootIOCtor");
       AddConstructorType("");
 
@@ -5682,9 +5677,6 @@ int main(int argc, char **argv)
       // coverity[fun_call_w_exception] - that's just fine.
       RStl::Instance().WriteClassInit(0, interp, normCtxt);
 
-      fclose(fpld);
-
-      if (!il) remove(autold);
       if (use_preprocessor) remove(bundlename.c_str());
 
       // Now we have done all our looping and thus all the possible 
