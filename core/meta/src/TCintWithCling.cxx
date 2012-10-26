@@ -2711,6 +2711,11 @@ void TCintWithCling::UpdateClassInfoWork(const char* item, Long_t tagnum)
          }
       }
    }
+   if (gROOT->GetListOfClasses()->GetEntries() == 0)
+   {
+      // Nothing to find, let's not get yourself in trouble.
+      return;
+   }
    TClass* cl = gROOT->GetClass(item, load);
    if (cl) {
       cl->ResetClassInfo(tagnum);
