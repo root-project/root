@@ -52,7 +52,7 @@ using namespace ROOT;
 
 // #define SELECTION_DEBUG
 
-void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl);
+// void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl);
 
 /* -------------------------------------------------------------------------- */
 using namespace clang;
@@ -96,8 +96,8 @@ RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type
    
    TMetaUtils::GetNormalizedName( fNormalizedName, clang::QualType(requestedType,0), interpreter, normCtxt);
 
-   std::string canonicalName;
-   R__GetQualifiedName(canonicalName,*decl);
+   // std::string canonicalName;
+   // R__GetQualifiedName(canonicalName,*decl);
 
    // fprintf(stderr,"Created annotation with: requested name=%-22s normalized name=%-22s canonical name=%-22s\n",fRequestedName.c_str(),fNormalizedName.c_str(),canonicalName.c_str());
 }
