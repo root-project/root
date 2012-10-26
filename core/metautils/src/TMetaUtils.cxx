@@ -608,8 +608,15 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    // Readd missing default template parameter.
    normalizedType = ROOT::TMetaUtils::AddDefaultParameters(normalizedType, interpreter, normCtxt);
    
+   clang::PrintingPolicy policy(ctxt.getPrintingPolicy());
+   policy.SuppressTagKeyword = true; // Never get the class or struct keyword
+   policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.
+   // The scope suppression is required for getting rid of the anonymous part of the name of a class defined in an anonymous namespace.
+   // This gives us more control vs not using the clang::ElaboratedType and relying on the Policy.SuppressUnwrittenScope which would
+   // strip both the anonymous and the inline namespace names (and we probably do not want the later to be suppressed).
+
    std::string normalizedNameStep1;
-   normalizedType.getAsStringInternal(normalizedNameStep1,ctxt.getPrintingPolicy());
+   normalizedType.getAsStringInternal(normalizedNameStep1,policy);
    
    // Still remove the std:: and default template argument and insert the Long64_t
    TClassEdit::TSplitType splitname(normalizedNameStep1.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault));
