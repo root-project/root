@@ -754,7 +754,12 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
    if(D && (D->isImplicit() || !D->isCompleteDefinition()) ) {
       return true;
    }
-   
+
+   const clang::CXXRecordDecl *cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(D);
+   if (cxxdecl && cxxdecl->getDescribedClassTemplate ()) {
+      // Never select the class templates themselves.
+      return true;
+   }
    DumpDecl(D, "");
 
    if (fVerboseLevel > 2) {
