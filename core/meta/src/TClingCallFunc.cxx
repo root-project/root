@@ -450,38 +450,43 @@ void TClingCallFunc::SetArgs(const char *params)
    }
 }
 
-void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, const char *params, long *offset)
+void TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method, const char* arglist, long* poffset)
 {
    delete fMethod;
    fMethod = new TClingMethodInfo(fInterp);
    fEEFunc = 0;
    fEEAddr = 0;
-   if (offset) {
-      *offset = 0L;
+   if (poffset) {
+      *poffset = 0L;
    }
    if (!info->IsValid()) {
       return;
    }
-   const cling::LookupHelper& lh = fInterp->getLookupHelper();
-   if (strcmp(params,")")==0) {
+   if (strcmp(arglist, ")") == 0) {
       // CINT accepted ) as meaning no parameter.
-      params = "";
+      arglist = "";
    }
-   const clang::FunctionDecl *decl = lh.findFunctionArgs(info->GetDecl(), method, params);
+   const cling::LookupHelper& lh = fInterp->getLookupHelper();
+   const clang::FunctionDecl* decl =
+      lh.findFunctionArgs(info->GetDecl(), method, arglist);
    if (!decl) {
       return;
    }
    fMethod->Init(decl);
    Init(decl);
-   if (offset) {
-      // FIXME: set this to the correct offset!
-      *offset = 0L;
+   if (poffset) {
+      // We have been asked to return a this pointer adjustment.
+      if (const clang::CXXMethodDecl* md =
+               llvm::dyn_cast<clang::CXXMethodDecl>(decl)) {
+         // This is a class member function.
+         info->GetOffset(md);
+      }
    }
    // FIXME: We should eliminate the double parse here!
    fArgVals.clear();
    fArgs.clear();
-   EvaluateArgList(params);
-   clang::ASTContext &Context = fInterp->getCI()->getASTContext();
+   EvaluateArgList(arglist);
+   clang::ASTContext& Context = fInterp->getCI()->getASTContext();
    for (unsigned I = 0U, E = fArgVals.size(); I < E; ++I) {
       const cling::Value& val = fArgVals[I].get();
       if (!val.type->isIntegralType(Context) &&
@@ -507,28 +512,24 @@ void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
 }
 
 void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *method,
-                                  const char *proto, long *offset)
+                                  const char *proto, long *poffset)
 {
    delete fMethod;
    fMethod = new TClingMethodInfo(fInterp);
    fEEFunc = 0;
    fEEAddr = 0;
-   if (offset) {
-      *offset = 0L;
+   if (poffset) {
+      *poffset = 0L;
    }
+   fArgVals.clear();
+   fArgs.clear();
    if (!info->IsValid()) {
       return;
    }
-   const cling::LookupHelper& lh = fInterp->getLookupHelper();
-   const clang::FunctionDecl *FD = lh.findFunctionProto(info->GetDecl(), method, proto);
-   if (!FD) {
-      return;
-   }
-   fMethod->Init(FD);
-   Init(FD);
-   if (offset) {
-      // FIXME: set this to the correct offset!
-      *offset = 0L;
+   *fMethod = info->GetMethod(method, proto, poffset);
+   const clang::FunctionDecl *FD = fMethod->GetMethodDecl();
+   if (FD) {
+      Init(FD);
    }
 }
 

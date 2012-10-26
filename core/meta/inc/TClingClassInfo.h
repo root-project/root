@@ -38,6 +38,7 @@ class Interpreter;
 
 namespace clang {
 class Decl;
+class CXXMethodDecl;
 }
 
 namespace ROOT {
@@ -86,6 +87,7 @@ public:
                                   long *poffset, MatchMode mode = ConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;
    int                  GetMethodNArg(const char *method, const char *proto) const;
+   long                 GetOffset(const clang::CXXMethodDecl* md) const;
    bool                 HasDefaultConstructor() const;
    bool                 HasMethod(const char *name) const;
    void                 Init(const char *name);

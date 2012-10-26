@@ -234,37 +234,30 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       const char *proto, long *poffset, MatchMode mode /*= ConversionMatch*/,
       InheritanceMode imode /*= WithInheritance*/) const
 {
+   if (poffset) {
+      *poffset = 0L;
+   }
    if (!IsValid()) {
       TClingMethodInfo tmi(fInterp);
       return tmi;
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
-   const clang::FunctionDecl *FD = lh.findFunctionProto(fDecl, fname, proto);
+   const clang::FunctionDecl *fd = lh.findFunctionProto(fDecl, fname, proto);
+   if (!fd) {
+      // Function not found.
+      TClingMethodInfo tmi(fInterp);
+      return tmi;
+   }
    if (poffset) {
-     *poffset = 0L;
-     if (const clang::CXXMethodDecl *MD =
-           llvm::dyn_cast<clang::CXXMethodDecl>(FD)) {
-        const clang::CXXRecordDecl *definer = MD->getParent();
-        const clang::CXXRecordDecl *accessor =
-           llvm::cast<clang::CXXRecordDecl>(fDecl);
-        if (definer != accessor) {
-           // This function may not be accessible using a pointer
-           // to the declaring class, get the adjustment necessary
-           // to convert that to a pointer to the defining class.
-           TClingBaseClassInfo bi(fInterp, const_cast<TClingClassInfo*>(this));
-           while (bi.Next()) {
-              TClingClassInfo *bci = bi.GetBase();
-              if (bci->GetDecl() == definer) {
-                 // We have found the right base class, now get the
-                 // necessary adjustment.
-                 *poffset = bi.Offset();
-              }
-           }
-        }
+     // We have been asked to return a this pointer adjustment.
+     if (const clang::CXXMethodDecl *md =
+           llvm::dyn_cast<clang::CXXMethodDecl>(fd)) {
+        // This is a class member function.
+        *poffset = GetOffset(md);
      }
    }
    TClingMethodInfo tmi(fInterp);
-   tmi.Init(FD);
+   tmi.Init(fd);
    return tmi;
 }
 
@@ -282,6 +275,30 @@ int TClingClassInfo::GetMethodNArg(const char *method, const char *proto) const
       clang_val = static_cast<int>(num_params);
    }
    return clang_val;
+}
+
+long TClingClassInfo::GetOffset(const clang::CXXMethodDecl* md) const
+{
+   long offset = 0L;
+   const clang::CXXRecordDecl* definer = md->getParent();
+   const clang::CXXRecordDecl* accessor =
+      llvm::cast<clang::CXXRecordDecl>(fDecl);
+   if (definer != accessor) {
+      // This function may not be accessible using a pointer
+      // to the declaring class, get the adjustment necessary
+      // to convert that to a pointer to the defining class.
+      TClingBaseClassInfo bi(fInterp, const_cast<TClingClassInfo*>(this));
+      while (bi.Next(0)) {
+         TClingClassInfo* bci = bi.GetBase();
+         if (bci->GetDecl() == definer) {
+            // We have found the right base class, now get the
+            // necessary adjustment.
+            offset = bi.Offset();
+            break;
+         }
+      }
+   }
+   return offset;
 }
 
 bool TClingClassInfo::HasDefaultConstructor() const

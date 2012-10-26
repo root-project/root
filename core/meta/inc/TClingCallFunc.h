@@ -70,6 +70,8 @@ private:
                                                 // We do *not* own the data stored here.
 
 
+private:
+
    std::string ExprToString(const clang::Expr* expr) const;
    void EvaluateArgList(const std::string &ArgList);
    cling::StoredValueRef EvaluateExpression(const clang::Expr* expr) const;
@@ -113,15 +115,15 @@ public:
    void               *InterfaceMethod() const;
    bool                IsValid() const;
    void                ResetArg();
-   void                SetArg(long param);
-   void                SetArg(double param);
-   void                SetArg(long long param);
-   void                SetArg(unsigned long long param);
-   void                SetArgArray(long *paramArr, int nparam);
-   void                SetArgs(const char *params);
-   void                SetFunc(const TClingClassInfo *info, const char *method, const char *params, long *offset);
+   void                SetArg(long arg);
+   void                SetArg(double arg);
+   void                SetArg(long long arg);
+   void                SetArg(unsigned long long arg);
+   void                SetArgArray(long *argArr, int narg);
+   void                SetArgs(const char *args);
+   void                SetFunc(const TClingClassInfo *info, const char *method, const char *arglist, long *poffset);
    void                SetFunc(const TClingMethodInfo *info);
-   void                SetFuncProto(const TClingClassInfo *info, const char *method, const char *proto, long *offset);
+   void                SetFuncProto(const TClingClassInfo *info, const char *method, const char *proto, long *poffset);
    void                Init(const clang::FunctionDecl *);
    llvm::GenericValue  Invoke(const std::vector<llvm::GenericValue> &ArgValues) const;
 
