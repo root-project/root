@@ -287,10 +287,10 @@ void TDataType::SetType(const char *name)
    } else if (!strcmp("long", name)) {
       fType = kLong_t;
       fSize = sizeof(Long_t);
-   } else if (!strcmp("unsigned long long", name)) {
+   } else if (!strcmp("unsigned long long", name) || !strcmp("ULong64_t",name)) {
       fType = kULong64_t;
       fSize = sizeof(ULong64_t);
-   } else if (!strcmp("long long", name)) {
+   } else if (!strcmp("long long", name) || !strcmp("Long64_t",name)) {
       fType = kLong64_t;
       fSize = sizeof(Long64_t);
    } else if (!strcmp("unsigned short", name)) {
