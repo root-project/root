@@ -337,8 +337,8 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
          }
          obj['_typename'] = 'JSROOTIO.' + class_name;
          JSROOTCore.addMethods(obj);
-         //if (clRef['tag'])
-         //   gFile.MapObject(obj, clRef['tag']);
+         if (clRef['tag'])
+            gFile.MapObject(obj, clRef['tag']);
          gFile.MapObject(obj, (gFile.fTagOffset + startpos + 2) | 0x01);
       }
       else if (clRef['name'] === 0 && clRef['tag'] != 0) {
