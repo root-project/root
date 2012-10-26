@@ -1570,6 +1570,7 @@ function doubleTap(elem, speed, distance) {
    JSROOTPainter.drawGraph = function(vis, pad, graph, hframe) {
       var scalex = 1, scaley = 1, logx = false, logy = false, logz = false,
           gridx = false, gridy = false, draw_all = true;
+      var draw_errors = true;
       if (pad && typeof(pad) != 'undefined') {
          logx = pad['fLogx'];
          logy = pad['fLogy'];
@@ -1589,6 +1590,10 @@ function doubleTap(elem, speed, distance) {
          }
       }
       else if (graph['_typename'] == 'JSROOTIO.TGraphErrors') {
+         maxEX = d3.max(graph['fEX']);
+         maxEY = d3.max(graph['fEY']);
+         if (maxEX < 1.0e-300 && maxEY < 1.0e-300)
+            draw_errors = false;
       }
       var seriesType = 'line';
       var showMarker = true;
@@ -1600,10 +1605,20 @@ function doubleTap(elem, speed, distance) {
             seriesType = 'scatter';
       }
       var bins = d3.range(graph['fNpoints']).map(function(p) {
-         return {
-            x: graph['fX'][p] * scalex,
-            y: graph['fY'][p] * scaley
-         };
+         if (graph['_typename'] == 'JSROOTIO.TGraphErrors') {
+            return {
+               x: graph['fX'][p] * scalex,
+               y: graph['fY'][p] * scaley,
+               xerr: graph['fEX'][p] * scalex,
+               yerr: graph['fEY'][p] * scaley
+            };
+         }
+         else {
+            return {
+               x: graph['fX'][p] * scalex,
+               y: graph['fY'][p] * scaley
+            };
+         }
       });
       var ret = hframe != null ? hframe : this.createFrame(vis, pad, graph['fHistogram'], null);
       var frame = ret['frame'];
@@ -1749,6 +1764,73 @@ function doubleTap(elem, speed, distance) {
                .attr("d", marker)
                .append("svg:title")
                .text(function(d) { return "x = " + d.x.toPrecision(5) + " \ny = " + d.y.toPrecision(5); });
+         }
+         if (graph['_typename'] == 'JSROOTIO.TGraphErrors' && draw_errors) {
+
+            /* Add x-error indicators */
+            g.selectAll("error_x")
+               .data(graph.bins)
+               .enter()
+               .append("svg:line")
+               .attr("x1", function(d) { return graph.x(d.x-d.xerr)} )
+               .attr("y1", function(d) { return graph.y(d.y)} )
+               .attr("x2", function(d) { return graph.x(d.x+d.xerr)} )
+               .attr("y2", function(d) { return graph.y(d.y)} )
+               .style("stroke", root_colors[graph['fLineColor']])
+               .style("stroke-width", graph['fLineWidth']);
+
+            g.selectAll("e1_x")
+               .data(graph.bins)
+               .enter()
+               .append("svg:line")
+               .attr("y1", function(d) { return graph.y(d.y)-3} )
+               .attr("x1", function(d) { return graph.x(d.x-d.xerr)})
+               .attr("y2", function(d) { return graph.y(d.y)+3})
+               .attr("x2", function(d) { return graph.x(d.x-d.xerr)})
+               .style("stroke", root_colors[graph['fLineColor']])
+               .style("stroke-width", graph['fLineWidth']);
+            g.selectAll("e1_x")
+               .data(graph.bins)
+               .enter()
+               .append("svg:line")
+               .attr("y1", function(d) { return graph.y(d.y)-3} )
+               .attr("x1", function(d) { return graph.x(d.x+d.xerr) })
+               .attr("y2", function(d) { return graph.y(d.y)+3})
+               .attr("x2", function(d) { return graph.x(d.x+d.xerr) })
+               .style("stroke", root_colors[graph['fLineColor']])
+               .style("stroke-width", graph['fLineWidth']);
+
+            g.selectAll("error_y")
+               .data(graph.bins)
+               .enter()
+               .append("svg:line")
+               .attr("x1", function(d) { return graph.x(d.x)})
+               .attr("y1", function(d) { return graph.y(d.y-d.yerr) })
+               .attr("x2", function(d) { return graph.x(d.x)})
+               .attr("y2", function(d) { return graph.y(d.y+d.yerr) })
+               .style("stroke", root_colors[graph['fLineColor']])
+               .style("stroke-width", graph['fLineWidth']);
+
+            g.selectAll("e1_y")
+               .data(graph.bins)
+               .enter()
+               .append("svg:line")
+               .attr("x1", function(d) { return graph.x(d.x)-3})
+               .attr("y1", function(d) { return graph.y(d.y-d.yerr) })
+               .attr("x2", function(d) { return graph.x(d.x)+3})
+               .attr("y2", function(d) { return graph.y(d.y-d.yerr) })
+               .style("stroke", root_colors[graph['fLineColor']])
+               .style("stroke-width", graph['fLineWidth']);
+            g.selectAll("e1_y")
+               .data(graph.bins)
+               .enter()
+               .append("svg:line")
+               .attr("x1", function(d) { return graph.x(d.x)-3})
+               .attr("y1", function(d) { return graph.y(d.y+d.yerr) })
+               .attr("x2", function(d) { return graph.x(d.x)+3})
+               .attr("y2", function(d) { return graph.y(d.y+d.yerr) })
+               .style("stroke", root_colors[graph['fLineColor']])
+               .style("stroke-width", graph['fLineWidth']);
          }
       };
       graph['redraw'] = do_redraw;
@@ -2535,7 +2617,7 @@ function doubleTap(elem, speed, distance) {
          else if (obj['_typename'] == 'JSROOTIO.TF1') {
             JSROOTPainter.drawFunction(svg, null, obj, null);
          }
-         else if (obj['_typename'] == 'JSROOTIO.TGraph') {
+         else if (obj['_typename'].match(/\bTGraph/)) {
             JSROOTPainter.drawGraph(svg, null, obj, null);
          }
          else if (obj['_typename'] == 'JSROOTIO.TMultiGraph') {
@@ -2973,7 +3055,7 @@ function doubleTap(elem, speed, distance) {
                this.drawFunction(vis, pad, primitives[i], fframe);
             primitives[i]['isDrawn'] = true;
          }
-         if (classname == 'JSROOTIO.TGraph') {
+         if (classname.match(/\bTGraph/)) {
             primitives[i]['fName'] += i;
             this.drawGraph(vis, pad, primitives[i], frame);
          }
@@ -3241,7 +3323,7 @@ function doubleTap(elem, speed, distance) {
          var node_img = source_dir+'img/page.gif';
          if (keys[i]['className'].match(/\bTH1/)  ||
              keys[i]['className'].match(/\bTH2/)  ||
-             keys[i]['className'] == 'TGraph') {
+             keys[i]['className'].match(/\bTGraph/)) {
             tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
             node_img = source_dir+'img/graphical.png';
          }
@@ -3303,7 +3385,7 @@ function doubleTap(elem, speed, distance) {
          var node_title = keys[i]['className'];
          if (keys[i]['className'].match(/\bTH1/) ||
              keys[i]['className'].match(/\bTH2/) ||
-             keys[i]['className'] == 'TGraph') {
+             keys[i]['className'].match(/\bTGraph/)) {
             tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
             node_img = source_dir+'img/graphical.png';
             node_title = keys[i]['name'];
