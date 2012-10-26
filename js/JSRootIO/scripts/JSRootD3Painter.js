@@ -2284,11 +2284,19 @@ function doubleTap(elem, speed, distance) {
          var string = leg['fLabel'];
          var pos_y = ((i+1) * (font_size * mul)) - (font_size/3);
          var tpos_y = (i+1) * (font_size * mul);
+
+         var mo = gFile.GetMappedObject(leg['fObject']);
+         if (mo) {
+            leg['fMarkerColor'] = mo['fMarkerColor'];
+            leg['fLineColor'] = mo['fLineColor'];
+            leg['fLineStyle'] = mo['fLineStyle'];
+            leg['fLineWidth'] = mo['fLineWidth'];
+         }
          var line_color = root_colors[leg['fLineColor']];
-         var line_style = leg['fLineStyle'];
          var line_width = leg['fLineWidth'];
          var line_style = root_line_styles[leg['fLineStyle']];
          var opt = leg['fOption'].toLowerCase();
+
          p.append("text")
             .attr("class", "text")
             .attr("text-anchor", "start")

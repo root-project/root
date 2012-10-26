@@ -308,6 +308,7 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
    JSROOTIO.ReadObjectAny = function(str, o, previous) {
       var obj = {};
       var class_name = previous;
+      var startpos = o;
       var clRef = gFile.fStreamerInfo.ReadClass(str, o);
       o = clRef['off'];
       // use clRef['name'] and use previous name if == -1
@@ -336,8 +337,9 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
          }
          obj['_typename'] = 'JSROOTIO.' + class_name;
          JSROOTCore.addMethods(obj);
-         if (clRef['tag'])
-            gFile.MapObject(obj, clRef['tag']);
+         //if (clRef['tag'])
+         //   gFile.MapObject(obj, clRef['tag']);
+         gFile.MapObject(obj, (gFile.fTagOffset + startpos + 2) | 0x01);
       }
       else if (clRef['name'] === 0 && clRef['tag'] != 0) {
          // already seen (and read) object...
@@ -528,10 +530,10 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
       o = ver['off'];
       var obj = {};
       obj['_typename'] = 'JSROOTIO.TCanvas';
+      gFile.ClearObjectMap();
       if (JSROOTIO.GetStreamer('TPad')) {
          o = JSROOTIO.GetStreamer('TPad').Stream(obj, str, o);
       }
-      gFile.ClearObjectMap();
       return obj;
    };
 
@@ -686,6 +688,7 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
             case kAnyP:
                classname = this[prop]['typename'];
                if (classname == "TObject*") {
+                  obj[prop] = JSROOTIO.ntou4(str, o);
                   o += 4;
                   break;
                }
@@ -2276,7 +2279,8 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
       };
 
       JSROOTIO.RootFile.prototype.MapObject = function(obj, tag) {
-         this['fObjectMap'].push({tag: tag, obj: obj});
+         if (this['fObjectMap'].indexOf({tag: tag, obj: obj}) == -1)
+            this['fObjectMap'].push({tag: tag, obj: obj});
       };
 
       JSROOTIO.RootFile.prototype.ClearObjectMap = function() {
