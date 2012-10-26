@@ -636,12 +636,24 @@ std::string gResourceDir;
 
 void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext)
 {
-   type.getAsStringInternal(qual_name,forcontext.getASTContext().getPrintingPolicy());
+   clang::PrintingPolicy policy( forcontext.getASTContext().getPrintingPolicy() );
+   policy.SuppressTagKeyword = true; // Never get the class or struct keyword
+   policy.SuppressUnwrittenScope = true; // Don't write the inline or anonymous namespace names.
+   type.getAsStringInternal(qual_name,policy);
 }
 
 void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl)
 {
-   cl.getNameForDiagnostic(qual_name,cl.getASTContext().getPrintingPolicy(),true); // qual_name = N->getQualifiedNameAsString();
+   clang::PrintingPolicy policy( cl.getASTContext().getPrintingPolicy() );
+   policy.SuppressTagKeyword = true; // Never get the class or struct keyword
+   policy.SuppressUnwrittenScope = true; // Don't write the inline or anonymous namespace names.
+  
+   cl.getNameForDiagnostic(qual_name,policy,true);
+
+   if ( strncmp(qual_name.c_str(),"<anonymous ",strlen("<anonymous ") ) == 0) {
+      size_t pos = qual_name.find(':');
+      qual_name.erase(0,pos+2);
+   }
 }
 
 void R__GetQualifiedName(std::string &qual_name, const RScanner::AnnotatedRecordDecl &annotated)
@@ -665,8 +677,12 @@ std::string R__GetQualifiedName(const clang::Type &type, const clang::NamedDecl 
 
 std::string R__GetQualifiedName(const clang::NamedDecl &cl)
 {
+   clang::PrintingPolicy policy( cl.getASTContext().getPrintingPolicy() );
+   policy.SuppressTagKeyword = true; // Never get the class or struct keyword
+   policy.SuppressUnwrittenScope = true; // Don't write the inline or anonymous namespace names.
+
    std::string result;
-   cl.getNameForDiagnostic(result,cl.getASTContext().getPrintingPolicy(),true); // qual_name = N->getQualifiedNameAsString();
+   cl.getNameForDiagnostic(result,policy,true); // qual_name = N->getQualifiedNameAsString();
    return result;
 }
 
@@ -680,6 +696,33 @@ std::string R__GetQualifiedName(const clang::CXXBaseSpecifier &base)
 std::string R__GetQualifiedName(const RScanner::AnnotatedRecordDecl &annotated)
 {
    return R__GetQualifiedName(*annotated.GetRecordDecl());
+}
+
+bool R__GetNameWithinNamespace(std::string &fullname, 
+                               std::string &clsname, std::string &nsname, 
+                               const clang::CXXRecordDecl *cl)
+{
+   // Return true one of the class' enclosing scope is a namespace and
+   // set fullname to the fully qualified name,
+   // clsname to the name within a namespace
+   // and nsname to the namespace fully qualified name.
+
+   fullname.clear();
+   nsname.clear();
+
+   R__GetQualifiedName(fullname,*cl);
+   clsname = fullname;
+   
+   const clang::NamedDecl *ctxt = llvm::dyn_cast<clang::NamedDecl>(cl->getEnclosingNamespaceContext());
+   if (ctxt && ctxt!=cl) {
+      const clang::NamespaceDecl *nsdecl = llvm::dyn_cast<clang::NamespaceDecl>(ctxt);
+      if (nsdecl == 0 || !nsdecl->isAnonymousNamespace()) {
+         R__GetQualifiedName(nsname,*ctxt);
+         clsname.erase (0, nsname.size() + 2);
+         return true;
+      }
+   }
+   return false;
 }
 
 std::string R__TrueName(const clang::FieldDecl &m)
@@ -2664,19 +2707,11 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl)
    bool add_template_keyword = NeedTemplateKeyword(cl);
 
    string fullname;
-   R__GetQualifiedName(fullname,*cl);
-
-   string clsname = fullname;
-
-   const clang::NamedDecl *nsdecl = llvm::dyn_cast<clang::NamedDecl>(cl->getEnclosingNamespaceContext());
+   string clsname;
    string nsname;
-   if (nsdecl && nsdecl!=cl ) {
-      R__GetQualifiedName(nsname,*nsdecl);
-      clsname.erase (0, nsname.size() + 2);
-   }
-
    int enclSpaceNesting = 0;
-   if (!nsname.empty()) {
+
+   if (R__GetNameWithinNamespace(fullname,clsname,nsname,cl)) {
       enclSpaceNesting = WriteNamespaceHeader(*dictSrcOut,*cl);
    }
 
@@ -3271,20 +3306,11 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl, const cling::Interpr
    bool add_template_keyword = NeedTemplateKeyword(clxx);
    
    string fullname;
-   R__GetQualifiedName(fullname,cl);
-   
-   string clsname = fullname;
-   
-   const clang::NamedDecl *nsdecl = llvm::dyn_cast<clang::NamedDecl>(clxx->getEnclosingNamespaceContext());
+   string clsname;
    string nsname;
-   if (nsdecl && nsdecl!=cl ) {
-      R__GetQualifiedName(nsname,*nsdecl);
-      clsname.erase (0, nsname.size() + 2);
-   }
-   
-
    int enclSpaceNesting = 0;
-   if (!nsname.empty()) {
+
+   if (R__GetNameWithinNamespace(fullname,clsname,nsname,clxx)) {
       enclSpaceNesting = WriteNamespaceHeader(*dictSrcOut,*cl);
    }
    
@@ -3690,19 +3716,11 @@ void WriteAutoStreamer(const RScanner::AnnotatedRecordDecl &cl, const cling::Int
    }
    
    string fullname;
-   R__GetQualifiedName(fullname,cl);
-   
-   string clsname = fullname;
-
-   const clang::NamedDecl *nsdecl = llvm::dyn_cast<clang::NamedDecl>(clxx->getEnclosingNamespaceContext());
+   string clsname;
    string nsname;
-   if (nsdecl && nsdecl!=cl ) {
-      R__GetQualifiedName(nsname,*nsdecl);
-      clsname.erase (0, nsname.size() + 2);
-   }
-   
    int enclSpaceNesting = 0;
-   if (!nsname.empty()) {
+
+   if (R__GetNameWithinNamespace(fullname,clsname,nsname,clxx)) {
       enclSpaceNesting = WriteNamespaceHeader(*dictSrcOut,*cl);
    }
 
@@ -3847,23 +3865,16 @@ void WriteShowMembers(const RScanner::AnnotatedRecordDecl &cl, bool outside = fa
    }
 
    if (!outside) {
+      string fullname;
       string clsname;
-      R__GetQualifiedName(clsname,*cl);
-      
-      const clang::DeclContext *ctxt = R__GetEnclosingSpace(*cl);
       string nsname;
-      if (ctxt) {
-         const clang::NamedDecl *ns = llvm::dyn_cast<clang::NamedDecl>(ctxt);
-         if (ns) {
-            R__GetQualifiedName(nsname,*ns);
-            clsname.erase (0, nsname.size() + 2);
-         }
-      }
-      bool add_template_keyword = NeedTemplateKeyword(cxxdecl);
       int enclSpaceNesting = 0;
-      if (!nsname.empty()) {
+      
+      if (R__GetNameWithinNamespace(fullname,clsname,nsname,cxxdecl)) {
          enclSpaceNesting = WriteNamespaceHeader(*dictSrcOut,*cl);
       }
+   
+      bool add_template_keyword = NeedTemplateKeyword(cxxdecl);
       if (add_template_keyword) (*dictSrcOut) << "template <> ";
       (*dictSrcOut) << "void " << clsname << "::ShowMembers(TMemberInspector &R__insp)"
                     << std::endl << "{" << std::endl;
