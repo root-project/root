@@ -3060,6 +3060,11 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl)
 {
    // Write the code to initialize the namespace name and the initialization object.
 
+   if (cl->isAnonymousNamespace()) {
+      // Don't write a GenerateInitInstance for the anonymous namespaces.
+      return;
+   }
+
    // coverity[fun_call_w_exception] - that's just fine.
    string classname = R__GetQualifiedName(*cl).c_str();
    string mappedname;
