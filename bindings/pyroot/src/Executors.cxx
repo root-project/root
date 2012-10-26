@@ -200,6 +200,10 @@ PYROOT_IMPLEMENT_ARRAY_EXECUTOR( Double, Double_t )
 //- special cases ------------------------------------------------------------
 PyObject* PyROOT::TSTLStringExecutor::Execute( CallFunc_t* func, void* self )
 {
+// TODO: Cling can not handle return by value for now
+   PyErr_SetString(PyExc_NotImplementedError, "CLING DOES NOT SUPPORT RETURN BY VALUE!" );
+   return 0;
+
 // execute <func> with argument <self>, construct python string return value
    std::string* result = (std::string*)gInterpreter->CallFunc_ExecInt( func, self );
    if ( ! result ) {
@@ -234,6 +238,10 @@ PyObject* PyROOT::TRootObjectExecutor::Execute( CallFunc_t* func, void* self )
 //____________________________________________________________________________
 PyObject* PyROOT::TRootObjectByValueExecutor::Execute( CallFunc_t* func, void* self )
 {
+// TODO: Cling can not handle return by value for now
+   PyErr_SetString(PyExc_NotImplementedError, "CLING DOES NOT SUPPORT RETURN BY VALUE!" );
+   return 0;
+
 // execution will bring a temporary in existence
    void* result = (void*)gInterpreter->CallFunc_ExecInt( func, self );
    if ( ! result ) {
