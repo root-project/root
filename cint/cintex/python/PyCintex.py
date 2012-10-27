@@ -45,7 +45,14 @@ class Template:
       self.__name__ = name
    def __call__( self, *args ):
       name = self.__name__[ 0 <= self.__name__.find( 'std::' ) and 5 or 0:]
-      return libPyROOT.MakeRootTemplateClass( name, *args )
+      result = libPyROOT.MakeRootTemplateClass( name, *args )
+    # special case pythonization (builtin_map is not available from the C-API)
+      if hasattr( result, 'push_back' ):
+         def iadd( self, ll ):
+            [ self.push_back(x) for x in ll ]
+            return self
+         result.__iadd__ = iadd
+      return result
 
 sys.modules[ 'libPyROOT' ].Template = Template
 
