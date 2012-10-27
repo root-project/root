@@ -82,7 +82,7 @@ private:
 public:
    LinkdefReader();
 
-   bool LoadIncludes(cling::Interpreter &interp); 
+   bool LoadIncludes(cling::Interpreter &interp, std::string &extraInclude); 
    bool Parse(SelectionRules& sr, llvm::StringRef code, const std::vector<std::string> &parserArgs, const char *llvmdir);
    
 private:

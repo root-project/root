@@ -486,8 +486,9 @@ bool LinkdefReader::IsPatternRule(const std::string& rule_token)
  * The method records that 'include' has been explicitly requested in the linkdef file
  * to be added to the dictionary and interpreter.
  */
-bool LinkdefReader::LoadIncludes(cling::Interpreter &interp)
+bool LinkdefReader::LoadIncludes(cling::Interpreter &interp, std::string &extraIncludes)
 {
+   extraIncludes += fIncludes;
    return cling::Interpreter::kSuccess == interp.declare(fIncludes);
 }
 

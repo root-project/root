@@ -351,9 +351,9 @@ const char *help =
 #include <windows.h>
 #include <Tlhelp32.h> // for MAX_MODULE_NAME32
 #include <process.h>
-#include <errno.h>
 #endif
 
+#include <errno.h>
 #include <time.h>
 #include <string>
 #include <list>
@@ -427,6 +427,66 @@ using namespace ROOT;
       }         
    }
 
+//______________________________________________________________________________
+static void R__GetCurrentDirectory(std::string &output)
+{
+   char fixedLength[1024];
+   char *currWorkDir = fixedLength;
+   size_t len = 1024;
+   char *result = currWorkDir;
+
+   do {
+      if (result == 0) {
+         len = 2*len;
+         if (fixedLength != currWorkDir) {
+            delete [] currWorkDir;
+         }
+         currWorkDir = new char[len];
+      }  
+#ifdef WIN32
+      result = ::_getcwd(currWorkDir, len);
+#else
+      result = getcwd(currWorkDir, len);
+#endif
+   } while ( result == 0 && errno == ERANGE );
+
+   output = currWorkDir;
+   output += '/';
+
+   if (fixedLength != currWorkDir) {
+      delete [] currWorkDir;
+   }
+}
+
+//______________________________________________________________________________
+static std::string R__GetRelocatableHeaderName(const char *header, const std::string &currentDirectory) 
+{
+   // Convert to path relative to $PWD.
+   // If that's not what the caller wants, she should pass -I to rootcint and a
+   // different relative path to the header files.
+#ifdef ROOTBUILD
+         // For ROOT, convert module directories like core/base/inc/ to include/
+#endif
+
+   std::string result( header );
+
+   const char *currWorkDir = currentDirectory.c_str();
+   size_t lenCurrWorkDir = strlen(currWorkDir);
+   if (result.substr(0, lenCurrWorkDir) == currWorkDir) {
+      // Convert to path relative to $PWD.
+      // If that's not what the caller wants, she should pass -I to rootcint and a
+      // different relative path to the header files.
+      result.erase(0, lenCurrWorkDir);
+   }
+#ifdef ROOTBUILD
+   // For ROOT, convert module directories like core/base/inc/ to include/
+   int posInc = result.find("/inc/");
+   if (posInc != -1) {
+      result = /*std::string("include") +*/ result.substr(posInc + 5, -1);
+   }
+#endif
+   return result;
+}
 using namespace ROOT;
 
 std::ostream* dictSrcOut=&std::cout;
@@ -1416,13 +1476,6 @@ void BeforeParseInit()
       LoadLibraryMap();
       G__set_class_autoloading_callback(&AutoLoadCallback);
    }
-
-   //---------------------------------------------------------------------------
-   // Add the conversion rule processors
-   //---------------------------------------------------------------------------
-   // G__addpragma( (char*)"read", ProcessReadPragma );
-   // G__addpragma( (char*)"readraw", ProcessReadRawPragma );
-
 }
 
 
@@ -1489,27 +1542,11 @@ bool CheckClassDef(const clang::RecordDecl *cl)
    // Detect if the class has a ClassDef
    bool hasClassDef = ClassInfo__HasMethod(cl,"Class_Version");
 
-   /*
-    The following could be use to detect whether one of the
-    class' parent class has a ClassDef
-
-    long offset;
-    const char *proto = "";
-    const char *name = "IsA";
-
-    G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
-    bool parentHasClassDef = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
-    */
-
-   // Avoid unadvertently introducing a dependency on libTree.so (when running with
-   // the --lib-list-prefix option.
-   //int autoloadEnable = G__set_class_autoloading(0);
    const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
    if (!clxx) {
       return false;
    }
    bool isAbstract = clxx->isAbstract();
-   //G__set_class_autoloading(autoloadEnable);
 
    bool result = true;
    if (!isAbstract && InheritsFromTObject(clxx) && !InheritsFromTSelector(clxx)
@@ -1520,7 +1557,6 @@ bool CheckClassDef(const clang::RecordDecl *cl)
       result = true;
    }
 
-   // This check is disabled for now.
    return result;
 }
 
@@ -4388,7 +4424,7 @@ static ESourceFileKind GetSourceFileKind(const char* filename)
 
 
 //______________________________________________________________________________
-static int GenerateModule(const char* dictSrcFile, const std::vector<std::string>& args)
+static int GenerateModule(const char* dictSrcFile, const std::vector<std::string>& args, const std::string &currentDirectory)
 {
    // Generate the clang module given the arguments.
    // Returns != 0 on error.
@@ -4431,31 +4467,7 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
       "      static const char* headers[] = {\n";
 
    {
-      char currWorkDir[1024];
-#ifdef WIN32
-      ::_getcwd(currWorkDir, sizeof(currWorkDir));
-#else
-      getcwd(currWorkDir, sizeof(currWorkDir));
-#endif
-      size_t lenCurrWorkDir = strlen(currWorkDir);
-      if (lenCurrWorkDir + 1 < sizeof(currWorkDir)) {
-         currWorkDir[lenCurrWorkDir++] = '/';
-         currWorkDir[lenCurrWorkDir] = 0;
-      }
       for (size_t iH = 0, eH = headers.size(); iH < eH; ++iH) {
-         if (headers[iH].substr(0, lenCurrWorkDir) == currWorkDir) {
-            // Convert to path relative to $PWD.
-            // If that's not what the caller wants, she should pass -I to rootcint and a
-            // different relative path to the header files.
-            headers[iH].erase(0, lenCurrWorkDir);
-         }
-#ifdef ROOTBUILD
-         // For ROOT, convert module directories like core/base/inc/ to include/
-         int posInc = headers[iH].find("/inc/");
-         if (posInc != -1) {
-            headers[iH] = /*std::string("include") +*/ headers[iH].substr(posInc + 5, -1);
-         }
-#endif
          (*dictSrcOut) << "             \"" << headers[iH] << "\"," << std::endl;
       }
    }
@@ -4586,6 +4598,9 @@ int main(int argc, char **argv)
    string libfilename;
    const char *env_dict_type=getenv("ROOTDICTTYPE");
    int dicttype = 0; // 09-07-07 -- 0 for dict, 1 for ShowMembers
+
+   std::string currentDirectory;
+   R__GetCurrentDirectory(currentDirectory);
 
    if (env_dict_type) {
       if (!strcmp(env_dict_type, "cint"))
@@ -5088,6 +5103,7 @@ int main(int argc, char **argv)
 #endif
 
    std::string interpPragmaSource;
+   std::string includeForSource;
    std::list<std::string> includedFilesForBundle;
    string esc_arg;
    bool insertedBundle = false;
@@ -5149,7 +5165,10 @@ int main(int argc, char **argv)
          }
          interp.declare(std::string("#include \"") + argv[i] + "\"");
          interpPragmaSource += std::string("#include \"") + argv[i] + "\"\n";
-         pcmArgs.push_back(argv[i]);
+         std::string header( R__GetRelocatableHeaderName( argv[i], currentDirectory ) );
+         if (!R__IsSelectionFile(argv[i])) 
+            includeForSource += std::string("#include \"") + header + "\"\n";
+         pcmArgs.push_back(header);
       } else {
          if (strcmp("-pipe", argv[ic])!=0) {
             // filter out undesirable options
@@ -5166,7 +5185,10 @@ int main(int argc, char **argv)
                // Looks like a file
                interp.declare(std::string("#include \"") + argv[i] + "\"");
                interpPragmaSource += std::string("#include \"") + argv[i] + "\"\n";
-               pcmArgs.push_back(argv[i]);
+               std::string header( R__GetRelocatableHeaderName( argv[i], currentDirectory ) );
+               if (!R__IsSelectionFile(argv[i])) 
+                  includeForSource += std::string("#include \"") + header + "\"\n";
+               pcmArgs.push_back(header);
 
 #if 0
                // remove header files from CINT view
@@ -5382,6 +5404,7 @@ int main(int argc, char **argv)
    }   
 
    SelectionRules selectionRules;
+   std::string extraIncludes;
 
    if (requestAllSymbols) {
       selectionRules.SetDeep(true);
@@ -5399,7 +5422,7 @@ int main(int argc, char **argv)
          Info(0,"#pragma successfully parsed.\n");
       }
 
-      ldefr.LoadIncludes(interp);
+      ldefr.LoadIncludes(interp,extraIncludes);
 
    } else if (R__IsSelectionXml(linkdefFilename.c_str())) {
 
@@ -5445,7 +5468,7 @@ int main(int argc, char **argv)
          Info(0,"Linkdef file successfully parsed.\n");
       }
 
-      ldefr.LoadIncludes(interp);
+      ldefr.LoadIncludes(interp,extraIncludes);
    } else {
 
       Error(0,"Unrecognized selection file: %s",linkdefFilename.c_str());
@@ -5469,16 +5492,13 @@ int main(int argc, char **argv)
       (*dictSrcOut) << std::endl;
    }
 
-   // Loop over all command line arguments and write include statements.
-   // Skip options and any LinkDef.h.
-   if (ifl && !icc) {
-      for (i = ic; i < argc; i++) {
-         if (*argv[i] != '-' && *argv[i] != '+' &&
-             !(R__IsSelectionFile(argv[i])))
-            (*dictSrcOut) << "#include \"" << argv[i] << "\"" << std::endl;
-      }
-      (*dictSrcOut) << std::endl;
-   }
+   //---------------------------------------------------------------------------
+   // Write all the necessary #include
+   //---------------------------------------------------------------------------
+   (*dictSrcOut) << "// Header files passed as explicit arguments\n";
+   (*dictSrcOut) << includeForSource;
+   (*dictSrcOut) << "\n// Header files passed via #pragma extra_include\n";
+   (*dictSrcOut) << extraIncludes << endl;
 
    selectionRules.SearchNames(interp);
 
@@ -5679,7 +5699,11 @@ int main(int argc, char **argv)
       // annotation, let's write the pcms.
       if (strstr(dictname,"rootcint_") != dictname) {
          // Modules only for "regular" dictionaries, not for cintdlls
-         GenerateModule(dictname, pcmArgs);
+         // pcmArgs does not need any of the 'extra' include (entered via
+         // #pragma) as those are needed only for compilation.
+         // However CINT was essentially treating them the same as any other
+         // so we may have to put them here too ... maybe.
+         GenerateModule(dictname, pcmArgs, currentDirectory);
       }
 
    } // (stub-less calls)
