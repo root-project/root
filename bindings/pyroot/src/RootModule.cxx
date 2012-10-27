@@ -516,7 +516,9 @@ extern "C" void initlibPyROOT()
    if ( gROOT == 0 ) {
       std::cout << "PyROOT: gROOT == NULL hack\n" << 
                    "  --> now creating and loading important classes" << std::endl;
+#ifndef R__HAS_CLING
       gROOT = ROOT::GetROOT();
+#endif
       gROOT->ProcessLine( "#include \"TROOT.h\"" );
       gROOT->ProcessLine( "#include \"TString.h\"" );
       gROOT->ProcessLine( "#include \"Rtypes.h\"" );
