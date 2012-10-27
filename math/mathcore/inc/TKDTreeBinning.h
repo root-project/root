@@ -8,6 +8,9 @@
  *                                                                    *
  **********************************************************************/
 
+#ifndef ROOT_TKDTreeBinning
+#define ROOT_TKDTreeBinning
+
 // Header file for class TKDTreeBinning
 //
 //
@@ -92,3 +95,6 @@ public:
    ClassDef(TKDTreeBinning, 1)
 
 };
+
+#endif // ROOT_TKDTreeBinning
+

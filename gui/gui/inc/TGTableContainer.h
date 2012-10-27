@@ -8,6 +8,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#ifndef ROOT_TGTableFrame
+#define ROOT_TGTableFrame
+
 #ifndef ROOT_TGCanvas
 #include "TGCanvas.h"
 #endif
@@ -51,3 +54,7 @@ public:
 
    ClassDef(TGTableHeaderFrame, 0) // A frame used internally by TGTable.
 };
+
+#endif // ROOT_TGTableFrame
+
+
