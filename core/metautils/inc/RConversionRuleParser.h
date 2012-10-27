@@ -35,8 +35,8 @@ namespace ROOT
    //---------------------------------------------------------------------------
    typedef std::map<std::string, std::string> SchemaRuleMap_t;
    typedef std::map<std::string, std::list<SchemaRuleMap_t> > SchemaRuleClassMap_t;
-   extern SchemaRuleClassMap_t G__ReadRules;
-   extern SchemaRuleClassMap_t G__ReadRawRules;
+   extern SchemaRuleClassMap_t gReadRules;
+   extern SchemaRuleClassMap_t gReadRawRules;
 
    typedef std::map<std::string, ROOT::TSchemaType> MembersTypeMap_t;
    typedef std::map<std::string, std::string> MembersMap_t;

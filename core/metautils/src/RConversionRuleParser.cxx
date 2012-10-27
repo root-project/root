@@ -17,8 +17,8 @@ namespace ROOT
    //--------------------------------------------------------------------------
    // Allocate global variables
    //--------------------------------------------------------------------------
-   SchemaRuleClassMap_t G__ReadRules;
-   SchemaRuleClassMap_t G__ReadRawRules;
+   SchemaRuleClassMap_t gReadRules;
+   SchemaRuleClassMap_t gReadRawRules;
 
    static Bool_t ValidateRule( const std::map<std::string, std::string>& rule, string &error_string );
    
@@ -774,7 +774,7 @@ namespace ROOT
       //-----------------------------------------------------------------------
       // Processing read rules
       //-----------------------------------------------------------------------
-      for( it = G__ReadRules.begin(); it != G__ReadRules.end(); ++it ) {
+      for( it = gReadRules.begin(); it != gReadRules.end(); ++it ) {
          for( rule = it->second.begin(); rule != it->second.end(); ++rule ) {
             attr = rule->find( "include" );
             if( attr == rule->end() ) continue;
@@ -786,7 +786,7 @@ namespace ROOT
       //-----------------------------------------------------------------------
       // Processing read raw rules
       //-----------------------------------------------------------------------
-      for( it = G__ReadRawRules.begin(); it != G__ReadRawRules.end(); ++it ) {
+      for( it = gReadRawRules.begin(); it != gReadRawRules.end(); ++it ) {
          for( rule = it->second.begin(); rule != it->second.end(); ++rule ) {
             attr = rule->find( "include" );
             if( attr == rule->end() ) continue;
@@ -823,11 +823,11 @@ namespace ROOT
       //-----------------------------------------------------------------------
       SchemaRuleClassMap_t::iterator it;
       std::string                    targetClass = rule["targetClass"];
-      it = G__ReadRules.find( targetClass );
-      if( it == G__ReadRules.end() ) {
+      it = gReadRules.find( targetClass );
+      if( it == gReadRules.end() ) {
          std::list<SchemaRuleMap_t> lst;
          lst.push_back( rule );
-         G__ReadRules[targetClass] = lst;
+         gReadRules[targetClass] = lst;
       }
       else
          it->second.push_back( rule );
@@ -854,11 +854,11 @@ namespace ROOT
       //-----------------------------------------------------------------------
       SchemaRuleClassMap_t::iterator it;
       std::string                    targetClass = rule["targetClass"];
-      it = G__ReadRawRules.find( targetClass );
-      if( it == G__ReadRawRules.end() ) {
+      it = gReadRawRules.find( targetClass );
+      if( it == gReadRawRules.end() ) {
          std::list<SchemaRuleMap_t> lst;
          lst.push_back( rule );
-         G__ReadRawRules[targetClass] = lst;
+         gReadRawRules[targetClass] = lst;
       }
       else
          it->second.push_back( rule );

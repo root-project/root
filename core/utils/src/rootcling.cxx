@@ -2823,8 +2823,8 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input, const cling::
    //--------------------------------------------------------------------------
    // Check if we have any schema evolution rules for this class
    //--------------------------------------------------------------------------
-   SchemaRuleClassMap_t::iterator rulesIt1 = G__ReadRules.find( R__GetQualifiedName(*cl).c_str() );
-   SchemaRuleClassMap_t::iterator rulesIt2 = G__ReadRawRules.find( R__GetQualifiedName(*cl).c_str() );
+   SchemaRuleClassMap_t::iterator rulesIt1 = gReadRules.find( R__GetQualifiedName(*cl).c_str() );
+   SchemaRuleClassMap_t::iterator rulesIt2 = gReadRawRules.find( R__GetQualifiedName(*cl).c_str() );
 
    MembersTypeMap_t nameTypeMap;
    CreateNameTypeMap( *cl, nameTypeMap );
@@ -2832,7 +2832,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input, const cling::
    //--------------------------------------------------------------------------
    // Process the read rules
    //--------------------------------------------------------------------------
-   if( rulesIt1 != G__ReadRules.end() ) {
+   if( rulesIt1 != gReadRules.end() ) {
       int i = 0;
       (*dictSrcOut) << std::endl;
       (*dictSrcOut) << "   // Schema evolution read functions" << std::endl;
@@ -2860,7 +2860,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input, const cling::
    //--------------------------------------------------------------------------
    // Process the read raw rules
    //--------------------------------------------------------------------------
-   if( rulesIt2 != G__ReadRawRules.end() ) {
+   if( rulesIt2 != gReadRawRules.end() ) {
       int i = 0;
       (*dictSrcOut) << std::endl;
       (*dictSrcOut) << "   // Schema evolution read raw functions" << std::endl;
@@ -2887,16 +2887,6 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input, const cling::
    }
 
    (*dictSrcOut) << std::endl << "   // Function generating the singleton type initializer" << std::endl;
-
-#if 0
-   fprintf(fp, "#if defined R__NAMESPACE_TEMPLATE_IMP_BUG\n");
-   fprintf(fp, "   template <> ::ROOT::TGenericClassInfo *::ROOT::GenerateInitInstanceLocal< %s >(const %s*)\n   {\n",
-           cl.Fullname(), cl.Fullname() );
-   fprintf(fp, "#else\n");
-   fprintf(fp, "   template <> ::ROOT::TGenericClassInfo *GenerateInitInstanceLocal< %s >(const %s*)\n   {\n",
-           classname.c_str(), classname.c_str() );
-   fprintf(fp, "#endif\n");
-#endif
 
    (*dictSrcOut) << "   static TGenericClassInfo *GenerateInitInstanceLocal(const " << csymbol.c_str() << "*)" << std::endl << "   {" << std::endl;
 
@@ -3035,11 +3025,11 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input, const cling::
    //---------------------------------------------------------------------------
    // Pass the schema evolution rules to TGenericClassInfo
    //---------------------------------------------------------------------------
-   if( (rulesIt1 != G__ReadRules.end() && rulesIt1->second.size()>0) || (rulesIt2 != G__ReadRawRules.end()  && rulesIt2->second.size()>0) ) {
+   if( (rulesIt1 != gReadRules.end() && rulesIt1->second.size()>0) || (rulesIt2 != gReadRawRules.end()  && rulesIt2->second.size()>0) ) {
       (*dictSrcOut) << std::endl << "      ROOT::TSchemaHelper* rule;" << std::endl;
    }
 
-   if( rulesIt1 != G__ReadRules.end() ) {
+   if( rulesIt1 != gReadRules.end() ) {
       (*dictSrcOut) << std::endl;
       (*dictSrcOut) << "      // the io read rules" << std::endl;
       (*dictSrcOut) << "      std::vector<ROOT::TSchemaHelper> readrules(";
@@ -3048,7 +3038,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input, const cling::
       (*dictSrcOut) << "      instance.SetReadRules( readrules );" << std::endl;
    }
 
-   if( rulesIt2 != G__ReadRawRules.end() ) {
+   if( rulesIt2 != gReadRawRules.end() ) {
       (*dictSrcOut) << std::endl;
       (*dictSrcOut) << "      // the io read raw rules" << std::endl;
       (*dictSrcOut) << "      std::vector<ROOT::TSchemaHelper> readrawrules(";
@@ -5177,6 +5167,12 @@ int main(int argc, char **argv)
                interp.declare(std::string("#include \"") + argv[i] + "\"");
                interpPragmaSource += std::string("#include \"") + argv[i] + "\"\n";
                pcmArgs.push_back(argv[i]);
+
+#if 0
+               // remove header files from CINT view
+               free(argvv[argcc-1]);
+               argvv[--argcc] = 0;
+#endif
             }
          }
       }
@@ -5459,7 +5455,7 @@ int main(int argc, char **argv)
    //---------------------------------------------------------------------------
    // Write schema evolution reelated headers and declarations
    //---------------------------------------------------------------------------
-   if( !G__ReadRules.empty() || !G__ReadRawRules.empty() ) {
+   if( !gReadRules.empty() || !gReadRawRules.empty() ) {
       (*dictSrcOut) << "#include \"TBuffer.h\"" << std::endl;
       (*dictSrcOut) << "#include \"TVirtualObject.h\"" << std::endl;
       (*dictSrcOut) << "#include <vector>" << std::endl;
