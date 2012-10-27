@@ -792,7 +792,7 @@ void TCintWithCling::RegisterModule(const char* modulename,
    gSystem->ExpandPathName(searchPath);
 
    if (!gSystem->FindFile(searchPath, pcmFileName)) {
-      Error("RegisterModule()", "Cannot find dictionary module %s in %s",
+      Error("RegisterModule", "cannot find dictionary module %s in %s",
             pcmFileName.Data(), searchPath.Data());
    } else {
       TCintWithCling::Info("RegisterModule", "Loading PCM %s", pcmFileName.Data());
@@ -801,7 +801,7 @@ void TCintWithCling::RegisterModule(const char* modulename,
    }
 
    for (const char** hdr = headers; *hdr; ++hdr) {
-      Info("RegisterModule()", "   #including %s...", *hdr);
+      Info("RegisterModule", "   #including %s...", *hdr);
       fInterpreter->parse(TString::Format("#include \"%s\"", *hdr).Data());
    }
 }
@@ -1071,7 +1071,7 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
       = astContext.getASTRecordLayout(recordDecl);
 
    if (cl->Size() != recLayout.getSize().getQuantity()) {
-      Error("InspectMembers","TClass and cling disagree on the size of the class %s, respectively %d %ld\n",
+      Error("InspectMembers","TClass and cling disagree on the size of the class %s, respectively %d %lld\n",
             cl->GetName(),cl->Size(),recLayout.getSize().getQuantity());
    }
    unsigned iNField = 0;
