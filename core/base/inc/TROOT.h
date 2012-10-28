@@ -58,10 +58,11 @@ class TROOT;
 
 R__EXTERN TVirtualMutex *gROOTMutex;
 
+#ifdef R__HAS_CLING
 namespace ROOT {
    extern TROOT *GetROOT2();
 }
-
+#endif
 
 class TROOT : public TDirectory {
 
