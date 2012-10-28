@@ -664,16 +664,16 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    fLockProcessLine = kTRUE;
    // Disable the autoloader until it is explicitly enabled.
    G__set_class_autoloading(0);
-   G__RegisterScriptCompiler(&ScriptCompiler);
+   //G__RegisterScriptCompiler(&ScriptCompiler);
    G__set_ignoreinclude(&IgnoreInclude);
    G__InitUpdateClassInfo(&TCint_UpdateClassInfo);
    G__InitGetSpecialObject(&TCint_FindSpecialObject);
    // check whether the compiler is available:
-   char* path = gSystem->Which(gSystem->Getenv("PATH"), gSystem->BaseName(COMPILER));
-   if (path && path[0]) {
-      G__InitGenerateDictionary(&TCint_GenerateDictionary);
-   }
-   delete[] path;
+   //char* path = gSystem->Which(gSystem->Getenv("PATH"), gSystem->BaseName(COMPILER));
+   //if (path && path[0]) {
+   //   G__InitGenerateDictionary(&TCint_GenerateDictionary);
+   //}
+   //delete[] path;
    ResetAll();
 #ifndef R__WIN32
    optind = 1;  // make sure getopt() works in the main program
