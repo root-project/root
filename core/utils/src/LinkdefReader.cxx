@@ -76,6 +76,7 @@ void LinkdefReader::PopulatePragmaMap(){
    LinkdefReader::fgMapPragmaNames["struct"] = kStruct;
    LinkdefReader::fgMapPragmaNames["all"] = kAll;
    LinkdefReader::fgMapPragmaNames["defined_in"] = kDefinedIn;
+   LinkdefReader::fgMapPragmaNames["ioctortype"] = kIOCtorType;
    LinkdefReader::fgMapPragmaNames["nestedclass"] = kNestedclasses;
    LinkdefReader::fgMapPragmaNames["nestedclasses"] = kNestedclasses;
    LinkdefReader::fgMapPragmaNames["nestedclasses;"] = kNestedclasses;
@@ -99,7 +100,7 @@ void LinkdefReader::PopulateCppMap(){
    LinkdefReader::fgMapCppNames["#else"] = kElse;
 }
 
-LinkdefReader::LinkdefReader() : fLine(1), fCount(0) 
+LinkdefReader::LinkdefReader() : fLine(1), fCount(0), fIOCtorTypeCallback(0)
 {
    PopulatePragmaMap();
    PopulateCppMap();
@@ -462,6 +463,11 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
             //csr.PrintAttributes(3);
          }
          break;
+      case kIOCtorType:
+         // #pragma link C++ IOCtorType typename;
+         if (fIOCtorTypeCallback) 
+            fIOCtorTypeCallback(identifier.c_str());
+         break;
       case kIgnore:
          // All the pragma that were supported in CINT but are currently not relevant for CLING
          // (mostly because we do not yet filter the dictionary/pcm).
@@ -609,6 +615,14 @@ bool LinkdefReader::ProcessOperators(std::string& pattern)
    }
    pattern = "operator*(*"+pattern+"*)";
    return true;
+}
+
+void LinkdefReader::SetIOCtorTypeCallback(IOCtorTypeCallback callback)
+{
+   // Set the callback function to be call for every
+   // #pragma link C++ ioctortype typename;
+
+   fIOCtorTypeCallback = callback;
 }
 
 class LinkdefReaderPragmaHandler : public clang::PragmaHandler {
