@@ -381,6 +381,8 @@ using namespace ROOT;
 #include "SelectionRules.h"
 #include "Scanner.h"
 
+cling::Interpreter *gInterp = 0;
+
 // NOTE: This belongs in RConversionRules.cxx but can only be moved there if it is not shared with rootcint
    void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext);
 
@@ -503,12 +505,21 @@ char *StrDup(const char *str);
 
 class RConstructorType {
    std::string           fArgTypeName;
-   clang::CXXRecordDecl *fArgType;
+   const clang::CXXRecordDecl *fArgType;
 
 public:
-   RConstructorType(const char *type_of_arg) : fArgTypeName(type_of_arg),fArgType(0) {}
+   RConstructorType(const char *type_of_arg) : fArgTypeName(type_of_arg),fArgType(0) 
+   {
+      const cling::LookupHelper& lh = gInterp->getLookupHelper();
+      // We can not use findScope since the type we are given are usually,
+      // only forward declared (and findScope explicitly reject them).
+      clang::QualType instanceType = lh.findType(type_of_arg); 
+      if (!instanceType.isNull()) 
+         fArgType = instanceType->getAsCXXRecordDecl();
+   }
 
    const char *GetName() { return fArgTypeName.c_str(); }
+   const clang::CXXRecordDecl *GetType() { return fArgType; }
 };
 
 vector<RConstructorType> gIoConstructorTypes;
@@ -646,8 +657,6 @@ long R__GetLineNumber(const clang::Decl *decl)
       return -1;
    }   
 }
-
-cling::Interpreter *gInterp = 0;
 
 // In order to store the meaningful for the IO comments we have to transform 
 // the comment into annotation of the given decl.
@@ -1829,39 +1838,66 @@ bool HasCustomOperatorNewArrayPlacement(const clang::RecordDecl &cl)
    return HasCustomOperatorNewPlacement("operator new[]",cl);
 }
 
-bool CheckConstructor(const clang::CXXRecordDecl *cl, const char *arg)
+//______________________________________________________________________________
+bool CheckConstructor(const clang::CXXRecordDecl *cl, RConstructorType &ioctortype)
 {
+   const char *arg = ioctortype.GetName();
    if ( (arg == 0 || arg[0] == '\0') && !cl->hasUserDeclaredConstructor() ) {
       return true;
    }
 
-   for(clang::CXXRecordDecl::ctor_iterator iter = cl->ctor_begin(), end = cl->ctor_end();
-       iter != end;
-       ++iter)
-   {
-      if (iter->getAccess() == clang::AS_public) {
+   if (ioctortype.GetType() ==0 && (arg == 0 || arg[0] == '\0')) {
+      // We are looking for a constructor with zero non-default arguments.
+
+      for(clang::CXXRecordDecl::ctor_iterator iter = cl->ctor_begin(), end = cl->ctor_end();
+          iter != end;
+          ++iter)
+      {
+         if (iter->getAccess() != clang::AS_public)
+            continue;
          // We can reach this constructor.
-
-         if (arg == 0 || arg[0] == '\0') {
-            // We are looking for a constructor with zero non-default arguments.
-
-            if (iter->getNumParams() == 0) {
-               return true;
-            }
-            if ( (*iter->param_begin())->hasDefaultArg()) {
-               return true;
-            }
-         } else {
-
-            if (iter->getNumParams() == 1) {
-               std::string realArg = (*iter->param_begin())->getType().getAsString();
-               // fprintf(stderr,"Checking constructor arg %s against %s\n",realArg.c_str(),arg);
-               if (realArg == arg) {
-                  return true;
+            
+         if (iter->getNumParams() == 0) {
+            return true;
+         }
+         if ( (*iter->param_begin())->hasDefaultArg()) {
+            return true;
+         }
+      } // For each constructor.
+   }
+   else {
+      for(clang::CXXRecordDecl::ctor_iterator iter = cl->ctor_begin(), end = cl->ctor_end();
+          iter != end;
+          ++iter) 
+      {
+         if (iter->getAccess() != clang::AS_public)
+            continue;
+         
+         // We can reach this constructor.
+         if (iter->getNumParams() == 1) {
+            clang::QualType argType( (*iter->param_begin())->getType() );
+            argType = argType.getDesugaredType(cl->getASTContext());
+            if (argType->isPointerType()) {
+               argType = argType->getPointeeType();
+               argType = argType.getDesugaredType(cl->getASTContext());
+               
+               const clang::CXXRecordDecl *argDecl = argType->getAsCXXRecordDecl();
+               if (argDecl && ioctortype.GetType()) {
+                  if (argDecl->getCanonicalDecl() == ioctortype.GetType()->getCanonicalDecl()) {
+                     return true;
+                  }
+               } else {
+                  std::string realArg = argType.getAsString();
+                  std::string clarg("class ");
+                  clarg += arg;
+                  if (realArg == clarg) {
+                     return true;
+                     
+                  }
                }
             }
-         }
-      }
+         } // has one argument.
+      } // for each constructor 
    }
    return false;
 }
@@ -1885,7 +1921,7 @@ bool HasDefaultConstructor(const clang::CXXRecordDecl *cl, string *arg)
          proto += " *";
       }
 
-      result = CheckConstructor(cl,proto.c_str());
+      result = CheckConstructor(cl,gIoConstructorTypes[i]);
       if (result && extra && arg) {
          *arg = "( (";
          *arg += proto;
@@ -5230,7 +5266,6 @@ int main(int argc, char **argv)
    }
 
    G__setothermain(2);
-   G__set_ioctortype_handler( (int (*)(const char*))AddConstructorType );
    G__set_beforeparse_hook( BeforeParseInit );
    if (G__main(argcc, argvv) < 0) {
       Error(0, "%s: error loading headers...\n", argv[0]);
@@ -5413,7 +5448,9 @@ int main(int argc, char **argv)
       // interpPragmaSource.
 
       LinkdefReader ldefr;
-      clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap 
+      ldefr.SetIOCtorTypeCallback(AddConstructorType);
+      clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
+ 
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
                        gResourceDir.c_str())) {
          Error(0,"Parsing #pragma failed %s",linkdefFilename.c_str());
@@ -5459,7 +5496,9 @@ int main(int argc, char **argv)
       selectionRules.SetSelectionFileType(SelectionRules::kLinkdefFile);
 
       LinkdefReader ldefr;
+      ldefr.SetIOCtorTypeCallback(AddConstructorType);
       clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap 
+
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
                        gResourceDir.c_str())) {
          Error(0,"Parsing Linkdef file %s",linkdefFilename.c_str());
@@ -5548,45 +5587,6 @@ int main(int argc, char **argv)
       //     WriteClassCode (Streamer,ShowMembers,Auxiliary functions)
       //
 
-      // Open LinkDef file for reading, so that we can process classes
-      // in order of appearence in this file (STK)
-      if (il) {
-         FILE *fpld = 0;
-         // Open file specified on command line
-         string filename;
-         bool found = Which(argv[il], filename);
-         if (!found) {
-            Error(0, "%s: cannot open file %s\n", argv[0], argv[il]);
-            CleanupOnExit(1);
-            return 1;
-         }
-         fpld = fopen(filename.c_str(), "r");
-         if (!fpld) {
-            Error(0, "%s: cannot open file %s\n", argv[0], argv[il]);
-            CleanupOnExit(1);
-            return 1;
-         }
-
-         // Read LinkDef file and process the #pragma link C++ ioctortype
-         char consline[256];
-         while (fgets(consline, 256, fpld)) {
-            static const char* ioctorTokens[] = {"pragma", "link", "C++", "ioctortype", 0};
-            size_t tokpos = 0;
-            bool constype = ParsePragmaLine(consline, ioctorTokens, &tokpos);
-
-            if (constype) {
-               char *request = strtok(consline + tokpos, "-!+;");
-               // just in case remove trailing space and tab
-               while (*request == ' ') request++;
-               int len = strlen(request)-1;
-               while (request[len]==' ' || request[len]=='\t') request[len--] = '\0';
-               request = Compress(request); //no space between tmpl arguments allowed
-               AddConstructorType(request);
-               
-            }
-         }
-         fclose(fpld);
-      }
       AddConstructorType("TRootIOCtor");
       AddConstructorType("");
 
