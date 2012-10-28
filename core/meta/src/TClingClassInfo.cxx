@@ -303,12 +303,36 @@ long TClingClassInfo::GetOffset(const clang::CXXMethodDecl* md) const
 
 bool TClingClassInfo::HasDefaultConstructor() const
 {
-   // Note: This is a ROOT special!  It actually test for the root ioctor.
+   // Return true if there a public constructor taking no argument
+   // (including a constructor that has default for all its argument).
+
+   // Note: This is could enhanced to also know about the ROOT ioctor
+   // but this was not the case in CINT.
+
    if (!IsValid()) {
       return false;
    }
-   // FIXME: Look for root ioctor when we have function lookup, and
-   //        rootcling can tell us what the name of the ioctor is.
+   
+   const clang::CXXRecordDecl *CRD =
+      llvm::dyn_cast<clang::CXXRecordDecl>(fDecl);
+
+   if (!CRD) return true; 
+
+   for(clang::CXXRecordDecl::ctor_iterator iter = CRD->ctor_begin(), end = CRD->ctor_end();
+       iter != end;
+       ++iter)
+   {
+      if (iter->getAccess() == clang::AS_public) {
+         // We can reach this constructor.
+         if (iter->getNumParams() == 0) {
+            return true;
+         }
+         if (iter->getNumParams() == 0) {
+            return true;
+         }
+      }
+   }
+
    return false;
 }
 
@@ -554,7 +578,8 @@ void *TClingClassInfo::New() const
 {
    // Invoke a new expression to use the class constructor
    // that takes no arguments to create an object of this class type.
-   if (!IsValid()) {
+
+   if (!HasDefaultConstructor()) {
       return 0;
    }
    std::ostringstream os;
@@ -575,7 +600,7 @@ void *TClingClassInfo::New(int n) const
    // Invoke a new expression to use the class constructor
    // that takes no arguments to create an array object
    // of this class type.
-   if (!IsValid()) {
+   if (!HasDefaultConstructor()) {
       return 0;
    }
    std::ostringstream os;
@@ -597,7 +622,7 @@ void *TClingClassInfo::New(int n, void *arena) const
    // constructor that takes no arguments to create an
    // array of objects of this class type in the given
    // memory arena.
-   if (!IsValid()) {
+   if (!HasDefaultConstructor()) {
       return 0;
    }
    std::ostringstream os;
@@ -619,7 +644,7 @@ void *TClingClassInfo::New(void *arena) const
    // Invoke a placement new expression to use the class
    // constructor that takes no arguments to create an
    // object of this class type in the given memory arena.
-   if (!IsValid()) {
+   if (!HasDefaultConstructor()) {
       return 0;
    }
    std::ostringstream os;
