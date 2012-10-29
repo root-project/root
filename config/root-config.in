@@ -213,46 +213,6 @@ solaris64CC5)
    auxldflags="-m64 -library=stlport4"
    auxlibs="-lm -ldl -lnsl -lsocket"
    ;;
-sgicc)
-   # SGI
-   auxcflags="-LANG:std"
-   auxlibs="-lm -ldl"
-   ;;
-sgicc64)
-   # SGI
-   auxcflags="-64 -LANG:std"
-   auxlibs="-lm"
-   ;;
-sgigcc)
-   # SGI 6.x with gcc
-   auxcflags="-fsigned-char"
-   auxlibs="-lgen -lstdc++ -lm -ldl"
-   ;;
-sgin32gcc)
-   # SGI 6.x with gcc with n32 ABI
-   auxcflags="-fsigned-char"
-   auxlibs="-lm -ldl"
-   ;;
-alphagcc)
-   # Alpha/OSF with g++
-   auxcflags=
-   auxlibs="-lg++ -lm"
-   ;;
-alphagcc)
-   # Alpha/OSF with gcc
-   auxcflags="-mcpu=ev5 -D__osf__ -D__alpha"
-   auxlibs="-ltermcap -lm"
-   ;;
-alphacxx6)
-   # Alpha/OSF with cxx6
-   auxcflags="-tlocal -D__osf__ -D__alpha -D_USE_STD_IOSTREAM"
-   auxlibs="-lm"
-   ;;
-alphacxx)
-   # Alpha/OSF with cxx5
-   auxcflags="-oldcxx -D__osf__ -D__alpha"
-   auxlibs="-lm"
-   ;;
 linuxrh42 | linuxrh51)
    # Linux with gcc 2.7.2.x
    auxcflags=
@@ -262,12 +222,6 @@ linux)
    # Linux with gcc >= 3.x
    auxcflags="-m32"
    auxldflags="-m32"
-   auxlibs="-lm -ldl -rdynamic"
-   ;;
-linuxmips)
-   # Linux on mips with gcc >= 3.x
-   auxcflags="-mapi=32"
-   auxldflags="-mapi=32"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxhppa)
@@ -317,11 +271,6 @@ linuxx32gcc)
    # x32 ABI (64 bit mode with 32 bit pointers) Linux with gcc > 4.7
    auxcflags="-mx32"
    auxldflags="-mx32"
-   auxlibs="-lm -ldl -rdynamic"
-   ;;
-linuxalphagcc)
-   # Alpha Linux with gcc
-   auxcflags=
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxarm)
