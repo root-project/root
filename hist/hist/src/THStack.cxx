@@ -409,9 +409,14 @@ TH1 *THStack::GetHistogram() const
    //       1- option 'A' was specified in THStack::Draw. Return fHistogram
    //       2- user had called TPad::DrawFrame. return pointer to hframe histogram
    //
-   // IMPORTANT NOTE
-   //  You must call Draw before calling this function. The returned histogram
-   //  depends on the selected Draw options.
+   // IMPORTANT NOTES
+   // - You must call Draw before calling this function. The returned histogram
+   //   depends on the selected Draw options.
+   // - This function returns a pointer to an intermediate fixed bin size
+   //   histogram used to set the range and for picking.
+   //   You cannot use this histogram to return the bin information.
+   //   You must get a pointer to one of the histograms in the stack,
+   //   the first one, for example.
 
    if (fHistogram) return fHistogram;
    if (!gPad) return 0;
