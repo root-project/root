@@ -199,6 +199,17 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
             }            
          }
 
+         if (TagDecl *TD = dyn_cast<TagDecl>(*DI)) {
+            listOfSmth = gROOT->GetListOfClasses();
+            if (TObject *o = listOfSmth->FindObject(TD->getName().data())) {
+               TClass *cl = o->IsA();
+               TClingClassInfo* clInfo = (TClingClassInfo*)cl->GetClassInfo();
+               if (!clInfo)
+                  clInfo = new TClingClassInfo(interp);
+               clInfo->Init(*TD);                  
+            }
+         }
+
          if (isa<DeclContext>(*DI) && !isa<EnumDecl>(*DI)) {
             // We have to find all the typedefs contained in that decl context
             // and add it to the list of types.
@@ -2648,87 +2659,13 @@ public:
 //______________________________________________________________________________
 void TCintWithCling::UpdateClassInfo(char* item, Long_t tagnum)
 {
-   // Static function called by CINT when it changes the tagnum for
-   // a class (e.g. after re-executing the setup function). In such
-   // cases we have to update the tagnum in the G__ClassInfo used by
-   // the TClass for class "item".
-   R__LOCKGUARD(gCINTMutex);
-   if (gROOT && gROOT->GetListOfClasses()) {
-      static Bool_t entered = kFALSE;
-      static vector<TInfoNode> updateList;
-      Bool_t topLevel;
-      if (entered) {
-         topLevel = kFALSE;
-      }
-      else {
-         entered = kTRUE;
-         topLevel = kTRUE;
-      }
-      if (topLevel) {
-         UpdateClassInfoWork(item, tagnum);
-      }
-      else {
-         // If we are called indirectly from within another call to
-         // TCintWithCling::UpdateClassInfo, we delay the update until the dictionary loading
-         // is finished (i.e. when we return to the top level TCintWithCling::UpdateClassInfo).
-         // This allows for the dictionary to be fully populated when we actually
-         // update the TClass object.   The updating of the TClass sometimes
-         // (STL containers and when there is an emulated class) forces the building
-         // of the TClass object's real data (which needs the dictionary info).
-         updateList.push_back(TInfoNode(item, tagnum));
-      }
-      if (topLevel) {
-         while (!updateList.empty()) {
-            TInfoNode current(updateList.back());
-            updateList.pop_back();
-            current.Update();
-         }
-         entered = kFALSE;
-      }
-   }
+   // No op: see TClingCallbacks
 }
 
 //______________________________________________________________________________
 void TCintWithCling::UpdateClassInfoWork(const char* item, Long_t tagnum)
 {
-   // This does the actual work of UpdateClassInfo.
-   Bool_t load = kFALSE;
-   if (strchr(item, '<') && TClass::GetClassShortTypedefHash()) {
-      // We have a template which may have duplicates.
-      TString resolvedItem(
-         TClassEdit::ResolveTypedef(TClassEdit::ShortType(item,
-                                    TClassEdit::kDropStlDefault).c_str(), kTRUE));
-      if (resolvedItem != item) {
-         TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedItem);
-         if (cl) {
-            load = kTRUE;
-         }
-      }
-      if (!load) {
-         TIter next(TClass::GetClassShortTypedefHash()->GetListForObject(resolvedItem));
-         while (TClass::TNameMapNode* htmp =
-                   static_cast<TClass::TNameMapNode*>(next())) {
-            if (resolvedItem == htmp->String()) {
-               TClass* cl = gROOT->GetClass(htmp->fOrigName, kFALSE);
-               if (cl) {
-                  // we found at least one equivalent.
-                  // let's force a reload
-                  load = kTRUE;
-                  break;
-               }
-            }
-         }
-      }
-   }
-   if (gROOT->GetListOfClasses()->GetEntries() == 0)
-   {
-      // Nothing to find, let's not get yourself in trouble.
-      return;
-   }
-   TClass* cl = gROOT->GetClass(item, load);
-   if (cl) {
-      cl->ResetClassInfo(tagnum);
-   }
+   // No op: see TClingCallbacks
 }
 
 //______________________________________________________________________________
