@@ -50,8 +50,10 @@ const char *kCheckMsg  = "%s not true at line %d of `%s'";
 
 // Integrate with crash reporter.
 #ifdef __APPLE__
-extern "C" const char *__crashreporter_info__;
-const char *__crashreporter_info__ = 0;
+extern "C" {
+static const char *__crashreporter_info__ = 0;
+asm(".desc ___crashreporter_info__, 0x10");
+}
 #endif
 
 static ErrorHandlerFunc_t gErrorHandler = DefaultErrorHandler;
