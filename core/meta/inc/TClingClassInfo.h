@@ -55,8 +55,8 @@ private:
    bool                  fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
    bool                  fDescend; // Flag for signaling the need to descend on this advancement.
    clang::DeclContext::decl_iterator fIter; // Current decl in scope.
-   const clang::Decl       *fDecl; // Current decl, we do *not* own.
-   const clang::RecordType *fType; // Type representing the decl (conserves typedefs like Double32_t). (we do *not* own)
+   const clang::Decl    *fDecl; // Current decl, we do *not* own.
+   const clang::TagType *fType; // Type representing the decl (conserves typedefs like Double32_t). (we do *not* own)
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
    std::string              fTitle; // The meta info for the class.
 public: // Types
@@ -76,7 +76,7 @@ public:
    explicit TClingClassInfo(); // NOT IMPLEMENTED
    explicit TClingClassInfo(cling::Interpreter *);
    explicit TClingClassInfo(cling::Interpreter *, const char *);
-   explicit TClingClassInfo(cling::Interpreter *, const clang::RecordType &);
+   explicit TClingClassInfo(cling::Interpreter *, const clang::TagDecl &);
 
    const clang::Decl   *GetDecl() const { return fDecl; }
    long                 ClassProperty() const;
@@ -92,6 +92,7 @@ public:
    bool                 HasMethod(const char *name) const;
    void                 Init(const char *name);
    void                 Init(int tagnum);
+   void                 Init(const clang::TagDecl &);
    bool                 IsBase(const char *name) const;
    static bool          IsEnum(cling::Interpreter *interp, const char *name);
    bool                 IsLoaded() const;

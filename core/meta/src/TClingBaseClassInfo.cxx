@@ -176,8 +176,7 @@ int TClingBaseClassInfo::InternalNext(int onlyDirect)
       }
       // Check if current base class is a dependent type, that is, an
       // uninstantiated template class.
-      const clang::RecordType *Ty = fIter->getType()->
-                                    getAs<clang::RecordType>();
+      const clang::TagType *Ty = fIter->getType()->getAs<clang::TagType>();
       if (!Ty) {
          // A dependent type (uninstantiated template), skip it.
          continue;
@@ -197,7 +196,7 @@ int TClingBaseClassInfo::InternalNext(int onlyDirect)
       }
       // Update info for this base class.
       delete fBaseInfo;
-      fBaseInfo = new TClingClassInfo(fInterp, *Ty);
+      fBaseInfo = new TClingClassInfo(fInterp, *Ty->getDecl());
       // Iterator is now valid.
       return 1;
    }

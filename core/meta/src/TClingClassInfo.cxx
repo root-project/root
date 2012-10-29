@@ -108,10 +108,11 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
-                                 const clang::RecordType &type)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(&type), fTitle("")
+                                 const clang::TagDecl &tag)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0), 
+     fTitle("")
 {
-   fDecl = fType->getDecl();
+   Init(tag);
 }
 
 long TClingClassInfo::ClassProperty() const
@@ -415,6 +416,13 @@ void TClingClassInfo::Init(int tagnum)
 {
    Warning("TClingClassInfo::Init(tagnum)","Not yet implemented\n");
    return;
+}
+
+void TClingClassInfo::Init(const clang::TagDecl &tag)
+{
+   fDecl = &tag;
+   clang::ASTContext &C = tag.getASTContext();
+   fType = C.getTagDeclType(&tag)->getAs<clang::TagType>();
 }
 
 bool TClingClassInfo::IsBase(const char *name) const
