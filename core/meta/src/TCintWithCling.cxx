@@ -945,6 +945,7 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    int indent = 0;
    // This will hold the resulting value of the evaluation the given line.
    cling::StoredValueRef result;
+   cling::Interpreter::CompilationResult compRes = cling::Interpreter::kSuccess;
    if (!strncmp(sLine.Data(), ".L", 2) || !strncmp(sLine.Data(), ".x", 2) ||
        !strncmp(sLine.Data(), ".X", 2)) {
       // If there was a trailing "+", then CINT compiled the code above,
@@ -978,14 +979,14 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
             }
             const char *function = gSystem->BaseName(fname);
             mod_line = function + arguments + io;
-            indent = fMetaProcessor->process(mod_line, &result);
+            indent = fMetaProcessor->process(mod_line, &result, &compRes);
          }
       } else {
-         indent = fMetaProcessor->process(mod_line, &result);
+         indent = fMetaProcessor->process(mod_line, &result, &compRes);
       }
    }
    else {
-      indent = fMetaProcessor->process(sLine, &result);
+      indent = fMetaProcessor->process(sLine, &result, &compRes);
    }
    if (result.isValid() && result.needsManagedAllocation())
       fTemporaries->push_back(result);
@@ -1006,9 +1007,17 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       /// fMetaProcessor->abortEvaluation();
       return 0;
    }
-   if (result.isValid()
+   if (error) {
+      switch (compRes) {
+      case cling::Interpreter::kSuccess: *error = kNoError; break;
+      case cling::Interpreter::kFailure: *error = kRecoverable; break;
+      case cling::Interpreter::kMoreInputExpected: *error = kProcessing; break;
+      }
+   }
+   if (compRes == cling::Interpreter::kSuccess
+       && result.isValid()
        && !result.get().isVoid(fInterpreter->getCI()->getASTContext())) {
-      return result.get().simplisticCastAs<long>();
+         return result.get().simplisticCastAs<long>();
    }
    return 0;
 }
