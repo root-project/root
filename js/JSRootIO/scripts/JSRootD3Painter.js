@@ -2278,6 +2278,14 @@ function doubleTap(elem, speed, distance) {
          font_size *= 0.85 * (w / max_len);
          mul *= 0.95 * (max_len / w);
       }
+      var x1 = pave['fX1NDC'];
+      var x2 = pave['fX2NDC'];
+      var y1 = pave['fY1NDC'];
+      var y2 = pave['fY2NDC'];
+      var margin = pave['fMargin']*( x2-x1 )/pave['fNColumns'];
+      var yspace = (y2-y1)/nlines;
+      var ytext = y2 + 0.5*yspace;  // y-location of 0th entry
+      var boxw = margin*0.35;
 
       for (var i=0; i<nlines; ++i) {
          var leg = pave['fPrimitives'][i];
@@ -2291,10 +2299,14 @@ function doubleTap(elem, speed, distance) {
             leg['fLineColor'] = mo['fLineColor'];
             leg['fLineStyle'] = mo['fLineStyle'];
             leg['fLineWidth'] = mo['fLineWidth'];
+            leg['fFillColor'] = mo['fFillColor'];
+            leg['fFillStyle'] = mo['fFillStyle'];
          }
          var line_color = root_colors[leg['fLineColor']];
          var line_width = leg['fLineWidth'];
          var line_style = root_line_styles[leg['fLineStyle']];
+         var fill_color = root_colors[leg['fFillColor']];
+         var fill_style = leg['fFillStyle'];
          var opt = leg['fOption'].toLowerCase();
 
          p.append("text")
@@ -2311,11 +2323,41 @@ function doubleTap(elem, speed, distance) {
 
          // Draw fill pattern (in a box)
          if (opt.indexOf('f') != -1) {
+            // box total height is yspace*0.7
+            // define x,y as the center of the symbol for this entry
+            var xsym = margin/2;
+            var ysym = ytext;
+            var xf = new Array(4), yf = new Array(4);
+            xf[0] = xsym - boxw;
+            yf[0] = ysym - yspace*0.35;
+            xf[1] = xsym + boxw;
+            yf[1] = yf[0];
+            xf[2] = xf[1];
+            yf[2] = ysym + yspace*0.35;
+            xf[3] = xf[0];
+            yf[3] = yf[2];
+            for (var j=0;j<4;j++) {
+               xf[j] = xf[j] * vis.attr("width");
+               yf[j] = yf[j] * vis.attr("height");
+            }
+            var ww = xf[1] - xf[0];
+            var hh = yf[2] - yf[0];
+            pos_y = pos_y - (hh/2);
+            var pos_x = (tpos_x/2) - (ww/2);
+
+            p.append("svg:rect")
+               .attr("x", pos_x)
+               .attr("y", pos_y)
+               .attr("width", ww)
+               .attr("height", hh)
+               .attr("fill", fill_color)
+               .style("stroke-width", line_width)
+               .style("stroke", line_color);
          }
          // Draw line
-         if (opt.indexOf('l') != -1 || opt.indexOf('f') != -1) {
+         if (opt.indexOf('l') != -1) {
             // line total length (in x) is margin*0.8
-            var line_length = (0.8 * pave['fMargin']) * w;
+            var line_length = (0.7 * pave['fMargin']) * w;
             var pos_x = (tpos_x - line_length) / 2;
             p.append("svg:line")
                .attr("x1", pos_x)
@@ -2333,7 +2375,7 @@ function doubleTap(elem, speed, distance) {
          // Draw Polymarker
          if (opt.indexOf('p') != -1) {
 
-            var line_length = (0.8 * pave['fMargin']) * w;
+            var line_length = (0.7 * pave['fMargin']) * w;
             var pos_x = tpos_x / 2;
 
             var filled = false;
