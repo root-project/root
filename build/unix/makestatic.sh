@@ -23,18 +23,15 @@ rm -f $ROOTAEXE $PROOFAEXE
 
 gobjs=`$STATICOBJECTLIST -d`
 
-dummyc=R__dummy.c
-dummyo=""
-if [ $PLATFORM = "alpha" ] && [ $CXX = "cxx" ]; then
-   echo 'void dnet_conn() {}' > $dummyc
-   $CC -c $dummyc
-   dummyo=R__dummy.o
+# If linking with Cocoa framework, then don't use XLIBS
+if echo $EXTRALIBS | grep ' Cocoa' > /dev/null 2>& 1 ; then
+    XLIBS=
 fi
 
 echo "Making $ROOTAEXE..."
-echo $LD $LDFLAGS -o $ROOTAEXE main/src/rmain.o $dummyo $gobjs $ROOTALIB \
+echo $LD $LDFLAGS -o $ROOTAEXE main/src/rmain.o $gobjs $ROOTALIB \
    $XLIBS $SYSLIBS $EXTRALIBS
-$LD $LDFLAGS -o $ROOTAEXE main/src/rmain.o $dummyo $gobjs $ROOTALIB \
+$LD $LDFLAGS -o $ROOTAEXE main/src/rmain.o $gobjs $ROOTALIB \
    $XLIBS $SYSLIBS $EXTRALIBS
 
 linkstat=$?
@@ -43,16 +40,14 @@ if [ $linkstat -ne 0 ]; then
 fi
 
 echo "Making $PROOFAEXE..."
-echo $LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o $dummyo $gobjs $ROOTALIB \
+echo $LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o $gobjs $ROOTALIB \
    $XLIBS $SYSLIBS $EXTRALIBS
-$LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o $dummyo $gobjs $ROOTALIB \
+$LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o $gobjs $ROOTALIB \
    $XLIBS $SYSLIBS $EXTRALIBS
 
 linkstat=$?
 if [ $linkstat -ne 0 ]; then
    exit $linkstat
 fi
-
-rm -f $dummyc $dummyo
 
 exit 0

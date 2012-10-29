@@ -501,7 +501,8 @@ ROOTMAP       = etc/system.rootmap
 
 ##### Extra libs needed for "static" target #####
 
-STATICEXTRALIBS = $(PCRELDFLAGS) $(PCRELIB) \
+STATICEXTRALIBS = $(CLINGLIBEXTRA) \
+                  $(PCRELDFLAGS) $(PCRELIB) \
                   $(FREETYPELDFLAGS) $(FREETYPELIB)
 ifneq ($(SSLLIB),)
 STATICEXTRALIBS += $(SSLLIB)
@@ -510,7 +511,7 @@ ifeq ($(XFTLIB),yes)
 STATICEXTRALIBS += -lXft
 endif
 ifeq ($(BUILDCOCOA),yes)
-STATICEXTRALIBS += -framework Cocoa
+STATICEXTRALIBS += -framework Cocoa -framework OpenGL
 endif
 
 ##### libCore #####

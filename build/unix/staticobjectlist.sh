@@ -50,6 +50,11 @@ for i in * ; do
    fi
 done
 
+# add Cling objects
+for i in Interpreter MetaProcessor Utils ; do
+   ls interpreter/cling/lib/$i/*.o > /dev/null 2>&1 && objs="$objs `ls interpreter/cling/lib/$i/*.o`"
+done
+
 if [ "x$dictonly" = "xyes" ]; then
    echo $gobjs
 else
