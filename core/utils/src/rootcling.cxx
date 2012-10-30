@@ -1705,7 +1705,7 @@ string GetNonConstMemberName(const clang::FieldDecl &m, const string &prefix = "
 }
 
 //______________________________________________________________________________
-bool NeedShadowClass(const RScanner::AnnotatedRecordDecl &cl_input)
+bool NeedExternalShowMember(const RScanner::AnnotatedRecordDecl &cl_input)
 {
    if (IsStdClass(*cl_input.GetRecordDecl())) {
       // getName() return the template name without argument!
@@ -3054,7 +3054,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input, const cling::
                  << "                  typeid(" << csymbol.c_str() << "), DefineBehavior(ptr, ptr)," << std::endl
                  << "                  ";
    //   fprintf(fp, "                  (::ROOT::ClassInfo< %s >::ShowMembersFunc_t)&::ROOT::ShowMembers,%d);\n", classname.c_str(),cl_input.RootFlag());
-   if (!NeedShadowClass(cl_input)) {
+   if (!NeedExternalShowMember(cl_input)) {
       if (!ClassInfo__HasMethod(cl,"ShowMembers")) (*dictSrcOut) << "0, ";
    } else {
       if (!ClassInfo__HasMethod(cl,"ShowMembers"))
@@ -4017,7 +4017,7 @@ void WriteClassCode(const RScanner::AnnotatedRecordDecl &cl, const cling::Interp
    if (ClassInfo__HasMethod(cl,"ShowMembers")) {
       WriteShowMembers(cl);
    } else {
-      if (NeedShadowClass(cl)) {
+      if (NeedExternalShowMember(cl)) {
          WriteShowMembers(cl, true);
       }
    }
