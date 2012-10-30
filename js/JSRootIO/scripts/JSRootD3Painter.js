@@ -5,7 +5,7 @@
 
 // The "source_dir" variable is defined in JSRootInterface.js
 
-var d_tree, key_tree;
+var d_tree, key_tree, defs;
 
 var kWhite = 0, kBlack = 1, kGray = 920, kRed = 632, kGreen = 416, kBlue = 600,
     kYellow = 400, kMagenta = 616, kCyan = 432, kOrange = 800, kSpring = 820,
@@ -176,57 +176,57 @@ var symbols_map = {
  */
 function generateAllColors () {
    var colorMap = new Array(
-      'rgb(255,255,255)',
-      'rgb(0,0,0)',
-      'rgb(255,0,0)',
-      'rgb(0,255,0)',
-      'rgb(0,0,255)',
-      'rgb(255,255,0)',
-      'rgb(255,0,255)',
-      'rgb(0,255,255)',
-      'rgb(89,211,84)',
-      'rgb(89,84,216)',
-      'rgb(254,254,254)',
-      'rgb(191,181,173)',
-      'rgb(76,76,76)',
-      'rgb(102,102,102)',
-      'rgb(127,127,127)',
-      'rgb(153,153,153)',
-      'rgb(178,178,178)',
-      'rgb(204,204,204)',
-      'rgb(229,229,229)',
-      'rgb(242,242,242)',
-      'rgb(204,198,170)',
-      'rgb(204,198,170)',
-      'rgb(193,191,168)',
-      'rgb(186,181,163)',
-      'rgb(178,165,150)',
-      'rgb(183,163,155)',
-      'rgb(173,153,140)',
-      'rgb(155,142,130)',
-      'rgb(135,102,86)',
-      'rgb(175,206,198)',
-      'rgb(132,193,163)',
-      'rgb(137,168,160)',
-      'rgb(130,158,140)',
-      'rgb(173,188,198)',
-      'rgb(122,142,153)',
-      'rgb(117,137,145)',
-      'rgb(104,130,150)',
-      'rgb(109,122,132)',
-      'rgb(124,153,209)',
-      'rgb(127,127,155)',
-      'rgb(170,165,191)',
-      'rgb(211,206,135)',
-      'rgb(221,186,135)',
-      'rgb(188,158,130)',
-      'rgb(198,153,124)',
-      'rgb(191,130,119)',
-      'rgb(206,94,96)',
-      'rgb(170,142,147)',
-      'rgb(165,119,122)',
-      'rgb(147,104,112)',
-      'rgb(211,89,84)');
+      'rgb(255, 255, 255)',
+      'rgb(0, 0, 0)',
+      'rgb(255, 0, 0)',
+      'rgb(0, 255, 0)',
+      'rgb(0, 0, 255)',
+      'rgb(255, 255, 0)',
+      'rgb(255, 0, 255)',
+      'rgb(0, 255, 255)',
+      'rgb(89, 211, 84)',
+      'rgb(89, 84, 216)',
+      'rgb(254, 254, 254)',
+      'rgb(191, 181, 173)',
+      'rgb(76, 76, 76)',
+      'rgb(102, 102, 102)',
+      'rgb(127, 127, 127)',
+      'rgb(153, 153, 153)',
+      'rgb(178, 178, 178)',
+      'rgb(204, 204, 204)',
+      'rgb(229, 229, 229)',
+      'rgb(242, 242, 242)',
+      'rgb(204, 198, 170)',
+      'rgb(204, 198, 170)',
+      'rgb(193, 191, 168)',
+      'rgb(186, 181, 163)',
+      'rgb(178, 165, 150)',
+      'rgb(183, 163, 155)',
+      'rgb(173, 153, 140)',
+      'rgb(155, 142, 130)',
+      'rgb(135, 102, 86)',
+      'rgb(175, 206, 198)',
+      'rgb(132, 193, 163)',
+      'rgb(137, 168, 160)',
+      'rgb(130, 158, 140)',
+      'rgb(173, 188, 198)',
+      'rgb(122, 142, 153)',
+      'rgb(117, 137, 145)',
+      'rgb(104, 130, 150)',
+      'rgb(109, 122, 132)',
+      'rgb(124, 153, 209)',
+      'rgb(127, 127, 155)',
+      'rgb(170, 165, 191)',
+      'rgb(211, 206, 135)',
+      'rgb(221, 186, 135)',
+      'rgb(188, 158, 130)',
+      'rgb(198, 153, 124)',
+      'rgb(191, 130, 119)',
+      'rgb(206, 94, 96)',
+      'rgb(170, 142, 147)',
+      'rgb(165, 119, 122)',
+      'rgb(147, 104, 112)',
+      'rgb(211, 89, 84)');
 
    var circleColors = [632, 416, 600, 400, 616, 432];
 
@@ -286,9 +286,9 @@ function generateAllColors () {
    for(var i = 0; i < 6; i++) {
       for(var j = 0; j < 15; j++) {
          var colorn = circleColors[i] + j - 10;
-         colorMap[colorn] = 'rgb(' + circleSets[i][3*j] + ',' + circleSets[i][3*j+1] + ',' + circleSets[i][3*j+2] + ')';
+         colorMap[colorn] = 'rgb(' + circleSets[i][3*j] + ', ' + circleSets[i][3*j+1] + ', ' + circleSets[i][3*j+2] + ')';
          colorn = rectangleColors[i] + j - 9;
-         colorMap[colorn] = 'rgb('+ rectSets[i][3*j] + ',' + rectSets[i][3*j+1] + ',' + rectSets[i][3*j+2] + ')';
+         colorMap[colorn] = 'rgb('+ rectSets[i][3*j] + ', ' + rectSets[i][3*j+1] + ', ' + rectSets[i][3*j+2] + ')';
       }
     }
     return colorMap;
@@ -476,6 +476,158 @@ function doubleTap(elem, speed, distance) {
    }, false);
 };
 
+function createFillPatterns(svg, id, line_color) {
+   // create fill patterns - only if they don't exists yet
+   for (var i=0; i<defs[0][0]['childNodes'].length;++i) {
+      if (defs[0][0]['childNodes'][i]['id'] == "pat"+id &&
+          defs[0][0]['childNodes'][i]['style']['stroke'] == line_color)
+         return;
+   }
+   switch (id) {
+      case 3001:
+         defs.append('svg:pattern')
+            .attr("id", "pat3001")
+            .attr("patternUnits", "userSpaceOnUse")
+            .attr("width", "3px")
+            .attr("height", "2px")
+            .style("stroke", line_color)
+            .append('svg:rect')
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", 1)
+            .attr("height", 1)
+            .style("stroke", line_color)
+            .append('svg:rect')
+            .attr("x", 2)
+            .attr("y", 0)
+            .attr("width", 1)
+            .attr("height", 1)
+            .style("stroke", line_color)
+            .append('svg:rect')
+            .attr("x", 1)
+            .attr("y", 1)
+            .attr("width", 1)
+            .attr("height", 1)
+            .style("stroke", line_color);
+         break;
+      case 3002:
+         defs.append('svg:pattern')
+            .attr("id", "pat3002")
+            .attr("patternUnits", "userSpaceOnUse")
+            .attr("width", "4px")
+            .attr("height", "2px")
+            .style("stroke", line_color)
+            .append('svg:rect')
+            .attr("x", 1)
+            .attr("y", 0)
+            .attr("width", 1)
+            .attr("height", 1)
+            .style("stroke", line_color)
+            .append('svg:rect')
+            .attr("x", 3)
+            .attr("y", 1)
+            .attr("width", 1)
+            .attr("height", 1)
+            .style("stroke", line_color);
+         break;
+      case 3003:
+         defs.append('svg:pattern')
+            .attr("id", "pat3003")
+            .attr("patternUnits", "userSpaceOnUse")
+            .attr("width", "4px")
+            .attr("height", "4px")
+            .style("stroke", line_color)
+            .append('svg:rect')
+            .attr("x", 2)
+            .attr("y", 1)
+            .attr("width", 1)
+            .attr("height", 1)
+            .style("stroke", line_color)
+            .append('svg:rect')
+            .attr("x", 0)
+            .attr("y", 3)
+            .attr("width", 1)
+            .attr("height", 1)
+            .style("stroke", line_color);
+         break;
+      case 3004:
+         defs.append('svg:pattern')
+            .attr("id", "pat3004")
+            .attr("patternUnits", "userSpaceOnUse")
+            .attr("width", "8px")
+            .attr("height", "8px")
+            .style("stroke", line_color)
+            .append("svg:line")
+            .attr("x1", 8)
+            .attr("y1", 0)
+            .attr("x2", 0)
+            .attr("y2", 8)
+            .style("stroke", line_color)
+            .style("stroke-width", 1);
+         break;
+      case 3005:
+         defs.append('svg:pattern')
+            .attr("id", "pat3005")
+            .attr("patternUnits", "userSpaceOnUse")
+            .attr("width", "8px")
+            .attr("height", "8px")
+            .style("stroke", line_color)
+            .append("svg:line")
+            .attr("x1", 0)
+            .attr("y1", 0)
+            .attr("x2", 8)
+            .attr("y2", 8)
+            .style("stroke", line_color)
+            .style("stroke-width", 1);
+         break;
+      case 3006:
+         defs.append('svg:pattern')
+            .attr("id", "pat3006")
+            .attr("patternUnits", "userSpaceOnUse")
+            .attr("width", "4px")
+            .attr("height", "4px")
+            .style("stroke", line_color)
+            .append("svg:line")
+            .attr("x1", 1)
+            .attr("y1", 0)
+            .attr("x2", 1)
+            .attr("y2", 3)
+            .style("stroke", line_color)
+            .style("stroke-width", 1);
+         break;
+      case 3007:
+         defs.append('svg:pattern')
+            .attr("id", "pat3007")
+            .attr("patternUnits", "userSpaceOnUse")
+            .attr("width", "4px")
+            .attr("height", "4px")
+            .style("stroke", line_color)
+            .append("svg:line")
+            .attr("x1", 0)
+            .attr("y1", 1)
+            .attr("x2", 3)
+            .attr("y2", 1)
+            .style("stroke", line_color)
+            .style("stroke-width", 1);
+         break;
+      default: /* == 3004 */
+         defs.append('svg:pattern')
+            .attr("id", "pat3004")
+            .attr("patternUnits", "userSpaceOnUse")
+            .attr("width", "8px")
+            .attr("height", "8px")
+            .style("stroke", line_color)
+            .append("svg:line")
+            .attr("x1", 8)
+            .attr("y1", 0)
+            .attr("x2", 0)
+            .attr("y2", 8)
+            .style("stroke", line_color)
+            .style("stroke-width", 1);
+         break;
+   }
+};
+
 (function(){
 
    if (typeof JSROOTPainter == 'object'){
@@ -586,7 +738,7 @@ function doubleTap(elem, speed, distance) {
          g = hue2rgb(p, q, h);
          b = hue2rgb(p, q, h - 1/3);
       }
-      return 'rgb('+Math.round(r * 255)+','+Math.round(g * 255)+','+Math.round(b * 255)+')';
+      return 'rgb('+Math.round(r * 255)+', '+Math.round(g * 255)+', '+Math.round(b * 255)+')';
    };
 
    JSROOTPainter.getMinMax = function(hist, what) {
@@ -900,6 +1052,7 @@ function doubleTap(elem, speed, distance) {
                   .attr("width", w)
                   .attr("height", h)
                   .style("background-color", 'white');
+      defs = svg.append('svg:defs');
       return svg;
    };
 
@@ -1246,6 +1399,7 @@ function doubleTap(elem, speed, distance) {
           .attr("width", w)
           .attr("height", h)
           .style("background-color", fillcolor);
+      defs = svg.append('svg:defs');
 
       JSROOTPainter.drawPrimitives(svg, canvas);
       return svg;
@@ -2036,6 +2190,7 @@ function doubleTap(elem, speed, distance) {
                .attr("id", g_id);
 
             if ((histo['fFillStyle'] < 4000 || histo['fFillStyle'] > 4100) && histo['fFillColor'] != 0) {
+
                /* histogram filling */
                var area = d3.svg.area()
                   .x(function(d) { return histo.x(d.x);})
@@ -2043,13 +2198,25 @@ function doubleTap(elem, speed, distance) {
                   .y1(function(d) { return histo.y(d.y);})
                   .interpolate("step-before")
 
-               g.append("svg:path")
-                  .attr("class", "area")
-                  .attr("d", area(bins))
-                  .style("stroke", linecolor)
-                  .style("stroke-width", histo['fLineWidth'])
-                  .style("fill", fillcolor)
-                  .style("antialias", "false");
+               if (histo['fFillStyle'] > 3000 && histo['fFillStyle'] <= 3025) {
+                  createFillPatterns(vis, histo['fFillStyle'], fillcolor);
+                  g.append("svg:path")
+                     .attr("class", "area")
+                     .attr("d", area(bins))
+                     .style("stroke", linecolor)
+                     .style("stroke-width", histo['fLineWidth'])
+                     .style("fill", "url(#pat" + histo['fFillStyle'] + ")")
+                     .style("antialias", "false");
+               }
+               else {
+                  g.append("svg:path")
+                     .attr("class", "area")
+                     .attr("d", area(bins))
+                     .style("stroke", linecolor)
+                     .style("stroke-width", histo['fLineWidth'])
+                     .style("fill", fillcolor)
+                     .style("antialias", "false");
+               }
             }
             else {
                /* histogram contour lines only */
@@ -2345,14 +2512,27 @@ function doubleTap(elem, speed, distance) {
             pos_y = pos_y - (hh/2);
             var pos_x = (tpos_x/2) - (ww/2);
 
-            p.append("svg:rect")
-               .attr("x", pos_x)
-               .attr("y", pos_y)
-               .attr("width", ww)
-               .attr("height", hh)
-               .attr("fill", fill_color)
-               .style("stroke-width", line_width)
-               .style("stroke", line_color);
+            if (fill_style > 3000) {
+               createFillPatterns(vis, fill_style, fill_color);
+               p.append("svg:rect")
+                  .attr("x", pos_x)
+                  .attr("y", pos_y)
+                  .attr("width", ww)
+                  .attr("height", hh)
+                  .style("fill", "url(#pat" + fill_style + ")")
+                  .style("stroke-width", line_width)
+                  .style("stroke", line_color);
+            }
+            else {
+               p.append("svg:rect")
+                  .attr("x", pos_x)
+                  .attr("y", pos_y)
+                  .attr("width", ww)
+                  .attr("height", hh)
+                  .attr("fill", fill_color)
+                  .style("stroke-width", line_width)
+                  .style("stroke", line_color);
+            }
          }
          // Draw line
          if (opt.indexOf('l') != -1) {
