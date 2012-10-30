@@ -2022,7 +2022,7 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
             AddOutputObject(listOfMissingFiles);
          }
          TStatus *tmpStatus = (TStatus *)GetOutput("PROOF_Status");
-         if (!tmpStatus) AddOutputObject(new TStatus());
+         if (!tmpStatus) AddOutputObject((tmpStatus = new TStatus()));
          
          // Estimate how much data are missing
          Int_t ngood = dset->GetListOfElements()->GetSize();
