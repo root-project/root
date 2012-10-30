@@ -2635,23 +2635,6 @@ void* TCintWithCling::FindSpecialObject(const char* item, G__ClassInfo* type,
 }
 
 //______________________________________________________________________________
-// Helper class for UpdateClassInfo
-namespace {
-class TInfoNode {
-private:
-   string fName;
-   Long_t fTagnum;
-public:
-   TInfoNode(const char* item, Long_t tagnum)
-      : fName(item), fTagnum(tagnum)
-   {}
-   void Update() {
-      //TCintWithCling::UpdateClassInfoWork(fName.c_str(), fTagnum);
-   }
-};
-}
-
-//______________________________________________________________________________
 void TCintWithCling::UpdateClassInfo(char* item, Long_t tagnum)
 {
    // No op: see TClingCallbacks
