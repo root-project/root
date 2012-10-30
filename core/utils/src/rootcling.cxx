@@ -495,12 +495,6 @@ std::ostream* dictSrcOut=&std::cout;
 
 bool gNeedCollectionProxy = false;
 
-enum EDictType {
-   kDictTypeCint,
-   kDictTypeReflex,
-   kDictTypeGCCXML
-} dict_type = kDictTypeCint;
-
 char *StrDup(const char *str);
 
 class RConstructorType {
@@ -4686,6 +4680,18 @@ int main(int argc, char **argv)
       gErrorIgnoreLevel = kInfo; // Display all information (same as -v)
       ic++;
    }
+   if (ic < argc) {
+      if (!strcmp(argv[ic], "-cint")) {
+         // Flag is ignored, should warn of deprecation.
+         ic++;
+      } else if (!strcmp(argv[ic], "-reflex")) {
+         // Flag is ignored, should warn of deprecation.
+         ic++;
+      } else if (!strcmp(argv[ic], "-gccxml")) {
+         // Flag is ignored, should warn of deprecation.
+         ic++;
+      }
+   }
 
    const char* libprefix = "--lib-list-prefix=";
 
@@ -5655,16 +5661,7 @@ int main(int argc, char **argv)
 
             // 'linesToSkip' is because we want to put it after #defined private/protected
             if (++nl == linesToSkip && icc) {
-               switch (dict_type) {
-               case kDictTypeGCCXML:
-                  fprintf(fpd, "#define G__DICTIONARY gccxml\n");
-                  break;
-               case kDictTypeReflex:
-                  fprintf(fpd, "#define G__DICTIONARY reflex\n");
-                  break;
-               default:;
-               }
-
+ 
                if (gNeedCollectionProxy) {
                   fprintf(fpd, "\n#include \"TCollectionProxyInfo.h\"");
                }
