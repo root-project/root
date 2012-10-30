@@ -331,6 +331,7 @@ public:
    Int_t              ReadBuffer(TBuffer &b, void *pointer);
    void               RemoveRef(TClassRef *ref); 
    void               ReplaceWith(TClass *newcl, Bool_t recurse = kTRUE) const;
+   void               ResetCaches();
    void               ResetClassInfo(Long_t tagnum);
    void               ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }
    void               ResetMenuList();
