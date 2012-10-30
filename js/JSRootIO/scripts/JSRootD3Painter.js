@@ -2132,8 +2132,8 @@ function createFillPatterns(svg, id, line_color) {
       }
       if (histo['fMinimum'] != -1111) hmin = histo['fMinimum'];
       if (histo['fMaximum'] != -1111) hmax = histo['fMaximum'];
-      histo['fYaxis']['fXmin'] = hmin;
-      histo['fYaxis']['fXmax'] = hmax;
+      histo['fYaxis']['fXmin'] = hmin * mul;
+      histo['fYaxis']['fXmax'] = hmax * 1.1;
       var binwidth = ((histo['fXaxis']['fXmax'] - histo['fXaxis']['fXmin']) / histo['fXaxis']['fNbins']);
       var bins = d3.range(histo['fXaxis']['fNbins']).map(function(p) {
          var offset = (opt.indexOf('e') != -1) ? (p * binwidth) - (binwidth / 2.0) : (p * binwidth);
