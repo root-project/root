@@ -201,8 +201,8 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
 
          if (TagDecl *TD = dyn_cast<TagDecl>(*DI)) {
             listOfSmth = gROOT->GetListOfClasses();
-            if (TObject *o = listOfSmth->FindObject(TD->getName().data())) {
-               TClass *cl = o->IsA();
+            std::string name = TD->getNameAsString();
+            if (TClass *cl = (TClass*)listOfSmth->FindObject(name.c_str())) {
                TClingClassInfo* clInfo = (TClingClassInfo*)cl->GetClassInfo();
                if (!clInfo)
                   clInfo = new TClingClassInfo(interp);
