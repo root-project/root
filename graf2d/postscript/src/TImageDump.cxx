@@ -671,6 +671,30 @@ void TImageDump::Text(Double_t x, Double_t y, const char *chars)
 }
 
 
+//______________________________________________________________________________
+void TImageDump::Text(Double_t x, Double_t y, const wchar_t *chars)
+{
+   // Draw text
+   //
+   // x: x position of the text
+   // y: y position of the text
+   
+   if (!gPad || !fImage) {
+      return;
+   }
+   
+   fImage->BeginPaint();
+   
+   TText t(x, y, chars);
+   t.SetTextSize(fTextSize);
+   t.SetTextFont(fTextFont);
+   t.SetTextAlign(fTextAlign);
+   t.SetTextAngle(fTextAngle);
+   t.SetTextColor(fTextColor);
+   fImage->DrawText(&t, XtoPixel(x), YtoPixel(y));
+}
+
+
 ////////////////////////// CellArray code ////////////////////////////////////
 static UInt_t *gCellArrayColors = 0;
 static Int_t   gCellArrayN = 0;

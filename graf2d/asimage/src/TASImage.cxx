@@ -2518,7 +2518,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
    fn.Strip();
    char *tmpstr = 0;
 
-   if (fn.EndsWith(".ttf") || fn.EndsWith(".TTF")) {
+   if (fn.EndsWith(".pfa") || fn.EndsWith(".PFA") || fn.EndsWith(".pfb") || fn.EndsWith(".PFB") || fn.EndsWith(".ttf") || fn.EndsWith(".TTF") || fn.EndsWith(".otf") || fn.EndsWith(".OTF")) {
       tmpstr = gSystem->ExpandPathName(fn.Data());
       fn = tmpstr;
       ttfont = kTRUE;
@@ -5751,7 +5751,12 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
    TTF::SetRotationMatrix(text->GetTextAngle());
 
    // set text
-   TTF::PrepareString(text->GetTitle());
+   const wchar_t *wcsTitle = reinterpret_cast<const wchar_t *>(text->GetWcsTitle());
+   if (wcsTitle != NULL) {
+      TTF::PrepareString(wcsTitle);
+   } else {
+      TTF::PrepareString(text->GetTitle());
+   }
    TTF::LayoutGlyphs();
 
    // color

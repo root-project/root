@@ -73,7 +73,9 @@ public:
    void  SetMarkerColor( Color_t cindex=1);
    void  SetTextColor( Color_t cindex=1);
    void  Text(Double_t x, Double_t y, const char *string);
+   void  Text(Double_t, Double_t, const wchar_t *){}
    void  TextNDC(Double_t u, Double_t v, const char *string);
+   void  TextNDC(Double_t, Double_t, const wchar_t *){}
    Int_t UtoSVG(Double_t u);
    Int_t VtoSVG(Double_t v);
    Int_t XtoSVG(Double_t x);

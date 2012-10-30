@@ -159,6 +159,22 @@ void TTF::GetTextAdvance(UInt_t &a, char *text)
 }
 
 //______________________________________________________________________________
+void TTF::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *text)
+{
+   // Get width (w) and height (h) when text is horizontal.
+
+   if (!fgInit) Init();
+
+   SetRotationMatrix(0);
+   PrepareString(text);
+   LayoutGlyphs();
+   Int_t Xoff = 0; if (fgCBox.xMin < 0) Xoff = -fgCBox.xMin;
+   Int_t Yoff = 0; if (fgCBox.yMin < 0) Yoff = -fgCBox.yMin;
+   w = fgCBox.xMax + Xoff + fgTBlankW;
+   h = fgCBox.yMax + Yoff;
+}
+
+//______________________________________________________________________________
 void TTF::LayoutGlyphs()
 {
    // Compute the glyps positions, fgAscent and fgWidth (needed for alignment).
@@ -242,6 +258,44 @@ void TTF::PrepareString(const char *string)
    fgNumGlyphs = 0;
    while (*p) {
       index = CharToUnicode((FT_ULong)*p);
+      if (index != 0) {
+         glyph->fIndex = index;
+         glyph++;
+         fgNumGlyphs++;
+      }
+      if (index == 3) {
+         NbTBlank++;
+      } else {
+         NbTBlank = 0;
+      }
+      if (fgNumGlyphs >= kMaxGlyphs) break;
+      p++;
+   }
+
+   // compute the trailing blanks width. It is use to compute the text
+   // width in GetTextExtent
+   if (NbTBlank) {
+      FT_UInt load_flags = FT_LOAD_DEFAULT;
+      if (!fgHinting) load_flags |= FT_LOAD_NO_HINTING;
+      if (FT_Load_Glyph(fgFace[fgCurFontIdx], 3, load_flags)) return;
+      fgTBlankW = (Int_t)((fgFace[fgCurFontIdx]->glyph->advance.x)>>6)*NbTBlank;
+   }
+}
+
+//______________________________________________________________________________
+void TTF::PrepareString(const wchar_t *string)
+{
+   // Put the characters in "string" in the "glyphs" array.
+
+   const wchar_t *p = string;
+   TTGlyph *glyph = fgGlyphs;
+   UInt_t index;       // Unicode value
+   Int_t NbTBlank = 0; // number of trailing blanks
+
+   fgTBlankW   = 0;
+   fgNumGlyphs = 0;
+   while (*p) {
+      index = FT_Get_Char_Index(fgFace[fgCurFontIdx], (FT_ULong)*p);
       if (index != 0) {
          glyph->fIndex = index;
          glyph++;
@@ -445,30 +499,45 @@ void TTF::SetTextFont(Font_t fontnumber)
    // Table of Microsoft and (for non-MSFT operating systems) backup
    // FreeFont TTF fonts.
    static const char *fonttable[][2] = {
-      // fontnumber/10  MSFT font   Free font
-      /* 0 */ { "arialbd.ttf",   "FreeSansBold.ttf"        },
-      /* 1 */ { "timesi.ttf",    "FreeSerifItalic.ttf"     },
-      /* 2 */ { "timesbd.ttf",   "FreeSerifBold.ttf"       },
-      /* 3 */ { "timesbi.ttf",   "FreeSerifBoldItalic.ttf" },
-      /* 4 */ { "arial.ttf",     "FreeSans.ttf"            },
-      /* 5 */ { "ariali.ttf",    "FreeSansOblique.ttf"     },
-      /* 6 */ { "arialbd.ttf",   "FreeSansBold.ttf"        },
-      /* 7 */ { "arialbi.ttf",   "FreeSansBoldOblique.ttf" },
-      /* 8 */ { "cour.ttf",      "FreeMono.ttf"            },
-      /* 9 */ { "couri.ttf",     "FreeMonoOblique.ttf"     },
-      /*10 */ { "courbd.ttf",    "FreeMonoBold.ttf"        },
-      /*11 */ { "courbi.ttf",    "FreeMonoBoldOblique.ttf" },
-      /*12 */ { "symbol.ttf",    "symbol.ttf"              },
-      /*13 */ { "times.ttf",     "FreeSerif.ttf"           },
-      /*14 */ { "wingding.ttf",  "opens___.ttf"            },
-      /*15 */ { "symbol.ttf",    "symbol.ttf"              }
+	  { "Root.TTFont.0", "FreeSansBold.otf" },
+	  { "Root.TTFont.1", "FreeSerifItalic.otf" },
+	  { "Root.TTFont.2", "FreeSerifBold.otf" },
+	  { "Root.TTFont.3", "FreeSerifBoldItalic.otf" },
+	  { "Root.TTFont.4", "FreeSans.otf" },
+	  { "Root.TTFont.5", "FreeSansOblique.otf" },
+	  { "Root.TTFont.6", "FreeSansBold.otf" },
+	  { "Root.TTFont.7", "FreeSansBoldOblique.otf" },
+	  { "Root.TTFont.8", "FreeMono.otf" },
+	  { "Root.TTFont.9", "FreeMonoOblique.otf" },
+	  { "Root.TTFont.10", "FreeMonoBold.otf" },
+	  { "Root.TTFont.11", "FreeMonoBoldOblique.otf" },
+	  { "Root.TTFont.12", "symbol.ttf" },
+	  { "Root.TTFont.13", "FreeSerif.otf" },
+	  { "Root.TTFont.14", "wingding.ttf" },
+	  { "Root.TTFont.15", "symbol.ttf" },
+	  { "Root.TTFont.STIXGen", "STIXGeneral.otf" },
+	  { "Root.TTFont.STIXGenIt", "STIXGeneralItalic.otf" },
+	  { "Root.TTFont.STIXGenBd", "STIXGeneralBol.otf" },
+	  { "Root.TTFont.STIXGenBdIt", "STIXGeneralBolIta.otf" },
+	  { "Root.TTFont.STIXSiz1Sym", "STIXSiz1Sym.otf" },
+	  { "Root.TTFont.STIXSiz1SymBd", "STIXSiz1SymBol.otf" },
+	  { "Root.TTFont.STIXSiz2Sym", "STIXSiz2Sym.otf" },
+	  { "Root.TTFont.STIXSiz2SymBd", "STIXSiz2SymBol.otf" },
+	  { "Root.TTFont.STIXSiz3Sym", "STIXSiz3Sym.otf" },
+	  { "Root.TTFont.STIXSiz3SymBd", "STIXSiz3SymBol.otf" },
+	  { "Root.TTFont.STIXSiz4Sym", "STIXSiz4Sym.otf" },
+	  { "Root.TTFont.STIXSiz4SymBd", "STIXSiz4SymBol.otf" },
+	  { "Root.TTFont.STIXSiz5Sym", "STIXSiz5Sym.otf" },
+	  { "Root.TTFont.ME", "DroidSansFallback.ttf" },
+	  { "Root.TTFont.CJKMing", "DroidSansFallback.ttf" },
+	  { "Root.TTFont.CJKGothic", "DroidSansFallback.ttf" }
    };
 
    static int fontset = -1;
    int        thisset = fontset;
 
    int fontid = fontnumber / 10;
-   if (fontid < 0 || fontid > 15) fontid = 0;
+   if (fontid < 0 || fontid > 31) fontid = 0;
 
    if (thisset == -1) {
       // try to load font (font must be in Root.TTFontPath resource)
@@ -480,7 +549,7 @@ void TTF::SetTextFont(Font_t fontnumber)
                                           "$(ROOTSYS)/fonts"
 #endif
                                          );
-      char *ttfont = gSystem->Which(ttpath, fonttable[fontid][0], kReadPermission);
+      char *ttfont = gSystem->Which(ttpath, gEnv->GetValue(fonttable[fontid][0], fonttable[fontid][1]), kReadPermission);
       if (ttfont) {
          delete [] ttfont;
          thisset = 0;
@@ -491,7 +560,7 @@ void TTF::SetTextFont(Font_t fontnumber)
    }
    Int_t italic = 0;
    if (fontid==15) italic = 1;
-   int ret = SetTextFont(fonttable[fontid][thisset], italic);
+   int ret = SetTextFont(gEnv->GetValue(fonttable[fontid][thisset], fonttable[fontid][1]), italic);
    // Do not define font set is we're loading the symbol.ttf - it's
    // the same in both cases.
    if (ret == 0 && fontid != 12) fontset = thisset;

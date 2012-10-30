@@ -18,6 +18,8 @@
 #include "TMath.h"
 #include "TPoint.h"
 #include "TClass.h"
+#include <wchar.h>
+#include <cstdlib>
 
 ClassImp(TText)
 
@@ -35,7 +37,7 @@ ClassImp(TText)
 
 
 //______________________________________________________________________________
-TText::TText(): TNamed(), TAttText()
+TText::TText(): TNamed(), TAttText(), fWcsTitle(NULL)
 {
    // Text default constructor.
 
@@ -45,7 +47,7 @@ TText::TText(): TNamed(), TAttText()
 
 
 //______________________________________________________________________________
-TText::TText(Double_t x, Double_t y, const char *text) : TNamed("",text), TAttText()
+TText::TText(Double_t x, Double_t y, const char *text) : TNamed("",text), TAttText(), fWcsTitle(NULL)
 {
    // Text normal constructor.
 
@@ -55,9 +57,24 @@ TText::TText(Double_t x, Double_t y, const char *text) : TNamed("",text), TAttTe
 
 
 //______________________________________________________________________________
+TText::TText(Double_t x, Double_t y, const wchar_t *text) : TAttText()
+{
+   // Text normal constructor.
+
+   fX = x;
+   fY = y;
+   fWcsTitle = new std::wstring(text);
+   SetName("");
+   SetMbTitle(text);
+}
+
+
+//______________________________________________________________________________
 TText::~TText()
 {
    // Text default destructor.
+
+   if (fWcsTitle != NULL) delete reinterpret_cast<std::wstring *>(fWcsTitle);
 }
 
 
@@ -81,6 +98,27 @@ void TText::Copy(TObject &obj) const
    ((TText&)obj).fY = fY;
    TNamed::Copy(obj);
    TAttText::Copy(((TText&)obj));
+   if (fWcsTitle != NULL) {
+      *reinterpret_cast<std::wstring *>(fWcsTitle) =
+         *reinterpret_cast<std::wstring *>(((TText&)obj).fWcsTitle);
+   } else {
+      dynamic_cast<TText &>(obj).fWcsTitle =
+         new std::wstring(*reinterpret_cast<std::wstring *>(
+         dynamic_cast<TText &>(obj).fWcsTitle));
+   }
+}
+
+
+//______________________________________________________________________________
+const void *TText::GetWcsTitle(void) const
+{
+   // Returns teh text as UNICODE.
+
+   if (fWcsTitle != NULL) {
+      return reinterpret_cast<std::wstring *>(fWcsTitle)->c_str();
+   } else {
+      return NULL;
+   }
 }
 
 
@@ -133,7 +171,32 @@ TText *TText::DrawText(Double_t x, Double_t y, const char *text)
 
 
 //______________________________________________________________________________
+TText *TText::DrawText(Double_t x, Double_t y, const wchar_t *text)
+{
+   // Draw this text with new coordinates.
+
+   TText *newtext = new TText(x, y, text);
+   TAttText::Copy(*newtext);
+   newtext->SetBit(kCanDelete);
+   if (TestBit(kTextNDC)) newtext->SetNDC();
+   newtext->AppendPad();
+   return newtext;
+}
+
+
+//______________________________________________________________________________
 TText *TText::DrawTextNDC(Double_t x, Double_t y, const char *text)
+{
+   // Draw this text with new coordinates in NDC.
+
+   TText *newtext = DrawText(x, y, text);
+   newtext->SetNDC();
+   return newtext;
+}
+
+
+//______________________________________________________________________________
+TText *TText::DrawTextNDC(Double_t x, Double_t y, const wchar_t *text)
 {
    // Draw this text with new coordinates in NDC.
 
@@ -382,7 +445,7 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       w = h = 0;
       return;
    }
-   
+
    if (angle) {
       Int_t cBoxX[4], cBoxY[4];
       Int_t ptx, pty;
@@ -447,6 +510,36 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
 
 
 //______________________________________________________________________________
+void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const wchar_t *text) const
+{
+   // Return text ascent and descent for string text
+   //  in a return total text ascent
+   //  in d return text descent
+
+   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
+   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Double_t tsize;
+   if (wh < hh)  tsize = fTextSize*wh;
+   else          tsize = fTextSize*hh;
+
+   if (gVirtualX->HasTTFonts() || gPad->IsBatch() || gVirtualX->InheritsFrom("TGCocoa")) {
+      TTF::SetTextFont(fTextFont);
+      TTF::SetTextSize(tsize);
+      a = TTF::GetBox().yMax;
+      d = TMath::Abs(TTF::GetBox().yMin);
+   } else {
+      gVirtualX->SetTextSize((int)tsize);
+      a = gVirtualX->GetFontAscent();
+      if (!a) {
+         UInt_t w;
+         gVirtualX->GetTextExtent(w, a, (wchar_t*)text);
+      }
+      d = gVirtualX->GetFontDescent();
+   }
+}
+
+
+//______________________________________________________________________________
 void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
 {
    // Return text extent for string text
@@ -494,6 +587,30 @@ void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
       UInt_t h;
       gVirtualX->SetTextSize((int)tsize);
       gVirtualX->GetTextExtent(a, h, (char*)text);
+   }
+}
+
+
+//______________________________________________________________________________
+void TText::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text) const
+{
+   // Return text extent for string text
+   //  in w return total text width
+   //  in h return text height
+
+   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
+   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Double_t tsize;
+   if (wh < hh)  tsize = fTextSize*wh;
+   else          tsize = fTextSize*hh;
+
+   if (gVirtualX->HasTTFonts() || gPad->IsBatch() || gVirtualX->InheritsFrom("TGCocoa")) {
+      TTF::SetTextFont(fTextFont);
+      TTF::SetTextSize(tsize);
+      TTF::GetTextExtent(w, h, (wchar_t*)text);
+   } else {
+      gVirtualX->SetTextSize((int)tsize);
+      gVirtualX->GetTextExtent(w, h, (wchar_t*)text);
    }
 }
 
@@ -585,7 +702,27 @@ void TText::PaintText(Double_t x, Double_t y, const char *text)
 
 
 //______________________________________________________________________________
+void TText::PaintText(Double_t x, Double_t y, const wchar_t *text)
+{
+   // Draw this text with new coordinates.
+
+   TAttText::Modify();  //Change text attributes only if necessary
+   gPad->PaintText(x,y,text);
+}
+
+
+//______________________________________________________________________________
 void TText::PaintTextNDC(Double_t u, Double_t v, const char *text)
+{
+   // Draw this text with new coordinates in NDC.
+
+   TAttText::Modify();  //Change text attributes only if necessary
+   gPad->PaintTextNDC(u,v,text);
+}
+
+
+//______________________________________________________________________________
+void TText::PaintTextNDC(Double_t u, Double_t v, const wchar_t *text)
 {
    // Draw this text with new coordinates in NDC.
 
@@ -636,6 +773,24 @@ void TText::SetNDC(Bool_t isNDC)
 
    ResetBit(kTextNDC);
    if (isNDC) SetBit(kTextNDC);
+}
+
+
+//______________________________________________________________________________
+void TText::SetMbTitle(const wchar_t *title)
+{
+   // Change (i.e. set) the title of the TNamed.
+
+   char *mb_title = new char[MB_CUR_MAX * wcslen(title) + 1];
+   char *p = mb_title;
+   size_t length = wcslen(title);
+   for (size_t i = 0; i < length; i++) {
+      const int n = wctomb(p, title[i]);
+      if (n >= 0) p += n;
+   }
+   fTitle = mb_title;
+   delete [] mb_title;
+   if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 

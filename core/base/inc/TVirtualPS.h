@@ -70,12 +70,14 @@ public:
    virtual void  NewPage() = 0;
    virtual void  Open(const char *filename, Int_t type=-111) = 0;
    virtual void  Text(Double_t x, Double_t y, const char *string) = 0;
+   virtual void  Text(Double_t x, Double_t y, const wchar_t *string) = 0;
    virtual void  SetColor(Float_t r, Float_t g, Float_t b) = 0;
 
    virtual void  PrintFast(Int_t nch, const char *string="");
    virtual void  PrintStr(const char *string="");
    virtual void  WriteInteger(Int_t i, Bool_t space=kTRUE);
    virtual void  WriteReal(Float_t r);
+   virtual void  PrintRaw(Int_t len, const char *str);
    virtual void *GetStream() const {  return (void*)fStream; }
    virtual void  SetStream(std::ofstream *os) {  fStream = os; }
 

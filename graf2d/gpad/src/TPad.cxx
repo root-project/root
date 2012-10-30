@@ -3935,7 +3935,39 @@ void TPad::PaintText(Double_t x, Double_t y, const char *text)
 
 
 //______________________________________________________________________________
+void TPad::PaintText(Double_t x, Double_t y, const wchar_t *text)
+{
+   // Paint text in CurrentPad World coordinates.
+
+   Modified();
+
+   if (!gPad->IsBatch())
+      GetPainter()->DrawText(x, y, text, TVirtualPadPainter::kClear);
+
+   if (gVirtualPS) gVirtualPS->Text(x, y, text);
+}
+
+
+//______________________________________________________________________________
 void TPad::PaintTextNDC(Double_t u, Double_t v, const char *text)
+{
+   // Paint text in CurrentPad NDC coordinates.
+
+   Modified();
+
+   if (!gPad->IsBatch())
+      GetPainter()->DrawTextNDC(u, v, text, TVirtualPadPainter::kClear);
+
+   if (gVirtualPS) {
+      Double_t x = fX1 + u*(fX2 - fX1);
+      Double_t y = fY1 + v*(fY2 - fY1);
+      gVirtualPS->Text(x, y, text);
+   }
+}
+
+
+//______________________________________________________________________________
+void TPad::PaintTextNDC(Double_t u, Double_t v, const wchar_t *text)
 {
    // Paint text in CurrentPad NDC coordinates.
 

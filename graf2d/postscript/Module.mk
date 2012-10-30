@@ -46,11 +46,11 @@ include/%.h:    $(POSTSCRIPTDIRI)/%.h
 		cp $< $@
 
 $(POSTSCRIPTLIB): $(POSTSCRIPTO) $(POSTSCRIPTDO) $(ORDER_) $(MAINLIBS) \
-                  $(POSTSCRIPTLIBDEP)
+                  $(POSTSCRIPTLIBDEP) $(MATHTEXTLIB)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libPostscript.$(SOEXT) $@ \
 		   "$(POSTSCRIPTO) $(POSTSCRIPTDO)" \
-		   "$(POSTSCRIPTLIBEXTRA)"
+		   "$(POSTSCRIPTLIBEXTRA) $(FREETYPELDFLAGS) $(FREETYPELIB) $(MATHTEXTLIB)"
 
 $(POSTSCRIPTDS): $(POSTSCRIPTH) $(POSTSCRIPTL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
@@ -75,3 +75,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
+ifeq ($(ARCH),alphacxx6)
+$(call stripsrc,$(POSTSCRIPTDIRS)/TPostScript.o): OPT = $(NOOPT)
+endif

@@ -15,6 +15,9 @@
 //
 
 #include "Riostream.h"
+#include "Byteswap.h"
+#include "TError.h"
+#include "TClonesArray.h"
 #include "TVirtualPS.h"
 
 TVirtualPS *gVirtualPS = 0;
@@ -184,4 +187,27 @@ void TVirtualPS::WriteReal(Float_t z)
    char str[15];
    snprintf(str,15," %g", z);
    PrintStr(str);
+}
+
+
+//______________________________________________________________________________
+void TVirtualPS::PrintRaw(Int_t len, const char *str)
+{
+   // Print a raw
+
+   fNByte += len;
+   if ((len + fLenBuffer) > kMaxBuffer - 1) {
+      fStream->write(fBuffer, fLenBuffer);
+      while(len > kMaxBuffer-1) {
+         fStream->write(str,kMaxBuffer);
+         len -= kMaxBuffer;
+         str += kMaxBuffer;
+      }
+      memcpy(fBuffer, str, len);
+      fLenBuffer = len;
+   } else {
+      memcpy(fBuffer + fLenBuffer, str, len);
+      fLenBuffer += len;
+   }
+   fPrinted = kTRUE;
 }

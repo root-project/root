@@ -169,6 +169,8 @@ public:
 
    void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                    const char *text, ETextMode mode);
+   void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                   const wchar_t *text, ETextMode mode);
    void      SetTextFont(Font_t fontnumber);
    Int_t     SetTextFont(char *fontname, ETextSetMode mode);
    void      SetTextSize(Float_t textsize);
