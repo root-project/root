@@ -18,8 +18,8 @@
 
 #include "fontembed.h"
 #include <algorithm>
-#include <cstring>
-#include <cstdio>
+#include <string.h>
+#include <stdio.h>
 #ifdef WIN32
 #define snprintf _snprintf
 #endif

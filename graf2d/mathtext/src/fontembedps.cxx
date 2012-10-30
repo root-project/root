@@ -17,8 +17,8 @@
 // 02110-1301 USA
 
 #include "fontembed.h"
-#include <cstring>
-#include <cstdio>
+#include <string.h>
+#include <stdio.h>
 #ifdef WIN32
 #define snprintf _snprintf
 #endif

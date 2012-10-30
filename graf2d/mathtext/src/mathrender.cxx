@@ -23,7 +23,7 @@
 #pragma warning( disable : 4066)
 #endif
 
-#include <cmath>
+#include <math.h>
 #include <algorithm>
 #include <sstream>
 #include "mathrender.h"
