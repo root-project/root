@@ -237,6 +237,7 @@ End_Html */
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <wchar.h>
 
 #include "Riostream.h"
 #include "Byteswap.h"
