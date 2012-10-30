@@ -1489,7 +1489,7 @@ void BeforeParseInit()
 
 
 //______________________________________________________________________________
-bool CheckInputOperator(const char *what, const char *proto, const string &fullname, const clang::RecordDecl *cl, int dicttype)
+bool CheckInputOperator(const char *what, const char *proto, const string &fullname, const clang::RecordDecl *cl)
 {
    // Check if the specificed operator (what) has been properly declared if the user has
    // resquested a custom version.
@@ -1507,22 +1507,19 @@ bool CheckInputOperator(const char *what, const char *proto, const string &fulln
       has_input_error = true;
    }
    if (has_input_error) {
-      if (dicttype==0||dicttype==1){
-         // We don't want to generate duplicated error messages in several dictionaries (when generating temporaries)
-         Error(0,
-               "in this version of ROOT, the option '!' used in a linkdef file\n"
-               "       implies the actual existence of customized operators.\n"
-               "       The following declaration is now required:\n"
-               "   TBuffer &%s(TBuffer &,%s *&);\n",what,fullname.c_str());
-
-      }
+      // We don't want to generate duplicated error messages in several dictionaries (when generating temporaries)
+      Error(0,
+            "in this version of ROOT, the option '!' used in a linkdef file\n"
+            "       implies the actual existence of customized operators.\n"
+            "       The following declaration is now required:\n"
+            "   TBuffer &%s(TBuffer &,%s *&);\n",what,fullname.c_str());
    }
    return has_input_error;
  
 }
 
 //______________________________________________________________________________
-bool CheckInputOperator(const clang::RecordDecl *cl, int dicttype)
+bool CheckInputOperator(const clang::RecordDecl *cl)
 {
    // Check if the operator>> has been properly declared if the user has
    // resquested a custom version.
@@ -1537,8 +1534,8 @@ bool CheckInputOperator(const clang::RecordDecl *cl, int dicttype)
         fullname.c_str());
 
    // We do want to call both CheckInputOperator all the times.
-   bool has_input_error = CheckInputOperator("operator>>",proto,fullname,cl,dicttype);
-   has_input_error = CheckInputOperator("operator<<",proto,fullname,cl,dicttype) || has_input_error;
+   bool has_input_error = CheckInputOperator("operator>>",proto,fullname,cl);
+   has_input_error = CheckInputOperator("operator<<",proto,fullname,cl) || has_input_error;
    return has_input_error;
 }
 
@@ -4666,12 +4663,8 @@ int main(int argc, char **argv)
    int i, j, ic, ifl, force;
    int icc = 0;
    int use_preprocessor = 0;
-   int longheadername = 0;
    bool requestAllSymbols = false; // Would be set to true is we decide to support an option like --deep.
-   string dictpathname;
-   string libfilename;
    const char *env_dict_type=getenv("ROOTDICTTYPE");
-   int dicttype = 0; // 09-07-07 -- 0 for dict, 1 for ShowMembers
 
    std::string currentDirectory;
    R__GetCurrentDirectory(currentDirectory);
@@ -4730,7 +4723,6 @@ int main(int argc, char **argv)
           && strcmp(argv[ic], "-f")!=0 ) {
       if (!strcmp(argv[ic], "-l")) {
 
-         longheadername = 1;
          ic++;
       } else if (!strncmp(argv[ic],libprefix,strlen(libprefix))) {
 
@@ -4839,11 +4831,6 @@ int main(int argc, char **argv)
       for (p = dictname + strlen(dictname)-1;p!=dictname;--p) {
          if (*p =='/' ||  *p =='\\') {
             *p = 0;
-            if (p == dictname) {
-               dictpathname = "/";
-            } else {
-               dictpathname = dictname;
-            }
             break;
          }
       }
@@ -5226,6 +5213,7 @@ int main(int argc, char **argv)
          }
          return 1;
       }
+#define CINT_INCLUDE
       if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+') {
          StrcpyArgWithEsc(esc_arg, argv[i]);
          if (use_preprocessor) {
@@ -5233,7 +5221,9 @@ int main(int argc, char **argv)
             fprintf(bundle,"#include <%s>\n", esc_arg.c_str());
             includedFilesForBundle.push_back(argv[i]);
             if (!insertedBundle) {
+#ifdef CINT_INCLUDE
                argvv[argcc++] = (char*)bundlename.c_str();
+#endif
                insertedBundle = true;
             }
          }
@@ -5264,7 +5254,7 @@ int main(int argc, char **argv)
                   includeForSource += std::string("#include \"") + header + "\"\n";
                pcmArgs.push_back(header);
 
-#if 0
+#ifndef CINT_INCLUDE
                // remove header files from CINT view
                free(argvv[argcc-1]);
                argvv[--argcc] = 0;
@@ -5597,7 +5587,7 @@ int main(int argc, char **argv)
             if (version!=0) {
                // Only Check for input operator is the object is I/O has
                // been requested.
-               has_input_error |= CheckInputOperator(*iter,dicttype);
+               has_input_error |= CheckInputOperator(*iter);
             }
          }
       }
@@ -5611,140 +5601,129 @@ int main(int argc, char **argv)
       exit(1);
    }
 
-   // 26-07-07
-   // dont generate the showmembers if we only want
-   // all the memfunc_setup stuff (stub-less calls)
-   if(dicttype==0 || dicttype==1) {
-      //
-      // We will loop over all the classes several times.
-      // In order we will call
-      //
-      //     WriteClassInit (code to create the TGenericClassInfo)
-      //     check for constructor and operator input
-      //     WriteClassFunctions (declared in ClassDef)
-      //     WriteClassCode (Streamer,ShowMembers,Auxiliary functions)
-      //
-
-      AddConstructorType("TRootIOCtor");
-      AddConstructorType("");
-
-      //
-      // Loop over all classes and create Streamer() & Showmembers() methods
-      //
-
-// SELECTION LOOP
-      RScanner::NamespaceColl_t::const_iterator ns_iter = scan.fSelectedNamespaces.begin();
-      RScanner::NamespaceColl_t::const_iterator ns_end = scan.fSelectedNamespaces.end();
-      for( ; ns_iter != ns_end; ++ns_iter) {
-         WriteNamespaceInit(*ns_iter);         
+   //
+   // We will loop over all the classes several times.
+   // In order we will call
+   //
+   //     WriteClassInit (code to create the TGenericClassInfo)
+   //     check for constructor and operator input
+   //     WriteClassFunctions (declared in ClassDef)
+   //     WriteClassCode (Streamer,ShowMembers,Auxiliary functions)
+   //
+   
+   // The order of addition to the list of constructor type
+   // is significant.  The list is sorted by with the highest
+   // priority first.
+   AddConstructorType("TRootIOCtor");
+   AddConstructorType("");
+   
+   //
+   // Loop over all classes and create Streamer() & Showmembers() methods
+   //
+   
+   // SELECTION LOOP
+   RScanner::NamespaceColl_t::const_iterator ns_iter = scan.fSelectedNamespaces.begin();
+   RScanner::NamespaceColl_t::const_iterator ns_end = scan.fSelectedNamespaces.end();
+   for( ; ns_iter != ns_end; ++ns_iter) {
+      WriteNamespaceInit(*ns_iter);         
+   }
+   
+   iter = scan.fSelectedClasses.begin();
+   end = scan.fSelectedClasses.end();
+   for( ; iter != end; ++iter) 
+   {
+      if (!iter->GetRecordDecl()->isCompleteDefinition()) {
+         Error(0,"A dictionary has been requested for %s but there is no declaration!\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
+         continue;
       }
-
-      iter = scan.fSelectedClasses.begin();
-      end = scan.fSelectedClasses.end();
-      for( ; iter != end; ++iter) 
-      {
-         if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-            Error(0,"A dictionary has been requested for %s but there is no declaration!\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
-            continue;
-         }
-         if (iter->RequestOnlyTClass()) {
-            // fprintf(stderr,"rootcling: Skipping class %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
-            // For now delay those for later.
-            continue;
-         }
-
-         if (clang::CXXRecordDecl* CXXRD = llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl())))
+      if (iter->RequestOnlyTClass()) {
+         // fprintf(stderr,"rootcling: Skipping class %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
+         // For now delay those for later.
+         continue;
+      }
+      
+      if (clang::CXXRecordDecl* CXXRD = llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl())))
             R__AnnotateDecl(*CXXRD);
-         const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
-         if (CRD) {
-            Info(0,"Generating code for class %s\n", iter->GetNormalizedName() );
-            std::string qualname( CRD->getQualifiedNameAsString() );
-            if (IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
-                  // coverity[fun_call_w_exception] - that's just fine.
-               RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
-            } else {
-               WriteClassInit(*iter, interp, normCtxt);
-            }               
-         }
-      }
-
-      //
-      // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
-      // first to allow template specialisation to occur before template
-      // instantiation (STK)
-      //
-// SELECTION LOOP
-      iter = scan.fSelectedClasses.begin();
-      end = scan.fSelectedClasses.end();
-      for( ; iter != end; ++iter) 
-      {
-         if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-            continue;
-         }                       
-         if (iter->RequestOnlyTClass()) {
-            // For now delay those for later.
-            continue;
-         }
-         const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
-         if (cxxdecl && ClassInfo__HasMethod(*iter,"Class_Name")) {
-            WriteClassFunctions(cxxdecl);
-         }
-      }
-
-      // Keep track of classes processed by reading Linkdef file.
-      // When all classes in LinkDef are done, loop over all classes known
-      // to CINT output the ones that were not in the LinkDef. This can happen
-      // in case "#pragma link C++ defined_in" is used.
-      //const int kMaxClasses = 2000;
-      //char *clProcessed[kMaxClasses];
-
-// LINKDEF SELECTION LOOP
-      // Loop to get the shadow class for the class marker 'RequestOnlyTClass' (but not the
-      // STL class which is done via RStl::Instance().WriteClassInit(0);
-      // and the ClassInit
-      iter = scan.fSelectedClasses.begin();
-      end = scan.fSelectedClasses.end();
-      for( ; iter != end; ++iter) 
-      {
-         if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-            continue;
-         }
-         if (!iter->RequestOnlyTClass()) {
-            continue;
-         }
-         if (!IsSTLContainer(*iter)) {
+      const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
+      if (CRD) {
+         Info(0,"Generating code for class %s\n", iter->GetNormalizedName() );
+         std::string qualname( CRD->getQualifiedNameAsString() );
+         if (IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
+            // coverity[fun_call_w_exception] - that's just fine.
+            RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
+         } else {
             WriteClassInit(*iter, interp, normCtxt);
-         }
+         }               
       }
-      // Loop to write all the ClassCode
-      iter = scan.fSelectedClasses.begin();
-      end = scan.fSelectedClasses.end();
-      for( ; iter != end; ++iter) 
-      {
-         if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-            continue;
-         }
-         WriteClassCode(*iter, interp, normCtxt);
+   }
+
+   //
+   // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
+   // first to allow template specialisation to occur before template
+   // instantiation (STK)
+   //
+   // SELECTION LOOP
+   iter = scan.fSelectedClasses.begin();
+   end = scan.fSelectedClasses.end();
+   for( ; iter != end; ++iter) 
+   {
+      if (!iter->GetRecordDecl()->isCompleteDefinition()) {
+         continue;
+      }                       
+      if (iter->RequestOnlyTClass()) {
+         // For now delay those for later.
+         continue;
       }
-
-      //RStl::Instance().WriteStreamer(fp); //replaced by new Markus code
-      // coverity[fun_call_w_exception] - that's just fine.
-      RStl::Instance().WriteClassInit(0, interp, normCtxt);
-
-      if (use_preprocessor) remove(bundlename.c_str());
-
-      // Now we have done all our looping and thus all the possible 
-      // annotation, let's write the pcms.
-      if (strstr(dictname,"rootcint_") != dictname) {
-         // Modules only for "regular" dictionaries, not for cintdlls
-         // pcmArgs does not need any of the 'extra' include (entered via
-         // #pragma) as those are needed only for compilation.
-         // However CINT was essentially treating them the same as any other
-         // so we may have to put them here too ... maybe.
-         GenerateModule(dictname, pcmArgs, currentDirectory);
+      const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
+      if (cxxdecl && ClassInfo__HasMethod(*iter,"Class_Name")) {
+         WriteClassFunctions(cxxdecl);
       }
+   }
+   
+   // LINKDEF SELECTION LOOP
+   // Loop to get the shadow class for the class marker 'RequestOnlyTClass' (but not the
+   // STL class which is done via RStl::Instance().WriteClassInit(0);
+   // and the ClassInit
+   iter = scan.fSelectedClasses.begin();
+   end = scan.fSelectedClasses.end();
+   for( ; iter != end; ++iter) 
+   {
+      if (!iter->GetRecordDecl()->isCompleteDefinition()) {
+         continue;
+      }
+      if (!iter->RequestOnlyTClass()) {
+         continue;
+      }
+      if (!IsSTLContainer(*iter)) {
+         WriteClassInit(*iter, interp, normCtxt);
+      }
+   }
+   // Loop to write all the ClassCode
+   iter = scan.fSelectedClasses.begin();
+   end = scan.fSelectedClasses.end();
+   for( ; iter != end; ++iter) 
+   {
+      if (!iter->GetRecordDecl()->isCompleteDefinition()) {
+         continue;
+      }
+      WriteClassCode(*iter, interp, normCtxt);
+   }
+   
+   // coverity[fun_call_w_exception] - that's just fine.
+   RStl::Instance().WriteClassInit(0, interp, normCtxt);
+   
+   if (use_preprocessor) remove(bundlename.c_str());
 
-   } // (stub-less calls)
+   // Now we have done all our looping and thus all the possible 
+   // annotation, let's write the pcms.
+   if (strstr(dictname,"rootcint_") != dictname) {
+      // Modules only for "regular" dictionaries, not for cintdlls
+      // pcmArgs does not need any of the 'extra' include (entered via
+      // #pragma) as those are needed only for compilation.
+      // However CINT was essentially treating them the same as any other
+      // so we may have to put them here too ... maybe.
+      GenerateModule(dictname, pcmArgs, currentDirectory);
+   }
 
    // Append CINT dictionary to file containing Streamers and ShowMembers
    if (ifl) {
@@ -5767,14 +5746,6 @@ int main(int argc, char **argv)
 
          // make name of dict include file "aapDict.cxx" -> "aapDict.h"
          int  nl = 0;
-         // 07-11-07
-         // Include the temporaries here to get one file with everything
-         char *s = strrchr(dictname, '.');
-         if (s) *s = 0;
-         string inclf(dictname); inclf += ".h";
-         string inclfTmp1(dictname); inclfTmp1 += "Tmp1.cxx";
-         string inclfTmp2(dictname); inclfTmp2 += "Tmp2.cxx";
-         if (s) *s = '.';
 
          // during copy put dict include on top and remove later reference
          while (fgets(line, BUFSIZ, fp)) {
@@ -5793,23 +5764,6 @@ int main(int argc, char **argv)
                   fprintf(fpd, "#define G__DICTIONARY reflex\n");
                   break;
                default:;
-               }
-               if (longheadername && dictpathname.length() ) {
-                  fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclf.c_str());
-               } else {
-                  fprintf(fpd, "#include \"%s\"\n", inclf.c_str());
-               }
-
-               // 07-11-07
-               // Put the includes to temporary files when generating the third dictionary
-               if(dicttype==3){
-                  if (longheadername && dictpathname.length() ) {
-                     fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclfTmp1.c_str());
-                     fprintf(fpd, "#include \"%s/%s\"\n", dictpathname.c_str(), inclfTmp2.c_str());
-                  } else {
-                     fprintf(fpd, "#include \"%s\"\n", inclfTmp1.c_str());
-                     fprintf(fpd, "#include \"%s\"\n", inclfTmp2.c_str());
-                  }
                }
 
                if (gNeedCollectionProxy) {
