@@ -19,6 +19,7 @@
 #ifndef MATHRENDER_H_
 #define MATHRENDER_H_
 
+#include <math.h>
 #include <string>
 #include <iostream>
 #include <stdint.h>
