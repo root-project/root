@@ -47,7 +47,7 @@ namespace mathtext {
 			const std::vector<unsigned char> &table_data);
 	public:
 		// I/O
-		static std::vector<unsigned char> read_font_data(FILE *fp);
+		static std::vector<unsigned char> read_font_data(FILE *);
 		static std::vector<unsigned char> read_font_data(const std::string &filename);
 		// Font parsing
 		static bool parse_otf_cff_header(
