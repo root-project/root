@@ -5651,7 +5651,11 @@ int main(int argc, char **argv)
 
          // make name of dict include file "aapDict.cxx" -> "aapDict.h"
          int  nl = 0;
-
+         char *s = strrchr(dictname, '.');
+         if (s) *s = 0;
+         string inclf(dictname); inclf += ".h";
+         if (s) *s = '.';
+         
          // during copy put dict include on top and remove later reference
          while (fgets(line, BUFSIZ, fp)) {
             if (!strncmp(line, "#include", 8) && strstr(line, "\" //newlink 3678 "))
@@ -5661,7 +5665,8 @@ int main(int argc, char **argv)
 
             // 'linesToSkip' is because we want to put it after #defined private/protected
             if (++nl == linesToSkip && icc) {
- 
+               fprintf(fpd, "#include \"%s\"\n", inclf.c_str());
+
                if (gNeedCollectionProxy) {
                   fprintf(fpd, "\n#include \"TCollectionProxyInfo.h\"");
                }
