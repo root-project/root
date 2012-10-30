@@ -1722,13 +1722,11 @@ bool NeedShadowClass(const RScanner::AnnotatedRecordDecl &cl_input)
    // a proper shadow class, and the user has no chance of
    // veto-ing a shadow, as we need it for ShowMembers :-/
    if (ClassInfo__HasMethod(cl_input,"ShowMembers"))
-      return dict_type == kDictTypeReflex || R__IsTemplate(*cl_input);
+      return R__IsTemplate(*cl_input);
 
    // no streamer, no shadow
    if (cl_input.RequestNoStreamer()) return false;
 
-   if (dict_type == kDictTypeReflex) return true;
-   
    return (cl_input.RequestStreamerInfo());
 }
 
@@ -4664,19 +4662,9 @@ int main(int argc, char **argv)
    int icc = 0;
    int use_preprocessor = 0;
    bool requestAllSymbols = false; // Would be set to true is we decide to support an option like --deep.
-   const char *env_dict_type=getenv("ROOTDICTTYPE");
 
    std::string currentDirectory;
    R__GetCurrentDirectory(currentDirectory);
-
-   if (env_dict_type) {
-      if (!strcmp(env_dict_type, "cint"))
-         dict_type=kDictTypeCint;
-      else if (!strcmp(env_dict_type, "reflex"))
-         dict_type=kDictTypeReflex;
-      else if (!strcmp(env_dict_type, "gccxml"))
-         dict_type=kDictTypeGCCXML;
-   }
 
    ic = 1;
    if (!strcmp(argv[ic], "-v")) {
@@ -4697,23 +4685,6 @@ int main(int argc, char **argv)
    } else if (!strcmp(argv[ic], "-v4")) {
       gErrorIgnoreLevel = kInfo; // Display all information (same as -v)
       ic++;
-   }
-   if (ic < argc) {
-      if (!strcmp(argv[ic], "-cint")) {
-         dict_type = kDictTypeCint;
-         ic++;
-      } else if (!strcmp(argv[ic], "-reflex")) {
-         dict_type = kDictTypeReflex;
-         ic++;
-      } else if (!strcmp(argv[ic], "-gccxml")) {
-         dict_type = kDictTypeGCCXML;
-         ic++;
-      }
-   }
-
-   if (dict_type==kDictTypeGCCXML) {
-      int rc =  system("genreflex-rootcint --gccxml-available");
-      if (rc) dict_type=kDictTypeReflex; // fall back to reflex
    }
 
    const char* libprefix = "--lib-list-prefix=";
@@ -5016,11 +4987,7 @@ int main(int argc, char **argv)
          // NO! clang needs to see the truth.
          // clingArgs.push_back(argvv[argcc - 1]);
          argvv[argcc++] = (char *)"-V";        // include info on private members
-         if (dict_type==kDictTypeReflex) {
-            argvv[argcc++] = (char *)"-c-3";
-         } else {
-            argvv[argcc++] = (char *)"-c-10";
-         }
+         argvv[argcc++] = (char *)"-c-10";
          argvv[argcc++] = (char *)"+V";        // turn on class comment mode
          if (!use_preprocessor) {
 #ifdef ROOTBUILD
@@ -5314,74 +5281,6 @@ int main(int argc, char **argv)
    }
    G__setglobalcomp(0); // G__NOLINK
 #endif
-
-   // We ran cint to load the in-memory database,
-   // so that the I/O code can be properly generated.
-   // So now let's call GCCXML if requested
-   if (dict_type==kDictTypeGCCXML) {
-      string gccxml_rootcint_call;
-#ifndef ROOTBUILD
-# ifndef ROOTBINDIR
-      if (getenv("ROOTSYS")) {
-         gccxml_rootcint_call=getenv("ROOTSYS");
-#  ifdef WIN32
-         gccxml_rootcint_call+="\\bin\\";
-#  else
-         gccxml_rootcint_call+="/bin/";
-#  endif
-      }
-# else
-      gccxml_rootcint_call=ROOTBINDIR;
-#  ifdef WIN32
-      gccxml_rootcint_call+="\\";
-#  else
-      gccxml_rootcint_call+="/";
-#  endif
-# endif
-#else
-# ifdef WIN32
-      gccxml_rootcint_call="bin\\";
-# else
-      gccxml_rootcint_call="bin/";
-# endif
-#endif
-      gccxml_rootcint_call+="genreflex-rootcint";
-
-      for (int iarg=1; iarg<argc; ++iarg) {
-         gccxml_rootcint_call+=" ";
-         gccxml_rootcint_call+=argv[iarg];
-
-         if (!strcmp(argv[iarg], "-c")) {
-            for (i = 0; i < (int)path.size(); i++) {
-               gccxml_rootcint_call+=" ";
-               gccxml_rootcint_call+=path[i].c_str();
-            }
-            gccxml_rootcint_call+=" -DR__GCCXML";
-#ifdef ROOTBUILD
-            gccxml_rootcint_call+=" -DG__NOCINTDLL";
-#endif
-            gccxml_rootcint_call+=" -DTRUE=1";
-            gccxml_rootcint_call+=" -DFALSE=0";
-            gccxml_rootcint_call+=" -DR__EXTERN=extern";
-            gccxml_rootcint_call+=" -Dexternalref=extern";
-            gccxml_rootcint_call+=" -DSYSV";
-#ifdef ROOTBUILD
-            //gccxml_rootcint_call+=" base/inc/TROOT.h";
-            gccxml_rootcint_call+=" base/inc/TObject.h";
-            gccxml_rootcint_call+=" base/inc/TMemberInspector.h";
-#else
-            gccxml_rootcint_call+=" TObject.h";
-            gccxml_rootcint_call+=" TMemberInspector.h";
-#endif
-         }
-      }
-      //printf("Calling %s\n", gccxml_rootcint_call.c_str());
-      int rc=system(gccxml_rootcint_call.c_str());
-      if (rc) {
-         CleanupOnExit(rc);
-         return rc;
-      }
-   }
 
    if (use_preprocessor && icc)
       ReplaceBundleInDict(argv[ifl], bundlename);
