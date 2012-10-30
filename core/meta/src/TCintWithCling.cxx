@@ -84,6 +84,7 @@
 #include <map>
 #include <set>
 #include <stdint.h>
+#include <fstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -936,15 +937,6 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       TString io;
       TString fname = gSystem->SplitAclicMode(sLine.Data() + 3,
                                               aclicMode, arguments, io);
-      if (!aclicMode.Length()) {
-         // ACLiC is fully delegated to ROOT or Cling
-         if ((mod_line[1] == 'x') || (mod_line[1] == 'X')) {
-            // Let CINT load the file, but have only cling execute it.
-            mod_line[1] = 'L';
-         }
-         mod_line = ".L " + fname;
-         ret = ProcessLineCintOnly(mod_line, error);
-      }
    }
    // A non-zero returned value means the given line was
    // not a complete statement.
@@ -988,9 +980,32 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
             indent = fMetaProcessor->process(mod_line, &result, &compRes);
          }
       } else {
-         indent = fMetaProcessor->process(mod_line, &result, &compRes);
+         // not ACLiC
+         bool unnamedMacro = false;
+         {
+            std::string line;
+            std::ifstream in(fname);
+            static const char whitespace[] = " \t\r\n";
+            while (in) {
+               std::getline(in, line);
+               std::string::size_type posNonWS = line.find_first_not_of(whitespace);
+               if (posNonWS != std::string::npos) {
+                  unnamedMacro = (line[posNonWS] == '{');
+                  break;
+               }
+            }
+         }
+         if (unnamedMacro) {
+            compRes = fMetaProcessor->readInputFromFile(fname.Data(), &result,
+                                                        true /*ignoreOutmostBlock*/);
+         } else {
+            TString cintModLine = ".L " + fname;
+            ProcessLineCintOnly(cintModLine);
+
+            indent = fMetaProcessor->process(mod_line, &result, &compRes);
+         }
       }
-   }
+   } // .L / .X / .x
    else {
       indent = fMetaProcessor->process(sLine, &result, &compRes);
    }
