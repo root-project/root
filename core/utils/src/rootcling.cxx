@@ -1929,7 +1929,7 @@ bool CheckConstructor(const clang::CXXRecordDecl *cl, RConstructorType &ioctorty
                   argType = argType.getDesugaredType(cl->getASTContext());
                }
                if (argType->isTemplateTypeParmType()) {
-                  return true;
+                  // return true;
                }
             }
          }
