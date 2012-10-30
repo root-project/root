@@ -202,12 +202,7 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
          if (TagDecl *TD = dyn_cast<TagDecl>(*DI)) {
             listOfSmth = gROOT->GetListOfClasses();
             std::string name = TD->getNameAsString();
-            if (TClass *cl = (TClass*)listOfSmth->FindObject(name.c_str())) {
-               TClingClassInfo* clInfo = (TClingClassInfo*)cl->GetClassInfo();
-               if (!clInfo)
-                  clInfo = new TClingClassInfo(interp);
-               clInfo->Init(*TD);                  
-            }
+            TCintWithCling::UpdateClassInfoWork(name.c_str());
          }
 
          if (isa<DeclContext>(*DI) && !isa<EnumDecl>(*DI)) {
@@ -2651,7 +2646,7 @@ public:
       : fName(item), fTagnum(tagnum)
    {}
    void Update() {
-      TCintWithCling::UpdateClassInfoWork(fName.c_str(), fTagnum);
+      //TCintWithCling::UpdateClassInfoWork(fName.c_str(), fTagnum);
    }
 };
 }
@@ -2663,9 +2658,45 @@ void TCintWithCling::UpdateClassInfo(char* item, Long_t tagnum)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::UpdateClassInfoWork(const char* item, Long_t tagnum)
+//FIXME: Factor out that function in TClass, because TClass does it already twice
+void TCintWithCling::UpdateClassInfoWork(const char* item)
 {
-   // No op: see TClingCallbacks
+   // This does the actual work of UpdateClassInfo.
+   Bool_t load = kFALSE;
+   if (strchr(item, '<') && TClass::GetClassShortTypedefHash()) {
+      // We have a template which may have duplicates.
+      TString resolvedItem(TClassEdit::ResolveTypedef(TClassEdit::ShortType(item,
+                                  TClassEdit::kDropStlDefault).c_str(), kTRUE));
+      if (resolvedItem != item) {
+         TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedItem);
+         if (cl) {
+            load = kTRUE;
+         }
+      }
+      if (!load) {
+         TIter next(TClass::GetClassShortTypedefHash()->GetListForObject(resolvedItem));
+         while (TClass::TNameMapNode* htmp =
+                static_cast<TClass::TNameMapNode*>(next())) {
+            if (resolvedItem == htmp->String()) {
+               TClass* cl = gROOT->GetClass(htmp->fOrigName, kFALSE);
+               if (cl) {
+                  // we found at least one equivalent.
+                  // let's force a reload
+                  load = kTRUE;
+                  break;
+               }
+            }
+         }
+      }
+   }
+   if (gROOT->GetListOfClasses()->GetEntries() == 0) {
+      // Nothing to find, let's not get yourself in trouble.
+      return;
+   }
+   TClass* cl = gROOT->GetClass(item, load);
+   if (cl) {
+      cl->ResetCaches();
+   }
 }
 
 //______________________________________________________________________________

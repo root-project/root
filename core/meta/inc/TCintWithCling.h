@@ -195,7 +195,7 @@ public: // Public Interface
    static void* FindSpecialObject(const char* name, G__ClassInfo* type, void** prevObj, void** assocPtr);
    static int   AutoLoadCallback(const char* cls, const char* lib);
    static void  UpdateClassInfo(char* name, Long_t tagnum);
-   static void  UpdateClassInfoWork(const char* name, Long_t tagnum);
+   static void  UpdateClassInfoWork(const char* name);
    static void  UpdateAllCanvases();
 
    // Misc
