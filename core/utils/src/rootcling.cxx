@@ -1912,16 +1912,17 @@ bool CheckConstructor(const clang::CXXRecordDecl *cl, RConstructorType &ioctorty
                argType = argType.getDesugaredType(cl->getASTContext());
 
                // Check for either of:
-               //   ClassName::ClassName( T &);
                //   ClassName::ClassName( T *&);
                //   ClassName::ClassName( T *);
                //   ClassName::ClassName( T );
                // which all could be used for a call to new ClassName( (ioctor*)0)
 
-               // Strip one reference type
+               // // Strip one reference type
                if (argType->isReferenceType()) {
-                  argType = argType->getPointeeType();
-                  argType = argType.getDesugaredType(cl->getASTContext());
+                  if (argType->getPointeeType()->isPointerType()) {
+                     argType = argType->getPointeeType();
+                     argType = argType.getDesugaredType(cl->getASTContext());
+                  }
                }
                // Strip one pointer type
                if (argType->isPointerType()) {
@@ -1929,7 +1930,7 @@ bool CheckConstructor(const clang::CXXRecordDecl *cl, RConstructorType &ioctorty
                   argType = argType.getDesugaredType(cl->getASTContext());
                }
                if (argType->isTemplateTypeParmType()) {
-                  // return true;
+                  return true;
                }
             }
          }
