@@ -1476,14 +1476,14 @@ void TROOT::InitInterpreter()
 {
    // Initialize the interpreter. Should be called only after main(),
    // to make sure LLVM/Clang is fully initialized.
-   
+
    fInterpreter = new TCintWithCling("C/C++", "CINT+cling C/C++ Interpreter");
    fCleanups->Add(fInterpreter);
    fInterpreter->SetBit(kMustCleanup);
-   
+
    // Load RQ_OBJECT.h in interpreter (allows signal/slot programming, like Qt)
    TQObject::LoadRQ_OBJECT();
-   
+
    fgRootInit = kTRUE;
 
    TClass::ReadRules(); // Read the default customization rules ...   
