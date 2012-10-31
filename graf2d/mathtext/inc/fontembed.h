@@ -17,6 +17,7 @@
 // 02110-1301 USA
 
 #include <stdint.h>
+#include <stdio.h>
 #include <vector>
 #include <string>
 #include <map>
