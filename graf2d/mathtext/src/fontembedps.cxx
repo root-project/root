@@ -240,10 +240,10 @@ namespace mathtext {
 				   sizeof(unsigned int));
 			offset += sizeof(unsigned int) + 2;
 			while (segment_header.type != TYPE_EOF) {
-#ifndef R__BYTESWAP
+#ifdef LITTLE_ENDIAN
 				segment_header.length =
-					Rbswap_32(segment_header.length);
-#endif // R__BYTESWAP
+					bswap_32(segment_header.length);
+#endif // LITTLE_ENDIAN
 				char *buffer = new char[segment_header.length];
 
 				memcpy(buffer, &font_data[offset],
