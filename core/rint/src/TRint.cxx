@@ -149,10 +149,12 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
       PrintLogo(lite);
    }
 
+#ifndef R__HAS_CLING
    // Explicitly load libMathCore as CINT will not auto load it when using one
    // of its globals. Once moved to Cling, which should work correctly, we
    // can remove this statement.
    gSystem->Load("libMathCore");
+#endif
 
    // Load some frequently used includes
    Int_t includes = gEnv->GetValue("Rint.Includes", 1);
