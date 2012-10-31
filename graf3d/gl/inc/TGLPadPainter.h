@@ -114,8 +114,10 @@ public:
    void     DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y);
    
    void     DrawText(Double_t x, Double_t y, const char *text, ETextMode mode);
+   void     DrawText(Double_t, Double_t, const wchar_t *, ETextMode){}
    void     DrawTextNDC(Double_t x, Double_t y, const char *text, ETextMode mode);
-                     
+   void     DrawTextNDC(Double_t, Double_t, const wchar_t *, ETextMode){}
+   
    //jpg, png, gif and bmp output.
    void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const;
 
