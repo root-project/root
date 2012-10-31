@@ -70,12 +70,13 @@
 #include "TEnv.h"
 #include <KeySymbols.h>
 
+#include "RConfigure.h"
+
 #include "TRootBrowser.h"
 #include "TGFileBrowser.h"
 #include "TGInputDialog.h"
 #include "TRootHelpDialog.h"
 #include "HelpText.h"
-
 #include "Getline.h"
 
 #ifdef WIN32
@@ -216,7 +217,11 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    fHf = new TGHorizontalFrame(fVf, 100, 100);
    // Tabs & co...
+#if defined(R__HAS_COCOA)
+   fV1 = new TGVerticalFrame(fHf, 252, 100, kFixedWidth);
+#else
    fV1 = new TGVerticalFrame(fHf, 250, 100, kFixedWidth);
+#endif
    fV2 = new TGVerticalFrame(fHf, 600, 100);
    fH1 = new TGHorizontalFrame(fV2, 100, 100);
    fH2 = new TGHorizontalFrame(fV2, 100, 100, kFixedHeight);
