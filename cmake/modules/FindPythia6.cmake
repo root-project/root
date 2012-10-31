@@ -8,7 +8,7 @@
 set(PYTHIA6_FOUND 0)
 
 
-find_library(PYTHIA6_LIBRARY NAMES pythia6 libPythia6 PATHS
+find_library(PYTHIA6_LIBRARY NAMES pythia6 Pythia6 PATHS
   $ENV{PYTHIA6_DIR}/lib
   /cern/pro/lib 
   /opt/pythia 

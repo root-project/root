@@ -32,7 +32,7 @@ else()
     DOC "Specify the directory containing sql.h."
   )
 
-  find_library( ODBC_LIBRARY NAMES libiodbc libodbc odbc32
+  find_library( ODBC_LIBRARY NAMES iodbc odbc odbc32
     PATHS
     /usr/lib
     /usr/lib/odbc
