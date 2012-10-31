@@ -508,8 +508,17 @@ void TGColorSelect::DoRedraw()
 
       if (fState == kButtonDown) { ++x; ++y; }
 
+#ifdef R__HAS_COCOA
+      //Adjustment for Quartz 2D is required:
+      //first, I DO not try to fit filled rectangle into outline - this
+      //simply DOES NOT work (with retina/non-retina display, for example.
+      //First - fill rectable, then draw outline.
+      gVirtualX->FillRectangle(fId, fDrawGC(), x + 1, y + 1, w - 1, h - 1);
+      gVirtualX->DrawRectangle(fId, GetShadowGC()(), x + 1, y + 1, w - 1, h - 1);
+#else
       gVirtualX->DrawRectangle(fId, GetShadowGC()(), x, y, w - 1, h - 1);
       gVirtualX->FillRectangle(fId, fDrawGC(), x + 1, y + 1, w - 2, h - 2);
+#endif
 
       // separator
 
@@ -570,12 +579,24 @@ void TGColorSelect::DrawTriangle(GContext_t gc, Int_t x, Int_t y)
 
    Point_t points[3];
 
+#ifdef R__HAS_COCOA
+   //When it comes to tiny pixel-precise objects like this,
+   //Quartz is not really good: triangle is ugly and wrong.
+   //I have to adjust pixels manually.
+   points[0].fX = x;
+   points[0].fY = y;
+   points[1].fX = x + 6;
+   points[1].fY = y;
+   points[2].fX = x + 3;
+   points[2].fY = y + 3;
+#else
    points[0].fX = x;
    points[0].fY = y;
    points[1].fX = x + 5;
    points[1].fY = y;
    points[2].fX = x + 2;
    points[2].fY = y + 3;
+#endif
 
    gVirtualX->FillPolygon(fId, gc, points, 3);
 }
