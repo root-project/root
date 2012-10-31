@@ -60,7 +60,7 @@ R__EXTERN TVirtualMutex *gROOTMutex;
 
 #ifdef R__HAS_CLING
 namespace ROOT {
-   extern TROOT *GetROOT2();
+   TROOT *GetROOT2();
 }
 #endif
 
@@ -297,6 +297,9 @@ public:
 
 namespace ROOT {
    TROOT *GetROOT();
+#ifdef R__HAS_CLING
+   R__EXTERN TROOT *gROOTLocal;
+#endif
 }
 #ifdef R__HAS_CLING
 #define gROOT (ROOT::GetROOT())
