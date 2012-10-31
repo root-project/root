@@ -631,13 +631,14 @@ namespace mathtext {
 		public:
 			point_t _offset;
 			bounding_box_t _bounding_box;
+			struct extension_t {
+				wchar_t _glyph;
+				unsigned int _family;
+				float _size;
+			};
 			union {
 				unsigned int _style;
-				struct {
-					wchar_t _glyph;
-					unsigned int _family;
-					float _size;
-				} _extensible;
+				extension_t _extensible;
 			};
 			float _delimiter_height;
 			inline math_token_t(
