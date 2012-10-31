@@ -612,7 +612,7 @@ function createFillPatterns(svg, id, line_color) {
          break;
       default: /* == 3004 */
          defs.append('svg:pattern')
-            .attr("id", "pat3004")
+            .attr("id", "pat"+id)
             .attr("patternUnits", "userSpaceOnUse")
             .attr("width", "8px")
             .attr("height", "8px")
