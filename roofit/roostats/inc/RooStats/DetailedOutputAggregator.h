@@ -37,6 +37,7 @@ class RooAbsCollection;
 class RooFitResult;
 class RooDataSet;
 class RooArgList;
+class RooArgSet; 
 
 namespace RooStats {
 
