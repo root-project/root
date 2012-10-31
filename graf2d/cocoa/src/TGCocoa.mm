@@ -1328,6 +1328,10 @@ void TGCocoa::ShapeCombineMask(Window_t windowID, Int_t /*x*/, Int_t /*y*/, Pixm
 void TGCocoa::SetMWMHints(Window_t wid, UInt_t value, UInt_t funcs, UInt_t /*input*/)
 {
    // Sets decoration style.
+   
+   return;
+   
+   
    assert(!fPimpl->IsRootWindow(wid) && "SetMWMHints, called for 'root' window");
    
    QuartzWindow * const qw = fPimpl->GetWindow(wid).fQuartzWindow;
@@ -1383,12 +1387,13 @@ void TGCocoa::SetWMSizeHints(Window_t wid, UInt_t wMin, UInt_t hMin, UInt_t wMax
    //
    assert(!fPimpl->IsRootWindow(wid) && "SetWMSizeHints, called for 'root' window");
 
-   QuartzWindow * const qw = fPimpl->GetWindow(wid).fQuartzWindow;   
-   //I can use CGSizeMake, but what if NSSize one bad day becomes something else? :)
-   NSSize minSize = {}; minSize.width = wMin, minSize.height = hMin;
-   [qw setMinSize : minSize];
-   NSSize maxSize = {}; maxSize.width = wMax, maxSize.height = hMax;
-   [qw setMaxSize : maxSize];
+   const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+   const NSRect minRect = [NSWindow frameRectForContentRect : CGRectMake(0., 0., wMin, hMin) styleMask : styleMask];
+   const NSRect maxRect = [NSWindow frameRectForContentRect : CGRectMake(0., 0., wMax, hMax) styleMask : styleMask];
+
+   QuartzWindow * const qw = fPimpl->GetWindow(wid).fQuartzWindow;
+   [qw setMinSize : minRect.size];
+   [qw setMaxSize : maxRect.size];
 }
 
 //______________________________________________________________________________
