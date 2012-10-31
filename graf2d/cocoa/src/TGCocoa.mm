@@ -1327,11 +1327,7 @@ void TGCocoa::ShapeCombineMask(Window_t windowID, Int_t /*x*/, Int_t /*y*/, Pixm
 //______________________________________________________________________________
 void TGCocoa::SetMWMHints(Window_t wid, UInt_t value, UInt_t funcs, UInt_t /*input*/)
 {
-   // Sets decoration style.
-   
-   return;
-   
-   
+   // Sets decoration style.   
    assert(!fPimpl->IsRootWindow(wid) && "SetMWMHints, called for 'root' window");
    
    QuartzWindow * const qw = fPimpl->GetWindow(wid).fQuartzWindow;
