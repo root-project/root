@@ -17,7 +17,7 @@ find_path(PYTHIA8_INCLUDE_DIR Pythia.h
   DOC "Specify the directory containing Pythia.h."
 )
 
-find_library(PYTHIA8_LIBRARY NAMES Pythia8 libPythia8 PATHS
+find_library(PYTHIA8_LIBRARY NAMES Pythia8 pythia8 PATHS
   $ENV{PYTHIA8_DIR}/lib
   /opt/pythia8/lib
   /usr/local/lib
