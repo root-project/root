@@ -11,8 +11,14 @@ cd
 rm -rf llvm-export
 svn export -r $GOLDEN http://llvm.org/svn/llvm-project/llvm/trunk llvm-export
 
+# don't need the test directory
+rm -rf llvm-export/test
+
 rm -rf clang-export
 svn export -r $GOLDEN http://llvm.org/svn/llvm-project/cfe/trunk clang-export
+
+# don't need the test directory
+rm -rf clang-export/test
 
 # will automatically commit into vendor branch
 $ROOTSYS/build/unix/svn_load_dirs.pl https://root.cern.ch/svn/root/vendors llvm llvm-export -m "Update LLVM to r$GOLDEN."
