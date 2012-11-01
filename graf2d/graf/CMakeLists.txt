@@ -6,7 +6,7 @@
 set(libname Graf)
 
 if(WIN32)
-  set(mathtextlib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/mathtext.lib)
+  set(mathtextlib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libmathtext.lib)
 else()
   set(mathtextlib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libmathtext.a)
 endif()
