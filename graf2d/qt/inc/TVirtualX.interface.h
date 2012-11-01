@@ -24,6 +24,10 @@ public:
 
    //TVirtualX has two versions of CreateOpenGLContext
    using TVirtualX::CreateOpenGLContext;
+
+   //TVirtualX has these two methods with wchar_t
+   using TVirtualX::DrawText;
+   using TVirtualX::GetTextExtent;;
    
    virtual void      CreateOpenGLContext(Int_t wid=0);
    virtual void      DeleteOpenGLContext(Int_t wid=0);
