@@ -2884,7 +2884,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
       y -= 0.4*tsizey*TMath::Cos(kDEGRAD*fTextAngle);
       x += 0.4*tsizex*TMath::Sin(kDEGRAD*fTextAngle);
    }
-   UInt_t w, h;
+   UInt_t w = 0,  h = 0;
 
    TText t;
    t.SetTextSize(fTextSize);
