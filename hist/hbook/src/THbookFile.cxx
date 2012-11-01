@@ -848,6 +848,8 @@ TObject *THbookFile::ConvertRWN(Int_t id)
       name += nchar;
    }
    tree->SetEntries(nentries);
+   delete [] chtag_out;
+
    return tree;
 }
 
