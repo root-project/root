@@ -1003,14 +1003,15 @@ Int_t TXSocket::Flush()
    }
 
    // Move spares to the spare queue
-   if (splist.size() > 0) {
-      R__LOCKGUARD(&fgSMtx);
-      for (i = splist.begin(); i != splist.end();) {
-         fgSQue.push_back(*i);
-         i = splist.erase(i);
+   {  R__LOCKGUARD(&fgSMtx);
+      if (splist.size() > 0) {
+         for (i = splist.begin(); i != splist.end();) {
+            fgSQue.push_back(*i);
+            i = splist.erase(i);
+         }
       }
    }
-
+   
    // We are done
    return nf;
 }
