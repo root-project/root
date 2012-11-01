@@ -98,7 +98,6 @@ namespace Quartz = ROOT::Quartz;
    assert(width > 0 && "resizeW:H:, Pixmap width must be positive");
    assert(height > 0 && "resizeW:H:, Pixmap height must be positive");
 
-//   fScaleFactor = unsigned([[NSScreen mainScreen] backingScaleFactor] + 0.5);
    fScaleFactor = unsigned(scaleFactor + 0.5);
    
    //Part, which does not change anything in a state:
@@ -341,10 +340,7 @@ namespace Quartz = ROOT::Quartz;
       NSLog(@"QuartzPixmap: readColorBits:intoBuffer:, src and copy area do not intersect");
       return 0;
    }
-   
-   if (fScaleFactor > 1)
-      NSLog(@"QuartzPixmap: readColorBits:, called for scaled pixmap!");
-   
+
    unsigned char *buffer = 0;
 
    try {
@@ -354,10 +350,30 @@ namespace Quartz = ROOT::Quartz;
       return 0;
    }
 
+
+   Util::NSScopeGuard<QuartzPixmap> scaledPixmap;
+
+   if (fScaleFactor > 1) {
+      scaledPixmap.Reset([[QuartzPixmap alloc] initWithW : fWidth H : fHeight scaleFactor : 1.]);
+      //Ooops, all screwed up!!!
+      if (!scaledPixmap.Get()) {
+         NSLog(@"QuartzImage: -readColorBits:, can not create scaled pixmap");
+         return buffer;//empty buffer.
+      }
+      
+      Rectangle_t copyArea = {};
+      copyArea.fWidth = fWidth;
+      copyArea.fHeight = fHeight;
+      
+      [scaledPixmap.Get() copy : self area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
+   }
+
    unsigned char *dstPixel = buffer;
 
       //fImageData has 4 bytes per pixel.
-   const unsigned char *line = fData + area.fY * fWidth * 4;
+   const unsigned char *line = fScaleFactor == 1 ? fData + area.fY * fWidth * 4
+                               : scaledPixmap.Get()->fData + area.fY * fWidth * 4;
+
    const unsigned char *srcPixel = line + area.fX * 4;
 
    for (Short_t i = 0; i < area.fHeight; ++i) {
@@ -389,12 +405,37 @@ namespace Quartz = ROOT::Quartz;
    assert(x < fWidth && "putPixel:X:Y:, x parameter is >= self.fWidth");
    assert(y < fHeight && "putPixel:X:Y:, y parameter is >= self.fHeight");
    
-   unsigned char *dst = fData + y * fWidth * 4 + x * 4;
-   
-   dst[0] = rgb[0];
-   dst[1] = rgb[1];
-   dst[2] = rgb[2];
-   dst[3] = 255;
+   if (fScaleFactor > 1) {
+      //Ooops, and what should I do now???
+      const unsigned scaledW = fWidth * fScaleFactor;
+      const unsigned scaledH = fHeight * fScaleFactor;
+      
+      unsigned char *dst = fData + y * fScaleFactor * scaledW * 4 + x * fScaleFactor * 4;
+
+      for (unsigned i = 0; i < 2; ++i, dst += 4) {
+         dst[0] = rgb[0];
+         dst[1] = rgb[1];
+         dst[2] = rgb[2];
+         dst[3] = 255;
+      }
+
+      dst -= 8;
+      dst += scaledW * 4;
+
+      for (unsigned i = 0; i < 2; ++i, dst += 4) {
+         dst[0] = rgb[0];
+         dst[1] = rgb[1];
+         dst[2] = rgb[2];
+         dst[3] = 255;
+      }
+   } else {
+      unsigned char *dst = fData + y * fWidth * 4 + x * 4;
+      
+      dst[0] = rgb[0];
+      dst[1] = rgb[1];
+      dst[2] = rgb[2];
+      dst[3] = 255;
+   }
 }
 
 //______________________________________________________________________________
