@@ -105,7 +105,7 @@ TAFS::TAFS(const char *fpw, const char *user, int life)
    // Prompt for credentials if not yet found
    if (!pw) {
 
-      TString prompt = Form("AFS password for %s@%s", usr.Data(), AFSLocalCell());
+      TString prompt = TString::Format("AFS password for %s@%s", usr.Data(), AFSLocalCell());
 
       // Init the dialog box, if needed
       if (fgUsePwdDialog) {
