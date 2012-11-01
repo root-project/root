@@ -18,9 +18,6 @@
 #pragma link C++ global gMinuit2;
 #pragma link C++ global gFumili2;
 
-#pragma link C++ class TFitterMinuit;
-#pragma link C++ class TFitterFumili;
-#pragma link C++ class TFcnAdapter;
 
 //#pragma link C++ namespace ROOT::Minuit2;
 

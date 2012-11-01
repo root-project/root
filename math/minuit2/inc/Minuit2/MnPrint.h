@@ -82,6 +82,9 @@ public:
    
    // print current minimization state 
    static void PrintState(std::ostream & os, const MinimumState &, const char * msg, int iter = -1);
+
+   // print FCN value with right precision adding optionally end line
+   static void PrintFcn(std::ostream & os, double value, bool endline = true);
 };
 
 

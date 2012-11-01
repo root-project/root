@@ -106,6 +106,9 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 
 #ifdef DEBUG
    std::cout << "Calculating Gradient at x =   " << par.Vec() << std::endl;
+   int pr = std::cout.precision(13);
+   std::cout << "fcn(x) = " << fcnmin << std::endl; 
+   std::cout.precision(pr);
 #endif
 
 #ifndef _OPENMP
@@ -178,6 +181,13 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
          double grdb4 = grd(i);
          grd(i) = 0.5*(fs1 - fs2)/step;
          g2(i) = (fs1 + fs2 - 2.*fcnmin)/step/step;
+
+#ifdef DEBUG
+         pr = std::cout.precision(13);
+         std::cout << "cycle " << j << " x " << x(i) << " step " << step << " f1 " << fs1 << " f2 " << fs2 
+                   << " grd " << grd(i) << " g2 " << g2(i) << std::endl; 
+         std::cout.precision(pr);
+#endif
          
          if(fabs(grdb4-grd(i))/(fabs(grd(i))+dfmin/step) < GradTolerance())  {
             //  	std::cout<<"j= "<<j<<std::endl;
@@ -199,14 +209,15 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
       //     vgrd(i) = grd;
       //     vgrd2(i) = g2;
       //     vgstp(i) = gstep;
-   }  
+
 
 #ifdef DEBUG
-   std::cout << "Gradient =   " << grd << std::endl;
+      pr = std::cout.precision(13);
+      int iext = Trafo().ExtOfInt(i);
+      std::cout << "Parameter " << Trafo().Name(iext) << " Gradient =   " << grd(i) << " g2 = " << g2(i) << " step " << gstep(i) << std::endl;
+      std::cout.precision(pr);
 #endif
-
-   //   std::cout<<"final grd: "<<grd<<std::endl;
-   //   std::cout<<"########### return from Numerical2PDerivative"<<std::endl;
+   }
 
 #ifndef _OPENMP
    mpiproc.SyncVector(grd);

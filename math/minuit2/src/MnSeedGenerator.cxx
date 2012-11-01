@@ -66,7 +66,8 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
    double fcnmin = fcn(x);
 
    if (printLevel > 1) { 
-      std::cout << "MnSeedGenerator: for initial parameters FCN = " << fcnmin << std::endl;
+      std::cout << "MnSeedGenerator: for initial parameters FCN = ";
+      MnPrint::PrintFcn(std::cout,fcnmin);
    }
    
    MinimumParameters pa(x, fcnmin);
@@ -82,6 +83,7 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
          mat(i,i) = (fabs(dgrad.G2()(i)) > prec.Eps2() ? 1./dgrad.G2()(i) : 1.);
    }
    MinimumError err(mat, dcovar);
+
    double edm = VariableMetricEDMEstimator().Estimate(dgrad, err);
    MinimumState state(pa, err, dgrad, edm, fcn.NumOfCalls());
 

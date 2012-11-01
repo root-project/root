@@ -78,6 +78,12 @@ FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters& 
       gr(i) = grd;
       gr2(i) = g2;
       gst(i) = gstep;
+
+#ifdef DEBUG
+      std::cout << "computing initial gradient for parameter " << Trafo().Name(exOfIn) << " value = " << var 
+                << " [ " << vmin << " , " << vplu << " ] " << "dirin " <<  dirin << " grd " << grd << " g2 " << g2 << std::endl;
+#endif
+
    }
    
    return FunctionGradient(gr, gr2, gst);  

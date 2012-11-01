@@ -48,6 +48,13 @@ int MnPrint::Level( ) {
    return gPrintLevel;
 }
 
+void MnPrint::PrintFcn(std::ostream & os, double value, bool endline) { 
+   int pr = os.precision(PRECISION);
+   os << value; 
+   if (endline) os << std::endl;
+   os.precision(pr);
+}
+
 void MnPrint::PrintState(std::ostream & os, const MinimumState & state, const char * msg, int iter) { 
    // helper function to print state and message in one single line
    os << msg; 
