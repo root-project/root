@@ -2843,7 +2843,8 @@ TH1 *TH1::DrawCopy(Option_t *option) const
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
-   TH1 *newth1 = (TH1 *)Clone();
+   TString newName = TString::Format("%s_copy",GetName());
+   TH1 *newth1 = (TH1 *)Clone(newName);
    newth1->SetDirectory(0);
    newth1->SetBit(kCanDelete);
    newth1->AppendPad(option);
