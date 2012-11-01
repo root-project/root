@@ -1098,7 +1098,7 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //             = "C" In case of linear fitting, do not calculate the chisquare
    //                    (saves time)
    //             = "F" If fitting a polN, use the minuit fitter
-   //             = "EX0" When fitting a TGraphErrors do not consider errors in the coordinate
+   //             = "EX0" When fitting a TGraphErrors or TGraphAsymErrors do not consider errors in the coordinate
    //             = "ROB" In case of linear fitting, compute the LTS regression
    //                     coefficients (robust (resistant) regression), using
    //                     the default fraction of good points
