@@ -471,7 +471,7 @@ void Init2DGaus(const ROOT::Fit::BinData & data, TF1 * f1)
 
 // filling fit data from TGraph objects
 
-BinData::ErrorType GetDataType(const TGraph * gr, const DataOptions & fitOpt) { 
+BinData::ErrorType GetDataType(const TGraph * gr, DataOptions & fitOpt) { 
    // get type of data for TGraph objects
    double *ex = gr->GetEX();
    double *ey = gr->GetEY();
@@ -486,6 +486,7 @@ BinData::ErrorType GetDataType(const TGraph * gr, const DataOptions & fitOpt) {
       type =  BinData::kNoError; 
    }
    // need to treat case when all errors are zero 
+   // note that by default fitOpt.fCoordError is true
    else if ( ex != 0 && fitOpt.fCoordErrors)  { 
       // check that all errors are not zero
       int i = 0; 
@@ -494,20 +495,30 @@ BinData::ErrorType GetDataType(const TGraph * gr, const DataOptions & fitOpt) {
          ++i;
       }
    }
+   // case of asymmetric errors (by default fAsymErrors is true)
    else if ( ( eyl != 0 && eyh != 0)  && fitOpt.fAsymErrors)  { 
       // check also if that all errors are non zero's
       int i = 0; 
-      bool zeroError = true;
-      while (i < gr->GetN() && zeroError) { 
+      bool zeroErrorX = true;
+      bool zeroErrorY = true;
+      while (i < gr->GetN() && (zeroErrorX || zeroErrorY)) { 
          double e2X = ( gr->GetErrorXlow(i) + gr->GetErrorXhigh(i) );
          double e2Y = eyl[i] + eyh[i];
-         if ( e2X > 0 || e2Y > 0) zeroError = false; 
+         zeroErrorX &= (e2X <= 0); 
+         zeroErrorY &= (e2Y <= 0);
          ++i;
       }
-      if (zeroError) 
+      if (zeroErrorX && zeroErrorY) 
          type = BinData::kNoError;
-      else 
+      else if (!zeroErrorX && zeroErrorY) 
+         type = BinData::kCoordError; 
+      else if (zeroErrorX && !zeroErrorY) {
          type = BinData::kAsymError; 
+         fitOpt.fCoordErrors = false; 
+      }
+      else {
+         type = BinData::kAsymError; 
+      }
    }
 
    // need to look also a case when all errors in y are zero 
@@ -637,6 +648,7 @@ void DoFillData ( BinData  & dv,  const TGraph * gr,  BinData::ErrorType type, T
 
          // skip points with total error = 0
          if ( errorX <=0 && errorY <= 0 ) continue; 
+
          
          if (type == BinData::kAsymError)   { 
             // asymmetric errors 
@@ -788,11 +800,13 @@ void FillData ( BinData  & dv, const TGraph * gr,  TF1 * func ) {
    fitOpt.fErrors1 = (type == BinData::kNoError);
    // set this if we want to have error=1 for points with zero errors (by default they are skipped)
    // fitOpt.fUseEmpty = true;
-   fitOpt.fCoordErrors = (type ==  BinData::kCoordError);
-   fitOpt.fAsymErrors = (type ==  BinData::kAsymError);
+
+   // use coordinate or asym  errors in case option is set  and type is consistent
+   fitOpt.fCoordErrors &= (type ==  BinData::kCoordError) ||  (type ==  BinData::kAsymError) ;
+   fitOpt.fAsymErrors &= (type ==  BinData::kAsymError);
 
 
-   // if sata are filled already check if there are consistent - otherwise do nothing
+   // if data are filled already check if there are consistent - otherwise do nothing
    if (dv.Size() > 0 && dv.NDim() == 1 ) { 
       // check if size is correct otherwise flag an errors 
       if (dv.PointSize() == 2 && type != BinData::kNoError ) {
@@ -804,6 +818,10 @@ void FillData ( BinData  & dv, const TGraph * gr,  TF1 * func ) {
          return;
       }
       if (dv.PointSize() == 4 && type != BinData::kCoordError ) {
+         Error("FillData","Inconsistent TGraph with previous data set- skip all graph data"); 
+         return;
+      }
+      if (dv.PointSize() == 5 && type != BinData::kAsymError ) {
          Error("FillData","Inconsistent TGraph with previous data set- skip all graph data"); 
          return;
       }

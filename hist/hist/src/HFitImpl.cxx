@@ -190,8 +190,10 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    }
 #endif   
 
-   // switch off linear fitting in case data has  coordinate errors 
-   if (fitdata->GetErrorType() == ROOT::Fit::BinData::kCoordError ) linear = false;
+   // switch off linear fitting in case data has coordinate errors and the option is set
+   if (fitdata->GetErrorType() == ROOT::Fit::BinData::kCoordError && fitdata->Opt().fCoordErrors ) linear = false;
+   // linear fit cannot be done also in case of asymmetric errors 
+   if (fitdata->GetErrorType() == ROOT::Fit::BinData::kAsymError && fitdata->Opt().fAsymErrors ) linear = false;
 
    // this functions use the TVirtualFitter
    if (special != 0 && !fitOption.Bound && !linear) { 
