@@ -115,6 +115,18 @@ public:
       : TText(), TAttFill(0, 1001),
         _parent(parent), _font_size(0), _angle_degree(0)
    {
+      int i;
+      _font_size = 0;
+      _x0 = 0;
+      _y0 = 0;
+      _angle_degree = 0;
+      for (i = 0; i<6; i++) _pad_pixel_transform[i] = 0;
+      _pad_scale = 0;
+      _pad_scale_x = 0;
+      _pad_scale_y = 0;
+      _pad_scale_x_relative = 0;
+      _pad_scale_y_relative = 0;
+      for (i = 0; i < mathtext::math_text_renderer_t::NFAMILY; i++) _current_font_size[i] = 0;
    }
    inline float
    font_size(const unsigned int family = FAMILY_PLAIN) const
