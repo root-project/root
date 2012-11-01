@@ -5,6 +5,12 @@
 
 set(libname Graf)
 
+if(WIN32)
+  set(mathtextlib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/mathtext.lib)
+else()
+  set(mathtextlib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libmathtext.a)
+endif()
+
 ROOT_USE_PACKAGE(core)
 ROOT_USE_PACKAGE(math/matrix)
 ROOT_USE_PACKAGE(io/io)
@@ -16,7 +22,7 @@ ROOT_GENERATE_ROOTMAP(${libname} LINKDEF LinkDef.h DEPENDENCIES Hist Matrix Math
 
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
-ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx LIBRARIES ${FREETYPE_LIBRARIES} mathtext DEPENDENCIES Hist Matrix MathCore RIO)
+ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx LIBRARIES ${FREETYPE_LIBRARIES} ${mathtextlib} DEPENDENCIES Hist Matrix MathCore RIO)
 
 if(builtin_freetype)
   add_dependencies(${libname} FREETYPE)
