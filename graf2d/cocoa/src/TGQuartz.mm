@@ -683,7 +683,7 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
       return;
 
    //By default, all pixels are set to 0 (all components, that's what code in TGX11TTF also does here).
-   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h]);
+   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h scaleFactor : [[NSScreen mainScreen] backingScaleFactor]]);
    if (!pixmap.Get()) {
       Error("DrawText", "pixmap creation failed");
       return;

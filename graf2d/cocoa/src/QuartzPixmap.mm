@@ -64,7 +64,7 @@ namespace Quartz = ROOT::Quartz;
 @synthesize fID;
 
 //______________________________________________________________________________
-- (id) initWithW : (unsigned) width H : (unsigned) height
+- (id) initWithW : (unsigned) width H : (unsigned) height scaleFactor : (CGFloat) scaleFactor
 {
    if (self = [super init]) {
       fWidth = 0;
@@ -72,7 +72,7 @@ namespace Quartz = ROOT::Quartz;
       fData = 0;
       fContext = 0;
       
-      if (![self resizeW : width H : height]) {
+      if (![self resizeW : width H : height scaleFactor : scaleFactor]) {
          [self release];
          return nil;
       }
@@ -93,12 +93,13 @@ namespace Quartz = ROOT::Quartz;
 }
 
 //______________________________________________________________________________
-- (BOOL) resizeW : (unsigned) width H : (unsigned) height
+- (BOOL) resizeW : (unsigned) width H : (unsigned) height scaleFactor : (CGFloat) scaleFactor
 {
    assert(width > 0 && "resizeW:H:, Pixmap width must be positive");
    assert(height > 0 && "resizeW:H:, Pixmap height must be positive");
 
-   fScaleFactor = unsigned([[NSScreen mainScreen] backingScaleFactor] + 0.5);
+//   fScaleFactor = unsigned([[NSScreen mainScreen] backingScaleFactor] + 0.5);
+   fScaleFactor = unsigned(scaleFactor + 0.5);
    
    //Part, which does not change anything in a state:
    unsigned char *memory = 0;

@@ -2142,7 +2142,7 @@ Int_t TGCocoa::OpenPixmap(UInt_t w, UInt_t h)
    newSize.width = w;
    newSize.height = h;
 
-   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h]);
+   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h scaleFactor : [[NSScreen mainScreen] backingScaleFactor]]);
    if (pixmap.Get()) {
       pixmap.Get().fID = fPimpl->RegisterDrawable(pixmap.Get());//Can throw.
       return (Int_t)pixmap.Get().fID;
@@ -2164,7 +2164,7 @@ Int_t TGCocoa::ResizePixmap(Int_t wid, UInt_t w, UInt_t h)
    if (w == pixmap.fWidth && h == pixmap.fHeight)
       return 1;
    
-   if ([pixmap resizeW : w H : h])//This can throw std::bad_alloc, ok, no resource will leak.
+   if ([pixmap resizeW : w H : h scaleFactor : [[NSScreen mainScreen] backingScaleFactor]])//This can throw std::bad_alloc, ok, no resource will leak.
       return 1;
 
    return -1;
@@ -3246,7 +3246,7 @@ void TGCocoa::SetDoubleBufferON()
          return;
    }
 
-   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : currW H : currH]);
+   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : currW H : currH scaleFactor : [[NSScreen mainScreen] backingScaleFactor]]);
    if (pixmap.Get()) {
       window.fBackBuffer = pixmap.Get();
    } else {
