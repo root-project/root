@@ -1001,6 +1001,7 @@ namespace mathtext {
 				priority = 9;
 				break;
 			default:
+				delete [] subtable_offset;
 				return false;
 			}
 		}
