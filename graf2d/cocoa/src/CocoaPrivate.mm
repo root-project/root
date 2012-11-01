@@ -147,6 +147,7 @@ void CocoaPrivate::DeleteDrawable(Drawable_t drawableID)
       [qw.fContentView removeFromSuperview];
       qw.contentView = nil;
 
+      qw.fIsDeleted = YES;
       //Remove transient windows?
       /*
       const Util::NSScopeGuard<NSArray> children([[qw childWindows] copy]);
