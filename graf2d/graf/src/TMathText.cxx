@@ -49,7 +49,6 @@ End_Html
 
 const Double_t kPI      = TMath::Pi();
 const Int_t kLatex      = BIT(10);
-const Int_t kPrintingPS = BIT(11); //set in TPad.h
 
 class TMathTextRenderer : public TText, public TAttFill,
                           public mathtext::math_text_renderer_t {
