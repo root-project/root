@@ -16,9 +16,6 @@
 #include "DllImport.h"
 #include "TInterpreter.h"
 
-// CINT
-#include "Api.h"
-
 // Standard
 #include <utility>
 #include <sstream>
@@ -214,9 +211,7 @@ PyObject* PyROOT::TSTLStringExecutor::Execute( CallFunc_t* func, void* self )
    PyObject* pyresult =
       PyROOT_PyUnicode_FromStringAndSize( result->c_str(), result->size() );
 
-// stop CINT from tracking the object, then force delete
-   G__pop_tempobject_nodel();
-   delete result;
+// TODO: take over ownership from Cling somehow (old:  G__pop_tempobject_nodel(); delete result;)
 
    return pyresult;
 }
@@ -250,8 +245,7 @@ PyObject* PyROOT::TRootObjectByValueExecutor::Execute( CallFunc_t* func, void* s
       return 0;
    }
 
-// stop CINT from tracking the object, so that ownership is ours
-   G__pop_tempobject_nodel();
+// TODO: resolve possible ownership issues (old: G__pop_tempobject_nodel();)
 
 // the result can then be bound
    ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( result, fClass );
@@ -290,6 +284,13 @@ PyObject* PyROOT::TRootObjectRefExecutor::Execute( CallFunc_t* func, void* self 
 }
 
 //____________________________________________________________________________
+PyObject* PyROOT::TRootObjectPtrExecutor::Execute( CallFunc_t* func, void* self )
+{
+// execute <func> with argument <self>, construct python ROOT object return ptr value
+   return BindRootObject( (void*)gInterpreter->CallFunc_ExecInt( func, self ), fClass, kTRUE );
+}
+
+//____________________________________________________________________________
 PyObject* PyROOT::TConstructorExecutor::Execute( CallFunc_t* func, void* klass )
 {
 // package return address in PyObject* for caller to handle appropriately
@@ -316,15 +317,17 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
 // If all fails, void is used, which will cause the return type to be ignored on use
 
 // resolve typedefs etc., and collect qualifiers
-   G__TypeInfo ti( fullType.c_str() );
-   std::string resolvedType = ti.TrueName();
-   if ( ! ti.IsValid() )
-      resolvedType = fullType;     // otherwise, resolvedType will be "(unknown)"
+   std::string resolvedType = TClassEdit::ResolveTypedef( fullType.c_str(), true );
    const std::string& cpd = Utility::Compound( resolvedType );
    std::string realType = TClassEdit::ShortType( resolvedType.c_str(), 1 );
 
+// an exactly matching executor is best
+   ExecFactories_t::iterator h = gExecFactories.find( resolvedType );
+   if ( h != gExecFactories.end() )
+      return (h->second)();
+
 // a full, qualified matching executor is preferred
-   ExecFactories_t::iterator h = gExecFactories.find( realType + cpd );
+   h = gExecFactories.find( realType + cpd );
    if ( h != gExecFactories.end() )
       return (h->second)();
 
@@ -342,18 +345,20 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
          result = new TRootObjectByValueExecutor( klass );
       else if ( cpd == "&" )
          result = new TRootObjectRefExecutor( klass );
+      else if ( cpd == "**" || cpd == "*&" || cpd == "&*" )
+         result = new TRootObjectPtrExecutor( klass );
       else
          result = new TRootObjectExecutor( klass );
    } else {
    // could still be an enum ...
-      if ( ti.Property() & G__BIT_ISENUM )
-         h = gExecFactories.find( "UInt_t" );
-      else {
+   //      if ( ti.Property() & G__BIT_ISENUM )
+   //         h = gExecFactories.find( "UInt_t" );
+   //      else {
          std::stringstream s;
          s << "return type not handled (using void): " << fullType << std::ends;
          PyErr_Warn( PyExc_RuntimeWarning, (char*)s.str().c_str() );
          h = gExecFactories.find( "void" );
-      }
+      //      }
    }
 
    if ( ! result && h != gExecFactories.end() )

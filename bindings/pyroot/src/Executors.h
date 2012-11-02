@@ -70,9 +70,6 @@ namespace PyROOT {
       virtual PyObject* Execute( CallFunc_t*, void* );
    };
 
-   PYROOT_DECLARE_BASIC_EXECUTOR( Constructor );
-   PYROOT_DECLARE_BASIC_EXECUTOR( PyObject );
-
    class TRefExecutor : public TExecutor {
    public:
       TRefExecutor() : fAssignable( 0 ) {}
@@ -83,6 +80,9 @@ namespace PyROOT {
    protected:
       PyObject* fAssignable;
    };
+
+   PYROOT_DECLARE_BASIC_EXECUTOR( Constructor );
+   PYROOT_DECLARE_BASIC_EXECUTOR( PyObject );
 
 #define PYROOT_DECLARE_BASIC_REFEXECUTOR( name )                              \
    class T##name##RefExecutor : public TRefExecutor {                         \
@@ -108,6 +108,12 @@ namespace PyROOT {
 
    protected:
       TClassRef fClass;
+   };
+
+   class TRootObjectPtrExecutor : public TRootObjectExecutor {
+   public:
+      TRootObjectPtrExecutor( const TClassRef& klass ) : TRootObjectExecutor ( klass ) {}
+      virtual PyObject* Execute( CallFunc_t*, void* );
    };
 
 // factories
