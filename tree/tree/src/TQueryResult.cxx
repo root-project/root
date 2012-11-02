@@ -439,16 +439,26 @@ void TQueryResult::SetOutputList(TList *out, Bool_t adopt)
    // or cloned.  If adopted, object ownership is transferred to this object.
    // The internal fOutputList will always be owner of its objects.
 
-   if (!out || out != fOutputList)
+   if (!out) {
       SafeDelete(fOutputList);
+      return;
+   }
 
    if (out && out != fOutputList) {
+      TObject *o = 0;
+      if (fOutputList) {
+         TIter nxoo(fOutputList);
+         while ((o = nxoo())) {
+            if (out->FindObject(o)) fOutputList->Remove(o);
+         }
+         SafeDelete(fOutputList);
+      }
       if (!adopt) {
          fOutputList = (TList *) (out->Clone());
       } else {
          fOutputList = new TList;
          TIter nxo(out);
-         TObject *o = 0;
+         o = 0;
          while ((o = nxo()))
             fOutputList->Add(o);
          out->SetOwner(kFALSE);
