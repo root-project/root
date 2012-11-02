@@ -364,6 +364,7 @@ public:
    // Function to retrieve the TClass object and dictionary function
    static void           AddClass(TClass *cl);
    static void           RemoveClass(TClass *cl);
+   static TClass        *GetClassOrAlias(const char *name);
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static VoidFuncPtr_t  GetDict (const char *cname);

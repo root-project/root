@@ -2471,6 +2471,46 @@ TVirtualIsAProxy* TClass::GetIsAProxy() const
 
 
 //______________________________________________________________________________
+TClass *TClass::GetClassOrAlias(const char *name)
+{
+   // Static method returning pointer to TClass of the specified class name.
+   // Also checks for possible templatye alias names (e.g. vector<Int_t>
+   // vs. vector<int>). Otherwise acts like GetClass(name, false).
+   Bool_t load = kFALSE;
+   if (strchr(name, '<') && TClass::GetClassShortTypedefHash()) {
+      // We have a template which may have duplicates.
+      TString resolvedName(TClassEdit::ResolveTypedef(TClassEdit::ShortType(name,
+                                  TClassEdit::kDropStlDefault).c_str(), kTRUE));
+      if (resolvedName != name) {
+         TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName);
+         if (cl) {
+            load = kTRUE;
+         }
+      }
+      if (!load) {
+         TIter next(TClass::GetClassShortTypedefHash()->GetListForObject(resolvedName));
+         while (TClass::TNameMapNode* htmp =
+                static_cast<TClass::TNameMapNode*>(next())) {
+            if (resolvedName == htmp->String()) {
+               TClass* cl = TClass::GetClass(htmp->fOrigName, kFALSE);
+               if (cl) {
+                  // we found at least one equivalent.
+                  // let's force a reload
+                  load = kTRUE;
+                  break;
+               }
+            }
+         }
+      }
+   }
+   if (gROOT->GetListOfClasses()->GetEntries() == 0) {
+      // Nothing to find, let's not get yourself in trouble.
+      return 0;
+   }
+   return TClass::GetClass(name, load);
+}
+
+//______________________________________________________________________________
 TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 {
    // Static method returning pointer to TClass of the specified class name.
