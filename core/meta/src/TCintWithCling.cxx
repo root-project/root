@@ -224,6 +224,19 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
        I != E; ++I)
       for (DeclGroupRef::const_iterator DI = I->begin(), DE = I->end(); 
            DI != DE; ++DI) {
+         if (isa<DeclContext>(*DI) && !isa<EnumDecl>(*DI)) {
+            // We have to find all the typedefs contained in that decl context
+            // and add it to the list of types.
+            listOfSmth = gROOT->GetListOfTypes();
+            llvm::SmallVector<TypedefDecl*, 128> Defs;
+            TypedefVisitor V(Defs);
+            V.TraverseDecl(*DI);
+            for (size_t i = 0; i < Defs.size(); ++i)
+            if (!listOfSmth->FindObject(Defs[i]->getNameAsString().c_str())) {
+               listOfSmth->Add(new TDataType(new TClingTypedefInfo(interp, Defs[i])));
+            }
+
+         }
          if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(*DI)) {
             listOfSmth = gROOT->GetListOfGlobalFunctions();
             if (!isa<TranslationUnitDecl>(FD->getDeclContext()))
@@ -238,19 +251,6 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
          }
          else if (TagDecl *TD = dyn_cast<TagDecl>(*DI)) {
             TCintWithCling__UpdateClassInfo(TD);
-         }
-         else if (isa<DeclContext>(*DI) && !isa<EnumDecl>(*DI)) {
-            // We have to find all the typedefs contained in that decl context
-            // and add it to the list of types.
-            listOfSmth = gROOT->GetListOfTypes();
-            llvm::SmallVector<TypedefDecl*, 128> Defs;
-            TypedefVisitor V(Defs);
-            V.TraverseDecl(*DI);
-            for (size_t i = 0; i < Defs.size(); ++i)
-            if (!listOfSmth->FindObject(Defs[i]->getNameAsString().c_str())) {
-               listOfSmth->Add(new TDataType(new TClingTypedefInfo(interp, Defs[i])));
-            }
-
          }
          else if (const TypedefDecl* TdefD = dyn_cast<TypedefDecl>(*DI)) {
             listOfSmth = gROOT->GetListOfTypes();
