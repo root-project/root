@@ -196,6 +196,7 @@ public: // Public Interface
    static int   AutoLoadCallback(const char* cls, const char* lib);
    static void  UpdateClassInfo(char* name, Long_t tagnum);
    static void  UpdateClassInfoWork(const char* name);
+          void  UpdateClassInfoWithDecl(void* vTD);
    static void  UpdateAllCanvases();
 
    // Misc

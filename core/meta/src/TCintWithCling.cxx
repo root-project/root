@@ -179,6 +179,43 @@ public:
    }
 };
 
+//______________________________________________________________________________
+static void TCintWithCling__UpdateClassInfo(TagDecl* TD)
+{
+   // Update TClingClassInfo for a class (e.g. upon seeing a definition).
+   static Bool_t entered = kFALSE;
+   static vector<TagDecl*> updateList;
+   Bool_t topLevel;
+
+   if (entered) topLevel = kFALSE;
+   else {
+      entered = kTRUE;
+      topLevel = kTRUE;
+   }
+   if (topLevel) {
+      ((TCintWithCling*)gInterpreter)->UpdateClassInfoWithDecl(TD);
+   } else {
+      // If we are called indirectly from within another call to
+      // TCint::UpdateClassInfo, we delay the update until the dictionary loading
+      // is finished (i.e. when we return to the top level TCint::UpdateClassInfo).
+      // This allows for the dictionary to be fully populated when we actually
+      // update the TClass object.   The updating of the TClass sometimes
+      // (STL containers and when there is an emulated class) forces the building
+      // of the TClass object's real data (which needs the dictionary info).
+      updateList.push_back(TD);
+   }
+   if (topLevel) {
+      while (!updateList.empty()) {
+         ((TCintWithCling*)gInterpreter)
+            ->UpdateClassInfoWithDecl(updateList.back());
+         updateList.pop_back();
+      }
+      entered = kFALSE;
+   }
+}
+
+
+
 extern "C" 
 void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
    TCollection *listOfSmth = 0;
@@ -199,14 +236,10 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
                listOfSmth->Add(new TFunction(new TClingMethodInfo(interp, FD)));
             }            
          }
-
-         if (TagDecl *TD = dyn_cast<TagDecl>(*DI)) {
-            listOfSmth = gROOT->GetListOfClasses();
-            std::string name = TD->getNameAsString();
-            TCintWithCling::UpdateClassInfoWork(name.c_str());
+         else if (TagDecl *TD = dyn_cast<TagDecl>(*DI)) {
+            TCintWithCling__UpdateClassInfo(TD);
          }
-
-         if (isa<DeclContext>(*DI) && !isa<EnumDecl>(*DI)) {
+         else if (isa<DeclContext>(*DI) && !isa<EnumDecl>(*DI)) {
             // We have to find all the typedefs contained in that decl context
             // and add it to the list of types.
             listOfSmth = gROOT->GetListOfTypes();
@@ -235,15 +268,13 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
 
             listOfSmth = gROOT->GetListOfGlobals();
 
-            if (!(isa<EnumDecl>(ND) || 
-                  isa<VarDecl>(ND) || isa<FieldDecl>(ND)))
+            if (!(isa<EnumDecl>(ND) || isa<VarDecl>(ND)))
                continue;
 
             // Skip if already in the list.
             if (listOfSmth->FindObject(ND->getNameAsString().c_str()))
                continue;
 
-            // FIXME: Review needed: How does ROOT understand globals?
             if (EnumDecl *ED = dyn_cast<EnumDecl>(*DI)) {
                for(EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
                       EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
@@ -2650,6 +2681,30 @@ void* TCintWithCling::FindSpecialObject(const char* item, G__ClassInfo* type,
 }
 
 //______________________________________________________________________________
+void TCintWithCling::UpdateClassInfoWithDecl(void* vTD)
+{
+   // Internal function. Inform a TClass about its new TagDecl.
+   TagDecl* td = (TagDecl*)vTD;
+   TagDecl* tdDef = td->getDefinition();
+   if (tdDef) td = tdDef;
+   std::string name = td->getName();
+   TClass* cl = TClass::GetClassOrAlias(name.c_str());
+   if (cl) {
+      TClingClassInfo* cci = ((TClingClassInfo*)cl->fClassInfo);
+      if (cci) {
+         const TagDecl* tdOld = dyn_cast<TagDecl>(cci->GetDecl());
+         if (!tdOld || tdDef) {
+            cl->ResetCaches();
+            cci->Init(*td);
+         }
+      } else {
+         cl->ResetCaches();
+         cl->fClassInfo = new TClingClassInfo(fInterpreter, *td);
+      }
+   }
+}
+
+//______________________________________________________________________________
 void TCintWithCling::UpdateClassInfo(char* item, Long_t tagnum)
 {
    // No op: see TClingCallbacks
@@ -2659,42 +2714,8 @@ void TCintWithCling::UpdateClassInfo(char* item, Long_t tagnum)
 //FIXME: Factor out that function in TClass, because TClass does it already twice
 void TCintWithCling::UpdateClassInfoWork(const char* item)
 {
-   // This does the actual work of UpdateClassInfo.
-   Bool_t load = kFALSE;
-   if (strchr(item, '<') && TClass::GetClassShortTypedefHash()) {
-      // We have a template which may have duplicates.
-      TString resolvedItem(TClassEdit::ResolveTypedef(TClassEdit::ShortType(item,
-                                  TClassEdit::kDropStlDefault).c_str(), kTRUE));
-      if (resolvedItem != item) {
-         TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedItem);
-         if (cl) {
-            load = kTRUE;
-         }
-      }
-      if (!load) {
-         TIter next(TClass::GetClassShortTypedefHash()->GetListForObject(resolvedItem));
-         while (TClass::TNameMapNode* htmp =
-                static_cast<TClass::TNameMapNode*>(next())) {
-            if (resolvedItem == htmp->String()) {
-               TClass* cl = gROOT->GetClass(htmp->fOrigName, kFALSE);
-               if (cl) {
-                  // we found at least one equivalent.
-                  // let's force a reload
-                  load = kTRUE;
-                  break;
-               }
-            }
-         }
-      }
-   }
-   if (gROOT->GetListOfClasses()->GetEntries() == 0) {
-      // Nothing to find, let's not get yourself in trouble.
-      return;
-   }
-   TClass* cl = gROOT->GetClass(item, load);
-   if (cl) {
-      cl->ResetCaches();
-   }
+   // This is a no-op as part of the API.
+   // TCintWithCling uses UpdateClassInfoWithDecl() instead.
 }
 
 //______________________________________________________________________________
