@@ -28,7 +28,7 @@
 //(though ROOT never does this). View has to know about GL-context only to notify it about
 //geometry changes (calls -update method) and to clear drawable in a -dealloc method.
 
-- (void) setOpenGLContext : (NSOpenGLContext *) context;
+@property (nonatomic, retain) NSOpenGLContext *fOpenGLContext;
 
 //ROOT's GL uses pixel format (TGLFormat class) when TGLWidget is
 //created, after that, pixel format never changed (though I can do 

@@ -3002,10 +3002,7 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
    typedef std::pair<UInt_t, Int_t> component_type;
    typedef std::vector<component_type>::size_type size_type;
 
-   assert(!fPimpl->IsRootWindow(parentID) && "CreateOpenGLWindow, could not create top-level gl window");
    //Convert pairs into Cocoa's GL attributes.
-   
-
    std::vector<NSOpenGLPixelFormatAttribute> attribs;
    for (size_type i = 0, e = formatComponents.size(); i < e; ++i) {
       const component_type &comp = formatComponents[i];
@@ -3035,8 +3032,11 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
    NSOpenGLPixelFormat * const pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes : &attribs[0]];
    const Util::NSScopeGuard<NSOpenGLPixelFormat> formatGuard(pixelFormat);
    
-   NSView<X11Window> * const parentView = fPimpl->GetWindow(parentID).fContentView;
-   assert([parentView isKindOfClass : [QuartzView class]] && "CreateOpenGLWindow, parent view must be QuartzView");
+   NSView<X11Window> *parentView = nil;
+   if (!fPimpl->IsRootWindow(parentID)) {
+      parentView = fPimpl->GetWindow(parentID).fContentView;
+      assert([parentView isKindOfClass : [QuartzView class]] && "CreateOpenGLWindow, parent view must be QuartzView");
+   }
    
    NSRect viewFrame = {};
    viewFrame.size.width = width;
@@ -3044,10 +3044,28 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
 
    ROOTOpenGLView * const glView = [[ROOTOpenGLView alloc] initWithFrame : viewFrame pixelFormat : pixelFormat];
    const Util::NSScopeGuard<ROOTOpenGLView> viewGuard(glView);
+
+   Window_t glID = kNone;
    
-   [parentView addChild : glView];
-   const Window_t glID = fPimpl->RegisterDrawable(glView);
-   glView.fID = glID;
+   if (parentView) {
+      [parentView addChild : glView];
+      glID = fPimpl->RegisterDrawable(glView);
+      glView.fID = glID;
+   } else {
+      //"top-level glview".
+      //Create a window to be parent of this gl-view.
+      QuartzWindow *parent = [[QuartzWindow alloc] initWithGLView : glView];
+      const Util::NSScopeGuard<QuartzWindow> winGuard(parent);
+      
+      
+      if (!parent) {
+         Error("CreateOpenGLWindow", "QuartzWindow allocation/initialization failed for a top-level GL widget");
+         return kNone;
+      }
+      
+      glID = fPimpl->RegisterDrawable(parent);
+      parent.fID = glID;
+   }
 
    return glID;
 }
@@ -3063,8 +3081,7 @@ Handle_t TGCocoa::CreateOpenGLContext(Window_t windowID, Handle_t sharedID)
    ROOTOpenGLView * const glView = (ROOTOpenGLView *)fPimpl->GetWindow(windowID);
 
    const Util::NSScopeGuard<NSOpenGLContext> newContext([[NSOpenGLContext alloc] initWithFormat : glView.pixelFormat shareContext : sharedContext]);
-   [glView setOpenGLContext : newContext.Get()];
-  
+   glView.fOpenGLContext = newContext.Get();
    const Handle_t ctxID = fPimpl->RegisterGLContext(newContext.Get());
 
    return ctxID;
@@ -3088,8 +3105,7 @@ Bool_t TGCocoa::MakeOpenGLContextCurrent(Handle_t ctxID, Window_t windowID)
       return kFALSE;
    }
 
-   assert([fPimpl->GetWindow(windowID) isKindOfClass : [ROOTOpenGLView class]] && "MakeOpenGLContextCurrent, view is not an OpenGL view");
-   ROOTOpenGLView * const glView = (ROOTOpenGLView *)fPimpl->GetWindow(windowID);
+   ROOTOpenGLView * const glView = (ROOTOpenGLView *)fPimpl->GetWindow(windowID).fContentView;
 
    if (OpenGL::GLViewIsValidDrawable(glView)) {
       if ([glContext view] != glView)
@@ -3100,7 +3116,7 @@ Bool_t TGCocoa::MakeOpenGLContextCurrent(Handle_t ctxID, Window_t windowID)
          glView.fUpdateContext = NO;
       }
 
-      [glView setOpenGLContext : glContext];
+      glView.fOpenGLContext = glContext;
       [glContext makeCurrentContext];
       
       return kTRUE;
@@ -3143,6 +3159,7 @@ Bool_t TGCocoa::MakeOpenGLContextCurrent(Handle_t ctxID, Window_t windowID)
          [fakeView setHidden : NO];
       }
 
+      glView.fOpenGLContext = nil;
       [glContext setView : fakeView];
       [glContext makeCurrentContext];
    }
@@ -3188,10 +3205,9 @@ void TGCocoa::DeleteOpenGLContext(Int_t ctxID)
    //now it's a context id. DeleteOpenGLContext is not used in ROOT,
    //only in TGLContext for Cocoa.
    NSOpenGLContext * const glContext = fPimpl->GetGLContextForHandle(ctxID);
-   
    if (NSView * const v = [glContext view]) {
       if ([v isKindOfClass : [ROOTOpenGLView class]])
-         [(ROOTOpenGLView *)v setOpenGLContext : nil];
+         ((ROOTOpenGLView *)v).fOpenGLContext = nil;
    
       [glContext clearDrawable];
    }
@@ -3200,7 +3216,6 @@ void TGCocoa::DeleteOpenGLContext(Int_t ctxID)
       [NSOpenGLContext clearCurrentContext];
 
    fPimpl->DeleteGLContext(ctxID);
-
 }
 
 //Off-screen rendering for TPad/TCanvas.

@@ -24,6 +24,7 @@
 #import <stdexcept>
 #import <cassert>
 
+#import "ROOTOpenGLView.h"
 #import "QuartzWindow.h"
 #import "QuartzPixmap.h"
 #import "QuartzUtils.h"
@@ -894,6 +895,34 @@ void print_mask_info(ULong_t mask)
       if (attr)
          X11::SetWindowAttributes(attr, self);
       
+      fIsDeleted = NO;
+   }
+   
+   return self;
+}
+
+//______________________________________________________________________________
+- (id) initWithGLView : (ROOTOpenGLView *) glView
+{
+   assert(glView != nil && "initWithGLView, glView parameter is nil");
+   
+   const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+
+   NSRect contentRect = glView.frame;
+   contentRect.origin = CGPointZero;
+
+   self = [super initWithContentRect : contentRect styleMask : styleMask backing : NSBackingStoreBuffered defer : NO];
+
+   if (self) {
+      //ROOT's not able to draw GUI concurrently, thanks to global variables and gVirtualX itself.
+      [self setAllowsConcurrentViewDrawing : NO];
+      self.delegate = self;
+      fContentView = glView;
+      [self setContentView : fContentView];
+      
+      NSLog(@"gl content view's count is %d", int([glView retainCount]));
+      
+      fDelayedTransient = NO;
       fIsDeleted = NO;
    }
    
