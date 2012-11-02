@@ -90,7 +90,7 @@ namespace RooStats {
          oocoutW((TObject *)0, Eval) << "RooStatsUtils::MakeNuisancePdf - no constraints found on nuisance parameters in the input model" << endl;
          return 0;
       } else if(constraints.getSize() == 1) {
-         return dynamic_cast<RooAbsPdf *>(constraints.first());
+         return dynamic_cast<RooAbsPdf *>(constraints.first()->clone(name));
       }
       return new RooProdPdf(name,"", constraints);
    }
@@ -119,7 +119,9 @@ namespace RooStats {
          }
 
          if(newList.getSize() == 0) return NULL; // only constraints in product
-         else if(newList.getSize() == 1) return dynamic_cast<RooAbsPdf *>(newList.at(0)); // return single component (no longer a product)
+         // return single component (no longer a product)
+         else if(newList.getSize() == 1) return dynamic_cast<RooAbsPdf *>(newList.at(0)->clone(TString::Format("%s_unconstrained", 
+                                                                                                               newList.at(0)->GetName()))); 
          else return new RooProdPdf(TString::Format("%s_unconstrained", prod->GetName()).Data(),
             TString::Format("%s without constraints", prod->GetTitle()).Data(), newList);
 

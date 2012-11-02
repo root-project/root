@@ -37,6 +37,7 @@
 #include "RooGaussian.h"
 #include "RooBifurGauss.h"
 #include "RooLognormal.h"
+#include "RooDataHist.h"
 #include <cmath>
 #include <typeinfo>
 
@@ -140,6 +141,24 @@ AsymptoticCalculator::AsymptoticCalculator(
 
    oocoutP((TObject*)0,Eval) << "AsymptoticCalculator: Building Asimov data Set" << endl;
 
+   // check that in case of binned models th ennumber of bins of the observables are consistent 
+   // with the number of bins  in the observed data 
+   // This number will be used for making the Asimov data set so it will be more consistent with the 
+   // observed data
+   int prevBins = 0; 
+   RooRealVar * xobs = 0;
+   if (GetNullModel()->GetObservables() && GetNullModel()->GetObservables()->getSize() == 1 ) {
+      xobs = (RooRealVar*) (GetNullModel()->GetObservables())->first();
+      if (data.IsA() == RooDataHist::Class() ) { 
+         if (data.numEntries() != xobs->getBins() ) { 
+            prevBins = xobs->getBins();
+            oocoutW((TObject*)0,InputArguments) << "AsymptoticCalculator: number of bins in " << xobs->GetName() << " are different than data bins " 
+                                                << " set the same data bins " << data.numEntries() << " in range " 
+                                                << " [ " << xobs->getMin() << " , " << xobs->getMax() << " ]" << std::endl;
+            xobs->setBins(data.numEntries());
+         }
+      }
+   }
 
    if (!nominalAsimov) {
       if (verbose >= 0) 
@@ -200,7 +219,8 @@ AsymptoticCalculator::AsymptoticCalculator(
          oocoutI((TObject*)0,InputArguments) << "Minimum of POI is " << muNull->getMin() << " corresponds to null  snapshot   - default configuration is  one-sided discovery formulae  " << std::endl;
    }
 
-
+   // restore number of bins 
+   if (prevBins > 0 && xobs) xobs->setBins(prevBins);
 
 }
 
@@ -745,7 +765,7 @@ double AsymptoticCalculator::GetExpectedPValues(double pnull, double palt, doubl
 void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs, RooAbsData & data, int &index,  double &binVolume, int &ibin) { 
    /// fill bins by looping recursivly on observables 
 
-   bool debug = (fgPrintLevel == 2);  
+   bool debug = (fgPrintLevel >= 2);  
 
    RooRealVar * v = dynamic_cast<RooRealVar*>( &(obs[index]) );
    if (!v) return;
@@ -783,6 +803,7 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
          if (debug) { 
             cout << "bin " << ibin << "\t";
             for (int j=0; j < obs.getSize(); ++j) { cout << "  " <<  ((RooRealVar&) obs[j]).getVal(); }
+            cout << " w = " << fval*expectedEvents;
             cout << endl;
          }
          // RooArgSet xxx(obs);
@@ -1227,12 +1248,21 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
 
       // part 1: create the nuisance pdf
       std::auto_ptr<RooAbsPdf> nuispdf(RooStats::MakeNuisancePdf(model,"TempNuisPdf") );
-      // unfold the nuisance pdf 
-      RooProdPdf *prod = dynamic_cast<RooProdPdf *>(nuispdf.get());
-      if (prod == 0) { 
-         oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: the nuisance pdf is not a RooProdPdf!" << std::endl;
+      if (nuispdf.get() == 0) { 
+         oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: model has nuisance parameters and global obs but no nuisance pdf "
+                                         << std::endl;
       }
-      std::auto_ptr<TIterator> iter(prod->pdfList().createIterator());
+      // unfold the nuisance pdf if it is a prod pdf
+      RooArgList pdfList;  
+      RooProdPdf *prod = dynamic_cast<RooProdPdf *>(nuispdf.get());
+      if (prod ) { 
+         pdfList.add(prod->pdfList());
+      }
+      else
+         // nothing to unfold - just use the pdf
+         pdfList.add(*nuispdf.get());
+
+      std::auto_ptr<TIterator> iter(pdfList.createIterator());
       for (RooAbsArg *a = (RooAbsArg *) iter->Next(); a != 0; a = (RooAbsArg *) iter->Next()) {
          RooAbsPdf *cterm = dynamic_cast<RooAbsPdf *>(a); 
          assert(cterm && "AsimovUtils: a factor of the nuisance pdf is not a Pdf!");
