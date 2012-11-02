@@ -2737,12 +2737,13 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          // We have transferred copy of the output objects in TQueryResult,
          // so now we can cleanup the selector, making sure that we do not
          // touch the output objects
-         if (output) output->SetOwner(kFALSE);
+         if (output) { output->SetOwner(kFALSE); output->Clear("nodelete"); }
          if (fCreateSelObj) SafeDelete(fSelector);
 
          // Delete fOutput (not needed anymore, cannot be finalized twice),
          // making sure that the objects saved in TQueryResult are not deleted
          fOutput->SetOwner(kFALSE);
+         fOutput->Clear("nodelete");
          SafeDelete(fOutput);
       }
    }
