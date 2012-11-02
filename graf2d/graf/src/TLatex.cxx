@@ -13,6 +13,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TLatex.h"
+#include "TMathText.h"
 #include "TMath.h"
 #include "TVirtualPad.h"
 #include "TVirtualPS.h"
@@ -1837,6 +1838,14 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       if (gVirtualX) gVirtualX->SetTextAngle(angle);
       if (gVirtualPS) gVirtualPS->SetTextAngle(angle);
       gPad->PaintText(x,y,text1);
+      return;
+   }
+   
+   // Paint the text using TMathText if contains a "\"
+   if (strstr(text1,"\\")) {
+      TMathText tm;
+      tm.SetTextAlign(GetTextAlign());
+      tm.PaintMathText(x, y, angle, size, text1);
       return;
    }
 
