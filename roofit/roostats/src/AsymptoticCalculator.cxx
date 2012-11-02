@@ -49,28 +49,6 @@
 using namespace RooStats;
 using namespace std;
 
-namespace Utils { 
-
-    bool SetAllConstant(const RooAbsCollection &coll, bool constant) {
-       // utility function to set all variable constant in a collection
-       // (from G. Petrucciani)
-       bool changed = false;
-       std::auto_ptr<TIterator> iter(coll.createIterator());
-       for (RooAbsArg *a = (RooAbsArg *) iter->Next(); a != 0; a = (RooAbsArg *) iter->Next()) {
-          RooRealVar *v = dynamic_cast<RooRealVar *>(a);
-          if (v && (v->isConstant() != constant)) {
-             changed = true;
-             v->setConstant(constant);
-          }
-       }
-       return changed;
-    }
-
-
-
-}
-
-
 
 ClassImp(RooStats::AsymptoticCalculator);
 
@@ -1184,7 +1162,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
    }
 
    // restore the parameters which were set constant
-   Utils::SetAllConstant(paramsSetConstant, false);
+   SetAllConstant(paramsSetConstant, false);
 
 
    RooArgSet *  allParams = model.GetPdf()->getParameters(realData);
@@ -1255,7 +1233,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
 
       // snapshot data global observables
       RooArgSet snapGlobalObsData;
-      Utils::SetAllConstant(gobs, true);
+      SetAllConstant(gobs, true);
       gobs.snapshot(snapGlobalObsData);
 
 
@@ -1369,7 +1347,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
       // needed this ?? (LM) 
 
       asimovGlobObs.removeAll();
-      Utils::SetAllConstant(gobs, true);
+      SetAllConstant(gobs, true);
       gobs.snapshot(asimovGlobObs);
 
       // revert global observables to the data value
