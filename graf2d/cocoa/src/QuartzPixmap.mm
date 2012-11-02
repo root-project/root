@@ -407,9 +407,7 @@ namespace Quartz = ROOT::Quartz;
    
    if (fScaleFactor > 1) {
       //Ooops, and what should I do now???
-      const unsigned scaledW = fWidth * fScaleFactor;
-      const unsigned scaledH = fHeight * fScaleFactor;
-      
+      const unsigned scaledW = fWidth * fScaleFactor;      
       unsigned char *dst = fData + y * fScaleFactor * scaledW * 4 + x * fScaleFactor * 4;
 
       for (unsigned i = 0; i < 2; ++i, dst += 4) {
