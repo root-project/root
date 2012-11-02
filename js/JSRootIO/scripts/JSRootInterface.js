@@ -125,8 +125,8 @@ function showDirectory(dir_name, cycle, dir_id) {
 };
 
 function displayObject(obj, cycle, idx) {
-   if (!obj['_typename'].match(/\bTH1/) &&
-       !obj['_typename'].match(/\bTH2/) &&
+   if (!obj['_typename'].match(/\bJSROOTIO.TH1/) &&
+       !obj['_typename'].match(/\bJSROOTIO.TH2/) &&
        obj['_typename'] != 'JSROOTIO.TGraph' &&
        obj['_typename'] != 'JSROOTIO.TCanvas' &&
        obj['_typename'] != 'JSROOTIO.TF1' &&

@@ -1664,18 +1664,7 @@ function createFillPatterns(svg, id, line_color) {
                .attr("font-family", "Arial")
                .attr("font-size", font_size)
                .text(func['fTitle']);
-/*
-            // foreign html objects don't work on IE, and not properly on FF... :-(
-            vis.append("foreignObject")
-               .attr("y", 0.05 * vis.attr("height"))
-               .attr("width", vis.attr("width"))
-               .attr("height", 100)
-            .append("xhtml:body")
-               .style("font", "14px 'Helvetica'")
-               .html("<h3><center>An HTML Foreign Object in SVG <font face='Symbol' color='green'>abCDEFG!</font></center></h3>");
-*/
          }
-
          xax.selectAll("text").attr("font-size", label_font_size);
          yax.selectAll("text").attr("font-size", label_font_size);
 
@@ -2835,13 +2824,13 @@ function createFillPatterns(svg, id, line_color) {
          }
          svg = JSROOTPainter.createCanvas($(render_to), idx);
          if (svg == null) return false;
-         if (obj['_typename'].match(/\bTH1/)) {
+         if (obj['_typename'].match(/\bJSROOTIO.TH1/)) {
             JSROOTPainter.drawHistogram1D(svg, null, obj, null);
          }
-         else if (obj['_typename'].match(/\bTH2/)) {
+         else if (obj['_typename'].match(/\bJSROOTIO.TH2/)) {
             JSROOTPainter.drawHistogram2D(svg, null, obj, null);
          }
-         else if (obj['_typename'].match(/\bTProfile/)) {
+         else if (obj['_typename'].match(/\bJSROOTIO.TProfile/)) {
             JSROOTPainter.drawProfile(svg, null, obj, null);
          }
          else if (obj['_typename'] == 'JSROOTIO.TF1') {
@@ -3261,7 +3250,7 @@ function createFillPatterns(svg, id, line_color) {
          if (classname == 'JSROOTIO.TText') {
             this.drawText(vis, pad, primitives[i]);
          }
-         if (classname.match(/\bTH1/)) {
+         if (classname.match(/\bJSROOTIO.TH1/)) {
             this.drawHistogram1D(vis, pad, primitives[i], frame);
             if (fframe) {
                fframe['xmin'] = primitives[i]['fXaxis']['fXmin'];
@@ -3274,10 +3263,10 @@ function createFillPatterns(svg, id, line_color) {
                }
             }
          }
-         if (classname.match(/\bTH2/)) {
+         if (classname.match(/\bJSROOTIO.TH2/)) {
             this.drawHistogram2D(vis, pad, primitives[i], frame);
          }
-         if (classname.match(/\bTProfile/)) {
+         if (classname.match(/\bJSROOTIO.TProfile/)) {
             this.drawProfile(vis, pad, primitives[i], frame);
          }
          if (classname == 'JSROOTIO.TF1') {
