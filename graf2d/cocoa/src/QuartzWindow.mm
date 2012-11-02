@@ -919,9 +919,6 @@ void print_mask_info(ULong_t mask)
       self.delegate = self;
       fContentView = glView;
       [self setContentView : fContentView];
-      
-      NSLog(@"gl content view's count is %d", int([glView retainCount]));
-      
       fDelayedTransient = NO;
       fIsDeleted = NO;
    }
