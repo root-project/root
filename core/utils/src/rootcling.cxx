@@ -5035,10 +5035,6 @@ int main(int argc, char **argv)
    clingArgs.push_back("-D__CINT__");
    clingArgs.push_back("-D__MAKECINT__");
    char platformDefines[64] = {0};
-#ifdef __KCC
-   snprintf(platformDefines, 64, "-DG__KCC=%ld", (long)__KCC);
-   clingArgs.push_back(platformDefines);
-#endif
 #ifdef __INTEL_COMPILER
    snprintf(platformDefines, 64, "-DG__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER);
    clingArgs.push_back(platformDefines);
@@ -5155,7 +5151,6 @@ int main(int argc, char **argv)
          }
          return 1;
       }
-#define CINT_INCLUDE
       if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+') {
          StrcpyArgWithEsc(esc_arg, argv[i]);
          if (use_preprocessor) {
@@ -5163,9 +5158,7 @@ int main(int argc, char **argv)
             fprintf(bundle,"#include <%s>\n", esc_arg.c_str());
             includedFilesForBundle.push_back(argv[i]);
             if (!insertedBundle) {
-#ifdef CINT_INCLUDE
-               argvv[argcc++] = (char*)bundlename.c_str();
-#endif
+//               argvv[argcc++] = (char*)bundlename.c_str();
                insertedBundle = true;
             }
          }
@@ -5196,11 +5189,9 @@ int main(int argc, char **argv)
                   includeForSource += std::string("#include \"") + header + "\"\n";
                pcmArgs.push_back(header);
 
-#ifndef CINT_INCLUDE
                // remove header files from CINT view
                free(argvv[argcc-1]);
                argvv[--argcc] = 0;
-#endif
             }
          }
       }
