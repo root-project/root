@@ -63,7 +63,7 @@ TEST_TARGETS := $(if $(TEST_TARGETS_DISABLED),\
 CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
 CLEAN_TARGETS += 
 
-ALL_LIBRARIES += AutoDict_* *_ACLiC_* *.success *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C \
+ALL_LIBRARIES += AutoDict_* *_ACLiC_* *.success *.d *.o *.obj *.so *.pcm *.def *.exp *.dll *.lib dummy.C \
 	*.pdb .def *.ilk *.manifest rootmap_* dummy* *.clog *.log *.elog *.celog *.eclog \
 	*_C.rootmap *_cc.rootmap *_cpp.rootmap *_cxx.rootmap *_h.rootmap
 
