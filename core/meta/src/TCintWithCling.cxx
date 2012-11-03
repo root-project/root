@@ -1686,25 +1686,16 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
    if (!autoload) {
       flag = 3;
    }
-   Int_t tagnum = G__defined_tagname(classname, flag); // This function might modify the name (to add space between >>).
-   if (tagnum >= 0) {
-      TClingClassInfo tci(fInterpreter, classname);
-      G__ClassInfo info(tagnum);
-      // If autoloading is off then Property() == 0 for autoload entries.
-      if (!autoload && !info.Property()) {
-         return kTRUE;
-      }
-      if (!tci.IsValid()) {
-         if (!(info.Property() & (G__BIT_ISENUM)) && info.Size()) // Size()==0 is an approximation of IsForwardDeclaredOrSetForAutoloading() 
-             Warning("CheckClassInfo", "class '%s' exists in CINT, but not in the AST!\n", classname);
-         delete[] classname;
-         return kFALSE;
-      }
-      if (info.Property() & (G__BIT_ISENUM | G__BIT_ISCLASS | G__BIT_ISSTRUCT | G__BIT_ISUNION | G__BIT_ISNAMESPACE)) {
-         // We are now sure that the entry is not in fact an autoload entry.
-         delete[] classname;
-         return kTRUE;
-      }
+
+   TClingClassInfo tci(fInterpreter, classname);
+   if (!tci.IsValid()) {
+      delete[] classname;
+      return kFALSE;
+   }
+   if (tci.Property() & (G__BIT_ISENUM | G__BIT_ISCLASS | G__BIT_ISSTRUCT | G__BIT_ISUNION | G__BIT_ISNAMESPACE)) {
+      // We are now sure that the entry is not in fact an autoload entry.
+      delete[] classname;
+      return kTRUE;
    }
 
    // Setting up iterator part of TClingTypedefInfo is too slow.
