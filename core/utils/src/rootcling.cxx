@@ -1348,18 +1348,12 @@ Recmap_t gAutoloads;
 string gLiblistPrefix;
 string gLibsNeeded;
 
-int AutoLoadCallbackImpl(char *c, char *)
+void RecordDeclCallback(const char *c)
 {
    string need( gAutoloads[c] );
    if (need.length() && gLibsNeeded.find(need)==string::npos) {
       gLibsNeeded += " " + need;
    }
-   return -1; // We did not actually 'succeed' in loading the definition.
-}
-
-extern "C" int AutoLoadCallback(char *c, char *l)
-{
-   return AutoLoadCallbackImpl(c,l);
 }
 
 void LoadLibraryMap()
@@ -1430,13 +1424,6 @@ void LoadLibraryMap()
                            break;
                         } else {
                            gAutoloads[base] = ""; // We never load namespaces on their own.
-                           if (sbuffer < base.size()+20) {
-                              delete [] buffer;
-                              sbuffer = base.size()+20;
-                              buffer = new char[sbuffer];
-                           }
-                           strlcpy(buffer,base.c_str(),sbuffer);
-                           G__set_class_autoloading_table(buffer, (char*)""); // We never load namespaces on their own.
                         }
                         ++k;
                      }
@@ -1458,29 +1445,11 @@ void LoadLibraryMap()
                buffer = new char[sbuffer];
             }
             strlcpy(buffer,classname.c_str(),sbuffer);
-            G__set_class_autoloading_table(buffer,(char*)line.c_str());
          }
       }
       file.close();
    }
 }
-
-extern "C" {
-   typedef void G__parse_hook_t ();
-   G__parse_hook_t* G__set_beforeparse_hook (G__parse_hook_t* hook);
-}
-
-//______________________________________________________________________________
-void BeforeParseInit()
-{
-   // If needed initialize the autoloading hook
-   if (gLiblistPrefix.length()) {
-      G__set_class_autoloading_table((char*)"ROOT", (char*)"libCore.so");
-      LoadLibraryMap();
-      G__set_class_autoloading_callback(&AutoLoadCallback);
-   }
-}
-
 
 //______________________________________________________________________________
 bool CheckInputOperator(const char *what, const char *proto, const string &fullname, const clang::RecordDecl *cl)
@@ -5267,7 +5236,6 @@ int main(int argc, char **argv)
    }
 
    G__setothermain(2);
-   G__set_beforeparse_hook( BeforeParseInit );
    if (G__main(argcc, argvv) < 0) {
       Error(0, "%s: error loading headers...\n", argv[0]);
       CleanupOnExit(1);
@@ -5474,8 +5442,14 @@ int main(int argc, char **argv)
 
    selectionRules.SearchNames(interp);
 
-   RScanner scan(selectionRules,interp,normCtxt);
    clang::CompilerInstance* CI = interp.getCI();
+   
+   RScanner scan(selectionRules,interp,normCtxt);
+   // If needed initialize the autoloading hook
+   if (gLiblistPrefix.length()) {
+      LoadLibraryMap();
+      scan.SetRecordDeclCallback(RecordDeclCallback);
+   }
    scan.Scan(CI->getASTContext());
 
    bool has_input_error = false;
@@ -5650,7 +5624,7 @@ int main(int argc, char **argv)
       if (fp && fpd) {
 
          // make name of dict include file "aapDict.cxx" -> "aapDict.h"
-         int  nl = 0;
+         int nl = 0;
          char *s = strrchr(dictname, '.');
          if (s) *s = 0;
          string inclf(dictname); inclf += ".h";

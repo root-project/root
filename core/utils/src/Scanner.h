@@ -48,8 +48,13 @@ class SelectionRules;
 // which traverses every node of the AST
 class RScanner: public clang::RecursiveASTVisitor<RScanner>
 {
+public:
+   typedef void (*DeclCallback)(const char *type);
+
 private:
    const SelectionRules &fSelectionRules;
+   DeclCallback fRecordDeclCallback;
+
    const clang::SourceManager* fSourceManager;
    unsigned int fVerboseLevel;
 
@@ -233,6 +238,9 @@ public:
    
    bool TraverseDeclContextHelper(clang::DeclContext *DC); // Here is the code magic :) - every Decl 
    // according to its type is processed by the corresponding Visitor method
+
+   // Set a callback to record which are declared.
+   DeclCallback SetRecordDeclCallback(DeclCallback callback);
 
    // Main interface of this class.
    void Scan(const clang::ASTContext &C);

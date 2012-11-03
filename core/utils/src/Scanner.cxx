@@ -144,7 +144,7 @@ int RScanner::AnnotatedRecordDecl::RootFlag() const
 
 //______________________________________________________________________________
 RScanner::RScanner (const SelectionRules &rules, const cling::Interpreter &interpret, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, unsigned int verbose /* = 0 */) : 
-   fSelectionRules(rules), fSourceManager(0), fVerboseLevel(verbose), fInterpreter(interpret), fNormCtxt(normCtxt)
+   fSelectionRules(rules), fRecordDeclCallback(0), fSourceManager(0), fVerboseLevel(verbose), fInterpreter(interpret), fNormCtxt(normCtxt)
 {
    // Regular constructor setting up the scanner to search for entities
    // matching the 'rules'.
@@ -747,8 +747,21 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
 // For every class the class builder is put on top of the fClassBuilders stack
 bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
 {
-   
+
    bool ret = true;
+
+   if (D && fRecordDeclCallback) {
+      // Pass on any declaration.   This is usually used to record dependency.
+      // Since rootcint see C++ compliant header files, we can assume that
+      // if a forward declaration or declaration has been inserted, the
+      // classes for which we are creating a dictionary will be using
+      // them either directly or indirectly.   Any false positive can be
+      // resolved by removing the spurrious dependency in the (user) header 
+      // files.
+      std::string qual_name;
+      GetDeclQualName(D,qual_name);
+      fRecordDeclCallback(qual_name.c_str());
+   }
    
    // in case it is implicit or a forward declaration, we are not interested.
    if(D && (D->isImplicit() || !D->isCompleteDefinition()) ) {
@@ -1134,4 +1147,12 @@ void RScanner::Scan(const clang::ASTContext &C)
 }
 
 
+//______________________________________________________________________________
+RScanner::DeclCallback RScanner::SetRecordDeclCallback(RScanner::DeclCallback callback)
+{
+   // Set the callback to the RecordDecl and return the previous one.
 
+   DeclCallback old = fRecordDeclCallback;
+   fRecordDeclCallback = callback;
+   return old;
+}
