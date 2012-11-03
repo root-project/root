@@ -719,10 +719,6 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    // Make sure that ALL macros are seen as C++.
    G__LockCpp();
    // Initialize for ROOT:
-   // Disallow the interpretation of Rtypes.h, TError.h and TGenericClassInfo.h
-   ProcessLineCintOnly("#define ROOT_Rtypes 0");
-   ProcessLineCintOnly("#define ROOT_TError 0");
-   ProcessLineCintOnly("#define ROOT_TGenericClassInfo 0");
    TString include;
    // Add the root include directory to list searched by default
 #ifndef ROOTINCDIR
@@ -732,13 +728,6 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    include = ROOTINCDIR;
 #endif // ROOTINCDIR
    TCintWithCling::AddIncludePath(include);
-   // Allow the usage of ClassDef and ClassImp in interpreted macros
-   // if RtypesCint.h can be found (think of static executable without include/)
-   char* whichTypesCint = gSystem->Which(include, "RtypesCint.h");
-   if (whichTypesCint) {
-      ProcessLineCintOnly("#include <RtypesCint.h>");
-      delete[] whichTypesCint;
-   }
 
    // Attach cling callbacks
    fInterpreter->setCallbacks(new TClingCallbacks(fInterpreter));
@@ -941,13 +930,13 @@ Long_t TCintWithCling::ProcessLineCintOnly(const char* line, EErrorCode* error /
 //______________________________________________________________________________
 Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
 {
-   // Let CINT process a command line.
+   // Let cling process a command line.
    //
-   // If the command is executed and the result is 0, then the return value
+   // If the command is executed and the error is 0, then the return value
    // is the int value corresponding to the result of the executed command
    // (float and double return values will be truncated).
    //
-   //
+
    // Copy the passed line, it comes from a static buffer in TApplication
    // and we can be reentered through the CINT routine G__process_cmd,
    // which would overwrite the static buffer and we would forget what we
@@ -958,17 +947,7 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       // End-Of-Line action, CINT-only.
       return TCintWithCling::ProcessLineCintOnly(sLine, error);
    }
-   Long_t ret = 0L;
-   (void)ret;
-   if (!strncmp(sLine.Data(), ".L", 2) || !strncmp(sLine.Data(), ".x", 2) ||
-       !strncmp(sLine.Data(), ".X", 2)) {
-      TString mod_line(sLine);
-      TString aclicMode;
-      TString arguments;
-      TString io;
-      TString fname = gSystem->SplitAclicMode(sLine.Data() + 3,
-                                              aclicMode, arguments, io);
-   }
+
    // A non-zero returned value means the given line was
    // not a complete statement.
    int indent = 0;
@@ -1030,9 +1009,6 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
             compRes = fMetaProcessor->readInputFromFile(fname.Data(), &result,
                                                         true /*ignoreOutmostBlock*/);
          } else {
-            TString cintModLine = ".L " + fname;
-            ProcessLineCintOnly(cintModLine);
-
             indent = fMetaProcessor->process(mod_line, &result, &compRes);
          }
       }
@@ -1051,7 +1027,7 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       if ((c != 'I') && (c != 'L') && (c != 'x') && (c != 'X')) {
          // But not .I which is cling-only, and the .L, .x,
          // and .X commands were handled above.
-         ret = ProcessLineCintOnly(sLine, error);
+         ProcessLineCintOnly(sLine, error);
       }
    }
    if (indent) {
