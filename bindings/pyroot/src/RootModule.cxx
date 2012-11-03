@@ -512,25 +512,6 @@ extern "C" void initlibPyROOT()
    if ( ! gRootModule )
       PYROOT_INIT_ERROR;
 
-// initialize gROOT
-   if ( gROOT == 0 ) {
-      std::cout << "PyROOT: gROOT == NULL hack\n" << 
-                   "  --> now creating and loading important classes" << std::endl;
-#ifndef R__HAS_CLING
-      gROOT = ROOT::GetROOT();
-#endif
-      gROOT->ProcessLine( "#include \"TROOT.h\"" );
-      gROOT->ProcessLine( "#include \"TString.h\"" );
-      gROOT->ProcessLine( "#include \"Rtypes.h\"" );
-      gROOT->ProcessLine( "#include \"TUnixSystem.h\"" );
-      gROOT->ProcessLine( "#include \"TPluginManager.h\"" );
-      gROOT->ProcessLine( "#include \"TStreamerInfo.h\"" );
-      gROOT->ProcessLine( "#include \"TMessageHandler.h\"" );
-      gROOT->ProcessLine( "#include \"TCintWithCling.h\"" );
-      gROOT->ProcessLine( "#include \"TPyROOTApplication.h\"" );
-      std::cout << "  --> gROOT created" << std::endl;
-   }
-
 // keep gRootModule, but do not increase its reference count even as it is borrowed,
 // or a self-referencing cycle would be created
 

@@ -491,6 +491,9 @@ class ModuleFacade( types.ModuleType ):
          appc.InitCINTMessageCallback();
          appc.InitROOTMessageCallback();
 
+       # make gApplication available on the prompt
+         _root.gROOT.ProcessLine( '#include "TApplication.h"' )
+
       if hasargv and PyConfig.IgnoreCommandLineOptions:
          sys.argv = argv
 

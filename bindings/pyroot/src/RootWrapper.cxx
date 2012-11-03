@@ -32,9 +32,6 @@
 #include "TGlobal.h"
 #include "DllImport.h"
 
-// CINT
-#include "Api.h"
-
 // Standard
 #include <map>
 #include <set>
@@ -647,9 +644,8 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
 {
 // try named global variable/enum (first ROOT, then Cling: sync is too slow)
    TGlobal* gb = (TGlobal*)gROOT->GetListOfGlobals( kFALSE )->FindObject( name.c_str() );
-   if ( gb && gb->GetAddress() != (void*)-1 ) {
+   if ( gb && gb->GetAddress() != (void*)-1 )
       return BindRootGlobal( gb );
-   }
 
 // (CLING) TODO: look into Cling's interactive bits (the following code does
 // not work):
@@ -771,12 +767,6 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
    if ( ! gbl || strcmp(gbl->GetName(), "") == 0 ) {
       Py_INCREF( Py_None );
       return Py_None;
-   }
-
-// for Cling, where apparently the address isn't filled yet
-   if ( gbl->GetAddress() == (void*)-1 ) {
-      PyErr_SetString( PyExc_RuntimeError, "GLOBAL ADDRESS NOT YET IMPLEMENTED IN CLING" );
-      return NULL;
    }
 
 // determine type and cast as appropriate
