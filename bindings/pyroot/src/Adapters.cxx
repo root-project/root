@@ -4,6 +4,7 @@
 #include "Utility.h"
 
 // ROOT
+#include "TInterpreter.h"
 #include "TBaseClass.h"
 #include "TClass.h"
 #include "TClassEdit.h"
@@ -14,9 +15,6 @@
 #include "TMethodArg.h"
 #include "TList.h"
 #include "TError.h"
-
-// CINT
-#include "Api.h"
 
 
 //= TReturnTypeAdapter =======================================================
@@ -366,9 +364,12 @@ PyROOT::TScopeAdapter::operator Bool_t() const
    if ( fName.empty() )
       return false;
 
+   Bool_t b = kFALSE;
+
    Int_t oldEIL = gErrorIgnoreLevel;
    gErrorIgnoreLevel = 3000;
-   Bool_t b = G__TypeInfo( Name( Rflx::QUALIFIED | Rflx::SCOPED ).c_str() ).IsValid();
+   TClass* klass = TClass::GetClass( Name( Rflx::QUALIFIED | Rflx::SCOPED ).c_str() );
+   if ( klass ) b = gInterpreter->ClassInfo_IsValid( klass->GetClassInfo() );
    gErrorIgnoreLevel = oldEIL;
    return b;
 }
@@ -377,7 +378,11 @@ PyROOT::TScopeAdapter::operator Bool_t() const
 Bool_t PyROOT::TScopeAdapter::IsComplete() const
 {
 // verify whether the dictionary of this class is fully available
-   return G__TypeInfo( Name( Rflx::SCOPED ).c_str() ).IsLoaded();
+   Bool_t b = kFALSE;
+
+   TClass* klass = TClass::GetClass( Name( Rflx::SCOPED ).c_str() );
+   if ( klass ) b = gInterpreter->ClassInfo_IsLoaded( klass->GetClassInfo() );
+   return b;
 }
 
 //____________________________________________________________________________
