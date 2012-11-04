@@ -25,6 +25,7 @@
 #include "TMath.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TEnv.h"
 
 #include "TGLBoundingBox.h"
 #include "TGLCamera.h"
@@ -1403,6 +1404,10 @@ Float_t TGLUtil::fgLineWidth      = 1.0f;
 Float_t TGLUtil::fgPointSizeScale = 1.0f;
 Float_t TGLUtil::fgLineWidthScale = 1.0f;
 
+Float_t TGLUtil::fgScreenScalingFactor     = 1.0f;
+Float_t TGLUtil::fgPointLineScalingFactor  = 1.0f;
+Int_t   TGLUtil::fgPickingRadius           = 1;
+
 const UChar_t TGLUtil::fgRed[4]    = { 230,   0,   0, 255 };
 const UChar_t TGLUtil::fgGreen[4]  = {   0, 230,   0, 255 };
 const UChar_t TGLUtil::fgBlue[4]   = {   0,   0, 230, 255 };
@@ -1499,6 +1504,30 @@ GLUtesselator* TGLUtil::GetDrawTesselator4dv()
    static TGLTesselatorWrap singleton((tessfuncptr_t) glVertex4dv);
 
    return singleton.fTess;
+}
+
+//______________________________________________________________________________
+void TGLUtil::InitializeIfNeeded()
+{
+   // Initialize globals that require other libraries to be initialized.
+   // This is called from TGLWidget creation function.
+
+   static Bool_t init_done = kFALSE;
+   if (init_done) return;
+   init_done = kTRUE;
+
+   fgScreenScalingFactor = gVirtualX->GetOpenGLScalingFactor();
+
+   if (strcmp(gEnv->GetValue("OpenGL.PointLineScalingFactor", "native"), "native") == 0)
+   {
+      fgPointLineScalingFactor = fgScreenScalingFactor;
+   }
+   else
+   {
+      fgPointLineScalingFactor = gEnv->GetValue("OpenGL.PointLineScalingFactor", 1.0);
+   }
+
+   fgPickingRadius = TMath::Nint(gEnv->GetValue("OpenGL.PickingRadius", 3.0) * TMath::Sqrt(fgScreenScalingFactor));
 }
 
 //______________________________________________________________________________
@@ -1702,6 +1731,66 @@ void TGLUtil::Color4fv(const Float_t* rgba)
 }
 
 /******************************************************************************/
+// Coordinate conversion and extra scaling (needed for osx retina)
+/******************************************************************************/
+
+//______________________________________________________________________________
+void TGLUtil::PointToViewport(Int_t& x, Int_t& y)
+{
+   // Convert from point/screen coordinates to GL viewport coordinates.
+
+   if (fgScreenScalingFactor != 1.0)
+   {
+      x = TMath::Nint(x * fgScreenScalingFactor);
+      y = TMath::Nint(y * fgScreenScalingFactor);
+   }
+}
+
+//______________________________________________________________________________
+void TGLUtil::PointToViewport(Int_t& x, Int_t& y, Int_t& w, Int_t& h)
+{
+   // Convert from point/screen coordinates to GL viewport coordinates.
+
+   if (fgScreenScalingFactor != 1.0)
+   {
+      x = TMath::Nint(x * fgScreenScalingFactor);
+      y = TMath::Nint(y * fgScreenScalingFactor);
+      w = TMath::Nint(w * fgScreenScalingFactor);
+      h = TMath::Nint(h * fgScreenScalingFactor);
+   }
+}
+
+//______________________________________________________________________________
+Float_t TGLUtil::GetScreenScalingFactor()
+{
+   // Returns scaling factor between screen points and GL viewport pixels.
+   // This is what is returned by gVirtualX->GetOpenGLScalingFactor() but is
+   // cached here to avoid a virtual function call as it is used quite often in
+   // TGLPhysical shape when drawing the selection highlight.
+
+   return fgScreenScalingFactor;
+}
+
+//______________________________________________________________________________
+Float_t TGLUtil::GetPointLineScalingFactor()
+{
+   // Return extra scaling factor for points and lines.
+   // By default this is set to the same value as ScreenScalingFactor to keep
+   // the same appearance. To override use rootrc entry, e.g.:
+   // OpenGL.PointLineScalingFactor: 1.0
+   
+   return fgPointLineScalingFactor;
+}
+
+//______________________________________________________________________________
+Int_t TGLUtil::GetPickingRadius()
+{
+   // Returns picking radius.
+
+   return fgPickingRadius;
+}
+
+/******************************************************************************/
 // Control for scaling of point-size and line-width.
 /******************************************************************************/
 
@@ -1743,7 +1832,7 @@ void TGLUtil::PointSize(Float_t point_size)
    // Set the point-size, taking the global scaling into account.
    // Wrapper for glPointSize.
 
-   fgPointSize = point_size * fgPointSizeScale;
+   fgPointSize = point_size * fgPointSizeScale * fgPointLineScalingFactor;
    glPointSize(fgPointSize);
 }
 
@@ -1753,7 +1842,7 @@ void TGLUtil::LineWidth(Float_t line_width)
    // Set the line-width, taking the global scaling into account.
    // Wrapper for glLineWidth.
 
-   fgLineWidth = line_width * fgLineWidthScale;
+   fgLineWidth = line_width * fgLineWidthScale * fgPointLineScalingFactor;
    glLineWidth(fgLineWidth);
 }
 

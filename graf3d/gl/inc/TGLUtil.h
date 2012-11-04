@@ -926,11 +926,16 @@ private:
    static Float_t fgPointSizeScale;
    static Float_t fgLineWidthScale;
 
+   static Float_t fgScreenScalingFactor;
+   static Float_t fgPointLineScalingFactor;
+   static Int_t   fgPickingRadius;
+
    TGLUtil(const TGLUtil&);            // Not implemented.
    TGLUtil& operator=(const TGLUtil&); // Not implemented.
 
 public:
    virtual ~TGLUtil() {}
+   static void InitializeIfNeeded();
 
    // Error checking
    static Int_t  CheckError(const char * loc);
@@ -968,6 +973,13 @@ public:
    static void Color4f(Float_t r, Float_t g, Float_t b, Float_t a);
    static void Color3fv(const Float_t* rgb);
    static void Color4fv(const Float_t* rgba);
+
+   // Coordinate conversion and extra scaling (needed for osx retina)
+   static void    PointToViewport(Int_t& x, Int_t& y);
+   static void    PointToViewport(Int_t& x, Int_t& y, Int_t& w, Int_t& h);
+   static Float_t GetScreenScalingFactor();
+   static Float_t GetPointLineScalingFactor();
+   static Int_t   GetPickingRadius();
 
    static Float_t GetPointSizeScale();
    static void    SetPointSizeScale(Float_t scale);

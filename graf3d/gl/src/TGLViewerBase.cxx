@@ -26,6 +26,8 @@
 #include "TGLContext.h"
 #include "TGLIncludes.h"
 
+#include "TEnv.h"
+
 #include <algorithm>
 #include <stdexcept>
 
@@ -62,6 +64,9 @@ TGLViewerBase::TGLViewerBase() :
    // Constructor.
 
    fRnrCtx = new TGLRnrCtx(this);
+
+   fWFLineW = gEnv->GetValue("OpenGL.WireframeLineScalingFactor", 1.0);
+   fOLLineW = gEnv->GetValue("OpenGL.OutlineLineScalingFactor", 1.0);
 }
 
 //______________________________________________________________________

@@ -100,6 +100,9 @@ TGLWidget* TGLWidget::Create(const TGLFormat &format,
 {
    // Static constructor for creating widget with given pixel format.
 
+   // Make sure window-system dependent part of GL-util is initialized.
+   TGLUtil::InitializeIfNeeded();
+
    std::pair<void *, void *> innerData;
 
    Window_t wid = CreateWindow(parent, format, width, height, innerData);
@@ -254,6 +257,7 @@ void TGLWidget::RemoveContext(TGLContext *ctx)
 void TGLWidget::ExtractViewport(Int_t *vp)const
 {
    //For camera.
+
    vp[0] = 0;
    vp[1] = 0;
    vp[2] = GetWidth();

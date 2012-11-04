@@ -1164,11 +1164,13 @@ Bool_t TGLViewer::DoSelect(Int_t x, Int_t y)
       return kFALSE;
    }
 
+   TGLUtil::PointToViewport(x, y);
+
    TUnlocker ulck(this);
 
    MakeCurrent();
 
-   fRnrCtx->BeginSelection(x, y, 3);
+   fRnrCtx->BeginSelection(x, y, TGLUtil::GetPickingRadius());
    glRenderMode(GL_SELECT);
 
    PreRender();
@@ -1229,6 +1231,8 @@ Bool_t TGLViewer::DoSecondarySelect(Int_t x, Int_t y)
       return kFALSE;
    }
 
+   TGLUtil::PointToViewport(x, y);
+
    TUnlocker ulck(this);
 
    if (! fSelRec.GetSceneInfo() || ! fSelRec.GetPhysShape() ||
@@ -1251,7 +1255,7 @@ Bool_t TGLViewer::DoSecondarySelect(Int_t x, Int_t y)
    SceneInfoList_t foo;
    foo.push_back(sinfo);
    fScenes.swap(foo);
-   fRnrCtx->BeginSelection(x, y, 3);
+   fRnrCtx->BeginSelection(x, y, TGLUtil::GetPickingRadius());
    fRnrCtx->SetSecSelection(kTRUE);
    glRenderMode(GL_SELECT);
 
@@ -1336,11 +1340,13 @@ Bool_t TGLViewer::DoOverlaySelect(Int_t x, Int_t y)
       return kFALSE;
    }
 
+   TGLUtil::PointToViewport(x, y);
+
    TUnlocker ulck(this);
 
    MakeCurrent();
 
-   fRnrCtx->BeginSelection(x, y, 3);
+   fRnrCtx->BeginSelection(x, y, TGLUtil::GetPickingRadius());
    glRenderMode(GL_SELECT);
 
    PreRenderOverlaySelection();
