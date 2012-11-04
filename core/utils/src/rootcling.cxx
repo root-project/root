@@ -3821,21 +3821,7 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl, const cling::Inte
    {
       int k = IsSTLContainer(*iter);
       if (k!=0) {
-         clang::SourceManager& sourceManager = clxx->getASTContext().getSourceManager();
-         size_t len = sourceManager.getCharacterData(iter->getLocEnd()) - sourceManager.getCharacterData(iter->getLocStart());
-         llvm::StringRef baseAsWritten( sourceManager.getCharacterData(iter->getLocStart()), len+1 );
-         // And we need to skip the access specifier and white space.
-         size_t offset = 0;
-         switch (iter->getAccessSpecifierAsWritten()) {
-         case clang::AS_public   : offset += strlen("public"); break;
-         case clang::AS_protected: offset += strlen("protected"); break;
-         case clang::AS_private  : offset += strlen("private"); break;
-         case clang::AS_none     : break;
-         }
-         while( offset<=len && ( (baseAsWritten.data()+offset)[0] == ':' || isspace((baseAsWritten.data()+offset)[0]) ) ) {
-            ++offset;
-         }
-         RStl::Instance().GenerateTClassFor( baseAsWritten.str().c_str()+offset, iter->getType()->getAsCXXRecordDecl (), interp, normCtxt);
+         RStl::Instance().GenerateTClassFor( iter->getType(), interp, normCtxt);
       }
    }
 
@@ -3957,7 +3943,6 @@ void WriteClassCode(const RScanner::AnnotatedRecordDecl &cl, const cling::Interp
    std::string fullname;
    R__GetQualifiedName(fullname,cl);
    if (TClassEdit::IsSTLCont(fullname.c_str()) ) {
-      // coverity[fun_call_w_exception] - that's just fine.
       RStl::Instance().GenerateTClassFor(cl.GetNormalizedName(), llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl()), interp, normCtxt);
       return;
    }
