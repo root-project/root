@@ -61,8 +61,8 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
       fIsOverlapped = NO;
       fPixelFormat = [format retain];
       
-    //  if ([[NSScreen mainScreen] backingScaleFactor] > 1.)
-    //     [self  setWantsBestResolutionOpenGLSurface : YES];
+      if ([[NSScreen mainScreen] backingScaleFactor] > 1.)
+         [self  setWantsBestResolutionOpenGLSurface : YES];
    }
 
    return self;

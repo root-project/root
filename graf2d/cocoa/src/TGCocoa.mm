@@ -2989,9 +2989,7 @@ Double_t TGCocoa::GetOpenGLScalingFactor()
    //Scaling factor to let our OpenGL code know, that we probably
    //work on a retina display.
    
-   //return [[NSScreen mainScreen] backingScaleFactor];
-   
-   return 1.;
+   return [[NSScreen mainScreen] backingScaleFactor];
 }
 
 //______________________________________________________________________________
