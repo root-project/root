@@ -29,8 +29,10 @@
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
 #include "RooTruthModel.h"
+#include "RooGenContext.h"
+#include "RooAbsAnaConvPdf.h"
+
 #include <algorithm>
 using namespace std ;
 
@@ -327,6 +329,17 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
   assert(0) ;
   return 0 ;
 }
+
+
+//_____________________________________________________________________________
+RooAbsGenContext* RooTruthModel::modelGenContext
+(const RooAbsAnaConvPdf& convPdf, const RooArgSet &vars, const RooDataSet *prototype,
+ const RooArgSet* auxProto, Bool_t verbose) const
+{
+  RooArgSet forceDirect(convVar()) ;
+  return new RooGenContext(dynamic_cast<const RooAbsPdf&>(convPdf), vars, prototype,
+                           auxProto, verbose, &forceDirect) ;
+} 
 
 
 

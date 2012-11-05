@@ -21,6 +21,8 @@
 #include "RooRealVar.h"
 #include "RooFormulaVar.h"
 
+class RooAbsAnaConvPdf;
+
 class RooResolutionModel : public RooAbsPdf {
 public:
 
@@ -30,6 +32,10 @@ public:
   RooResolutionModel(const RooResolutionModel& other, const char* name=0);
   virtual TObject* clone(const char* newname) const = 0 ;
   virtual ~RooResolutionModel();
+
+  virtual RooAbsGenContext* modelGenContext(const RooAbsAnaConvPdf&, const RooArgSet&,
+                                            const RooDataSet*, const RooArgSet*,
+                                            Bool_t) const { return 0; }
 
   Double_t getValV(const RooArgSet* nset=0) const ;
   virtual RooResolutionModel* convolution(RooFormulaVar* basis, RooAbsArg* owner) const ;

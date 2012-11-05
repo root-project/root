@@ -25,6 +25,7 @@
 #include "RooMsgService.h"
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
+#include "RooChangeTracker.h"
 
 using namespace std;
 
@@ -131,6 +132,7 @@ void RooCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) cons
     RooAbsArg* sourceClone = func.arg().cloneTree() ;
     cache.setSourceClone((RooAbsReal*)sourceClone) ;
     cache.sourceClone()->recursiveRedirectServers(*cache.hist()->get()) ;
+    cache.sourceClone()->recursiveRedirectServers(cache.paramTracker()->parameters());  
   }
 
   // Iterator over all bins of RooDataHist and fill weights

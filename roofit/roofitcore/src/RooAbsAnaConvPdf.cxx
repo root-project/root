@@ -264,22 +264,18 @@ RooAbsGenContext* RooAbsAnaConvPdf::genContext(const RooArgSet &vars, const RooD
   // and the smearing separately, adding them a posteriori. If this is not possible return
   // a (slower) generic generation context that uses accept/reject sampling
 
+  // Check if the resolution model specifies a special context to be used.
+  RooResolutionModel* conv = dynamic_cast<RooResolutionModel*>(_model.absArg());
+  assert(conv);
 
   RooArgSet* modelDep = _model.absArg()->getObservables(&vars) ;
   modelDep->remove(*convVar(),kTRUE,kTRUE) ;
   Int_t numAddDep = modelDep->getSize() ;
   delete modelDep ;
 
-  if (dynamic_cast<RooTruthModel*>(_model.absArg())) {
-    // Truth resolution model: use generic context explicitly allowing generation of convolution variable
-    RooArgSet forceDirect(*convVar()) ;
-    return new RooGenContext(*this,vars,prototype,auxProto,verbose,&forceDirect) ;
-  } 
-
   // Check if physics PDF and resolution model can both directly generate the convolution variable
   RooArgSet dummy ;
   Bool_t pdfCanDir = (getGenerator(*convVar(),dummy) != 0) ;
-  RooResolutionModel* conv = (RooResolutionModel*) _convSet.at(0) ;
   Bool_t resCanDir = conv && (conv->getGenerator(*convVar(),dummy)!=0) && conv->isDirectGenSafe(*convVar()) ;
 
   if (numAddDep>0 || !pdfCanDir || !resCanDir) {
@@ -293,6 +289,9 @@ RooAbsGenContext* RooAbsAnaConvPdf::genContext(const RooArgSet &vars, const RooD
     coutI(Generation) << "RooAbsAnaConvPdf::genContext(" << GetName() << ") Using regular accept/reject generator for convolution p.d.f because: " << reason.c_str() << endl ;    
     return new RooGenContext(*this,vars,prototype,auxProto,verbose) ;
   } 
+
+  RooAbsGenContext* context = conv->modelGenContext(*this, vars, prototype, auxProto, verbose);
+  if (context) return context;
   
   // Any other resolution model: use specialized generator context
   return new RooConvGenContext(*this,vars,prototype,auxProto,verbose) ;
