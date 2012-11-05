@@ -2428,7 +2428,8 @@ int STLContainerStreamer(const clang::FieldDecl &m, int rwmode, const cling::Int
    if (stltype!=0) {
       //        fprintf(stderr,"Add %s (%d) which is also %s\n",
       //                m.Type()->Name(), stltype, m.Type()->TrueName() );
-      RStl::Instance().GenerateTClassFor(m.getType(),interp,normCtxt);
+      clang::QualType utype(R__GetUnderlyingType(m.getType()),0);      
+      RStl::Instance().GenerateTClassFor(utype,interp,normCtxt);
    }
    if (stltype<=0) return 0;
    if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
@@ -3847,7 +3848,8 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl, const cling::Inte
       if (k!=0) {
          //          fprintf(stderr,"Add %s which is also",m.Type()->Name());
          //          fprintf(stderr," %s\n",R__TrueName(**field_iter) );
-         RStl::Instance().GenerateTClassFor(field_iter->getType(), interp, normCtxt);
+         clang::QualType utype(R__GetUnderlyingType(field_iter->getType()),0);
+         RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
       }      
    }
 

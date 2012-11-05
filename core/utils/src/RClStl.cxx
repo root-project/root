@@ -24,6 +24,7 @@ using namespace TClassEdit;
 #include "Scanner.h"
 
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/LookupHelper.h"
 
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/Template.h"
@@ -203,9 +204,18 @@ void ROOT::RStl::WriteClassInit(FILE* /*file*/, const cling::Interpreter &interp
 
    list_t::iterator iter;
    for(iter = fList.begin(); iter != fList.end(); ++iter) {
-      if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-         fprintf(stderr,"Error: incomplete definition for %s\n",iter->GetNormalizedName());
-         continue;
+ 
+      if (!iter->GetRecordDecl()->getDefinition()) {
+
+         // We do not have a complete definition, we need to force the instantiation
+         // and findScope can do that.
+         const cling::LookupHelper& lh = interp.getLookupHelper();
+         const clang::CXXRecordDecl *result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(lh.findScope(iter->GetNormalizedName(),0));
+
+         if (!result || !iter->GetRecordDecl()->getDefinition()) {
+            fprintf(stderr,"Error: incomplete definition for %s\n",iter->GetNormalizedName());
+            continue;
+         }
       }
 
       // std::string fullname = R__GetQualifiedName(*iter->GetRecordDecl());      
