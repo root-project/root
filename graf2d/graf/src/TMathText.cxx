@@ -662,14 +662,14 @@ void TMathText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
    s.ReplaceAll("\\","\\\\");
    s.ReplaceAll("\"","\\\"");
-   out << "   tex = new TMathText("<< fX << "," << fY << ","
+   out << "mathtex = new TMathText("<< fX << "," << fY << ","
       << quote << s.Data() << quote << ");" << std::endl;
    if (TestBit(kTextNDC)) {
-      out << "tex->SetNDC();" << std::endl;
+      out << "mathtex->SetNDC();" << std::endl;
    }
 
-   SaveTextAttributes(out, "tex", 11, 0, 1, 42, 0.05);
-   SaveFillAttributes(out, "tex", 0, 1001);
+   SaveTextAttributes(out, "mathtex", 11, 0, 1, 42, 0.05);
+   SaveFillAttributes(out, "mathtex", 0, 1001);
 
-   out<<"   tex->Draw();" << std::endl;
+   out<<"   mathtex->Draw();" << std::endl;
 }
