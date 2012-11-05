@@ -234,7 +234,9 @@ public:
    void PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
    
    void PaintText(Double_t x, Double_t y, const char *text);
+   void PaintText(Double_t x, Double_t y, const wchar_t *text);
    void PaintTextNDC(Double_t u, Double_t v, const char *text);
+   void PaintTextNDC(Double_t u, Double_t v, const wchar_t *text);
 
    void RedrawAxis(Option_t *option="");
    TH1F *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title);

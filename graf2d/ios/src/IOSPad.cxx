@@ -1201,6 +1201,10 @@ void Pad::PaintText(Double_t x, Double_t y, const char *text)
    fPainter.DrawText(x, y, text, TVirtualPadPainter::kClear);
 }
 
+//______________________________________________________________________________
+void Pad::PaintText(Double_t, Double_t, const wchar_t *)
+{
+}
 
 //______________________________________________________________________________
 void Pad::PaintTextNDC(Double_t u, Double_t v, const char *text)
@@ -1210,6 +1214,12 @@ void Pad::PaintTextNDC(Double_t u, Double_t v, const char *text)
    const Double_t yRange = GetY2() - GetY1();
    fPainter.DrawText(gPad->GetX1() + u * xRange, gPad->GetY1() + v * yRange, text, TVirtualPadPainter::kClear);
 }
+
+//______________________________________________________________________________
+void PaintTextNDC(Double_t, Double_t, const wchar_t *)
+{
+}
+
 
 //______________________________________________________________________________
 TH1F *Pad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title)
