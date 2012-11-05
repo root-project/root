@@ -3017,6 +3017,7 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
          attribs.push_back(NSOpenGLPFAStencilSize);
          attribs.push_back(comp.second > 0 ? comp.second : 8);
       } else if (comp.first == TGLFormat::kMultiSample) {
+         attribs.push_back(NSOpenGLPFAMultisample);
          attribs.push_back(NSOpenGLPFASampleBuffers);
          attribs.push_back(1);
          attribs.push_back(NSOpenGLPFASamples);
