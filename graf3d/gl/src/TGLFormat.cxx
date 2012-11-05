@@ -20,7 +20,7 @@
 #include "TEnv.h"
 #include "TError.h"
 #include "TVirtualX.h"
-//#include "RConfigure.h"
+#include "RConfigure.h"
 
 //______________________________________________________________________________
 //

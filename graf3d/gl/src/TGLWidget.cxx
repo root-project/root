@@ -22,7 +22,7 @@
 #include "TGLWSIncludes.h"
 #include "TGLUtil.h"
 #include "TGLEventHandler.h"
-//#include "RConfigure.h"
+#include "RConfigure.h"
 
 /******************************************************************************/
 // TGLWidget

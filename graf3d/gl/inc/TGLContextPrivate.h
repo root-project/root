@@ -9,7 +9,7 @@
 #include "TGLIncludes.h"
 #include "TGLWSIncludes.h"
 #include "TGLContext.h"
-//#include "RConfigure.h"
+#include "RConfigure.h"
 #include "GuiTypes.h"
 
 #ifdef WIN32
