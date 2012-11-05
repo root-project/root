@@ -291,7 +291,7 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
       _value = 0 ;
     } else {
       _value = rawVal / normVal ;
-//       cout << "RooAbsPdf::getValV(" << GetName() << ") writing _value = " << _value << endl ;
+//       cout << "RooAbsPdf::getValV(" << GetName() << ") writing _value = " << rawVal << "/" << normVal << " = " << _value << endl ;
     }
 
     clearValueAndShapeDirty() ; //setValueDirty(kFALSE) ;

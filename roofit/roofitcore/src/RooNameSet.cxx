@@ -191,10 +191,21 @@ Bool_t RooNameSet::operator==(const RooNameSet& other)
 
 
 //_____________________________________________________________________________
+Bool_t RooNameSet::operator<(const RooNameSet& other) const 
+{
+  return (strcmp(_nameList,other._nameList)) ;
+}
+
+
+
+//_____________________________________________________________________________
 RooNameSet& RooNameSet::operator=(const RooNameSet& other) 
 {
   // Assignment operator
 
+  // Check comparison against self
+  if (&other==this) return *this ;
+  
   delete[] _nameList ;
 
   _len = other._len ;

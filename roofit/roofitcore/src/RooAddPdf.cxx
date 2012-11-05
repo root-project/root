@@ -89,7 +89,7 @@ RooAddPdf::RooAddPdf() :
   _pdfIter   = _pdfList.createIterator() ;
   _coefIter  = _coefList.createIterator() ;
 
-  _coefCache = new Double_t[10] ;
+  _coefCache = new Double_t[100] ;
   _coefErrCount = _errorCount ;
 }
 
@@ -114,7 +114,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
   _pdfIter   = _pdfList.createIterator() ;
   _coefIter  = _coefList.createIterator() ;
 
-  _coefCache = new Double_t[10] ;
+  _coefCache = new Double_t[100] ;
   _coefErrCount = _errorCount ;
 
 }
@@ -832,7 +832,7 @@ Double_t RooAddPdf::evaluate() const
       Double_t pdfVal = pdf->getVal(nset) ;
       if (pdf->isSelectedComp()) {
 	value += pdfVal*_coefCache[i] ;
-	//  	cout << "RooAddPdf::EVALUATE(" << GetName() << ") adding pdf " << pdf->GetName() << " value = " << pdfVal << " coef = " << _coefCache[i] << endl ;
+// 	cout << "RooAddPdf::EVALUATE(" << GetName() << ") adding pdf " << pdf->GetName() << " value = " << pdfVal << " coef = " << _coefCache[i] << endl ;
       }
       i++ ;
     }

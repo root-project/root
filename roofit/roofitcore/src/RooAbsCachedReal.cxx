@@ -145,6 +145,13 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
 
   cache = createCache(nset) ;
 
+  // Set cache function data to ADirty since function will need update every time in cache update process
+  RooFIter iarg( cache->hist()->get()->fwdIterator() );
+  RooAbsArg *arg(0);
+  while ( (arg=iarg.next()) ) {
+    arg->setOperMode(ADirty);
+  }
+
   // Check if we have contents registered already in global expensive object cache 
   RooDataHist* htmp = (RooDataHist*) expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()) ;
 
@@ -296,6 +303,9 @@ RooArgList RooAbsCachedReal::FuncCacheElem::containedArgs(Action)
   RooArgList ret(*func()) ;
 
   ret.add(*_paramTracker) ;
+  if (_sourceClone) {
+    ret.add(*_sourceClone) ;
+  }
   return ret ;
 }
 

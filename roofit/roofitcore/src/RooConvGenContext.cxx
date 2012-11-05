@@ -144,7 +144,8 @@ RooConvGenContext::RooConvGenContext(const RooNumConvPdf &model, const RooArgSet
   _modelVars = new RooArgSet(*_modelVarsOwned) ;
   _convVarName = model.conv().cloneVar().GetName() ;
   _modelGen = ((RooAbsPdf&)model.conv().cloneModel()).genContext(*_modelVars,prototype,auxProto,verbose) ;
-  _modelCloneSet = 0 ;
+  _modelCloneSet = new RooArgSet ;
+  _modelCloneSet->add(model.conv().cloneModel()) ;
 
   if (prototype) {
     _pdfVars->add(*prototype->get()) ;

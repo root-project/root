@@ -22,6 +22,7 @@
 #include "Riostream.h"
 #include <math.h>
 #include <string>
+#include <algorithm>
 
 #include "RooLegendre.h"
 #include "RooAbsReal.h"
@@ -86,8 +87,9 @@ Double_t RooLegendre::evaluate() const
   // Note: P_0^0 = 1, so P_l^m = P_l^m P_0^0
 #ifdef R__HAS_MATHMORE  
   double r = 1;
-  if (_l1!=0||_m1!=0) r *= ROOT::Math::assoc_legendre(_l1,_m1,_ctheta);
-  if (_l2!=0||_m2!=0) r *= ROOT::Math::assoc_legendre(_l2,_m2,_ctheta);
+  double ctheta = std::max(-1., std::min((double)_ctheta, +1.));
+  if (_l1!=0||_m1!=0) r *= ROOT::Math::assoc_legendre(_l1,_m1,ctheta);
+  if (_l2!=0||_m2!=0) r *= ROOT::Math::assoc_legendre(_l2,_m2,ctheta);
   if ((_m1+_m2)%2==1) r = -r;
   return r;
 #else

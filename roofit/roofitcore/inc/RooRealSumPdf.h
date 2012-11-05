@@ -59,6 +59,10 @@ public:
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
   Bool_t isBinnedDistribution(const RooArgSet& obs) const  ;
 
+  void setFloor(Bool_t flag) { _doFloor = flag ; }
+  Bool_t getFloor() const { return _doFloor ; }
+  static void setFloorGlobal(Bool_t flag) { _doFloorGlobal = flag ; }
+  static Bool_t getFloorGlobal() { return _doFloorGlobal ; }
 
 protected:
   
@@ -80,10 +84,13 @@ protected:
   TIterator* _funcIter ;     //! Iterator over FUNC list
   TIterator* _coefIter ;    //! Iterator over coefficient list
   Bool_t _extended ;        // Allow use as extended p.d.f.
+
+  Bool_t _doFloor ; // Introduce floor at zero in pdf
+  static Bool_t _doFloorGlobal ; // Global flag for introducing floor at zero in pdf
   
 private:
 
-  ClassDef(RooRealSumPdf,2) // PDF constructed from a sum of (non-pdf) functions
+  ClassDef(RooRealSumPdf,3) // PDF constructed from a sum of (non-pdf) functions
 };
 
 #endif

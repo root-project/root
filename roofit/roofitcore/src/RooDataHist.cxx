@@ -167,7 +167,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   _dstore = (defaultStorageType==Tree) ? ((RooAbsDataStore*) new RooTreeDataStore(name,title,_vars)) : 
                                          ((RooAbsDataStore*) new RooVectorDataStore(name,title,_vars)) ;
   
-  importTH1Set(vars, indexCat, histMap, wgt, kTRUE) ;
+  importTH1Set(vars, indexCat, histMap, wgt, kFALSE) ;
 
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
 }
@@ -219,7 +219,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
     assert(0) ; 
   }
 
-  importTH1(vars,*const_cast<TH1*>(hist),wgt, kTRUE) ;
+  importTH1(vars,*const_cast<TH1*>(hist),wgt, kFALSE) ;
 
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
 }
@@ -328,7 +328,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 	hmap[token] = (TH1*) hiter->Next() ;
 	token = strtok(0,",") ;
       }
-      importTH1Set(vars,*indexCat,hmap,initWgt,kTRUE) ;
+      importTH1Set(vars,*indexCat,hmap,initWgt,kFALSE) ;
     } else {
 
       // Initialize importing mapped set of RooDataHists

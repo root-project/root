@@ -70,7 +70,7 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
     {
       RooArgSet coefNSet(vars) ;
       coefNSet.add(*prototype->get()) ;
-      _pdf->fixAddCoefNormalization(coefNSet) ;
+      _pdf->fixAddCoefNormalization(coefNSet,kFALSE) ;
     }
 
   model._pdfIter->Reset() ;
