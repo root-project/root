@@ -296,7 +296,11 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    // extend the ROOT system without adding permanent dependencies
    // (e.g. the graphics system is initialized via such a function).
 
+#ifndef R__HAS_CLING
    if (fgRootInit) {
+#else
+   if (fgRootInit || ROOT::gROOTLocal) {
+#endif
       //Warning("TROOT", "only one instance of TROOT allowed");
       return;
    }
@@ -515,7 +519,11 @@ TROOT::~TROOT()
    // Clean up and free resources used by ROOT (files, network sockets,
    // shared memory segments, etc.).
 
+#ifndef R__HAS_CLING
    if (gROOT == this) {
+#else
+   if (ROOT::gROOTLocal == this) {
+#endif
 
       // Mark the object as invalid, so that we can veto some actions
       // (like autoloading) while we are in the destructor.
