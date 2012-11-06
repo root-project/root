@@ -149,6 +149,7 @@ public:
    virtual void          Paint(Option_t *option="");
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
    static  Double_t      SafetyPhi(Double_t *point, Bool_t in, Double_t phi1, Double_t phi2);
+   static  Double_t      SafetySeg(Double_t r, Double_t z, Double_t r1, Double_t z1, Double_t r2, Double_t z2, Bool_t outer);
    virtual void          SetDimensions(Double_t *param)          = 0;
    void                  SetId(Int_t id) {fShapeId = id;}
    virtual void          SetPoints(Double_t *points) const         = 0;

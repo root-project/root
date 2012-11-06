@@ -836,37 +836,13 @@ Double_t TGeoCone::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   Double_t saf[3];
-//   Double_t edges[4];
-//   edges[0] = edges[1] = edges[2] = edges[3] = TGeoShape::Big();
-   Double_t ro1 = 0.5*(fRmin1+fRmin2);
-   Double_t tg1 = 0.5*(fRmin2-fRmin1)/fDz;
-   Double_t cr1 = 1./TMath::Sqrt(1.+tg1*tg1);
-   Double_t ro2 = 0.5*(fRmax1+fRmax2);
-   Double_t tg2 = 0.5*(fRmax2-fRmax1)/fDz;
-   Double_t cr2 = 1./TMath::Sqrt(1.+tg2*tg2);
-
+   Double_t saf[4];
    Double_t r=TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
-   Double_t rin = tg1*point[2]+ro1;
-   Double_t rout = tg2*point[2]+ro2;
-   saf[0] = fDz-TMath::Abs(point[2]);
-   saf[1] = (ro1>0)?((r-rin)*cr1):TGeoShape::Big();
-   saf[2] = (rout-r)*cr2;
-   if (in) return saf[TMath::LocMin(3,saf)];
-   for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
-   return saf[TMath::LocMax(3,saf)];
-   // Compute distance to visible edges
-/*
-   if (r<rin || point[2]<-fDz) edges[0] = (r-fRmin1)*(r-fRmin1) + (point[2]+fDz)*(point[2]+fDz);
-   if (r<rin || point[2]>fDz) edges[1] = (r-fRmin2)*(r-fRmin2) + (point[2]-fDz)*(point[2]-fDz);
-   if (r>rout || point[2]<-fDz) edges[2] = (r-fRmax1)*(r-fRmax1) + (point[2]+fDz)*(point[2]+fDz);
-   if (r>rout || point[2]>fDz) edges[3] = (r-fRmax2)*(r-fRmax2) + (point[2]-fDz)*(point[2]-fDz);
-   Double_t dist_edge = edges[TMath::LocMin(4,edges)];
-   if (dist_edge>1.e10) dist_edge = 0;
-   else dist_edge = TMath::Sqrt(dist_edge);
-   Double_t dist_side = saf[TMath::LocMax(3,saf)];
-   return TMath::Max(dist_edge,dist_side);
-*/
+   saf[0] = TGeoShape::SafetySeg(r,point[2], fRmin1, -fDz, fRmax1, -fDz, !in);
+   saf[1] = TGeoShape::SafetySeg(r,point[2], fRmax2, fDz, fRmin2, fDz, !in);
+   saf[2] = TGeoShape::SafetySeg(r,point[2], fRmin2, fDz, fRmin1, -fDz, !in);
+   saf[3] = TGeoShape::SafetySeg(r,point[2], fRmax1, -fDz, fRmax2, fDz, !in);
+   return saf[TMath::LocMin(4,saf)];
 }
 
 //_____________________________________________________________________________
@@ -875,35 +851,30 @@ Double_t TGeoCone::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmi
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   Double_t saf[3];
-   Double_t ro1 = 0.5*(rmin1+rmin2);
-   Double_t tg1 = 0.5*(rmin2-rmin1)/dz;
-   Double_t cr1 = 1./TMath::Sqrt(1.+tg1*tg1);
-   Double_t ro2 = 0.5*(rmax1+rmax2);
-   Double_t tg2 = 0.5*(rmax2-rmax1)/dz;
-   Double_t cr2 = 1./TMath::Sqrt(1.+tg2*tg2);
-
+   Double_t saf[4];
    Double_t r=TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
-   Double_t rin = tg1*point[2]+ro1;
-   Double_t rout = tg2*point[2]+ro2;
+//   Double_t rin = tg1*point[2]+ro1;
+//   Double_t rout = tg2*point[2]+ro2;
    switch (skipz) {
       case 1: // skip lower Z plane
-         saf[0] = dz - point[2];
+         saf[0] = TGeoShape::Big();
+         saf[1] = TGeoShape::SafetySeg(r,point[2], rmax2, dz, rmin2, dz, !in);
          break;
       case 2: // skip upper Z plane
-         saf[0] = dz + point[2];
+         saf[0] = TGeoShape::SafetySeg(r,point[2], rmin1, -dz, rmax1, -dz, !in);
+         saf[1] = TGeoShape::Big();
          break;
       case 3: // skip both
-         saf[0] = TGeoShape::Big();
+         saf[0] = saf[1] = TGeoShape::Big();
          break;
       default:
-         saf[0] = dz-TMath::Abs(point[2]);
+         saf[0] = TGeoShape::SafetySeg(r,point[2], rmin1, -dz, rmax1, -dz, !in);
+         saf[1] = TGeoShape::SafetySeg(r,point[2], rmax2, dz, rmin2, dz, !in);
    }
-   saf[1] = (ro1>0)?((r-rin)*cr1):TGeoShape::Big();
-   saf[2] = (rout-r)*cr2;
-   if (in) return saf[TMath::LocMin(3,saf)];
-   for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
-   return saf[TMath::LocMax(3,saf)];
+   // Safety to inner part
+   saf[2] = TGeoShape::SafetySeg(r,point[2], rmin1, -dz, rmin2, dz, in);
+   saf[3] = TGeoShape::SafetySeg(r,point[2], rmax1, -dz, rmax2, dz, !in);
+   return saf[TMath::LocMin(4,saf)];
 }
 
 //_____________________________________________________________________________
@@ -2088,33 +2059,11 @@ Double_t TGeoConeSeg::Safety(Double_t *point, Bool_t in) const
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
 
-   Double_t saf[3];
-   Double_t ro1 = 0.5*(fRmin1+fRmin2);
-   Double_t tg1 = 0.5*(fRmin2-fRmin1)/fDz;
-   Double_t cr1 = 1./TMath::Sqrt(1.+tg1*tg1);
-   Double_t ro2 = 0.5*(fRmax1+fRmax2);
-   Double_t tg2 = 0.5*(fRmax2-fRmax1)/fDz;
-   Double_t cr2 = 1./TMath::Sqrt(1.+tg2*tg2);
-
-   Double_t r=TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
-   Double_t rin = tg1*point[2]+ro1;
-   Double_t rout = tg2*point[2]+ro2;
-   Double_t safe = TGeoShape::Big();
-   if (in) {
-      saf[0] = fDz-TMath::Abs(point[2]);
-      saf[1] = (r-rin)*cr1;
-      saf[2] = (rout-r)*cr2;
-      safe = saf[TMath::LocMin(3,saf)];
-   } else {
-      saf[0] = TMath::Abs(point[2])-fDz; // positive if inside
-      saf[1] = (rin-r)*cr1;
-      saf[2] = (r-rout)*cr2;
-      safe = saf[TMath::LocMax(3,saf)];
-   }
+   Double_t safe = TGeoCone::Safety(point,in);
    if ((fPhi2-fPhi1)>=360.) return safe;
    Double_t safphi = TGeoShape::SafetyPhi(point, in, fPhi1, fPhi2);
-
    if (in) return TMath::Min(safe, safphi);
+   if (safe>1.E10) return safphi;
    return TMath::Max(safe, safphi);
 }
 
@@ -2123,42 +2072,12 @@ Double_t TGeoConeSeg::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t 
                               Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2, Int_t skipz)
 {
 // Static method to compute the closest distance from given point to this shape.
-   Double_t saf[3];
-   Double_t ro1 = 0.5*(rmin1+rmin2);
-   Double_t tg1 = 0.5*(rmin2-rmin1)/dz;
-   Double_t cr1 = 1./TMath::Sqrt(1.+tg1*tg1);
-   Double_t ro2 = 0.5*(rmax1+rmax2);
-   Double_t tg2 = 0.5*(rmax2-rmax1)/dz;
-   Double_t cr2 = 1./TMath::Sqrt(1.+tg2*tg2);
-
-   Double_t r=TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
-   Double_t rin = tg1*point[2]+ro1;
-   Double_t rout = tg2*point[2]+ro2;
-
-   Double_t safe = TGeoShape::Big();
-   switch (skipz) {
-      case 1: // skip lower Z plane
-         saf[0] = dz - point[2];
-         break;
-      case 2: // skip upper Z plane
-         saf[0] = dz + point[2];
-         break;
-      case 3: // skip both
-         saf[0] = TGeoShape::Big();
-         break;
-      default:
-         saf[0] = dz-TMath::Abs(point[2]);
-   }
-   saf[1] = (r-rin)*cr1;
-   saf[2] = (rout-r)*cr2;
+   Double_t safe = TGeoCone::SafetyS(point,in,dz,rmin1,rmax1,rmin2,rmax2,skipz);
+   if ((phi2-phi1)>=360.) return safe;
    Double_t safphi = TGeoShape::SafetyPhi(point,in,phi1,phi2);
-   if (in) {
-      safe = saf[TMath::LocMin(3,saf)];
-      return TMath::Min(safe,safphi);
-   }
-   for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
-   safe = saf[TMath::LocMax(3,saf)];
-   return TMath::Max(safe,safphi);
+   if (in) return TMath::Min(safe, safphi);
+   if (safe>1.E10) return safphi;
+   return TMath::Max(safe, safphi);
 }
 
 //_____________________________________________________________________________
@@ -2189,7 +2108,7 @@ void TGeoConeSeg::SetConsDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
    fRmin2 = rmin2;
    fRmax2 = rmax2;
    fPhi1 = phi1;
-   if (fPhi1<0) fPhi1+=360.;
+   while (fPhi1<0) fPhi1+=360.;
    fPhi2 = phi2;
    while (fPhi2<=fPhi1) fPhi2+=360.;
    if (TGeoShape::IsSameWithinTolerance(fPhi1,fPhi2)) Error("SetConsDimensions", "In shape %s invalid phi1=%g, phi2=%g\n", GetName(), fPhi1, fPhi2);
