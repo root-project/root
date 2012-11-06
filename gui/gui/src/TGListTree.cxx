@@ -1503,6 +1503,9 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
          height = pic1->GetHeight();
          ypic1 = y;
       } else {
+#ifdef R__HAS_COCOA
+         if (!pic2)//DO NOT MODIFY ytext, it WAS ADJUSTED already!
+#endif
          ytext = y;
          ypic1 = y + (Int_t)((height - pic1->GetHeight()) >> 1);
       }
@@ -1588,9 +1591,8 @@ void TGListTree::DrawOutline(Handle_t id, TGListTreeItem *item, Pixel_t col,
    }
    else
       gVirtualX->SetForeground(fDrawGC, col);
+
 #ifdef R__HAS_COCOA
-   //In case of TGCocoa, FontHeight can be SMALLER than image(s) sizes and outline looks weird.
-   //Draw outline around the tree item, not around the text.
    gVirtualX->DrawRectangle(id, fDrawGC, 1, item->fY - pos.fY, dim.fWidth-2, item->fHeight + 1);
 #else
    gVirtualX->DrawRectangle(id, fDrawGC, 1, item->fYtext-pos.fY-2, 
@@ -1612,19 +1614,15 @@ void TGListTree::DrawActive(Handle_t id, TGListTreeItem *item)
    gVirtualX->SetForeground(fDrawGC, item->GetActiveColor());
 
 #ifdef R__HAS_COCOA
-   //Since DrawItem uses FontHeight to calculate fYtext, I have to use FontHeight, not FontAscent here,
-   //otherwise text is in a wrong place (it's easy to see if tree has checkboxes, for example.
    gVirtualX->FillRectangle(id, fDrawGC, 1, item->fY - pos.fY, width, item->fHeight + 1);
-   gVirtualX->SetForeground(fDrawGC, fgBlackPixel);
-   gVirtualX->DrawString(id, fActiveGC, item->fXtext, item->fYtext - pos.fY + FontHeight(), item->GetText(), item->GetTextLength());
 #else
    gVirtualX->FillRectangle(id, fDrawGC, 1, item->fYtext-pos.fY-1, width, 
                             FontHeight()+3);
+#endif
    gVirtualX->SetForeground(fDrawGC, fgBlackPixel);
    gVirtualX->DrawString(id, fActiveGC, item->fXtext, 
                          item->fYtext - pos.fY + FontAscent(),
                          item->GetText(), item->GetTextLength());
-#endif
 }
 
 //______________________________________________________________________________
@@ -1639,19 +1637,12 @@ void TGListTree::DrawItemName(Handle_t id, TGListTreeItem *item)
       DrawActive(id, item);
    }
    else { // if (!item->IsActive() && (item != fSelected)) {
-#ifdef R__HAS_COCOA
-   //Since FontHeight was used to calculate fYtext, I have to use it here
-   //instead of FontAscent, otherwise, the text is misplaces (ascent and font height are different!)
-      gVirtualX->DrawString(id, fDrawGC, item->fXtext, item->fYtext - pos.fY + FontHeight(),
-                            item->GetText(), item->GetTextLength());
-#else
-      gVirtualX->FillRectangle(id, fHighlightGC, item->fXtext, 
+      gVirtualX->FillRectangle(id, fHighlightGC, item->fXtext,
                        item->fYtext-pos.fY, dim.fWidth-item->fXtext-2,
                        FontHeight()+1);
       gVirtualX->DrawString(id, fDrawGC,
                        item->fXtext, item->fYtext-pos.fY + FontAscent(),
                        item->GetText(), item->GetTextLength());
-#endif
    }
    if (item == fCurrent) {
       DrawOutline(id, item);
@@ -1661,12 +1652,7 @@ void TGListTree::DrawItemName(Handle_t id, TGListTreeItem *item)
       UInt_t width = TextWidth(item->GetText());
       gVirtualX->SetForeground(fColorGC, TColor::Number2Pixel(item->GetColor()));
       if (fColorMode & kColorUnderline) {
-#ifdef R__HAS_COCOA
-         //FontHeight!!!
-         Int_t y = item->fYtext-pos.fY + FontHeight() + 2;
-#else
          Int_t y = item->fYtext-pos.fY + FontAscent() + 2;
-#endif
          gVirtualX->DrawLine(id, fColorGC, item->fXtext, y, 
                              item->fXtext + width, y);
       }
