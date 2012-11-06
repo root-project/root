@@ -1018,7 +1018,7 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    }
    if (result.isValid() && result.needsManagedAllocation())
       fTemporaries->push_back(result);
-   if ((sLine[0] == '#') || (sLine[0] == '.')) {
+   if (sLine[0] == '.') {
       // Let CINT see preprocessor and meta commands, but only
       // after cling has seen them first, otherwise any dictionary
       // loading triggered by CINT will cause TClass constructors
