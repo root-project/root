@@ -1742,6 +1742,9 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
                   delete filecontent;
                   filecontent = null;
                }
+               else if (this.readyState == 4 && this.status == 404) {
+                  alert("Error 404: File not found!");
+               }
             }
             xhr.open('GET', url, true);
             var xhr_header = "bytes=" + pos + "-" + (pos + len);

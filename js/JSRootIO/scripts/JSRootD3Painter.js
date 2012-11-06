@@ -1552,8 +1552,8 @@ function createFillPatterns(svg, id, line_color) {
          if (h > hmax) hmax = h;
          if (h < hmin) hmin = h;
       }
-      if (hmax > 0.0) hmax *= 1.1;
-      if (hmin < 0.0) hmin *= 1.1;
+      if (hmax > 0.0) hmax *= 1.05;
+      if (hmin < 0.0) hmin *= 1.05;
       func['fYmin'] = hmin;
       func['fYmax'] = hmax;
       func['x_min'] = func['fXmin'];
@@ -2072,7 +2072,7 @@ function createFillPatterns(svg, id, line_color) {
          if (histo['fArray'][i+1] < hmin) hmin = histo['fArray'][i+1];
          if (histo['fArray'][i+1] > hmax) hmax = histo['fArray'][i+1];
       }
-      var mul = (hmin < 0) ? 1.1 : 1.0;
+      var mul = (hmin < 0) ? 1.05 : 1.0;
       if (hmin < 1e-300 && hmax < 1e-300) {
          var ymin = histo['fYaxis']['fXmin'], ymax = histo['fYaxis']['fXmax'];
          if (histo['fMinimum'] != -1111) ymin = histo['fMinimum'];
@@ -2092,8 +2092,6 @@ function createFillPatterns(svg, id, line_color) {
          else
             var y = d3.scale.linear().domain([ymin, ymax]).range([h, 0]);
 
-//         frame['x'] = x;
-//         frame['y'] = y;
          // avoid this!
          histo['fYaxis']['fXmin'] = ymin;
          histo['fYaxis']['fXmax'] = ymax;
@@ -2122,7 +2120,7 @@ function createFillPatterns(svg, id, line_color) {
       if (histo['fMinimum'] != -1111) hmin = histo['fMinimum'];
       if (histo['fMaximum'] != -1111) hmax = histo['fMaximum'];
       histo['fYaxis']['fXmin'] = hmin * mul;
-      histo['fYaxis']['fXmax'] = hmax * 1.1;
+      histo['fYaxis']['fXmax'] = hmax * 1.05;
       var binwidth = ((histo['fXaxis']['fXmax'] - histo['fXaxis']['fXmin']) / histo['fXaxis']['fNbins']);
       var bins = d3.range(histo['fXaxis']['fNbins']).map(function(p) {
          var offset = (opt.indexOf('e') != -1) ? (p * binwidth) - (binwidth / 2.0) : (p * binwidth);
@@ -2142,23 +2140,22 @@ function createFillPatterns(svg, id, line_color) {
       else
          var x = d3.scale.linear().domain([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]).range([0, w]);
       if (logy)
-         var y = d3.scale.log().domain([mul * d3.min(bins, function(d) { return d.y; }),
-                      1.1 * d3.max(bins, function(d) { return d.y; })]).range([h, 0]);
+         var y = d3.scale.log().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([h, 0]);
       else
-         var y = d3.scale.linear().domain([mul * d3.min(bins, function(d) { return d.y; }),
-                      1.1 * d3.max(bins, function(d) { return d.y; })]).range([h, 0]);
+         var y = d3.scale.linear().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([h, 0]);
 
-      ret['ymin'] = hmin;
-      ret['ymax'] = hmax;
+      ret['ymin'] = histo['fYaxis']['fXmin'];
+      ret['ymax'] = histo['fYaxis']['fXmax'];
       if (histo['fXaxis'].TestBit(EAxisBits.kAxisRange)) {
          ret['xmin'] = histo.getBinLowEdge(histo['fXaxis']['fFirst']);
          ret['xmax'] = histo.getBinUpEdge(histo['fXaxis']['fLast']);
          x.domain([ret['xmin'],ret['xmax']]);
+         y.domain([ret['ymin'],ret['ymax']]);
       }
       histo['x_min'] = histo['fXaxis']['fXmin'];
       histo['x_max'] = histo['fXaxis']['fXmax'];
-      histo['y_min'] = hmin * mul;
-      histo['y_max'] = hmax * 1.1;
+      histo['y_min'] = histo['fYaxis']['fXmin'];
+      histo['y_max'] = histo['fYaxis']['fXmax'];
 
       histo['x'] = x;
       histo['y'] = y;
@@ -2378,6 +2375,31 @@ function createFillPatterns(svg, id, line_color) {
       this.drawFunctions(vis, histo, pad, ret);
       if (!pad || typeof(pad) == 'undefined')
          this.drawStat(vis, histo);
+   };
+
+   JSROOTPainter.drawLatex = function(vis, string, x, y, attr) {
+      var w = vis.attr("width"), h = vis.attr("height");
+      while (string.indexOf('#') != -1)
+         string = string.replace('#', '\\');
+      string = string.replace(' ', '\\: ');
+
+      // method using jsMath do display formulae and LateX
+      // unfortunately it works only on FireFox (Chrome displays it, 
+      // but at wrong coordinates, and IE doesn't support foreignObject 
+      // in SVG...)
+      string = '\\displaystyle \\rm ' + string;
+      var fo = vis.append("foreignObject")
+         .attr("x", x)
+         .attr("y", y)
+         .attr("width", w - x)
+         .attr("height", h - y);
+      var math = fo.append("xhtml:div")
+         .style("display", "inline")
+         .style("color", attr['font-color'])
+         .style('font-size', (attr['font-size']*0.98)+'px')
+         .attr("class", "math")
+         .html(string);
+      jsMath.ProcessElement(math[0][0]);
    };
 
    JSROOTPainter.drawLegend = function(vis, pad, pave) {

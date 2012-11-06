@@ -144,8 +144,8 @@ function displayObject(obj, cycle, idx) {
 function AssertPrerequisites(andThen) {
    if (typeof JSROOTIO == "undefined") {
       // if JSROOTIO is not defined, then dynamically load the required scripts and open the file
-      loadScript('http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js', function() {
-      loadScript('http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js', function() {
+      loadScript('http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js', function() {
+      loadScript('http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/jquery-ui.min.js', function() {
       loadScript(source_dir+'scripts/dtree.js', function() {
       loadScript(source_dir+'scripts/rawinflate.js', function() {
       loadScript(source_dir+'scripts/JSRootCore.js', function() {
