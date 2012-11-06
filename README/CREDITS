@@ -851,3 +851,7 @@ D: contributed to Reflex
 N: Andreas Zoglauer
 E: zog@mpe.mpg.de
 D: contributed to TStyle::CreateGradientColorTable()
+
+N: Yue Shi Lai
+E: ylai@mit.edu
+D: TMathText class
