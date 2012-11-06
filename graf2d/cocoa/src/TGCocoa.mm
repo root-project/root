@@ -445,6 +445,9 @@ void TGCocoa::Update(Int_t mode)
       //Execute buffered commands.
       fPimpl->fX11CommandBuffer.Flush(fPimpl.get());
    }
+   
+   if (fDirectDraw && mode != 2)
+      fPimpl->fX11CommandBuffer.FlushXOROps(fPimpl.get());
 }
 
 //Window management part.

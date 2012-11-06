@@ -113,8 +113,10 @@ TGQuartz::TGQuartz(const char *name, const char *title)
 void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
 {
    //Check some conditions first.
-   if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
+   if (fDirectDraw) {
+      fPimpl->fX11CommandBuffer.AddDrawBoxXor(fSelectedDrawable, x1, y1, x2, y2);
       return;
+   }
 
    NSObject<X11Drawable> * const drawable = (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawBox");
    if (!drawable)
@@ -217,8 +219,10 @@ void TGQuartz::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
    // x1,y1        : begin of line
    // x2,y2        : end of line
 
-   if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
+   if (fDirectDraw) {
+      fPimpl->fX11CommandBuffer.AddDrawLineXor(fSelectedDrawable, x1, y1, x2, y2);   
       return;
+   }
 
    //Do some checks first:
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "DrawLine, bad drawable is selected");
