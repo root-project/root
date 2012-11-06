@@ -1790,6 +1790,29 @@ Option_t* option)
 </figure>
 
 </sect2>
+
+<sect2><title>The TeX Processor TMathText</title>
+<para>
+TMathText's purpose is to write mathematical equations, exactly as TeX would
+do it. The syntax is the same as the TeX's one.
+</para>
+<para>The script <code>$ROOTSYS/tutorials/graphics/tmathtex.C</code>:</para>
+<para>
+gives the following output:
+</para>
+
+<figure><title>A TMathText example</title>
+<para>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/mathtext.png" width="300.0pt"/></imageobject></inlinemediaobject>
+</para>
+</figure>
+
+<para><code>TMathText</code> uses plain
+TeX syntax and uses "\" as control instead of "#". If a piece of text containing
+"\" is given to <code>TLatex</code> then <code>TMathText</code> is automatically invoked.
+Therefore, as histograms' titles, axis titles, labels etc ... are drawn using
+<code>TLatex</code>, the <code>TMathText</code> syntax can be used for them also. </para>
+</sect2>
 </sect1>
 
 <sect1>

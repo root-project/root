@@ -1,99 +1,146 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project version="12.2">
+<project version="14.0">
     <meta>
         <filters directoryPatterns="" filePatterns="" positiveFilePatterns="" showHiddenFiles="false"/>
         <options>
-            <serialized version="12.2" xml:space="preserve">
+            <serialized version="14.0" xml:space="preserve">
                 <map>
                     <entry>
                         <String>scenario.associations</String>
                         <scenarioAssociation-array>
                             <scenarioAssociation>
-                                <field name="name">
-                                    <String>ROOT Docbook PDF</String>
-                                </field>
-                                <field name="type">
-                                    <String>XSL</String>
-                                </field>
                                 <field name="url">
                                     <String>ROOTUsersGuide.xml</String>
                                 </field>
+                                <field name="scenarioIds">
+                                    <list>
+                                        <String>ROOT Docbook HTML - Chunk</String>
+                                    </list>
+                                </field>
+                                <field name="scenarioTypes">
+                                    <list>
+                                        <String>XSL</String>
+                                    </list>
+                                </field>
                             </scenarioAssociation>
                             <scenarioAssociation>
-                                <field name="name">
-                                    <String>ROOT Docbook PDF</String>
+                                <field name="url">
+                                    <String>Graphics.xml</String>
                                 </field>
-                                <field name="type">
-                                    <String>XSL</String>
+                                <field name="scenarioIds">
+                                    <list>
+                                        <String>ROOT Docbook PDF</String>
+                                    </list>
                                 </field>
+                                <field name="scenarioTypes">
+                                    <list>
+                                        <String>XSL</String>
+                                    </list>
+                                </field>
+                            </scenarioAssociation>
+                            <scenarioAssociation>
                                 <field name="url">
                                     <String>Introduction.xml</String>
                                 </field>
+                                <field name="scenarioIds">
+                                    <list>
+                                        <String>ROOT Docbook PDF</String>
+                                    </list>
+                                </field>
+                                <field name="scenarioTypes">
+                                    <list>
+                                        <String>XSL</String>
+                                    </list>
+                                </field>
                             </scenarioAssociation>
                             <scenarioAssociation>
-                                <field name="name">
-                                    <String>ROOT Docbook PDF</String>
-                                </field>
-                                <field name="type">
-                                    <String>XSL</String>
-                                </field>
                                 <field name="url">
                                     <String>../../../Dropbox/User%27s%20Guide/WritingGUI.xml</String>
                                 </field>
+                                <field name="scenarioIds">
+                                    <list>
+                                        <String>ROOT Docbook PDF</String>
+                                    </list>
+                                </field>
+                                <field name="scenarioTypes">
+                                    <list>
+                                        <String>XSL</String>
+                                    </list>
+                                </field>
                             </scenarioAssociation>
                             <scenarioAssociation>
-                                <field name="name">
-                                    <String>ROOT Docbook PDF</String>
-                                </field>
-                                <field name="type">
-                                    <String>XSL</String>
-                                </field>
                                 <field name="url">
                                     <String>../../../ROOT_Documents/User%27s%20Guide/DocBook/1Introduction.xml</String>
                                 </field>
+                                <field name="scenarioIds">
+                                    <list>
+                                        <String>ROOT Docbook PDF</String>
+                                    </list>
+                                </field>
+                                <field name="scenarioTypes">
+                                    <list>
+                                        <String>XSL</String>
+                                    </list>
+                                </field>
                             </scenarioAssociation>
                             <scenarioAssociation>
-                                <field name="name">
-                                    <String>ROOT Docbook PDF</String>
-                                </field>
-                                <field name="type">
-                                    <String>XSL</String>
-                                </field>
                                 <field name="url">
                                     <String>../../../ROOT_Documents/User%27s%20Guide/DocBook/GettingStarted.xml</String>
                                 </field>
+                                <field name="scenarioIds">
+                                    <list>
+                                        <String>ROOT Docbook PDF</String>
+                                    </list>
+                                </field>
+                                <field name="scenarioTypes">
+                                    <list>
+                                        <String>XSL</String>
+                                    </list>
+                                </field>
                             </scenarioAssociation>
                             <scenarioAssociation>
-                                <field name="name">
-                                    <String>ROOT Docbook PDF</String>
-                                </field>
-                                <field name="type">
-                                    <String>XSL</String>
-                                </field>
                                 <field name="url">
                                     <String>../../../ROOT_Documents/User%27s%20Guide/DocBook/Introduction.xml</String>
                                 </field>
+                                <field name="scenarioIds">
+                                    <list>
+                                        <String>ROOT Docbook PDF</String>
+                                    </list>
+                                </field>
+                                <field name="scenarioTypes">
+                                    <list>
+                                        <String>XSL</String>
+                                    </list>
+                                </field>
                             </scenarioAssociation>
                             <scenarioAssociation>
-                                <field name="name">
-                                    <String>ROOT Docbook PDF</String>
-                                </field>
-                                <field name="type">
-                                    <String>XSL</String>
-                                </field>
                                 <field name="url">
                                     <String>../../../ROOT_Documents/User%27s%20Guide/DocBook/ROOTUsersGuide.xml</String>
                                 </field>
+                                <field name="scenarioIds">
+                                    <list>
+                                        <String>ROOT Docbook PDF</String>
+                                    </list>
+                                </field>
+                                <field name="scenarioTypes">
+                                    <list>
+                                        <String>XSL</String>
+                                    </list>
+                                </field>
                             </scenarioAssociation>
                             <scenarioAssociation>
-                                <field name="name">
-                                    <String>ROOT Docbook HTML</String>
-                                </field>
-                                <field name="type">
-                                    <String>XSL</String>
-                                </field>
                                 <field name="url">
                                     <String>FittingHistograms.xml</String>
+                                </field>
+                                <field name="scenarioIds">
+                                    <list>
+                                        <String>ROOT Docbook HTML</String>
+                                    </list>
+                                </field>
+                                <field name="scenarioTypes">
+                                    <list>
+                                        <String>XSL</String>
+                                    </list>
                                 </field>
                             </scenarioAssociation>
                         </scenarioAssociation-array>
