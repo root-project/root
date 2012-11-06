@@ -13,7 +13,6 @@
 // ROOT
 #include "TClass.h"
 #include "TClassEdit.h"
-#include "DllImport.h"
 #include "TInterpreter.h"
 
 // Standard
@@ -316,20 +315,22 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
 //
 // If all fails, void is used, which will cause the return type to be ignored on use
 
+// an exactly matching executor is best
+   ExecFactories_t::iterator h = gExecFactories.find( fullType );
+   if ( h != gExecFactories.end() )
+      return (h->second)();
+
 // resolve typedefs etc., and collect qualifiers
    std::string resolvedType = TClassEdit::ResolveTypedef( fullType.c_str(), true );
-   const std::string& cpd = Utility::Compound( resolvedType );
-   std::string realType = TClassEdit::ShortType( resolvedType.c_str(), 1 );
-
-// an exactly matching executor is best
-   ExecFactories_t::iterator h = gExecFactories.find( resolvedType );
-   if ( h != gExecFactories.end() )
-      return (h->second)();
 
 // a full, qualified matching executor is preferred
-   h = gExecFactories.find( realType + cpd );
+   h = gExecFactories.find( resolvedType );
    if ( h != gExecFactories.end() )
       return (h->second)();
+
+//-- nothing? ok, collect information about the type and possible qualifiers/decorators
+   const std::string& cpd = Utility::Compound( resolvedType );
+   std::string realType = TClassEdit::ShortType( resolvedType.c_str(), 1 );
 
 // accept ref as by value
    if ( ! cpd.empty() && cpd[ cpd.size() - 1 ] == '&' ) {
@@ -354,10 +355,13 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
    //      if ( ti.Property() & G__BIT_ISENUM )
    //         h = gExecFactories.find( "UInt_t" );
    //      else {
+      if ( cpd != "" ) {
          std::stringstream s;
-         s << "return type not handled (using void): " << fullType << std::ends;
+         s << "creating executor for unknown type \"" << fullType << "\"" << std::ends;
          PyErr_Warn( PyExc_RuntimeWarning, (char*)s.str().c_str() );
-         h = gExecFactories.find( "void" );
+         h = gExecFactories.find( "void*" );      // "user knows best"
+      } else
+         h = gExecFactories.find( "void" );       // fails on use
       //      }
    }
 

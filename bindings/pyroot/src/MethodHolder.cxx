@@ -174,6 +174,8 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
    if ( ! gInterpreter->CallFunc_IsValid(fMethodCall) && (Bool_t)fMethod == true ) {
       PyErr_Format( PyExc_RuntimeError, "could not resolve %s::%s(%s)",
          fClass.Name().c_str(), fMethod.Name().c_str(), callString.c_str() );
+      gInterpreter->CallFunc_Delete( fMethodCall );
+      fMethodCall = 0;
       return kFALSE;
    }
 

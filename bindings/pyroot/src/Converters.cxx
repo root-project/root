@@ -1044,14 +1044,16 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
 //
 // If all fails, void is used, which will generate a run-time warning when used.
 
-// resolve typedefs etc.
-   G__TypeInfo ti( fullType.c_str() );
-   std::string resolvedType = ti.TrueName();
-   if ( ! ti.IsValid() )
-      resolvedType = fullType;     // otherwise, resolvedType will be "(unknown)"
+// an exactly matching converter is best
+   ConvFactories_t::iterator h = gConvFactories.find( fullType );
+   if ( h != gConvFactories.end() )
+      return (h->second)( user );
 
-// an exactly matching converter is preferred
-   ConvFactories_t::iterator h = gConvFactories.find( resolvedType );
+// resolve typedefs etc.
+   std::string resolvedType = TClassEdit::ResolveTypedef( fullType.c_str(), true );
+
+// a full, qualified matching converter is preferred
+   h = gConvFactories.find( resolvedType );
    if ( h != gConvFactories.end() )
       return (h->second)( user );
 
@@ -1065,7 +1067,7 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
       return (h->second)( user );
 
 //-- nothing? collect qualifier information
-   Bool_t isConst = ti.Property() & G__BIT_ISCONSTANT;
+   Bool_t isConst = kFALSE; // # TODO: where to get const info?? ti.Property() & G__BIT_ISCONSTANT;
 
 // accept const <type>& as converter by value (as python copies most types)
    if ( isConst && cpd == "&" ) {
@@ -1096,12 +1098,13 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
       else if ( cpd == "" )               // by value
          result = new TStrictRootObjectConverter( klass, kTRUE );
 
-   } else if ( ti.Property() & G__BIT_ISENUM ) {
-   // special case (CINT): represent enums as unsigned integers
-      if ( cpd == "&" && !isConst ) {
-         h = gConvFactories.find( "long&" );
-      } else
-         h = gConvFactories.find( "UInt_t" );
+   // TODO: figure out enums
+   //   } else if ( ti.Property() & G__BIT_ISENUM ) {
+   //   // special case (CINT): represent enums as unsigned integers
+   //      if ( cpd == "&" && !isConst ) {
+   //         h = gConvFactories.find( "long&" );
+   //      } else
+   //         h = gConvFactories.find( "UInt_t" );
    }
 
    if ( ! result && h != gConvFactories.end() )
