@@ -4901,7 +4901,7 @@ int main(int argc, char **argv)
             }
             argvv[argcc++] = (char *)"+V";
          }
-         iv = argcc;
+         iv = i;
       }
       if (R__IsSelectionFile(argv[i])) {
          il = i;
@@ -4947,8 +4947,8 @@ int main(int argc, char **argv)
    }
 
    if (!il) {
-      // replace bundlename by headers for autolinkdef
-      GenerateLinkdef(&argcc, argvv, iv, interpPragmaSource);
+      // Generate autolinkdef
+      GenerateLinkdef(&argc, argv, iv, interpPragmaSource);
    }
 
    G__setothermain(2);
