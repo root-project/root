@@ -4951,17 +4951,6 @@ int main(int argc, char **argv)
          argvv[argcc++] = (char *)"-V";        // include info on private members
          argvv[argcc++] = (char *)"-c-10";
          argvv[argcc++] = (char *)"+V";        // turn on class comment mode
-         if (!use_preprocessor) {
-#ifdef ROOTBUILD
-            argvv[argcc++] = (char *)"TObject.h";
-            argvv[argcc++] = (char *)"TMemberInspector.h";
-            //argvv[argcc++] = (char *)"base/inc/TObject.h";
-            //argvv[argcc++] = (char *)"base/inc/TMemberInspector.h";
-#else
-            argvv[argcc++] = (char *)"TObject.h";
-            argvv[argcc++] = (char *)"TMemberInspector.h";
-#endif
-         }
       } else {
          Error(0, "%s: option -c can only be used when an output file has been specified\n", argv[0]);
          return 1;
