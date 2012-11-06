@@ -59,6 +59,7 @@ public:
    virtual bool IsGraphicsCommand()const;//By-default - false.
 
    virtual void Execute()const = 0;
+   virtual void Execute(CGContextRef /*ctx*/)const;
 
 private:   
    Command(const Command &rhs);
@@ -206,6 +207,35 @@ public:
    void Execute()const;
 };
 
+//Set of 'xor' operations, required by TCanvas and ExecuteEvent's machinery.
+class DrawBoxXor : public Command {
+private:
+   Int_t fX1;
+   Int_t fY1;
+   Int_t fX2;
+   Int_t fY2;
+
+public:
+   DrawBoxXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
+   
+   void Execute()const;
+   void Execute(CGContextRef ctx)const;
+};
+
+class DrawLineXor : public Command {
+private:
+   Int_t fX1;
+   Int_t fY1;
+   Int_t fX2;
+   Int_t fY2;
+
+public:
+   DrawLineXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
+   
+   void Execute()const;
+   void Execute(CGContextRef ctx)const;
+};
+
 class CommandBuffer {
 private:
    CommandBuffer(const CommandBuffer &rhs);
@@ -213,6 +243,8 @@ private:
    
    std::vector<Command *> fCommands;
    std::vector<QuartzView *> fViewBranch;
+
+   std::vector<Command *> fXorOps;   
 public:
    typedef std::vector<Command *>::size_type size_type;
 
@@ -229,10 +261,16 @@ public:
    void AddDrawRectangle(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, UInt_t w, UInt_t h);
    void AddUpdateWindow(QuartzView *view);
    void AddDeletePixmap(Pixmap_t pixmap);
+   
+   //'XOR' graphics for canvas.
+   void AddDrawBoxXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
+   void AddDrawLineXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2);   
 
    void Flush(Details::CocoaPrivate *impl);
+   void FlushXOROps(Details::CocoaPrivate *impl);   
    void RemoveOperationsForDrawable(Drawable_t wid);
    void RemoveGraphicsOperationsForWindow(Window_t wid);
+   void RemoveXORGraphicsOperationsForWindow(Window_t wid);
    
    size_type BufferSize()const
    {
@@ -240,6 +278,7 @@ public:
    }
 private:
    void ClearCommands();
+   void ClearXOROperations();   
    
    //Clip related stuff.
    ///////////////////////////

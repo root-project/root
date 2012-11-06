@@ -53,6 +53,11 @@ Command::~Command()
 }
 
 //______________________________________________________________________________
+void Command::Execute(CGContextRef /*ctx*/)const
+{
+}
+
+//______________________________________________________________________________
 bool Command::HasOperand(Drawable_t wid)const
 {
    return wid == fID;      
@@ -236,6 +241,69 @@ void DeletePixmap::Execute()const
 }
 
 //______________________________________________________________________________
+DrawBoxXor::DrawBoxXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+               : Command(windowID, GCValues_t()),
+                 fX1(x1),
+                 fY1(y1),
+                 fX2(x2),
+                 fY2(y2)
+{
+   if (fX1 > fX2)
+      std::swap(fX1, fX2);
+   if (fY1 > fY2)
+      std::swap(fY1, fY2);
+}
+
+//______________________________________________________________________________
+void DrawBoxXor::Execute()const
+{
+   //Noop.
+}
+
+//______________________________________________________________________________
+void DrawBoxXor::Execute(CGContextRef ctx)const
+{
+   //
+   assert(ctx != 0 && "Execute, ctx parameter is null");
+   
+   CGContextSetRGBStrokeColor(ctx, 0., 0., 0., 1.);
+   CGContextSetLineWidth(ctx, 1.);
+   
+   CGContextStrokeRect(ctx, CGRectMake(fX1, fY1, fX2 - fX1, fY2 - fY1));
+}
+
+//______________________________________________________________________________
+DrawLineXor::DrawLineXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+               : Command(windowID, GCValues_t()),
+                 fX1(x1),
+                 fY1(y1),
+                 fX2(x2),
+                 fY2(y2)
+{
+}
+
+//______________________________________________________________________________
+void DrawLineXor::Execute()const
+{
+   //Noop.
+}
+
+//______________________________________________________________________________
+void DrawLineXor::Execute(CGContextRef ctx)const
+{
+   //
+   assert(ctx != 0 && "Execute, ctx parameter is null");
+   
+   CGContextSetRGBStrokeColor(ctx, 0., 0., 0., 1.);
+   CGContextSetLineWidth(ctx, 1.);
+   
+   CGContextBeginPath(ctx);
+   CGContextMoveToPoint(ctx, fX1, fY1);
+   CGContextAddLineToPoint(ctx, fX2, fY2);
+   CGContextStrokePath(ctx);
+}
+
+//______________________________________________________________________________
 CommandBuffer::CommandBuffer()
 {
 }
@@ -244,6 +312,7 @@ CommandBuffer::CommandBuffer()
 CommandBuffer::~CommandBuffer()
 {
    ClearCommands();
+   ClearXOROperations();
 }
 
 //______________________________________________________________________________
@@ -413,6 +482,30 @@ void CommandBuffer::AddDeletePixmap(Pixmap_t pixmapID)
 }
 
 //______________________________________________________________________________
+void CommandBuffer::AddDrawBoxXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+{
+   try {
+      std::auto_ptr<DrawBoxXor> cmd(new DrawBoxXor(windowID, x1, y1, x2, y2));
+      fXorOps.push_back(cmd.get());
+      cmd.release();
+   } catch (const std::exception &) {
+      throw;
+   }
+}
+
+//______________________________________________________________________________
+void CommandBuffer::AddDrawLineXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+{
+   try {
+      std::auto_ptr<DrawLineXor> cmd(new DrawLineXor(windowID, x1, y1, x2, y2));
+      fXorOps.push_back(cmd.get());
+      cmd.release();
+   } catch (const std::exception &) {
+      throw;
+   }
+}
+
+//______________________________________________________________________________
 void CommandBuffer::Flush(Details::CocoaPrivate *impl)
 {
    assert(impl != 0 && "Flush, impl parameter is null");
@@ -496,12 +589,75 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
 }
 
 //______________________________________________________________________________
+void CommandBuffer::FlushXOROps(Details::CocoaPrivate *impl)
+{
+   assert(impl != 0 && "FlushXOROps, impl parameter is null");
+   
+   if (!fXorOps.size())
+      return;
+   
+   //I assume here, that all XOR ops in one iteration (one Update call) must
+   //be for the same window (if not, there is no normal way to implement this at all).
+   //TODO: verify and check this condition.
+
+   NSObject<X11Drawable> *drawable = impl->GetDrawable(fXorOps[0]->fID);
+   
+   assert([drawable isKindOfClass : [QuartzView class]] && "FlushXOROps, drawable must be of type QuartzView");
+   
+   QuartzView *view = (QuartzView *)drawable;
+   
+   if ([view lockFocusIfCanDraw]) {
+      NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
+      assert(nsContext != nil && "FlushXOROps, currentContext is nil");
+      CGContextRef currContext = (CGContextRef)[nsContext graphicsPort];
+      assert(currContext != 0 && "FlushXOROps, graphicsPort is null");//remove this assert?
+      
+      const Quartz::CGStateGuard ctxGuard(currContext);//ctx guard.
+      
+      CGContextSetAllowsAntialiasing(currContext, false);
+      
+      view.fContext = currContext;
+   
+      if (view.fBackBuffer) {//back buffer has canvas' contents.
+         //Very "special" window.
+         Rectangle_t copyArea = {};
+         copyArea.fWidth = UShort_t(view.fBackBuffer.fWidth);
+         copyArea.fHeight = UShort_t(view.fBackBuffer.fHeight);
+         [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];      
+      }
+   
+      //Now, do "XOR" drawings.
+      for (size_type i = 0, e = fXorOps.size(); i < e; ++i) {
+         if (fXorOps[i]) {
+            fXorOps[i]->Execute(currContext);
+         }
+      }
+      
+      [view unlockFocus];
+      view.fContext = 0;
+      
+      CGContextFlush(currContext);
+      
+      CGContextSetAllowsAntialiasing(currContext, true);
+   }
+   
+   ClearXOROperations();
+}
+
+//______________________________________________________________________________
 void CommandBuffer::RemoveOperationsForDrawable(Drawable_t drawable)
 {
    for (size_type i = 0; i < fCommands.size(); ++i) {
       if (fCommands[i] && fCommands[i]->HasOperand(drawable)) {
          delete fCommands[i];
          fCommands[i] = 0;
+      }
+   }
+
+   for (size_type i = 0; i < fXorOps.size(); ++i) {
+      if (fXorOps[i] && fXorOps[i]->HasOperand(drawable)) {
+         delete fXorOps[i];
+         fXorOps[i] = 0;
       }
    }
 }
@@ -518,12 +674,32 @@ void CommandBuffer::RemoveGraphicsOperationsForWindow(Window_t wid)
 }
 
 //______________________________________________________________________________
+void CommandBuffer::RemoveXORGraphicsOperationsForWindow(Window_t wid)
+{
+   for (size_type i = 0; i < fCommands.size(); ++i) {
+      if (fXorOps[i] && fXorOps[i]->HasOperand(wid)) {
+         delete fXorOps[i];
+         fXorOps[i] = 0;
+      }
+   }
+}
+
+//______________________________________________________________________________
 void CommandBuffer::ClearCommands()
 {
    for (size_type i = 0, e = fCommands.size(); i < e; ++i)
       delete fCommands[i];
 
    fCommands.clear();
+}
+
+//______________________________________________________________________________
+void CommandBuffer::ClearXOROperations()
+{
+   for (size_type i = 0, e = fXorOps.size(); i < e; ++i)
+      delete fXorOps[i];
+
+   fXorOps.clear();
 }
 
 //Clipping machinery.

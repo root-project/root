@@ -303,6 +303,8 @@ UInt_t GetModifiers()
       rootModifiers |= kButton1Mask;
    if (buttons & 2)
       rootModifiers |= kButton3Mask;
+   if (buttons & (1 << 2))
+      rootModifiers |= kButton2Mask;
 
    return rootModifiers;
 }
@@ -393,6 +395,8 @@ unsigned GetModifiersFromCocoaEvent(NSEvent *theEvent)
       rootModifiers |= kButton1Mask;
    if (buttons & 2)
       rootModifiers |= kButton3Mask;
+   if (buttons & (1 << 2))
+      rootModifiers |= kButton2Mask;
 
    return rootModifiers;
 }

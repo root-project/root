@@ -182,8 +182,11 @@ size_type ParsePixelSize(const std::string &name, size_type pos, XLFDName &dst)
       return endOfSize;
    }
 
+   const size_type pos1 = GetXLFDNameComponentAsInteger(name, "pixel size", pos, dst.fPixelSize);
+   if (dst.fPixelSize < 12)
+      dst.fPixelSize = 12;
    //Real size in pixel?
-   return GetXLFDNameComponentAsInteger(name, "pixel size", pos, dst.fPixelSize);
+   return pos1;//GetXLFDNameComponentAsInteger(name, "pixel size", pos, dst.fPixelSize);
 }
 
 //______________________________________________________________________________
@@ -269,8 +272,8 @@ bool ParseXLFDName(const std::string &xlfdName, XLFDName &dst)
    try {
       if (xlfdName == "fixed" || xlfdName == "*") {
          //Is this correct XLFD name???? Who knows. Replace it.
-         dst.fFamilyName = "Courier";
-         dst.fPixelSize = 11;
+         dst.fFamilyName = "Lucida Grande";
+         dst.fPixelSize = 12;
       } else {
          size_type pos = ParseFoundry(xlfdName, 0, dst);
          if (pos + 1 < nameLength)

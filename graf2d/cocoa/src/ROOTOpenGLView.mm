@@ -47,11 +47,10 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
    BOOL            fIsOverlapped;
    
    NSOpenGLPixelFormat *fPixelFormat;
-   NSOpenGLContext *fOpenGLContext;
-   
    BOOL fUpdateContext;
 }
 
+@synthesize fOpenGLContext;
 @synthesize fUpdateContext;
 
 //______________________________________________________________________________
@@ -62,8 +61,8 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
       fIsOverlapped = NO;
       fPixelFormat = [format retain];
       
-    //  if ([[NSScreen mainScreen] backingScaleFactor] > 1.)
-    //     [self  setWantsBestResolutionOpenGLSurface : YES];
+      if ([[NSScreen mainScreen] backingScaleFactor] > 1.)
+         [self  setWantsBestResolutionOpenGLSurface : YES];
    }
 
    return self;
@@ -75,16 +74,10 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
    if (fOpenGLContext && [fOpenGLContext view] == self)
       [fOpenGLContext clearDrawable];
 
+   self.fOpenGLContext = nil;
    [fPixelFormat release];
    //View does not own context.
    [super dealloc];
-}
-
-//______________________________________________________________________________
-- (void) setOpenGLContext : (NSOpenGLContext *) context
-{
-   //View does not own context, no changes in any ref counter == weak reference.
-   fOpenGLContext = context;
 }
 
 //______________________________________________________________________________

@@ -26,8 +26,8 @@
 
 @interface QuartzPixmap : NSObject<X11Drawable>
 
-- (id) initWithW : (unsigned) width H : (unsigned) height;
-- (BOOL) resizeW : (unsigned) width H : (unsigned) height;
+- (id) initWithW : (unsigned) width H : (unsigned) height scaleFactor : (CGFloat) scaleFactor;
+- (BOOL) resizeW : (unsigned) width H : (unsigned) height scaleFactor : (CGFloat) scaleFactor;
 
 - (CGImageRef) createImageFromPixmap;
 - (CGImageRef) createImageFromPixmap : (Rectangle_t) cropArea;

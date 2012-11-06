@@ -113,8 +113,10 @@ TGQuartz::TGQuartz(const char *name, const char *title)
 void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
 {
    //Check some conditions first.
-   if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
+   if (fDirectDraw) {
+      fPimpl->fX11CommandBuffer.AddDrawBoxXor(fSelectedDrawable, x1, y1, x2, y2);
       return;
+   }
 
    NSObject<X11Drawable> * const drawable = (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawBox");
    if (!drawable)
@@ -217,8 +219,10 @@ void TGQuartz::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
    // x1,y1        : begin of line
    // x2,y2        : end of line
 
-   if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
+   if (fDirectDraw) {
+      fPimpl->fX11CommandBuffer.AddDrawLineXor(fSelectedDrawable, x1, y1, x2, y2);   
       return;
+   }
 
    //Do some checks first:
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "DrawLine, bad drawable is selected");
@@ -377,14 +381,15 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t angle, Float_t /*mgn*/, const 
    (void)y;
    (void)angle;
    (void)mode;
-
-/*   TTF::SetSmoothing(kTRUE);
+   /*
+   TTF::SetSmoothing(kTRUE);
    TTF::SetRotationMatrix(angle);
    TTF::PrepareString(text);
    TTF::LayoutGlyphs();
 
    AlignTTFString();
-   RenderTTFString(x, y, mode);*/
+   RenderTTFString(x, y, mode);
+   */
 }
 
 //______________________________________________________________________________
@@ -683,7 +688,7 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
       return;
 
    //By default, all pixels are set to 0 (all components, that's what code in TGX11TTF also does here).
-   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h]);
+   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h scaleFactor : 1.f]);
    if (!pixmap.Get()) {
       Error("DrawText", "pixmap creation failed");
       return;

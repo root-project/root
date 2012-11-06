@@ -396,12 +396,9 @@ void FontCache::GetFontProperties(FontStruct_t font, int &maxAscent, int &maxDes
 
    assert(fLoadedFonts.find(fontRef) != fLoadedFonts.end() && "Font was not created by font manager");
 
-   //Instead of this, use CT funtion to request ascent/descent.
    try {
-      const Quartz::TextLine textLine("LALALA", fontRef);
-      textLine.GetAscentDescent(maxAscent, maxDescent);
-      maxAscent += 1;
-      maxDescent += 1;
+      maxAscent = int(CTFontGetAscent(fontRef) + 0.5);
+      maxDescent = int(CTFontGetDescent(fontRef) + 0.5);
    } catch (const std::exception &) {
       throw;
    }

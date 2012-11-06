@@ -445,6 +445,9 @@ void TGCocoa::Update(Int_t mode)
       //Execute buffered commands.
       fPimpl->fX11CommandBuffer.Flush(fPimpl.get());
    }
+   
+   if (fDirectDraw && mode != 2)
+      fPimpl->fX11CommandBuffer.FlushXOROps(fPimpl.get());
 }
 
 //Window management part.
@@ -1327,7 +1330,7 @@ void TGCocoa::ShapeCombineMask(Window_t windowID, Int_t /*x*/, Int_t /*y*/, Pixm
 //______________________________________________________________________________
 void TGCocoa::SetMWMHints(Window_t wid, UInt_t value, UInt_t funcs, UInt_t /*input*/)
 {
-   // Sets decoration style.
+   // Sets decoration style.   
    assert(!fPimpl->IsRootWindow(wid) && "SetMWMHints, called for 'root' window");
    
    QuartzWindow * const qw = fPimpl->GetWindow(wid).fQuartzWindow;
@@ -1383,12 +1386,13 @@ void TGCocoa::SetWMSizeHints(Window_t wid, UInt_t wMin, UInt_t hMin, UInt_t wMax
    //
    assert(!fPimpl->IsRootWindow(wid) && "SetWMSizeHints, called for 'root' window");
 
-   QuartzWindow * const qw = fPimpl->GetWindow(wid).fQuartzWindow;   
-   //I can use CGSizeMake, but what if NSSize one bad day becomes something else? :)
-   NSSize minSize = {}; minSize.width = wMin, minSize.height = hMin;
-   [qw setMinSize : minSize];
-   NSSize maxSize = {}; maxSize.width = wMax, maxSize.height = hMax;
-   [qw setMaxSize : maxSize];
+   const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+   const NSRect minRect = [NSWindow frameRectForContentRect : CGRectMake(0., 0., wMin, hMin) styleMask : styleMask];
+   const NSRect maxRect = [NSWindow frameRectForContentRect : CGRectMake(0., 0., wMax, hMax) styleMask : styleMask];
+
+   QuartzWindow * const qw = fPimpl->GetWindow(wid).fQuartzWindow;
+   [qw setMinSize : minRect.size];
+   [qw setMaxSize : maxRect.size];
 }
 
 //______________________________________________________________________________
@@ -2141,7 +2145,7 @@ Int_t TGCocoa::OpenPixmap(UInt_t w, UInt_t h)
    newSize.width = w;
    newSize.height = h;
 
-   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h]);
+   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h scaleFactor : [[NSScreen mainScreen] backingScaleFactor]]);
    if (pixmap.Get()) {
       pixmap.Get().fID = fPimpl->RegisterDrawable(pixmap.Get());//Can throw.
       return (Int_t)pixmap.Get().fID;
@@ -2163,7 +2167,7 @@ Int_t TGCocoa::ResizePixmap(Int_t wid, UInt_t w, UInt_t h)
    if (w == pixmap.fWidth && h == pixmap.fHeight)
       return 1;
    
-   if ([pixmap resizeW : w H : h])//This can throw std::bad_alloc, ok, no resource will leak.
+   if ([pixmap resizeW : w H : h scaleFactor : [[NSScreen mainScreen] backingScaleFactor]])//This can throw std::bad_alloc, ok, no resource will leak.
       return 1;
 
    return -1;
@@ -2988,9 +2992,7 @@ Double_t TGCocoa::GetOpenGLScalingFactor()
    //Scaling factor to let our OpenGL code know, that we probably
    //work on a retina display.
    
-   //return [[NSScreen mainScreen] backingScaleFactor];
-   
-   return 1.;
+   return [[NSScreen mainScreen] backingScaleFactor];
 }
 
 //______________________________________________________________________________
@@ -3001,10 +3003,7 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
    typedef std::pair<UInt_t, Int_t> component_type;
    typedef std::vector<component_type>::size_type size_type;
 
-   assert(!fPimpl->IsRootWindow(parentID) && "CreateOpenGLWindow, could not create top-level gl window");
    //Convert pairs into Cocoa's GL attributes.
-   
-
    std::vector<NSOpenGLPixelFormatAttribute> attribs;
    for (size_type i = 0, e = formatComponents.size(); i < e; ++i) {
       const component_type &comp = formatComponents[i];
@@ -3021,6 +3020,7 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
          attribs.push_back(NSOpenGLPFAStencilSize);
          attribs.push_back(comp.second > 0 ? comp.second : 8);
       } else if (comp.first == TGLFormat::kMultiSample) {
+         attribs.push_back(NSOpenGLPFAMultisample);
          attribs.push_back(NSOpenGLPFASampleBuffers);
          attribs.push_back(1);
          attribs.push_back(NSOpenGLPFASamples);
@@ -3034,8 +3034,11 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
    NSOpenGLPixelFormat * const pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes : &attribs[0]];
    const Util::NSScopeGuard<NSOpenGLPixelFormat> formatGuard(pixelFormat);
    
-   NSView<X11Window> * const parentView = fPimpl->GetWindow(parentID).fContentView;
-   assert([parentView isKindOfClass : [QuartzView class]] && "CreateOpenGLWindow, parent view must be QuartzView");
+   NSView<X11Window> *parentView = nil;
+   if (!fPimpl->IsRootWindow(parentID)) {
+      parentView = fPimpl->GetWindow(parentID).fContentView;
+      assert([parentView isKindOfClass : [QuartzView class]] && "CreateOpenGLWindow, parent view must be QuartzView");
+   }
    
    NSRect viewFrame = {};
    viewFrame.size.width = width;
@@ -3043,10 +3046,28 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
 
    ROOTOpenGLView * const glView = [[ROOTOpenGLView alloc] initWithFrame : viewFrame pixelFormat : pixelFormat];
    const Util::NSScopeGuard<ROOTOpenGLView> viewGuard(glView);
+
+   Window_t glID = kNone;
    
-   [parentView addChild : glView];
-   const Window_t glID = fPimpl->RegisterDrawable(glView);
-   glView.fID = glID;
+   if (parentView) {
+      [parentView addChild : glView];
+      glID = fPimpl->RegisterDrawable(glView);
+      glView.fID = glID;
+   } else {
+      //"top-level glview".
+      //Create a window to be parent of this gl-view.
+      QuartzWindow *parent = [[QuartzWindow alloc] initWithGLView : glView];
+      const Util::NSScopeGuard<QuartzWindow> winGuard(parent);
+      
+      
+      if (!parent) {
+         Error("CreateOpenGLWindow", "QuartzWindow allocation/initialization failed for a top-level GL widget");
+         return kNone;
+      }
+      
+      glID = fPimpl->RegisterDrawable(parent);
+      parent.fID = glID;
+   }
 
    return glID;
 }
@@ -3062,8 +3083,7 @@ Handle_t TGCocoa::CreateOpenGLContext(Window_t windowID, Handle_t sharedID)
    ROOTOpenGLView * const glView = (ROOTOpenGLView *)fPimpl->GetWindow(windowID);
 
    const Util::NSScopeGuard<NSOpenGLContext> newContext([[NSOpenGLContext alloc] initWithFormat : glView.pixelFormat shareContext : sharedContext]);
-   [glView setOpenGLContext : newContext.Get()];
-  
+   glView.fOpenGLContext = newContext.Get();
    const Handle_t ctxID = fPimpl->RegisterGLContext(newContext.Get());
 
    return ctxID;
@@ -3087,8 +3107,7 @@ Bool_t TGCocoa::MakeOpenGLContextCurrent(Handle_t ctxID, Window_t windowID)
       return kFALSE;
    }
 
-   assert([fPimpl->GetWindow(windowID) isKindOfClass : [ROOTOpenGLView class]] && "MakeOpenGLContextCurrent, view is not an OpenGL view");
-   ROOTOpenGLView * const glView = (ROOTOpenGLView *)fPimpl->GetWindow(windowID);
+   ROOTOpenGLView * const glView = (ROOTOpenGLView *)fPimpl->GetWindow(windowID).fContentView;
 
    if (OpenGL::GLViewIsValidDrawable(glView)) {
       if ([glContext view] != glView)
@@ -3099,7 +3118,7 @@ Bool_t TGCocoa::MakeOpenGLContextCurrent(Handle_t ctxID, Window_t windowID)
          glView.fUpdateContext = NO;
       }
 
-      [glView setOpenGLContext : glContext];
+      glView.fOpenGLContext = glContext;
       [glContext makeCurrentContext];
       
       return kTRUE;
@@ -3142,6 +3161,7 @@ Bool_t TGCocoa::MakeOpenGLContextCurrent(Handle_t ctxID, Window_t windowID)
          [fakeView setHidden : NO];
       }
 
+      glView.fOpenGLContext = nil;
       [glContext setView : fakeView];
       [glContext makeCurrentContext];
    }
@@ -3187,10 +3207,9 @@ void TGCocoa::DeleteOpenGLContext(Int_t ctxID)
    //now it's a context id. DeleteOpenGLContext is not used in ROOT,
    //only in TGLContext for Cocoa.
    NSOpenGLContext * const glContext = fPimpl->GetGLContextForHandle(ctxID);
-   
    if (NSView * const v = [glContext view]) {
       if ([v isKindOfClass : [ROOTOpenGLView class]])
-         [(ROOTOpenGLView *)v setOpenGLContext : nil];
+         ((ROOTOpenGLView *)v).fOpenGLContext = nil;
    
       [glContext clearDrawable];
    }
@@ -3199,7 +3218,6 @@ void TGCocoa::DeleteOpenGLContext(Int_t ctxID)
       [NSOpenGLContext clearCurrentContext];
 
    fPimpl->DeleteGLContext(ctxID);
-
 }
 
 //Off-screen rendering for TPad/TCanvas.
@@ -3245,7 +3263,7 @@ void TGCocoa::SetDoubleBufferON()
          return;
    }
 
-   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : currW H : currH]);
+   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : currW H : currH scaleFactor : [[NSScreen mainScreen] backingScaleFactor]]);
    if (pixmap.Get()) {
       window.fBackBuffer = pixmap.Get();
    } else {

@@ -23,6 +23,7 @@
 //                                            //
 ////////////////////////////////////////////////
 
+@class ROOTOpenGLView;
 @class QuartzImage;
 
 @interface QuartzWindow : NSWindow<X11Window, NSWindowDelegate>
@@ -31,9 +32,11 @@
 //I do declare all methods here, just for clarity.
 
 //Life-cycle: "ctor".
-- (id) initWithContentRect : (NSRect) contentRect styleMask : (NSUInteger) windowStyle 
+- (id) initWithContentRect : (NSRect) contentRect styleMask : (NSUInteger) windowStyle
        backing : (NSBackingStoreType) bufferingType defer : (BOOL) deferCreation
        windowAttributes : (const SetWindowAttributes_t *) attr;
+
+- (id) initWithGLView : (ROOTOpenGLView *) glView;
 
 - (void) dealloc;
 

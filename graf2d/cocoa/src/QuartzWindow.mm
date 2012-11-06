@@ -24,6 +24,7 @@
 #import <stdexcept>
 #import <cassert>
 
+#import "ROOTOpenGLView.h"
 #import "QuartzWindow.h"
 #import "QuartzPixmap.h"
 #import "QuartzUtils.h"
@@ -894,6 +895,31 @@ void print_mask_info(ULong_t mask)
       if (attr)
          X11::SetWindowAttributes(attr, self);
       
+      fIsDeleted = NO;
+   }
+   
+   return self;
+}
+
+//______________________________________________________________________________
+- (id) initWithGLView : (ROOTOpenGLView *) glView
+{
+   assert(glView != nil && "initWithGLView, glView parameter is nil");
+   
+   const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+
+   NSRect contentRect = glView.frame;
+   contentRect.origin = CGPointZero;
+
+   self = [super initWithContentRect : contentRect styleMask : styleMask backing : NSBackingStoreBuffered defer : NO];
+
+   if (self) {
+      //ROOT's not able to draw GUI concurrently, thanks to global variables and gVirtualX itself.
+      [self setAllowsConcurrentViewDrawing : NO];
+      self.delegate = self;
+      fContentView = glView;
+      [self setContentView : fContentView];
+      fDelayedTransient = NO;
       fIsDeleted = NO;
    }
    
@@ -2324,7 +2350,7 @@ void print_mask_info(ULong_t mask)
 - (void) mouseDown : (NSEvent *) theEvent
 {
    assert(fID != 0 && "mouseDown, fID is 0");
-
+   
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "mouseDown, gVirtualX is either null or has a type, different from TGCocoa");
    vx->GetEventTranslator()->GenerateButtonPressEvent(self, theEvent, kButton1);
@@ -2381,6 +2407,22 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
+- (void) otherMouseDown : (NSEvent *) theEvent
+{
+   assert(fID != 0 && "otherMouseDown, fID is 0");
+   
+   //Funny enough, [theEvent buttonNumber] is not the same thing as button masked in [NSEvent pressedMouseButtons],
+   //button number actually is a kind of right operand for bitshift for pressedMouseButtons.
+   if ([theEvent buttonNumber] == 2) {//this '2' will correspond to '4' in pressedMouseButtons.
+      //I do not care about mouse buttons after left/right/wheel - ROOT does not have
+      //any code for this.
+      TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
+      assert(vx != 0 && "otherMouseDown, gVirtualX is either null or has type different from TGCocoa");
+      vx->GetEventTranslator()->GenerateButtonPressEvent(self, theEvent, kButton2);
+   }
+}
+
+//______________________________________________________________________________
 - (void) mouseUp : (NSEvent *) theEvent
 {
    assert(fID != 0 && "mouseUp, fID is 0");
@@ -2399,6 +2441,17 @@ void print_mask_info(ULong_t mask)
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "rightMouseUp, gVirtualX is either null or has type different from TGCocoa");
    vx->GetEventTranslator()->GenerateButtonReleaseEvent(self, theEvent, kButton3);
+}
+
+//______________________________________________________________________________
+- (void) otherMouseUp : (NSEvent *) theEvent
+{
+   assert(fID != 0 && "otherMouseUp, fID is 0");
+   
+   //Here I assume it's always kButton2.
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   assert(vx != 0 && "otherMouseUp, gVirtualX is either null or has type different from TGCocoa");
+   vx->GetEventTranslator()->GenerateButtonReleaseEvent(self, theEvent, kButton2);
 }
 
 //______________________________________________________________________________
@@ -2443,7 +2496,7 @@ void print_mask_info(ULong_t mask)
    assert(fID != 0 && "mouseDragged, fID is 0");
    
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "mouseMoved, gVirtualX is null or not of TGCocoa type");
+   assert(vx != 0 && "mouseDragged, gVirtualX is null or not of TGCocoa type");
    
    vx->GetEventTranslator()->GeneratePointerMotionEvent(theEvent);   
 }
@@ -2454,9 +2507,21 @@ void print_mask_info(ULong_t mask)
    assert(fID != 0 && "rightMouseDragged, fID is 0");
 
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "rightMouseMoved, gVirtualX is null or not of TGCocoa type");
+   assert(vx != 0 && "rightMouseDragged, gVirtualX is null or not of TGCocoa type");
    
    vx->GetEventTranslator()->GeneratePointerMotionEvent(theEvent);
+}
+
+//______________________________________________________________________________
+- (void) otherMouseDragged : (NSEvent *)theEvent
+{
+   assert(fID != 0 && "otherMouseDragged, fID is 0");
+
+   if ([theEvent buttonNumber] == 2) {
+      TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
+      assert(vx != 0 && "otherMouseDragged, gVirtualX is null or not of TGCocoa type");
+      vx->GetEventTranslator()->GeneratePointerMotionEvent(theEvent);
+   }
 }
 
 //______________________________________________________________________________
@@ -2550,6 +2615,9 @@ void print_mask_info(ULong_t mask)
    case kArrowRight:
       pngFileName = "right_arrow_cursor.png";
       break;
+   case kRotate:
+      pngFileName = "rotate.png";
+      break;      
    case kBottomLeft:
    case kTopRight:
       pngFileName = "top_right_cursor.png";
@@ -2572,6 +2640,7 @@ void print_mask_info(ULong_t mask)
       
       NSString *nsPath = [NSString stringWithFormat : @"%s", path];//in autorelease pool.
       NSImage * const cursorImage = [[NSImage alloc] initWithContentsOfFile : nsPath];//must call release.
+
 
       if (!cursorImage)
          return nil;
