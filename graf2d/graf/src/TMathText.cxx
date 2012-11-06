@@ -24,7 +24,7 @@
 
 //______________________________________________________________________________
 /* Begin_Html
-<center><h2>TMathText : to draw LaTex Mathematical Formula</h2></center>
+<center><h2>TMathText : to draw TeX Mathematical Formula</h2></center>
  
 TMathText's purpose is to write mathematical equations, exactly as TeX would
 do it. The syntax is the same as the TeX's one.
