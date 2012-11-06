@@ -481,16 +481,20 @@ Double_t TGeoShape::SafetySeg(Double_t r, Double_t z, Double_t r1, Double_t z1, 
    // Positive crossp means point on the requested side of the (1,2) segment
    if (crossp < 0) return TGeoShape::Big();
    // Compute (1,P) dot (1,2)
-   Double_t cosa = (z-z1)*(z2-z1)+(r-r1)*(r2-r1);
-   // Negative cosa means point (1) is closest
-   if (cosa<1.E-10) return TMath::Sqrt((r-r1)*(r-r1)+(z-z1)*(z-z1));
+   Double_t c1 = (z-z1)*(z2-z1)+(r-r1)*(r2-r1);
+   // Negative c1 means point (1) is closest
+   if (c1<1.E-10) return TMath::Sqrt((r-r1)*(r-r1)+(z-z1)*(z-z1));
    // Compute (2,P) dot (1,2)
-   Double_t cosb = (z-z2)*(z2-z1)+(r-r2)*(r2-r1);
-   // Positive cosb means point (2) is closest
-   if (cosb>0) return TMath::Sqrt((r-r2)*(r-r2)+(z-z2)*(z-z2));
+   Double_t c2 = (z-z2)*(z2-z1)+(r-r2)*(r2-r1);
+   // Positive c2 means point (2) is closest
+   if (c2>-1.E-10) return TMath::Sqrt((r-r2)*(r-r2)+(z-z2)*(z-z2));
    // The closest point is between (1) and (2)
-   Double_t d12sq = (r1-r2)*(r1-r2)+(z1-z2)*(z1-z2);
-   return TMath::Sqrt((r-r1)*(r-r1)+(z-z1)*(z-z1)-cosa*cosa/d12sq);
+   c2 = (z2-z1)*(z2-z1)+(r2-r1)*(r2-r1);
+   // projected length factor with respect to (1,2) length
+   Double_t alpha = c1/c2;
+   Double_t rp = r1 + alpha*(r2-r1);
+   Double_t zp = z1 + alpha*(z2-z1);
+   return TMath::Sqrt((r-rp)*(r-rp)+(z-zp)*(z-zp));
 }
 
 //_____________________________________________________________________________
