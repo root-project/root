@@ -1479,11 +1479,7 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
    const TGPicture *pic2 = item->GetCheckBoxPicture();
 
    // Compute the height of this line
-#ifdef R__HAS_COCOA
-   height = FontAscent();//FontHeight();
-#else
    height = FontHeight();
-#endif
 
    xline = 0;
    xpic1 = x;
