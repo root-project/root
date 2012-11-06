@@ -502,7 +502,7 @@ inline Int_t TMath::Finite(Double_t x)
 #endif
 
 inline Int_t TMath::IsNaN(Double_t x)
-#if (defined(R__ANSISTREAM) || (defined(R__MACOSX) && defined(__arm__))) && !defined(_AIX)
+#if (defined(R__ANSISTREAM) || (defined(R__MACOSX) && defined(__arm__))) && !defined(_AIX) && !defined(__CUDACC__) 
 #if defined(isnan) || defined(R__SOLARIS_CC50) || defined(__INTEL_COMPILER)
    // from math.h
   { return ::isnan(x); }
