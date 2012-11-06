@@ -860,9 +860,26 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
 #endif
 
    int prev = 0;
-   for (int i=0; i<len; ++i) {
+   if (len > 5 && strncmp(tname,"std::",5) == 0) {
+      prev = 5;
+   }
+   for (int i=prev; i<len; ++i) {
       switch (tname[i]) {
-         case '<':
+         case ':': {
+           if ( strncmp(tname+prev,"std::",5) == 0 ) {
+              prev += 5;
+              ++i;
+           }
+           break;
+         }
+         case '<': {
+           char keep = input[i];
+           string temp( input, prev,i-prev );
+	   answ << temp;
+           answ << keep;
+           prev = i+1;
+           break; // We do not have a complete type yet.
+         }
          case '>':
          case '*':
          case ' ':
