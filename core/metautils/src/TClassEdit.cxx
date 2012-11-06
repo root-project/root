@@ -819,6 +819,8 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
                      }
 #endif
                   }
+                  // Consume the 2nd semi colon
+                  ++k;
                }
             }
          }
