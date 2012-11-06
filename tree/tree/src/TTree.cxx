@@ -5878,6 +5878,8 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
          newtree->Write();
          delete newtree;
       }
+      // Make sure things are really written out to disk before attempting any reading. 
+      info->fOutputDirectory->GetFile()->Flush();
       info->fOutputDirectory->ReadTObject(this,this->GetName());
    }
    if (!li) return 0;
