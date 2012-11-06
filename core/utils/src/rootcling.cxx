@@ -4168,183 +4168,6 @@ void StrcpyArgWithEsc(string& escaped, const char *original)
    escaped = CopyArg( original );
 }
 
-//______________________________________________________________________________
-void ReplaceFile(const char *tmpdictname, const char *dictname)
-{
-   // Unlink dictname and move tmpdictname into dictname
-
-#ifdef WIN32
-   int tries=0;
-   bool success=false;
-   while (!success && ++tries<51) {
-      success = (unlink(dictname) != -1);
-      if (!success && tries<50)
-         if (errno!=EACCES) break;
-         else Sleep(200);
-   }
-   if (success) {
-      success=false;
-      tries=0;
-      while (!success && ++tries<52) {
-         success = (rename(tmpdictname, dictname) != -1);
-         if (!success && tries<51)
-            if (errno!=EACCES) break;
-            else Sleep(200);
-      }
-   }
-   if (!success)
-      Error(0, "rootcint: failed to rename %s to %s in ReplaceBundleInDict() after %d tries (error is %d)\n",
-            tmpdictname, dictname, tries, errno);
-#else
-   if (unlink(dictname) == -1 || rename(tmpdictname, dictname) == -1)
-      Error(0, "rootcint: failed to rename %s to %s in ReplaceBundleInDict()\n",
-            tmpdictname, dictname);
-#endif
-
-}
-
-//______________________________________________________________________________
-void ReplaceBundleInDict(const char *dictname, const string &bundlename)
-{
-   // Replace the bundlename in the dict.cxx and .h file by the contents
-   // of the bundle.
-
-   // First patch dict.cxx. Create tmp file and copy dict.cxx to this file.
-   // When discovering a line like:
-   //   G__add_compiledheader("bundlename");
-   // replace it by the appropriate number of lines contained in the bundle.
-
-   FILE *fpd = fopen(dictname, "r");
-   if (!fpd) {
-      Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-            dictname);
-      return;
-   }
-
-   string tmpdictname(dictname);
-   tmpdictname += "_+_+_+rootcinttmp";
-   FILE *tmpdict = fopen(tmpdictname.c_str(), "w");
-   if (!tmpdict) {
-      Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-            tmpdictname.c_str());
-      fclose(fpd);
-      return;
-   }
-
-   string esc_bundlename;
-   StrcpyWithEsc(esc_bundlename, bundlename.c_str());
-
-   string checkline("  G__add_compiledheader(\"");
-   checkline += esc_bundlename;
-   checkline += "\");";
-   int clen = checkline.length();
-
-   char line[BUFSIZ];
-   if (tmpdict && fpd) {
-      while (fgets(line, BUFSIZ, fpd)) {
-         if (!strncmp(line, checkline.c_str(), clen)) {
-            FILE *fb = fopen(bundlename.c_str(), "r");
-            if (!fb) {
-               Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-                     bundlename.c_str());
-               fclose(fpd);
-               fclose(tmpdict);
-               remove(tmpdictname.c_str());
-               return;
-            }
-            while (fgets(line, BUFSIZ, fb)) {
-               char *s = strchr(line, '"');
-               if (!s) continue;
-               s++;
-               char *s1 = strrchr(s, '"');
-               if (R__IsSelectionFile(s))
-                  continue;
-               if (s1) {
-                  *s1 = 0;
-                  fprintf(tmpdict, "  G__add_compiledheader(\"%s\");\n", s);
-               }
-            }
-            fclose(fb);
-         } else
-            fprintf(tmpdict, "%s", line);
-      }
-   }
-
-   fclose(tmpdict);
-   fclose(fpd);
-
-   ReplaceFile(tmpdictname.c_str(),dictname);
-
-   // Next patch dict.h. Create tmp file and copy dict.h to this file.
-   // When discovering a line like:
-   //   #include "bundlename"
-   // replace it by the appropriate number of lines contained in the bundle.
-
-   // make dict.h
-   string dictnameh(dictname);
-   size_t dh = dictnameh.rfind('.');
-   if (dh != std::string::npos) {
-      dictnameh.erase(dh + 1);
-      dictnameh += "h";
-   } else {
-      Error(0, "rootcint: failed create dict.h in ReplaceBundleInDict()\n");
-      return;
-   }
-
-   fpd = fopen(dictnameh.c_str(), "r");
-   if (!fpd) {
-      Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-            dictnameh.c_str());
-      return;
-   }
-   tmpdict = fopen(tmpdictname.c_str(), "w");
-   if (!tmpdict) {
-      Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-            tmpdictname.c_str());
-      fclose(fpd);
-      return;
-   }
-
-   checkline = "#include \"";
-   checkline += esc_bundlename + "\"";
-   clen = checkline.length();
-
-   if (tmpdict && fpd) {
-      while (fgets(line, BUFSIZ, fpd)) {
-         if (!strncmp(line, checkline.c_str(), clen)) {
-            FILE *fb = fopen(bundlename.c_str(), "r");
-            if (!fb) {
-               Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-                     bundlename.c_str());
-               fclose(tmpdict);
-               fclose(fpd);
-               return;
-            }
-            while (fgets(line, BUFSIZ, fb)) {
-               char *s = strchr(line, '<');
-               if (!s) continue;
-               s++;
-               char *s1 = strrchr(s, '>');
-               if (R__IsSelectionFile(s))
-                  continue;
-               if (s1) {
-                  *s1 = 0;
-                  fprintf(tmpdict, "#include \"%s\"\n", s);
-               }
-            }
-            fclose(fb);
-         } else
-            fprintf(tmpdict, "%s", line);
-      }
-   }
-
-   fclose(tmpdict);
-   fclose(fpd);
-
-   ReplaceFile(tmpdictname.c_str(),dictnameh.c_str());
-}
-
-string bundlename;
 string tname;
 string dictsrc;
 
@@ -4353,7 +4176,6 @@ void CleanupOnExit(int code)
 {
    // Removes tmp files, and (if code!=0) output files.
 
-   if (!bundlename.empty()) unlink(bundlename.c_str());
    if (!tname.empty()) unlink(tname.c_str());
    if (code) {
       if (!dictsrc.empty()) {
@@ -4610,7 +4432,6 @@ int main(int argc, char **argv)
    char dictname[1024];
    int i, j, ic, ifl, force;
    int icc = 0;
-   int use_preprocessor = 0;
    bool requestAllSymbols = false; // Would be set to true is we decide to support an option like --deep.
 
    std::string currentDirectory;
@@ -4781,14 +4602,7 @@ int main(int argc, char **argv)
       if (force) ic = 2;
       ifl = 0;
    }
-
-   // If the user request use of a preprocessor we are going to bundle
-   // all the files into one so that cint considers them one compilation
-   // unit and so that each file that contains code guard is really
-   // included only once.
-   for (i = 1; i < argc; i++)
-      if (strcmp(argv[i], "-p") == 0) use_preprocessor = 1;
-
+   
 #ifndef __CINT__
    int   argcc, iv, il;
    std::vector<std::string> path;
@@ -4864,77 +4678,76 @@ int main(int argc, char **argv)
          default:        argvv[argcc++] = (char *)"-J1"; break;
          }
 
-         if (!use_preprocessor) {
-            // If the compiler's preprocessor is not used
-            // we still need to declare the compiler specific flags
-            // so that the header file are properly parsed.
+         // If the compiler's preprocessor is not used
+         // we still need to declare the compiler specific flags
+         // so that the header file are properly parsed.
 #ifdef __KCC
-            argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__KCC=%ld", (long)__KCC); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         snprintf(argvv[argcc],64, "-D__KCC=%ld", (long)__KCC); argcc++;
 #endif
 #ifdef __INTEL_COMPILER
-            argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         snprintf(argvv[argcc],64, "-D__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER); argcc++;
 #endif
 #ifdef __xlC__
-            argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__xlC__=%ld", (long)__xlC__); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         snprintf(argvv[argcc],64, "-D__xlC__=%ld", (long)__xlC__); argcc++;
 #endif
 #ifdef __GNUC__
-            argvv[argcc] = (char *)calloc(64, 1);
-            // coverity[secure_coding] - sufficient space
-            snprintf(argvv[argcc],64, "-D__GNUC__=%ld", (long)__GNUC__); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         // coverity[secure_coding] - sufficient space
+         snprintf(argvv[argcc],64, "-D__GNUC__=%ld", (long)__GNUC__); argcc++;
 #endif
 #ifdef __GNUC_MINOR__
-            argvv[argcc] = (char *)calloc(64, 1);
-            // coverity[secure_coding] - sufficient space
-            snprintf(argvv[argcc],64, "-D__GNUC_MINOR__=%ld", (long)__GNUC_MINOR__); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         // coverity[secure_coding] - sufficient space
+         snprintf(argvv[argcc],64, "-D__GNUC_MINOR__=%ld", (long)__GNUC_MINOR__); argcc++;
 #endif
 #ifdef __HP_aCC
-            argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64 "-D__HP_aCC=%ld", (long)__HP_aCC); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         snprintf(argvv[argcc],64 "-D__HP_aCC=%ld", (long)__HP_aCC); argcc++;
 #endif
 #ifdef __sun
-            argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__sun=%ld", (long)__sun); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         snprintf(argvv[argcc],64, "-D__sun=%ld", (long)__sun); argcc++;
 #endif
 #ifdef __SUNPRO_CC
-            argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__SUNPRO_CC=%ld", (long)__SUNPRO_CC); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         snprintf(argvv[argcc],64, "-D__SUNPRO_CC=%ld", (long)__SUNPRO_CC); argcc++;
 #endif
 #ifdef __ia64__
-            argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__ia64__=%ld", (long)__ia64__); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         snprintf(argvv[argcc],64, "-D__ia64__=%ld", (long)__ia64__); argcc++;
 #endif
 #ifdef __x86_64__
-            argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__x86_64__=%ld", (long)__x86_64__); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         snprintf(argvv[argcc],64, "-D__x86_64__=%ld", (long)__x86_64__); argcc++;
 #endif
 #ifdef __i386__
-            argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__i386__=%ld", (long)__i386__); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         snprintf(argvv[argcc],64, "-D__i386__=%ld", (long)__i386__); argcc++;
 #endif
 #ifdef __arm__
-            argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D__arm__=%ld", (long)__arm__); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         snprintf(argvv[argcc],64, "-D__arm__=%ld", (long)__arm__); argcc++;
 #endif
 #ifdef R__B64
-            argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-DR__B64"); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         snprintf(argvv[argcc],64, "-DR__B64"); argcc++;
 #endif
 #ifdef _WIN32
-            argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D_WIN32=%ld",(long)_WIN32); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         snprintf(argvv[argcc],64, "-D_WIN32=%ld",(long)_WIN32); argcc++;
 #endif
 #ifdef WIN32
-            argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-DWIN32=%ld",(long)WIN32); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         snprintf(argvv[argcc],64, "-DWIN32=%ld",(long)WIN32); argcc++;
 #endif
 #ifdef _MSC_VER
-            argvv[argcc] = (char *)calloc(64, 1);
-            snprintf(argvv[argcc],64, "-D_MSC_VER=%ld",(long)_MSC_VER); argcc++;
+         argvv[argcc] = (char *)calloc(64, 1);
+         snprintf(argvv[argcc],64, "-D_MSC_VER=%ld",(long)_MSC_VER); argcc++;
 #endif
-         }
+
 #ifdef ROOTBUILD
          argvv[argcc++] = (char *)"-DG__NOCINTDLL";
          clingArgs.push_back(argvv[argcc - 1]);
@@ -5079,27 +4892,7 @@ int main(int argc, char **argv)
 
    std::string interpPragmaSource;
    std::string includeForSource;
-   std::list<std::string> includedFilesForBundle;
    string esc_arg;
-   bool insertedBundle = false;
-   FILE *bundle = 0;
-   if (use_preprocessor) {
-      bundlename = R__tmpnam();
-      bundlename += ".h";
-      bundle = fopen(bundlename.c_str(), "w");
-      if (!bundle) {
-         Error(0, "%s: failed to open %s, usage of external preprocessor by CINT is not optimal\n",
-               argv[0], bundlename.c_str());
-         use_preprocessor = 0;
-      } else {
-         // use <> instead of "" otherwise the CPP will search first
-         // for these files in /tmp (location of the bundle.h) where
-         // it might not find the files (if starting with ./ or ../)
-         // or, even worse, pick up a wrong version placed in /tmp.
-         fprintf(bundle,"#include <TObject.h>\n");
-         fprintf(bundle,"#include <TMemberInspector.h>\n");
-      }
-   }
    for (i = ic; i < argc; i++) {
       if (!iv && *argv[i] != '-' && *argv[i] != '+') {
          if (!icc) {
@@ -5114,66 +4907,38 @@ int main(int argc, char **argv)
          il = i;
          if (i != argc-1) {
             Error(0, "%s: %s must be last file on command line\n", argv[0], argv[i]);
-            if (use_preprocessor) {
-               fclose(bundle);
-            }
             return 1;
          }
       }
       if (!strcmp(argv[i], "-c")) {
          Error(0, "%s: option -c must come directly after the output file\n", argv[0]);
-         if (use_preprocessor) {
-            fclose(bundle);
-         }
          return 1;
       }
-      if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+') {
-         StrcpyArgWithEsc(esc_arg, argv[i]);
-         if (use_preprocessor) {
-            // see comment about <> and "" above
-            fprintf(bundle,"#include <%s>\n", esc_arg.c_str());
-            includedFilesForBundle.push_back(argv[i]);
-            if (!insertedBundle) {
-//               argvv[argcc++] = (char*)bundlename.c_str();
-               insertedBundle = true;
-            }
-         }
-         interp.declare(std::string("#include \"") + argv[i] + "\"");
-         interpPragmaSource += std::string("#include \"") + argv[i] + "\"\n";
-         std::string header( R__GetRelocatableHeaderName( argv[i], currentDirectory ) );
-         if (!R__IsSelectionFile(argv[i])) 
-            includeForSource += std::string("#include \"") + header + "\"\n";
-         pcmArgs.push_back(header);
-      } else {
-         if (strcmp("-pipe", argv[ic])!=0) {
-            // filter out undesirable options
-            string argkeep;
+      if (strcmp("-pipe", argv[ic])!=0) {
+         // filter out undesirable options
+         string argkeep;
             // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
-            StrcpyArg(argkeep, argv[i]);
-            int ncha = argkeep.length()+1;
-            // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
-            argvv[argcc++] = (char*)calloc(ncha,1);
-            // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
-            strlcpy(argvv[argcc-1],argkeep.c_str(),ncha);
-
-            if (*argv[i] != '-' && *argv[i] != '+') {
-               // Looks like a file
-               interp.declare(std::string("#include \"") + argv[i] + "\"");
-               interpPragmaSource += std::string("#include \"") + argv[i] + "\"\n";
-               std::string header( R__GetRelocatableHeaderName( argv[i], currentDirectory ) );
-               if (!R__IsSelectionFile(argv[i])) 
-                  includeForSource += std::string("#include \"") + header + "\"\n";
-               pcmArgs.push_back(header);
-
-               // remove header files from CINT view
-               free(argvv[argcc-1]);
-               argvv[--argcc] = 0;
-            }
+         StrcpyArg(argkeep, argv[i]);
+         int ncha = argkeep.length()+1;
+         // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
+         argvv[argcc++] = (char*)calloc(ncha,1);
+         // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
+         strlcpy(argvv[argcc-1],argkeep.c_str(),ncha);
+         
+         if (*argv[i] != '-' && *argv[i] != '+') {
+            // Looks like a file
+            interp.declare(std::string("#include \"") + argv[i] + "\"");
+            interpPragmaSource += std::string("#include \"") + argv[i] + "\"\n";
+            std::string header( R__GetRelocatableHeaderName( argv[i], currentDirectory ) );
+            if (!R__IsSelectionFile(argv[i])) 
+               includeForSource += std::string("#include \"") + header + "\"\n";
+            pcmArgs.push_back(header);
+            
+            // remove header files from CINT view
+            free(argvv[argcc-1]);
+            argvv[--argcc] = 0;
          }
       }
-   }
-   if (use_preprocessor) {
-      fclose(bundle);
    }
 
    if (!iv) {
@@ -5183,23 +4948,7 @@ int main(int argc, char **argv)
 
    if (!il) {
       // replace bundlename by headers for autolinkdef
-      char* bundleAutoLinkdef = argvv[argcc - 1];
-      if (insertedBundle)
-         --argcc;
-      for (std::list<std::string>::const_iterator iHdr = includedFilesForBundle.begin();
-           iHdr != includedFilesForBundle.end(); ++iHdr) {
-         argvv[argcc] = StrDup(iHdr->c_str());
-         ++argcc;
-      }
       GenerateLinkdef(&argcc, argvv, iv, interpPragmaSource);
-      for (int iarg = argcc - includedFilesForBundle.size();
-           iarg < argcc; ++iarg)
-         delete [] argvv[iarg];
-      argcc -= includedFilesForBundle.size();
-      if (insertedBundle)
-         ++argcc;
-      argvv[argcc - 1] = bundleAutoLinkdef;
-
    }
 
    G__setothermain(2);
@@ -5222,9 +4971,6 @@ int main(int argc, char **argv)
    }
    G__setglobalcomp(0); // G__NOLINK
 #endif
-
-   if (use_preprocessor && icc)
-      ReplaceBundleInDict(argv[ifl], bundlename);
 
    // Check if code goes to stdout or cint file, use temporary file
    // for prepending of the rootcint generated code (STK)
@@ -5558,8 +5304,6 @@ int main(int argc, char **argv)
    // coverity[fun_call_w_exception] - that's just fine.
    RStl::Instance().WriteClassInit(0, interp, normCtxt);
    
-   if (use_preprocessor) remove(bundlename.c_str());
-
    // Now we have done all our looping and thus all the possible 
    // annotation, let's write the pcms.
    if (strstr(dictname,"rootcint_") != dictname) {
