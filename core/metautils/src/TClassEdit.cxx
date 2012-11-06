@@ -838,7 +838,7 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
             if (!t.isNull()) {
                clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
                if (!dest.isNull() && dest != t ) {
-                  return t.getAsString(gInterpreter->getCI()->getASTContext().getPrintingPolicy());
+                  return dest.getAsString(gInterpreter->getCI()->getASTContext().getPrintingPolicy());
                }
             }
          }
