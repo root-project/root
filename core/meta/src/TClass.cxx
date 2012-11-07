@@ -446,7 +446,6 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
 }
 
 THashTable* TClass::fgClassTypedefHash = 0;
-THashTable* TClass::fgClassShortTypedefHash = 0;
 
 //______________________________________________________________________________
 //______________________________________________________________________________
@@ -1021,10 +1020,6 @@ void TClass::Init(const char *name, Version_t cversion,
          fgClassTypedefHash->Add (new TNameMapNode (name, fName));
          SetBit (kHasNameMapNode);         
 
-         TString resolvedShort = TClassEdit::ResolveTypedef(fName, kTRUE);
-         if (resolvedShort != fName) {
-            fgClassShortTypedefHash->Add (new TNameMapNode (resolvedShort, fName));
-         }         
       }
       resolvedThis = TClassEdit::ResolveTypedef (name, kTRUE);
       if (resolvedThis != name) {
@@ -1170,23 +1165,7 @@ TClass::~TClass()
             break;
          }
       }
-   }
-   if (fgClassShortTypedefHash && TestBit (kHasNameMapNode)) {
-      TString resolvedShort =
-       TClassEdit::ResolveTypedef
-         (TClassEdit::ShortType(GetName(),
-                                TClassEdit::kDropStlDefault).c_str(),
-          kTRUE);
-      TIter next (fgClassShortTypedefHash->GetListForObject (resolvedShort));
-      while ( TNameMapNode* htmp = static_cast<TNameMapNode*> (next()) ) {
-         if (resolvedShort == htmp->String() && htmp->fOrigName == GetName()) {
-            fgClassShortTypedefHash->Remove (htmp);
-            delete htmp;
-            break;
-         }
-      }
-   }
-   
+   }   
 
    // Not owning lists, don't call Delete()
    // But this still need to be done first because the TList desctructor
@@ -2477,7 +2456,7 @@ TClass *TClass::GetClassOrAlias(const char *name)
    // Also checks for possible templatye alias names (e.g. vector<Int_t>
    // vs. vector<int>). Otherwise acts like GetClass(name, false).
    Bool_t load = kFALSE;
-   if (strchr(name, '<') && TClass::GetClassShortTypedefHash()) {
+   if (strchr(name, '<') && TClass::GetClassTypedefHash()) {
       // We have a template which may have duplicates.
       TString resolvedName(TClassEdit::ResolveTypedef(TClassEdit::ShortType(name,
                                   TClassEdit::kDropStlDefault).c_str(), kTRUE));
@@ -2488,7 +2467,7 @@ TClass *TClass::GetClassOrAlias(const char *name)
          }
       }
       if (!load) {
-         TIter next(TClass::GetClassShortTypedefHash()->GetListForObject(resolvedName));
+         TIter next(TClass::GetClassTypedefHash()->GetListForObject(resolvedName));
          while (TClass::TNameMapNode* htmp =
                 static_cast<TClass::TNameMapNode*>(next())) {
             if (resolvedName == htmp->String()) {
@@ -2671,9 +2650,9 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 }
 
 //______________________________________________________________________________
-THashTable *TClass::GetClassShortTypedefHash() {
+THashTable *TClass::GetClassTypedefHash() {
    // Return the class' names massaged with TClassEdit::ShortType with kDropStlDefault.
-   return fgClassShortTypedefHash;
+   return fgClassTypedefHash;
 }
 
 //______________________________________________________________________________

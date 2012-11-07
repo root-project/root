@@ -196,13 +196,8 @@ private:
    };
 
    // These are the above-referenced hash tables.  (The pointers are null
-   // if no entries have been made.)  There are actually two variants.
-   // In the first, the typedef names are resolved with
-   // TClassEdit::ResolveTypedef; in the second, the class names
-   // are first massaged with TClassEdit::ShortType with kDropStlDefault.
-   // (??? Are the two distinct tables really needed?)
+   // if no entries have been made.)  
    static THashTable* fgClassTypedefHash;
-   static THashTable* fgClassShortTypedefHash;
 
 private:
    TClass(const TClass& tc);
@@ -210,7 +205,7 @@ private:
 
 protected:
    TVirtualStreamerInfo     *FindStreamerInfo(TObjArray* arr, UInt_t checksum) const;
-   static THashTable        *GetClassShortTypedefHash();
+   static THashTable        *GetClassTypedefHash();
 
 public:
    TClass();

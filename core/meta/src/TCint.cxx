@@ -2077,7 +2077,7 @@ void TCint::UpdateClassInfoWork(const char *item, Long_t tagnum)
    // This does the actual work of UpdateClassInfo.
 
    Bool_t load = kFALSE;
-   if (strchr(item,'<') && TClass::GetClassShortTypedefHash()) {
+   if (strchr(item,'<') && TClass::GetClassTypedefHash()) {
       // We have a template which may have duplicates.
 
       TString resolvedItem(
@@ -2091,7 +2091,7 @@ void TCint::UpdateClassInfoWork(const char *item, Long_t tagnum)
       }
 
       if (!load) {
-         TIter next(TClass::GetClassShortTypedefHash()->GetListForObject(resolvedItem));
+         TIter next(TClass::GetClassTypedefHash()->GetListForObject(resolvedItem));
 
          while ( TClass::TNameMapNode* htmp =
               static_cast<TClass::TNameMapNode*> (next()) ) {
