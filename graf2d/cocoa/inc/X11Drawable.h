@@ -85,6 +85,7 @@
 @property (nonatomic, assign) unsigned long fBackgroundPixel;//Used by TGCocoa::ClearArea.
 @property (nonatomic, retain) QuartzImage  *fBackgroundPixmap;//Hmm, image, pixmap ...
 @property (nonatomic, readonly) int         fMapState;
+@property (nonatomic, assign) BOOL          fOverrideRedirect;
 
 //End of SetWindowAttributes_t/WindowAttributes_t
 /////////////////////////////////////////////////////////////////

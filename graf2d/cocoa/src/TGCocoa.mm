@@ -857,7 +857,11 @@ void TGCocoa::ReparentChild(Window_t wid, Window_t pid, Int_t x, Int_t y)
       
       NSRect frame = view.frame;
       frame.origin = CGPointZero;
-      const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+      
+      NSUInteger styleMask = NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+      if (!view.fOverrideRedirect)
+         styleMask |= NSTitledWindowMask;
+   
       QuartzWindow * const newTopLevel = [[QuartzWindow alloc] initWithContentRect : frame styleMask : styleMask backing : NSBackingStoreBuffered defer : NO];
       
       [view setX : x Y : y];

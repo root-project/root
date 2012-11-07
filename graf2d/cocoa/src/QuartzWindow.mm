@@ -530,6 +530,8 @@ void SetWindowAttributes(const SetWindowAttributes_t *attr, NSObject<X11Window> 
          [qw setStyleMask : NSBorderlessWindowMask];
          [qw setAlphaValue : 0.95];
       }
+      
+      window.fOverrideRedirect = YES;
    }
 }
 
@@ -589,7 +591,7 @@ void GetWindowAttributes(NSObject<X11Window> *window, WindowAttributes_t *dst)
    //Not used by GUI.
    //dst->fDoNotPropagateMask
 
-   dst->fOverrideRedirect = 0;
+   dst->fOverrideRedirect = window.fOverrideRedirect;
    //Dummy value.
    dst->fScreen = 0;
 }
@@ -1477,6 +1479,7 @@ void print_mask_info(ULong_t mask)
 @synthesize fBitGravity;
 @synthesize fWinGravity;
 @synthesize fBackgroundPixel;
+@synthesize fOverrideRedirect;
 //SetWindowAttributes_t/WindowAttributes_t
 /////////////////////
 @synthesize fParentView;
