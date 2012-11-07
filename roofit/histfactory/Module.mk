@@ -19,7 +19,7 @@ HF_PREPAREHISTFACTORY := bin/prepareHistFactory
 
 ##### tf_makeworkspace.exe #####
 
-HF_MAKEWORKSPACEEXES   := $(MODDIRS)/MakeModelAndMeasurements.cxx
+HF_MAKEWORKSPACEEXES   := $(MODDIRS)/MakeModelAndMeasurements.cxx $(MODDIRS)/hist2workspace.cxx
 HF_MAKEWORKSPACEEXEO   := $(call stripsrc,$(HF_MAKEWORKSPACEEXES:.cxx=.o))
 HF_MAKEWORKSPACEEXEDEP := $(HF_MAKEWORKSPACEEXEO:.o=.d)
 
