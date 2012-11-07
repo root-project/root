@@ -1,3 +1,12 @@
+// @(#)root/roostats:$Id$
+// Author: George Lewis, Kyle Cranmer
+/*************************************************************************
+ * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef HISTFACTORY_MEASUREMENT_H
 #define HISTFACTORY_MEASUREMENT_H
@@ -13,7 +22,7 @@
 
 #include "PreprocessFunction.h"
 #include "RooStats/HistFactory/Channel.h"
-
+#include "RooStats/HistFactory/Asimov.h"
 
 namespace RooStats{
 namespace HistFactory {
@@ -57,18 +66,9 @@ public:
   std::vector< RooStats::HistFactory::PreprocessFunction >& GetFunctionObjects() { return fFunctionObjects; }
   std::vector< std::string > GetPreprocessFunctions();
 
-  // Make these dynamically from the list of preprocess functions
-  // instead of storing them
-  // void AddPreprocessFunction( const std::string& function ) { fPreprocessFunctions.push_back( function ); }
-  // void SetPreprocessFunctions( std::vector< std::string > functions ) { fPreprocessFunctions = functions;  }
-  // std::vector< std::string >& GetPreprocessFunctions()  { return fPreprocessFunctions; }
-  // void ClearPreprocessFunctions() { fPreprocessFunctions.clear(); }
-
-  /*
-    <ParamSetting Const=\"True\" Val=\"%g\">%s</ParamSetting>\n" % (setting[1],param)
-    <ConstraintTerm Type=\"%s\" RelativeUncertainty=\"%g\">%s</ConstraintTerm>\n" % (constraint[0],constraint[1],param)
-  */
-
+  // Get and set Asimov Datasets
+  std::vector< RooStats::HistFactory::Asimov >& GetAsimovDatasets() { return fAsimovDatasets; }
+  void AddAsimovDataset( RooStats::HistFactory::Asimov dataset ) { fAsimovDatasets.push_back(dataset); }
 
   void SetLumi(double Lumi ) { fLumi = Lumi; }
   void SetLumiRelErr( double RelErr ) { fLumiRelErr = RelErr; }
@@ -131,7 +131,10 @@ private:
 
   // List of Preprocess Function objects
   std::vector< RooStats::HistFactory::PreprocessFunction > fFunctionObjects;
-  // std::vector< std::string > fPreprocessFunctions;
+
+  // List of Asimov datasets to generate
+  std::vector< RooStats::HistFactory::Asimov > fAsimovDatasets;
+
 
   // List of Alternate constraint terms
   std::map< std::string, double > fGammaSyst;

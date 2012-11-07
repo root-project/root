@@ -141,14 +141,19 @@ namespace RooStats {
 #ifdef DEBUG
       cout << "Retrieving " << file << ":" << path << obj ;
 #endif
+
       TFile inFile(file.c_str());
       TH1 * ptr = (TH1 *) (inFile.Get( (path+obj).c_str() )->Clone());
+
 #ifdef DEBUG
-      cout << " found at " << ptr << " with integral " << ptr->Integral() << " and mean " << ptr->GetMean() << std::endl;
+      cout << " found at " << ptr << " with integral " << ptr->Integral() 
+	   << " and mean " << ptr->GetMean() << std::endl;
 #endif
       //    if(file.empty() || path.empty() || obj.empty()){
+
       if(!ptr){
-	cerr << "Not all necessary info are set to access the input file. Check your config" << std::endl;
+	cerr << "Not all necessary info are set to access the input file. Check your config" 
+	     << std::endl;
 	cerr << "filename: " << file
 	     << "path: " << path
 	     << "obj: " << obj << std::endl;
@@ -192,6 +197,50 @@ namespace RooStats {
       return child_vec;
     }
 
+    // Turn a std::string of "children" (space separated items)
+    // into a vector of std::strings
+    void AddParamsToAsimov( RooStats::HistFactory::Asimov& asimov, std::string str ) {
+
+      // First, split the string into a list 
+      // each describing a parameter
+      std::vector<std::string> string_list = GetChildrenFromString( str );
+
+      // Next, go through each one and split based
+      // on the '=' to separate the name from the val
+      // and fill the map
+      std::map<std::string, double> param_map;
+
+      for( unsigned int i=0; i < string_list.size(); ++i) {
+	
+	std::string param = string_list.at(i);
+	// Split the string
+	size_t eql_location = param.find("=");
+
+	// If there is no '=' deliminator, we only
+	// set the variable constant
+	if( eql_location==string::npos ) {
+	  asimov.SetFixedParam(param);
+	}
+	else {
+	  
+	  std::string param_name = param.substr(0,eql_location);
+	  double param_val = atof( param.substr(eql_location+1, param.size()).c_str() );
+	  
+	  std::cout << "ASIMOV - Param Name: " << param_name
+		    << " Param Val: " << param_val << std::endl;
+	  // Give the params a value AND set them constant
+	  asimov.SetParamValue(param_name, param_val);
+	  asimov.SetFixedParam(param_name);
+	}
+	  
+      }
+
+      return;
+
+    }
+
+
+
     /*
       bool AddSummaries( vector<EstimateSummary> & channel, vector<vector<EstimateSummary> > &master){
       std::string channel_str=channel[0].channel;
@@ -208,7 +257,8 @@ namespace RooStats {
 
 
     // Looking to deprecate this function and convert entirely to Measurements
-    std::vector<EstimateSummary> GetChannelEstimateSummaries(Measurement& measurement, Channel& channel) {
+    std::vector<EstimateSummary> GetChannelEstimateSummaries(Measurement& measurement, 
+							     Channel& channel) {
 
       // Convert a "Channel" into a list of "Estimate Summaries"
       // This should only be a temporary function, as the
@@ -379,7 +429,7 @@ namespace RooStats {
 
 
 
-
+    /*
     void unfoldConstraints(RooArgSet& initial, RooArgSet& final, RooArgSet& obs, RooArgSet& nuis, int& counter) {
       //
       // Loop through an initial set of constraints
@@ -415,8 +465,8 @@ namespace RooStats {
       }
       delete itr;
     }
-
-
+    */
+    /*
     RooAbsData* makeAsimovData(ModelConfig* mcInWs, bool doConditional, RooWorkspace* combWS, 
 			       RooAbsPdf* combPdf, RooDataSet* combData, bool b_only, double doMuHat, 
 			       double muVal, bool signalInjection, bool doNuisPro) {
@@ -872,6 +922,6 @@ namespace RooStats {
       return asimovData;
 
     }
-
+    */
   }
 }

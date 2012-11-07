@@ -3,7 +3,12 @@
 #include "RooStats/HistFactory/Data.h"
 
 
-RooStats::HistFactory::Data::Data( std::string HistoName, std::string InputFile, std::string HistoPath ) :
+RooStats::HistFactory::Data::Data() : fName("") {
+  ;
+}
+
+RooStats::HistFactory::Data::Data( std::string HistoName, std::string InputFile, 
+				   std::string HistoPath ) :
   fInputFile( InputFile ), fHistoName( HistoName ), fHistoPath( HistoPath ) {;}
 
 TH1* RooStats::HistFactory::Data::GetHisto() {

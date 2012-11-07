@@ -194,6 +194,14 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
 				 fData.GetHistoName()) );
   }
 
+  // Collect any histograms for additional Datasets
+  for( unsigned int i=0; i < fAdditionalData.size(); ++i) {
+    RooStats::HistFactory::Data& data = fAdditionalData.at(i);
+    if( data.GetInputFile() != "" ) {
+      data.SetHisto( GetHistogram(data.GetInputFile(), data.GetHistoPath(),data.GetHistoName()) );
+    }
+  }
+
   // Get the histograms for the samples:
   for( unsigned int sampItr = 0; sampItr < fSamples.size(); ++sampItr ) {
 

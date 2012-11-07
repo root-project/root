@@ -85,6 +85,7 @@ namespace HistFactory{
       void FitModel(RooWorkspace *, std::string, std::string, std::string, bool=false  );
       std::string FilePrefixStr(std::string);
 
+
       std::string fFileNamePrefix;
       std::string fRowTitle;
       std::vector<std::string> fSystToFix;

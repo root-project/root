@@ -21,17 +21,10 @@
 #include "TFile.h"
 #include "TXMLAttr.h"
 
-//#include "RooStats/HistFactory/EstimateSummary.h"
-
-
 #include "RooStats/HistFactory/Channel.h"
 #include "RooStats/HistFactory/Measurement.h"
 #include "RooStats/HistFactory/Sample.h"
 
-
-//using namespace std; 
-
-// KC: Should make this a class and have it do some of what is done in MakeModelAndMeasurements
 
 namespace RooStats{
    namespace HistFactory {
@@ -42,17 +35,8 @@ namespace RooStats{
 
        // The "main" method
        std::vector< RooStats::HistFactory::Measurement > GetMeasurementsFromXML(std::string input); 
-
-
-       // Another alternet method
-       // void FillMeasurementsAndChannelsFromXML(std::string input, 
-       //				       std::vector< RooStats::HistFactory::Measurement >&,
-       //				       std::vector< RooStats::HistFactory::Channel >&);
-       
-
        RooStats::HistFactory::Measurement CreateMeasurementFromDriverNode( TXMLNode* node );
        RooStats::HistFactory::Channel ParseChannelXMLFile( std::string filen );
-
 
        // Helpers used to process a channel
        HistFactory::Data CreateDataElement( TXMLNode* node );
@@ -69,15 +53,7 @@ namespace RooStats{
        HistFactory::StatError   ActivateStatError( TXMLNode* node );
        HistFactory::PreprocessFunction ParseFunctionConfig( TXMLNode* functionNode );
 
-       // To be deprecated
-       /*
-       typedef std::pair<double,double> UncertPair;
-       void AddSystematic( RooStats::HistFactory::EstimateSummary &, TXMLNode*, std::string, std::string,std::string);
-       void ReadXmlConfig( std::string, std::vector<RooStats::HistFactory::Channel>& , Double_t );
-       */
-
      protected:
-
 
        bool CheckTrueFalse( std::string val, std::string Name );
        bool IsAcceptableNode( TXMLNode* functionNode );
@@ -87,7 +63,6 @@ namespace RooStats{
        // to these cached values
        std::string m_currentInputFile;
        std::string m_currentChannel;
-       // std::string m_currentHistoName;
        std::string m_currentHistoPath;
 
      };

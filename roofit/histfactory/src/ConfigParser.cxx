@@ -378,6 +378,59 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode
       }
     }
 
+    else if( child->GetNodeName() == TString( "Asimov" ) ) {
+
+      //std::string name;
+      //std::map<string, double> fixedParams;
+
+      // Now, create and configure an asimov object
+      // and add it to the measurement
+      RooStats::HistFactory::Asimov asimov;
+      std::string ParamFixString;
+
+      // Loop over attributes
+      attribIt = child->GetAttributes();
+      curAttr = 0;
+      while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+	
+	if( curAttr->GetName() == TString( "" ) ) {
+	  std::cout << "Error: Found tag attribute with no name in ConstraintTerm" << std::endl;
+	  throw hf_exc();
+	}
+
+	else if( curAttr->GetName() == TString( "Name" ) ) {
+	  std::string name = curAttr->GetValue();
+	  asimov.SetName( name );
+	}
+
+	else if( curAttr->GetName() == TString( "FixParams" ) ) {
+	  ParamFixString = curAttr->GetValue();
+	  //std::map<std::string, double> fixedParams = ExtractParamMapFromString(FixParamList);
+	  //asimov.GetFixedParams() = fixedParams;
+	}
+
+	else {
+	  std::cout << "Found tag attribute with unknown name in ConstraintTerm: "
+		    << curAttr->GetName() << std::endl;
+	  throw hf_exc();
+	}
+
+      }
+
+      // Add any parameters to the asimov dataset
+      // to be fixed during the fitting and dataset generation
+      if( ParamFixString=="" ) {
+	std::cout << "Warning: Asimov Dataset with name: " << asimov.GetName()
+		  << " added, but no parameters are set to be fixed" << std::endl;
+      }
+      else {
+	AddParamsToAsimov( asimov, ParamFixString );
+      }
+      
+      measurement.AddAsimovDataset( asimov );
+
+    }
+
     else if( child->GetNodeName() == TString( "ConstraintTerm" ) ) {
       vector<string> syst; 
       string type = ""; 
@@ -586,6 +639,8 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
 
   TXMLNode* node = rootNode->GetChildren();
 
+  bool firstData=true;
+
   while( node != 0 ) {
 
     // Restore the Channel-Wide Defaults
@@ -598,7 +653,20 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
     }
 
     else if( node->GetNodeName() == TString( "Data" ) ) {
-      channel.SetData( CreateDataElement(node) );
+      if( firstData ) {
+	RooStats::HistFactory::Data data = CreateDataElement(node);
+	if( data.GetName() != "" ) {
+	  std::cout << "Error: You can only rename the datasets of additional data sets.  " 
+		    << "  Remove the 'Name=" << data.GetName() << "' tag"
+		    << " from channel: " << channel.GetName() << std::endl;
+	  throw hf_exc();
+	}
+	channel.SetData( data );
+	firstData=false;
+      }
+      else {
+	channel.AddAdditionalData( CreateDataElement(node) );
+      }
     }
 
     else if( node->GetNodeName() == TString( "StatErrorConfig" ) ) {
@@ -654,6 +722,10 @@ HistFactory::Data ConfigParser::CreateDataElement( TXMLNode* node ) {
 	throw hf_exc();
       }
 
+      else if( attrName == TString( "Name" ) ) {
+	data.SetName( attrVal );
+      }
+
       else if( attrName == TString( "InputFile" ) ) {
 	data.SetInputFile( attrVal );
       }
@@ -688,8 +760,9 @@ HistFactory::Data ConfigParser::CreateDataElement( TXMLNode* node ) {
     std::cout << "Created Data Node with"
 	      << " InputFile: " << data.GetInputFile()
 	      << " HistoName: " << data.GetHistoName()
-	      << " HistoPath: " << data.GetHistoPath()
-	      << std::endl;
+	      << " HistoPath: " << data.GetHistoPath();
+    if( data.GetName() != "") std::cout << " Name: " << data.GetName();
+    std::cout  << std::endl;
 
     // data.hist = GetHisto(data.FileName, data.HistoPath, data.HistoName);
 
