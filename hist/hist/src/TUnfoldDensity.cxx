@@ -232,7 +232,7 @@ TUnfoldDensity::TUnfoldDensity
    // report detailed list of excluded bins
    for (Int_t ix = 0; ix <= nOut+1; ix++) {
       if(fHistToX[ix]<0) {
-         Info("TUnfold","*NOT* unfolding bin "+GetOutputBinName(ix));
+         Info("TUnfold","*NOT* unfolding bin %s",GetOutputBinName(ix).Data());
       }
    }
 

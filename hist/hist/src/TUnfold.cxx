@@ -2404,7 +2404,7 @@ Int_t TUnfold::SetInput(const TH1 *input, Double_t scaleBias,
                     binlist +=row;
                  }
                  } */
-              Warning("SetInput",binlist);
+              Warning("SetInput","%s",binlist.Data());
            }
         }
      }
