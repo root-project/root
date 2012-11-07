@@ -1,2 +1,4 @@
 
 Processing execResolveTypedef.cxx+...
+The following should be 'int': int
+(int)0
