@@ -489,6 +489,13 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
       fActiveButtonID = event->fCode;
    }
 
+#ifdef R__HAS_COCOA
+   // On osx/cocoa use cmd modifier for mouse-2 and cmd-alt for mouse-3.
+   if (event->fCode == kButton1 && event->fState & kKeyMod2Mask)
+   {
+      event->fCode = event->fState & kKeyMod1Mask ? kButton3 : kButton2;
+   }
+#endif
 
    // Button DOWN
    if (event->fType == kButtonPress)
@@ -546,7 +553,7 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
 
       if ( ! handled)
       {
-         switch(event->fCode)
+         switch (event->fCode)
          {
             // LEFT mouse button
             case kButton1:
