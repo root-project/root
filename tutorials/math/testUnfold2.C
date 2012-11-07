@@ -1,10 +1,11 @@
-// TUnfold test program as an example for a more complex regularisation scheme
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 
-//  Version 16, parallel to changes in TUnfold
+//  Version 17.0, updated for changed methods in TUnfold
 //
 //  History:
+//    Version 16.1, parallel to changes in TUnfold
+//    Version 16.0, parallel to changes in TUnfold
 //    Version 15, with automatic L-curve scan, simplified example
 //    Version 14, with changes in TUnfoldSys.cxx
 //    Version 13,  with changes to TUnfold.C
@@ -23,6 +24,23 @@
 //    Version 1, remove L curve analysis, use ScanLcurve() method instead
 //    Version 0, L curve analysis included here
 
+/*
+  This file is part of TUnfold.
+
+  TUnfold is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  TUnfold is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <TMath.h>
 #include <TCanvas.h>
 #include <TRandom3.h>
@@ -31,13 +49,13 @@
 #include <TStyle.h>
 #include <TVector.h>
 #include <TGraph.h>
-#include <TUnfold.h>
+#include "TUnfold.h"
 
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////
 // 
-//  Test program as an example for a more complex regularisation scheme
+//  Test program as an example for a user specific regularisation scheme
 //
 //  (1) Generate Monte Carlo and Data events
 //      The events consist of
@@ -270,12 +288,12 @@ int testUnfold2()
 
   TH1D *histMunfold=new TH1D("Unfolded",";mass(gen)",nGen,xminGen,xmaxGen);
   unfold.GetOutput(histMunfold,binMap);
-  TH1D *histMdetFold=unfold.GetFoldedOutput("FoldedBack","mass(det)",
-                                              xminDet,xmaxDet);
+  TH1D *histMdetFold=new TH1D("FoldedBack","mass(det)",nDet,xminDet,xmaxDet);
+  unfold.GetFoldedOutput(histMdetFold);
 
   // store global correlation coefficients
   TH1D *histRhoi=new TH1D("rho_I","mass",nGen,xminGen,xmaxGen);  
-  unfold.GetRhoI(histRhoi,0,binMap);
+  unfold.GetRhoI(histRhoi,binMap);
 
   delete[] binMap;
   binMap=0;

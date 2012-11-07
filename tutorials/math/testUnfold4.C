@@ -1,10 +1,10 @@
-// Simple toy tests of the TUnfold package
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 
-//  Version 16, parallel to changes in TUnfold
+//  Version 16.1, parallel to changes in TUnfold
 //
 //  History:
+//    Version 16.0, parallel to changes in TUnfold
 //    Version 15, use L-curve scan to scan the average correlation
 
 #include <TMath.h>
@@ -16,9 +16,26 @@
 #include <TVector.h>
 #include <TGraph.h>
 
-#include <TUnfoldSys.h>
+#include "TUnfoldDensity.h"
 
 using namespace std;
+
+/*
+  This file is part of TUnfold.
+
+  TUnfold is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  TUnfold is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 ///////////////////////////////////////////////////////////////////////
 // 
@@ -26,12 +43,12 @@ using namespace std;
 //
 // Simple toy tests of the TUnfold package
 //
-// Pseudo data (5000 events) are unfilded into three components
+// Pseudo data (5000 events) are unfolded into three components
 // The unfolding is performed once without and once with area constraint
 //
-// The pulls show that the result is biased if no constraint is applied
-// This is because the true data errors are not used, and instead the
-// sqrt(data) errors are used.
+// Ideally, the pulls may show that the result is biased if no constraint
+// is applied. This is expected because the true data errors are not known,
+// and instead the sqrt(data) errors are used.
 //
 ///////////////////////////////////////////////////////////////////////
 
@@ -79,7 +96,7 @@ void testUnfold4()
   rnd=new TRandom3();
 
   // data and MC number of events
-  Double_t const nData0=    1000.0;
+  Double_t const nData0=    500.0;
   Double_t const nMC0  =  50000.0;
 
   // Binning
@@ -95,7 +112,7 @@ void testUnfold4()
 
   // parameters
   // fraction of events per signal shape
-  static const Double_t genFrac[]={0.4,0.4,0.2};
+  static const Double_t genFrac[]={0.3,0.6,0.1};
 
   // signal shapes
   static const Double_t genShape[][5]=
@@ -125,6 +142,7 @@ void testUnfold4()
   cout<<"TUnfold version is "<<TUnfold::GetTUnfoldVersion()<<"\n";
 
   for(int itoy=0;itoy<1000;itoy++) {
+     if(!(itoy %10)) cout<<"toy iteration: "<<itoy<<"\n";
      histDetDATA->Reset();
      histGenDetMC->Reset();
 
@@ -152,7 +170,7 @@ void testUnfold4()
      TUnfoldSys unfold(histGenDetMC,TUnfold::kHistMapOutputHoriz,
                        TUnfold::kRegModeSize,TUnfold::kEConstraintNone);
      // define the input vector (the measured data distribution)
-     unfold.SetInput(histDetDATA);
+     unfold.SetInput(histDetDATA,0.0,1.0);
 
      // run the unfolding
      unfold.ScanLcurve(50,0.,0.,0,0,0);
@@ -182,6 +200,8 @@ void testUnfold4()
   }
   TCanvas output;
   output.Divide(3,2);
+
+  gStyle->SetOptFit(1111);
   
   for(int i=0;i<nGen;i++) {
      output.cd(i+1);

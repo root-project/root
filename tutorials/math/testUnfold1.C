@@ -1,10 +1,11 @@
-// Test program for the classes TUnfold, TUnfoldSys
 // Author: Stefan Schmitt
 // DESY, 14.10.2008
 
-//  Version 16, parallel to changes in TUnfold
+//  Version 17.0, updated for using the classes TUnfoldDensity, TUnfoldBinning
 //
 //  History:
+//    Version 16.1, parallel to changes in TUnfold
+//    Version 16.0, parallel to changes in TUnfold
 //    Version 15, with automated L-curve scan
 //    Version 14, with changes in TUnfoldSys.cxx
 //    Version 13, include test of systematic errors
@@ -23,6 +24,22 @@
 //    Version 1, remove L curve analysis, use ScanLcurve() method instead
 //    Version 0, L curve analysis included here
 
+/*
+  This file is part of TUnfold.
+
+  TUnfold is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  TUnfold is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <TError.h>
 #include <TMath.h>
@@ -34,7 +51,7 @@
 #include <TVector.h>
 #include <TGraph.h>
 
-#include <TUnfoldSys.h>
+#include "TUnfoldDensity.h"
 
 // #define VERBOSE_LCURVE_SCAN
 
@@ -42,7 +59,7 @@ using namespace std;
 
 ///////////////////////////////////////////////////////////////////////
 // 
-//  Test program for the classes TUnfold, TUnfoldSys
+//  Test program for the classes TUnfold and related
 //
 //  (1) Generate Monte Carlo and Data events
 //      The events consist of
@@ -83,7 +100,7 @@ using namespace std;
 
 TRandom *rnd=0;
 
-TH2D *gHistInvEMatrix;
+TH2 *gHistInvEMatrix;
 
 TVirtualFitter *gFitter=0;
 
@@ -281,9 +298,22 @@ int testUnfold1()
   }
 
   //=========================================================================
+  // divide by bin withd to get density distributions
+  TH1D *histDensityGenData=new TH1D("DensityGenData",";mass(gen)",
+                                    nGen,xminGen,xmaxGen);
+  TH1D *histDensityGenMC=new TH1D("DensityGenMC",";mass(gen)",
+                                    nGen,xminGen,xmaxGen);
+  for(Int_t i=1;i<=nGen;i++) {
+     histDensityGenData->SetBinContent(i,histMgenData->GetBinContent(i)/
+                                       histMgenData->GetBinWidth(i));
+     histDensityGenMC->SetBinContent(i,histMgenMC->GetBinContent(i)/
+                                       histMgenMC->GetBinWidth(i));
+  }
+
+  //=========================================================================
   // set up the unfolding
   // define migration matrix
-  TUnfoldSys unfold(histMdetGenMC,TUnfold::kHistMapOutputVert);
+  TUnfoldDensity unfold(histMdetGenMC,TUnfold::kHistMapOutputVert);
 
   // define input and bias scame
   // do not use the bias, because MC peak may be at the wrong place
@@ -360,42 +390,21 @@ int testUnfold1()
   TGraph *bestLogTauLogChi2=new TGraph(1,t,x);
 
   //==========================================================================
-  // retreive results into histograms, using a bin map
-  //
-  // the binMap maps the output of the unfolding to the final histogram bins
-  //
-  // In this example, the underflow and overflow bin are discarded,
-  // whereas the other bins are just copied.
-  //
-  // This procedure is important for determining the inverse of the
-  // covariance matrix. The covariance matrix is used for a fit later
-  // on. Also, the global
-  // correlation corefficients depend on the proper mapping
-  Int_t *binMap=new Int_t[nGen+2];
-  for(Int_t i=1;i<=nGen;i++) binMap[i]=i;
-  binMap[0]=-1; // discarde underflow bin (here: the background normalisation)
-  binMap[nGen+1]=-1; // discarde overflow bin (here: bins with mass>10)
+  // retreive results into histograms
 
-  // get unfolded distribution using the binMap
-  TH1D *histMunfold=new TH1D("Unfolded",";mass(gen)",nGen,xminGen,xmaxGen);
-  unfold.GetOutput(histMunfold,binMap);
+  // get unfolded distribution
+  TH1 *histMunfold=unfold.GetOutput("Unfolded");
 
   // get unfolding result, folded back
-  TH1D *histMdetFold=unfold.GetFoldedOutput("FoldedBack",";mass(det)",
-                                              xminDet,xmaxDet);
+  TH1 *histMdetFold=unfold.GetFoldedOutput("FoldedBack");
 
   // get error matrix (input distribution [stat] errors only)
-  // using the binMap
-  TH2D *histEmatData=new TH2D("EmatData",";mass(gen);mass(gen)",
-                               nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
-  unfold.GetEmatrix(histEmatData,binMap);
+  // TH2D *histEmatData=unfold.GetEmatrix("EmatData");
 
   // get total error matrix:
-  //   migration matrix uncorrelated and colrrelated systematic errors
-  //   added inquadrature with the data statistical errors
-  TH2D *histEmatTotal=new TH2D("EmatTotal",";mass(gen);mass(gen)",
-                               nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
-  unfold.GetEmatrixTotal(histEmatTotal,binMap);
+  //   migration matrix uncorrelated and correlated systematic errors
+  //   added in quadrature to the data statistical errors
+  TH2 *histEmatTotal=unfold.GetEmatrixTotal("EmatTotal");
 
   // create data histogram with the total errors
   TH1D *histTotalError=
@@ -406,25 +415,24 @@ int testUnfold1()
        (bin,TMath::Sqrt(histEmatTotal->GetBinContent(bin,bin)));
   }
 
-  // get global correlation coefficients and inverse of covariance
-  // matrix.
-  // !!! these quantities do not include the systematic errors !!!
-  gHistInvEMatrix=new TH2D("invEmat",";mass(gen);mass(gen)",
-                           nGen,xminGen,xmaxGen,nGen,xminGen,xmaxGen);
-  TH1D *histRhoi=new TH1D("rho_I",";mass(gen)",nGen,xminGen,xmaxGen);
-  unfold.GetRhoI(histRhoi,gHistInvEMatrix,binMap);
-
-  // remove the binMap, it is not needed anymore
-  delete[] binMap;
-  binMap=0; // just in case You think it is still defined
+  // get global correlation coefficients
+  // for this calculation one has to specify whether the
+  // underflow/overflow bins are included or not
+  // default: include all bins
+  // here: exclude underflow and overflow bins
+  TH1 *histRhoi=unfold.GetRhoItotal("rho_I",
+                                    0, // use default title
+                                    0, // all distributions
+                                    "*[UO]", // discard underflow and overflow bins on all axes
+                                    kTRUE, // use original binning
+                                    &gHistInvEMatrix // store inverse of error matrix
+                                    );
 
   //======================================================================
   // fit Breit-Wigner shape to unfolded data, using the full error matrix
   // here we use a "user" chi**2 function to take into account
   // the full covariance matrix
-  // !!! Note: the systematic errors are not included in this fit
-  // !!! one would have to invert the matrix histEmatTotal
-  // !!! to include syst. errors in the fit
+
   gFitter=TVirtualFitter::Fitter(histMunfold);
   gFitter->SetFCN(chisquare_corr);
 
@@ -432,6 +440,7 @@ int testUnfold1()
   bw->SetParameter(0,1000.);
   bw->SetParameter(1,3.8);
   bw->SetParameter(2,0.2);
+
   // for (wrong!) fitting without correlations, drop the option "U"
   // here.
   histMunfold->Fit(bw,"UE");
@@ -459,9 +468,9 @@ int testUnfold1()
   histTotalError->Draw("E");
   histMunfold->SetLineColor(kGreen);
   histMunfold->Draw("SAME E1");
-  histMgenData->SetLineColor(kRed);
-  histMgenData->Draw("SAME");
-  histMgenMC->Draw("SAME HIST");
+  histDensityGenData->SetLineColor(kRed);
+  histDensityGenData->Draw("SAME");
+  histDensityGenMC->Draw("SAME HIST");
 
   // show detector level distributions
   //    data (red)
@@ -471,7 +480,9 @@ int testUnfold1()
   histMdetFold->SetLineColor(kBlue);
   histMdetFold->Draw();
   histMdetMC->Draw("SAME HIST");
-  TH1D *histInput=unfold.GetInput("Minput",";mass(det)",xminDet,xmaxDet);
+  
+  TH1 *histInput=unfold.GetInput("Minput",";mass(det)");
+
   histInput->SetLineColor(kRed);
   histInput->Draw("SAME");
 
