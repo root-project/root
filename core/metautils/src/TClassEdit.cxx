@@ -840,7 +840,20 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
             if (!t.isNull()) {
                clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
                if (!dest.isNull() && dest != t ) {
-                  return dest.getAsString(gInterpreter->getCI()->getASTContext().getPrintingPolicy());
+                  clang::PrintingPolicy policy(gInterpreter->getCI()->getASTContext().getPrintingPolicy());
+                  policy.SuppressTagKeyword = true; // Never get the class or struct keyword
+                  policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.
+                  // The scope suppression is required for getting rid of the anonymous part of the name of a class defined in an anonymous namespace.
+                  // This gives us more control vs not using the clang::ElaboratedType and relying on the Policy.SuppressUnwrittenScope which would
+                  // strip both the anonymous and the inline namespace names (and we probably do not want the later to be suppressed).
+                  string result;
+                  dest.getAsStringInternal(result,policy);
+                  // Strip the std::
+                  if ( strncmp(result.c_str(), "std::", 5) == 0) {
+                     return result.substr(5);
+                  } else {
+                     return result;
+                  }
                }
             }
          }
