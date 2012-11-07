@@ -46,7 +46,7 @@ ClassImp(ParamHistFunc);
 
 
 //_____________________________________________________________________________
-ParamHistFunc::ParamHistFunc() : _numBins(0)
+ParamHistFunc::ParamHistFunc() : _numBins(0), _Normalized(false)
 {
   ;
 }
@@ -59,7 +59,8 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _dataVars("!dataVars","data Vars",       this),
   _paramSet("!paramSet","bin paramaters",  this),
   _numBins(0),
-  _dataSet( (string(name)+"_dataSet").c_str(), "", vars) 
+  _dataSet( (string(name)+"_dataSet").c_str(), "", vars),
+  _Normalized( false )
 {
   
   // Create a function which returns binewise-values
@@ -104,7 +105,8 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _dataVars("!dataVars","data Vars",       this),
   _paramSet("!paramSet","bin paramaters",  this),
   _numBins(0),
-  _dataSet( (string(name)+"_dataSet").c_str(), "", vars, Hist) 
+  _dataSet( (string(name)+"_dataSet").c_str(), "", vars, Hist),
+  _Normalized( false )
 {
 
   // Create a function which returns binewise-values
@@ -165,7 +167,8 @@ ParamHistFunc::ParamHistFunc(const ParamHistFunc& other, const char* name) :
   _paramSet("!paramSet", this, other._paramSet),
   _numBins( other._numBins ),
   _binMap( other._binMap ),
-  _dataSet( other._dataSet )
+  _dataSet( other._dataSet ),
+  _Normalized( other._Normalized )
 {
   ;
   // Copy constructor
@@ -276,8 +279,6 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
       VarNameStream << Prefix << "_bin_" << i;
       std::string VarName = VarNameStream.str();
 
-
-
       RooRealVar gamma( VarName.c_str(), VarName.c_str(), 1.0 ); 
       // "Hard-Code" a minimum of 0.0
       gamma.setMin( 0.0 );
@@ -290,7 +291,6 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 
     }
   }
-
 
   else if( numVars == 2 ) {
  
@@ -365,8 +365,6 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
     }
   }
 
-    
-
   else {
  
     cout << " Error: ParamHistFunc doesn't support dimensions > 3D " <<  endl;
@@ -429,7 +427,6 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 //_____________________________________________________________________________
 RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Prefix, const RooArgList& vars, 
 					 Double_t gamma_min, Double_t gamma_max) {
-
 
   RooArgList params = ParamHistFunc::createParamSet( w, Prefix, vars );
 
@@ -518,7 +515,6 @@ RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBin
 
   // Get the number of bins
   // in the nominal histogram
- 
 
   RooArgList paramSet;
 
@@ -541,7 +537,6 @@ RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBin
     gamma_nominal = gamma_max;
   }
 
-
   // For each bin, create a RooRealVar
   for( Int_t i = 0; i < numBins; ++i) {
 
@@ -555,7 +550,6 @@ RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBin
     paramSet.add( *gamma );
 
   }
-
 
   return paramSet;
 
@@ -588,7 +582,6 @@ Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
     numVars++;
 
   }
-
 
   Int_t numBinsX = 1;
   Int_t numBinsY = 1;
@@ -636,7 +629,6 @@ Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
       }
     }
   }
-
   
   return 0;
 
@@ -704,14 +696,14 @@ Double_t ParamHistFunc::evaluate() const
 
   Double_t value = param->getVal();
 
-  /*
-  cout << "ParamHistFunc - Current Bin: " << currentBin
-       << " param pointer: " << param
-       << " param val: " << paramVal
-       << " val: " << value
-       << endl;
-  */
-  return value;
+  // If we don't require the function to
+  // be normalized, return right away
+  if( !_Normalized ) return value;
+  
+  // Else, we divide the value by the integral
+  // which effectively normalizes the function over bins
+  Double_t scale = 1.0 / analyticalIntegralWN(0, NULL, NULL);
+  return scale*value;
   
 }
 
@@ -726,13 +718,11 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
   if (allVars.getSize()==0) return 0 ;
   if (_forceNumInt) return 0 ;
 
-
   // Select subset of allVars that are actual dependents
   analVars.add(allVars) ;
   //  RooArgSet* normSet = normSet2 ? getObservables(normSet2) : 0 ;
   //  RooArgSet* normSet = getObservables();
   //  RooArgSet* normSet = 0;
-
 
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
@@ -749,7 +739,6 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
   return code+1 ; 
 
-
   // Make list of function projection and normalization integrals 
   //  RooAbsReal* param ;
   // RooAbsReal *func ;
@@ -760,7 +749,6 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
   func = (RooAbsReal*) &( _dataVar.arg() );
   RooAbsReal* funcInt = func->createIntegral(analVars) ;
   cache->_funcIntList.addOwned(*funcInt) ;
-
 
   // Implement integration here
 
@@ -786,8 +774,6 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 */
 
 }
-
-
 
 
 //_____________________________________________________________________________

@@ -15,6 +15,7 @@
 #include "RooWorkspace.h"
 #include "RooSimultaneous.h"
 #include "RooCategory.h"
+#include "RooProduct.h"
 #include "RooRealSumPdf.h"
 #include "RooStats/HistFactory/Measurement.h"
 
@@ -31,27 +32,12 @@ namespace RooStats {
 
       // Initialze based on an already-created HistFactory Model
       HistFactoryNavigation(ModelConfig* mc);
+      HistFactoryNavigation(const std::string& File, 
+			    const std::string& WorkspaceName="combined",
+			    const std::string& ModelConfigName="ModelConfig");
+      HistFactoryNavigation(RooAbsPdf* model, RooArgSet* observables);
 
       virtual ~HistFactoryNavigation() {} 
-
-      // Get the RooAbsReal function for a given sample in a given channel
-      RooAbsReal* SampleFunction(const std::string& channel, const std::string& sample);
-
-      // Get the set of observables for a given channel
-      RooArgSet* GetObservableSet(const std::string& channel);
-
-      // The (current) histogram for that sample 
-      // This includes all parameters and interpolation
-      TH1* GetSampleHist(const std::string& channel, const std::string& sample, const std::string& name="");  
-
-      // Get the total channel histogram for this channel
-      TH1* GetChannelHist(const std::string& channel, const std::string& name="");
-
-      // Get the constraint term for a given systematic (alpha or gamma)
-      RooAbsReal* GetConstraintTerm(const std::string& parameter);
-
-      // Get the uncertainty based on the constraint term for a given systematic
-      double GetConstraintUncertainty(const std::string& parameter);
 
       // Should pretty print all channels and the current values 
       void PrintState();
@@ -61,8 +47,20 @@ namespace RooStats {
       // Print the current values and errors of pdf parameters
       void PrintParameters(bool IncludeConstantParams=false);
 
+      // Print parameters that effect a particular channel
+      void PrintChannelParameters(const std::string& channel, 
+				  bool IncludeConstantParams=false);
+
+      // Print parameters that effect a particular sample
+      void PrintSampleParameters(const std::string& channel, const std::string& sample, 
+				 bool IncludeConstantParams=false);
+
+      // Print the different components that make up a sample
+      // (NormFactors, Statistical Uncertainties, Interpolation, etc)
+      void PrintSampleComponents(const std::string& channel, const std::string& sample);
+
       // Print a "HistFactory style" RooDataSet in a readable way
-      static void PrintDataSet(RooDataSet* data, const std::string& channel="");
+      static void PrintDataSet(RooDataSet* data, const std::string& channel="", int max=-1);
 
       // Print the model and the data, comparing channel by channel
       void PrintModelAndData(RooDataSet* data);
@@ -72,6 +70,66 @@ namespace RooStats {
       // The value of the ith bin for that sample and channel 
       double GetBinValue(int bin, const std::string& channel, const std::string& sample);  
 
+      // The (current) histogram for that sample 
+      // This includes all parameters and interpolation
+      TH1* GetSampleHist(const std::string& channel, 
+			 const std::string& sample, const std::string& name="");  
+
+      // Get the total channel histogram for this channel
+      TH1* GetChannelHist(const std::string& channel, const std::string& name="");
+
+      // Get the RooAbsReal function for a given sample in a given channel
+      RooAbsReal* SampleFunction(const std::string& channel, const std::string& sample);
+
+      // Get the set of observables for a given channel
+      RooArgSet* GetObservableSet(const std::string& channel);
+
+      // Get the constraint term for a given systematic (alpha or gamma)
+      RooAbsReal* GetConstraintTerm(const std::string& parameter);
+
+      // Get the uncertainty based on the constraint term for a given systematic
+      double GetConstraintUncertainty(const std::string& parameter);
+
+      // Find a node in the pdf and replace it with a new node
+      // These nodes can be functions, pdf's, RooRealVar's, etc
+      // Will do minimial checking to make sure the replacement makes sense
+      void ReplaceNode(const std::string& ToReplace, RooAbsArg* ReplaceWith);
+
+
+      // Set any RooRealVar's const (or not const) if they match
+      // the supplied regular expression
+      void SetConstant(const std::string& regExpr=".*", bool constant=true);
+
+      void SetNumBinsToPrint(int num) { _numBinsToPrint = num; }
+      int GetNumBinsToPrint() const { return _numBinsToPrint; }
+
+      // Get the model for this channel
+      RooAbsPdf* GetModel() const { return fModel; }
+
+      //
+      RooAbsPdf* GetChannelPdf(const std::string& channel);
+      
+
+      // Return the RooRealVar by the same name used in the model
+      // If not found, return NULL
+      RooRealVar* var(const std::string& varName) const;
+      
+      /*
+      // Add a channel to the pdf
+      // Combine the data if it is provided
+      void AddChannel(const std::string& channel, RooAbsPdf* pdf, RooDataSet* data=NULL);
+      */
+
+      /*
+      // Add a constraint term to the pdf
+      // This method requires that the pdf NOT be simultaneous
+      void AddConstraintTerm(RooAbsArg* constraintTerm);
+
+      // Add a constraint term to the pdf of a particular channel
+      // This method requires that the pdf be simultaneous 
+      // OR that the channel string match the channel that the pdf represents
+      void AddConstraintTerm(RooAbsArg* constraintTerm, const std::string& channel);
+      */
 
     protected:
 
@@ -98,6 +156,8 @@ namespace RooStats {
       // The observables
       RooArgSet* fObservables;
 
+      int _numBinsToPrint;
+
       // The list of channels
       std::vector<std::string> fChannelNameVec;
 
@@ -116,7 +176,10 @@ namespace RooStats {
 
       // Internal method implementation of finding a daughter node
       // from a parent node (looping over all generations)
-      RooAbsReal* findChild(const std::string& name, RooAbsReal* parent);
+      RooAbsArg* findChild(const std::string& name, RooAbsReal* parent) const;
+
+      // Recursively get all products of products
+      RooArgSet _GetAllProducts(RooProduct* node);
       
 
     protected:

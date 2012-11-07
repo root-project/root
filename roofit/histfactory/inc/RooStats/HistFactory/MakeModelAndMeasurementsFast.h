@@ -13,6 +13,8 @@
 #include "RooPlot.h"
 #include "TFile.h"
 
+void fastDriver(std::string input);
+
 namespace RooStats{
   namespace HistFactory{
 

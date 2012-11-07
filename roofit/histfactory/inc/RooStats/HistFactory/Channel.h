@@ -1,3 +1,12 @@
+// @(#)root/roostats:$Id$
+// Author: George Lewis, Kyle Cranmer
+/*************************************************************************
+ * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
  
 #ifndef HISTFACTORY_CHANNEL_H
 #define HISTFACTORY_CHANNEL_H
@@ -39,6 +48,9 @@ public:
   void SetData( TH1* hData );
   RooStats::HistFactory::Data& GetData() { return fData; }
 
+  void AddAdditionalData( const RooStats::HistFactory::Data& data ) { fAdditionalData.push_back(data); } 
+  std::vector<RooStats::HistFactory::Data>& GetAdditionalData() { return fAdditionalData; }
+
   void SetStatErrorConfig( double RelErrorThreshold, Constraint::Type ConstraintType );
   void SetStatErrorConfig( double RelErrorThreshold, std::string ConstraintType );
   void SetStatErrorConfig( RooStats::HistFactory::StatErrorConfig Config ) { fStatErrorConfig = Config; }
@@ -60,6 +72,10 @@ protected:
   std::string fHistoPath;
 
   HistFactory::Data fData;
+
+  // One can add additional datasets
+  // These are simply added to the xml under a different name
+  std::vector<RooStats::HistFactory::Data> fAdditionalData;
 
   HistFactory::StatErrorConfig fStatErrorConfig;
 

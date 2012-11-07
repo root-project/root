@@ -32,6 +32,7 @@
 #pragma link C++ class RooStats::HistFactory::Channel+ ;
 #pragma link C++ class RooStats::HistFactory::Sample+ ;
 #pragma link C++ class RooStats::HistFactory::Data+ ;
+#pragma link C++ class RooStats::HistFactory::Asimov+ ;
 
 #pragma link C++ class RooStats::HistFactory::StatError+ ;
 #pragma link C++ class RooStats::HistFactory::StatErrorConfig+ ;

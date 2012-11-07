@@ -48,8 +48,13 @@ namespace RooStats{
 
     std::vector<EstimateSummary> GetChannelEstimateSummaries(Measurement& measurement, Channel& channel);
 
+
+    void AddParamsToAsimov( RooStats::HistFactory::Asimov& asimov, std::string str );
+
+    /*
     RooAbsData* makeAsimovData(ModelConfig* mcInWs, bool doConditional, RooWorkspace* combWS, RooAbsPdf* combPdf, RooDataSet* combData, bool b_only, double doMuHat = false, double muVal = -999, bool signalInjection = false, bool doNuisPro = true);
     void unfoldConstraints(RooArgSet& initial, RooArgSet& final, RooArgSet& obs, RooArgSet& nuis, int& counter);
+    */
 
   }
 }
