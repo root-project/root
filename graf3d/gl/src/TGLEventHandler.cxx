@@ -35,6 +35,7 @@
 #include "TGLAnnotation.h"
 #include "TEnv.h"
 #include "TMath.h"
+#include "RConfigure.h"
 
 //______________________________________________________________________________
 //
@@ -489,7 +490,7 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
       fActiveButtonID = event->fCode;
    }
 
-#ifdef R__HAS_COCOA
+#if defined(R__HAS_COCOA)
    // On osx/cocoa use cmd modifier for mouse-2 and cmd-alt for mouse-3.
    if (event->fCode == kButton1 && event->fState & kKeyMod2Mask)
    {
