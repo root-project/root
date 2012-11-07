@@ -1,20 +1,40 @@
-// @(#)root/hist:$Id$
 // Author: Stefan Schmitt
 // DESY, 23/01/09
 
-//  Version 16, parallel to changes in TUnfold
+//  Version 17.1, bug fix with background uncertainty
 //
 //  History:
+//    Version 17.0, possibility to specify an error matrix with SetInput
+//    Version 16.1, parallel to changes in TUnfold
+//    Version 16.0, parallel to changes in TUnfold
 //    Version 15, fix bugs with uncorr. uncertainties, add backgnd subtraction
 //    Version 14, remove some print-out, do not add unused sys.errors
 //    Version 13, support for systematic errors
 
 ////////////////////////////////////////////////////////////////////////
 //
-// TUnfoldSys adds error propagation of systematic errors to TUnfold
-// Also, background sources (with errors) can be subtracted.
+//  TUnfoldSys : public TUnfold
 //
-// The following sources of systematic error are considered:
+//  TUnfold is used to decompose a measurement y into several sources x
+//  given the measurement uncertainties and a matrix of migrations A
+//
+//  TUnfoldSys adds error propagation of systematic errors to TUnfold
+//  Also, background sources (with errors) can be subtracted.
+//
+//  *************************************************************
+//  * For most applications, it is better to use TUnfoldDensity *
+//  * instead of using TUnfoldSys or TUnfold                    *
+//  *************************************************************
+//
+//  If you use this software, please consider the following citation
+//       S.Schmitt, JINST 7 (2012) T10003 [arXiv:1205.6201]
+//
+//  More documentation and updates are available on
+//      http://www.desy.de/~sschmitt
+//
+//
+//  The following sources of systematic error are considered in TUnfoldSys
+//
 //  (a) uncorrelated errors on the input matrix histA, taken as the 
 //      errors provided with the histogram.
 //      These are typically statistical errors from finite Monte Carlo samples
@@ -30,6 +50,7 @@
 //
 //  (e) scale errors on background sources
 //
+// In addition there is the (statistical) uncertainty of the input vector (i)
 //
 // Source (a) is providede with the original histogram histA
 //     TUnfoldSys(histA,...)
@@ -69,7 +90,7 @@
 //     GetDeltaSysTau()               corresponds to (c)
 //     GetDeltaSysBackgroundScale()   corresponds to (e)
 //  The error sources (a) and (d) originate from many uncorrelated errors,
-//  which in general ar NOT uncorrelated on the result vector.
+//  which in general are NOT uncorrelated on the result vector.
 //  Thus, there is no corresponding shift of the output vector, only error
 //  matrices are available
 //
@@ -80,102 +101,56 @@
 //   GetEmatrixSysTau()                (c)
 //   GetEmatrixSysBackgroundUncorr()   (d)
 //   GetEmatrixSysBackgroundScale()    (e)
-//   GetEmatrixInput()                 (0)
-//   GetEmatrix()                      (0)+(d)+(e)
-//   GetEmatrixTotal()                 (0)+(a)+(b)+(c)+(d)+(e)
-//
-// Example:
-// ========
-//    TH2D *histA,*histAsys1,*histAsys2,*histBgr1,*histBgr2;
-//    TH1D *data;
-//  assume the above histograms are filled:
-//      histA: migration matrix from generator (x-axis) to detector (y-axis)
-//           the errors of histA are the uncorrelated systematic errors
-//      histAsys1: alternative migration matrix, when systematic #1 is applied
-//      histAsys1: alternative migration matrix, when systematic #2 is applied
-//      histBgr: known background to the data, with errors
-//
-//  set up the unfolding:
-//
-//    TUnfoldSys unfold(histA,TUnfold::kHistMapOutputVert);
-//    unfold.SetInput(input);
-//     // this background has 5% scale uncertainty
-//    unfold.SubtractBackground(histBgr1,"bgr1",1.0,0.05);
-//     // this background is scaled by 0.8 and has 10% scale uncertainty
-//    unfold.SubtractBackground(histBgr2,"bgr2",0.8,0.1);
-//    unfold.AddSysError(histAsys1,"syserror1",TUnfold::kHistMapOutputVert,
-//                       TUnfoldSys::kSysErrModeMatrix);
-//    unfold.AddSysError(histAsys2,"syserror2",TUnfold::kHistMapOutputVert,
-//                       TUnfoldSys::kSysErrModeMatrix);
-//
-//
-//  run the unfolding: see description of class TUnfold
-//    unfold.ScanLcurve( ...)
-//
-//  retrieve the output
-//  the errors include errors from input, from histBgr1 and from histBgr2
-//    unfold.GetOutput(output);
-//
-//  retreive systematic shifts corresponding to correlated error sources
-//  In the example, there are 4 correlated sources:
-//     * 5% scale error on bgr1
-//     * 10% scale error on bgr2
-//     * the systematic error  "syserror1"
-//     * the systematic error  "syserror2"
-//  These error s are returned as vectors
-//  (corresponding to one-sigma shifts of each source)
-//
-//   unfold.GetDeltaSysBackgroundScale(bgr1shifts,"bgr1");
-//   unfold.GetDeltaSysBackgroundScale(bgr2shifts,"bgr2");
-//   unfold.GetDeltaSysSource(sys1shifts,"syserror1");
-//   unfold.GetDeltaSysSource(sys2shifts,"syserror2");
-//
-//  retreive errors from uncorrelated sources
-//  In the example, there are four sources of uncorrelated error
-//     * the input vector (statistical errors of the data)
-//     * the input matrix histA (Monte Carlo statistical errors)
-//     * the errors on bgr1 (Monte Carlo statistical errors)
-//     * the errors on bgr2 (Monte Carlo statistical errors)
-//  These errors are returned as error matrices
-//
-//    unfold.GetEmatrixInput(stat_error);
-//    unfold.GetEmatrixSysUncorr(uncorr_sys);
-//    unfold.GetEmatrixSysBackgroundUncorr(bgr1uncorr,"bgr1");
-//    unfold.GetEmatrixSysBackgroundUncorr(bgr2uncorr,"bgr2");
+//   GetEmatrixInput()                 (i)
+//   GetEmatrix()                      (i)+(d)+(e)
+//   GetEmatrixTotal()                 (i)+(a)+(b)+(c)+(d)+(e)
 //
 //  Error matrices can be added to existing histograms.
 //  This is useful to retreive the sum of several error matrices.
-//  If the last argument of the .GetEmatrixXXX methods is set to kFALSE, the
-//  histogram is not cleared, but the error matrix is simply added.
-//  Example: add all errors from background subtraction
-//
-//     unfold.GetEmatrixSysBackgroundUncorr(bgrerror,"bgr1",0,kTRUE);   
-//     unfold.GetEmatrixSysBackgroundCorr(bgrerror,"bgr1",0,kFALSE);   
-//     unfold.GetEmatrixSysBackgroundUncorr(bgrerror,"bgr2",0,kFALSE);   
-//     unfold.GetEmatrixSysBackgroundCorr(bgrerror,"bgr2",0,kFALSE);   
-//
-//  There is a special function to get the total error:
-//    unfold.GetEmatrixTotal(err_total);
+//  If the last argument of the GetEmatrixXXX() methods is set to kFALSE,
+//  the histogram is not cleared, but the error matrix is simply added to the
+//  existing histogram
 //
 ////////////////////////////////////////////////////////////////////////
+
+/*
+  This file is part of TUnfold.
+
+  TUnfold is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  TUnfold is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <iostream>
 #include <TMap.h>
 #include <TMath.h>
 #include <TObjString.h>
 #include <RVersion.h>
+#include <cmath>
 
-#include <TUnfoldSys.h>
+#include "TUnfoldSys.h"
 
 ClassImp(TUnfoldSys)
 
-TUnfoldSys::TUnfoldSys(void) {
+TUnfoldSys::TUnfoldSys(void)
+{
    // set all pointers to zero
    InitTUnfoldSys();
 }
 
-TUnfoldSys::TUnfoldSys(const TH2 *hist_A, EHistMap histmap, ERegMode regmode,
-                       EConstraint constraint) : TUnfold(hist_A,histmap,regmode,constraint) {
+TUnfoldSys::TUnfoldSys
+(const TH2 *hist_A, EHistMap histmap, ERegMode regmode,EConstraint constraint)
+   : TUnfold(hist_A,histmap,regmode,constraint)
+{
    // arguments:
    //    hist_A:  matrix that describes the migrations
    //    histmap: mapping of the histogram axes to the unfolding output 
@@ -247,8 +222,9 @@ TUnfoldSys::TUnfoldSys(const TH2 *hist_A, EHistMap histmap, ERegMode regmode,
    delete[] dataDAinRelSq;      
 }
 
-void TUnfoldSys::AddSysError(const TH2 *sysError,const char *name,
-                             EHistMap histmap,ESysErrMode mode) {
+void TUnfoldSys::AddSysError
+(const TH2 *sysError,const char *name,EHistMap histmap,ESysErrMode mode)
+{
    // add a correlated error source
    //    sysError: alternative matrix or matrix of absolute/relative shifts
    //    name: name of the error source
@@ -330,7 +306,8 @@ void TUnfoldSys::AddSysError(const TH2 *sysError,const char *name,
    }
 }
 
-void TUnfoldSys::DoBackgroundSubtraction(void) {
+void TUnfoldSys::DoBackgroundSubtraction(void)
+{
    // performs background subtraction
    // fY = fYData - fBgrIn
    // fVyy = fVyyData + fBgrErrUncorr^2 + fBgrErrCorr * fBgrErrCorr#
@@ -344,6 +321,11 @@ void TUnfoldSys::DoBackgroundSubtraction(void) {
          fY=new TMatrixD(*fYData);
          fVyy=new TMatrixDSparse(*fVyyData);
       } else {
+         if(GetVyyInv()) {
+            Warning("DoBackgroundSubtraction",
+                    "inverse error matrix from user input,"
+                    " not corrected for background");
+         }
          // copy of the data
          fY=new TMatrixD(*fYData);
          // subtract background from fY
@@ -384,40 +366,40 @@ void TUnfoldSys::DoBackgroundSubtraction(void) {
          }
          // add uncorrelated background errors
          {
-            TMapIter bgrErrUncorrPtr(fBgrErrUncorrIn);
-            for(key=bgrErrUncorrPtr.Next();key;key=bgrErrUncorrPtr.Next()) {
-               const TMatrixD *bgrerruncorr=(TMatrixD const *)
+            TMapIter bgrErrUncorrSqPtr(fBgrErrUncorrInSq);
+            for(key=bgrErrUncorrSqPtr.Next();key;
+                key=bgrErrUncorrSqPtr.Next()) {
+               const TMatrixD *bgrerruncorrSquared=(TMatrixD const *)
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
-                  ((const TPair *)*bgrErrUncorrPtr)->Value()
+                  ((const TPair *)*bgrErrUncorrSqPtr)->Value()
 #else
-                  fBgrErrUncorrIn->GetValue(((const TObjString *)key)
-                                            ->GetString())
+                  fBgrErrUncorrInSq->GetValue(((const TObjString *)key)
+                                              ->GetString())
 #endif
                   ;
                for(Int_t yi=0;yi<ny;yi++) {
                   if(!usedBin[yi]) continue;
-                  vyy(yi,yi) +=(*bgrerruncorr)(yi,0)* (*bgrerruncorr)(yi,0);
+                  vyy(yi,yi) +=(*bgrerruncorrSquared)(yi,0);
                }
             }
          }
          // add correlated background errors
          {
-            TMapIter bgrErrCorrPtr(fBgrErrCorrIn);
-            for(key=bgrErrCorrPtr.Next();key;key=bgrErrCorrPtr.Next()) {
+            TMapIter bgrErrScalePtr(fBgrErrScaleIn);
+            for(key=bgrErrScalePtr.Next();key;key=bgrErrScalePtr.Next()) {
+               const TMatrixD *bgrerrscale=(const TMatrixD *)
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
-                  if (!*bgrErrCorrPtr) continue;
-               const TMatrixD *bgrerrcorr=(const TMatrixD *)
-                  ((const TPair *)*bgrErrCorrPtr)->Value();
+                  ((const TPair *)*bgrErrScalePtr)->Value()
 #else
-               const TMatrixD *bgrerrcorr=(const TMatrixD *)
-                  fBgrErrCorrIn->GetValue(((const TObjString *)key)
-                                          ->GetString());
+                  fBgrErrScaleIn->GetValue(((const TObjString *)key)
+                                          ->GetString())
 #endif
+                  ;
                for(Int_t yi=0;yi<ny;yi++) {
                   if(!usedBin[yi]) continue;
                   for(Int_t yj=0;yj<ny;yj++) {
                      if(!usedBin[yj]) continue;
-                     vyy(yi,yj) +=(*bgrerrcorr)(yi,0)* (*bgrerrcorr)(yj,0);
+                     vyy(yi,yj) +=(*bgrerrscale)(yi,0)* (*bgrerrscale)(yj,0);
                   }
                }
             }
@@ -430,78 +412,14 @@ void TUnfoldSys::DoBackgroundSubtraction(void) {
 
       }
    } else {
-      Fatal("TUnfoldSys::DoBackgroundSubtraction","No input vector defined");
+      Fatal("DoBackgroundSubtraction","No input vector defined");
    }
-#ifdef UNUSED
-      // for first background source, create a copy of the original error
-      // matrix
-      if(!fVyy0) {
-         if(!fVyy) {
-            Fatal("TUnfoldSys::SubtractBackground",
-                  "did You forget to call SetInput()?");
-         }
-         fVyy0=new TMatrixDSparse(*fVyy);
-      }
-      Int_t *rowcol=new Int_t[GetNy()];
-      Int_t *col0=new Int_t[GetNy()];
-      Double_t *error_uncorr=new Double_t[GetNy()];
-      Double_t *error_uncorr_sq=new Double_t[GetNy()];
-      Double_t *error_corr=new Double_t[GetNy()];
-      Int_t n=0;
-      const Int_t *vyyinv_rows=fVyyinv->GetRowIndexArray();
-      const Int_t *vyyinv_cols=fVyyinv->GetColIndexArray();
-      const Double_t *vyyinv_data=fVyyinv->GetMatrixArray();
-      for(Int_t row=0;row<fVyyinv->GetNrows();row++) {
-         Double_t y0=(*fY)(row,0);
-         (*fY)(row,0) -= scale*bgr->GetBinContent(row+1);
-         // loop over the existing data error matrix
-         // only those bins which have non-zero error^-1 are considered
-         for(Int_t index=vyyinv_rows[row];index<vyyinv_rows[row+1];index++) {
-            if(vyyinv_cols[index]==row) {
-               rowcol[n] = row;
-               col0[n]=0;
-               // uncorrelated error
-               error_uncorr[n]=scale*bgr->GetBinError(row+1);
-               error_uncorr_sq[n]=error_uncorr[n]*error_uncorr[n];
-               // correlated error
-               error_corr[n] = scale_error*bgr->GetBinContent(row+1);
-               n++;
-            }
-         }
-      }
-      // diagonal matrix of uncorrelated errors
-      TMatrixDSparse VYuncorr(GetNy(),GetNy());
-      SetSparseMatrixArray(&VYuncorr,n,rowcol,rowcol,error_uncorr_sq);
-      // add uncorrelated errors
-      AddMSparse(fVyy,1.0,&VYuncorr);
-      // save uncorrelated errors
-      TMatrixDSparse *dbgr_unc=new TMatrixDSparse(GetNy(),1);
-      SetSparseMatrixArray(dbgr_unc,n,rowcol,col0,error_uncorr);
-      fBgrUncorrIn->Add(new TObjString(name),dbgr_unc);
-      // save vector of correlated errors
-      TMatrixDSparse *dbgr_corr=new TMatrixDSparse(GetNy(),1);
-      SetSparseMatrixArray(dbgr_corr,n,rowcol,col0,error_corr);
-      fBgrCorrIn->Add(new TObjString(name),dbgr_corr);
-      // add correlated error
-      TMatrixDSparse *VYcorr=MultiplyMSparseMSparseTranspVector
-         (dbgr_corr,dbgr_corr,0);
-      AddMSparse(fVyy,1.0,VYcorr);
-      delete[] error_uncorr;
-      delete[] error_uncorr_sq;
-      delete[] error_corr;
-      delete[] rowcol;
-      delete[] col0;
-      DeleteMatrix(&VYcorr);
-      // invert covariance matrix
-      DeleteMatrix(&fVyyinv);
-      TMatrixD *vyyinv=InvertMSparse(fVyy);
-      fVyyinv=new TMatrixDSparse(*vyyinv);
-      DeleteMatrix(&vyyinv);
-#endif
 }
 
 Int_t TUnfoldSys::SetInput(const TH1 *hist_y,Double_t scaleBias,
-                           Double_t oneOverZeroError) {
+                              Double_t oneOverZeroError,const TH2 *hist_vyy,
+                              const TH2 *hist_vyy_inv)
+{
    // Define the input data for subsequent calls to DoUnfold(Double_t)
    //  input:   input distribution with errors
    //  scaleBias:  scale factor applied to the bias
@@ -510,17 +428,15 @@ Int_t TUnfoldSys::SetInput(const TH1 *hist_y,Double_t scaleBias,
    //                 +10000*number of unconstrained output bins
    //         Note: return values>=10000 are fatal errors, 
    //               for the given input, the unfolding can not be done!
-   // Calls the SetInput metghod of the base class, then renames the input
+   // Calls the SetInput method of the base class, then renames the input
    // vectors fY and fVyy, then performs the background subtraction
    // Data members modified:
    //   fYData,fY,fVyyData,fVyy,fVyyinvData,fVyyinv
    // and those modified by TUnfold::SetInput()
    // and those modified by DoBackgroundSubtraction()
 
-   Int_t r=TUnfold::SetInput(hist_y,scaleBias,oneOverZeroError);
-   //LM: WARNING: Coverity detects here a false USE_AFTER_FREE for fY and fVyy
-   // the objects are deleted but then re-created immediatly afterwards in 
-   //  TUnfold::SetInput
+   Int_t r=TUnfold::SetInput(hist_y,scaleBias,oneOverZeroError,hist_vyy,
+                             hist_vyy_inv);
    fYData=fY;
    fY=0;
    fVyyData=fVyy;
@@ -530,9 +446,9 @@ Int_t TUnfoldSys::SetInput(const TH1 *hist_y,Double_t scaleBias,
    return r;
 }
 
-void TUnfoldSys::SubtractBackground(const TH1 *bgr,const char *name,
-                                    Double_t scale,
-                                    Double_t scale_error) {
+void TUnfoldSys::SubtractBackground
+(const TH1 *bgr,const char *name,Double_t scale,Double_t scale_error)
+{
    // Store background source
    //   bgr:    background distribution with uncorrelated errors
    //   name:   name of this background source
@@ -540,7 +456,7 @@ void TUnfoldSys::SubtractBackground(const TH1 *bgr,const char *name,
    //   scaleError: error on scale factor (correlated error)
    //
    // Data members modified:
-   //   fBgrIn,fBgrErrUncorrIn,fBgrErrCorrIn
+   //   fBgrIn,fBgrErrUncorrInSq,fBgrErrScaleIn
    // and those modified by DoBackgroundSubtraction()
 
    // save background source
@@ -549,26 +465,100 @@ void TUnfoldSys::SubtractBackground(const TH1 *bgr,const char *name,
             name);
    } else {
       TMatrixD *bgrScaled=new TMatrixD(GetNy(),1);
-      TMatrixD *bgrErrUnc=new TMatrixD(GetNy(),1);
+      TMatrixD *bgrErrUncSq=new TMatrixD(GetNy(),1);
       TMatrixD *bgrErrCorr=new TMatrixD(GetNy(),1);
       for(Int_t row=0;row<GetNy();row++) {
          (*bgrScaled)(row,0) = scale*bgr->GetBinContent(row+1);
-         (*bgrErrUnc)(row,0) = scale*bgr->GetBinError(row+1);
+         (*bgrErrUncSq)(row,0) =
+            TMath::Power(scale*bgr->GetBinError(row+1),2.);
          (*bgrErrCorr)(row,0) = scale_error*bgr->GetBinContent(row+1);
       }
       fBgrIn->Add(new TObjString(name),bgrScaled);
-      fBgrErrUncorrIn->Add(new TObjString(name),bgrErrUnc);
-      fBgrErrCorrIn->Add(new TObjString(name),bgrErrCorr);
+      fBgrErrUncorrInSq->Add(new TObjString(name),bgrErrUncSq);
+      fBgrErrScaleIn->Add(new TObjString(name),bgrErrCorr);
       if(fYData) {
          DoBackgroundSubtraction();
       } else {
-         Info("TUnfoldSys::SubtractBackground",
+         Info("SubtractBackground",
               "Background subtraction prior to setting input data");
       }
    }
 }
 
-void TUnfoldSys::InitTUnfoldSys(void) {
+void TUnfoldSys::GetBackground
+(TH1 *bgrHist,const char *bgrSource,const Int_t *binMap,
+ Int_t includeError,Bool_t clearHist) const
+{
+   if(clearHist) {
+       ClearHistogram(bgrHist);
+   }
+   // add all background sources
+   const TObject *key;
+   {
+      TMapIter bgrPtr(fBgrIn);
+      for(key=bgrPtr.Next();key;key=bgrPtr.Next()) {
+         TString bgrName=((const TObjString *)key)->GetString();
+         if(bgrSource && bgrName.CompareTo(bgrSource)) continue;
+         const TMatrixD *bgr=(const TMatrixD *)
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
+            ((const TPair *)*bgrPtr)->Value()
+#else
+            fBgrIn->GetValue(bgrName)
+#endif
+            ;
+         for(Int_t i=0;i<GetNy();i++) {
+            Int_t destBin=binMap[i];
+            bgrHist->SetBinContent(destBin,bgrHist->GetBinContent(destBin)+
+                                   (*bgr)(i,0));
+         }
+      }
+   }
+   // add uncorrelated background errors
+   if(includeError &1) {
+      TMapIter bgrErrUncorrSqPtr(fBgrErrUncorrInSq);
+      for(key=bgrErrUncorrSqPtr.Next();key;key=bgrErrUncorrSqPtr.Next()) {
+         TString bgrName=((const TObjString *)key)->GetString();
+         if(bgrSource && bgrName.CompareTo(bgrSource)) continue;
+         const TMatrixD *bgrerruncorrSquared=(TMatrixD const *)
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
+            ((const TPair *)*bgrErrUncorrSqPtr)->Value()
+#else
+            fBgrErrUncorrInSq->GetValue(((const TObjString *)key)
+                                            ->GetString())
+#endif
+            ;
+         for(Int_t i=0;i<GetNy();i++) {
+            Int_t destBin=binMap[i];
+            bgrHist->SetBinError
+               (destBin,TMath::Sqrt
+                ((*bgrerruncorrSquared)(i,0)+
+                 TMath::Power(bgrHist->GetBinError(destBin),2.)));
+         }
+      }
+   }
+   if(includeError & 2) {
+      TMapIter bgrErrScalePtr(fBgrErrScaleIn);
+      for(key=bgrErrScalePtr.Next();key;key=bgrErrScalePtr.Next()) {
+         TString bgrName=((const TObjString *)key)->GetString();
+         if(bgrSource && bgrName.CompareTo(bgrSource)) continue;
+         const TMatrixD *bgrerrscale=(TMatrixD const *)
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
+            ((const TPair *)*bgrErrScalePtr)->Value()
+#else
+            fBgrErrScaleIn->GetValue(((const TObjString *)key)->GetString())
+#endif
+            ;
+         for(Int_t i=0;i<GetNy();i++) {
+            Int_t destBin=binMap[i];
+            bgrHist->SetBinError(destBin,hypot((*bgrerrscale)(i,0),
+                                               bgrHist->GetBinError(destBin)));
+         }
+      }
+   }
+}
+
+void TUnfoldSys::InitTUnfoldSys(void)
+{
    // initialize pointers and TMaps
 
    // input
@@ -576,18 +566,18 @@ void TUnfoldSys::InitTUnfoldSys(void) {
    fDAinColRelSq = 0;
    fAoutside = 0;
    fBgrIn = new TMap();
-   fBgrErrUncorrIn = new TMap();
-   fBgrErrCorrIn = new TMap();
+   fBgrErrUncorrInSq = new TMap();
+   fBgrErrScaleIn = new TMap();
    fSysIn = new TMap();
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
    fBgrIn->SetOwnerKeyValue();
-   fBgrErrUncorrIn->SetOwnerKeyValue();
-   fBgrErrCorrIn->SetOwnerKeyValue();
+   fBgrErrUncorrInSq->SetOwnerKeyValue();
+   fBgrErrScaleIn->SetOwnerKeyValue();
    fSysIn->SetOwnerKeyValue();
 #else
    fBgrIn->SetOwner();
-   fBgrErrUncorrIn->SetOwner();
-   fBgrErrCorrIn->SetOwner();
+   fBgrErrUncorrInSq->SetOwner();
+   fBgrErrScaleIn->SetOwner();
    fSysIn->SetOwner();
 #endif
    // results
@@ -608,13 +598,14 @@ void TUnfoldSys::InitTUnfoldSys(void) {
    fVyyData=0;
 }
 
-TUnfoldSys::~TUnfoldSys(void) {
+TUnfoldSys::~TUnfoldSys(void)
+{
    // delete all data members
    DeleteMatrix(&fDAinRelSq);
    DeleteMatrix(&fDAinColRelSq);
    delete fBgrIn;
-   delete fBgrErrUncorrIn;
-   delete fBgrErrCorrIn;
+   delete fBgrErrUncorrInSq;
+   delete fBgrErrScaleIn;
    delete fSysIn;
    ClearResults();
    delete fDeltaCorrX;
@@ -623,7 +614,8 @@ TUnfoldSys::~TUnfoldSys(void) {
    DeleteMatrix(&fVyyData);
 }
 
-void TUnfoldSys::ClearResults(void) {
+void TUnfoldSys::ClearResults(void)
+{
    // clear all data members which depend on the unfolding results
    TUnfold::ClearResults();
    DeleteMatrix(&fEmatUncorrX);
@@ -633,7 +625,8 @@ void TUnfoldSys::ClearResults(void) {
    DeleteMatrix(&fDeltaSysTau);
 }
 
-void TUnfoldSys::PrepareSysError(void) {
+void TUnfoldSys::PrepareSysError(void)
+{
    // calculations required for syst.error
    // data members modified
    //    fEmatUncorrX, fEmatUncorrAx, fDeltaCorrX, fDeltaCorrAx
@@ -677,7 +670,6 @@ void TUnfoldSys::PrepareSysError(void) {
    for(key=(const TObjString *)sysErrIn.Next();key;
        key=(const TObjString *)sysErrIn.Next()) {
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
-      if (!*sysErrIn) continue;
       const TMatrixDSparse *dsys=
          (const TMatrixDSparse *)((const TPair *)*sysErrIn)->Value();
 #else
@@ -717,8 +709,9 @@ void TUnfoldSys::PrepareSysError(void) {
    DeleteMatrix(&AM1);
 }
   
-void TUnfoldSys::GetEmatrixSysUncorr(TH2 *ematrix,const Int_t *binMap,
-                                     Bool_t clearEmat) {
+void TUnfoldSys::GetEmatrixSysUncorr
+(TH2 *ematrix,const Int_t *binMap,Bool_t clearEmat)
+{
    // get output error contribution from statistical fluctuations in A
    //   ematrix: output error matrix histogram
    //   binMap: see method GetEmatrix()
@@ -729,8 +722,9 @@ void TUnfoldSys::GetEmatrixSysUncorr(TH2 *ematrix,const Int_t *binMap,
    ErrorMatrixToHist(ematrix,fEmatUncorrX,binMap,clearEmat);
 }
 
-TMatrixDSparse *TUnfoldSys::PrepareUncorrEmat(const TMatrixDSparse *m_0,
-                                              const TMatrixDSparse *m_1) {
+TMatrixDSparse *TUnfoldSys::PrepareUncorrEmat
+(const TMatrixDSparse *m_0,const TMatrixDSparse *m_1)
+{
    // propagate uncorrelated systematic errors to a covariance matrix
    //   m0,m1 : coefficients (matrices) for propagating the errors
    //
@@ -922,7 +916,8 @@ TMatrixDSparse *TUnfoldSys::PrepareUncorrEmat(const TMatrixDSparse *m_0,
 }
 
 TMatrixDSparse *TUnfoldSys::PrepareCorrEmat
-(const TMatrixDSparse *m1,const TMatrixDSparse *m2,const TMatrixDSparse *dsys) {
+(const TMatrixDSparse *m1,const TMatrixDSparse *m2,const TMatrixDSparse *dsys)
+{
    // propagate correlated systematic shift to output vector
    //   m1,m2 : coefficients for propagating the errors
    //   dsys : matrix of correlated shifts from this source
@@ -944,14 +939,16 @@ TMatrixDSparse *TUnfoldSys::PrepareCorrEmat
    return delta;
 }
 
-void TUnfoldSys::SetTauError(Double_t delta_tau) {
+void TUnfoldSys::SetTauError(Double_t delta_tau)
+{
    // set uncertainty on tau
    fDtau=delta_tau;
    DeleteMatrix(&fDeltaSysTau);
 }
 
-void TUnfoldSys::GetDeltaSysSource(TH1 *hist_delta,const char *name,
-                                   const Int_t *binMap) {
+Bool_t TUnfoldSys::GetDeltaSysSource(TH1 *hist_delta,const char *name,
+                                   const Int_t *binMap)
+{
    // calculate systematic shift from a given source
    //    ematrix: output
    //    source: name of the error source
@@ -963,35 +960,45 @@ void TUnfoldSys::GetDeltaSysSource(TH1 *hist_delta,const char *name,
       delta=(TMatrixDSparse *)named_emat->Value();
    }
    VectorMapToHist(hist_delta,delta,binMap);
+   return delta !=0;
 }
 
-void TUnfoldSys::GetDeltaSysBackgroundScale(TH1 *hist_delta,const char *source,
-                                         const Int_t *binMap) {
+Bool_t TUnfoldSys::GetDeltaSysBackgroundScale
+(TH1 *hist_delta,const char *source,const Int_t *binMap)
+{
    // get correlated shift induced by a background source
    //   delta: output shift vector histogram
    //   source: name of background source
    //   binMap: see method GetEmatrix()
    //   see PrepareSysError()
    PrepareSysError();
-   const TPair *named_err=(const TPair *)fBgrErrCorrIn->FindObject(source);
+   const TPair *named_err=(const TPair *)fBgrErrScaleIn->FindObject(source);
    TMatrixDSparse *dx=0;
    if(named_err) {
-      const TMatrixDSparse *dy=(TMatrixDSparse *)named_err->Value();
-      dx=MultiplyMSparseMSparse(GetDXDY(),dy);
+      const TMatrixD *dy=(TMatrixD *)named_err->Value();
+      dx=MultiplyMSparseM(GetDXDY(),dy);
    }
    VectorMapToHist(hist_delta,dx,binMap);
+   if(dx!=0) {
+      DeleteMatrix(&dx);
+      return kTRUE;
+   }
+   return kFALSE;
 }
 
-void TUnfoldSys::GetDeltaSysTau(TH1 *hist_delta,const Int_t *binMap) {
+Bool_t TUnfoldSys::GetDeltaSysTau(TH1 *hist_delta,const Int_t *binMap)
+{
    // calculate systematic shift from tau variation
    //    ematrix: output
    //    binMap: see method GetEmatrix()
    PrepareSysError();
    VectorMapToHist(hist_delta,fDeltaSysTau,binMap);
+   return fDeltaSysTau !=0;
 }
 
-void TUnfoldSys::GetEmatrixSysSource(TH2 *ematrix,const char *name,
-                                     const Int_t *binMap,Bool_t clearEmat) {
+void TUnfoldSys::GetEmatrixSysSource
+(TH2 *ematrix,const char *name,const Int_t *binMap,Bool_t clearEmat)
+{
    // calculate systematic shift from a given source
    //    ematrix: output
    //    source: name of the error source
@@ -1008,20 +1015,20 @@ void TUnfoldSys::GetEmatrixSysSource(TH2 *ematrix,const char *name,
    DeleteMatrix(&emat);
 }
 
-void TUnfoldSys::GetEmatrixSysBackgroundScale(TH2 *ematrix,const char *name,
-                                              const Int_t *binMap,
-                                              Bool_t clearEmat) {
+void TUnfoldSys::GetEmatrixSysBackgroundScale
+(TH2 *ematrix,const char *name,const Int_t *binMap,Bool_t clearEmat)
+{
    // calculate systematic shift from a given background scale error
    //    ematrix: output
    //    source: name of the error source
    //    binMap: see method GetEmatrix()
    //    clearEmat: set kTRUE to clear the histogram prior to adding the errors
    PrepareSysError();
-   const TPair *named_err=(const TPair *)fBgrErrCorrIn->FindObject(name);
+   const TPair *named_err=(const TPair *)fBgrErrScaleIn->FindObject(name);
    TMatrixDSparse *emat=0;
    if(named_err) {
-      const TMatrixDSparse *dy=(TMatrixDSparse *)named_err->Value();
-      TMatrixDSparse *dx=MultiplyMSparseMSparse(GetDXDY(),dy);
+      const TMatrixD *dy=(TMatrixD *)named_err->Value();
+      TMatrixDSparse *dx=MultiplyMSparseM(GetDXDY(),dy);
       emat=MultiplyMSparseMSparseTranspVector(dx,dx,0);
       DeleteMatrix(&dx);
    }
@@ -1029,8 +1036,9 @@ void TUnfoldSys::GetEmatrixSysBackgroundScale(TH2 *ematrix,const char *name,
    DeleteMatrix(&emat);
 }
 
-void TUnfoldSys::GetEmatrixSysTau(TH2 *ematrix,
-                                  const Int_t *binMap,Bool_t clearEmat) {
+void TUnfoldSys::GetEmatrixSysTau
+(TH2 *ematrix,const Int_t *binMap,Bool_t clearEmat)
+{
    // calculate error matrix from error in regularisation parameter
    //    ematrix: output
    //    binMap: see method GetEmatrix()
@@ -1044,8 +1052,9 @@ void TUnfoldSys::GetEmatrixSysTau(TH2 *ematrix,
    DeleteMatrix(&emat);
 }
 
-void TUnfoldSys::GetEmatrixInput(TH2 *ematrix,const Int_t *binMap,
-                                     Bool_t clearEmat) {
+void TUnfoldSys::GetEmatrixInput
+(TH2 *ematrix,const Int_t *binMap,Bool_t clearEmat)
+{
    // calculate error matrix from error in input vector alone
    //    ematrix: output
    //    binMap: see method GetEmatrix()
@@ -1054,21 +1063,27 @@ void TUnfoldSys::GetEmatrixInput(TH2 *ematrix,const Int_t *binMap,
 }
 
 void TUnfoldSys::GetEmatrixSysBackgroundUncorr
-(TH2 *ematrix,const char *source,const Int_t *binMap,Bool_t clearEmat) {
+(TH2 *ematrix,const char *source,const Int_t *binMap,Bool_t clearEmat)
+{
    // calculate error matrix contribution originating from uncorrelated errors
    // of one background source
    //    ematrix: output
    //    source: name of the error source
    //    binMap: see method GetEmatrix()
    //    clearEmat: set kTRUE to clear the histogram prior to adding the errors
-   const TPair *named_err=(const TPair *)fBgrErrCorrIn->FindObject(source);
-   const TMatrixDSparse *emat=0;
-   if(named_err) emat=(TMatrixDSparse *)named_err->Value();
-   GetEmatrixFromVyy(emat,ematrix,binMap,clearEmat);
+   const TPair *named_err=(const TPair *)fBgrErrUncorrInSq->FindObject(source);
+   TMatrixDSparse *emat=0;
+   if(named_err) {
+      TMatrixD const *dySquared=(TMatrixD const *)named_err->Value();
+      emat=MultiplyMSparseMSparseTranspVector(GetDXDY(),GetDXDY(),dySquared);
+   }
+   ErrorMatrixToHist(ematrix,emat,binMap,clearEmat);
+   DeleteMatrix(&emat);
 }
 
-void TUnfoldSys::GetEmatrixFromVyy(const TMatrixDSparse *vyy,TH2 *ematrix,
-                                   const Int_t *binMap,Bool_t clearEmat) {
+void TUnfoldSys::GetEmatrixFromVyy
+(const TMatrixDSparse *vyy,TH2 *ematrix,const Int_t *binMap,Bool_t clearEmat)
+{
    // propagate error matrix vyy to the result
    //    vyy: error matrix on input data fY
    //    ematrix: output
@@ -1085,7 +1100,8 @@ void TUnfoldSys::GetEmatrixFromVyy(const TMatrixDSparse *vyy,TH2 *ematrix,
    DeleteMatrix(&em);
 }
 
-void TUnfoldSys::GetEmatrixTotal(TH2 *ematrix,const Int_t *binMap) {
+void TUnfoldSys::GetEmatrixTotal(TH2 *ematrix,const Int_t *binMap)
+{
    // get total error including statistical error
    //    ematrix: output
    //    binMap: see method GetEmatrix()
@@ -1102,29 +1118,30 @@ void TUnfoldSys::GetEmatrixTotal(TH2 *ematrix,const Int_t *binMap) {
    GetEmatrixSysTau(ematrix,binMap,kFALSE); // (c)
 }
 
-Double_t TUnfoldSys::GetChi2Sys(void) {
-   // calculate total chi**2 including systematic errors
+TMatrixDSparse *TUnfoldSys::GetSummedErrorMatrixYY(void)
+{
    PrepareSysError();
+
    // errors from input vector and from background subtraction
-   TMatrixDSparse emat_sum(*fVyy);
+   TMatrixDSparse *emat_sum=new TMatrixDSparse(*fVyy);
+
    // uncorrelated systematic error
-   AddMSparse(&emat_sum,1.0,fEmatUncorrAx);
+   AddMSparse(emat_sum,1.0,fEmatUncorrAx);
    TMapIter sysErrPtr(fDeltaCorrAx);
    const TObject *key;
-   // correlated su=ystematic errors
-   for(key=sysErrPtr.Next();key;key=sysErrPtr.Next()) {
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
-      if (!*sysErrPtr) continue;
-      const TMatrixDSparse *delta=(TMatrixDSparse *)
-         ((const TPair *)*sysErrPtr)->Value();
-#else
-      const TMatrixDSparse *delta=(TMatrixDSparse *)
-         fDeltaCorrAx->GetValue(((const TObjString *)key)
-                                ->GetString());
-#endif
 
+   // correlated systematic errors
+   for(key=sysErrPtr.Next();key;key=sysErrPtr.Next()) {
+      const TMatrixDSparse *delta=(TMatrixDSparse *)
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
+                 ((const TPair *)*sysErrPtr)->Value()
+#else
+         fDeltaCorrAx->GetValue(((const TObjString *)key)
+                                ->GetString())
+#endif
+         ;
       TMatrixDSparse *emat=MultiplyMSparseMSparseTranspVector(delta,delta,0);
-      AddMSparse(&emat_sum,1.0,emat);
+      AddMSparse(emat_sum,1.0,emat);
       DeleteMatrix(&emat);
    }
    // error on tau
@@ -1133,24 +1150,91 @@ Double_t TUnfoldSys::GetChi2Sys(void) {
       TMatrixDSparse *emat_tau=
          MultiplyMSparseMSparseTranspVector(Adx_tau,Adx_tau,0);
       DeleteMatrix(&Adx_tau);
-      AddMSparse(&emat_sum,1.0,emat_tau);
+      AddMSparse(emat_sum,1.0,emat_tau);
       DeleteMatrix(&emat_tau);
    }
+   return emat_sum;
+}
+   
+TMatrixDSparse *TUnfoldSys::GetSummedErrorMatrixXX(void)
+{
+   PrepareSysError();
 
-   TMatrixD *v=InvertMSparse(&emat_sum);
+   // errors from input vector and from background subtraction
+   TMatrixDSparse *emat_sum=new TMatrixDSparse(*GetVxx());
+
+   // uncorrelated systematic error
+   AddMSparse(emat_sum,1.0,fEmatUncorrX);
+   TMapIter sysErrPtr(fDeltaCorrX);
+   const TObject *key;
+
+   // correlated systematic errors
+   for(key=sysErrPtr.Next();key;key=sysErrPtr.Next()) {
+      const TMatrixDSparse *delta=(TMatrixDSparse *)
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
+                 ((const TPair *)*sysErrPtr)->Value()
+#else
+         fDeltaCorrX->GetValue(((const TObjString *)key)
+                                ->GetString())
+#endif
+         ;
+      TMatrixDSparse *emat=MultiplyMSparseMSparseTranspVector(delta,delta,0);
+      AddMSparse(emat_sum,1.0,emat);
+      DeleteMatrix(&emat);
+   }
+   // error on tau
+   if(fDeltaSysTau) {
+      TMatrixDSparse *emat_tau=
+         MultiplyMSparseMSparseTranspVector(fDeltaSysTau,fDeltaSysTau,0);
+      AddMSparse(emat_sum,1.0,emat_tau);
+      DeleteMatrix(&emat_tau);
+   }
+   return emat_sum;
+}
+   
+
+Double_t TUnfoldSys::GetChi2Sys(void)
+{
+   // calculate total chi**2 including systematic errors
+
+   TMatrixDSparse *emat_sum=GetSummedErrorMatrixYY();
+
+   Int_t rank=0;
+   TMatrixDSparse *v=InvertMSparseSymmPos(emat_sum,&rank);
    TMatrixD dy(*fY, TMatrixD::kMinus, *GetAx());
+   TMatrixDSparse *vdy=MultiplyMSparseM(v,&dy);
+   DeleteMatrix(&v);
    Double_t r=0.0;
-   for(Int_t i=0;i<v->GetNrows();i++) {
-      for(Int_t j=0;j<v->GetNcols();j++) {
-         r += dy(i,0) * (*v)(i,j) * dy(j,0);
+   const Int_t *vdy_rows=vdy->GetRowIndexArray();
+   const Double_t *vdy_data=vdy->GetMatrixArray();
+   for(Int_t i=0;i<vdy->GetNrows();i++) {
+      if(vdy_rows[i+1]>vdy_rows[i]) {
+         r += vdy_data[vdy_rows[i]] * dy(i,0);
       }
    }
-   DeleteMatrix(&v);
+   DeleteMatrix(&vdy);
+   DeleteMatrix(&emat_sum);
    return r;
 }
 
+void TUnfoldSys::GetRhoItotal(TH1 *rhoi,const Int_t *binMap,TH2 *invEmat)
+{
+   // get global correlation coefficients including systematic,statistical,background,tau errors
+   //    rhoi: output histogram
+   //    binMap: for each global bin, indicate in which histogram bin
+   //            to store its content
+   //    invEmat: output histogram for inverse of error matrix
+   //              (pointer may zero if inverse is not requested)
+   ClearHistogram(rhoi,-1.);
+   TMatrixDSparse *emat_sum=GetSummedErrorMatrixXX();
+   GetRhoIFromMatrix(rhoi,emat_sum,binMap,invEmat);
+
+   DeleteMatrix(&emat_sum);
+}
+
 void TUnfoldSys::ScaleColumnsByVector
-(TMatrixDSparse *m,const TMatrixTBase<Double_t> *v) const {
+(TMatrixDSparse *m,const TMatrixTBase<Double_t> *v) const
+{
    // scale columns of m by the corresponding rows of v
    // input:
    //   m:  pointer to sparse matrix of dimension NxM
@@ -1187,8 +1271,9 @@ void TUnfoldSys::ScaleColumnsByVector
    }
 }
 
-void TUnfoldSys::VectorMapToHist(TH1 *hist_delta,const TMatrixDSparse *delta,
-                                 const Int_t *binMap) {
+void TUnfoldSys::VectorMapToHist
+(TH1 *hist_delta,const TMatrixDSparse *delta,const Int_t *binMap)
+{
    // sum over bins of *delta, as defined in binMap,fXToHist
    //   hist_delta: histogram to return summed vector
    //   delta: vector to sum and remap

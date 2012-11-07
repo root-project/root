@@ -1,10 +1,13 @@
-// @(#)root/hist:$Id$
 // Author: Stefan Schmitt
 // DESY, 13/10/08
 
-//  Version 16, some cleanup, more getter functions, query version number
+//  Version 17.1, bug fixes in GetFoldedOutput, GetOutput
 //
 //  History:
+//    Version 17.0, error matrix with SetInput, store fL not fLSquared
+//    Version 16.2, in parallel to bug-fix in TUnfoldSys
+//    Version 16.1, in parallel to bug-fix in TUnfold.C
+//    Version 16.0, some cleanup, more getter functions, query version number
 //    Version 15, simplified L-curve scan, new tau definition, new eror calc.
 //    Version 14, with changes in TUnfoldSys.cxx
 //    Version 13, new methods for derived classes
@@ -27,6 +30,12 @@
 #define ROOT_TUnfold
 
 //////////////////////////////////////////////////////////////////////////
+//                                                                      //
+//                                                                      //
+//  TUnfold provides functionality to correct data                      //
+//   for migration effects.                                             //
+//                                                                      //
+//  Citation: S.Schmitt, JINST 7 (2012) T10003 [arXiv:1205.6201]        //
 //                                                                      //
 //                                                                      //
 //  TUnfold solves the inverse problem                                  //
@@ -56,6 +65,22 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+/*
+  This file is part of TUnfold.
+
+  TUnfold is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  TUnfold is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <TH1D.h>
 #include <TH2D.h>
@@ -65,8 +90,11 @@
 #include <TMatrixDSparse.h>
 #include <TMatrixD.h>
 #include <TObjArray.h>
+#include <TString.h>
 
-#define TUnfold_VERSION "V16.0"
+#define TUnfold_VERSION "V17.1"
+#define TUnfold_CLASS_VERSION 17
+
 
 class TUnfold : public TObject {
  private:
@@ -85,7 +113,7 @@ class TUnfold : public TObject {
    };
  protected:
    TMatrixDSparse * fA;         // Input: matrix
-   TMatrixDSparse *fLsquared;   // Input: regularisation conditions squared
+   TMatrixDSparse *fL;          // Input: regularisation conditions
    TMatrixDSparse *fVyy;        // Input: covariance matrix for y
    TMatrixD *fY;                // Input: y
    TMatrixD *fX0;               // Input: x0
@@ -97,7 +125,10 @@ class TUnfold : public TObject {
    EConstraint fConstraint;     // Input: type of constraint to use
    ERegMode fRegMode;           // Input: type of regularisation
  private:
+   Int_t fIgnoredBins;          // number of input bins which are dropped because they have error=0
+   Double_t fEpsMatrix;         // machine accuracy for eingenvalue analysis
    TMatrixD *fX;                // Result: x
+   TMatrixDSparse *fVyyInv;     // Result: inverse of covariance matrix on y
    TMatrixDSparse *fVxx;        // Result: covariance matrix on x
    TMatrixDSparse *fVxxInv;     // Result: inverse of covariance matrix on x
    TMatrixDSparse *fAx;         // Result: Ax
@@ -114,18 +145,19 @@ class TUnfold : public TObject {
    TMatrixDSparse *fE;          // Result: matrix E
  protected:
    TUnfold(void);              // for derived classes
+   // Int_t IsNotSymmetric(TMatrixDSparse const &m) const;
    virtual Double_t DoUnfold(void);     // the unfolding algorithm
    virtual void ClearResults(void);     // clear all results
-
+   void ClearHistogram(TH1 *h,Double_t x=0.) const;
+   virtual TString GetOutputBinName(Int_t iBinX) const; // name a bin
    TMatrixDSparse *MultiplyMSparseM(const TMatrixDSparse *a,const TMatrixD *b) const; // multiply sparse and non-sparse matrix
    TMatrixDSparse *MultiplyMSparseMSparse(const TMatrixDSparse *a,const TMatrixDSparse *b) const; // multiply sparse and sparse matrix
    TMatrixDSparse *MultiplyMSparseTranspMSparse(const TMatrixDSparse *a,const TMatrixDSparse *b) const; // multiply transposed sparse and sparse matrix
    TMatrixDSparse *MultiplyMSparseMSparseTranspVector
       (const TMatrixDSparse *m1,const TMatrixDSparse *m2,
        const TMatrixTBase<Double_t> *v) const; // calculate M_ij = sum_k [m1_ik*m2_jk*v[k] ]. the pointer v may be zero (means no scaling).
-   TMatrixD *InvertMSparse(const TMatrixDSparse *A) const; // invert sparse matrix
-   static Bool_t InvertMConditioned(TMatrixD *A); // invert matrix including preconditioning
-   void AddMSparse(TMatrixDSparse *dest,Double_t f,const TMatrixDSparse *src); // replacement for dest += f*src
+   TMatrixDSparse *InvertMSparseSymmPos(const TMatrixDSparse *A,Int_t *rank) const; // invert symmetric (semi-)positive sparse matrix
+   void AddMSparse(TMatrixDSparse *dest,Double_t f,const TMatrixDSparse *src) const; // replacement for dest += f*src
    TMatrixDSparse *CreateSparseMatrix(Int_t nrow,Int_t ncol,Int_t nele,Int_t *row,Int_t *col,Double_t *data) const; // create a TMatrixDSparse from an array
    inline Int_t GetNx(void) const {
       return fA->GetNcols();
@@ -133,8 +165,8 @@ class TUnfold : public TObject {
    inline Int_t GetNy(void) const {
       return fA->GetNrows();
    } // number of input bins
-   void ErrorMatrixToHist(TH2 *ematrix,const TMatrixDSparse *emat,const Int_t *binMap,
-                          Bool_t doClear) const; // return an error matrix as histogram
+   void ErrorMatrixToHist(TH2 *ematrix,const TMatrixDSparse *emat,const Int_t *binMap,Bool_t doClear) const; // return an error matrix as histogram
+   Double_t GetRhoIFromMatrix(TH1 *rhoi,const TMatrixDSparse *eOrig,const Int_t *binMap,TH2 *invEmat) const; // return global correlation coefficients
    inline const TMatrixDSparse *GetDXDY(void) const { return fDXDY; } // access derivative dx/dy
    inline const TMatrixDSparse *GetDXDAM(int i) const { return fDXDAM[i]; } // access matrix parts of the derivative dx/dA
    inline const TMatrixDSparse *GetDXDAZ(int i) const { return fDXDAZ[i]; } // access vector parts of the derivative dx/dA
@@ -144,9 +176,14 @@ class TUnfold : public TObject {
    inline const TMatrixDSparse *GetE(void) const { return fE; } // get matrix E
    inline const TMatrixDSparse *GetVxx(void) const { return fVxx; } // get covariance matrix of x
    inline const TMatrixDSparse *GetVxxInv(void) const { return fVxxInv; } // get inverse of covariance matrix of x
+   inline const TMatrixDSparse *GetVyyInv(void) const { return fVyyInv; } // get inverse of covariance matrix of y
    inline const TMatrixD *GetX(void) const { return fX; } // get result vector x
+   inline Int_t GetRowFromBin(int ix) const { return fHistToX[ix]; } // convert histogram bin number to matrix row
+   inline Int_t GetBinFromRow(int ix) const { return fXToHist[ix]; } // convert matrix row to histogram bin number
    static void DeleteMatrix(TMatrixD **m); // delete and invalidate pointer
    static void DeleteMatrix(TMatrixDSparse **m); // delete and invalidate pointer
+   Bool_t AddRegularisationCondition(Int_t i0,Double_t f0,Int_t i1=-1,Double_t f1=0.,Int_t i2=-1,Double_t f2=0.); // add regularisation condition for a triplet of output bins
+   Bool_t AddRegularisationCondition(Int_t nEle,const Int_t *indices,const Double_t *rowData); // add a regularisation condition
 public:
    enum EHistMap {              // mapping between unfolding matrix and TH2 axes
       kHistMapOutputHoriz = 0,  // map unfolding output to x-axis of TH2 matrix
@@ -156,7 +193,7 @@ public:
    TUnfold(const TH2 *hist_A, EHistMap histmap,
            ERegMode regmode = kRegModeSize,
            EConstraint constraint=kEConstraintArea);      // constructor
-   virtual ~ TUnfold(void);    // delete data members
+   virtual ~TUnfold(void);    // delete data members
    static const char*GetTUnfoldVersion(void);
    void SetBias(const TH1 *bias);       // set alternative bias
    void SetConstraint(EConstraint constraint); // set type of constraint for the next unfolding
@@ -167,35 +204,49 @@ public:
    Int_t RegularizeBins2D(int start_bin, int step1, int nbin1, int step2, int nbin2, ERegMode regmode);  // regularize a 2-dimensional grid
    Double_t DoUnfold(Double_t tau,
                      const TH1 *hist_y, Double_t scaleBias=0.0);  // do the unfolding
-   virtual Int_t SetInput(const TH1 *hist_y, Double_t scaleBias=0.0,Double_t oneOverZeroError=0.0); // define input distribution for ScanLCurve
+   virtual Int_t SetInput(const TH1 *hist_y, Double_t scaleBias=0.0,Double_t oneOverZeroError=0.0,const TH2 *hist_vyy=0,const TH2 *hist_vyy_inv=0); // define input distribution
    virtual Double_t DoUnfold(Double_t tau); // Unfold with given choice of tau
    virtual Int_t ScanLcurve(Int_t nPoint,Double_t tauMin,
                             Double_t tauMax,TGraph **lCurve,
-			    TSpline **logTauX=0,TSpline **logTauY=0); // scan the L curve using successive calls to DoUnfold(Double_t)
-   TH1D *GetOutput(const char *name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;    // get unfolding result
-   TH1D *GetBias(const char *name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;      // get bias
-   TH1D *GetFoldedOutput(const char *name,const char *title, Double_t y0 = 0.0, Double_t y1 = 0.0) const; // get folded unfolding result
-   TH1D *GetInput(const char *name,const char *title, Double_t y0 = 0.0, Double_t y1 = 0.0) const;     // get unfolding input
-   TH2D *GetRhoIJ(const char *name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;     // get correlation coefficients
-   TH2D *GetEmatrix(const char*name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;   // get error matrix
-   TH1D *GetRhoI(const char*name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;      // get global correlation coefficients
-   TH2D *GetLsquared(const char*name,const char *title, Double_t x0 = 0.0, Double_t x1 = 0.0) const;  // get regularisation conditions squared
+			    TSpline **logTauX=0,TSpline **logTauY=0); // scan the L curve using successive calls to DoUnfold(Double_t) at various tau
+   void GetProbabilityMatrix(TH2 *A,EHistMap histmap) const; // get the matrix A of probabilities
+   void GetNormalisationVector(TH1 *s,const Int_t *binMap=0) const; // get the vector of normalisation factors, equivalent to the initial bias vector
 
-   void GetOutput(TH1 *output,const Int_t *binMap=0) const; // get output distribution, averaged over bins
-   void GetEmatrix(TH2 *ematrix,const Int_t *binMap=0) const; // get error matrix, averaged over bins
-   Double_t GetRhoI(TH1 *rhoi,TH2 *ematrixinv=0,const Int_t *binMap=0) const; // get global correlation coefficients and inverse of error matrix, averaged over bins
-   void GetRhoIJ(TH2 *rhoij,const Int_t *binMap=0) const; // get correlation coefficients, averaged over bins
-   Double_t GetTau(void) const;  // regularisation parameter
-   inline Double_t GetRhoMax(void) const { return fRhoMax; } // maximum global correlation
-   inline Double_t GetRhoAvg(void) const { return fRhoAvg; }  // average global correlation
-   inline Double_t GetChi2A(void) const { return fChi2A; }  // chi**2 contribution from A
-   Double_t GetChi2L(void) const;        // chi**2 contribution from L
-   virtual Double_t GetLcurveX(void) const;        // x axis of L curve
-   virtual Double_t GetLcurveY(void) const;        // y axis of L curve
-   inline Int_t GetNdf(void) const { return fNdf; }   // number of degrees of freedom
-   Int_t GetNpar(void) const;  // number of parameters
+   void GetOutput(TH1 *output,const Int_t *binMap=0) const; // get output distribution, arbitrary bin mapping
 
-   ClassDef(TUnfold, 0) //Unfolding with support for L-curve analysis
+   void GetBias(TH1 *bias,const Int_t *binMap=0) const; // get bias (includind biasScale)
+
+   void GetFoldedOutput(TH1 *folded,const Int_t *binMap=0) const; // get unfolding result folded back through the matrix
+
+   void GetInput(TH1 *inputData,const Int_t *binMap=0) const; // get input data
+
+   void GetRhoIJ(TH2 *rhoij,const Int_t *binMap=0) const; // get correlation coefficients, arbitrary bin mapping
+
+   void GetEmatrix(TH2 *ematrix,const Int_t *binMap=0) const; // get error matrix, arbitrary bin mapping
+
+   Double_t GetRhoI(TH1 *rhoi,const Int_t *binMap=0,TH2 *invEmat=0) const; // get global correlation coefficients, arbitrary bin mapping
+
+   void GetLsquared(TH2 *lsquared) const; // get regularisation conditions squared
+
+   inline Int_t GetNr(void) const { return fL->GetNrows(); } // number of regularisation conditions
+   void GetL(TH2 *l) const; // get matrix of regularisation conditions
+
+   void GetInputInverseEmatrix(TH2 *ematrix);   // get input data inverse of error matrix
+
+   Double_t GetTau(void) const;  // get regularisation parameter
+   inline Double_t GetRhoMax(void) const { return fRhoMax; } // get maximum global correlation
+   inline Double_t GetRhoAvg(void) const { return fRhoAvg; }  // get average global correlation
+   inline Double_t GetChi2A(void) const { return fChi2A; }  // get chi**2 contribution from A
+   Double_t GetChi2L(void) const;        // get chi**2 contribution from L
+   virtual Double_t GetLcurveX(void) const;        // get value on x axis of L curve
+   virtual Double_t GetLcurveY(void) const;        // get value on y axis of L curve
+   inline Int_t GetNdf(void) const { return fNdf; }   // get number of degrees of freedom
+   Int_t GetNpar(void) const;  // get number of parameters
+
+   inline Double_t GetEpsMatrix(void) const { return  fEpsMatrix; } // get accuracy for eingenvalue analysis
+   void SetEpsMatrix(Double_t eps); // set accuracy for eigenvalue analysis
+
+   ClassDef(TUnfold, TUnfold_CLASS_VERSION) //Unfolding with support for L-curve analysis
 };
 
 #endif
