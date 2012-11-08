@@ -54,6 +54,7 @@
 #include <TMarker.h>
 #include <TPolyLine.h>
 #include <TLatex.h>
+#include <TMathText.h>
 #include <TLegend.h>
 #include <TEllipse.h>
 #include <TCurlyArc.h>
@@ -79,8 +80,8 @@ Int_t    StatusPrint    (TString &filename, Int_t id, const TString &title, Int_
 Int_t    AnalysePS      (const TString &filename);
 Int_t    FileSize       (char *filename);
 TCanvas *StartTest      (Int_t w, Int_t h);
-void     TestReport1    (TCanvas *C, const TString &title);
-void     TestReport2    ();
+void     TestReport1    (TCanvas *C, const TString &title, Int_t IPS=0);
+void     TestReport2    (Int_t IPS=0);
 void     DoCcode        (TCanvas *C);
 TString  stime(time_t* t, bool utc = false, bool display_time_zone = true);
 
@@ -123,6 +124,7 @@ void     tlatex4        ();
 void     tlatex5        ();
 void     tline          ();
 void     tmarker        ();
+void     tmathtext      ();
 void     tmultigraph1   ();
 void     tmultigraph2   ();
 void     tpolyline      ();
@@ -144,6 +146,7 @@ void     cleanup        ();
 // Global variables.
 Int_t     gVerbose;
 Int_t     gTestNum;
+Int_t     gTestsFailed;
 Int_t     gPS1RefNb[50];
 Int_t     gPS1ErrNb[50];
 Int_t     gPDFRefNb[50];
@@ -265,7 +268,7 @@ void stressGraphics(Int_t verbose = 0)
    Int_t i = -1;
    while (fgets(line,160,sg)) {
       if (i>=0) {
-         sscanf(&line[8]  ,"%d",&gPS1RefNb[i]);
+         sscanf(&line[7]  ,"%d",&gPS1RefNb[i]);
          sscanf(&line[18] ,"%d",&gPS1ErrNb[i]);
          sscanf(&line[28] ,"%d",&gPDFRefNb[i]);
          sscanf(&line[38] ,"%d",&gPDFErrNb[i]);
@@ -275,7 +278,7 @@ void stressGraphics(Int_t verbose = 0)
          sscanf(&line[78] ,"%d",&gJPGErrNb[i]);
          sscanf(&line[88] ,"%d",&gPNGRefNb[i]);
          sscanf(&line[98] ,"%d",&gPNGErrNb[i]);
-         sscanf(&line[108],"%d",&gPS2RefNb[i]);
+         sscanf(&line[107],"%d",&gPS2RefNb[i]);
          sscanf(&line[118],"%d",&gPS2ErrNb[i]);
       }
       i++;
@@ -292,8 +295,9 @@ void stressGraphics(Int_t verbose = 0)
       std::cout << "**********************************************************************" <<std::endl;
    }
 
-   gVerbose = verbose;
-   gTestNum = 0;
+   gVerbose     = verbose;
+   gTestNum     = 0;
+   gTestsFailed = 0;
 
    gBenchmark->Start("stressGraphics");
 
@@ -314,6 +318,7 @@ void stressGraphics(Int_t verbose = 0)
    tlatex5      ();
    kerning      ();
    itbf         ();
+   tmathtext    ();
    transpad     ();
    statfitparam ();
    if (!gOptionR) {
@@ -363,6 +368,12 @@ void stressGraphics(Int_t verbose = 0)
    clonepad     ();
    hbars        (); 
    if (!gOptionR) {
+      std::cout << "**********************************************************************" <<std::endl;
+      if (!gTestsFailed) {
+         std::cout << "*  All the tests passed. :-)" <<std::endl;
+      } else {
+         std::cout << "*  " << gTestsFailed <<" tests failed. :-(" <<std::endl;
+      }
       std::cout << "**********************************************************************" <<std::endl;
 
       gBenchmark->Stop("stressGraphics");
@@ -434,6 +445,7 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
          std::cout << "         Reference = "  << ref << std::endl;
          std::cout << "         Error     = "  << TMath::Abs(res-ref)
                                           << " (was " << err << ")"<< std::endl;
+         gTestsFailed++;
          return 1;
       }
    } else {
@@ -504,7 +516,7 @@ TCanvas *StartTest(Int_t w, Int_t h)
 
 
 //______________________________________________________________________________
-void TestReport1(TCanvas *C, const TString &title)
+void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
 {
    // Report 1:
    // Draw the canvas generate as PostScript, count the number of characters in
@@ -517,9 +529,16 @@ void TestReport1(TCanvas *C, const TString &title)
    C->Draw();
    ps1->Close();
    TString psfile = outfile;
-   StatusPrint(psfile,  gTestNum, title, AnalysePS(outfile) ,
-                                         gPS1RefNb[gTestNum-1],
-                                         gPS1ErrNb[gTestNum-1]);
+   if (IPS) {
+      StatusPrint(psfile,  gTestNum, title, FileSize(outfile) ,
+                                            gPS1RefNb[gTestNum-1],
+                                            gPS1ErrNb[gTestNum-1]);
+      
+   } else {
+      StatusPrint(psfile,  gTestNum, title, AnalysePS(outfile) ,
+                                            gPS1RefNb[gTestNum-1],
+                                            gPS1ErrNb[gTestNum-1]);
+   }
 
    sprintf(outfile,"sg%2.2d.pdf",gTestNum);
    C->cd(0);
@@ -578,7 +597,7 @@ void DoCcode(TCanvas *C)
 
 
 //______________________________________________________________________________
-void TestReport2()
+void TestReport2(Int_t IPS)
 {
    // Report 2:
    // Draw the canvas generate as .C, generate the corresponding PostScript
@@ -592,12 +611,19 @@ void TestReport2()
    gROOT->ProcessLine(gCfile);
    gPad->SaveAs(outfile);
    gErrorIgnoreLevel = 0;
+   Int_t i;
 
    TString psfile = outfile;
-   Int_t i = StatusPrint(psfile,-1, "  C file result", AnalysePS(outfile),
-                                                       gPS2RefNb[gTestNum-1],
-                                                       gPS2ErrNb[gTestNum-1]);
-
+   if (IPS) {
+      i = StatusPrint(psfile,-1, "  C file result", FileSize(outfile),
+                                                    gPS2RefNb[gTestNum-1],
+                                                    gPS2ErrNb[gTestNum-1]);
+   } else {
+      i = StatusPrint(psfile,-1, "  C file result", AnalysePS(outfile),
+                                                    gPS2RefNb[gTestNum-1],
+                                                    gPS2ErrNb[gTestNum-1]);
+   }
+   
    sprintf(gCfile,"sg%2.2d.C",gTestNum);
    if (!gOptionK && !i) gSystem->Unlink(gCfile);
 
@@ -1165,6 +1191,29 @@ void itbf()
    TestReport1(C, "TLatex commands #kern, #lower, #it and #bf");
    DoCcode(C);
    TestReport2();
+}
+
+
+//______________________________________________________________________________
+void tmathtext()
+{
+   TCanvas *C = StartTest(700, 500);
+   
+	TMathText l;
+	l.SetTextAlign(23);
+	l.SetTextSize(0.06);
+	l.DrawMathText(0.50, 1.000, "\\prod_{j\\ge0} \\left(\\sum_{k\\ge0} a_{jk}z^k\\right) = \\sum_{n\\ge0} z^n \\left(\\sum_{k_0,k_1,\\ldots\\ge0\\atop k_0+k_1+\\cdots=n} a_{0k_0}a_{1k_1} \\cdots \\right)");
+	l.DrawMathText(0.50, 0.800, "W_{\\delta_1\\rho_1\\sigma_2}^{3\\beta} = U_{\\delta_1\\rho_1\\sigma_2}^{3\\beta} + {1\\over 8\\pi^2} \\int_{\\alpha_1}^{\\alpha_2} d\\alpha_2^\\prime \\left[ {U_{\\delta_1\\rho_1}^{2\\beta} - \\alpha_2^\\prime U_{\\rho_1\\sigma_2}^{1\\beta} \\over U_{\\rho_1\\sigma_2}^{0\\beta}} \\right]");
+	l.DrawMathText(0.50, 0.600, "d\\Gamma = {1\\over 2m_A} \\left( \\prod_f {d^3p_f\\over (2\\pi)^3} {1\\over 2E_f} \\right) \\left| \\mathscr{M} \\left(m_A - \\left\\{p_f\\right\\} \\right) \\right|^2 (2\\pi)^4 \\delta^{(4)} \\left(p_A - \\sum p_f \\right)");
+	l.DrawMathText(0.50, 0.425, "4\\mathrm{Re}\\left\\{{2\\over 1-\\Delta\\alpha} \\chi(s) \\left[ \\^{g}_\\nu^e \\^{g}_\\nu^f (1 + \\cos^2\\theta) + \\^{g}_a^e \\^{g}_a^f \\cos\\theta \\right] \\right\\}");
+	l.DrawMathText(0.50, 0.330, "p(n) = {1\\over\\pi\\sqrt{2}} \\sum_{k = 1}^\\infty \\sqrt{k} A_k(n) {d\\over dn} {\\sinh \\left\\{ {\\pi\\over k} \\sqrt{2\\over 3} \\sqrt{n - {1\\over 24}} \\right\\} \\over \\sqrt{n - {1\\over 24}}}");
+	l.DrawMathText(0.13, 0.150, "{(\\ell+1)C_{\\ell}^{TE} \\over 2\\pi}");
+   l.DrawMathText(0.27, 0.110, "\\mathbb{N} \\subset \\mathbb{R}");
+	l.DrawMathText(0.63, 0.100, "\\hbox{RHIC スピン物理 Нью-Йорк}");
+   
+   TestReport1(C, "TMathText",1);
+   DoCcode(C);
+   TestReport2(1);
 }
 
 
