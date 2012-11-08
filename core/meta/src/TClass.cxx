@@ -1807,9 +1807,11 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp,
                // function and that it's okay.
                return kTRUE;
             }
-            // Let the caller protest:
-            // Error("CallShowMembers", "Cannot find any ShowMembers function for %s!", GetName());
-            return kFALSE;
+            // Since we do have some dictionary information, let's
+            // call the interpreter's ShowMember.
+            // This works with Cling and might work with CINT (to support interpreted classes)
+            gInterpreter->InspectMembers(insp, obj, this);
+            return kTRUE;
          } else {
             R__LOCKGUARD2(gCINTMutex);
             gCint->CallFunc_ResetArg(fInterShowMembers);
@@ -1832,67 +1834,9 @@ void TClass::InterpretedShowMembers(void* obj, TMemberInspector &insp)
 {
    // Do a ShowMembers() traversal of all members and base classes' members
    // using the reflection information from the interpreter. Works also for
-   // ionterpreted objects.
+   // interpreted objects.
 
-   if (!fClassInfo) return;
-
-   DataMemberInfo_t* dmi = gCint->DataMemberInfo_Factory(fClassInfo);
-
-   TString name("*");
-   while (gCint->DataMemberInfo_Next(dmi)) {
-      name.Remove(1);
-      name += gCint->DataMemberInfo_Name(dmi);
-      if (name == "*G__virtualinfo") continue;
-
-      // skip static members and the member G__virtualinfo inserted by the
-      // CINT RTTI system
-      Long_t prop = gCint->DataMemberInfo_Property(dmi) | gCint->DataMemberInfo_TypeProperty(dmi);
-      if (prop & (G__BIT_ISSTATIC | G__BIT_ISENUM))
-         continue;
-      Bool_t isPointer =  gCint->DataMemberInfo_TypeProperty(dmi) & G__BIT_ISPOINTER;
-
-      // Array handling
-      if (prop & G__BIT_ISARRAY) {
-         int arrdim = gCint->DataMemberInfo_ArrayDim(dmi);
-         for (int dim = 0; dim < arrdim; dim++) {
-            int nelem = gCint->DataMemberInfo_MaxIndex(dmi, dim);
-            name += TString::Format("[%d]", nelem);
-         }
-      }
-
-      const char* inspname = name;
-      if (!isPointer) {
-         // no '*':
-         ++inspname;
-      }
-      void* maddr = ((char*)obj) + gCint->DataMemberInfo_Offset(dmi);
-      insp.Inspect(this, insp.GetParent(), inspname, maddr);
-
-      // If struct member: recurse.
-      if (!isPointer && !(prop & G__BIT_ISFUNDAMENTAL)) {
-         std::string clmName(TClassEdit::ShortType(gCint->DataMemberInfo_TypeName(dmi),
-                                                   TClassEdit::kDropTrailStar) );
-         TClass* clm = TClass::GetClass(clmName.c_str());
-         if (clm) {
-            insp.InspectMember(clm, maddr, name);
-         }
-      }
-   } // while next data member
-   gCint->DataMemberInfo_Delete(dmi);
-
-   // Iterate over base classes
-   BaseClassInfo_t* bci = gCint->BaseClassInfo_Factory(fClassInfo);
-   while (gCint->BaseClassInfo_Next(bci)) {
-      const char* bclname = gCint->BaseClassInfo_Name(bci);
-      TClass* bcl = TClass::GetClass(bclname);
-      void* baddr = ((char*)obj) + gCint->BaseClassInfo_Offset(bci);
-      if (bcl) {
-         bcl->CallShowMembers(baddr, insp);
-      } else {
-         Warning("InterpretedShowMembers()", "Unknown class %s", bclname);
-      }
-   }
-   gCint->BaseClassInfo_Delete(bci);
+   return gInterpreter->InspectMembers(insp, obj, this);
 }
 
 //______________________________________________________________________________

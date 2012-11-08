@@ -423,6 +423,75 @@ void TCint::EndOfLineAction()
 }
 
 //______________________________________________________________________________
+void TCint::InspectMembers(TMemberInspector&, void* obj, const TClass* cl)
+{
+   // Visit all members over members, recursing over base classes.
+
+   ClassInfo_t *ci = cl->GetClassInfo();
+
+   if (!ci) return;
+
+   DataMemberInfo_t* dmi = gCint->DataMemberInfo_Factory(ci);
+
+   TString name("*");
+   while (DataMemberInfo_Next(dmi)) {
+      name.Remove(1);
+      name += DataMemberInfo_Name(dmi);
+      if (name == "*G__virtualinfo") continue;
+
+      // skip static members and the member G__virtualinfo inserted by the
+      // CINT RTTI system
+      Long_t prop = DataMemberInfo_Property(dmi) | DataMemberInfo_TypeProperty(dmi);
+      if (prop & (G__BIT_ISSTATIC | G__BIT_ISENUM))
+         continue;
+      Bool_t isPointer =  DataMemberInfo_TypeProperty(dmi) & G__BIT_ISPOINTER;
+
+      // Array handling
+      if (prop & G__BIT_ISARRAY) {
+         int arrdim = DataMemberInfo_ArrayDim(dmi);
+         for (int dim = 0; dim < arrdim; dim++) {
+            int nelem = DataMemberInfo_MaxIndex(dmi, dim);
+            name += TString::Format("[%d]", nelem);
+         }
+      }
+
+      const char* inspname = name;
+      if (!isPointer) {
+         // no '*':
+         ++inspname;
+      }
+      void* maddr = ((char*)obj) + DataMemberInfo_Offset(dmi);
+      insp.Inspect(this, insp.GetParent(), inspname, maddr);
+
+      // If struct member: recurse.
+      if (!isPointer && !(prop & G__BIT_ISFUNDAMENTAL)) {
+         std::string clmName(TClassEdit::ShortType(DataMemberInfo_TypeName(dmi),
+                                                   TClassEdit::kDropTrailStar) );
+         TClass* clm = TClass::GetClass(clmName.c_str());
+         if (clm) {
+            insp.InspectMember(clm, maddr, name);
+         }
+      }
+   } // while next data member
+   DataMemberInfo_Delete(dmi);
+
+   // Iterate over base classes
+   BaseClassInfo_t* bci = BaseClassInfo_Factory(fClassInfo);
+   while (BaseClassInfo_Next(bci)) {
+      const char* bclname = BaseClassInfo_Name(bci);
+      TClass* bcl = TClass::GetClass(bclname);
+      void* baddr = ((char*)obj) + BaseClassInfo_Offset(bci);
+      if (bcl) {
+         bcl->CallShowMembers(baddr, insp);
+      } else {
+         Warning("InterpretedShowMembers()", "Unknown class %s", bclname);
+      }
+   }
+   BaseClassInfo_Delete(bci);
+
+}
+
+//______________________________________________________________________________
 Bool_t TCint::IsLoaded(const char* filename) const
 {
    // Return true if the file has already been loaded by cint.

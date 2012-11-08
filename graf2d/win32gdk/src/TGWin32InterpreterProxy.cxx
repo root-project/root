@@ -44,6 +44,7 @@ VOID_METHOD_ARG0(Interpreter,ClearStack,1)
 VOID_METHOD_ARG0(Interpreter,EndOfLineAction,1)
 VOID_METHOD_ARG0(Interpreter,EnableAutoLoading,1)
 RETURN_METHOD_ARG0(Interpreter,Int_t,InitializeDictionaries)
+VOID_METHOD_ARG3(Interpreter,InspectMembers,TMemberInspector&, insp, void*, obj, const TClass*,cl,1)
 RETURN_METHOD_ARG3(Interpreter,Int_t,GenerateDictionary,const char*,classes,const char*,headers,const char*,options); 
 RETURN_METHOD_ARG0(Interpreter,char*,GetPrompt)
 RETURN_METHOD_ARG0(Interpreter,const char*,GetSharedLibs)

@@ -3877,10 +3877,10 @@ void WriteBodyShowMembers(const RScanner::AnnotatedRecordDecl &cl, bool outside)
       getClass += csymbol + "*)0x0)->GetClass()";
    }
    if (outside) {
-      (*dictSrcOut) << "   ((TCintWithCling*)gInterpreter)->InspectMembers(R__insp, obj, "
+      (*dictSrcOut) << "   gInterpreter->InspectMembers(R__insp, obj, "
                     << getClass << ");" << std::endl;
    } else {
-      (*dictSrcOut) << "   ((TCintWithCling*)gInterpreter)->InspectMembers(R__insp, this, "
+      (*dictSrcOut) << "   gInterpreter->InspectMembers(R__insp, this, "
                     << getClass << ");" << std::endl;
    }
 }
@@ -5005,18 +5005,13 @@ int main(int argc, char **argv)
 
                  << "#define R__DICTIONARY_FILENAME " << main_dictname << std::endl
                  << "#include \"RConfig.h\" //rootcint 4834" << std::endl
-                 << "#if !defined(R__ACCESS_IN_SYMBOL)" << std::endl
-                 << "//Break the privacy of classes -- Disabled for the moment" << std::endl
-                 << "#define private public" << std::endl
-                 << "#define protected public" << std::endl
-                 << "#endif" << std::endl
                  << std::endl;
 #ifndef R__SOLARIS
    (*dictSrcOut) << "// Since CINT ignores the std namespace, we need to do so in this file." << std::endl
                  << "namespace std {} using namespace std;" << std::endl << std::endl;
-   int linesToSkip = 16; // number of lines up to here.
+   int linesToSkip = 11; // number of lines up to here.
 #else
-   int linesToSkip = 13; // number of lines up to here.
+   int linesToSkip =  8; // number of lines up to here.
 #endif
 
    (*dictSrcOut) << "#include \"TClass.h\"" << std::endl

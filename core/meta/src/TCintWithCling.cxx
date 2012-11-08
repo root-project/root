@@ -1078,7 +1078,7 @@ void TCintWithCling::AddIncludePath(const char *path)
 
 //______________________________________________________________________________
 void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
-                                    TClass* cl)
+                                    const TClass* cl)
 {
    // Visit all members over members, recursing over base classes.
    
@@ -1204,7 +1204,7 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
       // R__insp.Inspect(R__cl, R__insp.GetParent(), "fName", &fName);
       // R__insp.InspectMember(fName, "fName.");
       // R__insp.Inspect(R__cl, R__insp.GetParent(), "*fClass", &fClass);
-      insp.Inspect(cl, insp.GetParent(), fieldName.c_str(), cobj + fieldOffset);
+      insp.Inspect(const_cast<TClass*>(cl), insp.GetParent(), fieldName.c_str(), cobj + fieldOffset);
 
       if (!ispointer) {
          const clang::CXXRecordDecl* fieldRecDecl = memNonPtrType->getAsCXXRecordDecl();
