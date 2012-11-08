@@ -1,12 +1,17 @@
 class TopLevel { public: virtual ~TopLevel() {} };
 class BottomOne : public TopLevel {};
 #ifndef __CINT__
+#ifndef __CLING__
 class BottomMissing : public TopLevel {};
+#endif
 #endif
 
 #include "Riostream.h"
 #include "TClass.h"
 
+#ifdef __CLING__
+void missingInfo();
+#else
 void missingInfo() {
    TopLevel *one = new BottomOne;
    TopLevel *missing = new BottomMissing;
@@ -62,4 +67,4 @@ void missingInfo() {
 
    }
 }
-
+#endif // hidden from cling/rootcling
