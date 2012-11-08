@@ -33,6 +33,17 @@
 #include "TAttAxis.h"
 #endif
 
+#ifdef Bool
+#undef Bool
+#endif
+#ifdef True
+#undef True
+#endif
+#ifdef False
+#undef False
+#endif
+
+
 class TStreamerInfo;
 class TStreamerInfo;
 class TStreamerElement;

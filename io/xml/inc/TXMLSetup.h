@@ -19,6 +19,17 @@
 #include "TString.h"
 #endif
 
+#ifdef Bool
+#undef Bool
+#endif
+#ifdef True
+#undef True
+#endif
+#ifdef False
+#undef False
+#endif
+
+
 namespace xmlio {
    extern const char* Root;
    extern const char* Setup;
