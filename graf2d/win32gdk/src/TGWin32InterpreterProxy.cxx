@@ -52,7 +52,7 @@ void _NAME4_(p2,Interpreter,InspectMembers,insp)(void *in)
       TMemberInspector *par1; void *par2; const TClass *par3;
    };
    tmp *p = (tmp*)in;
-   _NAME3_(TGWin32,Interpreter,Proxy)::RealObject()->InspectMembers(p->par1,p->par2,p->par3);
+   _NAME3_(TGWin32,Interpreter,Proxy)::RealObject()->InspectMembers(*p->par1,p->par2,p->par3);
 }
 
 void TGWin32InterpreterProxy::InspectMembers(TMemberInspector& insp, void* obj, const TClass* cl)
@@ -60,10 +60,10 @@ void TGWin32InterpreterProxy::InspectMembers(TMemberInspector& insp, void* obj, 
    DEBUG_PROFILE_PROXY_START(InspectMembers)
    struct tmp {
       TMemberInspector *par1; void *par2; const TClass *par3;
-      tmp(TMemberInspector * par1,void *par2,const TClass *par3):par1(&insp),par2(obj),par3(cl) {}
+      tmp(TMemberInspector *par1,void *par2,const TClass *par3):par1(par1),par2(par2),par3(par3) {}
    };
    fParam = new tmp(&insp,obj,cl);
-   fCallBack = &_NAME4_(p2,InspectMembers,TMemberInspector,insp);
+   fCallBack = &_NAME4_(p2,Interpreter,InspectMembers,insp);
    Bool_t batch = ForwardCallBack(1);
    //   insp = ((tmp*)fParam)->par1;
    obj = ((tmp*)fParam)->par2;
