@@ -43,6 +43,7 @@
 #include "THashTable.h"
 #include "RConfigure.h"
 #include "compiledata.h"
+#include "TMemberInspector.h"
 
 #include <vector>
 #include <set>
@@ -423,7 +424,7 @@ void TCint::EndOfLineAction()
 }
 
 //______________________________________________________________________________
-void TCint::InspectMembers(TMemberInspector&, void* obj, const TClass* cl)
+void TCint::InspectMembers(TMemberInspector& insp, void* obj, const TClass* cl)
 {
    // Visit all members over members, recursing over base classes.
 
@@ -461,7 +462,7 @@ void TCint::InspectMembers(TMemberInspector&, void* obj, const TClass* cl)
          ++inspname;
       }
       void* maddr = ((char*)obj) + DataMemberInfo_Offset(dmi);
-      insp.Inspect(this, insp.GetParent(), inspname, maddr);
+      insp.Inspect(const_cast<TClass*>(cl), insp.GetParent(), inspname, maddr);
 
       // If struct member: recurse.
       if (!isPointer && !(prop & G__BIT_ISFUNDAMENTAL)) {
@@ -476,7 +477,7 @@ void TCint::InspectMembers(TMemberInspector&, void* obj, const TClass* cl)
    DataMemberInfo_Delete(dmi);
 
    // Iterate over base classes
-   BaseClassInfo_t* bci = BaseClassInfo_Factory(fClassInfo);
+   BaseClassInfo_t* bci = BaseClassInfo_Factory(ci);
    while (BaseClassInfo_Next(bci)) {
       const char* bclname = BaseClassInfo_Name(bci);
       TClass* bcl = TClass::GetClass(bclname);
