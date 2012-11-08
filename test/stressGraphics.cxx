@@ -146,6 +146,7 @@ void     cleanup        ();
 // Global variables.
 Int_t     gVerbose;
 Int_t     gTestNum;
+Int_t     gTestsFailed;
 Int_t     gPS1RefNb[50];
 Int_t     gPS1ErrNb[50];
 Int_t     gPDFRefNb[50];
@@ -294,8 +295,9 @@ void stressGraphics(Int_t verbose = 0)
       std::cout << "**********************************************************************" <<std::endl;
    }
 
-   gVerbose = verbose;
-   gTestNum = 0;
+   gVerbose     = verbose;
+   gTestNum     = 0;
+   gTestsFailed = 0;
 
    gBenchmark->Start("stressGraphics");
 
@@ -367,6 +369,12 @@ void stressGraphics(Int_t verbose = 0)
    hbars        (); 
    if (!gOptionR) {
       std::cout << "**********************************************************************" <<std::endl;
+      if (!gTestsFailed) {
+         std::cout << "*  All the tests passed. :-)" <<std::endl;
+      } else {
+         std::cout << "*  " << gTestsFailed <<" tests failed. :-(" <<std::endl;
+      }
+      std::cout << "**********************************************************************" <<std::endl;
 
       gBenchmark->Stop("stressGraphics");
 
@@ -437,6 +445,7 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
          std::cout << "         Reference = "  << ref << std::endl;
          std::cout << "         Error     = "  << TMath::Abs(res-ref)
                                           << " (was " << err << ")"<< std::endl;
+         gTestsFailed++;
          return 1;
       }
    } else {
