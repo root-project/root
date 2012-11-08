@@ -38,6 +38,7 @@
 #pragma link C++ class TImagePlugin;
 #pragma link C++ class TImagePalette;
 #pragma link C++ class TLatex+;
+#pragma link C++ class TMathText+;
 #pragma link C++ class TLegend+;
 #pragma link C++ class TLegendEntry+;
 #pragma link C++ class TLine-;

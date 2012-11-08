@@ -351,6 +351,25 @@ void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
 }
 
 //______________________________________________________________________________
+void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                        const wchar_t *text, ETextMode mode)
+{
+   // Draw text using TrueType fonts. If TrueType fonts are not available the
+   // text is drawn with TGX11::DrawText.
+
+   if (!fHasTTFonts) {
+      TGX11::DrawText(x, y, angle, mgn, text, mode);
+   } else {
+      if (!TTF::fgInit) TTF::Init();
+      TTF::SetRotationMatrix(angle);
+      TTF::PrepareString(text);
+      TTF::LayoutGlyphs();
+      Align();
+      RenderString(x, y, mode);
+   }
+}
+
+//______________________________________________________________________________
 XImage *TGX11TTF::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Get the background of the current window in an XImage.

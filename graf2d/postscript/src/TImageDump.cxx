@@ -60,6 +60,7 @@ TImageDump::TImageDump() : TVirtualPS()
    fImage     = 0;
    gVirtualPS = this;
    fType      = 0;
+   SetTitle("IMG");
 }
 
 //______________________________________________________________________________
@@ -76,6 +77,7 @@ TImageDump::TImageDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype
 
    Open(fname, wtype);
    gVirtualPS = this;
+   SetTitle("IMG");
 }
 
 //______________________________________________________________________________
@@ -659,6 +661,30 @@ void TImageDump::Text(Double_t x, Double_t y, const char *chars)
 
    fImage->BeginPaint();
 
+   TText t(x, y, chars);
+   t.SetTextSize(fTextSize);
+   t.SetTextFont(fTextFont);
+   t.SetTextAlign(fTextAlign);
+   t.SetTextAngle(fTextAngle);
+   t.SetTextColor(fTextColor);
+   fImage->DrawText(&t, XtoPixel(x), YtoPixel(y));
+}
+
+
+//______________________________________________________________________________
+void TImageDump::Text(Double_t x, Double_t y, const wchar_t *chars)
+{
+   // Draw text
+   //
+   // x: x position of the text
+   // y: y position of the text
+   
+   if (!gPad || !fImage) {
+      return;
+   }
+   
+   fImage->BeginPaint();
+   
    TText t(x, y, chars);
    t.SetTextSize(fTextSize);
    t.SetTextFont(fTextFont);

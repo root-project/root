@@ -13,16 +13,13 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TLatex.h"
+#include "TMathText.h"
 #include "TMath.h"
 #include "TVirtualPad.h"
 #include "TVirtualPS.h"
 
-#ifdef R__SUNCCBUG
-const Double_t kPI = 3.14159265358979323846;
-#else
 const Double_t kPI = TMath::Pi();
-#endif
-const Int_t kLatex      = BIT(10);
+const Int_t kLatex = BIT(10);
 
 ClassImp(TLatex)
 
@@ -48,6 +45,7 @@ It provides several functionalities:
 <li><a href="#L11"> Character Adjustement</a></li>
 <li><a href="#L12"> Italic and Boldface</a></li>
 <li><a href="#L13"> Examples</a></li>
+<li><a href="#L14"> Interface to TMathText</a></li>
 </ul>
 
 When the font precision (see <tt>TAttText</tt>) is low (0 or 1), TLatex is
@@ -297,6 +295,15 @@ Begin_Macro(source)
    return ex3;
 }
 End_Macro
+ 
+Begin_Html
+<a name="L14"></a><h3>Interface to TMathText</h3>
+The class <tt>TMathText</tt> is a TeX math formulae interpreter. It uses plain
+TeX syntax and uses "\" as control instead of "#". If a piece of text containing
+"\" is given to <tt>TLatex</tt> then <tt>TMathText</tt> is automatically invoked.
+Therefore, as histograms' titles, axis titles, labels etc ... are drawn using
+<tt>TLatex</tt>, the <tt>TMathText</tt> syntax can be used for them also. 
+End_Html
 */
 
 
@@ -1270,10 +1277,10 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                tilde.SetTextAngle(fTextAngle);
                tilde.PaintText(xx,yy,"~");
                if (saveps) {
-                  y2 -= 4*sub;
+                  gVirtualPS = saveps;
+                  if (!strstr(gVirtualPS->GetTitle(),"IMG")) y2 -= 4*sub;
                   xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y2-yOrigin)*sinang+xOrigin));
                   yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
-                  gVirtualPS = saveps;
                   gVirtualPS->SetTextAlign(22);
                   gVirtualPS->Text(xx, yy, "~");
                }
@@ -1843,6 +1850,14 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       gPad->PaintText(x,y,text1);
       return;
    }
+   
+   // Paint the text using TMathText if contains a "\"
+   if (strstr(text1,"\\")) {
+      TMathText tm;
+      tm.SetTextAlign(GetTextAlign());
+      tm.PaintMathText(x, y, angle, size, text1);
+      return;
+   }
 
    TString newText = text1;
    if( newText.Length() == 0) return;
@@ -1864,8 +1879,8 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
 
    fError = 0 ;
    if (CheckLatexSyntax(newText)) {
-      cout<<"\n*ERROR<TLatex>: "<<fError<<endl;
-      cout<<"==> "<<text1<<endl;
+      std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
+      std::cout<<"==> "<<text1<<std::endl;
       return ;
    }
    fError = 0 ;
@@ -1895,8 +1910,8 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
    Short_t valign = fTextAlign - 10*halign;
    TextSpec_t newSpec = spec;
    if (fError != 0) {
-      cout<<"*ERROR<TLatex>: "<<fError<<endl;
-      cout<<"==> "<<text<<endl;
+      std::cout<<"*ERROR<TLatex>: "<<fError<<std::endl;
+      std::cout<<"==> "<<text<<std::endl;
    } else {
       fShow = kTRUE;
       newSpec.fSize = size;
@@ -2201,8 +2216,8 @@ Double_t TLatex::GetXsize()
    if( newText.Length() == 0) return 0;
    fError = 0 ;
    if (CheckLatexSyntax(newText)) {
-      cout<<"\n*ERROR<TLatex>: "<<fError<<endl;
-      cout<<"==> "<<GetTitle()<<endl;
+      std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
+      std::cout<<"==> "<<GetTitle()<<std::endl;
       return 0;
    }
    fError = 0 ;
@@ -2226,8 +2241,8 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
    if( newText.Length() == 0) return;
    fError = 0 ;
    if (CheckLatexSyntax(newText)) {
-      cout<<"\n*ERROR<TLatex>: "<<fError<<endl;
-      cout<<"==> "<<GetTitle()<<endl;
+      std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
+      std::cout<<"==> "<<GetTitle()<<std::endl;
       return;
    }
    fError = 0 ;
@@ -2275,8 +2290,8 @@ Double_t TLatex::GetYsize()
    if( newText.Length() == 0) return 0;
    fError = 0 ;
    if (CheckLatexSyntax(newText)) {
-      cout<<"\n*ERROR<TLatex>: "<<fError<<endl;
-      cout<<"==> "<<GetTitle()<<endl;
+      std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
+      std::cout<<"==> "<<GetTitle()<<std::endl;
       return 0;
    }
    fError = 0 ;
@@ -2323,7 +2338,7 @@ void TLatex::Savefs(TLatexFormSize *fs)
 
 
 //______________________________________________________________________________
-void TLatex::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TLatex::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
@@ -2335,13 +2350,13 @@ void TLatex::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    }
    TString s = GetTitle();
    s.ReplaceAll("\"","\\\"");
-   out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<endl;
-   if (TestBit(kTextNDC)) out<<"tex->SetNDC();"<<endl;
+   out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<std::endl;
+   if (TestBit(kTextNDC)) out<<"tex->SetNDC();"<<std::endl;
 
    SaveTextAttributes(out,"tex",11,0,1,62,0.05);
    SaveLineAttributes(out,"tex",1,1,1);
 
-   out<<"   tex->Draw();"<<endl;
+   out<<"   tex->Draw();"<<std::endl;
 }
 
 

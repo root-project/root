@@ -1355,6 +1355,21 @@ void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
 }
 
 //______________________________________________________________________________
+void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                       const wchar_t *text, ETextMode mode)
+{
+   // Draw text using TrueType fonts. If TrueType fonts are not available the
+   // text is drawn with TGWin32::DrawText.
+
+   if (!TTF::IsInitialized()) TTF::Init();
+   TTF::SetRotationMatrix(angle);
+   TTF::PrepareString(text);
+   TTF::LayoutGlyphs();
+   Align();
+   RenderString(x, y, mode);
+}
+
+//______________________________________________________________________________
 GdkImage *TGWin32::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Get the background of the current window in an XImage.

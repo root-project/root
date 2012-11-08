@@ -169,6 +169,8 @@ public:
 
    void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                    const char *text, ETextMode mode);
+   void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                   const wchar_t *text, ETextMode mode);
    void      SetTextFont(Font_t fontnumber);
    Int_t     SetTextFont(char *fontname, ETextSetMode mode);
    void      SetTextSize(Float_t textsize);
@@ -193,6 +195,7 @@ public:
    void      GetPlanes(Int_t &nplanes);
    void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
    virtual void GetTextExtent(UInt_t &w, UInt_t &h, char *mess);
+   virtual void GetTextExtent(UInt_t &, UInt_t &, wchar_t *){}
    Float_t   GetTextMagnitude() {return fTextMagnitude;}
    Window_t  GetWindowID(Int_t wid);
    Bool_t    HasTTFonts() const { return fHasTTFonts; }

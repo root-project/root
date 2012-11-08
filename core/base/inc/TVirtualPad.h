@@ -176,7 +176,9 @@ public:
    virtual void     PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="") = 0;
    virtual void     PaintModified() = 0;
    virtual void     PaintText(Double_t x, Double_t y, const char *text) = 0;
+   virtual void     PaintText(Double_t x, Double_t y, const wchar_t *text) = 0;
    virtual void     PaintTextNDC(Double_t u, Double_t v, const char *text) = 0;
+   virtual void     PaintTextNDC(Double_t u, Double_t v, const wchar_t *text) = 0;
    virtual Double_t PixeltoX(Int_t px) = 0;
    virtual Double_t PixeltoY(Int_t py) = 0;
    virtual void     Pop() = 0;

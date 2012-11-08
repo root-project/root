@@ -54,15 +54,17 @@ public:
 
 class TGX11TTF;
 class TGWin32;
+class TMathTextRenderer;
 
 
 class TTF {
 
 friend class TGX11TTF;
 friend class TGWin32;
+friend class TMathTextRenderer;
 friend class TGQuartz;
 
-private:
+protected:
    enum { kTTMaxFonts = 32, kMaxGlyphs = 1024 };
 
    static Int_t       fgAscent;                // string ascent, used to compute Y alignment
@@ -88,6 +90,7 @@ public:
    static Short_t CharToUnicode(UInt_t code);
    static void    LayoutGlyphs();
    static void    PrepareString(const char *string);
+   static void    PrepareString(const wchar_t *string);
    static void    SetRotationMatrix(Float_t angle);
 
 public:
@@ -109,6 +112,7 @@ public:
    static void           SetKerning(Bool_t state);
    static void           SetSmoothing(Bool_t state);
    static void           GetTextExtent(UInt_t &w, UInt_t &h, char *text);
+   static void           GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *text);
    static void           GetTextAdvance(UInt_t &a, char *text);
    static void           SetTextFont(Font_t fontnumber);
    static Int_t          SetTextFont(const char *fontname, Int_t italic=0);

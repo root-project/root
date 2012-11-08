@@ -192,6 +192,7 @@ public:
    void      DrawPolyLine(Int_t n, TPoint *xy);
    void      DrawPolyMarker(Int_t n, TPoint *xy);
    virtual void DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode);
+   virtual void DrawText(Int_t, Int_t, Float_t, Float_t, const wchar_t *, ETextMode) {}
    void      GetCharacterUp(Float_t &chupx, Float_t &chupy);
    Int_t     GetDoubleBuffer(Int_t wid);
    void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
@@ -201,6 +202,7 @@ public:
    void      GetPlanes(Int_t &nplanes);
    void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
    virtual void GetTextExtent(UInt_t &w, UInt_t &h, char *mess);
+   virtual void GetTextExtent(UInt_t &, UInt_t &, wchar_t *){}
    Float_t   GetTextMagnitude() { return fTextMagnitude; }
    Window_t  GetWindowID(Int_t wid);
    Bool_t    HasTTFonts() const { return fHasTTFonts; }

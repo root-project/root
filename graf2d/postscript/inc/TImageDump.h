@@ -59,6 +59,7 @@ public:
    void  NewPage();
    void  Open(const char *filename, Int_t type = -111);
    void  Text(Double_t x, Double_t y, const char *string);
+   void  Text(Double_t x, Double_t y, const wchar_t *string);
    void  SetColor(Float_t r, Float_t g, Float_t b);
    void *GetStream() const {  return (void*)fImage; }
    void  SetType(Int_t type = -111) { fType = type; }

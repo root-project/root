@@ -92,7 +92,7 @@ public:
    virtual void      DeleteOpenGLContext(Int_t wid=0);
    
    //---- OpenGL related stuff, required only with R__HAS_COCOA ----
-   virtual Double_t  GetOpenGLScalingFactor();   
+   virtual Double_t  GetOpenGLScalingFactor();
    virtual Window_t  CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &format);
    virtual Handle_t  CreateOpenGLContext(Window_t windowID, Handle_t sharedContext);
    virtual Bool_t    MakeOpenGLContextCurrent(Handle_t ctx, Window_t windowID);
@@ -108,6 +108,8 @@ public:
    virtual void      DrawPolyMarker(Int_t n, TPoint *xy);
    virtual void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text,
                               ETextMode mode);
+   virtual void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text,
+                              ETextMode mode);
    virtual UInt_t    ExecCommand(TGWin32Command *code);
    virtual void      GetCharacterUp(Float_t &chupx, Float_t &chupy);
    EDrawMode         GetDrawMode() { return fDrawMode; }
@@ -119,6 +121,7 @@ public:
    virtual void      GetPlanes(Int_t &nplanes);
    virtual void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
    virtual void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess);
+   virtual void      GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *mess);
    virtual Int_t     GetFontAscent() const;
    virtual Int_t     GetFontDescent() const ;
    virtual Float_t   GetTextMagnitude();

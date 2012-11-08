@@ -86,6 +86,8 @@ protected:
    Int_t   fLastCellGreen;   //Last green value
    Int_t   fLastCellBlue;    //Last blue value
    Int_t   fNBSameColorCell; //Number of boxes with the same color
+   TString fFileName;        //PS file name
+   Bool_t  fFontEmbed;       //True is FontEmbed has been called
 
    static Int_t fgLineJoin;  //Appearance of joining lines
 
@@ -114,6 +116,10 @@ public:
    void  DrawPolyMarker(Int_t n, Double_t *x, Double_t *y);
    void  DrawPS(Int_t n, Float_t *xw, Float_t *yw);
    void  DrawPS(Int_t n, Double_t *xw, Double_t *yw);
+   bool  FontEmbedType1(const char *filename);
+   bool  FontEmbedType2(const char *filename);
+   bool  FontEmbedType42(const char *filename);
+   void  FontEmbed();
    void  FontEncode();
    void  Initialize();
    void  NewPage();
@@ -135,7 +141,9 @@ public:
    void  SetColor(Int_t color = 1);
    void  SetColor(Float_t r, Float_t g, Float_t b);
    void  Text(Double_t x, Double_t y, const char *string);
+   void  Text(Double_t x, Double_t y, const wchar_t *string);
    void  TextNDC(Double_t u, Double_t v, const char *string);
+   void  TextNDC(Double_t u, Double_t v, const wchar_t *string);
    Int_t UtoPS(Double_t u);
    Int_t VtoPS(Double_t v);
    Int_t XtoPS(Double_t x);
