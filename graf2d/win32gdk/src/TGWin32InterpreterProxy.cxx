@@ -44,7 +44,34 @@ VOID_METHOD_ARG0(Interpreter,ClearStack,1)
 VOID_METHOD_ARG0(Interpreter,EndOfLineAction,1)
 VOID_METHOD_ARG0(Interpreter,EnableAutoLoading,1)
 RETURN_METHOD_ARG0(Interpreter,Int_t,InitializeDictionaries)
-VOID_METHOD_ARG3(Interpreter,InspectMembers,TMemberInspector&, insp, void*, obj, const TClass*,cl,1)
+// Does not support references:
+//VOID_METHOD_ARG3(Interpreter,InspectMembers,TMemberInspector&, insp, void*, obj, const TClass*,cl,1)
+void _NAME4_(p2,Interpreter,InspectMembers,insp)(void *in)
+{
+   struct tmp {
+      TMemberInspector *par1; void *par2; const TClass *par3;
+   };
+   tmp *p = (tmp*)in;
+   _NAME3_(TGWin32,Interpreter,Proxy)::RealObject()->method(p->par1,p->par2,p->par3);
+}
+
+void TGWin32InterpreterProxy::InspectMembers(TMemberInspector& insp, void* obj, const TClass* cl)
+{
+   DEBUG_PROFILE_PROXY_START(InspectMembers)
+   struct tmp {
+      TMemberInspector *par1; void *par2; const TClass *par3;
+      tmp(type1 par1,void *par2,const TClass *par3):par1(&insp),par2(obj),par3(cl) {}
+   };
+   fParam = new tmp(&insp,obj,cl);
+   fCallBack = &_NAME4_(p2,InspectMembers,TMemberInspector,insp);
+   Bool_t batch = ForwardCallBack(1);
+   par1 = ((tmp*)fParam)->par1;
+   par2 = ((tmp*)fParam)->par2;
+   par3 = ((tmp*)fParam)->par3;
+   if (!batch) delete fParam;
+   DEBUG_PROFILE_PROXY_STOP(InspectMembers)
+}
+
 RETURN_METHOD_ARG3(Interpreter,Int_t,GenerateDictionary,const char*,classes,const char*,headers,const char*,options); 
 RETURN_METHOD_ARG0(Interpreter,char*,GetPrompt)
 RETURN_METHOD_ARG0(Interpreter,const char*,GetSharedLibs)
