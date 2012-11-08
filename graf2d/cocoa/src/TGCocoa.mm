@@ -857,7 +857,11 @@ void TGCocoa::ReparentChild(Window_t wid, Window_t pid, Int_t x, Int_t y)
       
       NSRect frame = view.frame;
       frame.origin = CGPointZero;
-      const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+      
+      NSUInteger styleMask = NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+      if (!view.fOverrideRedirect)
+         styleMask |= NSTitledWindowMask;
+   
       QuartzWindow * const newTopLevel = [[QuartzWindow alloc] initWithContentRect : frame styleMask : styleMask backing : NSBackingStoreBuffered defer : NO];
       
       [view setX : x Y : y];
@@ -3024,7 +3028,7 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
          attribs.push_back(NSOpenGLPFASampleBuffers);
          attribs.push_back(1);
          attribs.push_back(NSOpenGLPFASamples);
-         attribs.push_back(comp.second ? comp.second : 4);
+         attribs.push_back(comp.second ? comp.second : 8);
       }
    }
    

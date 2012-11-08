@@ -397,7 +397,7 @@ void FontCache::GetFontProperties(FontStruct_t font, int &maxAscent, int &maxDes
    assert(fLoadedFonts.find(fontRef) != fLoadedFonts.end() && "Font was not created by font manager");
 
    try {
-      maxAscent = int(CTFontGetAscent(fontRef) + 0.5);
+      maxAscent = int(CTFontGetAscent(fontRef) + 0.5) + 2;
       maxDescent = int(CTFontGetDescent(fontRef) + 0.5);
    } catch (const std::exception &) {
       throw;
