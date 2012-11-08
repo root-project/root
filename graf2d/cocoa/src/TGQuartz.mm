@@ -381,7 +381,7 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t angle, Float_t /*mgn*/, const 
    (void)y;
    (void)angle;
    (void)mode;
-   /*
+
    TTF::SetSmoothing(kTRUE);
    TTF::SetRotationMatrix(angle);
    TTF::PrepareString(text);
@@ -389,7 +389,6 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t angle, Float_t /*mgn*/, const 
 
    AlignTTFString();
    RenderTTFString(x, y, mode);
-   */
 }
 
 //______________________________________________________________________________
