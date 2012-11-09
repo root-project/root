@@ -119,6 +119,11 @@ landaun = function(f, x, i) {
 
    JSROOTCore.addMethods = function(obj) {
       // check object type and add methods if needed
+      if (typeof(obj['fBits']) != "undefined" && typeof(obj['TestBit']) == "undefined") {
+         obj['TestBit'] = function (f) {
+            return ((obj['fBits'] & f) != 0);
+         };
+      }
       if (!obj['_typename'] || typeof(obj['_typename']) == 'undefined')
          return;
       if (obj['_typename'].indexOf("JSROOTIO.TH1") == 0 ||

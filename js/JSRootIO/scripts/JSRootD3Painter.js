@@ -1542,30 +1542,62 @@ function createFillPatterns(svg, id, line_color) {
       if (func['fLineColor'] == 0) {
          linecolor = '#4572A7';
       }
+      var interpolate_method = 'basis';
       var h, hmin = 1.0e32, hmax = -1.0e32;
-      // use fNpfits instead of fNpx if possible (to use more points)
-      if (func['fNpfits'] <= 103) func['fNpfits'] = 333;
-      var nb_points = Math.max(func['fNpx'], func['fNpfits']);
-      var binwidth = ((func['fXmax'] - func['fXmin']) / nb_points);
-      for (var i=0;i<nb_points;++i) {
-         h = func.evalPar(func['fXmin'] + (i * binwidth));
-         if (h > hmax) hmax = h;
-         if (h < hmin) hmin = h;
+      if (func['fNsave'] > 0) {
+         // in the case where the points have been saved, useful for example 
+         // if we don't have the user's function
+         var nb_points = func['fNpx'];
+         for (var i=0;i<nb_points;++i) {
+            if (func['fSave'][i] > hmax) hmax = h;
+            if (func['fSave'][i] < hmin) hmin = h;
+         }
+         if (hmax > 0.0) hmax *= 1.05;
+         if (hmin < 0.0) hmin *= 1.05;
+         func['fYmin'] = hmin;
+         func['fYmax'] = hmax;
+         func['x_min'] = func['fSave'][nb_points+1];
+         func['x_max'] = func['fSave'][nb_points+2];
+         func['y_min'] = func['fYmin'];
+         func['y_max'] = func['fYmax'];
+         binwidth = ((func['x_max'] - func['x_min']) / nb_points);
+         var bins = d3.range(nb_points).map(function(p) {
+            return {
+               x: func['x_min'] + (p * binwidth),
+               y: func['fSave'][p]
+            };
+         });
+         func['bins'] = bins;
+         interpolate_method = 'monotone';
       }
-      if (hmax > 0.0) hmax *= 1.05;
-      if (hmin < 0.0) hmin *= 1.05;
-      func['fYmin'] = hmin;
-      func['fYmax'] = hmax;
-      func['x_min'] = func['fXmin'];
-      func['x_max'] = func['fXmax'];
-      func['y_min'] = func['fYmin'];
-      func['y_max'] = func['fYmax'];
-      var bins = d3.range(nb_points).map(function(p) {
-         return {
-            x: func['fXmin'] + (p * binwidth),
-            y: func.evalPar(func['fXmin'] + (p * binwidth))
-         };
-      });
+      else {
+         // we don't have the points, so let's try to interpret the function
+         // use fNpfits instead of fNpx if possible (to use more points)
+         if (func['fNpfits'] <= 103) func['fNpfits'] = 333;
+         var nb_points = Math.max(func['fNpx'], func['fNpfits']);
+         var binwidth = ((func['fXmax'] - func['fXmin']) / nb_points);
+         for (var i=0;i<nb_points;++i) {
+            h = func.evalPar(func['fXmin'] + (i * binwidth));
+            if (h > hmax) hmax = h;
+            if (h < hmin) hmin = h;
+         }
+         if (hmax > 0.0) hmax *= 1.05;
+         if (hmin < 0.0) hmin *= 1.05;
+         func['fYmin'] = hmin;
+         func['fYmax'] = hmax;
+         func['x_min'] = func['fXmin'];
+         func['x_max'] = func['fXmax'];
+         func['y_min'] = func['fYmin'];
+         func['y_max'] = func['fYmax'];
+         var bins = d3.range(nb_points).map(function(p) {
+            return {
+               x: func['fXmin'] + (p * binwidth),
+               y: func.evalPar(func['fXmin'] + (p * binwidth))
+            };
+         });
+         func['bins'] = bins;
+         interpolate_method = 'cardinal-open';
+      }
       var ret = hframe != null ? hframe : this.createFrame(vis, pad, func, null);
       var frame = ret['frame'];
       var svg_frame = d3.select(ret['id']);
@@ -1594,7 +1626,6 @@ function createFillPatterns(svg, id, line_color) {
       }
       func['x'] = x;
       func['y'] = y;
-      func['bins'] = bins;
 
       function do_redraw() {
 
@@ -1607,11 +1638,11 @@ function createFillPatterns(svg, id, line_color) {
          var line = d3.svg.line()
             .x(function(d) { return func.x(d.x);})
             .y(function(d) { return func.y(d.y);})
-            .interpolate('cardinal-open');
+            .interpolate(interpolate_method);
 
          g.append("svg:path")
             .attr("class", "line")
-            .attr("d", line(bins))
+            .attr("d", line(func.bins))
             .style("stroke", linecolor)
             .style("stroke-width", func['fLineWidth'])
             .style("stroke-dasharray", root_line_styles[func['fLineStyle']])
