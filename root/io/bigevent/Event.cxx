@@ -350,7 +350,7 @@ void Event::SetRandomVertex() {
 void Event::ShowLachaud() {
    
    vector<string>::iterator R__k;
-   printf("Lachaud vector has %d entries\n",fLachaud.size());
+   printf("Lachaud vector has %ld entries\n",fLachaud.size());
    for (R__k = fLachaud.begin(); R__k != fLachaud.end(); ++R__k) {
       printf(" %s\n",(*R__k).c_str());
    }
