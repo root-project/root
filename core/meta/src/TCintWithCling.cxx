@@ -55,6 +55,7 @@
 #include "RConfigure.h"
 #include "compiledata.h"
 #include "TMetaUtils.h"
+#include "TVirtualCollectionProxy.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -1107,10 +1108,16 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
    const clang::ASTRecordLayout& recLayout
       = astContext.getASTRecordLayout(recordDecl);
 
+   TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
+   if (proxy && ( proxy->GetProperties() & TVirtualCollectionProxy::kIsEmulated ) ) {
+      Error("InspectMembers","The TClass for %s has an emulated proxy but we are looking at a compiled version of the collection!\n",
+            cl->GetName());
+   }
    if (cl->Size() != recLayout.getSize().getQuantity()) {
       Error("InspectMembers","TClass and cling disagree on the size of the class %s, respectively %d %lld\n",
             cl->GetName(),cl->Size(),(Long64_t)recLayout.getSize().getQuantity());
    }
+
    unsigned iNField = 0;
    // iterate over fields
    // FieldDecls are non-static, else it would be a VarDecl.
@@ -1212,9 +1219,8 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
             // nested objects get an extra call to InspectMember
             // R__insp.InspectMember("FileStat_t", (void*)&fFileStat, "fFileStat.", false);
             std::string sFieldRecName;
-            fieldRecDecl->getNameForDiagnostic(sFieldRecName,
-                                               printPol, true /*fqi*/);
-            llvm::StringRef comment = ROOT::TMetaUtils::GetComment(*recordDecl, 0);
+            ROOT::TMetaUtils::GetNormalizedName(sFieldRecName, clang::QualType(memNonPtrType,0), *fInterpreter, *fNormalizedCtxt);
+            llvm::StringRef comment = ROOT::TMetaUtils::GetComment(* (*iField), 0);
             // NOTE, we have to change this to support selection XML!
             bool transient = !comment.empty() && comment[0] == '!';
             

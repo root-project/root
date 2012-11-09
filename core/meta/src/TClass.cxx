@@ -2576,6 +2576,10 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    strlcpy(modifiable_name,name,nch);
    if (gInterpreter->CheckClassInfo(modifiable_name)) {
       const char *altname = gInterpreter->GetInterpreterTypeName(modifiable_name,kTRUE);
+      if ( strncmp(altname,"std::",5)==0 ) {
+         // Don't add std::, we almost always remove it.
+         altname += 5;
+      }
       if (strcmp(altname,name)!=0) {
          // altname now contains the full name of the class including a possible
          // namespace if there has been a using namespace statement.
