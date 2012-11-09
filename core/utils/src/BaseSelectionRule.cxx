@@ -270,14 +270,11 @@ bool BaseSelectionRule::IsSelected (const clang::NamedDecl *decl, const std::str
       }
    }
    
-   bool otherSourceFile = false;
    // if file_name is passed and we have file_name or file_pattern attribute but the
    // passed file_name is different than that in the selection rule than return false (=kNo)
    if (!file_name.empty() && (has_file_name_attribute||has_file_pattern_attribute) && !has_file_rule) 
-      otherSourceFile = true;
-   
-   if (otherSourceFile) {
-      noName = false;
+   {
+      noName = true;
       dontCare = false;
       file = true;
       return false;
