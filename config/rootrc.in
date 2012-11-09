@@ -228,6 +228,46 @@ Browser.AutoThumbnail:       yes
 # Start URL for the TRootBrowser embedded HTML renderer
 Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
 
+# OpenGL options (defaults are shown)
+# Default user interaction model for 3D view manipulation assumes that user
+# controls the scene (rotates or moves it). Change this to 'yes' to switch
+# to viewer-centric model where controls "move" the viewer (or camera).
+OpenGL.EventHandler.ViewerCentricControls:  no
+# Following three settings are factors scaling the effect of corresponding
+# user inputs. Set to negative value to invert sense of action.
+OpenGL.EventHandler.ArrowKeyFactor:         1.0
+OpenGL.EventHandler.MouseDragFactor:        1.0
+OpenGL.EventHandler.MouseWheelFactor:       1.0
+# Area around mouse cursor used to detect underlying objects for selection
+# and hihglight.
+OpenGL.PickingRadius:                       3.0
+# Additional scaling factor for point-sizes and line-widths. The default value
+# "native" sets this to 2.0 when running on mac in retina mode and 1.0
+# otherwise. Any floating-point number can be set but values above 4.0 do not
+# make much sense.
+OpenGL.PointLineScalingFactor:              "native"
+# Default scaling of lines used for drawing of polygons in wireframe mode ('w').
+# This can be set for every viewer in GLViewer GUI editor.
+OpenGL.WireframeLineScalingFactor:          1.0
+# Default scaling of lines used for polygon outline in outline mode ('t').
+# This can be set for every viewer in GLViewer GUI editor.
+OpenGL.OutlineLineScalingFactor:            1.0
+# Save pictures using framebuffer objects which works even when GL window is
+# not on screen or is covered by other windows. Image scaling is supported
+# but there is no GUI support -- call corresponding TGLViewer functions.
+# FBOs might not work on some machines or over ssh due to buggy GL support.
+OpenGL.SavePicturesViaFBO:                  yes
+# If saving via FBO fails, fallback to using back-buffer for image capture.
+OpenGL.SavePictureFallbackToBB:             yes
+# Enable multi-sampling (full-scene antialisaing), if supported.
+# Set to 1 to use lowest available settings or a higher integer to request
+# a specific number of samples per pixel (4 (linux) or 8 (mac) is reasonable).
+OpenGL.Framebuffer.Multisample:             0
+
+# EVE options (defaults are shown)
+# Autmoatically hide/roll up GL viewer menu-bars.
+Eve.Viewer.HideMenus:    1
+
 # Rint (interactive ROOT executable) specific alias, logon and logoff macros.
 Rint.Load:               rootalias.C
 Rint.Logon:              rootlogon.C
