@@ -27,10 +27,10 @@ int compile(const char *what)
          return;
       }
    }
-   compile(0,what);
+   return compile(0,what);
 }
 
 void run(const char *what) {
-   compile(what);
-   write();
+   if (compile(what))
+      write();
 }
