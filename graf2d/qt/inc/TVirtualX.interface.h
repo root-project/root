@@ -22,9 +22,13 @@ public:
    virtual void      CloseWindow();
    virtual void      CopyPixmap(Int_t wid, Int_t xpos, Int_t ypos);
 
-   //-Woverloaded-virtual
+   //TVirtualX has two versions of CreateOpenGLContext
    using TVirtualX::CreateOpenGLContext;
 
+   //TVirtualX has these two methods with wchar_t
+   using TVirtualX::DrawText;
+   using TVirtualX::GetTextExtent;;
+   
    virtual void      CreateOpenGLContext(Int_t wid=0);
    virtual void      DeleteOpenGLContext(Int_t wid=0);
    virtual void      DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode);
