@@ -379,13 +379,18 @@ void TGLPhysicalShape::Draw(TGLRnrCtx & rnrCtx) const
 
       if (rnrCtx.HighlightOutline())
       {
-         const Int_t offsets[12][2] = { {-1,-1}, { 1,-1}, { 1, 1}, {-1, 1},
-                                        { 1, 0}, { 0, 1}, {-1, 0}, { 0,-1},
-                                        { 0,-2}, { 2, 0}, { 0, 2}, {-2, 0} };
+         static const Int_t offsets[20][2] =
+           { {-1,-1}, { 1,-1}, { 1, 1}, {-1, 1},
+             { 1, 0}, { 0, 1}, {-1, 0}, { 0,-1},
+             { 0,-2}, { 2, 0}, { 0, 2}, {-2, 0},
+             {-2,-2}, { 2,-2}, { 2, 2}, {-2, 2},
+             { 0,-3}, { 3, 0}, { 0, 3}, {-3, 0} };
+         static const Int_t max_off =
+           TGLUtil::GetScreenScalingFactor() > 1.5 ? 20 : 12;
 
          const TGLRect& vp = rnrCtx.RefCamera().RefViewport();
 
-         for (int i = 0; i < 12; ++i)
+         for (int i = 0; i < max_off; ++i)
          {
             glViewport(vp.X() + offsets[i][0], vp.Y() + offsets[i][1], vp.Width(), vp.Height());
             fLogicalShape->DrawHighlight(rnrCtx, this);

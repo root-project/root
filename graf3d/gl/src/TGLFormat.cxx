@@ -20,7 +20,7 @@
 #include "TEnv.h"
 #include "TError.h"
 #include "TVirtualX.h"
-//#include "RConfigure.h"
+#include "RConfigure.h"
 
 //______________________________________________________________________________
 //
@@ -242,14 +242,16 @@ void TGLFormat::InitAvailableSamples()
    std::set<Int_t> ns_set;
    ns_set.insert(0);
 
-   TGLWidget *widget = TGLWidget::CreateDummy();
-   widget->MakeCurrent();
-
 #ifdef WIN32
 
    // Missing implementation.
 #elif defined(R__HAS_COCOA)
+   ns_set.insert(8);
+   ns_set.insert(16);
 #else
+   TGLWidget *widget = TGLWidget::CreateDummy();
+   widget->MakeCurrent();
+
    if (GLXEW_ARB_multisample)
    {
       Display *dpy  = (Display*) gVirtualX->GetDisplay();
@@ -268,9 +270,8 @@ void TGLFormat::InitAvailableSamples()
       XFree(vis);
    }
 
-#endif
-
    delete widget;
+#endif
 
    fgAvailableSamples.reserve(ns_set.size());
    for (std::set<Int_t>::iterator i = ns_set.begin(); i != ns_set.end(); ++i)
