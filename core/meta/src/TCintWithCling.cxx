@@ -1083,6 +1083,13 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
 {
    // Visit all members over members, recursing over base classes.
    
+   if (!cl || cl->GetCollectionProxy()) {
+      // We do not need to investigate the content of the STL
+      // collection, they are opaque to us (and details are
+      // uninteresting).
+      return;
+   }
+
    char* cobj = (char*) obj; // for ptr arithmetics
 
    static clang::PrintingPolicy
@@ -1108,11 +1115,11 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
    const clang::ASTRecordLayout& recLayout
       = astContext.getASTRecordLayout(recordDecl);
 
-   TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
-   if (proxy && ( proxy->GetProperties() & TVirtualCollectionProxy::kIsEmulated ) ) {
-      Error("InspectMembers","The TClass for %s has an emulated proxy but we are looking at a compiled version of the collection!\n",
-            cl->GetName());
-   }
+   // TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
+   // if (proxy && ( proxy->GetProperties() & TVirtualCollectionProxy::kIsEmulated ) ) {
+   //    Error("InspectMembers","The TClass for %s has an emulated proxy but we are looking at a compiled version of the collection!\n",
+   //          cl->GetName());
+   // }
    if (cl->Size() != recLayout.getSize().getQuantity()) {
       Error("InspectMembers","TClass and cling disagree on the size of the class %s, respectively %d %lld\n",
             cl->GetName(),cl->Size(),(Long64_t)recLayout.getSize().getQuantity());
