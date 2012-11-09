@@ -168,7 +168,7 @@ void AppendConstructorSignature(const clang::CXXConstructorDecl *ctorDecl, std::
       }
    }
 
-   name += ")";
+   name += ");";
 }
 
 //______________________________________________________________________________
@@ -177,12 +177,18 @@ void AppendMemberFunctionName(const clang::CXXMethodDecl *methodDecl, std::strin
    assert(methodDecl != 0 && "AppendMemberFunctionName, 'methodDecl' parameter is null");
    assert(methodDecl->getKind() != clang::Decl::CXXConstructor && "AppendMemberFunctionName, 'methodDecl' parameter is a ctor declaration");
 
-
-   if (methodDecl->isStatic())
-      name += "static ";
-
    llvm::raw_string_ostream out(name);
-   methodDecl->print(out, 0, true);
+
+   const clang::LangOptions langOpts;
+   clang::PrintingPolicy printingPolicy(langOpts);
+
+   printingPolicy.TerseOutput = true;//Do not print the body of an inlined function.
+   printingPolicy.SuppressSpecifiers = false; //Show 'static', 'inline', etc.
+
+   methodDecl->print(out, printingPolicy, 0, true);
+   out.flush();
+
+   name += ";";
 }
 
 //______________________________________________________________________________
@@ -634,6 +640,10 @@ void ClassPrinter::DisplayMembers(const clang::CXXRecordDecl *classDecl)const
    for (method_iterator method = classDecl->method_begin(); method != classDecl->method_end(); ++method) {
       if (method->getKind() == clang::Decl::CXXConstructor)
          continue;
+      
+      if (method->isImplicit())//Compiler-generated.
+         continue;
+      
       textLine.clear();
       AppendMemberLocation(fInterpreter->getCI(), *method, textLine);
       textLine += ' ';
