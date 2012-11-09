@@ -267,7 +267,7 @@ function(ROOT_LINKER_LIBRARY library)
     message("Target ${library} already exists. Renaming target name to ${library}_new")
     set(library ${library}_new)
   endif()
-  if(WIN32 AND NOT ARG_DLLEXPORT)
+  if(WIN32 AND ARG_TYPE STREQUAL SHARED AND NOT ARG_DLLEXPORT) 
     #---create a list of all the object files-----------------------------
     if(CMAKE_GENERATOR MATCHES "Visual Studio")
       foreach(src1 ${lib_srcs})
