@@ -670,7 +670,7 @@ function createFillPatterns(svg, id, line_color) {
 
    JSROOTPainter = {};
 
-   JSROOTPainter.version = '1.4 2012/02/24';
+   JSROOTPainter.version = '2.0 2012/11/10';
 
    /*
     * Helper functions
@@ -2894,6 +2894,9 @@ function createFillPatterns(svg, id, line_color) {
          }
          else if (obj['_typename'] == 'JSROOTIO.TMultiGraph') {
             JSROOTPainter.drawMultiGraph(svg, null, obj, null);
+         }
+         else if (typeof(drawUserObject) == 'function') {
+            drawUserObject(obj, svg);
          }
          if (init == true)
             window.setTimeout(function() { $(render_to)[0].scrollIntoView(); }, 50);

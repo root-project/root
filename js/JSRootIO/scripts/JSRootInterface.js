@@ -114,9 +114,8 @@ function showObject(obj_name, cycle) {
 };
 
 function displayDirectory(directory, cycle, dir_id) {
-   $("#status").html("<br/>JSROOTIO.RootFile.js version: " + JSROOTIO.version + "<br/>");
    var url = $("#urlToLoad").val();
-   $("#status").append("load: " + url + "<br/>");
+   $("#status").html("file: " + url + "<br/>");
    JSROOTPainter.addDirectoryKeys(directory.fKeys, '#status', dir_id);
 };
 
@@ -131,7 +130,8 @@ function displayObject(obj, cycle, idx) {
        obj['_typename'] != 'JSROOTIO.TCanvas' &&
        obj['_typename'] != 'JSROOTIO.TF1' &&
        obj['_typename'] != 'JSROOTIO.TProfile') {
-      return;
+      if (typeof(checkUserTypes) != 'function' || checkUserTypes(obj) == false)
+         return;
    }
    var uid = "uid_accordion_"+(++last_index);
    var entryInfo = "<h5 id=\""+uid+"\"><a> " + obj['fName'] + ";" + cycle + "</a>&nbsp; </h5>\n";
@@ -156,10 +156,9 @@ function AssertPrerequisites(andThen) {
             andThen();
          }
          else {
-            $("#status").html("<br/>JSROOTIO.RootFile.js version: " + JSROOTIO.version + "<br/>");
             var url = $("#urlToLoad").val();
             if (url == "" || url == " ") return;
-            $("#status").append("load: " + url + "<br/>");
+            $("#status").html("file: " + url + "<br/>");
             ResetUI();
             gFile = new JSROOTIO.RootFile(url);
             $('#report').append("</body></html>");
@@ -192,10 +191,9 @@ function ReadFile() {
    }
    if (AssertPrerequisites()) return;
    // else simply open the file
-   $("#status").html("<br/>JSROOTIO.RootFile.js version: " + JSROOTIO.version + "<br/>");
    var url = $("#urlToLoad").val();
    if (url == "" || url == " ") return;
-   $("#status").append("load: " + url + "<br/>");
+   $("#status").html("file: " + url + "<br/>");
    if (gFile) {
       gFile.Delete();
       delete gFile;
@@ -220,7 +218,7 @@ function ResetUI() {
    $("#report").innerHTML = '';
    delete $("#report").get(0);
    //window.location.reload(true);
-   $("#status").html("<br/>JSROOTIO.RootFile.js version: " + JSROOTIO.version + "<br/>");
+   $('#status').get(0).innerHTML = '';
    $('#report').get(0).innerHTML = '';
    $(window).unbind('resize');
 };
@@ -238,7 +236,10 @@ function BuildSimpleGUI() {
       return;
    }
    var arrFiles = files.split(';');
-   var guiCode = "<div id='main' class='column'>\n"
+
+   var guiCode = "<div id='overlay'><font face='Verdana' size='2px'>&nbsp;&nbsp;&nbspJSROOTIO version:" + JSROOTIO.version + "&nbsp;&nbsp;&nbsp</font></div>"
+
+      guiCode += "<div id='main' class='column'>\n"
       +"<h1><font face='Verdana' size='4'>Read a ROOT file with Javascript</font></h1>\n"
       +"<p><b>Select a ROOT file to read, or enter a url (*): </b><br/>\n"
       +'<small><sub>*: Other URLs might not work because of cross site scripting protection, see e.g. <a href="https://developer.mozilla.org/en/http_access_control">http://developer.mozilla.org/en/http_access_control</a> on how to avoid it.</sub></small></p>'

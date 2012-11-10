@@ -29,7 +29,7 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
 
    JSROOTIO = {};
 
-   JSROOTIO.version = "1.6 2012/02/24";
+   JSROOTIO.version = "1.7 2012/11/10";
 
    JSROOTIO.BIT = function(bits, index) {
       var mask = 1 << index;
@@ -593,7 +593,7 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
 
 (function(){
 
-   var version = "1.8 2012/02/24";
+   var version = "1.9 2012/11/10";
 
    // ctor
    JSROOTIO.TStreamer = function(file) {
@@ -997,8 +997,13 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
                   // skip TQObject...
                   break;
                default:
-                  // basic types and standard streamers
-                  o = this.ReadBasicType(str, o, obj, prop);
+                  if (this[prop]['type'] == kAny && typeof(streamUserType) == 'function') {
+                     o = streamUserType(this, str, o, obj, prop);
+                  }
+                  else {
+                     // basic types and standard streamers
+                     o = this.ReadBasicType(str, o, obj, prop);
+                  }
                   break;
             }
          }

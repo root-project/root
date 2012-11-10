@@ -106,6 +106,18 @@ input.tb {
    background-color: #ffffff;
 }
 
+#overlay {
+   z-index:1000;
+   position:absolute;
+   border: 1px solid #7777ff;
+   bottom:1px;
+   left:12px;
+   background:#ddddff;
+   opacity:0.6;
+   -moz-opacity:0.6;
+   filter:alpha(opacity=6);
+}
+
 /*--------------------------------------------------|
 | dTree 2.05 | www.destroydrop.com/javascript/tree/ |
 |---------------------------------------------------|
