@@ -66,15 +66,20 @@ void AppendClassDeclLocation(const clang::CompilerInstance *compiler, const clan
 }
 
 //______________________________________________________________________________
-void AppendMemberLocation(const clang::CompilerInstance *compiler, const clang::Decl *decl, std::string &textLine)
+void AppendMemberFunctionLocation(const clang::CompilerInstance *compiler, const clang::Decl *decl, std::string &textLine)
 {
    //Location has a fixed format - from G__display_class.
 
-   assert(compiler != 0 && "AppendMemberLocation, 'compiler' parameter is null");
-   assert(decl != 0 && "AppendMemberLocation, 'decl' parameter is null");
+   assert(compiler != 0 && "AppendMemberFunctionLocation, 'compiler' parameter is null");
+   assert(decl != 0 && "AppendMemberFunctionLocation, 'decl' parameter is null");
+
+   (void) compiler;
+   (void) decl;
+
 
    TString formatted("");
-   if (compiler->hasSourceManager()) {
+
+   /*if (compiler->hasSourceManager()) {
       const clang::SourceManager &sourceManager = compiler->getSourceManager();
       clang::PresumedLoc loc(sourceManager.getPresumedLoc(decl->getLocation()));
       if (loc.isValid())
@@ -86,7 +91,34 @@ void AppendMemberLocation(const clang::CompilerInstance *compiler, const clang::
       formatted.Form("%-20s", " ");
 
    if (formatted.Length())
-      textLine += formatted.Data();
+      textLine += formatted.Data();*/
+
+   //Format in  G__listfunc_pretty is: "%-15s%4d:%-3d%c%2d ".
+   //Or ... "%-15s%4d:%-3d%3d "
+
+   formatted.Form("%-15s(NA):(NA) 0", "(compiled)");
+   textLine += formatted.Data();
+}
+
+//______________________________________________________________________________
+void AppendDataMemberLocation(const clang::CompilerInstance *compiler, const clang::FieldDecl *field, std::string &textLine)
+{
+   assert(compiler != 0 && "AppendDataMemberLocation, 'compiler' parameter is null");
+   assert(field != 0 && "AppendDataMemberLocation, 'field' parameter is null");
+
+   TString formatted("");
+
+   if (compiler->hasSourceManager()) {
+      const clang::SourceManager &sourceManager = compiler->getSourceManager();
+      clang::PresumedLoc loc(sourceManager.getPresumedLoc(field->getLocation()));
+      if (loc.isValid())   //The format is from CINT.
+         formatted.Form("%-15s%4d", gSystem->BaseName(loc.getFilename()), int(loc.getLine()));
+   }
+
+   if (!formatted.Length())
+      formatted.Form("%-15s     " , "(compiled)");
+
+   textLine += formatted;
 }
 
 //______________________________________________________________________________
@@ -132,10 +164,10 @@ void AppendMemberAccessSpecifier(const clang::Decl *memberDecl, std::string &nam
 //______________________________________________________________________________
 void AppendConstructorSignature(const clang::CXXConstructorDecl *ctorDecl, std::string &name)
 {
-   assert(ctorDecl != 0 && "AppendMemberFunctionName, 'ctorDecl' parameter is null");
+   assert(ctorDecl != 0 && "AppendConstructorSignature, 'ctorDecl' parameter is null");
 
    const clang::QualType type = ctorDecl->getType();
-   assert(llvm::isa<clang::FunctionType>(type) == true && "ctorDecl->getType is not a FunctionType");
+   assert(llvm::isa<clang::FunctionType>(type) == true && "AppendConstructorSignature, ctorDecl->getType is not a FunctionType");
 
    const clang::FunctionType *aft = type->getAs<clang::FunctionType>();
    const clang::FunctionProtoType *ft = ctorDecl->hasWrittenPrototype() ? llvm::dyn_cast<clang::FunctionProtoType>(aft) : 0;
@@ -168,14 +200,14 @@ void AppendConstructorSignature(const clang::CXXConstructorDecl *ctorDecl, std::
       }
    }
 
-   name += ");";
+   name += ")";
 }
 
 //______________________________________________________________________________
-void AppendMemberFunctionName(const clang::CXXMethodDecl *methodDecl, std::string &name)
+void AppendMemberFunctionSignature(const clang::CXXMethodDecl *methodDecl, std::string &name)
 {
-   assert(methodDecl != 0 && "AppendMemberFunctionName, 'methodDecl' parameter is null");
-   assert(methodDecl->getKind() != clang::Decl::CXXConstructor && "AppendMemberFunctionName, 'methodDecl' parameter is a ctor declaration");
+   assert(methodDecl != 0 && "AppendMemberFunctionSignature, 'methodDecl' parameter is null");
+   assert(methodDecl->getKind() != clang::Decl::CXXConstructor && "AppendMemberFunctionSignature, 'methodDecl' parameter is a ctor declaration");
 
    llvm::raw_string_ostream out(name);
 
@@ -187,8 +219,6 @@ void AppendMemberFunctionName(const clang::CXXMethodDecl *methodDecl, std::strin
 
    methodDecl->print(out, printingPolicy, 0, true);
    out.flush();
-
-   name += ";";
 }
 
 //______________________________________________________________________________
@@ -243,6 +273,17 @@ void AppendBaseClassOffset(const clang::CompilerInstance *compiler,
 
    textLine += formatted.Data();
 }
+
+//______________________________________________________________________________
+void AppendDataMemberOffset(const clang::CompilerInstance *compiler, const clang::FieldDecl *field, std::string &textLine)
+{
+   assert(compiler != 0 && "AppendDataMemberOffset, 'compiler' parameter is null");
+   assert(field != 0 && "AppendDataMemberOffset, 'field' parameter is null");
+
+   (void) compiler;
+   (void) field;
+}
+
 
 //
 //This is a primitive class which does nothing except fprintf for the moment,
@@ -618,24 +659,23 @@ void ClassPrinter::DisplayMembers(const clang::CXXRecordDecl *classDecl)const
 
    typedef clang::CXXRecordDecl::method_iterator method_iterator;
    typedef clang::CXXRecordDecl::ctor_iterator ctor_iterator;
+   typedef clang::RecordDecl::field_iterator field_iterator;
 
    std::string textLine;
 
-   if (classDecl->ctor_begin() != classDecl->ctor_end())
-      fOut.Print("List of ctors: ---------------------------------------------------\n");
+   if (classDecl->ctor_begin() != classDecl->ctor_end() || classDecl->method_begin() != classDecl->method_end())
+      fOut.Print("List of member functions :---------------------------------------------------\n");
 
    for (ctor_iterator ctor = classDecl->ctor_begin(); ctor != classDecl->ctor_end(); ++ctor) {
       textLine.clear();
-      AppendMemberLocation(fInterpreter->getCI(), *ctor, textLine);
+      AppendMemberFunctionLocation(fInterpreter->getCI(), *ctor, textLine);
       textLine += ' ';
       AppendMemberAccessSpecifier(*ctor, textLine);
       AppendConstructorSignature(llvm::dyn_cast<clang::CXXConstructorDecl>(*ctor), textLine);
+      textLine += ';';
       fOut.Print(textLine.c_str());
       fOut.Print("\n");
    }
-
-   if (classDecl->method_begin() != classDecl->method_end())
-      fOut.Print("List of member functions: ----------------------------------------\n");
 
    for (method_iterator method = classDecl->method_begin(); method != classDecl->method_end(); ++method) {
       if (method->getKind() == clang::Decl::CXXConstructor)
@@ -645,9 +685,25 @@ void ClassPrinter::DisplayMembers(const clang::CXXRecordDecl *classDecl)const
          continue;
       
       textLine.clear();
-      AppendMemberLocation(fInterpreter->getCI(), *method, textLine);
+      AppendMemberFunctionLocation(fInterpreter->getCI(), *method, textLine);
       textLine += ' ';
-      AppendMemberFunctionName(*method, textLine);
+      AppendMemberAccessSpecifier(*method, textLine);
+      AppendMemberFunctionSignature(*method, textLine);
+      textLine += ';';
+      fOut.Print(textLine.c_str());
+      fOut.Print("\n");
+   }
+
+   if (classDecl->field_begin() != classDecl->field_end())
+      fOut.Print("List of member variables---------------------------------------------------\n");
+
+   for (field_iterator field = classDecl->field_begin(); field != classDecl->field_end(); ++field) {
+      textLine.clear();
+      AppendDataMemberLocation(fInterpreter->getCI(), *field, textLine);
+      textLine += ' ';
+      AppendDataMemberOffset(fInterpreter->getCI(), *field, textLine);
+//      AppendMemberAccessSpecifier(*field, textLine);
+      textLine += ';';
       fOut.Print(textLine.c_str());
       fOut.Print("\n");
    }
