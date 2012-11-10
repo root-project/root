@@ -441,6 +441,7 @@ std::ostream  &operator<<(std::ostream &str, const TString &s);
 template <>
 #endif
 TBuffer  &operator>>(TBuffer &buf,       TString *&sp);
+TBuffer  &operator<<(TBuffer &buf, const TString * sp);
 
 TString ToLower(const TString &s);    // Return lower-case version of argument
 TString ToUpper(const TString &s);    // Return upper-case version of argument
