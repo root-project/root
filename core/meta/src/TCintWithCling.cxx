@@ -1132,7 +1132,7 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
         eField = recordDecl->field_end(); iField != eField;
         ++iField, ++iNField) {
 
-      clang::QualType memberQT = iField->getType().getDesugaredType(astContext);
+      clang::QualType memberQT = cling::utils::Transform::GetPartiallyDesugaredType(astContext, iField->getType(), fNormalizedCtxt->GetTypeToSkip(), false /* fully qualify */);
       if (memberQT.isNull()) {
          std::string memberName;
          iField->getNameForDiagnostic(memberName, printPol, true /*fqi*/);
@@ -1157,7 +1157,7 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
          ispointer = true;
          clang::QualType ptrQT
             = memNonPtrType->getAs<clang::PointerType>()->getPointeeType();
-         ptrQT = ptrQT.getDesugaredType(astContext);
+         ptrQT = cling::utils::Transform::GetPartiallyDesugaredType(astContext, ptrQT, fNormalizedCtxt->GetTypeToSkip(), false /* fully qualify */);
          if (ptrQT.isNull()) {
             std::string memberName;
             iField->getNameForDiagnostic(memberName, printPol, true /*fqi*/);
@@ -1645,7 +1645,7 @@ void TCintWithCling::SetClassInfo(TClass* cl, Bool_t reload)
 //______________________________________________________________________________
 Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
 {
-   // Checks if a class with the specified name is defined in CINT.
+   // Checks if a class with the specified name is defined in Cling.
    // Returns kFALSE is class is not defined.
    // In the case where the class is not loaded and belongs to a namespace
    // or is nested, looking for the full class name is outputing a lots of
