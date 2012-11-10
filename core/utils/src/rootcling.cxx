@@ -406,14 +406,16 @@ cling::Interpreter *gInterp = 0;
 
          typenameStr.clear();
          dims.clear();
-         if (field_iter->getType()->isConstantArrayType()) {
-            const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(field_iter->getType().getTypePtr());
+         clang::QualType fieldType(field_iter->getType());
+         if (fieldType->isConstantArrayType()) {
+            const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(fieldType.getTypePtr());
             while (arrayType) {
                dims << "[" << arrayType->getSize().getLimitedValue() << "]";
+               fieldType = arrayType->getElementType();
                arrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual());
             }
          }
-         R__GetQualifiedName(typenameStr, field_iter->getType(), *(*field_iter));
+         R__GetQualifiedName(typenameStr, fieldType, *(*field_iter));
 
          nameType[field_iter->getName().str()] = TSchemaType(typenameStr.c_str(),dims.str().c_str());
       }
@@ -1457,10 +1459,17 @@ bool CheckInputOperator(const char *what, const char *proto, const string &fulln
    // Check if the specificed operator (what) has been properly declared if the user has
    // resquested a custom version.
 
+ 
    const clang::FunctionDecl *method = R__GetFuncWithProto(llvm::dyn_cast<clang::Decl>(cl->getDeclContext()), what, proto);
+   if (!method) {
+      // This intended to find the global scope.
+      clang::TranslationUnitDecl *TU =
+         cl->getASTContext().getTranslationUnitDecl();
+      method = R__GetFuncWithProto(TU, what, proto);
+   }
    bool has_input_error = false;
    if (method != 0 && (method->getAccess() == clang::AS_public || method->getAccess() == clang::AS_none) ) {
-      std::string filename = R__GetFileName(cl);
+      std::string filename = R__GetFileName(method);
       if (strstr(filename.c_str(),"TBuffer.h")!=0 ||
           strstr(filename.c_str(),"Rtypes.h" )!=0) {
 
@@ -1471,11 +1480,17 @@ bool CheckInputOperator(const char *what, const char *proto, const string &fulln
    }
    if (has_input_error) {
       // We don't want to generate duplicated error messages in several dictionaries (when generating temporaries)
+      const char *maybeconst = "";
+      const char *mayberef = "&";
+      if (what[strlen(what)-1]=='<') {
+         maybeconst = "const ";
+         mayberef = "";
+      }
       Error(0,
             "in this version of ROOT, the option '!' used in a linkdef file\n"
             "       implies the actual existence of customized operators.\n"
             "       The following declaration is now required:\n"
-            "   TBuffer &%s(TBuffer &,%s *&);\n",what,fullname.c_str());
+            "   TBuffer &%s(TBuffer &,%s%s *%s);\n",what,maybeconst,fullname.c_str(),mayberef);
    }
    return has_input_error;
  
