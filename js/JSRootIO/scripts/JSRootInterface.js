@@ -162,6 +162,8 @@ function AssertPrerequisites(andThen) {
             ResetUI();
             gFile = new JSROOTIO.RootFile(url);
             $('#report').append("</body></html>");
+            var version = "<div id='overlay'><font face='Verdana' size='2px'>&nbsp;&nbsp;&nbspJSROOTIO version:" + JSROOTIO.version + "&nbsp;&nbsp;&nbsp</font></div>";
+            $(version).prependTo("body");
          }
          $('#report').addClass("ui-accordion ui-accordion-icons ui-widget ui-helper-reset");
       }) }) }) }) }) }) }) });
