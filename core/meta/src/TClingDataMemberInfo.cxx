@@ -301,6 +301,11 @@ long TClingDataMemberInfo::Property() const
          property |= G__BIT_ISSTATIC;
       }
    }
+   if (llvm::isa<clang::EnumConstantDecl>(GetDecl())) {
+      // Enumaration constant are considered to be 'static' data member in
+      // the CINT (and thus ROOT) scheme.
+      property |= G__BIT_ISSTATIC;
+   }
    const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl());
    clang::QualType qt = vd->getType();
    if (llvm::isa<clang::TypedefType>(qt)) {
