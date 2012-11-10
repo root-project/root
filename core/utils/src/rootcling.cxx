@@ -1469,7 +1469,7 @@ bool CheckInputOperator(const char *what, const char *proto, const string &fulln
    }
    bool has_input_error = false;
    if (method != 0 && (method->getAccess() == clang::AS_public || method->getAccess() == clang::AS_none) ) {
-      std::string filename = R__GetFileName(cl);
+      std::string filename = R__GetFileName(method);
       if (strstr(filename.c_str(),"TBuffer.h")!=0 ||
           strstr(filename.c_str(),"Rtypes.h" )!=0) {
 
