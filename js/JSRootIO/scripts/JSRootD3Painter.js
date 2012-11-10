@@ -1339,6 +1339,7 @@ function createFillPatterns(svg, id, line_color) {
             }});
       }
       else {
+         if (n1ay >= 10) n1ay -= 2;
          var y_axis = d3.svg.axis()
             .scale(yy)
             .orient("left")
