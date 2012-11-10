@@ -802,6 +802,7 @@ namespace ROOT
          fSumw = rhs.fSumw;
          fSumw2 = rhs.fSumw2;
          fEntries = rhs.fEntries;
+         return *this;
       }
 
 //______________________________________________________________________________
@@ -1520,11 +1521,11 @@ namespace ROOT
 
          while(!pNode->IsHeadNode())
          {
-            if(pNode->IsRightChild())
+            if(pNode->Parent()->RightChild() == pNode)
             {
                assert(pNode->Parent()->LeftChild());
                pNode = pNode->Parent()->LeftChild();
-               while(pNode->RighttChild())
+               while(pNode->RightChild())
                   pNode = pNode->RightChild();
 
                assert(dynamic_cast<BinNode*>(pNode));
