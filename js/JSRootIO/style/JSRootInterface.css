@@ -26,7 +26,7 @@ textarea { font-size: 100%;}
 
 p { margin-top: 6px; padding: 0 10px 1em; }
 
-#main { left: 1%; right: 66%; overflow: auto; }
+#main { left: 3px; right: 66%; overflow: auto; }
 
 #report { height:100%; }
 
@@ -34,7 +34,7 @@ p { margin-top: 6px; padding: 0 10px 1em; }
 
 #reportHolder {
    left: 35%;
-   right: 1%;
+   right: 3px;
    overflow: auto;
    font-size:9pt;font-weight:normal;color:#191970;
 }
@@ -43,8 +43,8 @@ div.column {
    border: 1px dotted #666;
    background-color: #E6E6FA;
    position: absolute;
-   top: 20px;
-   bottom: 20px;
+   top: 3px;
+   bottom: 17px;
    padding: 8px;
 }
 
@@ -111,7 +111,7 @@ input.tb {
    position:absolute;
    border: 1px solid #7777ff;
    bottom:1px;
-   left:12px;
+   left:3px;
    background:#ddddff;
    opacity:0.6;
    -moz-opacity:0.6;

@@ -162,7 +162,7 @@ function AssertPrerequisites(andThen) {
             ResetUI();
             gFile = new JSROOTIO.RootFile(url);
             $('#report').append("</body></html>");
-            var version = "<div id='overlay'><font face='Verdana' size='2px'>&nbsp;&nbsp;&nbspJSROOTIO version:" + JSROOTIO.version + "&nbsp;&nbsp;&nbsp</font></div>";
+            var version = "<div id='overlay'><font face='Verdana' size='1px'>&nbspJSROOTIO version:" + JSROOTIO.version + "&nbsp</font></div>";
             $(version).prependTo("body");
          }
          $('#report').addClass("ui-accordion ui-accordion-icons ui-widget ui-helper-reset");
@@ -239,15 +239,15 @@ function BuildSimpleGUI() {
    }
    var arrFiles = files.split(';');
 
-   var guiCode = "<div id='overlay'><font face='Verdana' size='2px'>&nbsp;&nbsp;&nbspJSROOTIO version:" + JSROOTIO.version + "&nbsp;&nbsp;&nbsp</font></div>"
+   var guiCode = "<div id='overlay'><font face='Verdana' size='1px'>&nbspJSROOTIO version:" + JSROOTIO.version + "&nbsp</font></div>"
 
       guiCode += "<div id='main' class='column'>\n"
       +"<h1><font face='Verdana' size='4'>Read a ROOT file with Javascript</font></h1>\n"
       +"<p><b>Select a ROOT file to read, or enter a url (*): </b><br/>\n"
-      +'<small><sub>*: Other URLs might not work because of cross site scripting protection, see e.g. <a href="https://developer.mozilla.org/en/http_access_control">http://developer.mozilla.org/en/http_access_control</a> on how to avoid it.</sub></small></p>'
+      +'<small><sub>*: Other URLs might not work because of cross site scripting protection, see e.g. <a href="https://developer.mozilla.org/en/http_access_control">developer.mozilla.org/http_access_control</a> on how to avoid it.</sub></small></p>'
       +'<form name="ex">'
       +'<div style="margin-left:10px;">'
-      +'<input type="text" name="state" value="" size="40" id="urlToLoad"/><br/>'
+      +'<input type="text" name="state" value="" size="30" id="urlToLoad"/><br/>'
       +'<select name="s" size="1" '
       +'onchange="document.ex.state.value = document.ex.s.options[document.ex.s.selectedIndex].value;document.ex.s.selectedIndex=0;document.ex.s.value=\'\'">'
       +'<option value = " " selected = "selected">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</option>';
