@@ -879,7 +879,7 @@ bool CheckInputOperator(G__ClassInfo &cl, int dicttype)
       if (dicttype==0||dicttype==1){
          Error(0,
                "in this version of ROOT, the option '!' used in a linkdef file\n"
-               "       implies the actual existence of customized operator.\n"
+               "       implies the actual existence of customized operators.\n"
                "       The following declaration is now required:\n"
                "   TBuffer &operator<<(TBuffer &,const %s *);\n",cl.Fullname());
       }
