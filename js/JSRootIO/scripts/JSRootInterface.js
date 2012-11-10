@@ -146,10 +146,10 @@ function AssertPrerequisites(andThen) {
       // if JSROOTIO is not defined, then dynamically load the required scripts and open the file
       loadScript('http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js', function() {
       loadScript('http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/jquery-ui.min.js', function() {
+      loadScript('http://d3js.org/d3.v2.min.js', function() {
       loadScript(source_dir+'scripts/dtree.js', function() {
       loadScript(source_dir+'scripts/rawinflate.js', function() {
       loadScript(source_dir+'scripts/JSRootCore.js', function() {
-      loadScript('http://d3js.org/d3.v2.min.js', function() {
       loadScript(source_dir+'scripts/JSRootD3Painter.js', function() { 
       loadScript(source_dir+'scripts/JSRootIOEvolution.js', function() {
          if (andThen) {
@@ -162,8 +162,8 @@ function AssertPrerequisites(andThen) {
             ResetUI();
             gFile = new JSROOTIO.RootFile(url);
             $('#report').append("</body></html>");
-            $('#report').addClass("ui-accordion ui-accordion-icons ui-widget ui-helper-reset");
          }
+         $('#report').addClass("ui-accordion ui-accordion-icons ui-widget ui-helper-reset");
       }) }) }) }) }) }) }) });
       return true;
    }
