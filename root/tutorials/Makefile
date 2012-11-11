@@ -172,3 +172,7 @@ saxexample.xml: $(TUTDIR)/xml/saxexample.xml
 xml/DOMParsePerson.log xml/DOMRecursive.log : person.xml person.dtd
 xml/SAXHandler.log: saxexample.xml
 roofit/rf503_wspaceread_call.C: roofit/rf502_wspacewrite.log
+math/testUnfold5d.log: math/testUnfold5c.log
+math/testUnfold5c.log: math/testUnfold5b.log
+math/testUnfold5b.log: math/testUnfold5a.log
+
