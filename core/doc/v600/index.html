@@ -26,25 +26,25 @@ These versions are not available in regular distributions yet (except for <a hre
 <h4>rootcling</h4>
 
 rootcling is the successor to rootcint and genreflex. It is used to implement 
-backward compatibility wrapper for both of them with the following <em>backward
+backward compatibility wrappers for both of them with the following <em>backward
 incompatibilities.</em>
 <ul>
   <li>rootcling does not support multiline #pragma without a line
 continuation as rootcint did (rootcint support #pragma link with a line
 continutation only in ROOT v5.34/02 and above).</li>
-  <li>rootcling no longer redfined the private and protected keyword to public.
+  <li>rootcling no longer re-#defines the private and protected keywords to public.
 In particular this means that code compiled as part of the dictionary no longer
-have access to protected and private members of a classes (except where allowed
+has access to protected and private members of a class (except where allowed
 by the C++ standard).<li>
 </ul>
 
 <h4>ACliC</h4>
 
-ACLiC has the following back incompatibilities:
+ACLiC has the following backward incompatibilities:
 <ul>
-   <li>Since rootcling no longer redfined the private and protected keyword to public,
+   <li>Since rootcling no longer re-#defines the private and protected keyword to public,
 the code compiled by ACLIC no longer
-have access to protected and private members of a classes (except where allowed
+has access to protected and private members of a class (except where allowed
 by the C++ standard).</li>
 </ul>
 
