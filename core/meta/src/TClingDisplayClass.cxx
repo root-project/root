@@ -221,9 +221,9 @@ void AppendMemberFunctionSignature(const clang::Decl *methodDecl, std::string &n
 }
 
 //______________________________________________________________________________
-void AppendDataMemberDeclaration(const clang::Decl *fieldDecl, std::string &name)
+void AppendDataMemberDeclaration(const clang::Decl *memDecl, std::string &name)
 {
-   assert(fieldDecl != 0 && "AppendDataMemberDeclaration, 'fieldDecl' parameter is null");
+   assert(memDecl != 0 && "AppendDataMemberDeclaration, 'memDecl' parameter is null");
    
    llvm::raw_string_ostream out(name);
    const clang::LangOptions langOpts;
@@ -231,7 +231,7 @@ void AppendDataMemberDeclaration(const clang::Decl *fieldDecl, std::string &name
    printingPolicy.SuppressSpecifiers = false;
    printingPolicy.SuppressInitializers = true;
 
-   fieldDecl->print(out, printingPolicy, 0, true);
+   memDecl->print(out, printingPolicy, 0, true);
 }
 
 //______________________________________________________________________________
@@ -784,7 +784,10 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl)cons
                   }
 
                   textLine += ' ';
-                  AppendDataMemberDeclaration(*enumerator, textLine);
+                  //SuppressInitializer does not help with PrintingPolicy,
+                  //so I have to use getNameAsString.
+                  //AppendDataMemberDeclaration(*enumerator, textLine);
+                  textLine += enumerator->getNameAsString();
                   textLine += ";\n";
                   fOut.Print(textLine.c_str());
                }
