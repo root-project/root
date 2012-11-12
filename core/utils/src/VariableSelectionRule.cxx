@@ -16,3 +16,19 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "VariableSelectionRule.h"
+#include <iostream>
+
+void VariableSelectionRule::Print(std::ostream &out) const
+{
+   out<<"\t\tSelected: ";
+   switch(GetSelected()){
+   case BaseSelectionRule::kYes: out<<"Yes"<<std::endl;
+      break;
+   case BaseSelectionRule::kNo: out<<"No"<<std::endl;
+      break;
+   case BaseSelectionRule::kDontCare: out<<"Don't Care"<<std::endl;
+      break;
+   default: out<<"Unspecified"<<std::endl;
+   }
+   PrintAttributes(out,3);
+}

@@ -98,69 +98,7 @@ void SelectionRules::PrintSelectionRules() const
       for(std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin(); 
           it != fClassSelectionRules.end(); ++it, ++i) {
          std::cout<<"\tClass sel rule "<<i<<":"<<std::endl;
-         std::cout<<"\t\tSelected: ";
-         switch(it->GetSelected()){
-            case BaseSelectionRule::kYes: std::cout<<"Yes"<<std::endl;
-               break;
-            case BaseSelectionRule::kNo: std::cout<<"No"<<std::endl;
-               break;
-            case BaseSelectionRule::kDontCare: std::cout<<"Don't Care"<<std::endl;
-               break;
-            default: std::cout<<"Unspecified"<<std::endl;
-         }
-         std::cout<<"\t\tAttributes: "<<std::endl;
-         it->PrintAttributes(2);
-         
-         if (it->HasFieldSelectionRules()) {
-            //std::cout<<"\t\tHas field entries"<<std::endl;
-            std::list<VariableSelectionRule> fields = it->GetFieldSelectionRules();
-            std::list<VariableSelectionRule>::iterator fit = fields.begin();
-            int j = 0;
-            
-            for (; fit != fields.end(); ++fit, ++j) 
-            {
-               std::cout<<"\t\tField "<<j<<":"<<std::endl;
-               std::cout<<"\t\tSelected: ";
-               switch(fit->GetSelected()){
-                  case BaseSelectionRule::kYes: std::cout<<"Yes"<<std::endl;
-                     break;
-                  case BaseSelectionRule::kNo: std::cout<<"No"<<std::endl;
-                     break;
-                  case BaseSelectionRule::kDontCare: std::cout<<"Don't Care"<<std::endl;
-                     break;
-                  default: std::cout<<"Unspecified"<<std::endl;
-               }
-               fit->PrintAttributes(3);
-            }
-         } 
-         else {
-            std::cout<<"\t\tNo field sel rules"<<std::endl;
-         }
-         if (it->HasMethodSelectionRules()) {
-            //std::cout<<"\t\tHas method entries"<<std::endl;
-            std::list<FunctionSelectionRule> methods = it->GetMethodSelectionRules();
-            std::list<FunctionSelectionRule>::iterator mit = methods.begin();
-            int k = 0;
-            
-            for (; mit != methods.end(); ++mit, ++k) 
-            {
-               std::cout<<"\t\tMethod "<<k<<":"<<std::endl;
-               std::cout<<"\t\tSelected: ";
-               switch(mit->GetSelected()){
-                  case BaseSelectionRule::kYes: std::cout<<"Yes"<<std::endl;
-                     break;
-                  case BaseSelectionRule::kNo: std::cout<<"No"<<std::endl;
-                     break;
-                  case BaseSelectionRule::kDontCare: std::cout<<"Don't Care"<<std::endl;
-                     break;
-                  default: std::cout<<"Unspecified"<<std::endl;
-               }
-               mit->PrintAttributes(3);
-            }
-         }
-         else {
-            std::cout<<"\t\tNo method sel rules"<<std::endl;
-         }
+         std::cout<< *it;
       }
    }
    else { 
@@ -184,7 +122,7 @@ void SelectionRules::PrintSelectionRules() const
                break;
             default: std::cout<<"Unspecified"<<std::endl;
          }
-         it2->PrintAttributes(2);
+         it2->PrintAttributes(std::cout,2);
       }
    }
    else {
@@ -207,7 +145,7 @@ void SelectionRules::PrintSelectionRules() const
                break;
             default: std::cout<<"Unspecified"<<std::endl;
          }
-         it3->PrintAttributes(2);
+         it3->PrintAttributes(std::cout,2);
       }
    }
    else {
@@ -230,7 +168,7 @@ void SelectionRules::PrintSelectionRules() const
                break;
             default: std::cout<<"Unspecified"<<std::endl;
          }
-         it4->PrintAttributes(2);
+         it4->PrintAttributes(std::cout,2);
       }
    }
    else {
@@ -1622,7 +1560,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
             if (name.length() > 0) {
                std::cout << name << '\n';
             } else {
-               it->PrintAttributes(29);
+               it->PrintAttributes(std::cout,29);
             }
          }
       }
@@ -1648,7 +1586,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
                std::cout<<"Error - unused variable rule: "<<name<<std::endl;
             }
             if (name.length() == 0) {
-               it->PrintAttributes(3);
+               it->PrintAttributes(std::cout,3);
             }
          }
       }
@@ -1678,7 +1616,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
                std::cout<<"Error - unused function rule: "<<name<<std::endl;
             }
             if (name.length() == 0) {
-               it->PrintAttributes(3);
+               it->PrintAttributes(std::cout,3);
             }
          }
       }
@@ -1705,7 +1643,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
                std::cout<<"Error - unused enum rule: "<<name<<std::endl;
             }
             if (name.length() == 0) {
-               it->PrintAttributes(3);
+               it->PrintAttributes(std::cout,3);
             }
          }
       }

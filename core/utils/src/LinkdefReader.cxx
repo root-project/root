@@ -464,7 +464,7 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
             csr.SetAttributeValue("name", identifier);
 
             fSelectionRules->AddClassSelectionRule(csr);
-            //csr.PrintAttributes(3);
+            //csr.PrintAttributes(std::cout,3);
          }
          break;
       case kIOCtorType:

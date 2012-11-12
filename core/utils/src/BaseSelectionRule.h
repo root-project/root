@@ -24,6 +24,7 @@
 #include <string>
 #include <map>
 #include <list>
+#include <iosfwd>
 
 namespace clang {
    class NamedDecl;
@@ -56,6 +57,8 @@ public:
    BaseSelectionRule(long index) : fIndex(index),fIsSelected(kNo),fMatchFound(false),fCXXRecordDecl(0) {} 
    BaseSelectionRule(long index, ESelect sel, const std::string& attributeName, const std::string& attributeValue);
    
+   virtual void Print(std::ostream &out) const = 0;
+
    long    GetIndex() const { return fIndex; }
 
    bool    HasAttributeWithName(const std::string& attributeName) const; // returns true if there is an attribute with the specified name
@@ -68,6 +71,7 @@ public:
    
    const AttributesMap_t& GetAttributes() const; // returns the list of attributes
    void  PrintAttributes(int level) const;       // prints the list of attributes - level is the number of tabs from the beginning of the line
+   void  PrintAttributes(std::ostream &out, int level) const;       // prints the list of attributes - level is the number of tabs from the beginning of the line
 
    bool  IsSelected (const clang::NamedDecl *decl, const std::string& name, const std::string& prototype, const std::string& file_name, bool& dontCare, bool& noName, bool& file, bool isLinkdef) const; // for more detailed description look at the .cxx file
 
@@ -89,4 +93,9 @@ protected:
    static void  ProcessPattern(const std::string& pattern, std::list<std::string>& out); // divides a pattern into a list of sub-patterns
 };
 
+inline std::ostream &operator<<(std::ostream& out, const BaseSelectionRule &obj)
+{
+   obj.Print(out);
+   return out;
+}
 #endif

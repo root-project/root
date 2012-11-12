@@ -28,6 +28,8 @@ public:
    VariableSelectionRule(long index) : BaseSelectionRule(index) {}
    VariableSelectionRule(long index, ESelect sel, std::string attributeName, std::string attributeValue) 
        : BaseSelectionRule(index, sel, attributeName, attributeValue){}
+
+   void Print(std::ostream &out) const;
 };
 
 typedef VariableSelectionRule FunctionSelectionRule; // Function selection rules are the same as Variable selection rules

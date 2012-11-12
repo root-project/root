@@ -1,3 +1,4 @@
+
 // @(#)root/core/utils:$Id: ClassSelectionRule.h 28529 2009-05-11 16:43:35Z pcanal $
 // Author: Velislava Spasova September 2010
 
@@ -22,6 +23,7 @@
 #include "VariableSelectionRule.h"
 
 #include <list>
+#include <iosfwd>
 
 class ClassSelectionRule: public BaseSelectionRule
 {
@@ -43,7 +45,8 @@ public:
    BaseSelectionRule(index), fIsInheritable(false), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false),fRequestedVersionNumber(-1) {}
    ClassSelectionRule(long index, bool inherit, ESelect sel, std::string attributeName, std::string attributeValue):
    BaseSelectionRule(index, sel, attributeName, attributeValue), fIsInheritable(inherit), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false),fRequestedVersionNumber(-1) {}
-   
+
+   void Print(std::ostream &out) const;
 
    void AddFieldSelectionRule(VariableSelectionRule field); //adds entry to the filed selections list
    bool HasFieldSelectionRules() const;

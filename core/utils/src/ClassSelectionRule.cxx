@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "ClassSelectionRule.h"
+#include <iostream>
 
 void ClassSelectionRule::AddFieldSelectionRule(VariableSelectionRule field)
 {
@@ -41,6 +42,53 @@ void ClassSelectionRule::AddMethodSelectionRule(FunctionSelectionRule method)
 bool ClassSelectionRule::HasMethodSelectionRules() const
 {
   return !fMethodSelectionRules.empty();
+}
+
+void ClassSelectionRule::Print(std::ostream &out) const
+{
+   out<<"\t\tSelected: ";
+   switch(GetSelected()){
+      case BaseSelectionRule::kYes: out<<"Yes"<<std::endl;
+         break;
+      case BaseSelectionRule::kNo: out<<"No"<<std::endl;
+         break;
+      case BaseSelectionRule::kDontCare: out<<"Don't Care"<<std::endl;
+         break;
+      default: out<<"Unspecified"<<std::endl;
+   }
+   out<<"\t\tAttributes: "<<std::endl;
+   PrintAttributes(out,2);
+   
+   if (HasFieldSelectionRules()) {
+      //out<<"\t\tHas field entries"<<std::endl;
+      std::list<VariableSelectionRule> fields = GetFieldSelectionRules();
+      std::list<VariableSelectionRule>::iterator fit = fields.begin();
+      int j = 0;
+      
+      for (; fit != fields.end(); ++fit, ++j) 
+         {
+            out<<"\t\tField "<<j<<":"<<std::endl;
+            out<<*fit;
+          }
+   } 
+   else {
+      out<<"\t\tNo field sel rules"<<std::endl;
+   }
+   if (HasMethodSelectionRules()) {
+      //out<<"\t\tHas method entries"<<std::endl;
+      std::list<FunctionSelectionRule> methods = GetMethodSelectionRules();
+      std::list<FunctionSelectionRule>::iterator mit = methods.begin();
+      int k = 0;
+      
+      for (; mit != methods.end(); ++mit, ++k) 
+         {
+            out<<"\t\tMethod "<<k<<":"<<std::endl;
+            out<<*mit;
+         }
+   }
+   else {
+      out<<"\t\tNo method sel rules"<<std::endl;
+   }
 }
 
 //const std::list<FunctionSelectionRule>& ClassSelectionRule::GetMethodSelectionRules()

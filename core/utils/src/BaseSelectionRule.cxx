@@ -122,7 +122,7 @@ const BaseSelectionRule::AttributesMap_t& BaseSelectionRule::GetAttributes() con
    return fAttributes;
 }
 
-void BaseSelectionRule::PrintAttributes(int level) const
+void BaseSelectionRule::PrintAttributes(std::ostream &out, int level) const
 { 
    std::string tabs;
    for (int i = 0; i < level; ++i) {
@@ -131,15 +131,18 @@ void BaseSelectionRule::PrintAttributes(int level) const
    
    if (!fAttributes.empty()) {
       for (AttributesMap_t::const_iterator iter = fAttributes.begin(); iter!=fAttributes.end(); ++iter) {
-         std::cout<<tabs<<iter->first<<" = "<<iter->second<<std::endl;
+         out<<tabs<<iter->first<<" = "<<iter->second<<std::endl;
       }
    }
    else {
-      std::cout<<tabs<<"No attributes"<<std::endl;
+      out<<tabs<<"No attributes"<<std::endl;
    }
 }
 
-
+void BaseSelectionRule::PrintAttributes(int level) const
+{ 
+   PrintAttributes(std::cout, level);
+}
 
 bool BaseSelectionRule::IsSelected (const clang::NamedDecl *decl, const std::string& name, const std::string& prototype, 
                                     const std::string& file_name, bool& dontCare, bool& noName, bool& file, bool isLinkdef) const
