@@ -79,6 +79,7 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
 #endif
    
    double edmPrev = simplex.Edm();
+   int niterations = 0;
    do {
       jl = simplex.Jl();
       jh = simplex.Jh();
@@ -94,6 +95,13 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
       //     for (unsigned int i = 0; i < simplex.Simplex().size(); ++i)  
       //       std::cout << " i = " << i << " x = " << simplex(i).second << " fval(x) = " << simplex(i).first << std::endl; 
 #endif
+
+      // trace the iterations (need to create a MinimunState although errors and gradient are not existing)
+      if (TraceIter() ) TraceIteration(niterations, MinimumState(MinimumParameters(simplex(jl).second,simplex(jl).first), simplex.Edm(), mfcn.NumOfCalls()) );
+      if (PrintLevel() > 1) MnPrint::PrintState(std::cout,simplex(jl).first, simplex.Edm(),mfcn.NumOfCalls(),"Simplex: Iteration # ", niterations);
+      niterations++;
+
+
       MnAlgebraicVector pbar(n);
       for(unsigned int i = 0; i < n+1; i++) {
          if(i == jh) continue;
@@ -194,10 +202,9 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
    
    MinimumState st(MinimumParameters(pbar, dirin, ybar), simplex.Edm(), mfcn.NumOfCalls());
 
-#ifdef WARNINGMSG
-   if (MnPrint::Level()>1)
+   if (PrintLevel() > 1) 
       MnPrint::PrintState(std::cout,st,"Simplex: Final iteration");
-#endif
+   if (TraceIter() ) TraceIteration(niterations, st);
    
    if(mfcn.NumOfCalls() > maxfcn) {
 #ifdef WARNINGMSG

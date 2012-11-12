@@ -30,9 +30,6 @@
 #endif
 
 
-
-
-
 namespace ROOT { 
 
    namespace Minuit2 { 
@@ -40,6 +37,7 @@ namespace ROOT {
       class ModularFunctionMinimizer; 
       class FCNBase; 
       class FunctionMinimum;
+      class MnTraceObject;
 
       // enumeration specifying the type of Minuit2 minimizers
       enum EMinimizerType { 
@@ -284,6 +282,17 @@ public:
 
    /// print result of minimization
    virtual void PrintResults(); 
+
+   /// set an object to trace operation for each iteration
+   /// The object muust implement operator() (unsigned int, MinimumState & state)
+   void SetTraceObject(MnTraceObject & obj);
+
+   /// set storage level   = 1 : store all iteration states (default)
+   ///                     = 0 : store only first and last state to save memory
+   void SetStorageLevel(int level); 
+  
+   /// return the minimizer state (containing values, step size , etc..)
+   const ROOT::Minuit2::MnUserParameterState & State() { return fState; }
 
 protected: 
    

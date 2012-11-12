@@ -36,14 +36,18 @@
 #include "Minuit2/FumiliMinimizer.h"
 #include "Minuit2/MnParameterScan.h"
 #include "Minuit2/MnContours.h"
- 
-
+#include "Minuit2/MnTraceObject.h" 
+#include "Minuit2/MinimumBuilder.h"
 
 #include <cassert> 
 #include <iostream> 
 #include <algorithm>
 #include <functional>
 
+#ifdef USE_ROOT_ERROR
+#include "TROOT.h"
+#include "TMinuit2TraceObject.h"
+#endif
 
 namespace ROOT { 
 
@@ -392,7 +396,8 @@ bool Minuit2Minimizer::Minimize() {
    int strategyLevel = Strategy(); 
    fMinuitFCN->SetErrorDef(ErrorDef() );
 
-   if (PrintLevel() >=1) { 
+   int printLevel = PrintLevel();
+   if (printLevel >=1) { 
       // print the real number of maxfcn used (defined in ModularFuncitonMinimizer)
       int maxfcn_used = maxfcn; 
       if (maxfcn_used == 0) { 
@@ -405,10 +410,11 @@ bool Minuit2Minimizer::Minimize() {
    }
 
    // internal minuit messages
-   MnPrint::SetLevel(PrintLevel() );
+   MnPrint::SetLevel(printLevel );
+   fMinimizer->Builder().SetPrintLevel(printLevel);
 
    // switch off Minuit2 printing
-   int prev_level = (PrintLevel() <= 0 ) ?   TurnOffPrintInfoLevel() : -2; 
+   int prev_level = (printLevel <= 0 ) ?   TurnOffPrintInfoLevel() : -2; 
 
    // set the precision if needed
    if (Precision() > 0) fState.SetPrecision(Precision());
@@ -445,11 +451,44 @@ bool Minuit2Minimizer::Minimize() {
       strategy.SetHessianStepTolerance(hessStepTol);
       strategy.SetHessianG2Tolerance(hessStepTol);
 
-      if (PrintLevel() > 0) { 
-         std::cout << "Minuit2Minimizer::Minuit  - Changing default stratgey options" << std::endl;
+      if (printLevel > 0) { 
+         std::cout << "Minuit2Minimizer::Minuit  - Changing default strategy options" << std::endl;
          minuit2Opt->Print();
       }
+
+      int storageLevel = 1; 
+      bool ret = minuit2Opt->GetValue("StorageLevel",storageLevel);
+      if (ret) SetStorageLevel(storageLevel);
       
+   }
+
+   // set a minimizer tracer object (defult for printlevel=10, from gROOT for printLevel=11)
+   // use some special print levels
+   MnTraceObject * traceObj = 0;
+#ifdef USE_ROOT_ERROR 
+   if (printLevel == 10 && gROOT) { 
+      TObject * obj = gROOT->FindObject("Minuit2TraceObject");
+      traceObj = dynamic_cast<ROOT::Minuit2::MnTraceObject*>(obj);
+      if (traceObj) {
+         // need to remove from the list
+         gROOT->Remove(obj);
+      }
+   }
+   if (printLevel == 20 || printLevel == 30 || printLevel == 40 || (printLevel >= 20000 && printLevel < 30000) ) { 
+      int parNumber = printLevel-20000;
+      if (printLevel == 20) parNumber = -1;
+      if (printLevel == 30) parNumber = -2;
+      if (printLevel == 40) parNumber = 0;
+      traceObj = new TMinuit2TraceObject(parNumber);
+   }
+#endif
+   if (printLevel == 100 || (printLevel >= 10000 && printLevel < 20000)) {
+      int parNumber = printLevel-10000; 
+      traceObj = new MnTraceObject(parNumber);
+   }
+   if (traceObj) { 
+      traceObj->Init(fState);
+      SetTraceObject(*traceObj);
    }
       
    const ROOT::Minuit2::FCNGradientBase * gradFCN = dynamic_cast<const ROOT::Minuit2::FCNGradientBase *>( fMinuitFCN ); 
@@ -477,6 +516,9 @@ bool Minuit2Minimizer::Minimize() {
    fState = fMinimum->UserState(); 
    bool ok =  ExamineMinimum(*fMinimum);
    //fMinimum = 0; 
+
+   // delete trace object if it was constructed
+   if (traceObj) {       delete traceObj;   }
    return ok; 
 }
 
@@ -1031,7 +1073,17 @@ int Minuit2Minimizer::CovMatrixStatus() const {
    return 0; 
 }
 
+void Minuit2Minimizer::SetTraceObject(MnTraceObject & obj) {
+   // set trace object
+   if (!fMinimizer) return;
+   fMinimizer->Builder().SetTraceObject(obj);
+}
 
+void Minuit2Minimizer::SetStorageLevel(int level) { 
+   // set storage level
+   if (!fMinimizer) return;
+   fMinimizer->Builder().SetStorageLevel(level);
+ }
    
 } // end namespace Minuit2
 
