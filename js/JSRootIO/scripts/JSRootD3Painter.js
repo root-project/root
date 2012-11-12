@@ -411,6 +411,18 @@ function format_id(id) {
       g_id = g_id.replace('>', 'gt');
    while (g_id.indexOf('<') != -1)
       g_id = g_id.replace('<', 'lt');
+   while (g_id.indexOf('\\') != -1)
+      g_id = g_id.replace('\\', '');
+   while (g_id.indexOf('\'') != -1)
+      g_id = g_id.replace('\'', '');
+   while (g_id.indexOf('(') != -1)
+      g_id = g_id.replace('(', '_');
+   while (g_id.indexOf(')') != -1)
+      g_id = g_id.replace(')', '_');
+   while (g_id.indexOf('/') != -1)
+      g_id = g_id.replace('/', '_');
+   while (g_id.indexOf('-') != -1)
+      g_id = g_id.replace('-', '_');
    return g_id;
 };
 
