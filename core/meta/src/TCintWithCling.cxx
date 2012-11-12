@@ -82,6 +82,7 @@
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include <iostream>
 #include <map>
 #include <set>
 #include <stdint.h>
@@ -92,6 +93,7 @@
 
 #include <cxxabi.h>
 #include <limits.h>
+#include <stdio.h>
 
 #ifdef __APPLE__
 #include <dlfcn.h>
@@ -1033,7 +1035,16 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       if ((c != 'I') && (c != 'L') && (c != 'x') && (c != 'X')) {
          // But not .I which is cling-only, and the .L, .x,
          // and .X commands were handled above.
-         ProcessLineCintOnly(sLine, error);
+         if (sLine.BeginsWith(".class")) {
+            TString className;
+            Ssiz_t pos = 0;
+            sLine.Tokenize(className, pos, " ");
+            sLine.Tokenize(className, pos, " ");
+            
+            if (className.Length())
+               DisplayClass(stdout, (char *)className.Data(), 0, 0);
+         } else
+            ProcessLineCintOnly(sLine, error);
       }
    }
    if (indent) {
