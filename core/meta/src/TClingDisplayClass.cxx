@@ -1,6 +1,7 @@
 #undef NDEBUG
 
 #include <cassert>
+#include <limits>
 #include <string>
 #include <set>
 
@@ -210,15 +211,26 @@ void AppendMemberFunctionSignature(const clang::CXXMethodDecl *methodDecl, std::
    assert(methodDecl->getKind() != clang::Decl::CXXConstructor && "AppendMemberFunctionSignature, 'methodDecl' parameter is a ctor declaration");
 
    llvm::raw_string_ostream out(name);
-
    const clang::LangOptions langOpts;
    clang::PrintingPolicy printingPolicy(langOpts);
-
    printingPolicy.TerseOutput = true;//Do not print the body of an inlined function.
    printingPolicy.SuppressSpecifiers = false; //Show 'static', 'inline', etc.
 
    methodDecl->print(out, printingPolicy, 0, true);
-   out.flush();
+}
+
+//______________________________________________________________________________
+void AppendDataMemberDeclaration(const clang::FieldDecl *fieldDecl, std::string &name)
+{
+   assert(fieldDecl != 0 && "AppendDataMemberDeclaration, 'fieldDecl' parameter is null");
+   
+   llvm::raw_string_ostream out(name);   
+   const clang::LangOptions langOpts;
+   clang::PrintingPolicy printingPolicy(langOpts);
+   printingPolicy.SuppressSpecifiers = false;
+   printingPolicy.SuppressInitializers = true;
+
+   fieldDecl->print(out, printingPolicy, 0, true);
 }
 
 //______________________________________________________________________________
@@ -275,13 +287,18 @@ void AppendBaseClassOffset(const clang::CompilerInstance *compiler,
 }
 
 //______________________________________________________________________________
-void AppendDataMemberOffset(const clang::CompilerInstance *compiler, const clang::FieldDecl *field, std::string &textLine)
+void AppendDataMemberOffset(const clang::CompilerInstance *compiler, const clang::CXXRecordDecl *classDecl, const clang::FieldDecl *fieldDecl, std::string &textLine)
 {
    assert(compiler != 0 && "AppendDataMemberOffset, 'compiler' parameter is null");
-   assert(field != 0 && "AppendDataMemberOffset, 'field' parameter is null");
+   assert(classDecl != 0 && "AppendDataMemberOffset, 'classDecl' parameter is null");
+   assert(fieldDecl != 0 && "AppendDataMemberOffset, 'fieldDecl' parameter is null");
 
-   (void) compiler;
-   (void) field;
+   const clang::ASTRecordLayout &layout = compiler->getASTContext().getASTRecordLayout(classDecl);
+   
+   TString formatted;
+   //
+   formatted.Form("0x%-8x", int(layout.getFieldOffset(fieldDecl->getFieldIndex()) / std::numeric_limits<unsigned char>::digits));
+   textLine += formatted.Data();
 }
 
 
@@ -346,7 +363,10 @@ private:
    void DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const;
    void DisplayBasesAsList(const clang::CXXRecordDecl *classDecl)const;
    void DisplayBasesAsTree(const clang::CXXRecordDecl *classDecl, unsigned nSpaces)const;
-   void DisplayMembers(const clang::CXXRecordDecl *classDecl)const;
+   void DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)const;
+   void DisplayDataMembers(const clang::CXXRecordDecl *classDecl)const;
+   void DisplayMemberFunctionsTemplates(const clang::CXXRecordDecl *classDecl)const;
+   void DisplayNonFieldDataMembers(const clang::CXXRecordDecl *classDecl)const;
 
    FILEPrintHelper fOut;
    const cling::Interpreter *fInterpreter;
@@ -581,7 +601,8 @@ void ClassPrinter::DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const
 
       DisplayBasesAsTree(classDecl, 0);
       //now list all members.
-      DisplayMembers(classDecl);
+      DisplayMemberFunctions(classDecl);
+      DisplayDataMembers(classDecl);
    }
 }
 
@@ -653,13 +674,12 @@ void ClassPrinter::DisplayBasesAsTree(const clang::CXXRecordDecl *classDecl, uns
 }
 
 //______________________________________________________________________________
-void ClassPrinter::DisplayMembers(const clang::CXXRecordDecl *classDecl)const
+void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)const
 {
-   assert(classDecl != 0 && "DisplayMembers, 'classDecl' parameter is null");
+   assert(classDecl != 0 && "DisplayMemberFunction, 'classDecl' parameter is null");
 
    typedef clang::CXXRecordDecl::method_iterator method_iterator;
    typedef clang::CXXRecordDecl::ctor_iterator ctor_iterator;
-   typedef clang::RecordDecl::field_iterator field_iterator;
 
    std::string textLine;
 
@@ -693,6 +713,26 @@ void ClassPrinter::DisplayMembers(const clang::CXXRecordDecl *classDecl)const
       fOut.Print(textLine.c_str());
       fOut.Print("\n");
    }
+   
+   //Now, the problem: template member-functions are not in the list of methods.
+   //I have to additionally scan class declarations.
+}
+
+//______________________________________________________________________________
+void ClassPrinter::DisplayMemberFunctionsTemplates(const clang::CXXRecordDecl *classDecl)const
+{
+   assert(classDecl != 0 && "DisplayMemberFunctionsTemplates, 'classDecl' parameter is null");
+   (void) classDecl;
+}
+
+//______________________________________________________________________________
+void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl)const
+{
+   assert(classDecl != 0 && "DisplayDataMembers, 'classDecl' parameter is null");
+
+   typedef clang::RecordDecl::field_iterator field_iterator;
+
+   std::string textLine;
 
    if (classDecl->field_begin() != classDecl->field_end())
       fOut.Print("List of member variables---------------------------------------------------\n");
@@ -701,12 +741,22 @@ void ClassPrinter::DisplayMembers(const clang::CXXRecordDecl *classDecl)const
       textLine.clear();
       AppendDataMemberLocation(fInterpreter->getCI(), *field, textLine);
       textLine += ' ';
-      AppendDataMemberOffset(fInterpreter->getCI(), *field, textLine);
-//      AppendMemberAccessSpecifier(*field, textLine);
+      AppendDataMemberOffset(fInterpreter->getCI(), classDecl, *field, textLine);
+      AppendMemberAccessSpecifier(*field, textLine);
+      AppendDataMemberDeclaration(*field, textLine);
       textLine += ';';
       fOut.Print(textLine.c_str());
       fOut.Print("\n");
    }
+   
+   //Now the problem: static data members are not fields, enumerators are not fields.
+}
+
+//______________________________________________________________________________
+void ClassPrinter::DisplayNonFieldDataMembers(const clang::CXXRecordDecl *classDecl)const
+{
+   assert(classDecl != 0 && "DisplayNonFieldDataMembers, 'classDecl' parameter is null");
+   (void) classDecl;
 }
 
 }//unnamed namespace
