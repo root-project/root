@@ -69,7 +69,6 @@ public:
    const clang::Decl   *GetDecl() const;
    void                 Init(const char *name);
    bool                 IsValid() const;
-   int                  AdvanceToDecl(const clang::Decl *);
    int                  InternalNext();
    int                  Next();
    long                 Property() const;

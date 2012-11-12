@@ -110,26 +110,6 @@ bool TClingTypedefInfo::IsValid() const
 }
 
 //______________________________________________________________________________
-int TClingTypedefInfo::AdvanceToDecl(const clang::Decl *target_decl)
-{
-   // Set the iterator to point at the given declaration.
-   const clang::TranslationUnitDecl *tu = target_decl->getTranslationUnitDecl();
-   const clang::DeclContext *dc = llvm::cast<clang::DeclContext>(tu);
-   fFirstTime = true;
-   fDescend = false;
-   fIter = dc->decls_begin();
-   fDecl = 0;
-   fIterStack.clear();
-   while (InternalNext()) {
-      if (fDecl == target_decl) {
-         fFirstTime = true;
-         return 1;
-      }
-   }
-   return 0;
-}
-
-//______________________________________________________________________________
 int TClingTypedefInfo::InternalNext()
 {
    // Increment the iterator, return true if new position is valid.
