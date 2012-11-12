@@ -107,6 +107,15 @@ namespace ROOT {
 namespace MacOSX {
 namespace Detail {
 
+class NSAppInitializer
+{
+public:
+   NSAppInitializer()
+   {
+      [NSApplication sharedApplication];
+   }
+};
+
 class MacOSXSystem {
 public:
    MacOSXSystem();
@@ -137,6 +146,8 @@ public:
    void SetFileDescriptors(const fd_map_type &fdTable, DescriptorType fdType);
 
    std::set<CFFileDescriptorRef> fCFFileDescriptors;
+   
+   NSAppInitializer fAppStarter;
    const ROOT::MacOSX::Util::AutoreleasePool fPool;
 
    static MacOSXSystem *fgInstance;
@@ -330,13 +341,15 @@ TMacOSXSystem::TMacOSXSystem()
 {
    //
 
+   const ROOT::MacOSX::Util::AutoreleasePool pool;
+
    [NSApplication sharedApplication];
    //Documentation says, that +sharedApplication, initializes the app. But this is not true,
    //it's still not really initialized, part of initialization is done by -run method.
 
    //If you call run, it never returns unless app is finished. I have to stop Cocoa's event loop
    //processing, since we have our own event loop.
-   
+  
    const ROOT::MacOSX::Util::NSScopeGuard<RunStopper> stopper([[RunStopper alloc] init]);
 
    [stopper.Get() performSelector : @selector(stopRun) withObject : nil afterDelay : 0.05];//Delay? What it should be?
