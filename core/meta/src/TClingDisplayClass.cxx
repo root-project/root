@@ -767,6 +767,9 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl)cons
                   AppendDataMemberLocation(fInterpreter->getCI(), *enumerator, textLine);
                   textLine += " 0x0       ";//offset is meaningless.
                   AppendMemberAccessSpecifier(*enumerator, textLine);
+                  const clang::QualType type(enumerator->getType());
+                  textLine += type.getAsString();
+                  textLine += ' ';
                   AppendDataMemberDeclaration(*enumerator, textLine);
                   textLine += ";\n";
                   fOut.Print(textLine.c_str());
