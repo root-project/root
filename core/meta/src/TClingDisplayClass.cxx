@@ -686,6 +686,9 @@ void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)
       fOut.Print("List of member functions :---------------------------------------------------\n");
 
    for (ctor_iterator ctor = classDecl->ctor_begin(); ctor != classDecl->ctor_end(); ++ctor) {
+      if (ctor->isImplicit())//Compiler-generated.
+         continue;
+   
       textLine.clear();
       AppendMemberFunctionLocation(fInterpreter->getCI(), *ctor, textLine);
       textLine += ' ';
