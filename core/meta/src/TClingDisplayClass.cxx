@@ -102,7 +102,7 @@ void AppendMemberFunctionLocation(const clang::CompilerInstance *compiler, const
 }
 
 //______________________________________________________________________________
-void AppendDataMemberLocation(const clang::CompilerInstance *compiler, const clang::FieldDecl *field, std::string &textLine)
+void AppendDataMemberLocation(const clang::CompilerInstance *compiler, const clang::Decl *field, std::string &textLine)
 {
    assert(compiler != 0 && "AppendDataMemberLocation, 'compiler' parameter is null");
    assert(field != 0 && "AppendDataMemberLocation, 'field' parameter is null");
@@ -205,7 +205,8 @@ void AppendConstructorSignature(const clang::CXXConstructorDecl *ctorDecl, std::
 }
 
 //______________________________________________________________________________
-void AppendMemberFunctionSignature(const clang::CXXMethodDecl *methodDecl, std::string &name)
+//void AppendMemberFunctionSignature(const clang::CXXMethodDecl *methodDecl, std::string &name)
+void AppendMemberFunctionSignature(const clang::Decl *methodDecl, std::string &name)
 {
    assert(methodDecl != 0 && "AppendMemberFunctionSignature, 'methodDecl' parameter is null");
    assert(methodDecl->getKind() != clang::Decl::CXXConstructor && "AppendMemberFunctionSignature, 'methodDecl' parameter is a ctor declaration");
@@ -216,11 +217,11 @@ void AppendMemberFunctionSignature(const clang::CXXMethodDecl *methodDecl, std::
    printingPolicy.TerseOutput = true;//Do not print the body of an inlined function.
    printingPolicy.SuppressSpecifiers = false; //Show 'static', 'inline', etc.
 
-   methodDecl->print(out, printingPolicy, 0, true);
+   methodDecl->print(out, printingPolicy, 0, false);//true);//true was wrong: for member function templates it will print template itself and specializations.
 }
 
 //______________________________________________________________________________
-void AppendDataMemberDeclaration(const clang::FieldDecl *fieldDecl, std::string &name)
+void AppendDataMemberDeclaration(const clang::Decl *fieldDecl, std::string &name)
 {
    assert(fieldDecl != 0 && "AppendDataMemberDeclaration, 'fieldDecl' parameter is null");
    
@@ -365,8 +366,6 @@ private:
    void DisplayBasesAsTree(const clang::CXXRecordDecl *classDecl, unsigned nSpaces)const;
    void DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)const;
    void DisplayDataMembers(const clang::CXXRecordDecl *classDecl)const;
-   void DisplayMemberFunctionsTemplates(const clang::CXXRecordDecl *classDecl)const;
-   void DisplayNonFieldDataMembers(const clang::CXXRecordDecl *classDecl)const;
 
    FILEPrintHelper fOut;
    const cling::Interpreter *fInterpreter;
@@ -716,13 +715,18 @@ void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)
    
    //Now, the problem: template member-functions are not in the list of methods.
    //I have to additionally scan class declarations.
-}
-
-//______________________________________________________________________________
-void ClassPrinter::DisplayMemberFunctionsTemplates(const clang::CXXRecordDecl *classDecl)const
-{
-   assert(classDecl != 0 && "DisplayMemberFunctionsTemplates, 'classDecl' parameter is null");
-   (void) classDecl;
+   for (decl_iterator decl = classDecl->decls_begin(); decl != classDecl->decls_end(); ++decl) {
+      if (decl->getKind() == clang::Decl::FunctionTemplate) {
+         textLine.clear();
+         AppendMemberFunctionLocation(fInterpreter->getCI(), *decl, textLine);
+         textLine += ' ';
+         AppendMemberAccessSpecifier(*decl, textLine);
+         AppendMemberFunctionSignature(*decl, textLine);
+         textLine += ';';
+         fOut.Print(textLine.c_str());
+         fOut.Print("\n");
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -750,13 +754,26 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl)cons
    }
    
    //Now the problem: static data members are not fields, enumerators are not fields.
-}
-
-//______________________________________________________________________________
-void ClassPrinter::DisplayNonFieldDataMembers(const clang::CXXRecordDecl *classDecl)const
-{
-   assert(classDecl != 0 && "DisplayNonFieldDataMembers, 'classDecl' parameter is null");
-   (void) classDecl;
+   for (decl_iterator decl = classDecl->decls_begin(); decl != classDecl->decls_end(); ++decl) {
+      if (decl->getKind() == clang::Decl::Enum) {
+         //
+         //fOut.Print("enum\n");
+      } else if (decl->getKind() == clang::Decl::Var) {
+         clang::VarDecl * const varDecl = clang::dyn_cast<clang::VarDecl>(*decl);
+         assert(varDecl != 0 && "DisplayDataMembers, internal error, decl->getKind() == Var, but decl is not a VarDecl");
+         if (varDecl->getStorageClass() == clang::SC_Static) {
+            //I hope, this is a static data-member :)
+            textLine.clear();
+            AppendDataMemberLocation(fInterpreter->getCI(), varDecl, textLine);
+            textLine += " 0x0     ";//offset is meaningless.
+            AppendMemberAccessSpecifier(varDecl, textLine);
+            AppendDataMemberDeclaration(varDecl, textLine);
+            textLine += ';';
+            fOut.Print(textLine.c_str());
+            fOut.Print("\n");
+         }
+      }
+   }
 }
 
 }//unnamed namespace
