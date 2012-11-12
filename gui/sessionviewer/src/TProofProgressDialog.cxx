@@ -172,7 +172,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
    // Progress bar
    fBar = new TGHProgressBar(vf4, TGProgressBar::kFancy, 200);
    fBar->SetBarColor("green");
-   fBar->UsePercent();
+   fBar->Percent(kTRUE);
    fBar->ShowPos(kTRUE);
    vf4->AddFrame(fBar, new TGLayoutHints(kLHintsTop | kLHintsLeft |
                      kLHintsExpandX, 10, 10, 5, 5));
