@@ -34,6 +34,7 @@
 
 namespace cling {
 class Interpreter;
+class Value;
 }
 
 namespace llvm {
@@ -125,7 +126,8 @@ public:
    void                SetFunc(const TClingMethodInfo *info);
    void                SetFuncProto(const TClingClassInfo *info, const char *method, const char *proto, long *poffset);
    void                Init(const clang::FunctionDecl *);
-   llvm::GenericValue  Invoke(const std::vector<llvm::GenericValue> &ArgValues) const;
+   void                Invoke(const std::vector<llvm::GenericValue> &ArgValues,
+                              cling::Value* result = 0) const;
 
 };
 

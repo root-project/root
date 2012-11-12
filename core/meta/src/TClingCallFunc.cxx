@@ -206,13 +206,13 @@ long TClingCallFunc::ExecInt(void *address) const
    if (!IsValid()) {
       return 0L;
    }
-   llvm::GenericValue val;
+   cling::Value val;
    const clang::Decl *D = fMethod->GetMethodDecl();
    const clang::CXXMethodDecl *MD = llvm::dyn_cast<clang::CXXMethodDecl>(D);
    const clang::DeclContext *DC = D->getDeclContext();
    if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
       // Free function or static member function.
-      val = Invoke(fArgs);
+      Invoke(fArgs, &val);
    }
    else {
       // Member function.
@@ -234,7 +234,7 @@ long TClingCallFunc::ExecInt(void *address) const
                                        reinterpret_cast<unsigned long>(address));
          args.push_back(this_ptr);
          args.insert(args.end(), fArgs.begin(), fArgs.end());
-         val  = Invoke(args);
+         Invoke(args, &val);
          
          // We don't really mean to call the constructor and return its (lack of)
          // return value, we meant to execute and return 'new TypeOf(...)' and
@@ -253,9 +253,9 @@ long TClingCallFunc::ExecInt(void *address) const
                                     reinterpret_cast<unsigned long>(address));
       args.push_back(this_ptr);
       args.insert(args.end(), fArgs.begin(), fArgs.end());
-      val  = Invoke(args);
+      Invoke(args, &val);
    }
-   return static_cast<long>(val.IntVal.getSExtValue());
+   return val.simplisticCastAs<long>();
 }
 
 long long TClingCallFunc::ExecInt64(void *address) const
@@ -263,13 +263,13 @@ long long TClingCallFunc::ExecInt64(void *address) const
    if (!IsValid()) {
       return 0LL;
    }
-   llvm::GenericValue val;
+   cling::Value val;
    const clang::Decl *D = fMethod->GetMethodDecl();
    const clang::CXXMethodDecl *MD = llvm::dyn_cast<clang::CXXMethodDecl>(D);
    const clang::DeclContext *DC = D->getDeclContext();
    if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
       // Free function or static member function.
-      val = Invoke(fArgs);
+      Invoke(fArgs, &val);
    }
    else {
       // Member function.
@@ -297,9 +297,9 @@ long long TClingCallFunc::ExecInt64(void *address) const
                                     reinterpret_cast<unsigned long>(address));
       args.push_back(this_ptr);
       args.insert(args.end(), fArgs.begin(), fArgs.end());
-      val = Invoke(args);
+      Invoke(args, &val);
    }
-   return static_cast<long long>(val.IntVal.getSExtValue());
+   return val.simplisticCastAs<long long>();
 }
 
 double TClingCallFunc::ExecDouble(void *address) const
@@ -307,13 +307,13 @@ double TClingCallFunc::ExecDouble(void *address) const
    if (!IsValid()) {
       return 0.0;
    }
-   llvm::GenericValue val;
+   cling::Value val;
    const clang::Decl *D = fMethod->GetMethodDecl();
    const clang::CXXMethodDecl *MD = llvm::dyn_cast<clang::CXXMethodDecl>(D);
    const clang::DeclContext *DC = D->getDeclContext();
    if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
       // Free function or static member function.
-      val = Invoke(fArgs);
+      Invoke(fArgs, &val);
    }
    else {
       // Member function.
@@ -341,9 +341,9 @@ double TClingCallFunc::ExecDouble(void *address) const
                                     reinterpret_cast<unsigned long>(address));
       args.push_back(this_ptr);
       args.insert(args.end(), fArgs.begin(), fArgs.end());
-      val = Invoke(args);
+      Invoke(args, &val);
    }
-   return val.DoubleVal;
+   return val.simplisticCastAs<double>();
 }
 
 TClingMethodInfo *TClingCallFunc::FactoryMethod() const
@@ -758,14 +758,16 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
    }
 }
 
-llvm::GenericValue
-TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues) const
+void
+TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues,
+                       cling::Value* result /*= 0*/) const
 {
    // FIXME: We need to think about thunks for the this pointer adjustment,
    //        and the return pointer adjustment for covariant return types.
    //if (!IsValid()) {
    //   return;
    //}
+   if (result) *result = cling::Value();
    unsigned long num_given_args = static_cast<unsigned long>(ArgValues.size());
    const clang::FunctionDecl *fd = fMethod->GetMethodDecl();
    const clang::CXXMethodDecl *md = llvm::dyn_cast<clang::CXXMethodDecl>(fd);
@@ -786,15 +788,13 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues) const
       Error("TClingCallFunc::Invoke()",
             "Not enough function arguments given (min: %u max:%u, given: %lu)",
             min_args, num_params, num_given_args);
-      llvm::GenericValue bad_val;
-      return bad_val;
+      return;
    }
    else if (num_given_args > num_params) {
       Error("TClingCallFunc::Invoke()",
             "Too many function arguments given (min: %u max: %u, given: %lu)",
             min_args, num_params, num_given_args);
-      llvm::GenericValue bad_val;
-      return bad_val;
+      return;
    }
 
    // This will be the arguments actually passed to the JIT function.
@@ -833,8 +833,7 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues) const
                      "Default for argument %u: %s", i, ExprToString(expr).c_str());
                Error("TClingCallFunc::Invoke",
                      "is not of integral, floating, or pointer type!");
-               llvm::GenericValue bad_val;
-               return bad_val;
+               return;
             }
             const llvm::Type *ty = ft->getParamType(i);
             Args.push_back(convertIntegralToArg(val.value, ty));
@@ -843,22 +842,24 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues) const
             Error("TClingCallFunc::Invoke",
                   "Could not evaluate default for argument %u: %s",
                   i, ExprToString(expr).c_str());
-            llvm::GenericValue bad_val;
-            return bad_val;
+            return;
          }
       }
    }
-   llvm::GenericValue return_val;
-   return_val = fInterp->getExecutionEngine()->runFunction(fEEFunc, Args);
-   if (ft->getReturnType()->getTypeID() == llvm::Type::PointerTyID) {
-      // Note: The cint interface requires pointers to be
-      //       returned as unsigned long.
-      llvm::GenericValue converted_return_val;
-      converted_return_val.IntVal =
-         llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
-            reinterpret_cast<unsigned long>(GVTOP(return_val)));
-      return converted_return_val;
+
+   llvm::GenericValue return_val = fInterp->getExecutionEngine()->runFunction(fEEFunc, Args);
+   if (result) {
+      if (ft->getReturnType()->getTypeID() == llvm::Type::PointerTyID) {
+         // Note: The cint interface requires pointers to be
+         //       returned as unsigned long.
+         llvm::GenericValue converted_return_val;
+         converted_return_val.IntVal =
+            llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
+                        reinterpret_cast<unsigned long>(GVTOP(return_val)));
+         *result = cling::Value(converted_return_val, context.LongTy);
+      } else {
+         *result = cling::Value(return_val, fd->getResultType());
+      }
    }
-   return return_val;
 }
 
