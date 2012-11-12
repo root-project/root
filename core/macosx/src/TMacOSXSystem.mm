@@ -328,10 +328,9 @@ ClassImp(TMacOSXSystem)
 TMacOSXSystem::TMacOSXSystem()
                   : fPimpl(new Private::MacOSXSystem)
 {
-   const ROOT::MacOSX::Util::AutoreleasePool pool;
+   //
 
    [NSApplication sharedApplication];
-
    //Documentation says, that +sharedApplication, initializes the app. But this is not true,
    //it's still not really initialized, part of initialization is done by -run method.
 
