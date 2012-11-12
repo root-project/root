@@ -454,7 +454,7 @@ private:
    std::map<Atom_t, Window_t> fSelectionOwners;
    typedef std::map<Atom_t, Window_t>::iterator selection_iterator;
    
-   bool fSetIcon;
+   bool fSetApp;
 
 public:
    static Atom_t fgDeleteWindowAtom;

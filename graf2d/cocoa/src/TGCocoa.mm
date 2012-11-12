@@ -30,6 +30,7 @@
 #include "X11Drawable.h"
 #include "QuartzText.h"
 #include "CocoaUtils.h"
+#include "MenuLoader.h"
 #include "X11Events.h"
 #include "X11Buffer.h"
 #include "TGLFormat.h"
@@ -319,7 +320,7 @@ TGCocoa::TGCocoa()
               fDrawMode(kCopy),
               fDirectDraw(false),
               fForegroundProcess(false),
-              fSetIcon(true)
+              fSetApp(true)
 {
    fPimpl.reset(new Details::CocoaPrivate);
 
@@ -335,7 +336,7 @@ TGCocoa::TGCocoa(const char *name, const char *title)
               fDrawMode(kCopy),
               fDirectDraw(false),
               fForegroundProcess(false),
-              fSetIcon(true)
+              fSetApp(true)
 {
    fPimpl.reset(new Details::CocoaPrivate);
    
@@ -934,8 +935,11 @@ void TGCocoa::MapWindow(Window_t wid)
    if (MakeProcessForeground())
       [fPimpl->GetWindow(wid) mapWindow];
       
-   if (fSetIcon)
+   if (fSetApp) {
       SetApplicationIcon();
+      Details::PopulateMainMenu();
+      fSetApp = false;
+   }
 }
 
 //______________________________________________________________________________
@@ -963,6 +967,12 @@ void TGCocoa::MapRaised(Window_t wid)
 
    if (MakeProcessForeground())
       [fPimpl->GetWindow(wid) mapRaised];
+   
+   if (fSetApp) {
+      SetApplicationIcon();
+      Details::PopulateMainMenu();
+      fSetApp = false;
+   }
 }
 
 //______________________________________________________________________________
@@ -4225,6 +4235,5 @@ void TGCocoa::SetApplicationIcon()
             [NSApp setApplicationIconImage : image];
          }
       }
-      fSetIcon = false;
    }
 }
