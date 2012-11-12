@@ -174,6 +174,11 @@ public:
    TypedefVisitor(llvm::SmallVector<TypedefDecl*,128> &defs) : fTypedefs(defs)
    {}
 
+   bool TraverseStmt(Stmt*) {
+      // Don't descend info function bodies.
+      return true;
+   }
+
    bool VisitTypedefDecl(TypedefDecl *TdefD) {
       fTypedefs.push_back(TdefD);
       return true; // returning false will abort the in-depth traversal.
