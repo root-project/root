@@ -151,14 +151,14 @@ void AppendMemberAccessSpecifier(const clang::Decl *memberDecl, std::string &nam
    
    switch (memberDecl->getAccess()) {
    case clang::AS_private:
-      name += "private: ";
+      name += "private:";
       break;
    case clang::AS_protected:
-      name += "protected: ";
+      name += "protected:";
       break;
    case clang::AS_public:
    case clang::AS_none://Public or private?
-      name += "public: ";
+      name += "public:";
    }   
 }
 
@@ -170,8 +170,8 @@ void AppendConstructorSignature(const clang::CXXConstructorDecl *ctorDecl, std::
    const clang::QualType type = ctorDecl->getType();
    assert(llvm::isa<clang::FunctionType>(type) == true && "AppendConstructorSignature, ctorDecl->getType is not a FunctionType");
 
-   const clang::FunctionType *aft = type->getAs<clang::FunctionType>();
-   const clang::FunctionProtoType *ft = ctorDecl->hasWrittenPrototype() ? llvm::dyn_cast<clang::FunctionProtoType>(aft) : 0;
+   const clang::FunctionType * const aft = type->getAs<clang::FunctionType>();
+   const clang::FunctionProtoType * const ft = ctorDecl->hasWrittenPrototype() ? llvm::dyn_cast<clang::FunctionProtoType>(aft) : 0;
 
    if (ctorDecl->isExplicit())
       name += "explicit ";
@@ -238,7 +238,7 @@ void AppendDataMemberDeclaration(const clang::Decl *fieldDecl, std::string &name
 void AppendBaseClassSpecifiers(base_decl_iterator base, std::string &textLine)
 {
    if (base->isVirtual())
-      textLine += "virtual ";
+      textLine += "virtual";
 
    switch (base->getAccessSpecifier()) {
    case clang::AS_private:
@@ -266,11 +266,8 @@ void AppendClassSize(const clang::CompilerInstance *compiler, const clang::Recor
 }
 
 //______________________________________________________________________________
-void AppendBaseClassOffset(const clang::CompilerInstance *compiler,
-                           const clang::CXXRecordDecl *completeClass,
-                           const clang::CXXRecordDecl *baseClass,
-                           bool isVirtual,
-                           std::string &textLine)
+void AppendBaseClassOffset(const clang::CompilerInstance *compiler, const clang::CXXRecordDecl *completeClass,
+                           const clang::CXXRecordDecl *baseClass, bool isVirtual, std::string &textLine)
 {
    assert(compiler != 0 && "AppendBaseClassOffset, 'compiler' parameter is null");
    assert(completeClass != 0 && "AppendBaseClassOffset, 'completeClass' parameter is null");
@@ -411,7 +408,7 @@ void ClassPrinter::DisplayClass(const std::string &className)const
    fSeenDecls.clear();
 
    const cling::LookupHelper &lookupHelper = fInterpreter->getLookupHelper();
-   if (const clang::Decl *const decl = lookupHelper.findScope(className)) {
+   if (const clang::Decl * const decl = lookupHelper.findScope(className)) {
       if (const clang::CXXRecordDecl * const classDecl = llvm::dyn_cast<clang::CXXRecordDecl>(decl)) {
          if (classDecl->hasDefinition())
             DisplayClassDecl(classDecl);
@@ -477,7 +474,7 @@ void ClassPrinter::ProcessBlockDecl(decl_iterator decl)const
 
    //Block can contain nested (arbitrary deep) class declarations.
    //Though, I'm not sure if have block in our code.
-   const clang::BlockDecl *blockDecl = llvm::dyn_cast<clang::BlockDecl>(*decl);
+   const clang::BlockDecl * const blockDecl = llvm::dyn_cast<clang::BlockDecl>(*decl);
    assert(blockDecl != 0 && "ProcessBlockDecl, internal error - decl is not a BlockDecl");
 
    for (decl_iterator it = blockDecl->decls_begin(); it != blockDecl->decls_end(); ++it)
@@ -492,7 +489,7 @@ void ClassPrinter::ProcessFunctionDecl(decl_iterator decl)const
    assert(*decl != 0 && "ProcessFunctionDecl, 'decl' parameter is not a valid iterator");
 
    //Function can contain class declarations, we have to check this.
-   const clang::FunctionDecl *functionDecl = llvm::dyn_cast<clang::FunctionDecl>(*decl);
+   const clang::FunctionDecl * const functionDecl = llvm::dyn_cast<clang::FunctionDecl>(*decl);
    assert(functionDecl != 0 && "ProcessFunctionDecl, internal error - decl is not a FunctionDecl");
 
    for (decl_iterator it = functionDecl->decls_begin(); it != functionDecl->decls_end(); ++it)
@@ -508,7 +505,7 @@ void ClassPrinter::ProcessNamespaceDecl(decl_iterator decl)const
    assert(decl->getKind() == clang::Decl::Namespace && "ProcessNamespaceDecl, decl->getKind() != Namespace");
 
    //Namespace can contain nested (arbitrary deep) class declarations.
-   const clang::NamespaceDecl *namespaceDecl = llvm::dyn_cast<clang::NamespaceDecl>(*decl);
+   const clang::NamespaceDecl * const namespaceDecl = llvm::dyn_cast<clang::NamespaceDecl>(*decl);
    assert(namespaceDecl != 0 && "ProcessNamespaceDecl, 'decl' parameter is not a NamespaceDecl");
 
    for (decl_iterator it = namespaceDecl->decls_begin(); it != namespaceDecl->decls_end(); ++it)
@@ -522,7 +519,7 @@ void ClassPrinter::ProcessLinkageSpecDecl(decl_iterator decl)const
    assert(fInterpreter != 0 && "ProcessLinkageSpecDecl, fInterpreter is null");
    assert(*decl != 0 && "ProcessLinkageSpecDecl, 'decl' parameter is not a valid iterator");
 
-   const clang::LinkageSpecDecl *linkageSpec = llvm::dyn_cast<clang::LinkageSpecDecl>(*decl);
+   const clang::LinkageSpecDecl * const linkageSpec = llvm::dyn_cast<clang::LinkageSpecDecl>(*decl);
    assert(linkageSpec != 0 && "ProcessLinkageSpecDecl, internal error - decl is not a LinkageSpecDecl");
 
    for (decl_iterator it = linkageSpec->decls_begin(); it != linkageSpec->decls_end(); ++it)
@@ -535,7 +532,7 @@ void ClassPrinter::ProcessClassDecl(decl_iterator decl)const
    assert(fInterpreter != 0 && "ProcessClassDecl, fInterpreter is null");
    assert(*decl != 0 && "ProcessClassDecl, 'decl' parameter is not a valid iterator");
 
-   const clang::CXXRecordDecl *classDecl = llvm::dyn_cast<clang::CXXRecordDecl>(*decl);
+   const clang::CXXRecordDecl * const classDecl = llvm::dyn_cast<clang::CXXRecordDecl>(*decl);
    assert(classDecl != 0 && "ProcessClassDecl, internal error, declaration is not a CXXRecordDecl");
 
    if (!classDecl->hasDefinition())
@@ -682,8 +679,10 @@ void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)
 
    std::string textLine;
 
-   if (classDecl->ctor_begin() != classDecl->ctor_end() || classDecl->method_begin() != classDecl->method_end())
+   if (classDecl->ctor_begin() != classDecl->ctor_end() || classDecl->method_begin() != classDecl->method_end()) {
       fOut.Print("List of member functions :---------------------------------------------------\n");
+      fOut.Print("filename       line:size busy function type and name\n");//CINT has a format like %-15s blah-blah.
+   }
 
    for (ctor_iterator ctor = classDecl->ctor_begin(); ctor != classDecl->ctor_end(); ++ctor) {
       if (ctor->isImplicit())//Compiler-generated.
@@ -693,6 +692,7 @@ void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)
       AppendMemberFunctionLocation(fInterpreter->getCI(), *ctor, textLine);
       textLine += ' ';
       AppendMemberAccessSpecifier(*ctor, textLine);
+      textLine += ' ';
       AppendConstructorSignature(llvm::dyn_cast<clang::CXXConstructorDecl>(*ctor), textLine);
       textLine += ";\n";
       fOut.Print(textLine.c_str());
@@ -709,6 +709,7 @@ void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)
       AppendMemberFunctionLocation(fInterpreter->getCI(), *method, textLine);
       textLine += ' ';
       AppendMemberAccessSpecifier(*method, textLine);
+      textLine += ' ';
       AppendMemberFunctionSignature(*method, textLine);
       textLine += ";\n";
       fOut.Print(textLine.c_str());
@@ -722,6 +723,7 @@ void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)
          AppendMemberFunctionLocation(fInterpreter->getCI(), *decl, textLine);
          textLine += ' ';
          AppendMemberAccessSpecifier(*decl, textLine);
+         textLine += ' ';
          AppendMemberFunctionSignature(*decl, textLine);
          textLine += ";\n";
          fOut.Print(textLine.c_str());
@@ -748,6 +750,7 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl)cons
       textLine += ' ';
       AppendDataMemberOffset(fInterpreter->getCI(), classDecl, *field, textLine);
       AppendMemberAccessSpecifier(*field, textLine);
+      textLine += ' ';
       AppendDataMemberDeclaration(*field, textLine);
       textLine += ";\n";
       fOut.Print(textLine.c_str());
@@ -767,8 +770,19 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl)cons
                   AppendDataMemberLocation(fInterpreter->getCI(), *enumerator, textLine);
                   textLine += " 0x0       ";//offset is meaningless.
                   AppendMemberAccessSpecifier(*enumerator, textLine);
+                  textLine += ' ';
+
+                  {//Block to force flush for stream.
+                  
+                  //llvm::raw_string_ostream stream(textLine);
                   const clang::QualType type(enumerator->getType());
+                  //const clang::LangOptions lo;
+                  //clang::PrintingPolicy pp(lo);
+                  //pp.SuppressScope = true;
+                  //type.print(stream, pp);
                   textLine += type.getAsString();
+                  }
+
                   textLine += ' ';
                   AppendDataMemberDeclaration(*enumerator, textLine);
                   textLine += ";\n";
@@ -777,7 +791,7 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl)cons
             }
          }
       } else if (decl->getKind() == clang::Decl::Var) {
-         clang::VarDecl * const varDecl = clang::dyn_cast<clang::VarDecl>(*decl);
+         const clang::VarDecl * const varDecl = clang::dyn_cast<clang::VarDecl>(*decl);
          assert(varDecl != 0 && "DisplayDataMembers, internal compiler error, decl->getKind() == Var, but decl is not a VarDecl");
          if (varDecl->getStorageClass() == clang::SC_Static) {
             //I hope, this is a static data-member :)
@@ -785,6 +799,7 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl)cons
             AppendDataMemberLocation(fInterpreter->getCI(), varDecl, textLine);
             textLine += " 0x0       ";//offset is meaningless.
             AppendMemberAccessSpecifier(varDecl, textLine);
+            textLine += ' ';
             AppendDataMemberDeclaration(varDecl, textLine);
             textLine += ";\n";
             fOut.Print(textLine.c_str());
