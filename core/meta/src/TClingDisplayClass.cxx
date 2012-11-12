@@ -225,7 +225,7 @@ void AppendDataMemberDeclaration(const clang::Decl *fieldDecl, std::string &name
 {
    assert(fieldDecl != 0 && "AppendDataMemberDeclaration, 'fieldDecl' parameter is null");
    
-   llvm::raw_string_ostream out(name);   
+   llvm::raw_string_ostream out(name);
    const clang::LangOptions langOpts;
    clang::PrintingPolicy printingPolicy(langOpts);
    printingPolicy.SuppressSpecifiers = false;
@@ -694,9 +694,8 @@ void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)
       textLine += ' ';
       AppendMemberAccessSpecifier(*ctor, textLine);
       AppendConstructorSignature(llvm::dyn_cast<clang::CXXConstructorDecl>(*ctor), textLine);
-      textLine += ';';
+      textLine += ";\n";
       fOut.Print(textLine.c_str());
-      fOut.Print("\n");
    }
 
    for (method_iterator method = classDecl->method_begin(); method != classDecl->method_end(); ++method) {
@@ -711,9 +710,8 @@ void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)
       textLine += ' ';
       AppendMemberAccessSpecifier(*method, textLine);
       AppendMemberFunctionSignature(*method, textLine);
-      textLine += ';';
+      textLine += ";\n";
       fOut.Print(textLine.c_str());
-      fOut.Print("\n");
    }
    
    //Now, the problem: template member-functions are not in the list of methods.
@@ -725,9 +723,8 @@ void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)
          textLine += ' ';
          AppendMemberAccessSpecifier(*decl, textLine);
          AppendMemberFunctionSignature(*decl, textLine);
-         textLine += ';';
+         textLine += ";\n";
          fOut.Print(textLine.c_str());
-         fOut.Print("\n");
       }
    }
 }
@@ -738,6 +735,7 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl)cons
    assert(classDecl != 0 && "DisplayDataMembers, 'classDecl' parameter is null");
 
    typedef clang::RecordDecl::field_iterator field_iterator;
+   typedef clang::EnumDecl::enumerator_iterator enumerator_iterator;
 
    std::string textLine;
 
@@ -751,29 +749,42 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl)cons
       AppendDataMemberOffset(fInterpreter->getCI(), classDecl, *field, textLine);
       AppendMemberAccessSpecifier(*field, textLine);
       AppendDataMemberDeclaration(*field, textLine);
-      textLine += ';';
+      textLine += ";\n";
       fOut.Print(textLine.c_str());
-      fOut.Print("\n");
    }
    
    //Now the problem: static data members are not fields, enumerators are not fields.
    for (decl_iterator decl = classDecl->decls_begin(); decl != classDecl->decls_end(); ++decl) {
       if (decl->getKind() == clang::Decl::Enum) {
-         //
-         //fOut.Print("enum\n");
+         const clang::EnumDecl *enumDecl = clang::dyn_cast<clang::EnumDecl>(*decl);
+         assert(enumDecl != 0 && "DisplayDataMember, internal compielr error, decl->getKind() == Enum, but decl is not a EnumDecl");
+         if (enumDecl->isComplete() && (enumDecl = enumDecl->getDefinition())) {//it's not really clear, if I should really check this.
+            if (fSeenDecls.find(enumDecl) == fSeenDecls.end()) {
+               fSeenDecls.insert(enumDecl);               
+               for (enumerator_iterator enumerator = enumDecl->enumerator_begin(); enumerator != enumDecl->enumerator_end(); ++enumerator) {
+                  //
+                  textLine.clear();
+                  AppendDataMemberLocation(fInterpreter->getCI(), *enumerator, textLine);
+                  textLine += " 0x0       ";//offset is meaningless.
+                  AppendMemberAccessSpecifier(*enumerator, textLine);
+                  AppendDataMemberDeclaration(*enumerator, textLine);
+                  textLine += ";\n";
+                  fOut.Print(textLine.c_str());
+               }
+            }
+         }
       } else if (decl->getKind() == clang::Decl::Var) {
          clang::VarDecl * const varDecl = clang::dyn_cast<clang::VarDecl>(*decl);
-         assert(varDecl != 0 && "DisplayDataMembers, internal error, decl->getKind() == Var, but decl is not a VarDecl");
+         assert(varDecl != 0 && "DisplayDataMembers, internal compiler error, decl->getKind() == Var, but decl is not a VarDecl");
          if (varDecl->getStorageClass() == clang::SC_Static) {
             //I hope, this is a static data-member :)
             textLine.clear();
             AppendDataMemberLocation(fInterpreter->getCI(), varDecl, textLine);
-            textLine += " 0x0     ";//offset is meaningless.
+            textLine += " 0x0       ";//offset is meaningless.
             AppendMemberAccessSpecifier(varDecl, textLine);
             AppendDataMemberDeclaration(varDecl, textLine);
-            textLine += ';';
+            textLine += ";\n";
             fOut.Print(textLine.c_str());
-            fOut.Print("\n");
          }
       }
    }
