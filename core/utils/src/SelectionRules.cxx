@@ -608,6 +608,7 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, co
    const ClassSelectionRule *selector = 0;
    int fImplNo = 0;
    const ClassSelectionRule *explicit_selector = 0;
+   const ClassSelectionRule *specific_pattern_selector = 0;
    int fFileNo = 0;
    
    // NOTE: should we separate namespaces from classes in the rules?
@@ -630,7 +631,7 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, co
                   explicit_selector = &(*it);
                } else if (match == BaseSelectionRule::kPattern) {
                   // NOTE: weird ...
-                  if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = &(*it);
+                  if (pattern_value != "*" && pattern_value != "*::*") specific_pattern_selector = &(*it);
                }
             }
          } else if (it->GetSelected() == BaseSelectionRule::kNo) {         
@@ -673,6 +674,7 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, co
 #endif
       
       if (explicit_selector) return explicit_selector;
+      else if (specific_pattern_selector) return specific_pattern_selector;
       else if (fImplNo > 0) return 0;
       else return selector;
    }
@@ -705,6 +707,7 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
          const ClassSelectionRule *selector = 0;
          int fImplNo = 0;
          const ClassSelectionRule *explicit_selector = 0;
+         const ClassSelectionRule *specific_pattern_selector = 0;
          int fFileNo = 0;
          
          std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin();
@@ -725,7 +728,7 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
                         explicit_selector = &(*it);
                      } else if (match == BaseSelectionRule::kPattern) {
                         // NOTE: weird ...
-                        if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = &(*it);
+                        if (pattern_value != "*" && pattern_value != "*::*") specific_pattern_selector = &(*it);
                      }
                   }
                } else if (it->GetSelected() == BaseSelectionRule::kNo) {         
@@ -760,14 +763,13 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
                }
             }
          } // Loop over the rules.
-         if (IsLinkdefFile()) {
-            // for rootcint explicit (name) Yes is stronger than implicit (pattern) No which is stronger than implicit (pattern) Yes
-            
+         if (IsLinkdefFile()) {            
 #ifdef SELECTION_DEBUG
             std::cout<<"\n\tfYes = "<<fYes<<", fImplNo = "<<fImplNo<<std::endl;
 #endif
-            
+            // for rootcint explicit (name) Yes is stronger than implicit (pattern) No which is stronger than implicit (pattern) Yes
             if (explicit_selector) return explicit_selector;
+            else if (specific_pattern_selector) return specific_pattern_selector;
             else if (fImplNo > 0) return 0;
             else return selector;
          }
