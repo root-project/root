@@ -117,7 +117,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
    const clang::ASTContext& Ctx = interpreter.getCI()->getASTContext();
 
-   // In case of Int_t* we need to strip the pointer first, desugar and attach
+   // In case of name* we need to strip the pointer first, add the default and attach
    // the pointer once again.
    if (llvm::isa<clang::PointerType>(instanceType.getTypePtr())) {
       // Get the qualifiers.
@@ -557,6 +557,89 @@ void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
    }
    out.resize(j);
    return;
+}
+
+// See also cling's AST.cpp
+static
+clang::NestedNameSpecifier* CreateNestedNameSpecifier(const clang::ASTContext& Ctx,
+                                                      clang::NamespaceDecl* cl) {
+   
+   clang::NamespaceDecl* outer 
+      = llvm::dyn_cast_or_null<clang::NamespaceDecl>(cl->getDeclContext());
+   if (outer && outer->getName().size()) {
+      clang::NestedNameSpecifier* outerNNS = CreateNestedNameSpecifier(Ctx,outer);
+      return clang::NestedNameSpecifier::Create(Ctx,outerNNS,
+                                         cl);
+   } else {
+      return clang::NestedNameSpecifier::Create(Ctx, 
+                                         0, /* no starting '::'*/
+                                         cl);        
+   }
+}
+
+// See also cling's AST.cpp
+static
+clang::NestedNameSpecifier* CreateNestedNameSpecifier(const clang::ASTContext& Ctx,
+                                                      clang::TagDecl *cl) {
+   
+   clang::NamedDecl* outer = llvm::dyn_cast_or_null<clang::NamedDecl>(cl->getDeclContext());
+   if (outer && outer->getName().size()) {
+      clang::NestedNameSpecifier *outerNNS;
+      if (cl->getDeclContext()->isNamespace()) {
+         outerNNS = CreateNestedNameSpecifier(Ctx,
+                                              llvm::dyn_cast<clang::NamespaceDecl>(outer));
+      } else {
+         outerNNS = CreateNestedNameSpecifier(Ctx,
+                                              llvm::dyn_cast<clang::TagDecl>(outer));
+      }
+      return clang::NestedNameSpecifier::Create(Ctx,outerNNS,
+                                         false /* template keyword wanted */,
+                                         Ctx.getTypeDeclType(cl).getTypePtr());
+   } else {
+      return clang::NestedNameSpecifier::Create(Ctx, 
+                                         0, /* no starting '::'*/
+                                         false /* template keyword wanted */,
+                                         Ctx.getTypeDeclType(cl).getTypePtr());        
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////
+clang::QualType ROOT::TMetaUtils::GetFullyQualifiedType(const clang::QualType &qtype,
+                                                        const cling::Interpreter &interpreter)
+{
+   // Return the fully qualified type, if we need to recurse through any template parameter, 
+   // this needs to be merged somehow with GetPartialDesugaredType.
+
+   const clang::ASTContext& Ctx = interpreter.getCI()->getASTContext();
+
+   if (llvm::isa<clang::TypedefType>(qtype.getTypePtr())) {
+      clang::QualType QT(qtype);
+      clang::Decl *decl = 0;
+      const clang::TypedefType* typedeftype = 
+         llvm::dyn_cast_or_null<clang::TypedefType>(QT.getTypePtr());
+      decl = typedeftype->getDecl();
+      if (decl) {
+         clang::NamedDecl* outer 
+            = llvm::dyn_cast_or_null<clang::NamedDecl>(decl->getDeclContext());
+         clang::NamespaceDecl* outer_ns
+            = llvm::dyn_cast_or_null<clang::NamespaceDecl>(decl->getDeclContext());
+         if (outer && !(outer_ns && outer_ns->isAnonymousNamespace())) {
+            clang::NestedNameSpecifier* prefix = 0;
+            if (outer_ns) {
+               prefix = CreateNestedNameSpecifier(Ctx,outer_ns);
+            } else {
+               assert(llvm::isa<clang::TagDecl>(outer)&& "not in namespace of TagDecl");
+               prefix = CreateNestedNameSpecifier(Ctx,
+                                                  llvm::dyn_cast<clang::TagDecl>(outer));
+            }
+            if (prefix) QT = Ctx.getElaboratedType(clang::ETK_None,prefix,QT);
+         }
+      }
+      return QT;
+   }
+   else {
+      return qtype;
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////

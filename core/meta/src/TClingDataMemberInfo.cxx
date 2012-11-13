@@ -420,7 +420,13 @@ const char *TClingDataMemberInfo::TypeName() const
          vdType = GetDecl()->getASTContext().getQualifiedType(vdType->getBaseElementTypeUnsafe(),vdType.getQualifiers());
       }
 
+      // AddDefaultParameters doubles as a clang::ElaboratedType adder!
+      // However it does resolved the typedef in the (default) template parameter
+      // so that might be too much here.
+      vdType = ROOT::TMetaUtils::GetFullyQualifiedType( vdType, *fInterp );
+
       clang::PrintingPolicy policy(Ctxt.getPrintingPolicy());
+      policy.SuppressScope = false;
       policy.AnonymousTagLocations = false;
 
       buf = TClassEdit::CleanType(vdType.getAsString(policy).c_str(),0,0);
@@ -437,8 +443,6 @@ const char *TClingDataMemberInfo::TypeTrueName(const ROOT::TMetaUtils::TNormaliz
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
-   clang::PrintingPolicy policy(GetDecl()->getASTContext().getPrintingPolicy());
-   policy.AnonymousTagLocations = false;
    if (const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl())) {
       ROOT::TMetaUtils::GetNormalizedName(buf, vd->getType(), *fInterp, normCtxt);
 
