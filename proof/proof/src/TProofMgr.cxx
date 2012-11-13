@@ -1011,6 +1011,33 @@ TFileCollection *TProofMgr::UploadFiles(const char *srcfiles,
    return ds;
 }
 
+//______________________________________________________________________________
+Int_t TProofMgr::Rm(const char *what, const char *, const char *)
+{
+   // Run 'rm' on 'what'. Locally it is just a call to TSystem::Unlink .
+
+   Int_t rc = -1;
+   // Nothing to do if not in contact with proofserv
+   if (!IsValid()) {
+      Error("Rm", "invalid TProofMgr - do nothing");
+      return rc;
+   }
+   // Nothing to do if not in contact with proofserv
+   if (!what || (what && strlen(what) <= 0)) {
+      Error("Rm", "path undefined!");
+      return rc;
+   }
+   
+   TUrl u(what);
+   if (!strcmp(u.GetProtocol(), "file")) {
+      rc = gSystem->Unlink(u.GetFile());
+   } else {
+      rc = gSystem->Unlink(what);
+   }
+   // Done
+   return (rc == 0) ? 0 : -1;
+}
+
 //
 //  TProofDesc
 //

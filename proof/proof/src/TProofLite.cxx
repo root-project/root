@@ -2281,3 +2281,49 @@ void TProofLite::FindUniqueSlaves()
    fUniqueMonitor->DeActivateAll();
    fAllUniqueMonitor->DeActivateAll();
 }
+
+//______________________________________________________________________________
+void TProofLite::ShowData()
+{
+   // List contents of the data directory in the sandbox.
+   // This is the place where files produced by the client queries are kept
+
+   if (!IsValid()) return;
+
+   // Get worker infos
+   TList *wrki = GetListOfSlaveInfos();
+   TSlaveInfo *wi = 0;
+   TIter nxwi(wrki);
+   while ((wi = (TSlaveInfo *) nxwi())) {
+      ShowDataDir(wi->GetDataDir());
+   }
+}
+
+//______________________________________________________________________________
+void TProofLite::ShowDataDir(const char *dirname)
+{
+   // List contents of the data directory 'dirname'
+
+   if (!dirname) return;
+   
+   FileStat_t dirst;
+   if (gSystem->GetPathInfo(dirname, dirst) != 0) return;
+   if (!R_ISDIR(dirst.fMode)) return;
+
+   void *dirp = gSystem->OpenDirectory(dirname);
+   TString fn;
+   const char *ent = 0;
+   while ((ent = gSystem->GetDirEntry(dirp))) {
+      fn.Form("%s/%s", dirname, ent);
+      FileStat_t st;
+      if (gSystem->GetPathInfo(fn.Data(), st) == 0) {
+         if (R_ISREG(st.fMode)) {
+            Printf("lite:0| %s", fn.Data());
+         } else if (R_ISREG(st.fMode)) {
+            ShowDataDir(fn.Data());
+         }
+      }
+   }
+   // Done
+   return;
+}
