@@ -15,7 +15,7 @@ Axis_t xxmin, Axis_t  xxmax)
 <listitem><para><code>*fname: </code>The name of the fitted function (the model) is passed as the first parameter. This name may be one of ROOT pre-defined function names or a
 user-defined function. The functions below are predefined, and can be used with the <emphasis role="bold"><code>TH1</code></emphasis><code>::Fit</code>
 method:</para></listitem>
-<listitem><para>"<code>gaus</code>" Gaussian function with 3 parameters:              <code>f(x) = p0*exp(-0.5*((x-p1)/p2)^2))</code></para></listitem>
+<listitem><para>"<code>gaus</code>" Gaussian function with 3 parameters:              <code>f(x) = p0*exp(-0.5*((x-p1)/p2)^2)</code></para></listitem>
 <listitem><para>"<code>expo</code>"An Exponential with 2 parameters:  <code>f(x) = exp(p0+p1*x)</code> </para></listitem>
 <listitem><para>"<code>pol</code><emphasis role="italic"><code>N</code></emphasis>" A polynomial of degree <emphasis role="italic">N</emphasis>:   <code>f(x) = p0 + p1*x + p2*x2 +...</code> </para></listitem>
 <listitem><para>"<code>landau</code>" Landau function with mean and sigma. This function has been adaptedfrom the <code>CERNLIB</code> routine <code>G110 denlan</code>.</para></listitem>
