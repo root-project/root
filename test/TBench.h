@@ -66,6 +66,8 @@ public:
   ClassDef(THit,1) // the hit class
 };
 
+TBuffer &operator<<(TBuffer &b, const THit *hit);
+
 namespace stdext {
   template<class T>  inline size_t __gnu_cxx_hash_obj(const T& __o) {
     unsigned long __h = 0;
