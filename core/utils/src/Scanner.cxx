@@ -785,7 +785,7 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
    }
    
    const ClassSelectionRule *selected = fSelectionRules.IsDeclSelected(D);
-   if (selected && selected->GetSelected() == BaseSelectionRule::kYes ) {
+   if (selected && selected->GetSelected() == BaseSelectionRule::kYes) {
       // For the case kNo, we could (but don't) remove the node from the pcm
       // For the case kDontCare, the rule is just a place holder and we are actually trying to exclude some of its children
       // (this is used only in the selection xml case).
