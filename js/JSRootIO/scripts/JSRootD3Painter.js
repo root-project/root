@@ -2514,6 +2514,10 @@ function createFillPatterns(svg, id, line_color) {
          var string = leg['fLabel'];
          var pos_y = ((i+1) * (font_size * mul)) - (font_size/3);
          var tpos_y = (i+1) * (font_size * mul);
+         if (nlines == 1) {
+            var pos_y = (h * 0.75) - (font_size/3);
+            var tpos_y = h * 0.75;
+         }
 
          var mo = gFile.GetMappedObject(leg['fObject']);
          if (mo) {
