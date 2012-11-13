@@ -2415,11 +2415,11 @@ const char *TCint::GetSTLIncludePath() const
 //                      M I S C
 //______________________________________________________________________________
 
-int TCint::DisplayClass(FILE *fout,char *name,int base,int start) const
+int TCint::DisplayClass(FILE *fout,const char *name,int base,int start) const
 {
    // Interface to CINT function
 
-   return G__display_class(fout,name,base,start);
+   return G__display_class(fout,const_cast<char*>(name),base,start);
 }
 //______________________________________________________________________________
 int TCint::DisplayIncludePath(FILE *fout) const

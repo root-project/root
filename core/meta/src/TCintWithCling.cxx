@@ -830,13 +830,13 @@ void TCintWithCling::RegisterModule(const char* modulename,
       Error("RegisterModule", "cannot find dictionary module %s in %s",
             pcmFileName.Data(), searchPath.Data());
    } else {
-      TCintWithCling::Info("RegisterModule", "Loading PCM %s", pcmFileName.Data());
+      // TCintWithCling::Info("RegisterModule", "Loading PCM %s", pcmFileName.Data());
       clang::CompilerInstance* CI = fInterpreter->getCI();
       ROOT::TMetaUtils::declareModuleMap(CI, pcmFileName, headers);
    }
 
    for (const char** hdr = headers; *hdr; ++hdr) {
-      Info("RegisterModule", "   #including %s...", *hdr);
+      // Info("RegisterModule", "   #including %s...", *hdr);
       fInterpreter->parse(TString::Format("#include \"%s\"", *hdr).Data());
    }
 }
@@ -1036,7 +1036,7 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          // But not .I which is cling-only, and the .L, .x,
          // and .X commands were handled above.
          if (sLine.BeginsWith(".class "))
-            DisplayClass(stdout, (char *)sLine.Data() + 7, 0, 0); //:))
+            DisplayClass(stdout, sLine.Data() + 7, 0, 0); //:))
          else
             ProcessLineCintOnly(sLine, error);
       }
@@ -2902,7 +2902,7 @@ const char* TCintWithCling::GetSTLIncludePath() const
 //                      M I S C
 //______________________________________________________________________________
 
-int TCintWithCling::DisplayClass(FILE* fout, char* name, int base, int start) const
+int TCintWithCling::DisplayClass(FILE* fout, const char* name, int base, int start) const
 {
    // Interface to CINT function
    if (!name || !name[0]) {
@@ -2914,7 +2914,7 @@ int TCintWithCling::DisplayClass(FILE* fout, char* name, int base, int start) co
    } else
       TClingDisplayClass::DisplayClass(fout, fInterpreter, name, true);//for the single class, info is always verbose.
 
-   return G__display_class(fout, name, base, start);
+   return 0;
 }
 
 //______________________________________________________________________________

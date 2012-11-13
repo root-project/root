@@ -154,7 +154,7 @@ public:
    static void  UpdateAllCanvases();
 
    // Misc
-   virtual int    DisplayClass(FILE *fout,char *name,int base,int start) const;
+   virtual int    DisplayClass(FILE *fout,const char *name,int base,int start) const;
    virtual int    DisplayIncludePath(FILE *fout) const;
    virtual void  *FindSym(const char *entry) const;
    virtual void   GenericError(const char *error) const;
