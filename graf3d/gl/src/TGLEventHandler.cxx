@@ -241,7 +241,8 @@ void TGLEventHandler::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    // Map our event EEventType (base/inc/Buttons.h) back to Event_t (base/inc/GuiTypes.h)
    // structure, and call appropriate HandleXyzz() function
-   Event_t eventSt;
+   Event_t eventSt = { kOtherEvent, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                       kFALSE, 0, 0, {0, 0, 0, 0, 0} };
    eventSt.fX = px;
    eventSt.fY = py;
    eventSt.fState = 0;
