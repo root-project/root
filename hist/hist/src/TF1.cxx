@@ -39,6 +39,7 @@
 #include "Math/Minimizer.h"
 #include "Math/MinimizerOptions.h"
 #include "Math/Factory.h"
+#include "Math/ChebyshevPol.h"
 #include "Fit/FitResult.h"
 
 //#include <iostream>
@@ -2545,7 +2546,14 @@ void TF1::InitStandardFunctions()
       for (Int_t i=0;i<10;i++) {
          f1 = new TF1(Form("pol%d",i),Form("pol%d",i),-1,1);
          f1->SetParameters(1,1,1,1,1,1,1,1,1,1);
+         // create also chebyshev polynomial
+         // (note polynomial object will not be deleted)
+         // note that these functions cannot be stored
+         ROOT::Math::ChebyshevPol * pol = new ROOT::Math::ChebyshevPol(i); 
+         f1 = new TF1(TString::Format("cheb%d",i),pol,-1,1,i+1);
+         f1->SetParameters(1,1,1,1,1,1,1,1,1,1);
       }
+      
    }
 }
 
