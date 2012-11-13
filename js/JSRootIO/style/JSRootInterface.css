@@ -124,7 +124,6 @@ button.closeButton {
    background:#ddddff;
    opacity:0.6;
    -moz-opacity:0.6;
-   filter:alpha(opacity=6);
 }
 
 /*--------------------------------------------------|
