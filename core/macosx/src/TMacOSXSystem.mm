@@ -24,6 +24,31 @@
 #include "TVirtualX.h"
 #include "TError.h"
 
+//The special class to perform a selector to stop a -run: method.
+@interface RunStopper : NSObject
+@end
+
+@implementation RunStopper
+
+//We attach this delegate only once, when trying to initialize NSApplication (by calling its -run method).
+//______________________________________________________________________________
+- (void) stopRun
+{
+   [NSApp stop : nil];
+   //This is not enough to stop, from docs:
+   //This method notifies the application that you want to exit the current run loop as soon as it finishes processing the current NSEvent object.
+   //This method does not forcibly exit the current run loop. Instead it sets a flag that the application checks only after it finishes dispatching an actual event object.
+
+
+   //I'm sending a fake event, to stop.
+   NSEvent* stopEvent = [NSEvent otherEventWithType: NSApplicationDefined location: NSMakePoint(0,0) modifierFlags: 0 timestamp: 0.0
+                                 windowNumber: 0 context: nil subtype: 0 data1: 0 data2: 0];
+   [NSApp postEvent : stopEvent atStart : true];
+}
+
+@end
+
+
 //
 //Stuff which I have to copy from TUnixSystem. Find a better way to organize code.
 //Fortunately, this does not violate ODR, but still UGLY.
@@ -82,6 +107,15 @@ namespace ROOT {
 namespace MacOSX {
 namespace Detail {
 
+class NSAppInitializer
+{
+public:
+   NSAppInitializer()
+   {
+      [NSApplication sharedApplication];
+   }
+};
+
 class MacOSXSystem {
 public:
    MacOSXSystem();
@@ -112,6 +146,8 @@ public:
    void SetFileDescriptors(const fd_map_type &fdTable, DescriptorType fdType);
 
    std::set<CFFileDescriptorRef> fCFFileDescriptors;
+   
+   NSAppInitializer fAppStarter;
    const ROOT::MacOSX::Util::AutoreleasePool fPool;
 
    static MacOSXSystem *fgInstance;
@@ -303,7 +339,21 @@ ClassImp(TMacOSXSystem)
 TMacOSXSystem::TMacOSXSystem()
                   : fPimpl(new Private::MacOSXSystem)
 {
+   //
+
+   const ROOT::MacOSX::Util::AutoreleasePool pool;
+
    [NSApplication sharedApplication];
+   //Documentation says, that +sharedApplication, initializes the app. But this is not true,
+   //it's still not really initialized, part of initialization is done by -run method.
+
+   //If you call run, it never returns unless app is finished. I have to stop Cocoa's event loop
+   //processing, since we have our own event loop.
+  
+   const ROOT::MacOSX::Util::NSScopeGuard<RunStopper> stopper([[RunStopper alloc] init]);
+
+   [stopper.Get() performSelector : @selector(stopRun) withObject : nil afterDelay : 0.05];//Delay? What it should be?
+   [NSApp run];
 }
 
 //______________________________________________________________________________
