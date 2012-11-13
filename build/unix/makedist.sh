@@ -10,6 +10,8 @@ TYPE=`bin/root-config --arch`
 if [ "x`bin/root-config --platform`" = "xmacosx" ]; then
    TYPE=$TYPE-`sw_vers -productVersion | cut -d . -f1 -f2`
    TYPE=$TYPE-`uname -p`
+   # /usr/bin/tar on OSX is BSDTAR which is for our purposes GNU tar compatible
+   TAR=/usr/bin/tar
 fi
 if [ "x`bin/root-config --platform`" = "xsolaris" ]; then
    TYPE=$TYPE-`uname -r`
@@ -60,7 +62,8 @@ else
       TARFILE=${TARFILE}".gz"
       TARCMD="${TAR} zcvf ${TARFILE} -T ${TARFILE}.filelist"
    else
-      TARCMD="tar cvf ${TARFILE}"
+      # use r to append to archive which is needed when using xargs
+      TARCMD="tar rvf ${TARFILE}"
       DOGZIP="y"
    fi
 fi
@@ -77,7 +80,7 @@ rm -f ${TARFILE}
 if [ "x${TAR}" != "x" ] || [ "x$MSI" = "x1" ]; then
    $TARCMD || exit 1
 else
-   $TARCMD `cat ${TARFILE}.filelist` || exit 1
+   (cat ${TARFILE}.filelist | xargs $TARCMD) || exit 1
 fi
 rm ${TARFILE}.filelist 
 
