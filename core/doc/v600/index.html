@@ -36,6 +36,14 @@ continutation only in ROOT v5.34/02 and above).</li>
 In particular this means that code compiled as part of the dictionary no longer
 has access to protected and private members of a class (except where allowed
 by the C++ standard).<li>
+  <li>rootcling no longer consider a friend declaration to be a
+declaration for the friended function.  In particular this means that
+rootcling may now issue:
+<pre>Error: in this version of ROOT, the option '!' used in a linkdef file
+       implies the actual existence of customized operators.
+       The following declaration is now required:
+   TBuffer &operator<<(TBuffer &,const THit *);
+</pre>if the operator&lt;&lt; declration is missing.</li>
 </ul>
 
 <h4>ACliC</h4>
