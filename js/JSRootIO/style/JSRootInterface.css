@@ -109,9 +109,6 @@ input.tb {
 button.closeButton {
    margin-top: -3px; 
    margin-right: 2px; 
-   height: 21px;
-   width: 21px;
-   color: red;
    float: right;
 }
 
