@@ -2877,6 +2877,10 @@ function createFillPatterns(svg, id, line_color) {
       function draw(init) {
 
          var render_to = '#histogram' + idx;
+         if (typeof($(render_to)[0]) == 'undefined') { 
+            obj = null; 
+            return; 
+         }
          $(render_to).empty();
 
          for (i=0; i<func_list.length; ++i) {
