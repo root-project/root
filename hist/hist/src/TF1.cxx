@@ -2550,7 +2550,7 @@ void TF1::InitStandardFunctions()
          // (note polynomial object will not be deleted)
          // note that these functions cannot be stored
          ROOT::Math::ChebyshevPol * pol = new ROOT::Math::ChebyshevPol(i); 
-         f1 = new TF1(TString::Format("cheb%d",i),pol,-1,1,i+1);
+         f1 = new TF1(TString::Format("chebyshev%d",i),pol,-1,1,i+1);
          f1->SetParameters(1,1,1,1,1,1,1,1,1,1);
       }
       
