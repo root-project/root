@@ -42,6 +42,7 @@ class TGeoMatrix : public TNamed
 public:
 enum EGeoTransfTypes {
    kGeoIdentity  = 0,
+   kGeoShared       = BIT(14),
    kGeoTranslation  = BIT(17),
    kGeoRotation     = BIT(18),
    kGeoScale        = BIT(19),
@@ -78,6 +79,7 @@ public :
    Bool_t               IsRotation()    const {return TestBit(kGeoRotation);}
    Bool_t               IsReflection()  const {return TestBit(kGeoReflection);}
    Bool_t               IsScale()       const {return TestBit(kGeoScale);}
+   Bool_t               IsShared()      const {return TestBit(kGeoShared);}
    Bool_t               IsCombi()       const {return (TestBit(kGeoTranslation) 
                                                && TestBit(kGeoRotation));}
    Bool_t               IsGeneral()     const {return (TestBit(kGeoTranslation) 
@@ -112,6 +114,7 @@ public :
    virtual void         SetDx(Double_t) {}
    virtual void         SetDy(Double_t) {}
    virtual void         SetDz(Double_t) {}
+   void                 SetShared(Bool_t flag=kTRUE) {SetBit(kGeoShared, flag);}
    
    ClassDef(TGeoMatrix, 1)                 // base geometrical transformation class
 };

@@ -704,6 +704,7 @@ TGeoNode *TGeoNodeMatrix::MakeCopyNode() const
    }
    // copy VC
    if (IsVirtual()) node->SetVirtual();
+   if (IsOverlapping()) node->SetOverlapping(); // <--- ADDED
    return node;
 }
 

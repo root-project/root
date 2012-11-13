@@ -1485,10 +1485,10 @@ void TGeoPainter::RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *o
 }   
 
 //______________________________________________________________________________
-void TGeoPainter::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz)
+void TGeoPainter::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz, const char *target_vol, Bool_t check_norm)
 {
 // Shoot nrays in the current drawn geometry
-   fChecker->RandomRays(nrays, startx, starty, startz);
+   fChecker->RandomRays(nrays, startx, starty, startz, target_vol, check_norm);
 }   
 
 //______________________________________________________________________________

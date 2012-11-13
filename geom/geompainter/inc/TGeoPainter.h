@@ -148,7 +148,7 @@ public:
    virtual void       PrintOverlaps() const;
    void               PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option="");
    virtual void       RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option="");
-   virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);
+   virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz, const char *target_vol=0, Bool_t check_norm=kFALSE);
    virtual void       Raytrace(Option_t *option="");
    virtual TGeoNode  *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
    virtual void       SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3, Double_t bombr=1.3);

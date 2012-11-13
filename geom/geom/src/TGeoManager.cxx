@@ -2691,11 +2691,11 @@ Int_t TGeoManager::GetMaterialIndex(const char *matname) const
    return -1;  // fail
 }
 //_____________________________________________________________________________
-void TGeoManager::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz)
+void TGeoManager::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz, const char *target_vol, Bool_t check_norm)
 {
 // Randomly shoot nrays and plot intersections with surfaces for current
 // top node.
-   GetGeomPainter()->RandomRays(nrays, startx, starty, startz);
+   GetGeomPainter()->RandomRays(nrays, startx, starty, startz, target_vol, check_norm);
 }
 
 //_____________________________________________________________________________

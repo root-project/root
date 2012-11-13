@@ -87,8 +87,10 @@ public:
    TGeoMatrix       *GetRightMatrix() const {return fRightMat;}
    TGeoShape        *GetLeftShape() const {return fLeft;}
    TGeoShape        *GetRightShape() const {return fRight;}
+   virtual TGeoBoolNode *MakeClone() const = 0;
    virtual void      Paint(Option_t *option);
    void              RegisterMatrices();
+   Bool_t            ReplaceMatrix(TGeoMatrix *mat, TGeoMatrix *newmat);
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
    virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void      SetPoints(Double_t *points) const;
@@ -131,6 +133,7 @@ public:
    virtual void      Sizeof3D() const;
 
    //CS specific
+   virtual TGeoBoolNode *MakeClone() const;
    virtual void      Paint(Option_t *option);
 
    ClassDef(TGeoUnion, 1)              // union node
@@ -169,6 +172,7 @@ public:
    virtual void      Sizeof3D() const;
 
    //CS specific
+   virtual TGeoBoolNode *MakeClone() const;
    virtual void      Paint(Option_t *option);
 
    ClassDef(TGeoIntersection, 1)              // intersection node
@@ -206,6 +210,7 @@ public:
    virtual void      Sizeof3D() const;
 
    //CS specific
+   virtual TGeoBoolNode *MakeClone() const;
    virtual void      Paint(Option_t *option);
 
    ClassDef(TGeoSubtraction, 1)              // subtraction node
