@@ -42,6 +42,12 @@ public:
       kNo,
       kDontCare
    };
+   enum EMatchType {
+      kName,
+      kPattern,
+      kFile,
+      kNoMatch
+   };
 
 private:
    long                   fIndex;           // Index indicating the ordering of the rules.
@@ -57,6 +63,7 @@ public:
    BaseSelectionRule(long index) : fIndex(index),fIsSelected(kNo),fMatchFound(false),fCXXRecordDecl(0) {} 
    BaseSelectionRule(long index, ESelect sel, const std::string& attributeName, const std::string& attributeValue);
    
+   virtual void DebugPrint() const;
    virtual void Print(std::ostream &out) const = 0;
 
    long    GetIndex() const { return fIndex; }
@@ -73,7 +80,7 @@ public:
    void  PrintAttributes(int level) const;       // prints the list of attributes - level is the number of tabs from the beginning of the line
    void  PrintAttributes(std::ostream &out, int level) const;       // prints the list of attributes - level is the number of tabs from the beginning of the line
 
-   bool  IsSelected (const clang::NamedDecl *decl, const std::string& name, const std::string& prototype, const std::string& file_name, bool& dontCare, bool& noName, bool& file, bool isLinkdef) const; // for more detailed description look at the .cxx file
+   EMatchType Match(const clang::NamedDecl *decl, const std::string& name, const std::string& prototype, const std::string& file_name, bool isLinkdef) const; // for more detailed description look at the .cxx file
 
    void  SetMatchFound(bool match); // set fMatchFound
    bool  GetMatchFound() const;     // get fMatchFound
