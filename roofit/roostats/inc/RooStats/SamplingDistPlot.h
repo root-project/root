@@ -115,7 +115,6 @@ namespace RooStats {
 
     RooList fItems; // holds TH1Fs only
     RooList fOtherItems; // other objects to be drawn like TLine etc.
-    TIterator* fIterator; // TODO remove class variable and instantiate locally as necessary
     RooPlot* fRooPlot;
     Bool_t fLogXaxis;
     Bool_t fLogYaxis;
