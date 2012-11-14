@@ -27,8 +27,11 @@ TMinuit2TraceObject::TMinuit2TraceObject(int parNumber) : ROOT::Minuit2::MnTrace
 TMinuit2TraceObject::~TMinuit2TraceObject() {
    // rest previous pad but do not delete histograms
    if (fOldPad && gPad && fOldPad != gPad) gPad = fOldPad; 
-   int niter = int(fHistoFval->GetEntries()+0.5);
-   if (fHistoFval) fHistoFval->GetXaxis()->SetRange(1,niter);
+   int niter = -1;   
+   if (fHistoFval) { 
+      niter = int(fHistoFval->GetEntries()+0.5);
+      fHistoFval->GetXaxis()->SetRange(1,niter);
+   }
    if (fHistoEdm) fHistoEdm->GetXaxis()->SetRange(1,niter);
    if (fHistoParList) { 
       for (int i=0; i < fHistoParList->GetSize(); ++i) { 
