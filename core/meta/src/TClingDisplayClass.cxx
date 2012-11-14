@@ -1,6 +1,7 @@
 #undef NDEBUG
 
 #include <algorithm>
+#include <iostream>
 #include <cassert>
 #include <cctype>
 #include <limits>
@@ -37,6 +38,46 @@ namespace {
 typedef clang::DeclContext::decl_iterator decl_iterator;
 typedef clang::CXXRecordDecl::base_class_const_iterator base_decl_iterator;
 
+//______________________________________________________________________________
+template<class Decl>
+bool HasUDT(const Decl *decl)
+{
+   //Check the type of decl, if it's a CXXRecordDecl or array with base element type of CXXRecordDecl.
+   assert(decl != 0 && "HasUDT, 'decl' parameter is null");
+
+   if (const clang::RecordType * const recordType = decl->getType()->template getAs<clang::RecordType>())
+      return llvm::cast_or_null<clang::CXXRecordDecl>(recordType->getDecl()->getDefinition());
+
+   if (const clang::ArrayType * const arrayType = decl->getType()->getAsArrayTypeUnsafe()) {
+      if (const clang::Type * const elType = arrayType->getBaseElementTypeUnsafe()) {
+         if (const clang::RecordType * const recordType = elType->getAs<clang::RecordType>())
+            return llvm::cast_or_null<clang::CXXRecordDecl>(recordType->getDecl()->getDefinition());
+      }
+   }
+
+   return false;
+}
+
+//______________________________________________________________________________
+int NumberOfElements(const clang::ArrayType *type)
+{
+   assert(type != 0 && "NumberOfElements, 'type' parameter is null");
+   
+   if (const clang::ConstantArrayType * const arrayType = llvm::dyn_cast<clang::ConstantArrayType>(type)) {
+      //We can calculate only the size of constant size array.
+      const int nElements = int(arrayType->getSize().roundToDouble());//very convenient, many thanks for this shitty API.
+      if (nElements <= 0)
+         return 0;
+      
+      if (const clang::Type *elementType = arrayType->getElementType().getTypePtr()) {
+         if (const clang::ArrayType *subArrayType = elementType->getAsArrayTypeUnsafe())
+            return nElements * NumberOfElements(subArrayType);
+      }
+
+      return nElements;
+   } else
+      return 0;
+}
 
 //______________________________________________________________________________
 void AppendClassDeclLocation(const clang::CompilerInstance *compiler, const clang::CXXRecordDecl *classDecl, std::string &textLine, bool verbose)
@@ -280,6 +321,18 @@ void AppendDataMemberSize(const clang::CompilerInstance *compiler, const Decl *d
          const clang::ASTRecordLayout &layout = compiler->getASTContext().getASTRecordLayout(recordDecl);
          formatted.Form("%d", int(layout.getSize().getQuantity()));
       }
+   } else if (const clang::ArrayType * const arrayType = decl->getType()->getAsArrayTypeUnsafe()) {
+      if (const clang::Type * const elementType = arrayType->getBaseElementTypeUnsafe()) {
+         if (const clang::CXXRecordDecl * const recordDecl = elementType->getAsCXXRecordDecl()) {
+            const clang::ASTRecordLayout &layout = compiler->getASTContext().getASTRecordLayout(recordDecl);
+            const int baseElementSize = int(layout.getSize().getQuantity());
+            
+            const int nElements = NumberOfElements(arrayType);
+            std::cout<<"nElements: "<<nElements<<" baseElementSize "<<baseElementSize<<std::endl;
+            if (nElements > 0)
+               formatted.Form("%d", nElements * baseElementSize);
+         }
+      }
    }
    
    if (formatted.Length())
@@ -321,7 +374,6 @@ void AppendDataMemberOffset(const clang::CompilerInstance *compiler, const clang
    formatted.Form("0x%-8x", int(layout.getFieldOffset(fieldDecl->getFieldIndex()) / std::numeric_limits<unsigned char>::digits));
    textLine += formatted.Data();
 }
-
 
 //
 //This is a primitive class which does nothing except fprintf for the moment,
@@ -387,9 +439,18 @@ private:
    {
       //Extract the type of declaration and process it.
       assert(decl != 0 && "ProcessTypeOfMember, 'decl' parameter is null");
-      if (const clang::RecordType * const recordType = decl->getType()->template getAs<clang::RecordType>())
+
+      if (const clang::RecordType * const recordType = decl->getType()->template getAs<clang::RecordType>()) {
          if (const clang::CXXRecordDecl * const classDecl = llvm::cast_or_null<clang::CXXRecordDecl>(recordType->getDecl()->getDefinition()))
             DisplayDataMembers(classDecl, nSpaces);
+      } else if (const clang::ArrayType * const arrayType = decl->getType()->getAsArrayTypeUnsafe()) {
+         if (const clang::Type * const elType = arrayType->getBaseElementTypeUnsafe()) {
+            if (const clang::RecordType * const recordType = elType->getAs<clang::RecordType>()) {
+               if (const clang::CXXRecordDecl *classDecl = llvm::cast_or_null<clang::CXXRecordDecl>(recordType->getDecl()->getDefinition()))
+                  DisplayDataMembers(classDecl, nSpaces);
+            }
+         }
+      }
    }
 
    void DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const;
@@ -397,16 +458,6 @@ private:
    void DisplayBasesAsTree(const clang::CXXRecordDecl *classDecl, unsigned nSpaces)const;
    void DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)const;
    void DisplayDataMembers(const clang::CXXRecordDecl *classDecl, unsigned nSpaces)const;
-   
-   template<class Decl>
-   bool HasUDT(const Decl *decl)const
-   {
-      assert(decl != 0 && "HasUDT, 'decl' parameter is null");
-      if (const clang::RecordType * const recordType = decl->getType()->template getAs<clang::RecordType>())
-         return llvm::cast_or_null<clang::CXXRecordDecl>(recordType->getDecl()->getDefinition());
-
-      return false;
-   }
 
    FILEPrintHelper fOut;
    const cling::Interpreter *fInterpreter;
@@ -797,7 +848,7 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl, uns
       textLine += ' ';
       AppendDataMemberDeclaration(*field, textLine);
       if (HasUDT(*field)) {
-         textLine += '=';
+         textLine += ", size = ";
          AppendDataMemberSize(fInterpreter->getCI(), *field, textLine);
          textLine += '\n';
          fOut.Print(textLine.c_str());
@@ -807,9 +858,7 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl, uns
          fOut.Print(textLine.c_str());
       }
    }
-   
 
-   
    //Now the problem: static data members are not fields, enumerators are not fields.
    for (decl_iterator decl = classDecl->decls_begin(); decl != classDecl->decls_end(); ++decl) {
       if (decl->getKind() == clang::Decl::Enum) {
@@ -823,7 +872,7 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl, uns
                textLine.clear();
                AppendDataMemberLocation(fInterpreter->getCI(), *enumerator, textLine);
                textLine += gap;
-               textLine += " 0x0       ";//offset is meaningless.
+               textLine += "0x0        ";//offset is meaningless.
                
                AppendMemberAccessSpecifier(*enumerator, textLine);
                textLine += ' ';
@@ -854,12 +903,12 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl, uns
             textLine.clear();
             AppendDataMemberLocation(fInterpreter->getCI(), varDecl, textLine);
             textLine += gap;
-            textLine += " 0x0       ";//offset is meaningless.
+            textLine += "0x0        ";//offset is meaningless.
             AppendMemberAccessSpecifier(varDecl, textLine);
             textLine += ' ';
             AppendDataMemberDeclaration(varDecl, textLine);
             if (HasUDT(varDecl)) {
-               textLine += '=';
+               textLine += ", size = ";
                AppendDataMemberSize(fInterpreter->getCI(), varDecl, textLine);
                textLine += '\n';
                fOut.Print(textLine.c_str());
