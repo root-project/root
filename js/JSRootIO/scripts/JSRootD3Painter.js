@@ -2530,12 +2530,14 @@ function createFillPatterns(svg, id, line_color) {
 
          var mo = gFile.GetMappedObject(leg['fObject']);
          if (mo) {
+            leg['fFillColor']   = mo['fFillColor'];
+            leg['fFillStyle']   = mo['fFillStyle'];
+            leg['fLineColor']   = mo['fLineColor'];
+            leg['fLineStyle']   = mo['fLineStyle'];
+            leg['fLineWidth']   = mo['fLineWidth'];
             leg['fMarkerColor'] = mo['fMarkerColor'];
-            leg['fLineColor'] = mo['fLineColor'];
-            leg['fLineStyle'] = mo['fLineStyle'];
-            leg['fLineWidth'] = mo['fLineWidth'];
-            leg['fFillColor'] = mo['fFillColor'];
-            leg['fFillStyle'] = mo['fFillStyle'];
+            leg['fMarkerSize']  = mo['fMarkerSize'];
+            leg['fMarkerStyle'] = mo['fMarkerStyle'];
          }
          var line_color = root_colors[leg['fLineColor']];
          var line_width = leg['fLineWidth'];

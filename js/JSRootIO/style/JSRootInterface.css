@@ -36,6 +36,7 @@ p { margin-top: 6px; padding: 0 10px 1em; }
    left: 35%;
    right: 3px;
    overflow: auto;
+   overflow-y: scroll;
    font-size:9pt;font-weight:normal;color:#191970;
 }
 
