@@ -49,12 +49,21 @@ LLVMOPTFLAGS := --enable-optimized --disable-assertions
 else
 LLVMOPTFLAGS := --disable-optimized
 endif
-ifneq ($(FORCELLVM),)
+
+ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist distsrc),)
+ifeq ($(findstring clean-,$(MAKECMDGOALS)),)
+ifeq ($(shell which svn 2>&1 | sed -ne "s@.*/svn@svn@p"),svn)
+FORCELLVM := $(shell bash $(ROOT_SRCDIR)/build/unix/svninfollvm.sh $(ROOT_SRCDIR)/interpreter/llvm)
+endif
+endif
+endif
+
+ifneq ($(FORCELLVM),0)
 FORCELLVMTARGET := FORCELLVMTARGET
 endif
 
 ##### local rules #####
-.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) FORCELLVMTARGET
+.PHONY: all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) FORCELLVMTARGET
 
 # clang resource directory gets copied to lib/clang/
 # clang version extraction as in tools/clang/lib/Headers/Makefile
@@ -127,6 +136,7 @@ $(LLVMDEPO): $(LLVMDEPS)
 		$$LLVM_HOST \
 		--prefix=$(ROOT_OBJDIR)/$(LLVMDIRI) \
 		--disable-docs --disable-bindings \
+		--disable-visibility-inlines-hidden \
 		$(LLVMOPTFLAGS) \
 		--enable-targets=host \
 		CC=$$LLVMCC CXX=$$LLVMCXX \

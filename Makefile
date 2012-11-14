@@ -448,7 +448,7 @@ endif
 
 ##### Store SVN revision number #####
 
-ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist),)
+ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist distsrc),)
 ifeq ($(findstring clean-,$(MAKECMDGOALS)),)
 ifeq ($(shell which svn 2>&1 | sed -ne "s@.*/svn@svn@p"),svn)
 SVNREV  := $(shell bash $(ROOT_SRCDIR)/build/unix/svninfo.sh $(ROOT_SRCDIR))
