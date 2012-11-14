@@ -1,7 +1,6 @@
 #undef NDEBUG
 
 #include <algorithm>
-#include <iostream>
 #include <cassert>
 #include <cctype>
 #include <limits>
@@ -328,7 +327,6 @@ void AppendDataMemberSize(const clang::CompilerInstance *compiler, const Decl *d
             const int baseElementSize = int(layout.getSize().getQuantity());
             
             const int nElements = NumberOfElements(arrayType);
-            std::cout<<"nElements: "<<nElements<<" baseElementSize "<<baseElementSize<<std::endl;
             if (nElements > 0)
                formatted.Form("%d", nElements * baseElementSize);
          }
