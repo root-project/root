@@ -816,35 +816,35 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl, uns
          const clang::EnumDecl *enumDecl = clang::dyn_cast<clang::EnumDecl>(*decl);
          assert(enumDecl != 0 && "DisplayDataMember, internal compielr error, decl->getKind() == Enum, but decl is not a EnumDecl");
          if (enumDecl->isComplete() && (enumDecl = enumDecl->getDefinition())) {//it's not really clear, if I should really check this.
-            if (fSeenDecls.find(enumDecl) == fSeenDecls.end()) {
-               fSeenDecls.insert(enumDecl);               
-               for (enumerator_iterator enumerator = enumDecl->enumerator_begin(); enumerator != enumDecl->enumerator_end(); ++enumerator) {
-                  //
-                  textLine.clear();
-                  AppendDataMemberLocation(fInterpreter->getCI(), *enumerator, textLine);
-                  textLine += gap;
-                  textLine += " 0x0       ";//offset is meaningless.
-                  
-                  AppendMemberAccessSpecifier(*enumerator, textLine);
-                  textLine += ' ';
-                  //{//Block to force flush for stream.                  
-                  //llvm::raw_string_ostream stream(textLine);
-                  const clang::QualType type(enumerator->getType());
-                  //const clang::LangOptions lo;
-                  //clang::PrintingPolicy pp(lo);
-                  //pp.SuppressScope = true;
-                  //type.print(stream, pp);
-                  textLine += type.getAsString();
-                  //}
-                  textLine += ' ';
-                  //SuppressInitializer does not help with PrintingPolicy,
-                  //so I have to use getNameAsString.
-                  //AppendDataMemberDeclaration(*enumerator, textLine);
-                  textLine += enumerator->getNameAsString();
-                  textLine += "\n";
-                  fOut.Print(textLine.c_str());
-               }
+            //if (fSeenDecls.find(enumDecl) == fSeenDecls.end()) {
+            //   fSeenDecls.insert(enumDecl);
+            for (enumerator_iterator enumerator = enumDecl->enumerator_begin(); enumerator != enumDecl->enumerator_end(); ++enumerator) {
+               //
+               textLine.clear();
+               AppendDataMemberLocation(fInterpreter->getCI(), *enumerator, textLine);
+               textLine += gap;
+               textLine += " 0x0       ";//offset is meaningless.
+               
+               AppendMemberAccessSpecifier(*enumerator, textLine);
+               textLine += ' ';
+               //{//Block to force flush for stream.                  
+               //llvm::raw_string_ostream stream(textLine);
+               const clang::QualType type(enumerator->getType());
+               //const clang::LangOptions lo;
+               //clang::PrintingPolicy pp(lo);
+               //pp.SuppressScope = true;
+               //type.print(stream, pp);
+               textLine += type.getAsString();
+               //}
+               textLine += ' ';
+               //SuppressInitializer does not help with PrintingPolicy,
+               //so I have to use getNameAsString.
+               //AppendDataMemberDeclaration(*enumerator, textLine);
+               textLine += enumerator->getNameAsString();
+               textLine += "\n";
+               fOut.Print(textLine.c_str());
             }
+            //}
          }
       } else if (decl->getKind() == clang::Decl::Var) {
          const clang::VarDecl * const varDecl = clang::dyn_cast<clang::VarDecl>(*decl);
