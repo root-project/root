@@ -1,5 +1,6 @@
 #undef NDEBUG
 
+#include <algorithm>
 #include <cassert>
 #include <cctype>
 #include <limits>
@@ -206,7 +207,6 @@ void AppendConstructorSignature(const clang::CXXConstructorDecl *ctorDecl, std::
 }
 
 //______________________________________________________________________________
-//void AppendMemberFunctionSignature(const clang::CXXMethodDecl *methodDecl, std::string &name)
 void AppendMemberFunctionSignature(const clang::Decl *methodDecl, std::string &name)
 {
    assert(methodDecl != 0 && "AppendMemberFunctionSignature, 'methodDecl' parameter is null");
@@ -264,6 +264,28 @@ void AppendClassSize(const clang::CompilerInstance *compiler, const clang::Recor
 
    TString formatted(TString::Format("SIZE: %d", int(layout.getSize().getQuantity())));
    textLine += formatted.Data();
+}
+
+//______________________________________________________________________________
+template<class Decl>
+void AppendDataMemberSize(const clang::CompilerInstance *compiler, const Decl *decl, std::string &textLine)
+{
+   assert(compiler != 0 && "AppendDataMemberSize, 'compiler' parameter is null");
+   assert(decl != 0 && "AppendDataMemberSize, 'decl' parameter is null");
+   
+   TString formatted;
+   
+   if (const clang::RecordType * const recordType = decl->getType()->template getAs<clang::RecordType>()) {
+      if (const clang::RecordDecl * const recordDecl = llvm::cast_or_null<clang::RecordDecl>(recordType->getDecl()->getDefinition())) {
+         const clang::ASTRecordLayout &layout = compiler->getASTContext().getASTRecordLayout(recordDecl);
+         formatted.Form("%d", int(layout.getSize().getQuantity()));
+      }
+   }
+   
+   if (formatted.Length())
+      textLine += formatted.Data();
+   else
+      textLine += "NA";
 }
 
 //______________________________________________________________________________
@@ -337,7 +359,8 @@ void FILEPrintHelper::Print(const char *msg)const
 class ClassPrinter {
 private:
    enum {
-      kBaseTreeShift = 3
+      kBaseTreeShift = 3,
+      kMemberTypeShift = 3
    };
 public:
    ClassPrinter(FILE * out, const class cling::Interpreter *interpreter);
@@ -358,12 +381,32 @@ private:
    void ProcessNamespaceDecl(decl_iterator decl)const;
    void ProcessLinkageSpecDecl(decl_iterator decl)const;
    void ProcessClassDecl(decl_iterator decl)const;
+   
+   template<class Decl>
+   void ProcessTypeOfMember(const Decl *decl, unsigned nSpaces)const
+   {
+      //Extract the type of declaration and process it.
+      assert(decl != 0 && "ProcessTypeOfMember, 'decl' parameter is null");
+      if (const clang::RecordType * const recordType = decl->getType()->template getAs<clang::RecordType>())
+         if (const clang::CXXRecordDecl * const classDecl = llvm::cast_or_null<clang::CXXRecordDecl>(recordType->getDecl()->getDefinition()))
+            DisplayDataMembers(classDecl, nSpaces);
+   }
 
    void DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const;
    void DisplayBasesAsList(const clang::CXXRecordDecl *classDecl)const;
    void DisplayBasesAsTree(const clang::CXXRecordDecl *classDecl, unsigned nSpaces)const;
    void DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)const;
-   void DisplayDataMembers(const clang::CXXRecordDecl *classDecl)const;
+   void DisplayDataMembers(const clang::CXXRecordDecl *classDecl, unsigned nSpaces)const;
+   
+   template<class Decl>
+   bool HasUDT(const Decl *decl)const
+   {
+      assert(decl != 0 && "HasUDT, 'decl' parameter is null");
+      if (const clang::RecordType * const recordType = decl->getType()->template getAs<clang::RecordType>())
+         return llvm::cast_or_null<clang::CXXRecordDecl>(recordType->getDecl()->getDefinition());
+
+      return false;
+   }
 
    FILEPrintHelper fOut;
    const cling::Interpreter *fInterpreter;
@@ -460,7 +503,8 @@ void ClassPrinter::ProcessDecl(decl_iterator decl)const
       break;
    default:
       if (llvm::dyn_cast<clang::FunctionDecl>(*decl))
-         ProcessFunctionDecl(decl);//decl->getKind() != clang::Decl::Function.
+         //decl->getKind() != clang::Decl::Function, but decl has type, inherited from FunctionDecl.
+         ProcessFunctionDecl(decl);
       break;
    }
 }
@@ -598,8 +642,13 @@ void ClassPrinter::DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const
 
       DisplayBasesAsTree(classDecl, 0);
       //now list all members.
+      
+      fOut.Print("List of member functions :---------------------------------------------------\n");
+      fOut.Print("filename       line:size busy function type and name\n");//CINT has a format like %-15s blah-blah.
       DisplayMemberFunctions(classDecl);
-      DisplayDataMembers(classDecl);
+      
+      fOut.Print("List of member variables --------------------------------------------------\n");
+      DisplayDataMembers(classDecl, 0);
    }
 }
 
@@ -680,11 +729,6 @@ void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)
 
    std::string textLine;
 
-   if (classDecl->ctor_begin() != classDecl->ctor_end() || classDecl->method_begin() != classDecl->method_end()) {
-      fOut.Print("List of member functions :---------------------------------------------------\n");
-      fOut.Print("filename       line:size busy function type and name\n");//CINT has a format like %-15s blah-blah.
-   }
-
    for (ctor_iterator ctor = classDecl->ctor_begin(); ctor != classDecl->ctor_end(); ++ctor) {
       if (ctor->isImplicit())//Compiler-generated.
          continue;
@@ -733,7 +777,7 @@ void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)
 }
 
 //______________________________________________________________________________
-void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl)const
+void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl, unsigned nSpaces)const
 {
    assert(classDecl != 0 && "DisplayDataMembers, 'classDecl' parameter is null");
 
@@ -741,21 +785,30 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl)cons
    typedef clang::EnumDecl::enumerator_iterator enumerator_iterator;
 
    std::string textLine;
-
-   if (classDecl->field_begin() != classDecl->field_end())
-      fOut.Print("List of member variables---------------------------------------------------\n");
+   const std::string gap(std::max(nSpaces, 1u), ' ');
 
    for (field_iterator field = classDecl->field_begin(); field != classDecl->field_end(); ++field) {
       textLine.clear();
       AppendDataMemberLocation(fInterpreter->getCI(), *field, textLine);
-      textLine += ' ';
+      textLine += gap;
       AppendDataMemberOffset(fInterpreter->getCI(), classDecl, *field, textLine);
+      textLine += ' ';
       AppendMemberAccessSpecifier(*field, textLine);
       textLine += ' ';
       AppendDataMemberDeclaration(*field, textLine);
-      textLine += ";\n";
-      fOut.Print(textLine.c_str());
+      if (HasUDT(*field)) {
+         textLine += '=';
+         AppendDataMemberSize(fInterpreter->getCI(), *field, textLine);
+         textLine += '\n';
+         fOut.Print(textLine.c_str());
+         ProcessTypeOfMember(*field, nSpaces + kMemberTypeShift);
+      } else {
+         textLine += "\n";
+         fOut.Print(textLine.c_str());
+      }
    }
+   
+
    
    //Now the problem: static data members are not fields, enumerators are not fields.
    for (decl_iterator decl = classDecl->decls_begin(); decl != classDecl->decls_end(); ++decl) {
@@ -769,12 +822,12 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl)cons
                   //
                   textLine.clear();
                   AppendDataMemberLocation(fInterpreter->getCI(), *enumerator, textLine);
+                  textLine += gap;
                   textLine += " 0x0       ";//offset is meaningless.
+                  
                   AppendMemberAccessSpecifier(*enumerator, textLine);
                   textLine += ' ';
-
-                  {//Block to force flush for stream.
-                  
+                  //{//Block to force flush for stream.                  
                   //llvm::raw_string_ostream stream(textLine);
                   const clang::QualType type(enumerator->getType());
                   //const clang::LangOptions lo;
@@ -782,14 +835,13 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl)cons
                   //pp.SuppressScope = true;
                   //type.print(stream, pp);
                   textLine += type.getAsString();
-                  }
-
+                  //}
                   textLine += ' ';
                   //SuppressInitializer does not help with PrintingPolicy,
                   //so I have to use getNameAsString.
                   //AppendDataMemberDeclaration(*enumerator, textLine);
                   textLine += enumerator->getNameAsString();
-                  textLine += ";\n";
+                  textLine += "\n";
                   fOut.Print(textLine.c_str());
                }
             }
@@ -801,12 +853,21 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl)cons
             //I hope, this is a static data-member :)
             textLine.clear();
             AppendDataMemberLocation(fInterpreter->getCI(), varDecl, textLine);
+            textLine += gap;
             textLine += " 0x0       ";//offset is meaningless.
             AppendMemberAccessSpecifier(varDecl, textLine);
             textLine += ' ';
             AppendDataMemberDeclaration(varDecl, textLine);
-            textLine += ";\n";
-            fOut.Print(textLine.c_str());
+            if (HasUDT(varDecl)) {
+               textLine += '=';
+               AppendDataMemberSize(fInterpreter->getCI(), varDecl, textLine);
+               textLine += '\n';
+               fOut.Print(textLine.c_str());
+               ProcessTypeOfMember(varDecl, nSpaces + kMemberTypeShift);
+            } else {
+               textLine += "\n";
+               fOut.Print(textLine.c_str());
+            }
          }
       }
    }
