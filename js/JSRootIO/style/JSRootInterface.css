@@ -63,7 +63,7 @@ input.tb {
 .ui-icon-triangle-1-s { background-position: -64px -16px; }
 
 .ui-accordion { 
-   width: 100%;
+   width: 100%; margin-right: 15px;
 }
 .ui-accordion-header {
    background-color: #c0c8ff;

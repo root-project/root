@@ -950,10 +950,12 @@ function createFillPatterns(svg, id, line_color) {
    JSROOTPainter.addInteraction = function(vis, obj) {
       var width = vis.attr("width"), height = vis.attr("height");
       var e, origin, rect;
-      doubleTap(vis[0][0]);
 
-      if (typeof(vis['objects']) === 'undefined')
+      if (typeof(vis['objects']) === 'undefined') {
          vis['objects'] = new Array();
+         doubleTap(vis[0][0]);
+      }
+      if (vis['objects'].indexOf(obj) != -1) return;
       vis['objects'].push(obj);
 
       function refresh() {
@@ -975,7 +977,8 @@ function createFillPatterns(svg, id, line_color) {
             vis['objects'][i].redraw();
          }
       };
-      var zoom = d3.behavior.zoom().x(obj.x).y(obj.y).on("zoom", refresh());
+      //var zoom = d3.behavior.zoom().x(obj.x).y(obj.y).on("zoom", refresh());
+      var zoom = d3.behavior.zoom().x(obj.x).y(obj.y);
       vis.on("touchstart", startRectSel);
       vis.on("mousedown", startRectSel);
 
@@ -1535,6 +1538,7 @@ function createFillPatterns(svg, id, line_color) {
             });
       };
       histo['redraw'] = do_redraw;
+      do_redraw();
    };
 
    JSROOTPainter.drawFunction = function(vis, pad, func, hframe) {
@@ -1662,6 +1666,7 @@ function createFillPatterns(svg, id, line_color) {
             .style("fill", "none");
       };
       func['redraw'] = do_redraw;
+      do_redraw();
 
       if (draw_all) {
 
@@ -2021,6 +2026,7 @@ function createFillPatterns(svg, id, line_color) {
          }
       };
       graph['redraw'] = do_redraw;
+      do_redraw();
 
       if (draw_all) {
          this.drawAxes(frame, graph['fHistogram'], pad, x, y);
@@ -2153,6 +2159,7 @@ function createFillPatterns(svg, id, line_color) {
          this.drawTitle(vis, histo, pad);
          this.addInteraction(frame, histo);
          this.drawFunctions(vis, histo, pad, ret);
+         histo.redraw();
          return {
             frame: frame,
             xmin: histo['fXaxis']['fXmin'],
@@ -2265,6 +2272,7 @@ function createFillPatterns(svg, id, line_color) {
             }
          };
          histo['redraw'] = do_redraw;
+         do_redraw();
       }
       if (draw_all)
          this.drawAxes(frame, histo, pad, x, y);
@@ -2403,6 +2411,7 @@ function createFillPatterns(svg, id, line_color) {
             .text(function(d) { return "x = " + d.x.toPrecision(5) + " \ny = " + d.y.toPrecision(5) + " \nentries = " + d.z; });
       };
       histo['redraw'] = do_redraw;
+      do_redraw();
 
       if (opt.indexOf('colz') != -1) {
          // just to initialize the default palette
@@ -2868,6 +2877,7 @@ function createFillPatterns(svg, id, line_color) {
          histo['redraw'] = function() {
             JSROOTPainter.drawGrid(frame, histo, pad, x, y);
          };
+         histo.redraw();
          this.addInteraction(frame, histo);
       }
       for (var i=0; i<graphs.length; ++i) {
