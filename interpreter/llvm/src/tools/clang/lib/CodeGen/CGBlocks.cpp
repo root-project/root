@@ -14,7 +14,7 @@
 #include "CGDebugInfo.h"
 #include "CodeGenFunction.h"
 #include "CGObjCRuntime.h"
-#include "CodeGenModule.h"
+#include "clang/CodeGen/CodeGenModule.h"
 #include "CGBlocks.h"
 #include "clang/AST/DeclObjC.h"
 #include "llvm/Module.h"

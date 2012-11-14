@@ -19,7 +19,7 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/Frontend/CodeGenOptions.h"
-#include "CodeGenTypes.h"
+#include "clang/CodeGen/CodeGenTypes.h"
 #include "CGCXXABI.h"
 #include "llvm/DerivedTypes.h"
 #include "llvm/Type.h"

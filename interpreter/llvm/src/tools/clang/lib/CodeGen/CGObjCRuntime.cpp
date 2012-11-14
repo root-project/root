@@ -16,7 +16,7 @@
 #include "CGObjCRuntime.h"
 
 #include "CGRecordLayout.h"
-#include "CodeGenModule.h"
+#include "clang/CodeGen/CodeGenModule.h"
 #include "CodeGenFunction.h"
 #include "CGCleanup.h"
 

@@ -12,7 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/CodeGen/ModuleBuilder.h"
-#include "CodeGenModule.h"
+#include "clang/CodeGen/CodeGenModule.h"
 #include "clang/Frontend/CodeGenOptions.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclObjC.h"
@@ -47,6 +47,10 @@ namespace {
 
     virtual llvm::Module* ReleaseModule() {
       return M.take();
+    }
+
+    virtual CodeGen::CodeGenModule* GetBuilder() {
+      return Builder.get();
     }
 
     virtual void Initialize(ASTContext &Context) {

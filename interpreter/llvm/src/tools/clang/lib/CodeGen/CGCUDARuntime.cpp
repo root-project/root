@@ -16,7 +16,7 @@
 #include "CGCUDARuntime.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/ExprCXX.h"
-#include "CGCall.h"
+#include "clang/CodeGen/CGCall.h"
 #include "CodeGenFunction.h"
 
 using namespace clang;

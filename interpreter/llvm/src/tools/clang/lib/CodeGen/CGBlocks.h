@@ -14,7 +14,7 @@
 #ifndef CLANG_CODEGEN_CGBLOCKS_H
 #define CLANG_CODEGEN_CGBLOCKS_H
 
-#include "CodeGenTypes.h"
+#include "clang/CodeGen/CodeGenTypes.h"
 #include "clang/AST/Type.h"
 #include "llvm/Module.h"
 #include "clang/Basic/TargetInfo.h"
@@ -25,8 +25,8 @@
 
 #include "CodeGenFunction.h"
 #include "CGBuilder.h"
-#include "CGCall.h"
-#include "CGValue.h"
+#include "clang/CodeGen/CGCall.h"
+#include "clang/CodeGen/CGValue.h"
 
 namespace llvm {
   class Module;

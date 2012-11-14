@@ -27,11 +27,16 @@ namespace clang {
   class LangOptions;
   class CodeGenOptions;
 
+  namespace CodeGen {
+    class CodeGenModule;
+  }
+
   class CodeGenerator : public ASTConsumer {
     virtual void anchor();
   public:
     virtual llvm::Module* GetModule() = 0;
     virtual llvm::Module* ReleaseModule() = 0;
+    virtual CodeGen::CodeGenModule* GetBuilder() = 0;
   };
 
   /// CreateLLVMCodeGen - Create a CodeGenerator instance.

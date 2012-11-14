@@ -13,7 +13,7 @@
 
 #include "TargetInfo.h"
 #include "CodeGenFunction.h"
-#include "CodeGenModule.h"
+#include "clang/CodeGen/CodeGenModule.h"
 #include "CGObjCRuntime.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/AST/ASTContext.h"

@@ -11,7 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "CodeGenModule.h"
+#include "clang/CodeGen/CodeGenModule.h"
 #include "CGCXXABI.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"

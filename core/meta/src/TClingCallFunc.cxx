@@ -42,6 +42,8 @@
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
+#include "clang/CodeGen/ModuleBuilder.h"
+#include "clang/CodeGen/CodeGenModule.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
 
@@ -533,106 +535,16 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
    }
 }
 
-static llvm::Type *getLLVMTypeFromBuiltin(llvm::LLVMContext &Context,
-                                          clang::ASTContext &ASTCtx,
-                                          const clang::BuiltinType* PBT)
+static llvm::Type *getLLVMType(cling::Interpreter *interp, clang::QualType QT)
 {
-   llvm::Type *TY = 0;
-   if (PBT->isInteger()) {
-      uint64_t BTBits = ASTCtx.getTypeInfo(PBT).first;
-      TY = llvm::IntegerType::get(Context, BTBits);
-   } else switch (PBT->getKind()) {
-      case clang::BuiltinType::Half:
-      case clang::BuiltinType::ObjCId:
-      case clang::BuiltinType::ObjCClass:
-      case clang::BuiltinType::ObjCSel:
-      case clang::BuiltinType::Dependent:
-      case clang::BuiltinType::Overload:
-      case clang::BuiltinType::BoundMember:
-      case clang::BuiltinType::PseudoObject:
-      case clang::BuiltinType::UnknownAny:
-      case clang::BuiltinType::BuiltinFn:
-      case clang::BuiltinType::ARCUnbridgedCast:
-         Error("TClingCallFunc::getLLVMTypeFromBuiltin()",
-               "Not implemented (kind %d)!", (int) PBT->getKind());
-         break;
-      case clang::BuiltinType::Void:
-         TY = llvm::Type::getVoidTy(Context);
-         break;
-      case clang::BuiltinType::Float:
-         TY = llvm::Type::getFloatTy(Context);
-         break;
-      case clang::BuiltinType::Double:
-         TY = llvm::Type::getDoubleTy(Context);
-         break;
-      case clang::BuiltinType::LongDouble:
-         TY = llvm::Type::getFP128Ty(Context);
-         break;
-      case clang::BuiltinType::NullPtr:
-         TY = llvm::IntegerType::get(Context, CHAR_BIT);
-         break;
-      default:
-         // everything else should be ints - what are we missing?
-         Error("TClingCallFunc::getLLVMTypeFromBuiltin()",
-               "Logic error (missing kind %d)!", (int)PBT->getKind());
-         break;         
-   }
-   return TY;
-}
-
-static llvm::Type *getLLVMType(llvm::LLVMContext &Context,
-                               clang::ASTContext &ASTCtx,
-                               clang::QualType QT)
-{
-   llvm::Type *TY = 0;
-   QT = QT.getCanonicalType();
-   const clang::BuiltinType *BT = QT->getAs<clang::BuiltinType>();
-   // Note: nullptr is a builtin type.
-   if (QT->isPointerType() || QT->isReferenceType()) {
-      clang::QualType PT = QT->getPointeeType();
-      PT = PT.getCanonicalType();
-      const clang::BuiltinType *PBT = llvm::dyn_cast<clang::BuiltinType> (PT);
-      if (PBT) {
-         // Pointer to something simple, preserve that.
-         if (PT->isVoidType()) {
-            // We have pointer to void, llvm cannot handle that,
-            // force it to pointer to char.
-            TY = llvm::PointerType::getUnqual(
-                    llvm::IntegerType::get(Context, CHAR_BIT));
-         }
-         else {
-            // We have pointer to clang builtin type, preserve that.
-            llvm::Type *llvm_pt = getLLVMTypeFromBuiltin(Context, ASTCtx, PBT);
-            TY = llvm::PointerType::getUnqual(llvm_pt);
-         }
-      }
-      else {
-         // Force it to pointer to char.
-         TY = llvm::PointerType::getUnqual(
-                 llvm::IntegerType::get(Context, CHAR_BIT));
-      }
-   }
-   else if (QT->isRealFloatingType()) {
-      TY = getLLVMTypeFromBuiltin(Context, ASTCtx, BT);
-   }
-   else if (QT->isIntegralOrEnumerationType()) {
-      if (BT) {
-         TY = getLLVMTypeFromBuiltin(Context, ASTCtx, BT);
-      }
-      else {
-         const clang::EnumType *ET = QT->getAs<clang::EnumType>();
-         clang::QualType IT = ET->getDecl()->getIntegerType();
-         IT = IT.getCanonicalType();
-         const clang::BuiltinType *IBT = llvm::dyn_cast<clang::BuiltinType>(IT);
-         TY = getLLVMTypeFromBuiltin(Context, ASTCtx, IBT);
-      }
-   }
-   else if (QT->isVoidType()) {
-      TY = llvm::Type::getVoidTy(Context);
-   } else {
-      Error("getLLVMType()", "Cannot handle type ID %d", QT->getTypeClass());
-   }
-   return TY;
+   clang::CodeGenerator* CG = interp->getCodeGenerator();
+   clang::CodeGen::CodeGenModule* CGM = CG->GetBuilder();
+   clang::CodeGen::CodeGenTypes& CGT = CGM->getTypes();
+   // Note: The first thing this routine does is getCanonicalType(), so we
+   //       do not need to do that first.
+   llvm::Type* Ty = CGT.ConvertType(QT);
+   //llvm::Type* Ty = CGT.ConvertTypeForMem(QT);
+   return Ty;
 }
 
 void TClingCallFunc::Init(const clang::FunctionDecl *FD)
@@ -717,7 +629,7 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
          for (unsigned I = 0U; I < NumParams; ++I) {
             const clang::ParmVarDecl *PVD = FD->getParamDecl(I);
             clang::QualType QT = PVD->getType();
-            llvm::Type *argtype = getLLVMType(Context, ASTCtx, QT);
+            llvm::Type *argtype = getLLVMType(fInterp, QT);
             if (argtype == 0) {
                // We are not in good shape, quit while we are still alive.
                return;
@@ -731,7 +643,7 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
                                                 CHAR_BIT);
          }
          else {
-            ReturnType = getLLVMType(Context, ASTCtx, FD->getResultType());
+            ReturnType = getLLVMType(fInterp, FD->getResultType());
          }
          if (ReturnType) {
             

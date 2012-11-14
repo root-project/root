@@ -26,10 +26,10 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/ValueHandle.h"
 #include "llvm/Support/Debug.h"
-#include "CodeGenModule.h"
+#include "clang/CodeGen/CodeGenModule.h"
 #include "CGBuilder.h"
 #include "CGDebugInfo.h"
-#include "CGValue.h"
+#include "clang/CodeGen/CGValue.h"
 
 namespace llvm {
   class BasicBlock;

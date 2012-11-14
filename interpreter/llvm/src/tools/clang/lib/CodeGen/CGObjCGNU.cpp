@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "CGObjCRuntime.h"
-#include "CodeGenModule.h"
+#include "clang/CodeGen/CodeGenModule.h"
 #include "CodeGenFunction.h"
 #include "CGCleanup.h"
 #include "clang/AST/ASTContext.h"

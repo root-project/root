@@ -11,11 +11,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "CodeGenModule.h"
+#include "clang/CodeGen/CodeGenModule.h"
 #include "CGDebugInfo.h"
 #include "CodeGenFunction.h"
 #include "CodeGenTBAA.h"
-#include "CGCall.h"
+#include "clang/CodeGen/CGCall.h"
 #include "CGCUDARuntime.h"
 #include "CGCXXABI.h"
 #include "CGObjCRuntime.h"
