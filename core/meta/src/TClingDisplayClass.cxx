@@ -1,6 +1,7 @@
 #undef NDEBUG
 
 #include <cassert>
+#include <cctype>
 #include <limits>
 #include <string>
 #include <set>
@@ -831,10 +832,18 @@ void DisplayClass(FILE *out, const cling::Interpreter *interpreter, const char *
    assert(interpreter != 0 && "DisplayClass, 'interpreter' parameter is null");
    assert(className != 0 && "DisplayClass, 'className' parameter is null");
 
+   while (std::isspace(*className))
+      ++className;
+   
    ClassPrinter printer(out, interpreter);
-   printer.SetVerbose(verbose);
-   printer.DisplayClass(className);
 
+   if (*className) {
+      printer.SetVerbose(verbose);
+      printer.DisplayClass(className);
+   } else {
+      printer.SetVerbose(true);//?
+      printer.DisplayAllClasses();
+   }
 }
 
 
