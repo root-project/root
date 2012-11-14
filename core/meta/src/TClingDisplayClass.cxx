@@ -15,6 +15,7 @@
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/AST/RecordLayout.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
@@ -259,6 +260,77 @@ void AppendMemberFunctionSignature(const clang::Decl *methodDecl, std::string &n
    printingPolicy.SuppressSpecifiers = false; //Show 'static', 'inline', etc.
 
    methodDecl->print(out, printingPolicy, 0, false);//true);//true was wrong: for member function templates it will print template itself and specializations.
+}
+
+//______________________________________________________________________________
+void AppendMemberFunctionTemplateSignature(clang::FunctionTemplateDecl *decl, std::string &name)
+{
+   assert(decl != 0 && "AppendMemberFunctinoTemplateSignature, 'decl' parameter is null");
+
+   typedef clang::FunctionTemplateDecl::spec_iterator spec_iterator;
+
+   (void) decl;
+
+   clang::TemplateParameterList * const params = decl->getTemplateParameters();
+   assert(params != 0 && "AppendMemberFunctinoTemplateSignature, template paramter list is null");
+
+   llvm::raw_string_ostream out(name);
+   const clang::LangOptions langOpts;
+   clang::PrintingPolicy printingPolicy(langOpts);
+
+   for (spec_iterator spec = decl->spec_begin(), specEnd = decl->spec_end(); spec != specEnd; ++spec) {
+      const clang::TemplateArgumentList *args = (*spec)->getTemplateSpecializationArgs();
+      assert(!args || params->size() == args->size());
+
+      out << "template <";
+
+      for (unsigned i = 0, e = params->size(); i != e; ++i) {
+         if (i != 0)
+            out << ", ";
+
+         const clang::Decl * const param = params->getParam(i);
+         if (const clang::TemplateTypeParmDecl * const ttp = llvm::dyn_cast<clang::TemplateTypeParmDecl>(param)) {
+            if (ttp->wasDeclaredWithTypename())
+               out << "typename ";
+            else
+               out << "class ";
+
+            if (ttp->isParameterPack())
+               out << "... ";
+
+            out << *ttp;
+
+            if (args) {
+               out << " = ";
+               args->get(i).print(printingPolicy, out);
+            } else if (ttp->hasDefaultArgument()) {
+               out << " = ";
+               out << ttp->getDefaultArgument().getAsString(printingPolicy);
+            }
+         } else if (const clang::NonTypeTemplateParmDecl * const nttp = llvm::dyn_cast<clang::NonTypeTemplateParmDecl>(param)) {
+            out << nttp->getType().getAsString(printingPolicy);
+
+            if (nttp->isParameterPack() && !llvm::isa<clang::PackExpansionType>(nttp->getType()))
+               out << "...";
+
+            if (clang::IdentifierInfo *name = nttp->getIdentifier()) {
+               out << ' ';
+               out << name->getName();
+            }
+
+            if (args) {
+               out << " = ";
+               args->get(i).print(printingPolicy, out);
+            } else if (nttp->hasDefaultArgument()) {
+               out << " = ";
+               nttp->getDefaultArgument()->printPretty(out, 0, printingPolicy, 0);//the last 0 for indentation.
+            }
+         } /*else if (const clang::TemplateTemplateParmDecl *ttpd = llvm::dyn_cast<clang::TemplateTemplateParmDecl>(param)) {
+         }*/
+      }
+
+      out << "> ";
+   }
 }
 
 //______________________________________________________________________________
@@ -819,6 +891,7 @@ void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)
          AppendMemberAccessSpecifier(*decl, textLine);
          textLine += ' ';
          AppendMemberFunctionSignature(*decl, textLine);
+         //AppendMemberFunctionTemplateSignature(llvm::dyn_cast<clang::FunctionTemplateDecl>(*decl), textLine);
          textLine += ";\n";
          fOut.Print(textLine.c_str());
       }
