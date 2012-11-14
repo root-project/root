@@ -23,17 +23,21 @@ Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, Roo
          << "Same RooArgSet used for null and alternate, so you must explicitly SetNullParameters and SetAlternateParameters or the likelihood ratio will always be 1."
          << std::endl;
    }
+  
    
    // strip pdfs of constraints (which cancel out in the ratio) to avoid unnecessary computations and computational errors
    if (fFirstEval) {
       fNullPdf = RooStats::MakeUnconstrainedPdf(*fNullPdf, *fNullPdf->getObservables(data));
       fAltPdf  = RooStats::MakeUnconstrainedPdf(*fAltPdf , *fAltPdf->getObservables(data) );
+      if (!fNullPdf || !fAltPdf) { 
+         oocoutE(fNullPdf,InputArguments)
+            << "Error: invalid null or alt pdf " << fNullPdf->GetName() << "  " << fAltPdf->GetName() 
+            << std::endl;
+         return TMath::QuietNaN();
+      }
    }
 
    fFirstEval = false;
-
-   RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
-   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
    Bool_t reuse = (fReuseNll || fgAlwaysReuseNll) ;
 
@@ -53,9 +57,6 @@ Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, Roo
    *attachedSet = *fNullParameters;
    *attachedSet = nullPOI;
    double nullNLL = fNllNull->getVal();
-         
-   //std::cout << std::endl << "SLRTS: null params:" << std::endl;
-   //attachedSet->Print("v");
          
 
    if (!reuse) {
@@ -107,6 +108,5 @@ Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, Roo
    }
 
 
-   RooMsgService::instance().setGlobalKillBelow(msglevel);
    return nullNLL - altNLL;
 }
