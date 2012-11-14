@@ -1779,8 +1779,8 @@ can set the number of stacked panels at building time. It has the following
 constructor: By default, the number of stacked panels is 5,
 <code>option=</code>”<code>br</code>”.</para>
 
-<programlisting language="c++">TPavesText(Double_t x1,Double_t y1,Double_t x2,Double_t y2,Int_t npaves,
-Option_t* option)
+<programlisting language="c++">TPavesText(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
+Int_t npaves, Option_t* option)
 </programlisting>
 
 <figure><title>A PaveText example</title>
@@ -1961,8 +1961,9 @@ This function will be used to map the user coordinates to the axis values and
 ticks.</para>
 <para>The constructor is the following:</para>
 
-<programlisting language="c++">TGaxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
-const char* funcname,Int_t ndiv=510,Option_t* chopt,Double_t gridlength=0)
+<programlisting language="c++">TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
+       const char* funcname, Int_t ndiv=510,
+       Option_t* chopt, Double_t gridlength=0)
 </programlisting>
 
 <para>In such a way, it is possible to obtain exponential evolution of the tick
@@ -2265,7 +2266,7 @@ to define the histogram limits relatively to the time offset value.</para>
 <figure>
 <title>Time axis examples</title>
 <para>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/030000C8.png" width="211.05pt" depth="201.7pt"/></imageobject></inlinemediaobject>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/030000C8.png" width="300.05pt"/></imageobject></inlinemediaobject>
 </para>
 </figure>
 
@@ -2312,7 +2313,7 @@ day after.</para>
 
 <figure><title>A histogram with time axis X</title>
 <para>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/030000C9.png" width="208.55pt" depth="173.8pt"/></imageobject></inlinemediaobject>
+<inlinemediaobject><imageobject><imagedata fileref="pictures/030000C9.png" width="300.55pt"/></imageobject></inlinemediaobject>
 </para>
 </figure>
 
@@ -2501,7 +2502,8 @@ void seism() {
     gSystem-&gt;ProcessEvents(); 
     //canvas can be edited during the loop
    }
-   printf("Real Time = %8.3fs,Cpu Time = %8.3fsn",sw.RealTime(),sw.CpuTime());
+   printf("Real Time = %8.3fs,Cpu Time = %8.3fsn",sw.RealTime(),
+          sw.CpuTime());
 }
 </programlisting>
 
@@ -2895,7 +2897,8 @@ precision <code>2</code>.</para>
     lid = new TLatex(0.1,1-(double)i/15,cid);
     lid-&gt;SetTextFont(62);
     lid-&gt;Draw();
-    l = new TLatex(.2,1-(double)i/15,"The quick brown fox is not here anymore")
+    l = new TLatex(.2,1-(double)i/15,
+                   "The quick brown fox is not here anymore")
     l-&gt;SetTextFont(i*10+2);
     l-&gt;Draw();
   }
@@ -3140,7 +3143,8 @@ more colors than the number of contours.</para>
   for (Int_t i=0; i&lt;colNum; i++) {
     <emphasis role="italic">// get the color and if it does not exist create it</emphasis>
     if (! gROOT-&gt;GetColor(230+i) ){
-      TColor *color = new TColor(230+i,1-(i/((colNum)*1.0)),0.3,0.5,"");
+      TColor *color = 
+         new TColor(230+i,1-(i/((colNum)*1.0)),0.3,0.5,"");
     } else {
       TColor *color = gROOT-&gt;GetColor(230+i);
       color-&gt;SetRGB(1-(i/((colNum)*1.0)),0.3,0.5);
@@ -3329,8 +3333,8 @@ a panel with several entries (class
 <emphasis role="bold"><code>TLegendEntry</code></emphasis>) and is created by
 the constructor</para>
 
-<programlisting language="c++">TLegend(Double_t x1,Double_t y1,Double_t x2,Double_t y2,const char *header,
-Option_t *option)
+<programlisting language="c++">TLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
+        const char *header, Option_t *option)
 </programlisting>
 
 <para>The legend is defined with default coordinates, border size and option.
@@ -3352,7 +3356,9 @@ for title</para></listitem>
 "<code>brand</code>". Once the legend box is created, one has to add the text
 with the <code>AddEntry()</code> method:</para>
 
-<programlisting language="c++">TLegendEntry* TLegend::AddEntry(TObject *obj, const char *label,Option_t *option)
+<programlisting language="c++">TLegendEntry* TLegend::AddEntry(TObject *obj, 
+                                const char *label,
+                                Option_t *option)
 </programlisting>
 
 <para>The parameters are:</para>
@@ -3374,7 +3380,9 @@ object</para></listitem>
 </itemizedlist>
 <para>One may also use the other form of the method <code>AddEntry</code>:</para>
 
-<programlisting language="c++">TLegendEntry* TLegend::AddEntry(const char *name,const char *label, Option_t *option)
+<programlisting language="c++">TLegendEntry* TLegend::AddEntry(const char *name, 
+                                const char *label,
+                                Option_t *option)
 </programlisting>
 
 <para>Here <code>name</code> is the name of the object in the pad. Other
@@ -3387,7 +3395,8 @@ leg-&gt;AddEntry(fun3,"Another Theory","f");
 leg-&gt;AddEntry(gr,"The Data","p");
 leg-&gt;Draw();
 <emphasis role="italic">// oops we forgot the blue line... add it after</emphasis>
-leg-&gt;AddEntry(fun2,"#sqrt{2#pi} P_{T} (#gamma) latex  formula","f");
+leg-&gt;AddEntry(fun2,
+              "#sqrt{2#pi} P_{T} (#gamma) latex  formula","f");
 <emphasis role="italic">// and add a header (or "title") for the legend</emphasis>
 leg-&gt;SetHeader("The Legend Title");
 leg-&gt;Draw();
@@ -3517,15 +3526,16 @@ c1.Print("c1.ps");
 <para>If the Postscript file name finishes with "<code>(</code>", the file
 remains opened (it is not closed). If the Postscript file name finishes with "<code>)</code>" and the file has been opened with "<code>(</code>", the file is closed.</para>
 
-<programlisting language="c++"><code>{  </code>
-<code>   TCanvas c1("c1");</code>
-<code>   h1.Draw();</code>
-<code>   c1.Print("c1.ps(");  </code><emphasis role="italic"><code>// write canvas and keep the ps file open</code></emphasis>
-<code>   h2.Draw();</code>
-<code>   c1.Print("c1.ps");   </code><emphasis role="italic"><code>// canvas is added to "c1.ps"</code></emphasis>
-<code>   h3.Draw();</code>
-<code>   c1.Print("c1.ps)");  </code><emphasis role="italic"><code>//canvas is added to "c1.ps"; ps file is closed</code></emphasis>
-<code>}</code>
+<programlisting language="c++">{  
+   TCanvas c1("c1");
+   h1.Draw();
+   c1.Print("c1.ps("); <emphasis role="italic">// write canvas and keep the ps file open</emphasis>
+   h2.Draw();
+   c1.Print("c1.ps");  <emphasis role="italic">// canvas is added to "c1.ps"</emphasis>
+   h3.Draw();
+   c1.Print("c1.ps)"); <emphasis role="italic">// canvas is added to "c1.ps"
+                       // and ps file is closed</emphasis>
+}
 </programlisting>
 
 <para>The <emphasis role="bold"><code>TCanvas</code></emphasis><code>::Print("file.ps(")</code>         mechanism is very useful, but it can be a little inconvenient to have the action of opening/closing a file being atomic with printing a page. Particularly if pages are being generated in some loop, one needs to detect the special cases of first and last page. The "<code>[</code>" and "<code>]</code>" can be used instead of "<code>(</code>" and "<code>)</code>" as shown in the next example.</para>
@@ -3651,7 +3661,8 @@ gSystem-&gt;Exec("gs file.ps");  <emphasis role="italic"><code>// invoke PostScr
 
 <para>The "<code>Plain</code>" style can be used if you want to get a "conventional" PostScript output or if you are working on a monochrome display. The following example shows how to create it.</para>
 
-<programlisting language="c++">TStyle *plain  = new TStyle("Plain","Plain Style(no colors/fill areas)");
+<programlisting language="c++">TStyle *plain  = new TStyle("Plain",
+                            "Plain Style(no colors/fill areas)");
 plain-&gt;SetCanvasBorderMode(0);
 plain-&gt;SetPadBorderMode(0);
 plain-&gt;SetPadColor(0);
@@ -3828,7 +3839,8 @@ gStyle-&gt;SetLabelFont(72);
 <para>Configure the camera by calling the methods <code>SetPerspectiveCamera(</code>) or <code>SetOrthographicCamera()</code> of <emphasis role="bold"><code>TGLViewer</code></emphasis>:</para>
 
 <programlisting language="c++">TGLViewer * v = (TGLViewer *)gPad-&gt;GetViewer3D();
-v-&gt;SetOrthoCamera(TGLViewer::kCameraOrthoXOY,left,right,top,bottom);
+v-&gt;SetOrthoCamera(TGLViewer::kCameraOrthoXOY,
+                  left,right,top,bottom);
 ...
 v-&gt;SetPerspectiveCamera (camera,fov,dolly,center,hRotate,vRotate);
 </programlisting>
@@ -4138,20 +4150,20 @@ if (buffer.SectionsValid(TBuffer3D:: kShapeSpecific)) {
 
 <programlisting language="c++">TVirtualViewer3D * viewer = gPad-&gt;GetViewer3D();
 if (shape.IsA() != TGeoCompositeShape::Class()) {
-<emphasis role="italic"><code>   // Does viewer prefer local frame positions?</code></emphasis>
-Bool_t localFrame = viewer-&gt;PreferLocalFrame();
-<emphasis role="italic"><code>   // Perform first fetch of buffer from the shape and adding it to the viewer</code></emphasis>
-const TBuffer3D &amp;buffer = shape.GetBuffer3D(TBuffer3D::kCore |
-TBuffer3D::kBoundingBox |
-TBuffer3D::kShapeSpecific
-,localFrame);
-Int_t reqSections = viewer-&gt;AddObject(buffer, &amp;addDaughters);
-<emphasis role="italic"><code>   // If the viewer requires additional sections fetch from the shape </code></emphasis>
-<emphasis role="italic"><code>// (if possible) and add again</code></emphasis>
-if (reqSections != TBuffer3D::kNone) {
-shape.GetBuffer3D(reqSections, localFrame);
-viewer-&gt;AddObject(buffer, &amp;addDaughters);
-}
+<emphasis role="italic">   // Does viewer prefer local frame positions?</emphasis>
+   Bool_t localFrame = viewer-&gt;PreferLocalFrame();
+<emphasis role="italic">   // Perform first fetch of buffer from the shape and adding</emphasis>
+<emphasis role="italic">   // it to the viewer</emphasis>
+   const TBuffer3D &amp;buffer = shape.GetBuffer3D(TBuffer3D::kCore |
+   TBuffer3D::kBoundingBox |
+   TBuffer3D::kShapeSpecific, localFrame);
+   Int_t reqSections = viewer-&gt;AddObject(buffer, &amp;addDaughters);
+<emphasis role="italic">   // If the viewer requires additional sections fetch from the </emphasis>
+<emphasis role="italic">   // shape (if possible) and add again</emphasis>
+   if (reqSections != TBuffer3D::kNone) {
+      shape.GetBuffer3D(reqSections, localFrame);
+      viewer-&gt;AddObject(buffer, &amp;addDaughters);
+   }
 }
 </programlisting>
 
@@ -4159,37 +4171,37 @@ viewer-&gt;AddObject(buffer, &amp;addDaughters);
 
 <programlisting language="c++">const TBuffer3D &amp;TGeoSphere::GetBuffer3D(Int_t reqSections,
 Bool_t localFrame) const {
-<emphasis role="italic"><code>   // Fills a static 3D buffer and returns a reference.</code></emphasis>
-static TBuffer3DSphere buffer;
-<emphasis role="italic"><code>   // Filling of kBoundingBox is defered to TGeoBBox, and</code></emphasis>
-<emphasis role="italic"><code>   // kCore on up to TGeoShape</code></emphasis>
-TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
-<emphasis role="italic"><code>   // Complete kShapeSpecific section for sphere</code></emphasis>
-if (reqSections &amp; TBuffer3D::kShapeSpecific) {
-buffer.fRadiusInner  = fRmin;
-buffer.fRadiusOuter  = fRmax;
-…
-buffer.SetSectionsValid(TBuffer3D::kShapeSpecific);
+<emphasis role="italic">   // Fills a static 3D buffer and returns a reference.</emphasis>
+   static TBuffer3DSphere buffer;
+<emphasis role="italic">   // Filling of kBoundingBox is defered to TGeoBBox, and</emphasis>
+<emphasis role="italic">   // kCore on up to TGeoShape</emphasis>
+   TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
+<emphasis role="italic">   // Complete kShapeSpecific section for sphere</emphasis>
+   if (reqSections &amp; TBuffer3D::kShapeSpecific) {
+      buffer.fRadiusInner  = fRmin;
+      buffer.fRadiusOuter  = fRmax;
+      …
+      buffer.SetSectionsValid(TBuffer3D::kShapeSpecific);
+   }
+<emphasis role="italic">   // Complete kRawSizes section</emphasis>
+   if (reqSections &amp; TBuffer3D::kRawSizes) {
+      …
+      buffer.SetSectionsValid(TBuffer3D::kRawSizes);
+   }
 }
-<emphasis role="italic"><code>   // Complete kRawSizes section</code></emphasis>
-if (reqSections &amp; TBuffer3D::kRawSizes) {
-…
-buffer.SetSectionsValid(TBuffer3D::kRawSizes);
-}
-}
-<emphasis role="italic"><code>   // Complete kRaw tesselation section</code></emphasis>
-if ((reqSections &amp; TBuffer3D::kRaw) &amp;&amp;
-buffer.SectionsValid(TBuffer3D::kRawSizes)) {
-SetPoints(buffer.fPnts);
-<emphasis role="italic"><code>      // Transform points to master frame if viewer requires it</code></emphasis>
-<emphasis role="italic"><code>      // The fLocalFrame flag and translation matrix will have already</code></emphasis>
-<emphasis role="italic"><code>      // been set in TGeoShape::FillBuffer3D() as requried</code></emphasis>
-if (!buffer.fLocalFrame)
-TransformPoints(buffer.fPnts, buffer.NbPnts());
-SetSegsAndPols(buffer);
-buffer.SetSectionsValid(TBuffer3D::kRaw);
-}
-return buffer;
+<emphasis role="italic">   // Complete kRaw tesselation section</emphasis>
+   if ((reqSections &amp; TBuffer3D::kRaw) &amp;&amp;
+        buffer.SectionsValid(TBuffer3D::kRawSizes)) {
+      SetPoints(buffer.fPnts);
+<emphasis role="italic">      // Transform points to master frame if viewer requires it</emphasis>
+<emphasis role="italic">      // The fLocalFrame flag and translation matrix will have </emphasis>
+<emphasis role="italic">      // already been set in TGeoShape::FillBuffer3D() as required</emphasis>
+      if (!buffer.fLocalFrame)
+         TransformPoints(buffer.fPnts, buffer.NbPnts());
+      SetSegsAndPols(buffer);
+      buffer.SetSectionsValid(TBuffer3D::kRaw);
+   }
+   return buffer;
 }
 </programlisting>
 
@@ -4274,9 +4286,11 @@ buffer.SetSectionsValid(TBuffer3D::kBoundingBox);
 <title>Physical IDs</title>
 <para>TVirtualViewer3D provides for two methods of object addition:</para>
 
-<programlisting language="c++">virtual Int_t AddObject(const TBuffer3D &amp;buffer, Bool_t * addChildren = 0)
-virtual Int_t AddObject(UInt_t physicalID, const TBuffer3D &amp; buffer,
-Bool_t *addChildren = 0)
+<programlisting language="c++">virtual Int_t AddObject(const TBuffer3D &amp;buffer, 
+                        Bool_t * addChildren = 0)
+virtual Int_t AddObject(UInt_t physicalID,
+                        const TBuffer3D &amp; buffer,
+                        Bool_t *addChildren = 0)
 </programlisting>
 
 <para>If you use the first (simple) case a viewer using logical/physical pairs will generate sequential IDs for each physical object internally. Scene rebuilds will require destruction and recreation of all physical objects. For the second you can specify an identifier from the client side, which must be unique and stable – i.e. the IDs of a published object is consistent, regardless of changes in termination of contained child geometry branches. In this case the viewer can safely cache the physical objects across scene rebuilds, discarding those no longer of interest.</para>
