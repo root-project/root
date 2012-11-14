@@ -1,6 +1,5 @@
-#import "TApplication.h"
-
 #import "ROOTApplicationDelegate.h"
+#import "TApplication.h"
 
 @implementation ROOTApplicationDelegate
 
@@ -61,8 +60,8 @@
 //______________________________________________________________________________
 - (NSApplicationTerminateReply) applicationShouldTerminate : (NSApplication *) sender
 {
+   (void) sender;
    [self performSelector : @selector(quitROOT) withObject : nil afterDelay : 0.1];
-   
    return NSTerminateCancel;
 }
 
