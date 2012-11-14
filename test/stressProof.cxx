@@ -1735,6 +1735,12 @@ Int_t PT_CheckSimpleNtuple(TQueryResult *qr, Long64_t nevt, const char *dsname)
    SafeDelete(hpx);
    SafeDelete(hpz);
    SafeDelete(hpr);
+     
+   // Clear dsname
+   gProof->ClearData(TProof::kDataset |TProof::kForceClear, dsname);
+   
+   // Clear dsname
+   gProof->ClearData(TProof::kDataset |TProof::kForceClear, dsname);
    
    // Done
    PutPoint();

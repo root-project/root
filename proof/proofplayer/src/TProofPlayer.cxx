@@ -2495,7 +2495,12 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                   TIter next(fileList);
                   TObjString *url = 0;
                   while((url = (TObjString*)next())) {
-                     gSystem->Unlink(url->GetString());
+                     TUrl u(url->GetName());
+                     if (!strcmp(u.GetProtocol(), "file")) {
+                        gSystem->Unlink(u.GetFile());
+                     } else {
+                        gSystem->Unlink(url->GetName());
+                     }
                   }
                }
                // Reset the merger

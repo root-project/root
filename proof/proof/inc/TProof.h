@@ -899,7 +899,7 @@ public:
    virtual void ShowDataSetCache(const char *dataset = 0);
    virtual void ClearDataSetCache(const char *dataset = 0);
 
-   void         ShowData();
+   virtual void ShowData();
    void         ClearData(UInt_t what = kUnregistered, const char *dsname = 0);
 
    const char *GetMaster() const { return fMaster; }
