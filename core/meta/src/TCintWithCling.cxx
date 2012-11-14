@@ -830,13 +830,13 @@ void TCintWithCling::RegisterModule(const char* modulename,
       Error("RegisterModule", "cannot find dictionary module %s in %s",
             pcmFileName.Data(), searchPath.Data());
    } else {
-      // TCintWithCling::Info("RegisterModule", "Loading PCM %s", pcmFileName.Data());
+      TCintWithCling::Info("RegisterModule", "Loading PCM %s", pcmFileName.Data());
       clang::CompilerInstance* CI = fInterpreter->getCI();
       ROOT::TMetaUtils::declareModuleMap(CI, pcmFileName, headers);
    }
 
    for (const char** hdr = headers; *hdr; ++hdr) {
-      // Info("RegisterModule", "   #including %s...", *hdr);
+      Info("RegisterModule", "   #including %s...", *hdr);
       fInterpreter->parse(TString::Format("#include \"%s\"", *hdr).Data());
    }
 }
