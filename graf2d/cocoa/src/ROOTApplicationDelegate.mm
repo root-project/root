@@ -1,4 +1,5 @@
 #import "ROOTApplicationDelegate.h"
+#import "TApplication.h"
 
 @implementation ROOTApplicationDelegate
 
@@ -49,5 +50,20 @@
    //Popups were fixed using transient hint, noop now.
    (void) aNotification;
 }
+
+//______________________________________________________________________________
+- (void) quitROOT
+{
+   gApplication->Terminate(0);
+}
+
+//______________________________________________________________________________
+- (NSApplicationTerminateReply) applicationShouldTerminate : (NSApplication *) sender
+{
+   (void) sender;
+   [self performSelector : @selector(quitROOT) withObject : nil afterDelay : 0.1];
+   return NSTerminateCancel;
+}
+
 
 @end
