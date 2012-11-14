@@ -694,12 +694,12 @@ void ClassPrinter::DisplayClassDecl(const clang::CXXRecordDecl *classDecl)const
       DisplayBasesAsTree(classDecl, 0);
       //now list all members.
       
+      fOut.Print("List of member variables --------------------------------------------------\n");
+      DisplayDataMembers(classDecl, 0);
+      
       fOut.Print("List of member functions :---------------------------------------------------\n");
       fOut.Print("filename       line:size busy function type and name\n");//CINT has a format like %-15s blah-blah.
       DisplayMemberFunctions(classDecl);
-      
-      fOut.Print("List of member variables --------------------------------------------------\n");
-      DisplayDataMembers(classDecl, 0);
    }
 }
 
