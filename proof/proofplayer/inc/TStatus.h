@@ -39,7 +39,9 @@ namespace std { using ::set; using ::string; }
 class TStatus : public TNamed {
 
 public:
-   enum EProcStatus { kNotOk = 15};  // True if status of things are not OK
+   enum EProcStatus {
+      kNotOk = BIT(15)       // True if status of things are not OK
+   };
 
 private:
    TList       fMsgs;     // list of error messages
