@@ -32,8 +32,6 @@ void PopulateMainMenu()
 	NSMenu *submenu = [[NSMenu alloc] initWithTitle : @"Apple"];
    const Util::NSScopeGuard<NSMenu> submenuGuard1(submenu);
    
-   //TODO: Ooops. setAppleMenu: is not a public API.
-	[NSApp performSelector : @selector(setAppleMenu:) withObject : submenu];
    PopulateApplicationMenu(submenu);
 	[mainMenu setSubmenu : submenu forItem : menuItem];
 		
