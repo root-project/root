@@ -70,37 +70,12 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0),
      fTitle("")
 {
-   if (gDebug > 0) {
-      Info("TClingClassInfo(name)", "looking up class name: %s\n", name);
-   }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const clang::Type *type = 0;
    const clang::Decl *decl = lh.findScope(name,&type);
    if (!decl) {
-      if (gDebug > 0) {
-         Info("TClingClassInfo(name)", "cling class not found name: %s\n",
-              name);
-      }
       std::string buf = TClassEdit::InsertStd(name);
       decl = lh.findScope(buf,&type);
-      if (!decl) {
-         if (gDebug > 0) {
-            Info("TClingClassInfo(name)", "cling class not found name: %s\n",
-                 buf.c_str());
-         }
-      }
-      else {
-         if (gDebug > 0) {
-            Info("TClingClassInfo(name)", "found cling class name: %s  "
-                 "decl: 0x%lx\n", buf.c_str(), (long) decl);
-         }
-      }
-   }
-   else {
-      if (gDebug > 0) {
-         Info("TClingClassInfo(name)", "found cling class name: %s  "
-              "decl: 0x%lx\n", name, (long) decl);
-      }
    }
    fDecl = decl;
    if (type) 
@@ -368,9 +343,6 @@ bool TClingClassInfo::HasMethod(const char *name) const
 
 void TClingClassInfo::Init(const char *name)
 {
-   if (gDebug > 0) {
-      Info("TClingClassInfo::Init(name)", "looking up class: %s\n", name);
-   }
    fFirstTime = true;
    fDescend = false;
    fIter = clang::DeclContext::decl_iterator();
@@ -380,30 +352,8 @@ void TClingClassInfo::Init(const char *name)
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const clang::Decl *decl = lh.findScope(name);
    if (!decl) {
-      if (gDebug > 0) {
-         Info("TClingClassInfo::Init(name)", "cling class not found "
-              "name: %s\n", name);
-      }
       std::string buf = TClassEdit::InsertStd(name);
       decl = lh.findScope(buf);
-      if (!decl) {
-         if (gDebug > 0) {
-            Info("TClingClassInfo::Init(name)", "cling class not found "
-                 "name: %s\n", buf.c_str());
-         }
-      }
-      else {
-         if (gDebug > 0) {
-            Info("TClingClassInfo::Init(name)", "found cling class "
-                 "name: %s  decl: 0x%lx\n", buf.c_str(), (long) decl);
-         }
-      }
-   }
-   else {
-      if (gDebug > 0) {
-         Info("TClingClassInfo::Init(name)", "found cling class "
-              "name: %s  decl: 0x%lx\n", name, (long) decl);
-      }
    }
    fDecl = decl;
    if (decl) {
@@ -414,7 +364,7 @@ void TClingClassInfo::Init(const char *name)
 
 void TClingClassInfo::Init(int tagnum)
 {
-   Warning("TClingClassInfo::Init(tagnum)","Not yet implemented\n");
+   Error("TClingClassInfo::Init(tagnum)","Should no longer be called\n");
    return;
 }
 
