@@ -1207,8 +1207,14 @@ bool Sema::LookupName(LookupResult &R, Scope *S, bool AllowBuiltinCreation) {
       }
   } else {
     // Perform C++ unqualified name lookup.
-    if (CppLookupName(R, S))
+    if (CppLookupName(R, S)) {
+      if (R.isSingleResult())
+        if (const TagDecl *TD = dyn_cast<TagDecl>(R.getFoundDecl())) {
+          if (!TD->isThisDeclarationADefinition() && ExternalSource)
+            ExternalSource->LookupUnqualified(R, S);
+        }
       return true;
+    }
   }
 
   // If we didn't find a use of this identifier, and if the identifier
