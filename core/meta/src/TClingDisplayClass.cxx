@@ -828,7 +828,7 @@ void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)
          //print constructor-template correctly, otherwise, class name and
          //parameters are omitted (this is also true for clang and normal, non-templated
          //constructors.
-         if (const clang::FunctionDecl *funcDecl = ftDecl->getTemplatedDecl()) {
+         if (const clang::FunctionDecl * const funcDecl = ftDecl->getTemplatedDecl()) {
             if (const clang::CXXConstructorDecl * const ctorDecl = llvm::dyn_cast<clang::CXXConstructorDecl>(funcDecl)) {
                textLine += ' ';
                AppendConstructorSignature(ctorDecl, textLine);
