@@ -638,7 +638,7 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
       RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*integral,*cacheParams) ;
       cachedIntegral->setInterpolationOrder(2) ;
       cachedIntegral->addOwnedComponents(*integral) ;
-      //cachedIntegral->setCacheSource(kTRUE) ;
+      cachedIntegral->setCacheSource(kTRUE) ;
       if (integral->operMode()==ADirty) {
 	cachedIntegral->setOperMode(ADirty) ;
       }
