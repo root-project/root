@@ -3095,8 +3095,46 @@ void TCintWithCling::SetTempLevel(int val) const
 //______________________________________________________________________________
 int TCintWithCling::UnloadFile(const char* path) const
 {
-   // Interface to CINT function
-   return G__unloadfile(path);
+   // Unload a shared library or a source file.
+
+   //return G__unloadfile(path);
+
+   // Check fInterpreter->getLoadedFiles() to determine whether this is a shared
+   // library or code. If it's not in there complain.
+   typedef llvm::SmallVectorImpl<cling::Interpreter::LoadedFileInfo*> LoadedFiles_t;
+   const LoadedFiles_t& loadedFiles = fInterpreter->getLoadedFiles();
+   const cling::Interpreter::LoadedFileInfo* fileInfo = 0;
+   for (LoadedFiles_t::const_iterator iF = loadedFiles.begin(),
+           eF = loadedFiles.end(); iF != eF; ++iF) {
+      if ((*iF)->getName() == path) {
+         fileInfo = *iF;
+      }
+   }
+   if (!fileInfo) {
+      Error("UnloadFile", "File %s has not been loaded!", path);
+      return -1;
+   }
+
+   if (fileInfo->getType() == cling::Interpreter::LoadedFileInfo::kDynamicLibrary) {
+      // Signal that the list of shared libs needs to be updated.
+      const_cast<TCintWithCling*>(this)->fPrevLoadedDynLibInfo = 0;
+      const_cast<TCintWithCling*>(this)->fSharedLibs = "";
+
+      Error("UnloadFile", "Unloading of shared libraries not yet implemented!\n"
+            "Not unloading file %s!", path);
+
+      return -1;
+   } else if (fileInfo->getType() == cling::Interpreter::LoadedFileInfo::kSource) {
+      Error("UnloadFile", "Unloading of source files not yet implemented!\n"
+            "Not unloading file %s!", path);
+      return -1;
+   } else {
+      Error("UnloadFile", "Unloading of files of type %d not yet implemented!\n"
+            "Not unloading file %s!", (int)fileInfo->getType(), path);
+      return -1;
+   }
+
+   return -1;
 }
 
 
