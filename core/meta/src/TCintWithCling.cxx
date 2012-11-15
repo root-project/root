@@ -1414,12 +1414,12 @@ Int_t TCintWithCling::Load(const char* filename, Bool_t system)
    R__LOCKGUARD2(gCINTMutex);
    cling::Interpreter::LoadLibResult res
       = fInterpreter->loadLibrary(filename, system);
-   if (res == cling::Interpreter::LoadLibSuccess) {
+   if (res == cling::Interpreter::kLoadLibSuccess) {
       // update list of loaded shared libs
    }
    switch (res) {
-   case cling::Interpreter::LoadLibSuccess: return 0;
-   // Not yet: case cling::Interpreter::LoadLibExists:  return 1;
+   case cling::Interpreter::kLoadLibSuccess: return 0;
+   case cling::Interpreter::kLoadLibExists:  return 1;
    default: break;
    };
    return -1;
