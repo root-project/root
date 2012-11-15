@@ -83,6 +83,7 @@
 #include "llvm/Support/raw_ostream.h"
 
 #include <iostream>
+#include <cassert>
 #include <map>
 #include <set>
 #include <stdint.h>
@@ -2859,13 +2860,31 @@ const char* TCintWithCling::GetIncludePath()
 {
    // Refresh the list of include paths known to the interpreter and return it
    // with -I prepended.
-   R__LOCKGUARD(gCINTMutex);
+
    fIncludePath = "";
+
+   using namespace clang;
+   typedef std::vector<HeaderSearchOptions::Entry>::size_type size_type;
+
+   const CompilerInstance * const compiler = fInterpreter->getCI();
+   assert(compiler != 0 && "GetIncludePath, compiler instance is null");
+   
+   const HeaderSearchOptions &headers = compiler->getHeaderSearchOpts();
+   const std::vector<HeaderSearchOptions::Entry> &userEntries = headers.UserEntries;
+   
+   for (size_type i = 0, e = userEntries.size(); i < e; ++i) {
+      fIncludePath.Append(" -I\"");
+      fIncludePath.Append(userEntries[i].Path.c_str());
+      fIncludePath.Append("\" ");
+   }
+
+   R__LOCKGUARD(gCINTMutex);
    G__IncludePathInfo path;
    while (path.Next()) {
       const char* pathname = path.Name();
       fIncludePath.Append(" -I\"").Append(pathname).Append("\" ");
    }
+   
    return fIncludePath;
 }
 
