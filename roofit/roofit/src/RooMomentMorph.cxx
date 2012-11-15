@@ -230,7 +230,7 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* nset) const
   vector<RooAbsReal*> myrms(nVar,null);      
   vector<RooAbsReal*> mypos(nVar,null);      
   vector<RooAbsReal*> slope(nPdf*nVar,null); 
-  vector<RooAbsReal*> offset(nPdf*nVar,null); 
+  vector<RooAbsReal*> offs(nPdf*nVar,null); 
   vector<RooAbsReal*> transVar(nPdf*nVar,null); 
   vector<RooAbsReal*> transPdf(nPdf,null);      
 
@@ -300,13 +300,13 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* nset) const
       std::string slopeName = Form("%s_slope_%d_%d",GetName(),i,j);
       std::string offsetName = Form("%s_offset_%d_%d",GetName(),i,j);
       slope[ij(i,j)]  = new RooFormulaVar(slopeName.c_str(),"@0/@1",RooArgList(*sigmarv[ij(i,j)],*myrms[j]));
-      offset[ij(i,j)] = new RooFormulaVar(offsetName.c_str(),"@0-(@1*@2)",RooArgList(*meanrv[ij(i,j)],*mypos[j],*slope[ij(i,j)]));
-      ownedComps.add(RooArgSet(*slope[ij(i,j)],*offset[ij(i,j)])) ;
+      offs[ij(i,j)] = new RooFormulaVar(offsetName.c_str(),"@0-(@1*@2)",RooArgList(*meanrv[ij(i,j)],*mypos[j],*slope[ij(i,j)]));
+      ownedComps.add(RooArgSet(*slope[ij(i,j)],*offs[ij(i,j)])) ;
       // linear transformations, so pdf can be renormalized
       var = (RooRealVar*)(_varItr->Next());
       std::string transVarName = Form("%s_transVar_%d_%d",GetName(),i,j);
-      //transVar[ij(i,j)] = new RooFormulaVar(transVarName.c_str(),transVarName.c_str(),"@0*@1+@2",RooArgList(*var,*slope[ij(i,j)],*offset[ij(i,j)]));
-      transVar[ij(i,j)] = new RooLinearVar(transVarName.c_str(),transVarName.c_str(),*var,*slope[ij(i,j)],*offset[ij(i,j)]);
+      //transVar[ij(i,j)] = new RooFormulaVar(transVarName.c_str(),transVarName.c_str(),"@0*@1+@2",RooArgList(*var,*slope[ij(i,j)],*offs[ij(i,j)]));
+      transVar[ij(i,j)] = new RooLinearVar(transVarName.c_str(),transVarName.c_str(),*var,*slope[ij(i,j)],*offs[ij(i,j)]);
 
       ownedComps.add(*transVar[ij(i,j)]) ;
       cust.replaceArg(*var,*transVar[ij(i,j)]);
