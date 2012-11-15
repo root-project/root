@@ -98,7 +98,12 @@
 
 #ifdef __APPLE__
 #include <dlfcn.h>
+#include <mach-o/dyld.h>
 #endif // __APPLE__
+
+#ifdef R__LINUX
+#include <dlfcn.h>
+#endif
 
 using namespace std;
 using namespace clang;
@@ -638,12 +643,11 @@ ClassImp(TCintWithCling)
 //______________________________________________________________________________
 TCintWithCling::TCintWithCling(const char *name, const char *title)
    : TInterpreter(name, title)
-   , fSharedLibs("")
-   , fSharedLibsSerial(-1)
    , fGlobalsListSerial(-1)
    , fInterpreter(0)
    , fMetaProcessor(0)
    , fNormalizedCtxt(0)
+   , fPrevLoadedDynLibInfo(0)
 {
    // Initialize the CINT+cling interpreter interface.
 
@@ -1404,6 +1408,68 @@ Bool_t TCintWithCling::IsLoaded(const char* filename) const
 }
 
 //______________________________________________________________________________
+void TCintWithCling::UpdateListOfLoadedSharedLibraries() {
+#ifdef R_WIN32
+   // need to call RegisterLoadedSharedLibrary() here
+   // by calling Win32's EnumerateLoadedModules().
+   Error("TCintWithCling::UpdateListOfLoadedSharedLibraries",
+         "Platform not supported!");   
+#elif defined(R__MACOSX)
+   if (!_dyld_present()) return;
+   // fPrevLoadedDynLibInfo stores the *next* image index to look at
+   uint32_t imageIndex = (uint32_t) (size_t) fPrevLoadedDynLibInfo;
+   const char* imageName = 0;
+   while ((imageName = _dyld_get_image_name(imageIndex))) {
+      RegisterLoadedSharedLibrary(imageName);
+      ++imageIndex;
+   }
+   fPrevLoadedDynLibInfo = (void*)(size_t)imageIndex;
+#elif defined(R__LINUX)
+   struct PointerNo4_t {
+      void* fSkip[3];
+      void* fPtr;
+   };
+   struct LinkMap_t {
+      void* fAddr;
+      const char* fName;
+      void* fLd;
+      LinkMap_t* fNext;
+      LinkMap_t* fPrev;
+   };
+   if (!fPrevLoadedDynLibInfo || fPrevLoadedDynLibInfo == (void*)(size_t)-1) {
+      PointerNo4_t* procLinkMap = (PointerNo4_t*)dlopen(0,  RTLD_LAZY | RTLD_GLOBAL);
+      // 4th pointer of 4th pointer is the linkmap.
+      // See http://syprog.blogspot.fr/2011/12/listing-loaded-shared-objects-in-linux.html
+      LinkMap_t* linkMap = (LinkMap_t*) ((PointerNo4_t*)procLinkMap->fPtr)->fPtr;
+      RegisterLoadedSharedLibrary(linkMap->fName);
+      fPrevLoadedDynLibInfo = linkMap;
+   }
+   
+   LinkMap_t* iDyLib = (LinkMap_t*)fPrevLoadedDynLibInfo;
+   while (iDyLib->fNext) {
+      iDyLib = iDyLib->fNext;
+      RegisterLoadedSharedLibrary(iDyLib->fName);
+   }
+   fPrevLoadedDynLibInfo = iDyLib;
+#else
+   Error("TCintWithCling::UpdateListOfLoadedSharedLibraries",
+         "Platform not supported!");
+#endif
+}
+
+//______________________________________________________________________________
+void TCintWithCling::RegisterLoadedSharedLibrary(const char* filename)
+{
+   if (!filename) return;
+
+   llvm::sys::DynamicLibrary::getPermanentLibrary(filename);
+   if (!fSharedLibs.IsNull()) {
+      fSharedLibs.Append(" ");
+   }
+   fSharedLibs.Append(filename);
+}
+
+//______________________________________________________________________________
 Int_t TCintWithCling::Load(const char* filename, Bool_t system)
 {
    // Load a library file in CINT's memory.
@@ -1415,7 +1481,7 @@ Int_t TCintWithCling::Load(const char* filename, Bool_t system)
    cling::Interpreter::LoadLibResult res
       = fInterpreter->loadLibrary(filename, system);
    if (res == cling::Interpreter::kLoadLibSuccess) {
-      // update list of loaded shared libs
+      UpdateListOfLoadedSharedLibraries();
    }
    switch (res) {
    case cling::Interpreter::kLoadLibSuccess: return 0;
@@ -2720,63 +2786,7 @@ void TCintWithCling::UpdateAllCanvases()
 //______________________________________________________________________________
 const char* TCintWithCling::GetSharedLibs()
 {
-   // Return the list of shared libraries known to CINT.
-   if (fSharedLibsSerial == G__SourceFileInfo::SerialNumber()) {
-      return fSharedLibs;
-   }
-   fSharedLibsSerial = G__SourceFileInfo::SerialNumber();
-   fSharedLibs.Clear();
-   G__SourceFileInfo cursor(0);
-   while (cursor.IsValid()) {
-      const char* filename = cursor.Name();
-      if (filename == 0) {
-         continue;
-      }
-      Int_t len = strlen(filename);
-      const char* end = filename + len;
-      Bool_t needToSkip = kFALSE;
-      if (len > 5 && ((strcmp(end - 4, ".dll") == 0) || (strstr(filename, "Dict.") != 0)  || (strstr(filename, "MetaTCint") != 0))) {
-         // Filter out the cintdlls
-         static const char* excludelist [] = {
-            "stdfunc.dll", "stdcxxfunc.dll", "posix.dll", "ipc.dll", "posix.dll"
-            "string.dll", "vector.dll", "vectorbool.dll", "list.dll", "deque.dll",
-            "map.dll", "map2.dll", "set.dll", "multimap.dll", "multimap2.dll",
-            "multiset.dll", "stack.dll", "queue.dll", "valarray.dll",
-            "exception.dll", "stdexcept.dll", "complex.dll", "climits.dll",
-            "libvectorDict.", "libvectorboolDict.", "liblistDict.", "libdequeDict.",
-            "libmapDict.", "libmap2Dict.", "libsetDict.", "libmultimapDict.", "libmultimap2Dict.",
-            "libmultisetDict.", "libstackDict.", "libqueueDict.", "libvalarrayDict."
-         };
-         static const unsigned int excludelistsize = sizeof(excludelist) / sizeof(excludelist[0]);
-         static int excludelen[excludelistsize] = { -1};
-         if (excludelen[0] == -1) {
-            for (unsigned int i = 0; i < excludelistsize; ++i) {
-               excludelen[i] = strlen(excludelist[i]);
-            }
-         }
-         const char* basename = gSystem->BaseName(filename);
-         for (unsigned int i = 0; !needToSkip && i < excludelistsize; ++i) {
-            needToSkip = (!strncmp(basename, excludelist[i], excludelen[i]));
-         }
-      }
-      if (!needToSkip &&
-            (
-#if defined(R__MACOSX) && defined(MAC_OS_X_VERSION_10_5)
-               (dlopen_preflight(filename)) ||
-#endif
-               (len > 2 && strcmp(end - 2, ".a") == 0)    ||
-               (len > 3 && (strcmp(end - 3, ".sl") == 0   ||
-                            strcmp(end - 3, ".dl") == 0   ||
-                            strcmp(end - 3, ".so") == 0)) ||
-               (len > 4 && (strcasecmp(end - 4, ".dll") == 0)) ||
-               (len > 6 && (strcasecmp(end - 6, ".dylib") == 0)))) {
-         if (!fSharedLibs.IsNull()) {
-            fSharedLibs.Append(" ");
-         }
-         fSharedLibs.Append(filename);
-      }
-      cursor.Next();
-   }
+   // Return the list of shared libraries loaded into the process.
    return fSharedLibs;
 }
 

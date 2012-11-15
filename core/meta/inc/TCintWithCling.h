@@ -93,7 +93,6 @@ private: // Data Members
    G__dictposition fDictPos;          // CINT dictionary context after initialization is complete.
    G__dictposition fDictPosGlobals;   // CINT dict context after ResetGlobals().
    TString         fSharedLibs;       // Shared libraries loaded by G__loadfile().
-   Int_t           fSharedLibsSerial; // Last time we set fSharedLibs.
    Int_t           fGlobalsListSerial;// Last time we refreshed the ROOT list of globals.
    TString         fIncludePath;      // Interpreter include path.
    TString         fRootmapLoadPath;  // Dynamic load path for rootmap files.
@@ -106,6 +105,8 @@ private: // Data Members
 
    std::vector<cling::StoredValueRef> *fTemporaries;    // Stack of temporaries
    ROOT::TMetaUtils::TNormalizedCtxt  *fNormalizedCtxt; // Which typedef to avoid striping.
+
+   void*           fPrevLoadedDynLibInfo; // Internal info to mark the last loaded libray.
 
 public: // Public Interface
 
@@ -378,7 +379,8 @@ private: // Private Utility Functions
 
    Long_t ProcessLineCintOnly(const char* line, TInterpreter::EErrorCode* error = 0);
 
-public: // ROOT Metadata
+   void UpdateListOfLoadedSharedLibraries();
+   void RegisterLoadedSharedLibrary(const char* name);
 
    ClassDef(TCintWithCling, 0) //Interface to CINT C/C++ interpreter
 };
