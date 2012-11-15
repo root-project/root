@@ -385,9 +385,7 @@ void* autoloadCallback(const std::string& mangled_name)
    TString lib;
    Ssiz_t posLib = 0;
    while (libs.Tokenize(lib, posLib)) {
-      std::string errmsg;
-      bool load_failed = llvm::sys::DynamicLibrary::LoadLibraryPermanently(lib, &errmsg);
-      if (load_failed) {
+      if (gInterpreter->Load(lib, kFALSE /*system*/)) {
          // The library load failed, all done.
          //fprintf(stderr, "load failed: %s\n", errmsg.c_str());
          return 0;
@@ -1410,16 +1408,21 @@ Int_t TCintWithCling::Load(const char* filename, Bool_t system)
 {
    // Load a library file in CINT's memory.
    // if 'system' is true, the library is never unloaded.
+   // Return 0 on success, -1 on failure.
+
+   // Used to return 0 on success, 1 on duplicate, -1 on failure, -2 on "fatal".
    R__LOCKGUARD2(gCINTMutex);
-   int i;
-   if (!system) {
-      i = G__loadfile(filename);
+   cling::Interpreter::LoadLibResult res
+      = fInterpreter->loadLibrary(filename, system);
+   if (res == cling::Interpreter::LoadLibSuccess) {
+      // update list of loaded shared libs
    }
-   else {
-      i = G__loadsystemfile(filename);
-   }
-   UpdateListOfTypes();
-   return i;
+   switch (res) {
+   case cling::Interpreter::LoadLibSuccess: return 0;
+   // Not yet: case cling::Interpreter::LoadLibExists:  return 1;
+   default: break;
+   };
+   return -1;
 }
 
 //______________________________________________________________________________
