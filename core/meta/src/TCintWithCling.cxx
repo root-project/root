@@ -2864,6 +2864,8 @@ const char* TCintWithCling::GetIncludePath()
    // Refresh the list of include paths known to the interpreter and return it
    // with -I prepended.
 
+   R__LOCKGUARD(gCINTMutex);
+
    using namespace clang;
    typedef std::vector<HeaderSearchOptions::Entry>::size_type size_type;
 
@@ -2881,7 +2883,6 @@ const char* TCintWithCling::GetIncludePath()
       fIncludePath.Append("\" ");
    }
 
-   R__LOCKGUARD(gCINTMutex);
    G__IncludePathInfo path;
    while (path.Next()) {
       const char* pathname = path.Name();
@@ -2931,9 +2932,29 @@ int TCintWithCling::DisplayClass(FILE* fout, const char* name, int base, int sta
 }
 
 //______________________________________________________________________________
-int TCintWithCling::DisplayIncludePath(FILE* fout) const
+int TCintWithCling::DisplayIncludePath(FILE *fout) const
 {
    // Interface to CINT function
+   // Copy & paste from GetIncludePath, since format is a bit different and ... GetIncludePath is non-const :)
+   using namespace clang;
+   typedef std::vector<HeaderSearchOptions::Entry>::size_type size_type;
+
+   assert(fout != 0 && "DisplayIncludePath, 'fout' parameter is null");
+   TString includePath;
+
+   const CompilerInstance * const compiler = fInterpreter->getCI();
+   assert(compiler != 0 && "DisplayIncludePath, compiler instance is null");
+   
+   const HeaderSearchOptions &headers = compiler->getHeaderSearchOpts();
+   const std::vector<HeaderSearchOptions::Entry> &userEntries = headers.UserEntries;
+   
+   for (size_type i = 0, e = userEntries.size(); i < e; ++i) {
+      includePath.Append(" -I");
+      includePath.Append(userEntries[i].Path.c_str());
+   }
+
+   fprintf(fout, "include path:%s\n", includePath.Data());
+   
    return G__display_includepath(fout);
 }
 
