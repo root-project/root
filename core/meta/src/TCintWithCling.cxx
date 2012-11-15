@@ -326,6 +326,15 @@ TObject* TCintWithCling__GetObjectAddress(const char *Name, void *&LookupCtx) {
 extern "C" const Decl* TCintWithCling__GetObjectDecl(TObject *obj) {
    return ((TClingClassInfo*)obj->IsA()->GetClassInfo())->GetDecl();
 }
+
+// Load library containing specified class. Returns 0 in case of error
+// and 1 in case if success.
+extern "C" int TCintWithCling__AutoLoadCallback(const char* className)
+{
+   string cls(className);
+   return gCint->AutoLoad(cls.c_str());
+}
+
 //______________________________________________________________________________
 //
 //
@@ -2596,19 +2605,13 @@ Int_t TCintWithCling::AutoLoad(const char* cls)
 }
 
 //______________________________________________________________________________
-Int_t TCintWithCling::AutoLoadCallback(const char* cls, const char* lib)
+Int_t TCintWithCling::AutoLoadCallback(const char* cls, const char* /*lib*/)
 {
    // Load library containing specified class. Returns 0 in case of error
    // and 1 in case if success.
    R__LOCKGUARD(gCINTMutex);
-   if (!gROOT || !gInterpreter || !cls || !lib) {
+   if (!gROOT || !gInterpreter || !cls) {
       return 0;
-   }
-   // calls to load libCore might come in the very beginning when libCore
-   // dictionary is not fully loaded yet, ignore it since libCore is always
-   // loaded
-   if (strstr(lib, "libCore")) {
-      return 1;
    }
    // lookup class to find list of dependent libraries
    TString deplibs = gInterpreter->GetClassSharedLibs(cls);
@@ -2631,18 +2634,6 @@ Int_t TCintWithCling::AutoLoadCallback(const char* cls, const char* lib)
          }
       }
       delete tokens;
-   }
-   if (lib[0]) {
-      if (gROOT->LoadClass(cls, lib) == 0) {
-         if (gDebug > 0)
-            ::Info("TCintWithCling::AutoLoadCallback", "loaded library %s for class %s",
-                   lib, cls);
-         return 1;
-      }
-      else {
-         ::Error("TCintWithCling::AutoLoadCallback", "failure loading library %s for class %s",
-                 lib, cls);
-      }
    }
    return 0;
 }

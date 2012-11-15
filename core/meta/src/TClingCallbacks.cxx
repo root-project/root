@@ -18,6 +18,7 @@
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Scope.h"
 
@@ -33,11 +34,12 @@ extern "C" {
    void TCintWithCling__UpdateListsOnUnloaded(const cling::Transaction&); 
    TObject* TCintWithCling__GetObjectAddress(const char *Name, void *&LookupCtx);
    Decl* TCintWithCling__GetObjectDecl(TObject *obj);
+   int TCintWithCling__AutoLoadCallback(const char* className);
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp) 
    : InterpreterCallbacks(interp), fLastLookupCtx(0), fROOTSpecialNamespace(0),
-     fFirstRun(true) {
+     fFirstRun(true), isAutoLoading(false) {
    const Decl* D = 0;
    m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &D);
    fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(const_cast<Decl*>(D));
@@ -45,7 +47,6 @@ TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
 
 //pin the vtable here
 TClingCallbacks::~TClingCallbacks() {}
-
 
 // If cling cannot find a name it should ask ROOT before it issues an error.
 // If ROOT knows the name then it has to create a new variable with that name
@@ -64,13 +65,9 @@ TClingCallbacks::~TClingCallbacks() {}
 //
 // returns true when declaration is found and no error should be emitted.
 bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
-   // FIXME:
-   // Disable the callback until we solve the issue with the parser lookup.
-   // Here if we try to do parser lookup we end up in an invalid state.
-   return false;
-
 
    Sema &SemaR = m_Interpreter->getSema();
+   Preprocessor &PP = SemaR.getPreprocessor();
    DeclContext *CurDC = SemaR.CurContext;
 
    // Make sure that the failed lookup comes from the prompt.
@@ -92,7 +89,11 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
          //TODO: Check for same types.
       }
       else {
+         // Save state of the PP
+         Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+
          const Decl *TD = TCintWithCling__GetObjectDecl(obj);
+
          QualType QT = SemaR.getASTContext().getTypeDeclType(cast<TypeDecl>(TD));
          VarDecl *VD = VarDecl::Create(SemaR.getASTContext(), 
                                        fROOTSpecialNamespace,
@@ -107,6 +108,36 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
          R.addDecl(VD);
       }
       return true;
+   }
+   else {
+      if (isAutoLoading)
+         return false;
+      isAutoLoading = true;
+
+      // Save state of the PP
+      Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+      
+      bool oldSuppressDiags = SemaR.getDiagnostics().getSuppressAllDiagnostics();
+      SemaR.getDiagnostics().setSuppressAllDiagnostics();
+      
+      // We can't PushDeclContext, because we go up and the routine that pops 
+      // the DeclContext assumes that we drill down always.
+      // We have to be on the global context. At that point we are in a 
+      // wrapper function so the parent context must be the global.
+      Sema::ContextAndScopeRAII pushedSAndDC(SemaR, CurDC->getParent(), 
+                                             S->getParent());
+
+      bool lookupSuccess = false;
+      if (TCintWithCling__AutoLoadCallback(Name.getAsString().c_str())) {
+         pushedSAndDC.pop();
+         lookupSuccess = SemaR.LookupName(R, S);
+      }
+
+      SemaR.getDiagnostics().setSuppressAllDiagnostics(oldSuppressDiags);
+
+      isAutoLoading = false;
+
+      return lookupSuccess;
    }
 
    return false; // give up.
