@@ -41,6 +41,7 @@ else
    ret=1
 fi
 
+[ -d `dirname $OUT` ] || mkdir -p `dirname $OUT`
 echo $rev > $OUT
 echo $ret
 
