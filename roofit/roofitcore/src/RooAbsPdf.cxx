@@ -940,6 +940,8 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooCmdArg& arg1, const Ro
   // GlobalObservables(const RooArgSet&) -- Define the set of normalization observables to be used for the constraint terms.
   //                                        If none are specified the constrained parameters are used
   // ExternalConstraints(const RooArgSet& ) -- Include given external constraints to likelihood
+  // Offset(Bool_t)                  -- Offset likelihood by initial value (so that starting value of FCN in minuit is zero). This
+  //                                    can improve numeric stability in simultaneously fits with components with large likelihood values
   //
   // Options to control flow of fit procedure
   // ----------------------------------------
@@ -1031,6 +1033,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("doEEWall","EvalErrorWall",0,1) ;
   pc.defineInt("doWarn","Warnings",0,1) ;
   pc.defineInt("doSumW2","SumW2Error",0,-1) ;
+  pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
   pc.defineString("mintype","Minimizer",0,"OldMinuit") ;
   pc.defineString("minalg","Minimizer",1,"minuit") ;
   pc.defineObject("minosSet","Minos",0,0) ;
@@ -1067,6 +1070,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t doEEWall = pc.getInt("doEEWall") ;
   Int_t doWarn   = pc.getInt("doWarn") ;
   Int_t doSumW2  = pc.getInt("doSumW2") ;
+  Int_t doOffset = pc.getInt("doOffset") ;
   const RooArgSet* minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet")) ;
 #ifdef __ROOFIT_NOROOMINIMIZER
   const char* minType =0 ;
@@ -1100,6 +1104,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   }
     
   RooAbsReal* nll = createNLL(data,nllCmdList) ;  
+  if (doOffset) nll->enableOffsetting(kTRUE) ;
 
   RooFitResult *ret = 0 ;    
 

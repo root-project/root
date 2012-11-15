@@ -192,6 +192,7 @@ RooCmdArg SumW2Error(Bool_t flag) ;
 RooCmdArg CloneData(Bool_t flag) ;
 RooCmdArg Integrate(Bool_t flag) ;
 RooCmdArg Minimizer(const char* type, const char* alg=0) ;
+RooCmdArg Offset(Bool_t flag=kTRUE) ;
 
 // RooAbsPdf::paramOn arguments
 RooCmdArg Label(const char* str) ;
