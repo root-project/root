@@ -183,7 +183,11 @@ public:
    {}
 
    bool TraverseStmt(Stmt*) {
-      // Don't descend info function bodies.
+      // Don't descend into function bodies.
+      return true;
+   }
+   bool TraverseClassTemplateDecl(ClassTemplateDecl*) {
+      // Don't descend into templates (but only instances thereof).
       return true;
    }
 
