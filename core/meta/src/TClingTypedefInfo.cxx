@@ -55,7 +55,7 @@ TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
    // fIter is invalid; cannot call Next().
    if (gDebug > 0) {
       Info("TClingTypedefInfo::TClingTypedefInfo(interp,name)",
-           "found typedef name: %s  decl: 0x%lx\n", 
+           "found typedef name: %s  decl: 0x%lx", 
            TdefD->getNameAsString().c_str(), (long) fDecl);
    }
 }
@@ -72,7 +72,7 @@ void TClingTypedefInfo::Init(const char *name)
 {
    // Lookup named typedef and reset the iterator to point to it.
    if (gDebug > 0) {
-      Info("TClingTypedefInfo::Init(name)", "looking up typedef: %s\n", name);
+      Info("TClingTypedefInfo::Init(name)", "looking up typedef: %s", name);
    }
    // Reset the iterator to invalid.
    fFirstTime = true;
@@ -84,7 +84,7 @@ void TClingTypedefInfo::Init(const char *name)
    if (!fDecl) {
       if (gDebug > 0) {
          Info("TClingTypedefInfo::Init(name)",
-              "typedef not found name: %s\n", name);
+              "typedef not found name: %s", name);
       }
       return;
    }
@@ -92,13 +92,13 @@ void TClingTypedefInfo::Init(const char *name)
       // If what the lookup found is not a typedef, ignore it.
       if (gDebug > 0) {
          Info("TClingTypedefInfo::Init(name)",
-              "type not a typedef: %s\n", name);
+              "type not a typedef: %s", name);
       }
       fDecl = 0;
    }
    if (gDebug > 0) {
       Info("TClingTypedefInfo::Init(name)", "found typedef name: "
-           "%s  decl: 0x%lx\n", name, (long) fDecl);
+           "%s  decl: 0x%lx", name, (long) fDecl);
    }
 }
 
