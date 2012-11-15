@@ -223,8 +223,10 @@ class Parser : public CodeCompletionHandler {
 
   bool SkipFunctionBodies;
 
+  bool IsTemporary;
 public:
-  Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies);
+  Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies, 
+         bool isTemp = false);
   ~Parser();
 
   const LangOptions &getLangOpts() const { return PP.getLangOpts(); }
@@ -720,7 +722,7 @@ public:
     return Diag(Tok, DiagID);
   }
 
-private:
+protected:
   void SuggestParentheses(SourceLocation Loc, unsigned DK,
                           SourceRange ParenRange);
   void CheckNestedObjCContexts(SourceLocation AtLoc);

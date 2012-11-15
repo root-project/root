@@ -890,9 +890,11 @@ void Preprocessor::AddPragmaHandler(StringRef Namespace,
   }
 
   // Check to make sure we don't already have a pragma for this identifier.
-  assert(!InsertNS->FindHandler(Handler->getName()) &&
-         "Pragma handler already exists for this identifier!");
-  InsertNS->AddPragma(Handler);
+  // assert(!InsertNS->FindHandler(Handler->getName()) &&
+  //        "Pragma handler already exists for this identifier!");
+
+  if (!InsertNS->FindHandler(Handler->getName()))
+     InsertNS->AddPragma(Handler);
 }
 
 /// RemovePragmaHandler - Remove the specific pragma handler from the
