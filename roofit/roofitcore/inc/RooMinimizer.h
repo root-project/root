@@ -48,6 +48,7 @@ public:
   void setEps(Double_t eps) ;
   void optimizeConst(Int_t flag) ;
   void setEvalErrorWall(Bool_t flag) { _fcn->SetEvalErrorWall(flag); }
+  void setOffsetting(Bool_t flag) ;
 
   RooFitResult* fit(const char* options) ;
 

@@ -300,6 +300,13 @@ public:
 
   virtual Bool_t setData(RooAbsData& /*data*/, Bool_t /*cloneData*/=kTRUE) { return kTRUE ; }
 
+  virtual void enableOffsetting(Bool_t) {} ;
+  virtual Bool_t isOffsetting() const { return kFALSE ; }
+  virtual Double_t offset() const { return 0 ; }
+  
+  static void setHideOffset(Bool_t flag);
+  static Bool_t hideOffset() ;
+
 protected:
 
   // PlotOn with command list
@@ -319,7 +326,7 @@ protected:
 
   Bool_t isSelectedComp() const ;
 
-
+  
  public:
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars) const ;
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
@@ -464,7 +471,7 @@ protected:
   static Bool_t _globalSelectComp ;  // Global activation switch for component selection
 
   mutable RooArgSet* _lastNSet ; //!
-
+  static Bool_t _hideOffset ; // Offset hiding flag
 
   ClassDef(RooAbsReal,2) // Abstract real-valued variable
 };

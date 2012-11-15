@@ -249,6 +249,14 @@ void RooMinuit::setEps(Double_t eps)
 
 
 //_____________________________________________________________________________
+void RooMinuit::setOffsetting(Bool_t flag) 
+{ 
+  // Enable internal likelihood offsetting for enhanced numeric precision
+  _func->enableOffsetting(flag) ; 
+}
+
+
+//_____________________________________________________________________________
 RooFitResult* RooMinuit::fit(const char* options)
 {
   // Parse traditional RooAbsPdf::fitTo driver options
@@ -1191,7 +1199,9 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
   }
 
   // Calculate the function for these parameters
+  RooAbsReal::setHideOffset(kFALSE) ;
   f= context->_func->getVal() ;
+  RooAbsReal::setHideOffset(kTRUE) ;
   context->_evalCounter++ ;
   if ( RooAbsPdf::evalError() || RooAbsReal::numEvalErrors()>0 || f>1e30) {
 
@@ -1230,11 +1240,11 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
   } else if (f>maxFCN) {
     maxFCN = f ;
   }
-
+  
   // Optional logging
   if (logf) (*logf) << setprecision(15) << f << setprecision(4) << endl;
   if (verbose) {
-    cout << "\nprevFCN = " << setprecision(10) << f << setprecision(4) << "  " ;
+    cout << "\nprevFCN" << (context->_func->isOffsetting()?"-offset":"") << " = " << setprecision(10) << f << setprecision(4) << "  " ;
     cout.flush() ;
   }
 }

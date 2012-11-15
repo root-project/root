@@ -33,6 +33,8 @@ public:
   RooConstraintSum(const RooConstraintSum& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooConstraintSum(*this, newname); }
 
+  const RooArgList& list() { return _set1 ; }
+
 protected:
 
   RooListProxy _set1 ;    // Set of constraint terms

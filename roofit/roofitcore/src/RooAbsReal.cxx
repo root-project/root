@@ -103,6 +103,10 @@ ClassImp(RooAbsReal)
 
 Bool_t RooAbsReal::_cacheCheck(kFALSE) ;
 Bool_t RooAbsReal::_globalSelectComp = kFALSE ;
+Bool_t RooAbsReal::_hideOffset = kTRUE ;
+
+void RooAbsReal::setHideOffset(Bool_t flag) { _hideOffset = flag ; }
+Bool_t RooAbsReal::hideOffset() { return _hideOffset ; }
 
 RooAbsReal::ErrorLoggingMode RooAbsReal::_evalErrorMode = RooAbsReal::PrintErrors ;
 Int_t RooAbsReal::_evalErrorCount = 0 ;

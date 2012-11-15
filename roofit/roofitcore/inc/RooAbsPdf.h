@@ -186,11 +186,6 @@ public:
   virtual Double_t getValV(const RooArgSet* set=0) const ;
   virtual Double_t getLogVal(const RooArgSet* set=0) const ;
 
-  void setNormValueCaching(Int_t minNumIntDim, Int_t ipOrder=2) ;
-  Int_t minDimNormValueCaching() const { return _minDimNormValueCache ; }
-  Int_t intOrderNormValueCaching() const { return _valueCacheIntOrder ; }
-  
-
   Double_t getNorm(const RooArgSet& nset) const { 
     // Get p.d.f normalization term needed for observables 'nset'
     return getNorm(&nset) ; 
@@ -249,6 +244,7 @@ public:
   }
   void setNormRangeOverride(const char* rangeName) ;
 
+  const RooAbsReal* getNormIntegral(const RooArgSet& nset) const { return getNormObj(0,&nset,0) ; }
   
 protected:   
 
@@ -306,8 +302,6 @@ protected:
   mutable Double_t _rawValue ;
   mutable RooAbsReal* _norm   ;      //! Normalization integral (owned by _normMgr)
   mutable RooArgSet* _normSet ;      //! Normalization set with for above integral
-  Int_t _minDimNormValueCache ;      // Minimum number of numerically integrated dimensions to activate normalization value caching
-  Int_t _valueCacheIntOrder ;        // Interpolation order for numeric integral value cache
 
   class CacheElem : public RooAbsCacheElement {
   public:
@@ -347,7 +341,7 @@ protected:
   TString _normRange ; // Normalization range
   static TString _normRangeOverride ; 
   
-  ClassDef(RooAbsPdf,3) // Abstract PDF with normalization support
+  ClassDef(RooAbsPdf,4) // Abstract PDF with normalization support
 };
 
 

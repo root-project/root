@@ -208,6 +208,14 @@ void RooMinimizer::setEps(Double_t eps)
 }
 
 
+//_____________________________________________________________________________
+void RooMinimizer::setOffsetting(Bool_t flag) 
+{
+  // Enable internal likelihood offsetting for enhanced numeric precision
+  _func->enableOffsetting(flag) ; 
+}
+
+
 
 
 //_____________________________________________________________________________

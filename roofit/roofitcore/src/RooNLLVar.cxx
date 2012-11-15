@@ -40,8 +40,6 @@
 #include "RooRealVar.h"
 
 
-using namespace std;
-
 ClassImp(RooNLLVar)
 ;
 
@@ -86,6 +84,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
   _extended = pc.getInt("extended") ;
   _weightSq = kFALSE ;
   _first = kTRUE ;
+  _offset = 0 ;
 
 }
 
@@ -210,7 +209,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     if (_weightSq) eventWeight *= eventWeight ;
 
     Double_t term = eventWeight * pdfClone->getLogVal(_normSet);
-//     cout << "term[" << i << "] = " << term << endl ;
+    //cout << "term = " << term << endl ;
     sumWeight += eventWeight ;
 
     result-= term;
@@ -249,10 +248,24 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     _first = kFALSE ;
     _funcClone->wireAllCaches() ;
   }
-      
+  
 
+  // Check if value offset flag is set.
+  if (_doOffset) {
+    
+    // If no offset is stored enable this feature now
+    if (_offset==0) {
+      coutI(Minimization) << "RooNLLVar::evaluatePartition(" << GetName() << ") Likelihood offset now set to " << result << endl ;
+      _offset = result ;
+    }
+
+    // Substract offset
+    result -= _offset ;
+  }
+    
   return result ;
 }
+
 
 
 

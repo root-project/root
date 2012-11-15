@@ -54,6 +54,8 @@ public:
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;     
   Bool_t isBinnedDistribution(const RooArgSet& obs) const  ;
 
+  virtual void enableOffsetting(Bool_t) ;
+
 protected:
 
   RooArgList   _ownedList ;      // List of owned components

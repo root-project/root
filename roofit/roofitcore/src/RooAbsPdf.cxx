@@ -166,7 +166,7 @@ Bool_t RooAbsPdf::_evalError = kFALSE ;
 TString RooAbsPdf::_normRangeOverride ;
 
 //_____________________________________________________________________________
-RooAbsPdf::RooAbsPdf() : _norm(0), _normSet(0), _minDimNormValueCache(999), _valueCacheIntOrder(2), _specGeneratorConfig(0)
+RooAbsPdf::RooAbsPdf() : _norm(0), _normSet(0), _specGeneratorConfig(0)
 {
   // Default constructor
   _errorCount = 0 ;
@@ -180,7 +180,7 @@ RooAbsPdf::RooAbsPdf() : _norm(0), _normSet(0), _minDimNormValueCache(999), _val
 
 //_____________________________________________________________________________
 RooAbsPdf::RooAbsPdf(const char *name, const char *title) : 
-  RooAbsReal(name,title), _norm(0), _normSet(0), _minDimNormValueCache(999), _valueCacheIntOrder(2), _normMgr(this,10), _selectComp(kTRUE), _specGeneratorConfig(0)
+  RooAbsReal(name,title), _norm(0), _normSet(0), _normMgr(this,10), _selectComp(kTRUE), _specGeneratorConfig(0)
 {
   // Constructor with name and title only
   resetErrorCounters() ;
@@ -192,7 +192,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title) :
 //_____________________________________________________________________________
 RooAbsPdf::RooAbsPdf(const char *name, const char *title, 
 		     Double_t plotMin, Double_t plotMax) :
-  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _normSet(0), _minDimNormValueCache(999), _valueCacheIntOrder(2), _normMgr(this,10), _selectComp(kTRUE), _specGeneratorConfig(0)
+  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _normSet(0), _normMgr(this,10), _selectComp(kTRUE), _specGeneratorConfig(0)
 {
   // Constructor with name, title, and plot range
   resetErrorCounters() ;
@@ -203,7 +203,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title,
 
 //_____________________________________________________________________________
 RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) : 
-  RooAbsReal(other,name), _norm(0), _normSet(0), _minDimNormValueCache(other._minDimNormValueCache), _valueCacheIntOrder(other._valueCacheIntOrder),
+  RooAbsReal(other,name), _norm(0), _normSet(0),
   _normMgr(other._normMgr,this), _selectComp(other._selectComp), _normRange(other._normRange)
 {
   // Copy constructor
@@ -474,66 +474,48 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
     const char* nr = (_normRangeOverride.Length()>0 ? _normRangeOverride.Data() : (_normRange.Length()>0 ? _normRange.Data() : 0)) ;
 
 //     cout << "RooAbsPdf::syncNormalization(" << GetName() << ") rangeName for normalization is " << (nr?nr:"<null>") << endl ;
-    RooRealIntegral* normInt = (RooRealIntegral*) createIntegral(*depList,*getIntegratorConfig(),nr) ;
+    RooAbsReal* normInt = createIntegral(*depList,*getIntegratorConfig(),nr) ;
     normInt->getVal() ;
 //     cout << "resulting normInt = " << normInt->GetName() << endl ;
 
-    RooArgSet* normParams = normInt->getVariables() ;
-    if (normParams->getSize()>0 && normParams->getSize()<3 && normInt->numIntRealVars().getSize()>=_minDimNormValueCache) {
-      coutI(Caching) << "RooAbsPdf::syncNormalization(" << GetName() << ") INFO: constructing " << normParams->getSize() 
-		     << "-dim value cache for normalization integral over " << *depList << endl ;
-      string name = Form("%s_CACHE_[%s]",normInt->GetName(),normParams->contentsString().c_str()) ;
-      RooCachedReal* cachedNorm = new RooCachedReal(name.c_str(),name.c_str(),*normInt,*normParams) ;     
-      cachedNorm->setInterpolationOrder(_valueCacheIntOrder) ;
-      cachedNorm->addOwnedComponents(*normInt) ;
-      cachedNorm->setCacheSource(kTRUE) ;
-      _norm = cachedNorm ;
-    } else {
-      _norm = normInt ;
-    } 
-    delete normParams ;
+    const char* cacheParamsStr = getStringAttribute("CACHEPARAMINT") ;
+    if (cacheParamsStr && strlen(cacheParamsStr)) {
+      
+      RooArgSet* intParams = normInt->getVariables() ;
+      
+      RooNameSet cacheParamNames ;
+      cacheParamNames.setNameList(cacheParamsStr) ;
+      RooArgSet* cacheParams = cacheParamNames.select(*intParams) ;
+      
+      if (cacheParams->getSize()>0) {
+	cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams->getSize()
+			 << "-dim value cache for integral over " << *depList << " as a function of " << *cacheParams << " in range " << (nr?nr:"<default>") <<  endl ;
+	string name = Form("%s_CACHE_[%s]",normInt->GetName(),cacheParams->contentsString().c_str()) ;
+	RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*normInt,*cacheParams) ;
+	cachedIntegral->setInterpolationOrder(2) ;
+	cachedIntegral->addOwnedComponents(*normInt) ;
+	cachedIntegral->setCacheSource(kTRUE) ;
+	if (normInt->operMode()==ADirty) {
+	  cachedIntegral->setOperMode(ADirty) ;
+	}
+	normInt= cachedIntegral ;
+      }
+      
+      delete cacheParams ;
+      delete intParams ;
+    }
+    _norm = normInt ;    
   }
-
-
-
+  
   // Register new normalization with manager (takes ownership)
   cache = new CacheElem(*_norm) ;
   _normMgr.setObj(nset,cache) ;
-
+  
 //   cout << "making new object " << _norm->GetName() << endl ;
 
   delete depList ;
   return kTRUE ;
 }
-
-
-
-//_____________________________________________________________________________
-void RooAbsPdf::setNormValueCaching(Int_t minNumIntDim, Int_t ipOrder) 
-{ 
-  // Activate caching of normalization integral values in a interpolated histogram 
-  // for integrals that exceed the specified minimum number of numerically integrated
-  // dimensions, _and_ of which the integral has at most 2 parameters. 
-  //
-  // The cache is scanned with a granularity defined by a binning named "cache" in the 
-  // scanned integral parameters and is interpolated to given order.
-  // The cache values are kept for the livetime of the ROOT session/application
-  // and are persisted along with the object in case the p.d.f. is persisted
-  // in a RooWorkspace
-  // 
-  // This feature can substantially speed up fits and improve convergence with slow 
-  // multi-dimensional integrals whose value varies slowly with the parameters so that the
-  // an interpolated histogram is a good approximation of the true integral value.
-  // The improved convergence behavior is a result of making the value of the normalization
-  // integral deterministic for each value of the parameters. If (multi-dimensional) numeric
-  // integrals are calculated at insufficient precision (>=1e-7) MINUIT convergence may
-  // be impaired by the effects numerical noise that can cause that subsequent evaluations
-  // of an integral at the same point in parameter space can give slightly different answers.
-
-  _minDimNormValueCache = minNumIntDim ; 
-  _valueCacheIntOrder = ipOrder ; 
-}
-
 
 
 
@@ -615,6 +597,11 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
   // An error message is printed if the argument of the log is negative.
 
   Double_t prob = getVal(nset) ;
+
+  if (fabs(prob)>1e6) {
+    coutW(Eval) << "RooAbsPdf::getLogVal(" << GetName() << ") WARNING: large likelihood value: " << prob << endl ;
+  }
+
   if(prob < 0) {
 
     logEvalError("getLogVal() top-level p.d.f evaluates to a negative number") ;
@@ -677,6 +664,24 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
 
   // calculate and return the negative log-likelihood of the Poisson
   // factor for this dataset, dropping the constant log(observed!)
+  //   Double_t extra=0;
+  //   if(observed<1000000) {
+  //     Double_t Delta1 = (expected-observed);
+  //     Double_t Delta2 = observed*(log(expected)-log(observed+1));
+  //     Double_t Const3 = 0.5*log(observed+1);
+  //     extra= Delta1 - Delta2 + Const3;
+  
+  //     cout << " extra obs = " << observed << " exp = " << expected << endl ;
+  //     cout << " extra orig = " << expected - observed*log(expected) << endl ;
+  //     cout << " extra orig fix = " << expected - observed*log(expected) + log(TMath::Gamma(observed+1)) << endl ;
+  //     cout << " extra new  = " << extra << endl ;
+  
+  //   } else {
+  //     Double_t sigma_square=expected;
+  //     Double_t diff=observed-expected;
+  //     extra=-log(sigma_square)/2 + (diff*diff)/(2*sigma_square);
+  //   }
+  
   Double_t extra= expected - observed*log(expected);
 
 //   cout << "RooAbsPdf::extendedTerm(" << GetName() << ") observed = " << observed << " expected = " << expected << endl ;

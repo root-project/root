@@ -77,6 +77,8 @@ RooAbsTestStatistic::RooAbsTestStatistic()
   _simCount = 0 ;
   _splitRange = 0 ;
   _verbose = kFALSE ;
+  _doOffset = kFALSE ;
+  _offset = 0 ;
 }
 
 
@@ -99,7 +101,9 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   _gofArray(0),
   _nCPU(nCPU),
   _mpfeArray(0),
-  _mpinterl(interleave)
+  _mpinterl(interleave),
+  _doOffset(kFALSE),
+  _offset(0)
 {
   // Constructor taking function (real), a dataset (data), a set of projected observables (projSet). If
   // rangeName is not null, only events in the dataset inside the range will be used in the test
@@ -164,7 +168,9 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   _gofArray(0),
   _nCPU(other._nCPU),
   _mpfeArray(0),
-  _mpinterl(other._mpinterl)
+  _mpinterl(other._mpinterl),
+  _doOffset(other._doOffset),
+  _offset(other._offset)
 {
   // Copy constructor
 
@@ -279,7 +285,7 @@ Double_t RooAbsTestStatistic::evaluate() const
       nLast  = _nEvents * (_setNum+1) / _numSets ;
       nStep  = 1 ;
     }
-
+    
 
     //cout << "nCPU = " << _nCPU << (_mpinterl?"INTERLEAVE":"BULK") << " nFirst = " << nFirst << " nLast = " << nLast << " nStep = " << nStep << endl ;
 
@@ -289,6 +295,8 @@ Double_t RooAbsTestStatistic::evaluate() const
       ret /= globalNormalization() ;
     }
 
+    if (hideOffset()) ret += offset() ;
+    
     return ret ;
 
   }
@@ -591,5 +599,35 @@ Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
   return kTRUE ;
 }
 
+
+
+void RooAbsTestStatistic::enableOffsetting(Bool_t flag) 
+{
+  // Apply internal value offsetting to control numeric precision
+  
+  switch(operMode()) {
+    
+  case Slave:
+    _doOffset = flag ;
+    // Clear offset if feature is disabled to that it is recalculated next time it is enabled
+    if (!_doOffset) {
+      _offset = 0 ;
+    }
+    break ;
+
+  case SimMaster:
+    for (Int_t i=0 ; i<_nGof ; i++) {
+      _gofArray[i]->enableOffsetting(flag) ;
+    }
+    break ;
+
+  case MPMaster:
+    // Not yet supported
+    coutF(DataHandling) << "RooAbsTestStatistic::enableOffsetting(" << GetName() << ") FATAL: enableOffsetting() is not yet supported in multi-processor mode" << endl ;
+    throw string("RooAbsTestStatistic::enableOffsetting is not supported in MPMaster mode") ;
+    break ;
+  }
+  
+}
 
 

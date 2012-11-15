@@ -57,6 +57,10 @@ public:
 
   Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) ;
 
+  void enableOffsetting(Bool_t flag) ;
+  Bool_t isOffsetting() const { return _doOffset ; }
+  virtual Double_t offset() const { return _offset ; }
+
 protected:
 
   virtual void printCompactTreeHook(std::ostream& os, const char* indent="") ;
@@ -131,8 +135,10 @@ protected:
   pRooRealMPFE*  _mpfeArray ; //! Array of parallel execution frond ends
 
   Bool_t         _mpinterl ; // Use interleaving strategy rather than N-wise split for partioning of dataset for multiprocessor-split
+  Bool_t         _doOffset ; // Apply interval value offset to control numeric precision?
+  mutable Double_t _offset ; //! Offset
 
-  ClassDef(RooAbsTestStatistic,1) // Abstract base class for real-valued test statistics
+  ClassDef(RooAbsTestStatistic,2) // Abstract base class for real-valued test statistics
 };
 
 #endif
