@@ -703,11 +703,12 @@ Int_t TEveCaloLegoGL::GetGridStep(TGLRnrCtx &rnrCtx) const
    Int_t ngroup = 1;
    if (fM->fAutoRebin && fM->fPixelsPerBin > ppb)
    {
-      ngroup = TMath::Nint(fM->fPixelsPerBin*0.5/ppb); // symetrical rebin factor 2
       // limit rebin realtive to number of axis bins
-      Int_t minN = TMath::Min(fM->fData->GetEtaBins()->GetNbins(), fM->fData->GetPhiBins()->GetNbins());
-      if (ngroup * 4 > minN)
-         ngroup = minN/4;
+      Int_t maxGroup = TMath::Min(fM->fData->GetEtaBins()->GetNbins(), fM->fData->GetPhiBins()->GetNbins())/4;
+      if (maxGroup > 1) {
+         ngroup = TMath::Nint(fM->fPixelsPerBin*0.5/ppb); // symetrical rebin factor 2
+         if (ngroup  > maxGroup) ngroup = maxGroup;
+      }
    }
    fCurrentPixelsPerBin = TMath::Nint(ppb);
 
