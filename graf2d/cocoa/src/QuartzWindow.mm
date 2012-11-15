@@ -2391,6 +2391,7 @@ void print_mask_info(ULong_t mask)
    print_mask_info(fEventMask);
    NSLog(@"grab mask is:");
    print_mask_info(fPassiveGrabEventMask);
+   NSLog(@"view's geometry: x == %g, y == %g, w == %g, h == %g", self.frame.origin.x, self.frame.origin.y, self.frame.size.width, self.frame.size.height);
    NSLog(@"----------------End of view info------------------");
 }
 #endif

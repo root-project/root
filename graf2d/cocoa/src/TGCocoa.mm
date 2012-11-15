@@ -1691,9 +1691,11 @@ void TGCocoa::FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x
 
    if (!drawable.fIsPixmap) {
       QuartzView * const view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
-      const CGPoint origin = [view convertPoint : view.frame.origin toView : nil];
-      patternPhase.width = origin.x;
-      patternPhase.height = origin.y;
+      if (view.fParentView) {
+         const CGPoint origin = [view.fParentView convertPoint : view.frame.origin toView : nil];
+         patternPhase.width = origin.x;
+         patternPhase.height = origin.y;
+      }
    }
 
    const Quartz::CGStateGuard ctxGuard(ctx);//Will restore context state.
@@ -2096,11 +2098,13 @@ void TGCocoa::ClearAreaAux(Window_t windowID, Int_t x, Int_t y, UInt_t w, UInt_t
       CGContextFillRect(view.fContext, CGRectMake(x, y, w, h));
    } else {
       const CGRect fillRect = CGRectMake(x, y, w, h);
-      CGSize patternPhase = {};
-      const CGPoint origin = [view convertPoint : view.frame.origin toView : nil];
-      patternPhase.width = origin.x;
-      patternPhase.height = origin.y;
 
+      CGSize patternPhase = {};
+      if (view.fParentView) {
+         const CGPoint origin = [view.fParentView convertPoint : view.frame.origin toView : nil];
+         patternPhase.width = origin.x;
+         patternPhase.height = origin.y;
+      }
       const Quartz::CGStateGuard ctxGuard(view.fContext);//Will restore context state.
 
       PatternContext patternContext = {Mask_t(), 0, 0, 0, view.fBackgroundPixmap, patternPhase};
