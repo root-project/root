@@ -263,77 +263,6 @@ void AppendMemberFunctionSignature(const clang::Decl *methodDecl, std::string &n
 }
 
 //______________________________________________________________________________
-void AppendMemberFunctionTemplateSignature(clang::FunctionTemplateDecl *decl, std::string &name)
-{
-   assert(decl != 0 && "AppendMemberFunctinoTemplateSignature, 'decl' parameter is null");
-
-   typedef clang::FunctionTemplateDecl::spec_iterator spec_iterator;
-
-   (void) decl;
-
-   clang::TemplateParameterList * const params = decl->getTemplateParameters();
-   assert(params != 0 && "AppendMemberFunctinoTemplateSignature, template paramter list is null");
-
-   llvm::raw_string_ostream out(name);
-   const clang::LangOptions langOpts;
-   clang::PrintingPolicy printingPolicy(langOpts);
-
-   for (spec_iterator spec = decl->spec_begin(), specEnd = decl->spec_end(); spec != specEnd; ++spec) {
-      const clang::TemplateArgumentList *args = (*spec)->getTemplateSpecializationArgs();
-      assert(!args || params->size() == args->size());
-
-      out << "template <";
-
-      for (unsigned i = 0, e = params->size(); i != e; ++i) {
-         if (i != 0)
-            out << ", ";
-
-         const clang::Decl * const param = params->getParam(i);
-         if (const clang::TemplateTypeParmDecl * const ttp = llvm::dyn_cast<clang::TemplateTypeParmDecl>(param)) {
-            if (ttp->wasDeclaredWithTypename())
-               out << "typename ";
-            else
-               out << "class ";
-
-            if (ttp->isParameterPack())
-               out << "... ";
-
-            out << *ttp;
-
-            if (args) {
-               out << " = ";
-               args->get(i).print(printingPolicy, out);
-            } else if (ttp->hasDefaultArgument()) {
-               out << " = ";
-               out << ttp->getDefaultArgument().getAsString(printingPolicy);
-            }
-         } else if (const clang::NonTypeTemplateParmDecl * const nttp = llvm::dyn_cast<clang::NonTypeTemplateParmDecl>(param)) {
-            out << nttp->getType().getAsString(printingPolicy);
-
-            if (nttp->isParameterPack() && !llvm::isa<clang::PackExpansionType>(nttp->getType()))
-               out << "...";
-
-            if (clang::IdentifierInfo *name = nttp->getIdentifier()) {
-               out << ' ';
-               out << name->getName();
-            }
-
-            if (args) {
-               out << " = ";
-               args->get(i).print(printingPolicy, out);
-            } else if (nttp->hasDefaultArgument()) {
-               out << " = ";
-               nttp->getDefaultArgument()->printPretty(out, 0, printingPolicy, 0);//the last 0 for indentation.
-            }
-         } /*else if (const clang::TemplateTemplateParmDecl *ttpd = llvm::dyn_cast<clang::TemplateTemplateParmDecl>(param)) {
-         }*/
-      }
-
-      out << "> ";
-   }
-}
-
-//______________________________________________________________________________
 void AppendDataMemberDeclaration(const clang::Decl *memDecl, std::string &name)
 {
    assert(memDecl != 0 && "AppendDataMemberDeclaration, 'memDecl' parameter is null");
@@ -885,13 +814,27 @@ void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)
    //I have to additionally scan class declarations.
    for (decl_iterator decl = classDecl->decls_begin(); decl != classDecl->decls_end(); ++decl) {
       if (decl->getKind() == clang::Decl::FunctionTemplate) {
+         const clang::FunctionTemplateDecl * const ftDecl = llvm::dyn_cast<clang::FunctionTemplateDecl>(*decl);
+         assert(ftDecl != 0 && "DisplayMemberFunctions, decl is not a function template");
+         
          textLine.clear();
          AppendMemberFunctionLocation(fInterpreter->getCI(), *decl, textLine);
          textLine += ' ';
          AppendMemberAccessSpecifier(*decl, textLine);
          textLine += ' ';
          AppendMemberFunctionSignature(*decl, textLine);
-         //AppendMemberFunctionTemplateSignature(llvm::dyn_cast<clang::FunctionTemplateDecl>(*decl), textLine);
+
+         //Unless this is fixed in clang, I have to do a stupid trick here to
+         //print constructor-template correctly, otherwise, class name and
+         //parameters are omitted (this is also true for clang and normal, non-templated
+         //constructors.
+         if (ftDecl->getTemplatedDecl()) {
+            if (const clang::CXXConstructorDecl * const ctorDecl = llvm::dyn_cast<clang::CXXConstructorDecl>(ftDecl->getTemplatedDecl())) {
+               textLine += ' ';
+               AppendConstructorSignature(ctorDecl, textLine);
+            }
+         }
+
          textLine += ";\n";
          fOut.Print(textLine.c_str());
       }
