@@ -488,7 +488,7 @@ class ModuleFacade( types.ModuleType ):
       appc = _root.MakeRootClass( 'PyROOT::TPyROOTApplication' )
       if appc.CreatePyROOTApplication(True): # for Cling: no default args
          appc.InitROOTGlobals()
-         appc.InitCINTMessageCallback();
+         # TODO Cling equivalent needed: appc.InitCINTMessageCallback();
          appc.InitROOTMessageCallback();
 
        # make gApplication available on the prompt

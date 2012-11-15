@@ -13,9 +13,6 @@
 #include "TClass.h"
 #include "TMethod.h"
 
-// CINT
-#include "Api.h"
-
 // Standard
 #include <string>
 

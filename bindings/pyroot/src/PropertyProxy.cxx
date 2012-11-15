@@ -17,9 +17,6 @@
 #include "TDataType.h"
 #include "TClassEdit.h"
 
-// CINT
-#include "Api.h"
-
 
 namespace PyROOT {
 

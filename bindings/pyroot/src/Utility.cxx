@@ -696,7 +696,7 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& typeName )
 }
 
 //____________________________________________________________________________
-Long_t PyROOT::Utility::GetObjectOffset( TClass* clCurrent, TClass* clDesired, void* address, Bool_t downcast ) {
+Long_t PyROOT::Utility::GetObjectOffset( TClass* clCurrent, TClass* clDesired, void* /* address */, Bool_t downcast ) {
 // root/meta base class offset fails in the case of virtual inheritance
    Long_t offset = 0;
 
@@ -713,9 +713,14 @@ Long_t PyROOT::Utility::GetObjectOffset( TClass* clCurrent, TClass* clDesired, v
 }
 
 //____________________________________________________________________________
-void PyROOT::Utility::ErrMsgCallback( char* msg )
+void PyROOT::Utility::ErrMsgCallback( char* /* msg */ )
 {
 // Translate CINT error/warning into python equivalent.
+
+// TODO (Cling): this function is probably not going to be used anymore and
+// may need removing at some point for cleanup
+
+/* Commented out for Cling ---
 
 // ignore the "*** Interpreter error recovered ***" message
    if ( strstr( msg, "error recovered" ) )
@@ -780,6 +785,8 @@ void PyROOT::Utility::ErrMsgCallback( char* msg )
       fprintf( stdout, "Note: (file \"%s\", line %d) %s\n", errFile, errLine, p+6 );
    else   // unknown: printing it to screen is the safest action
       fprintf( stdout, "Message: (file \"%s\", line %d) %s\n", errFile, errLine, msg );
+
+ --- Commented out for Cling */
 }
 
 //____________________________________________________________________________

@@ -19,9 +19,6 @@
 #include "TClassEdit.h"
 #include "TVirtualMutex.h"
 #include "TException.h"
-
-// CINT
-#include "Api.h"
 #include "TInterpreter.h"
 
 // Standard
@@ -35,12 +32,6 @@
 R__EXTERN PyObject* gRootModule;
 
 namespace {
-
-// CINT temp level guard
-   struct TempLevelGuard_t {
-      TempLevelGuard_t() { G__settemplevel( 1 ); }
-      ~TempLevelGuard_t() { G__settemplevel( -1 ); }
-   };
 
    ClassInfo_t* GetGlobalNamespaceInfo() {
       return gInterpreter->ClassInfo_Factory();
@@ -150,7 +141,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
       if ( callString.length() == 0 )
          callString = fullType;
       else
-         callString += "," + fullType;
+         callString += ", " + fullType;
    }
 
 // setup call func
@@ -171,7 +162,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
       &fOffset );
       //, G__ClassInfo::ExactMatch );
 
-   if ( ! gInterpreter->CallFunc_IsValid(fMethodCall) && (Bool_t)fMethod == true ) {
+   if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) && (Bool_t)fMethod == true ) {
       PyErr_Format( PyExc_RuntimeError, "could not resolve %s::%s(%s)",
          fClass.Name().c_str(), fMethod.Name().c_str(), callString.c_str() );
       gInterpreter->CallFunc_Delete( fMethodCall );
@@ -539,9 +530,7 @@ template< class T, class M >
 PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self )
 {
 // call the interface method
-   R__LOCKGUARD2( gCINTMutex );
-   TempLevelGuard_t g;
-
+   R__LOCKGUARD2( gGlobalMutex );
    PyObject* result = 0;
 
    if ( Utility::gSignalPolicy == Utility::kFast ) {
@@ -558,10 +547,6 @@ PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self )
       Py_DECREF( result );
       result = 0;
    }
-
-// recover from error, if not cleared (needed as we're returning to prompt)
-   if ( G__get_return( 0 ) > G__RETURN_NORMAL )
-      G__security_recover( 0 );    // 0 ensures silence
 
    return result;
 }

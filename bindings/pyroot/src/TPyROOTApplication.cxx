@@ -15,9 +15,6 @@
 #include "Getline.h"
 #include "TVirtualX.h"
 
-// CINT
-#include "Api.h"
-
 // Standard
 #include <string.h>
 
@@ -57,19 +54,13 @@ PyROOT::TPyROOTApplication::TPyROOTApplication(
 
    if ( bLoadLibs )   // note that this section could be programmed in python
    {
-   // follow TRint to minimize differences with CINT (note: changed <pair> to
-   // <utility> for Cling, which is correct)
+   // follow TRint to minimize differences with root.exe (note: changed <pair>
+   // to <utility> for Cling, which is correct)
       ProcessLine( "#include <iostream>", kTRUE );
       ProcessLine( "#include <string>",   kTRUE ); // for std::string iostream.
       ProcessLine( "#include <vector>",   kTRUE ); // needed because they're used within the
       ProcessLine( "#include <utility>",  kTRUE ); //  core ROOT dicts and CINT won't be able
                                                    //  to properly unload these files
-
-   // following RINT, these are now commented out (rely on auto-loading)
-   //   // the following libs are also useful to have, make sure they are loaded...
-   //      gROOT->LoadClass("TMinuit",     "Minuit");
-   //      gROOT->LoadClass("TPostScript", "Postscript");
-   //      gROOT->LoadClass("THtml",       "Html");
    }
 
 #ifdef WIN32
@@ -147,16 +138,6 @@ Bool_t PyROOT::TPyROOTApplication::InitROOTGlobals()
       gSystem->SetProgname( "python" );
 #endif
 
-   return kTRUE;
-}
-
-//____________________________________________________________________________
-Bool_t PyROOT::TPyROOTApplication::InitCINTMessageCallback()
-{
-// Install CINT message callback which will turn CINT error message into
-// python exceptions. Always returns true.
-
-   G__set_errmsgcallback( (void*)&Utility::ErrMsgCallback );
    return kTRUE;
 }
 

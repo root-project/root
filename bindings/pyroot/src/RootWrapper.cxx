@@ -88,13 +88,11 @@ namespace {
       return pyclass;
    }
 
-// helper to split between CINT and Reflex (the latter is no longer used)
-   Long_t GetDataMemberAddress( TClass* klass, TDataMember* mb )
+// (CLING) looks pretty wrong, no?
+   Long_t GetDataMemberAddress( TDataMember* mb )
    {
-   // Get the address of a data member (CINT-style).
-      Long_t offset = 0;
-      G__DataMemberInfo dmi = ((G__ClassInfo*)klass->GetClassInfo())->GetDataMember( mb->GetName(), &offset );
-      return dmi.Offset();
+   // Get the address of a data member (used for enums)
+      return mb->GetOffsetCint();
    }
 
 } // unnamed namespace
@@ -337,7 +335,7 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
 
    // enums (static enums are the defined values, non-static are data members, i.e. properties)
       if ( mb.TypeOf().IsEnum() && mb.IsStatic() ) {
-         PyObject* val = PyInt_FromLong( *((Int_t*)GetDataMemberAddress( klass, mb ) ) );
+         PyObject* val = PyInt_FromLong( *((Int_t*)GetDataMemberAddress( mb ) ) );
          PyObject_SetAttrString( pyclass, const_cast<char*>(mb.Name().c_str()), val );
          Py_DECREF( val );
 
