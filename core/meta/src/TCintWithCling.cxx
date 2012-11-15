@@ -838,13 +838,13 @@ void TCintWithCling::RegisterModule(const char* modulename,
       Error("RegisterModule", "cannot find dictionary module %s in %s",
             pcmFileName.Data(), searchPath.Data());
    } else {
-      TCintWithCling::Info("RegisterModule", "Loading PCM %s", pcmFileName.Data());
+      if (gDebug > 5) Info("RegisterModule", "Loading PCM %s", pcmFileName.Data());
       clang::CompilerInstance* CI = fInterpreter->getCI();
       ROOT::TMetaUtils::declareModuleMap(CI, pcmFileName, headers);
    }
 
    for (const char** hdr = headers; *hdr; ++hdr) {
-      Info("RegisterModule", "   #including %s...", *hdr);
+      if (gDebug > 5) Info("RegisterModule", "   #including %s...", *hdr);
       fInterpreter->parse(TString::Format("#include \"%s\"", *hdr).Data());
    }
 }
@@ -2680,11 +2680,14 @@ void TCintWithCling::UpdateClassInfoWithDecl(void* vTD)
          const TagDecl* tdOld = dyn_cast<TagDecl>(cci->GetDecl());
          if (!tdOld || tdDef) {
             cl->ResetCaches();
-            cci->Init(*td);
+            cci->Init(*cci->GetType());
          }
       } else {
          cl->ResetCaches();
-         cl->fClassInfo = new TClingClassInfo(fInterpreter, *td);
+         // yes, this is alsmost a waste of time, but we do need to lookup
+         // the 'type' corresponding to the TClass anyway in order to
+         // preserver the opaque typedefs (Double32_t)
+         cl->fClassInfo = new TClingClassInfo(fInterpreter, cl->GetName());
       }
    }
 }

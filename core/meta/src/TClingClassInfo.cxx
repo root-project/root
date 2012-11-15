@@ -78,12 +78,11 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
       decl = lh.findScope(buf,&type);
    }
    fDecl = decl;
-   if (type) 
-      fType = type->getAs<clang::RecordType>(); // NOTE: getAs removes some typedefs.
+   fType = type;
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
-                                 const clang::TagDecl &tag)
+                                 const clang::Type &tag)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0), 
      fTitle("")
 {
@@ -364,15 +363,22 @@ void TClingClassInfo::Init(const char *name)
 
 void TClingClassInfo::Init(int tagnum)
 {
-   Error("TClingClassInfo::Init(tagnum)","Should no longer be called\n");
+   Fatal("TClingClassInfo::Init(tagnum)","Should no longer be called");
    return;
 }
 
-void TClingClassInfo::Init(const clang::TagDecl &tag)
+void TClingClassInfo::Init(const clang::Type &tag)
 {
-   fDecl = &tag;
-   clang::ASTContext &C = tag.getASTContext();
-   fType = C.getTagDeclType(&tag)->getAs<clang::TagType>();
+   fType = &tag;
+   fDecl = fType->getAsCXXRecordDecl();
+   if (!fDecl) {
+      clang::QualType qType(fType,0);
+      static clang::PrintingPolicy
+         printPol(fInterp->getCI()->getLangOpts());
+      printPol.SuppressScope = false;
+      Error("TClingClassInfo::Init(const clang::Type&)","The given type %s does not point to a CXXRecordDecl",
+            qType.getAsString(printPol).c_str());
+   }
 }
 
 bool TClingClassInfo::IsBase(const char *name) const
@@ -520,7 +526,7 @@ int TClingClassInfo::InternalNext()
          fType = 0;
          if (fDecl) {
             const clang::RecordDecl *rdecl = llvm::dyn_cast<clang::RecordDecl>(fDecl);
-            if (rdecl) fType = rdecl->getASTContext().getRecordType(rdecl)->getAs<clang::RecordType>();
+            if (rdecl) fType = rdecl->getASTContext().getRecordType(rdecl).getTypePtr();
          }
          return 1;
       }

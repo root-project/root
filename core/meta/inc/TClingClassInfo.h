@@ -27,18 +27,15 @@
 
 #include "TClingMethodInfo.h"
 
-#include "clang/AST/DeclBase.h"
-
 #include <vector>
 #include <string>
 
 namespace cling {
-class Interpreter;
+   class Interpreter;
 }
 
 namespace clang {
-class Decl;
-class CXXMethodDecl;
+   class CXXMethodDecl;
 }
 
 namespace ROOT {
@@ -56,9 +53,12 @@ private:
    bool                  fDescend; // Flag for signaling the need to descend on this advancement.
    clang::DeclContext::decl_iterator fIter; // Current decl in scope.
    const clang::Decl    *fDecl; // Current decl, we do *not* own.
-   const clang::TagType *fType; // Type representing the decl (conserves typedefs like Double32_t). (we do *not* own)
+   const clang::Type    *fType; // Type representing the decl (conserves typedefs like Double32_t). (we do *not* own)
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
-   std::string              fTitle; // The meta info for the class.
+   std::string           fTitle; // The meta info for the class.
+
+   explicit TClingClassInfo() /* = delete */; // NOT IMPLEMENTED
+   TClingClassInfo &operator=(const TClingClassInfo &) /* = delete */; // NOT IMPLEMENTED
 public: // Types
 
    enum MatchMode {
@@ -73,26 +73,26 @@ public: // Types
 
 public:
 
-   explicit TClingClassInfo(); // NOT IMPLEMENTED
    explicit TClingClassInfo(cling::Interpreter *);
    explicit TClingClassInfo(cling::Interpreter *, const char *);
-   explicit TClingClassInfo(cling::Interpreter *, const clang::TagDecl &);
+   explicit TClingClassInfo(cling::Interpreter *, const clang::Type &);
 
-   const clang::Decl   *GetDecl() const { return fDecl; }
    long                 ClassProperty() const;
    void                 Delete(void *arena) const;
    void                 DeleteArray(void *arena, bool dtorOnly) const;
    void                 Destruct(void *arena) const;
+   const clang::Decl   *GetDecl() const { return fDecl; } // Underlying representation without Double32_t
    TClingMethodInfo     GetMethod(const char *fname, const char *proto,
                                   long *poffset, MatchMode mode = ConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;
    int                  GetMethodNArg(const char *method, const char *proto) const;
    long                 GetOffset(const clang::CXXMethodDecl* md) const;
+   const clang::Type   *GetType() const { return fType; } // Underlying representation with Double32_t
    bool                 HasDefaultConstructor() const;
    bool                 HasMethod(const char *name) const;
    void                 Init(const char *name);
    void                 Init(int tagnum);
-   void                 Init(const clang::TagDecl &);
+   void                 Init(const clang::Type &);
    bool                 IsBase(const char *name) const;
    static bool          IsEnum(cling::Interpreter *interp, const char *name);
    bool                 IsLoaded() const;

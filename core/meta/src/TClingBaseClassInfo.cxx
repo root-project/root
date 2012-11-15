@@ -196,7 +196,7 @@ int TClingBaseClassInfo::InternalNext(int onlyDirect)
       }
       // Update info for this base class.
       delete fBaseInfo;
-      fBaseInfo = new TClingClassInfo(fInterp, *Ty->getDecl());
+      fBaseInfo = new TClingClassInfo(fInterp, *fIter->getType());
       // Iterator is now valid.
       return 1;
    }
