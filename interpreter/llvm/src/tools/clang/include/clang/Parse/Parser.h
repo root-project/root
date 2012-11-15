@@ -43,6 +43,7 @@ namespace clang {
   class InMessageExpressionRAIIObject;
   class PoisonSEHIdentifiersRAIIObject;
   class VersionTuple;
+  class DestroyTemplateIdAnnotationsRAIIObj;
 
 /// PrettyStackTraceParserEntry - If a crash happens while the parser is active,
 /// an entry is printed for it.
@@ -89,6 +90,7 @@ class Parser : public CodeCompletionHandler {
   friend class ObjCDeclContextSwitch;
   friend class ParenBraceBracketBalancer;
   friend class BalancedDelimiterTracker;
+  friend class DestroyTemplateIdAnnotationsRAIIObj;
 
   Preprocessor &PP;
 

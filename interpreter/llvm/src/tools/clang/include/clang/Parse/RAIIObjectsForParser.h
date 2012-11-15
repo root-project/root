@@ -18,6 +18,7 @@
 #include "clang/Parse/ParseDiagnostic.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Sema/DelayedDiagnostic.h"
+#include "clang/Sema/ParsedTemplate.h"
 #include "clang/Sema/Sema.h"
 
 namespace clang {
@@ -427,6 +428,23 @@ namespace clang {
       return diagnoseMissingClose();
     }
     void skipToEnd();
+  };
+
+  /// \brief RAIIObject to destroy the contents of a SmallVector of
+  /// TemplateIdAnnotation pointers and clear the vector.
+  class DestroyTemplateIdAnnotationsRAIIObj {
+    Parser &P;
+  public:
+    DestroyTemplateIdAnnotationsRAIIObj(Parser &p)
+      : P(p) {}
+
+    ~DestroyTemplateIdAnnotationsRAIIObj() {
+      for (SmallVectorImpl<TemplateIdAnnotation *>::iterator I =
+           P.TemplateIds.begin(), E = P.TemplateIds.end();
+           I != E; ++I)
+        (*I)->Destroy();
+      P.TemplateIds.clear();
+    }
   };
 
 } // end namespace clang

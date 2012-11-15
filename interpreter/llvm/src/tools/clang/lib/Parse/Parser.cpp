@@ -13,11 +13,11 @@
 
 #include "clang/Parse/Parser.h"
 #include "clang/Parse/ParseDiagnostic.h"
+#include "clang/Parse/RAIIObjectsForParser.h"
 #include "clang/Sema/DeclSpec.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/ParsedTemplate.h"
 #include "llvm/Support/raw_ostream.h"
-#include "RAIIObjectsForParser.h"
 #include "ParsePragma.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/ASTConsumer.h"
@@ -546,30 +546,10 @@ void Parser::Initialize() {
   }
 }
 
-namespace {
-  /// \brief RAIIObject to destroy the contents of a SmallVector of
-  /// TemplateIdAnnotation pointers and clear the vector.
-  class DestroyTemplateIdAnnotationsRAIIObj {
-    SmallVectorImpl<TemplateIdAnnotation *> &Container;
-  public:
-    DestroyTemplateIdAnnotationsRAIIObj(SmallVectorImpl<TemplateIdAnnotation *>
-                                       &Container)
-      : Container(Container) {}
-
-    ~DestroyTemplateIdAnnotationsRAIIObj() {
-      for (SmallVectorImpl<TemplateIdAnnotation *>::iterator I =
-           Container.begin(), E = Container.end();
-           I != E; ++I)
-        (*I)->Destroy();
-      Container.clear();
-    }
-  };
-}
-
 /// ParseTopLevelDecl - Parse one top-level declaration, return whatever the
 /// action tells us to.  This returns true if the EOF was encountered.
 bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
-  DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(TemplateIds);
+  DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(*this);
 
   // Skip over the EOF token, flagging end of previous input for incremental 
   // processing
@@ -639,7 +619,7 @@ void Parser::ParseTranslationUnit() {
 Parser::DeclGroupPtrTy
 Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
                                  ParsingDeclSpec *DS) {
-  DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(TemplateIds);
+  DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(*this);
   ParenBraceBracketBalancer BalancerRAIIObj(*this);
 
   if (PP.isCodeCompletionReached()) {

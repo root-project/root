@@ -22,12 +22,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Parse/Parser.h"
+#include "clang/Parse/RAIIObjectsForParser.h"
 #include "clang/Sema/DeclSpec.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/ParsedTemplate.h"
 #include "clang/Sema/TypoCorrection.h"
 #include "clang/Basic/PrettyStackTrace.h"
-#include "RAIIObjectsForParser.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/SmallString.h"
 using namespace clang;
