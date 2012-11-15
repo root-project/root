@@ -623,6 +623,62 @@ public:
   void EnterTokenStream(const Token *Toks, unsigned NumToks,
                         bool DisableMacroExpansion, bool OwnsTokens);
 
+  /// A RAII object to temporarily reset PP's state and restore it.
+  class CleanupAndRestoreCacheRAII {
+  private:
+    Preprocessor &PP;
+    CachedTokensTy::size_type SavedCachedLexPos;
+    CachedTokensTy SavedCachedTokens;
+    std::vector<IncludeStackInfo> SavedStack;
+    Lexer *SavedCurLexer;
+    PTHLexer *SavedCurPTHLexer;
+    PreprocessorLexer *SavedCurPPLexer;
+    TokenLexer* SavedCurTokenLexer;
+    const DirectoryLookup *SavedCurDirLookup;
+    enum CurLexerKind SavedCurLexerKind;
+
+  public:
+    CleanupAndRestoreCacheRAII(Preprocessor &PP)
+      : PP(PP), SavedCachedLexPos(PP.CachedLexPos), 
+        SavedCachedTokens(PP.CachedTokens), SavedStack(PP.IncludeMacroStack),
+        SavedCurLexer(PP.CurLexer.take()), 
+        SavedCurPTHLexer(PP.CurPTHLexer.take()),
+        SavedCurPPLexer(PP.CurPPLexer), 
+        SavedCurTokenLexer(PP.CurTokenLexer.take()),
+        SavedCurDirLookup(PP.CurDirLookup),
+        SavedCurLexerKind(PP.CurLexerKind)
+    {
+      PP.CachedLexPos = 0;
+      PP.IncludeMacroStack.clear();
+    }
+
+    void pop() {
+      PP.CachedLexPos = SavedCachedLexPos;
+      PP.CachedTokens = SavedCachedTokens;
+      PP.IncludeMacroStack = SavedStack;
+      PP.CurLexer.reset(SavedCurLexer);
+      PP.CurPTHLexer.reset(SavedCurPTHLexer);
+      PP.CurPPLexer = SavedCurPPLexer;
+      PP.CurTokenLexer.reset(SavedCurTokenLexer);
+      PP.CurDirLookup = SavedCurDirLookup;
+      PP.CurLexerKind = SavedCurLexerKind;
+
+      SavedCachedLexPos = 0;
+      SavedCachedTokens.clear();
+      SavedStack.clear();
+      SavedCurLexer = 0;
+      SavedCurPTHLexer = 0;
+      SavedCurPPLexer = 0;
+      SavedCurTokenLexer = 0;
+      SavedCurDirLookup = 0;
+      SavedCurLexerKind = (enum CurLexerKind)~0U;
+    }
+
+    ~CleanupAndRestoreCacheRAII() {
+      pop();
+    }
+  };
+
   /// RemoveTopOfLexerStack - Pop the current lexer/macro exp off the top of the
   /// lexer stack.  This should only be used in situations where the current
   /// state of the top-of-stack lexer is known.
