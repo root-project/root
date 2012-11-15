@@ -2861,10 +2861,10 @@ const char* TCintWithCling::GetIncludePath()
    // Refresh the list of include paths known to the interpreter and return it
    // with -I prepended.
 
-   fIncludePath = "";
-
    using namespace clang;
    typedef std::vector<HeaderSearchOptions::Entry>::size_type size_type;
+
+   fIncludePath = "";
 
    const CompilerInstance * const compiler = fInterpreter->getCI();
    assert(compiler != 0 && "GetIncludePath, compiler instance is null");
