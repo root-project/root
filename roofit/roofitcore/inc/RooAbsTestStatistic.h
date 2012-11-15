@@ -54,7 +54,7 @@ public:
     // Default value of global normalization factor is 1.0
     return 1.0 ; 
   }
-
+  
   Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) ;
 
   void enableOffsetting(Bool_t flag) ;

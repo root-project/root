@@ -255,7 +255,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     
     // If no offset is stored enable this feature now
     if (_offset==0) {
-      coutI(Minimization) << "RooNLLVar::evaluatePartition(" << GetName() << ") Likelihood offset now set to " << result << endl ;
+      coutI(Minimization) << "RooNLLVar::evaluatePartition(" << GetName() << ") first = "<< firstEvent << " last = " << lastEvent << " Likelihood offset now set to " << result << endl ;
       _offset = result ;
     }
 

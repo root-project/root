@@ -40,6 +40,8 @@ public:
 
   void applyNLLWeightSquared(Bool_t flag) ;
 
+  void enableOffsetting(Bool_t flag) ;
+  
   protected:
 
   // Function evaluation
@@ -51,7 +53,7 @@ public:
   State _state ;
 
   enum Message { SendReal=0, SendCat=1, Calculate=2, Retrieve=3, ReturnValue=4, Terminate=5, 
-		 ConstOpt=6, Verbose=7, RetrieveErrors=8, SendError=9, LogEvalError=10, ApplyNLLW2=11 } ;
+		 ConstOpt=6, Verbose=7, RetrieveErrors=8, SendError=9, LogEvalError=10, ApplyNLLW2=11, EnableOffset=12, CalculateNoOffset=13 } ;
   
   void initialize() ; 
   void initVars() ;

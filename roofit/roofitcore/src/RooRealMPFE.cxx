@@ -261,8 +261,17 @@ void RooRealMPFE::serverLoop()
 
     case Calculate:
       if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
-			       << ") IPC fromClient> Calculate" << endl ; 
+			       << ") IPC fromClient> Calculate" << endl ;       
       _value = _arg ;
+      break ;
+
+    case CalculateNoOffset:
+      if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
+			       << ") IPC fromClient> Calculate" << endl ; 
+
+      RooAbsReal::setHideOffset(kFALSE) ;
+      _value = _arg ; 
+      RooAbsReal::setHideOffset(kTRUE) ;
       break ;
 
     case Retrieve:
@@ -316,6 +325,19 @@ void RooRealMPFE::serverLoop()
       
       // Do application of weight-squared here
       doApplyNLLW2(flag) ;
+      }
+      break ;
+
+    case EnableOffset:
+      {
+      Bool_t flag ;
+      UInt_t tmp1 = read(_pipeToServer[0],&flag,sizeof(Bool_t)) ;
+      if (tmp1<sizeof(Bool_t)) perror("read") ;
+      if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
+			       << ") IPC fromClient> EnableOffset " << (flag?1:0) << endl ; 
+      
+      // Enable likelihoof offsetting here
+      ((RooAbsReal&)_arg.arg()).enableOffsetting(flag) ;
       }
       break ;
 
@@ -460,7 +482,7 @@ void RooRealMPFE::calculate() const
       }
     }
 
-    Message msg = Calculate ;
+    Message msg = hideOffset() ? Calculate : CalculateNoOffset;
     UInt_t tmp8 = write(_pipeToServer[1],&msg,sizeof(msg)) ;
     if (tmp8<sizeof(Message)) perror("write") ;
     if (_verboseServer) cout << "RooRealMPFE::calculate(" << GetName() 
@@ -704,13 +726,12 @@ void RooRealMPFE::applyNLLWeightSquared(Bool_t flag)
     UInt_t tmp1 = write(_pipeToServer[1],&msg,sizeof(msg)) ;
     UInt_t tmp2 = write(_pipeToServer[1],&flag,sizeof(Bool_t)) ;
     if (tmp1+tmp2<sizeof(Message)+sizeof(Bool_t)) perror("write") ;
-    if (_verboseServer) cout << "RooRealMPFE::setVerbose(" << GetName() 
+    if (_verboseServer) cout << "RooRealMPFE::applyNLLWeightSquared(" << GetName() 
 			     << ") IPC toServer> ApplyNLLW2 " << (flag?1:0) << endl ;      
   } 
 #endif // _WIN32
   doApplyNLLW2(flag) ;
 }
-
 
 
 //_____________________________________________________________________________
@@ -721,3 +742,26 @@ void RooRealMPFE::doApplyNLLW2(Bool_t flag)
     nll->applyWeightSquared(flag) ;
   }  
 }
+
+
+//_____________________________________________________________________________
+void RooRealMPFE::enableOffsetting(Bool_t flag) 
+{
+  // Control verbose messaging related to inter process communication
+  // on both client and server side
+
+#ifndef _WIN32
+  if (_state==Client) {
+    Message msg = EnableOffset ;
+    UInt_t tmp1 = write(_pipeToServer[1],&msg,sizeof(msg)) ;
+    UInt_t tmp2 = write(_pipeToServer[1],&flag,sizeof(Bool_t)) ;
+    if (tmp1+tmp2<sizeof(Message)+sizeof(Bool_t)) perror("write") ;
+    if (_verboseServer) cout << "RooRealMPFE::enableOffsetting(" << GetName() 
+			     << ") IPC toServer> EnableOffset " << (flag?1:0) << endl ;      
+  } 
+#endif // _WIN32
+  ((RooAbsReal&)_arg.arg()).enableOffsetting(flag) ;
+}
+
+
+

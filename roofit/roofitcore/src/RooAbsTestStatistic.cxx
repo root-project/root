@@ -604,6 +604,10 @@ Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
 void RooAbsTestStatistic::enableOffsetting(Bool_t flag) 
 {
   // Apply internal value offsetting to control numeric precision
+  if (!_init) {
+    const_cast<RooAbsTestStatistic*>(this)->initialize() ;
+  }
+
   
   switch(operMode()) {
     
@@ -621,13 +625,11 @@ void RooAbsTestStatistic::enableOffsetting(Bool_t flag)
     }
     break ;
 
-  case MPMaster:
-    // Not yet supported
-    coutF(DataHandling) << "RooAbsTestStatistic::enableOffsetting(" << GetName() << ") FATAL: enableOffsetting() is not yet supported in multi-processor mode" << endl ;
-    throw string("RooAbsTestStatistic::enableOffsetting is not supported in MPMaster mode") ;
-    break ;
+  case MPMaster:    
+    for (Int_t i=0 ; i<_nCPU ; i++) {
+      _mpfeArray[i]->enableOffsetting(flag) ;
+    }
   }
-  
 }
 
 
