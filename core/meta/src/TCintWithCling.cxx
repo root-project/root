@@ -1469,7 +1469,8 @@ void TCintWithCling::RegisterLoadedSharedLibrary(const char* filename)
    if (!filename) return;
 
    // Tell the interpreter that this library is available.
-   fInterpreter->loadLibrary(filename);
+
+   fInterpreter->loadLibrary(filename, true /*permanent*/);
 
    // Update string of available libraries.
    if (!fSharedLibs.IsNull()) {
@@ -2974,7 +2975,7 @@ int TCintWithCling::DisplayIncludePath(FILE *fout) const
 void* TCintWithCling::FindSym(const char* entry) const
 {
    // Interface to CINT function
-   return G__findsym(entry);
+   return fInterpreter->getAddressOfGlobal(entry);
 }
 
 //______________________________________________________________________________
