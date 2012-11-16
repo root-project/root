@@ -451,17 +451,9 @@ Long64_t TDSetElement::GetEntries(Bool_t isTree, Bool_t openfile)
    }
 
    // Record end-point Url and mark as looked-up; be careful to change
-   // nothing in the file name, otherwise some cross-checks may fail
-   TUrl *eu = (TUrl *) file->GetEndpointUrl();
-   if (eu) {
-      eu->SetOptions(TUrl(fname).GetOptions());
-      eu->SetAnchor(TUrl(fname).GetAnchor());
-      if (strlen(eu->GetProtocol()) > 0 && strcmp(eu->GetProtocol(), "file"))
-         fName = eu->GetUrl();
-      else
-         fName = eu->GetFileAndOptions();
-   }
-   SetBit(kHasBeenLookedUp);
+   // nothing in the file name, otherwise some cross-checks may fail.
+   // The lookup is only performed if not yet done
+   if (Lookup(kFALSE) != 0) Warning("GetEntries", "lookup problems for %s", GetName());
 
    TDirectory *dirsave = gDirectory;
    if (!file->cd(fDirectory)) {
