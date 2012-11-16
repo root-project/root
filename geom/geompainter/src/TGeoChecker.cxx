@@ -2132,7 +2132,6 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
    Int_t itot=0;
    Int_t n10=nrays/10;
    Double_t theta,phi, step, normlen;
-   const Double_t *normal;
    Double_t ox = ((TGeoBBox*)vol->GetShape())->GetOrigin()[0];
    Double_t oy = ((TGeoBBox*)vol->GetShape())->GetOrigin()[1];
    Double_t oz = ((TGeoBBox*)vol->GetShape())->GetOrigin()[2];
@@ -2184,6 +2183,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
          if (step<TGeoShape::Tolerance()) inull++;
          else inull = 0;
          if (inull>5) break;
+         const Double_t *normal = 0;
          if (check_norm) {
             normal = fGeoManager->FindNormalFast();
             if (!normal) break;
