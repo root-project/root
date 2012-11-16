@@ -754,6 +754,16 @@ enum Mode {
 //___________________________________________________________
 - (void) sendEmail
 {
+   if (![MFMailComposeViewController canSendMail]) {
+      UIAlertView *alert = [[UIAlertView alloc] initWithTitle : @"Send e-mail:"
+                                                message : @"Please, add your e-mail account in device settings"
+                                                delegate : nil
+                                                cancelButtonTitle : @"Close"
+                                                otherButtonTitles : nil];
+      [alert show];
+      return;
+   }
+
 	NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
 	NSString *saveDirectory = [paths objectAtIndex : 0];
    NSString *saveFileName = [NSString stringWithFormat:@"%s.pdf", fileContainer->GetObject(currentObject)->GetName()];
@@ -761,7 +771,7 @@ enum Mode {
 	const char *filename = [newFilePath UTF8String];
    
    [self createPDFFileWithPage: CGRectMake(0, 0, 600, 600) fileName : filename];
-//
+
 /*
    NSString *rootFileName = [NSString stringWithFormat:@"%s.root", fileContainer->GetObject(currentObject)->GetName()];
 	NSString *rootFilePath = [saveDirectory stringByAppendingPathComponent : rootFileName];
@@ -770,7 +780,6 @@ enum Mode {
    f.cd();
    fileContainer->GetObject(currentObject)->Write();
 */
-//
 
    MFMailComposeViewController * mailComposer = [[MFMailComposeViewController alloc] init];
    [mailComposer setSubject:@"E-mail from ROOT's iPad"];
