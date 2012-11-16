@@ -4545,10 +4545,11 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
    }
    static const char* exts[] = {
       ".so", ".dll", ".dylib", ".sl", ".dl", ".a", 0 };
-   const char* ext = exts[0];
-   while (ext) {
+   const char** ext = exts;
+   while (*ext) {
       TString fname(sLib);
-      fname += ext++;
+      fname += *ext;
+      ++ext;
       if (gSystem->FindFile(GetDynamicPath(), fname, kReadPermission)) {
          sLib.Swap(fname);
          return sLib;
