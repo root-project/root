@@ -13,6 +13,9 @@
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TText.h"
+#  include <ft2build.h>
+#  include FT_FREETYPE_H
+#  include FT_GLYPH_H
 #include "TTF.h"
 #include "TVirtualX.h"
 #include "TMath.h"
