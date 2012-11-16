@@ -649,10 +649,21 @@ public:
         SavedCurLexerKind(PP.CurLexerKind)
     {
       PP.CachedLexPos = 0;
+      PP.CachedTokens.clear();
       PP.IncludeMacroStack.clear();
+      PP.CurLexer.reset(0); 
+      PP.CurPTHLexer.reset(0);
+      PP.CurPPLexer = 0; 
+      PP.CurTokenLexer.reset(0);
+      PP.CurDirLookup = 0;
+      PP.CurLexerKind = CLK_CachingLexer;
     }
 
     void pop() {
+      if (SavedCurLexerKind == (enum CurLexerKind)~0U)
+        return;
+
+      //ExitCachingLexMode();
       PP.CachedLexPos = SavedCachedLexPos;
       PP.CachedTokens = SavedCachedTokens;
       PP.IncludeMacroStack = SavedStack;

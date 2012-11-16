@@ -19,6 +19,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Parse/Parser.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Scope.h"
 
@@ -116,6 +117,8 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
       // Save state of the PP
       Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+      Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
+      Parser::ParserCurTokRestoreRAII savedCurToken(P);
       
       bool oldSuppressDiags = SemaR.getDiagnostics().getSuppressAllDiagnostics();
       SemaR.getDiagnostics().setSuppressAllDiagnostics();
@@ -130,6 +133,7 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
       bool lookupSuccess = false;
       if (TCintWithCling__AutoLoadCallback(Name.getAsString().c_str())) {
          pushedSAndDC.pop();
+         cleanupRAII.pop();
          lookupSuccess = SemaR.LookupName(R, S);
       }
 

@@ -238,6 +238,34 @@ public:
   AttributeFactory &getAttrFactory() { return AttrFactory; }
 
   const Token &getCurToken() const { return Tok; }
+
+  /// A RAII object to temporarily reset PP's state and restore it.
+  class ParserCurTokRestoreRAII {
+  private:
+    Parser &P;
+    Token SavedTok;
+
+  public:
+    ParserCurTokRestoreRAII(Parser &P)
+      : P(P), SavedTok(P.Tok) 
+    {
+    }
+
+    void pop() {
+      if (SavedTok.is(tok::unknown))
+        return;
+
+      P.Tok = SavedTok;
+      
+      SavedTok.startToken();
+    }
+
+    ~ParserCurTokRestoreRAII() {
+      pop();
+    }
+  };
+
+
   Scope *getCurScope() const { return Actions.getCurScope(); }
 
   Decl  *getObjCDeclContext() const { return Actions.getObjCDeclContext(); }
