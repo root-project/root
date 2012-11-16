@@ -8986,9 +8986,10 @@ void TProof::PrintProgress(Long64_t total, Long64_t processed,
    }
    Float_t evtrti = (procTime > 0. && processed > 0) ? processed / procTime : -1.;
    Float_t mbsrti = (procTime > 0. && bytesread > 0) ? bytesread / procTime : -1.;
+   TString sunit("B/s");
    if (evtrti > 0.) {
+      Float_t remainingTime = (total >= processed) ? (total - processed) / evtrti : -1;
       if (mbsrti > 0.) {
-         TString sunit("B/s");
          const Float_t toK = 1024., toM = 1048576., toG = 1073741824.;
          if (mbsrti >= toG) {
             mbsrti /= toG;
@@ -9000,18 +9001,19 @@ void TProof::PrintProgress(Long64_t total, Long64_t processed,
             mbsrti /= toK;
             sunit = "kB/s";
          }
-         fprintf(stderr, "| %.02f %% [%.1f evts/s, %.1f %s]\r",
-                (total ? ((100.0*processed)/total) : 100.0), evtrti, mbsrti, sunit.Data());
+         fprintf(stderr, "| %.02f %% [%.1f evts/s, %.1f %s, time left: %.1f s]\r",
+                (total ? ((100.0*processed)/total) : 100.0), evtrti, mbsrti, sunit.Data(), remainingTime);
       } else {
-         fprintf(stderr, "| %.02f %% [%.1f evts/s]\r",
-                (total ? ((100.0*processed)/total) : 100.0), evtrti);
+         fprintf(stderr, "| %.02f %% [%.1f evts/s, time left: %.1f s]\r",
+                (total ? ((100.0*processed)/total) : 100.0), evtrti, remainingTime);
       }
    } else {
       fprintf(stderr, "| %.02f %%\r",
               (total ? ((100.0*processed)/total) : 100.0));
    }
-   if (processed >= total)
-      fprintf(stderr, "\n");
+   if (processed >= total) {
+      fprintf(stderr, "\n Query processing time: %.1f s\n", procTime);
+   }
 }
 
 //______________________________________________________________________________
