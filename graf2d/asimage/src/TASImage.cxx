@@ -53,6 +53,9 @@ palette can be modified with a GUI, just select StartPaletteEditor() from the
 context menu.
 End_Html */
 
+#  include <ft2build.h>
+#  include FT_FREETYPE_H
+#  include FT_GLYPH_H
 #include "TASImage.h"
 #include "TASImagePlugin.h"
 #include "TROOT.h"

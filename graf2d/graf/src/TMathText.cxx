@@ -12,6 +12,9 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
+#  include <ft2build.h>
+#  include FT_FREETYPE_H
+#  include FT_GLYPH_H
 #include "TTF.h"
 #include "TMathText.h"
 #include "TMath.h"

@@ -20,6 +20,9 @@
 // RConfigure.h is needed for TTFFONTDIR
 #include "RConfigure.h"
 
+#  include <ft2build.h>
+#  include FT_FREETYPE_H
+#  include FT_GLYPH_H
 #include "TTF.h"
 #include "TSystem.h"
 #include "TEnv.h"

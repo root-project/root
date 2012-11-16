@@ -26,11 +26,11 @@
 #include "Rtypes.h"
 #endif
 
-#ifndef __CINT__
-#  include <ft2build.h>
-#  include FT_FREETYPE_H
-#  include FT_GLYPH_H
-#else
+// Forward declare for the headers:
+// #  include <ft2build.h>
+// #  include FT_FREETYPE_H
+// #  include FT_GLYPH_H
+#ifndef FT_FREETYPE_H
    typedef void* FT_Library;
    typedef void* FT_Face;
    typedef void* FT_CharMap;
@@ -41,7 +41,6 @@
    struct FT_Matrix;
    struct FT_Bitmap;
 #endif
-
 
 // Class (actually structure) containing glyphs description
 class TTGlyph {

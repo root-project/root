@@ -25,6 +25,9 @@
 
 #include <stdlib.h>
 
+#  include <ft2build.h>
+#  include FT_FREETYPE_H
+#  include FT_GLYPH_H
 #include "TGX11TTF.h"
 #include "TClass.h"
 #include "TEnv.h"
