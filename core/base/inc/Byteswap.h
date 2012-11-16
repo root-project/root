@@ -29,6 +29,13 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
+#if (defined(__linux) || defined(__APPLE__)) && \
+    (defined(__i386__) || defined(__x86_64__)) && \
+    (defined(__GNUC__) && __GNUC__ >= 2)
+#ifndef R__USEASMSWAP
+#define R__USEASMSWAP
+#endif
+#endif
 
 /* Get the machine specific, optimized definitions.  */
 /* The following is copied from <bits/byteswap.h> (only from RH6.0 and above) */
@@ -37,7 +44,7 @@
 #define R__bswap_constant_16(x) \
      ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
 
-#if defined __GNUC__ && __GNUC__ >= 2
+#if defined R__USEASMSWAP
 # define R__bswap_16(x) \
      (__extension__                                                           \
       ({ register unsigned short int __v;                                     \
@@ -60,7 +67,7 @@
      ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) |               \
       (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
 
-#if defined __GNUC__ && __GNUC__ >= 2
+#if defined R__USEASMSWAP
 /* To swap the bytes in a word the i486 processors and up provide the
    `bswap' opcode.  On i386 we have to use three instructions.  */
 # if !defined __i486__ && !defined __pentium__ && !defined __pentiumpro__ &&  \
