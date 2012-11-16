@@ -4,6 +4,6 @@ all:
 clean:
 	
 
-instal:
+install:
 	
 
