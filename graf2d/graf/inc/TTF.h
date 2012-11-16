@@ -30,17 +30,27 @@
 // #  include <ft2build.h>
 // #  include FT_FREETYPE_H
 // #  include FT_GLYPH_H
-#ifndef FT_FREETYPE_H
-   typedef void* FT_Library;
-   typedef void* FT_Face;
-   typedef void* FT_CharMap;
-   typedef void* FT_Glyph;
+extern "C" {
+   struct FT_LibraryRec_;
+   struct FT_FaceRec_;
+   struct FT_CharMapRec_;
+   struct FT_GlyphRec_;
+   struct FT_Matrix_;
+   struct FT_Bitmap_;
+   typedef struct FT_LibraryRec_* FT_Library;
+   typedef struct FT_FaceRec_* FT_Face;
+   typedef struct FT_CharMapRec_* FT_CharMap;
+   typedef struct FT_GlyphRec_* FT_Glyph;
+   typedef struct FT_Matrix_ FT_Matrix;
+   typedef struct FT_Bitmap_ FT_Bitmap; // Forward declared for TGX11TTF.h's benefit
    typedef signed long FT_Pos;
-   struct FT_Vector { FT_Pos x, y; };
-   struct FT_BBox { FT_Pos xMin, yMin, xMax, yMax; };
-   struct FT_Matrix;
-   struct FT_Bitmap;
-#endif
+   #ifndef FT_FREETYPE_H
+   struct FT_Vector_ { FT_Pos x, y; };
+   struct FT_BBox_ { FT_Pos xMin, yMin, xMax, yMax; };
+   #endif
+   typedef struct FT_Vector_ FT_Vector;
+   typedef struct FT_BBox_ FT_BBox;
+}
 
 // Class (actually structure) containing glyphs description
 class TTGlyph {
