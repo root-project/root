@@ -3074,15 +3074,13 @@ void TCintWithCling::Setgvp(Long_t gvp) const
 //______________________________________________________________________________
 void TCintWithCling::SetRTLD_NOW() const
 {
-   // Interface to CINT function
-   G__Set_RTLD_NOW();
+   Error("SetRTLD_NOW()", "Will never be implemented! Don't use!");
 }
 
 //______________________________________________________________________________
 void TCintWithCling::SetRTLD_LAZY() const
 {
-   // Interface to CINT function
-   G__Set_RTLD_LAZY();
+   Error("SetRTLD_LAZY()", "Will never be implemented! Don't use!");
 }
 
 //______________________________________________________________________________
