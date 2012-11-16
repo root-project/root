@@ -407,6 +407,7 @@ public:
    TString     &ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2, Ssiz_t ls2);  // Find&Replace all s1 with s2 if any
    void         Resize(Ssiz_t n);                       // Truncate or add blanks as necessary
    TSubString   Strip(EStripType s = kTrailing, char c = ' ') const;
+   TString     &Swap(TString &other); // Swap the contents of this and other without reallocation
    void         ToLower();                              // Change self to lower-case
    void         ToUpper();                              // Change self to upper-case
    TObjArray   *Tokenize(const TString &delim) const;
@@ -633,6 +634,16 @@ inline TString &TString::ReplaceAll(const char *s1, const TString &s2)
 
 inline TString &TString::ReplaceAll(const char *s1,const char *s2)
 { return ReplaceAll(s1, s1 ? strlen(s1) : 0, s2, s2 ? strlen(s2) : 0); }
+
+inline TString &TString::Swap(TString &other) {
+   // Swap the contents of other and this without reallocation.
+#ifndef __CINT__
+   Rep_t tmp = other.fRep;
+   other.fRep = fRep;
+   fRep = tmp;
+#endif
+   return *this;
+}
 
 inline char &TString::operator()(Ssiz_t i)
 { return GetPointer()[i]; }
