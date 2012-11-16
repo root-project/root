@@ -20,6 +20,10 @@
 
 #include <Cocoa/Cocoa.h>
 
+#  include <ft2build.h>
+#  include FT_FREETYPE_H
+#  include FT_GLYPH_H
+
 #include "QuartzFillArea.h"
 #include "TColorGradient.h"
 #include "QuartzMarker.h"
