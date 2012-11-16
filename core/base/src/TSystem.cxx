@@ -3637,20 +3637,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if (!keep) k->SetBit(kMustCleanup);
       fCompiled->Add(k);
 
-#ifndef NOCINT
-      // This is intended to force a failure if not all symbols needed
-      // by the library are present.
-      gInterpreter->SetRTLD_NOW();
-#endif
       if (needLoadMap) {
           gInterpreter->LoadLibraryMap(libmapfilename);
       }
       if (gDebug>3)  ::Info("ACLiC","loading the shared library");
       if (loadLib) result = !gSystem->Load(library);
       else result = kTRUE;
-#ifndef NOCINT
-      gInterpreter->SetRTLD_LAZY();
-#endif
 
       if ( !result ) {
          if (gDebug>3) {
