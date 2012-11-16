@@ -1394,12 +1394,14 @@ Bool_t TCintWithCling::IsLoaded(const char* filename) const
       incPath.ReplaceAll(" :", ":");
    }
    incPath.Prepend(".:");
+   sFilename = filename;
    if (gSystem->FindFile(incPath, sFilename, kReadPermission)
        && fileMap.count(sFilename.Data())) {
       return kTRUE;
    }
 
    // Check shared library.
+   sFilename = filename;
    if (gSystem->FindDynamicLibrary(sFilename, kTRUE)
        && fileMap.count(sFilename.Data())) {
       return kTRUE;
@@ -1460,9 +1462,16 @@ void TCintWithCling::UpdateListOfLoadedSharedLibraries() {
 //______________________________________________________________________________
 void TCintWithCling::RegisterLoadedSharedLibrary(const char* filename)
 {
+   // Register a new shared library name with the interpreter; add it to
+   // fSharedLibs.
+
+   // Ignore NULL filenames, aka "the process".
    if (!filename) return;
 
-   llvm::sys::DynamicLibrary::getPermanentLibrary(filename);
+   // Tell the interpreter that this library is available.
+   fInterpreter->loadLibrary(filename);
+
+   // Update string of available libraries.
    if (!fSharedLibs.IsNull()) {
       fSharedLibs.Append(" ");
    }
