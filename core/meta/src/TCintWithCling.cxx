@@ -1363,50 +1363,46 @@ Bool_t TCintWithCling::IsLoaded(const char* filename) const
    //            the include path
    //            the shared library path
    R__LOCKGUARD(gCINTMutex);
-   G__SourceFileInfo file(filename);
-   if (file.IsValid()) {
-      return kTRUE;
-   };
-   char* next = gSystem->Which(TROOT::GetMacroPath(), filename, kReadPermission);
-   if (next) {
-      file.Init(next);
-      delete[] next;
-      if (file.IsValid()) {
-         return kTRUE;
-      };
+
+   typedef cling::Interpreter::LoadedFileInfo FileInfo_t;
+   typedef llvm::SmallVectorImpl<FileInfo_t*> AllFileInfos_t;
+
+   llvm::StringMap<const FileInfo_t*> fileMap;
+
+   // Fill fileMap; return early on exact match.
+   const AllFileInfos_t& allFiles = fInterpreter->getLoadedFiles();
+   for (AllFileInfos_t::const_iterator iF = allFiles.begin(), iE = allFiles.end();
+        iF != iE; ++iF) {
+      if ((*iF)->getName() == filename) return kTRUE; // exact match
+      fileMap[(*iF)->getName()] = *iF;
    }
+
+   if (fileMap.empty()) return kFALSE;
+
+   // Check MacroPath.
+   TString sFilename(filename);
+   if (gSystem->FindFile(TROOT::GetMacroPath(), sFilename, kReadPermission)
+       && fileMap.count(sFilename.Data())) {
+      return kTRUE;
+   }
+
+   // Check IncludePath.
    TString incPath = gSystem->GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
-   incPath.Append(":").Prepend(" ");
+   incPath.Append(":").Prepend(" "); // to match " -I" (note leading ' ')
    incPath.ReplaceAll(" -I", ":");      // of form :dir1 :dir2:dir3
    while (incPath.Index(" :") != -1) {
       incPath.ReplaceAll(" :", ":");
    }
    incPath.Prepend(".:");
-# ifdef CINTINCDIR
-   TString cintdir = CINTINCDIR;
-# else
-   TString cintdir = "$(ROOTSYS)/cint";
-# endif
-   incPath.Append(":");
-   incPath.Append(cintdir);
-   incPath.Append("/include:");
-   incPath.Append(cintdir);
-   incPath.Append("/stl");
-   next = gSystem->Which(incPath, filename, kReadPermission);
-   if (next) {
-      file.Init(next);
-      delete[] next;
-      if (file.IsValid()) {
-         return kTRUE;
-      };
+   if (gSystem->FindFile(incPath, sFilename, kReadPermission)
+       && fileMap.count(sFilename.Data())) {
+      return kTRUE;
    }
-   next = gSystem->DynamicPathName(filename, kTRUE);
-   if (next) {
-      file.Init(next);
-      delete[] next;
-      if (file.IsValid()) {
-         return kTRUE;
-      };
+
+   // Check shared library.
+   if (gSystem->FindDynamicLibrary(sFilename, kTRUE)
+       && fileMap.count(sFilename.Data())) {
+      return kTRUE;
    }
    return kFALSE;
 }
