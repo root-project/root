@@ -1410,14 +1410,14 @@ Bool_t TCintWithCling::IsLoaded(const char* filename) const
 }
 
 //______________________________________________________________________________
-void TCintWithCling::UpdateListOfLoadedSharedLibraries() {
+void TCintWithCling::UpdateListOfLoadedSharedLibraries()
+{
 #ifdef R_WIN32
    // need to call RegisterLoadedSharedLibrary() here
    // by calling Win32's EnumerateLoadedModules().
    Error("TCintWithCling::UpdateListOfLoadedSharedLibraries",
          "Platform not supported!");   
 #elif defined(R__MACOSX)
-   if (!_dyld_present()) return;
    // fPrevLoadedDynLibInfo stores the *next* image index to look at
    uint32_t imageIndex = (uint32_t) (size_t) fPrevLoadedDynLibInfo;
    const char* imageName = 0;
