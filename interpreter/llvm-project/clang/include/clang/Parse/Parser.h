@@ -50,6 +50,7 @@ namespace clang {
   struct OMPTraitSelector;
   struct OMPTraitSet;
   class OMPTraitInfo;
+  class DestroyTemplateIdAnnotationsRAIIObj;
 
 /// Parser - This implements a parser for the C family of languages.  After
 /// parsing units of the grammar, productions are invoked to handle whatever has
@@ -65,6 +66,7 @@ class Parser : public CodeCompletionHandler {
   friend class ObjCDeclContextSwitch;
   friend class ParenBraceBracketBalancer;
   friend class BalancedDelimiterTracker;
+  friend class DestroyTemplateIdAnnotationsRAIIObj;
 
   Preprocessor &PP;
 
@@ -499,6 +501,34 @@ public:
   AttributeFactory &getAttrFactory() { return AttrFactory; }
 
   const Token &getCurToken() const { return Tok; }
+
+  /// A RAII object to temporarily reset PP's state and restore it.
+  class ParserCurTokRestoreRAII {
+  private:
+    Parser &P;
+    Token SavedTok;
+
+  public:
+    ParserCurTokRestoreRAII(Parser &P)
+      : P(P), SavedTok(P.Tok)
+    {
+    }
+
+    void pop() {
+      if (SavedTok.is(tok::unknown))
+        return;
+
+      P.Tok = SavedTok;
+
+      SavedTok.startToken();
+    }
+
+    ~ParserCurTokRestoreRAII() {
+      pop();
+    }
+  };
+
+
   Scope *getCurScope() const { return Actions.getCurScope(); }
   void incrementMSManglingNumber() const {
     return Actions.incrementMSManglingNumber();
