@@ -215,7 +215,7 @@ public:
    void              AddDynamicPath(const char *dir);
    const char       *GetDynamicPath();
    void              SetDynamicPath(const char *path);
-   char             *DynamicPathName(const char *lib, Bool_t quiet = kFALSE);
+   const char       *FindDynamicLibrary(TString &lib, Bool_t quiet = kFALSE);
    int               Load(const char *module, const char *entry = "", Bool_t system = kFALSE);
    const char       *GetLibraries(const char *regexp = "",
                                   const char *option = "",

@@ -1909,13 +1909,30 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
 }
 
 //______________________________________________________________________________
-char *TSystem::DynamicPathName(const char *, Bool_t)
+char *TSystem::DynamicPathName(const char *lib, Bool_t quiet /*=kFALSE*/)
 {
-   // Need to return the equivalent of LD_LIBRARY_PATH.
+   // Find a dynamic library called lib using the system search paths.
+   // Appends known extensions if needed. Returned string must be deleted
+   // by the user!
 
-   AbstractMethod("DynamicPathName");
+   TString sLib(lib);
+   if (FindDynamicLibrary(sLib, quiet))
+      return StrDup(sLib);
    return 0;
 }
+
+//______________________________________________________________________________
+const char *TSystem::FindDynamicLibrary(TString&, Bool_t)
+{
+   // Find a dynamic library using the system search paths. lib will be updated
+   // to contain the absolute filename if found. Returns lib if found, or NULL
+   // if a library called lib was not found.
+   // This function does not open the library.
+
+   AbstractMethod("FindDynamicLibrary");
+   return 0;
+}
+
 //______________________________________________________________________________
 Func_t TSystem::DynFindSymbol(const char * /*lib*/, const char *entry)
 {

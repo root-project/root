@@ -470,7 +470,8 @@ public:
    virtual void            AddDynamicPath(const char *pathname);
    virtual const char     *GetDynamicPath();
    virtual void            SetDynamicPath(const char *pathname);
-   virtual char           *DynamicPathName(const char *lib, Bool_t quiet = kFALSE);
+   char                   *DynamicPathName(const char *lib, Bool_t quiet = kFALSE);
+   virtual const char     *FindDynamicLibrary(TString& lib, Bool_t quiet = kFALSE);
    virtual Func_t          DynFindSymbol(const char *module, const char *entry);
    virtual int             Load(const char *module, const char *entry = "", Bool_t system = kFALSE);
    virtual void            Unload(const char *module);

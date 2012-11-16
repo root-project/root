@@ -3981,28 +3981,31 @@ void TWinNTSystem::SetDynamicPath(const char *path)
 }
 
 //______________________________________________________________________________
-char *TWinNTSystem::DynamicPathName(const char *lib, Bool_t quiet)
+const char *TWinNTSystem::FindDynamicLibrary(TString &sLib, Bool_t quiet)
 {
-   // Returns the path of a dynamic library (searches for library in the
-   // dynamic library search path). If no file name extension is provided
-   // it tries .DLL. Returned string must be deleted.
+   // Returns and updates sLib to the path of a dynamic library
+   //  (searches for library in the dynamic library search path).
+   // If no file name extension is provided it tries .DLL.
 
-   char *name;
-
-   int len = strlen(lib);
-   if (len > 4 && (!stricmp(lib+len-4, ".dll"))) {
-      name = gSystem->Which(GetDynamicPath(), lib, kReadPermission);
+   int len = sLib.Length();
+   if (len > 4 && (!stricmp(sLib.Data()+len-4, ".dll"))) {
+      if (gSystem->FindFile(GetDynamicPath(), sLib, kReadPermission))
+         return sLib;
    } else {
-      name = Form("%s.dll", lib);
-      name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
+      TString sLibDll(sLib);
+      sLibDll += ".dll";
+      if (gSystem->FindFile(GetDynamicPath(), sLibDll, kReadPermission)) {
+         sLibDll.Swap(sLib);
+         return sLib;
+      }
    }
 
-   if (!name && !quiet) {
+   if (!quiet) {
       Error("DynamicPathName",
-            "%s does not exist in %s,\nor has wrong file extension (.dll)", lib,
-            GetDynamicPath());
+            "%s does not exist in %s,\nor has wrong file extension (.dll)",
+             sLib.Data(), GetDynamicPath());
    }
-   return name;
+   return 0;
 }
 
 //______________________________________________________________________________
