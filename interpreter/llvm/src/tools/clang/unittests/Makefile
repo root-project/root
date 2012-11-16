@@ -2,3 +2,7 @@ all:
 	
 clean:
 	
+
+install:
+	
+

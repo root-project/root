@@ -3,3 +3,7 @@ all:
 
 clean:
 	
+
+instal:
+	
+
