@@ -2892,12 +2892,20 @@ const char* TCintWithCling::GetIncludePath()
    fIncludePath = "";
 
    llvm::SmallVector<std::string, 10> includePaths;//Why 10? Hell if I know.
-   //false - no system header, false - without flags.
-   fInterpreter->GetIncludePaths(includePaths, false, false);
+   //false - no system header, true - with flags.
+   fInterpreter->GetIncludePaths(includePaths, false, true);
+   if (const size_t nPaths = includePaths.size()) {
+      assert(!(nPaths & 1) && "GetIncludePath, number of paths and options is not equal");
 
-   for (std::size_t i = 0, e = includePaths.size(); i < e; ++i) {
-      fIncludePath.Append(" -I");
-      fIncludePath.Append(includePaths[i].c_str());
+      for (size_t i = 0; i < nPaths; i += 2) {
+         if (i)
+            fIncludePath.Append(' ');
+         fIncludePath.Append(includePaths[i].c_str());
+
+         if (includePaths[i] != "-I")
+            fIncludePath.Append(' ');
+         fIncludePath.Append(includePaths[i + 1], includePaths[i + 1].length());
+      }
    }
 
    //
@@ -2956,17 +2964,23 @@ int TCintWithCling::DisplayIncludePath(FILE *fout) const
    assert(fout != 0 && "DisplayIncludePath, 'fout' parameter is null");
 
    llvm::SmallVector<std::string, 10> includePaths;//Why 10? Hell if I know.
-   //false - no system header, false - without flags.
-   fInterpreter->GetIncludePaths(includePaths, false, false);
+   //false - no system header, true - with flags.
+   fInterpreter->GetIncludePaths(includePaths, false, true);
+   if (const size_t nPaths = includePaths.size()) {
+      assert(!(nPaths & 1) && "DisplayIncludePath, number of paths and options is not equal");
 
-   std::string allIncludes("include path:");
-   
-   for (std::size_t i = 0, e = includePaths.size(); i < e; ++i) {
-      allIncludes += " -I";
-      allIncludes += includePaths[i];
+      std::string allIncludes("include path:");
+      for (size_t i = 0; i < nPaths; i += 2) {
+         allIncludes += ' ';
+         allIncludes += includePaths[i];
+
+         if (includePaths[i] != "-I")
+            allIncludes += ' ';
+         allIncludes += includePaths[i + 1];
+      }
+
+      fprintf(fout, "%s\n", allIncludes.c_str());
    }
-
-   fprintf(fout, "%s\n", allIncludes.c_str());
 
    return G__display_includepath(fout);
 }
