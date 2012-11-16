@@ -1857,21 +1857,192 @@ function createFillPatterns(svg, id, line_color) {
 
       // exclusion graphs
       var lw = graph['fLineWidth'];
-      var ec, ff, exclusionGraph = false;
+      var ec, ff = 1, exclusionGraph = false;
       if (graph['fLineWidth'] > 99) {
-         var glw = graph['fLineWidth'];
+         exclusionGraph = true;
+         var normx, normy;
+         var n = graph['fNpoints'];
+         var glw = graph['fLineWidth'],
+             xo = new Array(n+2),
+             yo = new Array(n+2),
+             xt = new Array(n+2),
+             yt = new Array(n+2),
+             xf = new Array(2*n+2),
+             yf = new Array(2*n+2);
          // negative value means another side of the line...
          if (glw > 32767) {
             glw = 65536 - glw;
          }
-         exclusionGraph = true;
-         //lw = (glw/100)*0.005; // ? from TGraphPainter src...
          lw = glw % 100; // line width
-         //ff = (glw - lw) / 100; // filled width
-         ff = (glw - lw) * 0.05; // filled width
          ec = root_colors[graph['fFillColor']];
          ec = ec.replace('rgb', 'rgba');
-         ec = ec.replace(')', ',0.30)');
+         ec = ec.replace(')', ', 0.20)');
+
+         var a, i, j, nf, wk = (glw/100)*0.008;
+         if (graph['fLineWidth'] > 32767)
+            wk *= -1;
+
+         var xmin = graph['fHistogram']['fXaxis']['fXmin'],
+             xmax = graph['fHistogram']['fXaxis']['fXmax'],
+             ymin = graph['fHistogram']['fYaxis']['fXmin'],
+             ymax = graph['fHistogram']['fYaxis']['fXmax'];
+         for (i=0; i<n; i++) {
+            xo[i] = (graph['fX'][i]-xmin) / (xmax - xmin);
+            yo[i] = (graph['fY'][i]-ymin) / (ymax - ymin);
+         }
+         // The first part of the filled area is made of the graph points.
+         // Make sure that two adjacent points are different.
+         xf[0] = xo[0];
+         yf[0] = yo[0];
+         nf = 0;
+         for (i=1; i<n; i++) {
+            if (xo[i] == xo[i-1] && yo[i] == yo[i-1]) continue;
+            nf++;
+            xf[nf] = xo[i];
+            if (xf[i] == xf[i-1]) xf[i] += 0.000001; // add an epsilon to avoid exact vertical lines.
+            yf[nf] = yo[i];
+         }
+         // For each graph points a shifted points is computed to build up
+         // the second part of the filled area. First and last points are
+         // treated as special cases, outside of the loop.
+         if (xf[1] == xf[0]) {
+            a = Math.PI / 2.0;
+         } else {
+            a = Math.atan((yf[1] - yf[0]) / (xf[1] - xf[0]));
+         }
+         if (xf[0] <= xf[1]) {
+            xt[0] = xf[0] - wk * Math.sin(a);
+            yt[0] = yf[0] + wk * Math.cos(a);
+         } else {
+            xt[0] = xf[0] + wk * Math.sin(a);
+            yt[0] = yf[0] - wk * Math.cos(a);
+         }
+         if (xf[nf] == xf[nf-1]) {
+            a = Math.PI / 2.0;
+         } else {
+            a = Math.atan((yf[nf] - yf[nf-1]) / (xf[nf] - xf[nf-1]));
+         }
+         if (xf[nf] >= xf[nf-1]) {
+            xt[nf] = xf[nf] - wk * Math.sin(a);
+            yt[nf] = yf[nf] + wk * Math.cos(a);
+         } else {
+            xt[nf] = xf[nf] + wk * Math.sin(a);
+            yt[nf] = yf[nf] - wk * Math.cos(a);
+         }
+
+         var a1, a2, a3, xi0, yi0, xi1, yi1, xi2, yi2;
+         for (i=1; i<nf; i++) {
+            xi0 = xf[i];
+            yi0 = yf[i];
+            xi1 = xf[i+1];
+            yi1 = yf[i+1];
+            xi2 = xf[i-1];
+            yi2 = yf[i-1];
+            if (xi1 == xi0) {
+               a1 = Math.PI / 2.0;
+            } else {
+               a1  = Math.atan((yi1 - yi0) / (xi1 - xi0));
+            }
+            if (xi1 < xi0) a1 = a1 + Math.PI;
+            if (xi2 == xi0) {
+               a2 = Math.PI / 2.0;
+            } else {
+               a2  = Math.atan((yi0 - yi2) / (xi0 - xi2));
+            }
+            if (xi0 < xi2) a2 = a2 + Math.PI;
+            x1 = xi0 - wk * Math.sin(a1);
+            y1 = yi0 + wk * Math.cos(a1);
+            x2 = xi0 - wk * Math.sin(a2);
+            y2 = yi0 + wk * Math.cos(a2);
+            xm = (x1 + x2) * 0.5;
+            ym = (y1 + y2) * 0.5;
+            if (xm == xi0) {
+               a3 = Math.PI / 2.0;
+            } else {
+               a3 = Math.atan((ym - yi0) / (xm - xi0));
+            }
+            x3 = xi0 - wk * Math.sin(a3 + (Math.PI / 2.0));
+            y3 = yi0 + wk * Math.cos(a3 + (Math.PI / 2.0));
+            // Rotate (x3,y3) by PI around (xi0,yi0) if it is not on the (xm,ym) side.
+            if ((xm - xi0) * (x3 - xi0) < 0 && (ym - yi0) * (y3 - yi0) < 0) {
+               x3 = 2 * xi0 - x3;
+               y3 = 2 * yi0 - y3;
+            }
+            if ((xm == x1) && (ym == y1)) {
+               x3 = xm;
+               y3 = ym;
+            }
+            xt[i] = x3;
+            yt[i] = y3;
+         }
+         // Close the polygon if the first and last points are the same
+         if (xf[nf] == xf[0] && yf[nf] == yf[0]) {
+            xm = (xt[nf] + xt[0]) * 0.5;
+            ym = (yt[nf] + yt[0]) * 0.5;
+            if (xm == xf[0]) {
+               a3 = Math.PI / 2.0;
+            } else {
+               a3 = Math.atan((ym - yf[0]) / (xm - xf[0]));
+            }
+            x3 = xf[0] + wk * Math.sin(a3 + (Math.PI / 2.0));
+            y3 = yf[0] - wk * Math.cos(a3 + (Math.PI / 2.0));
+            if ((xm - xf[0]) * (x3 - xf[0]) < 0 && (ym - yf[0]) * (y3 - yf[0]) < 0) {
+               x3 = 2 * xf[0] - x3;
+               y3 = 2 * yf[0] - y3;
+            }
+            xt[nf] = x3;
+            xt[0]  = x3;
+            yt[nf] = y3;
+            yt[0]  = y3;
+         }
+         // Find the crossing segments and remove the useless ones
+         var xc, yc, c1, b1, c2, b2;
+         var cross = false;
+         var nf2 = nf;
+         for (i=nf2; i>0; i--) {
+            for (j=i-1; j>0; j--) {
+               if (xt[i-1] == xt[i] || xt[j-1] == xt[j]) continue;
+               c1  = (yt[i-1] - yt[i]) / (xt[i-1] - xt[i]);
+               b1  = yt[i] - c1 * xt[i];
+               c2  = (yt[j-1] - yt[j]) / (xt[j-1] - xt[j]);
+               b2  = yt[j] - c2 * xt[j];
+               if (c1 != c2) {
+                  xc = (b2 - b1) / (c1 - c2);
+                  yc = c1 * xc + b1;
+                  if (xc > Math.min(xt[i], xt[i-1]) && xc < Math.max(xt[i], xt[i-1]) &&
+                      xc > Math.min(xt[j], xt[j-1]) && xc < Math.max(xt[j], xt[j-1]) &&
+                      yc > Math.min(yt[i], yt[i-1]) && yc < Math.max(yt[i], yt[i-1]) &&
+                      yc > Math.min(yt[j], yt[j-1]) && yc < Math.max(yt[j], yt[j-1])) {
+                     nf++; xf[nf] = xt[i]; yf[nf] = yt[i];
+                     nf++; xf[nf] = xc   ; yf[nf] = yc;
+                     i = j;
+                     cross = true;
+                     break;
+                  } else {
+                     continue;
+                  }
+               } else {
+                  continue;
+               }
+            }
+            if (!cross) {
+               nf++;
+               xf[nf] = xt[i];
+               yf[nf] = yt[i];
+            }
+            cross = false;
+         }
+         nf++; xf[nf] = xt[0]; yf[nf] = yt[0]; nf++;
+         for (i=0; i<nf; i++) {
+            xf[i] = xmin + (xf[i] * (xmax - xmin));
+            yf[i] = ymin + (yf[i] * (ymax - ymin));
+         }
+         var excl = d3.range(nf).map(function(p) {
+            return {
+               x: xf[p],
+               y: yf[p]
+            };
+         });
       }
 
       function do_redraw() {
@@ -1889,22 +2060,35 @@ function createFillPatterns(svg, id, line_color) {
             var line = d3.svg.line()
                .x(function(d) { return graph.x(d.x);})
                .y(function(d) { return graph.y(d.y);});
-
+         }
+         if (exclusionGraph) {
+            showMarker = false;
+            if (graph['fFillStyle'] > 3000 && graph['fFillStyle'] <= 3025) {
+               createFillPatterns(vis, graph['fFillStyle'], root_colors[graph['fFillColor']]);
+               g.append("svg:path")
+                  .attr("class", "line")
+                  .attr("d", line(excl))
+                  .style("stroke", "none")
+                  .style("stroke-width", ff)
+                  .style("fill", "url(#pat" + graph['fFillStyle'] + ")")
+                  .style("antialias", "false");
+            }
+            else {
+               g.append("svg:path")
+                  .attr("class", "line")
+                  .attr("d", line(excl))
+                  .style("stroke", "none")
+                  .style("stroke-width", ff)
+                  .style("fill", ec);
+            }
+         }
+         if (seriesType == 'line') {
             g.append("svg:path")
                .attr("class", "line")
                .attr("d", line(bins))
                .style("stroke", root_colors[graph['fLineColor']])
                .style("stroke-width", lw)
                .style("stroke-dasharray", root_line_styles[graph['fLineStyle']])
-               .style("fill", "none");
-         }
-         if (exclusionGraph) {
-            showMarker = false;
-            g.append("svg:path")
-               .attr("class", "line")
-               .attr("d", line(bins))
-               .style("stroke", ec)
-               .style("stroke-width", ff)
                .style("fill", "none");
          }
          if (graph['_typename'] == 'JSROOTIO.TGraphErrors' && draw_errors) {
