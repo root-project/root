@@ -2982,7 +2982,7 @@ int TCintWithCling::DisplayIncludePath(FILE *fout) const
       fprintf(fout, "%s\n", allIncludes.c_str());
    }
 
-   return G__display_includepath(fout);
+   return 0;
 }
 
 //______________________________________________________________________________
