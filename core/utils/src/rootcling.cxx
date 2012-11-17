@@ -4046,7 +4046,7 @@ void GenerateLinkdef(int *argc, char **argv, int iv, std::string &code_for_parse
 }
 
 //______________________________________________________________________________
-bool Which(const char *fname, string& pname)
+bool Which(cling::Interpreter &interp, const char *fname, string& pname)
 {
    // Find file name in path specified via -I statements to CINT.
    // Can be only called after G__main(). Return pointer to static
@@ -4065,10 +4065,15 @@ bool Which(const char *fname, string& pname)
       return true;
    }
 
-   struct G__includepath *ipath = G__getipathentry();
+   llvm::SmallVector<std::string, 10> includePaths;//Why 10? Hell if I know.
+   //false - no system header, false - with flags.
+   interp.GetIncludePaths(includePaths, false, false);
 
-   while (!fp && ipath->pathname) {
-      pname = ipath->pathname;
+   const size_t nPaths = includePaths.size();
+   for (size_t i = 0; i < nPaths; i += 1 /* 2 */) {
+      fprintf(stderr,"Seeing string %s\n",includePaths[i].c_str());
+
+      pname = includePaths[i].c_str();
 #ifdef WIN32
       pname += "\\";
       static const char* fopenopts = "rb";
@@ -4077,12 +4082,12 @@ bool Which(const char *fname, string& pname)
       static const char* fopenopts = "r";
 #endif
       pname += fname;
+      fprintf(stderr,"Tesing string %s\n",pname.c_str());
       fp = fopen(pname.c_str(), fopenopts);
-      ipath = ipath->next;
-   }
-   if (fp) {
-      fclose(fp);
-      return true;
+      if (fp) {
+         fclose(fp);
+         return true;
+      }         
    }
    pname = "";
    return false;
@@ -5061,7 +5066,7 @@ int main(int argc, char **argv)
    if (!il) {
       linkdefFilename = "in memory";
    } else {
-      bool found = Which(argv[il], linkdefFilename);
+      bool found = Which(interp, argv[il], linkdefFilename);
       if (!found) {
          Error(0, "%s: cannot open linkdef file %s\n", argv[0], argv[il]);
          CleanupOnExit(1);
