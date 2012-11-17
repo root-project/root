@@ -3014,10 +3014,11 @@ Long_t TCintWithCling::Getgvp() const
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::Getp2f2funcname(void* receiver) const
+const char* TCintWithCling::Getp2f2funcname(void*) const
 {
-   // Interface to CINT function
-   return G__p2f2funcname(receiver);
+   Error("Getp2f2funcname", "Will not be implemented: "
+         "all function pointers are compiled!");
+   return NULL;
 }
 
 //______________________________________________________________________________
