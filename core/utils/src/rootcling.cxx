@@ -229,7 +229,6 @@ extern "C" {
    int  G__setglobalcomp(int globalcomp);
    int   G__main(int argc, char **argv);
    void  G__exit(int rtn);
-   struct G__includepath *G__getipathentry();
 }
 const char *ShortTypeName(const char *typeDesc);
 
@@ -2264,11 +2263,16 @@ void WriteAuxFunctions(const RScanner::AnnotatedRecordDecl &cl)
 //______________________________________________________________________________
 int ElementStreamer(const clang::NamedDecl &forcontext, const clang::QualType &qti, const char *R__t,int rwmode,const char *tcl=0)
 {
+
    static const clang::CXXRecordDecl *TObject_decl = R__ScopeSearch("TObject");
    enum {
-      R__BIT_ISTOBJECT   = 0x10000000,
-      R__BIT_HASSTREAMER = 0x20000000,
-      kBIT_ISSTRING    = 0x40000000
+      kBIT_ISTOBJECT     = 0x10000000,
+      kBIT_HASSTREAMER   = 0x20000000,
+      kBIT_ISSTRING      = 0x40000000,
+      
+      kBIT_ISPOINTER     = 0x00001000,
+      kBIT_ISFUNDAMENTAL = 0x00000020,
+      kBIT_ISENUM        = 0x00000008
    };
 
    const clang::Type &ti( * qti.getTypePtr() );
@@ -2287,13 +2291,13 @@ int ElementStreamer(const clang::NamedDecl &forcontext, const clang::QualType &q
  
    long kase = 0;   
 
-   if (ti.isPointerType())           kase |= G__BIT_ISPOINTER;
-   if (rawtype->isFundamentalType()) kase |= G__BIT_ISFUNDAMENTAL;
-   if (rawtype->isEnumeralType())    kase |= G__BIT_ISENUM;
+   if (ti.isPointerType())           kase |= kBIT_ISPOINTER;
+   if (rawtype->isFundamentalType()) kase |= kBIT_ISFUNDAMENTAL;
+   if (rawtype->isEnumeralType())    kase |= kBIT_ISENUM;
 
 
-   if (isTObj)              kase |= R__BIT_ISTOBJECT;
-   if (isStre)              kase |= R__BIT_HASSTREAMER;
+   if (isTObj)              kase |= kBIT_ISTOBJECT;
+   if (isStre)              kase |= kBIT_HASSTREAMER;
    if (tiName == "string")  kase |= kBIT_ISSTRING;
    if (tiName == "string*") kase |= kBIT_ISSTRING;
    
@@ -2308,17 +2312,17 @@ int ElementStreamer(const clang::NamedDecl &forcontext, const clang::QualType &q
       if (R__t) (*dictSrcOut) << "            " << tiName << " " << R__t << ";" << std::endl;
       switch (kase) {
 
-      case G__BIT_ISFUNDAMENTAL:
+      case kBIT_ISFUNDAMENTAL:
          if (!R__t)  return 0;
          (*dictSrcOut) << "            R__b >> " << R__t << ";" << std::endl;
          break;
 
-      case G__BIT_ISPOINTER|R__BIT_ISTOBJECT|R__BIT_HASSTREAMER:
+      case kBIT_ISPOINTER|kBIT_ISTOBJECT|kBIT_HASSTREAMER:
          if (!R__t)  return 1;
          (*dictSrcOut) << "            " << R__t << " = (" << tiName << ")R__b.ReadObjectAny(" << tcl << ");"  << std::endl;
          break;
 
-      case G__BIT_ISENUM:
+      case kBIT_ISENUM:
          if (!R__t)  return 0;
          //             fprintf(fp, "            R__b >> (Int_t&)%s;\n",R__t);
          // On some platforms enums and not 'Int_t' and casting to a reference to Int_t
@@ -2329,13 +2333,13 @@ int ElementStreamer(const clang::NamedDecl &forcontext, const clang::QualType &q
                        << "            " << R__t << " = static_cast<" << tiName << ">(readtemp);" << std::endl;
          break;
 
-      case R__BIT_HASSTREAMER:
-      case R__BIT_HASSTREAMER|R__BIT_ISTOBJECT:
+      case kBIT_HASSTREAMER:
+      case kBIT_HASSTREAMER|kBIT_ISTOBJECT:
          if (!R__t)  return 0;
          (*dictSrcOut) << "            " << R__t << ".Streamer(R__b);" << std::endl;
          break;
 
-      case R__BIT_HASSTREAMER|G__BIT_ISPOINTER:
+      case kBIT_HASSTREAMER|kBIT_ISPOINTER:
          if (!R__t)  return 1;
          //fprintf(fp, "            fprintf(stderr,\"info is %%p %%d\\n\",R__b.GetInfo(),R__b.GetInfo()?R__b.GetInfo()->GetOldVersion():-1);\n");
          (*dictSrcOut) << "            if (R__b.GetInfo() && R__b.GetInfo()->GetOldVersion()<=3) {" << std::endl;
@@ -2357,14 +2361,14 @@ int ElementStreamer(const clang::NamedDecl &forcontext, const clang::QualType &q
                        << "             " << R__t << " = R__str.Data();}" << std::endl;
          break;
 
-      case kBIT_ISSTRING|G__BIT_ISPOINTER:
+      case kBIT_ISSTRING|kBIT_ISPOINTER:
          if (!R__t)  return 0;
          (*dictSrcOut) << "            {TString R__str;"  << std::endl
                        << "             R__str.Streamer(R__b);" << std::endl
                        << "             " << R__t << " = new string(R__str.Data());}" << std::endl;
          break;
 
-      case G__BIT_ISPOINTER:
+      case kBIT_ISPOINTER:
          if (!R__t)  return 1;
          (*dictSrcOut) << "            " << R__t << " = (" << tiName << ")R__b.ReadObjectAny(" << tcl << ");" << std::endl;
          break;
@@ -2379,25 +2383,25 @@ int ElementStreamer(const clang::NamedDecl &forcontext, const clang::QualType &q
 
       switch (kase) {
 
-      case G__BIT_ISFUNDAMENTAL:
-      case G__BIT_ISPOINTER|R__BIT_ISTOBJECT|R__BIT_HASSTREAMER:
+      case kBIT_ISFUNDAMENTAL:
+      case kBIT_ISPOINTER|kBIT_ISTOBJECT|kBIT_HASSTREAMER:
          if (!R__t)  return 0;
          (*dictSrcOut) << "            R__b << " << R__t << ";" << std::endl;
          break;
 
-      case G__BIT_ISENUM:
+      case kBIT_ISENUM:
          if (!R__t)  return 0;
          (*dictSrcOut) << "            {  void *ptr_enum = (void*)&" << R__t << ";\n";
          (*dictSrcOut) << "               R__b >> *reinterpret_cast<Int_t*>(ptr_enum); }" << std::endl;
          break;
 
-      case R__BIT_HASSTREAMER:
-      case R__BIT_HASSTREAMER|R__BIT_ISTOBJECT:
+      case kBIT_HASSTREAMER:
+      case kBIT_HASSTREAMER|kBIT_ISTOBJECT:
          if (!R__t)  return 0;
          (*dictSrcOut) << "            ((" << objType << "&)" << R__t << ").Streamer(R__b);" << std::endl;
          break;
 
-      case R__BIT_HASSTREAMER|G__BIT_ISPOINTER:
+      case kBIT_HASSTREAMER|kBIT_ISPOINTER:
          if (!R__t)  return 1;
          (*dictSrcOut) << "            R__b.WriteObjectAny(" << R__t << "," << tcl << ");" << std::endl;
          break;
@@ -2408,13 +2412,13 @@ int ElementStreamer(const clang::NamedDecl &forcontext, const clang::QualType &q
                        << "             R__str.Streamer(R__b);};" << std::endl;
          break;
 
-      case kBIT_ISSTRING|G__BIT_ISPOINTER:
+      case kBIT_ISSTRING|kBIT_ISPOINTER:
          if (!R__t)  return 0;
          (*dictSrcOut) << "            {TString R__str(" << R__t << "->c_str());" << std::endl
                        << "             R__str.Streamer(R__b);}" << std::endl;
          break;
 
-      case G__BIT_ISPOINTER:
+      case kBIT_ISPOINTER:
          if (!R__t)  return 1;
          (*dictSrcOut) << "            R__b.WriteObjectAny(" << R__t << "," << tcl <<");" << std::endl;
          break;
