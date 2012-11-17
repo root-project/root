@@ -4942,12 +4942,18 @@ int main(int argc, char **argv)
          
          if (*argv[i] != '-' && *argv[i] != '+') {
             // Looks like a file
-            interp.declare(std::string("#include \"") + argv[i] + "\"");
-            interpPragmaSource += std::string("#include \"") + argv[i] + "\"\n";
-            std::string header( R__GetRelocatableHeaderName( argv[i], currentDirectory ) );
-            if (!R__IsSelectionFile(argv[i])) 
-               includeForSource += std::string("#include \"") + header + "\"\n";
-            pcmArgs.push_back(header);
+            if (cling::Interpreter::kSuccess 
+                == interp.declare(std::string("#include \"") + argv[i] + "\"")) {
+               interpPragmaSource += std::string("#include \"") + argv[i] + "\"\n";
+               std::string header( R__GetRelocatableHeaderName( argv[i], currentDirectory ) );
+               if (!R__IsSelectionFile(argv[i])) 
+                  includeForSource += std::string("#include \"") + header + "\"\n";
+               pcmArgs.push_back(header);
+            } else {
+               Error(0, "%s: compilation failure\n", argv[0]);
+               CleanupOnExit(1);
+               return 1;
+            }
             
             // remove header files from CINT view
             free(argvv[argcc-1]);
@@ -4958,6 +4964,7 @@ int main(int argc, char **argv)
 
    if (!iv) {
       Error(0, "%s: no input files specified\n", argv[0]);
+      CleanupOnExit(1);
       return 1;
    }
 
@@ -5056,7 +5063,7 @@ int main(int argc, char **argv)
    } else {
       bool found = Which(argv[il], linkdefFilename);
       if (!found) {
-         Error(0, "%s: cannot open file %s\n", argv[0], argv[il]);
+         Error(0, "%s: cannot open linkdef file %s\n", argv[0], argv[il]);
          CleanupOnExit(1);
          return 1;
       }
@@ -5103,7 +5110,7 @@ int main(int argc, char **argv)
          file.close();
       }
       else {
-         Error(0,"XML file %s couldn't be opened!",linkdefFilename.c_str());
+         Error(0,"XML file %s couldn't be opened!\n",linkdefFilename.c_str());
       }
 
    } else if (R__IsLinkdefFile(linkdefFilename.c_str())) {
@@ -5114,7 +5121,7 @@ int main(int argc, char **argv)
          file.close();
       }
       else {
-         Error(0,"Linkdef file %s couldn't be opened!",linkdefFilename.c_str());
+         Error(0,"Linkdef file %s couldn't be opened!\n",linkdefFilename.c_str());
       }
 
       selectionRules.SetSelectionFileType(SelectionRules::kLinkdefFile);
