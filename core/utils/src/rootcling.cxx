@@ -4046,9 +4046,9 @@ void GenerateLinkdef(int *argc, char **argv, int iv, std::string &code_for_parse
 //______________________________________________________________________________
 bool Which(cling::Interpreter &interp, const char *fname, string& pname)
 {
-   // Find file name in path specified via -I statements to CINT.
-   // Can be only called after G__main(). Return pointer to static
-   // space containing full pathname or 0 in case file not found.
+   // Find file name in path specified via -I statements to Cling.
+   // Return false if the file can not be found.
+   // If the file is found, set pname to the full path name and return true.
 
    FILE *fp = 0;
 
