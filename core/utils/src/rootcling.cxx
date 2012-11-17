@@ -4069,7 +4069,6 @@ bool Which(cling::Interpreter &interp, const char *fname, string& pname)
 
    const size_t nPaths = includePaths.size();
    for (size_t i = 0; i < nPaths; i += 1 /* 2 */) {
-      fprintf(stderr,"Seeing string %s\n",includePaths[i].c_str());
 
       pname = includePaths[i].c_str();
 #ifdef WIN32
@@ -4080,7 +4079,6 @@ bool Which(cling::Interpreter &interp, const char *fname, string& pname)
       static const char* fopenopts = "r";
 #endif
       pname += fname;
-      fprintf(stderr,"Tesing string %s\n",pname.c_str());
       fp = fopen(pname.c_str(), fopenopts);
       if (fp) {
          fclose(fp);
