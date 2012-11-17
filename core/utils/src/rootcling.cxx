@@ -159,8 +159,6 @@
 // arguments in the compiled version of rootcint.                       //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-
 #include "RConfigure.h"
 #include "RConfig.h"
 #include "Rtypes.h"
@@ -338,10 +336,6 @@ const char *help =
 "2) Note that the LinkDef file name MUST contain the string:\n"
 "   LinkDef.h, Linkdef.h or linkdef.h, i.e. NA49_LinkDef.h is fine,\n"
 "   just like linkdef1.h. Linkdef.h is case sensitive.\n";
-
-#else
-#include <ertti.h>
-#endif
 
 #ifdef _WIN32
 #ifdef system
@@ -4627,7 +4621,6 @@ int main(int argc, char **argv)
       ifl = 0;
    }
    
-#ifndef __CINT__
    int   argcc, iv, il;
    std::vector<std::string> path;
    char *argvv[500];
@@ -5001,7 +4994,6 @@ int main(int argc, char **argv)
       }
    }
    G__setglobalcomp(0); // G__NOLINK
-#endif
 
    // Check if code goes to stdout or cint file, use temporary file
    // for prepending of the rootcint generated code (STK)
