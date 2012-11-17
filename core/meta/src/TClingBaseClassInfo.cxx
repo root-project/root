@@ -29,6 +29,8 @@
 #include "Property.h"
 #include "TClingProperty.h"
 
+#include "TMetaUtils.h"
+
 #include "cling/Interpreter/Interpreter.h"
 
 #include "clang/AST/ASTContext.h"
@@ -196,7 +198,8 @@ int TClingBaseClassInfo::InternalNext(int onlyDirect)
       }
       // Update info for this base class.
       delete fBaseInfo;
-      fBaseInfo = new TClingClassInfo(fInterp, *fIter->getType());
+      clang::QualType bType = ROOT::TMetaUtils::ReSubstTemplateArg(fIter->getType(),fClassInfo->GetType());
+      fBaseInfo = new TClingClassInfo(fInterp, *bType);
       // Iterator is now valid.
       return 1;
    }

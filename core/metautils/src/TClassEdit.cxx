@@ -24,9 +24,11 @@
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Utils/AST.h"
 
+#include "TMetaUtils.h"
+
 namespace {
    static cling::Interpreter *gInterpreter = 0;
-   llvm::SmallSet<const clang::Type*, 4> gTypeToSkip;
+   ROOT::TMetaUtils::TNormalizedCtxt *gNormalizedCtxt = 0;
 }
 
 #endif
@@ -36,9 +38,10 @@ namespace std {} using namespace std;
 #ifndef R__HAS_CLING
 #else
 //______________________________________________________________________________
-void TClassEdit::Init(cling::Interpreter &interpreter)
+void TClassEdit::Init(cling::Interpreter &interpreter,ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    gInterpreter = &interpreter;
+   gNormalizedCtxt = &normCtxt;
 }
 #endif
 
@@ -258,7 +261,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
          const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
          clang::QualType t = lh.findType(nameSuperLong);
          if (!t.isNull()) {
-            clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
+            clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gNormalizedCtxt->GetTypeToSkip(), true /* fully qualify */);
             if (!dest.isNull() && (dest != t)) 
                dest.getAsStringInternal(nameSuperLong,gInterpreter->getCI()->getASTContext().getPrintingPolicy());
          }
@@ -279,7 +282,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
             const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
             clang::QualType t = lh.findType((nonDefName + closeTemplate).c_str());
             if (!t.isNull()) {
-               clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
+               clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gNormalizedCtxt->GetTypeToSkip(), true /* fully qualify */);
                if ( !dest.isNull() && (dest!=t) && nameSuperLong == t.getAsString(gInterpreter->getCI()->getASTContext().getPrintingPolicy()) )
                   break;
             }
@@ -838,7 +841,7 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
             const cling::LookupHelper& lh = gInterpreter->getLookupHelper();
             clang::QualType t = lh.findType(tname);
             if (!t.isNull()) {
-               clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gTypeToSkip, true /* fully qualify */);
+               clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(gInterpreter->getCI()->getASTContext(), t, gNormalizedCtxt->GetTypeToSkip(), true /* fully qualify */);
                if (!dest.isNull() && dest != t ) {
                   clang::PrintingPolicy policy(gInterpreter->getCI()->getASTContext().getPrintingPolicy());
                   policy.SuppressTagKeyword = true; // Never get the class or struct keyword

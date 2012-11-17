@@ -148,6 +148,12 @@ namespace ROOT {
          return TND;
       }
 
+      // Check if 'input' or any of its template parameter was substituted when
+      // instantiating the class template instance and replace it with the 
+      // partially sugared type we have from 'instance'.
+      clang::QualType ReSubstTemplateArg(clang::QualType input, const clang::Type *instance);
+ 
+
    } // namespace TMetaUtils
 
 

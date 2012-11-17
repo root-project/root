@@ -29,6 +29,11 @@ namespace std {
 namespace cling {
    class Interpreter;
 }
+namespace ROOT {
+   namespace TMetaUtils {
+      class TNormalizedCtxt;
+   }
+}
 #endif
 
 // TClassEdit is used to manipulate class and type names.
@@ -82,7 +87,7 @@ namespace TClassEdit {
    };
 
 #ifdef R__HAS_CLING
-   void        Init(cling::Interpreter &interp);
+   void        Init(cling::Interpreter &interp,ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
 #endif
 
    std::string CleanType (const char *typeDesc,int mode = 0,const char **tail=0);

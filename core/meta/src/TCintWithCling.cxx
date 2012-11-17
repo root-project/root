@@ -700,7 +700,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
 
-   TClassEdit::Init(*fInterpreter);
+   TClassEdit::Init(*fInterpreter,*fNormalizedCtxt);
 
    // set the gModuleHeaderInfoBuffer pointer
    TCintWithCling__RegisterModule(0, 0, 0, 0, 0);

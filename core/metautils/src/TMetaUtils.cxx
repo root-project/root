@@ -84,7 +84,7 @@ clang::NestedNameSpecifier* AddDefaultParametersNNS(const clang::ASTContext& Ctx
    const clang::Type* scope_type = scope->getAsType();
    if (scope_type) {
       // this is not a namespace, so we might need to desugar
-     clang::NestedNameSpecifier* outer_scope = scope->getPrefix();
+      clang::NestedNameSpecifier* outer_scope = scope->getPrefix();
       if (outer_scope) {
          outer_scope = AddDefaultParametersNNS(Ctx, outer_scope, interpreter, normCtxt);
       }
@@ -803,6 +803,7 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
    return modCreation.first;
 }
 
+//////////////////////////////////////////////////////////////////////////
 llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::SourceLocation *loc)
 {
    clang::SourceManager& sourceManager = decl.getASTContext().getSourceManager();
@@ -882,6 +883,7 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
    return llvm::StringRef(commentStart, commentEnd - commentStart);
 }
 
+//////////////////////////////////////////////////////////////////////////
 llvm::StringRef ROOT::TMetaUtils::GetClassComment(const clang::CXXRecordDecl &decl, clang::SourceLocation *loc, const cling::Interpreter &interpreter)
 {
    // Find the class comment (after the ClassDef).
@@ -912,4 +914,145 @@ llvm::StringRef ROOT::TMetaUtils::GetClassComment(const clang::CXXRecordDecl &de
       }
    }
    return llvm::StringRef();
+}
+
+//////////////////////////////////////////////////////////////////////////
+clang::NestedNameSpecifier* 
+ReSubstTemplateArgNNS(const clang::ASTContext &Ctxt, 
+                      clang::NestedNameSpecifier *scope, 
+                      const clang::Type *instance)
+{
+   // Check if 'scope' or any of its template parameter was substituted when
+   // instantiating the class template instance and replace it with the 
+   // partially sugared types we have from 'instance'.
+ 
+   const clang::Type* scope_type = scope->getAsType();      
+   if (scope_type) {
+      clang::NestedNameSpecifier* outer_scope = scope->getPrefix();
+      if (outer_scope) {
+         outer_scope = ReSubstTemplateArgNNS(Ctxt, outer_scope, instance);
+      }
+      clang::QualType substScope = 
+         ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType(scope_type,0), instance);
+      // NOTE: Should check whether the type has changed or not.
+      scope = clang::NestedNameSpecifier::Create(Ctxt,outer_scope,
+                                                 false /* template keyword wanted */,
+                                                 substScope.getTypePtr());
+   }
+   return scope;
+}
+
+//////////////////////////////////////////////////////////////////////////
+clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, const clang::Type *instance)
+{
+   // Check if 'input' or any of its template parameter was substituted when
+   // instantiating the class template instance and replace it with the 
+   // partially sugared types we have from 'instance'.
+
+   if (!instance) return input;
+   
+   // Treat scope (clang::ElaboratedType) if any.
+   const clang::ElaboratedType* etype 
+      = llvm::dyn_cast<clang::ElaboratedType>(input.getTypePtr());
+   if (etype) {
+      // We have to also handle the prefix.
+      
+      clang::Qualifiers scope_qualifiers = input.getLocalQualifiers();
+      assert(instance->getAsCXXRecordDecl()!=0 && "ReSubstTemplateArg only makes sense with a type representing a class.");
+      const clang::ASTContext &Ctxt = instance->getAsCXXRecordDecl()->getASTContext();
+     
+      clang::NestedNameSpecifier *scope = ReSubstTemplateArgNNS(Ctxt,etype->getQualifier(),instance);
+      clang::QualType subTy = ReSubstTemplateArg(clang::QualType(etype->getNamedType().getTypePtr(),0),instance);
+ 
+      subTy = Ctxt.getElaboratedType(clang::ETK_None,scope,subTy);
+      subTy = Ctxt.getQualifiedType(subTy,scope_qualifiers);
+      return subTy;
+   }
+
+   // If the instance is also an elaborated type, we need to skip
+   etype = llvm::dyn_cast<clang::ElaboratedType>(instance);
+   if (etype) {
+      instance = etype->getNamedType().getTypePtr();
+      if (!instance) return input;
+   }
+
+   const clang::TemplateSpecializationType* TST 
+      = llvm::dyn_cast<const clang::TemplateSpecializationType>(instance);
+   
+   if (!TST) return input;
+ 
+   const clang::ClassTemplateSpecializationDecl* TSTdecl
+      = llvm::dyn_cast_or_null<const clang::ClassTemplateSpecializationDecl>(instance->getAsCXXRecordDecl());
+
+   const clang::SubstTemplateTypeParmType *substType
+      = llvm::dyn_cast<clang::SubstTemplateTypeParmType>(input.getTypePtr());
+
+   if (substType) {
+      // Make sure it got replaced from this template
+      const clang::ClassTemplateDecl *replacedCtxt = 0;
+                                               
+      const clang::DeclContext *replacedDeclCtxt = substType->getReplacedParameter()->getDecl()->getDeclContext();
+      const clang::CXXRecordDecl *decl = llvm::dyn_cast<clang::CXXRecordDecl>(replacedDeclCtxt);
+      if (decl) {
+         replacedCtxt = decl->getDescribedClassTemplate();
+      } else {
+         replacedCtxt = llvm::dyn_cast<clang::ClassTemplateDecl>(replacedDeclCtxt);
+      }
+      unsigned int index = substType->getReplacedParameter()->getIndex();
+      if (replacedCtxt->getCanonicalDecl() == TSTdecl->getSpecializedTemplate()->getCanonicalDecl() 
+          || /* the following is likely just redundant */
+          substType->getReplacedParameter()->getDecl() 
+          == TSTdecl->getSpecializedTemplate ()->getTemplateParameters()->getParam(index))
+      {
+         if ( index >= TST->getNumArgs() ) {
+            // The argument replaced was a default template argument that is
+            // being listed as part of the instance ... 
+            // so we probably don't really know how to spell it ... we would need to recreate it
+            // (See AddDefaultParamters).
+            return input;
+         } else {
+            return TST->getArg(index).getAsType();
+         }
+      }
+   }
+   // Maybe a class template instance, recurse and rebuild
+   const clang::TemplateSpecializationType* inputTST 
+      = llvm::dyn_cast<const clang::TemplateSpecializationType>(input.getTypePtr());
+   const clang::ASTContext& astCtxt = TSTdecl->getASTContext(); 
+
+   if (inputTST) {
+      bool mightHaveChanged = false;
+      llvm::SmallVector<clang::TemplateArgument, 4> desArgs;
+      for(clang::TemplateSpecializationType::iterator I = inputTST->begin(), E = inputTST->end();
+          I != E; ++I) {
+         if (I->getKind() != clang::TemplateArgument::Type) {
+            desArgs.push_back(*I);
+            continue;
+         }
+
+         clang::QualType SubTy = I->getAsType();
+         // Check if the type needs more desugaring and recurse.
+         if (llvm::isa<clang::SubstTemplateTypeParmType>(SubTy) 
+             || llvm::isa<clang::TemplateSpecializationType>(SubTy)) {
+            mightHaveChanged = true;
+            clang::QualType newSubTy = ReSubstTemplateArg(SubTy,instance);
+            if (!newSubTy.isNull()) {
+               desArgs.push_back(clang::TemplateArgument(newSubTy));
+            }
+         } else 
+            desArgs.push_back(*I);
+      }
+      
+      // If desugaring happened allocate new type in the AST.
+      if (mightHaveChanged) {
+         clang::Qualifiers qualifiers = input.getLocalQualifiers();
+         input = astCtxt.getTemplateSpecializationType(inputTST->getTemplateName(), 
+                                                       desArgs.data(),
+                                                       desArgs.size(),
+                                                       inputTST->getCanonicalTypeInternal());
+         input = astCtxt.getQualifiedType(input, qualifiers);
+      }
+   }
+
+   return input;
 }

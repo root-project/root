@@ -4833,7 +4833,7 @@ int main(int argc, char **argv)
   
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
-   TClassEdit::Init(interp);
+   TClassEdit::Init(interp,normCtxt);
 
    // flags used only for the pragma parser:
    clingArgs.push_back("-D__CINT__");

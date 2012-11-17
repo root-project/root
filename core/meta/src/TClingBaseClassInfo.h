@@ -34,7 +34,7 @@
 #include <vector>
 
 namespace cling {
-class Interpreter;
+   class Interpreter;
 }
 
 class TClingClassInfo;
