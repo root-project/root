@@ -20,7 +20,7 @@ namespace ROOT
    SchemaRuleClassMap_t gReadRules;
    SchemaRuleClassMap_t gReadRawRules;
 
-   static Bool_t ValidateRule( const std::map<std::string, std::string>& rule, string &error_string );
+   static Bool_t ValidateRule( const std::map<std::string, std::string>& rule, std::string &error_string );
    
    static std::string::size_type FindEndSymbol(std::string &command) 
    {
@@ -208,7 +208,7 @@ namespace ROOT
    }
 
    //--------------------------------------------------------------------------
-   static Bool_t ValidateRule( const std::map<std::string, std::string>& rule, string &error_string )
+   static Bool_t ValidateRule( const std::map<std::string, std::string>& rule, std::string &error_string )
    {
       // Validate if the user specified rules are correct
 
@@ -352,6 +352,7 @@ namespace ROOT
       return true;
    }
 
+#ifndef R__HAS_CLING
    //--------------------------------------------------------------------------
    void CreateNameTypeMap( G__ClassInfo &cl, MembersTypeMap_t& nameType )
    {
@@ -388,6 +389,7 @@ namespace ROOT
          nameType[base.Name()] = TSchemaType(base.Name(),"");
       }
    }
+#endif
 
    //---------------------------------------------------------------------------
    Bool_t HasValidDataMembers(SchemaRuleMap_t& rule,

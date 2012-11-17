@@ -13,11 +13,19 @@
 #include <ostream>
 #include <utility>
 
+#ifndef ROOT_RConfigure
+#include "RConfigure.h"
+#endif
+
+#ifndef R__HAS_CLING
+
 #ifndef __MAKECINT__
 #include "Api.h"
 #include "Shadow.h"
 #else
 class G__ClassInfo;
+#endif
+
 #endif
 
 #ifndef R__TSCHEMATYPE_H
@@ -44,8 +52,11 @@ namespace ROOT
    //---------------------------------------------------------------------------
    // Create the data member name-type map
    //---------------------------------------------------------------------------
-   void CreateNameTypeMap( G__ClassInfo &cl, MembersTypeMap_t& members );
+#ifndef R__HAS_CLING
+  void CreateNameTypeMap( G__ClassInfo &cl, MembersTypeMap_t& members );
+#else
    //   void CreateNameTypeMap( const clang::CXXRecordDecl &cl, MembersTypeMap_t& members );
+#endif
 
    //---------------------------------------------------------------------------
    // Check if given rule contains references to valid data members

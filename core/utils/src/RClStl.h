@@ -52,7 +52,6 @@ namespace ROOT {
       static RStl& Instance();
       ~RStl() {};
       
-      static std::string DropDefaultArg(const std::string &classname);
       void GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlClass, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
       void GenerateTClassFor(const clang::QualType &type, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
       void Print();

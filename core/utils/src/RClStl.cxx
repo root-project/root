@@ -15,6 +15,7 @@
 
 #include "RClStl.h"
 #include "TClassEdit.h"
+#include "TMetaUtils.h"
 using namespace TClassEdit;
 #include <stdio.h>
 
@@ -181,21 +182,6 @@ void ROOT::RStl::Print()
    }
 }
 
-std::string ROOT::RStl::DropDefaultArg(const std::string &classname)
-{
-   // Remove the default argument from the stl container.
-
-   G__ClassInfo cl(classname.c_str());
-
-   if ( cl.TmpltName() == 0 ) return classname;
-
-   if ( TClassEdit::STLKind( cl.TmpltName() ) == 0 ) return classname;
-
-   return TClassEdit::ShortType( cl.Fullname(),
-                                 TClassEdit::kDropStlDefault );
-
-}
-
 void ROOT::RStl::WriteClassInit(FILE* /*file*/, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    // This function writes the TGeneraticClassInfo initialiser
@@ -236,9 +222,10 @@ void ROOT::RStl::WriteStreamer(FILE *file,const clang::CXXRecordDecl *stlcl)
    std::string shortTypeName = GetLong64_Name( TClassEdit::ShortType(R__GetQualifiedName(*stlcl).c_str(),TClassEdit::kDropStlDefault) );
    std::string noConstTypeName( TClassEdit::CleanType(shortTypeName.c_str(),2) );
 
-   streamerName += G__map_cpp_name((char *)shortTypeName.c_str());
-   std::string typedefName = G__map_cpp_name((char *)shortTypeName.c_str());
-
+   std::string typedefName;
+   ROOT::TMetaUtils::GetCppName(typedefName, shortTypeName.c_str());
+   streamerName += typedefName;
+   
    const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (stlcl);
    if (!tmplt_specialization) return;
 
