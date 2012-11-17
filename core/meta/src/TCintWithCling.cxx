@@ -1422,7 +1422,9 @@ void TCintWithCling::UpdateListOfLoadedSharedLibraries()
    uint32_t imageIndex = (uint32_t) (size_t) fPrevLoadedDynLibInfo;
    const char* imageName = 0;
    while ((imageName = _dyld_get_image_name(imageIndex))) {
-      RegisterLoadedSharedLibrary(imageName);
+      // Skip binary
+      if (imageIndex > 0)
+         RegisterLoadedSharedLibrary(imageName);
       ++imageIndex;
    }
    fPrevLoadedDynLibInfo = (void*)(size_t)imageIndex;
@@ -2797,6 +2799,8 @@ void TCintWithCling::UpdateAllCanvases()
 const char* TCintWithCling::GetSharedLibs()
 {
    // Return the list of shared libraries loaded into the process.
+   if (!fPrevLoadedDynLibInfo && fSharedLibs.IsNull())
+      UpdateListOfLoadedSharedLibraries();
    return fSharedLibs;
 }
 
