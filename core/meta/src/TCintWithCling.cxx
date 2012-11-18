@@ -1095,12 +1095,8 @@ void TCintWithCling::AddIncludePath(const char *path)
    // looks for include files. Only one path item can be specified at a
    // time, i.e. "path1:path2" is not supported.
 
-   fInterpreter->AddIncludePath(path);
-   //TCintWithCling::AddIncludePath(path);
    R__LOCKGUARD(gCINTMutex);
-   char* incpath = gSystem->ExpandPathName(path);
-   G__add_ipath(incpath);
-   delete[] incpath;
+   fInterpreter->AddIncludePath(path);
 }
 
 //______________________________________________________________________________
@@ -2912,13 +2908,6 @@ const char* TCintWithCling::GetIncludePath()
       }
    }
 
-   //
-   G__IncludePathInfo path;
-   while (path.Next()) {
-      const char* pathname = path.Name();
-      fIncludePath.Append(" -I\"").Append(pathname).Append("\" ");
-   }
-   
    return fIncludePath;
 }
 
@@ -3131,8 +3120,6 @@ void TCintWithCling::SetTempLevel(int val) const
 int TCintWithCling::UnloadFile(const char* path) const
 {
    // Unload a shared library or a source file.
-
-   //return G__unloadfile(path);
 
    // Check fInterpreter->getLoadedFiles() to determine whether this is a shared
    // library or code. If it's not in there complain.
