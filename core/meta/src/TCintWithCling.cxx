@@ -2030,7 +2030,7 @@ TString TCintWithCling::GetMangledNameWithPrototype(TClass* cl, const char* meth
 
 //______________________________________________________________________________
 void* TCintWithCling::GetInterfaceMethod(TClass* cl, const char* method,
-                                const char* params)
+                                         const char* params)
 {
    // Return pointer to CINT interface function for a method of a class with
    // parameters params (params is a string of actual arguments, not formal
@@ -3006,8 +3006,19 @@ void TCintWithCling::GenericError(const char* error) const
 //______________________________________________________________________________
 Long_t TCintWithCling::GetExecByteCode() const
 {
-   // Interface to CINT function
-   return (Long_t)G__exec_bytecode;
+   // This routines used to return the address of the internal wrapper
+   // function (of the interpreter) that was used to call *all* the
+   // interpreted functions that were bytecode compiled (no longer 
+   // interpreted line by line).  In Cling, there is no such
+   // wrapper function.
+   // In practice this routines was use to decipher whether the
+   // pointer returns by InterfaceMethod could be used to uniquely
+   // represent the function.  In Cling if the function is in a 
+   // useable state (its compiled version is available), this is
+   // always the case.  
+   // See TClass::GetMethod.
+
+   return 0;
 }
 
 //______________________________________________________________________________
