@@ -3042,15 +3042,17 @@ int TCintWithCling::GetSecurityError() const
 //______________________________________________________________________________
 int TCintWithCling::LoadFile(const char* path) const
 {
-   // Interface to CINT function
-   return G__loadfile(path);
+   // Load a source file or library called path into the interpreter.
+   return fInterpreter->loadFile(path);
 }
 
 //______________________________________________________________________________
 void TCintWithCling::LoadText(const char* text) const
 {
-   // Interface to CINT function
-   G__load_text(text);
+   // Load the declarations from text into the interpreter.
+   // Note that this cannot be (top level) statements; text must contain
+   // top level declarations.
+   fInterpreter->declare(text);
 }
 
 //______________________________________________________________________________
