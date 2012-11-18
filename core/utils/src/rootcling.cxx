@@ -473,6 +473,7 @@ static std::string R__GetRelocatableHeaderName(const char *header, const std::st
 using namespace ROOT;
 
 std::ostream* dictSrcOut=&std::cout;
+std::ostream* dictHdrOut=&std::cout;
 
 bool gNeedCollectionProxy = false;
 
@@ -1224,91 +1225,6 @@ bool ParsePragmaLine(const std::string& line, const char* expectedTokens[],
    }
    if (end) *end = pos;
    return true;
-}
-
-namespace {
-   class R__tmpnamElement {
-   public:
-      R__tmpnamElement() : fTmpnam() {}
-      R__tmpnamElement(const std::string& tmpnam): fTmpnam(tmpnam) {}
-      ~R__tmpnamElement() { unlink(fTmpnam.c_str()); }
-   private:
-      string fTmpnam;
-   };
-}
-
-#ifndef R__USE_MKSTEMP
-# if defined(R__GLIBC) || defined(__FreeBSD__) || \
-    (defined(__APPLE__) && defined(MAC_OS_X_VERSION_10_5))
-#  define R__USE_MKSTEMP 1
-# endif
-#endif
-
-//______________________________________________________________________________
-string R__tmpnam()
-{
-   // return a unique temporary file name as defined by tmpnam
-
-   static char filename[L_tmpnam+2];
-   static string tmpdir;
-   static bool initialized = false;
-   static list<R__tmpnamElement> tmpnamList;
-
-
-   if (!initialized) {
-#if R__USE_MKSTEMP
-      // Unlike tmpnam mkstemp does not prepend anything
-      // to its result but must get the pattern as a
-      // full pathname.
-      tmpdir = std::string(P_tmpdir) + "/";
-#endif
-
-      if (strlen(P_tmpdir) <= 2) {
-         // tmpnam (see man page) prepends the value of the
-         // P_tmpdir (defined in stdio.h) to its result.
-         // If P_tmpdir is less that 2 character it is likely to
-         // just be '/' or '\\' and we do not want to write in
-         // the root directory, so let's add the temp directory.
-         char *tmp;
-         if ((tmp = getenv("CINTTMPDIR"))) tmpdir = tmp;
-         else if ((tmp=getenv("TEMP")))    tmpdir = tmp;
-         else if ((tmp=getenv("TMP")))     tmpdir = tmp;
-         else tmpdir = ".";
-         tmpdir += '/';
-      }
-      initialized = true;
-   }
-
-#if R__USE_MKSTEMP
-   static const char *radix = "XXXXXX";
-   static const char *prefix = "rootcint_";
-   if (tmpdir.length() + strlen(radix) + strlen(prefix) + 2 > L_tmpnam + 2) {
-      // too long
-      std::cerr << "Temporary file name too long! Trying with /tmp..." << std::endl;
-      tmpdir = "/tmp/";
-   }
-   strlcpy(filename, tmpdir.c_str(),L_tmpnam+2);
-   strlcat(filename, prefix,L_tmpnam+2);
-   strlcat(filename, radix,L_tmpnam+2);
-   mode_t old_umask = umask(077); // be restrictive for mkstemp()
-   int temp_fileno = mkstemp(filename);/*mkstemp not only generate file name but also opens the file*/
-   umask(old_umask);
-   if (temp_fileno >= 0) {
-      close(temp_fileno);
-   }
-   remove(filename);
-   tmpnamList.push_back(R__tmpnamElement(filename));
-   return filename;
-
-#else
-   tmpnam(filename);
-
-   string result(tmpdir);
-   result += filename;
-   result += "_rootcint";
-   tmpnamList.push_back(R__tmpnamElement(result));
-   return result;
-#endif
 }
 
 #ifdef _WIN32
@@ -4166,7 +4082,6 @@ void StrcpyArgWithEsc(string& escaped, const char *original)
    escaped = CopyArg( original );
 }
 
-string tname;
 string dictsrc;
 
 //______________________________________________________________________________
@@ -4174,7 +4089,6 @@ void CleanupOnExit(int code)
 {
    // Removes tmp files, and (if code!=0) output files.
 
-   if (!tname.empty()) unlink(tname.c_str());
    if (code) {
       if (!dictsrc.empty()) {
          unlink(dictsrc.c_str());
@@ -4601,7 +4515,7 @@ int main(int argc, char **argv)
       ifl = 0;
    }
    
-   int   argcc, iv, il;
+   int argcc, iv, il;
    std::vector<std::string> path;
    char *argvv[500];
 
@@ -4955,22 +4869,42 @@ int main(int argc, char **argv)
       GenerateLinkdef(&argc, argv, iv, interpPragmaSource);
    }
 
-   // Check if code goes to stdout or cint file, use temporary file
-   // for prepending of the rootcint generated code (STK)
+   // make name of dict include file "aapDict.cxx" -> "aapDict.h"
+   std::string dictheader( argv[ifl] );
+   size_t pos = dictheader.rfind('.');
+   dictheader.erase(pos);
+   dictheader.append(".h");
+   
+   std::string inclf(dictname);
+   pos = inclf.rfind('.');
+   inclf.erase(pos);
+   inclf.append(".h");
+   
+   // Check if code goes to stdout or rootcling file
    std::ofstream fileout;
+   std::ofstream headerout;
    if (ifl) {
-      tname = R__tmpnam();
-      fileout.open(tname.c_str());
+      fileout.open(argv[ifl]);
       dictSrcOut = &fileout;
       if (!(*dictSrcOut)) {
          Error(0, "rootcint: failed to open %s in main\n",
-               tname.c_str());
+               argv[ifl]);
          CleanupOnExit(1);
          return 1;
       }
-   } else
+      headerout.open(dictheader.c_str());
+      dictHdrOut = &headerout;
+      if (!(*dictHdrOut)) {
+         Error(0, "rootcint: failed to open %s in main\n",
+               dictheader.c_str());
+         CleanupOnExit(1);
+         return 1;
+      }
+   } else {
       dictSrcOut = &std::cout;
-
+      dictHdrOut = &std::cout;
+   }
+   
    string main_dictname(argv[ifl]);
    size_t dh = main_dictname.rfind('.');
    if (dh != std::string::npos) {
@@ -4987,29 +4921,9 @@ int main(int argc, char **argv)
                  << "//" << std::endl << std::endl
 
                  << "#define R__DICTIONARY_FILENAME " << main_dictname << std::endl
-                 << "#include \"RConfig.h\" //rootcint 4834" << std::endl
+                 << "#include \"" << inclf << "\"\n"
                  << std::endl;
 #ifndef R__SOLARIS
-   (*dictSrcOut) << "// Since CINT ignores the std namespace, we need to do so in this file." << std::endl
-                 << "namespace std {} using namespace std;" << std::endl << std::endl;
-   int linesToSkip = 11; // number of lines up to here.
-#else
-   int linesToSkip =  8; // number of lines up to here.
-#endif
-
-   (*dictSrcOut) << "#include \"TClass.h\"" << std::endl
-                 << "#include \"TCintWithCling.h\"" << std::endl
-                 << "#include \"TBuffer.h\"" << std::endl
-                 << "#include \"TMemberInspector.h\"" << std::endl
-                 << "#include \"TError.h\"" << std::endl << std::endl
-                 << "#ifndef G__ROOT" << std::endl
-                 << "#define G__ROOT" << std::endl
-                 << "#endif" << std::endl << std::endl
-                 << "#include \"RtypesImp.h\"" << std::endl
-                 << "#include \"TIsAProxy.h\"" << std::endl
-                 << "#include \"TFileMergeInfo.h\"" << std::endl;
-   (*dictSrcOut) << std::endl;
-#ifdef R__SOLARIS
    (*dictSrcOut) << "// Since CINT ignores the std namespace, we need to do so in this file." << std::endl
                  << "namespace std {} using namespace std;" << std::endl << std::endl;
 #endif
@@ -5293,79 +5207,41 @@ int main(int argc, char **argv)
       GenerateModule(dictname, pcmArgs, currentDirectory);
    }
 
-   // Append CINT dictionary to file containing Streamers and ShowMembers
-   if (ifl) {
-      char line[BUFSIZ];
-      FILE *fpd = fopen(argv[ifl], "r");
-      FILE* fp = fopen(tname.c_str(), "a");
-
-      if (fp && fpd)
-         while (fgets(line, BUFSIZ, fpd))
-            fprintf(fp, "%s", line);
-
-      if (fp)  fclose(fp);
-      if (fpd) fclose(fpd);
-
-      // copy back to dictionary file
-      fpd = fopen(argv[ifl], "w");
-      fp  = fopen(tname.c_str(), "r");
-
-      if (fp && fpd) {
-
-         // make name of dict include file "aapDict.cxx" -> "aapDict.h"
-         int nl = 0;
-         char *s = strrchr(dictname, '.');
-         if (s) *s = 0;
-         string inclf(dictname); inclf += ".h";
-         if (s) *s = '.';
-         
-         string dictheader( argv[ifl] );
-         size_t pos = dictheader.rfind('.');
-         dictheader.erase(pos);
-         dictheader.append(".h");
-         
-         // Now that CINT is not longer there to write the header file,
-         // write one and include in there a few things for backward 
-         // compatibility.
-         FILE *fheader = fopen(dictheader.c_str(),"w");
-         fprintf(fheader,"%s","/********************************************************************\n");
-         fprintf(fheader,"* %s\n",dictheader.c_str());
-         fprintf(fheader,"* CAUTION: DON'T CHANGE THIS FILE. THIS FILE IS AUTOMATICALLY GENERATED\n");
-         fprintf(fheader,"*          FROM HEADER FILES LISTED IN 'DictInit::headers'.\n");
-         fprintf(fheader,"*          CHANGE THOSE HEADER FILES AND REGENERATE THIS FILE.\n");
-         fprintf(fheader,"********************************************************************/\n");
-         fprintf(fheader,"#include <stddef.h>\n");
-         fprintf(fheader,"#include <stdio.h>\n");
-         fprintf(fheader,"#include <stdlib.h>\n");
-         fprintf(fheader,"#include <math.h>\n");
-         fprintf(fheader,"#include <string.h>\n");
-         fprintf(fheader,"#define G__DICTIONARY\n");
-
-         // during copy put dict include on top and remove later reference
-         while (fgets(line, BUFSIZ, fp)) {
-            if (!strncmp(line, "#include", 8) && strstr(line, "\" //newlink 3678 "))
-               continue;
-            fprintf(fpd, "%s", line);
-
-            // 'linesToSkip' was because we wanted to put it after #defined private/protected
-            if (++nl == linesToSkip && icc) {
-               fprintf(fpd, "#include \"%s\"\n", inclf.c_str());
-
-               if (gNeedCollectionProxy) {
-                  fprintf(fheader,"#include <algorithm>\n");
-                  fprintf(fpd, "\n#include \"TCollectionProxyInfo.h\"");
-               }
-            }
-         }
-         fprintf(fheader,"\n");
-         if (fheader) fclose(fheader);
-      }
-
-      if (fp)  fclose(fp);
-      if (fpd) fclose(fpd);
-      remove(tname.c_str());
+   // Now that CINT is not longer there to write the header file,
+   // write one and include in there a few things for backward 
+   // compatibility.
+   (*dictHdrOut) << "/********************************************************************\n";
+   
+   (*dictHdrOut) << "* " << dictheader << "\n";
+   (*dictHdrOut) << "* CAUTION: DON'T CHANGE THIS FILE. THIS FILE IS AUTOMATICALLY GENERATED\n";
+   (*dictHdrOut) << "*          FROM HEADER FILES LISTED IN 'DictInit::headers'.\n";
+   (*dictHdrOut) << "*          CHANGE THOSE HEADER FILES AND REGENERATE THIS FILE.\n";
+   (*dictHdrOut) << "********************************************************************/\n";
+   (*dictHdrOut) << "#include <stddef.h>\n";
+   (*dictHdrOut) << "#include <stdio.h>\n";
+   (*dictHdrOut) << "#include <stdlib.h>\n";
+   (*dictHdrOut) << "#include <math.h>\n";
+   (*dictHdrOut) << "#include <string.h>\n";
+   (*dictHdrOut) << "#define G__DICTIONARY\n";
+   (*dictHdrOut) << "#include \"RConfig.h\"\n"
+                 << "#include \"TClass.h\"\n"
+                 << "#include \"TCintWithCling.h\"\n"
+                 << "#include \"TBuffer.h\"\n"
+                 << "#include \"TMemberInspector.h\"\n"
+                 << "#include \"TError.h\"\n\n"
+                 << "#ifndef G__ROOT\n"
+                 << "#define G__ROOT\n"
+                 << "#endif\n\n"
+                 << "#include \"RtypesImp.h\"\n"
+                 << "#include \"TIsAProxy.h\"\n"
+                 << "#include \"TFileMergeInfo.h\"\n";
+   (*dictSrcOut) << std::endl;
+   if (gNeedCollectionProxy) {
+      (*dictHdrOut) << "#include <algorithm>\n";
+      (*dictHdrOut) << "\n#include \"TCollectionProxyInfo.h\"";
    }
-
+   (*dictHdrOut) << "\n";
+   
    if (gLiblistPrefix.length()) {
       string liblist_filename = gLiblistPrefix + ".out";
 
