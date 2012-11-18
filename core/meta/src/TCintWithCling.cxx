@@ -3013,8 +3013,12 @@ Long_t TCintWithCling::GetExecByteCode() const
 //______________________________________________________________________________
 Long_t TCintWithCling::Getgvp() const
 {
-   // Interface to CINT function
-   return (Long_t)G__getgvp();
+   // Interface to the CINT global object pointer which was controlling the
+   // behavior of the wrapper around the calls to operator new and the constructor
+   // and operator delete and the destructor.
+
+   Error("Getgvp","This was controlling the behavior of the wrappers for object construction and destruction.\nThis is now a nop and likely change the behavior of the calling routines.");
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -3093,8 +3097,12 @@ void TCintWithCling::SetErrmsgcallback(void* p) const
 //______________________________________________________________________________
 void TCintWithCling::Setgvp(Long_t gvp) const
 {
-   // Interface to CINT function
-   G__setgvp(gvp);
+   // Interface to the CINT global object pointer which was controlling the
+   // behavior of the wrapper around the calls to operator new and the constructor
+   // and operator delete and the destructor.
+
+   Error("Setgvp","This was controlling the behavior of the wrappers for object construction and destruction.\nThis is now a nop and likely change the behavior of the calling routines.");
+
 }
 
 //______________________________________________________________________________

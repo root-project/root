@@ -23,6 +23,24 @@ These versions are not available in regular distributions yet (except for <a hre
 
 <h3>Core Libraries</h3>
 
+<h4>TInterpreter</h4>
+
+The following are no longer supported and are now only issueing error
+messages:
+<ul><li>Getgvp</li>
+    <li>Setgvp</li>
+    <li>SetRTLD_NOW</li>
+    <li>SetRTLD_LAZY</li>
+</ul>
+
+Use of Setgvp and Getgvp should be looked at carefully as they were
+use to control the behavior of the multiplexing CINT wrappers that
+were both wrapper the calls to operator new with and without placement
+and the constructor (and similarly for operator delete and the
+destructor).  Cling does not support such a multiplexing wrapper and
+alternatively interface must be used (See TClass::New and
+TClass::Destructor for example).
+
 <h4>rootcling</h4>
 
 rootcling is the successor to rootcint and genreflex. It is used to implement 
