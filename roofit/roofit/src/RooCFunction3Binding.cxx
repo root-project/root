@@ -45,6 +45,7 @@ template<> RooCFunction3Map<double,unsigned int,unsigned int,double>* RooCFuncti
 
 namespace RooFit {
 
+#ifndef R__HAS_CLING
   RooAbsReal* bindFunction(const char* name,void* func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) {
     // This function is for use in CINT, which does not properly handly
     // overloading on function pointer types, so we do it here explicitly
@@ -57,6 +58,7 @@ namespace RooFit {
     oocoutE((TObject*)0,InputArguments) << "bindFunction::ERROR No matching RooCFunction3Binding<> class found for function " << RooCintUtils::functionName(func) << endl ;
     return 0 ;
   }
+#endif
 
   RooAbsReal* bindFunction(const char* name,CFUNCD3DDD func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) {
     return new RooCFunction3Binding<Double_t,Double_t,Double_t,Double_t>(name,name,func,x,y,z) ;
@@ -83,6 +85,7 @@ namespace RooFit {
   }
 
 
+#ifndef R__HAS_CLING
   RooAbsPdf* bindPdf(const char* name,void* func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) {
     // This function is for use in CINT, which does not properly handly
     // overloading on function pointer types, so we do it here explicitly
@@ -95,6 +98,7 @@ namespace RooFit {
     oocoutE((TObject*)0,InputArguments) << "bindPdf::ERROR No matching RooCFunction3PdfBinding<> class found for function " << RooCintUtils::functionName(func) << endl ;
     return 0 ;
   }
+#endif
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD3DDD func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) {
     return new RooCFunction3PdfBinding<Double_t,Double_t,Double_t,Double_t>(name,name,func,x,y,z) ;

@@ -40,10 +40,12 @@ using namespace std ;
 namespace RooCintUtils 
 {
 
+#ifndef R__HAS_CLING
   const char* functionName(void* func) 
   {
     return G__p2f2funcname(func);
   }
+#endif
 
   pair<list<string>,unsigned int> ctorArgs(const char* classname, UInt_t nMinArg) 
   {
@@ -146,6 +148,7 @@ namespace RooCintUtils
     return kFALSE ;
   }
   
+#ifndef R__HAS_CLING
   Bool_t matchFuncPtrArgs(void* func, const char* args) 
   {
     // Returns TRUE if given pointer to function takes true arguments as listed in string args
@@ -198,7 +201,7 @@ namespace RooCintUtils
   
 
 }
-
+#endif
 
 Bool_t RooCintUtils::isTypeDef(const char* trueName, const char* aliasName)
 {

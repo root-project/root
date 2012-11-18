@@ -28,8 +28,10 @@ typedef Double_t (*CFUNCD4DDDD)(Double_t,Double_t,Double_t,Double_t) ;
 typedef Double_t (*CFUNCD4DDDI)(Double_t,Double_t,Double_t,Int_t) ;
 typedef Double_t (*CFUNCD4DDDB)(Double_t,Double_t,Double_t,Bool_t) ;
 
+#ifndef R__HAS_CLING
 RooAbsReal* bindFunction(const char* name,void* func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z, RooAbsReal& w) ;
 RooAbsPdf* bindPdf(const char* name,void* func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z, RooAbsReal& w) ;
+#endif
 #ifndef __CINT__
 RooAbsReal* bindFunction(const char* name,CFUNCD4DDDD func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z, RooAbsReal& w) ;
 RooAbsReal* bindFunction(const char* name,CFUNCD4DDDI func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z, RooAbsReal& w) ;

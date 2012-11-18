@@ -31,8 +31,10 @@ typedef Double_t (*CFUNCD2DI)(Double_t,Int_t) ;
 typedef Double_t (*CFUNCD2II)(Int_t,Int_t) ;
 
 
+#ifndef R__HAS_CLING
 RooAbsReal* bindFunction(const char* name,void* func,RooAbsReal& x, RooAbsReal& y) ;
 RooAbsPdf* bindPdf(const char* name,void* func,RooAbsReal& x, RooAbsReal& y) ;
+#endif
 #ifndef __CINT__
 RooAbsReal* bindFunction(const char* name,CFUNCD2DD func,RooAbsReal& x, RooAbsReal& y) ;
 RooAbsReal* bindFunction(const char* name,CFUNCD2ID func,RooAbsReal& x, RooAbsReal& y) ;

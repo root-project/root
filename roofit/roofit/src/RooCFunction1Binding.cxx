@@ -61,6 +61,7 @@ RooCFunction1Map<double,int>& RooCFunction1Ref<double,int>::fmap()
 
 namespace RooFit {
 
+#ifndef R__HAS_CLING
   RooAbsReal* bindFunction(const char* name,void* func,RooAbsReal& x) 
   {
     // This function is for use in CINT, which does not properly handly
@@ -70,7 +71,7 @@ namespace RooFit {
     oocoutE((TObject*)0,InputArguments) << "bindFunction::ERROR No matching RooCFunction1Binding<> class found for function " << RooCintUtils::functionName(func) << endl ;
     return 0 ;
   }
-
+#endif
 
   RooAbsReal* bindFunction(const char* name,CFUNCD1D func,RooAbsReal& x) {
     return new RooCFunction1Binding<Double_t,Double_t>(name,name,func,x) ;
@@ -80,6 +81,7 @@ namespace RooFit {
     return new RooCFunction1Binding<Double_t,Int_t>(name,name,func,x) ;
   }
 
+#ifndef R__HAS_CLING
   RooAbsPdf* bindPdf(const char* name,void* func,RooAbsReal& x) 
   {
     // This function is for use in CINT, which does not properly handly
@@ -89,6 +91,7 @@ namespace RooFit {
     oocoutE((TObject*)0,InputArguments) << "bindFunction::ERROR No matching RooCFunction1PdfBinding<> class found for function " << RooCintUtils::functionName(func) << endl ;
     return 0 ;
   }
+#endif
 
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD1D func,RooAbsReal& x) {

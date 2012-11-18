@@ -28,8 +28,10 @@ namespace RooFit {
 typedef Double_t (*CFUNCD1D)(Double_t) ;
 typedef Double_t (*CFUNCD1I)(Int_t) ;
 
+#ifndef R__HAS_CLING
 RooAbsReal* bindFunction(const char* name,void* func,RooAbsReal& x) ;
 RooAbsPdf*  bindPdf(const char* name,void* func,RooAbsReal& x) ;
+#endif
 #ifndef __CINT__
 RooAbsReal* bindFunction(const char* name,CFUNCD1D func,RooAbsReal& x) ;
 RooAbsReal* bindFunction(const char* name,CFUNCD1I func,RooAbsReal& x) ;
