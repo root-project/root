@@ -477,8 +477,6 @@ std::ostream* dictHdrOut=&std::cout;
 
 bool gNeedCollectionProxy = false;
 
-char *StrDup(const char *str);
-
 class RConstructorType {
    std::string           fArgTypeName;
    const clang::CXXRecordDecl *fArgType;
@@ -1227,18 +1225,6 @@ bool ParsePragmaLine(const std::string& line, const char* expectedTokens[],
    return true;
 }
 
-#ifdef _WIN32
-//______________________________________________________________________________
-// defined in newlink.c
-extern "C" FILE *FOpenAndSleep(const char *filename, const char *mode);
-
-# ifdef fopen
-#  undef fopen
-# endif
-# define fopen(A,B) FOpenAndSleep((A),(B))
-#endif
-
-
 //______________________________________________________________________________
 typedef map<string,string> Recmap_t;
 Recmap_t gAutoloads;
@@ -1809,9 +1795,10 @@ bool CheckConstructor(const clang::CXXRecordDecl *cl, RConstructorType &ioctorty
 }
 
 //______________________________________________________________________________
-bool HasDefaultConstructor(const clang::CXXRecordDecl *cl, string *arg)
+bool HasIOConstructor(const clang::CXXRecordDecl *cl, string *arg)
 {
    // return true if we can find an constructor calleable without any arguments
+   // or with one the IOCtor special types.
 
    bool result = false;
 
@@ -2078,7 +2065,7 @@ void WriteAuxFunctions(const RScanner::AnnotatedRecordDecl &cl)
    (*dictSrcOut) << "namespace ROOT {" << std::endl;
 
    string args;
-   if (HasDefaultConstructor(clxx,&args)) {
+   if (HasIOConstructor(clxx,&args)) {
       // write the constructor wrapper only for concrete classes
       (*dictSrcOut) << "   // Wrappers around operator new" << std::endl
                     << "   static void *new_" << mappedname.c_str() << "(void *p) {" << std::endl
@@ -2776,7 +2763,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input, const cling::
    if (!ClassInfo__HasMethod(cl,"Dictionary") || R__IsTemplate(*cl))
       (*dictSrcOut) << "   static void " << mappedname.c_str() << "_Dictionary();" << std::endl;
 
-   if (HasDefaultConstructor(cl,&args)) {
+   if (HasIOConstructor(cl,&args)) {
       (*dictSrcOut) << "   static void *new_" << mappedname.c_str() << "(void *p = 0);" << std::endl;
       if (args.size()==0 && NeedDestructor(cl))
          (*dictSrcOut) << "   static void *newArray_" << mappedname.c_str()
@@ -2948,7 +2935,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input, const cling::
    }
    (*dictSrcOut) << "isa_proxy, " << rootflag << "," << std::endl
                  << "                  sizeof(" << csymbol.c_str() << ") );" << std::endl;
-   if (HasDefaultConstructor(cl,&args)) {
+   if (HasIOConstructor(cl,&args)) {
       (*dictSrcOut) << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << std::endl;
       if (args.size()==0 && NeedDestructor(cl))
          (*dictSrcOut) << "      instance.SetNewArray(&newArray_" << mappedname.c_str() << ");" << std::endl;
@@ -3985,46 +3972,6 @@ bool Which(cling::Interpreter &interp, const char *fname, string& pname)
    }
    pname = "";
    return false;
-}
-
-//______________________________________________________________________________
-char *StrDup(const char *str)
-{
-   // Duplicate the string str. The returned string has to be deleted by
-   // the user.
-
-   if (!str) return 0;
-
-   // allocate 20 extra characters in case of eg, vector<vector<T>>
-   int nch = strlen(str)+20;
-   char *s = new char[nch];
-   if (s) strlcpy(s, str,nch);
-
-   return s;
-}
-
-//______________________________________________________________________________
-char *Compress(const char *str)
-{
-   // Remove all blanks from the string str. The returned string has to be
-   // deleted by the user.
-
-   if (!str) return 0;
-
-   const char *p = str;
-   // allocate 20 extra characters in case of eg, vector<vector<T>>
-   char *s, *s1 = new char[strlen(str)+20];
-   s = s1;
-
-   while (*p) {
-      // keep space for A<const B>!
-      if (*p != ' ' || (p - str > 0 && isalnum(*(p-1))))
-         *s++ = *p;
-      p++;
-   }
-   *s = '\0';
-
-   return s1;
 }
 
 //______________________________________________________________________________
