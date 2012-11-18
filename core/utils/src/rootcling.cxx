@@ -4342,7 +4342,7 @@ int main(int argc, char **argv)
    }
 
    char dictname[1024];
-   int i, j, ic, ifl, force;
+   int i, ic, ifl, force;
    int icc = 0;
    bool requestAllSymbols = false; // Would be set to true is we decide to support an option like --deep.
 
@@ -4515,9 +4515,8 @@ int main(int argc, char **argv)
       ifl = 0;
    }
    
-   int argcc, iv, il;
+   int iv, il;
    std::vector<std::string> path;
-   char *argvv[500];
 
    std::vector<std::string> clingArgs;
    clingArgs.push_back(argv[0]);
@@ -4534,23 +4533,11 @@ int main(int argc, char **argv)
 #endif
    path.push_back(std::string("-I") + TMetaUtils::GetROOTIncludeDir(ROOTBUILDVAL));
 
-   argvv[0] = argv[0];
-   argcc = 1;
 
    if (ic < argc && !strcmp(argv[ic], "-c")) {
       icc++;
       if (ifl) {
-         char *s;
          ic++;
-         argvv[argcc++] = (char *)"-q0";
-         argvv[argcc++] = (char *)"-n";
-         int ncha = strlen(argv[ifl])+1;
-         argvv[argcc] = (char *)calloc(ncha, 1);
-         strlcpy(argvv[argcc], argv[ifl],ncha); argcc++;
-         argvv[argcc++] = (char *)"-N";
-         s = strrchr(dictname,'.');
-         argvv[argcc] = (char *)calloc(strlen(dictname), 1);
-         strncpy(argvv[argcc], dictname, s-dictname); argcc++;
 
          while (ic < argc && (*argv[ic] == '-' || *argv[ic] == '+')) {
             if (strcmp("+P", argv[ic]) == 0 ||
@@ -4565,116 +4552,15 @@ int main(int argc, char **argv)
                    && strcmp("-p", argv[ic])) {
                   clingArgs.push_back(argv[ic]);
                }
-               argvv[argcc++] = argv[ic++];
+               ic++;
             } else {
                ic++;
             }
          }
 
          for (i = 0; i < (int)path.size(); i++) {
-            argvv[argcc++] = (char*)path[i].c_str();
             clingArgs.push_back(path[i].c_str());
          }
-
-#ifdef __hpux
-         argvv[argcc++] = (char *)"-I/usr/include/X11R5";
-#endif
-         switch (gErrorIgnoreLevel) {
-         case kInfo:     argvv[argcc++] = (char *)"-J4"; break;
-         case kNote:     argvv[argcc++] = (char *)"-J3"; break;
-         case kWarning:  argvv[argcc++] = (char *)"-J2"; break;
-         case kError:    argvv[argcc++] = (char *)"-J1"; break;
-         case kSysError:
-         case kFatal:    argvv[argcc++] = (char *)"-J0"; break;
-         default:        argvv[argcc++] = (char *)"-J1"; break;
-         }
-
-         // If the compiler's preprocessor is not used
-         // we still need to declare the compiler specific flags
-         // so that the header file are properly parsed.
-#ifdef __KCC
-         argvv[argcc] = (char *)calloc(64, 1);
-         snprintf(argvv[argcc],64, "-D__KCC=%ld", (long)__KCC); argcc++;
-#endif
-#ifdef __INTEL_COMPILER
-         argvv[argcc] = (char *)calloc(64, 1);
-         snprintf(argvv[argcc],64, "-D__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER); argcc++;
-#endif
-#ifdef __xlC__
-         argvv[argcc] = (char *)calloc(64, 1);
-         snprintf(argvv[argcc],64, "-D__xlC__=%ld", (long)__xlC__); argcc++;
-#endif
-#ifdef __GNUC__
-         argvv[argcc] = (char *)calloc(64, 1);
-         // coverity[secure_coding] - sufficient space
-         snprintf(argvv[argcc],64, "-D__GNUC__=%ld", (long)__GNUC__); argcc++;
-#endif
-#ifdef __GNUC_MINOR__
-         argvv[argcc] = (char *)calloc(64, 1);
-         // coverity[secure_coding] - sufficient space
-         snprintf(argvv[argcc],64, "-D__GNUC_MINOR__=%ld", (long)__GNUC_MINOR__); argcc++;
-#endif
-#ifdef __HP_aCC
-         argvv[argcc] = (char *)calloc(64, 1);
-         snprintf(argvv[argcc],64 "-D__HP_aCC=%ld", (long)__HP_aCC); argcc++;
-#endif
-#ifdef __sun
-         argvv[argcc] = (char *)calloc(64, 1);
-         snprintf(argvv[argcc],64, "-D__sun=%ld", (long)__sun); argcc++;
-#endif
-#ifdef __SUNPRO_CC
-         argvv[argcc] = (char *)calloc(64, 1);
-         snprintf(argvv[argcc],64, "-D__SUNPRO_CC=%ld", (long)__SUNPRO_CC); argcc++;
-#endif
-#ifdef __ia64__
-         argvv[argcc] = (char *)calloc(64, 1);
-         snprintf(argvv[argcc],64, "-D__ia64__=%ld", (long)__ia64__); argcc++;
-#endif
-#ifdef __x86_64__
-         argvv[argcc] = (char *)calloc(64, 1);
-         snprintf(argvv[argcc],64, "-D__x86_64__=%ld", (long)__x86_64__); argcc++;
-#endif
-#ifdef __i386__
-         argvv[argcc] = (char *)calloc(64, 1);
-         snprintf(argvv[argcc],64, "-D__i386__=%ld", (long)__i386__); argcc++;
-#endif
-#ifdef __arm__
-         argvv[argcc] = (char *)calloc(64, 1);
-         snprintf(argvv[argcc],64, "-D__arm__=%ld", (long)__arm__); argcc++;
-#endif
-#ifdef R__B64
-         argvv[argcc] = (char *)calloc(64, 1);
-         snprintf(argvv[argcc],64, "-DR__B64"); argcc++;
-#endif
-#ifdef _WIN32
-         argvv[argcc] = (char *)calloc(64, 1);
-         snprintf(argvv[argcc],64, "-D_WIN32=%ld",(long)_WIN32); argcc++;
-#endif
-#ifdef WIN32
-         argvv[argcc] = (char *)calloc(64, 1);
-         snprintf(argvv[argcc],64, "-DWIN32=%ld",(long)WIN32); argcc++;
-#endif
-#ifdef _MSC_VER
-         argvv[argcc] = (char *)calloc(64, 1);
-         snprintf(argvv[argcc],64, "-D_MSC_VER=%ld",(long)_MSC_VER); argcc++;
-#endif
-
-#ifdef ROOTBUILD
-         argvv[argcc++] = (char *)"-DG__NOCINTDLL";
-         clingArgs.push_back(argvv[argcc - 1]);
-#endif
-         argvv[argcc++] = (char *)"-DTRUE=1";
-         clingArgs.push_back(argvv[argcc - 1]);
-         argvv[argcc++] = (char *)"-DFALSE=0";
-         clingArgs.push_back(argvv[argcc - 1]);
-         argvv[argcc++] = (char *)"-Dexternalref=extern";
-         argvv[argcc++] = (char *)"-DSYSV";
-         argvv[argcc++] = (char *)"-D__MAKECINT__";
-         // NO! clang needs to see the truth.
-         // clingArgs.push_back(argvv[argcc - 1]);
-         argvv[argcc++] = (char *)"-V";        // include info on private members
-         argvv[argcc++] = (char *)"-c-10";
-         argvv[argcc++] = (char *)"+V";        // turn on class comment mode
       } else {
          Error(0, "%s: option -c can only be used when an output file has been specified\n", argv[0]);
          return 1;
@@ -4806,12 +4692,6 @@ int main(int argc, char **argv)
    string esc_arg;
    for (i = ic; i < argc; i++) {
       if (!iv && *argv[i] != '-' && *argv[i] != '+') {
-         if (!icc) {
-            for (j = 0; j < (int)path.size(); j++) {
-               argvv[argcc++] = (char*)path[j].c_str();
-            }
-            argvv[argcc++] = (char *)"+V";
-         }
          iv = i;
       }
       if (R__IsSelectionFile(argv[i])) {
@@ -4830,11 +4710,6 @@ int main(int argc, char **argv)
          string argkeep;
             // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
          StrcpyArg(argkeep, argv[i]);
-         int ncha = argkeep.length()+1;
-         // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
-         argvv[argcc++] = (char*)calloc(ncha,1);
-         // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
-         strlcpy(argvv[argcc-1],argkeep.c_str(),ncha);
          
          if (*argv[i] != '-' && *argv[i] != '+') {
             // Looks like a file
@@ -4851,9 +4726,6 @@ int main(int argc, char **argv)
                return 1;
             }
             
-            // remove header files from CINT view
-            free(argvv[argcc-1]);
-            argvv[--argcc] = 0;
          }
       }
    }
