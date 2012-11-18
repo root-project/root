@@ -3067,17 +3067,24 @@ const char* TCintWithCling::MapCppName(const char* name) const
 }
 
 //______________________________________________________________________________
-void TCintWithCling::SetAlloclockfunc(void (*p)()) const
+void TCintWithCling::SetAlloclockfunc(void (* /* p */ )()) const
 {
-   // Interface to CINT function
-   G__set_alloclockfunc(p);
+   // [Place holder for Mutex Lock] 
+   // Provide the interpreter with a way to
+   // acquire a lock used to protect critical section 
+   // of its code (non-thread safe parts).
+
+   // nothing to do for now.
 }
 
 //______________________________________________________________________________
-void TCintWithCling::SetAllocunlockfunc(void (*p)()) const
+void TCintWithCling::SetAllocunlockfunc(void (* /* p */ )()) const
 {
-   // Interface to CINT function
-   G__set_allocunlockfunc(p);
+   // [Place holder for Mutex Unlock] Provide the interpreter with a way to
+   // release a lock used to protect critical section 
+   // of its code (non-thread safe parts).
+
+   // nothing to do for now.
 }
 
 //______________________________________________________________________________
