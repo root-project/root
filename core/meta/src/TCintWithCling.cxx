@@ -2751,7 +2751,10 @@ void TCintWithCling::UpdateClassInfoWithDecl(void* vTD)
    if (cl) {
       TClingClassInfo* cci = ((TClingClassInfo*)cl->fClassInfo);
       if (cci) {
-         const TagDecl* tdOld = dyn_cast<TagDecl>(cci->GetDecl());
+         const TagDecl* tdOld = 0;
+         if (cci->GetDecl()) {
+            tdOld = dyn_cast<TagDecl>(cci->GetDecl());
+         }
          if (!tdOld || tdDef) {
             cl->ResetCaches();
             cci->Init(*cci->GetType());
