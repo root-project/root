@@ -4124,7 +4124,8 @@ static ESourceFileKind GetSourceFileKind(const char* filename)
 
 
 //______________________________________________________________________________
-static int GenerateModule(const char* dictSrcFile, const std::vector<std::string>& args, const std::string &currentDirectory)
+static int GenerateModule(const char* dictSrcFile, const std::vector<std::string>& args,
+                          const std::string &currentDirectory)
 {
    // Generate the clang module given the arguments.
    // Returns != 0 on error.
@@ -4161,16 +4162,14 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
    }
 
    // Dictionary initialization code for loading the module
-   (*dictSrcOut) << "namespace {\n"
-      "  static struct DictInit {\n"
-      "    DictInit() {\n"
+   (*dictSrcOut) << "void TriggerDictionaryInitalization_" << dictname << "() {\n"
       "      static const char* headers[] = {\n";
-
    {
       for (size_t iH = 0, eH = headers.size(); iH < eH; ++iH) {
          (*dictSrcOut) << "             \"" << headers[iH] << "\"," << std::endl;
       }
    }
+
    (*dictSrcOut) << 
       "      0 };\n"
       "      static const char* includePaths[] = {\n";
@@ -4178,6 +4177,7 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
            iI = compI.begin(), iE = compI.end(); iI != iE; ++iI) {
       (*dictSrcOut) << "             \"" << *iI << "\"," << std::endl;
    }
+
    (*dictSrcOut) << 
       "      0 };\n"
       "      static const char* macroDefines[] = {\n";
@@ -4185,6 +4185,7 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
            iD = compD.begin(), iDE = compD.end(); iD != iDE; ++iD) {
       (*dictSrcOut) << "             \"" << *iD << "\"," << std::endl;
    }
+
    (*dictSrcOut) << 
       "      0 };\n"
       "      static const char* macroUndefines[] = {\n";
@@ -4192,12 +4193,22 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
            iU = compU.begin(), iUE = compU.end(); iU != iUE; ++iU) {
       (*dictSrcOut) << "             \"" << *iU << "\"," << std::endl;
    }
+
    (*dictSrcOut) << 
       "      0 };\n"
-      "      TCintWithCling__RegisterModule(\"" << dictname << "\",\n"
-      "         headers, includePaths, macroDefines, macroUndefines);\n"
+      "      static bool sInitialized = false;\n"
+      "      if (!sInitialized) {\n;"
+      "        TCintWithCling__RegisterModule(\"" << dictname << "\",\n"
+      "          headers, includePaths, macroDefines, macroUndefines);\n"
+      "        sInitialized = true;\n"
+      "      }\n"
       "    }\n"
-      "  } __TheInitializer;\n"
+      "namespace {\n"
+      "  static struct DictInit {\n"
+      "    DictInit() {\n"
+      "      TriggerDictionaryInitalization_" << dictname << "();\n"
+      "    }\n"
+      "  } __TheDictionaryInitializer;\n"
       "}" << std::endl;
 
    clang::CompilerInstance* CI = gInterp->getCI();

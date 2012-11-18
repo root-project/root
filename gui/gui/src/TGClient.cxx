@@ -53,6 +53,7 @@ TGClient *gClient = 0;
 
 // Initialize gClient in case libGui is loaded in batch mode
 extern "C" void G__cpp_setup_tagtableG__Gui1();
+void TriggerDictionaryInitalization_G__Gui1();
 class TGClientInit {
 public:
    TGClientInit() { 
@@ -63,7 +64,7 @@ public:
          // This is required because the dictionaries must be initialized 
          // __before__ the TGClient creation which will induce the creation 
          // of a TClass object which will need the dictionary for TGClient!
-         Warning("TGClientInit","Could not check/force that all is okay for an error free creation of TGClient");
+         TriggerDictionaryInitalization_G__Gui1();
 #else
       if (gROOT && gROOT->IsBatch()) {
          // Insure that the CINT dictionary is initialized __before__ the TGClient creation which
