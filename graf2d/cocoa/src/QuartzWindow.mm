@@ -1234,8 +1234,8 @@ void print_mask_info(ULong_t mask)
    
    const Util::AutoreleasePool pool;
 
-   [self makeKeyAndOrderFront : self];
    [fContentView setHidden : NO];
+   [self makeKeyAndOrderFront : self];
    [fContentView configureNotifyTree];
 
    if (fDelayedTransient) {
@@ -1251,8 +1251,8 @@ void print_mask_info(ULong_t mask)
 
    const Util::AutoreleasePool pool;
 //   [self orderFront : self];
-   [self makeKeyAndOrderFront : self];
    [fContentView setHidden : NO];
+   [self makeKeyAndOrderFront : self];
    [fContentView configureNotifyTree];
    
    if (fDelayedTransient) {
