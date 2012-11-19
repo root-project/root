@@ -17,6 +17,9 @@
 #define ROO_CINT_UTILS
 
 #include "Rtypes.h"
+#ifndef ROOT_RConfigure
+#include "RConfigure.h"
+#endif
 #include <list>
 #include <string>
 namespace RooCintUtils {

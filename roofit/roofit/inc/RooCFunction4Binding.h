@@ -14,6 +14,9 @@
 #define ROOCFUNCTION4BINDING
 
 #include "TString.h"
+#ifndef ROOT_RConfigure
+#include "RConfigure.h"
+#endif
 #include "RooAbsReal.h"
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"

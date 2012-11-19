@@ -23,13 +23,12 @@
 
 #include "RooCintUtils.h"
 
-// #if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
-// #include "cint/Api.h"
-// #else
+#ifndef R__HAS_CLING
 #include "Api.h"
-// #endif
+#endif
 
 #include "RooMsgService.h"
+#include "TInterpreter.h"
 #include <string.h>
 #include <string>
 #include <iostream>
@@ -56,58 +55,51 @@ namespace RooCintUtils
     Int_t nreq(0) ;
     list<string> ret ;
     
-    G__ClassInfo cls(classname);
-    G__MethodInfo func(cls);
-    while(func.Next()) {
+    ClassInfo_t* cls = gInterpreter->ClassInfo_Factory(classname);
+    MethodInfo_t* func = gInterpreter->MethodInfo_Factory(cls);
+    while(gInterpreter->MethodInfo_Next(func)) {
       ret.clear() ;
       nreq=0 ;
       
       // Find 'the' constructor
       
       // Skip non-public methods
-      if (!(func.Property()&G__BIT_ISPUBLIC)) {
+      if (!(gInterpreter->MethodInfo_Property(func) & kIsPublic)) {
 	continue ;
       }	
       
       // Return type must be class name
-      if (string(classname)!= func.Type()->Name()) {
+      if (string(classname) != gInterpreter->MethodInfo_TypeName(func)) {
 	continue ;
       }
       
       // Skip default constructor
-      if (func.NArg()==0 || func.NArg()==func.NDefaultArg()) {
+      int nargs = gInterpreter->MethodInfo_NArg(func);
+      if (nargs==0 || nargs==gInterpreter->MethodInfo_NDefaultArg(func)) {
 	continue ;
       }
       
-      // Skip copy constructor
-      G__MethodArgInfo arg1(func);
-      arg1.Next() ;	
-      string tmp(Form("const %s&",classname)) ;
-      if (tmp==arg1.Type()->Name()) {
-	continue ;
-      }
-      
-      // Examine definition of remaining ctor
-      G__MethodArgInfo arg(func);
-
-      
-      // Require that first to arguments are of type const char*
-      while(arg.Next()) {
-	if (nreq<2 && string("const char*") != arg.Type()->Name()) {	  
+      MethodArgInfo_t* arg = gInterpreter->MethodArgInfo_Factory(func);
+      while (gInterpreter->MethodArgInfo_Next(arg)) {
+        // Require that first to arguments are of type const char*
+         const char* argTypeName = gInterpreter->MethodArgInfo_TypeName(arg);
+        if (nreq<2 && string("const char*") != argTypeName) {
 	  continue ;
 	}
-	ret.push_back(arg.Type()->Name()) ;
-	if(!arg.DefaultValue()) nreq++ ;
+	ret.push_back(argTypeName) ;
+	if(!gInterpreter->MethodArgInfo_DefaultValue(arg)) nreq++ ;
       }
+      gInterpreter->MethodArgInfo_Delete(arg);
 
       // Check that the number of required arguments is at least nMinArg
       if (ret.size()<nMinArg) {
 	continue ;
       }
 
-      return pair<list<string>,unsigned int>(ret,nreq) ;
-      
+      break;
     }
+    gInterpreter->MethodInfo_Delete(func);
+    gInterpreter->ClassInfo_Delete(cls);
     return pair<list<string>,unsigned int>(ret,nreq) ;
   }
 
@@ -115,9 +107,10 @@ namespace RooCintUtils
   Bool_t isEnum(const char* classname) 
   {
     // Returns true if given type is an enum
-    G__ClassInfo cls(classname);
-    long property = cls.Property();
-    return (property&G__BIT_ISENUM) ;    
+    ClassInfo_t* cls = gInterpreter->ClassInfo_Factory(classname);
+    long property = gInterpreter->ClassInfo_Property(cls);
+    gInterpreter->ClassInfo_Delete(cls);
+    return (property&kIsEnum) ;    
   }
 
 
@@ -135,16 +128,20 @@ namespace RooCintUtils
       value = strrchr(value,':')+1 ;
     }
 
-    G__ClassInfo cls(className);
-    G__DataMemberInfo dm(cls);
-    while (dm.Next()) {
+    ClassInfo_t* cls = gInterpreter->ClassInfo_Factory(className);
+    DataMemberInfo_t* dm = gInterpreter->DataMemberInfo_Factory(cls);
+    while (gInterpreter->DataMemberInfo_Next(dm)) {
       // Check if this data member represents an enum value
-      if (string(Form("const %s",typeName))==dm.Type()->Name()) {
-	if (string(value)==dm.Name()) {
+      if (string(Form("const %s",typeName))==gInterpreter->DataMemberInfo_TypeName(dm)) {
+	if (string(value)==gInterpreter->DataMemberInfo_Name(dm)) {
+          gInterpreter->DataMemberInfo_Delete(dm);
+          gInterpreter->ClassInfo_Delete(cls);
 	  return kTRUE ;
 	}
       }
     }
+    gInterpreter->DataMemberInfo_Delete(dm);
+    gInterpreter->ClassInfo_Delete(cls);
     return kFALSE ;
   }
   
@@ -173,43 +170,53 @@ namespace RooCintUtils
     }
     
     // Get info on scope
-    G__ClassInfo scope(scopeName);
+    ClassInfo_t* scope = gInterpreter->ClassInfo_Factory(scopeName);
     
     // Loop over all methods in scope
-    G__MethodInfo method(scope);
-    while(method.Next()) {
+    MethodInfo_t* method = gInterpreter->MethodInfo_Factory(scope);
+    while(gInterpreter->MethodInfo_Next(method)) {
       // If method name matches, check argument list
-      if (string(methodName?methodName:"")==method.Name()) {
+      if (string(methodName?methodName:"")==gInterpreter->MethodInfo_Name(method)) {
 	
 	// Construct list of arguments
 	string s ;
-	G__MethodArgInfo arg(method);
-      while(arg.Next()) {
+	MethodArgInfo_t* arg = gInterpreter->MethodArgInfo_Factory(method);
+      while(gInterpreter->MethodArgInfo_Next(arg)) {
 	if (s.length()>0) s += "," ;
-	s += arg.Type()->TrueName() ;
+        s += gInterpreter->MethodArgInfo_TrueTypeName(arg) ;
       }      
       
+      gInterpreter->MethodArgInfo_Delete(arg);
       if (s==args) {
+        gInterpreter->ClassInfo_Delete(scope);
+        gInterpreter->MethodInfo_Delete(method);
 	return kTRUE ;
       }
       }
     }
     
+    gInterpreter->ClassInfo_Delete(scope);
+    gInterpreter->MethodInfo_Delete(method);
     // Fill s with comma separate list of methods true argument names
     return kFALSE ;
   }
   
+#endif
 
 }
-#endif
 
 Bool_t RooCintUtils::isTypeDef(const char* trueName, const char* aliasName)
 {
   // Returns true if aliasName is a typedef for trueName
-  G__TypedefInfo t;
-  while(t.Next()) {
-    if (string(trueName)==t.TrueName() && string(aliasName)==t.Name()) return kTRUE ;
+  TypedefInfo_t* t = gInterpreter->TypedefInfo_Factory();
+  while(gInterpreter->TypedefInfo_Next(t)) {
+    if (string(trueName)==gInterpreter->TypedefInfo_TrueName(t)
+        && string(aliasName)==gInterpreter->TypedefInfo_Name(t)) {
+      gInterpreter->TypedefInfo_Delete(t);
+      return kTRUE ;
+    }
   }
+  gInterpreter->TypedefInfo_Delete(t);
   return kFALSE ;
 }
 
@@ -217,12 +224,15 @@ Bool_t RooCintUtils::isTypeDef(const char* trueName, const char* aliasName)
 std::string RooCintUtils::trueName(const char* aliasName) 
 {
   // Returns the true type for a given typedef name.
-  G__TypedefInfo t;
-  while(t.Next()) {
-    if (string(aliasName)==t.Name()) {      
-      return trueName(string(t.TrueName()).c_str()) ;
+  TypedefInfo_t* t = gInterpreter->TypedefInfo_Factory();
+  while(gInterpreter->TypedefInfo_Next(t)) {
+    if (string(aliasName)==gInterpreter->TypedefInfo_Name(t)) {      
+      std::string ret = trueName(string(gInterpreter->TypedefInfo_TrueName(t)).c_str()) ;
+      gInterpreter->TypedefInfo_Delete(t);
+      return ret;
     }
   }
+  gInterpreter->TypedefInfo_Delete(t);
   return string(aliasName) ;
 }
 

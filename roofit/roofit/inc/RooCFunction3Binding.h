@@ -13,6 +13,9 @@
 #define ROOCFUNCTION3BINDING
 
 #include "TString.h"
+#ifndef ROOT_RConfigure
+#include "RConfigure.h"
+#endif
 #include "RooAbsReal.h"
 #include "RooRealProxy.h"
 #include "RooMsgService.h"
