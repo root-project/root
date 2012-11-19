@@ -1883,17 +1883,19 @@ function createFillPatterns(svg, id, color) {
          ec = ec.replace('rgb', 'rgba');
          ec = ec.replace(')', ', 0.20)');
 
-         var a, i, j, nf, wk = (glw/100)*0.008;
+         var a, i, j, nf, wk = (glw/100)*0.005;
          if (graph['fLineWidth'] > 32767)
             wk *= -1;
 
-         var xmin = graph['fHistogram']['fXaxis']['fXmin'],
-             xmax = graph['fHistogram']['fXaxis']['fXmax'],
-             ymin = graph['fHistogram']['fYaxis']['fXmin'],
-             ymax = graph['fHistogram']['fYaxis']['fXmax'];
+         var ratio = w / h;
+
+         var xmin = graph['x_min'], xmax = graph['x_max'],
+             ymin = graph['y_min'], ymax = graph['y_max'];
          for (i=0; i<n; i++) {
-            xo[i] = (graph['fX'][i]-xmin) / (xmax - xmin);
-            yo[i] = (graph['fY'][i]-ymin) / (ymax - ymin);
+            xo[i] = (graph['fX'][i] - xmin) / (xmax - xmin);
+            yo[i] = (graph['fY'][i] - ymin) / (ymax - ymin);
+            if (w > h) yo[i] = yo[i] / ratio;
+            else if (h > w) xo[i] = xo[i] / ratio;
          }
          // The first part of the filled area is made of the graph points.
          // Make sure that two adjacent points are different.
@@ -2039,8 +2041,20 @@ function createFillPatterns(svg, id, color) {
          }
          nf++; xf[nf] = xt[0]; yf[nf] = yt[0]; nf++;
          for (i=0; i<nf; i++) {
-            xf[i] = xmin + (xf[i] * (xmax - xmin));
-            yf[i] = ymin + (yf[i] * (ymax - ymin));
+            if (w > h) {
+               xf[i] = xmin + (xf[i] * (xmax - xmin));
+               yf[i] = ymin + (yf[i] * (ymax - ymin)) * ratio;
+            }
+            else if (h > w) {
+               xf[i] = xmin + (xf[i] * (xmax - xmin)) * ratio;
+               yf[i] = ymin + (yf[i] * (ymax - ymin));
+            }
+            else {
+               xf[i] = xmin + (xf[i] * (xmax - xmin));
+               yf[i] = ymin + (yf[i] * (ymax - ymin));
+            }
+            if (logx && xf[i] <= 0.0) xf[i] = xmin;
+            if (logy && yf[i] <= 0.0) yf[i] = ymin;
          }
          var excl = d3.range(nf).map(function(p) {
             return {
