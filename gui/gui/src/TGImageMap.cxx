@@ -384,7 +384,7 @@ void TGRegionWithId::DisplayPopup()
 {
    // Display popup menu associated with this region.
 
-   if (fPopup) fPopup->PlaceMenu(gPointerX, gPointerY, kFALSE, kTRUE);
+   if (fPopup) fPopup->PlaceMenu(gPointerX, gPointerY, kTRUE, kTRUE);
 }
 
 //______________________________________________________________________________
@@ -593,7 +593,7 @@ Bool_t TGImageMap::HandleButton(Event_t *event)
                RegionClicked(region->GetId());
             else if (event->fCode == kButton3 ) {
                pop = region->GetPopup();
-               if (pop) pop->PlaceMenu(gPointerX, gPointerY, kFALSE, kTRUE);
+               if (pop) pop->PlaceMenu(gPointerX, gPointerY, kTRUE, kTRUE);
             }
          }
          return kTRUE;

@@ -5735,7 +5735,7 @@ out:
    fPimpl->fLastPopupAction = kNoneAct;
    fPimpl->fPlacePopup = kTRUE;
 
-   fFrameMenu->PlaceMenu(x, y, kFALSE, kTRUE);
+   fFrameMenu->PlaceMenu(x, y, kTRUE, kTRUE);
 }
 
 //______________________________________________________________________________
@@ -5774,7 +5774,7 @@ void TGuiBldDragManager::Menu4Lasso(Int_t x, Int_t y)
 
    fPimpl->fLastPopupAction = kNoneAct;
    fPimpl->fPlacePopup = kTRUE;
-   fLassoMenu->PlaceMenu(x, y, kFALSE, kTRUE);
+   fLassoMenu->PlaceMenu(x, y, kTRUE, kTRUE);
 }
 
 //______________________________________________________________________________
