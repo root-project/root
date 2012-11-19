@@ -2062,6 +2062,7 @@ function createFillPatterns(svg, id, line_color) {
                .y(function(d) { return graph.y(d.y);});
          }
          if (exclusionGraph) {
+            /* first draw exclusion area, and then the line */
             showMarker = false;
             if (graph['fFillStyle'] > 3000 && graph['fFillStyle'] <= 3025) {
                createFillPatterns(vis, graph['fFillStyle'], root_colors[graph['fFillColor']]);
@@ -2092,7 +2093,6 @@ function createFillPatterns(svg, id, line_color) {
                .style("fill", "none");
          }
          if (graph['_typename'] == 'JSROOTIO.TGraphErrors' && draw_errors) {
-
             /* Add x-error indicators */
             g.selectAll("error_x")
                .data(graph.bins)
@@ -2126,6 +2126,7 @@ function createFillPatterns(svg, id, line_color) {
                .style("stroke", root_colors[graph['fLineColor']])
                .style("stroke-width", graph['fLineWidth']);
 
+            /* Add y-error indicators */
             g.selectAll("error_y")
                .data(graph.bins)
                .enter()
@@ -2159,6 +2160,7 @@ function createFillPatterns(svg, id, line_color) {
                .style("stroke-width", graph['fLineWidth']);
          }
          if (showMarker) {
+            /* Add markers */
             var filled = false;
             if ((graph['fMarkerStyle'] == 8) ||
                 (graph['fMarkerStyle'] > 19 && graph['fMarkerStyle'] < 24) ||
