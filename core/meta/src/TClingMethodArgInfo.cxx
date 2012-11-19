@@ -115,27 +115,29 @@ const char *TClingMethodArgInfo::DefaultValue() const
    static std::string buf;
    buf.clear();
    llvm::raw_string_ostream out(buf);
-   if (expr) {
-      bool implicitInit = false;
-      if (const clang::CXXConstructExpr *construct =
-               llvm::dyn_cast<clang::CXXConstructExpr>(expr)) {
-         implicitInit = (pvd->getInitStyle() == clang::VarDecl::CallInit) &&
-                        (construct->getNumArgs() == 0) &&
-                        !construct->isListInitialization();
+   if (!expr) {
+      // CINT returned NULL for non-defaulted args.
+      return 0;
+   }
+   bool implicitInit = false;
+   if (const clang::CXXConstructExpr *construct =
+       llvm::dyn_cast<clang::CXXConstructExpr>(expr)) {
+      implicitInit = (pvd->getInitStyle() == clang::VarDecl::CallInit) &&
+         (construct->getNumArgs() == 0) &&
+         !construct->isListInitialization();
+   }
+   if (!implicitInit) {
+      if (pvd->getInitStyle() == clang::VarDecl::CallInit) {
+         //out << "(";
       }
-      if (!implicitInit) {
-         if (pvd->getInitStyle() == clang::VarDecl::CallInit) {
-            //out << "(";
-         }
-         else if (pvd->getInitStyle() == clang::VarDecl::CInit) {
-            //out << " = ";
-         }
-         expr->printPretty(out, 0, policy, /*Indentation=*/0);
-         if (pvd->getInitStyle() == clang::VarDecl::CallInit) {
-            //out << ")";
-         }
-         out.flush();
+      else if (pvd->getInitStyle() == clang::VarDecl::CInit) {
+         //out << " = ";
       }
+      expr->printPretty(out, 0, policy, /*Indentation=*/0);
+      if (pvd->getInitStyle() == clang::VarDecl::CallInit) {
+         //out << ")";
+      }
+      out.flush();
    }
    return buf.c_str();
 }
