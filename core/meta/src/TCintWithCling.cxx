@@ -2194,11 +2194,11 @@ const char* TCintWithCling::GetTopLevelMacroName() const
 {
    // Return the file name of the current un-included interpreted file.
    // See the documentation for GetCurrentMacroName().
-   G__SourceFileInfo srcfile(G__get_ifile()->filenum);
-   while (srcfile.IncludedFrom().IsValid()) {
-      srcfile = srcfile.IncludedFrom();
-   }
-   return srcfile.Name();
+
+   Warning("GetTopLevelMacroName", "Must change return type!");
+   static std::string sMacroName;
+   sMacroName = fMetaProcessor->getTopExecutingFile();
+   return sMacroName.c_str();
 }
 
 //______________________________________________________________________________
@@ -2209,12 +2209,12 @@ const char* TCintWithCling::GetCurrentMacroName() const
    // GetCurrentMacroName() and GetTopLevelMacroName():
    // BEGIN_HTML <!--
    /* -->
-      <span style="color:#ffffff;background-color:#7777ff;padding-left:0.3em;padding-right:0.3em">inclfile.h</span>
+      <span style="color:#ffffff;background-color:#7777ff;padding-left:0.3em;padding-right:0.3em">inclfile.C</span>
       <!--div style="border:solid 1px #ffff77;background-color: #ffffdd;float:left;padding:0.5em;margin-bottom:0.7em;"-->
       <div class="code">
       <pre style="margin:0pt">#include &lt;iostream&gt;
-   void inclfunc() {
-   std::cout &lt;&lt; "In inclfile.h" &lt;&lt; std::endl;
+   void inclfile() {
+   std::cout &lt;&lt; "In inclfile.C" &lt;&lt; std::endl;
    std::cout &lt;&lt; "  TCintWithCling::GetCurrentMacroName() returns  " &lt;&lt;
       TCintWithCling::GetCurrentMacroName() &lt;&lt; std::endl;
    std::cout &lt;&lt; "  TCintWithCling::GetTopLevelMacroName() returns " &lt;&lt;
@@ -2224,15 +2224,14 @@ const char* TCintWithCling::GetCurrentMacroName() const
       <span style="color:#ffffff;background-color:#7777ff;padding-left:0.3em;padding-right:0.3em">mymacro.C</span>
       <div style="border:solid 1px #ffff77;background-color: #ffffdd;float:left;padding:0.5em;margin-bottom:0.7em;">
       <pre style="margin:0pt">#include &lt;iostream&gt;
-   #include "inclfile.h"
    void mymacro() {
    std::cout &lt;&lt; "In mymacro.C" &lt;&lt; std::endl;
    std::cout &lt;&lt; "  TCintWithCling::GetCurrentMacroName() returns  " &lt;&lt;
       TCintWithCling::GetCurrentMacroName() &lt;&lt; std::endl;
    std::cout &lt;&lt; "  TCintWithCling::GetTopLevelMacroName() returns " &lt;&lt;
       TCintWithCling::GetTopLevelMacroName() &lt;&lt; std::endl;
-   std::cout &lt;&lt; "  Now calling inclfunc..." &lt;&lt; std::endl;
-   inclfunc();
+   std::cout &lt;&lt; "  Now calling inclfile..." &lt;&lt; std::endl;
+   gInterpreter->ProcessLine(".x inclfile.C");;
    }</pre></div>
    <div style="clear:both"></div>
    <!-- */
@@ -2243,11 +2242,15 @@ const char* TCintWithCling::GetCurrentMacroName() const
    // In mymacro.C
    //   TCintWithCling::GetCurrentMacroName() returns  ./mymacro.C
    //   TCintWithCling::GetTopLevelMacroName() returns ./mymacro.C
-   //   Now calling inclfunc...
+   //   Now calling inclfile...
    // In inclfile.h
-   //   TCintWithCling::GetCurrentMacroName() returns  inclfile.h
+   //   TCintWithCling::GetCurrentMacroName() returns  inclfile.C
    //   TCintWithCling::GetTopLevelMacroName() returns ./mymacro.C
-   return G__get_ifile()->name;
+
+   Warning("GetCurrentMacroName", "Must change return type!");
+   static std::string sMacroName;
+   sMacroName = fMetaProcessor->getCurrentlyExecutingFile();
+   return sMacroName.c_str();
 }
 
 //______________________________________________________________________________
