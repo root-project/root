@@ -15,6 +15,8 @@ int compile(int type, const char *what)
       return !gSystem->CompileMacro("float16.cxx","k",lib);
    } else if (type==1) {
       return !gSystem->CompileMacro("maptovector.cxx","k",lib);
+   } else {
+      return 0;
    }
 }
 
@@ -23,8 +25,7 @@ int compile(const char *what)
    const char *stltypes[] = { "vec", "list", "map", "multimap" };
    for( int i = 0; i < sizeof(stltypes)/sizeof(char*); ++i ) {
       if (strcmp(what,stltypes[i])==0) {
-         compile(1,what);
-         return;
+         return compile(1,what);
       }
    }
    return compile(0,what);
