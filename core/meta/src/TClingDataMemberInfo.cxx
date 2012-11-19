@@ -67,9 +67,10 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
    }
 }
 
-TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp, const clang::ValueDecl *ValD)
-: fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), 
-fSingleDecl(ValD) {
+TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp, 
+                                           const clang::ValueDecl *ValD)
+  : fInterp(interp), fClassInfo(new TClingClassInfo(interp)), fFirstTime(true), 
+    fTitle(""), fSingleDecl(ValD) {
    using namespace llvm;
    assert((isa<TranslationUnitDecl>(ValD->getDeclContext()) || 
            isa<EnumConstantDecl>(ValD)) && "Not TU?");
