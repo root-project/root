@@ -23,9 +23,32 @@ These versions are not available in regular distributions yet (except for <a hre
 
 <h3>Core Libraries</h3>
 
+<h4>Cling vs CINT</h4>
+
+Cling follows the C++ standard much more strictly than CINT.   In
+particular some code that used to run with CINT will either issue
+new warnings or new compilations error.
+
+For example when CINT was parsing Namespace::Symbol it would not
+only apply the C++ search rules but also search in the outer
+scopes and for this example could actually return ::Symbol instead
+of (as Cling now does) issuing a compilation error.
+
+<h4>Cling not yet implemented features</h4>
+
+In this release Cling does not support the following (but we intended
+to re-introduce them soon) features:
+
+<ul><li>Unloading of script and shared libraries</li>
+    <li>Discovery of symbols that are declared but not implemented
+    being delayed until run-time. I.e.
+<pre>void foo();
+void run() { dlopen("foo.so"); foo(); }</pre>does not work in this release.</li>
+</ul>
+
 <h4>TInterpreter</h4>
 
-The following are no longer supported and are now only issueing error
+The following are no longer supported and are now only issuing error
 messages:
 <ul><li>Getgvp</li>
     <li>Setgvp</li>
