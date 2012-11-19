@@ -1474,7 +1474,7 @@ void TCintWithCling::RegisterLoadedSharedLibrary(const char* filename)
    // Check that this is not a system library
    if (!strncmp(filename, "/usr/lib/system/", 16)
        || !strncmp(filename, "/usr/lib/libc++", 15)
-       // should we hide this? || !strncmp(filename, "/System/Library/Frameworks/", 27)
+       || !strncmp(filename, "/System/Library/Frameworks/", 27)
        || !strncmp(filename, "/System/Library/PrivateFrameworks/", 34))
       return;
 #endif
