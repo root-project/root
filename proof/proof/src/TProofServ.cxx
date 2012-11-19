@@ -3061,6 +3061,7 @@ Int_t TProofServ::SetupCommon()
                fGlobalPackageDirList = new THashList();
                fGlobalPackageDirList->SetOwner();
             }
+            ResolveKeywords(ldir);
             fGlobalPackageDirList->Add(new TNamed(key,ldir));
             Info("SetupCommon", "directory for global packages %s added to the list",
                           ldir.Data());
@@ -7080,12 +7081,18 @@ Int_t TProofServ::Fork()
 //______________________________________________________________________________
 void TProofServ::ResolveKeywords(TString &fname, const char *path)
 {
-   // Replace <ord>, <user>, <u>, <group>, <stag>, <qnum> and <file> placeholders in fname
+   // Replace <ord>, <user>, <u>, <group>, <stag>, <qnum>, <file>, <rver> and
+   // <build> placeholders in fname.
+   // Here, <rver> is the root version in integer form, e.g. 53403, and <build> a
+   // string includign version, architecture and compiler version, e.g.
+   // '53403_linuxx8664gcc_gcc46' .
 
    // Replace <user>, if any
    if (fname.Contains("<user>")) {
       if (gProofServ && gProofServ->GetUser() && strlen(gProofServ->GetUser())) {
          fname.ReplaceAll("<user>", gProofServ->GetUser());
+      } else if (gProof && gProof->GetUser() && strlen(gProof->GetUser())) {
+         fname.ReplaceAll("<user>", gProof->GetUser());
       } else {
          fname.ReplaceAll("<user>", "nouser");
       }
@@ -7095,23 +7102,32 @@ void TProofServ::ResolveKeywords(TString &fname, const char *path)
       if (gProofServ && gProofServ->GetUser() && strlen(gProofServ->GetUser())) {
          TString u(gProofServ->GetUser()[0]);
          fname.ReplaceAll("<u>", u);
+      } else if (gProof && gProof->GetUser() && strlen(gProof->GetUser())) {
+         TString u(gProof->GetUser()[0]);
+         fname.ReplaceAll("<u>", u);
       } else {
          fname.ReplaceAll("<u>", "n");
       }
    }
    // Replace <group>, if any
    if (fname.Contains("<group>")) {
-      if (gProofServ && gProofServ->GetGroup() && strlen(gProofServ->GetGroup()))
+      if (gProofServ && gProofServ->GetGroup() && strlen(gProofServ->GetGroup())) {
          fname.ReplaceAll("<group>", gProofServ->GetGroup());
-      else
+      } else if (gProof && gProof->GetGroup() && strlen(gProof->GetGroup())) {
+         fname.ReplaceAll("<group>", gProof->GetGroup());
+      } else {
          fname.ReplaceAll("<group>", "default");
+      }
    }
    // Replace <stag>, if any
    if (fname.Contains("<stag>")) {
-      if (gProofServ && gProofServ->GetSessionTag() && strlen(gProofServ->GetSessionTag()))
+      if (gProofServ && gProofServ->GetSessionTag() && strlen(gProofServ->GetSessionTag())) {
          fname.ReplaceAll("<stag>", gProofServ->GetSessionTag());
-      else
+      } else if (gProof && gProof->GetSessionTag() && strlen(gProof->GetSessionTag())) {
+         fname.ReplaceAll("<stag>", gProof->GetSessionTag());
+      } else {
          ::Warning("TProofServ::ResolveKeywords", "session tag undefined: ignoring");
+      }
    }
    // Replace <ord>, if any
    if (fname.Contains("<ord>")) {
@@ -7130,6 +7146,17 @@ void TProofServ::ResolveKeywords(TString &fname, const char *path)
    // Replace <file>, if any
    if (fname.Contains("<file>") && path && strlen(path) > 0) {
       fname.ReplaceAll("<file>", path);
+   }
+   // Replace <rver>, if any
+   if (fname.Contains("<rver>")) {
+      TString v = TString::Format("%d", gROOT->GetVersionInt());
+      fname.ReplaceAll("<rver>", v);
+   }
+   // Replace <build>, if any
+   if (fname.Contains("<build>")) {
+      TString b = TString::Format("%d_%s_%s", gROOT->GetVersionInt(), gSystem->GetBuildArch(),
+                                  gSystem->GetBuildCompilerVersion());
+      fname.ReplaceAll("<build>", b);
    }
 }
 

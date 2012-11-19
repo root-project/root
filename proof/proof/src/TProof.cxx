@@ -890,6 +890,7 @@ Int_t TProof::Init(const char *, const char *conffile,
          Int_t from = 0;
          TString ldir;
          while (globpack.Tokenize(ldir, from, ":")) {
+            TProofServ::ResolveKeywords(ldir);
             if (gSystem->AccessPathName(ldir, kReadPermission)) {
                Warning("Init", "directory for global packages %s does not"
                                " exist or is not readable", ldir.Data());
