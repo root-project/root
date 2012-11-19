@@ -479,8 +479,8 @@ void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
       nextto = NextTimeOut(kTRUE);
       
       if (pendingOnly) {
-         if (fFileHandler && !fFileHandler->GetSize())
-            return;
+         //if (fFileHandler && !fFileHandler->GetSize())
+         //   return;
          nextto = 0;
          pollOnce = kFALSE;
       }
