@@ -3390,7 +3390,7 @@ MethodArgInfo_t *TCint::MethodArgInfo_Factory(MethodInfo_t *minfo) const
 {
    // Interface to CINT function
 
-   G__MethodArgInfo *info = new G__MethodArgInfo((G__MethodInfo*)minfo);
+   G__MethodArgInfo *info = new G__MethodArgInfo(*(G__MethodInfo*)minfo);
    return info;
 }
 //______________________________________________________________________________
