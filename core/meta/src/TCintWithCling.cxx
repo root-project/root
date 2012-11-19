@@ -3931,6 +3931,13 @@ const char* TCintWithCling::MethodArgInfo_TypeName(MethodArgInfo_t* marginfo) co
    return info->TypeName();
 }
 
+//______________________________________________________________________________
+const char* TCintWithCling::MethodArgInfo_TrueTypeName(MethodArgInfo_t* marginfo) const
+{
+   TClingMethodArgInfo* info = (TClingMethodArgInfo*) marginfo;
+   return info->Type()->TrueName(*fNormalizedCtxt);
+}
+
 
 //______________________________________________________________________________
 //
@@ -4041,6 +4048,13 @@ bool TCintWithCling::TypedefInfo_IsValid(TypedefInfo_t* tinfo) const
 {
    TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
    return TClinginfo->IsValid();
+}
+
+//______________________________________________________________________________
+Int_t TCintWithCling::TypedefInfo_Next(TypedefInfo_t* tinfo) const
+{
+   TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
+   return TClinginfo->Next();
 }
 
 //______________________________________________________________________________

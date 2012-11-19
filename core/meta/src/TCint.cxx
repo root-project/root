@@ -3250,7 +3250,8 @@ MethodInfo_t *TCint::MethodInfo_Factory(ClassInfo_t* clinfo) const
 {
    // Interface to CINT function
 
-   G__MethodInfo *info = new G__MethodInfo((G__ClassInfo*)clinfo);
+   G__MethodInfo *info = new G__MethodInfo();
+   info->Init(*(G__ClassInfo*)clinfo);
    return info;
 }
 //______________________________________________________________________________
@@ -3450,6 +3451,14 @@ const char *TCint::MethodArgInfo_TypeName(MethodArgInfo_t *marginfo) const
    G__MethodArgInfo *info = (G__MethodArgInfo*)marginfo;
    return info->Type()->Name();
 }
+//______________________________________________________________________________
+const char *TCint::MethodArgInfo_TrueTypeName(MethodArgInfo_t *marginfo) const
+{
+   // Interface to CINT function
+
+   G__MethodArgInfo *info = (G__MethodArgInfo*)marginfo;
+   return info->Type()->TrueName();
+}
 
 
 //______________________________________________________________________________
@@ -3577,6 +3586,14 @@ Bool_t  TCint::TypedefInfo_IsValid(TypedefInfo_t *tinfo) const
 
    G__TypedefInfo *info = (G__TypedefInfo*)tinfo;
    return info->IsValid();
+}
+//______________________________________________________________________________
+Int_t  TCint::TypedefInfo_Next(TypedefInfo_t *tinfo) const
+{
+   // Interface to CINT function
+
+   G__TypedefInfo *info = (G__TypedefInfo*)tinfo;
+   return info->Next();
 }
 //______________________________________________________________________________
 Long_t  TCint::TypedefInfo_Property(TypedefInfo_t *tinfo) const

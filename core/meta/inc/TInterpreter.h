@@ -265,6 +265,7 @@ public:
    virtual const char *MethodArgInfo_DefaultValue(MethodArgInfo_t * /* marginfo */) const {return 0;}
    virtual const char *MethodArgInfo_Name(MethodArgInfo_t * /* marginfo */) const {return 0;}
    virtual const char *MethodArgInfo_TypeName(MethodArgInfo_t * /* marginfo */) const {return 0;}
+   virtual const char *MethodArgInfo_TrueTypeName(MethodArgInfo_t * /* marginfo */) const {return 0;}
 
                   
    // G__TypeInfo interface            
@@ -286,6 +287,7 @@ public:
    virtual TypedefInfo_t  *TypedefInfo_FactoryCopy(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual void   TypedefInfo_Init(TypedefInfo_t * /* tinfo */, const char * /* funcname */) const {;}
    virtual Bool_t TypedefInfo_IsValid(TypedefInfo_t * /* tinfo */) const {return 0;}
+   virtual int    TypedefInfo_Next(TypedefInfo_t* /*tinfo*/) const {return 0;}
    virtual Long_t TypedefInfo_Property(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual int    TypedefInfo_Size(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual const char *TypedefInfo_TrueName(TypedefInfo_t * /* tinfo */) const {return 0;}
