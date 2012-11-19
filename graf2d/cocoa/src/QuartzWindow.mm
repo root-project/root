@@ -1153,6 +1153,28 @@ void print_mask_info(ULong_t mask)
 
 //... forwards to fContentView.
 
+//______________________________________________________________________________
+- (void) setFBackgroundPixel : (unsigned long) backgroundColor
+{
+   assert(fContentView != nil && "setFBackgroundPixal, fContentView is nil");
+
+   if (!fShapeCombineMask) {
+      CGFloat rgba[] = {0., 0., 0., 1.};
+      X11::PixelToRGB(backgroundColor, rgba);
+
+      [self setBackgroundColor : [NSColor colorWithColorSpace : [NSColorSpace deviceRGBColorSpace] components : rgba count : 4]];
+   }
+   
+   fContentView.fBackgroundPixel = backgroundColor;
+}
+
+//______________________________________________________________________________
+- (unsigned long) fBackgroundPixel
+{
+   assert(fContentView != nil && "fBackgroundPixel, fContentView is nil");
+
+   return fContentView.fBackgroundPixel;
+}
 
 //______________________________________________________________________________
 - (int) fMapState

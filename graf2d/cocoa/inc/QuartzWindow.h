@@ -88,6 +88,7 @@
 /////////////////////////////////////////////////////////////////
 //SetWindowAttributes_t/WindowAttributes_t
 
+@property (nonatomic, assign) unsigned long fBackgroundPixel;
 @property (nonatomic, readonly) int         fMapState;
 
 //End of SetWindowAttributes_t/WindowAttributes_t
