@@ -3250,8 +3250,7 @@ MethodInfo_t *TCint::MethodInfo_Factory(ClassInfo_t* clinfo) const
 {
    // Interface to CINT function
 
-   G__MethodInfo *info = new G__MethodInfo();
-   info->Init(*(G__ClassInfo*)clinfo);
+   G__MethodInfo *info = new G__MethodInfo(*(G__ClassInfo*)clinfo);
    return info;
 }
 //______________________________________________________________________________
