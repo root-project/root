@@ -148,6 +148,9 @@ Int_t TProofLite::Init(const char *, const char *conffile,
 
    fValid = kFALSE;
 
+   // Connected to terminal?
+   fTty = (isatty(0) == 0 || isatty(1) == 0) ? kFALSE : kTRUE;   
+
    if (TestBit(TProof::kIsMaster)) {
       // Fill default conf file and conf dir
       if (!conffile || strlen(conffile) == 0)

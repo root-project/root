@@ -316,12 +316,16 @@ private:
    TString      fExp;
    Int_t        fIdx;
    Int_t        fNWrks;
+   Int_t        fLastNWrks;
    static char  fgCr[4];
 public:
-   TProofMergePrg() : fExp(), fIdx(-1), fNWrks(-1) { }
+   TProofMergePrg() : fExp(), fIdx(-1), fNWrks(-1), fLastNWrks(-1) { }
 
-   const char  *Export() { fExp.Form("%c (%d workers still sending)   ", fgCr[fIdx], fNWrks);
-                           return fExp.Data(); }
+   const char  *Export(Bool_t &changed) {
+                  fExp.Form("%c (%d workers still sending)   ", fgCr[fIdx], fNWrks);
+                  changed = (fLastNWrks != fNWrks || fLastNWrks == -1) ? kTRUE : kFALSE;
+                  fLastNWrks = fNWrks;
+                  return fExp.Data(); }
    void         DecreaseNWrks() { fNWrks--; }
    void         IncreaseNWrks() { fNWrks++; }
    void         IncreaseIdx() { fIdx++; if (fIdx == 4) fIdx = 0; }
@@ -480,6 +484,7 @@ private:
    };
 
    Bool_t          fValid;           //is this a valid proof object
+   Bool_t          fTty;             //TRUE if connected to a terminal
    TString         fMaster;          //master server ("" if a master); used in the browser
    TString         fWorkDir;         //current work directory on remote servers
    TString         fGroup;           //PROOF group of this user
@@ -932,11 +937,12 @@ public:
    Float_t     GetRealTime() const { return fRealTime; }
    Float_t     GetCpuTime() const { return fCpuTime; }
 
-   Bool_t      IsLite() const { return (fServType == TProofMgr::kProofLite); }
-   Bool_t      IsProofd() const { return (fServType == TProofMgr::kProofd); }
+   Bool_t      IsLite() const { return (fServType == TProofMgr::kProofLite) ? kTRUE : kFALSE; }
+   Bool_t      IsProofd() const { return (fServType == TProofMgr::kProofd) ? kTRUE : kFALSE; }
    Bool_t      IsFolder() const { return kTRUE; }
    Bool_t      IsMaster() const { return fMasterServ; }
    Bool_t      IsValid() const { return fValid; }
+   Bool_t      IsTty() const { return fTty; }
    Bool_t      IsParallel() const { return GetParallel() > 0 ? kTRUE : kFALSE; }
    Bool_t      IsIdle() const { return (fNotIdle <= 0) ? kTRUE : kFALSE; }
    Bool_t      IsWaiting() const { return fIsWaiting; }

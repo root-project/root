@@ -102,7 +102,7 @@ Bool_t TProofInterruptHandler::Notify()
 {
    // TProof interrupt handler.
 
-   if (isatty(0) == 0 || isatty(1) == 0 || fProof->GetRemoteProtocol() < 22) {
+   if (!fProof->IsTty() || fProof->GetRemoteProtocol() < 22) {
 
       // Cannot ask the user : abort any remote processing
       fProof->StopProcess(kTRUE);
@@ -111,7 +111,7 @@ Bool_t TProofInterruptHandler::Notify()
       // Real stop or request to switch to asynchronous?
       const char *a = 0;
       if (fProof->GetRemoteProtocol() < 22) {
-         a = Getline("\nSwith to asynchronous mode not supported remotely:"
+         a = Getline("\nSwitch to asynchronous mode not supported remotely:"
                      "\nEnter S/s to stop, Q/q to quit, any other key to continue: ");
       } else {
          a = Getline("\nEnter A/a to switch asynchronous, S/s to stop, Q/q to quit,"
@@ -498,6 +498,7 @@ void TProof::InitMembers()
    // Default initializations
 
    fValid = kFALSE;
+   fTty = kFALSE;
    fRecvMessages = 0;
    fSlaveInfo = 0;
    fMasterServ = kFALSE;
@@ -714,6 +715,9 @@ Int_t TProof::Init(const char *, const char *conffile,
    R__ASSERT(gSystem);
 
    fValid = kFALSE;
+
+   // Connected to terminal?
+   fTty = (isatty(0) == 0 || isatty(1) == 0) ? kFALSE : kTRUE;
 
    // If in attach mode, options is filled with additional info
    Bool_t attach = kFALSE;
@@ -2995,11 +2999,13 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
                      // Increment counter on the client side
                      fMergePrg.IncreaseIdx();
                      TString msg;
-                     msg.Form("%s: merging output objects ... %s", prefix, fMergePrg.Export());
-                     if (gProofServ)
+                     Bool_t changed = kFALSE;
+                     msg.Form("%s: merging output objects ... %s", prefix, fMergePrg.Export(changed));
+                     if (gProofServ) {
                         gProofServ->SendAsynMessage(msg.Data(), kFALSE);
-                     else
+                     } else if (IsTty() || changed) {
                         fprintf(stderr, "%s\r", msg.Data());
+                     }
                      // Add or merge it
                      if ((fPlayer->AddOutputObject(o) == 1)) {
                         // Remove the object if it has been merged
@@ -6792,7 +6798,7 @@ void TProof::ClearData(UInt_t what, const char *dsname)
    // Check whether we need to prompt
    TString prompt, a("Y");
    Bool_t force = (what & kForceClear) ? kTRUE : kFALSE;
-   Bool_t doask = (!force && isatty(0) != 0 && isatty(1) != 0) ? kTRUE : kFALSE;
+   Bool_t doask = (!force && IsTty()) ? kTRUE : kFALSE;
 
    // If all just send the request
    if ((what & TProof::kPurge)) {
