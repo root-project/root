@@ -2494,10 +2494,10 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
      Double_t x0=GetLcurveX();
      Double_t y0=GetLcurveY();
      Info("ScanLcurve","logtau=-Infinity X=%lf Y=%lf",x0,y0);
-     if(!finite(x0)) {
+     if(!TMath::Finite(x0)) {
         Fatal("ScanLcurve","problem (too few input bins?) X=%f",x0);
      }
-     if(!finite(y0)) {
+     if(!TMath::Finite(y0)) {
         Fatal("ScanLcurve","problem (missing regularisation?) Y=%f",y0);
      }
      {
@@ -2506,7 +2506,7 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
            0.5*(TMath::Log10(fChi2A+3.*TMath::Sqrt(GetNdf()+1.0))
                 -GetLcurveY());
         DoUnfold(TMath::Power(10.,logTau));
-        if((!finite(GetLcurveX())) ||(!finite(GetLcurveY()))) {
+        if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
            Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
                  GetLcurveX(),GetLcurveY());
         }
@@ -2525,7 +2525,7 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
            x0=GetLcurveX();
            Double_t logTau=(*curve.begin()).first-0.5;
            DoUnfold(TMath::Power(10.,logTau));
-           if((!finite(GetLcurveX())) ||(!finite(GetLcurveY()))) {
+           if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
               Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
                     GetLcurveX(),GetLcurveY());
            }
@@ -2547,7 +2547,7 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
                (curve.size()<2))) {
            Double_t logTau=(*curve.begin()).first-0.5;
            DoUnfold(TMath::Power(10.,logTau));
-           if((!finite(GetLcurveX())) ||(!finite(GetLcurveY()))) {
+           if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
               Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
                     GetLcurveX(),GetLcurveY());
            }
@@ -2562,7 +2562,7 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
      if(nPoint>1) {
         // insert maximum tau
         DoUnfold(TMath::Power(10.,logTauMax));
-        if((!finite(GetLcurveX())) ||(!finite(GetLcurveY()))) {
+        if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
            Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
                  GetLcurveX(),GetLcurveY());
         }
@@ -2572,7 +2572,7 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
      }
      // insert minimum tau
      DoUnfold(TMath::Power(10.,logTauMin));
-     if((!finite(GetLcurveX())) ||(!finite(GetLcurveY()))) {
+     if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
         Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
               GetLcurveX(),GetLcurveY());
      }
@@ -2607,7 +2607,7 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
       i0=i1;
     }
     DoUnfold(TMath::Power(10.,logTau));
-    if((!finite(GetLcurveX())) ||(!finite(GetLcurveY()))) {
+    if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
        Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
              GetLcurveX(),GetLcurveY());
     }
@@ -2746,7 +2746,7 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
     delete[] cCi;
     logTauFin=cTmax;
     DoUnfold(TMath::Power(10.,logTauFin));
-    if((!finite(GetLcurveX())) ||(!finite(GetLcurveY()))) {
+    if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
        Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
              GetLcurveX(),GetLcurveY());
     }

@@ -1178,7 +1178,7 @@ Int_t TUnfoldDensity::ScanTau
             0.5*(TMath::Log10(GetChi2A()+3.*TMath::Sqrt(GetNdf()+1.0))
                  -GetLcurveY());
          DoUnfold(TMath::Power(10.,logTau));
-         if((!finite(GetLcurveX())) ||(!finite(GetLcurveY()))) {
+         if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
             Fatal("ScanTau","problem (missing regularisation?) X=%f Y=%f",
                   GetLcurveX(),GetLcurveY());
          }
