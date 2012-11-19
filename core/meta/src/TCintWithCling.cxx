@@ -1466,10 +1466,18 @@ void TCintWithCling::RegisterLoadedSharedLibrary(const char* filename)
    // Ignore NULL filenames, aka "the process".
    if (!filename) return;
 
-   // Tell the interpreter that this library is available.
-
+   // Tell the interpreter that this library is available; all libraries can be
+   // used to resolve symbols.
    fInterpreter->loadLibrary(filename, true /*permanent*/);
 
+#if defined(R__MACOSX)
+   // Check that this is not a system library
+   if (!strncmp(filename, "/usr/lib/system/", 16)
+       || !strncmp(filename, "/usr/lib/libc++", 15)
+       // should we hide this? || !strncmp(filename, "/System/Library/Frameworks/", 27)
+       || !strncmp(filename, "/System/Library/PrivateFrameworks/", 34))
+      return;
+#endif
    // Update string of available libraries.
    if (!fSharedLibs.IsNull()) {
       fSharedLibs.Append(" ");
