@@ -23,16 +23,16 @@
 
 #include "TString.h"
 class TObject ;
-#include "TMethodCall.h"
 
 class RooGenCategory : public RooAbsCategory {
 public:
+  typedef const char* (*RooGetCategoryFunc_t)(RooArgSet&);
   // Constructors etc.
   inline RooGenCategory() { 
     // Default constructor
     // coverity[UNINIT_CTOR]
   }
-  RooGenCategory(const char *name, const char *title, void* userFunc, RooArgSet& catList);
+  RooGenCategory(const char *name, const char *title, RooGetCategoryFunc_t userFunc, RooArgSet& catList);
   RooGenCategory(const RooGenCategory& other, const char *name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooGenCategory(*this,newname); }
   virtual ~RooGenCategory();
@@ -54,12 +54,10 @@ protected:
   RooCategoryProxy _superCatProxy ; // Proxy for super category
   Int_t *_map ;                     //! Super-index to generic-index map
 
-  TString      _userFuncName ; // Name of user function
-  TMethodCall* _userFunc;      // CINT pointer to user function
-  Long_t _userArgs[1];         // Placeholder for user function arguments
+  RooGetCategoryFunc_t _userFunc;      // CINT pointer to user function
                                  
-  virtual RooCatType evaluate() const ; 
-  ClassDef(RooGenCategory,1) // Generic category-to-category function based on user supplied mapping function
+  virtual RooCatType evaluate() const ;
+  ClassDef(RooGenCategory,2) // Generic category-to-category function based on user supplied mapping function
 };
 
 #endif

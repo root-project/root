@@ -32,21 +32,15 @@
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "TMethodCall.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
 #include "TString.h"
-#include "TInterpreter.h"  
 #include "RooGenCategory.h"
 #include "RooStreamParser.h"
 #include "RooMapCatEntry.h"
 #include "RooErrorHandler.h"
 #include "RooMsgService.h"
-
-#if ROOT_VERSION_CODE < ROOT_VERSION(5,20,00)
-#include "Api.h"
-#endif
 
 using namespace std;
 
@@ -55,25 +49,18 @@ ClassImp(RooGenCategory)
 
 
 //_____________________________________________________________________________
-RooGenCategory::RooGenCategory(const char *name, const char *title, void *userFunc, RooArgSet& catList) :
+RooGenCategory::RooGenCategory(const char *name, const char *title,
+                               RooGetCategoryFunc_t userFunc, RooArgSet& catList) :
   RooAbsCategory(name, title), 
   _superCat("superCat","Super Category",catList), 
-  _superCatProxy("superCatProxy","Super Category Proxy",this,_superCat), 
-  _map(0) 
+  _superCatProxy("superCatProxy","Super Category Proxy",this,_superCat),
+  _map(0),
+  _userFunc(userFunc)
 {
-  // Constructor with pointer to a CINT user mapping function and list of input categories
+  // Constructor with user mapping function and list of input categories
   // on which the user mapping function can operate
   
-  // Convert the function pointer into a parse object using the CINT
-  // dictionary in memory.
-
-#if ROOT_VERSION_CODE >= ROOT_VERSION(5,20,00)
-  _userFuncName = gCint->Getp2f2funcname(userFunc);
-#else
-  _userFuncName = G__p2f2funcname(userFunc);
-#endif
-
-  if(_userFuncName.IsNull()) {
+  if(!_userFunc) {
     coutE(InputArguments) << GetName() << ": cannot find dictionary info for (void*)"
 			  << (void*)userFunc << endl;
     return;
@@ -87,7 +74,7 @@ RooGenCategory::RooGenCategory(const char *name, const char *title, void *userFu
 RooGenCategory::RooGenCategory(const RooGenCategory& other, const char *name) :
   RooAbsCategory(other,name), _superCat(other._superCat), 
   _superCatProxy("superCatProxy","Super Category Proxy",this,_superCat),
-  _map(0), _userFuncName(other._userFuncName)
+  _map(0), _userFunc(other._userFunc)
 {
   // Copy constructor
 
@@ -105,10 +92,6 @@ void RooGenCategory::initialize()
 
   // This is a static link, no need for redirection support
   addServer(_superCat,kTRUE,kTRUE) ;
-
-  _userFunc= new TMethodCall();
-  // We must use "RooArgSet*" instead of "RooArgSet&" here (why?)
-  _userFunc->InitWithPrototype(_userFuncName.Data(),"RooArgSet*"); 
 
   updateIndexList() ;
 }
@@ -136,13 +119,8 @@ TString RooGenCategory::evalUserFunc(RooArgSet *vars)
   // Utility function to evaluate (interpreted) user function
 
   assert(0 != _userFunc);
-  Long_t result;
-  _userArgs[0]= (Long_t)vars ;
-  _userFunc->SetParamPtrs(_userArgs);
-  _userFunc->Execute(result);
-  const char *text= (const char *)result;
-  return TString(text);
-} 
+  return TString((*_userFunc)(*vars));
+}
 
 
 
@@ -223,7 +201,6 @@ void RooGenCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, 
     TString moreIndent(indent) ;
     indent.Append("   ") ;
     ((RooSuperCategory&)_superCatProxy.arg()).inputCatList().printStream(os,kName|kClassName|kArgs,kSingleLine) ;
-    os << indent << "  User mapping function is 'const char* " << _userFuncName << "(RooArgSet*)'" << endl ;
   }
 }
 
