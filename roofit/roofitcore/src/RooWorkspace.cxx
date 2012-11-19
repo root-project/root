@@ -1473,7 +1473,7 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 #if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
   if (!(tc->GetClassInfo()->Property()&G__BIT_ISABSTRACT) && !tc->HasDefaultConstructor()) {
 #else
-  if (!(gCint->ClassInfo_Property(tc->GetClassInfo())&G__BIT_ISABSTRACT) && !tc->HasDefaultConstructor()) {
+  if (!(tc->Property() & kIsAbstract) && !tc->HasDefaultConstructor()) {
 #endif
     oocoutW(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") WARNING cannot import class " 
 				    << tc->GetName() << " : it cannot be persisted because it doesn't have a default constructor. Please fix " << endl ;
