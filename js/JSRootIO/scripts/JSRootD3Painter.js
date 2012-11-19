@@ -488,17 +488,18 @@ function doubleTap(elem, speed, distance) {
    }, false);
 };
 
-function createFillPatterns(svg, id, line_color) {
+function createFillPatterns(svg, id, color) {
    // create fill patterns - only if they don't exists yet
+   var line_color = JSROOTPainter.getRootColor(color);
    for (var i=0; i<defs[0][0]['childNodes'].length;++i) {
-      if (defs[0][0]['childNodes'][i]['id'] == "pat"+id &&
+      if (defs[0][0]['childNodes'][i]['id'] == "pat" + id + "_" + color &&
           defs[0][0]['childNodes'][i]['style']['stroke'] == line_color)
          return;
    }
    switch (id) {
       case 3001:
          defs.append('svg:pattern')
-            .attr("id", "pat3001")
+            .attr("id", "pat3001_"+color)
             .attr("patternUnits", "userSpaceOnUse")
             .attr("width", "3px")
             .attr("height", "2px")
@@ -524,7 +525,7 @@ function createFillPatterns(svg, id, line_color) {
          break;
       case 3002:
          defs.append('svg:pattern')
-            .attr("id", "pat3002")
+            .attr("id", "pat3002_"+color)
             .attr("patternUnits", "userSpaceOnUse")
             .attr("width", "4px")
             .attr("height", "2px")
@@ -544,7 +545,7 @@ function createFillPatterns(svg, id, line_color) {
          break;
       case 3003:
          defs.append('svg:pattern')
-            .attr("id", "pat3003")
+            .attr("id", "pat3003_"+color)
             .attr("patternUnits", "userSpaceOnUse")
             .attr("width", "4px")
             .attr("height", "4px")
@@ -564,7 +565,7 @@ function createFillPatterns(svg, id, line_color) {
          break;
       case 3004:
          defs.append('svg:pattern')
-            .attr("id", "pat3004")
+            .attr("id", "pat3004_"+color)
             .attr("patternUnits", "userSpaceOnUse")
             .attr("width", "8px")
             .attr("height", "8px")
@@ -579,7 +580,7 @@ function createFillPatterns(svg, id, line_color) {
          break;
       case 3005:
          defs.append('svg:pattern')
-            .attr("id", "pat3005")
+            .attr("id", "pat3005_"+color)
             .attr("patternUnits", "userSpaceOnUse")
             .attr("width", "8px")
             .attr("height", "8px")
@@ -594,7 +595,7 @@ function createFillPatterns(svg, id, line_color) {
          break;
       case 3006:
          defs.append('svg:pattern')
-            .attr("id", "pat3006")
+            .attr("id", "pat3006_"+color)
             .attr("patternUnits", "userSpaceOnUse")
             .attr("width", "4px")
             .attr("height", "4px")
@@ -609,7 +610,7 @@ function createFillPatterns(svg, id, line_color) {
          break;
       case 3007:
          defs.append('svg:pattern')
-            .attr("id", "pat3007")
+            .attr("id", "pat3007_"+color)
             .attr("patternUnits", "userSpaceOnUse")
             .attr("width", "4px")
             .attr("height", "4px")
@@ -624,7 +625,7 @@ function createFillPatterns(svg, id, line_color) {
          break;
       default: /* == 3004 */
          defs.append('svg:pattern')
-            .attr("id", "pat"+id)
+            .attr("id", "pat"+id+"_"+color)
             .attr("patternUnits", "userSpaceOnUse")
             .attr("width", "8px")
             .attr("height", "8px")
@@ -687,6 +688,10 @@ function createFillPatterns(svg, id, line_color) {
    /*
     * Helper functions
     */
+
+   JSROOTPainter.getRootColor = function(color) {
+      return root_colors[color];
+   };
 
    JSROOTPainter.padtoX = function(pad, x) {
       // Convert x from pad to X.
@@ -2065,13 +2070,13 @@ function createFillPatterns(svg, id, line_color) {
             /* first draw exclusion area, and then the line */
             showMarker = false;
             if (graph['fFillStyle'] > 3000 && graph['fFillStyle'] <= 3025) {
-               createFillPatterns(vis, graph['fFillStyle'], root_colors[graph['fFillColor']]);
+               createFillPatterns(vis, graph['fFillStyle'], graph['fFillColor']);
                g.append("svg:path")
                   .attr("class", "line")
                   .attr("d", line(excl))
                   .style("stroke", "none")
                   .style("stroke-width", ff)
-                  .style("fill", "url(#pat" + graph['fFillStyle'] + ")")
+                  .style("fill", "url(#pat" + graph['fFillStyle'] + "_" + graph['fFillColor'] + ")")
                   .style("antialias", "false");
             }
             else {
@@ -2422,13 +2427,13 @@ function createFillPatterns(svg, id, line_color) {
                   .interpolate("step-before")
 
                if (histo['fFillStyle'] > 3000 && histo['fFillStyle'] <= 3025) {
-                  createFillPatterns(vis, histo['fFillStyle'], fillcolor);
+                  createFillPatterns(vis, histo['fFillStyle'], histo['fFillColor']);
                   g.append("svg:path")
                      .attr("class", "area")
                      .attr("d", area(bins))
                      .style("stroke", linecolor)
                      .style("stroke-width", histo['fLineWidth'])
-                     .style("fill", "url(#pat" + histo['fFillStyle'] + ")")
+                     .style("fill", "url(#pat" + histo['fFillStyle'] + "_" + histo['fFillColor'] + ")")
                      .style("antialias", "false");
                }
                else {
@@ -2769,13 +2774,13 @@ function createFillPatterns(svg, id, line_color) {
             var pos_x = (tpos_x/2) - (ww/2);
 
             if (fill_style > 3000) {
-               createFillPatterns(vis, fill_style, fill_color);
+               createFillPatterns(vis, fill_style, leg['fFillColor']);
                p.append("svg:rect")
                   .attr("x", pos_x)
                   .attr("y", pos_y)
                   .attr("width", ww)
                   .attr("height", hh)
-                  .style("fill", "url(#pat" + fill_style + ")")
+                  .style("fill", "url(#pat" + fill_style + "_" + leg['fFillColor'] + ")")
                   .style("stroke-width", line_width)
                   .style("stroke", line_color);
             }
