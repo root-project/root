@@ -31,6 +31,7 @@
 #include "Property.h"
 #include "TClingProperty.h"
 #include "TClingTypeInfo.h"
+#include "TError.h"
 #include "TMetaUtils.h"
 
 #include "cling/Interpreter/Interpreter.h"
@@ -297,12 +298,24 @@ long TClingMethodInfo::Property() const
 TClingTypeInfo *TClingMethodInfo::Type() const
 {
    static TClingTypeInfo ti(fInterp);
-   ti.Init(clang::QualType());
    if (!IsValid()) {
+      ti.Init(clang::QualType());
       return &ti;
    }
-   clang::QualType qt = GetMethodDecl()->getResultType();
-   ti.Init(qt);
+   if (llvm::isa<clang::CXXConstructorDecl>(GetMethodDecl())) {
+      // CINT claims that constructors return the class object.
+      const clang::TypeDecl* ctorClass = llvm::dyn_cast_or_null<clang::TypeDecl>
+         (GetMethodDecl()->getDeclContext());
+      if (!ctorClass) {
+         Error("TClingMethodInfo::Type", "Cannot find DeclContext for constructor!");
+      } else {
+         clang::QualType qt(ctorClass->getTypeForDecl(), 0);
+         ti.Init(qt);
+      }
+   } else {
+      clang::QualType qt = GetMethodDecl()->getResultType();
+      ti.Init(qt);
+   }
    return &ti;
 }
 
