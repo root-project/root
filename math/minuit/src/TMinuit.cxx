@@ -5881,6 +5881,7 @@ L280:
       }
    }
    if (ktofix > 0) {
+      ierr = 0;
       kinfix = fNiofex[ktofix-1];
       if (kinfix > 0) mnfixp(kinfix-1, ierr);
       if (ierr > 0)   goto L800;
