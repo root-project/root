@@ -539,7 +539,7 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
    Double_t intTrue = ceSum[0]/(nevMC+0.000001);
    Double_t intDriv=0.;
 
-   if (kBest == -1) Varedu(ceSum,kBest,xBest,yBest); // determine the best edge,
+   Varedu(ceSum,kBest,xBest,yBest);        // determine the best division edge,
    intDriv =sqrt(ceSum[1]/nevMC) -intTrue; // Foam build-up, sqrt(<w**2>) -<w>
 
    //=================================================================================
