@@ -3246,6 +3246,14 @@ MethodInfo_t *TCint::MethodInfo_Factory() const
    return info;
 }
 //______________________________________________________________________________
+MethodInfo_t *TCint::MethodInfo_Factory(ClassInfo_t* clinfo) const
+{
+   // Interface to CINT function
+
+   G__MethodInfo *info = new G__MethodInfo((G__ClassInfo*)clinfo);
+   return info;
+}
+//______________________________________________________________________________
 MethodInfo_t *TCint::MethodInfo_FactoryCopy(MethodInfo_t *minfo) const
 {
    // Interface to CINT function
@@ -3375,6 +3383,14 @@ MethodArgInfo_t *TCint::MethodArgInfo_Factory() const
    // Interface to CINT function
 
    G__MethodArgInfo *info = new G__MethodArgInfo();
+   return info;
+}
+//______________________________________________________________________________
+MethodArgInfo_t *TCint::MethodArgInfo_Factory(MethodInfo_t *minfo) const
+{
+   // Interface to CINT function
+
+   G__MethodArgInfo *info = new G__MethodArgInfo((G__MethodInfo*)minfo);
    return info;
 }
 //______________________________________________________________________________

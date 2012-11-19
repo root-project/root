@@ -3765,6 +3765,11 @@ MethodInfo_t* TCintWithCling::MethodInfo_Factory() const
 }
 
 //______________________________________________________________________________
+MethodInfo_t* TCintWithCling::MethodInfo_Factory(ClassInfo_t* clinfo) const
+{
+   return (MethodInfo_t*) new TClingMethodInfo(fInterpreter, (TClingClassInfo*)clinfo);
+}
+//______________________________________________________________________________
 MethodInfo_t* TCintWithCling::MethodInfo_FactoryCopy(MethodInfo_t* minfo) const
 {
    return (MethodInfo_t*) new TClingMethodInfo(*(TClingMethodInfo*)minfo);
@@ -3869,6 +3874,12 @@ void TCintWithCling::MethodArgInfo_Delete(MethodArgInfo_t* marginfo) const
 MethodArgInfo_t* TCintWithCling::MethodArgInfo_Factory() const
 {
    return (MethodArgInfo_t*) new TClingMethodArgInfo(fInterpreter);
+}
+
+//______________________________________________________________________________
+MethodArgInfo_t* TCintWithCling::MethodArgInfo_Factory(MethodInfo_t *minfo) const
+{
+   return (MethodArgInfo_t*) new TClingMethodArgInfo(fInterpreter, (TClingMethodInfo*)minfo);
 }
 
 //______________________________________________________________________________
