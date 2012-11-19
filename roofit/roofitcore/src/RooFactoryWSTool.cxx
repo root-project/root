@@ -386,8 +386,10 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 	} else {
 	  btype = *ti ;
 	}
-	if (btype.find("&")) {
+	if (btype[btype.length() - 1] == '&') {
 	  btype.erase(btype.size()-1,btype.size()) ;
+          while (btype[btype.length() - 1] == ' ')
+             btype.erase(btype.length() - 1, 1);
 	}
 
 	// If btype if a typedef, substitute it by the true type name
