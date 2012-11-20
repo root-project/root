@@ -2722,24 +2722,25 @@ Int_t TCintWithCling::AutoLoad(const char* cls)
          const char* deplib = ((TObjString*)tokens->At(i))->GetName();
          if (gROOT->LoadClass(cls, deplib) == 0) {
             if (gDebug > 0)
-               ::Info("TCintWithCling::AutoLoad", "loaded dependent library %s for class %s",
-                      deplib, cls);
+               ::Info("TCintWithCling::AutoLoad",
+                      "loaded dependent library %s for class %s", deplib, cls);
          }
          else
-            ::Error("TCintWithCling::AutoLoad", "failure loading dependent library %s for class %s",
+            ::Error("TCintWithCling::AutoLoad",
+                    "failure loading dependent library %s for class %s",
                     deplib, cls);
       }
       const char* lib = ((TObjString*)tokens->At(0))->GetName();
       if (lib[0]) {
          if (gROOT->LoadClass(cls, lib) == 0) {
             if (gDebug > 0)
-               ::Info("TCintWithCling::AutoLoad", "loaded library %s for class %s",
-                      lib, cls);
+               ::Info("TCintWithCling::AutoLoad",
+                      "loaded library %s for class %s", lib, cls);
             status = 1;
          }
          else
-            ::Error("TCintWithCling::AutoLoad", "failure loading library %s for class %s",
-                    lib, cls);
+            ::Error("TCintWithCling::AutoLoad",
+                    "failure loading library %s for class %s", lib, cls);
       }
       delete tokens;
    }
