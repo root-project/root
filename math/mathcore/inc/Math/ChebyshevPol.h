@@ -17,6 +17,8 @@
 #ifndef ROOT_Math_ChebyshevPol
 #define ROOT_Math_ChebyshevPol
 
+#include <cstring>
+
 namespace ROOT { 
 
    namespace Math { 
