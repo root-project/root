@@ -834,6 +834,18 @@ Int_t TCint::DeleteGlobal(void *obj)
 }
 
 //______________________________________________________________________________
+Int_t TCint::DeleteVariable(const char *name)
+{
+   // Delete a variable name from CINT symbol table so it cannot be accessed
+   // anymore. Returns 1 in case of success and 0 in case object was not in
+   // table.
+
+   R__LOCKGUARD(gCINTMutex);
+
+   return G__deletevariable(name);
+}
+
+//______________________________________________________________________________
 void TCint::SaveContext()
 {
    // Save the current CINT state.

@@ -1649,6 +1649,55 @@ Int_t TCintWithCling::DeleteGlobal(void* obj)
 }
 
 //______________________________________________________________________________
+Int_t TCintWithCling::DeleteVariable(const char* name)
+{
+   // Undeclare obj called name.
+   // Returns 1 in case of success, 0 for failure.
+   R__LOCKGUARD(gCINTMutex);
+   llvm::StringRef srName(name);
+   const char* unscopedName = name;
+   llvm::StringRef::size_type posScope = srName.rfind("::");
+   const clang::DeclContext* declCtx = 0;
+   if (posScope != llvm::StringRef::npos) {
+      const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
+      const clang::Decl* scopeDecl = lh.findScope(srName.substr(0, posScope));
+      if (!scopeDecl) {
+         Error("DeleteVariable", "Cannot find enclosing scope for variable %s",
+               name);
+         return 0;
+      }
+      declCtx = llvm::dyn_cast<clang::DeclContext>(scopeDecl);
+      if (!declCtx) {
+         Error("DeleteVariable",
+               "Enclosing scope for variable %s is not a declaration context",
+               name);
+         return 0;
+      }
+      unscopedName += posScope + 2;
+   }
+   clang::NamedDecl* nVarDecl
+      = cling::utils::Lookup::Named(&fInterpreter->getSema(), unscopedName, declCtx);
+   if (!nVarDecl) {
+      Error("DeleteVariable", "Unknown variable %s", name);
+      return 0;
+   }
+   clang::VarDecl* varDecl = llvm::dyn_cast<clang::VarDecl>(nVarDecl);
+   if (!varDecl) {
+      Error("DeleteVariable", "Entity %s is not a variable", name);
+      return 0;
+   }
+
+   clang::QualType qType = varDecl->getType();
+   const clang::Type* type = qType->getUnqualifiedDesugaredType();
+   if (type->isPointerType() || type->isReferenceType()) {
+      int** ppInt = (int**)fInterpreter->getAddressOfGlobal(varDecl);
+      // set pointer / reference to invalid.
+      if (ppInt) *ppInt = 0;
+   }
+   return 1;
+}
+
+//______________________________________________________________________________
 void TCintWithCling::SaveContext()
 {
    // Save the current CINT state.
