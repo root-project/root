@@ -801,7 +801,7 @@ namespace mathtext {
 			}
 #endif // LITTLE_ENDIAN
 
-			uint16_t max_glyph_name_index = 0;
+			size_t max_glyph_name_index = 0;
 			for (int i = num_glyphs - 1; i >= 0; i--) {
 				if (glyph_name_index[i] > max_glyph_name_index) {
 					max_glyph_name_index = glyph_name_index[i];

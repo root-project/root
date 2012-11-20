@@ -310,7 +310,8 @@ namespace mathtext {
 			field_t _index;
 			inline atom_t(const unsigned int type,
 						  const field_t &nucleus)
-				: _type(type), _nucleus(nucleus)
+				: _type(type), _nucleus(nucleus),
+				  _limits(LIMITS_UNKNOWN)
 			{
 			}
 			inline atom_t(const unsigned int type,
@@ -328,7 +329,7 @@ namespace mathtext {
 						  const field_t &superscript,
 						  const field_t &subscript)
 				: _nucleus(nucleus), _superscript(superscript),
-				  _subscript(subscript)
+				  _subscript(subscript), _limits(LIMITS_UNKNOWN)
 			{
 				classify();
 			}
