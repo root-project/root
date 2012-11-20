@@ -2712,7 +2712,7 @@ Int_t TCintWithCling::AutoLoad(const char* cls)
       return status;
    }
    // Prevent the recursion when the library dictionary are loaded.
-   Int_t oldvalue = G__set_class_autoloading(0);
+   Int_t oldvalue = SetClassAutoloading(false);
    // lookup class to find list of dependent libraries
    TString deplibs = GetClassSharedLibs(cls);
    if (!deplibs.IsNull()) {
@@ -2743,7 +2743,7 @@ Int_t TCintWithCling::AutoLoad(const char* cls)
       }
       delete tokens;
    }
-   G__set_class_autoloading(oldvalue);
+   SetClassAutoloading(oldvalue);
    return status;
 }
 
