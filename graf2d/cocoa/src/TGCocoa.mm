@@ -1478,7 +1478,8 @@ void TGCocoa::DrawLineAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x1, In
    CGContextSetAllowsAntialiasing(ctx, false);//Smoothed line is of wrong color and in a wrong position - this is bad for GUI.
    
    if (!drawable.fIsPixmap) {
-      CGContextTranslateCTM(ctx, 0.f, 1.);
+//      if (GetOpenGLScalingFactor() == 1.)
+         CGContextTranslateCTM(ctx, 0.f, 0.5);
    } else {
       //Pixmap uses native Cocoa's left-low-corner system.
       //TODO: check the line on the edge.
