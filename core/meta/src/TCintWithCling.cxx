@@ -407,8 +407,6 @@ void* autoloadCallback(const std::string& mangled_name)
    return addr;
 }
 
-
-
 //______________________________________________________________________________
 //
 //
@@ -636,13 +634,9 @@ ClassImp(TCintWithCling)
 
 //______________________________________________________________________________
 TCintWithCling::TCintWithCling(const char *name, const char *title)
-   : TInterpreter(name, title)
-   , fGlobalsListSerial(-1)
-   , fInterpreter(0)
-   , fMetaProcessor(0)
-   , fNormalizedCtxt(0)
-   , fPrevLoadedDynLibInfo(0)
-   , fClingCallbacks(0)
+: TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0), 
+   fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
+   fClingCallbacks(0)
 {
    // Initialize the CINT+cling interpreter interface.
 
