@@ -78,34 +78,6 @@ TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
    }
 }
 
-//______________________________________________________________________________
-TF2::TF2(const char *name, void *fcn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar)
-      : TF1(name, fcn, xmin, xmax, npar)
-{
-//*-*-*-*-*-*-*F2 constructor using a pointer to an interpreted function*-*-*
-//*-*          =========================================================
-//*-*
-//*-*   npar is the number of free parameters used by the function
-//*-*
-//*-*  Creates a function of type C between xmin and xmax and ymin,ymax.
-//*-*  The function is defined with npar parameters
-//*-*  fcn must be a function of type:
-//*-*     Double_t fcn(Double_t *x, Double_t *params)
-//*-*
-//*-*  This constructor is called for functions of type C by CINT.
-//*-*
-//*-* WARNING! A function created with this constructor cannot be Cloned.
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
-   fYmin   = ymin;
-   fYmax   = ymax;
-   fNpx    = 30;
-   fNpy    = 30;
-   fNdim   = 2;
-   fContour.Set(0);
-
-}
 
 //______________________________________________________________________________
 TF2::TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar)
@@ -178,6 +150,37 @@ TF2::TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
 
 }
 
+
+// CINT constructors
+#ifndef R__HAS_CLING
+//______________________________________________________________________________
+TF2::TF2(const char *name, void *fcn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar)
+      : TF1(name, fcn, xmin, xmax, npar)
+{
+//*-*-*-*-*-*-*F2 constructor using a pointer to an interpreted function*-*-*
+//*-*          =========================================================
+//*-*
+//*-*   npar is the number of free parameters used by the function
+//*-*
+//*-*  Creates a function of type C between xmin and xmax and ymin,ymax.
+//*-*  The function is defined with npar parameters
+//*-*  fcn must be a function of type:
+//*-*     Double_t fcn(Double_t *x, Double_t *params)
+//*-*
+//*-*  This constructor is called for functions of type C by CINT.
+//*-*
+//*-* WARNING! A function created with this constructor cannot be Cloned.
+//*-*
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   fYmin   = ymin;
+   fYmax   = ymax;
+   fNpx    = 30;
+   fNpy    = 30;
+   fNdim   = 2;
+   fContour.Set(0);
+
+}
 //______________________________________________________________________________
 TF2::TF2(const char *name, void * ptr, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char *className)
       : TF1(name, ptr, xmin, xmax, npar,className)
@@ -222,6 +225,7 @@ TF2::TF2(const char *name, void * ptr, void *,Double_t xmin, Double_t xmax, Doub
    fContour.Set(0);
 
 }
+#endif // #ifndef R__HAS_CLING
 
 
 //______________________________________________________________________________

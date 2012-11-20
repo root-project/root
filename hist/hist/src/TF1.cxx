@@ -544,98 +544,6 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
 
 
 //______________________________________________________________________________
-TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
-      :TFormula(), TAttLine(), TAttFill(), TAttMarker()
-{
-   // F1 constructor using pointer to an interpreted function.
-   //
-   //  See TFormula constructor for explanation of the formula syntax.
-   //
-   //  Creates a function of type C between xmin and xmax.
-   //  The function is defined with npar parameters
-   //  fcn must be a function of type:
-   //     Double_t fcn(Double_t *x, Double_t *params)
-   //
-   //  see tutorial; myfit for an example of use
-   //  also test/stress.cxx (see function stress1)
-   //
-   //
-   //  This constructor is called for functions of type C by CINT.
-   //
-   //  WARNING! A function created with this constructor cannot be Cloned.
-
-
-   fXmin       = xmin;
-   fXmax       = xmax;
-   fNpx        = 100;
-   fType       = 2;
-   //fFunction   = 0;
-   if (npar > 0 ) fNpar = npar;
-   if (fNpar) {
-      fNames      = new TString[fNpar];
-      fParams     = new Double_t[fNpar];
-      fParErrors  = new Double_t[fNpar];
-      fParMin     = new Double_t[fNpar];
-      fParMax     = new Double_t[fNpar];
-      for (int i = 0; i < fNpar; i++) {
-         fParams[i]     = 0;
-         fParErrors[i]  = 0;
-         fParMin[i]     = 0;
-         fParMax[i]     = 0;
-      }
-   } else {
-      fParErrors = 0;
-      fParMin    = 0;
-      fParMax    = 0;
-   }
-   fChisquare  = 0;
-   fIntegral   = 0;
-   fAlpha      = 0;
-   fBeta       = 0;
-   fGamma      = 0;
-   fParent     = 0;
-   fNpfits     = 0;
-   fNDF        = 0;
-   fNsave      = 0;
-   fSave       = 0;
-   fHistogram  = 0;
-   fMinimum    = -1111;
-   fMaximum    = -1111;
-   fMethodCall = 0;
-   fCintFunc   = 0;
-   fNdim       = 1;
-
-   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-   gROOT->GetListOfFunctions()->Remove(f1old);
-   SetName(name);
-
-   if (gStyle) {
-      SetLineColor(gStyle->GetFuncColor());
-      SetLineWidth(gStyle->GetFuncWidth());
-      SetLineStyle(gStyle->GetFuncStyle());
-   }
-   SetFillStyle(0);
-
-   if (!fcn) return;
-   const char *funcname = gCint->Getp2f2funcname(fcn);
-   SetTitle(funcname);
-   if (funcname) {
-      fMethodCall = new TMethodCall();
-      fMethodCall->InitWithPrototype(funcname,"Double_t*,Double_t*");
-      fNumber = -1;
-      gROOT->GetListOfFunctions()->Add(this);
-      if (! fMethodCall->IsValid() ) {
-         Error("TF1","No function found with the signature %s(Double_t*,Double_t*)",funcname);
-      }
-   } else {
-      Error("TF1","can not find any function at the address 0x%lx. This function requested for %s",(Long_t)fcn,name);
-   }
-
-
-}
-
-
-//______________________________________________________________________________
 TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar)
       :TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
@@ -865,6 +773,100 @@ void TF1::CreateFromFunctor(const char *name, Int_t npar)
 
 }
 
+
+// CINT constructors
+#ifndef R__HAS_CLING
+//______________________________________________________________________________
+TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
+      :TFormula(), TAttLine(), TAttFill(), TAttMarker()
+{
+   // F1 constructor using pointer to an interpreted function.
+   //
+   //  See TFormula constructor for explanation of the formula syntax.
+   //
+   //  Creates a function of type C between xmin and xmax.
+   //  The function is defined with npar parameters
+   //  fcn must be a function of type:
+   //     Double_t fcn(Double_t *x, Double_t *params)
+   //
+   //  see tutorial; myfit for an example of use
+   //  also test/stress.cxx (see function stress1)
+   //
+   //
+   //  This constructor is called for functions of type C by CINT.
+   //
+   //  WARNING! A function created with this constructor cannot be Cloned.
+
+
+   fXmin       = xmin;
+   fXmax       = xmax;
+   fNpx        = 100;
+   fType       = 2;
+   //fFunction   = 0;
+   if (npar > 0 ) fNpar = npar;
+   if (fNpar) {
+      fNames      = new TString[fNpar];
+      fParams     = new Double_t[fNpar];
+      fParErrors  = new Double_t[fNpar];
+      fParMin     = new Double_t[fNpar];
+      fParMax     = new Double_t[fNpar];
+      for (int i = 0; i < fNpar; i++) {
+         fParams[i]     = 0;
+         fParErrors[i]  = 0;
+         fParMin[i]     = 0;
+         fParMax[i]     = 0;
+      }
+   } else {
+      fParErrors = 0;
+      fParMin    = 0;
+      fParMax    = 0;
+   }
+   fChisquare  = 0;
+   fIntegral   = 0;
+   fAlpha      = 0;
+   fBeta       = 0;
+   fGamma      = 0;
+   fParent     = 0;
+   fNpfits     = 0;
+   fNDF        = 0;
+   fNsave      = 0;
+   fSave       = 0;
+   fHistogram  = 0;
+   fMinimum    = -1111;
+   fMaximum    = -1111;
+   fMethodCall = 0;
+   fCintFunc   = 0;
+   fNdim       = 1;
+
+   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
+   gROOT->GetListOfFunctions()->Remove(f1old);
+   SetName(name);
+
+   if (gStyle) {
+      SetLineColor(gStyle->GetFuncColor());
+      SetLineWidth(gStyle->GetFuncWidth());
+      SetLineStyle(gStyle->GetFuncStyle());
+   }
+   SetFillStyle(0);
+
+   if (!fcn) return;
+   const char *funcname = gCint->Getp2f2funcname(fcn);
+   SetTitle(funcname);
+   if (funcname) {
+      fMethodCall = new TMethodCall();
+      fMethodCall->InitWithPrototype(funcname,"Double_t*,Double_t*");
+      fNumber = -1;
+      gROOT->GetListOfFunctions()->Add(this);
+      if (! fMethodCall->IsValid() ) {
+         Error("TF1","No function found with the signature %s(Double_t*,Double_t*)",funcname);
+      }
+   } else {
+      Error("TF1","can not find any function at the address 0x%lx. This function requested for %s",(Long_t)fcn,name);
+   }
+
+
+}
+
 //______________________________________________________________________________
 TF1::TF1(const char *name,void *ptr, Double_t xmin, Double_t xmax, Int_t npar, const char * className )
       :TFormula(), TAttLine(), TAttFill(), TAttMarker()
@@ -1003,7 +1005,7 @@ void TF1::CreateFromCintClass(const char *name,void *ptr, Double_t xmin, Double_
 
 
 }
-
+#endif // #ifndef R__HAS_CLING
 
 
 //______________________________________________________________________________

@@ -23,6 +23,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "RConfigure.h"
+
 #ifndef ROOT_TFormula
 #include "TFormula.h"
 #endif
@@ -83,7 +85,10 @@ protected:
    static TF1   *fgCurrent;   //pointer to current function being processed
 
    void CreateFromFunctor(const char *name, Int_t npar);
+
+#ifndef R__HAS_CLING
    void CreateFromCintClass(const char *name, void * ptr, Double_t xmin, Double_t xmax, Int_t npar, const char * cname, const char * fname);
+#endif
 
    virtual Double_t GetMinMaxNDim(Double_t * x , Bool_t findmax, Double_t epsilon = 0, Int_t maxiter = 0) const;
    virtual void GetRange(Double_t * xmin, Double_t * xmax) const; 
@@ -97,7 +102,6 @@ public:
    TF1();
    TF1(const char *name, const char *formula, Double_t xmin=0, Double_t xmax=1);
    TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar);
-   TF1(const char *name, void *fcn, Double_t xmin, Double_t xmax, Int_t npar);
 #ifndef __CINT__
    TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Int_t npar=0);
    TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Int_t npar=0);
@@ -188,9 +192,12 @@ public:
       CreateFromFunctor(name, npar);
    }
 
-   // constructor used by CINT
+#ifndef R__HAS_CLING
+   // constructors used by CINT
    TF1(const char *name, void *ptr, Double_t xmin, Double_t xmax, Int_t npar, const char *className );
+   TF1(const char *name, void *fcn, Double_t xmin, Double_t xmax, Int_t npar);
    TF1(const char *name, void *ptr, void *,Double_t xmin, Double_t xmax, Int_t npar, const char *className, const char *methodName = 0);
+#endif
 
    TF1(const TF1 &f1);
    TF1& operator=(const TF1 &rhs);

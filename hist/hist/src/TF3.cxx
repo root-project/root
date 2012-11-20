@@ -62,33 +62,6 @@ TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
    }
 }
 
-
-//______________________________________________________________________________
-TF3::TF3(const char *name,void *fcn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar)
-      :TF2(name,fcn,xmin,xmax,ymin,ymax,npar)
-{
-//*-*-*-*-*-*-*F3 constructor using a pointer to an interpreted function*-*-*
-//*-*          =========================================================
-//*-*
-//*-*   npar is the number of free parameters used by the function
-//*-*
-//*-*  Creates a function of type C between xmin and xmax and ymin,ymax.
-//*-*  The function is defined with npar parameters
-//*-*  fcn must be a function of type:
-//*-*     Double_t fcn(Double_t *x, Double_t *params)
-//*-*
-//*-*  This constructor is called for functions of type C by CINT.
-//*-*
-//*-* WARNING! A function created with this constructor cannot be Cloned.
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
-   fZmin   = zmin;
-   fZmax   = zmax;
-   fNpz    = 30;
-   fNdim   = 3;
-}
-
 //______________________________________________________________________________
 TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar)
       :TF2(name,fcn,xmin,xmax,ymin,ymax,npar)
@@ -155,6 +128,35 @@ TF3::TF3(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
    fNdim   = 3;
 }
 
+
+// CINT Constructors
+#ifndef R__HAS_CLING
+//______________________________________________________________________________
+TF3::TF3(const char *name,void *fcn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar)
+      :TF2(name,fcn,xmin,xmax,ymin,ymax,npar)
+{
+//*-*-*-*-*-*-*F3 constructor using a pointer to an interpreted function*-*-*
+//*-*          =========================================================
+//*-*
+//*-*   npar is the number of free parameters used by the function
+//*-*
+//*-*  Creates a function of type C between xmin and xmax and ymin,ymax.
+//*-*  The function is defined with npar parameters
+//*-*  fcn must be a function of type:
+//*-*     Double_t fcn(Double_t *x, Double_t *params)
+//*-*
+//*-*  This constructor is called for functions of type C by CINT.
+//*-*
+//*-* WARNING! A function created with this constructor cannot be Cloned.
+//*-*
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   fZmin   = zmin;
+   fZmax   = zmax;
+   fNpz    = 30;
+   fNdim   = 3;
+}
+
 //______________________________________________________________________________
 TF3::TF3(const char *name, void * ptr, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, const char *className)
    : TF2(name, ptr, xmin, xmax, ymin, ymax,  npar, className), 
@@ -193,6 +195,7 @@ TF3::TF3(const char *name, void * ptr, void *,Double_t xmin, Double_t xmax, Doub
 
    fNdim   = 3;
 }
+#endif // #ifndef R__HAS_CLING
 
 
 //______________________________________________________________________________

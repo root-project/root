@@ -41,7 +41,6 @@ protected:
 public:
    TF2();
    TF2(const char *name, const char *formula, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1);
-   TF2(const char *name, void *fcn, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0);
 #ifndef __CINT__
    TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0);
    TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0);
@@ -71,9 +70,12 @@ public:
       fNdim = 2;
    } 
 
+#ifndef R__HAS_CLING
    // constructor used by CINT 
+   TF2(const char *name, void *fcn, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0);
    TF2(const char *name, void *ptr,  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char *className ); 
    TF2(const char *name, void *ptr, void *,Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char *className, const char *methodName = 0);
+#endif
 
    TF2(const TF2 &f2);
    TF2 &operator=(const TF2& rhs);
