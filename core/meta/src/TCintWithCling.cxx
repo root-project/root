@@ -3151,7 +3151,6 @@ void TCintWithCling::SetAllocunlockfunc(void (* /* p */ )()) const
 //______________________________________________________________________________
 int TCintWithCling::SetClassAutoloading(int autoload) const
 {
-   // Interface to CINT function
    assert(fClingCallbacks && "We must have callbacks!");
    bool oldVal =  fClingCallbacks->IsAutoloadingEnabled();
    fClingCallbacks->SetAutoloadingEnabled(autoload);
