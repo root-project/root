@@ -485,7 +485,7 @@ class ModuleFacade( types.ModuleType ):
     # must be called after gApplication creation:
       if '__IPYTHON__' in __builtins__:
        # IPython's FakeModule hack otherwise prevents usage of python from CINT
-         _root.gROOT.ProcessLine( 'TPython::Exec( "" )' )
+         _root.gROOT.ProcessLine( 'TPython::Exec( "" );' )
          sys.modules[ '__main__' ].__builtins__ = __builtins__
 
     # custom logon file (must be after creation of ROOT globals)
