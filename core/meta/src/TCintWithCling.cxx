@@ -427,16 +427,6 @@ extern "C" void TCint_UpdateClassInfo(char* c, Long_t l)
    TCintWithCling::UpdateClassInfo(c, l);
 }
 
-extern "C" void* TCint_FindSpecialObject(char* c, G__ClassInfo* ci, void** p1, void** p2)
-{
-   return TCintWithCling::FindSpecialObject(c, ci, p1, p2);
-}
-
-//______________________________________________________________________________
-//
-//
-//
-
 //______________________________________________________________________________
 //
 //
@@ -714,7 +704,6 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    //G__RegisterScriptCompiler(&ScriptCompiler);
    G__set_ignoreinclude(&IgnoreInclude);
    G__InitUpdateClassInfo(&TCint_UpdateClassInfo);
-   G__InitGetSpecialObject(&TCint_FindSpecialObject);
    // check whether the compiler is available:
    //char* path = gSystem->Which(gSystem->Getenv("PATH"), gSystem->BaseName(COMPILER));
    //if (path && path[0]) {
@@ -837,10 +826,17 @@ void TCintWithCling::RegisterModule(const char* modulename,
       ROOT::TMetaUtils::declareModuleMap(CI, pcmFileName, headers);
    }
 
+   bool oldValue = false;
+   if (fClingCallbacks)
+     oldValue = SetClassAutoloading(false);
+
    for (const char** hdr = headers; *hdr; ++hdr) {
       if (gDebug > 5) Info("RegisterModule", "   #including %s...", *hdr);
       fInterpreter->parse(TString::Format("#include \"%s\"", *hdr).Data());
    }
+
+   if (fClingCallbacks)
+     SetClassAutoloading(oldValue);
 }
 
 //______________________________________________________________________________
