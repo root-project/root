@@ -2707,7 +2707,6 @@ Bool_t RooWorkspace::isValidCPPID(const char* name)
 void RooWorkspace::unExport()
 {
   // Delete exported reference in CINT namespace 
-  char buf[10240] ;
   TIterator* iter = _allOwnedNodes.createIterator() ;
   TObject* wobj ;
   while((wobj=iter->Next())) {
