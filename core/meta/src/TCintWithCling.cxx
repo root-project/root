@@ -2306,8 +2306,8 @@ const char* TCintWithCling::GetCurrentMacroName() const
    //   TCintWithCling::GetCurrentMacroName() returns  inclfile.C
    //   TCintWithCling::GetTopLevelMacroName() returns ./mymacro.C
 
-#ifdef R__MUST_REVIST
-R__MUST_REVIST(6,0)
+#ifdef R__MUST_REVISIT
+R__MUST_REVISIT(6,0)
    Warning("GetCurrentMacroName", "Must change return type!");
 #endif
    static std::string sMacroName;
