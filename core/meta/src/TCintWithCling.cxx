@@ -652,6 +652,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    , fMetaProcessor(0)
    , fNormalizedCtxt(0)
    , fPrevLoadedDynLibInfo(0)
+   , fClingCallbacks(0)
 {
    // Initialize the CINT+cling interpreter interface.
 
@@ -754,7 +755,8 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    TCintWithCling::AddIncludePath(include);
 
    // Attach cling callbacks
-   fInterpreter->setCallbacks(new TClingCallbacks(fInterpreter));
+   fClingCallbacks = new TClingCallbacks(fInterpreter);
+   fInterpreter->setCallbacks(fClingCallbacks);
 }
 
 //______________________________________________________________________________
@@ -1337,10 +1339,8 @@ void TCintWithCling::EnableAutoLoading()
    // is used that is stored in a not yet loaded library. Uses the
    // information stored in the class/library map (typically
    // $ROOTSYS/etc/system.rootmap).
-   R__LOCKGUARD(gCINTMutex);
-   G__set_class_autoloading_callback(&TCint_AutoLoadCallback);
-   G__set_class_autoloading(1);
    LoadLibraryMap();
+   SetClassAutoloading(true);
 }
 
 //______________________________________________________________________________
@@ -3151,7 +3151,10 @@ void TCintWithCling::SetAllocunlockfunc(void (* /* p */ )()) const
 int TCintWithCling::SetClassAutoloading(int autoload) const
 {
    // Interface to CINT function
-   return G__set_class_autoloading(autoload);
+   assert(fClingCallbacks && "We must have callbacks!");
+   bool oldVal =  fClingCallbacks->IsAutoloadingEnabled();
+   fClingCallbacks->SetAutoloadingEnabled(autoload);
+   return oldVal;
 }
 
 //______________________________________________________________________________

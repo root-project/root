@@ -30,11 +30,15 @@ private:
    void *fLastLookupCtx;
    clang::NamespaceDecl *fROOTSpecialNamespace;
    bool fFirstRun;
-   bool isAutoLoading;
+   bool fIsAutoloading;
+   bool fIsAutoloadingRecursively;
 public:
    TClingCallbacks(cling::Interpreter* interp);
 
    ~TClingCallbacks();
+
+   void SetAutoloadingEnabled(bool val = true) { fIsAutoloading = val; }
+   bool IsAutoloadingEnabled() { return fIsAutoloading; }
 
    virtual bool LookupObject(clang::LookupResult &R, clang::Scope *S);
 

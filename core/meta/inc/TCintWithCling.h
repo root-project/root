@@ -64,9 +64,10 @@ class G__ClassInfo;
 
 using namespace Cint;
 
+class TEnv;
+class TClingCallbacks;
 class TMethod;
 class TObjArray;
-class TEnv;
 
 namespace cling {
 class Interpreter;
@@ -107,6 +108,7 @@ private: // Data Members
    ROOT::TMetaUtils::TNormalizedCtxt  *fNormalizedCtxt; // Which typedef to avoid striping.
 
    void*           fPrevLoadedDynLibInfo; // Internal info to mark the last loaded libray.
+   TClingCallbacks* fClingCallbacks; // cling::Interpreter owns it.
 
 public: // Public Interface
 

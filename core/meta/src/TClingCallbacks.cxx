@@ -40,7 +40,7 @@ extern "C" {
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp) 
    : InterpreterCallbacks(interp), fLastLookupCtx(0), fROOTSpecialNamespace(0),
-     fFirstRun(true), isAutoLoading(false) {
+     fFirstRun(true), fIsAutoloading(false), fIsAutoloadingRecursively(false) {
    const Decl* D = 0;
    m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &D);
    fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(const_cast<Decl*>(D));
@@ -72,38 +72,41 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
    DeclContext *CurDC = SemaR.CurContext;
    DeclarationName Name = R.getLookupName();
 
-   // Try to autoload first
-   if (isAutoLoading)
-     return false;
-   isAutoLoading = true;
+   // Try to autoload first if autoloading is enabled
+   if (IsAutoloadingEnabled()) {
+     // Avoid tail chasing.
+     if (fIsAutoloadingRecursively)
+       return false;
+     fIsAutoloadingRecursively = true;
 
-   // Save state of the PP
-   Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
-   Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
-   Parser::ParserCurTokRestoreRAII savedCurToken(P);
-      
-   bool oldSuppressDiags = SemaR.getDiagnostics().getSuppressAllDiagnostics();
-   SemaR.getDiagnostics().setSuppressAllDiagnostics();
-      
-   // We can't PushDeclContext, because we go up and the routine that pops 
-   // the DeclContext assumes that we drill down always.
-   // We have to be on the global context. At that point we are in a 
-   // wrapper function so the parent context must be the global.
-   Sema::ContextAndScopeRAII pushedSAndDC(SemaR, CurDC, S);
+     // Save state of the PP
+     Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+     Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
+     Parser::ParserCurTokRestoreRAII savedCurToken(P);
 
-   bool lookupSuccess = false;
-   if (TCintWithCling__AutoLoadCallback(Name.getAsString().c_str())) {
-     pushedSAndDC.pop();
-     cleanupRAII.pop();
-     lookupSuccess = SemaR.LookupName(R, S);
+     bool oldSuppressDiags = SemaR.getDiagnostics().getSuppressAllDiagnostics();
+     SemaR.getDiagnostics().setSuppressAllDiagnostics();
+      
+     // We can't PushDeclContext, because we go up and the routine that pops 
+     // the DeclContext assumes that we drill down always.
+     // We have to be on the global context. At that point we are in a 
+     // wrapper function so the parent context must be the global.
+     Sema::ContextAndScopeRAII pushedSAndDC(SemaR, CurDC, S);
+
+     bool lookupSuccess = false;
+     if (TCintWithCling__AutoLoadCallback(Name.getAsString().c_str())) {
+       pushedSAndDC.pop();
+       cleanupRAII.pop();
+       lookupSuccess = SemaR.LookupName(R, S);
+     }
+
+     SemaR.getDiagnostics().setSuppressAllDiagnostics(oldSuppressDiags);
+
+     fIsAutoloadingRecursively = false;
+   
+     if (lookupSuccess)
+       return true;
    }
-
-   SemaR.getDiagnostics().setSuppressAllDiagnostics(oldSuppressDiags);
-   
-   isAutoLoading = false;
-   
-   if (lookupSuccess)
-     return true;
 
    // If the autoload wasn't successful try ROOT specials.
    // Make sure that the failed lookup comes from the prompt.
