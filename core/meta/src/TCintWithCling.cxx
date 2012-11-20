@@ -3116,6 +3116,8 @@ void TCintWithCling::SetAllocunlockfunc(void (* /* p */ )()) const
 //______________________________________________________________________________
 int TCintWithCling::SetClassAutoloading(int autoload) const
 {
+   // Enable/Disable the Autoloading of libraries.
+   // Returns the old value, i.e whether it was enabled or not.
    assert(fClingCallbacks && "We must have callbacks!");
    bool oldVal =  fClingCallbacks->IsAutoloadingEnabled();
    fClingCallbacks->SetAutoloadingEnabled(autoload);
