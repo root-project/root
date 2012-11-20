@@ -2214,8 +2214,8 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) addPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers
 {
-   //Remove and add (not to traverse twice).
- //  [self removePassiveKeyGrab : keyCode modifiers : modifiers];
+   //TODO: why am I removing the old one??? :)
+   [self removePassiveKeyGrab : keyCode modifiers : modifiers];
    PassiveKeyGrab * const newGrab = [[PassiveKeyGrab alloc] initWithKey : keyCode modifiers : modifiers];
    [fPassiveKeyGrabs addObject : newGrab];
    [newGrab release];
