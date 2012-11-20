@@ -429,16 +429,6 @@ extern "C" void TCint_UpdateClassInfo(char* c, Long_t l)
    TCintWithCling::UpdateClassInfo(c, l);
 }
 
-extern "C" int TCint_AutoLoadCallback(char* c, char* l)
-{
-   ULong_t varp = G__getgvp();
-   G__setgvp((Long_t)G__PVOID);
-   string cls(c);
-   int result =  TCintWithCling::AutoLoadCallback(cls.c_str(), l);
-   G__setgvp(varp);
-   return result;
-}
-
 extern "C" void* TCint_FindSpecialObject(char* c, G__ClassInfo* ci, void** p1, void** p2)
 {
    return TCintWithCling::FindSpecialObject(c, ci, p1, p2);
@@ -2674,40 +2664,6 @@ Int_t TCintWithCling::AutoLoad(const char* cls)
    }
    SetClassAutoloading(oldvalue);
    return status;
-}
-
-//______________________________________________________________________________
-Int_t TCintWithCling::AutoLoadCallback(const char* cls, const char* /*lib*/)
-{
-   // Load library containing specified class. Returns 0 in case of error
-   // and 1 in case if success.
-   R__LOCKGUARD(gCINTMutex);
-   if (!gROOT || !gInterpreter || !cls) {
-      return 0;
-   }
-   // lookup class to find list of dependent libraries
-   TString deplibs = gInterpreter->GetClassSharedLibs(cls);
-   if (!deplibs.IsNull()) {
-      if (gDebug > 0 && gDebug <= 4)
-         ::Info("TCintWithCling::AutoLoadCallback", "loaded dependent library %s for class %s",
-                deplibs.Data(), cls);
-      TString delim(" ");
-      TObjArray* tokens = deplibs.Tokenize(delim);
-      for (Int_t i = tokens->GetEntriesFast() - 1; i > 0; i--) {
-         const char* deplib = ((TObjString*)tokens->At(i))->GetName();
-         if (gROOT->LoadClass(cls, deplib) == 0) {
-            if (gDebug > 4)
-               ::Info("TCintWithCling::AutoLoadCallback", "loaded dependent library %s for class %s",
-                      deplib, cls);
-         }
-         else {
-            ::Error("TCintWithCling::AutoLoadCallback", "failure loading dependent library %s for class %s",
-                    deplib, cls);
-         }
-      }
-      delete tokens;
-   }
-   return 0;
 }
 
 //______________________________________________________________________________
