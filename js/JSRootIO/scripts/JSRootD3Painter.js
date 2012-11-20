@@ -1868,12 +1868,9 @@ function createFillPatterns(svg, id, color) {
          var normx, normy;
          var n = graph['fNpoints'];
          var glw = graph['fLineWidth'],
-             xo = new Array(n+2),
-             yo = new Array(n+2),
-             xt = new Array(n+2),
-             yt = new Array(n+2),
-             xf = new Array(2*n+2),
-             yf = new Array(2*n+2);
+             xo = new Array(n+2), yo = new Array(n+2),
+             xt = new Array(n+2), yt = new Array(n+2),
+             xf = new Array(2*n+2), yf = new Array(2*n+2);
          // negative value means another side of the line...
          if (glw > 32767) {
             glw = 65536 - glw;
@@ -2062,6 +2059,13 @@ function createFillPatterns(svg, id, color) {
                y: yf[p]
             };
          });
+         /* some clean-up */
+         xo.splice(0, xo.length); yo.splice(0, yo.length);
+         xo = null; yo = null;
+         xt.splice(0, xt.length); yt.splice(0, yt.length);
+         xt = null; yt = null;
+         xf.splice(0, xf.length); yf.splice(0, yf.length);
+         xf = null; yf = null;
       }
 
       function do_redraw() {
