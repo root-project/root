@@ -30,7 +30,7 @@
 #pragma link C++ class ROOT::Math::Polynomial-;
 #endif
 
-#pragma link C++ class ROOT::Math::Chebyshev+;
+#pragma link C++ class ROOT::Math::ChebyshevApprox+;
 #pragma link C++ class ROOT::Math::Derivator+;
 
 #pragma link C++ class ROOT::Math::Vavilov+;

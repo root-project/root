@@ -23,7 +23,7 @@
   *                                                                    *
   **********************************************************************/
 
-// Implementation file for class Chebyshev
+// Implementation file for class ChebyshevApprox
 // 
 // Created by: moneta  at Thu Dec  2 14:51:15 2004
 // 
@@ -33,7 +33,7 @@
 
 #include "Math/IFunction.h"
 
-#include "Math/Chebyshev.h"
+#include "Math/ChebyshevApprox.h"
 #include "GSLFunctionWrapper.h"
 #include "GSLChebSeries.h"
 
@@ -46,7 +46,7 @@ namespace ROOT {
 namespace Math {
 
 
-Chebyshev::Chebyshev(const ROOT::Math::IGenFunction & f, double a, double b, size_t n) : 
+ChebyshevApprox::ChebyshevApprox(const ROOT::Math::IGenFunction & f, double a, double b, size_t n) : 
    fOrder(n) , fSeries(0), fFunction(0)
 {
    // constructor from function (IGenFunction type) and interval [a,b] and series size n
@@ -57,7 +57,7 @@ Chebyshev::Chebyshev(const ROOT::Math::IGenFunction & f, double a, double b, siz
 }
 
 // constructor with GSL function
-Chebyshev::Chebyshev(GSLFuncPointer f, void * params, double a, double b, size_t n) :
+ChebyshevApprox::ChebyshevApprox(GSLFuncPointer f, void * params, double a, double b, size_t n) :
 fOrder(n) , fSeries(0), fFunction(0)
 {
    // constructor from function (GSL type) and interval [a,b] and series size n  
@@ -65,26 +65,26 @@ fOrder(n) , fSeries(0), fFunction(0)
    Initialize(  f, params, a, b ); 
 }
 
-Chebyshev::~Chebyshev() 
+ChebyshevApprox::~ChebyshevApprox() 
 {
    // desctructor (clean up resources)
    if (fFunction) delete fFunction;
    if (fSeries) delete fSeries;
 }
 
-Chebyshev::Chebyshev(size_t n) : 
+ChebyshevApprox::ChebyshevApprox(size_t n) : 
 fOrder(n) , fSeries(0), fFunction(0)
 {
    // constructor passing only size (need to initialize setting the function afterwards) 
    fSeries = new GSLChebSeries(n); 
 }
 
-Chebyshev::Chebyshev(const Chebyshev & /*cheb */ )  
+ChebyshevApprox::ChebyshevApprox(const ChebyshevApprox & /*cheb */ )  
 {
    // cannot copy series because don't know original function
 }
 
-Chebyshev & Chebyshev::operator = (const Chebyshev &rhs) 
+ChebyshevApprox & ChebyshevApprox::operator = (const ChebyshevApprox &rhs) 
 {
    // dummy assignment
    if (this == &rhs) return *this;  // time saving self-test
@@ -92,7 +92,7 @@ Chebyshev & Chebyshev::operator = (const Chebyshev &rhs)
    return *this;
 }
 
-void Chebyshev::Initialize( GSLFuncPointer f, void * params, double a, double b) { 
+void ChebyshevApprox::Initialize( GSLFuncPointer f, void * params, double a, double b) { 
    // initialize by passing a function and interval [a,b] 
    // delete previous existing function pointer
    assert(fSeries != 0); 
@@ -106,24 +106,24 @@ void Chebyshev::Initialize( GSLFuncPointer f, void * params, double a, double b)
    gsl_cheb_init( fSeries->get(), fFunction->GetFunc(), a, b); 
 }
 
-double Chebyshev::operator() ( double x ) const {
+double ChebyshevApprox::operator() ( double x ) const {
    // evaluate the approximation
    return gsl_cheb_eval(fSeries->get(), x);
 } 
 
-std::pair<double, double>  Chebyshev::EvalErr( double x) const { 
+std::pair<double, double>  ChebyshevApprox::EvalErr( double x) const { 
    // evaluate returning result and error
    double result, error; 
    gsl_cheb_eval_err(fSeries->get(), x, &result, &error);
    return std::make_pair( result, error); 
 }
 
-double Chebyshev::operator() ( double x, size_t n) const {
+double ChebyshevApprox::operator() ( double x, size_t n) const {
    // evaluate at most order n ( truncate the series)
    return gsl_cheb_eval_n(fSeries->get(), n, x);
 }
 
-std::pair<double, double>  Chebyshev::EvalErr( double x, size_t n) const { 
+std::pair<double, double>  ChebyshevApprox::EvalErr( double x, size_t n) const { 
    // evaluate at most order n ( truncate the series) returning resutl + error
    double result, error; 
    gsl_cheb_eval_n_err(fSeries->get(), n, x, &result, &error);
@@ -132,10 +132,10 @@ std::pair<double, double>  Chebyshev::EvalErr( double x, size_t n) const {
 
 
 
-Chebyshev *   Chebyshev::Deriv() { 
+ChebyshevApprox *   ChebyshevApprox::Deriv() { 
    // calculate derivative. Returna pointer to a new series 
    // used auto_ptr (supprseed since not good support on some compilers)
-   Chebyshev * deriv = new Chebyshev(fOrder); 
+   ChebyshevApprox * deriv = new ChebyshevApprox(fOrder); 
    
    // check for errors ? 
    gsl_cheb_calc_deriv( (deriv->fSeries)->get(), fSeries->get() );
@@ -145,9 +145,9 @@ Chebyshev *   Chebyshev::Deriv() {
    //   return pDeriv;  
 }
 
-Chebyshev * Chebyshev::Integral() { 
+ChebyshevApprox * ChebyshevApprox::Integral() { 
    // integral (return pointer)
-   Chebyshev * integ = new Chebyshev(fOrder); 
+   ChebyshevApprox * integ = new ChebyshevApprox(fOrder); 
    
    // check for errors ? 
    gsl_cheb_calc_integ( (integ->fSeries)->get(), fSeries->get() );

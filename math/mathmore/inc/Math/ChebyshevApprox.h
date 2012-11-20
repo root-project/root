@@ -22,14 +22,14 @@
   *                                                                    *
   **********************************************************************/
 
-// Header file for class Chebyshev
+// Header file for class ChebyshevApprox
 // 
 // Created by: moneta  at Thu Dec  2 14:51:15 2004
 // 
 // Last update: Thu Dec  2 14:51:15 2004
 // 
-#ifndef ROOT_Math_Chebyshev
-#define ROOT_Math_Chebyshev
+#ifndef ROOT_Math_ChebyshevApprox
+#define ROOT_Math_ChebyshevApprox
 
 /**
    @defgroup NumAlgo Numerical Algorithms
@@ -39,7 +39,7 @@
 
 
 /**
-   @defgroup FuncApprox Function Approximation (Chebyshev)
+   @defgroup FuncApprox Function Approximation (ChebyshevApprox)
    @ingroup NumAlgo
  */
 
@@ -74,7 +74,7 @@ class GSLFunctionWrapper;
  */
 
 
-class Chebyshev {
+class ChebyshevApprox {
 
 public: 
 
@@ -84,16 +84,16 @@ public:
       constructor based on functions of type IGenFunction
    */
 
-  Chebyshev(const ROOT::Math::IGenFunction & f, double a, double b, size_t n); 
+  ChebyshevApprox(const ROOT::Math::IGenFunction & f, double a, double b, size_t n); 
 
    /**
       Construct a Chebyshev series approximation to a Function f in range [a,b];
       constructor based on free functions with gsl_function type signature
    */
-   Chebyshev(GSLFuncPointer f, void *p, double a, double b, size_t n); 
+   ChebyshevApprox(GSLFuncPointer f, void *p, double a, double b, size_t n); 
 
    // destructor
-   virtual ~Chebyshev(); 
+   virtual ~ChebyshevApprox(); 
 
 
 private:
@@ -102,11 +102,11 @@ private:
       construct a Chebyshev series or order n
       The series must be initialized from a function 
    */
-   Chebyshev(size_t n); 
+   ChebyshevApprox(size_t n); 
 
 // usually copying is non trivial, so we make this unaccessible
-   Chebyshev(const Chebyshev &); 
-   Chebyshev & operator = (const Chebyshev &); 
+   ChebyshevApprox(const ChebyshevApprox &); 
+   ChebyshevApprox & operator = (const ChebyshevApprox &); 
 
 public: 
   
@@ -140,7 +140,7 @@ public:
       derivatives coefficients. The returned pointer must be managed by the user.
    */
    //TO DO: implement copying to return by value
-   Chebyshev * Deriv(); 
+   ChebyshevApprox * Deriv(); 
 
    /**
       Compute the integral of the series and return a pointer to a new Chebyshev series with the 
@@ -148,7 +148,7 @@ public:
       The returned pointer must be managed by the user
    */
    //TO DO: implement copying to return by value
-   Chebyshev * Integral(); 
+   ChebyshevApprox * Integral(); 
 
 protected: 
 
@@ -169,4 +169,4 @@ private:
 } // namespace Math
 } // namespace ROOT
 
-#endif /* ROOT_Math_Chebyshev */
+#endif /* ROOT_Math_ChebyshevApprox */
