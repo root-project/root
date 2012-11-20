@@ -2215,7 +2215,7 @@ void print_mask_info(ULong_t mask)
 - (void) addPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers
 {
    //Remove and add (not to traverse twice).
-   [self removePassiveKeyGrab : keyCode modifiers : modifiers];
+ //  [self removePassiveKeyGrab : keyCode modifiers : modifiers];
    PassiveKeyGrab * const newGrab = [[PassiveKeyGrab alloc] initWithKey : keyCode modifiers : modifiers];
    [fPassiveKeyGrabs addObject : newGrab];
    [newGrab release];
@@ -2561,9 +2561,14 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) keyUp:(NSEvent *)theEvent
+- (void) keyUp : (NSEvent *) theEvent
 {
-   (void)theEvent;
+   assert(fID != 0 && "keyUp, fID is 0");
+
+   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
+   assert(vx != 0 && "keyUp, gVirtualX is null or not of TGCocoa type");
+   vx->GetEventTranslator()->GenerateKeyReleaseEvent(self, theEvent);
+
 }
 
 //First responder staff.
@@ -2584,22 +2589,24 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (BOOL) becomeFirstResponder
 {
-   //Change focus.
-   NSView<X11Window> *focusView = nil;
-   for (NSView<X11Window> *view = self; view; view = view.fParentView) {
-      if (view.fEventMask & kFocusChangeMask) {
-         focusView = view;
-         break;
+   if (!fOverrideRedirect) {
+      //Change focus.
+      NSView<X11Window> *focusView = nil;
+      for (NSView<X11Window> *view = self; view; view = view.fParentView) {
+         if (view.fEventMask & kFocusChangeMask) {
+            focusView = view;
+            break;
+         }
       }
+
+      if (!focusView)
+         focusView = ((QuartzWindow *)[self window]).fContentView;
+      
+      TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
+      assert(vx != 0 && "becomeFirstResponder, gVirtualX is null or not of TGCocoa type");
+      vx->GetEventTranslator()->GenerateFocusChangeEvent(focusView);
    }
-
-   if (!focusView)
-      focusView = ((QuartzWindow *)[self window]).fContentView;
    
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "becomeFirstResponder, gVirtualX is null or not of TGCocoa type");
-   vx->GetEventTranslator()->GenerateFocusChangeEvent(focusView);
-
    return YES;
 }
 
