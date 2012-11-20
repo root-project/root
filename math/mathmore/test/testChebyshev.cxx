@@ -1,5 +1,5 @@
 
-#include "Math/Chebyshev.h"
+#include "Math/ChebyshevApprox.h"
 #include "Math/IFunction.h"
 #include "Math/Functor.h"
 #include "Math/SpecFunc.h"
@@ -46,7 +46,7 @@ private:
 };
 
 
-int printCheb( const ROOT::Math::Chebyshev & c, double x0, double x1, FP func = 0 ) { 
+int printCheb( const ROOT::Math::ChebyshevApprox & c, double x0, double x1, FP func = 0 ) { 
 
   double dx = (x1-x0)/10;
   for ( double x = x0; x < x1; x+= dx ) { 
@@ -72,20 +72,20 @@ int main() {
 
   // test with cos(x) + 1.0
   std::cout << "Test Cheb approx to step function :" << std::endl;
-  ROOT::Math::Chebyshev c(myfunc, 0, 0., 1.0, 40); 
+  ROOT::Math::ChebyshevApprox c(myfunc, 0, 0., 1.0, 40); 
   printCheb(c, 0, 1, myfunc); 
   std::cout << "Test integral of step function :" << std::endl;
-  ROOT::Math::Chebyshev *  cInteg = c.Integral();
+  ROOT::Math::ChebyshevApprox *  cInteg = c.Integral();
   printCheb(*cInteg, 0., 1); 
   delete cInteg;
   
 
   std::cout << "Test Cheb approx to Gamma function :" << std::endl;
   GammaFunction gf;
-  ROOT::Math::Chebyshev c2(gf, 1.0, 2.0, 40); 
+  ROOT::Math::ChebyshevApprox c2(gf, 1.0, 2.0, 40); 
   printCheb(c2, 1.0, 2.0,  gamma_func); 
   std::cout << "Test derivative of gammma :" << std::endl;
-  ROOT::Math::Chebyshev * cDeriv = c2.Deriv();
+  ROOT::Math::ChebyshevApprox * cDeriv = c2.Deriv();
   printCheb(*cDeriv, 1.0, 2.0); 
   delete cDeriv;
 
