@@ -2420,10 +2420,10 @@ Int_t TCintWithCling::LoadLibraryMap(const char* rootmapfile)
                            fMapfile->ReadFile(p, kEnvGlobal);
                            fRootmapFiles->Add(new TNamed(f, p));
                         }
-                        //                        else {
-                        //                           fprintf(stderr,"Reject %s because %s is already there\n",p.Data(),f.Data());
-                        //                           fRootmapFiles->FindObject(f)->ls();
-                        //                        }
+                        // else {
+                        //    fprintf(stderr,"Reject %s because %s is already there\n",p.Data(),f.Data());
+                        //    fRootmapFiles->FindObject(f)->ls();
+                        // }
                      }
                   }
                   if (f.BeginsWith("rootmap")) {
@@ -2471,43 +2471,6 @@ Int_t TCintWithCling::LoadLibraryMap(const char* rootmapfile)
          // convert "-" to " ", since class names may have
          // blanks and TEnv considers a blank a terminator
          cls.ReplaceAll("-", " ");
-         if (cls.Contains(":")) {
-            // We have a namespace and we have to check it first
-            int slen = cls.Length();
-            for (int k = 0; k < slen; k++) {
-               if (cls[k] == ':') {
-                  if (k + 1 >= slen || cls[k + 1] != ':') {
-                     // we expected another ':'
-                     break;
-                  }
-                  if (k) {
-                     TString base = cls(0, k);
-                     if (base == "std") {
-                        // std is not declared but is also ignored by CINT!
-                        break;
-                     }
-                     else {
-                        // Only declared the namespace do not specify any library because
-                        // the namespace might be spread over several libraries and we do not
-                        // know (yet?) which one the user will need!
-                        // But what if it's not a namespace but a class?
-                        // Does CINT already know it?
-                        const char* baselib = G__get_class_autoloading_table(const_cast<char*>(base.Data()));
-                        if ((!baselib || !baselib[0]) && !rec->FindObject(base)) {
-                           G__set_class_autoloading_table(const_cast<char*>(base.Data()), const_cast<char*>(""));
-                        }
-                     }
-                     ++k;
-                  }
-               }
-               else if (cls[k] == '<') {
-                  // We do not want to look at the namespace inside the template parameters!
-                  break;
-               }
-            }
-         }
-         G__set_class_autoloading_table(const_cast<char*>(cls.Data()), const_cast<char*>(lib));
-         G__security_recover(stderr); // Ignore any error during this setting.
          if (gDebug > 6) {
             const char* wlib = gSystem->DynamicPathName(lib, kTRUE);
             if (wlib) {
