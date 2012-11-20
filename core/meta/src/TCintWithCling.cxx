@@ -2255,7 +2255,10 @@ const char* TCintWithCling::GetCurrentMacroName() const
    //   TCintWithCling::GetCurrentMacroName() returns  inclfile.C
    //   TCintWithCling::GetTopLevelMacroName() returns ./mymacro.C
 
+#ifdef R__MUST_REVIST
+R__MUST_REVIST(6,0)
    Warning("GetCurrentMacroName", "Must change return type!");
+#endif
    static std::string sMacroName;
    sMacroName = fMetaProcessor->getCurrentlyExecutingFile();
    return sMacroName.c_str();
