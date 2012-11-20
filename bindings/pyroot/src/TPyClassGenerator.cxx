@@ -10,9 +10,6 @@
 // ROOT
 #include "TClass.h"
 
-// CINT
-#include "Api.h"
-
 // Standard
 #include <string>
 #include <typeinfo>
@@ -22,6 +19,7 @@
 namespace {
 
    //_________________________________________________________________________
+/* TODO: implement for Cling
    int PyCtorCallback( G__value* res, G__CONST char*, struct G__param*, int )
    {
    // CINT-installable constructor callback.
@@ -42,8 +40,10 @@ namespace {
 
       return 1;
    }
+*/
 
    //_________________________________________________________________________
+/* TODO: implement for Cling
    int PyMemFuncCallback( G__value* res, G__CONST char*, struct G__param* libp, int )
    {
    // CINT-installable member function callback.
@@ -126,6 +126,8 @@ namespace {
       return 1;
    }
 
+*/
+
 } // unnamed namespace
 
 
@@ -137,8 +139,9 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
 }
 
 //- public members -----------------------------------------------------------
-TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silent )
+TClass* TPyClassGenerator::GetClass( const char* /* name */, Bool_t /* load */, Bool_t /* silent */ )
 {
+/* TODO: implment for Cling
 // Class generator to make python classes available to CINT.
 
 // called if all other class generators failed, attempt to build from python class
@@ -237,6 +240,8 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
    TClass::AddClass( klass );
 
    return klass;
+*/
+   return NULL;
 }
 
 //____________________________________________________________________________

@@ -492,7 +492,9 @@ class ModuleFacade( types.ModuleType ):
          appc.InitROOTMessageCallback();
 
        # make gApplication available on the prompt
-         _root.gROOT.ProcessLine( '#include "TApplication.h"' )
+       # TODO: Cling can't handle default arguments (crashes)
+         import array
+         _root.gROOT.ProcessLine( '#include "TApplication.h"', array.array('i', [0]) )
 
       if hasargv and PyConfig.IgnoreCommandLineOptions:
          sys.argv = argv

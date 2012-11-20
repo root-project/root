@@ -125,7 +125,8 @@ Bool_t TPython::Initialize()
    }
 
 // python side class construction, managed by ROOT
-   gROOT->AddClassGenerator( new TPyClassGenerator );
+// TODO: implement TPyClassGenerator for Cling
+//   gROOT->AddClassGenerator( new TPyClassGenerator );
 
 // declare success ...
    isInitialized = kTRUE;

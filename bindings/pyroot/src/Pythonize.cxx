@@ -32,9 +32,6 @@
 #include "TBranch.h"
 #include "TLeaf.h"
 
-// CINT
-#include "Api.h"
-
 // Standard
 #include <stdexcept>
 #include <string>
@@ -1510,6 +1507,7 @@ namespace {
    }
 
 //- TFN behavior --------------------------------------------------------------
+/* TODO: implement for Cling
    int TFNPyCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
    {
    // This is a generic CINT-installable TFN (with N=1,2,3) callback (used to factor
@@ -1575,7 +1573,7 @@ namespace {
          G__Doubleref(&libp->para[2]), 1 );
 
       PyObject* arg4 = BufFac_t::Instance()->PyBuffer_FromMemory(
-         (Double_t*)G__int(libp->para[3]), -1 /* size unknown */ );
+         (Double_t*)G__int(libp->para[3]), -1 ); // size unknown
 
    // perform actual call
       result = PyObject_CallFunction( pyfunc, (char*)"OOOOi",
@@ -1592,6 +1590,8 @@ namespace {
       G__setnull( res );
       return ( 1 || hash || res || libp );
    }
+
+*/
 
 //____________________________________________________________________________
    class TPretendInterpreted: public PyCallable {
@@ -1620,6 +1620,7 @@ namespace {
    };
 
 //____________________________________________________________________________
+/* TODO: implement for Cling
    class TF1InitWithPyFunc : public TPretendInterpreted {
    public:
       TF1InitWithPyFunc( int ntf = 1 ) : TPretendInterpreted( 2 + 2*ntf ) {}
@@ -1730,7 +1731,7 @@ namespace {
 
       virtual PyCallable* Clone() { return new TF3InitWithPyFunc( *this ); }
    };
-
+*/
 
 //- TFunction behavior ---------------------------------------------------------
    PyObject* TFunctionCall( ObjectProxy* self, PyObject* args ) {
@@ -1739,6 +1740,7 @@ namespace {
 
 
 //- TMinuit behavior -----------------------------------------------------------
+/* TODO: implement for Cling
    class TMinuitSetFCN : public TPretendInterpreted {
    public:
       TMinuitSetFCN( int nArgs = 1 ) : TPretendInterpreted( nArgs ) {}
@@ -1825,7 +1827,7 @@ namespace {
          return TMinuitSetFCN::operator()( self, args, 0, 0 );
       }
    };
-
+*/
 
 //- Fit::TFitter behavior ------------------------------------------------------
    PyObject* gFitterPyCallback = 0;
@@ -2247,6 +2249,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( name == "TH1" )       // allow hist *= scalar
       return Utility::AddToClass( pyclass, "__imul__", (PyCFunction) THNIMul, METH_O );
 
+/* TODO: implement for Cling
    if ( name == "TF1" )       // allow instantiation with python callable
       return Utility::AddToClass( pyclass, "__init__", new TF1InitWithPyFunc );
 
@@ -2255,15 +2258,18 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( name == "TF3" )       // allow instantiation with python callable
       return Utility::AddToClass( pyclass, "__init__", new TF3InitWithPyFunc );
+*/
 
    if ( name == "TFunction" ) // allow direct call
       return Utility::AddToClass( pyclass, "__call__", (PyCFunction) TFunctionCall );
 
+/* TODO: implement for Cling
    if ( name == "TMinuit" )   // allow call with python callable
       return Utility::AddToClass( pyclass, "SetFCN", new TMinuitSetFCN );
 
    if ( name == "TFitter" )   // allow call with python callable (this is not correct)
       return Utility::AddToClass( pyclass, "SetFCN", new TMinuitFitterSetFCN );
+*/
 
    if ( name == "Fitter" )    // really Fit::Fitter, allow call with python callable
       return Utility::AddToClass( pyclass, "FitFCN", new TFitterFitFCN );
