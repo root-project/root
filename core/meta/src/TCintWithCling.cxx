@@ -1023,10 +1023,12 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
             while (in) {
                std::getline(in, line);
                std::string::size_type posNonWS = line.find_first_not_of(whitespace);
-               if (posNonWS != std::string::npos) {
-                  unnamedMacro = (line[posNonWS] == '{');
-                  break;
-               }
+               if (posNonWS == std::string::npos) continue;
+               if (line[posNonWS] == '/' && line[posNonWS + 1] == '/')
+                  // Too bad, we only suppose C++ comments here.
+                  continue;
+               unnamedMacro = (line[posNonWS] == '{');
+               break;
             }
          }
          if (unnamedMacro) {
