@@ -42,9 +42,9 @@
 #pragma link C++ class std::vector< RooStats::HistFactory::Channel >+ ;
 #pragma link C++ class std::vector< RooStats::HistFactory::Sample >+ ;
 
-#pragma link C++ defined_in "include/RooStats/HistFactory/MakeModelAndMeasurementsFast.h"; 
-#pragma link C++ defined_in "include/RooStats/HistFactory/Systematics.h"; 
-#pragma link C++ defined_in "include/RooStats/HistFactory/HistFactoryModelUtils.h"; 
+#pragma link C++ defined_in "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"; 
+#pragma link C++ defined_in "RooStats/HistFactory/Systematics.h"; 
+#pragma link C++ defined_in "RooStats/HistFactory/HistFactoryModelUtils.h"; 
 
 
 #endif
