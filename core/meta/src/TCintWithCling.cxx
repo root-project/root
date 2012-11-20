@@ -2367,8 +2367,8 @@ Int_t TCintWithCling::LoadLibraryMap(const char* rootmapfile)
    // Load map between class and library. If rootmapfile is specified a
    // specific rootmap file can be added (typically used by ACLiC).
    // In case of error -1 is returned, 0 otherwise.
-   // Cint uses this information to automatically load the shared library
-   // for a class (autoload mechanism).
+   // The interpreter uses this information to automatically load the shared 
+   // library for a class (autoload mechanism).
    // See also the AutoLoadCallback() method below.
    R__LOCKGUARD(gCINTMutex);
    // open the [system].rootmap files
@@ -2377,9 +2377,6 @@ Int_t TCintWithCling::LoadLibraryMap(const char* rootmapfile)
       fMapfile->IgnoreDuplicates(kTRUE);
       fRootmapFiles = new TObjArray;
       fRootmapFiles->SetOwner();
-      // Make sure that this information will be useable by inserting our
-      // autoload call back!
-      G__set_class_autoloading_callback(&TCint_AutoLoadCallback);
    }
    // Load all rootmap files in the dynamic load path ((DY)LD_LIBRARY_PATH, etc.).
    // A rootmap file must end with the string ".rootmap".
@@ -2647,43 +2644,11 @@ Int_t TCintWithCling::UnloadLibraryMap(const char* library)
          // convert "-" to " ", since class names may have
          // blanks and TEnv considers a blank a terminator
          cls.ReplaceAll("-", " ");
-         if (cls.Contains(":")) {
-            // We have a namespace and we have to check it first
-            int slen = cls.Length();
-            for (int k = 0; k < slen; k++) {
-               if (cls[k] == ':') {
-                  if (k + 1 >= slen || cls[k + 1] != ':') {
-                     // we expected another ':'
-                     break;
-                  }
-                  if (k) {
-                     TString base = cls(0, k);
-                     if (base == "std") {
-                        // std is not declared but is also ignored by CINT!
-                        break;
-                     }
-                     else {
-                        // Only declared the namespace do not specify any library because
-                        // the namespace might be spread over several libraries and we do not
-                        // know (yet?) which one the user will need!
-                        //G__remove_from_class_autoloading_table((char*)base.Data());
-                     }
-                     ++k;
-                  }
-               }
-               else if (cls[k] == '<') {
-                  // We do not want to look at the namespace inside the template parameters!
-                  break;
-               }
-            }
-         }
          if (!strcmp(library, lib)) {
             if (fMapfile->GetTable()->Remove(rec) == 0) {
                Error("UnloadLibraryMap", "entry for <%s,%s> not found in library map table", cls.Data(), lib);
                ret = -1;
             }
-            G__set_class_autoloading_table(const_cast<char*>(cls.Data()), (char*)(-1));
-            G__security_recover(stderr); // Ignore any error during this setting.
          }
          delete tokens;
       }
