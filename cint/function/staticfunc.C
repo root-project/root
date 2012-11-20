@@ -32,7 +32,7 @@ struct SelLambda {
 class Top {
 
 public:
-   void func(TString &s) {
+   void func(const TString &s) {
       cout << s.Data() << endl;
    }
    void Run() {
