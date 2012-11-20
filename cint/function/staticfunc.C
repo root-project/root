@@ -7,7 +7,7 @@
 
 struct SelLambda {
    static const int Stopmin = 0;
-   void SelLambda::Loop(Long64_t inEntries)
+   void Loop(Long64_t inEntries)
    {
       
       Long64_t nentries = 1;
