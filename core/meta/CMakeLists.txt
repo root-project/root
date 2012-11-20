@@ -8,8 +8,6 @@ ROOT_GLOB_HEADERS(headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRE
 file(GLOB tcling_headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/TCling*.h)
 file(GLOB tcling_sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TCling*.cxx)
 
-list(REMOVE_ITEM headers ${tcling_headers})
-
 if(BuildCling)
   add_definitions(-DR__WITH_CLING)
   list(REMOVE_ITEM headers TCint.h)
