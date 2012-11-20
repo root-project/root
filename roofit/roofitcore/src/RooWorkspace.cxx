@@ -2712,8 +2712,11 @@ void RooWorkspace::unExport()
   TObject* wobj ;
   while((wobj=iter->Next())) {
     if (isValidCPPID(wobj->GetName())) {
-      strlcpy(buf,Form("%s::%s",_exportNSName.c_str(),wobj->GetName()),10240) ;
-      G__deletevariable(buf) ;
+      // Temporary work-around for properly deleting the variable from
+      // the interpreter: at least mark all subsequent uses as invalid.
+      TString code = TString::Format("*(void**)(&(%s::%s)) = 0;",
+                                     _exportNSName.c_str(),wobj->GetName());
+      gInterpreter->ProcessLine(code);
     }
   }
   delete iter ;
