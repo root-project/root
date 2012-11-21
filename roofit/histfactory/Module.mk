@@ -66,7 +66,12 @@ HISTFACTORYDH   := $(HISTFACTORYDS:.cxx=.h)
 HISTFACTORYH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/RooStats/HistFactory/*.h))
 HISTFACTORYS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HISTFACTORYO    := $(call stripsrc,$(HISTFACTORYS:.cxx=.o))
-HISTFACTORYI    := $(MODDIRI)
+#location of header files for rootcint (cannot use absolute path for win32)
+ifeq ($(PLATFORM),win32)
+HISTFACTORYDICTI    := roofit/histfactory/inc
+else
+HISTFACTORYDICTI    := $(MODDIRI)
+endif	
 
 HISTFACTORYDEP  := $(HISTFACTORYO:.o=.d) $(HISTFACTORYDO:.o=.d)
 
@@ -102,7 +107,8 @@ $(HISTFACTORYLIB): $(HISTFACTORYO) $(HISTFACTORYDO) $(ORDER_) $(MAINLIBS) \
 $(HISTFACTORYDS):  $(HISTFACTORYH) $(HISTFACTORYL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@  -c -I$(HISTFACTORYI) $(HISTFACTORYH)  $(HISTFACTORYL) 
+		@echo `pwd`
+		$(ROOTCINTTMP) -f $@  -c -I$(HISTFACTORYDICTI) $(HISTFACTORYH)  $(HISTFACTORYL) 
 
 $(HISTFACTORYMAP): $(RLIBMAP) $(MAKEFILEDEP) $(HISTFACTORYL)
 		$(RLIBMAP) -o  $@ -l $(HISTFACTORYLIB) \
