@@ -1838,6 +1838,11 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
 
    int storeAutoload = SetClassAutoloading(false);
 
+   // Note that when using CINT we explicitly requested
+   // for template to *not* be instantiated as a
+   // consequence to the equivalent call.  
+   // We need to review whether we want to re-add this
+   // distinction ...
    TClingClassInfo tci(fInterpreter, classname);
    if (!tci.IsValid()) {
       delete[] classname;
@@ -2693,6 +2698,11 @@ void TCintWithCling::UpdateClassInfoWithDecl(void* vTD)
    TagDecl* tdDef = td->getDefinition();
    if (tdDef) td = tdDef;
    std::string name = td->getName();
+   
+   // Supposedly we are being called being something is being
+   // loaded ... let's now tell the autoloader to do the work
+   // yet another time.
+   int storedAutoloading = SetClassAutoloading(false);
    TClass* cl = TClass::GetClassOrAlias(name.c_str());
    if (cl) {
       TClingClassInfo* cci = ((TClingClassInfo*)cl->fClassInfo);
@@ -2710,6 +2720,7 @@ void TCintWithCling::UpdateClassInfoWithDecl(void* vTD)
          cl->fClassInfo = new TClingClassInfo(fInterpreter, cl->GetName());
       }
    }
+   SetClassAutoloading(storedAutoloading);
 }
 
 //______________________________________________________________________________
