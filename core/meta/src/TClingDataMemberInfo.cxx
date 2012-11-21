@@ -430,7 +430,8 @@ const char *TClingDataMemberInfo::TypeName() const
       policy.SuppressScope = false;
       policy.AnonymousTagLocations = false;
 
-      buf = TClassEdit::CleanType(vdType.getAsString(policy).c_str(),0,0);
+      TClassEdit::TSplitType splitname(vdType.getAsString(policy).c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault));
+      splitname.ShortType(buf,TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
       return buf.c_str();
    }
    return 0;
