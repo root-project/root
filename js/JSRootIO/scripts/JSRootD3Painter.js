@@ -2305,7 +2305,12 @@ function createFillPatterns(svg, id, color) {
 
    JSROOTPainter.drawHistogram1D = function(vis, pad, histo, hframe) {
       var i, logx = false, logy = false, logz = false, gridx = false, gridy = false;
+      var same = false;
       var opt = histo['fOption'].toLowerCase();
+      if (opt.indexOf('same') != -1) {
+         same = true;
+         opt = opt.replace('same', '');
+      }
       var draw_all = false;
       if (hframe == null || (hframe['xmin'] < 1e-300 && hframe['xmax'] < 1e-300 &&
           hframe['ymin'] < 1e-300 && hframe['ymax'] < 1e-300)) {
@@ -2404,8 +2409,14 @@ function createFillPatterns(svg, id, color) {
       else
          var y = d3.scale.linear().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([h, 0]);
 
-      ret['ymin'] = histo['fYaxis']['fXmin'];
-      ret['ymax'] = histo['fYaxis']['fXmax'];
+      if (same) {
+         x.domain([ret['xmin'],ret['xmax']]);
+         y.domain([ret['ymin'],ret['ymax']]);
+      }
+      else {
+         ret['ymin'] = histo['fYaxis']['fXmin'];
+         ret['ymax'] = histo['fYaxis']['fXmax'];
+      }
       if (histo['fXaxis'].TestBit(EAxisBits.kAxisRange)) {
          ret['xmin'] = histo.getBinLowEdge(histo['fXaxis']['fFirst']);
          ret['xmax'] = histo.getBinUpEdge(histo['fXaxis']['fLast']);
@@ -2477,6 +2488,7 @@ function createFillPatterns(svg, id, color) {
                   .style("stroke", linecolor)
                   .style("stroke-width", histo['fLineWidth'])
                   .style("fill", "none")
+                  .style("stroke-dasharray", histo['fLineStyle'] > 1 ? root_line_styles[histo['fLineStyle']] : null)
                   .style("antialias", "false");
             }
          };
