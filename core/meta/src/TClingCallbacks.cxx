@@ -171,9 +171,6 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
          Interpreter::CompilationResult Result = m_Interpreter->codegen(&T);
          assert(Result == Interpreter::kSuccess 
                 && "Compilation should never fail!");
-         // initialize it directly in memory ugly:
-         void** address = (void**)m_Interpreter->getAddressOfGlobal(VD);
-         *address = obj;
          R.addDecl(VD);
       }
       return true;
