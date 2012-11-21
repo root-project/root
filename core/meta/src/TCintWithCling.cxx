@@ -827,7 +827,6 @@ void TCintWithCling::RegisterModule(const char* modulename,
    }
 
    bool oldValue = false;
-   // FIXME: Whatif/can the callbacks be set during the parsing?
    if (fClingCallbacks)
      oldValue = SetClassAutoloading(false);
 
