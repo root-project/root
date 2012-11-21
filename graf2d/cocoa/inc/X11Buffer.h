@@ -213,13 +213,11 @@ public:
 //Set of 'xor' operations, required by TCanvas and ExecuteEvent's machinery.
 class DrawBoxXor : public Command {
 private:
-   Int_t fX1;
-   Int_t fY1;
-   Int_t fX2;
-   Int_t fY2;
+   Point fP1;
+   Point fP2;
 
 public:
-   DrawBoxXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
+   DrawBoxXor(Window_t windowID, const Point &p1, const Point &p2);
    
    void Execute()const;
    void Execute(CGContextRef ctx)const;
@@ -227,13 +225,11 @@ public:
 
 class DrawLineXor : public Command {
 private:
-   Int_t fX1;
-   Int_t fY1;
-   Int_t fX2;
-   Int_t fY2;
+   Point fP1;
+   Point fP2;
 
 public:
-   DrawLineXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
+   DrawLineXor(Window_t windowID, const Point &p1, const Point &p2);
    
    void Execute()const;
    void Execute(CGContextRef ctx)const;

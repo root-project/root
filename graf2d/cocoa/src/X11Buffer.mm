@@ -241,17 +241,15 @@ void DeletePixmap::Execute()const
 }
 
 //______________________________________________________________________________
-DrawBoxXor::DrawBoxXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+DrawBoxXor::DrawBoxXor(Window_t windowID, const Point &p1, const Point &p2)
                : Command(windowID, GCValues_t()),
-                 fX1(x1),
-                 fY1(y1),
-                 fX2(x2),
-                 fY2(y2)
+                 fP1(p1),
+                 fP2(p2)
 {
-   if (fX1 > fX2)
-      std::swap(fX1, fX2);
-   if (fY1 > fY2)
-      std::swap(fY1, fY2);
+   if (fP1.fX > fP2.fX)
+      std::swap(fP1.fX, fP2.fX);
+   if (fP1.fY > fP2.fY)
+      std::swap(fP1.fY, fP2.fY);
 }
 
 //______________________________________________________________________________
@@ -269,16 +267,14 @@ void DrawBoxXor::Execute(CGContextRef ctx)const
    CGContextSetRGBStrokeColor(ctx, 0., 0., 0., 1.);
    CGContextSetLineWidth(ctx, 1.);
    
-   CGContextStrokeRect(ctx, CGRectMake(fX1, fY1, fX2 - fX1, fY2 - fY1));
+   CGContextStrokeRect(ctx, CGRectMake(fP1.fX, fP1.fY, fP2.fX - fP1.fX, fP2.fY - fP1.fY));
 }
 
 //______________________________________________________________________________
-DrawLineXor::DrawLineXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+DrawLineXor::DrawLineXor(Window_t windowID, const Point &p1, const Point &p2)
                : Command(windowID, GCValues_t()),
-                 fX1(x1),
-                 fY1(y1),
-                 fX2(x2),
-                 fY2(y2)
+                 fP1(p1),
+                 fP2(p2)
 {
 }
 
@@ -298,8 +294,8 @@ void DrawLineXor::Execute(CGContextRef ctx)const
    CGContextSetLineWidth(ctx, 1.);
    
    CGContextBeginPath(ctx);
-   CGContextMoveToPoint(ctx, fX1, fY1);
-   CGContextAddLineToPoint(ctx, fX2, fY2);
+   CGContextMoveToPoint(ctx, fP1.fX, fP1.fY);
+   CGContextAddLineToPoint(ctx, fP2.fX, fP2.fY);
    CGContextStrokePath(ctx);
 }
 
@@ -319,13 +315,7 @@ CommandBuffer::~CommandBuffer()
 void CommandBuffer::AddDrawLine(Drawable_t wid, const GCValues_t &gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
    try {
-      Point p1 = {};
-      p1.fX = x1;
-      p1.fY = y1;
-      Point p2 = {};
-      p2.fX = x2;
-      p2.fY = y2;
-      std::auto_ptr<DrawLine> cmd(new DrawLine(wid, gc, p1, p2));//if this throws, I do not care.
+      std::auto_ptr<DrawLine> cmd(new DrawLine(wid, gc, Point(x1, y1), Point(x2, y2)));//if this throws, I do not care.
       fCommands.push_back(cmd.get());//this can throw.
       cmd.release();
    } catch (const std::exception &) {
@@ -352,7 +342,7 @@ void CommandBuffer::AddDrawSegments(Drawable_t wid, const GCValues_t &gc, const 
 void CommandBuffer::AddClearArea(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    try {
-      Rectangle_t r = {};
+      Rectangle_t r = {};//To be replaced with X11::Rectangle.
       r.fX = x;
       r.fY = y;
       r.fWidth = (UShort_t)w;
@@ -375,10 +365,7 @@ void CommandBuffer::AddCopyArea(Drawable_t src, Drawable_t dst, const GCValues_t
       area.fY = srcY;
       area.fWidth = (UShort_t)width;
       area.fHeight = (UShort_t)height;
-      Point dstPoint = {};
-      dstPoint.fX = dstX;
-      dstPoint.fY = dstY;
-      std::auto_ptr<CopyArea> cmd(new CopyArea(src, dst, gc, area, dstPoint));//Can throw, nothing leaks.
+      std::auto_ptr<CopyArea> cmd(new CopyArea(src, dst, gc, area, Point(dstX, dstY)));//Can throw, nothing leaks.
       fCommands.push_back(cmd.get());//this can throw.
       cmd.release();
    } catch (const std::exception &) {
@@ -393,10 +380,7 @@ void CommandBuffer::AddDrawString(Drawable_t wid, const GCValues_t &gc, Int_t x,
       if (len < 0)//Negative length can come from caller.
          len = std::strlen(text);
       const std::string substr(text, len);//Can throw.
-      Point p = {};
-      p.fX = x;
-      p.fY = y;
-      std::auto_ptr<DrawString> cmd(new DrawString(wid, gc, p, substr));//Can throw.
+      std::auto_ptr<DrawString> cmd(new DrawString(wid, gc, Point(x, y), substr));//Can throw.
       fCommands.push_back(cmd.get());//can throw.
       cmd.release();
    } catch (const std::exception &) {
@@ -483,7 +467,7 @@ void CommandBuffer::AddDeletePixmap(Pixmap_t pixmapID)
 void CommandBuffer::AddDrawBoxXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
    try {
-      std::auto_ptr<DrawBoxXor> cmd(new DrawBoxXor(windowID, x1, y1, x2, y2));
+      std::auto_ptr<DrawBoxXor> cmd(new DrawBoxXor(windowID, Point(x1, y1), Point(x2, y2)));
       fXorOps.push_back(cmd.get());
       cmd.release();
    } catch (const std::exception &) {
@@ -495,7 +479,7 @@ void CommandBuffer::AddDrawBoxXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x
 void CommandBuffer::AddDrawLineXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
    try {
-      std::auto_ptr<DrawLineXor> cmd(new DrawLineXor(windowID, x1, y1, x2, y2));
+      std::auto_ptr<DrawLineXor> cmd(new DrawLineXor(windowID, Point(x1, y1), Point(x2, y2)));
       fXorOps.push_back(cmd.get());
       cmd.release();
    } catch (const std::exception &) {
