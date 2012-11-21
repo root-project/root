@@ -1210,7 +1210,7 @@ bool Sema::LookupName(LookupResult &R, Scope *S, bool AllowBuiltinCreation) {
     if (CppLookupName(R, S)) {
       if (R.isSingleResult())
         if (const TagDecl *TD = dyn_cast<TagDecl>(R.getFoundDecl())) {
-          if (!TD->isThisDeclarationADefinition() && ExternalSource)
+          if (!TD->getDefinition() && ExternalSource)
             ExternalSource->LookupUnqualified(R, S);
         }
       return true;
