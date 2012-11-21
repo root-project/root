@@ -118,10 +118,20 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
    TObject *obj = TCintWithCling__GetObjectAddress(Name.getAsString().c_str(), 
                                                    fLastLookupCtx);
+   ASTContext& C = SemaR.getASTContext();
    if (obj) {
       NamedDecl *ND = utils::Lookup::Named(&SemaR, Name, fROOTSpecialNamespace);
       if (ND) {
          TObject **address = (TObject**)m_Interpreter->getAddressOfGlobal(ND);
+         // Since code was generated already we cannot rely on the initializer 
+         // of the decl in the AST, however we will update that init so that it
+         // will be easier while debugging.
+         VarDecl *VD = cast<VarDecl>(ND);
+         CStyleCastExpr *CStyleCast = cast<CStyleCastExpr>(VD->getInit());
+         Expr* newInit = utils::Synthesize::IntegerLiteralExpr(C, (uint64_t)obj);
+         CStyleCast->setSubExpr(newInit);
+
+         // The actual update happens here, directly in memory.
          *address = obj;
          R.addDecl(ND);
          //TODO: Check for same types.
@@ -131,7 +141,6 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
          Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
 
          const Decl *TD = TCintWithCling__GetObjectDecl(obj);
-         ASTContext& C = SemaR.getASTContext();
          // We will declare the variable as pointer.
          QualType QT = C.getPointerType(C.getTypeDeclType(cast<TypeDecl>(TD)));
          
@@ -140,7 +149,11 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
                                        Name.getAsIdentifierInfo(), QT,
                                        /*TypeSourceInfo*/0, SC_None, SC_None
                                        );
+         // Build an initializer
+         Expr* Init 
+           = utils::Synthesize::CStyleCastPtrExpr(&SemaR, QT, (uint64_t)obj);
          // Register the decl in our hidden special namespace
+         VD->setInit(Init);
          fROOTSpecialNamespace->addDecl(VD);
 
          cling::CompilationOptions CO;
