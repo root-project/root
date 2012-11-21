@@ -16,6 +16,7 @@
 #import <cstddef>
 #import <new>
 
+#import "CocoaGuiTypes.h"
 #import "QuartzWindow.h"
 #import "QuartzPixmap.h"
 #import "QuartzUtils.h"
@@ -881,6 +882,40 @@ bool AdjustCropArea(const Rectangle_t &srcRect, Rectangle_t &cropArea)
       cropArea.fY = srcRect.fY;
    } else
       cropArea.fHeight = std::min(int(srcRect.fHeight) - int(cropArea.fY - srcRect.fY), int(cropArea.fHeight));
+   
+   return true;
+}
+
+//______________________________________________________________________________
+bool AdjustCropArea(const Rectangle &srcRect, Rectangle &cropArea)
+{
+   // First, find cases, when srcRect and cropArea do not intersect.
+   // I have to care about integer overflows.
+
+   (void) srcRect;
+   (void) cropArea;
+/*   if (cropArea.fX >= srcRect.fX + int(srcRect.fWidth))
+      return false;//No intersection: crop on the right of source.
+   if (cropArea.fX + int(cropArea.fWidth) <= srcRect.fX)
+      return false;//No intersection: crop on the left of source.
+      
+   if (cropArea.fY >= srcRect.fY + int(srcRect.fHeight))
+      return false;//No intersection: crop is above the source.
+   if (cropArea.fY + int(cropArea.fHeight) <= srcRect.fY)
+      return false;//No intersection: crop is under the source.
+      
+   //Intersection exists, set crop area to this intersection.
+   if (cropArea.fX < srcRect.fX) {
+      cropArea.fWidth = std::min(int(srcRect.fWidth), int(cropArea.fWidth) - int(srcRect.fX - cropArea.fX));
+      cropArea.fX = srcRect.fX;
+   } else
+      cropArea.fWidth = std::min(int(srcRect.fWidth) - int(cropArea.fX - srcRect.fX), int(cropArea.fWidth));
+      
+   if (cropArea.fY < srcRect.fY) {
+      cropArea.fHeight = std::min(int(srcRect.fHeight), int(cropArea.fHeight) - int(srcRect.fY - cropArea.fY));
+      cropArea.fY = srcRect.fY;
+   } else
+      cropArea.fHeight = std::min(int(srcRect.fHeight) - int(cropArea.fY - srcRect.fY), int(cropArea.fHeight));*/
    
    return true;
 }
