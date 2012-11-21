@@ -382,7 +382,7 @@ void TStreamerInfo::Build()
       } else {
          // try STL container or string
          static const char* full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
-         if (!strcmp(dmType, "string") || !strcmp(dmType, full_string_name)) {
+         if (!strcmp(dmType, "string") || !strcmp(dmType, "std::string") || !strcmp(dmType, full_string_name)) {
             element = new TStreamerSTLstring(dmName, dmTitle, offset, dmFull, dmIsPtr);
          } else if (dm->IsSTLContainer()) {
             element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dm->GetTrueTypeName(), dmIsPtr);

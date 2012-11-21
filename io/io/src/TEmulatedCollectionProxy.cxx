@@ -619,7 +619,7 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
    } else {
 
       static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
-      if (strcmp(dmType,"string") == 0 || strcmp(dmType,full_string_name)==0 ) {
+      if (strcmp(dmType,"string") == 0 || strcmp(dmType,"std::string") == 0 || strcmp(dmType,full_string_name)==0 ) {
          return new TStreamerSTLstring(dmName,dmTitle,offset,dmFull,dmIsPtr);
       }
       if (TClassEdit::IsSTLCont(dmType)) {
