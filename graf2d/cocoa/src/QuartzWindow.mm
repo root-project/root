@@ -1708,14 +1708,18 @@ void print_mask_info(ULong_t mask)
    if (mask) {
       assert(mask.fImage != nil && "copyImage:area:withMask:clipOrigin:toPoint:, mask.fImage is nil");
       assert(CGImageIsMask(mask.fImage) == true && "copyImage:area:withMask:clipOrigin:toPoint:, mask.fImage is not a mask");
-      clipXY.fY = X11::LocalYROOTToCocoa(self, clipXY.fY + mask.fHeight);
-      const CGRect clipRect = CGRectMake(clipXY.fX, clipXY.fY, mask.fWidth, mask.fHeight);
+      //clipXY.fY = X11::LocalYROOTToCocoa(self, clipXY.fY + mask.fHeight);
+      const CGFloat clipY = X11::LocalYROOTToCocoa(self, CGFloat(clipXY.fY) + mask.fHeight);
+      //const CGRect clipRect = CGRectMake(clipXY.fX, clipXY.fY, mask.fWidth, mask.fHeight);
+      const CGRect clipRect = CGRectMake(clipXY.fX, clipY, mask.fWidth, mask.fHeight);      
       CGContextClipToMask(self.fContext, clipRect, mask.fImage);
    }
    
    //Convert from X11 to Cocoa (as soon as we scaled y * -1).
-   dstPoint.fY = X11::LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);
-   const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
+   //dstPoint.fY = X11::LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);
+   const CGFloat dstY = X11::LocalYROOTToCocoa(self, CGFloat(dstPoint.fY) + area.fHeight);
+   //const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
+   const CGRect imageRect = CGRectMake(dstPoint.fX, dstY, area.fWidth, area.fHeight);
    CGContextDrawImage(self.fContext, imageRect, subImage);
 
    if (needSubImage)
@@ -1761,7 +1765,7 @@ void print_mask_info(ULong_t mask)
    }
 
    const Quartz::CGStateGuard ctxGuard(self.fContext);
-   const CGRect imageRect = CGRectMake(dstPoint.fX, [self visibleRect].size.height - (dstPoint.fY + area.fHeight), area.fWidth, area.fHeight);
+   const CGRect imageRect = CGRectMake(dstPoint.fX, [self visibleRect].size.height - (CGFloat(dstPoint.fY) + area.fHeight), area.fWidth, area.fHeight);
 
    CGContextTranslateCTM(self.fContext, 0., [self visibleRect].size.height); 
    CGContextScaleCTM(self.fContext, 1., -1.);
@@ -1810,13 +1814,16 @@ void print_mask_info(ULong_t mask)
       assert(mask.fImage != nil && "copyPixmap:area:withMask:clipOrigin:toPoint:, mask.fImage is nil");
       assert(CGImageIsMask(mask.fImage) == true && "copyPixmap:area:withMask:clipOrigin:toPoint:, mask.fImage is not a mask");
 
-      clipXY.fY = X11::LocalYROOTToCocoa(self, clipXY.fY + mask.fHeight);
-      const CGRect clipRect = CGRectMake(clipXY.fX, clipXY.fY, mask.fWidth, mask.fHeight);
+      //clipXY.fY = X11::LocalYROOTToCocoa(self, clipXY.fY + mask.fHeight);
+      const CGFloat clipY = X11::LocalYROOTToCocoa(self, CGFloat(clipXY.fY) + mask.fHeight);
+      //const CGRect clipRect = CGRectMake(clipXY.fX, clipXY.fY, mask.fWidth, mask.fHeight);
+      const CGRect clipRect = CGRectMake(clipXY.fX, clipY, mask.fWidth, mask.fHeight);
       CGContextClipToMask(self.fContext, clipRect, mask.fImage);
    }
    
-   dstPoint.fY = X11::LocalYCocoaToROOT(self, dstPoint.fY + area.fHeight);
-   const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
+   //dstPoint.fY = X11::LocalYCocoaToROOT(self, dstPoint.fY + area.fHeight);
+   const CGFloat dstY = X11::LocalYCocoaToROOT(self, CGFloat(dstPoint.fY) + area.fHeight);
+   const CGRect imageRect = CGRectMake(dstPoint.fX, dstY, area.fWidth, area.fHeight);
    CGContextDrawImage(self.fContext, imageRect, imageFromPixmap.Get());
    
    if (needSubImage)
@@ -1853,8 +1860,10 @@ void print_mask_info(ULong_t mask)
    CGContextTranslateCTM(self.fContext, 0., self.fHeight); 
    CGContextScaleCTM(self.fContext, 1., -1.);
 
-   dstPoint.fY = X11::LocalYCocoaToROOT(self, dstPoint.fY + area.fHeight);
-   const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
+   //dstPoint.fY = X11::LocalYCocoaToROOT(self, dstPoint.fY + area.fHeight);
+   const CGFloat dstY = X11::LocalYCocoaToROOT(self, CGFloat(dstPoint.fY) + area.fHeight);
+   //const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
+   const CGRect imageRect = CGRectMake(dstPoint.fX, dstY, area.fWidth, area.fHeight);
    CGContextDrawImage(self.fContext, imageRect, subImage);
    
    if (needSubImage)
