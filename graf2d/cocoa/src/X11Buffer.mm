@@ -790,10 +790,10 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
          //Check if two rects intersect.
          if (RectsOverlap(frame2, frame1)) {
             //Substruct frame1 from our view's rect.
-            clipRect.x1 = frame1.origin.x;
-            clipRect.x2 = clipRect.x1 + frame1.size.width;
-            clipRect.y1 = frame1.origin.y;
-            clipRect.y2 = clipRect.y1 + frame1.size.height;
+            clipRect.fX1 = frame1.origin.x;
+            clipRect.fX2 = clipRect.fX1 + frame1.size.width;
+            clipRect.fY1 = frame1.origin.y;
+            clipRect.fY2 = clipRect.fY1 + frame1.size.height;
             fRectsToClip.push_back(clipRect);
          }
       }
@@ -814,10 +814,10 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
          frame1.origin = [view convertPoint : frame1.origin toView : view.fParentView];
       
       if (RectsOverlap(frame2, frame1)) {
-         clipRect.x1 = frame1.origin.x;
-         clipRect.x2 = clipRect.x1 + frame1.size.width;
-         clipRect.y1 = frame1.origin.y;
-         clipRect.y2 = clipRect.y1 + frame1.size.height;
+         clipRect.fX1 = frame1.origin.x;
+         clipRect.fX2 = clipRect.fX1 + frame1.size.width;
+         clipRect.fY1 = frame1.origin.y;
+         clipRect.fY2 = clipRect.fY1 + frame1.size.height;
          fRectsToClip.push_back(clipRect);
       }
    }
@@ -908,23 +908,23 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
 
    //[First, we "cut" the original rect into stripes.
    for (rect_const_iterator recIt = fRectsToClip.begin(), endIt = fRectsToClip.end(); recIt != endIt; ++recIt) {
-      if (recIt->x1 <= rect.x1 && recIt->x2 >= rect.x2 && recIt->y1 <= rect.y1 && recIt->y2 >= rect.y2) {
+      if (recIt->fX1 <= rect.fX1 && recIt->fX2 >= rect.fX2 && recIt->fY1 <= rect.fY1 && recIt->fY2 >= rect.fY2) {
          //this rect completely overlaps our view, not need to calculate anything at all.
          fClippedRegion.push_back(CGRectMake(0., 0., 0., 0.));
          return;
       }
    
-      if (recIt->x1 > rect.x1)//recIt->x1 is always < rect.x2 (input validation).
-         fXBounds.push_back(recIt->x1);
+      if (recIt->fX1 > rect.fX1)//recIt->x1 is always < rect.x2 (input validation).
+         fXBounds.push_back(recIt->fX1);
 
-      if (recIt->x2 < rect.x2)//recIt->x2 is always > rect.x1 (input validation).
-         fXBounds.push_back(recIt->x2);
+      if (recIt->fX2 < rect.fX2)//recIt->x2 is always > rect.x1 (input validation).
+         fXBounds.push_back(recIt->fX2);
 
-      if (recIt->y1 > rect.y1)
-         fYBounds.push_back(recIt->y1);
+      if (recIt->fY1 > rect.fY1)
+         fYBounds.push_back(recIt->fY1);
 
-      if (recIt->y2 < rect.y2)
-         fYBounds.push_back(recIt->y2);
+      if (recIt->fY2 < rect.fY2)
+         fYBounds.push_back(recIt->fY2);
    }
 
    std::sort(fXBounds.begin(), fXBounds.end());
@@ -942,16 +942,16 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
 
    //Mark the overlapped parts.
    for (rect_const_iterator recIt = fRectsToClip.begin(), endIt = fRectsToClip.end(); recIt != endIt; ++recIt) {
-      const int_iterator left = BinarySearchLeft(fXBounds.begin(), xBoundsEnd, recIt->x1);
+      const int_iterator left = BinarySearchLeft(fXBounds.begin(), xBoundsEnd, recIt->fX1);
       const size_type firstXBand = left == xBoundsEnd ? 0 : left - fXBounds.begin() + 1;
       
-      const int_iterator right = BinarySearchRight(fXBounds.begin(), xBoundsEnd, recIt->x2);
+      const int_iterator right = BinarySearchRight(fXBounds.begin(), xBoundsEnd, recIt->fX2);
       const size_type lastXBand = right - fXBounds.begin() + 1;
       
-      const int_iterator bottom = BinarySearchLeft(fYBounds.begin(), yBoundsEnd, recIt->y1);
+      const int_iterator bottom = BinarySearchLeft(fYBounds.begin(), yBoundsEnd, recIt->fY1);
       const size_type firstYBand = bottom == yBoundsEnd ? 0 : bottom - fYBounds.begin() + 1;
 
-      const int_iterator top = BinarySearchRight(fYBounds.begin(), yBoundsEnd, recIt->y2);
+      const int_iterator top = BinarySearchRight(fYBounds.begin(), yBoundsEnd, recIt->fY2);
       const size_type lastYBand = top - fYBounds.begin() + 1;
 
       for (size_type i = firstYBand; i < lastYBand; ++i) {
@@ -969,11 +969,11 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
       const size_type baseIndex = i * nXBands;
       for (size_type j = 0; j < nXBands; ++j) {
          if (!fGrid[baseIndex + j]) {
-            newRect.origin.x = j ? fXBounds[j - 1] : rect.x1;
-            newRect.origin.y = i ? fYBounds[i - 1] : rect.y1;
+            newRect.origin.x = j ? fXBounds[j - 1] : rect.fX1;
+            newRect.origin.y = i ? fYBounds[i - 1] : rect.fY1;
             
-            newRect.size.width = (j == nXBands - 1 ? rect.x2 : fXBounds[j]) - newRect.origin.x;
-            newRect.size.height = (i == nYBands - 1 ? rect.y2 : fYBounds[i]) - newRect.origin.y;
+            newRect.size.width = (j == nXBands - 1 ? rect.fX2 : fXBounds[j]) - newRect.origin.x;
+            newRect.size.height = (i == nYBands - 1 ? rect.fY2 : fYBounds[i]) - newRect.origin.y;
 
             fClippedRegion.push_back(newRect);
          }

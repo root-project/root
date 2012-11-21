@@ -283,18 +283,18 @@ private:
    //Clip related stuff.
 
    struct WidgetRect {
-      int x1;
-      int y1;
-      int x2;
-      int y2;
+      int fX1;
+      int fY1;
+      int fX2;
+      int fY2;
 
       WidgetRect()
-         : x1(0), y1(0), x2(0), y2(0)
+         : fX1(0), fY1(0), fX2(0), fY2(0)
       {
       }
       
       WidgetRect(int leftX, int bottomY, int rightX, int topY)
-         : x1(leftX), y1(bottomY), x2(rightX), y2(topY)
+         : fX1(leftX), fY1(bottomY), fX2(rightX), fY2(topY)
       {
       }
    };
