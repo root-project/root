@@ -281,9 +281,6 @@ private:
    void ClearXOROperations();   
    
    //Clip related stuff.
-   ///////////////////////////
-   //Yet another rectangle :)
-   //Needed by clipping calculations.
 
    struct WidgetRect {
       int x1;
