@@ -5197,6 +5197,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
    Bool_t all = kFALSE;
    TMessage msg;
    Bool_t fromglobal = kFALSE;
+   Int_t chkveropt = 1;  // Default: check ROOT version
 
    // Notification message
    TString noth;
@@ -5290,6 +5291,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          break;
       case TProof::kBuildPackage:
          (*mess) >> package;
+         if ((mess->BufferSize() > mess->Length())) (*mess) >> chkveropt;
 
          // always follows BuildPackage so no need to check for PROOF-INF
          pdir = fPackageDir + "/" + package;
@@ -5354,6 +5356,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
 
                // read version from file proofvers.txt, and if current version is
                // not the same do a "BUILD.sh clean"
+               Bool_t goodver = kTRUE;
                Bool_t savever = kFALSE;
                TString v;
                Int_t rev = -1;
@@ -5364,9 +5367,13 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                   r.Gets(f);
                   rev = (!r.IsNull() && r.IsDigit()) ? r.Atoi() : -1;
                   fclose(f);
+                  if (chkveropt > 0) {
+                     if (v != gROOT->GetVersion()) goodver = kFALSE;
+                     if (goodver && chkveropt > 1)
+                        if (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision()) goodver = kFALSE;
+                  }
                }
-               if (!f || v != gROOT->GetVersion() ||
-                  (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision())) {
+               if (!f || !goodver) {
                   if (!fromglobal || !gSystem->AccessPathName(pdir, kWritePermission)) {
                      savever = kTRUE;
                      SendAsynMessage(TString::Format("%s: %s: version change (current: %s:%d,"
@@ -5461,7 +5468,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
             PDB(kPackage, 1)
                Info("HandleCache", "package %s successfully built", package.Data());
          }
-         if (slb) slb->Form("%d %s %d", type, package.Data(), status);
+         if (slb) slb->Form("%d %s %d %d", type, package.Data(), status, chkveropt);
          break;
       case TProof::kLoadPackage:
          (*mess) >> package;
@@ -5701,9 +5708,10 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          break;
       case TProof::kBuildSubPackage:
          (*mess) >> package;
+         if ((mess->BufferSize() > mess->Length())) (*mess) >> chkveropt;
          if (IsMaster())
-            fProof->BuildPackage(package);
-         if (slb) slb->Form("%d %s", type, package.Data());
+            fProof->BuildPackage(package, TProof::kBuildAll, chkveropt);
+         if (slb) slb->Form("%d %s %d", type, package.Data(), chkveropt);
          break;
       case TProof::kUnloadPackage:
          (*mess) >> package;
