@@ -131,18 +131,34 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
          Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
 
          const Decl *TD = TCintWithCling__GetObjectDecl(obj);
-
-         QualType QT = SemaR.getASTContext().getTypeDeclType(cast<TypeDecl>(TD));
-         VarDecl *VD = VarDecl::Create(SemaR.getASTContext(), 
-                                       fROOTSpecialNamespace,
-                                       SourceLocation(),
-                                       SourceLocation(),
-                                       Name.getAsIdentifierInfo(),
-                                       QT,
-                                       /*TypeSourceInfo*/0,
-                                       SC_None,
-                                       SC_None
+         ASTContext& C = SemaR.getASTContext();
+         // We will declare the variable as pointer.
+         QualType QT = C.getPointerType(C.getTypeDeclType(cast<TypeDecl>(TD)));
+         
+         VarDecl *VD = VarDecl::Create(C, fROOTSpecialNamespace, 
+                                       SourceLocation(), SourceLocation(),
+                                       Name.getAsIdentifierInfo(), QT,
+                                       /*TypeSourceInfo*/0, SC_None, SC_None
                                        );
+         // Register the decl in our hidden special namespace
+         fROOTSpecialNamespace->addDecl(VD);
+
+         cling::CompilationOptions CO;
+         CO.DeclarationExtraction = 0;
+         CO.ValuePrinting = CompilationOptions::VPDisabled;
+         CO.ResultEvaluation = 0;
+         CO.DynamicScoping = 0;
+         CO.Debug = 0;
+         CO.CodeGeneration = 1;
+
+         cling::Transaction T(CO, /*llvm::Module=*/0);
+         T.appendUnique(VD);
+         T.setCompleted();
+
+         m_Interpreter->codegen(&T);
+         // initialize it directly in memory ugly:
+         void** address = (void**)m_Interpreter->getAddressOfGlobal(VD);
+         *address = obj;
          R.addDecl(VD);
       }
       return true;
