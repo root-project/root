@@ -54,6 +54,12 @@ var EBinErrorOpt = {
    kPoisson2 : 2   // errors from Poisson interval at 95% CL (~ 2 sigma)
 };
 
+var kCARTESIAN   = 1;
+var kPOLAR       = 2;
+var kCYLINDRICAL = 3;
+var kSPHERICAL   = 4;
+var kRAPIDITY    = 5;
+
 String.prototype.endsWith = function(str, ignoreCase) {
    return (ignoreCase ? this.toUpperCase() : this).slice(-str.length)
        == (ignoreCase ? str.toUpperCase() : str);
