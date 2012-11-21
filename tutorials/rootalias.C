@@ -52,7 +52,7 @@ const char *cd(char *path=0)
 //______________________________________________________________________________
 void bexec2(char *macro)
 {
-   printf("in bexec dir=%s\n",dir.Data());
+   printf("in bexec dir=%s\n",pwd());
    if (gROOT->IsBatch()) printf("Processing benchmark: %s\n",macro);
    TPaveText *summary = (TPaveText*)bench->GetPrimitive("TPave");
    TText *tmacro = summary->GetLineWith(macro);
