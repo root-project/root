@@ -32,8 +32,8 @@ if(WIN32)
                       COMMAND cmake -E copy_directory ${PCRE_SRCDIR}/win32 win32
                       COMMAND cmake -E tar xvzf ${PCRE_TARGZFILE}
 		              COMMAND cmake -E chdir win32 nmake -nologo -f Makefile.msc 
-					                               CFG=${pcrebuild} 
-												   NMCXXFLAGS="-I${CMAKE_SOURCE_DIR}/build/win -FIw32pragma.h")
+                      CFG=${pcrebuild} 
+                      NMCXXFLAGS="${BLDCXXFLAGS} -I${CMAKE_SOURCE_DIR}/build/win -FIw32pragma.h")
 else()
   set(pcreliba ${CMAKE_CURRENT_BINARY_DIR}/${PCRE_VERSION}/.libs/libpcre.a)
   set(pcrelib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libpcre.a)

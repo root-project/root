@@ -129,6 +129,9 @@ add_definitions(-DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__CINTBODY)
 # TODO: Check if this works on all platforms 
 add_library(Cint_static STATIC ${CINT_SRCS})
 add_dependencies(Cint_static IOSENUM_H)
+if(WIN32)
+  set_target_properties(Cint_static PROPERTIES STATIC_LIBRARY_FLAGS -ignore:4221)
+endif()
 
 #---Create the shared Cint library--------------------------------------------------------------------------
 ROOT_LINKER_LIBRARY(Cint loadfile.cxx LIBRARIES Cint_static ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
