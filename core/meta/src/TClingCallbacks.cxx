@@ -49,22 +49,14 @@ TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
 //pin the vtable here
 TClingCallbacks::~TClingCallbacks() {}
 
-// If cling cannot find a name it should ask ROOT before it issues an error.
-// If ROOT knows the name then it has to create a new variable with that name
-// and type in dedicated for that namespace (eg. __ROOT_SpecialObjects).
-// For example if the interpreter is looking for h in h-Draw(), this routine
-// will create
-// namespace __ROOT_SpecialObjects {
-//   THist* h = (THist*) the_address;
-// }
+// On a failed lookup we have to try to more things before issuing an error.
+// The symbol might need to be loaded by ROOT's autoloading mechanism or
+// it might be a ROOT special object. 
+// 
+// Try those first and if still failing issue the diagnostics.
 //
-// Later if h is called again it again won't be found by the standart lookup
-// because it is in our hidden namespace (nobody should do using namespace 
-// __ROOT_SpecialObjects). It caches the variable declarations and their
-// last address. If the newly found decl with the same name (h) has different
-// address than the cached one it goes directly at the address and updates it.
+// returns true when a declaration is found and no error should be emitted.
 //
-// returns true when declaration is found and no error should be emitted.
 bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
    if (tryAutoloadInternal(R, S))
@@ -74,6 +66,11 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
    return tryFindROOTSpecialInternal(R, S);
 }
 
+// The symbol might be defined in the ROOT class autoloading map so we have to
+// try to autoload it first and do secondary lookup to try to find it.
+//
+// returns true when a declaration is found and no error should be emitted.
+//
 bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
    Sema &SemaR = m_Interpreter->getSema();
    ASTContext& C = SemaR.getASTContext();
