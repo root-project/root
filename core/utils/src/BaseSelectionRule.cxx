@@ -228,7 +228,8 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
       {
          // Reject classes that declared in a namespace or TagDecl
          // (in particular not in a function)
-         if (!decl->getDeclContext()->isNamespace() && !decl->getDeclContext()->isRecord()) {
+         const clang::DeclContext *declCtxt = decl->getDeclContext();
+         if (!declCtxt->isNamespace() && !declCtxt->isRecord() && !declCtxt->isTranslationUnit()) {
             return kNoMatch;
          }
 
