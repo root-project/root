@@ -154,21 +154,22 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
    TObject *obj = TCintWithCling__GetObjectAddress(Name.getAsString().c_str(), 
                                                    fLastLookupCtx);
    if (obj) {
-      NamedDecl *ND = utils::Lookup::Named(&SemaR, Name, fROOTSpecialNamespace);
-      if (ND) {
-         TObject **address = (TObject**)m_Interpreter->getAddressOfGlobal(ND);
+     VarDecl *VD = cast_or_null<VarDecl>(utils::Lookup::Named(&SemaR, 
+                                                              Name, 
+                                                        fROOTSpecialNamespace));
+      if (VD) {
+         //TODO: Check for same types.
+
+         TObject **address = (TObject**)m_Interpreter->getAddressOfGlobal(VD);
          // Since code was generated already we cannot rely on the initializer 
          // of the decl in the AST, however we will update that init so that it
          // will be easier while debugging.
-         VarDecl *VD = cast<VarDecl>(ND);
          CStyleCastExpr *CStyleCast = cast<CStyleCastExpr>(VD->getInit());
          Expr* newInit = utils::Synthesize::IntegerLiteralExpr(C, (uint64_t)obj);
          CStyleCast->setSubExpr(newInit);
 
          // The actual update happens here, directly in memory.
          *address = obj;
-         R.addDecl(ND);
-         //TODO: Check for same types.
       }
       else {
          // Save state of the PP
@@ -178,11 +179,10 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
          // We will declare the variable as pointer.
          QualType QT = C.getPointerType(C.getTypeDeclType(cast<TypeDecl>(TD)));
          
-         VarDecl *VD = VarDecl::Create(C, fROOTSpecialNamespace, 
-                                       SourceLocation(), SourceLocation(),
-                                       Name.getAsIdentifierInfo(), QT,
-                                       /*TypeSourceInfo*/0, SC_None, SC_None
-                                       );
+         VD = VarDecl::Create(C, fROOTSpecialNamespace, SourceLocation(), 
+                              SourceLocation(), Name.getAsIdentifierInfo(), QT,
+                              /*TypeSourceInfo*/0, SC_None, SC_None
+                              );
          // Build an initializer
          Expr* Init 
            = utils::Synthesize::CStyleCastPtrExpr(&SemaR, QT, (uint64_t)obj);
@@ -205,8 +205,9 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
          Interpreter::CompilationResult Result = m_Interpreter->codegen(&T);
          assert(Result == Interpreter::kSuccess 
                 && "Compilation should never fail!");
-         R.addDecl(VD);
       }
+      assert(VD && "Cannot be null!");
+      R.addDecl(VD);
       return true;
    }
 
