@@ -835,7 +835,7 @@ define BuildFromObj
 $(CMDECHO) ( touch dummy$$$$.C && \
 	($(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) ) \",\"$<\")" > $@.build.log 2>&1 || cat $@.build.log ) && \
 	mv dummy$$$$_C.$(DllSuf) $@ && \
-	rm -f dummy$$$$.C dummy$$$$_C.* \
+	rm -f dummy$$$$_C.* \
 )
 endef
 
@@ -843,7 +843,7 @@ define BuildFromObjs
 $(CMDECHO) ( touch dummy$$$$.C && \
 	($(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) ) \",\"$(filter %.$(ObjSuf),$^)\")" > $@.build.log 2>&1 || cat $@.build.log ) && \
 	mv dummy$$$$_C.$(DllSuf) $@ && \
-	rm dummy$$$$.C \
+	rm -f dummy$$$$_C.* \
 )
 endef
 
