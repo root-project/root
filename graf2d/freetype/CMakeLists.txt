@@ -34,7 +34,7 @@ if(WIN32)
                       COMMAND cmake -E copy win/freetype.mak ${FREETYPE_VERSION}/builds/win32/visualc
                       COMMAND cmake -E copy win/freetype.dep ${FREETYPE_VERSION}/builds/win32/visualc
                       COMMAND cmake -E chdir ${FREETYPE_VERSION}/builds/win32/visualc 
-                              nmake -nologo -f freetype.mak CFG=${freetypebuild} NMAKECXXFLAGS="-MD -GR -D_CRT_SECURE_NO_DEPRECATE" )
+                              nmake -nologo -f freetype.mak CFG=${freetypebuild} NMAKECXXFLAGS="${BLDCXXFLAGS} -D_CRT_SECURE_NO_DEPRECATE" )
 else()
   set(freetypelib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libfreetype.a)
   set(freetypeliba ${CMAKE_CURRENT_BINARY_DIR}/${FREETYPE_VERSION}/objs/.libs/libfreetype.a)
