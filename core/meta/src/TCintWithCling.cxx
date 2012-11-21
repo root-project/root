@@ -1831,19 +1831,19 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
       current += 2;
    }
    strlcpy(classname, name, nch);
-   int flag = 2;
-   if (!autoload) {
-      flag = 3;
-   }
+
+   int storeAutoload = SetClassAutoloading(false);
 
    TClingClassInfo tci(fInterpreter, classname);
    if (!tci.IsValid()) {
       delete[] classname;
+      SetClassAutoloading(storeAutoload);
       return kFALSE;
    }
    if (tci.Property() & (G__BIT_ISENUM | G__BIT_ISCLASS | G__BIT_ISSTRUCT | G__BIT_ISUNION | G__BIT_ISNAMESPACE)) {
       // We are now sure that the entry is not in fact an autoload entry.
       delete[] classname;
+      SetClassAutoloading(storeAutoload);
       return kTRUE;
    }
 
@@ -1853,6 +1853,7 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
    TClingTypedefInfo t(fInterpreter, name);
    if (t.IsValid() && !(t.Property() & G__BIT_ISFUNDAMENTAL)) {
       delete[] classname;
+      SetClassAutoloading(storeAutoload);
       return kTRUE;
    }
    */
@@ -1881,6 +1882,7 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
    }
 
    delete[] classname;
+   SetClassAutoloading(storeAutoload);
    return (decl);
 }
 
