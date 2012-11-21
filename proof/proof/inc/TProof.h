@@ -633,8 +633,8 @@ private:
    Int_t    SetParallelSilent(Int_t nodes, Bool_t random = kFALSE);
    void     RecvLogFile(TSocket *s, Int_t size);
    void     NotifyLogMsg(const char *msg, const char *sfx = "\n");
-   Int_t    BuildPackage(const char *package, EBuildPackageOpt opt = kBuildAll);
-   Int_t    BuildPackageOnClient(const char *package, Int_t opt = 0, TString *path = 0);
+   Int_t    BuildPackage(const char *package, EBuildPackageOpt opt = kBuildAll, Int_t chkveropt = 2);
+   Int_t    BuildPackageOnClient(const char *package, Int_t opt = 0, TString *path = 0, Int_t chkveropt = 2);
    Int_t    LoadPackage(const char *package, Bool_t notOnClient = kFALSE, TList *loadopts = 0);
    Int_t    LoadPackageOnClient(const char *package, TList *loadopts = 0);
    Int_t    UnloadPackage(const char *package);
