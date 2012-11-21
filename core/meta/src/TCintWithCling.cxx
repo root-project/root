@@ -844,100 +844,6 @@ void TCintWithCling::RegisterModule(const char* modulename,
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::ProcessLineCintOnly(const char* line, EErrorCode* error /*=0*/)
-{
-   // Let CINT process a command line.
-   // If the command is executed and the result of G__process_cmd is 0,
-   // the return value is the int value corresponding to the result of the command
-   // (float and double return values will be truncated).
-
-   Long_t ret = 0;
-   if (gApplication) {
-      if (gApplication->IsCmdThread()) {
-         if (gGlobalMutex && !gCINTMutex && fLockProcessLine) {
-            gGlobalMutex->Lock();
-            if (!gCINTMutex)
-               gCINTMutex = gGlobalMutex->Factory(kTRUE);
-            gGlobalMutex->UnLock();
-         }
-         R__LOCKGUARD(fLockProcessLine ? gCINTMutex : 0);
-         gROOT->SetLineIsProcessing();
-
-         G__value local_res;
-         G__setnull(&local_res);
-
-         // It checks whether the input line contains the "fantom" method
-         // to synchronize user keyboard input and ROOT prompt line
-         if (strstr(line,fantomline)) {
-            G__free_tempobject();
-            TCintWithCling::UpdateAllCanvases();
-         } else {
-            int local_error = 0;
-
-            int prerun = G__getPrerun();
-            G__setPrerun(0);
-            ret = G__process_cmd(const_cast<char*>(line), fPrompt, &fMore, &local_error, &local_res);
-            G__setPrerun(prerun);
-            if (local_error == 0 && G__get_return(&fExitCode) == G__RETURN_EXIT2) {
-               ResetGlobals();
-               gApplication->Terminate(fExitCode);
-            }
-            if (error)
-               *error = (EErrorCode)local_error;
-         }
-
-         if (ret == 0) {
-            // prevent overflow signal
-            double resd = G__double(local_res);
-            if (resd > LONG_MAX) ret = LONG_MAX;
-            else if (resd < LONG_MIN) ret = LONG_MIN;
-            else ret = G__int_cast(local_res);
-         }
-
-         gROOT->SetLineHasBeenProcessed();
-      } else {
-         ret = ProcessLineCintOnly(line, error);
-      }
-   } else {
-      if (gGlobalMutex && !gCINTMutex && fLockProcessLine) {
-         gGlobalMutex->Lock();
-         if (!gCINTMutex)
-            gCINTMutex = gGlobalMutex->Factory(kTRUE);
-         gGlobalMutex->UnLock();
-      }
-      R__LOCKGUARD(fLockProcessLine ? gCINTMutex : 0);
-      gROOT->SetLineIsProcessing();
-
-      G__value local_res;
-      G__setnull(&local_res);
-
-      int local_error = 0;
-
-      int prerun = G__getPrerun();
-      G__setPrerun(0);
-      ret = G__process_cmd(const_cast<char*>(line), fPrompt, &fMore, &local_error, &local_res);
-      G__setPrerun(prerun);
-      if (local_error == 0 && G__get_return(&fExitCode) == G__RETURN_EXIT2) {
-         ResetGlobals();
-         exit(fExitCode);
-      }
-      if (error)
-         *error = (EErrorCode)local_error;
-
-      if (ret == 0) {
-         // prevent overflow signal
-         double resd = G__double(local_res);
-         if (resd > LONG_MAX) ret = LONG_MAX;
-         else if (resd < LONG_MIN) ret = LONG_MIN;
-         else ret = G__int_cast(local_res);
-      }
-
-      gROOT->SetLineHasBeenProcessed();
-   }
-   return ret;
-}
-
-//______________________________________________________________________________
 Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
 {
    // Let cling process a command line.
@@ -954,9 +860,38 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    //
    TString sLine(line);
    if (strstr(line,fantomline)) {
-      // End-Of-Line action, CINT-only.
-      return TCintWithCling::ProcessLineCintOnly(sLine, error);
+      // End-Of-Line action
+      // See the comment (copied from above):
+      // It is a "fantom" method to synchronize user keyboard input
+      // and ROOT prompt line (for WIN32)
+      // and is implemented by 
+      if (gApplication) {
+         if (gApplication->IsCmdThread()) {
+            if (gGlobalMutex && !gCINTMutex && fLockProcessLine) {
+               gGlobalMutex->Lock();
+               if (!gCINTMutex)
+                  gCINTMutex = gGlobalMutex->Factory(kTRUE);
+               gGlobalMutex->UnLock();
+            }
+            R__LOCKGUARD(fLockProcessLine ? gCINTMutex : 0);
+            gROOT->SetLineIsProcessing();
+
+            UpdateAllCanvases();
+
+            gROOT->SetLineHasBeenProcessed();
+         }
+      }
+      return 0;
    }
+      
+   if (gGlobalMutex && !gCINTMutex && fLockProcessLine) {
+      gGlobalMutex->Lock();
+      if (!gCINTMutex)
+         gCINTMutex = gGlobalMutex->Factory(kTRUE);
+      gGlobalMutex->UnLock();
+   }
+   R__LOCKGUARD(fLockProcessLine ? gCINTMutex : 0);
+   gROOT->SetLineIsProcessing();
 
    // A non-zero returned value means the given line was
    // not a complete statement.
@@ -1041,13 +976,12 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          // and .X commands were handled above.
          if (sLine.BeginsWith(".class "))
             DisplayClass(stdout, sLine.Data() + 7, 0, 0); //:))
-         else
-            ProcessLineCintOnly(sLine, error);
       }
    }
    if (indent) {
       // incomplete expression, needs something like:
       /// fMetaProcessor->abortEvaluation();
+      gROOT->SetLineHasBeenProcessed();
       return 0;
    }
    if (error) {
@@ -1059,9 +993,12 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    }
    if (compRes == cling::Interpreter::kSuccess
        && result.isValid()
-       && !result.get().isVoid(fInterpreter->getCI()->getASTContext())) {
-         return result.get().simplisticCastAs<long>();
+       && !result.get().isVoid(fInterpreter->getCI()->getASTContext())) 
+   {
+      gROOT->SetLineHasBeenProcessed();
+      return result.get().simplisticCastAs<long>();
    }
+   gROOT->SetLineHasBeenProcessed();
    return 0;
 }
 

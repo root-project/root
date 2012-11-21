@@ -384,8 +384,6 @@ private: // Private Utility Functions
    {
    }
 
-   Long_t ProcessLineCintOnly(const char* line, TInterpreter::EErrorCode* error = 0);
-
    void UpdateListOfLoadedSharedLibraries();
    void RegisterLoadedSharedLibrary(const char* name);
 
