@@ -244,14 +244,14 @@ $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
 	@(cd $*; $(TESTTIMEPRE) $(MAKE) CURRENTDIR=$* --no-print-directory $(TESTGOAL) $(TESTTIMEPOST) ; \
      result=$$?; \
      if [ $$result -ne 0 ] ; then \
-         len=`echo Tests in $(CALLDIR)/$* | wc -c `;end=`expr 68 - $$len`;printf 'Test in %s %*.*s ' $(CALLDIR)/$* $$end $$end $(DOTS); \
+         len=`echo Tests in $(CALLDIR)/$* | wc -c `;end=`expr 68 - $$len`;printf 'Tests in %s %*.*s ' $(CALLDIR)/$* $$end $$end $(DOTS); \
 	      printf 'FAIL\n' ; \
          false ; \
      $(TESTTIMEACTION) \
      fi ) 
 
 #     result=$$?; \
-#     len=`echo Test in $(CALLDIR)/$* | wc -c `;end=`expr 68 - $$len`;printf 'Test in %s %*.*s ' $(CALLDIR)/$* $$end $$end $(DOTS); \
+#     len=`echo Test in $(CALLDIR)/$* | wc -c `;end=`expr 68 - $$len`;printf 'Tests in %s %*.*s ' $(CALLDIR)/$* $$end $$end $(DOTS); \
 #	  if [ -f $*/.success ] ; then printf 'OK\n' ; else printf 'FAIL\n' ; fi; \
 #     if [ $$result -ne 0 ] ; then false ; fi )
 
