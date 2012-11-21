@@ -190,6 +190,10 @@ public:
       // Don't descend into templates (but only instances thereof).
       return true;
    }
+   bool TraverseClassTemplatePartialSpecializationDecl(ClassTemplatePartialSpecializationDecl*) {
+      // Don't descend into templates partial specialization (but only instances thereof).
+      return true;
+   }
 
    bool VisitTypedefDecl(TypedefDecl *TdefD) {
       fTypedefs.push_back(TdefD);
