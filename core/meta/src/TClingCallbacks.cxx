@@ -155,7 +155,9 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
          T.appendUnique(VD);
          T.setCompleted();
 
-         m_Interpreter->codegen(&T);
+         Interpreter::CompilationResult Result = m_Interpreter->codegen(&T);
+         assert(Result == Interpreter::kSuccess 
+                && "Compilation failed should never happen!");
          // initialize it directly in memory ugly:
          void** address = (void**)m_Interpreter->getAddressOfGlobal(VD);
          *address = obj;
