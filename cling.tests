@@ -27,6 +27,7 @@
 ./root/io/webfile
 ./root/math/unuran
 ./root/meta/rootmap
+./root/treedraw
 ./root/treeformula/depth
 ./root/treeformula/event
 ./root/treeformula/schemaEvolution
