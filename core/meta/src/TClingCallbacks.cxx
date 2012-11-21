@@ -117,6 +117,7 @@ bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
        return true;
    }
 
+   return false;
 }
 
 // If cling cannot find a name it should ask ROOT before it issues an error.
