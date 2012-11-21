@@ -27,6 +27,7 @@
 #include <stack>
 
 namespace clang {
+   class ClassTemplatePartialSpecializationDecl;
    class ClassTemplateDecl;
    class RecordDecl;
    class Stmt;
@@ -238,7 +239,10 @@ public:
    //   // Don't descend into templates (but only instances thereof).
    //   return true;
    //}
-
+   bool TraverseClassTemplatePartialSpecializationDecl(clang::ClassTemplatePartialSpecializationDecl*) {
+      // Don't descend into templates partial specialization (but only instances thereof).
+      return true;
+   }
 
    bool VisitEnumDecl(clang::EnumDecl* D); //Visitor for every EnumDecl i.e. enumeration node in the AST
    bool VisitFieldDecl(clang::FieldDecl* D); //Visitor for e field inside a class
