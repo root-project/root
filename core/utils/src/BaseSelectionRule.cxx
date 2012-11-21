@@ -226,13 +226,6 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
           CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef)))
       
       {
-         // Reject classes that declared in a namespace or TagDecl
-         // (in particular not in a function)
-         const clang::DeclContext *declCtxt = decl->getDeclContext();
-         if (!declCtxt->isNamespace() && !declCtxt->isRecord() && !declCtxt->isTranslationUnit()) {
-            return kNoMatch;
-         }
-
          // Reject utility class defined in ClassImp
          // when using a file based rule
          if (!strncmp(name.c_str(), "R__Init", 7) ||

@@ -27,7 +27,9 @@
 #include <stack>
 
 namespace clang {
+   class ClassTemplateDecl;
    class RecordDecl;
+   class Stmt;
 }
 
 namespace cling {
@@ -227,6 +229,16 @@ public:
 public:
    // Configure the vistitor to also visit template instantiation.
    bool shouldVisitTemplateInstantiations() const { return true; }
+
+   bool TraverseStmt(clang::Stmt*) {
+      // Don't descend into function bodies.
+      return true;
+   }
+   //bool TraverseClassTemplateDecl(clang::ClassTemplateDecl*) {
+   //   // Don't descend into templates (but only instances thereof).
+   //   return true;
+   //}
+
 
    bool VisitEnumDecl(clang::EnumDecl* D); //Visitor for every EnumDecl i.e. enumeration node in the AST
    bool VisitFieldDecl(clang::FieldDecl* D); //Visitor for e field inside a class
