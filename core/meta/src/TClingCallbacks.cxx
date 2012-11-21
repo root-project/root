@@ -68,6 +68,7 @@ TClingCallbacks::~TClingCallbacks() {}
 bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
    Sema &SemaR = m_Interpreter->getSema();
+   ASTContext& C = SemaR.getASTContext();
    Preprocessor &PP = SemaR.getPreprocessor();
    DeclContext *CurDC = SemaR.CurContext;
    DeclarationName Name = R.getLookupName();
@@ -91,7 +92,8 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
      // the DeclContext assumes that we drill down always.
      // We have to be on the global context. At that point we are in a 
      // wrapper function so the parent context must be the global.
-     Sema::ContextAndScopeRAII pushedSAndDC(SemaR, CurDC, S);
+     Sema::ContextAndScopeRAII pushedSAndDC(SemaR, C.getTranslationUnitDecl(), 
+                                            SemaR.TUScope);
 
      bool lookupSuccess = false;
      if (TCintWithCling__AutoLoadCallback(Name.getAsString().c_str())) {
@@ -118,7 +120,6 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
    TObject *obj = TCintWithCling__GetObjectAddress(Name.getAsString().c_str(), 
                                                    fLastLookupCtx);
-   ASTContext& C = SemaR.getASTContext();
    if (obj) {
       NamedDecl *ND = utils::Lookup::Named(&SemaR, Name, fROOTSpecialNamespace);
       if (ND) {
