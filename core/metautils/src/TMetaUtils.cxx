@@ -994,7 +994,11 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       const clang::DeclContext *replacedDeclCtxt = substType->getReplacedParameter()->getDecl()->getDeclContext();
       const clang::CXXRecordDecl *decl = llvm::dyn_cast<clang::CXXRecordDecl>(replacedDeclCtxt);
       if (decl) {
-         replacedCtxt = decl->getDescribedClassTemplate();
+         if (decl->getKind() == clang::Decl::ClassTemplatePartialSpecialization) {
+            replacedCtxt = llvm::dyn_cast<clang::ClassTemplatePartialSpecializationDecl>(decl)->getSpecializedTemplate();
+         } else {
+            replacedCtxt = decl->getDescribedClassTemplate();
+         }
       } else {
          replacedCtxt = llvm::dyn_cast<clang::ClassTemplateDecl>(replacedDeclCtxt);
       }
