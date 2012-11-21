@@ -44,7 +44,7 @@ TTree* makeTree()
     flag <<= 1;
     c++;
     (c2[2])++;
-    printf("%f:%d:%#x:%c\n",val,flag,flag,c,c2);
+    printf("%f:%d:%#x:%c\n",val,flag,flag,c /* ,c2 */);
   }
 
   tree->Fill();
