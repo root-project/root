@@ -4,12 +4,12 @@ void edit(char *file)
 {
    char s[64], *e;
    if (!strcmp(gSystem->GetName(), "WinNT")) {
-      if (e = getenv("EDITOR"))
+      if ((e = getenv("EDITOR")))
          sprintf(s, "start %s %s", e, file);
       else
          sprintf(s, "start notepad %s", file);
    } else {
-      if (e = getenv("EDITOR"))
+      if ((e = getenv("EDITOR")))
          sprintf(s, "%s %s", e, file);
       else
          sprintf(s, "xterm -e vi %s &", file);
@@ -20,7 +20,8 @@ void edit(char *file)
 //______________________________________________________________________________
 void ls(char *path=0)
 {
-   char s[256] = (!strcmp(gSystem->GetName(), "WinNT")) ? "dir /w " : "ls ";
+   char s[256];
+   strcpy(s, (!strcmp(gSystem->GetName(), "WinNT")) ? "dir /w " : "ls ");
    if (path) strcat(s,path);
    gSystem->Exec(s);
 }
@@ -28,19 +29,20 @@ void ls(char *path=0)
 //______________________________________________________________________________
 void dir(char *path=0)
 {
-   char s[256] = (!strcmp(gSystem->GetName(), "WinNT")) ? "dir " : "ls -l ";
+   char s[256];
+   strcpy(s,(!strcmp(gSystem->GetName(), "WinNT")) ? "dir " : "ls -l ");
    if (path) strcat(s,path);
    gSystem->Exec(s);
 }
 
 //______________________________________________________________________________
-char *pwd()
+const char *pwd()
 {
     return gSystem->WorkingDirectory();
 }
 
 //______________________________________________________________________________
-char *cd(char *path=0)
+const char *cd(char *path=0)
 {
  if (path)
    gSystem->ChangeDirectory(path);
@@ -50,7 +52,7 @@ char *cd(char *path=0)
 //______________________________________________________________________________
 void bexec2(char *macro)
 {
-printf("in bexec dir=%s\n",dir.Data());
+   printf("in bexec dir=%s\n",dir.Data());
    if (gROOT->IsBatch()) printf("Processing benchmark: %s\n",macro);
    TPaveText *summary = (TPaveText*)bench->GetPrimitive("TPave");
    TText *tmacro = summary->GetLineWith(macro);
