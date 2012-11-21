@@ -67,10 +67,17 @@ TClingCallbacks::~TClingCallbacks() {}
 // returns true when declaration is found and no error should be emitted.
 bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
+   if (tryAutoloadInternal(R, S))
+      return true; // happiness.
+
+   // If the autoload wasn't successful try ROOT specials.
+   return tryFindROOTSpecialInternal(R, S);
+}
+
+bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
    Sema &SemaR = m_Interpreter->getSema();
    ASTContext& C = SemaR.getASTContext();
    Preprocessor &PP = SemaR.getPreprocessor();
-   DeclContext *CurDC = SemaR.CurContext;
    DeclarationName Name = R.getLookupName();
 
    // Try to autoload first if autoloading is enabled
@@ -110,7 +117,33 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
        return true;
    }
 
-   // If the autoload wasn't successful try ROOT specials.
+}
+
+// If cling cannot find a name it should ask ROOT before it issues an error.
+// If ROOT knows the name then it has to create a new variable with that name
+// and type in dedicated for that namespace (eg. __ROOT_SpecialObjects).
+// For example if the interpreter is looking for h in h-Draw(), this routine
+// will create
+// namespace __ROOT_SpecialObjects {
+//   THist* h = (THist*) the_address;
+// }
+//
+// Later if h is called again it again won't be found by the standart lookup
+// because it is in our hidden namespace (nobody should do using namespace 
+// __ROOT_SpecialObjects). It caches the variable declarations and their
+// last address. If the newly found decl with the same name (h) has different
+// address than the cached one it goes directly at the address and updates it.
+//
+// returns true when declaration is found and no error should be emitted.
+//
+bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
+
+   Sema &SemaR = m_Interpreter->getSema();
+   ASTContext& C = SemaR.getASTContext();
+   Preprocessor &PP = SemaR.getPreprocessor();
+   DeclContext *CurDC = SemaR.CurContext;
+   DeclarationName Name = R.getLookupName();
+
    // Make sure that the failed lookup comes from the prompt.
    if(!CurDC || !CurDC->isFunctionOrMethod())
       return false;
@@ -177,9 +210,8 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
       return true;
    }
 
-   return false; // give up.
+   return false;
 }
-
 // The callback is used to update the list of globals in ROOT.
 //
 void TClingCallbacks::TransactionCommitted(const Transaction &T) {

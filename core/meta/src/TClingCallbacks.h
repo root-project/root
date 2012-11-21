@@ -49,4 +49,8 @@ public:
    // The callback is used to update the list of globals in ROOT.
    //
    virtual void TransactionUnloaded(const cling::Transaction &T);
+
+private:
+   bool tryAutoloadInternal(clang::LookupResult &R, clang::Scope *S);
+   bool tryFindROOTSpecialInternal(clang::LookupResult &R, clang::Scope *S);
 };
