@@ -70,7 +70,7 @@ bool Command::IsGraphicsCommand()const
 }
 
 //______________________________________________________________________________
-DrawLine::DrawLine(Drawable_t wid, const GCValues_t &gc, const Point_t &p1, const Point_t &p2)
+DrawLine::DrawLine(Drawable_t wid, const GCValues_t &gc, const Point &p1, const Point &p2)
             : Command(wid, gc),
               fP1(p1),
               fP2(p2)
@@ -119,7 +119,7 @@ void ClearArea::Execute()const
 }
 
 //______________________________________________________________________________
-CopyArea::CopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc, const Rectangle_t &area, const Point_t &dstPoint)
+CopyArea::CopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc, const Rectangle_t &area, const Point &dstPoint)
                : Command(dst, gc),
                  fSrc(src),
                  fArea(area),
@@ -142,7 +142,7 @@ void CopyArea::Execute()const
 }
 
 //______________________________________________________________________________
-DrawString::DrawString(Drawable_t wid, const GCValues_t &gc, const Point_t &point, const std::string &text)
+DrawString::DrawString(Drawable_t wid, const GCValues_t &gc, const Point &point, const std::string &text)
                : Command(wid, gc),
                  fPoint(point),
                  fText(text)
@@ -319,12 +319,10 @@ CommandBuffer::~CommandBuffer()
 void CommandBuffer::AddDrawLine(Drawable_t wid, const GCValues_t &gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
    try {
-      Point_t p1 = {}; 
-      //I'd use .fX = x1 from standard C, but ... this is already C++0x + Obj-C :)
-      //So, not to make it worse :)
+      Point p1 = {};
       p1.fX = x1;
       p1.fY = y1;
-      Point_t p2 = {};
+      Point p2 = {};
       p2.fX = x2;
       p2.fY = y2;
       std::auto_ptr<DrawLine> cmd(new DrawLine(wid, gc, p1, p2));//if this throws, I do not care.
@@ -377,7 +375,7 @@ void CommandBuffer::AddCopyArea(Drawable_t src, Drawable_t dst, const GCValues_t
       area.fY = srcY;
       area.fWidth = (UShort_t)width;
       area.fHeight = (UShort_t)height;
-      Point_t dstPoint = {};
+      Point dstPoint = {};
       dstPoint.fX = dstX;
       dstPoint.fY = dstY;
       std::auto_ptr<CopyArea> cmd(new CopyArea(src, dst, gc, area, dstPoint));//Can throw, nothing leaks.
@@ -395,7 +393,7 @@ void CommandBuffer::AddDrawString(Drawable_t wid, const GCValues_t &gc, Int_t x,
       if (len < 0)//Negative length can come from caller.
          len = std::strlen(text);
       const std::string substr(text, len);//Can throw.
-      Point_t p = {};
+      Point p = {};
       p.fX = x;
       p.fY = y;
       std::auto_ptr<DrawString> cmd(new DrawString(wid, gc, p, substr));//Can throw.

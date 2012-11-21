@@ -17,6 +17,9 @@
 
 #include <Cocoa/Cocoa.h>
 
+#ifndef ROOT_CocoaGuiTypes
+#include "CocoaGuiTypes.h"
+#endif
 #ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
 #endif
@@ -68,11 +71,11 @@ private:
 
 class DrawLine : public Command {
 private:
-   const Point_t fP1;
-   const Point_t fP2;
+   const Point fP1;
+   const Point fP2;
 
 public:
-   DrawLine(Drawable_t wid, const GCValues_t &gc, const Point_t &p1, const Point_t &p2);
+   DrawLine(Drawable_t wid, const GCValues_t &gc, const Point &p1, const Point &p2);
    void Execute()const;
    bool IsGraphicsCommand()const
    {
@@ -95,7 +98,7 @@ public:
 
 class ClearArea : public Command {
 private:
-   const Rectangle_t fArea;
+   const Rectangle_t fArea;//to be replaced with X11::Rectangle
 
 public:
    ClearArea(Window_t wid, const Rectangle_t &area);
@@ -109,11 +112,11 @@ public:
 class CopyArea : public Command {
 private:
    const Drawable_t  fSrc;
-   const Rectangle_t fArea;
-   const Point_t     fDstPoint;
+   const Rectangle_t fArea;//to be replaced with X11::Rectangle
+   const Point     fDstPoint;
 
 public:
-   CopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc, const Rectangle_t &area, const Point_t &dstPoint);
+   CopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc, const Rectangle_t &area, const Point &dstPoint);
 
    bool HasOperand(Drawable_t drawable)const;
    bool IsGraphicsCommand()const
@@ -127,11 +130,11 @@ public:
 
 class DrawString : public Command {
 private:
-   const Point_t     fPoint;
+   const Point       fPoint;
    const std::string fText;
 
 public:
-   DrawString(Drawable_t wid, const GCValues_t &gc, const Point_t &point, const std::string &text);
+   DrawString(Drawable_t wid, const GCValues_t &gc, const Point &point, const std::string &text);
    
    bool IsGraphicsCommand()const
    {
@@ -143,7 +146,7 @@ public:
 
 class FillRectangle : public Command {
 private:
-   const Rectangle_t fRectangle;
+   const Rectangle_t fRectangle;//to be replaced with X11::Rectangle
 
 public:
    FillRectangle(Drawable_t wid, const GCValues_t &gc, const Rectangle_t &rectangle);
@@ -173,7 +176,7 @@ public:
 
 class DrawRectangle : public Command {
 private:
-   Rectangle_t fRectangle;
+   Rectangle_t fRectangle;//to be replaced with X11::Rectangle
 
 public:
    DrawRectangle(Drawable_t wid, const GCValues_t &gc, const Rectangle_t &rectangle);
