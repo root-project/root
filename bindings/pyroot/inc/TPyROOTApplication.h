@@ -27,7 +27,6 @@ public:
    static Bool_t CreatePyROOTApplication( Bool_t bLoadLibs = kTRUE );
 
    static Bool_t InitROOTGlobals();
-   static Bool_t InitCINTMessageCallback();
    static Bool_t InitROOTMessageCallback();
 
 public:
