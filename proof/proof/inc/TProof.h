@@ -478,6 +478,11 @@ private:
       kBuildAll            = 0,
       kCollectBuildResults = 1
    };
+   enum EParCheckVersionOpt {
+      kDontCheck   = 0,
+      kCheckROOT    = 1,
+      kCheckSVN     = 2
+   };
    enum EProofShowQuotaOpt {
       kPerGroup = 0x1,
       kPerUser = 0x2

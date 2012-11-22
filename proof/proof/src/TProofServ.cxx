@@ -5203,7 +5203,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
    Bool_t all = kFALSE;
    TMessage msg;
    Bool_t fromglobal = kFALSE;
-   Int_t chkveropt = 1;  // Default: check ROOT version
+   Int_t chkveropt = TProof::kCheckROOT;  // Default: check ROOT version
 
    // Notification message
    TString noth;
@@ -5373,9 +5373,9 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                   r.Gets(f);
                   rev = (!r.IsNull() && r.IsDigit()) ? r.Atoi() : -1;
                   fclose(f);
-                  if (chkveropt > 0) {
+                  if (chkveropt == TProof::kCheckROOT || chkveropt == TProof::kCheckSVN) {
                      if (v != gROOT->GetVersion()) goodver = kFALSE;
-                     if (goodver && chkveropt > 1)
+                     if (goodver && chkveropt == TProof::kCheckSVN)
                         if (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision()) goodver = kFALSE;
                   }
                }
