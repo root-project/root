@@ -823,7 +823,7 @@ void TCintWithCling::RegisterModule(const char* modulename,
 
    if (!gSystem->FindFile(searchPath, pcmFileName)) {
       Error("RegisterModule", "cannot find dictionary module %s in %s",
-            pcmFileName.Data(), searchPath.Data());
+            ROOT::TMetaUtils::GetModuleFileName(modulename).c_str(), searchPath.Data());
    } else {
       if (gDebug > 5) Info("RegisterModule", "Loading PCM %s", pcmFileName.Data());
       clang::CompilerInstance* CI = fInterpreter->getCI();
