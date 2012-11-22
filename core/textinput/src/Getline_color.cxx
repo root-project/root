@@ -234,7 +234,7 @@ void ROOT::TextInputColorizer::ProcessTextChange(EditorRange& Modification,
          if (gROOT->GetListOfTypes()->FindObject(word.c_str())
              || gClassTable->GetDict(word.c_str())
              || gInterpreter->GetClassSharedLibs(word.c_str())
-             || TClass::GetClass(word.c_str(), kFALSE)) {
+             || gInterpreter->CheckClassInfo(word.c_str(), false /*autoload*/)) {
             color = kColorType;
          }
          for (size_t ic = i; ic < i + wordLen; ++ic) {
