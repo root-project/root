@@ -19,7 +19,7 @@ CLING_TESTS := $(patsubst %,%.test,$(CLING_SUBDIR) )
 
 %.test: $(EVENTDIR)/$(SUCCESS_FILE) utils
 	@(echo Running test in $(CALLDIR)/$*)
-	@(cd $(CALLDIR)/$*; $(TESTTIMEPRE) $(MAKE) CURRENTDIR=$* --no-print-directory $(TESTGOAL) $(TESTTIMEPOST) ; \
+	@(cd $(CALLDIR)/$* && $(TESTTIMEPRE) $(MAKE) CURRENTDIR=$* --no-print-directory $(TESTGOAL) $(TESTTIMEPOST) ; \
      result=$$?; \
      if [ $$result -ne 0 ] ; then \
          len=`echo Tests in $(CALLDIR)/$* | wc -c `;end=`expr 68 - $$len`;printf 'Test in %s %*.*s ' $(CALLDIR)/$* $$end $$end $(DOTS); \
