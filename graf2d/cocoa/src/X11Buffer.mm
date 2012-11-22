@@ -218,12 +218,8 @@ void UpdateWindow::Execute()const
 {
    assert(fView.fContext != 0 && "Execute, view.fContext is null");
 
-   if (QuartzPixmap *pixmap = fView.fBackBuffer) {
-      Rectangle_t copyArea = {};
-      copyArea.fWidth = UShort_t(pixmap.fWidth);
-      copyArea.fHeight = UShort_t(pixmap.fHeight);
-      [fView copy : pixmap area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
-   }
+   if (QuartzPixmap *pixmap = fView.fBackBuffer)
+      [fView copy : pixmap area : Rectangle(0, 0, pixmap.fWidth, pixmap.fHeight) withMask : nil clipOrigin : Point() toPoint : Point()];
 }
 
 //______________________________________________________________________________
@@ -544,10 +540,8 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
             
             if (view.fBackBuffer) {
                //Very "special" window.
-               Rectangle_t copyArea = {};
-               copyArea.fWidth = UShort_t(view.fBackBuffer.fWidth);
-               copyArea.fHeight = UShort_t(view.fBackBuffer.fHeight);
-               [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
+               const Rectangle copyArea(0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight);
+               [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point() toPoint : Point()];
             }
             
             [view unlockFocus];
@@ -602,10 +596,8 @@ void CommandBuffer::FlushXOROps(Details::CocoaPrivate *impl)
    
       if (view.fBackBuffer) {//back buffer has canvas' contents.
          //Very "special" window.
-         Rectangle_t copyArea = {};
-         copyArea.fWidth = UShort_t(view.fBackBuffer.fWidth);
-         copyArea.fHeight = UShort_t(view.fBackBuffer.fHeight);
-         [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];      
+         const Rectangle copyArea(0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight);
+         [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point() toPoint : Point()];
       }
    
       //Now, do "XOR" drawings.

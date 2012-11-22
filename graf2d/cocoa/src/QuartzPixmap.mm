@@ -160,17 +160,11 @@ namespace Quartz = ROOT::Quartz;
 //______________________________________________________________________________
 - (CGImageRef) createImageFromPixmap
 {
-   Rectangle_t imageRect = {};
-   imageRect.fX = 0;
-   imageRect.fY = 0;
-   imageRect.fWidth = fWidth;
-   imageRect.fHeight = fHeight;
-   
-   return [self createImageFromPixmap : imageRect];
+   return [self createImageFromPixmap : X11::Rectangle(0, 0, fWidth, fHeight)];
 }
 
 //______________________________________________________________________________
-- (CGImageRef) createImageFromPixmap : (Rectangle_t) cropArea
+- (CGImageRef) createImageFromPixmap : (X11::Rectangle) cropArea
 {
    //Crop area must be valid and adjusted by caller.
    
@@ -249,7 +243,7 @@ namespace Quartz = ROOT::Quartz;
 }
 
 //______________________________________________________________________________
-- (void) copyImage : (QuartzImage *) srcImage area : (Rectangle_t) area withMask : (QuartzImage *) mask clipOrigin : (Point_t) clipXY toPoint : (Point_t) dstPoint
+- (void) copyImage : (QuartzImage *) srcImage area : (X11::Rectangle) area withMask : (QuartzImage *) mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
 {
    using namespace ROOT::MacOSX::X11;
 
@@ -280,12 +274,12 @@ namespace Quartz = ROOT::Quartz;
    if (mask) {
       assert(mask.fImage != nil && "copyImage:area:withMask:clipOrigin:toPoint, mask is not nil, but mask.fImage is nil");
       assert(CGImageIsMask(mask.fImage) && "copyImage:area:withMask:clipOrigin:toPoint, mask.fImage is not a mask");
-      clipXY.fY = LocalYROOTToCocoa(self, clipXY.fY + mask.fHeight);
+      clipXY.fY = LocalYROOTToCocoa(self, clipXY.fY + mask.fHeight);//TODO: fix the possible overflow? (though, who can have such images???)
       const CGRect clipRect = CGRectMake(clipXY.fX, clipXY.fY, mask.fWidth, mask.fHeight);
       CGContextClipToMask(fContext, clipRect, mask.fImage);
    }
 
-   dstPoint.fY = LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);
+   dstPoint.fY = LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);//TODO: fix the possible overflow? (though, who can have such images???)
    const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
    CGContextDrawImage(fContext, imageRect, subImage);
 
@@ -294,7 +288,7 @@ namespace Quartz = ROOT::Quartz;
 }
 
 //______________________________________________________________________________
-- (void) copyPixmap : (QuartzPixmap *) srcPixmap area : (Rectangle_t) area withMask : (QuartzImage *)mask clipOrigin : (Point_t) clipXY toPoint : (Point_t) dstPoint
+- (void) copyPixmap : (QuartzPixmap *) srcPixmap area : (X11::Rectangle) area withMask : (QuartzImage *)mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
 {
    using namespace ROOT::MacOSX::X11;
 
@@ -314,19 +308,21 @@ namespace Quartz = ROOT::Quartz;
    if (mask) {
       assert(mask.fImage != nil && "copyPixmap:area:withMask:clipOrigin:toPoint, mask is not nil, but mask.fImage is nil");
       assert(CGImageIsMask(mask.fImage) && "copyPixmap:area:withMask:clipOrigin:toPoint, mask.fImage is not a mask");
-      clipXY.fY = LocalYROOTToCocoa(self, clipXY.fY + mask.fHeight);
+      clipXY.fY = LocalYROOTToCocoa(self, clipXY.fY + mask.fHeight);//TODO: fix the possible overflow? (though, who can have such images???)
       const CGRect clipRect = CGRectMake(clipXY.fX, clipXY.fY, mask.fWidth, mask.fHeight);
       CGContextClipToMask(fContext, clipRect, mask.fImage);
    }
    
-   dstPoint.fY = LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);
+   dstPoint.fY = LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);//TODO: fix the possible overflow? (though, who can have such images???)
    const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
    CGContextDrawImage(fContext, imageRect, image.Get());
 }
 
 //______________________________________________________________________________
-- (void) copy : (NSObject<X11Drawable> *) src area : (Rectangle_t) area withMask : (QuartzImage *)mask clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint
+- (void) copy : (NSObject<X11Drawable> *) src area : (X11::Rectangle) area withMask : (QuartzImage *)mask clipOrigin : (X11::Point) origin toPoint : (X11::Point) dstPoint
 {
+   assert(area.fWidth && area.fHeight && "copy:area:widthMask:clipOrigin:toPoint, empty area to copy");
+
    if ([src isKindOfClass : [QuartzImage class]]) {
       [self copyImage : (QuartzImage *)src area : area withMask : mask clipOrigin : origin toPoint : dstPoint];
    } else if ([src isKindOfClass : [QuartzPixmap class]]) {
@@ -336,8 +332,9 @@ namespace Quartz = ROOT::Quartz;
 }
 
 //______________________________________________________________________________
-- (unsigned char *) readColorBits : (Rectangle_t) area
+- (unsigned char *) readColorBits : (X11::Rectangle) area
 {
+   assert(area.fWidth && area.fHeight && "readColorBits:, empty area to copy");
 
    if (!X11::AdjustCropArea(self, area)) {
       NSLog(@"QuartzPixmap: readColorBits:intoBuffer:, src and copy area do not intersect");
@@ -364,23 +361,20 @@ namespace Quartz = ROOT::Quartz;
          return buffer;//empty buffer.
       }
       
-      Rectangle_t copyArea = {};
-      copyArea.fWidth = fWidth;
-      copyArea.fHeight = fHeight;
-      
-      [scaledPixmap.Get() copy : self area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
+      [scaledPixmap.Get() copy : self area : X11::Rectangle(0, 0, fWidth, fHeight) withMask : nil clipOrigin : X11::Point() toPoint : X11::Point()];
    }
 
    unsigned char *dstPixel = buffer;
 
-      //fImageData has 4 bytes per pixel.
+   //fImageData has 4 bytes per pixel.
+   //TODO: possible overflows everywhere :(
    const unsigned char *line = fScaleFactor == 1 ? fData + area.fY * fWidth * 4
                                : scaledPixmap.Get()->fData + area.fY * fWidth * 4;
 
    const unsigned char *srcPixel = line + area.fX * 4;
 
-   for (Short_t i = 0; i < area.fHeight; ++i) {
-      for (Short_t j = 0; j < area.fWidth; ++j, srcPixel += 4, dstPixel += 4) {
+   for (unsigned i = 0; i < area.fHeight; ++i) {
+      for (unsigned j = 0; j < area.fWidth; ++j, srcPixel += 4, dstPixel += 4) {
          dstPixel[0] = srcPixel[0];
          dstPixel[1] = srcPixel[1];
          dstPixel[2] = srcPixel[2];
@@ -745,7 +739,7 @@ namespace Quartz = ROOT::Quartz;
 }
 
 //______________________________________________________________________________
-- (BOOL) isRectInside : (Rectangle_t) area
+- (BOOL) isRectInside : (X11::Rectangle) area
 {
    if (area.fX < 0 || (unsigned)area.fX >= fWidth)
       return NO;
@@ -760,7 +754,7 @@ namespace Quartz = ROOT::Quartz;
 }
 
 //______________________________________________________________________________
-- (unsigned char *) readColorBits : (Rectangle_t) area
+- (unsigned char *) readColorBits : (X11::Rectangle) area
 {
    assert([self isRectInside : area] == YES && "readColorBits: bad area parameter");
    //Image, bitmap - they all must be converted to ARGB (bitmap) or BGRA (image) (for libAfterImage).
@@ -780,8 +774,8 @@ namespace Quartz = ROOT::Quartz;
       const unsigned char *line = fImageData + area.fY * fWidth;
       const unsigned char *srcPixel =  line + area.fX;
 
-      for (UShort_t i = 0; i < area.fHeight; ++i) {
-         for (UShort_t j = 0; j < area.fWidth; ++j, ++srcPixel, dstPixel += 4) {
+      for (unsigned i = 0; i < area.fHeight; ++i) {
+         for (unsigned j = 0; j < area.fWidth; ++j, ++srcPixel, dstPixel += 4) {
             if (!srcPixel[0])
                dstPixel[0] = 255;//can be 1 or anything different from 0.
          }
@@ -795,8 +789,8 @@ namespace Quartz = ROOT::Quartz;
       const unsigned char *line = fImageData + area.fY * fWidth * 4;
       const unsigned char *srcPixel = line + area.fX * 4;
       
-      for (UShort_t i = 0; i < area.fHeight; ++i) {
-         for (UShort_t j = 0; j < area.fWidth; ++j, srcPixel += 4, dstPixel += 4) {
+      for (unsigned i = 0; i < area.fHeight; ++i) {
+         for (unsigned j = 0; j < area.fWidth; ++j, srcPixel += 4, dstPixel += 4) {
             dstPixel[0] = srcPixel[2];
             dstPixel[1] = srcPixel[1];
             dstPixel[2] = srcPixel[0];
@@ -850,42 +844,12 @@ namespace MacOSX {
 namespace X11 {
 
 //______________________________________________________________________________
-CGImageRef CreateSubImage(QuartzImage *image, const Rectangle_t &area)
+CGImageRef CreateSubImage(QuartzImage *image, const Rectangle &area)
 {
    assert(image != nil && "CreateSubImage, image parameter is nil");
 
    const CGRect subImageRect = CGRectMake(area.fX, area.fY, area.fHeight, area.fWidth);
    return CGImageCreateWithImageInRect(image.fImage, subImageRect);
-}
-
-//______________________________________________________________________________
-bool AdjustCropArea(const Rectangle_t &srcRect, Rectangle_t &cropArea)
-{
-   //First, find cases, when srcRect and cropArea do not intersect.
-   if (cropArea.fX >= srcRect.fX + int(srcRect.fWidth))
-      return false;//No intersection: crop on the right of source.
-   if (cropArea.fX + int(cropArea.fWidth) <= srcRect.fX)
-      return false;//No intersection: crop on the left of source.
-      
-   if (cropArea.fY >= srcRect.fY + int(srcRect.fHeight))
-      return false;//No intersection: crop is above the source.
-   if (cropArea.fY + int(cropArea.fHeight) <= srcRect.fY)
-      return false;//No intersection: crop is under the source.
-      
-   //Intersection exists, set crop area to this intersection.
-   if (cropArea.fX < srcRect.fX) {
-      cropArea.fWidth = std::min(int(srcRect.fWidth), int(cropArea.fWidth) - int(srcRect.fX - cropArea.fX));
-      cropArea.fX = srcRect.fX;
-   } else
-      cropArea.fWidth = std::min(int(srcRect.fWidth) - int(cropArea.fX - srcRect.fX), int(cropArea.fWidth));
-      
-   if (cropArea.fY < srcRect.fY) {
-      cropArea.fHeight = std::min(int(srcRect.fHeight), int(cropArea.fHeight) - int(srcRect.fY - cropArea.fY));
-      cropArea.fY = srcRect.fY;
-   } else
-      cropArea.fHeight = std::min(int(srcRect.fHeight) - int(cropArea.fY - srcRect.fY), int(cropArea.fHeight));
-   
-   return true;
 }
 
 namespace {
@@ -988,17 +952,12 @@ bool AdjustCropArea(const Rectangle &srcRect, Rectangle &cropArea)
 }
 
 //______________________________________________________________________________
-bool AdjustCropArea(QuartzImage *srcImage, Rectangle_t &cropArea)
+bool AdjustCropArea(QuartzImage *srcImage, Rectangle &cropArea)
 {
    assert(srcImage != nil && "AdjustCropArea, srcImage parameter is nil");
    assert(srcImage.fImage != nil && "AdjustCropArea, srcImage.fImage is nil");
-   
-   Rectangle_t srcRect = {};
-   srcRect.fX = 0, srcRect.fY = 0;
-   srcRect.fWidth = srcImage.fWidth;
-   srcRect.fHeight = srcImage.fHeight;
-   
-   return AdjustCropArea(srcRect, cropArea);
+
+   return AdjustCropArea(X11::Rectangle(0, 0, srcImage.fWidth, srcImage.fHeight), cropArea);
 }
 
 //______________________________________________________________________________
@@ -1007,15 +966,8 @@ bool AdjustCropArea(QuartzImage *srcImage, NSRect &cropArea)
    assert(srcImage != nil && "AdjustCropArea, srcImage parameter is nil");
    assert(srcImage.fImage != 0 && "AdjustCropArea, srcImage.fImage is null");
    
-   Rectangle_t srcRect = {};
-   srcRect.fWidth = srcImage.fWidth;
-   srcRect.fHeight = srcImage.fHeight;
-   
-   Rectangle_t dstRect = {};
-   dstRect.fX = Short_t(cropArea.origin.x);
-   dstRect.fY = Short_t(cropArea.origin.y);
-   dstRect.fWidth = UShort_t(cropArea.size.width);
-   dstRect.fHeight = UShort_t(cropArea.size.height);
+   const Rectangle srcRect(0, 0, srcImage.fWidth, srcImage.fHeight);
+   Rectangle dstRect(int(cropArea.origin.x), int(cropArea.origin.y), unsigned(cropArea.size.width), unsigned(cropArea.size.height));
    
    if (AdjustCropArea(srcRect, dstRect)) {
       cropArea.origin.x = dstRect.fX;
@@ -1030,16 +982,11 @@ bool AdjustCropArea(QuartzImage *srcImage, NSRect &cropArea)
 }
 
 //______________________________________________________________________________
-bool AdjustCropArea(QuartzPixmap *srcPixmap, Rectangle_t &cropArea)
+bool AdjustCropArea(QuartzPixmap *srcPixmap, X11::Rectangle &cropArea)
 {
    assert(srcPixmap != nil && "AdjustCropArea, srcPixmap parameter is nil");
 
-   Rectangle_t srcRect = {};
-   srcRect.fX = 0, srcRect.fY = 0;
-   srcRect.fWidth = srcPixmap.fWidth;
-   srcRect.fHeight = srcPixmap.fHeight;
-   
-   return AdjustCropArea(srcRect, cropArea);
+   return AdjustCropArea(X11::Rectangle(0, 0, srcPixmap.fWidth, srcPixmap.fHeight), cropArea);
 }
 
 //______________________________________________________________________________
@@ -1069,9 +1016,9 @@ void FillPixmapBuffer(const unsigned char *bitmap, unsigned width, unsigned heig
 
    if (depth > 1) {
       unsigned char foregroundColor[4] = {};
-      X11::PixelToRGB(foregroundPixel, foregroundColor);
+      PixelToRGB(foregroundPixel, foregroundColor);
       unsigned char backgroundColor[4] = {};
-      X11::PixelToRGB(backgroundPixel, backgroundColor);
+      PixelToRGB(backgroundPixel, backgroundColor);
 
       for (unsigned j = 0; j < height; ++j) {
          const unsigned line = j * width * 4;
@@ -1106,6 +1053,6 @@ void FillPixmapBuffer(const unsigned char *bitmap, unsigned width, unsigned heig
    }
 }
 
-}
-}
-}
+}//X11
+}//MacOSX
+}//ROOT

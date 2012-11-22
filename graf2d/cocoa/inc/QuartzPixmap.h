@@ -15,6 +15,7 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "CocoaGuiTypes.h"
 #import "X11Drawable.h"
 #import "GuiTypes.h"
 
@@ -30,7 +31,7 @@
 - (BOOL) resizeW : (unsigned) width H : (unsigned) height scaleFactor : (CGFloat) scaleFactor;
 
 - (CGImageRef) createImageFromPixmap;
-- (CGImageRef) createImageFromPixmap : (Rectangle_t) cropArea;
+- (CGImageRef) createImageFromPixmap : (ROOT::MacOSX::X11::Rectangle) cropArea;
 
 //X11Drawable protocol.
 
@@ -44,11 +45,10 @@
 - (unsigned) fWidth;
 - (unsigned) fHeight;
 
-//Point_t, Rectangle_t are in GuiTypes.h
-- (void) copy : (NSObject<X11Drawable> *) src area : (Rectangle_t) area withMask : (QuartzImage *) mask 
-         clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint;
+- (void) copy : (NSObject<X11Drawable> *) src area : (ROOT::MacOSX::X11::Rectangle) area withMask : (QuartzImage *) mask 
+         clipOrigin : (ROOT::MacOSX::X11::Point) origin toPoint : (ROOT::MacOSX::X11::Point) dstPoint;
 
-- (unsigned char *) readColorBits : (Rectangle_t) area;
+- (unsigned char *) readColorBits : (ROOT::MacOSX::X11::Rectangle) area;
 
 //
 - (unsigned char *) fData;
@@ -91,21 +91,21 @@
 - (unsigned) fWidth;
 - (unsigned) fHeight;
 
-- (unsigned char *) readColorBits : (Rectangle_t) area;
+- (unsigned char *) readColorBits : (ROOT::MacOSX::X11::Rectangle) area;
 
 @end
 
 
 namespace ROOT {
 namespace MacOSX {
-namespace X11 {//X11 emulation. But must go into quartz module later.
+namespace X11 {
 
-CGImageRef CreateSubImage(QuartzImage *image, const Rectangle_t &area);
+CGImageRef CreateSubImage(QuartzImage *image, const Rectangle &area);
 //
-bool AdjustCropArea(const Rectangle_t &srcRect, Rectangle_t &cropArea);
-bool AdjustCropArea(QuartzImage *srcImage, Rectangle_t &cropArea);
+bool AdjustCropArea(const Rectangle &srcRect, Rectangle &cropArea);
+bool AdjustCropArea(QuartzImage *srcImage, Rectangle &cropArea);
 bool AdjustCropArea(QuartzImage *srcImage, NSRect &cropArea);
-bool AdjustCropArea(QuartzPixmap *srcImage, Rectangle_t &cropArea);
+bool AdjustCropArea(QuartzPixmap *srcImage, Rectangle &cropArea);
 
 //Aux. function for TGCocoa.
 void FillPixmapBuffer(const unsigned char *bitmap, unsigned width, unsigned height, ULong_t foregroundPixel, 

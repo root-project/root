@@ -703,7 +703,7 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
       //For this mode, TGX11TTF does some work to: a) preserve pixels under symbols
       //b) calculate (interpolate) pixel for glyphs.
       
-      Rectangle_t bbox = {Short_t(x1), Short_t(y1), UShort_t(w), UShort_t(h)};
+      X11::Rectangle bbox(x1, y1, w, h);
       //We already check IsVisible, so, in principle, bbox at least has intersection with
       //the current selected drawable.
       if (X11::AdjustCropArea(dstPixmap, bbox))
@@ -749,9 +749,9 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
                             mode == kClear ? ULong_t(-1) : 0xffffff, bx, by);
    }
 
-   Rectangle_t copyArea = {0, 0, UShort_t(w), UShort_t(h)};
-   Point_t dstPoint = {Short_t(x1), Short_t(y1)};
-   [dstPixmap copy : pixmap.Get() area : copyArea withMask : nil clipOrigin : Point_t() toPoint : dstPoint];
+   const X11::Rectangle copyArea(0, 0, w, h);
+   const X11::Point dstPoint(x1, y1);
+   [dstPixmap copy : pixmap.Get() area : copyArea withMask : nil clipOrigin : X11::Point() toPoint : dstPoint];
 }
 
 //______________________________________________________________________________

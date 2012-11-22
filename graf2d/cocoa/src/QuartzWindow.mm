@@ -1110,7 +1110,7 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) copy : (NSObject<X11Drawable> *) src area : (Rectangle_t) area withMask : (QuartzImage *)mask clipOrigin : (Point_t) clipXY toPoint : (Point_t) dstPoint
+- (void) copy : (NSObject<X11Drawable> *) src area : (X11::Rectangle) area withMask : (QuartzImage *)mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
 {
    assert(fContentView != nil && "copy:area:toPoint:, fContentView is nil");
 
@@ -1118,7 +1118,7 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (unsigned char *) readColorBits : (Rectangle_t) area
+- (unsigned char *) readColorBits : (X11::Rectangle) area
 {
    assert(fContentView != nil && "readColorBits:, fContentView is nil");
    
@@ -1667,7 +1667,7 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) copyImage : (QuartzImage *) srcImage area : (Rectangle_t) area withMask : (QuartzImage *) mask clipOrigin : (Point_t) clipXY toPoint : (Point_t) dstPoint
+- (void) copyImage : (QuartzImage *) srcImage area : (X11::Rectangle) area withMask : (QuartzImage *) mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
 {
    //TODO: test and fix all possible cases with crop area and masks.
 
@@ -1727,7 +1727,7 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) copyView : (QuartzView *) srcView area : (Rectangle_t) area toPoint : (Point_t) dstPoint
+- (void) copyView : (QuartzView *) srcView area : (X11::Rectangle) area toPoint : (X11::Point) dstPoint
 {
    //To copy one "window" to another "window", I have to ask source QuartzView to draw intself into
    //bitmap, and copy this bitmap into the destination view.
@@ -1774,7 +1774,7 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) copyPixmap : (QuartzPixmap *) srcPixmap area : (Rectangle_t) area withMask : (QuartzImage *) mask clipOrigin : (Point_t) clipXY toPoint : (Point_t) dstPoint
+- (void) copyPixmap : (QuartzPixmap *) srcPixmap area : (X11::Rectangle) area withMask : (QuartzImage *) mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
 {
    //Check parameters.
    assert(srcPixmap != nil && "copyPixmap:area:withMask:clipOrigin:toPoint:, srcPixmap parameter is nil");
@@ -1832,7 +1832,7 @@ void print_mask_info(ULong_t mask)
 
 
 //______________________________________________________________________________
-- (void) copyImage : (QuartzImage *) srcImage area : (Rectangle_t) area toPoint : (Point_t) dstPoint
+- (void) copyImage : (QuartzImage *) srcImage area : (X11::Rectangle) area toPoint : (X11::Point) dstPoint
 {
    assert(srcImage != nil && "copyImage:area:toPoint:, srcImage parameter is nil");
    assert(srcImage.fImage != nil && "copyImage:area:toPoint:, srcImage.fImage is nil");
@@ -1871,9 +1871,10 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) copy : (NSObject<X11Drawable> *) src area : (Rectangle_t) area withMask : (QuartzImage *)mask clipOrigin : (Point_t) clipXY toPoint : (Point_t) dstPoint
+- (void) copy : (NSObject<X11Drawable> *) src area : (X11::Rectangle) area withMask : (QuartzImage *)mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
 {
    assert(src != nil && "copy:area:withMask:clipOrigin:toPoint:, src parameter is nil");
+   assert(area.fWidth && area.fHeight && "copy:area:withMask:clipOrigin:toPoint:, area to copy is empty");
    
    if ([src isKindOfClass : [QuartzWindow class]]) {
       //Forget about mask (can I have it???)
@@ -1893,16 +1894,13 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (unsigned char *) readColorBits : (Rectangle_t) area
+- (unsigned char *) readColorBits : (X11::Rectangle) area
 {
-   //TODO: make the part, reading pixels
-   //from NSBitmapImageRep not so lame.
+   //
+   assert(area.fWidth && area.fHeight && "readColorBits:, area to copy is empty");
+
    const NSRect visRect = [self visibleRect];
-   Rectangle_t srcRect = {};
-   srcRect.fX = visRect.origin.x;
-   srcRect.fY = visRect.origin.y;
-   srcRect.fWidth = visRect.size.width;
-   srcRect.fHeight = visRect.size.height;
+   const X11::Rectangle srcRect(int(visRect.origin.x), int(visRect.origin.y), unsigned(visRect.size.width), unsigned(visRect.size.height));
    
    if (!X11::AdjustCropArea(srcRect, area)) {
       NSLog(@"QuartzView: -readColorBits:, visible rect of view and copy area do not intersect");
@@ -1941,8 +1939,8 @@ void print_mask_info(ULong_t mask)
    const unsigned char *line = srcData + area.fY * dataWidth * 4;
    const unsigned char *srcPixel = line + area.fX * 4;
       
-   for (UShort_t i = 0; i < area.fHeight; ++i) {
-      for (UShort_t j = 0; j < area.fWidth; ++j, srcPixel += 4, dstPixel += 4) {
+   for (unsigned i = 0; i < area.fHeight; ++i) {
+      for (unsigned j = 0; j < area.fWidth; ++j, srcPixel += 4, dstPixel += 4) {
          dstPixel[0] = srcPixel[2];
          dstPixel[1] = srcPixel[1];
          dstPixel[2] = srcPixel[0];
@@ -2328,11 +2326,9 @@ void print_mask_info(ULong_t mask)
 
          if (fBackBuffer) {
             //Very "special" window.
-            Rectangle_t copyArea = {};//TODO: why Rectangle_t uses UShort_t instead of unsigned??? Have to declare my own rect_t later:((
-            copyArea.fWidth = UShort_t(fBackBuffer.fWidth);
-            copyArea.fHeight = UShort_t(fBackBuffer.fHeight);
+            const X11::Rectangle copyArea(0, 0, fBackBuffer.fWidth, fBackBuffer.fHeight);
 
-            [self copy : fBackBuffer area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
+            [self copy : fBackBuffer area : copyArea withMask : nil clipOrigin : X11::Point() toPoint : X11::Point()];
          }
      
          vx->CocoaDrawOFF();
