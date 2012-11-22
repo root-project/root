@@ -230,7 +230,8 @@ void ROOT::TextInputColorizer::ProcessTextChange(EditorRange& Modification,
          std::string word = text.substr(i, wordLen);
          char color = kColorNone;
          if (gROOT->GetListOfTypes()->FindObject(word.c_str())
-             || gInterpreter->CheckClassInfo(word.c_str(), kFALSE)) {
+             || gROOT->GetListOfClasses()->FindObject(word.c_str())
+             || gInterpreter->GetClassSharedLibs(word.c_str())) {
             color = kColorType;
          }
          for (size_t ic = i; ic < i + wordLen; ++ic) {
