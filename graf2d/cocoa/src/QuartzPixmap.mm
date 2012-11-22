@@ -12,8 +12,10 @@
 //#define NDEBUG
 
 #import <algorithm>
+#import <utility>
 #import <cassert>
 #import <cstddef>
+#import <limits>
 #import <new>
 
 #import "CocoaGuiTypes.h"
@@ -886,36 +888,100 @@ bool AdjustCropArea(const Rectangle_t &srcRect, Rectangle_t &cropArea)
    return true;
 }
 
+namespace {
+
+//Now, close your eyes and open them at the end of this block. :)
+//Sure, this can be done easy, but I hate to convert between negative signed integers and
+//unsigned integers and the other way, so I have this implementation (integers will be always
+//positive and they obviously fit into unsigned integers).
+
+typedef std::pair<int, unsigned> range_type;
+
+//______________________________________________________________________________
+bool FindOverlapSameSigns(const range_type &left, const range_type &right, range_type &intersection)
+{
+   //"Same" means both are positive, or both are negative, none of them is 0.
+   const unsigned dX(right.first - left.first);//diff fits into the positive range of int.
+   //No intersection.
+   if (dX >= left.second)
+      return false;
+   //Find an intersection.
+   intersection.first = right.first;
+   intersection.second = std::min(right.second, left.second - dX);//left.second is always > dX.
+
+   return true;
+}
+
+//______________________________________________________________________________
+bool FindOverlapDifferentSigns(const range_type &left, const range_type &right, range_type &intersection)
+{
+   //x2 - x1 can overflow.
+   //Left.x is negative, right.x is non-negative (0 included).
+   const unsigned signedMinAbs(std::numeric_limits<unsigned>::max() / 2 + 1);
+   
+   if (left.first == std::numeric_limits<int>::min()) {//hehehe
+      if (left.second <= signedMinAbs)
+         return false;
+      
+      if (left.second - signedMinAbs <= unsigned(right.first))
+         return false;
+      
+      intersection.first = right.first;
+      intersection.second = std::min(right.second, left.second - signedMinAbs - unsigned(right.first));
+   } else {
+      const unsigned leftXAbs(-left.first);
+      if (leftXAbs <= left.second)
+         return false;
+      
+      if (left.second - leftXAbs <= unsigned(right.first))
+         return false;
+      
+      intersection.first = right.first;
+      intersection.second = std::min(right.second, left.second - leftXAbs - unsigned(right.first));
+   }
+
+   return true;
+}
+
+//______________________________________________________________________________
+bool FindOverlap(const range_type &range1, const range_type &range2, range_type &intersection)
+{
+   range_type left;
+   range_type right;
+   
+   if (range1.first < range2.first) {
+      left = range1;
+      right = range2;
+   } else {
+      left = range2;
+      right = range1;
+   }
+
+   if (left.first < 0)
+      return right.first < 0 ? FindOverlapSameSigns(left, right, intersection) : FindOverlapDifferentSigns(left, right, intersection);
+   else
+      return FindOverlapSameSigns(left, right, intersection);
+}
+
+}
+
 //______________________________________________________________________________
 bool AdjustCropArea(const Rectangle &srcRect, Rectangle &cropArea)
 {
-   // First, find cases, when srcRect and cropArea do not intersect.
-   // I have to care about integer overflows.
-
-   (void) srcRect;
-   (void) cropArea;
-/*   if (cropArea.fX >= srcRect.fX + int(srcRect.fWidth))
-      return false;//No intersection: crop on the right of source.
-   if (cropArea.fX + int(cropArea.fWidth) <= srcRect.fX)
-      return false;//No intersection: crop on the left of source.
-      
-   if (cropArea.fY >= srcRect.fY + int(srcRect.fHeight))
-      return false;//No intersection: crop is above the source.
-   if (cropArea.fY + int(cropArea.fHeight) <= srcRect.fY)
-      return false;//No intersection: crop is under the source.
-      
-   //Intersection exists, set crop area to this intersection.
-   if (cropArea.fX < srcRect.fX) {
-      cropArea.fWidth = std::min(int(srcRect.fWidth), int(cropArea.fWidth) - int(srcRect.fX - cropArea.fX));
-      cropArea.fX = srcRect.fX;
-   } else
-      cropArea.fWidth = std::min(int(srcRect.fWidth) - int(cropArea.fX - srcRect.fX), int(cropArea.fWidth));
-      
-   if (cropArea.fY < srcRect.fY) {
-      cropArea.fHeight = std::min(int(srcRect.fHeight), int(cropArea.fHeight) - int(srcRect.fY - cropArea.fY));
-      cropArea.fY = srcRect.fY;
-   } else
-      cropArea.fHeight = std::min(int(srcRect.fHeight) - int(cropArea.fY - srcRect.fY), int(cropArea.fHeight));*/
+   //Find rects intersection.
+   range_type xIntersection;
+   if (!FindOverlap(range_type(srcRect.fX, srcRect.fWidth), range_type(cropArea.fX, cropArea.fWidth), xIntersection))
+      return false;
+   
+   range_type yIntersection;
+   if (!FindOverlap(range_type(srcRect.fY, srcRect.fHeight), range_type(cropArea.fY, cropArea.fHeight), yIntersection))
+      return false;
+   
+   cropArea.fX = xIntersection.first;
+   cropArea.fWidth = xIntersection.second;
+   
+   cropArea.fY = yIntersection.first;
+   cropArea.fHeight = yIntersection.second;
    
    return true;
 }
