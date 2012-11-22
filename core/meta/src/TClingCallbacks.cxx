@@ -100,7 +100,7 @@ bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
      // the DeclContext assumes that we drill down always.
      // We have to be on the global context. At that point we are in a 
      // wrapper function so the parent context must be the global.
-     Sema::ContextAndScopeRAII pushedSAndDC(SemaR, C.getTranslationUnitDecl(), 
+     Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(), 
                                             SemaR.TUScope);
 
      bool lookupSuccess = false;
