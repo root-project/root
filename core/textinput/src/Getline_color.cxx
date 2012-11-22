@@ -14,8 +14,10 @@
 #include <stack>
 #include <string>
 
-#include "TROOT.h"
+#include "TClass.h"
+#include "TClassTable.h"
 #include "TInterpreter.h"
+#include "TROOT.h"
 #include "textinput/Range.h"
 #include "textinput/Text.h"
 
@@ -230,8 +232,9 @@ void ROOT::TextInputColorizer::ProcessTextChange(EditorRange& Modification,
          std::string word = text.substr(i, wordLen);
          char color = kColorNone;
          if (gROOT->GetListOfTypes()->FindObject(word.c_str())
-             || gROOT->GetListOfClasses()->FindObject(word.c_str())
-             || gInterpreter->GetClassSharedLibs(word.c_str())) {
+             || gClassTable->GetDict(word.c_str())
+             || gInterpreter->GetClassSharedLibs(word.c_str())
+             || TClass::GetClass(word.c_str(), kFALSE)) {
             color = kColorType;
          }
          for (size_t ic = i; ic < i + wordLen; ++ic) {
