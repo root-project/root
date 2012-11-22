@@ -2,7 +2,6 @@
 ./cint/const
 ./cint/other
 ./cint/printf
-./cint/reflex_standalone
 ./cint/reload
 ./cint/stack
 ./cint/stl/dicts
