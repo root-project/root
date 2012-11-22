@@ -256,6 +256,7 @@ bool InterpreterStress::stressReflection() {
       ClassInfo_t* k = gInterpreter->ClassInfo_Factory("Klass");
       bool hasMethod = gInterpreter->ClassInfo_HasMethod(k, fname.Data());
       if (hasMethod != (funcnum >= Klass::first_klf && funcnum <= Klass::last_klf)) {
+         std::cout << "Error: Can not find " << fname << " in Klass\n";
          success = false;
       }
       if (!hasMethod) {
@@ -267,12 +268,14 @@ bool InterpreterStress::stressReflection() {
       Long_t offset = -1;
       gInterpreter->CallFunc_SetFuncProto(mk, k, fname, "double", &offset);
       if (!gInterpreter->CallFunc_IsValid(mk)) {
+         std::cout << "Error: The CallFunc for Klass::" << fname << "(double) is invalid\n";
          success = false;
          gInterpreter->CallFunc_Delete(mk);
          gInterpreter->ClassInfo_Delete(k);
          continue;
       }
       if (offset != 0) {
+         std::cout << "Error: The offset for CallFunc for Klass::" << fname << " is not zero (" << offset << ")\n";
          success = false;
          gInterpreter->CallFunc_Delete(mk);
          gInterpreter->ClassInfo_Delete(k);
@@ -283,6 +286,7 @@ bool InterpreterStress::stressReflection() {
 
       void* obj = gInterpreter->ClassInfo_New(k);
       if (!obj) {
+         std::cout << "Error: ClasInfo::New for Klass failed.\n";
          success = false;
          gInterpreter->CallFunc_Delete(mk);
          gInterpreter->ClassInfo_Delete(k);
@@ -291,6 +295,8 @@ bool InterpreterStress::stressReflection() {
 
       long ret = gInterpreter->CallFunc_ExecInt(mk, obj);
       if (ret != (long) (funcnum + (-funcnum * 2 + 0.2))) {
+         std::cout << "Error: Execution of Klass::" << fname << " failed (result = "
+                   << ret << " rather than = " << (long) (funcnum + (-funcnum * 2 + 0.2)) << ")\n";
          success = false;
          gInterpreter->CallFunc_Delete(mk);
          gInterpreter->ClassInfo_Delete(k);
