@@ -114,7 +114,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    // if (mode&2) remove default allocators from STL containers
    // if (mode&4) remove all     allocators from STL containers
    // if (mode&8) return inner class of stl container. list<innerClass>
-   // if (mode&16) return deepest class of stl container. vector<list<deapest>>
+   // if (mode&16) return deepest class of stl container. vector<list<deepest>>
    // if (mode&kDropAllDefault) remove default template arguments
    /////////////////////////////////////////////////////////////////////////////
 
