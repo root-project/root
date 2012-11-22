@@ -88,6 +88,10 @@ bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
      Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
      Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
      Parser::ParserCurTokRestoreRAII savedCurToken(P);
+     // After we have saved the token reset the current one to something which 
+     // is safe (semi colon usually means empty decl)
+     Token& Tok = const_cast<Token&>(P.getCurToken());
+     Tok.setKind(tok::semi);
 
      bool oldSuppressDiags = SemaR.getDiagnostics().getSuppressAllDiagnostics();
      SemaR.getDiagnostics().setSuppressAllDiagnostics();
@@ -200,8 +204,8 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
          T.appendUnique(VD);
          T.setCompleted();
 
-         Interpreter::CompilationResult Result = m_Interpreter->codegen(&T);
-         assert(Result == Interpreter::kSuccess 
+         m_Interpreter->codegen(&T);
+         assert(T.getState() == Transaction::kCommitted
                 && "Compilation should never fail!");
       }
       assert(VD && "Cannot be null!");
