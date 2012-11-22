@@ -83,50 +83,50 @@ public:
    }
 };
 
-// class wrapping function evaluation directly in 1D interface (used for integration) 
+// class wrapping function evaluation directly in 1D interface (used for integration)
 // and implementing the methods for the momentum calculations
 
-class  TF1_EvalWrapper : public ROOT::Math::IGenFunction { 
-public: 
-   TF1_EvalWrapper(TF1 * f, const Double_t * par, bool useAbsVal, Double_t n = 1, Double_t x0 = 0) : 
-      fFunc(f), 
+class  TF1_EvalWrapper : public ROOT::Math::IGenFunction {
+public:
+   TF1_EvalWrapper(TF1 * f, const Double_t * par, bool useAbsVal, Double_t n = 1, Double_t x0 = 0) :
+      fFunc(f),
       fPar( ( (par) ? par : f->GetParameters() ) ),
       fAbsVal(useAbsVal),
-      fN(n), 
-      fX0(x0)   
+      fN(n),
+      fX0(x0)
    {
-      fFunc->InitArgs(fX, fPar); 
+      fFunc->InitArgs(fX, fPar);
    }
 
-   ROOT::Math::IGenFunction * Clone()  const { 
+   ROOT::Math::IGenFunction * Clone()  const {
       // use default copy constructor
       TF1_EvalWrapper * f =  new TF1_EvalWrapper( *this);
-      f->fFunc->InitArgs(f->fX, f->fPar); 
+      f->fFunc->InitArgs(f->fX, f->fPar);
       return f;
    }
    // evaluate |f(x)|
-   Double_t DoEval( Double_t x) const { 
-      fX[0] = x; 
+   Double_t DoEval( Double_t x) const {
+      fX[0] = x;
       Double_t fval = fFunc->EvalPar( fX, fPar);
       if (fAbsVal && fval < 0)  return -fval;
-      return fval; 
-   } 
+      return fval;
+   }
    // evaluate x * |f(x)|
-   Double_t EvalFirstMom( Double_t x) { 
-      fX[0] = x; 
-      return fX[0] * TMath::Abs( fFunc->EvalPar( fX, fPar) ); 
-   } 
+   Double_t EvalFirstMom( Double_t x) {
+      fX[0] = x;
+      return fX[0] * TMath::Abs( fFunc->EvalPar( fX, fPar) );
+   }
    // evaluate (x - x0) ^n * f(x)
-   Double_t EvalNMom( Double_t x) const  { 
-      fX[0] = x; 
-      return TMath::Power( fX[0] - fX0, fN) * TMath::Abs( fFunc->EvalPar( fX, fPar) ); 
+   Double_t EvalNMom( Double_t x) const  {
+      fX[0] = x;
+      return TMath::Power( fX[0] - fX0, fN) * TMath::Abs( fFunc->EvalPar( fX, fPar) );
    }
 
-   TF1 * fFunc; 
-   mutable Double_t fX[1]; 
-   const double * fPar; 
+   TF1 * fFunc;
+   mutable Double_t fX[1];
+   const double * fPar;
    Bool_t fAbsVal;
-   Double_t fN; 
+   Double_t fN;
    Double_t fX0;
 };
 
@@ -1100,7 +1100,7 @@ void TF1::Copy(TObject &obj) const
 {
    // Copy this F1 to a new F1.
    // Note that the cached integral with its related arrays are not copied
-   // (they are also set as transient data members) 
+   // (they are also set as transient data members)
 
    if (((TF1&)obj).fParMin)    delete [] ((TF1&)obj).fParMin;
    if (((TF1&)obj).fParMax)    delete [] ((TF1&)obj).fParMax;
@@ -1155,7 +1155,7 @@ void TF1::Copy(TObject &obj) const
       for (i=0;i<fNpar;i++)   ((TF1&)obj).fParMax[i]    = fParMax[i];
    }
    if (fMethodCall) {
-      // use copy-constructor of TMethodCall 
+      // use copy-constructor of TMethodCall
       TMethodCall *m = new TMethodCall(*fMethodCall);
 //       m->InitWithPrototype(fMethodCall->GetMethodName(),fMethodCall->GetProto());
       ((TF1&)obj).fMethodCall  = m;
@@ -1196,28 +1196,28 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
    // interpolation error is decreased by making the step size h smaller.
    //
    // Author: Anna Kreshuk
-   
-   if (GetNdim() > 1) { 
+
+   if (GetNdim() > 1) {
       Warning("Derivative","Function dimension is larger than one");
    }
 
    ROOT::Math::RichardsonDerivator rd;
    double xmin, xmax;
    GetRange(xmin, xmax);
-   // this is not optimal (should be used the average x instead of the range) 
+   // this is not optimal (should be used the average x instead of the range)
    double h = eps* std::abs(xmax-xmin);
-   if ( h <= 0 ) h = 0.001;  
-   double der = 0; 
-   if (params) { 
-      ROOT::Math::WrappedTF1 wtf(*( const_cast<TF1 *> (this) )); 
+   if ( h <= 0 ) h = 0.001;
+   double der = 0;
+   if (params) {
+      ROOT::Math::WrappedTF1 wtf(*( const_cast<TF1 *> (this) ));
       wtf.SetParameters(params);
-      der = rd.Derivative1(wtf,x,h);   
-   }                                            
-   else { 
-      // no need to set parameters used a non-parametric wrapper to avoid allocating 
+      der = rd.Derivative1(wtf,x,h);
+   }
+   else {
+      // no need to set parameters used a non-parametric wrapper to avoid allocating
       // an array with parameter values
       ROOT::Math::WrappedFunction<const TF1 & > wf( *this);
-      der = rd.Derivative1(wf,x,h);   
+      der = rd.Derivative1(wf,x,h);
    }
 
    gErrorTF1 = rd.Error();
@@ -1260,27 +1260,27 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
    //
    // Author: Anna Kreshuk
 
-   if (GetNdim() > 1) { 
+   if (GetNdim() > 1) {
       Warning("Derivative2","Function dimension is larger than one");
    }
 
    ROOT::Math::RichardsonDerivator rd;
    double xmin, xmax;
    GetRange(xmin, xmax);
-   // this is not optimal (should be used the average x instead of the range) 
+   // this is not optimal (should be used the average x instead of the range)
    double h = eps* std::abs(xmax-xmin);
-   if ( h <= 0 ) h = 0.001;  
-   double der = 0; 
-   if (params) { 
-      ROOT::Math::WrappedTF1 wtf(*( const_cast<TF1 *> (this) )); 
+   if ( h <= 0 ) h = 0.001;
+   double der = 0;
+   if (params) {
+      ROOT::Math::WrappedTF1 wtf(*( const_cast<TF1 *> (this) ));
       wtf.SetParameters(params);
-      der = rd.Derivative2(wtf,x,h);   
-   }                                            
-   else { 
-      // no need to set parameters used a non-parametric wrapper to avoid allocating 
+      der = rd.Derivative2(wtf,x,h);
+   }
+   else {
+      // no need to set parameters used a non-parametric wrapper to avoid allocating
       // an array with parameter values
       ROOT::Math::WrappedFunction<const TF1 & > wf( *this);
-      der = rd.Derivative2(wf,x,h);   
+      der = rd.Derivative2(wf,x,h);
    }
 
    gErrorTF1 = rd.Error();
@@ -1323,31 +1323,31 @@ Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
    //
    // Author: Anna Kreshuk
 
-   if (GetNdim() > 1) { 
+   if (GetNdim() > 1) {
       Warning("Derivative3","Function dimension is larger than one");
    }
 
    ROOT::Math::RichardsonDerivator rd;
    double xmin, xmax;
    GetRange(xmin, xmax);
-   // this is not optimal (should be used the average x instead of the range) 
+   // this is not optimal (should be used the average x instead of the range)
    double h = eps* std::abs(xmax-xmin);
-   if ( h <= 0 ) h = 0.001;  
-   double der = 0; 
-   if (params) { 
-      ROOT::Math::WrappedTF1 wtf(*( const_cast<TF1 *> (this) )); 
+   if ( h <= 0 ) h = 0.001;
+   double der = 0;
+   if (params) {
+      ROOT::Math::WrappedTF1 wtf(*( const_cast<TF1 *> (this) ));
       wtf.SetParameters(params);
-      der = rd.Derivative3(wtf,x,h);   
-   }                                            
-   else { 
-      // no need to set parameters used a non-parametric wrapper to avoid allocating 
+      der = rd.Derivative3(wtf,x,h);
+   }
+   else {
+      // no need to set parameters used a non-parametric wrapper to avoid allocating
       // an array with parameter values
       ROOT::Math::WrappedFunction<const TF1 & > wf( *this);
-      der = rd.Derivative3(wf,x,h);   
+      der = rd.Derivative3(wf,x,h);
    }
 
    gErrorTF1 = rd.Error();
-   return der; 
+   return der;
 
 }
 
@@ -1640,8 +1640,8 @@ Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
    //  If the function is unimodal or if its extrema are far apart, setting
    //  the fNpx to a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
-   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) 
-   //  and absolute (if |x| < 1)  and maxiter (default = 100) controls the maximum number 
+   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 )
+   //  and absolute (if |x| < 1)  and maxiter (default = 100) controls the maximum number
    //  of iteration of the Brent algorithm
    //  If the flag logx is set the grid search is done in log step size
    //  This is done automatically if the log scale is set in the current Pad
@@ -1650,7 +1650,7 @@ Double_t TF1::GetMaximum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
 
-   if (!logx && gPad != 0) logx = gPad->GetLogx(); 
+   if (!logx && gPad != 0) logx = gPad->GetLogx();
 
    ROOT::Math::BrentMinimizer1D bm;
    GInverseFunc g(this);
@@ -1677,17 +1677,17 @@ Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t 
    //  If the function is unimodal or if its extrema are far apart, setting
    //  the fNpx to a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
-   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) 
-   //  and absolute (if |x| < 1)  and maxiter (default = 100) controls the maximum number 
+   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 )
+   //  and absolute (if |x| < 1)  and maxiter (default = 100) controls the maximum number
    //  of iteration of the Brent algorithm
    //  If the flag logx is set the grid search is done in log step size
    //  This is done automatically if the log scale is set in the current Pad
     //
    // NOTE: see also TF1::GetX
-   
+
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
 
-   if (!logx && gPad != 0) logx = gPad->GetLogx(); 
+   if (!logx && gPad != 0) logx = gPad->GetLogx();
 
    ROOT::Math::BrentMinimizer1D bm;
    GInverseFunc g(this);
@@ -1714,8 +1714,8 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
    //  unimodal or if its extrema are far apart, setting the fNpx to
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
-   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) 
-   //  and absolute (if |x| < 1)  and maxiter (default = 100) controls the maximum number 
+   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 )
+   //  and absolute (if |x| < 1)  and maxiter (default = 100) controls the maximum number
    //  of iteration of the Brent algorithm
    //  If the flag logx is set the grid search is done in log step size
    //  This is done automatically if the log scale is set in the current Pad
@@ -1724,7 +1724,7 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
 
-   if (!logx && gPad != 0) logx = gPad->GetLogx(); 
+   if (!logx && gPad != 0) logx = gPad->GetLogx();
 
    ROOT::Math::BrentMinimizer1D bm;
    ROOT::Math::WrappedFunction<const TF1&> wf1(*this);
@@ -1741,67 +1741,67 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
 //______________________________________________________________________________
 Double_t TF1::GetMinMaxNDim(Double_t * x , bool findmax, Double_t epsilon, Int_t maxiter  ) const
 {
-   // find the minimum of a function of whatever dimension. 
+   // find the minimum of a function of whatever dimension.
    // While GetMinimum works only for 1D function , GetMinimumNDim works for all dimensions
    // since it uses the minimizer interface
    // vector x at beginning will contained the initial point, on exit will contain the result
-   
+
    R__ASSERT(x != 0);
 
-   int ndim = GetNdim(); 
+   int ndim = GetNdim();
    if (ndim == 0) {
       Error("GetMinimumNDim","Function of dimension 0 - return Eval(x)");
       return (const_cast<TF1&>(*this))(x);
-   } 
-
-   // create minimizer class 
-   const char * minimName = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-   const char * minimAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
-   ROOT::Math::Minimizer * min = ROOT::Math::Factory::CreateMinimizer(minimName, minimAlgo); 
-
-   if (min == 0) { 
-      Error("GetMinimumNDim","Error creating minimizer %s",minimName);
-      return 0; 
    }
 
-   // minimizer will be set using default values 
+   // create minimizer class
+   const char * minimName = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+   const char * minimAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
+   ROOT::Math::Minimizer * min = ROOT::Math::Factory::CreateMinimizer(minimName, minimAlgo);
+
+   if (min == 0) {
+      Error("GetMinimumNDim","Error creating minimizer %s",minimName);
+      return 0;
+   }
+
+   // minimizer will be set using default values
    if (epsilon > 0) min->SetTolerance(epsilon);
-   if (maxiter > 0) min->SetMaxFunctionCalls(maxiter); 
+   if (maxiter > 0) min->SetMaxFunctionCalls(maxiter);
 
    // create wrapper class from TF1 (cannot use Functor, t.b.i.)
-   ROOT::Math::WrappedMultiFunction<TF1&> objFunc(const_cast<TF1&>(*this),ndim); 
+   ROOT::Math::WrappedMultiFunction<TF1&> objFunc(const_cast<TF1&>(*this),ndim);
    // create -f(x) when searching for the maximum
-   GInverseFuncNdim invFunc(const_cast<TF1*>(this)); 
-   ROOT::Math::WrappedMultiFunction<GInverseFuncNdim&> objFuncInv(invFunc,ndim); 
-   if (!findmax) 
+   GInverseFuncNdim invFunc(const_cast<TF1*>(this));
+   ROOT::Math::WrappedMultiFunction<GInverseFuncNdim&> objFuncInv(invFunc,ndim);
+   if (!findmax)
       min->SetFunction(objFunc);
-   else 
+   else
       min->SetFunction(objFuncInv);
 
-   std::vector<double> rmin(ndim);  
-   std::vector<double> rmax(ndim);  
+   std::vector<double> rmin(ndim);
+   std::vector<double> rmax(ndim);
    GetRange(&rmin[0],&rmax[0]);
-   for (int i = 0; i < ndim; ++i) { 
-      const char * xname =  0; 
-      double stepSize = 0.1; 
+   for (int i = 0; i < ndim; ++i) {
+      const char * xname =  0;
+      double stepSize = 0.1;
       // use range for step size or give some value depending on x if range is not defined
-      if (rmax[i] > rmin[i])  
-         stepSize = (rmax[i] - rmin[i])/100; 
-      else if (std::abs(x[i]) > 1.) 
-         stepSize = 0.1*x[i]; 
+      if (rmax[i] > rmin[i])
+         stepSize = (rmax[i] - rmin[i])/100;
+      else if (std::abs(x[i]) > 1.)
+         stepSize = 0.1*x[i];
 
-      // set variable names 
-      if (ndim <= 3) { 
-         if (i == 0) { 
+      // set variable names
+      if (ndim <= 3) {
+         if (i == 0) {
             xname = "x";
          }
-         else if (i == 1) { 
+         else if (i == 1) {
             xname = "y";
          }
-         else { 
+         else {
             xname = "z";
          }
-      } 
+      }
       else {
          xname = TString::Format("x_%d",i);
          // arbitrary step sie (should be computed from range)
@@ -1809,20 +1809,20 @@ Double_t TF1::GetMinMaxNDim(Double_t * x , bool findmax, Double_t epsilon, Int_t
 
       if (rmin[i] < rmax[i] ) {
          //Info("GetMinMax","setting limits on %s - [ %f , %f ]",xname,rmin[i],rmax[i]);
-         min->SetLimitedVariable(i,xname,x[i], stepSize, rmin[i], rmax[i]); 
+         min->SetLimitedVariable(i,xname,x[i], stepSize, rmin[i], rmax[i]);
       }
       else {
-         min->SetVariable(i,xname,x[i], stepSize); 
+         min->SetVariable(i,xname,x[i], stepSize);
       }
    }
-      
-   bool ret = min->Minimize(); 
-   if (!ret) { 
+
+   bool ret = min->Minimize();
+   if (!ret) {
       Error("GetMinimumNDim","Error minimizing function %s",GetName() );
    }
-   if (min->X() ) std::copy (min->X(), min->X()+ndim, x); 
-   double fmin = min->MinValue(); 
-   delete min; 
+   if (min->X() ) std::copy (min->X(), min->X()+ndim, x);
+   double fmin = min->MinValue();
+   delete min;
    // need to revert sign in case looging for maximum
    return (findmax) ? -fmin : fmin;
 
@@ -1841,8 +1841,8 @@ Double_t TF1::GetMinimumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t 
    //  unimodal or if its extrema are far apart, setting the fNpx to
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
-   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) 
-   //  and absolute (if |x| < 1)  and maxiter (default = 100) controls the maximum number 
+   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 )
+   //  and absolute (if |x| < 1)  and maxiter (default = 100) controls the maximum number
    //  of iteration of the Brent algorithm
    //  If the flag logx is set the grid search is done in log step size
    //  This is done automatically if the log scale is set in the current Pad
@@ -1877,8 +1877,8 @@ Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax, Double_t epsilon, 
    //  unimodal or if its extrema are far apart, setting the fNpx to
    //  a small value speeds the algorithm up many times.
    //  Then, Brent's method is applied on the bracketed interval
-   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 ) 
-   //  and absolute (if |x| < 1)  and maxiter (default = 100) controls the maximum number 
+   //  epsilon (default = 1.E-10) controls the relative accuracy (if |x| > 1 )
+   //  and absolute (if |x| < 1)  and maxiter (default = 100) controls the maximum number
    //  of iteration of the Brent algorithm
    //  If the flag logx is set the grid search is done in log step size
    //  This is done automatically if the log scale is set in the current Pad
@@ -1887,7 +1887,7 @@ Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax, Double_t epsilon, 
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
 
-   if (!logx && gPad != 0) logx = gPad->GetLogx(); 
+   if (!logx && gPad != 0) logx = gPad->GetLogx();
 
    GFunc g(this, fy);
    ROOT::Math::WrappedFunction<GFunc> wf1(g);
@@ -2007,8 +2007,8 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    //     f2->GetQuantiles(nprob,gr->GetY());
    //     gr->Draw("alp");
 
-   // LM: change to use fNpx 
-   // should we change code to use a root finder ? 
+   // LM: change to use fNpx
+   // should we change code to use a root finder ?
    // It should be more precise and more efficient
    const Int_t npx     = TMath::Max(fNpx, 2*nprobSum);
    const Double_t xMin = GetXmin();
@@ -2124,7 +2124,7 @@ Double_t TF1::GetRandom()
          xmax = TMath::Log10(fXmax);
       }
       dx = (xmax-xmin)/fNpx;
-         
+
       Double_t *xx = new Double_t[fNpx+1];
       for (i=0;i<fNpx;i++) {
             xx[i] = xmin +i*dx;
@@ -2282,23 +2282,23 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
 void TF1::GetRange(Double_t *rmin, Double_t *rmax) const
 {
    // Return range of a generic N-D function.
-   int ndim = GetNdim(); 
-   
-   double xmin = 0, ymin = 0, zmin = 0, xmax = 0, ymax = 0, zmax = 0; 
-   GetRange(xmin, ymin, zmin, xmax, ymax, zmax); 
+   int ndim = GetNdim();
+
+   double xmin = 0, ymin = 0, zmin = 0, xmax = 0, ymax = 0, zmax = 0;
+   GetRange(xmin, ymin, zmin, xmax, ymax, zmax);
    for (int i = 0; i < ndim; ++i) {
-      if (i == 0) { 
-         rmin[0] = xmin; rmax[0] = xmax; 
+      if (i == 0) {
+         rmin[0] = xmin; rmax[0] = xmax;
       }
-      else if (i == 1) { 
-         rmin[1] = ymin; rmax[1] = ymax; 
+      else if (i == 1) {
+         rmin[1] = ymin; rmax[1] = ymax;
       }
-      else if (i == 2) { 
-         rmin[2] = zmin; rmax[2] = zmax; 
+      else if (i == 2) {
+         rmin[2] = zmin; rmax[2] = zmax;
       }
       else {
-         rmin[i] = 0; 
-         rmax[i] = 0; 
+         rmin[i] = 0;
+         rmax[i] = 0;
       }
    }
 }
@@ -2382,7 +2382,7 @@ Double_t TF1::GetSave(const Double_t *xx)
    dx   = (xmax-xmin)/np;
    if (x < xmin || x > xmax) return 0;
    // return a Nan in case of x=nan, otherwise will crash later
-   if (TMath::IsNaN(x) ) return x; 
+   if (TMath::IsNaN(x) ) return x;
    if (dx <= 0) return 0;
 
    Int_t bin     = Int_t((x-xmin)/dx);
@@ -2444,7 +2444,7 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
    //
    // If a paramter is fixed, the gradient on this parameter = 0
 
-   if (fNpar == 0) return 0; 
+   if (fNpar == 0) return 0;
 
    if(eps< 1e-10 || eps > 1) {
       Warning("Derivative","parameter esp=%g out of allowed range[1e-10,1], reset to 0.01",eps);
@@ -2551,11 +2551,11 @@ void TF1::InitStandardFunctions()
          // create also chebyshev polynomial
          // (note polynomial object will not be deleted)
          // note that these functions cannot be stored
-         ROOT::Math::ChebyshevPol * pol = new ROOT::Math::ChebyshevPol(i); 
+         ROOT::Math::ChebyshevPol * pol = new ROOT::Math::ChebyshevPol(i);
          f1 = new TF1(TString::Format("chebyshev%d",i),pol,-1,1,i+1);
          f1->SetParameters(1,1,1,1,1,1,1,1,1,1);
       }
-      
+
    }
 }
 
@@ -2680,7 +2680,7 @@ Double_t TF1::Integral(Double_t a, Double_t b, const Double_t *params, Double_t 
    //      g->IntegralFast(n,x,w,0,100000)= 1.253
 
 
-   TF1_EvalWrapper wf1( this, params, fgAbsValue ); 
+   TF1_EvalWrapper wf1( this, params, fgAbsValue );
 
    ROOT::Math::GaussIntegrator giod;
    //ROOT::Math::Integrator giod;
@@ -2714,31 +2714,31 @@ Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_
 //______________________________________________________________________________
 Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t * params, const Double_t * covmat, Double_t epsilon )
 {
-   // Return Error on Integral of a parameteric function between a and b 
+   // Return Error on Integral of a parameteric function between a and b
    // due to the parameter uncertainties.
    // A pointer to a vector of parameter values and to the elements of the covariance matrix (covmat)
-   // can be optionally passed.  By default (i.e. when a zero pointer is passed) the current stored 
+   // can be optionally passed.  By default (i.e. when a zero pointer is passed) the current stored
    // parameter values are used to estimate the integral error together with the covariance matrix
-   // from the last fit (retrieved from the global fitter instance) 
+   // from the last fit (retrieved from the global fitter instance)
    //
-   // IMPORTANT NOTE1: When no covariance matrix is passed and in the meantime a fit is done 
-   // using another function, the routine will signal an error and it will return zero only 
-   // when the number of fit parameter is different than the values stored in TF1 (TF1::GetNpar() ). 
-   // In the case that npar is the same, an incorrect result is returned. 
+   // IMPORTANT NOTE1: When no covariance matrix is passed and in the meantime a fit is done
+   // using another function, the routine will signal an error and it will return zero only
+   // when the number of fit parameter is different than the values stored in TF1 (TF1::GetNpar() ).
+   // In the case that npar is the same, an incorrect result is returned.
    //
-   // IMPORTANT NOTE2: The user must pass a pointer to the elements of the full covariance matrix 
-   // dimensioned with the right size (npar*npar), where npar is the total number of parameters (TF1::GetNpar()), 
-   // including also the fixed parameters. When there are fixed parameters, the pointer returned from 
-   // TVirtualFitter::GetCovarianceMatrix() cannot be used. 
-   // One should use the TFitResult class, as shown in the example below.   
-   // 
-   // To get the matrix and values from an old fit do for example:  
+   // IMPORTANT NOTE2: The user must pass a pointer to the elements of the full covariance matrix
+   // dimensioned with the right size (npar*npar), where npar is the total number of parameters (TF1::GetNpar()),
+   // including also the fixed parameters. When there are fixed parameters, the pointer returned from
+   // TVirtualFitter::GetCovarianceMatrix() cannot be used.
+   // One should use the TFitResult class, as shown in the example below.
+   //
+   // To get the matrix and values from an old fit do for example:
    // TFitResultPtr r = histo->Fit(func, "S");
-   // ..... after performing other fits on the same function do 
+   // ..... after performing other fits on the same function do
    // func->IntegralError(x1,x2,r->GetParams(), r->GetCovarianceMatrix()->GetMatrixArray() );
 
-   Double_t x1[1]; 
-   Double_t x2[1]; 
+   Double_t x1[1];
+   Double_t x2[1];
    x1[0] = a, x2[0] = b;
    return ROOT::TF1Helper::IntegralError(this,1,x1,x2,params,covmat,epsilon);
 }
@@ -2746,29 +2746,29 @@ Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t * params, con
 //______________________________________________________________________________
 Double_t TF1::IntegralError(Int_t n, const Double_t * a, const Double_t * b, const Double_t * params, const  Double_t * covmat, Double_t epsilon )
 {
-   // Return Error on Integral of a parameteric function with dimension larger tan one 
+   // Return Error on Integral of a parameteric function with dimension larger tan one
    // between a[] and b[]  due to the parameters uncertainties.
-   // For a TF1 with dimension larger than 1 (for example a TF2 or TF3) 
+   // For a TF1 with dimension larger than 1 (for example a TF2 or TF3)
    // TF1::IntegralMultiple is used for the integral calculation
    //
    // A pointer to a vector of parameter values and to the elements of the covariance matrix (covmat) can be optionally passed.
-   // By default (i.e. when a zero pointer is passed) the current stored parameter values are used to estimate the integral error 
+   // By default (i.e. when a zero pointer is passed) the current stored parameter values are used to estimate the integral error
    // together with the covariance matrix from the last fit (retrieved from the global fitter instance).
    //
-   // IMPORTANT NOTE1: When no covariance matrix is passed and in the meantime a fit is done 
-   // using another function, the routine will signal an error and it will return zero only 
-   // when the number of fit parameter is different than the values stored in TF1 (TF1::GetNpar() ). 
-   // In the case that npar is the same, an incorrect result is returned. 
+   // IMPORTANT NOTE1: When no covariance matrix is passed and in the meantime a fit is done
+   // using another function, the routine will signal an error and it will return zero only
+   // when the number of fit parameter is different than the values stored in TF1 (TF1::GetNpar() ).
+   // In the case that npar is the same, an incorrect result is returned.
    //
-   // IMPORTANT NOTE2: The user must pass a pointer to the elements of the full covariance matrix 
-   // dimensioned with the right size (npar*npar), where npar is the total number of parameters (TF1::GetNpar()), 
-   // including also the fixed parameters. When there are fixed parameters, the pointer returned from 
-   // TVirtualFitter::GetCovarianceMatrix() cannot be used. 
-   // One should use the TFitResult class, as shown in the example below.   
-   // 
-   // To get the matrix and values from an old fit do for example:  
+   // IMPORTANT NOTE2: The user must pass a pointer to the elements of the full covariance matrix
+   // dimensioned with the right size (npar*npar), where npar is the total number of parameters (TF1::GetNpar()),
+   // including also the fixed parameters. When there are fixed parameters, the pointer returned from
+   // TVirtualFitter::GetCovarianceMatrix() cannot be used.
+   // One should use the TFitResult class, as shown in the example below.
+   //
+   // To get the matrix and values from an old fit do for example:
    // TFitResultPtr r = histo->Fit(func, "S");
-   // ..... after performing other fits on the same function do 
+   // ..... after performing other fits on the same function do
    // func->IntegralError(x1,x2,r->GetParams(), r->GetCovarianceMatrix()->GetMatrixArray() );
 
    return ROOT::TF1Helper::IntegralError(this,n,a,b,params,covmat,epsilon);
@@ -3005,7 +3005,7 @@ void TF1::Paint(Option_t *option)
          minimum = fHistogram->GetYaxis()->GetXmin();
       } else {
          minimum = fMinimum;
-         // Optimize the computation of the scale in Y in case the min/max of the 
+         // Optimize the computation of the scale in Y in case the min/max of the
          // function oscillate around a constant value
          if (minimum == -1111) {
             Double_t hmin;
@@ -3126,8 +3126,42 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    Int_t i;
    char quote = '"';
+
+   // Save the function as C code independant from ROOT.
+   if (strstr(option,"cc")) {
+      out << "double " << GetName() << "(double xv) {"<<std::endl;
+      Double_t dx = (fXmax-fXmin)/(fNpx-1);
+      out << "   double x[" << fNpx << "] = {" << std::endl;
+      out << "   ";
+      Int_t n = 0;
+      for (i=0; i<fNpx; i++) {
+         out << fXmin + dx*i ;
+         if (i<fNpx-1) out << ", ";
+         if (n++ == 10) { out << std::endl; out << "   "; n = 0;}
+      }
+      out << std::endl;
+      out << "   };" << std::endl;
+      out << "   double y[" << fNpx << "] = {" << std::endl;
+      out << "   ";
+      n = 0;
+      for (i=0; i<fNpx; i++) {
+         out << Eval(fXmin + dx*i);
+         if (i<fNpx-1) out << ", ";
+         if (n++ == 10) { out << std::endl; out << "   "; n = 0;}
+      }
+      out << std::endl;
+      out << "   };" << std::endl;
+      out << "   if (xv<x[0]) return y[0];" << std::endl;
+      out << "   if (xv>x[" << fNpx-1 << "]) return y[" << fNpx-1 << "];" << std::endl;
+      out << "   int i, j=0;" << std::endl;
+      out << "   for (i=1; i<" << fNpx << "; i++) { if (xv < x[i]) break; j++; }" << std::endl;
+      out << "   return y[j] + (y[j + 1] - y[j]) / (x[j + 1] - x[j]) * (xv - x[j]);" << std::endl;
+      out <<"}"<<std::endl;
+      return;
+   }
+
    out<<"   "<<std::endl;
-   //if (!fMethodCall) {
+
    if (!fType) {
       out<<"   TF1 *"<<GetName()<<" = new TF1("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<");"<<std::endl;
       if (fNpx != 100) {
@@ -3229,31 +3263,31 @@ void TF1::SetCurrent(TF1 *f1)
 //______________________________________________________________________________
 void TF1::SetFitResult(const ROOT::Fit::FitResult & result, const Int_t* indpar )
 {
-   // Set the result from the fit  
+   // Set the result from the fit
    // parameter values, errors, chi2, etc...
    // Optionally a pointer to a vector (with size fNpar) of the parameter indices in the FitResult can be passed
-   // This is useful in the case of a combined fit with different functions, and the FitResult contains the global result 
-   // By default it is assume that indpar = {0,1,2,....,fNpar-1}. 
+   // This is useful in the case of a combined fit with different functions, and the FitResult contains the global result
+   // By default it is assume that indpar = {0,1,2,....,fNpar-1}.
 
-   if (result.IsEmpty()) { 
+   if (result.IsEmpty()) {
       Warning("SetFitResult","Empty Fit result - nathing is set in TF1");
-      return;      
+      return;
    }
-   if (indpar == 0 && fNpar != (int) result.NPar() ) { 
+   if (indpar == 0 && fNpar != (int) result.NPar() ) {
       Error("SetFitResult","Invalid Fit result passed - number of parameter is %d , different than TF1::GetNpar() = %d",fNpar,result.NPar());
       return;
    }
-   if (result.Chi2() > 0) 
+   if (result.Chi2() > 0)
       SetChisquare(result.Chi2() );
-   else 
+   else
       SetChisquare(result.MinFcnValue() );
 
    SetNDF(result.Ndf() );
    SetNumberFitPoints(result.Ndf() + result.NFreeParameters() );
 
 
-   for (Int_t i = 0; i < fNpar; ++i) { 
-      Int_t ipar = (indpar != 0) ? indpar[i] : i;  
+   for (Int_t i = 0; i < fNpar; ++i) {
+      Int_t ipar = (indpar != 0) ? indpar[i] : i;
       if (ipar < 0) continue;
       fParams[i] = result.Parameter(ipar);
       // in case errors are not present do not set them
@@ -3261,8 +3295,8 @@ void TF1::SetFitResult(const ROOT::Fit::FitResult & result, const Int_t* indpar 
          fParErrors[i] = result.Error(ipar);
    }
    //invalidate cached integral since parameters have changed
-   Update();   
-         
+   Update();
+
 }
 
 
@@ -3317,12 +3351,12 @@ void TF1::SetNpx(Int_t npx)
    if (GetNdim() > 1) maxPx = 10000;
    if (npx >= minPx && npx <= maxPx) {
       fNpx = npx;
-   } 
-   else { 
-      if(npx < minPx) fNpx = minPx; 
-      if(npx > maxPx) fNpx = maxPx; 
+   }
+   else {
+      if(npx < minPx) fNpx = minPx;
+      if(npx > maxPx) fNpx = maxPx;
       Warning("SetNpx","Number of points must be >=%d && <= %d, fNpx set to %d",minPx,maxPx,fNpx);
-   } 
+   }
    Update();
 }
 
@@ -3540,9 +3574,9 @@ Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params,
    // See TF1::Integral() for parameter definitions
 
    // wrapped function in interface for integral calculation
-   // using abs value of integral 
+   // using abs value of integral
 
-   TF1_EvalWrapper func(this, params, kTRUE, n); 
+   TF1_EvalWrapper func(this, params, kTRUE, n);
 
    ROOT::Math::GaussIntegrator giod;
 
@@ -3556,7 +3590,7 @@ Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params,
    }
 
    // calculate now integral of x^n f(x)
-   // wrapped the member function EvalNum in  interface required by integrator using the functor class 
+   // wrapped the member function EvalNum in  interface required by integrator using the functor class
    ROOT::Math::Functor1D xnfunc( &func, &TF1_EvalWrapper::EvalNMom);
    giod.SetFunction(xnfunc);
 
@@ -3570,12 +3604,12 @@ Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params,
 Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *params, Double_t epsilon)
 {
    // Return nth central moment of function between a and b
-   // (i.e the n-th moment around the mean value)   
+   // (i.e the n-th moment around the mean value)
    //
    // See TF1::Integral() for parameter definitions
    //   Author: Gene Van Buren <gene@bnl.gov>
-  
-   TF1_EvalWrapper func(this, params, kTRUE, n); 
+
+   TF1_EvalWrapper func(this, params, kTRUE, n);
 
    ROOT::Math::GaussIntegrator giod;
 
@@ -3589,15 +3623,15 @@ Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *
    }
 
    // calculate now integral of xf(x)
-   // wrapped the member function EvalFirstMom in  interface required by integrator using the functor class 
+   // wrapped the member function EvalFirstMom in  interface required by integrator using the functor class
    ROOT::Math::Functor1D xfunc( &func, &TF1_EvalWrapper::EvalFirstMom);
    giod.SetFunction(xfunc);
 
    // estimate of mean value
    Double_t xbar = giod.Integral(a,b)/norm;
 
-   // use different mean value in function wrapper 
-   func.fX0 = xbar; 
+   // use different mean value in function wrapper
+   func.fX0 = xbar;
    ROOT::Math::Functor1D xnfunc( &func, &TF1_EvalWrapper::EvalNMom);
    giod.SetFunction(xnfunc);
 
