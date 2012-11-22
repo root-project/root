@@ -7672,9 +7672,9 @@ Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path, I
                r.Gets(f);
                rev = (!r.IsNull() && r.IsDigit()) ? r.Atoi() : -1;
                fclose(f);
-               if (chkveropt > 0) {
+               if (chkveropt == kCheckROOT || chkveropt == kCheckSVN) {
                   if (v != gROOT->GetVersion()) goodver = kFALSE;
-                  if (goodver && chkveropt > 1)
+                  if (goodver && chkveropt == kCheckSVN)
                      if (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision()) goodver = kFALSE;
                }
             }
@@ -8085,12 +8085,12 @@ Int_t TProof::EnablePackage(const char *package, const char *loadopts,
             }
             TString ocv = os->String()(fcv, lcv - fcv);
             Int_t cvopt = -1;
-            if (ocv.EndsWith("=off"))
-               cvopt = 0;
-            else if (ocv.EndsWith("=on"))
-               cvopt = 1;
-            else if (ocv.EndsWith("=svn"))
-               cvopt = 2;
+            if (ocv.EndsWith("=off") || ocv.EndsWith("=0"))
+               cvopt = (Int_t) kDontCheck;
+            else if (ocv.EndsWith("=on") || ocv.EndsWith("=1"))
+               cvopt = (Int_t) kCheckROOT;
+            else if (ocv.EndsWith("=svn") || ocv.EndsWith("=2"))
+               cvopt = (Int_t) kCheckSVN;
             else
                Warning("EnablePackage", "'checkversion' option unknown from argument: '%s' - ignored", ocv.Data()); 
             if (cvopt > -1) {
@@ -8152,15 +8152,15 @@ Int_t TProof::EnablePackage(const char *package, TList *loadopts,
       opt = kDontBuildOnClient;
 
    // Get check version option; user settings have priority
-   Int_t chkveropt = 1;
+   Int_t chkveropt = kCheckROOT;
    TString ocv = gEnv->GetValue("Proof.Package.CheckVersion", "");
    if (!ocv.IsNull()) {
       if (ocv == "off" || ocv == "0")
-         chkveropt = 0;
+         chkveropt = (Int_t) kDontCheck;
       else if (ocv == "on" || ocv == "1")
-         chkveropt = 1;
+         chkveropt = (Int_t) kCheckROOT;
       else if (ocv == "svn" || ocv == "2")
-         chkveropt = 2;
+         chkveropt = (Int_t) kCheckSVN;
       else
          Warning("EnablePackage", "'checkversion' option unknown from rootrc: '%s' - ignored", ocv.Data()); 
    }      
