@@ -1,17 +1,11 @@
-#if !defined(private)
-#undef ROOT_TClass
-#define private public
-//#define TClass TClassFake
 #include "TClass.h"
-//#undef TClass
-#undef private
-#endif
-
 #include "TNamed.h"
 #include "TClass.h"
 #include <iostream>
 #include "TApplication.h"
 #include "TStopwatch.h"
+#include "TList.h"
+#include "TDataMember.h"
 
 TClass* globalIsA(const TClass *cl, const void* obj) {
    if (gDebug>0) {
@@ -27,12 +21,27 @@ TClass* globalIsA(const TClass *cl, const void* obj) {
    return tobj->IsA();
 }
 
+void SetIsA(TClass *cl, TClass *newvalue)
+{
+   static long offset_fIsA = -1;
+   if (offset_fIsA == -1) {
+      TDataMember *d_fIsA = (TDataMember *)TClass::Class()->GetListOfDataMembers()->FindObject("fIsA");
+      if (d_fIsA == 0) {
+         std::cerr << "Could not find the offset of TClass::fIsA.\n";
+      }
+      offset_fIsA = d_fIsA->GetOffset();
+   }
+   TClass **ptr_fIsA = (TClass**)(((char*)cl)+offset_fIsA);
+   *ptr_fIsA = newvalue;
+}
+
 void TestTClassGlobalIsA() {
    TNamed * m = new TNamed("example","test");
 
    TClass * cltobj = TObject::Class();
    TClass * cltnam = TNamed::Class();
 
+   
    TObject* o = m;
    
    bool hasError = kFALSE;
@@ -52,9 +61,8 @@ void TestTClassGlobalIsA() {
    }
    if (hasError) gApplication->Terminate(1);
    
-   // we tricked the code (see start of file) so we can do this (well not on windows though :( ).
-   ((TClass*)cltobj)->fIsA = 0;
-   ((TClass*)cltnam)->fIsA = 0;
+   SetIsA(cltobj,0);
+   SetIsA(cltnam,0);
 
    if ( cltnam != cltobj->GetActualClass(o) ) {
       std::cerr << "cltobj->IsA(o) does not return the object class\n";
@@ -117,9 +125,8 @@ void TestTClassGlobalIsAPerf(int n=10) {
    }
    w.Print();
 
-   // we are in a dictionary so we can do this (well not on windows though :( ).
-   cltobj->fIsA = 0;
-   cltnam->fIsA = 0;
+   SetIsA(cltobj,0);
+   SetIsA(cltnam,0);
 
    std::cout << "Running without fIsA\n";
    w.Start();
