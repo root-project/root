@@ -900,7 +900,8 @@ typedef std::pair<int, unsigned> range_type;
 //______________________________________________________________________________
 bool FindOverlapSameSigns(const range_type &left, const range_type &right, range_type &intersection)
 {
-   //"Same" means both are positive, or both are negative, none of them is 0.
+   //"Same" means both xs are non-negative, or both are negative.
+   //left.x <= right.x.
    const unsigned dX(right.first - left.first);//diff fits into the positive range of int.
    //No intersection.
    if (dX >= left.second)
@@ -929,8 +930,8 @@ bool FindOverlapDifferentSigns(const range_type &left, const range_type &right, 
       intersection.first = right.first;
       intersection.second = std::min(right.second, left.second - signedMinAbs - unsigned(right.first));
    } else {
-      const unsigned leftXAbs(-left.first);
-      if (leftXAbs <= left.second)
+      const unsigned leftXAbs(-left.first);//-left.first can't overflow.
+      if (leftXAbs >= left.second)
          return false;
       
       if (left.second - leftXAbs <= unsigned(right.first))
@@ -959,8 +960,8 @@ bool FindOverlap(const range_type &range1, const range_type &range2, range_type 
 
    if (left.first < 0)
       return right.first < 0 ? FindOverlapSameSigns(left, right, intersection) : FindOverlapDifferentSigns(left, right, intersection);
-   else
-      return FindOverlapSameSigns(left, right, intersection);
+
+   return FindOverlapSameSigns(left, right, intersection);
 }
 
 }
