@@ -786,7 +786,7 @@ void TCintWithCling::RegisterModule(const char* modulename,
       if (posAssign != kNPOS) {
          macroPP[posAssign] = ' ';
       }
-      fInterpreter->declare(macroPP.Data());
+      fInterpreter->parse(macroPP.Data());
    }
    for (const char** macroU = macroUndefines; *macroU; ++macroU) {
       TString macroPP("#undef ");
@@ -796,7 +796,7 @@ void TCintWithCling::RegisterModule(const char* modulename,
       if (posAssign != kNPOS) {
          macroPP[posAssign] = ' ';
       }
-      fInterpreter->declare(macroPP.Data());
+      fInterpreter->parse(macroPP.Data());
    }
 
    // Assemble search path:   
