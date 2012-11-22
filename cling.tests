@@ -29,7 +29,6 @@
 ./root/treedraw
 ./root/treeformula/depth
 ./root/treeformula/event
-./root/treeformula/schemaEvolution
 ./root/tree/interpreted
 ./root/tree/split
 ./root/tree/tcut
