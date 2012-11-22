@@ -151,7 +151,8 @@ namespace mathtext {
 			wchar_t _glyph;
 			unsigned int _type;
 			inline math_symbol_t(void)
-				: _family(FAMILY_PLAIN), _type(atom_t::TYPE_UNKNOWN)
+				: _family(FAMILY_PLAIN), _glyph(L'\0'),
+				  _type(atom_t::TYPE_UNKNOWN)
 			{
 			}
 			inline math_symbol_t(std::string code, wchar_t glyph,
@@ -189,6 +190,7 @@ namespace mathtext {
 			bool _vertical;
 			std::wstring _string;
 			box_t(void)
+				: _vertical(false), _string(L"")
 			{
 			}
 			box_t(std::wstring string)
@@ -321,7 +323,7 @@ namespace mathtext {
 			{
 			}
 			inline atom_t(const field_t &nucleus)
-				: _nucleus(nucleus)
+				: _nucleus(nucleus), _limits(false)
 			{
 				classify();
 			}
@@ -417,16 +419,22 @@ namespace mathtext {
 			unsigned int _boundary;
 			inline item_t(const unsigned int type,
 						  const float length = 0)
-				: _type(type), _atom(field_t()), _length(length)
+				: _type(type), _atom(field_t()), _length(length),
+				  _style_change(STYLE_UNKNOWN),
+				  _boundary(BOUNDARY_UNKNOWN)
 			{
 			}
 			inline item_t(const atom_t &atom)
-				: _type(TYPE_ATOM), _atom(atom)
+				: _type(TYPE_ATOM), _atom(atom), _length(0),
+				  _style_change(STYLE_UNKNOWN),
+				  _boundary(BOUNDARY_UNKNOWN)
 			{
 			}
 			inline item_t(const unsigned int type,
 						  const atom_t &atom)
-				: _type(type), _atom(atom)
+				: _type(type), _atom(atom), _length(0),
+				  _style_change(STYLE_UNKNOWN),
+				  _boundary(BOUNDARY_UNKNOWN)
 			{
 			}
 			bool operator==(const item_t &item) const;
