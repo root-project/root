@@ -105,7 +105,7 @@ bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
 
      bool lookupSuccess = false;
      if (TCintWithCling__AutoLoadCallback(Name.getAsString().c_str())) {
-       pushedSAndDC.pop();
+       pushedDCAndS.pop();
        cleanupRAII.pop();
        lookupSuccess = SemaR.LookupName(R, S);
      }
