@@ -886,8 +886,18 @@ void *TGQuartz::GetSelectedDrawableChecked(const char *calledFrom) const
    NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(fSelectedDrawable);
    if (!drawable.fIsPixmap) {
       //TPad/TCanvas ALWAYS draw only into a pixmap.
-      Error(calledFrom, "Selected drawable is not a pixmap");
-      return 0;
+      if ([drawable isKindOfClass : [QuartzView class]]) {
+         QuartzView *view = (QuartzView *)drawable;
+         if (!view.fBackBuffer) {
+            Error(calledFrom, "Selected window is not double buffered");
+            return 0;
+         }
+         
+         drawable = view.fBackBuffer;
+      } else {
+         Error(calledFrom, "Selected drawable is neither a pixmap, nor a double buffered window");
+         return 0;
+      }
    }
    
    if (!drawable.fContext) {
