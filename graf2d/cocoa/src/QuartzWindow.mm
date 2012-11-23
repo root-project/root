@@ -1362,6 +1362,8 @@ void print_mask_info(ULong_t mask)
 - (void) windowDidBecomeKey : (NSNotification *) aNotification
 {
    assert(fContentView != nil && "windowDidBecomeKey, fContentView is nil");
+   
+   (void) aNotification;
 
    if (!fContentView.fOverrideRedirect) {
       TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
