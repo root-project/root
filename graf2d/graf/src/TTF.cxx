@@ -263,7 +263,7 @@ void TTF::PrepareString(const char *string)
          glyph++;
          fgNumGlyphs++;
       }
-      if (index == 3) {
+      if (*p == ' ') {
          NbTBlank++;
       } else {
          NbTBlank = 0;
