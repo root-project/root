@@ -689,6 +689,313 @@ function createFillPatterns(svg, id, color) {
     * Helper functions
     */
 
+   JSROOTPainter.clearCuts = function(chopt) {
+      /* decode string "chopt" and remove graphical cuts */
+      var left = chopt.indexOf('[');
+      if (left == -1) return chopt;
+      var right = chopt.indexOf(']');
+      if (right == -1) return chopt;
+      var nch = right-left;
+      if (nch < 2) return chopt;
+      for (i=0;i<=nch;i++) chopt[left+i] = ' ';
+      return chopt;
+   };
+
+   JSROOTPainter.decodeOptions = function(opt, histo, pad) {
+      /* decode string 'opt' and fill the option structure */
+      var hdim = 1; // histo['fDimension'];
+      if (histo['_typename'].match(/\bJSROOTIO.TH2/)) hdim = 2;
+      if (histo['_typename'].match(/\bJSROOTIO.TH3/)) hdim = 3;
+      var nch = opt.length;
+      var option = { 'Axis': 0, 'Bar': 0, 'Curve': 0, 'Error': 0, 'Hist': 0, 
+         'Line': 0, 'Mark': 0, 'Fill': 0, 'Same': 0, 'Func': 0, 'Scat': 0,
+         'Star': 0, 'Arrow': 0, 'Box': 0, 'Text': 0, 'Char': 0, 'Color': 0,
+         'Contour': 0, 'Logx': 0, 'Logy': 0, 'Logz': 0, 'Lego': 0, 'Surf': 0,
+         'Off': 0, 'Tri': 0, 'Proj': 0, 'AxisPos': 0, 'Spec': 0, 'Pie': 0,
+         'List': 0, 'Zscale': 0, 'FrontBox': 1, 'BackBox': 1, 'System': kCARTESIAN,
+         'HighRes': 0, 'Zero': 0
+      };
+      //check for graphical cuts
+      var chopt = opt.toUpperCase();
+      chopt = JSROOTPainter.clearCuts(chopt);
+      if (hdim > 1) option.Scat = 1;
+      if (!nch) option.Hist = 1;
+      if (histo['fFunctions'].length > 0) option.Func = 2;
+      if (histo['fSumw2'].length > 0 && hdim == 1) option.Error = 2;
+      var l = chopt.indexOf('SPEC');
+      if (l != -1) {
+         option.Scat = 0;
+         chopt = chopt.replace('SPEC', '    ');
+         var bs = 0;
+         l = chopt.indexOf('BF(');
+         if (l != -1) {
+            bs = parseInt(chopt)
+         }
+         option.Spec = Math.max(1600, bs);
+         return option;
+      }
+      l = chopt.indexOf('GL');
+      if (l != -1) {
+         chopt = chopt.replace('GL', '  ');
+      }
+      l = chopt.indexOf('X+');
+      if (l != -1) {
+         option.AxisPos = 10;
+         chopt = chopt.replace('X+', '  ');
+      }
+      l = chopt.indexOf('Y+');
+      if (l != -1) {
+         option.AxisPos += 1;
+         chopt = chopt.replace('Y+', '  ');
+      }
+      if ((option.AxisPos == 10 || option.AxisPos == 1) && (nch == 2)) option.Hist = 1;
+      if (option.AxisPos == 11 && nch == 4) option.Hist = 1;
+      l = chopt.indexOf('SAMES');
+      if (l != -1) {
+         if (nch == 5) option.Hist = 1;
+         option.Same = 2;
+         chopt = chopt.replace('SAMES', '     ');
+      }
+      l = chopt.indexOf('SAME');
+      if (l != -1) {
+         if (nch == 4) option.Hist = 1;
+         option.Same = 1;
+         chopt = chopt.replace('SAME', '    ');
+      }
+      l = chopt.indexOf('PIE');
+      if (l != -1) {
+         option.Pie = 1;
+         chopt = chopt.replace('PIE', '   ');
+      }
+      l = chopt.indexOf('LEGO');
+      if (l != -1) {
+         option.Scat = 0;
+         option.Lego = 1; 
+         chopt = chopt.replace('LEGO', '    ');
+         if (chopt[l+4] == '1') { option.Lego = 11; chopt[l+4] = ' '; }
+         if (chopt[l+4] == '2') { option.Lego = 12; chopt[l+4] = ' '; }
+         if (chopt[l+4] == '3') { option.Lego = 13; chopt[l+4] = ' '; }
+         l = chopt.indexOf('FB'); if (l != -1) { option.FrontBox = 0; chopt = chopt.replace('FB', '  '); }
+         l = chopt.indexOf('BB'); if (l != -1) { option.BackBox = 0;  chopt = chopt.replace('BB', '  '); }
+         l = chopt.indexOf('0'); if (l != -1) { option.Zero = 1;  chopt = chopt.replace('0', ' '); }
+      }
+      l = chopt.indexOf('SURF');
+      if (l != -1) {
+         option.Scat = 0;
+         option.Surf = 1; chopt = chopt.replace('SURF', '    ');
+         if (chopt[l+4] == '1') { option.Surf = 11; chopt[l+4] = ' '; }
+         if (chopt[l+4] == '2') { option.Surf = 12; chopt[l+4] = ' '; }
+         if (chopt[l+4] == '3') { option.Surf = 13; chopt[l+4] = ' '; }
+         if (chopt[l+4] == '4') { option.Surf = 14; chopt[l+4] = ' '; }
+         if (chopt[l+4] == '5') { option.Surf = 15; chopt[l+4] = ' '; }
+         if (chopt[l+4] == '6') { option.Surf = 16; chopt[l+4] = ' '; }
+         if (chopt[l+4] == '7') { option.Surf = 17; chopt[l+4] = ' '; }
+         l = chopt.indexOf('FB'); if (l != -1) { option.FrontBox = 0; chopt = chopt.replace('FB', '  '); }
+         l = chopt.indexOf('BB'); if (l != -1) { option.BackBox = 0; chopt = chopt.replace('BB', '  '); }
+      }
+      l = chopt.indexOf('TF3');
+      if (l != -1) {
+         l = chopt.indexOf('FB'); if (l != -1) { option.FrontBox = 0; chopt = chopt.replace('FB', '  '); }
+         l = chopt.indexOf('BB'); if (l != -1) { option.BackBox = 0; chopt = chopt.replace('BB', '  '); }
+      }
+      l = chopt.indexOf('ISO');
+      if (l != -1) {
+         l = chopt.indexOf('FB'); if (l != -1) { option.FrontBox = 0; chopt = chopt.replace('FB', '  '); }
+         l = chopt.indexOf('BB'); if (l != -1) { option.BackBox = 0; chopt = chopt.replace('BB', '  '); }
+      }
+      l = chopt.indexOf('LIST'); if (l != -1) { option.List = 1; chopt = chopt.replace('LIST', '  '); }
+      l = chopt.indexOf('CONT');
+      if (l != -1) {
+         chopt = chopt.replace('CONT', '    ');
+         if (hdim > 1) {
+            option.Scat = 0;
+            option.Contour = 1;
+            if (chopt[l+4] == '1') { option.Contour = 11; chopt[l+4] = ' '; }
+            if (chopt[l+4] == '2') { option.Contour = 12; chopt[l+4] = ' '; }
+            if (chopt[l+4] == '3') { option.Contour = 13; chopt[l+4] = ' '; }
+            if (chopt[l+4] == '4') { option.Contour = 14; chopt[l+4] = ' '; }
+            if (chopt[l+4] == '5') { option.Contour = 15; chopt[l+4] = ' '; }
+         } else {
+            option.Hist = 1;
+         }
+      }
+      l = chopt.indexOf('HBAR');
+      if (l != -1) {
+         option.Hist = 0;
+         option.Bar = 20; chopt = chopt.replace('HBAR', '    ');
+         if (chopt[l+4] == '1') { option.Bar = 21; chopt[l+4] = ' '; }
+         if (chopt[l+4] == '2') { option.Bar = 22; chopt[l+4] = ' '; }
+         if (chopt[l+4] == '3') { option.Bar = 23; chopt[l+4] = ' '; }
+         if (chopt[l+4] == '4') { option.Bar = 24; chopt[l+4] = ' '; }
+      }
+      l = chopt.indexOf('BAR');
+      if (l != -1) {
+         option.Hist = 0;
+         option.Bar = 10; chopt = chopt.replace('BAR', '   ');
+         if (chopt[l+3] == '1') { option.Bar = 11; chopt[l+3] = ' '; }
+         if (chopt[l+3] == '2') { option.Bar = 12; chopt[l+3] = ' '; }
+         if (chopt[l+3] == '3') { option.Bar = 13; chopt[l+3] = ' '; }
+         if (chopt[l+3] == '4') { option.Bar = 14; chopt[l+3] = ' '; }
+      }
+      l = chopt.indexOf('ARR' );
+      if (l != -1) {
+         chopt = chopt.replace('ARR', '   ');
+         if (hdim > 1) {
+            option.Arrow  = 1;
+            option.Scat = 0;
+         } else {
+            option.Hist = 1;
+         }
+      }
+      l = chopt.indexOf('BOX' );
+      if (l != -1) {
+         chopt = chopt.replace('BOX', '   ');
+         if (hdim>1) {
+            Hoption.Scat = 0;
+            Hoption.Box  = 1;
+            if (chopt[l+3] == '1') { option.Box = 11; chopt[l+3] = ' '; }
+         } else {
+            option.Hist = 1;
+         }
+      }
+      l = chopt.indexOf('COLZ');
+      if (l != -1) {
+         chopt = chopt.replace('COLZ', '');
+         if (hdim>1) {
+            option.Color  = 2;
+            option.Scat   = 0;
+            option.Zscale = 1;
+         } else {
+            option.Hist = 1;
+         }
+      }
+      l = chopt.indexOf('COL' );
+      if (l != -1) {
+         chopt = chopt.replace('COL', '   ');
+         if (hdim>1) {
+            option.Color = 1;
+            option.Scat  = 0;
+         } else {
+            option.Hist = 1;
+         }
+      }
+      l = chopt.indexOf('CHAR'); if (l != -1) { option.Char = 1; chopt = chopt.replace('CHAR', '    '); option.Scat = 0; }
+      l = chopt.indexOf('FUNC'); if (l != -1) { option.Func = 2; chopt = chopt.replace('FUNC', '    '); option.Hist = 0; }
+      l = chopt.indexOf('HIST'); if (l != -1) { option.Hist = 2; chopt = chopt.replace('HIST', '    '); option.Func = 0; option.Error = 0; }
+      l = chopt.indexOf('AXIS'); if (l != -1) { option.Axis = 1; chopt = chopt.replace('AXIS', '    '); }
+      l = chopt.indexOf('AXIG'); if (l != -1) { option.Axis = 2; chopt = chopt.replace('AXIG', '    '); }
+      l = chopt.indexOf('SCAT'); if (l != -1) { option.Scat = 1; chopt = chopt.replace('SCAT', '    '); }
+      l = chopt.indexOf('TEXT');
+      if (l != -1) {
+         var angle = parseInt(chopt);
+         if (angle != NaN) {
+            if (angle < 0)  angle = 0;
+            if (angle > 90) angle = 90;
+            option.Text = 1000 + angle;
+         }
+         else {
+            option.Text = 1;
+         }
+         chopt = chopt.replace('TEXT', '    ');
+         l = chopt.indexOf('N');
+         if (l != -1 && histo['_typename'].match(/\bJSROOTIO.TH2Poly/)) option.Text += 3000;
+         option.Scat = 0;
+      }
+      l = chopt.indexOf('POL');  if (l != -1) { option.System = kPOLAR;       chopt = chopt.replace('POL', '   '); }
+      l = chopt.indexOf('CYL');  if (l != -1) { option.System = kCYLINDRICAL; chopt = chopt.replace('CYL', '   '); }
+      l = chopt.indexOf('SPH');  if (l != -1) { option.System = kSPHERICAL;   chopt = chopt.replace('SPH', '   '); }
+      l = chopt.indexOf('PSR');  if (l != -1) { option.System = kRAPIDITY;    chopt = chopt.replace('PSR', '   '); }
+      l = chopt.indexOf('TRI');
+      if (l != -1) {
+         option.Scat = 0;
+         option.Color  = 0;
+         option.Tri = 1; chopt = chopt.replace('TRI', '   ');
+         l = chopt.indexOf('FB');   if (l != -1) { option.FrontBox = 0; chopt = chopt.replace('FB', '  '); }
+         l = chopt.indexOf('BB');   if (l != -1) { option.BackBox = 0;  chopt = chopt.replace('BB', '  '); }
+         l = chopt.indexOf('ERR');  if (l != -1) chopt = chopt.replace('ERR', '   ');
+      }
+      l = chopt.indexOf('AITOFF');
+      if (l != -1) {
+         Hoption.Proj = 1; chopt = chopt.replace('AITOFF', '      ');  // Aitoff projection
+      }
+      l = chopt.indexOf('MERCATOR');
+      if (l != -1) {
+         option.Proj = 2; chopt = chopt.replace('MERCATOR', '        ');  // Mercator projection
+      }
+      l = chopt.indexOf('SINUSOIDAL');
+      if (l != -1) {
+         option.Proj = 3; chopt = chopt.replace('SINUSOIDAL', '         ');  // Sinusoidal projection
+      }
+      l = chopt.indexOf('PARABOLIC');
+      if (l != -1) {
+         option.Proj = 4; chopt = chopt.replace('PARABOLIC', '         ');  // Parabolic projection
+      }
+      if (option.Proj > 0) {
+         option.Scat = 0;
+         option.Contour = 14;
+      }
+      if (chopt.indexOf('A') != -1)    option.Axis = -1;
+      if (chopt.indexOf('B') != -1)    option.Bar  = 1;
+      if (chopt.indexOf('C') != -1)  { option.Curve =1; option.Hist = -1; }
+      if (chopt.indexOf('F') != -1)    option.Fill =1;
+      if (chopt.indexOf('][') != -1) { option.Off  =1; option.Hist =1; }
+      if (chopt.indexOf('F2') != -1)   option.Fill =2;
+      if (chopt.indexOf('L') != -1)  { option.Line =1; option.Hist = -1; }
+      if (chopt.indexOf('P') != -1)  { option.Mark =1; option.Hist = -1; }
+      if (chopt.indexOf('Z') != -1)    option.Zscale =1;
+      if (chopt.indexOf('*') != -1)    option.Star =1;
+      if (chopt.indexOf('H') != -1)    option.Hist =2;
+      if (chopt.indexOf('P0') != -1)   option.Mark =10;
+      if (histo['_typename'].match(/\bJSROOTIO.TH2Poly/)) {
+         if (option.Fill + option.Line + option.Mark != 0 ) option.Scat = 0;
+      }
+      if (chopt.indexOf('E') != -1) {
+         if (hdim == 1) {
+            option.Error = 1;
+            if (chopt.indexOf('E0') != -1)  option.Error = 10;
+            if (chopt.indexOf('E1') != -1)  option.Error = 11;
+            if (chopt.indexOf('E2') != -1)  option.Error = 12;
+            if (chopt.indexOf('E3') != -1)  option.Error = 13;
+            if (chopt.indexOf('E4') != -1)  option.Error = 14;
+            if (chopt.indexOf('E5') != -1)  option.Error = 15;
+            if (chopt.indexOf('E6') != -1)  option.Error = 16;
+            if (chopt.indexOf('X0') != -1) {
+               if (option.Error == 1)  option.Error += 20;
+               option.Error += 10;
+            }
+            if (option.Text && histo['_typename'].match(/\bJSROOTIO.TProfile/)) {
+               option.Text += 2000;
+               option.Error = 0;
+            }
+         } else {
+            if (option.Error == 0) {
+               option.Error = 100;
+               option.Scat  = 0;
+            }
+            if (option.Text) {
+               option.Text += 2000;
+               option.Error = 0;
+            }
+         }
+      }
+      if (chopt.indexOf('9') != -1)  option.HighRes = 1;
+      if (option.Surf == 15) {
+         if (option.System == kPOLAR || option.System == kCARTESIAN) {
+            option.Surf = 13;
+            //Warning('MakeChopt','option SURF5 is not supported in Cartesian and Polar modes');
+         }
+      }
+      if (pad && typeof(pad) != 'undefined') {
+         // Copy options from current pad
+         option.Logx = pad['fLogx'];
+         option.Logy = pad['fLogy'];
+         option.Logz = pad['fLogz'];
+      }
+      //  Check options incompatibilities
+      if (option.Bar == 1) option.Hist = -1;
+      return option;
+   };
+
    JSROOTPainter.getRootColor = function(color) {
       return root_colors[color];
    };
@@ -1429,7 +1736,7 @@ function createFillPatterns(svg, id, color) {
    JSROOTPainter.drawErrors = function(svg, bins, histo, pad, x, y) {
       var w = svg.attr("width"), h = svg.attr("height");
       /* Add a panel for each data point */
-      var opt = histo['fOption'].toLowerCase();
+      var options = JSROOTPainter.decodeOptions(histo['fOption'], histo, pad);
       var info_marker = getRootMarker(root_markers, histo['fMarkerStyle']);
       var shape = info_marker['shape'], filled = info_marker['toFill'],
           toRotate = info_marker['toRotate'], marker_size = histo['fMarkerSize'] * 32;
@@ -1479,7 +1786,7 @@ function createFillPatterns(svg, id, color) {
             .style("stroke", root_colors[histo['fLineColor']])
             .style("stroke-width", histo['fLineWidth']);
 
-         if (opt.indexOf('e1') != -1) {
+         if (options.Error == 11) {
             g.selectAll("e1_x")
                .data(histo.bins)
                .enter()
@@ -1512,7 +1819,7 @@ function createFillPatterns(svg, id, color) {
             .style("stroke", root_colors[histo['fLineColor']])
             .style("stroke-width", histo['fLineWidth']);
 
-         if (opt.indexOf('e1') != -1) {
+         if (options.Error == 11) {
             g.selectAll("e1_y")
                .data(histo.bins)
                .enter()
@@ -1767,7 +2074,41 @@ function createFillPatterns(svg, id, color) {
    JSROOTPainter.drawGraph = function(vis, pad, graph, hframe) {
       var scalex = 1, scaley = 1, logx = false, logy = false, logz = false,
           gridx = false, gridy = false, draw_all = true;
+      var optionLine, optionAxis, optionCurve, optionStar, optionMark,
+          optionBar, optionR, optionOne, optionE, optionFill, optionZ,
+          optionCurveFill;
       var draw_errors = true;
+      if ('fOption' in graph) { 
+         var opt = graph['fOption'].toUpperCase();
+         opt.replace('SAME', '');
+      }
+      else var opt = 'LP';
+
+      if (opt.indexOf('L') != -1) optionLine = 1;  else optionLine = 0;
+      if (opt.indexOf('A') != -1) optionAxis = 1;  else optionAxis = 0;
+      if (opt.indexOf('C') != -1) optionCurve= 1;  else optionCurve= 0;
+      if (opt.indexOf('*') != -1) optionStar = 1;  else optionStar = 0;
+      if (opt.indexOf('P') != -1) optionMark = 1;  else optionMark = 0;
+      if (opt.indexOf('B') != -1) optionBar  = 1;  else optionBar  = 0;
+      if (opt.indexOf('R') != -1) optionR    = 1;  else optionR    = 0;
+      if (opt.indexOf('1') != -1) optionOne  = 1;  else optionOne  = 0;
+      if (opt.indexOf('F') != -1) optionFill = 1;  else optionFill = 0;
+      if (opt.indexOf('2') != -1 || opt.indexOf('3') != -1 || 
+          opt.indexOf('4') != -1 || opt.indexOf('5') != -1) optionE = 1;  
+      else optionE = 0;
+      optionZ = 0;
+
+      // if no drawing option is selected and if chopt<>' ' nothing is done.
+      if (optionLine + optionFill + optionCurve + optionStar + optionMark + optionBar + optionE == 0) {
+         if (chopt.length == 0) optionLine = 1;
+         else return;
+      }
+      if (optionStar) graph['fMarkerStyle'] = 3;
+      optionCurveFill = 0;
+      if (optionCurve && optionFill) {
+         optionCurveFill = 1;
+         optionFill      = 0;
+      }
       if (pad && typeof(pad) != 'undefined') {
          logx = pad['fLogx'];
          logy = pad['fLogy'];
@@ -1792,15 +2133,13 @@ function createFillPatterns(svg, id, color) {
          if (maxEX < 1.0e-300 && maxEY < 1.0e-300)
             draw_errors = false;
       }
-      var seriesType = 'line';
-      var showMarker = true;
-      if (graph['fOption'] && typeof(graph['fOption']) != 'undefined') {
-         var opt = graph['fOption'].toLowerCase();
-         if (opt.indexOf('p') == -1 && opt.indexOf('*') == -1)
-            showMarker = false;
-         if (opt.indexOf('l') == -1 && opt.indexOf('c') == -1)
-            seriesType = 'scatter';
-      }
+      var seriesType = 'scatter';
+      var showMarker = false;
+      if (optionMark == 1 || optionStar == 1)
+         showMarker = true;
+      if (optionLine == 1 || optionCurve == 1)
+         seriesType = 'line';
+
       var bins = d3.range(graph['fNpoints']).map(function(p) {
          if (graph['_typename'] == 'JSROOTIO.TGraphErrors') {
             return {
@@ -2304,22 +2643,14 @@ function createFillPatterns(svg, id, color) {
    };
 
    JSROOTPainter.drawHistogram1D = function(vis, pad, histo, hframe) {
-      var i, logx = false, logy = false, logz = false, gridx = false, gridy = false;
-      var same = false;
-      var opt = histo['fOption'].toLowerCase();
-      if (opt.indexOf('same') != -1) {
-         same = true;
-         opt = opt.replace('same', '');
-      }
+      var i, gridx = false, gridy = false;
+      var options = JSROOTPainter.decodeOptions(histo['fOption'], histo, pad);
       var draw_all = false;
       if (hframe == null || (hframe['xmin'] < 1e-300 && hframe['xmax'] < 1e-300 &&
           hframe['ymin'] < 1e-300 && hframe['ymax'] < 1e-300)) {
          draw_all = true;
       }
       if (pad && typeof(pad) != 'undefined') {
-         logx = pad['fLogx'];
-         logy = pad['fLogy'];
-         logz = pad['fLogz'];
          gridx = pad['fGridx'];
          gridy = pad['fGridy'];
       }
@@ -2347,11 +2678,11 @@ function createFillPatterns(svg, id, color) {
          var frame = ret['frame'];
          var svg_frame = d3.select(ret['id']);
          var w = frame.attr("width"), h = frame.attr("height");
-         if (logx)
+         if (options.Logx)
             var x = d3.scale.log().domain([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]).range([0, w]);
          else
             var x = d3.scale.linear().domain([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]).range([0, w]);
-         if (logy)
+         if (options.Logy)
             var y = d3.scale.log().domain([ymin, ymax]).range([h, 0]);
          else
             var y = d3.scale.linear().domain([ymin, ymax]).range([h, 0]);
@@ -2388,7 +2719,7 @@ function createFillPatterns(svg, id, color) {
       histo['fYaxis']['fXmax'] = hmax * 1.05;
       var binwidth = ((histo['fXaxis']['fXmax'] - histo['fXaxis']['fXmin']) / histo['fXaxis']['fNbins']);
       var bins = d3.range(histo['fXaxis']['fNbins']).map(function(p) {
-         var offset = (opt.indexOf('e') != -1) ? (p * binwidth) - (binwidth / 2.0) : (p * binwidth);
+         var offset = (options.Error > 0) ? (p * binwidth) - (binwidth / 2.0) : (p * binwidth);
          return {
             x:  histo['fXaxis']['fXmin'] + offset,
             y:  histo['fArray'][p],
@@ -2400,16 +2731,16 @@ function createFillPatterns(svg, id, color) {
       var frame = ret['frame'];
       var svg_frame = d3.select(ret['id']);
       var w = frame.attr("width"), h = frame.attr("height");
-      if (logx)
+      if (options.Logx)
          var x = d3.scale.log().domain([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]).range([0, w]);
       else
          var x = d3.scale.linear().domain([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]).range([0, w]);
-      if (logy)
+      if (options.Logy)
          var y = d3.scale.log().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([h, 0]);
       else
          var y = d3.scale.linear().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([h, 0]);
 
-      if (same) {
+      if (options.Same) {
          x.domain([ret['xmin'],ret['xmax']]);
          y.domain([ret['ymin'],ret['ymax']]);
       }
@@ -2432,7 +2763,7 @@ function createFillPatterns(svg, id, color) {
       histo['y'] = y;
       histo['bins'] = bins;
 
-      if (opt.indexOf('e') != -1) {
+      if (options.Error > 0) {
          this.drawErrors(svg_frame, bins, histo, pad, x, y);
       }
       else {
@@ -2504,12 +2835,9 @@ function createFillPatterns(svg, id, color) {
    };
 
    JSROOTPainter.drawHistogram2D = function(vis, pad, histo, hframe) {
-      var i, logx = false, logy = false, logz = false, gridx = false, gridy = false;
-      var opt = histo['fOption'].toLowerCase();
+      var i, gridx = false, gridy = false;
+      var options = JSROOTPainter.decodeOptions(histo['fOption'], histo, pad);
       if (pad && typeof(pad) != 'undefined') {
-         logx = pad['fLogx'];
-         logy = pad['fLogy'];
-         logz = pad['fLogz'];
          gridx = pad['fGridx'];
          gridy = pad['fGridy'];
       }
@@ -2548,11 +2876,11 @@ function createFillPatterns(svg, id, color) {
       var frame = ret['frame'];
       var svg_frame = d3.select(ret['id']);
       var w = frame.attr("width"), h = frame.attr("height");
-      if (logx)
+      if (options.Logx)
          var x = d3.scale.log().domain([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]).range([0, w]);
       else
          var x = d3.scale.linear().domain([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]).range([0, w]);
-      if (logy)
+      if (options.Logy)
          var y = d3.scale.log().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([h, 0]);
       else
          var y = d3.scale.linear().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([h, 0]);
@@ -2592,40 +2920,28 @@ function createFillPatterns(svg, id, color) {
             .attr("x", function(d) { return histo.x(d.x) + (scalex/2) - (d.z * constx/2);})
             .attr("y", function(d) { return histo.y(d.y) + (scaley/2) - (d.z * consty/2);})
             .attr("width", function(d) {
-               switch (opt) {
-                  case 'colz':
-                  case 'col':
-                     return (w / histo['fXaxis']['fNbins']) * xfactor;
-                  default:
-                     return d.z * ((w / histo['fXaxis']['fNbins']) / maxbin) * xfactor;
-               }
+               if (options.Color > 0)
+                  return (w / histo['fXaxis']['fNbins']) * xfactor;
+               else
+                  return d.z * ((w / histo['fXaxis']['fNbins']) / maxbin) * xfactor;
             })
             .attr("height", function(d) {
-               switch (opt) {
-                  case 'colz':
-                  case 'col':
-                     return (h / histo['fYaxis']['fNbins']) * yfactor;
-                  default:
-                     return d.z * ((h / histo['fYaxis']['fNbins']) / maxbin) * yfactor;
-               }
+               if (options.Color > 0)
+                  return (h / histo['fYaxis']['fNbins']) * yfactor;
+               else
+                  return d.z * ((h / histo['fYaxis']['fNbins']) / maxbin) * yfactor;
             })
             .style("stroke", function(d) {
-               switch (opt) {
-                  case 'colz':
-                  case 'col':
-                     return JSROOTPainter.getValueColor(histo, d.z, pad);
-                  default:
-                     return "black";
-               }
+               if (options.Color > 0)
+                  return JSROOTPainter.getValueColor(histo, d.z, pad);
+               else
+                  return "black";
             })
             .style("fill", function(d) {
-               switch (opt) {
-                  case 'colz':
-                  case 'col':
-                     return JSROOTPainter.getValueColor(histo, d.z, pad);
-                  default:
-                     return "none";
-               }
+               if (options.Color > 0)
+                  return JSROOTPainter.getValueColor(histo, d.z, pad);
+               else
+                  return "none";
             });
          g.selectAll("rect")
             .append("svg:title")
@@ -2634,7 +2950,7 @@ function createFillPatterns(svg, id, color) {
       histo['redraw'] = do_redraw;
       do_redraw();
 
-      if (opt.indexOf('colz') != -1) {
+      if (options.Color > 0 && options.Zscale > 0) {
          // just to initialize the default palette
          this.getValueColor(histo, 0, pad);
          for (i=0; i<histo['fFunctions'].length; ++i) {
