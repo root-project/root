@@ -241,7 +241,7 @@ void stressGraphics(Int_t verbose = 0)
          }
       }
    }
-   
+
    // Check if $ROOTSYS/tutorials/tree/cernstaff.root exists
    gCernstaff = new TFile("$(ROOTSYS)/tutorials/tree/cernstaff.root");
    if (gCernstaff->IsZombie()) {
@@ -366,7 +366,7 @@ void stressGraphics(Int_t verbose = 0)
    zoomfit      ();
    parallelcoord();
    clonepad     ();
-   hbars        (); 
+   hbars        ();
    if (!gOptionR) {
       std::cout << "**********************************************************************" <<std::endl;
       if (!gTestsFailed) {
@@ -533,7 +533,6 @@ void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
       StatusPrint(psfile,  gTestNum, title, FileSize(outfile) ,
                                             gPS1RefNb[gTestNum-1],
                                             gPS1ErrNb[gTestNum-1]);
-      
    } else {
       StatusPrint(psfile,  gTestNum, title, AnalysePS(outfile) ,
                                             gPS1RefNb[gTestNum-1],
@@ -623,7 +622,7 @@ void TestReport2(Int_t IPS)
                                                     gPS2RefNb[gTestNum-1],
                                                     gPS2ErrNb[gTestNum-1]);
    }
-   
+
    sprintf(gCfile,"sg%2.2d.C",gTestNum);
    if (!gOptionK && !i) gSystem->Unlink(gCfile);
 
@@ -948,14 +947,14 @@ void tlatex3()
    TCanvas *C = StartTest(700,500);
 
    TPaveText pt(.05,.1,.95,.8);
-   pt.AddText("#frac{2s}{#pi#alpha^{2}}  #frac{d#sigma}{dcos#theta} (e^{+}e^{-} #rightarrow f#bar{f} ) = \
-   #left| #frac{1}{1 - #Delta#alpha} #right|^{2} (1+cos^{2}#theta)");
+   pt.AddText("#frac{2s}{#pi#alpha^{2}}  #frac{d#sigma}{dcos#theta} (e^{+}e^{-}#rightarrowf#bar{f} ) = \
+#left| #frac{1}{1 - #Delta#alpha} #right|^{2} (1+cos^{2}#theta)");
    pt.AddText("+ 4 Re #left{ #frac{2}{1 - #Delta#alpha} #chi(s) #[]{#hat{g}_{#nu}^{e}#hat{g}_{#nu}^{f} \
-   (1 + cos^{2}#theta) + 2 #hat{g}_{a}^{e}#hat{g}_{a}^{f} cos#theta) } #right}");
+(1 + cos^{2}#theta) + 2 #hat{g}_{a}^{e}#hat{g}_{a}^{f} cos#theta) } #right}");
    pt.AddText("+ 16#left|#chi(s)#right|^{2}\
-   #left[(#hat{g}_{a}^{e}^{2} + #hat{g}_{v}^{e}^{2})\
-   (#hat{g}_{a}^{f}^{2} + #hat{g}_{v}^{f}^{2})(1+cos^{2}#theta)\
-   + 8 #hat{g}_{a}^{e} #hat{g}_{a}^{f} #hat{g}_{v}^{e} #hat{g}_{v}^{f}cos#theta#right] ");
+#left[(#hat{g}_{a}^{e}^{2}+#hat{g}_{v}^{e}^{2})\
+(#hat{g}_{a}^{f}^{2} + #hat{g}_{v}^{f}^{2})(1+cos^{2}#theta) \
++ 8 #hat{g}_{a}^{e} #hat{g}_{a}^{f} #hat{g}_{v}^{e} #hat{g}_{v}^{f}cos#theta#right] ");
    pt.SetLabel("Born equation");
    pt.Draw();
 
@@ -1198,7 +1197,7 @@ void itbf()
 void tmathtext()
 {
    TCanvas *C = StartTest(700, 500);
-   
+
 	TMathText l;
 	l.SetTextAlign(23);
 	l.SetTextSize(0.06);
@@ -1210,7 +1209,7 @@ void tmathtext()
 	l.DrawMathText(0.13, 0.150, "{(\\ell+1)C_{\\ell}^{TE} \\over 2\\pi}");
    l.DrawMathText(0.27, 0.110, "\\mathbb{N} \\subset \\mathbb{R}");
 	l.DrawMathText(0.63, 0.100, "\\hbox{RHIC スピン物理 Нью-Йорк}");
-   
+
    TestReport1(C, "TMathText",1);
    DoCcode(C);
    TestReport2(1);
@@ -1323,7 +1322,7 @@ void statfitparam ()
    pt->SetFillColor(18);
    pt->SetTextAlign(12);
    pt->AddText("This example test all the possible cases");
-   pt->AddText("handled by ThistPainter::GetBestFormat.");
+   pt->AddText("handled by THistPainter::GetBestFormat.");
    pt->AddText("This method returns the best format to");
    pt->AddText("paint the fit parameters errors.");
    pt->Draw();
@@ -1523,37 +1522,37 @@ void tgaxis4()
 void tgaxis5()
 {
    // 5th TGaxis test.
-   
+
    TCanvas *C = StartTest(800,570);
-   
+
    double f = 1.8;
-      
+
    TLatex* tex1 = new TLatex;
    tex1->SetNDC();
    tex1->SetTextFont(102);
    tex1->SetTextSize(0.07*f);
-   
+
    TLatex* tex3 = new TLatex;
    tex3->SetNDC();
    tex3->SetTextFont(102);
    tex3->SetTextSize(0.07*f);
    tex3->SetTextColor(kBlue+2);
-   
+
    TLatex* tex2 = new TLatex;
    tex2->SetNDC();
    tex2->SetTextFont(102);
    tex2->SetTextSize(0.07*f);
    tex2->SetTextColor(kOrange+3);
-   
+
    time_t offset[] = {0,                   0, 1325376000, 1341100800};
    time_t t[]      = {1331150400, 1336417200,          0, 36000};
-      
+
    C->SetTopMargin(0);  C->SetBottomMargin(0);
    C->SetLeftMargin(0); C->SetRightMargin(0);
    C->Divide(2, 4, -1, -1);
    TLine l;
    l.DrawLine(0.5, 0, 0.5, 1.);
-   
+
    for(int i = 0; i < 4; ++i){
       for(int gmt = 0; gmt < 2; ++gmt){
          const char* opt = (gmt ? "gmt" : "local");
@@ -1566,20 +1565,20 @@ void tgaxis5()
          ga->SetTimeFormat("TGaxis label: #color[2]{%Y-%m-%d %H:%M:%S}");
          ga->SetLabelFont(102);
          ga->SetLabelColor(kBlue+2);
-         
+
          ga->SetTimeOffset(offset[i], opt);
          ga->SetLabelOffset(0.04*f);
          ga->SetLabelSize(0.07*f);
          ga->SetLineColor(0);
          ga->Draw();
-         
-         // Get offset string of axis time format: there is not acccessor 
+
+         // Get offset string of axis time format: there is not acccessor
          // to time format in TGaxis.
          // Assumes TAxis use the same format.
          TAxis a(10, 0, 1600000000);
          a.SetTimeOffset(offset[i], opt);
          const char* offsettimeformat = a.GetTimeFormat();
-         
+
          char buf[256];
          if (offset[i] < t[i]) {
             sprintf(buf, "#splitline{%s, %s}{offset: %ld, option %s}",
@@ -1599,7 +1598,7 @@ void tgaxis5()
          if(i > 0) l.DrawLine(0, 0.95, 1, 0.95);
       }
    }
-   
+
    TestReport1(C, "TGaxis 5 (Time on axis: reference test)");
    DoCcode(C);
    TestReport2();
@@ -1610,8 +1609,8 @@ void tgaxis5()
 TString stime(time_t* t, bool utc, bool display_time_zone)
 {
    // function used by tgaxis5
-   
-   struct tm* tt;   
+
+   struct tm* tt;
    if (utc) tt = gmtime(t);
    else     tt = localtime(t);
    char buf[256];
@@ -2622,18 +2621,18 @@ void zoomfit()
 void hbars()
 {
    // Ntuple drawing with alphanumeric variables
-   
+
    TCanvas *C = StartTest(700,800);
-   
+
    TTree *T = (TTree*)gCernstaff->Get("T");
    T->SetFillColor(45);
    C->SetFillColor(42);
    C->Divide(1,2);
-   
+
    //horizontal bar chart
    C->cd(1); gPad->SetGrid(); gPad->SetLogx(); gPad->SetFrameFillColor(33);
    T->Draw("Nation","","hbar2");
-   
+
    //vertical bar chart
    C->cd(2); gPad->SetGrid(); gPad->SetFrameFillColor(33);
    T->Draw("Division>>hDiv","","goff");
@@ -2649,16 +2648,15 @@ void hbars()
    hDivFR->SetBarOffset(0.55);
    hDivFR->SetFillColor(50);
    TH1 *h2 = hDivFR->DrawCopy("bar2,same");
-   
+
    TLegend *legend = new TLegend(0.55,0.65,0.76,0.82);
    legend->AddEntry(h1,"All nations","f");
    legend->AddEntry(h2,"French only","f");
    legend->Draw();
 
-   
    gPad->Modified();
    gPad->Update();
-   
+
    TestReport1(C, "Ntuple drawing with alphanumeric variables");
    DoCcode(C);
    TestReport2();
