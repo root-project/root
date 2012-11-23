@@ -70,5 +70,12 @@
       "\" is given to <tt>TLatex</tt> then <tt>TMathText</tt> is automatically invoked.
       Therefore, as histograms' titles, axis titles, labels etc ... are drawn using
       <tt>TLatex</tt>, the <tt>TMathText</tt> syntax can be used for them also.    </li>
+   <li>
+   Fix a very old bug (in <tt>TTF.cxx</tt> since the beginning).
+   With the following code the spaces between "text" and #lambda were ignored.
+   <pre>
+   TLatex t; t.DrawLatex( 0.1,0.1,"text   #Lambda" )
+   </pre>
+   </li>
 </ul>
 
