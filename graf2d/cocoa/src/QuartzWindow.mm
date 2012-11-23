@@ -1358,6 +1358,38 @@ void print_mask_info(ULong_t mask)
    return NO;
 }
 
+//______________________________________________________________________________
+- (void) windowDidBecomeKey : (NSNotification *) aNotification
+{
+   assert(fContentView != nil && "windowDidBecomeKey, fContentView is nil");
+
+   if (!fContentView.fOverrideRedirect) {
+      TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
+      assert(vx != 0 && "becomeFirstResponder, gVirtualX is null or not of TGCocoa type");
+      vx->GetEventTranslator()->GenerateFocusChangeEvent(self.fContentView);
+   }
+}
+
+/*
+//______________________________________________________________________________
+- (void) windowDidResignKey : (NSNotification *) aNotification
+{
+//   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
+//   assert(vx != 0 && "becomeFirstResponder, gVirtualX is null or not of TGCocoa type");
+//   vx->GetEventTranslator()->GenerateFocusChangeEvent(nil);
+}
+*/
+
+/*
+//______________________________________________________________________________
+-(BOOL)canBecomeKeyWindow
+{
+   assert(fContentView != nil && "canBecomeKeyWindow, fContentView is nil");
+
+   return !fContentView.fOverrideRedirect;
+}
+*/
+
 @end
 
 //
@@ -2591,6 +2623,7 @@ void print_mask_info(ULong_t mask)
    return YES;
 }
 
+/*
 //______________________________________________________________________________
 - (BOOL) becomeFirstResponder
 {
@@ -2623,7 +2656,7 @@ void print_mask_info(ULong_t mask)
    //NSResponder returns YES, so do I.
    return YES;
 }
-
+*/
 
 //Cursors.
 //______________________________________________________________________________

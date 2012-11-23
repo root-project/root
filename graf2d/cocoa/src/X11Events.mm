@@ -1235,7 +1235,7 @@ void EventTranslator::GenerateKeyPressEvent(NSView<X11Window> *view, NSEvent *th
 
    if (!fKeyGrabView && !fFocusView)
       return;
-   
+
    !fKeyGrabView ? GenerateKeyPressEventNoGrab(theEvent) :
                    GenerateKeyEventActiveGrab(theEvent);
 }
@@ -1626,7 +1626,7 @@ void EventTranslator::GenerateKeyPressEventNoGrab(NSEvent *theEvent)
    assert(fFocusView != nil && "GenerateKeyPressEventNoGrab, fFocusView is nil");
 
    FindKeyGrabView(fFocusView, theEvent);
-
+   
    if (!fKeyGrabView) {
       NSView<X11Window> *candidateView = nil;
 
@@ -1696,7 +1696,7 @@ void EventTranslator::GenerateKeyEventForView(NSView<X11Window> *view, NSEvent *
    
    const Mask_t eventType = theEvent.type == NSKeyDown ? kKeyPressMask : kKeyReleaseMask;
    NSView<X11Window> *childView = nil;
-
+/*
    for (;;) {
       if (!view.isHidden && (view.fEventMask & eventType))
          break;
@@ -1706,7 +1706,7 @@ void EventTranslator::GenerateKeyEventForView(NSView<X11Window> *view, NSEvent *
       childView = view.isHidden ? nil : view;
       view = view.fParentView;
    }
- 
+ */
    NSPoint mousePosition = {};
    if (QuartzWindow * const topLevel = FindWindowUnderPointer())
       mousePosition = [topLevel mouseLocationOutsideOfEventStream];
