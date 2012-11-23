@@ -521,7 +521,7 @@ void TMVA::MethodBoost::ResetBoostWeights()
 {
    // resetting back the boosted weights of the events to 1
    for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
-      Event *ev = Data()->GetEvent(ievt);
+      const Event *ev = Data()->GetEvent(ievt);
       ev->SetBoostWeight( 1.0 );
    }
 }
@@ -802,7 +802,7 @@ void TMVA::MethodBoost::SingleBoost()
       // first reweight
       Double_t newSum=0., oldSum=0.;
       for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
-         Event* ev =  Data()->GetEvent(ievt);
+         const Event* ev =  Data()->GetEvent(ievt);
          oldSum += ev->GetWeight();
          if (WrongDetection[ievt] && fBoostWeight != 0) {
             if (ev->GetWeight() > 0) ev->ScaleBoostWeight(fBoostWeight);
@@ -816,7 +816,7 @@ void TMVA::MethodBoost::SingleBoost()
       // next normalize the weights
       Double_t normSig=0, normBkg=0;
       for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
-         Event* ev = Data()->GetEvent(ievt);
+         const Event* ev = Data()->GetEvent(ievt);
 	 ev->ScaleBoostWeight(normWeight);
          if (ev->GetClass()) normBkg+=ev->GetWeight();
          else                normSig+=ev->GetWeight();
@@ -826,7 +826,7 @@ void TMVA::MethodBoost::SingleBoost()
       // Bagging or Bootstrap boosting, gives new random weight for every event
       TRandom3*trandom   = new TRandom3(fRandomSeed+fMethods.size());
       for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
-         Event* ev = Data()->GetEvent(ievt);
+         const Event* ev = Data()->GetEvent(ievt);
          ev->SetBoostWeight(trandom->Rndm());
          sumAll1+=ev->GetWeight();
       }
@@ -834,7 +834,7 @@ void TMVA::MethodBoost::SingleBoost()
       // weights (changing only the boosted weight of all the events)
       Double_t Factor=sumAll/sumAll1;
       for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
-         Event* ev = Data()->GetEvent(ievt);
+         const Event* ev = Data()->GetEvent(ievt);
          ev->ScaleBoostWeight(Factor);
       }
    }
@@ -845,7 +845,7 @@ void TMVA::MethodBoost::SingleBoost()
       Double_t MVACutValue = method->GetSignalReferenceCut();
       sumAll1 = 0;
       for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
-         Event* ev = Data()->GetEvent(ievt);
+         const Event* ev = Data()->GetEvent(ievt);
 	 if (fBoostType == "HighEdgeGauss")
 	    ev->SetBoostWeight( TMath::Exp( -std::pow(fMVAvalues->at(ievt)-MVACutValue,2)/(0.1*fADABoostBeta) ) );
 	 else if (fBoostType == "HighEdgeCoPara")

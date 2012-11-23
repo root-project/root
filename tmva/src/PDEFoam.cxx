@@ -492,8 +492,8 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
       if (fDim>0) for (j=0; j<fDim; j++) xRand[j]= cellPosi[j] +fAlpha[j]*(cellSize[j]);
 
       wt         = dx*Eval(xRand, event_density);
-      totevents += dx*event_density;
-      
+      totevents += event_density;
+
       nProj = 0;
       if (fDim>0) {
          for (k=0; k<fDim; k++) {
@@ -512,6 +512,7 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
       nevEff = ceSum[0]*ceSum[0]/ceSum[1];
       if ( nevEff >= fNBin*fEvPerBin) break;
    }   // ||||||||||||||||||||||||||END MC LOOP|||||||||||||||||||||||||||||
+   totevents *= dx;
    totevents /= fNSampl;
 
    // make shure that, if root cell is explored, more than zero
@@ -539,7 +540,7 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
    Double_t intTrue = ceSum[0]/(nevMC+0.000001);
    Double_t intDriv=0.;
 
-   Varedu(ceSum,kBest,xBest,yBest);        // determine the best division edge,
+   if (kBest == -1) Varedu(ceSum,kBest,xBest,yBest); // determine the best edge,
    intDriv =sqrt(ceSum[1]/nevMC) -intTrue; // Foam build-up, sqrt(<w**2>) -<w>
 
    //=================================================================================
@@ -651,7 +652,7 @@ Long_t TMVA::PDEFoam::PeekMax()
    Long_t iCell = -1;
 
    Long_t  i;
-   Double_t  drivMax, driv;
+   Double_t  drivMax, driv, xDiv;
    Bool_t bCutNmin = kTRUE;
    Bool_t bCutMaxDepth = kTRUE;
    //   drivMax = kVlow;
@@ -659,10 +660,15 @@ Long_t TMVA::PDEFoam::PeekMax()
    for(i=0; i<=fLastCe; i++) {//without root
       if( fCells[i]->GetStat() == 1 ) {
          // if driver integral < numeric limit, skip cell
-         if (fCells[i]->GetDriv() < std::numeric_limits<float>::epsilon())
+         driv = fCells[i]->GetDriv();
+         if (driv < std::numeric_limits<float>::epsilon())
             continue;
 
-         driv =  TMath::Abs( fCells[i]->GetDriv());
+         // do not split cell at the edges
+         xDiv = TMath::Abs(fCells[i]->GetXdiv());
+         if (xDiv <= std::numeric_limits<Double_t>::epsilon() ||
+             xDiv >= 1.0 - std::numeric_limits<Double_t>::epsilon())
+            continue;
 
          // apply cut on depth
          if (GetMaxDepth() > 0)
@@ -682,10 +688,10 @@ Long_t TMVA::PDEFoam::PeekMax()
 
    if (iCell == -1){
       if (!bCutNmin)
-         Log() << kVERBOSE << "Warning: No cell with more than " 
+         Log() << kVERBOSE << "Warning: No cell with more than "
                << GetNmin() << " events found!" << Endl;
       else if (!bCutMaxDepth)
-         Log() << kVERBOSE << "Warning: Maximum depth reached: " 
+         Log() << kVERBOSE << "Warning: Maximum depth reached: "
                << GetMaxDepth() << Endl;
       else
          Log() << kWARNING << "<PDEFoam::PeekMax>: no more candidate cells (drivMax>0) found for further splitting." << Endl;
@@ -738,7 +744,7 @@ Double_t TMVA::PDEFoam::Eval(Double_t *xRand, Double_t &event_density)
 {
    // Internal subprogram.
    // Evaluates (training) distribution.
-   
+
    // Transform variable xRand, since Foam boundaries are [0,1] and
    // fDistr is filled with events which range in [fXmin,fXmax]
    //
@@ -889,7 +895,7 @@ void TMVA::PDEFoam::PrintCell(Long_t iCell)
 
    if (iCell < 0 || iCell > fLastCe) {
       Log() << kWARNING << "<PrintCell(iCell=" << iCell
-            << ")>: cell number " << iCell << " out of bounds!" 
+            << ")>: cell number " << iCell << " out of bounds!"
             << Endl;
       return;
    }
@@ -994,7 +1000,7 @@ Float_t TMVA::PDEFoam::GetCellValue(const std::vector<Float_t> &xvec, ECellValue
    // variables.
    //
    // Parameters:
-   // 
+   //
    // - xvec - event vector (untransformed, [fXmin,fXmax])
    //
    // - cv - the cell value to return
@@ -1006,7 +1012,7 @@ Float_t TMVA::PDEFoam::GetCellValue(const std::vector<Float_t> &xvec, ECellValue
    //
    // The cell value, corresponding to 'xvec', estimated by the given
    // kernel.
-   
+
    std::vector<Float_t> txvec(VarTransform(xvec));
    if (kernel == NULL)
       return GetCellValue(FindCell(txvec), cv);
@@ -1045,7 +1051,7 @@ std::vector<Float_t> TMVA::PDEFoam::GetCellValue( const std::map<Int_t,Float_t>&
    // get the cell values
    std::vector<Float_t> cell_values;
    cell_values.reserve(cells.size());
-   for (std::vector<PDEFoamCell*>::const_iterator cell_it=cells.begin(); 
+   for (std::vector<PDEFoamCell*>::const_iterator cell_it=cells.begin();
 	cell_it != cells.end(); ++cell_it)
       cell_values.push_back(GetCellValue(*cell_it, cv));
 
@@ -1210,8 +1216,8 @@ TH1D* TMVA::PDEFoam::Draw1Dim( ECellValue cell_value, Int_t nbin, PDEFoamKernelB
    // - kernel - a PDEFoam kernel.
 
    // avoid plotting of wrong dimensions
-   if ( GetTotDim()!=1 ) 
-      Log() << kFATAL << "<Draw1Dim>: function can only be used for 1-dimensional foams!" 
+   if ( GetTotDim()!=1 )
+      Log() << kFATAL << "<Draw1Dim>: function can only be used for 1-dimensional foams!"
 	    << Endl;
 
    TString hname("h_1dim");
@@ -1276,7 +1282,7 @@ TH2D* TMVA::PDEFoam::Project2( Int_t idim1, Int_t idim2, ECellValue cell_value, 
             << " Using 1000 bins for each dimension instead." << Endl;
       nbin = 1000;
    } else if (nbin<1) {
-      Log() << kWARNING << "Wrong bin number: " << nbin 
+      Log() << kWARNING << "Wrong bin number: " << nbin
             << "; set nbin=50" << Endl;
       nbin = 50;
    }
@@ -1308,7 +1314,7 @@ TH2D* TMVA::PDEFoam::Project2( Int_t idim1, Int_t idim2, ECellValue cell_value, 
 	 // loop over cells and fill the histogram with the cell
 	 // values
 	 Float_t sum_cv = 0; // sum of the cell values
-	 for (std::vector<TMVA::PDEFoamCell*>::const_iterator it = cells.begin(); 
+	 for (std::vector<TMVA::PDEFoamCell*>::const_iterator it = cells.begin();
 	      it != cells.end(); ++it) {
 	    // get cell position and size
 	    PDEFoamVect cellPosi(GetTotDim()), cellSize(GetTotDim());
@@ -1357,7 +1363,7 @@ Float_t TMVA::PDEFoam::GetCellValue(const PDEFoamCell* cell, ECellValue cv)
       return GetCellElement(cell, 1);
 
    case kValueDensity: {
-      
+
       Double_t volume  = cell->GetVolume();
       if (volume > numeric_limits<double>::epsilon()) {
          return GetCellValue(cell, kValue)/volume;
@@ -1435,7 +1441,7 @@ void TMVA::PDEFoam::SetCellElement( PDEFoamCell *cell, UInt_t i, Double_t value 
    } else {
       // dynamic_cast doesn't seem to work here ?!
       vec = (TVectorD*)cell->GetElement();
-      if (!vec) 
+      if (!vec)
 	 Log() << kFATAL << "<SetCellElement> ERROR: cell element is not a TVectorD*" << Endl;
       // check vector size and resize if necessary
       if (i >= (UInt_t) vec->GetNrows())
@@ -1482,7 +1488,7 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, TString opt,
    //                         unified foam
    //    - target           - in case of mono-target regression
    //   If none of {cell_value, rms, rms_ov_mean} is given, the cells
-   //   will not be filled.  
+   //   will not be filled.
    //   If 'opt' contains the string 'cellnumber', the index of
    //   each cell is draw in addition.
    //
@@ -1543,9 +1549,9 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, TString opt,
    outfile<<"a->SetFillStyle(0);"<<std::endl;  // big frame
    outfile<<"a->SetLineWidth(4);"<<std::endl;
    outfile<<"TBox *b1=new TBox();"<<std::endl;  // single cell
-   outfile<<"TText*t=new TText();"<<endl;  // text for numbering
+   outfile<<"TText*t=new TText();"<<std::endl;  // text for numbering
    if (fillcells) {
-      outfile << (colors ? "gStyle->SetPalette(1, 0);" : "gStyle->SetPalette(0);") 
+      outfile << (colors ? "gStyle->SetPalette(1, 0);" : "gStyle->SetPalette(0);")
               << std::endl;
       outfile <<"b1->SetFillStyle(1001);"<<std::endl;
       outfile<<"TBox *b2=new TBox();"<<std::endl;  // single cell
@@ -1563,7 +1569,7 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, TString opt,
 
    // if cells shall be filled, calculate minimal and maximal plot
    // value --> store in zmin and zmax
-   if (fillcells) {	       
+   if (fillcells) {
       for (Long_t iCell=1; iCell<=fLastCe; iCell++) {
          if ( fCells[iCell]->GetStat() == 1) {
             Float_t value = GetCellValue(fCells[iCell], cell_value);
@@ -1595,11 +1601,11 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, TString opt,
    for (Long_t iCell=1; iCell<=fLastCe; iCell++) {
       if ( fCells[iCell]->GetStat() == 1) {
          fCells[iCell]->GetHcub(cellPosi,cellSize);
-         x1 = offs+lpag*(cellPosi[0]);             
+         x1 = offs+lpag*(cellPosi[0]);
          y1 = offs+lpag*(cellPosi[1]);
-         x2 = offs+lpag*(cellPosi[0]+cellSize[0]); 
+         x2 = offs+lpag*(cellPosi[0]+cellSize[0]);
          y2 = offs+lpag*(cellPosi[1]+cellSize[1]);
-         
+
          if (fillcells) {
             // get cell value
             Float_t value = GetCellValue(fCells[iCell], cell_value);
@@ -1622,16 +1628,16 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, TString opt,
 
          //     cell number
          if (plotcellnumber) {
-            outfile<<"t->SetTextColor(4);"<<endl;
+            outfile<<"t->SetTextColor(4);"<<std::endl;
             if(fLastCe<51)
-               outfile<<"t->SetTextSize(0.025);"<<endl;  // text for numbering
+               outfile<<"t->SetTextSize(0.025);"<<std::endl;  // text for numbering
             else if(fLastCe<251)
-               outfile<<"t->SetTextSize(0.015);"<<endl;
+               outfile<<"t->SetTextSize(0.015);"<<std::endl;
             else
-               outfile<<"t->SetTextSize(0.008);"<<endl;
-            x = offs+lpag*(cellPosi[0]+0.5*cellSize[0]); 
+               outfile<<"t->SetTextSize(0.008);"<<std::endl;
+            x = offs+lpag*(cellPosi[0]+0.5*cellSize[0]);
             y = offs+lpag*(cellPosi[1]+0.5*cellSize[1]);
-            outfile<<"t->DrawText("<<x<<","<<y<<","<<"\""<<iCell<<"\""<<");"<<endl;
+            outfile<<"t->DrawText("<<x<<","<<y<<","<<"\""<<iCell<<"\""<<");"<<std::endl;
          }
       }
    }
@@ -1652,9 +1658,9 @@ void TMVA::PDEFoam::FillBinarySearchTree( const Event* ev )
 
 //_____________________________________________________________________
 void TMVA::PDEFoam::DeleteBinarySearchTree()
-{ 
+{
    // Delete the foam's density estimator, which contains the binary
    // search tree.
-   if(fDistr) delete fDistr; 
+   if(fDistr) delete fDistr;
    fDistr = NULL;
 }

@@ -514,7 +514,14 @@ void TMVA::MethodRuleFit::TrainJFRuleFit( void )
    // training of rules using Jerome Friedmans implementation
 
    fRuleFit.InitPtrs( this );
-   fRuleFit.SetTrainingEvents( GetTrainingEvents() );
+   Data()->SetCurrentType(Types::kTraining);
+   UInt_t nevents = Data()->GetNTrainingEvents();
+   std::vector<const TMVA::Event*> tmp;
+   for (Long64_t ievt=0; ievt<nevents; ievt++) {
+     const Event *event = GetEvent(ievt);
+     tmp.push_back(event);
+   }
+   fRuleFit.SetTrainingEvents( tmp );
 
    RuleFitAPI *rfAPI = new RuleFitAPI( this, &fRuleFit, Log().GetMinType() );
 

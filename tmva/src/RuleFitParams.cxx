@@ -232,7 +232,7 @@ void TMVA::RuleFitParams::EvaluateAverage( UInt_t ind1, UInt_t ind2,
       }
    } 
    else { // MakeRuleMap() has not yet been called
-      const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
+      const std::vector<const Event *> *events = &(fRuleFit->GetTrainingEvents());
       for ( UInt_t i=ind1; i<ind2+1; i++) {
          ew = fRuleFit->GetTrainingEventWeight(i);
          sumew += ew;
@@ -868,7 +868,7 @@ void TMVA::RuleFitParams::CalcFStar()
       return;
    }
    //
-   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
+   const std::vector<const Event *> *events = &(fRuleFit->GetTrainingEvents());
    //
    fFstar.clear();
    std::vector<Double_t> fstarSorted;
@@ -907,7 +907,7 @@ Double_t TMVA::RuleFitParams::Optimism()
       Log() << kFATAL << "<Optimism> Invalid start/end indices!" << Endl;
    }
    //
-   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
+   const std::vector<const Event *> *events = &(fRuleFit->GetTrainingEvents());
    //
    Double_t sumy=0;
    Double_t sumyhat=0;
@@ -954,7 +954,7 @@ Double_t TMVA::RuleFitParams::ErrorRateReg()
    //
    Double_t sF;
    //
-   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
+   const std::vector<const Event *> *events = &(fRuleFit->GetTrainingEvents());
    //
    Double_t sumdf = 0;
    Double_t sumdfmed = 0;
@@ -992,7 +992,7 @@ Double_t TMVA::RuleFitParams::ErrorRateBin()
       Log() << kFATAL << "<ErrorRateBin> Invalid start/end indices!" << Endl;
    }
    //
-   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
+   const std::vector<const Event *> *events = &(fRuleFit->GetTrainingEvents());
    //
    Double_t sumdfbin = 0;
    Double_t dneve = Double_t(neve);
@@ -1093,7 +1093,7 @@ Double_t TMVA::RuleFitParams::ErrorRateRoc()
       Log() << kFATAL << "<ErrorRateRoc> Invalid start/end indices!" << Endl;
    }
    //
-   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
+   const std::vector<const Event *> *events = &(fRuleFit->GetTrainingEvents());
    //
    Double_t sF;
    //
@@ -1143,7 +1143,7 @@ void TMVA::RuleFitParams::ErrorRateRocTst()
       return;
    }
    //
-   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
+   const std::vector<const Event *> *events = &(fRuleFit->GetTrainingEvents());
    //
    //   std::vector<Double_t> sF;
    Double_t sF;
@@ -1248,7 +1248,7 @@ void TMVA::RuleFitParams::MakeTstGradientVector()
    //
    Double_t norm   = 2.0/fNEveEffPath;
    //
-   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
+   const std::vector<const Event *> *events = &(fRuleFit->GetTrainingEvents());
 
    // Clear gradient vectors
    for (UInt_t itau=0; itau<fGDNTau; itau++) {
@@ -1370,7 +1370,7 @@ void TMVA::RuleFitParams::MakeGradientVector()
    //
    const Double_t norm   = 2.0/fNEveEffPath;
    //
-   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
+   const std::vector<const Event *> *events = &(fRuleFit->GetTrainingEvents());
 
    // Clear gradient vectors
    for (UInt_t ir=0; ir<fNRules; ir++) {
@@ -1516,7 +1516,7 @@ Double_t TMVA::RuleFitParams::CalcAverageTruth()
    Double_t sum=0;
    Double_t ensig=0;
    Double_t enbkg=0;
-   const std::vector<Event *> *events = &(fRuleFit->GetTrainingEvents());
+   const std::vector<const Event *> *events = &(fRuleFit->GetTrainingEvents());
    for (UInt_t i=fPathIdx1; i<fPathIdx2+1; i++) {
       Double_t ew = fRuleFit->GetTrainingEventWeight(i);
       if (fRuleFit->GetMethodRuleFit()->DataInfo().IsSignal((*events)[i])) ensig += ew;

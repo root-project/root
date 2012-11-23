@@ -50,7 +50,7 @@ namespace TMVA
       PDEFoamDiscriminantDensity();
       PDEFoamDiscriminantDensity(std::vector<Double_t> box, UInt_t cls);
       PDEFoamDiscriminantDensity(const PDEFoamDiscriminantDensity&);
-      virtual ~PDEFoamDiscriminantDensity() {};
+      virtual ~PDEFoamDiscriminantDensity() {}
 
       // main function used by PDEFoam
       // returns discriminant density N_class/N_total at a given point

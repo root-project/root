@@ -49,7 +49,7 @@ namespace TMVA
    public:
       PDEFoamDiscriminant();                  // Default constructor (used only by ROOT streamer)
       PDEFoamDiscriminant(const TString&, UInt_t); // Principal user-defined constructor
-      virtual ~PDEFoamDiscriminant() {};      // Default destructor
+      virtual ~PDEFoamDiscriminant() {}       // Default destructor
 
       // function to fill created cell with given value
       virtual void FillFoamCells(const Event* ev, Float_t wt);

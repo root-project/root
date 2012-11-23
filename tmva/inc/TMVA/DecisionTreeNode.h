@@ -63,6 +63,9 @@ namespace TMVA {
                            fNSigEvents_unweighted ( 0 ),
                            fNBkgEvents_unweighted ( 0 ),
                            fNEvents_unweighted ( 0 ),
+                           fNSigEvents_unboosted ( 0 ),
+                           fNBkgEvents_unboosted ( 0 ),
+                           fNEvents_unboosted ( 0 ),
                            fSeparationIndex (-1 ),
                            fSeparationGain ( -1 )
       {
@@ -86,6 +89,9 @@ namespace TMVA {
       Float_t  fNSigEvents_unweighted;      // sum of signal event in the node
       Float_t  fNBkgEvents_unweighted;      // sum of backgr event in the node
       Float_t  fNEvents_unweighted;         // number of events in that entered the node (during training)
+      Float_t  fNSigEvents_unboosted;      // sum of signal event in the node
+      Float_t  fNBkgEvents_unboosted;      // sum of backgr event in the node
+      Float_t  fNEvents_unboosted;         // number of events in that entered the node (during training)
       Float_t  fSeparationIndex; // measure of "purity" (separation between S and B) AT this node
       Float_t  fSeparationGain;  // measure of "purity", separation, or information gained BY this nodes selection
 
@@ -196,6 +202,15 @@ namespace TMVA {
       // set the number of unweighted events that entered the node (during training)
       void SetNEvents_unweighted( Float_t nev ){ fTrainInfo->fNEvents_unweighted =nev ; }
 
+      // set the sum of the unboosted signal events in the node
+      void SetNSigEvents_unboosted( Float_t s ) { fTrainInfo->fNSigEvents_unboosted = s; }
+
+      // set the sum of the unboosted backgr events in the node
+      void SetNBkgEvents_unboosted( Float_t b ) { fTrainInfo->fNBkgEvents_unboosted = b; }
+
+      // set the number of unboosted events that entered the node (during training)
+      void SetNEvents_unboosted( Float_t nev ){ fTrainInfo->fNEvents_unboosted =nev ; }
+
       // increment the sum of the signal weights in the node
       void IncrementNSigEvents( Float_t s ) { fTrainInfo->fNSigEvents += s; }
 
@@ -231,6 +246,15 @@ namespace TMVA {
 
       // return  the number of unweighted events that entered the node (during training)
       Float_t GetNEvents_unweighted( void ) const  { return fTrainInfo->fNEvents_unweighted; }
+
+      // return the sum of unboosted signal weights in the node
+      Float_t GetNSigEvents_unboosted( void ) const  { return fTrainInfo->fNSigEvents_unboosted; }
+
+      // return the sum of unboosted backgr weights in the node
+      Float_t GetNBkgEvents_unboosted( void ) const  { return fTrainInfo->fNBkgEvents_unboosted; }
+
+      // return  the number of unboosted events that entered the node (during training)
+      Float_t GetNEvents_unboosted( void ) const  { return fTrainInfo->fNEvents_unboosted; }
 
 
       // set the choosen index, measure of "purity" (separation between S and B) AT this node

@@ -234,6 +234,7 @@ TTree* TMVA::Factory::CreateEventAssignTrees( const TString& name )
 {
    // create the data assignment tree (for event-wise data assignment by user)
    TTree * assignTree = new TTree( name, name );
+   assignTree->SetDirectory(0);
    assignTree->Branch( "type",   &fATreeType,   "ATreeType/I" );
    assignTree->Branch( "weight", &fATreeWeight, "ATreeWeight/F" );
 
@@ -877,7 +878,7 @@ void TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType)
 
    // iterate over methods and optimize
    for( itrMethod = fMethods.begin(); itrMethod != fMethods.end(); ++itrMethod ) {
-
+      Event::fIsTraining = kTRUE;
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
       if (!mva) {
          Log() << kFATAL << "Dynamic cast to MethodBase failed" <<Endl;
@@ -903,7 +904,7 @@ void TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType)
 
 //_______________________________________________________________________
 void TMVA::Factory::TrainAllMethods() 
-{     
+{  
    // iterates through all booked methods and calls training
 
    if(fDataInputHandler->GetEntries() <=1) { // 0 entries --> 0 events, 1 entry --> dynamical dataset (or one entry)
@@ -937,7 +938,7 @@ void TMVA::Factory::TrainAllMethods()
 
    // iterate over methods and train
    for( itrMethod = fMethods.begin(); itrMethod != fMethods.end(); ++itrMethod ) {
-
+      Event::fIsTraining = kTRUE;
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
       if(mva==0) continue;
 
@@ -1038,6 +1039,7 @@ void TMVA::Factory::TestAllMethods()
    MVector::iterator itrMethod    = fMethods.begin();
    MVector::iterator itrMethodEnd = fMethods.end();
    for (; itrMethod != itrMethodEnd; itrMethod++) {
+      Event::fIsTraining = kFALSE;
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
       if(mva==0) continue;
       Types::EAnalysisType analysisType = mva->GetAnalysisType();
@@ -1107,6 +1109,7 @@ void TMVA::Factory::EvaluateAllVariables( TString options )
 {
    // iterates over all MVA input varables and evaluates them
    Log() << kINFO << "Evaluating all variables..." << Endl;
+   Event::fIsTraining = kFALSE;
 
    for (UInt_t i=0; i<DefaultDataSetInfo().GetNVariables(); i++) {
       TString s = DefaultDataSetInfo().GetVariableInfo(i).GetLabel();
@@ -1179,6 +1182,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
    MVector::iterator itrMethod    = fMethods.begin();
    MVector::iterator itrMethodEnd = fMethods.end();
    for (; itrMethod != itrMethodEnd; itrMethod++) {
+      Event::fIsTraining = kFALSE;
       MethodBase* theMethod = dynamic_cast<MethodBase*>(*itrMethod);
       if(theMethod==0) continue;
       if (theMethod->GetMethodType() != Types::kCuts) methodsNoCuts.push_back( *itrMethod );
@@ -1396,7 +1400,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
          DataSet* defDs = DefaultDataSetInfo().GetDataSet();
          defDs->SetCurrentType(Types::kTesting);
          for (Int_t ievt=0; ievt<defDs->GetNEvents(); ievt++) {
-            Event* ev = defDs->GetEvent(ievt);
+            const Event* ev = defDs->GetEvent(ievt);
 
             // for correlations
             TMatrixD* theMat = 0;

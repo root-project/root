@@ -266,7 +266,7 @@ Double_t TMVA::MethodCommittee::AdaBoost( TMVA::MethodBase* method )
    MethodBase* mbase = (MethodBase*)method;
    for (Int_t ievt=0; ievt<Data()->GetNTrainingEvents(); ievt++) {
 
-      Event* ev = Data()->GetEvent(ievt);
+      const Event* ev = Data()->GetEvent(ievt);
 
       // total sum of event weights
       sumw += ev->GetBoostWeight();
@@ -309,7 +309,7 @@ Double_t TMVA::MethodCommittee::AdaBoost( TMVA::MethodBase* method )
    // now fill new boostweights
    for (Int_t ievt=0; ievt<Data()->GetNTrainingEvents(); ievt++) {
 
-      Event *ev = Data()->GetEvent(ievt);
+      const Event* ev = Data()->GetEvent(ievt);
 
       // read the Training Event into "event"
       if (!correctSelected[ievt]) ev->SetBoostWeight( ev->GetBoostWeight() * boostFactor);
@@ -320,7 +320,7 @@ Double_t TMVA::MethodCommittee::AdaBoost( TMVA::MethodBase* method )
 
    // re-normalise the boostweights
    for (Int_t ievt=0; ievt<Data()->GetNTrainingEvents(); ievt++) {
-      Event *ev = Data()->GetEvent(ievt);
+      const Event* ev = Data()->GetEvent(ievt);
       ev->SetBoostWeight( ev->GetBoostWeight() * sumw / newSumw );      
    }
 
@@ -345,7 +345,7 @@ Double_t TMVA::MethodCommittee::Bagging( UInt_t imember )
 
    // loop over all events in training tree
    for (Int_t ievt=0; ievt<Data()->GetNTrainingEvents(); ievt++) {
-      Event* ev = Data()->GetEvent(ievt);
+      const Event* ev = Data()->GetEvent(ievt);
 
       // read the Training Event into "event"
       Double_t newWeight = trandom->Rndm();
@@ -355,7 +355,7 @@ Double_t TMVA::MethodCommittee::Bagging( UInt_t imember )
 
    // re-normalise the boostweights
    for (Int_t ievt=0; ievt<Data()->GetNTrainingEvents(); ievt++) {
-      Event* ev = Data()->GetEvent(ievt);
+      const Event* ev = Data()->GetEvent(ievt);
       ev->SetBoostWeight( ev->GetBoostWeight() * Data()->GetNTrainingEvents() / newSumw );      
    }
 

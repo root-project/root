@@ -73,7 +73,7 @@ void TMVA::VariableDecorrTransform::Initialize()
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::VariableDecorrTransform::PrepareTransformation( const std::vector<Event*>& events )
+Bool_t TMVA::VariableDecorrTransform::PrepareTransformation (const std::vector<Event*>& events)
 {
    // calculate the decorrelation matrix and the normalization
    Initialize();
@@ -233,7 +233,7 @@ const TMVA::Event* TMVA::VariableDecorrTransform::InverseTransform( const TMVA::
 
 
 //_______________________________________________________________________
-void TMVA::VariableDecorrTransform::CalcSQRMats( const std::vector<Event*>& events, Int_t maxCls )
+void TMVA::VariableDecorrTransform::CalcSQRMats( const std::vector< Event*>& events, Int_t maxCls )
 {
    // compute square-root matrices for signal and background
 

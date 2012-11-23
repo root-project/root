@@ -270,7 +270,7 @@ void TMVA::MethodPDEFoam::ProcessOptions()
    else if (fDTLogic == "SdivSqrtSplusB")
       fDTSeparation = kSdivSqrtSplusB;
    else {
-      Log() << kWARNING << "Unknown separation type: " << fDTLogic 
+      Log() << kWARNING << "Unknown separation type: " << fDTLogic
 	    << ", setting to None" << Endl;
       fDTLogic = "None";
       fDTSeparation = kFoam;
@@ -295,7 +295,7 @@ TMVA::MethodPDEFoam::~MethodPDEFoam( void )
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDEFoam::CalcXminXmax() 
+void TMVA::MethodPDEFoam::CalcXminXmax()
 {
    // Determine foam range [fXmin, fXmax] for all dimensions, such
    // that a fraction of 'fFrac' events lie outside the foam.
@@ -320,17 +320,17 @@ void TMVA::MethodPDEFoam::CalcXminXmax()
    Log() << kDEBUG << "Number of training events: " << Data()->GetNTrainingEvents() << Endl;
    Int_t nevoutside = (Int_t)((Data()->GetNTrainingEvents())*(fFrac)); // number of events that are outside the range
    Int_t rangehistbins = 10000;                               // number of bins in histos
-  
+
    // loop over all testing singnal and BG events and clac minimal and
    // maximal value of every variable
    for (Long64_t i=0; i<(GetNEvents()); i++) { // events loop
-      const Event* ev = GetEvent(i);    
+      const Event* ev = GetEvent(i);
       for (UInt_t dim=0; dim<kDim; dim++) { // variables loop
          Float_t val;
          if (fMultiTargetRegression) {
             if (dim < vDim)
                val = ev->GetValue(dim);
-            else 
+            else
                val = ev->GetTarget(dim-vDim);
          }
          else
@@ -346,12 +346,12 @@ void TMVA::MethodPDEFoam::CalcXminXmax()
    // Create and fill histograms for each dimension (with same events
    // as before), to determine range based on number of events outside
    // the range
-   TH1F **range_h = new TH1F*[kDim]; 
+   TH1F **range_h = new TH1F*[kDim];
    for (UInt_t dim=0; dim<kDim; dim++) {
       range_h[dim]  = new TH1F(Form("range%i", dim), "range", rangehistbins, xmin[dim], xmax[dim]);
    }
 
-   // fill all testing events into histos 
+   // fill all testing events into histos
    for (Long64_t i=0; i<GetNEvents(); i++) {
       const Event* ev = GetEvent(i);
       for (UInt_t dim=0; dim<kDim; dim++) {
@@ -367,8 +367,8 @@ void TMVA::MethodPDEFoam::CalcXminXmax()
    }
 
    // calc Xmin, Xmax from Histos
-   for (UInt_t dim=0; dim<kDim; dim++) { 
-      for (Int_t i=1; i<(rangehistbins+1); i++) { // loop over bins 
+   for (UInt_t dim=0; dim<kDim; dim++) {
+      for (Int_t i=1; i<(rangehistbins+1); i++) { // loop over bins
          if (range_h[dim]->Integral(0, i) > nevoutside) { // calc left limit (integral over bins 0..i = nevoutside)
             xmin[dim]=range_h[dim]->GetBinLowEdge(i);
             break;
@@ -380,13 +380,13 @@ void TMVA::MethodPDEFoam::CalcXminXmax()
             break;
          }
       }
-   }  
+   }
    // now xmin[] and xmax[] contain upper/lower limits for every dimension
 
    // copy xmin[], xmax[] values to the class variable
    fXmin.clear();
    fXmax.clear();
-   for (UInt_t dim=0; dim<kDim; dim++) { 
+   for (UInt_t dim=0; dim<kDim; dim++) {
       fXmin.push_back(xmin[dim]);
       fXmax.push_back(xmax[dim]);
    }
@@ -425,9 +425,9 @@ void TMVA::MethodPDEFoam::Train( void )
       if (DoMulticlass())
 	 TrainMultiClassification();
       else {
-	 if (DataInfo().GetNormalization() != "EQUALNUMEVENTS" ) { 
-	    Log() << kINFO << "NormMode=" << DataInfo().GetNormalization() 
-		  << " chosen. Note that only NormMode=EqualNumEvents" 
+	 if (DataInfo().GetNormalization() != "EQUALNUMEVENTS" ) {
+	    Log() << kINFO << "NormMode=" << DataInfo().GetNormalization()
+		  << " chosen. Note that only NormMode=EqualNumEvents"
 		  << " ensures that Discriminant values correspond to"
 		  << " signal probabilities." << Endl;
 	 }
@@ -445,13 +445,13 @@ void TMVA::MethodPDEFoam::Train( void )
 
    // delete the binary search tree in order to save memory
    for(UInt_t i=0; i<fFoam.size(); i++) {
-      if(fFoam.at(i)) 
+      if(fFoam.at(i))
 	 fFoam.at(i)->DeleteBinarySearchTree();
    }
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDEFoam::TrainSeparatedClassification() 
+void TMVA::MethodPDEFoam::TrainSeparatedClassification()
 {
    // Creation of 2 separated foams: one for signal events, one for
    // backgound events.  At the end the foam cells of fFoam[0] will
@@ -466,7 +466,7 @@ void TMVA::MethodPDEFoam::TrainSeparatedClassification()
       // create 2 PDEFoams
       fFoam.push_back( InitFoam(foamcaption[i], kSeparate) );
 
-      Log() << kVERBOSE << "Filling binary search tree of " << foamcaption[i] 
+      Log() << kVERBOSE << "Filling binary search tree of " << foamcaption[i]
             << " with events" << Endl;
       // insert event to BinarySearchTree
       for (Long64_t k=0; k<GetNEvents(); ++k) {
@@ -492,7 +492,7 @@ void TMVA::MethodPDEFoam::TrainSeparatedClassification()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDEFoam::TrainUnifiedClassification() 
+void TMVA::MethodPDEFoam::TrainUnifiedClassification()
 {
    // Create only one unified foam (fFoam[0]) whose cells contain the
    // average discriminator (N_sig)/(N_sig + N_bg)
@@ -502,7 +502,7 @@ void TMVA::MethodPDEFoam::TrainUnifiedClassification()
    Log() << kVERBOSE << "Filling binary search tree of discriminator foam with events" << Endl;
    // insert event to BinarySearchTree
    for (Long64_t k=0; k<GetNEvents(); ++k) {
-      const Event* ev = GetEvent(k); 
+      const Event* ev = GetEvent(k);
       if (!(IgnoreEventsWithNegWeightsInTraining() && ev->GetWeight()<=0))
 	 fFoam.back()->FillBinarySearchTree(ev);
    }
@@ -513,7 +513,7 @@ void TMVA::MethodPDEFoam::TrainUnifiedClassification()
    Log() << kVERBOSE << "Filling foam cells with events" << Endl;
    // loop over all training events -> fill foam cells with N_sig and N_Bg
    for (Long64_t k=0; k<GetNEvents(); ++k) {
-      const Event* ev = GetEvent(k); 
+      const Event* ev = GetEvent(k);
       Float_t weight = fFillFoamWithOrigWeights ? ev->GetOriginalWeight() : ev->GetWeight();
       if (!(IgnoreEventsWithNegWeightsInTraining() && ev->GetWeight()<=0))
 	 fFoam.back()->FillFoamCells(ev, weight);
@@ -525,7 +525,7 @@ void TMVA::MethodPDEFoam::TrainUnifiedClassification()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDEFoam::TrainMultiClassification() 
+void TMVA::MethodPDEFoam::TrainMultiClassification()
 {
    // Create one unified foam (see TrainUnifiedClassification()) for
    // each class, where the cells of foam i (fFoam[i]) contain the
@@ -541,7 +541,7 @@ void TMVA::MethodPDEFoam::TrainMultiClassification()
 	    << iClass << " with events" << Endl;
       // insert event to BinarySearchTree
       for (Long64_t k=0; k<GetNEvents(); ++k) {
-	 const Event* ev = GetEvent(k); 
+	 const Event* ev = GetEvent(k);
 	 if (!(IgnoreEventsWithNegWeightsInTraining() && ev->GetWeight()<=0))
 	    fFoam.back()->FillBinarySearchTree(ev);
       }
@@ -553,7 +553,7 @@ void TMVA::MethodPDEFoam::TrainMultiClassification()
       // loop over all training events and fill foam cells with signal
       // and background events
       for (Long64_t k=0; k<GetNEvents(); ++k) {
-	 const Event* ev = GetEvent(k); 
+	 const Event* ev = GetEvent(k);
 	 Float_t weight = fFillFoamWithOrigWeights ? ev->GetOriginalWeight() : ev->GetWeight();
 	 if (!(IgnoreEventsWithNegWeightsInTraining() && ev->GetWeight()<=0))
 	    fFoam.back()->FillFoamCells(ev, weight);
@@ -566,7 +566,7 @@ void TMVA::MethodPDEFoam::TrainMultiClassification()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDEFoam::TrainMonoTargetRegression() 
+void TMVA::MethodPDEFoam::TrainMonoTargetRegression()
 {
    // Training one (mono target regression) foam, whose cells contain
    // the average 0th target.  The dimension of the foam = number of
@@ -580,7 +580,7 @@ void TMVA::MethodPDEFoam::TrainMonoTargetRegression()
       Log() << kWARNING << "Warning: number of targets = " << Data()->GetNTargets()
             << "  --> using only first target" << Endl;
    }
-   else 
+   else
       Log() << kDEBUG << "MethodPDEFoam: number of Targets: " << Data()->GetNTargets() << Endl;
 
    fFoam.push_back( InitFoam("MonoTargetRegressionFoam", kMonoTarget) );
@@ -588,7 +588,7 @@ void TMVA::MethodPDEFoam::TrainMonoTargetRegression()
    Log() << kVERBOSE << "Filling binary search tree with events" << Endl;
    // insert event to BinarySearchTree
    for (Long64_t k=0; k<GetNEvents(); ++k) {
-      const Event* ev = GetEvent(k); 
+      const Event* ev = GetEvent(k);
       if (!(IgnoreEventsWithNegWeightsInTraining() && ev->GetWeight()<=0))
 	 fFoam.back()->FillBinarySearchTree(ev);
    }
@@ -599,7 +599,7 @@ void TMVA::MethodPDEFoam::TrainMonoTargetRegression()
    Log() << kVERBOSE << "Filling foam cells with events" << Endl;
    // loop over all events -> fill foam cells with target
    for (Long64_t k=0; k<GetNEvents(); ++k) {
-      const Event* ev = GetEvent(k); 
+      const Event* ev = GetEvent(k);
       Float_t weight = fFillFoamWithOrigWeights ? ev->GetOriginalWeight() : ev->GetWeight();
       if (!(IgnoreEventsWithNegWeightsInTraining() && ev->GetWeight()<=0))
 	 fFoam.back()->FillFoamCells(ev, weight);
@@ -621,12 +621,12 @@ void TMVA::MethodPDEFoam::TrainMultiTargetRegression()
    Log() << kDEBUG << "Number of Targets:   " << Data()->GetNTargets()   << Endl;
    Log() << kDEBUG << "Dimension of foam:   " << Data()->GetNVariables()+Data()->GetNTargets() << Endl;
    if (fKernel==kLinN)
-      Log() << kFATAL << "LinNeighbors kernel currently not supported" 
+      Log() << kFATAL << "LinNeighbors kernel currently not supported"
             << " for multi target regression" << Endl;
 
    fFoam.push_back( InitFoam("MultiTargetRegressionFoam", kMultiTarget) );
 
-   Log() << kVERBOSE << "Filling binary search tree of multi target regression foam with events" 
+   Log() << kVERBOSE << "Filling binary search tree of multi target regression foam with events"
          << Endl;
    // insert event to BinarySearchTree
    for (Long64_t k=0; k<GetNEvents(); ++k) {
@@ -654,11 +654,11 @@ void TMVA::MethodPDEFoam::TrainMultiTargetRegression()
       Event *ev = new Event(*GetEvent(k));
       // since in multi-target regression targets are handled like
       // variables --> remove targets and add them to the event variabels
-      std::vector<Float_t> targets = ev->GetTargets(); 	 
+      std::vector<Float_t> targets = ev->GetTargets();
       const UInt_t nVariables = ev->GetValues().size();
       Float_t weight = fFillFoamWithOrigWeights ? ev->GetOriginalWeight() : ev->GetWeight();
-      for (UInt_t i = 0; i < targets.size(); ++i) 	 
-	 ev->SetVal(i+nVariables, targets.at(i)); 	 
+      for (UInt_t i = 0; i < targets.size(); ++i)
+	 ev->SetVal(i+nVariables, targets.at(i));
       ev->GetTargets().clear();
       if (!(IgnoreEventsWithNegWeightsInTraining() && ev->GetWeight()<=0))
 	 fFoam.back()->FillFoamCells(ev, weight);
@@ -834,7 +834,7 @@ const TMVA::Ranking* TMVA::MethodPDEFoam::CreateRanking()
       // the overall variable importance is the average over all foams
       for (UInt_t ivar = 0; ivar < GetNvar(); ++ivar) {
 	 importance.at(ivar) += tmp_importance.at(ivar) / fFoam.size();
-      }      
+      }
    }
 
    // fill ranking vector
@@ -902,7 +902,7 @@ TMVA::PDEFoam* TMVA::MethodPDEFoam::InitFoam(TString foamcaption, EFoamType ft, 
    // - foamcaption - name of PDEFoam object
    //
    // - ft - type of PDEFoam
-   //   Candidates are: 
+   //   Candidates are:
    //     - kSeparate    - creates TMVA::PDEFoamEvent
    //     - kDiscr       - creates TMVA::PDEFoamDiscriminant
    //     - kMonoTarget  - creates TMVA::PDEFoamTarget
@@ -978,7 +978,7 @@ TMVA::PDEFoam* TMVA::MethodPDEFoam::InitFoam(TString foamcaption, EFoamType ft, 
 	 sepType = new SdivSqrtSplusB();
 	 break;
       default:
-	 Log() << kFATAL << "Separation type " << fDTSeparation 
+	 Log() << kFATAL << "Separation type " << fDTSeparation
 	       << " currently not supported" << Endl;
 	 break;
       }
@@ -1004,7 +1004,7 @@ TMVA::PDEFoam* TMVA::MethodPDEFoam::InitFoam(TString foamcaption, EFoamType ft, 
 
    // set fLogger attributes
    pdefoam->Log().SetMinType(this->Log().GetMinType());
-   
+
    // set PDEFoam parameters
    pdefoam->SetDim(         dim);
    pdefoam->SetnCells(      fnCells);    // optional
@@ -1018,7 +1018,7 @@ TMVA::PDEFoam* TMVA::MethodPDEFoam::InitFoam(TString foamcaption, EFoamType ft, 
 
    // Init PDEFoam
    pdefoam->Initialize();
-   
+
    // Set Xmin, Xmax
    SetXminXmax(pdefoam);
 
@@ -1035,7 +1035,7 @@ const std::vector<Float_t>& TMVA::MethodPDEFoam::GetRegressionValues()
    fRegressionReturnVal->reserve(Data()->GetNTargets());
 
    const Event* ev = GetEvent();
-   std::vector<Float_t> vals = ev->GetValues(); // get array of event variables (non-targets)   
+   std::vector<Float_t> vals = ev->GetValues(); // get array of event variables (non-targets)
 
    if (vals.empty()) {
       Log() << kWARNING << "<GetRegressionValues> value vector is empty. " << Endl;
@@ -1057,7 +1057,7 @@ const std::vector<Float_t>& TMVA::MethodPDEFoam::GetRegressionValues()
          fRegressionReturnVal->push_back(targets.at(i));
    }
    else {
-      fRegressionReturnVal->push_back(fFoam.at(0)->GetCellValue(vals, kValue, fKernelEstimator));   
+      fRegressionReturnVal->push_back(fFoam.at(0)->GetCellValue(vals, kValue, fKernelEstimator));
    }
 
    // apply inverse transformation to regression values
@@ -1101,7 +1101,7 @@ void TMVA::MethodPDEFoam::DeleteFoams()
    // Deletes all trained foams
    for (UInt_t i=0; i<fFoam.size(); i++)
       if (fFoam.at(i)) delete fFoam.at(i);
-   fFoam.clear();   
+   fFoam.clear();
 }
 
 //_______________________________________________________________________
@@ -1119,11 +1119,11 @@ void TMVA::MethodPDEFoam::Reset()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDEFoam::PrintCoefficients( void ) 
+void TMVA::MethodPDEFoam::PrintCoefficients( void )
 {}
 
 //_______________________________________________________________________
-void TMVA::MethodPDEFoam::AddWeightsXMLTo( void* parent ) const 
+void TMVA::MethodPDEFoam::AddWeightsXMLTo( void* parent ) const
 {
    // create XML output of PDEFoam method variables
 
@@ -1146,7 +1146,7 @@ void TMVA::MethodPDEFoam::AddWeightsXMLTo( void* parent ) const
    gTools().AddAttr( wght, "TargetSelection", TargetSelectionToUInt(fTargetSelection) );
    gTools().AddAttr( wght, "FillFoamWithOrigWeights", fFillFoamWithOrigWeights );
    gTools().AddAttr( wght, "UseYesNoCell",    fUseYesNoCell );
-   
+
    // save foam borders Xmin[i], Xmax[i]
    void *xmin_wrap;
    for (UInt_t i=0; i<fXmin.size(); i++){
@@ -1166,17 +1166,17 @@ void TMVA::MethodPDEFoam::AddWeightsXMLTo( void* parent ) const
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDEFoam::WriteFoamsToFile() const 
+void TMVA::MethodPDEFoam::WriteFoamsToFile() const
 {
    // Write PDEFoams to file
 
    // fill variable names into foam
-   FillVariableNamesToFoam();   
+   FillVariableNamesToFoam();
 
-   TString rfname( GetWeightFileName() ); 
+   TString rfname( GetWeightFileName() );
 
    // replace in case of txt weight file
-   rfname.ReplaceAll( TString(".") + gConfig().GetIONames().fWeightFileExtension + ".txt", ".xml" );   
+   rfname.ReplaceAll( TString(".") + gConfig().GetIONames().fWeightFileExtension + ".txt", ".xml" );
 
    // add foam indicator to distinguish from main weight file
    rfname.ReplaceAll( ".xml", "_foams.root" );
@@ -1193,7 +1193,7 @@ void TMVA::MethodPDEFoam::WriteFoamsToFile() const
    }
 
    rootFile->Close();
-   Log() << kINFO << "Foams written to file: " 
+   Log() << kINFO << "Foams written to file: "
          << gTools().Color("lightblue") << rfname << gTools().Color("reset") << Endl;
 }
 
@@ -1209,13 +1209,13 @@ void  TMVA::MethodPDEFoam::ReadWeightsFromStream( std::istream& istr )
    istr >> fnCells;                         // Number of Cells  (500)
    istr >> fnSampl;                         // Number of MC events per cell in build-up (1000)
    istr >> fnBin;                           // Number of bins in build-up (100)
-   istr >> fEvPerBin;                       // Maximum events (equiv.) per bin in buid-up (1000) 
+   istr >> fEvPerBin;                       // Maximum events (equiv.) per bin in buid-up (1000)
    istr >> fCompress;                       // compress output file
 
    Bool_t regr;
    istr >> regr;                            // regression foam
    SetAnalysisType( (regr ? Types::kRegression : Types::kClassification ) );
-   
+
    Bool_t CutNmin, CutRMSmin; // dummy for backwards compatib.
    Float_t RMSmin;            // dummy for backwards compatib.
    istr >> CutNmin;                         // cut on minimal number of events in cell
@@ -1244,9 +1244,9 @@ void  TMVA::MethodPDEFoam::ReadWeightsFromStream( std::istream& istr )
    fXmax.assign(kDim, 0);
 
    // read range
-   for (UInt_t i=0; i<kDim; i++) 
+   for (UInt_t i=0; i<kDim; i++)
       istr >> fXmin.at(i);
-   for (UInt_t i=0; i<kDim; i++) 
+   for (UInt_t i=0; i<kDim; i++)
       istr >> fXmax.at(i);
 
    // read pure foams from file
@@ -1254,7 +1254,7 @@ void  TMVA::MethodPDEFoam::ReadWeightsFromStream( std::istream& istr )
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDEFoam::ReadWeightsFromXML( void* wghtnode ) 
+void TMVA::MethodPDEFoam::ReadWeightsFromXML( void* wghtnode )
 {
    // read PDEFoam variables from xml weight file
 
@@ -1286,7 +1286,7 @@ void TMVA::MethodPDEFoam::ReadWeightsFromXML( void* wghtnode )
       gTools().ReadAttr( wghtnode, "FillFoamWithOrigWeights", fFillFoamWithOrigWeights );
    if (gTools().HasAttr(wghtnode, "UseYesNoCell"))
       gTools().ReadAttr( wghtnode, "UseYesNoCell", fUseYesNoCell );
-   
+
    // clear old range [Xmin, Xmax] and prepare new range for reading
    fXmin.clear();
    fXmax.clear();
@@ -1319,7 +1319,7 @@ void TMVA::MethodPDEFoam::ReadWeightsFromXML( void* wghtnode )
 
    // if foams exist, delete them
    DeleteFoams();
-   
+
    // read pure foams from file
    ReadFoamsFromFile();
 
@@ -1375,7 +1375,7 @@ void TMVA::MethodPDEFoam::ReadFoamsFromFile()
 {
    // read foams from file
 
-   TString rfname( GetWeightFileName() ); 
+   TString rfname( GetWeightFileName() );
 
    // replace in case of txt weight file
    rfname.ReplaceAll( TString(".") + gConfig().GetIONames().fWeightFileExtension + ".txt", ".xml" );
@@ -1383,7 +1383,7 @@ void TMVA::MethodPDEFoam::ReadFoamsFromFile()
    // add foam indicator to distinguish from main weight file
    rfname.ReplaceAll( ".xml", "_foams.root" );
 
-   Log() << kINFO << "Read foams from file: " << gTools().Color("lightblue") 
+   Log() << kINFO << "Read foams from file: " << gTools().Color("lightblue")
          << rfname << gTools().Color("reset") << Endl;
    TFile *rootFile = new TFile( rfname, "READ" );
    if (rootFile->IsZombie()) Log() << kFATAL << "Cannot open file \"" << rfname << "\"" << Endl;
@@ -1453,7 +1453,7 @@ TMVA::ETargetSelection TMVA::MethodPDEFoam::UIntToTargetSelection(UInt_t its)
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDEFoam::FillVariableNamesToFoam() const 
+void TMVA::MethodPDEFoam::FillVariableNamesToFoam() const
 {
    // store the variable names in all foams
    for (UInt_t ifoam=0; ifoam<fFoam.size(); ifoam++) {
@@ -1463,7 +1463,7 @@ void TMVA::MethodPDEFoam::FillVariableNamesToFoam() const
          else
             fFoam.at(ifoam)->AddVariableName(DataInfo().GetVariableInfo(idim).GetExpression().Data());
       }
-   }   
+   }
 }
 
 //_______________________________________________________________________

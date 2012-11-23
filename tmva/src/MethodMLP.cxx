@@ -1229,7 +1229,7 @@ void TMVA::MethodMLP::UpdateNetwork(Double_t desired, Double_t eventWeight)
 }
 
 //______________________________________________________________________________
-void TMVA::MethodMLP::UpdateNetwork(std::vector<Float_t>& desired, Double_t eventWeight)
+void TMVA::MethodMLP::UpdateNetwork(const std::vector<Float_t>& desired, Double_t eventWeight)
 {
    // update the network based on how closely
    // the output matched the desired output

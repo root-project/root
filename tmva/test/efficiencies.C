@@ -5,6 +5,7 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
    // input:   - Input file (result from TMVA),
    //          - type = 1 --> plot efficiency(B) versus eff(S)
    //                 = 2 --> plot rejection (B) versus efficiency (S)
+   //                 = 3 --> plot 1/eff(B) versus efficiency (S)
 
    Bool_t __PLOT_LOGO__  = kTRUE;
    Bool_t __SAVE_IMAGE__ = kTRUE;
@@ -21,8 +22,11 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
       y1 = 1 - y2;
       y2 = 1 - z;
       //      cout << "--- type==2: plot background rejection versus signal efficiency" << endl;
-   }
-   else {
+   } else if (type == 3) {
+      y1 = 0;
+      y2 = -1; // will be set to the max found in the histograms
+
+   } else {
       //  cout << "--- type==1: plot background efficiency versus signal efficiency" << endl;
    }
    // create canvas
@@ -47,12 +51,47 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
    TString xtit = "Signal efficiency";
    TString ytit = "Background efficiency";
    if (type == 2) ytit = "Background rejection";
+   if (type == 3) ytit = "1/(Background eff.)";
    TString ftit = ytit + " versus " + xtit;
+
+   TString hNameRef = "effBvsS";
+   if (type == 2) hNameRef = "rejBvsS";
+   if (type == 3) hNameRef = "invBeffvsSeff";
+
 
    if (TString(BinDir->GetName()).Contains("multicut")){
       ftit += "  Bin: ";
       ftit += (BinDir->GetTitle());
    }
+
+   TList xhists;
+   TList xmethods;
+   UInt_t xnm = TMVAGlob::GetListOfMethods( xmethods );
+   TIter xnext(&xmethods);
+   // loop over all methods
+   TKey *xkey;
+   while (xkey = (TKey*)xnext()) {
+      TDirectory * mDir = (TDirectory*)xkey->ReadObj();
+      TList titles;
+      UInt_t ninst = TMVAGlob::GetListOfTitles(mDir,titles);
+      TIter nextTitle(&titles);
+      TKey *titkey;
+      TDirectory *titDir;
+      while ((titkey = TMVAGlob::NextKey(nextTitle,"TDirectory"))) {
+         titDir = (TDirectory *)titkey->ReadObj();
+         TString methodTitle;
+         TMVAGlob::GetMethodTitle(methodTitle,titDir);
+         TIter nextKey( titDir->GetListOfKeys() );
+         while ((hkey = TMVAGlob::NextKey(nextKey,"TH1"))) {
+            TH1 *h = (TH1*)hkey->ReadObj();
+            TString hname = h->GetName();
+            if (hname.Contains( hNameRef ) && hname.BeginsWith( "MVA_" )) {
+               if (type==3 && h->GetMaximum() > y2) y2 = h->GetMaximum();
+            }
+         }
+      }
+   }
+
 
    // draw empty frame
    if(gROOT->FindObject("frame")!=0) gROOT->FindObject("frame")->Delete();
@@ -66,9 +105,6 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
    Int_t color = 1;
    Int_t nmva  = 0;
    TKey *key, *hkey;
-
-   TString hNameRef = "effBvsS";
-   if (type == 2) hNameRef = "rejBvsS";
 
    TList hists;
    TList methods;

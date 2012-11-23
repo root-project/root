@@ -76,7 +76,7 @@ namespace TMVA {
       virtual ~VariableTransformBase( void );
 
       virtual void         Initialize() = 0;
-      virtual Bool_t       PrepareTransformation( const std::vector<Event*>&  ) = 0;
+      virtual Bool_t       PrepareTransformation (const std::vector<Event*>&  ) = 0;
       virtual const Event* Transform       ( const Event* const, Int_t cls ) const = 0;
       virtual const Event* InverseTransform( const Event* const, Int_t cls ) const = 0;
 
@@ -130,7 +130,7 @@ namespace TMVA {
 
    protected:
 
-      void CalcNorm( const std::vector<Event*>& );
+      void CalcNorm( const std::vector<const Event*>& );
 
       void SetCreated( Bool_t c = kTRUE ) { fCreated = c; }
       void SetNVariables( UInt_t i )      { fNVars = i; }

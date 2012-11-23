@@ -361,11 +361,15 @@ namespace TMVA {
       // ---------- event accessors ------------------------------------------------
 
       // returns reference to data set
+      // NOTE: this DataSet is the "original" dataset, i.e. the one seen by ALL Classifiers WITHOUT transformation
+      DataSet* Data() const { return DataInfo().GetDataSet(); }
       DataSetInfo&     DataInfo() const { return fDataSetInfo; }
 
       mutable const Event*   fTmpEvent; //! temporary event when testing on a different DataSet than the own one
 
       // event reference and update
+      // NOTE: these Event accessors make sure that you get the events transformed according to the 
+      //        particular clasifiers transformation chosen
       UInt_t           GetNEvents      () const { return Data()->GetNEvents(); }
       const Event*     GetEvent        () const;
       const Event*     GetEvent        ( const TMVA::Event* ev ) const;
@@ -383,7 +387,6 @@ namespace TMVA {
       virtual Bool_t        IsSignalLike();
       virtual Bool_t        IsSignalLike(Double_t mvaVal);
 
-      DataSet* Data() const { return DataInfo().GetDataSet(); }
 
       Bool_t                HasMVAPdfs() const { return fHasMVAPdfs; }
       virtual void          SetAnalysisType( Types::EAnalysisType type ) { fAnalysisType = type; }
@@ -451,16 +454,7 @@ namespace TMVA {
 
       // access to event information that needs method-specific information
 
-      Float_t GetTWeight( const Event* ev ) const {
-         return (fIgnoreNegWeightsInTraining && (ev->GetWeight() < 0)) ? 0. : ev->GetWeight();
-      }
-
       Bool_t           IsConstructedFromWeightFile() const { return fConstructedFromWeightFile; }
-
-   public:
-      virtual void SetCurrentEvent( Long64_t ievt ) const {
-         Data()->SetCurrentEvent(ievt);
-      }
 
 
    private:

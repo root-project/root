@@ -1,6 +1,11 @@
 #include "tmvaglob.C"
 #include "TControlBar.h"
 #include "TMap.h"
+#include "TVectorT.h"
+#include "TLine.h"
+#include "TPaveText.h"
+#include "TMVA/PDEFoamKernelBase.h"
+#include "TMVA/PDEFoamKernelTrivial.h"
 
 #include <sstream>
 #include <string>
@@ -8,11 +13,15 @@
 
 #include "TMVA/PDEFoam.h"
 
-void PlotFoams( TString fin = "weights/TMVAClassification_PDEFoam.weights_foams.root",
-                bool useTMVAStyle=kTRUE )
+void Plot1DimFoams(TList&, TMVA::ECellValue, const TString&, TMVA::PDEFoamKernelBase*);
+void PlotNDimFoams(TList&, TMVA::ECellValue, const TString&, TMVA::PDEFoamKernelBase*);
+void DrawCell(TMVA::PDEFoamCell*, TMVA::PDEFoam*, Double_t, Double_t, Double_t, Double_t);
+
+void PlotFoams( TString fileName = "weights/TMVAClassification_PDEFoam.weights_foams.root",
+                bool useTMVAStyle = kTRUE )
 {
-   cout << "read file: " << fin << endl;
-   TFile *file = TFile::Open(fin);
+   cout << "read file: " << fileName << endl;
+   TFile *file = TFile::Open(fileName);
 
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
@@ -22,29 +31,29 @@ void PlotFoams( TString fin = "weights/TMVAClassification_PDEFoam.weights_foams.
    if ((gDirectory->Get("SignalFoam") && gDirectory->Get("BgFoam")) ||
        gDirectory->Get("MultiTargetRegressionFoam")) {
       TString macro = Form( "Plot(\"%s\", TMVA::kValueDensity, \"Event density\", %s)",
-			    fin.Data(), (useTMVAStyle ? "kTRUE" : "kFALSE") );
+			    fileName.Data(), (useTMVAStyle ? "kTRUE" : "kFALSE") );
       cbar->AddButton( "Event density", macro, "Plot event density", "button" );
    } else if (gDirectory->Get("DiscrFoam") || gDirectory->Get("MultiClassFoam0")){
       TString macro = Form( "Plot(\"%s\", TMVA::kValue, \"Discriminator\", %s)",
-			    fin.Data(), (useTMVAStyle ? "kTRUE" : "kFALSE") );
+			    fileName.Data(), (useTMVAStyle ? "kTRUE" : "kFALSE") );
       cbar->AddButton( "Discriminator", macro, "Plot discriminator", "button" );
    } else if (gDirectory->Get("MonoTargetRegressionFoam")){
       TString macro = Form( "Plot(\"%s\", TMVA::kValue, \"Target\", %s)",
-			    fin.Data(), (useTMVAStyle ? "kTRUE" : "kFALSE") );
+			    fileName.Data(), (useTMVAStyle ? "kTRUE" : "kFALSE") );
       cbar->AddButton( "Target", macro, "Plot target", "button" );
    } else {
-      cout << "Error: no foams found in file: " << fin << endl;
+      cout << "Error: no foams found in file: " << fileName << endl;
       return;
    }
 
    TString macro_rms = Form( "Plot(\"%s\", TMVA::kRms, \"Variance\", %s)",
-			     fin.Data(), (useTMVAStyle ? "kTRUE" : "kFALSE") );
+			     fileName.Data(), (useTMVAStyle ? "kTRUE" : "kFALSE") );
    cbar->AddButton( "Variance", macro_rms, "Plot variance", "button" );
    TString macro_rms_ov_mean = Form( "Plot(\"%s\", TMVA::kRmsOvMean, \"Variance/Mean\", %s)",
-				     fin.Data(), (useTMVAStyle ? "kTRUE" : "kFALSE") );
+				     fileName.Data(), (useTMVAStyle ? "kTRUE" : "kFALSE") );
    cbar->AddButton( "Variance/Mean", macro_rms_ov_mean, "Plot variance over mean", "button" );
    TString macro_cell_tree = Form( "PlotCellTree(\"%s\", \"Cell tree\", %s)",
-				   fin.Data(), (useTMVAStyle ? "kTRUE" : "kFALSE") );
+				   fileName.Data(), (useTMVAStyle ? "kTRUE" : "kFALSE") );
    cbar->AddButton( "Cell tree", macro_cell_tree, "Plot cell tree", "button" );
 
    cbar->Show();
@@ -52,45 +61,50 @@ void PlotFoams( TString fin = "weights/TMVAClassification_PDEFoam.weights_foams.
 }
 
 // foam plotting macro
-void Plot( TString fin = "weights/TMVAClassification_PDEFoam.weights_foams.root",
-	   TMVA::ECellValue cv, TString cv_long, bool useTMVAStyle=kTRUE )
+void Plot(TString fileName, TMVA::ECellValue cv, TString cv_long, bool useTMVAStyle = kTRUE)
 {
-   cout << "read file: " << fin << endl;
-   TFile *file = TFile::Open(fin);
+   cout << "read file: " << fileName << endl;
+   TFile *file = TFile::Open(fileName);
 
    gStyle->SetNumberContours(999);
    if (useTMVAStyle)  TMVAGlob::SetTMVAStyle();
 
-   // find foams and foam type
+   // fileNamed foams and foam type
+   TMVA::PDEFoam* SignalFoam = (TMVA::PDEFoam*) gDirectory->Get("SignalFoam");
+   TMVA::PDEFoam* BgFoam     = (TMVA::PDEFoam*) gDirectory->Get("BgFoam");
+   TMVA::PDEFoam* DiscrFoam  = (TMVA::PDEFoam*) gDirectory->Get("DiscrFoam");
+   TMVA::PDEFoam* MultiClassFoam0 = (TMVA::PDEFoam*) gDirectory->Get("MultiClassFoam0");
+   TMVA::PDEFoam* MonoTargetRegressionFoam = (TMVA::PDEFoam*) gDirectory->Get("MonoTargetRegressionFoam");
+   TMVA::PDEFoam* MultiTargetRegressionFoam = (TMVA::PDEFoam*) gDirectory->Get("MultiTargetRegressionFoam");
    TList foam_list; // the foams and their captions
-   if (gDirectory->Get("SignalFoam") && gDirectory->Get("BgFoam")){
+   if (SignalFoam && BgFoam) {
       foam_list.Add(new TPair(SignalFoam, new TObjString("Signal Foam")));
       foam_list.Add(new TPair(BgFoam, new TObjString("Background Foam")));
-   } else if (gDirectory->Get("DiscrFoam")){
+   } else if (DiscrFoam) {
       foam_list.Add(new TPair(DiscrFoam, new TObjString("Discriminator Foam")));
-   } else if (gDirectory->Get("MultiClassFoam0")){
+   } else if (MultiClassFoam0) {
       UInt_t cls = 0;
       TMVA::PDEFoam *fm = NULL;
-      while (fm = (TMVA::PDEFoam*) gDirectory->Get(Form("MultiClassFoam%u", cls))) {
+      while ((fm = (TMVA::PDEFoam*) gDirectory->Get(Form("MultiClassFoam%u", cls)))) {
 	 foam_list.Add(new TPair(fm, new TObjString(Form("Discriminator Foam %u",cls))));
 	 cls++;
       }
-   } else if (gDirectory->Get("MonoTargetRegressionFoam")){
+   } else if (MonoTargetRegressionFoam) {
       foam_list.Add(new TPair(MonoTargetRegressionFoam,
 			      new TObjString("MonoTargetRegression Foam")));
-   } else if (gDirectory->Get("MultiTargetRegressionFoam")){
+   } else if (MultiTargetRegressionFoam) {
       foam_list.Add(new TPair(MultiTargetRegressionFoam,
 			      new TObjString("MultiTargetRegression Foam")));
    } else {
-      cout << "ERROR: no Foams found in file: " << fin << endl;
+      cout << "ERROR: no Foams found in file: " << fileName << endl;
       return;
    }
 
    // loop over all foams and print out a debug message
    TListIter foamIter(&foam_list);
    TPair *fm_pair = NULL;
-   Int_t kDim; // foam dimensions
-   while (fm_pair = (TPair*) foamIter()) {
+   Int_t kDim = 0; // foam dimensions
+   while ((fm_pair = (TPair*) foamIter())) {
       kDim = ((TMVA::PDEFoam*) fm_pair->Key())->GetTotDim();
       cout << "Foam loaded: " << ((TObjString*) fm_pair->Value())->String()
 	   << " (dimension = " << kDim << ")" << endl;
@@ -121,13 +135,13 @@ void Plot1DimFoams(TList& foam_list, TMVA::ECellValue cell_value,
    // loop over all foams and draw the histogram
    TListIter it(&foam_list);
    TPair* fm_pair = NULL;    // the (foam, caption) pair
-   while (fm_pair = (TPair*) it()) {
+   while ((fm_pair = (TPair*) it())) {
       TMVA::PDEFoam* foam = (TMVA::PDEFoam*) fm_pair->Key();
       if (!foam) continue;
       TString foam_caption(((TObjString*) fm_pair->Value())->String());
       TString variable_name(foam->GetVariableName(0)->String());
 
-      canvas = new TCanvas(Form("canvas_%u",foam),
+      canvas = new TCanvas(Form("canvas_%p",foam),
                            "1-dimensional PDEFoam", 400, 400);
 
       projection = foam->Draw1Dim(cell_value, 100, kernel);
@@ -152,7 +166,7 @@ void PlotNDimFoams(TList& foam_list, TMVA::ECellValue cell_value,
    // loop over all foams and draw the projection
    TListIter it(&foam_list);
    TPair* fm_pair = NULL;    // the (foam, caption) pair
-   while (fm_pair = (TPair*) it()) {
+   while ((fm_pair = (TPair*) it())) {
       TMVA::PDEFoam* foam = (TMVA::PDEFoam*) fm_pair->Key();
       if (!foam) continue;
       TString foam_caption(((TObjString*) fm_pair->Value())->String());
@@ -162,7 +176,7 @@ void PlotNDimFoams(TList& foam_list, TMVA::ECellValue cell_value,
       for (Int_t i = 0; i < kDim; ++i) {
          for (Int_t k = i + 1; k < kDim; ++k) {
 
-            canvas = new TCanvas(Form("canvas_%u_%i:%i", foam, i, k),
+            canvas = new TCanvas(Form("canvas_%p_%i:%i", foam, i, k),
                                  Form("Foam projections %i:%i", i, k),
                                  (Int_t)(400/(1.-0.2)), 400);
             canvas->SetRightMargin(0.2);
@@ -187,13 +201,12 @@ void PlotNDimFoams(TList& foam_list, TMVA::ECellValue cell_value,
 }
 
 
-void PlotCellTree( TString fin = "weights/TMVAClassification_PDEFoam.weights_foams.root",
-		   TString cv_long, bool useTMVAStyle=kTRUE )
+void PlotCellTree(TString fileName, TString cv_long, bool useTMVAStyle = kTRUE)
 {
    // Draw the PDEFoam cell tree
 
-   cout << "read file: " << fin << endl;
-   TFile *file = TFile::Open(fin);
+   cout << "read file: " << fileName << endl;
+   TFile *file = TFile::Open(fileName);
 
    if (useTMVAStyle)  TMVAGlob::SetTMVAStyle();
 
@@ -201,7 +214,7 @@ void PlotCellTree( TString fin = "weights/TMVAClassification_PDEFoam.weights_foa
    TListIter foamIter(gDirectory->GetListOfKeys());
    TKey *foam_key = NULL; // the foam key
    TCanvas *canv = NULL;  // the canvas
-   while (foam_key = (TKey*) foamIter()) {
+   while ((foam_key = (TKey*) foamIter())) {
       TString name(foam_key->GetName());
       TString class_name(foam_key->GetClassName());
       if (!class_name.Contains("PDEFoam"))
@@ -253,10 +266,9 @@ void DrawCell( TMVA::PDEFoamCell *cell, TMVA::PDEFoam *foam,
    t->AddText( Form("Intg=%.5f", cell->GetIntg()) );
    t->AddText( Form("Var=%.5f", cell->GetDriv()) );
    TVectorD *vec = (TVectorD*) cell->GetElement();
-   if (vec != NULL){
-      for (Int_t i = 0; i < vec->GetNrows(); ++i) {
-	 t->AddText( Form("E[%i]=%.5f", i, vec(i)) );
-      }
+   if (vec) {
+      for (Int_t i = 0; i < vec->GetNrows(); ++i)
+	 t->AddText( Form("E[%i]=%.5f", i, (*vec)[i]) );
    }
 
    if (cell->GetStat() != 1) {
@@ -277,6 +289,4 @@ void DrawCell( TMVA::PDEFoamCell *cell, TMVA::PDEFoam *foam,
    }
 
    t->Draw();
-
-   return;
 }

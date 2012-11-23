@@ -105,6 +105,9 @@ namespace TMVA {
 
       Bool_t MonitorBoost( MethodBoost* booster);
 
+      void SetMinNodeSize(Double_t sizeInPercent);
+      void SetMinNodeSize(TString sizeInPercent);
+
    private:
       // Init used in the various constructors
       void Init( void );
@@ -117,7 +120,9 @@ namespace TMVA {
       //options for the decision Tree
       SeparationBase                 *fSepType;         // the separation used in node splitting
       TString                         fSepTypeS;        // the separation (option string) used in node splitting
-      Int_t                           fNodeMinEvents;   // min number of events in node 
+      Int_t                           fMinNodeEvents;   // min number of events in node
+      Float_t                         fMinNodeSize;     // min percentage of training events in node
+      TString                         fMinNodeSizeS;    // string containing min percentage of training events in node
   
       Int_t                           fNCuts;           // grid used in cut applied in node splitting
       Bool_t                          fUseYesNoLeaf;    // use sig or bkg classification in leave nodes or sig/bkg

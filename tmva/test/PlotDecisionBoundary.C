@@ -84,7 +84,7 @@ void PlotDecisionBoundary( TString weightFile = "weights/TMVAClassification_BDT.
    // create a set of variables and declare them to the reader
    // - the variable names must corresponds in name and type to 
    // those given in the weight file(s) that you use
-   Double_t var0, var1;
+   Float_t var0, var1;
    reader->AddVariable( v0,                &var0 );
    reader->AddVariable( v1,                &var1 );
 

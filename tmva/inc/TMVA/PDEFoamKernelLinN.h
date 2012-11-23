@@ -51,7 +51,7 @@ namespace TMVA
    public:
       PDEFoamKernelLinN();                 // Constructor
       PDEFoamKernelLinN(const PDEFoamKernelLinN&); // Copy Constructor
-      virtual ~PDEFoamKernelLinN() {};     // Destructor
+      virtual ~PDEFoamKernelLinN() {}      // Destructor
 
       // kernel estimator
       virtual Float_t Estimate(PDEFoam*, std::vector<Float_t>&, ECellValue);

@@ -135,7 +135,7 @@ namespace TMVA {
    protected:
 
       // typedef of an Event const iterator
-      typedef std::vector<TMVA::Event *>::const_iterator  EventItr;
+      typedef std::vector<const TMVA::Event *>::const_iterator  EventItr;
 
       // init ntuple
       void InitNtuple();

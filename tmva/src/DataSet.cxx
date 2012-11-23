@@ -66,7 +66,7 @@ TMVA::DataSet::DataSet(const DataSetInfo& dsi)
      fTrainingBlockSize(0)
 {
    // constructor
-   for (UInt_t i=0; i<4; i++) fEventCollection[i] = new std::vector<Event*>();
+   for (UInt_t i=0; i<4; i++) fEventCollection[i] = new std::vector<Event*>;
    
    fClassEvents.resize(4);
    fBlockBelongToTraining.reserve(10);
@@ -171,7 +171,7 @@ void TMVA::DataSet::DestroyCollection(Types::ETreeType type, Bool_t deleteEvents
 }
 
 //_______________________________________________________________________
-TMVA::Event* TMVA::DataSet::GetEvent() const
+const TMVA::Event* TMVA::DataSet::GetEvent() const
 {
    if (fSampling.size() > UInt_t(fCurrentTreeIdx) && fSampling.at(fCurrentTreeIdx)) {
       Long64_t iEvt = fSamplingSelected.at(fCurrentTreeIdx).at( fCurrentEventIdx )->second;

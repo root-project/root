@@ -451,7 +451,7 @@ void TMVA::VariableTransformBase::CountVariableTypes( UInt_t& nvars, UInt_t& ntg
 
 
 //_______________________________________________________________________
-void TMVA::VariableTransformBase::CalcNorm( const std::vector<Event*>& events ) 
+void TMVA::VariableTransformBase::CalcNorm( const std::vector<const Event*>& events ) 
 {
    // TODO --> adapt to variable,target,spectator selection
    // method to calculate minimum, maximum, mean, and RMS for all

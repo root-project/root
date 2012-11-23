@@ -85,7 +85,9 @@ void TMVA::MethodLD::Init( void )
    else                fNRegOut = 1;
 
    fLDCoeff = new vector< vector< Double_t >* >(fNRegOut);
-   for (Int_t iout = 0; iout<fNRegOut; iout++) (*fLDCoeff)[iout] = new std::vector<Double_t>( GetNvar()+1 );
+   for (Int_t iout = 0; iout<fNRegOut; iout++){
+      (*fLDCoeff)[iout] = new std::vector<Double_t>( GetNvar()+1 ); 
+   }
 
    // the minimum requirement to declare an event signal-like
    SetSignalReferenceCut( 0.0 );
@@ -99,8 +101,9 @@ TMVA::MethodLD::~MethodLD( void )
    if (fSumValMatx) { delete fSumValMatx; fSumValMatx = 0; }
    if (fCoeffMatx)  { delete fCoeffMatx;  fCoeffMatx  = 0; }
    if (fLDCoeff) {
-      for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); vi++)
+      for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); vi++){
          if (*vi) { delete *vi; *vi = 0; }
+      }
       delete fLDCoeff; fLDCoeff = 0;
    }
 }
@@ -206,8 +209,9 @@ void TMVA::MethodLD::GetSum( void )
    // and X the coordinates values
    const UInt_t nvar = DataInfo().GetNVariables();
 
-   for (UInt_t ivar = 0; ivar<=nvar; ivar++)
+   for (UInt_t ivar = 0; ivar<=nvar; ivar++){
       for (UInt_t jvar = 0; jvar<=nvar; jvar++) (*fSumMatx)( ivar, jvar ) = 0;
+   }
 
    // compute sample means
    Long64_t nevts = Data()->GetNEvents();
@@ -227,9 +231,11 @@ void TMVA::MethodLD::GetSum( void )
       }
 
       // Sum of products of coordinates
-      for (UInt_t ivar=0; ivar<nvar; ivar++)
-         for (UInt_t jvar=0; jvar<nvar; jvar++)
+      for (UInt_t ivar=0; ivar<nvar; ivar++){
+         for (UInt_t jvar=0; jvar<nvar; jvar++){
             (*fSumMatx)( ivar+1, jvar+1 ) += ev->GetValue( ivar ) * ev->GetValue( jvar ) * weight;
+         }
+      }
    }
 }
 
@@ -239,9 +245,11 @@ void TMVA::MethodLD::GetSumVal( void )
    //Calculates the vector transposed(X)*W*Y with Y being the target vector
    const UInt_t nvar = DataInfo().GetNVariables();
 
-   for (Int_t ivar = 0; ivar<fNRegOut; ivar++)
-      for (UInt_t jvar = 0; jvar<=nvar; jvar++)
+   for (Int_t ivar = 0; ivar<fNRegOut; ivar++){
+      for (UInt_t jvar = 0; jvar<=nvar; jvar++){
          (*fSumValMatx)(jvar,ivar) = 0;
+      }
+   }
 
    // Sum of coordinates multiplied by values
    for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
@@ -257,14 +265,15 @@ void TMVA::MethodLD::GetSumVal( void )
 
          Double_t val = weight;
 
-         if (!DoRegression())
-            val *= DataInfo().IsSignal(ev);
-         else //for regression
+         if (!DoRegression()){
+            val *= DataInfo().IsSignal(ev); // yes it works.. but I'm still surprised (Helge).. would have not set y_B to zero though..
+         }else {//for regression
             val *= ev->GetTarget( ivar ); 
-
+         }
          (*fSumValMatx)( 0,ivar ) += val; 
-         for (UInt_t jvar=0; jvar<nvar; jvar++) 
+         for (UInt_t jvar=0; jvar<nvar; jvar++) {
             (*fSumValMatx)(jvar+1,ivar ) += ev->GetValue(jvar) * val;
+         }
       }
    }
 }
@@ -297,8 +306,9 @@ void TMVA::MethodLD::GetLDCoeff( void )
       }
       if (!DoRegression()) {
          (*(*fLDCoeff)[ivar])[0]=0.0;
-         for (UInt_t jvar = 1; jvar<nvar+1; jvar++)
+         for (UInt_t jvar = 1; jvar<nvar+1; jvar++){
             (*(*fLDCoeff)[ivar])[0]+=(*fCoeffMatx)(jvar,ivar)*(*fSumMatx)(0,jvar)/(*fSumMatx)( 0, 0 );
+         }
          (*(*fLDCoeff)[ivar])[0]/=-2.0;
       }
       
@@ -309,9 +319,11 @@ void TMVA::MethodLD::GetLDCoeff( void )
 void  TMVA::MethodLD::ReadWeightsFromStream( std::istream& istr )
 {
    // read LD coefficients from weight file
-   for (Int_t iout=0; iout<fNRegOut; iout++)
-      for (UInt_t icoeff=0; icoeff<GetNvar()+1; icoeff++)
+   for (Int_t iout=0; iout<fNRegOut; iout++){
+      for (UInt_t icoeff=0; icoeff<GetNvar()+1; icoeff++){
          istr >> (*(*fLDCoeff)[iout])[icoeff];
+      }
+   }
 }
 
 //_______________________________________________________________________
@@ -347,8 +359,9 @@ void TMVA::MethodLD::ReadWeightsFromXML( void* wghtnode )
 
    // create vector with coefficients (double vector due to arbitrary output dimension)
    if (fLDCoeff) { 
-      for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); vi++)
+      for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); vi++){
          if (*vi) { delete *vi; *vi = 0; }
+      }
       delete fLDCoeff; fLDCoeff = 0;
    }
    fLDCoeff = new vector< vector< Double_t >* >(fNRegOut);

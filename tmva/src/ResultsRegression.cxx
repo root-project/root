@@ -67,7 +67,7 @@ TH1F*  TMVA::ResultsRegression::QuadraticDeviation( UInt_t tgtNum , Bool_t trunc
    }
    else{
      for (Int_t ievt=0; ievt<ds->GetNEvents(); ievt++) {
-       Event* ev = ds->GetEvent(ievt);
+       const Event* ev = ds->GetEvent(ievt);
        std::vector<Float_t> regVal = fRegValues.at(ievt);
        Float_t val = regVal.at( tgtNum ) - ev->GetTarget( tgtNum );
        val *= val;
@@ -82,7 +82,7 @@ TH1F*  TMVA::ResultsRegression::QuadraticDeviation( UInt_t tgtNum , Bool_t trunc
    h->GetYaxis()->SetTitle("Weighted Entries");
 
    for (Int_t ievt=0; ievt<ds->GetNEvents(); ievt++) {
-      Event* ev = ds->GetEvent(ievt);
+      const Event* ev = ds->GetEvent(ievt);
       std::vector<Float_t> regVal = fRegValues.at(ievt);
       Float_t val = regVal.at( tgtNum ) - ev->GetTarget( tgtNum );
       val *= val;
@@ -112,7 +112,7 @@ TH2F*  TMVA::ResultsRegression::DeviationAsAFunctionOf( UInt_t varNum, UInt_t tg
       xmax = vinf.GetMax();
 
       for (Int_t ievt=0; ievt<ds->GetNEvents(); ievt++) {
-         Event* ev = ds->GetEvent(ievt);
+         const Event* ev = ds->GetEvent(ievt);
          Float_t val = ev->GetValue(varNum);
 
          if (val < xmin ) xmin = val;
@@ -126,7 +126,7 @@ TH2F*  TMVA::ResultsRegression::DeviationAsAFunctionOf( UInt_t varNum, UInt_t tg
       xmax = vinf.GetMax();
 
       for (Int_t ievt=0; ievt<ds->GetNEvents(); ievt++) {
-         Event* ev = ds->GetEvent(ievt);
+         const Event* ev = ds->GetEvent(ievt);
          Float_t val = ev->GetTarget(varNum);
 
          if (val < xmin ) xmin = val;
@@ -138,7 +138,7 @@ TH2F*  TMVA::ResultsRegression::DeviationAsAFunctionOf( UInt_t varNum, UInt_t tg
    Float_t ymax = -FLT_MAX;
 
    for (Int_t ievt=0; ievt<ds->GetNEvents(); ievt++) {
-      Event* ev = ds->GetEvent(ievt);
+      const Event* ev = ds->GetEvent(ievt);
       std::vector<Float_t> regVal = fRegValues.at(ievt);
 
       Float_t diff = regVal.at( tgtNum ) - ev->GetTarget( tgtNum );
@@ -167,7 +167,7 @@ TH2F*  TMVA::ResultsRegression::DeviationAsAFunctionOf( UInt_t varNum, UInt_t tg
    h->GetYaxis()->SetTitle( yName );
 
    for (Int_t ievt=0; ievt<ds->GetNEvents(); ievt++) {
-      Event* ev = ds->GetEvent(ievt);
+      const Event* ev = ds->GetEvent(ievt);
       std::vector<Float_t> regVal = fRegValues.at(ievt);
 
       Float_t xVal = (takeTargets?ev->GetTarget( varNum ):ev->GetValue( varNum ));

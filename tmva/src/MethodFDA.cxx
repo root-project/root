@@ -357,7 +357,7 @@ void TMVA::MethodFDA::Train( void )
       const Event* ev = GetEvent(ievt);
 
       // true event copy
-      Float_t w  = GetTWeight(ev);
+      Float_t w  = ev->GetWeight();
 
       if (!DoRegression()) {
          if (DataInfo().IsSignal(ev)) { fSumOfWeightsSig += w; }

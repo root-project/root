@@ -55,6 +55,9 @@
 #ifndef ROOT_TRandom3
 #include "TRandom3.h"
 #endif
+#ifndef ROOT_TMatrix
+#include "TMatrix.h"
+#endif
 
 #ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"

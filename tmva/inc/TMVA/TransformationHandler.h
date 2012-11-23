@@ -83,7 +83,7 @@ namespace TMVA {
       VariableTransformBase* AddTransformation(VariableTransformBase*, Int_t cls );
       const TList& GetTransformationList()   const { return fTransformations; }
       Int_t        GetNumOfTransformations() const { return fTransformations.GetSize(); }
-      std::vector<Event*>* CalcTransformations( const std::vector<Event*>&, Bool_t createNewVector = kFALSE );
+      const std::vector<Event*>* CalcTransformations( const std::vector<Event*>&, Bool_t createNewVector = kFALSE );
       
       void         CalcStats( const std::vector<Event*>& events );
       void         AddStats ( Int_t k, UInt_t ivar, Double_t mean, Double_t rms, Double_t min, Double_t max );

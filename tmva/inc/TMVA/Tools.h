@@ -100,6 +100,14 @@ namespace TMVA {
       static Tools& Instance();
       static void   DestroyInstance();
 
+
+      template <typename T> Double_t Mean(Long64_t n, const T *a, const Double_t *w=0);
+      template <typename Iterator, typename WeightIterator> Double_t Mean ( Iterator first, Iterator last, WeightIterator w);
+      
+      template <typename T> Double_t RMS(Long64_t n, const T *a, const Double_t *w=0);
+      template <typename Iterator, typename WeightIterator> Double_t RMS(Iterator first, Iterator last, WeightIterator w);
+
+   
       // simple statistics operations on tree entries
       void  ComputeStat( const std::vector<TMVA::Event*>&,
                          std::vector<Float_t>*,
@@ -131,6 +139,7 @@ namespace TMVA {
       // returns the covariance matrix of of the different classes (and the sum) 
       // given the event sample
       std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls, VariableTransformBase* transformBase=0 );
+      std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<const Event*>& events, Int_t maxCls, VariableTransformBase* transformBase=0 );
 
 
       // turns covariance into correlation matrix
@@ -304,5 +313,6 @@ inline Double_t TMVA::Tools::ComputeVariance( Double_t sumx2, Double_t sumx, Int
 }
 
 
+  
 #endif
 

@@ -60,7 +60,7 @@ void TMVA::VariableRearrangeTransform::Initialize()
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::VariableRearrangeTransform::PrepareTransformation( const std::vector<Event*>& /*events*/ )
+Bool_t TMVA::VariableRearrangeTransform::PrepareTransformation (const std::vector<Event*>& /*events*/)
 {
    // prepare transformation --> (nothing to do)
    if (!IsEnabled() || IsCreated()) return kTRUE;

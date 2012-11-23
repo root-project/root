@@ -48,7 +48,7 @@ namespace TMVA
    public:
       PDEFoamEvent();                  // Default constructor (used only by ROOT streamer)
       PDEFoamEvent(const TString&);    // Principal user-defined constructor
-      virtual ~PDEFoamEvent() {};      // Default destructor
+      virtual ~PDEFoamEvent() {}       // Default destructor
 
       // function to fill created cell with given value
       virtual void FillFoamCells(const Event* ev, Float_t wt);

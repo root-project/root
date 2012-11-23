@@ -91,7 +91,7 @@ namespace TMVA {
       virtual ~VariableGaussTransform( void );
 
       void   Initialize();
-      Bool_t PrepareTransformation( const std::vector<Event*>& );
+      Bool_t PrepareTransformation (const std::vector<Event*>&);
 
       virtual const Event* Transform(const Event* const, Int_t cls ) const;
       virtual const Event* InverseTransform(const Event* const, Int_t cls ) const;

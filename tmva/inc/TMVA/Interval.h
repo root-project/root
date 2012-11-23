@@ -69,23 +69,27 @@ namespace TMVA {
       virtual ~Interval();
 
       // accessors
-      Double_t GetMin()   const { return fMin; }
-      Double_t GetMax()   const { return fMax; }
-      Double_t GetWidth() const { return fMax - fMin; }
-      Int_t    GetNbins() const { return fNbins; }
-      Double_t GetMean()  const { return (fMax + fMin)/2; }
-      Double_t GetRndm( TRandom3& )  const;
-      Double_t GetElement( Int_t position ) const;      
-      Double_t GetStepSize() const;
+      // accessors
+      virtual Double_t GetMin()   const { return fMin; }
+      virtual Double_t GetMax()   const { return fMax; }
+      virtual Double_t GetWidth() const;
+      virtual Int_t    GetNbins() const { return fNbins; }
+      virtual Double_t GetMean()  const;
+      virtual Double_t GetRndm( TRandom3& )  const;
+      virtual Double_t GetElement( Int_t position ) const;      
+      virtual Double_t GetStepSize(Int_t iBin=0) const;
 
       void SetMax( Double_t m ) { fMax = m; }
       void SetMin( Double_t m ) { fMin = m; }
 
-   private:
+      virtual void Print( std::ostream& os ) const;
+
+   protected:
 
       Double_t fMin, fMax;    // the constraints of the Interval
       Int_t    fNbins;        // when >0 : number of bins (discrete interval); when ==0 continuous interval
 
+   private:
       static MsgLogger* fgLogger;   // message logger
       MsgLogger& Log() const { return *fgLogger; }          
 

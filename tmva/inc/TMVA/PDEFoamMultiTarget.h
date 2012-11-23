@@ -56,7 +56,7 @@ namespace TMVA
    public:
       PDEFoamMultiTarget();                  // Default constructor (used only by ROOT streamer)
       PDEFoamMultiTarget(const TString&, ETargetSelection); // Principal user-defined constructor
-      virtual ~PDEFoamMultiTarget() {};      // Default destructor
+      virtual ~PDEFoamMultiTarget() {}       // Default destructor
 
       // overridden from PDEFoam: extract the targets from the foam
       virtual std::vector<Float_t> GetCellValue(const std::map<Int_t, Float_t>&, ECellValue);

@@ -236,7 +236,7 @@ void TMVA::GeneticPopulation::Print( ostream & out, Int_t untilIndex )
            vec < fGenePool[it].GetFactors().end(); vec++ ) {
          out << "f_" << n++ << ": " << (*vec) << "     ";
       }
-      out << endl;
+      out << std::endl;
    }
 }
 
@@ -251,7 +251,7 @@ TH1F* TMVA::GeneticPopulation::VariableDistribution( Int_t varNumber, Int_t bins
    //          int max : maximum value of the histogram
    //
 
-   cout << "FAILED! TMVA::GeneticPopulation::VariableDistribution" << endl;
+   std::cout << "FAILED! TMVA::GeneticPopulation::VariableDistribution" << std::endl;
 
    std::stringstream histName;
    histName.clear();
@@ -268,7 +268,7 @@ vector<Double_t> TMVA::GeneticPopulation::VariableDistribution( Int_t /*varNumbe
    // gives back all the values of coefficient "varNumber" of the current generation
    //
 
-   cout << "FAILED! TMVA::GeneticPopulation::VariableDistribution" << endl;
+   std::cout << "FAILED! TMVA::GeneticPopulation::VariableDistribution" << std::endl;
 
    vector< Double_t > varDist;
 

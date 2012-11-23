@@ -88,7 +88,7 @@ void TMVA::VariableGaussTransform::Initialize()
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::VariableGaussTransform::PrepareTransformation( const std::vector<Event*>& events )
+Bool_t TMVA::VariableGaussTransform::PrepareTransformation (const std::vector<Event*>& events)
 {
    // calculate the cumulative distributions
    Initialize();
@@ -187,7 +187,7 @@ const TMVA::Event* TMVA::VariableGaussTransform::Transform(const Event* const ev
 }
 
 //_______________________________________________________________________
-const TMVA::Event* TMVA::VariableGaussTransform::InverseTransform( const Event* const ev, Int_t cls ) const
+const TMVA::Event* TMVA::VariableGaussTransform::InverseTransform(const  Event* const ev, Int_t cls ) const
 {
    // apply the inverse Gauss or inverse uniform transformation
 
@@ -247,7 +247,7 @@ const TMVA::Event* TMVA::VariableGaussTransform::InverseTransform( const Event* 
 }
 
 //_______________________________________________________________________
-void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector<Event*>& events )
+void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector< Event*>& events )
 {
    // fill the cumulative distributions
 

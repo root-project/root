@@ -78,7 +78,7 @@ TMVA::PDEFoamDecisionTreeDensity::PDEFoamDecisionTreeDensity(const PDEFoamDecisi
 }
 
 //_____________________________________________________________________
-Double_t TMVA::PDEFoamDecisionTreeDensity::Density(std::vector<Double_t>& /* Xarg */, 
+Double_t TMVA::PDEFoamDecisionTreeDensity::Density(std::vector<Double_t>& /* Xarg */,
                                                    Double_t&              /* event_density */)
 {
    // This function is not used in the decision tree like PDEFoam,
@@ -87,8 +87,8 @@ Double_t TMVA::PDEFoamDecisionTreeDensity::Density(std::vector<Double_t>& /* Xar
 }
 
 //_____________________________________________________________________
-void TMVA::PDEFoamDecisionTreeDensity::FillHistograms(TMVA::Volume &volume, std::vector<TH1D*> &hsig, 
-                                                      std::vector<TH1D*> &hbkg, std::vector<TH1D*> &hsig_unw, 
+void TMVA::PDEFoamDecisionTreeDensity::FillHistograms(TMVA::Volume &volume, std::vector<TH1D*> &hsig,
+                                                      std::vector<TH1D*> &hbkg, std::vector<TH1D*> &hsig_unw,
                                                       std::vector<TH1D*> &hbkg_unw)
 {
    // Fill the given histograms with signal and background events,

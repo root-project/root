@@ -50,15 +50,15 @@
 #ifndef ROOT_TTree
 #include "TTree.h"
 #endif
-#ifndef ROOT_TCut
-#include "TCut.h"
-#endif
-#ifndef ROOT_TMatrixDfwd
-#include "TMatrixDfwd.h"
-#endif
-#ifndef ROOT_TPrincipal
-#include "TPrincipal.h"
-#endif
+//#ifndef ROOT_TCut
+//#include "TCut.h"
+//#endif
+//#ifndef ROOT_TMatrixDfwd
+//#include "TMatrixDfwd.h"
+//#endif
+//#ifndef ROOT_TPrincipal
+//#include "TPrincipal.h"
+//#endif
 #ifndef ROOT_TRandom3
 #include "TRandom3.h"
 #endif
@@ -89,16 +89,22 @@ namespace TMVA {
       Long64_t  GetNEvents( Types::ETreeType type = Types::kMaxTreeType ) const;
       Long64_t  GetNTrainingEvents()              const { return GetNEvents(Types::kTraining); }
       Long64_t  GetNTestEvents()                  const { return GetNEvents(Types::kTesting); }
-      Event*    GetEvent()                        const; // returns event without transformations
-      Event*    GetEvent        ( Long64_t ievt ) const { fCurrentEventIdx = ievt; return GetEvent(); } // returns event without transformations
-      Event*    GetTrainingEvent( Long64_t ievt ) const { return GetEvent(ievt, Types::kTraining); }
-      Event*    GetTestEvent    ( Long64_t ievt ) const { return GetEvent(ievt, Types::kTesting); }
-      Event*    GetEvent        ( Long64_t ievt, Types::ETreeType type ) const {
+
+      // const getters
+      const Event*    GetEvent()                        const; // returns event without transformations
+      const Event*    GetEvent        ( Long64_t ievt ) const { fCurrentEventIdx = ievt; return GetEvent(); } // returns event without transformations
+      const Event*    GetTrainingEvent( Long64_t ievt ) const { return GetEvent(ievt, Types::kTraining); }
+      const Event*    GetTestEvent    ( Long64_t ievt ) const { return GetEvent(ievt, Types::kTesting); }
+      const Event*    GetEvent        ( Long64_t ievt, Types::ETreeType type ) const 
+      {
          fCurrentTreeIdx = TreeIndex(type); fCurrentEventIdx = ievt; return GetEvent();
       }
 
-      UInt_t    GetNVariables() const;
-      UInt_t    GetNTargets()   const;
+
+
+
+      UInt_t    GetNVariables()   const;
+      UInt_t    GetNTargets()     const;
       UInt_t    GetNSpectators()  const;
 
       void      SetCurrentEvent( Long64_t ievt         ) const { fCurrentEventIdx = ievt; }

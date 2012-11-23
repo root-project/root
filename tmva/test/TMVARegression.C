@@ -251,7 +251,7 @@ void TMVARegression( TString myMethodList = "" )
    // Boosted Decision Trees
    if (Use["BDT"])
      factory->BookMethod( TMVA::Types::kBDT, "BDT",
-                           "!H:!V:NTrees=100:nEventsMin=5:BoostType=AdaBoostR2:SeparationType=RegressionVariance:nCuts=20:PruneMethod=CostComplexity:PruneStrength=30" );
+                           "!H:!V:NTrees=100:MinNodeSize=1.0%:BoostType=AdaBoostR2:SeparationType=RegressionVariance:nCuts=20:PruneMethod=CostComplexity:PruneStrength=30" );
 
    if (Use["BDTG"])
      factory->BookMethod( TMVA::Types::kBDT, "BDTG",

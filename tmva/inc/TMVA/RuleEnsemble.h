@@ -159,7 +159,7 @@ namespace TMVA {
       void UpdateEventVal();
 
       // fill binary rule respons for all events (or selected subset)
-      void MakeRuleMap(const std::vector<TMVA::Event *> *events=0, UInt_t ifirst=0, UInt_t ilast=0);
+      void MakeRuleMap(const std::vector<const TMVA::Event *> *events=0, UInt_t ifirst=0, UInt_t ilast=0);
 
       // clear rule map
       void ClearRuleMap() { fRuleMap.clear(); fRuleMapEvents=0; }
@@ -261,7 +261,7 @@ namespace TMVA {
       const MethodBase*                      GetMethodBase()      const;
       const RuleFit*                         GetRuleFit()         const { return fRuleFit; }
       //
-      const std::vector<TMVA::Event *>*     GetTrainingEvents()  const;
+      const std::vector<const TMVA::Event *>*     GetTrainingEvents()  const;
       const Event*                    GetTrainingEvent(UInt_t i) const;
       const Event*                    GetEvent() const { return fEvent; }
       //
@@ -389,7 +389,7 @@ namespace TMVA {
       std::vector< std::vector<UInt_t> > fRuleMap;           // map of rule responses
       UInt_t                        fRuleMapInd0;       // start index
       UInt_t                        fRuleMapInd1;       // last index
-      const std::vector<TMVA::Event *> *fRuleMapEvents; // pointer to vector of events used
+      const std::vector<const TMVA::Event *> *fRuleMapEvents; // pointer to vector of events used
       //
       const RuleFit*                fRuleFit;           // pointer to rule fit object 
 

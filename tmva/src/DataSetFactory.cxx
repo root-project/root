@@ -437,7 +437,7 @@ void TMVA::DataSetFactory::CalcMinMax( DataSet* ds, TMVA::DataSetInfo& dsi )
    // perform event loop
 
    for (Int_t i=0; i<ds->GetNEvents(); i++) {
-      Event * ev = ds->GetEvent(i);
+      const Event * ev = ds->GetEvent(i);
       for (UInt_t ivar=0; ivar<nvar; ivar++) {
          Double_t v = ev->GetValue(ivar);
          if (v<min[ivar]) min[ivar] = v;
@@ -536,7 +536,7 @@ TMatrixD* TMVA::DataSetFactory::CalcCovarianceMatrix( DataSet * ds, const UInt_t
    Double_t ic = 0;
    for (Int_t i=0; i<ds->GetNEvents(); i++) {
 
-      Event * ev = ds->GetEvent(i);
+      const Event * ev = ds->GetEvent(i);
       if (ev->GetClass() != classNumber ) continue;
 
       Double_t weight = ev->GetWeight();
@@ -1446,12 +1446,12 @@ TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
    for (UInt_t cls = 0, clsEnd = dsi.GetNClasses(); cls<clsEnd; ++cls) {
       Log() << kINFO << "--> Rescale " << setiosflags(ios::left) << std::setw(maxL)
             << dsi.GetClassInfo(cls)->GetName() << " event weights by factor: " << renormFactor.at(cls) << Endl;
-      std::for_each( tmpEventVector[Types::kTraining].at(cls).begin(),
-                     tmpEventVector[Types::kTraining].at(cls).end(),
-                     std::bind2nd(std::mem_fun(&TMVA::Event::ScaleWeight),renormFactor.at(cls)) );
-      std::for_each( tmpEventVector[Types::kTesting].at(cls).begin(),
-                     tmpEventVector[Types::kTesting].at(cls).end(),
-                     std::bind2nd(std::mem_fun(&TMVA::Event::ScaleWeight),renormFactor.at(cls)) );
+      for (EventVector::iterator it = tmpEventVector[Types::kTraining].at(cls).begin(),
+	       itEnd = tmpEventVector[Types::kTraining].at(cls).end(); it != itEnd; ++it)
+	  (*it)->SetWeight ((*it)->GetWeight() * renormFactor.at(cls));
+      for (EventVector::iterator it = tmpEventVector[Types::kTesting].at(cls).begin(),
+	       itEnd = tmpEventVector[Types::kTesting].at(cls).end(); it != itEnd; ++it)
+	  (*it)->SetWeight ((*it)->GetWeight() * renormFactor.at(cls));
    }
 
 

@@ -67,7 +67,7 @@ namespace TMVA {
    class PDEFoam;
 
    // separation types
-   enum EDTSeparation { kFoam, kGiniIndex, kMisClassificationError, 
+   enum EDTSeparation { kFoam, kGiniIndex, kMisClassificationError,
 			kCrossEntropy, kGiniIndexWithLaplace, kSdivSqrtSplusB };
 
    // foam types
@@ -76,12 +76,13 @@ namespace TMVA {
    // enum type for possible foam cell values
    // kValue         : cell value who's rms is minimized
    // kValueError    : error on kValue
-   // kValueDensity  : volume density of kValue
+   // kValueDensity  : kValue / cell volume
    // kMeanValue     : mean sampling value (saved in fIntegral)
    // kRms           : rms of sampling distribution (saved in fDriver)
    // kRmsOvMean     : rms/mean of sampling distribution (saved in
    //                  fDriver and fIntegral)
-   enum ECellValue { kValue, kValueError, kValueDensity, kMeanValue, 
+   // kCellVolume    : volume of cell
+   enum ECellValue { kValue, kValueError, kValueDensity, kMeanValue,
 		     kRms, kRmsOvMean, kCellVolume };
 }
 
@@ -183,7 +184,7 @@ namespace TMVA {
 
       // Square function (fastest implementation)
       template<typename T> T Sqr(T x) const { return x*x; }
-      
+
       PDEFoam(const PDEFoam&);    // Copy Constructor  NOT USED
 
       // ---------- Public functions ----------------------------------
@@ -194,7 +195,7 @@ namespace TMVA {
 
       // ---------- Foam creation functions
 
-      void Initialize(){};        // initialize the PDEFoam
+      void Initialize() {}        // initialize the PDEFoam
       void FillBinarySearchTree( const Event* ev ); // fill event into BST
       void Create();              // build-up foam
 
@@ -205,7 +206,7 @@ namespace TMVA {
       void ResetCellElements();
 
       // function to call after foam is grown
-      virtual void Finalize(){};
+      virtual void Finalize() {}
 
       // ---------- Getters and Setters
 
@@ -220,10 +221,10 @@ namespace TMVA {
       // coverity[ -tainted_data_return ]
       Int_t    GetTotDim()    const {return fDim;  } // Get total dimension
       TString  GetFoamName()  const {return fName; } // Get name of foam
-      UInt_t   GetNActiveCells()   const {return fNoAct;}; // returns number of active cells
-      UInt_t   GetNInActiveCells() const {return GetNCells()-GetNActiveCells();}; // returns number of not active cells
-      UInt_t   GetNCells()         const {return fNCells;};   // returns number of cells
-      PDEFoamCell* GetRootCell()   const {return fCells[0];}; // get pointer to root cell
+      UInt_t   GetNActiveCells()   const {return fNoAct;} // returns number of active cells
+      UInt_t   GetNInActiveCells() const {return GetNCells()-GetNActiveCells();} // returns number of not active cells
+      UInt_t   GetNCells()         const {return fNCells;}   // returns number of cells
+      PDEFoamCell* GetRootCell()   const {return fCells[0];} // get pointer to root cell
 
       // Getters and Setters for user cut options
       void     SetNmin(UInt_t val)     { fNmin=val;      }
@@ -266,7 +267,7 @@ namespace TMVA {
       // ---------- Foam projection methods
 
       // project foam to two-dimensional histogram
-      virtual TH2D* Project2(Int_t idim1, Int_t idim2, ECellValue cell_value=kValue, 
+      virtual TH2D* Project2(Int_t idim1, Int_t idim2, ECellValue cell_value=kValue,
 			     PDEFoamKernelBase *kernel=NULL, UInt_t nbin=50);
 
       // Project one-dimensional foam to a 1-dim histogram

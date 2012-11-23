@@ -304,7 +304,7 @@ void TMVA::MethodFisher::GetMean( void )
       const Event * ev = GetEvent(ievt);
 
       // sum of weights
-      Double_t weight = GetTWeight(ev);
+      Double_t weight = ev->GetWeight();
       if (DataInfo().IsSignal(ev)) fSumOfWeightsS += weight;
       else                         fSumOfWeightsB += weight;
 
@@ -355,7 +355,7 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
       // read the Training Event into "event"
       const Event* ev = GetEvent(ievt);
 
-      Double_t weight = GetTWeight(ev); // may ignore events with negative weights
+      Double_t weight = ev->GetWeight(); // may ignore events with negative weights
 
       for (Int_t x=0; x<nvar; x++) xval[x] = ev->GetValue( x );
       Int_t k=0;
@@ -365,7 +365,7 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
                Double_t v = ( (xval[x] - (*fMeanMatx)(x, 0))*(xval[y] - (*fMeanMatx)(y, 0)) )*weight;
                sumSig[k] += v;
             }else{
-               Double_t v = ( (xval[x] - (*fMeanMatx)(x, 0))*(xval[y] - (*fMeanMatx)(y, 0)) )*weight;
+               Double_t v = ( (xval[x] - (*fMeanMatx)(x, 1))*(xval[y] - (*fMeanMatx)(y, 1)) )*weight;
                sumBgd[k] += v;
             }
             k++;
@@ -375,7 +375,16 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
    Int_t k=0;
    for (Int_t x=0; x<nvar; x++) {
       for (Int_t y=0; y<nvar; y++) {
-         (*fWith)(x, y) = (sumSig[k] + sumBgd[k])/(fSumOfWeightsS + fSumOfWeightsB);
+         //(*fWith)(x, y) = (sumSig[k] + sumBgd[k])/(fSumOfWeightsS + fSumOfWeightsB);
+         // HHV: I am still convinced that THIS is how it should be (below) However, while
+         // the old version corresponded so nicely with LD, the FIXED version does not, unless
+         // we agree to change LD. For LD, it is not "defined" to my knowledge how the weights
+         // are weighted, while it is clear how the "Within" matrix for Fisher should be calcuated
+         // (i.e. as seen below). In order to agree with the Fisher classifier, one would have to
+         // weigh signal and background such that they correspond to the same number of effective
+         // (weithed) events.
+         // THAT is NOT done currently, but just "event weights" are used. 
+         (*fWith)(x, y) = sumSig[k]/fSumOfWeightsS + sumBgd[k]/fSumOfWeightsB;
          k++;
       }
    }
@@ -448,6 +457,7 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
    }
 
    TMatrixD invCov( *theMat );
+
    if ( TMath::Abs(invCov.Determinant()) < 10E-24 ) {
       Log() << kWARNING << "<GetFisherCoeff> matrix is almost singular with deterninant="
               << TMath::Abs(invCov.Determinant()) 
@@ -475,12 +485,12 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
       for (jvar=0; jvar<GetNvar(); jvar++) {
          Double_t d = (*fMeanMatx)(jvar, 0) - (*fMeanMatx)(jvar, 1);
          (*fFisherCoeff)[ivar] += invCov(ivar, jvar)*d;
-      }    
-    
+      }
       // rescale
       (*fFisherCoeff)[ivar] *= xfact;
    }
-
+   
+   
    // offset correction
    fF0 = 0.0;
    for (ivar=0; ivar<GetNvar(); ivar++){ 

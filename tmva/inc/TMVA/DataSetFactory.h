@@ -102,16 +102,16 @@ namespace TMVA {
    template<class T>
    struct DeleteFunctor_t
    {
-      DeleteFunctor_t& operator()(T* p) {
+      DeleteFunctor_t& operator()(const T* p) {
          delete p;
          return *this;
       }
    };
 
    template<class T>
-   DeleteFunctor_t<T> DeleteFunctor()
+   DeleteFunctor_t<const T> DeleteFunctor()
    {
-      return DeleteFunctor_t<T>();
+      return DeleteFunctor_t<const T>();
    }
 
 
@@ -207,7 +207,7 @@ namespace TMVA {
 
    class DataSetFactory {
 
-      typedef std::vector< Event* >                             EventVector;
+      typedef std::vector<Event* >                             EventVector;
       typedef std::vector< EventVector >                        EventVectorOfClasses;
       typedef std::map<Types::ETreeType, EventVectorOfClasses > EventVectorOfClassesOfTreeType;
       typedef std::map<Types::ETreeType, EventVector >          EventVectorOfTreeType;

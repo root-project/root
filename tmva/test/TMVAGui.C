@@ -179,6 +179,13 @@ void TMVAGui( const char* fName = "TMVA.root" )
                  "Plots background rejection vs signal efficiencies (macro efficiencies.C) [\"ROC\" stands for \"Receiver Operation Characteristics\"]",
                  buttonType, defaultRequiredClassifier );
 
+   title = Form( "(%ib) Classifier 1/(Backgr. Efficiency) vs Signal Efficiency (ROC curve)", ic );
+   ActionButton( cbar,  
+                 title,
+                 Form( ".x efficiencies.C(\"%s\",%d)", fName, 3 ),
+                 "Plots 1/(background eff.)  vs signal efficiencies (macro efficiencies.C) [\"ROC\" stands for \"Receiver Operation Characteristics\"]",
+                 buttonType, defaultRequiredClassifier );
+
    title = Form( "(%i) Parallel Coordinates (requires ROOT-version >= 5.17)", ++ic );
    ActionButton( cbar,  
                  title,
@@ -230,7 +237,7 @@ void TMVAGui( const char* fName = "TMVA.root" )
    title = Form( "(%i) Decision Tree Control Plots (BDT)", ++ic );
    ActionButton( cbar,  
                  title,
-                 Form( ".x BDTControlPlots.C(\"%s\")", fName ),
+                 Form( ".x BDTControlPlots.C+(\"%s\")", fName ),
                  "Plots to monitor boosting and pruning of decision trees (macro BDTControlPlots.C)",
                  buttonType, "BDT" );
    //    ActionButton( cbar,  

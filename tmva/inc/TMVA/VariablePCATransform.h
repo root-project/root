@@ -55,7 +55,7 @@ namespace TMVA {
       virtual ~VariablePCATransform( void );
 
       void   Initialize();
-      Bool_t PrepareTransformation( const std::vector<Event*>& );
+      Bool_t PrepareTransformation (const std::vector<Event*>&);
 
       virtual const Event* Transform(const Event* const, Int_t cls ) const;
       virtual const Event* InverseTransform(const Event* const, Int_t cls ) const;
@@ -71,7 +71,7 @@ namespace TMVA {
 
    private:
 
-      void CalculatePrincipalComponents( const std::vector<Event*>& );
+      void CalculatePrincipalComponents( const std::vector< Event*>& );
       void X2P( std::vector<Float_t>&, const std::vector<Float_t>&, Int_t cls ) const;
       void P2X( std::vector<Float_t>&, const std::vector<Float_t>&, Int_t cls ) const;
 

@@ -459,6 +459,7 @@ void TMVA::MethodBase::ProcessBaseOptions()
       Log() << kFATAL << "<ProcessOptions> Verbosity level type '"
             << fVerbosityLevelString << "' unknown." << Endl;
    }
+   Event::fIgnoreNegWeightsInTraining = fIgnoreNegWeightsInTraining;
 }
 
 //_______________________________________________________________________
@@ -632,6 +633,7 @@ void TMVA::MethodBase::SetTuneParameters(std::map<TString,Double_t> /* tuneParam
 void TMVA::MethodBase::TrainMethod()
 {
    Data()->SetCurrentType(Types::kTraining);
+   Event::fIsTraining = kTRUE; // used to set negative event weights to zero if chosen to do so
 
    // train the MVA method
    if (Help()) PrintHelpMessage();
@@ -639,6 +641,8 @@ void TMVA::MethodBase::TrainMethod()
    // all histograms should be created in the method's subdirectory
    BaseDir()->cd();
 
+   // once calculate all the transformation (e.g. the sequence of Decorr:Gauss:Decorr)
+   //    needed for this classifier 
    GetTransformationHandler().CalcTransformations(Data()->GetEventCollection());
 
    // call training of derived MVA
@@ -831,10 +835,9 @@ void TMVA::MethodBase::AddClassifierOutput( Types::ETreeType type )
 
    clRes->Resize( nEvents );
    for (Int_t ievt=0; ievt<nEvents; ievt++) {
-
-      SetCurrentEvent(ievt);
+      Data()->SetCurrentEvent(ievt);
       clRes->SetValue( GetMvaValue(), ievt );
-
+      
       // print progress
       Int_t modulo = Int_t(nEvents/100);
       if (modulo <= 0 ) modulo = 1;
@@ -1034,7 +1037,7 @@ void TMVA::MethodBase::TestClassification()
    
    // determine cut orientation
    fCutOrientation = (fMeanS > fMeanB) ? kPositive : kNegative;
-   
+
    // fill 2 types of histograms for the various analyses
    // this one is for actual plotting
    
@@ -1110,6 +1113,7 @@ void TMVA::MethodBase::TestClassification()
       }
    }
    
+   // uncomment those (and several others if you want unnormalized output
    gTools().NormHist( mva_s  );
    gTools().NormHist( mva_b  );
    gTools().NormHist( proba_s );
@@ -1296,7 +1300,12 @@ void TMVA::MethodBase::ReadStateFromFile()
          << gTools().Color("lightblue") << tfname << gTools().Color("reset") << Endl;
 
    if (tfname.EndsWith(".xml") ) {
-      void* doc = gTools().xmlengine().ParseFile(tfname); // the default buffer size in TXMLEngine::ParseFile is 100k. Starting with ROOT 5.29 one can set the buffer size, see: http://savannah.cern.ch/bugs/?78864. This might be necessary for large XML files
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,29,0)
+      void* doc = gTools().xmlengine().ParseFile(tfname,1000000); // the default buffer size in TXMLEngine::ParseFile is 100k. Starting with ROOT 5.29 one can set the buffer size, see: http://savannah.cern.ch/bugs/?78864. This might be necessary for large XML files
+#else
+      void* doc = gTools().xmlengine().ParseFile(tfname);
+#endif
+
       void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
       ReadStateFromXML(rootnode);
       gTools().xmlengine().FreeDoc(doc);
@@ -1941,7 +1950,7 @@ void TMVA::MethodBase::WriteEvaluationHistosToFile(Types::ETreeType treetype)
             << "/kMaxAnalysisType" << Endl;
    results->GetStorage()->Write();
    if (treetype==Types::kTesting) {
-      GetTransformationHandler().PlotVariables( GetEventCollection( Types::kTesting ), BaseDir() );
+      GetTransformationHandler().PlotVariables (GetEventCollection( Types::kTesting ), BaseDir() );
    }
 }
 
@@ -2414,6 +2423,7 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
       }
 
       // normalise output distributions
+      // uncomment those (and several others if you want unnormalized output
       gTools().NormHist( mva_s_tr  );
       gTools().NormHist( mva_b_tr  );
 
@@ -3079,10 +3089,19 @@ Double_t TMVA::MethodBase::GetEffForRoot( Double_t theCut )
 //_______________________________________________________________________
 const std::vector<TMVA::Event*>& TMVA::MethodBase::GetEventCollection( Types::ETreeType type) 
 {
+   // returns the event collection (i.e. the dataset) TRANSFORMED using the
+   //   classifiers specific Variable Transformation (e.g. Decorr or Decorr:Gauss:Decorr)
+
+   // if there's no variable transformation for this classifier, just hand back the 
+   //  event collection of the data set
    if (GetTransformationHandler().GetTransformationList().GetEntries() <= 0) {
       return (Data()->GetEventCollection(type));
-   }
-   Int_t idx = Data()->TreeIndex(type);
+   } 
+
+   // otherwise, transform ALL the events and hand back the vector of the pointers to the 
+   // transformed events. If the pointer is already != 0, i.e. the whole thing has been
+   // done before, I don't need to do it again, but just "hand over" the pointer to those events.
+   Int_t idx = Data()->TreeIndex(type);  //index indicating Training,Testing,...  events/datasets
    if (fEventCollections.at(idx) == 0) {
       fEventCollections.at(idx) = &(Data()->GetEventCollection(type));
       fEventCollections.at(idx) = GetTransformationHandler().CalcTransformations(*(fEventCollections.at(idx)),kTRUE);
