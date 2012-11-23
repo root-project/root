@@ -292,6 +292,8 @@ public:
    virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum=0);
    virtual Double_t GetRandom() const;
    virtual void     GetStats(Double_t *stats) const;
+           Double_t GetStdDev(Int_t axis=1) const { return GetRMS(axis); }                  
+           Double_t GetStdDevError(Int_t axis=1) const { return GetRMSError(axis); }
    virtual Double_t GetSumOfWeights() const;
    virtual TArrayD *GetSumw2() {return &fSumw2;}
    virtual const TArrayD *GetSumw2() const {return &fSumw2;}
