@@ -652,8 +652,6 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl)
       sourceLocation = PLoc.getIncludeLoc();
    }
    
-   clang::PresumedLoc includePLoc = sourceManager.getPresumedLoc(sourceLocation);
-   
    // If the location is a macro get the expansion location.
    sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
    
