@@ -903,7 +903,10 @@ void TGWin32::CloseDisplay()
    gPtr2VirtualX = 0;
    gPtr2Interpreter = 0;
    gVirtualX = TGWin32VirtualXProxy::RealObject();
-   gInterpreter = TGWin32InterpreterProxy::RealObject();
+   // Following the change in revision 47611,
+   // gInterpreter is a read-only variable but its value
+   // is overridden by gPtr2Interpreter when it is not null.
+   //   gInterpreter = TGWin32InterpreterProxy::RealObject();
 
    // The lock above does not work, so at least
    // minimize the risk
