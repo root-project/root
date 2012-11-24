@@ -548,84 +548,6 @@ bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name)
    return false;
 }
 
-llvm::StringRef R__GetFileName(const clang::Decl *decl)
-{
-   // It looks like the template specialization decl actually contains _less_ information
-   // on the location of the code than the decl (in case where there is forward declaration,
-   // that is what the specialization points to.
-   //
-   // const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
-   // if (clxx) {
-   //    switch(clxx->getTemplateSpecializationKind()) {
-   //       case clang::TSK_Undeclared:
-   //          // We want the default behavior
-   //          break;
-   //       case clang::TSK_ExplicitInstantiationDeclaration:
-   //       case clang::TSK_ExplicitInstantiationDefinition:
-   //       case clang::TSK_ImplicitInstantiation: {
-   //          // We want the location of the template declaration:
-   //          const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
-   //          if (tmplt_specialization) {
-   //             // return R__GetFileName(const_cast< clang::ClassTemplateSpecializationDecl *>(tmplt_specialization)->getSpecializedTemplate());
-   //          }
-   //          break;
-   //       }
-   //       case clang::TSK_ExplicitSpecialization:
-   //          // We want the default behavior
-   //          break;
-   //       default:
-   //          break;
-   //    } 
-   // }
-
-   clang::SourceLocation sourceLocation = decl->getLocation();
-
-   if (! (sourceLocation.isValid() && sourceLocation.isFileID()) ) {
-      return "invalid";
-   }
-
-   clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
-   clang::PresumedLoc PLoc = sourceManager.getPresumedLoc(sourceLocation);
-   sourceLocation = PLoc.getIncludeLoc();
- 
-   // Let's try to find out what was the first non system header entry point.
-   while (sourceManager.isInSystemHeader(sourceLocation)) {
-      PLoc = sourceManager.getPresumedLoc(sourceLocation);
-      sourceLocation = PLoc.getIncludeLoc();
-   }
-   
-   clang::PresumedLoc includePLoc = sourceManager.getPresumedLoc(sourceLocation);
-   // const clang::NamedDecl *ndecl = llvm::dyn_cast<clang::NamedDecl>(decl);
-   // fprintf(stderr,"For %s we are seeing %s\n",ndecl->getNameAsString().c_str(),includePLoc.getFilename());
-   
-   // If the location is a macro get the expansion location.
-   sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
-   
-   bool invalid;
-   const char *includeLineStart = sourceManager.getCharacterData(sourceLocation, &invalid);
-   if (invalid)
-      return "invalid";
-   char delim = includeLineStart[0];
-   if (delim=='<') delim = '>';
-   ++includeLineStart;
-   
-   const char *includeLineEnd = includeLineStart;
-   while ( *includeLineEnd != delim && *includeLineEnd != '\n' && *includeLineEnd != '\r' ) {
-      ++includeLineEnd;
-   }
-   llvm::StringRef includeLine(includeLineStart, includeLineEnd - includeLineStart); // This does *not* include the character at includeLineEnd.
-   // fprintf(stderr,"For %s we are seeing %s (%c)\n",ndecl->getNameAsString().c_str(),includeLine.str().c_str(),delim);
-   return includeLine;
-
-   // if (sourceLocation.isValid() && sourceLocation.isFileID()) {
-   //    clang::PresumedLoc PLoc = sourceManager.getPresumedLoc(sourceLocation);
-   //    return PLoc.getFilename();
-   // }
-   // else {
-   //    return "invalid";
-   // }
-}
-
 long R__GetLineNumber(const clang::Decl *decl)
 {
    // It looks like the template specialization decl actually contains _less_ information
@@ -1384,7 +1306,7 @@ bool CheckInputOperator(const char *what, const char *proto, const string &fulln
    }
    bool has_input_error = false;
    if (method != 0 && (method->getAccess() == clang::AS_public || method->getAccess() == clang::AS_none) ) {
-      std::string filename = R__GetFileName(method);
+      std::string filename = ROOT::TMetaUtils::GetFileName(method);
       if (strstr(filename.c_str(),"TBuffer.h")!=0 ||
           strstr(filename.c_str(),"Rtypes.h" )!=0) {
 
@@ -2929,7 +2851,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input, const cling::
 //      delete [] funcname;
 
       if (methodinfo &&
-          R__GetFileName(methodinfo).find("Rtypes.h") == llvm::StringRef::npos) {
+          ROOT::TMetaUtils::GetFileName(methodinfo).find("Rtypes.h") == llvm::StringRef::npos) {
 
          // GetClassVersion was defined in the header file.
          //fprintf(fp, "GetClassVersion((%s *)0x0), ",classname.c_str());
@@ -2940,7 +2862,7 @@ void WriteClassInit(const RScanner::AnnotatedRecordDecl &cl_input, const cling::
       //fprintf(stderr,"DEBUG: %s has value %d\n",classname.c_str(),(int)G__int(G__calc(temporary)));
    }
 
-   std::string filename = R__GetFileName(cl_input);
+   std::string filename = ROOT::TMetaUtils::GetFileName(cl_input);
    if (filename.length() > 0) {
       for (unsigned int i=0; i<filename.length(); i++) {
          if (filename[i]=='\\') filename[i]='/';
@@ -3144,7 +3066,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl)
       (*dictSrcOut) << "0 /*version*/, ";
    }
 
-   std::string filename = R__GetFileName(cl);
+   std::string filename = ROOT::TMetaUtils::GetFileName(cl);
    for (unsigned int i=0; i<filename.length(); i++) {
       if (filename[i]=='\\') filename[i]='/';
    }
@@ -3738,7 +3660,7 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl, const cling::Inte
 
    string a;
    string clName;
-   TMetaUtils::GetCppName(clName, R__GetFileName(cl.GetRecordDecl()).str().c_str());
+   TMetaUtils::GetCppName(clName, ROOT::TMetaUtils::GetFileName(cl.GetRecordDecl()).str().c_str());
    int version = GetClassVersion(cl.GetRecordDecl());
    if (version == 0) return;
    if (version < 0 && !(cl.RequestStreamerInfo()) ) return;

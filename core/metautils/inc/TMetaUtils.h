@@ -60,6 +60,9 @@ namespace ROOT {
       // Return the ROOT include directory
       std::string GetROOTIncludeDir(bool rootbuild);
 
+      // Return the header file to be included to declare the Decl
+      llvm::StringRef GetFileName(const clang::Decl *decl);
+
       // Return the dictionary file name for a module
       std::string GetModuleFileName(const char* moduleName);
 

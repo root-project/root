@@ -604,6 +604,75 @@ clang::NestedNameSpecifier* CreateNestedNameSpecifier(const clang::ASTContext& C
 }
 
 //////////////////////////////////////////////////////////////////////////
+llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl)
+{
+   // Return the header file to be included to declare the Decl.
+
+   // It looks like the template specialization decl actually contains _less_ information
+   // on the location of the code than the decl (in case where there is forward declaration,
+   // that is what the specialization points to.
+   //
+   // const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
+   // if (clxx) {
+   //    switch(clxx->getTemplateSpecializationKind()) {
+   //       case clang::TSK_Undeclared:
+   //          // We want the default behavior
+   //          break;
+   //       case clang::TSK_ExplicitInstantiationDeclaration:
+   //       case clang::TSK_ExplicitInstantiationDefinition:
+   //       case clang::TSK_ImplicitInstantiation: {
+   //          // We want the location of the template declaration:
+   //          const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
+   //          if (tmplt_specialization) {
+   //             // return R__GetFileName(const_cast< clang::ClassTemplateSpecializationDecl *>(tmplt_specialization)->getSpecializedTemplate());
+   //          }
+   //          break;
+   //       }
+   //       case clang::TSK_ExplicitSpecialization:
+   //          // We want the default behavior
+   //          break;
+   //       default:
+   //          break;
+   //    } 
+   // }
+
+   clang::SourceLocation sourceLocation = decl->getLocation();
+
+   if (! (sourceLocation.isValid() && sourceLocation.isFileID()) ) {
+      return "invalid";
+   }
+
+   clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
+   clang::PresumedLoc PLoc = sourceManager.getPresumedLoc(sourceLocation);
+   sourceLocation = PLoc.getIncludeLoc();
+ 
+   // Let's try to find out what was the first non system header entry point.
+   while (sourceManager.isInSystemHeader(sourceLocation)) {
+      PLoc = sourceManager.getPresumedLoc(sourceLocation);
+      sourceLocation = PLoc.getIncludeLoc();
+   }
+   
+   clang::PresumedLoc includePLoc = sourceManager.getPresumedLoc(sourceLocation);
+   
+   // If the location is a macro get the expansion location.
+   sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
+   
+   bool invalid;
+   const char *includeLineStart = sourceManager.getCharacterData(sourceLocation, &invalid);
+   if (invalid)
+      return "invalid";
+   char delim = includeLineStart[0];
+   if (delim=='<') delim = '>';
+   ++includeLineStart;
+   
+   const char *includeLineEnd = includeLineStart;
+   while ( *includeLineEnd != delim && *includeLineEnd != '\n' && *includeLineEnd != '\r' ) {
+      ++includeLineEnd;
+   }
+   return llvm::StringRef(includeLineStart, includeLineEnd - includeLineStart); // This does *not* include the character at includeLineEnd.
+}
+
+//////////////////////////////////////////////////////////////////////////
 clang::QualType ROOT::TMetaUtils::GetFullyQualifiedType(const clang::QualType &qtype,
                                                         const cling::Interpreter &interpreter)
 {
