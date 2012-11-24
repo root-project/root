@@ -444,12 +444,9 @@ static void R__GetCurrentDirectory(std::string &output)
 //______________________________________________________________________________
 static std::string R__GetRelocatableHeaderName(const char *header, const std::string &currentDirectory) 
 {
-   // Convert to path relative to $PWD.
+   // Convert to path relative to $PWD
    // If that's not what the caller wants, she should pass -I to rootcint and a
    // different relative path to the header files.
-#ifdef ROOTBUILD
-         // For ROOT, convert module directories like core/base/inc/ to include/
-#endif
 
    std::string result( header );
 
@@ -579,17 +576,54 @@ llvm::StringRef R__GetFileName(const clang::Decl *decl)
    //       default:
    //          break;
    //    } 
-   // }   
-   clang::SourceLocation sourceLocation = decl->getLocation();
-   clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
+   // }
 
-   if (sourceLocation.isValid() && sourceLocation.isFileID()) {
-      clang::PresumedLoc PLoc = sourceManager.getPresumedLoc(sourceLocation);
-      return PLoc.getFilename();
-   }
-   else {
+   clang::SourceLocation sourceLocation = decl->getLocation();
+
+   if (! (sourceLocation.isValid() && sourceLocation.isFileID()) ) {
       return "invalid";
    }
+
+   clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
+   clang::PresumedLoc PLoc = sourceManager.getPresumedLoc(sourceLocation);
+   sourceLocation = PLoc.getIncludeLoc();
+ 
+   // Let's try to find out what was the first non system header entry point.
+   while (sourceManager.isInSystemHeader(sourceLocation)) {
+      PLoc = sourceManager.getPresumedLoc(sourceLocation);
+      sourceLocation = PLoc.getIncludeLoc();
+   }
+   
+   clang::PresumedLoc includePLoc = sourceManager.getPresumedLoc(sourceLocation);
+   // const clang::NamedDecl *ndecl = llvm::dyn_cast<clang::NamedDecl>(decl);
+   // fprintf(stderr,"For %s we are seeing %s\n",ndecl->getNameAsString().c_str(),includePLoc.getFilename());
+   
+   // If the location is a macro get the expansion location.
+   sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
+   
+   bool invalid;
+   const char *includeLineStart = sourceManager.getCharacterData(sourceLocation, &invalid);
+   if (invalid)
+      return "invalid";
+   char delim = includeLineStart[0];
+   if (delim=='<') delim = '>';
+   ++includeLineStart;
+   
+   const char *includeLineEnd = includeLineStart;
+   while ( *includeLineEnd != delim && *includeLineEnd != '\n' && *includeLineEnd != '\r' ) {
+      ++includeLineEnd;
+   }
+   llvm::StringRef includeLine(includeLineStart, includeLineEnd - includeLineStart); // This does *not* include the character at includeLineEnd.
+   // fprintf(stderr,"For %s we are seeing %s (%c)\n",ndecl->getNameAsString().c_str(),includeLine.str().c_str(),delim);
+   return includeLine;
+
+   // if (sourceLocation.isValid() && sourceLocation.isFileID()) {
+   //    clang::PresumedLoc PLoc = sourceManager.getPresumedLoc(sourceLocation);
+   //    return PLoc.getFilename();
+   // }
+   // else {
+   //    return "invalid";
+   // }
 }
 
 long R__GetLineNumber(const clang::Decl *decl)
@@ -4550,9 +4584,9 @@ int main(int argc, char **argv)
                              gResourceDir.c_str());
    interp.declare("namespace std {} using namespace std;");
 #ifdef ROOTBUILD
-   interp.declare("#include \"include/Rtypes.h\"");
-   interp.declare("#include \"include/TClingRuntime.h\"");
-   interp.declare("#include \"include/TObject.h\"");
+   interp.declare("#include \"Rtypes.h\"");
+   interp.declare("#include \"TClingRuntime.h\"");
+   interp.declare("#include \"TObject.h\"");
 #else
 # ifndef ROOTINCDIR
    interp.declare("#include \"Rtypes.h\"");
@@ -4665,17 +4699,27 @@ int main(int argc, char **argv)
       }
       if (strcmp("-pipe", argv[ic])!=0) {
          // filter out undesirable options
-         string argkeep;
-            // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
-         StrcpyArg(argkeep, argv[i]);
          
          if (*argv[i] != '-' && *argv[i] != '+') {
             // Looks like a file
+
+            bool isSelectionFile = R__IsSelectionFile(argv[i]);
+
+            string argkeep;
+            // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
+            if (!isSelectionFile) StrcpyArg(argkeep, argv[i]);
+            std::string header( isSelectionFile ? argv[i] : R__GetRelocatableHeaderName( argv[i], currentDirectory ) );
+            
+            // We are 'normalizing' the file in two different way.  StrcpyArg (from rootcint)
+            // strip just the ROOTBUILD part (i.e. $PWD/package/module/inc) while
+            // R__GetRelocatableHeaderName also $PWD.
+            // R__GetRelocatableHeaderName is likely to be too aggressive and the 
+            // ROOTBUILD part should really be removed by changing the ROOT makefile
+            // to pass -I and path relative to the include path.
             if (cling::Interpreter::kSuccess 
-                == interp.declare(std::string("#include \"") + argv[i] + "\"")) {
-               interpPragmaSource += std::string("#include \"") + argv[i] + "\"\n";
-               std::string header( R__GetRelocatableHeaderName( argv[i], currentDirectory ) );
-               if (!R__IsSelectionFile(argv[i])) 
+                == interp.declare(std::string("#include \"") + header + "\"")) {
+               interpPragmaSource += std::string("#include \"") + header + "\"\n";
+               if (!isSelectionFile) 
                   includeForSource += std::string("#include \"") + header + "\"\n";
                pcmArgs.push_back(header);
             } else {
