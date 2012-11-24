@@ -295,7 +295,7 @@ public:
    virtual const char *TypedefInfo_Name(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual const char *TypedefInfo_Title(TypedefInfo_t * /* tinfo */) const {return 0;}
 
-   static TInterpreter  *&Instance();
+   static TInterpreter *Instance();
 
    ClassDef(TInterpreter,0)  //ABC defining interface to generic interpreter
 };

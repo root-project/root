@@ -20,8 +20,12 @@
 
 #include "TInterpreter.h"
 
+#include "TROOT.h"
+#include "TError.h"
+
 TInterpreter*   (*gPtr2Interpreter)() = 0; // returns pointer to global object
 TInterpreter*   gCint = 0; // returns pointer to global TCint object
+static TInterpreter *gInterpreterLocal = 0; // The real holder of the pointer.
 
 ClassImp(TInterpreter)
 
@@ -31,16 +35,21 @@ TInterpreter::TInterpreter(const char *name, const char *title)
 {
    // TInterpreter ctor only called by derived classes.
 
-   gInterpreter = this;
-   gCint        = this;
+   gInterpreterLocal = this;
+   gCint             = this;
 }
 
 //______________________________________________________________________________
-TInterpreter *&TInterpreter::Instance()
+TInterpreter *TInterpreter::Instance()
 {
    // returns gInterpreter global
 
-   static TInterpreter *instance = 0;
-   if (gPtr2Interpreter) instance = gPtr2Interpreter();
-   return instance;
+   if (gInterpreterLocal == 0) {
+      static TROOT *getROOT = ROOT::GetROOT(); // Make sure gInterpreterLocal is set
+      if (!getROOT) {
+         ::Fatal("TInterpreter::Instance","TROOT object is required before accessing a TInterpreter");
+      }
+   }
+   if (gPtr2Interpreter) return gPtr2Interpreter();
+   return gInterpreterLocal;
 }
