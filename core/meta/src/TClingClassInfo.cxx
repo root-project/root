@@ -717,8 +717,9 @@ const char *TClingClassInfo::FileName() const
    if (!IsValid()) {
       return 0;
    }
-   // FIXME: Implement this when rootcling provides the information.
-   return 0;
+   static std::string buf;
+   buf = ROOT::TMetaUtils::GetFileName(GetDecl());
+   return buf.c_str();
 }
 
 const char *TClingClassInfo::FullName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
