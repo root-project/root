@@ -21,7 +21,6 @@ withspace.test:
 	@(cd "with space"; $(TESTTIMEPRE) $(MAKE) "CURRENTDIR=withspace" --no-print-directory $(TESTGOAL) $(TESTTIMEPOST); \
      result=$$?; \
      if [ $$result -ne 0 ] ; then \
-	       set -x ; \
          len=`echo Tests in $(CALLDIR)/withspace | wc -c `;end=`expr 68 - $$len`;printf 'Test in withspace %*.*s ' $$end $$end $(DOTS); \
 	      printf 'FAIL\n' ; \
          false ; \
