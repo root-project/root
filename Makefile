@@ -17,7 +17,7 @@ CLING_TESTS := $(patsubst %,%.test,$(CLING_SUBDIR) )
 #%.test:
 #	$(CMDECHO) cd $* && make test
 
-root/aclic/withspace.test:
+root/aclic/withspace.test: utils
 	@(echo Running test in $(CALLDIR)/withspace)
 	@(cd "root/aclic/with space"; $(TESTTIMEPRE) $(MAKE) "CURRENTDIR=withspace" --no-print-directory $(TESTGOAL) $(TESTTIMEPOST); \
      result=$$?; \

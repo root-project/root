@@ -16,7 +16,7 @@ ifneq ($(TIME),)
    TESTTIMEACTION_WS = else if [ -f $(TESTTIMINGFILE) ]; then printf " %8s\n" "[`cat $(TESTTIMINGFILE)`ms]" && root.exe -q -b -l -n '$(ROOTTEST_HOME)/scripts/recordtiming.cc+("$(ROOTTEST_HOME)",$(ROOTTEST_RUNID),$(ROOTTEST_TESTID),"$(PWD)/with space","$(TESTTIMINGFILE)")' > /dev/null && rm -f $(TESTTIMINGFILE); fi
 endif
 
-withspace.test:
+withspace.test: utils
 	@(echo Running test in $(CALLDIR)/withspace)
 	@(cd "with space"; $(TESTTIMEPRE) $(MAKE) "CURRENTDIR=withspace" --no-print-directory $(TESTGOAL) $(TESTTIMEPOST); \
      result=$$?; \
