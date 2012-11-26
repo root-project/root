@@ -192,6 +192,8 @@
 
 #if defined(R__WIN32)
 #include "cygpath.h"
+#else
+#include <unistd.h>
 #endif
 
 #ifdef ROOTBUILD
