@@ -129,6 +129,12 @@ $(LLVMDEPO): $(LLVMDEPS)
 			LLVMCXX="aCC"; \
 			LLVM_CFLAGS="+DD64 -Ae"; \
 		fi; \
+		if [ $(CXX11) = "yes" ]; then \
+			LLVMCXX11="--enable-cxx11"; \
+		fi; \
+		if [ $(LIBCXX11) = "yes" ]; then \
+			LLVMLIBCXX11="--enable-libcpp"; \
+		fi; \
 		echo "*** Configuring LLVM in $(dir $@) ..."; \
 		mkdir -p $(dir $@) && \
 		cd $(dir $@)  && \
@@ -137,6 +143,8 @@ $(LLVMDEPO): $(LLVMDEPS)
 		--prefix=$(ROOT_OBJDIR)/$(LLVMDIRI) \
 		--disable-docs --disable-bindings \
 		--disable-visibility-inlines-hidden \
+		$(LLVMCXX11) \
+		$(LLVMLIBCXX11) \
 		$(LLVMOPTFLAGS) \
 		--enable-targets=host \
 		CC=$$LLVMCC CXX=$$LLVMCXX \

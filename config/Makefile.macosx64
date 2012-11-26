@@ -40,6 +40,10 @@ CC            = clang
 ifeq ($(CXX11),yes)
 CXX11FLAGS    = -std=c++11
 endif
+ifeq ($(LIBCXX11),yes)
+CXX11FLAGS   += -stdlib=libc++
+CXX11LDFLAGS  = -stdlib=libc++
+endif
 else
 CXX           = g++
 CC            = gcc
@@ -67,7 +71,7 @@ LD            = clang++
 else
 LD            = g++
 endif
-LDFLAGS       = $(OPT) -m64 -mmacosx-version-min=$(MACOSXVERS)
+LDFLAGS       = $(OPT) -m64 -mmacosx-version-min=$(MACOSXVERS) $(CXX11LDFLAGS)
 
 FORCELINK     = yes
 NEEDFINK      = yes

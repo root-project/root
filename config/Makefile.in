@@ -61,6 +61,7 @@ XFTLIB         := @enable_xft@
 BUILDCOCOA     := @buildcocoa@
 
 CXX11          := @c++11@
+LIBCXX11       := @libc++11@
 
 EXPLICITLINK   := @explicitlink@
 
