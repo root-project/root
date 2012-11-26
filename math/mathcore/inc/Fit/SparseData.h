@@ -17,9 +17,10 @@
 
 #ifndef ROOT_Fit_DataVector
 #include "Fit/DataVector.h"
+#endif
+#ifndef ROOT_Fit_BinData
 #include "Fit/BinData.h"
 #endif
-
 
 namespace ROOT { 
 
