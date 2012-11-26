@@ -750,38 +750,11 @@ const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const clang::Type**
    return result;
 }
 
-const clang::Type *R__GetUnderlyingType(clang::QualType type)
-{
-   // Return the base/underlying type of a chain of array or pointers type.
-   // Does not yet support the array and pointer part being intermixed.
-   
-   const clang::Type *rawtype = type.getTypePtr();
-
-   // NOTE: We probably meant isa<clang::ElaboratedType>
-   if (rawtype->isElaboratedTypeSpecifier() ) {
-      rawtype = rawtype->getCanonicalTypeInternal().getTypePtr();
-   }
-   if (rawtype->isArrayType()) {
-      rawtype = type.getTypePtr()->getBaseElementTypeUnsafe ();
-   }   
-   if (rawtype->isPointerType() || rawtype->isReferenceType() ) {
-      //Get to the 'raw' type.
-      clang::QualType pointee;
-      while ( (pointee = rawtype->getPointeeType()) , pointee.getTypePtrOrNull() && pointee.getTypePtr() != rawtype)
-      {
-         rawtype = pointee.getTypePtr();
-      }
-   }
-   if (rawtype->isArrayType()) {
-      rawtype = type.getTypePtr()->getBaseElementTypeUnsafe ();
-   }
-   return rawtype;
-}
 
 
 clang::RecordDecl *R__GetUnderlyingRecordDecl(clang::QualType type)
 {
-   const clang::Type *rawtype = R__GetUnderlyingType(type);
+   const clang::Type *rawtype = ROOT::TMetaUtils::GetUnderlyingType(type);
 
    if (rawtype->isFundamentalType() || rawtype->isEnumeralType()) {
       // not an ojbect.
@@ -2122,7 +2095,7 @@ int ElementStreamer(const clang::NamedDecl &forcontext, const clang::QualType &q
    
    string objType(ShortTypeName(tiName.c_str()));
 
-   const clang::Type *rawtype = R__GetUnderlyingType(clang::QualType(&ti,0));
+   const clang::Type *rawtype = ROOT::TMetaUtils::GetUnderlyingType(clang::QualType(&ti,0));
    string rawname;
    R__GetQualifiedName(rawname, clang::QualType(rawtype,0), forcontext);
    
@@ -2288,7 +2261,7 @@ int STLContainerStreamer(const clang::FieldDecl &m, int rwmode, const cling::Int
    if (stltype!=0) {
       //        fprintf(stderr,"Add %s (%d) which is also %s\n",
       //                m.Type()->Name(), stltype, m.Type()->TrueName() );
-      clang::QualType utype(R__GetUnderlyingType(m.getType()),0);      
+      clang::QualType utype(ROOT::TMetaUtils::GetUnderlyingType(m.getType()),0);      
       RStl::Instance().GenerateTClassFor(utype,interp,normCtxt);
    }
    if (stltype<=0) return 0;
@@ -3326,7 +3299,7 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl, const cling::Interpr
          clang::QualType type = field_iter->getType();
          std::string type_name = type.getAsString(clxx->getASTContext().getPrintingPolicy());
 
-         const clang::Type *underling_type = R__GetUnderlyingType(type);
+         const clang::Type *underling_type = ROOT::TMetaUtils::GetUnderlyingType(type);
          
          // we skip:
          //  - static members
@@ -3535,7 +3508,7 @@ void WriteStreamer(const RScanner::AnnotatedRecordDecl &cl, const cling::Interpr
                         (*dictSrcOut) << "      //R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);";
                      }
                   } else {
-                     if (R__GetQualifiedName(*R__GetUnderlyingType(field_iter->getType()),**field_iter) == "TClonesArray") {
+                     if (R__GetQualifiedName(*ROOT::TMetaUtils::GetUnderlyingType(field_iter->getType()),**field_iter) == "TClonesArray") {
                         (*dictSrcOut) << "      " << field_iter->getName().str() << "->Streamer(R__b);" << std::endl;
                      } else {
                         if (i == 0) {
@@ -3704,7 +3677,7 @@ void WritePointersSTL(const RScanner::AnnotatedRecordDecl &cl, const cling::Inte
       if (k!=0) {
          //          fprintf(stderr,"Add %s which is also",m.Type()->Name());
          //          fprintf(stderr," %s\n",R__TrueName(**field_iter) );
-         clang::QualType utype(R__GetUnderlyingType(field_iter->getType()),0);
+         clang::QualType utype(ROOT::TMetaUtils::GetUnderlyingType(field_iter->getType()),0);
          RStl::Instance().GenerateTClassFor(utype, interp, normCtxt);
       }      
    }

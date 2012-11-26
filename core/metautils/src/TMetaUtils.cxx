@@ -984,6 +984,43 @@ llvm::StringRef ROOT::TMetaUtils::GetClassComment(const clang::CXXRecordDecl &de
 }
 
 //////////////////////////////////////////////////////////////////////////
+const clang::Type *ROOT::TMetaUtils::GetUnderlyingType(clang::QualType type)
+{
+   // Return the base/underlying type of a chain of array or pointers type.
+   // Does not yet support the array and pointer part being intermixed.
+   
+   const clang::Type *rawtype = type.getTypePtr();
+
+   // NOTE: We probably meant isa<clang::ElaboratedType>
+   if (rawtype->isElaboratedTypeSpecifier() ) {
+      rawtype = rawtype->getCanonicalTypeInternal().getTypePtr();
+   }
+   if (rawtype->isArrayType()) {
+      rawtype = type.getTypePtr()->getBaseElementTypeUnsafe ();
+   }   
+   if (rawtype->isPointerType() || rawtype->isReferenceType() ) {
+      //Get to the 'raw' type.
+      clang::QualType pointee;
+      while ( (pointee = rawtype->getPointeeType()) , pointee.getTypePtrOrNull() && pointee.getTypePtr() != rawtype)
+      {
+         rawtype = pointee.getTypePtr();
+
+         if (rawtype->isElaboratedTypeSpecifier() ) {
+            rawtype = rawtype->getCanonicalTypeInternal().getTypePtr();
+         }
+         if (rawtype->isArrayType()) {
+            rawtype = type.getTypePtr()->getBaseElementTypeUnsafe ();
+         }
+      }
+   }
+   if (rawtype->isArrayType()) {
+      rawtype = type.getTypePtr()->getBaseElementTypeUnsafe ();
+   }
+   return rawtype;
+}
+
+//////////////////////////////////////////////////////////////////////////
+static
 clang::NestedNameSpecifier* 
 ReSubstTemplateArgNNS(const clang::ASTContext &Ctxt, 
                       clang::NestedNameSpecifier *scope, 

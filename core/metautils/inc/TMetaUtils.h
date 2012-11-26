@@ -119,7 +119,10 @@ namespace ROOT {
       // ClassDef(MyClass, 1) // class comment
       //
       llvm::StringRef GetClassComment(const clang::CXXRecordDecl &decl, clang::SourceLocation *loc, const cling::Interpreter &interpreter);
-      
+
+      // Return the base/underlying type of a chain of array or pointers type.
+      const clang::Type *GetUnderlyingType(clang::QualType type);
+
       // Scans the redeclaration chain for a definition of the redeclarable which
       // is annotated.
       //
