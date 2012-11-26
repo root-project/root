@@ -18,8 +18,8 @@ GEOCADDS     := $(call stripsrc,$(MODDIRS)/G__GeoCad.cxx)
 GEOCADDO     := $(GEOCADDS:.cxx=.o)
 GEOCADDH     := $(GEOCADDS:.cxx=.h)
 
-GEOCADH1     := RootOCC.h OCCStep.h
-GEOCADH2     := TRootStep.h
+GEOCADH1     := TGeoToOCC.h TOCCToStep.h
+GEOCADH2     := TGeoToStep.h
 GEOCADH1     := $(patsubst %,$(MODDIRI)/%,$(GEOCADH1))
 GEOCADH2     := $(patsubst %,$(MODDIRI)/%,$(GEOCADH2))
 GEOCADH      := $(GEOCADH1) $(GEOCADH2)

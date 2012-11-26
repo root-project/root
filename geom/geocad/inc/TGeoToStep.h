@@ -9,30 +9,30 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TRootStep
-#define ROOT_TRootStep
+#ifndef ROOT_TGeoToStep
+#define ROOT_TGeoToStep
 
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
 
 class TGeoManager;
-class OCCStep;
+class TOCCToStep;
 
 
-class TRootStep: public TObject {
+class TGeoToStep: public TObject {
 
 protected:
    TGeoManager *fGeometry; //ROOT geometry pointer
-   OCCStep *fCreate;       //OCC geometry build based on Root one
+   TOCCToStep *fCreate;       //OCC geometry build based on Root one
 
 public:
-   TRootStep(); 
-   TRootStep(TGeoManager *geom);
-   ~TRootStep();
+   TGeoToStep(); 
+   TGeoToStep(TGeoManager *geom);
+   ~TGeoToStep();
    void *CreateGeometry();
 
-   ClassDef(TRootStep,0)
+   ClassDef(TGeoToStep,0)
 };
 
 #endif

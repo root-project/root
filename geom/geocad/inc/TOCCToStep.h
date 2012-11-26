@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
  
-#ifndef ROOT_OCCStep
-#define ROOT_OCCStep
+#ifndef ROOT_TOCCToStep
+#define ROOT_TOCCToStep
 
 #ifndef ROOT_TGeoNode
 #include "TGeoNode.h"
@@ -18,8 +18,8 @@
 #ifndef ROOT_TGeoMatrix
 #include "TGeoMatrix.h"
 #endif
-#ifndef ROOT_RootOCC
-#include "RootOCC.h"
+#ifndef ROOT_TGeoToOCC
+#include "TGeoToOCC.h"
 #endif
 
 #include <TDF_Label.hxx>
@@ -30,7 +30,7 @@
 #include <TopoDS_Shape.hxx>
 
 
-class OCCStep {
+class TOCCToStep {
 
 private:
    typedef std::map <TGeoVolume *, TDF_Label> LabelMap_t;
@@ -39,7 +39,7 @@ private:
    Handle(TDocStd_Document) fDoc;    //the step document element
    LabelMap_t               fTree;   //tree of Label's volumes
    TDF_Label                fLabel;  //label of the OCC shape elemet
-   RootOCC                  fRootShape;
+   TGeoToOCC                  fRootShape;
    TopoDS_Shape             fShape;  //OCC shape (translated root shape)
 
    void            OCCDocCreation();
@@ -50,7 +50,7 @@ private:
    TopLoc_Location CalcLocation(TGeoHMatrix matrix);
 
 public:
-   OCCStep();
+   TOCCToStep();
    void      PrintAssembly();
    TDF_Label OCCShapeCreation(TGeoManager *m);
    void      OCCTreeCreation(TGeoManager *m);

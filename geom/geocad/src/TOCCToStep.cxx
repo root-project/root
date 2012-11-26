@@ -10,7 +10,7 @@
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
-// OCCStep Class                                                        //
+// TOCCToStep Class                                                     //
 //                                                                      //
 // This class contains implementation of writing OpenCascade's          //
 // geometry shapes to the STEP file reproducing the originary ROOT      //
@@ -27,8 +27,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "OCCStep.h"
-#include "RootOCC.h"
+#include "TOCCToStep.h"
+#include "TGeoToOCC.h"
 
 #include "TGeoVolume.h"
 #include "TString.h"
@@ -48,24 +48,24 @@ using namespace std;
 
 
 //______________________________________________________________________________
-OCCStep::OCCStep() 
+TOCCToStep::TOCCToStep() 
 {
    OCCDocCreation();
 }
 
 //______________________________________________________________________________
-void OCCStep::OCCDocCreation()
+void TOCCToStep::OCCDocCreation()
 {
    Handle (XCAFApp_Application)A = XCAFApp_Application::GetApplication();
    if (!A.IsNull()) {
       A->NewDocument ("MDTV-XCAF", fDoc);
    }
    else
-      ::Error("OCCStep::OCCDocCreation", "creating OCC application");
+      ::Error("TOCCToStep::OCCDocCreation", "creating OCC application");
 }
 
 //______________________________________________________________________________
-TDF_Label OCCStep::OCCShapeCreation(TGeoManager *m)
+TDF_Label TOCCToStep::OCCShapeCreation(TGeoManager *m)
 {
    // Logical fTree creation.
 
@@ -73,13 +73,11 @@ TDF_Label OCCStep::OCCShapeCreation(TGeoManager *m)
    TGeoVolume * currentVolume;
    TGeoVolume * motherVol;
    TGeoVolume * Top;
-   TString type;
    TString path;
    Int_t num = 0;
    Int_t level = 0;
    TIter next(m->GetListOfVolumes());
    fLabel = XCAFDoc_DocumentTool::ShapeTool(fDoc->Main())->NewShape();
-   type = m->GetTopVolume()->GetShape()->IsA()->GetName();
    fShape = fRootShape.OCC_SimpleShape(m->GetTopVolume()->GetShape());
    XCAFDoc_DocumentTool::ShapeTool(fDoc->Main())->SetShape(fLabel, fShape);
    TDataStd_Name::Set(fLabel, m->GetTopVolume()->GetName());
@@ -88,10 +86,9 @@ TDF_Label OCCStep::OCCShapeCreation(TGeoManager *m)
    fTree[Top] = fLabel;
    while ((currentVolume = (TGeoVolume *)next())) {
       if (GetLabelOfVolume(currentVolume).IsNull()) {
-         type = currentVolume->GetShape()->IsA()->GetName();
          num = currentVolume->GetNdaughters();
          if ((GetLabelOfVolume(currentVolume).IsNull())) {
-            if (type == "TGeoCompositeShape") {
+            if (currentVolume->GetShape()->IsA()==TGeoCompositeShape::Class()) {
                fShape = fRootShape.OCC_CompositeShape((TGeoCompositeShape*)currentVolume->GetShape(), TGeoIdentity());
             } else {
                fShape = fRootShape.OCC_SimpleShape(currentVolume->GetShape());
@@ -116,9 +113,8 @@ TDF_Label OCCStep::OCCShapeCreation(TGeoManager *m)
                } else {
                   TGeoNode * grandMother = nextNode.GetNode(level);
                   motherVol = grandMother->GetVolume();
-                  TString type2 = motherVol->GetShape()->IsA()->GetName();
                   TopoDS_Shape Mothershape;
-                  if (type2 == "TGeoCompositeShape") {
+                  if (motherVol->GetShape()->IsA()==TGeoCompositeShape::Class()) {
                      Mothershape = fRootShape.OCC_CompositeShape((TGeoCompositeShape*)motherVol->GetShape(), TGeoIdentity());
                   } else {
                      Mothershape = fRootShape.OCC_SimpleShape(motherVol->GetShape());
@@ -143,21 +139,21 @@ TDF_Label OCCStep::OCCShapeCreation(TGeoManager *m)
 }
 
 //______________________________________________________________________________
-void OCCStep::OCCWriteStep(const char *fname)
+void TOCCToStep::OCCWriteStep(const char *fname)
 {
    STEPControl_StepModelType mode = STEPControl_AsIs;
    fWriter.SetNameMode(Standard_True);
    if (!Interface_Static::SetIVal("write.step.assembly", 1)) { //assembly mode
-      Error("OCCStep::OCCWriteStep", "failed to set assembly mode for step data");
+      Error("TOCCToStep::OCCWriteStep", "failed to set assembly mode for step data");
    }
    if (!fWriter.Transfer(fDoc, mode)) {
-      ::Error("OCCStep::OCCWriteStep", "error translating document");
+      ::Error("TOCCToStep::OCCWriteStep", "error translating document");
    }
    IFSelect_ReturnStatus stat = fWriter.Write(fname);
 }
 
 //______________________________________________________________________________
-TDF_Label OCCStep::GetLabelOfVolume(TGeoVolume * v)
+TDF_Label TOCCToStep::GetLabelOfVolume(TGeoVolume * v)
 {
    TDF_Label null;
    if (fTree.find(v) != fTree.end())
@@ -167,7 +163,7 @@ TDF_Label OCCStep::GetLabelOfVolume(TGeoVolume * v)
 }
 
 //______________________________________________________________________________
-TGeoVolume * OCCStep::GetVolumeOfLabel(TDF_Label fLabel)
+TGeoVolume * TOCCToStep::GetVolumeOfLabel(TDF_Label fLabel)
 {
    map <TGeoVolume *,TDF_Label>::iterator it;
    for(it = fTree.begin(); it != fTree.end(); it++) 
@@ -176,14 +172,14 @@ TGeoVolume * OCCStep::GetVolumeOfLabel(TDF_Label fLabel)
 }
 
 //______________________________________________________________________________
-void OCCStep::AddChildLabel(TDF_Label mother, TDF_Label child, TopLoc_Location loc)
+void TOCCToStep::AddChildLabel(TDF_Label mother, TDF_Label child, TopLoc_Location loc)
 {
    TDF_Label newL=XCAFDoc_DocumentTool::ShapeTool(mother)->AddComponent(mother, child,loc);
    XCAFDoc_DocumentTool::ShapeTool(mother)->UpdateAssembly(mother);
 }
 
 //______________________________________________________________________________
-TopLoc_Location OCCStep::CalcLocation (TGeoHMatrix matrix)
+TopLoc_Location TOCCToStep::CalcLocation (TGeoHMatrix matrix)
 { 
    gp_Trsf TR,TR1;
    TopLoc_Location locA;
@@ -200,7 +196,7 @@ TopLoc_Location OCCStep::CalcLocation (TGeoHMatrix matrix)
 }
 
 //______________________________________________________________________________
-void OCCStep::OCCTreeCreation(TGeoManager * m)
+void TOCCToStep::OCCTreeCreation(TGeoManager * m)
 {
    TGeoIterator nextNode(m->GetTopVolume());
    TGeoNode *currentNode = 0;
@@ -238,7 +234,7 @@ void OCCStep::OCCTreeCreation(TGeoManager * m)
 }
 
 //______________________________________________________________________________
-void OCCStep::PrintAssembly()
+void TOCCToStep::PrintAssembly()
 {
    XCAFDoc_DocumentTool::ShapeTool(fDoc->Main())->Dump();
 }

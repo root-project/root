@@ -10,7 +10,7 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-// RootOCC Class                                                              //
+// TGeoToOCC Class                                                              //
 // --------------------                                                       //
 //                                                                            //
 //   This class contains implementation of converting ROOT's                  //
@@ -44,7 +44,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#include "RootOCC.h"
+#include "TGeoToOCC.h"
+
 
 //Cascade
 
@@ -96,6 +97,7 @@
 #include "TString.h"
 #include "TClass.h"
 #include "TGeoBoolNode.h"
+#include "TGeoShapeAssembly.h"
 #include "TGeoTrd1.h"
 #include "TGeoTrd2.h"
 #include "TGeoArb8.h"
@@ -112,103 +114,104 @@
 #include "TGeoMatrix.h"
 
 
-RootOCC::RootOCC():fOccShape()
+
+TGeoToOCC::TGeoToOCC():fOccShape()
 {	
 
 }
 
-RootOCC::~RootOCC()
+TGeoToOCC::~TGeoToOCC()
 {
 	
 }
 
-TopoDS_Shape RootOCC::OCC_SimpleShape(TGeoShape *TG_Shape)
+TopoDS_Shape TGeoToOCC::OCC_SimpleShape(TGeoShape *TG_Shape)
 {
    TString type = TG_Shape->IsA()->GetName();
    out.open("/tmp/TGeoCad.log",ios::app);
    out<<"Translating: "<<type<<endl;
    out.close();
-   if(type=="TGeoTube") {
+   if(TG_Shape->IsA()==TGeoTube::Class()) {
       TGeoTube* TG_Tube=(TGeoTube*)TG_Shape;
       return OCC_Tube(TG_Tube->GetRmin(), TG_Tube->GetRmax(),TG_Tube->GetDz(),0, 0);
-   } else if(type=="TGeoTubeSeg") {
+   } else if(TG_Shape->IsA()==TGeoTubeSeg::Class()) {
       TGeoTubeSeg* TG_TubeSeg=(TGeoTubeSeg*)TG_Shape;
       Double_t r = (TG_TubeSeg->GetPhi2()-TG_TubeSeg->GetPhi1());
-      return OCC_Tube(TG_TubeSeg->GetRmin(), TG_TubeSeg->GetRmax(),TG_TubeSeg->GetDz(),(TG_TubeSeg->GetPhi1())*PI/180., r*PI/180.);
-   } else if(type=="TGeoEltu") {
+      return OCC_Tube(TG_TubeSeg->GetRmin(), TG_TubeSeg->GetRmax(),TG_TubeSeg->GetDz(),(TG_TubeSeg->GetPhi1())*M_PI/180., r*M_PI/180.);
+   } else if(TG_Shape->IsA()==TGeoEltu::Class()) {
       TGeoEltu* TG_Eltu=(TGeoEltu*)TG_Shape;
       return OCC_EllTube(TG_Eltu->GetA(),TG_Eltu->GetB() , TG_Eltu->GetDz());
-   } else if(type=="TGeoCtub") {
+   } else if(TG_Shape->IsA()==TGeoCtub::Class()) {
       TGeoCtub* TG_Ctub=(TGeoCtub*)TG_Shape;
       Double_t r = (TG_Ctub->GetPhi2()-TG_Ctub->GetPhi1());
       return OCC_Cuttub(TG_Ctub->GetRmin(), TG_Ctub->GetRmax(),  TG_Ctub->GetDz(),
-      TG_Ctub->GetPhi1()*PI/180.,r*PI/180.,TG_Ctub->GetNlow(),TG_Ctub->GetNhigh());
-   } else if(type=="TGeoCone") {
+      TG_Ctub->GetPhi1()*M_PI/180.,r*M_PI/180.,TG_Ctub->GetNlow(),TG_Ctub->GetNhigh());
+   } else if(TG_Shape->IsA()==TGeoCone::Class()) {
       TGeoCone* TG_Cone=(TGeoCone*)TG_Shape;
-      return OCC_Cones(TG_Cone->GetRmin1(),TG_Cone->GetRmax1(),TG_Cone->GetRmin2(), TG_Cone->GetRmax2(),TG_Cone->GetDz(), 0, 2*PI);
-   } else if(type=="TGeoConeSeg") {
+      return OCC_Cones(TG_Cone->GetRmin1(),TG_Cone->GetRmax1(),TG_Cone->GetRmin2(), TG_Cone->GetRmax2(),TG_Cone->GetDz(), 0, 2*M_PI);
+   } else if(TG_Shape->IsA()==TGeoConeSeg::Class()) {
       TGeoConeSeg* TG_ConeSeg=(TGeoConeSeg*)TG_Shape;
       Double_t r  = (TG_ConeSeg->GetPhi2()-TG_ConeSeg->GetPhi1());
       return OCC_Cones(TG_ConeSeg->GetRmin1(), TG_ConeSeg->GetRmax1(),TG_ConeSeg->GetRmin2(), TG_ConeSeg->GetRmax2(), 
-      TG_ConeSeg->GetDz(), (TG_ConeSeg->GetPhi1())*PI/180., r*PI/180.);
-   } else if(type=="TGeoTorus") {
+      TG_ConeSeg->GetDz(), (TG_ConeSeg->GetPhi1())*M_PI/180., r*M_PI/180.);
+   } else if(TG_Shape->IsA()==TGeoTorus::Class()) {
       TGeoTorus* TG_Torus=(TGeoTorus*)TG_Shape;
       Double_t DPhi=(Double_t)TG_Torus->GetDphi()-TG_Torus->GetPhi1();
       if (DPhi<0)
       DPhi=(Double_t)TG_Torus->GetPhi1()-TG_Torus->GetDphi();
       Double_t Phi1= (Double_t)TG_Torus->GetPhi1();
       return OCC_Torus((Double_t)TG_Torus->GetRmin(),(Double_t)TG_Torus->GetRmax(),(Double_t)TG_Torus->GetR(), 
-      Phi1*PI/180., DPhi*PI/180.);
-   } else if(type=="TGeoSphere") {
+      Phi1*M_PI/180., DPhi*M_PI/180.);
+   } else if(TG_Shape->IsA()==TGeoSphere::Class()) {
       TGeoSphere* TG_Sphere=(TGeoSphere*)TG_Shape;
       Double_t DPhi = (TG_Sphere->GetPhi2()-TG_Sphere->GetPhi1());
       Double_t DTheta = (TG_Sphere->GetTheta2()-TG_Sphere->GetTheta1());
-      return OCC_Sphere(TG_Sphere->GetRmin(), TG_Sphere->GetRmax(),(TG_Sphere->GetPhi1())*PI/180., DPhi*PI/180.,
-      TG_Sphere->GetTheta1()*PI/180., DTheta*PI/180.);
-   } else if(type=="TGeoPcon") {
+      return OCC_Sphere(TG_Sphere->GetRmin(), TG_Sphere->GetRmax(),(TG_Sphere->GetPhi1())*M_PI/180., DPhi*M_PI/180.,
+      TG_Sphere->GetTheta1()*M_PI/180., DTheta*M_PI/180.);
+   } else if(TG_Shape->IsA()==TGeoPcon::Class()) {
       TGeoPcon* TG_Pcon=(TGeoPcon*)TG_Shape;
-      return OCC_Pcon((TG_Pcon->GetPhi1())*PI/180.,
-      (TG_Pcon->GetDphi())*PI/180.,TG_Pcon->GetNz(),TG_Pcon->GetRmin(),TG_Pcon->GetRmax(),TG_Pcon->GetZ());
-   } else if(type=="TGeoPgon") {
+      return OCC_Pcon((TG_Pcon->GetPhi1())*M_PI/180.,
+      (TG_Pcon->GetDphi())*M_PI/180.,TG_Pcon->GetNz(),TG_Pcon->GetRmin(),TG_Pcon->GetRmax(),TG_Pcon->GetZ());
+   } else if(TG_Shape->IsA()==TGeoPgon::Class()) {
       TGeoPgon* TG_Pgon=(TGeoPgon*)TG_Shape;
       Int_t numpoints=TG_Pgon->GetNmeshVertices();
       Double_t *p = new Double_t[3*numpoints];
       TG_Pgon->SetPoints(p); 
       return OCC_Pgon(TG_Pgon->GetNsegments(),TG_Pgon->GetNz(),p,TG_Pgon->GetPhi1(),TG_Pgon->GetDphi(),numpoints*3);
-   } else if(type=="TGeoHype") {
+   } else if(TG_Shape->IsA()==TGeoHype::Class()) {
       TGeoHype* TG_Hype=(TGeoHype*)TG_Shape;
       return OCC_Hype(TG_Hype->GetRmin(), TG_Hype->GetRmax(), TG_Hype->GetStIn(), TG_Hype->GetStOut(),TG_Hype->GetDz());
-   } else if(type=="TGeoXtru") {
+   } else if(TG_Shape->IsA()==TGeoXtru::Class()) {
       return OCC_Xtru((TGeoXtru*)TG_Shape);
-   } else if (type=="TGeoBBox") { 
+   } else if (TG_Shape->IsA()==TGeoBBox::Class()) { 
       TGeoBBox * TG_Box=(TGeoBBox*)TG_Shape;
       const Double_t * Origin = TG_Box->GetOrigin();
       return OCC_Box(TG_Box->GetDX(),TG_Box->GetDY(),TG_Box->GetDZ(),Origin[0],Origin[1],Origin[2]);
-   } else if (type=="TGeoTrd1") {
+   } else if (TG_Shape->IsA()==TGeoTrd1::Class()) {
       TGeoTrd1 * TG_Trd1=(TGeoTrd1*)TG_Shape;
       return OCC_Trd(TG_Trd1->GetDx1(),TG_Trd1->GetDx2(),TG_Trd1->GetDy(),TG_Trd1->GetDy(),TG_Trd1->GetDz());
-   } else if (type=="TGeoTrd2") {
+   } else if (TG_Shape->IsA()==TGeoTrd2::Class()) {
       TGeoTrd2 * TG_Trd2=(TGeoTrd2*)TG_Shape;
       return OCC_Trd(TG_Trd2->GetDx1(),TG_Trd2->GetDx2(),TG_Trd2->GetDy1(),TG_Trd2->GetDy2(),TG_Trd2->GetDz());
-   } else if (type=="TGeoArb8") {
+   } else if (TG_Shape->IsA()==TGeoArb8::Class()) {
       TGeoArb8 * TG_Arb8=(TGeoArb8*)TG_Shape;
      Double_t vertex[24];
       TG_Shape->SetPoints(vertex);
       return OCC_Arb8(TG_Arb8->GetDz(),TG_Arb8->GetVertices(),vertex);
-   } else if (type=="TGeoShapeAssembly") {
+   } else if (TG_Shape->IsA()==TGeoShapeAssembly::Class()) {
       TGeoBBox * TG_Ass=(TGeoBBox*)TG_Shape;
       return OCC_Box(TG_Ass->GetDX(),TG_Ass->GetDY(),TG_Ass->GetDZ(),0,0,0);
-   } else if (type=="TGeoPara") {
+   } else if (TG_Shape->IsA()==TGeoPara::Class()) {
       TGeoPara * TG_Para=(TGeoPara*)TG_Shape; 
       Double_t vertex[24];
       TG_Shape->SetPoints(vertex);
       return OCC_ParaTrap(vertex);
-   }  else if (type=="TGeoTrap") {
+   }  else if (TG_Shape->IsA()==TGeoTrap::Class()) {
       TGeoTrap * TG_Trap=(TGeoTrap*)TG_Shape; 
       Double_t vertex[24];
       TG_Shape->SetPoints(vertex);
       return OCC_ParaTrap(vertex);
-   } else if (type=="TGeoGtra") {
+   } else if (TG_Shape->IsA()==TGeoGtra::Class()) {
       TGeoGtra * TG_Tra=(TGeoGtra*)TG_Shape; 
       Double_t vertex[24];
       TG_Shape->SetPoints(vertex);
@@ -217,7 +220,7 @@ TopoDS_Shape RootOCC::OCC_SimpleShape(TGeoShape *TG_Shape)
       cout<<"Error, unknown form"<<endl;
 }
 
-TopoDS_Shape RootOCC::OCC_CompositeShape(TGeoCompositeShape *comp, TGeoHMatrix m)
+TopoDS_Shape TGeoToOCC::OCC_CompositeShape(TGeoCompositeShape *comp, TGeoHMatrix m)
 {
    Double_t const *t;
    Double_t const *r;
@@ -306,7 +309,7 @@ TopoDS_Shape RootOCC::OCC_CompositeShape(TGeoCompositeShape *comp, TGeoHMatrix m
    }
 }
 
-TopoDS_Shape RootOCC::OCC_EllTube(Double_t a, Double_t b, Double_t dz)
+TopoDS_Shape TGeoToOCC::OCC_EllTube(Double_t a, Double_t b, Double_t dz)
 {
    gp_Pnt p (0.,0.,-dz);
    gp_Dir d (0,0,1);
@@ -324,14 +327,14 @@ TopoDS_Shape RootOCC::OCC_EllTube(Double_t a, Double_t b, Double_t dz)
    fOccShape = BRepPrimAPI_MakePrism(f , v);
    if(a<b) {
       gp_Trsf t;
-      t.SetRotation(gp::OZ(), PI/2.);
+      t.SetRotation(gp::OZ(), M_PI/2.);
       BRepBuilderAPI_Transform brepT(fOccShape , t);
       fOccShape = brepT.Shape();
    }
    return Reverse(fOccShape);
 }
 
-TopoDS_Shape RootOCC::OCC_Torus(Double_t Rmin, Double_t Rmax, Double_t Rtor,
+TopoDS_Shape TGeoToOCC::OCC_Torus(Double_t Rmin, Double_t Rmax, Double_t Rtor,
                             Double_t SPhi, Double_t DPhi)
 {
    TopoDS_Solid torMin;
@@ -358,7 +361,7 @@ TopoDS_Shape RootOCC::OCC_Torus(Double_t Rmin, Double_t Rmax, Double_t Rtor,
 }
 
 
-TopoDS_Shape RootOCC::OCC_Sphere(Double_t rmin, Double_t rmax, 
+TopoDS_Shape TGeoToOCC::OCC_Sphere(Double_t rmin, Double_t rmax, 
                                     Double_t phi1, Double_t Dphi, 
                                     Double_t theta1, Double_t Dtheta)
 {
@@ -368,8 +371,9 @@ TopoDS_Shape RootOCC::OCC_Sphere(Double_t rmin, Double_t rmax,
    TopoDS_Edge eI;
    TopoDS_Face f;
    TopoDS_Wire w;
+   
 
-   if(rmin==0&&phi1==0&&Dphi==2*PI&&theta1==0&&Dtheta==PI) {
+   if(rmin==0&&phi1==0&&Dphi==2*M_PI&&theta1==0&&Dtheta==M_PI) {
       TopoDS_Solid s= BRepPrimAPI_MakeSphere(rmax);
       return s;
    }
@@ -405,7 +409,7 @@ TopoDS_Shape RootOCC::OCC_Sphere(Double_t rmin, Double_t rmax,
    return Reverse(fOccShape);
 }
 
-TopoDS_Shape RootOCC::OCC_Tube(Double_t rmin, Double_t rmax, 
+TopoDS_Shape TGeoToOCC::OCC_Tube(Double_t rmin, Double_t rmax, 
                            Double_t dz, Double_t phi1, 
                            Double_t phi2)
 {
@@ -415,8 +419,8 @@ TopoDS_Shape RootOCC::OCC_Tube(Double_t rmin, Double_t rmax,
    TopoDS_Shape  tubsT;
    gp_Trsf TT;
    gp_Trsf TR;
-   if (rmin==0) rmin=rmin+0.000001;
-   if (rmax==0)rmax=rmax+0.000001;
+   if (rmin==0) rmin=rmin+0.00001;
+   if (rmax==0) rmax=rmax+0.00001;
    if (phi1==0&&phi2==0) { 
      innerCyl = BRepPrimAPI_MakeCylinder(rmin,dz*2);
      outerCyl = BRepPrimAPI_MakeCylinder(rmax,dz*2);
@@ -443,7 +447,7 @@ TopoDS_Shape RootOCC::OCC_Tube(Double_t rmin, Double_t rmax,
    return  Reverse(fOccShape);
 }
 
-TopoDS_Shape RootOCC::OCC_Cones(Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, Double_t dz, Double_t phi1, Double_t phi2)
+TopoDS_Shape TGeoToOCC::OCC_Cones(Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, Double_t dz, Double_t phi1, Double_t phi2)
 {
    TopoDS_Solid innerCon;
    TopoDS_Solid  outerCon;
@@ -474,7 +478,7 @@ TopoDS_Shape RootOCC::OCC_Cones(Double_t rmin1, Double_t rmax1, Double_t rmin2, 
    return Reverse(fOccShape);
 }
 
-TopoDS_Shape RootOCC::OCC_Cuttub(Double_t rmin, Double_t rmax, Double_t dz, 
+TopoDS_Shape TGeoToOCC::OCC_Cuttub(Double_t rmin, Double_t rmax, Double_t dz, 
                            Double_t phi1, Double_t Dphi,const Double_t * Nlow,const Double_t * Nhigh)
 {
    out.open("/tmp/TGeoCad.log",ios::app);
@@ -497,7 +501,6 @@ TopoDS_Shape RootOCC::OCC_Cuttub(Double_t rmin, Double_t rmax, Double_t dz,
    BRepAlgoAPI_Cut cutResult(rmaxCyl, rminCyl);
    cutResult.Build();
    tubs=cutResult.Shape();
-   //cout<<"dopo la prima cut"<<cutResult.ErrorStatus()<<endl;
    TopExp_Explorer anExp2 (tubs, TopAbs_SOLID);
    if (anExp2.More()) {
       TopoDS_Shape aTmpShape = anExp2.Current();
@@ -572,7 +575,7 @@ TopoDS_Shape RootOCC::OCC_Cuttub(Double_t rmin, Double_t rmax, Double_t dz,
 }
 
 
-TopoDS_Shape RootOCC::OCC_Xtru(TGeoXtru * TG_Xtru)
+TopoDS_Shape TGeoToOCC::OCC_Xtru(TGeoXtru * TG_Xtru)
 {
    Int_t vert=TG_Xtru->GetNvert();
    Int_t nz=TG_Xtru->GetNz();
@@ -588,7 +591,7 @@ TopoDS_Shape RootOCC::OCC_Xtru(TGeoXtru * TG_Xtru)
          y[pp]=TG_Xtru->GetYOffset(i)+(TG_Xtru->GetScale(i)*TG_Xtru->GetY(pp));
       }
       z[i]=TG_Xtru->GetZ(i);
-      w=RootOCC::Polygon(x,y,z[i],vert);
+      w=TGeoToOCC::Polygon(x,y,z[i],vert);
       sect.AddWire(w);	
    }
    sect.Build();
@@ -597,7 +600,7 @@ TopoDS_Shape RootOCC::OCC_Xtru(TGeoXtru * TG_Xtru)
 }
 
 
-TopoDS_Shape RootOCC::OCC_Hype(Double_t rmin, Double_t  rmax,Double_t  stin, Double_t stout, Double_t  dz )
+TopoDS_Shape TGeoToOCC::OCC_Hype(Double_t rmin, Double_t  rmax,Double_t  stin, Double_t stout, Double_t  dz )
 {	
    gp_Pnt p(0, 0, 0);
    gp_Dir d(0, 0, 1);
@@ -646,15 +649,15 @@ TopoDS_Shape RootOCC::OCC_Hype(Double_t rmin, Double_t  rmax,Double_t  stin, Dou
    hyW=WIRE.Wire();
    BRepBuilderAPI_MakeFace face(hyW);
    hyF=face.Face();
-   t.SetRotation(gp::OX(), PI/2.);
+   t.SetRotation(gp::OX(), M_PI/2.);
    BRepBuilderAPI_Transform TF(t);
    TF.Perform(hyF,Standard_True);
    hyF = TopoDS::Face(TF.Shape());
-   fOccShape = BRepPrimAPI_MakeRevol (hyF,gp::OZ(),2*PI);
+   fOccShape = BRepPrimAPI_MakeRevol (hyF,gp::OZ(),2*M_PI);
    return  Reverse(fOccShape);
 }
 
-TopoDS_Shape RootOCC::OCC_ParaTrap (Double_t *vertex)
+TopoDS_Shape TGeoToOCC::OCC_ParaTrap (Double_t *vertex)
 {
    BRepOffsetAPI_ThruSections sect(true,true); 
    TopoDS_Wire w;
@@ -688,7 +691,7 @@ TopoDS_Shape RootOCC::OCC_ParaTrap (Double_t *vertex)
 }
 
 
-TopoDS_Shape RootOCC::OCC_Arb8(Double_t dz, Double_t * ivert, Double_t *points)
+TopoDS_Shape TGeoToOCC::OCC_Arb8(Double_t dz, Double_t * ivert, Double_t *points)
 {
    out.open("/tmp/TGeoCad.log",ios::app);
    TopoDS_Shell newShell;
@@ -704,8 +707,6 @@ TopoDS_Shape RootOCC::OCC_Arb8(Double_t dz, Double_t * ivert, Double_t *points)
    BRepBuilderAPI_MakePolygon poly1,poly2,poly3,poly4,poly5,poly6;
    Int_t x=0,y=0,z=0;
    gp_Pnt point;
-   for (Int_t i=0;i<16;i++) 
-    out<<"ivert["<<i<<"]="<<ivert[i]<<endl;
    for (Int_t i=0;i<8;i++) {
      
       x=count++;y=count++;z=count++;
@@ -821,7 +822,7 @@ TopoDS_Shape RootOCC::OCC_Arb8(Double_t dz, Double_t * ivert, Double_t *points)
 
 
 
-TopoDS_Shape RootOCC::OCC_Box(Double_t dx, Double_t dy, Double_t dz, Double_t OX, Double_t OY, Double_t OZ )
+TopoDS_Shape TGeoToOCC::OCC_Box(Double_t dx, Double_t dy, Double_t dz, Double_t OX, Double_t OY, Double_t OZ )
 {
    TopoDS_Solid box;
    if (dz==0)dz=0.1;
@@ -831,7 +832,7 @@ TopoDS_Shape RootOCC::OCC_Box(Double_t dx, Double_t dy, Double_t dz, Double_t OX
 }
 
 
-TopoDS_Shape RootOCC::OCC_Trd(Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2, Double_t dz)
+TopoDS_Shape TGeoToOCC::OCC_Trd(Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2, Double_t dz)
 {
    TopoDS_Wire wire;
    BRepOffsetAPI_ThruSections sect(true,true); 
@@ -871,7 +872,7 @@ TopoDS_Shape RootOCC::OCC_Trd(Double_t dx1, Double_t dx2, Double_t dy1, Double_t
    return fOccShape;
 }
 
-TopoDS_Wire RootOCC::Polygon(Double_t *x, Double_t *y, Double_t z, Int_t num )
+TopoDS_Wire TGeoToOCC::Polygon(Double_t *x, Double_t *y, Double_t z, Int_t num )
 {
    BRepBuilderAPI_MakePolygon poly;
    TopoDS_Wire w ;
@@ -886,7 +887,7 @@ TopoDS_Wire RootOCC::Polygon(Double_t *x, Double_t *y, Double_t z, Int_t num )
 }
 
 
-TopoDS_Shape RootOCC::OCC_Pcon(Double_t startPhi, Double_t deltaPhi, 
+TopoDS_Shape TGeoToOCC::OCC_Pcon(Double_t startPhi, Double_t deltaPhi, 
                           Int_t zNum, Double_t *rMin, Double_t *rMax, Double_t *z)
 {
    
@@ -922,7 +923,7 @@ TopoDS_Shape RootOCC::OCC_Pcon(Double_t startPhi, Double_t deltaPhi,
 }
 
  
-TopoDS_Shape RootOCC::OCC_Pgon(Int_t np, Int_t nz, Double_t * p, Double_t phi1, Double_t DPhi, Int_t numpoint)
+TopoDS_Shape TGeoToOCC::OCC_Pgon(Int_t np, Int_t nz, Double_t * p, Double_t phi1, Double_t DPhi, Int_t numpoint)
 {  
    BRepOffsetAPI_ThruSections sectInner(true,true); 
    BRepOffsetAPI_ThruSections sectOuter(true,true);
@@ -959,7 +960,6 @@ TopoDS_Shape RootOCC::OCC_Pgon(Int_t np, Int_t nz, Double_t * p, Double_t phi1, 
          for (Int_t h=0;h<nzvert;h++){
             xx=p[ind++];yy=p[ind++];zz=p[ind++]; 
             point=gp_Pnt(xx,yy,zz);
-            //cout<<"x"<<xx<<"y"<<yy<<"z"<<zz<<endl;
             aPoly.Add(point);
          }
          aPoly.Close();
@@ -1003,8 +1003,8 @@ TopoDS_Shape RootOCC::OCC_Pgon(Int_t np, Int_t nz, Double_t * p, Double_t phi1, 
       fOccShape=Result.Shape();
       return Reverse(fOccShape);
    } else {
-      myCut=BRepPrimAPI_MakeCylinder (max+1,2*Zmax,(360.-DPhi)*PI/180.); 
-      TT.SetRotation(gp_Ax1(gp_Pnt(0.,0.,0.), gp_Vec(0., 0., 1.)), (-90.0+phi1)*PI/180.0);
+      myCut=BRepPrimAPI_MakeCylinder (max+1,2*Zmax,(360.-DPhi)*M_PI/180.); 
+      TT.SetRotation(gp_Ax1(gp_Pnt(0.,0.,0.), gp_Vec(0., 0., 1.)), (-90.0+phi1)*M_PI/180.0);
       BRepBuilderAPI_Transform theTT(TT);
       theTT.Perform(myCut, Standard_True);
       fOccShape=theTT.Shape();
@@ -1021,7 +1021,7 @@ TopoDS_Shape RootOCC::OCC_Pgon(Int_t np, Int_t nz, Double_t * p, Double_t phi1, 
 }
 
 
-TopoDS_Shape RootOCC::Reverse(TopoDS_Shape Shape)
+TopoDS_Shape TGeoToOCC::Reverse(TopoDS_Shape Shape)
 {
    BRepClass3d_SolidClassifier * setPrecision= new BRepClass3d_SolidClassifier (Shape);
    setPrecision->PerformInfinitePoint(Precision::Confusion());

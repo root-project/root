@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RootOCC
-#define ROOT_RootOCC
+#ifndef ROOT_TGeoToOCC
+#define ROOT_TGeoToOCC
 
 //Cascade
 #include <TopoDS_Shape.hxx>
@@ -27,7 +27,7 @@
 #include <fstream>
 
 
-class RootOCC
+class TGeoToOCC
 {
 private:
    void OCCDocCreation(); 
@@ -51,8 +51,8 @@ private:
    TopoDS_Shape fOccShape;
 
 public:
-   RootOCC(); 
-   virtual ~RootOCC();
+   TGeoToOCC(); 
+   virtual ~TGeoToOCC();
    TopoDS_Shape OCC_SimpleShape(TGeoShape *TG_Shape);
    TopoDS_Shape OCC_CompositeShape(TGeoCompositeShape *cs, TGeoHMatrix matrix);
    TopoDS_Shape Reverse(TopoDS_Shape Shape);
