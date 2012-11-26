@@ -893,7 +893,6 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl, uns
       AppendMemberAccessSpecifier(*field, textLine);
       textLine += ' ';
       AppendObjectDeclaration(*field, printingPolicy, true, textLine);
-      //AppendDataMemberDeclaration(*field, textLine);
       if (HasUDT(*field)) {
          textLine += ", size = ";
          AppendUDTSize(fInterpreter->getCI(), *field, textLine);
@@ -935,7 +934,6 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl, uns
                textLine += ' ';
                //SuppressInitializer does not help with PrintingPolicy,
                //so I have to use getNameAsString.
-               //AppendDataMemberDeclaration(*enumerator, textLine);
                textLine += enumerator->getNameAsString();
                textLine += "\n";
                fOut.Print(textLine.c_str());
@@ -954,7 +952,6 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl, uns
             AppendMemberAccessSpecifier(varDecl, textLine);
             textLine += ' ';
             AppendObjectDeclaration(varDecl, printingPolicy, true, textLine);
-            //AppendDataMemberDeclaration(varDecl, textLine);
             if (HasUDT(varDecl)) {
                textLine += ", size = ";
                AppendUDTSize(fInterpreter->getCI(), varDecl, textLine);
