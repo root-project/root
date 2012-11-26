@@ -945,7 +945,7 @@ Long_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
    Long_t retval = 0;
 
    while (1) {
-      bool res = macro.getline(currentline, kBufSize);
+      bool res = (bool)macro.getline(currentline, kBufSize);
       if (macro.eof()) break;
       if (!res) {
          // Probably only read kBufSize, let's ignore the remainder of
