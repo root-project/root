@@ -4155,7 +4155,7 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
    (*dictSrcOut) << 
       "      0 };\n"
       "      static bool sInitialized = false;\n"
-      "      if (!sInitialized) {\n;"
+      "      if (!sInitialized) {\n"
       "        TCintWithCling__RegisterModule(\"" << dictname << "\",\n"
       "          headers, includePaths, macroDefines, macroUndefines);\n"
       "        sInitialized = true;\n"
