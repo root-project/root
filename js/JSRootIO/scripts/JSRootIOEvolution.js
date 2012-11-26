@@ -709,7 +709,10 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
                }
                if (JSROOTIO.GetStreamer(classname)) {
                   var clRef = gFile.fStreamerInfo.ReadClass(str, o);
-                  if (clRef && clRef['name']) o = clRef['off'];
+                  if (clRef && clRef['name']) {
+                     o = clRef['off'];
+                     classname = clRef['name'];
+                  }
                   obj[prop] = new Object();
                   obj[prop]['_typename'] = 'JSROOTIO.' + classname;
                   o = JSROOTIO.GetStreamer(classname).Stream(obj[prop], str, o);
