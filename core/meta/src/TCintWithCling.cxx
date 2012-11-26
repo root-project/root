@@ -1052,10 +1052,15 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
 
    const clang::ASTContext& astContext = fInterpreter->getCI()->getASTContext();
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
+   const clang::Decl *scopeDecl = lh.findScope(clname);
+   if (!scopeDecl) {
+      Error("InspectMembers", "Cannot find Decl for class %s", clname);
+      return;
+   }
    const clang::CXXRecordDecl* recordDecl 
-     = llvm::dyn_cast<const clang::CXXRecordDecl>(lh.findScope(clname));
+     = llvm::dyn_cast<const clang::CXXRecordDecl>(scopeDecl);
    if (!recordDecl) {
-      Error("InspectMembers", "Cannot find RecordDecl for class %s", clname);
+      Error("InspectMembers", "Cannot find Decl for class %s is not a CXXRecordDecl.", clname);
       return;
    }
    
