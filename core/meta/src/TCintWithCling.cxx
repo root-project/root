@@ -1923,6 +1923,98 @@ void TCintWithCling::CreateListOfMethodArgs(TFunction* m)
 }
 
 //______________________________________________________________________________
+TClass *TCintWithCling::GenerateTClass(const char *classname, Bool_t silent /* = kFALSE */)
+{
+   // Generate a TClass for the given class.
+
+   TClingClassInfo tci(fInterpreter, classname);
+   if (!tci.IsValid()) {  
+      int version = 1;
+      if (TClassEdit::IsSTLCont(classname)) {
+         version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
+      }
+      TClass *cl = new TClass(classname, version, 0, 0, -1, -1, silent);
+      cl->SetBit(TClass::kIsEmulation);
+
+      return cl;
+   } else {
+      return GenerateTClass(&tci,silent);
+   }
+}
+
+//______________________________________________________________________________
+static void GenerateTClass_GatherInnerIncludes(cling::Interpreter *interp, TString &includes,TClingClassInfo *info)
+{
+   includes += info->FileName();
+
+   const clang::ClassTemplateSpecializationDecl *templateCl 
+      = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(info->GetDecl());
+   if (templateCl) {
+      for(unsigned int i=0; i <  templateCl->getTemplateArgs().size(); ++i) {
+          const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(i) );
+          if (arg.getKind() == clang::TemplateArgument::Type) {
+             const clang::Type *uType = ROOT::TMetaUtils::GetUnderlyingType( arg.getAsType() );
+
+            if (!uType->isFundamentalType() && !uType->isEnumeralType()) {
+               // We really need a header file.
+               const clang::CXXRecordDecl *argdecl = uType->getAsCXXRecordDecl();            
+               if (argdecl) {
+                  includes += ";";
+                  TClingClassInfo subinfo(interp,*(argdecl->getASTContext().getRecordType(argdecl).getTypePtr()));
+                  GenerateTClass_GatherInnerIncludes(interp, includes, &subinfo);
+               } else {
+                  std::string Result;
+                  llvm::raw_string_ostream OS(Result);
+                  arg.print(argdecl->getASTContext().getPrintingPolicy(),OS);
+                  Warning("TCintWithCling::GenerateTClass","Missing header file for %s",OS.str().c_str());
+               }
+            }
+          }
+      }
+   }
+}
+
+//______________________________________________________________________________
+TClass *TCintWithCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE */)
+{
+   // Generate a TClass for the given class.
+
+   TClingClassInfo *info = (TClingClassInfo*)classinfo;
+   if (!info && !info->IsValid()) {
+      Fatal("GenerateTClass","Requires a valid ClassInfo object");
+      return 0;
+   }
+   // We are in the case where we have AST nodes for this class.
+   TClass *cl = 0;
+   TString classname = info->FullName(*fNormalizedCtxt); // Could we use Name()?
+   if (TClassEdit::IsSTLCont(classname)) {
+      Info("GenerateTClass","Will (try to) generate the compiled TClass for %s.",classname.Data());
+      // We need to build up the list of required headers, by 
+      // looking at each template arguments.
+      TString includes;
+      GenerateTClass_GatherInnerIncludes(fInterpreter,includes,info);
+
+      if (0 == GenerateDictionary(classname,includes)) {
+         // 0 means success.
+         cl = gROOT->LoadClass(classname, silent);
+         if (cl == 0) {
+            Error("GenerateTClass","Even though the dictionary generation for %s seemed successfull we can't find the TClass bootstrap!",classname.Data());
+         }
+      }
+      if (cl == 0) {
+         int version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
+         cl = new TClass(classname, version, 0, 0, -1, -1, silent);
+         cl->SetBit(TClass::kIsEmulation);
+      }
+   } else {
+      // For regular class, just create a TClass on the fly ...
+      // Not quite useful yet, but that what CINT used to do anyway.
+      cl = new TClass(classname, 1, 0, 0, -1, -1, silent);
+   }
+   return cl;
+}
+
+//______________________________________________________________________________
 Int_t TCintWithCling::GenerateDictionary(const char* classes, const char* includes /* = 0 */, const char* /* options  = 0 */)
 {
    // Generate the dictionary for the C++ classes listed in the first
@@ -2068,8 +2160,12 @@ const char* TCintWithCling::GetInterpreterTypeName(const char* name, Bool_t full
    // This is used in particular to synchronize between the name used
    // by rootcint and by the run-time enviroment (TClass)
    // Return 0 if the name is not known.
+
    R__LOCKGUARD(gCINTMutex);
-   if (!gInterpreter->CheckClassInfo(name)) {
+
+   // This first step is likely redundant if
+   // the next step never issue any warnings.
+   if (!CheckClassInfo(name)) {
       return 0;
    }
    TClingClassInfo cl(fInterpreter, name);

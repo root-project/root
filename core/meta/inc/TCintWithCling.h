@@ -126,6 +126,8 @@ public: // Public Interface
    Int_t   GetExitCode() const { return fExitCode; }
    TEnv*   GetMapfile() const { return fMapfile; }
    Int_t   GetMore() const { return fMore; }
+   TClass *GenerateTClass(const char *classname, Bool_t silent = kFALSE); 
+   TClass *GenerateTClass(ClassInfo_t *classinfo, Bool_t silent = kFALSE); 
    Int_t   GenerateDictionary(const char* classes, const char* includes = 0, const char* options = 0);
    char*   GetPrompt() { return fPrompt; }
    const char* GetSharedLibs();

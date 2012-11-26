@@ -1388,8 +1388,7 @@ Bool_t TClass::AddRule( const char *rule )
    TClass *cl = TClass::GetClass( ruleobj->GetTargetClass() );
    if (!cl) {
       // Create an empty emulated class for now.
-      cl = new TClass(ruleobj->GetTargetClass(), 1, 0, 0, -1, -1, kTRUE);
-      cl->SetBit(TClass::kIsEmulation);
+      cl = gInterpreter->GenerateTClass(ruleobj->GetTargetClass(), /*silent = */ kTRUE);
    }
    ROOT::TSchemaRuleSet* rset = cl->GetSchemaRules( kTRUE );
       

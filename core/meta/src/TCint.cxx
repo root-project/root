@@ -1256,6 +1256,30 @@ void TCint::CreateListOfMethodArgs(TFunction *m)
 }
 
 //______________________________________________________________________________
+Int_t TCint::GenerateTClass(const char *classname, Bool_t silent /* = kFALSE */)
+{
+   // Generate a TClass for the given class.
+   
+   int version = 1;
+   if (TClassEdit::TClassEdit::IsSTLCont(classname)) {
+      version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
+   }
+   TClass *cl = new TClass(classname, version, 0, 0, -1, -1, kTRUE);
+   cl->SetBit(TClass::kIsEmulation);
+
+   return cl;
+}
+
+//______________________________________________________________________________
+Int_t TCint::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE */)
+{
+   // Generate a TClass for the given class.
+
+   G__ClassInfo *info = (G__ClassInfo*)classinfo;
+   return GenerateTClass(info->Fullname());
+}
+
+//______________________________________________________________________________
 Int_t TCint::GenerateDictionary(const char *classes, const char *includes /* = 0 */, const char * /* options  = 0 */)
 {
    // Generate the dictionary for the C++ classes listed in the first

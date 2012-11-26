@@ -1031,8 +1031,7 @@ static TClass *R__FindSTLClass(const char *name, Bool_t load, Bool_t silent, con
 
    if (load && cl==0) {
       // Create an Emulated class for this container.
-      cl = new TClass(defaultname.c_str(), TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion(), 0, 0, -1, -1, silent );
-      cl->SetBit(TClass::kIsEmulation);
+      cl = gInterpreter->GenerateTClass(defaultname.c_str(), silent);
    }
 
    return cl;
