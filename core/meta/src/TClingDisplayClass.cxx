@@ -4,19 +4,21 @@
 #include <cassert>
 #include <cctype>
 #include <limits>
-#include <string>
 #include <set>
 
 //CLANG
 #include "clang/Frontend/CompilerInstance.h"
+#include "clang/Basic/IdentifierTable.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/LangOptions.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/Basic/Specifiers.h"
+#include "clang/Lex/Preprocessor.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/Lex/MacroInfo.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Type.h"
@@ -145,20 +147,47 @@ void AppendMemberFunctionLocation(const clang::CompilerInstance *compiler, const
 }
 
 //______________________________________________________________________________
-void AppendDataMemberLocation(const clang::CompilerInstance *compiler, const clang::Decl *field, std::string &textLine)
+void AppendDeclLocation(const clang::CompilerInstance *compiler, const clang::Decl *decl, std::string &textLine)
 {
-   assert(compiler != 0 && "AppendDataMemberLocation, 'compiler' parameter is null");
-   assert(field != 0 && "AppendDataMemberLocation, 'field' parameter is null");
+   assert(compiler != 0 && "AppendDeclLocation, 'compiler' parameter is null");
+   assert(decl != 0 && "AppendDeclLocation, 'decl' parameter is null");
 
    TString formatted("");
 
    if (compiler->hasSourceManager()) {
       const clang::SourceManager &sourceManager = compiler->getSourceManager();
-      clang::PresumedLoc loc(sourceManager.getPresumedLoc(field->getLocation()));
+      clang::PresumedLoc loc(sourceManager.getPresumedLoc(decl->getLocation()));
       if (loc.isValid())   //The format is from CINT.
          formatted.Form("%-15s%4d", gSystem->BaseName(loc.getFilename()), int(loc.getLine()));
    }
 
+   if (!formatted.Length())
+      formatted.Form("%-15s     " , "(compiled)");
+
+   textLine += formatted;
+}
+
+//______________________________________________________________________________
+void AppendMacroLocation(const clang::CompilerInstance *compiler, const clang::MacroInfo *macroInfo, std::string &textLine)
+{
+   assert(compiler != 0 && "AppendMacroLocation, 'compiler' parameter is null");
+   assert(macroInfo != 0 && "AppendMacroLocation, 'macroInfo' parameter is null");
+
+   (void) compiler;
+   
+   //TODO: check what does location for macro definition really means -
+   //macro can be defined many times, what do we have in a clang::TranslationUnit in this case?
+   //At the moment this function is similar to AppendDeclLocation.
+   
+   TString formatted("");
+   
+   if (compiler->hasSourceManager()) {
+      const clang::SourceManager &sourceManager = compiler->getSourceManager();
+      clang::PresumedLoc loc(sourceManager.getPresumedLoc(macroInfo->getDefinitionLoc()));
+      if (loc.isValid())   //The format is from CINT.
+         formatted.Form("%-15s%4d", gSystem->BaseName(loc.getFilename()), int(loc.getLine()));
+   }
+   
    if (!formatted.Length())
       formatted.Form("%-15s     " , "(compiled)");
 
@@ -263,17 +292,12 @@ void AppendMemberFunctionSignature(const clang::Decl *methodDecl, std::string &n
 }
 
 //______________________________________________________________________________
-void AppendDataMemberDeclaration(const clang::Decl *memDecl, std::string &name)
+void AppendObjectDeclaration(const clang::Decl *objDecl, const clang::PrintingPolicy &policy, bool printInstantiation, std::string &name)
 {
-   assert(memDecl != 0 && "AppendDataMemberDeclaration, 'memDecl' parameter is null");
-   
-   llvm::raw_string_ostream out(name);
-   const clang::LangOptions langOpts;
-   clang::PrintingPolicy printingPolicy(langOpts);
-   printingPolicy.SuppressSpecifiers = false;
-   printingPolicy.SuppressInitializers = true;
+   assert(objDecl != 0 && "AppendObjectDeclaration, 'objDecl' parameter is null");
 
-   memDecl->print(out, printingPolicy, 0, true);
+   llvm::raw_string_ostream out(name);
+   objDecl->print(out, policy, 0, printInstantiation);
 }
 
 //______________________________________________________________________________
@@ -309,10 +333,10 @@ void AppendClassSize(const clang::CompilerInstance *compiler, const clang::Recor
 
 //______________________________________________________________________________
 template<class Decl>
-void AppendDataMemberSize(const clang::CompilerInstance *compiler, const Decl *decl, std::string &textLine)
+void AppendUDTSize(const clang::CompilerInstance *compiler, const Decl *decl, std::string &textLine)
 {
-   assert(compiler != 0 && "AppendDataMemberSize, 'compiler' parameter is null");
-   assert(decl != 0 && "AppendDataMemberSize, 'decl' parameter is null");
+   assert(compiler != 0 && "AppendUDTSize, 'compiler' parameter is null");
+   assert(decl != 0 && "AppendUDTSize, 'decl' parameter is null");
    
    TString formatted;
    
@@ -471,6 +495,7 @@ ClassPrinter::ClassPrinter(FILE *out, const cling::Interpreter *interpreter)
                   fInterpreter(interpreter),
                   fVerbose(false)
 {
+   assert(out != 0 && "ClassPrinter, 'out' parameter is null");
    assert(interpreter != 0 && "ClassPrinter, 'compiler' parameter is null");
 }
 
@@ -772,7 +797,7 @@ void ClassPrinter::DisplayBasesAsTree(const clang::CXXRecordDecl *classDecl, uns
 //______________________________________________________________________________
 void ClassPrinter::DisplayMemberFunctions(const clang::CXXRecordDecl *classDecl)const
 {
-   assert(classDecl != 0 && "DisplayMemberFunction, 'classDecl' parameter is null");
+   assert(classDecl != 0 && "DisplayMemberFunctions, 'classDecl' parameter is null");
 
    typedef clang::CXXRecordDecl::method_iterator method_iterator;
    typedef clang::CXXRecordDecl::ctor_iterator ctor_iterator;
@@ -849,21 +874,29 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl, uns
    typedef clang::RecordDecl::field_iterator field_iterator;
    typedef clang::EnumDecl::enumerator_iterator enumerator_iterator;
 
+   //
+   const clang::LangOptions langOpts;
+   clang::PrintingPolicy printingPolicy(langOpts);
+   printingPolicy.SuppressSpecifiers = false;
+   printingPolicy.SuppressInitializers = true;
+   //
+
    std::string textLine;
    const std::string gap(std::max(nSpaces, 1u), ' ');
 
    for (field_iterator field = classDecl->field_begin(); field != classDecl->field_end(); ++field) {
       textLine.clear();
-      AppendDataMemberLocation(fInterpreter->getCI(), *field, textLine);
+      AppendDeclLocation(fInterpreter->getCI(), *field, textLine);
       textLine += gap;
       AppendDataMemberOffset(fInterpreter->getCI(), classDecl, *field, textLine);
       textLine += ' ';
       AppendMemberAccessSpecifier(*field, textLine);
       textLine += ' ';
-      AppendDataMemberDeclaration(*field, textLine);
+      AppendObjectDeclaration(*field, printingPolicy, true, textLine);
+      //AppendDataMemberDeclaration(*field, textLine);
       if (HasUDT(*field)) {
          textLine += ", size = ";
-         AppendDataMemberSize(fInterpreter->getCI(), *field, textLine);
+         AppendUDTSize(fInterpreter->getCI(), *field, textLine);
          textLine += '\n';
          fOut.Print(textLine.c_str());
          ProcessTypeOfMember(*field, nSpaces + kMemberTypeShift);
@@ -877,14 +910,14 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl, uns
    for (decl_iterator decl = classDecl->decls_begin(); decl != classDecl->decls_end(); ++decl) {
       if (decl->getKind() == clang::Decl::Enum) {
          const clang::EnumDecl *enumDecl = clang::dyn_cast<clang::EnumDecl>(*decl);
-         assert(enumDecl != 0 && "DisplayDataMember, internal compielr error, decl->getKind() == Enum, but decl is not a EnumDecl");
+         assert(enumDecl != 0 && "DisplayDataMembers, internal compielr error, decl->getKind() == Enum, but decl is not a EnumDecl");
          if (enumDecl->isComplete() && (enumDecl = enumDecl->getDefinition())) {//it's not really clear, if I should really check this.
             //if (fSeenDecls.find(enumDecl) == fSeenDecls.end()) {
             //   fSeenDecls.insert(enumDecl);
             for (enumerator_iterator enumerator = enumDecl->enumerator_begin(); enumerator != enumDecl->enumerator_end(); ++enumerator) {
                //
                textLine.clear();
-               AppendDataMemberLocation(fInterpreter->getCI(), *enumerator, textLine);
+               AppendDeclLocation(fInterpreter->getCI(), *enumerator, textLine);
                textLine += gap;
                textLine += "0x0        ";//offset is meaningless.
                
@@ -915,15 +948,16 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl, uns
          if (varDecl->getStorageClass() == clang::SC_Static) {
             //I hope, this is a static data-member :)
             textLine.clear();
-            AppendDataMemberLocation(fInterpreter->getCI(), varDecl, textLine);
+            AppendDeclLocation(fInterpreter->getCI(), varDecl, textLine);
             textLine += gap;
             textLine += "0x0        ";//offset is meaningless.
             AppendMemberAccessSpecifier(varDecl, textLine);
             textLine += ' ';
-            AppendDataMemberDeclaration(varDecl, textLine);
+            AppendObjectDeclaration(varDecl, printingPolicy, true, textLine);
+            //AppendDataMemberDeclaration(varDecl, textLine);
             if (HasUDT(varDecl)) {
                textLine += ", size = ";
-               AppendDataMemberSize(fInterpreter->getCI(), varDecl, textLine);
+               AppendUDTSize(fInterpreter->getCI(), varDecl, textLine);
                textLine += '\n';
                fOut.Print(textLine.c_str());
                ProcessTypeOfMember(varDecl, nSpaces + kMemberTypeShift);
@@ -934,6 +968,213 @@ void ClassPrinter::DisplayDataMembers(const clang::CXXRecordDecl *classDecl, uns
          }
       }
    }
+}
+
+//Aux. class to display global objects, macros (object-like), enumerators.
+
+class GlobalsPrinter {
+public:
+   GlobalsPrinter(FILE * out, const class cling::Interpreter *interpreter);
+
+   void DisplayGlobals()const;
+   void DisplayGlobal(const std::string &name)const;
+
+private:
+   
+   void DisplayVarDecl(const clang::VarDecl *varDecl)const;
+   void DisplayEnumeratorDecl(const clang::EnumConstantDecl *enumerator)const;
+   void DisplayObjectLikeMacro(const clang::IdentifierInfo *identifierInfo, const clang::MacroInfo *macroInfo)const;
+
+   FILEPrintHelper fOut;
+   const cling::Interpreter *fInterpreter;
+
+   mutable std::set<const clang::Decl *> fSeenDecls;
+};
+
+//______________________________________________________________________________
+GlobalsPrinter::GlobalsPrinter(FILE *out, const cling::Interpreter *interpreter)
+                : fOut(out),
+                  fInterpreter(interpreter)
+{
+   assert(out != 0 && "GlobalsPrinter, 'out' parameter is null");
+   assert(interpreter != 0 && "GlobalsPrinter, 'compiler' parameter is null");
+}
+
+//______________________________________________________________________________
+void GlobalsPrinter::DisplayGlobals()const
+{
+   typedef clang::EnumDecl::enumerator_iterator enumerator_iterator;
+   typedef clang::Preprocessor::macro_iterator macro_iterator;
+
+   assert(fInterpreter != 0 && "DisplayGlobals, fInterpreter is null");
+   
+   const clang::CompilerInstance * const compiler = fInterpreter->getCI();
+   assert(compiler != 0 && "DisplayGlobals, compiler instance is null");
+
+   const clang::TranslationUnitDecl * const tuDecl = compiler->getASTContext().getTranslationUnitDecl();
+   assert(tuDecl != 0 && "DisplayGlobals, translation unit is empty");
+
+   //fSeenDecls.clear();
+
+   //Try to print global macro definitions (object-like only).
+   const clang::Preprocessor &pp = compiler->getPreprocessor();
+   for (macro_iterator macro = pp.macro_begin(); macro != pp.macro_end(); ++macro) {
+      if (macro->second->isObjectLike())
+         DisplayObjectLikeMacro(macro->first, macro->second);
+   }
+
+   //TODO: fSeenDecls - should I check that some declaration is already visited?
+   //It's obviously that for objects we can have one definition and any number
+   //of declarations, should I print them?
+
+   for (decl_iterator decl = tuDecl->decls_begin(); decl != tuDecl->decls_end(); ++decl) {
+      if (const clang::VarDecl * const varDecl = llvm::dyn_cast<clang::VarDecl>(*decl))
+         DisplayVarDecl(varDecl);
+      else if (const clang::EnumDecl *enumDecl = llvm::dyn_cast<clang::EnumDecl>(*decl)) {
+         if (enumDecl->isComplete() && (enumDecl = enumDecl->getDefinition())) {//it's not really clear, if I should really check this.
+            for (enumerator_iterator enumerator = enumDecl->enumerator_begin(); enumerator != enumDecl->enumerator_end(); ++enumerator)
+               DisplayEnumeratorDecl(*enumerator);
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
+void GlobalsPrinter::DisplayGlobal(const std::string &name)const
+{
+   typedef clang::EnumDecl::enumerator_iterator enumerator_iterator;
+   typedef clang::Preprocessor::macro_iterator macro_iterator;
+   
+   //TODO: is it ok to compare 'name' with decl->getNameAsString() ??
+
+   assert(fInterpreter != 0 && "DisplayGlobal, fInterpreter is null");
+   
+   const clang::CompilerInstance * const compiler = fInterpreter->getCI();
+   assert(compiler != 0 && "DisplayGlobal, compiler instance is null");
+   
+   const clang::TranslationUnitDecl * const tuDecl = compiler->getASTContext().getTranslationUnitDecl();
+   assert(tuDecl != 0 && "DisplayGlobal, translation unit is empty");
+   
+   //fSeenDecls.clear();
+   bool found = false;
+   
+   const clang::Preprocessor &pp = compiler->getPreprocessor();
+   for (macro_iterator macro = pp.macro_begin(); macro != pp.macro_end(); ++macro) {
+      if (macro->second->isObjectLike()) {
+         if (name == macro->first->getName().data()) {
+            DisplayObjectLikeMacro(macro->first, macro->second);
+            found = true;
+         }
+      }
+   }
+   
+   for (decl_iterator decl = tuDecl->decls_begin(); decl != tuDecl->decls_end(); ++decl) {
+      if (const clang::VarDecl * const varDecl = llvm::dyn_cast<clang::VarDecl>(*decl)) {
+         if (varDecl->getNameAsString() == name) {
+            DisplayVarDecl(varDecl);
+            found = true;
+         }
+      } else if (const clang::EnumDecl *enumDecl = llvm::dyn_cast<clang::EnumDecl>(*decl)) {
+         if (enumDecl->isComplete() && (enumDecl = enumDecl->getDefinition())) {//it's not really clear, if I should really check this.
+            for (enumerator_iterator enumerator = enumDecl->enumerator_begin(); enumerator != enumDecl->enumerator_end(); ++enumerator) {
+               if (enumerator->getNameAsString() == name) {
+                  DisplayEnumeratorDecl(*enumerator);
+                  found = true;
+               }
+            }
+         }
+      }
+   }
+
+   //Do as CINT does:
+   if (!found)
+      fOut.Print(("Variable " + name + " not found\n").c_str());
+}
+
+//______________________________________________________________________________
+void GlobalsPrinter::DisplayVarDecl(const clang::VarDecl *varDecl) const
+{
+   assert(fInterpreter != 0 && "DisplayVarDecl, fInterpreter is null");
+   assert(varDecl != 0 && "DisplayVarDecl, 'varDecl' parameter is null");
+   
+   const clang::LangOptions langOpts;
+   clang::PrintingPolicy printingPolicy(langOpts);
+   printingPolicy.SuppressSpecifiers = false;
+   printingPolicy.SuppressInitializers = false;
+   
+   std::string textLine;
+
+   AppendDeclLocation(fInterpreter->getCI(), varDecl, textLine);
+
+   //TODO:
+   //Hehe, it's strange to expect addresses from an AST :)
+   //Add it, if you know how, I don't care.
+   textLine += " (address: NA) ";
+
+   AppendObjectDeclaration(varDecl, printingPolicy, false, textLine);
+   
+   if (HasUDT(varDecl)) {
+      textLine += ", size = ";
+      AppendUDTSize(fInterpreter->getCI(), varDecl, textLine);
+   }
+   
+   textLine += "\n";
+   fOut.Print(textLine.c_str());
+}
+
+//______________________________________________________________________________
+void GlobalsPrinter::DisplayEnumeratorDecl(const clang::EnumConstantDecl *enumerator)const
+{
+   assert(fInterpreter != 0 && "DisplayEnumeratorDecl, fInterpreter is null");
+   assert(enumerator != 0 && "DisplayEnumeratorDecl, 'enumerator' parameter is null");
+
+   const clang::LangOptions langOpts;
+   clang::PrintingPolicy printingPolicy(langOpts);
+   printingPolicy.SuppressInitializers = false;
+   
+   std::string textLine;
+   
+   AppendDeclLocation(fInterpreter->getCI(), enumerator, textLine);
+   
+   textLine += " (address: NA) ";//No address, that's an enumerator.
+
+   const clang::QualType type(enumerator->getType());
+   textLine += type.getAsString();
+   textLine += ' ';
+
+   AppendObjectDeclaration(enumerator, printingPolicy, false, textLine);
+   
+   textLine += "\n";
+   fOut.Print(textLine.c_str());
+}
+
+//______________________________________________________________________________
+void GlobalsPrinter::DisplayObjectLikeMacro(const clang::IdentifierInfo *identifierInfo, const clang::MacroInfo *macroInfo)const
+{
+   assert(identifierInfo != 0 && "DisplayObjectLikeMacro, 'identifierInfo' parameter is null");
+   assert(macroInfo != 0 && "DisplayObjectLikeMacro, 'macroInfo' parameter is null");
+
+   std::string textLine;
+   
+   AppendMacroLocation(fInterpreter->getCI(), macroInfo, textLine);
+   
+   textLine += " (address: NA) #define ";//No address exists for a macro definition.
+   
+   textLine += identifierInfo->getName().data();
+   
+   if (macroInfo->getNumTokens())
+      textLine += " =";
+
+   assert(fInterpreter->getCI() != 0 && "DisplayObjectLikeMacro, compiler instance is null");
+   const clang::Preprocessor &pp = fInterpreter->getCI()->getPreprocessor();
+   
+   for (unsigned i = 0, e = macroInfo->getNumTokens(); i < e; ++i) {
+      textLine += ' ';
+      textLine += pp.getSpelling(macroInfo->getReplacementToken(i));
+   }
+   
+   fOut.Print(textLine.c_str());
+   fOut.Print("\n");
 }
 
 }//unnamed namespace
@@ -970,5 +1211,24 @@ void DisplayClass(FILE *out, const cling::Interpreter *interpreter, const char *
    }
 }
 
+//______________________________________________________________________________
+void DisplayGlobals(FILE *out, const cling::Interpreter *interpreter)
+{
+   assert(out != 0 && "DisplayGlobals, 'out' parameter is null");
+   assert(interpreter != 0 && "DisplayGlobals, 'interpreter' parameter is null");
+   
+   GlobalsPrinter printer(out, interpreter);
+   printer.DisplayGlobals();
+}
+
+//______________________________________________________________________________
+void DisplayGlobal(FILE *out, const cling::Interpreter *interpreter, const std::string &name)
+{
+   assert(out != 0 && "DisplayGlobal, 'out' parameter is null");
+   assert(interpreter != 0 && "DisplayGlobal, 'interpreter' parameter is null");
+   
+   GlobalsPrinter printer(out, interpreter);
+   printer.DisplayGlobal(name);
+}
 
 }//namespace cling
