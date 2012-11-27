@@ -16,8 +16,8 @@
 namespace ROOT {
 namespace Math {
 
-GaussLegendreIntegrator::GaussLegendreIntegrator(int num, double eps) : 
-   GaussIntegrator(eps)
+   GaussLegendreIntegrator::GaussLegendreIntegrator(int num, double eps) : 
+      GaussIntegrator(eps, eps)
 {
    // Basic contructor
    fNum = num;
@@ -82,7 +82,7 @@ double GaussLegendreIntegrator::DoIntegral(double a, double b, const IGenFunctio
 void GaussLegendreIntegrator::SetRelTolerance (double eps)
 {
    // Set the desired relative Error.
-   fEpsilon = eps;
+   fEpsRel = eps;
    CalcGaussLegendreSamplingPoints();
 }
 
@@ -96,7 +96,7 @@ void GaussLegendreIntegrator::CalcGaussLegendreSamplingPoints()
    // Given the number of sampling points this routine fills the
    // arrays x and w.
 
-   if (fNum<=0 || fEpsilon<=0)
+   if (fNum<=0 || fEpsRel<=0)
       return;
 
    if ( fX == 0 )
@@ -138,7 +138,7 @@ void GaussLegendreIntegrator::CalcGaussLegendreSamplingPoints()
          // Newton's method
          z -= p1/pp;
 
-      } while (std::fabs(p1/pp) > fEpsilon);
+      } while (std::fabs(p1/pp) > fEpsRel);
 
       // Put root and its symmetric counterpart
       fX[i]       = -z;
@@ -152,8 +152,8 @@ void GaussLegendreIntegrator::CalcGaussLegendreSamplingPoints()
 
 ROOT::Math::IntegratorOneDimOptions  GaussLegendreIntegrator::Options() const { 
    ROOT::Math::IntegratorOneDimOptions opt; 
-   opt.SetAbsTolerance(fEpsilon); 
-   opt.SetRelTolerance(fEpsilon); 
+   opt.SetAbsTolerance(0); 
+   opt.SetRelTolerance(fEpsRel); 
    opt.SetWKSize(0); 
    opt.SetNPoints(fNum); 
    opt.SetIntegrator("GaussLegendre");
@@ -166,7 +166,7 @@ void GaussLegendreIntegrator::SetOptions(const ROOT::Math::IntegratorOneDimOptio
 //    std::cout << "fEpsilon = " << fEpsilon << std::endl;
 //    std::cout << opt.RelTolerance() << " abs " << opt.AbsTolerance() << std::endl;
    //double tol = opt.RelTolerance(); fEpsilon = tol; 
-   fEpsilon = opt.RelTolerance(); 
+   fEpsRel = opt.RelTolerance(); 
 //    std::cout << "fEpsilon = " << fEpsilon << std::endl;
    fNum = opt.NPoints(); 
    if (fNum <= 7)  MATH_WARN_MSGVAL("GaussLegendreIntegrator::SetOptions","setting a low number of points ",fNum);

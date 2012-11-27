@@ -3,6 +3,7 @@
 //
 #include "Math/IFunction.h"
 #include "Math/AdaptiveIntegratorMultiDim.h"
+#include "Math/IntegratorOptions.h"
 #include "Math/Error.h"
 
 #include <cmath>
@@ -26,6 +27,10 @@ AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim(double absTol, double rel
    fFun(0)
 {
    // constructor - without passing a function
+   if (fAbsTol <= 0) fAbsTol = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance(); 
+   if (fRelTol <= 0) fRelTol = ROOT::Math::IntegratorMultiDimOptions::DefaultRelTolerance(); 
+   if (fMaxPts == 0) fMaxPts = ROOT::Math::IntegratorMultiDimOptions::DefaultNCalls(); 
+   if (fSize   == 0) fSize = ROOT::Math::IntegratorMultiDimOptions::DefaultWKSize(); 
 }
 
 AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim( const IMultiGenFunction &f, double absTol, double relTol, unsigned int maxpts, unsigned int size):
@@ -42,6 +47,11 @@ AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim( const IMultiGenFunction 
    fFun(&f)
 {
    // constructur passing a multi-dimensional function interface
+   // constructor - without passing a function
+   if (fAbsTol <= 0) fAbsTol = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance(); 
+   if (fRelTol <= 0) fRelTol = ROOT::Math::IntegratorMultiDimOptions::DefaultRelTolerance(); 
+   if (fMaxPts == 0) fMaxPts = ROOT::Math::IntegratorMultiDimOptions::DefaultNCalls(); 
+   if (fSize   == 0) fSize = ROOT::Math::IntegratorMultiDimOptions::DefaultWKSize(); 
 }
 
 
@@ -77,7 +87,8 @@ double AdaptiveIntegratorMultiDim::DoIntegral(const double* xmin, const double *
    bool kFALSE = false;
    bool kTRUE = true;
 
-   double eps = fRelTol; //specified relative accuracy
+   double epsrel = fRelTol; //specified relative accuracy
+   double epsabs = fAbsTol; //specified relative accuracy
    //output parameters
    fStatus = 0; //report status
    unsigned int nfnevl; //nr of function evaluations
@@ -322,8 +333,7 @@ L160: //to divide or not
          fStatus = 1;
    }
    //..and accuracy appropriare
-   if (relerr < eps && ifncls >= minpts) fStatus = 0;  // We do not use the absolute error.
-   //if (relerr < eps* aresult && abserr < eps && ifncls >= minpts) fStatus = 0;
+   if ( ( relerr < epsrel || abserr < epsabs ) && ifncls >= minpts) fStatus = 0;  // We do not use the absolute error.
    if (fStatus == 3) {
       ldv = kTRUE;
       isbrgn  = irgnst;
