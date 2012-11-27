@@ -90,6 +90,8 @@ public:
    Bool_t   IsProcessLineLocked() const { return RealObject()->IsProcessLineLocked(); }
    void     SetProcessLineLock(Bool_t lock = kTRUE);
    Int_t    GetExitCode() const { return RealObject()->GetExitCode(); }
+   TClass  *GenerateTClass(const char *class, Bool_t silent = kFALSE); 
+   TClass  *GenerateTClass(ClassInfo_t *class, Bool_t silent = kFALSE); 
    Int_t    GenerateDictionary(const char *classes, const char *includes = 0, const char *options = 0); 
    Int_t    GetMore() const {  return RealObject()->GetMore(); }
    Bool_t   IsLoaded(const char *filename) const {  return RealObject()->IsLoaded(filename); }
