@@ -1994,6 +1994,7 @@ TClass *TCintWithCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* 
    TClass *cl = 0;
    TString classname = info->FullName(*fNormalizedCtxt); // Could we use Name()?
    if (TClassEdit::IsSTLCont(classname)) {
+#if 0
       Info("GenerateTClass","Will (try to) generate the compiled TClass for %s.",classname.Data());
       // We need to build up the list of required headers, by 
       // looking at each template arguments.
@@ -2007,6 +2008,7 @@ TClass *TCintWithCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* 
             Error("GenerateTClass","Even though the dictionary generation for %s seemed successfull we can't find the TClass bootstrap!",classname.Data());
          }
       }
+#endif
       if (cl == 0) {
          int version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
          cl = new TClass(classname, version, 0, 0, -1, -1, silent);
