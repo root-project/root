@@ -68,7 +68,7 @@ namespace HFit {
    TFitResultPtr Fit(FitObject * h1, TF1 *f1 , Foption_t & option , const ROOT::Math::MinimizerOptions & moption, const char *goption,  ROOT::Fit::DataRange & range); 
 
    template <class FitObject>
-   void StoreAndDrawFitFunction(FitObject * h1, const TF1 * f1, const ROOT::Fit::DataRange & range, bool, bool, const char *goption);
+   void StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::DataRange & range, bool, bool, const char *goption);
 
 } 
 
@@ -518,7 +518,7 @@ void HFit::GetDrawingRange(THnBase * s1, ROOT::Fit::DataRange & range) {
 }
 
 template<class FitObject>
-void HFit::StoreAndDrawFitFunction(FitObject * h1, const TF1 * f1, const ROOT::Fit::DataRange & range, bool delOldFunction, bool drawFunction, const char *goption) { 
+void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::DataRange & range, bool delOldFunction, bool drawFunction, const char *goption) { 
 //   - Store fitted function in histogram functions list and draw
 // should have separate functions for 1,2,3d ? t.b.d in case
 
@@ -526,9 +526,6 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, const TF1 * f1, const ROOT::F
    std::cout <<"draw and store fit function " << f1->GetName() << std::endl;
 #endif
  
-   TF1 *fnew1;
-   TF2 *fnew2;
-   TF3 *fnew3;
 
    Int_t ndim = GetDimension(h1);
    double xmin = 0, xmax = 0, ymin = 0, ymax = 0, zmin = 0, zmax = 0; 
@@ -548,44 +545,74 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, const TF1 * f1, const ROOT::F
       return;
    } 
 
+   // delete the function in the list only if 
+   // the funciton we are fitting is not in that list
+   // If this is the case we re-use that function object and 
+   // we do not create a new one (if delOldFunction is true)
+   bool reuseOldFunction = false; 
    if (delOldFunction) {
       TIter next(funcList, kIterBackward);
       TObject *obj;
       while ((obj = next())) {
          if (obj->InheritsFrom(TF1::Class())) {
-            funcList->Remove(obj);
-            delete obj;
+            if (obj != f1) {
+               funcList->Remove(obj);
+               delete obj;
+            }
+            else {
+               reuseOldFunction = true; 
+            }
          }
       }
    }
 
+   TF1 *fnew1 = 0;
+   TF2 *fnew2 = 0;
+   TF3 *fnew3 = 0;
+
    // copy TF1 using TClass to avoid slicing in case of derived classes
    if (ndim < 2) {
-      fnew1 = (TF1*)f1->IsA()->New();
-      R__ASSERT(fnew1);
-      f1->Copy(*fnew1);
-      funcList->Add(fnew1);
+      if (!reuseOldFunction) { 
+         fnew1 = (TF1*)f1->IsA()->New();
+         R__ASSERT(fnew1);
+         f1->Copy(*fnew1);
+         funcList->Add(fnew1);
+      }
+      else { 
+         fnew1 = f1;
+      }
       fnew1->SetParent( h1 );
       fnew1->SetRange(xmin,xmax);
       fnew1->Save(xmin,xmax,0,0,0,0);
       if (!drawFunction) fnew1->SetBit(TF1::kNotDraw);
       fnew1->SetBit(TFormula::kNotGlobal);
    } else if (ndim < 3) {
-      fnew2 = (TF2*)f1->IsA()->New();
-      R__ASSERT(fnew2);
-      f1->Copy(*fnew2);
-      funcList->Add(fnew2);
+      if (!reuseOldFunction) { 
+         fnew2 = (TF2*)f1->IsA()->New();
+         R__ASSERT(fnew2);
+         f1->Copy(*fnew2);
+         funcList->Add(fnew2);
+      }
+      else { 
+         fnew2 = dynamic_cast<TF2*>(f1);
+         R__ASSERT(fnew2);
+      }
       fnew2->SetRange(xmin,ymin,xmax,ymax);
       fnew2->SetParent( h1 );
       fnew2->Save(xmin,xmax,ymin,ymax,0,0);
       if (!drawFunction) fnew2->SetBit(TF1::kNotDraw);
       fnew2->SetBit(TFormula::kNotGlobal);
-   } else {
-      // 3D- why f3d is not saved ???
-      fnew3 = (TF3*)f1->IsA()->New();
-      R__ASSERT(fnew3);
-      f1->Copy(*fnew3);
-      funcList->Add(fnew3);
+   } else { 
+      if (!reuseOldFunction) { 
+         fnew3 = (TF3*)f1->IsA()->New();
+         R__ASSERT(fnew3);
+         f1->Copy(*fnew3);
+         funcList->Add(fnew3);
+      }
+      else {
+         fnew2 = dynamic_cast<TF3*>(f1);
+         R__ASSERT(fnew3);         
+      }
       fnew3->SetRange(xmin,ymin,zmin,xmax,ymax,zmax);
       fnew3->SetParent( h1 );
       fnew3->Save(xmin,xmax,ymin,ymax,zmin,zmax);
