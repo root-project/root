@@ -2967,6 +2967,37 @@ function createFillPatterns(svg, id, color) {
          this.drawStat(vis, histo);
    };
 
+   JSROOTPainter.drawHStack = function(vis, pad, stack, hframe) {
+      // paint the list of histograms
+      // By default, histograms are shown stacked.
+      //    -the first histogram is paint
+      //    -then the sum of the first and second, etc
+      if (!'fHists' in stack) return;
+      if (stack['fHists'].length == 0) return;
+      var histos = stack['fHists'];
+      var opt = "";
+      var histo = stack['fHistogram'];
+      if (hframe) frame = hframe['frame'];
+      else {
+         hframe = this.createFrame(vis, pad, histo, null);
+      }
+      if (histo['_typename'].match(/\bJSROOTIO.TH1/))
+         this.drawHistogram1D(vis, pad, histo, hframe);
+      else if (histo['_typename'].match(/\bJSROOTIO.TH2/))
+         this.drawHistogram2D(vis, pad, histo, hframe);
+      hframe['xmin'] = histo['fXaxis']['fXmin'];
+      hframe['xmax'] = histo['fXaxis']['fXmax'];
+      hframe['ymin'] = histo['fYaxis']['fXmin'];
+      hframe['ymax'] = histo['fYaxis']['fXmax'];
+      for (var i=0; i<histos.length; ++i) {
+         histos[i]['fName'] += i;
+         if (histos[i]['_typename'].match(/\bJSROOTIO.TH1/))
+            this.drawHistogram1D(vis, pad, histos[i], hframe);
+         else if (histos[i]['_typename'].match(/\bJSROOTIO.TH2/))
+            this.drawHistogram2D(vis, pad, histos[i], hframe);
+      }
+   };
+
    JSROOTPainter.drawLatex = function(vis, string, x, y, attr) {
       var w = vis.attr("width"), h = vis.attr("height");
       while (string.indexOf('#') != -1)
@@ -3453,6 +3484,9 @@ function createFillPatterns(svg, id, color) {
          else if (obj['_typename'].match(/\bJSROOTIO.TH2/)) {
             JSROOTPainter.drawHistogram2D(svg, null, obj, null);
          }
+         else if (obj['_typename'].match(/\bJSROOTIO.THStack/)) {
+            JSROOTPainter.drawHStack(svg, null, obj, null)
+         }
          else if (obj['_typename'].match(/\bJSROOTIO.TProfile/)) {
             JSROOTPainter.drawProfile(svg, null, obj, null);
          }
@@ -3498,6 +3532,13 @@ function createFillPatterns(svg, id, color) {
       if (pad['fFillStyle'] > 4000 && pad['fFillStyle'] < 4100)
          fillcolor = 'none';
 
+      var border_width = pad['fLineWidth'];
+      var border_color = root_colors[pad['fLineColor']];
+      if (pad['fBorderMode'] == 0) {
+         border_width = 0;
+         border_color = 'none';
+      }
+
       var new_pad = vis.append("svg:g")
          .attr("width", w)
          .attr("height", h)
@@ -3510,8 +3551,8 @@ function createFillPatterns(svg, id, color) {
          .attr("width", w)
          .attr("height", h)
          .attr("fill", fillcolor)
-         .style("stroke-width", pad['fLineWidth'])
-         .style("stroke", root_colors[pad['fLineColor']]);
+         .style("stroke-width", border_width)
+         .style("stroke", border_color);
 
       this.drawPrimitives(new_pad, pad);
       return new_pad;
@@ -3891,6 +3932,9 @@ function createFillPatterns(svg, id, color) {
          }
          if (classname.match(/\bJSROOTIO.TH2/)) {
             this.drawHistogram2D(vis, pad, primitives[i], frame);
+         }
+         if (classname.match(/\bJSROOTIO.THStack/)) {
+            this.drawHStack(vis, pad, primitives[i], frame)
          }
          if (classname.match(/\bJSROOTIO.TProfile/)) {
             this.drawProfile(vis, pad, primitives[i], frame);
