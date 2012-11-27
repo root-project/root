@@ -1261,10 +1261,10 @@ TClass *TCint::GenerateTClass(const char *classname, Bool_t silent /* = kFALSE *
    // Generate a TClass for the given class.
    
    int version = 1;
-   if (TClassEdit::TClassEdit::IsSTLCont(classname)) {
+   if (TClassEdit::IsSTLCont(classname)) {
       version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
    }
-   TClass *cl = new TClass(classname, version, 0, 0, -1, -1, kTRUE);
+   TClass *cl = new TClass(classname, version, 0, 0, -1, -1, silent);
    cl->SetBit(TClass::kIsEmulation);
 
    return cl;
@@ -1276,7 +1276,7 @@ TClass *TCint::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE 
    // Generate a TClass for the given class.
 
    G__ClassInfo *info = (G__ClassInfo*)classinfo;
-   return GenerateTClass(info->Fullname());
+   return GenerateTClass(info->Fullname(),silent);
 }
 
 //______________________________________________________________________________
