@@ -51,15 +51,26 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
-#---Check for c++11 option------------------------------------------------------------
-if(c++11)
+#---Check for cxx11 option------------------------------------------------------------
+if(cxx11)
   include(CheckCXXCompilerFlag)
   CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CXX11)
   if(NOT HAS_CXX11)
-    message(STATUS "Current compiler does not suppport -std=c++11 option. Switching OFF c++11 option")
-    set(c++11 OFF CACHE BOOL "" FORCE)
+    message(STATUS "Current compiler does not suppport -std=c++11 option. Switching OFF cxx11 option")
+    set(cxx11 OFF CACHE BOOL "" FORCE)
   endif()
 endif()
+
+#---Check for cxx11 option------------------------------------------------------------
+if(libcxx11 AND cxx11)
+  include(CheckCXXCompilerFlag)
+  CHECK_CXX_COMPILER_FLAG("-std=c++11 -stdlib=libc++" HAS_LIBCXX11)
+  if(NOT HAS_LIBCXX11)
+    message(STATUS "Current compiler does not suppport -stdlib=libc++ option. Switching OFF libcxx11 option")
+    set(cxx11 OFF CACHE BOOL "" FORCE)
+  endif()
+endif()
+
 
 #---Need to locate thead libraries and options to set properly some compilation flags---------------- 
 find_package(Threads)
@@ -73,9 +84,13 @@ elseif(WIN32)
   include(SetupWindows)
 endif()
 
-if(c++11)
+if(cxx11)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-deprecated-declaration")
 endif()
+if(libcxx11)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+endif()
+
 
 #---Print the final compiler flags--------------------------------------------------------------------
 message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")

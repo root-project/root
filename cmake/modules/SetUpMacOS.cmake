@@ -44,7 +44,6 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
   
   if (CMAKE_COMPILER_IS_GNUCXX)
      message(STATUS "Found GNU compiler collection")
-     execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wall -Woverloaded-virtual -fsigned-char -fno-common")
      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common")
@@ -79,7 +78,6 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
   elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
   
      message(STATUS "Found LLVM compiler collection")
-     execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wall -Woverloaded-virtual -fsigned-char -fno-common")
      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common")
