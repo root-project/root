@@ -961,7 +961,12 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       }
    } // .L / .X / .x
    else {
-      indent = fMetaProcessor->process(sLine, &result, &compRes);
+      if (0!=strncmp(sLine.Data(), ".autodict ",10)) {
+         // explicitly ignore .autodict without having to support it
+         // in cling.
+
+         indent = fMetaProcessor->process(sLine, &result, &compRes);
+      }
    }
    if (result.isValid() && result.needsManagedAllocation())
       fTemporaries->push_back(result);
@@ -974,8 +979,9 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       if ((c != 'I') && (c != 'L') && (c != 'x') && (c != 'X')) {
          // But not .I which is cling-only, and the .L, .x,
          // and .X commands were handled above.
-         if (sLine.BeginsWith(".class "))
+         if (sLine.BeginsWith(".class ")) {
             DisplayClass(stdout, sLine.Data() + 7, 0, 0); //:))
+         }
       }
    }
    if (indent) {
