@@ -94,9 +94,8 @@ public:
    virtual Double_t GetSave(const Double_t *x);
    virtual Double_t GetZmin() const {return fZmin;}
    virtual Double_t GetZmax() const {return fZmax;}
-   virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001) {return TF1::Integral(a,b,params,epsilon);}
-   virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001) {return TF1::Integral(ax,bx,ay,by,epsilon);}
-   virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001);
+   using TF2::Integral;
+   virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsrel=1.e-9);
    virtual Bool_t   IsInside(const Double_t *x) const;
    virtual TH1     *CreateHistogram();
    virtual void     Paint(Option_t *option="");

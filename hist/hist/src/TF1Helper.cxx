@@ -12,6 +12,7 @@
 
 #include "TF1Helper.h"
 #include "TError.h"
+#include "TMath.h"
 #include <vector>
 #include <cmath>
 #include <cassert>
@@ -30,7 +31,7 @@ namespace ROOT {
       
 
 
-double IntegralError(TF1 * func, Int_t ndim, const double * a, const double * b, const double * params, const double * covmat, double epsilon) { 
+      double IntegralError(TF1 * func, Int_t ndim, const double * a, const double * b, const double * params, const double * covmat, double epsrel, double epsabs) { 
 
    // calculate the eror on an integral from a to b of a parametetric function f when the parameters 
    // are estimated from a fit and have an error represented by the covariance matrix of the fit. 
@@ -100,11 +101,17 @@ double IntegralError(TF1 * func, Int_t ndim, const double * a, const double * b,
       double integral  = 0;
       if (covMatrix(i,i) > 0 ) {          
          TF1 gradFunc("gradFunc",TGradientParFunction(i,func),0,0,0);
-         if (onedim) 
-            integral = gradFunc.Integral(*a,*b,(double*)0,epsilon);
+         if (onedim) {
+            double error = 0;
+            integral = gradFunc.IntegralOneDim(*a,*b,epsrel,epsabs, error);
+         }
          else { 
             double relerr;
-            integral = gradFunc.IntegralMultiple(ndim,a,b,epsilon,relerr);
+            int ifail = 0; 
+            int nfnevl = 0;
+            int maxpts = TMath::Min( int (10*TMath::Power(gradFunc.GetNpx(),gradFunc.GetNdim())), 10000000);           
+            integral = gradFunc.IntegralMultiple(ndim,a,b,maxpts,epsrel,epsabs,relerr,nfnevl,ifail);
+            Warning("TF1Helper::IntegralError","n-dim integration failed code=%d, ",ifail);
          }
       }
       ig[i] = integral; 

@@ -881,7 +881,7 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
    try {
       CheckConsistency(this,h1);
    } catch(DifferentNumberOfBins&) {
-      Error("Add","Attempt to add histograms with different number of bins");
+      Error("Add","Attempt to add histograms with different number of bins : nbins h1 = %d , nbins h2 =  %d",GetNbinsX(), h1->GetNbinsX());
       return kFALSE;
    } catch(DifferentAxisLimits&) {
       Warning("Add","Attempt to add histograms with different axis limits");

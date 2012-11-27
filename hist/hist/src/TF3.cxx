@@ -525,9 +525,11 @@ Double_t TF3::GetSave(const Double_t *xx)
 }
 
 //______________________________________________________________________________
-Double_t TF3::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon)
+Double_t TF3::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsrel)
 {
 // Return Integral of a 3d function in range [ax,bx],[ay,by],[az,bz]
+// with a desired relative accuracy. 
+//
 //
    Double_t a[3], b[3];
    a[0] = ax;
@@ -538,12 +540,11 @@ Double_t TF3::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Doubl
    b[2] = bz;
    Double_t relerr  = 0;
    Int_t n = 3;
-   Int_t minpts = 2*2*2+2*n*(n+1)+1;  // ie 33
    Int_t maxpts = 20*fNpx*fNpy*fNpz;
    Int_t nfnevl,ifail;
-   Double_t result = IntegralMultiple(n,a,b,minpts,maxpts,epsilon,relerr,nfnevl,ifail);
+   Double_t result = IntegralMultiple(n,a,b,maxpts,epsrel,epsrel, relerr,nfnevl,ifail);
    if (ifail > 0) {
-      Warning("Integral","failed code=%d, minpts=%d, maxpts=%d, epsilon=%g, nfnevl=%d, relerr=%g ",ifail,minpts,maxpts,epsilon,nfnevl,relerr);
+      Warning("Integral","failed code=%d, maxpts=%d, epsrel=%g, nfnevl=%d, relerr=%g ",ifail,maxpts,epsrel,nfnevl,relerr);
    }
    return result;
 }

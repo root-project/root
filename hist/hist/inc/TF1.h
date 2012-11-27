@@ -255,15 +255,18 @@ public:
    virtual void     GradientPar(const Double_t *x, Double_t *grad, Double_t eps=0.01);
    virtual void     InitArgs(const Double_t *x, const Double_t *params);
    static  void     InitStandardFunctions();
-   virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=1e-12);
-   virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=1e-12);
-   virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=1e-12);
-   virtual Double_t IntegralError(Double_t a, Double_t b, const Double_t *params=0, const Double_t *covmat=0, Double_t epsilon=1e-12);
-   virtual Double_t IntegralError(Int_t n, const Double_t * a, const Double_t * b, const Double_t *params=0, const Double_t *covmat=0, Double_t epsilon=1e-12);
+   virtual Double_t Integral(Double_t a, Double_t b, Double_t epsrel=1.e-12);
+   virtual Double_t IntegralOneDim(Double_t a, Double_t b, Double_t epsrel, Double_t epsabs, Double_t &err);
+   virtual Double_t IntegralError(Double_t a, Double_t b, const Double_t *params=0, const Double_t *covmat=0, Double_t epsrel=1e-12, Double_t epsabs=1.e-12);
+   virtual Double_t IntegralError(Int_t n, const Double_t * a, const Double_t * b, const Double_t *params=0, const Double_t *covmat=0, Double_t epsrel=1e-12, Double_t epsabs=1.e-12);
    //virtual Double_t IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params=0);
    virtual Double_t IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params=0, Double_t epsilon=1e-12);
-   virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t minpts, Int_t maxpts, Double_t epsilon, Double_t &relerr,Int_t &nfnevl, Int_t &ifail);
-   virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsilon, Double_t &relerr);
+   virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t maxpts, Double_t epsrel, Double_t epsabs ,Double_t &relerr,Int_t &nfnevl, Int_t &ifail);
+   // for backward compatibility
+   virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t /*minpts*/, Int_t maxpts, Double_t epsrel, Double_t &relerr,Int_t &nfnevl, Int_t &ifail) { 
+      return  IntegralMultiple(n,a,b,maxpts, epsrel, epsrel, relerr, nfnevl, ifail);  
+   }
+   virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsrel, Double_t &relerr);
    virtual Bool_t   IsInside(const Double_t *x) const;
    virtual void     Paint(Option_t *option="");
    virtual void     Print(Option_t *option="") const;

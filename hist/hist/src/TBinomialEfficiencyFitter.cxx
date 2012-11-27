@@ -401,14 +401,14 @@ void TBinomialEfficiencyFitter::ComputeFCN(Double_t& f, const Double_t* par)
             switch (nDim) {
                case 1:
                   mu = (fAverage) ?
-                     fFunction->Integral(xlow, xup, (Double_t*)0, fEpsilon) 
+                     fFunction->Integral(xlow, xup, fEpsilon) 
                         / (xup-xlow) :
                      fFunction->Eval(fDenominator->GetBinCenter(bin));
                   break;
                case 2:
                   {
                      mu = (fAverage) ?
-                     fFunction->Integral(xlow, xup, ylow, yup, fEpsilon) 
+                        ((TF2*)fFunction)->Integral(xlow, xup, ylow, yup, fEpsilon) 
                         / ((xup-xlow)*(yup-ylow)) :
                      fFunction->Eval(fDenominator->GetXaxis()->GetBinCenter(xbin),
                      fDenominator->GetYaxis()->GetBinCenter(ybin));
@@ -417,7 +417,7 @@ void TBinomialEfficiencyFitter::ComputeFCN(Double_t& f, const Double_t* par)
                case 3:
                   {
                      mu = (fAverage) ?
-                        fFunction->Integral(xlow, xup, ylow, yup, zlow, zup, fEpsilon)
+                        ((TF3*)fFunction)->Integral(xlow, xup, ylow, yup, zlow, zup, fEpsilon)
                            / ((xup-xlow)*(yup-ylow)*(zup-zlow)) :
                         fFunction->Eval(fDenominator->GetXaxis()->GetBinCenter(xbin),
                                  fDenominator->GetYaxis()->GetBinCenter(ybin),

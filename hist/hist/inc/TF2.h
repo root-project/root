@@ -107,10 +107,8 @@ public:
    virtual Double_t GetMaximum(Double_t *x ) const;
    virtual Double_t GetYmin() const {return fYmin;}
    virtual Double_t GetYmax() const {return fYmax;}
-   virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsil=0.000001) {return TF1::Integral(a,b,params,epsil);}
-   virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsil=0.000001);
-   virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsil=0.000001)
-                            {return TF1::Integral(ax,bx,ay,by,az,bz,epsil);}
+   using TF1::Integral;
+   virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsrel=1.e-9); 
    virtual Bool_t   IsInside(const Double_t *x) const;
    virtual TH1     *CreateHistogram();
    virtual void     Paint(Option_t *option="");

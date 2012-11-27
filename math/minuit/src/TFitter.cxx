@@ -677,11 +677,11 @@ void TFitter::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
       TF1::RejectPoint(kFALSE);
       f1->SetParameters(u);
       if (nd < 2) {
-         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],u)/cache[3];
+         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3])/cache[3];
       } else if (nd < 3) {
-         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5])/(cache[3]*cache[5]);
+         fu = ((TF2*)f1)->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5])/(cache[3]*cache[5]);
       } else {
-         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5],cache[6] - 0.5*cache[7],cache[6] + 0.5*cache[7])/(cache[3]*cache[5]*cache[7]);
+         fu = ((TF3*)f1)->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5],cache[6] - 0.5*cache[7],cache[6] + 0.5*cache[7])/(cache[3]*cache[5]*cache[7]);
       }
       if (TF1::RejectedPoint()) {cache += fPointSize; continue;}
       eu = cache[1];
@@ -808,11 +808,11 @@ void TFitter::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *
       TF1::RejectPoint(kFALSE);
       f1->SetParameters(u);
       if (nd < 2) {
-         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],u)/cache[3];
+         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3])/cache[3];
       } else if (nd < 3) {
-         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5])/(cache[3]*cache[5]);
+         fu = ((TF2*)f1)->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5])/(cache[3]*cache[5]);
       } else {
-         fu = f1->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5],cache[6] - 0.5*cache[7],cache[6] + 0.5*cache[7])/(cache[3]*cache[5]*cache[7]);
+         fu = ((TF3*)f1)->Integral(cache[2] - 0.5*cache[3],cache[2] + 0.5*cache[3],cache[4] - 0.5*cache[5],cache[4] + 0.5*cache[5],cache[6] - 0.5*cache[7],cache[6] + 0.5*cache[7])/(cache[3]*cache[5]*cache[7]);
       }
       if (TF1::RejectedPoint()) {cache += fPointSize; continue;}
       if (flag == 2) {

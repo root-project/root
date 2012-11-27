@@ -34,7 +34,7 @@ namespace IntegOneDim {
 #else 
    static int gDefaultIntegrator = IntegrationOneDim::kGAUSS;
 #endif
-   static double gDefaultAbsTolerance = 1.E-06; 
+   static double gDefaultAbsTolerance = 1.E-09; 
    static double gDefaultRelTolerance = 1.E-09; 
    static unsigned int gDefaultWKSize = 1000;
    static unsigned int gDefaultNPointsLegendre = 10;  
@@ -47,7 +47,7 @@ namespace IntegOneDim {
 namespace IntegMultiDim { 
 
    static int gDefaultIntegrator = IntegrationMultiDim::kADAPTIVE;  
-   static double gDefaultAbsTolerance = 1.E-06; 
+   static double gDefaultAbsTolerance = 1.E-09; 
    static double gDefaultRelTolerance = 1.E-09; 
    static unsigned int gDefaultWKSize = 100000;
    static unsigned int gDefaultNCalls = 100000;

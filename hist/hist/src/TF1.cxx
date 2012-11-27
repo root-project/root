@@ -31,6 +31,8 @@
 #include "Math/BrentMinimizer1D.h"
 #include "Math/BrentMethods.h"
 #include "Math/Integrator.h"
+#include "Math/IntegratorMultiDim.h"
+#include "Math/IntegratorOptions.h"
 #include "Math/GaussIntegrator.h"
 #include "Math/GaussLegendreIntegrator.h"
 #include "Math/AdaptiveIntegratorMultiDim.h"
@@ -2024,8 +2026,7 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    Int_t intNegative = 0;
    Int_t i;
    for (i = 0; i < npx; i++) {
-      const Double_t *params = 0;
-      Double_t integ = Integral(Double_t(xMin+i*dx),Double_t(xMin+i*dx+dx),params);
+      Double_t integ = Integral(Double_t(xMin+i*dx),Double_t(xMin+i*dx+dx));
       if (integ < 0) {intNegative++; integ = -integ;}
       integral[i+1] = integral[i] + integ;
    }
@@ -2558,80 +2559,35 @@ void TF1::InitStandardFunctions()
 
    }
 }
-
+//______________________________________________________________________________
+Double_t TF1::Integral(Double_t a, Double_t b,  Double_t epsrel) 
+{
+   // use IntegralOneDim
+   Double_t error = 0;
+   return IntegralOneDim(a,b, epsrel, epsrel, error);
+}
 
 //______________________________________________________________________________
-Double_t TF1::Integral(Double_t a, Double_t b, const Double_t *params, Double_t epsilon)
+Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t epsabs, Double_t & error)
 {
-   // Return Integral of function between a and b.
+   // Return Integral of function between a and b using the given parameter values and 
+   // relative and absolute tolerance. 
+   // The defult integrator defined in ROOT::Math::IntegratorOneDimOptions::DefaultIntegrator() is used 
+   // If ROOT contains the MathMore library the default integrator is set to be 
+   // the adaptive ROOT::Math::GSLIntegrator (based on QUADPACK) or otherwise the 
+   // ROOT::Math::GaussIntegrator is used
+   // See the reference documentation of these classes for more information about the 
+   // integration algorithms
+   // To change integration algorithm just do : 
+   // ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator(IntegratorName);
+   // Valid integrator names are: 
+   //   - Gauss  :               for ROOT::Math::GaussIntegrator
+   //   - GaussLegendre    :     for ROOT::Math::GaussLegendreIntegrator
+   //   - Adaptive         :     for ROOT::Math::GSLIntegrator adaptive method (QAG) 
+   //   - AdaptiveSingular :     for ROOT::Math::GSLIntegrator adaptive singular method (QAGS) 
+   //   - NonAdaptive      :     for ROOT::Math::GSLIntegrator non adaptive (QNG) 
    //
-   //   based on original CERNLIB routine DGAUSS by Sigfried Kolbig
-   //   converted to C++ by Rene Brun
-   //
-   // This function computes, to an attempted specified accuracy, the value
-   // of the integral.
-   //Begin_Latex
-   //   I = #int^{B}_{A} f(x)dx
-   //End_Latex
-   // Usage:
-   //   In any arithmetic expression, this function has the approximate value
-   //   of the integral I.
-   //   - A, B: End-points of integration interval. Note that B may be less
-   //           than A.
-   //   - params: Array of function parameters. If 0, use current parameters.
-   //   - epsilon: Accuracy parameter (see Accuracy).
-   //
-   //Method:
-   //   For any interval [a,b] we define g8(a,b) and g16(a,b) to be the 8-point
-   //   and 16-point Gaussian quadrature approximations to
-   //Begin_Latex
-   //   I = #int^{b}_{a} f(x)dx
-   //End_Latex
-   //   and define
-   //Begin_Latex
-   //   r(a,b) = #frac{#||{g_{16}(a,b)-g_{8}(a,b)}}{1+#||{g_{16}(a,b)}}
-   //End_Latex
-   //   Then,
-   //Begin_Latex
-   //   G = #sum_{i=1}^{k}g_{16}(x_{i-1},x_{i})
-   //End_Latex
-   //   where, starting with x0 = A and finishing with xk = B,
-   //   the subdivision points xi(i=1,2,...) are given by
-   //Begin_Latex
-   //   x_{i} = x_{i-1} + #lambda(B-x_{i-1})
-   //End_Latex
-   //   Begin_Latex #lambdaEnd_Latex is equal to the first member of the
-   //   sequence 1,1/2,1/4,... for which r(xi-1, xi) < EPS.
-   //   If, at any stage in the process of subdivision, the ratio
-   //Begin_Latex
-   //   q = #||{#frac{x_{i}-x_{i-1}}{B-A}}
-   //End_Latex
-   //   is so small that 1+0.005q is indistinguishable from 1 to
-   //   machine accuracy, an error exit occurs with the function value
-   //   set equal to zero.
-   //
-   // Accuracy:
-   //   Unless there is severe cancellation of positive and negative values of
-   //   f(x) over the interval [A,B], the argument EPS may be considered as
-   //   specifying a bound on the <I>relative</I> error of I in the case
-   //   |I|&gt;1, and a bound on the absolute error in the case |I|&lt;1. More
-   //   precisely, if k is the number of sub-intervals contributing to the
-   //   approximation (see Method), and if
-   //Begin_Latex
-   //   I_{abs} = #int^{B}_{A} #||{f(x)}dx
-   //End_Latex
-   //   then the relation
-   //Begin_Latex
-   //   #frac{#||{G-I}}{I_{abs}+k} < EPS
-   //End_Latex
-   //   will nearly always be true, provided the routine terminates without
-   //   printing an error message. For functions f having no singularities in
-   //   the closed interval [A,B] the accuracy will usually be much higher than
-   //   this.
-   //
-   // Error handling:
-   //   The requested accuracy cannot be obtained (see Method).
-   //   The function value is set equal to zero.
+   // In order to use the GSL integrators one needs to have the MathMore library installed 
    //
    // Note 1:
    //   Values of the function f(x) at the interval end-points A and B are not
@@ -2680,39 +2636,46 @@ Double_t TF1::Integral(Double_t a, Double_t b, const Double_t *params, Double_t 
    //      g->IntegralFast(n,x,w,0,100000)= 1.253
 
 
-   TF1_EvalWrapper wf1( this, params, fgAbsValue );
+   TF1_EvalWrapper wf1( this, fParams, fgAbsValue );
+   Double_t result = 0; 
 
-   ROOT::Math::GaussIntegrator giod;
-   //ROOT::Math::Integrator giod;
-   giod.SetFunction(wf1);
-   giod.SetRelTolerance(epsilon);
-   //giod.SetAbsTolerance(epsilon);
 
-   return giod.Integral(a, b);
+   if (ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationOneDim::kGAUSS ) { 
+      ROOT::Math::GaussIntegrator giod(epsabs, epsrel);
+      giod.SetFunction(wf1);
+      result =  giod.Integral(a, b);
+      error = giod.Error();
+   }
+   else { 
+      ROOT::Math::IntegratorOneDim iod(wf1, ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType(), epsabs, epsrel); 
+      result =  iod.Integral(a, b);
+      error = iod.Error();
+   }
+   return result; 
 }
 
 
 //______________________________________________________________________________
-Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t)
-{
-   // Return Integral of a 2d function in range [ax,bx],[ay,by]
+// Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_t)
+// {
+//    // Return Integral of a 2d function in range [ax,bx],[ay,by]
 
-   Error("Integral","Must be called with a TF2 only");
-   return 0;
-}
+//    Error("Integral","Must be called with a TF2 only");
+//    return 0;
+// }
 
+
+// //______________________________________________________________________________
+// Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_t, Double_t, Double_t)
+// {
+//    // Return Integral of a 3d function in range [ax,bx],[ay,by],[az,bz]
+
+//    Error("Integral","Must be called with a TF3 only");
+//    return 0;
+// }
 
 //______________________________________________________________________________
-Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_t, Double_t)
-{
-   // Return Integral of a 3d function in range [ax,bx],[ay,by],[az,bz]
-
-   Error("Integral","Must be called with a TF3 only");
-   return 0;
-}
-
-//______________________________________________________________________________
-Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t * params, const Double_t * covmat, Double_t epsilon )
+Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t * params, const Double_t * covmat, Double_t epsrel, Double_t epsabs)
 {
    // Return Error on Integral of a parameteric function between a and b
    // due to the parameter uncertainties.
@@ -2740,11 +2703,11 @@ Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t * params, con
    Double_t x1[1];
    Double_t x2[1];
    x1[0] = a, x2[0] = b;
-   return ROOT::TF1Helper::IntegralError(this,1,x1,x2,params,covmat,epsilon);
+   return ROOT::TF1Helper::IntegralError(this,1,x1,x2,params,covmat,epsrel,epsabs);
 }
 
 //______________________________________________________________________________
-Double_t TF1::IntegralError(Int_t n, const Double_t * a, const Double_t * b, const Double_t * params, const  Double_t * covmat, Double_t epsilon )
+Double_t TF1::IntegralError(Int_t n, const Double_t * a, const Double_t * b, const Double_t * params, const  Double_t * covmat, Double_t epsrel, Double_t epsabs )
 {
    // Return Error on Integral of a parameteric function with dimension larger tan one
    // between a[] and b[]  due to the parameters uncertainties.
@@ -2771,7 +2734,7 @@ Double_t TF1::IntegralError(Int_t n, const Double_t * a, const Double_t * b, con
    // ..... after performing other fits on the same function do
    // func->IntegralError(x1,x2,r->GetParams(), r->GetCovarianceMatrix()->GetMatrixArray() );
 
-   return ROOT::TF1Helper::IntegralError(this,n,a,b,params,covmat,epsilon);
+   return ROOT::TF1Helper::IntegralError(this,n,a,b,params,covmat,epsrel,epsabs);
 }
 
 #ifdef INTHEFUTURE
@@ -2804,15 +2767,16 @@ Double_t TF1::IntegralFast(Int_t num, Double_t * /* x */, Double_t * /* w */, Do
 
 
 //______________________________________________________________________________
-Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t eps, Double_t &relerr)
+Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsrel, Double_t &relerr)
 {
    //  See more general prototype below.
    //  This interface kept for back compatibility
+   // It is reccomended to use the other interface where one can specify also epsabs and the maximum number of 
+   // points
 
    Int_t nfnevl,ifail;
-   Int_t minpts = 2+2*n*(n+1)+1; //ie 7 for n=1
-   Int_t maxpts = 1000;
-   Double_t result = IntegralMultiple(n,a,b,minpts, maxpts,eps,relerr,nfnevl,ifail);
+   Int_t maxpts = TMath::Min( Int_t( 20*TMath::Power(fNpx,GetNdim())), 10000000);
+   Double_t result = IntegralMultiple(n,a,b,maxpts,epsrel,epsrel,relerr,nfnevl,ifail);
    if (ifail > 0) {
       Warning("IntegralMultiple","failed code=%d, ",ifail);
    }
@@ -2821,35 +2785,25 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Do
 
 
 //______________________________________________________________________________
-Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t minpts, Int_t maxpts, Double_t eps, Double_t &relerr,Int_t &nfnevl, Int_t &ifail)
+Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t maxpts, Double_t epsrel, Double_t epsabs, Double_t &relerr,Int_t &nfnevl, Int_t &ifail)
 {
-   //  Adaptive Quadrature for Multiple Integrals over N-Dimensional
-   //  Rectangular Regions
-   //
-   //Begin_Latex
-   // I_{n} = #int_{a_{n}}^{b_{n}} #int_{a_{n-1}}^{b_{n-1}} ... #int_{a_{1}}^{b_{1}} f(x_{1}, x_{2},...,x_{n}) dx_{1}dx_{2}...dx_{n}
-   //End_Latex
-   //
-   // Author(s): A.C. Genz, A.A. Malik
-   // converted/adapted by R.Brun to C++ from Fortran CERNLIB routine RADMUL (D120)
-   // The new code features many changes compared to the Fortran version.
-   // Note that this function is currently called only by TF2::Integral (n=2)
-   // and TF3::Integral (n=3).
    //
    // This function computes, to an attempted specified accuracy, the value of
-   // the integral over an n-dimensional rectangular region.
+   // the integral 
    //
    // Input parameters:
    //
    //    n     : Number of dimensions [2,15]
    //    a,b   : One-dimensional arrays of length >= N . On entry A[i],  and  B[i],
    //            contain the lower and upper limits of integration, respectively.
-   //    minpts: Minimum number of function evaluations requested. Must not exceed maxpts.
-   //            if minpts < 1 minpts is set to 2^n +2*n*(n+1) +1
    //    maxpts: Maximum number of function evaluations to be allowed.
    //            maxpts >= 2^n +2*n*(n+1) +1
    //            if maxpts<minpts, maxpts is set to 10*minpts
-   //    eps   : Specified relative accuracy.
+   //    epsrel   : Specified relative accuracy.
+   //    epsabs   : Specified absolute accuracy.
+   //               The integration algorithm will attempt to reach either the relative or the absolute accuracy. 
+   //               In case the maximum funcion called is reached the algorithm will stop earlier without having reached 
+   //               the desired accuracy
    //
    // Output parameters:
    //
@@ -2864,36 +2818,38 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, In
    //
    // Method:
    //
-   //    An integration rule of degree seven is used together with a certain
-   //    strategy of subdivision.
-   //    For a more detailed description of the method see References.
+   //    The defult method used is the Genz-Mallik adaptive multidimensional algorithm 
+   //    using the class ROOT::Math::AdaptiveIntegratorMultiDim 
+   //    (see the reference documentation of the class)
+   //   Other methods can be used by setting ROOT::Math::IntegratorMultiDimOptions::SetDefaultIntegrator()
+   //   to different integrators.
+   //   Other possible integrators are MC integrators based on the ROOT::Math::GSLMCIntegrator class
+   //   Possible methods are : Vegas, Miser or Plain
+   //   IN case of MC integration the accuracy is determined by the number of function calls, one should be 
+   //   careful not to use a too large value of maxpts 
    //
-   // Notes:
-   //
-   //   1.Multi-dimensional integration is time-consuming. For each rectangular
-   //     subregion, the routine requires function evaluations.
-   //     Careful programming of the integrand might result in substantial saving
-   //     of time.
-   //   2.Numerical integration usually works best for smooth functions.
-   //     Some analysis or suitable transformations of the integral prior to
-   //     numerical work may contribute to numerical efficiency.
-   //
-   // References:
-   //
-   //   1.A.C. Genz and A.A. Malik, Remarks on algorithm 006:
-   //     An adaptive algorithm for numerical integration over
-   //     an N-dimensional rectangular region, J. Comput. Appl. Math. 6 (1980) 295-302.
-   //   2.A. van Doren and L. de Ridder, An adaptive algorithm for numerical
-   //     integration over an n-dimensional cube, J.Comput. Appl. Math. 2 (1976) 207-217.
+   // 
 
    ROOT::Math::WrappedMultiFunction<TF1&> wf1(*this, n);
 
-   ROOT::Math::AdaptiveIntegratorMultiDim aimd(wf1, eps, eps, maxpts);
-   aimd.SetMinPts(minpts);
-   double result = aimd.Integral(a,b);
-   relerr = aimd.RelError();
-   nfnevl = aimd.NEval();
-   ifail = 0;
+   double result = 0; 
+   if (ROOT::Math::IntegratorMultiDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationMultiDim::kADAPTIVE ) { 
+      ROOT::Math::AdaptiveIntegratorMultiDim aimd(wf1, epsabs, epsrel, maxpts);
+      //aimd.SetMinPts(minpts); // use default minpts ( n^2 + 2 * n * (n+1) +1 )
+      result = aimd.Integral(a,b);
+      relerr = aimd.RelError();
+      nfnevl = aimd.NEval();
+      ifail =  aimd.Status();
+   }
+   else { 
+      // use default abs tolerance = relative tolerance
+      ROOT::Math::IntegratorMultiDim imd(wf1, ROOT::Math::IntegratorMultiDimOptions::DefaultIntegratorType(), epsabs, epsrel, maxpts); 
+      result = imd.Integral(a,b);
+      relerr = (result != 0) ? imd.Error()/ std::abs(result) : imd.Error(); 
+      nfnevl = 0; 
+      ifail = imd.Status();
+   }
+
 
    return result;
 }
