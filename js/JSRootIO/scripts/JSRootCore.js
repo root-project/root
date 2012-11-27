@@ -37,9 +37,22 @@ var EStatusBits = {
    kInvalidObject : BIT(13)   // if object ctor succeeded but object should not be used
 };
 
+   // TH1 status bits
+var TH1StatusBits = {
+   kNoStats       : BIT(9),  // don't draw stats box
+   kUserContour   : BIT(10), // user specified contour levels
+   kCanRebin      : BIT(11), // can rebin axis
+   kLogX          : BIT(15), // X-axis in log scale
+   kIsZoomed      : BIT(16), // bit set when zooming on Y axis
+   kNoTitle       : BIT(17), // don't draw the histogram title
+   kIsAverage     : BIT(18)  // Bin contents are average (used by Add)
+};
+
 var kTextNDC = BIT(14);
 
 var kNotDraw = BIT(9);  // don't draw the function (TF1) when in a TH1
+
+var kNstat = 13;
 
 var EErrorType = {
    kERRORMEAN : 0,
@@ -132,6 +145,9 @@ landaun = function(f, x, i) {
       }
       if (!obj['_typename'] || typeof(obj['_typename']) == 'undefined')
          return;
+      if (obj['_typename'].indexOf("JSROOTIO.TH1") == 0) obj['fDimension'] = 1;
+      if (obj['_typename'].indexOf("JSROOTIO.TH2") == 0) obj['fDimension'] = 2;
+      if (obj['_typename'].indexOf("JSROOTIO.TH3") == 0) obj['fDimension'] = 3;
       if (obj['_typename'].indexOf("JSROOTIO.TH1") == 0 ||
           obj['_typename'].indexOf("JSROOTIO.TH2") == 0 ||
           obj['_typename'].indexOf("JSROOTIO.TH3") == 0) {
