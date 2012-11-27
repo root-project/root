@@ -1256,7 +1256,7 @@ void TCint::CreateListOfMethodArgs(TFunction *m)
 }
 
 //______________________________________________________________________________
-Int_t TCint::GenerateTClass(const char *classname, Bool_t silent /* = kFALSE */)
+TClass *TCint::GenerateTClass(const char *classname, Bool_t silent /* = kFALSE */)
 {
    // Generate a TClass for the given class.
    
@@ -1271,7 +1271,7 @@ Int_t TCint::GenerateTClass(const char *classname, Bool_t silent /* = kFALSE */)
 }
 
 //______________________________________________________________________________
-Int_t TCint::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE */)
+TClass *TCint::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE */)
 {
    // Generate a TClass for the given class.
 
