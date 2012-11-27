@@ -162,6 +162,7 @@ TClingCallFunc::EvaluateExpression(const clang::Expr* expr) const
 void TClingCallFunc::Exec(void *address) const
 {
    if (!IsValid()) {
+      Error("TClingCallFunc::Exec", "Attempt to execute while invalid.");
       return;
    }
    const clang::Decl *D = fMethod->GetMethodDecl();
@@ -170,35 +171,27 @@ void TClingCallFunc::Exec(void *address) const
    if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
       // Free function or static member function.
       Invoke(fArgs);
+      return;
    }
-   else {
-      // Member function.
-      if (const clang::CXXConstructorDecl *CD =
-               llvm::dyn_cast<clang::CXXConstructorDecl>(D)) {
-         clang::ASTContext &Context = CD->getASTContext();
-         const clang::RecordDecl *RD = llvm::cast<clang::RecordDecl>(DC);
-         if (!RD->getDefinition()) {
-            // Forward-declared class, we do not know what the size is.
-            return;
-         }
-         const clang::ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
-         int64_t size = Layout.getSize().getQuantity();
-         address = malloc(size);
-      }
-      else {
-         if (!address) {
-            Error("TClingCallFunc::Exec",
-                  "calling member function with no object pointer!\n");
-         }
-      }
-      std::vector<llvm::GenericValue> args;
-      llvm::GenericValue this_ptr;
-      this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
-                                    reinterpret_cast<unsigned long>(address));
-      args.push_back(this_ptr);
-      args.insert(args.end(), fArgs.begin(), fArgs.end());
-      Invoke(args);
+   // Member function.
+   if (llvm::dyn_cast<clang::CXXConstructorDecl>(D)) {
+      // Constructor.
+      Error("TClingCallFunc::Exec",
+            "Constructor must be called with ExecInt!");
+      return;
    }
+   if (!address) {
+      Error("TClingCallFunc::Exec",
+            "calling member function with no object pointer!");
+      return;
+   }
+   std::vector<llvm::GenericValue> args;
+   llvm::GenericValue this_ptr;
+   this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
+                                 reinterpret_cast<unsigned long>(address));
+   args.push_back(this_ptr);
+   args.insert(args.end(), fArgs.begin(), fArgs.end());
+   Invoke(args);
 }
 
 long TClingCallFunc::ExecInt(void *address) const
@@ -206,6 +199,7 @@ long TClingCallFunc::ExecInt(void *address) const
    // Yes, the function name has Int in it, but it
    // returns a long.  This is a matter of CINT history.
    if (!IsValid()) {
+      Error("TClingCallFunc::ExecInt", "Attempt to execute while invalid.");
       return 0L;
    }
    const clang::Decl *D = fMethod->GetMethodDecl();
@@ -227,52 +221,53 @@ long TClingCallFunc::ExecInt(void *address) const
       //
       // and we return the allocated address.
       //
-      clang::ASTContext &Context = CD->getASTContext();
+      clang::ASTContext &Ctx = CD->getASTContext();
       const clang::RecordDecl *RD = llvm::cast<clang::RecordDecl>(DC);
       if (!RD->getDefinition()) {
          // Forward-declared class, we do not know what the size is.
          return 0L;
       }
       //
-      //  Find and call an operator new.
+      //  If we are not doing a placement new, then
+      //  find and call an operator new to allocate
+      //  the memory for the object.
       //
-      const clang::ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
-      int64_t size = Layout.getSize().getQuantity();
-      const cling::LookupHelper& LH = fInterp->getLookupHelper();
-      if (const clang::FunctionDecl *mbrNew = LH.findFunctionProto(RD,
-            "operator new", "std::size_t")) {
-         // We have a member function operator new.
-         // Note: An operator new that is a class member does not take
-         //       a this pointer as the first argument, unlike normal
-         //       member functions.
-         TClingCallFunc cf(fInterp);
-         cf.fMethod = new TClingMethodInfo(fInterp, mbrNew);
-         cf.Init(mbrNew);
-         cf.SetArg(static_cast<long>(size));
-         cling::Value val;
-         cf.Invoke(cf.fArgs, &val);
-         address =
-            reinterpret_cast<void*>(val.simplisticCastAs<unsigned long>());
-      }
-      else if (const clang::FunctionDecl *gblNew = LH.findFunctionProto(
-            Context.getTranslationUnitDecl(), "operator new", "std::size_t")) {
-         // We have a global operator new.
-         TClingCallFunc cf(fInterp);
-         cf.fMethod = new TClingMethodInfo(fInterp, gblNew);
-         cf.Init(gblNew);
-         cf.SetArg(static_cast<long>(size));
-         cling::Value val;
-         cf.Invoke(cf.fArgs, &val);
-         address =
-            reinterpret_cast<void*>(val.simplisticCastAs<unsigned long>());
-      }
-      else {
-         Error("TClingCallFunc::ExecInt", "in constructor call and could not find an operator new");
-         return 0L;
+      if (!address) {
+        const clang::ASTRecordLayout &Layout = Ctx.getASTRecordLayout(RD);
+        int64_t size = Layout.getSize().getQuantity();
+        const cling::LookupHelper& LH = fInterp->getLookupHelper();
+        TClingCallFunc cf(fInterp);
+        const clang::FunctionDecl *newFunc = 0;
+        if ((newFunc = LH.findFunctionProto(RD, "operator new",
+              "std::size_t"))) {
+           // We have a member function operator new.
+           // Note: An operator new that is a class member does not take
+           //       a this pointer as the first argument, unlike normal
+           //       member functions.
+        }
+        else if ((newFunc = LH.findFunctionProto(Ctx.getTranslationUnitDecl(),
+              "operator new", "std::size_t"))) {
+           // We have a global operator new.
+        }
+        else {
+           Error("TClingCallFunc::ExecInt",
+                 "in constructor call and could not find an operator new");
+           return 0L;
+        }
+        cf.fMethod = new TClingMethodInfo(fInterp, newFunc);
+        cf.Init(newFunc);
+        cf.SetArg(static_cast<long>(size));
+        // Note: This may throw!
+        cling::Value val;
+        cf.Invoke(cf.fArgs, &val);
+        address =
+           reinterpret_cast<void*>(val.simplisticCastAs<unsigned long>());
+        // Note: address is guaranteed to be non-zero here, otherwise
+        //       the operator new would have thrown a bad_alloc exception.
       }
       //
-      //  Call the constructor, passing the address we got
-      //  from operator new as the this pointer.
+      //  Call the constructor, either passing the address we were given,
+      //  or the address we got from the operator new as the this pointer.
       //
       std::vector<llvm::GenericValue> args;
       llvm::GenericValue this_ptr;
@@ -282,13 +277,13 @@ long TClingCallFunc::ExecInt(void *address) const
       args.insert(args.end(), fArgs.begin(), fArgs.end());
       cling::Value val;
       Invoke(args, &val);
-      // And return the address we got from the operator new.
+      // And return the address of the object.
       return reinterpret_cast<long>(address);
    }
    // FIXME: Need to treat member operator new special, it takes no this ptr.
    if (!address) {
       Error("TClingCallFunc::ExecInt",
-         "calling member function with no object pointer!");
+            "Calling member function with no object pointer!");
       return 0L;
    }
    std::vector<llvm::GenericValue> args;
@@ -305,88 +300,76 @@ long TClingCallFunc::ExecInt(void *address) const
 long long TClingCallFunc::ExecInt64(void *address) const
 {
    if (!IsValid()) {
+      Error("TClingCallFunc::ExecInt64", "Attempt to execute while invalid.");
       return 0LL;
    }
-   cling::Value val;
    const clang::Decl *D = fMethod->GetMethodDecl();
    const clang::CXXMethodDecl *MD = llvm::dyn_cast<clang::CXXMethodDecl>(D);
    const clang::DeclContext *DC = D->getDeclContext();
    if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
       // Free function or static member function.
+      cling::Value val;
       Invoke(fArgs, &val);
+      return val.simplisticCastAs<long long>();
    }
-   else {
-      // Member function.
-      if (const clang::CXXConstructorDecl *CD =
-               llvm::dyn_cast<clang::CXXConstructorDecl>(D)) {
-         clang::ASTContext &Context = CD->getASTContext();
-         const clang::RecordDecl *RD = llvm::cast<clang::RecordDecl>(DC);
-         if (!RD->getDefinition()) {
-            // Forward-declared class, we do not know what the size is.
-            return 0LL;
-         }
-         const clang::ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
-         int64_t size = Layout.getSize().getQuantity();
-         address = malloc(size);
-      }
-      else {
-         if (!address) {
-            fprintf(stderr, "TClingCallFunc::Exec: error: "
-                    "calling member function with no object pointer!\n");
-         }
-      }
-      std::vector<llvm::GenericValue> args;
-      llvm::GenericValue this_ptr;
-      this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
-                                    reinterpret_cast<unsigned long>(address));
-      args.push_back(this_ptr);
-      args.insert(args.end(), fArgs.begin(), fArgs.end());
-      Invoke(args, &val);
+   // Member function.
+   if (llvm::dyn_cast<clang::CXXConstructorDecl>(D)) {
+      // Constructor.
+      Error("TClingCallFunc::Exec",
+            "Constructor must be called with ExecInt!");
+      return 0LL;
    }
+   if (!address) {
+      Error("TClingCallFunc::Exec",
+            "Calling member function with no object pointer!");
+      return 0LL;
+   }
+   std::vector<llvm::GenericValue> args;
+   llvm::GenericValue this_ptr;
+   this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
+                                 reinterpret_cast<unsigned long>(address));
+   args.push_back(this_ptr);
+   args.insert(args.end(), fArgs.begin(), fArgs.end());
+   cling::Value val;
+   Invoke(args, &val);
    return val.simplisticCastAs<long long>();
 }
 
 double TClingCallFunc::ExecDouble(void *address) const
 {
    if (!IsValid()) {
+      Error("TClingCallFunc::ExecDouble", "Attempt to execute while invalid.");
       return 0.0;
    }
-   cling::Value val;
    const clang::Decl *D = fMethod->GetMethodDecl();
    const clang::CXXMethodDecl *MD = llvm::dyn_cast<clang::CXXMethodDecl>(D);
    const clang::DeclContext *DC = D->getDeclContext();
    if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
       // Free function or static member function.
+      cling::Value val;
       Invoke(fArgs, &val);
+      return val.simplisticCastAs<double>();
    }
-   else {
-      // Member function.
-      if (const clang::CXXConstructorDecl *CD =
-               llvm::dyn_cast<clang::CXXConstructorDecl>(D)) {
-         clang::ASTContext &Context = CD->getASTContext();
-         const clang::RecordDecl *RD = llvm::cast<clang::RecordDecl>(DC);
-         if (!RD->getDefinition()) {
-            // Forward-declared class, we do not know what the size is.
-            return 0.0;
-         }
-         const clang::ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
-         int64_t size = Layout.getSize().getQuantity();
-         address = malloc(size);
-      }
-      else {
-         if (!address) {
-            fprintf(stderr, "TClingCallFunc::Exec: error: "
-                    "calling member function with no object pointer!\n");
-         }
-      }
-      std::vector<llvm::GenericValue> args;
-      llvm::GenericValue this_ptr;
-      this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
-                                    reinterpret_cast<unsigned long>(address));
-      args.push_back(this_ptr);
-      args.insert(args.end(), fArgs.begin(), fArgs.end());
-      Invoke(args, &val);
+   // Member function.
+   if (llvm::dyn_cast<clang::CXXConstructorDecl>(D)) {
+      // Constructor.
+      Error("TClingCallFunc::Exec",
+            "Constructor must be called with ExecInt!");
+      return 0.0;
    }
+   if (!address) {
+      Error("TClingCallFunc::Exec",
+            "Calling member function with no object pointer!");
+      return 0.0;
+   }
+   std::vector<llvm::GenericValue> args;
+   llvm::GenericValue this_ptr;
+   this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
+                                 reinterpret_cast<unsigned long>(address));
+   args.push_back(this_ptr);
+   args.insert(args.end(), fArgs.begin(), fArgs.end());
+   cling::Value val;
+   Invoke(args, &val);
    return val.simplisticCastAs<double>();
 }
 
@@ -504,20 +487,27 @@ void TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method, co
       *poffset = 0L;
    }
    if (!info->IsValid()) {
+      Error("TClingCallFunc::SetFunc", "Class info is invalid!");
       return;
    }
-   if (strcmp(arglist, ")") == 0) {
-      // CINT accepted ) as meaning no parameter.
+   if (!strcmp(arglist, ")")) {
+      // CINT accepted a single right paren as meaning no arguments.
       arglist = "";
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const clang::FunctionDecl* decl =
       lh.findFunctionArgs(info->GetDecl(), method, arglist);
    if (!decl) {
+      Error("TClingCallFunc::SetFunc", "Could not find method %s(%s)", method,
+            arglist);
       return;
    }
    fMethod->Init(decl);
    Init(decl);
+   if (!IsValid()) {
+      Error("TClingCallFunc::SetFunc", "Method %s(%s) has no body.", method,
+            arglist);
+   }
    if (poffset) {
       // We have been asked to return a this pointer adjustment.
       if (const clang::CXXMethodDecl* md =
@@ -536,6 +526,9 @@ void TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method, co
       if (!val.type->isIntegralType(Context) &&
             !val.type->isRealFloatingType() && !val.type->isPointerType()) {
          // Invalid argument type, cint skips it, strange.
+         Info("TClingCallFunc::SetFunc", "Invalid value for arg %u of "
+              "function %s(%s)", I, method, arglist);
+         // FIXME: This really should be an error.
          continue;
       }
       fArgs.push_back(val.value);
@@ -553,6 +546,9 @@ void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
       return;
    }
    Init(fMethod->GetMethodDecl());
+   if (!IsValid()) {
+      Error("TClingCallFunc::SetFunc", "Method has no body.");
+   }
 }
 
 void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *method,
@@ -568,12 +564,21 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
    fArgVals.clear();
    fArgs.clear();
    if (!info->IsValid()) {
+      Error("TClingCallFunc::SetFuncProto", "Class info is invalid!");
       return;
    }
    *fMethod = info->GetMethod(method, proto, poffset);
+   if (!fMethod->IsValid()) {
+      Error("TClingCallFunc::SetFuncProto", "Could not find method %s(%s)",
+            method, proto);
+   }
    const clang::FunctionDecl *FD = fMethod->GetMethodDecl();
    if (FD) {
       Init(FD);
+      if (!IsValid()) {
+         Error("TClingCallFunc::SetFuncProto", "Method %s(%s) has no body.",
+               method, proto);
+      }
    }
 }
 
