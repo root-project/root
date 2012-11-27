@@ -1934,7 +1934,7 @@ TClass *TCintWithCling::GenerateTClass(const char *classname, Bool_t silent /* =
    // Generate a TClass for the given class.
 
    TClingClassInfo tci(fInterpreter, classname);
-   if (!tci.IsValid()) {  
+   if (1 || !tci.IsValid()) {  
       int version = 1;
       if (TClassEdit::IsSTLCont(classname)) {
          version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
