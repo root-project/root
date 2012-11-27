@@ -57,12 +57,14 @@
 
 
 #include "Math/DistFuncMathCore.h"
+//#define USE_MATHMORE
 #ifdef USE_MATHMORE
-#include "Math/DistMathMore.h"
+#include "Math/DistFuncMathMore.h"
 #endif
 
 #include "Math/IParamFunction.h"
 #include "Math/Integrator.h"
+#include "Math/IntegratorOptions.h"
 #include <iostream>
 #include <iomanip>
 #include <limits>
@@ -261,7 +263,7 @@ int StatFunction<F1,F2,N1,N2>::Test(double xmin, double xmax, double xlow, doubl
       double q1 = Cdf(v1);
       //std::cout << "v1 " << v1 << " pdf " << (*this)(v1) << " cdf " << q1 << " quantile " << Quantile(q1) << std::endl;  
       // calculate integral of pdf
-      Integrator ig(IntegrationOneDim::ADAPTIVESINGULAR, 1.E-12,1.E-12,100000);
+      Integrator ig(IntegrationOneDim::kADAPTIVESINGULAR, 1.E-12,1.E-12,100000);
       ig.SetFunction(*this);
       double q2 = 0; 
       if (!c) { 
@@ -311,6 +313,7 @@ int StatFunction<F1,F2,N1,N2>::Test(double xmin, double xmax, double xlow, doubl
    }
    //std::cout << "x1-x2 " << x1 << "   " << x2 << std::endl;
    TF1 * f = new TF1("ftemp",ParamFunctor(*this),x1,x2,0);
+   ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("Gauss");
 
    for (int i = 0; i < NFuncTest; ++i) { 
       double v1 = xmin + dx*i;  // value used  for testing
@@ -318,7 +321,7 @@ int StatFunction<F1,F2,N1,N2>::Test(double xmin, double xmax, double xlow, doubl
       //std::cout << "i = " << i << " v1  = " << v1 << " pdf " << (*this)(v1) << " cdf " << q1 << std::endl;  
       double q2 = 0; 
       if (!c) { 
-         q2 = f->Integral(x1,v1); 
+         q2 = f->Integral(x1,v1,1.E-12); 
          // use a larger scale (integral error is 10-9)
          iret |= compare("test _cdf", q1, q2, fScale1 );
          // test the quantile 
@@ -327,7 +330,7 @@ int StatFunction<F1,F2,N1,N2>::Test(double xmin, double xmax, double xlow, doubl
       }
       else { 
          // upper integral (cdf_c)
-         q2 = f->Integral(v1,x2);  
+         q2 = f->Integral(v1,x2,1.E-12);  
          iret |= compare("test _cdf_c", q1, q2, fScale1);
          double v2 = Quantile(q1); 
          iret |= compare("test _quantile_c", v1, v2, fScale2 );

@@ -1263,6 +1263,7 @@ Int_t TH1::BufferEmpty(Int_t action)
          if (x > xmax) xmax = x;
       }
       if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
+         std::cout << "FILLBUFFER " << xmin << " " << xmax << std::endl;
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax);
       } else {
          fBuffer = 0;
@@ -3243,14 +3244,25 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
    if (!f1) { Error("FillRandom", "Unknown function: %s",fname); return; }
 
 //   - Allocate temporary space to store the integral and compute integral
-   Int_t first  = fXaxis.GetFirst();
-   Int_t last   = fXaxis.GetLast();
+
+   TAxis * xAxis = &fXaxis;
+
+   // in case axis of histogram is not defined use the function axis
+   if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
+      Double_t xmin,xmax; 
+      f1->GetRange(xmin,xmax);
+      Info("FillRandom","Using function axis and range [%g,%g]",xmin, xmax);
+      xAxis = f1->GetHistogram()->GetXaxis(); 
+   }
+
+   Int_t first  = xAxis->GetFirst();
+   Int_t last   = xAxis->GetLast();
    Int_t nbinsx = last-first+1;
 
    Double_t *integral = new Double_t[nbinsx+1];
    integral[0] = 0;
    for (binx=1;binx<=nbinsx;binx++) {
-      Double_t fint = f1->Integral(fXaxis.GetBinLowEdge(binx+first-1),fXaxis.GetBinUpEdge(binx+first-1));
+      Double_t fint = f1->Integral(xAxis->GetBinLowEdge(binx+first-1),xAxis->GetBinUpEdge(binx+first-1));
       integral[binx] = integral[binx-1] + fint;
    }
 
@@ -3266,9 +3278,9 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
       r1 = gRandom->Rndm(loop);
       ibin = TMath::BinarySearch(nbinsx,&integral[0],r1);
       //binx = 1 + ibin;
-      //x    = fXaxis.GetBinCenter(binx); //this is not OK when SetBuffer is used
-      x    = fXaxis.GetBinLowEdge(ibin+first)
-             +fXaxis.GetBinWidth(ibin+first)*(r1-integral[ibin])/(integral[ibin+1] - integral[ibin]);
+      //x    = xAxis->GetBinCenter(binx); //this is not OK when SetBuffer is used
+      x    = xAxis->GetBinLowEdge(ibin+first)
+             +xAxis->GetBinWidth(ibin+first)*(r1-integral[ibin])/(integral[ibin+1] - integral[ibin]);
       Fill(x);
    }
    delete [] integral;

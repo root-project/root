@@ -76,6 +76,8 @@
 #include "Fit/SparseData.h"
 #include "HFitInterface.h"
 
+#include "Math/IntegratorOptions.h"
+
 #include "TApplication.h"
 #include "TBenchmark.h"
 #include "Riostream.h"
@@ -6040,6 +6042,7 @@ bool testH1Integral()
   
    TF1 * gaus = new TF1("gaus","gaus"); 
    h1->Fit(gaus, "Q0");
+
 
    // test first nentries
    double err = 0;

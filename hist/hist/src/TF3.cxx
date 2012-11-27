@@ -540,7 +540,7 @@ Double_t TF3::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Doubl
    b[2] = bz;
    Double_t relerr  = 0;
    Int_t n = 3;
-   Int_t maxpts = 20*fNpx*fNpy*fNpz;
+   Int_t maxpts = TMath::Min(100000, 20*fNpx*fNpy*fNpz);
    Int_t nfnevl,ifail;
    Double_t result = IntegralMultiple(n,a,b,maxpts,epsrel,epsrel, relerr,nfnevl,ifail);
    if (ifail > 0) {

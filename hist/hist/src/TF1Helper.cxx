@@ -107,11 +107,13 @@ namespace ROOT {
          }
          else { 
             double relerr;
+            epsrel *= TMath::Power(10,func->GetNdim()-1);
+            epsabs *= TMath::Power(10,func->GetNdim()-1);  // lower tolerances for higher dimensions
             int ifail = 0; 
             int nfnevl = 0;
-            int maxpts = TMath::Min( int (10*TMath::Power(gradFunc.GetNpx(),gradFunc.GetNdim())), 10000000);           
+            int maxpts = TMath::Max(20000, TMath::Min( int (20*TMath::Power(func->GetNpx(),func->GetNdim())), 10000000) );           
             integral = gradFunc.IntegralMultiple(ndim,a,b,maxpts,epsrel,epsabs,relerr,nfnevl,ifail);
-            Warning("TF1Helper::IntegralError","n-dim integration failed code=%d, ",ifail);
+            if (ifail) Warning("TF1Helper::IntegralError","n-dim integration failed code=%d I = %g, relerr =%g, maxpts = %d, epsrel = %g, epsabs = %g, ",ifail,integral,relerr,maxpts,epsrel,epsabs);
          }
       }
       ig[i] = integral; 
