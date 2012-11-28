@@ -27,6 +27,7 @@
 #include "clang/Basic/SourceManager.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/DeclTemplate.h"
 
 #ifdef _WIN32
 #include "process.h"
@@ -39,7 +40,22 @@ static const char *R__GetDeclSourceFileName(const clang::Decl* D)
    clang::SourceLocation SL = D->getLocation();
    clang::ASTContext& ctx = D->getASTContext();
    clang::SourceManager& SM = ctx.getSourceManager();
-   
+
+   if (SL.isValid() && SL.isFileID()) {
+      clang::PresumedLoc PLoc = SM.getPresumedLoc(SL);
+      return PLoc.getFilename();
+   }
+   else {
+      return "invalid";
+   }   
+}
+
+static const char *R__GetDeclSourceFileName(const clang::ClassTemplateSpecializationDecl *tmpltDecl)
+{
+   clang::SourceLocation SL = tmpltDecl->getPointOfInstantiation();
+   clang::ASTContext& ctx = tmpltDecl->getASTContext();
+   clang::SourceManager& SM = ctx.getSourceManager();
+
    if (SL.isValid() && SL.isFileID()) {
       clang::PresumedLoc PLoc = SM.getPresumedLoc(SL);
       return PLoc.getFilename();
@@ -195,7 +211,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
          return kNoMatch;
       }
    }
-   
+
    std::string name_value;
    bool has_name_attribute = GetAttributeValue("name", name_value);
    std::string pattern_value;
@@ -239,14 +255,28 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
    
    if ((has_file_name_attribute||has_file_pattern_attribute)) {
       const char *file_name = R__GetDeclSourceFileName(decl);
-      if ((has_file_name_attribute && 
+      bool hasFileMatch = ((has_file_name_attribute && 
            //FIXME It would be much better to cache the rule stat result and compare to the clang::FileEntry
            (R__match_filename(file_name_value.c_str(),file_name))) 
           ||
           (has_file_pattern_attribute && 
-           CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef)))
-         
-      {
+           CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef)));
+
+      if (!hasFileMatch) {
+         const clang::ClassTemplateSpecializationDecl *tmpltDecl =
+            llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl);
+         // Try the instantiation point.
+         if (tmpltDecl) {
+            file_name = R__GetDeclSourceFileName(tmpltDecl);
+            hasFileMatch = ((has_file_name_attribute && 
+                             //FIXME It would be much better to cache the rule stat result and compare to the clang::FileEntry
+                             (R__match_filename(file_name_value.c_str(),file_name))) 
+                            ||
+                            (has_file_pattern_attribute && 
+                             CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef)));
+         }
+      }
+      if (hasFileMatch) {
          // Reject utility class defined in ClassImp
          // when using a file based rule
          if (!strncmp(name.c_str(), "R__Init", 7) ||
@@ -413,12 +443,17 @@ bool BaseSelectionRule::EndsWithStar(const std::string& pattern) {
 
 bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string& pattern, const std::list<std::string>& patterns_list, bool isLinkdef)
 {
+   if (pattern == "*" /* && patterns_list.back().size() == 0 */) {
+      // We have the simple pattern '*', it matches everything by definition!
+      return true;
+   }
+
    std::list<std::string>::const_iterator it = patterns_list.begin();
    int pos1 = -1, pos2 = -1, pos_end = -1;
    bool begin = BeginsWithStar(pattern);
    bool end = EndsWithStar(pattern);
    
-   // we first chack if the last sub-pattern is contained in the test string 
+   // we first check if the last sub-pattern is contained in the test string 
    std::string last = patterns_list.back();
    pos_end = test.rfind(last);
    
