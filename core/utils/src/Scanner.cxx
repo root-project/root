@@ -14,6 +14,8 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "llvm/ADT/SmallSet.h"
+#include "clang/Sema/Sema.h"
+#include "clang/Frontend/CompilerInstance.h"
 
 #include "cling/Interpreter/Interpreter.h"
 extern cling::Interpreter *gInterp;
@@ -766,6 +768,15 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
    // in case it is implicit or a forward declaration, we are not interested.
    if(D && (D->isImplicit() || !D->isCompleteDefinition()) ) {
       return true;
+   }
+
+   // Reject the selection of std::pair on the ground that it is trivial
+   // and can easily be recreated from the AST information.
+   if (D->getName() == "pair") {
+      const clang::NamespaceDecl *ctxt = llvm::dyn_cast<clang::NamespaceDecl>(D->getDeclContext())->getCanonicalDecl();
+      if (ctxt && ctxt == fInterpreter.getCI()->getSema().getStdNamespace()) { 
+         return true;
+      }
    }
 
    const clang::CXXRecordDecl *cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(D);
