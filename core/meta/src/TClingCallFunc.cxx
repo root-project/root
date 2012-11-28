@@ -498,15 +498,15 @@ void TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method, co
    const clang::FunctionDecl* decl =
       lh.findFunctionArgs(info->GetDecl(), method, arglist);
    if (!decl) {
-      Error("TClingCallFunc::SetFunc", "Could not find method %s(%s)", method,
-            arglist);
+      //Error("TClingCallFunc::SetFunc", "Could not find method %s(%s)", method,
+      //      arglist);
       return;
    }
    fMethod->Init(decl);
    Init(decl);
    if (!IsValid()) {
-      Error("TClingCallFunc::SetFunc", "Method %s(%s) has no body.", method,
-            arglist);
+      //Error("TClingCallFunc::SetFunc", "Method %s(%s) has no body.", method,
+      //      arglist);
    }
    if (poffset) {
       // We have been asked to return a this pointer adjustment.
@@ -546,9 +546,9 @@ void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
       return;
    }
    Init(fMethod->GetMethodDecl());
-   if (!IsValid()) {
-      Error("TClingCallFunc::SetFunc", "Method has no body.");
-   }
+   //if (!IsValid()) {
+   //   Error("TClingCallFunc::SetFunc", "Method has no body.");
+   //}
 }
 
 void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *method,
@@ -569,16 +569,16 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
    }
    *fMethod = info->GetMethod(method, proto, poffset);
    if (!fMethod->IsValid()) {
-      Error("TClingCallFunc::SetFuncProto", "Could not find method %s(%s)",
-            method, proto);
+      //Error("TClingCallFunc::SetFuncProto", "Could not find method %s(%s)",
+      //      method, proto);
    }
    const clang::FunctionDecl *FD = fMethod->GetMethodDecl();
    if (FD) {
       Init(FD);
-      if (!IsValid()) {
-         Error("TClingCallFunc::SetFuncProto", "Method %s(%s) has no body.",
-               method, proto);
-      }
+      //if (!IsValid()) {
+      //   Error("TClingCallFunc::SetFuncProto", "Method %s(%s) has no body.",
+      //         method, proto);
+      //}
    }
 }
 
@@ -744,13 +744,13 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues,
    }
    if (num_given_args < min_args) {
       // Not all required arguments given.
-      Error("TClingCallFunc::Invoke()",
+      Error("TClingCallFunc::Invoke",
             "Not enough function arguments given (min: %u max:%u, given: %lu)",
             min_args, num_params, num_given_args);
       return;
    }
    else if (num_given_args > num_params) {
-      Error("TClingCallFunc::Invoke()",
+      Error("TClingCallFunc::Invoke",
             "Too many function arguments given (min: %u max: %u, given: %lu)",
             min_args, num_params, num_given_args);
       return;
