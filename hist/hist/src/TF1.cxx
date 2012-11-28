@@ -2639,16 +2639,29 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
    TF1_EvalWrapper wf1( this, fParams, fgAbsValue );
    Double_t result = 0; 
 
-
    if (ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationOneDim::kGAUSS ) { 
-      ROOT::Math::GaussIntegrator giod(epsabs, epsrel);
-      giod.SetFunction(wf1);
-      result =  giod.Integral(a, b);
-      error = giod.Error();
+      ROOT::Math::GaussIntegrator iod(epsabs, epsrel);
+      iod.SetFunction(wf1);
+      if (a != - TMath::Infinity() && b != TMath::Infinity() ) 
+         result =  iod.Integral(a, b);
+      else if (a == - TMath::Infinity() && b != TMath::Infinity() )
+         result = iod.IntegralLow(b); 
+      else if (a != - TMath::Infinity() && b == TMath::Infinity() )
+         result = iod.IntegralUp(a); 
+      else if (a == - TMath::Infinity() && b == TMath::Infinity() )
+         result = iod.Integral();
+      error = iod.Error();
    }
    else { 
       ROOT::Math::IntegratorOneDim iod(wf1, ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType(), epsabs, epsrel); 
-      result =  iod.Integral(a, b);
+      if (a != - TMath::Infinity() && b != TMath::Infinity() ) 
+         result =  iod.Integral(a, b);
+      else if (a == - TMath::Infinity() && b != TMath::Infinity() )
+         result = iod.IntegralLow(b); 
+      else if (a != - TMath::Infinity() && b == TMath::Infinity() )
+         result = iod.IntegralUp(a); 
+      else if (a == - TMath::Infinity() && b == TMath::Infinity() )
+         result = iod.Integral();
       error = iod.Error();
    }
    return result; 

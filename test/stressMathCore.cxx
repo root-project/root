@@ -76,7 +76,7 @@
 #include "TTree.h"
 #include "TFile.h"
 #include "TF1.h"
-
+#include "TMath.h"
 
 #include "Math/Vector2D.h"
 #include "Math/Vector3D.h"
@@ -313,12 +313,12 @@ int StatFunction<F1,F2,N1,N2>::Test(double xmin, double xmax, double xlow, doubl
    }
    //std::cout << "x1-x2 " << x1 << "   " << x2 << std::endl;
    TF1 * f = new TF1("ftemp",ParamFunctor(*this),x1,x2,0);
-   ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("Gauss");
+   //ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator("Gauss");
 
    for (int i = 0; i < NFuncTest; ++i) { 
       double v1 = xmin + dx*i;  // value used  for testing
       double q1 = Cdf(v1);
-      //std::cout << "i = " << i << " v1  = " << v1 << " pdf " << (*this)(v1) << " cdf " << q1 << std::endl;  
+
       double q2 = 0; 
       if (!c) { 
          q2 = f->Integral(x1,v1,1.E-12); 
@@ -335,6 +335,10 @@ int StatFunction<F1,F2,N1,N2>::Test(double xmin, double xmax, double xlow, doubl
          double v2 = Quantile(q1); 
          iret |= compare("test _quantile_c", v1, v2, fScale2 );
       }
+      // if (!c)   std::cout << "i = " << i << " x1 = " << x1 << " v  = " << v1 << " pdf " << (*this)(v1) << " cdf " << q1 << " Int(x1,v)= " << q2 << std::endl;  
+      // else   
+      //    std::cout << "i = " << i << " x2 = " << x2 << " v  = " << v1 << " pdf " << (*this)(v1) << " cdf_c " << q1 << " Int(v,x2)= " << q2 << std::endl;  
+
    }
    delete f; 
 #endif
@@ -383,7 +387,6 @@ int testStatFunctions(int nfunc = 100 ) {
    int iret = 0; 
    NFuncTest = nfunc; 
 
-
    { 
       PrintTest("Beta distribution"); 
       CREATE_DIST(beta);
@@ -399,11 +402,11 @@ int testStatFunctions(int nfunc = 100 ) {
 #ifdef USE_MATHMORE // gamma_quantile is in mathmore
       CREATE_DIST(gamma);
       dist.SetParameters( 2, 1);
-      iret |= dist.Test(0.05,5, 0.,1.);
+      iret |= dist.Test(0.05,5, 0.,TMath::Infinity());
 #endif
       CREATE_DIST_C(gamma);
       distc.SetParameters( 2, 1);
-      iret |= distc.Test(0.05,5, 0.,1.,true);
+      iret |= distc.Test(0.05,5, 0.,TMath::Infinity(),true);
    }
 
    {
@@ -417,7 +420,7 @@ int testStatFunctions(int nfunc = 100 ) {
       CREATE_DIST_C(chisquared);
       distc.SetParameters( 10, 0);
       distc.ScaleTol2(10000000);  // t.b.c.
-      iret |= distc.Test(0.05,30, 0.,1.,true);
+      iret |= distc.Test(0.05,30, 0.,TMath::Infinity(),true);
 
    }
    {
@@ -435,16 +438,12 @@ int testStatFunctions(int nfunc = 100 ) {
       PrintTest("BreitWigner distribution "); 
       CREATE_DIST(breitwigner);
       dist.SetParameters( 1);
-#ifndef USE_MATHMORE
       dist.ScaleTol1(1E8);
-#endif
       dist.ScaleTol2(10);
       iret |= dist.Test(-5,5);
       CREATE_DIST_C(breitwigner);
       distc.SetParameters( 1);
-#ifndef USE_MATHMORE
       distc.ScaleTol1(1E8);
-#endif
       distc.ScaleTol2(10);
       iret |= distc.Test(-5,5,1,0,true);
    }
@@ -458,12 +457,10 @@ int testStatFunctions(int nfunc = 100 ) {
       iret |= dist.Test(0.05,5,0,1);
       CREATE_DIST_C(fdistribution);
       distc.SetParameters( 5, 4);
-#ifndef USE_MATHMORE
       distc.ScaleTol1(100000000);
-#endif
       distc.ScaleTol2(10);
       // if enlarge scale test fails
-      iret |= distc.Test(0.05,5,0,1,true);
+      iret |= distc.Test(0.05,5,0,TMath::Infinity(),true);
    }
 #ifdef USE_MATHMORE // wait t quantile is in mathcore
    {
@@ -487,11 +484,9 @@ int testStatFunctions(int nfunc = 100 ) {
       iret |= dist.Test(0.01,5,0,1);
       CREATE_DIST_C(lognormal);
       distc.SetParameters(1,1 );
-#ifndef USE_MATHMORE
-      distc.ScaleTol1(1000000);
-#endif
+      distc.ScaleTol1(1000);
       distc.ScaleTol2(1000000); // t.b.c.
-      iret |= distc.Test(0.01,5,0,1,true);
+      iret |= distc.Test(0.01,5,0,TMath::Infinity(),true);
    }
 
    { 
@@ -513,12 +508,12 @@ int testStatFunctions(int nfunc = 100 ) {
       // as indicated in Landau paper (
       dist.ScaleTol1(10000);  
       dist.ScaleTol2(1.E10);
-      iret |= dist.Test(-1,10,-10.,1.E10);
+      iret |= dist.Test(-1,10,-TMath::Infinity(),TMath::Infinity());
       CREATE_DIST_C(landau);
       distc.SetParameters( 2);
-      distc.ScaleTol1(10000);  
-      distc.ScaleTol2(1.0E10);
-      iret |= distc.Test(-1,10,-10.,1.E10,true);
+      distc.ScaleTol1(1000);  
+      distc.ScaleTol2(1E10);
+      iret |= distc.Test(-1,10,-TMath::Infinity(), TMath::Infinity(),true);
    }
 
    { 
