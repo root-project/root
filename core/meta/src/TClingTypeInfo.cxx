@@ -32,10 +32,13 @@
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Utils/AST.h"
+
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/Frontend/CompilerInstance.h"
+
 #include <cstdio>
 #include <string>
 
@@ -148,6 +151,30 @@ long TClingTypeInfo::Property() const
    }
    if (QT.isConstQualified()) {
       property |= G__BIT_ISCONSTANT;
+   }
+   const clang::TagType *tagQT = llvm::dyn_cast<clang::TagType>(QT.getTypePtr());
+   if (tagQT) {
+      // Note: Now we have class, enum, struct, union only.
+      const clang::TagDecl *TD = llvm::dyn_cast<clang::TagDecl>(tagQT->getDecl());
+      if (TD->isEnum()) {
+         property |= G__BIT_ISENUM;
+      } else {
+         // Note: Now we have class, struct, union only.
+         const clang::CXXRecordDecl *CRD =
+            llvm::dyn_cast<clang::CXXRecordDecl>(TD);
+         if (CRD->isClass()) {
+            property |= G__BIT_ISCLASS;
+         }
+         else if (CRD->isStruct()) {
+            property |= G__BIT_ISSTRUCT;
+         }
+         else if (CRD->isUnion()) {
+            property |= G__BIT_ISUNION;
+         }
+         if (CRD->isAbstract()) {
+            property |= G__BIT_ISABSTRACT;
+         }
+      }
    }
    return property;
 }
