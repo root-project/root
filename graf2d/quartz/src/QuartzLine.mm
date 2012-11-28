@@ -141,6 +141,10 @@ void DrawPolyLine(CGContextRef ctx, Int_t n, TPoint * xy)
    CGContextMoveToPoint(ctx, xy[0].fX, xy[0].fY);
    for (Int_t i = 1; i < n; ++i)
       CGContextAddLineToPoint(ctx, xy[i].fX, xy[i].fY);
+   
+   if (xy[n - 1].fX == xy[0].fX && xy[n - 1].fY == xy[0].fY)
+      CGContextClosePath(ctx);
+   
    CGContextStrokePath(ctx);
 }
 
