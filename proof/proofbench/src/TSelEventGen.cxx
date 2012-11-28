@@ -357,10 +357,9 @@ Bool_t TSelEventGen::Process(Long64_t entry)
    TString fndset(filename);
       
    // Set the Url for remote access
-   TString seed = TString::Format("%s/%s", gSystem->HostName(), filename.Data());
+   TString seed = TString::Format("%s/%s", gSystem->HostName(), filename.Data()), dsrv;
    TUrl basedirurl(filename, kTRUE);
    if (!strcmp(basedirurl.GetProtocol(), "file")) {
-      TString dsrv;
       TProofServ::GetLocalServer(dsrv);
       TProofServ::FilterLocalroot(fndset, dsrv);      
    }
