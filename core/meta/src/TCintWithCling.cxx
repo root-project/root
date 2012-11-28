@@ -26,7 +26,6 @@
 #include "TClingMethodInfo.h"
 #include "TClingTypedefInfo.h"
 #include "TClingTypeInfo.h"
-#include "TClingDisplayClass.h"
 
 #include "TROOT.h"
 #include "TApplication.h"
@@ -970,20 +969,6 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    }
    if (result.isValid() && result.needsManagedAllocation())
       fTemporaries->push_back(result);
-   if (sLine[0] == '.') {
-      // Let CINT see preprocessor and meta commands, but only
-      // after cling has seen them first, otherwise any dictionary
-      // loading triggered by CINT will cause TClass constructors
-      // to not be able to load clang declarations.
-      Char_t c = sLine[1];
-      if ((c != 'I') && (c != 'L') && (c != 'x') && (c != 'X')) {
-         // But not .I which is cling-only, and the .L, .x,
-         // and .X commands were handled above.
-         if (sLine.BeginsWith(".class ")) {
-            DisplayClass(stdout, sLine.Data() + 7, 0, 0); //:))
-         }
-      }
-   }
    if (indent) {
       // incomplete expression, needs something like:
       /// fMetaProcessor->abortEvaluation();
@@ -2938,18 +2923,9 @@ const char* TCintWithCling::GetSTLIncludePath() const
 //                      M I S C
 //______________________________________________________________________________
 
-int TCintWithCling::DisplayClass(FILE* fout, const char* name, int base, int start) const
+int TCintWithCling::DisplayClass(FILE* /*fout*/, const char* /*name*/, int /*base*/, int /*start*/) const
 {
    // Interface to CINT function
-   if (!name || !name[0]) {
-      //That's how G__display_class works: if name is "", when,
-      //if base != 0 we have a verbose output for every class,
-      //otherwise it's a short info for all classes. Start
-      //parameter is ignored in cling version (TODO?)
-      TClingDisplayClass::DisplayAllClasses(fout, fInterpreter, base);
-   } else
-      TClingDisplayClass::DisplayClass(fout, fInterpreter, name, true);//for the single class, info is always verbose.
-
    return 0;
 }
 
