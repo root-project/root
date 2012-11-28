@@ -3751,7 +3751,7 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       // Get the address of the first item for the PrintDebug.
       // (Performance is not essential here since we are going to print to
       // the screen anyway).
-      void *arr0 = loopconfig->GetFirstAddress(start_collection,end_collection);
+      void *arr0 = start_collection ? loopconfig->GetFirstAddress(start_collection,end_collection) : 0;
       // loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
