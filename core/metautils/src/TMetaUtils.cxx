@@ -644,21 +644,34 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl)
 
    clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
    clang::PresumedLoc PLoc = sourceManager.getPresumedLoc(sourceLocation);
-   sourceLocation = PLoc.getIncludeLoc();
+   clang::SourceLocation includeLocation = PLoc.getIncludeLoc();
  
    // Let's try to find out what was the first non system header entry point.
-   while (sourceManager.isInSystemHeader(sourceLocation)) {
-      PLoc = sourceManager.getPresumedLoc(sourceLocation);
-      sourceLocation = PLoc.getIncludeLoc();
+   while (sourceManager.isInSystemHeader(includeLocation)) {
+      clang::PresumedLoc includePLoc = sourceManager.getPresumedLoc(includeLocation);
+      includeLocation = includePLoc.getIncludeLoc();
    }
    
    // If the location is a macro get the expansion location.
-   sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
+   includeLocation = sourceManager.getExpansionRange(includeLocation).second;
    
+   
+   clang::FileID IdOfInclude = sourceManager.getFileID(includeLocation);
+   if (sourceManager.getFilename(includeLocation) == "InteractiveInputLineIncluder.h") {
+      // With cling the 'main' file is a virtual file and can't really be looked into.
+      // (The name of the virtual file is 'InteractiveInputLineIncluder.h').
+      // The included file is an in-memory buffer with a made-up name.
+      // Typically something like: "input_line_4"
+      return PLoc.getFilename();
+      // return "Interpreter Statement."; is another option.
+   }
+
+   // Try to find the spelling used in the #include
    bool invalid;
-   const char *includeLineStart = sourceManager.getCharacterData(sourceLocation, &invalid);
+   const char *includeLineStart = sourceManager.getCharacterData(includeLocation, &invalid);
    if (invalid)
-      return "invalid";
+      return PLoc.getFilename();
+
    char delim = includeLineStart[0];
    if (delim=='<') delim = '>';
    ++includeLineStart;
