@@ -29,7 +29,7 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
 
    JSROOTIO = {};
 
-   JSROOTIO.version = "1.7 2012/11/10";
+   JSROOTIO.version = "1.8 2012/11/28";
 
    JSROOTIO.BIT = function(bits, index) {
       var mask = 1 << index;
@@ -594,7 +594,7 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
 
 (function(){
 
-   var version = "1.9 2012/11/10";
+   var version = "1.10 2012/11/28";
 
    // ctor
    JSROOTIO.TStreamer = function(file) {
@@ -1684,7 +1684,7 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
 
 (function(){
 
-   var version = "1.6 2012/02/24";
+   var version = "1.7 2012/11/28";
 
    if (typeof JSROOTCore != "object") {
       var e1 = new Error("This extension requires JSROOTCore.js");
