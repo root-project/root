@@ -2056,7 +2056,7 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
          this.ReadBuffer(key['nbytes'] - key['keyLen'], callback1);
       };
 
-      JSROOTIO.RootFile.prototype.ReadObject = function(obj_name, cycle) {
+      JSROOTIO.RootFile.prototype.ReadObject = function(obj_name, cycle, node_id) {
          // read any object from a root file
          if (findObject(obj_name+cycle)) return;
          var key = this.GetKey(obj_name, cycle);
@@ -2079,6 +2079,9 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
                   JSROOTIO.GetStreamer(key['className']).Stream(obj, objbuf['unzipdata'], 0);
                   if (key['className'] == 'TFormula') {
                      JSROOTCore.addFormula(obj);
+                  }
+                  else if (key['className'] == 'TNtuple' || key['className'] == 'TTree') {
+                     displayTree(obj, cycle, node_id);
                   }
                   else {
                      JSROOTCore.addMethods(obj);

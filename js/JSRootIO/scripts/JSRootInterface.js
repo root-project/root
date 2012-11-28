@@ -136,6 +136,16 @@ function showDirectory(dir_name, cycle, dir_id) {
    gFile.ReadDirectory(dir_name, cycle, dir_id);
 };
 
+function readTree(tree_name, cycle, node_id) {
+   gFile.ReadObject(tree_name, cycle, node_id);
+};
+
+function displayTree(tree, cycle, node_id) {
+   var url = $("#urlToLoad").val();
+   $("#status").html("file: " + url + "<br/>");
+   JSROOTPainter.displayTree(tree, '#status', node_id);
+};
+
 function displayObject(obj, cycle, idx) {
    if (!obj['_typename'].match(/\bJSROOTIO.TH1/) &&
        !obj['_typename'].match(/\bJSROOTIO.TH2/) &&
