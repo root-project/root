@@ -842,7 +842,7 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    //
 
    // Copy the passed line, it comes from a static buffer in TApplication
-   // and we can be reentered through the CINT routine G__process_cmd,
+   // which can be reentered through the Cling evaluation routines,
    // which would overwrite the static buffer and we would forget what we
    // were doing.
    //
@@ -1232,8 +1232,8 @@ void TCintWithCling::ClearStack()
 //______________________________________________________________________________
 Int_t TCintWithCling::InitializeDictionaries()
 {
-   // Initialize all registered dictionaries. Normally this is already done
-   // by G__init_cint() and G__dlmod().
+   // Initialize all registered dictionaries.
+
    R__LOCKGUARD(gCINTMutex);
 
    SmallVectorImpl<ModuleHeaderInfo_t>::iterator
@@ -1494,10 +1494,18 @@ Long_t TCintWithCling::Calc(const char* line, EErrorCode* error)
 
 //______________________________________________________________________________
 void TCintWithCling::SetGetline(const char * (*getlineFunc)(const char* prompt),
-                       void (*histaddFunc)(const char* line))
+                                void (*histaddFunc)(const char* line))
 {
    // Set a getline function to call when input is needed.
-   G__SetGetlineFunc(getlineFunc, histaddFunc);
+
+   // If cling offers a replacement for G__pause(), it would need to 
+   // also offer a way to customize at least the history recording.
+
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
+   Warning("SetGetline","Cling should support the equivalent of SetGetlineFunc(getlineFunc, histaddFunc)");
+#endif
+#endif
 }
 
 //______________________________________________________________________________
@@ -1518,28 +1526,42 @@ void TCintWithCling::RecursiveRemove(TObject* obj)
 //______________________________________________________________________________
 void TCintWithCling::Reset()
 {
-   // Reset the CINT state to the state saved by the last call to
+   // Reset the Cling state to the state saved by the last call to
    // TCintWithCling::SaveContext().
+
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
    R__LOCKGUARD(gCINTMutex);
-   G__scratch_upto(&fDictPos);
+   Warning("Reset","Cling should support the equivalent of scratch_upto(&fDictPos)");
+#endif
+#endif
 }
 
 //______________________________________________________________________________
 void TCintWithCling::ResetAll()
 {
-   // Reset the CINT state to its initial state.
+   // Reset the Cling state to its initial state.
+
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
    R__LOCKGUARD(gCINTMutex);
-   G__init_cint("cint +V");
-   G__init_process_cmd();
+   Warning("ResetAll","Cling should support the equivalent of complete reset (unload everything but the startup decls.");
+#endif
+#endif
 }
 
 //______________________________________________________________________________
 void TCintWithCling::ResetGlobals()
 {
-   // Reset the CINT global object state to the state saved by the last
+   // Reset in Cling the list of global variables to the state saved by the last
    // call to TCintWithCling::SaveGlobalsContext().
+
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
    R__LOCKGUARD(gCINTMutex);
-   G__scratch_globals_upto(&fDictPosGlobals);
+   Warning("ResetGlobals","Cling should support the equivalent of scratch_globals_upto(&fDictPosGlobals)");
+#endif
+#endif
 }
 
 //______________________________________________________________________________
@@ -1547,6 +1569,7 @@ void TCintWithCling::ResetGlobalVar(void* obj)
 {
    // Reset the CINT global object state to the state saved by the last
    // call to TCintWithCling::SaveGlobalsContext().
+
    R__LOCKGUARD(gCINTMutex);
    G__resetglobalvar(obj);
 }
@@ -1554,11 +1577,16 @@ void TCintWithCling::ResetGlobalVar(void* obj)
 //______________________________________________________________________________
 void TCintWithCling::RewindDictionary()
 {
-   // Rewind CINT dictionary to the point where it was before executing
+   // Rewind Cling dictionary to the point where it was before executing
    // the current macro. This function is typically called after SEGV or
    // ctlr-C after doing a longjmp back to the prompt.
+
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
    R__LOCKGUARD(gCINTMutex);
-   G__rewinddictionary();
+   Warning("RewindDictionary","Cling should provide a way to revert transaction similar to rewinddictionary()");
+#endif
+#endif
 }
 
 //______________________________________________________________________________
@@ -1622,35 +1650,45 @@ Int_t TCintWithCling::DeleteVariable(const char* name)
 //______________________________________________________________________________
 void TCintWithCling::SaveContext()
 {
-   // Save the current CINT state.
+   // Save the current Cling state.
+
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
    R__LOCKGUARD(gCINTMutex);
-   G__store_dictposition(&fDictPos);
+   Warning("SaveContext","Cling should provide a way to record a state watermark similar to store_dictposition(&fDictPos)");
+#endif
+#endif
 }
 
 //______________________________________________________________________________
 void TCintWithCling::SaveGlobalsContext()
 {
-   // Save the current CINT state of global objects.
+   // Save the current Cling state of global objects.
+
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
    R__LOCKGUARD(gCINTMutex);
-   G__store_dictposition(&fDictPosGlobals);
+   Warning("SaveGlobalsContext","Cling should provide a way to record a watermark for the list of global variable similar to store_dictposition(&fDictPosGlobals)");
+#endif
+#endif
 }
 
 //______________________________________________________________________________
 void TCintWithCling::UpdateListOfGlobals()
 {
- // No op: see TClingCallbacks (used to update the list of globals)
+   // No op: see TClingCallbacks (used to update the list of globals)
 }
 
 //______________________________________________________________________________
 void TCintWithCling::UpdateListOfGlobalFunctions()
 {
- // No op: see TClingCallbacks (used to update the list of global functions)
+   // No op: see TClingCallbacks (used to update the list of global functions)
 }
 
 //______________________________________________________________________________
 void TCintWithCling::UpdateListOfTypes()
 {
- // No op: see TClingCallbacks (used to update the list of types)
+   // No op: see TClingCallbacks (used to update the list of types)
 }
 
 //______________________________________________________________________________
@@ -1863,7 +1901,7 @@ void TCintWithCling::CreateListOfDataMembers(TClass* cl)
    TClingDataMemberInfo t(fInterpreter, (TClingClassInfo*)cl->GetClassInfo());
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
-      if (t.IsValid() && t.Name() && strcmp(t.Name(), "G__virtualinfo")) {
+      if (t.IsValid() && t.Name()) {
          TClingDataMemberInfo* a = new TClingDataMemberInfo(t);
          cl->fData->Add(new TDataMember(a, cl));
       }
@@ -2331,9 +2369,10 @@ const char* TCintWithCling::GetCurrentMacroName() const
    //   TCintWithCling::GetCurrentMacroName() returns  inclfile.C
    //   TCintWithCling::GetTopLevelMacroName() returns ./mymacro.C
 
-#ifdef R__MUST_REVISIT
-R__MUST_REVISIT(6,0)
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,0)
    Warning("GetCurrentMacroName", "Must change return type!");
+#endif
 #endif
    static std::string sMacroName;
    sMacroName = fMetaProcessor->getCurrentlyExecutingFile();
@@ -2704,7 +2743,7 @@ Int_t TCintWithCling::AutoLoad(const char* cls)
 //______________________________________________________________________________
 //FIXME: Use of G__ClassInfo in the interface!
 void* TCintWithCling::FindSpecialObject(const char* item, G__ClassInfo* type,
-                               void** prevObj, void** assocPtr)
+                                        void** prevObj, void** assocPtr)
 {
    // Static function called by CINT when it finds an un-indentified object.
    // This function tries to find the UO in the ROOT files, directories, etc.
@@ -3159,7 +3198,7 @@ int TCintWithCling::UnloadFile(const char* path) const
 
 //______________________________________________________________________________
 //
-//  G__CallFunc interface
+//  CallFunc interface
 //
 
 //______________________________________________________________________________
@@ -3306,7 +3345,7 @@ void TCintWithCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, 
 
 //______________________________________________________________________________
 //
-//  G__ClassInfo interface
+//  ClassInfo interface
 //
 
 Long_t TCintWithCling::ClassInfo_ClassProperty(ClassInfo_t* cinfo) const
@@ -3524,7 +3563,7 @@ const char* TCintWithCling::ClassInfo_TmpltName(ClassInfo_t* cinfo) const
 
 //______________________________________________________________________________
 //
-//  G__BaseClassInfo interface
+//  BaseClassInfo interface
 //
 
 //______________________________________________________________________________
@@ -3598,7 +3637,7 @@ const char* TCintWithCling::BaseClassInfo_TmpltName(BaseClassInfo_t* bcinfo) con
 
 //______________________________________________________________________________
 //
-//  G__DataMemberInfo interface
+//  DataMemberInfo interface
 //
 
 //______________________________________________________________________________
@@ -3716,7 +3755,7 @@ const char* TCintWithCling::DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dmi
 
 //______________________________________________________________________________
 //
-//  G__MethodInfo interface
+//  MethodInfo interface
 //
 
 //______________________________________________________________________________
@@ -3836,7 +3875,7 @@ const char* TCintWithCling::MethodInfo_Title(MethodInfo_t* minfo) const
 
 //______________________________________________________________________________
 //
-//  G__MethodArgInfo interface
+//  MethodArgInfo interface
 //
 
 //______________________________________________________________________________
@@ -3916,7 +3955,7 @@ const char* TCintWithCling::MethodArgInfo_TrueTypeName(MethodArgInfo_t* marginfo
 
 //______________________________________________________________________________
 //
-//  G__TypeInfo interface
+//  TypeInfo interface
 //
 
 //______________________________________________________________________________
@@ -3989,7 +4028,7 @@ const char* TCintWithCling::TypeInfo_TrueName(TypeInfo_t* tinfo) const
 
 //______________________________________________________________________________
 //
-//  G__TypedefInfo interface
+//  TypedefInfo interface
 //
 
 //______________________________________________________________________________
