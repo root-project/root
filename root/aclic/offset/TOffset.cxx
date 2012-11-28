@@ -80,7 +80,7 @@ const char *TOffset::GetName() const
   typedef map<int,int > 		MAP;
   typedef multimap<int,int > 	        MULTIMAP;
   typedef set<int> 			SET;
-  typedef multiset<int,int > 	        MULTISET;
+  typedef multiset<int > 	        MULTISET;
 
   class TestChar   	{public: Char_t c; char   	m;};
   class TestShort  	{public: Char_t c; short  	m;};
