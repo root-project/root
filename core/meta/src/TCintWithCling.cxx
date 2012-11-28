@@ -683,18 +683,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    // set the gModuleHeaderInfoBuffer pointer
    TCintWithCling__RegisterModule(0, 0, 0, 0, 0);
 
-   SmallVectorImpl<ModuleHeaderInfo_t>::iterator
-      li = gModuleHeaderInfoBuffer->begin(),
-      le = gModuleHeaderInfoBuffer->end();
-   for (; li != le; ++li) {
-      // process buffered module registrations
-      ((TCintWithCling*)gCint)->RegisterModule(li->fModuleName,
-                                               li->fHeaders,
-                                               li->fIncludePaths,
-                                               li->fMacroDefines,
-                                               li->fMacroUndefines);
-   }
-   gModuleHeaderInfoBuffer->clear();
+   TCintWithCling::InitializeDictionaries();
    
    // Initialize the CINT interpreter interface.
    fMore      = 0;
@@ -1226,10 +1215,10 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
 //______________________________________________________________________________
 void TCintWithCling::ClearFileBusy()
 {
-   // Reset CINT internal state in case a previous action was not correctly
-   // terminated by G__init_cint() and G__dlmod().
-   R__LOCKGUARD(gCINTMutex);
-   G__clearfilebusy(0);
+   // Reset the interpreter internal state in case a previous action was not correctly
+   // terminated.
+
+   // No-op there is not equivalent state (to be cleared) in Cling.
 }
 
 //______________________________________________________________________________
@@ -1246,7 +1235,21 @@ Int_t TCintWithCling::InitializeDictionaries()
    // Initialize all registered dictionaries. Normally this is already done
    // by G__init_cint() and G__dlmod().
    R__LOCKGUARD(gCINTMutex);
-   return G__call_setup_funcs();
+
+   SmallVectorImpl<ModuleHeaderInfo_t>::iterator
+      li = gModuleHeaderInfoBuffer->begin(),
+      le = gModuleHeaderInfoBuffer->end();
+   for (; li != le; ++li) {
+      // process buffered module registrations
+      ((TCintWithCling*)gCint)->RegisterModule(li->fModuleName,
+                                               li->fHeaders,
+                                               li->fIncludePaths,
+                                               li->fMacroDefines,
+                                               li->fMacroUndefines);
+   }
+   gModuleHeaderInfoBuffer->clear();
+
+   return 0;
 }
 
 //______________________________________________________________________________
