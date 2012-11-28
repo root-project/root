@@ -1567,11 +1567,15 @@ void TCintWithCling::ResetGlobals()
 //______________________________________________________________________________
 void TCintWithCling::ResetGlobalVar(void* obj)
 {
-   // Reset the CINT global object state to the state saved by the last
+   // Reset the Cling 'user' global objects/variables state to the state saved by the last
    // call to TCintWithCling::SaveGlobalsContext().
 
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
    R__LOCKGUARD(gCINTMutex);
-   G__resetglobalvar(obj);
+   Warning("ResetGlobalVar","Cling should support the equivalent of resetglobalvar(obj)");
+#endif
+#endif
 }
 
 //______________________________________________________________________________
@@ -1592,10 +1596,16 @@ void TCintWithCling::RewindDictionary()
 //______________________________________________________________________________
 Int_t TCintWithCling::DeleteGlobal(void* obj)
 {
-   // Delete obj from CINT symbol table so it cannot be accessed anymore.
+   // Delete obj from Cling symbol table so it cannot be accessed anymore.
    // Returns 1 in case of success and 0 in case object was not in table.
+
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
    R__LOCKGUARD(gCINTMutex);
-   return G__deleteglobal(obj);
+   Warning("DeleteGlobal","Cling should provide the equivalent of deleteglobal(obj), see also DeleteVariable.");
+#endif
+#endif
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -1603,6 +1613,13 @@ Int_t TCintWithCling::DeleteVariable(const char* name)
 {
    // Undeclare obj called name.
    // Returns 1 in case of success, 0 for failure.
+
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
+   Warning("DeleteVariable","should do more that just reseting the value to zero");
+#endif
+#endif
+
    R__LOCKGUARD(gCINTMutex);
    llvm::StringRef srName(name);
    const char* unscopedName = name;
