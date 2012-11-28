@@ -415,7 +415,13 @@ Bool_t TGX11TTF::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
    // If string falls outside window, there is probably no need to draw it.
    if (x + (int)w <= 0 || x >= (int)width)  return kFALSE;
    if (y + (int)h <= 0 || y >= (int)height) return kFALSE;
-
+   
+   // If w or h are much larger than the window size, there is probably no need
+   // to draw it. Moreover a to large text size may produce a Seg Fault in
+   // malloc in RenderString.
+   if (w > 10*width)  return kFALSE;
+   if (h > 10*height) return kFALSE;
+   
    return kTRUE;
 }
 
