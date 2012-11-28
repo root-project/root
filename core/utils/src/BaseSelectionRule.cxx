@@ -19,15 +19,35 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "BaseSelectionRule.h"
+
 #include <iostream>
 #include <string.h>
+
+#include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/SourceManager.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/ASTContext.h"
 
 #ifdef _WIN32
 #include "process.h"
 #endif
 #include <sys/stat.h>
 
+
+static const char *R__GetDeclSourceFileName(const clang::Decl* D)
+{
+   clang::SourceLocation SL = D->getLocation();
+   clang::ASTContext& ctx = D->getASTContext();
+   clang::SourceManager& SM = ctx.getSourceManager();
+   
+   if (SL.isValid() && SL.isFileID()) {
+      clang::PresumedLoc PLoc = SM.getPresumedLoc(SL);
+      return PLoc.getFilename();
+   }
+   else {
+      return "invalid";
+   }   
+}
 
 /******************************************************************
  * R__matchfilename(srcfilename,filename)
@@ -151,7 +171,7 @@ void BaseSelectionRule::PrintAttributes(int level) const
 
 BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *decl, const std::string& name, 
                                                        const std::string& prototype, 
-                                                       const std::string& file_name, bool isLinkdef) const
+                                                       bool isLinkdef) const
 {
    /* This method returns whether and how the declaration is matching the rule.
     * It returns one of:
@@ -217,14 +237,15 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
    std::string file_pattern_value;
    bool has_file_pattern_attribute = GetAttributeValue("file_pattern", file_pattern_value);
    
-   if (!file_name.empty()) {
+   if ((has_file_name_attribute||has_file_pattern_attribute)) {
+      const char *file_name = R__GetDeclSourceFileName(decl);
       if ((has_file_name_attribute && 
-                       //FIXME It would be much better to cache the rule stat result and compare to the clang::FileEntry
-                       (R__match_filename(file_name_value.c_str(),file_name.c_str()))) 
-         ||
-         (has_file_pattern_attribute && 
-          CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef)))
-      
+           //FIXME It would be much better to cache the rule stat result and compare to the clang::FileEntry
+           (R__match_filename(file_name_value.c_str(),file_name))) 
+          ||
+          (has_file_pattern_attribute && 
+           CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef)))
+         
       {
          // Reject utility class defined in ClassImp
          // when using a file based rule
@@ -233,23 +254,21 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
             return kNoMatch;
          }
          if (has_pattern_attribute) {
-            if (CheckPattern(name, pattern_value, fSubPatterns, isLinkdef)) {
-               const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
-               return kFile;
-            }
+         if (CheckPattern(name, pattern_value, fSubPatterns, isLinkdef)) {
+            const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
+            return kFile;
+         }
          } else {
             const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
             return kFile;
          }
       }
       
-      // if file_name is passed and we have file_name or file_pattern attribute but the
+      // We have file_name or file_pattern attribute but the
       // passed file_name is different than that in the selection rule then return no match
-      if ((has_file_name_attribute||has_file_pattern_attribute)) 
-      {
-         return kNoMatch;
-      }
+      return kNoMatch;
    }
+
 
    if (has_pattern_attribute && CheckPattern(name, pattern_value, fSubPatterns, isLinkdef)) {
       const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);

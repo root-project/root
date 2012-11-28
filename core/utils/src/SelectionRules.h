@@ -127,9 +127,6 @@ public:
    // gets the name and qualified name of the Decl
    bool GetDeclName(clang::Decl* D, std::string& name, std::string& qual_name) const;
    
-   // gets the name of the source file where the Decl was declared
-   bool GetDeclSourceFileName(clang::Decl* D, std::string& file_name) const;
-   
    // gets the function prototype if the Decl (if it is global function or method)
    bool GetFunctionPrototype(clang::Decl* D, std::string& prototype) const;
    

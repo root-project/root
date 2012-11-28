@@ -408,25 +408,6 @@ bool SelectionRules::GetDeclName(clang::Decl* D, std::string& name, std::string&
    }  
 }
 
-bool SelectionRules::GetDeclSourceFileName(clang::Decl* D, std::string& file_name) const
-{
-   clang::SourceLocation SL = D->getLocation();
-   clang::ASTContext& ctx = D->getASTContext();
-   clang::SourceManager& SM = ctx.getSourceManager();
-   
-   if (SL.isValid() && SL.isFileID()) {
-      clang::PresumedLoc PLoc = SM.getPresumedLoc(SL);
-      file_name = PLoc.getFilename();
-      return true;
-   }
-   else {
-      file_name = "invalid";
-      return false;
-   }   
-}
-
-
-
 bool SelectionRules::GetFunctionPrototype(clang::Decl* D, std::string& prototype) const {
    if (!D) {
       return false;
@@ -600,11 +581,6 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, co
       return 0;
    }
  
-   std::string file_name;
-   if (GetHasFileNameRule()){
-      if (!GetDeclSourceFileName(N, file_name)){
-      }
-   }
    const ClassSelectionRule *selector = 0;
    int fImplNo = 0;
    const ClassSelectionRule *explicit_selector = 0;
@@ -619,7 +595,7 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, co
    BaseSelectionRule::EMatchType match;
    for(; it != fClassSelectionRules.end(); ++it) {
    
-      match = it->Match(N,qual_name,"",file_name,IsLinkdefFile());
+      match = it->Match(N,qual_name,"",IsLinkdefFile());
 
       if (match != BaseSelectionRule::kNoMatch) {
          // If we have a match.
@@ -699,11 +675,6 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
    clang::TagDecl* T = llvm::dyn_cast<clang::TagDecl> (D); //TagDecl has methods to understand of what kind is the Decl
    if (T) {
       if (IsLinkdefFile() || T->isClass() || T->isStruct()) {
-         std::string file_name;
-         if (GetHasFileNameRule()){
-            if (!GetDeclSourceFileName(D, file_name)){
-            }
-         }
          const ClassSelectionRule *selector = 0;
          int fImplNo = 0;
          const ClassSelectionRule *explicit_selector = 0;
@@ -716,7 +687,7 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
          std::string pattern_value;
          for(; it != fClassSelectionRules.end(); ++it) {
 
-            BaseSelectionRule::EMatchType match = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", file_name, true);
+            BaseSelectionRule::EMatchType match = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", true);
 
             if (match != BaseSelectionRule::kNoMatch) {
                // If we have a match.
@@ -802,22 +773,13 @@ const BaseSelectionRule *SelectionRules::IsVarSelected(clang::VarDecl* D, const 
    std::list<VariableSelectionRule>::const_iterator it = fVariableSelectionRules.begin();
    std::list<VariableSelectionRule>::const_iterator it_end =  fVariableSelectionRules.end();
    
-   std::string file_name;
-   if (GetHasFileNameRule()){
-      if (GetDeclSourceFileName(D, file_name)){
-#ifdef SELECTION_DEBUG
-         std::cout<<"\tSource file name: "<<file_name<<std::endl;
-#endif
-      }
-   }
-   
    const BaseSelectionRule *selector = 0;
    
    // iterate through all the rules 
    // we call this method only for genrefex variables, functions and enums - it is simpler than the class case:
    // if we have No - it is veto even if we have explicit yes as well
    for(; it != it_end; ++it) {
-      if (BaseSelectionRule::kNoMatch != it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", file_name, false)) {
+      if (BaseSelectionRule::kNoMatch != it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false)) {
          if (it->GetSelected() == BaseSelectionRule::kNo) {
             // The rule did explicitly request to not select this entity.
             return 0;
@@ -843,22 +805,13 @@ const BaseSelectionRule *SelectionRules::IsFunSelected(clang::FunctionDecl* D, c
 #endif
    it = fFunctionSelectionRules.begin();
    it_end = fFunctionSelectionRules.end();
-   
-   std::string file_name;
-   if (GetHasFileNameRule()){
-      if (GetDeclSourceFileName(D, file_name)){
-#ifdef SELECTION_DEBUG
-         std::cout<<"\tSource file name: "<<file_name<<std::endl;
-#endif
-      }
-   }
-   
+      
    const BaseSelectionRule *selector = 0;
    // iterate through all the rules 
    // we call this method only for genrefex variables, functions and enums - it is simpler than the class case:
    // if we have No - it is veto even if we have explicit yes as well
    for(; it != it_end; ++it) {
-      if (BaseSelectionRule::kNoMatch != it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, file_name, false)) {
+      if (BaseSelectionRule::kNoMatch != it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, false)) {
          if (it->GetSelected() == BaseSelectionRule::kNo) {
             // The rule did explicitly request to not select this entity.
             return 0;
@@ -879,22 +832,13 @@ const BaseSelectionRule *SelectionRules::IsEnumSelected(clang::EnumDecl* D, cons
    it = fEnumSelectionRules.begin();
    it_end = fEnumSelectionRules.end();
    
-   std::string file_name;
-   if (GetHasFileNameRule()){
-      if (GetDeclSourceFileName(D, file_name)){
-#ifdef SELECTION_DEBUG
-         std::cout<<"\tSource file name: "<<file_name<<std::endl;
-#endif
-      }
-   }
-   
    const BaseSelectionRule *selector = 0;
    
    // iterate through all the rules 
    // we call this method only for genrefex variables, functions and enums - it is simpler than the class case:
    // if we have No - it is veto even if we have explicit yes as well
    for(; it != it_end; ++it) {
-      if (BaseSelectionRule::kNoMatch != it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", file_name, false)) {
+      if (BaseSelectionRule::kNoMatch != it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false)) {
          if (it->GetSelected() == BaseSelectionRule::kNo) {
             // The rule did explicitly request to not select this entity.
             return 0;
@@ -916,15 +860,6 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(clang::VarDecl* D,
    it = fVariableSelectionRules.begin();
    it_end = fVariableSelectionRules.end();
    
-   std::string file_name;
-   if (GetHasFileNameRule()){
-      if (GetDeclSourceFileName(D, file_name)) {
-#ifdef SELECTION_DEBUG
-         std::cout<<"\tSource file name: "<<file_name<<std::endl;
-#endif
-      }
-   }
-   
    const BaseSelectionRule *selector = 0;
    int fImplNo = 0;
    const BaseSelectionRule *explicit_selector = 0;
@@ -933,7 +868,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(clang::VarDecl* D,
    std::string pattern_value;
    for(; it != it_end; ++it) {
       BaseSelectionRule::EMatchType match 
-         = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", file_name, false);
+         = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false);
       if (match != BaseSelectionRule::kNoMatch) {
          if (it->GetSelected() == BaseSelectionRule::kYes) {
             // explicit rules are with stronger priority in rootcint
@@ -989,15 +924,6 @@ const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(clang::FunctionDec
    it = fFunctionSelectionRules.begin();
    it_end = fFunctionSelectionRules.end();
    
-   std::string file_name;
-   if (GetHasFileNameRule()){
-      if (GetDeclSourceFileName(D, file_name)) {
-#ifdef SELECTION_DEBUG
-         std::cout<<"\tSource file name: "<<file_name<<std::endl;
-#endif
-      }
-   }
-   
    const BaseSelectionRule *selector = 0;
    int fImplNo = 0;
    const BaseSelectionRule *explicit_selector = 0;
@@ -1006,7 +932,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(clang::FunctionDec
    std::string pattern_value;
    for(; it != it_end; ++it) {
       BaseSelectionRule::EMatchType match 
-         = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, file_name, false);
+         = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, false);
       if (match != BaseSelectionRule::kNoMatch) {
          if (it->GetSelected() == BaseSelectionRule::kYes) {
             // explicit rules are with stronger priority in rootcint
@@ -1059,15 +985,6 @@ const BaseSelectionRule *SelectionRules::IsLinkdefEnumSelected(clang::EnumDecl* 
    it = fEnumSelectionRules.begin();
    it_end = fEnumSelectionRules.end();
    
-   std::string file_name;
-   if (GetHasFileNameRule()){
-      if (GetDeclSourceFileName(D, file_name)) {
-#ifdef SELECTION_DEBUG
-         std::cout<<"\tSource file name: "<<file_name<<std::endl;
-#endif
-      }
-   }
-   
    const BaseSelectionRule *selector = 0;
    int fImplNo = 0;
    const BaseSelectionRule *explicit_selector = 0;
@@ -1076,7 +993,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefEnumSelected(clang::EnumDecl* 
    std::string pattern_value;
    for(; it != it_end; ++it) {
       BaseSelectionRule::EMatchType match = 
-         it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", file_name, false);
+         it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false);
       if (match != BaseSelectionRule::kNoMatch) {
          if (it->GetSelected() == BaseSelectionRule::kYes) {
             // explicit rules are with stronger priority in rootcint
@@ -1157,7 +1074,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D,
       std::string pat_value;
       for(; it != it_end; ++it) {
          BaseSelectionRule::EMatchType match
-            = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, "", false);
+            = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, false);
          
          if (match == BaseSelectionRule::kName) {
             // here I should implement my implicit/explicit thing
@@ -1279,15 +1196,6 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D,
       std::string parent_name, parent_qual_name;
       if (!GetParentName(D, parent_name, parent_qual_name)) return 0;
       
-      std::string file_name;
-      if (GetHasFileNameRule()){
-         if (GetDeclSourceFileName(D, file_name)){
-#ifdef SELECTION_DEBUG            
-            std::cout<<"\tSource file name: "<<file_name<<std::endl;
-#endif
-         }
-      }
-      
       const BaseSelectionRule *selector = 0;
       int fImplNo = 0;
       const BaseSelectionRule *explicit_selector = 0;
@@ -1300,7 +1208,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefMethodSelected(clang::Decl* D,
       std::string pattern_value;
       for(; it != fClassSelectionRules.end(); ++it) {
          BaseSelectionRule::EMatchType match 
-            = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), parent_qual_name, "", file_name, true); // == BaseSelectionRule::kYes
+            = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), parent_qual_name, "", true); // == BaseSelectionRule::kYes
          
          if (match != BaseSelectionRule::kNoMatch) {
             if (it->GetSelected() == BaseSelectionRule::kYes) {
@@ -1370,15 +1278,6 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const 
    {    
       if (!GetParentName(D, parent_name, parent_qual_name)) return 0;
       
-      std::string file_name;
-      if (GetHasFileNameRule()){
-         if (GetDeclSourceFileName(D, file_name)) {
-#ifdef SELECTION_DEBUG
-            std::cout<<"\tSource file name: "<<file_name<<std::endl;
-#endif
-         }
-      }
-      
       const BaseSelectionRule *selector = 0;
       Int_t fImplNo = 0;
       const BaseSelectionRule *explicit_selector = 0;
@@ -1390,7 +1289,7 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const 
       std::string pattern_value;
       for(; it != fClassSelectionRules.end(); ++it) {
          BaseSelectionRule::EMatchType match 
-            = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), parent_qual_name, "", file_name, false);
+            = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), parent_qual_name, "", false);
 
          if (match != BaseSelectionRule::kNoMatch) {
             if (it->GetSelected() == BaseSelectionRule::kYes) {
@@ -1461,7 +1360,7 @@ const BaseSelectionRule *SelectionRules::IsMemberSelected(clang::Decl* D, const 
                      mem_it = members.begin();
                      mem_it_end = members.end();
                      for (; mem_it != mem_it_end; ++mem_it) {
-                        if (BaseSelectionRule::kName == mem_it->Match(llvm::dyn_cast<clang::NamedDecl>(D), str_name, prototype, file_name, false)) {
+                        if (BaseSelectionRule::kName == mem_it->Match(llvm::dyn_cast<clang::NamedDecl>(D), str_name, prototype, false)) {
                            if (mem_it->GetSelected() == BaseSelectionRule::kNo) return 0;
                         }
                      }

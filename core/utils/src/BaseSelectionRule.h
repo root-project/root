@@ -80,7 +80,7 @@ public:
    void  PrintAttributes(int level) const;       // prints the list of attributes - level is the number of tabs from the beginning of the line
    void  PrintAttributes(std::ostream &out, int level) const;       // prints the list of attributes - level is the number of tabs from the beginning of the line
 
-   EMatchType Match(const clang::NamedDecl *decl, const std::string& name, const std::string& prototype, const std::string& file_name, bool isLinkdef) const; // for more detailed description look at the .cxx file
+   EMatchType Match(const clang::NamedDecl *decl, const std::string& name, const std::string& prototype, bool isLinkdef) const; // for more detailed description look at the .cxx file
 
    void  SetMatchFound(bool match); // set fMatchFound
    bool  GetMatchFound() const;     // get fMatchFound
