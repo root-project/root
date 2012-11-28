@@ -19,7 +19,7 @@ namespace ROOT {
 
    namespace TF1Helper { 
 
-      double IntegralError(TF1 * func, int dim, const double * a, const double * b, const double * params, const double * covmat, double epsrel, double epsabs); 
+      double IntegralError(TF1 * func, int dim, const double * a, const double * b, const double * params, const double * covmat, double eps); 
 
   /**
      function class representing the derivative with respect a parameter of a given TF1  

@@ -6030,6 +6030,19 @@ bool testScale3DProf()
    return status;
 }
 
+
+bool normGaussfunc = true;
+double gaus1d(const double *x, const double * p) { 
+   return p[0] * TMath::Gaus( x[0], p[1], p[2], normGaussfunc);
+}
+double gaus2d(const double *x, const double * p) { 
+   return p[0] * TMath::Gaus( x[0], p[1], p[2], normGaussfunc ) * TMath::Gaus( x[1], p[3], p[4], normGaussfunc );
+}
+double gaus3d(const double *x, const double * p) { 
+   return p[0] * TMath::Gaus( x[0], p[1], p[2], normGaussfunc ) * TMath::Gaus( x[1], p[3], p[4], normGaussfunc ) * TMath::Gaus( x[2], p[5], p[6], normGaussfunc );
+}
+
+
 bool testH1Integral() 
 { 
    int i1 = 1;
@@ -6037,11 +6050,14 @@ bool testH1Integral()
    
    int n = 10000; 
    TH1D * h1 = new TH1D("h1","h1",100,-5,5); 
-   h1->FillRandom("gaus",n); 
+   TF1 * gaus = new TF1("gaus1d",gaus1d,-5,5,3); 
+   gaus->SetParameters(1,0,1);
 
-  
-   TF1 * gaus = new TF1("gaus","gaus"); 
-   h1->Fit(gaus, "Q0");
+   h1->FillRandom("gaus1d",n); 
+
+   TString fitOpt = "LQ0";
+   if ( defaultEqualOptions & cmpOptDebug ) fitOpt = "L0"; 
+   h1->Fit(gaus, fitOpt);
 
 
    // test first nentries
@@ -6079,15 +6095,6 @@ bool testH1Integral()
    return iret;
 }
 
-double gaus1d(const double *x, const double * p) { 
-   return p[0] * TMath::Gaus( x[0], p[1], p[2] );
-}
-double gaus2d(const double *x, const double * p) { 
-   return p[0] * TMath::Gaus( x[0], p[1], p[2] ) * TMath::Gaus( x[1], p[3], p[4] );
-}
-double gaus3d(const double *x, const double * p) { 
-   return p[0] * TMath::Gaus( x[0], p[1], p[2] ) * TMath::Gaus( x[1], p[3], p[4] ) * TMath::Gaus( x[2], p[5], p[6] );
-}
 
 bool testH2Integral()
 { 
@@ -6100,9 +6107,11 @@ bool testH2Integral()
    TH2D * h2 = new TH2D("h2","h2",50,-5,5, 50, -5, 5); 
   
    TF2 * gaus = new TF2("gaus2d",gaus2d,-5,5,-5,5,5); 
-   gaus->SetParameters(100,0,2,1.,1);
+   gaus->SetParameters(100,0,1.2,1.,1);
    h2->FillRandom("gaus2d",n);
-   h2->Fit(gaus,"LQ0");
+   TString fitOpt = "LQ0";
+   if ( defaultEqualOptions & cmpOptDebug ) fitOpt = "L0";
+   h2->Fit(gaus,fitOpt);
 
 
    // test first nentries
@@ -6125,7 +6134,9 @@ bool testH2Integral()
    a[0] = x1; a[1] = y1; 
    b[0] = x2; b[1] = y2; 
    
-   double igf = gaus->Integral(x1,x2,y1,y2);    
+   //double igf = gaus->Integral(x1,x2,y1,y2,1.E-4);    
+   double relerr = 0;
+   double igf = gaus->IntegralMultiple(2, a, b, 1.E-4, relerr);  // don't need high tolerance (use 10-4)
    double err2 = gaus->IntegralError(2,a,b);
 
    double delta = fabs( igh - igf)/ err1; 
@@ -6133,7 +6144,7 @@ bool testH2Integral()
    if ( defaultEqualOptions & cmpOptDebug ) {
       std::cout << "Estimated entries = " << nent << " +/- " << err << std::endl; 
       std::cout << "Histogram integral =  " << igh << " +/- " << err1 << std::endl;
-      std::cout << "Function  integral =  " << igf << " +/- " << err2 << std::endl;
+      std::cout << "Function  integral =  " << igf << " +/- " << err2 << " +/- " << igf*relerr << std::endl;
       std::cout << " Difference (histogram - function) in nsigma  = " <<  delta << std::endl;
    }
 
@@ -6158,18 +6169,22 @@ bool testH3Integral()
    int n = 1000000; 
    TH3D * h3 = new TH3D("h3","h3",50,-5,5, 50, -5, 5, 50, -5, 5); 
   
+   //TF3 * gaus = new TF3("gaus3d",gaus3d,-5,5,-5,5,-5,5,7); 
    TF3 * gaus = new TF3("gaus3d",gaus3d,-5,5,-5,5,-5,5,7); 
-   gaus->SetParameters(100,0,2,1.,2,-1,1);
+   gaus->SetParameters(100,0,1.3,1.,1.,-1,0.9);
    w.Start(); 
    h3->FillRandom("gaus3d",n);
 
    //gaus->SetParameter(0, h3->GetMaximum() );
 
+   TString fitOpt = "LQ0";
    w.Stop(); 
-   if ( defaultEqualOptions & cmpOptDebug )
+   if ( defaultEqualOptions & cmpOptDebug ) { 
       std::cout << "Time to fill random " << w.RealTime() << std::endl;
+      fitOpt = "L0";
+   }
    w.Start(); 
-   h3->Fit(gaus,"LQ0");
+   h3->Fit(gaus,fitOpt);
    if ( defaultEqualOptions & cmpOptDebug )
       std::cout << "Time to fit         " << w.RealTime() << std::endl;
 
@@ -6207,7 +6222,10 @@ bool testH3Integral()
    b[0] = x2; b[1] = y2; b[2] = z2; 
 
    w.Start();
-   double igf = gaus->Integral(x1,x2,y1,y2,z1,z2); 
+   double relerr = 0;
+   double igf = gaus->IntegralMultiple(3, a, b, 1.E-4, relerr);  // don't need high tolerance (use 10-4) 
+   //double igf = gaus->Integral(x1,x2,y1,y2,z1,z2,1.E-4);  // don't need high tolerance 
+   
    double err2 = gaus->IntegralError(3,a,b);
    w.Stop();    
 
@@ -6216,7 +6234,7 @@ bool testH3Integral()
    if ( defaultEqualOptions & cmpOptDebug ) {
       std::cout << "Time to function integral   " << w.RealTime() << std::endl;
       std::cout << "Histogram integral =  " << igh << " +/- " << err1 << std::endl;
-      std::cout << "Function  integral =  " << igf << " +/- " << err2 << std::endl;
+      std::cout << "Function  integral =  " << igf << " +/- " << err2 << " +/- " << igf*relerr << std::endl;
       std::cout << " Difference (histogram - function) in nsigma  = " <<  delta << std::endl;
    }
    

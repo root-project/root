@@ -2675,7 +2675,7 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
 // }
 
 //______________________________________________________________________________
-Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t * params, const Double_t * covmat, Double_t epsrel, Double_t epsabs)
+Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t * params, const Double_t * covmat, Double_t epsilon)
 {
    // Return Error on Integral of a parameteric function between a and b
    // due to the parameter uncertainties.
@@ -2703,11 +2703,11 @@ Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t * params, con
    Double_t x1[1];
    Double_t x2[1];
    x1[0] = a, x2[0] = b;
-   return ROOT::TF1Helper::IntegralError(this,1,x1,x2,params,covmat,epsrel,epsabs);
+   return ROOT::TF1Helper::IntegralError(this,1,x1,x2,params,covmat,epsilon);
 }
 
 //______________________________________________________________________________
-Double_t TF1::IntegralError(Int_t n, const Double_t * a, const Double_t * b, const Double_t * params, const  Double_t * covmat, Double_t epsrel, Double_t epsabs )
+Double_t TF1::IntegralError(Int_t n, const Double_t * a, const Double_t * b, const Double_t * params, const  Double_t * covmat, Double_t epsilon )
 {
    // Return Error on Integral of a parameteric function with dimension larger tan one
    // between a[] and b[]  due to the parameters uncertainties.
@@ -2734,7 +2734,7 @@ Double_t TF1::IntegralError(Int_t n, const Double_t * a, const Double_t * b, con
    // ..... after performing other fits on the same function do
    // func->IntegralError(x1,x2,r->GetParams(), r->GetCovarianceMatrix()->GetMatrixArray() );
 
-   return ROOT::TF1Helper::IntegralError(this,n,a,b,params,covmat,epsrel,epsabs);
+   return ROOT::TF1Helper::IntegralError(this,n,a,b,params,covmat,epsilon);
 }
 
 #ifdef INTHEFUTURE
