@@ -351,9 +351,10 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
          }
       }
       else {
-         o += 2; // skip version
-         o += 4; // skip unique id
-         obj['fBits'] = JSROOTIO.ntou4(str, o); o += 4;
+         // simply skip empty object...
+         //o += 2; // skip version
+         //o += 4; // skip unique id
+         //obj['fBits'] = JSROOTIO.ntou4(str, o); o += 4;
       }
       return {
          'cln' : class_name,
