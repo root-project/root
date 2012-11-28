@@ -308,16 +308,20 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::VarDecl* D) const
 #endif
 }
  
-const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FieldDecl* D) const
+const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FieldDecl* /* D */) const
 {  
+   // Currently rootcling does not need any information about fields.
+   return 0;
+#if 0
    std::string str_name;   // name of the Decl
    std::string qual_name;  // fully qualified name of the Decl   
    GetDeclName(D, str_name, qual_name);
 
    return IsMemberSelected(D, str_name);
+#endif
 }
 
-const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FunctionDecl* D) const
+const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FunctionDecl* /* D */) const
 {  
    // Currently rootcling does not need any information about function.
    return 0;
