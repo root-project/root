@@ -1263,7 +1263,6 @@ Int_t TH1::BufferEmpty(Int_t action)
          if (x > xmax) xmax = x;
       }
       if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
-         std::cout << "FILLBUFFER " << xmin << " " << xmax << std::endl;
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax);
       } else {
          fBuffer = 0;
