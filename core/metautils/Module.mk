@@ -79,7 +79,7 @@ $(METAUTILSDIRS)/G__std__%.cxx: $(METAUTILSDIRS)/%Linkdef.h $(ROOTCINTTMPDEP)
 	$(ROOTCINTTMP) -f $@ -c $(subst multi,,${*:2=}) \
 	   $(ROOT_SRCDIR)/core/metautils/src/$*Linkdef.h
 
-$(STLDICTS): lib/lib%Dict.$(SOEXT): $(METAUTILSDIRS)/G__std__%.o
+$(STLDICTS): lib/lib%Dict.$(SOEXT): $(METAUTILSDIRS)/G__std__%.o $(ORDER_) $(MAINLIBS)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ "$(filter-out $(MAINLIBS),$^)" ""
 
 lib/lib%Dict.rootmap: $(RLIBMAP) $(MAKEFILEDEP) $(METAUTILSDIRS)/%Linkdef.h
