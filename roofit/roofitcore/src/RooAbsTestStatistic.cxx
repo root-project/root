@@ -617,6 +617,7 @@ void RooAbsTestStatistic::enableOffsetting(Bool_t flag)
     if (!_doOffset) {
       _offset = 0 ;
     }
+    setValueDirty() ;
     break ;
 
   case SimMaster:

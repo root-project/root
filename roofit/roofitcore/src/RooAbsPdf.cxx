@@ -724,6 +724,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooCmdArg& arg1, const 
   //                                        If none are specified the constrained parameters are used
   // Verbose(Bool_t flag)           -- Constrols RooFit informational messages in likelihood construction
   // CloneData(Bool flag)           -- Use clone of dataset in NLL (default is true)
+  // Offset(Bool_t)                  -- Offset likelihood by initial value (so that starting value of FCN in minuit is zero). This
+  //                                    can improve numeric stability in simultaneously fits with components with large likelihood values
   // 
   // 
   
@@ -768,6 +770,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineSet("cPars","Constrain",0,0) ;
   pc.defineSet("glObs","GlobalObservables",0,0) ;
   pc.defineInt("constrAll","Constrained",0,0) ;
+  pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
   pc.defineMutex("Range","RangeWithName") ;
   pc.defineMutex("Constrain","Constrained") ;
@@ -789,6 +792,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   Bool_t verbose = pc.getInt("verbose") ;
   Int_t optConst = pc.getInt("optConst") ;
   Int_t cloneData = pc.getInt("cloneData") ;
+  Int_t doOffset = pc.getInt("doOffset") ;
   
   // If no explicit cloneData command is specified, cloneData is set to true if optimization is activated
   if (cloneData==2) {
@@ -905,6 +909,11 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   if (doStripDisconnected) {
     delete cPars ;
   }
+
+  if (doOffset) {
+    nll->enableOffsetting(kTRUE) ;
+  }
+
   return nll ;
 }
 
@@ -1015,7 +1024,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
 
   RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,CloneData,GlobalObservables,GlobalObservablesTag") ;
+  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,CloneData,GlobalObservables,GlobalObservablesTag,OffsetLikelihood") ;
 
   pc.defineString("fitOpt","FitOptions",0,"") ;
   pc.defineInt("optConst","Optimize",0,2) ;
@@ -1070,7 +1079,6 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t doEEWall = pc.getInt("doEEWall") ;
   Int_t doWarn   = pc.getInt("doWarn") ;
   Int_t doSumW2  = pc.getInt("doSumW2") ;
-  Int_t doOffset = pc.getInt("doOffset") ;
   const RooArgSet* minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet")) ;
 #ifdef __ROOFIT_NOROOMINIMIZER
   const char* minType =0 ;
@@ -1104,8 +1112,6 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   }
     
   RooAbsReal* nll = createNLL(data,nllCmdList) ;  
-  if (doOffset) nll->enableOffsetting(kTRUE) ;
-
   RooFitResult *ret = 0 ;    
 
   // Instantiate MINUIT

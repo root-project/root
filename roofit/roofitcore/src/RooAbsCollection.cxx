@@ -215,6 +215,7 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
     delete output ;
     return 0 ;
   }
+  output->setHashTableSize(0) ;
   return output ;
 }
 

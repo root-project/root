@@ -47,7 +47,7 @@ RooNameSet::RooNameSet()
 {
   // Default constructor
 
-  _len = 256 ;
+  _len = 64 ;
   _nameList = new char[_len] ;
   _nameList[0] = 0 ;
   
@@ -61,7 +61,7 @@ RooNameSet::RooNameSet(const RooArgSet& argSet)
 {
   // Construct from RooArgSet
 
-  _len = 256 ;
+  _len = 64 ;
   _nameList = new char[_len] ;
   _nameList[0] = 0 ;
   refill(argSet) ;
@@ -125,7 +125,7 @@ void RooNameSet::refill(const RooArgSet& argSet)
       if (ptr>=end) {
 	// Extend buffer
 	Int_t offset = ptr-_nameList ;
-	extendBuffer(256) ;
+	extendBuffer(64) ;
 	ptr = _nameList + offset ;
 	end = _nameList + _len - 2;
       }
