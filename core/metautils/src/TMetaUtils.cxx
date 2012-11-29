@@ -638,11 +638,16 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl)
 
    clang::SourceLocation sourceLocation = decl->getLocation();
 
-   if (! (sourceLocation.isValid() && sourceLocation.isFileID()) ) {
+   clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
+
+   if (!sourceLocation.isValid() ) {
       return "invalid";
    }
 
-   clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
+   if (!sourceLocation.isFileID()) {
+      sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
+   }
+
    clang::PresumedLoc PLoc = sourceManager.getPresumedLoc(sourceLocation);
    clang::SourceLocation includeLocation = PLoc.getIncludeLoc();
  
@@ -653,8 +658,9 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl)
    }
    
    // If the location is a macro get the expansion location.
-   includeLocation = sourceManager.getExpansionRange(includeLocation).second;
-   
+   if (!includeLocation.isFileID()) {
+      includeLocation = sourceManager.getExpansionRange(includeLocation).second;
+   }
    
    clang::FileID IdOfInclude = sourceManager.getFileID(includeLocation);
    if (sourceManager.getFilename(includeLocation) == "InteractiveInputLineIncluder.h") {

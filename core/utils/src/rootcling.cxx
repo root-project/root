@@ -582,6 +582,14 @@ long R__GetLineNumber(const clang::Decl *decl)
    clang::SourceLocation sourceLocation = decl->getLocation();
    clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
 
+  if (!sourceLocation.isValid() ) {
+      return -1;
+   }
+
+   if (!sourceLocation.isFileID()) {
+      sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
+   }
+
    if (sourceLocation.isValid() && sourceLocation.isFileID()) {
       return sourceManager.getLineNumber(sourceManager.getFileID(sourceLocation),sourceManager.getFileOffset(sourceLocation));
    }
