@@ -39,6 +39,8 @@ CINTDLLS_SOURCE_FILES = $(addsuffix .cc ,$(addprefix core/metautils/src/stlLoade
 
 # these need dictionaries
 CINTDICTDLLS =
+ifneq ($(BUILDCLING),yes)
+
 ifneq ($(findstring vector,$(CINTDLLS)),)
 CINTDICTDLLS += lib/libvectorDict.$(SOEXT)
 $(CINTDLLDIRSTL)/vector.dll: core/metautils/src/stlLoader_vector.o
@@ -78,6 +80,8 @@ endif
 ifneq ($(findstring complex,$(CINTDLLS)),)
 CINTDICTDLLS += lib/libcomplexDict.$(SOEXT)
 $(CINTDLLDIRSTL)/complex.dll: core/metautils/src/stlLoader$(CINT7VERSIONNO)_complex.o
+endif
+
 endif
 
 CINTDICTMAPS = $(CINTDICTDLLS:.$(SOEXT)=.rootmap)
@@ -258,6 +262,8 @@ $(CINTDLLDIRDLLS)/sys/ipc.dll: $(CINTDLLDIRL)/G__c_ipc.o
 ##### ipc special treatment - END
 
 ##### dictionaries
+ifneq ($(BUILDCLING),yes)
+
 $(CINTDLLDIRDLLSTL)/rootcint_%.cxx: $(ROOT_SRCDIR)/core/metautils/src/%Linkdef.h $(CINTDLLROOTCINTTMPDEP)
 	$(CINTDLLROOTCINTTMP) -f $@ -c $(subst multi,,${*:2=}) \
 	   $(ROOT_SRCDIR)/core/metautils/src/$*Linkdef.h
@@ -274,6 +280,7 @@ $(filter-out lib/libvectorDict.rootmap,$(CINTDICTMAPS)): lib/lib%Dict.rootmap: $
 $(CINTDICTDLLS): lib/lib%Dict.$(SOEXT): $(CINTDLLDIRDLLSTL)/rootcint_%.o
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ "$(filter-out $(MAINLIBS),$^)" "$(CINTDLLLIBLINK)"
 
+endif
 ##### dictionaries - END
 
 ##### clean
