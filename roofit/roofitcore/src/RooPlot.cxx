@@ -523,15 +523,22 @@ void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label)
 
 
 //_____________________________________________________________________________
-void RooPlot::Draw(Option_t *)
+void RooPlot::Draw(Option_t *option)
 {
   // Draw this plot and all of the elements it contains. The specified options
   // only apply to the drawing of our frame. The options specified in our add...()
   // methods will be used to draw each object we contain.
 
+  TString optArg = option ;
+  optArg.ToLower() ;
+
   // This draw options prevents the histogram with one dummy entry 
   // to be drawn 
-  _hist->Draw("FUNC");
+  if (optArg.Contains("same")) {
+    _hist->Draw("FUNCSAME");
+  } else {
+    _hist->Draw("FUNC");
+  }
 
   _iterator->Reset();
   TObject *obj = 0;
