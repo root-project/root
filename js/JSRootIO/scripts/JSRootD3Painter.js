@@ -4217,9 +4217,6 @@ function createFillPatterns(svg, id, color) {
          }
          key_tree.add(k, dir_id, disp_name, tree_link, node_title, '', node_img, node_img);
          nid = k; k++;
-         if (branches[i]['fBranches'].length > 0) {
-            k = JSROOTPainter.displayBranches(branches[i]['fBranches'], nid, k);
-         }
          for (var j=0; j<nb_leaves; ++j) {
             var disp_name = branches[i]['fLeaves'][j]['fName'];
             var node_title = disp_name;
@@ -4228,9 +4225,12 @@ function createFillPatterns(svg, id, color) {
             key_tree.add(k, nid, disp_name, tree_link, node_title, '', node_img, node_img);
             k++;
          }
+         if (branches[i]['fBranches'].length > 0) {
+            k = JSROOTPainter.displayBranches(branches[i]['fBranches'], nid, k);
+         }
       }
       return k;
-   }
+   };
 
    JSROOTPainter.displayTree = function(tree, container, dir_id) {
       var tree_link = '';
@@ -4240,7 +4240,7 @@ function createFillPatterns(svg, id, color) {
       content += key_tree;
       $(container).append(content);
       key_tree.openTo(dir_id, true);
-   }
+   };
 
    JSROOTPainter.displayListOfKeys = function(keys, container) {
       delete key_tree;
@@ -4363,7 +4363,7 @@ function createFillPatterns(svg, id, color) {
       content += key_tree;
       $(container).append(content);
       key_tree.openTo(dir_id, true);
-   }
+   };
 
    JSROOTPainter.displayStreamerInfos = function(streamerInfo, container) {
 
