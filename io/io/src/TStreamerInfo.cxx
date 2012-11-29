@@ -3054,7 +3054,15 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, TMemberStreamer *&stre
    char dmbracket[256];
    snprintf(dmbracket,255,"%s[",dm->GetName());
    Int_t offset = kMissing;
-   if (fClass->GetDeclFileLine() < 0) offset = dm->GetOffset();
+   if (!fClass->IsLoaded()) {
+      // If the 'class' is not loaded, we do not have a TClass bootstrap and thus
+      // the 'RealData' might not have enough information because of the lack
+      // of proper ShowMember imlementation.
+      if (! (dm->Property() & kIsStatic) ) {
+         // Give an offset only to non-static members.
+         offset = dm->GetOffset();
+      }
+   }
    TRealData *rdm;
    while ((rdm = (TRealData*)nextr())) {
       char *rdmc = (char*)rdm->GetName();
