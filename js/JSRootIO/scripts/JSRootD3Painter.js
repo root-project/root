@@ -4198,35 +4198,45 @@ function createFillPatterns(svg, id, color) {
     * List tree (dtree) related functions
     */
 
-   JSROOTPainter.displayTree = function(tree, container, dir_id) {
-      var tree_link = '';
-      var content = "<p><a href='javascript: key_tree.openAll();'>open all</a> | <a href='javascript: key_tree.closeAll();'>close all</a></p>";
-      var k = key_tree.aNodes.length;
-      var dir_name = key_tree.aNodes[dir_id]['title'];
-      for (var i=0; i<tree['fBranches'].length; ++i) {
-         var nb_leaves = tree['fBranches'][i]['fLeaves'].length;
-         var disp_name = tree['fBranches'][i]['fName'];
+   JSROOTPainter.displayBranches = function(branches, dir_id, k) {
+      for (var i=0; i<branches.length; ++i) {
+         var nb_leaves = branches[i]['fLeaves'].length;
+         var disp_name = branches[i]['fName'];
          var node_img = source_dir+'img/branch.png';
          var node_title = disp_name;
          var tree_link = "";
          if (nb_leaves == 0) {
             node_img = source_dir+'img/leaf.png';
          }
-         else if (nb_leaves == 1 && tree['fBranches'][i]['fLeaves'][0]['fName'] == disp_name) {
+         else if (nb_leaves == 1 && branches[i]['fLeaves'][0]['fName'] == disp_name) {
             node_img = source_dir+'img/leaf.png';
             nb_leaves--;
          }
+         if (branches[i]['fBranches'].length > 0) {
+            node_img = source_dir+'img/branch.png';
+         }
          key_tree.add(k, dir_id, disp_name, tree_link, node_title, '', node_img, node_img);
-         k++;
+         nid = k; k++;
+         if (branches[i]['fBranches'].length > 0) {
+            k = JSROOTPainter.displayBranches(branches[i]['fBranches'], nid, k);
+         }
          for (var j=0; j<nb_leaves; ++j) {
-            var disp_name = tree['fBranches'][i]['fLeaves'][j]['fName'];
+            var disp_name = branches[i]['fLeaves'][j]['fName'];
             var node_title = disp_name;
             var node_img = source_dir+'img/leaf.png';
             var tree_link = "";
-            key_tree.add(k, 0, disp_name, tree_link, node_title, '', node_img, node_img);
+            key_tree.add(k, nid, disp_name, tree_link, node_title, '', node_img, node_img);
             k++;
          }
       }
+      return k;
+   }
+
+   JSROOTPainter.displayTree = function(tree, container, dir_id) {
+      var tree_link = '';
+      var content = "<p><a href='javascript: key_tree.openAll();'>open all</a> | <a href='javascript: key_tree.closeAll();'>close all</a></p>";
+      var k = key_tree.aNodes.length;
+      JSROOTPainter.displayBranches(tree['fBranches'], dir_id, k);
       content += key_tree;
       $(container).append(content);
       key_tree.openTo(dir_id, true);
@@ -4331,8 +4341,9 @@ function createFillPatterns(svg, id, color) {
             node_title = keys[i]['name'];
          }
          else if (keys[i]['className'] == 'TTree' || keys[i]['className'] == 'TNtuple') {
-            tree_link = "javascript: readTree('"+keys[i]['name']+"',"+keys[i]['cycle']+","+(i+1)+");";
+            tree_link = "javascript: readTree('"+keys[i]['name']+"',"+keys[i]['cycle']+","+k+");";
             node_img = source_dir+'img/tree.png';
+            node_title = keys[i]['name'];
          }
          else if (keys[i]['className'].match('TCanvas')) {
             tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
@@ -4343,7 +4354,7 @@ function createFillPatterns(svg, id, color) {
                key_tree.add(k, dir_id, disp_name+';'+keys[i]['cycle'], tree_link, node_title, '', node_img,
                             source_dir+'img/folderopen.gif');
             else if (keys[i]['className'] == 'TNtuple' || keys[i]['className'] == 'TTree')
-               key_tree.add(k, 0, keys[i]['name']+';'+keys[i]['cycle'], tree_link, keys[i]['name'], '', node_img, node_img);
+               key_tree.add(k, dir_id, disp_name+';'+keys[i]['cycle'], tree_link, node_title, '', node_img, node_img);
             else
                key_tree.add(k, dir_id, disp_name+';'+keys[i]['cycle'], tree_link, node_title, '', node_img);
             k++;
