@@ -391,8 +391,6 @@ Int_t RooMinuit::minos()
   profileStop() ;
   backProp() ;
 
-  cout << "MINOS: status = " << _status << endl ;
-  
   saveStatus("MINOS",_status) ;
 
   return _status ;
