@@ -1,30 +1,30 @@
 {
    bool error = false;
    tree = new TTree ("tree", "tree");
-   tree.ReadFile ("test.txt","",' ');
-   tree.SetAlias("first", "(name==\"16A\")");
-   tree.SetAlias("second", "count==2");
-   tree.Scan();
+   tree->ReadFile ("test.txt","",' ');
+   tree->SetAlias("first", "(name==\"16A\")");
+   tree->SetAlias("second", "count==2");
+   tree->Scan();
    
-   Long64_t res = tree.Draw("name", "first");
+   Long64_t res = tree->Draw("name", "first");
    if (res != 1) {
       error = true;
-      fprintf(stdout,"Error: Draw(\"name\", \"first\") returned %d instead of 1\n",res);
+      fprintf(stdout,"Error: Draw(\"name\", \"first\") returned %lld instead of 1\n",res);
    }
-   res = tree.Draw("name", "second");
+   res = tree->Draw("name", "second");
    if (res != 1) {
       error = true;
-      fprintf(stdout,"Error: Draw(\"name\", \"second\") returned %d instead of 1\n",res);
+      fprintf(stdout,"Error: Draw(\"name\", \"second\") returned %lld instead of 1\n",res);
    }
-   res = tree.Draw("name", "first");
+   res = tree->Draw("name", "first");
    if (res != 1) {
       error = true;
-      fprintf(stdout,"Error: Second run of Draw(\"name\", \"first\") returned %d instead of 1\n",res);
+      fprintf(stdout,"Error: Second run of Draw(\"name\", \"first\") returned %lld instead of 1\n",res);
    }
-   res = tree.Draw("name", "(name==\"16A\")");
+   res = tree->Draw("name", "(name==\"16A\")");
    if (res != 1) {
       error = true;
-      fprintf(stdout,"Error: Draw(\"name\", \"(name==\\\"16A\\\")\") returned %d instead of 1\n",res);
+      fprintf(stdout,"Error: Draw(\"name\", \"(name==\\\"16A\\\")\") returned %lld instead of 1\n",res);
    }
    tree->Scan("first?name:\"not first\" ");
    tree->Scan("first?name:\"not first\" ","!first");
