@@ -50,6 +50,7 @@ static const char *R__GetDeclSourceFileName(const clang::Decl* D)
    }   
 }
 
+#if MATCH_ON_INSTANTIATION_LOCATION
 static const char *R__GetDeclSourceFileName(const clang::ClassTemplateSpecializationDecl *tmpltDecl)
 {
    clang::SourceLocation SL = tmpltDecl->getPointOfInstantiation();
@@ -64,6 +65,7 @@ static const char *R__GetDeclSourceFileName(const clang::ClassTemplateSpecializa
       return "invalid";
    }   
 }
+#endif
 
 /******************************************************************
  * R__matchfilename(srcfilename,filename)
@@ -262,6 +264,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
           (has_file_pattern_attribute && 
            CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef)));
 
+#if MATCH_ON_INSTANTIATION_LOCATION
       if (!hasFileMatch) {
          const clang::ClassTemplateSpecializationDecl *tmpltDecl =
             llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl);
@@ -276,6 +279,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
                              CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef)));
          }
       }
+#endif
       if (hasFileMatch) {
          // Reject utility class defined in ClassImp
          // when using a file based rule
