@@ -11,11 +11,9 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// This class defines an interface to the CINT C/C++ interpreter made   //
-// by Masaharu Goto from HP Japan, using cling as interpreter backend.  //
+// This class defines an interface to cling as interpreter backend.     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
 #include "TCintWithCling.h"
 
 #include "TClingBaseClassInfo.h"
@@ -425,11 +423,6 @@ extern "C" int IgnoreInclude(const char* fname, const char* expandedfname)
    return gROOT->IgnoreInclude(fname, expandedfname);
 }
 
-extern "C" void TCint_UpdateClassInfo(char* c, Long_t l)
-{
-   TCintWithCling::UpdateClassInfo(c, l);
-}
-
 //______________________________________________________________________________
 //
 //
@@ -692,10 +685,9 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    fRootmapFiles = 0;
    fLockProcessLine = kTRUE;
    // Disable the autoloader until it is explicitly enabled.
-   G__set_class_autoloading(0);
+   SetClassAutoloading(false);
    //G__RegisterScriptCompiler(&ScriptCompiler);
    G__set_ignoreinclude(&IgnoreInclude);
-   G__InitUpdateClassInfo(&TCint_UpdateClassInfo);
    // check whether the compiler is available:
    //char* path = gSystem->Which(gSystem->Getenv("PATH"), gSystem->BaseName(COMPILER));
    //if (path && path[0]) {
@@ -706,8 +698,6 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
 #ifndef R__WIN32
    optind = 1;  // make sure getopt() works in the main program
 #endif // R__WIN32
-   // Make sure that ALL macros are seen as C++.
-   G__LockCpp();
    // Initialize for ROOT:
    TString include;
    // Add the root include directory to list searched by default
@@ -727,23 +717,22 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
 //______________________________________________________________________________
 TCintWithCling::~TCintWithCling()
 {
-   // Destroy the CINT interpreter interface.
-   if (fMore != -1) {
-      // only close the opened files do not free memory:
-      // G__scratch_all();
-      G__close_inputfiles();
-   }
+   // Destroy the interpreter interface.
    delete fMapfile;
    delete fRootmapFiles;
    delete fMetaProcessor;
    delete fTemporaries;
    delete fNormalizedCtxt;
    delete fInterpreter;
-   //   delete fDeMux;
    gCint = 0;
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
+   Warning("~TCintWithCling", "Interface not available yet.");
 #ifdef R__COMPLETE_MEM_TERMINATION
-   G__scratch_all();
-#endif // R__COMPLETE_MEM_TERMINATION
+   // remove all cling objects
+#endif
+#endif
+#endif
    //--
 }
 
@@ -987,10 +976,7 @@ void TCintWithCling::PrintIntro()
 {
    // Print CINT introduction and help message.
 
-   Printf("\nCINT/ROOT C/C++ Interpreter version %s", G__cint_version());
-   Printf(">>>>>>>>> cling-ified version <<<<<<<<<<");
-   Printf("Type ? for help. Commands must be C++ statements.");
-   Printf("Enclose multiple statements between { }.");
+   Printf("cling C/C++ Interpreter: type .? for help.");
 }
 
 //______________________________________________________________________________
@@ -2911,7 +2897,12 @@ Bool_t TCintWithCling::IsErrorMessagesEnabled() const
 {
    // If error messages are disabled, the interpreter should suppress its
    // failures and warning messages from stdout.
-   return !G__const_whatnoerror();
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
+   Warning("IsErrorMessagesEnabled", "Interface not available yet.");
+#endif
+#endif
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -2919,13 +2910,12 @@ Bool_t TCintWithCling::SetErrorMessages(Bool_t enable)
 {
    // If error messages are disabled, the interpreter should suppress its
    // failures and warning messages from stdout. Return the previous state.
-   if (enable) {
-      G__const_resetnoerror();
-   }
-   else {
-      G__const_setnoerror();
-   }
-   return !G__const_whatnoerror();
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
+   Warning("SetErrorMessages", "Interface not available yet.");
+#endif
+#endif
+   return TCintWithCling::IsErrorMessagesEnabled();
 }
 
 //______________________________________________________________________________
@@ -3026,8 +3016,12 @@ void* TCintWithCling::FindSym(const char* entry) const
 //______________________________________________________________________________
 void TCintWithCling::GenericError(const char* error) const
 {
-   // Interface to CINT function
-   G__genericerror(error);
+   // Let the interpreter issue a generic error, and set its error state.
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
+   Warning("GenericError","Interface not available yet.");
+#endif
+#endif
 }
 
 //______________________________________________________________________________
@@ -3071,7 +3065,12 @@ const char* TCintWithCling::Getp2f2funcname(void*) const
 int TCintWithCling::GetSecurityError() const
 {
    // Interface to CINT function
-   return G__get_security_error();
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
+   Warning("GetSecurityError", "Interface not available yet.");
+#endif
+#endif
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -3125,6 +3124,8 @@ int TCintWithCling::SetClassAutoloading(int autoload) const
 {
    // Enable/Disable the Autoloading of libraries.
    // Returns the old value, i.e whether it was enabled or not.
+   if (!autoload && !fClingCallbacks) return false;
+
    assert(fClingCallbacks && "We must have callbacks!");
    bool oldVal =  fClingCallbacks->IsAutoloadingEnabled();
    fClingCallbacks->SetAutoloadingEnabled(autoload);
@@ -3134,8 +3135,12 @@ int TCintWithCling::SetClassAutoloading(int autoload) const
 //______________________________________________________________________________
 void TCintWithCling::SetErrmsgcallback(void* p) const
 {
-   // Interface to CINT function
-   G__set_errmsgcallback(p);
+   // Set a callback to receive error messages.
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
+   Warning("SetErrmsgcallback", "Interface not available yet.");
+#endif
+#endif
 }
 
 //______________________________________________________________________________
@@ -4122,4 +4127,3 @@ const char* TCintWithCling::TypedefInfo_Title(TypedefInfo_t* tinfo) const
    TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
    return TClinginfo->Title();
 }
-
