@@ -782,11 +782,13 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
       return BindRootObject( (void*)gbl->GetAddress(), klass );
    }
 
+/* TODO: Cling does not yet support enums ....
    if ( gbl->GetAddress() &&       // check for enums (which are const, not properties)
         (unsigned long)gbl->GetAddress() != (unsigned long)-1 && // Cling (??)
         ( G__TypeInfo( gbl->GetTypeName() ).Property() & G__BIT_ISENUM ) ) {
       return PyInt_FromLong( *((int*)gbl->GetAddress()) );
    }
+*/
 
 // for built-in types, to ensure setability
    return (PyObject*)PropertyProxy_New< TGlobal* >( gbl );
