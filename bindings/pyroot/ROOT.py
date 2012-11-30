@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 09/05/12
+# Last: 11/30/12
 
 """PyROOT user module.
 
@@ -82,10 +82,6 @@ if needsGlobal:
    dlflags = sys.getdlopenflags()
    sys.setdlopenflags( 0x100 | 0x2 )    # RTLD_GLOBAL | RTLD_NOW
 
-import ctypes
-#_libCling = ctypes.CDLL( 'libCling.so', ctypes.RTLD_GLOBAL | 0x2 )  # force symbols for libCore.so
-#_libClang = ctypes.CDLL( 'libclang.so', ctypes.RTLD_GLOBAL | 0x2 )  # id.
-#_libCore = ctypes.CDLL( 'libCore.so', ctypes.RTLD_GLOBAL | 0x2 )  # id.
 import libPyROOT as _root
 
 # reset dl flags if needed
@@ -125,7 +121,6 @@ class _Configuration( object ):
 
    def __init__( self ):
       self.IgnoreCommandLineOptions = 0
-      # TODO: re-enable the GUI thread
       self.StartGuiThread = True
       self._gts = []
 
@@ -248,10 +243,7 @@ def _TTree__iter__( self ):
       yield self                   # TODO: not sure how to do this w/ C-API ...
       i += 1
 
-try:
-   _root.MakeRootClass( "TTree" ).__iter__    = _TTree__iter__
-except:
-   pass
+_root.MakeRootClass( "TTree" ).__iter__    = _TTree__iter__
 
 
 ### RINT command emulation ------------------------------------------------------
@@ -313,8 +305,7 @@ if not '__IPYTHON__' in __builtins__:
 ### call EndOfLineAction after each interactive command (to update display etc.)
 _orig_dhook = sys.displayhook
 def _displayhook( v ):
-   # (CLING) TODO: need equivalent?
-#   _root.gInterpreter.EndOfLineAction()
+   _root.gInterpreter.EndOfLineAction()
    return _orig_dhook( v )
 
 
@@ -442,9 +433,6 @@ class ModuleFacade( types.ModuleType ):
          return self.module.__all__
 
     # lookup into ROOT (which may cause python-side enum/class/global creation)
-      # (CLING) TODO: WTF?
-      if name == 'gRootDir':
-         return None
       attr = _root.LookupRootEntity( name )
 
     # the call above will raise AttributeError as necessary; so if we get here,
@@ -486,15 +474,10 @@ class ModuleFacade( types.ModuleType ):
          sys.argv = []
 
       appc = _root.MakeRootClass( 'PyROOT::TPyROOTApplication' )
-      if appc.CreatePyROOTApplication(True): # for Cling: no default args
+      if appc.CreatePyROOTApplication():
          appc.InitROOTGlobals()
          # TODO Cling equivalent needed: appc.InitCINTMessageCallback();
          appc.InitROOTMessageCallback();
-
-       # make gApplication available on the prompt
-       # TODO: Cling can't handle default arguments (crashes)
-         import array
-         _root.gROOT.ProcessLine( '#include "TApplication.h"', array.array('i', [0]) )
 
       if hasargv and PyConfig.IgnoreCommandLineOptions:
          sys.argv = argv
