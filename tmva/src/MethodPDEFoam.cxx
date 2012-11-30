@@ -282,6 +282,14 @@ void TMVA::MethodPDEFoam::ProcessOptions()
 
    if (fTargetSelectionStr == "Mean" ) fTargetSelection = kMean;
    else                                fTargetSelection = kMpv;
+   // sanity check: number of targets > 1 and MultiTargetRegression=F
+   // makes no sense --> set MultiTargetRegression=T
+   if (DoRegression() && Data()->GetNTargets() > 1 && !fMultiTargetRegression) {
+      Log() << kWARNING << "Warning: number of targets > 1"
+            << " and MultiTargetRegression=F was set, this makes no sense!"
+            << " --> I'm setting MultiTargetRegression=T" << Endl;
+      fMultiTargetRegression = kTRUE;
+   }
 }
 
 //_______________________________________________________________________
@@ -572,16 +580,12 @@ void TMVA::MethodPDEFoam::TrainMonoTargetRegression()
    // the average 0th target.  The dimension of the foam = number of
    // non-targets (= number of variables).
 
-   if (Data()->GetNTargets() < 1) {
-      Log() << kFATAL << "Error: number of targets = " << Data()->GetNTargets() << Endl;
-      return;
+   if (Data()->GetNTargets() != 1) {
+      Log() << kFATAL << "Can't do mono-target regression with "
+            << Data()->GetNTargets() << " targets!" << Endl;
    }
-   else if (Data()->GetNTargets() > 1) {
-      Log() << kWARNING << "Warning: number of targets = " << Data()->GetNTargets()
-            << "  --> using only first target" << Endl;
-   }
-   else 
-      Log() << kDEBUG << "MethodPDEFoam: number of Targets: " << Data()->GetNTargets() << Endl;
+
+   Log() << kDEBUG << "MethodPDEFoam: number of Targets: " << Data()->GetNTargets() << Endl;
 
    fFoam.push_back( InitFoam("MonoTargetRegressionFoam", kMonoTarget) );
 
@@ -1198,7 +1202,7 @@ void TMVA::MethodPDEFoam::WriteFoamsToFile() const
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodPDEFoam::ReadWeightsFromStream( istream& istr )
+void  TMVA::MethodPDEFoam::ReadWeightsFromStream( std::istream& istr )
 {
    // read options and internal parameters
 
