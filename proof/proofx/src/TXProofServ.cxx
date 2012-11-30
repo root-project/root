@@ -691,15 +691,29 @@ Int_t TXProofServ::Setup()
    }
    fWorkDir = gEnv->GetValue("ProofServ.Sandbox", Form("~/%s", kPROOF_WorkDir));
 
-   // Get top session tag, i.e. the tag of the PROOF session
-   if ((fTopSessionTag = gEnv->GetValue("ProofServ.TopSessionTag", "-1")) == "-1") {
-      Error("Setup", "Top session tag missing");
-      return -1;
-   }
    // Get Session tag
    if ((fSessionTag = gEnv->GetValue("ProofServ.SessionTag", "-1")) == "-1") {
       Error("Setup", "Session tag missing");
       return -1;
+   }
+   // Get top session tag, i.e. the tag of the PROOF session
+   if ((fTopSessionTag = gEnv->GetValue("ProofServ.TopSessionTag", "-1")) == "-1") {
+      fTopSessionTag = "";
+      // Try to extract it from log file path (for backward compatibility)
+      if (gSystem->Getenv("ROOTPROOFLOGFILE")) {
+         fTopSessionTag = gSystem->DirName(gSystem->Getenv("ROOTPROOFLOGFILE"));
+         Ssiz_t lstl;
+         if ((lstl = fTopSessionTag.Last('/')) != kNPOS) fTopSessionTag.Remove(0, lstl + 1);
+         if (fTopSessionTag.BeginsWith("session-")) {
+            fTopSessionTag.Remove(0, strlen("session-"));
+         } else {
+            fTopSessionTag = "";
+         }
+      }
+      if (fTopSessionTag.IsNull()) {
+         Error("Setup", "top session tag missing");
+         return -1;
+      }
    }
 
    // Make sure the process ID is in the tag
