@@ -79,7 +79,9 @@ clang::NestedNameSpecifier* AddDefaultParametersNNS(const clang::ASTContext& Ctx
                                                     clang::NestedNameSpecifier* scope,
                                                     const cling::Interpreter &interpreter,
                                                     const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) {
-    // Add default parameter to the scope if needed.
+   // Add default parameter to the scope if needed.
+
+   if (!scope) return 0;
 
    const clang::Type* scope_type = scope->getAsType();
    if (scope_type) {
@@ -151,8 +153,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    const clang::ElaboratedType* etype 
       = llvm::dyn_cast<clang::ElaboratedType>(instanceType.getTypePtr());
    if (etype) {
-      // We have to also handle the prefix.
- 
+      // We have to also handle the prefix. 
       prefix = AddDefaultParametersNNS(Ctx, etype->getQualifier(), interpreter, normCtxt);
       instanceType = clang::QualType(etype->getNamedType().getTypePtr(),0);
    }
@@ -1065,6 +1066,8 @@ ReSubstTemplateArgNNS(const clang::ASTContext &Ctxt,
    // instantiating the class template instance and replace it with the 
    // partially sugared types we have from 'instance'.
  
+   if (!scope) return 0;
+
    const clang::Type* scope_type = scope->getAsType();      
    if (scope_type) {
       clang::NestedNameSpecifier* outer_scope = scope->getPrefix();
@@ -1103,7 +1106,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       clang::NestedNameSpecifier *scope = ReSubstTemplateArgNNS(Ctxt,etype->getQualifier(),instance);
       clang::QualType subTy = ReSubstTemplateArg(clang::QualType(etype->getNamedType().getTypePtr(),0),instance);
  
-      subTy = Ctxt.getElaboratedType(clang::ETK_None,scope,subTy);
+      if (scope) subTy = Ctxt.getElaboratedType(clang::ETK_None,scope,subTy);
       subTy = Ctxt.getQualifiedType(subTy,scope_qualifiers);
       return subTy;
    }

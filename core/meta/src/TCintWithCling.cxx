@@ -1770,7 +1770,15 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
    // specifically check that each level of nesting is already loaded.
    // In case of templates the idea is that everything between the outer
    // '<' and '>' has to be skipped, e.g.: aap<pipo<noot>::klaas>::a_class
+
    R__LOCKGUARD(gCINTMutex);
+   static const char *anonEnum = "anonymous enum ";
+   static int cmplen = strlen(anonEnum);
+
+   if (0 == strncmp(name,anonEnum,cmplen)) {
+      return kFALSE;
+   }
+
    Int_t nch = strlen(name) * 2;
    char* classname = new char[nch];
    strlcpy(classname, name, nch);
@@ -1803,6 +1811,10 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
          return kFALSE;
       }
       *current = '\0';
+      if (0 == strncmp(name,anonEnum,cmplen)) {
+         delete[] classname;
+         return kFALSE;
+      }
       TClingClassInfo info(fInterpreter, classname);
       if (!info.IsValid()) {
          delete[] classname;
