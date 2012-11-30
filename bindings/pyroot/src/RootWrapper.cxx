@@ -480,7 +480,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       klass = T::ByName( lookup );
    }
 
-   if ( ! (Bool_t)klass && G__defined_templateclass( const_cast< char* >( lookup.c_str() ) ) ) {
+   if ( ! (Bool_t)klass && 0 /* TODO: check template here on cling; Was: G__defined_templateclass( const_cast< char* >( lookup.c_str() ) ) */ ) {
    // a "naked" templated class is requested: return callable proxy for instantiations
       PyObject* pytcl = PyObject_GetAttr( gRootModule, PyStrings::gTemplate );
       PyObject* pytemplate = PyObject_CallFunction(
@@ -495,17 +495,19 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       return pytemplate;
    }
 
-   if ( ! (Bool_t)klass && G__defined_tagname( lookup.c_str(), 2 ) != -1 ) {
-   // an unloaded namespace is requested
-      PyObject* pyns = CreateNewROOTPythonClass( lookup, NULL );
-
-   // cache the result
-      PyObject_SetAttrString( scope ? scope : gRootModule, (char*)name.c_str(), pyns );
-
-   // done, next step should be a lookup into this namespace
-      Py_XDECREF( scope );
-      return pyns;
-   }
+// TODO: presumably the next portion is no longer needed with Cling (need check)
+//   if ( ! (Bool_t)klass && G__defined_tagname( lookup.c_str(), 2 ) != -1 ) {
+//   // an unloaded namespace is requested
+//      PyObject* pyns = CreateNewROOTPythonClass( lookup, NULL );
+//
+//   // cache the result
+//      PyObject_SetAttrString( scope ? scope : gRootModule, (char*)name.c_str(), pyns );
+//
+//   // done, next step should be a lookup into this namespace
+//    Py_XDECREF( scope );
+//      return pyns;
+//   }
+//
 
    if ( ! (Bool_t)klass ) {   // if so, all options have been exhausted: it doesn't exist as such
       if ( ! scope && fullname.find( "ROOT::" ) == std::string::npos ) { // not already in ROOT::
