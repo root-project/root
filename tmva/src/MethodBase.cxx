@@ -1109,6 +1109,7 @@ void TMVA::MethodBase::TestClassification()
       }
    }
    
+   // uncomment those (and several others if you want unnormalized output
    gTools().NormHist( mva_s  );
    gTools().NormHist( mva_b  );
    gTools().NormHist( proba_s );
@@ -1295,7 +1296,11 @@ void TMVA::MethodBase::ReadStateFromFile()
          << gTools().Color("lightblue") << tfname << gTools().Color("reset") << Endl;
 
    if (tfname.EndsWith(".xml") ) {
-      void* doc = gTools().xmlengine().ParseFile(tfname); // the default buffer size in TXMLEngine::ParseFile is 100k. Starting with ROOT 5.29 one can set the buffer size, see: http://savannah.cern.ch/bugs/?78864. This might be necessary for large XML files
+#if ROOT_VERSION_CODE >= ROOT_VERSION(5,29,0)
+      void* doc = gTools().xmlengine().ParseFile(tfname,gTools().xmlenginebuffersize()); // the default buffer size in TXMLEngine::ParseFile is 100k. Starting with ROOT 5.29 one can set the buffer size, see: http://savannah.cern.ch/bugs/?78864. This might be necessary for large XML files
+#else
+      void* doc = gTools().xmlengine().ParseFile(tfname);
+#endif
       void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
       ReadStateFromXML(rootnode);
       gTools().xmlengine().FreeDoc(doc);
@@ -2413,6 +2418,7 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
       }
 
       // normalise output distributions
+      // uncomment those (and several others if you want unnormalized output
       gTools().NormHist( mva_s_tr  );
       gTools().NormHist( mva_b_tr  );
 
