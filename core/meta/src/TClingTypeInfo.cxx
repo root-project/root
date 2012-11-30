@@ -170,7 +170,7 @@ long TClingTypeInfo::Property() const
          else if (CRD->isUnion()) {
             property |= G__BIT_ISUNION;
          }
-         if (CRD->isAbstract()) {
+         if (CRD->isThisDeclarationADefinition() && CRD->isAbstract()) {
             property |= G__BIT_ISABSTRACT;
          }
       }
