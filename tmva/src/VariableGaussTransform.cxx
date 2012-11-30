@@ -690,7 +690,14 @@ void TMVA::VariableGaussTransform::MakeFunction( std::ostream& fout, const TStri
    //
    const UInt_t nvar = fGet.size();
    UInt_t numDist  = GetNClasses() + 1;
-   Int_t nBins = 1000; 
+   Int_t nBins = -1; 
+   for (UInt_t icls=0; icls<numDist; icls++) {
+      for (UInt_t ivar=0; ivar<nvar; ivar++) {
+         Int_t nbin=(fCumulativePDF[ivar][icls])->GetGraph()->GetN();
+         if (nbin > nBins) nBins=nbin;
+      }
+   }
+
    // creates the gauss transformation function
    if (part==1) {
       fout << std::endl;
@@ -698,8 +705,11 @@ void TMVA::VariableGaussTransform::MakeFunction( std::ostream& fout, const TStri
       fout << std::endl;
       // declare variables
       fout << "   double  cumulativeDist["<<nvar<<"]["<<numDist<<"]["<<nBins+1<<"];"<<std::endl;
+      fout << "   double  X["<<nvar<<"]["<<numDist<<"]["<<nBins+1<<"];"<<std::endl;
       fout << "   double xMin["<<nvar<<"]["<<numDist<<"];"<<std::endl;
       fout << "   double xMax["<<nvar<<"]["<<numDist<<"];"<<std::endl;
+      fout << "   int    nbins["<<nvar<<"]["<<numDist<<"];"<<std::endl;
+      fout << "   double stepsize["<<nvar<<"]["<<numDist<<"];"<<std::endl;
    }
    if (part==2) {
       fout << std::endl;
@@ -710,14 +720,19 @@ void TMVA::VariableGaussTransform::MakeFunction( std::ostream& fout, const TStri
       fout << "{" << std::endl;
       fout << "   // Gauss/Uniform transformation, initialisation" << std::endl;
       fout << "   nvar=" << nvar << ";" << std::endl;
+      for (UInt_t icls=0; icls<numDist; icls++) {
+         for (UInt_t ivar=0; ivar<nvar; ivar++) {
+            Int_t nbin=(fCumulativePDF[ivar][icls])->GetGraph()->GetN();
+            fout << "   nbins["<<ivar<<"]["<<icls<<"]="<<nbin<<";"<<std::endl;
+            fout << "   stepsize["<<ivar<<"]["<<icls<<"]="<<(fCumulativePDF[ivar][icls])->GetGraph()->GetX()[3]-(fCumulativePDF[ivar][icls])->GetGraph()->GetX()[2] <<";"<<std::endl;
+         }
+      }
+
       // fill meat here
       // loop over nvar , cls, loop over nBins
       // fill cumulativeDist with fCumulativePDF[ivar][cls])->GetValue(vec(ivar)
       for (UInt_t icls=0; icls<numDist; icls++) {
          for (UInt_t ivar=0; ivar<nvar; ivar++) {
-            Double_t xmn=(fCumulativePDF[ivar][icls])->GetXmin();
-            Double_t xmx=(fCumulativePDF[ivar][icls])->GetXmax();
-
             // Int_t idx = 0;
             try{
                // idx = fGet.at(ivar).second;
@@ -731,13 +746,15 @@ void TMVA::VariableGaussTransform::MakeFunction( std::ostream& fout, const TStri
 
 //            Double_t xmn=Variables()[idx].GetMin();
 //            Double_t xmx=Variables()[idx].GetMax();
+            Double_t xmn = (fCumulativePDF[ivar][icls])->GetGraph()->GetX()[0];
+            Double_t xmx = (fCumulativePDF[ivar][icls])->GetGraph()->GetX()[(fCumulativePDF[ivar][icls])->GetGraph()->GetN()-1];
 
             fout << "    xMin["<<ivar<<"]["<<icls<<"]="<<xmn<<";"<<std::endl;
             fout << "    xMax["<<ivar<<"]["<<icls<<"]="<<xmx<<";"<<std::endl;
-            for (Int_t ibin=0; ibin<=nBins; ibin++) {
-               Double_t xval = xmn + (xmx-xmn) / nBins * (ibin+0.5);
-               // ibin = (xval -xmin) / (xmax-xmin) *1000 
-               fout << "  cumulativeDist[" << ivar << "]["<< icls<< "]["<<ibin<<"]="<< (fCumulativePDF[ivar][icls])->GetVal(xval)<< ";"<<std::endl;
+            for (Int_t ibin=0; ibin<(fCumulativePDF[ivar][icls])->GetGraph()->GetN(); ibin++) {
+               fout << "  cumulativeDist[" << ivar << "]["<< icls<< "]["<<ibin<<"]="<< (fCumulativePDF[ivar][icls])->GetGraph()->GetY()[ibin]<< ";"<<std::endl;
+               fout << "  X[" << ivar << "]["<< icls<< "]["<<ibin<<"]="<< (fCumulativePDF[ivar][icls])->GetGraph()->GetX()[ibin]<< ";"<<std::endl;
+
             }
          }
       }
@@ -753,49 +770,52 @@ void TMVA::VariableGaussTransform::MakeFunction( std::ostream& fout, const TStri
       fout << "       else cls = "<<(fCumulativePDF[0].size()==1?0:2)<<";"<< std::endl;
       fout << "   }"<< std::endl;
       
-      fout << "   // copy the variables which are going to be transformed" << std::endl;
+      fout << "   // copy the variables which are going to be transformed                                "<< std::endl;
       VariableTransformBase::MakeFunction(fout, fcncName, 0, trCounter, 0 );
-      fout << "   std::vector<double> dv(nvar);" << std::endl;
-      fout << "   for (int ivar=0; ivar<nvar; ivar++) dv[ivar] = iv[indicesGet.at(ivar)];" << std::endl;
-
-      
-      fout << "   bool FlatNotGauss = "<< (fFlatNotGauss? "true": "false") <<";"<< std::endl;
-      fout << "   double cumulant;"<< std::endl;
-      fout << "   //const int nvar = "<<nvar<<";"<< std::endl;
-      fout << "   for (int ivar=0; ivar<nvar; ivar++) {"<< std::endl;
-      // ibin = (xval -xMin) / (xMax-xMin) *1000 
-      fout << "   int ibin1 = (int) ((dv[ivar]-xMin[ivar][cls])/(xMax[ivar][cls]-xMin[ivar][cls])*"<<nBins<<");"<<std::endl;
-      fout << "   if (ibin1<=0) { cumulant = cumulativeDist[ivar][cls][0];}"<<std::endl;
-      fout << "   else if (ibin1>="<<nBins<<") { cumulant = cumulativeDist[ivar][cls]["<<nBins<<"];}"<<std::endl;
-      fout << "   else {"<<std::endl;
-      fout << "           int ibin2 = ibin1+1;" << std::endl;
-      fout << "           double dx = dv[ivar]-(xMin[ivar][cls]+"<< (1./nBins)
-           << "           * ibin1* (xMax[ivar][cls]-xMin[ivar][cls]));"  
-           << std::endl;
-      fout << "           double eps=dx/(xMax[ivar][cls]-xMin[ivar][cls])*"<<nBins<<";"<<std::endl;
-      fout << "           cumulant = eps*cumulativeDist[ivar][cls][ibin1] + (1-eps)*cumulativeDist[ivar][cls][ibin2];" << std::endl;
-      fout << "           if (cumulant>1.-10e-10) cumulant = 1.-10e-10;"<< std::endl;
-      fout << "           if (cumulant<10e-10)    cumulant = 10e-10;"<< std::endl;
-      fout << "           if (FlatNotGauss) dv[ivar] = cumulant;"<< std::endl;
-      fout << "           else {"<< std::endl;
-      fout << "              double maxErfInvArgRange = 0.99999999;"<< std::endl;
-      fout << "              double arg = 2.0*cumulant - 1.0;"<< std::endl;
-      fout << "              if (arg >  maxErfInvArgRange) arg= maxErfInvArgRange;"<< std::endl;
-      fout << "              if (arg < -maxErfInvArgRange) arg=-maxErfInvArgRange;"<< std::endl;
-      fout << "              double inverf=0., stp=1. ;"<<std::endl;
-      fout << "              while (stp >1.e-10){;"<<std::endl;
-      fout << "                if (erf(inverf)>arg) inverf -=stp ;"<<std::endl;
-      fout << "                else if (erf(inverf)<=arg && erf(inverf+stp)>=arg) stp=stp/5. ;"<<std::endl;
-      fout << "                else inverf += stp;"<<std::endl;
-      fout << "              } ;"<<std::endl;
-      fout << "              //dv[ivar] = 1.414213562*TMath::ErfInverse(arg);"<< std::endl;
-      fout << "              dv[ivar] = 1.414213562* inverf;"<< std::endl;
-      fout << "           }"<< std::endl;
-      fout << "       }"<< std::endl;
-      fout << "   }"<< std::endl;
-
-      fout << "   // copy the transformed variables back" << std::endl;
-      fout << "   for (int ivar=0; ivar<nvar; ivar++) iv[indicesPut.at(ivar)] = dv[ivar];" << std::endl;
-      fout << "}" << std::endl;
+      fout << "   std::vector<double> dv(nvar);                                                          "<< std::endl;
+      fout << "   for (int ivar=0; ivar<nvar; ivar++) dv[ivar] = iv[indicesGet.at(ivar)];                "<< std::endl;
+      fout << "                                                                                          "<< std::endl;
+      fout << "   bool FlatNotGauss = "<< (fFlatNotGauss? "true": "false") <<";                          "<< std::endl;
+      fout << "   double cumulant;                                                                       "<< std::endl;
+      fout << "   //const int nvar = "<<nvar<<";                                                         "<< std::endl;
+      fout << "   for (int ivar=0; ivar<nvar; ivar++) {                                                  "<< std::endl;
+      fout << "      int nbin  = nbins[ivar][cls];                                                       "<< std::endl;
+      fout << "      int ibin=0;                                                                         "<< std::endl;
+      fout << "      while (dv[ivar] > X[ivar][cls][ibin]) ibin++;                                       "<< std::endl;
+      fout << "                                                                                          "<< std::endl;
+      fout << "      if (ibin<0) { ibin=0;}                                                              "<< std::endl;
+      fout << "      if (ibin>=nbin) { ibin=nbin-1;}                                                     "<< std::endl;
+      fout << "      int nextbin = ibin;                                                                 "<< std::endl;
+      fout << "      if ((dv[ivar] > X[ivar][cls][ibin] && ibin !=nbin-1) || ibin==0)                    "<< std::endl;
+      fout << "         nextbin++;                                                                       "<< std::endl;
+      fout << "      else                                                                                "<< std::endl;
+      fout << "         nextbin--;                                                                       "<< std::endl;
+      fout << "                                                                                          "<< std::endl;
+      fout << "      double dx = X[ivar][cls][ibin]- X[ivar][cls][nextbin];                              "<< std::endl;
+      fout << "      double dy = cumulativeDist[ivar][cls][ibin] - cumulativeDist[ivar][cls][nextbin];   "<< std::endl;
+      fout << "      cumulant = cumulativeDist[ivar][cls][ibin] + (dv[ivar] - X[ivar][cls][ibin])* dy/dx;"<< std::endl;
+      fout << "                                                                                          "<< std::endl;
+      fout << "                                                                                          "<< std::endl;
+      fout << "      if (cumulant>1.-10e-10) cumulant = 1.-10e-10;                                       "<< std::endl;
+      fout << "      if (cumulant<10e-10)    cumulant = 10e-10;                                          "<< std::endl;
+      fout << "      if (FlatNotGauss) dv[ivar] = cumulant;                                              "<< std::endl;
+      fout << "      else {                                                                              "<< std::endl;
+      fout << "         double maxErfInvArgRange = 0.99999999;                                           "<< std::endl;
+      fout << "         double arg = 2.0*cumulant - 1.0;                                                 "<< std::endl;
+      fout << "         if (arg >  maxErfInvArgRange) arg= maxErfInvArgRange;                            "<< std::endl;
+      fout << "         if (arg < -maxErfInvArgRange) arg=-maxErfInvArgRange;                            "<< std::endl;
+      fout << "         double inverf=0., stp=1. ;                                                       "<< std::endl;
+      fout << "         while (stp >1.e-10){;                                                            "<< std::endl;
+      fout << "            if (erf(inverf)>arg) inverf -=stp ;                                           "<< std::endl;
+      fout << "            else if (erf(inverf)<=arg && erf(inverf+stp)>=arg) stp=stp/5. ;               "<< std::endl;
+      fout << "            else inverf += stp;                                                           "<< std::endl;
+      fout << "         } ;                                                                              "<< std::endl;
+      fout << "         //dv[ivar] = 1.414213562*TMath::ErfInverse(arg);                                 "<< std::endl;
+      fout << "         dv[ivar] = 1.414213562* inverf;                                                  "<< std::endl;
+      fout << "      }                                                                                   "<< std::endl;
+      fout << "   }                                                                                      "<< std::endl;
+      fout << "   // copy the transformed variables back                                                 "<< std::endl;
+      fout << "   for (int ivar=0; ivar<nvar; ivar++) iv[indicesPut.at(ivar)] = dv[ivar];                "<< std::endl;
+      fout << "}                                                                                         "<< std::endl;
    }
 }
