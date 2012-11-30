@@ -470,6 +470,7 @@ void TMVA::VariableNormalizeTransform::BuildTransformationFromVarInfo( const std
       for(std::vector<TMVA::VariableInfo>::const_iterator v = var.begin(); v!=var.end(); ++v, ++vidx) {
          fMin[cls][vidx] = v->GetMin();
          fMax[cls][vidx] = v->GetMax();
+         fGet.push_back(std::pair<Char_t,UInt_t>('v',vidx));
       }
    }
    SetCreated();
