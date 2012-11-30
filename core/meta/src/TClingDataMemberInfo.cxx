@@ -412,8 +412,6 @@ const char *TClingDataMemberInfo::TypeName() const
    static std::string buf;
    buf.clear();
    if (const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl())) {
-      const clang::ASTContext &Ctxt = GetDecl()->getASTContext();
-
       clang::QualType vdType = vd->getType();
       // In CINT's version, the type name returns did *not* include any array
       // information, ROOT's existing code depends on it.
