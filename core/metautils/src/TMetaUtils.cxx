@@ -662,7 +662,6 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl)
       includeLocation = sourceManager.getExpansionRange(includeLocation).second;
    }
    
-   clang::FileID IdOfInclude = sourceManager.getFileID(includeLocation);
    if (sourceManager.getFilename(includeLocation) == "InteractiveInputLineIncluder.h") {
       // With cling the 'main' file is a virtual file and can't really be looked into.
       // (The name of the virtual file is 'InteractiveInputLineIncluder.h').
