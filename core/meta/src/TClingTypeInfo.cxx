@@ -102,9 +102,8 @@ const char *TClingTypeInfo::Name() const
    // Note: This *must* be static because we are returning a pointer inside it!
    static std::string buf;
    buf.clear();
-   clang::PrintingPolicy Policy(fInterp->getCI()->getASTContext().
-                                getPrintingPolicy());
-   fQualType.getAsStringInternal(buf, Policy);
+
+   ROOT::TMetaUtils::GetFullyQualifiedTypeName(buf,fQualType,*fInterp);
    return buf.c_str();
 }
 
@@ -291,13 +290,8 @@ const char *TClingTypeInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &no
    // Note: This *must* be static because we are returning a pointer inside it.
    static std::string buf;
    buf.clear();
-   
-   const clang::ASTContext &ctxt = fInterp->getCI()->getASTContext();
-   clang::PrintingPolicy Policy(ctxt.getPrintingPolicy());
-   
-   clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, fQualType, normCtxt.GetTypeToSkip(), true /* fully qualify */); 
-   normalizedType = ROOT::TMetaUtils::AddDefaultParameters(normalizedType, *fInterp, normCtxt);
-   normalizedType.getAsStringInternal(buf,Policy);
+
+   ROOT::TMetaUtils::GetNormalizedName(buf,fQualType, *fInterp, normCtxt);
 
    return buf.c_str();
 }

@@ -88,6 +88,10 @@ namespace ROOT {
       // including template arguments.
       clang::QualType GetFullyQualifiedType(const clang::QualType &type, const cling::Interpreter &interpreter);
 
+      // Return the type with all parts fully qualified (most typedefs),
+      // including template arguments.
+      void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, const cling::Interpreter &interpreter);
+
       // Return the type name normalized for ROOT,
       // keeping only the ROOT opaque typedef (Double32_t, etc.) and
       // adding default template argument for all types except the STL collections

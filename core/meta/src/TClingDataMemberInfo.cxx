@@ -424,14 +424,8 @@ const char *TClingDataMemberInfo::TypeName() const
       // if (we_need_to_do_the_subst_because_the_class_is_a_template_instance_of_double32_t)
       vdType = ROOT::TMetaUtils::ReSubstTemplateArg(vdType, fClassInfo->GetType() );
 
-      vdType = ROOT::TMetaUtils::GetFullyQualifiedType( vdType, *fInterp );
+      ROOT::TMetaUtils::GetFullyQualifiedTypeName(buf, vdType, *fInterp);
 
-      clang::PrintingPolicy policy(Ctxt.getPrintingPolicy());
-      policy.SuppressScope = false;
-      policy.AnonymousTagLocations = false;
-
-      TClassEdit::TSplitType splitname(vdType.getAsString(policy).c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault));
-      splitname.ShortType(buf,TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
       return buf.c_str();
    }
    return 0;

@@ -269,13 +269,8 @@ const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt 
    if (underlyingType->isBooleanType()) {
       return "bool";
    }
-   const clang::ASTContext &ctxt = fDecl->getASTContext();
-   clang::QualType normalizedType = ctxt.getTypedefType(td);
-   
-   clang::PrintingPolicy Policy(ctxt.getPrintingPolicy());
-   normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, normalizedType, normCtxt.GetTypeToSkip(), true /* fully qualify */); 
-   normalizedType = ROOT::TMetaUtils::AddDefaultParameters(normalizedType, *fInterp, normCtxt);
-   normalizedType.getAsStringInternal(truename,Policy);
+   const clang::ASTContext &ctxt = fInterp->getCI()->getASTContext();
+   ROOT::TMetaUtils::GetNormalizedName(truename, ctxt.getTypedefType(td), *fInterp, normCtxt);
    
    return truename.c_str();
 }
@@ -289,9 +284,10 @@ const char *TClingTypedefInfo::Name() const
    }
    // Note: This must be static because we return a pointer to the internals.
    static std::string fullname;
-   fullname.clear();
-   clang::PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
-   llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameForDiagnostic(fullname, Policy, /*Qualified=*/true);
+   fullname.clear();   
+   const clang::TypedefDecl *td = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
+   const clang::ASTContext &ctxt = fDecl->getASTContext();
+   ROOT::TMetaUtils::GetFullyQualifiedTypeName(fullname,ctxt.getTypedefType(td),*fInterp);
    return fullname.c_str();
 }
 

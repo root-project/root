@@ -729,6 +729,23 @@ clang::QualType ROOT::TMetaUtils::GetFullyQualifiedType(const clang::QualType &q
 }
 
 //////////////////////////////////////////////////////////////////////////
+void ROOT::TMetaUtils::GetFullyQualifiedTypeName(std::string &typenamestr,
+                                                 const clang::QualType &qtype,
+                                                 const cling::Interpreter &interpreter)
+{
+   clang::QualType typeForName = ROOT::TMetaUtils::GetFullyQualifiedType(qtype, interpreter);
+
+   clang::PrintingPolicy policy(interpreter.getCI()->getASTContext().
+                                getPrintingPolicy());
+   policy.SuppressScope = false;
+   policy.AnonymousTagLocations = false;
+
+   TClassEdit::TSplitType splitname(typeForName.getAsString(policy).c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault));
+   splitname.ShortType(typenamestr,TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
+
+}
+
+//////////////////////////////////////////////////////////////////////////
 std::string ROOT::TMetaUtils::GetInterpreterExtraIncludePath(bool rootbuild)
 {
    // Return the -I needed to find RuntimeUniverse.h
