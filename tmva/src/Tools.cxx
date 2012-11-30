@@ -103,7 +103,7 @@ Double_t TMVA::Tools::NormVariable( Double_t x, Double_t xmin, Double_t xmax )
 Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B ) const
 {
    // compute "separation" defined as
-   // <s2> = (1/2) Int_-oo..+oo { (S^2(x) - B^2(x))/(S(x) + B(x)) dx }
+   // <s2> = (1/2) Int_-oo..+oo { (S(x) - B(x))^2/(S(x) + B(x)) dx }
    Double_t separation = 0;
 
    // sanity checks
@@ -132,8 +132,8 @@ Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B ) const
 
    if (nS > 0 && nB > 0) {
       for (Int_t bin=0; bin<nstep; bin++) {
-         Double_t s = S->GetBinContent( bin )/Double_t(nS);
-         Double_t b = B->GetBinContent( bin )/Double_t(nB);
+         Double_t s = S->GetBinContent( bin+1 )/Double_t(nS);
+         Double_t b = B->GetBinContent( bin+1 )/Double_t(nB);
          // separation
          if (s + b > 0) separation += 0.5*(s - b)*(s - b)/(s + b);
       }
@@ -153,7 +153,7 @@ Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B ) const
 Double_t TMVA::Tools::GetSeparation( const PDF& pdfS, const PDF& pdfB ) const
 {
    // compute "separation" defined as
-   // <s2> = (1/2) Int_-oo..+oo { (S(x)2 - B(x)2)/(S(x) + B(x)) dx }
+   // <s2> = (1/2) Int_-oo..+oo { (S(x) - B(x))2/(S(x) + B(x)) dx }
 
    Double_t xmin = pdfS.GetXmin();
    Double_t xmax = pdfS.GetXmax();
@@ -198,10 +198,12 @@ void TMVA::Tools::ComputeStat( const std::vector<TMVA::Event*>& events, std::vec
    // first fill signal and background in arrays before analysis
    Double_t* varVecS  = new Double_t[entries];
    Double_t* varVecB  = new Double_t[entries];
+   Double_t* wgtVecS  = new Double_t[entries];
+   Double_t* wgtVecB  = new Double_t[entries];
    xmin               = +DBL_MAX;
    xmax               = -DBL_MAX;
-   Long64_t nEventsS  = -1;
-   Long64_t nEventsB  = -1;
+   Long64_t nEventsS  = 0;
+   Long64_t nEventsB  = 0;
    Double_t xmin_ = 0, xmax_ = 0;
 
    if (norm) {
@@ -214,26 +216,32 @@ void TMVA::Tools::ComputeStat( const std::vector<TMVA::Event*>& events, std::vec
       if (norm) theVar = Tools::NormVariable( theVar, xmin_, xmax_ );
 
       if (Int_t(events[ievt]->GetClass()) == signalClass ){
-         varVecS[++nEventsS] = theVar; // this is signal
+         wgtVecS[nEventsS]   = events[ievt]->GetWeight(); // this is signal
+         varVecS[nEventsS++] = theVar; // this is signal
       }
       else {
-         varVecB[++nEventsB] = theVar; // this is background
+         wgtVecB[nEventsB]   = events[ievt]->GetWeight(); // this is signal
+         varVecB[nEventsB++] = theVar; // this is background
       }
 
       if (theVar > xmax) xmax = theVar;
       if (theVar < xmin) xmin = theVar;
    }
-   ++nEventsS;
-   ++nEventsB;
+   // ++nEventsS;
+   // ++nEventsB;
 
    // basic statistics
-   meanS = TMath::Mean( nEventsS, varVecS );
-   meanB = TMath::Mean( nEventsB, varVecB );
-   rmsS  = TMath::RMS ( nEventsS, varVecS );
-   rmsB  = TMath::RMS ( nEventsB, varVecB );
+   // !!! TMath::Mean allows for weights, but NOT for negative weights
+   //     and TMath::RMS doesn't allow for weights all together...
+   meanS = TMVA::Tools::Mean( nEventsS, varVecS, wgtVecS );
+   meanB = TMVA::Tools::Mean( nEventsB, varVecB, wgtVecB );
+   rmsS  = TMVA::Tools::RMS ( nEventsS, varVecS, wgtVecS );
+   rmsB  = TMVA::Tools::RMS ( nEventsB, varVecB, wgtVecB );
 
    delete [] varVecS;
    delete [] varVecB;
+   delete [] wgtVecS;
+   delete [] wgtVecB;
 }
 
 //_______________________________________________________________________
@@ -617,7 +625,7 @@ TH2F* TMVA::Tools::TransposeHist( const TH2F& h )
 
    // sanity check
    if (h.GetNbinsX() != h.GetNbinsY()) {
-      Log() << kFATAL << "<TransposeHist> cannot transpose non-quadratic histogram" << endl;
+      Log() << kFATAL << "<TransposeHist> cannot transpose non-quadratic histogram" << Endl;
    }
    
    TH2F *transposedHisto = new TH2F( h ); 
@@ -812,7 +820,7 @@ const TString& TMVA::Tools::Color( const TString& c )
 
    if (c == "reset") return gClr_reset; 
 
-   cout << "Unknown color " << c << endl;
+   std::cout << "Unknown color " << c << std::endl;
    exit(1);
 
    return gClr_none;
@@ -1214,13 +1222,13 @@ void TMVA::Tools::ReadTMatrixDFromXML( void* node, const char* name, TMatrixD* m
 void TMVA::Tools::TMVAWelcomeMessage()
 {
    // direct output, eg, when starting ROOT session -> no use of Logger here
-   cout << endl;
-   cout << Color("bold") << "TMVA -- Toolkit for Multivariate Data Analysis" << Color("reset") << endl;
-   cout << "        " << "Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE << endl;
-   cout << "        " << "Copyright (C) 2005-2010 CERN, MPI-K Heidelberg, Us of Bonn and Victoria" << endl;
-   cout << "        " << "Home page:     http://tmva.sf.net" << endl;
-   cout << "        " << "Citation info: http://tmva.sf.net/citeTMVA.html" << endl;
-   cout << "        " << "License:       http://tmva.sf.net/LICENSE" << endl << endl;
+   std::cout << std::endl;
+   std::cout << Color("bold") << "TMVA -- Toolkit for Multivariate Data Analysis" << Color("reset") << std::endl;
+   std::cout << "        " << "Version " << TMVA_RELEASE << ", " << TMVA_RELEASE_DATE << std::endl;
+   std::cout << "        " << "Copyright (C) 2005-2010 CERN, MPI-K Heidelberg, Us of Bonn and Victoria" << std::endl;
+   std::cout << "        " << "Home page:     http://tmva.sf.net" << std::endl;
+   std::cout << "        " << "Citation info: http://tmva.sf.net/citeTMVA.html" << std::endl;
+   std::cout << "        " << "License:       http://tmva.sf.net/LICENSE" << std::endl << std::endl;
 }
 
 //_______________________________________________________________________
@@ -1400,6 +1408,23 @@ Bool_t TMVA::Tools::HistoHasEquidistantBins(const TH1& h)
 
 //_______________________________________________________________________
 std::vector<TMatrixDSym*>*
+TMVA::Tools::CalcCovarianceMatrices( const std::vector<const Event*>& events, Int_t maxCls, VariableTransformBase* transformBase )
+{
+    std::vector<Event*> eventVector;
+    for (std::vector<const Event*>::const_iterator it = events.begin(), itEnd = events.end(); it != itEnd; ++it)
+    {
+	eventVector.push_back (new Event(*(*it)));
+    }
+    std::vector<TMatrixDSym*>* returnValue = CalcCovarianceMatrices (eventVector, maxCls, transformBase);
+    for (std::vector<Event*>::const_iterator it = eventVector.begin(), itEnd = eventVector.end(); it != itEnd; ++it)
+    {
+	delete (*it);
+    }
+    return returnValue;
+}
+
+//_______________________________________________________________________
+std::vector<TMatrixDSym*>*
 TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls, VariableTransformBase* transformBase )
 {
    // compute covariance matrices
@@ -1448,7 +1473,7 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t ma
    for (UInt_t i=0; i<events.size(); i++) {
 
       // fill the event
-      Event * ev = events[i];
+      const Event * ev = events[i];
       cls = ev->GetClass();
       Double_t weight = ev->GetWeight();
 
@@ -1522,3 +1547,117 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t ma
    return mat;
 }
 
+template <typename Iterator, typename WeightIterator>
+Double_t TMVA::Tools::Mean ( Iterator first,  Iterator last,  WeightIterator w)
+{
+   // Return the weighted mean of an array defined by the first and
+   // last iterators. The w iterator should point to the first element
+   // of a vector of weights of the same size as the main array.
+
+   Double_t sum = 0;
+   Double_t sumw = 0;
+   int i = 0;
+   if (w==NULL)
+   {
+       while ( first != last ) 
+       {
+	   // if ( *w < 0) {
+	   //    ::Error("TMVA::Tools::Mean","w[%d] = %.4e < 0 ?!",i,*w);
+	   //    return 0;
+	   // } // SURE, why wouldn't you allow for negative event weights here ?? :)
+	   sum  += (*first);
+	   sumw += 1.0 ;
+	   ++first;
+	   ++i;
+       }
+       if (sumw <= 0) {
+	   ::Error("TMVA::Tools::Mean","sum of weights <= 0 ?! that's a bit too much of negative event weights :) ");
+	   return 0;
+       }
+   }
+   else
+   {
+       while ( first != last ) 
+       {
+	   // if ( *w < 0) {
+	   //    ::Error("TMVA::Tools::Mean","w[%d] = %.4e < 0 ?!",i,*w);
+	   //    return 0;
+	   // } // SURE, why wouldn't you allow for negative event weights here ?? :)
+	   sum  += (*w) * (*first);
+	   sumw += (*w) ;
+	   ++w;
+	   ++first;
+	   ++i;
+       }
+       if (sumw <= 0) {
+	   ::Error("TMVA::Tools::Mean","sum of weights <= 0 ?! that's a bit too much of negative event weights :) ");
+	   return 0;
+       }
+   }
+   return sum/sumw;
+}
+
+template <typename T>
+Double_t TMVA::Tools::Mean(Long64_t n, const T *a, const Double_t *w)
+{
+   // Return the weighted mean of an array a with length n.
+
+   if (w) {
+      return TMVA::Tools::Mean(a, a+n, w);
+   } else {
+      return TMath::Mean(a, a+n);
+   }
+}
+
+template <typename Iterator, typename WeightIterator>
+Double_t TMVA::Tools::RMS(Iterator first, Iterator last, WeightIterator w)
+{
+   // Return the Standard Deviation of an array defined by the iterators.
+   // Note that this function returns the sigma(standard deviation) and
+   // not the root mean square of the array.
+
+   Double_t sum = 0;
+   Double_t sum2 = 0;
+   Double_t sumw = 0;
+
+   Double_t adouble;
+   if (w==NULL)
+   {
+       while ( first != last ) {
+	   adouble=Double_t(*first);
+	   sum  += adouble; 
+	   sum2 += adouble*adouble;
+	   sumw += 1.0;
+	   ++first;
+       }
+   }
+   else
+   {
+       while ( first != last ) {
+	   adouble=Double_t(*first);
+	   sum  += adouble * (*w); 
+	   sum2 += adouble*adouble * (*w);
+	   sumw += (*w);
+	   ++first;
+	   ++w;
+       }
+   }
+   Double_t norm = 1./sumw;
+   Double_t mean = sum*norm;
+   Double_t rms = TMath::Sqrt(TMath::Abs(sum2*norm -mean*mean));
+   return rms;
+}
+
+template <typename T>
+Double_t TMVA::Tools::RMS(Long64_t n, const T *a, const Double_t *w)
+{
+   // Return the Standard Deviation of an array a with length n.
+   // Note that this function returns the sigma(standard deviation) and
+   // not the root mean square of the array.
+
+   if (w) {
+      return TMVA::Tools::RMS(a, a+n, w);
+   } else {
+      return TMath::RMS(a, a+n);
+   }
+}
