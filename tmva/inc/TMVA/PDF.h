@@ -95,6 +95,7 @@ namespace TMVA {
 
       // histogram underlying the PDF
       TH1*     GetPDFHist()      const { return fPDFHist; }
+      TGraph*  GetGraph()        const { return fGraph; }
       TH1*     GetOriginalHist() const { return fHistOriginal; }
       TH1*     GetSmoothedHist() const { return fHist; }
       TH1*     GetNSmoothHist()  const { return fNSmoothHist; }
