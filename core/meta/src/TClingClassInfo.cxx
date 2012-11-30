@@ -302,7 +302,8 @@ bool TClingClassInfo::HasDefaultConstructor() const
          if (iter->getNumParams() == 0) {
             return true;
          }
-         if (iter->getNumParams() == 0) {
+         // Most likely just this test is needed.
+         if (iter->getMinRequiredArguments() == 0) {
             return true;
          }
       }
