@@ -83,7 +83,7 @@ $(STLDICTS): lib/lib%Dict.$(SOEXT): $(METAUTILSDIRS)/G__std__%.o $(ORDER_) $(MAI
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ "$(filter-out $(MAINLIBS),$^)" ""
 
 lib/lib%Dict.rootmap: $(RLIBMAP) $(MAKEFILEDEP) $(METAUTILSDIRS)/%Linkdef.h
-	$(RLIBMAP) -o $@ -l lib%Dict.$(SOEXT) -c $(METAUTILSDIRS)/$*Linkdef.h
+	$(RLIBMAP) -o $@ -l lib$*Dict.$(SOEXT) -c $(METAUTILSDIRS)/$*Linkdef.h
 
 METAUTILSDEP   += $(STLDICTS_DEP)
 
