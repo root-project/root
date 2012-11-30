@@ -88,8 +88,8 @@ PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
 
    TClass* klass = (TClass*)this->GetClass().Id();
 
-// perform the call (fails for loaded macro's)
-   Long_t address = (Long_t)this->Execute( klass );
+// perform the call, 0 makes the other side allocate the memory
+   Long_t address = (Long_t)this->Execute( 0 );
 
 // done with filtered args
    Py_DECREF( args );
