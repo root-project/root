@@ -13,7 +13,7 @@ comment*/ defined(SOMETHING)    /*yet another one*/
     class test 
     {
     public:
-       int a() {printf("a\n");}
+       int a() { return printf("a\n");}
     };
 
 
