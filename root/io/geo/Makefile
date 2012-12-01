@@ -4,8 +4,7 @@ FILES_IN_TAR := $(shell tar tzf geometries.tar.gz)
 C_FILES_IN_TAR := $(filter %.C,$(FILES_IN_TAR))
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log unpack.last \
-maketar $(FILES_IN_TAR)
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log unpack.last maketar $(FILES_IN_TAR)
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
