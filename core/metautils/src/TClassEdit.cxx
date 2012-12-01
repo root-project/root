@@ -527,8 +527,12 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
    output.clear();
    if (strlen(type)==0) return 0;
   
-   string full( mode & kLong64 ? TClassEdit::GetLong64_Name( CleanType(type, 1 /* keepInnerConst */) )
-               : CleanType(type, 1 /* keepInnerConst */) );
+   int cleantypeMode = 1 /* keepInnerConst */;
+   if (mode & kKeepOuterConst) {
+      cleantypeMode = 0; /* remove only the outer class keyword */
+   }
+   string full( mode & kLong64 ? TClassEdit::GetLong64_Name( CleanType(type, cleantypeMode) )
+               : CleanType(type, cleantypeMode) );
    if ( mode & kDropStd && strncmp( full.c_str(), "std::", 5) == 0) {
       full.erase(0,5);
    }
@@ -539,11 +543,43 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
    const unsigned int tlen( full.size() );
    if ( tlen > 0 ) {
       const char *starloc = t + tlen - 1;
-      if ( (*starloc)=='*' ) {
-         while( (*(starloc-1))=='*' ) { starloc--; }
+      bool hasconst = false;
+      if ( (*starloc)=='t' 
+          && (starloc-t) > 5 && 0 == strncmp((starloc-5),"const",5) 
+          && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
+         // we are ending on a const.
+         starloc -= 4;
+         if ((*starloc-1)==' ') {
+            // Take the space too.
+            starloc--;
+         }
+         hasconst = true;
+      }
+      if ( hasconst || (*starloc)=='*' || (*starloc)=='&' ) {
+         while( (*(starloc-1))=='*' || (*(starloc-1))=='&' || (*(starloc-1))=='t') { 
+            if ( (*(starloc-1))=='t' ) {
+               if ( (starloc-1-t) > 5 && 0 == strncmp((starloc-5),"const",5)
+                   && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
+                  // we have a const.
+                  starloc -= 5;
+                  if ((*starloc-1)==' ') {
+                     // Take the space too.
+                     starloc--;
+                  }
+               } else {
+                  break;
+               }
+            } else {
+               starloc--;
+            }
+         }
          stars = starloc;
          const unsigned int starlen = strlen(starloc);
          full.erase(tlen-starlen,starlen);
+      } else if (hasconst) {
+         stars = starloc;
+         const unsigned int starlen = strlen(starloc);
+         full.erase(tlen-starlen,starlen);         
       }
    }
 
@@ -656,7 +692,7 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
       
       if (*c == '<')   lev++;
       if (lev==0 && !isalnum(*c)) {
-         if (!strchr("*:_$ []-@",*c)) break;
+         if (!strchr("*&:_$ []-@",*c)) break;
       }
       if (c[0]=='>' && result.size() && result[result.size()-1]=='>') result+=" ";
 
