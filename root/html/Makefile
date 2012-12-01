@@ -56,6 +56,7 @@ MakeIndex_filtered.log: MakeIndex.log
 	| grep -v 'no dictionary for' \
 	| grep -v 't open file' \
 	| grep -v ' scanning ' \
+        | grep -v ' Times-Roman' \
 	| grep -v '_Index.html' > $@
 
 MakeIndex: MakeIndex_filtered.log
