@@ -2920,7 +2920,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          TString sub = includes(pos,len);
          sub.Remove(0,3); // Remove ' -I'
          AssignAndDelete( sub, ConcatFileName( WorkingDirectory(), sub ) );
-         sub.Prepend(" -I");
+         sub.Prepend(" -I\"");
+         sub.Append("\"");
          includes.Replace(pos,len,sub);
          pos = rel_inc.Index(includes,&len);
       }
