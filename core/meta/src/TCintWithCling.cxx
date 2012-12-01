@@ -1885,6 +1885,22 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
 }
 
 //______________________________________________________________________________
+Bool_t TCintWithCling::CheckClassTemplate(const char *name)
+{
+   // Return true if there is a class template by the given name ...
+
+ 
+   const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
+   const clang::Decl *decl = lh.findClassTemplate(name);
+   if (!decl) {
+      std::string strname = "std::";
+      strname += name;
+      decl = lh.findClassTemplate(strname);
+   }
+   return 0 != decl;
+}
+
+//______________________________________________________________________________
 void TCintWithCling::CreateListOfBaseClasses(TClass* cl)
 {
    // Create list of pointers to base class(es) for TClass cl.

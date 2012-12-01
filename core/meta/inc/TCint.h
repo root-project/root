@@ -127,6 +127,7 @@ public:
    void    UpdateListOfTypes();
    void    SetClassInfo(TClass *cl, Bool_t reload = kFALSE);
    Bool_t  CheckClassInfo(const char *name, Bool_t autoload = kTRUE);
+   Bool_t  CheckClassTemplate(const char *name);
    Long_t  Calc(const char *line, EErrorCode *error = 0);
    void    CreateListOfBaseClasses(TClass *cl);
    void    CreateListOfDataMembers(TClass *cl);

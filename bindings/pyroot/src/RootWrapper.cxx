@@ -480,7 +480,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       klass = T::ByName( lookup );
    }
 
-   if ( ! (Bool_t)klass && 0 /* TODO: check template here on cling; Was: G__defined_templateclass( const_cast< char* >( lookup.c_str() ) ) */ ) {
+   if ( ! (Bool_t)klass && gInterpreter->CheckClassTemplate( lookup.c_str() ) ) {
    // a "naked" templated class is requested: return callable proxy for instantiations
       PyObject* pytcl = PyObject_GetAttr( gRootModule, PyStrings::gTemplate );
       PyObject* pytemplate = PyObject_CallFunction(

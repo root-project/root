@@ -1149,6 +1149,14 @@ Bool_t TCint::CheckClassInfo(const char *name, Bool_t autoload /*= kTRUE*/)
 }
 
 //______________________________________________________________________________
+Bool_t TCint::CheckClassTemplate(const char *name)
+{
+   // Return true if there is a class template by the given name ...
+
+   return 0 != G__defined_templateclass( const_cast<char*>(name) );
+}
+
+//______________________________________________________________________________
 void TCint::CreateListOfBaseClasses(TClass *cl)
 {
    // Create list of pointers to base class(es) for TClass cl.
