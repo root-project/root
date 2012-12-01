@@ -51,7 +51,7 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
 TUTORIALSTESTS_NEEDS_MINUIT2 := fit/fit2dHist fit/fit2dHist \
 fit/fitCircle fit/minuit2FitBench2D fit/minuit2FitBench2D \
 fit/minuit2FitBench fit/minuit2FitBench fit/minuit2GausFit fit/minuit2GausFit \
-fit/NumericalMinimization
+fit/NumericalMinimization fit/combinedFit
 
 ifeq (,$(wildcard $(ROOTSYS)/lib/libMinuit2.*))
 TUTORIALSTESTS_VETO += $(TUTORIALSTESTS_NEEDS_MINUIT2)
@@ -87,7 +87,7 @@ TUTORIALSTESTS_VETO += image/rose_image
 TUTORIALSTESTS_VETO += eve/text_test
 TUTORIALSTESTS_VETO += eve/test_paramlist
 
-TUTORIALSTESTS_VETO_CC := math/testrandom
+TUTORIALSTESTS_VETO_CC := math/testrandom fit/combinedFit
 
 ifeq ($(GUI),)
   TUTORIALSTESTS_VETO += $(TUTORIALSTESTS_NONBATCH)
