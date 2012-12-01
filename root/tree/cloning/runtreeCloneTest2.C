@@ -57,7 +57,7 @@ void runtreeCloneTest2(const char* outFile = "pion_merged.root", //here's where 
    void *pDir = gSystem->OpenDirectory(inputDir.Data());
    
    char* cFileName;
-   while( cFileName = (char*) gSystem->GetDirEntry(pDir) ) {
+   while( (cFileName = (char*) gSystem->GetDirEntry(pDir)) ) {
       
       TString fileName(cFileName);
       if(fileName.EndsWith( fileString.Data() )) {
