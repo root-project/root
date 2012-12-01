@@ -16,4 +16,4 @@ TeleDict.C: Tele.h TeleLinkdef.h $(ROOTCINT)
 	$(CMDECHO) test ! `(rootcint -f TeleDict.C -c Tele.h TeleLinkdef.h >TeleDict.log 2>&1 )`  && touch TeleDict.C 
 
 dicto : MyClassDict.o TeleDict.o
-	$(CMDECHO) diff -b  dicto.ref TeleDict.log 
+	$(CMDECHO) diff -b -w dicto.ref TeleDict.log 
