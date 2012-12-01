@@ -740,8 +740,9 @@ void ROOT::TMetaUtils::GetFullyQualifiedTypeName(std::string &typenamestr,
    policy.SuppressScope = false;
    policy.AnonymousTagLocations = false;
 
-   TClassEdit::TSplitType splitname(typeForName.getAsString(policy).c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault));
-   splitname.ShortType(typenamestr,TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
+   TClassEdit::TSplitType splitname(typeForName.getAsString(policy).c_str(),
+                                    (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
+   splitname.ShortType(typenamestr,TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst);
 
 }
 
