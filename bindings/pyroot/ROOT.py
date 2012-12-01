@@ -305,7 +305,8 @@ if not '__IPYTHON__' in __builtins__:
 ### call EndOfLineAction after each interactive command (to update display etc.)
 _orig_dhook = sys.displayhook
 def _displayhook( v ):
-   _root.gInterpreter.EndOfLineAction()
+# TODO: EndOfLineAction currently unresolvable (#98656?)
+#   _root.gInterpreter.EndOfLineAction()
    return _orig_dhook( v )
 
 
