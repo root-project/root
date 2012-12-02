@@ -18,6 +18,11 @@ else
    CMDECHO=
 endif
 
+
+ifneq ($(FIXCLING),)
+-include $(ROOTTEST_HOME)/scripts/FixCling.mk
+endif
+   
 CALLROOTEXEBUILD:=root.exe
 
 # The user directory should define
