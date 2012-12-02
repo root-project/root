@@ -332,6 +332,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    // from the argument array. The following arguments are handled:
    //    -b : run in batch mode without graphics
    //    -x : exit on exception
+   //    -e expression: request execution of the given C++ expression.
    //    -n : do not execute logon and logoff macros as specified in .rootrc
    //    -q : exit after processing command line macro files
    //    -l : do not show splash screen
@@ -377,6 +378,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          fprintf(stderr, "Options:\n");
          fprintf(stderr, "  -b : run in batch mode without graphics\n");
          fprintf(stderr, "  -x : exit on exception\n");
+         fprintf(stderr, "  -e expression: request execution of the given C++ expression");
          fprintf(stderr, "  -n : do not execute logon and logoff macros as specified in .rootrc\n");
          fprintf(stderr, "  -q : exit after processing command line macro files\n");
          fprintf(stderr, "  -l : do not show splash screen\n");
@@ -415,6 +417,20 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          // used when started by front-end program to signal that
          // splash screen can be popped down (TRint::PrintLogo())
          argv[i] = null;
+      } else if (!strcmp(argv[i], "-e")) {
+         argv[i] = null;
+         ++i;
+
+         if ( i < *argc ) {
+            if (!fFiles) fFiles = new TObjArray;
+            TObjString *expr = new TObjString(argv[i]);
+            expr->SetBit(kExpression);
+            fFiles->Add(expr);
+            argv[i] = null;
+         } else {
+            Warning("GetOptions", "-e must be followed by an expression.");           
+         }   
+
       } else if (argv[i][0] != '-' && argv[i][0] != '+') {
          Long64_t size;
          Long_t id, flags, modtime;

@@ -384,29 +384,33 @@ void TRint::Run(Bool_t retrn)
                printf("\n");
             Bool_t rootfile = kFALSE;
             
-            if (file->String().EndsWith(".root") || file->String().BeginsWith("file:")) {
-               rootfile = kTRUE;
+            if (file->TestBit(kExpression)) {
+               snprintf(cmd, kMAXPATHLEN+50, "%s", (const char*)file->String());
             } else {
-               FILE *mayberootfile = fopen(file->String(),"rb");
-               if (mayberootfile) {
-                  char header[5];
-                  if (fgets(header,5,mayberootfile)) {
-                     rootfile = strncmp(header,"root",4)==0;
+               if (file->String().EndsWith(".root") || file->String().BeginsWith("file:")) {
+                  rootfile = kTRUE;
+               } else {
+                  FILE *mayberootfile = fopen(file->String(),"rb");
+                  if (mayberootfile) {
+                     char header[5];
+                     if (fgets(header,5,mayberootfile)) {
+                        rootfile = strncmp(header,"root",4)==0;
+                     }
+                     fclose(mayberootfile);
                   }
-                  fclose(mayberootfile);
                }
-            }
-            if (rootfile) {
-               // special trick to be able to open files using UNC path names
-               if (file->String().BeginsWith("\\\\"))
-                  file->String().Prepend("\\\\");
-               file->String().ReplaceAll("\\","/");
-               const char *rfile = (const char*)file->String();
-               Printf("Attaching file %s as _file%d...", rfile, nfile);
-               snprintf(cmd, kMAXPATHLEN+50, "TFile *_file%d = TFile::Open(\"%s\")", nfile++, rfile);
-            } else {
-               Printf("Processing %s...", (const char*)file->String());
-               snprintf(cmd, kMAXPATHLEN+50, ".x %s", (const char*)file->String());
+               if (rootfile) {
+                  // special trick to be able to open files using UNC path names
+                  if (file->String().BeginsWith("\\\\"))
+                     file->String().Prepend("\\\\");
+                  file->String().ReplaceAll("\\","/");
+                  const char *rfile = (const char*)file->String();
+                  Printf("Attaching file %s as _file%d...", rfile, nfile);
+                  snprintf(cmd, kMAXPATHLEN+50, "TFile *_file%d = TFile::Open(\"%s\")", nfile++, rfile);
+               } else {
+                  Printf("Processing %s...", (const char*)file->String());
+                  snprintf(cmd, kMAXPATHLEN+50, ".x %s", (const char*)file->String());
+               }
             }
             Getlinem(kCleanUp, 0);
             Gl_histadd(cmd);
