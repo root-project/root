@@ -2005,6 +2005,7 @@ TClass *TCintWithCling::GenerateTClass(const char *classname, Bool_t silent /* =
    }
 }
 
+#if 0
 //______________________________________________________________________________
 static void GenerateTClass_GatherInnerIncludes(cling::Interpreter *interp, TString &includes,TClingClassInfo *info)
 {
@@ -2036,6 +2037,7 @@ static void GenerateTClass_GatherInnerIncludes(cling::Interpreter *interp, TStri
       }
    }
 }
+#endif
 
 //______________________________________________________________________________
 TClass *TCintWithCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE */)
