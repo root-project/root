@@ -138,8 +138,8 @@ namespace TMVA {
 
       // returns the covariance matrix of of the different classes (and the sum) 
       // given the event sample
-      std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls, VariableTransformBase* transformBase=0 );
-      std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<const Event*>& events, Int_t maxCls, VariableTransformBase* transformBase=0 );
+      std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<TMVA::Event*>& events, Int_t maxCls, VariableTransformBase* transformBase=0 );
+      std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<const TMVA::Event*>& events, Int_t maxCls, VariableTransformBase* transformBase=0 );
 
 
       // turns covariance into correlation matrix
