@@ -12,6 +12,8 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMissingSmartInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundErracticValuePrinter"
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenUnnamedReturn"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectInitOrder"
+CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectFileLoc"
+CALLROOTEXE += -e "\#define ClingWorkAroundPrintfIssues"
 
 # variable to be used in Makefiles.
 
@@ -23,3 +25,5 @@ ClingWorkAroundMissingSmartInclude = yes
 ClingWorkAroundErracticValuePrinter = yes
 ClingWorkAroundBrokenUnnamedReturn = yes
 ClingWorkAroundUnnamedIncorrectInitOrder = yes # See https://savannah.cern.ch/bugs/index.php?99210
+ClingWorkAroundUnnamedIncorrectFileLoc = yes # see https:://savannah.cern.ch/bugs/index.php?99236
+ClingWorkAroundPrintfIssues = yes # see https:://savannah.cern.ch/bugs/index.php?99234
