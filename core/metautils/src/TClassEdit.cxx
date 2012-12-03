@@ -130,7 +130,13 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    //      {for (int i=0;i<narg;i++) fprintf(stderr,"calling ShortType %d for %s with %d %s \n",
    //                                        mode,typeDesc,i,arglist[i].c_str());
    //      }
-   if (fElements[narg-1].empty() == false && fElements[narg-1][0]=='*') {
+   if (fElements[narg-1].empty() == false &&
+       (fElements[narg-1][0]=='*' 
+        || fElements[narg-1][0]=='&' 
+        || 0 == fElements[narg-1].compare(0,6,"const*") 
+        || 0 == fElements[narg-1].compare(0,6,"const&") 
+        )
+       ) {
       if ((mode&1)==0) tailLoc = narg-1;
       narg--;
    }
