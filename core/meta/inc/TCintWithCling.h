@@ -50,7 +50,8 @@ extern "C" {
                                        const char** headers,
                                        const char** includePaths,
                                        const char** macroDefines,
-                                       const char** macroUndefines);
+                                       const char** macroUndefines,
+                                       void (*triggerFunc)() );
    void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction&);
    void TCintWithCling__UpdateListsOnUnloaded(const cling::Transaction&);
    TObject* TCintWithCling__GetObjectAddress(const char *Name, void *&LookupCtx);
@@ -154,7 +155,8 @@ public: // Public Interface
                           const char** headers,
                           const char** includePaths,
                           const char** macroDefines,
-                          const char** macroUndefines);
+                          const char** macroUndefines,
+                          void (*triggerFunc)());
    void    SetGetline(const char * (*getlineFunc)(const char* prompt),
                       void (*histaddFunc)(const char* line));
    void    Reset();

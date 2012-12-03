@@ -4064,7 +4064,7 @@ static ESourceFileKind GetSourceFileKind(const char* filename)
 
 //______________________________________________________________________________
 static int GenerateModule(const char* dictSrcFile, const std::vector<std::string>& args,
-                          const std::string &currentDirectory)
+                          const std::string & /* currentDirectory */)
 {
    // Generate the clang module given the arguments.
    // Returns != 0 on error.
@@ -4138,7 +4138,8 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
       "      static bool sInitialized = false;\n"
       "      if (!sInitialized) {\n"
       "        TCintWithCling__RegisterModule(\"" << dictname << "\",\n"
-      "          headers, includePaths, macroDefines, macroUndefines);\n"
+      "          headers, includePaths, macroDefines, macroUndefines,\n"
+      "          TriggerDictionaryInitalization_" << dictname << ");\n"
       "        sInitialized = true;\n"
       "      }\n"
       "    }\n"
@@ -4152,7 +4153,9 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
 
    clang::CompilerInstance* CI = gInterp->getCI();
 
-// Note: need to resolve _where_ to create the pcm
+   // Note: need to resolve _where_ to create the pcm
+   // We default in a lib subdirectory (for the ROOT build)
+   // otherwise we put it in the same directory as the dictionary file (for ACLiC)
    std::string dictDir = "lib/";
 #ifdef WIN32
    struct _stati64 finfo;
@@ -4165,7 +4168,8 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
    struct stat finfo;
    if (stat(dictDir.c_str(), &finfo) < 0 ||
        !S_ISDIR(finfo.st_mode)) {
-      dictDir = "./";
+      // dictDir = "./";
+      dictDir = llvm::sys::path::parent_path(dictSrcFile);
    }
    
 #endif
@@ -4983,6 +4987,14 @@ int main(int argc, char **argv)
       // #pragma) as those are needed only for compilation.
       // However CINT was essentially treating them the same as any other
       // so we may have to put them here too ... maybe.
+
+      // Until the module are actually enabled in ROOT, we need to register
+      // the 'current' directory to make it relocatable (i.e. have a way
+      // to find the headers).
+      string incCurDir = "-I";
+      incCurDir += currentDirectory;
+      pcmArgs.push_back(incCurDir);
+
       GenerateModule(dictname, pcmArgs, currentDirectory);
    }
 

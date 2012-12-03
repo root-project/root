@@ -118,15 +118,17 @@ namespace {
                          const char** headers,
                          const char** includePaths,
                          const char** macroDefines,
-                         const char** macroUndefines):
+                         const char** macroUndefines,
+                         void (*triggerFunc)() ):
          fModuleName(moduleName), fHeaders(headers),
          fIncludePaths(includePaths), fMacroDefines(macroDefines),
-         fMacroUndefines(macroUndefines) {}
+         fMacroUndefines(macroUndefines), fTriggerFunc(triggerFunc) {}
       const char* fModuleName; // module name
       const char** fHeaders; // 0-terminated array of header files
       const char** fIncludePaths; // 0-terminated array of header files
       const char** fMacroDefines; // 0-terminated array of header files
       const char** fMacroUndefines; // 0-terminated array of header files
+      void (*fTriggerFunc)(); // Pointer to the dict initialization used to find the library name
    };
 
    llvm::SmallVector<ModuleHeaderInfo_t, 10> *gModuleHeaderInfoBuffer;
@@ -138,7 +140,8 @@ void TCintWithCling__RegisterModule(const char* modulename,
                                     const char** headers,
                                     const char** includePaths,
                                     const char** macroDefines,
-                                    const char** macroUndefines)
+                                    const char** macroUndefines,
+                                    void (*triggerFunc)() )
 {
    // Called by static dictionary initialization to register clang modules
    // for headers. Calls TCintWithCling::RegisterModule() unless gCling
@@ -158,13 +161,15 @@ void TCintWithCling__RegisterModule(const char* modulename,
                                                headers,
                                                includePaths,
                                                macroDefines,
-                                               macroUndefines);
+                                               macroUndefines,
+                                               triggerFunc);
    } else {
       moduleHeaderInfoBuffer.push_back(ModuleHeaderInfo_t(modulename,
                                                           headers,
                                                           includePaths,
                                                           macroDefines,
-                                                          macroUndefines));
+                                                          macroUndefines,
+                                                          triggerFunc));
    }
 }
 
@@ -405,21 +410,6 @@ void* autoloadCallback(const std::string& mangled_name)
    void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
    //fprintf(stderr, "addr: %016lx\n", reinterpret_cast<unsigned long>(addr));
    return addr;
-}
-
-//______________________________________________________________________________
-//
-//
-//
-
-extern "C" int ScriptCompiler(const char* filename, const char* opt)
-{
-   return gSystem->CompileMacro(filename, opt);
-}
-
-extern "C" int IgnoreInclude(const char* fname, const char* expandedfname)
-{
-   return gROOT->IgnoreInclude(fname, expandedfname);
 }
 
 //______________________________________________________________________________
@@ -673,7 +663,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    TClassEdit::Init(*fInterpreter,*fNormalizedCtxt);
 
    // set the gModuleHeaderInfoBuffer pointer
-   TCintWithCling__RegisterModule(0, 0, 0, 0, 0);
+   TCintWithCling__RegisterModule(0, 0, 0, 0, 0, 0);
 
    TCintWithCling::InitializeDictionaries();
    
@@ -685,14 +675,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    fLockProcessLine = kTRUE;
    // Disable the autoloader until it is explicitly enabled.
    SetClassAutoloading(false);
-   //G__RegisterScriptCompiler(&ScriptCompiler);
-   G__set_ignoreinclude(&IgnoreInclude);
-   // check whether the compiler is available:
-   //char* path = gSystem->Which(gSystem->Getenv("PATH"), gSystem->BaseName(COMPILER));
-   //if (path && path[0]) {
-   //   G__InitGenerateDictionary(&TCint_GenerateDictionary);
-   //}
-   //delete[] path;
+
    ResetAll();
 #ifndef R__WIN32
    optind = 1;  // make sure getopt() works in the main program
@@ -736,11 +719,47 @@ TCintWithCling::~TCintWithCling()
 }
 
 //______________________________________________________________________________
+static const char *FindLibraryName(void (*func)())
+{
+   // Wrapper around dladdr (and friends)
+
+#if defined(__CYGWIN__) && defined(__GNUC__)
+   return 0;
+#elif defined(G__WIN32)
+   MEMORY_BASIC_INFORMATION mbi;
+   if (!VirtualQuery (func, &mbi, sizeof (mbi)))
+   {
+      return 0;
+   }
+   
+   HMODULE hMod = (HMODULE) mbi.AllocationBase;
+   static char moduleName[MAX_PATH];
+   
+   if (!GetModuleFileNameA (hMod, moduleName, sizeof (moduleName)))
+   {
+      return 0;
+   }
+   return moduleName;
+#else
+   Dl_info info;
+   if (dladdr((void*)func,&info)==0) {
+      // Not in a known share library, let's give up
+      return 0;
+   } else {
+      //fprintf(stdout,"Found address in %s\n",info.dli_fname);
+      return info.dli_fname;
+   }
+#endif 
+
+}
+
+//______________________________________________________________________________
 void TCintWithCling::RegisterModule(const char* modulename,
                                     const char** headers,
                                     const char** includePaths,
                                     const char** macroDefines,
-                                    const char** macroUndefines)
+                                    const char** macroUndefines,
+                                    void (*triggerFunc)())
 {
    // Inject the module named "modulename" into cling; load all headers.
    // headers is a 0-terminated array of header files to #include after
@@ -748,6 +767,7 @@ void TCintWithCling::RegisterModule(const char* modulename,
    // entries (or %PATH% on Windows).
    // This function gets called by the static initialization of dictionary
    // libraries.
+   // the value of 'triggerFunc' is used to find the shared library location.
 
    TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
 
@@ -796,6 +816,18 @@ void TCintWithCling::RegisterModule(const char* modulename,
 # endif
 #endif // ROOTLIBDIR
    gSystem->ExpandPathName(searchPath);
+
+   if (triggerFunc) {
+      const char *libraryName = FindLibraryName(triggerFunc);
+      if (libraryName) {
+         std::string libDir = llvm::sys::path::parent_path(libraryName);
+ #ifdef R__WIN32
+         searchPath += ";" + libDir;
+#else
+         searchPath += ":" + libDir;
+#endif
+      }
+   }
 
    if (!gSystem->FindFile(searchPath, pcmFileName)) {
       Error("RegisterModule", "cannot find dictionary module %s in %s",
@@ -1230,7 +1262,8 @@ Int_t TCintWithCling::InitializeDictionaries()
                                                li->fHeaders,
                                                li->fIncludePaths,
                                                li->fMacroDefines,
-                                               li->fMacroUndefines);
+                                               li->fMacroUndefines,
+                                               li->fTriggerFunc);
    }
    gModuleHeaderInfoBuffer->clear();
 
@@ -1499,6 +1532,8 @@ void TCintWithCling::RecursiveRemove(TObject* obj)
    // Delete object from CINT symbol table so it can not be used anymore.
    // CINT objects are always on the heap.
    R__LOCKGUARD(gCINTMutex);
+   // Note that fgSetOfSpecials is supposed to be updated by TClingCallbacks::tryFindROOTSpecialInternal
+   // (but isn't at the moment).
    if (obj->IsOnHeap() && fgSetOfSpecials && !((std::set<TObject*>*)fgSetOfSpecials)->empty()) {
       std::set<TObject*>::iterator iSpecial = ((std::set<TObject*>*)fgSetOfSpecials)->find(obj);
       if (iSpecial != ((std::set<TObject*>*)fgSetOfSpecials)->end()) {
@@ -2770,29 +2805,6 @@ Int_t TCintWithCling::AutoLoad(const char* cls)
    }
    SetClassAutoloading(oldvalue);
    return status;
-}
-
-//______________________________________________________________________________
-//FIXME: Use of G__ClassInfo in the interface!
-void* TCintWithCling::FindSpecialObject(const char* item, G__ClassInfo* type,
-                                        void** prevObj, void** assocPtr)
-{
-   // Static function called by CINT when it finds an un-indentified object.
-   // This function tries to find the UO in the ROOT files, directories, etc.
-   // This functions has been registered by the TCint ctor.
-   if (!*prevObj || *assocPtr != gDirectory) {
-      *prevObj = gROOT->FindSpecialObject(item, *assocPtr);
-      if (!fgSetOfSpecials) {
-         fgSetOfSpecials = new std::set<TObject*>;
-      }
-      if (*prevObj) {
-         ((std::set<TObject*>*)fgSetOfSpecials)->insert((TObject*)*prevObj);
-      }
-   }
-   if (*prevObj) {
-      type->Init(((TObject*)*prevObj)->ClassName());
-   }
-   return *prevObj;
 }
 
 //______________________________________________________________________________
