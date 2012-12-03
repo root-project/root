@@ -156,6 +156,20 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
    TObject *obj = TCintWithCling__GetObjectAddress(Name.getAsString().c_str(), 
                                                    fLastLookupCtx);
    if (obj) {
+
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
+      // Register the address in TCling::fgSetOfSpecials
+      // to speed-up the execution of TCling::RecursiveRemove when 
+      // the object is not a special.
+      // See http://root.cern.ch/viewvc/trunk/core/meta/src/TCint.cxx?view=log#rev18109
+      if (!fgSetOfSpecials) {
+         fgSetOfSpecials = new std::set<TObject*>;
+      }
+      ((std::set<TObject*>*)fgSetOfSpecials)->insert((TObject*)*obj);
+#endif
+#endif
+
      VarDecl *VD = cast_or_null<VarDecl>(utils::Lookup::Named(&SemaR, 
                                                               Name, 
                                                         fROOTSpecialNamespace));
