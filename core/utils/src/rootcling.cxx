@@ -4167,12 +4167,15 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
    struct stat finfo;
    if (stat(dictDir.c_str(), &finfo) < 0 ||
        !S_ISDIR(finfo.st_mode)) {
-      dictDir = "./";
-      // fprintf(stderr,"Will check parent of the pcm in %s\n",dictSrcFile);
-      // dictDir = llvm::sys::path::parent_path(dictSrcFile);
+      dictDir = llvm::sys::path::parent_path(dictSrcFile);
+      if (dictDir.empty()) {
+         dictDir = "./";
+      } else {
+         dictDir += "/";
+      }
    }
 #endif
-   // fprintf(stderr,"Will write the pcm in %s\n",dictDir.c_str());
+
    CI->getPreprocessor().getHeaderSearchInfo().setModuleCachePath(dictDir.c_str());
    std::string moduleFile = dictDir + ROOT::TMetaUtils::GetModuleFileName(dictname.c_str());
    clang::Module* module = 0;
@@ -4970,7 +4973,7 @@ int main(int argc, char **argv)
    incCurDir += currentDirectory;
    pcmArgs.push_back(incCurDir);
    
-   GenerateModule(dictname.c_str(), pcmArgs, currentDirectory);
+   GenerateModule(dictpathname.c_str(), pcmArgs, currentDirectory);
 
    // Now that CINT is not longer there to write the header file,
    // write one and include in there a few things for backward 
