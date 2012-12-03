@@ -168,7 +168,6 @@ var symbols_map = {
    '#parallel' : '',
    '#perp' : '\u22A5',
    '#odot' : ''
-
 };
 
 /*
@@ -401,6 +400,7 @@ function format_id(id) {
    /* format the string id to remove specials characters
       (that cannot be used in id strings) */
    var g_id = id;
+   if (g_id == "") g_id = "random_histo_" + random_id++;
    while (g_id.indexOf(' ') != -1)
       g_id = g_id.replace(' ', '_');
    while (g_id.indexOf(':') != -1)
@@ -423,6 +423,10 @@ function format_id(id) {
       g_id = g_id.replace('/', '_');
    while (g_id.indexOf('-') != -1)
       g_id = g_id.replace('-', '_');
+   while (g_id.indexOf('[') != -1)
+      g_id = g_id.replace('[', '_');
+   while (g_id.indexOf(']') != -1)
+      g_id = g_id.replace(']', '_');
    return g_id;
 };
 
@@ -2668,7 +2672,7 @@ function createFillPatterns(svg, id, color) {
          if (histo['fArray'][i+1] > hmax) hmax = histo['fArray'][i+1];
       }
       var mul = (hmin < 0) ? 1.05 : 1.0;
-      if (hmin < 1e-300 && hmax < 1e-300) {
+      if (Math.abs(hmin) < 1e-300 && Math.abs(hmax) < 1e-300) {
          var ymin = histo['fYaxis']['fXmin'], ymax = histo['fYaxis']['fXmax'];
          if (histo['fMinimum'] != -1111) ymin = histo['fMinimum'];
          if (histo['fMaximum'] != -1111) ymax = histo['fMaximum'];

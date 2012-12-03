@@ -15,6 +15,7 @@ var last_index = 0;
 var function_list = new Array();
 var func_list = new Array();
 var frame_id = 0;
+var random_id = 0;
 
 function closeCollapsible(e, el) {
    var sel = $(el)[0].textContent;
@@ -234,6 +235,7 @@ function ResetUI() {
    obj_index = 0;
    last_index = 0;
    frame_id = 0;
+   random_id = 0;
    if (gFile) {
       gFile.Delete();
       delete gFile;
