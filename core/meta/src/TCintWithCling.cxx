@@ -273,7 +273,7 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
                listOfSmth->Add(new TFunction(new TClingMethodInfo(interp, FD)));
             }            
          }
-         else if (TagDecl *TD = dyn_cast<TagDecl>(*DI)) {
+         else if (RecordDecl *TD = dyn_cast<RecordDecl>(*DI)) {
             TCintWithCling__UpdateClassInfo(TD);
          }
          else if (const TypedefDecl* TdefD = dyn_cast<TypedefDecl>(*DI)) {
@@ -283,6 +283,13 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
             }
          }
          else if (const NamedDecl *ND = dyn_cast<NamedDecl>(*DI)) {
+            
+            if (TagDecl *TD = dyn_cast<TagDecl>(*DI)) {
+               // Mostly just for EnumDecl (the other TagDecl are handled
+               // by the 'RecordDecl' if statement.
+               TCintWithCling__UpdateClassInfo(TD);
+            }
+
             // We care about declarations on the global scope.
             if (!isa<TranslationUnitDecl>(ND->getDeclContext()))
                continue;
@@ -300,6 +307,7 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
                continue;
 
             if (EnumDecl *ED = dyn_cast<EnumDecl>(*DI)) {
+ 
                for(EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
                       EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
                   if (!listOfSmth->FindObject((*EDI)->getNameAsString().c_str())) {  
