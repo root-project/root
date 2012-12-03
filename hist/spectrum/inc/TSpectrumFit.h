@@ -125,8 +125,8 @@ protected:
    void                StiefelInversion(Double_t **a,Int_t rozmer);
 
 public:
-   void                FitAwmi(float *source); 
-   void                FitStiefel(float *source); 
+   void                FitAwmi(Double_t *source); 
+   void                FitStiefel(Double_t *source); 
    Double_t           *GetAmplitudes() const {return fAmpCalc;}   
    Double_t           *GetAmplitudesErrors() const {return fAmpErr;}
    Double_t           *GetAreas() const {return fArea;}            
@@ -139,7 +139,7 @@ public:
    void                GetTailParameters(Double_t &t, Double_t &tErr, Double_t &b, Double_t &bErr, Double_t &s, Double_t &sErr);
    void                SetBackgroundParameters(Double_t a0Init, Bool_t fixA0, Double_t a1Init, Bool_t fixA1, Double_t a2Init, Bool_t fixA2);
    void                SetFitParameters(Int_t xmin,Int_t xmax, Int_t numberIterations, Double_t alpha, Int_t statisticType, Int_t alphaOptim, Int_t power, Int_t fitTaylor);
-   void                SetPeakParameters(Double_t sigma, Bool_t fixSigma, const Float_t *positionInit, const Bool_t *fixPosition, const Float_t *ampInit, const Bool_t *fixAmp);    
+   void                SetPeakParameters(Double_t sigma, Bool_t fixSigma, const Double_t *positionInit, const Bool_t *fixPosition, const Double_t *ampInit, const Bool_t *fixAmp);    
    void                SetTailParameters(Double_t tInit, Bool_t fixT, Double_t bInit, Bool_t fixB, Double_t sInit, Bool_t fixS); 
 
    ClassDef(TSpectrumFit,1)  //Spectrum Fitter using algorithm without matrix inversion and conjugate gradient method for symmetrical matrices (Stiefel-Hestens method)

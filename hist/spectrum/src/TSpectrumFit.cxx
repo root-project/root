@@ -794,7 +794,7 @@ Double_t TSpectrumFit::Ourpowl(Double_t a, Int_t pw)
 /////////////////FITTING FUNCTION WITHOUT MATRIX INVERSION///////////////////////////////////////
 
 //____________________________________________________________________________
-void TSpectrumFit::FitAwmi(Float_t *source) 
+void TSpectrumFit::FitAwmi(Double_t *source) 
 {
 /////////////////////////////////////////////////////////////////////////////
 //        ONE-DIMENSIONAL FIT FUNCTION                                 
@@ -877,7 +877,7 @@ of peaks simultaneously that represent sometimes thousands of parameters [2],
 
 <p class=MsoNormal style='text-align:justify'>void <a
 href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrumFit::FitAwmi</b></a>(<a
-href="http://root.cern.ch/root/html/ListOfTypes.html#float"><b>float</b></a> *fSource)
+href="http://root.cern.ch/root/html/ListOfTypes.html#double"><b>double</b></a> *fSource)
 </p>
 
 <p class=MsoNormal style='text-align:justify'>This function fits the source
@@ -1139,11 +1139,11 @@ i,nfound=0,bin;</span></p>
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmax  =
 nbins;</span></p>
 
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Float_t * source =
-new float[nbins];</span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t * source =
+new Double_t[nbins];</span></p>
 
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Float_t * dest =
-new float[nbins];   </span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t * dest =
+new Double_t[nbins];   </span></p>
 
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   TH1F *h = new
 TH1F(&quot;h&quot;,&quot;Fitting using AWMI algorithm&quot;,nbins,xmin,xmax);</span></p>
@@ -1198,11 +1198,11 @@ kFALSE;    </span></p>
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   //filling in the
 initial estimates of the input parameters</span></p>
 
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Float_t *PosX =
-new Float_t[nfound];         </span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t *PosX =
+new Double_t[nfound];         </span></p>
 
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Float_t *PosY =
-new Float_t[nfound];</span></p>
+<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t *PosY =
+new Double_t[nfound];</span></p>
 
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   PosX =
 s-&gt;GetPositionX();</span></p>
@@ -2258,7 +2258,7 @@ void TSpectrumFit::StiefelInversion(Double_t **a, Int_t size)
 }
 
 //_______________________________________________________________________________
-void TSpectrumFit::FitStiefel(Float_t *source) 
+void TSpectrumFit::FitStiefel(Double_t *source) 
 {
 /////////////////////////////////////////////////////////////////////////////
 //        ONE-DIMENSIONAL FIT FUNCTION                                    
@@ -2285,7 +2285,7 @@ void TSpectrumFit::FitStiefel(Float_t *source)
 
 <p class=MsoNormal style='text-align:justify'>void <a
 href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrumFit::</b></a>FitStiefel(<a
-href="http://root.cern.ch/root/html/ListOfTypes.html#float"><b>float</b></a> *fSource)
+href="http://root.cern.ch/root/html/ListOfTypes.html#double"><b>double</b></a> *fSource)
 </p>
 
 <p class=MsoNormal style='text-align:justify'>&nbsp;</p>
@@ -2344,10 +2344,10 @@ style='font-size:10.0pt'>Int_t xmin  = 0;</span></p>
 nbins;</span></p>
 
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>Float_t * source = new float[nbins];</span></p>
+style='font-size:10.0pt'>Double_t * source = new Double_t[nbins];</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t * dest = new
-float[nbins];   </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t * dest = new
+Double_t[nbins];   </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *h = new TH1F(&quot;h&quot;,&quot;Fitting
 using AWMI algorithm&quot;,nbins,xmin,xmax);</span></p>
@@ -2399,11 +2399,11 @@ i++){</span></p>
 <p class=MsoNormal><span style='font-size:10.0pt'>   //filling in the initial
 estimates of the input parameters</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosX = new
-Float_t[nfound];         </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *PosX = new
+Double_t[nfound];         </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosY = new
-Float_t[nfound];</span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *PosY = new
+Double_t[nfound];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   PosX =
 s-&gt;GetPositionX();</span></p>
@@ -3298,7 +3298,7 @@ void TSpectrumFit::SetFitParameters(Int_t xmin,Int_t xmax, Int_t numberIteration
 }
 
 //_______________________________________________________________________________
-void TSpectrumFit::SetPeakParameters(Double_t sigma, Bool_t fixSigma, const Float_t *positionInit, const Bool_t *fixPosition, const Float_t *ampInit, const Bool_t *fixAmp)
+void TSpectrumFit::SetPeakParameters(Double_t sigma, Bool_t fixSigma, const Double_t *positionInit, const Bool_t *fixPosition, const Double_t *ampInit, const Bool_t *fixAmp)
 {
 //////////////////////////////////////////////////////////////////////////////
 //   SETTER FUNCTION                                                      

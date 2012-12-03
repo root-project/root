@@ -21,11 +21,11 @@ class TSpectrum3 : public TNamed {
 protected:
    Int_t         fMaxPeaks;       //Maximum number of peaks to be found
    Int_t         fNPeaks;         //number of peaks found
-   Float_t      *fPosition;       //[fNPeaks] array of current peak positions
-   Float_t      *fPositionX;      //[fNPeaks] X positions of peaks
-   Float_t      *fPositionY;      //[fNPeaks] Y positions of peaks
-   Float_t      *fPositionZ;      //[fNPeaks] Z positions of peaks
-   Float_t       fResolution;     //resolution of the neighboring peaks
+   Double_t      *fPosition;       //[fNPeaks] array of current peak positions
+   Double_t      *fPositionX;      //[fNPeaks] X positions of peaks
+   Double_t      *fPositionY;      //[fNPeaks] Y positions of peaks
+   Double_t      *fPositionZ;      //[fNPeaks] Z positions of peaks
+   Double_t       fResolution;     //resolution of the neighboring peaks
    TH1          *fHistogram;      //resulting histogram
 
 public:
@@ -37,22 +37,22 @@ public:
    };
 
    TSpectrum3();
-   TSpectrum3(Int_t maxpositions, Float_t resolution=1);
+   TSpectrum3(Int_t maxpositions, Double_t resolution=1);
    virtual ~TSpectrum3();
-   virtual const char *Background(const TH1 *hist,int niter, Option_t *option="goff");
-   const char         *Background(float ***spectrum,Int_t ssizex, Int_t ssizey, Int_t ssizez, Int_t numberIterationsX,Int_t numberIterationsY, Int_t numberIterationsZ, Int_t direction,Int_t filterType);
-   const char         *Deconvolution(float ***source, const float ***resp, Int_t ssizex, Int_t ssizey, Int_t ssizez,Int_t numberIterations, Int_t numberRepetitions, Double_t boost);
+   virtual const char *Background(const TH1 *hist, Int_t niter, Option_t *option="goff");
+   const char         *Background(Double_t ***spectrum, Int_t ssizex, Int_t ssizey, Int_t ssizez, Int_t numberIterationsX,Int_t numberIterationsY, Int_t numberIterationsZ, Int_t direction,Int_t filterType);
+   const char         *Deconvolution(Double_t ***source, const Double_t ***resp, Int_t ssizex, Int_t ssizey, Int_t ssizez,Int_t numberIterations, Int_t numberRepetitions, Double_t boost);
    TH1                *GetHistogram() const {return fHistogram;}
    Int_t               GetNPeaks() const {return fNPeaks;}
-   Float_t            *GetPositionX() const {return fPositionX;}
-   Float_t            *GetPositionY() const {return fPositionY;}
-   Float_t            *GetPositionZ() const {return fPositionZ;}
+   Double_t            *GetPositionX() const {return fPositionX;}
+   Double_t            *GetPositionY() const {return fPositionY;}
+   Double_t            *GetPositionZ() const {return fPositionZ;}
    virtual void        Print(Option_t *option="") const;
    virtual Int_t       Search(const TH1 *hist, Double_t sigma=2, Option_t *option="goff", Double_t threshold=0.05);
-   Int_t               SearchFast(const float ***source, float ***dest, Int_t ssizex, Int_t ssizey, Int_t ssizez, Double_t sigma, Double_t threshold, Bool_t markov, Int_t averWindow);
-   Int_t               SearchHighRes(const float ***source,float ***dest, Int_t ssizex, Int_t ssizey, Int_t ssizez, Double_t sigma, Double_t threshold, Bool_t backgroundRemove,Int_t deconIterations, Bool_t markov, Int_t averWindow);
-   void                SetResolution(Float_t resolution=1);
-   const char         *SmoothMarkov(float ***source, Int_t ssizex, Int_t ssizey, Int_t ssizez, Int_t averWindow);
+   Int_t               SearchFast(const Double_t ***source, Double_t ***dest, Int_t ssizex, Int_t ssizey, Int_t ssizez, Double_t sigma, Double_t threshold, Bool_t markov, Int_t averWindow);
+   Int_t               SearchHighRes(const Double_t ***source,Double_t ***dest, Int_t ssizex, Int_t ssizey, Int_t ssizez, Double_t sigma, Double_t threshold, Bool_t backgroundRemove,Int_t deconIterations, Bool_t markov, Int_t averWindow);
+   void                SetResolution(Double_t resolution=1);
+   const char         *SmoothMarkov(Double_t ***source, Int_t ssizex, Int_t ssizey, Int_t ssizez, Int_t averWindow);
 
    ClassDef(TSpectrum3,1)  //Peak Finder, Background estimator, Markov smoothing and Deconvolution for 3-D histograms
 };

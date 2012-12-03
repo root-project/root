@@ -1728,7 +1728,7 @@ Double_t TSpectrum2Fit::Derpro(Double_t a, Double_t sx, Double_t sy, Double_t ro
 /////////////////END OF AUXILIARY FUNCTIONS USED BY FITTING FUNCTION fit2//////////////////////////
 /////////////////FITTING FUNCTION WITHOUT MATRIX INVERSION///////////////////////////////////////
 //______________________________________________________________________________
-void TSpectrum2Fit::FitAwmi(Float_t **source) 
+void TSpectrum2Fit::FitAwmi(Double_t **source) 
 {
 /////////////////////////////////////////////////////////////////////////////
 // TWO-DIMENSIONAL FIT FUNCTION                
@@ -2281,10 +2281,10 @@ do</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   Int_t ymax  = nbinsy;</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t ** source = new
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t ** source = new
 float *[nbinsx];   </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t ** dest = new
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t ** dest = new
 float *[nbinsx];      </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
@@ -2343,17 +2343,17 @@ Bool_t[nfound];   </span></p>
 <p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t *FixAmp = new
 Bool_t[nfound];      </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosX = new
-Float_t[nfound];         </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *PosX = new
+Double_t[nfound];         </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosY = new
-Float_t[nfound];</span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *PosY = new
+Double_t[nfound];</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *Amp = new
-Float_t[nfound];      </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *Amp = new
+Double_t[nfound];      </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *AmpXY = new
-Float_t[nfound];         </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *AmpXY = new
+Double_t[nfound];         </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   PosX =
 s-&gt;GetPositionX();</span></p>
@@ -2375,7 +2375,7 @@ kFALSE;      </span></p>
 <p class=MsoNormal><span style='font-size:10.0pt'>      FixAmp[i] = kFALSE;    </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>      Amp[i] =
-source[(int)(PosX[i]+0.5)][(int)(PosY[i]+0.5)];      //initial values of peaks
+source[(Int_t)(PosX[i]+0.5)][(Int_t)(PosY[i]+0.5)];      //initial values of peaks
 amplitudes, input parameters          </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>      AmpXY[i] = 0;</span></p>
@@ -2482,10 +2482,10 @@ Int_t ymin  = 0;</span></p>
 Int_t ymax  = nbinsy;</span></p>
 
 <p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Float_t ** source = new float *[nbinsx];   </span></p>
+Double_t ** source = new float *[nbinsx];   </span></p>
 
 <p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Float_t ** dest = new float *[nbinsx];      </span></p>
+Double_t ** dest = new float *[nbinsx];      </span></p>
 
 <p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
 for (i=0;i&lt;nbinsx;i++)</span></p>
@@ -2548,16 +2548,16 @@ Bool_t *FixPosY = new Bool_t[nfound];   </span></p>
 Bool_t *FixAmp = new Bool_t[nfound];      </span></p>
 
 <p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Float_t *PosX = new Float_t[nfound];         </span></p>
+Double_t *PosX = new Double_t[nfound];         </span></p>
 
 <p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Float_t *PosY = new Float_t[nfound];</span></p>
+Double_t *PosY = new Double_t[nfound];</span></p>
 
 <p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Float_t *Amp = new Float_t[nfound];      </span></p>
+Double_t *Amp = new Double_t[nfound];      </span></p>
 
 <p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Float_t *AmpXY = new Float_t[nfound];         </span></p>
+Double_t *AmpXY = new Double_t[nfound];         </span></p>
 
 <p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
 PosX = s-&gt;GetPositionX();</span></p>
@@ -2578,7 +2578,7 @@ FixPosY[i] = kFALSE;      </span></p>
 FixAmp[i] = kFALSE;    </span></p>
 
 <p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>     
-Amp[i] = source[(int)(PosX[i]+0.5)][(int)(PosY[i]+0.5)];      //initial values
+Amp[i] = source[(Int_t)(PosX[i]+0.5)][(Int_t)(PosY[i]+0.5)];      //initial values
 of peaks amplitudes, input parameters          </span></p>
 
 <p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>     
@@ -2764,7 +2764,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          for (i2 = fYmin; i2 <= fYmax; i2++) {
             yw = source[i1][i2];
             ywm = yw;
-            f = Shape2(fNPeaks, (Double_t) i1, (Double_t) i2,
+            f = Shape2(fNPeaks, i1, i2,
                         working_space, working_space[peak_vel],
                         working_space[peak_vel + 1],
                         working_space[peak_vel + 2],
@@ -2808,7 +2808,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                 //calculation of gradient vector
                 for (j = 0, k = 0; j < fNPeaks; j++) {
                if (fFixAmp[j] == false) {
-                  a = Deramp2((Double_t) i1, (Double_t) i2,
+                  a = Deramp2(i1, i2,
                                working_space[7 * j + 1],
                                working_space[7 * j + 2],
                                working_space[peak_vel],
@@ -2837,7 +2837,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                   k += 1;
                }
                if (fFixPositionX[j] == false) {
-                  a = Deri02((Double_t) i1, (Double_t) i2,
+                  a = Deri02(i1, i2,
                               working_space[7 * j],
                               working_space[7 * j + 1],
                               working_space[7 * j + 2],
@@ -2849,7 +2849,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                               working_space[peak_vel + 12],
                               working_space[peak_vel + 13]);
                   if (fFitTaylor == kFitTaylorOrderSecond)
-                     d = Derderi02((Double_t) i1, (Double_t) i2,
+                     d = Derderi02(i1, i2,
                                     working_space[7 * j],
                                     working_space[7 * j + 1],
                                     working_space[7 * j + 2],
@@ -2886,7 +2886,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                   k += 1;
                }
                if (fFixPositionY[j] == false) {
-                  a = Derj02((Double_t) i1, (Double_t) i2,
+                  a = Derj02(i1, i2,
                               working_space[7 * j],
                               working_space[7 * j + 1],
                               working_space[7 * j + 2],
@@ -2898,7 +2898,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                               working_space[peak_vel + 12],
                               working_space[peak_vel + 13]);
                   if (fFitTaylor == kFitTaylorOrderSecond)
-                     d = Derderj02((Double_t) i1, (Double_t) i2,
+                     d = Derderj02(i1, i2,
                                     working_space[7 * j],
                                     working_space[7 * j + 1],
                                     working_space[7 * j + 2],
@@ -2935,7 +2935,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                   k += 1;
                }
                if (fFixAmpX1[j] == false) {
-                  a = Derampx((Double_t) i1, working_space[7 * j + 5],
+                  a = Derampx(i1, working_space[7 * j + 5],
                                working_space[peak_vel],
                                working_space[peak_vel + 8],
                                working_space[peak_vel + 10],
@@ -2959,7 +2959,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                   k += 1;
                }
                if (fFixAmpY1[j] == false) {
-                  a = Derampx((Double_t) i2, working_space[7 * j + 6],
+                  a = Derampx(i2, working_space[7 * j + 6],
                                working_space[peak_vel + 1],
                                working_space[peak_vel + 9],
                                working_space[peak_vel + 11],
@@ -2983,14 +2983,14 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                   k += 1;
                }
                if (fFixPositionX1[j] == false) {
-                  a = Deri01((Double_t) i1, working_space[7 * j + 3],
+                  a = Deri01(i1, working_space[7 * j + 3],
                               working_space[7 * j + 5],
                               working_space[peak_vel],
                               working_space[peak_vel + 8],
                               working_space[peak_vel + 10],
                               working_space[peak_vel + 12]);
                   if (fFitTaylor == kFitTaylorOrderSecond)
-                     d = Derderi01((Double_t) i1, working_space[7 * j + 3],
+                     d = Derderi01(i1, working_space[7 * j + 3],
                                     working_space[7 * j + 5],
                                     working_space[peak_vel]);
                   if (ywm != 0) {
@@ -3023,14 +3023,14 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                   k += 1;
                }
                if (fFixPositionY1[j] == false) {
-                  a = Deri01((Double_t) i2, working_space[7 * j + 4],
+                  a = Deri01(i2, working_space[7 * j + 4],
                               working_space[7 * j + 6],
                               working_space[peak_vel + 1],
                               working_space[peak_vel + 9],
                               working_space[peak_vel + 11],
                               working_space[peak_vel + 13]);
                   if (fFitTaylor == kFitTaylorOrderSecond)
-                     d = Derderi01((Double_t) i2, working_space[7 * j + 4],
+                     d = Derderi01(i2, working_space[7 * j + 4],
                                     working_space[7 * j + 6],
                                     working_space[peak_vel + 1]);
                   if (ywm != 0) {
@@ -3064,7 +3064,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                }
             }
             if (fFixSigmaX == false) {
-               a = Dersigmax(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Dersigmax(fNPeaks, i1, i2,
                               working_space, working_space[peak_vel],
                               working_space[peak_vel + 1],
                               working_space[peak_vel + 2],
@@ -3075,8 +3075,8 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                               working_space[peak_vel + 12],
                               working_space[peak_vel + 13]);
                if (fFitTaylor == kFitTaylorOrderSecond)
-                  d = Derdersigmax(fNPeaks, (Double_t) i1,
-                                    (Double_t) i2, working_space,
+                  d = Derdersigmax(fNPeaks, i1,
+                                    i2, working_space,
                                     working_space[peak_vel],
                                     working_space[peak_vel + 1],
                                     working_space[peak_vel + 2]);
@@ -3109,7 +3109,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixSigmaY == false) {
-               a = Dersigmay(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Dersigmay(fNPeaks, i1, i2,
                               working_space, working_space[peak_vel],
                               working_space[peak_vel + 1],
                               working_space[peak_vel + 2],
@@ -3120,8 +3120,8 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                               working_space[peak_vel + 12],
                               working_space[peak_vel + 13]);
                if (fFitTaylor == kFitTaylorOrderSecond)
-                  d = Derdersigmay(fNPeaks, (Double_t) i1,
-                                    (Double_t) i2, working_space,
+                  d = Derdersigmay(fNPeaks, i1,
+                                    i2, working_space,
                                     working_space[peak_vel],
                                     working_space[peak_vel + 1],
                                     working_space[peak_vel + 2]);
@@ -3154,7 +3154,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixRo == false) {
-               a = Derro(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Derro(fNPeaks, i1, i2,
                           working_space, working_space[peak_vel],
                           working_space[peak_vel + 1],
                           working_space[peak_vel + 2]);
@@ -3247,7 +3247,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixTxy == false) {
-               a = Dertxy(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Dertxy(fNPeaks, i1, i2,
                            working_space, working_space[peak_vel],
                            working_space[peak_vel + 1],
                            working_space[peak_vel + 12],
@@ -3271,7 +3271,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixSxy == false) {
-               a = Dersxy(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Dersxy(fNPeaks, i1, i2,
                            working_space, working_space[peak_vel],
                            working_space[peak_vel + 1]);
                if (ywm != 0) {
@@ -3293,7 +3293,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixTx == false) {
-               a = Dertx(fNPeaks, (Double_t) i1, working_space,
+               a = Dertx(fNPeaks, i1, working_space,
                           working_space[peak_vel],
                           working_space[peak_vel + 12]);
                if (ywm != 0) {
@@ -3315,7 +3315,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixTy == false) {
-               a = Derty(fNPeaks, (Double_t) i2, working_space,
+               a = Derty(fNPeaks, i2, working_space,
                           working_space[peak_vel + 1],
                           working_space[peak_vel + 13]);
                if (ywm != 0) {
@@ -3337,7 +3337,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixSx == false) {
-               a = Dersx(fNPeaks, (Double_t) i1, working_space,
+               a = Dersx(fNPeaks, i1, working_space,
                           working_space[peak_vel]);
                if (ywm != 0) {
                   c = Ourpowl(a, pw);
@@ -3358,7 +3358,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixSy == false) {
-               a = Dersy(fNPeaks, (Double_t) i2, working_space,
+               a = Dersy(fNPeaks, i2, working_space,
                           working_space[peak_vel + 1]);
                if (ywm != 0) {
                   c = Ourpowl(a, pw);
@@ -3379,7 +3379,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixBx == false) {
-               a = Derbx(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Derbx(fNPeaks, i1, i2,
                           working_space, working_space[peak_vel],
                           working_space[peak_vel + 1],
                           working_space[peak_vel + 6],
@@ -3405,7 +3405,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixBy == false) {
-               a = Derby(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Derby(fNPeaks, i1, i2,
                           working_space, working_space[peak_vel],
                           working_space[peak_vel + 1],
                           working_space[peak_vel + 6],
@@ -3598,8 +3598,8 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                   for (i2 = fYmin; i2 <= fYmax; i2++) {
                      yw = source[i1][i2];
                      ywm = yw;
-                     f = Shape2(fNPeaks, (Double_t) i1,
-                                 (Double_t) i2, working_space,
+                     f = Shape2(fNPeaks, i1,
+                                 i2, working_space,
                                  working_space[peak_vel],
                                  working_space[peak_vel + 1],
                                  working_space[peak_vel + 2],
@@ -3924,7 +3924,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                for (i2 = fYmin; i2 <= fYmax; i2++) {
                   yw = source[i1][i2];
                   ywm = yw;
-                  f = Shape2(fNPeaks, (Double_t) i1, (Double_t) i2,
+                  f = Shape2(fNPeaks, i1, i2,
                               working_space, working_space[peak_vel],
                               working_space[peak_vel + 1],
                               working_space[peak_vel + 2],
@@ -3979,7 +3979,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
             yw = source[i1][i2];
             if (yw == 0)
                yw = 1;
-            f = Shape2(fNPeaks, (Double_t) i1, (Double_t) i2,
+            f = Shape2(fNPeaks, i1, i2,
                         working_space, working_space[peak_vel],
                         working_space[peak_vel + 1],
                         working_space[peak_vel + 2],
@@ -4000,7 +4000,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                 //calculate gradient vector
                 for (j = 0, k = 0; j < fNPeaks; j++) {
                if (fFixAmp[j] == false) {
-                  a = Deramp2((Double_t) i1, (Double_t) i2,
+                  a = Deramp2(i1, i2,
                                working_space[7 * j + 1],
                                working_space[7 * j + 2],
                                working_space[peak_vel],
@@ -4019,7 +4019,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                   k += 1;
                }
                if (fFixPositionX[j] == false) {
-                  a = Deri02((Double_t) i1, (Double_t) i2,
+                  a = Deri02(i1, i2,
                               working_space[7 * j],
                               working_space[7 * j + 1],
                               working_space[7 * j + 2],
@@ -4039,7 +4039,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                   k += 1;
                }
                if (fFixPositionY[j] == false) {
-                  a = Derj02((Double_t) i1, (Double_t) i2,
+                  a = Derj02(i1, i2,
                               working_space[7 * j],
                               working_space[7 * j + 1],
                               working_space[7 * j + 2],
@@ -4059,7 +4059,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                   k += 1;
                }
                if (fFixAmpX1[j] == false) {
-                  a = Derampx((Double_t) i1, working_space[7 * j + 5],
+                  a = Derampx(i1, working_space[7 * j + 5],
                                working_space[peak_vel],
                                working_space[peak_vel + 8],
                                working_space[peak_vel + 10],
@@ -4073,7 +4073,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                   k += 1;
                }
                if (fFixAmpY1[j] == false) {
-                  a = Derampx((Double_t) i2, working_space[7 * j + 6],
+                  a = Derampx(i2, working_space[7 * j + 6],
                                working_space[peak_vel + 1],
                                working_space[peak_vel + 9],
                                working_space[peak_vel + 11],
@@ -4087,7 +4087,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                   k += 1;
                }
                if (fFixPositionX1[j] == false) {
-                  a = Deri01((Double_t) i1, working_space[7 * j + 3],
+                  a = Deri01(i1, working_space[7 * j + 3],
                               working_space[7 * j + 5],
                               working_space[peak_vel],
                               working_space[peak_vel + 8],
@@ -4102,7 +4102,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                   k += 1;
                }
                if (fFixPositionY1[j] == false) {
-                  a = Deri01((Double_t) i2, working_space[7 * j + 4],
+                  a = Deri01(i2, working_space[7 * j + 4],
                               working_space[7 * j + 6],
                               working_space[peak_vel + 1],
                               working_space[peak_vel + 9],
@@ -4118,7 +4118,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                }
             }
             if (fFixSigmaX == false) {
-               a = Dersigmax(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Dersigmax(fNPeaks, i1, i2,
                               working_space, working_space[peak_vel],
                               working_space[peak_vel + 1],
                               working_space[peak_vel + 2],
@@ -4137,7 +4137,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixSigmaY == false) {
-               a = Dersigmay(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Dersigmay(fNPeaks, i1, i2,
                               working_space, working_space[peak_vel],
                               working_space[peak_vel + 1],
                               working_space[peak_vel + 2],
@@ -4156,7 +4156,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixRo == false) {
-               a = Derro(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Derro(fNPeaks, i1, i2,
                           working_space, working_space[peak_vel],
                           working_space[peak_vel + 1],
                           working_space[peak_vel + 2]);
@@ -4199,7 +4199,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixTxy == false) {
-               a = Dertxy(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Dertxy(fNPeaks, i1, i2,
                            working_space, working_space[peak_vel],
                            working_space[peak_vel + 1],
                            working_space[peak_vel + 12],
@@ -4213,7 +4213,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixSxy == false) {
-               a = Dersxy(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Dersxy(fNPeaks, i1, i2,
                            working_space, working_space[peak_vel],
                            working_space[peak_vel + 1]);
                if (yw != 0) {
@@ -4225,7 +4225,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixTx == false) {
-               a = Dertx(fNPeaks, (Double_t) i1, working_space,
+               a = Dertx(fNPeaks, i1, working_space,
                           working_space[peak_vel],
                           working_space[peak_vel + 12]);
                if (yw != 0) {
@@ -4237,7 +4237,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixTy == false) {
-               a = Derty(fNPeaks, (Double_t) i2, working_space,
+               a = Derty(fNPeaks, i2, working_space,
                           working_space[peak_vel + 1],
                           working_space[peak_vel + 13]);
                if (yw != 0) {
@@ -4249,7 +4249,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixSx == false) {
-               a = Dersx(fNPeaks, (Double_t) i1, working_space,
+               a = Dersx(fNPeaks, i1, working_space,
                           working_space[peak_vel]);
                if (yw != 0) {
                   c = Ourpowl(a, pw);
@@ -4260,7 +4260,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixSy == false) {
-               a = Dersy(fNPeaks, (Double_t) i2, working_space,
+               a = Dersy(fNPeaks, i2, working_space,
                           working_space[peak_vel + 1]);
                if (yw != 0) {
                   c = Ourpowl(a, pw);
@@ -4271,7 +4271,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixBx == false) {
-               a = Derbx(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Derbx(fNPeaks, i1, i2,
                           working_space, working_space[peak_vel],
                           working_space[peak_vel + 1],
                           working_space[peak_vel + 6],
@@ -4287,7 +4287,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                k += 1;
             }
             if (fFixBy == false) {
-               a = Derby(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Derby(fNPeaks, i1, i2,
                           working_space, working_space[peak_vel],
                           working_space[peak_vel + 1],
                           working_space[peak_vel + 6],
@@ -4603,7 +4603,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
    fChi = chi_cel / b;
    for (i1 = fXmin; i1 <= fXmax; i1++) {
       for (i2 = fYmin; i2 <= fYmax; i2++) {
-         f = Shape2(fNPeaks, (Double_t) i1, (Double_t) i2,
+         f = Shape2(fNPeaks, i1, i2,
                      working_space, working_space[peak_vel],
                      working_space[peak_vel + 1],
                      working_space[peak_vel + 2],
@@ -4629,7 +4629,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
 
 
 // ____________________________________________________________________________________________________________________________
-void TSpectrum2Fit::FitStiefel(Float_t **source) 
+void TSpectrum2Fit::FitStiefel(Double_t **source) 
 {
 /////////////////////////////////////////////////////////////////////////////
 // TWO-DIMENSIONAL FIT FUNCTION USING STIEFEL-HESTENS               
@@ -4737,9 +4737,9 @@ nbinsx;</span></p>
 nbinsy;</span></p>
 
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>Float_t ** source = new float *[nbinsx];   </span></p>
+style='font-size:10.0pt'>Double_t ** source = new float *[nbinsx];   </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t ** dest = new
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t ** dest = new
 float *[nbinsx];      </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
@@ -4798,17 +4798,17 @@ Bool_t[nfound];   </span></p>
 <p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t *FixAmp = new
 Bool_t[nfound];      </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosX = new
-Float_t[nfound];         </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *PosX = new
+Double_t[nfound];         </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosY = new
-Float_t[nfound];</span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *PosY = new
+Double_t[nfound];</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *Amp = new
-Float_t[nfound];      </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *Amp = new
+Double_t[nfound];      </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *AmpXY = new
-Float_t[nfound];         </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *AmpXY = new
+Double_t[nfound];         </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   PosX = s-&gt;GetPositionX();</span></p>
 
@@ -4826,7 +4826,7 @@ kFALSE;      </span></p>
 <p class=MsoNormal><span style='font-size:10.0pt'>      FixAmp[i] = kFALSE;    </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>      Amp[i] =
-source[(int)(PosX[i]+0.5)][(int)(PosY[i]+0.5)];      //initial values of peaks
+source[(Int_t)(PosX[i]+0.5)][(Int_t)(PosY[i]+0.5)];      //initial values of peaks
 amplitudes, input parameters          </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>      AmpXY[i] = 0;</span></p>
@@ -5014,7 +5014,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             for (j = 0, k = 0; j < fNPeaks; j++) {
                if (fFixAmp[j] == false) {
                   working_space[2 * shift + k] =
-                      Deramp2((Double_t) i1, (Double_t) i2,
+                      Deramp2(i1, i2,
                               working_space[7 * j + 1],
                               working_space[7 * j + 2],
                               working_space[peak_vel],
@@ -5028,7 +5028,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                }
                if (fFixPositionX[j] == false) {
                   working_space[2 * shift + k] =
-                      Deri02((Double_t) i1, (Double_t) i2,
+                      Deri02(i1, i2,
                              working_space[7 * j],
                              working_space[7 * j + 1],
                              working_space[7 * j + 2],
@@ -5043,7 +5043,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                }
                if (fFixPositionY[j] == false) {
                   working_space[2 * shift + k] =
-                      Derj02((Double_t) i1, (Double_t) i2,
+                      Derj02(i1, i2,
                              working_space[7 * j],
                              working_space[7 * j + 1],
                              working_space[7 * j + 2],
@@ -5058,7 +5058,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                }
                if (fFixAmpX1[j] == false) {
                   working_space[2 * shift + k] =
-                      Derampx((Double_t) i1, working_space[7 * j + 5],
+                      Derampx(i1, working_space[7 * j + 5],
                               working_space[peak_vel],
                               working_space[peak_vel + 8],
                               working_space[peak_vel + 10],
@@ -5067,7 +5067,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                }
                if (fFixAmpY1[j] == false) {
                   working_space[2 * shift + k] =
-                      Derampx((Double_t) i2, working_space[7 * j + 6],
+                      Derampx(i2, working_space[7 * j + 6],
                               working_space[peak_vel + 1],
                               working_space[peak_vel + 9],
                               working_space[peak_vel + 11],
@@ -5076,7 +5076,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                }
                if (fFixPositionX1[j] == false) {
                   working_space[2 * shift + k] =
-                      Deri01((Double_t) i1, working_space[7 * j + 3],
+                      Deri01(i1, working_space[7 * j + 3],
                              working_space[7 * j + 5],
                              working_space[peak_vel],
                              working_space[peak_vel + 8],
@@ -5086,7 +5086,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                }
                if (fFixPositionY1[j] == false) {
                   working_space[2 * shift + k] =
-                      Deri01((Double_t) i2, working_space[7 * j + 4],
+                      Deri01(i2, working_space[7 * j + 4],
                              working_space[7 * j + 6],
                              working_space[peak_vel + 1],
                              working_space[peak_vel + 9],
@@ -5096,7 +5096,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                }
             } if (fFixSigmaX == false) {
                working_space[2 * shift + k] =
-                   Dersigmax(fNPeaks, (Double_t) i1, (Double_t) i2,
+                   Dersigmax(fNPeaks, i1, i2,
                              working_space, working_space[peak_vel],
                              working_space[peak_vel + 1],
                              working_space[peak_vel + 2],
@@ -5110,7 +5110,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             }
             if (fFixSigmaY == false) {
                working_space[2 * shift + k] =
-                   Dersigmay(fNPeaks, (Double_t) i1, (Double_t) i2,
+                   Dersigmay(fNPeaks, i1, i2,
                              working_space, working_space[peak_vel],
                              working_space[peak_vel + 1],
                              working_space[peak_vel + 2],
@@ -5124,7 +5124,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             }
             if (fFixRo == false) {
                working_space[2 * shift + k] =
-                   Derro(fNPeaks, (Double_t) i1, (Double_t) i2,
+                   Derro(fNPeaks, i1, i2,
                          working_space, working_space[peak_vel],
                          working_space[peak_vel + 1],
                          working_space[peak_vel + 2]);
@@ -5144,7 +5144,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             }
             if (fFixTxy == false) {
                working_space[2 * shift + k] =
-                   Dertxy(fNPeaks, (Double_t) i1, (Double_t) i2,
+                   Dertxy(fNPeaks, i1, i2,
                           working_space, working_space[peak_vel],
                           working_space[peak_vel + 1],
                           working_space[peak_vel + 12],
@@ -5153,40 +5153,40 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             }
             if (fFixSxy == false) {
                working_space[2 * shift + k] =
-                   Dersxy(fNPeaks, (Double_t) i1, (Double_t) i2,
+                   Dersxy(fNPeaks, i1, i2,
                           working_space, working_space[peak_vel],
                           working_space[peak_vel + 1]);
                k += 1;
             }
             if (fFixTx == false) {
                working_space[2 * shift + k] =
-                   Dertx(fNPeaks, (Double_t) i1, working_space,
+                   Dertx(fNPeaks, i1, working_space,
                          working_space[peak_vel],
                          working_space[peak_vel + 12]);
                k += 1;
             }
             if (fFixTy == false) {
                working_space[2 * shift + k] =
-                   Derty(fNPeaks, (Double_t) i2, working_space,
+                   Derty(fNPeaks, i2, working_space,
                          working_space[peak_vel + 1],
                          working_space[peak_vel + 13]);
                k += 1;
             }
             if (fFixSx == false) {
                working_space[2 * shift + k] =
-                   Dersx(fNPeaks, (Double_t) i1, working_space,
+                   Dersx(fNPeaks, i1, working_space,
                          working_space[peak_vel]);
                k += 1;
             }
             if (fFixSy == false) {
                working_space[2 * shift + k] =
-                   Dersy(fNPeaks, (Double_t) i2, working_space,
+                   Dersy(fNPeaks, i2, working_space,
                          working_space[peak_vel + 1]);
                k += 1;
             }
             if (fFixBx == false) {
                working_space[2 * shift + k] =
-                   Derbx(fNPeaks, (Double_t) i1, (Double_t) i2,
+                   Derbx(fNPeaks, i1, i2,
                          working_space, working_space[peak_vel],
                          working_space[peak_vel + 1],
                          working_space[peak_vel + 6],
@@ -5197,7 +5197,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             }
             if (fFixBy == false) {
                working_space[2 * shift + k] =
-                   Derby(fNPeaks, (Double_t) i1, (Double_t) i2,
+                   Derby(fNPeaks, i1, i2,
                          working_space, working_space[peak_vel],
                          working_space[peak_vel + 1],
                          working_space[peak_vel + 6],
@@ -5208,7 +5208,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             }
             yw = source[i1][i2];
             ywm = yw;
-            f = Shape2(fNPeaks, (Double_t) i1, (Double_t) i2,
+            f = Shape2(fNPeaks, i1, i2,
                         working_space, working_space[peak_vel],
                         working_space[peak_vel + 1],
                         working_space[peak_vel + 2],
@@ -5438,8 +5438,8 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                   for (i2 = fYmin; i2 <= fYmax; i2++) {
                      yw = source[i1][i2];
                      ywm = yw;
-                     f = Shape2(fNPeaks, (Double_t) i1,
-                                 (Double_t) i2, working_space,
+                     f = Shape2(fNPeaks, i1,
+                                 i2, working_space,
                                  working_space[peak_vel],
                                  working_space[peak_vel + 1],
                                  working_space[peak_vel + 2],
@@ -5764,7 +5764,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                for (i2 = fYmin; i2 <= fYmax; i2++) {
                   yw = source[i1][i2];
                   ywm = yw;
-                  f = Shape2(fNPeaks, (Double_t) i1, (Double_t) i2,
+                  f = Shape2(fNPeaks, i1, i2,
                               working_space, working_space[peak_vel],
                               working_space[peak_vel + 1],
                               working_space[peak_vel + 2],
@@ -5819,7 +5819,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             yw = source[i1][i2];
             if (yw == 0)
                yw = 1;
-            f = Shape2(fNPeaks, (Double_t) i1, (Double_t) i2,
+            f = Shape2(fNPeaks, i1, i2,
                         working_space, working_space[peak_vel],
                         working_space[peak_vel + 1],
                         working_space[peak_vel + 2],
@@ -5840,7 +5840,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                 //calculate gradient vector
                 for (j = 0, k = 0; j < fNPeaks; j++) {
                if (fFixAmp[j] == false) {
-                  a = Deramp2((Double_t) i1, (Double_t) i2,
+                  a = Deramp2(i1, i2,
                                working_space[7 * j + 1],
                                working_space[7 * j + 2],
                                working_space[peak_vel],
@@ -5858,7 +5858,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                   k += 1;
                }
                if (fFixPositionX[j] == false) {
-                  a = Deri02((Double_t) i1, (Double_t) i2,
+                  a = Deri02(i1, i2,
                               working_space[7 * j],
                               working_space[7 * j + 1],
                               working_space[7 * j + 2],
@@ -5877,7 +5877,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                   k += 1;
                }
                if (fFixPositionY[j] == false) {
-                  a = Derj02((Double_t) i1, (Double_t) i2,
+                  a = Derj02(i1, i2,
                               working_space[7 * j],
                               working_space[7 * j + 1],
                               working_space[7 * j + 2],
@@ -5896,7 +5896,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                   k += 1;
                }
                if (fFixAmpX1[j] == false) {
-                  a = Derampx((Double_t) i1, working_space[7 * j + 5],
+                  a = Derampx(i1, working_space[7 * j + 5],
                                working_space[peak_vel],
                                working_space[peak_vel + 8],
                                working_space[peak_vel + 10],
@@ -5909,7 +5909,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                   k += 1;
                }
                if (fFixAmpY1[j] == false) {
-                  a = Derampx((Double_t) i2, working_space[7 * j + 6],
+                  a = Derampx(i2, working_space[7 * j + 6],
                                working_space[peak_vel + 1],
                                working_space[peak_vel + 9],
                                working_space[peak_vel + 11],
@@ -5922,7 +5922,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                   k += 1;
                }
                if (fFixPositionX1[j] == false) {
-                  a = Deri01((Double_t) i1, working_space[7 * j + 3],
+                  a = Deri01(i1, working_space[7 * j + 3],
                               working_space[7 * j + 5],
                               working_space[peak_vel],
                               working_space[peak_vel + 8],
@@ -5936,7 +5936,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                   k += 1;
                }
                if (fFixPositionY1[j] == false) {
-                  a = Deri01((Double_t) i2, working_space[7 * j + 4],
+                  a = Deri01(i2, working_space[7 * j + 4],
                               working_space[7 * j + 6],
                               working_space[peak_vel + 1],
                               working_space[peak_vel + 9],
@@ -5951,7 +5951,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                }
             }
             if (fFixSigmaX == false) {
-               a = Dersigmax(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Dersigmax(fNPeaks, i1, i2,
                               working_space, working_space[peak_vel],
                               working_space[peak_vel + 1],
                               working_space[peak_vel + 2],
@@ -5969,7 +5969,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                k += 1;
             }
             if (fFixSigmaY == false) {
-               a = Dersigmay(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Dersigmay(fNPeaks, i1, i2,
                               working_space, working_space[peak_vel],
                               working_space[peak_vel + 1],
                               working_space[peak_vel + 2],
@@ -5987,7 +5987,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                k += 1;
             }
             if (fFixRo == false) {
-               a = Derro(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Derro(fNPeaks, i1, i2,
                           working_space, working_space[peak_vel],
                           working_space[peak_vel + 1],
                           working_space[peak_vel + 2]);
@@ -6026,7 +6026,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                k += 1;
             }
             if (fFixTxy == false) {
-               a = Dertxy(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Dertxy(fNPeaks, i1, i2,
                            working_space, working_space[peak_vel],
                            working_space[peak_vel + 1],
                            working_space[peak_vel + 12],
@@ -6039,7 +6039,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                k += 1;
             }
             if (fFixSxy == false) {
-               a = Dersxy(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Dersxy(fNPeaks, i1, i2,
                            working_space, working_space[peak_vel],
                            working_space[peak_vel + 1]);
                if (yw != 0) {
@@ -6050,7 +6050,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                k += 1;
             }
             if (fFixTx == false) {
-               a = Dertx(fNPeaks, (Double_t) i1, working_space,
+               a = Dertx(fNPeaks, i1, working_space,
                           working_space[peak_vel],
                           working_space[peak_vel + 12]);
                if (yw != 0) {
@@ -6061,7 +6061,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                k += 1;
             }
             if (fFixTy == false) {
-               a = Derty(fNPeaks, (Double_t) i2, working_space,
+               a = Derty(fNPeaks, i2, working_space,
                           working_space[peak_vel + 1],
                           working_space[peak_vel + 13]);
                if (yw != 0) {
@@ -6072,7 +6072,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                k += 1;
             }
             if (fFixSx == false) {
-               a = Dersx(fNPeaks, (Double_t) i1, working_space,
+               a = Dersx(fNPeaks, i1, working_space,
                           working_space[peak_vel]);
                if (yw != 0) {
                   working_space[2 * shift + k] += chi_opt; //der[k]
@@ -6082,7 +6082,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                k += 1;
             }
             if (fFixSy == false) {
-               a = Dersy(fNPeaks, (Double_t) i2, working_space,
+               a = Dersy(fNPeaks, i2, working_space,
                           working_space[peak_vel + 1]);
                if (yw != 0) {
                   working_space[2 * shift + k] += chi_opt; //der[k]
@@ -6092,7 +6092,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                k += 1;
             }
             if (fFixBx == false) {
-               a = Derbx(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Derbx(fNPeaks, i1, i2,
                           working_space, working_space[peak_vel],
                           working_space[peak_vel + 1],
                           working_space[peak_vel + 6],
@@ -6107,7 +6107,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                k += 1;
             }
             if (fFixBy == false) {
-               a = Derby(fNPeaks, (Double_t) i1, (Double_t) i2,
+               a = Derby(fNPeaks, i1, i2,
                           working_space, working_space[peak_vel],
                           working_space[peak_vel + 1],
                           working_space[peak_vel + 6],
@@ -6422,7 +6422,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
    fChi = chi_cel / b;
    for (i1 = fXmin; i1 <= fXmax; i1++) {
       for (i2 = fYmin; i2 <= fYmax; i2++) {
-         f = Shape2(fNPeaks, (Double_t) i1, (Double_t) i2,
+         f = Shape2(fNPeaks, i1, i2,
                      working_space, working_space[peak_vel],
                      working_space[peak_vel + 1],
                      working_space[peak_vel + 2],
@@ -6500,7 +6500,7 @@ void TSpectrum2Fit::SetFitParameters(Int_t xmin,Int_t xmax,Int_t ymin,Int_t ymax
 }
 
 //______________________________________________________________________________
-void TSpectrum2Fit::SetPeakParameters(Double_t sigmaX, Bool_t fixSigmaX, Double_t sigmaY, Bool_t fixSigmaY, Double_t ro, Bool_t fixRo, const Float_t *positionInitX, const Bool_t *fixPositionX, const Float_t *positionInitY, const Bool_t *fixPositionY, const Float_t *positionInitX1, const Bool_t *fixPositionX1, const Float_t *positionInitY1, const Bool_t *fixPositionY1, const Float_t *ampInit, const Bool_t *fixAmp, const Float_t *ampInitX1, const Bool_t *fixAmpX1, const Float_t *ampInitY1, const Bool_t *fixAmpY1)
+void TSpectrum2Fit::SetPeakParameters(Double_t sigmaX, Bool_t fixSigmaX, Double_t sigmaY, Bool_t fixSigmaY, Double_t ro, Bool_t fixRo, const Double_t *positionInitX, const Bool_t *fixPositionX, const Double_t *positionInitY, const Bool_t *fixPositionY, const Double_t *positionInitX1, const Bool_t *fixPositionX1, const Double_t *positionInitY1, const Bool_t *fixPositionY1, const Double_t *ampInit, const Bool_t *fixAmp, const Double_t *ampInitX1, const Bool_t *fixAmpX1, const Double_t *ampInitY1, const Bool_t *fixAmpY1)
 {
 //////////////////////////////////////////////////////////////////////////////
 //   SETTER FUNCTION                                                      
@@ -6565,19 +6565,19 @@ void TSpectrum2Fit::SetPeakParameters(Double_t sigmaX, Bool_t fixSigmaX, Double_
    }
    fSigmaInitX = sigmaX, fFixSigmaX = fixSigmaX, fSigmaInitY = sigmaY, fFixSigmaY = fixSigmaY, fRoInit = ro, fFixRo = fixRo;
    for(i=0; i < fNPeaks; i++){
-      fPositionInitX[i] = (Double_t) positionInitX[i];
+      fPositionInitX[i] = positionInitX[i];
       fFixPositionX[i] = fixPositionX[i];
-      fPositionInitY[i] = (Double_t) positionInitY[i];
+      fPositionInitY[i] = positionInitY[i];
       fFixPositionY[i] = fixPositionY[i];      
-      fPositionInitX1[i] = (Double_t) positionInitX1[i];
+      fPositionInitX1[i] = positionInitX1[i];
       fFixPositionX1[i] = fixPositionX1[i];
-      fPositionInitY1[i] = (Double_t) positionInitY1[i];
+      fPositionInitY1[i] = positionInitY1[i];
       fFixPositionY1[i] = fixPositionY1[i];            
-      fAmpInit[i] = (Double_t) ampInit[i];
+      fAmpInit[i] = ampInit[i];
       fFixAmp[i] = fixAmp[i]; 
-      fAmpInitX1[i] = (Double_t) ampInitX1[i];
+      fAmpInitX1[i] = ampInitX1[i];
       fFixAmpX1[i] = fixAmpX1[i];       
-      fAmpInitY1[i] = (Double_t) ampInitY1[i];
+      fAmpInitY1[i] = ampInitY1[i];
       fFixAmpY1[i] = fixAmpY1[i];             
    }
 }
@@ -6648,7 +6648,7 @@ void TSpectrum2Fit::SetTailParameters(Double_t tInitXY, Bool_t fixTxy, Double_t 
 }
 
 //______________________________________________________________________________
-void TSpectrum2Fit::GetPositions(Float_t *positionsX, Float_t *positionsY, Float_t *positionsX1, Float_t *positionsY1)
+void TSpectrum2Fit::GetPositions(Double_t *positionsX, Double_t *positionsY, Double_t *positionsX1, Double_t *positionsY1)
 {
 //////////////////////////////////////////////////////////////////////////////
 //   GETTER FUNCTION                                                      
@@ -6660,15 +6660,15 @@ void TSpectrum2Fit::GetPositions(Float_t *positionsX, Float_t *positionsY, Float
 //         -positionY1 - gets vector of y positions of 1D ridges
 //////////////////////////////////////////////////////////////////////////////      
    for( Int_t i=0; i < fNPeaks; i++){
-      positionsX[i]  = (Float_t) fPositionCalcX[i];
-      positionsY[i]  = (Float_t) fPositionCalcY[i];      
-      positionsX1[i] = (Float_t) fPositionCalcX1[i];
-      positionsY1[i] = (Float_t) fPositionCalcY1[i];            
+      positionsX[i]  = fPositionCalcX[i];
+      positionsY[i]  = fPositionCalcY[i];      
+      positionsX1[i] = fPositionCalcX1[i];
+      positionsY1[i] = fPositionCalcY1[i];            
    }
 }
 
 //______________________________________________________________________________
-void TSpectrum2Fit::GetPositionErrors(Float_t *positionErrorsX, Float_t *positionErrorsY, Float_t *positionErrorsX1, Float_t *positionErrorsY1)
+void TSpectrum2Fit::GetPositionErrors(Double_t *positionErrorsX, Double_t *positionErrorsY, Double_t *positionErrorsX1, Double_t *positionErrorsY1)
 {
 //////////////////////////////////////////////////////////////////////////////
 //   GETTER FUNCTION                                                      
@@ -6681,15 +6681,15 @@ void TSpectrum2Fit::GetPositionErrors(Float_t *positionErrorsX, Float_t *positio
 //////////////////////////////////////////////////////////////////////////////      
    
    for( Int_t i=0; i < fNPeaks; i++){
-      positionErrorsX[i] = (Float_t) fPositionErrX[i];
-      positionErrorsY[i] = (Float_t) fPositionErrY[i];      
-      positionErrorsX1[i] = (Float_t) fPositionErrX1[i];      
-      positionErrorsY1[i] = (Float_t) fPositionErrY1[i];      
+      positionErrorsX[i] = fPositionErrX[i];
+      positionErrorsY[i] = fPositionErrY[i];      
+      positionErrorsX1[i] = fPositionErrX1[i];      
+      positionErrorsY1[i] = fPositionErrY1[i];      
    }
 }
 
 //______________________________________________________________________________
-void TSpectrum2Fit::GetAmplitudes(Float_t *amplitudes, Float_t *amplitudesX1, Float_t *amplitudesY1)
+void TSpectrum2Fit::GetAmplitudes(Double_t *amplitudes, Double_t *amplitudesX1, Double_t *amplitudesY1)
 {
 //////////////////////////////////////////////////////////////////////////////
 //   GETTER FUNCTION                                                      
@@ -6701,14 +6701,14 @@ void TSpectrum2Fit::GetAmplitudes(Float_t *amplitudes, Float_t *amplitudesX1, Fl
 //////////////////////////////////////////////////////////////////////////////      
    
    for( Int_t i=0; i < fNPeaks; i++){
-      amplitudes[i] = (Float_t) fAmpCalc[i];
-      amplitudesX1[i] = (Float_t) fAmpCalcX1[i];      
-      amplitudesY1[i] = (Float_t) fAmpCalcY1[i];      
+      amplitudes[i] = fAmpCalc[i];
+      amplitudesX1[i] = fAmpCalcX1[i];      
+      amplitudesY1[i] = fAmpCalcY1[i];      
    }
 }
 
 //______________________________________________________________________________
-void TSpectrum2Fit::GetAmplitudeErrors(Float_t *amplitudeErrors, Float_t *amplitudeErrorsX1, Float_t *amplitudeErrorsY1)
+void TSpectrum2Fit::GetAmplitudeErrors(Double_t *amplitudeErrors, Double_t *amplitudeErrorsX1, Double_t *amplitudeErrorsY1)
 {
 //////////////////////////////////////////////////////////////////////////////
 //   GETTER FUNCTION                                                      
@@ -6720,14 +6720,14 @@ void TSpectrum2Fit::GetAmplitudeErrors(Float_t *amplitudeErrors, Float_t *amplit
 //////////////////////////////////////////////////////////////////////////////      
    
    for( Int_t i=0; i < fNPeaks; i++){
-      amplitudeErrors[i] = (Float_t) fAmpErr[i];
-      amplitudeErrorsX1[i] = (Float_t) fAmpErrX1[i];      
-      amplitudeErrorsY1[i] = (Float_t) fAmpErrY1[i];      
+      amplitudeErrors[i] = fAmpErr[i];
+      amplitudeErrorsX1[i] = fAmpErrX1[i];      
+      amplitudeErrorsY1[i] = fAmpErrY1[i];      
    }
 }
 
 //______________________________________________________________________________
-void TSpectrum2Fit::GetVolumes(Float_t *volumes)
+void TSpectrum2Fit::GetVolumes(Double_t *volumes)
 {
 //////////////////////////////////////////////////////////////////////////////
 //   GETTER FUNCTION                                                      
@@ -6736,12 +6736,12 @@ void TSpectrum2Fit::GetVolumes(Float_t *volumes)
 //         -volumes - gets vector of volumes of 2D peaks
 //////////////////////////////////////////////////////////////////////////////         
    for( Int_t i=0; i < fNPeaks; i++){
-      volumes[i] = (Float_t) fVolume[i];
+      volumes[i] = fVolume[i];
    }
 }
 
 //______________________________________________________________________________
-void TSpectrum2Fit::GetVolumeErrors(Float_t *volumeErrors)
+void TSpectrum2Fit::GetVolumeErrors(Double_t *volumeErrors)
 {
 //////////////////////////////////////////////////////////////////////////////
 //   GETTER FUNCTION                                                      
@@ -6750,7 +6750,7 @@ void TSpectrum2Fit::GetVolumeErrors(Float_t *volumeErrors)
 //         -volumeErrors - gets vector of volumes errors of 2D peaks
 //////////////////////////////////////////////////////////////////////////////            
    for( Int_t i=0; i < fNPeaks; i++){
-      volumeErrors[i] = (Float_t) fVolumeErr[i];
+      volumeErrors[i] = fVolumeErr[i];
    }
 }
 

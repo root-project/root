@@ -38,8 +38,8 @@ protected:
    Int_t     fDirection;                 //forward or inverse transform
    Int_t     fXmin;                      //first channel of filtered or enhanced region
    Int_t     fXmax;                      //last channel of filtered or enhanced region
-   Float_t   fFilterCoeff;               //value set in the filtered region
-   Float_t   fEnhanceCoeff;              //multiplication coefficient applied in enhanced region;
+   Double_t   fFilterCoeff;               //value set in the filtered region
+   Double_t   fEnhanceCoeff;              //multiplication coefficient applied in enhanced region;
 
 public:
    enum {
@@ -64,23 +64,23 @@ public:
    virtual ~TSpectrumTransform();
 
 protected:
-   void                BitReverse(float *working_space,Int_t num);
-   void                BitReverseHaar(float *working_space,Int_t shift,Int_t num,Int_t start);
-   void                Fourier(float *working_space,Int_t num,Int_t hartley,Int_t direction,Int_t zt_clear);
-   Int_t               GeneralExe(float *working_space,Int_t zt_clear,Int_t num,Int_t degree,Int_t type);
-   Int_t               GeneralInv(float *working_space,Int_t num,Int_t degree,Int_t type);
-   void                Haar(float *working_space,Int_t num,Int_t direction);
-   void                Walsh(float *working_space,Int_t num);
+   void                BitReverse(Double_t *working_space,Int_t num);
+   void                BitReverseHaar(Double_t *working_space,Int_t shift,Int_t num,Int_t start);
+   void                Fourier(Double_t *working_space,Int_t num,Int_t hartley,Int_t direction,Int_t zt_clear);
+   Int_t               GeneralExe(Double_t *working_space,Int_t zt_clear,Int_t num,Int_t degree,Int_t type);
+   Int_t               GeneralInv(Double_t *working_space,Int_t num,Int_t degree,Int_t type);
+   void                Haar(Double_t *working_space,Int_t num,Int_t direction);
+   void                Walsh(Double_t *working_space,Int_t num);
 
 public:
-   void                Enhance(const float *source, float *destVector);
-   void                FilterZonal(const float *source, float *destVector);
+   void                Enhance(const Double_t *source, Double_t *destVector);
+   void                FilterZonal(const Double_t *source, Double_t *destVector);
    void                SetDirection(Int_t direction);
-   void                SetEnhanceCoeff(Float_t enhanceCoeff);
-   void                SetFilterCoeff(Float_t filterCoeff);
+   void                SetEnhanceCoeff(Double_t enhanceCoeff);
+   void                SetFilterCoeff(Double_t filterCoeff);
    void                SetRegion(Int_t xmin, Int_t xmax);
    void                SetTransformType(Int_t transType, Int_t degree);
-   void                Transform(const float *source, float *destVector);
+   void                Transform(const Double_t *source, Double_t *destVector);
 
    ClassDef(TSpectrumTransform,1)  //Spectrum Transformer, it calculates classic orthogonal 1D transforms
 };

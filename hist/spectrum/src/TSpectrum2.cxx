@@ -97,9 +97,9 @@ TSpectrum2::TSpectrum2() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 
    Int_t n = 100;
    fMaxPeaks   = n;
-   fPosition   = new Float_t[n];
-   fPositionX  = new Float_t[n];
-   fPositionY  = new Float_t[n];
+   fPosition   = new Double_t[n];
+   fPositionX  = new Double_t[n];
+   fPositionY  = new Double_t[n];
    fResolution = 1;
    fHistogram  = 0;
    fNPeaks     = 0;
@@ -107,7 +107,7 @@ TSpectrum2::TSpectrum2() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 
 
 //______________________________________________________________________________
-TSpectrum2::TSpectrum2(Int_t maxpositions, Float_t resolution) :TNamed("Spectrum", "Miroslav Morhac peak finder") 
+TSpectrum2::TSpectrum2(Int_t maxpositions, Double_t resolution) :TNamed("Spectrum", "Miroslav Morhac peak finder") 
 {   
 //  maxpositions:  maximum number of peaks
 //  resolution:    determines resolution of the neighboring peaks
@@ -118,9 +118,9 @@ TSpectrum2::TSpectrum2(Int_t maxpositions, Float_t resolution) :TNamed("Spectrum
    
    Int_t n = maxpositions;
    fMaxPeaks  = n;
-   fPosition  = new Float_t[n];
-   fPositionX = new Float_t[n];
-   fPositionY = new Float_t[n];
+   fPosition  = new Double_t[n];
+   fPositionX = new Double_t[n];
+   fPositionY = new Double_t[n];
    fHistogram = 0;
    fNPeaks    = 0;
    SetResolution(resolution);
@@ -159,7 +159,7 @@ void TSpectrum2::SetDeconIterations(Int_t n)
 
 
 //______________________________________________________________________________
-TH1 *TSpectrum2::Background(const TH1 * h, int number_of_iterations,
+TH1 *TSpectrum2::Background(const TH1 * h, Int_t number_of_iterations,
                                    Option_t * option) 
 {
 /////////////////////////////////////////////////////////////////////////////
@@ -278,13 +278,13 @@ Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
    Int_t sizex = hin->GetXaxis()->GetNbins();
    Int_t sizey = hin->GetYaxis()->GetNbins();
    Int_t i, j, binx,biny, npeaks;
-   Float_t ** source = new float *[sizex];
-   Float_t ** dest   = new float *[sizex];
+   Double_t ** source = new Double_t*[sizex];
+   Double_t ** dest   = new Double_t*[sizex];
    for (i = 0; i < sizex; i++) {
-      source[i] = new float[sizey];
-      dest[i]   = new float[sizey];
+      source[i] = new Double_t[sizey];
+      dest[i]   = new Double_t[sizey];
       for (j = 0; j < sizey; j++) {
-         source[i][j] = (Float_t) hin->GetBinContent(i + 1, j + 1);
+         source[i][j] = hin->GetBinContent(i + 1, j + 1);
       }
    }
    //npeaks = SearchHighRes(source, dest, sizex, sizey, sigma, 100*threshold, kTRUE, 3, kTRUE, 10);
@@ -326,7 +326,7 @@ Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
 
 
 //______________________________________________________________________________
-void TSpectrum2::SetResolution(Float_t resolution) 
+void TSpectrum2::SetResolution(Double_t resolution) 
 {   
 //  resolution: determines resolution of the neighboring peaks
 //              default value is 1 correspond to 3 sigma distance
@@ -345,7 +345,7 @@ void TSpectrum2::SetResolution(Float_t resolution)
     
 /////////////////////NEW FUNCTIONS  JANUARY 2006
 //______________________________________________________________________________
-const char *TSpectrum2::Background(float **spectrum,
+const char *TSpectrum2::Background(Double_t **spectrum,
                        Int_t ssizex, Int_t ssizey,
                        Int_t numberIterationsX,
                        Int_t numberIterationsY,
@@ -444,7 +444,7 @@ p = 1, 2, …, number_of_iterations. </span></p>
 <a href="http://root.cern.ch/root/html/ListOfTypes.html#char" target="_parent">char</a>*
 </span></b><span style='font-size:18.0pt'><a
 href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrum2::Background</b></a><b>
-(<a href="http://root.cern.ch/root/html/ListOfTypes.html#float" target="_parent">float</a>
+(<a href="http://root.cern.ch/root/html/ListOfTypes.html#double" target="_parent">double</a>
 **spectrum, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int"
 target="_parent">int</a> ssizex, <a
 href="http://root.cern.ch/root/html/ListOfTypes.html#int" target="_parent">int</a>
@@ -583,11 +583,11 @@ TSpectrum).</p>
 
 <p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
 
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t ** source = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
-<p class=MsoNormal>      source[i]=new float[nbinsy];     </p>
+<p class=MsoNormal>      source[i]=new Double_t[nbinsy];     </p>
 
 <p class=MsoNormal>   TH2F *back = new TH2F(&quot;back&quot;,&quot;Background estimation&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
 
@@ -679,11 +679,11 @@ TSpectrum).</p>
 
 <p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
 
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
-<p class=MsoNormal>      source[i]=new float[nbinsy];     </p>
+<p class=MsoNormal>      source[i]=new Double_t[nbinsy];     </p>
 
 <p class=MsoNormal>   TH2F *back = new TH2F(&quot;back&quot;,&quot;Background estimation&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
 
@@ -783,11 +783,11 @@ TSpectrum).</p>
 
 <p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
 
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
-<p class=MsoNormal>      source[i]=new float[nbinsy];     </p>
+<p class=MsoNormal>      source[i]=new Double_t[nbinsy];     </p>
 
 <p class=MsoNormal>   TH2F *back = new TH2F(&quot;back&quot;,&quot;Background estimation&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
 
@@ -832,8 +832,8 @@ window&quot;,10,10,1000,700);</p>
 <!-- */
 // --> End_Html
 
-   int i, x, y, sampling, r1, r2;
-   float a, b, p1, p2, p3, p4, s1, s2, s3, s4;
+   Int_t i, x, y, sampling, r1, r2;
+   Double_t a, b, p1, p2, p3, p4, s1, s2, s3, s4;
    if (ssizex <= 0 || ssizey <= 0)
       return "Wrong parameters";
    if (numberIterationsX < 1 || numberIterationsY < 1)
@@ -841,16 +841,16 @@ window&quot;,10,10,1000,700);</p>
    if (ssizex < 2 * numberIterationsX + 1
         || ssizey < 2 * numberIterationsY + 1)
       return ("Too Large Clipping Window");
-   float **working_space = new float *[ssizex];
+   Double_t **working_space = new Double_t*[ssizex];
    for (i = 0; i < ssizex; i++)
-      working_space[i] = new float[ssizey];
+      working_space[i] = new Double_t[ssizey];
    sampling =
-       (int) TMath::Max(numberIterationsX, numberIterationsY);
+       (Int_t) TMath::Max(numberIterationsX, numberIterationsY);
    if (direction == kBackIncreasingWindow) {
       if (filterType == kBackSuccessiveFiltering) {
          for (i = 1; i <= sampling; i++) {
-            r1 = (int) TMath::Min(i, numberIterationsX), r2 =
-                (int) TMath::Min(i, numberIterationsY);
+            r1 = (Int_t) TMath::Min(i, numberIterationsX), r2 =
+                (Int_t) TMath::Min(i, numberIterationsY);
             for (y = r2; y < ssizey - r2; y++) {
                for (x = r1; x < ssizex - r1; x++) {
                   a = spectrum[x][y];
@@ -896,8 +896,8 @@ window&quot;,10,10,1000,700);</p>
       
       else if (filterType == kBackOneStepFiltering) {
          for (i = 1; i <= sampling; i++) {
-            r1 = (int) TMath::Min(i, numberIterationsX), r2 =
-                (int) TMath::Min(i, numberIterationsY);
+            r1 = (Int_t) TMath::Min(i, numberIterationsX), r2 =
+                (Int_t) TMath::Min(i, numberIterationsY);
             for (y = r2; y < ssizey - r2; y++) {
                for (x = r1; x < ssizex - r1; x++) {
                   a = spectrum[x][y];
@@ -924,8 +924,8 @@ window&quot;,10,10,1000,700);</p>
    else if (direction == kBackDecreasingWindow) {
       if (filterType == kBackSuccessiveFiltering) {
          for (i = sampling; i >= 1; i--) {
-            r1 = (int) TMath::Min(i, numberIterationsX), r2 =
-                (int) TMath::Min(i, numberIterationsY);
+            r1 = (Int_t) TMath::Min(i, numberIterationsX), r2 =
+                (Int_t) TMath::Min(i, numberIterationsY);
             for (y = r2; y < ssizey - r2; y++) {
                for (x = r1; x < ssizex - r1; x++) {
                   a = spectrum[x][y];
@@ -971,8 +971,8 @@ window&quot;,10,10,1000,700);</p>
       
       else if (filterType == kBackOneStepFiltering) {
          for (i = sampling; i >= 1; i--) {
-            r1 = (int) TMath::Min(i, numberIterationsX), r2 =
-                (int) TMath::Min(i, numberIterationsY);
+            r1 = (Int_t) TMath::Min(i, numberIterationsX), r2 =
+                (Int_t) TMath::Min(i, numberIterationsY);
             for (y = r2; y < ssizey - r2; y++) {
                for (x = r1; x < ssizex - r1; x++) {
                   a = spectrum[x][y];
@@ -1002,7 +1002,7 @@ window&quot;,10,10,1000,700);</p>
 }
 
 //_____________________________________________________________________________
-const char* TSpectrum2::SmoothMarkov(float **source, Int_t ssizex, Int_t ssizey, Int_t averWindow)
+const char* TSpectrum2::SmoothMarkov(Double_t **source, Int_t ssizex, Int_t ssizey, Int_t averWindow)
 {
 /////////////////////////////////////////////////////////////////////////////
 //   TWO-DIMENSIONAL MARKOV SPECTRUM SMOOTHING FUNCTION               
@@ -1089,7 +1089,7 @@ algortihm to two dimensions. </span></p>
 href="http://root.cern.ch/root/html/ListOfTypes.html#char" target="_parent">char</a>*
 </span></b><span style='font-size:18.0pt'><a
 href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrum2::SmoothMarkov</b></a><b>(<a
-href="http://root.cern.ch/root/html/ListOfTypes.html#float" target="_parent">float</a>
+href="http://root.cern.ch/root/html/ListOfTypes.html#double" target="_parent">double</a>
 **fSpectrum, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int"
 target="_parent">int</a> ssizex, <a
 href="http://root.cern.ch/root/html/ListOfTypes.html#int" target="_parent">int</a>
@@ -1183,12 +1183,12 @@ TSpectrum).</p>
 
 <p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
 
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    source[i]=new
-float[nbinsy];     </p>
+Double_t[nbinsy];     </p>
 
 <p class=MsoNormal>   TH2F *smooth = new
 TH2F(&quot;smooth&quot;,&quot;Background
@@ -1234,14 +1234,14 @@ source[i][j]);   </p>
 
 <!-- */
 // --> End_Html
-   int xmin, xmax, ymin, ymax, i, j, l;
-   double a, b, maxch;
-   double nom, nip, nim, sp, sm, spx, spy, smx, smy, plocha = 0;
+   Int_t xmin, xmax, ymin, ymax, i, j, l;
+   Double_t a, b, maxch;
+   Double_t nom, nip, nim, sp, sm, spx, spy, smx, smy, plocha = 0;
    if(averWindow <= 0)
       return "Averaging Window must be positive";      
-   float **working_space = new float* [ssizex];
+   Double_t **working_space = new Double_t*[ssizex];
    for(i = 0; i < ssizex; i++)
-      working_space[i] = new float[ssizey];      
+      working_space[i] = new Double_t[ssizey];      
    xmin = 0;
    xmax = ssizex - 1;
    ymin = 0;
@@ -1416,7 +1416,7 @@ source[i][j]);   </p>
 }
 
 //______________________________________________________________________________________________________________________________
-const char *TSpectrum2::Deconvolution(float **source, float **resp,
+const char *TSpectrum2::Deconvolution(Double_t **source, Double_t **resp,
                                        Int_t ssizex, Int_t ssizey,
                                        Int_t numberIterations, 
                                        Int_t numberRepetitions,
@@ -1527,8 +1527,8 @@ name="TSpectrum:Deconvolution1"></a><a
 href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b><span
 style='font-size:18.0pt'>TSpectrum2::Deconvolution</span></b></a><b><span
 style='font-size:18.0pt'>(<a
-href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> **source,
-const <a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a>
+href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> **source,
+const <a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
 **resp, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a> ssizex,
 <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a> ssizey, <a
 href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a> numberIterations,
@@ -1661,12 +1661,12 @@ TSpectrum2).</p>
 
 <p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
 
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    source[i]=new
-float[nbinsy];     </p>
+Double_t[nbinsy];     </p>
 
 <p class=MsoNormal>   TH2F *decon = new TH2F(&quot;decon&quot;,&quot;Gold
 deconvolution&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
@@ -1676,12 +1676,12 @@ TFile(&quot;spectra2\\TSpectrum2.root&quot;);</p>
 
 <p class=MsoNormal>   decon=(TH2F*) f-&gt;Get(&quot;decon1;1&quot;);</p>
 
-<p class=MsoNormal>   Float_t ** response = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** response = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    response[i]=new
-float[nbinsy];     </p>
+Double_t[nbinsy];     </p>
 
 <p class=MsoNormal>   TH2F *resp = new TH2F(&quot;resp&quot;,&quot;Response
 matrix&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
@@ -1788,12 +1788,12 @@ TSpectrum2).</p>
 
 <p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
 
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    source[i]=new
-float[nbinsy];     </p>
+Double_t[nbinsy];     </p>
 
 <p class=MsoNormal>   TH2F *decon = new TH2F(&quot;decon&quot;,&quot;Gold
 deconvolution&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
@@ -1802,12 +1802,12 @@ deconvolution&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
 
 <p class=MsoNormal>   decon=(TH2F*) f-&gt;Get(&quot;decon2;1&quot;);</p>
 
-<p class=MsoNormal>   Float_t ** response = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** response = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    response[i]=new
-float[nbinsy];     </p>
+Double_t[nbinsy];     </p>
 
 <p class=MsoNormal>   TH2F *resp = new TH2F(&quot;resp&quot;,&quot;Response
 matrix&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
@@ -1900,12 +1900,12 @@ TSpectrum2).</p>
 
 <p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
 
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    source[i]=new
-float[nbinsy];     </p>
+Double_t[nbinsy];     </p>
 
 <p class=MsoNormal>   TH2F *decon = new TH2F(&quot;decon&quot;,&quot;Boosted
 Gold deconvolution&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
@@ -1914,12 +1914,12 @@ Gold deconvolution&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
 
 <p class=MsoNormal>   decon=(TH2F*) f-&gt;Get(&quot;decon2;1&quot;);</p>
 
-<p class=MsoNormal>   Float_t ** response = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** response = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    response[i]=new
-float[nbinsy];     </p>
+Double_t[nbinsy];     </p>
 
 <p class=MsoNormal>   TH2F *resp = new TH2F(&quot;resp&quot;,&quot;Response
 matrix&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
@@ -1976,18 +1976,18 @@ deconvolution&quot;,10,10,1000,700);</p>
 
 <!-- */
 // --> End_Html
-   int i, j, lhx, lhy, i1, i2, j1, j2, k1, k2, lindex, i1min, i1max,
+   Int_t i, j, lhx, lhy, i1, i2, j1, j2, k1, k2, lindex, i1min, i1max,
        i2min, i2max, j1min, j1max, j2min, j2max, positx = 0, posity = 0, repet;
-   double lda, ldb, ldc, area, maximum = 0;
+   Double_t lda, ldb, ldc, area, maximum = 0;
    if (ssizex <= 0 || ssizey <= 0)
       return "Wrong parameters";
    if (numberIterations <= 0)
       return "Number of iterations must be positive";
    if (numberRepetitions <= 0)
       return "Number of repetitions must be positive";   
-   double **working_space = new double *[ssizex];
+   Double_t **working_space = new Double_t *[ssizex];
    for (i = 0; i < ssizex; i++)
-      working_space[i] = new double[5 * ssizey];
+      working_space[i] = new Double_t[5 * ssizey];
    area = 0;
    lhx = -1, lhy = -1;
    for (i = 0; i < ssizex; i++) {
@@ -2135,7 +2135,7 @@ deconvolution&quot;,10,10,1000,700);</p>
 }
 
 //____________________________________________________________________________
-Int_t TSpectrum2::SearchHighRes(float **source,float **dest, Int_t ssizex, Int_t ssizey,
+Int_t TSpectrum2::SearchHighRes(Double_t **source, Double_t **dest, Int_t ssizex, Int_t ssizey,
                                  Double_t sigma, Double_t threshold,
                                  Bool_t backgroundRemove,Int_t deconIterations,
                                  Bool_t markov, Int_t averWindow)
@@ -2218,11 +2218,11 @@ name="TSpectrum:Search1HighRes"></a><a
 href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b><span
 style='font-size:18.0pt'>TSpectrum2::SearchHighRes</span></b></a><b><span
 style='font-size:18.0pt'> (<a
-href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> **source,<a
-href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> **dest, <a
+href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> **source,<a
+href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> **dest, <a
 href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a> ssizex, <a
 href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a> ssizey, <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> sigma, <a
+href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> sigma, <a
 href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> threshold,
 <a href="http://root.cern.ch/root/html/ListOfTypes.html#bool">bool</a> backgroundRemove,<a
 href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a> deconIterations,
@@ -2367,19 +2367,19 @@ function (class TSpectrum).</p>
 
 <p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
 
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    source[i]=new
-float[nbinsy];</p>
+Double_t[nbinsy];</p>
 
-<p class=MsoNormal>   Float_t ** dest = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** dest = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    dest[i]=new
-float[nbinsy];</p>
+Double_t[nbinsy];</p>
 
 <p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
 resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
@@ -2413,8 +2413,8 @@ nbinsy, 2, 5, kTRUE, 3, kFALSE, 3);   </p>
 <p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
 
 <p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
-%d\n&quot;,(int)(fPositionX[i]+0.5), (int)(fPositionY[i]+0.5),
-(int)source[(int)(fPositionX[i]+0.5)][(int)(fPositionY[i]+0.5)]);        </p>
+%d\n&quot;,(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
+(Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);        </p>
 
 <p class=MsoNormal>}</p>
 
@@ -2469,19 +2469,19 @@ function (class TSpectrum).</p>
 
 <p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
 
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    source[i]=new
-float[nbinsy];</p>
+Double_t[nbinsy];</p>
 
-<p class=MsoNormal>   Float_t ** dest = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** dest = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    dest[i]=new
-float[nbinsy];</p>
+Double_t[nbinsy];</p>
 
 <p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
 resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
@@ -2516,8 +2516,8 @@ nbinsy, 2, 10, kTRUE, 10, kFALSE, 3);   </p>
 <p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
 
 <p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
-%d\n&quot;,(int)(fPositionX[i]+0.5), (int)(fPositionY[i]+0.5),
-(int)source[(int)(fPositionX[i]+0.5)][(int)(fPositionY[i]+0.5)]);        </p>
+%d\n&quot;,(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
+(Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);        </p>
 
 <p class=MsoNormal>}</p>
 
@@ -2587,19 +2587,19 @@ function (class TSpectrum).</p>
 
 <p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
 
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    source[i]=new
-float[nbinsy];</p>
+Double_t[nbinsy];</p>
 
-<p class=MsoNormal>   Float_t ** dest = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** dest = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    dest[i]=new
-float[nbinsy];</p>
+Double_t[nbinsy];</p>
 
 <p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
 resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
@@ -2636,8 +2636,8 @@ nbinsy, 2, 2, kFALSE, 3, kFALSE, 1);//3, 10, 100   </p>
 <p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
 
 <p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
-%d\n&quot;,(int)(fPositionX[i]+0.5), (int)(fPositionY[i]+0.5),
-(int)source[(int)(fPositionX[i]+0.5)][(int)(fPositionY[i]+0.5)]);        </p>
+%d\n&quot;,(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
+(Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);        </p>
 
 <p class=MsoNormal>}</p>
 
@@ -2691,19 +2691,19 @@ function (class TSpectrum).</p>
 
 <p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
 
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    source[i]=new
-float[nbinsy];</p>
+Double_t[nbinsy];</p>
 
-<p class=MsoNormal>   Float_t ** dest = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** dest = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    dest[i]=new
-float[nbinsy];</p>
+Double_t[nbinsy];</p>
 
 <p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
 resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
@@ -2738,8 +2738,8 @@ nbinsy, 3, 5, kFALSE, 10, kTRUE, 3);   </p>
 <p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
 
 <p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
-%d\n&quot;,(int)(fPositionX[i]+0.5), (int)(fPositionY[i]+0.5),
-(int)source[(int)(fPositionX[i]+0.5)][(int)(fPositionY[i]+0.5)]);        </p>
+%d\n&quot;,(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
+(Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);        </p>
 
 <p class=MsoNormal>}</p>
 
@@ -2793,19 +2793,19 @@ function (class TSpectrum).</p>
 
 <p class=MsoNormal>   Double_t ymax  = (Double_t)nbinsy;   </p>
 
-<p class=MsoNormal>   Float_t ** source = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** source = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    source[i]=new
-float[nbinsy];</p>
+Double_t[nbinsy];</p>
 
-<p class=MsoNormal>   Float_t ** dest = new float *[nbinsx];   </p>
+<p class=MsoNormal>   Double_t** dest = new Double_t*[nbinsx];   </p>
 
 <p class=MsoNormal>   for (i=0;i&lt;nbinsx;i++)</p>
 
 <p class=MsoNormal>                                    dest[i]=new
-float[nbinsy];</p>
+Double_t[nbinsy];</p>
 
 <p class=MsoNormal>   TH2F *search = new TH2F(&quot;search&quot;,&quot;High
 resolution peak searching&quot;,nbinsx,xmin,xmax,nbinsy,ymin,ymax);</p>
@@ -2840,8 +2840,8 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
 <p class=MsoNormal>   for(i=0;i&lt;nfound;i++)</p>
 
 <p class=MsoNormal>             printf(&quot;posx= %d, posy= %d, value=
-%d\n&quot;,(int)(fPositionX[i]+0.5), (int)(fPositionY[i]+0.5),
-(int)source[(int)(fPositionX[i]+0.5)][(int)(fPositionY[i]+0.5)]);        </p>
+%d\n&quot;,(Int_t)(fPositionX[i]+0.5), (Int_t)(fPositionY[i]+0.5),
+(Int_t)source[(Int_t)(fPositionX[i]+0.5)][(Int_t)(fPositionY[i]+0.5)]);        </p>
 
 <p class=MsoNormal>}</p>
 
@@ -2849,16 +2849,16 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
 
 <!-- */
 // --> End_Html
-   int number_of_iterations = (int)(4 * sigma + 0.5);
-   int k, lindex, priz;
-   double lda, ldb, ldc, area, maximum;
-   int xmin, xmax, l, peak_index = 0, ssizex_ext = ssizex + 4 * number_of_iterations, ssizey_ext = ssizey + 4 * number_of_iterations, shift = 2 * number_of_iterations;
-   int ymin, ymax, i, j;
-   double a, b, ax, ay, maxch, plocha = 0;
-   double nom, nip, nim, sp, sm, spx, spy, smx, smy;
-   double p1, p2, p3, p4, s1, s2, s3, s4;
-   int x, y;
-   int lhx, lhy, i1, i2, j1, j2, k1, k2, i1min, i1max, i2min, i2max, j1min, j1max, j2min, j2max, positx, posity;
+   Int_t number_of_iterations = (Int_t)(4 * sigma + 0.5);
+   Int_t k, lindex, priz;
+   Double_t lda, ldb, ldc, area, maximum;
+   Int_t xmin, xmax, l, peak_index = 0, ssizex_ext = ssizex + 4 * number_of_iterations, ssizey_ext = ssizey + 4 * number_of_iterations, shift = 2 * number_of_iterations;
+   Int_t ymin, ymax, i, j;
+   Double_t a, b, ax, ay, maxch, plocha = 0;
+   Double_t nom, nip, nim, sp, sm, spx, spy, smx, smy;
+   Double_t p1, p2, p3, p4, s1, s2, s3, s4;
+   Int_t x, y;
+   Int_t lhx, lhy, i1, i2, j1, j2, k1, k2, i1min, i1max, i2min, i2max, j1min, j1max, j2min, j2max, positx, posity;
    if (sigma < 1) {
       Error("SearchHighRes", "Invalid sigma, must be greater than or equal to 1");
       return 0;
@@ -2869,7 +2869,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
       return 0;
    }
    
-   j = (int) (5.0 * sigma + 0.5);
+   j = (Int_t) (5.0 * sigma + 0.5);
    if (j >= PEAK_WINDOW / 2) {
       Error("SearchHighRes", "Too large sigma");
       return 0;
@@ -2887,11 +2887,11 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
          return 0;
       }
    }   
-   i = (int)(4 * sigma + 0.5);
+   i = (Int_t)(4 * sigma + 0.5);
    i = 4 * i;
-   double **working_space = new double *[ssizex + i];
+   Double_t **working_space = new Double_t *[ssizex + i];
    for (j = 0; j < ssizex + i; j++) {
-      Double_t *wsk = working_space[j] = new double[16 * (ssizey + i)];
+      Double_t *wsk = working_space[j] = new Double_t[16 * (ssizey + i)];
       for (k=0;k<16 * (ssizey + i);k++) wsk[k] = 0;
    }   
    for(j = 0; j < ssizey_ext; j++){
@@ -3206,10 +3206,10 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
    //generate response matrix
    for(i = 0; i < ssizex_ext; i++){
       for(j = 0; j < ssizey_ext; j++){
-         lda = (double)i - 3 * sigma;
-         ldb = (double)j - 3 * sigma;
+         lda = (Double_t)i - 3 * sigma;
+         ldb = (Double_t)j - 3 * sigma;
          lda = (lda * lda + ldb * ldb) / (2 * sigma * sigma);
-         k=(int)(1000 * TMath::Exp(-lda));
+         k=(Int_t)(1000 * TMath::Exp(-lda));
          lda = k;
          if(lda != 0){
             if((i + 1) > lhx)
@@ -3385,7 +3385,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
                if(working_space[i][j] > threshold * maximum / 100.0){
                   if(peak_index < fMaxPeaks){
                      for(k = i - 1,a = 0,b = 0; k <= i + 1; k++){
-                        a += (double)(k - shift) * working_space[k][j];
+                        a += (Double_t)(k - shift) * working_space[k][j];
                         b += working_space[k][j];
                      }
                      ax=a/b;
@@ -3396,7 +3396,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
                         ax = ssizex - 1;
 
                      for(k = j - 1,a = 0,b = 0; k <= j + 1; k++){
-                        a += (double)(k - shift) * working_space[i][k];
+                        a += (Double_t)(k - shift) * working_space[i][k];
                         b += working_space[i][k];
                      }
                      ay=a/b;
@@ -3414,7 +3414,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
 
                      else{
                         for(k = 0, priz = 0; k < peak_index && priz == 0; k++){
-                           if(working_space[shift+(int)(ax+0.5)][15 * ssizey_ext + shift + (int)(ay+0.5)] > working_space[shift+(int)(fPositionX[k]+0.5)][15 * ssizey_ext + shift + (int)(fPositionY[k]+0.5)])
+                           if(working_space[shift+(Int_t)(ax+0.5)][15 * ssizey_ext + shift + (Int_t)(ay+0.5)] > working_space[shift+(Int_t)(fPositionX[k]+0.5)][15 * ssizey_ext + shift + (Int_t)(fPositionY[k]+0.5)])
                               priz = 1;
                         }
                         if(priz == 0){
@@ -3449,7 +3449,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
          dest[i][j] = working_space[i + shift][j + shift];
       }
    }
-   i = (int)(4 * sigma + 0.5);
+   i = (Int_t)(4 * sigma + 0.5);
    i = 4 * i;   
    for (j = 0; j < ssizex + i; j++)
       delete[]working_space[j];

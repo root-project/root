@@ -71,9 +71,9 @@ TSpectrum::TSpectrum() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 
    Int_t n = 100;
    fMaxPeaks  = n;
-   fPosition   = new Float_t[n];
-   fPositionX  = new Float_t[n];
-   fPositionY  = new Float_t[n];
+   fPosition   = new Double_t[n];
+   fPositionX  = new Double_t[n];
+   fPositionY  = new Double_t[n];
    fResolution = 1;
    fHistogram  = 0;
    fNPeaks     = 0;
@@ -81,7 +81,7 @@ TSpectrum::TSpectrum() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 
 
 //______________________________________________________________________________
-TSpectrum::TSpectrum(Int_t maxpositions, Float_t resolution)
+TSpectrum::TSpectrum(Int_t maxpositions, Double_t resolution)
           :TNamed("Spectrum", "Miroslav Morhac peak finder")
 {
    /* Begin_Html
@@ -98,9 +98,9 @@ TSpectrum::TSpectrum(Int_t maxpositions, Float_t resolution)
    Int_t n = maxpositions;
    if (n <= 0) n = 1;
    fMaxPeaks  = n;
-   fPosition  = new Float_t[n];
-   fPositionX = new Float_t[n];
-   fPositionY = new Float_t[n];
+   fPosition  = new Double_t[n];
+   fPositionX = new Double_t[n];
+   fPositionY = new Double_t[n];
    fHistogram = 0;
    fNPeaks    = 0;
    SetResolution(resolution);
@@ -222,7 +222,7 @@ TH1 *TSpectrum::Background(const TH1 * h, int numberIterations,
    Int_t last  = h->GetXaxis()->GetLast();
    Int_t size = last-first+1;
    Int_t i;
-   Float_t * source = new float[size];
+   Double_t * source = new Double_t[size];
    for (i = 0; i < size; i++) source[i] = h->GetBinContent(i + first);
 
    //find background (source is input and in output contains the background
@@ -342,8 +342,8 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option,
       Int_t last  = hin->GetXaxis()->GetLast();
       Int_t size = last-first+1;
       Int_t i, bin, npeaks;
-      Float_t * source = new float[size];
-      Float_t * dest   = new float[size];
+      Double_t * source = new Double_t[size];
+      Double_t * dest   = new Double_t[size];
       for (i = 0; i < size; i++) source[i] = hin->GetBinContent(i + first);
       if (sigma < 1) {
          sigma = size/fMaxPeaks;
@@ -386,7 +386,7 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option,
 
 
 //______________________________________________________________________________
-void TSpectrum::SetResolution(Float_t resolution)
+void TSpectrum::SetResolution(Double_t resolution)
 {
    /* Begin_Html
   resolution: determines resolution of the neighboring peaks
@@ -404,7 +404,7 @@ void TSpectrum::SetResolution(Float_t resolution)
 
 
 //______________________________________________________________________________
-const char *TSpectrum::Background(float *spectrum, int ssize,
+const char *TSpectrum::Background(Double_t *spectrum, int ssize,
                                           int numberIterations,
                                           int direction, int filterOrder,
                                           bool smoothing,int smoothWindow,
@@ -486,8 +486,8 @@ void Background_incr() {
    Int_t i;
    Double_t nbins = 256;
    Double_t xmin  = 0;
-   Double_t xmax  = (Double_t)nbins;
-   Float_t * source = new float[nbins];
+   Double_t xmax  = nbins;
+   Double_t * source = new Double_t[nbins];
    TH1F *back = new TH1F("back","",nbins,xmin,xmax);
    TH1F *d = new TH1F("d","",nbins,xmin,xmax);
    TFile *f = new TFile("spectra\\TSpectrum.root");
@@ -534,8 +534,8 @@ void Background_decr() {
    Int_t i;
    Double_t nbins = 256;
    Double_t xmin  = 0;
-   Double_t xmax  = (Double_t)nbins;
-   Float_t * source = new float[nbins];
+   Double_t xmax  = nbins;
+   Double_t * source = new Double_t[nbins];
    TH1F *back = new TH1F("back","",nbins,xmin,xmax);
    TH1F *d = new TH1F("d","",nbins,xmin,xmax);
    TFile *f = new TFile("spectra\\TSpectrum.root");
@@ -585,8 +585,8 @@ void Background_width() {
    Int_t i;
    Double_t nbins = 256;
    Double_t xmin  = 0;
-   Double_t xmax  = (Double_t)nbins;
-   Float_t * source = new float[nbins];
+   Double_t xmax  = nbins;
+   Double_t * source = new Double_t[nbins];
    TH1F *h = new TH1F("h","",nbins,xmin,xmax);
    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
@@ -644,8 +644,8 @@ void Background_width2() {
    Int_t i;
    Double_t nbins = 4096;
    Double_t xmin  = 0;
-   Double_t xmax  = (Double_t)4096;
-   Float_t * source = new float[nbins];
+   Double_t xmax  = 4096;
+   Double_t * source = new Double_t[nbins];
    TH1F *h = new TH1F("h","",nbins,xmin,xmax);
    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
@@ -713,8 +713,8 @@ void Background_order() {
    Int_t i;
    Double_t nbins = 4096;
    Double_t xmin  = 0;
-   Double_t xmax  = (Double_t)4096;
-   Float_t * source = new float[nbins];
+   Double_t xmax  = 4096;
+   Double_t * source = new Double_t[nbins];
    TH1F *h = new TH1F("h","",nbins,xmin,xmax);
    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
@@ -790,8 +790,8 @@ void Background_smooth() {
    Int_t i;
    Double_t nbins = 4096;
    Double_t xmin  = 0;
-   Double_t xmax  = (Double_t)nbins;
-   Float_t * source = new float[nbins];
+   Double_t xmax  = nbins;
+   Double_t * source = new Double_t[nbins];
    TH1F *h = new TH1F("h","",nbins,xmin,xmax);
    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
@@ -846,8 +846,8 @@ void Background_compton() {
    Int_t i;
    Double_t nbins = 512;
    Double_t xmin  = 0;
-   Double_t xmax  = (Double_t)nbins;
-   Float_t * source = new float[nbins];
+   Double_t xmax  = nbins;
+   Double_t * source = new Double_t[nbins];
    TH1F *h = new TH1F("h","",nbins,xmin,xmax);
    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
    TFile *f = new TFile("spectra\\TSpectrum.root");
@@ -869,7 +869,7 @@ void Background_compton() {
 End_Html */
 
    int i, j, w, bw, b1, b2, priz;
-   float a, b, c, d, e, yb1, yb2, ai, av, men, b4, c4, d4, e4, b6, c6, d6, e6, f6, g6, b8, c8, d8, e8, f8, g8, h8, i8;
+   Double_t a, b, c, d, e, yb1, yb2, ai, av, men, b4, c4, d4, e4, b6, c6, d6, e6, f6, g6, b8, c8, d8, e8, f8, g8, h8, i8;
    if (ssize <= 0)
       return "Wrong Parameters";
    if (numberIterations < 1)
@@ -878,7 +878,7 @@ End_Html */
       return "Too Large Clipping Window";
    if (smoothing == kTRUE && smoothWindow != kBackSmoothing3 && smoothWindow != kBackSmoothing5 && smoothWindow != kBackSmoothing7 && smoothWindow != kBackSmoothing9 && smoothWindow != kBackSmoothing11 && smoothWindow != kBackSmoothing13 && smoothWindow != kBackSmoothing15)
       return "Incorrect width of smoothing window";
-   float *working_space = new float[2 * ssize];
+   Double_t *working_space = new Double_t[2 * ssize];
    for (i = 0; i < ssize; i++){
       working_space[i] = spectrum[i];
       working_space[i + ssize] = spectrum[i];
@@ -951,10 +951,10 @@ End_Html */
                b = (working_space[ssize + j - i] + working_space[ssize + j + i]) / 2.0;
                c = 0;
                ai = i / 2;
-               c -= working_space[ssize + j - (int) (2 * ai)] / 6;
-               c += 4 * working_space[ssize + j - (int) ai] / 6;
-               c += 4 * working_space[ssize + j + (int) ai] / 6;
-               c -= working_space[ssize + j + (int) (2 * ai)] / 6;
+               c -= working_space[ssize + j - (Int_t) (2 * ai)] / 6;
+               c += 4 * working_space[ssize + j - (Int_t) ai] / 6;
+               c += 4 * working_space[ssize + j + (Int_t) ai] / 6;
+               c -= working_space[ssize + j + (Int_t) (2 * ai)] / 6;
                if (b < c)
                   b = c;
                if (b < a)
@@ -994,7 +994,7 @@ End_Html */
                b = (b + c) / 2;
                ai = i / 2;
                b4 = 0, men = 0;
-               for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
+               for (w = j - (Int_t)(2 * ai) - bw; w <= j - (Int_t)(2 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      b4 += working_space[ssize + w];
                      men +=1;
@@ -1002,7 +1002,7 @@ End_Html */
                }
                b4 = b4 / men;
                c4 = 0, men = 0;
-               for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
+               for (w = j - (Int_t)ai - bw; w <= j - (Int_t)ai + bw; w++){
                   if (w >= 0 && w < ssize){
                      c4 += working_space[ssize + w];
                      men +=1;
@@ -1010,7 +1010,7 @@ End_Html */
                }
                c4 = c4 / men;
                d4 = 0, men = 0;
-               for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){
+               for (w = j + (Int_t)ai - bw; w <= j + (Int_t)ai + bw; w++){
                   if (w >= 0 && w < ssize){
                      d4 += working_space[ssize + w];
                      men +=1;
@@ -1018,7 +1018,7 @@ End_Html */
                }
                d4 = d4 / men;
                e4 = 0, men = 0;
-               for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
+               for (w = j + (Int_t)(2 * ai) - bw; w <= j + (Int_t)(2 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      e4 += working_space[ssize + w];
                      men +=1;
@@ -1050,18 +1050,18 @@ End_Html */
                b = (working_space[ssize + j - i] + working_space[ssize + j + i]) / 2.0;
                c = 0;
                ai = i / 2;
-               c -= working_space[ssize + j - (int) (2 * ai)] / 6;
-               c += 4 * working_space[ssize + j - (int) ai] / 6;
-               c += 4 * working_space[ssize + j + (int) ai] / 6;
-               c -= working_space[ssize + j + (int) (2 * ai)] / 6;
+               c -= working_space[ssize + j - (Int_t) (2 * ai)] / 6;
+               c += 4 * working_space[ssize + j - (Int_t) ai] / 6;
+               c += 4 * working_space[ssize + j + (Int_t) ai] / 6;
+               c -= working_space[ssize + j + (Int_t) (2 * ai)] / 6;
                d = 0;
                ai = i / 3;
-               d += working_space[ssize + j - (int) (3 * ai)] / 20;
-               d -= 6 * working_space[ssize + j - (int) (2 * ai)] / 20;
-               d += 15 * working_space[ssize + j - (int) ai] / 20;
-               d += 15 * working_space[ssize + j + (int) ai] / 20;
-               d -= 6 * working_space[ssize + j + (int) (2 * ai)] / 20;
-               d += working_space[ssize + j + (int) (3 * ai)] / 20;
+               d += working_space[ssize + j - (Int_t) (3 * ai)] / 20;
+               d -= 6 * working_space[ssize + j - (Int_t) (2 * ai)] / 20;
+               d += 15 * working_space[ssize + j - (Int_t) ai] / 20;
+               d += 15 * working_space[ssize + j + (Int_t) ai] / 20;
+               d -= 6 * working_space[ssize + j + (Int_t) (2 * ai)] / 20;
+               d += working_space[ssize + j + (Int_t) (3 * ai)] / 20;
                if (b < d)
                   b = d;
                if (b < c)
@@ -1103,7 +1103,7 @@ End_Html */
                b = (b + c) / 2;
                ai = i / 2;
                b4 = 0, men = 0;
-               for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
+               for (w = j - (Int_t)(2 * ai) - bw; w <= j - (Int_t)(2 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      b4 += working_space[ssize + w];
                      men +=1;
@@ -1111,7 +1111,7 @@ End_Html */
                }
                b4 = b4 / men;
                c4 = 0, men = 0;
-               for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
+               for (w = j - (Int_t)ai - bw; w <= j - (Int_t)ai + bw; w++){
                   if (w >= 0 && w < ssize){
                      c4 += working_space[ssize + w];
                      men +=1;
@@ -1119,7 +1119,7 @@ End_Html */
                }
                c4 = c4 / men;
                d4 = 0, men = 0;
-               for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){
+               for (w = j + (Int_t)ai - bw; w <= j + (Int_t)ai + bw; w++){
                   if (w >= 0 && w < ssize){
                      d4 += working_space[ssize + w];
                      men +=1;
@@ -1127,7 +1127,7 @@ End_Html */
                }
                d4 = d4 / men;
                e4 = 0, men = 0;
-               for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
+               for (w = j + (Int_t)(2 * ai) - bw; w <= j + (Int_t)(2 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      e4 += working_space[ssize + w];
                      men +=1;
@@ -1137,7 +1137,7 @@ End_Html */
                b4 = (-b4 + 4 * c4 + 4 * d4 - e4) / 6;
                ai = i / 3;
                b6 = 0, men = 0;
-               for (w = j - (int)(3 * ai) - bw; w <= j - (int)(3 * ai) + bw; w++){
+               for (w = j - (Int_t)(3 * ai) - bw; w <= j - (Int_t)(3 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      b6 += working_space[ssize + w];
                      men +=1;
@@ -1145,7 +1145,7 @@ End_Html */
                }
                b6 = b6 / men;
                c6 = 0, men = 0;
-               for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
+               for (w = j - (Int_t)(2 * ai) - bw; w <= j - (Int_t)(2 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      c6 += working_space[ssize + w];
                      men +=1;
@@ -1153,7 +1153,7 @@ End_Html */
                }
                c6 = c6 / men;
                d6 = 0, men = 0;
-               for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
+               for (w = j - (Int_t)ai - bw; w <= j - (Int_t)ai + bw; w++){
                   if (w >= 0 && w < ssize){
                      d6 += working_space[ssize + w];
                      men +=1;
@@ -1161,7 +1161,7 @@ End_Html */
                }
                d6 = d6 / men;
                e6 = 0, men = 0;
-               for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){
+               for (w = j + (Int_t)ai - bw; w <= j + (Int_t)ai + bw; w++){
                   if (w >= 0 && w < ssize){
                      e6 += working_space[ssize + w];
                      men +=1;
@@ -1169,7 +1169,7 @@ End_Html */
                }
                e6 = e6 / men;
                f6 = 0, men = 0;
-               for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
+               for (w = j + (Int_t)(2 * ai) - bw; w <= j + (Int_t)(2 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      f6 += working_space[ssize + w];
                      men +=1;
@@ -1177,7 +1177,7 @@ End_Html */
                }
                f6 = f6 / men;
                g6 = 0, men = 0;
-               for (w = j + (int)(3 * ai) - bw; w <= j + (int)(3 * ai) + bw; w++){
+               for (w = j + (Int_t)(3 * ai) - bw; w <= j + (Int_t)(3 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      g6 += working_space[ssize + w];
                      men +=1;
@@ -1211,28 +1211,28 @@ End_Html */
                b = (working_space[ssize + j - i] + working_space[ssize + j + i]) / 2.0;
                c = 0;
                ai = i / 2;
-               c -= working_space[ssize + j - (int) (2 * ai)] / 6;
-               c += 4 * working_space[ssize + j - (int) ai] / 6;
-               c += 4 * working_space[ssize + j + (int) ai] / 6;
-               c -= working_space[ssize + j + (int) (2 * ai)] / 6;
+               c -= working_space[ssize + j - (Int_t) (2 * ai)] / 6;
+               c += 4 * working_space[ssize + j - (Int_t) ai] / 6;
+               c += 4 * working_space[ssize + j + (Int_t) ai] / 6;
+               c -= working_space[ssize + j + (Int_t) (2 * ai)] / 6;
                d = 0;
                ai = i / 3;
-               d += working_space[ssize + j - (int) (3 * ai)] / 20;
-               d -= 6 * working_space[ssize + j - (int) (2 * ai)] / 20;
-               d += 15 * working_space[ssize + j - (int) ai] / 20;
-               d += 15 * working_space[ssize + j + (int) ai] / 20;
-               d -= 6 * working_space[ssize + j + (int) (2 * ai)] / 20;
-               d += working_space[ssize + j + (int) (3 * ai)] / 20;
+               d += working_space[ssize + j - (Int_t) (3 * ai)] / 20;
+               d -= 6 * working_space[ssize + j - (Int_t) (2 * ai)] / 20;
+               d += 15 * working_space[ssize + j - (Int_t) ai] / 20;
+               d += 15 * working_space[ssize + j + (Int_t) ai] / 20;
+               d -= 6 * working_space[ssize + j + (Int_t) (2 * ai)] / 20;
+               d += working_space[ssize + j + (Int_t) (3 * ai)] / 20;
                e = 0;
                ai = i / 4;
-               e -= working_space[ssize + j - (int) (4 * ai)] / 70;
-               e += 8 * working_space[ssize + j - (int) (3 * ai)] / 70;
-               e -= 28 * working_space[ssize + j - (int) (2 * ai)] / 70;
-               e += 56 * working_space[ssize + j - (int) ai] / 70;
-               e += 56 * working_space[ssize + j + (int) ai] / 70;
-               e -= 28 * working_space[ssize + j + (int) (2 * ai)] / 70;
-               e += 8 * working_space[ssize + j + (int) (3 * ai)] / 70;
-               e -= working_space[ssize + j + (int) (4 * ai)] / 70;
+               e -= working_space[ssize + j - (Int_t) (4 * ai)] / 70;
+               e += 8 * working_space[ssize + j - (Int_t) (3 * ai)] / 70;
+               e -= 28 * working_space[ssize + j - (Int_t) (2 * ai)] / 70;
+               e += 56 * working_space[ssize + j - (Int_t) ai] / 70;
+               e += 56 * working_space[ssize + j + (Int_t) ai] / 70;
+               e -= 28 * working_space[ssize + j + (Int_t) (2 * ai)] / 70;
+               e += 8 * working_space[ssize + j + (Int_t) (3 * ai)] / 70;
+               e -= working_space[ssize + j + (Int_t) (4 * ai)] / 70;
                if (b < e)
                   b = e;
                if (b < d)
@@ -1276,7 +1276,7 @@ End_Html */
                b = (b + c) / 2;
                ai = i / 2;
                b4 = 0, men = 0;
-               for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
+               for (w = j - (Int_t)(2 * ai) - bw; w <= j - (Int_t)(2 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      b4 += working_space[ssize + w];
                      men +=1;
@@ -1284,7 +1284,7 @@ End_Html */
                }
                b4 = b4 / men;
                c4 = 0, men = 0;
-               for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
+               for (w = j - (Int_t)ai - bw; w <= j - (Int_t)ai + bw; w++){
                   if (w >= 0 && w < ssize){
                      c4 += working_space[ssize + w];
                      men +=1;
@@ -1292,7 +1292,7 @@ End_Html */
                }
                c4 = c4 / men;
                d4 = 0, men = 0;
-               for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){
+               for (w = j + (Int_t)ai - bw; w <= j + (Int_t)ai + bw; w++){
                   if (w >= 0 && w < ssize){
                      d4 += working_space[ssize + w];
                      men +=1;
@@ -1300,7 +1300,7 @@ End_Html */
                }
                d4 = d4 / men;
                e4 = 0, men = 0;
-               for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
+               for (w = j + (Int_t)(2 * ai) - bw; w <= j + (Int_t)(2 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      e4 += working_space[ssize + w];
                      men +=1;
@@ -1310,7 +1310,7 @@ End_Html */
                b4 = (-b4 + 4 * c4 + 4 * d4 - e4) / 6;
                ai = i / 3;
                b6 = 0, men = 0;
-               for (w = j - (int)(3 * ai) - bw; w <= j - (int)(3 * ai) + bw; w++){
+               for (w = j - (Int_t)(3 * ai) - bw; w <= j - (Int_t)(3 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      b6 += working_space[ssize + w];
                      men +=1;
@@ -1318,7 +1318,7 @@ End_Html */
                }
                b6 = b6 / men;
                c6 = 0, men = 0;
-               for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
+               for (w = j - (Int_t)(2 * ai) - bw; w <= j - (Int_t)(2 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      c6 += working_space[ssize + w];
                      men +=1;
@@ -1326,7 +1326,7 @@ End_Html */
                }
                c6 = c6 / men;
                d6 = 0, men = 0;
-               for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
+               for (w = j - (Int_t)ai - bw; w <= j - (Int_t)ai + bw; w++){
                   if (w >= 0 && w < ssize){
                      d6 += working_space[ssize + w];
                      men +=1;
@@ -1334,7 +1334,7 @@ End_Html */
                }
                d6 = d6 / men;
                e6 = 0, men = 0;
-               for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){
+               for (w = j + (Int_t)ai - bw; w <= j + (Int_t)ai + bw; w++){
                   if (w >= 0 && w < ssize){
                      e6 += working_space[ssize + w];
                      men +=1;
@@ -1342,7 +1342,7 @@ End_Html */
                }
                e6 = e6 / men;
                f6 = 0, men = 0;
-               for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
+               for (w = j + (Int_t)(2 * ai) - bw; w <= j + (Int_t)(2 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      f6 += working_space[ssize + w];
                      men +=1;
@@ -1350,7 +1350,7 @@ End_Html */
                }
                f6 = f6 / men;
                g6 = 0, men = 0;
-               for (w = j + (int)(3 * ai) - bw; w <= j + (int)(3 * ai) + bw; w++){
+               for (w = j + (Int_t)(3 * ai) - bw; w <= j + (Int_t)(3 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      g6 += working_space[ssize + w];
                      men +=1;
@@ -1360,7 +1360,7 @@ End_Html */
                b6 = (b6 - 6 * c6 + 15 * d6 + 15 * e6 - 6 * f6 + g6) / 20;
                ai = i / 4;
                b8 = 0, men = 0;
-               for (w = j - (int)(4 * ai) - bw; w <= j - (int)(4 * ai) + bw; w++){
+               for (w = j - (Int_t)(4 * ai) - bw; w <= j - (Int_t)(4 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      b8 += working_space[ssize + w];
                      men +=1;
@@ -1368,7 +1368,7 @@ End_Html */
                }
                b8 = b8 / men;
                c8 = 0, men = 0;
-               for (w = j - (int)(3 * ai) - bw; w <= j - (int)(3 * ai) + bw; w++){
+               for (w = j - (Int_t)(3 * ai) - bw; w <= j - (Int_t)(3 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      c8 += working_space[ssize + w];
                      men +=1;
@@ -1376,7 +1376,7 @@ End_Html */
                }
                c8 = c8 / men;
                d8 = 0, men = 0;
-               for (w = j - (int)(2 * ai) - bw; w <= j - (int)(2 * ai) + bw; w++){
+               for (w = j - (Int_t)(2 * ai) - bw; w <= j - (Int_t)(2 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      d8 += working_space[ssize + w];
                      men +=1;
@@ -1384,7 +1384,7 @@ End_Html */
                }
                d8 = d8 / men;
                e8 = 0, men = 0;
-               for (w = j - (int)ai - bw; w <= j - (int)ai + bw; w++){
+               for (w = j - (Int_t)ai - bw; w <= j - (Int_t)ai + bw; w++){
                   if (w >= 0 && w < ssize){
                      e8 += working_space[ssize + w];
                      men +=1;
@@ -1392,7 +1392,7 @@ End_Html */
                }
                e8 = e8 / men;
                f8 = 0, men = 0;
-               for (w = j + (int)ai - bw; w <= j + (int)ai + bw; w++){
+               for (w = j + (Int_t)ai - bw; w <= j + (Int_t)ai + bw; w++){
                   if (w >= 0 && w < ssize){
                      f8 += working_space[ssize + w];
                      men +=1;
@@ -1400,7 +1400,7 @@ End_Html */
                }
                f8 = f8 / men;
                g8 = 0, men = 0;
-               for (w = j + (int)(2 * ai) - bw; w <= j + (int)(2 * ai) + bw; w++){
+               for (w = j + (Int_t)(2 * ai) - bw; w <= j + (Int_t)(2 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      g8 += working_space[ssize + w];
                      men +=1;
@@ -1408,7 +1408,7 @@ End_Html */
                }
                g8 = g8 / men;
                h8 = 0, men = 0;
-               for (w = j + (int)(3 * ai) - bw; w <= j + (int)(3 * ai) + bw; w++){
+               for (w = j + (Int_t)(3 * ai) - bw; w <= j + (Int_t)(3 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      h8 += working_space[ssize + w];
                      men +=1;
@@ -1416,7 +1416,7 @@ End_Html */
                }
                h8 = h8 / men;
                i8 = 0, men = 0;
-               for (w = j + (int)(4 * ai) - bw; w <= j + (int)(4 * ai) + bw; w++){
+               for (w = j + (Int_t)(4 * ai) - bw; w <= j + (Int_t)(4 * ai) + bw; w++){
                   if (w >= 0 && w < ssize){
                      i8 += working_space[ssize + w];
                      men +=1;
@@ -1509,7 +1509,7 @@ End_Html */
 
 
 //______________________________________________________________________________
-const char* TSpectrum::SmoothMarkov(float *source, int ssize, int averWindow)
+const char* TSpectrum::SmoothMarkov(Double_t *source, int ssize, int averWindow)
 {
    /* Begin_Html
    <b>One-dimensional markov spectrum smoothing function</b>
@@ -1566,8 +1566,8 @@ const char* TSpectrum::SmoothMarkov(float *source, int ssize, int averWindow)
       Int_t i;
       Double_t nbins = 1024;
       Double_t xmin  = 0;
-      Double_t xmax  = (Double_t)nbins;
-      Float_t * source = new float[nbins];
+      Double_t xmax  = nbins;
+      Double_t * source = new Double_t[nbins];
       TH1F *h = new TH1F("h","Smoothed spectrum for m=3",nbins,xmin,xmax);
       TFile *f = new TFile("spectra\\TSpectrum.root");
       h=(TH1F*) f->Get("smooth1;1");
@@ -1584,11 +1584,11 @@ const char* TSpectrum::SmoothMarkov(float *source, int ssize, int averWindow)
    End_Html */
 
    int xmin, xmax, i, l;
-   float a, b, maxch;
-   float nom, nip, nim, sp, sm, area = 0;
+   Double_t a, b, maxch;
+   Double_t nom, nip, nim, sp, sm, area = 0;
    if(averWindow <= 0)
       return "Averaging Window must be positive";
-   float *working_space = new float[ssize];
+   Double_t *working_space = new Double_t[ssize];
    xmin = 0,xmax = ssize - 1;
    for(i = 0, maxch = 0; i < ssize; i++){
       working_space[i]=0;
@@ -1652,9 +1652,9 @@ const char* TSpectrum::SmoothMarkov(float *source, int ssize, int averWindow)
 
 
 //______________________________________________________________________________
-const char *TSpectrum::Deconvolution(float *source, const float *response,
+const char *TSpectrum::Deconvolution(Double_t *source, const Double_t *response,
                                       int ssize, int numberIterations,
-                                      int numberRepetitions, double boost )
+                                      int numberRepetitions, Double_t boost )
 {
    /* Begin_Html
    <b>One-dimensional deconvolution function</b>
@@ -1766,9 +1766,9 @@ const char *TSpectrum::Deconvolution(float *source, const float *response,
       Int_t i;
       Double_t nbins = 256;
       Double_t xmin  = 0;
-      Double_t xmax  = (Double_t)nbins;
-      Float_t * source = new float[nbins];
-      Float_t * response = new float[nbins];
+      Double_t xmax  = nbins;
+      Double_t * source = new Double_t[nbins];
+      Double_t * response = new Double_t[nbins];
       TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
       TH1F *d = new TH1F("d","",nbins,xmin,xmax);
       TFile *f = new TFile("spectra\\TSpectrum.root");
@@ -1876,9 +1876,9 @@ const char *TSpectrum::Deconvolution(float *source, const float *response,
       Int_t i;
       Double_t nbins = 256;
       Double_t xmin  = 0;
-      Double_t xmax  = (Double_t)nbins;
-      Float_t * source = new float[nbins];
-      Float_t * response = new float[nbins];
+      Double_t xmax  = nbins;
+      Double_t * source = new Double_t[nbins];
+      Double_t * response = new Double_t[nbins];
       TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
       TH1F *d = new TH1F("d","",nbins,xmin,xmax);
       TFile *f = new TFile("spectra\\TSpectrum.root");
@@ -1944,9 +1944,9 @@ const char *TSpectrum::Deconvolution(float *source, const float *response,
       Int_t i;
       Double_t nbins = 256;
       Double_t xmin  = 0;
-      Double_t xmax  = (Double_t)nbins;
-      Float_t * source = new float[nbins];
-      Float_t * response = new float[nbins];
+      Double_t xmax  = nbins;
+      Double_t * source = new Double_t[nbins];
+      Double_t * response = new Double_t[nbins];
       TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
       TH1F *d = new TH1F("d","",nbins,xmin,xmax);
       TFile *f = new TFile("spectra\\TSpectrum.root");
@@ -1977,9 +1977,9 @@ const char *TSpectrum::Deconvolution(float *source, const float *response,
 
        //   working_space-pointer to the working vector
        //   (its size must be 4*ssize of source spectrum)
-   double *working_space = new double[4 * ssize];
+   Double_t *working_space = new Double_t[4 * ssize];
    int i, j, k, lindex, posit, lh_gold, l, repet;
-   double lda, ldb, ldc, area, maximum;
+   Double_t lda, ldb, ldc, area, maximum;
    area = 0;
    lh_gold = -1;
    posit = 0;
@@ -2099,9 +2099,9 @@ const char *TSpectrum::Deconvolution(float *source, const float *response,
 
 
 //______________________________________________________________________________
-const char *TSpectrum::DeconvolutionRL(float *source, const float *response,
+const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *response,
                                       int ssize, int numberIterations,
-                                      int numberRepetitions, double boost )
+                                      int numberRepetitions, Double_t boost )
 {
    /* Begin_Html
    <b>One-dimensional deconvolution function.</b>
@@ -2172,9 +2172,9 @@ const char *TSpectrum::DeconvolutionRL(float *source, const float *response,
       Int_t i;
       Double_t nbins = 256;
       Double_t xmin  = 0;
-      Double_t xmax  = (Double_t)nbins;
-      Float_t * source = new float[nbins];
-      Float_t * response = new float[nbins];
+      Double_t xmax  = nbins;
+      Double_t * source = new Double_t[nbins];
+      Double_t * response = new Double_t[nbins];
       TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
       TH1F *d = new TH1F("d","",nbins,xmin,xmax);
       TFile *f = new TFile("spectra\\TSpectrum.root");
@@ -2232,9 +2232,9 @@ const char *TSpectrum::DeconvolutionRL(float *source, const float *response,
       Int_t i;
       Double_t nbins = 256;
       Double_t xmin  = 0;
-      Double_t xmax  = (Double_t)nbins;
-      Float_t * source = new float[nbins];
-      Float_t * response = new float[nbins];
+      Double_t xmax  = nbins;
+      Double_t * source = new Double_t[nbins];
+      Double_t * response = new Double_t[nbins];
       TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
       TH1F *d = new TH1F("d","",nbins,xmin,xmax);
       TFile *f = new TFile("spectra\\TSpectrum.root");
@@ -2266,9 +2266,9 @@ const char *TSpectrum::DeconvolutionRL(float *source, const float *response,
 
        //   working_space-pointer to the working vector
        //   (its size must be 4*ssize of source spectrum)
-   double *working_space = new double[4 * ssize];
+   Double_t *working_space = new Double_t[4 * ssize];
    int i, j, k, lindex, posit, lh_gold, repet, kmin, kmax;
-   double lda, ldb, ldc, maximum;
+   Double_t lda, ldb, ldc, maximum;
    lh_gold = -1;
    posit = 0;
    maximum = 0;
@@ -2362,11 +2362,11 @@ const char *TSpectrum::DeconvolutionRL(float *source, const float *response,
 
 
 //______________________________________________________________________________
-const char *TSpectrum::Unfolding(float *source,
-                                 const float **respMatrix,
+const char *TSpectrum::Unfolding(Double_t *source,
+                                 const Double_t **respMatrix,
                                  int ssizex, int ssizey,
                                  int numberIterations,
-                                 int numberRepetitions, double boost)
+                                 int numberRepetitions, Double_t boost)
 {
    /* Begin_Html
    <b>One-dimensional unfolding function</b>
@@ -2445,12 +2445,12 @@ const char *TSpectrum::Unfolding(float *source,
       Int_t nbinsx = 2048;
       Int_t nbinsy = 10;
       Double_t xmin  = 0;
-      Double_t xmax  = (Double_t)nbinsx;
+      Double_t xmax  = nbinsx;
       Double_t ymin  = 0;
-      Double_t ymax  = (Double_t)nbinsy;
-      Float_t * source = new float[nbinsx];
-      Float_t ** response = new float *[nbinsy];
-      for (i=0;i<nbinsy;i++) response[i]=new float[nbinsx];
+      Double_t ymax  = nbinsy;
+      Double_t * source = new Double_t[nbinsx];
+      Double_t ** response = new Double_t *[nbinsy];
+      for (i=0;i<nbinsy;i++) response[i]=new Double_t[nbinsx];
       TH1F *h = new TH1F("h","",nbinsx,xmin,xmax);
       TH1F *d = new TH1F("d","Decomposition - unfolding",nbinsx,xmin,xmax);
       TH2F *decon_unf_resp = new TH2F("decon_unf_resp","Root File",nbinsy,ymin,ymax,nbinsx,xmin,xmax);
@@ -2478,15 +2478,15 @@ const char *TSpectrum::Unfolding(float *source,
    End_Html */
 
    int i, j, k, lindex, lhx = 0, repet;
-   double lda, ldb, ldc, area;
+   Double_t lda, ldb, ldc, area;
    if (ssizex <= 0 || ssizey <= 0)
       return "Wrong Parameters";
    if (ssizex < ssizey)
       return "Sizex must be greater than sizey)";
    if (numberIterations <= 0)
       return "Number of iterations must be positive";
-   double *working_space =
-       new double[ssizex * ssizey + 2 * ssizey * ssizey + 4 * ssizex];
+   Double_t *working_space =
+       new Double_t[ssizex * ssizey + 2 * ssizey * ssizey + 4 * ssizex];
 
 /*read response matrix*/
    for (j = 0; j < ssizey && lhx != -1; j++) {
@@ -2623,8 +2623,8 @@ const char *TSpectrum::Unfolding(float *source,
 
 
 //______________________________________________________________________________
-Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
-                                     float sigma, double threshold,
+Int_t TSpectrum::SearchHighRes(Double_t *source,Double_t *destVector, int ssize,
+                                     Double_t sigma, Double_t threshold,
                                      bool backgroundRemove,int deconIterations,
                                      bool markov, int averWindow)
 {
@@ -2672,7 +2672,7 @@ Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
      background.
    <li> ability to identify peaks close to the edges of the
      spectrum region. Usually peak finders fail to detect them.
-   <li> resolution, decomposition of doublets and multiplets.
+   <li> resolution, decomposition of Double_tts and multiplets.
      The algorithm should be able to recognize close positioned peaks.
    <li> ability to identify peaks with different sigma.
    </ul>
@@ -2718,15 +2718,15 @@ Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
    #include <TSpectrum>
 
    void SearchHR1() {
-      Float_t fPositionX[100];
-      Float_t fPositionY[100];
+      Double_t fPositionX[100];
+      Double_t fPositionY[100];
       Int_t fNPeaks = 0;
       Int_t i,nfound,bin;
       Double_t nbins = 1024,a;
       Double_t xmin  = 0;
-      Double_t xmax  = (Double_t)nbins;
-      Float_t * source = new float[nbins];
-      Float_t * dest = new float[nbins];
+      Double_t xmax  = nbins;
+      Double_t * source = new Double_t[nbins];
+      Double_t * dest = new Double_t[nbins];
       TH1F *h = new TH1F("h","High resolution peak searching, number of iterations = 3",nbins,xmin,xmax);
       TH1F *d = new TH1F("d","",nbins,xmin,xmax);
       TFile *f = new TFile("spectra\\TSpectrum.root");
@@ -2738,7 +2738,7 @@ Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
       h->Draw("L");
       TSpectrum *s = new TSpectrum();
       nfound = s->SearchHighRes(source, dest, nbins, 8, 2, kTRUE, 3, kTRUE, 3);
-      Float_t *xpeaks = s->GetPositionX();
+      Double_t *xpeaks = s->GetPositionX();
       for (i = 0; i < nfound; i++) {
          a=xpeaks[i];
          bin = 1 + Int_t(a + 0.5);
@@ -2806,15 +2806,15 @@ Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
    #include <TSpectrum>
 
    void SearchHR3() {
-      Float_t fPositionX[100];
-      Float_t fPositionY[100];
+      Double_t fPositionX[100];
+      Double_t fPositionY[100];
       Int_t fNPeaks = 0;
       Int_t i,nfound,bin;
       Double_t nbins = 1024,a;
       Double_t xmin  = 0;
-      Double_t xmax  = (Double_t)nbins;
-      Float_t * source = new float[nbins];
-      Float_t * dest = new float[nbins];
+      Double_t xmax  = nbins;
+      Double_t * source = new Double_t[nbins];
+      Double_t * dest = new Double_t[nbins];
       TH1F *h = new TH1F("h","Influence of # of iterations in deconvolution in peak searching",nbins,xmin,xmax);
       TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
       TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
@@ -2829,7 +2829,7 @@ Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
       h->Draw("L");
       TSpectrum *s = new TSpectrum();
       nfound = s->SearchHighRes(source, dest, nbins, 8, 2, kTRUE, 3, kTRUE, 3);
-      Float_t *xpeaks = s->GetPositionX();
+      Double_t *xpeaks = s->GetPositionX();
       for (i = 0; i < nfound; i++) {
          a=xpeaks[i];
          bin = 1 + Int_t(a + 0.5);
@@ -2870,14 +2870,14 @@ Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
    </pre>
    End_Html */
 
-   int i, j, numberIterations = (int)(7 * sigma + 0.5);
-   double a, b, c;
+   int i, j, numberIterations = (Int_t)(7 * sigma + 0.5);
+   Double_t a, b, c;
    int k, lindex, posit, imin, imax, jmin, jmax, lh_gold, priz;
-   double lda, ldb, ldc, area, maximum, maximum_decon;
+   Double_t lda, ldb, ldc, area, maximum, maximum_decon;
    int xmin, xmax, l, peak_index = 0, size_ext = ssize + 2 * numberIterations, shift = numberIterations, bw = 2, w;
-   double maxch;
-   double nom, nip, nim, sp, sm, plocha = 0;
-   double m0low=0,m1low=0,m2low=0,l0low=0,l1low=0,detlow,av,men;
+   Double_t maxch;
+   Double_t nom, nip, nim, sp, sm, plocha = 0;
+   Double_t m0low=0,m1low=0,m2low=0,l0low=0,l1low=0,detlow,av,men;
    if (sigma < 1) {
       Error("SearchHighRes", "Invalid sigma, must be greater than or equal to 1");
       return 0;
@@ -2888,7 +2888,7 @@ Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
       return 0;
    }
 
-   j = (int) (5.0 * sigma + 0.5);
+   j = (Int_t) (5.0 * sigma + 0.5);
    if (j >= PEAK_WINDOW / 2) {
       Error("SearchHighRes", "Too large sigma");
       return 0;
@@ -2928,9 +2928,9 @@ Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
       l1low = 0;
    }
 
-   i = (int)(7 * sigma + 0.5);
+   i = (Int_t)(7 * sigma + 0.5);
    i = 2 * i;
-   double *working_space = new double [7 * (ssize + i)];
+   Double_t *working_space = new Double_t [7 * (ssize + i)];
    for (j=0;j<7 * (ssize + i);j++) working_space[j] = 0;
    for(i = 0; i < size_ext; i++){
       if(i < shift){
@@ -3120,9 +3120,9 @@ Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
    maximum = 0;
 //generate response vector
    for(i = 0; i < size_ext; i++){
-      lda = (double)i - 3 * sigma;
+      lda = (Double_t)i - 3 * sigma;
       lda = lda * lda / (2 * sigma * sigma);
-      j = (int)(1000 * TMath::Exp(-lda));
+      j = (Int_t)(1000 * TMath::Exp(-lda));
       lda = j;
       if(lda != 0)
          lh_gold = i + 1;
@@ -3249,7 +3249,7 @@ Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
          if(i >= shift && i < ssize + shift){
             if(working_space[i] > lda*maximum_decon && working_space[6 * size_ext + i] > threshold * maximum / 100.0){
                for(j = i - 1, a = 0, b = 0; j <= i + 1; j++){
-                  a += (double)(j - shift) * working_space[j];
+                  a += (Double_t)(j - shift) * working_space[j];
                   b += working_space[j];
                }
                a = a / b;
@@ -3265,7 +3265,7 @@ Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
 
                else{
                   for(j = 0, priz = 0; j < peak_index && priz == 0; j++){
-                     if(working_space[6 * size_ext + shift + (int)a] > working_space[6 * size_ext + shift + (int)fPositionX[j]])
+                     if(working_space[6 * size_ext + shift + (Int_t)a] > working_space[6 * size_ext + shift + (Int_t)fPositionX[j]])
                         priz = 1;
                   }
                   if(priz == 0){
@@ -3300,8 +3300,8 @@ Int_t TSpectrum::SearchHighRes(float *source,float *destVector, int ssize,
 
 
 //______________________________________________________________________________
-Int_t TSpectrum::Search1HighRes(float *source,float *destVector, int ssize,
-                                     float sigma, double threshold,
+Int_t TSpectrum::Search1HighRes(Double_t *source,Double_t *destVector, int ssize,
+                                     Double_t sigma, Double_t threshold,
                                      bool backgroundRemove,int deconIterations,
                                      bool markov, int averWindow)
 {

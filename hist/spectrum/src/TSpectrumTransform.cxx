@@ -88,7 +88,7 @@ TSpectrumTransform::~TSpectrumTransform()
 }
 
 //_____________________________________________________________________________
-void TSpectrumTransform::Haar(float *working_space, int num, int direction) 
+void TSpectrumTransform::Haar(Double_t *working_space, int num, int direction) 
 {   
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -101,8 +101,8 @@ void TSpectrumTransform::Haar(float *working_space, int num, int direction)
 //                                                                              //
 //////////////////////////////////////////////////////////////////////////////////
    int i, ii, li, l2, l3, j, jj, jj1, lj, iter, m, jmin, jmax;
-   double a, b, c, wlk;
-   float val;
+   Double_t a, b, c, wlk;
+   Double_t val;
    for (i = 0; i < num; i++)
       working_space[i + num] = 0;
    i = num;
@@ -114,7 +114,7 @@ void TSpectrumTransform::Haar(float *working_space, int num, int direction)
    if (direction == kTransformForward) {
       for (m = 1; m <= iter; m++) {
          li = iter + 1 - m;
-         l2 = (int) TMath::Power(2, li - 1);
+         l2 = (Int_t) TMath::Power(2, li - 1);
          for (i = 0; i < (2 * l2); i++) {
             working_space[num + i] = working_space[i];
          }
@@ -137,8 +137,8 @@ void TSpectrumTransform::Haar(float *working_space, int num, int direction)
    for (ii = 2; ii <= iter; ii++) {
       i = ii - 1;
       wlk = 1 / TMath::Sqrt(TMath::Power(2, iter - i));
-      jmin = (int) TMath::Power(2, i);
-      jmax = (int) TMath::Power(2, ii) - 1;
+      jmin = (Int_t) TMath::Power(2, i);
+      jmax = (Int_t) TMath::Power(2, ii) - 1;
       for (j = jmin; j <= jmax; j++) {
          val = working_space[j];
          a = val;
@@ -152,7 +152,7 @@ void TSpectrumTransform::Haar(float *working_space, int num, int direction)
          a = 2;
          b = m - 1;
          c = TMath::Power(a, b);
-         li = (int) c;
+         li = (Int_t) c;
          for (i = 0; i < (2 * li); i++) {
             working_space[i + num] = working_space[i];
          }
@@ -171,7 +171,7 @@ void TSpectrumTransform::Haar(float *working_space, int num, int direction)
 }
 
 //____________________________________________________________________________    
-void TSpectrumTransform::Walsh(float *working_space, int num) 
+void TSpectrumTransform::Walsh(Double_t *working_space, int num) 
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -183,8 +183,8 @@ void TSpectrumTransform::Walsh(float *working_space, int num)
 //                                                                              //
 //////////////////////////////////////////////////////////////////////////////////
    int i, m, nump = 1, mnum, mnum2, mp, ib, mp2, mnum21, iba, iter;
-   double a;
-   float val1, val2;
+   Double_t a;
+   Double_t val1, val2;
    for (i = 0; i < num; i++)
       working_space[i + num] = 0;
    i = num;
@@ -228,7 +228,7 @@ void TSpectrumTransform::Walsh(float *working_space, int num)
 }
 
 //____________________________________________________________________________    
-void TSpectrumTransform::BitReverse(float *working_space, int num) 
+void TSpectrumTransform::BitReverse(Double_t *working_space, int num) 
 {   
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -268,7 +268,7 @@ void TSpectrumTransform::BitReverse(float *working_space, int num)
 }
 
 //____________________________________________________________________________    
-void TSpectrumTransform::Fourier(float *working_space, int num, int hartley,
+void TSpectrumTransform::Fourier(Double_t *working_space, int num, int hartley,
                           int direction, int zt_clear) 
 {   
 //////////////////////////////////////////////////////////////////////////////////
@@ -283,9 +283,9 @@ void TSpectrumTransform::Fourier(float *working_space, int num, int hartley,
 //                                                                              //
 //////////////////////////////////////////////////////////////////////////////////
    int nxp2, nxp, i, j, k, m, iter, mxp, j1, j2, n1, n2, it;
-   double a, b, c, d, sign, wpwr, arg, wr, wi, tr, ti, pi =
+   Double_t a, b, c, d, sign, wpwr, arg, wr, wi, tr, ti, pi =
        3.14159265358979323846;
-   float val1, val2, val3, val4;
+   Double_t val1, val2, val3, val4;
    if (direction == kTransformForward && zt_clear == 0) {
       for (i = 0; i < num; i++)
          working_space[i + num] = 0;
@@ -393,7 +393,7 @@ void TSpectrumTransform::Fourier(float *working_space, int num, int hartley,
 }
 
 //____________________________________________________________________________    
-void TSpectrumTransform::BitReverseHaar(float *working_space, int shift, int num,
+void TSpectrumTransform::BitReverseHaar(Double_t *working_space, int shift, int num,
                                  int start) 
 {
 //////////////////////////////////////////////////////////////////////////////////
@@ -441,7 +441,7 @@ void TSpectrumTransform::BitReverseHaar(float *working_space, int shift, int num
 }
 
 //____________________________________________________________________________    
-int TSpectrumTransform::GeneralExe(float *working_space, int zt_clear, int num,
+int TSpectrumTransform::GeneralExe(Double_t *working_space, int zt_clear, int num,
                             int degree, int type) 
 {
 //////////////////////////////////////////////////////////////////////////////////
@@ -458,9 +458,9 @@ int TSpectrumTransform::GeneralExe(float *working_space, int zt_clear, int num,
 //////////////////////////////////////////////////////////////////////////////////
    int i, j, k, m, nump, mnum, mnum2, mp, ib, mp2, mnum21, iba, iter,
        mp2step, mppom, ring;
-   double a, b, c, d, wpwr, arg, wr, wi, tr, ti, pi =
+   Double_t a, b, c, d, wpwr, arg, wr, wi, tr, ti, pi =
        3.14159265358979323846;
-   float val1, val2, val3, val4, a0oldr = 0, b0oldr = 0, a0r, b0r;
+   Double_t val1, val2, val3, val4, a0oldr = 0, b0oldr = 0, a0r, b0r;
    if (zt_clear == 0) {
       for (i = 0; i < num; i++)
          working_space[i + 2 * num] = 0;
@@ -562,7 +562,7 @@ int TSpectrumTransform::GeneralExe(float *working_space, int zt_clear, int num,
 }
 
 //____________________________________________________________________________    
-int TSpectrumTransform::GeneralInv(float *working_space, int num, int degree,
+int TSpectrumTransform::GeneralInv(Double_t *working_space, int num, int degree,
                             int type) 
 {
 //////////////////////////////////////////////////////////////////////////////////
@@ -579,9 +579,9 @@ int TSpectrumTransform::GeneralInv(float *working_space, int num, int degree,
    int i, j, k, m, nump =
        1, mnum, mnum2, mp, ib, mp2, mnum21, iba, iter, mp2step, mppom,
        ring;
-   double a, b, c, d, wpwr, arg, wr, wi, tr, ti, pi =
+   Double_t a, b, c, d, wpwr, arg, wr, wi, tr, ti, pi =
        3.14159265358979323846;
-   float val1, val2, val3, val4, a0oldr = 0, b0oldr = 0, a0r, b0r;
+   Double_t val1, val2, val3, val4, a0oldr = 0, b0oldr = 0, a0r, b0r;
    i = num;
    iter = 0;
    for (; i > 1;) {
@@ -687,7 +687,7 @@ int TSpectrumTransform::GeneralInv(float *working_space, int num, int degree,
 //////////TRANSFORM FUNCTION - CALCULATES DIFFERENT 1-D DIRECT AND INVERSE ORTHOGONAL TRANSFORMS//////
 
 //____________________________________________________________________________    
-void TSpectrumTransform::Transform(const float *source, float *destVector)
+void TSpectrumTransform::Transform(const Double_t *source, Double_t *destVector)
 {   
 ///////////////////////////////////////////////////////////////////////////////
 //        ONE-DIMENSIONAL TRANSFORM FUNCTION                                 
@@ -738,8 +738,8 @@ enhancement of experimental data</p>
 <p class=MsoNormal><i>Function:</i></p>
 
 <p class=MsoNormal><b>void TSpectrumTransform::Transform(const <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> *fSource,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a>
+href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> *fSource,
+<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
 *fDest)</b></p>
 
 <p class=MsoNormal style='text-align:justify'>&nbsp;</p>
@@ -901,10 +901,10 @@ do</span></p>
 (Double_t)nbins;</span></p>
 
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>Float_t * source = new float[nbins];</span></p>
+style='font-size:10.0pt'>Double_t * source = new Double_t[nbins];</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t * dest = new
-float[nbins];   </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t * dest = new
+Double_t[nbins];   </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *h = new TH1F(&quot;h&quot;,&quot;Transformed
 spectrum using Cosine transform&quot;,nbins,xmin,xmax);</span></p>
@@ -955,19 +955,19 @@ h-&gt;SetLineColor(kRed);      </span></p>
 <!-- */
 // --> End_Html
    int i, j=0, k = 1, m, l;
-   float val;
-   double a, b, pi = 3.14159265358979323846;
-   float *working_space = 0;
+   Double_t val;
+   Double_t a, b, pi = 3.14159265358979323846;
+   Double_t *working_space = 0;
    if (fTransformType >= kTransformFourierWalsh && fTransformType <= kTransformSinHaar) {
       if (fTransformType >= kTransformCosWalsh)
          fDegree += 1;
-      k = (int) TMath::Power(2, fDegree);
+      k = (Int_t) TMath::Power(2, fDegree);
       j = fSize / k;
    }
    switch (fTransformType) {
    case kTransformHaar:
    case kTransformWalsh:
-      working_space = new float[2 * fSize];
+      working_space = new Double_t[2 * fSize];
       break;
    case kTransformCos:
    case kTransformSin:
@@ -976,13 +976,13 @@ h-&gt;SetLineColor(kRed);      </span></p>
    case kTransformFourierWalsh:
    case kTransformFourierHaar:
    case kTransformWalshHaar:
-      working_space = new float[4 * fSize];
+      working_space = new Double_t[4 * fSize];
       break;
    case kTransformCosWalsh:
    case kTransformCosHaar:
    case kTransformSinWalsh:
    case kTransformSinHaar:
-      working_space = new float[8 * fSize];
+      working_space = new Double_t[8 * fSize];
       break;
    }
    if (fDirection == kTransformForward) {
@@ -1015,7 +1015,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
          }
          Fourier(working_space, fSize, 0, kTransformForward, 0);
          for (i = 0; i < fSize / 2; i++) {
-            a = pi * (double) i / (double) fSize;
+            a = pi * (Double_t) i / (Double_t) fSize;
             a = TMath::Cos(a);
             b = working_space[i];
             a = b / a;
@@ -1035,7 +1035,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
          }
          Fourier(working_space, fSize, 0, kTransformForward, 0);
          for (i = 0; i < fSize / 2; i++) {
-            a = pi * (double) i / (double) fSize;
+            a = pi * (Double_t) i / (Double_t) fSize;
             a = TMath::Sin(a);
             b = working_space[i];
             if (a != 0)
@@ -1078,7 +1078,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
             val = source[i];
             if (fTransformType == kTransformCosWalsh
                  || fTransformType == kTransformCosHaar) {
-               j = (int) TMath::Power(2, fDegree) / 2;
+               j = (Int_t) TMath::Power(2, fDegree) / 2;
                k = i / j;
                k = 2 * k * j;
                working_space[k + i % j] = val;
@@ -1087,7 +1087,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
             
             else if (fTransformType == kTransformSinWalsh
                      || fTransformType == kTransformSinHaar) {
-               j = (int) TMath::Power(2, fDegree) / 2;
+               j = (Int_t) TMath::Power(2, fDegree) / 2;
                k = i / j;
                k = 2 * k * j;
                working_space[k + i % j] = val;
@@ -1107,7 +1107,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
          
          else if (fTransformType == kTransformCosWalsh
                   || fTransformType == kTransformCosHaar) {
-            m = (int) TMath::Power(2, fDegree);
+            m = (Int_t) TMath::Power(2, fDegree);
             l = 2 * fSize / m;
             for (i = 0; i < l; i++)
                BitReverseHaar(working_space, 2 * fSize, m, i * m);
@@ -1115,7 +1115,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
             for (i = 0; i < fSize; i++) {
                k = i / j;
                k = 2 * k * j;
-               a = pi * (double) (i % j) / (double) (2 * j);
+               a = pi * (Double_t) (i % j) / (Double_t) (2 * j);
                a = TMath::Cos(a);
                b = working_space[k + i % j];
                if (i % j == 0)
@@ -1130,7 +1130,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
          
          else if (fTransformType == kTransformSinWalsh
                   || fTransformType == kTransformSinHaar) {
-            m = (int) TMath::Power(2, fDegree);
+            m = (Int_t) TMath::Power(2, fDegree);
             l = 2 * fSize / m;
             for (i = 0; i < l; i++)
                BitReverseHaar(working_space, 2 * fSize, m, i * m);
@@ -1138,7 +1138,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
             for (i = 0; i < fSize; i++) {
                k = i / j;
                k = 2 * k * j;
-               a = pi * (double) (i % j) / (double) (2 * j);
+               a = pi * (Double_t) (i % j) / (Double_t) (2 * j);
                a = TMath::Cos(a);
                b = working_space[j + k + i % j];
                if (i % j == 0)
@@ -1151,10 +1151,10 @@ h-&gt;SetLineColor(kRed);      </span></p>
             }
          }
          if (fTransformType > kTransformWalshHaar)
-            k = (int) TMath::Power(2, fDegree - 1);
+            k = (Int_t) TMath::Power(2, fDegree - 1);
          
          else
-            k = (int) TMath::Power(2, fDegree);
+            k = (Int_t) TMath::Power(2, fDegree);
          j = fSize / k;
          for (i = 0, l = 0; i < fSize; i++, l = (l + k) % fSize) {
             working_space[fSize + i] = working_space[l + i / j];
@@ -1207,11 +1207,11 @@ h-&gt;SetLineColor(kRed);      </span></p>
          fSize = 2 * fSize;
          working_space[0] = working_space[0] * TMath::Sqrt(2.0);
          for (i = 0; i < fSize / 2; i++) {
-            a = pi * (double) i / (double) fSize;
+            a = pi * (Double_t) i / (Double_t) fSize;
             b = TMath::Sin(a);
             a = TMath::Cos(a);
-            working_space[i + fSize] = (double) working_space[i] * b;
-            working_space[i] = (double) working_space[i] * a;
+            working_space[i + fSize] = (Double_t) working_space[i] * b;
+            working_space[i] = (Double_t) working_space[i] * a;
          } for (i = 2; i <= (fSize / 2); i++) {
             working_space[fSize - i + 1] = working_space[i - 1];
             working_space[fSize - i + 1 + fSize] =
@@ -1232,11 +1232,11 @@ h-&gt;SetLineColor(kRed);      </span></p>
          working_space[fSize / 2] =
              working_space[fSize / 2 - 1] * TMath::Sqrt(2.0);
          for (i = fSize / 2 - 1; i > 0; i--) {
-            a = pi * (double) i / (double) fSize;
+            a = pi * (Double_t) i / (Double_t) fSize;
             working_space[i + fSize] =
-                -(double) working_space[i - 1] * TMath::Cos(a);
+                -(Double_t) working_space[i - 1] * TMath::Cos(a);
             working_space[i] =
-                (double) working_space[i - 1] * TMath::Sin(a);
+                (Double_t) working_space[i - 1] * TMath::Sin(a);
          } for (i = 2; i <= (fSize / 2); i++) {
             working_space[fSize - i + 1] = working_space[i - 1];
             working_space[fSize - i + 1 + fSize] =
@@ -1285,10 +1285,10 @@ h-&gt;SetLineColor(kRed);      </span></p>
             }
          }
          if (fTransformType > kTransformWalshHaar)
-            k = (int) TMath::Power(2, fDegree - 1);
+            k = (Int_t) TMath::Power(2, fDegree - 1);
          
          else
-            k = (int) TMath::Power(2, fDegree);
+            k = (Int_t) TMath::Power(2, fDegree);
          j = fSize / k;
          for (i = 0, l = 0; i < fSize; i++, l = (l + k) % fSize) {
             working_space[fSize + l + i / j] = working_space[i];
@@ -1310,13 +1310,13 @@ h-&gt;SetLineColor(kRed);      </span></p>
          
          else if (fTransformType == kTransformCosWalsh
                   || fTransformType == kTransformCosHaar) {
-            j = (int) TMath::Power(2, fDegree) / 2;
-            m = (int) TMath::Power(2, fDegree);
+            j = (Int_t) TMath::Power(2, fDegree) / 2;
+            m = (Int_t) TMath::Power(2, fDegree);
             l = 2 * fSize / m;
             for (i = 0; i < fSize; i++) {
                k = i / j;
                k = 2 * k * j;
-               a = pi * (double) (i % j) / (double) (2 * j);
+               a = pi * (Double_t) (i % j) / (Double_t) (2 * j);
                if (i % j == 0) {
                   working_space[2 * fSize + k + i % j] =
                       working_space[i] * TMath::Sqrt(2.0);
@@ -1327,9 +1327,9 @@ h-&gt;SetLineColor(kRed);      </span></p>
                   b = TMath::Sin(a);
                   a = TMath::Cos(a);
                   working_space[4 * fSize + 2 * fSize + k + i % j] =
-                      -(double) working_space[i] * b;
+                      -(Double_t) working_space[i] * b;
                   working_space[2 * fSize + k + i % j] =
-                      (double) working_space[i] * a;
+                      (Double_t) working_space[i] * a;
             } } for (i = 0; i < fSize; i++) {
                k = i / j;
                k = 2 * k * j;
@@ -1351,7 +1351,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
                    working_space[4 * fSize + 2 * fSize + i];
             }
             GeneralInv(working_space, 2 * fSize, fDegree, fTransformType);
-            m = (int) TMath::Power(2, fDegree);
+            m = (Int_t) TMath::Power(2, fDegree);
             l = 2 * fSize / m;
             for (i = 0; i < l; i++)
                BitReverseHaar(working_space, 2 * fSize, m, i * m);
@@ -1359,13 +1359,13 @@ h-&gt;SetLineColor(kRed);      </span></p>
          
          else if (fTransformType == kTransformSinWalsh
                   || fTransformType == kTransformSinHaar) {
-            j = (int) TMath::Power(2, fDegree) / 2;
-            m = (int) TMath::Power(2, fDegree);
+            j = (Int_t) TMath::Power(2, fDegree) / 2;
+            m = (Int_t) TMath::Power(2, fDegree);
             l = 2 * fSize / m;
             for (i = 0; i < fSize; i++) {
                k = i / j;
                k = 2 * k * j;
-               a = pi * (double) (i % j) / (double) (2 * j);
+               a = pi * (Double_t) (i % j) / (Double_t) (2 * j);
                if (i % j == 0) {
                   working_space[2 * fSize + k + j + i % j] =
                       working_space[j + k / 2 - i % j -
@@ -1377,9 +1377,9 @@ h-&gt;SetLineColor(kRed);      </span></p>
                   b = TMath::Sin(a);
                   a = TMath::Cos(a);
                   working_space[4 * fSize + 2 * fSize + k + j + i % j] =
-                      -(double) working_space[j + k / 2 - i % j - 1] * b;
+                      -(Double_t) working_space[j + k / 2 - i % j - 1] * b;
                   working_space[2 * fSize + k + j + i % j] =
-                      (double) working_space[j + k / 2 - i % j - 1] * a;
+                      (Double_t) working_space[j + k / 2 - i % j - 1] * a;
             } } for (i = 0; i < fSize; i++) {
                k = i / j;
                k = 2 * k * j;
@@ -1426,7 +1426,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
 //////////FilterZonal FUNCTION - CALCULATES DIFFERENT 1-D ORTHOGONAL TRANSFORMS, SETS GIVEN REGION TO FILTER COEFFICIENT AND TRANSFORMS IT BACK//////
 
 //______________________________________________________________________________
-void TSpectrumTransform::FilterZonal(const float *source, float *destVector)
+void TSpectrumTransform::FilterZonal(const Double_t *source, Double_t *destVector)
 {   
 ////////////////////////////////////////////////////////////////////////////////
 //        ONE-DIMENSIONAL FILTER ZONAL FUNCTION                               
@@ -1458,8 +1458,8 @@ void TSpectrumTransform::FilterZonal(const float *source, float *destVector)
 <p class=MsoNormal><i>Function:</i></p>
 
 <p class=MsoNormal><b>void TSpectrumTransform::FilterZonal(const <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> *fSource,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> *fDest)</b></p>
+href="http://root.cern.ch/root/html/ListOfTypes.html#Double_t">Double_t</a> *fSource,
+<a href="http://root.cern.ch/root/html/ListOfTypes.html#Double_t">Double_t</a> *fDest)</b></p>
 
 <p class=MsoNormal style='text-align:justify'>&nbsp;</p>
 
@@ -1517,10 +1517,10 @@ do</span></p>
 (Double_t)nbins;</span></p>
 
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>Float_t * source = new float[nbins];</span></p>
+style='font-size:10.0pt'>Double_t * source = new Double_t[nbins];</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t * dest = new
-float[nbins];   </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t * dest = new
+Double_t[nbins];   </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *h = new
 TH1F(&quot;h&quot;,&quot;Zonal filtering using Cosine
@@ -1583,19 +1583,19 @@ L&quot;);</span></p>
 <!-- */
 // --> End_Html
    int i, j=0, k = 1, m, l;
-   float val;
-   float *working_space = 0;
-   double a, b, pi = 3.14159265358979323846, old_area, new_area;
+   Double_t val;
+   Double_t *working_space = 0;
+   Double_t a, b, pi = 3.14159265358979323846, old_area, new_area;
    if (fTransformType >= kTransformFourierWalsh && fTransformType <= kTransformSinHaar) {
       if (fTransformType >= kTransformCosWalsh)
          fDegree += 1;
-      k = (int) TMath::Power(2, fDegree);
+      k = (Int_t) TMath::Power(2, fDegree);
       j = fSize / k;
    }
    switch (fTransformType) {
    case kTransformHaar:
    case kTransformWalsh:
-      working_space = new float[2 * fSize];
+      working_space = new Double_t[2 * fSize];
       break;
    case kTransformCos:
    case kTransformSin:
@@ -1604,13 +1604,13 @@ L&quot;);</span></p>
    case kTransformFourierWalsh:
    case kTransformFourierHaar:
    case kTransformWalshHaar:
-      working_space = new float[4 * fSize];
+      working_space = new Double_t[4 * fSize];
       break;
    case kTransformCosWalsh:
    case kTransformCosHaar:
    case kTransformSinWalsh:
    case kTransformSinHaar:
-      working_space = new float[8 * fSize];
+      working_space = new Double_t[8 * fSize];
       break;
    }
    switch (fTransformType) {
@@ -1636,7 +1636,7 @@ L&quot;);</span></p>
       }
       Fourier(working_space, fSize, 0, kTransformForward, 0);
       for (i = 0; i < fSize / 2; i++) {
-         a = pi * (double) i / (double) fSize;
+         a = pi * (Double_t) i / (Double_t) fSize;
          a = TMath::Cos(a);
          b = working_space[i];
          a = b / a;
@@ -1654,7 +1654,7 @@ L&quot;);</span></p>
       }
       Fourier(working_space, fSize, 0, kTransformForward, 0);
       for (i = 0; i < fSize / 2; i++) {
-         a = pi * (double) i / (double) fSize;
+         a = pi * (Double_t) i / (Double_t) fSize;
          a = TMath::Sin(a);
          b = working_space[i];
          if (a != 0)
@@ -1688,7 +1688,7 @@ L&quot;);</span></p>
       for (i = 0; i < fSize; i++) {
          val = source[i];
          if (fTransformType == kTransformCosWalsh || fTransformType == kTransformCosHaar) {
-            j = (int) TMath::Power(2, fDegree) / 2;
+            j = (Int_t) TMath::Power(2, fDegree) / 2;
             k = i / j;
             k = 2 * k * j;
             working_space[k + i % j] = val;
@@ -1697,7 +1697,7 @@ L&quot;);</span></p>
          
          else if (fTransformType == kTransformSinWalsh
                   || fTransformType == kTransformSinHaar) {
-            j = (int) TMath::Power(2, fDegree) / 2;
+            j = (Int_t) TMath::Power(2, fDegree) / 2;
             k = i / j;
             k = 2 * k * j;
             working_space[k + i % j] = val;
@@ -1716,7 +1716,7 @@ L&quot;);</span></p>
       }
       
       else if (fTransformType == kTransformCosWalsh || fTransformType == kTransformCosHaar) {
-         m = (int) TMath::Power(2, fDegree);
+         m = (Int_t) TMath::Power(2, fDegree);
          l = 2 * fSize / m;
          for (i = 0; i < l; i++)
             BitReverseHaar(working_space, 2 * fSize, m, i * m);
@@ -1724,7 +1724,7 @@ L&quot;);</span></p>
          for (i = 0; i < fSize; i++) {
             k = i / j;
             k = 2 * k * j;
-            a = pi * (double) (i % j) / (double) (2 * j);
+            a = pi * (Double_t) (i % j) / (Double_t) (2 * j);
             a = TMath::Cos(a);
             b = working_space[k + i % j];
             if (i % j == 0)
@@ -1738,7 +1738,7 @@ L&quot;);</span></p>
       }
       
       else if (fTransformType == kTransformSinWalsh || fTransformType == kTransformSinHaar) {
-         m = (int) TMath::Power(2, fDegree);
+         m = (Int_t) TMath::Power(2, fDegree);
          l = 2 * fSize / m;
          for (i = 0; i < l; i++)
             BitReverseHaar(working_space, 2 * fSize, m, i * m);
@@ -1746,7 +1746,7 @@ L&quot;);</span></p>
          for (i = 0; i < fSize; i++) {
             k = i / j;
             k = 2 * k * j;
-            a = pi * (double) (i % j) / (double) (2 * j);
+            a = pi * (Double_t) (i % j) / (Double_t) (2 * j);
             a = TMath::Cos(a);
             b = working_space[j + k + i % j];
             if (i % j == 0)
@@ -1759,10 +1759,10 @@ L&quot;);</span></p>
          }
       }
       if (fTransformType > kTransformWalshHaar)
-         k = (int) TMath::Power(2, fDegree - 1);
+         k = (Int_t) TMath::Power(2, fDegree - 1);
       
       else
-         k = (int) TMath::Power(2, fDegree);
+         k = (Int_t) TMath::Power(2, fDegree);
       j = fSize / k;
       for (i = 0, l = 0; i < fSize; i++, l = (l + k) % fSize) {
          working_space[fSize + i] = working_space[l + i / j];
@@ -1842,11 +1842,11 @@ L&quot;);</span></p>
       fSize = 2 * fSize;
       working_space[0] = working_space[0] * TMath::Sqrt(2.0);
       for (i = 0; i < fSize / 2; i++) {
-         a = pi * (double) i / (double) fSize;
+         a = pi * (Double_t) i / (Double_t) fSize;
          b = TMath::Sin(a);
          a = TMath::Cos(a);
-         working_space[i + fSize] = (double) working_space[i] * b;
-         working_space[i] = (double) working_space[i] * a;
+         working_space[i + fSize] = (Double_t) working_space[i] * b;
+         working_space[i] = (Double_t) working_space[i] * a;
       } for (i = 2; i <= (fSize / 2); i++) {
          working_space[fSize - i + 1] = working_space[i - 1];
          working_space[fSize - i + 1 + fSize] =
@@ -1864,10 +1864,10 @@ L&quot;);</span></p>
       working_space[fSize / 2] =
           working_space[fSize / 2 - 1] * TMath::Sqrt(2.0);
       for (i = fSize / 2 - 1; i > 0; i--) {
-         a = pi * (double) i / (double) fSize;
+         a = pi * (Double_t) i / (Double_t) fSize;
          working_space[i + fSize] =
-             -(double) working_space[i - 1] * TMath::Cos(a);
-         working_space[i] = (double) working_space[i - 1] * TMath::Sin(a);
+             -(Double_t) working_space[i - 1] * TMath::Cos(a);
+         working_space[i] = (Double_t) working_space[i - 1] * TMath::Sin(a);
       } for (i = 2; i <= (fSize / 2); i++) {
          working_space[fSize - i + 1] = working_space[i - 1];
          working_space[fSize - i + 1 + fSize] =
@@ -1901,10 +1901,10 @@ L&quot;);</span></p>
    case kTransformSinWalsh:
    case kTransformSinHaar:
       if (fTransformType > kTransformWalshHaar)
-         k = (int) TMath::Power(2, fDegree - 1);
+         k = (Int_t) TMath::Power(2, fDegree - 1);
       
       else
-         k = (int) TMath::Power(2, fDegree);
+         k = (Int_t) TMath::Power(2, fDegree);
       j = fSize / k;
       for (i = 0, l = 0; i < fSize; i++, l = (l + k) % fSize) {
          working_space[fSize + l + i / j] = working_space[i];
@@ -1924,13 +1924,13 @@ L&quot;);</span></p>
       }
       
       else if (fTransformType == kTransformCosWalsh || fTransformType == kTransformCosHaar) {
-         j = (int) TMath::Power(2, fDegree) / 2;
-         m = (int) TMath::Power(2, fDegree);
+         j = (Int_t) TMath::Power(2, fDegree) / 2;
+         m = (Int_t) TMath::Power(2, fDegree);
          l = 2 * fSize / m;
          for (i = 0; i < fSize; i++) {
             k = i / j;
             k = 2 * k * j;
-            a = pi * (double) (i % j) / (double) (2 * j);
+            a = pi * (Double_t) (i % j) / (Double_t) (2 * j);
             if (i % j == 0) {
                working_space[2 * fSize + k + i % j] =
                    working_space[i] * TMath::Sqrt(2.0);
@@ -1941,9 +1941,9 @@ L&quot;);</span></p>
                b = TMath::Sin(a);
                a = TMath::Cos(a);
                working_space[4 * fSize + 2 * fSize + k + i % j] =
-                   -(double) working_space[i] * b;
+                   -(Double_t) working_space[i] * b;
                working_space[2 * fSize + k + i % j] =
-                   (double) working_space[i] * a;
+                   (Double_t) working_space[i] * a;
          } } for (i = 0; i < fSize; i++) {
             k = i / j;
             k = 2 * k * j;
@@ -1965,20 +1965,20 @@ L&quot;);</span></p>
                 working_space[4 * fSize + 2 * fSize + i];
          }
          GeneralInv(working_space, 2 * fSize, fDegree, fTransformType);
-         m = (int) TMath::Power(2, fDegree);
+         m = (Int_t) TMath::Power(2, fDegree);
          l = 2 * fSize / m;
          for (i = 0; i < l; i++)
             BitReverseHaar(working_space, 2 * fSize, m, i * m);
       }
       
       else if (fTransformType == kTransformSinWalsh || fTransformType == kTransformSinHaar) {
-         j = (int) TMath::Power(2, fDegree) / 2;
-         m = (int) TMath::Power(2, fDegree);
+         j = (Int_t) TMath::Power(2, fDegree) / 2;
+         m = (Int_t) TMath::Power(2, fDegree);
          l = 2 * fSize / m;
          for (i = 0; i < fSize; i++) {
             k = i / j;
             k = 2 * k * j;
-            a = pi * (double) (i % j) / (double) (2 * j);
+            a = pi * (Double_t) (i % j) / (Double_t) (2 * j);
             if (i % j == 0) {
                working_space[2 * fSize + k + j + i % j] =
                    working_space[j + k / 2 - i % j - 1] * TMath::Sqrt(2.0);
@@ -1989,9 +1989,9 @@ L&quot;);</span></p>
                b = TMath::Sin(a);
                a = TMath::Cos(a);
                working_space[4 * fSize + 2 * fSize + k + j + i % j] =
-                   -(double) working_space[j + k / 2 - i % j - 1] * b;
+                   -(Double_t) working_space[j + k / 2 - i % j - 1] * b;
                working_space[2 * fSize + k + j + i % j] =
-                   (double) working_space[j + k / 2 - i % j - 1] * a;
+                   (Double_t) working_space[j + k / 2 - i % j - 1] * a;
          } } for (i = 0; i < fSize; i++) {
             k = i / j;
             k = 2 * k * j;
@@ -2035,7 +2035,7 @@ L&quot;);</span></p>
 
 //////////ENHANCE FUNCTION - CALCULATES DIFFERENT 1-D ORTHOGONAL TRANSFORMS, MULTIPLIES GIVEN REGION BY ENHANCE COEFFICIENT AND TRANSFORMS IT BACK//////
 //___________________________________________________________________________
-void TSpectrumTransform::Enhance(const float *source, float *destVector) 
+void TSpectrumTransform::Enhance(const Double_t *source, Double_t *destVector) 
 {   
 ////////////////////////////////////////////////////////////////////////////////
 //        ONE-DIMENSIONAL ENHANCE ZONAL FUNCTION                             
@@ -2066,8 +2066,8 @@ void TSpectrumTransform::Enhance(const float *source, float *destVector)
 <p class=MsoNormal><i>Function:</i></p>
 
 <p class=MsoNormal><b>void TSpectrumTransform::Enhance(const <a
-href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> *fSource,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a>
+href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> *fSource,
+<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
 *fDest)</b></p>
 
 <p class=MsoNormal><b>&nbsp;</b></p>
@@ -2123,10 +2123,10 @@ do</span></p>
 (Double_t)nbins;</span></p>
 
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>Float_t * source = new float[nbins];</span></p>
+style='font-size:10.0pt'>Double_t * source = new Double_t[nbins];</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t * dest = new
-float[nbins];   </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t * dest = new
+Double_t[nbins];   </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *h = new
 TH1F(&quot;h&quot;,&quot;Enhancement using Cosine transform&quot;,nbins,xmin,xmax);</span></p>
@@ -2190,19 +2190,19 @@ L&quot;);</span></p>
 <!-- */
 // --> End_Html
    int i, j=0, k = 1, m, l;
-   float val;
-   float *working_space = 0;
-   double a, b, pi = 3.14159265358979323846, old_area, new_area;
+   Double_t val;
+   Double_t *working_space = 0;
+   Double_t a, b, pi = 3.14159265358979323846, old_area, new_area;
    if (fTransformType >= kTransformFourierWalsh && fTransformType <= kTransformSinHaar) {
       if (fTransformType >= kTransformCosWalsh)
          fDegree += 1;
-      k = (int) TMath::Power(2, fDegree);
+      k = (Int_t) TMath::Power(2, fDegree);
       j = fSize / k;
    }
    switch (fTransformType) {
    case kTransformHaar:
    case kTransformWalsh:
-      working_space = new float[2 * fSize];
+      working_space = new Double_t[2 * fSize];
       break;
    case kTransformCos:
    case kTransformSin:
@@ -2211,13 +2211,13 @@ L&quot;);</span></p>
    case kTransformFourierWalsh:
    case kTransformFourierHaar:
    case kTransformWalshHaar:
-      working_space = new float[4 * fSize];
+      working_space = new Double_t[4 * fSize];
       break;
    case kTransformCosWalsh:
    case kTransformCosHaar:
    case kTransformSinWalsh:
    case kTransformSinHaar:
-      working_space = new float[8 * fSize];
+      working_space = new Double_t[8 * fSize];
       break;
    }
    switch (fTransformType) {
@@ -2243,7 +2243,7 @@ L&quot;);</span></p>
       }
       Fourier(working_space, fSize, 0, kTransformForward, 0);
       for (i = 0; i < fSize / 2; i++) {
-         a = pi * (double) i / (double) fSize;
+         a = pi * (Double_t) i / (Double_t) fSize;
          a = TMath::Cos(a);
          b = working_space[i];
          a = b / a;
@@ -2261,7 +2261,7 @@ L&quot;);</span></p>
       }
       Fourier(working_space, fSize, 0, kTransformForward, 0);
       for (i = 0; i < fSize / 2; i++) {
-         a = pi * (double) i / (double) fSize;
+         a = pi * (Double_t) i / (Double_t) fSize;
          a = TMath::Sin(a);
          b = working_space[i];
          if (a != 0)
@@ -2295,7 +2295,7 @@ L&quot;);</span></p>
       for (i = 0; i < fSize; i++) {
          val = source[i];
          if (fTransformType == kTransformCosWalsh || fTransformType == kTransformCosHaar) {
-            j = (int) TMath::Power(2, fDegree) / 2;
+            j = (Int_t) TMath::Power(2, fDegree) / 2;
             k = i / j;
             k = 2 * k * j;
             working_space[k + i % j] = val;
@@ -2304,7 +2304,7 @@ L&quot;);</span></p>
          
          else if (fTransformType == kTransformSinWalsh
                   || fTransformType == kTransformSinHaar) {
-            j = (int) TMath::Power(2, fDegree) / 2;
+            j = (Int_t) TMath::Power(2, fDegree) / 2;
             k = i / j;
             k = 2 * k * j;
             working_space[k + i % j] = val;
@@ -2323,7 +2323,7 @@ L&quot;);</span></p>
       }
       
       else if (fTransformType == kTransformCosWalsh || fTransformType == kTransformCosHaar) {
-         m = (int) TMath::Power(2, fDegree);
+         m = (Int_t) TMath::Power(2, fDegree);
          l = 2 * fSize / m;
          for (i = 0; i < l; i++)
             BitReverseHaar(working_space, 2 * fSize, m, i * m);
@@ -2331,7 +2331,7 @@ L&quot;);</span></p>
          for (i = 0; i < fSize; i++) {
             k = i / j;
             k = 2 * k * j;
-            a = pi * (double) (i % j) / (double) (2 * j);
+            a = pi * (Double_t) (i % j) / (Double_t) (2 * j);
             a = TMath::Cos(a);
             b = working_space[k + i % j];
             if (i % j == 0)
@@ -2345,7 +2345,7 @@ L&quot;);</span></p>
       }
       
       else if (fTransformType == kTransformSinWalsh || fTransformType == kTransformSinHaar) {
-         m = (int) TMath::Power(2, fDegree);
+         m = (Int_t) TMath::Power(2, fDegree);
          l = 2 * fSize / m;
          for (i = 0; i < l; i++)
             BitReverseHaar(working_space, 2 * fSize, m, i * m);
@@ -2353,7 +2353,7 @@ L&quot;);</span></p>
          for (i = 0; i < fSize; i++) {
             k = i / j;
             k = 2 * k * j;
-            a = pi * (double) (i % j) / (double) (2 * j);
+            a = pi * (Double_t) (i % j) / (Double_t) (2 * j);
             a = TMath::Cos(a);
             b = working_space[j + k + i % j];
             if (i % j == 0)
@@ -2366,10 +2366,10 @@ L&quot;);</span></p>
          }
       }
       if (fTransformType > kTransformWalshHaar)
-         k = (int) TMath::Power(2, fDegree - 1);
+         k = (Int_t) TMath::Power(2, fDegree - 1);
       
       else
-         k = (int) TMath::Power(2, fDegree);
+         k = (Int_t) TMath::Power(2, fDegree);
       j = fSize / k;
       for (i = 0, l = 0; i < fSize; i++, l = (l + k) % fSize) {
          working_space[fSize + i] = working_space[l + i / j];
@@ -2449,11 +2449,11 @@ L&quot;);</span></p>
       fSize = 2 * fSize;
       working_space[0] = working_space[0] * TMath::Sqrt(2.0);
       for (i = 0; i < fSize / 2; i++) {
-         a = pi * (double) i / (double) fSize;
+         a = pi * (Double_t) i / (Double_t) fSize;
          b = TMath::Sin(a);
          a = TMath::Cos(a);
-         working_space[i + fSize] = (double) working_space[i] * b;
-         working_space[i] = (double) working_space[i] * a;
+         working_space[i + fSize] = (Double_t) working_space[i] * b;
+         working_space[i] = (Double_t) working_space[i] * a;
       } for (i = 2; i <= (fSize / 2); i++) {
          working_space[fSize - i + 1] = working_space[i - 1];
          working_space[fSize - i + 1 + fSize] =
@@ -2471,10 +2471,10 @@ L&quot;);</span></p>
       working_space[fSize / 2] =
           working_space[fSize / 2 - 1] * TMath::Sqrt(2.0);
       for (i = fSize / 2 - 1; i > 0; i--) {
-         a = pi * (double) i / (double) fSize;
+         a = pi * (Double_t) i / (Double_t) fSize;
          working_space[i + fSize] =
-             -(double) working_space[i - 1] * TMath::Cos(a);
-         working_space[i] = (double) working_space[i - 1] * TMath::Sin(a);
+             -(Double_t) working_space[i - 1] * TMath::Cos(a);
+         working_space[i] = (Double_t) working_space[i - 1] * TMath::Sin(a);
       } for (i = 2; i <= (fSize / 2); i++) {
          working_space[fSize - i + 1] = working_space[i - 1];
          working_space[fSize - i + 1 + fSize] =
@@ -2508,10 +2508,10 @@ L&quot;);</span></p>
    case kTransformSinWalsh:
    case kTransformSinHaar:
       if (fTransformType > kTransformWalshHaar)
-         k = (int) TMath::Power(2, fDegree - 1);
+         k = (Int_t) TMath::Power(2, fDegree - 1);
       
       else
-         k = (int) TMath::Power(2, fDegree);
+         k = (Int_t) TMath::Power(2, fDegree);
       j = fSize / k;
       for (i = 0, l = 0; i < fSize; i++, l = (l + k) % fSize) {
          working_space[fSize + l + i / j] = working_space[i];
@@ -2531,13 +2531,13 @@ L&quot;);</span></p>
       }
       
       else if (fTransformType == kTransformCosWalsh || fTransformType == kTransformCosHaar) {
-         j = (int) TMath::Power(2, fDegree) / 2;
-         m = (int) TMath::Power(2, fDegree);
+         j = (Int_t) TMath::Power(2, fDegree) / 2;
+         m = (Int_t) TMath::Power(2, fDegree);
          l = 2 * fSize / m;
          for (i = 0; i < fSize; i++) {
             k = i / j;
             k = 2 * k * j;
-            a = pi * (double) (i % j) / (double) (2 * j);
+            a = pi * (Double_t) (i % j) / (Double_t) (2 * j);
             if (i % j == 0) {
                working_space[2 * fSize + k + i % j] =
                    working_space[i] * TMath::Sqrt(2.0);
@@ -2548,9 +2548,9 @@ L&quot;);</span></p>
                b = TMath::Sin(a);
                a = TMath::Cos(a);
                working_space[4 * fSize + 2 * fSize + k + i % j] =
-                   -(double) working_space[i] * b;
+                   -(Double_t) working_space[i] * b;
                working_space[2 * fSize + k + i % j] =
-                   (double) working_space[i] * a;
+                   (Double_t) working_space[i] * a;
          } } for (i = 0; i < fSize; i++) {
             k = i / j;
             k = 2 * k * j;
@@ -2572,20 +2572,20 @@ L&quot;);</span></p>
                 working_space[4 * fSize + 2 * fSize + i];
          }
          GeneralInv(working_space, 2 * fSize, fDegree, fTransformType);
-         m = (int) TMath::Power(2, fDegree);
+         m = (Int_t) TMath::Power(2, fDegree);
          l = 2 * fSize / m;
          for (i = 0; i < l; i++)
             BitReverseHaar(working_space, 2 * fSize, m, i * m);
       }
       
       else if (fTransformType == kTransformSinWalsh || fTransformType == kTransformSinHaar) {
-         j = (int) TMath::Power(2, fDegree) / 2;
-         m = (int) TMath::Power(2, fDegree);
+         j = (Int_t) TMath::Power(2, fDegree) / 2;
+         m = (Int_t) TMath::Power(2, fDegree);
          l = 2 * fSize / m;
          for (i = 0; i < fSize; i++) {
             k = i / j;
             k = 2 * k * j;
-            a = pi * (double) (i % j) / (double) (2 * j);
+            a = pi * (Double_t) (i % j) / (Double_t) (2 * j);
             if (i % j == 0) {
                working_space[2 * fSize + k + j + i % j] =
                    working_space[j + k / 2 - i % j - 1] * TMath::Sqrt(2.0);
@@ -2596,9 +2596,9 @@ L&quot;);</span></p>
                b = TMath::Sin(a);
                a = TMath::Cos(a);
                working_space[4 * fSize + 2 * fSize + k + j + i % j] =
-                   -(double) working_space[j + k / 2 - i % j - 1] * b;
+                   -(Double_t) working_space[j + k / 2 - i % j - 1] * b;
                working_space[2 * fSize + k + j + i % j] =
-                   (double) working_space[j + k / 2 - i % j - 1] * a;
+                   (Double_t) working_space[j + k / 2 - i % j - 1] * a;
          } } for (i = 0; i < fSize; i++) {
             k = i / j;
             k = 2 * k * j;
@@ -2706,7 +2706,7 @@ void TSpectrumTransform::SetDirection(Int_t direction)
 }
 
 //___________________________________________________________________________
-void TSpectrumTransform::SetFilterCoeff(Float_t filterCoeff)
+void TSpectrumTransform::SetFilterCoeff(Double_t filterCoeff)
 {
 //////////////////////////////////////////////////////////////////////////////
 //   SETTER FUNCION                                                      
@@ -2718,7 +2718,7 @@ void TSpectrumTransform::SetFilterCoeff(Float_t filterCoeff)
 }
 
 //___________________________________________________________________________
-void TSpectrumTransform::SetEnhanceCoeff(Float_t enhanceCoeff)
+void TSpectrumTransform::SetEnhanceCoeff(Double_t enhanceCoeff)
 {
 //////////////////////////////////////////////////////////////////////////////
 //   SETTER FUNCION                                                      

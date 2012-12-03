@@ -182,23 +182,23 @@ protected:
    Double_t            Volume(Double_t a,Double_t sx,Double_t sy,Double_t ro);
 
 public:
-   void                FitAwmi(Float_t **source);   
-   void                FitStiefel(Float_t **source);   
-   void                GetAmplitudes(Float_t *amplitudes, Float_t *amplitudesX1, Float_t *amplitudesY1);
-   void                GetAmplitudeErrors(Float_t *amplitudeErrors, Float_t *amplitudeErrorsX1, Float_t *amplitudeErrorsY1);
+   void                FitAwmi(Double_t **source);   
+   void                FitStiefel(Double_t **source);   
+   void                GetAmplitudes(Double_t *amplitudes, Double_t *amplitudesX1, Double_t *amplitudesY1);
+   void                GetAmplitudeErrors(Double_t *amplitudeErrors, Double_t *amplitudeErrorsX1, Double_t *amplitudeErrorsY1);
    void                GetBackgroundParameters(Double_t &a0, Double_t &a0Err, Double_t &ax, Double_t &axErr, Double_t &ay, Double_t &ayErr);
    Double_t            GetChi() const {return fChi;}   
-   void                GetPositions(Float_t *positionsX, Float_t *positionsY, Float_t *positionsX1, Float_t *positionsY1);
-   void                GetPositionErrors(Float_t *positionErrorsX, Float_t *positionErrorsY, Float_t *positionErrorsX1, Float_t *positionErrorsY1);
+   void                GetPositions(Double_t *positionsX, Double_t *positionsY, Double_t *positionsX1, Double_t *positionsY1);
+   void                GetPositionErrors(Double_t *positionErrorsX, Double_t *positionErrorsY, Double_t *positionErrorsX1, Double_t *positionErrorsY1);
    void                GetRo(Double_t &ro, Double_t &roErr);
    void                GetSigmaX(Double_t &sigmaX, Double_t &sigmaErrX);
    void                GetSigmaY(Double_t &sigmaY, Double_t &sigmaErrY);
    void                GetTailParameters(Double_t &txy, Double_t &txyErr, Double_t &tx, Double_t &txErr, Double_t &ty, Double_t &tyErr, Double_t &bx, Double_t &bxErr, Double_t &by, Double_t &byErr, Double_t &sxy, Double_t &sxyErr, Double_t &sx, Double_t &sxErr, Double_t &sy, Double_t &syErr);
-   void                GetVolumes(Float_t *volumes);
-   void                GetVolumeErrors(Float_t *volumeErrors);
+   void                GetVolumes(Double_t *volumes);
+   void                GetVolumeErrors(Double_t *volumeErrors);
    void                SetBackgroundParameters(Double_t a0Init, Bool_t fixA0, Double_t axInit, Bool_t fixAx, Double_t ayInit, Bool_t fixAy);   
    void                SetFitParameters(Int_t xmin,Int_t xmax,Int_t ymin,Int_t ymax, Int_t numberIterations, Double_t alpha, Int_t statisticType, Int_t alphaOptim, Int_t power, Int_t fitTaylor);
-   void                SetPeakParameters(Double_t sigmaX, Bool_t fixSigmaX, Double_t sigmaY, Bool_t fixSigmaY, Double_t ro, Bool_t fixRo, const Float_t *positionInitX, const Bool_t *fixPositionX, const Float_t *positionInitY, const Bool_t *fixPositionY, const Float_t *positionInitX1, const Bool_t *fixPositionX1, const Float_t *positionInitY1, const Bool_t *fixPositionY1, const Float_t *ampInit, const Bool_t *fixAmp, const Float_t *ampInitX1, const Bool_t *fixAmpX1, const Float_t *ampInitY1, const Bool_t *fixAmpY1);   
+   void                SetPeakParameters(Double_t sigmaX, Bool_t fixSigmaX, Double_t sigmaY, Bool_t fixSigmaY, Double_t ro, Bool_t fixRo, const Double_t *positionInitX, const Bool_t *fixPositionX, const Double_t *positionInitY, const Bool_t *fixPositionY, const Double_t *positionInitX1, const Bool_t *fixPositionX1, const Double_t *positionInitY1, const Bool_t *fixPositionY1, const Double_t *ampInit, const Bool_t *fixAmp, const Double_t *ampInitX1, const Bool_t *fixAmpX1, const Double_t *ampInitY1, const Bool_t *fixAmpY1);   
    void                SetTailParameters(Double_t tInitXY, Bool_t fixTxy, Double_t tInitX, Bool_t fixTx, Double_t tInitY, Bool_t fixTy, Double_t bInitX, Bool_t fixBx, Double_t bInitY, Bool_t fixBy, Double_t sInitXY, Bool_t fixSxy, Double_t sInitX, Bool_t fixSx, Double_t sInitY, Bool_t fixSy);
    
    ClassDef(TSpectrum2Fit,1)  //Spectrum2 Fitter using algorithm without matrix inversion and conjugate gradient method for symmetrical matrices (Stiefel-Hestens method)

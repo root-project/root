@@ -65,10 +65,10 @@ TSpectrum3::TSpectrum3() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 
    Int_t n = 100;
    fMaxPeaks   = n;
-   fPosition   = new Float_t[n];
-   fPositionX  = new Float_t[n];
-   fPositionY  = new Float_t[n];
-   fPositionZ  = new Float_t[n];   
+   fPosition   = new Double_t[n];
+   fPositionX  = new Double_t[n];
+   fPositionY  = new Double_t[n];
+   fPositionZ  = new Double_t[n];   
    fResolution = 1;
    fHistogram  = 0;
    fNPeaks     = 0;
@@ -76,7 +76,7 @@ TSpectrum3::TSpectrum3() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 
 
 //______________________________________________________________________________
-TSpectrum3::TSpectrum3(Int_t maxpositions, Float_t resolution) :TNamed("Spectrum", "Miroslav Morhac peak finder") 
+TSpectrum3::TSpectrum3(Int_t maxpositions, Double_t resolution) :TNamed("Spectrum", "Miroslav Morhac peak finder") 
 {   
 //  maxpositions:  maximum number of peaks
 //  resolution:    determines resolution of the neighboring peaks
@@ -86,10 +86,10 @@ TSpectrum3::TSpectrum3(Int_t maxpositions, Float_t resolution) :TNamed("Spectrum
 //                 May be set later through SetResolution.
    Int_t n = TMath::Max(maxpositions, 100);
    fMaxPeaks  = n;
-   fPosition  = new Float_t[n];
-   fPositionX = new Float_t[n];
-   fPositionY = new Float_t[n];
-   fPositionZ = new Float_t[n];   
+   fPosition  = new Double_t[n];
+   fPositionX = new Double_t[n];
+   fPositionY = new Double_t[n];
+   fPositionZ = new Double_t[n];   
    fHistogram = 0;
    fNPeaks    = 0;
    SetResolution(resolution);
@@ -109,7 +109,7 @@ TSpectrum3::~TSpectrum3()
 }
 
 //______________________________________________________________________________
-const char *TSpectrum3::Background(const TH1 * h, int number_of_iterations,
+const char *TSpectrum3::Background(const TH1 * h, Int_t number_of_iterations,
                                    Option_t * option) 
 {
 /////////////////////////////////////////////////////////////////////////////
@@ -181,20 +181,20 @@ Int_t TSpectrum3::Search(const TH1 * hin, Double_t sigma,
    Int_t sizey = hin->GetYaxis()->GetNbins();
    Int_t sizez = hin->GetZaxis()->GetNbins();   
    Int_t i, j, k, binx,biny,binz, npeaks;
-   float *** source = new float **[sizex];
-   float *** dest   = new float **[sizex];
+   Double_t*** source = new Double_t**[sizex];
+   Double_t*** dest   = new Double_t**[sizex];
    for (i = 0; i < sizex; i++) {
-      source[i] = new float *[sizey];
-      dest[i]   = new float *[sizey];
+      source[i] = new Double_t*[sizey];
+      dest[i]   = new Double_t*[sizey];
       for (j = 0; j < sizey; j++) {
-         source[i][j] = new float [sizez];
-         dest[i][j]   = new float [sizez];
+         source[i][j] = new Double_t[sizez];
+         dest[i][j]   = new Double_t[sizez];
          for (k = 0; k < sizez; k++)       
-            source[i][j][k] = (float) hin->GetBinContent(i + 1, j + 1, k + 1);
+            source[i][j][k] = (Double_t) hin->GetBinContent(i + 1, j + 1, k + 1);
       }
    }
    //the smoothing option is used for 1-d but not for 2-d histograms
-   npeaks = SearchHighRes((const float***)source, dest, sizex, sizey, sizez, sigma, 100*threshold, kTRUE, 3, kFALSE, 3);
+   npeaks = SearchHighRes((const Double_t***)source, dest, sizex, sizey, sizez, sigma, 100*threshold, kTRUE, 3, kFALSE, 3);
 
    //The logic in the loop should be improved to use the fact
    //that fPositionX,Y give a precise position inside a bin.
@@ -226,7 +226,7 @@ Int_t TSpectrum3::Search(const TH1 * hin, Double_t sigma,
 
 
 //______________________________________________________________________________
-void TSpectrum3::SetResolution(Float_t resolution) 
+void TSpectrum3::SetResolution(Double_t resolution) 
 {   
 //  resolution: determines resolution of the neighboring peaks
 //              default value is 1 correspond to 3 sigma distance
@@ -240,7 +240,7 @@ void TSpectrum3::SetResolution(Float_t resolution)
 }
 
 //______________________________________________________________________________
-const char *TSpectrum3::Background(float ***spectrum,
+const char *TSpectrum3::Background(Double_t***spectrum,
                        Int_t ssizex, Int_t ssizey, Int_t ssizez,
                        Int_t numberIterationsX,
                        Int_t numberIterationsY,
@@ -332,7 +332,7 @@ number_of_iterations. </p>
 <p class=MsoNormal style='text-align:justify'><b>const <a
 href="http://root.cern.ch/root/html/ListOfTypes.html#char" target="_parent">char</a>*
 </b><a href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrum3::Background</b></a><b>
-(<a href="http://root.cern.ch/root/html/ListOfTypes.html#float" target="_parent">float</a>
+(<a href="http://root.cern.ch/root/html/ListOfTypes.html#double" target="_parent">double</a>
 ***fSpectrum, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int"
 target="_parent">int</a> fSizex, <a
 href="http://root.cern.ch/root/html/ListOfTypes.html#int" target="_parent">int</a>
@@ -472,34 +472,34 @@ nbinsy;   </span></p>
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
 style='font-size:10.0pt'>Int_t zmax  = nbinsz;      </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   float *** source = new
-float **[nbinsx];</span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t*** source = new
+Double_t**[nbinsx];</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   float *** dest = new float
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t*** dest = new Double_t
 **[nbinsx];      </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>      source[i]=new float*
+<p class=MsoNormal><span style='font-size:10.0pt'>      source[i]=new Double_t*
 [nbinsy];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>     
 for(j=0;j&lt;nbinsy;j++)</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>         source[i][j]=new
-float [nbinsz];</span></p>
+Double_t[nbinsz];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   }           </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>      dest[i]=new float*
+<p class=MsoNormal><span style='font-size:10.0pt'>      dest[i]=new Double_t*
 [nbinsy];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>     
 for(j=0;j&lt;nbinsy;j++)</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>         dest[i][j]=new float
+<p class=MsoNormal><span style='font-size:10.0pt'>         dest[i][j]=new Double_t
 [nbinsz];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   }              </span></p>
@@ -665,26 +665,26 @@ back-&gt;Draw(&quot;&quot;);  </span></p>
 
 <!-- */
 // --> End_Html
-   int i, j, x, y, z, sampling, q1, q2, q3;
-   float a, b, c, d, p1, p2, p3, p4, p5, p6, p7, p8, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, r1, r2, r3, r4, r5, r6;
+   Int_t i, j, x, y, z, sampling, q1, q2, q3;
+   Double_t a, b, c, d, p1, p2, p3, p4, p5, p6, p7, p8, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, r1, r2, r3, r4, r5, r6;
    if (ssizex <= 0 || ssizey <= 0 || ssizez <= 0)
       return "Wrong parameters";
    if (numberIterationsX < 1 || numberIterationsY < 1 || numberIterationsZ < 1)
       return "Width of Clipping Window Must Be Positive";
    if (ssizex < 2 * numberIterationsX + 1 || ssizey < 2 * numberIterationsY + 1 || ssizey < 2 * numberIterationsZ + 1)
       return ("Too Large Clipping Window");
-   float ***working_space=new float** [ssizex];
+   Double_t*** working_space=new Double_t**[ssizex];
    for(i=0;i<ssizex;i++){
-      working_space[i]=new float* [ssizey];
+      working_space[i] =new Double_t*[ssizey];
       for(j=0;j<ssizey;j++)
-         working_space[i][j]=new float [ssizez];
+         working_space[i][j]=new Double_t[ssizez];
    }                         
-   sampling =(int) TMath::Max(numberIterationsX, numberIterationsY);
-   sampling =(int) TMath::Max(sampling, numberIterationsZ);
+   sampling =(Int_t) TMath::Max(numberIterationsX, numberIterationsY);
+   sampling =(Int_t) TMath::Max(sampling, numberIterationsZ);
    if (direction == kBackIncreasingWindow) {
       if (filterType == kBackSuccessiveFiltering) {
          for (i = 1; i <= sampling; i++) {
-            q1 = (int) TMath::Min(i, numberIterationsX), q2 =(int) TMath::Min(i, numberIterationsY), q3 =(int) TMath::Min(i, numberIterationsZ);
+            q1 = (Int_t) TMath::Min(i, numberIterationsX), q2 =(Int_t) TMath::Min(i, numberIterationsY), q3 =(Int_t) TMath::Min(i, numberIterationsZ);
             for (z = q3; z < ssizez - q3; z++) {
                for (y = q2; y < ssizey - q2; y++) {
                   for (x = q1; x < ssizex - q1; x++) {
@@ -806,7 +806,7 @@ back-&gt;Draw(&quot;&quot;);  </span></p>
 
       else if (filterType == kBackOneStepFiltering) {
          for (i = 1; i <= sampling; i++) {
-            q1 = (int) TMath::Min(i, numberIterationsX), q2 =(int) TMath::Min(i, numberIterationsY), q3 =(int) TMath::Min(i, numberIterationsZ);
+            q1 = (Int_t) TMath::Min(i, numberIterationsX), q2 =(Int_t) TMath::Min(i, numberIterationsY), q3 =(Int_t) TMath::Min(i, numberIterationsZ);
             for (z = q3; z < ssizez - q3; z++) {
                for (y = q2; y < ssizey - q2; y++) {
                   for (x = q1; x < ssizex - q1; x++) {
@@ -860,7 +860,7 @@ back-&gt;Draw(&quot;&quot;);  </span></p>
    else if (direction == kBackDecreasingWindow) {
       if (filterType == kBackSuccessiveFiltering) {
          for (i = sampling; i >= 1; i--) {
-            q1 = (int) TMath::Min(i, numberIterationsX), q2 =(int) TMath::Min(i, numberIterationsY), q3 =(int) TMath::Min(i, numberIterationsZ);
+            q1 = (Int_t) TMath::Min(i, numberIterationsX), q2 =(Int_t) TMath::Min(i, numberIterationsY), q3 =(Int_t) TMath::Min(i, numberIterationsZ);
             for (z = q3; z < ssizez - q3; z++) {
                for (y = q2; y < ssizey - q2; y++) {
                   for (x = q1; x < ssizex - q1; x++) {
@@ -982,7 +982,7 @@ back-&gt;Draw(&quot;&quot;);  </span></p>
 
       else if (filterType == kBackOneStepFiltering) {
          for (i = sampling; i >= 1; i--) {
-            q1 = (int) TMath::Min(i, numberIterationsX), q2 =(int) TMath::Min(i, numberIterationsY), q3 =(int) TMath::Min(i, numberIterationsZ);
+            q1 = (Int_t) TMath::Min(i, numberIterationsX), q2 =(Int_t) TMath::Min(i, numberIterationsY), q3 =(Int_t) TMath::Min(i, numberIterationsZ);
             for (z = q3; z < ssizez - q3; z++) {
                for (y = q2; y < ssizey - q2; y++) {
                   for (x = q1; x < ssizex - q1; x++) {
@@ -1042,7 +1042,7 @@ back-&gt;Draw(&quot;&quot;);  </span></p>
 }
 
 //_____________________________________________________________________________
-const char* TSpectrum3::SmoothMarkov(float ***source, Int_t ssizex, Int_t ssizey, Int_t ssizez, Int_t averWindow)
+const char* TSpectrum3::SmoothMarkov(Double_t***source, Int_t ssizex, Int_t ssizey, Int_t ssizez, Int_t averWindow)
 {
 /////////////////////////////////////////////////////////////////////////////
 // THREE-DIMENSIONAL MARKOV SPECTRUM SMOOTHING FUNCTION                    //
@@ -1122,7 +1122,7 @@ We have extended this algorithm to three dimensions. </p>
 <p class=MsoNormal><b>const <a
 href="http://root.cern.ch/root/html/ListOfTypes.html#char" target="_parent">char</a>*
 </b><a href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrum3::SmoothMarkov</b></a><b>(<a
-href="http://root.cern.ch/root/html/ListOfTypes.html#float" target="_parent">float</a>
+href="http://root.cern.ch/root/html/ListOfTypes.html#double" target="_parent">double</a>
 ***fSpectrum, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int"
 target="_parent">int</a> fSizex, <a
 href="http://root.cern.ch/root/html/ListOfTypes.html#int" target="_parent">int</a>
@@ -1212,19 +1212,19 @@ nbinsy;   </span></p>
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
 style='font-size:10.0pt'>Int_t zmax  = nbinsz;      </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   float *** source = new
-float **[nbinsx];</span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t*** source = new
+Double_t**[nbinsx];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>      source[i]=new float*
+<p class=MsoNormal><span style='font-size:10.0pt'>      source[i]=new Double_t*
 [nbinsy];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>     
 for(j=0;j&lt;nbinsy;j++)</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>         source[i][j]=new
-float [nbinsz];</span></p>
+Double_t[nbinsz];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   }           </span></p>
 
@@ -1293,16 +1293,16 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
 <!-- */
 // --> End_Html
 
-   int xmin,xmax,ymin,ymax,zmin,zmax,i,j,k,l;
-   double a,b,maxch;
-   double nom,nip,nim,sp,sm,spx,smx,spy,smy,spz,smz,plocha=0;
+   Int_t xmin,xmax,ymin,ymax,zmin,zmax,i,j,k,l;
+   Double_t a,b,maxch;
+   Double_t nom,nip,nim,sp,sm,spx,smx,spy,smy,spz,smz,plocha=0;
    if(averWindow<=0)
       return "Averaging Window must be positive";         
-   float ***working_space = new float** [ssizex];
+   Double_t***working_space = new Double_t**[ssizex];
    for(i = 0;i < ssizex; i++){
-      working_space[i] = new float* [ssizey];
+      working_space[i] = new Double_t*[ssizey];
       for(j = 0;j < ssizey; j++)
-         working_space[i][j] = new float [ssizez];
+         working_space[i][j] = new Double_t[ssizez];
    }
    xmin = 0;
    xmax = ssizex - 1;
@@ -1839,7 +1839,7 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
 }
 
 //______________________________________________________________________________________________________________________________
-const char *TSpectrum3::Deconvolution(float ***source, const float ***resp,
+const char *TSpectrum3::Deconvolution(Double_t***source, const Double_t***resp,
                                        Int_t ssizex, Int_t ssizey, Int_t ssizez,
                                        Int_t numberIterations, 
                                        Int_t numberRepetitions,
@@ -1940,8 +1940,8 @@ algorithm we refer also to TSpectrum and TSpectrum2 </p>
 href="http://root.cern.ch/root/html/ListOfTypes.html#char">char</a>* </b><a
 name="TSpectrum:Deconvolution1"></a><a
 href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrum3::Deconvolution</b></a><b>(<a
-href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> ***fSource,
-const <a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a>
+href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> ***fSource,
+const <a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
 ***fResp, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
 fSizex, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
 fSizey, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
@@ -2079,34 +2079,34 @@ nbinsy;   </span></p>
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
 style='font-size:10.0pt'>Int_t zmax  = nbinsz;      </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   float *** source = new
-float **[nbinsx];</span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t*** source = new
+Double_t**[nbinsx];</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   float *** resp = new float
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t*** resp = new Double_t
 **[nbinsx];      </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>      source[i]=new float*
+<p class=MsoNormal><span style='font-size:10.0pt'>      source[i]=new Double_t*
 [nbinsy];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>     
 for(j=0;j&lt;nbinsy;j++)</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>         source[i][j]=new
-float [nbinsz];</span></p>
+Double_t[nbinsz];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   }           </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>      resp[i]=new float*
+<p class=MsoNormal><span style='font-size:10.0pt'>      resp[i]=new Double_t*
 [nbinsy];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>     
 for(j=0;j&lt;nbinsy;j++)</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>         resp[i][j]=new float
+<p class=MsoNormal><span style='font-size:10.0pt'>         resp[i][j]=new Double_t
 [nbinsz];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   }              </span></p>
@@ -2236,34 +2236,34 @@ nbinsy;   </span></p>
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
 style='font-size:10.0pt'>Int_t zmax  = nbinsz;      </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   float *** source = new
-float **[nbinsx];</span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t*** source = new
+Double_t**[nbinsx];</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   float *** resp = new float
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t*** resp = new Double_t
 **[nbinsx];      </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>      source[i]=new float*
+<p class=MsoNormal><span style='font-size:10.0pt'>      source[i]=new Double_t*
 [nbinsy];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>     
 for(j=0;j&lt;nbinsy;j++)</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>         source[i][j]=new
-float [nbinsz];</span></p>
+Double_t[nbinsz];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   }           </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>      resp[i]=new float*
+<p class=MsoNormal><span style='font-size:10.0pt'>      resp[i]=new Double_t*
 [nbinsy];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>     
 for(j=0;j&lt;nbinsy;j++)</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>         resp[i][j]=new float
+<p class=MsoNormal><span style='font-size:10.0pt'>         resp[i][j]=new Double_t
 [nbinsz];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   }              </span></p>
@@ -2347,19 +2347,19 @@ decon_in-&gt;Draw(&quot;&quot;);  </span></p>
 <!-- */
 // --> End_Html
 
-   int i, j, k, lhx, lhy, lhz, i1, i2, i3, j1, j2, j3, k1, k2, k3, lindex, i1min, i1max, i2min, i2max, i3min, i3max, j1min, j1max, j2min, j2max, j3min, j3max, positx = 0, posity = 0, positz = 0, repet;
-   double lda, ldb, ldc, area, maximum = 0;
+   Int_t i, j, k, lhx, lhy, lhz, i1, i2, i3, j1, j2, j3, k1, k2, k3, lindex, i1min, i1max, i2min, i2max, i3min, i3max, j1min, j1max, j2min, j2max, j3min, j3max, positx = 0, posity = 0, positz = 0, repet;
+   Double_t lda, ldb, ldc, area, maximum = 0;
    if (ssizex <= 0 || ssizey <= 0 || ssizez <= 0)
       return "Wrong parameters";   
    if (numberIterations <= 0)
       return "Number of iterations must be positive";   
    if (numberRepetitions <= 0)
       return "Number of repetitions must be positive";      
-   double ***working_space=new double** [ssizex];
+   Double_t ***working_space=new Double_t** [ssizex];
    for(i=0;i<ssizex;i++){
-      working_space[i]=new double* [ssizey];
+      working_space[i]=new Double_t* [ssizey];
       for(j=0;j<ssizey;j++)
-         working_space[i][j]=new double [5*ssizez];
+         working_space[i][j]=new Double_t [5*ssizez];
    }
    area = 0;
    lhx = -1, lhy = -1, lhz = -1;
@@ -2539,7 +2539,7 @@ decon_in-&gt;Draw(&quot;&quot;);  </span></p>
 }
 
 //__________________________________________________________________
-Int_t TSpectrum3::SearchHighRes(const float ***source,float ***dest, Int_t ssizex, Int_t ssizey, Int_t ssizez,
+Int_t TSpectrum3::SearchHighRes(const Double_t***source,Double_t***dest, Int_t ssizex, Int_t ssizey, Int_t ssizez,
                                  Double_t sigma, Double_t threshold,
                                  Bool_t backgroundRemove,Int_t deconIterations,
                                  Bool_t markov, Int_t averWindow)
@@ -2619,12 +2619,12 @@ with correct peak identification in three-dimensional coincidence spectra are</p
 href="http://root.cern.ch/root/html/ListOfTypes.html#Int_t">Int_t</a> </b><a
 name="TSpectrum:Search1HighRes"></a><a
 href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrum3::SearchHighRes</b></a><b>
-(const <a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a>
-***fSource,<a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a>
+(const <a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
+***fSource,<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
 ***fDest, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
 fSizex, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
 fSizey, <a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
-fSizez, <a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a>
+fSizez, <a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
 fSigma, <a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
 fThreshold, <a href="http://root.cern.ch/root/html/ListOfTypes.html#bool">bool</a>
 fBackgroundRemove,<a href="http://root.cern.ch/root/html/ListOfTypes.html#int">int</a>
@@ -2762,34 +2762,34 @@ nbinsy;   </span></p>
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
 style='font-size:10.0pt'>Int_t zmax  = nbinsz;      </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   float *** source = new
-float **[nbinsx];</span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t*** source = new
+Double_t**[nbinsx];</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   float *** dest = new float
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t*** dest = new Double_t
 **[nbinsx];      </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>      source[i]=new float*
+<p class=MsoNormal><span style='font-size:10.0pt'>      source[i]=new Double_t*
 [nbinsy];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>     
 for(j=0;j&lt;nbinsy;j++)</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>         source[i][j]=new
-float [nbinsz];</span></p>
+Double_t[nbinsz];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   }           </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for(i=0;i&lt;nbinsx;i++){</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>      dest[i]=new float*
+<p class=MsoNormal><span style='font-size:10.0pt'>      dest[i]=new Double_t*
 [nbinsy];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>     
 for(j=0;j&lt;nbinsy;j++)</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>         dest[i][j]=new float
+<p class=MsoNormal><span style='font-size:10.0pt'>         dest[i][j]=new Double_t
 [nbinsz];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   }              </span></p>
@@ -2853,14 +2853,14 @@ search-&gt;SetBinContent(i + 1,j + 1,k + 1, dest[i][j][k]);</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosX = new
-Float_t[nfound];         </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *PosX = new
+Double_t[nfound];         </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosY = new
-Float_t[nfound];</span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *PosY = new
+Double_t[nfound];</span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t *PosZ = new
-Float_t[nfound];      </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *PosZ = new
+Double_t[nfound];      </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   PosX =
 s-&gt;GetPositionX();</span></p>
@@ -2875,8 +2875,8 @@ s-&gt;GetPositionZ();            </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>                    </span><span
 lang=PL style='font-size:10.0pt'>printf(&quot;posx= %d, posy= %d, posz=
-%d\n&quot;,(int)(PosX[i]+0.5), (int)(PosY[i]+0.5),
-(int)(PosZ[i]+0.5));           </span></p>
+%d\n&quot;,(Int_t)(PosX[i]+0.5), (Int_t)(PosY[i]+0.5),
+(Int_t)(PosZ[i]+0.5));           </span></p>
 
 <p class=MsoNormal><span lang=PL style='font-size:10.0pt'>   </span><span
 style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
@@ -2888,17 +2888,17 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
 <!-- */
 // --> End_Html
 
-   int number_of_iterations = (int)(4 * sigma + 0.5);
-   int k,lindex;
-   double lda,ldb,ldc,area,maximum;
-   int xmin,xmax,l,peak_index = 0,sizex_ext=ssizex + 4 * number_of_iterations,sizey_ext = ssizey + 4 * number_of_iterations,sizez_ext = ssizez + 4 * number_of_iterations,shift = 2 * number_of_iterations;
-   int ymin,ymax,zmin,zmax,i,j;
-   double a,b,maxch,plocha = 0,plocha_markov = 0;
-   double nom,nip,nim,sp,sm,spx,spy,smx,smy,spz,smz;
-   double p1,p2,p3,p4,p5,p6,p7,p8,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,r1,r2,r3,r4,r5,r6;
-   int x,y,z;
-   double pocet_sigma = 5;
-   int lhx,lhy,lhz,i1,i2,i3,j1,j2,j3,k1,k2,k3,i1min,i1max,i2min,i2max,i3min,i3max,j1min,j1max,j2min,j2max,j3min,j3max,positx,posity,positz;
+   Int_t number_of_iterations = (Int_t)(4 * sigma + 0.5);
+   Int_t k,lindex;
+   Double_t lda,ldb,ldc,area,maximum;
+   Int_t xmin,xmax,l,peak_index = 0,sizex_ext=ssizex + 4 * number_of_iterations,sizey_ext = ssizey + 4 * number_of_iterations,sizez_ext = ssizez + 4 * number_of_iterations,shift = 2 * number_of_iterations;
+   Int_t ymin,ymax,zmin,zmax,i,j;
+   Double_t a,b,maxch,plocha = 0,plocha_markov = 0;
+   Double_t nom,nip,nim,sp,sm,spx,spy,smx,smy,spz,smz;
+   Double_t p1,p2,p3,p4,p5,p6,p7,p8,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,r1,r2,r3,r4,r5,r6;
+   Int_t x,y,z;
+   Double_t pocet_sigma = 5;
+   Int_t lhx,lhy,lhz,i1,i2,i3,j1,j2,j3,k1,k2,k3,i1min,i1max,i2min,i2max,i3min,i3max,j1min,j1max,j2min,j2max,j3min,j3max,positx,posity,positz;
    if(sigma < 1){
       Error("SearchHighRes", "Invalid sigma, must be greater than or equal to 1");   
       return 0;
@@ -2909,7 +2909,7 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
       return 0;
    }
    
-   j = (int)(pocet_sigma*sigma+0.5);
+   j = (Int_t)(pocet_sigma*sigma+0.5);
    if (j >= PEAK_WINDOW / 2) {
       Error("SearchHighRes", "Too large sigma");
       return 0;
@@ -2929,13 +2929,13 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
       }
    }
       
-   i = (int)(4 * sigma + 0.5);
+   i = (Int_t)(4 * sigma + 0.5);
    i = 4 * i;
-   double ***working_space = new double** [ssizex + i];
+   Double_t ***working_space = new Double_t** [ssizex + i];
    for(j = 0;j < ssizex + i; j++){
-      working_space[j] = new double* [ssizey + i];
+      working_space[j] = new Double_t* [ssizey + i];
       for(k = 0;k < ssizey + i; k++)
-         working_space[j][k] = new double [5 * (ssizez + i)];
+         working_space[j][k] = new Double_t [5 * (ssizez + i)];
    }
    for(k = 0;k < sizez_ext; k++){
       for(j = 0;j < sizey_ext; j++){
@@ -3844,11 +3844,11 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
    for(i = 0;i < sizex_ext; i++){
       for(j = 0;j < sizey_ext; j++){
          for(k = 0;k < sizez_ext; k++){
-            lda = (double)i - 3 * sigma;
-            ldb = (double)j - 3 * sigma;
-            ldc = (double)k - 3 * sigma;
+            lda = (Double_t)i - 3 * sigma;
+            ldb = (Double_t)j - 3 * sigma;
+            ldc = (Double_t)k - 3 * sigma;
             lda = (lda * lda + ldb * ldb + ldc * ldc) / (2 * sigma * sigma);
-            l = (int)(1000 * exp(-lda));
+            l = (Int_t)(1000 * exp(-lda));
             lda = l;
             if(lda!=0){
                if((i + 1) > lhx)
@@ -4042,17 +4042,17 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
                   if(working_space[i][j][l] > threshold * maximum / 100.0){
                      if(peak_index < fMaxPeaks){                   
                         for(k = i - 1,a = 0,b = 0;k <= i + 1; k++){
-                           a += (double)(k - shift) * working_space[k][j][l];
+                           a += (Double_t)(k - shift) * working_space[k][j][l];
                            b += working_space[k][j][l];
                         }
                      fPositionX[peak_index] = a / b;
                         for(k = j - 1,a = 0,b = 0;k <= j + 1; k++){
-                           a += (double)(k - shift) * working_space[i][k][l];
+                           a += (Double_t)(k - shift) * working_space[i][k][l];
                            b += working_space[i][k][l];
                         }
                         fPositionY[peak_index] = a / b;
                         for(k = l - 1,a = 0,b = 0;k <= l + 1; k++){
-                           a += (double)(k - shift) * working_space[i][j][k];
+                           a += (Double_t)(k - shift) * working_space[i][j][k];
                            b += working_space[i][j][k];
                         }
                         fPositionZ[peak_index] = a / b;
@@ -4071,7 +4071,7 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
          }
       }
    }
-   k = (int)(4 * sigma + 0.5);
+   k = (Int_t)(4 * sigma + 0.5);
    k = 4 * k;      
    for(i = 0;i < ssizex + k; i++){
       for(j = 0;j < ssizey + k; j++)
@@ -4084,7 +4084,7 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
 }
 
 //______________________________________________________________________________
-Int_t TSpectrum3::SearchFast(const float ***source, float ***dest, Int_t ssizex, Int_t ssizey, Int_t ssizez,
+Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssizex, Int_t ssizey, Int_t ssizez,
                                  Double_t sigma, Double_t threshold,
                                  Bool_t markov, Int_t averWindow)
                                      
@@ -4111,17 +4111,17 @@ Int_t TSpectrum3::SearchFast(const float ***source, float ***dest, Int_t ssizex,
 //                  we refer to manual (applies only for Markov method)    //
 /////////////////////////////////////////////////////////////////////////////
 
-   int i,j,k,l,li,lj,lk,lmin,lmax,xmin,xmax,ymin,ymax,zmin,zmax;
-   double maxch,plocha = 0,plocha_markov = 0;
-   double nom,nip,nim,sp,sm,spx,spy,smx,smy,spz,smz;
-   float norma,val,val1,val2,val3,val4,val5,val6,val7,val8,val9,val10,val11,val12,val13,val14,val15,val16,val17,val18,val19,val20,val21,val22,val23,val24,val25,val26;
-   double a,b,s,f,maximum;
-   int x,y,z,peak_index=0;
-   double p1,p2,p3,p4,p5,p6,p7,p8,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,r1,r2,r3,r4,r5,r6;
-   double pocet_sigma = 5;
-   int number_of_iterations=(int)(4 * sigma + 0.5);
-   int sizex_ext=ssizex + 4 * number_of_iterations,sizey_ext = ssizey + 4 * number_of_iterations,sizez_ext = ssizez + 4 * number_of_iterations,shift = 2 * number_of_iterations;
-   double c[PEAK_WINDOW],s_f_ratio_peaks = 5;
+   Int_t i,j,k,l,li,lj,lk,lmin,lmax,xmin,xmax,ymin,ymax,zmin,zmax;
+   Double_t maxch,plocha = 0,plocha_markov = 0;
+   Double_t nom,nip,nim,sp,sm,spx,spy,smx,smy,spz,smz;
+   Double_t norma,val,val1,val2,val3,val4,val5,val6,val7,val8,val9,val10,val11,val12,val13,val14,val15,val16,val17,val18,val19,val20,val21,val22,val23,val24,val25,val26;
+   Double_t a,b,s,f,maximum;
+   Int_t x,y,z,peak_index=0;
+   Double_t p1,p2,p3,p4,p5,p6,p7,p8,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,r1,r2,r3,r4,r5,r6;
+   Double_t pocet_sigma = 5;
+   Int_t number_of_iterations=(Int_t)(4 * sigma + 0.5);
+   Int_t sizex_ext=ssizex + 4 * number_of_iterations,sizey_ext = ssizey + 4 * number_of_iterations,sizez_ext = ssizez + 4 * number_of_iterations,shift = 2 * number_of_iterations;
+   Double_t c[PEAK_WINDOW],s_f_ratio_peaks = 5;
    if(sigma < 1){
       Error("SearchFast", "Invalid sigma, must be greater than or equal to 1");   
       return 0;
@@ -4132,7 +4132,7 @@ Int_t TSpectrum3::SearchFast(const float ***source, float ***dest, Int_t ssizex,
       return 0;
    }
    
-   j = (int)(pocet_sigma*sigma+0.5);
+   j = (Int_t)(pocet_sigma*sigma+0.5);
    if (j >= PEAK_WINDOW / 2) {
       Error("SearchFast", "Too large sigma");
       return 0;
@@ -4150,13 +4150,13 @@ Int_t TSpectrum3::SearchFast(const float ***source, float ***dest, Int_t ssizex,
       return 0;
    }
       
-   i = (int)(4 * sigma + 0.5);
+   i = (Int_t)(4 * sigma + 0.5);
    i = 4 * i;
-   double ***working_space = new double** [ssizex + i];
+   Double_t ***working_space = new Double_t** [ssizex + i];
    for(j = 0;j < ssizex + i; j++){
-      working_space[j] = new double* [ssizey + i];
+      working_space[j] = new Double_t* [ssizey + i];
       for(k = 0;k < ssizey + i; k++)
-         working_space[j][k] = new double [4 * (ssizez + i)];
+         working_space[j][k] = new Double_t [4 * (ssizez + i)];
    }
    
    for(k = 0;k < sizez_ext; k++){
@@ -5076,7 +5076,7 @@ Int_t TSpectrum3::SearchFast(const float ***source, float ***dest, Int_t ssizex,
    for(i = 0;i < PEAK_WINDOW; i++){
       c[i] = 0;
    }
-   j = (int)(pocet_sigma * sigma + 0.5);
+   j = (Int_t)(pocet_sigma * sigma + 0.5);
    for(i = -j;i <= j; i++){
       a=i;
       a = -a * a;
@@ -5098,7 +5098,7 @@ Int_t TSpectrum3::SearchFast(const float ***source, float ***dest, Int_t ssizex,
       c[i] = c[i] / norma;
    }
    a = pocet_sigma * sigma + 0.5;
-   i = (int)a;
+   i = (Int_t)a;
    zmin = i;
    zmax = sizez_ext - i - 1;
    ymin = i;
@@ -5216,17 +5216,17 @@ Int_t TSpectrum3::SearchFast(const float ***source, float ***dest, Int_t ssizex,
                                     if(working_space[x][y][z + 3 * sizez_ext] > threshold * maximum / 100.0){
                                        if(peak_index<fMaxPeaks){
                                           for(k = x - 1,a = 0,b = 0;k <= x + 1; k++){
-                                             a += (double)(k - shift) * working_space[k][y][z];
+                                             a += (Double_t)(k - shift) * working_space[k][y][z];
                                              b += working_space[k][y][z];
                                           }
                                           fPositionX[peak_index] = a / b;
                                           for(k = y - 1,a = 0,b = 0;k <= y + 1; k++){
-                                             a += (double)(k - shift) * working_space[x][k][z];
+                                             a += (Double_t)(k - shift) * working_space[x][k][z];
                                              b += working_space[x][k][z];
                                           }
                                           fPositionY[peak_index] = a / b;
                                           for(k = z - 1,a = 0,b = 0;k <= z + 1; k++){
-                                             a += (double)(k - shift) * working_space[x][y][k];
+                                             a += (Double_t)(k - shift) * working_space[x][y][k];
                                              b += working_space[x][y][k];
                                           }
                                           fPositionZ[peak_index] = a / b;
@@ -5254,7 +5254,7 @@ Int_t TSpectrum3::SearchFast(const float ***source, float ***dest, Int_t ssizex,
          }
       }
    }   
-   k = (int)(4 * sigma + 0.5);
+   k = (Int_t)(4 * sigma + 0.5);
    k = 4 * k;      
    for(i = 0;i < ssizex + k; i++){
       for(j = 0;j < ssizey + k; j++)

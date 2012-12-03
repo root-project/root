@@ -104,7 +104,7 @@ TSpectrum2Transform::~TSpectrum2Transform()
 
 //////////AUXILIARY FUNCTIONS FOR TRANSFORM BASED FUNCTIONS////////////////////////
 //_____________________________________________________________________________
-void TSpectrum2Transform::Haar(Float_t *working_space, Int_t num, Int_t direction) 
+void TSpectrum2Transform::Haar(Double_t *working_space, Int_t num, Int_t direction) 
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -118,7 +118,7 @@ void TSpectrum2Transform::Haar(Float_t *working_space, Int_t num, Int_t directio
 //////////////////////////////////////////////////////////////////////////////////
    Int_t i, ii, li, l2, l3, j, jj, jj1, lj, iter, m, jmin, jmax;
    Double_t a, b, c, wlk;
-   Float_t val;
+   Double_t val;
    for (i = 0; i < num; i++)
       working_space[i + num] = 0;
    i = num;
@@ -187,7 +187,7 @@ void TSpectrum2Transform::Haar(Float_t *working_space, Int_t num, Int_t directio
 }
 
 //_____________________________________________________________________________
-void TSpectrum2Transform::Walsh(Float_t *working_space, Int_t num) 
+void TSpectrum2Transform::Walsh(Double_t *working_space, Int_t num) 
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -200,7 +200,7 @@ void TSpectrum2Transform::Walsh(Float_t *working_space, Int_t num)
 //////////////////////////////////////////////////////////////////////////////////
    Int_t i, m, nump = 1, mnum, mnum2, mp, ib, mp2, mnum21, iba, iter;
    Double_t a;
-   Float_t val1, val2;
+   Double_t val1, val2;
    for (i = 0; i < num; i++)
       working_space[i + num] = 0;
    i = num;
@@ -244,7 +244,7 @@ void TSpectrum2Transform::Walsh(Float_t *working_space, Int_t num)
 }
 
 //_____________________________________________________________________________
-void TSpectrum2Transform::BitReverse(Float_t *working_space, Int_t num) 
+void TSpectrum2Transform::BitReverse(Double_t *working_space, Int_t num) 
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -284,7 +284,7 @@ void TSpectrum2Transform::BitReverse(Float_t *working_space, Int_t num)
 }
 
 //_____________________________________________________________________________
-void TSpectrum2Transform::Fourier(Float_t *working_space, Int_t num, Int_t hartley,
+void TSpectrum2Transform::Fourier(Double_t *working_space, Int_t num, Int_t hartley,
                            Int_t direction, Int_t zt_clear) 
 {
 //////////////////////////////////////////////////////////////////////////////////
@@ -301,7 +301,7 @@ void TSpectrum2Transform::Fourier(Float_t *working_space, Int_t num, Int_t hartl
    Int_t nxp2, nxp, i, j, k, m, iter, mxp, j1, j2, n1, n2, it;
    Double_t a, b, c, d, sign, wpwr, arg, wr, wi, tr, ti, pi =
        3.14159265358979323846;
-   Float_t val1, val2, val3, val4;
+   Double_t val1, val2, val3, val4;
    if (direction == kTransformForward && zt_clear == 0) {
       for (i = 0; i < num; i++)
          working_space[i + num] = 0;
@@ -409,7 +409,7 @@ void TSpectrum2Transform::Fourier(Float_t *working_space, Int_t num, Int_t hartl
 }
 
 //_____________________________________________________________________________
-void TSpectrum2Transform::BitReverseHaar(Float_t *working_space, Int_t shift, Int_t num,
+void TSpectrum2Transform::BitReverseHaar(Double_t *working_space, Int_t shift, Int_t num,
                                   Int_t start) 
 {
 //////////////////////////////////////////////////////////////////////////////////
@@ -457,7 +457,7 @@ void TSpectrum2Transform::BitReverseHaar(Float_t *working_space, Int_t shift, In
 }
 
 //_____________________________________________________________________________
-Int_t TSpectrum2Transform::GeneralExe(Float_t *working_space, Int_t zt_clear, Int_t num,
+Int_t TSpectrum2Transform::GeneralExe(Double_t *working_space, Int_t zt_clear, Int_t num,
                              Int_t degree, Int_t type) 
 {
 //////////////////////////////////////////////////////////////////////////////////
@@ -476,7 +476,7 @@ Int_t TSpectrum2Transform::GeneralExe(Float_t *working_space, Int_t zt_clear, In
        mp2step, mppom, ring;
    Double_t a, b, c, d, wpwr, arg, wr, wi, tr, ti, pi =
        3.14159265358979323846;
-   Float_t val1, val2, val3, val4, a0oldr = 0, b0oldr = 0, a0r, b0r;
+   Double_t val1, val2, val3, val4, a0oldr = 0, b0oldr = 0, a0r, b0r;
    if (zt_clear == 0) {
       for (i = 0; i < num; i++)
          working_space[i + 2 * num] = 0;
@@ -578,7 +578,7 @@ Int_t TSpectrum2Transform::GeneralExe(Float_t *working_space, Int_t zt_clear, In
 }
 
 //_____________________________________________________________________________
-Int_t TSpectrum2Transform::GeneralInv(Float_t *working_space, Int_t num, Int_t degree,
+Int_t TSpectrum2Transform::GeneralInv(Double_t *working_space, Int_t num, Int_t degree,
                              Int_t type) 
 {
 //////////////////////////////////////////////////////////////////////////////////
@@ -597,7 +597,7 @@ Int_t TSpectrum2Transform::GeneralInv(Float_t *working_space, Int_t num, Int_t d
        ring;
    Double_t a, b, c, d, wpwr, arg, wr, wi, tr, ti, pi =
        3.14159265358979323846;
-   Float_t val1, val2, val3, val4, a0oldr = 0, b0oldr = 0, a0r, b0r;
+   Double_t val1, val2, val3, val4, a0oldr = 0, b0oldr = 0, a0r, b0r;
    i = num;
    iter = 0;
    for (; i > 1;) {
@@ -699,8 +699,8 @@ Int_t TSpectrum2Transform::GeneralInv(Float_t *working_space, Int_t num, Int_t d
 }
 
 //_____________________________________________________________________________
-void TSpectrum2Transform::HaarWalsh2(Float_t **working_matrix,
-                              Float_t *working_vector, Int_t numx, Int_t numy,
+void TSpectrum2Transform::HaarWalsh2(Double_t **working_matrix,
+                              Double_t *working_vector, Int_t numx, Int_t numy,
                               Int_t direction, Int_t type) 
 {
 //////////////////////////////////////////////////////////////////////////////////
@@ -793,7 +793,7 @@ void TSpectrum2Transform::HaarWalsh2(Float_t **working_matrix,
 }
 
 //_____________________________________________________________________________
-void TSpectrum2Transform::FourCos2(Float_t **working_matrix, Float_t *working_vector,
+void TSpectrum2Transform::FourCos2(Double_t **working_matrix, Double_t *working_vector,
                             Int_t numx, Int_t numy, Int_t direction, Int_t type) 
 {
 //////////////////////////////////////////////////////////////////////////////////
@@ -1063,7 +1063,7 @@ void TSpectrum2Transform::FourCos2(Float_t **working_matrix, Float_t *working_ve
 }
 
 //_____________________________________________________________________________
-void TSpectrum2Transform::General2(Float_t **working_matrix, Float_t *working_vector,
+void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_vector,
                             Int_t numx, Int_t numy, Int_t direction, Int_t type,
                             Int_t degree) 
 {
@@ -1081,7 +1081,7 @@ void TSpectrum2Transform::General2(Float_t **working_matrix, Float_t *working_ve
 //                                                                              //
 //////////////////////////////////////////////////////////////////////////////////
    Int_t i, j, jstup, kstup, l, m;
-   Float_t val, valx, valz;
+   Double_t val, valx, valz;
    Double_t a, b, pi = 3.14159265358979323846;
    if (direction == kTransformForward) {
       for (j = 0; j < numy; j++) {
@@ -1691,7 +1691,7 @@ void TSpectrum2Transform::General2(Float_t **working_matrix, Float_t *working_ve
     
 //////////TRANSFORM2 FUNCTION - CALCULATES DIFFERENT 2-D DIRECT AND INVERSE ORTHOGONAL TRANSFORMS//////
 //_____________________________________________________________________________
-void TSpectrum2Transform::Transform(const Float_t **fSource, Float_t **fDest)
+void TSpectrum2Transform::Transform(const Double_t **fSource, Double_t **fDest)
 {
 //////////////////////////////////////////////////////////////////////////////////////////
 /* TWO-DIMENSIONAL TRANSFORM FUNCTION                    */ 
@@ -1744,8 +1744,8 @@ enhancement of experimental data</p>
 
 <p class=MsoNormal>void <a
 href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrumTransform2::Transform</b></a><b>(const
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> **fSource,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> **fDest)</b></p>
+<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> **fSource,
+<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> **fDest)</b></p>
 
 <p class=MsoNormal style='text-align:justify'>&nbsp;</p>
 
@@ -1907,20 +1907,20 @@ nbinsx;</span></p>
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t ymax  = nbinsy;</span></p>
 
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>Float_t ** source = new float *[nbinsx];   </span></p>
+style='font-size:10.0pt'>Double_t ** source = new Double_t *[nbinsx];   </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t ** dest = new
-float *[nbinsx];      </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t ** dest = new
+Double_t *[nbinsx];      </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>                                                source[i]=new
-float[nbinsy];</span></p>
+Double_t[nbinsy];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>                                                dest[i]=new
-float[nbinsy];   </span></p>
+Double_t[nbinsy];   </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   TH2F *trans = new
 TH2F(&quot;trans&quot;,&quot;Background
@@ -1984,15 +1984,15 @@ trans-&gt;Draw(&quot;SURF&quot;);      </span></p>
 // --> End_Html
    Int_t i, j;
    Int_t size;
-   Float_t *working_vector = 0, **working_matrix = 0;
+   Double_t *working_vector = 0, **working_matrix = 0;
    size = (Int_t) TMath::Max(fSizeX, fSizeY);
    switch (fTransformType) {
    case kTransformHaar:
    case kTransformWalsh:
-      working_vector = new Float_t[2 * size];
-      working_matrix = new Float_t *[fSizeX];
+      working_vector = new Double_t[2 * size];
+      working_matrix = new Double_t *[fSizeX];
       for (i = 0; i < fSizeX; i++)
-         working_matrix[i] = new Float_t[fSizeY];
+         working_matrix[i] = new Double_t[fSizeY];
       break;
    case kTransformCos:
    case kTransformSin:
@@ -2001,19 +2001,19 @@ trans-&gt;Draw(&quot;SURF&quot;);      </span></p>
    case kTransformFourierWalsh:
    case kTransformFourierHaar:
    case kTransformWalshHaar:
-      working_vector = new Float_t[4 * size];
-      working_matrix = new Float_t *[fSizeX];
+      working_vector = new Double_t[4 * size];
+      working_matrix = new Double_t *[fSizeX];
       for (i = 0; i < fSizeX; i++)
-         working_matrix[i] = new Float_t[2 * fSizeY];
+         working_matrix[i] = new Double_t[2 * fSizeY];
       break;
    case kTransformCosWalsh:
    case kTransformCosHaar:
    case kTransformSinWalsh:
    case kTransformSinHaar:
-      working_vector = new Float_t[8 * size];
-      working_matrix = new Float_t *[fSizeX];
+      working_vector = new Double_t[8 * size];
+      working_matrix = new Double_t *[fSizeX];
       for (i = 0; i < fSizeX; i++)
-         working_matrix[i] = new Float_t[2 * fSizeY];
+         working_matrix[i] = new Double_t[2 * fSizeY];
       break;
    }
    if (fDirection == kTransformForward) {
@@ -2269,7 +2269,7 @@ trans-&gt;Draw(&quot;SURF&quot;);      </span></p>
 //////////END OF TRANSFORM2 FUNCTION/////////////////////////////////
 //_______________________________________________________________________________________
 //////////FILTER2_ZONAL FUNCTION - CALCULATES DIFFERENT 2-D ORTHOGONAL TRANSFORMS, SETS GIVEN REGION TO FILTER COEFFICIENT AND TRANSFORMS IT BACK//////
-void TSpectrum2Transform::FilterZonal(const Float_t **fSource, Float_t **fDest) 
+void TSpectrum2Transform::FilterZonal(const Double_t **fSource, Double_t **fDest) 
 {
 //////////////////////////////////////////////////////////////////////////////////////////
 /* TWO-DIMENSIONAL FILTER ZONAL FUNCTION                      */ 
@@ -2298,8 +2298,8 @@ void TSpectrum2Transform::FilterZonal(const Float_t **fSource, Float_t **fDest)
 
 <p class=MsoNormal>void <a
 href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrumTransform2::FilterZonal</b></a><b>(const
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> **fSource,
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a> **fDest)</b></p>
+<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> **fSource,
+<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a> **fDest)</b></p>
 
 <p class=MsoNormal style='text-align:justify'>&nbsp;</p>
 
@@ -2362,20 +2362,20 @@ nbinsx;</span></p>
 nbinsy;</span></p>
 
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>Float_t ** source = new float *[nbinsx];   </span></p>
+style='font-size:10.0pt'>Double_t ** source = new Double_t *[nbinsx];   </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t ** dest = new
-float *[nbinsx];      </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t ** dest = new
+Double_t *[nbinsx];      </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>                                                source[i]=new
-float[nbinsy];</span></p>
+Double_t[nbinsy];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>                                                dest[i]=new
-float[nbinsy];   </span></p>
+Double_t[nbinsy];   </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   TH2F *trans = new
 TH2F(&quot;trans&quot;,&quot;Background
@@ -2449,15 +2449,15 @@ trans-&gt;Draw(&quot;SURF&quot;);     </span></p>
    Int_t i, j;
    Double_t a, old_area = 0, new_area = 0;
    Int_t size;
-   Float_t *working_vector = 0, **working_matrix = 0;
+   Double_t *working_vector = 0, **working_matrix = 0;
    size = (Int_t) TMath::Max(fSizeX, fSizeY);
    switch (fTransformType) {
    case kTransformHaar:
    case kTransformWalsh:
-      working_vector = new Float_t[2 * size];
-      working_matrix = new Float_t *[fSizeX];
+      working_vector = new Double_t[2 * size];
+      working_matrix = new Double_t *[fSizeX];
       for (i = 0; i < fSizeX; i++)
-         working_matrix[i] = new Float_t[fSizeY];
+         working_matrix[i] = new Double_t[fSizeY];
       break;
    case kTransformCos:
    case kTransformSin:
@@ -2466,19 +2466,19 @@ trans-&gt;Draw(&quot;SURF&quot;);     </span></p>
    case kTransformFourierWalsh:
    case kTransformFourierHaar:
    case kTransformWalshHaar:
-      working_vector = new Float_t[4 * size];
-      working_matrix = new Float_t *[fSizeX];
+      working_vector = new Double_t[4 * size];
+      working_matrix = new Double_t *[fSizeX];
       for (i = 0; i < fSizeX; i++)
-         working_matrix[i] = new Float_t[2 * fSizeY];
+         working_matrix[i] = new Double_t[2 * fSizeY];
       break;
    case kTransformCosWalsh:
    case kTransformCosHaar:
    case kTransformSinWalsh:
    case kTransformSinHaar:
-      working_vector = new Float_t[8 * size];
-      working_matrix = new Float_t *[fSizeX];
+      working_vector = new Double_t[8 * size];
+      working_matrix = new Double_t *[fSizeX];
       for (i = 0; i < fSizeX; i++)
-         working_matrix[i] = new Float_t[2 * fSizeY];
+         working_matrix[i] = new Double_t[2 * fSizeY];
       break;
    }
    switch (fTransformType) {
@@ -2713,7 +2713,7 @@ trans-&gt;Draw(&quot;SURF&quot;);     </span></p>
 //////////  END OF FILTER2_ZONAL FUNCTION/////////////////////////////////
 //////////ENHANCE2 FUNCTION - CALCULATES DIFFERENT 2-D ORTHOGONAL TRANSFORMS, MULTIPLIES GIVEN REGION BY ENHANCE COEFFICIENT AND TRANSFORMS IT BACK//////
 //______________________________________________________________________
-void TSpectrum2Transform::Enhance(const Float_t **fSource, Float_t **fDest)
+void TSpectrum2Transform::Enhance(const Double_t **fSource, Double_t **fDest)
 {
 //////////////////////////////////////////////////////////////////////////////////////////
 /* TWO-DIMENSIONAL ENHANCE ZONAL FUNCTION                     */ 
@@ -2741,8 +2741,8 @@ void TSpectrum2Transform::Enhance(const Float_t **fSource, Float_t **fDest)
 
 <p class=MsoNormal>void <a
 href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrumTransform2::Enhance</b></a><b>(const
-<a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a>
-**fSource, <a href="http://root.cern.ch/root/html/ListOfTypes.html#float">float</a>
+<a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
+**fSource, <a href="http://root.cern.ch/root/html/ListOfTypes.html#double">double</a>
 **fDest)</b></p>
 
 <p class=MsoNormal style='text-align:justify'>&nbsp;</p>
@@ -2804,20 +2804,20 @@ nbinsx;</span></p>
 nbinsy;</span></p>
 
 <p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>Float_t ** source = new float *[nbinsx];   </span></p>
+style='font-size:10.0pt'>Double_t ** source = new Double_t *[nbinsx];   </span></p>
 
-<p class=MsoNormal><span style='font-size:10.0pt'>   Float_t ** dest = new
-float *[nbinsx];      </span></p>
+<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t ** dest = new
+Double_t *[nbinsx];      </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>                                                source[i]=new
-float[nbinsy];</span></p>
+Double_t[nbinsy];</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   for (i=0;i&lt;nbinsx;i++)</span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>                                                dest[i]=new
-float[nbinsy];   </span></p>
+Double_t[nbinsy];   </span></p>
 
 <p class=MsoNormal><span style='font-size:10.0pt'>   TH2F *trans = new
 TH2F(&quot;trans&quot;,&quot;Background
@@ -2875,15 +2875,15 @@ style='font-size:10.0pt'>  trans-&gt;Draw(&quot;SURF&quot;);     </span></p>
    Int_t i, j;
    Double_t a, old_area = 0, new_area = 0;
    Int_t size;
-   Float_t *working_vector = 0, **working_matrix = 0;
+   Double_t *working_vector = 0, **working_matrix = 0;
    size = (Int_t) TMath::Max(fSizeX, fSizeY);
    switch (fTransformType) {
    case kTransformHaar:
    case kTransformWalsh:
-      working_vector = new Float_t[2 * size];
-      working_matrix = new Float_t *[fSizeX];
+      working_vector = new Double_t[2 * size];
+      working_matrix = new Double_t *[fSizeX];
       for (i = 0; i < fSizeX; i++)
-         working_matrix[i] = new Float_t[fSizeY];
+         working_matrix[i] = new Double_t[fSizeY];
       break;
    case kTransformCos:
    case kTransformSin:
@@ -2892,19 +2892,19 @@ style='font-size:10.0pt'>  trans-&gt;Draw(&quot;SURF&quot;);     </span></p>
    case kTransformFourierWalsh:
    case kTransformFourierHaar:
    case kTransformWalshHaar:
-      working_vector = new Float_t[4 * size];
-      working_matrix = new Float_t *[fSizeX];
+      working_vector = new Double_t[4 * size];
+      working_matrix = new Double_t *[fSizeX];
       for (i = 0; i < fSizeX; i++)
-         working_matrix[i] = new Float_t[2 * fSizeY];
+         working_matrix[i] = new Double_t[2 * fSizeY];
       break;
    case kTransformCosWalsh:
    case kTransformCosHaar:
    case kTransformSinWalsh:
    case kTransformSinHaar:
-      working_vector = new Float_t[8 * size];
-      working_matrix = new Float_t *[fSizeX];
+      working_vector = new Double_t[8 * size];
+      working_matrix = new Double_t *[fSizeX];
       for (i = 0; i < fSizeX; i++)
-         working_matrix[i] = new Float_t[2 * fSizeY];
+         working_matrix[i] = new Double_t[2 * fSizeY];
       break;
    }
    switch (fTransformType) {
@@ -3216,7 +3216,7 @@ void TSpectrum2Transform::SetDirection(Int_t direction)
 }
 
 //______________________________________________________________________
-void TSpectrum2Transform::SetFilterCoeff(Float_t filterCoeff)
+void TSpectrum2Transform::SetFilterCoeff(Double_t filterCoeff)
 {
 //////////////////////////////////////////////////////////////////////////////
 //   SETTER FUNCION                                                      
@@ -3228,7 +3228,7 @@ void TSpectrum2Transform::SetFilterCoeff(Float_t filterCoeff)
 }
 
 //______________________________________________________________________
-void TSpectrum2Transform::SetEnhanceCoeff(Float_t enhanceCoeff)
+void TSpectrum2Transform::SetEnhanceCoeff(Double_t enhanceCoeff)
 {
 //////////////////////////////////////////////////////////////////////////////
 //   SETTER FUNCION                                                      
