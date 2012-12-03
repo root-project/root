@@ -201,7 +201,7 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
          CO.CodeGeneration = 1;
 
          cling::Transaction T(CO, /*llvm::Module=*/0);
-         T.appendUnique(VD);
+         T.append(VD);
          T.setCompleted();
 
          m_Interpreter->codegen(&T);

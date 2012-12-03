@@ -241,8 +241,8 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
    cling::Interpreter* interp = ((TCintWithCling*)gCint)->GetInterpreter();
    for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
        I != E; ++I)
-      for (DeclGroupRef::const_iterator DI = I->begin(), DE = I->end(); 
-           DI != DE; ++DI) {
+      for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(), 
+              DE = I->m_DGR.end(); DI != DE; ++DI) {
          if (isa<DeclContext>(*DI) && !isa<EnumDecl>(*DI)) {
             // We have to find all the typedefs contained in that decl context
             // and add it to the list of types.
@@ -315,9 +315,8 @@ void TCintWithCling__UpdateListsOnUnloaded(const cling::Transaction &T) {
    TCollection* globals = gROOT->GetListOfGlobals();
    for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
        I != E; ++I)
-      for (DeclGroupRef::const_iterator
-              DI = I->begin(), DE = I->end(); DI != DE; ++DI) {
-
+      for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(), 
+              DE = I->m_DGR.end(); DI != DE; ++DI) {
          if (const VarDecl* VD = dyn_cast<VarDecl>(*DI)) {
             global = (TGlobal*)globals->FindObject(VD->getNameAsString().c_str());
             if (global) {
