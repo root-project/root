@@ -3812,14 +3812,14 @@ void WriteClassCode(const RScanner::AnnotatedRecordDecl &cl, const cling::Interp
 }
 
 //______________________________________________________________________________
-void GenerateLinkdef(int *argc, char **argv, int iv, std::string &code_for_parser)
+void GenerateLinkdef(int *argc, char **argv, int firstInputFile, std::string &code_for_parser)
 {
    code_for_parser += "#ifdef __CINT__\n\n";
    code_for_parser += "#pragma link off all globals;\n";
    code_for_parser += "#pragma link off all classes;\n";
    code_for_parser += "#pragma link off all functions;\n\n";
 
-   for (int i = iv; i < *argc; i++) {
+   for (int i = firstInputFile; i < *argc; i++) {
       char *s, trail[3];
       int   nostr = 0, noinp = 0, bcnt = 0, l = strlen(argv[i])-1;
       for (int j = 0; j < 3; j++) {
@@ -3968,38 +3968,37 @@ void StrcpyArgWithEsc(string& escaped, const char *original)
    escaped = CopyArg( original );
 }
 
-string dictsrc;
-
+std::string gDictsrcForCleanup;
 //______________________________________________________________________________
 void CleanupOnExit(int code)
 {
    // Removes tmp files, and (if code!=0) output files.
 
    if (code) {
-      if (!dictsrc.empty()) {
-         unlink(dictsrc.c_str());
+      if (!gDictsrcForCleanup.empty()) {
+         unlink(gDictsrcForCleanup.c_str());
          // also remove the .d file belonging to dictsrc
-         size_t posExt=dictsrc.rfind('.');
+         size_t posExt=gDictsrcForCleanup.rfind('.');
          if (posExt!=string::npos) {
-            dictsrc.replace(posExt, dictsrc.length(), ".d");
-            unlink(dictsrc.c_str());
+            gDictsrcForCleanup.replace(posExt, gDictsrcForCleanup.length(), ".d");
+            unlink(gDictsrcForCleanup.c_str());
          }
       }
    }
    // also remove the .def file created by CINT.
    {
-      size_t posExt=dictsrc.rfind('.');
+      size_t posExt=gDictsrcForCleanup.rfind('.');
       if (posExt!=string::npos) {
-         dictsrc.replace(posExt, dictsrc.length(), ".def");
-         unlink(dictsrc.c_str());
+         gDictsrcForCleanup.replace(posExt, gDictsrcForCleanup.length(), ".def");
+         unlink(gDictsrcForCleanup.c_str());
 
-         size_t posSlash=dictsrc.rfind('/');
+         size_t posSlash=gDictsrcForCleanup.rfind('/');
          if (posSlash==string::npos) {
-            posSlash=dictsrc.rfind('\\');
+            posSlash=gDictsrcForCleanup.rfind('\\');
          }
          if (posSlash!=string::npos) {
-            dictsrc.replace(0,posSlash+1,"");
-            unlink(dictsrc.c_str());
+            gDictsrcForCleanup.replace(0,posSlash+1,"");
+            unlink(gDictsrcForCleanup.c_str());
          }
       }
    }
@@ -4168,12 +4167,12 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
    struct stat finfo;
    if (stat(dictDir.c_str(), &finfo) < 0 ||
        !S_ISDIR(finfo.st_mode)) {
-      // dictDir = "./";
-      dictDir = llvm::sys::path::parent_path(dictSrcFile);
+      dictDir = "./";
+      // fprintf(stderr,"Will check parent of the pcm in %s\n",dictSrcFile);
+      // dictDir = llvm::sys::path::parent_path(dictSrcFile);
    }
-   
 #endif
-   
+   // fprintf(stderr,"Will write the pcm in %s\n",dictDir.c_str());
    CI->getPreprocessor().getHeaderSearchInfo().setModuleCachePath(dictDir.c_str());
    std::string moduleFile = dictDir + ROOT::TMetaUtils::GetModuleFileName(dictname.c_str());
    clang::Module* module = 0;
@@ -4242,9 +4241,9 @@ int main(int argc, char **argv)
       return 1;
    }
 
-   char dictname[1024];
-   int i, ic, ifl, force;
-   int icc = 0;
+   std::string dictname;
+   std::string dictpathname;
+   int ic, force;
    bool requestAllSymbols = false; // Would be set to true is we decide to support an option like --deep.
 
    std::string currentDirectory;
@@ -4285,7 +4284,6 @@ int main(int argc, char **argv)
 
    const char* libprefix = "--lib-list-prefix=";
 
-   ifl = 0;
    while (ic < argc && strncmp(argv[ic], "-",1)==0
           && strcmp(argv[ic], "-f")!=0 ) {
       if (!strcmp(argv[ic], "-l")) {
@@ -4341,7 +4339,6 @@ int main(int argc, char **argv)
    }
 #endif
 
-   string header("");
    if (ic < argc && (strstr(argv[ic],".C")  || strstr(argv[ic],".cpp") ||
        strstr(argv[ic],".cp") || strstr(argv[ic],".cxx") ||
        strstr(argv[ic],".cc") || strstr(argv[ic],".c++"))) {
@@ -4353,7 +4350,7 @@ int main(int argc, char **argv)
             return 1;
          }
       }
-      //string header( argv[ic] );
+      string header( argv[ic] );
       header = argv[ic];
       int loc = strrchr(argv[ic],'.') - argv[ic];
       header[loc+1] = 'h';
@@ -4379,46 +4376,30 @@ int main(int argc, char **argv)
          }
       }
 
-      dictsrc=argv[ic];
-      fp = fopen(argv[ic], "w");
-      if (fp) fclose(fp);    // make sure file is created and empty
-      ifl = ic;
-      ic++;
-
       // remove possible pathname to get the dictionary name
-      if (strlen(argv[ifl]) > (sizeof(dictname)-1)) {
+      if (strlen(argv[ic]) > (PATH_MAX-1)) {
          Error(0, "rootcint: dictionary name too long (more than %d characters): %s\n",
-               sizeof(dictname)-1,argv[ifl]);
+               (PATH_MAX-1),argv[ic]);
          CleanupOnExit(1);
          return 1;
       }
-      strncpy(dictname, argv[ifl], sizeof(dictname)-1);
-      char *p = 0;
-      // find the right part of then name.
-      for (p = dictname + strlen(dictname)-1;p!=dictname;--p) {
-         if (*p =='/' ||  *p =='\\') {
-            *p = 0;
-            break;
-         }
-      }
-      if (!p)
-         p = dictname;
-      else if (p != dictname) {
-         p++;
-         memmove(dictname, p, strlen(p)+1);
-      }
+
+      gDictsrcForCleanup = argv[ic];
+      dictpathname = argv[ic];
+      dictname = llvm::sys::path::filename(dictpathname);
+   
+      fp = fopen(argv[ic], "w");
+      if (fp) fclose(fp);    // make sure file is created and empty
+      ic++;
+
    } else if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h")) {
       fprintf(stderr, "%s\n", help);
       return 1;
    } else {
       ic = 1;
       if (force) ic = 2;
-      ifl = 0;
    }
    
-   int iv, il;
-   std::vector<std::string> path;
-
    std::vector<std::string> clingArgs;
    clingArgs.push_back(argv[0]);
    clingArgs.push_back("-I.");
@@ -4432,43 +4413,32 @@ int main(int argc, char **argv)
 #if !defined(ROOTBUILD) && defined(ROOTINCDIR)
    SetRootSys();
 #endif
-   path.push_back(std::string("-I") + TMetaUtils::GetROOTIncludeDir(ROOTBUILDVAL));
-
 
    if (ic < argc && !strcmp(argv[ic], "-c")) {
-      icc++;
-      if (ifl) {
+      // Simply ignore the -c options.
+      ic++;
+   }
+
+   while (ic < argc && (*argv[ic] == '-' || *argv[ic] == '+')) {
+      if (strcmp("+P", argv[ic]) == 0 ||
+          strcmp("+V", argv[ic]) == 0 ||
+          strcmp("+STUB", argv[ic]) == 0) {
+         // break when we see positional options
+         break;
+      }
+      if (strcmp("-pipe", argv[ic])!=0 && strcmp("-pthread", argv[ic])!=0) {
+         // filter out undesirable options
+         if (strcmp("-fPIC", argv[ic]) && strcmp("-fpic", argv[ic])
+             && strcmp("-p", argv[ic])) 
+            {    
+               clingArgs.push_back(argv[ic]);
+            }
          ic++;
-
-         while (ic < argc && (*argv[ic] == '-' || *argv[ic] == '+')) {
-            if (strcmp("+P", argv[ic]) == 0 ||
-                strcmp("+V", argv[ic]) == 0 ||
-                strcmp("+STUB", argv[ic]) == 0) {
-               // break when we see positional options
-               break;
-            }
-            if (strcmp("-pipe", argv[ic])!=0 && strcmp("-pthread", argv[ic])!=0) {
-               // filter out undesirable options
-               if (strcmp("-fPIC", argv[ic]) && strcmp("-fpic", argv[ic])
-                   && strcmp("-p", argv[ic])) {
-                  clingArgs.push_back(argv[ic]);
-               }
-               ic++;
-            } else {
-               ic++;
-            }
-         }
-
-         for (i = 0; i < (int)path.size(); i++) {
-            clingArgs.push_back(path[i].c_str());
-         }
       } else {
-         Error(0, "%s: option -c can only be used when an output file has been specified\n", argv[0]);
-         return 1;
+         ic++;
       }
    }
-   iv = 0;
-   il = 0;
+   clingArgs.push_back(std::string("-I") + TMetaUtils::GetROOTIncludeDir(ROOTBUILDVAL));
 
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
@@ -4591,12 +4561,14 @@ int main(int argc, char **argv)
    std::string interpPragmaSource;
    std::string includeForSource;
    string esc_arg;
-   for (i = ic; i < argc; i++) {
-      if (!iv && *argv[i] != '-' && *argv[i] != '+') {
-         iv = i;
+   int firstInputFile = 0;
+   int linkdefLoc = 0;
+   for (int i = ic; i < argc; i++) {
+      if (!firstInputFile && *argv[i] != '-' && *argv[i] != '+') {
+         firstInputFile = i;
       }
       if (R__IsSelectionFile(argv[i])) {
-         il = i;
+         linkdefLoc = i;
          if (i != argc-1) {
             Error(0, "%s: %s must be last file on command line\n", argv[0], argv[i]);
             return 1;
@@ -4641,37 +4613,39 @@ int main(int argc, char **argv)
       }
    }
 
-   if (!iv) {
+   if (!firstInputFile) {
       Error(0, "%s: no input files specified\n", argv[0]);
       CleanupOnExit(1);
       return 1;
    }
 
-   if (!il) {
+   if (!linkdefLoc) {
       // Generate autolinkdef
-      GenerateLinkdef(&argc, argv, iv, interpPragmaSource);
+      GenerateLinkdef(&argc, argv, firstInputFile, interpPragmaSource);
    }
 
    // make name of dict include file "aapDict.cxx" -> "aapDict.h"
-   std::string dictheader( argv[ifl] );
-   size_t pos = dictheader.rfind('.');
-   dictheader.erase(pos);
-   dictheader.append(".h");
-   
+   std::string dictheader( dictpathname );
+   if (!dictheader.empty()) {
+      size_t pos = dictheader.rfind('.');
+      if (pos != std::string::npos) dictheader.erase(pos);
+      dictheader.append(".h");
+   }
    std::string inclf(dictname);
-   pos = inclf.rfind('.');
-   inclf.erase(pos);
-   inclf.append(".h");
-   
+   if (!inclf.empty()) {
+      size_t pos = inclf.rfind('.');
+      if (pos != std::string::npos) inclf.erase(pos);
+      inclf.append(".h");
+   }
    // Check if code goes to stdout or rootcling file
    std::ofstream fileout;
    std::ofstream headerout;
-   if (ifl) {
-      fileout.open(argv[ifl]);
+   if (!dictpathname.empty()) {
+      fileout.open(dictpathname.c_str());
       dictSrcOut = &fileout;
       if (!(*dictSrcOut)) {
          Error(0, "rootcint: failed to open %s in main\n",
-               argv[ifl]);
+               dictpathname.c_str());
          CleanupOnExit(1);
          return 1;
       }
@@ -4688,21 +4662,23 @@ int main(int argc, char **argv)
       dictHdrOut = &std::cout;
    }
    
-   string main_dictname(argv[ifl]);
-   size_t dh = main_dictname.rfind('.');
-   if (dh != std::string::npos) {
-      main_dictname.erase(dh);
+   string main_dictname(dictpathname);
+   {
+      size_t dh = main_dictname.rfind('.');
+      if (dh != std::string::npos) {
+         main_dictname.erase(dh);
+      }
+      // Need to replace all the characters not allowed in a symbol ...
+      std::string main_dictname_copy(main_dictname);
+      TMetaUtils::GetCppName(main_dictname, main_dictname_copy.c_str());
    }
-   // Need to replace all the characters not allowed in a symbol ...
-   std::string main_dictname_copy(main_dictname);
-   TMetaUtils::GetCppName(main_dictname, main_dictname_copy.c_str());
 
    time_t t = time(0);
    (*dictSrcOut) << "//"  << std::endl
                  << "// File generated by " << argv[0] << " at " << ctime(&t) << std::endl
                  << "// Do NOT change. Changes will be lost next time file is generated" << std::endl
                  << "//" << std::endl << std::endl
-
+      
                  << "#define R__DICTIONARY_FILENAME " << main_dictname << std::endl
                  << "#include \"" << inclf << "\"\n"
                  << std::endl;
@@ -4716,12 +4692,12 @@ int main(int argc, char **argv)
    //---------------------------------------------------------------------------
 
    string linkdefFilename;
-   if (!il) {
+   if (!linkdefLoc) {
       linkdefFilename = "in memory";
    } else {
-      bool found = Which(interp, argv[il], linkdefFilename);
+      bool found = Which(interp, argv[linkdefLoc], linkdefFilename);
       if (!found) {
-         Error(0, "%s: cannot open linkdef file %s\n", argv[0], argv[il]);
+         Error(0, "%s: cannot open linkdef file %s\n", argv[0], argv[linkdefLoc]);
          CleanupOnExit(1);
          return 1;
       }
@@ -4732,7 +4708,7 @@ int main(int argc, char **argv)
 
    if (requestAllSymbols) {
       selectionRules.SetDeep(true);
-   } else if (!il) {
+   } else if (!linkdefLoc) {
       // There is no linkdef file, we added the 'default' #pragma to 
       // interpPragmaSource.
 
@@ -4981,22 +4957,20 @@ int main(int argc, char **argv)
    
    // Now we have done all our looping and thus all the possible 
    // annotation, let's write the pcms.
-   if (strstr(dictname,"rootcint_") != dictname) {
-      // Modules only for "regular" dictionaries, not for cintdlls
-      // pcmArgs does not need any of the 'extra' include (entered via
-      // #pragma) as those are needed only for compilation.
-      // However CINT was essentially treating them the same as any other
-      // so we may have to put them here too ... maybe.
 
-      // Until the module are actually enabled in ROOT, we need to register
-      // the 'current' directory to make it relocatable (i.e. have a way
-      // to find the headers).
-      string incCurDir = "-I";
-      incCurDir += currentDirectory;
-      pcmArgs.push_back(incCurDir);
+   // pcmArgs does not need any of the 'extra' include (entered via
+   // #pragma) as those are needed only for compilation.
+   // However CINT was essentially treating them the same as any other
+   // so we may have to put them here too ... maybe.
 
-      GenerateModule(dictname, pcmArgs, currentDirectory);
-   }
+   // Until the module are actually enabled in ROOT, we need to register
+   // the 'current' directory to make it relocatable (i.e. have a way
+   // to find the headers).
+   string incCurDir = "-I";
+   incCurDir += currentDirectory;
+   pcmArgs.push_back(incCurDir);
+   
+   GenerateModule(dictname.c_str(), pcmArgs, currentDirectory);
 
    // Now that CINT is not longer there to write the header file,
    // write one and include in there a few things for backward 
