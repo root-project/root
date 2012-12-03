@@ -99,6 +99,10 @@ namespace {
 
 
 //- helpers --------------------------------------------------------------------
+namespace PyROOT {
+   PyObject* BindRootGlobal( DataMemberInfo_t* );
+}
+
 namespace {
 
    inline void AddToGlobalScope( const char* label, const char* /* hdr */, TObject* obj, TClass* klass )
@@ -644,17 +648,15 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
 {
 // try named global variable/enum (first ROOT, then Cling: sync is too slow)
    TGlobal* gb = (TGlobal*)gROOT->GetListOfGlobals( kFALSE )->FindObject( name.c_str() );
-   if ( gb && gb->GetAddress() != (void*)-1 )
+   if ( gb && gb->GetAddress() && gb->GetAddress() != (void*)-1 )
       return BindRootGlobal( gb );
 
-// (CLING) TODO: look into Cling's interactive bits (the following code does
-// not work):
-   ClassInfo_t* gbl = gInterpreter->ClassInfo_Factory();
+   ClassInfo_t* gbl = gInterpreter->ClassInfo_Factory( "" ); // "" == global namespace
    DataMemberInfo_t* dt = gInterpreter->DataMemberInfo_Factory( gbl );
    while ( gInterpreter->DataMemberInfo_Next( dt ) ) {
-      if ( gInterpreter->DataMemberInfo_IsValid( dt ) && gInterpreter->DataMemberInfo_Name( dt ) == name ) {
-         TGlobal g = TGlobal( dt );
-         return BindRootGlobal( &g );
+      if ( gInterpreter->DataMemberInfo_IsValid( dt ) &&
+           gInterpreter->DataMemberInfo_Name( dt ) == name ) {
+         return BindRootGlobal( dt );
       }
    }
 
@@ -761,6 +763,12 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
 }
 
 //____________________________________________________________________________
+PyObject* PyROOT::BindRootGlobal( DataMemberInfo_t* dmi ) {
+   TGlobal gbl( gInterpreter->DataMemberInfo_FactoryCopy( dmi ) );
+   return BindRootGlobal( &gbl );
+}
+
+//____________________________________________________________________________
 PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
 {
 // gbl == 0 means global does not exist (rather than gbl is NULL pointer)
@@ -782,13 +790,11 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
       return BindRootObject( (void*)gbl->GetAddress(), klass );
    }
 
-/* TODO: Cling does not yet support enums ....
-   if ( gbl->GetAddress() &&       // check for enums (which are const, not properties)
+   if ( gbl->GetAddress() &&       // check for enums and consts
         (unsigned long)gbl->GetAddress() != (unsigned long)-1 && // Cling (??)
-        ( G__TypeInfo( gbl->GetTypeName() ).Property() & G__BIT_ISENUM ) ) {
+        ( gInterpreter->ClassInfo_IsEnum( gbl->GetTypeName() ) ) ) {
       return PyInt_FromLong( *((int*)gbl->GetAddress()) );
    }
-*/
 
 // for built-in types, to ensure setability
    return (PyObject*)PropertyProxy_New< TGlobal* >( gbl );
