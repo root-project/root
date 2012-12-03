@@ -52,7 +52,7 @@ TFile *cernbuild(Int_t get=0) {
    tree->Branch("Division",Division,"Division/C");
    tree->Branch("Nation",Nation,"Nation/C");
    char line[80];
-   while (fgets(&line,80,fp)) {
+   while (fgets(line,80,fp)) {
       sscanf(&line[0],"%d %d %d %d %d",&Category,&Flag,&Age,&Service,&Children);
       sscanf(&line[32],"%d %d  %d %d %s %s",&Grade,&Step,&Hrweek,&Cost,Division,Nation);
       tree->Fill();
@@ -73,8 +73,17 @@ TFile *cernbuild(Int_t get=0) {
 int execDrawString()
 {
    cernbuild(1);
+#ifdef ClingWorkAroundMissingDynamicScope
+   TTree *T; gFile->GetObject("T",T);
+#endif
    T->Draw("Division");
+#ifdef ClingWorkAroundMissingDynamicScope
+   TH1F *htemp = (TH1F*)gROOT->FindObject("htemp");
+#endif
    htemp->Print("all");
+#ifdef ClingWorkAroundErracticValuePrinter
+   printf("(int)0\n");
+#endif
    return 0;
 }
 

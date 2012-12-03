@@ -1,12 +1,21 @@
 {
    bool error = false;
+#ifdef ClingWorkAroundMissingImplicitAuto
+   TTree *tree = new TTree ("tree", "tree");
+#else
    tree = new TTree ("tree", "tree");
+#endif
    tree->ReadFile ("test.txt","",' ');
    tree->SetAlias("first", "(name==\"16A\")");
    tree->SetAlias("second", "count==2");
    tree->Scan();
    
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   Long64_t res;
+   res = tree->Draw("name", "first");
+#else 
    Long64_t res = tree->Draw("name", "first");
+#endif    
    if (res != 1) {
       error = true;
       fprintf(stdout,"Error: Draw(\"name\", \"first\") returned %lld instead of 1\n",res);
@@ -36,7 +45,10 @@
    gErrorIgnoreLevel = kWarning;
    tree->Draw("scriptAliasString.C+");
    
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   bool ret = error;
+#else
    return error;
-   
+#endif
 }
 
