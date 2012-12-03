@@ -62,18 +62,20 @@ public:
                                                              fGlobalCC(state.fGlobalCC), fIntParameters(state.fIntParameters), fIntCovariance(state.fIntCovariance) {}
 
    MnUserParameterState& operator=(const MnUserParameterState& state) {
-      fValid = state.fValid;
-      fCovarianceValid = state.fCovarianceValid;
-      fGCCValid = state.fGCCValid;
-      fCovStatus = state.fCovStatus;
-      fFVal = state.fFVal;
-      fEDM = state.fEDM;
-      fNFcn = state.fNFcn;
-      fParameters = state.fParameters;
-      fCovariance = state.fCovariance;
-      fGlobalCC = state.fGlobalCC;
-      fIntParameters = state.fIntParameters;
-      fIntCovariance = state.fIntCovariance;
+      if(this != &state) {
+         fValid = state.fValid;
+         fCovarianceValid = state.fCovarianceValid;
+         fGCCValid = state.fGCCValid;
+         fCovStatus = state.fCovStatus;
+         fFVal = state.fFVal;
+         fEDM = state.fEDM;
+         fNFcn = state.fNFcn;
+         fParameters = state.fParameters;
+         fCovariance = state.fCovariance;
+         fGlobalCC = state.fGlobalCC;
+         fIntParameters = state.fIntParameters;
+         fIntCovariance = state.fIntCovariance;
+      }   
       return *this;
    }
 
