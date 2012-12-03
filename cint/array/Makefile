@@ -28,7 +28,14 @@ endif
 array1test.log: array1.C
 
 array1test.short.log : array1test.log
-	$(CMDECHO) cat array1test.log | sed -e 's/0x[^ ]*//g' -e 's/[A-Za-z]:.*array1.C/array1.C/g' > $@
+ifneq ($(ClingWorkAroundUnnamedIncorrectFileLoc),)
+	$(CMDECHO) cat array1test.log | sed -e 's/0x[^ ]*//g' -e 's/[A-Za-z]:.*array1.C/array1.C/g' \
+		-e 's/(address: NA) class/ /' -e 's/, size = .*/=/' \
+		-e 's/input_line_[0-9]*/array1.C/' -e 's/    4   /         3   /' -e 's/   11   /          6   /' > $@
+else
+	$(CMDECHO) cat array1test.log | sed -e 's/0x[^ ]*//g' -e 's/[A-Za-z]:.*array1.C/array1.C/g' \
+		-e 's/(address: NA) class/ /' -e 's/, size = .*/=/' > $@
+endif
 
 array1test: array1test.short.log
 	$(TestDiff)
