@@ -5305,6 +5305,13 @@ Long64_t TH1::Merge(TCollection *li)
          allHaveLabels &= (haveOneLabel);
          // for the error message
          if (haveOneLabel) foundLabelHist = kTRUE;
+         // If histograms have labels but kCanRebin is not set on this 
+         // use merging of bin content
+         if (allHaveLabels && !this->TestBit(TH1::kCanRebin)) {
+            Warning("Merge","Histogram %s has labels but has not the kCanRebin bit set - falling back to bin numbering mode",GetName() );
+            allHaveLabels = kFALSE;
+         }
+         // it means 
          // I could add a check if histogram contains bins without a label 
          // and with non-zero bin content
          // Do we want to support this ???
