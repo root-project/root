@@ -44,7 +44,7 @@ public:
   bool IsValid() const {return fPtr != 0;}
   
   MnRefCountedPointer& operator=(const MnRefCountedPointer<T>& other) {
-    if(fPtr != other.fPtr) {
+    if(this != &other && fPtr != other.fPtr) {
       RemoveReference();
       fPtr = other.fPtr;
       fCounter = other.fCounter;

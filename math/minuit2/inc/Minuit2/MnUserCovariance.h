@@ -52,8 +52,10 @@ public:
   MnUserCovariance(const MnUserCovariance& cov) : fData(cov.fData), fNRow(cov.fNRow) {}
 
   MnUserCovariance& operator=(const MnUserCovariance& cov) {
-    fData = cov.fData;
-    fNRow = cov.fNRow;
+    if(this != &cov) {
+      fData = cov.fData;
+      fNRow = cov.fNRow;
+    }
     return *this;
   }
 
