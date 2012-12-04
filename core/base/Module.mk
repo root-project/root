@@ -32,7 +32,11 @@ BASEH4       := TDirectory.h
 
 BASEDS       := $(BASEDS1) $(BASEDS2) $(BASEDS3) $(BASEDS4)
 ifeq ($(PLATFORM),win32)
+ifeq ($(BUILDCLING),yes)
+BASEDO       := $(BASEDO1) $(BASEDO2) $(BASEDO3)
+else
 BASEDO       := $(BASEDO1) $(BASEDO2) $(BASEDO3) $(BASEDO4)
+endif
 else
 BASEDO       := $(BASEDO1) $(BASEDO2) $(BASEDO3)
 endif
@@ -48,10 +52,14 @@ BASEH3       := GuiTypes.h KeySymbols.h Buttons.h TTimeStamp.h TVirtualMutex.h \
 BASEH3       := $(patsubst %,$(MODDIRI)/%,$(BASEH3))
 BASEH1       := $(filter-out $(BASEH3),$(BASEH1))
 BASEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+ifeq ($(BUILDCLING),yes)
+BASES        := $(filter-out $(BASEDS4),$(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
+else
 ifeq ($(PLATFORM),win32)
 BASES        := $(filter-out $(BASEDS4),$(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
 else
 BASES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+endif
 endif
 BASEO        := $(call stripsrc,$(BASES:.cxx=.o))
 

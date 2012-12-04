@@ -56,4 +56,39 @@ namespace ROOT {                                                     \
 }
 #endif
 
+
+#if defined(__cplusplus)
+/* Helper class to avoid compiler warning about casting function pointer
+** to void pointer.
+*/
+class TFunc2void {
+   typedef void (*funcptr_t)();
+
+   union funcptr_and_voidptr {
+      typedef void (*funcptr_t)();
+
+      funcptr_and_voidptr(void *val) : _read(val) {}
+
+      void *_read;
+      funcptr_t _write;
+   };
+
+   funcptr_and_voidptr _tmp;
+public:
+   template <typename T>
+   TFunc2void( T vfp ) : _tmp(0) {
+      _tmp._write = ( funcptr_t )vfp;
+   }
+
+   operator void* () const {
+      return _tmp._read;
+   }
+};
+#else
+typedef union {
+   void *_read;
+   void (*_write)();
+} funcptr_and_voidptr_t;
+#endif
+
 #endif

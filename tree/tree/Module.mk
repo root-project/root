@@ -27,7 +27,11 @@ TREEDH2      := TTree.h TChain.h
 
 TREEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 TREES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+ifeq ($(BUILDCLING),yes)
+TREEO        := $(filter-out $(TREEDO2),$(call stripsrc,$(TREES:.cxx=.o)))
+else
 TREEO        := $(call stripsrc,$(TREES:.cxx=.o))
+endif
 
 TREEDEP      := $(TREEO:.o=.d) $(TREEDO:.o=.d)
 

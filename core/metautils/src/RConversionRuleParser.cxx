@@ -731,7 +731,7 @@ namespace ROOT
             StrReplace( code, "\n", "\\n" );
             StrReplace( code, "\"", "\\\"");
 
-            output << "      rule->fFunctionPtr = (void *)G__func2void( ";
+            output << "      rule->fFunctionPtr = (void *)TFunc2void( ";
             output << (*it)["funcname"] << ");" << std::endl;
             output << "      rule->fCode        = \"" << code;
             output << "\";" << std::endl;

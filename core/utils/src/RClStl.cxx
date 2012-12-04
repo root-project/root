@@ -11,7 +11,6 @@
 
 #include "RConfigure.h"
 #include "RConfig.h"
-#include "Api.h"
 
 #include "RClStl.h"
 #include "TClassEdit.h"
