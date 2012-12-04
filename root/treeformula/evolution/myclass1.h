@@ -1,3 +1,5 @@
+#ifndef MYCLASS1_H
+#define MYCLASS1_H
 // myclass.h 
 #include "TNamed.h" 
 class myclass: public TNamed 
@@ -11,4 +13,6 @@ class myclass: public TNamed
 
 #ifdef __MAKECINT__ 
 #pragma link C++ class myclass+; 
+#endif
+
 #endif

@@ -1,5 +1,10 @@
 // testclass.cc 
+#ifdef ClingWorkAroundMissingSmartInclude
+int loader = gROOT->ProcessLine(".L myclass1.cc+");
+#include "myclass1.h"
+#else
 #include "myclass1.cc+" 
+#endif
 #include "TFile.h" 
 #include "TTree.h" 
 #include "TClonesArray.h" 

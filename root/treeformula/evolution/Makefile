@@ -59,6 +59,10 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+CALLROOTEXE += -e "gSystem->Load(\"libTreePlayer\");" 
+endif
+
 test.root: myclass1_cc.$(DllSuf) writeclass.cc
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q writeclass.cc > test_root.log 2>&1
 
@@ -66,4 +70,8 @@ treetest.log: test.root myclass2_cc.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q readclass.cc > treetest.log 2>&1
 
 treetest: treetest.log
+ifneq ($(ClingWorkAroundCallfuncAndInline),)
+	$(TestDiffCintSpecific)
+else
 	$(TestDiff)
+endif
