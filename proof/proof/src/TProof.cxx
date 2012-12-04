@@ -1286,8 +1286,8 @@ Int_t TProof::AddWorkers(TList *workerList)
       // Add to global list (we will add to the monitor list after
       // finalizing the server startup)
       Bool_t slaveOk = kTRUE;
+      fSlaves->Add(slave);
       if (slave->IsValid()) {
-         fSlaves->Add(slave);
          addedWorkers->Add(slave);
       } else {
          slaveOk = kFALSE;

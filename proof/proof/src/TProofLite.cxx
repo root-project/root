@@ -621,8 +621,8 @@ Int_t TProofLite::SetupWorkers(Int_t opt, TList *startedWorkers)
                   }
 
                   // Monitor good workers
+                  fSlaves->Add(wrk);
                   if (wrk->IsValid()) {
-                     fSlaves->Add(wrk);
                      if (opt == 1) fActiveSlaves->Add(wrk);
                      fAllMonitor->Add(wrk->GetSocket());
                      // Record also in the list for termination
