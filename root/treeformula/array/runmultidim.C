@@ -23,6 +23,7 @@ tree->Scan("fEvents[].fShwInd[0]","","colsize=20");
 tree->Scan("fEvents.fEventNo:fEvents[].fNShower:fShowers[fEvents[].fShwInd[]].fEnergy","fEvents[].fShwInd[]*0==0","colsize=20");
 
 return;
+/*
 // Wrong
 tree->Scan("fShowers[fEvents[].fShwInd[]].fEnergy","fEvents[].fNShower > 0"); // to fix remove condition
 tree->Scan("fEvents[].fNShower:fShowers[fEvents[].fShwInd[]].fEnergy","1"); // to fix replace cond : fEvents[].fShwInd[]*0==0
@@ -39,6 +40,6 @@ root [55]   tree->Scan("fEvents.fEventNo:fShowers[fEvents[].fShwInd[]].fEnergy",
 *        0 *        1 *                  0 *       20 *
 *        0 *        2 *                  2 *       30 *
 *******************************************************
-
+*/
 
 }
