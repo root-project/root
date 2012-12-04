@@ -7,6 +7,7 @@ CINT_VERSION := cling
 
 CALLROOTEXE = root.exe
 # Essential problems, must be fixed before the release.
+# (incorrect behavior of C++ compliant code)
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectInitOrder"
 CALLROOTEXE += -e "\#define ClingWorkAroundPrintfIssues"
 # Major features/issues
