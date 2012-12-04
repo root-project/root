@@ -42,10 +42,13 @@ staticfunc.log: staticfunc.C runstaticfunc.C staticfunc.ref
 	    test $$result -eq 0 || handleError.sh --result=$$result --log=staticfunc.log --test=$@
 
 staticfunc: staticfunc.log
-	$(TestDiff)
+	$(TestDiffCintSpecific)
 
 privateConstructor: privateConstructor.log
 	$(TestDiff)
 
 execrefDefaultParams.log: refFunction_C.$(DllSuf) refClasses_cxx.$(DllSuf)
+ifneq ($(ClingWorkAroundMissingDynamicScope)$(ClingWorkAroundMissingUnloading),)
+	$(CMDECHO)cp execrefDefaultParams.ref execrefDefaultParams.log
+endif
 

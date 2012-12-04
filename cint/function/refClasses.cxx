@@ -1,3 +1,6 @@
+#ifndef refClasses_cxx
+#define refClasses_cxx
+
 #include <stdio.h>
 #include "TString.h"
 
@@ -18,4 +21,5 @@ TString value;
   const char *Data() { return value.Data(); }
 };
 
+#endif
 

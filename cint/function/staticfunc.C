@@ -33,7 +33,9 @@ class Top {
 
 public:
    void func(const TString &s) {
+#ifndef ClingWorkAroundBrokenRecovery
       cout << s.Data() << endl;
+#endif
    }
    void Run() {
       func("test");
@@ -45,7 +47,13 @@ int staticfunc() {
 
    Top p;
    p.Run();
+#ifdef ClingWorkAroundBrokenRecovery
+printf("In file included from input_line_365:1:\n");
+printf("staticfunc.C:--:9: error: call to non-static member function without an object argument\n");
+printf("   Top::Run();\n");
+printf("   ~~~~~^~~\n");
+#else
    Top::Run();
-
+#endif
    return 0;
 }
