@@ -103,7 +103,7 @@ void findPeaks(Int_t pmin, Int_t pmax, Int_t &nfound, Int_t &ngood, Int_t &nghos
    nfound = s->Search(h,2,"goff");
    //Search found peaks
    ngood = 0;
-   Float_t *xpeaks = s->GetPositionX();
+   Double_t *xpeaks = s->GetPositionX();
    for (p=0;p<npeaks;p++) {
       for (Int_t pf=0;pf<nfound;pf++) {
          Double_t dx = TMath::Abs(xpeaks[pf] - par[3*p+3]);
@@ -208,8 +208,8 @@ void stress2(Int_t np2) {
    
    //searching good and ghost peaks (approximation)
    Int_t pf,ngood = 0;
-   Float_t *xpeaks = s->GetPositionX();
-   Float_t *ypeaks = s->GetPositionY();
+   Double_t *xpeaks = s->GetPositionX();
+   Double_t *ypeaks = s->GetPositionY();
    for (p=0;p<npeaks;p++) {
       for (Int_t pf=0;pf<nfound;pf++) {
          Double_t diffx = TMath::Abs(xpeaks[pf] - par[5*p+1]);
