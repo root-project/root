@@ -987,8 +987,8 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    if (result.isValid() && result.needsManagedAllocation())
       fTemporaries->push_back(result);
    if (indent) {
-      // incomplete expression, needs something like:
-      /// fMetaProcessor->abortEvaluation();
+      Error("ProcessLine", "Ignoring invalid input.");
+      fMetaProcessor->cancelContinuation();
       gROOT->SetLineHasBeenProcessed();
       return 0;
    }
