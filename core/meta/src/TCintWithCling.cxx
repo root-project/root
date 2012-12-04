@@ -374,6 +374,7 @@ void* autoloadCallback(const std::string& mangled_name)
    int err = 0;
    char* demangled_name = abi::__cxa_demangle(mangled_name.c_str(), 0, 0, &err);
    if (err) {
+      free(demangled_name);
       return 0;
    }
    //fprintf(stderr, "demangled name: '%s'\n", demangled_name);
@@ -382,6 +383,8 @@ void* autoloadCallback(const std::string& mangled_name)
    //  function name.
    //
    std::string name(demangled_name);
+   free(demangled_name);
+
    // Remove the function arguments.
    std::string::size_type pos = name.rfind('(');
    if (pos != std::string::npos) {
