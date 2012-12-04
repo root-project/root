@@ -3647,10 +3647,12 @@ bool testMerge1DLabelSame()
    list->Add(h2);
    list->Add(h3);
 
+   h1->SetBit(TH1::kCanRebin);
+
    h1->Merge(list);
 
    
-   bool ret = equals("MergeLabelSame1D", h1, h4, cmpOptStats, 1E-10);
+   bool ret = equals("MergeLabelSame1D", h1, h4, cmpOptNone, 1E-10);
    delete h1;
    delete h2;
    delete h3;
@@ -4383,6 +4385,8 @@ bool testMerge1DLabelAll()
    h1->LabelsOption("a");
    h2->LabelsOption("<");
    h3->LabelsOption(">");
+
+   h1->SetBit(TH1::kCanRebin);
    
    h1->Merge(list);
 
