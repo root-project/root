@@ -15,6 +15,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoading"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndInline"
 # Convenience features, would be nice to have.
+CALLROOTEXE += -e "\#define ClingWorkAroundBrokenRecovery"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingImplicitAuto"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingSmartInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundErracticValuePrinter"
@@ -40,3 +41,4 @@ ClingWorkAroundUnnamedIncorrectInitOrder = yes # See https://savannah.cern.ch/bu
 ClingWorkAroundUnnamedIncorrectFileLoc = yes   # see https://savannah.cern.ch/bugs/index.php?99236
 ClingWorkAroundPrintfIssues = yes              # see https://savannah.cern.ch/bugs/index.php?99234
 ClingWorkAroundCallfuncAndInline = yes
+ClingWorkAroundBrokenRecovery = yes
