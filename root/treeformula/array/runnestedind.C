@@ -53,5 +53,8 @@ int runnestedind() {
       cout << "Drawing \"type[sonind[]]>>hbad\",\"type[]==3\" failed!\n";
       return 1;
    }
+#ifdef ClingWorkAroundErracticValuePrinter
+   printf("(int)0\n");
+#endif
    return 0;
 }

@@ -1,24 +1,40 @@
 {
 bool result = true;
 TFile *f = new TFile("orange.root");
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+TTree *t ; t =  (TTree*)f->Get("h1");
+#else
 TTree *t = (TTree*)f->Get("h1");
+#endif
+#ifdef ClingWorkAroundMissingImplicitAuto
+TCanvas *c;
+#endif
 c = new TCanvas();
 c->Divide(1,2);
 
+#ifdef ClingWorkAroundMissingDynamicScope
+   TH1F *histo1, *histo2;
+#endif
 {
    c->cd(1);
    Long64_t v1 = t->Draw("Vnt_fmcvtx_r[Vnt_vtx_i[0]-1][]>>histo1","");
+#ifdef ClingWorkAroundMissingDynamicScope
+   histo1 = (TH1F*)gROOT->FindObject("histo1");
+#endif
    int m1 = histo1->GetMean();
    c->cd(2);
    Long64_t v2 = t->Draw("Vnt_fmcvtx_r[][]>>histo2","(int(Iteration$/3)==(Vnt_vtx_i[0]-1))");
+#ifdef ClingWorkAroundMissingDynamicScope
+   histo2 = (TH1F*)gROOT->FindObject("histo2");
+#endif
    int m2 = histo2->GetMean();
    if (v1!=v2) {
       result = false;
-      fprintf(stderr,"draw return 1 is %d while draw return 2 is %d\n",v1,v2);
+      fprintf(stderr,"draw return 1 is %lld while draw return 2 is %lld\n",v1,v2);
    }
    if (m1!=m2) {
       result = false;
-      fprintf(stderr,"mean 1 is %d while mean 2 is %d\n",m1,m22);
+      fprintf(stderr,"mean 1 is %d while mean 2 is %d\n",m1,m2);
    }
 }
 {
@@ -36,7 +52,7 @@ c->Divide(1,2);
    int m2 = histo2->GetMean();
    if (v1!=v2) {
       result = false;
-      fprintf(stderr,"draw return 1 is %d while draw return 2 is %d\n",v1,v2);
+      fprintf(stderr,"draw return 1 is %lld while draw return 2 is %lld\n",v1,v2);
    }
    if (e1!=e2) {
       result = false;
@@ -62,7 +78,7 @@ if (1) {
    int m2 = histo2->GetMean();
    if (v1!=v2) {
       result = false;
-      fprintf(stderr,"draw return 1 is %d while draw return 2 is %d\n",v1,v2);
+      fprintf(stderr,"draw return 1 is %lld while draw return 2 is %lld\n",v1,v2);
    }
    if (e1!=e2) {
       result = false;
@@ -84,5 +100,9 @@ if (1) {
    }
 }
 
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   bool res = ! result;
+#else
 return !result; // this is used by the makefile
+#endif
 }

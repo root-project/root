@@ -1,8 +1,19 @@
 {
 // Fill out the code of the actual test
 gROOT->ProcessLine(".L NtpLib.C+");
+#ifdef ClingWorkAroundMissingDynamicScope
+gROOT->ProcessLine("FillNtp();");
+#else
 FillNtp();
+#endif
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+TFile *_file0 = 0;
+_file0 = TFile::Open("NtpRecord.root"); 
+#else
 TFile *_file0 = TFile::Open("NtpRecord.root"); 
+#endif
+if (_file0)
+{
 TTree *tree = (TTree*)_file0->Get("Ntp");
 
 tree->Scan("fEvents.fNShower","","colsize=20");
@@ -21,7 +32,7 @@ tree->Scan("fEvents[].fShwInd[0]","","colsize=20");
 
 
 tree->Scan("fEvents.fEventNo:fEvents[].fNShower:fShowers[fEvents[].fShwInd[]].fEnergy","fEvents[].fShwInd[]*0==0","colsize=20");
-
+}
 return;
 /*
 // Wrong

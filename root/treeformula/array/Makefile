@@ -72,7 +72,11 @@ ScanString: ScanString.log
 	$(TestDiff)
 
 vectorOfvector: vectorOfvector.clog
+ifeq ($(ClingWorkAroundErracticValuePrinter),)	
 	$(TestDiff)
+else
+	$(TestDiffCintSpecific)
+endif
 
 indexLoad: indexLoad.clog
 	$(TestDiff)

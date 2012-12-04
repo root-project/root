@@ -298,8 +298,10 @@ bool runvectorOfvector() {
 
    t = generateTree(10,5);
    success &= testing(t,"vec.fVec2",0);
+#ifndef ClingWorkAroundCallfuncAndInline
    success &= testing(t,"vec.fVec2.GetN1()",5);
    success &= testing(t,"vec.fVec2.GetN1()-vec.fVec2.fN",5);
+#endif
    success &= testing(t,"vec.fVec2.fN",5);
    success &= testing(t,"vec.fVec2.fVec1",0);
    success &= testing(t,"vec.fVec3",0);
@@ -316,8 +318,10 @@ bool runvectorOfvector() {
 
    t = generateTree(10,7);
    success &= testing(t,"vec.fVec2",0);
+#ifndef ClingWorkAroundCallfuncAndInline
    success &= testing(t,"vec.fVec2.GetN1()",5);
    success &= testing(t,"vec.fVec2.GetN1()-vec.fVec2.fN",5);
+#endif
    success &= testing(t,"vec.fVec2.fN",5);
    success &= testing(t,"vec.fVec2.fVec1",0);
    success &= testing(t,"vec.fVec3",0);
