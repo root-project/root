@@ -2321,15 +2321,24 @@ const char* TCintWithCling::GetInterpreterTypeName(const char* name, Bool_t full
 void TCintWithCling::Execute(const char* function, const char* params, int* error)
 {
    // Execute a global function with arguments params.
+   //
+   // FIXME: The cint-based version of this code does not check if the
+   //        SetFunc() call works, and does not do any real checking
+   //        for errors from the Exec() call.  It did fetch the most
+   //        recent cint security error and return that in error, but
+   //        this does not really translate well to cling/clang.  We
+   //        should enhance these interfaces so that we can report
+   //        compilation and runtime errors properly.
+   //
    R__LOCKGUARD2(gCINTMutex);
+   if (error) {
+      *error = TInterpreter::kNoError;
+   }
    TClingClassInfo cl(fInterpreter);
-   Long_t offset;
+   Long_t offset = 0L;
    TClingCallFunc func(fInterpreter);
    func.SetFunc(&cl, function, params, &offset);
    func.Exec(0);
-   if (error) {
-      *error = G__lasterror();
-   }
 }
 
 //______________________________________________________________________________
@@ -2337,7 +2346,19 @@ void TCintWithCling::Execute(TObject* obj, TClass* cl, const char* method,
                     const char* params, int* error)
 {
    // Execute a method from class cl with arguments params.
+   //
+   // FIXME: The cint-based version of this code does not check if the
+   //        SetFunc() call works, and does not do any real checking
+   //        for errors from the Exec() call.  It did fetch the most
+   //        recent cint security error and return that in error, but
+   //        this does not really translate well to cling/clang.  We
+   //        should enhance these interfaces so that we can report
+   //        compilation and runtime errors properly.
+   //
    R__LOCKGUARD2(gCINTMutex);
+   if (error) {
+      *error = TInterpreter::kNoError;
+   }
    // If the actual class of this object inherits 2nd (or more) from TObject,
    // 'obj' is unlikely to be the start of the object (as described by IsA()),
    // hence gInterpreter->Execute will improperly correct the offset.
@@ -2347,9 +2368,6 @@ void TCintWithCling::Execute(TObject* obj, TClass* cl, const char* method,
    func.SetFunc((TClingClassInfo*)cl->GetClassInfo(), method, params, &offset);
    void* address = (void*)((Long_t)addr + offset);
    func.Exec(address);
-   if (error) {
-      *error = G__lasterror();
-   }
 }
 
 //______________________________________________________________________________
