@@ -1495,7 +1495,7 @@ Long_t TCintWithCling::Calc(const char* line, EErrorCode* error)
 {
    // Directly execute an executable statement (e.g. "func()", "3+5", etc.
    // however not declarations, like "Int_t x;").
-   Long_t result;
+   Long_t result = 0L;
 #ifdef R__WIN32
    // Test on ApplicationImp not being 0 is needed because only at end of
    // TApplication ctor the IsLineProcessing flag is set to 0, so before
@@ -1507,17 +1507,39 @@ Long_t TCintWithCling::Calc(const char* line, EErrorCode* error)
       }
       gROOT->SetLineIsProcessing();
    }
-#endif
+#endif // R__WIN32
    R__LOCKGUARD2(gCINTMutex);
-   result = (Long_t) G__int_cast(G__calc(const_cast<char*>(line)));
    if (error) {
-      *error = (EErrorCode)G__lasterror();
+      *error = TInterpreter::kNoError;
    }
+   std::string strLine("(long)(");
+   strLine += line;
+   strLine += ')';
+   cling::StoredValueRef valRef;
+   cling::Interpreter::CompilationResult cr = fInterpreter->evaluate(strLine, valRef);
+   if (cr != cling::Interpreter::kSuccess) {
+      // Failure in compilation.
+      if (error) {
+         // Note: Yes these codes are weird.
+         *error = TInterpreter::kRecoverable;
+      }
+      return 0L;
+   }
+   if (!valRef.isValid()) {
+      // Failure at runtime.
+      if (error) {
+         // Note: Yes these codes are weird.
+         *error = TInterpreter::kDangerous;
+      }
+      return 0L;
+   }
+   const cling::Value& val = valRef.get();
+   result = val.simplisticCastAs<long>();
 #ifdef R__WIN32
    if (gApplication && gApplication->GetApplicationImp()) {
       gROOT->SetLineHasBeenProcessed();
    }
-#endif
+#endif // R__WIN32
    return result;
 }
 
