@@ -1755,6 +1755,7 @@ function createFillPatterns(svg, id, color) {
 
          JSROOTPainter.drawGrid(svg, histo, pad, x, y);
 
+         if (histo['fName'] == '') histo['fName'] = "random_histo_" + random_id++;
          var g_id = format_id(histo['fName']);
          svg.selectAll("#e_"+g_id).remove();
          var g = svg.append("svg:g")
@@ -1962,6 +1963,7 @@ function createFillPatterns(svg, id, color) {
 
       function do_redraw() {
 
+         if (func['fName'] == '') func['fName'] = "random_function_" + random_id++;
          var g_id = format_id(func['fName']);
          svg_frame.selectAll("#"+g_id).remove();
 
@@ -2416,6 +2418,7 @@ function createFillPatterns(svg, id, color) {
          if (draw_all)
             JSROOTPainter.drawGrid(frame, graph['fHistogram'], pad, x, y);
 
+         if (graph['fName'] == '') graph['fName'] = "random_graph_" + random_id++;
          var g_id = format_id(graph['fName']);
          svg_frame.selectAll("#"+g_id).remove();
          var g = svg_frame.append("svg:g")
@@ -2776,6 +2779,7 @@ function createFillPatterns(svg, id, color) {
             if (draw_all)
                JSROOTPainter.drawGrid(frame, histo, pad, x, y);
 
+            if (histo['fName'] == '') histo['fName'] = "random_histo_" + random_id++;
             var g_id = format_id(histo['fName']);
             svg_frame.selectAll("#"+g_id).remove();
             var g = svg_frame.append("svg:g")
@@ -2904,6 +2908,7 @@ function createFillPatterns(svg, id, color) {
 
          JSROOTPainter.drawGrid(frame, histo, pad, x, y);
 
+         if (histo['fName'] == '') histo['fName'] = "random_histo_" + random_id++;
          var g_id = format_id(histo['fName']);
          svg_frame.selectAll("#"+g_id).remove();
          var g = svg_frame.append("svg:g")
