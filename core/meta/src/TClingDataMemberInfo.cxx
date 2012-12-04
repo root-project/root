@@ -269,8 +269,15 @@ long TClingDataMemberInfo::Offset() const
    // enum constants are esentially numbers and don't get addresses. However
    // ROOT expects the address to the enum constant initalizer to be returned.
    else if (const EnumConstantDecl *ECD = dyn_cast<EnumConstantDecl>(D))
+      // The raw data is stored as a long long, so we need to find the 'long'
+      // part.
+#ifdef R__BYTESWAP
+      // In this case at the beginning.
       return reinterpret_cast<long>(ECD->getInitVal().getRawData());
-   
+#else
+      // In this case in the second part.
+      return reinterpret_cast<long>(((char*)ECD->getInitVal().getRawData())+sizeof(long) );
+#endif   
    return -1L;
 }
 
