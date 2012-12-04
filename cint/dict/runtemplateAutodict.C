@@ -22,5 +22,8 @@ int runtemplateAutodict()
 
   gROOT->ProcessLine(".x ROOTClassTest.C");
   //gROOT->ProcessLine(".U ROOTClassTest.C");
+#ifdef ClingWorkAroundErracticValuePrinter
+  printf("(int)0\n");
+#endif
   return 0;
 }

@@ -83,7 +83,11 @@ private:
       cout << s << endl;
    }
 
+#ifdef ClingWorkAroundScriptClassDef
+   ClassDefNV(TDefaultArgs,0);
+#else
    ClassDef(TDefaultArgs,0);
+#endif
 };
 
 void rundefaultargs() 

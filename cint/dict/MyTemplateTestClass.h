@@ -1,3 +1,6 @@
+#ifndef MyTemplateClass_h
+#define MyTemplateClass_h
+
 template <typename T>
 class MyTemplateClass
 {
@@ -13,3 +16,6 @@ class MyTemplateClass
     var = i;
   }
 };
+
+#endif
+

@@ -58,10 +58,10 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 defaultargs: defaultargs_interpreted defaultargs_compiled
 
 defaultargs_compiled: defaultargs.clog
-	$(TestDiff)
+	$(TestDiffW)
 
 defaultargs_interpreted: defaultargs.log
-	$(TestDiff)
+	$(TestDiffW)
 
 templateAutodict.shortlog: templateAutodict.log
 	$(CMDECHO) cat templateAutodict.log | grep -v -e _cint.\*cxx -e Creating -e AutoDict_.\*cxx > templateAutodict.shortlog

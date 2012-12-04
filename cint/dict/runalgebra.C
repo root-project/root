@@ -17,10 +17,13 @@
 
 void runalgebra (void) { /* Dummy ROOT initialization routine */ }
 
+#include "RConfigure.h"
+#ifndef R__HAS_CLING
 #ifndef __CINT__
 #include "G__ci.h"
 static int algebra3_lib_init = ( G__loadfile("complex"), 0 ); // load the CINT's complex.dll
 #endif /* __CINT__ */
+#endif
 
 #if defined(__MAKECINT__) || defined(__ALGEBRA3_CXX_DEBUG__)
 
