@@ -13,9 +13,6 @@
 class TDataMember;
 class TGlobal;
 
-// CINT
-#include "DataMbr.h"
-
 // Standard
 #include <string>
 
@@ -43,9 +40,8 @@ namespace PyROOT {
       Long_t       fOffset;
       Long_t       fProperty;
       TConverter*  fConverter;
-      Int_t        fOwnerTagnum;   // TODO: wrap up ...
+      void*        fParent;
       std::string  fName;
-      Int_t        fOwnerIsNamespace;
 
    private:              // private, as the python C-API will handle creation
       PropertyProxy() {}
