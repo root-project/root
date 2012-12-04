@@ -97,7 +97,7 @@ class TEntryList: public TNamed
    virtual void        SetTreeName(const char *treename){ fTreeName = treename; };
    virtual void        SetFileName(const char *filename){ fFileName = filename; };
    virtual void        SetTreeNumber(Int_t index) { fTreeNumber=index;  }
-   virtual void        SetReapplyCut(Bool_t apply = kFALSE) {fReapply = apply;}; // *TOGGLE*
+   virtual void        SetReapplyCut(Bool_t apply = kFALSE) {fReapply = apply;}; // *TOGGLE* *GETTER=GetReapplyCut
    virtual void        Subtract(const TEntryList *elist);
 
    static  Int_t       Relocate(const char *fn,
