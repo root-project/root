@@ -384,8 +384,7 @@ void TClingCallFunc::Init()
    fMethod = 0;
    fEEFunc = 0;
    fEEAddr = 0;
-   fArgVals.clear();
-   fArgs.clear();
+   ResetArg();
 }
 
 void *TClingCallFunc::InterfaceMethod() const
@@ -437,6 +436,7 @@ void TClingCallFunc::SetArg(unsigned long long param)
 
 void TClingCallFunc::SetArgArray(long *paramArr, int nparam)
 {
+   ResetArg();
    for (int i = 0; i < nparam; ++i) {
       llvm::GenericValue gv;
       gv.IntVal = llvm::APInt(sizeof(long) * CHAR_BIT, paramArr[i]);
@@ -446,6 +446,7 @@ void TClingCallFunc::SetArgArray(long *paramArr, int nparam)
 
 void TClingCallFunc::EvaluateArgList(const std::string &ArgList)
 {
+   ResetArg();
    llvm::SmallVector<clang::Expr*, 4> exprs;
    fInterp->getLookupHelper().findArgList(ArgList, exprs);
    for (llvm::SmallVector<clang::Expr*, 4>::const_iterator I = exprs.begin(),
@@ -461,6 +462,7 @@ void TClingCallFunc::EvaluateArgList(const std::string &ArgList)
 
 void TClingCallFunc::SetArgs(const char *params)
 {
+   ResetArg();
    EvaluateArgList(params);
    clang::ASTContext &Context = fInterp->getCI()->getASTContext();
    for (unsigned I = 0U, E = fArgVals.size(); I < E; ++I) {
@@ -517,8 +519,7 @@ void TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method, co
       }
    }
    // FIXME: We should eliminate the double parse here!
-   fArgVals.clear();
-   fArgs.clear();
+   ResetArg();
    EvaluateArgList(arglist);
    clang::ASTContext& Context = fInterp->getCI()->getASTContext();
    for (unsigned I = 0U, E = fArgVals.size(); I < E; ++I) {
@@ -561,8 +562,7 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
    if (poffset) {
       *poffset = 0L;
    }
-   fArgVals.clear();
-   fArgs.clear();
+   ResetArg();
    if (!info->IsValid()) {
       Error("TClingCallFunc::SetFuncProto", "Class info is invalid!");
       return;
