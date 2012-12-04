@@ -18,12 +18,11 @@ else
    CMDECHO=
 endif
 
+CALLROOTEXEBUILD:=root.exe
 
 ifneq ($(FIXCLING),)
 -include $(ROOTTEST_HOME)/scripts/FixCling.mk
 endif
-   
-CALLROOTEXEBUILD:=root.exe
 
 # The user directory should define
 # SUBDIRS listing any activated subdirectory
