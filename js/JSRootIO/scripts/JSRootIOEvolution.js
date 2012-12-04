@@ -594,7 +594,7 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
 
 (function(){
 
-   var version = "1.10 2012/11/28";
+   var version = "1.11 2012/12/04";
 
    // ctor
    JSROOTIO.TStreamer = function(file) {
@@ -703,7 +703,11 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
                      o += 4;
                      break;
                   }
-                  if (pval < 1000000) {
+                  if (pval < 10000000) {
+                     var ro = gFile.GetMappedObject(pval);
+                     if (ro) {
+                        obj[prop] = JSROOTCore.clone(ro);
+                     }
                      o += 4;
                      break;
                   }
