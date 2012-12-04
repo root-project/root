@@ -42,6 +42,6 @@ ClingWorkAroundBrokenUnnamedReturn = yes       # See https://savannah.cern.ch/bu
 ClingWorkAroundUnnamedIncorrectInitOrder = yes # See https://savannah.cern.ch/bugs/index.php?99210
 ClingWorkAroundUnnamedIncorrectFileLoc = yes   # see https://savannah.cern.ch/bugs/index.php?99236
 ClingWorkAroundPrintfIssues = yes              # see https://savannah.cern.ch/bugs/index.php?99234
-ClingWorkAroundCallfuncAndInline = yes
+ClingWorkAroundCallfuncAndInline = yes         # see https://savannah.cern.ch/bugs/index.php?98425
 ClingWorkAroundUnnamedInclude = yes            # See https://savannah.cern.ch/bugs/index.php?99246
 ClingWorkAroundBrokenRecovery = yes
