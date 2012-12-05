@@ -643,15 +643,23 @@ int TClingClassInfo::NMethods() const
       return fNMethods;
 
    // We have a new decl; update the method count.
+   fNMethods = 0;
+   TClingMethodInfo t(fInterp, const_cast<TClingClassInfo*>(this));
+   // This while loop must be identical to TCintWithCling::CreateListOfMethods()
+   // (except for the ++fNMethods part, obviously)
+   while (t.Next()) {
+      // if name cannot be obtained no use to put in list
+      if (t.IsValid() && t.Name()) {
+         ++fNMethods;
+      }
+   }
+   // Determine last decl per context as update tag:
    for (unsigned I = 0; I < contexts.size(); ++I) {
       DC = contexts[I];
       clang::Decl* lastDecl = 0;
       for (clang::DeclContext::decl_iterator iter = DC->decls_begin();
            *iter; ++iter) {
          lastDecl = *iter;
-         if (llvm::isa<clang::FunctionDecl>(lastDecl)) {
-            ++fNMethods;
-         }
       }
       fLastDeclForNMethods[I] = lastDecl;
    }
