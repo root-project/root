@@ -32,6 +32,9 @@ int t01()
     A a;
     a(3.2)(5.4);
     a()(3.2)(5.4,3.0);
+#ifdef ClingWorkAroundErracticValuePrinter
+    printf("(int)0\n");
+#endif
     return 0;
 }
 

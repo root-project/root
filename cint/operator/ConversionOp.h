@@ -1,3 +1,5 @@
+#ifndef ConversionOp_h
+#define ConversionOp_h
 /* See ConversionOp.C for details. */
 
 template <typename T>
@@ -77,4 +79,6 @@ class D {
 #pragma link C++ function D::operator*(A<int> &a);
 #pragma link C++ function D::operator/(A<float> &a);
 #endif
+#endif
+
 #endif
