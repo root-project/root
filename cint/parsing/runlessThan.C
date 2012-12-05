@@ -1,7 +1,7 @@
 {
-   double distance = 0;
+   double dist = 0;
    double minDistance = 100;
-   if (distance < minDistance) {
+   if (dist < minDistance) {
       printf("Hola\n");
       return 0;
    } else {
