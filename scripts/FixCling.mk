@@ -13,6 +13,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundPrintfIssues"
 # Major features/issues
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoading"
+CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundScriptClassDef"
 # Convenience features, would be nice to have.
@@ -23,6 +24,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundErracticValuePrinter"
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenUnnamedReturn"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectFileLoc"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedInclude"
+CALLROOTEXE += -e "\#define ClingWorkAroundNoDotNamespace"
 
 # Not for 6.0
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingUnloading"
@@ -45,3 +47,6 @@ ClingWorkAroundPrintfIssues = yes              # see https://savannah.cern.ch/bu
 ClingWorkAroundCallfuncAndInline = yes         # see https://savannah.cern.ch/bugs/index.php?98425
 ClingWorkAroundUnnamedInclude = yes            # See https://savannah.cern.ch/bugs/index.php?99246
 ClingWorkAroundBrokenRecovery = yes
+ClingWorkAroundNoDotNamespace = yes            # See https://savannah.cern.ch/bugs/index.php?99288
+ClingWorkAroundJITandInline = yes              # JIT does not instantiate inline even-though they are used (but not actually inlined)
+
