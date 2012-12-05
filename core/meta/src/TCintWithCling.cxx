@@ -980,7 +980,7 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       }
    } // .L / .X / .x
    else {
-      if (0!=strncmp(sLine.Data(), ".autodict ",10)) {
+      if (0!=strncmp(sLine.Data(), ".autodict ",10) && sLine != ".autodict") {
          // explicitly ignore .autodict without having to support it
          // in cling.
 
