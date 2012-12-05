@@ -96,6 +96,9 @@ int daniel2()
        if (gBarnaDebug) cout << "l=" << l << '\n';
        Xprime((Double)50, l, (Double)50);
     }
+#ifdef ClingWorkAroundErracticValuePrinter
+    printf("(int)0\n");
+#endif
     return 0;
 } 
 

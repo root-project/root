@@ -20,7 +20,7 @@ else
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l run.C > run.log
 endif
 
-barna.log:
+barna.log: barna.C
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l barna.C > barna.log 2>&1
 
 barna: barna.log
