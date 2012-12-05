@@ -1,8 +1,12 @@
 #include <iostream>
 
+#ifndef T_H
+#define T_H
+
 class t {
 public:
    t(): fT(42.31) {}
+   ~t() {}
 
    template <typename T>
    T get() const {
@@ -37,3 +41,5 @@ template <> void t::set<float>(float) {
 template <> void t::set<double>(double) {
    std::cout << "called set<double>()" << std::endl;
    fT = 9; }
+
+#endif

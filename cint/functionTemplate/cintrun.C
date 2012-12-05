@@ -1,5 +1,7 @@
 #include <iostream>
-//#include "t.h"
+#ifdef ClingWorkAroundMissingDynamicScope
+#include "t.h"
+#endif
 
 TObjString* methodToObjString(TMethod* m) {
    TObjString* pout = new TObjString;
@@ -19,6 +21,10 @@ TObjString* methodToObjString(TMethod* m) {
       out += " const";
    return pout;
 }
+
+#ifdef ClingWorkAroundMissingDynamicScope
+#include "printme.C"
+#endif
 
 void cintrun() {
    gSystem->Setenv("LINES","-1");
@@ -42,7 +48,9 @@ void cintrun() {
    while ((name = (TObjString*) iMethName()))
       cout << name->String() << endl;
    cout <<endl;
+#ifndef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine(".L printme.C");
+#endif
    t o; printme(o);
    o.set(12); printme(o);
    o.set(42.33); printme(o);

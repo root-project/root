@@ -34,7 +34,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 RFLXDICT_LIB:=t_rflx_wrap_cxx.$(DllSuf)
 
 cintrun reflexrun pythoncintrun pythonreflexrun: % : %.log
-	$(TestDiff)
+	$(TestDiffCintSpecific)
 
 
 cintrun.log: cintrun.C t_h.$(DllSuf)
