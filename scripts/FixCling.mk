@@ -21,6 +21,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundBrokenRecovery"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingImplicitAuto"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingSmartInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundErracticValuePrinter"
+CALLROOTEXE += -e "\#define ClingWorkAroundValuePrinterNotFullyQualified"
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenUnnamedReturn"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectFileLoc"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedInclude"
@@ -49,4 +50,4 @@ ClingWorkAroundUnnamedInclude = yes            # See https://savannah.cern.ch/bu
 ClingWorkAroundBrokenRecovery = yes
 ClingWorkAroundNoDotNamespace = yes            # See https://savannah.cern.ch/bugs/index.php?99288
 ClingWorkAroundJITandInline = yes              # JIT does not instantiate inline even-though they are used (but not actually inlined)
-
+ClingWorkAroundValuePrinterNotFullyQualified = yes # See https://savannah.cern.ch/bugs/index.php?99290
