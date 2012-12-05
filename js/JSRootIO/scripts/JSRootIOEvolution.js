@@ -716,7 +716,8 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
                   var clRef = gFile.fStreamerInfo.ReadClass(str, o);
                   if (clRef && clRef['name']) {
                      o = clRef['off'];
-                     classname = clRef['name'];
+                     if (clRef['name'] != -1)
+                        classname = clRef['name'];
                   }
                   obj[prop] = new Object();
                   obj[prop]['_typename'] = 'JSROOTIO.' + classname;
