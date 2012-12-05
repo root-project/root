@@ -7049,17 +7049,21 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       }
       if (print_fval || print_ferrors) {
          Double_t parmin,parmax;
+         Int_t a;
          for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
             fit->GetParLimits(ipar,parmin,parmax);
             if (print_fval < 2 && parmin*parmax != 0 && parmin >= parmax) continue;
+            snprintf(t,100,"%-8s ",fit->GetParName(ipar));
+            a = strlen(t);
+            if (a>50) a = 50;
             if (print_ferrors) {
-               snprintf(textstats,50,"%-8s = %s%s #pm %s ",fit->GetParName(ipar), "%",stats->GetFitFormat(),
-                       GetBestFormat(fit->GetParameter(ipar), fit->GetParError(ipar), stats->GetFitFormat()));
-               snprintf(t,100,textstats,(Float_t)fit->GetParameter(ipar)
-                               ,(Float_t)fit->GetParError(ipar));
+               snprintf(textstats,50,"= %s%s #pm %s ", "%",stats->GetFitFormat(),
+                        GetBestFormat(fit->GetParameter(ipar), fit->GetParError(ipar), stats->GetFitFormat()));
+               snprintf(&t[a],100,textstats,(Float_t)fit->GetParameter(ipar)
+                        ,(Float_t)fit->GetParError(ipar));
             } else {
-               snprintf(textstats,50,"%-8s = %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat());
-               snprintf(t,100,textstats,(Float_t)fit->GetParameter(ipar));
+               snprintf(textstats,50,"= %s%s ","%",stats->GetFitFormat());
+               snprintf(&t[a],100,textstats,(Float_t)fit->GetParameter(ipar));
             }
             t[63] = 0;
             stats->AddText(t);
