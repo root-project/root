@@ -1,5 +1,13 @@
+#ifdef ClingWorkAroundMissingDynamicScope
+#include "TTestClass.h"
+int runTTestClass()
+#endif
 {
-#include "TTestClass.h+"
+#ifndef ClingWorkAroundMissingDynamicScope
+#ifndef ClingWorkAroundMissingSmartInclude
+   #include "TTestClass.h+"
+#endif
+#endif
 
    TTestClass obj;
    obj.GetI();

@@ -36,7 +36,9 @@ ifneq ($(FAIL),)
 endif
 
 operatorLessThanTemplate:  operatorLessThanTemplate.log
+ifeq ($(ClingWorkAroundNoDotNamespace),)
 	$(TestDiff)
+endif
 
 scopeDict.cxx: scopeProblem.C
 	$(CMDECHO) rootcint -f scopeDict.cxx -c scopeProblem.C linkdef.h
@@ -65,7 +67,7 @@ ptrconst.clog: ptrconst_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l ptrconst.C+ > ptrconst.clog 2>&1
 
 ptrconst: ptrconst.clog
-	$(TestDiff)
+	$(TestDiffW)
 
 TTestClass_h.$(DllSuf):
 

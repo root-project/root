@@ -43,6 +43,8 @@ int runReadbool() {
    f = kFALSE;
    tester(i++,f,0);
 
-
+#ifdef ClingWorkAroundErracticValuePrinter
+   printf("(int)0\n");
+#endif
    return 0;
 }
