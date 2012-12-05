@@ -4464,22 +4464,29 @@ int main(int argc, char **argv)
    gResourceDir = TMetaUtils::GetLLVMResourceDir(ROOTBUILDVAL);
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              gResourceDir.c_str());
-   interp.declare("namespace std {} using namespace std;");
+   if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
 #ifdef ROOTBUILD
-   interp.declare("#include \"Rtypes.h\"");
-   interp.declare("#include \"TClingRuntime.h\"");
-   interp.declare("#include \"TObject.h\"");
+       || interp.declare("#include \"Rtypes.h\"") != cling::Interpreter::kSuccess
+       || interp.declare("#include \"TClingRuntime.h\"") != cling::Interpreter::kSuccess
+       || interp.declare("#include \"TObject.h\"") != cling::Interpreter::kSuccess
 #else
 # ifndef ROOTINCDIR
-   interp.declare("#include \"Rtypes.h\"");
-   interp.declare("#include \"TClingRuntime.h\"");
-   interp.declare("#include \"TObject.h\"");
+       || interp.declare("#include \"Rtypes.h\"") != cling::Interpreter::kSuccess
+       || interp.declare("#include \"TClingRuntime.h\"") != cling::Interpreter::kSuccess
+       || interp.declare("#include \"TObject.h\"") != cling::Interpreter::kSuccess
 # else
-   interp.declare("#include \"" ROOTINCDIR "/Rtypes.h\"");
-   interp.declare("#include \"" ROOTINCDIR "/TClingRuntime.h\"");
-   interp.declare("#include \"" ROOTINCDIR "/TObject.h\"");
+       || interp.declare("#include \"" ROOTINCDIR "/Rtypes.h\"") != cling::Interpreter::kSuccess
+       || interp.declare("#include \"" ROOTINCDIR "/TClingRuntime.h\"") != cling::Interpreter::kSuccess
+       || interp.declare("#include \"" ROOTINCDIR "/TObject.h\"") != cling::Interpreter::kSuccess
 # endif
 #endif
+       ) {
+      // There was an error.
+      Error(0,"Error loading the default header files.");
+      CleanupOnExit(1);
+      return 1;
+   }
+       
    gInterp = &interp;
 
    
@@ -4727,8 +4734,11 @@ int main(int argc, char **argv)
          Info(0,"#pragma successfully parsed.\n");
       }
 
-      ldefr.LoadIncludes(interp,extraIncludes);
-
+      if (!ldefr.LoadIncludes(interp,extraIncludes)) {
+         Error(0,"Error loading the #pragma extra_include.");
+         CleanupOnExit(1);
+         return 1;
+      }
    } else if (R__IsSelectionXml(linkdefFilename.c_str())) {
 
       selectionRules.SetSelectionFileType(SelectionRules::kSelectionXMLFile);
@@ -4775,7 +4785,11 @@ int main(int argc, char **argv)
          Info(0,"Linkdef file successfully parsed.\n");
       }
 
-      ldefr.LoadIncludes(interp,extraIncludes);
+      if(! ldefr.LoadIncludes(interp,extraIncludes) ) {
+         Error(0,"Error loading the #pragma extra_include.");
+         CleanupOnExit(1);
+         return 1;
+      }
    } else {
 
       Error(0,"Unrecognized selection file: %s",linkdefFilename.c_str());
