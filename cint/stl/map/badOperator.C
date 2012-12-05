@@ -1,10 +1,10 @@
-#ifdef ClingWorkAroundMissingDynamicScope
+#ifndef ClingWorkAroundMissingDynamicScope
+{
+gROOT->ProcessLine(".L MyOpClass.C+");
+#else
 #include "MyOpClass.C"
 int badOperator() 
 {
-#else
-{
-gROOT->ProcessLine(".L MyOpClass.C+");
 #endif
 MyOpClass obj;
 obj.value()["33"];
