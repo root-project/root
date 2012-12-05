@@ -251,7 +251,7 @@ long TClingDataMemberInfo::Offset() const
    }
 
    const Decl *D = GetDecl();
-
+   ASTContext& C = D->getASTContext();
    if (const FieldDecl *FldD = dyn_cast<FieldDecl>(D)) {
       // The current member is a non-static data member.
       clang::ASTContext &Context = FldD->getASTContext();
@@ -261,11 +261,19 @@ long TClingDataMemberInfo::Offset() const
       int64_t offset = Context.toCharUnitsFromBits(bits).getQuantity();
       return static_cast<long>(offset);
    } 
+   else if (const VarDecl *VD = dyn_cast<VarDecl>(D)) {
+      if (VD->getType()->isIntegralType(C) && VD->hasInit() &&
+          VD->checkInitIsICE()) {
+         // FIXME: We might want in future to printout the reason why the eval
+         // failed.
+         APValue* val = VD->evaluateValue();
+         return reinterpret_cast<long>(val->getInt().getRawData());
+      }
+      return reinterpret_cast<long>(fInterp->getAddressOfGlobal(VD));
+   }
    // FIXME: We have to explicitly check for not enum constant because the 
    // implementation of getAddressOfGlobal relies on mangling the name and in 
    // clang there is misbehaviour in MangleContext::shouldMangleDeclName.
-   else if (const VarDecl *VD = dyn_cast<VarDecl>(D))
-      return reinterpret_cast<long>(fInterp->getAddressOfGlobal(VD));
    // enum constants are esentially numbers and don't get addresses. However
    // ROOT expects the address to the enum constant initalizer to be returned.
    else if (const EnumConstantDecl *ECD = dyn_cast<EnumConstantDecl>(D))
