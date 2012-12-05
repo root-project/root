@@ -2029,8 +2029,14 @@ void TCintWithCling::CreateListOfMethods(TClass* cl)
 void TCintWithCling::UpdateListOfMethods(TClass* cl)
 {
    // Update the list of pointers to method for TClass cl, if necessary
-   delete cl->fMethod;
-   cl->fMethod = 0;
+   if (cl->fMethod) {
+      TClingClassInfo *info = (TClingClassInfo*)cl->GetClassInfo();
+      if (!info || cl->fMethod->GetEntries() == info->NMethods()) {
+         return;
+      }
+      delete cl->fMethod;
+      cl->fMethod = 0;
+   }
    CreateListOfMethods(cl);
 }
 

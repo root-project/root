@@ -55,7 +55,8 @@
 using namespace clang;
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0),
+     fNMethods(0)
 {
    clang::TranslationUnitDecl *TU =
       interp->getCI()->getASTContext().getTranslationUnitDecl();
@@ -68,7 +69,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0),
-     fTitle("")
+     fTitle(""), fNMethods(0)
 {
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const clang::Type *type = 0;
@@ -84,7 +85,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
                                  const clang::Type &tag)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0), 
-     fTitle("")
+     fTitle(""), fNMethods(0)
 {
    Init(tag);
 }
@@ -624,6 +625,37 @@ void *TClingClassInfo::New(void *arena) const
    // The ref-counted pointer will get destructed by StoredValueRef,
    // but not the allocation! I.e. the following is fine:
    return llvm::GVTOP(val.get().value);
+}
+
+int TClingClassInfo::NMethods() const
+{
+   // Return the number of methods
+   fNMethods = 0;
+   clang::DeclContext *DC = const_cast<clang::DeclContext*>(llvm::cast<clang::DeclContext>(fDecl));
+   llvm::SmallVector<clang::DeclContext *, 2> contexts;
+   DC->collectAllContexts(contexts);
+
+   bool noUpdate = fLastDeclForNMethods.size() == contexts.size();
+   for (unsigned I = 0; noUpdate && I < contexts.size(); ++I) {
+      noUpdate &= (fLastDeclForNMethods[I] && !fLastDeclForNMethods[I]->getNextDeclInContext());
+   }
+   if (noUpdate)
+      return fNMethods;
+
+   // We have a new decl; update the method count.
+   for (unsigned I = 0; I < contexts.size(); ++I) {
+      DC = contexts[I];
+      clang::Decl* lastDecl = 0;
+      for (clang::DeclContext::decl_iterator iter = DC->decls_begin();
+           *iter; ++iter) {
+         lastDecl = *iter;
+         if (llvm::isa<clang::FunctionDecl>(lastDecl)) {
+            ++fNMethods;
+         }
+      }
+      fLastDeclForNMethods[I] = lastDecl;
+   }
+   return fNMethods;
 }
 
 long TClingClassInfo::Property() const
