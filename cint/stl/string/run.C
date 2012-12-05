@@ -1,5 +1,11 @@
+#ifdef ClingWorkAroundMissingDynamicScope
+#include "t01.C"
+void run()
+#endif
 {
+#ifndef ClingWorkAroundMissingDynamicScope
 gROOT->ProcessLine(".L t01.C+g");
+#endif
 #include <string>
 
 string mystring("test string");
