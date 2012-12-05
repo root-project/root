@@ -44,23 +44,29 @@ class TClingTypeInfo;
 
 class TClingMethodInfo {
 private:
+   class SpecIterator;
+   
    cling::Interpreter                          *fInterp; // Cling interpreter, we do *not* own.
    llvm::SmallVector<clang::DeclContext *, 2>   fContexts; // Set of DeclContext that we will iterate over.
    bool                                         fFirstTime; // Flag for first time incrementing iterator, cint semantics are weird.
    unsigned int                                 fContextIdx; // Index in fContexts of DeclContext we are iterating over.
    clang::DeclContext::decl_iterator            fIter; // Our iterator.
    std::string                                  fTitle; // The meta info for the method.
+   SpecIterator                                *fTemplateSpecIter; // Iter over template specialization. [We own]
    const clang::FunctionDecl                   *fSingleDecl; // The single member
 
 public:
    explicit TClingMethodInfo(cling::Interpreter *interp) 
       : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""), 
-        fSingleDecl(0) {}
+        fTemplateSpecIter(0), fSingleDecl(0) {}
 
+   TClingMethodInfo(const TClingMethodInfo&);
+   
    // Takes concrete decl and disables the iterator. 
    TClingMethodInfo(cling::Interpreter *, const clang::FunctionDecl *);
-
    TClingMethodInfo(cling::Interpreter *, TClingClassInfo *);
+
+   ~TClingMethodInfo();
 
    const clang::FunctionDecl                   *GetMethodDecl() const;
    void                                         CreateSignature(TString &signature) const;
