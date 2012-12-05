@@ -18,6 +18,7 @@ typenameTest:
 	$(CMDECHO)rootcint -f typenameTestDict.C -c -D__CINT2__ typenameTest.C linkdef.h 
 ifeq ($(FAIL),)
 	$(WarnFailTest)
+	$(CMDECHO) echo "this is fixed by cling."
 else
 	$(CMDECHO)rootcint -f typenameTestDict.C -c typenameTest.C linkdef.h 
 endif

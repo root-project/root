@@ -23,6 +23,10 @@ template <class Config> class DecayDataT {
    
    };
 
+#ifdef __CINT__
+// This was necessary to work around a bug in 
+// the lookup code that prevented the class to use itself
+// to instantiate templates.
 #ifdef __CINT2__
 class A;
 class B;
@@ -34,6 +38,7 @@ class  DefaultConfig {
      typedef  B DecayData;
    
    };
+#endif
 #endif
 
 class  DefaultConfig {

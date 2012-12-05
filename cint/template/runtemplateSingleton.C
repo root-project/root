@@ -1,4 +1,8 @@
+#ifdef ClingWorkAroundMissingSmartInclude
+#include "Singleton.h"
+#else
 #include "Singleton.h+"
+#endif
 
 void runtemplateSingleton(bool output=false)
 {

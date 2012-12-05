@@ -1,3 +1,5 @@
+#include <iostream>
+
 template <class TYPE> class ValueVector;
 
 // forward declaration of explitcit instantiation
@@ -23,6 +25,8 @@ private:
     typedef  typename  collection_type::pointer          pointer ;
     typedef  typename  collection_type::const_pointer    const_pointer ;
     typedef  typename  collection_type::const_iterator   const_iterator ;
+
+   collection_type _container;
 
 //-----------------------------------------------------------------------------
 // Primitive Operations
