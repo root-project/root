@@ -34,6 +34,22 @@ Implement in THistPainter::GetObjectInfo the case of TProfile and TProfile2D to 
 each bin. Disable the printing of the bin information for TH3, since it is not currently possible to retrieve the
 3d bin number from the pixel coordinate. 
 </li>
+<li>
+Fit parameters with very long name destroyed the stats display. This is now fixed.
+<br>
+Example:
+<pre>
+{
+   gStyle->SetOptFit(111);
+   TH1F *hist = new TH1F("hist","hist",100,-5,5);
+   TF1 *fit = new TF1("fit","gaus",-5,5);
+   fit->SetParName(2,"Parameter with very very very very long name");
+   hist->FillRandom("gaus",5000);
+   hist->Draw();
+   hist->Fit(fit);
+}
+</pre>
+</li>
 </ul>
 
 
