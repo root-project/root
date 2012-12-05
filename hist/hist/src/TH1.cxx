@@ -5308,8 +5308,7 @@ Long64_t TH1::Merge(TCollection *li)
          // If histograms have labels but kCanRebin is not set on this 
          // use merging of bin content
          if (allHaveLabels && !this->TestBit(TH1::kCanRebin)) {
-            Warning("Merge","Histogram %s has labels but has not the kCanRebin bit set - falling back to bin numbering mode",GetName() );
-            allHaveLabels = kFALSE;
+               allHaveLabels = kFALSE;
          }
          // it means 
          // I could add a check if histogram contains bins without a label 
@@ -5472,6 +5471,9 @@ Long64_t TH1::Merge(TCollection *li)
                      // otherwise it will return zero and bin will be merged in underflow/overflow
                      // Do we want to keep this case ??
                      ix = fXaxis.FindBin(label);
+                     if (ix == 0) { 
+                        Warning("Merge","Histogram %s has labels but the kCanRebin unset - label %s is lost",GetName(),label);
+                     }
                   }
                   // ix cannot be -1 . Can be 0 in case label is not found and bit is not set 
                   if (ix <0) {
