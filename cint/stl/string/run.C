@@ -1,8 +1,10 @@
-#ifdef ClingWorkAroundMissingDynamicScope
+#ifndef ClingWorkAroundMissingDynamicScope
+{
+#else
 #include "t01.C"
 void run()
-#endif
 {
+#endif
 #ifndef ClingWorkAroundMissingDynamicScope
 gROOT->ProcessLine(".L t01.C+g");
 #endif

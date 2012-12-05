@@ -1,10 +1,10 @@
-#ifdef ClingWorkAroundMissingDynamicScope
+#ifndef ClingWorkAroundMissingDynamicScope
+{
+   gROOT->ProcessLine(".L t01.C");
+#else
 #include "t01.C"
 void runcint()
 {
-#else
-{
-   gROOT->ProcessLine(".L t01.C");
 #endif
    string mystring("test string");
 
