@@ -63,7 +63,17 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
    fIter = TU->decls_begin();
    InternalNext();
    fFirstTime = true;
-   fDecl = 0;
+   // CINT had this odd behavior where a ClassInfo created without any argument/input
+   // was set as an iterator that was ready to be iterated on but was set an not IsValid
+   // *BUT* a few routine where using this state as representing the global namespace
+   // (Theses routines includes the GetMethod routines and CallFunc::SetFunc .. but
+   // do not includes many of routines (like Property etc).
+   // To be somewhat backward compatible, let make this state actually valid (i.e.
+   // representing both the ready-for-first-iteration iterator *and* the global namespace)
+   // so that code that was working with CINT (grabbing the default initialized ClassInfo
+   // to look at the global namespace work) is working again (and, yes, things that
+   // use to not work like 'asking' the filename on this will go 'further' but oh well).
+   fDecl = TU;
    fType = 0;
 }
 
