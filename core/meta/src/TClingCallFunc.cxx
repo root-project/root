@@ -94,8 +94,7 @@ namespace {
       case llvm::Type::FloatTyID:
          {
             llvm::GenericValue ret;
-            ret.FloatVal = (sourceIsSigned) ?
-               (float)GVI.getSExtValue() : (float)GVI.getZExtValue();
+            ret.FloatVal = GV.FloatVal;
             return ret;
          }
          break;
@@ -103,8 +102,7 @@ namespace {
       case llvm::Type::DoubleTyID:
          {
             llvm::GenericValue ret;
-            ret.DoubleVal = (sourceIsSigned) ?
-               (double)GVI.getSExtValue() : (double)GVI.getZExtValue();
+            ret.DoubleVal = GV.DoubleVal;
             return ret;
          }
          break;
