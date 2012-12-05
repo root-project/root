@@ -8,7 +8,7 @@
 #pragma extra_include "Math/IFunctionfwd.h";
 #pragma extra_include "Math/IFunction.h";
 
-#pragma extra_include "GSLError.h";
+#pragma extra_include "math/mathmore/src/GSLError.h";
 
 #pragma link C++ nestedclasses;
 #pragma link C++ nestedtypedef;
