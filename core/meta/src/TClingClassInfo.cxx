@@ -664,6 +664,7 @@ int TClingClassInfo::NMethods() const
       }
    }
    // Determine last decl per context as update tag:
+   fLastDeclForNMethods.resize(contexts.size());
    for (unsigned I = 0; I < contexts.size(); ++I) {
       DC = contexts[I];
       clang::Decl* lastDecl = 0;
