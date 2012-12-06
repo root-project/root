@@ -72,4 +72,6 @@ complex: complex.log
 	$(TestDiff)
 
 henry: henry.log
+ifeq ($(ClingWorkAroundJITandInline),)
 	$(TestDiff)
+endif
