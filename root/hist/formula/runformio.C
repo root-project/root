@@ -35,6 +35,10 @@ void read() {
 void readV3file() {
    new TCanvas();
    TFile *_file0 = TFile::Open("result_30gev_sep05.root");
+#ifdef ClingWorkAroundMissingDynamicScope
+   TObjArray *ptspec_chisq_deut;
+   _file0->GetObject("ptspec_chisq_deut",ptspec_chisq_deut);
+#endif
    for(int i=0;i<ptspec_chisq_deut->GetEntries();++i) {
       TH1D *h = (TH1D*)ptspec_chisq_deut->At(105);
       TF1 *f = (TF1*)h->GetListOfFunctions()->At(0);

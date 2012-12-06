@@ -7,7 +7,7 @@ int assertTernary() {
    
    int result = 0;
    if (calc != eval) {
-      fprintf(stderr,"TFormula does not properly evaluate ternary operator got %d rather than %d\n",eval,calc);
+      fprintf(stderr,"TFormula does not properly evaluate ternary operator got %ld rather than %ld\n",eval,calc);
       ++result;
    }
    
@@ -36,14 +36,14 @@ int assertTernary() {
       long eval1 = f3.Eval(x)*f4a.Eval(x);
       long eval2 = f5a.Eval(x);
       if (eval1 != eval2) {
-         fprintf(stderr,"TFormula does not properly evaluate ternary operator for f3.Eval(x)*f4a.Eval(x) got %d and for f5a.Eval(x) got %d\n",eval1,eval2);
+         fprintf(stderr,"TFormula does not properly evaluate ternary operator for f3.Eval(x)*f4a.Eval(x) got %ld and for f5a.Eval(x) got %ld\n",eval1,eval2);
          ++result;
       }         
       cout<<"\tb:\t\t\t"<<f4b.Eval(x)<<" -> "<<f3.Eval(x)*f4b.Eval(x)<<" =? "<<f5b.Eval(x)<<endl;
       eval1 = f3.Eval(x)*f4b.Eval(x);
       eval2 = f5b.Eval(x);
       if (eval1 != eval2) {
-         fprintf(stderr,"TFormula does not properly evaluate ternary operator for f3.Eval(x)*f4b.Eval(x) got %d and for f5b.Eval(x) got %d\n",eval1,eval2);
+         fprintf(stderr,"TFormula does not properly evaluate ternary operator for f3.Eval(x)*f4b.Eval(x) got %ld and for f5b.Eval(x) got %ld\n",eval1,eval2);
          ++result;
       }         
    }

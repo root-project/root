@@ -43,6 +43,10 @@
 
   f3.Eval(0);
 
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+  int res = 0;
+#else
   return 0;
+#endif
 }
 

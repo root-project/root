@@ -19,5 +19,8 @@ int runstring()
       cerr << "!= is not working for strings\n";
       result = 1;
    }
+#ifdef ClingWorkAroundErracticValuePrinter
+  printf("(int)0\n");
+#endif
    return result;
 }
