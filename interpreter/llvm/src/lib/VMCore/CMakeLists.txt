@@ -45,7 +45,7 @@ add_llvm_library(LLVMCore
 if( MSVC_VERSION LESS 1700 )
 set_property(
   SOURCE Function.cpp
-  PROPERTY COMPILE_FLAGS "/Og-"
+  PROPERTY COMPILE_FLAGS "/Od"
   )
 endif()
 
