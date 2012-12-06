@@ -1,10 +1,4 @@
-./cint/const
-./cint/other
-./cint/printf
-./cint/reload
-./cint/stack
-./cint/stl/dicts
-./cint/stl/list
+./cint
 ./root/aclic/global
 ./root/aclic/offset
 ./root/aclic/withspace
