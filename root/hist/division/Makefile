@@ -62,4 +62,6 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 
 
 testTEfficiency: testTEfficiency.log
+ifeq ($(ClingWorkAroundJITandInline),)
 	$(TestDiff)
+endif
