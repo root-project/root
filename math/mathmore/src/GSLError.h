@@ -44,14 +44,14 @@ namespace ROOT {
          It is used only when building the dictionary (G__DICTIONARY is defined) 
          and not in the stand-alone version of the library. 
          In that case the default GSL error handler is used  
-       */
+      */
 
       class GSLError { 
 
       public: 
          
          GSLError() { 
-               gsl_set_error_handler(&GSLError::Handler);
+            gsl_set_error_handler(&GSLError::Handler);
             // set a new handler for GSL 
          }
 
