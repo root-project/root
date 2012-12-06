@@ -23,14 +23,17 @@ mylist_C.so:
 
 VectorSort.log: VectorSort.C
 ifeq ($(ClingWorkAroundValuePrinterNotFullyQualified),)
-	$(CMDECHO) LINES=0 $(CALLROOTEXE) -q -l -b $(@:.log=.C) \
+	$(CMDECHO) LINES=0 $(CALLROOTEXE) -q -l -b $(@:.log=.C) 2>&1 \
 	  | $(RemoveLeadingDirs) -e 's,^(vector,(class vector,' -e 's,::iterator)[x[:xdigit:]]*$$,::iterator),' \
 	  > $@ 2>&1
 else
-	$(CMDECHO) LINES=0 $(CALLROOTEXE) -q -l -b $(@:.log=.C) \
+	$(CMDECHO) LINES=0 $(CALLROOTEXE) -q -l -b $(@:.log=.C)  2>&1 \
 	  | $(RemoveLeadingDirs) -e 's,^(vector,(class vector,' -e 's,::iterator)[x[:xdigit:]]*$$,::iterator),' -e 's/const_iterator/class vector<unsigned int::const_iterator/' -e 's, @0x[a-fA-F0-9]*,,' \
 	  > $@ 2>&1
 endif
 
 VectorSort: VectorSort.log
+ifeq ($(ClingWorkAroundJITandInline),)
 	$(TestDiffCintSpecific)
+endif
+
