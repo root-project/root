@@ -4,7 +4,8 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log opdict.* templateMembersDict* templateMembers.ref templateMembersNoMem.ref
 
 #Set the list of target to make while testing
-TEST_TARGETS += duplicate operatorEqual mytest templateConstructorTest operatorTest templateMembers
+TEST_TARGETS += duplicate operatorEqual mytest templateConstructorTest operatorTest 
+# templateMembers
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -63,7 +64,7 @@ templateMembers.ref:  runtemplateMembers.C  templateMembers_C.$(DllSuf)  templat
 templateMembersCode_C.$(DllSuf): templateMembersCode.C templateMembers_C.$(DllSuf)
 	$(BuildWithLib)
 
-operatorEqual.log: operatorEqual_C.$(DllSuf)
+operatorEqual.log: operatorEqual_C.$(DllSuf) runoperatorEqual.C
 	$(CMDECHO)$(CALLROOTEXE) -q -b -l runoperatorEqual.C | grep -v FILE | grep -v tagnum |  $(RemoveDirs)| $(RemoveLeadingDirs) > operatorEqual.log
 
 operatorEqual: operatorEqual.log
