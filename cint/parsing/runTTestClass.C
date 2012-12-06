@@ -1,8 +1,11 @@
-#ifdef ClingWorkAroundMissingDynamicScope
+#ifndef ClingWorkAroundMissingDynamicScope
+{
+#else
 #include "TTestClass.h"
 int runTTestClass()
-#endif
 {
+#endif
+
 #ifndef ClingWorkAroundMissingDynamicScope
 #ifndef ClingWorkAroundMissingSmartInclude
    #include "TTestClass.h+"
