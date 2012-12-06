@@ -12,10 +12,12 @@ ifeq ($(HAVECINTEX),cintex)
 endif
 
 # also in Rules.mk, but that needs TEST_TARGETS to be defined first.
+ifeq ($(FIXCLING),)
 ifneq ($(HAS_PYTHON),)
    HAVEPYTHON := $(HAS_PYTHON)
 else
    HAVEPYTHON := $(shell root-config --has-python)
+endif
 endif
 
 ifeq ($(HAVEPYTHON),yes)
