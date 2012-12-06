@@ -2,85 +2,73 @@
 Processing run.C...
 ===========================================================================
 class Name::MyClass
- size=n/a FILE:libmaster.so LINE:-1
-List of base class--------------------------------------------------------
-0x0        public: TObject //Basic ROOT object
-List of member variable---------------------------------------------------
-Defined in MyClass
-libmaster.so     -1 0x0        private: static TClass* fgIsA
-List of member function---------------------------------------------------
-filename       line:size busy function type and name  (in MyClass)
-libmaster.so     -1:-1   0 public: void ~MyClass(void);
-libmaster.so     -1:-1   0 public: Name::MyClass MyClass(void);
-libmaster.so     -1:-1   0 public: void Print(Option_t*);
-libmaster.so     -1:-1   0 public: static TClass* Class(void);
-libmaster.so     -1:-1   0 public: static const char* Class_Name(void);
-libmaster.so     -1:-1   0 public: static Version_t Class_Version(void);
-libmaster.so     -1:-1   0 public: static void Dictionary(void);
-libmaster.so     -1:-1   0 public: virtual TClass* IsA(void) const;
-libmaster.so     -1:-1   0 public: virtual void ShowMembers(TMemberInspector&);
-libmaster.so     -1:-1   0 public: virtual void Streamer(TBuffer&);
-libmaster.so     -1:-1   0 public: void StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b);
-libmaster.so     -1:-1   0 public: static const char* DeclFileName(void);
-libmaster.so     -1:-1   0 public: static int ImplFileLine(void);
-libmaster.so     -1:-1   0 public: static const char* ImplFileName(void);
-libmaster.so     -1:-1   0 public: static int DeclFileLine(void);
-libmaster.so     -1:-1   0 public: Name::MyClass MyClass(const Name::MyClass&);
-libmaster.so     -1:-1   0 public: Name::MyClass& operator=(const Name::MyClass&);
+SIZE: 16 FILE: MyClass.hh LINE: 10
+Base classes: --------------------------------------------------------
+0x0        public TObject
+List of member variables --------------------------------------------------
+MyClass.hh       20 0x0      private: static class TClass *fgIsA
+List of member functions :---------------------------------------------------
+filename     line:size busy function type and name
+(compiled)     (NA):(NA) 0 public: MyClass();
+(compiled)     (NA):(NA) 0 public: void Print(Option_t *);
+(compiled)     (NA):(NA) 0 public: static class TClass *Class();
+(compiled)     (NA):(NA) 0 public: static const char *Class_Name();
+(compiled)     (NA):(NA) 0 public: static Version_t Class_Version();
+(compiled)     (NA):(NA) 0 public: static void Dictionary();
+(compiled)     (NA):(NA) 0 public: virtual class TClass *IsA() const;
+(compiled)     (NA):(NA) 0 public: virtual void ShowMembers(class TMemberInspector &);
+(compiled)     (NA):(NA) 0 public: virtual void Streamer(class TBuffer &);
+(compiled)     (NA):(NA) 0 public: void StreamerNVirtual(class TBuffer &ClassDef_StreamerNVirtual_b);
+(compiled)     (NA):(NA) 0 public: static const char *DeclFileName();
+(compiled)     (NA):(NA) 0 public: static int ImplFileLine();
+(compiled)     (NA):(NA) 0 public: static const char *ImplFileName();
+(compiled)     (NA):(NA) 0 public: static int DeclFileLine();
+(compiled)     (NA):(NA) 0 public: template <class T> T &func(T *t);
 ===========================================================================
 class Name::MyClass
- size=n/a FILE:libmaster.so LINE:-1
-List of base class--------------------------------------------------------
-0x0        public: TObject //Basic ROOT object
-List of member variable---------------------------------------------------
-Defined in MyClass
-libmaster.so     -1 0x0        private: static TClass* fgIsA
-List of member function---------------------------------------------------
-filename       line:size busy function type and name  (in MyClass)
-libmaster.so     -1:-1   0 public: void ~MyClass(void);
-libmaster.so     -1:-1   0 public: Name::MyClass MyClass(void);
-libmaster.so     -1:-1   0 public: void Print(Option_t*);
-libmaster.so     -1:-1   0 public: static TClass* Class(void);
-libmaster.so     -1:-1   0 public: static const char* Class_Name(void);
-libmaster.so     -1:-1   0 public: static Version_t Class_Version(void);
-libmaster.so     -1:-1   0 public: static void Dictionary(void);
-libmaster.so     -1:-1   0 public: virtual TClass* IsA(void) const;
-libmaster.so     -1:-1   0 public: virtual void ShowMembers(TMemberInspector&);
-libmaster.so     -1:-1   0 public: virtual void Streamer(TBuffer&);
-libmaster.so     -1:-1   0 public: void StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b);
-libmaster.so     -1:-1   0 public: static const char* DeclFileName(void);
-libmaster.so     -1:-1   0 public: static int ImplFileLine(void);
-libmaster.so     -1:-1   0 public: static const char* ImplFileName(void);
-libmaster.so     -1:-1   0 public: static int DeclFileLine(void);
-libmaster.so     -1:-1   0 public: Name::MyClass MyClass(const Name::MyClass&);
-libmaster.so     -1:-1   0 public: Name::MyClass& operator=(const Name::MyClass&);
-libmaster.so     -1:-1   0 public: TObject& func(TObject* t);
+SIZE: 16 FILE: MyClass.hh LINE: 10
+Base classes: --------------------------------------------------------
+0x0        public TObject
+List of member variables --------------------------------------------------
+MyClass.hh       20 0x0      private: static class TClass *fgIsA
+List of member functions :---------------------------------------------------
+filename     line:size busy function type and name
+(compiled)     (NA):(NA) 0 public: MyClass();
+(compiled)     (NA):(NA) 0 public: void Print(Option_t *);
+(compiled)     (NA):(NA) 0 public: static class TClass *Class();
+(compiled)     (NA):(NA) 0 public: static const char *Class_Name();
+(compiled)     (NA):(NA) 0 public: static Version_t Class_Version();
+(compiled)     (NA):(NA) 0 public: static void Dictionary();
+(compiled)     (NA):(NA) 0 public: virtual class TClass *IsA() const;
+(compiled)     (NA):(NA) 0 public: virtual void ShowMembers(class TMemberInspector &);
+(compiled)     (NA):(NA) 0 public: virtual void Streamer(class TBuffer &);
+(compiled)     (NA):(NA) 0 public: void StreamerNVirtual(class TBuffer &ClassDef_StreamerNVirtual_b);
+(compiled)     (NA):(NA) 0 public: static const char *DeclFileName();
+(compiled)     (NA):(NA) 0 public: static int ImplFileLine();
+(compiled)     (NA):(NA) 0 public: static const char *ImplFileName();
+(compiled)     (NA):(NA) 0 public: static int DeclFileLine();
+(compiled)     (NA):(NA) 0 public: template <class T> T &func(T *t);
 ===========================================================================
 class Name::MyClass
- size=n/a FILE:libmaster.so LINE:-1
-List of base class--------------------------------------------------------
-0x0        public: TObject //Basic ROOT object
-List of member variable---------------------------------------------------
-Defined in MyClass
-libmaster.so     -1 0x0        private: static TClass* fgIsA
-List of member function---------------------------------------------------
-filename       line:size busy function type and name  (in MyClass)
-libmaster.so     -1:-1   0 public: void ~MyClass(void);
-libmaster.so     -1:-1   0 public: Name::MyClass MyClass(void);
-libmaster.so     -1:-1   0 public: void Print(Option_t*);
-libmaster.so     -1:-1   0 public: static TClass* Class(void);
-libmaster.so     -1:-1   0 public: static const char* Class_Name(void);
-libmaster.so     -1:-1   0 public: static Version_t Class_Version(void);
-libmaster.so     -1:-1   0 public: static void Dictionary(void);
-libmaster.so     -1:-1   0 public: virtual TClass* IsA(void) const;
-libmaster.so     -1:-1   0 public: virtual void ShowMembers(TMemberInspector&);
-libmaster.so     -1:-1   0 public: virtual void Streamer(TBuffer&);
-libmaster.so     -1:-1   0 public: void StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b);
-libmaster.so     -1:-1   0 public: static const char* DeclFileName(void);
-libmaster.so     -1:-1   0 public: static int ImplFileLine(void);
-libmaster.so     -1:-1   0 public: static const char* ImplFileName(void);
-libmaster.so     -1:-1   0 public: static int DeclFileLine(void);
-libmaster.so     -1:-1   0 public: Name::MyClass MyClass(const Name::MyClass&);
-libmaster.so     -1:-1   0 public: Name::MyClass& operator=(const Name::MyClass&);
-libmaster.so     -1:-1   0 public: TObject& func(TObject* t);
-libmaster.so     -1:-1   0 public: TH1F& func(TH1F* t);
+SIZE: 16 FILE: MyClass.hh LINE: 10
+Base classes: --------------------------------------------------------
+0x0        public TObject
+List of member variables --------------------------------------------------
+MyClass.hh       20 0x0      private: static class TClass *fgIsA
+List of member functions :---------------------------------------------------
+filename     line:size busy function type and name
+(compiled)     (NA):(NA) 0 public: MyClass();
+(compiled)     (NA):(NA) 0 public: void Print(Option_t *);
+(compiled)     (NA):(NA) 0 public: static class TClass *Class();
+(compiled)     (NA):(NA) 0 public: static const char *Class_Name();
+(compiled)     (NA):(NA) 0 public: static Version_t Class_Version();
+(compiled)     (NA):(NA) 0 public: static void Dictionary();
+(compiled)     (NA):(NA) 0 public: virtual class TClass *IsA() const;
+(compiled)     (NA):(NA) 0 public: virtual void ShowMembers(class TMemberInspector &);
+(compiled)     (NA):(NA) 0 public: virtual void Streamer(class TBuffer &);
+(compiled)     (NA):(NA) 0 public: void StreamerNVirtual(class TBuffer &ClassDef_StreamerNVirtual_b);
+(compiled)     (NA):(NA) 0 public: static const char *DeclFileName();
+(compiled)     (NA):(NA) 0 public: static int ImplFileLine();
+(compiled)     (NA):(NA) 0 public: static const char *ImplFileName();
+(compiled)     (NA):(NA) 0 public: static int DeclFileLine();
+(compiled)     (NA):(NA) 0 public: template <class T> T &func(T *t);
