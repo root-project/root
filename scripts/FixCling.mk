@@ -53,4 +53,4 @@ ClingWorkAroundNoDotNamespace = yes            # See https://savannah.cern.ch/bu
 ClingWorkAroundJITandInline = yes              # JIT does not instantiate inline even-though they are used (but not actually inlined)
 ClingWorkAroundValuePrinterNotFullyQualified = yes # See https://savannah.cern.ch/bugs/index.php?99290
 ClingWorkAroundNoDotInclude = yes              # See trello card about .include
-ClingWorkAroundScriptClassDef = yes            # 
+ClingWorkAroundScriptClassDef = yes            # See https://savannah.cern.ch/bugs/index.php?99268
