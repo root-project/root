@@ -8,6 +8,10 @@ endif
 CLING_SUBDIRS := $(shell cat cling.tests)
 CLING_TESTS := $(patsubst %,%.test,$(CLING_SUBDIRS) )
 
+ifeq ($(MAKECMDGOALS),clingtest)
+MAKE += FIXCLING=yes
+endif
+
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 # Temporary addition for cling developement
