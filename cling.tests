@@ -1,7 +1,5 @@
 ./cint
-./root/aclic/global
-./root/aclic/offset
-./root/aclic/withspace
+./root/aclic
 ./root/io/alloc
 ./root/io/arrayobject
 ./root/io/bigevent
