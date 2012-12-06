@@ -51,3 +51,4 @@ ClingWorkAroundBrokenRecovery = yes
 ClingWorkAroundNoDotNamespace = yes            # See https://savannah.cern.ch/bugs/index.php?99288
 ClingWorkAroundJITandInline = yes              # JIT does not instantiate inline even-though they are used (but not actually inlined)
 ClingWorkAroundValuePrinterNotFullyQualified = yes # See https://savannah.cern.ch/bugs/index.php?99290
+ClingWorkAroundScriptClassDef = yes            # 
