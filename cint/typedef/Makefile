@@ -15,7 +15,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 ptrptr_test : ptrptr
 
 ptrptr : ptrptr.log
-	$(TestDiff) && touch $@
+	$(TestDiffCintSpecific) && touch $@
 
 ptrptr.log : runptrptr.C ptrptr.C vclass_h.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l runptrptr.C | grep ptrptr.C | $(RemoveLeadingDirs) > ptrptr.log 
