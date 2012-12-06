@@ -137,6 +137,10 @@ void* DynamicLibrary::SearchForAddressOfSymbol(const char *symbolName) {
   }
 
 #if HAVE_DLFCN_H
+  void* ptr = dlsym(RTLD_DEFAULT, symbolName);
+  if (ptr)
+    return ptr;
+#ifdef R__TOO_SLOW
   // Now search the libraries.
   if (OpenedHandles) {
     for (DenseSet<void *>::iterator I = OpenedHandles->begin(),
@@ -148,6 +152,7 @@ void* DynamicLibrary::SearchForAddressOfSymbol(const char *symbolName) {
       }
     }
   }
+#endif // R__TOO_SLOW
 #endif
 
   if (void *Result = llvm::SearchForAddressOfSpecialSymbol(symbolName))
