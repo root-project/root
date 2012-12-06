@@ -11,7 +11,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 constargs_test : constargs
 
 constargs : constargs.clog
-	$(TestDiff) && touch $@
+	$(TestDiffCintSpecific) && touch $@
 
 
 formio_test : formio
