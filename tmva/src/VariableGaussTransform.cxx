@@ -709,7 +709,6 @@ void TMVA::VariableGaussTransform::MakeFunction( std::ostream& fout, const TStri
       fout << "   double xMin["<<nvar<<"]["<<numDist<<"];"<<std::endl;
       fout << "   double xMax["<<nvar<<"]["<<numDist<<"];"<<std::endl;
       fout << "   int    nbins["<<nvar<<"]["<<numDist<<"];"<<std::endl;
-      fout << "   double stepsize["<<nvar<<"]["<<numDist<<"];"<<std::endl;
    }
    if (part==2) {
       fout << std::endl;
@@ -724,7 +723,6 @@ void TMVA::VariableGaussTransform::MakeFunction( std::ostream& fout, const TStri
          for (UInt_t ivar=0; ivar<nvar; ivar++) {
             Int_t nbin=(fCumulativePDF[ivar][icls])->GetGraph()->GetN();
             fout << "   nbins["<<ivar<<"]["<<icls<<"]="<<nbin<<";"<<std::endl;
-            fout << "   stepsize["<<ivar<<"]["<<icls<<"]="<<(fCumulativePDF[ivar][icls])->GetGraph()->GetX()[3]-(fCumulativePDF[ivar][icls])->GetGraph()->GetX()[2] <<";"<<std::endl;
          }
       }
 
@@ -749,11 +747,11 @@ void TMVA::VariableGaussTransform::MakeFunction( std::ostream& fout, const TStri
             Double_t xmn = (fCumulativePDF[ivar][icls])->GetGraph()->GetX()[0];
             Double_t xmx = (fCumulativePDF[ivar][icls])->GetGraph()->GetX()[(fCumulativePDF[ivar][icls])->GetGraph()->GetN()-1];
 
-            fout << "    xMin["<<ivar<<"]["<<icls<<"]="<<xmn<<";"<<std::endl;
-            fout << "    xMax["<<ivar<<"]["<<icls<<"]="<<xmx<<";"<<std::endl;
+            fout << "    xMin["<<ivar<<"]["<<icls<<"]="<< gTools().StringFromDouble(xmn)<<";"<<std::endl;
+            fout << "    xMax["<<ivar<<"]["<<icls<<"]="<<gTools().StringFromDouble(xmx)<<";"<<std::endl;
             for (Int_t ibin=0; ibin<(fCumulativePDF[ivar][icls])->GetGraph()->GetN(); ibin++) {
-               fout << "  cumulativeDist[" << ivar << "]["<< icls<< "]["<<ibin<<"]="<< (fCumulativePDF[ivar][icls])->GetGraph()->GetY()[ibin]<< ";"<<std::endl;
-               fout << "  X[" << ivar << "]["<< icls<< "]["<<ibin<<"]="<< (fCumulativePDF[ivar][icls])->GetGraph()->GetX()[ibin]<< ";"<<std::endl;
+               fout << "  cumulativeDist[" << ivar << "]["<< icls<< "]["<<ibin<<"]="<< gTools().StringFromDouble((fCumulativePDF[ivar][icls])->GetGraph()->GetY()[ibin])<< ";"<<std::endl;
+                                                                                        fout << "  X[" << ivar << "]["<< icls<< "]["<<ibin<<"]="<< gTools().StringFromDouble((fCumulativePDF[ivar][icls])->GetGraph()->GetX()[ibin])<< ";"<<std::endl;
 
             }
          }
