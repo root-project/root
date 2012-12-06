@@ -12,8 +12,9 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 tbits_test : tbits
 
 tbits : tbits.log
+ifeq ($(ClingWorkAroundJITandInline),)
 	$(TestDiff) && touch $@
-
+endif
 
 TExMap_test : TExMap
 
@@ -28,3 +29,11 @@ TMap : TMap.clog
 
 CATTreeClear : CATTreeClear.log
 	$(TestDiff)
+
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+CATTreeClear.log : CALLROOTEXE += -e "gSystem->Load(\"libTree\");"
+endif
+
+ifneq ($(ClingWorkAroundErracticValuePrinter),)
+execHistArray.success: EXTRA_DIFFOPTS += -w
+endif
