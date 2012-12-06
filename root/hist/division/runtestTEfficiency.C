@@ -1,30 +1,10 @@
 #include "TEfficiency.h"
 
-void runtestTEfficiency()
-{
-  // check consistency between TEfficiency and TGraphAsymmErrors
-  cout << "uniform prior with mode: "; testTEfficiency_vs_TGA(1000,TEfficiency::kBUniform,true);
-  cout << "uniform prior with mean: "; testTEfficiency_vs_TGA(1000,TEfficiency::kBUniform,false);
-  cout << "Jeffrey prior with mode: "; testTEfficiency_vs_TGA(1000,TEfficiency::kBJeffrey,true);
-  cout << "Jeffrey prior with mean: "; testTEfficiency_vs_TGA(1000,TEfficiency::kBJeffrey,false);
-  cout << "Clopper-Pearson: "; testTEfficiency_vs_TGA(1000,TEfficiency::kFCP,false);
-  cout << "Agresti-Coull: "; testTEfficiency_vs_TGA(1000,TEfficiency::kFAC,false);
-  cout << "Feldman-Cousin: "; testTEfficiency_vs_TGA(1000,TEfficiency::kFFC,false);
-  cout << "Wilson: "; testTEfficiency_vs_TGA(1000,TEfficiency::kFWilson,false);
-  cout << "Normal: "; testTEfficiency_vs_TGA(1000,TEfficiency::kFNormal,false);
-
-  // check confidence intervals for a few points
-  testClopperPearson();
-  testNormal();
-  testWilson();
-  testFeldmanCousins();
-  testJeffreyPrior();
-}
-
-bool testTEfficiency_vs_TGA(int nexp=1000,int statOpt = TEfficiency::kBUniform,bool mode = true)
+bool testTEfficiency_vs_TGA(int nexp /* =1000 */,TEfficiency::EStatOption statOpt /* = TEfficiency::kBUniform */,bool mode /* = true */)
 { 
    gRandom->SetSeed(111);
 
+   bool ok = true; 
    for (int i = 0; i < nexp; ++i) {
 
       //if (i>0 && i%500==0) cout << i << endl;
@@ -53,7 +33,7 @@ bool testTEfficiency_vs_TGA(int nexp=1000,int statOpt = TEfficiency::kBUniform,b
       else if (statOpt== TEfficiency::kFNormal ) g->Divide(h1,h2,"cl=0.683 n");
       else { 
          cout << "invalid statistic options - exit " << endl;
-         return;
+         return false;
       }
       double eff =  g->GetY()[0];
       double eu  =  g->GetEYhigh()[0];
@@ -72,7 +52,6 @@ bool testTEfficiency_vs_TGA(int nexp=1000,int statOpt = TEfficiency::kBUniform,b
       double el2 = e->GetEfficiencyErrorLow(1);
       double eu2 = e->GetEfficiencyErrorUp(1);
 
-      bool ok = true; 
       double tol = 1.E-12;
       if (!TMath::AreEqualAbs(eff2, eff, 1.E-14)) { cerr << "Different efficiency " << eff2 << "  vs  " << eff << endl; ok=false;}
       if (!TMath::AreEqualAbs(el2, el, 1.E-14))  { cerr << "Different low error " << el2 << "  vs  " << el << endl; ok = false; }
@@ -349,3 +328,25 @@ bool testJeffreyPrior()
   
   return ok;
 }
+
+void runtestTEfficiency()
+{
+  // check consistency between TEfficiency and TGraphAsymmErrors
+  cout << "uniform prior with mode: "; testTEfficiency_vs_TGA(1000,TEfficiency::kBUniform,true);
+  cout << "uniform prior with mean: "; testTEfficiency_vs_TGA(1000,TEfficiency::kBUniform,false);
+  cout << "Jeffrey prior with mode: "; testTEfficiency_vs_TGA(1000,TEfficiency::kBJeffrey,true);
+  cout << "Jeffrey prior with mean: "; testTEfficiency_vs_TGA(1000,TEfficiency::kBJeffrey,false);
+  cout << "Clopper-Pearson: "; testTEfficiency_vs_TGA(1000,TEfficiency::kFCP,false);
+  cout << "Agresti-Coull: "; testTEfficiency_vs_TGA(1000,TEfficiency::kFAC,false);
+  cout << "Feldman-Cousin: "; testTEfficiency_vs_TGA(1000,TEfficiency::kFFC,false);
+  cout << "Wilson: "; testTEfficiency_vs_TGA(1000,TEfficiency::kFWilson,false);
+  cout << "Normal: "; testTEfficiency_vs_TGA(1000,TEfficiency::kFNormal,false);
+
+  // check confidence intervals for a few points
+  testClopperPearson();
+  testNormal();
+  testWilson();
+  testFeldmanCousins();
+  testJeffreyPrior();
+}
+
