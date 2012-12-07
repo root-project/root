@@ -62,4 +62,4 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 
 
 storing: storing.log
-	$(TestDiff)
+	$(TestDiffW)

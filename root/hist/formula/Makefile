@@ -31,3 +31,4 @@ string: string.success
 string.success : string.log
 	$(SuccessTestDiff) && touch $@
 
+string.success: EXTRA_DIFFOPTS += -w 

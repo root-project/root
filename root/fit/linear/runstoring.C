@@ -141,8 +141,5 @@ int runstoring() {
    readformula();
    writefitter();
    readfitter();
-#ifdef ClingWorkAroundErracticValuePrinter
-   printf("(int)0\n");
-#endif
    return 0;
 }

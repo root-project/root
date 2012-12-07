@@ -30,7 +30,9 @@ Projections : Projections.log Projections.ref
 sparse_test : sparse
 
 sparse : sparse.log sparse.ref
+ifeq ($(ClingWorkAroundJITandInline),)
 	$(TestDiff) && touch $@
+endif
 
 ifneq ($(ClingWorkAroundMissingAutoLoading),)
 Projections.log : CALLROOTEXE += -e "gSystem->Load(\"libHist\");" 
