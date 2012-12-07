@@ -24,8 +24,8 @@ ptrptr.log : runptrptr.C ptrptr.C vclass_h.$(DllSuf)
 typedefAndScope_test : typedefAndScope_timestamp
 
 typedefAndScope_timestamp : typedefAndScope.log
-	$(CMDECHO) diff -b typedefAndScope.log typedefAndScope.ref && touch $@
+	$(CMDECHO) diff -b typedefAndScope.ref typedefAndScope.log && touch $@
 
 typedefAndScope.log : testclass.h testclass_h.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l testclass.h+ > typedefAndScope.log 2> typedefAndScope.build.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l -e 'gSystem->Load("testclass_h");' > typedefAndScope.log 2>&1
 
