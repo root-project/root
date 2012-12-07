@@ -62,4 +62,5 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 
 
 ownership: ownership.clog
-	$(TestDiff)
+	$(TestDiffW)
+

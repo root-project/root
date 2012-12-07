@@ -32,3 +32,7 @@ sparse_test : sparse
 sparse : sparse.log sparse.ref
 	$(TestDiff) && touch $@
 
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+Projections.log : CALLROOTEXE += -e "gSystem->Load(\"libHist\");" 
+sparse.log : CALLROOTEXE += -e "gSystem->Load(\"libHist\");" 
+endif
