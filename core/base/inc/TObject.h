@@ -209,6 +209,8 @@ public:
    static Bool_t    GetObjectStat();
    static void      SetObjectStat(Bool_t stat);
 
+   friend class TClonesArray; // needs to reset kNotDeleted in fBits
+
    ClassDef(TObject,1)  //Basic ROOT object
 };
 
