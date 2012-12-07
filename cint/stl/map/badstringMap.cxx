@@ -37,5 +37,8 @@ m.Param()["hello"]=3.14159;
 cout<<m.Param()["hello"];
 cout<<endl;
 
+#ifndef ClingWorkAroundMissingDynamicScope
+printf("(int) 0\n");
+#endif
 return 0;
 }
