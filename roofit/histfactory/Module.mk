@@ -67,11 +67,7 @@ HISTFACTORYH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/RooSta
 HISTFACTORYS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HISTFACTORYO    := $(call stripsrc,$(HISTFACTORYS:.cxx=.o))
 #location of header files for rootcint (cannot use absolute path for win32)
-ifeq ($(PLATFORM),win32)
-HISTFACTORYDICTI    := roofit/histfactory/inc
-else
-HISTFACTORYDICTI    := $(MODDIRI)
-endif	
+HISTFACTORYDICTI    := $(call stripsrc,$(MODDIRI))
 
 HISTFACTORYDEP  := $(HISTFACTORYO:.o=.d) $(HISTFACTORYDO:.o=.d)
 

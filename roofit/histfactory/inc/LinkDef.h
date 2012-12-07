@@ -42,6 +42,7 @@
 #pragma link C++ class std::vector< RooStats::HistFactory::Channel >+ ;
 #pragma link C++ class std::vector< RooStats::HistFactory::Sample >+ ;
 
+// make dictionary for all C++ classes defined in these following files
 #pragma link C++ defined_in "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"; 
 #pragma link C++ defined_in "RooStats/HistFactory/Systematics.h"; 
 #pragma link C++ defined_in "RooStats/HistFactory/HistFactoryModelUtils.h"; 
