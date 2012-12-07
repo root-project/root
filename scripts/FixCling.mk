@@ -38,7 +38,9 @@ CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndInline"
 ClingWorkAroundMissingImplicitAuto = yes
 ClingWorkAroundMissingDynamicScope = yes
 ClingWorkAroundMissingUnloading = yes
-ClingWorkAroundMissingAutoLoading = yes
+ClingWorkAroundMissingAutoLoading = yes        # See *also* the problem namespace and templates:
+                                               #     https://savannah.cern.ch/bugs/index.php?99329
+                                               #     https://savannah.cern.ch/bugs/index.php?99309
 ClingWorkAroundMissingSmartInclude = yes
 ClingWorkAroundBrokenUnnamedReturn = yes       # See https://savannah.cern.ch/bugs/index.php?99032
 ClingWorkAroundUnnamedIncorrectInitOrder = yes # See https://savannah.cern.ch/bugs/index.php?99210
