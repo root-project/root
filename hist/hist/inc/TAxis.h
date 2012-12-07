@@ -75,7 +75,7 @@ public:
           kLabelsDown    = BIT(20),
           kLabelsUp      = BIT(21),
           kIsInteger     = BIT(22),
-          kMoreLogLabels = BIT(23),
+          kMoreLogLabels = BIT(23)
    }; 
 
    TAxis();
