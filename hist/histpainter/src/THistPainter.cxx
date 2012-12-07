@@ -6808,7 +6808,7 @@ void THistPainter::PaintPalette()
       Double_t xmax = gPad->PadtoX(xup + xr);
       if (xmax > x2) xmax = gPad->PadtoX(gPad->GetX2()-0.01*xr);
       palette = new TPaletteAxis(xmin,ymin,xmax,ymax,fH);
-      fFunctions->Add(palette);
+      fFunctions->AddFirst(palette);
       palette->Paint();
    }
 }
