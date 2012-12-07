@@ -16,7 +16,7 @@ void hlabels2()
    c1->SetLeftMargin(0.15);
    c1->SetBottomMargin(0.15);
    TH2F *h = new TH2F("h","test",3,0,3,2,0,2);
-   h->SetBit(TH1::kCanRebin);
+   h->SetCanRebin(TH1::kAllAxes);
    h->SetStats(0);
    gRandom->SetSeed();
    for (Int_t i=0;i<15000;i++) {
