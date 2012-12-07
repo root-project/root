@@ -284,7 +284,7 @@ All histogram classes are derived from the base class TH1
 <p>     By default, the bin number is computed using the current axis ranges.
      If the automatic binning option has been set via
 <pre>
-       h->SetBit(TH1::kCanRebin);
+       h->SetCanRebin(kAllAxes);
 </pre>
      then, the Fill Function will automatically extend the axis range to
      accomodate the new value specified in the Fill argument. The method
@@ -1083,18 +1083,15 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    SetMinimum();
    SetMaximum();
 
-//    Reset the kCanRebin and time display option. Otherwise SetBinContent on the overflow bin
-//    would resize the axis limits!
+//    Reset the rebin possibility for all axes and the time display option. Otherwise SetBinContent 
+//    on the overflow bin would resize the axis limits!
 // we need to do for only X axis since only TH1x::SetBinContent resize the axis
-   Bool_t canRebin = TestBit(kCanRebin);
-   if (canRebin) ResetBit(kCanRebin);
+   UInt_t oldRebinBitMask = CanRebinAllAxes(); 
+   if (oldRebinBitMask) SetCanRebin(kNoAxis);
 
    Bool_t timeDisplayX = fXaxis.GetTimeDisplay();
    if (timeDisplayX)  fXaxis.SetTimeDisplay(0);
   
-
-   
-
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -1177,7 +1174,7 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       SetEntries(nEntries);
    }
 
-   if (canRebin) SetBit(kCanRebin);
+   SetCanRebin(oldRebinBitMask); // revert previous rebin state
    if (timeDisplayX)  fXaxis.SetTimeDisplay(1);
 
    return kTRUE;
@@ -1253,7 +1250,7 @@ Int_t TH1::BufferEmpty(Int_t action)
       Reset("ICES"); 
       fBuffer = buffer;
    }
-   if (TestBit(kCanRebin) || (fXaxis.GetXmax() <= fXaxis.GetXmin())) {
+   if (CanRebinAllAxes() || (fXaxis.GetXmax() <= fXaxis.GetXmin())) {
       //find min, max of entries in buffer
       Double_t xmin = fBuffer[2];
       Double_t xmax = xmin;
@@ -2315,6 +2312,20 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    return 0;
 }
 
+
+//______________________________________________________________________________
+void TH1::ClearUnderflowAndOverflow()
+{
+   // Remove all the content from the underflow and overflow bins, without changing the number of entries
+   // After calling this method, every undeflow and overflow bins will have content 0.0
+   // The Sumw2 is also cleared, since there is no more content in the bins
+   for (Int_t bin = 0; bin < fNcells; ++bin)
+      if (IsBinUnderflow(bin) || IsBinOverflow(bin)) { 
+         UpdateBinContent(bin, 0.0);
+         if (fSumw2.fN) fSumw2.fArray[bin] = 0.0;
+      }
+}
+
 //______________________________________________________________________________
 Double_t TH1::ComputeIntegral()
 {
@@ -2413,8 +2424,7 @@ void TH1::Copy(TObject &obj) const
 
    TArray* a = dynamic_cast<TArray*>(&obj);
    if (a) a->Set(fNcells);
-   Int_t canRebin = ((TH1&)obj).TestBit(kCanRebin);
-   ((TH1&)obj).ResetBit(kCanRebin);  //we want to avoid the call to LabelsInflate
+   UInt_t oldRebinBitMask = ((TH1&)obj).SetCanRebin(kNoAxis);  //we want to avoid the call to LabelsInflate
    // we need to set fBuffer to zero to avoid calling BufferEmpty in GetBinContent
    Double_t * buffer = 0; 
    if (fBuffer) { 
@@ -2422,8 +2432,8 @@ void TH1::Copy(TObject &obj) const
       ((TH1*)this)->fBuffer = 0; 
    }
    for (Int_t i=0;i<fNcells;i++) ((TH1&)obj).SetBinContent(i,this->GetBinContent(i));
-   // restore rebin bit and buffer pointer
-   if (canRebin) ((TH1&)obj).SetBit(kCanRebin);
+   // restore rebin state and buffer pointer
+   ((TH1&)obj).SetCanRebin(oldRebinBitMask);
    if (buffer) ((TH1*)this)->fBuffer  = buffer;
    ((TH1&)obj).fEntries   = fEntries;
 
@@ -2525,10 +2535,9 @@ Bool_t TH1::Divide(TF1 *f1, Double_t c1)
    SetMinimum();
    SetMaximum();
 
-//    Reset the kCanRebin option. Otherwise SetBinContent on the overflow bin
-//    would resize the axis limits!
-   ResetBit(kCanRebin);
-
+//    Reset the rebin possibility for all axes and the time display option. Otherwise SetBinContent 
+//    on the overflow bin would resize the axis limits!
+   SetCanRebin(kNoAxis);
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -2616,9 +2625,9 @@ Bool_t TH1::Divide(const TH1 *h1)
    if (fSumw2.fN == 0 && h1->GetSumw2N() != 0) Sumw2();
 
 
-//    Reset the kCanRebin option. Otherwise SetBinContent on the overflow bin
-//    would resize the axis limits!
-   ResetBit(kCanRebin);
+//    Reset the rebin possibility for all axes and the time display option. Otherwise SetBinContent 
+//    on the overflow bin would resize the axis limits!
+   SetCanRebin(kNoAxis);
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -2720,9 +2729,9 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
    SetMinimum();
    SetMaximum();
 
-//    Reset the kCanRebin option. Otherwise SetBinContent on the overflow bin
-//    would resize the axis limits!
-   ResetBit(kCanRebin);
+//    Reset the rebin possibility for all axes and the time display option. Otherwise SetBinContent 
+//    on the overflow bin would resize the axis limits!
+   SetCanRebin(kNoAxis);
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -3158,8 +3167,8 @@ Int_t TH1::Fill(const char *namex, Double_t w)
    Double_t z= w;
    fTsumw   += z;
    fTsumw2  += z*z;
-   // this make sense if the histogram is not expanding (kCanRebin is not set)
-   if (!TestBit(TH1::kCanRebin)) {
+   // this make sense if the histogram is not expanding (no axis can be rebinned)
+   if (!CanRebinAllAxes()) {
       Double_t x = fXaxis.GetBinCenter(bin);
       fTsumwx  += z*x;
       fTsumwx2 += z*x*x;
@@ -3379,7 +3388,7 @@ Int_t TH1::FindBin(Double_t x, Double_t y, Double_t z)
 //      structure. This has the advantage that all existing functions, such as
 //      GetBinContent, GetBinError, GetBinFunction work for all dimensions.
 //      This function tries to rebin the axis if the given point belongs to an
-//       under-/overflow bin AND if the TH1::kCanRebin bit is sei
+//       under-/overflow bin AND if CanRebinAllAxes() is true.
 //     See also TH1::GetBin, TAxis::FindBin and TAxis::FindFixBin
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
@@ -4806,9 +4815,9 @@ void TH1::LabelsInflate(Option_t *ax)
    Copy(*hold);
 
    Bool_t timedisp = axis->GetTimeDisplay();
-   Int_t  nbxold = fXaxis.GetNbins();
-   Int_t  nbyold = fYaxis.GetNbins();
-   Int_t  nbzold = fZaxis.GetNbins();
+//   Int_t  nbxold = fXaxis.GetNbins();
+//   Int_t  nbyold = fYaxis.GetNbins();
+//   Int_t  nbzold = fZaxis.GetNbins();
    Int_t nbins   = axis->GetNbins();
    Double_t xmin = axis->GetXmin();
    Double_t xmax = axis->GetXmax();
@@ -4829,11 +4838,11 @@ void TH1::LabelsInflate(Option_t *ax)
    for (ibin =0; ibin < fNcells; ibin++) { 
       GetBinXYZ(ibin,binx,biny,binz);
       bin = hold->GetBin(binx,biny,binz);
-      // NOTE that overflow in hold will be not considered
-      if (binx > nbxold  || biny > nbyold || binz > nbzold) bin = -1;
-      if (bin > 0)  { 
-         Double_t cu  = hold->GetBinContent(bin);
-         AddBinContent(ibin,cu);
+
+      // underflow and overflow will be cleaned up because their meaning has been altered
+      if (IsBinUnderflow(bin) || IsBinOverflow(bin)) UpdateBinContent(ibin, 0.0);
+      else { 
+         AddBinContent(ibin, hold->GetBinContent(bin));
          if (errors) fSumw2.fArray[ibin] += hold->fSumw2.fArray[bin];
       }
    }
@@ -5305,17 +5314,17 @@ Long64_t TH1::Merge(TCollection *li)
          allHaveLabels &= (haveOneLabel);
          // for the error message
          if (haveOneLabel) foundLabelHist = kTRUE;
-         // If histograms have labels but kCanRebin is not set on this 
+         // If histograms have labels but CanRebinAllAxes() is false 
          // use merging of bin content
-         if (allHaveLabels && !this->TestBit(TH1::kCanRebin)) {
-               allHaveLabels = kFALSE;
+         if (allHaveLabels && !CanRebinAllAxes()) {
+            allHaveLabels = kFALSE;
          }
          // it means 
          // I could add a check if histogram contains bins without a label 
          // and with non-zero bin content
          // Do we want to support this ???
-         // only in case the kCanRebin bit is not set
-         if (allHaveLabels && !h->TestBit(TH1::kCanRebin) ) { 
+         // only in case the !h->CanRebinAllAxes() 
+         if (allHaveLabels && !h->CanRebinAllAxes()) { 
             // count number of bins with non-null content
             Int_t non_zero_bins = 0; 
             Int_t nbins = h->GetXaxis()->GetNbins(); 
@@ -5400,9 +5409,9 @@ Long64_t TH1::Merge(TCollection *li)
    for (Int_t i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
    GetStats(totstats);
    Double_t nentries = GetEntries();
-   Bool_t canRebin=TestBit(kCanRebin);
+   UInt_t oldRebinBitMask = CanRebinAllAxes();
    // reset, otherwise setting the under/overflow will rebin and make a mess
-   if (!allHaveLabels) ResetBit(kCanRebin); 
+   if (!allHaveLabels) SetCanRebin(kNoAxis);
    while (TH1* hist=(TH1*)next()) {
       // process only if the histogram has limits; otherwise it was processed before
       // in the case of an existing buffer (see if statement just before) 
@@ -5417,6 +5426,7 @@ Long64_t TH1::Merge(TCollection *li)
          Int_t nx = hist->GetXaxis()->GetNbins();
          // loop on bins of the histogram and do the merge 
          for (Int_t binx = 0; binx <= nx + 1; binx++) {
+
             Double_t cu = hist->GetBinContent(binx);
             Double_t error1 = 0; 
             Int_t ix = -1; 
@@ -5454,27 +5464,25 @@ Long64_t TH1::Merge(TCollection *li)
                            hist->GetName(),binx );
                      return -1;
                   }
-                  if (label[0] == 0 ) { // case label is "" , i.e. is not set 
+//                  if (label[0] == 0 ) { // case label is "" , i.e. is not set 
                      // exclude underflow which could contain the non-existing labels
                      // thsi we could merge in all underflow
-                     if ( binx > 0 && binx <= nx) {                         
-                        Error("Merge","Cannot merge ! Label histogram %s contains a bin %d which has not a label and has non-zero content ",hist->GetName(),binx );
-                        return -1;
-                     }
-                     else
+//                     if ( binx > 0 && binx <= nx) {                         
+//                        Error("Merge","Cannot merge ! Label histogram %s contains a bin %d which has not a label and has non-zero content ",hist->GetName(),binx );
+//                        return -1;
+//                     }
+//                     else
                         // case of underflow/overflow
-                        ix = binx; 
-                  }
-                  else { 
+//                        ix = binx; 
+//                  }
+//                  else { 
                      // if bin does not exists FindBin will add it automatically 
                      // by calling LabelsInflate() if the bit is set
                      // otherwise it will return zero and bin will be merged in underflow/overflow
-                     // Do we want to keep this case ??
+                     // Do we want to keep this case ??            
                      ix = fXaxis.FindBin(label);
-                     if (ix == 0) { 
-                        Warning("Merge","Histogram %s has labels but the kCanRebin unset - label %s is lost",GetName(),label);
-                     }
-                  }
+                     if (ix == 0) Warning("Merge", "Histogram %s has labels but CanRebinAllAxes() is false - label %s is lost", GetName(), label);
+//                  }
                   // ix cannot be -1 . Can be 0 in case label is not found and bit is not set 
                   if (ix <0) {
                      Fatal("Merge","Error return from TAxis::FindBin for label %s",label);
@@ -5490,7 +5498,7 @@ Long64_t TH1::Merge(TCollection *li)
          }
       }
    }
-   if (canRebin) SetBit(kCanRebin);
+   SetCanRebin(oldRebinBitMask); // restore previous rebin state
 
    //copy merged stats
    PutStats(totstats);
@@ -5533,9 +5541,9 @@ Bool_t TH1::Multiply(TF1 *f1, Double_t c1)
    SetMinimum();
    SetMaximum();
 
-   //    Reset the kCanRebin option. Otherwise SetBinContent on the overflow bin
+   //    Reset the can rebin option. Otherwise SetBinContent on the overflow bin
    //    would resize the axis limits!
-   ResetBit(kCanRebin);
+   SetCanRebin(kNoAxis);
 
    //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -5621,9 +5629,9 @@ Bool_t TH1::Multiply(const TH1 *h1)
    SetMinimum();
    SetMaximum();
 
-   //    Reset the kCanRebin option. Otherwise SetBinContent on the overflow bin
+   //    Reset the can rebin option. Otherwise SetBinContent on the overflow bin
    //    would resize the axis limits!
-   ResetBit(kCanRebin);
+   SetCanRebin(kNoAxis);
 
    //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -5707,9 +5715,9 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
    SetMinimum();
    SetMaximum();
 
-   //    Reset the kCanRebin option. Otherwise SetBinContent on the overflow bin
+   //    Reset the can rebin option. Otherwise SetBinContent on the overflow bin
    //    would resize the axis limits!
-   ResetBit(kCanRebin);
+   SetCanRebin(kNoAxis);
 
    //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -5853,9 +5861,8 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       hnew = (TH1*)Clone(newname);
    }
 
-   //reset kCanRebin bit to avoid a rebinning in SetBinContent
-   Int_t bitRebin = hnew->TestBit(kCanRebin);
-   hnew->SetBit(kCanRebin,0);
+   //reset can rebin bit to avoid a rebinning in SetBinContent
+   UInt_t oldRebinBitMask = hnew->SetCanRebin(kNoAxis);
 
    // save original statistics
    Double_t stat[kNstat];
@@ -5948,7 +5955,8 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    }
    hnew->SetBinContent(newbins+1,binContent);
    if (oldErrors) hnew->SetBinError(newbins+1,TMath::Sqrt(binError));
-   hnew->SetBit(kCanRebin,bitRebin);
+
+   hnew->SetCanRebin(oldRebinBitMask); // restore previous rebin state
 
    // restore statistics and entries modified by SetBinContent
    hnew->SetEntries(entries);
@@ -6021,12 +6029,12 @@ void TH1::RebinAxis(Double_t x, TAxis *axis)
    // of the old histogram to fill the rebinned histogram.
    // Takes into account errors (Sumw2) if any.
    // The algorithm works for 1-d, 2-D and 3-D histograms.
-   // The bit kCanRebin must be set before invoking this function.
-   //  Ex:  h->SetBit(TH1::kCanRebin);
+   // The axis must be rebinnable before invoking this function.
+   // Ex: h->GetXaxis()->SetCanRebin(kTRUE);
 
-   if (!TestBit(kCanRebin)) return;
+   if (!CanRebinAllAxes()) return; // TODO -> only for this axis
    if (TMath::IsNaN(x)) {         // x may be a NaN
-      ResetBit(kCanRebin);
+      SetCanRebin(kNoAxis);
       return;
    }
 
@@ -6124,6 +6132,43 @@ void TH1::Scale(Double_t c1, Option_t *option)
    }
 }
 
+//______________________________________________________________________________
+Bool_t TH1::CanRebinAllAxes() const
+{
+   // returns true if all axes are rebinnable
+   Bool_t canRebin = fXaxis.CanRebin();
+   if (GetDimension() > 1) canRebin &= fYaxis.CanRebin();
+   if (GetDimension() > 2) canRebin &= fZaxis.CanRebin();
+
+   return canRebin;
+}
+
+//______________________________________________________________________________
+UInt_t TH1::SetCanRebin(UInt_t rebinBitMask) 
+{
+   // make the histogram axes rebinnable / not rebinnable according to the bit mask
+   // returns the previous bit mask specifying which axes are rebinnable 
+
+   UInt_t oldRebinBitMask = kNoAxis;
+
+   if (fXaxis.CanRebin()) oldRebinBitMask |= kXaxis;
+   if (rebinBitMask & kXaxis) fXaxis.SetCanRebin(kTRUE);
+   else fXaxis.SetCanRebin(kFALSE);
+
+   if (GetDimension() > 1) {
+      if (fYaxis.CanRebin()) oldRebinBitMask |= kYaxis;
+      if (rebinBitMask & kYaxis) fYaxis.SetCanRebin(kTRUE);
+      else fYaxis.SetCanRebin(kFALSE);
+   }
+   
+   if (GetDimension() > 2) {
+      if (fZaxis.CanRebin()) oldRebinBitMask |= kZaxis;
+      if (rebinBitMask & kZaxis) fZaxis.SetCanRebin(kTRUE);
+      else fZaxis.SetCanRebin(kFALSE);
+   }
+
+   return oldRebinBitMask;
+}
 
 //______________________________________________________________________________
 void TH1::SetDefaultBufferSize(Int_t buffersize)
@@ -7189,7 +7234,7 @@ void TH1::GetStats(Double_t *stats) const
    Double_t x;
    // case of labels with rebin of axis set 
    // statistics in x does not make any sense - set to zero 
-   if ((const_cast<TAxis&>(fXaxis)).GetLabels() && TestBit(TH1::kCanRebin) ) { 
+   if ((const_cast<TAxis&>(fXaxis)).GetLabels() && CanRebinAllAxes() ) { 
       stats[0] = fTsumw;
       stats[1] = fTsumw2;
       stats[2] = 0; 
@@ -8348,14 +8393,14 @@ void TH1::SetBinContent(Int_t bin, Double_t content)
    // Set bin content
    // see convention for numbering bins in TH1::GetBin
    // In case the bin number is greater than the number of bins and
-   // the timedisplay option is set or the kCanRebin bit is set,
+   // the timedisplay option is set or CanRebinAllAxes(),
    // the number of bins is automatically doubled to accommodate the new bin
 
    fEntries++;
    fTsumw = 0;
    if (bin < 0) return;
    if (bin >= fNcells-1) {
-      if (fXaxis.GetTimeDisplay() || TestBit(kCanRebin) ) {
+      if (fXaxis.GetTimeDisplay() || CanRebinAllAxes() ) {
          while (bin >=  fNcells-1)  LabelsInflate();
       } else {
          if (bin == fNcells-1) UpdateBinContent(bin, content);

@@ -48,9 +48,21 @@ private:
    TObject     *fParent;         //!Object owning this axis
    THashList   *fLabels;         //List of labels
 
+   // TAxis extra status bits (stored in fBits2)
+   enum {
+      kAlphanumeric = BIT(0),
+      kCanRebin = BIT(1)
+   };
+
+   Bool_t       HasBinWithoutLabel() const;
+   Bool_t       IsAlphanumeric() { return fBits2 & kAlphanumeric; }
+   void         SetAlphanumeric(Bool_t alphanumeric = kTRUE); 
+
 public:
    // TAxis status bits
-   enum { kTickPlus      = BIT(9),
+   enum { 
+          kDecimals      = BIT(7),
+          kTickPlus      = BIT(9),
           kTickMinus     = BIT(10),
           kAxisRange     = BIT(11),
           kCenterTitle   = BIT(12),
@@ -64,7 +76,7 @@ public:
           kLabelsUp      = BIT(21),
           kIsInteger     = BIT(22),
           kMoreLogLabels = BIT(23),
-          kDecimals      = BIT(11)}; //in fBits2
+   }; 
 
    TAxis();
    TAxis(Int_t nbins, Double_t xmin, Double_t xmax);
@@ -73,8 +85,10 @@ public:
    virtual ~TAxis();
    TAxis& operator=(const TAxis&);
 
-   virtual void       CenterLabels(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterLabels
-   virtual void       CenterTitle(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterTitle
+           Bool_t     CanRebin() const { return fBits2 & kCanRebin; }
+           void       SetCanRebin(Bool_t canRebin) { fBits2 = canRebin ? (fBits2 | kCanRebin) : (fBits2 & ~kCanRebin); }
+           void       CenterLabels(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterLabels
+           void       CenterTitle(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterTitle
    const char        *ChooseTimeFormat(Double_t axislength=0);
    virtual void       Copy(TObject &axis) const;
    virtual void       Delete(Option_t * /*option*/ ="") { }
@@ -91,16 +105,16 @@ public:
    virtual Double_t   GetBinUpEdge(Int_t bin) const;
    virtual Double_t   GetBinWidth(Int_t bin) const;
    virtual void       GetCenter(Double_t *center) const;
-           Bool_t     GetCenterLabels() const;
-           Bool_t     GetCenterTitle() const;
+           Bool_t     GetCenterLabels() const { return TestBit(kCenterLabels); }
+           Bool_t     GetCenterTitle() const { return TestBit(kCenterTitle); }
+           Bool_t     GetDecimals() const { return TestBit(kDecimals); } 
    THashList         *GetLabels() {return fLabels;}
    virtual void       GetLowEdge(Double_t *edge) const;
-           Bool_t     GetMoreLogLabels() const;
+           Bool_t     GetMoreLogLabels() const { return TestBit(kMoreLogLabels); }
            Int_t      GetNbins() const { return fNbins; }
-           Bool_t     GetNoExponent() const;
-           Bool_t     GetDecimals() const;
+           Bool_t     GetNoExponent() const { return TestBit(kNoExponent); }
    virtual TObject   *GetParent() const {return fParent;}
-           Bool_t     GetRotateTitle() const;
+           Bool_t     GetRotateTitle() const { return TestBit(kRotateTitle); }
    virtual const char *GetTicks() const;
    virtual Bool_t     GetTimeDisplay() const {return fTimeDisplay;}
    virtual const char *GetTimeFormat() const {return fTimeFormat.Data();}
@@ -117,18 +131,18 @@ public:
                          return (fXbins.GetSize() != 0);
                       }
    virtual void       LabelsOption(Option_t *option="h");  // *MENU*
-   virtual void       RotateTitle(Bool_t rotate=kTRUE); // *TOGGLE* *GETTER=GetRotateTitle
+           void       RotateTitle(Bool_t rotate=kTRUE); // *TOGGLE* *GETTER=GetRotateTitle
    virtual void       SaveAttributes(std::ostream &out, const char *name, const char *subname);
    virtual void       Set(Int_t nbins, Double_t xmin, Double_t xmax);
    virtual void       Set(Int_t nbins, const Float_t *xbins);
    virtual void       Set(Int_t nbins, const Double_t *xbins);
    virtual void       SetBinLabel(Int_t bin, const char *label);
+           void       SetDecimals(Bool_t dot = kTRUE); // *TOGGLE* *GETTER=GetDecimals
    virtual void       SetDefaults();
    virtual void       SetDrawOption(Option_t * /*option*/ ="") { }
-   virtual void       SetLimits(Double_t xmin, Double_t xmax);
-   virtual void       SetMoreLogLabels(Bool_t more=kTRUE);  // *TOGGLE* *GETTER=GetMoreLogLabels
-   virtual void       SetNoExponent(Bool_t noExponent=kTRUE);  // *TOGGLE* *GETTER=GetNoExponent
-   virtual void       SetDecimals(Bool_t dot=kTRUE);  // *TOGGLE* *GETTER=GetDecimals
+   virtual void       SetLimits(Double_t xmin, Double_t xmax) { /* set axis limits */ fXmin = xmin; fXmax = xmax; }
+           void       SetMoreLogLabels(Bool_t more=kTRUE);  // *TOGGLE* *GETTER=GetMoreLogLabels
+           void       SetNoExponent(Bool_t noExponent=kTRUE);  // *TOGGLE* *GETTER=GetNoExponent
    virtual void       SetParent(TObject *obj) {fParent = obj;}
    virtual void       SetRange(Int_t first=0, Int_t last=0);  // *MENU*
    virtual void       SetRangeUser(Double_t ufirst, Double_t ulast);  // *MENU*
@@ -141,6 +155,59 @@ public:
 
    ClassDef(TAxis,9)  //Axis class
 };
+
+//______________________________________________________________________________
+inline void TAxis::CenterLabels(Bool_t center)
+{
+   //   if center = kTRUE axis labels will be centered (hori axes only) on the bin center
+   //   default is to center on the primary tick marks
+   //   This option does not make sense if there are more bins than tick marks
+   SetBit(kCenterLabels, center);
+}
+
+//______________________________________________________________________________
+inline void TAxis::CenterTitle(Bool_t center)
+{
+   //   if center = kTRUE axis title will be centered
+   //   default is right adjusted
+   SetBit(kCenterTitle, center);
+}
+
+//___________________________________________________________________________
+inline void TAxis::RotateTitle(Bool_t rotate)
+{
+   // rotate title by 180 degrees
+   // by default the title is drawn right adjusted.
+   // if rotate is TRUE, the title is left adjusted at the end of the axis and rotated by 180 degrees
+   SetBit(kRotateTitle, rotate);
+}
+
+//______________________________________________________________________________
+inline void TAxis::SetDecimals(Bool_t dot) { 
+   // sets the decimals flag
+   // by default, blank characters are stripped, and then the label is correctly aligned.
+   // If the dot is the last character of the string, it is also stripped, unless this option is specified.
+   SetBit(kDecimals, dot); 
+}    
+
+//______________________________________________________________________________
+inline void TAxis::SetMoreLogLabels(Bool_t more)
+{
+   // Set the kMoreLogLabels bit flag
+   // When this option is selected more labels are drawn when in log scale and there is a small number of decades  (<3).
+   // The flag (in fBits) is passed to the drawing function TGaxis::PaintAxis
+   SetBit(kMoreLogLabels, more);
+}
+
+//______________________________________________________________________________
+inline void TAxis::SetNoExponent(Bool_t noExponent)
+{
+   // Set the NoExponent flag
+   // By default, an exponent of the form 10^N is used when the label value are either all very small or very large.
+   // The flag (in fBits) is passed to the drawing function TGaxis::PaintAxis
+   SetBit(kNoExponent, noExponent);
+}
+
 
 #endif
 

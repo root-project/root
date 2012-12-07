@@ -253,7 +253,7 @@ Int_t TProfile3D::BufferEmpty(Int_t action)
       Reset("ICES"); // reset without deleting the functions
       fBuffer = buffer;
    }
-   if (TestBit(kCanRebin) || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
+   if (CanRebinAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
       //find min, max of entries in buffer
       Double_t xmin = fBuffer[2];
       Double_t xmax = xmin;
@@ -946,8 +946,8 @@ Long64_t TProfile3D::Merge(TCollection *li)
 //    Int_t binx, biny, binz, ix, iy, iz, nx, ny, nz, bin, ibin;
 //    Int_t nbix = fXaxis.GetNbins();
 //    Int_t nbiy = fYaxis.GetNbins();
-//    Bool_t canRebin=TestBit(kCanRebin);
-//    ResetBit(kCanRebin); // reset, otherwise setting the under/overflow will rebin
+//    Bool_t canRebin = CanRebinAllAxes();
+//    SetCanRebin(TH1::kNoAxis); // reset, otherwise setting the under/overflow will rebin
 
 //    while (TProfile3D* h=(TProfile3D*)next()) {
 //       // process only if the histogram has limits; otherwise it was processed before
@@ -1002,7 +1002,7 @@ Long64_t TProfile3D::Merge(TCollection *li)
 //          fTsumwt2 += h->fTsumwt2;
 //       }
 //    }
-//    if (canRebin) SetBit(kCanRebin);
+//    if (canRebin) SetCanRebin(TH1::kAllAxes);
 
 //    //copy merged stats
 //    PutStats(totstats);
@@ -1135,8 +1135,8 @@ void TProfile3D::RebinAxis(Double_t x, TAxis *axis)
 // The algorithm makes a copy of the histogram, then loops on all bins
 // of the old histogram to fill the rebinned histogram.
 // Takes into account errors (Sumw2) if any.
-// The bit kCanRebin must be set before invoking this function.
-//  Ex:  h->SetBit(TH1::kCanRebin);
+// The axis must be rebinnable before invoking this function.
+// Ex: h->GetXaxis()->SetCanRebin(kTRUE)
 
    TProfile3D* hold = TProfileHelper::RebinAxis(this, x, axis);
    if ( hold ) {

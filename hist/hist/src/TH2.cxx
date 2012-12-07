@@ -169,7 +169,7 @@ Int_t TH2::BufferEmpty(Int_t action)
       fBuffer = buffer;
    }
 
-   if (TestBit(kCanRebin) || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
+   if (CanRebinAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
       //find min, max of entries in buffer
       Double_t xmin = fBuffer[2];
       Double_t xmax = xmin;
@@ -1595,8 +1595,8 @@ Long64_t TH2::Merge(TCollection *list)
    Int_t binx, biny, ix, iy, nx, ny, bin, ibin;
    Double_t cu;
    Int_t nbix = fXaxis.GetNbins();
-   Bool_t canRebin=TestBit(kCanRebin);
-   ResetBit(kCanRebin); // reset, otherwise setting the under/overflow will rebin
+   Bool_t canRebin = CanRebinAllAxes();
+   SetCanRebin(TH1::kNoAxis); // reset, otherwise setting the under/overflow will rebin
 
    while ((h=(TH2*)next())) {
       // process only if the histogram has limits; otherwise it was processed before
@@ -1643,7 +1643,7 @@ Long64_t TH2::Merge(TCollection *list)
          }
       }
    }
-   if (canRebin) SetBit(kCanRebin);
+   SetCanRebin(canRebin);
 
    //copy merged stats
    PutStats(totstats);
@@ -1745,9 +1745,9 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
       hnew->SetName(newname);
    }
 
-   //reset kCanRebin bit to avoid a rebinning in SetBinContent
-   Int_t bitRebin = hnew->TestBit(kCanRebin);
-   hnew->SetBit(kCanRebin,0);
+   // disable axis rebinning to avoid label inflation in SetBinContent
+   Int_t canRebin = hnew->CanRebinAllAxes();
+   hnew->SetCanRebin(TH1::kNoAxis);
 
    // save original statistics
    Double_t stat[kNstat];
@@ -1957,7 +1957,7 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    //restore statistics and entries  modified by SetBinContent
    hnew->SetEntries(entries);
    if (!resetStat) hnew->PutStats(stat);
-   hnew->SetBit(kCanRebin,bitRebin);
+   hnew->SetCanRebin(canRebin);
 
    delete [] oldBins;
    if (oldErrors) delete [] oldErrors;

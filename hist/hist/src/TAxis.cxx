@@ -23,6 +23,7 @@
 #include "TClass.h"
 #include "TMath.h"
 #include <time.h>
+#include <cassert>
 
 ClassImp(TAxis)
 
@@ -103,43 +104,6 @@ TAxis& TAxis::operator=(const TAxis &orig)
    return *this;
 }
 
-//______________________________________________________________________________
-void TAxis::CenterLabels(Bool_t center)
-{
-   //   if center = kTRUE axis labels will be centered (hori axes only)
-   //   on the bin center
-   //   default is to center on the primary tick marks
-   //   This option does not make sense if there are more bins than tick marks
-
-   if (center) SetBit(kCenterLabels);
-   else        ResetBit(kCenterLabels);
-}
-
-//______________________________________________________________________________
-Bool_t TAxis::GetCenterLabels() const
-{
-   // Return kTRUE if kCenterLabels bit is set, kFALSE otherwise.
-
-   return TestBit(kCenterLabels) ? kTRUE : kFALSE;
-}
-
-//______________________________________________________________________________
-void TAxis::CenterTitle(Bool_t center)
-{
-   //   if center = kTRUE axis title will be centered
-   //   default is right adjusted
-
-   if (center) SetBit(kCenterTitle);
-   else        ResetBit(kCenterTitle);
-}
-
-//______________________________________________________________________________
-Bool_t TAxis::GetCenterTitle() const
-{
-   // Return kTRUE if kCenterTitle bit is set, kFALSE otherwise.
-
-   return TestBit(kCenterTitle) ? kTRUE : kFALSE;
-}
 
 //______________________________________________________________________________
 const char *TAxis::ChooseTimeFormat(Double_t axislength)
@@ -285,22 +249,24 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 Int_t TAxis::FindBin(Double_t x)
 {
-   // Find bin number corresponding to abscissa x
+   // Find bin number corresponding to abscissa x. NOTE: this method does not work with alphanumeric bins !!!
    //
-   // If x is underflow or overflow, attempt to rebin histogram
-   // if the TH1::kCanRebin bit is set otherwise return 0 or fNbins+1
+   // If x is underflow or overflow, attempt to rebin histogram if the TAxis::kCanRebin 
+   // bit is set. Otherwise, return 0 or fNbins+1
 
    Int_t bin;
+   // NOTE: This should not be allowed for Alphanumeric histograms, but it is heavily used (legacy) in the TTreePlayer to fill alphanumeric histograms.
+   if (IsAlphanumeric() && gDebug) Info("FindBin","Numeric query on alphanumeric axis - Sorting the bins or rebinning can alter the correspondence between the label and the bin interval. REMEMBER: With Great Power Comes Great Responsibility !!!");
    if (x < fXmin) {              //*-* underflow
       bin = 0;
       if (fParent == 0) return bin;
-      if (!fParent->TestBit(TH1::kCanRebin)) return bin;
+      if (!CanRebin()) return bin; // TODO remove RebinAxis
       ((TH1*)fParent)->RebinAxis(x,this);
       return FindFixBin(x);
    } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN
       bin = fNbins+1;
       if (fParent == 0) return bin;
-      if (!fParent->TestBit(TH1::kCanRebin)) return bin;
+      if (!CanRebin()) return bin; // TODO Remove RebinAxis
       ((TH1*)fParent)->RebinAxis(x,this);
       return FindFixBin(x);
    } else {
@@ -320,10 +286,13 @@ Int_t TAxis::FindBin(const char *label)
    // Find bin number with label.
    // If the List of labels does not exist create it
    // If label is not in the list of labels do the following depending on the
-   // bit TH1::kCanRebin of the parent histogram.
+   // bit TAxis::kCanRebin of the axis.
    //   - if the bit is set add the new label and if the number of labels exceeds
    //      the number of bins, double the number of bins via TH1::LabelsInflate
-   //   - if the bit is not set return 0 (underflow bin)
+   //   - if the bit is not set and the histogram has labels in each bin 
+   //        set the bit automatically and consider the histogram as alphanumeric
+   //     if histogram has only some bins with labels then the histogram is not 
+   //     consider alphanumeric and return -1
    //
    // -1 is returned only when the Axis has no parent histogram
 
@@ -331,7 +300,8 @@ Int_t TAxis::FindBin(const char *label)
    if (!fLabels) {
       if (!fParent) return -1;
       fLabels = new THashList(1,1);
-      fParent->SetBit(TH1::kCanRebin);
+      SetCanRebin(kTRUE);
+      SetAlphanumeric(kTRUE);
       if (fXmax <= fXmin) {
          //L.M. Dec 2010 in case of no min and max specified use 0 ->NBINS
          fXmin = 0;
@@ -339,23 +309,36 @@ Int_t TAxis::FindBin(const char *label)
       }
    }
 
-   // search for label in the existing list
+   // search for label in the existing list and return it if it exists
    TObjString *obj = (TObjString*)fLabels->FindObject(label);
    if (obj) return (Int_t)obj->GetUniqueID();
 
-   //Not yet in the list. Can we rebin the histogram ?
-   // if we cannot re-bin put label in the underflow bins
-   if (!fParent->TestBit(TH1::kCanRebin)) {
-      if (gDebug>0)
-         Info("FindBin","Label %s is not in the list and the axis cannot be rebinned - the entry will be added in the underflow bin",label);
-      return 0;
+   // if labels is not in the list and we have already labels 
+   if (!IsAlphanumeric()) { 
+      // check if all bins have labels TODO 
+      if (HasBinWithoutLabel()) { 
+         Warning("FindBin","Label %s is not in the list and the axis is not alphanumeric - ignore it",label);
+         return -1; 
+      }
+      else { 
+         Info("FindBin","Label %s not in the list will be added to the histogram",label);
+         SetCanRebin(kTRUE);
+         SetAlphanumeric(kTRUE);
+      }
    }
 
+   //Not yet in the list. Can we rebin the histogram ?
+   assert ( CanRebin() && IsAlphanumeric() );
+   // {
+   //    if (gDebug>0)
+   //       Info("FindBin","Label %s is not in the list and the axis cannot be rebinned - the entry will be added in the underflow bin",label);
+   //    return 0;
+   // }
+
    Int_t n = fLabels->GetEntries();
-   TH1 *h = (TH1*)fParent;
 
    //may be we have to resize the histogram (doubling number of channels)
-   if (n >= fNbins) h->LabelsInflate(GetName());
+   if (n >= fNbins) ((TH1*)fParent)->LabelsInflate(GetName());
 
    //add new label to the list: assign bin number
    obj = new TObjString(label);
@@ -364,13 +347,15 @@ Int_t TAxis::FindBin(const char *label)
    return n+1;
 }
 
+
+
 //______________________________________________________________________________
 Int_t TAxis::FindFixBin(Double_t x) const
 {
    // Find bin number corresponding to abscissa x
    //
    // Identical to TAxis::FindBin except that if x is an underflow/overflow
-   // no attempt is made to rebin the histogram if TH1::kCanRebin bit is set
+   // no attempt is made to rebin the histogram if TAxis::kCanRebin bit is set
 
    Int_t bin;
    if (x < fXmin) {              //*-* underflow
@@ -547,6 +532,14 @@ const char *TAxis::GetTicks() const
 }
 
 //______________________________________________________________________________
+Bool_t TAxis::HasBinWithoutLabel() const
+{
+   // this helper function checks if there is a bin without a label
+   // if all bins have labels, the axis can / will become alphanumeric
+   return fLabels->GetSize() != fNbins;
+}
+
+//______________________________________________________________________________
 void TAxis::LabelsOption(Option_t *option)
 {
    //  Set option(s) to draw axis with labels
@@ -569,14 +562,6 @@ void TAxis::LabelsOption(Option_t *option)
    }
 
    h->LabelsOption(option,GetName());
-}
-
-//___________________________________________________________________________
-Bool_t TAxis::GetRotateTitle() const
-{
-   // Return kTRUE if kRotateTitle bit is set, kFALSE otherwise.
-
-   return TestBit(kRotateTitle) ? kTRUE : kFALSE;
 }
 
 //______________________________________________________________________________
@@ -603,21 +588,11 @@ void TAxis::ImportAttributes(const TAxis *axis)
    SetBit(TAxis::kTickPlus,      axis->TestBit(TAxis::kTickPlus));
    SetBit(TAxis::kTickMinus,     axis->TestBit(TAxis::kTickMinus));
    SetBit(TAxis::kMoreLogLabels, axis->TestBit(TAxis::kMoreLogLabels));
-   if (axis->GetDecimals())      SetBit(TAxis::kDecimals); //the bit is in TAxis::fAxis2
+   SetBit(TAxis::kDecimals,      axis->TestBit(TAxis::kDecimals));
    SetTimeFormat(axis->GetTimeFormat());
 }
 
-//___________________________________________________________________________
-void TAxis::RotateTitle(Bool_t rotate)
-{
-   //    rotate title by 180 degrees
-   //    by default the title is drawn right adjusted.
-   //    if rotate is TRUE, the title is left adjusted at the end of the axis
-   //    and rotated by 180 degrees
 
-   if (rotate) SetBit(kRotateTitle);
-   else        ResetBit(kRotateTitle);
-}
 
 //______________________________________________________________________________
 void TAxis::SaveAttributes(std::ostream &out, const char *name, const char *subname)
@@ -660,12 +635,20 @@ void TAxis::SaveAttributes(std::ostream &out, const char *name, const char *subn
       out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsUp);"<<std::endl;
    }
 
+   if (TestBit(kCenterLabels)) {
+      out<<"   "<<name<<subname<<"->CenterLabels(true);"<<std::endl;
+   }
+
    if (TestBit(kCenterTitle)) {
       out<<"   "<<name<<subname<<"->CenterTitle(true);"<<std::endl;
    }
 
    if (TestBit(kRotateTitle)) {
       out<<"   "<<name<<subname<<"->RotateTitle(true);"<<std::endl;
+   }
+
+   if (TestBit(kDecimals)) {
+      out<<"   "<<name<<subname<<"->SetDecimals();"<<std::endl;
    }
 
    if (TestBit(kMoreLogLabels)) {
@@ -728,6 +711,19 @@ void TAxis::Set(Int_t nbins, const Double_t *xbins)
 }
 
 //______________________________________________________________________________
+void TAxis::SetAlphanumeric(Bool_t alphanumeric)
+{
+   if (alphanumeric) fBits2 |= kAlphanumeric;
+   else fBits2 &= ~kAlphanumeric;
+
+   // clear underflow and overflow (in an alphanumeric situation they do not make sense)
+   // NOTE: using AddBinContent instead of SetBinContent in order to not change
+   //   the number of entries
+   ((TH1 *)fParent)->ClearUnderflowAndOverflow();
+}
+
+
+//______________________________________________________________________________
 void TAxis::SetDefaults()
 {
    // Set axis default values (from TStyle)
@@ -744,36 +740,11 @@ void TAxis::SetDefaults()
 }
 
 //______________________________________________________________________________
-Bool_t TAxis::GetDecimals() const
-{
-   // Returns kTRUE if kDecimals bit is set, kFALSE otherwise.
-   // see TAxis::SetDecimals
-
-   if ((fBits2 & kDecimals) != 0) return kTRUE;
-   else                           return kFALSE;
-}
-
-
-//______________________________________________________________________________
-void TAxis::SetDecimals(Bool_t dot)
-{
-   // Set the Decimals flag
-   // By default, blank characters are stripped, and then the
-   // label is correctly aligned. The dot, if last character of the string,
-   // is also stripped, unless this option is specified.
-   // One can disable the option by calling axis.SetDecimals(kTRUE).
-   // The flag (in fBits2) is passed to the drawing function TGaxis::PaintAxis
-
-   if (dot) fBits2 |=  kDecimals;
-   else     fBits2 &= ~kDecimals;
-}
-
-//______________________________________________________________________________
 void TAxis::SetBinLabel(Int_t bin, const char *label)
 {
    // Set label for bin
-   // In this case we create a label list in the axis but we do not
-   // set the kCanRebin bit.
+   // If no label list exists, it is created. If all the bins have labels, the
+   // axis becomes alphanumeric and rebinnable.
    // New labels will not be added with the Fill method but will end-up in the
    // underflow bin. See documentation of TAxis::FindBin(const char*)
 
@@ -798,58 +769,14 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
    obj = new TObjString(label);
    fLabels->Add(obj);
    obj->SetUniqueID((UInt_t)bin);
+
+   // check for Alphanumeric case (labels for each bin)
+   if (fLabels->GetSize() == fNbins) {
+      SetAlphanumeric(kTRUE);
+      SetCanRebin(kTRUE);
+   }
 }
 
-//______________________________________________________________________________
-void TAxis::SetLimits(Double_t xmin, Double_t xmax)
-{
-   //          Set the axis limits
-
-   fXmin = xmin;
-   fXmax = xmax;
-}
-
-//______________________________________________________________________________
-Bool_t TAxis::GetMoreLogLabels() const
-{
-   // Return kTRUE if kMoreLogLabels bit is set, kFALSE otherwise.
-
-   return TestBit(kMoreLogLabels) ? kTRUE : kFALSE;
-}
-
-//______________________________________________________________________________
-void TAxis::SetMoreLogLabels(Bool_t more)
-{
-   // Set the kMoreLogLabels bit flag
-   // When this option is selected more labels are drawn when in log scale
-   // and there is a small number of decades  (<3).
-   // The flag (in fBits) is passed to the drawing function TGaxis::PaintAxis
-
-   if (more) SetBit(kMoreLogLabels);
-   else      ResetBit(kMoreLogLabels);
-}
-
-//______________________________________________________________________________
-Bool_t TAxis::GetNoExponent() const
-{
-   // Returns kTRUE if kNoExponent bit is set, kFALSE otherwise.
-   // see TAxis::SetNoExponent
-
-   return TestBit(kNoExponent) ? kTRUE : kFALSE;
-}
-
-//______________________________________________________________________________
-void TAxis::SetNoExponent(Bool_t noExponent)
-{
-   // Set the NoExponent flag
-   // By default, an exponent of the form 10^N is used when the label values
-   // are either all very small or very large.
-   // One can disable the exponent by calling axis.SetNoExponent(kTRUE).
-   // The flag (in fBits) is passed to the drawing function TGaxis::PaintAxis
-
-   if (noExponent) SetBit(kNoExponent);
-   else            ResetBit(kNoExponent);
-}
 
 //______________________________________________________________________________
 void TAxis::SetRange(Int_t first, Int_t last)

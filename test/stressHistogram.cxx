@@ -2281,7 +2281,7 @@ bool testDivHn1()
       s4->SetBinError(coord, sqrt(error));
    }
 
-   bool ret = equals(TString::Format("DivideND1<%s>", HIST::Class()->GetName()), s1, s4, cmpOptNone, 1E-6);
+   bool ret = equals(TString::Format("DivideND1<%s>", HIST::Class()->GetName()), s1, s4, cmpOptStats, 1E-6);
    delete s1;
    delete s2;
    delete s3;
@@ -2346,7 +2346,7 @@ bool testDivHn2()
       s4->SetBinError(coord, sqrt(error));
    }
 
-   bool ret = equals(TString::Format("DivideND2<%s>", HIST::Class()->GetName()), s1, s4, cmpOptNone, 1E-6);
+   bool ret = equals(TString::Format("DivideND2<%s>", HIST::Class()->GetName()), s1, s4, cmpOptStats, 1E-6);
    
    delete s1;
    delete s2;
@@ -3188,7 +3188,7 @@ bool testWriteReadHn()
    TFile f2("tmpHist.root");
    HIST* s2 = static_cast<HIST*> ( f2.Get("wrS-s1") );
 
-   bool ret = equals(TString::Format("Read/Write Hist %s", HIST::Class()->GetName()), s1, s2, cmpOptNone);
+   bool ret = equals(TString::Format("Read/Write Hist %s", HIST::Class()->GetName()), s1, s2, cmpOptStats);
    delete s1;
    return ret;
 }
@@ -3647,12 +3647,12 @@ bool testMerge1DLabelSame()
    list->Add(h2);
    list->Add(h3);
 
-   h1->SetBit(TH1::kCanRebin);
+   h1->SetCanRebin(TH1::kAllAxes);
 
    h1->Merge(list);
 
    
-   bool ret = equals("MergeLabelSame1D", h1, h4, cmpOptNone, 1E-10);
+   bool ret = equals("MergeLabelSame1D", h1, h4, cmpOptStats, 1E-10);
    delete h1;
    delete h2;
    delete h3;
@@ -4350,15 +4350,6 @@ bool testMerge1DLabelAll()
    TH1D* h3 = new TH1D("merge1DLabelAll-h3", "h3-Title", numberOfBins, minRange, maxRange);
    TH1D* h4 = new TH1D("merge1DLabelAll-h4", "h4-Title", numberOfBins, minRange, maxRange);
 
-   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
-      ostringstream name;
-      name << (char) ((int) 'a' + i - 1);
-      h1->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h2->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h3->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h4->GetXaxis()->SetBinLabel(i, name.str().c_str());
-   }
-
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       h1->Fill(x, 1.0);
@@ -4377,6 +4368,15 @@ bool testMerge1DLabelAll()
       h4->Fill(x, 1.0);
    }
 
+   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
+      ostringstream name;
+      name << (char) ((int) 'a' + i - 1);
+      h1->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h2->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h3->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h4->GetXaxis()->SetBinLabel(i, name.str().c_str());
+   }
+
    TList *list = new TList;
    list->Add(h2);
    list->Add(h3);
@@ -4386,13 +4386,10 @@ bool testMerge1DLabelAll()
    h2->LabelsOption("<");
    h3->LabelsOption(">");
 
-   h1->SetBit(TH1::kCanRebin);
-   
    h1->Merge(list);
 
    h4->LabelsOption("a");
    
-
    bool ret = equals("MergeLabelAll1D", h1, h4, cmpOptNone, 1E-10);
    delete h1;
    delete h2;
@@ -4416,16 +4413,6 @@ bool testMerge2DLabelAll()
    TH2D* h4 = new TH2D("merge2DLabelAll-h4", "h4-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-
-   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
-      ostringstream name;
-      name << (char) ((int) 'a' + i - 1);
-      h1->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h2->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h3->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h4->GetXaxis()->SetBinLabel(i, name.str().c_str());
-   }
-
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -4445,6 +4432,15 @@ bool testMerge2DLabelAll()
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       h3->Fill(x, y, 1.0);
       h4->Fill(x, y, 1.0);
+   }
+
+   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
+      ostringstream name;
+      name << (char) ((int) 'a' + i - 1);
+      h1->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h2->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h3->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h4->GetXaxis()->SetBinLabel(i, name.str().c_str());
    }
 
    TList *list = new TList;
@@ -4480,16 +4476,6 @@ bool testMerge3DLabelAll()
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-
-   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
-      ostringstream name;
-      name << (char) ((int) 'a' + i - 1);
-      h1->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h2->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h3->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h4->GetXaxis()->SetBinLabel(i, name.str().c_str());
-   }
-
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -4514,6 +4500,15 @@ bool testMerge3DLabelAll()
       h4->Fill(x, y, z, 1.0);
    }
 
+   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
+      ostringstream name;
+      name << (char) ((int) 'a' + i - 1);
+      h1->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h2->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h3->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h4->GetXaxis()->SetBinLabel(i, name.str().c_str());
+   }
+
    TList *list = new TList;
    list->Add(h2);
    list->Add(h3);
@@ -4536,15 +4531,6 @@ bool testMergeProf1DLabelAll()
    TProfile* p3 = new TProfile("merge1DLabelAll-p3", "p3-Title", numberOfBins, minRange, maxRange);
    TProfile* p4 = new TProfile("merge1DLabelAll-p4", "p4-Title", numberOfBins, minRange, maxRange);
 
-   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
-      ostringstream name;
-      name << (char) ((int) 'a' + i - 1);
-      p1->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p2->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p3->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p4->GetXaxis()->SetBinLabel(i, name.str().c_str());
-   }
-
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -4564,6 +4550,15 @@ bool testMergeProf1DLabelAll()
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       p3->Fill(x, y, 1.0);
       p4->Fill(x, y, 1.0);
+   }
+
+   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
+      ostringstream name;
+      name << (char) ((int) 'a' + i - 1);
+      p1->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p2->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p3->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p4->GetXaxis()->SetBinLabel(i, name.str().c_str());
    }
 
    TList *list = new TList;
@@ -4596,15 +4591,6 @@ bool testMergeProf2DLabelAll()
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
-      ostringstream name;
-      name << (char) ((int) 'a' + i - 1);
-      p1->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p2->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p3->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p4->GetXaxis()->SetBinLabel(i, name.str().c_str());
-   }
-
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -4627,6 +4613,15 @@ bool testMergeProf2DLabelAll()
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       p3->Fill(x, y, z, 1.0);
       p4->Fill(x, y, z, 1.0);
+   }
+
+   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
+      ostringstream name;
+      name << (char) ((int) 'a' + i - 1);
+      p1->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p2->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p3->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p4->GetXaxis()->SetBinLabel(i, name.str().c_str());
    }
 
    TList *list = new TList;
@@ -4663,15 +4658,6 @@ bool testMergeProf3DLabelAll()
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
-      ostringstream name;
-      name << (char) ((int) 'a' + i - 1);
-      p1->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p2->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p3->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p4->GetXaxis()->SetBinLabel(i, name.str().c_str());
-   }
-
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -4697,6 +4683,15 @@ bool testMergeProf3DLabelAll()
       Double_t t = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       p3->Fill(x, y, z, t, 1.0);
       p4->Fill(x, y, z, t, 1.0);
+   }
+
+   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
+      ostringstream name;
+      name << (char) ((int) 'a' + i - 1);
+      p1->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p2->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p3->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p4->GetXaxis()->SetBinLabel(i, name.str().c_str());
    }
 
    TList *list = new TList;
@@ -4789,21 +4784,6 @@ bool testMerge2DLabelAllDiff()
                        numberOfBins, minRange, maxRange, 
                        numberOfBins + 2, minRange, maxRange);
 
-   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
-      ostringstream name;
-      name << (char) ((int) 'a' + i - 1);
-      h1->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h1->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      name << 1;
-      h2->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h2->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      name << 2;
-      h3->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h3->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      name << 3;
-      h4->GetXaxis()->SetBinLabel(i, name.str().c_str());
-   }
-
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -4823,6 +4803,21 @@ bool testMerge2DLabelAllDiff()
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       h3->Fill(x, y, 1.0);
       h4->Fill(x, y, 1.0);
+   }
+
+   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
+      ostringstream name;
+      name << (char) ((int) 'a' + i - 1);
+      h1->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h1->GetYaxis()->SetBinLabel(i, name.str().c_str());
+      name << 1;
+      h2->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h2->GetYaxis()->SetBinLabel(i, name.str().c_str());
+      name << 2;
+      h3->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h3->GetYaxis()->SetBinLabel(i, name.str().c_str());
+      name << 3;
+      h4->GetXaxis()->SetBinLabel(i, name.str().c_str());
    }
 
    TList *list = new TList;
@@ -4863,26 +4858,6 @@ bool testMerge3DLabelAllDiff()
                        numberOfBins + 1, minRange, maxRange, 
                        numberOfBins + 2, minRange, maxRange);
 
-   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
-      ostringstream name;
-      name << (char) ((int) 'a' + i - 1);
-      h1->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h1->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      h1->GetZaxis()->SetBinLabel(i, name.str().c_str());
-      name << 1;
-      h2->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h2->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      h2->GetZaxis()->SetBinLabel(i, name.str().c_str());
-      name << 2;
-      h3->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h3->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      h3->GetZaxis()->SetBinLabel(i, name.str().c_str());
-      name << 3;
-      h4->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      h4->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      h4->GetZaxis()->SetBinLabel(i, name.str().c_str());
-   }
-
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -4907,6 +4882,26 @@ bool testMerge3DLabelAllDiff()
       h4->Fill(x, y, z, 1.0);
    }
 
+   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
+      ostringstream name;
+      name << (char) ((int) 'a' + i - 1);
+      h1->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h1->GetYaxis()->SetBinLabel(i, name.str().c_str());
+      h1->GetZaxis()->SetBinLabel(i, name.str().c_str());
+      name << 1;
+      h2->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h2->GetYaxis()->SetBinLabel(i, name.str().c_str());
+      h2->GetZaxis()->SetBinLabel(i, name.str().c_str());
+      name << 2;
+      h3->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h3->GetYaxis()->SetBinLabel(i, name.str().c_str());
+      h3->GetZaxis()->SetBinLabel(i, name.str().c_str());
+      name << 3;
+      h4->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      h4->GetYaxis()->SetBinLabel(i, name.str().c_str());
+      h4->GetZaxis()->SetBinLabel(i, name.str().c_str());
+   }
+
    TList *list = new TList;
    list->Add(h2);
    list->Add(h3);
@@ -4929,21 +4924,6 @@ bool testMergeProf1DLabelAllDiff()
    TProfile* p3 = new TProfile("merge1DLabelAllDiff-p3", "p3-Title", numberOfBins, minRange, maxRange);
    TProfile* p4 = new TProfile("merge1DLabelAllDiff-p4", "p4-Title", numberOfBins, minRange, maxRange);
 
-   // It does not work properly! Look, the bins with the same labels
-   // are different ones and still the tests passes! This is not
-   // consistent with TH1::Merge()
-   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
-      ostringstream name;
-      name << (char) ((int) 'a' + i - 1);
-      p1->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      name << 1;
-      p2->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      name << 2;
-      p3->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      name << 3;
-      p4->GetXaxis()->SetBinLabel(i, name.str().c_str());
-   }
-
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -4963,6 +4943,21 @@ bool testMergeProf1DLabelAllDiff()
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       p3->Fill(x, y, 1.0);
       p4->Fill(x, y, 1.0);
+   }
+
+   // It does not work properly! Look, the bins with the same labels
+   // are different ones and still the tests passes! This is not
+   // consistent with TH1::Merge()
+   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
+      ostringstream name;
+      name << (char) ((int) 'a' + i - 1);
+      p1->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      name << 1;
+      p2->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      name << 2;
+      p3->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      name << 3;
+      p4->GetXaxis()->SetBinLabel(i, name.str().c_str());
    }
 
    TList *list = new TList;
@@ -4995,25 +4990,6 @@ bool testMergeProf2DLabelAllDiff()
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   // It does not work properly! Look, the bins with the same labels
-   // are different ones and still the tests passes! This is not
-   // consistent with TH1::Merge()
-   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
-      ostringstream name;
-      name << (char) ((int) 'a' + i - 1);
-      p1->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p1->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      name << 1;
-      p2->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p2->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      name << 2;
-      p3->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p3->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      name << 3;
-      p4->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p4->GetYaxis()->SetBinLabel(i, name.str().c_str());
-   }
-
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -5036,6 +5012,25 @@ bool testMergeProf2DLabelAllDiff()
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       p3->Fill(x, y, z, 1.0);
       p4->Fill(x, y, z, 1.0);
+   }
+
+   // It does not work properly! Look, the bins with the same labels
+   // are different ones and still the tests passes! This is not
+   // consistent with TH1::Merge()
+   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
+      ostringstream name;
+      name << (char) ((int) 'a' + i - 1);
+      p1->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p1->GetYaxis()->SetBinLabel(i, name.str().c_str());
+      name << 1;
+      p2->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p2->GetYaxis()->SetBinLabel(i, name.str().c_str());
+      name << 2;
+      p3->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p3->GetYaxis()->SetBinLabel(i, name.str().c_str());
+      name << 3;
+      p4->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p4->GetYaxis()->SetBinLabel(i, name.str().c_str());
    }
 
    TList *list = new TList;
@@ -5072,29 +5067,6 @@ bool testMergeProf3DLabelAllDiff()
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   // It does not work properly! Look, the bins with the same labels
-   // are different ones and still the tests passes! This is not
-   // consistent with TH1::Merge()
-   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
-      ostringstream name;
-      name << (char) ((int) 'a' + i - 1);
-      p1->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p1->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      p1->GetZaxis()->SetBinLabel(i, name.str().c_str());
-      name << 1;
-      p2->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p2->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      p2->GetZaxis()->SetBinLabel(i, name.str().c_str());
-      name << 2;
-      p3->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p3->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      p3->GetZaxis()->SetBinLabel(i, name.str().c_str());
-      name << 3;
-      p4->GetXaxis()->SetBinLabel(i, name.str().c_str());
-      p4->GetYaxis()->SetBinLabel(i, name.str().c_str());
-      p4->GetZaxis()->SetBinLabel(i, name.str().c_str());
-   }
-
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -5120,6 +5092,29 @@ bool testMergeProf3DLabelAllDiff()
       Double_t t = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       p3->Fill(x, y, z, t, 1.0);
       p4->Fill(x, y, z, t, 1.0);
+   }
+
+   // It does not work properly! Look, the bins with the same labels
+   // are different ones and still the tests passes! This is not
+   // consistent with TH1::Merge()
+   for ( Int_t i = 1; i <= numberOfBins; ++ i) {
+      ostringstream name;
+      name << (char) ((int) 'a' + i - 1);
+      p1->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p1->GetYaxis()->SetBinLabel(i, name.str().c_str());
+      p1->GetZaxis()->SetBinLabel(i, name.str().c_str());
+      name << 1;
+      p2->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p2->GetYaxis()->SetBinLabel(i, name.str().c_str());
+      p2->GetZaxis()->SetBinLabel(i, name.str().c_str());
+      name << 2;
+      p3->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p3->GetYaxis()->SetBinLabel(i, name.str().c_str());
+      p3->GetZaxis()->SetBinLabel(i, name.str().c_str());
+      name << 3;
+      p4->GetXaxis()->SetBinLabel(i, name.str().c_str());
+      p4->GetYaxis()->SetBinLabel(i, name.str().c_str());
+      p4->GetZaxis()->SetBinLabel(i, name.str().c_str());
    }
 
    TList *list = new TList;
@@ -5466,9 +5461,9 @@ bool testMerge1DRebin()
    TH1D* h4 = new TH1D("merge1D-h4", "h4-Title", numberOfBins, minRange, maxRange);
 
    h1->Sumw2();h2->Sumw2();h4->Sumw2();
-   h1->SetBit(TH1::kCanRebin);
-   h2->SetBit(TH1::kCanRebin);
-   h4->SetBit(TH1::kCanRebin);
+   h1->SetCanRebin(TH1::kAllAxes);
+   h2->SetCanRebin(TH1::kAllAxes);
+   h4->SetCanRebin(TH1::kAllAxes);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform( minRange,  maxRange);
@@ -5509,9 +5504,9 @@ bool testMerge2DRebin()
 
 
    h1->Sumw2();h2->Sumw2();h4->Sumw2();
-   h1->SetBit(TH1::kCanRebin);
-   h2->SetBit(TH1::kCanRebin);
-   h4->SetBit(TH1::kCanRebin);
+   h1->SetCanRebin(TH1::kAllAxes);
+   h2->SetCanRebin(TH1::kAllAxes);
+   h4->SetCanRebin(TH1::kAllAxes);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform( minRange,  maxRange);
@@ -5555,9 +5550,9 @@ bool testMerge3DRebin()
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
-   h1->SetBit(TH1::kCanRebin);
-   h2->SetBit(TH1::kCanRebin);
-   h4->SetBit(TH1::kCanRebin);
+   h1->SetCanRebin(TH1::kAllAxes);
+   h2->SetCanRebin(TH1::kAllAxes);
+   h4->SetCanRebin(TH1::kAllAxes);
 
    for ( Int_t e = 0; e < 10*nEvents; ++e ) {
       Double_t x = r.Uniform( minRange,  maxRange);
@@ -5594,9 +5589,9 @@ bool testMerge1DRebinProf()
    TProfile* h2 = new TProfile("merge1D-p2", "h2-Title", numberOfBins, minRange, maxRange);
    TProfile* h4 = new TProfile("merge1D-p4", "h4-Title", numberOfBins, minRange, maxRange);
 
-   h1->SetBit(TH1::kCanRebin);
-   h2->SetBit(TH1::kCanRebin);
-   h4->SetBit(TH1::kCanRebin);
+   h1->SetCanRebin(TH1::kAllAxes);
+   h2->SetCanRebin(TH1::kAllAxes);
+   h4->SetCanRebin(TH1::kAllAxes);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform( minRange,  maxRange);

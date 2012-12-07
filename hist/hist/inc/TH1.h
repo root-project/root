@@ -88,6 +88,15 @@ public:
          kPoisson2 = 2   // errors from Poisson interval at 95% CL (~ 2 sigma)            
    };
 
+   // enumeration specifying which bins can be rebinned
+   enum {
+      kNoAxis  = 0, // NOTE: Must always be 0 !!!
+      kXaxis = BIT(0),
+      kYaxis = BIT(1),
+      kZaxis = BIT(2),
+      kAllAxes = kXaxis | kYaxis | kZaxis
+   };
+
 protected:
     Int_t         fNcells;          //number of bins(1D), cells (2D) +U/Overflows
     TAxis         fXaxis;           //X axis descriptor
@@ -158,7 +167,7 @@ public:
    enum {
       kNoStats     = BIT(9),  // don't draw stats box
       kUserContour = BIT(10), // user specified contour levels
-      kCanRebin    = BIT(11), // can rebin axis
+      kCanRebin    = BIT(11), // FIXME DEPRECATED, can rebin all axes
       kLogX        = BIT(15), // X-axis in log scale
       kIsZoomed    = BIT(16), // bit set when zooming on Y axis
       kNoTitle     = BIT(17), // don't draw the histogram title
@@ -185,9 +194,10 @@ public:
    static  void     AddDirectory(Bool_t add=kTRUE);
    static  Bool_t   AddDirectoryStatus();
    virtual void     Browse(TBrowser *b);
+   virtual Bool_t   CanRebinAllAxes() const;
    virtual Double_t Chi2Test(const TH1* h2, Option_t *option = "UU", Double_t *res = 0) const;
    virtual Double_t Chi2TestX(const TH1* h2, Double_t &chi2, Int_t &ndf, Int_t &igood,Option_t *option = "UU",  Double_t *res = 0) const;
-
+   virtual void     ClearUnderflowAndOverflow();
    virtual Double_t ComputeIntegral();
    virtual void     DirectoryAutoAdd(TDirectory *);
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
@@ -353,6 +363,7 @@ public:
    virtual void     SetBinsLength(Int_t = -1) { } //redefined in derived classes
    virtual void     SetBinErrorOption(EBinErrorOpt type) { fBinStatErrOpt = type; }
    virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
+   virtual UInt_t   SetCanRebin(UInt_t rebinBitMask);
    virtual void     SetCellContent(Int_t binx, Int_t biny, Double_t content);
    virtual void     SetCellError(Int_t binx, Int_t biny, Double_t content);
    virtual void     SetContent(const Double_t *content);

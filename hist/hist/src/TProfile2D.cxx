@@ -289,7 +289,7 @@ Int_t TProfile2D::BufferEmpty(Int_t action)
       Reset("ICES"); // reset without deleting the functions
       fBuffer = buffer;
    }
-   if (TestBit(kCanRebin) || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
+   if (CanRebinAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
       //find min, max of entries in buffer
       Double_t xmin = fBuffer[2];
       Double_t xmax = xmin;
@@ -1300,8 +1300,8 @@ void TProfile2D::RebinAxis(Double_t x, TAxis *axis)
 // The algorithm makes a copy of the histogram, then loops on all bins
 // of the old histogram to fill the rebinned histogram.
 // Takes into account errors (Sumw2) if any.
-// The bit kCanRebin must be set before invoking this function.
-//  Ex:  h->SetBit(TH1::kCanRebin);
+// The axis must be rebinnable before invoking this function.
+// Ex: h->GetXaxis()->SetCanRebin(kTRUE)
 
    TProfile2D* hold = TProfileHelper::RebinAxis(this, x, axis);
    if ( hold ) {
