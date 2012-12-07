@@ -47,5 +47,9 @@
          cout << "Warning: but the class is apparently loaded anyway!?\n";
       }
    }
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   int res = !success;
+#else
    return !success;
+#endif
 }

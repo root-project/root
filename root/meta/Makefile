@@ -81,8 +81,8 @@ drawing.raw.log: DrawTest.sh  dt_DrawTest.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 
 drawing.log: drawing.raw.log
 	$(CMDECHO) grep -v 'ROOTMARKS' drawing.raw.log | grep '^..' | \
-	grep -v '^g\?make' | grep -v ' creating shared library' | \
-	grep -v 'Event.*root made' | grep -v 'dt.*made' > drawing.log
+	grep -v -e '^g\?make' -e ' creating shared library' | \
+	grep -v -e 'Event.*root made' -e 'dt.*made' -e ExecutionContext > drawing.log
 
 drawing: drawing.log
 	$(TestDiff)
@@ -112,3 +112,4 @@ testloadernotapp: loadernotapp.success
 loadernotapp.success: loadernotapp.log
 	$(SuccessTestDiff) && touch $@
 
+execResolveTypedef.success: EXTRA_DIFFOPTS += -w

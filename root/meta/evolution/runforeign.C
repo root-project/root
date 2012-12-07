@@ -6,19 +6,37 @@
    TFile *f = new TFile("data1.root");
    cout << "\n==> Looking at the StreamerInfo before loading the library\n"; 
 
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   TClass *cl;
+   cl = gROOT->GetClass("data");
+   TVirtualStreamerInfo *info;
+   info = cl->GetStreamerInfo();
+#else
    TClass *cl = gROOT->GetClass("data");
    TVirtualStreamerInfo *info = cl->GetStreamerInfo();
+#endif
    info->ls();
+#ifdef ClingWorkAroundJITandInline
+   cout.setf(ios_base::hex, ios_base::basefield);
+#endif
    cout << cl->GetName() << "'s streamerInfo #" 
       << info->GetClassVersion() << " has a checksum of " 
-      << "0x" << hex << info->GetCheckSum() << endl;
+#ifdef ClingWorkAroundJITandInline
+     << "0x" << info->GetCheckSum() << endl;
+#else
+     << "0x" << hex << info->GetCheckSum() << endl;
+#endif
 
    cl = gROOT->GetClass("Tdata");
    info = cl->GetStreamerInfo();
    info->ls();
    cout << cl->GetName() << "'s streamerInfo #" 
       << info->GetClassVersion() << " has a checksum of " 
+#ifdef ClingWorkAroundJITandInline
+      << "0x" << info->GetCheckSum() << endl;
+#else
       << "0x" << hex << info->GetCheckSum() << endl;
+#endif
 
    gROOT->ProcessLine(".L data2.C+");
 
@@ -29,7 +47,11 @@
    info->ls();
    cout << cl->GetName() << "'s streamerInfo #" 
       << info->GetClassVersion() << " has a checksum of " 
+#ifdef ClingWorkAroundJITandInline
+      << "0x" << info->GetCheckSum() << endl;
+#else
       << "0x" << hex << info->GetCheckSum() << endl;
+#endif
 
    cout << "\n==> List all the StreamerInfo after loading the library\n"; 
    cl->GetStreamerInfos()->ls();
@@ -41,14 +63,25 @@
    info->ls();
    cout << cl->GetName() << "'s streamerInfo #" 
       << info->GetClassVersion() << " has a checksum of " 
+#ifdef ClingWorkAroundJITandInline
+      << "0x" << info->GetCheckSum() << endl;
+#else
       << "0x" << hex << info->GetCheckSum() << endl;
+#endif
 
    cout << "\n==> List all the StreamerInfo after loading the library\n"; 
    cl->GetStreamerInfos()->ls();
 
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   TFile *f2, *f3, *f4;
+   f2 = new TFile("data2.root");
+   f3 = new TFile("data3.root");
+   f4 = new TFile("data4.root");
+#else
    TFile *f2 = new TFile("data2.root");
    TFile *f3 = new TFile("data3.root");
    TFile *f4 = new TFile("data4.root");
+#endif
 
    cout << "\n==> List all the StreamerInfo after loading all the files\n"; 
 
@@ -56,5 +89,9 @@
 
    f3->Get("myobj");
 
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   int res = 0;
+#else
    return 0;
+#endif
 }

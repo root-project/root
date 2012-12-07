@@ -65,7 +65,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 
 
 atlasaod.log: runatlasaod.C
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) > $@ 
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) | grep -v -e 'unused class rule' -e 'no dictionary for class pair' > $@ 
 
 ifeq ($(ARCH)$(FAIL),win32)
 atlasaod:
@@ -76,7 +76,7 @@ atlasaod: atlasaod.log
 endif
 
 cms310.log: runcms310.C
-	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) | grep -v 'WARNING: IO rule for class' > $@ 
+	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) | grep -v 'WARNING: IO rule for class' | grep -v -e 'unused class rule' -e 'no dictionary for class pair' > $@ 
 
 ifeq ($(ARCH)$(FAIL),win32)
 aliceesd:
@@ -89,10 +89,13 @@ aliceesd: aliceesd.log
 	$(TestDiff)
 
 cms310: cms310.log
+ifeq ($(ClingWorkAroundBrokenMakeProject),)
 	$(TestDiff)
 endif
 
+endif
+
 aliceesd.log: runaliceesd.C
-	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs) > $@
+	$(CMDECHO) ulimit -n 1024 ; $(CALLROOTEXE) -q -b -l $< 2>&1 | $(RemoveLeadingDirs)  | grep -v -e 'unused class rule' -e 'no dictionary for class pair' > $@
 
 

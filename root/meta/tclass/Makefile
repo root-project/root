@@ -35,3 +35,5 @@ tempParse: tempParse.log
 
 pairs: pairs.clog
 	$(TestDiff)
+
+execProperties.success: EXTRA_DIFFOPTS += -w

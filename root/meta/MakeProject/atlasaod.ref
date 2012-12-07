@@ -59,7 +59,6 @@ Warning in <TClass::TClass>: no dictionary for class MissingET_p1 is available
 Warning in <TClass::TClass>: no dictionary for class MissingEtTruth_p1 is available
 Warning in <TClass::TClass>: no dictionary for class TruthParticleContainer_p5 is available
 Warning in <TClass::TClass>: no dictionary for class INav4MomAssocs_p2 is available
-Warning in <TClass::TClass>: no dictionary for class pair<ElementLink_p2<unsigned int>,vector<ElementLink_p2<unsigned int> > > is available
 Warning in <TClass::TClass>: no dictionary for class Trk::SegmentCollection_tlp1 is available
 Warning in <TClass::TClass>: no dictionary for class Trk::SegmentCollection_p1 is available
 Warning in <TClass::TClass>: no dictionary for class Trk::Segment_p1 is available
@@ -183,7 +182,6 @@ Warning in <TClass::TClass>: no dictionary for class MuonCaloEnergyContainer_tlp
 Warning in <TClass::TClass>: no dictionary for class DataHeader_p3 is available
 Warning in <TClass::TClass>: no dictionary for class DataHeaderElement_p3 is available
 Warning in <TClass::TClass>: no dictionary for class EventStreamInfo_p1 is available
-Warning in <TClass::TClass>: no dictionary for class pair<unsigned int,string> is available
 MakeProject has generated 175 classes in small_aod
 MAKEP file has been generated
 small_aod.so has been generated
