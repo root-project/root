@@ -4,6 +4,7 @@
 ./root/fit
 ./root/hist
 ./root/math
+./root/meta
 ./root/io/alloc
 ./root/io/arrayobject
 ./root/io/bigevent
@@ -19,7 +20,6 @@
 ./root/io/rootcint/stl
 ./root/io/vararyobj
 ./root/io/webfile
-./root/meta/rootmap
 ./root/treedraw
 ./root/treeformula/depth
 ./root/treeformula/event
