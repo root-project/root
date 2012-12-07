@@ -697,7 +697,7 @@ endif
 
 %_h.$(DllSuf) : %.h $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1 || handleError.sh --result=$$? --log=$*_h.build.log
-   
+
    #( result=$$? ; cat $*_h.build.log ; exit $$result )
 
 %.log : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
@@ -821,9 +821,9 @@ endef
 
 define SuccessTestDiff
 	$(CMDECHO) if [ -f $(subst .success,.ref$(ROOTBITS),$@) ]; then \
-	   diff -u -b $(subst .success,.ref$(ROOTBITS),$@) $< ; \
+	   diff -u -b $(EXTRA_DIFFOPTS) $(subst .success,.ref$(ROOTBITS),$@) $< ; \
 	else \
-	   diff -u -b $(subst .success,.ref,$@) $< ; \
+	   diff -u -b $(EXTRA_DIFFOPTS) $(subst .success,.ref,$@) $< ; \
 	fi
 endef
 
