@@ -24,4 +24,4 @@ barna.log: barna.C
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l barna.C > barna.log 2>&1
 
 barna: barna.log
-	$(TestDiff)
+	$(TestDiffW)

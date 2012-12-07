@@ -67,7 +67,7 @@ templateAutodict.shortlog: templateAutodict.log
 	$(CMDECHO) cat templateAutodict.log | grep -v -e _cint.\*cxx -e Creating -e AutoDict_.\*cxx > templateAutodict.shortlog
 
 templateAutodict: templateAutodict.shortlog
-	$(TestDiff)
+	$(TestDiffW)
 
 operators.log: operators_dict_h.$(DllSuf)
 

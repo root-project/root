@@ -2,7 +2,7 @@
 {
 #else
 #include "TTestClass.h"
-int runTTestClass()
+void runTTestClass()
 {
 #endif
 
@@ -19,5 +19,7 @@ int runTTestClass()
    obj.GetPI();
    obj.GetPII(0);
    obj.GetPIII(0);
+#ifndef ClingWorkAroundMissingDynamicScope
    return 0;
+#endif
 }

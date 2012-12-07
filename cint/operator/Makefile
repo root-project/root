@@ -37,7 +37,7 @@ t01.log: t01.C
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l t01.C > t01.log
 
 ParanTest: t01.log
-	$(CMDECHO) diff -b t01.log t01.ref
+	$(CMDECHO) diff -b -w t01.log t01.ref
 
 ConversionOp.log : runConversionOp.C ConversionOp.C ConversionOp_h.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b  runConversionOp.C 2>&1 | \

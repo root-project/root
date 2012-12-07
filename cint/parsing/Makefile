@@ -61,7 +61,7 @@ else
 endif
 
 Readbool: Readbool.log
-	$(TestDiff)
+	$(TestDiffW)
 
 ptrconst.clog: ptrconst_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l ptrconst.C+ > ptrconst.clog 2>&1
