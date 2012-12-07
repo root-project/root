@@ -27,6 +27,9 @@ CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotNamespace"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotInclude"
 
+# Not fully investigated:
+CALLROOTEXE += -e "\#define ClingWorkAroundBrokenMakeProject"
+
 # Not for 6.0
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingUnloading"
 
@@ -54,3 +57,7 @@ ClingWorkAroundJITandInline = yes              # JIT does not instantiate inline
 ClingWorkAroundValuePrinterNotFullyQualified = yes # See https://savannah.cern.ch/bugs/index.php?99290
 ClingWorkAroundNoDotInclude = yes              # See trello card about .include
 ClingWorkAroundScriptClassDef = yes            # See https://savannah.cern.ch/bugs/index.php?99268
+
+# Not fully investigated:
+ClingWorkAroundBrokenMakeProject = yes
+
