@@ -69,24 +69,24 @@ unuran%.cxx: $(ROOT_SRCDIRDEP)/math/unuran/test/unuran%.cxx
 unuranSimple: unuranSimple.elog
 	$(TestDiff)
 
-unuranSimple.elog: unuranSimple_cxx.$(DllSuf)
+unuranSimple.elog: unuranSimple_cxx.$(DllSuf) unuranSimple.cxx
 
 unuranDistr: unuranDistr.elog
 	$(TestDiff)
 
-unuranDistr.elog: unuranDistr_cxx.$(DllSuf)
+unuranDistr.elog: unuranDistr_cxx.$(DllSuf) unuranDistr.cxx
 
 unuranDiscrete: unuranDiscrete.elog
 	$(TestDiff)
 
-unuranDiscrete.elog: unuranDiscrete_cxx.$(DllSuf)
+unuranDiscrete.elog: unuranDiscrete_cxx.$(DllSuf) unuranDiscrete.cxx
 
 unuranMulti2D: unuranMulti2D.elog
 	$(TestDiff)
 
-unuranMulti2D.elog: unuranMulti2D_cxx.$(DllSuf)
+unuranMulti2D.elog: unuranMulti2D_cxx.$(DllSuf) unuranMulti2D.cxx
 
 unuranMultiDim: unuranMultiDim.elog
 	$(TestDiff)
 
-unuranMultiDim.elog: unuranMultiDim_cxx.$(DllSuf)
+unuranMultiDim.elog: unuranMultiDim_cxx.$(DllSuf) unuranMultiDim.cxx

@@ -68,22 +68,22 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 $(addsuffix _cxx.$(DllSuf),$(GENVECTORTESTS)): CoordinateTraits.h RotationTraits.h
 
 #this suppress check in log file
-coordinates3D.elog: coordinates3D_cxx.$(DllSuf)
+coordinates3D.elog: coordinates3D_cxx.$(DllSuf) coordinates3D.cxx
 
 coordinates3D: coordinates3D.elog
 	$(TestDiff)
 
-coordinates4D.elog: coordinates4D_cxx.$(DllSuf)
+coordinates4D.elog: coordinates4D_cxx.$(DllSuf) coordinates4D.cxx
 
 coordinates4D: coordinates4D.elog
 	$(TestDiff)
 
-rotationApplication.elog: rotationApplication_cxx.$(DllSuf)
+rotationApplication.elog: rotationApplication_cxx.$(DllSuf) rotationApplication.cxx
 
 rotationApplication: rotationApplication.elog
 	$(TestDiff)
 
-testGenVector.log: testGenVector_cxx.$(DllSuf)
+testGenVector.log: testGenVector_cxx.$(DllSuf) testGenVector.cxx
 
 testGenVector: testGenVector.log
 	$(TestDiff)
