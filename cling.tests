@@ -1,5 +1,9 @@
 ./cint
 ./root/aclic
+./root/collection
+./root/fit
+./root/hist
+./root/math
 ./root/io/alloc
 ./root/io/arrayobject
 ./root/io/bigevent
