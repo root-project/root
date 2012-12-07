@@ -1,14 +1,11 @@
-#if !defined(__MAKECINT__)
-#include "Api.h"
-#endif
+#include "TInterpreter.h"
 
 bool runtest() {
-   {
-      G__ClassInfo cl("testSelector");
-      int  valid = cl.IsValid();
-      long property = cl.Property();
-      void *p = cl.New();
-      fprintf(stderr,"testSelector result is %d %ld %d\n",valid, property&G__BIT_ISCPPCOMPILED,p!=0);
-      return p!=0;
-   }
+   ClassInfo_t *cl = gInterpreter->ClassInfo_Factory("testSelector");
+   int  valid = gInterpreter->ClassInfo_IsValid(cl);
+   long property = gInterpreter->ClassInfo_Property(cl);
+   void *p =  gInterpreter->ClassInfo_New(cl);
+   fprintf(stderr,"testSelector result is %d %ld %d\n",valid, property&G__BIT_ISCPPCOMPILED,p!=0);
+   gInterpreter->ClassInfo_Delete(cl);
+   return p!=0;
 }
