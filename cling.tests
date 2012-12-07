@@ -5,6 +5,7 @@
 ./root/hist
 ./root/math
 ./root/meta
+./root/selector
 ./root/io/alloc
 ./root/io/arrayobject
 ./root/io/bigevent
