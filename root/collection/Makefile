@@ -34,6 +34,4 @@ ifneq ($(ClingWorkAroundMissingAutoLoading),)
 CATTreeClear.log : CALLROOTEXE += -e "gSystem->Load(\"libTree\");"
 endif
 
-ifneq ($(ClingWorkAroundErracticValuePrinter),)
 execHistArray.success: EXTRA_DIFFOPTS += -w
-endif
