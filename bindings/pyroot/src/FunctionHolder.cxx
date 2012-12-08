@@ -76,7 +76,7 @@ PyObject* PyROOT::TFunctionHolder< T, M >::FilterArgs(
 //____________________________________________________________________________
 template< class T, class M >
 PyObject* PyROOT::TFunctionHolder< T, M >::operator()(
-      ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user )
+      ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user, Bool_t release_gil )
 {
 // preliminary check in case keywords are accidently used (they are ignored otherwise)
    if ( kwds != 0 && PyDict_Size( kwds ) ) {
@@ -100,7 +100,7 @@ PyObject* PyROOT::TFunctionHolder< T, M >::operator()(
       return 0;                              // important: 0, not Py_None
 
 // execute function
-   return this->Execute( 0 );
+   return this->Execute( 0, release_gil );
 }
 
 //____________________________________________________________________________

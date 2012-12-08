@@ -27,7 +27,8 @@ namespace PyROOT {
       virtual PyCallable* Clone() { return new TFunctionHolder( *this ); }
 
       virtual PyObject* FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
-      virtual PyObject* operator()( ObjectProxy*, PyObject* args, PyObject* kwds, Long_t = 0 );
+      virtual PyObject* operator()( ObjectProxy*, PyObject* args, PyObject* kwds,
+                                    Long_t user = 0, Bool_t release_gil = kFALSE );
    };
 
 } // namespace PyROOT

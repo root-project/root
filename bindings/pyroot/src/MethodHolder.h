@@ -62,12 +62,13 @@ namespace PyROOT {
       virtual PyCallable* Clone() { return new TMethodHolder( *this ); }
 
    public:
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t = 0 );
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds,
+                                    Long_t user = 0, Bool_t release_gil = kFALSE );
 
       virtual Bool_t Initialize();
       virtual PyObject* FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
       virtual Bool_t SetMethodArgs( PyObject* args, Long_t user );
-      virtual PyObject* Execute( void* self );
+      virtual PyObject* Execute( void* self, Bool_t release_gil = kFALSE );
 
    protected:
       const M& GetMethod() { return fMethod; }
@@ -81,8 +82,8 @@ namespace PyROOT {
       void Copy_( const TMethodHolder& );
       void Destroy_() const;
 
-      PyObject* CallFast( void* );
-      PyObject* CallSafe( void* );
+      PyObject* CallFast( void*, Bool_t release_gil );
+      PyObject* CallSafe( void*, Bool_t release_gil );
 
       Bool_t InitCallFunc_();
 

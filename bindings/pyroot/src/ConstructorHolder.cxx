@@ -72,7 +72,7 @@ namespace PyROOT {
 #ifdef PYROOT_USE_REFLEX
 template<>
 PyObject* TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::operator()(
-      ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user )
+      ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user, Bool_t release_gil )
 {
 // preliminary check in case keywords are accidently used (they are ignored otherwise)
    if ( kwds != 0 && PyDict_Size( kwds ) ) {
@@ -95,7 +95,7 @@ PyObject* TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::opera
    }
 
 // perform the call, and set address if successful
-   Long_t address = (Long_t)this->Execute( 0 );
+   Long_t address = (Long_t)this->Execute( 0, release_gil );
    if ( address != 0 ) {
       Py_INCREF( self );
 
@@ -123,7 +123,7 @@ PyObject* TConstructorHolder< ROOT::Reflex::Scope, ROOT::Reflex::Member >::opera
 
 template< class T, class M >
 PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
-      ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user )
+      ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user, Bool_t release_gil )
 {
 // preliminary check in case keywords are accidently used (they are ignored otherwise)
    if ( kwds != 0 && PyDict_Size( kwds ) ) {
@@ -155,7 +155,7 @@ PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
    TClass* klass = (TClass*)this->GetClass().Id();
 
 // perform the call (fails for loaded macro's)
-   Long_t address = (Long_t)this->Execute( klass );
+   Long_t address = (Long_t)this->Execute( klass, release_gil );
    if ( ! address && ( ! PyErr_Occurred() /* exception thrown */ ) ) {
    // the ctor call fails for interpreted classes, can deal with limited info, or
    // otherwise only deal with default ctor

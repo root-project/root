@@ -478,14 +478,8 @@ namespace {
 
    // simple case
       if ( nMethods == 1 ) {
-         PyObject* result = 0;
-         if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kReleaseGIL ){
-            Py_BEGIN_ALLOW_THREADS
-            result = (*methods[0])( pymeth->fSelf, args, kwds, user );
-            Py_END_ALLOW_THREADS
-         } else
-            result = (*methods[0])( pymeth->fSelf, args, kwds, user );
-
+         PyObject* result = (*methods[0])( pymeth->fSelf, args, kwds, user,
+            (pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kReleaseGIL) );
          return HandleReturn( pymeth, result );
       }
 
