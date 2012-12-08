@@ -69,7 +69,10 @@ warning.log: data1.root data2.root data3.root data4.root data5.root \
 	    ) 2>&1 | sed -e 's@offset=  [0-9]*@offset= n/a@' > warning.log
 
 foreign: foreign.log
+ifeq ($(ClingWorkAroundJITandInline),)
 	$(TestDiff)
+endif
 
 warning: warning.log
 	$(TestDiff)
+
