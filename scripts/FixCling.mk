@@ -16,6 +16,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoading"
 CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundScriptClassDef"
+CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
 # Convenience features, would be nice to have.
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenRecovery"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingImplicitAuto"
@@ -57,6 +58,8 @@ ClingWorkAroundJITandInline = yes              # JIT does not instantiate inline
 ClingWorkAroundValuePrinterNotFullyQualified = yes # See https://savannah.cern.ch/bugs/index.php?99290
 ClingWorkAroundNoDotInclude = yes              # See trello card about .include
 ClingWorkAroundScriptClassDef = yes            # See https://savannah.cern.ch/bugs/index.php?99268
+ClingWorkAroundMultipleInclude = yes           # File are included each time a module that contains them is 
+                                               # loaded.  Should go away with the modules
 
 # Not fully investigated:
 ClingWorkAroundBrokenMakeProject = yes
