@@ -7,7 +7,12 @@
 #include "RootWrapper.h"
 #include "ClassMethodHolder.h"
 #include "MethodProxy.h"
+#include "PropertyProxy.h"
 #include "Adapters.h"
+
+// ROOT
+#include "TDataMember.h"
+#include "TInterpreter.h"
 
 // Standard
 #include <string.h>
@@ -98,6 +103,7 @@ namespace {
                TScopeAdapter klass = TScopeAdapter::ByName( ((PyTypeObject*)pyclass)->tp_name );
                if ( klass.IsNamespace() ) {
 
+               // functions
                   for ( size_t i = 0; i < klass.FunctionMemberSize(); ++i ) {
                      TMemberAdapter m = klass.FunctionMemberAt( i );
                      if ( m.Name() == name ) {
@@ -106,11 +112,29 @@ namespace {
                      // that it doesn't exist yet.
                         PyCallable* pyfunc = new TClassMethodHolder< TScopeAdapter, TMemberAdapter >( klass, m );
                         attr = (PyObject*)MethodProxy_New( name.c_str(), pyfunc );
-                        PyObject_SetAttr( pyclass, pyname, attr );
-                        Py_DECREF( attr );
-                        attr = PyType_Type.tp_getattro( pyclass, pyname );
                         break;
                      }
+                  }
+
+               // data members (Cling specific)
+                  if ( ! attr ) {
+                     DataMemberInfo_t* dt = gInterpreter->DataMemberInfo_Factory(
+                        ((TClass*)klass.Id())->GetClassInfo() );
+                     while ( gInterpreter->DataMemberInfo_Next( dt ) ) {
+                        if ( gInterpreter->DataMemberInfo_IsValid( dt ) &&
+                             gInterpreter->DataMemberInfo_Name( dt ) == name ) {
+                        // TODO: the following leaks, but only at program shutdown
+                           attr = (PyObject*)PropertyProxy_New(
+                              new TDataMember( gInterpreter->DataMemberInfo_FactoryCopy( dt ) ) );
+                           break;
+                        }
+                     }
+                  }
+
+                  if ( attr ) {
+                     PyObject_SetAttr( pyclass, pyname, attr );
+                     Py_DECREF( attr );
+                     attr = PyType_Type.tp_getattro( pyclass, pyname );
                   }
 
                }
