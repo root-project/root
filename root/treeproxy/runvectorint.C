@@ -4,6 +4,11 @@
 #include "TROOT.h"
 #include "TClonesArray.h"
 
+#ifndef runvectorint_C
+#ifdef ClingWorkAroundMultipleInclude
+#define runvectorint_C
+#endif
+
 class Track : public TObject {
 public:
    int random;
@@ -99,5 +104,4 @@ int runvectorint(int mode = 0)
    return 0;
 }
 
-
-
+#endif

@@ -147,7 +147,7 @@ vectorint.clog: vectorintSel_h.$(DllSuf) $(CORELIBS) runvectorint_C.$(DllSuf) du
 	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runvectorint.C+(5)' > vectorint.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$@ 
 
 vectorint: vectorint.clog
-	$(TestDiff)
+	$(TestDiffW)
 
 vectorintEmuSel.h: dude.h dude.cxx $(CORELIBS) runvectorintEmu_C.$(DllSuf) vec.root
 	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runvectorintEmu.C+(4)' > vectorintEmuSel_h.create.log 2>&1 || handleError.sh --result=$$? --log=vectorintEmuSel_h.create.log --test=$@ --rm=$@
@@ -159,21 +159,30 @@ vectorintEmu.clog: vectorintEmuSel_h.$(DllSuf) $(CORELIBS) runvectorintEmu_C.$(D
 		test $$result -eq 0 || handleError.sh --result=$$? --log=$@ --test=$@
 
 vectorintEmu: vectorintEmu.clog
-	$(TestDiff)
+	$(TestDiffW)
 
 make_tuple.log: runmake_tuple.C make_tuple.C make_tuple_draw.C  $(CORELIBS) 
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l runmake_tuple.C > make_tuple.raw.log 2>&1 ; result=$$? ; cat  make_tuple.raw.log | $(hideLibraryCreation) > make_tuple.log ; \
 		test $$result -eq 0 || handleError.sh --result=$$? --log=$@ --test=$@
 
 make_tuple: make_tuple.log
-	$(TestDiff)
+	$(TestDiffW)
+
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+friendchain.log: CALLROOTEXE += -e 'gSystem->Load("libTree");'
+endif
 
 friendchain.log: runfriendchain.C vertex.C make_chains.cxx  $(CORELIBS) 
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l runfriendchain.C > friendchain.raw.log  2>&1; result=$$? ; cat friendchain.raw.log  | $(hideLibraryCreation) > friendchain.log ; \
 		test $$result -eq 0 || handleError.sh --result=$$? --log=$@ --test=$@
 
 friendchain: friendchain.log
-	$(TestDiff)
+	$(TestDiffW)
+
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+btagobjsSel.h: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer"); gSystem->Load("libPhysics");'
+btagobjsProxy.clog: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer"); gSystem->Load("libPhysics");'
+endif
 
 btagobjsSel.h: btagobjsScript.h btagobjsScript.cxx $(CORELIBS) runbtagobjs.C btagobjs.root
 	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runbtagobjs.C(4)' > btagProxySel_h.create.log 2>&1 || handleError.sh --result=$$? --log=btagProxySel_h.create.log --test=$@ --rm=$@
@@ -183,4 +192,9 @@ btagobjsProxy.clog: btagobjsSel_h.$(DllSuf) $(CORELIBS) btagobjs.root runbtagobj
 		test $$result -eq 0 || handleError.sh --result=$$? --log=$@ --test=$@
 
 btagobjsProxy: btagobjsProxy.clog
-	$(TestDiff)
+	$(TestDiffW)
+
+ifneq ($(ClingWorkAroundMissingAutoLoading)$(ClingWorkAroundMissingSmartInclude),)
+valdim3.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer"); gSystem->Load("Track_C");' 
+endif
+

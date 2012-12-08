@@ -18,11 +18,15 @@ void runleaflist(int kase = 0) {
    vertexTree->Draw("simPosProxy.C+");
 
    if (kase==0) {
+#ifdef ClingWorkAroundMissingUnloading
+      fprintf(stderr,"Info in <TTreePlayer::DrawScript>: Will process tree/chain using generatedSel.h+\n");
+#else
       gSystem->Unload("generatedSel_h");
       gSystem->Unlink("generatedSel_h.so");
       gSystem->Unlink("generatedSel_h.dll");
       TNtuple *ntuple = new TNtuple("ntuple","Demo ntuple","px:py:pz:random:i");
       ntuple->Fill(42);
       ntuple->Draw("hsimpleProxy.C+");
+#endif
    }
 }
