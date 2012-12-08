@@ -9,7 +9,7 @@ from __future__ import generators
  o) install lazy ROOT class/variable lookup as appropriate
  o) feed gSystem and gInterpreter for display updates
  o) add readline completion (if supported by python build)
- o) enable some ROOT/CINT style commands
+ o) enable some ROOT/Cling style commands
  o) handle a few special cases such as gPad, STL, etc.
  o) execute rootlogon.py/.C scripts
 
@@ -252,11 +252,11 @@ def _excepthook( exctype, value, traceb ):
    if isinstance( value, SyntaxError ) and value.text:
       cmd, arg = split( value.text[:-1] )
 
-    # mimic ROOT/CINT commands
+    # mimic ROOT/Cling commands
       if cmd == '.q':
          sys.exit( 0 )
       elif cmd == '.?' or cmd == '.help':
-         sys.stdout.write( """PyROOT emulation of CINT commands.
+         sys.stdout.write( """PyROOT emulation of Cling commands.
 All emulated commands must be preceded by a . (dot).
 ===========================================================================
 Help:        ?         : this help
@@ -485,7 +485,7 @@ class ModuleFacade( types.ModuleType ):
 
     # must be called after gApplication creation:
       if '__IPYTHON__' in __builtins__:
-       # IPython's FakeModule hack otherwise prevents usage of python from CINT
+       # IPython's FakeModule hack otherwise prevents usage of python from Cling (TODO: verify necessity)
          _root.gROOT.ProcessLine( 'TPython::Exec( "" );' )
          sys.modules[ '__main__' ].__builtins__ = __builtins__
 
