@@ -55,6 +55,9 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
       return;
    }
    fClassInfo = new TClingClassInfo(*ci);
+   if (!fClassInfo->GetDecl()) {
+      return;
+   }
    const clang::CXXRecordDecl* CRD =
       llvm::dyn_cast<clang::CXXRecordDecl>(fClassInfo->GetDecl());
    if (!CRD) {
