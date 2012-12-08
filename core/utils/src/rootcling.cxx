@@ -4465,6 +4465,9 @@ int main(int argc, char **argv)
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              gResourceDir.c_str());
    if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
+// CINT uses to define a few header implicitly, we need to do it explicitly.
+       || interp.declare("#include <assert.h>\n"
+                         "#include <stdlib.h>\n") != cling::Interpreter::kSuccess
 #ifdef ROOTBUILD
        || interp.declare("#include \"Rtypes.h\"") != cling::Interpreter::kSuccess
        || interp.declare("#include \"TClingRuntime.h\"") != cling::Interpreter::kSuccess
