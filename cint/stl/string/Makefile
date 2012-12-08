@@ -12,8 +12,10 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 stringPassingTest: passingcint.out passing.out
+ifeq ($(ClingWorkAroundJITandInline),)
 		  $(CMDECHO)diff -b passingcint.out passingcint.ref
 		  $(CMDECHO)diff -b passing.out passing.ref
+endif
 
 passingcint.out : t01.C runcint.C
 		  $(CMDECHO)$(CALLROOTEXE) -q -b -l runcint.C > passingcint.out 2>buildcint.log
