@@ -194,7 +194,10 @@ void PyROOT::PropertyProxy::Set( TDataMember* dm )
    fConverter = CreateConverter( fullType, dm->GetMaxIndex( 0 ) );
    fName      = dm->GetName();
 
-   fParent    = (void*)dm->GetClass()->GetClassInfo();
+   if (dm->GetClass())
+      fParent = (void*)dm->GetClass()->GetClassInfo();
+   else
+      fParent = NULL;    // namespaces
 }
 
 //____________________________________________________________________________
