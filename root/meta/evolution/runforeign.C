@@ -20,22 +20,22 @@
    cout.setf(ios_base::hex, ios_base::basefield);
 #endif
    cout << cl->GetName() << "'s streamerInfo #" 
-      << info->GetClassVersion() << " has a checksum of " 
+      << info->GetClassVersion() << " has a checksum of "; 
 #ifdef ClingWorkAroundJITandInline
-     << "0x" << info->GetCheckSum() << endl;
+   cout  << "0x" << info->GetCheckSum() << endl;
 #else
-     << "0x" << hex << info->GetCheckSum() << endl;
+   cout  << "0x" << hex << info->GetCheckSum() << endl;
 #endif
 
    cl = gROOT->GetClass("Tdata");
    info = cl->GetStreamerInfo();
    info->ls();
    cout << cl->GetName() << "'s streamerInfo #" 
-      << info->GetClassVersion() << " has a checksum of " 
+      << info->GetClassVersion() << " has a checksum of "; 
 #ifdef ClingWorkAroundJITandInline
-      << "0x" << info->GetCheckSum() << endl;
+    cout  << "0x" << info->GetCheckSum() << endl;
 #else
-      << "0x" << hex << info->GetCheckSum() << endl;
+    cout  << "0x" << hex << info->GetCheckSum() << endl;
 #endif
 
    gROOT->ProcessLine(".L data2.C+");
@@ -46,11 +46,11 @@
    info = cl->GetStreamerInfo();
    info->ls();
    cout << cl->GetName() << "'s streamerInfo #" 
-      << info->GetClassVersion() << " has a checksum of " 
+      << info->GetClassVersion() << " has a checksum of " ;
 #ifdef ClingWorkAroundJITandInline
-      << "0x" << info->GetCheckSum() << endl;
+   cout << "0x" << info->GetCheckSum() << endl;
 #else
-      << "0x" << hex << info->GetCheckSum() << endl;
+   cout << "0x" << hex << info->GetCheckSum() << endl;
 #endif
 
    cout << "\n==> List all the StreamerInfo after loading the library\n"; 
@@ -62,11 +62,11 @@
    info = cl->GetStreamerInfo();
    info->ls();
    cout << cl->GetName() << "'s streamerInfo #" 
-      << info->GetClassVersion() << " has a checksum of " 
+      << info->GetClassVersion() << " has a checksum of " ;
 #ifdef ClingWorkAroundJITandInline
-      << "0x" << info->GetCheckSum() << endl;
+   cout << "0x" << info->GetCheckSum() << endl;
 #else
-      << "0x" << hex << info->GetCheckSum() << endl;
+   cout << "0x" << hex << info->GetCheckSum() << endl;
 #endif
 
    cout << "\n==> List all the StreamerInfo after loading the library\n"; 
