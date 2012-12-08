@@ -112,7 +112,6 @@ Warning in <TClass::TClass>: no dictionary for class edm::Wrapper<edm::OwnVector
 Warning in <TClass::TClass>: no dictionary for class edm::OwnVector<TrackingRecHit,edm::ClonePolicy<TrackingRecHit> > is available
 Warning in <TClass::TClass>: no dictionary for class edm::helpers::DoNoPostReadFixup is available
 Warning in <TClass::TClass>: no dictionary for class CSCDetId is available
-Warning in <TClass::TClass>: no dictionary for class pair<unsigned int,unsigned int> is available
 Warning in <TClass::TClass>: no dictionary for class edm::Wrapper<edm::RangeMap<CSCDetId,edm::OwnVector<CSCRecHit2D,edm::ClonePolicy<CSCRecHit2D> >,edm::ClonePolicy<CSCRecHit2D> > > is available
 Warning in <TClass::TClass>: no dictionary for class edm::RangeMap<CSCDetId,edm::OwnVector<CSCRecHit2D,edm::ClonePolicy<CSCRecHit2D> >,edm::ClonePolicy<CSCRecHit2D> > is available
 Warning in <TClass::TClass>: no dictionary for class edm::OwnVector<CSCRecHit2D,edm::ClonePolicy<CSCRecHit2D> > is available
@@ -321,14 +320,12 @@ Warning in <TClass::TClass>: no dictionary for class CaloRecHit is available
 Warning in <TClass::TClass>: no dictionary for class HBHERecHit is available
 Warning in <TClass::TClass>: no dictionary for class HFRecHit is available
 Warning in <TClass::TClass>: no dictionary for class HORecHit is available
-Warning in <TClass::TClass>: no dictionary for class pair<edm::ProductID,unsigned int> is available
 Warning in <TClass::TClass>: no dictionary for class reco::DeDxData is available
 Warning in <TClass::TClass>: no dictionary for class edmNew::dstvdetails::DetSetVectorTrans::Item is available
 Warning in <TClass::TClass>: no dictionary for class SiPixelCluster is available
 Warning in <TClass::TClass>: no dictionary for class SiStripCluster is available
 Warning in <TClass::TClass>: no dictionary for class reco::CaloCluster is available
 Warning in <TClass::TClass>: no dictionary for class reco::CaloID is available
-Warning in <TClass::TClass>: no dictionary for class pair<DetId,float> is available
 Warning in <TClass::TClass>: no dictionary for class reco::CaloJet is available
 Warning in <TClass::TClass>: no dictionary for class reco::CaloJet::Specific is available
 Warning in <TClass::TClass>: no dictionary for class reco::CaloMET is available
@@ -366,7 +363,6 @@ Warning in <TClass::TClass>: no dictionary for class reco::CompositeCandidate is
 Warning in <TClass::TClass>: no dictionary for class edm::OwnVector<reco::Candidate,edm::ClonePolicy<reco::Candidate> > is available
 Warning in <TClass::TClass>: no dictionary for class edm::Ptr<reco::PFCandidate> is available
 Warning in <TClass::TClass>: no dictionary for class edm::Ref<vector<reco::GsfTrack>,reco::GsfTrack,edm::refhelper::FindUsingAdvance<vector<reco::GsfTrack>,reco::GsfTrack> > is available
-Warning in <TClass::TClass>: no dictionary for class pair<edm::Ref<vector<reco::PFBlock>,reco::PFBlock,edm::refhelper::FindUsingAdvance<vector<reco::PFBlock>,reco::PFBlock> >,unsigned int> is available
 Warning in <TClass::TClass>: no dictionary for class edm::Ref<vector<reco::PFBlock>,reco::PFBlock,edm::refhelper::FindUsingAdvance<vector<reco::PFBlock>,reco::PFBlock> > is available
 Warning in <TClass::TClass>: no dictionary for class reco::PFCluster is available
 Warning in <TClass::TClass>: no dictionary for class reco::PFRecHitFraction is available
@@ -390,7 +386,6 @@ Warning in <TClass::TClass>: no dictionary for class edm::Ptr<reco::CaloCluster>
 Warning in <TClass::TClass>: no dictionary for class reco::PreshowerClusterShape is available
 Warning in <TClass::TClass>: no dictionary for class reco::SecondaryVertexTagInfo is available
 Warning in <TClass::TClass>: no dictionary for class reco::BaseTagInfo is available
-Warning in <TClass::TClass>: no dictionary for class pair<unsigned int,reco::SecondaryVertexTagInfo::TrackData> is available
 Warning in <TClass::TClass>: no dictionary for class reco::SecondaryVertexTagInfo::TrackData is available
 Warning in <TClass::TClass>: no dictionary for class edm::Ref<vector<reco::TrackIPTagInfo>,reco::TrackIPTagInfo,edm::refhelper::FindUsingAdvance<vector<reco::TrackIPTagInfo>,reco::TrackIPTagInfo> > is available
 Warning in <TClass::TClass>: no dictionary for class reco::SoftLeptonTagInfo is available
@@ -459,7 +454,6 @@ Warning in <TClass::TClass>: no dictionary for class edm::reftobase::BaseHolder<
 Warning in <TClass::TClass>: no dictionary for class edm::ErrorSummaryEntry is available
 Warning in <TClass::TClass>: no dictionary for class edm::ELseverityLevel is available
 Warning in <TClass::TClass>: no dictionary for class edm::reftobase::Holder<reco::CaloCluster,edm::Ref<vector<reco::SuperCluster>,reco::SuperCluster,edm::refhelper::FindUsingAdvance<vector<reco::SuperCluster>,reco::SuperCluster> > > is available
-Warning in <TClass::TClass>: no dictionary for class pair<edm::RefToBase<reco::Track>,reco::SoftLeptonProperties> is available
 Warning in <TClass::TClass>: no dictionary for class edm::reftobase::Holder<reco::Track,edm::Ref<vector<reco::GsfTrack>,reco::GsfTrack,edm::refhelper::FindUsingAdvance<vector<reco::GsfTrack>,reco::GsfTrack> > > is available
 Warning in <TClass::TClass>: no dictionary for class reco::SoftLeptonProperties is available
 Warning in <TClass::TClass>: no dictionary for class reco::Photon is available
@@ -470,7 +464,6 @@ Warning in <TClass::TClass>: no dictionary for class reco::Photon::ShowerShape i
 Warning in <TClass::TClass>: no dictionary for class DTDigiSimLink is available
 Warning in <TClass::TClass>: no dictionary for class edm::DetSet<RPCDigiSimLink> is available
 Warning in <TClass::TClass>: no dictionary for class RPCDigiSimLink is available
-Warning in <TClass::TClass>: no dictionary for class pair<unsigned int,int> is available
 Warning in <TClass::TClass>: no dictionary for class DTRecSegment4D is available
 Warning in <TClass::TClass>: no dictionary for class DTChamberRecSegment2D is available
 Warning in <TClass::TClass>: no dictionary for class DTRecSegment2D is available
