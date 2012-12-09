@@ -133,7 +133,7 @@ fullmc.clog: fullmcSel_h.$(DllSuf) $(CORELIBS) runfullmc_C.$(DllSuf) fullmc.cxx 
 	$(CMDECHO) $(CALLROOTEXE)  -b -q -l 'runfullmc.C+(5)' > fullmc.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$@ 
 
 fullmc: fullmc.clog
-	$(TestDiff)
+	$(TestDiffW)
 
 vec.root: $(CORELIBS) runvectorint_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l 'runvectorint.C+(3)' > vec.create.log 2>&1 || handleError.sh --result=$$? --log=vec.create.log --test=$@ --rm=$@

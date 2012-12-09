@@ -3,7 +3,7 @@
    gSystem->Load("libTree");
 #endif
    gROOT->ProcessLine(".x make_tuple.C");
-#ifndef ClingWorkAroundUnnamedIncorrectInitOrder
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
    TFile *file;
    file = TFile::Open("make_tuple.root");
 #else
