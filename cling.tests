@@ -6,6 +6,8 @@
 ./root/math
 ./root/meta
 ./root/selector
+./root/treeproxy
+./root/treedraw
 ./root/io/alloc
 ./root/io/arrayobject
 ./root/io/bigevent
@@ -21,7 +23,6 @@
 ./root/io/rootcint/stl
 ./root/io/vararyobj
 ./root/io/webfile
-./root/treedraw
 ./root/treeformula/depth
 ./root/treeformula/event
 ./root/tree/interpreted
