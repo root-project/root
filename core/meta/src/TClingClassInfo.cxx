@@ -361,16 +361,11 @@ void TClingClassInfo::Init(const char *name)
    fType = 0;
    fIterStack.clear();
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
-   const clang::Decl *decl = lh.findScope(name);
-   if (!decl) {
+   fDecl = lh.findScope(name,&fType);
+   if (!fDecl) {
       std::string buf = TClassEdit::InsertStd(name);
-      decl = lh.findScope(buf);
+      fDecl = lh.findScope(buf,&fType);
    }
-   fDecl = decl;
-   if (decl) {
-      const clang::RecordDecl *rdecl = llvm::dyn_cast<clang::RecordDecl>(decl);
-      if (rdecl) fType = rdecl->getASTContext().getRecordType(rdecl)->getAs<clang::RecordType>();
-   } 
 }
 
 void TClingClassInfo::Init(int tagnum)
@@ -382,13 +377,17 @@ void TClingClassInfo::Init(int tagnum)
 void TClingClassInfo::Init(const clang::Type &tag)
 {
    fType = &tag;
-   fDecl = fType->getAsCXXRecordDecl();
+   const clang::TagType *tagtype = fType->getAs<clang::TagType>();
+   if (tagtype) 
+      fDecl = tagtype->getDecl();
+   else 
+      fDecl = 0;
    if (!fDecl) {
       clang::QualType qType(fType,0);
       static clang::PrintingPolicy
          printPol(fInterp->getCI()->getLangOpts());
       printPol.SuppressScope = false;
-      Error("TClingClassInfo::Init(const clang::Type&)","The given type %s does not point to a CXXRecordDecl",
+      Error("TClingClassInfo::Init(const clang::Type&)","The given type %s does not point to a clang::Decl",
             qType.getAsString(printPol).c_str());
    }
 }

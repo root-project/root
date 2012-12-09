@@ -1892,25 +1892,39 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
    }
    strlcpy(classname, name, nch);
 
-   int storeAutoload = SetClassAutoloading(false);
+   int storeAutoload = SetClassAutoloading(autoload);
 
+   // First we want to check whether the decl exist, but _without_
+   // generating any template instantiation.
+   const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
+   const clang::Type *type = 0;
+   const clang::Decl *decl = lh.findScope(classname, &type, /* intantiateTemplate= */ false );
+   if (!decl) {
+      std::string buf = TClassEdit::InsertStd(classname);
+      decl = lh.findScope(buf,&type,false);
+   }   
+   delete[] classname;
+      
    // Note that when using CINT we explicitly requested
    // for template to *not* be instantiated as a
    // consequence to the equivalent call.  
    // We need to review whether we want to re-add this
    // distinction ...
-   TClingClassInfo tci(fInterpreter, classname);
-   if (!tci.IsValid()) {
-      delete[] classname;
-      SetClassAutoloading(storeAutoload);
-      return kFALSE;
+   if (decl && type) {
+      TClingClassInfo tci(fInterpreter, *type);
+      if (!tci.IsValid()) {
+         SetClassAutoloading(storeAutoload);
+         return kFALSE;
+      }
+      if (tci.Property() & (G__BIT_ISENUM | G__BIT_ISCLASS | G__BIT_ISSTRUCT | G__BIT_ISUNION | G__BIT_ISNAMESPACE)) {
+         // We are now sure that the entry is not in fact an autoload entry.
+         SetClassAutoloading(storeAutoload);
+         return kTRUE;
+      }
    }
-   if (tci.Property() & (G__BIT_ISENUM | G__BIT_ISCLASS | G__BIT_ISSTRUCT | G__BIT_ISUNION | G__BIT_ISNAMESPACE)) {
-      // We are now sure that the entry is not in fact an autoload entry.
-      delete[] classname;
-      SetClassAutoloading(storeAutoload);
-      return kTRUE;
-   }
+
+   SetClassAutoloading(storeAutoload);
+   return (decl);
 
    // Setting up iterator part of TClingTypedefInfo is too slow.
    // Copy the lookup code instead:
@@ -1923,32 +1937,14 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
    }
    */
 
-   const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
-   const clang::Decl *decl = lh.findScope(name);
-   if (!decl) {
-      if (gDebug > 0) {
-         Info("TClingClassInfo(name)", "cling class not found name: %s\n",
-              name);
-      }
-      std::string buf = TClassEdit::InsertStd(name);
-      decl = lh.findScope(buf);
-      if (!decl) {
-         if (gDebug > 0) {
-            Info("TClingClassInfo(name)", "cling class not found name: %s\n",
-                 buf.c_str());
-         }
-      }
-      else {
-         if (gDebug > 0) {
-            Info("TClingClassInfo(name)", "found cling class name: %s  "
-                 "decl: 0x%lx\n", buf.c_str(), (long) decl);
-         }
-      }
-   }
+//   const clang::Decl *decl = lh.findScope(name);
+//   if (!decl) {
+//      std::string buf = TClassEdit::InsertStd(name);
+//      decl = lh.findScope(buf);
+//   }
 
-   delete[] classname;
-   SetClassAutoloading(storeAutoload);
-   return (decl);
+//   SetClassAutoloading(storeAutoload);
+//   return (decl);
 }
 
 //______________________________________________________________________________
@@ -2063,19 +2059,28 @@ TClass *TCintWithCling::GenerateTClass(const char *classname, Bool_t silent /* =
 {
    // Generate a TClass for the given class.
 
-   TClingClassInfo tci(fInterpreter, classname);
-   if (1 || !tci.IsValid()) {  
-      int version = 1;
-      if (TClassEdit::IsSTLCont(classname)) {
-         version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
-      }
-      TClass *cl = new TClass(classname, version, 0, 0, -1, -1, silent);
-      cl->SetBit(TClass::kIsEmulation);
+// For now the following line would lead to the (unwanted) instantiation
+// of class template.  This could/would need to be resurrected only if
+// we re-introduce so sort of automatic instantiation.   However this would
+// have to include carefull look at the template parameter to avoid 
+// creating instnace we can not really use (if the parameter are only forward
+// declaration or do not have all the necessary interfaces).
 
-      return cl;
-   } else {
-      return GenerateTClass(&tci,silent);
+   //   TClingClassInfo tci(fInterpreter, classname);
+   //   if (1 || !tci.IsValid()) {  
+
+   int version = 1;
+   if (TClassEdit::IsSTLCont(classname)) {
+      version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
    }
+   TClass *cl = new TClass(classname, version, 0, 0, -1, -1, silent);
+   cl->SetBit(TClass::kIsEmulation);
+
+   return cl;
+   
+//   } else {
+//      return GenerateTClass(&tci,silent);
+//   }
 }
 
 #if 0
@@ -2870,7 +2875,9 @@ void TCintWithCling::UpdateClassInfoWithDecl(void* vTD)
    // Internal function. Inform a TClass about its new TagDecl.
    TagDecl* td = (TagDecl*)vTD;
    TagDecl* tdDef = td->getDefinition();
-   if (tdDef) td = tdDef;
+   // Let's pass the decl to the TClass only if it has a definition.
+   if (!tdDef) return;
+   td = tdDef;
    std::string name = td->getName();
    
    // Supposedly we are being called being something is being
