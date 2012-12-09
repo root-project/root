@@ -1,2 +1,0 @@
-@echo off
-python  @libdir@\python\genreflex\genreflex.py %*

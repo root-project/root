@@ -97,8 +97,8 @@ void TEmulatedMapProxy::ReadMap(int nElements, TBuffer &b)
          helper = (StreamHelper*)addr;
          v = val[loop];
          switch (v->fCase) {
-         case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
-         case G__BIT_ISENUM:
+         case kIsFundamental:  // Only handle primitives this way
+         case kIsEnum:
             switch( int(v->fKind) )   {
             case kBool_t:    b >> helper->boolean;     break;
             case kChar_t:    b >> helper->s_char;      break;
@@ -124,19 +124,19 @@ void TEmulatedMapProxy::ReadMap(int nElements, TBuffer &b)
                Error("TEmulatedMapProxy","fType %d is not supported yet!\n",v->fKind);
             }
             break;
-         case G__BIT_ISCLASS:
+         case kIsClass:
             b.StreamObject(helper,v->fType);
             break;
          case kBIT_ISSTRING:
             helper->read_std_string(b);
             break;
-         case G__BIT_ISPOINTER|G__BIT_ISCLASS:
+         case kIsPointer|kIsClass:
             helper->set(b.ReadObjectAny(v->fType));
             break;
-         case G__BIT_ISPOINTER|kBIT_ISSTRING:
+         case kIsPointer|kBIT_ISSTRING:
             helper->read_std_string_pointer(b);
             break;
-         case G__BIT_ISPOINTER|kBIT_ISTSTRING|G__BIT_ISCLASS:
+         case kIsPointer|kBIT_ISTSTRING|kIsClass:
             helper->read_tstring_pointer(vsn3,b);
             break;
          }
@@ -159,8 +159,8 @@ void TEmulatedMapProxy::WriteMap(int nElements, TBuffer &b)
          i = (StreamHelper*)addr;
          v = val[loop];
          switch (v->fCase) {
-         case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
-         case G__BIT_ISENUM:
+         case kIsFundamental:  // Only handle primitives this way
+         case kIsEnum:
             switch( int(v->fKind) )   {
             case kBool_t:    b << i->boolean;     break;
             case kChar_t:    b << i->s_char;      break;
@@ -184,19 +184,19 @@ void TEmulatedMapProxy::WriteMap(int nElements, TBuffer &b)
                Error("TEmulatedMapProxy","fType %d is not supported yet!\n",v->fKind);
             }
             break;
-         case G__BIT_ISCLASS:
+         case kIsClass:
             b.StreamObject(i,v->fType);
             break;
          case kBIT_ISSTRING:
             TString(i->c_str()).Streamer(b);
             break;
-         case G__BIT_ISPOINTER|G__BIT_ISCLASS:
+         case kIsPointer|kIsClass:
             b.WriteObjectAny(i->ptr(),v->fType);
             break;
-         case kBIT_ISSTRING|G__BIT_ISPOINTER:
+         case kBIT_ISSTRING|kIsPointer:
             i->write_std_string_pointer(b);
             break;
-         case kBIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:
+         case kBIT_ISTSTRING|kIsClass|kIsPointer:
             i->write_tstring_pointer(b);
             break;
          }

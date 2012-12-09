@@ -83,8 +83,6 @@ CXXFLAGS      = -nologo -FIw32pragma.h \
 CXXOUT        = -Fo
 CFLAGS        = -nologo -I$(ROOT_SRCDIR)/build/win -FIw32pragma.h -FIsehmap.h \
                 $(BLDCFLAGS) $(EXTRA_CFLAGS) -D_WIN32
-CINTCXXFLAGS := $(CXXFLAGS) $(CINTOPT)
-CINTCFLAGS   := $(CFLAGS) $(CINTOPT)
 
 # Linker:
 LD            = $(ROOT_SRCDIR)/build/win/ld.sh

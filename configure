@@ -33,6 +33,8 @@ deprecated_options="         \
    enable_mathcore           \
    enable_cern               \
    enable_editline           \
+   enable_cintex             \
+   enable_reflex             \
 "
 
 options="                    \
@@ -55,8 +57,6 @@ options="                    \
    enable_libcxx11           \
    enable_castor             \
    enable_chirp              \
-   enable_cintex             \
-   enable_cling              \
    enable_cocoa              \
    enable_dcache             \
    enable_explicitlink       \
@@ -88,7 +88,6 @@ options="                    \
    enable_python             \
    enable_qt                 \
    enable_qtgsi              \
-   enable_reflex             \
    enable_roofit             \
    enable_ruby               \
    enable_rfio               \
@@ -142,7 +141,6 @@ for c in $options ; do eval ${c}_explicit="" ; done
 
 enable_cxx11=no
 enable_libcxx11=no
-enable_cling=no
 enable_cocoa=
 enable_afs=no
 enable_alloc=no
@@ -179,7 +177,7 @@ if test "x$ENABLEALL" = "xyes"; then
     enable_qtgsi=yes
     enable_roofit=yes
     enable_minuit2=yes
-    enable_ruby=yes
+    #enable_ruby=yes     #not supported in ROOT v6.0.0 yet
     enable_table=yes
     enable_unuran=yes
 fi
@@ -229,7 +227,6 @@ ROOFIT           \
 MINUIT2          \
 TABLE            \
 XMLDIR           \
-ROOTDICTTYPE     \
 CASROOT          \
 "
 configenvvars=
@@ -1428,14 +1425,6 @@ THISROOTCSHIN=${ac_srcdir}/config/thisroot.csh
 THISROOTCSHOUT=bin/thisroot.csh
 THISROOTBATIN=${ac_srcdir}/config/thisroot.bat
 THISROOTBATOUT=bin/thisroot.bat
-GENREFLEXSHIN=${ac_srcdir}/config/genreflex.in
-GENREFLEXSHOUT=bin/genreflex
-GENREFLEXBATIN=${ac_srcdir}/config/genreflex.bat.in
-GENREFLEXBATOUT=bin/genreflex.bat
-GENREFLEXROOTCINTSHIN=${ac_srcdir}/config/genreflex-rootcint.in
-GENREFLEXROOTCINTSHOUT=bin/genreflex-rootcint
-GENREFLEXROOTCINTBATIN=${ac_srcdir}/config/genreflex-rootcint.bat.in
-GENREFLEXROOTCINTBATOUT=bin/genreflex-rootcint.bat
 SETXRDSHIN=${ac_srcdir}/config/setxrd.sh
 SETXRDSHOUT=bin/setxrd.sh
 SETXRDCSHIN=${ac_srcdir}/config/setxrd.csh
@@ -1465,7 +1454,6 @@ FIRST argument one of the architecures given at the end of this message.
    --bindir        Binary installation dir   (<prefix>/bin)
    --build         Build configuration [debug, ...],
                    overrides the ROOTBUILD shell variable
-   --cintincdir    CINT interpeted headers   (<libdir>/cint)
    --datadir       Data installation dir     (<prefix>/share/root)
    --docdir        Documentation             (<prefix>/share/doc/root)
    --elispdir      Where to put Emacs Lisp   (<prefix>/share/emacs/site-lisp)
@@ -1482,7 +1470,7 @@ FIRST argument one of the architecures given at the end of this message.
    --testdir       Tests                     (<docdir>/test)
    --tutdir        Tutorials                 (<docdir>/tutorial)
 
-If any of the flags --cintincdir, --datadir, --docdir, --etcdir, --iconpath
+If any of the flags --datadir, --docdir, --etcdir, --iconpath
 --incdir, --libdir, --macrodir, --mandir, or --prefix is given,
 ROOT will be compiled with static directory names, and you should not set
 the ROOTSYS environment variable.
@@ -1518,8 +1506,6 @@ enable/disable options, prefix with either --enable- or --disable-
   libcxx11           Build using libc++, requires cxx11 option (MacOS X only, for the time being)
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
   chirp              Chirp filesystem support, requires cctools >= 3.2.2
-  cintex             Build the libCintex Reflex interface library
-  cling              Use cling as interpreter backend (experimental!)
   cocoa              Use native Cocoa/Quartz graphics backend (MacOS X only)
   dcache             dCache support, requires libdcap from DESY
   explicitlink       Explicitly link with all dependent libraries
@@ -1551,7 +1537,6 @@ enable/disable options, prefix with either --enable- or --disable-
   python             Python ROOT bindings, requires python >= 2.2
   qt                 Qt graphics backend, requires libqt >= 4.x
   qtgsi              GSI's Qt integration, requires libqt >= 3
-  reflex             Build the libReflex dictionary library
   rfio               RFIO support, requires libshift from CASTOR >= 1.5.2
   roofit             Build the libRooFit advanced fitting package
   rpath              Set run-time library load path on executables
@@ -1599,7 +1584,6 @@ with options, prefix with --with-, enables corresponding support
   cppunit            Cppunit testing, directory of the cppunit installation
   dcap-incdir        dCache support, location of dcap.h
   dcap-libdir        dCache support, location of libdcap
-  dicttype           dictionary type: "cint" (default), "reflex", or "gccxml"
   dnssd-libdir       Bonjour support, location of libdns_sd
   dnssd-incdir       Bonjour support, location of dns_sd.h
   finkdir            Prefix of extra MacOS X package manager (Fink, MacPorts, ...)
@@ -1789,8 +1773,6 @@ ios*)
        result "Run "xcode-select" to update the developer directory path"
        exit 1
    fi
-   enable_cintex="no"
-   enable_reflex="no"
    enable_genvector="no"
    enable_tmva="no"
    ;;
@@ -1924,13 +1906,9 @@ if test $# -gt 0 ; then
       --with-cern-libdir=*)    echo "WARNING: option $1 is deprecated and ignored"'!' ;;
       --with-chirp-incdir=*)   chirpincdir=$optarg   ; enable_chirp="yes"   ;;
       --with-chirp-libdir=*)   chirplibdir=$optarg   ; enable_chirp="yes"   ;;
-      --with-cint-maxstruct=*) cintmaxstruct=$optarg ;;
-      --with-cint-maxtypedef=*) cintmaxtypedef=$optarg;;
-      --with-cint-longline=*)  cintlongline=$optarg  ;;
       --with-cppunit=*)        cppunit=$optarg       ;;
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
-      --with-dicttype=*)       dicttype=$optarg      ;;
       --with-dnssd-incdir=*)   dnssdincdir=$optarg   ; enable_bonjour="yes" ;;
       --with-dnssd-libdir=*)   dnssdlibdir=$optarg   ; enable_bonjour="yes" ;;
       --with-avahi-incdir=*)   avahiincdir=$optarg   ; enable_bonjour="yes" ;;
@@ -1966,7 +1944,7 @@ if test $# -gt 0 ; then
       --with-krb5-libdir=*)    krb5libdir=$optarg    ; enable_krb5="yes"    ;;
       --with-ldap-incdir=*)    ldapincdir=$optarg    ; enable_ldap="yes"    ;;
       --with-ldap-libdir=*)    ldaplibdir=$optarg    ; enable_ldap="yes"    ;;
-      --with-llvm-config=*)    llvmconfig=$optarg    ; enable_builtin_llvm=no;; # require explicit --enable-cling
+      --with-llvm-config=*)    llvmconfig=$optarg    ; enable_builtin_llvm=no;;
       --with-mysql-incdir=*)   mysqlincdir=$optarg   ; enable_mysql="yes"   ;;
       --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
       --with-monalisa-incdir=*)monalisaincdir=$optarg; enable_monalisa="yes";;
@@ -2085,7 +2063,6 @@ if test $# -gt 0 ; then
       #
       --aclocaldir=*) haveconfig=-DR__HAVE_CONFIG ; aclocaldir=$optarg  ;;
       --bindir=*)     haveconfig=-DR__HAVE_CONFIG ; bindir=$optarg      ;;
-      --cintincdir=*) haveconfig=-DR__HAVE_CONFIG ; cintincdir=$optarg  ;;
       --datadir=*)    haveconfig=-DR__HAVE_CONFIG ; datadir=$optarg     ;;
       --docdir=*)     haveconfig=-DR__HAVE_CONFIG ; docdir=$optarg      ;;
       --elispdir=*)   haveconfig=-DR__HAVE_CONFIG ; elispdir=$optarg    ;;
@@ -6010,49 +5987,6 @@ check_explicit "$enable_genvector" "$enable_genvector_explicit" \
 
 ######################################################################
 #
-### echo %%% Cintex Library - Contributed library
-#
-message "Checking whether to build libCintex"
-if test ! "x$enable_cintex" = "xno"; then
-    # only enable on i386, i686, x86_64:
-    case "$chip" in
-        i*86 | x86_64)
-            enable_cintex="yes"
-            result "yes"
-            ;;
-        *)
-            case `uname -m` in
-                i*86 | x86_64)
-                    enable_cintex="yes"
-                    result "yes"
-                    ;;
-                *)
-                    logmsg " incompatible Cintex architecture $chip"
-                    enable_cintex=""
-                    result "no"
-                    ;;
-            esac
-     esac
-else
-    enable_cintex=""
-    result "no"
-fi
-
-######################################################################
-#
-### echo %%% Reflex Library - Contributed library
-#
-message "Checking whether to build libReflex"
-if test ! "x$enable_reflex" = "xno"; then
-    enable_reflex="yes"
-    result "yes"
-else
-    enable_reflex=""
-    result "no"
-fi
-
-######################################################################
-#
 ### echo %%% RooFit Library - Contributed library
 #
 message "Checking whether to build libRooFit"
@@ -6185,44 +6119,6 @@ else
     enable_afdsmgrd="no"
 fi
 result "$enable_afdsmgrd$afdsmgrdapmonmsg"
-
-######################################################################
-#
-### echo %%% What dictionaries to build
-#
-# Can be either CINT (default), reflex, or gccxml.
-# Option will be passed to rootcint(_tmp),
-# and root-config --libs will have -lReflex if needed.
-#
-message "Checking what type of dictionaries to build"
-# --with-dicttype overrides env var ROOTDICTTYPE
-if test "x$dicttype" = "x" ; then
-    dicttype="$ROOTDICTTYPE"
-fi
-
-# set default to CINT
-if test "x$dicttype" = "x"; then
-    dicttype=cint
-fi
-
-case "$dicttype" in
-    cint);;
-    reflex | gccxml)
-        # check that cintex is enabled for reflex/gccxml
-        if test ! "x$enable_cintex" = "xyes"; then
-            result "Cannot generate $dicttype dictionaries with cintex disabled."
-            dicttype=cint
-        fi ;;
-    *)
-        result "Unknown dictionary \"$dicttype\"."
-        result "  Must be one of cint, reflex, gccxml."
-        dicttype=cint
-        ROOTDICTTYPE="trigger print info"
-        ;;
-esac
-
-# Print info if dicttype!=cint, or --with-dict overrides $ROOTDICTTYPE
-result "$dicttype"
 
 ######################################################################
 #
@@ -6412,6 +6308,12 @@ fi
 if test -d include/cint ; then
    rm -rf include/cint
 fi
+if test -d include/Cintex ; then
+   rm -rf include/Cintex
+fi
+if test -d include/Reflex ; then
+   rm -rf include/Reflex
+fi
 if test -d graf2d/freetype/src/freetype-2.3.5 ; then
    rm -rf graf2d/freetype/src/freetype-2.3.5
 fi
@@ -6468,12 +6370,18 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  core/metautils/src/RConversionRuleParser7.cxx \
  core/meta/src/G__TCint.h core/meta/src/G__TCint.cxx \
  core/thread/src/TLockFile.* proof/proofplayer/src/TFileMerger.* \
+ core/base/src/ManualBase4.* tree/tree/src/ManualTree2.* \
  graf2d/graf/src/G__Graf1.h graf2d/graf/src/G__Graf1.cxx \
  graf2d/graf/src/G__Graf2.h graf2d/graf/src/G__Graf2.cxx \
  etc/daemons/olbd.rc.d etc/daemons/cmsd.rc.d etc/daemons/xrootd.rc.d \
  bin/cmsd bin/xprep bin/xrd bin/xrdcp bin/xrdgsiproxy bin/xrdpwdadmin \
  bin/xrdsssadmin bin/xrdstagetool bin/xrootd lib/libXrd* \
- bin/drop_from_path
+ bin/drop_from_path bin/genreflex bin/genreflex.bat bin/genreflex-rootcint \
+ bin/genreflex-rootcint.bat lib/libcomplexDict.rootmap \
+ lib/libdequeDict.rootmap lib/liblistDict.rootmap lib/libmap2Dict.rootmap \
+ lib/libmapDict.rootmap lib/libmultimap2Dict.rootmap \
+ lib/libmultimapDict.rootmap lib/libmultisetDict.rootmap \
+ lib/libsetDict.rootmap lib/libvalarrayDict.rootmap lib/libvectorDict.rootmap
 
 ######################################################################
 #
@@ -6522,7 +6430,6 @@ if test ! "x$haveconfig" = "x" ; then
     if test "x$mandir" = "x";       then mandir=$prefix/share/man/man1; fi
     if test "x$datadir" = "x";      then datadir=$prefix/share/root; fi
     if test "x$macrodir" = "x";     then macrodir=$datadir/macros; fi
-    if test "x$cintincdir" = "x";   then cintincdir=$libdir/cint; fi
     if test "x$iconpath" = "x";     then iconpath=$datadir/icons; fi
     if test "x$srcdir" = "x";       then srcdir=$datadir/src; fi
     if test "x$fontdir" = "x";      then fontdir=$datadir/fonts; fi
@@ -6571,7 +6478,6 @@ else
     datadir=\$\(ROOTSYS\)
     mandir=\$\(ROOTSYS\)/man/man1
     macrodir=\$\(ROOTSYS\)/macros
-    cintincdir=\$\(ROOTSYS\)/cint
     iconpath=\$\(ROOTSYS\)/icons
     srcdir=\$\(ROOTSYS\)/src
     fontdir=\$\(ROOTSYS\)/fonts
@@ -6659,10 +6565,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@chirpincdir@|$chirpincdir|"          \
     -e "s|@chirplib@|$chirplib|"                \
     -e "s|@chirplibdir@|$chirplibdir|"          \
-    -e "s|@cintmaxstruct@|$cintmaxstruct|"      \
-    -e "s|@cintmaxtypedef@|$cintmaxtypedef|"    \
-    -e "s|@cintlongline@|$cintlongline|"        \
-    -e "s|@cintincdir@|$cintincdir|"            \
     -e "s|@cppunit@|$cppunit|"                  \
     -e "s|@datadir@|$datadir|"                  \
     -e "s|@dcapincdir@|$dcapincdir|"            \
@@ -6672,7 +6574,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@cryptolibdir@|$cryptolibdir|"        \
     -e "s|@dcaplib@|$dcaplib|"                  \
     -e "s|@dcaplibdir@|$dcaplibdir|"            \
-    -e "s|@dicttype@|$dicttype|"                \
     -e "s|@docdir@|$docdir|"                    \
     -e "s|@elispdir@|$elispdir|"                \
     -e "s|@buildgenvector@|$enable_genvector|"  \
@@ -6695,9 +6596,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@lzmaincdir@|$lzmaincdir|"            \
     -e "s|@lzmalib@|$lzmalib|"                  \
     -e "s|@lzmalibdir@|$lzmalibdir|"            \
-    -e "s|@buildcintex@|$enable_cintex|"        \
     -e "s|@buildcling@|$enable_cling|"          \
-    -e "s|@buildreflex@|$enable_reflex|"        \
     -e "s|@buildroofit@|$enable_roofit|"        \
     -e "s|@buildminuit2@|$enable_minuit2|"      \
     -e "s|@buildunuran@|$enable_unuran|"        \
@@ -6920,7 +6819,6 @@ message "Writing $CONFIGUREOUT"
 sed \
     -e "s|@architecture@|$arch|"           \
     -e "s|@bindir@|$bindir|"               \
-    -e "s|@cintincdir@|$cintincdir|"       \
     -e "s|@datadir@|$datadir|"             \
     -e "s|@docdir@|$docdir|"               \
     -e "s|@etcdir@|$etcdir|"               \
@@ -7056,7 +6954,6 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@features@|$features|"           \
     -e "s|@winrtdebug@|$enable_winrtdebug|"\
     -e "s|@configargs@|$configargs|"       \
-    -e "s|@dicttype@|$dicttype|"           \
     -e "s|@pythonvers@|$pythonvers|"       \
     -e "s|@alloclibdir@|$alloclibdir|"     \
     -e "s|@alloclib@|$alloclib|"           \
@@ -7247,60 +7144,6 @@ else
     message "Writing $SETXRDCSHOUT"
     cp -f $SETXRDCSHIN $SETXRDCSHOUT
     result "done"
-fi
-
-#---------------------------------------------------------------------
-# bin/genreflex(.bat), bin/genreflex-rootcint(.bat)
-#
-if test "x$enable_reflex" = "xyes"; then
-    libdirreflex=$libdir
-    if test "x$haveconfig" = "x" ; then
-        libdirreflex='$0; if readlink $dir > /dev/null 2>\&1; then lndir=`readlink $dir`; dir=`dirname $dir`; lndir=`dirname $lndir`; dir=`cd $dir \&\& cd $lndir \&\& pwd \|\| echo $lndir`; else dir=`dirname ${dir}`; fi; dir=${dir}/../lib'
-    fi
-    modpath=""
-    if test "x$platform" = "xwin32"; then
-        modpath=';dir=`cygpath -m $dir`'
-    fi
-
-    message "Writing $GENREFLEXSHOUT"
-    cat $GENREFLEXSHIN | sed -e "s|@libdir@|$libdirreflex$modpath|g" > $GENREFLEXSHOUT
-    chmod a+x $GENREFLEXSHOUT
-    result "done"
-    if test "x$platform" = "xwin32"; then
-        message "Writing $GENREFLEXBATOUT"
-        if test "x$haveconfig" = "x" ; then
-            libdirreflex='%~d0%~p0\\..\\lib'
-        else
-            libdirreflex=`cygpath -m $libdir`
-        fi
-
-        cat $GENREFLEXBATIN | sed -e "s|@libdir@|$libdirreflex|g" > $GENREFLEXBATOUT
-        chmod a+x $GENREFLEXBATOUT
-        result "done"
-    fi
-
-    message "Writing $GENREFLEXROOTCINTSHOUT"
-    libdirreflex=$libdir
-    if test "x$haveconfig" = "x" ; then
-        libdirreflex='`dirname $0`/../lib'
-    fi
-    cat $GENREFLEXROOTCINTSHIN | sed -e "s|@libdir@|$libdirreflex|g" > $GENREFLEXROOTCINTSHOUT
-    chmod a+x $GENREFLEXROOTCINTSHOUT
-    result "done"
-
-    if test "x$platform" = "xwin32"; then
-        message "Writing $GENREFLEXROOTCINTBATOUT"
-        if test "x$haveconfig" = "x" ; then
-            libdirreflex='%~d0%~p0\\..\\lib'
-        else
-            libdirreflex=`cygpath -m $libdir`
-        fi
-        cat $GENREFLEXROOTCINTBATIN | sed -e "s|@libdir@|$libdirreflex|g" > $GENREFLEXROOTCINTBATOUT
-        chmod a+x $GENREFLEXROOTCINTBATOUT
-        result "done"
-    fi
-else
-    rm -f bin/genreflex*
 fi
 
 #---------------------------------------------------------------------

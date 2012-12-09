@@ -69,7 +69,8 @@ include $(MAKEFILEDEP)
 
 ##### Modules to build #####
 
-MODULES       = build cint/cint core/metautils core/pcre core/clib core/utils \
+MODULES       = build interpreter/llvm interpreter/cling core/metautils \
+                core/pcre core/clib core/utils \
                 core/textinput core/base core/cont core/meta core/thread \
                 io/io math/mathcore net/net core/zip core/lzma math/matrix \
                 core/newdelete hist/hist tree/tree graf2d/freetype \
@@ -209,22 +210,11 @@ endif
 ifeq ($(BUILDMATHMORE),yes)
 MODULES      += math/mathmore
 endif
-ifeq ($(BUILDREFLEX),yes)
-# put reflex right in front of CINT; CINT needs it
-MODULES      := $(subst cint/cint,cint/reflex cint/cint,$(MODULES))
-endif
 ifeq ($(BUILDMINUIT2),yes)
 MODULES      += math/minuit2
 endif
 ifeq ($(BUILDUNURAN),yes)
 MODULES      += math/unuran
-endif
-ifeq ($(BUILDCLING),yes)
-# put cling right behind of CINT; e.g. UTILS need it
-MODULES      := $(subst cint/cint,cint/cint interpreter/llvm interpreter/cling,$(MODULES))
-endif
-ifeq ($(BUILDCINTEX),yes)
-MODULES      += cint/cintex
 endif
 ifeq ($(BUILDROOFIT),yes)
 MODULES      += roofit/roofitcore roofit/roofit roofit/roostats
@@ -293,22 +283,22 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 bindings/pyroot bindings/ruby io/gfal misc/minicern \
                 graf2d/qt gui/qtroot gui/qtgsi net/netx net/alien \
                 proof/proofd proof/proofx proof/pq2 \
-                sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
+                sql/oracle io/xmlparser math/mathmore \
                 tmva math/genetic io/hdfs graf2d/fitsio roofit/roofitcore \
                 roofit/roofit roofit/roostats roofit/histfactory \
                 math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
                 geom/geocad geom/gdml graf3d/eve net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz \
-                proof/proofbench proof/afdsmgrd interpreter/cling graf2d/ios \
-                graf2d/quartz graf2d/cocoa core/macosx interpreter/llvm
+                proof/proofbench proof/afdsmgrd graf2d/ios \
+                graf2d/quartz graf2d/cocoa core/macosx
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
 MODULES      += main   # must be last, $(ALLLIBS) must be fully formed
 
 ifeq ($(BUILDTOOLS),yes)
-MODULES       = build cint/cint core/metautils core/clib core/base core/meta \
-                core/utils
+MODULES       = build interpreter/llvm interpreter/cling core/metautils \
+                core/clib core/base core/meta core/utils
 endif
 
 ##### ROOT libraries #####
@@ -317,22 +307,14 @@ LPATH         = lib
 
 ifneq ($(PLATFORM),win32)
 RPATH        := -L$(LPATH)
-CINTLIBS     := -lCint
 NEWLIBS      := -lNew
-BOOTLIBS     := -lCore -lCint
-ifneq ($(ROOTDICTTYPE),cint)
-BOOTLIBS     += -lCintex -lReflex
-endif
+BOOTLIBS     := -lCore
 ROOTLIBS     := -lRIO -lHist -lGraf -lGraf3d -lGpad -lTree \
                 -lMatrix -lNet -lThread -lMathCore $(BOOTLIBS)
 RINTLIBS     := -lRint
 else
-CINTLIBS     := $(LPATH)/libCint.lib
 NEWLIBS      := $(LPATH)/libNew.lib
-BOOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib
-ifneq ($(ROOTDICTTYPE),cint)
-BOOTLIBS     += $(LPATH)/libCintex.lib $(LPATH)/libReflex.lib
-endif
+BOOTLIBS     := $(LPATH)/libCore.lib
 ROOTLIBS     := $(LPATH)/libRIO.lib $(LPATH)/libHist.lib \
                 $(LPATH)/libGraf.lib $(LPATH)/libGraf3d.lib \
                 $(LPATH)/libGpad.lib $(LPATH)/libTree.lib \
@@ -347,10 +329,7 @@ ROOTA        := bin/roota
 PROOFSERVA   := bin/proofserva
 
 # ROOTLIBSDEP is intended to match the content of ROOTLIBS
-BOOTLIBSDEP   = $(ORDER_) $(CORELIB) $(CINTLIB)
-ifneq ($(ROOTDICTTYPE),cint)
-BOOTLIBSDEP  += $(CINTEXLIB) $(REFLEXLIB)
-endif
+BOOTLIBSDEP   = $(ORDER_) $(CORELIB)
 ROOTLIBSDEP   = $(BOOTLIBSDEP) $(MATHCORELIB) $(IOLIB) $(NETLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(GPADLIB) $(TREELIB) $(MATRIXLIB)
 
@@ -478,7 +457,6 @@ MAKEDIST      := $(ROOT_SRCDIR)/build/unix/makedist.sh
 MAKEDISTSRC   := $(ROOT_SRCDIR)/build/unix/makedistsrc.sh
 MAKEVERSION   := $(ROOT_SRCDIR)/build/unix/makeversion.sh
 MAKECOMPDATA  := $(ROOT_SRCDIR)/build/unix/compiledata.sh
-MAKECINTDLL   := $(ROOT_SRCDIR)/build/unix/makecintdll.sh
 MAKECHANGELOG := $(ROOT_SRCDIR)/build/unix/makechangelog.sh
 MAKEHTML      := $(ROOT_SRCDIR)/build/unix/makehtml.sh
 MAKELOGHTML   := $(ROOT_SRCDIR)/build/unix/makeloghtml.sh
@@ -542,10 +520,7 @@ endif
 ##### In case shared libs need to resolve all symbols (e.g.: aix, win32) #####
 
 ifeq ($(EXPLICITLINK),yes)
-MAINLIBS     := $(CORELIB) $(CINTLIB)
-ifneq ($(ROOTDICTTYPE),cint)
-MAINLIBS     += $(CINTEXLIB) $(REFLEXLIB)
-endif
+MAINLIBS     := $(CORELIB)
 else
 MAINLIBS      =
 endif
@@ -563,45 +538,6 @@ INCLUDEFILES :=
 .SUFFIXES: .cxx .mm .d
 .PRECIOUS: include/%.h
 
-# special rules (need to be defined before generic ones)
-cint/cint/lib/dll_stl/G__%.o: cint/cint/lib/dll_stl/G__%.cxx
-	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
-	   $(CXXFLAGS) -D__cplusplus -I$(CINTDIRL)/prec_stl \
-	   -I$(CINTDIRSTL) -I$(CINTDIR)/inc -- $<
-	$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
-
-cint/cint/lib/dll_stl/G__c_%.o: cint/cint/lib/dll_stl/G__c_%.c
-	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
-	   $(CFLAGS) -I$(CINTDIRL)/prec_stl \
-	   -I$(CINTDIRSTL) -I$(CINTDIR)/inc -- $<
-	$(CC) $(NOOPT) $(CFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
-
-cint/cint/lib/G__%.o: cint/cint/lib/G__%.cxx
-	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
-	   $(CXXFLAGS) -D__cplusplus -I$(CINTDIRL)/prec_stl \
-	   -I$(CINTDIRSTL) -I$(CINTDIR)/inc -- $<
-	$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
-
-cint/cint/lib/G__c_%.o: cint/cint/lib/G__c_%.c
-	$(MAKEDEP) -R -f$(patsubst %.o,%.d,$@) -Y -w 1000 -- \
-	   $(CFLAGS) -I$(CINTDIRL)/prec_stl \
-	   -I$(CINTDIRSTL) -I$(CINTDIR)/inc -- $<
-	$(CC) $(NOOPT) $(CFLAGS) -I. -I$(CINTDIR)/inc  $(CXXOUT)$@ -c $<
-
-cint/cint/%.o: cint/cint/%.cxx
-	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCXXFLAGS) -I. -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I. $(CXXOUT)$@ -c $<
-
-cint/cint/%.o: $(ROOT_SRCDIR)/cint/cint/%.cxx
-	$(MAKEDIR)
-	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCXXFLAGS) -I. -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CINTCXXFLAGS) -I. $(CXXOUT)$@ -c $<
-
-cint/cint/%.o: $(ROOT_SRCDIR)/cint/cint/%.c
-	$(MAKEDIR)
-	$(MAKEDEP) -R -fcint/cint/$*.d -Y -w 1000 -- $(CINTCFLAGS) -I. -- $<
-	$(CC) $(OPT) $(CINTCFLAGS) -I. $(CXXOUT)$@ -c $<
-
 build/rmkdepend/%.o: $(ROOT_SRCDIR)/build/rmkdepend/%.cxx
 	$(MAKEDIR)
 	$(CXX) $(OPT) $(CXXFLAGS) $(CXXOUT)$@ -c $<
@@ -617,15 +553,8 @@ $(1)/%_tmp.o: $(1)/%_tmp.cxx
 
 $(1)/src/G__%.o: $(1)/src/G__%.cxx
 	$$(MAKEDEP) -R -f$$(patsubst %.o,%.d,$$@) -Y -w 1000 -- \
-	  $$(CXXFLAGS) -D__cplusplus -I$$(CINTDIRL)/prec_stl \
-	  -I$$(CINTDIRSTL) -I$$(CINTDIR)/inc -- $$<
-	$$(CXX) $$(NOOPT) $$(CXXFLAGS) -I. -I$$(CINTDIR)/inc  $$(CXXOUT)$$@ -c $$<
-
-$(1)/src/G__c_%.o: $(1)/src/G__c_%.c
-	$$(MAKEDEP) -R -f$$(patsubst %.o,%.d,$$@) -Y -w 1000 -- \
-	  $$(CFLAGS) -I$$(CINTDIRL)/prec_stl \
-	  -I$$(CINTDIRSTL) -I$$(CINTDIR)/inc -- $$<
-	$$(CC) $$(NOOPT) $$(CFLAGS) -I. -I$$(CINTDIR)/inc  $$(CXXOUT)$$@ -c $$<
+	  $$(CXXFLAGS) -D__cplusplus -- $$<
+	$$(CXX) $$(NOOPT) $$(CXXFLAGS) -I. $$(CXXOUT)$$@ -c $$<
 
 $(1)/%.o: $(ROOT_SRCDIR)/$(1)/%.cxx
 	$$(MAKEDIR)
@@ -658,7 +587,6 @@ endif
 endef
 
 MODULESGENERIC := build $(filter-out build,$(MODULES))
-MODULESGENERIC := $(filter-out cint/cint,$(MODULES))
 $(foreach module,$(MODULESGENERIC),$(eval $(call SRCTOOBJ_template,$(module))))
 
 %.o: %.cxx
@@ -687,7 +615,7 @@ endif
 endif
 
 ##### TARGETS #####
-.PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
+.PHONY:         all fast config rootcling rootlibs rootexecs dist distsrc \
                 clean distclean maintainer-clean compiledata \
                 version html changelog install uninstall showbuild \
                 releasenotes staticlib static map debian redhat skip postbin \
@@ -729,9 +657,9 @@ endif
 endif
 endif
 
-rootcint:       all-cint all-utils
+rootcling:      all-cling all-utils
 
-rootlibs:       rootcint compiledata $(ALLLIBS) $(ALLMAPS)
+rootlibs:       rootcling compiledata $(ALLLIBS) $(ALLMAPS)
 
 rootexecs:      rootlibs $(ALLEXECS)
 
@@ -750,7 +678,7 @@ buildtools:
 		fi; \
 		($(MAKE) BUILDTOOLS=yes \
 		   TARGETFLAGS=-DR__$(shell echo $(ARCH) | tr 'a-z' 'A-Z') \
-		   rootcint cint/cint/lib/posix/mktypes \
+		   rootcling \
 		) || exit 1;
 
 distclean::
@@ -820,7 +748,7 @@ endif
 	   touch $@; \
 	fi)
 
-$(CORELIB): $(CLINGO) $(COREO) $(COREDO) $(CINTLIB) $(PCREDEP) $(CORELIBDEP)
+$(CORELIB): $(CLINGO) $(COREO) $(COREDO) $(PCREDEP) $(CORELIBDEP)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 	   "$(SOFLAGS)" libCore.$(SOEXT) $@ \
 	   "$(COREDO) $(COREO) $(CLINGO) $(CLINGLIBEXTRA)" \
@@ -1035,10 +963,6 @@ endif
 	-@(mv -f tutorials/quadp/stock.root- tutorials/quadp/stock.root >/dev/null 2>&1;true)
 	-@(mv -f tutorials/proof/ntprndm.root- tutorials/proof/ntprndm.root >/dev/null 2>&1;true)
 	@rm -f $(ROOTA) $(PROOFSERVA) $(ROOTALIB)
-	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/*.so*
-	@rm -f $(CINTDIR)/stl/*.dll $(CINTDIR)/stl/*.so*
-	@rm -f $(CINTDIR)/include/sys/*.dll $(CINTDIR)/include/sys/*.so.*
-	@rm -f $(CINTDIR)/lib/posix/a.out $(CINTDIR)/lib/posix/mktypes
 	@rm -f README/ChangeLog build/dummy.d
 	@rm -rf README/ReleaseNotes
 	@rm -f etc/svninfo.txt
@@ -1056,7 +980,7 @@ maintainer-clean:: distclean
 	   build/misc/root-help.el build-arch-stamp build-indep-stamp \
 	   configure-stamp build-arch-cint-stamp config.status config.log
 
-version: $(CINTTMP)
+version: $(CLINGEXE)
 	@$(MAKEVERSION)
 
 staticlib: $(ROOTALIB)
@@ -1142,13 +1066,6 @@ install: all
 	   $(INSTALLDATA) include/*             $(DESTDIR)$(INCDIR); \
 	   echo "Installing $(ROOT_SRCDIR)/main/src/rmain.cxx in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDATA) $(ROOT_SRCDIR)/main/src/rmain.cxx $(DESTDIR)$(INCDIR); \
-	   echo "Installing cint/cint/include cint/cint/lib and cint/cint/stl in $(DESTDIR)$(CINTINCDIR)"; \
-	   $(INSTALLDIR)                        $(DESTDIR)$(CINTINCDIR)/cint; \
-	   $(INSTALLDATA) cint/cint/include     $(DESTDIR)$(CINTINCDIR)/cint; \
-	   $(INSTALLDATA) cint/cint/lib         $(DESTDIR)$(CINTINCDIR)/cint; \
-	   $(INSTALLDATA) cint/cint/stl         $(DESTDIR)$(CINTINCDIR)/cint; \
-	   find $(DESTDIR)$(CINTINCDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
-	   find $(DESTDIR)$(CINTINCDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing icons in $(DESTDIR)$(ICONPATH)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ICONPATH); \
 	   $(INSTALLDATA) icons/*.xpm           $(DESTDIR)$(ICONPATH); \
@@ -1213,9 +1130,6 @@ uninstall:
 	elif [ "$(USECONFIG)" = "FALSE" ]; then \
 	   echo "To uninstall ROOT just delete directory $$PWD"; \
 	else \
-	   rm -f $(DESTDIR)$(BINDIR)/`basename $(CINT)`; \
-	   rm -f $(DESTDIR)$(BINDIR)/`basename $(MAKECINT)`; \
-	   rm -f $(DESTDIR)$(BINDIR)/`basename $(ROOTCINTEXE)`; \
 	   rm -f $(DESTDIR)$(BINDIR)/`basename $(RMKDEP)`; \
 	   if [ "x$(BINDEXP)" != "x" ] ; then \
 	      rm -f $(DESTDIR)$(BINDIR)/`basename $(BINDEXP)`; \
@@ -1231,7 +1145,7 @@ uninstall:
 	      test "x`ls $(DESTDIR)$(BINDIR)`" = "x" ; then \
 	      rm -rf $(DESTDIR)$(BINDIR); \
 	   fi; \
-	   for lib in $(ALLLIBS) $(CINTLIB) $(ALLMAPS); do \
+	   for lib in $(ALLLIBS) $(ALLMAPS); do \
 	      rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib`* ; \
 	   done; \
 	   if test "x$(RFLX_GRFLXPY)" != "x"; then \
@@ -1256,8 +1170,7 @@ uninstall:
 	   for subdir in \
               . \
               Math/GenVector Math \
-              Reflex/internal Reflex/Builder Reflex \
-              Cintex GL TMVA Minuit2; do \
+              GL TMVA Minuit2; do \
               if test -d include/$${subdir}; then \
 	         for i in include/$${subdir}/*.h ; do \
 	            rm -f $(DESTDIR)$(INCDIR)/$${subdir}/`basename $$i`; \
@@ -1269,7 +1182,6 @@ uninstall:
               fi; \
 	   done; \
 	   rm -f $(DESTDIR)$(INCDIR)/rmain.cxx; \
-	   rm -rf $(DESTDIR)$(CINTINCDIR); \
 	   for i in icons/*.xpm ; do \
 	      rm -fr $(DESTDIR)$(ICONPATH)/`basename $$i`; \
 	   done; \
@@ -1360,10 +1272,8 @@ showbuild:
 	@echo "GCC_MINOR          = $(GCC_MINOR)"
 	@echo ""
 	@echo "CXXFLAGS           = $(CXXFLAGS)"
-	@echo "CINTCXXFLAGS       = $(CINTCXXFLAGS)"
 	@echo "EXTRA_CXXFLAGS     = $(EXTRA_CXXFLAGS)"
 	@echo "CFLAGS             = $(CFLAGS)"
-	@echo "CINTCFLAGS         = $(CINTCFLAGS)"
 	@echo "EXTRA_CFLAGS       = $(EXTRA_CFLAGS)"
 	@echo "F77FLAGS           = $(F77FLAGS)"
 	@echo "LDFLAGS            = $(LDFLAGS)"

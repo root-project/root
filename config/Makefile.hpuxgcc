@@ -19,10 +19,6 @@ CXX           = g++
 CC            = gcc
 CXXFLAGS      = -fPIC -I/usr/include/X11R5 $(EXTRA_CXXFLAGS)
 CFLAGS        = -fPIC -I/usr/include/X11R5 $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -fPIC -DG__REGEXP -DG__UNIX $(EXTRA_CXXFLAGS) \
-                -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO
-CINTCFLAGS    = -fPIC -DG__REGEXP -DG__UNIX $(EXTRA_CFLAGS) \
-                -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO
 COMPILER      = gnu
 
 # Linker:

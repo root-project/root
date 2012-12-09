@@ -45,7 +45,6 @@ TTFFONTDIR     := @ttffontdir@
 MACRODIR       := @macrodir@
 SRCDIR         := @srcdir@
 ICONPATH       := @iconpath@
-CINTINCDIR     := @cintincdir@
 DOCDIR         := @docdir@
 TESTDIR        := @testdir@
 TUTDIR         := @tutdir@
@@ -326,17 +325,9 @@ GSLLIBDIR      := @gsllibdir@
 GSLLIBS        := @gsllibs@
 GSLVERSION     := @gslversion@
 
-CINTMAXSTRUCT  := @cintmaxstruct@
-CINTMAXTYPEDEF := @cintmaxtypedef@
-CINTLONGLINE   := @cintlongline@
-
 BUILTINLLVM    := @builtinllvm@
 LLVMCONFIG     := @llvmconfig@
 BUILDCLING     := @buildcling@
-
-BUILDCINTEX    := @buildcintex@
-
-BUILDREFLEX    := @buildreflex@
 
 BUILDROOFIT    := @buildroofit@
 
@@ -355,8 +346,6 @@ AFDSMGRDAPMON  := @afdsmgrdapmon@
 
 CPPUNIT        := @cppunit@
 GCCXML         := @gccxml@
-
-ROOTDICTTYPE   := @dicttype@
 
 INSTALL        := cp -dpR
 INSTALLDATA    := cp -dpR

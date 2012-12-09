@@ -1916,7 +1916,7 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
          SetClassAutoloading(storeAutoload);
          return kFALSE;
       }
-      if (tci.Property() & (G__BIT_ISENUM | G__BIT_ISCLASS | G__BIT_ISSTRUCT | G__BIT_ISUNION | G__BIT_ISNAMESPACE)) {
+      if (tci.Property() & (kIsEnum | kIsClass | kIsStruct | kIsUnion | kIsNamespace)) {
          // We are now sure that the entry is not in fact an autoload entry.
          SetClassAutoloading(storeAutoload);
          return kTRUE;
@@ -1930,7 +1930,7 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
    // Copy the lookup code instead:
    /*
    TClingTypedefInfo t(fInterpreter, name);
-   if (t.IsValid() && !(t.Property() & G__BIT_ISFUNDAMENTAL)) {
+   if (t.IsValid() && !(t.Property() & kIsFundamental)) {
       delete[] classname;
       SetClassAutoloading(storeAutoload);
       return kTRUE;

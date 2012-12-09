@@ -48,21 +48,12 @@ LIBVERS=
 VERSION=
 EXPLLNKCORE=
 if [ "x$EXPLICIT" = "xyes" ]; then
-   if [ $LIB != "lib/libCint.$soext" ] \
-       && [ $LIB != "lib/libCling.$soext" ] \
-       && [ $LIB != "lib/libReflex.$soext" ] \
-       && [ $LIB != "lib/libminicern.$soext" ]; then
-      NEEDREFLEX=""
-      if [ "`bin/root-config --dicttype`" != "cint" ]; then
-          NEEDREFLEX="-lReflex"
-          if [ $LIB != "lib/libCintex.$soext" ]; then
-              NEEDREFLEX="-lCintex $NEEDREFLEX"
-          fi
-      fi
+   if [ $LIB != "lib/libCling.$soext" ] && \
+      [ $LIB != "lib/libminicern.$soext" ]; then
       if [ $LIB != "lib/libCore.$soext" ]; then
-         EXPLLNKCORE="-Llib $NEEDREFLEX -lCore -lCint"
+         EXPLLNKCORE="-Llib -lCore"
       else
-         EXPLLNKCORE="-Llib -lCint"
+         EXPLLNKCORE=""
       fi
    fi
    if [ $PLATFORM = "linux" ]; then
@@ -174,14 +165,12 @@ elif [ $PLATFORM = "ios" ]; then
    fi
 elif [ $LD = "build/unix/wingcc_ld.sh" ]; then
    EXPLLNKCORE=
-   if [ $SONAME != "libCint.dll" ] \
-       && [ $SONAME != "libCling.dll" ] \
-       && [ $SONAME != "libReflex.dll" ] \
-       && [ $SONAME != "libminicern.dll" ] ; then
+   if [ $SONAME != "libCling.dll" ] && \
+      [ $SONAME != "libminicern.dll" ]; then
       if [ $SONAME = "libCore.dll" ]; then
-         EXPLLNKCORE="-Llib -lCint"
+         EXPLLNKCORE=""
       else
-         EXPLLNKCORE="-Llib -lCore -lCint"
+         EXPLLNKCORE="-Llib -lCore"
       fi
    fi
    if [ "x$MAJOR" != "x" ] ; then

@@ -167,8 +167,6 @@
 #include <memory>
 #include <vector>
 
-#include "cintdictversion.h"
-
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Value.h"

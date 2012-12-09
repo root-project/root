@@ -21,10 +21,6 @@ CXXFLAGS      = -Wall -fsigned-char \
                 -I/usr/X11/include/ $(EXTRA_CXXFLAGS)
 CFLAGS        = -Wall -fsigned-char \
                 -I/usr/X11/include/ $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -Wall -fsigned-char $(EXTRA_CXXFLAGS) \
-                -DG__UNIX -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
-CINTCFLAGS    = -Wall -fsigned-char -DG__UNIX \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

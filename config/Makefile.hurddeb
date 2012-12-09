@@ -19,10 +19,6 @@ CXX           = g++
 CC            = gcc
 CXXFLAGS      = -pipe -Wall -fPIC $(EXTRA_CXXFLAGS)
 CFLAGS        = -pipe -Wall -fPIC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -pipe -Wall -fPIC -DG__REGEXP $(EXTRA_CXXFLAGS) \
-                -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
-CINTCFLAGS    = -pipe -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

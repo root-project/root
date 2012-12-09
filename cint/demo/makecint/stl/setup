@@ -1,5 +1,0 @@
-makecint -mk Makefile -dl sample.dll -H sample.h #-cint -M0x10
-make -f Makefile
-cint test.cxx
-make clean
-#rm Makefile

@@ -71,7 +71,7 @@ namespace {
 
    // filter const objects and enums to prevent changing their values
       if ( ( pyprop->fProperty & kIsConstant ) ||
-           ( ! ( ~pyprop->fProperty & ( kIsEnum | G__BIT_ISSTATIC ) ) ) ) {
+           ( ! ( ~pyprop->fProperty & ( kIsEnum | kIsStatic ) ) ) ) {
          PyErr_SetString( PyExc_TypeError, "assignment to const data not allowed" );
          return errret;
       }

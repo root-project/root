@@ -18,20 +18,9 @@ TREEDS       := $(call stripsrc,$(MODDIRS)/G__Tree.cxx)
 TREEDO       := $(TREEDS:.cxx=.o)
 TREEDH       := $(TREEDS:.cxx=.h)
 
-# ManualBase4 only needs to be regenerated (and then changed manually) when
-# the dictionary interface changes
-TREEL2       := $(MODDIRI)/LinkDef2.h
-TREEDS2      := $(call stripsrc,$(MODDIRS)/ManualTree2.cxx)
-TREEDO2      := $(TREEDS2:.cxx=.o)
-TREEDH2      := TTree.h TChain.h
-
 TREEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 TREES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-ifeq ($(BUILDCLING),yes)
-TREEO        := $(filter-out $(TREEDO2),$(call stripsrc,$(TREES:.cxx=.o)))
-else
 TREEO        := $(call stripsrc,$(TREES:.cxx=.o))
-endif
 
 TREEDEP      := $(TREEO:.o=.d) $(TREEDO:.o=.d)
 
@@ -62,13 +51,6 @@ $(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(TREEH) $(TREEL)
 
-# pre-requisites intentionally not specified... should be called only
-# on demand after deleting the file
-$(TREEDS2):
-		@echo "Generating dictionary $@..."
-		$(MAKEDIR)
-		$(ROOTCINTTMP) -f $@ -c -DR__MANUAL_DICT $(TREEDH2) $(TREEL2)
-
 $(TREEMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TREEL)
 		$(RLIBMAP) -o $@ -l $(TREELIB) \
 		   -d $(TREELIBDEPM) -c $(TREEL)
@@ -86,4 +68,3 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(TREEDO2): CXXFLAGS += -Iinclude/cint

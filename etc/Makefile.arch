@@ -52,8 +52,7 @@ ROOTLDFLAGS  := $(shell $(RC) --ldflags)
 ROOTLIBS     := $(shell $(RC) --libs)
 ROOTGLIBS    := $(shell $(RC) --glibs)
 HASTHREAD    := $(shell $(RC) --has-thread)
-ROOTDICTTYPE := $(shell $(RC) --dicttype)
-ROOTCINT     := rootcint
+ROOTCLING    := rootcling
 
 ifeq ($(PLATFORM),macosx)
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)

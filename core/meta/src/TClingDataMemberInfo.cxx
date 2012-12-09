@@ -25,8 +25,7 @@
 
 #include "TClingDataMemberInfo.h"
 
-#include "Property.h"
-#include "TClingProperty.h"
+#include "TDictionary.h"
 #include "TClingTypeInfo.h"
 #include "TMetaUtils.h"
 #include "TClassEdit.h"
@@ -297,13 +296,13 @@ long TClingDataMemberInfo::Property() const
    long property = 0L;
    switch (GetDecl()->getAccess()) {
       case clang::AS_public:
-         property |= G__BIT_ISPUBLIC;
+         property |= kIsPublic;
          break;
       case clang::AS_protected:
-         property |= G__BIT_ISPROTECTED;
+         property |= kIsProtected;
          break;
       case clang::AS_private:
-         property |= G__BIT_ISPRIVATE;
+         property |= kIsPrivate;
          break;
       case clang::AS_none:
          // IMPOSSIBLE
@@ -314,38 +313,38 @@ long TClingDataMemberInfo::Property() const
    }
    if (const clang::VarDecl *vard = llvm::dyn_cast<clang::VarDecl>(GetDecl())) {
       if (vard->getStorageClass() == clang::SC_Static) {
-         property |= G__BIT_ISSTATIC;
+         property |= kIsStatic;
       }
    }
    if (llvm::isa<clang::EnumConstantDecl>(GetDecl())) {
       // Enumaration constant are considered to be 'static' data member in
       // the CINT (and thus ROOT) scheme.
-      property |= G__BIT_ISSTATIC;
+      property |= kIsStatic;
    }
    const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl());
    clang::QualType qt = vd->getType();
    if (llvm::isa<clang::TypedefType>(qt)) {
-      property |= G__BIT_ISTYPEDEF;
+      property |= kIsTypedef;
    }
    qt = qt.getCanonicalType();
    if (qt.isConstQualified()) {
-      property |= G__BIT_ISCONSTANT;
+      property |= kIsConstant;
    }
    while (1) {
       if (qt->isArrayType()) {
-         property |= G__BIT_ISARRAY;
+         property |= kIsArray;
          qt = llvm::cast<clang::ArrayType>(qt)->getElementType();
          continue;
       }
       else if (qt->isReferenceType()) {
-         property |= G__BIT_ISREFERENCE;
+         property |= kIsReference;
          qt = llvm::cast<clang::ReferenceType>(qt)->getPointeeType();
          continue;
       }
       else if (qt->isPointerType()) {
-         property |= G__BIT_ISPOINTER;
+         property |= kIsPointer;
          if (qt.isConstQualified()) {
-            property |= G__BIT_ISPCONSTANT;
+            property |= kIsConstPointer;
          }
          qt = llvm::cast<clang::PointerType>(qt)->getPointeeType();
          continue;
@@ -357,30 +356,30 @@ long TClingDataMemberInfo::Property() const
       break;
    }
    if (qt->isBuiltinType()) {
-      property |= G__BIT_ISFUNDAMENTAL;
+      property |= kIsFundamental;
    }
    if (qt.isConstQualified()) {
-      property |= G__BIT_ISCONSTANT;
+      property |= kIsConstant;
    }
    const clang::TagType *tt = qt->getAs<clang::TagType>();
    if (tt) {
       const clang::TagDecl *td = tt->getDecl();
       if (td->isClass()) {
-         property |= G__BIT_ISCLASS;
+         property |= kIsClass;
       }
       else if (td->isStruct()) {
-         property |= G__BIT_ISSTRUCT;
+         property |= kIsStruct;
       }
       else if (td->isUnion()) {
-         property |= G__BIT_ISUNION;
+         property |= kIsUnion;
       }
       else if (td->isEnum()) {
-         property |= G__BIT_ISENUM;
+         property |= kIsEnum;
       }
    }
    // We can't be a namespace, can we?
    //   if (dc->isNamespace() && !dc->isTranslationUnit()) {
-   //      property |= G__BIT_ISNAMESPACE;
+   //      property |= kIsNamespace;
    //   }
    return property;
 }

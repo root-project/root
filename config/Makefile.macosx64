@@ -53,16 +53,6 @@ CXXFLAGS      = -m64 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
                 $(TARGETFLAGS) $(CXX11FLAGS)
 CFLAGS        = -m64 -pipe -Wshadow -W -Wall -fsigned-char -fno-common \
                 $(EXTRA_CFLAGS) $(FINK_CFLAGS) $(TARGETFLAGS)
-CINTCXXFLAGS  = -m64 -pipe -W -Wall -Woverloaded-virtual \
-                -fsigned-char -fno-common $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
-                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
-                -DG__STD_EXCEPTION $(TARGETFLAGS) $(CXX11FLAGS)
-CINTCFLAGS    = -m64 -pipe -W -Wall -fsigned-char -fno-common \
-                $(EXTRA_CFLAGS) $(FINK_CFLAGS) \
-                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
-                -DG__STD_EXCEPTION $(TARGETFLAGS)
 COMPILER      = gnu
 
 # Linker:

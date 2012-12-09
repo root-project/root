@@ -136,7 +136,7 @@ Bool_t PyROOT::TMemberAdapter::IsPublic() const
 Bool_t PyROOT::TMemberAdapter::IsStatic() const
 {
 // test if the adapted member represents a class (data) member
-   return fMember->Property() & G__BIT_ISSTATIC;
+   return fMember->Property() & kIsStatic;
 }
 
 //____________________________________________________________________________
@@ -419,7 +419,7 @@ Bool_t PyROOT::TScopeAdapter::IsNamespace() const
 {
 // test if this scope represents a namespace
    if ( fClass.GetClass() )
-      return fClass->Property() & G__BIT_ISNAMESPACE;
+      return fClass->Property() & kIsNamespace;
 
    return kFALSE;
 }

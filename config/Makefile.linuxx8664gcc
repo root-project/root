@@ -26,15 +26,6 @@ CC            = gcc
 CXXFLAGS      = -pipe -m64 -Wshadow -Wall -W -Woverloaded-virtual \
                 -fPIC $(EXTRA_CXXFLAGS) $(CXX11FLAGS)
 CFLAGS        = -pipe -m64 -Wshadow -Wall -W -fPIC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -pipe -m64 -Wall -W -Woverloaded-virtual \
-                -fPIC $(EXTRA_CXXFLAGS) $(CXX11FLAGS) \
-                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__STD_EXCEPTION -DG__64BIT
-CINTCFLAGS    = -pipe -m64 -Wall -W -fPIC $(EXTRA_CFLAGS) \
-                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__STD_EXCEPTION -DG__64BIT
 COMPILER      = gnu
 
 # Linker:

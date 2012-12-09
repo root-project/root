@@ -323,20 +323,20 @@ public:
       if (force) {
          if ( fKey->fProperties&kNeedDelete) {
             TVirtualCollectionProxy *proxy = fKey->fType->GetCollectionProxy();
-            TPushPop helper(proxy,fKey->fCase&G__BIT_ISPOINTER ? *(void**)ptr : ptr);
+            TPushPop helper(proxy,fKey->fCase&kIsPointer ? *(void**)ptr : ptr);
             proxy->Clear("force");
          }
          if ( fVal->fProperties&kNeedDelete) {
             TVirtualCollectionProxy *proxy = fVal->fType->GetCollectionProxy();
             char *addr = ((char*)ptr)+fValOffset;
-            TPushPop helper(proxy,fVal->fCase&G__BIT_ISPOINTER ? *(void**)addr : addr);
+            TPushPop helper(proxy,fVal->fCase&kIsPointer ? *(void**)addr : addr);
             proxy->Clear("force");
          }
       }
-      if ( fKey->fCase&G__BIT_ISPOINTER ) {
+      if ( fKey->fCase&kIsPointer ) {
          fKey->DeleteItem(*(void**)ptr);
       }
-      if ( fVal->fCase&G__BIT_ISPOINTER ) {
+      if ( fVal->fCase&kIsPointer ) {
          char *addr = ((char*)ptr)+fValOffset;
          fVal->DeleteItem(*(void**)addr);
       }
@@ -365,7 +365,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
       fDelete = fType->GetDelete();
       switch(inside[inside.length()-1]) {
       case '*':
-         fCase |= G__BIT_ISPOINTER;
+         fCase |= kIsPointer;
          fSize = sizeof(void*);
          break;
       default:
@@ -382,10 +382,10 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
       fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
       if (fType && !fType->IsLoaded()) {
          if (intype != inside) {
-            fCase |= G__BIT_ISPOINTER;
+            fCase |= kIsPointer;
             fSize = sizeof(void*);
          }
-         fCase  |= G__BIT_ISCLASS;
+         fCase  |= kIsClass;
          fCtor   = fType->GetNew();
          fDtor   = fType->GetDestructor();
          fDelete = fType->GetDelete();
@@ -405,12 +405,12 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
 #endif   
          if ( !gCint->TypeInfo_IsValid(ti) ) {
             if (intype != inside) {
-               fCase |= G__BIT_ISPOINTER;
+               fCase |= kIsPointer;
                fSize = sizeof(void*);
             }
             fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
             if (fType) {
-               fCase  |= G__BIT_ISCLASS;
+               fCase  |= kIsClass;
                fCtor   = fType->GetNew();
                fDtor   = fType->GetDestructor();
                fDelete = fType->GetDelete();
@@ -418,27 +418,27 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
             else {
                // either we have an Emulated enum or a really unknown class!
                // let's just claim its an enum :(
-               fCase = G__BIT_ISENUM;
+               fCase = kIsEnum;
                fSize = sizeof(Int_t);
                fKind = kInt_t;
             }
          }
          else {
             Long_t prop = gCint->TypeInfo_Property(ti);
-            if ( prop&G__BIT_ISPOINTER ) {
+            if ( prop&kIsPointer ) {
                fSize = sizeof(void*);
             }
-            if ( prop&G__BIT_ISSTRUCT ) {
-               prop |= G__BIT_ISCLASS;
+            if ( prop&kIsStruct ) {
+               prop |= kIsClass;
             }
-            if ( prop&G__BIT_ISCLASS ) {
+            if ( prop&kIsClass ) {
                fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
                R__ASSERT(fType);
                fCtor   = fType->GetNew();
                fDtor   = fType->GetDestructor();
                fDelete = fType->GetDelete();
             }
-            else if ( prop&G__BIT_ISFUNDAMENTAL ) {
+            else if ( prop&kIsFundamental ) {
                TDataType *fundType = gROOT->GetType( intype.c_str() );
                if (fundType==0) {
                   if (intype != "long double") {
@@ -452,15 +452,15 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
                      fKind = (EDataType)kBOOL_t;
                   }
                   fSize = gCint->TypeInfo_Size(ti);
-                  R__ASSERT((fKind>0 && fKind<0x16) || (fKind==-1&&(prop&G__BIT_ISPOINTER)) );
+                  R__ASSERT((fKind>0 && fKind<0x16) || (fKind==-1&&(prop&kIsPointer)) );
                }
             }
-            else if ( prop&G__BIT_ISENUM ) {
+            else if ( prop&kIsEnum ) {
                fSize = sizeof(int);
                fKind = kInt_t;
             }
-            fCase = prop & (G__BIT_ISPOINTER|G__BIT_ISFUNDAMENTAL|G__BIT_ISENUM|G__BIT_ISCLASS);
-            if (fType == TString::Class() && (fCase&G__BIT_ISPOINTER)) {
+            fCase = prop & (kIsPointer|kIsFundamental|kIsEnum|kIsClass);
+            if (fType == TString::Class() && (fCase&kIsPointer)) {
                fCase |= kBIT_ISTSTRING;
             }
          }
@@ -493,7 +493,7 @@ void TGenCollectionProxy::Value::DeleteItem(void* ptr)
 {
    // Delete an item.
 
-   if ( ptr && fCase&G__BIT_ISPOINTER ) {
+   if ( ptr && fCase&kIsPointer ) {
       if ( fDelete ) {
          (*fDelete)(ptr);
       }
@@ -799,7 +799,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
                
                fVal   = R__CreateValue(inside[2], silent);
                fKey   = R__CreateValue(inside[1], silent);
-               fPointers = (0 != (fKey->fCase&G__BIT_ISPOINTER));
+               fPointers = (0 != (fKey->fCase&kIsPointer));
                if (fPointers || (0 != (fKey->fProperties&kNeedDelete))) {
                   fProperties |= kNeedDelete;
                }
@@ -827,7 +827,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
                break;
          }
 
-         fPointers = fPointers || (0 != (fVal->fCase&G__BIT_ISPOINTER));
+         fPointers = fPointers || (0 != (fVal->fCase&kIsPointer));
          if (fPointers || (0 != (fVal->fProperties&kNeedDelete))) {
             fProperties |= kNeedDelete;
          }
@@ -1152,7 +1152,7 @@ void TGenCollectionProxy::DeleteItem(Bool_t force, void* ptr) const
       switch (fSTL_type) {
          case TClassEdit::kMap:
          case TClassEdit::kMultiMap: {
-            if ( fKey->fCase&G__BIT_ISPOINTER ) {
+            if ( fKey->fCase&kIsPointer ) {
                if (fKey->fProperties&kNeedDelete) {
                   TVirtualCollectionProxy *proxy = fKey->fType->GetCollectionProxy();
                   TPushPop helper(proxy,*(void**)ptr);
@@ -1167,7 +1167,7 @@ void TGenCollectionProxy::DeleteItem(Bool_t force, void* ptr) const
                }
             }               
             char *addr = ((char*)ptr)+fValOffset;
-            if ( fVal->fCase&G__BIT_ISPOINTER ) {
+            if ( fVal->fCase&kIsPointer ) {
                if ( fVal->fProperties&kNeedDelete) {
                   TVirtualCollectionProxy *proxy = fVal->fType->GetCollectionProxy();
                   TPushPop helper(proxy,*(void**)addr);
@@ -1184,7 +1184,7 @@ void TGenCollectionProxy::DeleteItem(Bool_t force, void* ptr) const
             break;
          }
          default: {
-            if ( fVal->fCase&G__BIT_ISPOINTER ) {
+            if ( fVal->fCase&kIsPointer ) {
                if (fVal->fProperties&kNeedDelete) {
                   TVirtualCollectionProxy *proxy = fVal->fType->GetCollectionProxy();
                   TPushPop helper(proxy,*(void**)ptr);

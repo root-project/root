@@ -82,7 +82,7 @@ include/%.h:    $(ZIPDIRI)/%.h
 $(ZIPDS):      $(ZIPDICTH) $(ZIPL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c -DG__API $(ZIPDICTH) $(ZIPL)
+		$(ROOTCINTTMP) -f $@ -c $(ZIPDICTH) $(ZIPL)
 
 all-$(MODNAME): $(ZIPO)
 

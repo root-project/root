@@ -135,7 +135,7 @@ void TMethod::CreateSignature()
 
    TFunction::CreateSignature();
 
-   if (Property() & kIsMethConst) fSignature += " const";
+   if (Property() & kIsConstMethod) fSignature += " const";
 }
 
 //______________________________________________________________________________

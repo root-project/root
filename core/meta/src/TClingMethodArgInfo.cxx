@@ -25,9 +25,8 @@
 
 #include "TClingMethodArgInfo.h"
 
+#include "TDictionary.h"
 #include "TClingMethodInfo.h"
-#include "Property.h"
-#include "TClingProperty.h"
 #include "TClingTypeInfo.h"
 
 #include "clang/AST/ASTContext.h"
@@ -66,11 +65,11 @@ long TClingMethodArgInfo::Property() const
    const clang::FunctionDecl *fd = fMethodInfo->GetMethodDecl();
    const clang::ParmVarDecl *pvd = fd->getParamDecl(fIdx);
    if (pvd->hasDefaultArg() || pvd->hasInheritedDefaultArg()) {
-      property |= G__BIT_ISDEFAULT;
+      property |= kIsDefault;
    }
    clang::QualType qt = pvd->getOriginalType().getCanonicalType();
    if (qt.isConstQualified()) {
-      property |= G__BIT_ISCONSTANT;
+      property |= kIsConstant;
    }
    while (1) {
       if (qt->isArrayType()) {
@@ -78,14 +77,14 @@ long TClingMethodArgInfo::Property() const
          continue;
       }
       else if (qt->isReferenceType()) {
-         property |= G__BIT_ISREFERENCE;
+         property |= kIsReference;
          qt = llvm::cast<clang::ReferenceType>(qt)->getPointeeType();
          continue;
       }
       else if (qt->isPointerType()) {
-         property |= G__BIT_ISPOINTER;
+         property |= kIsPointer;
          if (qt.isConstQualified()) {
-            property |= G__BIT_ISPCONSTANT;
+            property |= kIsConstPointer;
          }
          qt = llvm::cast<clang::PointerType>(qt)->getPointeeType();
          continue;
@@ -97,7 +96,7 @@ long TClingMethodArgInfo::Property() const
       break;
    }
    if (qt.isConstQualified()) {
-      property |= G__BIT_ISCONSTANT;
+      property |= kIsConstant;
    }
    return property;
 }

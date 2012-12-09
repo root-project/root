@@ -639,15 +639,15 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
 
    //Long_t prop = m.Property() | m.Type()->Property();
    Long_t prop = gCint->DataMemberInfo_Property(m) | gCint->DataMemberInfo_TypeProperty(m);
-   if (prop & G__BIT_ISSTATIC)           return;
-   if (prop & G__BIT_ISFUNDAMENTAL)      return;
-   if (prop & G__BIT_ISENUM)             return;
-   if (mname == "G__virtualinfo")        return;
+   if (prop & kIsStatic)           return;
+   if (prop & kIsFundamental)      return;
+   if (prop & kIsEnum)             return;
+   if (mname == "G__virtualinfo")  return;
 
    int  size = sizeof(void*);
 
    int nmax = 1;
-   if (prop & G__BIT_ISARRAY) {
+   if (prop & kIsArray) {
       for (int dim = 0; dim < gCint->DataMemberInfo_ArrayDim(m); dim++) nmax *= gCint->DataMemberInfo_MaxIndex(m,dim);
    }
 
@@ -655,7 +655,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
                                              TClassEdit::kDropTrailStar) );
    TClass * clm = TClass::GetClass(clmName.c_str());
    R__ASSERT(clm);
-   if (!(prop&G__BIT_ISPOINTER)) {
+   if (!(prop & kIsPointer)) {
       size = clm->Size();
       if (size==0) size = gCint->DataMemberInfo_TypeSize(m);
    }
@@ -668,7 +668,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
 
       char *ptr = (char*)addr + i*size;
 
-      void *obj = (prop&G__BIT_ISPOINTER) ? *((void**)ptr) : (TObject*)ptr;
+      void *obj = (prop & kIsPointer) ? *((void**)ptr) : (TObject*)ptr;
 
       if (!obj)           continue;
 
@@ -2235,7 +2235,7 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
       c = inh->GetClassPointer(kTRUE); // kFALSE);
       if (c) {
          if (cl == c) {
-            if ((inh->Property() & G__BIT_ISVIRTUALBASE) != 0)
+            if ((inh->Property() & kIsVirtual) != 0)
                return -2;
             return inh->GetDelta();
          }
@@ -2264,7 +2264,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
          BaseClassInfo_t *t = gCint->BaseClassInfo_Factory(GetClassInfo());
          while (gCint->BaseClassInfo_Next(t,0)) {
             if (gCint->BaseClassInfo_Tagnum(t) == base_tagnum) {
-               if ((gCint->BaseClassInfo_Property(t) & G__BIT_ISVIRTUALBASE) != 0) {
+               if ((gCint->BaseClassInfo_Property(t) & kIsVirtualBase) != 0) {
                   break;
                }
                int off = gCint->BaseClassInfo_Offset(t);

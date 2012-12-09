@@ -15,7 +15,6 @@
 #define ROOTICONPATH  "@iconpath@"
 #define EXTRAICONPATH "@extraiconpath@"
 #define TTFFONTDIR    "@ttffontdir@"
-#define CINTINCDIR    "@cintincdir@"
 #endif
 
 #@setresuid@ R__HAS_SETRESUID   /**/

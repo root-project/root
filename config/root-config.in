@@ -53,7 +53,6 @@ altcc="@altcc@"
 altcxx="@altcxx@"
 altf77="@altf77@"
 altld="@altld@"
-dicttype=@dicttype@
 
 if test "$platform" = "win32"; then
    if [ "x$ROOTSYS" != "x" ]; then
@@ -78,11 +77,8 @@ else
    newlib="-lNew"
    rootglibs="-lGui"
    rootevelibs="-lEve -lEG -lTreePlayer -lGeom -lGed -lRGL"
-   rootlibs="-lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad \
-             -lTree -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread"
-   if test "$dicttype" = "reflex" || test "$dicttype" = "gccxml"; then
-       rootlibs="$rootlibs -lReflex"
-   fi
+   rootlibs="-lCore -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree \
+             -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread"
 fi
 
 if test "$platform" = "win32"; then
@@ -473,7 +469,7 @@ Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version]\
  [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs]\
  [--glibs] [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir]\
  [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch]\
- [--platform] [--dicttype] [--config] [--features] [--svn-revision]\
+ [--platform] [--config] [--features] [--svn-revision]\
  [--python-version] [--cc] [--cxx] [--f77] [--ld ] [--help]"
 
 if test $# -eq 0; then
@@ -776,10 +772,6 @@ while test $# -gt 0; do
       ### output all supported features
       out="$out$features"  # no space, features starts with space
       ;;
-    --dicttype)
-      ### output the dictionary type
-      out="$out $dicttype"
-      ;;
     --cc)
       ### output used C compiler
       out="$out $altcc"
@@ -822,7 +814,6 @@ while test $# -gt 0; do
       echo "  --config              Print arguments used for ./configure"
       echo "  --features            Print list of all supported features"
       echo "  --has-<feature>       Test if <feature> is compiled in"
-      echo "  --dicttype            Print dictionary generator being used"
       echo "  --version             Print the ROOT version"
       echo "  --svn-revision        Print the ROOT SVN revision number"
       echo "  --python-version      Print the Python version used by ROOT"

@@ -24,8 +24,7 @@
 
 #include "TClingTypeInfo.h"
 
-#include "Property.h"
-#include "TClingProperty.h"
+#include "TDictionary.h"
 #include "Rtypes.h" // for gDebug
 #include "TClassEdit.h"
 #include "TMetaUtils.h"
@@ -115,11 +114,11 @@ long TClingTypeInfo::Property() const
    }
    long property = 0L;
    if (llvm::isa<clang::TypedefType>(*fQualType)) {
-      property |= G__BIT_ISTYPEDEF;
+      property |= kIsTypedef;
    }
    clang::QualType QT = fQualType.getCanonicalType();
    if (QT.isConstQualified()) {
-      property |= G__BIT_ISCONSTANT;
+      property |= kIsConstant;
    }
    while (1) {
       if (QT->isArrayType()) {
@@ -127,14 +126,14 @@ long TClingTypeInfo::Property() const
          continue;
       }
       else if (QT->isReferenceType()) {
-         property |= G__BIT_ISREFERENCE;
+         property |= kIsReference;
          QT = llvm::cast<clang::ReferenceType>(QT)->getPointeeType();
          continue;
       }
       else if (QT->isPointerType()) {
-         property |= G__BIT_ISPOINTER;
+         property |= kIsPointer;
          if (QT.isConstQualified()) {
-            property |= G__BIT_ISPCONSTANT;
+            property |= kIsConstPointer;
          }
          QT = llvm::cast<clang::PointerType>(QT)->getPointeeType();
          continue;
@@ -146,32 +145,32 @@ long TClingTypeInfo::Property() const
       break;
    }
    if (QT->isBuiltinType()) {
-      property |= G__BIT_ISFUNDAMENTAL;
+      property |= kIsFundamental;
    }
    if (QT.isConstQualified()) {
-      property |= G__BIT_ISCONSTANT;
+      property |= kIsConstant;
    }
    const clang::TagType *tagQT = llvm::dyn_cast<clang::TagType>(QT.getTypePtr());
    if (tagQT) {
       // Note: Now we have class, enum, struct, union only.
       const clang::TagDecl *TD = llvm::dyn_cast<clang::TagDecl>(tagQT->getDecl());
       if (TD->isEnum()) {
-         property |= G__BIT_ISENUM;
+         property |= kIsEnum;
       } else {
          // Note: Now we have class, struct, union only.
          const clang::CXXRecordDecl *CRD =
             llvm::dyn_cast<clang::CXXRecordDecl>(TD);
          if (CRD->isClass()) {
-            property |= G__BIT_ISCLASS;
+            property |= kIsClass;
          }
          else if (CRD->isStruct()) {
-            property |= G__BIT_ISSTRUCT;
+            property |= kIsStruct;
          }
          else if (CRD->isUnion()) {
-            property |= G__BIT_ISUNION;
+            property |= kIsUnion;
          }
          if (CRD->isThisDeclarationADefinition() && CRD->isAbstract()) {
-            property |= G__BIT_ISABSTRACT;
+            property |= kIsAbstract;
          }
       }
    }
@@ -214,10 +213,10 @@ int TClingTypeInfo::RefType() const
    }
    if (is_ref) {
       if (cnt < 2) {
-         val = G__PARAREFERENCE;
+         val = kParaReference;
       }
       else {
-         val |= G__PARAREF;
+         val |= kParaRef;
       }
    }
    return val;

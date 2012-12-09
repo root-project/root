@@ -439,7 +439,7 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
 
       TIter nextglobal(globals);                //iterate through all global to find
       while ((global=(TGlobal*)nextglobal())) { // values belonging to this enum type
-         if (global->Property() & G__BIT_ISENUM) {
+         if (global->Property() & kIsEnum) {
             gtypename = global->GetTypeName();
             if (strcmp(gtypename,etypename)==0) {
                Int_t *value = (Int_t*)(global->GetAddress());

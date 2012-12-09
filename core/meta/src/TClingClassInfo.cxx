@@ -27,8 +27,7 @@
 #include "TClassEdit.h"
 #include "TClingBaseClassInfo.h"
 #include "TClingMethodInfo.h"
-#include "Property.h"
-#include "TClingProperty.h"
+#include "TDictionary.h"
 #include "TClingTypeInfo.h"
 #include "TError.h"
 #include "TMetaUtils.h"
@@ -119,36 +118,36 @@ long TClingClassInfo::ClassProperty() const
    const clang::CXXRecordDecl *CRD =
       llvm::dyn_cast<clang::CXXRecordDecl>(fDecl);
    long property = 0L;
-   property |= G__CLS_VALID;
+   property |= kClassIsValid;
    if (CRD->isAbstract()) {
-      property |= G__CLS_ISABSTRACT;
+      property |= kClassIsAbstract;
    }
    if (CRD->hasUserDeclaredConstructor()) {
-      property |= G__CLS_HASEXPLICITCTOR;
+      property |= kClassHasExplicitCtor;
    }
    if (
       !CRD->hasUserDeclaredConstructor() &&
       !CRD->hasTrivialDefaultConstructor()
    ) {
-      property |= G__CLS_HASIMPLICITCTOR;
+      property |= kClassHasImplicitCtor;
    }
    if (
       CRD->hasUserProvidedDefaultConstructor() ||
       !CRD->hasTrivialDefaultConstructor()
    ) {
-      property |= G__CLS_HASDEFAULTCTOR;
+      property |= kClassHasDefaultCtor;
    }
    if (CRD->hasUserDeclaredDestructor()) {
-      property |= G__CLS_HASEXPLICITDTOR;
+      property |= kClassHasExplicitDtor;
    }
    else if (!CRD->hasTrivialDestructor()) {
-      property |= G__CLS_HASIMPLICITDTOR;
+      property |= kClassHasImplicitDtor;
    }
    if (CRD->hasUserDeclaredCopyAssignment()) {
-      property |= G__CLS_HASASSIGNOPR;
+      property |= kClassHasAssignOpr;
    }
    if (CRD->isPolymorphic()) {
-      property |= G__CLS_HASVIRTUAL;
+      property |= kClassHasVirtual;
    }
    return property;
 }
@@ -417,7 +416,7 @@ bool TClingClassInfo::IsEnum(cling::Interpreter *interp, const char *name)
 {
    // Note: This is a static member function.
    TClingClassInfo info(interp, name);
-   if (info.IsValid() && (info.Property() & G__BIT_ISENUM)) {
+   if (info.IsValid() && (info.Property() & kIsEnum)) {
       return true;
    }
    return false;
@@ -682,10 +681,10 @@ long TClingClassInfo::Property() const
       return 0L;
    }
    long property = 0L;
-   property |= G__BIT_ISCPPCOMPILED;
+   property |= kIsCPPCompiled;
    clang::Decl::Kind DK = fDecl->getKind();
    if ((DK == clang::Decl::Namespace) || (DK == clang::Decl::TranslationUnit)) {
-      property |= G__BIT_ISNAMESPACE;
+      property |= kIsNamespace;
       return property;
    }
    // Note: Now we have class, enum, struct, union only.
@@ -694,23 +693,23 @@ long TClingClassInfo::Property() const
       return 0L;
    }
    if (TD->isEnum()) {
-      property |= G__BIT_ISENUM;
+      property |= kIsEnum;
       return property;
    }
    // Note: Now we have class, struct, union only.
    const clang::CXXRecordDecl *CRD =
       llvm::dyn_cast<clang::CXXRecordDecl>(fDecl);
    if (CRD->isClass()) {
-      property |= G__BIT_ISCLASS;
+      property |= kIsClass;
    }
    else if (CRD->isStruct()) {
-      property |= G__BIT_ISSTRUCT;
+      property |= kIsStruct;
    }
    else if (CRD->isUnion()) {
-      property |= G__BIT_ISUNION;
+      property |= kIsUnion;
    }
    if (CRD->isAbstract()) {
-      property |= G__BIT_ISABSTRACT;
+      property |= kIsAbstract;
    }
    return property;
 }

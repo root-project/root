@@ -19,12 +19,6 @@ CXX           = icc
 CC            = icc
 CXXFLAGS      = -fPIC -wd1476 $(EXTRA_CXXFLAGS)
 CFLAGS        = -fPIC $(EXTRA_CFLAGS) -restrict
-CINTCXXFLAGS  = -fPIC $(EXTRA_CXXFLAGS) \
-                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
-CINTCFLAGS    = -fPIC $(EXTRA_CFLAGS) -restrict \
-                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
 
 # Compiler version:
 ICC_MAJOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
@@ -35,16 +29,12 @@ ICC_MINOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
 ifeq ($(ICC_MAJOR),9)
 CXXFLAGS     += -wd1572
 CFLAGS       += -wd1572
-CINTCXXFLAGS += -wd1572
-CINTCFLAGS   += -wd1572
 ICC_GE_9      = $(ICC_MAJOR)
 endif
 
 ifeq ($(ICC_MAJOR),10)
 CXXFLAGS     += -wd1572 -wd873 -wd672
 CFLAGS       += -wd1572
-CINTCXXFLAGS += -wd1572 -wd873
-CINTCFLAGS   += -wd1572
 ICC_GE_9      = $(ICC_MAJOR)
 ifneq ($(ICC_MINOR),0)
 ICC_GE_101    = $(ICC_MAJOR)$(ICC_MINOR)
@@ -54,8 +44,6 @@ endif
 ifeq ($(findstring $(ICC_MAJOR),10 9),)
 CXXFLAGS     += -m64 -wd1572 -wd873 -wd672
 CFLAGS       += -m64 -wd1572
-CINTCXXFLAGS += -m64 -wd1572 -wd873
-CINTCFLAGS   += -m64 -wd1572
 ICC_GE_9      = $(ICC_MAJOR)
 ICC_GE_101    = $(ICC_MAJOR)$(ICC_MINOR)
 endif

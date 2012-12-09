@@ -324,7 +324,7 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
             classFile << enumName << " { ";
          } else
             if (access < 3) {
-               if (member->Property() & G__BIT_ISSTATIC)
+               if (member->Property() & kIsStatic)
                   classFile << "static ";
                std::string shortTypeName(fHtml->ShortType(member->GetFullTypeName()));
                fParser->DecorateKeywords(classFile, shortTypeName.c_str());
@@ -1631,7 +1631,7 @@ void TClassDocOutput::WriteMethod(std::ostream& out, TString& ret,
          out << paramGuessed;
       }
       out << ")";
-      if (guessedMethod->GetMethod()->Property() & kIsMethConst)
+      if (guessedMethod->GetMethod()->Property() & kIsConstMethod)
          out << " const";
    } else {
       fParser->DecorateKeywords(params);

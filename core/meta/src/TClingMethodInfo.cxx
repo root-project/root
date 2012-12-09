@@ -28,8 +28,7 @@
 #include "TClingCallFunc.h"
 #include "TClingClassInfo.h"
 #include "TClingMethodArgInfo.h"
-#include "Property.h"
-#include "TClingProperty.h"
+#include "TDictionary.h"
 #include "TClingTypeInfo.h"
 #include "TError.h"
 #include "TMetaUtils.h"
@@ -288,17 +287,17 @@ long TClingMethodInfo::Property() const
       return 0L;
    }
    long property = 0L;
-   property |= G__BIT_ISCOMPILED;
+   property |= kIsCompiled;
    const clang::FunctionDecl *fd = GetMethodDecl();
    switch (fd->getAccess()) {
       case clang::AS_public:
-         property |= G__BIT_ISPUBLIC;
+         property |= kIsPublic;
          break;
       case clang::AS_protected:
-         property |= G__BIT_ISPROTECTED;
+         property |= kIsProtected;
          break;
       case clang::AS_private:
-         property |= G__BIT_ISPRIVATE;
+         property |= kIsPrivate;
          break;
       case clang::AS_none:
          // IMPOSSIBLE
@@ -308,11 +307,11 @@ long TClingMethodInfo::Property() const
          break;
    }
    if (fd->getStorageClass() == clang::SC_Static) {
-      property |= G__BIT_ISSTATIC;
+      property |= kIsStatic;
    }
    clang::QualType qt = fd->getResultType().getCanonicalType();
    if (qt.isConstQualified()) {
-      property |= G__BIT_ISCONSTANT;
+      property |= kIsConstant;
    }
    while (1) {
       if (qt->isArrayType()) {
@@ -320,14 +319,14 @@ long TClingMethodInfo::Property() const
          continue;
       }
       else if (qt->isReferenceType()) {
-         property |= G__BIT_ISREFERENCE;
+         property |= kIsReference;
          qt = llvm::cast<clang::ReferenceType>(qt)->getPointeeType();
          continue;
       }
       else if (qt->isPointerType()) {
-         property |= G__BIT_ISPOINTER;
+         property |= kIsPointer;
          if (qt.isConstQualified()) {
-            property |= G__BIT_ISPCONSTANT;
+            property |= kIsConstPointer;
          }
          qt = llvm::cast<clang::PointerType>(qt)->getPointeeType();
          continue;
@@ -339,29 +338,29 @@ long TClingMethodInfo::Property() const
       break;
    }
    if (qt.isConstQualified()) {
-      property |= G__BIT_ISCONSTANT;
+      property |= kIsConstant;
    }
    if (const clang::CXXMethodDecl *md =
             llvm::dyn_cast<clang::CXXMethodDecl>(fd)) {
       if (md->getTypeQualifiers() & clang::Qualifiers::Const) {
-         property |= G__BIT_ISCONSTANT | G__BIT_ISMETHCONSTANT;
+         property |= kIsConstant | kIsConstMethod;
       }
       if (md->isVirtual()) {
-         property |= G__BIT_ISVIRTUAL;
+         property |= kIsVirtual;
       }
       if (md->isPure()) {
-         property |= G__BIT_ISPUREVIRTUAL;
+         property |= kIsPureVirtual;
       }
       if (const clang::CXXConstructorDecl *cd =
                llvm::dyn_cast<clang::CXXConstructorDecl>(md)) {
          if (cd->isExplicit()) {
-            property |= G__BIT_ISEXPLICIT;
+            property |= kIsExplicit;
          }
       }
       else if (const clang::CXXConversionDecl *cd =
                   llvm::dyn_cast<clang::CXXConversionDecl>(md)) {
          if (cd->isExplicit()) {
-            property |= G__BIT_ISEXPLICIT;
+            property |= kIsExplicit;
          }
       }
    }

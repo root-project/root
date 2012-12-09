@@ -20,14 +20,6 @@ CC            = gcc
 CXXFLAGS      = -pipe -Wall -Woverloaded-virtual $(EXTRA_CXXFLAGS) \
                 -I/usr/X11R6/include
 CFLAGS        = -pipe -Wall $(EXTRA_CFLAGS) -I/usr/X11R6/include
-CINTCXXFLAGS  = -pipe -Wall -Woverloaded-virtual $(EXTRA_CXXFLAGS) \
-                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__CYGWIN \
-                -DG__NEWSTDHEADER
-CINTCFLAGS    = -pipe -Wall $(EXTRA_CFLAGS) \
-                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__CYGWIN \
-                -DG__NEWSTDHEADER
 COMPILER      = gnu
 
 # Linker:

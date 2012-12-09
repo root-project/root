@@ -23,23 +23,8 @@ BASEDO1      := $(BASEDS1:.cxx=.o)
 BASEDO2      := $(BASEDS2:.cxx=.o)
 BASEDO3      := $(BASEDS3:.cxx=.o)
 
-# ManualBase4 only needs to be regenerated (and then changed manually) when
-# the dictionary interface changes
-BASEL4       := $(MODDIRI)/LinkDef4.h
-BASEDS4      := $(MODDIRS)/ManualBase4.cxx
-BASEDO4      := $(call stripsrc,$(BASEDS4:.cxx=.o))
-BASEH4       := TDirectory.h
-
-BASEDS       := $(BASEDS1) $(BASEDS2) $(BASEDS3) $(BASEDS4)
-ifeq ($(PLATFORM),win32)
-ifeq ($(BUILDCLING),yes)
+BASEDS       := $(BASEDS1) $(BASEDS2) $(BASEDS3)
 BASEDO       := $(BASEDO1) $(BASEDO2) $(BASEDO3)
-else
-BASEDO       := $(BASEDO1) $(BASEDO2) $(BASEDO3) $(BASEDO4)
-endif
-else
-BASEDO       := $(BASEDO1) $(BASEDO2) $(BASEDO3)
-endif
 BASEDH       := $(BASEDS:.cxx=.h)
 
 BASEH1       := $(wildcard $(MODDIRI)/T*.h)
@@ -52,15 +37,7 @@ BASEH3       := GuiTypes.h KeySymbols.h Buttons.h TTimeStamp.h TVirtualMutex.h \
 BASEH3       := $(patsubst %,$(MODDIRI)/%,$(BASEH3))
 BASEH1       := $(filter-out $(BASEH3),$(BASEH1))
 BASEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-ifeq ($(BUILDCLING),yes)
-BASES        := $(filter-out $(BASEDS4),$(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
-else
-ifeq ($(PLATFORM),win32)
-BASES        := $(filter-out $(BASEDS4),$(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
-else
 BASES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-endif
-endif
 BASEO        := $(call stripsrc,$(BASES:.cxx=.o))
 
 BASEDEP      := $(BASEO:.o=.d) $(BASEDO:.o=.d)
@@ -96,15 +73,6 @@ $(BASEDS3):     $(BASEH3) $(BASEL3) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(BASEH3) $(BASEL3)
-# pre-requisites intentionally not specified... should be called only
-# on demand after deleting the file
-$(BASEDS4):
-		@echo "Generating dictionary $@..."
-		$(MAKEDIR)
-		$(ROOTCINTTMP) -f $@ -c $(BASEH4) $(BASEL4)
-		@echo "You need to manually fix the generated file as follow:"
-		@echo "1. In ManualBase4Body.h, modify the name of the 2 functions to match the name of the CINT wrapper functions in ManualBase4.cxx"
-		@echo "2. Replace the implementation of both functions by #include \"ManualBase4Body.h\" "
 
 all-$(MODNAME): $(BASEO) $(BASEDO)
 
@@ -114,9 +82,7 @@ clean-$(MODNAME):
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(BASEDEP) \
-		   $(filter-out $(BASEDIRS)/ManualBase4.cxx, $(BASEDS)) \
-		   $(filter-out $(BASEDIRS)/ManualBase4.h, $(BASEDH))
+		@rm -f $(BASEDEP) $(BASEDS) $(BASEDH)
 
 distclean::     distclean-$(MODNAME)
 
@@ -136,8 +102,6 @@ $(BASEDO1) $(BASEDO2): CXXFLAGS += $(PCREINC)
 ifeq ($(ARCH),linuxicc)
 $(BASEDO3):     CXXFLAGS += -wd191
 endif
-$(BASEDO4): OPT = $(NOOPT)
-$(BASEDO4): CXXFLAGS += -I.
 
 # Optimize dictionary with stl containers.
 $(BASEDO2): NOOPT = $(OPT)

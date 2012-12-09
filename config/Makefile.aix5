@@ -21,12 +21,6 @@ CXXFLAGS      = -qchars=signed -qnoro -qnoroconst -qrtti=all -qstaticinline \
                 -qtls $(EXTRA_CXXFLAGS)
 CFLAGS        = -qchars=signed -qnoro -qnoroconst -qstaticinline \
                 -qtls $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -qchars=signed -qnoro -qnoroconst -qrtti=all -qstaticinline \
-                -qtls -DG__REGEXP -D_POSIX2_SOURCE -DG__P2FCAST -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
-CINTCFLAGS    = -qchars=signed -qnoro -qnoroconst -qstaticinline \
-                -qtls -DG__REGEXP -D_POSIX2_SOURCE -DG__P2FCAST -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
 MAKESHAREDLIB = cd \$$BuildDir ; $(CXX) -c $(OPT) $(CXXFLAGS) \$$IncludePath \
                 \$$SourceFiles ; /usr/vacpp/bin/makeC++SharedLib \
                 -o \$$SharedLib \$$LinkedLibs -p 0 \$$ObjectFiles

@@ -21,10 +21,6 @@ CXXFLAGS      = -pipe -W -Wall -fPIC -I/usr/X11R6/include \
                 -I/usr/local/include $(EXTRA_CXXFLAGS)
 CFLAGS        = -pipe -W -Wall -fPIC -I/usr/X11R6/include \
                 -I/usr/local/include $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -pipe -W -Wall -fPIC -DG__REGEXP $(EXTRA_CXXFLAGS) \
-                -DG__UNIX -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL
-CINTCFLAGS    = -pipe -W -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL $(EXTRA_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

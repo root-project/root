@@ -45,8 +45,6 @@
 #include "TNamed.h"
 #endif
 
-#include "Property.h"
-
 typedef void CallFunc_t;
 typedef void ClassInfo_t;
 typedef void BaseClassInfo_t;
@@ -58,30 +56,59 @@ typedef void TypeInfo_t;
 typedef void TypedefInfo_t;
 
 enum EProperty {
-   kIsClass        = G__BIT_ISCLASS,
-   kIsStruct       = G__BIT_ISSTRUCT,
-   kIsUnion        = G__BIT_ISUNION,
-   kIsEnum         = G__BIT_ISENUM,
-   kIsNamespace    = G__BIT_ISNAMESPACE,
-   kIsTypedef      = G__BIT_ISTYPEDEF,
-   kIsFundamental  = G__BIT_ISFUNDAMENTAL,
-   kIsAbstract     = G__BIT_ISABSTRACT,
-   kIsVirtual      = G__BIT_ISVIRTUAL,
-   kIsPureVirtual  = G__BIT_ISPUREVIRTUAL,
-   kIsPublic       = G__BIT_ISPUBLIC,
-   kIsProtected    = G__BIT_ISPROTECTED,
-   kIsPrivate      = G__BIT_ISPRIVATE,
-   kIsPointer      = G__BIT_ISPOINTER,
-   kIsArray        = G__BIT_ISARRAY,
-   kIsStatic       = G__BIT_ISSTATIC,
-   kIsUsingVariable= G__BIT_ISUSINGVARIABLE,
-   kIsDefault      = G__BIT_ISDEFAULT,
-   kIsReference    = G__BIT_ISREFERENCE,
-   kIsConstant     = G__BIT_ISCONSTANT,
-   kIsConstPointer = G__BIT_ISPCONSTANT,
-   kIsMethConst    = G__BIT_ISMETHCONSTANT
+   kIsClass         = 0x00000001,
+   kIsStruct        = 0x00000002,
+   kIsUnion         = 0x00000004,
+   kIsEnum          = 0x00000008,
+   kIsTypedef       = 0x00000010,
+   kIsFundamental   = 0x00000020,
+   kIsAbstract      = 0x00000040,
+   kIsVirtual       = 0x00000080,
+   kIsPureVirtual   = 0x00000100,
+   kIsPublic        = 0x00000200,
+   kIsProtected     = 0x00000400,
+   kIsPrivate       = 0x00000800,
+   kIsPointer       = 0x00001000,
+   kIsArray         = 0x00002000,
+   kIsStatic        = 0x00004000,
+   kIsDefault       = 0x00008000,
+   kIsReference     = 0x00010000,
+   kIsDirectInherit = 0x00020000,
+   kIsCCompiled     = 0x00040000,
+   kIsCPPCompiled   = 0x00080000,
+   kIsCompiled      = 0x000C0000,
+   kIsConstant      = 0x00100000,
+   kIsVirtualBase   = 0x00200000,
+   kIsConstPointer  = 0x00400000,
+   kIsExplicit      = 0x04000000,
+   kIsNamespace     = 0x08000000,
+   kIsConstMethod   = 0x10000000,
+   kIsUsingVariable = 0x20000000
 };
 
+enum EClassProperty {
+   kClassIsValid         = 0x00000001,
+   kClassHasExplicitCtor = 0x00000010,
+   kClassHasImplicitCtor = 0x00000020,
+   kClassHasCtor         = 0x00000030,
+   kClassHasDefaultCtor  = 0x00000040,
+   kClassHasAssignOpr    = 0x00000080,
+   kClassHasExplicitDtor = 0x00000100,
+   kClassHasImplicitDtor = 0x00000200,
+   kClassHasDtor         = 0x00000300,
+   kClassHasVirtual      = 0x00001000,
+   kClassIsAbstract      = 0x00002000
+};
+
+enum ERefTypeValues {
+   kParaNormal     = 0,     // not used
+   kParaReference  = 1,
+   kParaP2P        = 2,     // not used
+   kParaP2P2P      = 3,     // not used
+   kParaRef        = 100,
+   kParaRefP2P     = 102,   // not used
+   kParaRefP2P2P   = 103    // not used
+};
 
 class TDictionary : public TNamed {
 

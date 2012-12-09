@@ -322,7 +322,7 @@ void TDocParser::AddClassDataMembersRecursively(TBaseClass* bc) {
             mtype = 1;
       }
 
-      const Int_t flagEnumConst = G__BIT_ISENUM | G__BIT_ISCONSTANT | G__BIT_ISSTATIC;
+      const Int_t flagEnumConst = kIsEnum | kIsConstant | kIsStatic;
       if ((dm->Property() & flagEnumConst) == flagEnumConst
           && dm->GetDataType() && dm->GetDataType()->GetType() == kInt_t) {
          mtype = 5;
@@ -2257,7 +2257,7 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
       TDocMethodWrapper* method = 0;
       while ((method = (TDocMethodWrapper *) nextMethod())) {
          if (name == method->GetName()
-             && isconst == ((method->GetMethod()->Property() & kIsMethConst) > 0)
+             && isconst == ((method->GetMethod()->Property() & kIsConstMethod) > 0)
              && method->GetMethod()->GetListOfMethodArgs()->GetSize() == nparams) {
             candidates.Add(method);
          }

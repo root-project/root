@@ -21,12 +21,6 @@ CXXFLAGS      = -pipe -Wall -fsigned-char -fPIC \
                 -I/usr/X11/include $(EXTRA_CXXFLAGS)
 CFLAGS        = -pipe -Wall -fPIC -fsigned-char \
                 -I/usr/X11/include $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -pipe -Wall -fPIC -fsigned-char -DG__REGEXP -DG__UNIX \
-                -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                $(EXTRA_CXXFLAGS)
-CINTCFLAGS    = -pipe -Wall -fPIC -fsigned-char -DG__REGEXP -DG__UNIX \
-                -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                $(EXTRA_CFLAGS)
 COMPILER      = gnu
 
 # Linker:

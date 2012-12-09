@@ -101,8 +101,6 @@ ROOFITLIBDEPM         += $(MATHMORELIB)
 ROOSTATSLIBDEPM       += $(MATHMORELIB)
 HISTFACTORYLIBDEPM    += $(MATHMORELIB)
 endif
-CINTEXLIBDEPM          = $(REFLEXLIB)
-REFLEXDICTLIBDEPM      = $(REFLEXLIB)
 RAUTHLIBDEPM           = $(NETLIB) $(IOLIB)
 GLBSAUTHLIBDEPM        = $(RAUTHLIB) $(NETLIB)
 KRB5AUTHLIBDEPM        = $(RAUTHLIB) $(NETLIB)
@@ -205,8 +203,6 @@ ROOFITCORELIBDEP       = $(ROOFITCORELIBDEPM)
 ROOFITLIBDEP           = $(ROOFITLIBDEPM)
 ROOSTATSLIBDEP         = $(ROOSTATSLIBDEPM)
 HISTFACTORYLIBDEP      = $(HISTFACTORYLIBDEPM)
-CINTEXLIBDEP           = $(CINTEXLIBDEPM)
-REFEXDICTLIBDEP        = $(REFLEXDICTLIBDEPM)
 RAUTHLIBDEP            = $(RAUTHLIBDEPM)
 GLBSAUTHLIBDEP         = $(GLBSAUTHLIBDEPM)
 KRB5AUTHLIBDEP         = $(KRB5AUTHLIBDEPM)
@@ -370,8 +366,6 @@ ROOFITLIBEXTRA         += lib/libMathMore.lib
 ROOSTATSLIBEXTRA       += lib/libMathMore.lib
 HISTFACTORYLIBEXTRA    += lib/libMathMore.lib
 endif
-CINTEXLIBEXTRA          = lib/libReflex.lib
-REFLEXDICTLIBEXTRA      = lib/libReflex.lib
 RAUTHLIBEXTRA           = lib/libNet.lib lib/libRIO.lib
 GLBSAUTHLIBEXTRA        = lib/libRootAuth.lib lib/libNet.lib
 KRB5AUTHLIBEXTRA        = lib/libRootAuth.lib lib/libNet.lib
@@ -504,8 +498,6 @@ ROOFITLIBEXTRA         += -lMathMore
 ROOSTATSLIBEXTRA       += -lMathMore
 HISTFACTORYLIBEXTRA    += -lMathMore
 endif
-CINTEXLIBEXTRA          = -Llib -lReflex
-REFLEXDICTLIBEXTRA      = -Llib -lReflex
 RAUTHLIBEXTRA           = -Llib -lNet -lRIO
 GLBSAUTHLIBEXTRA        = -Llib -lRootAuth -lNet
 KRB5AUTHLIBEXTRA        = -Llib -lRootAuth -lNet

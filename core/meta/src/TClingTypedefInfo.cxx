@@ -25,8 +25,7 @@
 
 #include "TClingTypedefInfo.h"
 
-#include "Property.h"
-#include "TClingProperty.h"
+#include "TDictionary.h"
 #include "TError.h"
 #include "TMetaUtils.h"
 #include "Rtypes.h" // for gDebug
@@ -187,11 +186,11 @@ long TClingTypedefInfo::Property() const
       return 0L;
    }
    long property = 0L;
-   property |= G__BIT_ISTYPEDEF;
+   property |= kIsTypedef;
    const clang::TypedefDecl *td = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
    clang::QualType qt = td->getUnderlyingType().getCanonicalType();
    if (qt.isConstQualified()) {
-      property |= G__BIT_ISCONSTANT;
+      property |= kIsConstant;
    }
    while (1) {
       if (qt->isArrayType()) {
@@ -199,14 +198,14 @@ long TClingTypedefInfo::Property() const
          continue;
       }
       else if (qt->isReferenceType()) {
-         property |= G__BIT_ISREFERENCE;
+         property |= kIsReference;
          qt = llvm::cast<clang::ReferenceType>(qt)->getPointeeType();
          continue;
       }
       else if (qt->isPointerType()) {
-         property |= G__BIT_ISPOINTER;
+         property |= kIsPointer;
          if (qt.isConstQualified()) {
-            property |= G__BIT_ISPCONSTANT;
+            property |= kIsConstPointer;
          }
          qt = llvm::cast<clang::PointerType>(qt)->getPointeeType();
          continue;
@@ -218,10 +217,10 @@ long TClingTypedefInfo::Property() const
       break;
    }
    if (qt->isBuiltinType()) {
-      property |= G__BIT_ISFUNDAMENTAL;
+      property |= kIsFundamental;
    }
    if (qt.isConstQualified()) {
-      property |= G__BIT_ISCONSTANT;
+      property |= kIsConstant;
    }
    return property;
 }

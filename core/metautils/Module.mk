@@ -18,13 +18,11 @@ METAUTILSH     := $(filter-out $(MODDIRI)/TMetaUtils.%,\
 METAUTILSS     := $(filter-out $(MODDIRS)/TMetaUtils.%,\
   $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
 
-ifeq ($(BUILDCLING),yes)
 METAUTILSTH     += $(MODDIRI)/TMetaUtils.h
 METAUTILSTS     += $(MODDIRS)/TMetaUtils.cxx
 METAUTILSCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGCXXFLAGS)))
 ifneq ($(CXX:g++=),$(CXX))
 METAUTILSCXXFLAGS += -Wno-shadow -Wno-unused-parameter
-endif
 endif
 
 METAUTILSO     := $(call stripsrc,$(METAUTILSS:.cxx=.o))
@@ -47,11 +45,9 @@ INCLUDEFILES += $(METAUTILSDEP)
 
 STLDICTS =
 
-ifeq ($(BUILDCLING),yes)
-
 STLDICTS_NAME = vector list deque map map2 set \
-                  multimap multimap2 multiset \
-                  stack queue complex
+                multimap multimap2 multiset \
+                stack queue complex
 ifneq ($(PLATFORM),win32)
 # FIX THEM!
   CINTSTLDLLNAMES += valarray
@@ -95,8 +91,6 @@ STLDICTSMAPS = $(STLDICTS:.$(SOEXT)=.rootmap)
 ALLLIBS    += $(STLDICTS)
 ALLMAPS    += $(STLDICTSMAPS)
    
-endif
-
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
@@ -106,24 +100,25 @@ include/%.h:    $(METAUTILSDIRI)/%.h
 $(METAUTILSDS): $(METAUTILSH) $(METAUTILSL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c -DG__API $(METAUTILSH) $(METAUTILSL)
+		$(ROOTCINTTMP) -f $@ -c $(METAUTILSH) $(METAUTILSL)
 
 all-$(MODNAME): $(METAUTILSO) $(METAUTILSDO) $(STLDICTS)
 
 clean-$(MODNAME):
-		@rm -f $(METAUTILSO) $(METAUTILSDO) $(STLDICTS_OBJ) $(STLDICTS_DEP)
+		@rm -f $(METAUTILSO) $(METAUTILSDO) $(STLDICTS_OBJ) \
+		   $(STLDICTS_DEP)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(METAUTILSDEP) $(METAUTILSDS) $(METAUTILSDH) $(STLDICTS_OBJ) $(STLDICTS_DEP) $(STLDICTS_SRC)
+		@rm -f $(METAUTILSDEP) $(METAUTILSDS) $(METAUTILSDH) \
+		   $(STLDICTS_OBJ) $(STLDICTS_DEP) $(STLDICTS_SRC) \
+		   $(STLDICTSMAPS)
 
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(METAUTILSTO): CXXFLAGS += $(METAUTILSCXXFLAGS)
 $(METAUTILSO): CXXFLAGS += $(METAUTILSCXXFLAGS)
-ifeq ($(BUILDCLING),yes)
 $(METAUTILSO): $(LLVMDEP)
 $(METAUTILSTO): $(LLVMDEP)
-endif

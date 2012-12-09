@@ -20,22 +20,11 @@ METADH       := $(METADS:.cxx=.h)
 
 METAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 METAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-ifeq ($(BUILDCLING),yes)
 METADCLINGCXXFLAGS:= -DR__WITH_CLING
 METACLINGCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGCXXFLAGS)))
 ifneq ($(CXX:g++=),$(CXX))
 METACLINGCXXFLAGS += -Wno-shadow -Wno-unused-parameter
 endif
-METAH        := $(filter-out $(MODDIRI)/TCint.h,$(METAH))
-METAS        := $(filter-out $(MODDIRS)/TCint.cxx,$(METAS))
-else
-METAH        := $(filter-out $(MODDIRI)/TCintWithCling.h \
-                $(MODDIRI)/TCling%.h,$(METAH))
-METAS        := $(filter-out $(MODDIRS)/TCintWithCling.cxx \
-                $(MODDIRS)/TCling%.cxx,$(METAS))
-METADCXXCLING:=
-endif
-METAHFORD    := $(filter-out $(MODDIRI)/TCling%,$(METAH))
 METAO        := $(call stripsrc,$(METAS:.cxx=.o))
 
 METADEP      := $(METAO:.o=.d) $(METADO:.o=.d)
@@ -52,10 +41,10 @@ INCLUDEFILES += $(METADEP)
 include/%.h:    $(METADIRI)/%.h
 		cp $< $@
 
-$(METADS):      $(METAHFORD) $(METAL) $(ROOTCINTTMPDEP) $(LLVMDEP)
+$(METADS):      $(METAH) $(METAL) $(ROOTCINTTMPDEP) $(LLVMDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c -DG__API $(METADCLINGCXXFLAGS) $(METAHFORD) $(METAL)
+		$(ROOTCINTTMP) -f $@ -c $(METADCLINGCXXFLAGS) $(METAH) $(METAL)
 
 all-$(MODNAME): $(METAO) $(METADO)
 

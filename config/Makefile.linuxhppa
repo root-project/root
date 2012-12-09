@@ -20,15 +20,6 @@ CC            = gcc
 CXXFLAGS      = -pipe -Wall -W -Woverloaded-virtual \
                 -fPIC $(EXTRA_CXXFLAGS)
 CFLAGS        = -pipe -Wall -W -fPIC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -pipe -Wall -W -Woverloaded-virtual \
-                -fPIC $(EXTRA_CXXFLAGS) \
-                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__STD_EXCEPTION 
-CINTCFLAGS    = -pipe -Wall -W -fPIC $(EXTRA_CFLAGS) \
-                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__STD_EXCEPTION 
 COMPILER      = gnu
 
 # Linker:
