@@ -34,6 +34,13 @@ only apply the C++ search rules but also search in the outer
 scopes and for this example could actually return ::Symbol instead
 of (as Cling now does) issuing a compilation error.
 
+Cling no longer supports refering to a class template instantiation
+of a class template that has all default template parameter without
+the &lt;&gt;. With:
+<pre>template <typename T = int> class vec {};</pre>.  With Cling
+(and any standard compliant compiler), using <em>vec&lt;&gt;</em>
+is allowed (but <em>vec</em> is not).
+
 <h4>Cling not yet implemented features</h4>
 
 In this release Cling does not support the following (but we intended
