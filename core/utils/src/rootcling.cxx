@@ -4450,11 +4450,11 @@ int main(int argc, char **argv)
    }
 
    // cling-only arguments
-   clingArgs.push_back("-fsyntax-only");
-   std::string interpInclude
-      = TMetaUtils::GetInterpreterExtraIncludePath(ROOTBUILDVAL);
+   std::string interpInclude = TMetaUtils::GetInterpreterExtraIncludePath(ROOTBUILDVAL);
    clingArgs.push_back(interpInclude);
-
+   clingArgs.push_back("-D__ROOTCLING__");
+   clingArgs.push_back("-fsyntax-only");
+   
    std::vector<const char*> clingArgsC;
    for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
         iclingArgs < nclingArgs; ++iclingArgs) {
@@ -4467,7 +4467,11 @@ int main(int argc, char **argv)
    if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
 // CINT uses to define a few header implicitly, we need to do it explicitly.
        || interp.declare("#include <assert.h>\n"
-                         "#include <stdlib.h>\n") != cling::Interpreter::kSuccess
+                         "#include <stdlib.h>\n"
+                         "#include <stddef.h>\n"
+                         "#include <math.h>\n"
+                         "#include <string.h>\n"
+                         ) != cling::Interpreter::kSuccess
 #ifdef ROOTBUILD
        || interp.declare("#include \"Rtypes.h\"") != cling::Interpreter::kSuccess
        || interp.declare("#include \"TClingRuntime.h\"") != cling::Interpreter::kSuccess
@@ -4491,8 +4495,6 @@ int main(int argc, char **argv)
    }
        
    gInterp = &interp;
-
-   
 
    // For the list of 'opaque' typedef to also include string, we have to include it now.
    interp.declare("#include <string>");
@@ -5007,6 +5009,7 @@ int main(int argc, char **argv)
    (*dictHdrOut) << "#include <stdlib.h>\n";
    (*dictHdrOut) << "#include <math.h>\n";
    (*dictHdrOut) << "#include <string.h>\n";
+   (*dictHdrOut) << "#include <assert.h>\n";
    (*dictHdrOut) << "#define G__DICTIONARY\n";
    (*dictHdrOut) << "#include \"RConfig.h\"\n"
                  << "#include \"TClass.h\"\n"

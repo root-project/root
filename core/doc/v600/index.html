@@ -93,6 +93,11 @@ rootcling may now issue:
    TBuffer &operator<<(TBuffer &,const THit *);
 </pre>if the operator&lt;&lt; declaration is missing.</li>
 </ul>
+</p>
+To steer the parsing done during the execution of rootcling, a new macro:
+<em>__ROOTCLING__</em> is now defined during the parsing.  The macros
+<em>__CINT__</em> and <em>__MAKECINT__</em> are defined only when looking
+for <tt>#pragma</tt> statement.
 
 <h4>ACliC</h4>
 
