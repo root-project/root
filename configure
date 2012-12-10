@@ -2388,8 +2388,6 @@ if test "x$enable_builtin_llvm" = "x" || \
     if test "x$llvmconfig" = "x" ; then
         if test ! "x$LLVMDIR" = "x" ; then
             llvmconfig="$LLVMDIR/bin"
-        else
-            result "no (needs --with-llvm-config or \$LLVMDIR)"
         fi
     fi
     if test ! "x$llvmconfig" = "x"; then
@@ -2402,11 +2400,13 @@ if test "x$enable_builtin_llvm" = "x" || \
             llvmdir='"'"`dirname $llvmdir`"'"'
         fi
     fi
-fi
-if test "x$hasllvm" = "xundef"; then
-    enable_builtin_llvm="yes"
-else
-    result "$llvmconfig" # have llvm
+    if test "x$hasllvm" = "xundef"; then
+        enable_builtin_llvm="yes"
+        llvmconfig=""
+        result "no (needs --with-llvm-config or \$LLVMDIR)"
+    else
+        result "$llvmconfig"
+    fi
 fi
 
 ######################################################################
