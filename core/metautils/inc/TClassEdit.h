@@ -25,7 +25,6 @@ namespace std {
 }
 #endif
 
-#ifdef R__HAS_CLING
 namespace cling {
    class Interpreter;
 }
@@ -34,7 +33,6 @@ namespace ROOT {
       class TNormalizedCtxt;
    }
 }
-#endif
 
 // TClassEdit is used to manipulate class and type names.
 //
@@ -87,9 +85,7 @@ namespace TClassEdit {
       TSplitType &operator=(const TSplitType &); // intentionally not implemented
    };
 
-#ifdef R__HAS_CLING
    void        Init(cling::Interpreter &interp,ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
-#endif
 
    std::string CleanType (const char *typeDesc,int mode = 0,const char **tail=0);
    bool        IsDefAlloc(const char *alloc, const char *classname);

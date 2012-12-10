@@ -45,20 +45,6 @@ template<> RooCFunction2Map<double,int,int> *RooCFunction2Ref<double,int,int>::_
 
 namespace RooFit {
 
-#ifndef R__HAS_CLING
-  RooAbsReal* bindFunction(const char* name,void* func,RooAbsReal& x, RooAbsReal& y) {
-    // This function is for use in CINT, which does not properly handly
-    // overloading on function pointer types, so we do it here explicitly
-    if (RooCintUtils::matchFuncPtrArgs(func,"double,double")) return new RooCFunction2Binding<Double_t,Double_t,Double_t>(name,name,(CFUNCD2DD)func,x,y) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"int,double")) return new RooCFunction2Binding<Double_t,Int_t,Double_t>(name,name,(CFUNCD2ID)func,x,y) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"unsigned int,double")) return new RooCFunction2Binding<Double_t,UInt_t,Double_t>(name,name,(CFUNCD2UD)func,x,y) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"double,int")) return new RooCFunction2Binding<Double_t,Double_t,Int_t>(name,name,(CFUNCD2DI)func,x,y) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"int,int")) return new RooCFunction2Binding<Double_t,Int_t,Int_t>(name,name,(CFUNCD2II)func,x,y) ;
-    oocoutE((TObject*)0,InputArguments) << "bindFunction::ERROR No matching RooCFunction2Binding<> class found for function " << RooCintUtils::functionName(func) << endl ;
-    return 0 ;
-  }
-#endif
-
   RooAbsReal* bindFunction(const char* name,CFUNCD2DD func,RooAbsReal& x, RooAbsReal& y) {
     return new RooCFunction2Binding<Double_t,Double_t,Double_t>(name,name,func,x,y) ;
   }
@@ -78,20 +64,6 @@ namespace RooFit {
   RooAbsReal* bindFunction(const char* name,CFUNCD2II func,RooAbsReal& x, RooAbsReal& y) {
     return new RooCFunction2Binding<Double_t,Int_t,Int_t>(name,name,func,x,y) ;
   }
-
-#ifndef R__HAS_CLING
-  RooAbsPdf* bindPdf(const char* name,void* func,RooAbsReal& x, RooAbsReal& y) {
-    // This function is for use in CINT, which does not properly handly
-    // overloading on function pointer types, so we do it here explicitly
-    if (RooCintUtils::matchFuncPtrArgs(func,"double,double")) return new RooCFunction2PdfBinding<Double_t,Double_t,Double_t>(name,name,(CFUNCD2DD)func,x,y) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"int,double")) return new RooCFunction2PdfBinding<Double_t,Int_t,Double_t>(name,name,(CFUNCD2ID)func,x,y) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"unsigned int,double")) return new RooCFunction2PdfBinding<Double_t,UInt_t,Double_t>(name,name,(CFUNCD2UD)func,x,y) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"double,int")) return new RooCFunction2PdfBinding<Double_t,Double_t,Int_t>(name,name,(CFUNCD2DI)func,x,y) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"int,int")) return new RooCFunction2PdfBinding<Double_t,Int_t,Int_t>(name,name,(CFUNCD2II)func,x,y) ;
-    oocoutE((TObject*)0,InputArguments) << "bindPdf::ERROR No matching RooCFunction2PdfBinding<> class found for function " << RooCintUtils::functionName(func) << endl ;
-    return 0 ;
-  }
-#endif
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD2DD func,RooAbsReal& x, RooAbsReal& y) {
     return new RooCFunction2PdfBinding<Double_t,Double_t,Double_t>(name,name,func,x,y) ;

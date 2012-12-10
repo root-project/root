@@ -335,22 +335,10 @@ void TMethodCall::Execute(void *object)
    R__LOCKGUARD2(gCINTMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-#ifdef R__HAS_CLING
    if (!fDtorOnly && fMethod[0]=='~') {
       Error("Execute","TMethodCall can no longer be use to call the operator delete and the destructor at the same time");
    }
    gCint->CallFunc_Exec(fFunc,address); 
-#else
-   gCint->SetTempLevel(1);
-  if (fDtorOnly) {
-      Long_t saveglobalvar = gCint->Getgvp();
-      gCint->Setgvp((Long_t)address);
-      gCint->CallFunc_Exec(fFunc,address);
-      gCint->Setgvp(saveglobalvar);
-   } else
-      gCint->CallFunc_Exec(fFunc,address);
-   gCint->SetTempLevel(-1);
-#endif
 }
 
 //______________________________________________________________________________

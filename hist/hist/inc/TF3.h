@@ -67,13 +67,6 @@ public:
       fNdim = 3;
    } 
 
-#ifndef R__HAS_CLING
-   // constructor used by CINT 
-   TF3(const char *name, void *fcn, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Int_t npar=0);
-   TF3(const char *name, void *ptr,  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, const char *className ); 
-   TF3(const char *name, void *ptr, void *,Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, const char *className, const char *methodName = 0);
-#endif
-
    TF3(const TF3 &f3);
    TF3& operator=(const TF3 &rhs);
    virtual   ~TF3();

@@ -352,45 +352,6 @@ namespace ROOT
       return true;
    }
 
-#ifndef R__HAS_CLING
-   //--------------------------------------------------------------------------
-   void CreateNameTypeMap( G__ClassInfo &cl, MembersTypeMap_t& nameType )
-   {
-      // Create the data member name-type map for given class
-
-      G__DataMemberInfo member( cl );
-      std::string dims;
-      while( member.Next() ) {
-         if (((member.Type()->Property() & G__BIT_ISCONSTANT)
-              && (member.Type()->Property() & G__BIT_ISENUM))  // an enum const
-             || (member.Property() & G__BIT_ISSTATIC)) // a static member
-            continue;
-         if (strcmp("G__virtualinfo", member.Name()) == 0) continue;
-         
-         dims.clear();
-         for (int dim = 0; dim < member.ArrayDim(); dim++) {
-            char cdim[24];
-            static const int maxsize = sizeof(cdim)/sizeof(cdim[0]);
-#ifdef _MSC_VER
-           int result = _snprintf(cdim,maxsize,"[%ld]",member.MaxIndex(dim));
-#else
-           int result = snprintf(cdim,maxsize,"[%ld]",member.MaxIndex(dim));
-#endif
-           if (result > maxsize) {
-               std::cout << "Error: array size is to large, the size '" << member.MaxIndex(dim) << "' does not fit in " << maxsize << " characters.\n";
-            }
-            dims += cdim;
-         }         
-         nameType[member.Name()] = TSchemaType(member.Type()->Name(),dims.c_str());
-      }
-
-      G__BaseClassInfo base( cl );
-      while( base.Next() ) {
-         nameType[base.Name()] = TSchemaType(base.Name(),"");
-      }
-   }
-#endif
-
    //---------------------------------------------------------------------------
    Bool_t HasValidDataMembers(SchemaRuleMap_t& rule,
                               MembersTypeMap_t& members )

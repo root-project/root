@@ -45,21 +45,6 @@ template<> RooCFunction3Map<double,unsigned int,unsigned int,double>* RooCFuncti
 
 namespace RooFit {
 
-#ifndef R__HAS_CLING
-  RooAbsReal* bindFunction(const char* name,void* func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) {
-    // This function is for use in CINT, which does not properly handly
-    // overloading on function pointer types, so we do it here explicitly
-    if (RooCintUtils::matchFuncPtrArgs(func,"double,double,double")) return new RooCFunction3Binding<Double_t,Double_t,Double_t,Double_t>(name,name,(CFUNCD3DDD)func,x,y,z) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"double,double,bool")) return new RooCFunction3Binding<Double_t,Double_t,Double_t,Bool_t>(name,name,(CFUNCD3DDB)func,x,y,z) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"double,int,int")) return new RooCFunction3Binding<Double_t,Double_t,Int_t,Int_t>(name,name,(CFUNCD3DII)func,x,y,z) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"unsigned int,double,unsigned int")) return new RooCFunction3Binding<Double_t,UInt_t,Double_t,UInt_t>(name,name,(CFUNCD3UDU)func,x,y,z) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"unsigned int,double,double")) return new RooCFunction3Binding<Double_t,UInt_t,Double_t,Double_t>(name,name,(CFUNCD3UDD)func,x,y,z) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"unsigned int,unsigned int,double")) return new RooCFunction3Binding<Double_t,UInt_t,UInt_t,Double_t>(name,name,(CFUNCD3UUD)func,x,y,z) ;
-    oocoutE((TObject*)0,InputArguments) << "bindFunction::ERROR No matching RooCFunction3Binding<> class found for function " << RooCintUtils::functionName(func) << endl ;
-    return 0 ;
-  }
-#endif
-
   RooAbsReal* bindFunction(const char* name,CFUNCD3DDD func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) {
     return new RooCFunction3Binding<Double_t,Double_t,Double_t,Double_t>(name,name,func,x,y,z) ;
   }
@@ -83,22 +68,6 @@ namespace RooFit {
   RooAbsReal* bindFunction(const char* name,CFUNCD3UUD func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) {
     return new RooCFunction3Binding<Double_t,UInt_t,UInt_t,Double_t>(name,name,func,x,y,z) ;
   }
-
-
-#ifndef R__HAS_CLING
-  RooAbsPdf* bindPdf(const char* name,void* func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) {
-    // This function is for use in CINT, which does not properly handly
-    // overloading on function pointer types, so we do it here explicitly
-    if (RooCintUtils::matchFuncPtrArgs(func,"double,double,double")) return new RooCFunction3PdfBinding<Double_t,Double_t,Double_t,Double_t>(name,name,(CFUNCD3DDD)func,x,y,z) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"double,double,bool")) return new RooCFunction3PdfBinding<Double_t,Double_t,Double_t,Bool_t>(name,name,(CFUNCD3DDB)func,x,y,z) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"double,int,int")) return new RooCFunction3PdfBinding<Double_t,Double_t,Int_t,Int_t>(name,name,(CFUNCD3DII)func,x,y,z) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"unsigned int,double,unsigned int")) return new RooCFunction3PdfBinding<Double_t,UInt_t,Double_t,UInt_t>(name,name,(CFUNCD3UDU)func,x,y,z) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"unsigned int,double,double")) return new RooCFunction3PdfBinding<Double_t,UInt_t,Double_t,Double_t>(name,name,(CFUNCD3UDD)func,x,y,z) ;
-    if (RooCintUtils::matchFuncPtrArgs(func,"unsigned int,unsigned int,double")) return new RooCFunction3PdfBinding<Double_t,UInt_t,UInt_t,Double_t>(name,name,(CFUNCD3UUD)func,x,y,z) ;
-    oocoutE((TObject*)0,InputArguments) << "bindPdf::ERROR No matching RooCFunction3PdfBinding<> class found for function " << RooCintUtils::functionName(func) << endl ;
-    return 0 ;
-  }
-#endif
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD3DDD func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) {
     return new RooCFunction3PdfBinding<Double_t,Double_t,Double_t,Double_t>(name,name,func,x,y,z) ;

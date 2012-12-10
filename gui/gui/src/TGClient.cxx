@@ -57,7 +57,6 @@ void TriggerDictionaryInitalization_G__Gui1();
 class TGClientInit {
 public:
    TGClientInit() { 
-#ifdef R__HAS_CLING
       if (ROOT::gROOTLocal && ROOT::gROOTLocal->IsBatch()) {
          // For now check if the heaeder files (or the module containing them)
          // has been loaded in Cling.
@@ -65,12 +64,6 @@ public:
          // __before__ the TGClient creation which will induce the creation 
          // of a TClass object which will need the dictionary for TGClient!
          TriggerDictionaryInitalization_G__Gui1();
-#else
-      if (gROOT && gROOT->IsBatch()) {
-         // Insure that the CINT dictionary is initialized __before__ the TGClient creation which
-         // will induce the creation of a TClass object which will need the dictionary for TGClient!
-         G__cpp_setup_tagtableG__Gui1(); 
-#endif
          new TGClient();
       }
       TApplication::NeedGraphicsLibs(); 
@@ -133,11 +126,7 @@ TGClient::TGClient(const char *dpyName)
       return;
    }
 
-#ifdef R__HAS_CLING
    if (fXfd >= 0 && !ROOT::gROOTLocal->IsBatch()) {
-#else
-   if (fXfd >= 0 && !gROOT->IsBatch()) {
-#endif
       TGInputHandler *xi = new TGInputHandler(this, fXfd);
       if (fXfd) gSystem->AddFileHandler(xi);
       // X11 events are handled via gXDisplay->Notify() in

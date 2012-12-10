@@ -327,7 +327,6 @@ GSLVERSION     := @gslversion@
 
 BUILTINLLVM    := @builtinllvm@
 LLVMCONFIG     := @llvmconfig@
-BUILDCLING     := @buildcling@
 
 BUILDROOFIT    := @buildroofit@
 

@@ -2378,50 +2378,35 @@ rm -f conftest.mk conftest conftest.cxx
 #
 ### echo %%% Cling - LLVM/clang based interpreter prototype
 #
-hascling="undef"
 hasllvm="undef"
 llvmdir="/**/"
-clingextrares=""
-if test ! "x$enable_cling" = "xno"; then
-    message "Checking for llvm-config"
-    if test "x$enable_builtin_llvm" = "x" || \
-       test "x$enable_builtin_llvm" = "xno" ; then
+if test "x$enable_builtin_llvm" = "x" || \
+   test "x$enable_builtin_llvm" = "xno" ; then
+    message "Checking for llvm-config for external llvm"
 	
-        # allow LLVMDIR instead of --with-llvm-config
-        if test "x$llvmconfig" = "x" ; then
-            if test ! "x$LLVMDIR" = "x" ; then
-                llvmconfig="$LLVMDIR/bin"
-            else
-                result "no"
-                clingextrares="(needs --with-llvm-config or \$LLVMDIR)"
-            fi
+    # allow LLVMDIR instead of --with-llvm-config
+    if test "x$llvmconfig" = "x" ; then
+        if test ! "x$LLVMDIR" = "x" ; then
+            llvmconfig="$LLVMDIR/bin"
+        else
+            result "no (needs --with-llvm-config or \$LLVMDIR)"
         fi
-        if test ! "x$llvmconfig" = "x"; then
-            if test -d "$llvmconfig"; then
-                llvmconfig=$llvmconfig/llvm-config
-            fi
-            if test -f $llvmconfig && test -x $llvmconfig; then
-                hascling="define"
-                hasllvm="define"
-                llvmdir="`dirname $llvmconfig`"
-                llvmdir='"'"`dirname $llvmdir`"'"'
-            fi
-        fi
-    else
-        hascling="define"
     fi
-else
-    enable_builtin_llvm="no"
+    if test ! "x$llvmconfig" = "x"; then
+        if test -d "$llvmconfig"; then
+            llvmconfig=$llvmconfig/llvm-config
+        fi
+        if test -f $llvmconfig && test -x $llvmconfig; then
+            hasllvm="define"
+            llvmdir="`dirname $llvmconfig`"
+            llvmdir='"'"`dirname $llvmdir`"'"'
+        fi
+    fi
 fi
-if test "x$hascling" = "xundef"; then
-    enable_cling="no"
-    message "Checking whether to integrate experimental cling"
-    result "no $clingextrares"
+if test "x$hasllvm" = "xundef"; then
+    enable_builtin_llvm="yes"
 else
     result "$llvmconfig" # have llvm
-    enable_cling="yes"
-    message "Checking whether to integrate experimental cling"
-    result "yes"
 fi
 
 ######################################################################
@@ -4384,12 +4369,7 @@ check_explicit "$enable_ldap" "$enable_ldap_explicit" \
 if test ! "x$enable_python" = "xno" ; then
     # PyROOT depends on cling
     message "Checking for PyROOT prerequisites"
-    if test ! "x$enable_cling" = "xyes"; then
-        enable_python="no"
-        result "no (cling disabled)"
-    else
-	result "yes"
-    fi
+    result "yes"
 fi
 if test ! "x$enable_python" = "xno" ; then
     # Check for Python include and library
@@ -6599,7 +6579,6 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@lzmaincdir@|$lzmaincdir|"            \
     -e "s|@lzmalib@|$lzmalib|"                  \
     -e "s|@lzmalibdir@|$lzmalibdir|"            \
-    -e "s|@buildcling@|$enable_cling|"          \
     -e "s|@buildroofit@|$enable_roofit|"        \
     -e "s|@buildminuit2@|$enable_minuit2|"      \
     -e "s|@buildunuran@|$enable_unuran|"        \
@@ -6837,7 +6816,6 @@ sed \
     -e "s|@hasmathmore@|$hasmathmore|"     \
     -e "s|@haspthread@|$haspthread|"       \
     -e "s|@hasxft@|$hasxft|"               \
-    -e "s|@hascling@|$hascling|"           \
     -e "s|@hascocoa@|$hascocoa|"           \
     -e "s|@usec++11@|$usecxx11|"           \
     -e "s|@uselibc++11@|$uselibcxx11|"     \

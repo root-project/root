@@ -23,10 +23,6 @@
 
 #include "RooCintUtils.h"
 
-#ifndef R__HAS_CLING
-#include "Api.h"
-#endif
-
 #include "RooMsgService.h"
 #include "TInterpreter.h"
 #include <string.h>
@@ -38,13 +34,6 @@ using namespace std ;
 
 namespace RooCintUtils 
 {
-
-#ifndef R__HAS_CLING
-  const char* functionName(void* func) 
-  {
-    return G__p2f2funcname(func);
-  }
-#endif
 
   pair<list<string>,unsigned int> ctorArgs(const char* classname, UInt_t nMinArg) 
   {
@@ -144,65 +133,6 @@ namespace RooCintUtils
     gInterpreter->ClassInfo_Delete(cls);
     return kFALSE ;
   }
-  
-#ifndef R__HAS_CLING
-  Bool_t matchFuncPtrArgs(void* func, const char* args) 
-  {
-    // Returns TRUE if given pointer to function takes true arguments as listed in string args
-    
-    // Retrieve CINT name of function
-    const char* fname=G__p2f2funcname(func);
-    if (!fname) {
-      oocoutE((TObject*)0,InputArguments) << "bindFunction::ERROR CINT cannot resolve name of function " << func << endl ;
-      return kFALSE ;
-    }
-    
-    // Seperate namespace part from method name
-    char buf[1024] ;
-    strlcpy(buf,fname,256) ;
-    const char* methodName(0), *scopeName = buf ;
-    for(int i=strlen(buf)-1 ; i>0 ; i--) {
-      if (buf[i]==':' && buf[i-1]==':') {
-	buf[i-1] = 0 ;
-	methodName = buf+i+1 ;
-	break ;
-      }
-    }
-    
-    // Get info on scope
-    ClassInfo_t* scope = gInterpreter->ClassInfo_Factory(scopeName);
-    
-    // Loop over all methods in scope
-    MethodInfo_t* method = gInterpreter->MethodInfo_Factory(scope);
-    while(gInterpreter->MethodInfo_Next(method)) {
-      // If method name matches, check argument list
-      if (string(methodName?methodName:"")==gInterpreter->MethodInfo_Name(method)) {
-	
-	// Construct list of arguments
-	string s ;
-	MethodArgInfo_t* arg = gInterpreter->MethodArgInfo_Factory(method);
-      while(gInterpreter->MethodArgInfo_Next(arg)) {
-	if (s.length()>0) s += "," ;
-        s += gInterpreter->MethodArgInfo_TrueTypeName(arg) ;
-      }      
-      
-      gInterpreter->MethodArgInfo_Delete(arg);
-      if (s==args) {
-        gInterpreter->ClassInfo_Delete(scope);
-        gInterpreter->MethodInfo_Delete(method);
-	return kTRUE ;
-      }
-      }
-    }
-    
-    gInterpreter->ClassInfo_Delete(scope);
-    gInterpreter->MethodInfo_Delete(method);
-    // Fill s with comma separate list of methods true argument names
-    return kFALSE ;
-  }
-  
-#endif
-
 }
 
 Bool_t RooCintUtils::isTypeDef(const char* trueName, const char* aliasName)
