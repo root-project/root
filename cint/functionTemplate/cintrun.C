@@ -17,7 +17,7 @@ TObjString* methodToObjString(TMethod* m) {
       out += arg->GetFullTypeName();
    }
    out += ")";
-   if (m->Property() & kIsMethConst)
+   if (m->Property() & kIsConstMethod)
       out += " const";
    return pout;
 }
