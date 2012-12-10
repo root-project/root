@@ -6305,6 +6305,9 @@ fi
 if test -d star ; then
    rm -rf star
 fi
+if test -d cint ; then
+   rm -rf cint
+fi
 if test -d include/cint ; then
    rm -rf include/cint
 fi
