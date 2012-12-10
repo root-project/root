@@ -42,6 +42,7 @@ ROOTCLINGTMPS   := $(call stripsrc,$(ROOTCLINGS:.cxx=_tmp.cxx))
 ROOTCLINGTMPO   := $(ROOTCLINGTMPS:.cxx=.o)
 ROOTCLINGDEP    := $(ROOTCLINGO:.o=.d) $(ROOTCLINGTMPO:.o=.d) $(ROOTCLINGUTILO:.o=.d)
 
+ROOTCINTEXE     := bin/rootcint$(EXEEXT)
 ROOTCLINGTMPEXE := $(call stripsrc,$(UTILSDIRS)/rootcling_tmp$(EXEEXT))
 ROOTCLINGEXE    := bin/rootcling$(EXEEXT)
 ROOTCINTTMP     := $(ROOTCLINGTMPEXE)
