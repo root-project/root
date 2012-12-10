@@ -139,6 +139,9 @@ bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
 // returns true when declaration is found and no error should be emitted.
 //
 bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
+   // User must be able to redefine the names that come from a file.
+   if (R.isForRedeclaration())
+      return false;
 
    Sema &SemaR = m_Interpreter->getSema();
    ASTContext& C = SemaR.getASTContext();
