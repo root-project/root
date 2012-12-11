@@ -37,7 +37,7 @@ all:    $(TARGETLIB)
 
 $(DICT): $(HDRS)
 	@echo "Generating dictionary $@..."
-	$(ROOTCINT) -f $@ -c $^
+	$(ROOTCLING) -f $@ -c $^
 
 $(TARGETLIB): $(OBJS) $(DICTO)
 ifeq ($(PLATFORM),macosx)

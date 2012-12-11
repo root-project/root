@@ -43,7 +43,7 @@ all:	$(TARGETPRG) $(TARGETLIB)
 
 $(DICT): $(HDRS)
 	@echo "Generating dictionary $@..."
-	$(ROOTCINT) -f $@ -c $^
+	$(ROOTCLING) -f $@ -c $^
 
 $(TARGETPRG): $(XSOBJS) $(DBOBJS) $(DICTO)
 	$(LD) $(LDFLAGS) $^ $(GLIBS) $(OutPutOpt)$@

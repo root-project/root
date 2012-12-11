@@ -125,7 +125,7 @@ $(RHTML):  $(RHTMLO)
 
 rhtmlDict.$(SrcSuf): rhtml.h LinkDef.h
 		@echo "Generating dictionary $@..."
-		@rootcint -f $@ -c rhtml.h LinkDef.h
+		@rootcling -f $@ -c rhtml.h LinkDef.h
 
 #------------------------------------------------------------------------------
 

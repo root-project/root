@@ -138,7 +138,7 @@ $(ROOTSHOWER):  $(ROOTSHOWERO) $(ROOTSHOWERRES)
 
 RootShowerDict.$(SrcSuf): MyParticle.h MyDetector.h MyEvent.h RSLinkDef.h
 		@echo "Generating dictionary $@..."
-		@rootcint -f $@ -c MyParticle.h MyDetector.h MyEvent.h RSLinkDef.h
+		$rootcling -f $@ -c MyParticle.h MyDetector.h MyEvent.h RSLinkDef.h
 
 #------------------------------------------------------------------------------
 

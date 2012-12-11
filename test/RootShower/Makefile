@@ -57,7 +57,7 @@ endif
 
 RootShowerDict.$(SrcSuf): MyParticle.h MyDetector.h MyEvent.h RSLinkDef.h
 		@echo "Generating dictionary $@..."
-		@rootcint -f $@ -c $^
+		$(ROOTCLING) -f $@ -c $^
 
 clean:
 		@rm -f $(OBJS) *.res core

@@ -53,7 +53,7 @@ $(RHTML):     $(RHTMLO)
 
 rhtmlDict.$(SrcSuf): rhtml.h LinkDef.h
 		@echo "Generating dictionary $@..."
-		@rootcint -f $@ -c $^
+		$(ROOTCLING) -f $@ -c $^
 
 clean:
 		@rm -f $(OBJS) core
