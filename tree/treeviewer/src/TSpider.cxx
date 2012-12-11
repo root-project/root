@@ -368,8 +368,8 @@ void TSpider::DeleteVariable(const char* varexp)
       fMax[ui-1] = fMax[ui];
       fAve[ui-1] = fAve[ui];
    }
-   fMin[fNcols-1] = FLT_MAX;
-   fMax[fNcols-1] = -FLT_MAX;
+   fMin[fNcols-1] = DBL_MAX;
+   fMax[fNcols-1] = -DBL_MAX;
    fAve[fNcols-1] = 0;
    --fNcols;
 
@@ -829,8 +829,8 @@ void TSpider::InitArrays(Int_t newsize)
             memmin[i] = fMin[i];
             memave[i] = fAve[i];
          } else {
-            memmax[i] = -FLT_MAX;
-            memmin[i] = FLT_MAX;
+            memmax[i] = -DBL_MAX;
+            memmin[i] = DBL_MAX;
             memave[i] = 0;
          }
       }
@@ -859,8 +859,8 @@ void TSpider::InitVariables(Long64_t firstentry, Long64_t nentries)
    fAve= new Double_t [fArraySize];
 
    for(i=0;i<fArraySize;++i){
-      fMax[i]= -FLT_MAX;
-      fMin[i]= FLT_MAX;
+      fMax[i]= -DBL_MAX;
+      fMin[i]= DBL_MAX;
       fAve[i]=0;
    }
 

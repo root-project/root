@@ -905,8 +905,8 @@ void TSelectorDraw::Begin(TTree *tree)
    if (!fW)             fW  = new Double_t[(Int_t)fTree->GetEstimate()];
 
    for (i = 0; i < fValSize; ++i) {
-      fVmin[i] = FLT_MAX;
-      fVmax[i] = -FLT_MAX;
+      fVmin[i] = DBL_MAX;
+      fVmax[i] = -DBL_MAX;
    }
 }
 
@@ -1511,8 +1511,8 @@ void TSelectorDraw::TakeEstimate()
       vmaxOld[i] = fVmax[i];
    }
    for (i = 0; i < fValSize; ++i) {
-      fVmin[i] = FLT_MAX;
-      fVmax[i] = - FLT_MAX;
+      fVmin[i] = DBL_MAX;
+      fVmax[i] = - DBL_MAX;
    }
    //__________________________1-D histogram_______________________
    if (fAction ==  1) {
@@ -1618,7 +1618,7 @@ void TSelectorDraw::TakeEstimate()
       TH2 *h2 = (TH2*)fObject;
       Bool_t process2 = kFALSE;
       if (h2->TestBit(TH1::kCanRebin)) {
-         if (vminOld[2] == FLT_MAX)
+         if (vminOld[2] == DBL_MAX)
             process2 = kTRUE;
          for (i = 0; i < fValSize && i < 4; i++) {
             fVmin[i] = vminOld[i];

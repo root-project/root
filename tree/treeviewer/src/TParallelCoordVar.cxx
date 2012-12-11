@@ -385,8 +385,8 @@ void TParallelCoordVar::GetMinMaxMean()
 {
    //Get mean, min and max of thos variable
    Double_t min,max,ave = 0;
-   min = FLT_MAX;
-   max = -FLT_MAX;
+   min = DBL_MAX;
+   max = -DBL_MAX;
    Long64_t first,nentries;
    first = fParallel->GetCurrentFirst();
    nentries = fParallel->GetCurrentN();
