@@ -48,7 +48,7 @@ $(RLIBMAP): $(RLIBMAPO)
 	$(LD) $(LDFLAGS) -o $@ $< imagehlp.lib
 endif
 
-all-$(MODNAME): $(ROOTCLINGTMPEXE) $(ROOTCLINGEXE) $(RLIBMAP)
+all-$(MODNAME): $(ROOTCLINGTMPEXE) $(ROOTCLINGEXE) $(ROOTCINTEXE) $(RLIBMAP)
 
 clean-$(MODNAME):
 	@rm -f $(ROOTCLINGTMPO) $(ROOTCLINGO) $(ROOTCLINGUTILO) $(RLIBMAPO)
@@ -57,7 +57,7 @@ clean:: clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 	@rm -f $(ROOTCLINGDEP) $(ROOTCLINGTMPEXE) $(ROOTCLINGEXE) \
-	   $(RLIBMAPDEP) $(RLIBMAP) \
+	   $(ROOTCINTEXE) $(RLIBMAPDEP) $(RLIBMAP) \
 	   $(call stripsrc,$(UTILSDIRS)/*.exp $(UTILSDIRS)/*.lib \
 	      $(UTILSDIRS)/*_tmp.cxx)
 
