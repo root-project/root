@@ -4459,7 +4459,11 @@ int main(int argc, char **argv)
       clingArgsC.push_back(clingArgs[iclingArgs].c_str());
    }
 
+#ifdef R__LLVMRESOURCEDIR
+   gResourceDir = R__LLVMRESOURCEDIR;
+#else
    gResourceDir = TMetaUtils::GetLLVMResourceDir(ROOTBUILDVAL);
+#endif
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              gResourceDir.c_str());
    if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
