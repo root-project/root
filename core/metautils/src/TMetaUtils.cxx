@@ -875,8 +875,10 @@ clang::QualType GetFullyQualifiedType(const clang::ASTContext& Ctx,
       prefix = CreateNestedNameSpecifierForScopeOf(Ctx,QT.getTypePtr());
 
       // move the qualifiers on the outer type (avoid 'std::const string'!)
-      prefix_qualifiers = QT.getLocalQualifiers();
-      QT = clang::QualType(QT.getTypePtr(),0);
+      if (prefix) {
+         prefix_qualifiers = QT.getLocalQualifiers();
+         QT = clang::QualType(QT.getTypePtr(),0);
+      }
    }
    
    // In case of template specializations iterate over the arguments and 
