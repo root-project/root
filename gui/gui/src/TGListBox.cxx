@@ -930,8 +930,9 @@ Bool_t TGLBContainer::HandleDoubleClick(Event_t *ev)
          DoubleClicked(f, ev->fCode);
          DoubleClicked(f, ev->fCode, ev->fXRoot, ev->fYRoot);
       }
+      return kTRUE;
    }
-   return kTRUE;
+   return TGContainer::HandleDoubleClick(ev);
 }
 
 //______________________________________________________________________________
@@ -1583,7 +1584,7 @@ Bool_t TGListBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                }
                break;
             case kCT_ITEMDBLCLICK:
-               {
+               if (!GetMultipleSelections()) {
                   TGLBEntry *entry = GetSelectedEntry();
                   if (entry) {
                      if (entry->InheritsFrom(TGTextLBEntry::Class())) {
