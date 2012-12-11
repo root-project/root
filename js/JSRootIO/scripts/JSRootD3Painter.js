@@ -2985,25 +2985,32 @@ function createFillPatterns(svg, id, color) {
       if (stack['fHists'].length == 0) return;
       var histos = stack['fHists'];
       var opt = "";
-      var histo = stack['fHistogram'];
+      var h, histo = stack['fHistogram'];
       if (hframe) frame = hframe['frame'];
-      else {
-         hframe = this.createFrame(vis, pad, histo, null);
-      }
-      if (histo['_typename'].match(/\bJSROOTIO.TH1/))
-         this.drawHistogram1D(vis, pad, histo, hframe);
-      else if (histo['_typename'].match(/\bJSROOTIO.TH2/))
-         this.drawHistogram2D(vis, pad, histo, hframe);
-      hframe['xmin'] = histo['fXaxis']['fXmin'];
-      hframe['xmax'] = histo['fXaxis']['fXmax'];
-      hframe['ymin'] = histo['fYaxis']['fXmin'];
-      hframe['ymax'] = histo['fYaxis']['fXmax'];
+      else hframe = this.createFrame(vis, pad, histo, null);
+      if ('redraw' in histo) // already drawn histo, so lets draw a clone
+         h = JSROOTCore.clone(histo);
+      else
+         h = histo;
+      if (h['_typename'].match(/\bJSROOTIO.TH1/))
+         this.drawHistogram1D(vis, pad, h, hframe);
+      else if (h['_typename'].match(/\bJSROOTIO.TH2/))
+         this.drawHistogram2D(vis, pad, h, hframe);
+      hframe['xmin'] = h['fXaxis']['fXmin'];
+      hframe['xmax'] = h['fXaxis']['fXmax'];
+      hframe['ymin'] = h['fYaxis']['fXmin'];
+      hframe['ymax'] = h['fYaxis']['fXmax'];
       for (var i=0; i<histos.length; ++i) {
-         histos[i]['fName'] += i;
-         if (histos[i]['_typename'].match(/\bJSROOTIO.TH1/))
-            this.drawHistogram1D(vis, pad, histos[i], hframe);
-         else if (histos[i]['_typename'].match(/\bJSROOTIO.TH2/))
-            this.drawHistogram2D(vis, pad, histos[i], hframe);
+         if ('redraw' in histo)
+            h = JSROOTCore.clone(histos[i]);
+         else
+            h = histos[i];
+         h['fName'] += i;
+         // add the same option (until proper drawing is implemented)
+         h['fOption'] += "same";
+         // only draw TH1s (for the time being)
+         if (h['_typename'].match(/\bJSROOTIO.TH1/))
+            this.drawHistogram1D(vis, pad, h, hframe);
       }
    };
 
