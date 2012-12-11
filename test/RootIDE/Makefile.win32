@@ -125,7 +125,7 @@ $(RIDE):  $(RIDEO)
 
 RIDEDict.$(SrcSuf): TGRootIDE.h LinkDef.h
 		@echo "Generating dictionary $@..."
-		@rootcint -f $@ -c TGRootIDE.h LinkDef.h
+		@rootcling -f $@ -c TGRootIDE.h LinkDef.h
 
 #------------------------------------------------------------------------------
 

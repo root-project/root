@@ -52,7 +52,7 @@ $(RIDE):     $(RIDEO)
 
 RIDEDict.$(SrcSuf): TGRootIDE.h LinkDef.h
 		@echo "Generating dictionary $@..."
-		@rootcint -f $@ -c $^
+		$(ROOTCLING) -f $@ -c $^
 
 clean:
 		@rm -f $(OBJS) core
