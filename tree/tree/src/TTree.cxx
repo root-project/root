@@ -5241,7 +5241,7 @@ Double_t TTree::GetMaximum(const char* columname)
       return 0;
    }
    TBranch* branch = leaf->GetBranch();
-   Double_t cmax = -FLT_MAX;
+   Double_t cmax = -DBL_MAX;
    for (Long64_t i = 0; i < fEntries; ++i) {
       Long64_t entryNumber = this->GetEntryNumber(i);
       if (entryNumber < 0) break;
