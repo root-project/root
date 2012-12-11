@@ -119,12 +119,11 @@ $(TESTIO):        $(TESTIOOBJ) libTrackDict.$(DllSuf)
 ifneq ($(USE_REFLEX),)
 TrackDict.$(SrcSuf): 	Track.h TrackDict.xml
 			@echo "Generating dictionary $@ using gccxml ..."
-			#rootcint -gccxml -f $@ -c $^	
 			genreflex Track.h --selection_file=TrackDict.xml -o TrackDict.cxx -I$(ROOTSYS)/include
 else
 TrackDict.$(SrcSuf): 	Track.h TrackLinkDef.h
-			@echo "Generating dictionary $@ using rootcint ..."
-			rootcint -f $@ -c $^	
+			@echo "Generating dictionary $@ using rootcling ..."
+			$(ROOTCLING) -f $@ -c $^	
 endif
 
 
