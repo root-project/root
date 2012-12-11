@@ -43,4 +43,15 @@ root/aclic/withspace.test: utils
      $(TESTTIMEACTION) \
      fi ) 
 
-clingtest: $(CLING_TESTS)
+cling-$(SUCCESS_FILE): $(CLING_TESTS)
+	@touch cling-$(SUCCESS_FILE)
+
+clingtest: cling-$(SUCCESS_FILE)
+	@len=`echo Cling tests in $(CALLDIR) | wc -c `;end=`expr 68 - $$len`; \
+           printf 'Cling tests in %s %*.*s ' $(CALLDIR) $$end $$end $(DOTS) ;
+ifeq ($(RUNNINGWITHTIMING),)
+	@if [ -f cling-$(SUCCESS_FILE) ] ; then printf 'OK\n' ; else printf 'FAIL\n' ; fi
+else
+	@if [ -f cling-$(SUCCESS_FILE) ] ; then printf 'OK' ; else printf 'FAIL\n' ; fi
+endif
+
