@@ -3005,6 +3005,8 @@ function createFillPatterns(svg, id, color) {
             h = JSROOTCore.clone(histos[i]);
          else
             h = histos[i];
+         if ('fOption' in stack)
+            h['fOption'] += stack['fOption'];
          h['fName'] += i;
          // add the same option (until proper drawing is implemented)
          h['fOption'] += "same";
