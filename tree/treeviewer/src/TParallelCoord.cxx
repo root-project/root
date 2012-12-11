@@ -465,7 +465,7 @@ Double_t TParallelCoord::GetGlobalMax()
 {
    // return the global maximum.
 
-   Double_t gmax=-FLT_MAX;
+   Double_t gmax=-DBL_MAX;
    TIter next(fVarList);
    TParallelCoordVar* var;
    while ((var = (TParallelCoordVar*)next())) {
@@ -480,7 +480,7 @@ Double_t TParallelCoord::GetGlobalMin()
 {
    // return the global minimum.
 
-   Double_t gmin=FLT_MAX;
+   Double_t gmin=DBL_MAX;
    TIter next(fVarList);
    TParallelCoordVar* var;
    while ((var = (TParallelCoordVar*)next())) {

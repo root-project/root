@@ -1118,7 +1118,7 @@ Double_t TChain::GetMaximum(const char* columname)
 {
    // -- Return maximum of column with name columname.
 
-   Double_t theMax = -FLT_MAX;
+   Double_t theMax = -DBL_MAX;
    for (Int_t file = 0; file < fNtrees; file++) {
       Long64_t first = fTreeOffset[file];
       LoadTree(first);
@@ -1135,7 +1135,7 @@ Double_t TChain::GetMinimum(const char* columname)
 {
    // -- Return minimum of column with name columname.
 
-   Double_t theMin = FLT_MAX;
+   Double_t theMin = DBL_MAX;
    for (Int_t file = 0; file < fNtrees; file++) {
       Long64_t first = fTreeOffset[file];
       LoadTree(first);
