@@ -21,12 +21,14 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenRecovery"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingImplicitAuto"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingSmartInclude"
-CALLROOTEXE += -e "\#define ClingWorkAroundValuePrinterNotFullyQualified"
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenUnnamedReturn"
-CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectFileLoc"
+CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedDetection"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedInclude"
+CALLROOTEXE += -e "\#define ClingWorkAroundValuePrinterNotFullyQualified"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotNamespace"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotInclude"
+CALLROOTEXE += -e "\#define ClingWorkAroundNoDotOptimization"
+CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectFileLoc"
 
 # Not fully investigated:
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenMakeProject"
@@ -36,7 +38,6 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMissingUnloading"
 
 # Fixes used when building library via ACLiC
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndInline"
-
 
 # variable to be used in Makefiles.
 ClingWorkAroundMissingImplicitAuto = yes
@@ -60,7 +61,8 @@ ClingWorkAroundNoDotInclude = yes              # See trello card about .include
 ClingWorkAroundScriptClassDef = yes            # See https://savannah.cern.ch/bugs/index.php?99268
 ClingWorkAroundMultipleInclude = yes           # File are included each time a module that contains them is 
                                                # loaded.  Should go away with the modules
-
+ClingWorkAroundNoDotOptimization = yes         # See https://savannah.cern.ch/bugs/index.php?99339
+ClingWorkAroundUnnamedDetection = yes          # See https://savannah.cern.ch/bugs/index.php?99341
 # Not fully investigated:
 ClingWorkAroundBrokenMakeProject = yes
 

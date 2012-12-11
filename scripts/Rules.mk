@@ -650,7 +650,7 @@ UTILS_PREREQ =  $(UTILS_LIBS)
 utils:  $(UTILS_LIBS) 
 
 copiedEvent$(ExeSuf): $(EVENTDIR)/bigeventTest.success
-	$(CMDECHO) cp $(EVENTDIR)/libEvent.* $(EVENTDIR)/Event.h .
+	$(CMDECHO) cp $(EVENTDIR)/libEvent.* $(EVENTDIR)/Event.h $(EVENTDIR)/EventDict_rdict.pcm .
 	$(CMDECHO) cp $(EVENTDIR)/Event$(ExeSuf) ./copiedEvent$(ExeSuf)
 ifeq ($(PLATFORM),win32)
 	$(CMDECHO) if [ -e $(EVENTDIR)/Event$(ExeSuf).manifest ] ; then cp $(EVENTDIR)/Event$(ExeSuf).manifest ./copiedEvent$(ExeSuf).manifest ; fi
