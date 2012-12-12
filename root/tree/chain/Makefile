@@ -59,7 +59,14 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
+execCleanup.success: EXTRA_DIFFOPTS += -w
+execmissingIndex.success: EXTRA_DIFFOPTS += -w
 
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+execCleanup.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+execmissingIndex.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+execresetbranch.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif
 
 subdir: subdir.log
 	$(TestDiff)
