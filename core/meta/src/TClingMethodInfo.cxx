@@ -300,7 +300,8 @@ long TClingMethodInfo::Property() const
          property |= kIsPrivate;
          break;
       case clang::AS_none:
-         // IMPOSSIBLE
+         if (fd->getDeclContext()->isNamespace()) 
+            property |= kIsPublic;
          break;
       default:
          // IMPOSSIBLE

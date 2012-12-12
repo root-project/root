@@ -305,7 +305,11 @@ long TClingDataMemberInfo::Property() const
          property |= kIsPrivate;
          break;
       case clang::AS_none:
-         // IMPOSSIBLE
+         if (GetDecl()->getDeclContext()->isNamespace()) {
+            property |= kIsPublic;
+         } else {
+            // IMPOSSIBLE
+         }
          break;
       default:
          // IMPOSSIBLE
