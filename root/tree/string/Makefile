@@ -60,6 +60,10 @@ endif
 ReadFile: ReadFile.log ReadFile.ref
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+ReadFile.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+leaflist.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif
 
 leaflist: leaflist.log leaflist.ref
-	$(TestDiff)
+	$(TestDiffW)
