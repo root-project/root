@@ -67,4 +67,8 @@ cachedchain: cachedchain.log
 	$(TestDiff)
 
 multiTree: multiTree.log
-	$(TestDiff)
+	$(TestDiffW)
+
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+multiTree.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif
