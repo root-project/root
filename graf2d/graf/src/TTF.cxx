@@ -304,7 +304,7 @@ void TTF::PrepareString(const wchar_t *string)
          glyph++;
          fgNumGlyphs++;
       }
-      if (index == 3) {
+      if (*p == ' ') {
          NbTBlank++;
       } else {
          NbTBlank = 0;
