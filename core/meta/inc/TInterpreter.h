@@ -33,7 +33,7 @@ class TMethod;
 class TObjArray;
 class TVirtualMutex;
 
-R__EXTERN TVirtualMutex *gCINTMutex;
+R__EXTERN TVirtualMutex *gClingMutex;
 
 class TInterpreter : public TNamed {
 

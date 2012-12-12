@@ -79,7 +79,7 @@ using namespace std;
 // Mutex to protect CINT and META operations
 // (exported to be used for similar cases in related classes)
 
-TVirtualMutex* gCINTMutex = 0;
+TVirtualMutex* gClingMutex = 0;
 
 void *gMmallocDesc = 0; //is used and set in TMapFile
 namespace {
@@ -765,7 +765,7 @@ TClass::TClass() :
 {
    // Default ctor.
 
-   R__LOCKGUARD2(gCINTMutex);
+   R__LOCKGUARD2(gClingMutex);
    fDeclFileLine   = -2;    // -2 for standalone TClass (checked in dtor)
 }
 
@@ -794,7 +794,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    // Normally you would use TClass::GetClass("class") to get access to a
    // TClass object for a certain class.
 
-   R__LOCKGUARD2(gCINTMutex);
+   R__LOCKGUARD2(gClingMutex);
 
    if (!gROOT)
       ::Fatal("TClass::TClass", "ROOT system not initialized");
@@ -839,7 +839,7 @@ TClass::TClass(const char *name, Version_t cversion,
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
-   R__LOCKGUARD2(gCINTMutex);
+   R__LOCKGUARD2(gClingMutex);
    Init(name,cversion, 0, 0, 0, dfil, ifil, dl, il,silent);
    SetBit(kUnloaded);
 }
@@ -869,7 +869,7 @@ TClass::TClass(const char *name, Version_t cversion,
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
 
-   R__LOCKGUARD2(gCINTMutex);
+   R__LOCKGUARD2(gClingMutex);
    // use info
    Init(name, cversion, &info, isa, showmembers, dfil, ifil, dl, il, silent);
 }
@@ -1152,7 +1152,7 @@ TClass::~TClass()
 {
    // TClass dtor. Deletes all list that might have been created.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
    
    // Remove from the typedef hashtables.
    if (fgClassTypedefHash && TestBit (kHasNameMapNode)) {
@@ -1407,7 +1407,7 @@ void TClass::AdoptSchemaRules( ROOT::TSchemaRuleSet *rules )
 {
    // Adopt a new set of Data Model Evolution rules.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
 
    delete fSchemaRules;
    fSchemaRules = rules;
@@ -1450,7 +1450,7 @@ void TClass::AddRef(TClassRef *ref)
    // Register a TClassRef object which points to this TClass object.
    // When this TClass object is deleted, 'ref' will be 'Reset'.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
    if (fRefStart==0) {
       fRefStart = ref;
    } else {
@@ -1534,7 +1534,7 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
    // If pointer is not 0, uses the object at pointer
    // otherwise creates a temporary object of this class.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
 
    // Only do this once.
    if (fRealData) {
@@ -1663,7 +1663,7 @@ void TClass::BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl)
 {
    // Build the list of real data for an emulated class
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
 
    TVirtualStreamerInfo *info;
    if (Property() & kIsAbstract) {
@@ -1731,7 +1731,7 @@ void TClass::CalculateStreamerOffset() const
    // its base class TObject. The pointer can be adjusted by
    // that offset to access any virtual method of TObject like
    // Streamer() and ShowMembers().
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
    if (!fIsOffsetStreamerSet && fClassInfo) {
       // When called via TMapFile (e.g. Update()) make sure that the dictionary
       // gets allocated on the heap and not in the mapped file.
@@ -1790,7 +1790,7 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp,
             CallFunc_t* ism = gCint->CallFunc_Factory();
             Long_t offset = 0;
             
-            R__LOCKGUARD2(gCINTMutex);
+            R__LOCKGUARD2(gClingMutex);
             gCint->CallFunc_SetFuncProto(ism,fClassInfo,"ShowMembers", "TMemberInspector&", &offset);
             if (fIsOffsetStreamerSet && offset != fOffsetStreamer) {
                Error("CallShowMembers", "Logic Error: offset for Streamer() and ShowMembers() differ!");
@@ -1812,7 +1812,7 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp,
             gInterpreter->InspectMembers(insp, obj, this);
             return kTRUE;
          } else {
-            R__LOCKGUARD2(gCINTMutex);
+            R__LOCKGUARD2(gClingMutex);
             gCint->CallFunc_ResetArg(fInterShowMembers);
             gCint->CallFunc_SetArg(fInterShowMembers,(Long_t) &insp);
             void* address = (void*) (((Long_t) obj) + fOffsetStreamer);
@@ -2259,7 +2259,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
    if (offset == -2) {
       // Can we get the offset from CINT?
       if (cl->GetClassInfo()) {
-         R__LOCKGUARD(gCINTMutex);
+         R__LOCKGUARD(gClingMutex);
          Long_t base_tagnum = gCint->ClassInfo_Tagnum(cl->GetClassInfo());
          BaseClassInfo_t *t = gCint->BaseClassInfo_Factory(GetClassInfo());
          while (gCint->BaseClassInfo_Next(t,0)) {
@@ -2927,7 +2927,7 @@ TList *TClass::GetListOfDataMembers()
 {
    // Return list containing the TDataMembers of a class.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
    if (!fClassInfo) {
       if (!fData) fData = new TList;
       return fData;
@@ -2947,7 +2947,7 @@ TList *TClass::GetListOfMethods()
 {
    // Return list containing the TMethods of a class.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
    if (!fClassInfo) {
       if (!fMethod) fMethod = new THashList;
       return fMethod;
@@ -2979,7 +2979,7 @@ TList *TClass::GetListOfAllPublicMethods()
    // - once finished, loop over resulting list and remove all private and
    //   protected methods.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
    if (!fAllPubMethod) {
       fAllPubMethod = new TList;
 
@@ -3016,7 +3016,7 @@ TList *TClass::GetListOfAllPublicDataMembers()
    // classes. Refers to a subset of the data members in GetListOfDatamembers()
    // so don't do GetListOfAllPublicDataMembers()->Delete().
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
    if (!fAllPubData) {
       fAllPubData = new TList;
       TIter next(GetListOfDataMembers());
@@ -3078,7 +3078,7 @@ void TClass::RemoveRef(TClassRef *ref)
 {
    // Unregister the TClassRef object.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
    if (ref==fRefStart) {
       fRefStart = ref->fNext;
       if (fRefStart) fRefStart->fPrevious = 0;
@@ -3096,7 +3096,7 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
 {
    // Inform the other objects to replace this object by the new TClass (newcl)
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
    //we must update the class pointers pointing to 'this' in all TStreamerElements
    TIter nextClass(gROOT->GetListOfClasses());
    TClass *acl;
@@ -3226,7 +3226,7 @@ void TClass::MakeCustomMenuList()
    // in this list, corresponding to the whole standard list.
    // Once the customizable version is done, one can remove or add elements.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
    TClassMenuItem *menuItem;
 
    // Make sure fClassMenuList is initialized and empty.
@@ -3447,7 +3447,7 @@ TMethod *TClass::GetClassMethod(const char *name, const char* params)
 
    TList* bucketForMethod = ((THashList*)GetListOfMethods())->GetListForObject(name);
    if (bucketForMethod) {
-      R__LOCKGUARD2(gCINTMutex);
+      R__LOCKGUARD2(gClingMutex);
       CallFunc_t  *func = gCint->CallFunc_Factory();
       Long_t       offset;
       gCint->CallFunc_SetFunc(func,GetClassInfo(), name, params, &offset);
@@ -3516,7 +3516,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
    //           with TStreamer::Optimize()!
    //
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
 
    // Handle special version, 0 means currently loaded version.
    // Warning:  This may be -1 for an emulated class.
@@ -3610,7 +3610,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfoAbstractEmulated(Int_t version /* =
    //           with TStreamer::Optimize()!
    //
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
 
    TString newname( GetName() );
    newname += "@@emulated";
@@ -3810,7 +3810,7 @@ void *TClass::New(ENewType defConstructor) const
       // constructor we can call.
       // [This is very unlikely to work, but who knows!]
       fgCallingNew = defConstructor;
-      R__LOCKGUARD2(gCINTMutex);
+      R__LOCKGUARD2(gClingMutex);
       p = gCint->ClassInfo_New(GetClassInfo());
       fgCallingNew = kRealNew;
       if (!p) {
@@ -3900,7 +3900,7 @@ void *TClass::New(void *arena, ENewType defConstructor) const
       // constructor we can call.
       // [This is very unlikely to work, but who knows!]
       fgCallingNew = defConstructor;
-      R__LOCKGUARD2(gCINTMutex);
+      R__LOCKGUARD2(gClingMutex);
       p = gCint->ClassInfo_New(GetClassInfo(),arena);
       fgCallingNew = kRealNew;
       if (!p) {
@@ -3984,7 +3984,7 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
       // constructor we can call.
       // [This is very unlikely to work, but who knows!]
       fgCallingNew = defConstructor;
-      R__LOCKGUARD2(gCINTMutex);
+      R__LOCKGUARD2(gClingMutex);
       p = gCint->ClassInfo_New(GetClassInfo(),nElements);
       fgCallingNew = kRealNew;
       if (!p) {
@@ -4067,7 +4067,7 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       // constructor that way, or no default constructor is available and
       // we fail.
       fgCallingNew = defConstructor;
-      R__LOCKGUARD2(gCINTMutex);
+      R__LOCKGUARD2(gClingMutex);
       p = gCint->ClassInfo_New(GetClassInfo(),nElements, arena);
       fgCallingNew = kRealNew;
       if (!p) {
@@ -4264,7 +4264,7 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       // call the array delete operator, hopefully
       // the class library is loaded and there will be
       // a destructor we can call.
-      R__LOCKGUARD2(gCINTMutex);
+      R__LOCKGUARD2(gClingMutex);
       gCint->ClassInfo_DeleteArray(GetClassInfo(),ary, dtorOnly);
    } else if (!fClassInfo && fCollectionProxy) {
       // There is no dictionary at all, so this is an emulated
@@ -4604,7 +4604,7 @@ Long_t TClass::Property() const
    //    kExternal: the class has a free standing way of streaming itself
    //    kEmulated: the class is missing its shared library.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
 
    if (fProperty!=(-1)) return fProperty;
 
@@ -4690,7 +4690,7 @@ void TClass::SetCollectionProxy(const ROOT::TCollectionProxyInfo &info)
    // Create the collection proxy object (and the streamer object) from
    // using the information in the TCollectionProxyInfo.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
 
    delete fCollectionProxy;
 
@@ -4912,7 +4912,7 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
    // TStreamerInfo uses the information in TStreamerElement while TClass uses the information
    // from TClass::GetListOfBases and TClass::GetListOfDataMembers.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
    
    if (fCheckSum && code == 0) return fCheckSum;
 
@@ -4991,7 +4991,7 @@ void TClass::AdoptReferenceProxy(TVirtualRefProxy* proxy)
    // represents a reference.
    // When a new proxy is adopted, the old one is deleted.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
 
    if ( fRefProxy )  {
       fRefProxy->Release();
@@ -5010,7 +5010,7 @@ void TClass::AdoptMemberStreamer(const char *name, TMemberStreamer *p)
 
    if (!fRealData) return;
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
 
    TIter next(fRealData);
    TRealData *rd;
@@ -5188,7 +5188,7 @@ void TClass::AdoptStreamer(TClassStreamer *str)
 //    Int_t k = TClassEdit::IsSTLCont(GetName());
 //    if (k==1||k==-1) { delete str; return; }
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
 
    if (fStreamer) delete fStreamer;
    if (str) {
@@ -5370,7 +5370,7 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
          return (TVirtualStreamerInfo*) arr->At( version );
    }
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
 
    //----------------------------------------------------------------------------
    // We don't have the streamer info so find it in other class
@@ -5464,7 +5464,7 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
    if( info )
       return info;
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gClingMutex);
 
    //----------------------------------------------------------------------------
    // Get it from the foreign class
@@ -5518,7 +5518,7 @@ Bool_t TClass::HasDefaultConstructor() const
    if (fNew) return kTRUE;
 
    if (GetClassInfo()) {
-      R__LOCKGUARD(gCINTMutex);
+      R__LOCKGUARD(gClingMutex);
       return gCint->ClassInfo_HasDefaultConstructor(GetClassInfo());
    }
    if (fCollectionProxy) {

@@ -87,7 +87,7 @@ private: // Data Members
    TString         fRootmapLoadPath;  // Dynamic load path for rootmap files.
    TEnv*           fMapfile;          // Association of classes to libraries.
    TObjArray*      fRootmapFiles;     // Loaded rootmap files.
-   Bool_t          fLockProcessLine;  // True if ProcessLine should lock gCINTMutex.
+   Bool_t          fLockProcessLine;  // True if ProcessLine should lock gClingMutex.
 
    cling::Interpreter*   fInterpreter;   // The interpreter.
    cling::MetaProcessor* fMetaProcessor; // The metaprocessor.
