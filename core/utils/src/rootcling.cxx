@@ -4607,6 +4607,11 @@ int main(int argc, char **argv)
             // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
             if (!isSelectionFile) StrcpyArg(argkeep, argv[i]);
             std::string header( isSelectionFile ? argv[i] : R__GetRelocatableHeaderName( argv[i], currentDirectory ) );
+            // Strip any trailing + which is only used by GeneratedLinkdef.h which currently 
+            // use directly argv.
+            if (header[header.length()-1]=='+') {
+               header.erase(header.length()-1);
+            }
             
             // We are 'normalizing' the file in two different way.  StrcpyArg (from rootcint)
             // strip just the ROOTBUILD part (i.e. $PWD/package/module/inc) while
