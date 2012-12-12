@@ -79,12 +79,20 @@ abc_rflx.cpp: abc.h
 
 libabc_rflx_C.$(DllSuf): abc_rflx.cpp
 
+
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+abc_cint.root: CALLROOTEXE += -e 'gROOT->ProcessLine(".L abc.h+");' 
+endif
+
 abc_cint.root: abc_h.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcwrite.C\(\"cint\"\) > abc_cint.log 2>&1
-	 
+
 abc_reflex.root: libabc_rflx_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcwrite.C\(\"reflex\"\) > abc_reflex.log 2>&1
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+abc.cintcint.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L abc.h+");' 
+endif
 
 abc.cintcint.log: abc_cint.root abc_h.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q abcread.C\(\"cint\",\"cint\"\) 2>&1 | grep -v Processing > abc.cintcint.log 
@@ -119,3 +127,8 @@ endif
 
 updates: updates.log
 	$(TestDiff)
+
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+updates.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif
+
