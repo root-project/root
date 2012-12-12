@@ -113,7 +113,7 @@ public:
 
       //TODO: see why it fails for a small number of observations
       // Create Gaussian model, generate data set and define
-      RooWorkspace* w = new RooWorkspace("w", kTRUE);
+      RooWorkspace* w = new RooWorkspace("w");
       w->factory("Gaussian::gauss(x[-5,5], mean[0,-5,5], sigma[1])");
       RooDataSet *data = w->pdf("gauss")->generate(*w->var("x"), N);
 
@@ -233,7 +233,7 @@ public:
          const Double_t confidenceLevel = 2 * normal_cdf(1) - 1.0;
 
          // Create Poisson model and dataset
-         RooWorkspace* w = new RooWorkspace("w", kTRUE);
+         RooWorkspace* w = new RooWorkspace("w");
          w->factory(TString::Format("Poisson::poiss(x[%d,0,1000], mean[0,1000])", fObsValue));
          RooDataSet *data = new RooDataSet("data", "data", *w->var("x"));
          data->add(*w->var("x"));
@@ -323,7 +323,7 @@ public:
    Bool_t testCode() {
 
       // Create workspace and model
-      RooWorkspace *w = new RooWorkspace("w", kTRUE);
+      RooWorkspace *w = new RooWorkspace("w");
       buildPoissonProductModel(w);
       ModelConfig *model = (ModelConfig *)w->obj("S+B");
 
@@ -418,7 +418,7 @@ public:
          } else {
 
             // build workspace and model
-            RooWorkspace *w = new RooWorkspace("w", kTRUE);
+            RooWorkspace *w = new RooWorkspace("w");
             buildOnOffModel(w);
             ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
             ModelConfig *bModel = (ModelConfig *)w->obj("B");
@@ -584,7 +584,7 @@ public:
       } else {
 
          // Create Poisson model
-         RooWorkspace* w = new RooWorkspace("w", kTRUE);
+         RooWorkspace* w = new RooWorkspace("w");
          w->factory("Poisson::poiss(x[0,100], mean[1e-6,100])");
          // TODO: see why it does not work so well for boundary observed values {0, 100}
 
@@ -719,7 +719,7 @@ public:
       } else {
 
          // Create Poisson model
-         RooWorkspace* w = new RooWorkspace("w", kTRUE);
+         RooWorkspace* w = new RooWorkspace("w");
          w->factory("Poisson::poiss(x[0,100], mean[1e-6,100])");
          w->factory("Uniform::prior(mean)");
          w->factory("EXPR::priorInv('1/mean', mean)");
@@ -835,7 +835,7 @@ public:
       const Int_t numberScans = 10; // sufficient number of scans
 
       // Create workspace and model
-      RooWorkspace *w = new RooWorkspace("w", kTRUE);
+      RooWorkspace *w = new RooWorkspace("w");
       buildPoissonProductModel(w);
       ModelConfig *model = (ModelConfig *)w->obj("S+B");
 
@@ -959,7 +959,7 @@ public:
    Bool_t testCode() {
 
       // Create workspace and model
-      RooWorkspace *w = new RooWorkspace("w", kTRUE);
+      RooWorkspace *w = new RooWorkspace("w");
       buildPoissonProductModel(w);
       ModelConfig *model = (ModelConfig *)w->obj("S+B");
 
@@ -1179,7 +1179,7 @@ public:
       TString significanceString = TString::Format("thtc1_significance_%d_%d_%lf", fObsValueOn, fObsValueOff, fTau);
 
       // build workspace and model
-      RooWorkspace* w = new RooWorkspace("w", kTRUE);
+      RooWorkspace* w = new RooWorkspace("w");
       buildOnOffModel(w);
       ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
       ModelConfig *bModel = (ModelConfig *)w->obj("B");
@@ -1272,7 +1272,7 @@ public:
    Bool_t testCode() {
 
       // Build workspace and models
-      RooWorkspace* w = new RooWorkspace("w", kTRUE);
+      RooWorkspace* w = new RooWorkspace("w");
       buildSimultaneousModel(w);
       ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
       ModelConfig *bModel = (ModelConfig *)w->obj("B");
@@ -1446,7 +1446,7 @@ public:
    Bool_t testCode() {
 
       // Create workspace and model
-      RooWorkspace *w = new RooWorkspace("w", kTRUE);
+      RooWorkspace *w = new RooWorkspace("w");
       buildPoissonProductModel(w);
       ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
       ModelConfig *bModel = (ModelConfig *)w->obj("B");
@@ -1595,7 +1595,7 @@ public:
    Bool_t testCode() {
 
       // Create workspace and model
-      RooWorkspace *w = new RooWorkspace("w", kTRUE);
+      RooWorkspace *w = new RooWorkspace("w");
       buildPoissonEfficiencyModel(w);
       ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
       ModelConfig *bModel = (ModelConfig *)w->obj("B");
@@ -1733,7 +1733,7 @@ public:
 
          // Make model for prototype on/off problem
          // Pois(x | s+b) * Pois(y | tau b )
-         RooWorkspace* w = new RooWorkspace("w", kTRUE);
+         RooWorkspace* w = new RooWorkspace("w");
          w->factory(TString::Format("Poisson::on_pdf(x[%d,0,500],sum::splusb(sig[0,0,100],bkg[100,0,300]))", xValue));
          w->factory(TString::Format("Poisson::off_pdf(y[%d,0,500],prod::taub(tau[%lf],bkg))", yValue, tauValue));
          w->factory("PROD::prod_pdf(on_pdf, off_pdf)");
