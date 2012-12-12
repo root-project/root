@@ -59,7 +59,9 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+chain.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif
 
 chain: chain.log
-	$(TestDiff)
+	$(TestDiffW)
