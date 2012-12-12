@@ -78,7 +78,3 @@ void runarraysize() {
 //	f->Close();
 }
 
-int main(void) {
-	varSizeArray_main();
-	return 0;
-}

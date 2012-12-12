@@ -59,7 +59,9 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+execReadMiniObjLeaf.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif
 
 arraysize: arraysize.log
 	$(TestDiff)
