@@ -59,7 +59,7 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-
+execQuery.success: EXTRA_DIFFOPTS += -w
 
 array: array.log
 	$(TestDiff)
