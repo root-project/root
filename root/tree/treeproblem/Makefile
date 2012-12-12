@@ -68,11 +68,23 @@ reader$(ExeSuf) :reader.$(ObjSuf)
 writer$(ExeSuf):writer.$(ObjSuf) Foo.$(DllSuf) 
 	$(CMDECHO) $(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.$(LibSuf) $(OutPutOpt)$@
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+write.log: CALLROOTEXE += -e 'gSystem->Load("Foo.so");'
+
+reader.log: CALLROOTEXE += -e 'gSystem->Load("Foo.so");'
+endif
+
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+write.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+
+reader.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif
+
 write.log:  writer$(ExeSuf) Foo.$(DllSuf)
-	$(CMDECHO) root -b -l -q writer.C > write.log
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q writer.C > write.log
 
 reader.log: Foo.$(DllSuf) reader$(ExeSuf) write.log
-	$(CMDECHO) root -b -l -q reader.C > reader.log
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q reader.C > reader.log
 
 check: reader.log
 	$(CMDECHO)diff -b -w reader.ref reader.log

@@ -22,5 +22,9 @@
   TTree *tree; f->GetObject("aname",tree);
   tree->Scan("*");
   delete f;
-  return 0;
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   int res = 0;
+#else
+   return 0;
+#endif
 } 

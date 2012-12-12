@@ -9,6 +9,10 @@
    tree.Show(0);
    tree.Show(1);
    tree.Scan("x:y");
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   int res = 0;
+#else
    return 0;
+#endif
 }
 
