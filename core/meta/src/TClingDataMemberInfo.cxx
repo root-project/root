@@ -294,7 +294,12 @@ long TClingDataMemberInfo::Property() const
       return 0L;
    }
    long property = 0L;
-   switch (GetDecl()->getAccess()) {
+   const clang::Decl *declaccess = GetDecl();
+   if (declaccess->getDeclContext()->isTransparentContext()) {
+      declaccess = llvm::dyn_cast<clang::Decl>(declaccess->getDeclContext());
+      if (!declaccess) declaccess = GetDecl();
+   }
+   switch (declaccess->getAccess()) {
       case clang::AS_public:
          property |= kIsPublic;
          break;
@@ -305,7 +310,7 @@ long TClingDataMemberInfo::Property() const
          property |= kIsPrivate;
          break;
       case clang::AS_none:
-         if (GetDecl()->getDeclContext()->isNamespace()) {
+         if (declaccess->getDeclContext()->isNamespace()) {
             property |= kIsPublic;
          } else {
             // IMPOSSIBLE
