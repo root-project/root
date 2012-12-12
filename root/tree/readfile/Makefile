@@ -36,7 +36,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 #  should also be reflected in the TEST_TARGETS variable above.
 
 ReadFile: ReadFile.log
-	$(TestDiff)
+	$(TestDiffW)
 
 # Outputs a message if the FAIL variable is null
 
