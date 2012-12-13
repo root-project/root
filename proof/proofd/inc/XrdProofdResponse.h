@@ -36,9 +36,7 @@ class XrdLink;
 class XrdProofdResponse
 {
  public:
-   XrdProofdResponse() { fLink = 0; *fTrsid = '\0'; fSID = 0;
-                         fResp.dlen = 0; fResp.status = 0;
-                         fResp.streamid[0] = 0; fResp.streamid[1] = 0; }
+   XrdProofdResponse() { Reset(); }
    virtual ~XrdProofdResponse() {}
 
    inline const  char   *STRID() { return (const char *)fTrsid;}
@@ -78,6 +76,11 @@ class XrdProofdResponse
 
    void                  GetSID(unsigned short &sid);
    void                  SetTrsid();
+
+   void                  Reset() { XrdSysMutexHelper mh(fMutex);
+                         fLink = 0; *fTrsid = '\0'; fSID = 0;
+                         fResp.dlen = 0; fResp.status = 0;
+                         fResp.streamid[0] = 0; fResp.streamid[1] = 0; }
 
    // To protect from concurrent use
    XrdSysRecMutex       fMutex;

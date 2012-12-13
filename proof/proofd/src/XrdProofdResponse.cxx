@@ -48,6 +48,16 @@
 #define XPRTRACING(a) ((a != 0) || (TRACING(RSP)))
 // Check link macro
 #define CHECKLINK \
+   {  XrdSysMutexHelper mh(fMutex); \
+      if (!fLink) { \
+         TRACE(XERR, "link is undefined! "); \
+         return 0; \
+      } else if (fLink->FDnum() < 0) { \
+         TRACE(XERR, "link descriptor invalid for link "<<fLink<<"! ("<< fLink->FDnum()<<")"); \
+         return 0; \
+      } \
+   }
+#define CHECKLINKNOMTX \
    if (!fLink) { \
       TRACE(XERR, "link is undefined! "); \
       return 0; \
@@ -551,6 +561,10 @@ int XrdProofdResponse::LinkSend(const char *buff, int len, XrdOucString &emsg)
    // The link is closed in case of error, because we cannot use it anymore
    // and the counter part needs to reconnect.
    // Return 0 on success, -1 on failure.
+   XPDLOC(RSP, "Response::LinkSend:1")
+
+   XrdSysMutexHelper mxh(fMutex);
+   CHECKLINKNOMTX;
 
    int rc = 0;
 
@@ -572,8 +586,11 @@ int XrdProofdResponse::LinkSend(const struct iovec *iov,
    // Functionality a la 'writev' is simulated by segmenting the sending.
    // This allows to avoid a recovery problem with 'writev'.
    // Return 0 on success, -1 on failure.
+   XPDLOC(RSP, "Response::LinkSend:2")
 
    int rc = 0;
+   XrdSysMutexHelper mxh(fMutex);
+   CHECKLINKNOMTX;
 
    // If we fail we close the link, and ask the client to reconnect
    if ((rc = fLink->Send(iov, iocnt, 0)) < 0) {
@@ -622,9 +639,8 @@ void XrdProofdResponse::GetSID(unsigned short &sid)
 {
    // Get stream ID (to be able to restore it later
 
-   {  XrdSysMutexHelper mh(fMutex);
-      memcpy((void *)&sid, (void *)&fResp.streamid[0], sizeof(sid));
-   }
+   XrdSysMutexHelper mh(fMutex);
+   memcpy((void *)&sid, (void *)&fResp.streamid[0], sizeof(sid));
 }
 
 //______________________________________________________________________________
@@ -647,16 +663,7 @@ void XrdProofdResponse::Set(XrdLink *l)
 
    {  XrdSysMutexHelper mh(fMutex);
       fLink = l;
-   }
-   GetSID(fSID);
-   if (fLink) {
-      if (fLink->FDnum() < 0) {
-         TRACE(XERR, "link descriptor invalid for link "<<fLink<<"! ("<< fLink->FDnum()<<")");
-      } else {
-         TRACE(DBG,"using link "<<fLink<<", descriptor:"<<fLink->FDnum());
-      }
-   } else {
-      TRACE(XERR,"link is undefined!");
+      memcpy((void *)&fSID, (void *)&fResp.streamid[0], sizeof(fSID));
    }
 }
 

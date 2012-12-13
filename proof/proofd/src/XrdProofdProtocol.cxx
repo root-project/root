@@ -508,10 +508,9 @@ void XrdProofdProtocol::Reset()
    // Cleanup existing XrdProofdResponse objects
    std::vector<XrdProofdResponse *>::iterator ii = fResponses.begin(); // One per each logical connection
    while (ii != fResponses.end()) {
-      delete *ii;
+      (*ii)->Reset();
       ii++;
    }
-   fResponses.clear();
 }
 
 //______________________________________________________________________________
@@ -735,36 +734,34 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
    XrdProofdClient *pmgr = fPClient;
 
    if (pmgr) {
-
       if (!Internal()) {
 
          TRACE(REQ,"External disconnection of protocol associated with pid "<<fPid);
 
          // Write disconnection file
-         XrdOucString discpath(fAdminPath, 0, fAdminPath.rfind("/cid"));
-         discpath += "/disconnected";
+         XrdOucString discpath(fAdminPath);
+         discpath.replace("/cid", "/disconnected");
          FILE *fd = fopen(discpath.c_str(), "w");
-            if (!fd) {
-            TRACE(XERR, "unable to create path: " <<discpath);
+         if (!fd) {
+            TRACE(XERR, "unable to create path: " <<discpath<<" (errno: "<<errno<<")");
          } else {
             fclose(fd);  
          } 
 
          // Remove protocol and response from attached client/proofserv instances
-	 // Set reconnect flag if proofserv instances attached to this client are still running
+         // Set reconnect flag if proofserv instances attached to this client are still running
          pmgr->ResetClientSlot(fCID);
          if(fgMgr && fgMgr->SessionMgr()) {
             XrdSysMutexHelper mhp(fgMgr->SessionMgr()->Mutex());
 
             fgMgr->SessionMgr()->DisconnectFromProofServ(fPid);
             if(pmgr->Running()) {
-	       TRACE(REQ,"Non-idle proofserv processes attached to this client, setting reconnect time");
-	       fgMgr->SessionMgr()->SetReconnectTime(true);
+               TRACE(REQ,"Non-idle proofserv processes attached to this client, setting reconnect time");
+               fgMgr->SessionMgr()->SetReconnectTime(true);
             }
             fgMgr->SessionMgr()->CheckActiveSessions(0);
-	 }
-         else {
-	    TRACE(XERR,"No XrdProofdMgr ("<<fgMgr<<") or SessionMgr ("<<fgMgr->SessionMgr()<<")")
+         } else {
+            TRACE(XERR,"No XrdProofdMgr ("<<fgMgr<<") or SessionMgr ("<<fgMgr->SessionMgr()<<")")
          }
 
       } else {
@@ -781,11 +778,10 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
             fgMgr->SessionMgr()->MvSession(buf.c_str());
          }
          else {
-	    TRACE(XERR,"No XrdProofdMgr ("<<fgMgr<<") or SessionMgr ("<<fgMgr->SessionMgr()<<")")
+            TRACE(XERR,"No XrdProofdMgr ("<<fgMgr<<") or SessionMgr ("<<fgMgr->SessionMgr()<<")")
          }
       }
    }
-
    // Set fields to starting point (debugging mostly)
    Reset();
 
@@ -1435,7 +1431,7 @@ void XrdProofdProtocol::TouchAdminPath()
             apath.replace(".status", "");
             rc = XrdProofdAux::Touch(apath.c_str());
          }
-         if (rc != 0) {
+         if (rc != 0 && rc != -ENOENT) {
             const char *type = Internal() ? "internal" : "external";
             TRACEP(this, XERR, type<<": problems touching "<<apath<<"; errno: "<<-rc);
          }
