@@ -17,6 +17,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundScriptClassDef"
 CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
+CALLROOTEXE += -e "\#define ClingWorkAroundIncorrectTearDownOrder"
 # Convenience features, would be nice to have.
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenRecovery"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingImplicitAuto"
@@ -63,6 +64,7 @@ ClingWorkAroundMultipleInclude = yes           # File are included each time a m
                                                # loaded.  Should go away with the modules
 ClingWorkAroundNoDotOptimization = yes         # See https://savannah.cern.ch/bugs/index.php?99339
 ClingWorkAroundUnnamedDetection = yes          # See https://savannah.cern.ch/bugs/index.php?99341
+ClingWorkAroundIncorrectTearDownOrder = yes    # See https://savannah.cern.ch/bugs/index.php?99266
 # Not fully investigated:
 ClingWorkAroundBrokenMakeProject = yes
 
