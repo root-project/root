@@ -53,22 +53,17 @@ endif()
 #---Modify the behaviour for local and non-local builds--------------------------------------------
 
 if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-  set(rootcint_cmd rootcint_tmp)
+  set(rootcint_cmd rootcling_tmp)
   set(rlibmap_cmd rlibmap)
   if(CMAKE_VERSION VERSION_GREATER 2.8.3)
-#    set(ROOTCINTDEP ${CMAKE_SOURCE_DIR}/cint/cint/inc/clingdictversion.h ROOTCINTTARGET)
-#    set(CINTDEP ${CMAKE_SOURCE_DIR}/cint/cint/inc/clingdictversion.h CINTTARGET)
     set(ROOTCINTDEP ROOTCINTTARGET)
-    set(CINTDEP CINTTARGET)
   else()
-    set(ROOTCINTDEP rootcint_tmp)
-    set(CINTDEP cint_tmp)
+    set(ROOTCINTDEP rootcling_tmp)
   endif()
 else()
-  set(rootcint_cmd rootcint)   
+  set(rootcint_cmd rootcling)
   set(rlibmap_cmd rlibmap)   
   set(ROOTCINTDEP)
-  set(CINTDEP)
 endif()
 
 set(CMAKE_VERBOSE_MAKEFILES OFF)
@@ -217,10 +212,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   get_directory_property(incdirs INCLUDE_DIRECTORIES)
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     set(includedirs -I${CMAKE_CURRENT_SOURCE_DIR}/inc 
-                    -I${CMAKE_BINARY_DIR}/include
-                    -I${CMAKE_SOURCE_DIR}/cint/cint/include 
-                    -I${CMAKE_SOURCE_DIR}/cint/cint/stl 
-                    -I${CMAKE_SOURCE_DIR}/cint/cint/lib)
+                    -I${CMAKE_BINARY_DIR}/include)
   else()
     set(includedirs -I${CMAKE_CURRENT_SOURCE_DIR}/inc) 
   endif() 
@@ -247,10 +239,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endforeach()
   #---call rootcint------------------------------------------
-  add_custom_command(OUTPUT ${dictionary}.cxx ${dictionary}.h
+  add_custom_command(OUTPUT ${dictionary}.cxx ${dictionary}.h ${dictionary}_rdict.pcm
                      COMMAND ${rootcint_cmd} -cint -f  ${dictionary}.cxx 
                                           -c ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef} 
                      DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}_rdict.pcm DESTINATION lib COMPONENT libraries)
 endfunction()
 
 

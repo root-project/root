@@ -21,24 +21,12 @@ set(BASE1_DICTIONARY  ${CMAKE_CURRENT_BINARY_DIR}/G__Base1.cxx PARENT_SCOPE)
 set(BASE2_DICTIONARY  ${CMAKE_CURRENT_BINARY_DIR}/G__Base2.cxx PARENT_SCOPE)
 set(BASE3_DICTIONARY  ${CMAKE_CURRENT_BINARY_DIR}/G__Base3.cxx PARENT_SCOPE)
 
-
-list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/ManualBase4.cxx)
-#if(WIN32)
-#  ROOT_GENERATE_DICTIONARY(ManualBase4 TDirectory.h LINKDEF LinkDef4.h)
-#  set(BASE4_DICTIONARY  ${CMAKE_CURRENT_BINARY_DIR}/ManualBase4.cxx PARENT_SCOPE)
-#  set(base4dict  ManualBase4.cxx)
-#else()
-  set(BASE4_DICTIONARY  ${CMAKE_CURRENT_SOURCE_DIR}/src/ManualBase4.cxx PARENT_SCOPE)  
-  set(base4dict)
-#endif()
-
 set(LibCore_SRCS ${LibCore_SRCS} ${sources} PARENT_SCOPE)
 set(LibCore_LINKDEF ${LibCore_LINKDEF} 
                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef1.h
                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef2.h
                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef3.h
                     PARENT_SCOPE)
-
 
 add_custom_target(BASE_DICTIONARY DEPENDS G__Base1.cxx
                                           G__Base2.cxx 
@@ -48,12 +36,6 @@ set_target_properties(BASE_DICTIONARY PROPERTIES FOLDER Dictionaries)
 ROOT_INSTALL_HEADERS()
 
 #---Extra options-----------------------------------------------------------------------
-
-#set_source_files_properties(${CMAKE_SOURCE_DIR}/core/base/src/TPRegexp.cxx
-#                            ${CMAKE_CURRENT_BINARY_DIR}/G__Base1.cxx
-#                            ${CMAKE_CURRENT_BINARY_DIR}/G__Base2.cxx
-#                            COMPILE_FLAGS ${PCRE_INCLUDE_DIR}
-#                            OBJECT_DEPENDS PCRE )
 
 if(GCC_MAJOR EQUAL 4 AND GCC_MINOR EQUAL 1)
   set_source_files_properties(${CMAKE_SOURCE_DIR}/core/base/src/TString.cxx

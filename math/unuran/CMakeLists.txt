@@ -60,5 +60,5 @@ set(unrsources ${UNR_UNTARDIR}/src/utils/*.c
 
 ROOT_GENERATE_DICTIONARY(G__Unuran *.h LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(Unuran LINKDEF LinkDef.h DEPENDENCIES Hist MathCore)
-ROOT_LINKER_LIBRARY(Unuran *.cxx ${unrsources} G__Unuran.cxx ${UNR_UNTARDIR}/config.h  LIBRARIES Cint Core DEPENDENCIES Hist MathCore)
+ROOT_LINKER_LIBRARY(Unuran *.cxx ${unrsources} G__Unuran.cxx ${UNR_UNTARDIR}/config.h  LIBRARIES Core DEPENDENCIES Hist MathCore)
 ROOT_INSTALL_HEADERS()

@@ -74,7 +74,7 @@ endforeach()
 
 #----------------------------------------------------------------------------
 # Now set them to ROOT_LIBRARIES
-set(ROOT_LIBRARIES Core Cint)
+set(ROOT_LIBRARIES Core)
 
 #----------------------------------------------------------------------------
 # Point the user to the UseGeant4.cmake file which they may wish to include

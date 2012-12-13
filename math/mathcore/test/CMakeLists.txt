@@ -19,7 +19,7 @@ Set(TestSourceGraphics
      testIntegrationMultiDim.cxx
 )
 
-Set(DEPENDENCIES Core Cint RIO Net Hist Graf Graf3d Gpad Tree 
+Set(DEPENDENCIES Core RIO Net Hist Graf Graf3d Gpad Tree 
                  Rint Postscript Matrix Physics MathCore Thread 
                  freetype
    ) 

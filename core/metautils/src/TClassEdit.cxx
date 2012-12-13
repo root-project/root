@@ -768,7 +768,7 @@ bool TClassEdit::IsVectorBool(const char *name) {
 
    return ( TClassEdit::STLKind( splitname.fElements[0].c_str() ) == TClassEdit::kVector)
       && ( splitname.fElements[1] == "bool" || splitname.fElements[1]=="Bool_t");
-};
+}
 
 //______________________________________________________________________________
 namespace {

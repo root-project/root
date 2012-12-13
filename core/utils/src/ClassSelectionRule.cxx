@@ -155,7 +155,7 @@ void ClassSelectionRule::SetRequestPrivate(bool value)
 void ClassSelectionRule::SetRequestedVersionNumber(int version)
 {
    fRequestedVersionNumber = version;
-};
+}
 
 bool ClassSelectionRule::RequestOnlyTClass() const
 {

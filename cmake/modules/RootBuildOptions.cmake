@@ -71,6 +71,7 @@ ROOT_BUILD_OPTION(builtin_lzma OFF "Built included liblzma, or use system liblzm
 ROOT_BUILD_OPTION(builtin_gsl OFF "Built the GSL library internally (downloading tarfile from the Web)")
 ROOT_BUILD_OPTION(builtin_cfitsio OFF "Built the FITSIO library internally (downloading tarfile from the Web)")
 ROOT_BUILD_OPTION(builtin_xrootd OFF "Built the XROOTD internally (downloading tarfile from the Web)")
+ROOT_BUILD_OPTION(builtin_llvm ON "Built the LLVM internally")
 ROOT_BUILD_OPTION(cxx11 OFF "Build using C++11 compatible mode, requires gcc > 4.7.x or clang")
 ROOT_BUILD_OPTION(libcxx11 OFF "Build using libc++, requires cxx11 option (MacOS X only, for the time being)")
 ROOT_BUILD_OPTION(castor ON "CASTOR support, requires libshift from CASTOR >= 1.5.2")

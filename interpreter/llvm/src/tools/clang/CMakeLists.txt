@@ -263,9 +263,9 @@ option(CLANG_BUILD_EXAMPLES "Build CLANG example programs by default." OFF)
 add_subdirectory(examples)
 
 # TODO: docs.
-add_subdirectory(test)
 
 if( LLVM_INCLUDE_TESTS )
+  add_subdirectory(test)
   if( NOT CLANG_BUILT_STANDALONE )
     add_subdirectory(unittests)
   endif()

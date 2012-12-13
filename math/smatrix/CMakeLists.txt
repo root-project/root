@@ -13,6 +13,6 @@ ROOT_GENERATE_DICTIONARY(G__${libname}32  Math/SMatrix.h     Math/SVector.h
 
 
 ROOT_GENERATE_ROOTMAP(${libname} LINKDEF LinkDef.h )
-ROOT_LINKER_LIBRARY(${libname} G__${libname}.cxx G__${libname}32.cxx LIBRARIES Core Cint)
+ROOT_LINKER_LIBRARY(${libname} G__${libname}.cxx G__${libname}32.cxx LIBRARIES Core)
 ROOT_INSTALL_HEADERS()
 

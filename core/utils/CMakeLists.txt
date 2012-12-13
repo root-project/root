@@ -1,36 +1,40 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT core/utils package
 ############################################################################
-ROOT_USE_PACKAGE(cint/cint)
 ROOT_USE_PACKAGE(core/metautils)
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src ${LLVM_INCLUDE_DIR} ${CLING_INCLUDE_DIR})
+add_definitions(${CLING_CXXFLAGS})
+ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/SelectionRules.cxx src/ClassSelectionRule.cxx
+                          src/BaseSelectionRule.cxx src/Scanner.cxx src/RClStl.cxx src/XMLReader.cxx
+                          src/VariableSelectionRule.cxx src/rootcling.cxx  
+                          ${METAUTILS_CXX_SOURCES}
+                          LIBRARIES ${CLING_LIBRARIES} )
+add_dependencies(rootcling CLING)
 
-#---rootcint executable------------------------------------------------------
-ROOT_EXECUTABLE(rootcint rootcint.cxx RStl.cxx
-                         ${METAUTILS_CXX_SOURCES} 
-                         ${CMAKE_SOURCE_DIR}/core/clib/src/strlcpy.c 
-                         ${CMAKE_SOURCE_DIR}/core/clib/src/strlcat.c 
-                         LIBRARIES Cint)
-add_dependencies(rootcint IOSENUM_H)
+add_custom_command(OUTPUT rootcling_tmp.cxx
+                   COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx rootcling_tmp.cxx )
+set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOTBUILD -DR__LLVMRESOURCEDIR=\"\\\"${CMAKE_BINARY_DIR}/etc/cling\\\"\"")
+ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx src/SelectionRules.cxx src/ClassSelectionRule.cxx
+                          src/BaseSelectionRule.cxx src/Scanner.cxx src/RClStl.cxx src/XMLReader.cxx
+                          src/VariableSelectionRule.cxx rootcling_tmp.cxx
+                          ${METAUTILS_CXX_SOURCES}
+                          LIBRARIES ${CLING_LIBRARIES} )
+add_dependencies(rootcling_tmp CLING)
+set_source_files_properties(src/LinkdefReader.cxx PROPERTIES COMPILE_FLAGS -fno-rtti)
 
-#---rootcint_tmp executable--------------------------------------------------
-add_custom_command(OUTPUT rootcint_tmp.cxx RStl_tmp.cxx loadfile_tmp.cxx
-                   COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcint.cxx rootcint_tmp.cxx
-                   COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/RStl.cxx RStl_tmp.cxx
-                   COMMAND cmake -E copy_if_different ${CMAKE_SOURCE_DIR}/cint/cint/src/loadfile.cxx loadfile_tmp.cxx )
-
-#add_definitions("-UR__HAVE_CONFIG -DROOTBUILD")
-set_source_files_properties(loadfile_tmp.cxx rootcint_tmp.cxx RStl_tmp.cxx PROPERTIES COMPILE_FLAGS 
-                            "-I${CMAKE_SOURCE_DIR}/core/utils/src -I${CMAKE_SOURCE_DIR}/cint/cint/src ${CINT_CXX_DEFINITIONS} -DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__CINTBODY -UR__HAVE_CONFIG -DROOTBUILD")
-ROOT_EXECUTABLE(rootcint_tmp  rootcint_tmp.cxx RStl_tmp.cxx loadfile_tmp.cxx
-                              ${METAUTILS_CXX_SOURCES}
-                              ${CMAKE_SOURCE_DIR}/core/clib/src/strlcpy.c 
-                              ${CMAKE_SOURCE_DIR}/core/clib/src/strlcat.c 
-                              LIBRARIES Cint_static ${CMAKE_DL_LIBS})
-add_dependencies(rootcint_tmp IOSENUM_H)
+#---Deal with LLVM resource here----------------------------------------------
+add_custom_target(LLVMRES COMMAND cmake -E make_directory
+                                  ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include
+                          COMMAND cmake -E copy_directory
+                                  ${CMAKE_BINARY_DIR}/LLVM-install/lib/clang/${LLVM_VERSION}/include
+                                  ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include  
+                          DEPENDS LLVM)
+install(DIRECTORY ${CMAKE_BINARY_DIR}/LLVM-install/lib/clang/${LLVM_VERSION}/include/ 
+        DESTINATION etc/cling/lib/clang/${LLVM_VERSION}/include USE_SOURCE_PERMISSIONS)
 
 #---Trick to avoid building all dictionaties when CINT is changed-------------
-add_custom_target(ROOTCINTTARGET DEPENDS rootcint rootcint_tmp)
+add_custom_target(ROOTCINTTARGET DEPENDS rootcling rootcling_tmp LLVMRES)
 
 #---rlibmap executable--------------------------------------------------------
 ROOT_EXECUTABLE(rlibmap rlibmap.cxx LIBRARIES ${CMAKE_THREAD_LIBS_INIT})

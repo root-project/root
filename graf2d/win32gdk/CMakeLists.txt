@@ -40,7 +40,7 @@ set_target_properties(GDKLIB PROPERTIES FOLDER Builtins)
 ROOT_GENERATE_DICTIONARY(G__Win32gdk TGWin32.h TGWin32GL.h LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(Win32gdk LINKDEF LinkDef.h DEPENDENCIES)
 
-ROOT_LINKER_LIBRARY(Win32gdk *.cxx *.c G__Win32gdk.cxx LIBRARIES Cint Core Graf ${FREETYPE_LIBRARIES} 
+ROOT_LINKER_LIBRARY(Win32gdk *.cxx *.c G__Win32gdk.cxx LIBRARIES Core Graf ${FREETYPE_LIBRARIES} 
                     ${gdklib} ${glib} Glu32.lib Opengl32.lib)
 add_dependencies(Win32gdk GDKLIB)
 if(builtin_freetype)

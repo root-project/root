@@ -546,6 +546,7 @@ if(xrootd)
     message(STATUS "Downloading and building XROOTD version ${xrootd_version}") 
     ExternalProject_Add(
       XROOTD
+      PREFIX XROOTD
       URL http://xrootd.slac.stanford.edu/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
@@ -556,8 +557,60 @@ if(xrootd)
   endif()
 endif()
 
+#---Check for cling and llvm ----------------------------------------------------------------
+if(cling)
+  if(builtin_llvm)
+    set(LLVM_SOURCE_DIR ${CMAKE_SOURCE_DIR}/interpreter/llvm/src)
+    set(LLVM_INSTALL_DIR ${CMAKE_BINARY_DIR}/LLVM-install)
+    ExternalProject_Add(
+      LLVM
+      PREFIX LLVM
+      SOURCE_DIR ${LLVM_SOURCE_DIR}
+      INSTALL_DIR ${CMAKE_BINARY_DIR}/LLVM-install
+      CMAKE_ARGS -DLLVM_INCLUDE_TESTS=OFF 
+                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} 
+                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> 
+    )
+    #---The list of libraires is optatined by runnning 'llvm-config --libs'
+    set(LLVM_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LLVM-install/include)
+    set(LLVM_LIBRARIES -L${CMAKE_BINARY_DIR}/LLVM-install/lib -lclangFrontend -lclangSerialization -lclangDriver -lclangCodeGen
+                       -lclangParse -lclangSema -lclangAnalysis  -lclangRewriteCore -lclangAST -lclangLex -lclangBasic -lclangEdit
+                       -lLLVMAsmParser -lLLVMInstrumentation -lLLVMLinker -lLLVMArchive -lLLVMBitReader -lLLVMDebugInfo -lLLVMJIT
+                       -lLLVMipo -lLLVMVectorize -lLLVMBitWriter -lLLVMTableGen -lLLVMXCoreCodeGen -lLLVMXCoreDesc -lLLVMXCoreInfo
+                       -lLLVMX86AsmParser -lLLVMX86CodeGen -lLLVMX86Desc -lLLVMX86Info -lLLVMX86AsmPrinter -lLLVMX86Utils -lLLVMSparcCodeGen
+                       -lLLVMSparcDesc -lLLVMSparcInfo -lLLVMPowerPCCodeGen -lLLVMPowerPCDesc -lLLVMPowerPCAsmPrinter -lLLVMPowerPCInfo
+                       -lLLVMNVPTXCodeGen -lLLVMNVPTXDesc -lLLVMNVPTXInfo -lLLVMNVPTXAsmPrinter -lLLVMMSP430CodeGen -lLLVMMSP430Desc
+                       -lLLVMMSP430Info -lLLVMMSP430AsmPrinter -lLLVMMBlazeAsmParser -lLLVMMBlazeCodeGen -lLLVMMBlazeDesc -lLLVMMBlazeInfo
+                       -lLLVMMBlazeAsmPrinter -lLLVMMipsAsmParser -lLLVMMipsCodeGen -lLLVMMipsDesc -lLLVMMipsInfo -lLLVMMipsAsmPrinter
+                       -lLLVMHexagonCodeGen -lLLVMHexagonDesc -lLLVMHexagonInfo -lLLVMHexagonAsmPrinter -lLLVMCppBackendCodeGen
+                       -lLLVMCppBackendInfo -lLLVMCellSPUCodeGen -lLLVMCellSPUDesc -lLLVMCellSPUInfo -lLLVMARMAsmParser -lLLVMARMCodeGen
+                       -lLLVMSelectionDAG -lLLVMAsmPrinter -lLLVMARMDesc -lLLVMARMInfo -lLLVMARMAsmPrinter -lLLVMMCParser -lLLVMInterpreter
+                       -lLLVMCodeGen -lLLVMScalarOpts -lLLVMInstCombine -lLLVMTransformUtils -lLLVMAnalysis -lLLVMMCJIT -lLLVMRuntimeDyld
+                       -lLLVMExecutionEngine -lLLVMTarget -lLLVMMC -lLLVMObject -lLLVMCore -lLLVMSupport)
+    file(READ ${LLVM_SOURCE_DIR}/configure _filestr)
+    string(REGEX REPLACE ".*PACKAGE_VERSION='([0-9]+[.][0-9]+).*" "\\1" LLVM_VERSION ${_filestr})
+  else()
+    find_package(LLVM REQUIRED)
+  endif()
+
+  ExternalProject_Add(
+    CLING
+    PREFIX CLING
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/interpreter/cling
+    INSTALL_DIR ${CMAKE_BINARY_DIR}/CLING-install
+    CMAKE_ARGS -DCLING_PATH_TO_LLVM_SOURCE=${CMAKE_SOURCE_DIR}/interpreter/llvm/src
+               -DCLING_PATH_TO_LLVM_BUILD=${CMAKE_BINARY_DIR}/LLVM-install
+               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+               -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> 
+    )
+    set(CLING_INCLUDE_DIR ${CMAKE_BINARY_DIR}/CLING-install/include)
+    set(CLING_LIBRARIES -L${CMAKE_BINARY_DIR}/CLING-install/lib -lclingInterpreter -lclingMetaProcessor -lclingUtils ${LLVM_LIBRARIES})
+    set(CLING_CXXFLAGS "-fvisibility-inlines-hidden -Wno-unused-parameter -Wwrite-strings -pedantic -Wno-long-long -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS")
+    add_dependencies(CLING LLVM)
+endif()
+
 #---Report non implemented options---------------------------------------------------
-foreach(opt afs chirp clarens cling dcache gfal glite globus hdfs lzma pch peac pgsql sapdb srp)
+foreach(opt afs chirp clarens dcache gfal glite globus hdfs lzma pch peac pgsql sapdb srp)
   if(${opt})
     message(STATUS ">>> Option '${opt}' not implemented yet! Signal your urgency to pere.mato@cern.ch")
     set(${opt} OFF CACHE BOOL "" FORCE)

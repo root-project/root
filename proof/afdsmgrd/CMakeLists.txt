@@ -96,7 +96,7 @@ add_custom_command(
 # is current working directory by default)
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/afdsmgrdUnpack
-  DEPENDS Core Cint RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix
+  DEPENDS Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix
     Physics MathCore Thread Proof
   COMMENT "Unpacking afdsmgrd tarball"
   COMMAND ${CMAKE_COMMAND} -E tar xzf

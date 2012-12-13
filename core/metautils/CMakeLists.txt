@@ -4,14 +4,9 @@
 
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 ROOT_GLOB_HEADERS(headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
-
-if(NOT cling)
-  list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TMetaUtils.cxx)
-  list(REMOVE_ITEM headers TMetaUtils.h)
-endif()
+list(REMOVE_ITEM headers TMetaUtils.h)
 
 ROOT_GENERATE_DICTIONARY(G__MetaUtils ${headers} LINKDEF LinkDef.h)
-
 set(METAUTILS_DICTIONARY  ${CMAKE_CURRENT_BINARY_DIR}/G__MetaUtils.cxx PARENT_SCOPE)
 
 set(LibCore_SRCS ${LibCore_SRCS} ${sources} PARENT_SCOPE)

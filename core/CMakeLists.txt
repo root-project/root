@@ -6,13 +6,13 @@ ROOT_USE_PACKAGE(core/base)
 ROOT_USE_PACKAGE(core/clib)
 ROOT_USE_PACKAGE(core/cont)
 ROOT_USE_PACKAGE(core/meta)
+ROOT_USE_PACKAGE(core/metautils)
 ROOT_USE_PACKAGE(core/textinput)
 ROOT_USE_PACKAGE(core/unix)
 ROOT_USE_PACKAGE(core/winnt)
 ROOT_USE_PACKAGE(core/macosx)
 ROOT_USE_PACKAGE(core/zip)
 ROOT_USE_PACKAGE(core/lzma)
-ROOT_USE_PACKAGE(cint/cint)
 
 
 if(builtin_pcre)
@@ -72,7 +72,6 @@ endif()
 set_source_files_properties(${BASE1_DICTIONARY} GENERATED)
 set_source_files_properties(${BASE2_DICTIONARY} GENERATED)
 set_source_files_properties(${BASE3_DICTIONARY} GENERATED)
-set_source_files_properties(${BASE4_DICTIONARY} GENERATED)
 
 set_source_files_properties(${TEXTINPUT_CXX_SOURCES} PROPERTIES
                              COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/textinput/src )
@@ -85,6 +84,13 @@ set_source_files_properties(${CMAKE_SOURCE_DIR}/core/base/src/TPRegexp.cxx
 set_source_files_properties(${CMAKE_SOURCE_DIR}/core/lzma/src/ZipLZMA.c
                             COMPILE_FLAGS -I${LZMA_INCLUDE_DIR}
                            )
+set_source_files_properties(${CMAKE_SOURCE_DIR}/core/meta/src/TCintWithCling.cxx
+                            COMPILE_FLAGS "${CLING_CXXFLAGS} -I${LLVM_INCLUDE_DIR} -I${CLING_INCLUDE_DIR}"
+                            )
+set_source_files_properties(${CMAKE_SOURCE_DIR}/core/metautils/src/TClassEdit.cxx
+                            COMPILE_FLAGS "${CLING_CXXFLAGS} -I${LLVM_INCLUDE_DIR} -I${CLING_INCLUDE_DIR}"
+                            )
+
 
 if(${GCC_MAJOR} EQUAL 4 AND ${GCC_MINOR} EQUAL 1)
   set_source_files_properties(${CMAKE_SOURCE_DIR}/core/base/src/TString.cxx
@@ -124,12 +130,20 @@ foreach(src ${LibCore_SRCS})
   if(${src} MATCHES "\\.mm$")
     set_source_files_properties(${src} COMPILE_FLAGS "-ObjC++ -std=c++11")
   endif()
+  if(${src} MATCHES "/TCling")
+    set_source_files_properties(${src} COMPILE_FLAGS "${CLING_CXXFLAGS} -I${LLVM_INCLUDE_DIR} -I${CLING_INCLUDE_DIR}")
+  endif()
+  if(${src} MATCHES "/TClingCallbacks")
+    set_source_files_properties(${src} COMPILE_FLAGS "${CLING_CXXFLAGS} -I${LLVM_INCLUDE_DIR} -I${CLING_INCLUDE_DIR} -fno-rtti")
+  endif()
+  if(${src} MATCHES "/metautils/")
+    set_source_files_properties(${src} COMPILE_FLAGS "${CLING_CXXFLAGS} -I${LLVM_INCLUDE_DIR} -I${CLING_INCLUDE_DIR}")
+  endif()
 endforeach()
 
 
 ROOT_LINKER_LIBRARY(Core ${LibCore_SRCS} ${CORE_DICTIONARIES} 
-                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs}
-                    DEPENDENCIES Cint)
+                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs} ${CLING_LIBRARIES})
 add_Dependencies(Core CLIB_DICTIONARY CONT_DICTIONARY  META_DICTIONARY METAUTILS_DICTIONARY BASE_DICTIONARY)
 if(UNIX)
   add_dependencies(Core UNIX_DICTIONARY)
@@ -146,5 +160,8 @@ if(builtin_pcre)
 endif()
 if(builtin_lzma)
   add_dependencies(Core LZMA)
+endif()
+if(cling)
+  add_dependencies(Core CLING)
 endif()
 
