@@ -1267,7 +1267,7 @@ function createFillPatterns(svg, id, color) {
       var width = vis.attr("width"), height = vis.attr("height");
       var e, origin, rect;
 
-      if (typeof(vis['objects']) === 'undefined') {
+      if (!('objects' in vis)) {
          vis['objects'] = new Array();
          doubleTap(vis[0][0]);
       }
@@ -1761,25 +1761,7 @@ function createFillPatterns(svg, id, color) {
          var g = svg.append("svg:g")
             .attr("id", "e_"+g_id);
 
-         var points = g.selectAll("markers")
-            .data(histo.bins)
-            .enter()
-            .append("svg:path")
-            .attr("class", "marker")
-            .attr("transform", function(d) {
-               return "translate(" + histo.x(d.x) + "," + histo.y(d.y) + ")"
-            })
-            .style("fill", root_colors[histo['fMarkerColor']])
-            .style("stroke", root_colors[histo['fMarkerColor']])
-            .attr("d", marker)
-            .append("svg:title")
-            .text(function(d) {
-               return "x = " + d.x.toPrecision(5) + " \ny = " + d.y.toPrecision(5) +
-                      " \nerror x = " + d.xerr.toPrecision(5) +
-                      " \nerror y = " + d.yerr.toPrecision(5);
-            });
-
-         /* Add x-error indicators */
+         /* Draw x-error indicators */
          g.selectAll("error_x")
             .data(histo.bins)
             .enter()
@@ -1813,6 +1795,7 @@ function createFillPatterns(svg, id, color) {
                .style("stroke", root_colors[histo['fLineColor']])
                .style("stroke-width", histo['fLineWidth']);
          }
+         /* Draw y-error indicators */
          g.selectAll("error_y")
             .data(histo.bins)
             .enter()
@@ -1846,6 +1829,23 @@ function createFillPatterns(svg, id, color) {
                .style("stroke", root_colors[histo['fLineColor']])
                .style("stroke-width", histo['fLineWidth']);
          }
+         var points = g.selectAll("markers")
+            .data(histo.bins)
+            .enter()
+            .append("svg:path")
+            .attr("class", "marker")
+            .attr("transform", function(d) {
+               return "translate(" + histo.x(d.x) + "," + histo.y(d.y) + ")"
+            })
+            .style("fill", root_colors[histo['fMarkerColor']])
+            .style("stroke", root_colors[histo['fMarkerColor']])
+            .attr("d", marker)
+            .append("svg:title")
+            .text(function(d) {
+               return "x = " + d.x.toPrecision(5) + " \ny = " + d.y.toPrecision(5) +
+                      " \nerror x = " + d.xerr.toPrecision(5) +
+                      " \nerror y = " + d.yerr.toPrecision(5);
+            });
          g.selectAll("line")
             .append("svg:title")
             .text(function(d) {
@@ -2981,38 +2981,110 @@ function createFillPatterns(svg, id, color) {
       // By default, histograms are shown stacked.
       //    -the first histogram is paint
       //    -then the sum of the first and second, etc
+      if (!'fHistogram' in stack) return;
       if (!'fHists' in stack) return;
       if (stack['fHists'].length == 0) return;
       var histos = stack['fHists'];
+      var nhists = stack['fHists'].length;
       var opt = "";
-      var h, histo = stack['fHistogram'];
-      if (hframe) frame = hframe['frame'];
-      else hframe = this.createFrame(vis, pad, histo, null);
-      if ('redraw' in histo) // already drawn histo, so lets draw a clone
-         h = JSROOTCore.clone(histo);
-      else
-         h = histo;
-      if (h['_typename'].match(/\bJSROOTIO.TH1/))
-         this.drawHistogram1D(vis, pad, h, hframe);
-      else if (h['_typename'].match(/\bJSROOTIO.TH2/))
-         this.drawHistogram2D(vis, pad, h, hframe);
-      hframe['xmin'] = h['fXaxis']['fXmin'];
-      hframe['xmax'] = h['fXaxis']['fXmax'];
-      hframe['ymin'] = h['fYaxis']['fXmin'];
-      hframe['ymax'] = h['fYaxis']['fXmax'];
-      for (var i=0; i<histos.length; ++i) {
-         if ('redraw' in histo)
-            h = JSROOTCore.clone(histos[i]);
-         else
-            h = histos[i];
-         if ('fOption' in stack)
-            h['fOption'] += stack['fOption'];
-         h['fName'] += i;
-         // add the same option (until proper drawing is implemented)
-         h['fOption'] += "same";
-         // only draw TH1s (for the time being)
-         if (h['_typename'].match(/\bJSROOTIO.TH1/))
-            this.drawHistogram1D(vis, pad, h, hframe);
+      if ('fOption' in stack) opt = stack['fOption'].toLowerCase();
+      var lsame = false;
+      if (opt.indexOf("same") != -1) {
+         lsame = true;
+         opt.replace("same", "");
+      }
+      // compute the min/max of each axis
+      var i, h;
+      var xmin = 1e100;
+      var xmax = -xmin;
+      var ymin = 1e100;
+      var ymax = -xmin;
+      for (var i=0; i<nhists; ++i) {
+         h = histos[i];
+         if (h['fXaxis']['fXmin'] < xmin) xmin = h['fXaxis']['fXmin'];
+         if (h['fXaxis']['fXmax'] > xmax) xmax = h['fXaxis']['fXmax'];
+         if (h['fYaxis']['fXmin'] < ymin) ymin = h['fYaxis']['fXmin'];
+         if (h['fYaxis']['fXmax'] > ymax) ymax = h['fYaxis']['fXmax'];
+      }
+      var nostack = opt.indexOf("nostack") == -1 ? false : true;
+      if (opt.indexOf("nostack") == -1) stack.buildStack();
+      var themin, themax;
+      if (stack['fMaximum'] == -1111) themax = stack.getMaximum(opt);
+      else themax = stack['fMaximum'];
+      if (stack['fMinimum'] == -1111) {
+         themin = stack.getMinimum(opt);
+         if (pad && pad['fLogy']) {
+            if (themin > 0) themin *= .9;
+            else themin = themax * 1.e-3;
+         }
+         else if (themin > 0)
+            themin = 0;
+      }
+      else themin = stack['fMinimum'];
+      stack['fHistogram']['fTitle'] = stack['fTitle'];
+      //var histo = JSROOTCore.clone(stack['fHistogram']);
+      var histo = stack['fHistogram'];
+      if (!histo.TestBit(TH1StatusBits.kIsZoomed)) {
+         if (nostack && stack['fMaximum'] != -1111) histo['fMaximum'] = stack['fMaximum'];
+         else {
+            if (pad && pad['fLogy']) histo['fMaximum'] = themax*(1+0.2*JSROOTMath.log10(themax/themin));
+            else histo['fMaximum'] = 1.05 * themax;
+         }
+         if (nostack && stack['fMinimum'] != -1111) histo['fMinimum'] = stack['fMinimum'];
+         else {
+            if (pad && pad['fLogy']) histo['fMinimum'] = themin/(1+0.5*JSROOTMath.log10(themax/themin));
+            else histo['fMinimum'] = themin;
+         }
+      }
+      if (!lsame) {
+         if (hframe) frame = hframe['frame'];
+         else hframe = this.createFrame(vis, pad, histo, null);
+         if ('fOption' in stack) {
+            if (histo['fOption'].indexOf(stack['fOption'] == -1))
+               histo['fOption'] += stack['fOption'];
+         }
+         if (histo['_typename'].match(/\bJSROOTIO.TH1/))
+            this.drawHistogram1D(vis, pad, histo, hframe);
+         else if (histo['_typename'].match(/\bJSROOTIO.TH2/))
+            this.drawHistogram2D(vis, pad, histo, hframe);
+         hframe['xmin'] = histo['fXaxis']['fXmin'];
+         hframe['xmax'] = histo['fXaxis']['fXmax'];
+         hframe['ymin'] = histo['fYaxis']['fXmin'];
+         hframe['ymax'] = histo['fYaxis']['fXmax'];
+      }
+      if (nostack) {
+         for (var i=0; i<nhists; ++i) {
+            if ('redraw' in histo) // draw a clone if already drawn
+               h = JSROOTCore.clone(histos[i]);
+            else
+               h = histos[i];
+            if ('fOption' in stack) {
+               if (h['fOption'].indexOf(stack['fOption'] == -1))
+                  h['fOption'] += stack['fOption'];
+            }
+            h['fName'] += i;
+            h['fOption'] += "same";
+            // only draw TH1s (for the time being)
+            if (h['_typename'].match(/\bJSROOTIO.TH1/))
+               this.drawHistogram1D(vis, pad, h, hframe);
+         }
+      } else {
+         var h1;
+         for (var i=0; i<nhists; ++i) {
+            if ('redraw' in histo) // draw a clone if already drawn
+               h1 = JSROOTCore.clone(stack['fStack'][nhists-i-1]);
+            else
+               h1 = stack['fStack'][nhists-i-1];
+            if ('fOption' in stack) {
+               if (h1['fOption'].indexOf(stack['fOption'] == -1))
+                  h1['fOption'] += stack['fOption'];
+            }
+            h1['fName'] += i;
+            h1['fOption'] += "same";
+            // only draw TH1s (for the time being)
+            if (h1['_typename'].match(/\bJSROOTIO.TH1/))
+               this.drawHistogram1D(vis, pad, h1, hframe);
+         }
       }
    };
 
