@@ -10,12 +10,12 @@
  *************************************************************************/
 
 
-#ifndef ROOT_TCintWithCling
-#define ROOT_TCintWithCling
+#ifndef ROOT_TCling
+#define ROOT_TCling
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TCintWithCling                                                       //
+// TCling                                                       //
 //                                                                      //
 // This class defines an interface to the CINT C/C++ interpreter made   //
 // by Masaharu Goto of HP Japan.                                        //
@@ -39,16 +39,16 @@ extern "C" {
    namespace cling {
       class Transaction;
    }
-   void TCintWithCling__RegisterModule(const char* modulename,
+   void TCling__RegisterModule(const char* modulename,
                                        const char** headers,
                                        const char** includePaths,
                                        const char** macroDefines,
                                        const char** macroUndefines,
                                        void (*triggerFunc)() );
-   void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction&);
-   void TCintWithCling__UpdateListsOnUnloaded(const cling::Transaction&);
-   TObject* TCintWithCling__GetObjectAddress(const char *Name, void *&LookupCtx);
-   const clang::Decl* TCintWithCling__GetObjectDecl(TObject *obj);
+   void TCling__UpdateListsOnCommitted(const cling::Transaction&);
+   void TCling__UpdateListsOnUnloaded(const cling::Transaction&);
+   TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
+   const clang::Decl* TCling__GetObjectDecl(TObject *obj);
 
 }
 
@@ -69,7 +69,7 @@ namespace ROOT {
    }
 }
 
-class TCintWithCling : public TInterpreter {
+class TCling : public TInterpreter {
 private: // Static Data Members
 
    static void* fgSetOfSpecials; // set of TObjects used in CINT variables
@@ -100,8 +100,8 @@ private: // Data Members
 
 public: // Public Interface
 
-   virtual ~TCintWithCling();
-   TCintWithCling(const char* name, const char* title);
+   virtual ~TCling();
+   TCling(const char* name, const char* title);
 
    cling::Interpreter *GetInterpreter() { return fInterpreter; }
 
@@ -367,9 +367,9 @@ public: // Public Interface
 
 private: // Private Utility Functions
 
-   TCintWithCling();
-   TCintWithCling(const TCintWithCling&); // NOT IMPLEMENTED
-   TCintWithCling& operator=(const TCintWithCling&); // NOT IMPLEMENTED
+   TCling();
+   TCling(const TCling&); // NOT IMPLEMENTED
+   TCling& operator=(const TCling&); // NOT IMPLEMENTED
 
    void Execute(TMethod*, TObjArray*, int* /*error*/ = 0)
    {
@@ -378,7 +378,7 @@ private: // Private Utility Functions
    void UpdateListOfLoadedSharedLibraries();
    void RegisterLoadedSharedLibrary(const char* name);
 
-   ClassDef(TCintWithCling, 0) //Interface to CINT C/C++ interpreter
+   ClassDef(TCling, 0) //Interface to CINT C/C++ interpreter
 };
 
 #endif
@@ -394,12 +394,12 @@ private: // Private Utility Functions
  *************************************************************************/
 
 
-#ifndef ROOT_TCintWithCling
-#define ROOT_TCintWithCling
+#ifndef ROOT_TCling
+#define ROOT_TCling
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TCintWithCling                                                       //
+// TCling                                                       //
 //                                                                      //
 // This class defines an interface to the CINT C/C++ interpreter made   //
 // by Masaharu Goto of HP Japan.                                        //
@@ -423,16 +423,16 @@ extern "C" {
    namespace cling {
       class Transaction;
    }
-   void TCintWithCling__RegisterModule(const char* modulename,
+   void TCling__RegisterModule(const char* modulename,
                                        const char** headers,
                                        const char** includePaths,
                                        const char** macroDefines,
                                        const char** macroUndefines,
                                        void (*triggerFunc)() );
-   void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction&);
-   void TCintWithCling__UpdateListsOnUnloaded(const cling::Transaction&);
-   TObject* TCintWithCling__GetObjectAddress(const char *Name, void *&LookupCtx);
-   const clang::Decl* TCintWithCling__GetObjectDecl(TObject *obj);
+   void TCling__UpdateListsOnCommitted(const cling::Transaction&);
+   void TCling__UpdateListsOnUnloaded(const cling::Transaction&);
+   TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
+   const clang::Decl* TCling__GetObjectDecl(TObject *obj);
 
 }
 
@@ -453,7 +453,7 @@ namespace ROOT {
    }
 }
 
-class TCintWithCling : public TInterpreter {
+class TCling : public TInterpreter {
 private: // Static Data Members
 
    static void* fgSetOfSpecials; // set of TObjects used in CINT variables
@@ -484,8 +484,8 @@ private: // Data Members
 
 public: // Public Interface
 
-   virtual ~TCintWithCling();
-   TCintWithCling(const char* name, const char* title);
+   virtual ~TCling();
+   TCling(const char* name, const char* title);
 
    cling::Interpreter *GetInterpreter() { return fInterpreter; }
 
@@ -751,9 +751,9 @@ public: // Public Interface
 
 private: // Private Utility Functions
 
-   TCintWithCling();
-   TCintWithCling(const TCintWithCling&); // NOT IMPLEMENTED
-   TCintWithCling& operator=(const TCintWithCling&); // NOT IMPLEMENTED
+   TCling();
+   TCling(const TCling&); // NOT IMPLEMENTED
+   TCling& operator=(const TCling&); // NOT IMPLEMENTED
 
    void Execute(TMethod*, TObjArray*, int* /*error*/ = 0)
    {
@@ -762,7 +762,7 @@ private: // Private Utility Functions
    void UpdateListOfLoadedSharedLibraries();
    void RegisterLoadedSharedLibrary(const char* name);
 
-   ClassDef(TCintWithCling, 0) //Interface to CINT C/C++ interpreter
+   ClassDef(TCling, 0) //Interface to CINT C/C++ interpreter
 };
 
 #endif
