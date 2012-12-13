@@ -69,7 +69,7 @@ typedef ROOT::TMapTypeToTClass IdMap_t;
 class TClass : public TDictionary {
 
 friend class TCint;
-friend class TCintWithCling;
+friend class TCling;
 friend void ROOT::ResetClassVersion(TClass*, const char*, Short_t);
 friend class ROOT::TGenericClassInfo;
 

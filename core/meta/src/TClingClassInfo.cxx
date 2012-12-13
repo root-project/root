@@ -653,7 +653,7 @@ int TClingClassInfo::NMethods() const
    // We have a new decl; update the method count.
    fNMethods = 0;
    TClingMethodInfo t(fInterp, const_cast<TClingClassInfo*>(this));
-   // This while loop must be identical to TCintWithCling::CreateListOfMethods()
+   // This while loop must be identical to TCling::CreateListOfMethods()
    // (except for the ++fNMethods part, obviously)
    while (t.Next()) {
       // if name cannot be obtained no use to put in list

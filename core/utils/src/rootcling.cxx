@@ -4134,7 +4134,7 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
       "      0 };\n"
       "      static bool sInitialized = false;\n"
       "      if (!sInitialized) {\n"
-      "        TCintWithCling__RegisterModule(\"" << dictname << "\",\n"
+      "        TCling__RegisterModule(\"" << dictname << "\",\n"
       "          headers, includePaths, macroDefines, macroUndefines,\n"
       "          TriggerDictionaryInitalization_" << dictname << ");\n"
       "        sInitialized = true;\n"
@@ -5020,7 +5020,7 @@ int main(int argc, char **argv)
    (*dictHdrOut) << "#define G__DICTIONARY\n";
    (*dictHdrOut) << "#include \"RConfig.h\"\n"
                  << "#include \"TClass.h\"\n"
-                 << "#include \"TCintWithCling.h\"\n"
+                 << "#include \"TCling.h\"\n"
                  << "#include \"TBuffer.h\"\n"
                  << "#include \"TMemberInspector.h\"\n"
                  << "#include \"TError.h\"\n\n"

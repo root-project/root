@@ -60,7 +60,7 @@
 #pragma link C++ class TFileMergeInfo;
 
 #ifdef R__WITH_CLING
-#pragma link C++ class TCintWithCling;
+#pragma link C++ class TCling;
 #else
 #pragma link C++ class TCint;
 #endif

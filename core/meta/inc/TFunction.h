@@ -29,7 +29,7 @@
 class TFunction : public TDictionary {
 
 friend class TCint;
-friend class TCintWithCling;
+friend class TCling;
 
 protected:
    MethodInfo_t   *fInfo;            //pointer to CINT function info
