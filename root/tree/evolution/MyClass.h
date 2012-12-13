@@ -47,7 +47,11 @@ class TopLevel {
    vector<Track> *fTracksPtr;
 public:
    TopLevel() : fTracksPtr(0) {};
+#ifdef ClingWorkAroundJITandInline
+   virtual ~TopLevel();
+#else
    virtual ~TopLevel() { delete fTracksPtr; }
+#endif
    void AddTrack(int seed) {
       if (fTracksPtr==0) fTracksPtr = new vector<Track>;
       Track t(seed); fTracks.push_back(t); 
@@ -59,6 +63,10 @@ public:
    ClassDef(TopLevel,VERSION);
 #endif
 };
+
+#ifdef ClingWorkAroundJITandInline
+inline TopLevel::~TopLevel() { delete fTracksPtr; }
+#endif
 
 #elif VERSION==3
 

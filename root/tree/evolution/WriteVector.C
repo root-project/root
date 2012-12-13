@@ -1,5 +1,7 @@
 {
+#ifndef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine(".L MyClassVector.cxx+");
+#endif
    TFile *f = new TFile("vectorfile.root","RECREATE");
    TTree *t = new TTree("tree","test tree");
    TopLevel *obj = new TopLevel;

@@ -54,5 +54,11 @@
    t->Scan("TopClSplit99.fTracksPtr.fEnergy","","colsize=35"); cout << flush;
    f->Close();
    delete f;
+      
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   gApplication->Terminate(0);
+#else
+   return 0;
+#endif
 
 }

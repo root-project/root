@@ -1,5 +1,7 @@
 {
+#ifndef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine(".L MyClassClones.cxx+");
+#endif
    TFile *f = new TFile("clonesfile.root","RECREATE");
    TTree *t = new TTree("tree","test tree");
    TopLevel *obj = new TopLevel;

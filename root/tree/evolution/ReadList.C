@@ -1,6 +1,10 @@
 {
    gROOT->ProcessLine(".L MyClassList.cxx+");
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   TFile *f; f = new TFile("clonesfile.root","READ");
+#else
    TFile *f = new TFile("clonesfile.root","READ");
+#endif
    TTree *t; f->GetObject("tree",t);
    //TopLevel *obj = 0;
    //t->SetBranchAddress("Top",&obj);

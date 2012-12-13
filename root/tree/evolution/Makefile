@@ -65,11 +65,23 @@ MyClassVector_cxx.$(DllSuf): MyClass.h MyClassVector.cxx
 
 MyClassList_cxx.$(DllSuf) : MyClass.h MyClassVector.cxx
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+clonesfile.root: CALLROOTEXE += -e 'gROOT->ProcessLine(".L MyClassClones.cxx+");'
+endif
+
 clonesfile.root: $(ROOTCORELIBS) MyClassClones_cxx.$(DllSuf) WriteClones.C
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l WriteClones.C > WriteClones.log 2>&1 || handleError.sh --result=$$? --log=WriteClones.log
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+vectorfile.root: CALLROOTEXE += -e 'gROOT->ProcessLine(".L MyClassVector.cxx+");'
+endif
+ 
 vectorfile.root: $(ROOTCORELIBS) MyClassVector_cxx.$(DllSuf) WriteVector.C
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l WriteVector.C > WriteVector.log 2>&1  || handleError.sh --result=$$? --log=WriteVector.log
+
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+listfile.root: CALLROOTEXE += -e 'gROOT->ProcessLine(".L MyClassList.cxx+");'
+endif
 
 listfile.root: $(ROOTCORELIBS) MyClassList_cxx.$(DllSuf) WriteList.C
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l WriteList.C > WriteList.log 2>&1  || handleError.sh --result=$$? --log=WriteList.log
@@ -100,6 +112,12 @@ containerEvolution: containerEvolution.log ReadClones.log ReadVector.log ReadLis
 SimpleOne_C.$(DllSuf): Simple.h
 SimpleTwo_C.$(DllSuf): Simple.h
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+SimpleOne.root: CALLROOTEXE += -e 'gROOT->ProcessLine(".L SimpleOne.C+");'
+
+SimpleTwo.root: CALLROOTEXE += -e 'gROOT->ProcessLine(".L SimpleTwo.C+");'
+endif
+
 SimpleOne.root: SimpleOne_C.$(DllSuf) SimpleWrite.C $(ROOTCORELIBS)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'SimpleWrite.C(1)' > SimpleWriteOne.log
 
@@ -112,6 +130,9 @@ SimpleRead.log: SimpleOne.root SimpleTwo.root SimpleRead.C $(ROOTCORELIBS)
 SimpleTest: SimpleRead.log 
 	$(CMDECHO) diff -u -b -w SimpleRead.ref SimpleRead.log
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+cloning.root: CALLROOTEXE += -e 'gROOT->ProcessLine(".L cloningOne.C+");'
+endif
 
 cloning.root: cloningOne_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'runcloning.C(1)' > cloning_root.log
@@ -132,10 +153,11 @@ missingArray.clog: missingArray.root missingArray2_cc.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'missingArray2.cc+' > missingArray.clog
 
 missingArray: missingArray.clog
-	$(TestDiff)
+	$(TestDiffW)
 
 missingCollection.root: writeMissingCollection_cxx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l writeMissingCollection.cxx+ > writeMissingCollection.clog 2>&1 || handleError.sh --result=$$? --log=writeMissingCollection.clog
 
 execMissingCollection.clog: missingCollection.root
 
+execMissingCollection.success: EXTRA_DIFFOPTS += -w

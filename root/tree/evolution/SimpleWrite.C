@@ -16,13 +16,17 @@ void Write(const char *filename)
 
 void SimpleWriteOne() 
 {
+#ifndef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine(".L SimpleOne.C+");
+#endif
    Write("SimpleOne.root");
 }
 
 void SimpleWriteTwo() 
 {
+#ifndef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine(".L SimpleTwo.C+");
+#endif
    Write("SimpleTwo.root");
 }
 

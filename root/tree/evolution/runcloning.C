@@ -1,5 +1,7 @@
 void writeOriginal() {
+#ifndef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine(".L cloningOne.C+");
+#endif
    cloning * c = new cloning;
    TFile *file = new TFile("cloning.root","RECREATE");
    TTree *tree = new TTree("T","T");

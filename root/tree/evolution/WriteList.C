@@ -1,5 +1,7 @@
 {
+#ifndef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine(".L MyClassList.cxx+");
+#endif
    TFile *f = new TFile("listfile.root","RECREATE");
    TTree *t = new TTree("tree","test tree");
    TopLevel *obj = new TopLevel;
