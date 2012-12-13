@@ -724,8 +724,8 @@ function createFillPatterns(svg, id, color) {
       chopt = JSROOTPainter.clearCuts(chopt);
       if (hdim > 1) option.Scat = 1;
       if (!nch) option.Hist = 1;
-      if (histo['fFunctions'].length > 0) option.Func = 2;
-      if (histo['fSumw2'].length > 0 && hdim == 1) option.Error = 2;
+      if ('fFunctions' in histo && histo['fFunctions'].length > 0) option.Func = 2;
+      if ('fSumw2' in histo && histo['fSumw2'].length > 0 && hdim == 1) option.Error = 2;
       var l = chopt.indexOf('SPEC');
       if (l != -1) {
          option.Scat = 0;
@@ -2048,7 +2048,7 @@ function createFillPatterns(svg, id, color) {
 
    JSROOTPainter.drawFunctions = function(vis, histo, pad, frame) {
       /* draw statistics box & other TPaveTexts */
-      if (typeof(histo['fFunctions']) != 'undefined') {
+      if ('fFunctions' in histo) {
          for (i=0; i<histo['fFunctions'].length; ++i) {
             if (histo['fFunctions'][i]['_typename'] == 'JSROOTIO.TPaveText' ||
                 histo['fFunctions'][i]['_typename'] == 'JSROOTIO.TPaveStats') {
@@ -2981,7 +2981,6 @@ function createFillPatterns(svg, id, color) {
       // By default, histograms are shown stacked.
       //    -the first histogram is paint
       //    -then the sum of the first and second, etc
-      if (!'fHistogram' in stack) return;
       if (!'fHists' in stack) return;
       if (stack['fHists'].length == 0) return;
       var histos = stack['fHists'];
@@ -3021,6 +3020,24 @@ function createFillPatterns(svg, id, color) {
             themin = 0;
       }
       else themin = stack['fMinimum'];
+      if (!('fHistogram' in stack)) {
+         h = stack['fHists'][0];
+         stack['fHistogram'] = new Object();
+         stack['fHistogram']['_typename'] = stack['fHists'][0]['_typename'];
+         stack['fHistogram']['fName'] = "unnamed";
+         stack['fHistogram']['fBits'] = 0;
+         stack['fHistogram']['TestBit'] = function(bit) { return false };
+         stack['fHistogram']['fOption'] = "";
+         stack['fHistogram']['fXaxis'] = JSROOTCore.clone(h['fXaxis']);
+         stack['fHistogram']['fYaxis'] = JSROOTCore.clone(h['fYaxis']);
+         stack['fHistogram']['fXaxis']['fXmin'] = xmin;
+         stack['fHistogram']['fXaxis']['fXmax'] = xmax;
+         stack['fHistogram']['fYaxis']['fXmin'] = ymin;
+         stack['fHistogram']['fYaxis']['fXmax'] = ymax;
+         stack['fHistogram']['fXaxis']['fNbins'] = 0;
+         stack['fHistogram']['fYaxis']['fNbins'] = 0;
+         stack['fHistogram']['fArray'] = new Array();
+      }
       stack['fHistogram']['fTitle'] = stack['fTitle'];
       //var histo = JSROOTCore.clone(stack['fHistogram']);
       var histo = stack['fHistogram'];
