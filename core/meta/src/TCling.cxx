@@ -11,9 +11,15 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// This class defines an interface to cling as interpreter backend.     //
+// TCling                                                               //
+//                                                                      //
+// This class defines an interface to the cling C++ interpreter.        //
+//                                                                      //
+// Cling is a full ANSI compliant C++-11 interpreter based on           //
+// clang/LLVM technology.                                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
 #include "TCling.h"
 
 #include "TClingBaseClassInfo.h"

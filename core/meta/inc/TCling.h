@@ -2,7 +2,7 @@
 // Author: Axel Naumann, 2011-10-19
 
 /*************************************************************************
- * Copyright (C) 1995-2011, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -17,20 +17,20 @@
 //                                                                      //
 // TCling                                                               //
 //                                                                      //
-// This class defines an interface to the CINT C/C++ interpreter made   //
-// by Masaharu Goto of HP Japan.                                        //
+// This class defines an interface to the cling C++ interpreter.        //
 //                                                                      //
-// CINT is an almost full ANSI compliant C/C++ interpreter.             //
+// Cling is a full ANSI compliant C++-11 interpreter based on           //
+// clang/LLVM technology.                                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TInterpreter
 #include "TInterpreter.h"
-#endif // ROOT_TInterpreter
+#endif
 
 #ifndef WIN32
 #define TWin32SendClass char
-#endif // WIN32
+#endif
 
 extern "C" {
    namespace clang {
