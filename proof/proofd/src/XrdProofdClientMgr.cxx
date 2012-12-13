@@ -94,10 +94,9 @@ void *XrdProofdClientCron(void *p)
             continue;
          }
          // Parse type
-         //XrdOucString buf;
          if (msg.Type() == XrdProofdClientMgr::kClientDisconnect) {
-            // obsolete
-	    TRACE(XERR, "obsolete type: XrdProofdClientMgr::kClientDisconnect");
+            // Obsolete
+            TRACE(XERR, "obsolete type: XrdProofdClientMgr::kClientDisconnect");
          } else {
             TRACE(XERR, "unknown type: "<<msg.Type());
             continue;
@@ -462,26 +461,22 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
          response->SendI((kXR_int32)XPROOFD_VERSBIN, (void *)pp, i);
          p->SetStatus((XPD_NEED_MAP | XPD_NEED_AUTH));
          return 0;
-      } else {
-         response->SendI((kXR_int32)XPROOFD_VERSBIN);
-         p->SetStatus(XPD_LOGGEDIN);
-         if (pp)
-            p->SetAuthEntity();
+      } else if (pp) {
+         p->SetAuthEntity();
       }
-   } else {
-      // Check the client at theis point; the XrdProofdClient instance is created
-      // in here, if everything else goes well
-      int rccc = 0;
-      if ((rccc = CheckClient(p, p->UserIn(), emsg)) != 0) {
-         TRACEP(p, XERR, emsg);
-         XErrorCode rcode = (rccc == -2) ? (XErrorCode) kXR_NotAuthorized
-                                         : (XErrorCode) kXR_InvalidRequest;
-         response->Send(rcode, emsg.c_str());
-         return 0;
-      }
-      rc = response->SendI((kXR_int32)XPROOFD_VERSBIN);
-      p->SetStatus(XPD_LOGGEDIN);
    }
+   // Check the client at this point; the XrdProofdClient instance is created
+   // in here, if everything else goes well
+   int rccc = 0;
+   if ((rccc = CheckClient(p, p->UserIn(), emsg)) != 0) {
+      TRACEP(p, XERR, emsg);
+      XErrorCode rcode = (rccc == -2) ? (XErrorCode) kXR_NotAuthorized
+                                       : (XErrorCode) kXR_InvalidRequest;
+      response->Send(rcode, emsg.c_str());
+      return 0;
+   }
+   rc = response->SendI((kXR_int32)XPROOFD_VERSBIN);
+   p->SetStatus(XPD_LOGGEDIN);
 
    // Map the client
    return MapClient(p, 1);
