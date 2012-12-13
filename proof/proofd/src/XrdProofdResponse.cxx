@@ -659,7 +659,6 @@ void XrdProofdResponse::Set(ServerResponseHeader *resp)
 void XrdProofdResponse::Set(XrdLink *l)
 {
    // Set the link to be used by this response
-   XPDLOC(RSP, "Response::Set")
 
    {  XrdSysMutexHelper mh(fMutex);
       fLink = l;
