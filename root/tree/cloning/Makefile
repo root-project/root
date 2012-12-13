@@ -20,6 +20,10 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 Event.new.split0.root: copiedEvent$(ExeSuf) $(ROOTCORELIBS) 
 	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) Event.new.split0.root
 
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+hsimple1.root: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif
+
 hsimple1.root: hsimple.C
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b hsimple.C > hsimple.out
 	$(CMDECHO) mv hsimple.root hsimple1.root
@@ -28,6 +32,10 @@ hsimple1.root: hsimple.C
 event1.root: Event.new.split0.root 
 	$(CMDECHO) cp Event.new.split0.root event1.root
 	$(CMDECHO) cp event1.root event2.root
+
+ifneq ($(ClingWorkAroundBrokenUnnamedReturn)$(ClingWorkAroundUnnamedIncorrectInitOrder),)
+treeCloneTest.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif
 
 treeCloneTest.log: hsimple1.root event1.root runEvent.C run.C  $(ROOTCORELIBS) 
 	$(CMDECHO) ( $(CALLROOTEXE) -q -b -l run.C && $(CALLROOTEXE) -q -b -l runEvent.C ) > treeCloneTest.log 2>&1
@@ -54,8 +62,16 @@ CopyTree.root: make_CopyTree.C ver_40200.root $(ROOTCORELIBS)
 
 deepClass.log: CopyTree.root
 
+ifneq ($(ClingWorkAroundBrokenUnnamedReturn)$(ClingWorkAroundUnnamedIncorrectInitOrder),)
+deepClass: CINT_VERSION := brokenReturn
+endif
+
 deepClass: deepClass.log
-	$(TestDiff)
+	$(TestDiffCintSpecific)
 
 index: index.clog
 	$(TestDiff)
+
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+treeCloneTest2.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif

@@ -18,7 +18,14 @@
 // pictures, graphics objects, detector geometries, tracks, events, etc..
 // This file is now becoming the current directory.
 
+#ifdef ClingWorkAroundMissingImplicitAuto
+  TNtuple *ntuple;
+#endif
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+  TFile *hfile; hfile = (TFile*)gROOT->FindObject("hsimple.root"); if (hfile) hfile->Close();
+#else
   TFile *hfile = (TFile*)gROOT->FindObject("hsimple.root"); if (hfile) hfile->Close();
+#endif
   hfile = new TFile("hsimple.root","RECREATE","Demo ROOT file with histograms");
   ntuple = new TNtuple("ntuple","Demo ntuple","px:py:pz:random:i");
 
@@ -38,5 +45,9 @@
 
   hfile->Write();
 
-  return 0;
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   int res = 0;
+#else
+   return 0;
+#endif
 }

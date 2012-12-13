@@ -1,4 +1,7 @@
- {
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+void run ()
+#endif
+{
     bool result = true;
 
     TChain *chain = new TChain("ntuple");
@@ -51,13 +54,13 @@
 
     chain->LoadTree(0);
     origleaf  = chain->GetLeaf("pz");
-    clone3leaf = tupleClone3->GetLeaf("pz");
+    TLeaf *clone3leaf = tupleClone3->GetLeaf("pz");
     
     if (origleaf->GetValuePointer() != clone3leaf->GetValuePointer()) {
        cerr << "We have a problem since the address of the value is different in the original and in the third copy!" << endl;
        result = false;
     }
-    if (tupleClone3->GetBranch("MT")->GetAddress() != &a) {
+    if (tupleClone3->GetBranch("MT")->GetAddress() != (char*)&a) {
        cerr << "We have a problem since the address of the branch MT (" << (void*)(tupleClone3->GetBranch("MT")->GetAddress())
             << " is not the address of the variable (" << (void*)&a  << ")" << endl;
     }

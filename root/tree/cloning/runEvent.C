@@ -68,7 +68,7 @@ void runEvent()
       result = false;
    }
 
-   if (clone3->GetBranch("MT")->GetAddress() != &a) {
+   if (clone3->GetBranch("MT")->GetAddress() != (char*)&a) {
       cerr << "We have a problem since the address of the branch MT (" << (void*)(clone3->GetBranch("MT")->GetAddress())
            << " is not the address of the variable (" << (void*)&a << ")" << endl;
    }

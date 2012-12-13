@@ -1,3 +1,6 @@
+#if defined(ClingWorkAroundBrokenUnnamedReturn) || defined(ClingWorkAroundUnnamedIncorrectInitOrder)
+int make_CopyTree()
+#endif
 {
 TChain* c = new TChain("NtpSt","NtpSt");
 c->Add("ver_40200.root");
