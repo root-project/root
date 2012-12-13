@@ -2567,7 +2567,8 @@ void TGeoVolumeAssembly::CreateThreadData(Int_t nthreads)
       if (fThreadData[tid] == 0) {
          fThreadData[tid] = new ThreadData_t;
       }
-   }      
+   } 
+   TGeoVolume:: CreateThreadData(nthreads);
    TThread::UnLock();
 }
 

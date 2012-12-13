@@ -113,7 +113,10 @@ void TGeoBoolNode::CreateThreadData(Int_t nthreads)
       if (fThreadData[tid] == 0) {
          fThreadData[tid] = new ThreadData_t;
       }
-   }   
+   }
+   // Propagate to components
+   if (fLeft)  fLeft->CreateThreadData(nthreads);
+   if (fRight) fRight->CreateThreadData(nthreads);
    TThread::UnLock();
 }
 
