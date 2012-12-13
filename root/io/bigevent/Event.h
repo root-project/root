@@ -67,7 +67,7 @@ friend Bool_t  operator<=(const EventHeader& h1, const EventHeader& h2);
 
    ClassDef(EventHeader,1)  //Event Header
 };
-inline Bool_t     operator<=(const EventHeader& s1, const EventHeader& s2)
+inline Bool_t     operator<=(const EventHeader& /* s1 */, const EventHeader& /* s2 */)
 { return 0; }
 
 template <class T> struct template1 {};
