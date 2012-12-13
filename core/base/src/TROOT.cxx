@@ -104,7 +104,7 @@
 #include "TMap.h"
 #include "TObjString.h"
 #include "TVirtualMutex.h"
-# include "TCintWithCling.h"
+# include "TCling.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -1433,7 +1433,7 @@ void TROOT::InitInterpreter()
    // Initialize the interpreter. Should be called only after main(),
    // to make sure LLVM/Clang is fully initialized.
 
-   fInterpreter = new TCintWithCling("C/C++", "CINT+cling C/C++ Interpreter");
+   fInterpreter = new TCling("C/C++", "CINT+cling C/C++ Interpreter");
    fCleanups->Add(fInterpreter);
    fInterpreter->SetBit(kMustCleanup);
 
