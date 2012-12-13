@@ -1016,7 +1016,7 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
                   break;
             }
          }
-         if (obj['fBits'] && typeof(obj['fBits']) != "undefined") {
+         if (('fBits' in obj) && !('TestBit' in obj)) {
             obj['TestBit'] = function (f) {
                return ((obj['fBits'] & f) != 0);
             };
