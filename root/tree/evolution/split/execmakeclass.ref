@@ -2,4 +2,4 @@
 Processing execmakeclass.C...
 Error in <TTree::Show()>: Cannot read entry 0 (no data read)
 ======> EVENT:0
- data.TObject.fBits = 50331648
+ data.TObject.fBits = 33554432
