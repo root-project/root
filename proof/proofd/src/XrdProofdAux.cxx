@@ -1546,6 +1546,8 @@ int XrdProofdAux::ParsePidPath(const char *path,
    // <pid>, <after> with the string following <pid>.
    XPDLOC(AUX, "ParsePidPath")
 
+   before = "";
+   after = "";
    long int pid = -1;
    if (path && strlen(path)) {
       pid = 0;

@@ -142,8 +142,9 @@ void *XrdProofdProofServCron(void *p)
             // Notify action
             TRACE(REQ, "kSessionRemoval: session: "<<fpid<<
                         " has been removed from the active list");
-         } else if (msg.Type() == XrdProofdProofServMgr::kClientDisconnect) {
-            // obsolete
+        } else if (msg.Type() == XrdProofdProofServMgr::kClientDisconnect) {
+            // Obsolete
+            TRACE(XERR, "obsolete type: XrdProofdProofServMgr::kClientDisconnect");
         } else if (msg.Type() == XrdProofdProofServMgr::kCleanSessions) {
             // Request for cleanup all sessions of a client (or all clients)
             XpdSrvMgrCreateCnt cnt(mgr, XrdProofdProofServMgr::kCleanSessionsCnt);
@@ -1126,7 +1127,17 @@ int XrdProofdProofServMgr::CleanClientSessions(const char *usr, int srvtype)
    while (ii != tobedel.end()) {
       XPDFORM(key, "%d", *ii);
       XrdSysMutexHelper mhp(fMutex);
-      fSessions.Del(key.c_str());
+      XrdProofdProofServ *xps = fSessions.Find(key.c_str());
+      bool active = 0;
+      std::list<XrdProofdProofServ *>::iterator ixps = fActiveSessions.begin();
+      while (ixps != fActiveSessions.end()) {
+         if (*ixps == xps) {
+            active = 1;
+            break;
+         }
+         ixps++;
+      }
+      if (!active) fSessions.Del(key.c_str());
       ii++;
    }
 
@@ -4875,6 +4886,7 @@ int XrdProofSessionInfo::SaveToFile(const char *file)
       TRACE(XERR,"invalid input: "<< (file ? file : "<nul>"));
       return -1;
    }
+   TRACE(HDBG,"session saved to file: "<<file);
 
    // Create the file
    FILE *fpid = fopen(file, "w");
@@ -4952,9 +4964,9 @@ int XrdProofSessionInfo::ReadFromFile(const char *file)
          if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';
          sline = line;
          if ((from = sline.tokenize(fUser, from, ' ')) == -1)
-            TRACE(XERR,"warning: corrupted line? "<<line);
+            TRACE(XERR,"warning: fUser: corrupted line? "<<line<<" (file: "<<file<<")");
          if ((from = sline.tokenize(fGroup, from, ' ')) == -1)
-            TRACE(XERR,"warning: corrupted line? "<<line);
+            TRACE(XERR,"warning: fGroup: corrupted line? "<<line<<" (file: "<<file<<")");
       }
       if (fgets(line, sizeof(line), fpid)) {
          if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';
@@ -4965,13 +4977,13 @@ int XrdProofSessionInfo::ReadFromFile(const char *file)
          sline = line;
          from = 0;
          if ((from = sline.tokenize(t, from, ' ')) == -1)
-            TRACE(XERR,"warning: corrupted line? "<<line);
+            TRACE(XERR,"warning: fPid: corrupted line? "<<line<<" (file: "<<file<<")");
          fPid = t.atoi();
          if ((from = sline.tokenize(t, from, ' ')) == -1)
-            TRACE(XERR,"warning: corrupted line? "<<line);
+            TRACE(XERR,"warning: fID: corrupted line? "<<line<<" (file: "<<file<<")");
          fID = t.atoi();
          if ((from = sline.tokenize(t, from, ' ')) == -1)
-            TRACE(XERR,"warning: corrupted line? "<<line);
+            TRACE(XERR,"warning: fSrvType: corrupted line? "<<line<<" (file: "<<file<<")");
          fSrvType = t.atoi();
       }
       if (fgets(line, sizeof(line), fpid)) {
@@ -4979,11 +4991,11 @@ int XrdProofSessionInfo::ReadFromFile(const char *file)
          sline = line;
          from = 0;
          if ((from = sline.tokenize(fOrdinal, from, ' ')) == -1)
-            TRACE(XERR,"warning: corrupted line? "<<line);
+            TRACE(XERR,"warning: fOrdinal: corrupted line? "<<line<<" (file: "<<file<<")");
          if ((from = sline.tokenize(fTag, from, ' ')) == -1)
-            TRACE(XERR,"warning: corrupted line? "<<line);
+            TRACE(XERR,"warning: fTag: corrupted line? "<<line<<" (file: "<<file<<")");
          if ((from = sline.tokenize(fAlias, from, ' ')) == -1)
-            TRACE(XERR,"warning: corrupted line? "<<line);
+            TRACE(HDBG,"fAlias undefined "<<line);
       }
       if (fgets(line, sizeof(line), fpid)) {
          if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';
@@ -4994,10 +5006,10 @@ int XrdProofSessionInfo::ReadFromFile(const char *file)
          sline = line;
          from = 0;
          if ((from = sline.tokenize(t, from, ' ')) == -1)
-            TRACE(XERR,"warning: corrupted line? "<<line);
+            TRACE(XERR,"warning: fSrvProtVers: corrupted line? "<<line<<" (file: "<<file<<")");
          fSrvProtVers = t.atoi();
          if ((from = sline.tokenize(fROOTTag, from, ' ')) == -1)
-            TRACE(XERR,"warning: corrupted line? "<<line);
+            TRACE(XERR,"warning: fROOTTag: corrupted line? "<<line<<" (file: "<<file<<")");
       }
       // All the remaining into fUserEnvs
       fUserEnvs = "";
