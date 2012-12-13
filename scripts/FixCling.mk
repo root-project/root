@@ -10,6 +10,7 @@ CALLROOTEXE = root.exe
 # (incorrect behavior of C++ compliant code)
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectInitOrder"
 CALLROOTEXE += -e "\#define ClingWorkAroundPrintfIssues"
+CALLROOTEXE += -e "\#define ClingWorkAroundIncorrectTearDownOrder"
 # Major features/issues
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoading"
@@ -17,7 +18,6 @@ CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundScriptClassDef"
 CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
-CALLROOTEXE += -e "\#define ClingWorkAroundIncorrectTearDownOrder"
 # Convenience features, would be nice to have.
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenRecovery"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingImplicitAuto"
@@ -30,6 +30,8 @@ CALLROOTEXE += -e "\#define ClingWorkAroundNoDotNamespace"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotOptimization"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectFileLoc"
+# Most likely no longer supported.
+# CALLROOTEXE += -e "\#define ClingReinstateRedeclarationAllowed"
 
 # Not fully investigated:
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenMakeProject"
@@ -67,4 +69,7 @@ ClingWorkAroundUnnamedDetection = yes          # See https://savannah.cern.ch/bu
 ClingWorkAroundIncorrectTearDownOrder = yes    # See https://savannah.cern.ch/bugs/index.php?99266
 # Not fully investigated:
 ClingWorkAroundBrokenMakeProject = yes
+# Most likely no longer supported.
+# ClingReinstateRedeclarationAllowed = yes     # See https://savannah.cern.ch/bugs/index.php?99396 
+
 
