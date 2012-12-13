@@ -11,13 +11,13 @@ void treeBranch()
 {
    if (TClass::GetClass("TopLevel")==0) gROOT->ProcessLine(".L userClass.C+");
    TopLevel *one = new BottomOne;
-#ifndef __CINT__
+#if !defined(__CINT__) && !defined(__ROOTCLING__)
    TopLevel *missing = new BottomMissing;
 #endif
 
    TTree * t = new TTree;
    t->Branch("one",&one);
-#ifndef __CINT__
+#if !defined(__CINT__) && !defined(__ROOTCLING__)
    t->Branch("missing",&missing);
 #endif
    t->Print();

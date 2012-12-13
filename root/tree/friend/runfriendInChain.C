@@ -1,4 +1,7 @@
 {
+#ifdef ClingWorkAroundIncorrectTearDownOrder
+   if (1) {
+#endif
 TCanvas *c = new TCanvas;
 TChain ch("tRawData");
 ch.Add("dat_001.root");
@@ -17,5 +20,8 @@ ch2.Draw("Q2shift");
 
 ch.AddFriend(&ch2);
 ch.Draw("Q2shift");
+#ifdef ClingWorkAroundIncorrectTearDownOrder
+   }
+#endif
 }
 

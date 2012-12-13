@@ -5,5 +5,9 @@
    t->AddFriend(t2);
    t->GetListOfFriends()->ls();
    f->Write();
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   int res = 0;
+#else
    return 0;
+#endif
 }

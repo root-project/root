@@ -222,8 +222,14 @@ bool test_ReadObjectInTree(bool withdot) {
 }
 void test_Persistency0(bool withdot=false)
 {
-  gROOT->ProcessLine(".O 0");  // Disable CINT optimization
-
+#ifdef __CINT__
+   gROOT->ProcessLine(".O 0");  // Disable CINT optimization
+#else
+   gROOT->ProcessLine("#ifndef ClingWorkAroundNoDotOptimization\n"
+                      "gROOT->ProcessLine(\".O 0\");\n"
+                      "#endif\n"); // Disable CINT optimization
+#endif
+   
   cout << "ObjectInitialization: "      << (test_ObjectInitialization()      ? "OK" : "FAIL") << endl;
   cout << "WriteObject:          "      << (test_WriteObject()       ? "OK" : "FAIL") << endl;
   cout << "ReadObject:           "      << (test_ReadObject()        ? "OK" : "FAIL") << endl;

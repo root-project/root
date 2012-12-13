@@ -6,4 +6,4 @@ this is a test
 erased value
 99
 this is a test
-(bool)0
+(_Bool) false

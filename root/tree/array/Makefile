@@ -13,6 +13,10 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+objArrayTest.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L TestObj.cpp+");'
+endif
+
 objArrayTest.log: TestObj_cpp.$(DllSuf)
 
 objArrayTest: objArrayTest.log objArrayTest.ref

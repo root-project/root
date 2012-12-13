@@ -50,6 +50,11 @@ FriendOfFriends.log: friendOfFriend_C.$(DllSuf) testFriends_C.$(DllSuf)
 FriendOfFriends: FriendOfFriends.log
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+treefriend.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+ChainFriend.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif
+
 treefriend: treefriend.log
 	$(TestDiff)
 
@@ -66,7 +71,7 @@ chainBranchStatus: chainBranchStatus.log
 	$(TestDiff)
 
 circular: circular.clog
-	$(TestDiff)
+	$(TestDiffW)
 
 localfriend: localfriend.log
 	$(TestDiff)
@@ -76,4 +81,6 @@ UnevenChain: UnevenChain.log
 
 Unaligned: Unaligned.log
 	$(TestDiff)
+
+execMissingParentValue.success: EXTRA_DIFFOPTS += -w
 

@@ -19,6 +19,10 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+inheritTest.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L inherit.C+g");'
+endif
+
 inherit_C.$(DllSuf): inherit.C buildInherit.C
 
 inheritTest.log: runInherit.C inherit_C.$(DllSuf)
@@ -29,11 +33,15 @@ inheritTest: inheritTest.log
 
 header_h.$(DllSuf): header.h buildHeader.C
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+headerTest.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L header.h+g");'
+endif
+
 headerTest.log: runHeader.C header_h.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l runHeader.C > headerTest.log 2>&1
 
 headerTest: headerTest.log
-	$(CMDECHO) diff -ubw headerTest.log headerTest.ref
+	$(CMDECHO) diff -ubw headerTest.ref headerTest.log
 
 clonesA_Event_cxx.$(DllSuf): clonesA_Event.h clonesA_Event.cxx
 
@@ -44,6 +52,12 @@ clonesATest: clonesA.log
 	$(CMDECHO) test ! `(grep exception clonesA.log > /dev/null) && echo $?`
 
 Embedded_load_C.$(DllSuf) : buildEmbedded.C Embedded_load.C Embedded_objects.cpp Embedded_objects.h
+
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+Embedded.root: CALLROOTEXE += -e 'gROOT->ProcessLine(".L Embedded_load.C+");'
+
+EmbeddedTest.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L Embedded_load.C+");'
+endif
 
 Embedded.root: Embedded_load_C.$(DllSuf) embwrite.C
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l embwrite.C > embwrite.log
@@ -85,17 +99,25 @@ endif
 merging.log: merging.C
 
 merging: merging.log
-	$(TestDiff)
+	$(TestDiffW)
 
 iobug.log : iobug_C.$(DllSuf)
 
+#ifneq ($(),)
+iobug: CINT_VERSION = UnnamedDetection
+#endif
+
 iobug: iobug.log
-	$(TestDiff)
+	$(TestDiffCintSpecific)
 
 treeBranch.log: userClass_C.$(DllSuf) treeBranch_C.$(DllSuf)
 
+ifneq ($(ClingWorkAroundMissingUnloading),)
+treeBranch: CINT_VERSION = missingUnloading
+endif
+
 treeBranch: treeBranch.log
-	$(TestDiff)
+	$(TestDiffCintSpecific)
 
 inheritAndOwn.log: test_Persistency0_C.$(DllSuf)  test_Persistency3_C.$(DllSuf)
 
@@ -113,6 +135,13 @@ ursula: ursula.log
 ConfigRecord_cxx.$(DllSuf): ConfigRecord.cxx ConfigRecord.h sueloader_C.$(DllSuf)
 	$(BuildWithLib)	
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+configtest.root: CALLROOTEXE += -e 'gSystem -> Load("sueloader_C");gSystem -> Load("ConfigRecord_cxx");'
+
+suetest.log: CALLROOTEXE += -e 'gSystem -> Load("sueloader_C");gSystem -> Load("ConfigRecord_cxx");'
+
+endif
+
 configtest.root: ConfigRecord_cxx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l suetestwrt.C > configtest.log 2>&1
 	$(CMDECHO) diff -u -b -w configtest.ref configtest.log
@@ -123,6 +152,13 @@ suetest.log: configtest.root
 suetest: suetest.log
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+Jantest.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+
+execCheckErrors.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+
+endif
+
 Jantest.log: JansEvent_C.$(DllSuf)
 
 Jantest: Jantest.log
@@ -132,10 +168,10 @@ deepnest: deepnest.clog
 	$(TestDiff)
 
 baseString: baseString.clog
-	$(TestDiff)
+	$(TestDiffW)
 
 prova: prova.log
-	$(TestDiff)
+	$(TestDiffW)
 
 augertest: augertest.log
 	$(TestDiff)
@@ -148,3 +184,7 @@ memleak: memleak.clog
 
 tcls.root: assert_twrite.success
 assert_tread.eclog: tcls.root 
+
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+execReuseTree.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif

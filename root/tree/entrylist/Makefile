@@ -56,3 +56,4 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 chain: chain.log
 	$(TestDiff)
 
+execTEntryListArray.success: EXTRA_DIFFOPTS += -w

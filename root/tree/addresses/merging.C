@@ -4,6 +4,9 @@
 #include "TTree.h"
 #include "TROOT.h"
 
+#ifndef merging_C
+#define merging_C
+
 using namespace std;
 
 int merging() 
@@ -72,3 +75,5 @@ int merging()
    return 0;
    
 } // end of main
+
+#endif

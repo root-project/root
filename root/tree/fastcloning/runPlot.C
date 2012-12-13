@@ -3,7 +3,7 @@ void Plot(const char*filename) {
    TFile *f1 = new TFile(filename);
    TTree *t1; f1->GetObject("CalTuple",t1);
    if (t1==0) {
-      Fatal("Missing tree in file %s",filename);
+      Fatal("runPlot.C : Plot","Missing tree in file %s",filename);
    }
    t1->SetScanField(-1);
    t1->Scan("CalXtalAdcPed[2][0][6][0]:CalXtalAdcPedAllRange[2][0][6][0][1]","CalXtalAdcRng[2][0][6][0]==1");

@@ -1,9 +1,15 @@
 {
 // usage: root[0] .x testwrt.C
 
-gSystem -> Load("sueloader_C");
-gSystem -> Load("ConfigRecord_cxx");
-
+#ifndef ClingWorkAroundMissingDynamicScope
+   gSystem -> Load("sueloader_C");
+   gSystem -> Load("ConfigRecord_cxx");
+#endif
+   
+#ifdef ClingWorkAroundMissingImplicitAuto
+   TFile *f;
+   TTree *t;
+#endif
 f = new TFile("configtest.root","RECREATE");
 t = new TTree("Config","Config Test");
 

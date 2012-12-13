@@ -118,11 +118,18 @@ merge.log: merged/$(REFFILE) $(MERGEFILES) copiedEvent$(ExeSuf) dt_RunDrawTest_C
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundJITandInline),)
+single:
+
+merge:
+else
 single: single.log
 	$(TestDiff)
 
 merge: merge.log
 	$(TestDiff)
+
+endif
 
 CloneTree.root: make_CloneTree.C
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l make_CloneTree.C > make_CloneTree.log 2>&1
@@ -157,6 +164,7 @@ filemergererror: filemergererror.log
 badmix: badmix.log
 	$(TestDiff)
 
+
 abstract.root: abstract_C.$(DllSuf)
 	$(CMDECHO) root.exe -b -l -q 'abstract.C+(0)' > abstract_root.log 2>&1
 
@@ -168,3 +176,6 @@ abstract.log: copy-abstract.root
 abstract: abstract.log
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+filemergererror.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif

@@ -1,3 +1,8 @@
+#ifndef RecRecordImp_cxx
+#ifdef ClingWorkAroundMultipleInclude
+#define RecRecordImp_cxx
+#endif
+
 #include <iostream>
 using namespace std;
 
@@ -25,7 +30,7 @@ void  RecRecordImp<T>::Print(Option_t* /* option */) const {
 
 }
 
-
+#endif
 
 
 

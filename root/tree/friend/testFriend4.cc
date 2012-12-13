@@ -22,6 +22,6 @@ if (res!=1) {
    fprintf(stderr,"Error the status of the friend branch was not properly reset!\n");
    gApplication->Terminate(1);
 }
-return 0;
+gApplication->Terminate(0);
 
 }

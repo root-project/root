@@ -11,8 +11,8 @@
 #include "Event.h"
 #endif
 
-TH1 *RefClone(TH1* orig) {
-   TH1 *cloned = (TH1*)orig->Clone(); 
+TH1F *RefClone(TH1F* orig) {
+   TH1F *cloned = (TH1F*)orig->Clone(); 
    TString name = orig->GetName();
    name.Prepend("ref");
    cloned->SetName(name);
@@ -20,13 +20,31 @@ TH1 *RefClone(TH1* orig) {
    return cloned;
 };
 
-TH1* RefClone(TDirectory* from, const char* name) {
-  TH1 * orig = (TH1*)from->Get(name);
-  if (!orig) {
-    cerr << "Missing " << name << " from " << from->GetName() << endl;
-    return 0;
-  }
-  return RefClone(orig);
+TH2F *RefClone(TH1* orig) {
+   TH2F *cloned = (TH2F*)orig->Clone(); 
+   TString name = orig->GetName();
+   name.Prepend("ref");
+   cloned->SetName(name);
+   cloned->Reset();
+   return cloned;
+};
+
+TH1F* RefClone(TDirectory* from, const char* name) {
+   TH1F * orig = (TH1F*)from->Get(name);
+   if (!orig) {
+      cerr << "Missing " << name << " from " << from->GetName() << endl;
+      return 0;
+   }
+   return RefClone(orig);
+}
+
+TH2F* RefClone2(TDirectory* from, const char* name) {
+   TH2F * orig = (TH2F*)from->Get(name);
+   if (!orig) {
+      cerr << "Missing " << name << " from " << from->GetName() << endl;
+      return 0;
+   }
+   return RefClone(orig);
 }
 
 void MakeHisto(TTree *tree, TDirectory* To) {
@@ -94,7 +112,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
    TH1F *refClosestDistance9 = RefClone(where,"hClosestDistance9");
 
    TH1F *refClosestDistanceIndex = RefClone(where, "hClosestDistanceIndex");
-   TH2F *refPxInd = (TH2F*)RefClone(where,"hPxInd");
+   TH2F *refPxInd = (TH2F*)RefClone2(where,"hPxInd");
 
    TH1F *refSqrtNtrack = RefClone(where,"hSqrtNtrack");
    TH1F *refShiftValid = RefClone(where,"hShiftValid");

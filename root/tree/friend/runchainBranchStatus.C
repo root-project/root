@@ -1,4 +1,8 @@
 {
+#ifdef ClingWorkAroundMissingImplicitAuto
+TTree *t1,*t2,*t3;
+TChain *c1;
+#endif
 t1 = new TTree("t1","");
 t2 = new TTree("t2","");
 int one;

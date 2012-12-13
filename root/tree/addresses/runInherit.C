@@ -1,10 +1,16 @@
 {
+#ifndef ClingWorkAroundMissingDynamicScope
   gROOT->ProcessLine(".L inherit.C+g"); // .x STreeEvent.so
+#endif
   STreeEvent* pEvent = new STreeEvent; pEvent->Init();
   TTree tree; 
   tree.Branch("Event.", "STreeEvent", &pEvent);
-  TBranch *b = tree.GetBranch("Event.Fit");
-  if (b==0) {
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   TBranch *b ; b = tree.GetBranch("Event.Fit");
+#else
+   TBranch *b = tree.GetBranch("Event.Fit");
+#endif
+   if (b==0) {
      cerr << "There are no reasons to not have the branch Event.Fit" << endl;
   }
 
@@ -18,24 +24,28 @@
   cerr << "Resetting the branch addresses\n";
   tree.SetBranchAddress("Event.",&pEvent);
   tree.GetEntry(0);
-  cerr << "For pEvent val is    : " << pEvent.Fit.val << endl;
-  if (pEvent.Fit.val != 3) {
+  cerr << "For pEvent val is    : " << pEvent->Fit.val << endl;
+  if (pEvent->Fit.val != 3) {
      cerr << "Abnormal value of pEvent.Fit.val! It should have been 3." << endl;
      gApplication->Terminate(1);
   }
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+  BottomTrack * t ; t = dynamic_cast<BottomTrack*>(pEvent->Fit.pPhotons->At(0));
+#else
   BottomTrack * t = dynamic_cast<BottomTrack*>(pEvent->Fit.pPhotons->At(0));
+#endif
   if (t==0) {
      cerr << "Missing Track in pEvent->Fit.pPhotons" << endl;
      gApplication->Terminate(1);
   }
-  if (t.topval != -11) {
+  if (t->topval != -11) {
      cerr << "Bad value of Track in pEvent->Fit.pPhotons" << endl;
-     cerr << t.topval << " instead of " << -11 << endl;
+     cerr << t->topval << " instead of " << -11 << endl;
      gApplication->Terminate(1);
   }
-  if (t.bottomval != 11) {
+  if (t->bottomval != 11) {
      cerr << "Bad value of Track bottomval in pEvent->Fit.pPhotons" << endl;
-     cerr << t.bottomval << " instead of " << 11 << endl;
+     cerr << t->bottomval << " instead of " << 11 << endl;
      gApplication->Terminate(1);
   }
   t = dynamic_cast<BottomTrack*>(pEvent->Fit.pPhotons->At(1));
@@ -43,14 +53,14 @@
      cerr << "Missing Track in pEvent->Fit.pPhotons" << endl;
      gApplication->Terminate(1);
   }
-  if (t.topval != -12) {
+  if (t->topval != -12) {
      cerr << "Bad value of Track in pEvent->Fit.pPhotons" << endl;
-     cerr << t.topval << " instead of " << -12 << endl;
+     cerr << t->topval << " instead of " << -12 << endl;
      gApplication->Terminate(1);
   }
-  if (t.bottomval != 12) {
+  if (t->bottomval != 12) {
      cerr << "Bad value of Track in pEvent->Fit.pPhotons" << endl;
-     cerr << t.bottomval << " instead of " << 12 << endl;
+     cerr << t->bottomval << " instead of " << 12 << endl;
      gApplication->Terminate(1);
   }
 }

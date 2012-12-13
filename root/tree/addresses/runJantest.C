@@ -1,5 +1,9 @@
 void runJantest() {
   gSystem->Load("libPhysics");
   gROOT->LoadMacro( "JansEvent.C+" );
-  testJan();
+#ifdef ClingWorkAroundMissingDynamicScope
+   gROOT->ProcessLine("testJan();");
+#else
+   testJan();
+#endif
 }

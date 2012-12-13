@@ -30,7 +30,6 @@ void execCheckErrors(bool what = 0)
   // std::cout << "fTreeNumber = " << tree->GetTreeNumber() << std::endl;
   tree->LoadTree(0); // REQUIRED
   // std::cout << "fTreeNumber = " << tree->GetTreeNumber() << std::endl;
-#endif /* 0 or 1 */
   
   TBranch *p = ((TBranch *)-1);
   Int_t r;
@@ -53,7 +52,7 @@ void execCheckErrors(bool what = 0)
   p = ((TBranch *)-1);
   r = tree->SetBranchAddress("px", &px, &p);
   std::cout << "Float_t ... " << r << std::endl;
-  if (p==-1) {
+  if (p==((TBranch*)-1)) {
      std::cout << "p unchanged\n";
   } else if (p==0) {
      std::cout << "p set to zero\n";
@@ -72,7 +71,7 @@ void execCheckErrors(bool what = 0)
   p = ((TBranch *)-1);
   r = tree->SetBranchAddress("px", &ix, &p);
   std::cout << "Int_t ...  "  << r << std::endl;
-  if (p==-1) {
+  if (p==((TBranch*)-1)) {
      std::cout << "p unchanged\n";
   } else if (p==0) {
      std::cout << "p set to zero\n";
@@ -91,7 +90,7 @@ void execCheckErrors(bool what = 0)
   p = ((TBranch *)-1);
   r = tree->SetBranchAddress("px", &s, &p);
   std::cout << "TString ... "  << r << std::endl;
-  if (p==-1) {
+  if (p==((TBranch *)-1)) {
      std::cout << "p unchanged\n";
   } else if (p==0) {
      std::cout << "p set to zero\n";
@@ -108,7 +107,7 @@ void execCheckErrors(bool what = 0)
   p = ((TBranch *)-1);
   r = tree->SetBranchAddress("px", &os, &p);
   std::cout << "TObjString ... "  << r << std::endl;
-  if (p==-1) {
+  if (p==((TBranch*)-1)) {
      std::cout << "p unchanged\n";
   } else if (p==0) {
      std::cout << "p set to zero\n";
@@ -125,7 +124,7 @@ void execCheckErrors(bool what = 0)
   p = ((TBranch *)-1);
   r = tree->SetBranchAddress("fake_px", &fake_px, &p);
   std::cout << "nonexistent branch ... "  << r << std::endl;
-  if (p==-1) {
+  if (p==((TBranch*)-1)) {
      std::cout << "p unchanged\n";
   } else if (p==0) {
      std::cout << "p set to zero\n";
@@ -144,7 +143,7 @@ void execCheckErrors(bool what = 0)
   p = ((TBranch *)-1);
   r = tree->SetBranchAddress("str", &px, &p);
   std::cout << "Float ... "  << r << std::endl;
-  if (p==-1) {
+  if (p==((TBranch*)-1)) {
      std::cout << "p unchanged\n";
   } else if (p==0) {
      std::cout << "p set to zero\n";
