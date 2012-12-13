@@ -69,8 +69,14 @@ cscan: cscan.clog
 
 functca.log: EventTcaMember_cc.$(DllSuf)
 
+functca.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L EventTcaMember.cc+");gSystem->Load("libTreePlayer");'
+
 functca: functca.log
 	$(TestDiff)
+
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+QEvent.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L QEvent.cc+");'
+endif
 
 QEvent.log: QEvent_cc.$(DllSuf)
 

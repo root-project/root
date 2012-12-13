@@ -1,4 +1,8 @@
 {
   gSystem->Load("main_C");
-  return foo::run();
+#ifdef ClingWorkAroundMissingDynamicScope
+   return gROOT->ProcessLine("foo:run()");
+#else
+   return foo::run();
+#endif
 }

@@ -20,13 +20,14 @@ int test(TTree *tree) {
       double val2 = f2->EvalInstance(0);
       if ( TMath::Abs(val1 - val2) > 0.1 ) {
          fprintf(stderr,"For entry %d the 2 formula disagree f1 = %f f2 = %f\n",j,val1,val2);
-         result = 0;
+         result = 1;
       }
       if ( TMath::Abs(val2 - (j>5)) > 0.1 ) {
          fprintf(stderr,"For entry %d the 2nd formula is not as expected = %d f2 = %f\n",j,(j>5),val2);
-         result = 0;
+         result = 1;
       }
    }
+   return result;
 }
 int runsubform() {
    return test(GetTree());

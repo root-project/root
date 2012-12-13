@@ -1,6 +1,8 @@
 void runQEvent() {
 
-    gROOT->ProcessLine(".L QEvent.cc+");
+#ifndef ClingWorkAroundMissingDynamicScope
+   gROOT->ProcessLine(".L QEvent.cc+");
+#endif
 
     const Int_t n = 100;
     UInt_t *array = new UInt_t[n];
@@ -29,8 +31,13 @@ void runQEvent() {
     delete q;
     delete tp;
 
-    TFile *f = new TFile("myTest.root");
-    TTree *t = (TTree*)f->Get("t");
+#ifdef ClingReinstateRedeclarationAllowed
+   TFile *f = new TFile("myTest.root");
+   TTree *t = (TTree*)f->Get("t");   
+#else
+   f = new TFile("myTest.root");
+   t = (TTree*)f->Get("t");
+#endif
     t->StartViewer();
     t->Draw("event.fRawTriggerPulse.fSample");
 

@@ -5,8 +5,8 @@ public:
       return gROOT;
    }
    
-   static int stuff(double x) {
-      return *gROOT;
+   static long stuff(double x) {
+      return (long)ROOT::GetROOT();
    }
 };
 

@@ -9,7 +9,9 @@ bool mfunc() {
    TFormula *fabs = new TFormula("fabs","abs(x)");
    TFormula *fmabs = new TFormula("fmabs","TMath::Abs(x)");
    TFormula *f = new TFormula("f","myfunc(x,y,z)");
+#ifndef ClingWorkAroundCallfuncAndInline
    TFormula *fromcl = new TFormula("f2","testcl::calc(x,y)");
+#endif
 
    bool result = true;
    if ( fabs->Eval(-33.3) != 33.3 ) {
@@ -24,15 +26,17 @@ bool mfunc() {
       cerr << "myfunc fails with " << f->Eval(3,4.5,50000000) << endl;
       result = false;
    }
+#ifndef ClingWorkAroundCallfuncAndInline
    if ( fromcl->Eval(3,5) != 3*5 ) {
       cerr << "testcl::calc failed and returned: " << fromcl->Eval(3,5) << endl;
       result = false;
    }
+#endif
    if (!result) gApplication->Terminate(1);
    return result;
 }
 
-unsigned char func() { 
+int func() { 
    // this return value is returned to the shell!
    return !mfunc();
 }

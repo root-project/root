@@ -1,14 +1,12 @@
-#ifndef __CINT__
 #include <iostream>
 #include <TROOT.h>
 #include <TFile.h>
 #include <TTree.h>
 #include "EventTcaMember.h"
-#endif
 
 void runfunctca()
 {
-#ifdef __CINT__
+#ifndef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine(".L EventTcaMember.cc+");
 #endif
    TFile *f = new TFile("test.root", "RECREATE");

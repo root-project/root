@@ -11,8 +11,8 @@ bool left() {
 void testBoolOpt() {
    // .L testBoolOpt.C
 
-   TFormula * for = new TFormula("for","left() || right()");
-   for->Print();
+   TFormula * form = new TFormula("for","left() || right()");
+   form->Print();
    TFormula * fand = new TFormula("fand","!left() && !right()");
    fand->Print();
 
@@ -20,7 +20,7 @@ void testBoolOpt() {
    if ( left() || right() ) {}
 
    fprintf(stderr,"TFormula: left() || right()\n");
-   for->Eval(0);
+   form->Eval(0);
 
    fprintf(stderr,"regular C++: !left() && !right()\n");
    if ( !left() && !right() ) {}
@@ -52,7 +52,5 @@ void testBoolOpt() {
 
    fprintf(stderr,"TFormula: left()+ (!left() && !right()) + right()\n");
    fcomp->Eval(0);
-
-   
 
 }

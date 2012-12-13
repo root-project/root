@@ -2,7 +2,7 @@
 #include "TTree.h"
 #include "Riostream.h"
 
-void macos(char* name)
+void macos(const char* name)
 {
    //Char_t cHead1[9]= {61,62,63,64,65,66,67,68,69}; 
    static Char_t cHead1[10] = "123456789";
