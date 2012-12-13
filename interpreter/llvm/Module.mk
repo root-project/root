@@ -112,11 +112,16 @@ $(LLVMDEPO): $(LLVMDEPS)
 		fi; \
 		if [ $(ARCH) = "iossim" ]; then \
 			LLVM_CFLAGS="-arch i386 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
-			LLVM_HOST="--host=i686-apple-darwin10"; \
+			LLVM_HOST="--host=i386-apple-darwin"; \
 		fi; \
 		if [ $(ARCH) = "ios" ]; then \
 			LLVM_CFLAGS="-arch armv7 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
-			LLVM_HOST="--host=arm-apple-darwin10"; \
+			LLVM_EXTRA_OPTIONS="--with-extra-options='$$LLVM_CFLAGS'"; \
+			LLVM_HOST="--host=armv7-apple-darwin"; \
+			LLVM_TARGET="--target=armv7-apple-darwin"; \
+			LLVM_BUILD="--build=i386-apple-darwin"; \
+			LLVM_BUILD_CC="BUILD_CC=$(CC)"; \
+			LLVM_BUILD_CXX="BUILD_CXX=$(CXX)"; \
 		fi; \
 		if [ $(ARCH) = "solaris64CC5" ]; then \
 			LLVM_CFLAGS="-m64"; \
@@ -140,14 +145,18 @@ $(LLVMDEPO): $(LLVMDEPS)
 		cd $(dir $@)  && \
 		GNUMAKE=$(MAKE) $(LLVMDIRS)/configure \
 		$$LLVM_HOST \
+		$$LLVM_TARGET \
+		$$LLVM_BUILD \
 		--prefix=$(ROOT_OBJDIR)/$(LLVMDIRI) \
 		--disable-docs --disable-bindings \
 		--disable-visibility-inlines-hidden \
-		$(LLVMCXX11) \
-		$(LLVMLIBCXX11) \
+		$$LLVMCXX11 \
+		$$LLVMLIBCXX11 \
 		$(LLVMOPTFLAGS) \
 		--enable-targets=host \
+		$$LLVM_EXTRA_OPTIONS \
 		CC=$$LLVMCC CXX=$$LLVMCXX \
+		$$LLVM_BUILD_CC $$LLVM_BUILD_CXX \
 		CFLAGS="$$LLVM_CFLAGS" CXXFLAGS="$$LLVM_CFLAGS" )
 
 all-$(MODNAME): $(LLVMLIB)
