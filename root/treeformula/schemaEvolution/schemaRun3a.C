@@ -1,8 +1,24 @@
 {
-  gSystem->Load("./libEvent_2"); 
-  TFile f("Event.root");
-  T.Show(5); //ok
-  T.Scan("fTemperature"); //ok
-  // gSystem->Load("libTreePlayer");
-  tf = new TTreeFormula("tf","fTemperature",T);
+#if defined(ClingWorkAroundUnnamedIncorrectInitOrder) || defined(ClingWorkAroundIncorrectTearDownOrder)
+   if (1) {
+#endif
+      
+   gSystem->Load("./libEvent_2"); 
+   TFile f("Event.root");
+   
+#ifdef ClingWorkAroundMissingDynamicScope
+   TTree *T; f.GetObject("T",T);
+#endif
+   
+   T->Show(5); //ok
+   T->Scan("fTemperature"); //ok
+   // gSystem->Load("libTreePlayer");
+#ifdef ClingWorkAroundMissingImplicitAuto
+   TTreeFormula *
+#endif
+   tf = new TTreeFormula("tf","fTemperature",T);
+      
+#if defined(ClingWorkAroundUnnamedIncorrectInitOrder) || defined(ClingWorkAroundIncorrectTearDownOrder)
+   }
+#endif
 }
