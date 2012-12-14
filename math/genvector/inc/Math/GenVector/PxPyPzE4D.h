@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id$
+// @(#)root/mathcore:$Id: 04c6d98020d7178ed5f0884f9466bca32b031565 $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
 /**********************************************************************
@@ -13,7 +13,7 @@
 // Created by: fischler at Wed Jul 20   2005
 //   (starting from PxPyPzE4D by moneta)
 // 
-// Last update: $Id$
+// Last update: $Id: 04c6d98020d7178ed5f0884f9466bca32b031565 $
 // 
 #ifndef ROOT_Math_GenVector_PxPyPzE4D 
 #define ROOT_Math_GenVector_PxPyPzE4D  1
@@ -54,7 +54,7 @@ public :
    /**
       Default constructor  with x=y=z=t=0 
    */
-   PxPyPzE4D() : fX(0), fY(0), fZ(0), fT(0) { }
+   PxPyPzE4D() : fX(0.0), fY(0.0), fZ(0.0), fT(0.0) { }
 
 
    /**
