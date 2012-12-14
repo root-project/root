@@ -26,6 +26,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMissingSmartInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenUnnamedReturn"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedDetection"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedInclude"
+CALLROOTEXE += -e "\#define ClingWorkAroundJITfullSymbolResolution"
 CALLROOTEXE += -e "\#define ClingWorkAroundValuePrinterNotFullyQualified"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotNamespace"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotInclude"
@@ -53,6 +54,7 @@ ClingWorkAroundMissingUnloading = yes
 ClingWorkAroundMissingAutoLoading = yes        # See *also* the problem namespace and templates:
                                                #     https://savannah.cern.ch/bugs/index.php?99329
                                                #     https://savannah.cern.ch/bugs/index.php?99309
+ClingWorkAroundJITfullSymbolResolution = yes   # See https://savannah.cern.ch/bugs/index.php?98898
 ClingWorkAroundMissingSmartInclude = yes
 ClingWorkAroundBrokenUnnamedReturn = yes       # See https://savannah.cern.ch/bugs/index.php?99032
 ClingWorkAroundUnnamedIncorrectInitOrder = yes # See https://savannah.cern.ch/bugs/index.php?99210
