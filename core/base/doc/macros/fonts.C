@@ -9,7 +9,7 @@ TCanvas * fonts()
    for (int f = 12; f<=152; f+=10) {
       if (f!=142) drawtext(0.02,y, f,"ABCDEFGH abcdefgh 0123456789 @#$");
       else drawtext(0.02,y, f,"ABCD efgh 01234 @#$");
-      y- = 0.065;
+      y -= 0.065;
    }
    return Tf;
 }
