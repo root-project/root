@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id$
+// @(#)root/mathcore:$Id: b12794c790afad19142e34a401af6c233aba446b $
 // Authors: W. Brown, M. Fischler, L. Moneta    2005  
 
  /**********************************************************************
@@ -47,7 +47,7 @@ public :
    /**
       Default constructor  with x=y=0 
    */
-   Cartesian2D() : fX(0), fY(0)  {  }
+   Cartesian2D() : fX(0.0), fY(0.0)  {  }
 
    /**
       Constructor from x,y  coordinates
