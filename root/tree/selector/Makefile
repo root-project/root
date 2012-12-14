@@ -16,10 +16,10 @@ execWithAbort.log: execWithAbort.C $(ROOTCORELIBS)
 electorTest: selector.log
 	$(CMDECHO) diff -b selector.ref selector.log
 
-SelectorCintTest.log: sel01_C.$(DllSuf) $(ROOTCORELIBS)
+SelectorCintTest.log: sel01_C.$(DllSuf) runSelectorCintTest.C $(ROOTCORELIBS)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b runSelectorCintTest.C 2>&1 | $(RemoveDirs) > $@ 
 
 SelectorCintTest: SelectorCintTest.log
-	$(TestDiff)
+	$(TestDiffCintSpecific)
 
 execGetSelector.log: emptysel_C.$(DllSuf)
