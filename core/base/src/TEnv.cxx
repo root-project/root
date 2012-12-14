@@ -38,13 +38,16 @@
 //                                                                      //
 // E.g.:                                                                //
 //                                                                      //
-//   Unix.Rint.Root.DynamicPath: .:$ROOTSYS/lib:~/lib                   //
+//   Unix.Rint.Root.DynamicPath: .:$(ROOTSYS)/lib:~/lib                 //
 //   myapp.Root.Debug:  FALSE                                           //
 //   TH.Root.Debug: YES                                                 //
 //   *.Root.MemStat: 1                                                  //
 //                                                                      //
 // <SystemName> and <ProgName> or <RootName> may be the wildcard "*".   //
 // A # in the first column starts comment line.                         //
+//                                                                      //
+// Note that the environment variables (like $ROOTSYS) need to be       //
+// surrounded in parentheses in order to be expanded.                   //
 //                                                                      //
 // For the currently defined resources (and their default values) see   //
 // $ROOTSYS/etc/system.rootrc.                                          //
