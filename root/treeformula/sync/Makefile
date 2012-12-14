@@ -13,12 +13,19 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 Event.root: copiedEvent$(ExeSuf) 
 	$(CMDECHO) ./copiedEvent 20 1 9 1 > createfile.out
 
+ifneq ($(ClingWorkAroundJITfullSymbolResolution),)
+Simple: CALLROOTEXE += -e 'gSystem->Load("libEvent");'
+endif
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+Simple: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif
+
 Simple: Event.root
 ifeq ($(FAIL),)
 	$(WarnFailTest)
-	$(CMDECHO) $(CALLROOTEXE) -l -b -q 'Run.C(1)' > readfile.out
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q 'Run.C(1)' > readfile.out 2>&1 && diff -w readfile-1.ref readfile.out
 else
-	$(CMDECHO) $(CALLROOTEXE) -l -b -q 'Run.C(0)' > readfile.out
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q 'Run.C(0)' > readfile.out 2>&1 && diff -w readfile-0.ref readfile.out
 endif
 
 load.log: loadcode_C.$(DllSuf)
