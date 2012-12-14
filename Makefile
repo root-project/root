@@ -980,7 +980,7 @@ maintainer-clean:: distclean
 	   build/misc/root-help.el build-arch-stamp build-indep-stamp \
 	   configure-stamp build-arch-cint-stamp config.status config.log
 
-version: $(CLINGEXE)
+version: $(ROOTEXE)
 	@$(MAKEVERSION)
 
 staticlib: $(ROOTALIB)

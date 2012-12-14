@@ -5,10 +5,10 @@
 #
 # Author: Fons Rademakers, 28/4/2000
 
-CINT=cint/cint/main/cint_tmp
+ROOTEXE=bin/root.exe
 SCRIPT=build/version.cxx
 
-$CINT $SCRIPT
+$ROOTEXE -q -b -l $SCRIPT
 
 if test "x`uname | grep -i cygwin`" != "x"; then
     echo 'Need to run "dos2unix base/inc/RVersion.h"'

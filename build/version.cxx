@@ -1,4 +1,4 @@
-int main(int argc, char *argv[])
+int version()
 {
    // Reads from the file build/version_number the new version
    // number and generates the header base/inc/RVersion.h.
@@ -11,8 +11,8 @@ int main(int argc, char *argv[])
 
    FILE *fp = fopen(in, "r");
    if (!fp) {
-      printf("%s: can not open input file %s\n", argv[0], in);
-      exit(1);
+      printf("version.cxx: can not open input file %s\n", in);
+      return 1;
    }
    char vers[32];
    fgets(vers, sizeof(vers), fp);
@@ -21,8 +21,8 @@ int main(int argc, char *argv[])
 
    fp = fopen(inr, "r");
    if (!fp) {
-      printf("%s: can not open input file %s\n", argv[0], in);
-      exit(1);
+      printf("version.cxx: can not open input file %s\n", inr);
+      return 1;
    }
    char branch[2048];
    fgets(branch, sizeof(branch), fp);
@@ -35,8 +35,8 @@ int main(int argc, char *argv[])
    const char *out = "core/base/inc/RVersion.h";
    fp = fopen(out, "w");
    if (!fp) {
-      printf("%s: can not open output file %s\n", argv[0], out);
-      exit(1);
+      printf("version.cxx: can not open output file %s\n", out);
+      return 1;
    }
 
    fprintf(fp, "#ifndef ROOT_RVersion\n");
@@ -69,5 +69,5 @@ int main(int argc, char *argv[])
 
    fclose(fp);
 
-   exit(0);
+   return 0;
 }
