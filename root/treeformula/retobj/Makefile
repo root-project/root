@@ -15,7 +15,7 @@ include $(ROOTTEST_HOME)/scripts/Event.mk
 
 .SUFFIXES: .cxx .o .so
 
-retobjTest.log: Event.new.split0.root
+retobjTest.log: Event.new.split0.root helper.C
 
 retobjTest: retobjTest.log
 	$(TestDiff)
