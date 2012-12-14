@@ -188,6 +188,7 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
 
    R__LOCKGUARD2(gClingMutex);
    fFunc = gCling->CallFunc_Factory();
+   gCling->CallFunc_IgnoreExtraArgs(fFunc, true);
 
    fClass = gCling->ClassInfo_Factory();
    TClass *cl = 0;

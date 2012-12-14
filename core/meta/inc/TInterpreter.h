@@ -161,6 +161,7 @@ public:
    virtual CallFunc_t   *CallFunc_Factory() const {return 0;}
    virtual CallFunc_t   *CallFunc_FactoryCopy(CallFunc_t * /* func */) const {return 0;}
    virtual MethodInfo_t *CallFunc_FactoryMethod(CallFunc_t * /* func */) const {return 0;}
+   virtual void   CallFunc_IgnoreExtraArgs(CallFunc_t * /*func */, bool /*ignore*/) const {;}
    virtual void   CallFunc_Init(CallFunc_t * /* func */) const {;}
    virtual Bool_t CallFunc_IsValid(CallFunc_t * /* func */) const {return 0;}
    virtual void   CallFunc_ResetArg(CallFunc_t * /* func */) const {;}

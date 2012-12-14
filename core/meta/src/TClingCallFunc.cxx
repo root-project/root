@@ -748,10 +748,12 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues,
       return;
    }
    else if (num_given_args > num_params) {
-      Error("TClingCallFunc::Invoke",
-            "Too many function arguments given (min: %u max: %u, given: %lu)",
-            min_args, num_params, num_given_args);
-      return;
+      if (!fIgnoreExtraArgs) {
+         Error("TClingCallFunc::Invoke",
+               "Too many function arguments given (min: %u max: %u, given: %lu)",
+               min_args, num_params, num_given_args);
+         return;
+      }
    }
 
    // This will be the arguments actually passed to the JIT function.

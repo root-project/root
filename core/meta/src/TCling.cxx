@@ -3388,6 +3388,13 @@ MethodInfo_t* TCling::CallFunc_FactoryMethod(CallFunc_t* func) const
 }
 
 //______________________________________________________________________________
+void TCling::CallFunc_IgnoreExtraArgs(CallFunc_t* func, bool ignore) const
+{
+   TClingCallFunc* f = (TClingCallFunc*) func;
+   f->IgnoreExtraArgs(ignore);
+}
+
+//______________________________________________________________________________
 void TCling::CallFunc_Init(CallFunc_t* func) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;

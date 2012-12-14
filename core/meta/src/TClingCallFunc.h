@@ -69,6 +69,7 @@ private:
                                                 // with SetArgs() or SetFunc() (in which case the value
                                                 // stored here is a copy of the value stored in fArgVals).
                                                 // We do *not* own the data stored here.
+   bool                                fIgnoreExtraArgs;
 
 
 private:
@@ -82,14 +83,16 @@ public:
    ~TClingCallFunc() { delete fMethod; }
 
    explicit TClingCallFunc(cling::Interpreter *interp)
-      : fInterp(interp), fMethod(0), fEEFunc(0), fEEAddr(0)
+      : fInterp(interp), fMethod(0), fEEFunc(0), fEEAddr(0),
+        fIgnoreExtraArgs(false)
    {
       fMethod = new TClingMethodInfo(interp);
    }
 
    TClingCallFunc(const TClingCallFunc &rhs)
       : fInterp(rhs.fInterp), fMethod(0), fEEFunc(rhs.fEEFunc),
-        fEEAddr(rhs.fEEAddr), fArgs(rhs.fArgs)
+        fEEAddr(rhs.fEEAddr), fArgs(rhs.fArgs),
+        fIgnoreExtraArgs(rhs.fIgnoreExtraArgs)
    {
       fMethod = new TClingMethodInfo(*rhs.fMethod);
    }
@@ -103,6 +106,7 @@ public:
          fEEFunc = rhs.fEEFunc;
          fEEAddr = rhs.fEEAddr;
          fArgs = rhs.fArgs;
+         fIgnoreExtraArgs = rhs.fIgnoreExtraArgs;
       }
       return *this;
    }
@@ -112,6 +116,7 @@ public:
    long long           ExecInt64(void *address) const;
    double              ExecDouble(void *address) const;
    TClingMethodInfo   *FactoryMethod() const;
+   void                IgnoreExtraArgs(bool ignore) { fIgnoreExtraArgs = ignore; }
    void                Init();
    void               *InterfaceMethod() const;
    bool                IsValid() const;
