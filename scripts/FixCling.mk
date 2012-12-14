@@ -18,6 +18,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundScriptClassDef"
 CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
+CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
 # Convenience features, would be nice to have.
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenRecovery"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingImplicitAuto"
@@ -42,6 +43,8 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMissingUnloading"
 
 # Fixes used when building library via ACLiC
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndInline"
+CALLROOTEXEBUILD += -e "\#define ClingWorkAroundJITandInline"
+CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
 
 # variable to be used in Makefiles.
 ClingWorkAroundMissingImplicitAuto = yes
@@ -56,6 +59,7 @@ ClingWorkAroundUnnamedIncorrectInitOrder = yes # See https://savannah.cern.ch/bu
 ClingWorkAroundUnnamedIncorrectFileLoc = yes   # see https://savannah.cern.ch/bugs/index.php?99236
 ClingWorkAroundPrintfIssues = yes              # see https://savannah.cern.ch/bugs/index.php?99234
 ClingWorkAroundCallfuncAndInline = yes         # see https://savannah.cern.ch/bugs/index.php?98425
+ClingWorkAroundCallfuncAndReturnByValue = yes  # See https://savannah.cern.ch/bugs/index.php?98317 and https://savannah.cern.ch/bugs/?98148
 ClingWorkAroundUnnamedInclude = yes            # See https://savannah.cern.ch/bugs/index.php?99246
 ClingWorkAroundBrokenRecovery = yes
 ClingWorkAroundNoDotNamespace = yes            # See https://savannah.cern.ch/bugs/index.php?99288
