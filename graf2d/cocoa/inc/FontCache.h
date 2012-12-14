@@ -30,9 +30,6 @@
 // FontCache class:                                             //
 // ROOT's GUI relies on TVirtualX to create and use fonts,      //
 // fonts are referenced by integer identifiers.                 //
-// Also, non-GUI graphics wants difference fonts.               //
-// For the moment, this is quite lame implementation,           //
-// which I will fix in a future (I promise! ;) ).               //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
@@ -43,7 +40,7 @@ namespace Details {
 class FontCache {
 public:
    enum Details {
-      nPadFonts = 13
+      nPadFonts = 15
    };
 
    FontCache();
@@ -70,7 +67,9 @@ public:
 
 private:
 
-   CTFontRef SelectSymbolFont(Float_t fontSize);
+   //We have "two symbolic" fonts, both of them use the same symbol.ttf (index 11),
+   //but the second one (index
+   CTFontRef SelectSymbolFont(Float_t fontSize, unsigned fontIndex);
 
    typedef Util::CFStrongReference<CTFontRef> CTFontGuard_t;
    

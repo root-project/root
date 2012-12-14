@@ -345,7 +345,8 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/, co
 
    try {
       if (CTFontRef currentFont = fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize())) {
-         if (GetTextFont() / 10 == 12) {//Greek and math symbols.
+         const unsigned fontIndex = GetTextFont() / 10;
+         if (fontIndex == 12 || fontIndex == 15) {//Greek and math symbols.
             //This is a hack. Correct way is to extract glyphs from symbol.ttf,
             //find correct mapping, place this glyphs. This requires manual layout though (?),
             //and as usually, I have to many things to do, may be, one day I'll fix text rendering also.
