@@ -292,6 +292,11 @@ long TClingCallFunc::ExecInt(void *address) const
    args.insert(args.end(), fArgs.begin(), fArgs.end());
    cling::Value val;
    Invoke(args, &val);
+   if (val.type->isVoidType()) {
+      // CINT was silently return 0 in this case,
+      // for now emulate this behavior for backward compatibility ...
+      return 0;
+   }
    return val.simplisticCastAs<long>();
 }
 
