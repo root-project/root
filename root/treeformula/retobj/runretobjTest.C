@@ -31,9 +31,11 @@ gROOT->ProcessLine(
                    "check(\"event.fH.GetXaxis()\");"
                    "check(\"event.GetHistogram().GetXaxis()\");"
                    "check(\"event.fH.GetXaxis().IsA()\");"
-                   "//check(\"event.GetHeader()\");"
+//                   "//check(\"event.GetHeader()\");"
+#ifndef ClingWorkAroundCallfuncAndReturnByValue
                    "check(\"event.GetTrackCopy()\");"
                    "check(\"event.GetTrackCopy(2)\");"
+#endif
                    );
 #else
 check("event.fH");
@@ -42,9 +44,12 @@ check("event.fH.GetXaxis()");
 check("event.GetHistogram().GetXaxis()");
 check("event.fH.GetXaxis().IsA()");
 //check("event.GetHeader()");
+#ifndef ClingWorkAroundCallfuncAndReturnByValue
 check("event.GetTrackCopy()");
 check("event.GetTrackCopy(2)");
-#endif
+#endif // ClingWorkAroundCallfuncAndReturnByValue
+#endif // ClingWorkAroundMissingDynamicScope
+
 new TFile("mcpool.root");
 #ifdef ClingWorkAroundMissingDynamicScope
    TTree* Events; gFile->GetObject("Events",Events);

@@ -3,6 +3,7 @@ void check(const char*arg) {
   tree->GetEntry(0);
   o = (TObject*)tf->EvalObject();
   o = (TObject*)tf->EvalObject();
-  o->IsA()->Print();
-  tf->EvalClass()->Print();
+  if (o) o->IsA()->Print();
+  if (tf->EvalClass())
+     tf->EvalClass()->Print();
 }

@@ -154,20 +154,36 @@ public:
    UInt_t        GetFlag() const { return fFlag; }
    Float_t       GetTemperature() const { return fTemperature; }
    EventHeader  *GetHeader() { return &fEvtHdr; }
+#ifdef ClingWorkAroundCallfuncAndInline
+   TClonesArray *GetTracks() const;
+#else
    TClonesArray *GetTracks() const {return fTracks;}
+#endif
    TRefArray    *GetHighPt() const {return fHighPt;}
    TRefArray    *GetMuons()  const {return fMuons;}
    Track        *GetLastTrack() const {return (Track*)fLastTrack.GetObject();}
+#ifdef ClingWorkAroundCallfuncAndInline
+   TH1F         *GetHistogram() const;
+#else
    TH1F         *GetHistogram() const {return (TH1F*)fH;}
+#endif
    TH1          *GetWebHistogram()  const {return (TH1*)fWebHistogram.GetObject();}
    Int_t         GetMeasure(UChar_t which) { return (which<10)?fMeasures[which]:0; }
    Float_t       GetMatrix(UChar_t x, UChar_t y) { return (x<4&&y<4)?fMatrix[x][y]:0; }
 
+#ifdef ClingWorkAroundCallfuncAndInline
+   Track         GetTrackCopy(int i = 0) const;
+#else
    Track         GetTrackCopy(int i = 0) const { return *(Track*)fTracks->At(i); }
+#endif
    ClassDef(Event,1)  //Event structure
 };
 
-
+#ifdef ClingWorkAroundCallfuncAndInline
+TClonesArray *Event::GetTracks() const {return fTracks;}
+TH1F         *Event::GetHistogram() const {return (TH1F*)fH;}
+Track         Event::GetTrackCopy(int i) const { return *(Track*)fTracks->At(i); }
+#endif
 
 class HistogramManager {
 

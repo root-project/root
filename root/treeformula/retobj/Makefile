@@ -17,8 +17,12 @@ include $(ROOTTEST_HOME)/scripts/Event.mk
 
 retobjTest.log: Event.new.split0.root helper.C
 
+ifneq ($(ClingWorkAroundCallfuncAndReturnByValue),)
+retobjTest: CINT_VERSION = ClingWorkAroundCallfuncAndReturnByValue
+endif
+
 retobjTest: retobjTest.log
-	$(TestDiff)
+	$(TestDiffCintSpecific)
 
 #retobjTest: Event.new.split0.root
 #	$(CMDECHO)$(CALLROOTEXE) -q -l -b run.C > result 2>&1 && diff -bw result result.good
@@ -27,6 +31,7 @@ Event.new.split0.root: ./Event$(ExeSuf) ./libEvent.$(DllSuf)
 #	$(CMDECHO)echo creating Event.new.split0.root
 	$(CMDECHO)./Event 10 1 0 1 >/dev/null 2>&1  && cp Event.root Event.new.split0.root 
 
-
 enum: enum.log
-	$(TestDiff)
+	$(TestDiffCintSpecific)
+
+Event.$(ObjSuf): CXXFLAGS += -DClingWorkAroundCallfuncAndInline
