@@ -9,8 +9,8 @@ CALLROOTEXE = root.exe
 # Essential problems, must be fixed before the release.
 # (incorrect behavior of C++ compliant code)
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectInitOrder"
-CALLROOTEXE += -e "\#define ClingWorkAroundPrintfIssues"
 CALLROOTEXE += -e "\#define ClingWorkAroundIncorrectTearDownOrder"
+CALLROOTEXE += -e "\#define ClingWorkAroundPrintfIssues"
 # Major features/issues
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoading"
@@ -32,6 +32,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundNoDotOptimization"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectFileLoc"
 # Most likely no longer supported.
 # CALLROOTEXE += -e "\#define ClingReinstateRedeclarationAllowed"
+# CALLROOTEXE += -e "\#define ClingReinstateImplicitDynamicCast"
 
 # Not fully investigated:
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenMakeProject"
@@ -71,5 +72,6 @@ ClingWorkAroundIncorrectTearDownOrder = yes    # See https://savannah.cern.ch/bu
 ClingWorkAroundBrokenMakeProject = yes
 # Most likely no longer supported.
 # ClingReinstateRedeclarationAllowed = yes     # See https://savannah.cern.ch/bugs/index.php?99396 
+# ClingReinstateImplicitDynamicCast = yes      # See https://savannah.cern.ch/bugs/index.php?99395
 
 
