@@ -289,7 +289,7 @@ Int_t TProfile2D::BufferEmpty(Int_t action)
       Reset("ICES"); // reset without deleting the functions
       fBuffer = buffer;
    }
-   if (CanRebinAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
+   if (CanExtendAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
       //find min, max of entries in buffer
       Double_t xmin = fBuffer[2];
       Double_t xmax = xmin;
@@ -308,10 +308,10 @@ Int_t TProfile2D::BufferEmpty(Int_t action)
       } else {
          fBuffer = 0;
          Int_t keep = fBufferSize; fBufferSize = 0;
-         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,&fXaxis);
-         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,&fXaxis);
-         if (ymin <  fYaxis.GetXmin()) RebinAxis(ymin,&fYaxis);
-         if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,&fYaxis);
+         if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
+         if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
+         if (ymin <  fYaxis.GetXmin()) ExtendAxis(ymin,&fYaxis);
+         if (ymax >= fYaxis.GetXmax()) ExtendAxis(ymax,&fYaxis);
          fBuffer = buffer;
          fBufferSize = keep;
       }
@@ -1292,18 +1292,18 @@ void TProfile2D::Reset(Option_t *option)
 
 
 //______________________________________________________________________________
-void TProfile2D::RebinAxis(Double_t x, TAxis *axis)
+void TProfile2D::ExtendAxis(Double_t x, TAxis *axis)
 {
 // Profile histogram is resized along axis such that x is in the axis range.
 // The new axis limits are recomputed by doubling iteratively
 // the current axis range until the specified value x is within the limits.
 // The algorithm makes a copy of the histogram, then loops on all bins
-// of the old histogram to fill the rebinned histogram.
+// of the old histogram to fill the extended histogram.
 // Takes into account errors (Sumw2) if any.
-// The axis must be rebinnable before invoking this function.
-// Ex: h->GetXaxis()->SetCanRebin(kTRUE)
+// The axis must be extendable before invoking this function.
+// Ex: h->GetXaxis()->SetCanExtend(kTRUE)
 
-   TProfile2D* hold = TProfileHelper::RebinAxis(this, x, axis);
+   TProfile2D* hold = TProfileHelper::ExtendAxis(this, x, axis);
    if ( hold ) {
       fTsumwz  = hold->fTsumwz;
       fTsumwz2 = hold->fTsumwz2;

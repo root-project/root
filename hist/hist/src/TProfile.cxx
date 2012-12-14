@@ -351,7 +351,7 @@ Int_t TProfile::BufferEmpty(Int_t action)
       Reset("ICES"); // reset without deleting the functions
       fBuffer = buffer;
    }
-   if (CanRebinAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin()) {
+   if (CanExtendAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin()) {
       //find min, max of entries in buffer
       Double_t xmin = fBuffer[2];
       Double_t xmax = xmin;
@@ -365,8 +365,8 @@ Int_t TProfile::BufferEmpty(Int_t action)
       } else {
          fBuffer = 0;
          Int_t keep = fBufferSize; fBufferSize = 0;
-         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,&fXaxis);
-         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,&fXaxis);
+         if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
+         if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
          fBuffer = buffer;
          fBufferSize = keep;
       }
@@ -1495,18 +1495,18 @@ TH1 *TProfile::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
 }
 
 //______________________________________________________________________________
-void TProfile::RebinAxis(Double_t x, TAxis *axis)
+void TProfile::ExtendAxis(Double_t x, TAxis *axis)
 {
 // Profile histogram is resized along x axis such that x is in the axis range.
 // The new axis limits are recomputed by doubling iteratively
 // the current axis range until the specified value x is within the limits.
 // The algorithm makes a copy of the histogram, then loops on all bins
-// of the old histogram to fill the rebinned histogram.
+// of the old histogram to fill the extended histogram.
 // Takes into account errors (Sumw2) if any.
-// The axis must be rebinnable before invoking this function.
-// Ex: h->GetXaxis()->SetCanRebin(kTRUE)
+// The axis must be extendable before invoking this function.
+// Ex: h->GetXaxis()->SetCanExtend(kTRUE)
 
-   TProfile*  hold = TProfileHelper::RebinAxis(this, x, axis);
+   TProfile*  hold = TProfileHelper::ExtendAxis(this, x, axis);
    if ( hold ) {
       fTsumwy  = hold->fTsumwy;
       fTsumwy2 = hold->fTsumwy2;

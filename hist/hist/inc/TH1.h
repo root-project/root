@@ -88,7 +88,7 @@ public:
          kPoisson2 = 2   // errors from Poisson interval at 95% CL (~ 2 sigma)            
    };
 
-   // enumeration specifying which bins can be rebinned
+   // enumeration specifying which axes can be extended
    enum {
       kNoAxis  = 0, // NOTE: Must always be 0 !!!
       kXaxis = BIT(0),
@@ -167,7 +167,7 @@ public:
    enum {
       kNoStats     = BIT(9),  // don't draw stats box
       kUserContour = BIT(10), // user specified contour levels
-      kCanRebin    = BIT(11), // FIXME DEPRECATED, can rebin all axes
+      kCanRebin    = BIT(11), // FIXME DEPRECATED - to be removed, replaced by SetCanExtend / CanExtendAllAxes
       kLogX        = BIT(15), // X-axis in log scale
       kIsZoomed    = BIT(16), // bit set when zooming on Y axis
       kNoTitle     = BIT(17), // don't draw the histogram title
@@ -194,7 +194,7 @@ public:
    static  void     AddDirectory(Bool_t add=kTRUE);
    static  Bool_t   AddDirectoryStatus();
    virtual void     Browse(TBrowser *b);
-   virtual Bool_t   CanRebinAllAxes() const;
+   virtual Bool_t   CanExtendAllAxes() const;
    virtual Double_t Chi2Test(const TH1* h2, Option_t *option = "UU", Double_t *res = 0) const;
    virtual Double_t Chi2TestX(const TH1* h2, Double_t &chi2, Int_t &ndf, Int_t &igood,Option_t *option = "UU",  Double_t *res = 0) const;
    virtual void     ClearUnderflowAndOverflow();
@@ -211,6 +211,7 @@ public:
    virtual Int_t    BufferEmpty(Int_t action=0);
    virtual void     Eval(TF1 *f1, Option_t *option="");
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   virtual void     ExtendAxis(Double_t x, TAxis *axis);
    virtual TH1     *FFT(TH1* h_output, Option_t *option);
    virtual Int_t    Fill(Double_t x);
    virtual Int_t    Fill(Double_t x, Double_t w);
@@ -335,7 +336,6 @@ public:
    virtual void     PutStats(Double_t *stats);
    virtual TH1     *Rebin(Int_t ngroup=2, const char*newname="", const Double_t *xbins=0);  // *MENU*
    virtual TH1     *RebinX(Int_t ngroup=2, const char*newname="") { return Rebin(ngroup,newname, (Double_t*) 0); }
-   virtual void     RebinAxis(Double_t x, TAxis *axis);
    virtual void     Rebuild(Option_t *option="");
    virtual void     RecursiveRemove(TObject *obj);
    virtual void     Reset(Option_t *option="");
@@ -363,7 +363,7 @@ public:
    virtual void     SetBinsLength(Int_t = -1) { } //redefined in derived classes
    virtual void     SetBinErrorOption(EBinErrorOpt type) { fBinStatErrOpt = type; }
    virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
-   virtual UInt_t   SetCanRebin(UInt_t rebinBitMask);
+   virtual UInt_t   SetCanExtend(UInt_t extendBitMask);
    virtual void     SetCellContent(Int_t binx, Int_t biny, Double_t content);
    virtual void     SetCellError(Int_t binx, Int_t biny, Double_t content);
    virtual void     SetContent(const Double_t *content);

@@ -169,7 +169,7 @@ Int_t TH2::BufferEmpty(Int_t action)
       fBuffer = buffer;
    }
 
-   if (CanRebinAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
+   if (CanExtendAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
       //find min, max of entries in buffer
       Double_t xmin = fBuffer[2];
       Double_t xmax = xmin;
@@ -188,10 +188,10 @@ Int_t TH2::BufferEmpty(Int_t action)
       } else {
          fBuffer = 0;
          Int_t keep = fBufferSize; fBufferSize = 0;
-         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,&fXaxis);
-         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,&fXaxis);
-         if (ymin <  fYaxis.GetXmin()) RebinAxis(ymin,&fYaxis);
-         if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,&fYaxis);
+         if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
+         if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
+         if (ymin <  fYaxis.GetXmin()) ExtendAxis(ymin,&fYaxis);
+         if (ymax >= fYaxis.GetXmax()) ExtendAxis(ymax,&fYaxis);
          fBuffer = buffer;
          fBufferSize = keep;
       }
@@ -1595,8 +1595,8 @@ Long64_t TH2::Merge(TCollection *list)
    Int_t binx, biny, ix, iy, nx, ny, bin, ibin;
    Double_t cu;
    Int_t nbix = fXaxis.GetNbins();
-   Bool_t canRebin = CanRebinAllAxes();
-   SetCanRebin(TH1::kNoAxis); // reset, otherwise setting the under/overflow will rebin
+   Bool_t canExtend = CanExtendAllAxes();
+   SetCanExtend(TH1::kNoAxis); // reset, otherwise setting the under/overflow will extend the axis 
 
    while ((h=(TH2*)next())) {
       // process only if the histogram has limits; otherwise it was processed before
@@ -1643,7 +1643,7 @@ Long64_t TH2::Merge(TCollection *list)
          }
       }
    }
-   SetCanRebin(canRebin);
+   SetCanExtend(canExtend);
 
    //copy merged stats
    PutStats(totstats);
@@ -1745,9 +1745,9 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
       hnew->SetName(newname);
    }
 
-   // disable axis rebinning to avoid label inflation in SetBinContent
-   Int_t canRebin = hnew->CanRebinAllAxes();
-   hnew->SetCanRebin(TH1::kNoAxis);
+   // disable axis extension to avoid label inflation in SetBinContent
+   Int_t canExtend = hnew->CanExtendAllAxes();
+   hnew->SetCanExtend(TH1::kNoAxis);
 
    // save original statistics
    Double_t stat[kNstat];
@@ -1957,7 +1957,7 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    //restore statistics and entries  modified by SetBinContent
    hnew->SetEntries(entries);
    if (!resetStat) hnew->PutStats(stat);
-   hnew->SetCanRebin(canRebin);
+   hnew->SetCanExtend(canExtend);
 
    delete [] oldBins;
    if (oldErrors) delete [] oldErrors;

@@ -55,15 +55,15 @@ void TMinuit2TraceObject::Init(const ROOT::Minuit2::MnUserParameterState & state
 
    fHistoFval = new TH1D("minuit2_hist_fval","Function Value/iteration",2,0,1);
    fHistoEdm = new TH1D("minuit2_hist_edm","Edm/iteration",2,0,1);
-   fHistoFval->SetCanRebin(TH1::kAllAxes);
-   fHistoEdm->SetCanRebin(TH1::kAllAxes);
+   fHistoFval->SetCanExtend(TH1::kAllAxes);
+   fHistoEdm->SetCanExtend(TH1::kAllAxes);
 
    // create histos for all parameters
    fHistoParList = new TList();
    for (unsigned int ipar = 0; ipar < state.Params().size(); ++ipar) { 
       if (state.Parameter(ipar).IsFixed() || state.Parameter(ipar).IsConst() ) continue;
       TH1D * h1 = new TH1D(TString::Format("minuit2_hist_par%d",ipar),TString::Format("Value of %s/iteration",state.Name(ipar)),2,0,1);
-      h1->SetCanRebin(TH1::kAllAxes);
+      h1->SetCanExtend(TH1::kAllAxes);
       fHistoParList->Add(h1);      
    }
 

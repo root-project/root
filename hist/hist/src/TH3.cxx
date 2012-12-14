@@ -167,7 +167,7 @@ Int_t TH3::BufferEmpty(Int_t action)
       Reset("ICES");  
       fBuffer = buffer;
    }
-   if (CanRebinAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() ||
+   if (CanExtendAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() ||
       fYaxis.GetXmax() <= fYaxis.GetXmin() ||
       fZaxis.GetXmax() <= fZaxis.GetXmin()) {
          //find min, max of entries in buffer
@@ -193,12 +193,12 @@ Int_t TH3::BufferEmpty(Int_t action)
          } else {
             fBuffer = 0;
             Int_t keep = fBufferSize; fBufferSize = 0;
-            if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,&fXaxis);
-            if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,&fXaxis);
-            if (ymin <  fYaxis.GetXmin()) RebinAxis(ymin,&fYaxis);
-            if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,&fYaxis);
-            if (zmin <  fZaxis.GetXmin()) RebinAxis(zmin,&fZaxis);
-            if (zmax >= fZaxis.GetXmax()) RebinAxis(zmax,&fZaxis);
+            if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
+            if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
+            if (ymin <  fYaxis.GetXmin()) ExtendAxis(ymin,&fYaxis);
+            if (ymax >= fYaxis.GetXmax()) ExtendAxis(ymax,&fYaxis);
+            if (zmin <  fZaxis.GetXmin()) ExtendAxis(zmin,&fZaxis);
+            if (zmax >= fZaxis.GetXmax()) ExtendAxis(zmax,&fZaxis);
             fBuffer = buffer;
             fBufferSize = keep;
          }
@@ -1651,8 +1651,8 @@ Long64_t TH3::Merge(TCollection *list)
    Double_t cu;
    Int_t nbix = fXaxis.GetNbins();
    Int_t nbiy = fYaxis.GetNbins();
-   Bool_t canRebin = CanRebinAllAxes();
-   SetCanRebin(TH1::kNoAxis); // reset, otherwise setting the under/overflow will rebin
+   Bool_t canExtend = CanExtendAllAxes();
+   SetCanExtend(TH1::kNoAxis); // reset, otherwise setting the under/overflow will extend the axis 
 
    while ( (h=(TH3*)next()) ) {
       // process only if the histogram has limits; otherwise it was processed before
@@ -1710,7 +1710,7 @@ Long64_t TH3::Merge(TCollection *list)
          }
       }
    }
-   if (canRebin) SetCanRebin(TH1::kAllAxes);
+   if (canExtend) SetCanExtend(TH1::kAllAxes);
 
    //copy merged stats
    PutStats(totstats);

@@ -12,7 +12,7 @@ void hlabels1()
    TH1F *h = new TH1F("h","test",3,0,3);
    h->SetStats(0);
    h->SetFillColor(38);
-   h->SetCanRebin(TH1::kAllAxes);
+   h->SetCanExtend(TH1::kAllAxes);
    for (Int_t i=0;i<5000;i++) {
       Int_t r = gRandom->Rndm()*20;
       h->Fill(people[r],1);

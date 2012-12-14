@@ -90,6 +90,7 @@ public:
    virtual Bool_t   Divide(TF1 *h1, Double_t c1=1);
    virtual Bool_t   Divide(const TH1 *h1);
    virtual Bool_t   Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+   virtual void     ExtendAxis(Double_t x, TAxis *axis);
    virtual Int_t    Fill(Double_t x, Double_t y);
    virtual Int_t    Fill(const char *namex, Double_t y);
    virtual Int_t    Fill(Double_t x, Double_t y, Double_t w);
@@ -119,7 +120,6 @@ public:
            TH1D    *ProjectionX(const char *name="_px", Option_t *option="e") const;
    virtual void     PutStats(Double_t *stats);
            TH1     *Rebin(Int_t ngroup=2, const char*newname="", const Double_t *xbins=0);
-   virtual void     RebinAxis(Double_t x, TAxis *axis);
    virtual void     Reset(Option_t *option="");
    virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void     Scale(Double_t c1=1, Option_t *option="");

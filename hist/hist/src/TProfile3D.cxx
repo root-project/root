@@ -253,7 +253,7 @@ Int_t TProfile3D::BufferEmpty(Int_t action)
       Reset("ICES"); // reset without deleting the functions
       fBuffer = buffer;
    }
-   if (CanRebinAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
+   if (CanExtendAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
       //find min, max of entries in buffer
       Double_t xmin = fBuffer[2];
       Double_t xmax = xmin;
@@ -277,12 +277,12 @@ Int_t TProfile3D::BufferEmpty(Int_t action)
       } else {
          fBuffer = 0;
          Int_t keep = fBufferSize; fBufferSize = 0;
-         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,&fXaxis);
-         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,&fXaxis);
-         if (ymin <  fYaxis.GetXmin()) RebinAxis(ymin,&fYaxis);
-         if (ymax >= fYaxis.GetXmax()) RebinAxis(ymax,&fYaxis);
-         if (zmin <  fZaxis.GetXmin()) RebinAxis(zmin,&fZaxis);
-         if (zmax >= fZaxis.GetXmax()) RebinAxis(zmax,&fZaxis);
+         if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
+         if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
+         if (ymin <  fYaxis.GetXmin()) ExtendAxis(ymin,&fYaxis);
+         if (ymax >= fYaxis.GetXmax()) ExtendAxis(ymax,&fYaxis);
+         if (zmin <  fZaxis.GetXmin()) ExtendAxis(zmin,&fZaxis);
+         if (zmax >= fZaxis.GetXmax()) ExtendAxis(zmax,&fZaxis);
          fBuffer = buffer;
          fBufferSize = keep;
       }
@@ -946,8 +946,8 @@ Long64_t TProfile3D::Merge(TCollection *li)
 //    Int_t binx, biny, binz, ix, iy, iz, nx, ny, nz, bin, ibin;
 //    Int_t nbix = fXaxis.GetNbins();
 //    Int_t nbiy = fYaxis.GetNbins();
-//    Bool_t canRebin = CanRebinAllAxes();
-//    SetCanRebin(TH1::kNoAxis); // reset, otherwise setting the under/overflow will rebin
+//    Bool_t canExtend = CanExtendAllAxes();
+//    SetCanExtend(TH1::kNoAxis); // reset, otherwise setting the under/overflow will rebin
 
 //    while (TProfile3D* h=(TProfile3D*)next()) {
 //       // process only if the histogram has limits; otherwise it was processed before
@@ -1002,7 +1002,7 @@ Long64_t TProfile3D::Merge(TCollection *li)
 //          fTsumwt2 += h->fTsumwt2;
 //       }
 //    }
-//    if (canRebin) SetCanRebin(TH1::kAllAxes);
+//    if (canExtend) SetCanExtend(TH1::kAllAxes);
 
 //    //copy merged stats
 //    PutStats(totstats);
@@ -1127,7 +1127,7 @@ void TProfile3D::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TProfile3D::RebinAxis(Double_t x, TAxis *axis)
+void TProfile3D::ExtendAxis(Double_t x, TAxis *axis)
 {
 // Profile histogram is resized along axis such that x is in the axis range.
 // The new axis limits are recomputed by doubling iteratively
@@ -1136,9 +1136,9 @@ void TProfile3D::RebinAxis(Double_t x, TAxis *axis)
 // of the old histogram to fill the rebinned histogram.
 // Takes into account errors (Sumw2) if any.
 // The axis must be rebinnable before invoking this function.
-// Ex: h->GetXaxis()->SetCanRebin(kTRUE)
+// Ex: h->GetXaxis()->SetCanExtend(kTRUE)
 
-   TProfile3D* hold = TProfileHelper::RebinAxis(this, x, axis);
+   TProfile3D* hold = TProfileHelper::ExtendAxis(this, x, axis);
    if ( hold ) {
       fTsumwt  = hold->fTsumwt;
       fTsumwt2 = hold->fTsumwt2;

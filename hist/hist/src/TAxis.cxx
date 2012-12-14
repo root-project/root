@@ -251,23 +251,22 @@ Int_t TAxis::FindBin(Double_t x)
 {
    // Find bin number corresponding to abscissa x. NOTE: this method does not work with alphanumeric bins !!!
    //
-   // If x is underflow or overflow, attempt to rebin histogram if the TAxis::kCanRebin 
-   // bit is set. Otherwise, return 0 or fNbins+1
+   // If x is underflow or overflow, attempt to extend the axis if TAxis::kCanExtend is true. Otherwise, return 0 or fNbins+1.
 
    Int_t bin;
    // NOTE: This should not be allowed for Alphanumeric histograms, but it is heavily used (legacy) in the TTreePlayer to fill alphanumeric histograms.
-   if (IsAlphanumeric() && gDebug) Info("FindBin","Numeric query on alphanumeric axis - Sorting the bins or rebinning can alter the correspondence between the label and the bin interval. REMEMBER: With Great Power Comes Great Responsibility !!!");
+   if (IsAlphanumeric() && gDebug) Info("FindBin","Numeric query on alphanumeric axis - Sorting the bins or extending the axes / rebinning can alter the correspondence between the label and the bin interval.");
    if (x < fXmin) {              //*-* underflow
       bin = 0;
       if (fParent == 0) return bin;
-      if (!CanRebin()) return bin; // TODO remove RebinAxis
-      ((TH1*)fParent)->RebinAxis(x,this);
+      if (!CanExtend()) return bin; 
+      ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
-   } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN
+   } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN)
       bin = fNbins+1;
       if (fParent == 0) return bin;
-      if (!CanRebin()) return bin; // TODO Remove RebinAxis
-      ((TH1*)fParent)->RebinAxis(x,this);
+      if (!CanExtend()) return bin;
+      ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
    } else {
       if (!fXbins.fN) {        //*-* fix bins
@@ -286,7 +285,7 @@ Int_t TAxis::FindBin(const char *label)
    // Find bin number with label.
    // If the List of labels does not exist create it
    // If label is not in the list of labels do the following depending on the
-   // bit TAxis::kCanRebin of the axis.
+   // bit TAxis::kCanExtend; of the axis.
    //   - if the bit is set add the new label and if the number of labels exceeds
    //      the number of bins, double the number of bins via TH1::LabelsInflate
    //   - if the bit is not set and the histogram has labels in each bin 
@@ -300,7 +299,7 @@ Int_t TAxis::FindBin(const char *label)
    if (!fLabels) {
       if (!fParent) return -1;
       fLabels = new THashList(1,1);
-      SetCanRebin(kTRUE);
+      SetCanExtend(kTRUE);
       SetAlphanumeric(kTRUE);
       if (fXmax <= fXmin) {
          //L.M. Dec 2010 in case of no min and max specified use 0 ->NBINS
@@ -315,23 +314,22 @@ Int_t TAxis::FindBin(const char *label)
 
    // if labels is not in the list and we have already labels 
    if (!IsAlphanumeric()) { 
-      // check if all bins have labels TODO 
       if (HasBinWithoutLabel()) { 
          Warning("FindBin","Label %s is not in the list and the axis is not alphanumeric - ignore it",label);
          return -1; 
       }
       else { 
          Info("FindBin","Label %s not in the list will be added to the histogram",label);
-         SetCanRebin(kTRUE);
+         SetCanExtend(kTRUE);
          SetAlphanumeric(kTRUE);
       }
    }
 
-   //Not yet in the list. Can we rebin the histogram ?
-   assert ( CanRebin() && IsAlphanumeric() );
+   //Not yet in the list. Can we extend the axis ?
+   assert ( CanExtend() && IsAlphanumeric() );
    // {
    //    if (gDebug>0)
-   //       Info("FindBin","Label %s is not in the list and the axis cannot be rebinned - the entry will be added in the underflow bin",label);
+   //       Info("FindBin","Label %s is not in the list and the axis cannot be extended - the entry will be added in the underflow bin",label);
    //    return 0;
    // }
 
@@ -355,7 +353,7 @@ Int_t TAxis::FindFixBin(Double_t x) const
    // Find bin number corresponding to abscissa x
    //
    // Identical to TAxis::FindBin except that if x is an underflow/overflow
-   // no attempt is made to rebin the histogram if TAxis::kCanRebin bit is set
+   // no attempt is made to extend the axis.
 
    Int_t bin;
    if (x < fXmin) {              //*-* underflow
@@ -744,7 +742,7 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
 {
    // Set label for bin
    // If no label list exists, it is created. If all the bins have labels, the
-   // axis becomes alphanumeric and rebinnable.
+   // axis becomes alphanumeric and extendable.
    // New labels will not be added with the Fill method but will end-up in the
    // underflow bin. See documentation of TAxis::FindBin(const char*)
 
@@ -773,7 +771,7 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
    // check for Alphanumeric case (labels for each bin)
    if (fLabels->GetSize() == fNbins) {
       SetAlphanumeric(kTRUE);
-      SetCanRebin(kTRUE);
+      SetCanExtend(kTRUE);
    }
 }
 

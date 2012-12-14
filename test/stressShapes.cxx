@@ -92,7 +92,7 @@ void length()
    for (i=0; i<nvolumes; i++) {
       volume = (TGeoVolume*)(vlist->At(i));
       hist = new TH1F(volume->GetName(), "lengths inside", 100, 0, 100);
-      hist->SetCanRebin(TH1::kAllAxes);
+      hist->SetCanExtend(TH1::kAllAxes);
       hlist->Add(hist);
    }   
    Int_t nrays = 100000;

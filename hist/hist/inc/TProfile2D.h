@@ -96,6 +96,7 @@ public:
    virtual Bool_t    Divide(TF1 *h1, Double_t c1=1);
    virtual Bool_t    Divide(const TH1 *h1);
    virtual Bool_t    Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+   virtual void      ExtendAxis(Double_t x, TAxis *axis);
    Int_t             Fill(Double_t x, Double_t y, Double_t z);
    virtual Int_t     Fill(Double_t x, const char *namey, Double_t z);
    virtual Int_t     Fill(const char *namex, Double_t y, Double_t z);
@@ -125,7 +126,6 @@ public:
    TH2D             *ProjectionXY(const char *name="_pxy", Option_t *option="e") const;
    virtual void      PutStats(Double_t *stats);
    virtual void      Reset(Option_t *option="");
-   virtual void      RebinAxis(Double_t x, TAxis *axis);
    virtual TProfile2D *Rebin2D(Int_t nxgroup=2, Int_t nygroup=2, const char *newname="");
    virtual TProfile2D *RebinX(Int_t ngroup=2, const char *newname="");
    virtual TProfile2D *RebinY(Int_t ngroup=2, const char *newname="");     

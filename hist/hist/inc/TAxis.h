@@ -51,7 +51,7 @@ private:
    // TAxis extra status bits (stored in fBits2)
    enum {
       kAlphanumeric = BIT(0),
-      kCanRebin = BIT(1)
+      kCanExtend = BIT(1)
    };
 
    Bool_t       HasBinWithoutLabel() const;
@@ -85,8 +85,8 @@ public:
    virtual ~TAxis();
    TAxis& operator=(const TAxis&);
 
-           Bool_t     CanRebin() const { return fBits2 & kCanRebin; }
-           void       SetCanRebin(Bool_t canRebin) { fBits2 = canRebin ? (fBits2 | kCanRebin) : (fBits2 & ~kCanRebin); }
+           Bool_t     CanExtend() const { return fBits2 & kCanExtend; }
+           void       SetCanExtend(Bool_t canExtend) { fBits2 = canExtend ? (fBits2 | kCanExtend) : (fBits2 & ~kCanExtend); }
            void       CenterLabels(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterLabels
            void       CenterTitle(Bool_t center=kTRUE);  // *TOGGLE* *GETTER=GetCenterTitle
    const char        *ChooseTimeFormat(Double_t axislength=0);

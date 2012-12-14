@@ -3647,7 +3647,7 @@ bool testMerge1DLabelSame()
    list->Add(h2);
    list->Add(h3);
 
-   h1->SetCanRebin(TH1::kAllAxes);
+   h1->SetCanExtend(TH1::kAllAxes);
 
    h1->Merge(list);
 
@@ -5461,9 +5461,9 @@ bool testMerge1DRebin()
    TH1D* h4 = new TH1D("merge1D-h4", "h4-Title", numberOfBins, minRange, maxRange);
 
    h1->Sumw2();h2->Sumw2();h4->Sumw2();
-   h1->SetCanRebin(TH1::kAllAxes);
-   h2->SetCanRebin(TH1::kAllAxes);
-   h4->SetCanRebin(TH1::kAllAxes);
+   h1->SetCanExtend(TH1::kAllAxes);
+   h2->SetCanExtend(TH1::kAllAxes);
+   h4->SetCanExtend(TH1::kAllAxes);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform( minRange,  maxRange);
@@ -5504,9 +5504,9 @@ bool testMerge2DRebin()
 
 
    h1->Sumw2();h2->Sumw2();h4->Sumw2();
-   h1->SetCanRebin(TH1::kAllAxes);
-   h2->SetCanRebin(TH1::kAllAxes);
-   h4->SetCanRebin(TH1::kAllAxes);
+   h1->SetCanExtend(TH1::kAllAxes);
+   h2->SetCanExtend(TH1::kAllAxes);
+   h4->SetCanExtend(TH1::kAllAxes);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Uniform( minRange,  maxRange);
@@ -5550,9 +5550,9 @@ bool testMerge3DRebin()
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
-   h1->SetCanRebin(TH1::kAllAxes);
-   h2->SetCanRebin(TH1::kAllAxes);
-   h4->SetCanRebin(TH1::kAllAxes);
+   h1->SetCanExtend(TH1::kAllAxes);
+   h2->SetCanExtend(TH1::kAllAxes);
+   h4->SetCanExtend(TH1::kAllAxes);
 
    for ( Int_t e = 0; e < 10*nEvents; ++e ) {
       Double_t x = r.Uniform( minRange,  maxRange);
@@ -5589,9 +5589,9 @@ bool testMerge1DRebinProf()
    TProfile* h2 = new TProfile("merge1D-p2", "h2-Title", numberOfBins, minRange, maxRange);
    TProfile* h4 = new TProfile("merge1D-p4", "h4-Title", numberOfBins, minRange, maxRange);
 
-   h1->SetCanRebin(TH1::kAllAxes);
-   h2->SetCanRebin(TH1::kAllAxes);
-   h4->SetCanRebin(TH1::kAllAxes);
+   h1->SetCanExtend(TH1::kAllAxes);
+   h2->SetCanExtend(TH1::kAllAxes);
+   h4->SetCanExtend(TH1::kAllAxes);
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform( minRange,  maxRange);
