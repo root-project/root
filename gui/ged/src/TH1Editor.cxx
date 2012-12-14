@@ -1698,7 +1698,7 @@ void TH1Editor::DoBinReleased()
       fHist->SetBins(nx,fBinHist->GetXaxis()->GetXmin(),
                      fBinHist->GetXaxis()->GetXmax());
       fHist->Add(fBinHist);
-      fHist->ResetBit(TH1::kCanRebin);
+      fHist->SetCanExtend(TH1::kNoAxis);
       fHist->Rebin(divx[numx]);
       // fModel=fHist;
       if (divx[0]!=2) {
@@ -1760,7 +1760,7 @@ void TH1Editor::DoBinMoved(Int_t numx)
       fHist->SetBins(nx,fBinHist->GetXaxis()->GetXmin(),
                      fBinHist->GetXaxis()->GetXmax());
       fHist->Add(fBinHist);
-      fHist->ResetBit(TH1::kCanRebin);
+      fHist->SetCanExtend(TH1::kNoAxis);
       fHist->Rebin(divx[numx]);
       //fModel=fHist;
       TAxis* xaxis = fHist->GetXaxis();
@@ -1828,7 +1828,7 @@ void TH1Editor::DoBinReleased1()
    Double_t rmin = xaxis->GetBinLowEdge(first);  // recent min in user coords
    Double_t rmax = xaxis->GetBinUpEdge(last);    // recent max in user coords
    
-   ((TH1*)player->GetHistogram())->ResetBit(TH1::kCanRebin);
+   ((TH1*)player->GetHistogram())->SetCanExtend(TH1::kNoAxis);
    ((TH1*)player->GetHistogram())->Reset();
 
    // get new Number of bins
@@ -1937,7 +1937,7 @@ void TH1Editor::DoBinLabel1()
    Double_t rmin = xaxis->GetBinLowEdge(first);   // recent min in user coords
    Double_t rmax = xaxis->GetBinUpEdge(last);     // recent max in user coords
    
-   ((TH1*)player->GetHistogram())->ResetBit(TH1::kCanRebin);
+   ((TH1*)player->GetHistogram())->SetCanExtend(TH1::kNoAxis);
    ((TH1*)player->GetHistogram())->Reset();
 
 // Calculate the new number of bins in the complete range
@@ -2005,7 +2005,7 @@ void TH1Editor::DoOffsetReleased()
       Double_t rmin = xaxis->GetBinLowEdge(first);     // recent min in user coords
       Double_t rmax = xaxis->GetBinUpEdge(last);       // recent max in user coords
    
-      ((TH1*)player->GetHistogram())->ResetBit(TH1::kCanRebin);
+      ((TH1*)player->GetHistogram())->SetCanExtend(TH1::kNoAxis);
       ((TH1*)player->GetHistogram())->Reset();
  
       ((TH1*)player->GetHistogram())->SetBins(nx,
@@ -2052,7 +2052,7 @@ void TH1Editor::DoOffsetMoved(Int_t num)
       Double_t rmin = xaxis->GetBinLowEdge(first);     // recent min in user coords
       Double_t rmax = xaxis->GetBinUpEdge(last);       // recent max in user coords
    
-      ((TH1*)player->GetHistogram())->ResetBit(TH1::kCanRebin);
+      ((TH1*)player->GetHistogram())->SetCanExtend(TH1::kNoAxis);
       ((TH1*)player->GetHistogram())->Reset();
  
       ((TH1*)player->GetHistogram())->SetBins(nx,
@@ -2096,7 +2096,7 @@ void TH1Editor::DoBinOffset()
    Double_t rmin = xaxis->GetBinLowEdge(first);     // recent min in user coords
    Double_t rmax = xaxis->GetBinUpEdge(last);       // recent max in user coords
    
-   ((TH1*)player->GetHistogram())->ResetBit(TH1::kCanRebin);
+   ((TH1*)player->GetHistogram())->SetCanExtend(TH1::kNoAxis);
    ((TH1*)player->GetHistogram())->Reset();
 
    ((TH1*)player->GetHistogram())->SetBins(nx,

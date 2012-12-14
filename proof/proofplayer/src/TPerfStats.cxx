@@ -244,7 +244,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
                            fSlaves, 0, fSlaves);
       fNodeHist->SetDirectory(0);
       fNodeHist->SetMinimum(0);
-      fNodeHist->SetBit(TH1::kCanRebin);
+      fNodeHist->SetCanExtend(TH1::kAllAxes);
       output->Add(fNodeHist);
       PDB(kMonitoring,1)
          Info("TPerfStats", "histo '%s' added to the output list", fNodeHist->GetName());
@@ -255,7 +255,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
                               ntime_bins, min_time, time_per_bin);
       fLatencyHist->SetDirectory(0);
       fLatencyHist->SetMarkerStyle(4);
-      fLatencyHist->SetBit(TH1::kCanRebin);
+      fLatencyHist->SetCanExtend(TH1::kAllAxes);
       output->Add(fLatencyHist);
       PDB(kMonitoring,1)
          Info("TPerfStats", "histo '%s' added to the output list", fLatencyHist->GetName());
@@ -266,7 +266,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
                                ntime_bins, min_time, time_per_bin);
       fProcTimeHist->SetDirectory(0);
       fProcTimeHist->SetMarkerStyle(4);
-      fProcTimeHist->SetBit(TH1::kCanRebin);
+      fProcTimeHist->SetCanExtend(TH1::kAllAxes);
       output->Add(fProcTimeHist);
       PDB(kMonitoring,1)
          Info("TPerfStats", "histo '%s' added to the output list", fProcTimeHist->GetName());
@@ -277,7 +277,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
                               ntime_bins, min_time, time_per_bin);
       fCpuTimeHist->SetDirectory(0);
       fCpuTimeHist->SetMarkerStyle(4);
-      fCpuTimeHist->SetBit(TH1::kCanRebin);
+      fCpuTimeHist->SetCanExtend(TH1::kAllAxes);
       output->Add(fCpuTimeHist);
       PDB(kMonitoring,1)
          Info("TPerfStats", "histo '%s' added to the output list", fCpuTimeHist->GetName());

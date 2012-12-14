@@ -404,6 +404,8 @@ public:
    void             UseCurrentStyle();
    static  TH1     *TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option);
 
+   virtual void     RebinAxis(Double_t x, TAxis *axis) { Obsolete("RebinAxis", "v6-00", "v6-02"); ExtendAxis(x, axis); } // DEPRECATED / OBSOLETE
+
    ClassDef(TH1,7)  //1-Dim histogram base class
 
 protected: 

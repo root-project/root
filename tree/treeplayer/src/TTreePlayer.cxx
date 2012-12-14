@@ -523,7 +523,7 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
       gStyle->SetCanvasPreferGL(pgl);
    }
 
-   if (fHistogram) fHistogram->ResetBit(TH1::kCanRebin);
+   if (fHistogram) fHistogram->SetCanExtend(TH1::kNoAxis);
    return fSelectedRows;
 }
 

@@ -1580,7 +1580,7 @@ void TH2Editor::DoBinReleased()
                      ny,fBinHist->GetYaxis()->GetXmin(),
                      fBinHist->GetYaxis()->GetXmax());
       fHist->Add(fBinHist);
-      fHist->ResetBit(TH1::kCanRebin);
+      fHist->SetCanExtend(TH1::kNoAxis);
       fHist->Rebin2D(divx[numx], divy[numy]);
 
       //fModel=fHist;
@@ -1686,7 +1686,7 @@ void TH2Editor::DoBinMoved()
                      ny,fBinHist->GetYaxis()->GetXmin(),
                      fBinHist->GetYaxis()->GetXmax());
       fHist->Add(fBinHist);
-      fHist->ResetBit(TH1::kCanRebin);
+      fHist->SetCanExtend(TH1::kNoAxis);
       fHist->Rebin2D(divx[numx], divy[numy]);
       //fModel=fHist;
       if (divx[0]!=2) {
@@ -1897,7 +1897,7 @@ void TH2Editor::DoBinReleased1()
    Double_t rminy = yaxis->GetBinLowEdge(firsty);  // recent min in user coords
    Double_t rmaxy = yaxis->GetBinUpEdge(lasty);    // recent max in user coords
 
-   ((TH2*)player->GetHistogram())->ResetBit(TH1::kCanRebin);
+   ((TH2*)player->GetHistogram())->SetCanExtend(TH1::kNoAxis);
    ((TH2*)player->GetHistogram())->Reset();
 
    // Get new Number of bins
@@ -2029,7 +2029,7 @@ void TH2Editor::DoBinLabel1()
    Double_t rminy = yaxis->GetBinLowEdge(firsty);   // recent min in user coords
    Double_t rmaxy = yaxis->GetBinUpEdge(lasty);     // recent max in user coords
 
-   ((TH2*)player->GetHistogram())->ResetBit(TH1::kCanRebin);
+   ((TH2*)player->GetHistogram())->SetCanExtend(TH1::kNoAxis);
    ((TH2*)player->GetHistogram())->Reset();
 
    // Calculate the new number of bins in the complete range
@@ -2129,7 +2129,7 @@ void TH2Editor::DoOffsetReleased()
       Double_t rminy = yaxis->GetBinLowEdge(firsty); // recent min in user coords
       Double_t rmaxy = yaxis->GetBinUpEdge(lasty);   // recent max in user coords
 
-      ((TH2*)player->GetHistogram())->ResetBit(TH1::kCanRebin);
+      ((TH2*)player->GetHistogram())->SetCanExtend(TH1::kNoAxis);
       ((TH2*)player->GetHistogram())->Reset();
 
       ((TH2*)player->GetHistogram())->SetBins(nx, minx-oldXOffset+xOffset,
@@ -2197,7 +2197,7 @@ void TH2Editor::DoOffsetMoved()
       Double_t rminy = yaxis->GetBinLowEdge(firsty); // recent min in user coords
       Double_t rmaxy = yaxis->GetBinUpEdge(lasty);   // recent max in user coords
 
-      ((TH2*)player->GetHistogram())->ResetBit(TH1::kCanRebin);
+      ((TH2*)player->GetHistogram())->SetCanExtend(TH1::kNoAxis);
       ((TH2*)player->GetHistogram())->Reset();
 
       ((TH2*)player->GetHistogram())->SetBins(nx,minx-oldXOffset+xOffset,
@@ -2262,7 +2262,7 @@ void TH2Editor::DoBinOffset()
    Double_t rminy = yaxis->GetBinLowEdge(firsty);  // recent min in user coords
    Double_t rmaxy = yaxis->GetBinUpEdge(lasty);    // recent max in user coords
 
-   ((TH2*)player->GetHistogram())->ResetBit(TH1::kCanRebin);
+   ((TH2*)player->GetHistogram())->SetCanExtend(TH1::kNoAxis);
    ((TH2*)player->GetHistogram())->Reset();
 
    ((TH2*)player->GetHistogram())->SetBins(nx,minx+xOffset-oldXOffset,

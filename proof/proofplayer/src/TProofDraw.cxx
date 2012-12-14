@@ -819,7 +819,7 @@ void TProofDrawHist::SlaveBegin(TTree *tree)
             fHistogram->SetBuffer(TH1::GetDefaultBufferSize());
          if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
             if (strstr(opt->GetTitle(), "rebin"))
-               fHistogram->SetBit(TH1::kCanRebin);
+               fHistogram->SetCanExtend(TH1::kAllAxes);
          }
       }
       fHistogram->SetDirectory(0);   // take ownership
@@ -1268,7 +1268,7 @@ void TProofDrawProfile::SlaveBegin(TTree *tree)
 
       if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
          if (strstr(opt->GetTitle(), "rebin"))
-            fProfile->SetBit(TH1::kCanRebin);
+            fProfile->SetCanExtend(TH1::kAllAxes);
       }
       fProfile->SetDirectory(0);   // take ownership
       fOutput->Add(fProfile);      // release ownership
@@ -1511,7 +1511,7 @@ void TProofDrawProfile2D::SlaveBegin(TTree *tree)
 
       if (TNamed *opt = dynamic_cast<TNamed*> (fInput->FindObject("PROOF_OPTIONS"))) {
          if (strstr(opt->GetTitle(), "rebin"))
-            fProfile->SetBit(TH1::kCanRebin);
+            fProfile->SetCanExtend(TH1::kAllAxes);
       }
       fProfile->SetDirectory(0);   // take ownership
       fOutput->Add(fProfile);      // release ownership
@@ -1668,16 +1668,16 @@ void TProofDrawGraph::Terminate(void)
          hist->SetBit(TH1::kNoStats);
          hist->SetBit(kCanDelete);
          if (fTreeDrawArgsParser.GetNoParameters() != 6)
-            hist->SetBit(TH1::kCanRebin);
+            hist->SetCanExtend(TH1::kAllAxes);
          else
-            hist->ResetBit(TH1::kCanRebin);
+            hist->SetCanExtend(TH1::kNoAxis);
 //         if (fTreeDrawArgsParser.GetShouldDraw())    // ?? FIXME
 //            hist->SetDirectory(0);
       } else {
          if (!fTreeDrawArgsParser.GetAdd())
             hist->Reset();
       }
-      if (hist->TestBit(TH1::kCanRebin) && hist->TestBit(kCanDelete)) {
+      if (hist->CanExtendAllAxes() && hist->TestBit(kCanDelete)) {
          Double_t* xArray = fGraph->GetX();
          Double_t* yArray = fGraph->GetY();
          Double_t xmin = *std::min_element(xArray, xArray+fGraph->GetN());
@@ -1833,9 +1833,9 @@ void TProofDrawPolyMarker3D::Terminate(void)
             hist->SetBit(TH1::kNoStats);
             hist->SetBit(kCanDelete);
             if (fTreeDrawArgsParser.GetNoParameters() != 9)
-               hist->SetBit(TH1::kCanRebin);
+               hist->SetCanExtend(TH1::kAllAxes);
             else
-               hist->ResetBit(TH1::kCanRebin);
+               hist->SetCanExtend(TH1::kNoAxis);
          } else {
             checkPrevious = kTRUE;
             PDB(kDraw,2)
@@ -1849,7 +1849,7 @@ void TProofDrawPolyMarker3D::Terminate(void)
 
       // Set the ranges; take into account previous histos for 'same' runs
       Double_t rmin[3], rmax[3];
-      if (hist->TestBit(TH1::kCanRebin) && hist->TestBit(kCanDelete)) {
+      if (hist->CanExtendAllAxes() && hist->TestBit(kCanDelete)) {
          rmin[0] = rmax[0] = rmin[1] = rmax[1] = rmin[2] = rmax[2] = 0;
          if (fPolyMarker3D->Size() > 0) {
             fPolyMarker3D->GetPoint(0, rmin[0], rmin[1], rmin[2]);
@@ -1993,9 +1993,9 @@ void TProofDrawListOfGraphs::Terminate(void)
          hist->SetBit(TH1::kNoStats);
          hist->SetBit(kCanDelete);
          if (fTreeDrawArgsParser.GetNoParameters() != 6)
-            hist->SetBit(TH1::kCanRebin);
+            hist->SetCanExtend(TH1::kAllAxes);
          else
-            hist->ResetBit(TH1::kCanRebin);
+            hist->SetCanExtend(TH1::kNoAxis);
 
 //         if (fTreeDrawArgsParser.GetShouldDraw())         // ?? FIXME
 //            hist->SetDirectory(0);
@@ -2018,7 +2018,7 @@ void TProofDrawListOfGraphs::Terminate(void)
             if (rmin[2] > i->fZ) rmin[2] = i->fZ;
          }
          // in this case we don't care about user-specified limits
-         if (hist->TestBit(TH1::kCanRebin) && hist->TestBit(kCanDelete)) {
+         if (hist->CanExtendAllAxes() && hist->TestBit(kCanDelete)) {
             THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hist,
                            rmin[1], rmax[1], rmin[2], rmax[2]);
          }
@@ -2157,9 +2157,9 @@ void TProofDrawListOfPolyMarkers3D::Terminate(void)
          hist->SetBit(TH1::kNoStats);
          hist->SetBit(kCanDelete);
          if (fTreeDrawArgsParser.GetNoParameters() != 9)
-            hist->SetBit(TH1::kCanRebin);
+            hist->SetCanExtend(TH1::kAllAxes);
          else
-            hist->ResetBit(TH1::kCanRebin);
+            hist->SetCanExtend(TH1::kNoAxis);
 
 //         if (fTreeDrawArgsParser.GetShouldDraw())          // ?? FIXME
 //            hist->SetDirectory(0);
@@ -2186,7 +2186,7 @@ void TProofDrawListOfPolyMarkers3D::Terminate(void)
             if (rmin[3] > i->fT) rmin[3] = i->fT;
          }
          // in this case we don't care about user-specified limits
-         if (hist->TestBit(TH1::kCanRebin) && hist->TestBit(kCanDelete)) {
+         if (hist->CanExtendAllAxes() && hist->TestBit(kCanDelete)) {
             THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hist,
                               rmin[1], rmax[1], rmin[2], rmax[2], rmin[3], rmax[3]);
          }

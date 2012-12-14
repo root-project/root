@@ -579,7 +579,7 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    TH1F *h = new TH1F("h","number of boundary crossings per volume",3,0,3);
    h->SetStats(0);
    h->SetFillColor(38);
-   h->SetBit(TH1::kCanRebin);
+   h->SetCanExtend(TH1::kAllAxes);
    
    memset(fFlags, 0, nuid*sizeof(Bool_t));
    for (i=0; i<nuid; i++) {
@@ -603,7 +603,7 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    TH1F *h1 = new TH1F("h1","percent of time spent per volume",3,0,3);
    h1->SetStats(0);
    h1->SetFillColor(38);
-   h1->SetBit(TH1::kCanRebin);
+   h1->SetCanExtend(TH1::kAllAxes);
    for (i=0; i<nuid; i++) {
       vol = fGeoManager->GetVolume(i);
       if (!vol || !vol->GetNdaughters()) continue;

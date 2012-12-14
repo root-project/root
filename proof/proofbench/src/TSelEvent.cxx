@@ -180,7 +180,7 @@ void TSelEvent::SlaveBegin(TTree *tree)
    fNTracksHist = new TH1F("ntracks_dist","N_{Tracks} per Event"
                            " Distribution", 100, 50, 150);
    //enable rebinning
-   fNTracksHist->SetBit(TH1::kCanRebin);
+   fNTracksHist->SetCanExtend(TH1::kAllAxes);
    fNTracksHist->SetDirectory(0);
    fNTracksHist->GetXaxis()->SetTitle("N_{Tracks}");
    fNTracksHist->GetYaxis()->SetTitle("N_{Events}");

@@ -88,10 +88,10 @@ namespace ROOT {
       Int_t nbins = gEnv->GetValue("Hist.Binning.1D.x",100);
       Double_t vmin=0, vmax=0;
       Double_t xmin=0, xmax=0;
-      Bool_t canRebin = kTRUE;
+      Bool_t canExtend = kTRUE;
       TString opt( options ); 
       Bool_t optSame = opt.Contains("same");
-      if (optSame) canRebin = kFALSE;
+      if (optSame) canExtend = kFALSE;
       
       if (gPad && optSame) {
          TListIter np(gPad->GetListOfPrimitives());
@@ -111,7 +111,7 @@ namespace ROOT {
       } else {
          vmin = xmin;
          vmax = xmax;
-         if (xmin < xmax) canRebin = kFALSE;
+         if (xmin < xmax) canExtend = kFALSE;
       }
       TH1F *hist = new TH1F("htemp","htemp",nbins,vmin,vmax);
       hist->SetLineColor(fTree->GetLineColor());
@@ -122,7 +122,7 @@ namespace ROOT {
       hist->SetMarkerStyle(fTree->GetMarkerStyle());
       hist->SetMarkerColor(fTree->GetMarkerColor());
       hist->SetMarkerSize(fTree->GetMarkerSize());
-      if (canRebin) hist->SetBit(TH1::kCanRebin);
+      if (canExtend) hist->SetCanExtend(TH1::kAllAxes);
       hist->GetXaxis()->SetTitle("var");
       hist->SetBit(kCanDelete);
       hist->SetDirectory(0);

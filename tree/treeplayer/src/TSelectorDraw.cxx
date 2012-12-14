@@ -194,8 +194,8 @@ void TSelectorDraw::Begin(TTree *tree)
    //   fOldHistogram     - pointer to hist hname
    //   elist     - pointer to selection list of hname
 
-   Bool_t canRebin = kTRUE;
-   if (optSame) canRebin = kFALSE;
+   Bool_t canExtend = kTRUE;
+   if (optSame) canExtend = kFALSE;
 
    Int_t nbinsx = 0, nbinsy = 0, nbinsz = 0;
    Double_t xmin = 0, xmax = 0, ymin = 0, ymax = 0, zmin = 0, zmax = 0;
@@ -556,7 +556,7 @@ void TSelectorDraw::Begin(TTree *tree)
             fAction   = -1;
             fVmin[0] = xmin;
             fVmax[0] = xmax;
-            if (xmin < xmax) canRebin = kFALSE;
+            if (xmin < xmax) canExtend = kFALSE;
          }
       }
       if (fOldHistogram) {
@@ -572,7 +572,7 @@ void TSelectorDraw::Begin(TTree *tree)
          hist->SetMarkerStyle(fTree->GetMarkerStyle());
          hist->SetMarkerColor(fTree->GetMarkerColor());
          hist->SetMarkerSize(fTree->GetMarkerSize());
-         if (canRebin)hist->SetBit(TH1::kCanRebin);
+         if (canExtend) hist->SetCanExtend(TH1::kAllAxes);
          if (!hkeep) {
             hist->GetXaxis()->SetTitle(fVar[0]->GetTitle());
             hist->SetBit(kCanDelete);
@@ -613,7 +613,7 @@ void TSelectorDraw::Begin(TTree *tree)
             fVmax[1] = xmax;
             fVmin[0] = ymin;
             fVmax[0] = ymax;
-            if (xmin < xmax && ymin < ymax) canRebin = kFALSE;
+            if (xmin < xmax && ymin < ymax) canExtend = kFALSE;
          }
       }
       if (profile || opt.Contains("prof")) {
@@ -626,7 +626,7 @@ void TSelectorDraw::Begin(TTree *tree)
                fAction = -4;
                fVmin[1] = xmin;
                fVmax[1] = xmax;
-               if (xmin < xmax) canRebin = kFALSE;
+               if (xmin < xmax) canExtend = kFALSE;
             }
             if (fAction == 2) {
                //we come here when option = "same prof"
@@ -659,7 +659,7 @@ void TSelectorDraw::Begin(TTree *tree)
             hp->SetMarkerStyle(fTree->GetMarkerStyle());
             hp->SetMarkerColor(fTree->GetMarkerColor());
             hp->SetMarkerSize(fTree->GetMarkerSize());
-            if (canRebin)hp->SetBit(TH1::kCanRebin);
+            if (canExtend) hp->SetCanExtend(TH1::kAllAxes);
          }
          fVar[1]->SetAxis(hp->GetXaxis());
          fObject = hp;
@@ -678,7 +678,7 @@ void TSelectorDraw::Begin(TTree *tree)
             h2->SetMarkerStyle(fTree->GetMarkerStyle());
             h2->SetMarkerColor(fTree->GetMarkerColor());
             h2->SetMarkerSize(fTree->GetMarkerSize());
-            if (canRebin)h2->SetBit(TH1::kCanRebin);
+            if (canExtend) h2->SetCanExtend(TH1::kAllAxes);
             if (!hkeep) {
                h2->GetXaxis()->SetTitle(fVar[1]->GetTitle());
                h2->GetYaxis()->SetTitle(fVar[0]->GetTitle());
@@ -755,7 +755,7 @@ void TSelectorDraw::Begin(TTree *tree)
             fVmax[1] = ymax;
             fVmin[0] = zmin;
             fVmax[0] = zmax;
-            if (xmin < xmax && ymin < ymax && zmin < zmax) canRebin = kFALSE;
+            if (xmin < xmax && ymin < ymax && zmin < zmax) canExtend = kFALSE;
          }
       }
       if ((fDimension == 3) && (profile || opt.Contains("prof"))) {
@@ -770,7 +770,7 @@ void TSelectorDraw::Begin(TTree *tree)
                fVmax[2] = xmax;
                fVmin[1] = ymin;
                fVmax[1] = ymax;
-               if (xmin < xmax && ymin < ymax) canRebin = kFALSE;
+               if (xmin < xmax && ymin < ymax) canExtend = kFALSE;
             }
             if (opt.Contains("profs")) {
                hp = new TProfile2D(hname, htitle.Data(), fNbins[2], fVmin[2], fVmax[2], fNbins[1], fVmin[1], fVmax[1], "s");
@@ -793,7 +793,7 @@ void TSelectorDraw::Begin(TTree *tree)
             hp->SetMarkerStyle(fTree->GetMarkerStyle());
             hp->SetMarkerColor(fTree->GetMarkerColor());
             hp->SetMarkerSize(fTree->GetMarkerSize());
-            if (canRebin)hp->SetBit(TH1::kCanRebin);
+            if (canExtend) hp->SetCanExtend(TH1::kAllAxes);
          }
          fVar[1]->SetAxis(hp->GetYaxis());
          fVar[2]->SetAxis(hp->GetXaxis());
@@ -812,7 +812,7 @@ void TSelectorDraw::Begin(TTree *tree)
             h2->SetMarkerStyle(fTree->GetMarkerStyle());
             h2->SetMarkerColor(fTree->GetMarkerColor());
             h2->SetMarkerSize(fTree->GetMarkerSize());
-            if (canRebin)h2->SetBit(TH1::kCanRebin);
+            if (canExtend) h2->SetCanExtend(TH1::kAllAxes);
             if (!hkeep) {
                h2->GetXaxis()->SetTitle(fVar[1]->GetTitle());
                h2->GetZaxis()->SetTitle(fVar[0]->GetTitle());
@@ -839,7 +839,7 @@ void TSelectorDraw::Begin(TTree *tree)
             h3->SetMarkerStyle(fTree->GetMarkerStyle());
             h3->SetMarkerColor(fTree->GetMarkerColor());
             h3->SetMarkerSize(fTree->GetMarkerSize());
-            if (canRebin)h3->SetBit(TH1::kCanRebin);
+            if (canExtend) h3->SetCanExtend(TH1::kAllAxes);
             if (!hkeep) {
                //small correction for the title offsets in x,y to take into account the angles
                Double_t xoffset = h3->GetXaxis()->GetTitleOffset();
@@ -1346,7 +1346,7 @@ void TSelectorDraw::TakeAction()
    //__________________________2D scatter plot_______________________
    else if (fAction == 12) {
       TH2 *h2 = (TH2*)fObject;
-      if (h2->TestBit(TH1::kCanRebin) && h2->TestBit(kCanDelete)) {
+      if (h2->CanExtendAllAxes() && h2->TestBit(kCanDelete)) {
          for (i = 0; i < fNfill; i++) {
             if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
             if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
@@ -1517,7 +1517,7 @@ void TSelectorDraw::TakeEstimate()
    //__________________________1-D histogram_______________________
    if (fAction ==  1) {
       TH1 *h1 = (TH1*)fObject;
-      if (fObject->TestBit(TH1::kCanRebin)) {
+      if (h1->CanExtendAllAxes()) {
          for (i = 0; i < fNfill; i++) {
             if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
             if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
@@ -1528,7 +1528,7 @@ void TSelectorDraw::TakeEstimate()
    //__________________________2-D histogram_______________________
    } else if (fAction ==  2) {
       TH2 *h2 = (TH2*)fObject;
-      if (fObject->TestBit(TH1::kCanRebin)) {
+      if (h2->CanExtendAllAxes()) {
          for (i = 0; i < fNfill; i++) {
             if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
             if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
@@ -1541,7 +1541,7 @@ void TSelectorDraw::TakeEstimate()
    //__________________________Profile histogram_______________________
    } else if (fAction ==  4) {
       TProfile *hp = (TProfile*)fObject;
-      if (fObject->TestBit(TH1::kCanRebin)) {
+      if (hp->CanExtendAllAxes()) {
          for (i = 0; i < fNfill; i++) {
             if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
             if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
@@ -1554,7 +1554,7 @@ void TSelectorDraw::TakeEstimate()
    //__________________________2D scatter plot_______________________
    } else if (fAction == 12) {
       TH2 *h2 = (TH2*)fObject;
-      if (h2->TestBit(TH1::kCanRebin)) {
+      if (h2->CanExtendAllAxes()) {
          for (i = 0; i < fNfill; i++) {
             if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
             if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
@@ -1617,7 +1617,7 @@ void TSelectorDraw::TakeEstimate()
    } else if (fAction == 33) {
       TH2 *h2 = (TH2*)fObject;
       Bool_t process2 = kFALSE;
-      if (h2->TestBit(TH1::kCanRebin)) {
+      if (h2->CanExtendAllAxes()) {
          if (vminOld[2] == DBL_MAX)
             process2 = kTRUE;
          for (i = 0; i < fValSize && i < 4; i++) {
@@ -1639,7 +1639,7 @@ void TSelectorDraw::TakeEstimate()
       //__________________________3D scatter plot_______________________
    } else if (fAction == 3 || fAction == 13) {
       TH3 *h3 = (TH3*)fObject;
-      if (fObject->TestBit(TH1::kCanRebin)) {
+      if (h3->CanExtendAllAxes()) {
          for (i = 0; i < fNfill; i++) {
             if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
             if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
@@ -1691,7 +1691,7 @@ void TSelectorDraw::TakeEstimate()
    //__________________________2D Profile Histogram__________________
    } else if (fAction == 23) {
       TProfile2D *hp = (TProfile2D*)fObject;
-      if (hp->TestBit(TH1::kCanRebin)) {
+      if (hp->CanExtendAllAxes()) {
          for (i = 0; i < fNfill; i++) {
             if (fVmin[0] > fVal[0][i]) fVmin[0] = fVal[0][i];
             if (fVmax[0] < fVal[0][i]) fVmax[0] = fVal[0][i];
@@ -1706,7 +1706,7 @@ void TSelectorDraw::TakeEstimate()
    //__________________________4D scatter plot_______________________
    } else if (fAction == 40) {
       TH3 *h3 = (TH3*)fObject;
-      if (fObject->TestBit(TH1::kCanRebin)) {
+      if (h3->CanExtendAllAxes()) {
          for (i = 0; i < fValSize && i < 4; i++) {
             fVmin[i] = vminOld[i];
             fVmax[i] = vmaxOld[i];
