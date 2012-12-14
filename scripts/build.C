@@ -41,7 +41,7 @@ void build(const char *filename,const char *lib = 0, const char *obj = 0)
    r.Append(" -DClingWorkAroundJITandInline ");
 #endif
 #ifdef ClingWorkAroundCallfuncAndReturnByValue
-   r.Append(" -ClingWorkAroundCallfuncAndReturnByValue ");
+   r.Append(" -DClingWorkAroundCallfuncAndReturnByValue ");
 #endif
    if (r.Length()) {
       r.Append(" $IncludePath");
