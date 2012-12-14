@@ -400,10 +400,10 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
          G__TypeInfo ti(gval);
 #else
          //G__TypeInfo ti(inside.c_str());
-         TypeInfo_t *ti = gCint->TypeInfo_Factory();
-         gCint->TypeInfo_Init(ti,inside.c_str());
+         TypeInfo_t *ti = gCling->TypeInfo_Factory();
+         gCling->TypeInfo_Init(ti,inside.c_str());
 #endif   
-         if ( !gCint->TypeInfo_IsValid(ti) ) {
+         if ( !gCling->TypeInfo_IsValid(ti) ) {
             if (intype != inside) {
                fCase |= kIsPointer;
                fSize = sizeof(void*);
@@ -424,7 +424,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
             }
          }
          else {
-            Long_t prop = gCint->TypeInfo_Property(ti);
+            Long_t prop = gCling->TypeInfo_Property(ti);
             if ( prop&kIsPointer ) {
                fSize = sizeof(void*);
             }
@@ -451,7 +451,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
                   if ( 0 == strcmp("bool",fundType->GetFullTypeName()) ) {
                      fKind = (EDataType)kBOOL_t;
                   }
-                  fSize = gCint->TypeInfo_Size(ti);
+                  fSize = gCling->TypeInfo_Size(ti);
                   R__ASSERT((fKind>0 && fKind<0x16) || (fKind==-1&&(prop&kIsPointer)) );
                }
             }
@@ -464,7 +464,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
                fCase |= kBIT_ISTSTRING;
             }
          }
-         gCint->TypeInfo_Delete(ti);
+         gCling->TypeInfo_Delete(ti);
       }
       if (fType) {
          TVirtualCollectionProxy *proxy = fType->GetCollectionProxy();

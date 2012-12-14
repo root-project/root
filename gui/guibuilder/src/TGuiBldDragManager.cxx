@@ -5496,7 +5496,7 @@ void TGuiBldDragManager::DoClassMenu(Int_t id)
          TString str2;
          str2.Form("((TGuiBldDragManager*)0x%lx)->%s((%s*)0x%lx)", (ULong_t)this, method->GetName(),
                   fPimpl->fMenuObject->ClassName(), (ULong_t)fPimpl->fMenuObject);
-         gCint->Calc((char *)str2.Data());
+         gCling->Calc((char *)str2.Data());
          //delete fFrameMenu;  // suicide (BB)?
          //fFrameMenu = 0;
          return;

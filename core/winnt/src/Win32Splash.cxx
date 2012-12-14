@@ -45,10 +45,10 @@ static const char *gRootDevelopers[] = {
    0
 };
 
-static const char *gCintDevelopers[] = {
-   "Masaharu Goto",
-   0
-};
+//static const char *gCintDevelopers[] = {
+//   "Masaharu Goto",
+//   0
+//};
 
 static const char *gRootDocumentation[] = {
    "Ilka Antcheva",
@@ -212,8 +212,8 @@ static int DrawCredits(HDC hDC, bool draw, bool extended)
    y = DrawCreditItem(hDC, "Lead Developers: ", gLeadDevelopers, y, draw);
    y += 2 * lineSpacing - 3;  // special layout tweak
    y = DrawCreditItem(hDC, "Core Engineering: ", gRootDevelopers, y, draw);
-   y += 2 * lineSpacing - 3;  // to just not cut the bottom of the "p"
-   y = DrawCreditItem(hDC, "CINT C/C++ Intepreter: ", gCintDevelopers, y, draw);
+   //y += 2 * lineSpacing - 3;  // to just not cut the bottom of the "p"
+   //y = DrawCreditItem(hDC, "CINT C/C++ Intepreter: ", gCintDevelopers, y, draw);
    y += 2 * lineSpacing - 3;
    y = DrawCreditItem(hDC, "Documentation: ", gRootDocumentation, y, draw);
 

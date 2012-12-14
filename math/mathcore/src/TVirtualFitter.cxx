@@ -288,7 +288,7 @@ void TVirtualFitter::SetFCN(void *fcn)
 
    if (!fcn) return;
 
-   const char *funcname = gCint->Getp2f2funcname(fcn);
+   const char *funcname = gCling->Getp2f2funcname(fcn);
    if (funcname) {
       delete fMethodCall;
       fMethodCall = new TMethodCall();

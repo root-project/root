@@ -93,13 +93,13 @@ Bool_t TInterruptHandler::Notify()
    // make sure we use the sbrk heap (in case of mapped files)
    gMmallocDesc = 0;
 
-   if (!gCint->GetSecurityError())
-      gCint->GenericError("\n *** Break *** keyboard interrupt");
+   if (!gCling->GetSecurityError())
+      gCling->GenericError("\n *** Break *** keyboard interrupt");
    else {
       Break("TInterruptHandler::Notify", "keyboard interrupt");
       if (TROOT::Initialized()) {
          Getlinem(kInit, "Root > ");
-         gCint->RewindDictionary();
+         gCling->RewindDictionary();
 #ifndef WIN32
          Throw(GetSignal());
 #endif
@@ -193,8 +193,8 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    ExecLogon();
 
    // Save current interpreter context
-   gCint->SaveContext();
-   gCint->SaveGlobalsContext();
+   gCling->SaveContext();
+   gCling->SaveGlobalsContext();
 
    // Install interrupt and terminal input handlers
    TInterruptHandler *ih = new TInterruptHandler();
@@ -259,7 +259,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    Gl_beep_hook = &BeepHook;
 
    // tell CINT to use our getline
-   gCint->SetGetline(Getline, Gl_histadd);
+   gCling->SetGetline(Getline, Gl_histadd);
 }
 
 //______________________________________________________________________________
@@ -421,7 +421,7 @@ void TRint::Run(Bool_t retrn)
             // to RETRY ... and we have to avoid the Getlinem(kInit, GetPrompt());
             needGetlinemInit = kFALSE;
             retval = ProcessLine(cmd, kFALSE, &error);
-            gCint->EndOfLineAction();
+            gCling->EndOfLineAction();
 
             // The ProcessLine has successfully completed and we need
             // to call Getlinem(kInit, GetPrompt());
@@ -496,7 +496,7 @@ void TRint::PrintLogo(Bool_t lite)
           gSystem->GetBuildArch());
 
    if (!lite)
-      gCint->PrintIntro();
+      gCling->PrintIntro();
 
 #ifdef R__UNIX
    // Popdown X logo, only if started with -splash option
@@ -511,7 +511,7 @@ char *TRint::GetPrompt()
 {
    // Get prompt from interpreter. Either "root [n]" or "end with '}'".
 
-   char *s = gCint->GetPrompt();
+   char *s = gCling->GetPrompt();
    if (s[0])
       strlcpy(fPrompt, s, sizeof(fPrompt));
    else
@@ -566,7 +566,7 @@ Bool_t TRint::HandleTermInput()
 
       fInterrupt = kFALSE;
 
-      if (!gCint->GetMore() && !sline.IsNull()) fNcmd++;
+      if (!gCling->GetMore() && !sline.IsNull()) fNcmd++;
 
       // prevent recursive calling of this input handler
       fInputHandler->DeActivate();
@@ -611,7 +611,7 @@ Bool_t TRint::HandleTermInput()
       fInputHandler->Activate();
 
       if (!sline.BeginsWith(".reset"))
-         gCint->EndOfLineAction();
+         gCling->EndOfLineAction();
 
       gTabCom->ClearAll();
       Getlinem(kInit, GetPrompt());

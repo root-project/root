@@ -36,9 +36,9 @@ TFunction::TFunction(MethodInfo_t *info) : TDictionary()
    fInfo       = info;
    fMethodArgs = 0;
    if (fInfo) {
-      SetName(gCint->MethodInfo_Name(fInfo));
-      SetTitle(gCint->MethodInfo_Title(fInfo));
-      fMangledName = gCint->MethodInfo_GetMangledName(fInfo);
+      SetName(gCling->MethodInfo_Name(fInfo));
+      SetTitle(gCling->MethodInfo_Title(fInfo));
+      fMangledName = gCling->MethodInfo_GetMangledName(fInfo);
    }
 }
 
@@ -48,8 +48,8 @@ TFunction::TFunction(const TFunction &orig) : TDictionary(orig)
    // Copy operator.
 
    if (orig.fInfo) {
-      fInfo = gCint->MethodInfo_FactoryCopy(orig.fInfo);
-      fMangledName = gCint->MethodInfo_GetMangledName(fInfo);
+      fInfo = gCling->MethodInfo_FactoryCopy(orig.fInfo);
+      fMangledName = gCling->MethodInfo_GetMangledName(fInfo);
    } else
       fInfo = 0;
    fMethodArgs = 0;
@@ -61,14 +61,14 @@ TFunction& TFunction::operator=(const TFunction &rhs)
    // Assignment operator.
 
    if (this != &rhs) {
-      gCint->MethodInfo_Delete(fInfo);
+      gCling->MethodInfo_Delete(fInfo);
       if (fMethodArgs) fMethodArgs->Delete();
       delete fMethodArgs;
       if (rhs.fInfo) {
-         fInfo = gCint->MethodInfo_FactoryCopy(rhs.fInfo);
-         SetName(gCint->MethodInfo_Name(fInfo));
-         SetTitle(gCint->MethodInfo_Title(fInfo));
-         fMangledName = gCint->MethodInfo_GetMangledName(fInfo);
+         fInfo = gCling->MethodInfo_FactoryCopy(rhs.fInfo);
+         SetName(gCling->MethodInfo_Name(fInfo));
+         SetTitle(gCling->MethodInfo_Title(fInfo));
+         fMangledName = gCling->MethodInfo_GetMangledName(fInfo);
       } else
          fInfo = 0;
       fMethodArgs = 0;
@@ -81,7 +81,7 @@ TFunction::~TFunction()
 {
    // TFunction dtor deletes adopted CINT MethodInfo.
 
-   gCint->MethodInfo_Delete(fInfo);
+   gCling->MethodInfo_Delete(fInfo);
 
    if (fMethodArgs) fMethodArgs->Delete();
    delete fMethodArgs;
@@ -102,7 +102,7 @@ void TFunction::CreateSignature()
 {
    // Using the CINT method arg information to create a complete signature string.
 
-   gCint->MethodInfo_CreateSignature(fInfo, fSignature);
+   gCling->MethodInfo_CreateSignature(fInfo, fSignature);
 }
 
 //______________________________________________________________________________
@@ -135,8 +135,8 @@ const char *TFunction::GetReturnTypeName() const
 {
    // Get full type description of function return type, e,g.: "class TDirectory*".
 
-   if (gCint->MethodInfo_Type(fInfo) == 0) return "Unknown";
-   return gCint->MethodInfo_TypeName(fInfo);
+   if (gCling->MethodInfo_Type(fInfo) == 0) return "Unknown";
+   return gCling->MethodInfo_TypeName(fInfo);
 }
 
 //______________________________________________________________________________
@@ -144,7 +144,7 @@ Int_t TFunction::GetNargs() const
 {
    // Number of function arguments.
 
-   return gCint->MethodInfo_NArg(fInfo);
+   return gCling->MethodInfo_NArg(fInfo);
 }
 
 //______________________________________________________________________________
@@ -152,7 +152,7 @@ Int_t TFunction::GetNargsOpt() const
 {
    // Number of function optional (default) arguments.
 
-   return gCint->MethodInfo_NDefaultArg(fInfo);
+   return gCling->MethodInfo_NDefaultArg(fInfo);
 }
 
 //______________________________________________________________________________
@@ -160,7 +160,7 @@ Long_t TFunction::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
 
-   return gCint->MethodInfo_Property(fInfo);
+   return gCling->MethodInfo_Property(fInfo);
 }
 
 //______________________________________________________________________________
@@ -170,7 +170,7 @@ void *TFunction::InterfaceMethod() const
    // can find which TFunction belongs to a CINT MethodInfo object.
    // Both need to have the same InterfaceMethod pointer.
 
-   return gCint->MethodInfo_InterfaceMethod(fInfo);
+   return gCling->MethodInfo_InterfaceMethod(fInfo);
 }
 
 //______________________________________________________________________________
@@ -197,7 +197,7 @@ const char *TFunction::GetPrototype() const
    // case of error.
 
    if (fInfo)
-      return gCint->MethodInfo_GetPrototype(fInfo);
+      return gCling->MethodInfo_GetPrototype(fInfo);
    else
       return 0;
 }

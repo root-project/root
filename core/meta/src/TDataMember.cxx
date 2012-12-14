@@ -200,11 +200,11 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
    if (!fInfo && !fClass) return; // default ctor is called
 
    if (fInfo) {
-      fFullTypeName = TClassEdit::GetLong64_Name(gCint->DataMemberInfo_TypeName(fInfo));
-      fTrueTypeName = TClassEdit::GetLong64_Name(gCint->DataMemberInfo_TypeTrueName(fInfo));
-      fTypeName     = TClassEdit::GetLong64_Name(gCint->TypeName(fFullTypeName));
-      SetName(gCint->DataMemberInfo_Name(fInfo));
-      const char *t = gCint->DataMemberInfo_Title(fInfo);
+      fFullTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeName(fInfo));
+      fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));
+      fTypeName     = TClassEdit::GetLong64_Name(gCling->TypeName(fFullTypeName));
+      SetName(gCling->DataMemberInfo_Name(fInfo));
+      const char *t = gCling->DataMemberInfo_Title(fInfo);
       SetTitle(t);
       if (t && t[0] != '!') SetBit(kObjIsPersistent);
       fDataType = 0;
@@ -255,7 +255,7 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
    Int_t token_cnt;
    Int_t i;
 
-   strlcpy(cmt,gCint->DataMemberInfo_Title(fInfo),2048);
+   strlcpy(cmt,gCling->DataMemberInfo_Title(fInfo),2048);
 
    if ((opt_ptr=strstr(cmt,"*OPTION={"))) {
 
@@ -264,12 +264,12 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
       //let's cut the part lying between {}
       ptr1 = strtok(opt_ptr  ,"{}");  //starts tokenizing:extracts "*OPTION={"
       if (ptr1 == 0) {
-         Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+         Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",gCling->DataMemberInfo_Title(fInfo));
          return;
       }
       ptr1 = strtok((char*)0,"{}");   //And now we have what we need in ptr1!!!
       if (ptr1 == 0) {
-         Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+         Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",gCling->DataMemberInfo_Title(fInfo));
          return;
       }
       
@@ -301,12 +301,12 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
          if (strstr(tokens[i],"GetMethod")) {
             ptr1 = strtok(tokens[i],"\"");    //tokenizing-strip text "GetMethod"
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",gCling->DataMemberInfo_Title(fInfo));
                return;
             }
             ptr1 = strtok(0,"\"");         //tokenizing - name is in ptr1!
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",gCling->DataMemberInfo_Title(fInfo));
                return;
             }
             
@@ -320,12 +320,12 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
          if (strstr(tokens[i],"SetMethod")) {
             ptr1 = strtok(tokens[i],"\"");
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",gCling->DataMemberInfo_Title(fInfo));
                return;
             }
             ptr1 = strtok((char*)0,"\"");    //name of Setter in ptr1
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",gCling->DataMemberInfo_Title(fInfo));
                return;
             }
             if (GetClass()->GetMethod(ptr1,"1"))
@@ -343,12 +343,12 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
          if (strstr(tokens[i],"Items")) {
             ptr1 = strtok(tokens[i],"()");
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",gCling->DataMemberInfo_Title(fInfo));
                return;
             }
             ptr1 = strtok((char*)0,"()");
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",gCint->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",gCling->DataMemberInfo_Title(fInfo));
                return;
             }
             
@@ -466,7 +466,7 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
 //______________________________________________________________________________
 TDataMember::TDataMember(const TDataMember& dm) :
   TDictionary(dm),
-  fInfo(gCint->DataMemberInfo_FactoryCopy(dm.fInfo)),
+  fInfo(gCling->DataMemberInfo_FactoryCopy(dm.fInfo)),
   fClass(dm.fClass),
   fDataType(dm.fDataType),
   fOffset(dm.fOffset),
@@ -487,7 +487,7 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
 {
    //assignement operator
    if(this!=&dm) {
-      gCint->DataMemberInfo_Delete(fInfo);
+      gCling->DataMemberInfo_Delete(fInfo);
       delete fValueSetter;
       delete fValueGetter;
       if (fOptions) {
@@ -497,7 +497,7 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
       }
 
       TDictionary::operator=(dm);
-      fInfo= gCint->DataMemberInfo_FactoryCopy(dm.fInfo);
+      fInfo= gCling->DataMemberInfo_FactoryCopy(dm.fInfo);
       fClass=dm.fClass;
       fDataType=dm.fDataType;
       fOffset=dm.fOffset;
@@ -516,7 +516,7 @@ TDataMember::~TDataMember()
 {
    // TDataMember dtor deletes adopted CINT DataMemberInfo object.
 
-   gCint->DataMemberInfo_Delete(fInfo);
+   gCling->DataMemberInfo_Delete(fInfo);
    delete fValueSetter;
    delete fValueGetter;
    if (fOptions) {
@@ -530,7 +530,7 @@ Int_t TDataMember::GetArrayDim() const
 {
    // Return number of array dimensions.
 
-   return gCint->DataMemberInfo_ArrayDim(fInfo);
+   return gCling->DataMemberInfo_ArrayDim(fInfo);
 }
 
 //______________________________________________________________________________
@@ -540,7 +540,7 @@ const char *TDataMember::GetArrayIndex() const
    // GetArrayIndex returns a string pointing to it;
    // otherwise it returns an empty string.
 
-   const char* val = gCint->DataMemberInfo_ValidArrayIndex(fInfo);
+   const char* val = gCling->DataMemberInfo_ValidArrayIndex(fInfo);
    return (val && IsaPointer() ) ? val : "";
 }
 
@@ -549,7 +549,7 @@ Int_t TDataMember::GetMaxIndex(Int_t dim) const
 {
    // Return maximum index for array dimension "dim".
 
-   return gCint->DataMemberInfo_MaxIndex(fInfo,dim);
+   return gCling->DataMemberInfo_MaxIndex(fInfo,dim);
 }
 
 //______________________________________________________________________________
@@ -587,7 +587,7 @@ Long_t TDataMember::GetOffset() const
 
    //case of an interpreted or emulated class
    if (fClass->GetDeclFileLine() < 0) {
-      ((TDataMember*)this)->fOffset = gCint->DataMemberInfo_Offset(fInfo);
+      ((TDataMember*)this)->fOffset = gCling->DataMemberInfo_Offset(fInfo);
       return fOffset;
    }
    //case of a compiled class
@@ -631,7 +631,7 @@ Long_t TDataMember::GetOffsetCint() const
 {
    // Get offset from "this" using the information in CINT only.
 
-   return gCint->DataMemberInfo_Offset(fInfo);
+   return gCling->DataMemberInfo_Offset(fInfo);
 }
 
 //______________________________________________________________________________
@@ -698,14 +698,14 @@ Long_t TDataMember::Property() const
 
    TDataMember *t = (TDataMember*)this;
    if (!fInfo) return 0;
-   int prop  = gCint->DataMemberInfo_Property(fInfo);
-   int propt = gCint->DataMemberInfo_TypeProperty(fInfo);
+   int prop  = gCling->DataMemberInfo_Property(fInfo);
+   int propt = gCling->DataMemberInfo_TypeProperty(fInfo);
    t->fProperty = prop|propt;
-   const char *tname = gCint->DataMemberInfo_TypeName(fInfo);
-   t->fTypeName = gCint->TypeName(tname);
+   const char *tname = gCling->DataMemberInfo_TypeName(fInfo);
+   t->fTypeName = gCling->TypeName(tname);
    t->fFullTypeName = tname;
-   t->fName  = gCint->DataMemberInfo_Name(fInfo);
-   t->fTitle = gCint->DataMemberInfo_Title(fInfo);
+   t->fName  = gCling->DataMemberInfo_Name(fInfo);
+   t->fTitle = gCling->DataMemberInfo_Title(fInfo);
 
    return fProperty;
 }

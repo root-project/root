@@ -84,7 +84,7 @@ TMethodCall::TMethodCall(const TMethodCall &orig) : TObject(orig)
 {
    // Copy ctor.
 
-   fFunc     = orig.fFunc ? gCint->CallFunc_FactoryCopy(orig.fFunc) : 0;
+   fFunc     = orig.fFunc ? gCling->CallFunc_FactoryCopy(orig.fFunc) : 0;
    fOffset   = orig.fOffset;
    fClass    = orig.fClass;
    fMethod   = orig.fMethod;
@@ -102,8 +102,8 @@ TMethodCall &TMethodCall::operator=(const TMethodCall &rhs)
    // Assignement operator.
 
    if (this != &rhs) {
-      gCint->CallFunc_Delete(fFunc);
-      fFunc     = rhs.fFunc ? gCint->CallFunc_FactoryCopy(rhs.fFunc) : 0;
+      gCling->CallFunc_Delete(fFunc);
+      fFunc     = rhs.fFunc ? gCling->CallFunc_FactoryCopy(rhs.fFunc) : 0;
       fOffset   = rhs.fOffset;
       fClass    = rhs.fClass;
       fMethod   = rhs.fMethod;
@@ -124,7 +124,7 @@ TMethodCall::~TMethodCall()
 {
    // TMethodCall dtor.
 
-   gCint->CallFunc_Delete(fFunc);
+   gCling->CallFunc_Delete(fFunc);
    delete fMetPtr;
 }
 
@@ -157,7 +157,7 @@ static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinf
                      scope[i-1] = 0;
                      pos = i+1;
                      TClass *cl = TClass::GetClass(scope);
-                     if (!cl) gCint->ClassInfo_Init(cinfo, scope);
+                     if (!cl) gCling->ClassInfo_Init(cinfo, scope);
                      return cl;
                   }
                }
@@ -178,14 +178,14 @@ void TMethodCall::Init(TClass *cl, const char *method, const char *params)
    // This two step method is much more efficient than calling for
    // every invocation TInterpreter::Execute(...).
 
-   ClassInfo_t *cinfo = gCint->ClassInfo_Factory();
+   ClassInfo_t *cinfo = gCling->ClassInfo_Factory();
    if (!cl) {
       UInt_t pos = 0;
       cl = R__FindScope(method,pos,cinfo);
       method = method+pos;
    }
    InitImplementation(method,params,0,cl,cinfo);
-   gCint->ClassInfo_Delete(cinfo);
+   gCling->ClassInfo_Delete(cinfo);
 }
 
 //______________________________________________________________________________
@@ -199,10 +199,10 @@ void TMethodCall::Init(const char *function, const char *params)
    // every invocation TInterpreter::Execute(...).
 
    UInt_t pos = 0;
-   ClassInfo_t *cinfo = gCint->ClassInfo_Factory();
+   ClassInfo_t *cinfo = gCling->ClassInfo_Factory();
    TClass *cl = R__FindScope(function,pos,cinfo);
    InitImplementation(function+pos, params, 0, cl, cinfo);
-   gCint->ClassInfo_Delete(cinfo);
+   gCling->ClassInfo_Delete(cinfo);
 }
 
 //______________________________________________________________________________
@@ -216,9 +216,9 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
    // information should be passed via the TClass or CINT ClassInfo.
 
    if (!fFunc)
-      fFunc = gCint->CallFunc_Factory();
+      fFunc = gCling->CallFunc_Factory();
    else
-      gCint->CallFunc_Init(fFunc);
+      gCling->CallFunc_Init(fFunc);
 
    fClass    = cl;
    fMetPtr   = 0;
@@ -229,7 +229,7 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
    fRetType  = kNone;
 
    ClassInfo_t *scope = 0;
-   ClassInfo_t *global = gCint->ClassInfo_Factory(); // Note: Unused variable???
+   ClassInfo_t *global = gCling->ClassInfo_Factory(); // Note: Unused variable???
    if (cl) scope = (ClassInfo_t*)cl->GetClassInfo();
    else    scope = (ClassInfo_t*)cinfo;
   
@@ -237,15 +237,15 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
 
    R__LOCKGUARD2(gClingMutex);
    if (params && params[0]) {
-      gCint->CallFunc_SetFunc(fFunc, scope, (char *)methodname, (char *)params, &fOffset);
+      gCling->CallFunc_SetFunc(fFunc, scope, (char *)methodname, (char *)params, &fOffset);
    } else if (proto && proto[0]) {
-      gCint->CallFunc_SetFuncProto(fFunc, scope, (char *)methodname, (char *)proto, &fOffset);
+      gCling->CallFunc_SetFuncProto(fFunc, scope, (char *)methodname, (char *)proto, &fOffset);
    } else {
       // No parameters
-      gCint->CallFunc_SetFunc(fFunc, scope, (char *)methodname, "", &fOffset);
+      gCling->CallFunc_SetFunc(fFunc, scope, (char *)methodname, "", &fOffset);
    }
    
-   gCint->ClassInfo_Delete(global);
+   gCling->ClassInfo_Delete(global);
 }
 
 //______________________________________________________________________________
@@ -258,14 +258,14 @@ void TMethodCall::InitWithPrototype(TClass *cl, const char *method, const char *
    // This two step method is much more efficient than calling for
    // every invocation TInterpreter::Execute(...).
 
-   ClassInfo_t *cinfo = gCint->ClassInfo_Factory();
+   ClassInfo_t *cinfo = gCling->ClassInfo_Factory();
    if (!cl) {
       UInt_t pos = 0;
       cl = R__FindScope(method,pos,cinfo);
       method = method+pos;
    }
    InitImplementation(method, 0, proto, cl, cinfo);
-   gCint->ClassInfo_Delete(cinfo);
+   gCling->ClassInfo_Delete(cinfo);
 }
 
 //______________________________________________________________________________
@@ -279,10 +279,10 @@ void TMethodCall::InitWithPrototype(const char *function, const char *proto)
    // every invocation TInterpreter::Execute(...).
 
    UInt_t pos = 0;
-   ClassInfo_t *cinfo = gCint->ClassInfo_Factory();
+   ClassInfo_t *cinfo = gCling->ClassInfo_Factory();
    TClass *cl = R__FindScope(function,pos,cinfo);
    InitImplementation(function+pos, 0, proto, cl, cinfo);
-   gCint->ClassInfo_Delete(cinfo);
+   gCling->ClassInfo_Delete(cinfo);
 }
 
 //______________________________________________________________________________
@@ -291,7 +291,7 @@ Bool_t TMethodCall::IsValid() const
    // Return true if the method call has been properly initialized and is
    // usable.
 
-   return fFunc ? gCint->CallFunc_IsValid(fFunc) : kFALSE;
+   return fFunc ? gCling->CallFunc_IsValid(fFunc) : kFALSE;
 }
 
 //______________________________________________________________________________
@@ -338,7 +338,7 @@ void TMethodCall::Execute(void *object)
    if (!fDtorOnly && fMethod[0]=='~') {
       Error("Execute","TMethodCall can no longer be use to call the operator delete and the destructor at the same time");
    }
-   gCint->CallFunc_Exec(fFunc,address); 
+   gCling->CallFunc_Exec(fFunc,address); 
 }
 
 //______________________________________________________________________________
@@ -349,13 +349,13 @@ void TMethodCall::Execute(void *object, const char *params)
    if (!fFunc) return;
    
    R__LOCKGUARD2(gClingMutex);
-   gCint->CallFunc_SetArgs(fFunc, (char *)params);
+   gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   gCint->SetTempLevel(1);
-   gCint->CallFunc_Exec(fFunc,address);
-   gCint->SetTempLevel(-1);
+   gCling->SetTempLevel(1);
+   gCling->CallFunc_Exec(fFunc,address);
+   gCling->SetTempLevel(-1);
 }
 
 //______________________________________________________________________________
@@ -368,9 +368,9 @@ void TMethodCall::Execute(void *object, Long_t &retLong)
    R__LOCKGUARD2(gClingMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   gCint->SetTempLevel(1);
-   retLong = gCint->CallFunc_ExecInt(fFunc,address);
-   gCint->SetTempLevel(-1);
+   gCling->SetTempLevel(1);
+   retLong = gCling->CallFunc_ExecInt(fFunc,address);
+   gCling->SetTempLevel(-1);
 }
 
 //______________________________________________________________________________
@@ -381,13 +381,13 @@ void TMethodCall::Execute(void *object, const char *params, Long_t &retLong)
    if (!fFunc) return;
    
    R__LOCKGUARD2(gClingMutex);
-   gCint->CallFunc_SetArgs(fFunc, (char *)params);
+   gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   gCint->SetTempLevel(1);
-   retLong = gCint->CallFunc_ExecInt(fFunc,address);
-   gCint->SetTempLevel(-1);
+   gCling->SetTempLevel(1);
+   retLong = gCling->CallFunc_ExecInt(fFunc,address);
+   gCling->SetTempLevel(-1);
 }
 
 //______________________________________________________________________________
@@ -400,9 +400,9 @@ void TMethodCall::Execute(void *object, Double_t &retDouble)
    R__LOCKGUARD2(gClingMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   gCint->SetTempLevel(1);
-   retDouble = gCint->CallFunc_ExecDouble(fFunc,address);
-   gCint->SetTempLevel(-1);
+   gCling->SetTempLevel(1);
+   retDouble = gCling->CallFunc_ExecDouble(fFunc,address);
+   gCling->SetTempLevel(-1);
 }
 
 //______________________________________________________________________________
@@ -413,13 +413,13 @@ void TMethodCall::Execute(void *object, const char *params, Double_t &retDouble)
    if (!fFunc) return;
    
    R__LOCKGUARD2(gClingMutex);
-   gCint->CallFunc_SetArgs(fFunc, (char *)params);
+   gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   gCint->SetTempLevel(1);
-   retDouble = gCint->CallFunc_ExecDouble(fFunc,address);
-   gCint->SetTempLevel(-1);
+   gCling->SetTempLevel(1);
+   retDouble = gCling->CallFunc_ExecDouble(fFunc,address);
+   gCling->SetTempLevel(-1);
 }
 
 //______________________________________________________________________________
@@ -432,9 +432,9 @@ void TMethodCall::Execute(void *object, char **retText)
    R__LOCKGUARD2(gClingMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   gCint->SetTempLevel(1);
-   *retText =(char*) (gCint->CallFunc_ExecInt(fFunc,address));
-   gCint->SetTempLevel(-1);
+   gCling->SetTempLevel(1);
+   *retText =(char*) (gCling->CallFunc_ExecInt(fFunc,address));
+   gCling->SetTempLevel(-1);
 }
 
 //______________________________________________________________________________
@@ -445,13 +445,13 @@ void TMethodCall::Execute(void *object, const char *params, char **retText)
    if (!fFunc) return;
    
    R__LOCKGUARD2(gClingMutex);
-   gCint->CallFunc_SetArgs(fFunc, (char *)params);
+   gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   gCint->SetTempLevel(1);
-   *retText =(char*)(gCint->CallFunc_ExecInt(fFunc,address));
-   gCint->SetTempLevel(-1);
+   gCling->SetTempLevel(1);
+   *retText =(char*)(gCling->CallFunc_ExecInt(fFunc,address));
+   gCling->SetTempLevel(-1);
 }
 
 //______________________________________________________________________________
@@ -478,19 +478,19 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
          returntype++;
       }
 
-      TypedefInfo_t *atype = gCint->TypedefInfo_Factory();
-      gCint->TypedefInfo_Init(atype,gCint->TypeName(rettype));
+      TypedefInfo_t *atype = gCling->TypedefInfo_Factory();
+      gCling->TypedefInfo_Init(atype,gCling->TypeName(rettype));
       //be careful, below this point rettype cannot be reused (point to a static in TCint)
       
-      const char *name = gCint->TypedefInfo_TrueName(atype);
+      const char *name = gCling->TypedefInfo_TrueName(atype);
 
       Bool_t isEnum = kFALSE;
       TypeInfo_t *typed = 0;
       if (name && !strcmp("(unknown)",name)) {
-         typed = gCint->TypeInfo_Factory();         
-         gCint->TypeInfo_Init(typed,func->GetReturnTypeName());
-         name  = gCint->TypeInfo_TrueName(typed);
-         if (gCint->TypeInfo_Property(typed)&kIsEnum) {
+         typed = gCling->TypeInfo_Factory();         
+         gCling->TypeInfo_Init(typed,func->GetReturnTypeName());
+         name  = gCling->TypeInfo_TrueName(typed);
+         if (gCling->TypeInfo_Property(typed)&kIsEnum) {
             isEnum = kTRUE;
          }
       }
@@ -527,8 +527,8 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
          fRetType = kLong;
       else
          fRetType = kOther;
-      gCint->TypeInfo_Delete(typed);
-      gCint->TypedefInfo_Delete(atype);
+      gCling->TypeInfo_Delete(typed);
+      gCling->TypedefInfo_Delete(atype);
 
    }
 
@@ -546,7 +546,7 @@ void TMethodCall::SetParamPtrs(void *paramArr, Int_t nparam)
 
    if (!fFunc) return;
    R__LOCKGUARD2(gClingMutex);
-   gCint->CallFunc_SetArgArray(fFunc,(Long_t *)paramArr, nparam);
+   gCling->CallFunc_SetArgArray(fFunc,(Long_t *)paramArr, nparam);
 }
 
 //______________________________________________________________________________
@@ -555,7 +555,7 @@ void TMethodCall::ResetParam()
    // Reset parameter list. To be used before the first call the SetParam().
 
    if (!fFunc) return;
-   gCint->CallFunc_ResetArg(fFunc);
+   gCling->CallFunc_ResetArg(fFunc);
 }
 
 //______________________________________________________________________________
@@ -564,7 +564,7 @@ void TMethodCall::SetParam(Long_t l)
    // Add a long method parameter.
 
    if (!fFunc) return;
-   gCint->CallFunc_SetArg(fFunc,l);
+   gCling->CallFunc_SetArg(fFunc,l);
 }
 
 //______________________________________________________________________________
@@ -573,7 +573,7 @@ void TMethodCall::SetParam(Double_t d)
    // Add a double method parameter.
 
    if (!fFunc) return;
-   gCint->CallFunc_SetArg(fFunc,d);
+   gCling->CallFunc_SetArg(fFunc,d);
 }
 
 //______________________________________________________________________________
@@ -582,7 +582,7 @@ void TMethodCall::SetParam(Long64_t ll)
    // Add a long long method parameter.
 
    if (!fFunc) return;
-   gCint->CallFunc_SetArg(fFunc,ll);
+   gCling->CallFunc_SetArg(fFunc,ll);
 }
 
 //______________________________________________________________________________
@@ -591,5 +591,5 @@ void TMethodCall::SetParam(ULong64_t ull)
    // Add a unsigned long long method parameter.
 
    if (!fFunc) return;   
-   gCint->CallFunc_SetArg(fFunc,ull);
+   gCling->CallFunc_SetArg(fFunc,ull);
 }

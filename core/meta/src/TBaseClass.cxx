@@ -37,7 +37,7 @@ TBaseClass::TBaseClass(BaseClassInfo_t *info, TClass *cl) : TDictionary()
    fInfo     = info;
    fClass    = cl;
    fClassPtr = 0;
-   if (fInfo) SetName(gCint->BaseClassInfo_FullName(fInfo));
+   if (fInfo) SetName(gCling->BaseClassInfo_FullName(fInfo));
 }
 
 //______________________________________________________________________________
@@ -45,7 +45,7 @@ TBaseClass::~TBaseClass()
 {
    // TBaseClass dtor deletes adopted CINT BaseClassInfo object.
 
-   gCint->BaseClassInfo_Delete(fInfo);
+   gCling->BaseClassInfo_Delete(fInfo);
 }
 
 //______________________________________________________________________________
@@ -71,7 +71,7 @@ Int_t TBaseClass::GetDelta() const
 {
    // Get offset from "this" to part of base class.
 
-   return (Int_t)gCint->BaseClassInfo_Offset(fInfo);
+   return (Int_t)gCling->BaseClassInfo_Offset(fInfo);
 }
 
 //______________________________________________________________________________
@@ -89,7 +89,7 @@ int TBaseClass::IsSTLContainer()
    // Return which type (if any) of STL container the data member is.
 
    if (!fInfo) return kNone;
-   const char *type = gCint->BaseClassInfo_TmpltName(fInfo);
+   const char *type = gCling->BaseClassInfo_TmpltName(fInfo);
    if (!type) return kNone;
 
    if (!strcmp(type, "vector"))   return kVector;
@@ -107,5 +107,5 @@ Long_t TBaseClass::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
 
-   return gCint->BaseClassInfo_Property(fInfo);
+   return gCling->BaseClassInfo_Property(fInfo);
 }

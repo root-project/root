@@ -293,8 +293,8 @@ void TThread::Init()
 
    // Create the single global mutex
    gGlobalMutex = new TMutex(kTRUE);
-   gCint->SetAlloclockfunc(CINT_alloc_lock);
-   gCint->SetAllocunlockfunc(CINT_alloc_unlock);
+   gCling->SetAlloclockfunc(CINT_alloc_lock);
+   gCling->SetAllocunlockfunc(CINT_alloc_unlock);
 }
 
 //______________________________________________________________________________

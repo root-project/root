@@ -432,7 +432,7 @@ const TSeqCollection *TTabCom::GetListOfClasses()
       if (!tmpfilename) return 0;
       FILE *fout = fopen(tmpfilename, "w");
       if (!fout) return 0;
-      gCint->DisplayClass(fout, (char*)"", 0, 0);
+      gCling->DisplayClass(fout, (char*)"", 0, 0);
       fclose(fout);
 
       // open the file
@@ -608,26 +608,26 @@ const TSeqCollection *TTabCom::GetListOfGlobals()
       int nglob = 0;
 
       // find the number of global objects
-      DataMemberInfo_t *t = gCint->DataMemberInfo_Factory();
-      while (gCint->DataMemberInfo_Next(t))
+      DataMemberInfo_t *t = gCling->DataMemberInfo_Factory();
+      while (gCling->DataMemberInfo_Next(t))
          nglob++;
 
       for (int i = 0; i < nglob; i++) {
-         a = gCint->DataMemberInfo_Factory();
-         gCint->DataMemberInfo_Next(a);             // initial positioning
+         a = gCling->DataMemberInfo_Factory();
+         gCling->DataMemberInfo_Next(a);             // initial positioning
 
          for (int j = 0; j < last; j++)
-            gCint->DataMemberInfo_Next(a);
+            gCling->DataMemberInfo_Next(a);
 
          // if name cannot be obtained no use to put in list
-         if (gCint->DataMemberInfo_IsValid(a) && gCint->DataMemberInfo_Name(a)) {
+         if (gCling->DataMemberInfo_IsValid(a) && gCling->DataMemberInfo_Name(a)) {
             fpGlobals->Add(new TGlobal(a));
          } else
-            gCint->DataMemberInfo_Delete(a);
+            gCling->DataMemberInfo_Delete(a);
 
          last++;
       }
-      gCint->DataMemberInfo_Delete(t);
+      gCling->DataMemberInfo_Delete(t);
    }
 
    return fpGlobals;
@@ -646,26 +646,26 @@ const TSeqCollection *TTabCom::GetListOfGlobalFunctions()
       int nglob = 0;
 
       // find the number of global functions
-      MethodInfo_t *t = gCint->MethodInfo_Factory();
-      while (gCint->MethodInfo_Next(t))
+      MethodInfo_t *t = gCling->MethodInfo_Factory();
+      while (gCling->MethodInfo_Next(t))
          nglob++;
 
       for (int i = 0; i < nglob; i++) {
-         a = gCint->MethodInfo_Factory();
-         gCint->MethodInfo_Next(a);             // initial positioning
+         a = gCling->MethodInfo_Factory();
+         gCling->MethodInfo_Next(a);             // initial positioning
 
          for (int j = 0; j < last; j++)
-            gCint->MethodInfo_Next(a);
+            gCling->MethodInfo_Next(a);
 
          // if name cannot be obtained no use to put in list
-         if (gCint->MethodInfo_IsValid(a) && gCint->MethodInfo_Name(a)) {
+         if (gCling->MethodInfo_IsValid(a) && gCling->MethodInfo_Name(a)) {
             fpGlobalFuncs->Add(new TFunction(a));
          } else
-            gCint->MethodInfo_Delete(a);
+            gCling->MethodInfo_Delete(a);
 
          last++;
       }
-      gCint->MethodInfo_Delete(t);
+      gCling->MethodInfo_Delete(t);
    }
 
    return fpGlobalFuncs;
@@ -1048,7 +1048,7 @@ TString TTabCom::GetSysIncludePath()
 
    FILE *fout = fopen(tmpfilename, "w");
    if (!fout) return "";
-   gCint->DisplayIncludePath(fout);
+   gCling->DisplayIncludePath(fout);
    fclose(fout);
 
    // open the tmp file

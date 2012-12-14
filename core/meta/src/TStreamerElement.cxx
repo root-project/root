@@ -1597,7 +1597,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
          if (isPointer) fCtype = TVirtualStreamerInfo::kObjectp;
          else           fCtype = TVirtualStreamerInfo::kObject;
       } else {
-         if (gCint->ClassInfo_IsEnum(sopen)) {
+         if (gCling->ClassInfo_IsEnum(sopen)) {
             if (isPointer) fCtype += TVirtualStreamerInfo::kOffsetP;
          } else {
             if(strcmp(sopen,"string")) {

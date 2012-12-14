@@ -165,16 +165,16 @@ TSelector *TSelector::GetSelector(const char *filename)
    // but does not have a dictionary, so we just raise a flag for better
    // diagnostic in the case the class is not found in the CINT ClassInfo table.
    Bool_t autoloaderr = kFALSE;
-   if (!fromFile && gCint->AutoLoad(localname) != 1)
+   if (!fromFile && gCling->AutoLoad(localname) != 1)
       autoloaderr = kTRUE;
 
-   ClassInfo_t *cl = gCint->ClassInfo_Factory();
+   ClassInfo_t *cl = gCling->ClassInfo_Factory();
    Bool_t ok = kFALSE;
    Bool_t nameFound = kFALSE;
-   while (gCint->ClassInfo_Next(cl)) {
-      if (localname == gCint->ClassInfo_FullName(cl)) {
+   while (gCling->ClassInfo_Next(cl)) {
+      if (localname == gCling->ClassInfo_FullName(cl)) {
          nameFound = kTRUE;
-         if (gCint->ClassInfo_IsBase(cl,"TSelector")) ok = kTRUE;
+         if (gCling->ClassInfo_IsBase(cl,"TSelector")) ok = kTRUE;
          break;
       }
    }
@@ -198,14 +198,14 @@ TSelector *TSelector::GetSelector(const char *filename)
    }
 
    // we can now create an instance of the class
-   TSelector *selector = (TSelector*)gCint->ClassInfo_New(cl);
+   TSelector *selector = (TSelector*)gCling->ClassInfo_New(cl);
    if (!selector || isCompiled) return selector;
 
    //interpreted selector: cannot be used as such
    //create a fake selector
    TSelectorCint *select = new TSelectorCint();
    select->Build(selector, cl);
-   gCint->ClassInfo_Delete(cl);
+   gCling->ClassInfo_Delete(cl);
    return select;
 }
 

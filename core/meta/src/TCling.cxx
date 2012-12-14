@@ -162,8 +162,8 @@ void TCling__RegisterModule(const char* modulename,
       return;
    }
 
-   if (gCint) {
-      ((TCling*)gCint)->RegisterModule(modulename,
+   if (gCling) {
+      ((TCling*)gCling)->RegisterModule(modulename,
                                                headers,
                                                includePaths,
                                                macroDefines,
@@ -249,7 +249,7 @@ static void TCling__UpdateClassInfo(TagDecl* TD)
 extern "C" 
 void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
    TCollection *listOfSmth = 0;
-   cling::Interpreter* interp = ((TCling*)gCint)->GetInterpreter();
+   cling::Interpreter* interp = ((TCling*)gCling)->GetInterpreter();
    for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
        I != E; ++I)
       for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(), 
@@ -361,7 +361,7 @@ extern "C" const Decl* TCling__GetObjectDecl(TObject *obj) {
 extern "C" int TCling__AutoLoadCallback(const char* className)
 {
    string cls(className);
-   return gCint->AutoLoad(cls.c_str());
+   return gCling->AutoLoad(cls.c_str());
 }
 
 //______________________________________________________________________________
@@ -405,7 +405,7 @@ void* autoloadCallback(const std::string& mangled_name)
    }
    //fprintf(stderr, "name: '%s'\n", name.c_str());
    // Now we have the class or namespace name, so do the lookup.
-   TString libs = gCint->GetClassSharedLibs(name.c_str());
+   TString libs = gCling->GetClassSharedLibs(name.c_str());
    if (libs.IsNull()) {
       // Not found in the map, all done.
       return 0;
@@ -723,7 +723,7 @@ TCling::~TCling()
    delete fTemporaries;
    delete fNormalizedCtxt;
    delete fInterpreter;
-   gCint = 0;
+   gCling = 0;
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
    Warning("~TCling", "Interface not available yet.");
@@ -1275,12 +1275,12 @@ Int_t TCling::InitializeDictionaries()
       le = gModuleHeaderInfoBuffer->end();
    for (; li != le; ++li) {
       // process buffered module registrations
-      ((TCling*)gCint)->RegisterModule(li->fModuleName,
-                                               li->fHeaders,
-                                               li->fIncludePaths,
-                                               li->fMacroDefines,
-                                               li->fMacroUndefines,
-                                               li->fTriggerFunc);
+      ((TCling*)gCling)->RegisterModule(li->fModuleName,
+                                        li->fHeaders,
+                                        li->fIncludePaths,
+                                        li->fMacroDefines,
+                                        li->fMacroUndefines,
+                                        li->fTriggerFunc);
    }
    gModuleHeaderInfoBuffer->clear();
 

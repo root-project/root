@@ -167,7 +167,7 @@ TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
    if (!cl->IsLoaded()) {
       // interpreted class
       void *clinfo = cl->GetClassInfo();
-      nargs = gCint->ClassInfo_GetMethodNArg(clinfo,method, proto);
+      nargs = gCling->ClassInfo_GetMethodNArg(clinfo,method, proto);
       if (nargs >= 0)  return (TMethod *) -1;
       nargs = 0;
       return 0;
@@ -212,17 +212,17 @@ static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
    Long_t faddr = 0;
    if (!cl->IsLoaded()) {
       // interpreted class
-      CallFunc_t *func = gCint->CallFunc_Factory();
+      CallFunc_t *func = gCling->CallFunc_Factory();
       long         offset;
       void *cinfo = cl->GetClassInfo();
-      gCint->CallFunc_SetFunc(func, cinfo, method, params, &offset);
-      Bool_t valid = gCint->CallFunc_IsValid(func);
-      gCint->CallFunc_Delete(func);
+      gCling->CallFunc_SetFunc(func, cinfo, method, params, &offset);
+      Bool_t valid = gCling->CallFunc_IsValid(func);
+      gCling->CallFunc_Delete(func);
       if (valid)
          return (TMethod *) -1;
       return 0;
    } else {
-      faddr = (Long_t)gCint->GetInterfaceMethod(cl, method, params);
+      faddr = (Long_t)gCling->GetInterfaceMethod(cl, method, params);
       if (!faddr) return 0;
    }
 
@@ -1449,9 +1449,9 @@ void TQObject::LoadRQ_OBJECT()
    // Load RQ_OBJECT.h which contains the #define RQ_OBJECT needed to
    // let interpreted classes connect to signals of compiled classes.
 
-   gCint->LoadText(RQ_OBJECT_STRING1);
-   gCint->LoadText(RQ_OBJECT_STRING2);
-   gCint->LoadText(RQ_OBJECT_STRING);
+   gCling->LoadText(RQ_OBJECT_STRING1);
+   gCling->LoadText(RQ_OBJECT_STRING2);
+   gCling->LoadText(RQ_OBJECT_STRING);
 
 }
 

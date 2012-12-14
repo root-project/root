@@ -934,7 +934,7 @@ void TMinuit::SetFCN(void *fcn)
 
    if (!fcn) return;
 
-   const char *funcname = gCint->Getp2f2funcname(fcn);
+   const char *funcname = gCling->Getp2f2funcname(fcn);
    if (funcname) {
       fMethodCall = new TMethodCall();
       fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");

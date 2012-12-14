@@ -72,10 +72,10 @@ static const char *gRootDevelopers[] = {
    0
 };
 
-static const char *gCintDevelopers[] = {
-   "Masaharu Goto",
-   0
-};
+//static const char *gCintDevelopers[] = {
+//   "Masaharu Goto",
+//   0
+//};
 
 static const char *gRootDocumentation[] = {
    "Ilka Antcheva",
@@ -283,9 +283,9 @@ static int DrawCredits(bool draw, bool extended)
 
    y = DrawCreditItem("Core Engineering: ", gRootDevelopers, y, draw);
 
-   y += 2*lineSpacing - 1;  // to just not cut the bottom of the "p"
+   //y += 2*lineSpacing - 1;  // to just not cut the bottom of the "p"
 
-   y = DrawCreditItem("CINT C/C++ Intepreter: ", gCintDevelopers, y, draw);
+   //y = DrawCreditItem("CINT C/C++ Intepreter: ", gCintDevelopers, y, draw);
 
    y += 2*lineSpacing;
 

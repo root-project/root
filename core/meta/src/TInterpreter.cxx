@@ -24,7 +24,7 @@
 #include "TError.h"
 
 TInterpreter*   (*gPtr2Interpreter)() = 0; // returns pointer to global object
-TInterpreter*   gCint = 0; // returns pointer to global TCint object
+TInterpreter*   gCling = 0; // returns pointer to global TCint object
 static TInterpreter *gInterpreterLocal = 0; // The real holder of the pointer.
 
 ClassImp(TInterpreter)
@@ -36,7 +36,7 @@ TInterpreter::TInterpreter(const char *name, const char *title)
    // TInterpreter ctor only called by derived classes.
 
    gInterpreterLocal = this;
-   gCint             = this;
+   gCling            = this;
 }
 
 //______________________________________________________________________________

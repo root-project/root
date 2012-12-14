@@ -137,7 +137,7 @@ FunctorCintHandler<PF>::FunctorCintHandler(void * p, const char * className , co
    fMethodCall = new TMethodCall();
 
    if (className == 0) {
-      const char *funcname = gCint->Getp2f2funcname((void *) fPtr);
+      const char *funcname = gCling->Getp2f2funcname((void *) fPtr);
 
       if (funcname)
          fMethodCall->InitWithPrototype(funcname,"double");
@@ -184,12 +184,12 @@ FunctorCintHandler<PF>::FunctorCintHandler(void * p1, void * p2 ) :    fDim(1) {
    fMethodCall = new TMethodCall();
    fMethodCall2 = new TMethodCall();
 
-   const char *funcname = gCint->Getp2f2funcname((void *) p1);
+   const char *funcname = gCling->Getp2f2funcname((void *) p1);
 
    if (funcname)
       fMethodCall->InitWithPrototype(funcname,"double");
 
-   const char *funcname2 = gCint->Getp2f2funcname((void *) p2);
+   const char *funcname2 = gCling->Getp2f2funcname((void *) p2);
 
    if (funcname2)
       fMethodCall2->InitWithPrototype(funcname2,"double");
@@ -212,7 +212,7 @@ FunctorCintHandler<PF>::FunctorCintHandler(void * p, unsigned int ndim, const ch
    fMethodCall = new TMethodCall();
 
    if (className == 0) {
-      const char *funcname = gCint->Getp2f2funcname((void *) fPtr);
+      const char *funcname = gCling->Getp2f2funcname((void *) fPtr);
 
       if (funcname)
          fMethodCall->InitWithPrototype(funcname,"const double*");
@@ -261,12 +261,12 @@ FunctorCintHandler<PF>::FunctorCintHandler(void * p1, void * p2, unsigned int di
    fMethodCall = new TMethodCall();
    fMethodCall2 = new TMethodCall();
 
-   const char *funcname = gCint->Getp2f2funcname((void *) p1);
+   const char *funcname = gCling->Getp2f2funcname((void *) p1);
 
    if (funcname)
       fMethodCall->InitWithPrototype(funcname,"const double *");
 
-   const char *funcname2 = gCint->Getp2f2funcname((void *) p2);
+   const char *funcname2 = gCling->Getp2f2funcname((void *) p2);
 
    if (funcname2)
       fMethodCall2->InitWithPrototype(funcname2,"const double *,UInt_t");

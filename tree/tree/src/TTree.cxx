@@ -3378,7 +3378,7 @@ void TTree::Delete(Option_t* option /* = "" */)
    }
 
    // Delete object from CINT symbol table so it can not be used anymore.
-   gCint->DeleteGlobal(this);
+   gCling->DeleteGlobal(this);
 
    // Warning: We have intentional invalidated this object while inside a member function!
    delete this;

@@ -117,7 +117,7 @@ TClass* TIsAProxy::operator()(const void *obj)
       if ( !fClass) return 0;
       fClass->Property();
       if ( fClass->GetClassInfo() )  {
-         fVirtual = (gCint->ClassInfo_ClassProperty(fClass->GetClassInfo())&kClassHasVirtual) == kClassHasVirtual;
+         fVirtual = (gCling->ClassInfo_ClassProperty(fClass->GetClassInfo())&kClassHasVirtual) == kClassHasVirtual;
       }
    }
    if ( !obj || !fVirtual )  {

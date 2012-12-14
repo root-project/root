@@ -41,8 +41,8 @@ TMethodArg::TMethodArg(MethodArgInfo_t *info, TFunction *method) : TDictionary()
    fInfo       = info;
    fMethod     = method;
    if (fInfo) {
-      SetName(gCint->MethodArgInfo_Name(fInfo));
-      SetTitle(gCint->MethodArgInfo_TypeName(fInfo));
+      SetName(gCling->MethodArgInfo_Name(fInfo));
+      SetTitle(gCling->MethodArgInfo_TypeName(fInfo));
    }
 }
 
@@ -51,7 +51,7 @@ TMethodArg::~TMethodArg()
 {
    // TMethodArg dtor deletes adopted CINT MethodArgInfo object.
 
-   if (fInfo) gCint->MethodArgInfo_Delete(fInfo);
+   if (fInfo) gCling->MethodArgInfo_Delete(fInfo);
 }
 
 //______________________________________________________________________________
@@ -59,7 +59,7 @@ const char *TMethodArg::GetDefault() const
 {
    // Get default value of method argument.
 
-   return gCint->MethodArgInfo_DefaultValue(fInfo);
+   return gCling->MethodArgInfo_DefaultValue(fInfo);
 }
 
 //______________________________________________________________________________
@@ -68,7 +68,7 @@ const char *TMethodArg::GetTypeName() const
    // Get type of method argument, e.g.: "class TDirectory*" -> "TDirectory"
    // Result needs to be used or copied immediately.
 
-   return gCint->TypeName(gCint->MethodArgInfo_TypeName(fInfo));
+   return gCling->TypeName(gCling->MethodArgInfo_TypeName(fInfo));
 }
 
 //______________________________________________________________________________
@@ -76,7 +76,7 @@ const char *TMethodArg::GetFullTypeName() const
 {
    // Get full type description of method argument, e.g.: "class TDirectory*".
 
-   return gCint->MethodArgInfo_TypeName(fInfo);
+   return gCling->MethodArgInfo_TypeName(fInfo);
 }
 
 //______________________________________________________________________________
@@ -84,7 +84,7 @@ Long_t TMethodArg::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
 
-   return gCint->MethodArgInfo_Property(fInfo);
+   return gCling->MethodArgInfo_Property(fInfo);
 }
 
 //______________________________________________________________________________

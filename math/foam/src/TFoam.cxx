@@ -1063,7 +1063,7 @@ void TFoam::SetRhoInt(void *fun)
 // Note that persistency for FOAM object will not work in the case of such
 // a distribution.
 
-   const char *namefcn = gCint->Getp2f2funcname(fun); //name of integrand function
+   const char *namefcn = gCling->Getp2f2funcname(fun); //name of integrand function
    if(namefcn) {
       fMethodCall=new TMethodCall();
       fMethodCall->InitWithPrototype(namefcn, "Int_t, Double_t *");

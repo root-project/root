@@ -38,11 +38,11 @@ TDataType::TDataType(TypedefInfo_t *info) : TDictionary()
    fInfo = info;
 
    if (fInfo) {
-      SetName(gCint->TypedefInfo_Name(fInfo));
-      SetTitle(gCint->TypedefInfo_Title(fInfo));
-      SetType(gCint->TypedefInfo_TrueName(fInfo));
-      fProperty = gCint->TypedefInfo_Property(fInfo);
-      fSize = gCint->TypedefInfo_Size(fInfo);
+      SetName(gCling->TypedefInfo_Name(fInfo));
+      SetTitle(gCling->TypedefInfo_Title(fInfo));
+      SetType(gCling->TypedefInfo_TrueName(fInfo));
+      fProperty = gCling->TypedefInfo_Property(fInfo);
+      fSize = gCling->TypedefInfo_Size(fInfo);
    } else {
       SetTitle("Builtin basic type");
       fProperty = 0;
@@ -66,7 +66,7 @@ TDataType::TDataType(const char *typenam) : fInfo(0), fProperty(kIsFundamental)
 //______________________________________________________________________________
 TDataType::TDataType(const TDataType& dt) :
   TDictionary(dt),
-  fInfo(gCint->TypedefInfo_FactoryCopy(dt.fInfo)),
+  fInfo(gCling->TypedefInfo_FactoryCopy(dt.fInfo)),
   fSize(dt.fSize),
   fType(dt.fType),
   fProperty(dt.fProperty),
@@ -81,8 +81,8 @@ TDataType& TDataType::operator=(const TDataType& dt)
    //assignement operator
    if(this!=&dt) {
       TDictionary::operator=(dt);
-      gCint->TypedefInfo_Delete(fInfo);
-      fInfo=gCint->TypedefInfo_FactoryCopy(dt.fInfo);
+      gCling->TypedefInfo_Delete(fInfo);
+      fInfo=gCling->TypedefInfo_FactoryCopy(dt.fInfo);
       fSize=dt.fSize;
       fType=dt.fType;
       fProperty=dt.fProperty;
@@ -96,7 +96,7 @@ TDataType::~TDataType()
 {
    // TDataType dtor deletes adopted CINT TypedefInfo object.
 
-   gCint->TypedefInfo_Delete(fInfo);
+   gCling->TypedefInfo_Delete(fInfo);
 }
 
 //______________________________________________________________________________
@@ -351,21 +351,21 @@ void TDataType::CheckInfo()
    // This intentionally cast the constness away so that
    // we can call CheckInfo from const data members.
 
-   if (!gCint->TypedefInfo_IsValid(fInfo) ||
-       strcmp(gCint->TypedefInfo_Name(fInfo),fName.Data())!=0) {
+   if (!gCling->TypedefInfo_IsValid(fInfo) ||
+       strcmp(gCling->TypedefInfo_Name(fInfo),fName.Data())!=0) {
 
       // The fInfo is invalid or does not
       // point to this typedef anymore, let's
       // refresh it
 
-      gCint->TypedefInfo_Init(fInfo, fName.Data());
+      gCling->TypedefInfo_Init(fInfo, fName.Data());
 
-      if (!gCint->TypedefInfo_IsValid(fInfo)) return;
+      if (!gCling->TypedefInfo_IsValid(fInfo)) return;
 
-      SetTitle(gCint->TypedefInfo_Title(fInfo));
-      SetType(gCint->TypedefInfo_TrueName(fInfo));
-      fProperty = gCint->TypedefInfo_Property(fInfo);
-      fSize = gCint->TypedefInfo_Size(fInfo);
+      SetTitle(gCling->TypedefInfo_Title(fInfo));
+      SetType(gCling->TypedefInfo_TrueName(fInfo));
+      fProperty = gCling->TypedefInfo_Property(fInfo);
+      fSize = gCling->TypedefInfo_Size(fInfo);
    }
 }
 

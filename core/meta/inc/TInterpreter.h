@@ -306,7 +306,7 @@ public:
 #ifndef __CINT__
 #define gInterpreter (TInterpreter::Instance())
 R__EXTERN TInterpreter* (*gPtr2Interpreter)();
-R__EXTERN TInterpreter* gCint;
+R__EXTERN TInterpreter* gCling;
 #endif
 
 #endif

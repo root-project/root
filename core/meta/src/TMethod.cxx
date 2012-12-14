@@ -46,7 +46,7 @@ TMethod::TMethod(MethodInfo_t *info, TClass *cl) : TFunction(info)
    fMenuItem     = kMenuNoMenu;
 
    if (fInfo) {
-      const char *t = gCint->MethodInfo_Title(fInfo);
+      const char *t = gCling->MethodInfo_Title(fInfo);
 
       if (t && strstr(t, "*TOGGLE")) {
          fMenuItem = kMenuToggle;
@@ -124,7 +124,7 @@ const char *TMethod::GetCommentString()
 {
    // Returns a comment string from the class declaration.
 
-   return gCint->MethodInfo_Title(fInfo);
+   return gCling->MethodInfo_Title(fInfo);
 }
 
 
