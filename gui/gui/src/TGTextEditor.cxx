@@ -488,6 +488,15 @@ void TGTextEditor::DataDropped(char *fname)
 }
 
 //______________________________________________________________________________
+void TGTextEditor::DataChanged()
+{
+   // Slot setting the fTextChanged flag to true when the text has been
+   // modified in fTextEdit
+
+   fTextChanged = kTRUE;
+}
+
+//______________________________________________________________________________
 void TGTextEditor::LoadFile(char *fname)
 {
    // Load a file into the editor. If fname is 0, a TGFileDialog will popup.

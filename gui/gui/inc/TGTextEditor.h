@@ -82,7 +82,7 @@ public:
    void           Search(Bool_t ret);
    void           Goto();
    void           About();
-   void           DataChanged() { fTextChanged = kTRUE; }
+   void           DataChanged();
    void           DataDropped(char *fname);
    Int_t          IsSaved();
    void           CompileMacro();
