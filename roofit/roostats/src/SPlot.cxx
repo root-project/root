@@ -441,6 +441,8 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   // and all others to 0.  Evaluate the pdf for each event
   // and store the values.
 
+  RooArgSet * pdfvars = pdf->getVariables();
+
   for (Int_t ievt = 0; ievt <numevents; ievt++) 
     {
       //   if (ievt % 100 == 0) 
@@ -449,7 +451,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
       //FIX THIS PART, EVALUATION PROGRESS!!
 
-      RooStats::SetParameters(fSData->get(ievt), pdf->getVariables()); 
+      RooStats::SetParameters(fSData->get(ievt), pdfvars); 
 
       //   RooArgSet row(*fSData->get(ievt));
        
@@ -480,6 +482,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 	  yieldvars[k]->setVal( 0 ) ;
 	}
     }
+  delete pdfvars;
    
   // check that the likelihood normalization is fine
   std::vector<Double_t> norm(nspec,0) ;
