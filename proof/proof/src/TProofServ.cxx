@@ -664,6 +664,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fInflateFactor   = 1000;
 
    fDataSetManager  = 0; // Initialized in Setup()
+   fDataSetStgRepo  = 0; // Initialized in Setup()
 
    fInputHandler    = 0;
 
@@ -991,6 +992,8 @@ TProofServ::~TProofServ()
    SafeDelete(fCacheLock);
    SafeDelete(fQueryLock);
    SafeDelete(fGlobalPackageDirList);
+   SafeDelete(fDataSetManager);
+   SafeDelete(fDataSetStgRepo);
    close(fLogFileDes);
 }
 
@@ -3185,6 +3188,27 @@ Int_t TProofServ::SetupCommon()
             Warning("SetupCommon", "default dataset manager plug-in initialization failed");
             SafeDelete(fDataSetManager);
          }
+      }
+      // Dataset manager for staging requests
+      TString dsReqCfg = gEnv->GetValue("Proof.DataSetStagingRequests", "");
+      if (!dsReqCfg.IsNull()) {
+         TPMERegexp reReqDir("(^| )dir:([^ ]+)( |$)");
+
+         if (reReqDir.Match(dsReqCfg) == 4) {
+            fDataSetStgRepo = new TDataSetManagerFile("_stage_", "_stage_",
+              Form("dir:%s perms:open", reReqDir[2].Data()));
+            if (fDataSetStgRepo &&
+               fDataSetStgRepo->TestBit(TObject::kInvalidObject)) {
+               Warning("SetupCommon",
+                  "failed init of dataset staging requests repository");
+               SafeDelete(fDataSetStgRepo);
+            }
+         } else {
+            Warning("SetupCommon",
+              "specify, with dir:<path>, a valid path for staging requests");
+         }
+      } else {
+         Warning("SetupCommon", "no repository for staging requests available");
       }
    }
 
@@ -6606,6 +6630,9 @@ Int_t TProofServ::HandleDataSets(TMessage *mess, TString *slb)
    TString dsUser, dsGroup, dsName, dsTree, uri, opt;
    Int_t rc = 0;
 
+   // Invalid characters in dataset URI
+   TPMERegexp reInvalid("[^A-Za-z0-9._-]");  // from ParseUri
+
    // Message type
    Int_t type = 0;
    (*mess) >> type;
@@ -6644,6 +6671,100 @@ Int_t TProofServ::HandleDataSets(TMessage *mess, TString *slb)
                Info("HandleDataSets", "dataset registration not allowed");
                if (slb) slb->Form("%d notallowed", type);
                return -1;
+            }
+         }
+         break;
+
+      case TProof::kRequestStaging:
+         {
+            (*mess) >> uri;  // TString
+
+            if (!fDataSetStgRepo) {
+               Error("HandleDataSets",
+                  "no dataset staging request repository available");
+               return -1;
+            }
+
+            // Transform input URI in a valid dataset name
+            TString validUri = uri;
+            while (reInvalid.Substitute(validUri, "_")) {}
+
+            // Check if dataset exists beforehand: if it does, staging has
+            // already been requested
+            if (fDataSetStgRepo->ExistsDataSet(validUri.Data())) {
+               Warning("HandleDataSet", "staging of %s already requested",
+                  uri.Data());
+               return -1;
+            }
+
+            // Try to get dataset from current manager
+            TFileCollection *fc = fDataSetManager->GetDataSet(uri.Data());
+            if (!fc || (fc->GetNFiles() == 0)) {
+               Error("HandleDataSets", "empty dataset or no dataset returned");
+               if (fc) delete fc;
+               return -1;
+            }
+
+            // Reset all staged bits and remove unnecessary URLs (all but last)
+            TIter it(fc->GetList());
+            TFileInfo *fi;
+            while ((fi = dynamic_cast<TFileInfo *>(it.Next()))) {
+               fi->ResetBit(TFileInfo::kStaged);
+               Int_t nToErase = fi->GetNUrls() - 1;
+               for (Int_t i=0; i<nToErase; i++)
+                  fi->RemoveUrlAt(0);
+            }
+
+            fc->Update();  // absolutely necessary
+
+            // Save request
+            fDataSetStgRepo->ParseUri(validUri, &dsGroup, &dsUser, &dsName);
+            if (fDataSetStgRepo->WriteDataSet(dsGroup, dsUser,
+               dsName, fc) == 0) {
+               // Error, can't save dataset
+               Error("HandleDataSet",
+                  "can't register staging request for %s", uri.Data());
+               delete fc;
+               return -1;
+            }
+
+            Info("HandleDataSets",
+               "Staging request registered for %s", uri.Data());
+
+            delete fc;
+            return 0;  // success (-1 == failure)
+         }
+         break;
+
+      case TProof::kStagingStatus:
+         {
+            (*mess) >> uri;  // TString
+
+            if (!fDataSetStgRepo) {
+               Error("HandleDataSets",
+                  "no dataset staging request repository available");
+               return -1;
+            }
+
+            // TODO what is slb?
+            //if (slb) slb->Form("%d %s %s", type, uri.Data(), opt.Data());
+
+            // Transform URI in a valid dataset name
+            TString validUri = uri;
+            while (reInvalid.Substitute(validUri, "_")) {}
+
+            // Get the list
+            TFileCollection *fc = fDataSetStgRepo->GetDataSet(validUri.Data());
+            if (fc) {
+               fSocket->SendObject(fc, kMESS_OK);
+               delete fc;
+               return 0;
+            }
+            else {
+               // No such dataset: not an error, but don't send message
+               Info("HandleDataSets", "no pending staging request for %s",
+                  validUri.Data());
+               return 0;
             }
          }
          break;

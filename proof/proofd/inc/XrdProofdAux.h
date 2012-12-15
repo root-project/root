@@ -219,14 +219,22 @@ public:
 //
 class XrdProofdDSInfo {
 public:
-   XrdOucString  fType;  // Backend type
-   XrdOucString  fUrl;   // URL from where to take the information
-   bool          fLocal; // TRUE if on the local file system
-   bool          fRW;    // TRUE if users can modify their area
-   XrdOucString  fOpts;  // Options for this source
+   XrdOucString  fType;    // Backend type
+   XrdOucString  fUrl;     // URL from where to take the information
+   bool          fLocal;   // TRUE if on the local file system
+   bool          fRW;      // TRUE if users can modify their area
+   XrdOucString  fOpts;    // Options for this source
+   XrdOucString  fObscure; // Obscure options to pass through
    XrdProofdDSInfo(const char *t, const char *u, bool local, bool rw,
-                   const char *o = "Ar:Av:") : 
-                   fType(t), fUrl(u), fLocal(local), fRW(rw), fOpts(o) { }
+                   const char *o = "Ar:Av:", const char *obscure = "") : 
+                   fType(t), fUrl(u), fLocal(local), fRW(rw), fOpts(o),
+                   fObscure(obscure) { }
+   XrdOucString ToString() const {
+      return "Type=" + fType + "; URL=" + fUrl +
+         "; Local=" + (fLocal ? "Yes" : "No") +
+         "; RW=" + (fRW ? "Yes" : "No") + "; Options=" + fOpts +
+         "; Obscure=" + fObscure;
+   }
 };
 
 //

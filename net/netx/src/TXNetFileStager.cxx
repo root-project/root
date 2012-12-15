@@ -22,6 +22,9 @@
 #include "TUrl.h"
 #include "TXNetFileStager.h"
 #include "TXNetSystem.h"
+#include "TFileCollection.h"
+#include "TStopwatch.h"
+#include "TFileInfo.h"
 
 //_____________________________________________________________________________
 TXNetFileStager::TXNetFileStager(const char *url) : TFileStager("xrd")
@@ -125,7 +128,7 @@ Bool_t TXNetFileStager::Stage(const char *path, Option_t *opt)
    }
 
    if (IsValid()) {
-      UChar_t o = 8;
+      UChar_t o = 8;  // XrdProtocol.hh
       UChar_t p = 0;
       // Parse options
       TString xo(opt), io;
@@ -205,6 +208,107 @@ Int_t TXNetFileStager::Locate(const char *path, TString &eurl)
 
    // Unable to initialize TXNetSystem
    return -1;
+}
+
+//_____________________________________________________________________________
+Int_t TXNetFileStager::Locate(TFileCollection *fc, Bool_t addDummyUrl)
+{
+   // Bulk locate request for a collection of files. A noop prepare command is
+   // issued beforehand to fill redirector's cache, then Locate() is issued on
+   // each file. Results are saved back to the input collection: when a file is
+   // found, the staged bit is set to on, and its endpoint URL is added, if
+   // different from the redirector's URL. If a file is not found, the staged
+   // bit is set to off.
+   // If addDummyUrl is kTRUE, in case file is not staged or redirector is
+   // identical to endpoint URL, a dummy URL is prepended, respectively:
+   // "noop://redir" and "noop://none".
+   // Returns < 0 in case of errors, and the number of files processed in case
+   // of success.
+
+   // Programmer's Notes:
+   //  - you can safely pass a URL with anchor: xrootd ignores it
+   //  - Locate wants the full URL, with root://redirector//...
+
+   if (!fc) {
+      Error("Locate", "No input collection given!");
+      return -1;
+   }
+
+   // Fill redirector's cache with an empty prepare request
+   //Int_t TXNetSystem::Prepare(TCollection *paths,
+   //   UChar_t opt, UChar_t prio, TString *bufout)
+
+   Int_t count = 0;
+
+   TStopwatch ts;
+   Double_t timeTaken_s;
+   TFileInfo *fi;
+
+   Int_t rv = fSystem->Prepare(fc->GetList(), 0, 0, NULL);
+   //                                         o  p
+
+   TIter it(fc->GetList());
+
+   timeTaken_s = ts.RealTime();
+   if (gDebug > 0) {
+      Info("Locate", "Bulk xprep done in %.1lfs (returned %d)",
+        ts.RealTime(), rv);
+   }
+
+   ts.Start();
+   TString surl, endp;
+
+   while ((fi = dynamic_cast<TFileInfo *>(it.Next())) != NULL) {
+
+      surl = fi->GetCurrentUrl()->GetUrl();
+
+      if (!IsValid()) {
+         GetPrefix(surl.Data(), fPrefix);
+         if (gDebug > 0) {
+            Info("Locate", "Stager non initialized, doing it now for %s",
+               fPrefix.Data());
+         }
+         fSystem = new TXNetSystem(surl.Data());
+      }
+
+      // Locating (0=success, 1=error -- 1 includes when file is not staged)
+      if (fSystem->Locate(surl.Data(), endp)) {
+         // File not staged
+         fi->ResetBit(TFileInfo::kStaged);
+
+         if (addDummyUrl)
+            fi->AddUrl("noop://none", kTRUE);
+
+         if (gDebug > 1)
+            Info("Locate", "Not found: %s", surl.Data());
+      }
+      else {
+         // File staged. Returned endpoint contains the same anchor and options.
+         // We just check if it is equal to one of our current URLs.
+
+         fi->SetBit(TFileInfo::kStaged);
+         if (surl != endp) {
+            fi->AddUrl(endp.Data(), kTRUE);
+         }
+         else if (addDummyUrl) {
+            // Returned URL identical to redirector's URL
+            fi->AddUrl("noop://redir", kTRUE);
+         }
+
+         if (gDebug > 1)
+            Info("Locate", "Found: %s --> %s", surl.Data(), endp.Data());
+      }
+
+      count++;
+   }
+
+   timeTaken_s += ts.RealTime();
+   if (gDebug > 0) {
+      Info("Locate", "All locates finished in %.1lfs", ts.RealTime());
+      Info("Locate", "Mass prepare and locates took %.1lfs", timeTaken_s);
+   }
+
+   return count;
 }
 
 //______________________________________________________________________________

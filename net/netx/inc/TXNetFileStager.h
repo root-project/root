@@ -26,6 +26,7 @@
 
 class TCollection;
 class TXNetSystem;
+class TFileCollection;
 
 class TXNetFileStager : public TFileStager {
 
@@ -41,6 +42,7 @@ public:
 
    Bool_t  IsStaged(const char *path);
    Int_t   Locate(const char *path, TString &endpath);
+   Int_t   Locate(TFileCollection *fc, Bool_t addDummyUrl = kFALSE);
    Bool_t  Matches(const char *s);
    Bool_t  Stage(const char *path, Option_t *opt = 0);
    Bool_t  Stage(TCollection *pathlist, Option_t *opt = 0);

@@ -845,8 +845,37 @@ Bool_t TDataSetManager::ParseUri(const char *uri,
    // Only non-null parameters are filled by this function.
    // Returns kTRUE in case of success.
 
-   // Append trailing slash if missing when wildcards are enabled
    TString uristr(uri);
+
+   // If URI contains fields in the form "Field=Value;" it is a virtual URI and
+   // should be treated differently
+   if ((uristr.Index('=') >= 0) && (uristr.Index(';') >= 0)) {
+
+      // URI is composed of two parts: a name (dsName), and the tree after the
+      // pound sign
+
+      Warning("ParseUri",
+        "Dataset URI looks like a virtual URI, treating it as such. "
+        "No group and user will be parsed!");
+
+      TPMERegexp reVirtualUri("^([^#]+)(#(.*))?$");
+      Int_t nm = reVirtualUri.Match(uristr);
+
+      if (nm >= 2) {
+         if (dsGroup) *dsGroup = "";
+         if (dsUser) *dsUser = "";
+         if (dsName) *dsName = reVirtualUri[1];
+         if (dsTree) {
+            if (nm == 4) *dsTree = reVirtualUri[3];
+            else *dsTree = "";
+         }
+      }
+      else return kFALSE;  // should never happen!
+
+      return kTRUE;
+   }
+
+   // Append trailing slash if missing when wildcards are enabled
    Int_t pc = 0;
    if (wildcards && uristr.Length() > 0) {
       pc = uristr.CountChar('/');
