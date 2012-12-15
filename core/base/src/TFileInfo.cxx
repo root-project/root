@@ -36,7 +36,8 @@ TFileInfo::TFileInfo(const char *in, Long64_t size, const char *uuid,
    // Constructor.
 
    // Get initializations form the input string: this will set at least the
-   // current URL; but it may set more: see TFileInfo::ParseInput().
+   // current URL; but it may set more: see TFileInfo::ParseInput(). Please note
+   // that MD5 sum should be provided as a string in md5ascii form.
    ParseInput(in);
 
    // Now also honour the input arguments: the size
@@ -51,7 +52,8 @@ TFileInfo::TFileInfo(const char *in, Long64_t size, const char *uuid,
    // The MD5
    if (md5) {
       SafeDelete(fMD5);
-      fMD5 = new TMD5((const UChar_t*)md5);
+      fMD5 = new TMD5();
+      fMD5->SetDigest(md5);  // sets digest from md5ascii representation
    }
    // The meta information
    if (meta) {
@@ -326,6 +328,23 @@ Bool_t TFileInfo::RemoveUrl(const char *url)
       delete lurl;
       return kTRUE;
    }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TFileInfo::RemoveUrlAt(Int_t i)
+{
+   // Remove URL at given position. Returns kTRUE on success, kFALSE on error.
+
+   TUrl *tUrl;
+   if ((tUrl = dynamic_cast<TUrl *>(fUrlList->At(i))) != NULL) {
+      fUrlList->Remove(tUrl);
+      if (tUrl == fCurrentUrl)
+         ResetUrl();
+      delete tUrl;
+      return kTRUE;
+   }
+
    return kFALSE;
 }
 

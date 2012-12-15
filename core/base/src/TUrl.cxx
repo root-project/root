@@ -126,6 +126,8 @@ void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
    fFile       = "";
    fAnchor     = "";
    fOptions    = "";
+   fFileOA     = "";
+   fHostFQ     = "";
 
    // if url starts with a / consider it as a file url
    if (url[0] == '/')
@@ -334,7 +336,7 @@ void TUrl::FindFile(char *u, Bool_t stripDoubleSlash)
 //______________________________________________________________________________
 TUrl::TUrl(const TUrl &url) : TObject(url)
 {
-   // TUrl copt ctor.
+   // TUrl copy ctor.
 
    fUrl        = url.fUrl;
    fProtocol   = url.fProtocol;

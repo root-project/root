@@ -34,6 +34,9 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TUrl.h"
+#include "TCollection.h"
+#include "TFileCollection.h"
+#include "THashList.h"
 
 //_____________________________________________________________________________
 TList* TFileStager::GetStaged(TCollection *pathlist)
@@ -147,6 +150,36 @@ Int_t TFileStager::Locate(const char *u, TString &f)
       return -1;
    f = u;
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t TFileStager::Locate(TFileCollection *fc, Bool_t)
+{
+   // Massive location of files. Returns < 0 on error, or number of files
+   // processed. Results are returned on the TFileCollection itself
+
+    TFileInfo *fi;
+    TString endp;
+    TIter it(fc->GetList());
+    Int_t count = 0;
+
+    while ((fi = dynamic_cast<TFileInfo *>(it.Next()))) {
+       const char *ourl = fi->GetCurrentUrl()->GetUrl();
+       if (!ourl) continue;
+
+       if (Locate(ourl, endp) == 0) {
+          fi->AddUrl(endp.Data(), kTRUE);
+          fi->SetBit(TFileInfo::kStaged);
+          fi->ResetUrl();
+       }
+       else {
+          fi->ResetBit(TFileInfo::kStaged);
+       }
+
+       count++;
+    }
+
+   return count;
 }
 
 //_____________________________________________________________________________

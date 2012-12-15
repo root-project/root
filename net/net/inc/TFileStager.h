@@ -35,6 +35,7 @@
 #endif
 
 class TCollection;
+class TFileCollection;
 
 class TFileStager : public TNamed {
 
@@ -45,6 +46,7 @@ public:
    virtual TList          *GetStaged(TCollection *pathlist);
    virtual Bool_t          IsStaged(const char *);
    virtual Int_t           Locate(const char *u, TString &f);
+   virtual Int_t           Locate(TFileCollection *fc, Bool_t addDummyUrl = kFALSE);
    virtual Bool_t          Matches(const char *s) { return ((s && (fName == s)) ? kTRUE : kFALSE); }
    virtual Bool_t          Stage(const char *, Option_t * = 0) { return kTRUE; }
    virtual Bool_t          Stage(TCollection *pathlist, Option_t *opt = 0);
