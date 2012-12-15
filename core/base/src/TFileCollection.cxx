@@ -31,6 +31,7 @@
 #include "TSystem.h"
 #include "Riostream.h"
 #include "TRegexp.h"
+#include "TPRegexp.h"
 #include "TError.h"
 
 
@@ -393,13 +394,23 @@ void TFileCollection::Print(Option_t *option) const
    //      'L'             together with 'F', print all the files in the collection
    //                      in long form (uuid, md5, all URLs, all meta objects; on
    //                      many lines)
+   //      "filter:[SsCc]" invokes PrintDetailed() which prints out dataset
+   //                      content in a formatted fashion by filtering on files
+   //                      which are (S)taged or not (s), (C)orrupted or not (c)
+
+   TString opt(option);
+   TPMERegexp re("(^|;| )filter:([SsCc]+)( |;|$)", 4);
+   if (re.Match(option) == 4) {
+     TString showOnly = re[2];
+     PrintDetailed(showOnly);
+     return;
+   }
 
    Printf("TFileCollection %s - %s contains: %lld files with a size of"
           " %lld bytes, %.1f %% staged - default tree name: '%s'",
           GetName(), GetTitle(), fNFiles, fTotalSize, GetStagedPercentage(),
           GetDefaultTreeName());
 
-   TString opt(option);
    if (opt.Contains("M", TString::kIgnoreCase)) {
       Printf("The files contain the following trees:");
 
@@ -419,6 +430,113 @@ void TFileCollection::Print(Option_t *option) const
          opt += TString::Format(" T:%s", fDefaultTree.Data());
       fList->Print(opt);
    }
+}
+
+//______________________________________________________________________________
+void TFileCollection::PrintDetailed(TString &showOnly) const
+{
+
+   Bool_t bS, bs, bC, bc;
+   bS = bs = bC = bc = kFALSE;
+
+   if (showOnly.Index('S') >= 0) bS = kTRUE;
+   if (showOnly.Index('s') >= 0) bs = kTRUE;
+   if (showOnly.Index('C') >= 0) bC = kTRUE;
+   if (showOnly.Index('c') >= 0) bc = kTRUE;
+
+   // If Ss (or Cc) omitted, show both Ss (or Cc)
+   if (!bc && !bC) bc = bC = kTRUE;
+   if (!bs && !bS) bs = bS = kTRUE;
+
+   TIter it(fList);
+   TFileInfo *info;
+   UInt_t countAll = 0;
+   UInt_t countMatch = 0;
+
+   Printf("\033[1m   #. SC | Entries | Size       | URL\033[m");
+
+   TString um;
+   Double_t sz;
+
+   while ((info = dynamic_cast<TFileInfo *>(it.Next()))) {
+
+      Bool_t s = info->TestBit(TFileInfo::kStaged);
+      Bool_t c = info->TestBit(TFileInfo::kCorrupted);
+
+      TUrl *url;
+
+      countAll++;
+
+      if ( ((s && bS) || (!s && bs)) && ((c && bC) || (!c && bc)) ) {
+
+         TFileInfoMeta *meta = info->GetMetaData();  // gets the first one
+         Int_t entries = -1;
+
+         if (meta) entries = meta->GetEntries();
+
+         FormatSize(info->GetSize(), um, sz);
+
+         // First line: current URL with all information
+         info->ResetUrl();
+         Printf("\033[1m%4u.\033[m %c%c | %-7s | %6.1lf %s | %s",
+           ++countMatch,
+           (s ? 'S' : 's'), (c ? 'C' : 'c'),
+           ((entries > 0) ? Form("% 7d", entries) : "n.a."),
+           sz, um.Data(),
+           info->GetCurrentUrl()->GetUrl());
+           info->NextUrl();
+
+         // Every other URL shown below current one
+         while ((url = info->NextUrl())) {
+            Printf("         |         |            | %s", url->GetUrl());
+         }
+         info->ResetUrl();
+
+      } // end match filters
+
+   } // end loop over entries
+
+   if (countAll) {
+
+     Printf(">> There are \033[1m%u\033[m file(s) in dataset: "
+        "\033[1m%u (%5.1f%%)\033[m matched your criteria (%s)",
+        countAll, countMatch,
+        100.*(Float_t)countMatch/(Float_t)countAll, showOnly.Data());
+
+    FormatSize(fTotalSize, um, sz);
+    Printf(">> Total size    : \033[1m%.1f %s\033[m", sz, um.Data());
+    Printf(">> Staged (S)    : \033[1m%5.1f %%\033[m", GetStagedPercentage());
+    Printf(">> Corrupted (C) : \033[1m%5.1f %%\033[m",
+      GetCorruptedPercentage());
+
+  }
+  else {
+    Printf(">> No files in dataset");
+  }
+
+  const char *treeName = GetDefaultTreeName();
+  Printf(">> Default tree  : \033[1m%s\033[m",
+    (treeName ? treeName : "(no default tree)"));
+
+}
+
+//______________________________________________________________________________
+void TFileCollection::FormatSize(Long64_t bytes, TString &um,
+   Double_t &size) const
+{
+
+   static const char *ums[] = { "byt", "KiB", "MiB", "GiB", "TiB" };
+   Int_t maxDiv = sizeof(ums)/sizeof(const char *);
+   Int_t nDiv = 0;
+   Double_t b = bytes;
+
+   while ((b >= 1024.) && (nDiv+1 < maxDiv)) {
+      b /= 1024.;
+      nDiv++;
+   }
+
+   um = ums[nDiv];
+   size = b;
 }
 
 //______________________________________________________________________________

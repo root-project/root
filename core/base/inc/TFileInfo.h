@@ -81,6 +81,8 @@ public:
    TUrl           *NextUrl();
    TUrl           *GetCurrentUrl() const;
    TUrl           *GetFirstUrl() const { return (TUrl*)fUrlList->First(); }
+   TUrl           *GetUrlAt(Int_t i) const { return (TUrl*)fUrlList->At(i); }
+   Bool_t          RemoveUrlAt(Int_t i);
    Int_t           GetNUrls() const    { return fUrlList->GetEntries(); }
 
    Bool_t          SetCurrentUrl(const char *url);

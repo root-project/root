@@ -56,6 +56,9 @@ private:
    TFileCollection(const TFileCollection&);             // not implemented
    TFileCollection& operator=(const TFileCollection&);  // not implemented
 
+   void PrintDetailed(TString &showOnly) const;
+   void FormatSize(Long64_t bytes, TString &um, Double_t &size) const;
+
 public:
    enum EStatusBits {
       kRemoteCollection = BIT(15)   // the collection is not staged
