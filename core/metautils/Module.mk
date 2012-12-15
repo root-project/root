@@ -44,15 +44,6 @@ INCLUDEFILES += $(METAUTILSDEP)
 #### STL dictionary (replacement for cintdlls)
 
 STLDICTS =
-
-STLDICTS_NAME = vector list deque map map2 set \
-                multimap multimap2 multiset \
-                stack queue complex
-ifneq ($(PLATFORM),win32)
-# FIX THEM!
-  CINTSTLDLLNAMES += valarray
-endif
-
 STLDICTS += lib/libvectorDict.$(SOEXT)
 STLDICTS += lib/liblistDict.$(SOEXT)
 STLDICTS += lib/libdequeDict.$(SOEXT)
@@ -62,20 +53,20 @@ STLDICTS += lib/libsetDict.$(SOEXT)
 STLDICTS += lib/libmultimapDict.$(SOEXT)
 STLDICTS += lib/libmultimap2Dict.$(SOEXT)
 STLDICTS += lib/libmultisetDict.$(SOEXT)
+STLDICTS += lib/libcomplexDict.$(SOEXT)
 ifneq ($(PLATFORM),win32)
 STLDICTS += lib/libvalarrayDict.$(SOEXT)
 endif
-STLDICTS += lib/libcomplexDict.$(SOEXT)
 
 STLDICTS_SRC := $(call stripsrc,$(patsubst lib/lib%Dict.$(SOEXT),$(METAUTILSDIRS)/G__std__%.cxx,$(STLDICTS)))
 STLDICTS_OBJ := $(patsubst %.cxx,%.o,$(STLDICTS_SRC))
 STLDICTS_DEP := $(patsubst %.cxx,%.d,$(STLDICTS_SRC))
 
-$(METAUTILSDIRS)/G__std__%.cxx: $(METAUTILSDIRS)/%Linkdef.h $(ROOTCINTTMPDEP)
+$(call stripsrc,$(METAUTILSDIRS)/G__std__%.cxx): $(METAUTILSDIRS)/%Linkdef.h $(ROOTCINTTMPDEP)
 	$(ROOTCINTTMP) -f $@ -c $(subst multi,,${*:2=}) \
 	   $(ROOT_SRCDIR)/core/metautils/src/$*Linkdef.h
 
-$(STLDICTS): lib/lib%Dict.$(SOEXT): $(METAUTILSDIRS)/G__std__%.o $(ORDER_) $(MAINLIBS)
+$(STLDICTS): lib/lib%Dict.$(SOEXT): $(call stripsrc,$(METAUTILSDIRS)/G__std__%.o) $(ORDER_) $(MAINLIBS)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ "$(filter-out $(MAINLIBS),$^)" ""
 
 lib/lib%Dict.rootmap: $(RLIBMAP) $(MAKEFILEDEP) $(METAUTILSDIRS)/%Linkdef.h
@@ -118,7 +109,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(METAUTILSTO): CXXFLAGS += $(METAUTILSCXXFLAGS)
 $(METAUTILSO): CXXFLAGS += $(METAUTILSCXXFLAGS)
 $(METAUTILSO): $(LLVMDEP)
+$(METAUTILSTO): CXXFLAGS += $(METAUTILSCXXFLAGS)
 $(METAUTILSTO): $(LLVMDEP)
