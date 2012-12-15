@@ -14,9 +14,9 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TDataSetManagerFile                                             //
+// TDataSetManagerFile                                                  //
 //                                                                      //
-// Implementation of TDataSetManager handling datasets from root   //
+// Implementation of TDataSetManager handling datasets from root        //
 // files under a specific directory path                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -42,6 +42,7 @@ private:
    Bool_t  fUseCache;          // True if the cache is used for browsing remote repositories
    TString fLocalCacheDir;     // Local cache when the repository is remote
    Int_t   fCacheUpdatePeriod; // Period for checking for new updated information
+   Bool_t  fOpenPerms;         // True if file permissions must be open
 
    // Local cache handling
    void    InitLocalCache();
@@ -96,6 +97,7 @@ public:
    const char      *GetStageOpts() const { return fStageOpts; }
    Int_t            WriteDataSet(const char *group, const char *user, const char *dsName,
                                  TFileCollection *dataset, UInt_t option = 0, TMD5 *checksum = 0);
+   Long_t           GetModTime(const char *uri);
 
    ClassDef(TDataSetManagerFile, 0) // DataSet manager for files
 };

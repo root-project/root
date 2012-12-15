@@ -118,6 +118,29 @@ void TDataSetManagerFile::Init()
                return;
             }
          }
+         else if (fOpenPerms) {
+
+            // Directory creation was OK: let's open permissions if requested
+            TString t;
+            Int_t rr = 0;
+
+            t.Form("%s/%s/%s", fDataSetDir.Data(), fGroup.Data(), fUser.Data());
+            rr += gSystem->Chmod(t.Data(), 0777);
+
+            t.Form("%s/%s", fDataSetDir.Data(), fGroup.Data());
+            rr += gSystem->Chmod(t.Data(), 0777);
+
+            rr += gSystem->Chmod(fDataSetDir.Data(), 0777);
+
+            if (rr < 0) {
+               t.Form("%s/%s/%s", fDataSetDir.Data(), fGroup.Data(),
+                 fUser.Data());
+               Warning("Init",
+                 "problems setting perms of dataset directory %s (#%d)",
+                 t.Data(), TSystem::GetErrno());
+            }
+
+         }
       }
 
       // If not in sandbox, construct the base URI using session defaults
@@ -291,9 +314,10 @@ void TDataSetManagerFile::ParseInitOpts(const char *ins)
    // The <datasetdir> is mandatory.
    // See TDataSetManager::ParseInitOpts for the available
    // base options.
-   // The base options are laready initialized by the base constructor
+   // The base options are already initialized by the base constructor
 
    SetBit(TObject::kInvalidObject);
+   fOpenPerms = kFALSE;
 
    // Needs something in
    if (!ins || strlen(ins) <= 0) return;
@@ -306,6 +330,8 @@ void TDataSetManagerFile::ParseInitOpts(const char *ins)
          fDataSetDir = tok(4, tok.Length());
       if (tok.BeginsWith("mss:"))
          fMSSUrl = tok(4, tok.Length());
+      if (tok == "perms:open")
+         fOpenPerms = kTRUE;
    }
 
    // The directory is mandatory
@@ -417,6 +443,13 @@ Int_t TDataSetManagerFile::NotifyUpdate(const char *group, const char *user,
       }
       // Write off the new content
       mac.SaveSource(fListFile.Data());
+      if (fOpenPerms) {
+         if (gSystem->Chmod(fListFile.Data(), 0666) < 0) {
+            Warning("NotifyUpdate",
+               "can't set permissions of dataset list file %s (#%d)",
+               fListFile.Data(), TSystem::GetErrno());
+         }
+      }
       if (!(newMd5 = TMD5::FileChecksum(fListFile.Data()))) {
          Error("NotifyUpdate", "problems calculating new checksum of %s", fListFile.Data());
          SafeDelete(oldMd5);
@@ -492,7 +525,14 @@ Int_t TDataSetManagerFile::CreateLsFile(const char *group, const char *user,
             Warning("CreateLsFile", "problems setting ownership on file '%s' (errno: %d)",
                                     lsfile.Data(), TSystem::GetErrno());
          }
-         if (chmod(lsfile.Data(), 0644) != 0) {
+         if (fOpenPerms) {
+            if (gSystem->Chmod(lsfile.Data(), 0666) < 0) {
+               Warning("NotifyUpdate",
+                  "can't set permissions of list file %s (#%d)",
+                  lsfile.Data(), TSystem::GetErrno());
+            }
+         }
+         else if (chmod(lsfile.Data(), 0644) != 0) {
             Warning("CreateLsFile", "problems setting permissions on file '%s' (errno: %d)",
                                     lsfile.Data(), TSystem::GetErrno());
          }
@@ -1428,11 +1468,27 @@ Int_t TDataSetManagerFile::WriteDataSet(const char *group, const char *user,
             Error("WriteDataSet", "unlink of %s failed", md5path.Data());
          return 0;
       }
+      else if (fOpenPerms) {
+         if (gSystem->Chmod(path.Data(), 0666) < 0) {
+            Warning("NotifyUpdate",
+               "can't set permissions of dataset file %s (#%d)",
+               path.Data(), TSystem::GetErrno());
+         }
+      }
+
       // Save md5 sum, otherwise the file was changed in the meanwhile and is not overwritten here
       if (ChecksumDataSet(path, md5path, md5sum) != 0) {
          Error("WriteDataSet", "problems calculating checksum of %s", path.Data());
          return 0;
       }
+      else if (fOpenPerms) {
+         if (gSystem->Chmod(md5path.Data(), 0666) < 0) {
+            Warning("NotifyUpdate",
+               "can't set permissions of dataset MD5 checksum file %s (#%d)",
+               md5path.Data(), TSystem::GetErrno());
+         }
+      }
+
       FileStat_t st;
       if (gSystem->GetPathInfo(path, st) != 0) {
          Error("WriteDataSet", "could not 'stat' the version of '%s'!", path.Data());
@@ -1908,4 +1964,26 @@ void TDataSetManagerFile::UpdateUsedSpace()
 
    // Scan the existing datasets
    GetDataSets(0, 0, 0, (UInt_t)kQuotaUpdate);
+}
+
+//______________________________________________________________________________
+Long_t TDataSetManagerFile::GetModTime(const char *uri)
+{
+   // Gets last dataset modification time. Returns -1 on error, or number of
+   // seconds since epoch on success
+
+   TString group, user, name, md5path;
+   if (!ParseUri(uri, &group, &user, &name)) {
+      return -1;
+   }
+
+   TString path( GetDataSetPath(group, user, name, md5path) );
+
+   Long_t modTime;
+   if (gSystem->GetPathInfo(path.Data(),
+      (Long_t *)0, (Long_t *)0, (Long_t *)0, &modTime)) {
+      return -1;
+   }
+
+   return modTime;
 }

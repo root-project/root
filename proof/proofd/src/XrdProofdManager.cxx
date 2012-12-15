@@ -123,6 +123,7 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fPort = XPD_DEF_PORT;
    fImage = "";        // image name for these servers
    fSockPathDir = "";
+   fStageReqRepo = "";
    fTMPdir = "/tmp";
    fWorkDir = "";
    fMUWorkDir = "";
@@ -875,18 +876,25 @@ int XrdProofdManager::Config(bool rcf)
       std::list<XrdProofdDSInfo *>::iterator ii = fDataSetSrcs.begin();
       bool goodsrc = 0;
       for (ii = fDataSetSrcs.begin(); ii != fDataSetSrcs.end();) {
-         if (!(goodsrc = ValidateLocalDataSetSrc((*ii)->fUrl, (*ii)->fLocal))) {
-            XPDERR("source " << (*ii)->fUrl << " could not be validated");
-            ii = fDataSetSrcs.erase(ii);
+         TRACE(ALL, ">> Defined dataset: " << (*ii)->ToString());
+         if ((*ii)->fType == "file") {
+            if (!(goodsrc = ValidateLocalDataSetSrc((*ii)->fUrl, (*ii)->fLocal))) {
+               XPDERR("source " << (*ii)->fUrl << " could not be validated");
+               ii = fDataSetSrcs.erase(ii);
+            } else {
+               // Check next
+               ii++;
+            }
          } else {
-            // Check next
+            // Validate only "file" datasets
+            TRACE(ALL, "Skipping validation (no \"file\" type dataset source)");
             ii++;
          }
       }
       if (fDataSetSrcs.size() > 0) {
          TRACE(ALL, fDataSetSrcs.size() << " dataset sources defined");
          for (ii = fDataSetSrcs.begin(); ii != fDataSetSrcs.end(); ii++) {
-            TRACE(ALL, " url:" << (*ii)->fUrl << ", local:" << (*ii)->fLocal << ", rw:" << (*ii)->fRW);
+            TRACE(ALL, ">> Valid dataset: " << (*ii)->ToString());
             if ((*ii)->fLocal && (*ii)->fRW) {
                if (fDataSetExp.length() > 0) fDataSetExp += ",";
                fDataSetExp += ((*ii)->fUrl).c_str();
@@ -1210,6 +1218,9 @@ bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
          }
       }
    }
+   else {
+      TRACE(ALL, "New dataset with no URL!");
+   }
    // Done
    return goodsrc;
 }
@@ -1245,6 +1256,7 @@ void XrdProofdManager::RegisterDirectives()
    Register("workdir", new XrdProofdDirective("workdir", (void *)&fWorkDir, &DoDirectiveString));
    Register("sockpathdir", new XrdProofdDirective("sockpathdir", (void *)&fSockPathDir, &DoDirectiveString));
    Register("remoteplite", new XrdProofdDirective("remoteplite", (void *)&fRemotePLite, &DoDirectiveInt));
+   Register("stagereqrepo", new XrdProofdDirective("stagereqrepo", (void *)&fStageReqRepo, &DoDirectiveString));
 }
 
 //______________________________________________________________________________
@@ -1715,7 +1727,7 @@ int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
       return -1;
 
    // URL for this source
-   XrdOucString type(val), url, opts;
+   XrdOucString type(val), url, opts, obscure;
    bool rw = 0, local = 0, goodsrc = 1;
    char *nxt = 0;
    while ((nxt = cfg->GetWord())) {
@@ -1727,6 +1739,9 @@ int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
          if (u.Proto == "" && u.HostWPort == "") local = 1;
       } else if (!strncmp(nxt, "opt:", 4)) {
          opts = nxt + 4;
+      } else {
+         obscure += nxt;
+         obscure += " ";
       }
    }
 
@@ -1745,10 +1760,12 @@ int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
       if (opts.length() <= 0) {
          opts = rw ? "Ar:Av:" : "-Ar:-Av:";
       }
+      XrdProofdDSInfo *dsi = new XrdProofdDSInfo(type.c_str(), url.c_str(),
+         local, rw, opts.c_str(), obscure.c_str());
       if (haslocal || !local) {
-         fDataSetSrcs.push_back(new XrdProofdDSInfo(type.c_str(), url.c_str(), local, rw, opts.c_str()));
+         fDataSetSrcs.push_back(dsi);
       } else {
-         fDataSetSrcs.push_front(new XrdProofdDSInfo(type.c_str(), url.c_str(), local, rw, opts.c_str()));
+         fDataSetSrcs.push_front(dsi);
       }
    }
    return 0;

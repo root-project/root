@@ -97,6 +97,7 @@ class TVirtualMutex;
 class TFileCollection;
 class TMap;
 class TDataSetManager;
+class TDataSetManagerFile;
 class TMacro;
 class TSelector;
 
@@ -136,7 +137,7 @@ class TSelector;
 // 31 -> 32: New log path trasmission
 // 32 -> 33: Development cycle 5.29/04 (fixed worker activation, new startup technology, ...)
 // 33 -> 34: Development cycle 5.33/02 (fix load issue, ...)
-// 34 -> 35: Development cycle 5.99/01 (PLite on workers, ...)
+// 34 -> 35: Development cycle 5.99/01 (PLite on workers, staging requests in separate dsmgr...)
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol        = 35;            // protocol version number
@@ -454,7 +455,9 @@ private:
       kGetQuota            = 10, //Get quota info per group
       kShowQuota           = 11, //Show quotas
       kSetDefaultTreeName  = 12, //Set the default tree name
-      kCache               = 13  //Show/clear cache
+      kCache               = 13, //Show/clear cache
+      kRequestStaging      = 14, //Request staging of a dataset
+      kStagingStatus       = 15  //Obtain staging status for the given dataset
    };
    enum ESendFileOpt {
       kAscii               = 0x0,
@@ -894,11 +897,14 @@ public:
    void        ShowDataSetQuota(Option_t* opt = 0);
 
    virtual Bool_t ExistsDataSet(const char *dataset);
-   void           ShowDataSet(const char *dataset = "", const char* opt = "M");
+   void           ShowDataSet(const char *dataset = "", const char* opt = "filter:SsCc");
    virtual Int_t  RemoveDataSet(const char *dataset, const char* optStr = "");
    virtual Int_t  VerifyDataSet(const char *dataset, const char* optStr = "");
    virtual TFileCollection *GetDataSet(const char *dataset, const char* optStr = "");
    TList         *FindDataSets(const char *searchString, const char* optStr = "");
+   virtual Bool_t RequestStagingDataSet(const char *dataset);
+   virtual TFileCollection *GetStagingStatusDataSet(const char *dataset);
+   virtual void   ShowStagingStatusDataSet(const char *dataset, const char *optStr = "filter:SsCc");
 
    virtual Int_t SetDataSetTreeName( const char *dataset, const char *treename);
 

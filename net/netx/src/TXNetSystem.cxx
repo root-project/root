@@ -565,7 +565,8 @@ Int_t TXNetSystem::Prepare(TCollection *paths,
          *buf += Form("%s\n", path.Data());
       }
 
-      Info("Prepare","buffer ready: issuing prepare ...");
+      Info("Prepare","buffer ready: issuing prepare (opt=%d, prio=%d) ...",
+         opt, prio);
       cg.ClientAdmin()->Prepare(buf->Data(), (kXR_char)opt, (kXR_char)prio);
       cg.ClientAdmin()->GoBackToRedirector();
       if (!bufout)

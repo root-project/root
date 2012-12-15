@@ -11,7 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// XrdProofdProofServMgr                                                  //
+// XrdProofdProofServMgr                                                //
 //                                                                      //
 // Author: G. Ganis, CERN, 2008                                         //
 //                                                                      //
@@ -3979,8 +3979,16 @@ int XrdProofdProofServMgr::CreateProofServRootRc(XrdProofdProtocol *p,
          rc += (*ii)->fUrl;
          rc += " opt:";
          rc += (*ii)->fOpts;
+         rc += " ";
+         rc += (*ii)->fObscure;
       }
       fprintf(frc, "%s\n", rc.c_str());
+   }
+
+   // If applicable, add staging requests repository directive initiator
+   if (strlen(fMgr->StageReqRepo()) > 0) {
+      fprintf(frc, "# Dataset staging requests repository\n");
+      fprintf(frc, "Proof.DataSetStagingRequests: %s\n", fMgr->StageReqRepo());
    }
 
    // If applicable, add datadir location

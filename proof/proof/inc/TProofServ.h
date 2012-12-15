@@ -44,6 +44,7 @@
 #endif
 
 class TDataSetManager;
+class TDataSetManagerFile;
 class TDSet;
 class TDSetElement;
 class TFileCollection;
@@ -153,6 +154,7 @@ private:
    Int_t         fCompressMsg;     // Compression level for messages
 
    TDataSetManager* fDataSetManager; // dataset manager
+   TDataSetManagerFile *fDataSetStgRepo;  // repository for staging requests
 
    Bool_t        fSendLogToMaster; // On workers, controls logs sending to master
 

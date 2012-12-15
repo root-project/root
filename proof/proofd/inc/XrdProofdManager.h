@@ -91,6 +91,7 @@ class XrdProofdManager : public XrdProofdConfig {
    const char       *DataDirOpts() const { return fDataDirOpts.c_str(); }
    const char       *DataDirUrlOpts() const { return fDataDirUrlOpts.c_str(); }
    const char       *DataSetExp() const { return fDataSetExp.c_str(); }
+   const char       *StageReqRepo() const { return fStageReqRepo.c_str(); }
 
    const char       *RootdExe() const { return fRootdExe.c_str(); }
    const char      **RootdArgs() const { return fRootdArgsPtrs; }
@@ -144,6 +145,8 @@ class XrdProofdManager : public XrdProofdConfig {
    XrdOucString      fDataDirOpts;    // String specifying options for fDataDir handling
    XrdOucString      fDataDirUrlOpts; // String specifying URL type options for fDataDir
    XrdOucString      fDataSetExp;     // List of local dataset repositories to be asserted
+   XrdOucString      fStageReqRepo;   // Directive for staging requests
+
 
    XrdOucString      fRootdExe;       // Path to 'rootd' to be use for protocol 'rootd://'
    std::list<XrdOucString> fRootdArgs;// Rootd arguments
@@ -186,6 +189,7 @@ class XrdProofdManager : public XrdProofdConfig {
    int               DoDirectiveAllowedUsers(char *, XrdOucStream *, bool);
    int               DoDirectiveDataDir(char *, XrdOucStream *, bool);
    int               DoDirectiveDataSetSrc(char *, XrdOucStream *, bool);
+   int               DoDirectiveDataSetReqRepo(char *, XrdOucStream *, bool);
    int               DoDirectiveFilterLibPaths(char *, XrdOucStream *, bool);
    int               DoDirectiveGroupfile(char *, XrdOucStream *, bool);
    int               DoDirectiveMaxOldLogs(char *, XrdOucStream *, bool);
