@@ -67,7 +67,7 @@ STLDICTS += lib/libvalarrayDict.$(SOEXT)
 endif
 STLDICTS += lib/libcomplexDict.$(SOEXT)
 
-STLDICTS_SRC := $(patsubst lib/lib%Dict.$(SOEXT),$(METAUTILSDIRS)/G__std__%.cxx,$(STLDICTS))
+STLDICTS_SRC := $(call stripsrc,$(patsubst lib/lib%Dict.$(SOEXT),$(METAUTILSDIRS)/G__std__%.cxx,$(STLDICTS)))
 STLDICTS_OBJ := $(patsubst %.cxx,%.o,$(STLDICTS_SRC))
 STLDICTS_DEP := $(patsubst %.cxx,%.d,$(STLDICTS_SRC))
 
