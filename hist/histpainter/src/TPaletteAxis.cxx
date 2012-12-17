@@ -120,6 +120,16 @@ TPaletteAxis::TPaletteAxis(const TPaletteAxis &palette) : TPave(palette)
 
 
 //______________________________________________________________________________
+TPaletteAxis& TPaletteAxis::operator=(const TPaletteAxis &orig)
+{
+   // Assignment operator.
+   
+   orig.Copy( *this );
+   return *this;
+}
+
+
+//______________________________________________________________________________
 void TPaletteAxis::Copy(TObject &obj) const
 {
    // Copy a palette to a palette.

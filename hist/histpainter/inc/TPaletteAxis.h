@@ -46,6 +46,7 @@ public:
    TPaletteAxis(const TPaletteAxis &palette);
    virtual ~TPaletteAxis();
    void Copy(TObject &palette) const;
+   TPaletteAxis& operator=(const TPaletteAxis&);
 
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
