@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
    fp = fopen(inr, "r");
    if (!fp) {
-      printf("%s: can not open input file %s\n", argv[0], in);
+      printf("%s: can not open input file %s\n", argv[0], inr);
       exit(1);
    }
    char branch[2048];
