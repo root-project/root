@@ -1,5 +1,8 @@
+#if defined(ClingWorkAroundMissingSmartInclude) || defined(ClingWorkAroundMissingDynamicScope)
+#include "TestClass.cc"
+#else
 #include "TestClass.cc+"
-
+#endif
 void readBack() 
 {
   TFile* outputB = TFile::Open("b.root");

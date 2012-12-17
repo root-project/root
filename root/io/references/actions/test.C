@@ -1,4 +1,8 @@
+#if defined(ClingWorkAroundMissingSmartInclude) || defined(ClingWorkAroundMissingDynamicScope)
+#include "TestClass.cc"
+#else
 #include "TestClass.cc+"
+#endif
 
 void build() 
 {
@@ -19,8 +23,14 @@ void build()
 
   outputA->Close();
   outputB->Close();
+#ifdef ClingWorkAroundJITandInline
+  cout.setf(ios_base::hex, ios_base::basefield);
+  cout << "fBits settings A: 0x" << testA->TestRefBits(0xFFFFFFFF) << endl;
+  cout << "fBits settings B: 0x" << testB->TestRefBits(0xFFFFFFFF) << endl;
+#else
   cout << "fBits settings A: 0x" << hex << testA->TestRefBits(0xFFFFFFFF) << endl;
   cout << "fBits settings B: 0x" << hex << testB->TestRefBits(0xFFFFFFFF) << endl;
+#endif
   delete outputA;
   delete outputB;
 }

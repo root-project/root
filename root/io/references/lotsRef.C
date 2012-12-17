@@ -14,10 +14,14 @@ void Check(TObject* obj) {
 #include "TObject.h"
 #include "TRef.h"
 
-#if defined(__MAKECINT__) || !defined(__CINT__)
+#if defined(__ROOTCLING__) || !defined(__CLING__)
+#include "A.C"
+#else
+#ifdef ClingWorkAroundMissingSmartInclude
 #include "A.C"
 #else
 #include "A.C+"
+#endif
 #endif
 
 void AddTree() {

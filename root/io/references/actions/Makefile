@@ -59,6 +59,10 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundMissingSmartInclude)$(ClingWorkAroundMissingDynamicScope),)
+setaction.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L TestClass.cc+");'
+endif
+
 setaction.log: TestClass_cc.$(DllSuf) $(ROOTCORELIBS) test.C test1.C test2.C test3.C
 	$(CMDECHO) ( $(CALLROOTEXE) -b -l -q test.C && \
 		$(CALLROOTEXE) -b -l -q test1.C && \

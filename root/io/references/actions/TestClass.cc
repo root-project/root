@@ -1,3 +1,6 @@
+#ifndef TestClass_cc
+#define TestClass_cc
+
 #include "TestClass.hh"
 #include "TObjArray.h"
 #include "TExec.h"
@@ -15,3 +18,5 @@ void TestClass::CallOnDemand()
 {
   std::cout << "Test class called on demand" << std::endl;
 }
+
+#endif
