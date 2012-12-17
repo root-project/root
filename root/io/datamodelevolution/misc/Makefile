@@ -59,8 +59,16 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+treeTest.root: CALLROOTEXE += -e 'gROOT->ProcessLine(".L SomeClass.cxx+");'
+endif
+
 treeTest.root: writeTree.C MyClass_cxx.$(DllSuf) SomeClass_cxx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l writeTree.C > treeTree_root.log 2>&1
+
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+postobj.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L MyClass.cxx+");'
+endif
 
 postobj.log: readTree.C treeTest.root MyClass_cxx.$(DllSuf) SomeClass_cxx.$(DllSuf)
 

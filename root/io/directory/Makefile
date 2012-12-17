@@ -59,7 +59,9 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+assertSubdirAndTree.elog: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif
 
 cd: cd.log
 	$(TestDiff)

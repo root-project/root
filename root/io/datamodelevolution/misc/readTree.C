@@ -1,7 +1,9 @@
 
 void readTree(const char* filename = "treeTest.root", bool loadSomeClass = true)
 {
+#ifndef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine(".L MyClass.cxx+");
+#endif
 	if (loadSomeClass) gROOT->ProcessLine(".L SomeClass.cxx+");
 	
 	TFile file(filename, "READ");

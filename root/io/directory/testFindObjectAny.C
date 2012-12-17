@@ -1,32 +1,40 @@
 void doit()
 {
-  TFile* base = new TFile("f.db","recreate");
-  TDirectory* a = base->mkdir("a","First Level Dir");
-  a->cd();
-  TH1D* ha = new TH1D("ha","ha",10,0,1);
-  TDirectory* aa = a->mkdir("aa","Second Level Dira");
-  aa->cd();
-  TH1D* haa = new TH1D("haa","haa",10,0,1);
+   TFile* base = new TFile("f.db","recreate");
+   TDirectory* a = base->mkdir("a","First Level Dir");
+   a->cd();
+   TH1D* ha = new TH1D("ha","ha",10,0,1);
+   TDirectory* aa = a->mkdir("aa","Second Level Dira");
+   aa->cd();
+   TH1D* haa = new TH1D("haa","haa",10,0,1);
    
    a->ls();
-
-  printf(" a: created@ 0x%x  found@ 0x%x\n", a,base->FindObjectAny("a"));
-  printf("ha: created@ 0x%x  found@ 0x%x\n",ha,base->FindObjectAny("ha"));
-  printf("ha: created@ 0x%x  --found@ 0x%x\n",ha,base->FindObjectAny("a/ha"));
-  k = (TDirectory*)base->FindObjectAny("a");
-  printf("ha: created@ 0x%x  found@ 0x%x\n",ha,k->FindObjectAny("ha"));
-
-  printf("aa: created@ 0x%x  found@ 0x%x\n",aa,base->FindObjectAny("aa"));
-  printf("aa: created@ 0x%x  --found@ 0x%x\n",aa,base->FindObjectAny("a/aa"));
-  printf("aa: created@ 0x%x  found@ 0x%x\n",aa,k->FindObjectAny("aa"));
-
-  printf("haa: created@ 0x%x  found@ 0x%x\n",haa,base->FindObjectAny("haa"));
-  printf("haa: created@ 0x%x  --found@ 0x%x\n",haa,base->FindObjectAny("aa/haa"));
-  printf("haa: created@ 0x%x  --found@ 0x%x\n",haa,base->FindObjectAny("a/aa/haa"));
-  printf("haa: created@ 0x%x  found@ 0x%x\n",haa,k->FindObjectAny("haa"));
-  printf("haa: created@ 0x%x  --found@ 0x%x\n",haa,k->FindObjectAny("aa/haa"));
-  kk = (TDirectory*)k->FindObjectAny("aa");
-  printf("haa: created@ 0x%x  found@ 0x%x\n",haa,kk->FindObjectAny("haa"));
+   
+   printf(" a: created@ %p  found@ %p\n", a,base->FindObjectAny("a"));
+   printf("ha: created@ %p  found@ %p\n",ha,base->FindObjectAny("ha"));
+   printf("ha: created@ %p  --found@ %p\n",ha,base->FindObjectAny("a/ha"));
+#ifdef ClingWorkAroundMissingImplicitAuto
+   TDirectory *k = (TDirectory*)base->FindObjectAny("a");
+#else
+   k = (TDirectory*)base->FindObjectAny("a");
+#endif
+   printf("ha: created@ %p  found@ %p\n",ha,k->FindObjectAny("ha"));
+   
+   printf("aa: created@ %p  found@ %p\n",aa,base->FindObjectAny("aa"));
+   printf("aa: created@ %p  --found@ %p\n",aa,base->FindObjectAny("a/aa"));
+   printf("aa: created@ %p  found@ %p\n",aa,k->FindObjectAny("aa"));
+   
+   printf("haa: created@ %p  found@ %p\n",haa,base->FindObjectAny("haa"));
+   printf("haa: created@ %p  --found@ %p\n",haa,base->FindObjectAny("aa/haa"));
+   printf("haa: created@ %p  --found@ %p\n",haa,base->FindObjectAny("a/aa/haa"));
+   printf("haa: created@ %p  found@ %p\n",haa,k->FindObjectAny("haa"));
+   printf("haa: created@ %p  --found@ %p\n",haa,k->FindObjectAny("aa/haa"));
+#ifdef ClingWorkAroundMissingImplicitAuto
+   TDirectory *kk = (TDirectory*)k->FindObjectAny("aa");
+#else
+   kk = (TDirectory*)k->FindObjectAny("aa");
+#endif
+   printf("haa: created@ %p  found@ %p\n",haa,kk->FindObjectAny("haa"));
    
    base->Write();
    
@@ -38,26 +46,37 @@ void doit2()
    TH1D *ha = 0;
    TH1D *haa = 0;
    TDirectory *aa = 0;
-   
+
+#ifdef ClingWorkAroundMissingDynamicScope
+   TDirectory *a = (TDirectory*)base->Get("a");
+#endif
    a->ls();
    
-   printf(" a: created@ 0x%x  found@ 0x%x\n", a,base->FindObjectAny("a"));
-   printf("ha: created@ 0x%x  found@ 0x%x\n",ha,base->FindObjectAny("ha"));
-   printf("ha: created@ 0x%x  --found@ 0x%x\n",ha,base->FindObjectAny("a/ha"));
+   printf(" a: created@ %p  found@ %p\n", a,base->FindObjectAny("a"));
+   printf("ha: created@ %p  found@ %p\n",ha,base->FindObjectAny("ha"));
+   printf("ha: created@ %p  --found@ %p\n",ha,base->FindObjectAny("a/ha"));
+#ifdef ClingWorkAroundMissingImplicitAuto
+   TDirectory *k = (TDirectory*)base->FindObjectAny("a");
+#else
    k = (TDirectory*)base->FindObjectAny("a");
-   printf("ha: created@ 0x%x  found@ 0x%x\n",ha,k->FindObjectAny("ha"));
+#endif
+   printf("ha: created@ %p  found@ %p\n",ha,k->FindObjectAny("ha"));
    
-   printf("aa: created@ 0x%x  found@ 0x%x\n",aa,base->FindObjectAny("aa"));
-   printf("aa: created@ 0x%x  --found@ 0x%x\n",aa,base->FindObjectAny("a/aa"));
-   printf("aa: created@ 0x%x  found@ 0x%x\n",aa,k->FindObjectAny("aa"));
+   printf("aa: created@ %p  found@ %p\n",aa,base->FindObjectAny("aa"));
+   printf("aa: created@ %p  --found@ %p\n",aa,base->FindObjectAny("a/aa"));
+   printf("aa: created@ %p  found@ %p\n",aa,k->FindObjectAny("aa"));
    
-   printf("haa: created@ 0x%x  found@ 0x%x\n",haa,base->FindObjectAny("haa"));
-   printf("haa: created@ 0x%x  --found@ 0x%x\n",haa,base->FindObjectAny("aa/haa"));
-   printf("haa: created@ 0x%x  --found@ 0x%x\n",haa,base->FindObjectAny("a/aa/haa"));
-   printf("haa: created@ 0x%x  found@ 0x%x\n",haa,k->FindObjectAny("haa"));
-   printf("haa: created@ 0x%x  --found@ 0x%x\n",haa,k->FindObjectAny("aa/haa"));
+   printf("haa: created@ %p  found@ %p\n",haa,base->FindObjectAny("haa"));
+   printf("haa: created@ %p  --found@ %p\n",haa,base->FindObjectAny("aa/haa"));
+   printf("haa: created@ %p  --found@ %p\n",haa,base->FindObjectAny("a/aa/haa"));
+   printf("haa: created@ %p  found@ %p\n",haa,k->FindObjectAny("haa"));
+   printf("haa: created@ %p  --found@ %p\n",haa,k->FindObjectAny("aa/haa"));
+#ifdef ClingWorkAroundMissingImplicitAuto
+   TDirectory *kk = (TDirectory*)k->FindObjectAny("aa");
+#else
    kk = (TDirectory*)k->FindObjectAny("aa");
-   printf("haa: created@ 0x%x  found@ 0x%x\n",haa,kk->FindObjectAny("haa"));
+#endif
+   printf("haa: created@ %p  found@ %p\n",haa,kk->FindObjectAny("haa"));
    
 }
 
@@ -80,7 +99,10 @@ int testFindObjectAny()
    TDirectory* aa = a->mkdir("aa","aa"); 
    aa->cd(); 
    TH1D* haa_new = new TH1D("haa","haa",10,0,1); 
-   TH1D* haa_find = (TH1D*)db->FindObjectAny("haa"); 
+   TH1D* haa_find = (TH1D*)db->FindObjectAny("haa");
+#ifdef ClingWorkAroundMissingDynamicScope
+   TH1D* haa = haa_find;
+#endif
    if (!haa) {
       cout << "haa missing\n";
    } else if (haa_new != haa_find) {
@@ -88,12 +110,24 @@ int testFindObjectAny()
    }
    
    TFile* base = new TFile("fdb.root","recreate");
+#ifdef ClingReinstateRedeclarationAllowed
    TDirectory* a = base->mkdir("a","First Level Dir");
+#else
+   a = base->mkdir("a","First Level Dir");
+#endif
    a->cd();
    TH1D* ha = new TH1D("ha","ha",10,0,1);
+#ifdef ClingReinstateRedeclarationAllowed
    TDirectory* aa = a->mkdir("aa","Second Level Dira");
+#else
+   aa = a->mkdir("aa","Second Level Dira");
+#endif
    aa->cd();
+#ifdef ClingWorkAroundMissingDynamicScope
+   haa = new TH1D("haa","haa",10,0,1);
+#else
    TH1D* haa = new TH1D("haa","haa",10,0,1);
+#endif
    
    testing(   a, base->FindObjectAny("a"));
    testing(  ha, base->FindObjectAny("ha"));

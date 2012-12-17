@@ -1,9 +1,11 @@
 
 void writeTree(const char* filename = "treeTest.root")
 {
+#ifndef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine(".L MyClass.cxx+");
 	gROOT->ProcessLine(".L SomeClass.cxx+");
-	
+#endif
+
 	TFile file(filename, "RECREATE");
 	TTree tree("testtree", "Tree with test objects");
 	MyClass* myobj = new MyClass;
@@ -11,7 +13,7 @@ void writeTree(const char* filename = "treeTest.root")
 	
 	myobj->Add(new TNamed("aaa", "AAAAAAAA"));
 	myobj->Add(new SomeClass("bbb"));
-   myobj->Add((void*)1);
+   myobj->Add((TObject*)1);
 	myobj->Add(new TNamed("ccc", "CCCCCCCC"));
 	myobj->Add(new SomeClass("ddd"));
    myobj->Array()[2] = 0;

@@ -3,6 +3,9 @@
 // author: Lukasz Janyst <ljanyst@cern.ch>
 //------------------------------------------------------------------------------
 
+#ifndef DataModelV1_h
+#define DataModelV1_h
+
 #include <utility>
 #include <vector>
 
@@ -190,3 +193,5 @@ private:
    
 };
 }
+
+#endif

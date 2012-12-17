@@ -10,7 +10,7 @@ public:
 	void Add(TObject* obj) { if (obj != NULL) {fArray.Add(obj);} }
 	Int_t Nentries() const { return fArray.GetEntriesFast(); }
 	const TObject* Entry(Int_t i) { return fArray[i]; }
-	const TObjArray& Array() const { return fArray; }
+   TObjArray& Array() { return fArray; }
 	virtual void Print(Option_t* option = "") const;
 
 private:

@@ -71,8 +71,13 @@ read_test1_cxx.$(DllSuf): DataModelV1.h
 test1.clog: test1_cxx.$(DllSuf) libDataModelV1_dictcint.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l test1.cxx+ > test1.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<  
 
+ifneq ($(ClingWorkAroundEmulatedProxyPair),)
+test1:
+	@true
+else
 test1: test1.clog
 	$(TestDiff)
+endif
 
 read_test1.clog: read_test1_cxx.$(DllSuf) libDataModelV1_dictcint.$(DllSuf) test1
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l read_test1.cxx+ > read_test1.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<  
@@ -80,8 +85,13 @@ read_test1.clog: read_test1_cxx.$(DllSuf) libDataModelV1_dictcint.$(DllSuf) test
 test1.comp.log: read_test1.clog
 	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 0) > test1.comp.log
 
+ifneq ($(ClingWorkAroundEmulatedProxyPair),)
+read_test1:
+	@true
+else
 read_test1: test1.comp.log
 	$(TestDiff)
+endif
 
 reflex_test1.clog: test1_cxx.$(DllSuf) libDataModelV1_dictrflx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l test1.cxx+\(\"r\"\) > reflex_test1.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<  
@@ -94,8 +104,13 @@ test2.clog: test2_cxx.$(DllSuf) test1 libDataModelV2_dictcint.$(DllSuf)
 test2.comp.log: test2.clog
 	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 1) > test2.comp.log 
 
+ifneq ($(ClingWorkAroundEmulatedProxyPair),)
+test2:
+	@true
+else
 test2: test2.comp.log
 	$(TestDiff)
+endif
 
 reflex_test2.clog: test2_cxx.$(DllSuf) libDataModelV2_dictrflx.$(DllSuf) reflex_test1
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l test2.cxx+\(\"r\"\) > reflex_test2.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<  
