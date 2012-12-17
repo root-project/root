@@ -3,15 +3,16 @@
    if (1) {
 #endif
    gROOT->ProcessLine(".L typedefWrite.C+");
-   TFile *f = new TFile("typedef.root");
 #ifdef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine(
-                      "UHTTimeFitter *u;"
-                      "f->GetObject(\"myobject\",&u);"
-                      );
+      "TFile *f = new TFile(\"typedef.root\");"
+      "UHTTimeFitter *u;"
+      "f->GetObject(\"myobject\",u);"
+      );
 #else
+   TFile *f = new TFile("typedef.root");
    UHTTimeFitter *u;
-   f->GetObject("myobject",&u);
+   f->GetObject("myobject",u);
 #endif
 #ifdef ClingWorkAroundUnnamedIncorrectInitOrder
    }

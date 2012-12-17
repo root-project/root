@@ -70,21 +70,21 @@ Warning in <TClass::TClass>: no dictionary for class SmartRefVector<LHCb::Track>
 Warning in <TClass::TClass>: no dictionary for class LHCb::RecVertex is available
 Warning in <TClass::TClass>: no dictionary for class LHCb::VertexBase is available
 
-StreamerInfo for class: LHCb::ODIN, checksum=0xff8e1eae
+StreamerInfo for class: LHCb::ODIN, checksum=0xba07acab
   DataObject     BASE            offset= n/a type= 0                     
-  unsigned int   m_runNumber     offset= n/a type=13 /< Run number       
-  unsigned int   m_eventType     offset= n/a type=13 /< Event type       
-  unsigned int   m_orbitNumber   offset= n/a type=13 /< Orbit ID         
-  unsigned long long m_eventNumber   offset= n/a type=17 /< L0 Event ID      
-  unsigned long long m_gpsTime       offset= n/a type=17 /< GPS Time (microseconds)
-  unsigned long long m_detectorStatus offset= n/a type=17 /< Detector Status  
-  unsigned int   m_errorBits     offset= n/a type=13 /< Error Bits       
-  unsigned int   m_bunchId       offset= n/a type=13 /< Bunch ID         
-  unsigned int   m_triggerType   offset= n/a type=13 /< Trigger Type     
-  int            m_readoutType   offset= n/a type= 3 /< Readout Type (@see enum LHCb::ODIN::ReadoutTypes)
-  bool           m_forceBit      offset= n/a type=18 /< Force Bit        
-  int            m_bunchCrossingType offset= n/a type= 3 /< Bunch Crossing Type (BXType, @see enum LHCb::ODIN::BXTypes)
-  unsigned int   m_bunchCurrent  offset= n/a type=13 /< Bunch Current    
+  unsigned int   m_runNumber     offset= n/a type=13 < Run number        
+  unsigned int   m_eventType     offset= n/a type=13 < Event type        
+  unsigned int   m_orbitNumber   offset= n/a type=13 < Orbit ID          
+  ULong64_t      m_eventNumber   offset= n/a type=17 < L0 Event ID       
+  ULong64_t      m_gpsTime       offset= n/a type=17 < GPS Time (microseconds)
+  ULong64_t      m_detectorStatus offset= n/a type=17 < Detector Status   
+  unsigned int   m_errorBits     offset= n/a type=13 < Error Bits        
+  unsigned int   m_bunchId       offset= n/a type=13 < Bunch ID          
+  unsigned int   m_triggerType   offset= n/a type=13 < Trigger Type      
+  int            m_readoutType   offset= n/a type= 3 < Readout Type (@see enum LHCb::ODIN::ReadoutTypes)
+  bool           m_forceBit      offset= n/a type=18 < Force Bit         
+  int            m_bunchCrossingType offset= n/a type= 3 < Bunch Crossing Type (BXType, @see enum LHCb::ODIN::BXTypes)
+  unsigned int   m_bunchCurrent  offset= n/a type=13 < Bunch Current     
    i= 0, DataObject      type=  0, offset= n/a, len=1, method=0
    i= 1, m_runNumber     type= 13, offset= n/a, len=1, method=0
    i= 2, m_eventType     type= 13, offset= n/a, len=1, method=0

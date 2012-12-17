@@ -25,6 +25,10 @@ endif
 data.root: MyClassOld_cxx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l write.C > write.log 
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+readold.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L MyClassOld.cxx+");'
+endif
+
 readold.log: MyClassOld_cxx.$(DllSuf) data.root
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l readold.C > readold.log 2>&1
 

@@ -59,6 +59,10 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+oldArrayObject.root: CALLROOTEXE += -e 'gROOT->LoadMacro("MyClass.cxx+");'
+endif
+
 oldArrayObject.root: WriteOldObject.C MyClass_cxx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l WriteOldObject.C > oldArrayObject.log 2>&1
 

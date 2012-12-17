@@ -1,4 +1,7 @@
-bool readfiles(const char** files, const char** failing, int type, bool cont = false) {
+int readfile(const char*, Bool_t checkValue = kTRUE);
+void extractfiles(const char* s, char** arr);
+
+bool readfiles(char** files, char** failing, int type, bool cont = false) {
    bool result = true;
    
 
@@ -22,7 +25,7 @@ bool readfiles(const char** files, const char** failing, int type, bool cont = f
 
 }
 
-bool readfiles_stl(const char** files, const char* failing, bool cont = false) {
+bool readfiles_stl(char** files, char** failing, bool cont = false) {
    //   const char * failing[] = { "" } ; // "float16tooshort.root","double32tooshort.root" };
 
    bool result = true;
@@ -73,8 +76,8 @@ void extractfiles(const char* s, char** arr) {
 
 bool read(const char* filespass, const char* filesfail, int type, const char *name) 
 {
-   const char * pass[256] = {0};
-   const char * fail[256] = {0};
+   char * pass[256] = {0};
+   char * fail[256] = {0};
 
    extractfiles(filespass, pass);
    extractfiles(filesfail, fail);
