@@ -1,5 +1,7 @@
 {
+#ifndef ClingWorkAroundMissingDynamicScope
 gROOT->ProcessLine(".L MyClassOld.cxx+");
+#endif
 TFile * file = new TFile("data.root","RECREATE");
 MyClass *m;
 TClonesArray *tca = new TClonesArray("MyClass");

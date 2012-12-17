@@ -33,5 +33,9 @@ int compile(const char *what)
 
 void run(const char *what) {
    if (compile(what))
+#ifdef ClingWorkAroundMissingDynamicScope
+      gROOT->ProcessLine("write();");
+#else
       write();
+#endif
 }

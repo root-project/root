@@ -18,6 +18,10 @@ endif
 ClassConv: ClassConv.log
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+data.root: CALLROOTEXE += -e 'gROOT->ProcessLine(".L MyClassOld.cxx+");'
+endif
+
 data.root: MyClassOld_cxx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l write.C > write.log 
 
