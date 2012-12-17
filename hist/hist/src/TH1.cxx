@@ -2417,12 +2417,6 @@ void TH1::Copy(TObject &obj) const
 
    TArray* a = dynamic_cast<TArray*>(&obj);
    if (a) a->Set(fNcells);
-   // we need to set fBuffer to zero to avoid calling BufferEmpty in GetBinContent
-   Double_t * buffer = 0; 
-   if (fBuffer) { 
-      buffer = fBuffer; 
-      ((TH1*)this)->fBuffer = 0; 
-   }
    for (Int_t i = 0; i < fNcells; i++) ((TH1&)obj).UpdateBinContent(i, RetrieveBinContent(i)); 
    
    ((TH1&)obj).fEntries   = fEntries;
