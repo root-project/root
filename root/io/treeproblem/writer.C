@@ -1,4 +1,3 @@
-#ifndef __CINT__
 #ifndef ROOT_TFile
 #include "TFile.h"
 #endif
@@ -17,11 +16,10 @@
 #ifndef __IOSTREAM__
 #include <iostream>
 #endif
-#endif
 
 int writer()
 {
-#ifdef __CINT__ 
+#if defined(__CLING__) && !defined(ClingWorkAroundMissingDynamicScope) 
   gSystem->Load("Foo");
 #endif
 
@@ -45,7 +43,7 @@ int writer()
   return 0;
 }
 
-#ifndef __CINT__
+#ifndef __CLING__
 int main(int argc, char** argv)
 {
   return writer();

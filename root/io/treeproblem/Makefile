@@ -40,6 +40,14 @@ dist:
 reader.log: Foo.$(DllSuf) reader.C writer.log
 	$(CMDECHO)$(CALLROOTEXE) -b -l -q reader.C > reader.log 2>&1
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+reader.log writer.log: CALLROOTEXE += -e 'gSystem->Load("Foo");'
+endif
+
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+reader.log writer.log: CALLROOTEXE += -e 'gSystem->Load("libTree");'
+endif
+
 writer.log: Foo.$(DllSuf) writer.C 
 	$(CMDECHO)$(CALLROOTEXE) -b -l -q writer.C > writer.log 2>&1
 

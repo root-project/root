@@ -1,4 +1,3 @@
-#ifndef __CINT__
 #ifndef ROOT_TFile
 #include "TFile.h"
 #endif
@@ -14,13 +13,17 @@
 #ifndef __IOSTREAM__
 #include <iostream>
 #endif
+#ifndef ROOT_TSystem
+#include "TSystem.h"
 #endif
 
 using namespace std;
 
 int reader() 
 {
+#ifndef ClingWorkAroundMissingDynamicScope
   gSystem->Load("Foo");
+#endif
 
 //  gDebug = 2; 
 
@@ -44,7 +47,7 @@ int reader()
   return 0;
 }
 
-#ifndef __CINT__
+#ifndef __CLING__
 int main(int argc, char** argv) 
 {
   return reader();
