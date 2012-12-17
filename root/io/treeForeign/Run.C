@@ -7,5 +7,9 @@ T->Print();
 T->Scan("myvar");
 T->Scan("arr.chunk.myvar[0]");
 T->Scan("arr.chunk.myvar");
- return 0;
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   gApplication->Terminate(0);
+#else
+   return 0;
+#endif
 }
