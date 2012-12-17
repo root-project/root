@@ -954,7 +954,7 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
                   }
                }              
                double y =  (w1*y1 + w2*y2)/(w1 + w2);
-               SetBinContent(bin, y);
+               UpdateBinContent(bin, y);
                if (fSumw2.fN) { 
                   double err2 =  1./(w1 + w2);
                   if (err2 < 1.E-200) err2 = 0;  // to remove arbitrary value when e1=0 AND e2=0
@@ -1083,12 +1083,6 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    SetMinimum();
    SetMaximum();
 
-//    Reset the extend possibility for all axes and the time display option. Otherwise SetBinContent 
-//    on the overflow bin would resize the axis limits!
-// we need to do for only X axis since only TH1x::SetBinContent resize the axis
-   UInt_t oldExtendBitMask = CanExtendAllAxes(); 
-   if (oldExtendBitMask) SetCanExtend(kNoAxis);
-
    Bool_t timeDisplayX = fXaxis.GetTimeDisplay();
    if (timeDisplayX)  fXaxis.SetTimeDisplay(0);
   
@@ -1133,7 +1127,7 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
                   }
                }              
                double y =  (w1*y1 + w2*y2)/(w1 + w2);
-               SetBinContent(bin, y);
+               UpdateBinContent(bin, y);
                if (fSumw2.fN) { 
                   double err2 =  1./(w1 + w2);
                   if (err2 < 1.E-200) err2 = 0;  // to remove arbitrary value when e1=0 AND e2=0
@@ -1146,14 +1140,14 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
                if (normWidth) {
                   Double_t w = wx*wy*wz;
                   cu  = c1*h1->GetBinContent(bin)/w;
-                  SetBinContent(bin,cu);
+                  UpdateBinContent(bin,cu);
                   if (fSumw2.fN) {
                      Double_t e1 = h1->GetBinError(bin)/w;
                      fSumw2.fArray[bin] = c1*c1*e1*e1;
                   }
                } else {
                   cu  = c1*h1->GetBinContent(bin)+ c2*h2->GetBinContent(bin);
-                  SetBinContent(bin,cu);
+                  UpdateBinContent(bin,cu);
                   if (fSumw2.fN) {
                      Double_t e1 = h1->GetBinError(bin);
                      Double_t e2 = h2->GetBinError(bin);
@@ -1169,12 +1163,11 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       ResetStats();
    }
    else {
-      // update statistics (do here to avoid changes by SetBinContent)
+      // update statistics (do here to avoid changes by SetBinContent)  FIXME remove???
       PutStats(s3);
       SetEntries(nEntries);
    }
 
-   SetCanExtend(oldExtendBitMask); // revert previous state
    if (timeDisplayX)  fXaxis.SetTimeDisplay(1);
 
    return kTRUE;
@@ -2424,17 +2417,14 @@ void TH1::Copy(TObject &obj) const
 
    TArray* a = dynamic_cast<TArray*>(&obj);
    if (a) a->Set(fNcells);
-   UInt_t oldExtendBitMask = ((TH1&)obj).SetCanExtend(kNoAxis);  //we want to avoid the call to LabelsInflate
    // we need to set fBuffer to zero to avoid calling BufferEmpty in GetBinContent
    Double_t * buffer = 0; 
    if (fBuffer) { 
       buffer = fBuffer; 
       ((TH1*)this)->fBuffer = 0; 
    }
-   for (Int_t i=0;i<fNcells;i++) ((TH1&)obj).SetBinContent(i,this->GetBinContent(i));
-   // restore state and buffer pointer
-   ((TH1&)obj).SetCanExtend(oldExtendBitMask);
-   if (buffer) ((TH1*)this)->fBuffer  = buffer;
+   for (Int_t i = 0; i < fNcells; i++) ((TH1&)obj).UpdateBinContent(i, RetrieveBinContent(i)); 
+   
    ((TH1&)obj).fEntries   = fEntries;
 
    // which will call BufferEmpty(0) and set fBuffer[0] to a  Maybe one should call 
@@ -2535,10 +2525,6 @@ Bool_t TH1::Divide(TF1 *f1, Double_t c1)
    SetMinimum();
    SetMaximum();
 
-//    Reset the extend possibility for all axes and the time display option. Otherwise SetBinContent 
-//    on the overflow bin would resize the axis limits!
-   SetCanExtend(kNoAxis);
-
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
    Double_t cu,w;
@@ -2559,7 +2545,7 @@ Bool_t TH1::Divide(TF1 *f1, Double_t c1)
             if (TF1::RejectedPoint()) continue;
             if (cu) w = GetBinContent(bin)/cu;
             else    w = 0;
-            SetBinContent(bin,w);
+            UpdateBinContent(bin,w);
             if (fSumw2.fN) {
                if (cu != 0) fSumw2.fArray[bin] = error1*error1/(cu*cu);
                else         fSumw2.fArray[bin] = 0;
@@ -2592,7 +2578,7 @@ Bool_t TH1::Divide(const TH1 *h1)
 // The function return kFALSE if the divide operation failed
 
    if (!h1) {
-      Error("Divide","Attempt to divide by a non-existing histogram");
+      Error("Divide", "Input histogram passed does not exist (NULL).");
       return kFALSE;
    }
 
@@ -2607,14 +2593,14 @@ Bool_t TH1::Divide(const TH1 *h1)
    try {
       CheckConsistency(this,h1);
    } catch(DifferentNumberOfBins&) {
-      Error("Divide","Attempt to divide histograms with different number of bins");
+      Error("Divide","Cannot divide histograms with different number of bins");
       return kFALSE;
    } catch(DifferentAxisLimits&) {
-      Warning("Divide","Attempt to divide histograms with different axis limits");
+      Warning("Divide","Dividing histograms with different axis limits");
    } catch(DifferentBinLimits&) {
-      Warning("Divide","Attempt to divide histograms with different bin limits");
+      Warning("Divide","Dividing histograms with different bin limits");
    } catch(DifferentLabels&) {
-      Warning("Divide","Attempt to divide histograms with different labels");
+      Warning("Divide","Dividing histograms with different labels");
    }
 
 
@@ -2623,11 +2609,6 @@ Bool_t TH1::Divide(const TH1 *h1)
 
 //    Create Sumw2 if h1 has Sumw2 set
    if (fSumw2.fN == 0 && h1->GetSumw2N() != 0) Sumw2();
-
-
-//    Reset the extend possibility for all axes and the time display option. Otherwise SetBinContent 
-//    on the overflow bin would resize the axis limits!
-   SetCanExtend(kNoAxis);
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -2640,7 +2621,7 @@ Bool_t TH1::Divide(const TH1 *h1)
             c1  = h1->GetBinContent(bin);
             if (c1) w = c0/c1;
             else    w = 0;
-            SetBinContent(bin,w);
+            UpdateBinContent(bin,w);
             if (fSumw2.fN) {
                Double_t e0 = GetBinError(bin);
                Double_t e1 = h1->GetBinError(bin);
@@ -2689,7 +2670,7 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
    Bool_t binomial = kFALSE;
    if (opt.Contains("b")) binomial = kTRUE;
    if (!h1 || !h2) {
-      Error("Divide","Attempt to divide by a non-existing histogram");
+      Error("Divide", "At least one of the input histograms passed does not exist (NULL).");
       return kFALSE;
    }
 
@@ -2704,14 +2685,14 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
       CheckConsistency(h1,h2);
       CheckConsistency(this,h1);
    } catch(DifferentNumberOfBins&) {
-      Error("Divide","Attempt to divide histograms with different number of bins");
+      Error("Divide","Cannot divide histograms with different number of bins");
       return kFALSE;
    } catch(DifferentAxisLimits&) {
-      Warning("Divide","Attempt to divide histograms with different axis limits");
+      Warning("Divide","Dividing histograms with different axis limits");
    } catch(DifferentBinLimits&) {
-      Warning("Divide","Attempt to divide histograms with different bin limits");
+      Warning("Divide","Dividing histograms with different bin limits");
    }  catch(DifferentLabels&) {
-      Warning("Divide","Attempt to divide histograms with different labels");
+      Warning("Divide","Dividing histograms with different labels");
    }
 
 
@@ -2729,10 +2710,6 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
    SetMinimum();
    SetMaximum();
 
-//    Reset the extend possibility for all axes and the time display option. Otherwise SetBinContent 
-//    on the overflow bin would resize the axis limits!
-   SetCanExtend(kNoAxis);
-
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
    Double_t b1,b2,w,d1,d2;
@@ -2746,7 +2723,7 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
             b2  = h2->GetBinContent(bin);
             if (b2) w = c1*b1/(c2*b2);
             else    w = 0;
-            SetBinContent(bin,w);
+            UpdateBinContent(bin,w);
             if (fSumw2.fN) {
                Double_t e1 = h1->GetBinError(bin);
                Double_t e2 = h2->GetBinError(bin);
@@ -5541,10 +5518,6 @@ Bool_t TH1::Multiply(TF1 *f1, Double_t c1)
    SetMinimum();
    SetMaximum();
 
-   //    Reset the can extend option. Otherwise SetBinContent on the overflow bin
-   //    would resize the axis limits!
-   SetCanExtend(kNoAxis);
-
    //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
    Double_t cu,w;
@@ -5564,7 +5537,7 @@ Bool_t TH1::Multiply(TF1 *f1, Double_t c1)
             cu  = c1*f1->EvalPar(xx);
             if (TF1::RejectedPoint()) continue;
             w = GetBinContent(bin)*cu;
-            SetBinContent(bin,w);
+            UpdateBinContent(bin,w);
             if (fSumw2.fN) {
                fSumw2.fArray[bin] = cu*cu*error1*error1;
             }
@@ -5629,10 +5602,6 @@ Bool_t TH1::Multiply(const TH1 *h1)
    SetMinimum();
    SetMaximum();
 
-   //    Reset the can extend option. Otherwise SetBinContent on the overflow bin
-   //    would resize the axis limits!
-   SetCanExtend(kNoAxis);
-
    //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
    Double_t c0,c1,w;
@@ -5643,7 +5612,7 @@ Bool_t TH1::Multiply(const TH1 *h1)
             c0  = GetBinContent(bin);
             c1  = h1->GetBinContent(bin);
             w   = c0*c1;
-            SetBinContent(bin,w);
+            UpdateBinContent(bin,w);
             if (fSumw2.fN) {
                Double_t e0 = GetBinError(bin);
                Double_t e1 = h1->GetBinError(bin);
@@ -5715,10 +5684,6 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
    SetMinimum();
    SetMaximum();
 
-   //    Reset the can extend option. Otherwise SetBinContent on the overflow bin
-   //    would resize the axis limits!
-   SetCanExtend(kNoAxis);
-
    //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
    Double_t b1,b2,w,d1,d2;
@@ -5731,7 +5696,7 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
             b1  = h1->GetBinContent(bin);
             b2  = h2->GetBinContent(bin);
             w   = (c1*b1)*(c2*b2);
-            SetBinContent(bin,w);
+            UpdateBinContent(bin,w);
             if (fSumw2.fN) {
                Double_t e1 = h1->GetBinError(bin);
                Double_t e2 = h2->GetBinError(bin);
@@ -6446,7 +6411,7 @@ void  TH1::Smooth(Int_t ntimes, Option_t *option)
    TH1::SmoothArray(nbins,xx,ntimes);
 
    for (i=0;i<nbins;i++) {
-      SetBinContent(i+firstbin,xx[i]);
+      UpdateBinContent(i+firstbin,xx[i]);
    }
    fEntries = nent;
    delete [] xx;
