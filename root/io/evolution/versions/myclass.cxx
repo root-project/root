@@ -1,5 +1,4 @@
 int write_what(const char*what);
-int readfile(const char *prefix = "veclong");
 
 int compile(const char *version, const char *what = "myclass.h")
 {
@@ -112,7 +111,11 @@ int runVecLong(int mode, const char *whatlib)
          return wcomp(whatlib,"veclong64.h"); 
       case 1:
          compile(whatlib,"veclong64.h");
+#ifdef ClingWorkAroundMissingDynamicScope
+         return gROOT->ProcessLine("readfile();");
+#else
          return readfile();
+#endif
       default:
          return 2; // Error case.
    }
