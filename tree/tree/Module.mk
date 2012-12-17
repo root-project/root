@@ -18,7 +18,7 @@ TREEDS       := $(call stripsrc,$(MODDIRS)/G__Tree.cxx)
 TREEDO       := $(TREEDS:.cxx=.o)
 TREEDH       := $(TREEDS:.cxx=.h)
 
-# ManualBase4 only needs to be regenerated (and then changed manually) when
+# ManualTree2 only needs to be regenerated (and then changed manually) when
 # the dictionary interface changes
 TREEL2       := $(MODDIRI)/LinkDef2.h
 TREEDS2      := $(call stripsrc,$(MODDIRS)/ManualTree2.cxx)
