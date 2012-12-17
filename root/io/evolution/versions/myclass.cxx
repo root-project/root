@@ -84,7 +84,6 @@ int checkFileFirst(const char *what, int part)
 
 int runAddVersion(int mode, const char *whatlib) 
 {
-   return 1;
    switch(mode) {
    case 0:
       return wcomp(whatlib);
