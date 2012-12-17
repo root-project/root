@@ -1,5 +1,21 @@
 {
-gROOT->ProcessLine(".L classes.C+");
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   if (1) {
+#endif
+      
+#ifndef SECOND_RUN
+   gROOT->ProcessLine(".L classes.C+");
+      
+#ifdef ClingWorkAroundMissingAutoLoading
+   gSystem->Load("libTree");
+#endif
+#endif
+
+#if defined(ClingWorkAroundMissingDynamicScope) && !defined(SECOND_RUN)
+#define SECOND_RUN
+   gROOT->ProcessLine(".x copy.C");
+#else
+            
 TEmcl *e = 0;
 TNonEmcl *ne = 0;
 
@@ -17,7 +33,15 @@ oldtree->GetEntry(0);
 tree->Fill();
 
 file->Write();
-return 0;
-
+#endif
+      
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   }
+#endif
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   gApplication->Terminate(0);
+#else
+   return 0;
+#endif
 }
 

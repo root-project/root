@@ -33,6 +33,10 @@ test.root: classes.C write.C
 copy.root: classes.C copy.C test.root
 		  $(CMDECHO) $(CALLROOTEXE) -q -l -b copy.C > copy.out 2>&1
 
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+tref_test_rd.log test2.root: CALLROOTEXE += -e 'gSystem->Load("libTree");'
+endif
+
 test2.root: tref_test.C
 		  $(CMDECHO) $(CALLROOTEXE) -q -l -b tref_test.C > tref_test.log
 

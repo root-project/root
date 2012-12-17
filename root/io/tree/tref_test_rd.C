@@ -18,7 +18,11 @@ void tref_test_rd()
 
   TFile hFile("test2.root");
 
+#ifdef ClingReinstateImplicitDynamicCast
   TTree* tree = hFile.Get("tree");
+#else
+  TTree* tree = (TTree*)hFile.Get("tree");
+#endif
 
   TObject* obj = new TObject();
   TRef*  ref = new TRef();

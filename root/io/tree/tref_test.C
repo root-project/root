@@ -1,4 +1,3 @@
-#ifndef __CINT__
 #include "TFile.h"
 #include "TApplication.h"
 #include "TSystem.h"
@@ -7,12 +6,7 @@
 #include "TH1.h"
 
 void tref_test()
-#endif
 {
-#ifdef __CINT__
-  gROOT->Reset();
-#endif
-
   Int_t bufSize = 4000;
   Int_t nEvents = 2000;
 

@@ -1,4 +1,7 @@
 {
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   if (1) {
+#endif
 // Make sure we do not autoload the library!
 gInterpreter->UnloadLibraryMap("classes_C");
 
@@ -26,5 +29,8 @@ if (cl->GetClassVersion()!=0) {
            cl->GetClassVersion(),0);
    exit(-1);
 }
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   }
+#endif
 
 }
