@@ -1,3 +1,6 @@
+#ifndef ToplevelClass_C
+#define ToplevelClass_C
+
 class MyClass {
 public:
    int a;
@@ -6,3 +9,4 @@ public:
    ~MyClass() {};
 };
 
+#endif
