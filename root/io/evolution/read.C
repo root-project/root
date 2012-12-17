@@ -1,5 +1,11 @@
-int readfile(const char*, Bool_t checkValue = kTRUE);
 void extractfiles(const char* s, char** arr);
+
+#ifdef ClingWorkAroundMissingDynamicScope
+int readfile_trampoline(const char*filename, Bool_t checkValue = kTRUE)
+{
+   return gROOT->ProcessLine(TString::Format("readfile(\"%s\",%d);",filename,checkValue));
+}
+#endif
 
 bool readfiles(char** files, char** failing, int type, bool cont = false) {
    bool result = true;
@@ -7,7 +13,11 @@ bool readfiles(char** files, char** failing, int type, bool cont = false) {
 
    for( int i = 0; files[i]; ++i ) {
       TString filename( Form("%s",files[i] ) );
+#ifdef ClingWorkAroundMissingDynamicScope
+      if (!readfile_trampoline(filename)) {
+#else
       if (!readfile(filename)) {
+#endif
          result = false;
       }
       if (!cont && !result) return false;
@@ -15,7 +25,11 @@ bool readfiles(char** files, char** failing, int type, bool cont = false) {
 
    for( int i = 0; failing[i]; ++i ) {
       TString filename( Form("%s",failing[i] ) );
+#ifdef ClingWorkAroundMissingDynamicScope
+      if (!readfile_trampoline(filename,false)) {
+#else
       if (!readfile(filename,false)) {
+#endif
          result = false;
       }
       if (!cont && !result) return false;
@@ -33,7 +47,11 @@ bool readfiles_stl(char** files, char** failing, bool cont = false) {
 
    for( int i = 0; files[i]; ++i ) {
       TString filename( Form("%s",files[i] ) );
+#ifdef ClingWorkAroundMissingDynamicScope
+      if (!readfile_trampoline(filename)) {
+#else
       if (!readfile(filename)) {
+#endif
          result = false;
       }
       if (!cont && !result) return false;

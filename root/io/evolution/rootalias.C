@@ -32,7 +32,7 @@ int compile(const char *what)
 }
 
 void run(const char *what) {
-   if (compile(what))
+   if (0 == compile(what))
 #if defined(ClingWorkAroundMissingDynamicScope) || defined(__CLING__)
       gROOT->ProcessLine("write();");
 #else
