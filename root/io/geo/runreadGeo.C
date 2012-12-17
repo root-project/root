@@ -17,5 +17,9 @@
   TGeoManager::Import("phobos.root"); 
   TGeoManager::Import("star.root");
   TGeoManager::Import("tesla.root");
-  0; // Insure success of the test (for Makefile)
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   gApplication->Terminate(0);
+#else
+   0; // Insure success of the test (for Makefile)
+#endif
 }
