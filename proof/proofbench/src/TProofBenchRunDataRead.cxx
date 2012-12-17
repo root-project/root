@@ -138,7 +138,6 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
    Bool_t nx = kFALSE;
    if (step == -2){
       nx = kTRUE;
-      start = fStart;
       step = 1;
    }
 
