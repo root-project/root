@@ -1,7 +1,16 @@
 {
 // Fill out the code of the actual test
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   if (1) {
+#endif
+#ifndef SECOND_RUN
    gROOT->ProcessLine(".L test_classes.h+");
- 
+#endif
+
+#if defined(ClingWorkAroundMissingDynamicScope) && !defined(SECOND_RUN)
+#define SECOND_RUN
+   gROOT->ProcessLine(".x runbasicxml.C");
+#else
    TString sbuf;
    
    cout << endl << "Doing TXmlEx1 - basic data types" << endl;
@@ -102,5 +111,13 @@
 
    
    cout << "Done " << endl;
-   return 0;
+#endif
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+      }
+#endif
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+      gApplication->Terminate(0);
+#else
+      return 0;
+#endif
 }

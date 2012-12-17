@@ -1,8 +1,16 @@
 {
 // Fill out the code of the actual test
-
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   if (1) {
+#endif
+#ifndef SECOND_RUN
    gROOT->ProcessLine(".L test_classes.h+");
-   
+#endif
+
+#if defined(ClingWorkAroundMissingDynamicScope) && !defined(SECOND_RUN)
+#define SECOND_RUN
+   gROOT->ProcessLine(".x runfilexml.C");
+#else
    TFile *f = TFile::Open("file.xml", "recreate");
    if (f==0) {
       cout << "Cannot create file.xml" << endl;   
@@ -59,7 +67,11 @@
    delete arr; arr = 0;
    delete clones; clones = 0;
    
+#ifdef ClingReinstateRedeclarationAllowed
    TFile *f = TFile::Open("file.xml");
+#else
+   f = TFile::Open("file.xml");
+#endif
    if (f==0) {
       cout << "Cannot open file.xml" << endl;   
       return;
@@ -91,5 +103,13 @@
    cout << "clones = " << (clones ? "Ok" : "Error") << endl;
 
    delete f;
+#endif
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   }
+#endif
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   gApplication->Terminate(0);
+#else
    return 0;
+#endif
 }
