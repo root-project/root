@@ -1,3 +1,8 @@
+#ifndef marker_h
+#ifdef ClingWorkAroundMultipleInclude
+#define marker_h
+#endif
+
 #include <stdio.h>
 #include "TString.h"
 
@@ -27,3 +32,5 @@ public:
 #endif
 
 Int_t Marker::fgDebug = 1;
+
+#endif

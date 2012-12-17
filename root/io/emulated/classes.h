@@ -1,3 +1,8 @@
+#ifndef classes_h
+#ifdef ClingWorkAroundMultipleInclude
+#define classes_h
+#endif
+
 #include "TObject.h"
 #include "marker.h"
 #include <vector>
@@ -144,3 +149,4 @@ public:
 #pragma link C++ class vector<TopLevel*>;
 #endif
 
+#endif

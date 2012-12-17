@@ -1,6 +1,10 @@
 #include "TFile.h"
 #include "TTree.h"
+#ifdef ClingWorkAroundMissingSmartInclude
+#include "marker.h"
+#else
 #include "marker.h+"
+#endif
 
 void read(const char *filename = "inherit.root")
 {

@@ -1,4 +1,4 @@
-#if defined(__CINT__) && !defined(__MAKECINT__)
+#if defined(__CLING__) && !defined(__MAKECINT__) && !defined(ClingWorkAroundMissingSmartInclude)
 #include "classes.h+"
 #else
 #include "classes.h"

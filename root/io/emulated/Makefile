@@ -59,11 +59,23 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundMissingSmartInclude),)
+inherit.root: CALLROOTEXE += -e 'gSystem->Load("classes_h");'
+endif
+
+ifneq ($(ClingWorkAroundMissingSmartInclude),)
+read.log: CALLROOTEXE += -e 'gSystem->Load("marker_h");'
+rewrite.log: CALLROOTEXE += -e 'gSystem->Load("marker_h");'
+endif
+
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+rewrite.log read.log inherit.root: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif
 
 abstract.root: writeAbstract_cxx.$(DllSuf) abstract.h
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l writeAbstract.cxx+ > writeAbstract.log 2>&1 
 
-inherit.root: write.C marker_h.$(DllSuf)
+inherit.root: write.C marker_h.$(DllSuf) classes_h.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l write.C > write.log 2>&1 
 
 read.log: read.C marker_h.$(DllSuf) inherit.root
