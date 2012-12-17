@@ -1,3 +1,5 @@
+void func(const char * name);
+
 void printmap() 
 {
    if (gDebug) {
@@ -33,7 +35,7 @@ void runempty(bool working = false){
 
 }
 
-void func(char * name) {
+void func(const char * name) {
 
    TFile *g = new TFile("temp.root","UPDATE");
 
