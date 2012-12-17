@@ -26,6 +26,7 @@ Bool_t  TColor::fgGrayscaleMode = kFALSE;
 Bool_t  TColor::fgInitDone = kFALSE;
 TArrayI TColor::fgPalette(0);
 
+using std::floor;
 
 //______________________________________________________________________________
 /* Begin_Html
@@ -1386,7 +1387,7 @@ const char *TColor::PixelAsHexString(ULong_t pixel)
 
 
 //______________________________________________________________________________
-void TColor::SaveColor(ostream &out, Int_t ci)
+void TColor::SaveColor(std::ostream &out, Int_t ci)
 {
    /* Begin_html
    Save a color with index > 228 as a C++ statement(s) on output stream out.
@@ -1407,13 +1408,13 @@ void TColor::SaveColor(ostream &out, Int_t ci)
    cname.Form("#%02x%02x%02x", ri, gi, bi);
 
    if (gROOT->ClassSaved(TColor::Class())) {
-      out << endl;
+      out << std::endl;
    } else {
-      out << endl;
-      out << "   Int_t ci;   // for color index setting" << endl;
+      out << std::endl;
+      out << "   Int_t ci;   // for color index setting" << std::endl;
    }
 
-   out<<"   ci = TColor::GetColor("<<quote<<cname.Data()<<quote<<");"<<endl;
+   out<<"   ci = TColor::GetColor("<<quote<<cname.Data()<<quote<<");"<<std::endl;
 }
 
 
@@ -1594,17 +1595,6 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
    <tt>if ncolors <= 0</tt> a default palette (see below) of 50 colors is
    defined. The colors defined in this palette are OK for coloring pads, labels.
    <p>
-   <tt>if ncolors == 1 && colors == 0</tt>, then a Pretty Palette with a
-   Spectrum Violet->Red is created. It is recommended to use this Pretty
-   palette when drawing legos, surfaces or contours.
-   <p>
-   if ncolors > 50 and colors=0, the DeepSea palette is used.
-   (see TColor::CreateGradientColorTable for more details)
-   <p>
-   <tt>if ncolors > 0 and colors = 0</tt>, the default palette is used
-   with a maximum of ncolors.
-   <p>
-   The default palette defines:
    <pre>
    index 0->9   : grey colors from light to dark grey
    index 10->19 : "brown" colors
@@ -1612,9 +1602,31 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
    index 30->39 : "redish" colors
    index 40->49 : basic colors
    </pre>
+   <p>
+   <tt>if ncolors == 1 && colors == 0</tt>, then a Pretty Palette with a
+   Spectrum Violet->Red is created with 50 colors. That's the default rain bow
+   pallette.
+   <p>
+   Other prefined palettes with 255 colors are available when <tt>colors == 0</tt>. 
+   The following value of <tt>ncolors</tt> give access to:
+   <p>
+   <pre>
+   if ncolors = 51 and colors=0, a Deep Sea palette is used.
+   if ncolors = 52 and colors=0, a Grey Scale palette is used.
+   if ncolors = 53 and colors=0, a Dark Body Radiator palette is used.
+   if ncolors = 54 and colors=0, a two-color hue palette palette is used.(dark blue through neutral gray to bright yellow) 
+   if ncolors = 55 and colors=0, a Rain Bow palette is used.
+   </pre>
+   (see TColor::CreateGradientColorTable for more details)
+   <p>
    The color numbers specified in the palette can be viewed by selecting
    the item "colors" in the "VIEW" menu of the canvas toolbar.
    The color parameters can be changed via TColor::SetRGB.
+   <p>
+   Note that when drawing a 2D histogram <tt>h2</tt> with the option "COL" or 
+   "COLZ" or with any "CONT" options using the color map, the number of colors 
+   used is defined by the number of contours <tt>n</tt> specified with:
+   <tt>h2->SetContour(n)</tt>
    End_html */
 
    Int_t i;
@@ -1642,8 +1654,8 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
       return;
    }
 
-   // set DeepSea palette
-   if (ncolors > 50 && colors == 0) {
+   // set Deep Sea palette
+   if (ncolors == 51 && colors == 0) {
       TColor::InitializeColors();
       if (ncolors == fgPalette.fN && paletteType == 3) return;
       const Int_t nRGBs = 5;
@@ -1651,8 +1663,64 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
       Double_t red[nRGBs]   = { 0.00, 0.09, 0.18, 0.09, 0.00 };
       Double_t green[nRGBs] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
       Double_t blue[nRGBs]  = { 0.17, 0.39, 0.62, 0.79, 0.97 };
-      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, ncolors);
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255);
       paletteType = 3;
+      return;
+   }
+   
+   // set Grey Scale palette
+   if (ncolors == 52 && colors == 0) {
+      TColor::InitializeColors();
+      if (ncolors == fgPalette.fN && paletteType == 4) return;
+      const Int_t nRGBs = 3;
+      Double_t stops[nRGBs] = { 0.00, 0.50, 1.00};
+      Double_t red[nRGBs]   = { 0.00, 0.50, 1.00};
+      Double_t green[nRGBs] = { 0.00, 0.50, 1.00};
+      Double_t blue[nRGBs]  = { 0.00, 0.50, 1.00};
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255);
+      paletteType = 4;
+      return;
+   }
+   
+   // set Dark Body Radiator palette
+   if (ncolors == 53 && colors == 0) {
+      TColor::InitializeColors();
+      if (ncolors == fgPalette.fN && paletteType == 5) return;
+      const Int_t nRGBs = 5;
+      Double_t stops[nRGBs] = { 0.00, 0.25, 0.50, 0.75, 1.00};
+      Double_t red[nRGBs]   = { 0.00, 0.50, 1.00, 1.00, 1.00};
+      Double_t green[nRGBs] = { 0.00, 0.00, 0.55, 1.00, 1.00};
+      Double_t blue[nRGBs]  = { 0.00, 0.00, 0.00, 0.00, 1.00};
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255);
+      paletteType = 5;
+      return;
+   }
+   
+   // set two-color hue palette (dark blue through neutral gray to bright yellow)
+   if (ncolors == 54 && colors == 0) {
+      TColor::InitializeColors();
+      if (ncolors == fgPalette.fN && paletteType == 6) return;
+      const Int_t nRGBs = 3;
+      Double_t stops[nRGBs] = { 0.00, 0.50, 1.00};
+      Double_t red[nRGBs]   = { 0.00, 0.50, 1.00};
+      Double_t green[nRGBs] = { 0.00, 0.50, 1.00};
+      Double_t blue[nRGBs]  = { 0.50, 0.50, 0.00};
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255);
+      paletteType = 6;
+      return;
+   }
+   
+   // set Rain Bow palette 
+   if (ncolors == 55 && colors == 0) {
+      TColor::InitializeColors();
+      if (ncolors == fgPalette.fN && paletteType == 7) return;
+      const Int_t nRGBs = 5;
+      Double_t stops[nRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
+      Double_t red[nRGBs]   = { 0.00, 0.00, 0.87, 1.00, 0.51 };
+      Double_t green[nRGBs] = { 0.00, 0.81, 1.00, 0.20, 0.00 };
+      Double_t blue[nRGBs]  = { 0.51, 1.00, 0.12, 0.00, 0.00 };
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255);
+      paletteType = 7;
       return;
    }
 
