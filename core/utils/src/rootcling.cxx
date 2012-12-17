@@ -4119,7 +4119,16 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
       "      static const char* macroDefines[] = {\n";
    for (std::vector<const char*>::const_iterator
            iD = compD.begin(), iDE = compD.end(); iD != iDE; ++iD) {
-      (*dictSrcOut) << "             \"" << *iD << "\"," << std::endl;
+      (*dictSrcOut) << "             \"";
+      // Need to escape the embedded quotes.
+      for(const char *c = *iD; *c != '\0'; ++c) {
+         if ( *c == '"' ) {
+            (*dictSrcOut) << "\\\"";            
+         } else {
+            (*dictSrcOut) << *c;
+         }
+      }
+      (*dictSrcOut) << "\"," << std::endl;
    }
 
    (*dictSrcOut) << 
