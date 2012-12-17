@@ -4,8 +4,10 @@
 //------------------------------------------------------------------------------
 
 #ifndef DataModelV1_h
+#ifdef ClingWorkAroundMultipleInclude
 #define DataModelV1_h
-
+#endif
+ 
 #include <utility>
 #include <vector>
 
