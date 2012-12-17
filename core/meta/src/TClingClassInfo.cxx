@@ -51,6 +51,8 @@
 #include <sstream>
 #include <string>
 
+static std::string FullyQualifiedName(const clang::Decl *decl);
+
 using namespace clang;
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
@@ -160,7 +162,7 @@ void TClingClassInfo::Delete(void *arena) const
       return;
    }
    std::ostringstream os;
-   os << "delete (" << Name() << "*)"
+   os << "delete (" << FullyQualifiedName(fDecl)  << "*)"
       << reinterpret_cast<unsigned long>(arena) << ";";
    cling::Interpreter::CompilationResult err =
       fInterp->execute(os.str());
@@ -185,7 +187,7 @@ void TClingClassInfo::DeleteArray(void *arena, bool dtorOnly) const
    }
    else {
       std::ostringstream os;
-      os << "delete[] (" << Name() << "*)"
+      os << "delete[] (" << FullyQualifiedName(fDecl)  << "*)"
          << reinterpret_cast<unsigned long>(arena) << ";";
       cling::Interpreter::CompilationResult err =
          fInterp->execute(os.str());
@@ -203,7 +205,7 @@ void TClingClassInfo::Destruct(void *arena) const
    if (!IsValid()) {
       return;
    }
-   const char *name = Name();
+   std::string name( FullyQualifiedName(fDecl) );
    std::ostringstream os;
    os << "((" << name << "*)" << reinterpret_cast<unsigned long>(arena)
       << ")->" << name << "::~" << name << "();";
@@ -547,7 +549,7 @@ int TClingClassInfo::Next()
 {
    return InternalNext();
 }
-
+   
 void *TClingClassInfo::New() const
 {
    // Invoke a new expression to use the class constructor
@@ -557,7 +559,7 @@ void *TClingClassInfo::New() const
       return 0;
    }
    std::ostringstream os;
-   os << "new " << Name() << ";";
+   os << "new " << FullyQualifiedName(fDecl) << ";";
    cling::StoredValueRef val;
    cling::Interpreter::CompilationResult err =
       fInterp->evaluate(os.str(), val);
@@ -578,7 +580,7 @@ void *TClingClassInfo::New(int n) const
       return 0;
    }
    std::ostringstream os;
-   os << "new " << Name() << "[" << n << "];";
+   os << "new " << FullyQualifiedName(fDecl) << "[" << n << "];";
    cling::StoredValueRef val;
    cling::Interpreter::CompilationResult err =
       fInterp->evaluate(os.str(), val);
@@ -601,7 +603,7 @@ void *TClingClassInfo::New(int n, void *arena) const
    }
    std::ostringstream os;
    os << "new ((void*)" << reinterpret_cast<unsigned long>(arena) << ") "
-      << Name() << "[" << n << "];";
+      << FullyQualifiedName(fDecl) << "[" << n << "];";
    cling::StoredValueRef val;
    cling::Interpreter::CompilationResult err =
       fInterp->evaluate(os.str(), val);
@@ -623,7 +625,7 @@ void *TClingClassInfo::New(void *arena) const
    }
    std::ostringstream os;
    os << "new ((void*)" << reinterpret_cast<unsigned long>(arena) << ") "
-      << Name() << ";";
+      << FullyQualifiedName(fDecl) << ";";
    cling::StoredValueRef val;
    cling::Interpreter::CompilationResult err =
       fInterp->evaluate(os.str(), val);
@@ -760,6 +762,17 @@ long TClingClassInfo::Tagnum() const
       return -1L;
    }
    return reinterpret_cast<long>(fDecl);
+}
+
+
+static std::string FullyQualifiedName(const clang::Decl *decl) {
+   // returns the fully qualified name without worrying about
+   // normalizing the name.
+   
+   std::string buf;
+   clang::PrintingPolicy Policy(decl->getASTContext().getPrintingPolicy());
+   llvm::dyn_cast<clang::NamedDecl>(decl)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+   return buf.c_str();
 }
 
 const char *TClingClassInfo::FileName() const
