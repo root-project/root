@@ -7,7 +7,7 @@ MODNAME      := proofbench
 MODDIR       := $(ROOT_SRCDIR)/proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
-PBPARDIR     := $(ROOT_SRCDIR)/etc/proof/proofbench
+PBPARDIR     := $(ROOT_OBJDIR)/etc/proof/proofbench
 
 PROOFBENCHDIR  := $(MODDIR)
 PROOFBENCHDIRS := $(PROOFBENCHDIR)/src
