@@ -3113,7 +3113,7 @@ Int_t TProofServ::SetupCommon()
       // Create 'queries' locker instance and lock it
       fQueryLock = new TProofLockPath(TString::Format("%s/%s%s-%s",
                        gSystem->TempDirectory(),
-                       kPROOF_QueryLockFile, fTopSessionTag.Data(),
+                       kPROOF_QueryLockFile, fSessionTag.Data(),
                        TString(fQueryDir).ReplaceAll("/","%").Data()));
       fQueryLock->Lock();
       // Create the query manager
