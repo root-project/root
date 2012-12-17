@@ -1896,6 +1896,11 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
    TDirectory::TContext ctxt(this);
 
    if (fFile==0) return 0;
+   
+   if (!cl) {
+      Error("WriteObject","Unknown type for %s, it can not be written.",name);
+      return 0;
+   }
 
    if (!fFile->IsWritable()) {
       if (!fFile->TestBit(TFile::kWriteError)) {
@@ -1905,7 +1910,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
       return 0;
    }
 
-   if (!obj || !cl) return 0;
+   if (!obj) return 0;
    TKey *key, *oldkey=0;
    Int_t bsize = GetBufferSize();
    if (bufsize > 0) bsize = bufsize;
