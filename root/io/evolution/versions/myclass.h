@@ -42,15 +42,16 @@ RootClassVersion(MyClass,1)
 #endif
 
 
-void write(const char *filename) 
+int write(const char *filename) 
 {
    TFile f(filename,"RECREATE");
    MyClass *m = new MyClass;
    f.WriteObject(m,"obj");
    f.Write();
+   return 0;
 }
 
-void write_what(const char*what) 
+int write_what(const char*what) 
 {
-   write(Form("myclass%s.root",what));
+   return write(Form("myclass%s.root",what));
 }

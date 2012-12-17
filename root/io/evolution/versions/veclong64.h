@@ -23,7 +23,7 @@ public:
 #include "TString.h"
 #include "TFile.h"
 
-void writefile(const char *prefix = "veclong") {
+int writefile(const char *prefix = "veclong") {
    TString filename;
    filename.Form("%s-%d.root",prefix,VERSION);
    TFile *f = new TFile(filename,"RECREATE");
@@ -32,6 +32,7 @@ void writefile(const char *prefix = "veclong") {
    c.Print();
    f->WriteObject(&c,"veclong");
    delete f;
+   return 0;
 }
 
 int readfile(const char *prefix = "veclong") {
@@ -49,8 +50,8 @@ int readfile(const char *prefix = "veclong") {
    return 0;
 }
 
-void write_what(const char * /* version */) {
-   writefile();
+int write_what(const char * /* version */) {
+   return writefile();
 }
 
 #ifdef __MAKECINT__

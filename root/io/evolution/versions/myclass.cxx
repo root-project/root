@@ -1,3 +1,6 @@
+int write_what(const char*what);
+int readfile(const char *prefix = "veclong");
+
 int compile(const char *version, const char *what = "myclass.h")
 {
    static const TString incs( gSystem->GetIncludePath() );
@@ -19,7 +22,11 @@ int compile(const char *version, const char *what = "myclass.h")
 int wcomp(const char *version, const char *what = "myclass.h")
 {
    int r = compile(version,what);
+#ifdef ClingWorkAroundMissingDynamicScope
+   if (!r) r = gROOT->ProcessLine(TString::Format("write_what(\"%s\");",version));
+#else
    if (!r) r = write_what(version);
+#endif
    return r;
 }
 
@@ -45,6 +52,7 @@ int checkLibFirst(const char *what, int part)
          gROOT->GetClass("MyClass")->GetStreamerInfos()->ls();
       }
    }
+   return 0;
 }
 
 int checkFileFirst(const char *what, int part)
@@ -70,17 +78,21 @@ int checkFileFirst(const char *what, int part)
    gROOT->GetClass("MyClass")->GetStreamerInfo();
 
    gROOT->GetClass("MyClass")->GetStreamerInfos()->ls();
-   
+ 
+   return 0;
 }
 
 
 int runAddVersion(int mode, const char *whatlib) 
 {
+   return 1;
    switch(mode) {
    case 0:
       return wcomp(whatlib);
    case 1:
+#ifndef ClingWorkAroundNoDotOptimization
       gROOT->ProcessLine(".O0");
+#endif
       return checkLibFirst(whatlib,0);
    case 2:
       return checkFileFirst(whatlib,0);
@@ -88,6 +100,8 @@ int runAddVersion(int mode, const char *whatlib)
       return checkLibFirst(whatlib,1);
    case 4:
       return checkFileFirst(whatlib,1);
+   default:
+      return 5; // Error case
    }
 }
 
@@ -99,6 +113,8 @@ int runVecLong(int mode, const char *whatlib)
       case 1:
          compile(whatlib,"veclong64.h");
          return readfile();
+      default:
+         return 2; // Error case.
    }
 }
 
