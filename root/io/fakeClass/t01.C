@@ -1,5 +1,9 @@
 {
 class Event;
 new TFile("test.root");
-return 0;
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   gApplication->Terminate(0);
+#else
+   return 0;
+#endif
 }
