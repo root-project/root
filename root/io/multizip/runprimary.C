@@ -1,5 +1,7 @@
 {
-// Fill out the code of the actual test
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   if (1) {
+#endif
    gSystem->Load("libMatrix");
    TFile *f = TFile::Open("multi.zip#1");
    f->ls();
@@ -15,5 +17,15 @@
       cout << "The retrieved TVectorD 'galaxy' has " << gal->GetNrows() << " rows instead of 160801\n";
       result = kFALSE;
    }
-   return !result; // We need to return the correct error code for a shell script or makefile
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   gApplication->Terminate(!result);
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+      }
+#endif
+#else
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+      }
+#endif
+      return !result; // We need to return the correct error code for a shell script or makefile
+#endif
 }
