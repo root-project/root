@@ -1,5 +1,15 @@
 {
-   gROOT->ProcessLine(".L na.cxx+");
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   if (1) {
+#endif
+#ifndef SECOND_RUN
+      gROOT->ProcessLine(".L na.cxx+");
+#endif
+      
+#if defined(ClingWorkAroundMissingDynamicScope) && !defined(SECOND_RUN)
+#define SECOND_RUN
+      gROOT->ProcessLine(".x wr.C");
+#else
 
    TCanvas *c1 = new TCanvas("c1", "c1");
    gStyle->SetPalette(1,0);
@@ -21,5 +31,14 @@
    TFile f("hout.root","recreate");
    h->Write();
    //f.Close();
+#endif // SECOND_RUN
+
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+}
+#endif
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+   gApplication->Terminate(0);
+#else
    return 0;
+#endif
 }

@@ -1,8 +1,11 @@
 {
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   if (1) {
+#endif
    gROOT->ProcessLine(".L na.cxx+");
    gSystem->Load("libHistPainter");
    TFile f("hout.root");
-   TH1 * h = f.Get("hpxpy");
+   TH1 * h = (TH1*)f.Get("hpxpy");
    h->SetDirectory(gROOT);
    f.Close();
    TList * l = h->GetListOfFunctions();
@@ -14,4 +17,7 @@
      fprintf(stdout,"name %s\n",l->At(i)->IsA()->GetName());
 
    };
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+   }
+#endif
 }
