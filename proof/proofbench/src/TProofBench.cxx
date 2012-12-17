@@ -346,6 +346,8 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
    Int_t nbins = pf->GetNbinsX();
    TGraphErrors *gr = new TGraphErrors(nbins);
    Double_t xx, ex, yy, ey, ymi = pf->GetBinContent(1), ymx = ymi;
+   Double_t xlow = pf->GetBinCenter(1) - pf->GetBinWidth(1)/2. ;
+   Double_t xhigh = pf->GetBinCenter(nbins) + pf->GetBinWidth(nbins)/2. ;
    Int_t k =1, kmx = -1;
    for (;k <= nbins; k++) {
       xx = pf->GetBinCenter(k);
@@ -374,7 +376,7 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
    gr->SetMarkerStyle(21);
    gr->SetMarkerSize(1.2);
 
-   TH1F *hgr = new TH1F("Graph-CPU"," CPU speed-up", nbins*4,0,nbins+1);
+   TH1F *hgr = new TH1F("Graph-CPU"," CPU speed-up", nbins*4, xlow, xhigh);
    hgr->SetMaximum(ymx + (ymx-ymi)*0.2);
    hgr->SetMinimum(0);
    hgr->SetDirectory(0);
@@ -767,6 +769,8 @@ void TProofBench::DrawDataSet(const char *outfile,
    Int_t nbins = pf->GetNbinsX();
    TGraphErrors *gr = new TGraphErrors(nbins);
    Double_t xx, ex, yy, ey, ymi = pf->GetBinContent(1), ymx = ymi;
+   Double_t xlow = pf->GetBinCenter(1) - pf->GetBinWidth(1)/2. ;
+   Double_t xhigh = pf->GetBinCenter(nbins) + pf->GetBinWidth(nbins)/2. ;
    Int_t k =1;
    for (;k <= nbins; k++) {
       xx = pf->GetBinCenter(k);
@@ -795,7 +799,7 @@ void TProofBench::DrawDataSet(const char *outfile,
    gr->SetMarkerStyle(21);
    gr->SetMarkerSize(1.2);
 
-   TH1F *hgr = new TH1F("Graph-DataSet"," Data Read speed-up", nbins*4,0,nbins+1);
+   TH1F *hgr = new TH1F("Graph-DataSet"," Data Read speed-up", nbins*4, xlow, xhigh);
    hgr->SetMaximum(ymx + (ymx-ymi)*0.2);
    hgr->SetMinimum(0);
    hgr->SetDirectory(0);
