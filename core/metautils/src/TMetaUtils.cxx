@@ -567,7 +567,7 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl)
 
    // It looks like the template specialization decl actually contains _less_ information
    // on the location of the code than the decl (in case where there is forward declaration,
-   // that is what the specialization points to.
+   // that is what the specialization points to).
    //
    // const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
    // if (clxx) {
