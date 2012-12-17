@@ -1,6 +1,10 @@
 #include "TFile.h"
 #include "TTree.h"
-#include "marker.h+"
+#ifdef ClingWorkAroundMissingSmartInclude
+#include "marker.h"
+#else
+#include "marker.h"
+#endif
 
 void rewrite(const char *filename = "inherit.root")
 {
@@ -11,7 +15,7 @@ void rewrite(const char *filename = "inherit.root")
    void *h = file->Get("holder");
    // gDebug = 7;
    fprintf(stdout,"Testing Writing\n");
-   out->WriteObject(h,"holdercopy");
+   out->WriteObjectAny(h,"Holder","holdercopy");
    
    fprintf(stdout,"Delete original\n");
    TClass *cl = TClass::GetClass("Holder");
