@@ -688,7 +688,7 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
           return NULL;
         }
         else {
-          Int_t rv = fstg->Locate(newFc, kTRUE);
+          Int_t rv = fstg->LocateCollection(newFc, kTRUE);
           if (rv < 0) {
             Error("GetDataSet", "Endpoint lookup returned an error");
             delete fstg;

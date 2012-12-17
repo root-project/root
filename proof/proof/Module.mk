@@ -18,10 +18,20 @@ PROOFDS      := $(call stripsrc,$(MODDIRS)/G__Proof.cxx)
 PROOFDO      := $(PROOFDS:.cxx=.o)
 PROOFDH      := $(PROOFDS:.cxx=.h)
 
-PROOFH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-PROOFS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-PROOFO       := $(call stripsrc,$(PROOFS:.cxx=.o))
+PROOFH_ALL   := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+PROOFS_ALL   := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 
+# Build AliEn dataset manager only when AliEn is enabled
+ifeq ($(BUILDALIEN),yes)
+  ALIENDSMGR := -DALIENDSMGR
+  PROOFH := $(PROOFH_ALL)
+  PROOFS := $(PROOFS_ALL)
+else
+  PROOFS := $(filter-out $(MODDIRS)/TDataSetManagerAliEn%,$(PROOFS_ALL))
+  PROOFH := $(filter-out $(MODDIRI)TDataSetManagerAliEn%,$(PROOFH_ALL))
+endif
+
+PROOFO   := $(call stripsrc,$(PROOFS:.cxx=.o))
 PROOFDEP     := $(PROOFO:.o=.d) $(PROOFDO:.o=.d)
 
 PROOFLIB     := $(LPATH)/libProof.$(SOEXT)
@@ -49,11 +59,11 @@ $(PROOFLIB):    $(PROOFO) $(PROOFDO) $(ORDER_) $(MAINLIBS) $(PROOFLIBDEP)
 $(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(PROOFH) $(PROOFL)
+		$(ROOTCINTTMP) -f $@ -c $(ALIENDSMGR) $(PROOFH) $(PROOFL)
 
 $(PROOFMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(PROOFL)
 		$(RLIBMAP) -o $@ -l $(PROOFLIB) \
-		   -d $(PROOFLIBDEPM) -c $(PROOFL)
+		   -d $(PROOFLIBDEPM) -c $(PROOFL) $(ALIENDSMGR)
 
 all-$(MODNAME): $(PROOFLIB) $(PROOFMAP)
 

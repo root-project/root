@@ -153,7 +153,7 @@ Int_t TFileStager::Locate(const char *u, TString &f)
 }
 
 //______________________________________________________________________________
-Int_t TFileStager::Locate(TFileCollection *fc, Bool_t)
+Int_t TFileStager::LocateCollection(TFileCollection *fc, Bool_t)
 {
    // Massive location of files. Returns < 0 on error, or number of files
    // processed. Results are returned on the TFileCollection itself
