@@ -3201,7 +3201,7 @@ Int_t TProofServ::SetupCommon()
             Warning("SetupCommon",
               "specify, with dir:<path>, a valid path for staging requests");
          }
-      } else {
+      } else if (gProofDebugLevel > 0) {
          Warning("SetupCommon", "no repository for staging requests available");
       }
    }

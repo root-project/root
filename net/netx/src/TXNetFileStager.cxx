@@ -211,7 +211,8 @@ Int_t TXNetFileStager::Locate(const char *path, TString &eurl)
 }
 
 //_____________________________________________________________________________
-Int_t TXNetFileStager::Locate(TFileCollection *fc, Bool_t addDummyUrl)
+Int_t TXNetFileStager::LocateCollection(TFileCollection *fc,
+   Bool_t addDummyUrl)
 {
    // Bulk locate request for a collection of files. A noop prepare command is
    // issued beforehand to fill redirector's cache, then Locate() is issued on
@@ -222,12 +223,12 @@ Int_t TXNetFileStager::Locate(TFileCollection *fc, Bool_t addDummyUrl)
    // If addDummyUrl is kTRUE, in case file is not staged or redirector is
    // identical to endpoint URL, a dummy URL is prepended, respectively:
    // "noop://redir" and "noop://none".
+   // If the collection contains URLs with "anchors" (i.e., #fileName.root),
+   // they are ignored by xrootd.
+   // The Locate() command preserves anchors, but needs single paths to be full
+   // URLs beginning with root://.
    // Returns < 0 in case of errors, and the number of files processed in case
    // of success.
-
-   // Programmer's Notes:
-   //  - you can safely pass a URL with anchor: xrootd ignores it
-   //  - Locate wants the full URL, with root://redirector//...
 
    if (!fc) {
       Error("Locate", "No input collection given!");
