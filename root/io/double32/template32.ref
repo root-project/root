@@ -31,4 +31,4 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TRealData	v2.d32	Description of persistent data members : 0 at: [deleted from log]
  OBJ: TRealData	v2.regdouble	Description of persistent data members : 0 at: [deleted from log]
 The following should be a Double32_t: Double32_t
-(int)0
+(int) 0
