@@ -46,7 +46,6 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
-
 # Remember that sometest.log can be made automatically from
 #  from runsometest.C
 # This target attempts to create a log file (which should be the output of running the test), and
@@ -64,3 +63,7 @@ notmergeable.log:
 
 notmergeable: notmergeable.log
 	$(TestDiff)
+	
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+execFileMerger.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif
