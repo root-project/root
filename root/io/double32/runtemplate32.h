@@ -1,3 +1,8 @@
+#ifndef runtemplate32_h
+#ifdef ClingWorkAroundMultipleInclude
+#define runtemplate32_h
+#endif
+
 #include "TClass.h"
 #include "TStreamerInfo.h"
 #include "TROOT.h"
@@ -41,4 +46,6 @@ public:
    MyVector<Double32_t> v1;
    MyVector<float> v2;
 };
+
+#endif
 
