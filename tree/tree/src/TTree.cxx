@@ -6431,13 +6431,22 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, c
       if (branchDescriptor) nch = strlen(branchDescriptor);
       // branch Descriptor is null, read its definition from the first line in the file
       if (!nch) {
-         in.getline(bd, 100000, newline);
-         if (!in.good()) {
-            delete [] bdname;
-            delete [] bd;
-            Error("ReadStream","Error reading stream");
-            return 0;
-         }
+         do {
+            in.getline(bd, 100000, newline);
+            if (!in.good()) {
+               delete [] bdname;
+               delete [] bd;
+               Error("ReadStream","Error reading stream");
+               return 0;
+            }
+            char *cursor = bd;
+            while( isspace(*cursor) && *cursor != '\n' && *cursor != '\0') {
+               ++cursor;
+            }
+            if (*cursor != '#' && *cursor != '\n' && *cursor != '\0') {
+               break;
+            }
+         } while (true);
          ++nlines;
          nch = strlen(bd);
       } else {
